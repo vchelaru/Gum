@@ -2,7 +2,7 @@
 
 ## Introduction
 
-`CircleRuntime` draws a circle (or ellipse) with a **fill** and an **outline (stroke)**. Its size is controlled by `Radius` (or by `Width` and `Height` for an ellipse). The fill is set by `FillColor`; the outline is set by `StrokeColor` and `StrokeWidth`. On top of fill and outline, a `CircleRuntime` can also render a gradient, a drop shadow, and a dashed outline.
+`CircleRuntime` draws a circle with a **fill** and an **outline (stroke)**. The circle is sized to fit within its `Width` × `Height` bounds. The fill is set by `FillColor`; the outline is set by `StrokeColor` and `StrokeWidth`. On top of fill and outline, a `CircleRuntime` can also render a gradient, a drop shadow, and a dashed outline.
 
 A freshly-constructed `CircleRuntime` renders as a **stroke-only outline** — `FillColor` defaults to transparent, `StrokeColor` defaults to white, and `StrokeWidth` defaults to `1`. Assign a visible `FillColor` to light up the fill, or set `StrokeWidth` to `0` to hide the outline.
 
@@ -19,7 +19,8 @@ The following code creates an outlined `CircleRuntime`:
 ```csharp
 // Initialize
 var circle = new CircleRuntime();
-circle.Radius = 64;
+circle.Width = 128;
+circle.Height = 128;
 circle.StrokeColor = Color.Green; // This is a Microsoft.Xna.Framework.Color
 container.Children.Add(circle);
 ```
@@ -31,7 +32,8 @@ To fill the circle, assign a visible `FillColor`. On MonoGame, KNI, and FNA the 
 ```csharp
 // Initialize
 var circle = new CircleRuntime();
-circle.Radius = 64;
+circle.Width = 128;
+circle.Height = 128;
 circle.FillColor = Color.Green; // light up the fill
 container.Children.Add(circle);
 ```
