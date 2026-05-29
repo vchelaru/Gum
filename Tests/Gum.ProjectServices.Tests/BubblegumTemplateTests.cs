@@ -12,9 +12,9 @@ namespace Gum.ProjectServices.Tests;
 
 /// <summary>
 /// Validates the bundled Bubblegum theme template after its migration off the retired
-/// ColoredRectangle / RoundedRectangle / ColoredCircle standards (see
-/// <see cref="BubblegumShapeMigrationHelper"/>). Guards against a regression where a future edit
-/// reintroduces a retired standard or leaves a dangling color reference.
+/// ColoredRectangle / RoundedRectangle / ColoredCircle standards (PR #2975). Guards against a
+/// regression where a future edit reintroduces a retired standard or leaves a dangling color
+/// reference.
 /// </summary>
 public class BubblegumTemplateTests
 {
