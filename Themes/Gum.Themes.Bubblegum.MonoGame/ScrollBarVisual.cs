@@ -20,8 +20,8 @@ public class ScrollBarVisual : BaseScrollBarVisual
     private const float FrameBorderThickness = 2f;
 
     private readonly ScrollBarThumbVisual _thumb;
-    private readonly RoundedRectangleRuntime _frameFill;
-    private readonly RoundedRectangleRuntime _frameBorder;
+    private readonly RectangleRuntime _frameFill;
+    private readonly RectangleRuntime _frameBorder;
     private bool _isHorizontal;
 
     public ScrollBarVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
@@ -139,9 +139,9 @@ public class ScrollBarVisual : BaseScrollBarVisual
         }
     }
 
-    private static RoundedRectangleRuntime CreateFrameFill()
+    private static RectangleRuntime CreateFrameFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "BubblegumScrollBarFrameFill";
         fill.X = 0;
         fill.Y = 0;
@@ -155,13 +155,14 @@ public class ScrollBarVisual : BaseScrollBarVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = FrameCornerRadius;
         fill.IsFilled = true;
-        fill.Color = BubblegumColors.Surface1;
+        fill.FillColor = BubblegumColors.Surface1;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateFrameBorder()
+    private static RectangleRuntime CreateFrameBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "BubblegumScrollBarFrameBorder";
         border.X = 0;
         border.Y = 0;
@@ -177,7 +178,7 @@ public class ScrollBarVisual : BaseScrollBarVisual
         border.IsFilled = false;
         border.StrokeWidth = FrameBorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = BubblegumColors.Border;
+        border.StrokeColor = BubblegumColors.Border;
         return border;
     }
 }

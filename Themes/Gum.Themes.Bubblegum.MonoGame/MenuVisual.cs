@@ -15,8 +15,8 @@ public class MenuVisual : BaseMenuVisual
 {
     private const float SeparatorHeight = 2f;
 
-    private readonly ColoredRectangleRuntime _fill;
-    private readonly ColoredRectangleRuntime _bottomSeparator;
+    private readonly RectangleRuntime _fill;
+    private readonly RectangleRuntime _bottomSeparator;
 
     public MenuVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -33,9 +33,9 @@ public class MenuVisual : BaseMenuVisual
         AddChild(InnerPanelInstance);
     }
 
-    private static ColoredRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        ColoredRectangleRuntime fill = new ColoredRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "BubblegumMenuFill";
         fill.X = 0;
         fill.Y = 0;
@@ -47,13 +47,15 @@ public class MenuVisual : BaseMenuVisual
         fill.Height = 0;
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
-        fill.Color = BubblegumColors.Surface1;
+        fill.IsFilled = true;
+        fill.FillColor = BubblegumColors.Surface1;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static ColoredRectangleRuntime CreateBottomSeparator()
+    private static RectangleRuntime CreateBottomSeparator()
     {
-        ColoredRectangleRuntime separator = new ColoredRectangleRuntime();
+        RectangleRuntime separator = new RectangleRuntime();
         separator.Name = "BubblegumMenuBottomSeparator";
         separator.X = 0;
         separator.Y = 0;
@@ -65,7 +67,9 @@ public class MenuVisual : BaseMenuVisual
         separator.Height = SeparatorHeight;
         separator.WidthUnits = DimensionUnitType.RelativeToParent;
         separator.HeightUnits = DimensionUnitType.Absolute;
-        separator.Color = BubblegumColors.Border;
+        separator.IsFilled = true;
+        separator.FillColor = BubblegumColors.Border;
+        separator.StrokeWidth = 0;
         return separator;
     }
 }

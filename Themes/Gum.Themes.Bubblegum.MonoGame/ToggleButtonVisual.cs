@@ -29,9 +29,9 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
     private const float ShadowBlur = 12f;
     private static readonly Color ShadowColor = new Color(255, 107, 157, 160);
 
-    private readonly RoundedRectangleRuntime _focusRing;
-    private readonly RoundedRectangleRuntime _fill;
-    private readonly RoundedRectangleRuntime _border;
+    private readonly RectangleRuntime _focusRing;
+    private readonly RectangleRuntime _fill;
+    private readonly RectangleRuntime _border;
 
     public ToggleButtonVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -60,9 +60,9 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         WireStates();
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "BubblegumToggleFill";
         fill.X = 0;
         fill.Y = 0;
@@ -76,19 +76,19 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.Color = BubblegumColors.Surface1;
+        fill.FillColor = BubblegumColors.Surface1;
+        fill.StrokeWidth = 0;
         fill.HasDropshadow = true;
         fill.DropshadowColor = ShadowColor;
         fill.DropshadowOffsetX = 0f;
         fill.DropshadowOffsetY = ShadowOffsetY;
-        fill.DropshadowBlurX = ShadowBlur;
-        fill.DropshadowBlurY = ShadowBlur;
+        fill.DropshadowBlur = ShadowBlur;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateBorder()
+    private static RectangleRuntime CreateBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "BubblegumToggleBorder";
         border.X = 0;
         border.Y = 0;
@@ -104,13 +104,13 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = BubblegumColors.Border;
+        border.StrokeColor = BubblegumColors.Border;
         return border;
     }
 
-    private static RoundedRectangleRuntime CreateFocusRing()
+    private static RectangleRuntime CreateFocusRing()
     {
-        RoundedRectangleRuntime ring = new RoundedRectangleRuntime();
+        RectangleRuntime ring = new RectangleRuntime();
         ring.Name = "BubblegumToggleFocusRing";
         ring.X = 0;
         ring.Y = 0;
@@ -126,7 +126,7 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = BubblegumPalette.FocusRing;
+        ring.StrokeColor = BubblegumPalette.FocusRing;
         ring.Visible = false;
         return ring;
     }
@@ -195,9 +195,9 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
 
     private void ApplyPalette(Color fill, Color border, Color text, bool showShadow, bool showFocusRing)
     {
-        _fill.Color = fill;
+        _fill.FillColor = fill;
         _fill.HasDropshadow = showShadow;
-        _border.Color = border;
+        _border.StrokeColor = border;
         TextInstance.Color = text;
         _focusRing.Visible = showFocusRing;
     }

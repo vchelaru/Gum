@@ -64,8 +64,8 @@ public static class BubblegumTheme
         BmfcSave.AddCharacters("✓▼");
 
         // Bubblegum's visuals build their bodies out of Apos.Shapes-backed
-        // RoundedRectangleRuntime instances, which require ShapeRenderer to
-        // be initialized. Guard for the case where the host app already
+        // RectangleRuntime / CircleRuntime instances, which require ShapeRenderer
+        // to be initialized. Guard for the case where the host app already
         // initialized it (mixing themes / using shape runtimes elsewhere).
         if (!ShapeRenderer.Self.IsInitialized)
         {
@@ -214,5 +214,16 @@ public static class BubblegumTheme
 
         FrameworkElement.DefaultFormsTemplates[typeof(Tooltip)] =
             new VisualTemplate((_, c) => new TooltipVisual(tryCreateFormsObject: c));
+
+        // Controls Bubblegum does not restyle are pinned to their stock V3 visuals so
+        // BubblegumTheme.Apply fully specifies the template set. FrameworkElement.DefaultFormsTemplates
+        // is global static state; without re-registering these, re-applying a theme at runtime
+        // (theme switching) would leave a previously-applied theme's visual in place for these
+        // controls. These match what a single-theme Bubblegum run already falls back to.
+        FrameworkElement.DefaultFormsTemplates[typeof(ItemsControl)] =
+            new VisualTemplate((_, c) => new Gum.Forms.DefaultVisuals.V3.ItemsControlVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(Gum.Forms.Controls.Games.DialogBox)] =
+            new VisualTemplate((_, c) => new Gum.Forms.DefaultVisuals.V3.DialogBoxVisual(tryCreateFormsObject: c));
     }
 }

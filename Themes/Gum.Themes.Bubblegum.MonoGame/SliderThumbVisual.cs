@@ -33,9 +33,9 @@ public class SliderThumbVisual : InteractiveGue
     private const float ShadowBlur = 10f;
     private static readonly Color ShadowColor = new Color(255, 107, 157, 160);
 
-    private readonly ColoredCircleRuntime _focusRing;
-    private readonly ColoredCircleRuntime _body;
-    private readonly ColoredCircleRuntime _border;
+    private readonly CircleRuntime _focusRing;
+    private readonly CircleRuntime _body;
+    private readonly CircleRuntime _border;
 
     private StateSaveCategory _buttonCategory = null!;
 
@@ -59,9 +59,9 @@ public class SliderThumbVisual : InteractiveGue
         WireStates();
     }
 
-    private static ColoredCircleRuntime CreateBody()
+    private static CircleRuntime CreateBody()
     {
-        ColoredCircleRuntime body = new ColoredCircleRuntime();
+        CircleRuntime body = new CircleRuntime();
         body.Name = "BubblegumSliderThumbBody";
         body.X = 0;
         body.Y = 0;
@@ -74,21 +74,21 @@ public class SliderThumbVisual : InteractiveGue
         body.WidthUnits = DimensionUnitType.RelativeToParent;
         body.HeightUnits = DimensionUnitType.RelativeToParent;
         body.IsFilled = true;
-        body.Color = Color.White;
+        body.FillColor = Color.White;
+        body.StrokeWidth = 0;
         // Native Gaussian drop shadow under the thumb — replaces the prior
         // single-circle approximation. Toggled per state via WireStates.
         body.HasDropshadow = true;
         body.DropshadowColor = ShadowColor;
         body.DropshadowOffsetX = 0f;
         body.DropshadowOffsetY = ShadowOffsetY;
-        body.DropshadowBlurX = ShadowBlur;
-        body.DropshadowBlurY = ShadowBlur;
+        body.DropshadowBlur = ShadowBlur;
         return body;
     }
 
-    private static ColoredCircleRuntime CreateBorder()
+    private static CircleRuntime CreateBorder()
     {
-        ColoredCircleRuntime border = new ColoredCircleRuntime();
+        CircleRuntime border = new CircleRuntime();
         border.Name = "BubblegumSliderThumbBorder";
         border.X = 0;
         border.Y = 0;
@@ -103,13 +103,13 @@ public class SliderThumbVisual : InteractiveGue
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = BubblegumColors.Accent;
+        border.StrokeColor = BubblegumColors.Accent;
         return border;
     }
 
-    private static ColoredCircleRuntime CreateFocusRing()
+    private static CircleRuntime CreateFocusRing()
     {
-        ColoredCircleRuntime ring = new ColoredCircleRuntime();
+        CircleRuntime ring = new CircleRuntime();
         ring.Name = "BubblegumSliderThumbFocusRing";
         ring.X = 0;
         ring.Y = 0;
@@ -124,7 +124,7 @@ public class SliderThumbVisual : InteractiveGue
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = BubblegumPalette.FocusRing;
+        ring.StrokeColor = BubblegumPalette.FocusRing;
         ring.Visible = false;
         return ring;
     }
@@ -166,9 +166,9 @@ public class SliderThumbVisual : InteractiveGue
 
     private void Apply(Color body, Color border, bool ring, bool showShadow)
     {
-        _body.Color = body;
+        _body.FillColor = body;
         _body.HasDropshadow = showShadow;
-        _border.Color = border;
+        _border.StrokeColor = border;
         _focusRing.Visible = ring;
     }
 }

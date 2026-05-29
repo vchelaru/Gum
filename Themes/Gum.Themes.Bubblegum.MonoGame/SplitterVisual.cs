@@ -13,7 +13,7 @@ namespace Gum.Themes.Bubblegum;
 /// </summary>
 public class SplitterVisual : BaseSplitterVisual
 {
-    private readonly ColoredRectangleRuntime _fill;
+    private readonly RectangleRuntime _fill;
 
     public SplitterVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -24,9 +24,9 @@ public class SplitterVisual : BaseSplitterVisual
         AddChild(_fill);
     }
 
-    private static ColoredRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        ColoredRectangleRuntime fill = new ColoredRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "BubblegumSplitterFill";
         fill.X = 0;
         fill.Y = 0;
@@ -38,7 +38,9 @@ public class SplitterVisual : BaseSplitterVisual
         fill.Height = 0;
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
-        fill.Color = BubblegumColors.AccentLight;
+        fill.IsFilled = true;
+        fill.FillColor = BubblegumColors.AccentLight;
+        fill.StrokeWidth = 0;
         return fill;
     }
 }
