@@ -3,6 +3,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Services;
+using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Gum.Undo;
 using System;
@@ -27,6 +28,8 @@ public class CompositeMemberLogic
     private readonly IGuiCommands _guiCommands;
     private readonly ObjectFinder _objectFinder;
     private readonly ICompositeMemberRegistry _registry;
+    private readonly IDialogService _dialogService;
+    private readonly INameVerifier _nameVerifier;
 
     public CompositeMemberLogic(
         ISelectedState selectedState,
@@ -34,7 +37,9 @@ public class CompositeMemberLogic
         IUndoManager undoManager,
         IGuiCommands guiCommands,
         ObjectFinder objectFinder,
-        ICompositeMemberRegistry registry)
+        ICompositeMemberRegistry registry,
+        IDialogService dialogService,
+        INameVerifier nameVerifier)
     {
         _selectedState = selectedState;
         _exposeVariableService = exposeVariableService;
@@ -42,6 +47,8 @@ public class CompositeMemberLogic
         _guiCommands = guiCommands;
         _objectFinder = objectFinder;
         _registry = registry;
+        _dialogService = dialogService;
+        _nameVerifier = nameVerifier;
     }
 
     /// <summary>
@@ -243,6 +250,24 @@ public class CompositeMemberLogic
         }
         //////////////////////End Early Out/////////////////////
 
+        // Single prompt for one base name; each channel is exposed as base + channelRootName. Suffixing the
+        // full root name (e.g. "StrokeRed", not just "Red") reproduces the historical per-channel default and
+        // keeps affixed colors (Stroke/Fill/gradient) from colliding.
+        string message = $"Enter a base name. Channels {string.Join(", ", channelRootNames)} will be appended:";
+        string title = "Expose color";
+
+        GetUserStringOptions options = new()
+        {
+            InitialValue = instance.Name,
+            Validator = (baseName) => ValidateBaseName(baseName, channelRootNames, element),
+        };
+
+        if (_dialogService.GetUserString(message, title, options) is not { } enteredBaseName)
+        {
+            // User cancelled: expose nothing.
+            return;
+        }
+
         using IDisposable undoLock = _undoManager.RequestLock();
 
         List<VariableSave> toRevert = new();
@@ -255,8 +280,9 @@ public class CompositeMemberLogic
                 break;
             }
 
+            string exposedName = enteredBaseName + rootName;
             OptionallyAttemptedGeneralResponse<VariableSave> response =
-                _exposeVariableService.HandleExposeVariableClick(instance, rootName);
+                _exposeVariableService.ExposeVariable(instance, rootName, exposedName);
 
             if (response.DidAttempt && response.Succeeded == false)
             {
@@ -275,6 +301,23 @@ public class CompositeMemberLogic
                 _exposeVariableService.HandleUnexposeVariableClick(variableToRevert, element);
             }
         }
+    }
+
+    /// <summary>
+    /// Validates the single base name by checking every derived channel name (base + root name). Returns the
+    /// first failure reason, or null if all derived names are valid.
+    /// </summary>
+    private string? ValidateBaseName(string? baseName, IReadOnlyList<string> channelRootNames, ElementSave element)
+    {
+        foreach (string rootName in channelRootNames)
+        {
+            string derivedName = (baseName ?? "") + rootName;
+            if (!_nameVerifier.IsVariableNameValid(derivedName, element, null!, out string? whyNot))
+            {
+                return whyNot;
+            }
+        }
+        return null;
     }
 
     private bool IsChannelExposed(string channelRootName, ElementSave element, InstanceSave? instance)

@@ -142,7 +142,9 @@ public partial class PropertyGridManager
             _undoManager,
             _guiCommands,
             _objectFinder,
-            Locator.GetRequiredService<ICompositeMemberRegistry>());
+            Locator.GetRequiredService<ICompositeMemberRegistry>(),
+            _dialogService,
+            Locator.GetRequiredService<Gum.Managers.INameVerifier>());
         var deleteVariableService = Locator.GetRequiredService<IDeleteVariableService>();
         var editVariableService = Locator.GetRequiredService<IEditVariableService>();
         var hotkeyManager = Locator.GetRequiredService<IHotkeyManager>();
