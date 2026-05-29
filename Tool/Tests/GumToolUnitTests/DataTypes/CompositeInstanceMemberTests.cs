@@ -84,6 +84,27 @@ public class CompositeInstanceMemberTests
     }
 
     [Fact]
+    public void SetValue_ShouldRaiseAfterComposite_EvenWhenAChannelThrows()
+    {
+        // AfterComposite is where the consumer disposes the undo lock taken in BeforeComposite. If a
+        // channel write throws and AfterComposite is skipped, the lock leaks and suppresses all further
+        // undo recording for the session. The write must be wrapped so AfterComposite always runs.
+        FakeChannelMember red = new();
+        FakeChannelMember green = new() { ThrowOnSet = true };
+        FakeChannelMember blue = new();
+
+        CompositeInstanceMember composite = MakeComposite(red, green, blue);
+
+        int afterCount = 0;
+        composite.AfterComposite += _ => afterCount++;
+
+        Should.Throw<InvalidOperationException>(() =>
+            composite.SetValue((1 << 16) | (2 << 8) | 3, SetPropertyCommitType.Full));
+
+        afterCount.ShouldBe(1);
+    }
+
+    [Fact]
     public void SetValue_ShouldRaiseBeforeAndAfterCompositeExactlyOnce()
     {
         CompositeInstanceMember composite = MakeComposite(new(), new(), new());
@@ -96,6 +117,28 @@ public class CompositeInstanceMemberTests
         composite.SetValue((1 << 16) | (2 << 8) | 3, SetPropertyCommitType.Full);
 
         beforeCount.ShouldBe(1);
+        afterCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void SetValue_ShouldThrowInvalidOperation_AndStillRaiseAfterComposite_WhenDecomposeArityMismatches()
+    {
+        // A descriptor whose Decompose returns the wrong number of values would otherwise throw
+        // IndexOutOfRange deep in the loop; the explicit guard gives a diagnosable message and the
+        // try/finally still runs AfterComposite so the undo lock is released.
+        CompositeInstanceMember composite = new(
+            "Composite",
+            new FakeChannelMember[] { new(), new(), new() },
+            typeof(int),
+            Compose,
+            _ => new object?[] { 1, 2 });
+
+        int afterCount = 0;
+        composite.AfterComposite += _ => afterCount++;
+
+        Should.Throw<InvalidOperationException>(() =>
+            composite.SetValue(123, SetPropertyCommitType.Full));
+
         afterCount.ShouldBe(1);
     }
 
@@ -118,6 +161,8 @@ public class CompositeInstanceMemberTests
 
         public int BackingValue { get; set; }
 
+        public bool ThrowOnSet { get; set; }
+
         public override bool IsDefault
         {
             get => _isDefault;
@@ -134,7 +179,14 @@ public class CompositeInstanceMemberTests
         {
             CustomGetEvent += _ => BackingValue;
             CustomGetTypeEvent += _ => typeof(int);
-            CustomSetPropertyEvent += (_, args) => BackingValue = (int)args.Value!;
+            CustomSetPropertyEvent += (_, args) =>
+            {
+                if (ThrowOnSet)
+                {
+                    throw new InvalidOperationException("Simulated channel write failure.");
+                }
+                BackingValue = (int)args.Value!;
+            };
         }
     }
 }

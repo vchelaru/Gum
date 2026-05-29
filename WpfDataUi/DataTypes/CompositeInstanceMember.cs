@@ -39,6 +39,12 @@ public class CompositeInstanceMember : InstanceMember
     /// <inheritdoc/>
     public override bool IsDefault
     {
+        // The getter is read by the grid to show default vs. set state. The setter forwards to each channel
+        // (mirroring MultiSelectInstanceMember). It is currently only reachable if SupportsMakeDefault is
+        // re-enabled on the composite — the consumer (CompositeMemberLogic) sets SupportsMakeDefault = false
+        // and drives "Make Default" through each channel's IsDefault directly. Do NOT delete this override:
+        // without it the base InstanceMember.IsDefault setter runs, which wipes the value to its type default
+        // on ANY assignment (true or false) rather than deferring to the channels.
         get => ChannelMembers.All(channel => channel.IsDefault);
         set
         {
@@ -104,17 +110,32 @@ public class CompositeInstanceMember : InstanceMember
 
     private void HandleCustomSet(object owner, SetPropertyArgs args)
     {
+        // BeforeComposite typically takes a single undo lock (see CompositeMemberLogic) that AfterComposite
+        // disposes. The channel writes must run inside try/finally so AfterComposite ALWAYS fires even if a
+        // channel's SetValue throws — otherwise the undo lock would leak and silently suppress all further
+        // undo recording for the rest of the session.
         BeforeComposite?.Invoke(args);
 
-        if (args.Value != null)
+        try
         {
-            object?[] decomposed = _decompose(args.Value);
-            for (int i = 0; i < ChannelMembers.Count; i++)
+            if (args.Value != null)
             {
-                ChannelMembers[i].SetValue(decomposed[i], args.CommitType);
+                object?[] decomposed = _decompose(args.Value);
+                if (decomposed.Length != ChannelMembers.Count)
+                {
+                    throw new InvalidOperationException(
+                        $"Decompose returned {decomposed.Length} value(s) but there are {ChannelMembers.Count} " +
+                        "channel(s); a composite descriptor's Decompose must return exactly one value per channel.");
+                }
+                for (int i = 0; i < ChannelMembers.Count; i++)
+                {
+                    ChannelMembers[i].SetValue(decomposed[i], args.CommitType);
+                }
             }
         }
-
-        AfterComposite?.Invoke(args);
+        finally
+        {
+            AfterComposite?.Invoke(args);
+        }
     }
 }
