@@ -10,4 +10,4 @@ ColoredCircle are round shapes which can be filled in or drawn as an outline, wi
 
 <figure><img src="../../../.gitbook/assets/image (143).png" alt=""><figcaption><p>A default ColoredCircle</p></figcaption></figure>
 
-ColoredCircles support Skia properties such as Has Dropshadow, Is Filled, and Use Gradient. For more information and examples, see the Skia Standard Element [General Properties pages](general-properties/).
+ColoredCircles support shape properties such as Has Dropshadow, Is Filled, and Use Gradient. For more information and examples, see the [Shape Properties](../shape-properties/README.md) pages.
