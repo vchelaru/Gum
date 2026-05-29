@@ -14,8 +14,8 @@ public class MenuVisual : BaseMenuVisual
 {
     private const float SeparatorHeight = 1f;
 
-    private readonly ColoredRectangleRuntime _fill;
-    private readonly ColoredRectangleRuntime _bottomSeparator;
+    private readonly RectangleRuntime _fill;
+    private readonly RectangleRuntime _bottomSeparator;
 
     public MenuVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -32,9 +32,9 @@ public class MenuVisual : BaseMenuVisual
         AddChild(InnerPanelInstance);
     }
 
-    private static ColoredRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        ColoredRectangleRuntime fill = new ColoredRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "Retro95MenuFill";
         fill.X = 0; fill.Y = 0;
         fill.XUnits = GeneralUnitType.PixelsFromMiddle;
@@ -44,13 +44,15 @@ public class MenuVisual : BaseMenuVisual
         fill.Width = 0; fill.Height = 0;
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
-        fill.Color = Retro95Colors.Surface;
+        fill.IsFilled = true;
+        fill.FillColor = Retro95Colors.Surface;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static ColoredRectangleRuntime CreateBottomSeparator()
+    private static RectangleRuntime CreateBottomSeparator()
     {
-        ColoredRectangleRuntime separator = new ColoredRectangleRuntime();
+        RectangleRuntime separator = new RectangleRuntime();
         separator.Name = "Retro95MenuDivider";
         separator.X = 0; separator.Y = 0;
         separator.XUnits = GeneralUnitType.PixelsFromMiddle;
@@ -61,7 +63,9 @@ public class MenuVisual : BaseMenuVisual
         separator.Height = SeparatorHeight;
         separator.WidthUnits = DimensionUnitType.RelativeToParent;
         separator.HeightUnits = DimensionUnitType.Absolute;
-        separator.Color = Retro95Colors.HairlineDivider;
+        separator.IsFilled = true;
+        separator.FillColor = Retro95Colors.HairlineDivider;
+        separator.StrokeWidth = 0;
         return separator;
     }
 }

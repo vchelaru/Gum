@@ -64,9 +64,9 @@ public static class Retro95Theme
         // All live in the bundled DejaVu Sans Mono icon font.
         BmfcSave.AddCharacters("✓✕▼▲◀▶■");
 
-        // Retro95's RadioButton uses ColoredCircleRuntime (the only circular
+        // Retro95's RadioButton uses CircleRuntime (the only circular
         // chrome in the theme — everything else is a rectangular bevel built
-        // from ColoredRectangleRuntime strips). Apos.Shapes' ShapeRenderer
+        // from RectangleRuntime strips). Apos.Shapes' ShapeRenderer
         // must be initialized for that one control. Guarded for the case
         // where the host app already initialized it.
         if (!ShapeRenderer.Self.IsInitialized)
@@ -203,5 +203,16 @@ public static class Retro95Theme
 
         FrameworkElement.DefaultFormsTemplates[typeof(Tooltip)] =
             new VisualTemplate((_, c) => new TooltipVisual(tryCreateFormsObject: c));
+
+        // Controls Retro95 does not restyle are pinned to their stock V3 visuals so
+        // Retro95Theme.Apply fully specifies the template set. FrameworkElement.DefaultFormsTemplates
+        // is global static state; without re-registering these, re-applying a theme at runtime
+        // (theme switching) would leave a previously-applied theme's visual in place for these
+        // controls. These match what a single-theme Retro95 run already falls back to.
+        FrameworkElement.DefaultFormsTemplates[typeof(ItemsControl)] =
+            new VisualTemplate((_, c) => new Gum.Forms.DefaultVisuals.V3.ItemsControlVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(Gum.Forms.Controls.Games.DialogBox)] =
+            new VisualTemplate((_, c) => new Gum.Forms.DefaultVisuals.V3.DialogBoxVisual(tryCreateFormsObject: c));
     }
 }

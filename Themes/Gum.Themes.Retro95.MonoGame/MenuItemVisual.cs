@@ -19,7 +19,7 @@ public class MenuItemVisual : BaseMenuItemVisual
     private const float HorizontalPadding = 10f;
     private const float VerticalPadding = 2f;
 
-    private readonly ColoredRectangleRuntime _fill;
+    private readonly RectangleRuntime _fill;
 
     public MenuItemVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject: false)
@@ -82,14 +82,14 @@ public class MenuItemVisual : BaseMenuItemVisual
 
     private void Apply(Color fill, Color text)
     {
-        _fill.Color = fill;
+        _fill.FillColor = fill;
         TextInstance.Color = text;
         SubmenuIndicatorInstance.Color = text;
     }
 
-    private static ColoredRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        ColoredRectangleRuntime fill = new ColoredRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "Retro95MenuItemFill";
         fill.X = 0; fill.Y = 0;
         fill.XUnits = GeneralUnitType.PixelsFromMiddle;
@@ -99,7 +99,9 @@ public class MenuItemVisual : BaseMenuItemVisual
         fill.Width = 0; fill.Height = 0;
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
-        fill.Color = Color.Transparent;
+        fill.IsFilled = true;
+        fill.FillColor = Color.Transparent;
+        fill.StrokeWidth = 0;
         return fill;
     }
 }

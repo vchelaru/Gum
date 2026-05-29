@@ -12,14 +12,14 @@ namespace Gum.Themes.Retro95;
 /// </summary>
 public class SplitterVisual : BaseSplitterVisual
 {
-    private readonly ColoredRectangleRuntime _fill;
+    private readonly RectangleRuntime _fill;
 
     public SplitterVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
     {
         Background.Parent = null;
 
-        _fill = new ColoredRectangleRuntime();
+        _fill = new RectangleRuntime();
         _fill.Name = "Retro95SplitterFill";
         _fill.X = 0; _fill.Y = 0;
         _fill.XUnits = GeneralUnitType.PixelsFromMiddle;
@@ -29,7 +29,9 @@ public class SplitterVisual : BaseSplitterVisual
         _fill.Width = 0; _fill.Height = 0;
         _fill.WidthUnits = DimensionUnitType.RelativeToParent;
         _fill.HeightUnits = DimensionUnitType.RelativeToParent;
-        _fill.Color = Retro95Colors.Surface;
+        _fill.IsFilled = true;
+        _fill.FillColor = Retro95Colors.Surface;
+        _fill.StrokeWidth = 0;
         AddChild(_fill);
     }
 }

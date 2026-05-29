@@ -13,7 +13,7 @@ namespace Gum.Themes.Retro95;
 /// </summary>
 public class ListBoxItemVisual : BaseListBoxItemVisual
 {
-    private readonly ColoredRectangleRuntime _fill;
+    private readonly RectangleRuntime _fill;
 
     public ListBoxItemVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -22,7 +22,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         FocusedIndicator.Parent = null;
         TextInstance.Parent = null;
 
-        _fill = new ColoredRectangleRuntime();
+        _fill = new RectangleRuntime();
         _fill.Name = "Retro95ListItemFill";
         _fill.X = 0; _fill.Y = 0;
         _fill.XUnits = GeneralUnitType.PixelsFromMiddle;
@@ -32,7 +32,9 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         _fill.Width = 0; _fill.Height = 0;
         _fill.WidthUnits = DimensionUnitType.RelativeToParent;
         _fill.HeightUnits = DimensionUnitType.RelativeToParent;
-        _fill.Color = Color.Transparent;
+        _fill.IsFilled = true;
+        _fill.FillColor = Color.Transparent;
+        _fill.StrokeWidth = 0;
         AddChild(_fill);
 
         AddChild(TextInstance);
@@ -60,7 +62,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
 
     private void Apply(Color fill, Color text)
     {
-        _fill.Color = fill;
+        _fill.FillColor = fill;
         TextInstance.Color = text;
     }
 }

@@ -23,7 +23,7 @@ public enum BevelMode
 }
 
 /// <summary>
-/// A Retro95 beveled chrome rectangle. Composes 8 thin <see cref="ColoredRectangleRuntime"/>
+/// A Retro95 beveled chrome rectangle. Composes 8 thin <see cref="RectangleRuntime"/>
 /// strips along the four edges to reproduce the Win95 CSS 4-layer inset box-shadow:
 /// <c>inset 1px 1px 0 #fff, inset 2px 2px 0 #DFDFDF, inset -1px -1px 0 #808080, inset -2px -2px 0 #404040</c>.
 /// <para>
@@ -36,7 +36,7 @@ public enum BevelMode
 /// The Win95 chrome has square corners by design — no <c>CornerRadius</c> property exists
 /// here. If a control needs a focus indicator, the convention is a 1-pixel dotted inset border;
 /// since the runtime has no dotted-stroke primitive, this theme approximates it with a single
-/// dark ColoredRectangleRuntime inset 4 px from the body edge (see consumers like ButtonVisual).
+/// dark RectangleRuntime inset 4 px from the body edge (see consumers like ButtonVisual).
 /// </para>
 /// </summary>
 public sealed class Retro95Bevel
@@ -44,26 +44,26 @@ public sealed class Retro95Bevel
     private const float OuterStripThickness = 1f;
     private const float InnerStripThickness = 1f;
 
-    private readonly ColoredRectangleRuntime _fill;
+    private readonly RectangleRuntime _fill;
 
     // Outer ring (1 px on each edge).
-    private readonly ColoredRectangleRuntime _outerTop;
-    private readonly ColoredRectangleRuntime _outerLeft;
-    private readonly ColoredRectangleRuntime _outerRight;
-    private readonly ColoredRectangleRuntime _outerBottom;
+    private readonly RectangleRuntime _outerTop;
+    private readonly RectangleRuntime _outerLeft;
+    private readonly RectangleRuntime _outerRight;
+    private readonly RectangleRuntime _outerBottom;
 
     // Inner ring (1 px just inside the outer ring).
-    private readonly ColoredRectangleRuntime _innerTop;
-    private readonly ColoredRectangleRuntime _innerLeft;
-    private readonly ColoredRectangleRuntime _innerRight;
-    private readonly ColoredRectangleRuntime _innerBottom;
+    private readonly RectangleRuntime _innerTop;
+    private readonly RectangleRuntime _innerLeft;
+    private readonly RectangleRuntime _innerRight;
+    private readonly RectangleRuntime _innerBottom;
 
     private Retro95Bevel(
-        ColoredRectangleRuntime fill,
-        ColoredRectangleRuntime outerTop, ColoredRectangleRuntime outerLeft,
-        ColoredRectangleRuntime outerRight, ColoredRectangleRuntime outerBottom,
-        ColoredRectangleRuntime innerTop, ColoredRectangleRuntime innerLeft,
-        ColoredRectangleRuntime innerRight, ColoredRectangleRuntime innerBottom)
+        RectangleRuntime fill,
+        RectangleRuntime outerTop, RectangleRuntime outerLeft,
+        RectangleRuntime outerRight, RectangleRuntime outerBottom,
+        RectangleRuntime innerTop, RectangleRuntime innerLeft,
+        RectangleRuntime innerRight, RectangleRuntime innerBottom)
     {
         _fill = fill;
         _outerTop = outerTop;
@@ -77,7 +77,7 @@ public sealed class Retro95Bevel
     }
 
     /// <summary>The central fill rectangle. Color defaults to <see cref="Retro95Colors.Surface"/>.</summary>
-    public ColoredRectangleRuntime Fill => _fill;
+    public RectangleRuntime Fill => _fill;
 
     /// <summary>
     /// Adds a beveled chrome block to <paramref name="parent"/>. Returns the bevel handle for
@@ -86,19 +86,19 @@ public sealed class Retro95Bevel
     /// </summary>
     public static Retro95Bevel AddTo(GraphicalUiElement parent, BevelMode mode, Color? fillColor = null)
     {
-        ColoredRectangleRuntime fill = NewStretchedRect("Retro95BevelFill");
-        fill.Color = fillColor ?? Retro95Colors.Surface;
+        RectangleRuntime fill = NewStretchedRect("Retro95BevelFill");
+        fill.FillColor = fillColor ?? Retro95Colors.Surface;
         parent.AddChild(fill);
 
-        ColoredRectangleRuntime outerTop = NewEdgeStrip("Retro95BevelOuterTop", Edge.Top, OuterStripThickness, inset: 0f);
-        ColoredRectangleRuntime outerLeft = NewEdgeStrip("Retro95BevelOuterLeft", Edge.Left, OuterStripThickness, inset: 0f);
-        ColoredRectangleRuntime outerRight = NewEdgeStrip("Retro95BevelOuterRight", Edge.Right, OuterStripThickness, inset: 0f);
-        ColoredRectangleRuntime outerBottom = NewEdgeStrip("Retro95BevelOuterBottom", Edge.Bottom, OuterStripThickness, inset: 0f);
+        RectangleRuntime outerTop = NewEdgeStrip("Retro95BevelOuterTop", Edge.Top, OuterStripThickness, inset: 0f);
+        RectangleRuntime outerLeft = NewEdgeStrip("Retro95BevelOuterLeft", Edge.Left, OuterStripThickness, inset: 0f);
+        RectangleRuntime outerRight = NewEdgeStrip("Retro95BevelOuterRight", Edge.Right, OuterStripThickness, inset: 0f);
+        RectangleRuntime outerBottom = NewEdgeStrip("Retro95BevelOuterBottom", Edge.Bottom, OuterStripThickness, inset: 0f);
 
-        ColoredRectangleRuntime innerTop = NewEdgeStrip("Retro95BevelInnerTop", Edge.Top, InnerStripThickness, inset: OuterStripThickness);
-        ColoredRectangleRuntime innerLeft = NewEdgeStrip("Retro95BevelInnerLeft", Edge.Left, InnerStripThickness, inset: OuterStripThickness);
-        ColoredRectangleRuntime innerRight = NewEdgeStrip("Retro95BevelInnerRight", Edge.Right, InnerStripThickness, inset: OuterStripThickness);
-        ColoredRectangleRuntime innerBottom = NewEdgeStrip("Retro95BevelInnerBottom", Edge.Bottom, InnerStripThickness, inset: OuterStripThickness);
+        RectangleRuntime innerTop = NewEdgeStrip("Retro95BevelInnerTop", Edge.Top, InnerStripThickness, inset: OuterStripThickness);
+        RectangleRuntime innerLeft = NewEdgeStrip("Retro95BevelInnerLeft", Edge.Left, InnerStripThickness, inset: OuterStripThickness);
+        RectangleRuntime innerRight = NewEdgeStrip("Retro95BevelInnerRight", Edge.Right, InnerStripThickness, inset: OuterStripThickness);
+        RectangleRuntime innerBottom = NewEdgeStrip("Retro95BevelInnerBottom", Edge.Bottom, InnerStripThickness, inset: OuterStripThickness);
 
         parent.AddChild(outerTop);
         parent.AddChild(outerLeft);
@@ -116,7 +116,7 @@ public sealed class Retro95Bevel
         return bevel;
     }
 
-    /// <summary>Flip the bevel's edge colors. Cheap (just sets <see cref="ColoredRectangleRuntime.Color"/>
+    /// <summary>Flip the bevel's edge colors. Cheap (just sets <see cref="RectangleRuntime.FillColor"/>
     /// on 8 thin strips); call from a state callback whenever press / inset state changes.</summary>
     public void SetMode(BevelMode mode)
     {
@@ -124,26 +124,26 @@ public sealed class Retro95Bevel
         {
             case BevelMode.Raised:
                 // top-left light, bottom-right dark
-                _outerTop.Color = Retro95Colors.HighlightOuter;
-                _outerLeft.Color = Retro95Colors.HighlightOuter;
-                _innerTop.Color = Retro95Colors.HighlightInner;
-                _innerLeft.Color = Retro95Colors.HighlightInner;
-                _outerBottom.Color = Retro95Colors.ShadowOuter;
-                _outerRight.Color = Retro95Colors.ShadowOuter;
-                _innerBottom.Color = Retro95Colors.ShadowInner;
-                _innerRight.Color = Retro95Colors.ShadowInner;
+                _outerTop.FillColor = Retro95Colors.HighlightOuter;
+                _outerLeft.FillColor = Retro95Colors.HighlightOuter;
+                _innerTop.FillColor = Retro95Colors.HighlightInner;
+                _innerLeft.FillColor = Retro95Colors.HighlightInner;
+                _outerBottom.FillColor = Retro95Colors.ShadowOuter;
+                _outerRight.FillColor = Retro95Colors.ShadowOuter;
+                _innerBottom.FillColor = Retro95Colors.ShadowInner;
+                _innerRight.FillColor = Retro95Colors.ShadowInner;
                 break;
 
             case BevelMode.Sunken:
                 // top-left dark, bottom-right light
-                _outerTop.Color = Retro95Colors.ShadowOuter;
-                _outerLeft.Color = Retro95Colors.ShadowOuter;
-                _innerTop.Color = Retro95Colors.ShadowInner;
-                _innerLeft.Color = Retro95Colors.ShadowInner;
-                _outerBottom.Color = Retro95Colors.HighlightOuter;
-                _outerRight.Color = Retro95Colors.HighlightOuter;
-                _innerBottom.Color = Retro95Colors.HighlightInner;
-                _innerRight.Color = Retro95Colors.HighlightInner;
+                _outerTop.FillColor = Retro95Colors.ShadowOuter;
+                _outerLeft.FillColor = Retro95Colors.ShadowOuter;
+                _innerTop.FillColor = Retro95Colors.ShadowInner;
+                _innerLeft.FillColor = Retro95Colors.ShadowInner;
+                _outerBottom.FillColor = Retro95Colors.HighlightOuter;
+                _outerRight.FillColor = Retro95Colors.HighlightOuter;
+                _innerBottom.FillColor = Retro95Colors.HighlightInner;
+                _innerRight.FillColor = Retro95Colors.HighlightInner;
                 break;
 
             case BevelMode.Inset:
@@ -151,38 +151,38 @@ public sealed class Retro95Bevel
                 // outer light + inner shadow on bottom-right. Same as Sunken
                 // but with the highlight/shadow swapped on the inner ring so
                 // the white inner band reads as the input fill catching light.
-                _outerTop.Color = Retro95Colors.ShadowInner;
-                _outerLeft.Color = Retro95Colors.ShadowInner;
-                _innerTop.Color = Retro95Colors.ShadowOuter;
-                _innerLeft.Color = Retro95Colors.ShadowOuter;
-                _outerBottom.Color = Retro95Colors.HighlightInner;
-                _outerRight.Color = Retro95Colors.HighlightInner;
-                _innerBottom.Color = Retro95Colors.HighlightOuter;
-                _innerRight.Color = Retro95Colors.HighlightOuter;
+                _outerTop.FillColor = Retro95Colors.ShadowInner;
+                _outerLeft.FillColor = Retro95Colors.ShadowInner;
+                _innerTop.FillColor = Retro95Colors.ShadowOuter;
+                _innerLeft.FillColor = Retro95Colors.ShadowOuter;
+                _outerBottom.FillColor = Retro95Colors.HighlightInner;
+                _outerRight.FillColor = Retro95Colors.HighlightInner;
+                _innerBottom.FillColor = Retro95Colors.HighlightOuter;
+                _innerRight.FillColor = Retro95Colors.HighlightOuter;
                 break;
 
             case BevelMode.StatusPanel:
                 // 1-pixel inverse bevel — only the outer ring is colored, inner ring matches the fill.
-                _outerTop.Color = Retro95Colors.ShadowInner;
-                _outerLeft.Color = Retro95Colors.ShadowInner;
-                _outerBottom.Color = Retro95Colors.HighlightOuter;
-                _outerRight.Color = Retro95Colors.HighlightOuter;
-                _innerTop.Color = _fill.Color;
-                _innerLeft.Color = _fill.Color;
-                _innerBottom.Color = _fill.Color;
-                _innerRight.Color = _fill.Color;
+                _outerTop.FillColor = Retro95Colors.ShadowInner;
+                _outerLeft.FillColor = Retro95Colors.ShadowInner;
+                _outerBottom.FillColor = Retro95Colors.HighlightOuter;
+                _outerRight.FillColor = Retro95Colors.HighlightOuter;
+                _innerTop.FillColor = _fill.FillColor;
+                _innerLeft.FillColor = _fill.FillColor;
+                _innerBottom.FillColor = _fill.FillColor;
+                _innerRight.FillColor = _fill.FillColor;
                 break;
         }
     }
 
     /// <summary>Set the central fill color (e.g. white for text-input fills, gray for button bodies).</summary>
-    public void SetFill(Color color) => _fill.Color = color;
+    public void SetFill(Color color) => _fill.FillColor = color;
 
     private enum Edge { Top, Left, Right, Bottom }
 
-    private static ColoredRectangleRuntime NewStretchedRect(string name)
+    private static RectangleRuntime NewStretchedRect(string name)
     {
-        ColoredRectangleRuntime r = new ColoredRectangleRuntime();
+        RectangleRuntime r = new RectangleRuntime();
         r.Name = name;
         r.X = 0; r.Y = 0;
         r.XUnits = GeneralUnitType.PixelsFromMiddle;
@@ -192,13 +192,17 @@ public sealed class Retro95Bevel
         r.Width = 0; r.Height = 0;
         r.WidthUnits = DimensionUnitType.RelativeToParent;
         r.HeightUnits = DimensionUnitType.RelativeToParent;
+        r.IsFilled = true;
+        r.StrokeWidth = 0;
         return r;
     }
 
-    private static ColoredRectangleRuntime NewEdgeStrip(string name, Edge edge, float thickness, float inset)
+    private static RectangleRuntime NewEdgeStrip(string name, Edge edge, float thickness, float inset)
     {
-        ColoredRectangleRuntime r = new ColoredRectangleRuntime();
+        RectangleRuntime r = new RectangleRuntime();
         r.Name = name;
+        r.IsFilled = true;
+        r.StrokeWidth = 0;
         switch (edge)
         {
             case Edge.Top:
