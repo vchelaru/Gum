@@ -34,9 +34,10 @@ public class ExpanderVisual : InteractiveGue
         headerContainer.HeightUnits = DimensionUnitType.Absolute;
         this.Children.Add(headerContainer);
 
-        var headerBackground = new ColoredRectangleRuntime();
+        var headerBackground = new RectangleRuntime();
         headerBackground.Dock(Gum.Wireframe.Dock.Fill);
-        headerBackground.Color = new Color(50, 50, 50);
+        headerBackground.FillColor = new Color(50, 50, 50);
+        headerBackground.StrokeWidth = 0;
         headerContainer.Children.Add(headerBackground);
 
         var headerContent = new ContainerRuntime();

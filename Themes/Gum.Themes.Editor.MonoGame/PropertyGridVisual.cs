@@ -87,10 +87,10 @@ public class PropertyGridVisual : ContainerRuntime
                 continue;
             }
 
-            var background = child.Children[0] as ColoredRectangleRuntime;
+            var background = child.Children[0] as RectangleRuntime;
             if (background != null)
             {
-                background.Color = visibleIndex % 2 == 0 ? EvenRowColor : OddRowColor;
+                background.FillColor = visibleIndex % 2 == 0 ? EvenRowColor : OddRowColor;
             }
 
             visibleIndex++;
@@ -110,8 +110,9 @@ public class PropertyGridVisual : ContainerRuntime
 
         if (AlternatingRowColorsEnabled)
         {
-            var background = new ColoredRectangleRuntime();
+            var background = new RectangleRuntime();
             background.Dock(Gum.Wireframe.Dock.Fill);
+            background.StrokeWidth = 0;
             row.Children.Add(background);
         }
 
