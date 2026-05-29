@@ -9,22 +9,30 @@ Shapes (Skia) support varies per platform. See below to see information about yo
 MonoGame and KNI projects can use the following shapes:
 
 * Arc
-* ColoredCircle
-* RoundedRectangle
+* Circle
+* Rectangle
+
+The outline (stroke) of Circle and Rectangle renders out of the box. The fill and the richer effects — gradients, drop shadows, and dashed strokes — are provided by the shape support package (`Gum.Shapes.MonoGame` or `Gum.Shapes.KNI`). Without the package those properties are saved but do not draw.
 
 Other types, such as SVG or Lottie, are not currently supported.
 
-These shapes are rendered using the Apos.Shapes library.
+For information on adding the shape support package to your project, see the [Shapes (Apos.Shapes)](../../../code/standard-visuals/shapes-apos.shapes.md) page.
 
-For information on adding Apos.Shapes to your library, see the [Shapes (Apos.Shapes)](../../../code/standard-visuals/shapes-apos.shapes.md) page.
+{% hint style="info" %}
+The older ColoredCircle, RoundedRectangle, and SolidRectangle shapes are being phased out in favor of Circle and Rectangle. They remain available so existing projects keep working, but will be removed in a future release.
+{% endhint %}
 {% endtab %}
 
 {% tab title="FNA" %}
-Apos.Shapes may work on FNA but has not been thoroughly tested. We are looking for contributors to help test this.
+FNA renders the outline (stroke) of Circle and Rectangle only. The fill and the richer effects (gradients, drop shadows, dashed strokes) are not available on FNA because there is no shape support package for it. We are looking for contributors to help expand FNA shape support.
 {% endtab %}
 
 {% tab title="Raylib" %}
-Shapes are not yet implemented in raylib. Please create an issue on GitHub or contact us on Discord if you would like to see this implemented.
+Raylib supports Circle and Rectangle — including fill, gradients, and drop shadows — natively, with no extra package required.
+
+{% hint style="info" %}
+Gradient-on-outline (a gradient applied to the stroke rather than the fill) is not yet implemented on raylib.
+{% endhint %}
 {% endtab %}
 
 {% tab title="Skia platforms (Maui, WPF, Silk.NET)" %}

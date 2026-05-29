@@ -26,6 +26,14 @@ Run the upgrade `gum upgrade` or `~/bin/gum upgrade`
 {% endtab %}
 {% endtabs %}
 
+### Shape standard elements in the tool
+
+New projects now seed the **Circle** and **Rectangle** standard elements, which provide a full fill, outline, gradient, drop shadow, dashed-stroke, and corner-radius surface. The older shape standard elements — **ColoredCircle**, **ColoredRectangle**, **RoundedRectangle**, and **SolidRectangle** — are being phased out, but existing projects that use them keep working; you do not need to replace them to upgrade.
+
+{% hint style="info" %}
+The tool only shows the new Circle and Rectangle fill, gradient, and drop shadow variable categories for version 3 (or later) projects. New projects use version 3 by default.
+{% endhint %}
+
 ## Upgrading Runtime
 
 The `2026.6` NuGet packages have not yet been published. Once released, upgrade your Gum NuGet packages to the new version. For more information, see the NuGet packages for your particular platform:
