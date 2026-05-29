@@ -35,9 +35,9 @@ internal sealed class ForestGladeButtonChrome
     public const float HoverGlowBlur = 24f;
     public const float PushedGlowBlur = 0f;
 
-    public RoundedRectangleRuntime Fill { get; }
-    public RoundedRectangleRuntime Border { get; }
-    public RoundedRectangleRuntime FocusRing { get; }
+    public RectangleRuntime Fill { get; }
+    public RectangleRuntime Border { get; }
+    public RectangleRuntime FocusRing { get; }
     public TextRuntime TextShadow { get; }
 
     private readonly TextRuntime _textInstance;
@@ -70,9 +70,9 @@ internal sealed class ForestGladeButtonChrome
         host.AddChild(textInstance);
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "ForestGladeButtonFill";
         fill.XUnits = GeneralUnitType.PixelsFromMiddle;
         fill.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -84,6 +84,7 @@ internal sealed class ForestGladeButtonChrome
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         ForestGladeLeaf.ApplyLarge(fill);
         fill.IsFilled = true;
+        fill.StrokeWidth = 0;
 
         // Vertical 2-stop linear gradient. Endpoints use PixelsFromSmall /
         // PixelsFromLarge (with value 0) rather than Percentage because the
@@ -105,14 +106,13 @@ internal sealed class ForestGladeButtonChrome
         fill.DropshadowColor = ForestGladePalette.DarkShadow;
         fill.DropshadowOffsetX = 0f;
         fill.DropshadowOffsetY = RestShadowOffsetY;
-        fill.DropshadowBlurX = RestShadowBlur;
-        fill.DropshadowBlurY = RestShadowBlur;
+        fill.DropshadowBlur = RestShadowBlur;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateBorder()
+    private static RectangleRuntime CreateBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "ForestGladeButtonBorder";
         border.XUnits = GeneralUnitType.PixelsFromMiddle;
         border.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -126,13 +126,13 @@ internal sealed class ForestGladeButtonChrome
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = ForestGladeColors.Border;
+        border.StrokeColor = ForestGladeColors.Border;
         return border;
     }
 
-    private static RoundedRectangleRuntime CreateFocusRing()
+    private static RectangleRuntime CreateFocusRing()
     {
-        RoundedRectangleRuntime ring = new RoundedRectangleRuntime();
+        RectangleRuntime ring = new RectangleRuntime();
         ring.Name = "ForestGladeButtonFocusRing";
         ring.XUnits = GeneralUnitType.PixelsFromMiddle;
         ring.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -150,7 +150,7 @@ internal sealed class ForestGladeButtonChrome
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = ForestGladeColors.SunPale * 0.45f;
+        ring.StrokeColor = ForestGladeColors.SunPale * 0.45f;
         ring.Visible = false;
         return ring;
     }
@@ -242,11 +242,10 @@ internal sealed class ForestGladeButtonChrome
     {
         Fill.Color1 = fillTop;
         Fill.Color2 = fillBottom;
-        Border.Color = border;
+        Border.StrokeColor = border;
         Fill.DropshadowColor = shadow;
         Fill.DropshadowOffsetY = shadowOffsetY;
-        Fill.DropshadowBlurX = shadowBlur;
-        Fill.DropshadowBlurY = shadowBlur;
+        Fill.DropshadowBlur = shadowBlur;
         Fill.HasDropshadow = shadowBlur > 0f;
         _textInstance.Color = text;
         TextShadow.Color = textShadow;

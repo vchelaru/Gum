@@ -31,7 +31,7 @@ public class ListBoxVisual : BaseListBoxVisual
     private static readonly Color HoverBorder = new Color(232, 255, 117, 240);
     private static readonly Color DisabledBorderColor = new Color(232, 255, 117, 50);
 
-    private static void ApplyLeafShape(RoundedRectangleRuntime r)
+    private static void ApplyLeafShape(RectangleRuntime r)
     {
         r.CornerRadius = SharpRadius;
         r.CustomRadiusTopLeft = SharpRadius;
@@ -40,9 +40,9 @@ public class ListBoxVisual : BaseListBoxVisual
         r.CustomRadiusBottomLeft = RoundedRadius;
     }
 
-    private readonly RoundedRectangleRuntime _focusRing;
-    private readonly RoundedRectangleRuntime _fill;
-    private readonly RoundedRectangleRuntime _border;
+    private readonly RectangleRuntime _focusRing;
+    private readonly RectangleRuntime _fill;
+    private readonly RectangleRuntime _border;
 
     public ListBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -83,9 +83,9 @@ public class ListBoxVisual : BaseListBoxVisual
         WireStates();
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "ForestGladeListBoxFill";
         fill.XUnits = GeneralUnitType.PixelsFromMiddle;
         fill.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -97,13 +97,14 @@ public class ListBoxVisual : BaseListBoxVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         ApplyLeafShape(fill);
         fill.IsFilled = true;
-        fill.Color = ForestGladePalette.InputFill;
+        fill.FillColor = ForestGladePalette.InputFill;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateBorder()
+    private static RectangleRuntime CreateBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "ForestGladeListBoxBorder";
         border.XUnits = GeneralUnitType.PixelsFromMiddle;
         border.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -117,14 +118,14 @@ public class ListBoxVisual : BaseListBoxVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = RestBorder;
+        border.StrokeColor = RestBorder;
         return border;
     }
 
-    private static RoundedRectangleRuntime CreateFocusRing()
+    private static RectangleRuntime CreateFocusRing()
     {
         const float halo = FocusRingInset;
-        RoundedRectangleRuntime ring = new RoundedRectangleRuntime();
+        RectangleRuntime ring = new RectangleRuntime();
         ring.Name = "ForestGladeListBoxFocusRing";
         ring.XUnits = GeneralUnitType.PixelsFromMiddle;
         ring.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -142,7 +143,7 @@ public class ListBoxVisual : BaseListBoxVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = ForestGladeColors.AccentHalo;
+        ring.StrokeColor = ForestGladeColors.AccentHalo;
         ring.Visible = false;
         return ring;
     }
@@ -162,8 +163,8 @@ public class ListBoxVisual : BaseListBoxVisual
 
     private void ApplyPalette(Color border, bool showFocusRing, bool fillDisabled = false)
     {
-        _fill.Color = fillDisabled ? ForestGladePalette.InputFillDisabled : ForestGladePalette.InputFill;
-        _border.Color = border;
+        _fill.FillColor = fillDisabled ? ForestGladePalette.InputFillDisabled : ForestGladePalette.InputFill;
+        _border.StrokeColor = border;
         _focusRing.Visible = showFocusRing;
     }
 }

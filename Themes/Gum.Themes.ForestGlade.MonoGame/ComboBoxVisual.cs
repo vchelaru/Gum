@@ -26,9 +26,9 @@ public class ComboBoxVisual : BaseComboBoxVisual
     private const float TextLeftPadding = 12f;
     private const float TextRightClearance = 4f;
 
-    private readonly RoundedRectangleRuntime _focusRing;
-    private readonly RoundedRectangleRuntime _fill;
-    private readonly RoundedRectangleRuntime _border;
+    private readonly RectangleRuntime _focusRing;
+    private readonly RectangleRuntime _fill;
+    private readonly RectangleRuntime _border;
     private readonly TextRuntime _dropdownGlyph;
 
     public ComboBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
@@ -60,9 +60,9 @@ public class ComboBoxVisual : BaseComboBoxVisual
         WireStates();
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "ForestGladeComboFill";
         fill.XUnits = GeneralUnitType.PixelsFromMiddle;
         fill.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -74,7 +74,8 @@ public class ComboBoxVisual : BaseComboBoxVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         ForestGladeLeaf.ApplyMedium(fill);
         fill.IsFilled = true;
-        fill.Color = ForestGladePalette.InputFill;
+        fill.FillColor = ForestGladePalette.InputFill;
+        fill.StrokeWidth = 0;
         // Same vertical dark gradient as the TextBox decoration so the closed
         // ComboBox reads as a sibling input chrome.
         fill.UseGradient = true;
@@ -92,9 +93,9 @@ public class ComboBoxVisual : BaseComboBoxVisual
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateBorder()
+    private static RectangleRuntime CreateBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "ForestGladeComboBorder";
         border.XUnits = GeneralUnitType.PixelsFromMiddle;
         border.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -108,14 +109,14 @@ public class ComboBoxVisual : BaseComboBoxVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = new Color(232, 255, 117, 56);
+        border.StrokeColor = new Color(232, 255, 117, 56);
         return border;
     }
 
-    private static RoundedRectangleRuntime CreateFocusRing()
+    private static RectangleRuntime CreateFocusRing()
     {
         const float halo = FocusRingInset;
-        RoundedRectangleRuntime ring = new RoundedRectangleRuntime();
+        RectangleRuntime ring = new RectangleRuntime();
         ring.Name = "ForestGladeComboFocusRing";
         ring.XUnits = GeneralUnitType.PixelsFromMiddle;
         ring.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -133,7 +134,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = ForestGladeColors.AccentHalo;
+        ring.StrokeColor = ForestGladeColors.AccentHalo;
         ring.Visible = false;
         return ring;
     }
@@ -201,10 +202,10 @@ public class ComboBoxVisual : BaseComboBoxVisual
     private void Apply(Color border, Color text, Color glyph, bool ring, bool fillDisabled)
     {
         Color baseFill = fillDisabled ? ForestGladePalette.InputFillDisabled : ForestGladePalette.InputFill;
-        _fill.Color = baseFill;
+        _fill.FillColor = baseFill;
         _fill.Color1 = Darken(baseFill, 0.65f);
         _fill.Color2 = baseFill;
-        _border.Color = border;
+        _border.StrokeColor = border;
         TextInstance.Color = text;
         _dropdownGlyph.Color = glyph;
         _focusRing.Visible = ring;

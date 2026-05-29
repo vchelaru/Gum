@@ -24,7 +24,7 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
     private const float FocusRingThickness = 3f;
     private static readonly Color RestBorder = new Color(232, 255, 117, 220);
 
-    private static void ApplyLeafShape(RoundedRectangleRuntime r)
+    private static void ApplyLeafShape(RectangleRuntime r)
     {
         r.CornerRadius = SharpRadius;
         r.CustomRadiusTopLeft = SharpRadius;
@@ -33,9 +33,9 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         r.CustomRadiusBottomLeft = RoundedRadius;
     }
 
-    private readonly RoundedRectangleRuntime _focusRing;
-    private readonly RoundedRectangleRuntime _fill;
-    private readonly RoundedRectangleRuntime _border;
+    private readonly RectangleRuntime _focusRing;
+    private readonly RectangleRuntime _fill;
+    private readonly RectangleRuntime _border;
 
     public ScrollViewerVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -77,9 +77,9 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         WireStates();
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "ForestGladeScrollViewerFill";
         fill.XUnits = GeneralUnitType.PixelsFromMiddle;
         fill.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -91,13 +91,14 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         ApplyLeafShape(fill);
         fill.IsFilled = true;
-        fill.Color = ForestGladePalette.InputFill;
+        fill.FillColor = ForestGladePalette.InputFill;
+        fill.StrokeWidth = 0;
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateBorder()
+    private static RectangleRuntime CreateBorder()
     {
-        RoundedRectangleRuntime border = new RoundedRectangleRuntime();
+        RectangleRuntime border = new RectangleRuntime();
         border.Name = "ForestGladeScrollViewerBorder";
         border.XUnits = GeneralUnitType.PixelsFromMiddle;
         border.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -111,14 +112,14 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.Color = RestBorder;
+        border.StrokeColor = RestBorder;
         return border;
     }
 
-    private static RoundedRectangleRuntime CreateFocusRing()
+    private static RectangleRuntime CreateFocusRing()
     {
         const float halo = FocusRingInset;
-        RoundedRectangleRuntime ring = new RoundedRectangleRuntime();
+        RectangleRuntime ring = new RectangleRuntime();
         ring.Name = "ForestGladeScrollViewerFocusRing";
         ring.XUnits = GeneralUnitType.PixelsFromMiddle;
         ring.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -136,7 +137,7 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.Color = ForestGladeColors.AccentHalo;
+        ring.StrokeColor = ForestGladeColors.AccentHalo;
         ring.Visible = false;
         return ring;
     }
@@ -145,13 +146,13 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
     {
         States.Enabled.Apply = () =>
         {
-            _border.Color = RestBorder;
+            _border.StrokeColor = RestBorder;
             _focusRing.Visible = false;
         };
 
         States.Focused.Apply = () =>
         {
-            _border.Color = ForestGladeColors.LeafBright;
+            _border.StrokeColor = ForestGladeColors.LeafBright;
             _focusRing.Visible = true;
         };
     }

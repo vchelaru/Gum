@@ -11,11 +11,11 @@ namespace Gum.Themes.ForestGlade;
 /// nodes — non-trivial to reproduce in shape primitives. We render the vine
 /// cord (a thin bark-colored rect down the middle) and leave the decorative
 /// leaf clusters out for v1; consumers can subclass and add leaf
-/// <c>ColoredCircleRuntime</c>s if needed.
+/// <c>CircleRuntime</c>s if needed.
 /// </summary>
 public class SplitterVisual : BaseSplitterVisual
 {
-    private readonly ColoredRectangleRuntime _fill;
+    private readonly RectangleRuntime _fill;
 
     public SplitterVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -26,9 +26,9 @@ public class SplitterVisual : BaseSplitterVisual
         AddChild(_fill);
     }
 
-    private static ColoredRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        ColoredRectangleRuntime fill = new ColoredRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "ForestGladeSplitterFill";
         fill.XUnits = GeneralUnitType.PixelsFromMiddle;
         fill.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -38,7 +38,9 @@ public class SplitterVisual : BaseSplitterVisual
         fill.Height = 0;
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
-        fill.Color = ForestGladePalette.VineCord;
+        fill.IsFilled = true;
+        fill.FillColor = ForestGladePalette.VineCord;
+        fill.StrokeWidth = 0;
         return fill;
     }
 }

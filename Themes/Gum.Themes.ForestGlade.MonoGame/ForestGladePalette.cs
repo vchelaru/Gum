@@ -11,7 +11,7 @@ namespace Gum.Themes.ForestGlade;
 internal static class ForestGladePalette
 {
     // ---- Button gradient stops (CSS .fg-btn uses three-stop linear gradients) ----
-    // Apos.Shapes supports 2-stop linear gradients on RoundedRectangleRuntime;
+    // Apos.Shapes supports 2-stop linear gradients on RectangleRuntime;
     // we use the first and last CSS stops, dropping the middle. The middle
     // tones (kept here as the legacy ButtonRestFill/etc. for any consumer
     // that referenced them) are the median of the gradient and read fine as

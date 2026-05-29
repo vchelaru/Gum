@@ -19,8 +19,8 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
 {
     private const float SelectionStripeWidth = 3f;
 
-    private readonly RoundedRectangleRuntime _fill;
-    private readonly RoundedRectangleRuntime _selectionStripe;
+    private readonly RectangleRuntime _fill;
+    private readonly RectangleRuntime _selectionStripe;
 
     public ListBoxItemVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         : base(fullInstantiation, tryCreateFormsObject)
@@ -44,9 +44,9 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         WireStates();
     }
 
-    private static RoundedRectangleRuntime CreateFill()
+    private static RectangleRuntime CreateFill()
     {
-        RoundedRectangleRuntime fill = new RoundedRectangleRuntime();
+        RectangleRuntime fill = new RectangleRuntime();
         fill.Name = "ForestGladeListItemFill";
         fill.XUnits = GeneralUnitType.PixelsFromMiddle;
         fill.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -58,7 +58,8 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = 0f;
         fill.IsFilled = true;
-        fill.Color = Color.Transparent;
+        fill.FillColor = Color.Transparent;
+        fill.StrokeWidth = 0;
         // Selected row CSS: linear-gradient(90deg, rgba(71,246,65,.22), rgba(71,246,65,.05))
         // — leaf-bright fading from left to right. Gradient is enabled here
         // and the stops are toggled per state by WireStates (transparent stops
@@ -76,9 +77,9 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         return fill;
     }
 
-    private static RoundedRectangleRuntime CreateSelectionStripe()
+    private static RectangleRuntime CreateSelectionStripe()
     {
-        RoundedRectangleRuntime stripe = new RoundedRectangleRuntime();
+        RectangleRuntime stripe = new RectangleRuntime();
         stripe.Name = "ForestGladeListItemStripe";
         stripe.X = 0f;
         stripe.XUnits = GeneralUnitType.PixelsFromSmall;
@@ -91,7 +92,8 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         stripe.HeightUnits = DimensionUnitType.RelativeToParent;
         stripe.CornerRadius = 0f;
         stripe.IsFilled = true;
-        stripe.Color = ForestGladePalette.SelectionStripe;
+        stripe.FillColor = ForestGladePalette.SelectionStripe;
+        stripe.StrokeWidth = 0;
         stripe.Visible = false;
         return stripe;
     }
