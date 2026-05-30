@@ -50,20 +50,20 @@ You can also post an issue: https://github.com/vchelaru/Gum/issues
 
 You can also check the docs: https://docs.flatredball.com/gum/
 
-## Platforms
+## Installation
 
-Gum produces general-purpose XML so it is technically possible to use Gum in any environment. That said, a number of runtimes exist to make integration into your project much easier.
+Gum's runtimes are published to NuGet. Install the package for your platform. All packages share the same version number, so they stay in sync.
 
-Gum integrations exist for the following environments:
+| Platform | Runtime | Shapes |
+|---|---|---|
+| MonoGame | [![NuGet](https://img.shields.io/nuget/v/Gum.MonoGame?label=Gum.MonoGame)](https://www.nuget.org/packages/Gum.MonoGame) | [![NuGet](https://img.shields.io/nuget/v/Gum.Shapes.MonoGame?label=Gum.Shapes.MonoGame)](https://www.nuget.org/packages/Gum.Shapes.MonoGame) |
+| KNI | [![NuGet](https://img.shields.io/nuget/v/Gum.KNI?label=Gum.KNI)](https://www.nuget.org/packages/Gum.KNI) | [![NuGet](https://img.shields.io/nuget/v/Gum.Shapes.KNI?label=Gum.Shapes.KNI)](https://www.nuget.org/packages/Gum.Shapes.KNI) |
+| raylib | [![NuGet](https://img.shields.io/nuget/v/Gum.raylib?label=Gum.raylib)](https://www.nuget.org/packages/Gum.raylib) | Built-in |
+| SkiaSharp | [![NuGet](https://img.shields.io/nuget/v/Gum.SkiaSharp?label=Gum.SkiaSharp)](https://www.nuget.org/packages/Gum.SkiaSharp) | Built-in |
+| Maui | [![NuGet](https://img.shields.io/nuget/v/Gum.SkiaSharp.Maui?label=Gum.SkiaSharp.Maui)](https://www.nuget.org/packages/Gum.SkiaSharp.Maui) | Built-in |
+| Sokol | [![NuGet](https://img.shields.io/nuget/v/Gum.sokol?label=Gum.sokol)](https://www.nuget.org/packages/Gum.sokol) | Built-in |
+| FNA | [![NuGet](https://img.shields.io/nuget/v/Gum.FNA?label=Gum.FNA)](https://www.nuget.org/packages/Gum.FNA) | — *(not supported)* |
 
-* MonoGame/FNA/Kni, including libraries like MonoGame.Extended and Nez
-* FlatRedBall
-* Meadow
-* SkiaSharp
-* Silk.NET
-* raylib
-* WPF
-* Maui
-* Avalonia
+> Shapes is the recommended way to draw rectangles, circles, and other primitives in Gum. On MonoGame and KNI it ships as a separate add-on package (install it alongside the runtime); on the other platforms it's built into the runtime.
 
-For details on integrating Gum with these runtimes, or for using GumCore to integrate with your own runtime, see the main documentation: https://docs.flatredball.com/gum/
+Gum produces general-purpose XML, so it can be used in virtually any C# environment. Beyond the packaged runtimes listed above, integrations also exist for environments such as FlatRedBall, Meadow, Silk.NET, WPF, and Avalonia. For integration details — or for using GumCore to integrate with your own runtime — see the main documentation: https://docs.flatredball.com/gum/
