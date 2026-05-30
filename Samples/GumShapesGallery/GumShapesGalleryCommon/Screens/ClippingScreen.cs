@@ -45,6 +45,7 @@ internal class ClippingScreen : FrameworkElement
         outsideClipShape.Y = 20;
         outsideClipShape.Radius = 24;
         outsideClipShape.FillColor = Color.OrangeRed;
+        outsideClipShape.IsFilled = true;
         AddChild(outsideClipShape);
 
         ScrollViewer scrollViewer = new ScrollViewer();
@@ -76,6 +77,7 @@ internal class ClippingScreen : FrameworkElement
             bg.Y = 2;
             bg.CornerRadius = 6;
             bg.FillColor = (i % 2 == 0) ? new Color(60, 60, 90) : new Color(80, 80, 120);
+            bg.IsFilled = true;
             row.AddChild(bg);
 
             CircleRuntime dot = new();
@@ -83,6 +85,7 @@ internal class ClippingScreen : FrameworkElement
             dot.Y = 8;
             dot.Radius = 12;
             dot.FillColor = Color.Goldenrod;
+            dot.IsFilled = true;
             row.AddChild(dot);
 
             TextRuntime label = new();

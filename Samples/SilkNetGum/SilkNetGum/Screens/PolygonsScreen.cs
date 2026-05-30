@@ -84,6 +84,7 @@ internal class PolygonsScreen : GraphicalUiElement
         frame.Width = CellSize;
         frame.Height = CellSize;
         frame.FillColor = new SKColor(50, 50, 70);
+        frame.IsFilled = true;
         frame.Children.Add(polygon);
         return frame;
     }

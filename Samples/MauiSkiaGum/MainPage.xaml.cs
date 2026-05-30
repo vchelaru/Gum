@@ -32,6 +32,7 @@ namespace MauiSkiaGum
             roundedRectangle.Width = 100;
             roundedRectangle.Height = 100;
             roundedRectangle.FillColor = SKColors.Blue;
+            roundedRectangle.IsFilled = true;
 
             // This is the default radius:
             roundedRectangle.CornerRadius = 20;
@@ -91,6 +92,7 @@ namespace MauiSkiaGum
             disc.Width = diameter;
             disc.Height = diameter;
             disc.FillColor = SKColors.Red;
+            disc.IsFilled = true;
             // CircleRuntime defaults to a 1 px white outline (#2790 two-slot defaults).
             // The pre-#2771 ColoredCircleRuntime had no stroke slot, so suppress the
             // outline to preserve the original solid-disc visual. Since #2938 the canonical
@@ -140,6 +142,7 @@ namespace MauiSkiaGum
             var circle = new CircleRuntime();
             MainStack.AddChild(circle);
             circle.FillColor = SKColors.Red;
+            circle.IsFilled = true;
             // Suppress the default 1 px white outline (see #2771 migration note) to
             // match the pre-migration ColoredCircleRuntime visual. Since #2938 the canonical
             // "hide stroke" gate is StrokeWidth = 0 (StrokeColor is non-nullable now).

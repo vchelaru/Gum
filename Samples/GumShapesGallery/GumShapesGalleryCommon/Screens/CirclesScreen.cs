@@ -128,6 +128,7 @@ internal class CirclesScreen : FrameworkElement
         CircleRuntime filled = new();
         filled.Radius = 28;
         filled.FillColor = Color.Crimson;
+        filled.IsFilled = true;
         row.AddChild(filled);
 
         CircleRuntime stroked = new();
@@ -179,6 +180,7 @@ internal class CirclesScreen : FrameworkElement
         CircleRuntime linearH = new();
         linearH.Radius = 28;
         linearH.FillColor = Color.White; // fill mode; gradient overrides solid color
+        linearH.IsFilled = true;
         linearH.UseGradient = true;
         linearH.GradientType = GradientType.Linear;
         linearH.Color1 = Color.White;
@@ -191,6 +193,7 @@ internal class CirclesScreen : FrameworkElement
         CircleRuntime linearV = new();
         linearV.Radius = 28;
         linearV.FillColor = Color.White;
+        linearV.IsFilled = true;
         linearV.UseGradient = true;
         linearV.GradientType = GradientType.Linear;
         linearV.Color1 = Color.Gold;
@@ -203,6 +206,7 @@ internal class CirclesScreen : FrameworkElement
         CircleRuntime linearD = new();
         linearD.Radius = 28;
         linearD.FillColor = Color.White;
+        linearD.IsFilled = true;
         linearD.UseGradient = true;
         linearD.GradientType = GradientType.Linear;
         linearD.Color1 = Color.Cyan;
@@ -215,6 +219,7 @@ internal class CirclesScreen : FrameworkElement
         CircleRuntime radial = new();
         radial.Radius = 28;
         radial.FillColor = Color.White;
+        radial.IsFilled = true;
         radial.UseGradient = true;
         radial.GradientType = GradientType.Radial;
         radial.Color1 = Color.White;
@@ -239,6 +244,7 @@ internal class CirclesScreen : FrameworkElement
             CircleRuntime filled = new();
             filled.Radius = 28;
             filled.FillColor = Color.Goldenrod;
+            filled.IsFilled = true;
             filled.IsAntialiased = aa;
             row.AddChild(filled);
 
@@ -265,12 +271,14 @@ internal class CirclesScreen : FrameworkElement
         CircleRuntime baseline = new();
         baseline.Radius = 28;
         baseline.FillColor = Color.Goldenrod;
+        baseline.IsFilled = true;
         row.AddChild(baseline);
 
         // Soft shadow: noticeable offset, generous blur, default opaque black.
         CircleRuntime soft = new();
         soft.Radius = 28;
         soft.FillColor = Color.Goldenrod;
+        soft.IsFilled = true;
         soft.HasDropshadow = true;
         soft.DropshadowOffsetX = 14;
         soft.DropshadowOffsetY = 14;
@@ -281,6 +289,7 @@ internal class CirclesScreen : FrameworkElement
         CircleRuntime hard = new();
         hard.Radius = 28;
         hard.FillColor = Color.Goldenrod;
+        hard.IsFilled = true;
         hard.HasDropshadow = true;
         hard.DropshadowColor = new Color(0, 0, 0, 160);
         hard.DropshadowOffsetX = 16;
@@ -294,6 +303,7 @@ internal class CirclesScreen : FrameworkElement
         CircleRuntime colored = new();
         colored.Radius = 28;
         colored.FillColor = Color.Goldenrod;
+        colored.IsFilled = true;
         colored.HasDropshadow = true;
         colored.DropshadowColor = new Color(220, 40, 160, 220);
         colored.DropshadowOffsetX = 16;
@@ -308,6 +318,7 @@ internal class CirclesScreen : FrameworkElement
         CircleRuntime fadedBody = new();
         fadedBody.Radius = 28;
         fadedBody.FillColor = new Color((byte)218, (byte)165, (byte)32, (byte)80);
+        fadedBody.IsFilled = true;
         fadedBody.HasDropshadow = true;
         fadedBody.DropshadowOffsetX = 14;
         fadedBody.DropshadowOffsetY = 14;
@@ -389,6 +400,7 @@ internal class CirclesScreen : FrameworkElement
         CircleRuntime strokeLast = new();
         strokeLast.Radius = 28;
         strokeLast.FillColor = Color.Crimson;
+        strokeLast.IsFilled = true;
         strokeLast.StrokeColor = Color.Cyan;
         strokeLast.StrokeWidth = 4;
         row.AddChild(strokeLast);
@@ -398,6 +410,7 @@ internal class CirclesScreen : FrameworkElement
         fillLast.StrokeColor = Color.Magenta;
         fillLast.StrokeWidth = 4;
         fillLast.FillColor = Color.Gold;
+        fillLast.IsFilled = true;
         row.AddChild(fillLast);
 
         return row;
@@ -418,6 +431,7 @@ internal class CirclesScreen : FrameworkElement
             CircleRuntime circle = new();
             circle.Radius = 28;
             circle.FillColor = Color.Red;
+            circle.IsFilled = true;
             circle.StrokeColor = Color.White;
             circle.StrokeWidth = strokeWidth;
             row.AddChild(circle);
@@ -461,6 +475,7 @@ internal class CirclesScreen : FrameworkElement
         frame.Width = width;
         frame.Height = height;
         frame.FillColor = new Color(60, 60, 80);
+        frame.IsFilled = true;
 
         CircleRuntime circle = new();
         circle.Width = width;
@@ -468,6 +483,7 @@ internal class CirclesScreen : FrameworkElement
         circle.WidthUnits = DimensionUnitType.Absolute;
         circle.HeightUnits = DimensionUnitType.Absolute;
         circle.FillColor = Color.SeaGreen;
+        circle.IsFilled = true;
         circle.StrokeColor = Color.Yellow;
         circle.StrokeWidth = 1;
         frame.Children.Add(circle);
@@ -480,10 +496,12 @@ internal class CirclesScreen : FrameworkElement
         frame.Width = 64;
         frame.Height = 64;
         frame.FillColor = new Color(60, 60, 80);
+        frame.IsFilled = true;
 
         CircleRuntime circle = new();
         circle.Radius = 32;
         circle.FillColor = Color.SeaGreen;
+        circle.IsFilled = true;
         circle.StrokeColor = Color.Yellow;
         circle.StrokeWidth = strokeWidth;
         circle.StrokeWidthUnits = DimensionUnitType.Absolute;
@@ -521,6 +539,7 @@ internal class CirclesScreen : FrameworkElement
         frame.Width = 70;
         frame.Height = 70;
         frame.FillColor = new Color(60, 60, 80);
+        frame.IsFilled = true;
 
         CircleRuntime circle = new();
         circle.Radius = 28;
@@ -531,6 +550,7 @@ internal class CirclesScreen : FrameworkElement
         if (filled)
         {
             circle.FillColor = Color.White;
+            circle.IsFilled = true;
         }
         else
         {
@@ -559,10 +579,12 @@ internal class CirclesScreen : FrameworkElement
         frame.Width = 128;
         frame.Height = 100;
         frame.FillColor = new Color(50, 50, 70);
+        frame.IsFilled = true;
 
         CircleRuntime circle = new();
         circle.Radius = 22;
         circle.FillColor = Color.Orange;
+        circle.IsFilled = true;
         circle.XOrigin = HorizontalAlignment.Center;
         circle.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         circle.YOrigin = alignment;

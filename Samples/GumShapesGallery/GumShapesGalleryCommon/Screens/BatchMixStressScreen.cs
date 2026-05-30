@@ -70,6 +70,7 @@ internal class BatchMixStressScreen : FrameworkElement
             dot.Y = 8;
             dot.Radius = 12;
             dot.FillColor = Color.Goldenrod;
+            dot.IsFilled = true;
             row.AddChild(dot);
 
             scrollViewer.InnerPanel.Children.Add(row);

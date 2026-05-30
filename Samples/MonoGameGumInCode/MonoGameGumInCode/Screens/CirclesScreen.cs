@@ -85,6 +85,7 @@ internal class CirclesScreen : FrameworkElement
         CircleRuntime filled = new();
         filled.Radius = 24;
         filled.FillColor = Color.Red;
+        filled.IsFilled = true;
         row.AddChild(filled);
 
         CircleRuntime stroked = new();
@@ -129,6 +130,7 @@ internal class CirclesScreen : FrameworkElement
         frame.Width = 200;
         frame.Height = 100;
         frame.FillColor = new Color(40, 40, 60);
+        frame.IsFilled = true;
 
         CircleRuntime circle = new();
         circle.Radius = 20;

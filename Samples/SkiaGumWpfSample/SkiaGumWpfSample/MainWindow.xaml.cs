@@ -34,10 +34,12 @@ namespace SkiaGumWpfSample
             var rectangle = new RectangleRuntime();
 
             rectangle.FillColor = new SkiaSharp.SKColor(50, 100, 0);
+            rectangle.IsFilled = true;
             container.Children.Add(rectangle);
 
             var rectangle2 = new RectangleRuntime();
             rectangle2.FillColor = new SkiaSharp.SKColor(200, 0, 0);
+            rectangle2.IsFilled = true;
 
             container.Children.Add(rectangle2);
 

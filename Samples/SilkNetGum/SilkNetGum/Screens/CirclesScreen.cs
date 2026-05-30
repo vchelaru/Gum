@@ -122,6 +122,7 @@ internal class CirclesScreen : GraphicalUiElement
         CircleRuntime filled = new();
         filled.Radius = 28;
         filled.FillColor = SKColors.Crimson;
+        filled.IsFilled = true;
         row.Children.Add(filled);
 
         CircleRuntime stroked = new();
@@ -169,6 +170,7 @@ internal class CirclesScreen : GraphicalUiElement
         CircleRuntime linearH = new();
         linearH.Radius = 28;
         linearH.FillColor = SKColors.White; // fill mode; gradient overrides solid color
+        linearH.IsFilled = true;
         linearH.UseGradient = true;
         linearH.GradientType = GradientType.Linear;
         linearH.Color1 = SKColors.White;
@@ -181,6 +183,7 @@ internal class CirclesScreen : GraphicalUiElement
         CircleRuntime linearV = new();
         linearV.Radius = 28;
         linearV.FillColor = SKColors.White;
+        linearV.IsFilled = true;
         linearV.UseGradient = true;
         linearV.GradientType = GradientType.Linear;
         linearV.Color1 = SKColors.Gold;
@@ -193,6 +196,7 @@ internal class CirclesScreen : GraphicalUiElement
         CircleRuntime linearD = new();
         linearD.Radius = 28;
         linearD.FillColor = SKColors.White;
+        linearD.IsFilled = true;
         linearD.UseGradient = true;
         linearD.GradientType = GradientType.Linear;
         linearD.Color1 = SKColors.Cyan;
@@ -205,6 +209,7 @@ internal class CirclesScreen : GraphicalUiElement
         CircleRuntime radial = new();
         radial.Radius = 28;
         radial.FillColor = SKColors.White;
+        radial.IsFilled = true;
         radial.UseGradient = true;
         radial.GradientType = GradientType.Radial;
         radial.Color1 = SKColors.White;
@@ -227,6 +232,7 @@ internal class CirclesScreen : GraphicalUiElement
         CircleRuntime strokeLast = new();
         strokeLast.Radius = 28;
         strokeLast.FillColor = SKColors.Crimson;
+        strokeLast.IsFilled = true;
         strokeLast.StrokeColor = SKColors.Cyan;
         strokeLast.StrokeWidth = 4;
         row.Children.Add(strokeLast);
@@ -236,6 +242,7 @@ internal class CirclesScreen : GraphicalUiElement
         fillLast.StrokeColor = SKColors.Magenta;
         fillLast.StrokeWidth = 4;
         fillLast.FillColor = SKColors.Gold;
+        fillLast.IsFilled = true;
         row.Children.Add(fillLast);
 
         return row;
@@ -254,6 +261,7 @@ internal class CirclesScreen : GraphicalUiElement
             CircleRuntime circle = new();
             circle.Radius = 28;
             circle.FillColor = SKColors.Red;
+            circle.IsFilled = true;
             circle.StrokeColor = SKColors.White;
             circle.StrokeWidth = strokeWidth;
             row.Children.Add(circle);
@@ -296,6 +304,7 @@ internal class CirclesScreen : GraphicalUiElement
         frame.Width = width;
         frame.Height = height;
         frame.FillColor = new SKColor(60, 60, 80);
+        frame.IsFilled = true;
 
         CircleRuntime circle = new();
         circle.Width = width;
@@ -303,6 +312,7 @@ internal class CirclesScreen : GraphicalUiElement
         circle.WidthUnits = DimensionUnitType.Absolute;
         circle.HeightUnits = DimensionUnitType.Absolute;
         circle.FillColor = SKColors.SeaGreen;
+        circle.IsFilled = true;
         circle.StrokeColor = SKColors.Yellow;
         circle.StrokeWidth = 1;
         frame.Children.Add(circle);
@@ -315,10 +325,12 @@ internal class CirclesScreen : GraphicalUiElement
         frame.Width = 64;
         frame.Height = 64;
         frame.FillColor = new SKColor(60, 60, 80);
+        frame.IsFilled = true;
 
         CircleRuntime circle = new();
         circle.Radius = 32;
         circle.FillColor = SKColors.SeaGreen;
+        circle.IsFilled = true;
         circle.StrokeColor = SKColors.Yellow;
         circle.StrokeWidth = strokeWidth;
         circle.StrokeWidthUnits = DimensionUnitType.Absolute;
@@ -338,6 +350,7 @@ internal class CirclesScreen : GraphicalUiElement
             CircleRuntime filled = new();
             filled.Radius = 28;
             filled.FillColor = SKColors.Goldenrod;
+            filled.IsFilled = true;
             filled.IsAntialiased = aa;
             row.Children.Add(filled);
 
@@ -363,12 +376,14 @@ internal class CirclesScreen : GraphicalUiElement
         CircleRuntime baseline = new();
         baseline.Radius = 28;
         baseline.FillColor = SKColors.Goldenrod;
+        baseline.IsFilled = true;
         row.Children.Add(baseline);
 
         // Soft shadow: noticeable offset, generous blur, default opaque black.
         CircleRuntime soft = new();
         soft.Radius = 28;
         soft.FillColor = SKColors.Goldenrod;
+        soft.IsFilled = true;
         soft.HasDropshadow = true;
         soft.DropshadowOffsetX = 14;
         soft.DropshadowOffsetY = 14;
@@ -381,6 +396,7 @@ internal class CirclesScreen : GraphicalUiElement
         CircleRuntime hard = new();
         hard.Radius = 28;
         hard.FillColor = SKColors.Goldenrod;
+        hard.IsFilled = true;
         hard.HasDropshadow = true;
         hard.DropshadowRed = 0; hard.DropshadowGreen = 0; hard.DropshadowBlue = 0; hard.DropshadowAlpha = 160;
         hard.DropshadowOffsetX = 16;
@@ -394,6 +410,7 @@ internal class CirclesScreen : GraphicalUiElement
         CircleRuntime colored = new();
         colored.Radius = 28;
         colored.FillColor = SKColors.Goldenrod;
+        colored.IsFilled = true;
         colored.HasDropshadow = true;
         colored.DropshadowRed = 220; colored.DropshadowGreen = 40; colored.DropshadowBlue = 160; colored.DropshadowAlpha = 220;
         colored.DropshadowOffsetX = 16;
@@ -408,6 +425,7 @@ internal class CirclesScreen : GraphicalUiElement
         CircleRuntime fadedBody = new();
         fadedBody.Radius = 28;
         fadedBody.FillColor = new SKColor(218, 165, 32, 80);
+        fadedBody.IsFilled = true;
         fadedBody.HasDropshadow = true;
         fadedBody.DropshadowOffsetX = 14;
         fadedBody.DropshadowOffsetY = 14;
@@ -500,6 +518,7 @@ internal class CirclesScreen : GraphicalUiElement
         frame.Width = 70;
         frame.Height = 70;
         frame.FillColor = new SKColor(60, 60, 80);
+        frame.IsFilled = true;
 
         CircleRuntime circle = new();
         circle.Radius = 28;
@@ -510,6 +529,7 @@ internal class CirclesScreen : GraphicalUiElement
         if (filled)
         {
             circle.FillColor = SKColors.White;
+            circle.IsFilled = true;
         }
         else
         {
@@ -538,10 +558,12 @@ internal class CirclesScreen : GraphicalUiElement
         frame.Width = 128;
         frame.Height = 100;
         frame.FillColor = new SKColor(50, 50, 70);
+        frame.IsFilled = true;
 
         CircleRuntime circle = new();
         circle.Radius = 22;
         circle.FillColor = SKColors.Orange;
+        circle.IsFilled = true;
         circle.XOrigin = HorizontalAlignment.Center;
         circle.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         circle.YOrigin = alignment;

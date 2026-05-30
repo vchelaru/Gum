@@ -64,6 +64,7 @@ internal class RectanglesScreen : FrameworkElement
             rect.Width = width;
             rect.Height = 40;
             rect.FillColor = new Color(80, 80, 120);
+            rect.IsFilled = true;
             rect.StrokeColor = Color.White;
             row.AddChild(rect);
         }
@@ -79,6 +80,7 @@ internal class RectanglesScreen : FrameworkElement
             rect.Width = 60;
             rect.Height = 40;
             rect.FillColor = new Color((byte)255, (byte)255, (byte)255, alpha);
+            rect.IsFilled = true;
             row.AddChild(rect);
         }
         return row;
@@ -91,6 +93,7 @@ internal class RectanglesScreen : FrameworkElement
         RectangleRuntime filled = new();
         filled.Width = 80; filled.Height = 50;
         filled.FillColor = Color.Crimson;
+        filled.IsFilled = true;
         row.AddChild(filled);
 
         RectangleRuntime stroked = new();
@@ -102,6 +105,7 @@ internal class RectanglesScreen : FrameworkElement
         RectangleRuntime both = new();
         both.Width = 80; both.Height = 50;
         both.FillColor = new Color(40, 40, 80);
+        both.IsFilled = true;
         both.StrokeColor = Color.Yellow;
         both.StrokeWidth = 2;
         row.AddChild(both);
@@ -124,6 +128,7 @@ internal class RectanglesScreen : FrameworkElement
             RectangleRuntime rect = new();
             rect.Width = 70; rect.Height = 50;
             rect.FillColor = new Color(30, 30, 50);
+            rect.IsFilled = true;
             rect.StrokeColor = Color.LightGreen;
             rect.StrokeWidth = strokeWidth;
             row.AddChild(rect);
@@ -144,6 +149,7 @@ internal class RectanglesScreen : FrameworkElement
             rect.Width = 80;
             rect.Height = 50;
             rect.FillColor = new Color(30, 30, 50);
+            rect.IsFilled = true;
             rect.StrokeColor = Color.LightGreen;
             rect.StrokeWidth = 2;
             rect.IsAntialiased = aa;
@@ -183,11 +189,13 @@ internal class RectanglesScreen : FrameworkElement
         frame.Width = 220;
         frame.Height = 100;
         frame.FillColor = new Color(40, 40, 60);
+        frame.IsFilled = true;
 
         RectangleRuntime rect = new();
         rect.Width = 60;
         rect.Height = 30;
         rect.FillColor = Color.Orange;
+        rect.IsFilled = true;
         rect.XOrigin = HorizontalAlignment.Center;
         rect.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         rect.YOrigin = alignment;
