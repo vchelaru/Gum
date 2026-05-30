@@ -79,6 +79,155 @@ public class RectangleRuntimeTests
         stroke.CustomRadiusBottomRight.ShouldBe(4f);
     }
 
+    // FillInset is the rectangle analog of CircleRuntime's FillRadiusInset (#2834): when both
+    // fill and stroke are visible, PreRender pushes an inset onto the fill slot so the fill's
+    // outer edge sits inside the stroke's band. Without it a filled rectangle with a
+    // semi-transparent stroke shows the FILL through the stroke instead of the background —
+    // the reported bug. Inset equals the AA-compensated stroke width: 4 - 1 (Apos AA halo) = 3.
+    [Fact]
+    public void FillInset_AaOn_WhenStrokeVisible_PushedAaCompensatedStrokeWidthInPreRender()
+    {
+        RectangleRuntime sut = new();
+        sut.Width = 100;
+        sut.Height = 60;
+        sut.IsFilled = true;
+        sut.FillColor = Color.Red;
+        sut.StrokeColor = Color.White;
+        sut.StrokeWidth = 4f;
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+        sut.IsAntialiased = true;
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        IRenderable asFillRenderable = fill;
+        asFillRenderable.PreRender();
+
+        fill.FillInset.ShouldBe(3f);
+    }
+
+    // At hairline strokes (StrokeWidth = 1, AA on) the AA-compensated stroke width is sub-pixel
+    // epsilon, but the AA halo is still 1 px. Inset must be floored at the AA contribution (1 px)
+    // so the fill's outer AA halo doesn't overlap the stroke's AA range.
+    [Fact]
+    public void FillInset_AaOn_AtHairlineStroke_FlooredAtAaContribution()
+    {
+        RectangleRuntime sut = new();
+        sut.Width = 100;
+        sut.Height = 60;
+        sut.IsFilled = true;
+        sut.FillColor = Color.Red;
+        sut.StrokeColor = Color.White;
+        sut.StrokeWidth = 1f;
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+        sut.IsAntialiased = true;
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        IRenderable asFillRenderable = fill;
+        asFillRenderable.PreRender();
+
+        fill.FillInset.ShouldBe(1f);
+    }
+
+    // When the stroke is invisible (StrokeWidth == 0) the fill renders at full size — no inset,
+    // no background ring where the stroke would have been.
+    [Fact]
+    public void FillInset_WhenStrokeInvisible_StaysZero()
+    {
+        RectangleRuntime sut = new();
+        sut.Width = 100;
+        sut.Height = 60;
+        sut.IsFilled = true;
+        sut.FillColor = Color.Red;
+        sut.StrokeColor = Color.White;
+        sut.StrokeWidth = 0f;
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        IRenderable asFillRenderable = fill;
+        asFillRenderable.PreRender();
+
+        fill.FillInset.ShouldBe(0f);
+    }
+
+    // The gradient paints the ACTIVE body: the fill when IsFilled, the stroke when stroke-only.
+    // Whichever slot is not the active body renders solid (its gradient gate stays off) so the two
+    // never share the single gradient and composite invisibly.
+    //
+    // Filled: gradient fills the body, stroke renders its solid StrokeColor.
+    [Fact]
+    public void UseGradient_WhenFilled_RoutesGradientToFill_StrokeSolid()
+    {
+        RectangleRuntime sut = new();
+        sut.IsFilled = true;
+        sut.FillColor = Color.Red;
+        sut.StrokeColor = Color.White;
+        sut.StrokeWidth = 4f;
+        sut.Color1 = Color.Blue;
+        sut.Color2 = Color.Green;
+        sut.Alpha1 = 255;
+        sut.Alpha2 = 255;
+
+        sut.UseGradient = true;
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
+
+        fill.UseGradient.ShouldBeTrue();
+        stroke.UseGradient.ShouldBeFalse();
+        stroke.ShouldPaintGradient(forcedColor: null).ShouldBeFalse();
+        stroke.Color.ShouldBe(Color.White);
+    }
+
+    // Stroke-only (IsFilled = false): the gradient paints the stroke; the (invisible) fill slot's
+    // gate is off. Without this the gradient rendered on the gated-transparent fill while the
+    // stroke showed solid — the reported bug.
+    [Fact]
+    public void UseGradient_WhenStrokeOnly_RoutesGradientToStroke_FillOff()
+    {
+        RectangleRuntime sut = new();
+        sut.IsFilled = false;
+        sut.StrokeColor = Color.White;
+        sut.StrokeWidth = 4f;
+        sut.Color1 = Color.Blue;
+        sut.Color2 = Color.Green;
+        sut.Alpha1 = 255;
+        sut.Alpha2 = 255;
+
+        sut.UseGradient = true;
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
+
+        stroke.UseGradient.ShouldBeTrue();
+        stroke.ShouldPaintGradient(forcedColor: null).ShouldBeTrue();
+        fill.UseGradient.ShouldBeFalse();
+    }
+
+    // Toggling IsFilled re-routes the gradient to the new active slot (mirror of the dropshadow
+    // SyncDropshadowToTarget re-routing), so the gate is never stranded on the wrong slot.
+    [Fact]
+    public void UseGradient_IsFilledToggle_RoutesGradientToActiveSlot()
+    {
+        RectangleRuntime sut = new();
+        sut.StrokeColor = Color.White;
+        sut.StrokeWidth = 4f;
+        sut.Color1 = Color.Blue;
+        sut.Color2 = Color.Green;
+        sut.Alpha1 = 255;
+        sut.Alpha2 = 255;
+        sut.UseGradient = true;
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
+
+        sut.IsFilled = true;
+        fill.UseGradient.ShouldBeTrue();
+        stroke.UseGradient.ShouldBeFalse();
+
+        sut.IsFilled = false;
+        fill.UseGradient.ShouldBeFalse();
+        stroke.UseGradient.ShouldBeTrue();
+    }
+
     // Issue #2925 (Phase 0 parity) — ScreenPixel was previously a Skia-only honor (Apos parity gap
     // noted in RoundedRectangleRuntime.cs:80, 124). At Camera.Zoom = 2 the resolved radius is
     // raw / zoom so the rounded corner holds a constant on-screen pixel size as the camera zooms,
@@ -226,12 +375,16 @@ public class RectangleRuntimeTests
         stroke.IsAntialiased.ShouldBeTrue();
     }
 
-    // Issue #2818: gradient props on RectangleRuntime push through to both Apos RoundedRectangles
-    // so a single gradient can paint fill and stroke at once (mirror of CircleRuntime #2791).
+    // Issue #2818: gradient coordinate/color props push through to BOTH Apos RoundedRectangles so
+    // the values round-trip on either slot. The UseGradient GATE, however, routes to the active
+    // body slot (fill when IsFilled, else stroke — see UseGradient_When* tests). IsFilled is set
+    // true here so the gate lands deterministically on the fill; the shared params are inert on
+    // the stroke while its gate is off.
     [Fact]
     public void Gradient_PropertiesPushedToBothFillAndStrokeSlots()
     {
         RectangleRuntime sut = new();
+        sut.IsFilled = true;
 
         sut.UseGradient = true;
         sut.GradientType = GradientType.Linear;
@@ -245,7 +398,7 @@ public class RectangleRuntimeTests
         RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
 
         fill.UseGradient.ShouldBeTrue();
-        stroke.UseGradient.ShouldBeTrue();
+        stroke.UseGradient.ShouldBeFalse();
         fill.GradientType.ShouldBe(GradientType.Linear);
         stroke.GradientType.ShouldBe(GradientType.Linear);
         fill.Red1.ShouldBe(Color.Red.R);

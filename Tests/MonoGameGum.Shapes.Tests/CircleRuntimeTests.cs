@@ -185,12 +185,15 @@ public class CircleRuntimeTests
     // Load-order contract guard for #2761 / #2768: if any of the four factory registrations
     // moves back inside the _registered guard in AposShapeRuntime, this catches the
     // regression. After Reset + re-call, a new CircleRuntime must still bind Apos Circles.
-    // Issue #2791: gradient props on CircleRuntime push through to both Apos Circles so a single
-    // gradient can paint fill and stroke at once (matches Skia's single-renderable behavior).
+    // Issue #2791: gradient coordinate/color props push through to BOTH Apos Circles so the values
+    // round-trip on either slot. The UseGradient GATE, however, routes to the active body slot
+    // (fill when IsFilled, else stroke — see UseGradient_When* tests). IsFilled is set true here so
+    // the gate lands deterministically on the fill; the shared params are inert on the stroke.
     [Fact]
     public void Gradient_PropertiesPushedToBothFillAndStrokeSlots()
     {
         CircleRuntime sut = new();
+        sut.IsFilled = true;
 
         sut.UseGradient = true;
         sut.GradientType = GradientType.Linear;
@@ -204,7 +207,7 @@ public class CircleRuntimeTests
         Circle stroke = (Circle)fill.Children[0];
 
         fill.UseGradient.ShouldBeTrue();
-        stroke.UseGradient.ShouldBeTrue();
+        stroke.UseGradient.ShouldBeFalse();
         fill.GradientType.ShouldBe(GradientType.Linear);
         stroke.GradientType.ShouldBe(GradientType.Linear);
         fill.Red1.ShouldBe(Color.Red.R);
@@ -215,6 +218,92 @@ public class CircleRuntimeTests
         stroke.GradientX2.ShouldBe(56);
         fill.GradientInnerRadius.ShouldBe(4);
         stroke.GradientInnerRadius.ShouldBe(4);
+    }
+
+    // The gradient paints the ACTIVE body: the fill when IsFilled, the stroke when stroke-only.
+    // The inactive slot renders solid (its gradient gate stays off) so the two never share the
+    // single gradient and composite invisibly.
+    //
+    // Filled: gradient fills the disk, stroke renders its solid StrokeColor.
+    [Fact]
+    public void UseGradient_WhenFilled_RoutesGradientToFill_StrokeSolid()
+    {
+        CircleRuntime sut = new();
+        sut.Width = 56;
+        sut.Height = 56;
+        sut.IsFilled = true;
+        sut.FillColor = Color.Red;
+        sut.StrokeColor = Color.White;
+        sut.StrokeWidth = 4f;
+        sut.Color1 = Color.Blue;
+        sut.Color2 = Color.Green;
+        sut.Alpha1 = 255;
+        sut.Alpha2 = 255;
+
+        sut.UseGradient = true;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+
+        fill.UseGradient.ShouldBeTrue();
+        stroke.UseGradient.ShouldBeFalse();
+        stroke.ShouldPaintGradient(forcedColor: null).ShouldBeFalse();
+        stroke.Color.ShouldBe(Color.White);
+    }
+
+    // Stroke-only (IsFilled = false): the gradient paints the stroke; the (invisible) fill slot's
+    // gate is off. Without this the gradient rendered on the gated-transparent fill while the
+    // stroke showed solid — the reported bug.
+    [Fact]
+    public void UseGradient_WhenStrokeOnly_RoutesGradientToStroke_FillOff()
+    {
+        CircleRuntime sut = new();
+        sut.Width = 56;
+        sut.Height = 56;
+        sut.IsFilled = false;
+        sut.StrokeColor = Color.White;
+        sut.StrokeWidth = 4f;
+        sut.Color1 = Color.Blue;
+        sut.Color2 = Color.Green;
+        sut.Alpha1 = 255;
+        sut.Alpha2 = 255;
+
+        sut.UseGradient = true;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+
+        stroke.UseGradient.ShouldBeTrue();
+        stroke.ShouldPaintGradient(forcedColor: null).ShouldBeTrue();
+        fill.UseGradient.ShouldBeFalse();
+    }
+
+    // Toggling IsFilled re-routes the gradient to the new active slot (mirror of the dropshadow
+    // SyncDropshadowToTarget re-routing), so the gate is never stranded on the wrong slot.
+    [Fact]
+    public void UseGradient_IsFilledToggle_RoutesGradientToActiveSlot()
+    {
+        CircleRuntime sut = new();
+        sut.Width = 56;
+        sut.Height = 56;
+        sut.StrokeColor = Color.White;
+        sut.StrokeWidth = 4f;
+        sut.Color1 = Color.Blue;
+        sut.Color2 = Color.Green;
+        sut.Alpha1 = 255;
+        sut.Alpha2 = 255;
+        sut.UseGradient = true;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+
+        sut.IsFilled = true;
+        fill.UseGradient.ShouldBeTrue();
+        stroke.UseGradient.ShouldBeFalse();
+
+        sut.IsFilled = false;
+        fill.UseGradient.ShouldBeFalse();
+        stroke.UseGradient.ShouldBeTrue();
     }
 
     // Issue #2797: dropshadow pushes to the fill slot only (with fallback to stroke when fill
@@ -927,9 +1016,9 @@ public class CircleRuntimeTests
     // special-cases the legacy single-slot properties (Color/Red/Green/Blue/Alpha/Radius);
     // every other property falls through to reflection on the *contained renderable*. For a
     // two-slot CircleRuntime the contained renderable is the fill slot, so two-slot variables
-    // (UseGradient, IsFilled, FillColor, StrokeColor, etc.) only reach the fill slot — the
-    // stroke slot never sees them. Visible symptom: `UseGradient = true` + `IsFilled = false`
-    // makes the stroke render solid because the stroke slot's UseGradient never flipped.
+    // (UseGradient, IsFilled, FillColor, StrokeColor, etc.) would only reach the fill slot if they
+    // fell through to reflection — bypassing the runtime side effects (IsFilled zeroing the fill
+    // alpha, StrokeColor writing the stroke slot, the runtime backing fields used for round-trip).
     //
     // These tests pin the contract that SetProperty routes through the *runtime's* typed
     // setters for two-slot variables. Each test confirms a runtime-level side effect that
@@ -937,7 +1026,7 @@ public class CircleRuntimeTests
     // the contained renderable).
 
     [Fact]
-    public void SetProperty_UseGradient_ForwardsToBothSlots()
+    public void SetProperty_UseGradient_RoutesThroughRuntimeSetter()
     {
         CircleRuntime sut = new();
 
@@ -945,8 +1034,13 @@ public class CircleRuntimeTests
 
         Circle fill = (Circle)sut.RenderableComponent;
         Circle stroke = (Circle)fill.Children[0];
-        fill.UseGradient.ShouldBeTrue();
+        // Routed through the runtime setter: the backing field is set and the gradient gate routes
+        // to the active body slot. IsFilled defaults false (stroke-only), so the gate lands on the
+        // stroke. Reflection writing straight to the contained fill renderable would leave the
+        // backing field (sut.UseGradient) false and never touch the stroke slot.
+        sut.UseGradient.ShouldBeTrue();
         stroke.UseGradient.ShouldBeTrue();
+        fill.UseGradient.ShouldBeFalse();
     }
 
     [Fact]

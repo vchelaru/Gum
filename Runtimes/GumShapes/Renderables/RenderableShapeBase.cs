@@ -791,6 +791,24 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
     }
 
     /// <summary>
+    /// The pixel-center alignment offset, in WORLD units, applied to a shape's edge before an
+    /// antialiased Apos draw so the AA gradient samples crisply against the SCREEN pixel grid
+    /// (Apos.Shapes issue #12). The raw value is half a SCREEN pixel; like the AA halo (#2936)
+    /// it must be divided by <paramref name="cameraZoom"/> so it holds a constant on-screen size.
+    /// Applied in world units without this division, the inset grows as the camera zooms in,
+    /// pulling fills and strokes visibly inward — a filled shape no longer reaches the edge of an
+    /// equally-sized NineSlice/sprite. Returns 0 when antialiasing is off (<paramref name="antiAliasSize"/> == 0).
+    /// </summary>
+    public static float GetAntiAliasWorldOffset(int antiAliasSize, float cameraZoom)
+    {
+        if (antiAliasSize == 0 || cameraZoom <= 0f)
+        {
+            return 0f;
+        }
+        return 0.5f / cameraZoom;
+    }
+
+    /// <summary>
     /// Adjusts a top-left position so that Apos.Shapes' center-based rotation
     /// produces the same result as rotating around the top-left corner.
     /// </summary>

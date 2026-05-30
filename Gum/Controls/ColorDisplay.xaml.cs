@@ -234,23 +234,29 @@ namespace Gum.Controls.DataUi
             var isColorSame = false;
 
 #if XNA
+            // InstanceMember.Value is null when multi-selecting instances whose colors differ; pattern
+            // matching leaves isColorSame false in that case so the picked color is applied to all.
             if (mInstancePropertyType == typeof(Microsoft.Xna.Framework.Color))
             {
-                var colorPack = (uint)(colorArgs.Color.R | (colorArgs.Color.G << 8) | (colorArgs.Color.B << 16) | (colorArgs.Color.A << 24));
-                var prevColor = (Microsoft.Xna.Framework.Color)InstanceMember.Value;
-                isColorSame = colorPack == prevColor.PackedValue;
+                if (InstanceMember.Value is Microsoft.Xna.Framework.Color prevColor)
+                {
+                    var colorPack = (uint)(colorArgs.Color.R | (colorArgs.Color.G << 8) | (colorArgs.Color.B << 16) | (colorArgs.Color.A << 24));
+                    isColorSame = colorPack == prevColor.PackedValue;
+                }
             }
-            else 
-#endif     
+            else
+#endif
             if (mInstancePropertyType == typeof(System.Drawing.Color))
             {
-                var prevColor = (System.Drawing.Color)InstanceMember.Value;
-                var newColor = colorArgs.Color;
+                if (InstanceMember.Value is System.Drawing.Color prevColor)
+                {
+                    var newColor = colorArgs.Color;
 
-                isColorSame = newColor.A == prevColor.A &&
-                    newColor.R == prevColor.R &&
-                    newColor.G == prevColor.G &&
-                newColor.B == prevColor.B;
+                    isColorSame = newColor.A == prevColor.A &&
+                        newColor.R == prevColor.R &&
+                        newColor.G == prevColor.G &&
+                        newColor.B == prevColor.B;
+                }
             }
             if (isColorSame) return;
 

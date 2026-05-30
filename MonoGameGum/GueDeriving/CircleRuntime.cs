@@ -565,6 +565,9 @@ public class CircleRuntime : GraphicalUiElement
             // shadow flag and the inactive slot releases it. Otherwise toggling IsFilled
             // either ghosts the previous target or never wakes the new one up.
             SyncDropshadowToTarget();
+            // Gradient routing also depends on IsFilled: the gradient paints the active body
+            // (fill when filled, stroke when stroke-only), so re-route on toggle.
+            SyncGradientToTarget();
             NotifyPropertyChanged();
         }
     }
@@ -701,11 +704,24 @@ public class CircleRuntime : GraphicalUiElement
 
     // Issue #2791: gradient pass-through. Backing fields live on the runtime so values
     // round-trip even when neither slot implements IGradientedRenderable (e.g. core-only stroke
-    // = DefaultStrokedCircleRenderable, no fill). Setters push to whichever slot(s) implement
-    // it. Pushing to both slots matches Skia's single-renderable behavior, where fill mode and
-    // dashed-stroke mode both consult the same gradient parameters; an Apos-backed
-    // CircleRuntime with both FillColor and StrokeColor + UseGradient = true renders a
-    // gradient-filled disk with a gradient stroke sharing the same gradient.
+    // = DefaultStrokedCircleRenderable, no fill). The coordinate/color setters push to whichever
+    // slot(s) implement it so the values round-trip on either; the UseGradient GATE routes to the
+    // active body slot (see SyncGradientToTarget). The gradient is the active body's paint — a
+    // gradient on the other slot would share the single gradient and composite invisibly, so the
+    // inactive slot renders solid.
+
+    // Routes the gradient gate to the ACTIVE body slot — the fill when IsFilled, the stroke when
+    // stroke-only — and forces the inactive slot's gate off. Mirrors SyncDropshadowToTarget. Re-run
+    // from both the UseGradient and IsFilled setters so toggling IsFilled re-routes the gate.
+    void SyncGradientToTarget()
+    {
+        var fillGrad = _fill as IGradientedRenderable;
+        var strokeGrad = _stroke as IGradientedRenderable;
+        var active = _isFilled ? fillGrad : strokeGrad;
+        var inactive = _isFilled ? strokeGrad : fillGrad;
+        if (active != null) active.UseGradient = _useGradient;
+        if (inactive != null) inactive.UseGradient = false;
+    }
 
     bool _useGradient;
     /// <summary>
@@ -720,8 +736,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             _useGradient = value;
-            if (_fill is IGradientedRenderable fillGrad) fillGrad.UseGradient = value;
-            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.UseGradient = value;
+            SyncGradientToTarget();
             NotifyPropertyChanged();
         }
     }

@@ -14,6 +14,107 @@ namespace MonoGameGum.Shapes.Tests;
 // rectangles anchor the band centerline at the body stroke centerline (only the AA halo grows).
 public class RoundedRectangleRenderableTests
 {
+    // Issue (Apos.Shapes filled-rectangle transparent-stroke bleed) — FillInset is the
+    // rectangle analog of Circle.FillRadiusInset (#2834): pull the filled body's outer edge
+    // inside the companion stroke band so a semi-transparent stroke shows the background
+    // through it, not the fill. The body pass shrinks symmetrically about the center (so the
+    // shape stays put); the shadow pass must NOT inherit the inset, or the shadow comes up
+    // short of the body's outer edge (mirror of #2958 on the circle).
+
+    [Fact]
+    public void ComputeFillDrawRect_BodyPass_NoInset_ReturnsRect()
+    {
+        RoundedRectangle sut = new() { FillInset = 0f };
+
+        (Vector2 position, Vector2 size) =
+            sut.ComputeFillDrawRect(new Vector2(10, 10), new Vector2(100, 60), isShadowPass: false);
+
+        position.ShouldBe(new Vector2(10, 10));
+        size.ShouldBe(new Vector2(100, 60));
+    }
+
+    [Fact]
+    public void ComputeFillDrawRect_BodyPass_WithInset_ShrinksAndRecentersAboutCenter()
+    {
+        RoundedRectangle sut = new() { FillInset = 4f };
+
+        (Vector2 position, Vector2 size) =
+            sut.ComputeFillDrawRect(new Vector2(10, 10), new Vector2(100, 60), isShadowPass: false);
+
+        // Each side pulls in by FillInset → size shrinks by 2 * inset, top-left moves in by inset.
+        size.ShouldBe(new Vector2(92, 52));
+        position.ShouldBe(new Vector2(14, 14));
+    }
+
+    [Fact]
+    public void ComputeFillDrawRect_BodyPass_InsetExceedsHalfDimension_ClampsToZero()
+    {
+        RoundedRectangle sut = new() { FillInset = 60f };
+
+        (Vector2 _, Vector2 size) =
+            sut.ComputeFillDrawRect(new Vector2(10, 10), new Vector2(100, 50), isShadowPass: false);
+
+        // 100 - 120 and 50 - 120 both clamp to 0 rather than inverting the rect.
+        size.X.ShouldBe(0f);
+        size.Y.ShouldBe(0f);
+    }
+
+    [Fact]
+    public void ComputeFillDrawRect_ShadowPass_IgnoresInset()
+    {
+        RoundedRectangle sut = new() { FillInset = 4f };
+
+        (Vector2 position, Vector2 size) =
+            sut.ComputeFillDrawRect(new Vector2(10, 10), new Vector2(100, 60), isShadowPass: true);
+
+        position.ShouldBe(new Vector2(10, 10));
+        size.ShouldBe(new Vector2(100, 60));
+    }
+
+    // Bug: the pixel-center AA offset (position += 0.5, size -= 1) that aligns an antialiased
+    // edge to the SCREEN pixel grid (Apos issue #12) was applied in WORLD units, ignoring camera
+    // zoom. Like the AA halo (#2936) it must be divided by cameraZoom so it stays a constant
+    // on-screen size — otherwise a filled rectangle inset visibly grows as the Gum tool zooms in
+    // and the fill pulls away from an equally-sized NineSlice. At zoom 1 the values match the
+    // historical 0.5 / 1.0.
+
+    [Fact]
+    public void ApplyAntiAliasInset_AaOff_ReturnsUnchanged()
+    {
+        RoundedRectangle sut = new();
+
+        (Vector2 position, Vector2 size) =
+            sut.ApplyAntiAliasInset(new Vector2(10, 10), new Vector2(100, 60), antiAliasSize: 0, cameraZoom: 1f);
+
+        position.ShouldBe(new Vector2(10, 10));
+        size.ShouldBe(new Vector2(100, 60));
+    }
+
+    [Fact]
+    public void ApplyAntiAliasInset_AaOn_Zoom1_InsetsHalfScreenPixel()
+    {
+        RoundedRectangle sut = new();
+
+        (Vector2 position, Vector2 size) =
+            sut.ApplyAntiAliasInset(new Vector2(10, 10), new Vector2(100, 60), antiAliasSize: 1, cameraZoom: 1f);
+
+        position.ShouldBe(new Vector2(10.5f, 10.5f));
+        size.ShouldBe(new Vector2(99f, 59f));
+    }
+
+    [Fact]
+    public void ApplyAntiAliasInset_AaOn_Zoom2_InsetScaledToScreenPixel()
+    {
+        RoundedRectangle sut = new();
+
+        (Vector2 position, Vector2 size) =
+            sut.ApplyAntiAliasInset(new Vector2(10, 10), new Vector2(100, 60), antiAliasSize: 1, cameraZoom: 2f);
+
+        // Half a SCREEN pixel = 0.25 world units at zoom 2; the full trim is twice that.
+        position.ShouldBe(new Vector2(10.25f, 10.25f));
+        size.ShouldBe(new Vector2(99.5f, 59.5f));
+    }
+
     [Fact]
     public void ComputeShadowDrawParameters_Filled_ZeroBlur_SizeUnchanged()
     {

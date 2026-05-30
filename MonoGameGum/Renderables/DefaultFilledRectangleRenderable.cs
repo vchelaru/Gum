@@ -44,5 +44,10 @@ public class DefaultFilledRectangleRenderable : SolidRectangle, IFilledRectangle
     public float? CustomRadiusTopRight { get; set; }
     public float? CustomRadiusBottomLeft { get; set; }
     public float? CustomRadiusBottomRight { get; set; }
+
+    // Stored but not rendered: SolidRectangle always draws at its full Width/Height. The
+    // fill-inset visual (hiding the fill under a transparent stroke band) is an Apos.Shapes
+    // feature; the core path keeps its historical full-edge fill. Set for round-tripping.
+    public float FillInset { get; set; }
 }
 #endif
