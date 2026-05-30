@@ -100,6 +100,7 @@ internal class ClipScreen : FrameworkElement
         oversized.Width = 220;
         oversized.Height = 140;
         oversized.FillColor = clipsChildren ? new Color(60, 120, 60) : new Color(120, 60, 60);
+        oversized.IsFilled = true;
         frame.AddChild(oversized);
 
         TextRuntime label = new();
@@ -144,6 +145,7 @@ internal class ClipScreen : FrameworkElement
         rect.Width = w;
         rect.Height = h;
         rect.FillColor = color;
+        rect.IsFilled = true;
         parent.AddChild(rect);
     }
 
@@ -192,6 +194,7 @@ internal class ClipScreen : FrameworkElement
         nestedOverflow.Width = 220;
         nestedOverflow.Height = 180;
         nestedOverflow.FillColor = new Color(60, 90, 140);
+        nestedOverflow.IsFilled = true;
         inner.AddChild(nestedOverflow);
 
         return outer;
@@ -219,6 +222,7 @@ internal class ClipScreen : FrameworkElement
         tile.Width = 140;
         tile.Height = 100;
         tile.FillColor = new Color(80, 80, 140);
+        tile.IsFilled = true;
         frame.AddChild(tile);
 
         // Text wider than the frame — clipping crops the right side of the glyphs.

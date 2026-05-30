@@ -26,6 +26,7 @@ internal class MixedScreen : FrameworkElement
         filledRectangleInstance.Width = 120;
         filledRectangleInstance.Height = 24;
         filledRectangleInstance.FillColor = Color.White;
+        filledRectangleInstance.IsFilled = true;
         container.Children.Add(filledRectangleInstance);
 
         AddText(container, "This is a (line) rectangle:");
@@ -89,6 +90,7 @@ internal class MixedScreen : FrameworkElement
             rectangle.Width = 7;
             rectangle.Height = 7;
             rectangle.FillColor = Color.White;
+            rectangle.IsFilled = true;
         }
 
         container.Children.Add(stackingContainer);

@@ -127,6 +127,7 @@ internal class RectanglesScreen : GraphicalUiElement
         RectangleRuntime filled = new();
         filled.Width = 80; filled.Height = 50;
         filled.FillColor = SKColors.Crimson;
+        filled.IsFilled = true;
         row.Children.Add(filled);
 
         RectangleRuntime stroked = new();
@@ -138,6 +139,7 @@ internal class RectanglesScreen : GraphicalUiElement
         RectangleRuntime both = new();
         both.Width = 80; both.Height = 50;
         both.FillColor = new SKColor(40, 40, 80);
+        both.IsFilled = true;
         both.StrokeColor = SKColors.Yellow;
         both.StrokeWidth = 2;
         row.Children.Add(both);
@@ -187,6 +189,7 @@ internal class RectanglesScreen : GraphicalUiElement
             rect.Width = 80;
             rect.Height = 60;
             rect.FillColor = new SKColor(40, 40, 80);
+            rect.IsFilled = true;
             rect.StrokeColor = SKColors.Orange;
             rect.StrokeWidth = 2;
             rect.CornerRadius = cornerRadius;
@@ -204,6 +207,7 @@ internal class RectanglesScreen : GraphicalUiElement
         RectangleRuntime rect = new();
         rect.Width = 120; rect.Height = 70;
         rect.FillColor = new SKColor(40, 40, 80);
+        rect.IsFilled = true;
         rect.StrokeColor = SKColors.Orange;
         rect.StrokeWidth = 2;
         rect.CustomRadiusTopLeft = 20;
@@ -222,6 +226,7 @@ internal class RectanglesScreen : GraphicalUiElement
         RectangleRuntime linearH = new();
         linearH.Width = 70; linearH.Height = 50;
         linearH.FillColor = SKColors.White; // fill mode; gradient overrides solid color
+        linearH.IsFilled = true;
         linearH.UseGradient = true;
         linearH.GradientType = GradientType.Linear;
         linearH.Color1 = SKColors.White;
@@ -234,6 +239,7 @@ internal class RectanglesScreen : GraphicalUiElement
         RectangleRuntime linearV = new();
         linearV.Width = 70; linearV.Height = 50;
         linearV.FillColor = SKColors.White;
+        linearV.IsFilled = true;
         linearV.UseGradient = true;
         linearV.GradientType = GradientType.Linear;
         linearV.Color1 = SKColors.Gold;
@@ -246,6 +252,7 @@ internal class RectanglesScreen : GraphicalUiElement
         RectangleRuntime linearD = new();
         linearD.Width = 70; linearD.Height = 50;
         linearD.FillColor = SKColors.White;
+        linearD.IsFilled = true;
         linearD.UseGradient = true;
         linearD.GradientType = GradientType.Linear;
         linearD.Color1 = SKColors.Cyan;
@@ -258,6 +265,7 @@ internal class RectanglesScreen : GraphicalUiElement
         RectangleRuntime radial = new();
         radial.Width = 70; radial.Height = 50;
         radial.FillColor = SKColors.White;
+        radial.IsFilled = true;
         radial.UseGradient = true;
         radial.GradientType = GradientType.Radial;
         radial.Color1 = SKColors.White;
@@ -280,6 +288,7 @@ internal class RectanglesScreen : GraphicalUiElement
         RectangleRuntime strokeLast = new();
         strokeLast.Width = 80; strokeLast.Height = 50;
         strokeLast.FillColor = SKColors.Crimson;
+        strokeLast.IsFilled = true;
         strokeLast.StrokeColor = SKColors.Cyan;
         strokeLast.StrokeWidth = 4;
         row.Children.Add(strokeLast);
@@ -289,6 +298,7 @@ internal class RectanglesScreen : GraphicalUiElement
         fillLast.StrokeColor = SKColors.Magenta;
         fillLast.StrokeWidth = 4;
         fillLast.FillColor = SKColors.Gold;
+        fillLast.IsFilled = true;
         row.Children.Add(fillLast);
 
         return row;
@@ -333,6 +343,7 @@ internal class RectanglesScreen : GraphicalUiElement
         frame.Width = 100;
         frame.Height = 100;
         frame.FillColor = new SKColor(60, 60, 80);
+        frame.IsFilled = true;
 
         RectangleRuntime rect = new();
         rect.Width = 70;
@@ -344,6 +355,7 @@ internal class RectanglesScreen : GraphicalUiElement
         if (filled)
         {
             rect.FillColor = SKColors.White;
+            rect.IsFilled = true;
         }
         else
         {
@@ -366,11 +378,13 @@ internal class RectanglesScreen : GraphicalUiElement
         frame.Width = 64;
         frame.Height = 64;
         frame.FillColor = new SKColor(60, 60, 80);
+        frame.IsFilled = true;
 
         RectangleRuntime rect = new();
         rect.Width = 64;
         rect.Height = 64;
         rect.FillColor = SKColors.SeaGreen;
+        rect.IsFilled = true;
         rect.StrokeColor = SKColors.Yellow;
         rect.StrokeWidth = strokeWidth;
         rect.StrokeWidthUnits = DimensionUnitType.Absolute;
@@ -390,6 +404,7 @@ internal class RectanglesScreen : GraphicalUiElement
             RectangleRuntime filled = new();
             filled.Width = 60; filled.Height = 50;
             filled.FillColor = SKColors.Goldenrod;
+            filled.IsFilled = true;
             filled.IsAntialiased = aa;
             row.Children.Add(filled);
 
@@ -415,12 +430,14 @@ internal class RectanglesScreen : GraphicalUiElement
         RectangleRuntime baseline = new();
         baseline.Width = 60; baseline.Height = 50;
         baseline.FillColor = SKColors.Goldenrod;
+        baseline.IsFilled = true;
         row.Children.Add(baseline);
 
         // Soft shadow: noticeable offset, generous blur, default opaque black.
         RectangleRuntime soft = new();
         soft.Width = 60; soft.Height = 50;
         soft.FillColor = SKColors.Goldenrod;
+        soft.IsFilled = true;
         soft.HasDropshadow = true;
         soft.DropshadowOffsetX = 14;
         soft.DropshadowOffsetY = 14;
@@ -433,6 +450,7 @@ internal class RectanglesScreen : GraphicalUiElement
         RectangleRuntime hard = new();
         hard.Width = 60; hard.Height = 50;
         hard.FillColor = SKColors.Goldenrod;
+        hard.IsFilled = true;
         hard.HasDropshadow = true;
         hard.DropshadowRed = 0; hard.DropshadowGreen = 0; hard.DropshadowBlue = 0; hard.DropshadowAlpha = 160;
         hard.DropshadowOffsetX = 16;
@@ -446,6 +464,7 @@ internal class RectanglesScreen : GraphicalUiElement
         RectangleRuntime colored = new();
         colored.Width = 60; colored.Height = 50;
         colored.FillColor = SKColors.Goldenrod;
+        colored.IsFilled = true;
         colored.HasDropshadow = true;
         colored.DropshadowRed = 220; colored.DropshadowGreen = 40; colored.DropshadowBlue = 160; colored.DropshadowAlpha = 220;
         colored.DropshadowOffsetX = 16;
@@ -457,6 +476,7 @@ internal class RectanglesScreen : GraphicalUiElement
         RectangleRuntime fadedBody = new();
         fadedBody.Width = 60; fadedBody.Height = 50;
         fadedBody.FillColor = new SKColor(218, 165, 32, 80);
+        fadedBody.IsFilled = true;
         fadedBody.HasDropshadow = true;
         fadedBody.DropshadowOffsetX = 14;
         fadedBody.DropshadowOffsetY = 14;
@@ -533,11 +553,13 @@ internal class RectanglesScreen : GraphicalUiElement
         frame.Width = 128;
         frame.Height = 100;
         frame.FillColor = new SKColor(50, 50, 70);
+        frame.IsFilled = true;
 
         RectangleRuntime rect = new();
         rect.Width = 50;
         rect.Height = 30;
         rect.FillColor = SKColors.Orange;
+        rect.IsFilled = true;
         rect.XOrigin = HorizontalAlignment.Center;
         rect.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         rect.YOrigin = alignment;

@@ -138,16 +138,19 @@ internal class RawVisualsScreen : FrameworkElement
         rectangle.Width = 80;
         rectangle.Height = 80;
         rectangle.FillColor = new Color(80, 160, 220, 255);
+        rectangle.IsFilled = true;
         row.AddChild(rectangle);
 
         var circle = new CircleRuntime();
         circle.Radius = 40;
         circle.FillColor = new Color(255, 100, 50, 255);
+        circle.IsFilled = true;
         row.AddChild(circle);
 
         var bigCircle = new CircleRuntime();
         bigCircle.Radius = 60;
         bigCircle.FillColor = new Color(50, 180, 80, 255);
+        bigCircle.IsFilled = true;
         row.AddChild(bigCircle);
     }
 

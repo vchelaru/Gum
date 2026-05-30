@@ -28,6 +28,7 @@ internal class CodeOnlyScreen : GraphicalUiElement
                 (byte)(50 + random.Next(150)),
                 (byte)(50 + random.Next(150)),
                 (byte)(50 + random.Next(150)));
+            rectangle.IsFilled = true;
 
             rectangle.Width = 50;
             rectangle.Height = 50;

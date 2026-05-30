@@ -131,6 +131,7 @@ internal class RectanglesScreen : FrameworkElement
         RectangleRuntime filled = new();
         filled.Width = 80; filled.Height = 50;
         filled.FillColor = Color.Crimson;
+        filled.IsFilled = true;
         row.AddChild(filled);
 
         RectangleRuntime stroked = new();
@@ -142,6 +143,7 @@ internal class RectanglesScreen : FrameworkElement
         RectangleRuntime both = new();
         both.Width = 80; both.Height = 50;
         both.FillColor = new Color(40, 40, 80);
+        both.IsFilled = true;
         both.StrokeColor = Color.Yellow;
         both.StrokeWidth = 2;
         row.AddChild(both);
@@ -161,6 +163,7 @@ internal class RectanglesScreen : FrameworkElement
             RectangleRuntime rect = new();
             rect.Width = 70; rect.Height = 50;
             rect.FillColor = new Color(30, 30, 50);
+            rect.IsFilled = true;
             rect.StrokeColor = Color.LightGreen;
             rect.StrokeWidth = strokeWidth;
             row.AddChild(rect);
@@ -179,6 +182,7 @@ internal class RectanglesScreen : FrameworkElement
             RectangleRuntime rect = new();
             rect.Width = 80; rect.Height = 60;
             rect.FillColor = new Color(40, 40, 80);
+            rect.IsFilled = true;
             rect.StrokeColor = Color.Orange;
             rect.StrokeWidth = 2;
             rect.IsAntialiased = true;
@@ -197,6 +201,7 @@ internal class RectanglesScreen : FrameworkElement
         RectangleRuntime rect = new();
         rect.Width = 120; rect.Height = 70;
         rect.FillColor = new Color(40, 40, 80);
+        rect.IsFilled = true;
         rect.StrokeColor = Color.Orange;
         rect.StrokeWidth = 2;
         rect.CustomRadiusTopLeft = 20;
@@ -218,6 +223,7 @@ internal class RectanglesScreen : FrameworkElement
         RectangleRuntime linearH = new();
         linearH.Width = 70; linearH.Height = 50;
         linearH.FillColor = Color.White;
+        linearH.IsFilled = true;
         linearH.UseGradient = true;
         linearH.GradientType = GradientType.Linear;
         linearH.Color1 = Color.White;
@@ -229,6 +235,7 @@ internal class RectanglesScreen : FrameworkElement
         RectangleRuntime linearV = new();
         linearV.Width = 70; linearV.Height = 50;
         linearV.FillColor = Color.White;
+        linearV.IsFilled = true;
         linearV.UseGradient = true;
         linearV.GradientType = GradientType.Linear;
         linearV.Color1 = Color.Gold;
@@ -240,6 +247,7 @@ internal class RectanglesScreen : FrameworkElement
         RectangleRuntime linearD = new();
         linearD.Width = 70; linearD.Height = 50;
         linearD.FillColor = Color.White;
+        linearD.IsFilled = true;
         linearD.UseGradient = true;
         linearD.GradientType = GradientType.Linear;
         linearD.Color1 = Color.Cyan;
@@ -251,6 +259,7 @@ internal class RectanglesScreen : FrameworkElement
         RectangleRuntime radial = new();
         radial.Width = 70; radial.Height = 50;
         radial.FillColor = Color.White;
+        radial.IsFilled = true;
         radial.UseGradient = true;
         radial.GradientType = GradientType.Radial;
         radial.Color1 = Color.White;
@@ -273,6 +282,7 @@ internal class RectanglesScreen : FrameworkElement
             RectangleRuntime filled = new();
             filled.Width = 60; filled.Height = 50;
             filled.FillColor = Color.Goldenrod;
+            filled.IsFilled = true;
             filled.IsAntialiased = aa;
             row.AddChild(filled);
 
@@ -296,11 +306,13 @@ internal class RectanglesScreen : FrameworkElement
         RectangleRuntime baseline = new();
         baseline.Width = 60; baseline.Height = 50;
         baseline.FillColor = Color.Goldenrod;
+        baseline.IsFilled = true;
         row.AddChild(baseline);
 
         RectangleRuntime soft = new();
         soft.Width = 60; soft.Height = 50;
         soft.FillColor = Color.Goldenrod;
+        soft.IsFilled = true;
         soft.HasDropshadow = true;
         soft.DropshadowOffsetX = 14;
         soft.DropshadowOffsetY = 14;
@@ -310,6 +322,7 @@ internal class RectanglesScreen : FrameworkElement
         RectangleRuntime hard = new();
         hard.Width = 60; hard.Height = 50;
         hard.FillColor = Color.Goldenrod;
+        hard.IsFilled = true;
         hard.HasDropshadow = true;
         hard.DropshadowColor = new Color(0, 0, 0, 160);
         hard.DropshadowOffsetX = 16;
@@ -320,6 +333,7 @@ internal class RectanglesScreen : FrameworkElement
         RectangleRuntime colored = new();
         colored.Width = 60; colored.Height = 50;
         colored.FillColor = Color.Goldenrod;
+        colored.IsFilled = true;
         colored.HasDropshadow = true;
         colored.DropshadowColor = new Color(220, 40, 160, 220);
         colored.DropshadowOffsetX = 16;
@@ -331,6 +345,7 @@ internal class RectanglesScreen : FrameworkElement
         RectangleRuntime fadedBody = new();
         fadedBody.Width = 60; fadedBody.Height = 50;
         fadedBody.FillColor = new Color((byte)218, (byte)165, (byte)32, (byte)80);
+        fadedBody.IsFilled = true;
         fadedBody.HasDropshadow = true;
         fadedBody.DropshadowOffsetX = 14;
         fadedBody.DropshadowOffsetY = 14;
@@ -400,6 +415,7 @@ internal class RectanglesScreen : FrameworkElement
         RectangleRuntime strokeLast = new();
         strokeLast.Width = 80; strokeLast.Height = 50;
         strokeLast.FillColor = Color.Crimson;
+        strokeLast.IsFilled = true;
         strokeLast.StrokeColor = Color.Cyan;
         strokeLast.StrokeWidth = 4;
         row.AddChild(strokeLast);
@@ -409,6 +425,7 @@ internal class RectanglesScreen : FrameworkElement
         fillLast.StrokeColor = Color.Magenta;
         fillLast.StrokeWidth = 4;
         fillLast.FillColor = Color.Gold;
+        fillLast.IsFilled = true;
         row.AddChild(fillLast);
 
         return row;
@@ -453,6 +470,7 @@ internal class RectanglesScreen : FrameworkElement
         frame.Width = 100;
         frame.Height = 100;
         frame.FillColor = new Color(60, 60, 80);
+        frame.IsFilled = true;
 
         RectangleRuntime rect = new();
         rect.Width = 70;
@@ -464,6 +482,7 @@ internal class RectanglesScreen : FrameworkElement
         if (filled)
         {
             rect.FillColor = Color.White;
+            rect.IsFilled = true;
         }
         else
         {
@@ -486,11 +505,13 @@ internal class RectanglesScreen : FrameworkElement
         frame.Width = 64;
         frame.Height = 64;
         frame.FillColor = new Color(60, 60, 80);
+        frame.IsFilled = true;
 
         RectangleRuntime rect = new();
         rect.Width = 64;
         rect.Height = 64;
         rect.FillColor = Color.SeaGreen;
+        rect.IsFilled = true;
         rect.StrokeColor = Color.Yellow;
         rect.StrokeWidth = strokeWidth;
         rect.StrokeWidthUnits = DimensionUnitType.Absolute;
@@ -519,11 +540,13 @@ internal class RectanglesScreen : FrameworkElement
         frame.Width = 128;
         frame.Height = 100;
         frame.FillColor = new Color(50, 50, 70);
+        frame.IsFilled = true;
 
         RectangleRuntime rect = new();
         rect.Width = 50;
         rect.Height = 30;
         rect.FillColor = Color.Orange;
+        rect.IsFilled = true;
         rect.XOrigin = HorizontalAlignment.Center;
         rect.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         rect.YOrigin = alignment;

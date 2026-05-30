@@ -89,6 +89,7 @@ internal class PolygonsScreen : FrameworkElement
         frame.Width = CellSize;
         frame.Height = CellSize;
         frame.FillColor = new Color(50, 50, 70);
+        frame.IsFilled = true;
         frame.Children.Add(polygon);
         return frame;
     }
