@@ -8,21 +8,19 @@ Use Gradient is a shape property supported by Circle, Rectangle, ColoredCircle, 
 
 The Use Gradient property controls whether a shape uses gradient values if true or a solid color if false.
 
-By default this value is false.
-
-<figure><img src="../../../.gitbook/assets/29_15 28 09.png" alt=""><figcaption><p>RoundedRectangle with Use Gradient set to false</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/30_04 45 13.png" alt=""><figcaption><p>Rectangle with Use Gradient set to false</p></figcaption></figure>
 
 If this value is set to true, then additional properties appear for controlling the gradient.
 
-<figure><img src="../../../.gitbook/assets/image (140).png" alt=""><figcaption><p>RoundedRectangle with Use Gradient set to true showing gradient values</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/30_04 46 05.png" alt=""><figcaption><p>Rectangle with Use Gradient set to true showing gradient values</p></figcaption></figure>
 
-### Red1 and 2, Green1 and 2, Blue1 and 2
+### Color1 and Color 2
 
-Gradients create a smooth interpolation of color from the first set of values (Red1, Green1, Blue1) to the second set of values (Red2, Green2, Blue2).
+Gradients create a smooth interpolation of color from Color 1 to Color2.
 
 Changing these values adjusts the gradient start and end colors.
 
-<figure><img src="../../../.gitbook/assets/29_15 48 03.gif" alt=""><figcaption><p>Gradient Red, Green, and Blue values</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/30_04 48 09.gif" alt=""><figcaption><p>Gradient Color values</p></figcaption></figure>
 
 ### Gradient X1 and 2, Gradient Y1 and 2
 
@@ -32,7 +30,7 @@ The gradient values appear at their respective values at the points specified by
 
 Changing the Gradient X or Y values changes the start and end points for the gradient.
 
-<figure><img src="../../../.gitbook/assets/29_15 40 24.gif" alt=""><figcaption><p>Changing gradient X and Y values changes the gradient direction and interpolation distance</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/30_04 50 09.gif" alt=""><figcaption><p>Changing gradient X and Y values changes the gradient direction and interpolation distance</p></figcaption></figure>
 
 ### Gradient X1 and X2 Units, Gradient Y1 and Y2 Units
 

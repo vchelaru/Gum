@@ -16,7 +16,7 @@ The outline (stroke) of Circle and Rectangle renders out of the box. The fill an
 
 Other types, such as SVG or Lottie, are not currently supported.
 
-For information on adding the shape support package to your project, see the [Shapes (Apos.Shapes)](../../../code/standard-visuals/shapes-apos.shapes.md) page.
+For information on adding the shape support package to your project, see the [Shapes](../../../code/standard-visuals/shapes-apos.shapes.md) page.
 
 {% hint style="info" %}
 The older ColoredCircle, RoundedRectangle, and SolidRectangle shapes are being phased out in favor of Circle and Rectangle. They remain available so existing projects keep working, but will be removed in a future release.

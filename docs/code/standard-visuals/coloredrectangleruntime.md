@@ -24,12 +24,8 @@ coloredRectangleRuntime.AddToManagers();
 
 The output is a white rectangle:
 
-![](<../../.gitbook/assets/22_06 21 56.png>)
-
 ### Gradient
 
 ColoredRectangleRuntime can display gradients. For information on gradients see the [ColoredRectangle gradient page](../../gum-tool/gum-elements/coloredrectangle/gradient.md).
 
 The output is a gradient rectangle:
-
-![](<../../.gitbook/assets/22_07 30 36.png>)

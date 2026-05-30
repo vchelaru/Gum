@@ -85,6 +85,7 @@
   * [Polygon](gum-tool/gum-elements/polygon/README.md)
     * [Height and Width](gum-tool/gum-elements/polygon/height-and-width.md)
     * [Points](gum-tool/gum-elements/polygon/points.md)
+  * [Rectangle](gum-tool/gum-elements/rectangle.md)
   * [Skia Standard Elements](gum-tool/gum-elements/skia-standard-elements/README.md)
     * [Arc](gum-tool/gum-elements/skia-standard-elements/arc/README.md)
       * [Start Angle](gum-tool/gum-elements/skia-standard-elements/arc/start-angle.md)
@@ -305,10 +306,8 @@
     * [MaxLettersToShow](code/standard-visuals/textruntime/maxletterstoshow.md)
     * [Text Wrapping](code/standard-visuals/textruntime/text-wrapping.md)
     * [VerticalAlignment](code/standard-visuals/textruntime/verticalalignment.md)
-
 * [Visual Tree](code/visual-tree/README.md)
   * [Finding Elements](code/visual-tree/finding-elements.md)
-
 * [Rendering](code/rendering/README.md)
   * [GumBatch](code/rendering/gumbatch.md)
   * [Rendering Custom Graphics](code/rendering/rendering-custom-graphics.md)
