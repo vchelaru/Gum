@@ -34,21 +34,22 @@ public class CircleRuntimeTests
         sut.Height.ShouldBe(32);
     }
 
-    // Issue #2938 — FillColor / StrokeColor are non-nullable on Skia, mirroring the XNALIKE
-    // CircleRuntime. The fill-hidden gate is IsFilled (defaults to true); stroke-hidden gate
-    // is StrokeWidth = 0.
+    // FillColor / StrokeColor are non-nullable on Skia, mirroring the XNALIKE CircleRuntime.
+    // FillColor defaults to opaque white and IsFilled defaults to false, so a fresh runtime
+    // renders as a stroke-only outline (the white fill is gated off). Flipping IsFilled = true
+    // fills the shape white without needing to also assign FillColor.
     [Fact]
-    public void FillColor_ShouldBeTransparent_ByDefault()
+    public void FillColor_ShouldBeWhite_ByDefault()
     {
         CircleRuntime sut = new();
-        sut.FillColor.ShouldBe(new SKColor(0, 0, 0, 0));
+        sut.FillColor.ShouldBe(new SKColor(255, 255, 255, 255));
     }
 
     [Fact]
-    public void IsFilled_ShouldBeTrue_ByDefault()
+    public void IsFilled_ShouldBeFalse_ByDefault()
     {
         CircleRuntime sut = new();
-        sut.IsFilled.ShouldBeTrue();
+        sut.IsFilled.ShouldBeFalse();
     }
 
     [Fact]
@@ -140,6 +141,7 @@ public class CircleRuntimeTests
     public void FillColorAndStrokeColor_BothSet_PaintsEachSlotIndependently()
     {
         CircleRuntime sut = new();
+        sut.IsFilled = true;
         sut.FillColor = SKColors.Crimson;
         sut.StrokeColor = SKColors.Cyan;
 
@@ -156,6 +158,7 @@ public class CircleRuntimeTests
     public void FillColorAndStrokeColor_SetInReverseOrder_StillPaintsBothSlots()
     {
         CircleRuntime sut = new();
+        sut.IsFilled = true;
         sut.StrokeColor = SKColors.Magenta;
         sut.FillColor = SKColors.Gold;
 
@@ -295,6 +298,7 @@ public class CircleRuntimeTests
     public void UseGradient_StrokeWidthZero_StrokeSlotStaysOff()
     {
         CircleRuntime sut = new();
+        sut.IsFilled = true;
         sut.StrokeWidth = 0;
         sut.UseGradient = true;
 
@@ -308,6 +312,7 @@ public class CircleRuntimeTests
     public void UseGradient_DefaultsBothSlotsOn()
     {
         CircleRuntime sut = new();
+        sut.IsFilled = true;
         sut.UseGradient = true;
 
         Circle fillSlot = (Circle)sut.RenderableComponent;
@@ -350,6 +355,7 @@ public class CircleRuntimeTests
     public void Dropshadow_FillColorSet_AppliesToFillSlot()
     {
         CircleRuntime sut = new();
+        sut.IsFilled = true;
         sut.FillColor = SKColors.Red;
         sut.HasDropshadow = true;
 
@@ -419,6 +425,7 @@ public class CircleRuntimeTests
     public void Clone_MutatingClone_DoesNotMutateSource()
     {
         CircleRuntime source = new();
+        source.IsFilled = true;
         source.FillColor = SKColors.Red;
         source.StrokeColor = SKColors.Blue;
 
@@ -464,6 +471,7 @@ public class CircleRuntimeTests
     public void Dropshadow_TargetSwitch_ClearsPreviousSlot()
     {
         CircleRuntime sut = new();
+        sut.IsFilled = true;
         sut.FillColor = SKColors.Red;
         sut.HasDropshadow = true;
         sut.PreRender();

@@ -128,6 +128,7 @@ public class RectangleRuntimeTests
     {
         RectangleRuntime sut = new();
 
+        sut.IsFilled = true;
         sut.FillColor = Color.Red;
         sut.StrokeColor = Color.Blue;
 
@@ -264,6 +265,9 @@ public class RectangleRuntimeTests
     {
         RectangleRuntime sut = new();
 
+        // Dropshadow routes to the fill slot only when the shape is filled; IsFilled now
+        // defaults to false, so opt the fill in to exercise the fill-slot routing.
+        sut.IsFilled = true;
         sut.HasDropshadow = true;
         sut.DropshadowColor = new Color(10, 20, 30, 40);
         sut.DropshadowOffsetX = 5;
@@ -439,6 +443,7 @@ public class RectangleRuntimeTests
     public void Clone_MutatingClone_DoesNotMutateSource()
     {
         RectangleRuntime source = new();
+        source.IsFilled = true;
         source.FillColor = Color.Red;
         source.StrokeColor = Color.Blue;
 
@@ -521,6 +526,7 @@ public class RectangleRuntimeTests
     {
         RectangleRuntime sut = new();
 
+        sut.IsFilled = true;
         sut.FillRed = 10;
         sut.FillGreen = 20;
         sut.FillBlue = 30;

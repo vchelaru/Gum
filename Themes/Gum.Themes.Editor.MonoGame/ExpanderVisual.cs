@@ -36,6 +36,7 @@ public class ExpanderVisual : InteractiveGue
 
         var headerBackground = new RectangleRuntime();
         headerBackground.Dock(Gum.Wireframe.Dock.Fill);
+        headerBackground.IsFilled = true;
         headerBackground.FillColor = new Color(50, 50, 50);
         headerBackground.StrokeWidth = 0;
         headerContainer.Children.Add(headerBackground);

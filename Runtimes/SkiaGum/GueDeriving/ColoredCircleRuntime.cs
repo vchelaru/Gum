@@ -12,7 +12,7 @@ namespace SkiaGum.GueDeriving;
 namespace Gum.GueDeriving;
 #endif
 
-[Obsolete("Use CircleRuntime with FillColor (when IsFilled is true, the default) or StrokeColor (when IsFilled is false) instead. ColoredCircleRuntime will be removed in a future release. See docs/gum-tool/upgrading/migrating-to-2026-may.md for the full migration guide.")]
+[Obsolete("Use CircleRuntime instead: set StrokeColor for an outline, or set IsFilled = true for a fill (FillColor defaults to white). ColoredCircleRuntime will be removed in a future release. See docs/gum-tool/upgrading/migrating-to-2026-may.md for the full migration guide.")]
 public class ColoredCircleRuntime : SkiaShapeRuntime
 {
     protected override RenderableShapeBase ContainedRenderable => ContainedCircle;

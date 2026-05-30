@@ -57,16 +57,16 @@ public class CircleRuntimeTests : BaseTestClass
         sut.FillColor.ShouldBe(new Color(11, 22, 33, 44));
     }
 
-    // Issue #2938 (regression fix) — FillColor defaults to transparent (alpha 0) so a
-    // freshly-constructed runtime renders as a stroke-only outline, preserving the pre-#2938
-    // ctor visual. IsFilled is true by default; assigning FillColor to a visible color lights
-    // the fill up without flipping IsFilled.
+    // FillColor defaults to opaque white and IsFilled defaults to false, so a freshly-
+    // constructed runtime renders as a stroke-only outline (the white fill is gated off). This
+    // is the "pit of success" default: flipping IsFilled = true fills the shape white without
+    // needing to also assign FillColor.
     [Fact]
-    public void FillColor_DefaultsToTransparent()
+    public void FillColor_DefaultsToWhite()
     {
         CircleRuntime sut = new();
 
-        sut.FillColor.ShouldBe(new Color(0, 0, 0, 0));
+        sut.FillColor.ShouldBe(Color.White);
     }
 
     [Fact]
@@ -83,11 +83,11 @@ public class CircleRuntimeTests : BaseTestClass
     }
 
     [Fact]
-    public void IsFilled_DefaultsToTrue()
+    public void IsFilled_DefaultsToFalse()
     {
         CircleRuntime sut = new();
 
-        sut.IsFilled.ShouldBeTrue();
+        sut.IsFilled.ShouldBeFalse();
     }
 
     [Fact]
