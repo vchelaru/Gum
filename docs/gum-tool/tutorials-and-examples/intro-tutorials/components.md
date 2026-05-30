@@ -2,130 +2,122 @@
 
 ## Introduction
 
-Components can contain instances of other components and of standard objects. Examples of components include:
+Components are reusable objects which can contain instances of other components and of standard objects. Examples of components include:
 
-* Check boxes
+* Health Bars
 * Buttons
 * Popup Menus
 
-Components can also be simple such as a button or more complex UI elements such as a full Options screen with dozens of instances.
+Components can also be simple such as a button or more complex UI elements such as a full Options menu with dozens of instances.
 
-## Simple Button Example - Creating the Entity
+Components can be made from-scratch or can be imported. Gum provides a full set of components for common controls including Button, TextBox, and ListBoxes, but for this tutorial we will be exploring how to build a component from scratch.
 
-To understand how components work, we'll create a simple Button component. To do this:
+## Creating a Component and Instances
+
+The first step in creating a component is to add an empty component and name it:
 
 1. Right-click on the Components folder in Gum and select **Add Component**
-2. Name the Component "Button"
-3. Drag+drop a ColoredRectangle standard element into the Button component
-4. Drag+drop a Text standard element into the Button component
+2. Name the Component "HealthBar" (no spaces)
 
-![A single Button Component with ColoredRectangle and Text. Note that the text is white.](../../../.gitbook/assets/GumButton1.PNG)
+Next we'll add two Rectangle instances. One will be used as the background for the health bar, and one will be used as the fill for the health bar.
 
-Since ColoredRectangleInstance and TextInstance are both white you may not be able to see the Text. Let's change the ColoredRectangleInstance's color:
+1. Drag+drop a Rectangle from the Standard folder into your Health Bar
+2. Repeat this again to create a 2nd rectangle
 
-1. Select ColoredRectangleInstance
-2. Change `Red` to `0`
-3. Change `Green` to `0`
-4. Keep `Blue` as `255`
+If you dragged the instances on the tree view, the two Rectangle instances will overlap. We will adjust their positions later in this tutorial.
 
-Notice that as you change the values, the background on the text box changes from green to white to indicate that the value has an explicit value. The `Blue` text box keeps a green value since it has not been changed from its default value.
+![HealthBar Component with two overlapping Rectangle instances](<../../../.gitbook/assets/30_05 37 15.png>)
 
-<figure><img src="../../../.gitbook/assets/14_06 16 21.png" alt=""><figcaption><p>Values backgrounds change from green to white when explicitly set</p></figcaption></figure>
+## Naming Instances
 
-Now you should be able to see the Text on top of the rectangle:
+Next we'll rename the instances so their names match their purpose. Rename the first rectangle Background and the second Fill. Notice that in Gum, the first item is the top-most, so you can think of it in the order that you would read text.
 
-![White text on top of a blue ColoredRectangle](../../../.gitbook/assets/Gum_URVP5vRzNF.png)
+<figure><img src="../../../.gitbook/assets/30_05 40 41.png" alt=""><figcaption><p>Renamed Rectangle instances</p></figcaption></figure>
 
-## Sizing the colored rectangle
+In this case, since Fill comes after Background, then it will draw on top. This ordering will become important when we make changes to these two instances later in the tutorial.
 
-At this point we have made some progress towards creating our first button, but it still needs some work.
+If you renamed them in the wrong order, you can also adjust their order in the component by selecting one of the instances, holding down the Alt key, and then pressing the up or down arrows to reorder the selected instance. You can also drag+drop to reorder, but be careful to not create an accidental parent/child relationship between the instances.
 
-First, we're going to adjust the size of the instances inside of our Button component. At this point you can see that the ColoredRectangle (the blue background) is not the same size as the button. Not only do we want to make the blue ColoredRectangle larger, but we also want it to automatically match the Button's size (the dotted outline).
+## Setting Background Variables
 
-To do this:
+Next we'll adjust the Background Rectangle:
 
-1. Select the ColoredRectangleInstance
-2. Select the Alignment tab
-3. Click the Fill Dock button
+1. Select Background
+2. Check the `Is Filled` variable
+3. Set `Fill Color` to black - you can click on the colored box to open the color editor, or you can type the hex value `000000`&#x20;
+4. Set `Stroke Width` to 0 - note that the stroke may not disappear since the Fill rectangle is still overlapping Background
+5. Click on the `Alignment` tab and click the Fill button in the Dock row. This causes the Background to fill the size of its parent, and to adjust its own size if the parent HealthBar size changes.
 
-<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1).png" alt=""><figcaption><p>Fill Dock expands the ColoredRectangleInstance to occupy its full parent</p></figcaption></figure>
+Now the Background should be a solid black background to the entire component
 
-Alternatively you can adjust the individual values. Keep in mind that using the Alignment tab is the fastest way to get your instances setup. The next section shows all of the changes that the Alignment tab performs for you:
+<figure><img src="../../../.gitbook/assets/30_05 47 34.png" alt=""><figcaption><p>Background filling the entire component</p></figcaption></figure>
 
-1. Select the ColoredRectangleInstance
-2. Change `Height Units` to `Relative To Parent`
-3. Change `Width Units` to `Relative to Parent`
-4. Change `Height` to `0`. This means that the actual height of the ColoredRectangleInstance matches the actual height of its container (the Button Component). Since `Height Units` is set to `Relative To Parent`.
-5. Change `Width` to `0`. This means that the actual width of the ColoredRectangleInstance matches the actual width of its parent.
+Before moving on, you might want to spend some time adjusting values on your background. Although we removed the stroke and changed the background to black, you may want your HealthBar to have a different appearance. Feel free to try changing other values to get a feel for the different options provided by Rectangle.
 
-Now the ColoredRectangleInstance automatically matches the Button's actual with and height:
+Also, note that we clicked the Fill Dock button. This button is a shortcut which changes a number of variables on the component. Specifically this changed:
 
-![ColoredRectangleInstance fills its parent by matching its width and height](../../../.gitbook/assets/Gum_rL5aAQWKVB.png)
+* X, X Units, X Origin - the background will always be positioned horizontally according to its parent's center
+* Y, Y Units, Y Origin - the background will always be positioned vertically according to its parent's center
+* Width, Width Units - the background will always grow or shrink horizontally to fill its parent
+* Height, Height Units - the background will always grow or shrink vertically to fill its parent
 
-Next we'll position the TextInstance. We'll want to adjust the Text so that it is always centered, and line-wraps with the size of the button.
+For more information on docking, see the [Dock page](../../gum-elements/general-properties/dock.md).
 
-To do this:
+## Setting Fill Variables
 
-1. Select TextInstance
-2. Click the Alignment tab
-3. Set Margin to 20
-4. Click the Fill Dock button
+Next we'll adjust our Fill Rectangle, starting with its color:
 
-<figure><img src="../../../.gitbook/assets/gb-010.png" alt=""><figcaption></figcaption></figure>
+1. Select Fill
+2. Check the `Is Filled` variable
+3. Set `Fill Color` to a green color - the exact value doesn't matter too much so pick a color you like
+4. Set `Stroke Width` to 0
 
-Alternatively you can set each individual value on the Text by following these steps:
+<figure><img src="../../../.gitbook/assets/30_06 00 25.png" alt=""><figcaption><p>Fill displaying a Green color</p></figcaption></figure>
 
-1. Select TextInstance
-2. Change its `Horizontal Alignment` to `Center`
-3. Change its `Vertical Alignment` to `Center`
+Unlike Background, the Fill rectangle needs to adjust in response to display how much health a player has. Specifically, the Fill rectangle needs to always fill its parent vertically, but its width depends on a health value.
 
-At this point the Text is vertically and horizontally centered within its boundaries, but we want to have the boundaries centered within the Button. To do this:
+First, we can adjust the height to fill its parent. To do this, set these values:
 
-1. Keep TextInstance selected
-2. Change the `X Units` to `Pixels From Center`
-3. Change the `X Origin` to `Center`
-4. Change `X` to `0`
+* Set Height to 0
+* Set Height Units to Relative to Parent
 
-Now let's make it centered on the Y as well:
+<figure><img src="../../../.gitbook/assets/30_06 01 20.png" alt=""><figcaption><p>Fill matching its parent's height</p></figcaption></figure>
 
-1. Keep the TextInstance selected
-2. Change the `Y Units` to `Pixels From Center`
-3. Change the `Y Origin` to `Center`
-4. Change `Y` to `0`
+Height Units and Width Units can be used to adjust the size of your object relative to its parent or children. In this case the parent is the entire health bar itself. Note that we've set up our Height and Height Units to be relative to parent manually, which is exactly what was done earlier when clicked the Fill Dock button. As mentioned earlier, the Fill Dock button is just a shortcut for setting these types of values.
 
-![](../../../.gitbook/assets/Gum_rL5aAQWKVB.png)
+Next we'll adjust our fill bar so that the width is a percentage of its parent rather than an absolute value.
 
-Finally, let's make the width of the text match the width of the button. For the Text we'll actually leave a border around the edge so the Text doesn't line wrap right against the edge of the button. To do this:
+* Set Width to any value between 0 and 100. It should be 50 by default which is a good default
+* Set Width Units to Percent of Parent
 
-1. Keep the TextInstance selected
-2. Change the `Width Units` to `Relative to Parent`
-3. Change `Width` to `-40`. This means the actual width of the Text is 40 pixels less than the actual width of its container. Since the button is centered this means a 20 pixel border on the left and 20 on the right (20+20=40).
+Now if we adjust the Width value, the health bar width adjusts relative to its parent.
 
-![Width and Width Units set explicitly to give the text a margin](../../../.gitbook/assets/Gum_Pz8MUKGk5c.png)
+<figure><img src="../../../.gitbook/assets/30_06 05 01.gif" alt=""><figcaption><p>Fill using Percent of Parent Width</p></figcaption></figure>
 
-## Setting the Button Default Variables
+## Changing HealthBar Width and Height
 
-Buttons are typically wider than they are tall. To match this common layout, let's set some variables on the Button:
+Now that we have set up both Background and Fill to be relative to their parent's size, we can adjust the size of the HealthBar component and all of the instances should also adjust automatically.
 
-1. Select the Button component
-2. Change `Width` to `120`
-3. Change `Height` to `36`
+Select the HealthBar component and set the following values:
 
-Notice that whenever you change these values, the contained objects (text and colored rectangle) adjust automatically.
+* Set Width to 200
+* Set Height ot 24
 
-![Text adjusted to be wider than it is tall](../../../.gitbook/assets/Gum_HiigFcls0X.png)
+<figure><img src="../../../.gitbook/assets/30_06 08 28.png" alt=""><figcaption><p>HealthBar with adjusted Width and Height</p></figcaption></figure>
 
 ## Creating Component Instances
 
 Now that we have a component created, we can add instances of this component the same way we have added standard elements. To do this:
 
-1. Create a new Screen. I'll call mine MainMenu
-2. Drag+drop the Button component into the Screen
+1. Create a new Screen. I'll call mine GameScreen
+2. Drag+drop the HealthBar component into the Screen
 
-We can now resize and position the Button instance. We can reuse our Button component to create multiple instances. Each instance can be adjusted by changing its `X`, `Y`, `Width`, and `Height` values.
+You can move and resize the newly-created HealthBarInstance in your screen. Notice that Background and Fill adjust in response to size changes on health bar.
 
-![Multiple Button instances in MainMenu](../../../.gitbook/assets/Gum_mQ20VxDf31.png)
+You can also create copies by pressing CTRL+C, CTRL+V. Note that newly-created instances overlap the copied instance, so you need to move pasted instances.
 
-We can change _top level_ variables on the Button such as `X`, `Y`, `Width`, and `Height`, but we cannot change variables on instances within the Button - all of our buttons currently display "Hello" text.
+<figure><img src="../../../.gitbook/assets/30_06 12 13.png" alt=""><figcaption><p>HealthBar instances in a screen</p></figcaption></figure>
 
-The next tutorial shows how to use exposed variables to further customize each button instance.
+## What's Next?
+
+Although we can can change the size and position of our health bars, we are missing some very important functionality - the ability to change how much health is displayed. The next tutorial discusses how to expose variables so that each instance can be modified.

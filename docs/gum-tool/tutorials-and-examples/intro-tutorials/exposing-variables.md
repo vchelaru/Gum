@@ -2,53 +2,47 @@
 
 ## Introduction
 
-The ability to expose variables in Gum makes components flexible. For this example we will continue the Button example from the last tutorial.
+The ability to expose variables in Gum makes components flexible. For this example we will continue using the HealthBar component from the previous tutorial.
 
 ## Recap
 
-The last tutorial created a Button component with Text and ColoredRectangle instances. The instances were set up to be positioned correctly according to the size of the button.
+The last tutorial created a HealthBar component with two rectangles - Background and Fill. The instances were set up to be positioned correctly according to the size of the HealthBar.
 
-We then created a MainMenu screen and added a few instances of the Button component to the MainMenu screen.
-
-While the size and positioning functionality in our button works well, the Text itself always says "Hello".
+We also created a GameScreen and added a few HealthBar instances. Although we can position and size each HealthBar instance, they all display the same health percent. This tutorial discusses how to use exposed variables to allow each instance to display a different value.
 
 ## Exposing the Text variable
 
-By default a Button only exposes its _top level_ variables. Variables on instances inside the button are not available outside of the button. In programming terms these variables are considered _protected_.
+By default components only exposes _top level_ variables. Variables on instances inside the component are not available when editing an instance. In programming terms these variables are considered _protected_.
 
-However, we can _expose_ variables on instances so that they can be modified in our MainMenu screen.
+However, we can _expose_ variables inside of our component so that they can be modified in our screen.
 
 To do this:
 
-1. Select TextInstance under Button
-2. Find the `Text` variable in the Variables tab (Second column, under the "States" panel)
-3. Right-click on the text box and select **Expose Variable**
-4. Enter the name "Text" for the variable name
+1. Select Fill inside the HealthBar component
+2. Find the `Width` variable in the Variables tab
+3. Right-click on the `Width` variable **Expose Variable**
+4. Enter the name HealthPercent for the variable name - note that typically variables are exposed without spaces in them, but Gum will display them with spaces in the variables tab
 
-<figure><img src="../../../.gitbook/assets/Gum_1efsktPMgR (1).png" alt=""><figcaption><p>Right-click to expose a variable</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/30_06 19 05.png" alt=""><figcaption><p>Right-click Expose Variable</p></figcaption></figure>
 
-You can verify that the `Text` variable is exposed by clicking on the the **Button** component and seeing the `Text` variable under the **Exposed** category:
+Notice the variable now displays its exposed variable name.
 
-<figure><img src="../../../.gitbook/assets/Gum_HcVRSOPPR9.png" alt=""><figcaption><p>Text variable is exposed</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/30_06 20 21.png" alt=""><figcaption><p>Width variable exposed as HealthPercent</p></figcaption></figure>
 
-## Setting instance variables
+Although this variable belongs to the Fill instance, it is now exposed as a variable on HealthBar. You can now see this variable by selecting the HealthBar component.
 
-Now that the `Text` variable is an exposed variable, it can be changed on each Button instance. To do this:
+<figure><img src="../../../.gitbook/assets/30_06 22 07.png" alt=""><figcaption><p>Health Percent under HealthBar</p></figcaption></figure>
 
-1. Select one of the Buttons in MainMenu
-2. Change its `Text` to "Button 1"
+Similarly, now each instance can be modified since each now exposes a Health Percent variable.
 
-Feel free to set different Text values on all of the buttons. Notice that the `Text` may word-wrap.
-
-![Text values set per button instance](../../../.gitbook/assets/Gum_8vSjkMFzj4.png)
+<figure><img src="../../../.gitbook/assets/30_06 23 52.png" alt=""><figcaption><p>Health Percent adjusted per-instance</p></figcaption></figure>
 
 ## Conclusion
 
-This tutorial shows how to expose Text values per-instance. You can expose other instance variables in your components to customize instances. Other examples of variables which may be exposed include:
+This tutorial shows how to use exposed variables to customize component instances. You can expose other instance variables in your components to customize instances. Other examples of variables which may be exposed include:
 
 * Visibility of icons on a Button component
 * Font sizes on a Label component
 * Sprite visibility showing the number of connected gamepads on a JoinGame component
-* Width (percentage) on a HealthBar component
 
 It's best to experiment with exposed variables to get a feel for how you can use them in your own components.
