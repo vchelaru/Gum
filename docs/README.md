@@ -10,19 +10,19 @@ The Gum layout engine can also be included in any .NET project without requiring
 
 Gum UI includes advanced layout functionality to create and preview your UI
 
-<figure><img src=".gitbook/assets/image (26).png" alt=""><figcaption><p>Gum UI</p></figcaption></figure>
+<figure><img src=".gitbook/assets/30_06 53 41.png" alt=""><figcaption><p>Gum UI</p></figcaption></figure>
 
 ### Object Oriented Design Focused on Reusable Controls
 
 Gum allows the creation of components which can be instanced and customized in screens and other components
 
-<figure><img src=".gitbook/assets/image (27).png" alt=""><figcaption><p>Gum Components</p></figcaption></figure>
+<figure><img src=".gitbook/assets/30_06 54 43.png" alt=""><figcaption><p>Gum Components</p></figcaption></figure>
 
 ### Gum Objects Support Multiple Size and Position Units
 
 Adjust an object’s origin, position units, size units, and stacking to create fluid UI
 
-<figure><img src=".gitbook/assets/image (28).png" alt=""><figcaption><p>Position and Size Units</p></figcaption></figure>
+<figure><img src=".gitbook/assets/30_06 50 51.png" alt=""><figcaption><p>Position and Size Units</p></figcaption></figure>
 
 ### Simple Integration - Gum Supports Many Runtimes
 
