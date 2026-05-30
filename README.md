@@ -68,18 +68,4 @@ Gum's runtimes are published to NuGet. Install the package for your platform. Al
 
 ## Platforms
 
-Gum produces general-purpose XML so it is technically possible to use Gum in any environment. That said, a number of runtimes exist to make integration into your project much easier.
-
-Gum integrations exist for the following environments:
-
-* MonoGame/FNA/Kni, including libraries like MonoGame.Extended and Nez
-* FlatRedBall
-* Meadow
-* SkiaSharp
-* Silk.NET
-* raylib
-* WPF
-* Maui
-* Avalonia
-
-For details on integrating Gum with these runtimes, or for using GumCore to integrate with your own runtime, see the main documentation: https://docs.flatredball.com/gum/
+Gum produces general-purpose XML, so it can be used in virtually any C# environment. Beyond the packaged runtimes listed above, integrations also exist for environments such as FlatRedBall, Meadow, Silk.NET, WPF, and Avalonia. For integration details — or for using GumCore to integrate with your own runtime — see the main documentation: https://docs.flatredball.com/gum/
