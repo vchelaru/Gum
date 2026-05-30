@@ -50,6 +50,22 @@ You can also post an issue: https://github.com/vchelaru/Gum/issues
 
 You can also check the docs: https://docs.flatredball.com/gum/
 
+## Installation
+
+Gum's runtimes are published to NuGet. Install the package for your platform. All packages share the same version number, so they stay in sync.
+
+| Platform | Runtime | Shapes |
+|---|---|---|
+| MonoGame | [![NuGet](https://img.shields.io/nuget/v/Gum.MonoGame?label=Gum.MonoGame)](https://www.nuget.org/packages/Gum.MonoGame) | [![NuGet](https://img.shields.io/nuget/v/Gum.Shapes.MonoGame?label=Gum.Shapes.MonoGame)](https://www.nuget.org/packages/Gum.Shapes.MonoGame) |
+| KNI | [![NuGet](https://img.shields.io/nuget/v/Gum.KNI?label=Gum.KNI)](https://www.nuget.org/packages/Gum.KNI) | [![NuGet](https://img.shields.io/nuget/v/Gum.Shapes.KNI?label=Gum.Shapes.KNI)](https://www.nuget.org/packages/Gum.Shapes.KNI) |
+| raylib | [![NuGet](https://img.shields.io/nuget/v/Gum.raylib?label=Gum.raylib)](https://www.nuget.org/packages/Gum.raylib) | Built-in |
+| SkiaSharp | [![NuGet](https://img.shields.io/nuget/v/Gum.SkiaSharp?label=Gum.SkiaSharp)](https://www.nuget.org/packages/Gum.SkiaSharp) | Built-in |
+| Maui | [![NuGet](https://img.shields.io/nuget/v/Gum.SkiaSharp.Maui?label=Gum.SkiaSharp.Maui)](https://www.nuget.org/packages/Gum.SkiaSharp.Maui) | Built-in |
+| Sokol | [![NuGet](https://img.shields.io/nuget/v/Gum.sokol?label=Gum.sokol)](https://www.nuget.org/packages/Gum.sokol) | Built-in |
+| FNA | [![NuGet](https://img.shields.io/nuget/v/Gum.FNA?label=Gum.FNA)](https://www.nuget.org/packages/Gum.FNA) | — *(not supported)* |
+
+> Shapes is the recommended way to draw rectangles, circles, and other primitives in Gum. On MonoGame and KNI it ships as a separate add-on package (install it alongside the runtime); on the other platforms it's built into the runtime.
+
 ## Platforms
 
 Gum produces general-purpose XML so it is technically possible to use Gum in any environment. That said, a number of runtimes exist to make integration into your project much easier.
