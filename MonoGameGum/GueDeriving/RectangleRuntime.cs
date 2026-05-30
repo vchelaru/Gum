@@ -775,6 +775,9 @@ public class RectangleRuntime : GraphicalUiElement
             }
             // Dropshadow routing depends on IsFilled — see CircleRuntime for the rationale.
             SyncDropshadowToTarget();
+            // Gradient routing also depends on IsFilled: the gradient paints the active body
+            // (fill when filled, stroke when stroke-only), so re-route on toggle.
+            SyncGradientToTarget();
             NotifyPropertyChanged();
         }
     }
@@ -983,6 +986,21 @@ public class RectangleRuntime : GraphicalUiElement
     // even when neither slot implements IGradientedRenderable (core defaults wrap SolidRectangle
     // / LineRectangle, no gradient concept). Setters push to whichever slot(s) implement it.
 
+    // Routes the gradient gate to the ACTIVE body slot — the fill when IsFilled, the stroke when
+    // stroke-only — and forces the inactive slot's gate off. Mirrors SyncDropshadowToTarget: a
+    // single gradient is the active body's paint, so the other slot renders solid (its StrokeColor
+    // / FillColor) rather than sharing the gradient and compositing invisibly over it. Re-run from
+    // both the UseGradient and IsFilled setters so toggling IsFilled re-routes the gate.
+    void SyncGradientToTarget()
+    {
+        var fillGrad = _fill as IGradientedRenderable;
+        var strokeGrad = _stroke as IGradientedRenderable;
+        var active = _isFilled ? fillGrad : strokeGrad;
+        var inactive = _isFilled ? strokeGrad : fillGrad;
+        if (active != null) active.UseGradient = _useGradient;
+        if (inactive != null) inactive.UseGradient = false;
+    }
+
     bool _useGradient;
     /// <inheritdoc cref="CircleRuntime.UseGradient"/>
     public bool UseGradient
@@ -991,8 +1009,7 @@ public class RectangleRuntime : GraphicalUiElement
         set
         {
             _useGradient = value;
-            if (_fill is IGradientedRenderable fillGrad) fillGrad.UseGradient = value;
-            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.UseGradient = value;
+            SyncGradientToTarget();
             NotifyPropertyChanged();
         }
     }
@@ -1571,6 +1588,29 @@ public class RectangleRuntime : GraphicalUiElement
         _stroke.CustomRadiusTopRight = topRight;
         _stroke.CustomRadiusBottomLeft = bottomLeft;
         _stroke.CustomRadiusBottomRight = bottomRight;
+
+        // Mirror of CircleRuntime.PreRender's FillRadiusInset push (#2834). When both slots are
+        // visible, inset the fill so its outer edge sits inside the stroke's opaque band —
+        // otherwise a filled rectangle with a semi-transparent stroke shows the FILL through the
+        // stroke instead of the background. Pushed via FillInset rather than mutating
+        // fill.Width/Height (the fill IS the runtime's contained sizing object; mutating Width
+        // would feed back into layout and shrink the rectangle each frame). Inset per side =
+        // AA-compensated stroke width, floored at the AA contribution for hairline strokes.
+        // Gated on stroke visibility: alpha 0 OR StrokeWidth 0 means no stroke is drawn, and an
+        // inset would render a thin background gap where the stroke would have been.
+        if (_fill != null)
+        {
+            float fillInset = 0f;
+            if (_stroke.Color.A > 0 && _strokeWidth > 0)
+            {
+                fillInset = renderableStrokeWidth;
+                if (_isAntialiased && _stroke is IAntialiasedRenderable)
+                {
+                    fillInset = Math.Max(fillInset, aposAaContributionWorld);
+                }
+            }
+            _fill.FillInset = fillInset;
+        }
     }
 
     /// <inheritdoc/>

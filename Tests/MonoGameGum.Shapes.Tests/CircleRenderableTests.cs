@@ -440,6 +440,50 @@ public class CircleRenderableTests
     // outer edge, leaving a visible ring of missing shadow under the stroke (worse at higher
     // camera zoom because the inset is in world units).
 
+    // The pixel-center AA inset shrinks the radius by half a SCREEN pixel (divided by cameraZoom,
+    // mirror of RoundedRectangle / #2936) so a filled circle's inset doesn't grow as the tool
+    // zooms. The center must stay FIXED: shifting it down/right (the old center += 0.5) insets the
+    // top/left edge by twice the offset while leaving the bottom/right edge flush, biasing the
+    // whole circle down and right (visible spill-over when zoomed out). Keeping the center fixed
+    // insets every edge symmetrically.
+
+    [Fact]
+    public void ApplyAntiAliasInset_AaOff_ReturnsUnchanged()
+    {
+        Circle sut = new();
+
+        (Vector2 center, float radius) =
+            sut.ApplyAntiAliasInset(new Vector2(50, 50), radius: 25f, antiAliasSize: 0, cameraZoom: 1f);
+
+        center.ShouldBe(new Vector2(50, 50));
+        radius.ShouldBe(25f);
+    }
+
+    [Fact]
+    public void ApplyAntiAliasInset_AaOn_Zoom1_ShrinksRadiusHalfScreenPixel_CenterFixed()
+    {
+        Circle sut = new();
+
+        (Vector2 center, float radius) =
+            sut.ApplyAntiAliasInset(new Vector2(50, 50), radius: 25f, antiAliasSize: 1, cameraZoom: 1f);
+
+        // Center unchanged — no down/right bias; radius shrinks half a screen pixel.
+        center.ShouldBe(new Vector2(50f, 50f));
+        radius.ShouldBe(24.5f);
+    }
+
+    [Fact]
+    public void ApplyAntiAliasInset_AaOn_Zoom2_ShrinksRadiusScaledToScreenPixel_CenterFixed()
+    {
+        Circle sut = new();
+
+        (Vector2 center, float radius) =
+            sut.ApplyAntiAliasInset(new Vector2(50, 50), radius: 25f, antiAliasSize: 1, cameraZoom: 2f);
+
+        center.ShouldBe(new Vector2(50f, 50f));
+        radius.ShouldBe(24.75f);
+    }
+
     [Fact]
     public void ComputeFillDrawRadius_BodyPass_NoInset_ReturnsRadius()
     {

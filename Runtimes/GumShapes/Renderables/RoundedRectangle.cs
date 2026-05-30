@@ -58,6 +58,60 @@ public class RoundedRectangle : RenderableShapeBase,
     public float? CustomRadiusBottomRight { get; set; }
     public float? CustomRadiusBottomLeft { get; set; }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Rectangle analog of <see cref="Circle.FillRadiusInset"/> (#2834). Pushed by
+    /// <see cref="Gum.GueDeriving.RectangleRuntime.PreRender"/> on the fill slot only when a
+    /// visible stroke is present. Applied as a symmetric inset at render time via
+    /// <see cref="ComputeFillDrawRect"/>; Width/Height are left untouched so the layout system
+    /// stays the sole source of size truth (mutating Width here would feed back into layout
+    /// because the fill instance is the runtime's contained sizing object).
+    /// </remarks>
+    public float FillInset { get; set; }
+
+    /// <summary>
+    /// Insets the fill draw rect by <see cref="FillInset"/> on every side, keeping the rect
+    /// centered (so the shape doesn't drift) and clamping each dimension at 0 rather than
+    /// inverting. Mirrors <see cref="Circle.ComputeFillDrawRadius"/>: only the body pass
+    /// consumes the inset; the shadow pass (<paramref name="isShadowPass"/>) draws at full size
+    /// so its outer edge lines up with the body's outer edge (#2958). Centering keeps it
+    /// correct under rotation — Apos rotates the rect around <c>position + size/2</c>, which the
+    /// symmetric inset leaves unchanged.
+    /// </summary>
+    public (Vector2 position, Vector2 size) ComputeFillDrawRect(Vector2 position, Vector2 size, bool isShadowPass)
+    {
+        if (isShadowPass || FillInset <= 0f)
+        {
+            return (position, size);
+        }
+
+        var newSize = new Vector2(
+            System.Math.Max(0f, size.X - 2f * FillInset),
+            System.Math.Max(0f, size.Y - 2f * FillInset));
+        var newPosition = new Vector2(
+            position.X + (size.X - newSize.X) / 2f,
+            position.Y + (size.Y - newSize.Y) / 2f);
+        return (newPosition, newSize);
+    }
+
+    /// <summary>
+    /// Insets the draw rect by the pixel-center AA alignment offset
+    /// (<see cref="RenderableShapeBase.GetAntiAliasWorldOffset"/>): the top-left moves in by the
+    /// offset and each dimension shrinks by twice it, keeping the rect centered. Scaled by
+    /// <paramref name="cameraZoom"/> so the inset stays a constant on-screen size at any zoom.
+    /// Returns the rect unchanged when antialiasing is off.
+    /// </summary>
+    public (Vector2 position, Vector2 size) ApplyAntiAliasInset(Vector2 position, Vector2 size, int antiAliasSize, float cameraZoom)
+    {
+        var offset = GetAntiAliasWorldOffset(antiAliasSize, cameraZoom);
+        if (offset == 0f)
+        {
+            return (position, size);
+        }
+        return (new Vector2(position.X + offset, position.Y + offset),
+                new Vector2(size.X - 2f * offset, size.Y - 2f * offset));
+    }
+
     /// <summary>
     /// Issue #2979 — dropshadow draw size, AA halo, and alpha scale for a rectangle of nominal
     /// <paramref name="hostSize"/>, mirroring <see cref="Circle"/>'s split (#2950/#2977).
@@ -125,6 +179,10 @@ public class RoundedRectangle : RenderableShapeBase,
 
         var size = new Microsoft.Xna.Framework.Vector2(Width, Height);
 
+        // Resolve camera zoom once: it scales the pixel-center AA inset (RenderInternal) and the
+        // dropshadow halo/geometry so both hold a constant on-screen size as the tool zooms.
+        var cameraZoom = (managers as RenderingLibrary.SystemManagers)?.Renderer?.Camera?.Zoom ?? 1f;
+
         if(HasDropshadow)
         {
             // Issue #2950 — when stroke <= blur on a stroke-only RoundedRectangle, fade the
@@ -135,7 +193,6 @@ public class RoundedRectangle : RenderableShapeBase,
             // Issue #2979 — strict-anchor shadow geometry (filled disk anchor / stroke centerline
             // anchor), mirroring Circle.Render. Replaces the old naive `size -= blur` that drove
             // the outline inward as blur grew. aaSize is world-anchored (scaled by camera zoom).
-            var cameraZoom = (managers as RenderingLibrary.SystemManagers)?.Renderer?.Camera?.Zoom ?? 1f;
             (Vector2 dropshadowSize, int shadowAaSize, float shadowAlphaScale) =
                 ComputeShadowDrawParameters(size, shadowStrokeWidth, cameraZoom);
             if (shadowAlphaScale < 1f)
@@ -154,10 +211,11 @@ public class RoundedRectangle : RenderableShapeBase,
                 shadowAaSize,
                 shadowStrokeWidth,
                 rotationRadians,
+                cameraZoom,
                 forcedColor: shadowColor);
         }
 
-        RenderInternal(sb, absoluteLeft, absoluteTop, size, IsAntialiased ? 1 : 0, StrokeWidth, rotationRadians);
+        RenderInternal(sb, absoluteLeft, absoluteTop, size, IsAntialiased ? 1 : 0, StrokeWidth, rotationRadians, cameraZoom);
     }
 
     private void RenderInternal(Apos.Shapes.ShapeBatch sb,
@@ -167,6 +225,7 @@ public class RoundedRectangle : RenderableShapeBase,
         int antiAliasSize,
         float strokeWidth,
         float rotationRadians,
+        float cameraZoom,
         Color? forcedColor = null)
     {
         if (!IsFilled && StrokeDashLength > 0 && StrokeGapLength > 0 && strokeWidth > 0
@@ -192,32 +251,35 @@ public class RoundedRectangle : RenderableShapeBase,
         // when shapes have a stroke thickness of 1 at the Gum level with anti aliasing. This renders wiht
         // an epsilon value of 0.01, with an anti-alias size of 1. By offsetting, the sampling of the antialias
         // gradient in the shader happens right at the start of the gradient, making for solid beautiful lines.
-        if(antiAliasSize != 0)
-        {
-            position.X += .5f;
-            position.Y += .5f;
-            size.X -= 1f;
-            size.Y -= 1f;
-        }
+        // The offset is half a SCREEN pixel, so it is divided by cameraZoom (via ApplyAntiAliasInset) —
+        // otherwise the inset grows in world space as the tool zooms in and the shape pulls visibly
+        // inward from an equally-sized NineSlice.
+        (position, size) = ApplyAntiAliasInset(position, size, antiAliasSize, cameraZoom);
 
         if (IsFilled)
         {
+            // Pull the fill's outer edge inside the companion stroke band (#2834 rectangle
+            // analog) so a semi-transparent stroke shows the background through it, not the
+            // fill. The shadow pass (forcedColor != null) must NOT inherit the inset, or its
+            // outer edge falls short of the body's outer edge (#2958).
+            var (fillPosition, fillSize) = ComputeFillDrawRect(position, size, isShadowPass: forcedColor != null);
+
             if (ShouldPaintGradient(forcedColor))
             {
                 var gradient = base.GetGradient(absoluteLeft, absoluteTop, rotationRadians);
 
                 if (hasCustomCorners)
-                    sb.DrawRectangle(position, size, gradient, gradient, thickness, corners, rotationRadians, antiAliasSize);
+                    sb.DrawRectangle(fillPosition, fillSize, gradient, gradient, thickness, corners, rotationRadians, antiAliasSize);
                 else
-                    sb.DrawRectangle(position, size, gradient, gradient, thickness, CornerRadius, rotationRadians, antiAliasSize);
+                    sb.DrawRectangle(fillPosition, fillSize, gradient, gradient, thickness, CornerRadius, rotationRadians, antiAliasSize);
             }
             else
             {
                 var color = forcedColor ?? Color;
                 if (hasCustomCorners)
-                    sb.DrawRectangle(position, size, color, color, thickness, corners, rotationRadians, antiAliasSize);
+                    sb.DrawRectangle(fillPosition, fillSize, color, color, thickness, corners, rotationRadians, antiAliasSize);
                 else
-                    sb.DrawRectangle(position, size, color, color, thickness, CornerRadius, rotationRadians, antiAliasSize);
+                    sb.DrawRectangle(fillPosition, fillSize, color, color, thickness, CornerRadius, rotationRadians, antiAliasSize);
             }
         }
         else

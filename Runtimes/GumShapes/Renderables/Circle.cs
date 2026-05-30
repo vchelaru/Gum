@@ -88,6 +88,25 @@ public class Circle : RenderableShapeBase,
         return System.Math.Max(0f, radius - FillRadiusInset);
     }
 
+    /// <summary>
+    /// Insets the draw circle by the pixel-center AA alignment offset
+    /// (<see cref="RenderableShapeBase.GetAntiAliasWorldOffset"/>): the radius shrinks by the
+    /// offset while the center stays FIXED, so every edge insets symmetrically. Shifting the
+    /// center (the original <c>center += 0.5</c>) insets the top/left edge by twice the offset
+    /// and leaves the bottom/right flush, biasing the whole disk down and right (visible
+    /// spill-over when zoomed out). Scaled by <paramref name="cameraZoom"/> so the inset holds a
+    /// constant on-screen size. Returns the circle unchanged when antialiasing is off.
+    /// </summary>
+    public (Vector2 center, float radius) ApplyAntiAliasInset(Vector2 center, float radius, int antiAliasSize, float cameraZoom)
+    {
+        var offset = GetAntiAliasWorldOffset(antiAliasSize, cameraZoom);
+        if (offset == 0f)
+        {
+            return (center, radius);
+        }
+        return (center, radius - offset);
+    }
+
     public override void Render(ISystemManagers managers)
     {
         // Issue #2950 follow-up — stroke-only Circle with StrokeWidth = 0 would otherwise draw
@@ -119,6 +138,10 @@ public class Circle : RenderableShapeBase,
 
         var radius = System.Math.Min(Width, Height) / 2.0f;
 
+        // Resolve camera zoom once: it scales the pixel-center AA inset (RenderInternal) and the
+        // dropshadow halo/geometry so both hold a constant on-screen size as the tool zooms.
+        var cameraZoom = (managers as RenderingLibrary.SystemManagers)?.Renderer?.Camera?.Zoom ?? 1f;
+
         if(HasDropshadow)
         {
             var shadowLeft = absoluteLeft + DropshadowOffsetX + DropshadowBlurX;
@@ -133,8 +156,6 @@ public class Circle : RenderableShapeBase,
             // the shadow disappears entirely).
             (float shadowStrokeWidth, Color shadowColor) =
                 ComputeStrokeShadowDrawParameters(EffectiveDropshadowColor);
-
-            var cameraZoom = (managers as RenderingLibrary.SystemManagers)?.Renderer?.Camera?.Zoom ?? 1f;
 
             float shadowRadius;
             int shadowAaSize;
@@ -174,10 +195,11 @@ public class Circle : RenderableShapeBase,
                 shadowAaSize,
                 shadowStrokeWidth,
                 rotationRadians,
+                cameraZoom,
                 shadowColor);
         }
 
-        RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, IsAntialiased ? 1 : 0, StrokeWidth, rotationRadians);
+        RenderInternal(sb, absoluteLeft, absoluteTop, center, radius, IsAntialiased ? 1 : 0, StrokeWidth, rotationRadians, cameraZoom);
     }
 
     private void RenderInternal(ShapeBatch sb,
@@ -188,6 +210,7 @@ public class Circle : RenderableShapeBase,
         int antiAliasSize,
         float strokeWidth,
         float rotationRadians,
+        float cameraZoom,
         Color? forcedColor = null)
     {
         if (!IsFilled && StrokeDashLength > 0 && StrokeGapLength > 0 && strokeWidth > 0 && radius > 0)
@@ -196,13 +219,10 @@ public class Circle : RenderableShapeBase,
             return;
         }
 
-        // See RoundedRectangle for more info
-        if (antiAliasSize != 0)
-        {
-            center.X += .5f;
-            center.Y += .5f;
-            radius -= .5f;
-        }
+        // See RoundedRectangle for more info. The offset is half a SCREEN pixel, so it is divided
+        // by cameraZoom (via ApplyAntiAliasInset) — otherwise the inset grows in world space as
+        // the tool zooms in and the circle pulls visibly inward.
+        (center, radius) = ApplyAntiAliasInset(center, radius, antiAliasSize, cameraZoom);
 
         if (IsFilled)
         {

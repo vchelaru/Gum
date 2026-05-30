@@ -40,5 +40,16 @@ public interface IFilledRectangleRenderable : IRenderable
 
     /// <inheritdoc cref="CustomRadiusTopLeft"/>
     float? CustomRadiusBottomRight { get; set; }
+
+    /// <summary>
+    /// Pixels to inset each side of the rendered fill (rectangle analog of
+    /// <see cref="IFilledCircleRenderable.FillRadiusInset"/>, issue #2834). Pushed by
+    /// <see cref="RectangleRuntime.PreRender"/> when the stroke slot is visible alongside the
+    /// fill — pulling the fill's outer edge inside the stroke's band so a semi-transparent
+    /// stroke shows the background through it, not the fill. Applied at render time only;
+    /// Width/Height stay layout-owned. Honored by Apos.Shapes' RoundedRectangle; stored but
+    /// not rendered on the core default (SolidRectangle).
+    /// </summary>
+    float FillInset { get; set; }
 }
 #endif
