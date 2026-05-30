@@ -66,6 +66,4 @@ Gum's runtimes are published to NuGet. Install the package for your platform. Al
 
 > Shapes is the recommended way to draw rectangles, circles, and other primitives in Gum. On MonoGame and KNI it ships as a separate add-on package (install it alongside the runtime); on the other platforms it's built into the runtime.
 
-## Platforms
-
 Gum produces general-purpose XML, so it can be used in virtually any C# environment. Beyond the packaged runtimes listed above, integrations also exist for environments such as FlatRedBall, Meadow, Silk.NET, WPF, and Avalonia. For integration details — or for using GumCore to integrate with your own runtime — see the main documentation: https://docs.flatredball.com/gum/
