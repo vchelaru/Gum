@@ -130,7 +130,7 @@ public class StandardElementsManagerGumTool : Singleton<StandardElementsManagerG
             else if (variable.Name == "Red" ||
                 variable.Name == "Green" ||
                 variable.Name == "Blue" ||
-                variable.Name == "Alpha"||
+                variable.Name == "Alpha" ||
                 variable.Name == "Red1" ||
                 variable.Name == "Green1" ||
                 variable.Name == "Blue1" ||
@@ -138,7 +138,10 @@ public class StandardElementsManagerGumTool : Singleton<StandardElementsManagerG
                 variable.Name == "Red2" ||
                 variable.Name == "Green2" ||
                 variable.Name == "Blue2" ||
-                variable.Name == "Alpha2" 
+                variable.Name == "Alpha2" ||
+                variable.Name == "FillAlpha" ||
+                variable.Name == "StrokeAlpha" ||
+                variable.Name == "DropshadowAlpha"
                 )
             {
                 variable.PropertiesToSetOnDisplayer["MinValue"] = 0.0;

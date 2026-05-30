@@ -1,12 +1,35 @@
+using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Shouldly;
 using System.Linq;
+using WpfDataUi.Controls;
 using Xunit;
 
 namespace GumToolUnitTests.Managers;
 
 public class StandardElementsManagerTests : BaseTestClass
 {
+    // FillAlpha / StrokeAlpha / DropshadowAlpha are 0-255 byte channels just like the legacy
+    // Alpha, so they should get the same SliderDisplay with a [0, 255] range rather than a
+    // plain int textbox.
+    [Theory]
+    [InlineData("FillAlpha")]
+    [InlineData("StrokeAlpha")]
+    [InlineData("DropshadowAlpha")]
+    public void SetPreferredDisplayers_AssignsByteRangeSlider_ToAlphaVariables(string variableName)
+    {
+        var state = new StateSave();
+        state.Variables.Add(new VariableSave { Type = "int", Name = variableName });
+
+        StandardElementsManagerGumTool.SetPreferredDisplayers(state);
+
+        var variable = state.Variables.First();
+        variable.PreferredDisplayer.ShouldBe(typeof(SliderDisplay));
+        variable.PropertiesToSetOnDisplayer["MinValue"].ShouldBe(0.0);
+        variable.PropertiesToSetOnDisplayer["MaxValue"].ShouldBe(255.0);
+    }
+
     [Theory]
     [InlineData("Circle")]
     [InlineData("Rectangle")]
