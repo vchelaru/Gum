@@ -112,6 +112,7 @@ public class PropertyGridVisual : ContainerRuntime
         {
             var background = new RectangleRuntime();
             background.Dock(Gum.Wireframe.Dock.Fill);
+            background.IsFilled = true;
             background.StrokeWidth = 0;
             row.Children.Add(background);
         }
