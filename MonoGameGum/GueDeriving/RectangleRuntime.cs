@@ -235,17 +235,16 @@ public class RectangleRuntime : GraphicalUiElement
     // implement any of this; when it gains support, lift the relevant blocks into RAYLIB ||
     // SOKOL (mirror the CircleRuntime pattern).
 
-    // Issue #2938 regression fix — transparent default so a freshly-constructed RectangleRuntime
-    // renders as a stroke-only outline (matches pre-#2938 visual the gallery / cross-backend
-    // samples assume).
-    Color _fillColor = new Color((byte)0, (byte)0, (byte)0, (byte)0);
+    // FillColor defaults to opaque white while IsFilled defaults to false, so a freshly-
+    // constructed RectangleRuntime renders as a stroke-only outline (the white fill is gated
+    // off). Flipping IsFilled = true fills it white without needing to assign FillColor.
+    Color _fillColor = new Color((byte)255, (byte)255, (byte)255, (byte)255);
 
     /// <inheritdoc cref="Gum.Renderables.LineRectangle.FillColor"/>
     /// <remarks>
     /// Issue #2938 — non-nullable since the visibility gate moved to <see cref="IsFilled"/>.
-    /// Defaults to transparent (alpha 0) so a freshly-constructed runtime renders a
-    /// stroke-only outline; IsFilled is true by default so assigning a visible color lights
-    /// up the fill without flipping IsFilled.
+    /// Defaults to opaque white; IsFilled is false by default so a fresh runtime is a
+    /// stroke-only outline and flipping IsFilled on alone yields a visible white fill.
     /// </remarks>
     public Color FillColor
     {
@@ -695,18 +694,19 @@ public class RectangleRuntime : GraphicalUiElement
 #endif
 
 #if XNALIKE
-    // Issue #2938 regression fix: FillColor defaults to transparent (alpha 0) so a freshly-
-    // constructed RectangleRuntime renders as a stroke-only outline — matching the pre-#2938
-    // visual that existing sample code (gallery frames) assumes. IsFilled is true by default;
-    // assigning FillColor to a visible color lights up the fill without flipping IsFilled.
-    Color _fillColor = new Color(0, 0, 0, 0);
+    // FillColor defaults to opaque white while IsFilled defaults to false, so a freshly-
+    // constructed RectangleRuntime renders as a stroke-only outline (the white fill is gated
+    // off). This is the "pit of success" default: flipping IsFilled = true fills the rectangle
+    // white without needing to also assign FillColor.
+    Color _fillColor = Color.White;
 
     /// <summary>
     /// Color of the filled rectangle. Pushed to the fill slot when <see cref="IsFilled"/> is
     /// <c>true</c>; when <c>IsFilled</c> is <c>false</c> the fill slot is pushed a transparent
     /// color so only the stroke draws. Both core (<see cref="DefaultFilledRectangleRenderable"/>)
     /// and MonoGameGumShapes (<c>RoundedRectangle</c> with <c>IsFilled = true</c>) honor this.
-    /// Defaults to transparent so a freshly-constructed runtime renders a stroke-only outline.
+    /// Defaults to opaque white so that flipping <see cref="IsFilled"/> on alone produces a
+    /// visible (white) fill.
     /// </summary>
     /// <remarks>
     /// Issue #2938 — non-nullable since the visibility gate moved to <see cref="IsFilled"/>.
@@ -753,14 +753,15 @@ public class RectangleRuntime : GraphicalUiElement
         set => FillColor = new Color(_fillColor.R, _fillColor.G, _fillColor.B, (byte)value);
     }
 
-    bool _isFilled = true;
+    bool _isFilled = false;
 
     /// <summary>
-    /// Gates fill rendering. When <c>true</c> (the default) the fill slot is painted with
-    /// <see cref="FillColor"/>. When <c>false</c> the fill slot is pushed a transparent color
-    /// so only the stroke draws — used to render a stroke-only outline without dropping
-    /// <see cref="FillColor"/>. Stroke visibility is gated separately by
-    /// <see cref="StrokeWidth"/> (0 hides stroke).
+    /// Gates fill rendering. When <c>true</c> the fill slot is painted with
+    /// <see cref="FillColor"/>. When <c>false</c> (the default) the fill slot is pushed a
+    /// transparent color so only the stroke draws — a freshly-constructed runtime is therefore
+    /// a stroke-only outline. Because <see cref="FillColor"/> defaults to opaque white, setting
+    /// this <c>true</c> alone produces a visible white fill. Stroke visibility is gated
+    /// separately by <see cref="StrokeWidth"/> (0 hides stroke).
     /// </summary>
     public bool IsFilled
     {
@@ -1802,12 +1803,10 @@ public class RectangleRuntime : GraphicalUiElement
                 SetContainedObject(_stroke);
             }
 
-            // Initial defaults — stroke white, fill transparent (IsFilled = true so the gate is
-            // open, but FillColor alpha = 0 so nothing visible draws), layout 50x50. Issue
-            // #2938 (regression fix): a freshly-constructed RectangleRuntime renders as a
-            // stroke-only outline — matching the pre-#2938 visual that existing sample code
-            // (gallery frames, sample backgrounds) assumes. Assigning FillColor to a visible
-            // color lights up the fill without flipping IsFilled.
+            // Initial defaults — stroke white, fill white but gated off (IsFilled = false), so
+            // the fill slot is pushed a transparent color and a freshly-constructed
+            // RectangleRuntime renders as a stroke-only outline, layout 50x50. Flipping
+            // IsFilled = true paints the fill white without needing to assign FillColor.
             _stroke.Color = _strokeColor;
             if (_fill != null)
             {
@@ -1842,19 +1841,19 @@ public class RectangleRuntime : GraphicalUiElement
 
             SetStrokeRenderable(new ContainedLineRectangle { CornerRadius = 0 });
 
-            // Defaults: transparent fill, white stroke — RectangleRuntime's historical
-            // outline-only visual, now expressed as IsFilled = true (base default) + FillColor
-            // alpha 0. Symmetric with CircleRuntime's Skia branch: assigning FillColor to a
-            // visible color lights up the fill without flipping IsFilled. Pre-#2938 the Skia
-            // branch flipped IsFilled = false explicitly; that broke gallery code which does
-            // `frame.FillColor = darkGray;` without setting IsFilled.
+            // Defaults: white fill gated off (IsFilled = false) + white stroke —
+            // RectangleRuntime's stroke-only outline visual. Because FillColor defaults to
+            // opaque white, flipping IsFilled = true paints a white fill without assigning a
+            // color. IsFilled must be set explicitly here (the shared SkiaShapeRuntime base
+            // defaults it to true for the legacy single-color shapes).
             //
-            // FillColor must be explicitly assigned here even though the field default is
-            // transparent: SkiaShapeRuntime.PushFillColorToSlot only runs from the FillColor /
-            // IsFilled property setters, never from field init. Without this line the Skia
-            // RoundedRectangle renderable retains its own constructor default (white) and the
-            // rectangle renders as a solid white block. Mirrors CircleRuntime's Skia ctor.
-            FillColor = new SKColor(0, 0, 0, 0);
+            // FillColor must be explicitly assigned even though the gate forces transparent:
+            // SkiaShapeRuntime.PushFillColorToSlot only runs from the FillColor / IsFilled
+            // property setters, never from field init. Setting IsFilled = false re-pushes a
+            // transparent color into the fill slot, so the RoundedRectangle renderable doesn't
+            // retain its own white constructor default and render as a solid white block.
+            FillColor = SKColors.White;
+            IsFilled = false;
             StrokeColor = SKColors.White;
             StrokeWidth = 1;
             StrokeWidthUnits = DimensionUnitType.ScreenPixel;
@@ -1885,14 +1884,13 @@ public class RectangleRuntime : GraphicalUiElement
             // (LineRectangle.Render falls back to Color when StrokeColor is null and no fill
             // is requested) keeps working unchanged.
             //
-            // #2938 (regression fix) — push runtime-held FillColor / StrokeColor / IsFilled
-            // defaults onto the renderable so the runtime properties report consistent state at
-            // construction. FillColor defaults to transparent and IsFilled defaults to true →
-            // a fresh rectangle renders as a stroke-only outline (matching the pre-#2938
-            // visual that existing sample code assumes).
+            // Push runtime-held FillColor / StrokeColor / IsFilled defaults onto the renderable
+            // so the runtime properties report consistent state at construction. FillColor
+            // defaults to opaque white and IsFilled defaults to false → a fresh rectangle
+            // renders as a stroke-only outline; flipping IsFilled = true paints it white.
             rectangle.StrokeColor = _strokeColor;
             rectangle.FillColor = _fillColor;
-            rectangle.IsFilled = true;
+            rectangle.IsFilled = false;
 #endif
 
             Width = 50;

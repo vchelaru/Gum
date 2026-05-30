@@ -53,6 +53,7 @@ public class RectangleRuntimeTests : BaseTestClass
         // The point of the two-slot model — bordered panel / button / card with both visible.
         RectangleRuntime sut = new();
 
+        sut.IsFilled = true;
         sut.FillColor = Color.Red;
         sut.StrokeColor = Color.Blue;
 
@@ -121,15 +122,15 @@ public class RectangleRuntimeTests : BaseTestClass
         ((DefaultFilledRectangleRenderable)sut.RenderableComponent).Children[0].ShouldBeSameAs(originalStroke);
     }
 
-    // Issue #2938 (regression fix) — FillColor defaults to transparent (alpha 0) so a
-    // freshly-constructed runtime renders as a stroke-only outline (pre-#2938 visual).
-    // IsFilled is true by default; assigning FillColor to a visible color lights the fill up.
+    // FillColor defaults to opaque white and IsFilled defaults to false, so a freshly-
+    // constructed runtime renders as a stroke-only outline (the white fill is gated off).
+    // Flipping IsFilled = true fills the shape white without needing to also assign FillColor.
     [Fact]
-    public void FillColor_DefaultsToTransparent()
+    public void FillColor_DefaultsToWhite()
     {
         RectangleRuntime sut = new();
 
-        sut.FillColor.ShouldBe(new Color(0, 0, 0, 0));
+        sut.FillColor.ShouldBe(Color.White);
     }
 
     [Fact]
@@ -141,11 +142,11 @@ public class RectangleRuntimeTests : BaseTestClass
     }
 
     [Fact]
-    public void IsFilled_DefaultsToTrue()
+    public void IsFilled_DefaultsToFalse()
     {
         RectangleRuntime sut = new();
 
-        sut.IsFilled.ShouldBeTrue();
+        sut.IsFilled.ShouldBeFalse();
     }
 
     [Fact]

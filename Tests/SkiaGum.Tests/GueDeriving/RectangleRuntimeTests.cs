@@ -256,25 +256,22 @@ public class RectangleRuntimeTests
         strokeSlot.HasDropshadow.ShouldBeTrue();
     }
 
-    // Issue #2938 (regression fix) — RectangleRuntime preserves the historical Skia default of
-    // an invisible fill via FillColor = transparent (alpha 0). IsFilled is true by default
-    // (base behavior), so the gate is open — assigning FillColor to a visible color lights the
-    // fill up without needing to flip IsFilled.
+    // FillColor defaults to opaque white and IsFilled defaults to false, so a fresh runtime
+    // renders as a stroke-only outline (the white fill is gated off). Flipping IsFilled = true
+    // fills the shape white without needing to also assign FillColor.
     [Fact]
-    public void FillColor_ShouldBeTransparent_ByDefault()
+    public void FillColor_ShouldBeWhite_ByDefault()
     {
         RectangleRuntime sut = new();
-        sut.FillColor.ShouldBe(new SKColor(0, 0, 0, 0));
+        sut.FillColor.ShouldBe(new SKColor(255, 255, 255, 255));
     }
 
     // Regression guard for the gallery breakage caught after PR #2939's first fix attempt:
     // SkiaShapeRuntime.PushFillColorToSlot only runs from the FillColor / IsFilled setters,
-    // never from field init. If the ctor relies on the field default and skips the explicit
-    // FillColor assignment, the Skia RoundedRectangle renderable retains its own
-    // constructor default (SKColors.White at RoundedRectangle.cs:23) and the rectangle
-    // renders as a solid white block. The runtime property reports the transparent default
-    // — so the existing default test passes — while the actual visual is wrong. This test
-    // asserts the renderable's Color directly so the bug can't reappear silently.
+    // never from field init. With IsFilled = false by default the gate forces the fill slot's
+    // renderable Color to transparent regardless of the (now white) FillColor, so a fresh
+    // rectangle still renders stroke-only rather than as a solid white block. This test asserts
+    // the renderable's Color directly so the bug can't reappear silently.
     [Fact]
     public void FillRenderableColor_ShouldBeTransparent_ByDefault()
     {
@@ -284,10 +281,10 @@ public class RectangleRuntimeTests
     }
 
     [Fact]
-    public void IsFilled_ShouldBeTrue_ByDefault()
+    public void IsFilled_ShouldBeFalse_ByDefault()
     {
         RectangleRuntime sut = new();
-        sut.IsFilled.ShouldBeTrue();
+        sut.IsFilled.ShouldBeFalse();
     }
 
     // Issue #2938 — per-channel ints compose into FillColor via the same setter pipeline
