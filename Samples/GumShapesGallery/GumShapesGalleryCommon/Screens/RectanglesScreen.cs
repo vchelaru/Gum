@@ -100,7 +100,6 @@ internal class RectanglesScreen : FrameworkElement
             RectangleRuntime rect = new();
             rect.Width = width;
             rect.Height = 40;
-            rect.CornerRadius = 10;
             rect.StrokeWidth = 1;
             rect.StrokeColor = Color.White;
             rect.IsAntialiased = true;
