@@ -1,0 +1,69 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12</LangVersion>
+
+    <PackageId>Gum.Themes.Hazard.Kni</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Gum Contributors</Authors>
+    <RepositoryUrl>https://github.com/vchelaru/Gum</RepositoryUrl>
+    <Description>Hazard theme for Gum Forms - an industrial space-salvage HUD look (hazard-yellow on warm black, square-cornered chrome, Saira Condensed type). Provides styled visuals for Gum Forms controls with KNI and Gum.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\Gum.Themes.Hazard.MonoGame\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.Hazard.MonoGame\Content\Fonts\SairaCondensed-OFL.txt" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.Hazard.MonoGame\Content\Fonts\DejaVuSansMono-LICENSE.txt" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Source-share the MonoGame variant's .cs files. A single set of visual +
+         theme code is compiled into both the MonoGame and KNI assemblies. -->
+    <Compile Include="..\Gum.Themes.Hazard.MonoGame\**\*.cs" />
+    <Compile Remove="..\Gum.Themes.Hazard.MonoGame\obj\**" />
+    <Compile Remove="..\Gum.Themes.Hazard.MonoGame\bin\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Re-embed the TTFs from the MonoGame project's Content\Fonts folder, but map
+         them under this assembly's Content\Fonts via <Link> so the resource name
+         resolves to "Gum.Themes.Hazard.Kni.Content.Fonts.<file>" - matching what
+         HazardTheme.RegisterEmbeddedFont derives from the assembly name. The
+         <Link> is load-bearing; without it the manifest name keeps the "..\" path. -->
+    <EmbeddedResource Include="..\Gum.Themes.Hazard.MonoGame\Content\Fonts\SairaCondensed-Regular.ttf">
+      <Link>Content\Fonts\SairaCondensed-Regular.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.Hazard.MonoGame\Content\Fonts\SairaCondensed-SemiBold.ttf">
+      <Link>Content\Fonts\SairaCondensed-SemiBold.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.Hazard.MonoGame\Content\Fonts\DejaVuSansMono.ttf">
+      <Link>Content\Fonts\DejaVuSansMono.ttf</Link>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- KernSmith is a runtime dependency of the theme. Flows transitively to
+         consumers - no PrivateAssets. -->
+    <PackageReference Include="KernSmith.KniGum" Version="*" />
+    <PackageReference Include="nkast.Xna.Framework" Version="4.2.9001">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\MonoGameGum\KniGum\KniGum.csproj" />
+    <ProjectReference Include="..\..\Runtimes\GumShapes\KniGumShapes.csproj" />
+  </ItemGroup>
+</Project>
