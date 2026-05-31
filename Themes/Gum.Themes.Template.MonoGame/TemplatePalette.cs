@@ -56,6 +56,12 @@ public static class TemplatePalette
     /// <summary>Accent - focus, fills, selection (<c>--acc</c>, <c>#007ACC</c>).</summary>
     public static readonly Color Accent = new Color(0, 122, 204);
 
+    /// <summary>Dark accent used as the background of a selected / highlighted item
+    /// (a selected ListBoxItem, an open MenuItem submenu). Muted enough that an
+    /// unfocused list still reads as "this row is selected" without competing with
+    /// the brighter <see cref="Accent"/> focus fill (<c>--accd</c>, <c>#094771</c>).</summary>
+    public static readonly Color Selection = new Color(9, 71, 113);
+
     /// <summary>Primary text (<c>--txt</c>, <c>#D4D4D4</c>).</summary>
     public static readonly Color Text = new Color(212, 212, 212);
 
@@ -64,6 +70,11 @@ public static class TemplatePalette
 
     /// <summary>Placeholder text (<c>--ph</c>, <c>#6A6A6A</c>).</summary>
     public static readonly Color Placeholder = new Color(106, 106, 106);
+
+    /// <summary>Light-blue text used on an accent-filled element (e.g. a ToggleButton
+    /// in its On state) so the label stays legible against the saturated
+    /// <see cref="Accent"/> fill (<c>#9DCFEE</c>).</summary>
+    public static readonly Color PressedText = new Color(157, 207, 238);
 
     // ---- Disabled tokens (explicit - muted, not derived) --------------------
 

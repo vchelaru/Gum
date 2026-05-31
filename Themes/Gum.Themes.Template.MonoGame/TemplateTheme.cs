@@ -175,6 +175,45 @@ public static class TemplateTheme
         FrameworkElement.DefaultFormsTemplates[typeof(Slider)] =
             new VisualTemplate((_, c) => new SliderVisual(tryCreateFormsObject: c));
 
+        FrameworkElement.DefaultFormsTemplates[typeof(CheckBox)] =
+            new VisualTemplate((_, c) => new CheckBoxVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(RadioButton)] =
+            new VisualTemplate((_, c) => new RadioButtonVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(ToggleButton)] =
+            new VisualTemplate((_, c) => new ToggleButtonVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(ComboBox)] =
+            new VisualTemplate((_, c) => new ComboBoxVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(ListBox)] =
+            new VisualTemplate((_, c) => new ListBoxVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(ListBoxItem)] =
+            new VisualTemplate((_, c) => new ListBoxItemVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(ScrollBar)] =
+            new VisualTemplate((_, c) => new ScrollBarVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(ScrollViewer)] =
+            new VisualTemplate((_, c) => new ScrollViewerVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(Menu)] =
+            new VisualTemplate((_, c) => new MenuVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(MenuItem)] =
+            new VisualTemplate((_, c) => new MenuItemVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(Window)] =
+            new VisualTemplate((_, c) => new WindowVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(Splitter)] =
+            new VisualTemplate((_, c) => new SplitterVisual(tryCreateFormsObject: c));
+
+        FrameworkElement.DefaultFormsTemplates[typeof(Tooltip)] =
+            new VisualTemplate((_, c) => new TooltipVisual(tryCreateFormsObject: c));
+
         // ---- Not yet styled: pinned to stock V3 visuals ---------------------
         // FrameworkElement.DefaultFormsTemplates is global static state. Registering
         // every control - even the ones this theme doesn't restyle yet - means
@@ -182,47 +221,8 @@ public static class TemplateTheme
         // (theme switching) doesn't leave another theme's visual in place. As you
         // build out the theme, move a control up to the styled block above and give
         // it a YourThemeVisual subclass.
-        FrameworkElement.DefaultFormsTemplates[typeof(CheckBox)] =
-            new VisualTemplate((_, c) => new V3.CheckBoxVisual(tryCreateFormsObject: c));
-
-        FrameworkElement.DefaultFormsTemplates[typeof(RadioButton)] =
-            new VisualTemplate((_, c) => new V3.RadioButtonVisual(tryCreateFormsObject: c));
-
-        FrameworkElement.DefaultFormsTemplates[typeof(ToggleButton)] =
-            new VisualTemplate((_, c) => new V3.ToggleButtonVisual(tryCreateFormsObject: c));
-
-        FrameworkElement.DefaultFormsTemplates[typeof(ComboBox)] =
-            new VisualTemplate((_, c) => new V3.ComboBoxVisual(tryCreateFormsObject: c));
-
-        FrameworkElement.DefaultFormsTemplates[typeof(ListBox)] =
-            new VisualTemplate((_, c) => new V3.ListBoxVisual(tryCreateFormsObject: c));
-
-        FrameworkElement.DefaultFormsTemplates[typeof(ListBoxItem)] =
-            new VisualTemplate((_, c) => new V3.ListBoxItemVisual(tryCreateFormsObject: c));
-
-        FrameworkElement.DefaultFormsTemplates[typeof(ScrollBar)] =
-            new VisualTemplate((_, c) => new V3.ScrollBarVisual(tryCreateFormsObject: c));
-
-        FrameworkElement.DefaultFormsTemplates[typeof(ScrollViewer)] =
-            new VisualTemplate((_, c) => new V3.ScrollViewerVisual(tryCreateFormsObject: c));
-
         FrameworkElement.DefaultFormsTemplates[typeof(Label)] =
             new VisualTemplate((_, c) => new V3.LabelVisual(tryCreateFormsObject: c));
-
-        FrameworkElement.DefaultFormsTemplates[typeof(Menu)] =
-            new VisualTemplate((_, c) => new V3.MenuVisual(tryCreateFormsObject: c));
-
-        FrameworkElement.DefaultFormsTemplates[typeof(MenuItem)] =
-            new VisualTemplate((_, c) => new V3.MenuItemVisual(tryCreateFormsObject: c));
-
-        FrameworkElement.DefaultFormsTemplates[typeof(Window)] =
-            new VisualTemplate((_, c) => new V3.WindowVisual(tryCreateFormsObject: c));
-
-        FrameworkElement.DefaultFormsTemplates[typeof(Splitter)] =
-            new VisualTemplate((_, c) => new V3.SplitterVisual(tryCreateFormsObject: c));
-
-        FrameworkElement.DefaultFormsTemplates[typeof(Tooltip)] =
-            new VisualTemplate((_, c) => new V3.TooltipVisual(tryCreateFormsObject: c));
 
         FrameworkElement.DefaultFormsTemplates[typeof(ItemsControl)] =
             new VisualTemplate((_, c) => new V3.ItemsControlVisual(tryCreateFormsObject: c));
