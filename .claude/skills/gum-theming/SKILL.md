@@ -9,6 +9,23 @@ A theme restyles Forms controls by subclassing each V3 default visual, swapping 
 
 This skill is about *authoring* a theme. For how a theme is *consumed* — installing the NuGet package, calling `Apply`, and the catalog of shipped themes — see the user guide: https://docs.flatredball.com/gum/code/styling/themes.
 
+## Fastest path: clone the template
+
+`Themes/Gum.Themes.Template.MonoGame` (+ its `.Kni` sibling) is a complete, building theme whose purpose is to be **cloned, not consumed**. Start a new theme from it rather than from scratch — it already wires the two-project MonoGame/KNI split, font embedding, and the `Apply` skeleton, and it encodes the two conventions below. Recipe for turning a CSS/HTML design into a theme:
+
+1. **Clone both projects** and find-replace `Template` → `YourTheme` (folder names, file names, `PackageId`, `namespace`, and the `Template*` type names: `TemplateTheme`, `TemplatePalette`, `TemplateShapes`, `TemplateTextInputDecoration`). Per-control visual class names (`ButtonVisual`, …) stay — the namespace disambiguates. Add both projects to `AllLibraries.sln` under the Themes folder and flip `<GeneratePackageOnBuild>` to `true`.
+2. **Transcribe the design's `:root` block into `YourThemePalette`** — one CSS custom property → one base-token field, keeping the `// --var #hex` comment so the mapping back to the mockup stays auditable. This is the bulk of "make it match the design."
+3. **Leave derived colors computed.** Hover/press/selection tints are get-only properties using `ColorExtensions.Adjust(±n)` (lighten/darken — already shipped with V3 styling). Only pin an explicit value when the design specifies an exact color that `Adjust` can't express (e.g. an eye-tuned glow alpha).
+4. **Swap the fonts** (TTFs + `<EmbeddedResource>` in both csprojs, plus the family names, `RegisterBundledFonts`, and `AddCharacters` in the theme class).
+5. **Restyle visuals**, promoting each from the stock-V3 block in `RegisterVisuals` to a styled subclass as you build it.
+
+Two conventions the template encodes, worth keeping in any theme:
+
+- **One palette, read everywhere.** Every visual reads its colors from `YourThemePalette`; never inline `new Color(...)` in a visual, so a restyle touches one file. It is the theme's analog of V3's `Colors`, but each theme owns its full palette (no shared base type) so the theme stays a self-contained, copyable reference.
+- **Shape factories for the common case.** `TemplateShapes` builds the centered/full-parent fill, border, and focus-ring shapes (rect and circle) that every visual reuses, collapsing the repeated ~15-line `RectangleRuntime` setup. Bespoke geometry (fixed-size sub-boxes, glyph `TextRuntime`s, edge strips, percentage-width bars) is still built inline.
+
+The template is all-Apos.Shapes. For a NineSlice-only theme, the Editor theme is the better starting reference (see primitive options below).
+
 ## Theme entry point
 
 `MyTheme.Apply(GraphicsDevice)` does in order:
