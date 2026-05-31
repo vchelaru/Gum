@@ -118,3 +118,7 @@ if(keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
 }
 ```
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAACCp1TTWvjMBD9K4PpwYZg0sJeEnpom36xdAnblLbgi2KNG23sUZFkZ9vg_96R5dRJLgurg82Mn968mXneRvf2tq6iiTM1jqIKqyUaG02iy9o5TbDsXtOMMmq0knAnSJZ4Vap8HevlH8wdWCSJZgTXDZK7MG8WBD-SjLYZAZ9GGJDYqBzhHLJ6PD47e6I16Q2FYBpgqoDYXwRlgRWlz8pgYUSF6T29125gVwdhEm73tXZEh5jAMAsamP5Bk75lZl-m-5T-xI-lFkYmA40_R7J3qAPd_mBp8b_q-mgu_lG2Bx1UbcMrrCdd4F_H8JMA6baDEoSD7Uw4XCge4i-9mSxaaJSAbeBvvwnbaBQpUk6JUn0iLz_QMiPhBoIT4oSBfbkLKRf6t9ZuP_nC8B_jIX49ip-VdCvOnY73kneo3lbuCNl3E-TNDVoL1-TQgNOQ-96-hfcXuoYD_vJ836JTbqx-lzwDbsr7cN1vkOl5CY9o_CDSGRaiLgcXMLMq4h3Wp-e1XaGMH1RutNWFS19IpDfenRtt1oOJbNopTQb39xLnaAptqvDj7JiTbvbtFxjUizmEAwAA)
+
+## Animating on Hover
+
+A button changes between its **Enabled**, **Highlighted**, **Pushed**, and **Disabled** states automatically and instantly. To play a keyframe animation when the button is highlighted (for example, growing or shrinking on hover), subscribe to the visual's `RollOn` and `RollOff` events and call `PlayAnimation`. See [Playing Animations on Hover or Highlight](../animationruntime.md#playing-animations-on-hover-or-highlight) for details.

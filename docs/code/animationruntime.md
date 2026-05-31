@@ -18,6 +18,10 @@ Animations defined in the Gum tool can be loaded at runtime. To load and play an
 2. Obtain an `AnimationRuntime` instance from your `GraphicalUiElement` . This could be a screen or component.
 3. Call `PlayAnimation` to begin the animation.
 
+{% hint style="info" %}
+The `PlayAnimation(string)` and `PlayAnimation(int)` overloads are extension methods in the `Gum.Wireframe` namespace. If a call such as `PlayAnimation("SlideOnAndOff")` will not compile (for example "no overload for method `PlayAnimation` takes 1 argument"), add `using Gum.Wireframe;` at the top of your file.
+{% endhint %}
+
 Animations can be played on an entire screen, entire component, or an individual instance within a screen or component.
 
 For this example, the project has a screen called AnimatedScreen which contains an animation named SlideOnAndOff.
@@ -166,6 +170,26 @@ public class Game1 : Game
 {% endtabs %}
 
 <figure><img src="../.gitbook/assets/23_05 20 06.gif" alt=""><figcaption></figcaption></figure>
+
+## Playing Animations on Hover or Highlight
+
+Forms controls such as `Button` change their visual state (for example **Enabled**, **Highlighted**, **Pushed**, and **Disabled**) automatically as the user interacts with them. These state changes are applied instantly — they are not keyframe animations, and they do not call `PlayAnimation`.
+
+Keyframe animations never play on their own. To run an animation when a control is highlighted, subscribe to the visual's `RollOn` event (raised when the cursor first moves over the control) and `RollOff` event (raised when the cursor leaves), then call `PlayAnimation`:
+
+```csharp
+// Initialize
+button.Visual.RollOn += (_, _) =>
+{
+    button.Visual.PlayAnimation("Highlight");
+};
+button.Visual.RollOff += (_, _) =>
+{
+    button.Visual.PlayAnimation("Unhighlight");
+};
+```
+
+The animations named above must exist on the control — either authored in the Gum tool and loaded with `LoadAnimations`, or created in code as shown in the next section. The control still applies its built-in **Highlighted** state on `RollOn`, so use animations for additional effects on top of that state rather than as a replacement for it.
 
 ## Code Example - Animations in Code-Only Projects
 
