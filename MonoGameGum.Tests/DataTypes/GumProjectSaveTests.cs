@@ -420,6 +420,83 @@ public class GumProjectSaveTests : BaseTestClass
         state.Variables.ShouldNotContain(v => v.Name.EndsWith(".Width"));
     }
 
+    // Issue #3009 — Circle/Rectangle dropped the standalone gradient start (Red1/Green1/Blue1/
+    // Alpha1); the start is now the active body color. The migration strips orphaned …1 channels
+    // from Circle/Rectangle elements and instances, while leaving Arc (which keeps Color1 as an
+    // obsolete shim) and Color2 untouched.
+    private static GumProjectSave MakeProjectWithShapeStandards()
+    {
+        GumProjectSave project = new GumProjectSave();
+        foreach (string standardName in new[] { "Circle", "Rectangle", "Arc" })
+        {
+            StandardElementSave standard = new StandardElementSave { Name = standardName };
+            standard.States.Add(new Gum.DataTypes.Variables.StateSave { Name = "Default" });
+            project.StandardElements.Add(standard);
+        }
+        return project;
+    }
+
+    [Fact]
+    public void StripCircleRectangleGradientColor1_RemovesChannels_OnCircleInstance_KeepsColor2()
+    {
+        GumProjectSave project = MakeProjectWithShapeStandards();
+        ComponentSave component = new ComponentSave { Name = "MyComponent" };
+        component.Instances.Add(new InstanceSave { Name = "CircleInstance", BaseType = "Circle" });
+        Gum.DataTypes.Variables.StateSave state = new Gum.DataTypes.Variables.StateSave { Name = "Default" };
+        state.Variables.Add(new VariableSave { Name = "CircleInstance.Red1", Type = "int", Value = 10, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "CircleInstance.Green1", Type = "int", Value = 20, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "CircleInstance.Blue1", Type = "int", Value = 30, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "CircleInstance.Alpha1", Type = "int", Value = 40, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "CircleInstance.Red2", Type = "int", Value = 50, SetsValue = true });
+        component.States.Add(state);
+        project.Components.Add(component);
+        Gum.Managers.ObjectFinder.Self.GumProjectSave = project;
+
+        bool changed = project.StripCircleRectangleGradientColor1();
+
+        changed.ShouldBeTrue();
+        state.Variables.ShouldNotContain(v => v.Name == "CircleInstance.Red1");
+        state.Variables.ShouldNotContain(v => v.Name == "CircleInstance.Green1");
+        state.Variables.ShouldNotContain(v => v.Name == "CircleInstance.Blue1");
+        state.Variables.ShouldNotContain(v => v.Name == "CircleInstance.Alpha1");
+        state.Variables.ShouldContain(v => v.Name == "CircleInstance.Red2");
+    }
+
+    [Fact]
+    public void StripCircleRectangleGradientColor1_RemovesUnqualifiedChannels_OnRectangleStandardElement()
+    {
+        GumProjectSave project = MakeProjectWithShapeStandards();
+        StandardElementSave rectangle = project.StandardElements.First(s => s.Name == "Rectangle");
+        Gum.DataTypes.Variables.StateSave state = rectangle.States.First();
+        state.Variables.Add(new VariableSave { Name = "Red1", Type = "int", Value = 1, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "Alpha1", Type = "int", Value = 2, SetsValue = true });
+        Gum.Managers.ObjectFinder.Self.GumProjectSave = project;
+
+        bool changed = project.StripCircleRectangleGradientColor1();
+
+        changed.ShouldBeTrue();
+        state.Variables.ShouldNotContain(v => v.Name == "Red1");
+        state.Variables.ShouldNotContain(v => v.Name == "Alpha1");
+    }
+
+    [Fact]
+    public void StripCircleRectangleGradientColor1_LeavesArcInstance_Untouched()
+    {
+        GumProjectSave project = MakeProjectWithShapeStandards();
+        ComponentSave component = new ComponentSave { Name = "MyComponent" };
+        component.Instances.Add(new InstanceSave { Name = "ArcInstance", BaseType = "Arc" });
+        Gum.DataTypes.Variables.StateSave state = new Gum.DataTypes.Variables.StateSave { Name = "Default" };
+        state.Variables.Add(new VariableSave { Name = "ArcInstance.Red1", Type = "int", Value = 10, SetsValue = true });
+        component.States.Add(state);
+        project.Components.Add(component);
+        Gum.Managers.ObjectFinder.Self.GumProjectSave = project;
+
+        bool changed = project.StripCircleRectangleGradientColor1();
+
+        changed.ShouldBeFalse();
+        state.Variables.ShouldContain(v => v.Name == "ArcInstance.Red1");
+    }
+
     [Fact]
     public void V1GumxFormat_DeserializesScreenReferenceNamesCorrectly()
     {

@@ -65,7 +65,6 @@ internal sealed class ForestGladeTextInputDecoration
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         ForestGladeLeaf.ApplyMedium(fill);
         fill.IsFilled = true;
-        fill.FillColor = ForestGladePalette.InputFill;
         fill.StrokeWidth = 0;
         // CSS .fg-input: linear-gradient(180deg, rgba(0,0,0,.30), rgba(0,0,0,.18))
         // over the canopy background — translates to a vertical gradient on
@@ -80,7 +79,7 @@ internal sealed class ForestGladeTextInputDecoration
         fill.GradientY2Units = GeneralUnitType.PixelsFromLarge;
         fill.GradientX2 = 0f;
         fill.GradientY2 = 0f;
-        fill.Color1 = new Color(2, 22, 25);
+        fill.FillColor = new Color(2, 22, 25);
         fill.Color2 = new Color(4, 36, 40);
         return fill;
     }
@@ -168,10 +167,10 @@ internal sealed class ForestGladeTextInputDecoration
     private void Apply(TextBoxBaseVisual host, Color fill, Color border, Color text,
         Color placeholder, Color caret, Color selection, bool haloVisible, bool glow)
     {
-        _fill.FillColor = fill;
         // Recompute the vertical gradient stops from the state's base fill so
-        // each state stays subtly darker at the top than the bottom.
-        _fill.Color1 = Darken(fill, 0.65f);
+        // each state stays subtly darker at the top than the bottom. The
+        // gradient start is the fill color itself.
+        _fill.FillColor = Darken(fill, 0.65f);
         _fill.Color2 = fill;
         _fill.HasDropshadow = glow;
         if (glow)

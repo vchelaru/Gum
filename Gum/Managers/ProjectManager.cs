@@ -274,6 +274,10 @@ public class ProjectManager : IProjectManager
                 {
                     wasModified = true;
                 }
+                if (_gumProjectSave.StripCircleRectangleGradientColor1())
+                {
+                    wasModified = true;
+                }
                 if (RemoveDuplicateVariables(_gumProjectSave))
                 {
                     wasModified = true;

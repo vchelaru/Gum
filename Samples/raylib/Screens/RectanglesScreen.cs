@@ -248,7 +248,6 @@ internal class RectanglesScreen : FrameworkElement
         linearH.IsFilled = true;
         linearH.UseGradient = true;
         linearH.GradientType = GradientType.Linear;
-        linearH.Color1 = Color.White;
         linearH.Color2 = new Color(70, 130, 180, 255);
         linearH.GradientX1 = 0; linearH.GradientY1 = 0;
         linearH.GradientX2 = 70; linearH.GradientY2 = 0;
@@ -257,11 +256,10 @@ internal class RectanglesScreen : FrameworkElement
         // Linear vertical: gold → crimson, top to bottom.
         RectangleRuntime linearV = new();
         linearV.Width = 70; linearV.Height = 50;
-        linearV.FillColor = Color.White;
+        linearV.FillColor = new Color(255, 215, 0, 255);
         linearV.IsFilled = true;
         linearV.UseGradient = true;
         linearV.GradientType = GradientType.Linear;
-        linearV.Color1 = new Color(255, 215, 0, 255);
         linearV.Color2 = new Color(220, 20, 60, 255);
         linearV.GradientX1 = 0; linearV.GradientY1 = 0;
         linearV.GradientX2 = 0; linearV.GradientY2 = 50;
@@ -270,11 +268,10 @@ internal class RectanglesScreen : FrameworkElement
         // Linear diagonal: cyan → magenta, top-left to bottom-right.
         RectangleRuntime linearD = new();
         linearD.Width = 70; linearD.Height = 50;
-        linearD.FillColor = Color.White;
+        linearD.FillColor = new Color(0, 255, 255, 255);
         linearD.IsFilled = true;
         linearD.UseGradient = true;
         linearD.GradientType = GradientType.Linear;
-        linearD.Color1 = new Color(0, 255, 255, 255);
         linearD.Color2 = new Color(255, 0, 255, 255);
         linearD.GradientX1 = 0; linearD.GradientY1 = 0;
         linearD.GradientX2 = 70; linearD.GradientY2 = 50;
@@ -287,7 +284,6 @@ internal class RectanglesScreen : FrameworkElement
         radial.IsFilled = true;
         radial.UseGradient = true;
         radial.GradientType = GradientType.Radial;
-        radial.Color1 = Color.White;
         radial.Color2 = new Color(0, 100, 0, 255);
         radial.GradientX1 = 35; radial.GradientY1 = 25;
         radial.GradientInnerRadius = 0;
@@ -389,11 +385,10 @@ internal class RectanglesScreen : FrameworkElement
         rect.YUnits = GeneralUnitType.PixelsFromMiddle;
         // Filled cell — light up the fill slot so the gradient renders on the fill. raylib's
         // outline-only case is handled by BuildRotationOutlineUnsupportedRow.
-        rect.FillColor = Color.White;
+        rect.FillColor = Color.Black;
         rect.IsFilled = true;
         rect.UseGradient = true;
         rect.GradientType = GradientType.Linear;
-        rect.Color1 = Color.Black;
         rect.Color2 = Color.White;
         rect.GradientX1 = 0; rect.GradientY1 = 0;
         rect.GradientX2 = 20; rect.GradientY2 = 0;

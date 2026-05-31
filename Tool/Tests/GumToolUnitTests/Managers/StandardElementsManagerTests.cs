@@ -84,10 +84,13 @@ public class StandardElementsManagerTests : BaseTestClass
 
         state.Variables.Any(v => v.Name == "UseGradient").ShouldBeTrue();
         state.Variables.Any(v => v.Name == "GradientType").ShouldBeTrue();
-        state.Variables.Any(v => v.Name == "Red1").ShouldBeTrue();
-        state.Variables.Any(v => v.Name == "Green1").ShouldBeTrue();
-        state.Variables.Any(v => v.Name == "Blue1").ShouldBeTrue();
-        state.Variables.Any(v => v.Name == "Alpha1").ShouldBeTrue();
+        // Issue #3009 — Circle/Rectangle no longer expose the standalone gradient start
+        // (Red1/Green1/Blue1/Alpha1); the gradient start is the active body color (FillColor when
+        // filled, StrokeColor otherwise). Color2 (the standalone second stop) remains.
+        state.Variables.Any(v => v.Name == "Red1").ShouldBeFalse();
+        state.Variables.Any(v => v.Name == "Green1").ShouldBeFalse();
+        state.Variables.Any(v => v.Name == "Blue1").ShouldBeFalse();
+        state.Variables.Any(v => v.Name == "Alpha1").ShouldBeFalse();
         state.Variables.Any(v => v.Name == "Red2").ShouldBeTrue();
         state.Variables.Any(v => v.Name == "Green2").ShouldBeTrue();
         state.Variables.Any(v => v.Name == "Blue2").ShouldBeTrue();

@@ -430,7 +430,7 @@ var circle = new CircleRuntime();
 circle.Width = 56;
 circle.Height = 56;
 circle.UseGradient = true;
-circle.Color1 = Color.Black;
+circle.FillColor = Color.Black;
 circle.Color2 = Color.White;
 // Gradient appeared on the fill on Apos and raylib — even though FillColor
 // defaults to transparent, which is supposed to hide the fill.
@@ -442,13 +442,55 @@ circle.Color2 = Color.White;
 var circle = new CircleRuntime();
 circle.Width = 56;
 circle.Height = 56;
-circle.FillColor = Color.White;   // light the fill up — opaque, RGB irrelevant
+circle.FillColor = Color.Black;   // light the fill up and set the gradient start
 circle.UseGradient = true;
-circle.Color1 = Color.Black;
 circle.Color2 = Color.White;
 ```
 
-The RGB of `FillColor` doesn't matter — the gradient overrides the per-pixel color. Only the alpha gates whether the fill paints at all. `StrokeColor` works the same way for the outline on backends that support gradient-on-stroke (Skia and Apos.Shapes; raylib's outline is solid only).
+Only the alpha of `FillColor` gates whether the fill paints at all. `StrokeColor` works the same way for the outline on backends that support gradient-on-stroke (Skia and Apos.Shapes; raylib's outline is solid only).
+
+### Breaking: `Color1` removed from `CircleRuntime` / `RectangleRuntime` — gradient start is now the fill/stroke color
+
+Issue #3009 — `CircleRuntime` and `RectangleRuntime` no longer have a standalone gradient **start** color. Previously the gradient ran between a dedicated `Color1` (`Red1` / `Green1` / `Blue1` / `Alpha1`) and `Color2`. Now the gradient **start** stop is the shape's active body color — `FillColor` when `IsFilled` is `true`, or `StrokeColor` when the shape is outline-only — and `Color2` (`Red2` / `Green2` / `Blue2` / `Alpha2`) remains the only standalone gradient color (the **end** stop). This removes the redundancy of having a fill color and a separate gradient-start color that had to be kept in sync.
+
+On the XNA-likes (MonoGame / FNA / KNI) and raylib, `Color1` / `Red1` / `Green1` / `Blue1` / `Alpha1` are **removed** from `CircleRuntime` / `RectangleRuntime` — code referencing them no longer compiles. On Skia the same members are `[Obsolete(error: true)]`, so they also fail to compile.
+
+To migrate, drop the `Color1` assignment and set the start color through `FillColor` (light up the fill so the gradient draws) — or through `StrokeColor` for an outline-only shape:
+
+❌ Old:
+
+```csharp
+// Initialize
+var circle = new CircleRuntime();
+circle.Width = 56;
+circle.Height = 56;
+circle.UseGradient = true;
+circle.Color1 = Color.Black;   // gradient start
+circle.Color2 = Color.White;   // gradient end
+circle.AddToRoot();
+```
+
+✅ New:
+
+```csharp
+// Initialize
+var circle = new CircleRuntime();
+circle.Width = 56;
+circle.Height = 56;
+circle.IsFilled = true;          // ensure the fill (and thus the start color) draws
+circle.FillColor = Color.Black;  // gradient start is now the fill color
+circle.UseGradient = true;
+circle.Color2 = Color.White;     // gradient end
+circle.AddToRoot();
+```
+
+For an outline-only shape (`IsFilled = false`), set `StrokeColor` as the start color instead.
+
+{% hint style="info" %}
+**`ArcRuntime` keeps `Color1` as an obsolete alias.** Arc's gradient start is its primary `Color`, so `Color1` (`Red1` / `Green1` / `Blue1` / `Alpha1`) survives on `ArcRuntime` only as a `[Obsolete]` (warning) back-compat shim that maps onto `Color`. New Arc code should use `Color` for the gradient start. The alias is expected to be removed around November 2026.
+
+The legacy `ColoredCircleRuntime` and `RoundedRectangleRuntime` are **unchanged** — they keep their real `Color1` gradient-start property.
+{% endhint %}
 
 ### Forms controls moved to GumCommon — input types widened
 

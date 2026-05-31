@@ -179,11 +179,10 @@ internal class CirclesScreen : FrameworkElement
         // Linear horizontal: white → blue
         CircleRuntime linearH = new();
         linearH.Radius = 28;
-        linearH.FillColor = Color.White; // fill mode; gradient overrides solid color
+        linearH.FillColor = Color.White; // gradient start stop is the fill color
         linearH.IsFilled = true;
         linearH.UseGradient = true;
         linearH.GradientType = GradientType.Linear;
-        linearH.Color1 = Color.White;
         linearH.Color2 = Color.SteelBlue;
         linearH.GradientX1 = 0; linearH.GradientY1 = 0;
         linearH.GradientX2 = 56; linearH.GradientY2 = 0;
@@ -192,11 +191,10 @@ internal class CirclesScreen : FrameworkElement
         // Linear vertical: gold → crimson
         CircleRuntime linearV = new();
         linearV.Radius = 28;
-        linearV.FillColor = Color.White;
+        linearV.FillColor = Color.Gold;
         linearV.IsFilled = true;
         linearV.UseGradient = true;
         linearV.GradientType = GradientType.Linear;
-        linearV.Color1 = Color.Gold;
         linearV.Color2 = Color.Crimson;
         linearV.GradientX1 = 0; linearV.GradientY1 = 0;
         linearV.GradientX2 = 0; linearV.GradientY2 = 56;
@@ -205,11 +203,10 @@ internal class CirclesScreen : FrameworkElement
         // Linear diagonal: cyan → magenta
         CircleRuntime linearD = new();
         linearD.Radius = 28;
-        linearD.FillColor = Color.White;
+        linearD.FillColor = Color.Cyan;
         linearD.IsFilled = true;
         linearD.UseGradient = true;
         linearD.GradientType = GradientType.Linear;
-        linearD.Color1 = Color.Cyan;
         linearD.Color2 = Color.Magenta;
         linearD.GradientX1 = 0; linearD.GradientY1 = 0;
         linearD.GradientX2 = 56; linearD.GradientY2 = 56;
@@ -222,7 +219,6 @@ internal class CirclesScreen : FrameworkElement
         radial.IsFilled = true;
         radial.UseGradient = true;
         radial.GradientType = GradientType.Radial;
-        radial.Color1 = Color.White;
         radial.Color2 = Color.DarkGreen;
         radial.GradientX1 = 28; radial.GradientY1 = 28;
         radial.GradientInnerRadius = 0;
@@ -547,18 +543,21 @@ internal class CirclesScreen : FrameworkElement
         circle.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         circle.YOrigin = VerticalAlignment.Center;
         circle.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        // The gradient start stop is the active body color: FillColor when filled,
+        // StrokeColor when only stroked. Set the appropriate slot to Black so the
+        // gradient starts dark in both variants.
         if (filled)
         {
-            circle.FillColor = Color.White;
+            circle.FillColor = Color.Black;
             circle.IsFilled = true;
         }
         else
         {
             circle.IsFilled = false;
+            circle.StrokeColor = Color.Black;
         }
         circle.UseGradient = true;
         circle.GradientType = GradientType.Linear;
-        circle.Color1 = Color.Black;
         circle.Color2 = Color.White;
         circle.GradientX1 = 0; circle.GradientY1 = 0;
         circle.GradientX2 = 20; circle.GradientY2 = 0;

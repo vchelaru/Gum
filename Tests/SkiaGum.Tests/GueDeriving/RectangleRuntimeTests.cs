@@ -55,17 +55,35 @@ public class RectangleRuntimeTests
         cloneStroke.ShouldNotBeSameAs(sourceStroke);
     }
 
+    // Issue #3009 — Circle/Rectangle no longer carry a standalone gradient Color1. Each slot's
+    // gradient start mirrors its own solid body color: the fill slot follows FillColor, the stroke
+    // slot follows StrokeColor.
     [Fact]
-    public void Color1_MirrorsToBothSlots()
+    public void GradientStart_MirrorsFillColor_OnFillSlot()
     {
         RectangleRuntime sut = new();
-        sut.Color1 = new SKColor(10, 20, 30, 40);
+        sut.IsFilled = true;
+        sut.FillColor = new SKColor(10, 20, 30, 40);
+
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        fillSlot.Red1.ShouldBe(10);
+        fillSlot.Green1.ShouldBe(20);
+        fillSlot.Blue1.ShouldBe(30);
+        fillSlot.Alpha1.ShouldBe(40);
+    }
+
+    [Fact]
+    public void GradientStart_MirrorsStrokeColor_OnStrokeSlot()
+    {
+        RectangleRuntime sut = new();
+        sut.StrokeColor = new SKColor(40, 50, 60, 70);
 
         RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
         RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
-        fillSlot.Red1.ShouldBe(10);
-        strokeSlot.Red1.ShouldBe(10);
-        strokeSlot.Alpha1.ShouldBe(40);
+        strokeSlot.Red1.ShouldBe(40);
+        strokeSlot.Green1.ShouldBe(50);
+        strokeSlot.Blue1.ShouldBe(60);
+        strokeSlot.Alpha1.ShouldBe(70);
     }
 
     [Fact]

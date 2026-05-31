@@ -14,13 +14,19 @@ If this value is set to true, then additional properties appear for controlling 
 
 <figure><img src="../../../.gitbook/assets/30_04 46 05.png" alt=""><figcaption><p>Rectangle with Use Gradient set to true showing gradient values</p></figcaption></figure>
 
-### Color1 and Color 2
+### Gradient start color and Color2
 
-Gradients create a smooth interpolation of color from Color 1 to Color2.
+A gradient creates a smooth interpolation from a start color to **Color2**.
 
-Changing these values adjusts the gradient start and end colors.
+For **Circle**, **Rectangle**, and **Arc**, the gradient starts from the shape's own color — for Circle and Rectangle that is the **Fill** color when the shape is filled or the **Stroke** color when it is outline-only, and for Arc it is the shape's **Color**. To adjust where the gradient begins, change that color; to adjust where it ends, change **Color2**. Because the start is the color the shape already shows, turning **Use Gradient** on and off does not produce a sudden color change.
+
+The older **ColoredCircle** and **RoundedRectangle** shapes instead expose a dedicated **Color1** for the gradient start.
 
 <figure><img src="../../../.gitbook/assets/30_04 48 09.gif" alt=""><figcaption><p>Gradient Color values</p></figcaption></figure>
+
+{% hint style="info" %}
+Earlier preview builds gave **Circle** and **Rectangle** a separate **Color1** for the gradient start. The start is now the shape's **Fill**/**Stroke** color, so **Color1** no longer appears for these shapes. **Arc** likewise derives its gradient start from its **Color**.
+{% endhint %}
 
 ### Gradient X1 and 2, Gradient Y1 and 2
 

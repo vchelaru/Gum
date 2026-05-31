@@ -143,9 +143,8 @@ public class Game1 : Game
         rectangle.AddToRoot();
         rectangle.X = 100;
         rectangle.CornerRadius = 15;
-        rectangle.FillColor = Color.White; // light the fill up so the gradient draws
+        rectangle.FillColor = Color.Blue; // the fill color is the gradient start, so light it up
         rectangle.UseGradient = true;
-        rectangle.Color1 = Color.Blue;
         rectangle.Color2 = Color.Green;
 
         var arc = new ArcRuntime();
@@ -220,21 +219,19 @@ A `CircleRuntime` also exposes a `Radius` property, but sizing through `Width` /
 
 ### Gradient
 
-When `UseGradient` is `true`, the shape is filled with a gradient between `Color1` and `Color2` instead of the solid `FillColor`. The endpoints (`GradientX1`/`GradientY1` and `GradientX2`/`GradientY2`) define the gradient vector for `Linear` gradients; for `Radial` gradients only the start point and the radius properties are used.
+When `UseGradient` is `true`, the shape is filled with a gradient between the shape's fill/stroke color and `Color2` instead of a solid color. The gradient **start** color is the shape's active body color — `FillColor` when `IsFilled` is `true`, or `StrokeColor` when the shape is outline-only — and `Color2` is the **end** color. The endpoints (`GradientX1`/`GradientY1` and `GradientX2`/`GradientY2`) define the gradient vector for `Linear` gradients; for `Radial` gradients only the start point and the radius properties are used.
 
 | Property | Type | Description |
 | --- | --- | --- |
 | `UseGradient` | `bool` | If `true`, the gradient properties drive the fill. If `false`, the solid `FillColor` is used. |
 | `GradientType` | `GradientType` | `Linear` (the default) or `Radial`. |
-| `Color1` | `Color` | The first gradient color. Shortcut for setting `Red1`, `Green1`, `Blue1`, and `Alpha1`. |
-| `Red1`, `Green1`, `Blue1`, `Alpha1` | `int` | Channels for the first gradient color (0–255). |
-| `Color2` | `Color` | The second gradient color. Shortcut for setting `Red2`, `Green2`, `Blue2`, and `Alpha2`. |
+| `Color2` | `Color` | The second (end) gradient color. The start color is the shape's `FillColor` (or `StrokeColor` when outline-only). Shortcut for setting `Red2`, `Green2`, `Blue2`, and `Alpha2`. |
 | `Red2`, `Green2`, `Blue2`, `Alpha2` | `int` | Channels for the second gradient color (0–255). |
 | `GradientX1`, `GradientY1` | `float` | Coordinates of the gradient start point. Interpretation depends on the matching `Units` value. |
 | `GradientX1Units`, `GradientY1Units` | `GeneralUnitType` | Coordinate system used to interpret `GradientX1` / `GradientY1`. |
 | `GradientX2`, `GradientY2` | `float` | Coordinates of the gradient end point (`Linear` gradients only). |
 | `GradientX2Units`, `GradientY2Units` | `GeneralUnitType` | Coordinate system used to interpret `GradientX2` / `GradientY2`. |
-| `GradientInnerRadius` | `float` | Inner radius (`Radial` gradients only). Inside this radius the shape is filled with `Color1`. |
+| `GradientInnerRadius` | `float` | Inner radius (`Radial` gradients only). Inside this radius the shape is filled with the start color. |
 | `GradientInnerRadiusUnits` | `DimensionUnitType` | Unit type for `GradientInnerRadius`. `Absolute` (pixels), `PercentageOfParent` (percentage of the shape's `Width`, so `100` = `Width`), or `RelativeToParent` (pixel offset from the shape's `Width`, so `0` = `Width` and `-10` = `Width − 10`). The shape's natural inscribed radius is `Width / 2` — to fit a circle inside the shape, use `50` (`PercentageOfParent`) or `-Width/2` (`RelativeToParent`). |
 | `GradientOuterRadius` | `float` | Outer radius at which the gradient has fully blended to `Color2` (`Radial` gradients only). |
 | `GradientOuterRadiusUnits` | `DimensionUnitType` | Unit type for `GradientOuterRadius`. Same options as `GradientInnerRadiusUnits`. |
@@ -297,9 +294,8 @@ var rectangle = new RectangleRuntime();
 rectangle.Width = 200;
 rectangle.Height = 80;
 rectangle.CornerRadius = 12;
-rectangle.FillColor = Color.White; // light up the fill so the gradient draws
+rectangle.FillColor = Color.Blue; // the fill color is the gradient start, so light it up
 rectangle.UseGradient = true;
-rectangle.Color1 = Color.Blue;
 rectangle.Color2 = Color.Green;
 container.Children.Add(rectangle);
 ```

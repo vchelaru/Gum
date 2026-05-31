@@ -49,7 +49,6 @@ public class ScrollBarThumbVisual : InteractiveGue
         body.HeightUnits = DimensionUnitType.RelativeToParent;
         ForestGladeLeaf.ApplySmall(body);
         body.IsFilled = true;
-        body.FillColor = ForestGladePalette.ScrollThumb;
         body.StrokeWidth = 0;
         // CSS .fg-sb-thm linear-gradient(180deg, rgba(71,246,65,.55), rgba(0,140,46,.55))
         // — vertical, leaf-bright at top fading to canopy-lit at the bottom.
@@ -63,7 +62,7 @@ public class ScrollBarThumbVisual : InteractiveGue
         body.GradientY2Units = GeneralUnitType.PixelsFromLarge;
         body.GradientX2 = 0f;
         body.GradientY2 = 0f;
-        body.Color1 = new Color(71, 246, 65, 200);
+        body.FillColor = new Color(71, 246, 65, 200);
         body.Color2 = new Color(0, 140, 46, 200);
         return body;
     }
@@ -104,7 +103,6 @@ public class ScrollBarThumbVisual : InteractiveGue
     private void ApplyGradient(Color top, Color bottom, bool gradient)
     {
         _body.UseGradient = gradient;
-        _body.Color1 = top;
         _body.Color2 = bottom;
         _body.FillColor = top;
     }

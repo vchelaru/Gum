@@ -306,6 +306,77 @@ namespace Gum.DataTypes
             return didChange;
         }
 
+        /// <summary>
+        /// Issue #3009 — Circle and Rectangle no longer store a standalone gradient start color
+        /// (Red1/Green1/Blue1/Alpha1 / Color1); the gradient start is now the active body color
+        /// (FillColor when filled, StrokeColor otherwise). Strips any orphaned Red1/Green1/Blue1/
+        /// Alpha1 variables left on Circle/Rectangle elements (and Circle/Rectangle-derived
+        /// elements) and on their instances. Arc — which keeps Color1 as an obsolete back-compat
+        /// shim — and the legacy RoundedRectangle/ColoredCircle shapes are left untouched.
+        /// </summary>
+        /// <remarks>
+        /// Uses <see cref="ObjectFinder.GetRootStandardElementSave(ElementSave?)"/> to resolve the
+        /// root standard type, so it correctly targets only Circle/Rectangle (and derived) and skips
+        /// Arc / legacy shapes. Color2 (Red2/Green2/Blue2/Alpha2 — the standalone second gradient
+        /// stop) is preserved.
+        /// </remarks>
+        public static bool StripCircleRectangleGradientColor1(this GumProjectSave gumProjectSave)
+        {
+            bool didChange = false;
+            foreach (var element in gumProjectSave.AllElements)
+            {
+                // Unqualified (element-level) channels are stripped when the element itself roots
+                // at Circle/Rectangle (e.g. the standard Circle/Rectangle, or a component derived
+                // from one overriding the value in its own state).
+                bool elementIsCircleOrRectangle =
+                    IsCircleOrRectangleRoot(ObjectFinder.Self.GetRootStandardElementSave(element));
+
+                foreach (var state in element.AllStates)
+                {
+                    if (StripGradientColor1InState(state, element, elementIsCircleOrRectangle))
+                    {
+                        didChange = true;
+                    }
+                }
+            }
+            return didChange;
+        }
+
+        private static readonly string[] GradientColor1ChannelNames =
+            new[] { "Red1", "Green1", "Blue1", "Alpha1" };
+
+        private static bool IsCircleOrRectangleRoot(StandardElementSave? root)
+        {
+            return root != null && (root.Name == "Circle" || root.Name == "Rectangle");
+        }
+
+        private static bool StripGradientColor1InState(StateSave state, ElementSave element, bool elementIsCircleOrRectangle)
+        {
+            var toRemove = state.Variables
+                .Where(v => v.Name != null && GradientColor1ChannelNames.Contains(GetLastNameSegment(v.Name)))
+                .Where(v =>
+                {
+                    var sourceObject = v.SourceObject;
+                    if (string.IsNullOrEmpty(sourceObject))
+                    {
+                        // Element-level channel: strip only when this element is a Circle/Rectangle.
+                        return elementIsCircleOrRectangle;
+                    }
+                    // Instance-qualified channel: strip only when the instance roots at Circle/Rectangle.
+                    var instance = element.Instances.FirstOrDefault(i => i.Name == sourceObject);
+                    return instance != null
+                        && IsCircleOrRectangleRoot(ObjectFinder.Self.GetRootStandardElementSave(instance));
+                })
+                .ToList();
+
+            foreach (var variable in toRemove)
+            {
+                state.Variables.Remove(variable);
+            }
+
+            return toRemove.Count > 0;
+        }
+
         private static bool MigrateRadiusInState(StateSave state)
         {
             const string radiusName = "Radius";

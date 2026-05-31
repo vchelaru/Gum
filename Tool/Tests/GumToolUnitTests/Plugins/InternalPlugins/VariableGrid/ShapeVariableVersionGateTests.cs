@@ -36,7 +36,9 @@ public class ShapeVariableVersionGateTests
     [InlineData("GradientX2Units")]
     [InlineData("GradientInnerRadius")]
     [InlineData("GradientOuterRadiusUnits")]
-    [InlineData("Red1")]
+    // Issue #3009 — Circle/Rectangle no longer expose the standalone gradient start
+    // (Red1/Green1/Blue1/Alpha1); the start is the active body color, so there is no such variable
+    // to gate. Color2 (Red2/Green2/Blue2/Alpha2) remains the standalone second stop and is gated.
     [InlineData("Alpha2")]
     // CornerRadius (Rectangle-only v3 surface absorbed from the retired RoundedRectangle)
     [InlineData("CornerRadius")]

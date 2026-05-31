@@ -127,7 +127,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
 
     private void ApplyPalette(Color fillLeft, Color fillRight, Color text, bool stripe)
     {
-        _fill.Color1 = fillLeft;
+        _fill.FillColor = fillLeft;
         _fill.Color2 = fillRight;
         TextInstance.Color = text;
         _selectionStripe.Visible = stripe;

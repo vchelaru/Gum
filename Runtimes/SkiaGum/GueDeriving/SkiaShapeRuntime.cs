@@ -156,6 +156,30 @@ public abstract class SkiaShapeRuntime : InteractiveGue
         }
     }
 
+    // Issue #3009 — in two-slot mode (Circle/Rectangle) the gradient START stop is the slot's own
+    // solid body color: the fill slot mirrors FillColor, the stroke slot mirrors StrokeColor into
+    // its Red1/Green1/Blue1/Alpha1. This removes the solid↔gradient color jump when toggling
+    // UseGradient (the start already equals the color the shape was showing) and converges the
+    // dropshadow alpha onto the gradient start. Legacy single-slot shapes (Arc, RoundedRectangle,
+    // ColoredCircle, Polygon, ...) are NOT two-slot, so they keep their explicit standalone Color1
+    // (set through the base Color1 / Red1.. members) and this is a no-op for them.
+    void SyncGradientStartToBody()
+    {
+        if (StrokeRenderable == null)
+        {
+            return;
+        }
+        ContainedRenderable.Red1 = _fillColor.Red;
+        ContainedRenderable.Green1 = _fillColor.Green;
+        ContainedRenderable.Blue1 = _fillColor.Blue;
+        ContainedRenderable.Alpha1 = _fillColor.Alpha;
+
+        StrokeRenderable.Red1 = _strokeColor.Red;
+        StrokeRenderable.Green1 = _strokeColor.Green;
+        StrokeRenderable.Blue1 = _strokeColor.Blue;
+        StrokeRenderable.Alpha1 = _strokeColor.Alpha;
+    }
+
     #region Solid colors
 
     public new int Alpha
@@ -271,6 +295,8 @@ public abstract class SkiaShapeRuntime : InteractiveGue
             ContainedRenderable.IsFilled = _isFilled;
             ContainedRenderable.Color = pushed;
         }
+        // Issue #3009 — keep each slot's gradient start in lockstep with its body color (two-slot only).
+        SyncGradientStartToBody();
     }
 
     SKColor _strokeColor = SKColors.White;
@@ -303,6 +329,8 @@ public abstract class SkiaShapeRuntime : InteractiveGue
                 ContainedRenderable.IsFilled = false;
                 ContainedRenderable.Color = value;
             }
+            // Issue #3009 — keep the stroke slot's gradient start in lockstep with StrokeColor (two-slot only).
+            SyncGradientStartToBody();
             RefreshSlotGradients();
         }
     }

@@ -605,6 +605,60 @@ public class ArcRuntime
         set => base.DropshadowBlurY = value;
     }
 
+    // Issue #3009 — Arc's gradient START stop is now its primary Color (the unified "gradient start
+    // = body color" model that Circle/Rectangle adopt via SyncGradientStartToBody). The legacy
+    // standalone gradient-start surface (Color1 / Red1 / Green1 / Blue1 / Alpha1) is kept only as
+    // [Obsolete] back-compat shims that map onto the primary Color, so old code compiles and old
+    // .gumx data — which set these channels independently — keeps loading (see
+    // CustomSetPropertyOnRenderable and the migration loss-case analysis on issue #3009). The
+    // obsoletes are slated for removal ~Nov 2026, after which Color1 leaves Arc entirely. The
+    // renderable's gradient-start channels are kept in lockstep with the primary color in PreRender.
+
+    /// <summary>Obsolete: Arc's gradient start is its primary <c>Color</c>; this maps onto Color for back-compat. See issue #3009.</summary>
+    [Obsolete("Arc's gradient start is now its primary Color — set Color (or Red/Green/Blue/Alpha) instead. Color1 maps onto Color for backward compatibility and will be removed ~Nov 2026. See issue #3009.")]
+#if SKIA
+    public new SKColor Color1
+    {
+        get => new SKColor((byte)Red, (byte)Green, (byte)Blue, (byte)Alpha);
+        set { Red = value.Red; Green = value.Green; Blue = value.Blue; Alpha = value.Alpha; }
+    }
+#else
+    public new Microsoft.Xna.Framework.Color Color1
+    {
+        get => new Microsoft.Xna.Framework.Color(Red, Green, Blue, Alpha);
+        set { Red = value.R; Green = value.G; Blue = value.B; Alpha = value.A; }
+    }
+#endif
+
+    /// <inheritdoc cref="Color1"/>
+    [Obsolete("Arc's gradient start is now its primary Color — set Color (or Red) instead. Red1 maps onto Color for backward compatibility and will be removed ~Nov 2026. See issue #3009.")]
+    public new int Red1 { get => Red; set => Red = value; }
+
+    /// <inheritdoc cref="Color1"/>
+    [Obsolete("Arc's gradient start is now its primary Color — set Color (or Green) instead. Green1 maps onto Color for backward compatibility and will be removed ~Nov 2026. See issue #3009.")]
+    public new int Green1 { get => Green; set => Green = value; }
+
+    /// <inheritdoc cref="Color1"/>
+    [Obsolete("Arc's gradient start is now its primary Color — set Color (or Blue) instead. Blue1 maps onto Color for backward compatibility and will be removed ~Nov 2026. See issue #3009.")]
+    public new int Blue1 { get => Blue; set => Blue = value; }
+
+    /// <inheritdoc cref="Color1"/>
+    [Obsolete("Arc's gradient start is now its primary Color — set Color (or Alpha) instead. Alpha1 maps onto Color for backward compatibility and will be removed ~Nov 2026. See issue #3009.")]
+    public new int Alpha1 { get => Alpha; set => Alpha = value; }
+
+    /// <inheritdoc/>
+    public override void PreRender()
+    {
+        base.PreRender();
+        // Issue #3009 — mirror the primary Color into the renderable's gradient-start channels each
+        // frame so the gradient start follows the body color regardless of how it was set (legacy
+        // Color1/Red1 shims, state changes, animation, or .gumx load via CustomSetPropertyOnRenderable).
+        ContainedArc.Red1 = ContainedArc.Red;
+        ContainedArc.Green1 = ContainedArc.Green;
+        ContainedArc.Blue1 = ContainedArc.Blue;
+        ContainedArc.Alpha1 = ContainedArc.Alpha;
+    }
+
     /// <summary>
     /// Initializes a new ArcRuntime. When <paramref name="fullInstantiation"/> is true (the
     /// default), an underlying <c>Arc</c> renderable is created and default values are applied
@@ -641,10 +695,10 @@ public class ArcRuntime
             StartAngle = 0;
             SweepAngle = 90;
 
-            Red1 = 255;
-            Green1 = 255;
-            Blue1 = 255;
-
+            // Issue #3009 — the gradient start is the primary Color (White, set above) and is
+            // synced into the renderable's start channels in PreRender, so the old explicit
+            // Red1/Green1/Blue1 = 255 seed is no longer needed. Color2 (the second stop) remains
+            // an independent standalone gradient color.
             Red2 = 255;
             Green2 = 255;
             Blue2 = 0;

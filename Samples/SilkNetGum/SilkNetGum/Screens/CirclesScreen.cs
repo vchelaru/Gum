@@ -169,11 +169,10 @@ internal class CirclesScreen : GraphicalUiElement
         // Linear horizontal: white → blue
         CircleRuntime linearH = new();
         linearH.Radius = 28;
-        linearH.FillColor = SKColors.White; // fill mode; gradient overrides solid color
+        linearH.FillColor = SKColors.White; // gradient start stop is the fill color
         linearH.IsFilled = true;
         linearH.UseGradient = true;
         linearH.GradientType = GradientType.Linear;
-        linearH.Color1 = SKColors.White;
         linearH.Color2 = SKColors.SteelBlue;
         linearH.GradientX1 = 0; linearH.GradientY1 = 0;
         linearH.GradientX2 = 56; linearH.GradientY2 = 0;
@@ -182,11 +181,10 @@ internal class CirclesScreen : GraphicalUiElement
         // Linear vertical: yellow → red
         CircleRuntime linearV = new();
         linearV.Radius = 28;
-        linearV.FillColor = SKColors.White;
+        linearV.FillColor = SKColors.Gold;
         linearV.IsFilled = true;
         linearV.UseGradient = true;
         linearV.GradientType = GradientType.Linear;
-        linearV.Color1 = SKColors.Gold;
         linearV.Color2 = SKColors.Crimson;
         linearV.GradientX1 = 0; linearV.GradientY1 = 0;
         linearV.GradientX2 = 0; linearV.GradientY2 = 56;
@@ -195,11 +193,10 @@ internal class CirclesScreen : GraphicalUiElement
         // Linear diagonal: cyan → magenta
         CircleRuntime linearD = new();
         linearD.Radius = 28;
-        linearD.FillColor = SKColors.White;
+        linearD.FillColor = SKColors.Cyan;
         linearD.IsFilled = true;
         linearD.UseGradient = true;
         linearD.GradientType = GradientType.Linear;
-        linearD.Color1 = SKColors.Cyan;
         linearD.Color2 = SKColors.Magenta;
         linearD.GradientX1 = 0; linearD.GradientY1 = 0;
         linearD.GradientX2 = 56; linearD.GradientY2 = 56;
@@ -212,7 +209,6 @@ internal class CirclesScreen : GraphicalUiElement
         radial.IsFilled = true;
         radial.UseGradient = true;
         radial.GradientType = GradientType.Radial;
-        radial.Color1 = SKColors.White;
         radial.Color2 = SKColors.DarkGreen;
         radial.GradientX1 = 28; radial.GradientY1 = 28;
         radial.GradientInnerRadius = 0;
@@ -526,18 +522,21 @@ internal class CirclesScreen : GraphicalUiElement
         circle.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         circle.YOrigin = VerticalAlignment.Center;
         circle.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        // The gradient start stop is the active body color: FillColor when filled,
+        // StrokeColor when only stroked. Set the appropriate slot to Black so the
+        // gradient starts dark in both variants.
         if (filled)
         {
-            circle.FillColor = SKColors.White;
+            circle.FillColor = SKColors.Black;
             circle.IsFilled = true;
         }
         else
         {
             circle.IsFilled = false;
+            circle.StrokeColor = SKColors.Black;
         }
         circle.UseGradient = true;
         circle.GradientType = GradientType.Linear;
-        circle.Color1 = SKColors.Black;
         circle.Color2 = SKColors.White;
         circle.GradientX1 = 0; circle.GradientY1 = 0;
         circle.GradientX2 = 20; circle.GradientY2 = 0;

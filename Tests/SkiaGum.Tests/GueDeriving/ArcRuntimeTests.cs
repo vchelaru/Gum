@@ -1,5 +1,7 @@
 ﻿using Gum.GueDeriving;
+using Gum.Wireframe;
 using Shouldly;
+using SkiaGum;
 using SkiaGum.Renderables;
 using System;
 using System.Collections.Generic;
@@ -9,6 +11,13 @@ namespace SkiaGum.Tests.GueDeriving;
 
 public class ArcRuntimeTests
 {
+    public ArcRuntimeTests()
+    {
+        // Route SetProperty through the production dispatcher so the .gumx-load path (which maps
+        // Arc's legacy Red1/Green1/Blue1/Alpha1 onto the primary Color, issue #3009) is exercised.
+        GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+    }
+
     // #2949: ArcRuntime exposes a single isotropic DropshadowBlur (mirroring CSS box-shadow /
     // Figma / Photoshop). Setting the scalar fans the value out to both axes; asserted on the
     // renderable's per-axis blur (which stays a real API at the renderable layer), not the
@@ -99,5 +108,71 @@ public class ArcRuntimeTests
         arcRuntime.PreRender();
 
         containedArc.StrokeWidth.ShouldBe(10);
+    }
+
+    // Issue #3009 — Arc's gradient start is now its primary Color (the unified "gradient start =
+    // body color" model). The renderable's gradient-start channels (Red1/Green1/Blue1/Alpha1) are
+    // synced from the primary color each frame in PreRender so the start follows the color
+    // regardless of how it was set.
+    [Fact]
+    public void GradientStart_MirrorsPrimaryColor_AfterPreRender()
+    {
+        ArcRuntime arcRuntime = new();
+        arcRuntime.Red = 10;
+        arcRuntime.Green = 20;
+        arcRuntime.Blue = 30;
+        arcRuntime.Alpha = 40;
+
+        arcRuntime.PreRender();
+
+        Arc containedArc = (Arc)arcRuntime.RenderableComponent;
+        containedArc.Red1.ShouldBe(10);
+        containedArc.Green1.ShouldBe(20);
+        containedArc.Blue1.ShouldBe(30);
+        containedArc.Alpha1.ShouldBe(40);
+    }
+
+    // Issue #3009 — the obsolete Red1/Green1/Blue1/Alpha1 / Color1 shims map onto the primary
+    // Color so old code keeps compiling and behaving sensibly (the standalone gradient start was
+    // collapsed onto the body color).
+    [Fact]
+    public void Red1Shim_MapsToPrimaryColor()
+    {
+#pragma warning disable CS0618 // exercising the obsolete back-compat shim on purpose
+        ArcRuntime arcRuntime = new();
+
+        arcRuntime.Red1 = 77;
+
+        arcRuntime.Red.ShouldBe(77);
+        arcRuntime.Red1.ShouldBe(77);
+#pragma warning restore CS0618
+    }
+
+    // Issue #3009 — Arc back-compat loss case (pinned per the locked design). Old Arc data sets
+    // the solid color channels (Color/Red/Green/Blue/Alpha) AND the legacy gradient-start channels
+    // (Red1/Green1/Blue1/Alpha1) independently. Both now remap onto the primary Color, and Gum
+    // applies variables alphabetically — so the …1 channels apply AFTER the solid ones and win.
+    // When UseGradient was false and Color1 was explicitly different from Color, the solid now
+    // shows the old Color1 (the documented, accepted lossy outcome).
+    [Fact]
+    public void Load_Color1WinsOverColor_OnPrimary_DocumentingLossyCase()
+    {
+        ArcRuntime arcRuntime = new();
+
+        // Solid channels apply first (alphabetical): an opaque blue.
+        arcRuntime.SetProperty("Alpha", 255);
+        arcRuntime.SetProperty("Blue", 200);
+        arcRuntime.SetProperty("Green", 0);
+        arcRuntime.SetProperty("Red", 0);
+        // …1 channels apply after and win (remapped onto the primary Color): an opaque red.
+        arcRuntime.SetProperty("Alpha1", 255);
+        arcRuntime.SetProperty("Blue1", 0);
+        arcRuntime.SetProperty("Green1", 0);
+        arcRuntime.SetProperty("Red1", 255);
+
+        // Primary color reflects the …1 values (Color1 wins) — the accepted lossy outcome.
+        arcRuntime.Red.ShouldBe(255);
+        arcRuntime.Green.ShouldBe(0);
+        arcRuntime.Blue.ShouldBe(0);
     }
 }

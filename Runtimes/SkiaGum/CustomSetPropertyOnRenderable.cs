@@ -381,6 +381,29 @@ public class CustomSetPropertyOnRenderable
                     }
                     handled = true;
                     break;
+                // Issue #3009 — Arc maps the legacy gradient-start channels (Red1/Green1/Blue1/
+                // Alpha1) onto the primary Color (the unified "gradient start = body color" model).
+                // Old .gumx data set these independently; route them to the primary so they load
+                // onto Color. Gum applies variables alphabetically, so the …1 channels apply after
+                // the solid ones and win — the accepted lossy case (UseGradient = false with an
+                // explicitly-different Color1) is pinned by ArcRuntimeTests. PreRender then mirrors
+                // the primary into the renderable's gradient-start channels for the gradient pass.
+                case nameof(RenderableShapeBase.Red1):
+                    asArc.Red = (int)value;
+                    handled = true;
+                    break;
+                case nameof(RenderableShapeBase.Green1):
+                    asArc.Green = (int)value;
+                    handled = true;
+                    break;
+                case nameof(RenderableShapeBase.Blue1):
+                    asArc.Blue = (int)value;
+                    handled = true;
+                    break;
+                case nameof(RenderableShapeBase.Alpha1):
+                    asArc.Alpha = (int)value;
+                    handled = true;
+                    break;
             }
             if (!handled)
             {

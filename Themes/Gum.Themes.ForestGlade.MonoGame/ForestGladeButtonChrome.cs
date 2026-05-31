@@ -240,7 +240,7 @@ internal sealed class ForestGladeButtonChrome
         Color shadow, float shadowOffsetY, float shadowBlur,
         Color text, Color textShadow, bool ring)
     {
-        Fill.Color1 = fillTop;
+        Fill.FillColor = fillTop;
         Fill.Color2 = fillBottom;
         Border.StrokeColor = border;
         Fill.DropshadowColor = shadow;

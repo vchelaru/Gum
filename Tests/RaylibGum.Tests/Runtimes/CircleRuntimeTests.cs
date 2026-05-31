@@ -13,6 +13,46 @@ namespace RaylibGum.Tests.Runtimes;
 
 public class CircleRuntimeTests : BaseTestClass
 {
+    // Issue #3009 follow-up — a stroke-only circle (IsFilled = false, only StrokeColor set) must
+    // render outline-only on raylib. The renderable's fill pass runs when `FillColor.HasValue ||
+    // IsFilled`, so the runtime must leave the renderable's FillColor null when the shape isn't
+    // filled (it previously pushed the default opaque-white FillColor unconditionally, filling
+    // every default circle).
+    [Fact]
+    public void StrokeOnly_DefaultCircle_DoesNotFill()
+    {
+        CircleRuntime sut = new();
+        sut.StrokeColor = new Color(255, 255, 255, 255);
+
+        LineCircle inner = (LineCircle)sut.RenderableComponent!;
+        inner.IsFilled.ShouldBeFalse();
+        inner.FillColor.HasValue.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsFilledTrue_PushesFillColorToRenderable()
+    {
+        CircleRuntime sut = new();
+        sut.FillColor = new Color(10, 20, 30, 255);
+        sut.IsFilled = true;
+
+        LineCircle inner = (LineCircle)sut.RenderableComponent!;
+        inner.FillColor.HasValue.ShouldBeTrue();
+        inner.FillColor!.Value.R.ShouldBe((byte)10);
+    }
+
+    [Fact]
+    public void IsFilledToggledOff_ClearsRenderableFillColor()
+    {
+        CircleRuntime sut = new();
+        sut.FillColor = new Color(10, 20, 30, 255);
+        sut.IsFilled = true;
+        sut.IsFilled = false;
+
+        LineCircle inner = (LineCircle)sut.RenderableComponent!;
+        inner.FillColor.HasValue.ShouldBeFalse();
+    }
+
     [Fact]
     public void Alpha_ShouldDefaultTo255()
     {
@@ -109,6 +149,9 @@ public class CircleRuntimeTests : BaseTestClass
         CircleRuntime sut = new();
         Color expected = new Color(10, 20, 30, 200);
 
+        // Issue #3009 — IsFilled gates the fill (consistent with Apos/Skia), so the fill color
+        // reaches the renderable only when the shape is filled.
+        sut.IsFilled = true;
         sut.FillColor = expected;
 
         sut.FillColor.R.ShouldBe((byte)10);
@@ -192,16 +235,20 @@ public class CircleRuntimeTests : BaseTestClass
         inner.DropshadowBlurY.ShouldBe(4f);
     }
 
+    // Issue #3009 — Circle/Rectangle no longer expose a standalone gradient Color1. The gradient
+    // start mirrors the active body color (FillColor when filled, StrokeColor otherwise) and is
+    // pushed into the contained LineCircle's Color1. Color2 remains the standalone second stop.
     [Fact]
-    public void Gradient_PropertiesRoundTrip_AndPushToContainedRenderable()
+    public void Gradient_StartMirrorsBodyColor_AndPushesToContainedRenderable()
     {
         CircleRuntime sut = new();
-        Color c1 = new Color(255, 0, 0, 255);
+        Color fill = new Color(255, 0, 0, 255);
         Color c2 = new Color(0, 0, 255, 255);
 
+        sut.IsFilled = true;
+        sut.FillColor = fill;
         sut.UseGradient = true;
         sut.GradientType = GradientType.Radial;
-        sut.Color1 = c1;
         sut.Color2 = c2;
 
         sut.UseGradient.ShouldBeTrue();
@@ -210,6 +257,7 @@ public class CircleRuntimeTests : BaseTestClass
         inner.UseGradient.ShouldBeTrue();
         inner.GradientType.ShouldBe(GradientType.Radial);
         inner.Color1.R.ShouldBe((byte)255);
+        inner.Color1.A.ShouldBe((byte)255);
         inner.Color2.B.ShouldBe((byte)255);
     }
 

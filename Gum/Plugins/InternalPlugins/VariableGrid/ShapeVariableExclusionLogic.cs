@@ -18,13 +18,32 @@ internal class ShapeVariableExclusionLogic
     public bool GetIfShapeVariableIsExcluded(string rootName, RecursiveVariableFinder finder,
         string? rootStandardTypeName, string prefix, out bool shouldExclude)
     {
+        // Issue #3009 — Arc's gradient start is now its primary Color; the Red1/Green1/Blue1/Alpha1
+        // surface is kept only as obsolete back-compat shims (mapping onto Color), so hide all four
+        // from Arc's grid entirely, leaving Arc a single primary Color. Circle/Rectangle don't have
+        // these variables at all (StandardElementsManager omits them); the legacy ColoredCircle/
+        // RoundedRectangle keep their standalone Color1, gated by UseGradient in the branch below.
+        if (rootStandardTypeName == "Arc" &&
+            (rootName == "Red1" || rootName == "Green1" || rootName == "Blue1" || rootName == "Alpha1"))
+        {
+            shouldExclude = true;
+            return true;
+        }
+
         if (rootName == "Red" || rootName == "Green" || rootName == "Blue")
         {
-            var usesGradients = finder.GetValue(prefix + "UseGradient");
-            if (usesGradients is bool asBool && asBool)
+            // Issue #3009 — on Arc the primary Color IS the gradient start, so keep it visible when
+            // a gradient is on (the user edits Color to set the start). The legacy shapes
+            // (ColoredCircle / RoundedRectangle / Line) keep a separate Color1, so their unused
+            // solid Color is hidden under a gradient (the pre-existing behavior).
+            if (rootStandardTypeName != "Arc")
             {
-                shouldExclude = true;
-                return true;
+                var usesGradients = finder.GetValue(prefix + "UseGradient");
+                if (usesGradients is bool asBool && asBool)
+                {
+                    shouldExclude = true;
+                    return true;
+                }
             }
         }
         else if (rootName == "Red1" || rootName == "Green1" || rootName == "Blue1" || rootName == "Alpha1" ||
@@ -117,22 +136,13 @@ internal class ShapeVariableExclusionLogic
         if (hasSeparateFillAndStroke &&
             (rootName == "FillRed" || rootName == "FillGreen" || rootName == "FillBlue" || rootName == "FillAlpha"))
         {
-            // Hidden when IsFilled = false (no fill drawn) or when UseGradient = true
-            // (gradient paints the fill slot, the solid fill channels are unused). Stroke
-            // channels stay visible regardless of UseGradient — gradient targets fill only.
+            // Hidden only when IsFilled = false (no fill drawn). Issue #3009 — the FillColor IS the
+            // gradient start when the shape is filled (Circle/Rectangle no longer have a standalone
+            // Color1), so the fill channels stay visible when UseGradient is on; the user sets the
+            // gradient start by editing FillColor. (They used to be hidden under UseGradient when
+            // the gradient had its own Color1.)
             var isFilled = finder.GetValue(prefix + "IsFilled");
-            if (isFilled is false)
-            {
-                shouldExclude = true;
-                return true;
-            }
-            var usesGradient = finder.GetValue(prefix + "UseGradient");
-            if (usesGradient is true)
-            {
-                shouldExclude = true;
-                return true;
-            }
-            shouldExclude = false;
+            shouldExclude = isFilled is false;
             return true;
         }
 

@@ -100,7 +100,6 @@ internal class RectanglesScreen : FrameworkElement
             RectangleRuntime rect = new();
             rect.Width = width;
             rect.Height = 40;
-            rect.CornerRadius = 10;
             rect.StrokeWidth = 1;
             rect.StrokeColor = Color.White;
             rect.IsAntialiased = true;
@@ -226,7 +225,6 @@ internal class RectanglesScreen : FrameworkElement
         linearH.IsFilled = true;
         linearH.UseGradient = true;
         linearH.GradientType = GradientType.Linear;
-        linearH.Color1 = Color.White;
         linearH.Color2 = Color.SteelBlue;
         linearH.GradientX1 = 0; linearH.GradientY1 = 0;
         linearH.GradientX2 = 70; linearH.GradientY2 = 0;
@@ -234,11 +232,10 @@ internal class RectanglesScreen : FrameworkElement
 
         RectangleRuntime linearV = new();
         linearV.Width = 70; linearV.Height = 50;
-        linearV.FillColor = Color.White;
+        linearV.FillColor = Color.Gold;
         linearV.IsFilled = true;
         linearV.UseGradient = true;
         linearV.GradientType = GradientType.Linear;
-        linearV.Color1 = Color.Gold;
         linearV.Color2 = Color.Crimson;
         linearV.GradientX1 = 0; linearV.GradientY1 = 0;
         linearV.GradientX2 = 0; linearV.GradientY2 = 50;
@@ -246,11 +243,10 @@ internal class RectanglesScreen : FrameworkElement
 
         RectangleRuntime linearD = new();
         linearD.Width = 70; linearD.Height = 50;
-        linearD.FillColor = Color.White;
+        linearD.FillColor = Color.Cyan;
         linearD.IsFilled = true;
         linearD.UseGradient = true;
         linearD.GradientType = GradientType.Linear;
-        linearD.Color1 = Color.Cyan;
         linearD.Color2 = Color.Magenta;
         linearD.GradientX1 = 0; linearD.GradientY1 = 0;
         linearD.GradientX2 = 70; linearD.GradientY2 = 50;
@@ -262,7 +258,6 @@ internal class RectanglesScreen : FrameworkElement
         radial.IsFilled = true;
         radial.UseGradient = true;
         radial.GradientType = GradientType.Radial;
-        radial.Color1 = Color.White;
         radial.Color2 = Color.DarkGreen;
         radial.GradientX1 = 35; radial.GradientY1 = 25;
         radial.GradientInnerRadius = 0;
@@ -479,18 +474,21 @@ internal class RectanglesScreen : FrameworkElement
         rect.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         rect.YOrigin = VerticalAlignment.Center;
         rect.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        // The gradient start stop is the active body color: FillColor when filled,
+        // StrokeColor when only stroked. Set the appropriate slot to Black so the
+        // gradient starts dark in both variants.
         if (filled)
         {
-            rect.FillColor = Color.White;
+            rect.FillColor = Color.Black;
             rect.IsFilled = true;
         }
         else
         {
             rect.IsFilled = false;
+            rect.StrokeColor = Color.Black;
         }
         rect.UseGradient = true;
         rect.GradientType = GradientType.Linear;
-        rect.Color1 = Color.Black;
         rect.Color2 = Color.White;
         rect.GradientX1 = 0; rect.GradientY1 = 0;
         rect.GradientX2 = 20; rect.GradientY2 = 0;
