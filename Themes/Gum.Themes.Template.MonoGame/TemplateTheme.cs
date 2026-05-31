@@ -102,6 +102,13 @@ public static class TemplateTheme
         // both the MonoGame and KNI variants without forking. The KNI csproj
         // re-embeds the TTFs via <Link> so the resource path inside that assembly is
         // "<assembly-name>.Content.Fonts.<file>".
+        //
+        // CLONE GOTCHA: this resolves only when the assembly name equals the
+        // project's root namespace (the fonts are embedded under RootNamespace but
+        // looked up here by AssemblyName). Both default from the project name, so
+        // leave <AssemblyName> and <RootNamespace> UNSET in the csproj. If a clone
+        // sets one and not the other, the build still succeeds but this throws
+        // FileNotFoundException at runtime - so run the theme, don't just build it.
         Assembly assembly = typeof(TemplateTheme).Assembly;
         string resourceName = $"{assembly.GetName().Name}.Content.Fonts.{fileName}";
 

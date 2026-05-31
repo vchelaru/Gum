@@ -13,18 +13,19 @@ This skill is about *authoring* a theme. For how a theme is *consumed* — insta
 
 `Themes/Gum.Themes.Template.MonoGame` (+ its `.Kni` sibling) is a complete, building theme whose purpose is to be **cloned, not consumed**. Start a new theme from it rather than from scratch — it already wires the two-project MonoGame/KNI split, font embedding, and the `Apply` skeleton, and it encodes the two conventions below. Recipe for turning a CSS/HTML design into a theme:
 
-1. **Clone both projects** and find-replace `Template` → `YourTheme` (folder names, file names, `PackageId`, `namespace`, and the `Template*` type names: `TemplateTheme`, `TemplatePalette`, `TemplateShapes`, `TemplateTextInputDecoration`). Per-control visual class names (`ButtonVisual`, …) stay — the namespace disambiguates. Add both projects to `AllLibraries.sln` under the Themes folder and flip `<GeneratePackageOnBuild>` to `true`.
-2. **Transcribe the design's `:root` block into `YourThemePalette`** — one CSS custom property → one base-token field, keeping the `// --var #hex` comment so the mapping back to the mockup stays auditable. This is the bulk of "make it match the design."
+1. **Clone both projects** and find-replace `Template` → `YourTheme` (folder names, file names, `PackageId`, `namespace`, and the `Template*` type names: `TemplateTheme`, `TemplatePalette`, `TemplateShapes`, `TemplateTextInputDecoration`). Per-control visual class names (`ButtonVisual`, …) stay — the namespace disambiguates. Add both projects to `AllLibraries.sln` under the Themes folder and flip `<GeneratePackageOnBuild>` to `true`. **Leave `AssemblyName`/`RootNamespace` unset** — they default to the project name and must stay equal, because fonts are looked up by assembly name but embedded under the root namespace; if they diverge the build still succeeds but fonts throw `FileNotFoundException` at runtime.
+2. **Transcribe the design's `:root` block into `YourThemePalette`** — one CSS custom property → one base-token field, keeping the `// --var #hex` comment so the mapping back to the mockup stays auditable. This is the bulk of "make it match the design." The standard slots are a starting vocabulary: add tokens for anything the design defines beyond them, delete unused ones.
 3. **Leave derived colors computed.** Hover/press/selection tints are get-only properties using `ColorExtensions.Adjust(±n)` (lighten/darken — already shipped with V3 styling). Only pin an explicit value when the design specifies an exact color that `Adjust` can't express (e.g. an eye-tuned glow alpha).
 4. **Swap the fonts** (TTFs + `<EmbeddedResource>` in both csprojs, plus the family names, `RegisterBundledFonts`, and `AddCharacters` in the theme class).
 5. **Restyle visuals**, promoting each from the stock-V3 block in `RegisterVisuals` to a styled subclass as you build it.
+6. **Verify by running, not just building.** Build both backends and add the theme to `MonoGameGumThemesShowcase` to smoke-test — `Apply` and font loading only fail at runtime, not at compile.
 
 Two conventions the template encodes, worth keeping in any theme:
 
 - **One palette, read everywhere.** Every visual reads its colors from `YourThemePalette`; never inline `new Color(...)` in a visual, so a restyle touches one file. It is the theme's analog of V3's `Colors`, but each theme owns its full palette (no shared base type) so the theme stays a self-contained, copyable reference.
 - **Shape factories for the common case.** `TemplateShapes` builds the centered/full-parent fill, border, and focus-ring shapes (rect and circle) that every visual reuses, collapsing the repeated ~15-line `RectangleRuntime` setup. Bespoke geometry (fixed-size sub-boxes, glyph `TextRuntime`s, edge strips, percentage-width bars) is still built inline.
 
-The template is all-Apos.Shapes. For a NineSlice-only theme, the Editor theme is the better starting reference (see primitive options below).
+**Match the design's visual language.** The template is flat/rectangular; a richer look needs shape changes beyond the palette — crib from the closest shipped theme: drop shadows/glows → Bubblegum (+ the "Drop shadows" section below); gradients → ForestGlade; bevels → Retro95; pills → a larger `CornerRadius`; NineSlice instead of Apos.Shapes → Editor.
 
 ## Theme entry point
 

@@ -37,6 +37,9 @@ namespace Gum.Themes.Template;
 public static class TemplatePalette
 {
     // ---- Base tokens (transcribe from the design's :root block) -------------
+    // These slots are a starting vocabulary, not a fixed set: add tokens for
+    // anything your design defines (extra accents, success/danger, ...) and remove
+    // any you don't use. Every visual reads its colors from here.
 
     /// <summary>App background (<c>--bg</c>, <c>#1A1B1E</c>).</summary>
     public static readonly Color Background = new Color(26, 27, 30);
