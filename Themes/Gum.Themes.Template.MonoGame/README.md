@@ -24,20 +24,57 @@ fonts under its own assembly name — one set of code, two backend packages.
 ## Making your own theme
 
 1. **Clone both projects** (`.MonoGame` and `.Kni`) and rename `Template` →
-   `YourTheme` everywhere: folder names, file names, the `<PackageId>`, the
-   `namespace`, and the `Template*` type names (`TemplateTheme`, `TemplatePalette`,
-   `TemplateShapes`, `TemplateTextInputDecoration`). The per-control visual class
-   names (`ButtonVisual`, etc.) stay the same — the namespace distinguishes them.
+   `YourTheme`: folder names, file names, the `<PackageId>`, the `namespace`, and the
+   four `Template*` type names (`TemplateTheme`, `TemplatePalette`, `TemplateShapes`,
+   `TemplateTextInputDecoration`). The per-control visual class names (`ButtonVisual`,
+   etc.) stay the same — the namespace distinguishes them.
+   **Don't do a blind global find-replace of the word `Template`.** Three Gum
+   *framework* identifiers also contain it and must **not** be renamed:
+   `VisualTemplate`, `DefaultFormsTemplates`, and `ScrollViewerVisualTemplate`.
+   The template deliberately keeps its own element names prefix-free (e.g. `"BoxFill"`,
+   not `"TemplateBoxFill"`), so the only theme-owned `Template` tokens are the
+   namespace and those four type names — rename exactly those (a whole-word /
+   case-sensitive replace of each), and leave the framework identifiers alone.
+   **Leave `<AssemblyName>` and `<RootNamespace>` unset** in both csprojs: they
+   default to the project name and must stay equal, because the embedded fonts are
+   looked up by assembly name but live under the root namespace. If those diverge,
+   the build still succeeds but fonts throw `FileNotFoundException` at runtime — so
+   rename the `.csproj` files and folders, not just the `<PackageId>`.
 2. **Fill in the palette.** Transcribe your design's `:root { --bg: …; }` block into
    the base tokens in `TemplatePalette`. Leave the derived colors computed unless
-   your design pins an exact value.
+   your design pins an exact value. The standard slots are a starting vocabulary,
+   not a cage — add tokens for anything your design defines (extra accents,
+   success/danger, etc.) and delete the ones you don't use.
 3. **Swap the fonts.** Drop your TTFs into `Content/Fonts/`, update the
    `<EmbeddedResource>` entries in both csprojs, and update `FontFamily` /
    `IconFontFamily` / `RegisterBundledFonts` in the theme class. Keep the license
    files alongside the fonts and packed in the csproj.
+   **Need static TTFs, not a variable font.** KernSmith rasterizes static TTFs; it
+   does not select instances from a variable font (a single `Foo[wght].ttf` carrying
+   every weight). Many modern Google Fonts ship VF-only — if yours does, fetch its
+   static weight cuts, or approximate with a static sibling family (e.g. the
+   `Condensed` variant) and map one cut to each Gum style slot (`null` → Normal,
+   `"Bold"`, etc.).
 4. **Restyle the visuals**, and as you build out a control, move it from the
    "stock V3" block in `RegisterVisuals` up to the styled block.
-5. **Publish:** flip `<GeneratePackageOnBuild>` to `true` in both csprojs.
+5. **Verify by running, not just building.** Build *both* `.MonoGame` and `.Kni`,
+   then add the theme to the `MonoGameGumThemesShowcase` sample (a `ProjectReference`
+   plus one `ThemeOption` entry) and run it. `Apply` and font loading only fail at
+   runtime — this is where a font `FileNotFoundException` from an uneven rename shows.
+6. **Publish:** flip `<GeneratePackageOnBuild>` to `true` in both csprojs.
+
+## If your design isn't flat
+
+The template is flat and rectangular — no shadows, gradients, bevels, or pills. The
+palette + shape conventions still apply, but matching a richer look needs shape
+changes beyond a palette swap. Crib from the closest shipped theme:
+
+- **Drop shadows / soft glows** → Bubblegum, plus the "Drop shadows" section of the
+  `gum-theming` skill (use the native Apos.Shapes shadow; don't stack rects).
+- **Gradients** → ForestGlade.
+- **Bevels / inset edges** (Win95-style) → Retro95.
+- **Pills / large rounded corners** → a larger `CornerRadius` on the rect shapes.
+- **NineSlice instead of Apos.Shapes** → Editor.
 
 ## Conventions worth keeping
 

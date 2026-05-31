@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12</LangVersion>
+
+    <PackageId>Gum.Themes.Hazard.MonoGame</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Gum Contributors</Authors>
+    <RepositoryUrl>https://github.com/vchelaru/Gum</RepositoryUrl>
+    <Description>Hazard theme for Gum Forms - an industrial space-salvage HUD look (hazard-yellow on warm black, square-cornered chrome, Saira Condensed type). Provides styled visuals for Gum Forms controls with MonoGame and Gum.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="Content\Fonts\SairaCondensed-OFL.txt" Pack="true" PackagePath="\" />
+    <None Include="Content\Fonts\DejaVuSansMono-LICENSE.txt" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- TTFs are embedded so HazardTheme.Apply can register them via the
+         KernSmithFontCreator byte[] overload, sparing consumers from copying font
+         files into their own Content folder. Saira Condensed (static weights;
+         Regular -> Normal, SemiBold/Bold -> Gum's Bold slot) is the body + label
+         family. The design's secondary proportional "Saira" is approximated with
+         the condensed family, since Saira ships only as a variable font. -->
+    <EmbeddedResource Include="Content\Fonts\SairaCondensed-Regular.ttf" />
+    <EmbeddedResource Include="Content\Fonts\SairaCondensed-SemiBold.ttf" />
+    <!-- DejaVu Sans Mono is bundled as the "icon font" for glyphs the body font
+         doesn't cover (Dingbats / Geometric Shapes blocks: check, close, arrows).
+         Registered under a distinct family name in HazardTheme so visual code is
+         decoupled from the specific TTF. -->
+    <EmbeddedResource Include="Content\Fonts\DejaVuSansMono.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- KernSmith is a runtime dependency of the theme (HazardTheme.Apply
+         constructs KernSmithFontCreator and calls RegisterFont). It must flow
+         transitively to consumers - hence no PrivateAssets here. -->
+    <PackageReference Include="KernSmith.MonoGameGum" Version="*" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
+    <ProjectReference Include="..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
+  </ItemGroup>
+</Project>

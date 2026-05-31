@@ -1,11 +1,11 @@
 using Gum.GueDeriving;
 using BaseSplitterVisual = Gum.Forms.DefaultVisuals.V3.SplitterVisual;
 
-namespace Gum.Themes.Template;
+namespace Gum.Themes.Hazard;
 
 /// <summary>
-/// Template-styled Splitter visual. A thin Border-colored fill — same hairline
-/// look as the rest of Template's container borders, so a splitter between two
+/// Hazard-styled Splitter visual. A thin Border-colored fill — same hairline
+/// look as the rest of Hazard's container borders, so a splitter between two
 /// surfaces reads as a continuation of the chrome rather than a new control.
 /// <para>
 /// V3.SplitterVisual has no state category and no hover/press feedback;
@@ -23,7 +23,7 @@ public class SplitterVisual : BaseSplitterVisual
     {
         Background.Parent = null;
 
-        _fill = TemplateShapes.Fill(TemplatePalette.Border, cornerRadius: 0f, "SplitterFill");
+        _fill = HazardShapes.Fill(HazardPalette.Border, cornerRadius: 0f, "HazardSplitterFill");
         AddChild(_fill);
     }
 }

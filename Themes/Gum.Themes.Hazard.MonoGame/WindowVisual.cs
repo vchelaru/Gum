@@ -5,11 +5,11 @@ using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using BaseWindowVisual = Gum.Forms.DefaultVisuals.V3.WindowVisual;
 
-namespace Gum.Themes.Template;
+namespace Gum.Themes.Hazard;
 
 /// <summary>
-/// Template-styled Window visual. Same Surface1 + 1 px border shell as the
-/// other Template controls, plus a Surface2 title bar fill so users can see
+/// Hazard-styled Window visual. Same Surface1 + 1 px border shell as the
+/// other Hazard controls, plus a Surface2 title bar fill so users can see
 /// where to drag, and a 1 px Border-colored separator between the title bar
 /// and the content area.
 /// <para>
@@ -19,7 +19,7 @@ namespace Gum.Themes.Template;
 /// </summary>
 public class WindowVisual : BaseWindowVisual
 {
-    private const float CornerRadius = 2f;
+    private const float CornerRadius = 0f;
     private const float BorderThickness = 1f;
     private const float TitleBarSeparatorHeight = 1f;
 
@@ -36,7 +36,7 @@ public class WindowVisual : BaseWindowVisual
         // The borders go LAST so they sit on top for resize hit testing, and
         // TitleBar goes AFTER InnerPanel so it sits on top for drag input.
         //
-        // To insert the Template chrome (fill + border) UNDER everything else,
+        // To insert the Hazard chrome (fill + border) UNDER everything else,
         // detach the whole tree, add chrome first, then re-attach the V3
         // children in the original order. Skipping the re-attach order is what
         // caused the original Window drag bug — InnerPanel ended up on top of
@@ -53,10 +53,10 @@ public class WindowVisual : BaseWindowVisual
         BorderLeftInstance.Visual.Parent = null;
         BorderRightInstance.Visual.Parent = null;
 
-        _fill = TemplateShapes.Fill(TemplatePalette.Surface1, CornerRadius, "WindowFill");
+        _fill = HazardShapes.Fill(HazardPalette.Surface1, CornerRadius, "HazardWindowFill");
         AddChild(_fill);
 
-        _border = TemplateShapes.Border(TemplatePalette.Border, CornerRadius, BorderThickness, "WindowBorder");
+        _border = HazardShapes.Border(HazardPalette.Border, CornerRadius, BorderThickness, "HazardWindowBorder");
         AddChild(_border);
 
         // V3 order from here on.
@@ -71,15 +71,15 @@ public class WindowVisual : BaseWindowVisual
         AddChild(BorderLeftInstance.Visual);
         AddChild(BorderRightInstance.Visual);
 
-        // Surface2 fill child of the title bar so the drag area is visibly
-        // chrome. GraphicalUiElement subclasses (RectangleRuntime) don't
-        // intercept events, so this won't block the title bar's drag handling.
-        _titleBarFill = TemplateShapes.Fill(TemplatePalette.Surface2, cornerRadius: 0f, "WindowTitleBarFill");
+        // Olive Band fill child of the title bar so the drag area is visibly
+        // chrome (.sv-win-bar). GraphicalUiElement subclasses (RectangleRuntime)
+        // don't intercept events, so this won't block the title bar's drag handling.
+        _titleBarFill = HazardShapes.Fill(HazardPalette.Band, cornerRadius: 0f, "HazardWindowTitleBarFill");
         _titleBarFill.Parent = TitleBarInstance.Visual;
 
         // 1 px Border-colored separator pinned to the bottom edge of the
         // title bar so the title bar visually separates from the content
-        // area, matching the rest of Template's hairline borders.
+        // area, matching the rest of Hazard's hairline borders.
         _titleBarSeparator = CreateTitleBarSeparator();
         _titleBarSeparator.Parent = TitleBarInstance.Visual;
     }
@@ -87,7 +87,7 @@ public class WindowVisual : BaseWindowVisual
     private static RectangleRuntime CreateTitleBarSeparator()
     {
         RectangleRuntime separator = new RectangleRuntime();
-        separator.Name = "WindowTitleBarSeparator";
+        separator.Name = "HazardWindowTitleBarSeparator";
         separator.X = 0;
         separator.Y = 0;
         separator.XUnits = GeneralUnitType.PixelsFromMiddle;
@@ -99,7 +99,7 @@ public class WindowVisual : BaseWindowVisual
         separator.WidthUnits = DimensionUnitType.RelativeToParent;
         separator.HeightUnits = DimensionUnitType.Absolute;
         separator.IsFilled = true;
-        separator.FillColor = TemplatePalette.Border;
+        separator.FillColor = HazardPalette.Border;
         separator.StrokeWidth = 0;
         return separator;
     }

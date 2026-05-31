@@ -6,17 +6,17 @@ using Microsoft.Xna.Framework;
 using RenderingLibrary.Graphics;
 using BaseRadioButtonVisual = Gum.Forms.DefaultVisuals.V3.RadioButtonVisual;
 
-namespace Gum.Themes.Template;
+namespace Gum.Themes.Hazard;
 
 /// <summary>
-/// Template-styled RadioButton visual. Replaces the V3 RadioButtonVisual's
+/// Hazard-styled RadioButton visual. Replaces the V3 RadioButtonVisual's
 /// NineSlice circular background, sprite-based inner dot, and underline focus
 /// indicator with an Apos.Shapes CircleRuntime stack: filled outer
 /// circle, 1px stroked outer ring, filled inner dot (visible when selected),
 /// and a 1px focus ring sized one pixel outside the outer ring.
 /// <para>
 /// The circles are fixed-size sub-boxes anchored to the left of a full-width
-/// control, so they're built inline rather than via <see cref="TemplateShapes"/>
+/// control, so they're built inline rather than via <see cref="HazardShapes"/>
 /// (which centers and sizes shapes to the parent).
 /// </para>
 /// </summary>
@@ -63,7 +63,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
     private static CircleRuntime CreateOuterFill()
     {
         CircleRuntime circle = new CircleRuntime();
-        circle.Name = "RadioOuterFill";
+        circle.Name = "HazardRadioOuterFill";
         circle.X = 0;
         circle.Y = 0;
         circle.XUnits = GeneralUnitType.PixelsFromSmall;
@@ -75,7 +75,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         circle.WidthUnits = DimensionUnitType.Absolute;
         circle.HeightUnits = DimensionUnitType.Absolute;
         circle.IsFilled = true;
-        circle.FillColor = TemplatePalette.Surface1;
+        circle.FillColor = HazardPalette.Surface1;
         circle.StrokeWidth = 0;
         return circle;
     }
@@ -83,7 +83,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
     private static CircleRuntime CreateOuterBorder()
     {
         CircleRuntime circle = new CircleRuntime();
-        circle.Name = "RadioOuterBorder";
+        circle.Name = "HazardRadioOuterBorder";
         circle.X = 0;
         circle.Y = 0;
         circle.XUnits = GeneralUnitType.PixelsFromSmall;
@@ -97,7 +97,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         circle.IsFilled = false;
         circle.StrokeWidth = BorderThickness;
         circle.StrokeWidthUnits = DimensionUnitType.Absolute;
-        circle.StrokeColor = TemplatePalette.Border;
+        circle.StrokeColor = HazardPalette.Border;
         return circle;
     }
 
@@ -107,7 +107,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         // The outer rings sit on parent.Left; offset the focus ring by -1 so
         // it's centered horizontally on the outer ring.
         CircleRuntime ring = new CircleRuntime();
-        ring.Name = "RadioFocusRing";
+        ring.Name = "HazardRadioFocusRing";
         ring.X = -FocusRingInset;
         ring.Y = 0;
         ring.XUnits = GeneralUnitType.PixelsFromSmall;
@@ -121,7 +121,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         ring.IsFilled = false;
         ring.StrokeWidth = BorderThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = TemplatePalette.Accent;
+        ring.StrokeColor = HazardPalette.Accent;
         ring.Visible = false;
         return ring;
     }
@@ -133,7 +133,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         // = 4 from the left.
         const float inset = (OuterSize - InnerSize) / 2f;
         CircleRuntime dot = new CircleRuntime();
-        dot.Name = "RadioInnerDot";
+        dot.Name = "HazardRadioInnerDot";
         dot.X = inset;
         dot.Y = 0;
         dot.XUnits = GeneralUnitType.PixelsFromSmall;
@@ -145,7 +145,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         dot.WidthUnits = DimensionUnitType.Absolute;
         dot.HeightUnits = DimensionUnitType.Absolute;
         dot.IsFilled = true;
-        dot.FillColor = TemplatePalette.Accent;
+        dot.FillColor = HazardPalette.Accent;
         dot.StrokeWidth = 0;
         dot.Visible = false;
         return dot;
@@ -155,75 +155,76 @@ public class RadioButtonVisual : BaseRadioButtonVisual
     {
         // -------- Unselected (Off) --------
         States.EnabledOff.Apply = () => Apply(
-            fill: TemplatePalette.Surface1, border: TemplatePalette.Border,
-            text: TemplatePalette.Text, innerVisible: false, ring: false);
+            fill: HazardPalette.Surface1, border: HazardPalette.Border,
+            text: HazardPalette.Text, innerVisible: false, ring: false);
 
         // Border tracks interaction state only — the inner dot alone signals
         // value. Hover/Highlighted gets BorderHover (matching TextBox's softer
         // hover→focus progression), focus drives Accent + ring, and the same
         // pattern is mirrored on On below.
         States.HighlightedOff.Apply = () => Apply(
-            fill: TemplatePalette.Surface2, border: TemplatePalette.BorderHover,
-            text: TemplatePalette.Text, innerVisible: false, ring: false);
+            fill: HazardPalette.Surface2, border: HazardPalette.BorderHover,
+            text: HazardPalette.Text, innerVisible: false, ring: false);
 
         States.FocusedOff.Apply = () => Apply(
-            fill: TemplatePalette.Surface1, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, innerVisible: false, ring: true);
+            fill: HazardPalette.Surface1, border: HazardPalette.Accent,
+            text: HazardPalette.Text, innerVisible: false, ring: true);
 
         States.HighlightedFocusedOff.Apply = () => Apply(
-            fill: TemplatePalette.Surface2, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, innerVisible: false, ring: true);
+            fill: HazardPalette.Surface2, border: HazardPalette.Accent,
+            text: HazardPalette.Text, innerVisible: false, ring: true);
 
         States.PushedOff.Apply = () => Apply(
-            fill: TemplatePalette.PressedFill, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, innerVisible: false, ring: false);
+            fill: HazardPalette.PressedFill, border: HazardPalette.Accent,
+            text: HazardPalette.Text, innerVisible: false, ring: false);
 
         States.DisabledOff.Apply = () => Apply(
-            fill: TemplatePalette.DisabledFill, border: TemplatePalette.DisabledBorder,
-            text: TemplatePalette.DisabledText, innerVisible: false, ring: false);
+            fill: HazardPalette.DisabledFill, border: HazardPalette.DisabledBorder,
+            text: HazardPalette.DisabledText, innerVisible: false, ring: false);
 
         States.DisabledFocusedOff.Apply = () => Apply(
-            fill: TemplatePalette.DisabledFill, border: TemplatePalette.DisabledBorder,
-            text: TemplatePalette.DisabledText, innerVisible: false, ring: true);
+            fill: HazardPalette.DisabledFill, border: HazardPalette.DisabledBorder,
+            text: HazardPalette.DisabledText, innerVisible: false, ring: true);
 
         // -------- Selected (On) --------
-        // Border mirrors the Off variants exactly — the value is communicated solely
-        // by the accent dot inside. Off and On look identical in chrome; the dot is
-        // the only difference.
+        // Selecting brings the ring to full Accent and fills the inner dot with
+        // Accent (.sv-rad.sel) — unlike the CheckBox, the circle itself stays dark;
+        // the accent ring + dot signal the value. Pressed deepens the dot to
+        // AccentPressed amber (.sv-rad.pre.sel).
         States.EnabledOn.Apply = () => Apply(
-            fill: TemplatePalette.Surface1, border: TemplatePalette.Border,
-            text: TemplatePalette.Text, innerVisible: true, innerColor: TemplatePalette.Accent,
+            fill: HazardPalette.Surface1, border: HazardPalette.Accent,
+            text: HazardPalette.Text, innerVisible: true, innerColor: HazardPalette.Accent,
             ring: false);
 
         States.HighlightedOn.Apply = () => Apply(
-            fill: TemplatePalette.Surface2, border: TemplatePalette.BorderHover,
-            text: TemplatePalette.Text, innerVisible: true, innerColor: TemplatePalette.Accent,
+            fill: HazardPalette.Surface2, border: HazardPalette.Accent,
+            text: HazardPalette.TextBright, innerVisible: true, innerColor: HazardPalette.Accent,
             ring: false);
 
         States.FocusedOn.Apply = () => Apply(
-            fill: TemplatePalette.Surface1, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, innerVisible: true, innerColor: TemplatePalette.Accent,
+            fill: HazardPalette.Surface1, border: HazardPalette.Accent,
+            text: HazardPalette.Text, innerVisible: true, innerColor: HazardPalette.Accent,
             ring: true);
 
         States.HighlightedFocusedOn.Apply = () => Apply(
-            fill: TemplatePalette.Surface2, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, innerVisible: true, innerColor: TemplatePalette.Accent,
+            fill: HazardPalette.Surface2, border: HazardPalette.Accent,
+            text: HazardPalette.Text, innerVisible: true, innerColor: HazardPalette.Accent,
             ring: true);
 
         States.PushedOn.Apply = () => Apply(
-            fill: TemplatePalette.PressedFill, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, innerVisible: true, innerColor: TemplatePalette.Accent,
+            fill: HazardPalette.PressedFill, border: HazardPalette.Accent,
+            text: HazardPalette.Text, innerVisible: true, innerColor: HazardPalette.AccentPressed,
             ring: false);
 
         States.DisabledOn.Apply = () => Apply(
-            fill: TemplatePalette.DisabledFill, border: TemplatePalette.DisabledBorder,
-            text: TemplatePalette.DisabledText, innerVisible: true,
-            innerColor: TemplatePalette.DisabledText, ring: false);
+            fill: HazardPalette.DisabledFill, border: HazardPalette.DisabledBorder,
+            text: HazardPalette.DisabledText, innerVisible: true,
+            innerColor: HazardPalette.DisabledText, ring: false);
 
         States.DisabledFocusedOn.Apply = () => Apply(
-            fill: TemplatePalette.DisabledFill, border: TemplatePalette.DisabledBorder,
-            text: TemplatePalette.DisabledText, innerVisible: true,
-            innerColor: TemplatePalette.DisabledText, ring: true);
+            fill: HazardPalette.DisabledFill, border: HazardPalette.DisabledBorder,
+            text: HazardPalette.DisabledText, innerVisible: true,
+            innerColor: HazardPalette.DisabledText, ring: true);
     }
 
     private void Apply(Color fill, Color border, Color text, bool innerVisible, bool ring,

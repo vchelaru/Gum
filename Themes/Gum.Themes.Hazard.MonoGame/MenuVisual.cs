@@ -4,10 +4,10 @@ using Gum.GueDeriving;
 using RenderingLibrary.Graphics;
 using BaseMenuVisual = Gum.Forms.DefaultVisuals.V3.MenuVisual;
 
-namespace Gum.Themes.Template;
+namespace Gum.Themes.Hazard;
 
 /// <summary>
-/// Template-styled Menu visual. Surface1 fill matching the rest of the Template
+/// Hazard-styled Menu visual. Surface1 fill matching the rest of the Hazard
 /// chrome, plus a 1 px Border-colored hairline at the bottom to visually separate
 /// the top menu bar from the page body below. V3.Menu has no state callbacks
 /// (the MenuCategory state set is empty), so this is static chrome.
@@ -23,16 +23,16 @@ public class MenuVisual : BaseMenuVisual
         : base(fullInstantiation, tryCreateFormsObject)
     {
         // V3 order is [Background, InnerPanelInstance]. Replace Background with
-        // the Template chrome, and reattach InnerPanelInstance last so menu
+        // the Hazard chrome, and reattach InnerPanelInstance last so menu
         // items render on top of the fill.
         Background.Parent = null;
         InnerPanelInstance.Parent = null;
 
-        _fill = TemplateShapes.Fill(TemplatePalette.Surface1, cornerRadius: 0f, "MenuFill");
+        _fill = HazardShapes.Fill(HazardPalette.Surface1, cornerRadius: 0f, "HazardMenuFill");
         AddChild(_fill);
 
         // Bottom hairline is an edge-anchored strip, not a full-parent shape, so
-        // it's built inline rather than via TemplateShapes.
+        // it's built inline rather than via HazardShapes.
         _bottomSeparator = CreateBottomSeparator();
         AddChild(_bottomSeparator);
 
@@ -42,7 +42,7 @@ public class MenuVisual : BaseMenuVisual
     private static RectangleRuntime CreateBottomSeparator()
     {
         RectangleRuntime separator = new RectangleRuntime();
-        separator.Name = "MenuBottomSeparator";
+        separator.Name = "HazardMenuBottomSeparator";
         separator.X = 0;
         separator.Y = 0;
         separator.XUnits = GeneralUnitType.PixelsFromMiddle;
@@ -54,7 +54,7 @@ public class MenuVisual : BaseMenuVisual
         separator.WidthUnits = DimensionUnitType.RelativeToParent;
         separator.HeightUnits = DimensionUnitType.Absolute;
         separator.IsFilled = true;
-        separator.FillColor = TemplatePalette.Border;
+        separator.FillColor = HazardPalette.Border;
         separator.StrokeWidth = 0;
         return separator;
     }

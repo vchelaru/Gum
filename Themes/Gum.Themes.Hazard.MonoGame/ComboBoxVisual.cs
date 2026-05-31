@@ -6,23 +6,23 @@ using Microsoft.Xna.Framework;
 using RenderingLibrary.Graphics;
 using BaseComboBoxVisual = Gum.Forms.DefaultVisuals.V3.ComboBoxVisual;
 
-namespace Gum.Themes.Template;
+namespace Gum.Themes.Hazard;
 
 /// <summary>
-/// Template-styled ComboBox visual. Closed control shell mirrors the TextBox /
+/// Hazard-styled ComboBox visual. Closed control shell mirrors the TextBox /
 /// ListBox / ScrollViewer pattern (Surface1 fill + 1 px border at CornerRadius=2
-/// + outer Accent focus ring, all from <see cref="TemplateShapes"/>). The V3
+/// + outer Accent focus ring, all from <see cref="HazardShapes"/>). The V3
 /// sprite-sheet dropdown arrow is replaced with a <c>▼</c> glyph rendered through
 /// the bundled icon font.
 /// <para>
 /// The dropdown popup is left alone — V3.ComboBoxVisual creates it via
-/// <c>new ListBox()</c>, which resolves through the Template Forms template, so
+/// <c>new ListBox()</c>, which resolves through the Hazard Forms template, so
 /// the dropdown already gets the themed ListBoxVisual without extra work here.
 /// </para>
 /// </summary>
 public class ComboBoxVisual : BaseComboBoxVisual
 {
-    private const float CornerRadius = 2f;
+    private const float CornerRadius = 0f;
     private const float BorderThickness = 1f;
     private const float FocusRingInset = 1f;
     private const float GlyphRightMargin = 10f;
@@ -51,13 +51,13 @@ public class ComboBoxVisual : BaseComboBoxVisual
         DropdownIndicator.Parent = null;
         TextInstance.Parent = null;
 
-        _focusRing = TemplateShapes.FocusRing(TemplatePalette.Accent, CornerRadius, FocusRingInset, BorderThickness);
+        _focusRing = HazardShapes.FocusRing(HazardPalette.Accent, CornerRadius, FocusRingInset, BorderThickness);
         AddChild(_focusRing);
 
-        _fill = TemplateShapes.Fill(TemplatePalette.Surface1, CornerRadius);
+        _fill = HazardShapes.Fill(HazardPalette.Surface1, CornerRadius);
         AddChild(_fill);
 
-        _border = TemplateShapes.Border(TemplatePalette.Border, CornerRadius, BorderThickness);
+        _border = HazardShapes.Border(HazardPalette.Border, CornerRadius, BorderThickness);
         AddChild(_border);
 
         _dropdownGlyph = CreateDropdownGlyph();
@@ -82,7 +82,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
         // Shapes block (▼ U+25BC) is monospaced for ASCII but the symbol glyph's
         // advance width is wider than the Latin cell. A snug container clips it.
         TextRuntime glyph = new TextRuntime();
-        glyph.Name = "DropdownGlyph";
+        glyph.Name = "HazardDropdownGlyph";
         glyph.X = -GlyphRightMargin;
         glyph.Y = 0;
         glyph.XUnits = GeneralUnitType.PixelsFromLarge;
@@ -95,10 +95,10 @@ public class ComboBoxVisual : BaseComboBoxVisual
         glyph.HeightUnits = DimensionUnitType.Absolute;
         glyph.HorizontalAlignment = HorizontalAlignment.Center;
         glyph.VerticalAlignment = VerticalAlignment.Center;
-        glyph.Font = TemplateTheme.IconFontFamily;
+        glyph.Font = HazardTheme.IconFontFamily;
         glyph.FontSize = GlyphFontSize;
         glyph.Text = "▼";
-        glyph.Color = TemplatePalette.Muted;
+        glyph.Color = HazardPalette.Muted;
         return glyph;
     }
 
@@ -110,37 +110,37 @@ public class ComboBoxVisual : BaseComboBoxVisual
         // full Text on hover/focus/press so the user gets visible "this is alive"
         // feedback distinct from the border.
         States.Enabled.Apply = () => Apply(
-            border: TemplatePalette.Border, text: TemplatePalette.Text,
-            glyph: TemplatePalette.Muted, ring: false, fillDisabled: false);
+            border: HazardPalette.Border, text: HazardPalette.Text,
+            glyph: HazardPalette.Muted, ring: false, fillDisabled: false);
 
         States.Highlighted.Apply = () => Apply(
-            border: TemplatePalette.BorderHover, text: TemplatePalette.Text,
-            glyph: TemplatePalette.Text, ring: false, fillDisabled: false);
+            border: HazardPalette.BorderHover, text: HazardPalette.Text,
+            glyph: HazardPalette.Text, ring: false, fillDisabled: false);
 
         States.Focused.Apply = () => Apply(
-            border: TemplatePalette.Accent, text: TemplatePalette.Text,
-            glyph: TemplatePalette.Text, ring: true, fillDisabled: false);
+            border: HazardPalette.Accent, text: HazardPalette.Text,
+            glyph: HazardPalette.Text, ring: true, fillDisabled: false);
 
         States.HighlightedFocused.Apply = () => Apply(
-            border: TemplatePalette.Accent, text: TemplatePalette.Text,
-            glyph: TemplatePalette.Text, ring: true, fillDisabled: false);
+            border: HazardPalette.Accent, text: HazardPalette.Text,
+            glyph: HazardPalette.Text, ring: true, fillDisabled: false);
 
         States.Pushed.Apply = () => Apply(
-            border: TemplatePalette.Accent, text: TemplatePalette.Text,
-            glyph: TemplatePalette.Text, ring: false, fillDisabled: false);
+            border: HazardPalette.Accent, text: HazardPalette.Text,
+            glyph: HazardPalette.Text, ring: false, fillDisabled: false);
 
         States.Disabled.Apply = () => Apply(
-            border: TemplatePalette.DisabledBorder, text: TemplatePalette.DisabledText,
-            glyph: TemplatePalette.DisabledText, ring: false, fillDisabled: true);
+            border: HazardPalette.DisabledBorder, text: HazardPalette.DisabledText,
+            glyph: HazardPalette.DisabledText, ring: false, fillDisabled: true);
 
         States.DisabledFocused.Apply = () => Apply(
-            border: TemplatePalette.DisabledBorder, text: TemplatePalette.DisabledText,
-            glyph: TemplatePalette.DisabledText, ring: true, fillDisabled: true);
+            border: HazardPalette.DisabledBorder, text: HazardPalette.DisabledText,
+            glyph: HazardPalette.DisabledText, ring: true, fillDisabled: true);
     }
 
     private void Apply(Color border, Color text, Color glyph, bool ring, bool fillDisabled)
     {
-        _fill.FillColor = fillDisabled ? TemplatePalette.DisabledFill : TemplatePalette.Surface1;
+        _fill.FillColor = fillDisabled ? HazardPalette.DisabledFill : HazardPalette.Surface1;
         _border.StrokeColor = border;
         TextInstance.Color = text;
         _dropdownGlyph.Color = glyph;

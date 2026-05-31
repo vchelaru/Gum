@@ -15,10 +15,9 @@ namespace Gum.Themes.Template;
 ///
 /// <list type="number">
 /// <item><b>Base tokens</b> - transcribed 1:1 from the source design's CSS custom
-/// properties (the <c>:root { --bg: ...; }</c> block). Each is documented with the
-/// CSS variable name and hex it came from so the mapping back to the mockup stays
-/// obvious. THIS is the section you fill in when cloning the template from an HTML
-/// design.</item>
+/// properties (the <c>:root { --bg: ...; }</c> block). Each carries the CSS variable
+/// name and hex it came from so the mapping back to the mockup stays auditable. These
+/// are the colors that define the theme's identity.</item>
 /// <item><b>Derived colors</b> - hover / pressed / selection tints computed from the
 /// base tokens via <see cref="ColorExtensions.Adjust"/> (lighten/darken by a
 /// percentage). Computing them keeps the palette small and keeps related colors in
@@ -37,6 +36,9 @@ namespace Gum.Themes.Template;
 public static class TemplatePalette
 {
     // ---- Base tokens (transcribe from the design's :root block) -------------
+    // These slots are a starting vocabulary, not a fixed set: add tokens for
+    // anything your design defines (extra accents, success/danger, ...) and remove
+    // any you don't use. Every visual reads its colors from here.
 
     /// <summary>App background (<c>--bg</c>, <c>#1A1B1E</c>).</summary>
     public static readonly Color Background = new Color(26, 27, 30);

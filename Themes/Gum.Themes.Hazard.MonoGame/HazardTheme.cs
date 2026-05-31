@@ -13,32 +13,29 @@ using MonoGameAndGum.Renderables;
 using RenderingLibrary.Graphics.Fonts;
 using V3 = Gum.Forms.DefaultVisuals.V3;
 
-namespace Gum.Themes.Template;
+namespace Gum.Themes.Hazard;
 
 /// <summary>
-/// Entry point for the theme. Call <see cref="Apply"/> once after initializing Gum
-/// to register the bundled fonts, configure the shared
+/// Entry point for the Hazard theme - an industrial space-salvage HUD look
+/// (hazard-yellow on warm near-black, muted-gold borders, square-cornered chrome,
+/// Saira Condensed type). Call <see cref="Apply"/> once after initializing Gum to
+/// register the bundled fonts, configure the shared
 /// <see cref="Styling.ActiveStyle"/> tokens, and install the theme's visuals as the
-/// default templates for Forms controls. Colors come from <see cref="TemplatePalette"/>.
-/// <para>
-/// This is the clone-to-build theme template - see <c>README.md</c> for the recipe
-/// (rename, palette, fonts, restyle). The code docs here describe what each piece
-/// does so a clone keeps them as-is rather than scrubbing template-only prose.
-/// </para>
+/// default templates for Forms controls. Colors come from <see cref="HazardPalette"/>.
 /// </summary>
-public static class TemplateTheme
+public static class HazardTheme
 {
-    /// <summary>Family name the bundled body TTFs are registered under. Use this as
-    /// the <c>Font</c> value on any TextRuntime to get the theme font.</summary>
-    public const string FontFamily = "DM Mono";
+    /// <summary>Family name the bundled body/label TTFs are registered under. Use
+    /// this as the <c>Font</c> value on any TextRuntime to get the theme font.</summary>
+    public const string FontFamily = "Saira Condensed";
 
     /// <summary>Family name the bundled icon font (DejaVu Sans Mono) is registered
-    /// under. Use this for glyphs the body font doesn't cover - check marks, close
-    /// buttons, combo/scrollbar arrows (Dingbats and Geometric Shapes blocks).</summary>
-    public const string IconFontFamily = "DM Mono Icons";
+    /// under. Use this for glyphs the body font doesn't cover - check marks,
+    /// combo/scrollbar arrows (Dingbats and Geometric Shapes blocks).</summary>
+    public const string IconFontFamily = "Saira Condensed Icons";
 
-    /// <summary>Default text size used by the theme.</summary>
-    public const int FontSize = 14;
+    /// <summary>Default text size used by the theme (the design's <c>--fs: 15px</c>).</summary>
+    public const int FontSize = 15;
 
     /// <summary>
     /// Applies the theme: wires KernSmith as the in-memory font creator, registers
@@ -56,9 +53,10 @@ public static class TemplateTheme
         // Pre-register any glyphs visuals render as Text rather than as sprite-sheet
         // icons. KernSmith bakes only the characters it has been told about, so
         // anything outside ASCII must be declared before the first font generation.
-        // Add every non-ASCII glyph your visuals use (e.g. ✓ for CheckBox, ▼ for
-        // ComboBox). They live in the bundled icon font, not the body font.
-        BmfcSave.AddCharacters("✓▼◀▶");
+        // Add every non-ASCII glyph the visuals render: ✓ (CheckBox check) and ▼
+        // (ComboBox dropdown arrow). They live in the bundled icon font, not the
+        // body font (Saira Condensed lacks the Dingbats / Geometric Shapes blocks).
+        BmfcSave.AddCharacters("✓▼");
 
         // The visuals build their bodies from Apos.Shapes-backed RectangleRuntime /
         // CircleRuntime instances, which require ShapeRenderer to be initialized.
@@ -77,15 +75,14 @@ public static class TemplateTheme
 
     private static void RegisterBundledFonts()
     {
-        // DM Mono ships no true 700-weight Bold, so Medium (500) maps to Gum's
-        // IsBold slot. Swap these filenames + the family/style mapping for your font.
-        RegisterEmbeddedFont(FontFamily, "DMMono-Regular.ttf", style: null);
-        RegisterEmbeddedFont(FontFamily, "DMMono-Medium.ttf", style: "Bold");
-        RegisterEmbeddedFont(FontFamily, "DMMono-Italic.ttf", style: "Italic");
-        RegisterEmbeddedFont(FontFamily, "DMMono-MediumItalic.ttf", style: "BoldItalic");
+        // Saira Condensed Regular -> Normal; SemiBold (600) maps to Gum's IsBold
+        // slot, matching the design's uppercase label/heading weight. Saira
+        // Condensed ships no italic, and the Forms styling never requests one.
+        RegisterEmbeddedFont(FontFamily, "SairaCondensed-Regular.ttf", style: null);
+        RegisterEmbeddedFont(FontFamily, "SairaCondensed-SemiBold.ttf", style: "Bold");
 
         // Icon font registered under a distinct family name so visual code addresses
-        // it explicitly via TemplateTheme.IconFontFamily.
+        // it explicitly via HazardTheme.IconFontFamily.
         RegisterEmbeddedFont(IconFontFamily, "DejaVuSansMono.ttf", style: null);
     }
 
@@ -102,7 +99,7 @@ public static class TemplateTheme
         // leave <AssemblyName> and <RootNamespace> UNSET in the csproj. If a clone
         // sets one and not the other, the build still succeeds but this throws
         // FileNotFoundException at runtime - so run the theme, don't just build it.
-        Assembly assembly = typeof(TemplateTheme).Assembly;
+        Assembly assembly = typeof(HazardTheme).Assembly;
         string resourceName = $"{assembly.GetName().Name}.Content.Fonts.{fileName}";
 
         using Stream? stream = assembly.GetManifestResourceStream(resourceName);
@@ -152,12 +149,12 @@ public static class TemplateTheme
             new VariableSave { Name = "IsItalic", Type = "bool", Value = false });
 
         // The four Styling.Colors slots that overlap with V3's vocabulary. The rest of
-        // the palette is read directly from TemplatePalette by the visuals. These four
+        // the palette is read directly from HazardPalette by the visuals. These four
         // also color the controls left at their stock V3 visual (e.g. Label).
-        styling.Colors.TextPrimary = TemplatePalette.Text;
-        styling.Colors.TextMuted = TemplatePalette.Muted;
-        styling.Colors.Primary = TemplatePalette.Surface1;
-        styling.Colors.Accent = TemplatePalette.Accent;
+        styling.Colors.TextPrimary = HazardPalette.Text;
+        styling.Colors.TextMuted = HazardPalette.Muted;
+        styling.Colors.Primary = HazardPalette.Surface1;
+        styling.Colors.Accent = HazardPalette.Accent;
     }
 
     private static void RegisterVisuals()

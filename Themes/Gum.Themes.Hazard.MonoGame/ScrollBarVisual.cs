@@ -5,10 +5,10 @@ using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using BaseScrollBarVisual = Gum.Forms.DefaultVisuals.V3.ScrollBarVisual;
 
-namespace Gum.Themes.Template;
+namespace Gum.Themes.Hazard;
 
 /// <summary>
-/// Template-styled ScrollBar visual. De-emphasized navigation chrome:
+/// Hazard-styled ScrollBar visual. De-emphasized navigation chrome:
 /// transparent track, no up/down arrow buttons, and a muted gray thumb that
 /// brightens on hover. Mirrors the conventions of VS Code / JetBrains / Slack /
 /// browser overlay scrollbars.
@@ -34,7 +34,7 @@ public class ScrollBarVisual : BaseScrollBarVisual
     private const float ThumbInset = 2f;
 
     /// <summary>Corner radius and stroke for the optional surrounding frame (see <see cref="ShowFrame"/>).</summary>
-    private const float FrameCornerRadius = 2f;
+    private const float FrameCornerRadius = 0f;
     private const float FrameBorderThickness = 1f;
 
     private readonly ScrollBarThumbVisual _thumb;
@@ -49,7 +49,7 @@ public class ScrollBarVisual : BaseScrollBarVisual
         // thumb visual in-place and create the Forms object ourselves.
         : base(fullInstantiation, tryCreateFormsObject: false)
     {
-        // Detach the V3 NineSlice track. The Template look has no visible
+        // Detach the V3 NineSlice track. The Hazard look has no visible
         // track — the parent container's surface reads through.
         TrackInstance.Parent = null;
 
@@ -74,10 +74,10 @@ public class ScrollBarVisual : BaseScrollBarVisual
         // thumb. Used for free-floating scrollbars (not inside a ListBox /
         // ScrollViewer shell) to give the bar a visible container.
         ThumbContainer.Parent = null;
-        _frameFill = TemplateShapes.Fill(TemplatePalette.Surface1, FrameCornerRadius, "ScrollBarFrameFill");
+        _frameFill = HazardShapes.Fill(HazardPalette.Surface1, FrameCornerRadius, "HazardScrollBarFrameFill");
         _frameFill.Visible = false;
         AddChild(_frameFill);
-        _frameBorder = TemplateShapes.Border(TemplatePalette.Border, FrameCornerRadius, FrameBorderThickness, "ScrollBarFrameBorder");
+        _frameBorder = HazardShapes.Border(HazardPalette.Border, FrameCornerRadius, FrameBorderThickness, "HazardScrollBarFrameBorder");
         _frameBorder.Visible = false;
         AddChild(_frameBorder);
         AddChild(ThumbContainer);
@@ -149,9 +149,9 @@ public class ScrollBarVisual : BaseScrollBarVisual
 
     /// <summary>
     /// When true, paints a Surface1 fill + 1 px Border stroke around the
-    /// scroll bar (CornerRadius=2), matching the rest of the Template shell
+    /// scroll bar (CornerRadius=2), matching the rest of the Hazard shell
     /// style. Use for free-floating scroll bars that aren't already nested
-    /// inside a Template container (ListBox / ScrollViewer already provide
+    /// inside a Hazard container (ListBox / ScrollViewer already provide
     /// the surrounding chrome, so leave this off in those cases). Defaults
     /// to false.
     /// </summary>
