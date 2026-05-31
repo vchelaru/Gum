@@ -30,12 +30,20 @@ public sealed class ThemeRequirements
     public FontGeneratorType? FontGenerator { get; init; }
 
     /// <summary>
-    /// True when the theme uses any Skia-backed Standard (e.g. RoundedRectangle,
-    /// ColoredCircle). When set, the apply step adds the full Skia shape bundle
-    /// via <see cref="ISkiaShapeStandardsLogic.AddAllStandards"/> — Arc, Canvas,
-    /// ColoredCircle, Line, LottieAnimation, RoundedRectangle, Svg.
+    /// True when the theme uses any Skia-backed Standard (e.g. Svg, Canvas, Arc).
+    /// When set, the apply step adds the Skia shape bundle via
+    /// <see cref="ISkiaShapeStandardsLogic.AddAllStandards"/> — Arc, Canvas, Line,
+    /// LottieAnimation, Svg, plus the legacy ColoredCircle / RoundedRectangle on
+    /// pre-v3 projects only (V3+ projects use the plain Circle / Rectangle instead).
     /// </summary>
     public bool RequiresSkiaShapes { get; init; }
+
+    /// <summary>
+    /// The standard element whose presence proves the Skia shape bundle is already in the project.
+    /// Svg is used because it is added on every project version (unlike the legacy ColoredCircle /
+    /// RoundedRectangle, which are no longer added on V3+), making it a version-proof sentinel.
+    /// </summary>
+    private const string SkiaShapeBundleSentinel = "Svg";
 
     public static ThemeRequirements LoadFromThemeDirectory(string themeDirectory)
     {
@@ -87,9 +95,9 @@ public sealed class ThemeRequirements
 
     /// <summary>
     /// Compares the requirements against <paramref name="project"/> and returns
-    /// the changes the import would need to apply. <c>RoundedRectangle</c>'s
-    /// presence is the proxy for "this project already has Skia shapes" — the
-    /// apply step is idempotent so a more thorough check isn't necessary.
+    /// the changes the import would need to apply. <c>Svg</c>'s presence is the
+    /// proxy for "this project already has Skia shapes" — the apply step is
+    /// idempotent so a more thorough check isn't necessary.
     /// </summary>
     public ThemeRequirementsDiff Diff(GumProjectSave project)
     {
@@ -100,7 +108,7 @@ public sealed class ThemeRequirements
 
         bool addSkiaShapes = RequiresSkiaShapes &&
             !project.StandardElementReferences.Any(r =>
-                string.Equals(r.Name, "RoundedRectangle", StringComparison.OrdinalIgnoreCase));
+                string.Equals(r.Name, SkiaShapeBundleSentinel, StringComparison.OrdinalIgnoreCase));
 
         return new ThemeRequirementsDiff(fontGenChange, project.FontGenerator, addSkiaShapes);
     }
@@ -144,8 +152,7 @@ public sealed class ThemeRequirementsDiff
         }
         if (AddSkiaShapes)
         {
-            lines.Add("Add Skia shape Standards (Arc, Canvas, ColoredCircle, Line, " +
-                      "LottieAnimation, RoundedRectangle, Svg).");
+            lines.Add("Add Skia shape Standards (Arc, Canvas, Line, LottieAnimation, Svg).");
         }
         return lines;
     }
