@@ -252,10 +252,21 @@ public class RectangleRuntime : GraphicalUiElement
         set
         {
             _fillColor = value;
-            ContainedLineRectangle.FillColor = value;
+            PushFillColorToRenderable();
             SyncGradientStart();
             NotifyPropertyChanged();
         }
+    }
+
+    // Issue #3009 follow-up — gate the renderable's fill color by IsFilled so a stroke-only
+    // rectangle (IsFilled = false) leaves the renderable's FillColor null and its fill pass (which
+    // runs when FillColor.HasValue || IsFilled) stays off — a fresh rectangle is outline-only.
+    // Mirrors how the Apos/Skia two-slot model pushes a transparent fill when the shape isn't
+    // filled; previously the default opaque-white FillColor was pushed unconditionally, filling
+    // every default rectangle.
+    void PushFillColorToRenderable()
+    {
+        ContainedLineRectangle.FillColor = ContainedLineRectangle.IsFilled ? (Color?)_fillColor : null;
     }
 
     /// <summary>Red channel of <see cref="FillColor"/>.</summary>
@@ -336,7 +347,9 @@ public class RectangleRuntime : GraphicalUiElement
         set
         {
             ContainedLineRectangle.IsFilled = value;
-            // Issue #3009 — re-route the gradient start to the now-active body color.
+            // Issue #3009 — re-gate the renderable fill color and re-route the gradient start to
+            // the now-active body color.
+            PushFillColorToRenderable();
             SyncGradientStart();
             NotifyPropertyChanged();
         }
@@ -1950,9 +1963,10 @@ public class RectangleRuntime : GraphicalUiElement
             // defaults to opaque white and IsFilled defaults to false → a fresh rectangle
             // renders as a stroke-only outline; flipping IsFilled = true paints it white.
             rectangle.StrokeColor = _strokeColor;
-            rectangle.FillColor = _fillColor;
             rectangle.IsFilled = false;
-            // Issue #3009 — seed the gradient start from the (white) body color.
+            // Issue #3009 — gate the fill color by IsFilled (null when not filled) so a fresh
+            // rectangle is a stroke-only outline, and seed the gradient start from the body color.
+            PushFillColorToRenderable();
             SyncGradientStart();
 #endif
 

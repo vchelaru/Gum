@@ -282,10 +282,20 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             _fillColor = value;
-            ContainedLineCircle.FillColor = value;
+            PushFillColorToRenderable();
             SyncGradientStart();
             NotifyPropertyChanged();
         }
+    }
+
+    // Issue #3009 follow-up — gate the renderable's fill color by IsFilled so a stroke-only circle
+    // (IsFilled = false) leaves the renderable's FillColor null and its fill pass (which runs when
+    // FillColor.HasValue || IsFilled) stays off — a fresh circle is outline-only. Mirrors how the
+    // Apos/Skia two-slot model pushes a transparent fill when the shape isn't filled; previously
+    // the default opaque-white FillColor was pushed unconditionally, filling every default circle.
+    void PushFillColorToRenderable()
+    {
+        ContainedLineCircle.FillColor = ContainedLineCircle.IsFilled ? (Color?)_fillColor : null;
     }
 
     /// <summary>Red channel of <see cref="FillColor"/>.</summary>
@@ -366,7 +376,9 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             ContainedLineCircle.IsFilled = value;
-            // Issue #3009 — re-route the gradient start to the now-active body color.
+            // Issue #3009 — re-gate the renderable fill color and re-route the gradient start to
+            // the now-active body color.
+            PushFillColorToRenderable();
             SyncGradientStart();
             NotifyPropertyChanged();
         }
@@ -1922,9 +1934,10 @@ public class CircleRuntime : GraphicalUiElement
             // defaults to opaque white and IsFilled defaults to false → a fresh circle renders
             // as a stroke-only outline; flipping IsFilled = true paints it white.
             circle.StrokeColor = _strokeColor;
-            circle.FillColor = _fillColor;
             circle.IsFilled = false;
-            // Issue #3009 — seed the gradient start from the (white) body color.
+            // Issue #3009 — gate the fill color by IsFilled (null when not filled) so a fresh
+            // circle is a stroke-only outline, and seed the gradient start from the body color.
+            PushFillColorToRenderable();
             SyncGradientStart();
 #endif
 #endif

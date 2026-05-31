@@ -13,6 +13,47 @@ namespace RaylibGum.Tests.Runtimes;
 
 public class RectangleRuntimeTests : BaseTestClass
 {
+    // Issue #3009 follow-up — a stroke-only rectangle (IsFilled = false, only StrokeColor set) must
+    // render outline-only on raylib. The renderable's fill pass runs when `FillColor.HasValue ||
+    // IsFilled`, so the runtime must leave the renderable's FillColor null when the shape isn't
+    // filled. It previously pushed the default opaque-white FillColor unconditionally, which made
+    // every default rectangle fill white (mirrors how Apos/Skia push a transparent fill when not
+    // filled).
+    [Fact]
+    public void StrokeOnly_DefaultRectangle_DoesNotFill()
+    {
+        RectangleRuntime sut = new();
+        sut.StrokeColor = new Color(255, 255, 255, 255);
+
+        LineRectangle inner = (LineRectangle)sut.RenderableComponent!;
+        inner.IsFilled.ShouldBeFalse();
+        inner.FillColor.HasValue.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsFilledTrue_PushesFillColorToRenderable()
+    {
+        RectangleRuntime sut = new();
+        sut.FillColor = new Color(10, 20, 30, 255);
+        sut.IsFilled = true;
+
+        LineRectangle inner = (LineRectangle)sut.RenderableComponent!;
+        inner.FillColor.HasValue.ShouldBeTrue();
+        inner.FillColor!.Value.R.ShouldBe((byte)10);
+    }
+
+    [Fact]
+    public void IsFilledToggledOff_ClearsRenderableFillColor()
+    {
+        RectangleRuntime sut = new();
+        sut.FillColor = new Color(10, 20, 30, 255);
+        sut.IsFilled = true;
+        sut.IsFilled = false;
+
+        LineRectangle inner = (LineRectangle)sut.RenderableComponent!;
+        inner.FillColor.HasValue.ShouldBeFalse();
+    }
+
     [Fact]
     public void Alpha_ShouldDefaultTo255()
     {
@@ -107,6 +148,9 @@ public class RectangleRuntimeTests : BaseTestClass
         RectangleRuntime sut = new();
         Color expected = new Color(10, 20, 30, 200);
 
+        // Issue #3009 — IsFilled gates the fill (consistent with Apos/Skia), so the fill color
+        // reaches the renderable only when the shape is filled.
+        sut.IsFilled = true;
         sut.FillColor = expected;
 
         sut.FillColor.R.ShouldBe((byte)10);
