@@ -229,11 +229,10 @@ internal class CirclesScreen : FrameworkElement
         circle.YUnits = GeneralUnitType.PixelsFromMiddle;
         // Filled cell — light up the fill slot with an opaque color so the gradient renders
         // on the fill. raylib's outline-only case is handled by BuildRotationOutlineUnsupportedRow.
-        circle.FillColor = Color.White;
+        circle.FillColor = Color.Black;
         circle.IsFilled = true;
         circle.UseGradient = true;
         circle.GradientType = GradientType.Linear;
-        circle.Color1 = Color.Black;
         circle.Color2 = Color.White;
         circle.GradientX1 = 0; circle.GradientY1 = 0;
         circle.GradientX2 = 20; circle.GradientY2 = 0;
@@ -283,7 +282,6 @@ internal class CirclesScreen : FrameworkElement
         linearH.IsFilled = true;
         linearH.UseGradient = true;
         linearH.GradientType = GradientType.Linear;
-        linearH.Color1 = Color.White;
         linearH.Color2 = new Color(70, 130, 180, 255);
         linearH.GradientX1 = 0; linearH.GradientY1 = 0;
         linearH.GradientX2 = 56; linearH.GradientY2 = 0;
@@ -292,11 +290,10 @@ internal class CirclesScreen : FrameworkElement
         // Linear vertical: gold → crimson, top to bottom.
         CircleRuntime linearV = new();
         linearV.Radius = 28;
-        linearV.FillColor = Color.White;
+        linearV.FillColor = new Color(255, 215, 0, 255);
         linearV.IsFilled = true;
         linearV.UseGradient = true;
         linearV.GradientType = GradientType.Linear;
-        linearV.Color1 = new Color(255, 215, 0, 255);
         linearV.Color2 = new Color(220, 20, 60, 255);
         linearV.GradientX1 = 0; linearV.GradientY1 = 0;
         linearV.GradientX2 = 0; linearV.GradientY2 = 56;
@@ -305,11 +302,10 @@ internal class CirclesScreen : FrameworkElement
         // Linear diagonal: cyan → magenta, top-left to bottom-right.
         CircleRuntime linearD = new();
         linearD.Radius = 28;
-        linearD.FillColor = Color.White;
+        linearD.FillColor = new Color(0, 255, 255, 255);
         linearD.IsFilled = true;
         linearD.UseGradient = true;
         linearD.GradientType = GradientType.Linear;
-        linearD.Color1 = new Color(0, 255, 255, 255);
         linearD.Color2 = new Color(255, 0, 255, 255);
         linearD.GradientX1 = 0; linearD.GradientY1 = 0;
         linearD.GradientX2 = 56; linearD.GradientY2 = 56;
@@ -322,7 +318,6 @@ internal class CirclesScreen : FrameworkElement
         radial.IsFilled = true;
         radial.UseGradient = true;
         radial.GradientType = GradientType.Radial;
-        radial.Color1 = Color.White;
         radial.Color2 = new Color(0, 100, 0, 255);
         radial.GradientX1 = 28; radial.GradientY1 = 28;
         radial.GradientInnerRadius = 0;

@@ -407,7 +407,9 @@ public class StandardElementsManager
             // only by flipping IsFilled = false (the fill slot's gradient is gated on _isFilled
             // in SkiaShapeRuntime.RefreshSlotGradients).
             AddFillAndStrokeVariables(stateSave, category: "Rendering");
-            AddGradientVariables(stateSave);
+            // Issue #3009 — Circle drives the gradient start from the active body color, so no
+            // standalone Color1 (Red1/Green1/Blue1/Alpha1).
+            AddGradientVariables(stateSave, includeStartColor: false);
             AddDropshadowVariables(stateSave);
             AddBlendVariable(stateSave);
 
@@ -450,7 +452,9 @@ public class StandardElementsManager
             // standard can be retired; default 0 keeps the historical hard-cornered visual. Only
             // Rectangle gets this (a Circle has no corners). Gated to v3 in ShapeVariableVersionGate.
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "CornerRadius", Category = "Rendering" });
-            AddGradientVariables(stateSave);
+            // Issue #3009 — Rectangle drives the gradient start from the active body color, so no
+            // standalone Color1 (Red1/Green1/Blue1/Alpha1).
+            AddGradientVariables(stateSave, includeStartColor: false);
             AddDropshadowVariables(stateSave);
             AddBlendVariable(stateSave);
 
@@ -1228,7 +1232,14 @@ public class StandardElementsManager
         state.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
     }
 
-    public static void AddGradientVariables(StateSave state)
+    /// <param name="includeStartColor">
+    /// When true (the default, for Arc and the legacy ColoredCircle/RoundedRectangle/Line shapes)
+    /// the standalone gradient start color channels (Red1/Green1/Blue1/Alpha1) are added. Issue
+    /// #3009 — the two-slot Circle/Rectangle drive the gradient start from the active body color
+    /// (FillColor/StrokeColor) instead of a standalone Color1, so they pass false and these
+    /// channels are omitted entirely. Color2 (the standalone second stop) is always added.
+    /// </param>
+    public static void AddGradientVariables(StateSave state, bool includeStartColor = true)
     {
         List<object> xUnitsExclusions = new List<object>();
         xUnitsExclusions.Add(PositionUnitType.PixelsFromTop);
@@ -1265,10 +1276,15 @@ public class StandardElementsManager
         state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0f, Category = "Rendering", Name = "GradientY1" });
         state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromTop, Name = "GradientY1Units", Category = "Rendering", ExcludedValuesForEnum = yUnitsExclusions });
 
-        state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Alpha1", Category = "Rendering" });
-        state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Red1", Category = "Rendering" });
-        state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Green1", Category = "Rendering" });
-        state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Blue1", Category = "Rendering" });
+        // Issue #3009 — the standalone gradient start (Color1) only exists on Arc and the legacy
+        // shapes; Circle/Rectangle drive the start from the active body color, so they omit it.
+        if (includeStartColor)
+        {
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Alpha1", Category = "Rendering" });
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Red1", Category = "Rendering" });
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Green1", Category = "Rendering" });
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Blue1", Category = "Rendering" });
+        }
 
         state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 100f, Category = "Rendering", Name = "GradientX2" });
         state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(PositionUnitType).Name, Value = PositionUnitType.PixelsFromLeft, Name = "GradientX2Units", Category = "Rendering", ExcludedValuesForEnum = xUnitsExclusions });

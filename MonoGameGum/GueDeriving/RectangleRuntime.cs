@@ -253,6 +253,7 @@ public class RectangleRuntime : GraphicalUiElement
         {
             _fillColor = value;
             ContainedLineRectangle.FillColor = value;
+            SyncGradientStart();
             NotifyPropertyChanged();
         }
     }
@@ -295,6 +296,7 @@ public class RectangleRuntime : GraphicalUiElement
         {
             _strokeColor = value;
             ContainedLineRectangle.StrokeColor = value;
+            SyncGradientStart();
             NotifyPropertyChanged();
         }
     }
@@ -334,6 +336,8 @@ public class RectangleRuntime : GraphicalUiElement
         set
         {
             ContainedLineRectangle.IsFilled = value;
+            // Issue #3009 — re-route the gradient start to the now-active body color.
+            SyncGradientStart();
             NotifyPropertyChanged();
         }
     }
@@ -371,15 +375,12 @@ public class RectangleRuntime : GraphicalUiElement
         }
     }
 
-    /// <inheritdoc cref="Gum.Renderables.LineRectangle.Color1"/>
-    public Color Color1
+    // Issue #3009 — Circle/Rectangle no longer expose a standalone gradient Color1. The gradient
+    // start mirrors the active body color (FillColor when filled, StrokeColor otherwise), synced
+    // from the FillColor / StrokeColor / IsFilled setters into the renderable's Color1.
+    void SyncGradientStart()
     {
-        get => ContainedLineRectangle.Color1;
-        set
-        {
-            ContainedLineRectangle.Color1 = value;
-            NotifyPropertyChanged();
-        }
+        ContainedLineRectangle.Color1 = ContainedLineRectangle.IsFilled ? _fillColor : _strokeColor;
     }
 
     /// <inheritdoc cref="Gum.Renderables.LineRectangle.Color2"/>
@@ -721,6 +722,8 @@ public class RectangleRuntime : GraphicalUiElement
             {
                 _fill.Color = _isFilled ? _fillColor : new Color(0, 0, 0, 0);
             }
+            // Issue #3009 — the fill slot's gradient start mirrors FillColor (no standalone Color1).
+            SyncGradientStart();
             NotifyPropertyChanged();
         }
     }
@@ -797,6 +800,8 @@ public class RectangleRuntime : GraphicalUiElement
         {
             _strokeColor = value;
             _stroke.Color = value;
+            // Issue #3009 — the stroke slot's gradient start mirrors StrokeColor (no standalone Color1).
+            SyncGradientStart();
             NotifyPropertyChanged();
         }
     }
@@ -1001,6 +1006,31 @@ public class RectangleRuntime : GraphicalUiElement
         if (inactive != null) inactive.UseGradient = false;
     }
 
+    // Issue #3009 — the gradient START stop is the slot's own solid body color; Circle/Rectangle
+    // no longer carry a standalone Color1. Each slot mirrors its solid color into its
+    // Red1/Green1/Blue1/Alpha1 so the gradient start equals the color the shape was already
+    // showing (no jump when UseGradient toggles), and the dropshadow alpha — which the Apos
+    // renderable scales by the slot's Color.A — converges onto the gradient start alpha. Called
+    // from the FillColor / StrokeColor setters and the constructor; the UseGradient gate routing
+    // stays in SyncGradientToTarget.
+    void SyncGradientStart()
+    {
+        if (_fill is IGradientedRenderable fillGrad)
+        {
+            fillGrad.Red1 = _fillColor.R;
+            fillGrad.Green1 = _fillColor.G;
+            fillGrad.Blue1 = _fillColor.B;
+            fillGrad.Alpha1 = _fillColor.A;
+        }
+        if (_stroke is IGradientedRenderable strokeGrad)
+        {
+            strokeGrad.Red1 = _strokeColor.R;
+            strokeGrad.Green1 = _strokeColor.G;
+            strokeGrad.Blue1 = _strokeColor.B;
+            strokeGrad.Alpha1 = _strokeColor.A;
+        }
+    }
+
     bool _useGradient;
     /// <inheritdoc cref="CircleRuntime.UseGradient"/>
     public bool UseGradient
@@ -1027,69 +1057,10 @@ public class RectangleRuntime : GraphicalUiElement
         }
     }
 
-    int _alpha1 = 255;
-    public int Alpha1
-    {
-        get => _alpha1;
-        set
-        {
-            _alpha1 = value;
-            if (_fill is IGradientedRenderable fillGrad) fillGrad.Alpha1 = value;
-            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.Alpha1 = value;
-            NotifyPropertyChanged();
-        }
-    }
-
-    int _red1;
-    public int Red1
-    {
-        get => _red1;
-        set
-        {
-            _red1 = value;
-            if (_fill is IGradientedRenderable fillGrad) fillGrad.Red1 = value;
-            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.Red1 = value;
-            NotifyPropertyChanged();
-        }
-    }
-
-    int _green1;
-    public int Green1
-    {
-        get => _green1;
-        set
-        {
-            _green1 = value;
-            if (_fill is IGradientedRenderable fillGrad) fillGrad.Green1 = value;
-            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.Green1 = value;
-            NotifyPropertyChanged();
-        }
-    }
-
-    int _blue1;
-    public int Blue1
-    {
-        get => _blue1;
-        set
-        {
-            _blue1 = value;
-            if (_fill is IGradientedRenderable fillGrad) fillGrad.Blue1 = value;
-            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.Blue1 = value;
-            NotifyPropertyChanged();
-        }
-    }
-
-    public Color Color1
-    {
-        get => new Color(_red1, _green1, _blue1, _alpha1);
-        set
-        {
-            Red1 = value.R;
-            Green1 = value.G;
-            Blue1 = value.B;
-            Alpha1 = value.A;
-        }
-    }
+    // Issue #3009 — the gradient start (Red1/Green1/Blue1/Alpha1 / Color1) is no longer stored on
+    // the runtime. It is driven from the active body color via SyncGradientStart(); the standalone
+    // Color1 surface was dropped for Circle/Rectangle (gradient support is unshipped, so no data to
+    // preserve). Color2 below remains the only standalone gradient color.
 
     int _alpha2 = 255;
     public int Alpha2
@@ -1693,6 +1664,51 @@ public class RectangleRuntime : GraphicalUiElement
         set => base.Blue = value;
     }
 
+    // Issue #3009 — the gradient START stop is the active body color (FillColor when filled,
+    // StrokeColor otherwise), driven by the base's two-slot SyncGradientStartToBody. The standalone
+    // Color1 surface inherited from SkiaShapeRuntime is unsupported on the new fill+stroke
+    // Rectangle: shadow it as an error so consumers are steered to FillColor / StrokeColor (mirrors
+    // the XNALIKE hard-drop). The members stay live on the base for legacy single-color shapes.
+    /// <summary>Obsolete: the gradient start is the active body color. Set <see cref="SkiaShapeRuntime.FillColor"/> / <see cref="SkiaShapeRuntime.StrokeColor"/>. See issue #3009.</summary>
+    [Obsolete("The gradient start is the active body color (FillColor when filled, StrokeColor otherwise). Set FillColor / StrokeColor instead of Color1. See issue #3009.", error: true)]
+    public new SKColor Color1
+    {
+        get => base.Color1;
+        set => base.Color1 = value;
+    }
+
+    /// <inheritdoc cref="Color1"/>
+    [Obsolete("The gradient start is the active body color (FillColor when filled, StrokeColor otherwise). Set FillColor / StrokeColor instead of Red1. See issue #3009.", error: true)]
+    public new int Red1
+    {
+        get => base.Red1;
+        set => base.Red1 = value;
+    }
+
+    /// <inheritdoc cref="Color1"/>
+    [Obsolete("The gradient start is the active body color (FillColor when filled, StrokeColor otherwise). Set FillColor / StrokeColor instead of Green1. See issue #3009.", error: true)]
+    public new int Green1
+    {
+        get => base.Green1;
+        set => base.Green1 = value;
+    }
+
+    /// <inheritdoc cref="Color1"/>
+    [Obsolete("The gradient start is the active body color (FillColor when filled, StrokeColor otherwise). Set FillColor / StrokeColor instead of Blue1. See issue #3009.", error: true)]
+    public new int Blue1
+    {
+        get => base.Blue1;
+        set => base.Blue1 = value;
+    }
+
+    /// <inheritdoc cref="Color1"/>
+    [Obsolete("The gradient start is the active body color (FillColor when filled, StrokeColor otherwise). Set FillColor / StrokeColor instead of Alpha1. See issue #3009.", error: true)]
+    public new int Alpha1
+    {
+        get => base.Alpha1;
+        set => base.Alpha1 = value;
+    }
+
     /// <inheritdoc cref="CircleRuntime.DropshadowBlur"/>
     public float DropshadowBlur
     {
@@ -1855,6 +1871,11 @@ public class RectangleRuntime : GraphicalUiElement
             Width = 50;
             Height = 50;
 
+            // Issue #3009 — seed each slot's gradient start from its (white) body color so flipping
+            // UseGradient on a freshly-constructed rectangle starts from white, matching the
+            // no-jump contract.
+            SyncGradientStart();
+
             // Issue #2818 (mirror of CircleRuntime #2797): pre-seed opaque-black dropshadow
             // with a slight downward offset/blur so toggling HasDropshadow = true at runtime
             // produces a visible shadow without further setup.
@@ -1931,6 +1952,8 @@ public class RectangleRuntime : GraphicalUiElement
             rectangle.StrokeColor = _strokeColor;
             rectangle.FillColor = _fillColor;
             rectangle.IsFilled = false;
+            // Issue #3009 — seed the gradient start from the (white) body color.
+            SyncGradientStart();
 #endif
 
             Width = 50;

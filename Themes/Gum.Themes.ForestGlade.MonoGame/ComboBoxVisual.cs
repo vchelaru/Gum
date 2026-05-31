@@ -74,7 +74,6 @@ public class ComboBoxVisual : BaseComboBoxVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         ForestGladeLeaf.ApplyMedium(fill);
         fill.IsFilled = true;
-        fill.FillColor = ForestGladePalette.InputFill;
         fill.StrokeWidth = 0;
         // Same vertical dark gradient as the TextBox decoration so the closed
         // ComboBox reads as a sibling input chrome.
@@ -88,7 +87,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
         fill.GradientY2Units = GeneralUnitType.PixelsFromLarge;
         fill.GradientX2 = 0f;
         fill.GradientY2 = 0f;
-        fill.Color1 = new Color(2, 22, 25);
+        fill.FillColor = new Color(2, 22, 25);
         fill.Color2 = new Color(4, 36, 40);
         return fill;
     }
@@ -202,8 +201,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
     private void Apply(Color border, Color text, Color glyph, bool ring, bool fillDisabled)
     {
         Color baseFill = fillDisabled ? ForestGladePalette.InputFillDisabled : ForestGladePalette.InputFill;
-        _fill.FillColor = baseFill;
-        _fill.Color1 = Darken(baseFill, 0.65f);
+        _fill.FillColor = Darken(baseFill, 0.65f);
         _fill.Color2 = baseFill;
         _border.StrokeColor = border;
         TextInstance.Color = text;

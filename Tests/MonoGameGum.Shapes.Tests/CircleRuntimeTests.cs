@@ -185,10 +185,12 @@ public class CircleRuntimeTests
     // Load-order contract guard for #2761 / #2768: if any of the four factory registrations
     // moves back inside the _registered guard in AposShapeRuntime, this catches the
     // regression. After Reset + re-call, a new CircleRuntime must still bind Apos Circles.
-    // Issue #2791: gradient coordinate/color props push through to BOTH Apos Circles so the values
-    // round-trip on either slot. The UseGradient GATE, however, routes to the active body slot
-    // (fill when IsFilled, else stroke — see UseGradient_When* tests). IsFilled is set true here so
-    // the gate lands deterministically on the fill; the shared params are inert on the stroke.
+    // Issue #2791 / #3009: gradient coordinate and Color2 props push through to BOTH Apos Circles
+    // so the values round-trip on either slot. The gradient START is per-slot now — each slot
+    // mirrors its own body color (see UseGradient_GradientStart_* tests) rather than a shared
+    // standalone Color1. The UseGradient GATE routes to the active body slot (fill when IsFilled,
+    // else stroke — see UseGradient_When* tests). IsFilled is set true here so the gate lands
+    // deterministically on the fill; the shared params are inert on the stroke.
     [Fact]
     public void Gradient_PropertiesPushedToBothFillAndStrokeSlots()
     {
@@ -197,7 +199,6 @@ public class CircleRuntimeTests
 
         sut.UseGradient = true;
         sut.GradientType = GradientType.Linear;
-        sut.Color1 = Color.Red;
         sut.Color2 = Color.Blue;
         sut.GradientX2 = 56;
         sut.GradientInnerRadius = 4;
@@ -210,8 +211,6 @@ public class CircleRuntimeTests
         stroke.UseGradient.ShouldBeFalse();
         fill.GradientType.ShouldBe(GradientType.Linear);
         stroke.GradientType.ShouldBe(GradientType.Linear);
-        fill.Red1.ShouldBe(Color.Red.R);
-        stroke.Red1.ShouldBe(Color.Red.R);
         fill.Blue2.ShouldBe(Color.Blue.B);
         stroke.Blue2.ShouldBe(Color.Blue.B);
         fill.GradientX2.ShouldBe(56);
@@ -235,9 +234,7 @@ public class CircleRuntimeTests
         sut.FillColor = Color.Red;
         sut.StrokeColor = Color.White;
         sut.StrokeWidth = 4f;
-        sut.Color1 = Color.Blue;
         sut.Color2 = Color.Green;
-        sut.Alpha1 = 255;
         sut.Alpha2 = 255;
 
         sut.UseGradient = true;
@@ -263,9 +260,7 @@ public class CircleRuntimeTests
         sut.IsFilled = false;
         sut.StrokeColor = Color.White;
         sut.StrokeWidth = 4f;
-        sut.Color1 = Color.Blue;
         sut.Color2 = Color.Green;
-        sut.Alpha1 = 255;
         sut.Alpha2 = 255;
 
         sut.UseGradient = true;
@@ -288,9 +283,7 @@ public class CircleRuntimeTests
         sut.Height = 56;
         sut.StrokeColor = Color.White;
         sut.StrokeWidth = 4f;
-        sut.Color1 = Color.Blue;
         sut.Color2 = Color.Green;
-        sut.Alpha1 = 255;
         sut.Alpha2 = 255;
         sut.UseGradient = true;
 
@@ -1089,5 +1082,83 @@ public class CircleRuntimeTests
         sut.FillColor.ShouldBe(new Color(60, 70, 80, 255));
         Circle fill = (Circle)sut.RenderableComponent;
         fill.Color.ShouldBe(new Color(60, 70, 80, 255));
+    }
+
+    // Issue #3009 — Circle/Rectangle no longer store a standalone gradient Color1. The gradient
+    // start stop is the ACTIVE body color: FillColor when IsFilled, StrokeColor when stroke-only.
+    // This removes the solid↔gradient color jump when toggling UseGradient (the start already
+    // equals the solid the shape was showing) and converges the dropshadow alpha (which scales by
+    // the renderable's Color.A) onto the gradient start alpha. Each slot mirrors its own solid
+    // color into its Red1/Green1/Blue1/Alpha1 start, so both fill and stroke can carry the
+    // correct gradient start simultaneously.
+
+    [Fact]
+    public void UseGradient_GradientStart_MirrorsFillColor_WhenFilled()
+    {
+        CircleRuntime sut = new();
+        sut.IsFilled = true;
+        sut.FillColor = new Color(10, 20, 30, 200);
+
+        sut.UseGradient = true;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        fill.Red1.ShouldBe(10);
+        fill.Green1.ShouldBe(20);
+        fill.Blue1.ShouldBe(30);
+        fill.Alpha1.ShouldBe(200);
+    }
+
+    [Fact]
+    public void UseGradient_GradientStart_MirrorsStrokeColor_WhenStrokeOnly()
+    {
+        CircleRuntime sut = new();
+        sut.IsFilled = false;
+        sut.StrokeColor = new Color(40, 50, 60, 70);
+
+        sut.UseGradient = true;
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        Circle stroke = (Circle)fill.Children[0];
+        stroke.Red1.ShouldBe(40);
+        stroke.Green1.ShouldBe(50);
+        stroke.Blue1.ShouldBe(60);
+        stroke.Alpha1.ShouldBe(70);
+    }
+
+    // No-jump contract: changing the body color while the gradient is on updates the gradient
+    // start in lockstep, so there is never a stale start color left behind.
+    [Fact]
+    public void FillColor_WhenChangedUnderGradient_UpdatesGradientStart()
+    {
+        CircleRuntime sut = new();
+        sut.IsFilled = true;
+        sut.UseGradient = true;
+
+        sut.FillColor = new Color(1, 2, 3, 4);
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        fill.Red1.ShouldBe(1);
+        fill.Green1.ShouldBe(2);
+        fill.Blue1.ShouldBe(3);
+        fill.Alpha1.ShouldBe(4);
+    }
+
+    // Dropshadow alpha converges onto the gradient start alpha: the renderable's solid Color.A
+    // (which EffectiveDropshadowColor scales by) now equals the gradient start alpha, because both
+    // are the body color.
+    [Fact]
+    public void Dropshadow_AlphaTracksGradientStart_WhenFilledGradient()
+    {
+        CircleRuntime sut = new();
+        sut.IsFilled = true;
+        sut.FillColor = new Color(255, 0, 0, 128);
+        sut.UseGradient = true;
+        sut.HasDropshadow = true;
+        sut.DropshadowColor = new Color(0, 0, 0, 255);
+
+        Circle fill = (Circle)sut.RenderableComponent;
+        fill.Alpha1.ShouldBe(128);
+        // EffectiveDropshadowColor.A = 255 * (Color.A = 128) / 255 = 128
+        fill.EffectiveDropshadowColor.A.ShouldBe((byte)128);
     }
 }

@@ -165,7 +165,7 @@ public class SliderVisual : BaseSliderVisual
     private void ApplyTrack(Color trackFill, Color fillLeft, Color fillRight)
     {
         _track.FillColor = trackFill;
-        _fill.Color1 = fillLeft;
+        _fill.FillColor = fillLeft;
         _fill.Color2 = fillRight;
     }
 }

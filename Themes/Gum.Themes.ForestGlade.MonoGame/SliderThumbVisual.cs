@@ -70,7 +70,7 @@ public class SliderThumbVisual : InteractiveGue
         // (PixelsFromMiddle with a small negative offset).
         body.UseGradient = true;
         body.GradientType = GradientType.Radial;
-        body.Color1 = ForestGladeColors.SunPale;
+        body.FillColor = ForestGladeColors.SunPale;
         body.Color2 = new Color(0, 140, 46); // CSS #008c2e outer stop
         // 35% / 30% from top-left on an 18 px circle ≈ ~-2.7 / -3.6 from middle.
         body.GradientX1Units = GeneralUnitType.PixelsFromMiddle;
@@ -179,7 +179,6 @@ public class SliderThumbVisual : InteractiveGue
     private void Apply(Color centre, Color edge, Color border, bool gradient, bool ring, bool showShadow, float blur)
     {
         _body.UseGradient = gradient;
-        _body.Color1 = centre;
         _body.Color2 = edge;
         _body.FillColor = centre;
         _body.HasDropshadow = showShadow;

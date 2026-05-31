@@ -74,6 +74,36 @@ public class ShapeVariableExclusionLogicTests
         shouldExclude.ShouldBeFalse();
     }
 
+    // Issue #3009 — Arc's gradient start is its primary Color; the Red1/Green1/Blue1/Alpha1 surface
+    // is kept only as obsolete back-compat shims, so it is always hidden from Arc's grid (even with
+    // a gradient on), leaving Arc a single primary Color.
+    [Theory]
+    [InlineData("Red1")]
+    [InlineData("Green1")]
+    [InlineData("Blue1")]
+    [InlineData("Alpha1")]
+    public void Arc_AlwaysHidesGradientStartChannels(string variableName)
+    {
+        var finder = MakeFinder(("UseGradient", true));
+
+        _logic.GetIfShapeVariableIsExcluded(variableName, finder, "Arc", "", out bool shouldExclude)
+            .ShouldBeTrue();
+        shouldExclude.ShouldBeTrue();
+    }
+
+    // The legacy ColoredCircle / RoundedRectangle keep their standalone Color1 (unchanged by
+    // #3009): the gradient start channels stay visible when a gradient is on.
+    [Theory]
+    [InlineData("ColoredCircle")]
+    [InlineData("RoundedRectangle")]
+    public void LegacyShapes_ShowGradientStartChannels_WhenGradientOn(string standardType)
+    {
+        var finder = MakeFinder(("UseGradient", true));
+
+        _logic.GetIfShapeVariableIsExcluded("Red1", finder, standardType, "", out bool shouldExclude);
+        shouldExclude.ShouldBeFalse();
+    }
+
     private static RecursiveVariableFinder MakeFinder(params (string name, object value)[] variables)
     {
         var element = new ComponentSave { Name = "Test" };

@@ -18,6 +18,18 @@ internal class ShapeVariableExclusionLogic
     public bool GetIfShapeVariableIsExcluded(string rootName, RecursiveVariableFinder finder,
         string? rootStandardTypeName, string prefix, out bool shouldExclude)
     {
+        // Issue #3009 — Arc's gradient start is now its primary Color; the Red1/Green1/Blue1/Alpha1
+        // surface is kept only as obsolete back-compat shims (mapping onto Color), so hide all four
+        // from Arc's grid entirely, leaving Arc a single primary Color. Circle/Rectangle don't have
+        // these variables at all (StandardElementsManager omits them); the legacy ColoredCircle/
+        // RoundedRectangle keep their standalone Color1, gated by UseGradient in the branch below.
+        if (rootStandardTypeName == "Arc" &&
+            (rootName == "Red1" || rootName == "Green1" || rootName == "Blue1" || rootName == "Alpha1"))
+        {
+            shouldExclude = true;
+            return true;
+        }
+
         if (rootName == "Red" || rootName == "Green" || rootName == "Blue")
         {
             var usesGradients = finder.GetValue(prefix + "UseGradient");

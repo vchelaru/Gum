@@ -225,11 +225,10 @@ internal class RectanglesScreen : GraphicalUiElement
         // Linear horizontal: white → blue
         RectangleRuntime linearH = new();
         linearH.Width = 70; linearH.Height = 50;
-        linearH.FillColor = SKColors.White; // fill mode; gradient overrides solid color
+        linearH.FillColor = SKColors.White; // gradient start stop is the fill color
         linearH.IsFilled = true;
         linearH.UseGradient = true;
         linearH.GradientType = GradientType.Linear;
-        linearH.Color1 = SKColors.White;
         linearH.Color2 = SKColors.SteelBlue;
         linearH.GradientX1 = 0; linearH.GradientY1 = 0;
         linearH.GradientX2 = 70; linearH.GradientY2 = 0;
@@ -238,11 +237,10 @@ internal class RectanglesScreen : GraphicalUiElement
         // Linear vertical: gold → crimson
         RectangleRuntime linearV = new();
         linearV.Width = 70; linearV.Height = 50;
-        linearV.FillColor = SKColors.White;
+        linearV.FillColor = SKColors.Gold;
         linearV.IsFilled = true;
         linearV.UseGradient = true;
         linearV.GradientType = GradientType.Linear;
-        linearV.Color1 = SKColors.Gold;
         linearV.Color2 = SKColors.Crimson;
         linearV.GradientX1 = 0; linearV.GradientY1 = 0;
         linearV.GradientX2 = 0; linearV.GradientY2 = 50;
@@ -251,11 +249,10 @@ internal class RectanglesScreen : GraphicalUiElement
         // Linear diagonal: cyan → magenta
         RectangleRuntime linearD = new();
         linearD.Width = 70; linearD.Height = 50;
-        linearD.FillColor = SKColors.White;
+        linearD.FillColor = SKColors.Cyan;
         linearD.IsFilled = true;
         linearD.UseGradient = true;
         linearD.GradientType = GradientType.Linear;
-        linearD.Color1 = SKColors.Cyan;
         linearD.Color2 = SKColors.Magenta;
         linearD.GradientX1 = 0; linearD.GradientY1 = 0;
         linearD.GradientX2 = 70; linearD.GradientY2 = 50;
@@ -268,7 +265,6 @@ internal class RectanglesScreen : GraphicalUiElement
         radial.IsFilled = true;
         radial.UseGradient = true;
         radial.GradientType = GradientType.Radial;
-        radial.Color1 = SKColors.White;
         radial.Color2 = SKColors.DarkGreen;
         radial.GradientX1 = 35; radial.GradientY1 = 25;
         radial.GradientInnerRadius = 0;
@@ -352,18 +348,21 @@ internal class RectanglesScreen : GraphicalUiElement
         rect.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
         rect.YOrigin = VerticalAlignment.Center;
         rect.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        // The gradient start stop is the active body color: FillColor when filled,
+        // StrokeColor when only stroked. Set the appropriate slot to Black so the
+        // gradient starts dark in both variants.
         if (filled)
         {
-            rect.FillColor = SKColors.White;
+            rect.FillColor = SKColors.Black;
             rect.IsFilled = true;
         }
         else
         {
             rect.IsFilled = false;
+            rect.StrokeColor = SKColors.Black;
         }
         rect.UseGradient = true;
         rect.GradientType = GradientType.Linear;
-        rect.Color1 = SKColors.Black;
         rect.Color2 = SKColors.White;
         rect.GradientX1 = 0; rect.GradientY1 = 0;
         rect.GradientX2 = 20; rect.GradientY2 = 0;

@@ -63,10 +63,9 @@ internal class ShapeVariableVersionGate
         "GradientOuterRadiusUnits",
         // Rounded corners (Rectangle only — absorbed from the retired RoundedRectangle standard)
         "CornerRadius",
-        "Red1",
-        "Green1",
-        "Blue1",
-        "Alpha1",
+        // Issue #3009 — Circle/Rectangle no longer expose the standalone gradient start
+        // (Red1/Green1/Blue1/Alpha1); the start is the active body color, so there is no such
+        // variable to gate. Color2 (Red2/Green2/Blue2/Alpha2) remains the standalone second stop.
         "Red2",
         "Green2",
         "Blue2",

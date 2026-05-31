@@ -161,9 +161,7 @@ public class RectangleRuntimeTests
         sut.FillColor = Color.Red;
         sut.StrokeColor = Color.White;
         sut.StrokeWidth = 4f;
-        sut.Color1 = Color.Blue;
         sut.Color2 = Color.Green;
-        sut.Alpha1 = 255;
         sut.Alpha2 = 255;
 
         sut.UseGradient = true;
@@ -187,9 +185,7 @@ public class RectangleRuntimeTests
         sut.IsFilled = false;
         sut.StrokeColor = Color.White;
         sut.StrokeWidth = 4f;
-        sut.Color1 = Color.Blue;
         sut.Color2 = Color.Green;
-        sut.Alpha1 = 255;
         sut.Alpha2 = 255;
 
         sut.UseGradient = true;
@@ -210,9 +206,7 @@ public class RectangleRuntimeTests
         RectangleRuntime sut = new();
         sut.StrokeColor = Color.White;
         sut.StrokeWidth = 4f;
-        sut.Color1 = Color.Blue;
         sut.Color2 = Color.Green;
-        sut.Alpha1 = 255;
         sut.Alpha2 = 255;
         sut.UseGradient = true;
 
@@ -375,11 +369,13 @@ public class RectangleRuntimeTests
         stroke.IsAntialiased.ShouldBeTrue();
     }
 
-    // Issue #2818: gradient coordinate/color props push through to BOTH Apos RoundedRectangles so
-    // the values round-trip on either slot. The UseGradient GATE, however, routes to the active
-    // body slot (fill when IsFilled, else stroke — see UseGradient_When* tests). IsFilled is set
-    // true here so the gate lands deterministically on the fill; the shared params are inert on
-    // the stroke while its gate is off.
+    // Issue #2818 / #3009: gradient coordinate and Color2 props push through to BOTH Apos
+    // RoundedRectangles so the values round-trip on either slot. The gradient START is per-slot now
+    // — each slot mirrors its own body color (see UseGradient_GradientStart_* tests) rather than a
+    // shared standalone Color1. The UseGradient GATE routes to the active body slot (fill when
+    // IsFilled, else stroke — see UseGradient_When* tests). IsFilled is set true here so the gate
+    // lands deterministically on the fill; the shared params are inert on the stroke while its
+    // gate is off.
     [Fact]
     public void Gradient_PropertiesPushedToBothFillAndStrokeSlots()
     {
@@ -388,7 +384,6 @@ public class RectangleRuntimeTests
 
         sut.UseGradient = true;
         sut.GradientType = GradientType.Linear;
-        sut.Color1 = Color.Red;
         sut.Color2 = Color.Blue;
         sut.GradientX2 = 56;
         sut.GradientInnerRadius = 4;
@@ -401,14 +396,79 @@ public class RectangleRuntimeTests
         stroke.UseGradient.ShouldBeFalse();
         fill.GradientType.ShouldBe(GradientType.Linear);
         stroke.GradientType.ShouldBe(GradientType.Linear);
-        fill.Red1.ShouldBe(Color.Red.R);
-        stroke.Red1.ShouldBe(Color.Red.R);
         fill.Blue2.ShouldBe(Color.Blue.B);
         stroke.Blue2.ShouldBe(Color.Blue.B);
         fill.GradientX2.ShouldBe(56);
         stroke.GradientX2.ShouldBe(56);
         fill.GradientInnerRadius.ShouldBe(4);
         stroke.GradientInnerRadius.ShouldBe(4);
+    }
+
+    // Issue #3009 — gradient start mirrors the active body color (parallel of the CircleRuntime
+    // tests). FillColor when filled, StrokeColor when stroke-only; dropshadow alpha converges onto
+    // the start because both equal the body color.
+    [Fact]
+    public void UseGradient_GradientStart_MirrorsFillColor_WhenFilled()
+    {
+        RectangleRuntime sut = new();
+        sut.IsFilled = true;
+        sut.FillColor = new Color(10, 20, 30, 200);
+
+        sut.UseGradient = true;
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        fill.Red1.ShouldBe(10);
+        fill.Green1.ShouldBe(20);
+        fill.Blue1.ShouldBe(30);
+        fill.Alpha1.ShouldBe(200);
+    }
+
+    [Fact]
+    public void UseGradient_GradientStart_MirrorsStrokeColor_WhenStrokeOnly()
+    {
+        RectangleRuntime sut = new();
+        sut.IsFilled = false;
+        sut.StrokeColor = new Color(40, 50, 60, 70);
+
+        sut.UseGradient = true;
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle stroke = (RoundedRectangle)fill.Children[0];
+        stroke.Red1.ShouldBe(40);
+        stroke.Green1.ShouldBe(50);
+        stroke.Blue1.ShouldBe(60);
+        stroke.Alpha1.ShouldBe(70);
+    }
+
+    [Fact]
+    public void FillColor_WhenChangedUnderGradient_UpdatesGradientStart()
+    {
+        RectangleRuntime sut = new();
+        sut.IsFilled = true;
+        sut.UseGradient = true;
+
+        sut.FillColor = new Color(1, 2, 3, 4);
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        fill.Red1.ShouldBe(1);
+        fill.Green1.ShouldBe(2);
+        fill.Blue1.ShouldBe(3);
+        fill.Alpha1.ShouldBe(4);
+    }
+
+    [Fact]
+    public void Dropshadow_AlphaTracksGradientStart_WhenFilledGradient()
+    {
+        RectangleRuntime sut = new();
+        sut.IsFilled = true;
+        sut.FillColor = new Color(255, 0, 0, 128);
+        sut.UseGradient = true;
+        sut.HasDropshadow = true;
+        sut.DropshadowColor = new Color(0, 0, 0, 255);
+
+        RoundedRectangle fill = (RoundedRectangle)sut.RenderableComponent;
+        fill.Alpha1.ShouldBe(128);
+        fill.EffectiveDropshadowColor.A.ShouldBe((byte)128);
     }
 
     // Issue #2818: dropshadow pushes to the fill slot only (with fallback to stroke when fill

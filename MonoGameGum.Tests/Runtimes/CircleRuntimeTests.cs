@@ -132,6 +132,9 @@ public class CircleRuntimeTests : BaseTestClass
     // slot is DefaultStrokedCircleRenderable (does not implement IGradientedRenderable). The
     // gradient setters must round-trip on the runtime so user code is forward-compatible with
     // a later install of the package, but produce no visual effect today.
+    // Issue #3009 — Color1 is no longer a standalone runtime value (the gradient start is the
+    // active body color), so it's not part of this round-trip set; Color2 and the coordinate/
+    // radius fields still round-trip.
     [Fact]
     public void Gradient_RoundTripsBackingFields_WhenNoGradientCapableSlot()
     {
@@ -139,7 +142,6 @@ public class CircleRuntimeTests : BaseTestClass
 
         sut.UseGradient = true;
         sut.GradientType = GradientType.Radial;
-        sut.Color1 = Color.Red;
         sut.Color2 = Color.Blue;
         sut.GradientX1 = 1;
         sut.GradientY1 = 2;
@@ -153,7 +155,6 @@ public class CircleRuntimeTests : BaseTestClass
 
         sut.UseGradient.ShouldBeTrue();
         sut.GradientType.ShouldBe(GradientType.Radial);
-        sut.Color1.ShouldBe(Color.Red);
         sut.Color2.ShouldBe(Color.Blue);
         sut.GradientX1.ShouldBe(1);
         sut.GradientY1.ShouldBe(2);

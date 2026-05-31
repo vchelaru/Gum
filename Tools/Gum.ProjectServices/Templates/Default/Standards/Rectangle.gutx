@@ -3,17 +3,11 @@
   <Name>Rectangle</Name>
   <State>
     <Name>Default</Name>
-    <Variable Type="int" Name="Alpha1" Category="Rendering" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
-    </Variable>
     <Variable Type="int" Name="Alpha2" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="Blend" Name="Blend" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
-    </Variable>
-    <Variable Type="int" Name="Blue1" Category="Rendering" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="int" Name="Blue2" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
@@ -96,9 +90,6 @@
     <Variable Type="PositionUnitType" Name="GradientY2Units" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
-    <Variable Type="int" Name="Green1" Category="Rendering" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
-    </Variable>
     <Variable Type="int" Name="Green2" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
@@ -125,9 +116,6 @@
     <Variable Type="float?" Name="MinHeight" Category="Dimensions" SetsValue="true" />
     <Variable Type="float?" Name="MinWidth" Category="Dimensions" SetsValue="true" />
     <Variable Type="string" Name="Parent" Category="Parent" SetsValue="true" />
-    <Variable Type="int" Name="Red1" Category="Rendering" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
-    </Variable>
     <Variable Type="int" Name="Red2" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
