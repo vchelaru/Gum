@@ -46,12 +46,15 @@ public class ThemeRequirementsTests
     }
 
     [Fact]
-    public void Diff_SkipsSkiaShapeAdd_WhenRoundedRectangleAlreadyPresent()
+    public void Diff_SkipsSkiaShapeAdd_WhenSvgAlreadyPresent()
     {
+        // Svg is the "already has the Skia bundle" proxy: it is added on every project version
+        // (unlike the legacy RoundedRectangle / ColoredCircle, which are no longer added on V3+),
+        // so its presence is the version-proof signal that the bundle is in place.
         var project = new GumProjectSave();
         project.StandardElementReferences.Add(new ElementReference
         {
-            Name = "RoundedRectangle",
+            Name = "Svg",
             ElementType = ElementType.Standard,
         });
 
@@ -63,12 +66,31 @@ public class ThemeRequirementsTests
     }
 
     [Fact]
+    public void Diff_AddsSkiaShapes_WhenOnlyLegacyShapePresent()
+    {
+        // A V3+ project no longer gets RoundedRectangle added, so RoundedRectangle's presence must
+        // NOT be treated as proof the Skia bundle exists. A project that somehow has only the legacy
+        // shape (e.g. an old project) but not Svg should still have the bundle applied.
+        var project = new GumProjectSave();
+        project.StandardElementReferences.Add(new ElementReference
+        {
+            Name = "RoundedRectangle",
+            ElementType = ElementType.Standard,
+        });
+
+        var requirements = ThemeRequirements.Parse("RequiresSkiaShapes: true");
+
+        var diff = requirements.Diff(project);
+        diff.AddSkiaShapes.ShouldBeTrue();
+    }
+
+    [Fact]
     public void Diff_NoChanges_WhenProjectAlreadySatisfiesRequirements()
     {
         var project = new GumProjectSave { FontGenerator = FontGeneratorType.KernSmith };
         project.StandardElementReferences.Add(new ElementReference
         {
-            Name = "RoundedRectangle",
+            Name = "Svg",
             ElementType = ElementType.Standard,
         });
 

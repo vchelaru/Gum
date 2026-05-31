@@ -1,8 +1,11 @@
 namespace Gum.Logic;
 
 /// <summary>
-/// Adds the Skia-backed Standard elements (Arc, Canvas, ColoredCircle, Line,
-/// LottieAnimation, RoundedRectangle, Svg) to the currently-loaded project.
+/// Adds the Skia-backed Standard elements to the currently-loaded project: Arc,
+/// Canvas, Line, LottieAnimation, Svg always, plus the legacy ColoredCircle /
+/// RoundedRectangle on pre-v3 projects only. On v3
+/// (<see cref="Gum.DataTypes.GumProjectSave.GumxVersions.ShapeVariableExpansion"/>)
+/// or later the plain Circle / Rectangle supersede those two, so they are skipped.
 /// </summary>
 /// <remarks>
 /// Historically this lived inside the SkiaPlugin, since Skia was an add-on.
