@@ -5,6 +5,7 @@ using Gum.Themes.Editor;
 using Gum.Themes.ForestGlade;
 using Gum.Themes.Neon;
 using Gum.Themes.Retro95;
+using Gum.Themes.Template;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -73,7 +74,7 @@ public class Game1 : Game
         GumUI.Initialize(this);
         GumUI.UseKeyboardDefaults();
 
-        // Press 1-6 to swap themes; the active screen is rebuilt so its
+        // Press 1-7 to swap themes; the active screen is rebuilt so its
         // controls pick up the newly-installed default templates. Editor has
         // no named Background color, so a sensible dark surround is used; the
         // Retro95 chrome is its Surface (battleship gray).
@@ -85,6 +86,7 @@ public class Game1 : Game
             new ThemeOption("Bubblegum", BubblegumTheme.Apply, BubblegumColors.Background),
             new ThemeOption("Editor", EditorTheme.Apply, new Color(40, 40, 40)),
             new ThemeOption("Retro 95", Retro95Theme.Apply, Retro95Colors.Surface),
+            new ThemeOption("Template Theme", TemplateTheme.Apply, TemplatePalette.Background),
         };
 
         // F1: all controls. F2: screenshot panel.
@@ -139,7 +141,7 @@ public class Game1 : Game
             SwitchScreen(() => new ScreenshotScreen());
         }
 
-        // Number keys 1-6 swap the active theme and rebuild the current screen.
+        // Number keys 1-7 swap the active theme and rebuild the current screen.
         for (int i = 0; i < _themes.Length; i++)
         {
             Keys themeKey = Keys.D1 + i;
