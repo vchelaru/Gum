@@ -82,7 +82,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
         // Shapes block (▼ U+25BC) is monospaced for ASCII but the symbol glyph's
         // advance width is wider than the Latin cell. A snug container clips it.
         TextRuntime glyph = new TextRuntime();
-        glyph.Name = "TemplateDropdownGlyph";
+        glyph.Name = "DropdownGlyph";
         glyph.X = -GlyphRightMargin;
         glyph.Y = 0;
         glyph.XUnits = GeneralUnitType.PixelsFromLarge;

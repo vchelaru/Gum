@@ -35,7 +35,7 @@ public class ScrollBarThumbVisual : InteractiveGue
         WidthUnits = DimensionUnitType.RelativeToParent;
         HeightUnits = DimensionUnitType.RelativeToParent;
 
-        _body = TemplateShapes.Fill(TemplatePalette.Border, CornerRadius, "TemplateScrollThumbBody");
+        _body = TemplateShapes.Fill(TemplatePalette.Border, CornerRadius, "ScrollThumbBody");
         AddChild(_body);
 
         WireStates();

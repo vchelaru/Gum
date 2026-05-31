@@ -63,7 +63,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
     private static CircleRuntime CreateOuterFill()
     {
         CircleRuntime circle = new CircleRuntime();
-        circle.Name = "TemplateRadioOuterFill";
+        circle.Name = "RadioOuterFill";
         circle.X = 0;
         circle.Y = 0;
         circle.XUnits = GeneralUnitType.PixelsFromSmall;
@@ -83,7 +83,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
     private static CircleRuntime CreateOuterBorder()
     {
         CircleRuntime circle = new CircleRuntime();
-        circle.Name = "TemplateRadioOuterBorder";
+        circle.Name = "RadioOuterBorder";
         circle.X = 0;
         circle.Y = 0;
         circle.XUnits = GeneralUnitType.PixelsFromSmall;
@@ -107,7 +107,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         // The outer rings sit on parent.Left; offset the focus ring by -1 so
         // it's centered horizontally on the outer ring.
         CircleRuntime ring = new CircleRuntime();
-        ring.Name = "TemplateRadioFocusRing";
+        ring.Name = "RadioFocusRing";
         ring.X = -FocusRingInset;
         ring.Y = 0;
         ring.XUnits = GeneralUnitType.PixelsFromSmall;
@@ -133,7 +133,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         // = 4 from the left.
         const float inset = (OuterSize - InnerSize) / 2f;
         CircleRuntime dot = new CircleRuntime();
-        dot.Name = "TemplateRadioInnerDot";
+        dot.Name = "RadioInnerDot";
         dot.X = inset;
         dot.Y = 0;
         dot.XUnits = GeneralUnitType.PixelsFromSmall;

@@ -82,7 +82,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
     private static RectangleRuntime CreateBoxFill()
     {
         RectangleRuntime fill = new RectangleRuntime();
-        fill.Name = "TemplateBoxFill";
+        fill.Name = "BoxFill";
         fill.X = 0;
         fill.Y = 0;
         fill.XUnits = GeneralUnitType.PixelsFromSmall;
@@ -103,7 +103,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
     private static RectangleRuntime CreateBoxBorder()
     {
         RectangleRuntime border = new RectangleRuntime();
-        border.Name = "TemplateBoxBorder";
+        border.Name = "BoxBorder";
         border.X = 0;
         border.Y = 0;
         border.XUnits = GeneralUnitType.PixelsFromSmall;
@@ -127,7 +127,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         // (BoxSize + 2px) per axis, centered on the box, so the 1px stroke
         // sits exactly one pixel outside the box border.
         RectangleRuntime ring = new RectangleRuntime();
-        ring.Name = "TemplateBoxFocusRing";
+        ring.Name = "BoxFocusRing";
         ring.X = -FocusRingInset;
         ring.Y = 0;
         ring.XUnits = GeneralUnitType.PixelsFromSmall;
@@ -157,7 +157,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         // overhang on the left side.
         const float overhang = (GlyphContainerSize - BoxSize) / 2f;
         TextRuntime glyph = new TextRuntime();
-        glyph.Name = "TemplateCheckGlyph";
+        glyph.Name = "CheckGlyph";
         glyph.X = -overhang;
         glyph.Y = 0;
         glyph.XUnits = GeneralUnitType.PixelsFromSmall;
@@ -178,7 +178,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         // Indeterminate dash from the CSS spec: 8x2 pill, accent-colored,
         // centered inside the box.
         RectangleRuntime dash = new RectangleRuntime();
-        dash.Name = "TemplateDashIndicator";
+        dash.Name = "DashIndicator";
         dash.X = BoxSize / 2f;
         dash.Y = 0;
         dash.XUnits = GeneralUnitType.PixelsFromSmall;

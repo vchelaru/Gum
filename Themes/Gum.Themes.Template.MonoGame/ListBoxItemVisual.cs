@@ -29,7 +29,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
 
         // Square-cornered fill so the row tiles flush inside the rounded ListBox
         // shell (the shell's border masks the corners). Starts transparent.
-        _fill = TemplateShapes.Fill(Color.Transparent, cornerRadius: 0f, "TemplateListItemFill");
+        _fill = TemplateShapes.Fill(Color.Transparent, cornerRadius: 0f, "ListItemFill");
         AddChild(_fill);
 
         AddChild(TextInstance);

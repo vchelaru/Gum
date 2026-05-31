@@ -16,22 +16,15 @@ using V3 = Gum.Forms.DefaultVisuals.V3;
 namespace Gum.Themes.Template;
 
 /// <summary>
-/// Entry point for the Template theme. Call <see cref="Apply"/> once after
-/// initializing Gum to register the bundled fonts, configure the shared
-/// <see cref="Styling.ActiveStyle"/> tokens, and install the theme's visuals as
-/// the default templates for Forms controls.
-///
-/// This is a starting point for a new theme. To make your own:
-/// <list type="number">
-/// <item>Clone the two projects (.MonoGame and .Kni), rename <c>Template</c> -&gt;
-/// <c>YourTheme</c> throughout (folder names, file names, PackageId, namespace,
-/// and the <c>Template*</c> type names).</item>
-/// <item>Fill in <see cref="TemplatePalette"/> from your design's CSS.</item>
-/// <item>Swap the TTFs in <c>Content\Fonts</c> and update <see cref="FontFamily"/> /
-/// <see cref="IconFontFamily"/> and <see cref="RegisterBundledFonts"/>.</item>
-/// <item>Restyle the visuals, and promote controls from the "stock V3" block in
-/// <see cref="RegisterVisuals"/> to your own styled visual as you build them out.</item>
-/// </list>
+/// Entry point for the theme. Call <see cref="Apply"/> once after initializing Gum
+/// to register the bundled fonts, configure the shared
+/// <see cref="Styling.ActiveStyle"/> tokens, and install the theme's visuals as the
+/// default templates for Forms controls. Colors come from <see cref="TemplatePalette"/>.
+/// <para>
+/// This is the clone-to-build theme template - see <c>README.md</c> for the recipe
+/// (rename, palette, fonts, restyle). The code docs here describe what each piece
+/// does so a clone keeps them as-is rather than scrubbing template-only prose.
+/// </para>
 /// </summary>
 public static class TemplateTheme
 {

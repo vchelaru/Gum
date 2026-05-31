@@ -24,10 +24,17 @@ fonts under its own assembly name — one set of code, two backend packages.
 ## Making your own theme
 
 1. **Clone both projects** (`.MonoGame` and `.Kni`) and rename `Template` →
-   `YourTheme` everywhere: folder names, file names, the `<PackageId>`, the
-   `namespace`, and the `Template*` type names (`TemplateTheme`, `TemplatePalette`,
-   `TemplateShapes`, `TemplateTextInputDecoration`). The per-control visual class
-   names (`ButtonVisual`, etc.) stay the same — the namespace distinguishes them.
+   `YourTheme`: folder names, file names, the `<PackageId>`, the `namespace`, and the
+   four `Template*` type names (`TemplateTheme`, `TemplatePalette`, `TemplateShapes`,
+   `TemplateTextInputDecoration`). The per-control visual class names (`ButtonVisual`,
+   etc.) stay the same — the namespace distinguishes them.
+   **Don't do a blind global find-replace of the word `Template`.** Three Gum
+   *framework* identifiers also contain it and must **not** be renamed:
+   `VisualTemplate`, `DefaultFormsTemplates`, and `ScrollViewerVisualTemplate`.
+   The template deliberately keeps its own element names prefix-free (e.g. `"BoxFill"`,
+   not `"TemplateBoxFill"`), so the only theme-owned `Template` tokens are the
+   namespace and those four type names — rename exactly those (a whole-word /
+   case-sensitive replace of each), and leave the framework identifiers alone.
    **Leave `<AssemblyName>` and `<RootNamespace>` unset** in both csprojs: they
    default to the project name and must stay equal, because the embedded fonts are
    looked up by assembly name but live under the root namespace. If those diverge,
@@ -42,6 +49,12 @@ fonts under its own assembly name — one set of code, two backend packages.
    `<EmbeddedResource>` entries in both csprojs, and update `FontFamily` /
    `IconFontFamily` / `RegisterBundledFonts` in the theme class. Keep the license
    files alongside the fonts and packed in the csproj.
+   **Need static TTFs, not a variable font.** KernSmith rasterizes static TTFs; it
+   does not select instances from a variable font (a single `Foo[wght].ttf` carrying
+   every weight). Many modern Google Fonts ship VF-only — if yours does, fetch its
+   static weight cuts, or approximate with a static sibling family (e.g. the
+   `Condensed` variant) and map one cut to each Gum style slot (`null` → Normal,
+   `"Bold"`, etc.).
 4. **Restyle the visuals**, and as you build out a control, move it from the
    "stock V3" block in `RegisterVisuals` up to the styled block.
 5. **Verify by running, not just building.** Build *both* `.MonoGame` and `.Kni`,

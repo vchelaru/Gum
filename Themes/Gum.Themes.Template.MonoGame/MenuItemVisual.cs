@@ -40,7 +40,7 @@ public class MenuItemVisual : BaseMenuItemVisual
         ContainerInstance.Parent = null;
 
         // Square-cornered fill so items tile flush; starts transparent (rest).
-        _fill = TemplateShapes.Fill(Color.Transparent, cornerRadius: 0f, "TemplateMenuItemFill");
+        _fill = TemplateShapes.Fill(Color.Transparent, cornerRadius: 0f, "MenuItemFill");
         AddChild(_fill);
 
         AddChild(ContainerInstance);
@@ -75,12 +75,12 @@ public class MenuItemVisual : BaseMenuItemVisual
             base.FormsControlAsObject = value;
             if (value is MenuItem menuItem)
             {
-                menuItem.ScrollViewerVisualTemplate = TemplateSubmenuScrollTemplate;
+                menuItem.ScrollViewerVisualTemplate = SubmenuScrollViewerTemplate;
             }
         }
     }
 
-    private VisualTemplate TemplateSubmenuScrollTemplate => new VisualTemplate(() =>
+    private VisualTemplate SubmenuScrollViewerTemplate => new VisualTemplate(() =>
     {
         ScrollViewerVisual visual = new ScrollViewerVisual(fullInstantiation: true, tryCreateFormsObject: false);
         visual.HasEvents = true;

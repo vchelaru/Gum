@@ -28,7 +28,7 @@ public class MenuVisual : BaseMenuVisual
         Background.Parent = null;
         InnerPanelInstance.Parent = null;
 
-        _fill = TemplateShapes.Fill(TemplatePalette.Surface1, cornerRadius: 0f, "TemplateMenuFill");
+        _fill = TemplateShapes.Fill(TemplatePalette.Surface1, cornerRadius: 0f, "MenuFill");
         AddChild(_fill);
 
         // Bottom hairline is an edge-anchored strip, not a full-parent shape, so
@@ -42,7 +42,7 @@ public class MenuVisual : BaseMenuVisual
     private static RectangleRuntime CreateBottomSeparator()
     {
         RectangleRuntime separator = new RectangleRuntime();
-        separator.Name = "TemplateMenuBottomSeparator";
+        separator.Name = "MenuBottomSeparator";
         separator.X = 0;
         separator.Y = 0;
         separator.XUnits = GeneralUnitType.PixelsFromMiddle;

@@ -53,10 +53,10 @@ public class WindowVisual : BaseWindowVisual
         BorderLeftInstance.Visual.Parent = null;
         BorderRightInstance.Visual.Parent = null;
 
-        _fill = TemplateShapes.Fill(TemplatePalette.Surface1, CornerRadius, "TemplateWindowFill");
+        _fill = TemplateShapes.Fill(TemplatePalette.Surface1, CornerRadius, "WindowFill");
         AddChild(_fill);
 
-        _border = TemplateShapes.Border(TemplatePalette.Border, CornerRadius, BorderThickness, "TemplateWindowBorder");
+        _border = TemplateShapes.Border(TemplatePalette.Border, CornerRadius, BorderThickness, "WindowBorder");
         AddChild(_border);
 
         // V3 order from here on.
@@ -74,7 +74,7 @@ public class WindowVisual : BaseWindowVisual
         // Surface2 fill child of the title bar so the drag area is visibly
         // chrome. GraphicalUiElement subclasses (RectangleRuntime) don't
         // intercept events, so this won't block the title bar's drag handling.
-        _titleBarFill = TemplateShapes.Fill(TemplatePalette.Surface2, cornerRadius: 0f, "TemplateWindowTitleBarFill");
+        _titleBarFill = TemplateShapes.Fill(TemplatePalette.Surface2, cornerRadius: 0f, "WindowTitleBarFill");
         _titleBarFill.Parent = TitleBarInstance.Visual;
 
         // 1 px Border-colored separator pinned to the bottom edge of the
@@ -87,7 +87,7 @@ public class WindowVisual : BaseWindowVisual
     private static RectangleRuntime CreateTitleBarSeparator()
     {
         RectangleRuntime separator = new RectangleRuntime();
-        separator.Name = "TemplateWindowTitleBarSeparator";
+        separator.Name = "WindowTitleBarSeparator";
         separator.X = 0;
         separator.Y = 0;
         separator.XUnits = GeneralUnitType.PixelsFromMiddle;
