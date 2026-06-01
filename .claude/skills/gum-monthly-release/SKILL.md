@@ -1,6 +1,6 @@
 ---
 name: gum-monthly-release
-description: Drafts the end-of-month Gum release notes from PRs and commits since the last release. Outputs a draft in /temp/ matching the Breaking Changes / Biggest Changes / Gum Tool / Gum Runtimes / Tutorials and Templates / Full Changelog format with image placeholders. User-triggered near month end.
+description: Drafts the end-of-month Gum release notes from PRs and commits since the last release. Outputs a draft in /temp/ in the hybrid format — curated Breaking Changes / Biggest Changes / Gum Tool / Gum Runtimes / Tutorials and Templates highlights on top, then a complete per-PR "What's Changed" list, then the Full Changelog placeholder — with image placeholders. User-triggered near month end.
 disable-model-invocation: true
 ---
 
@@ -26,21 +26,32 @@ Wait for answers before proceeding. If they answer some but not others, ask the 
 
 **Baked-in defaults — do not ask:**
 - **Primary author for `(thanks)` exclusion** is always `vchelaru`. Every PR by anyone else gets ` (thanks @author)` (still skipping bot accounts per Step 4).
-- **Biggest Changes selection** — propose **Top 4** + 4 alternates by default. The user may choose to expand the Top to 5+ during review (this has happened — e.g. April 2026 released with 5). Do not pre-emptively pad past 4; let the user pull alternates up if they want them. List alternates in the Open Questions block so the user can promote with one line.
+- **Biggest Changes selection** — propose **Top 4** + 4 alternates by default. The user may choose to expand the Top to 5+ during review — this is common on big months (April 2026 shipped 5; May 2026 shipped 6). When the release is clearly large (many net-new features, not just one dominant theme), say so and offer 6–7 up front rather than making the user pull every alternate up one at a time. Still don't pad with filler — only promote genuinely user-visible, "talkable" features; leave architectural-but-invisible changes (e.g. a controls-moved-to-a-shared-library refactor with backward-compat forwarders) as a regular section bullet, not a spotlight. List remaining alternates in Open Questions so the user can promote with one line.
 
 ## Step 2: Gather PRs and commits
 
-With the boundary established, gather all merged PRs and direct-to-`main` commits since that point. Use the GitHub CLI:
+With the boundary established, gather all merged PRs and commits since that point.
+
+**`git log` is the canonical PR set — not the `merged:>=DATE` search.** A release tag is often *published* days after the commit it points to (e.g. `Release_May_02_2026` was published May 2 but tags a late-April commit). A `merged:>=<publish-date>` filter then silently drops every PR merged between the tagged commit and the publish date — this burned a release once, undercounting by ~70 PRs. So derive the authoritative list from the commits actually reachable since the tag, and parse the squash-merge PR number from each subject:
 
 ```bash
-# PRs merged since boundary date (replace YYYY-MM-DD)
-gh pr list --repo vchelaru/Gum --state merged --search "merged:>=YYYY-MM-DD" --limit 200 --json number,title,author,mergedAt,body,labels,files
+# Canonical set: every squashed PR since the boundary tag. The trailing (#N) is the merge PR.
+git fetch origin --tags -q
+git log --no-merges <prev-tag>..origin/main --format="%s" \
+  | grep -oE '\(#[0-9]+\)$' | grep -oE '[0-9]+' | sort -un   # → the PR numbers to cover
+
+# Full clean subjects (already end in "(#N)") — used directly for the What's Changed list (Step 7.5):
+git log --no-merges <prev-tag>..origin/main --format="%s"
+```
+
+Use the `merged:>=DATE` search only as a *secondary* source for `files`/`labels`/`author` metadata, and reconcile it against the git-log set — anything in git log but missing from the search is a real PR the date filter dropped.
+
+```bash
+# Metadata for categorization (Tool vs Runtimes) — widen the date well before the tag to avoid undercounting:
+gh pr list --repo vchelaru/Gum --state merged --search "merged:>=YYYY-MM-DD" --limit 400 --json number,title,author,files,labels
 
 # For details on a specific PR (description + commits)
 gh pr view <number> --repo vchelaru/Gum --json title,body,commits,author,files
-
-# For direct-to-main commits with no PR
-git log --no-merges <prev-tag>..HEAD --format="%h %s"
 ```
 
 Look at — and this is where past drafts went wrong, so read carefully:
@@ -50,13 +61,17 @@ Look at — and this is where past drafts went wrong, so read carefully:
 - **Files touched** — used for categorization (Tool vs Runtimes). Pull these via `--json files` on the bulk `pr list` call rather than per-PR.
 - **Author** — for `(thanks @author)` attribution.
 
-**How to pull commits efficiently.** Instead of one `gh pr view` per PR (slow), batch-fetch commits with a single bulk call:
+**How to pull commits — and the node-limit trap.** You need every PR's commit list (don't draft bullets without it). The tempting one-shot — adding `commits` to a bulk `gh pr list … --json …,commits` — **fails on a busy month** with `GraphQL: … exceeds the maximum limit of 500,000` nodes, because the commits connection multiplies by author sub-connections × page size. Lowering `--limit` helps but is fragile. The bulletproof approach is to loop the canonical PR numbers and fetch each PR's commits individually (run it in the background — ~250 calls take a few minutes):
 
 ```bash
-gh pr list --repo vchelaru/Gum --state merged --search "merged:>=YYYY-MM-DD" --limit 200 --json number,title,author,mergedAt,labels,files,commits
+out=/tmp/gum_commits_all.txt; > "$out"
+for n in $(git log --no-merges <prev-tag>..origin/main --format="%s" | grep -oE '\(#[0-9]+\)$' | grep -oE '[0-9]+' | sort -un); do
+  gh pr view $n --repo vchelaru/Gum --json number,title,author,commits \
+    --jq '"===== PR #\(.number) [\(.author.login)] \(.title)\n" + ([.commits[].messageHeadline] | map("   - " + .) | join("\n"))' >> "$out" 2>/dev/null
+done
 ```
 
-Adding `commits` to the bulk `--json` field list means one round trip gives you per-commit headlines for every PR. Use this on the *first* gather pass — don't draft any bullets without it. Then for each PR, expand into bullets from its commit list, not just its title.
+Note: use `gh`'s built-in `--jq` flag — standalone `jq` is **not** installed in this environment, and neither is `python`. (Issue/non-PR numbers in the set just error and are skipped, which is fine.) Then expand each PR into bullets from its commit list, not just its title.
 
 **Heuristic for when a PR's commits will add content vs. just confirm the title:**
 - "Bump version to ...", "GITBOOK-NNN", `Merge pull request` — commits add nothing; trust the title.
@@ -107,7 +122,10 @@ Sections, in order:
 3. **Gum Tool** — anything affecting the Gum WPF tool (paths under `Tool/`, `Gum/`, plugins, tool-side projects).
 4. **Gum Runtimes** — anything affecting shipped runtime libraries (`MonoGameGum`, `KniGum`, `FnaGum`, `SkiaGum`, `RaylibGum`, `GumCommon`'s runtime-facing pieces).
 5. **Tutorials and Templates** — sample/template/tutorial changes. Often empty — **omit if empty**.
-6. **Full Changelog** — placeholder line (see Step 7).
+6. **What's Changed** — the complete, verifiable per-PR list (see Step 7.5). This is the "full diff below the highlights" half of the hybrid format.
+7. **Full Changelog** — placeholder line (see Step 7).
+
+**The output is a hybrid, not curated-only.** Sections 1–5 are *curated highlights* that consolidate and explain (e.g. ~80 shape PRs collapse into a handful of capability bullets). Curated-only drafts read as "missing tons" because the reader can't verify coverage — and aggressive consolidation *does* drop detail. The **What's Changed** list (Step 7.5) fixes this: every PR is listed, one line each, so coverage is provable. Always produce both halves.
 
 **Cross-cutting changes (e.g. `GumCommon` changes that affect both sides): duplicate the bullet in both Tool and Runtimes sections.** The user explicitly wants this — customers only read the section that applies to them and shouldn't have to guess whether a change in the other section affects them.
 
@@ -140,13 +158,43 @@ Place these on their own line where each image should go in the Biggest Changes 
 
 ## Step 7: Full Changelog placeholder
 
-Place this at the very bottom of the file, above the Open Questions block:
+Place this directly below the **What's Changed** list (Step 7.5) and above the Open Questions block:
 
 ```
 PLACEHOLDER!!!! Full Changelog link
 ```
 
-The user fills this in after they cut the tag.
+The user fills this in after they cut the tag — it's the GitHub *compare* link (`https://github.com/vchelaru/Gum/compare/<prev-tag>...<new-tag>`), which only resolves once the new tag exists. It is **not** missing content; don't try to fill it.
+
+## Step 7.5: Build the complete "What's Changed" list
+
+Below the curated sections (and above the Full Changelog placeholder), emit a `## What's Changed` section: one bullet per PR in the canonical set, so the release is fully verifiable.
+
+**Build it from `git log` subjects, not the PR-title API.** The squash-merge subject is the full PR title already suffixed with `(#N)` — clean and untruncated. The `gh pr list --json title` field, by contrast, comes back **truncated with `…`** for some older PRs, which leaks ellipses into the list. So:
+
+```bash
+git log --no-merges <prev-tag>..origin/main --format="%s" \
+  | grep -vE '^GITBOOK-' \
+  | grep -vE '^FRB fixes' \
+  | grep -vE '^Added #ifs and file includes into FRB' \
+  | sed 's/^/- /'
+```
+
+Then append ` (thanks @author)` to the lines whose PR is **not** authored by `vchelaru`. There are usually only a handful of external contributors; get them in one pass and `sed` the specific `(#N)` lines:
+
+```bash
+gh pr list --repo vchelaru/Gum --state merged --search "merged:>=YYYY-MM-DD" --limit 400 \
+  --json number,author --jq '.[] | select(.author.login != "vchelaru") | "\(.number) \(.author.login)"'
+# → for each, sed -i -E 's/\(#NNNN\)$/(#NNNN) (thanks @login)/' on the list file
+```
+
+Rules for the list:
+- **Order newest-first** (git log default) — matches GitHub's auto-generated "What's Changed".
+- **Exclude** GitBook auto-syncs and FRB-integration PRs (same filters as Step 2). These never appear, not even here.
+- **Keep everything else by default** — this list's job is completeness. Internal refactors that were *omitted from the curated sections* still belong here.
+- **Repo-housekeeping is the one trim the user may request** (CLAUDE.md edits, skill-file changes, CI-only PRs, GitBook asset renames, stub-doc adds). Leave them in by default but offer to strip them (see Step 11). Remove with `grep -vxF -e "<exact line>" …` (exact, fixed-string match) — note `grep -P` fails in this environment's locale, and `/`-containing titles break naive `sed /…/d` because `/` is the sed delimiter.
+
+Sanity-check the count against the canonical set (`git log` PR count minus the FRB/GitBook exclusions) before moving on.
 
 ## Step 8: Resolve sparse/unclear PRs with parallel subagents
 
@@ -226,9 +274,9 @@ Confirm the path in chat so the user can find it again.
 
 ## Step 11: Walk through Open Questions
 
-After the file is open, work through the Open Questions block with the user **one question at a time**. As each is resolved, edit the file directly (move bullets between sections, swap Biggest Changes entries, fill in clarified user-impact descriptions). Once all are resolved, delete the Open Questions block.
+After the file is open, work through the Open Questions block with the user **one question at a time**. As each is resolved, edit the file directly (move bullets between sections, swap Biggest Changes entries, fill in clarified user-impact descriptions). Among the questions to raise here: **offer to trim repo-housekeeping from the What's Changed list** (CLAUDE.md/skill-file/CI/stub-doc/GitBook-asset-rename PRs) — list the specific candidate lines so the user can say yes/no in one go. Once all are resolved, delete the Open Questions block.
 
-The skill is done when the markdown file contains only the release notes — no Open Questions — and the user is satisfied.
+The skill is done when the markdown file contains only the release notes — curated highlights + the What's Changed list + the two intentional placeholders (per-spotlight images and the Full Changelog compare link), no Open Questions — and the user is satisfied.
 
 ## Out of scope
 
