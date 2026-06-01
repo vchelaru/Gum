@@ -24,33 +24,15 @@ public class MenuVisual : BaseMenuVisual
         Background.Parent = null;
         InnerPanelInstance.Parent = null;
 
-        _fill = CreateFill();
+        _fill = BubblegumShapes.Fill(
+            color: BubblegumColors.Surface1,
+            name: "BubblegumMenuFill");
         AddChild(_fill);
 
         _bottomSeparator = CreateBottomSeparator();
         AddChild(_bottomSeparator);
 
         AddChild(InnerPanelInstance);
-    }
-
-    private static RectangleRuntime CreateFill()
-    {
-        RectangleRuntime fill = new RectangleRuntime();
-        fill.Name = "BubblegumMenuFill";
-        fill.X = 0;
-        fill.Y = 0;
-        fill.XUnits = GeneralUnitType.PixelsFromMiddle;
-        fill.YUnits = GeneralUnitType.PixelsFromMiddle;
-        fill.XOrigin = HorizontalAlignment.Center;
-        fill.YOrigin = VerticalAlignment.Center;
-        fill.Width = 0;
-        fill.Height = 0;
-        fill.WidthUnits = DimensionUnitType.RelativeToParent;
-        fill.HeightUnits = DimensionUnitType.RelativeToParent;
-        fill.IsFilled = true;
-        fill.FillColor = BubblegumColors.Surface1;
-        fill.StrokeWidth = 0;
-        return fill;
     }
 
     private static RectangleRuntime CreateBottomSeparator()

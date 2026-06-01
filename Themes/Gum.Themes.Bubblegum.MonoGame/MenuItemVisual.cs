@@ -28,7 +28,9 @@ public class MenuItemVisual : BaseMenuItemVisual
         Background.Parent = null;
         ContainerInstance.Parent = null;
 
-        _fill = CreateFill();
+        _fill = BubblegumShapes.Fill(
+            color: Color.Transparent,
+            name: "BubblegumMenuItemFill");
         AddChild(_fill);
 
         AddChild(ContainerInstance);
@@ -93,25 +95,5 @@ public class MenuItemVisual : BaseMenuItemVisual
         _fill.FillColor = fill;
         TextInstance.Color = text;
         SubmenuIndicatorInstance.Color = text;
-    }
-
-    private static RectangleRuntime CreateFill()
-    {
-        RectangleRuntime fill = new RectangleRuntime();
-        fill.Name = "BubblegumMenuItemFill";
-        fill.X = 0;
-        fill.Y = 0;
-        fill.XUnits = GeneralUnitType.PixelsFromMiddle;
-        fill.YUnits = GeneralUnitType.PixelsFromMiddle;
-        fill.XOrigin = HorizontalAlignment.Center;
-        fill.YOrigin = VerticalAlignment.Center;
-        fill.Width = 0;
-        fill.Height = 0;
-        fill.WidthUnits = DimensionUnitType.RelativeToParent;
-        fill.HeightUnits = DimensionUnitType.RelativeToParent;
-        fill.IsFilled = true;
-        fill.FillColor = Color.Transparent;
-        fill.StrokeWidth = 0;
-        return fill;
     }
 }
