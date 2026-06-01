@@ -232,6 +232,88 @@ public class DeleteLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void PerformConfirmedSingleInstanceDelete_DeletingChildWithParentInstance_SelectsParentInstance()
+    {
+        // Characterization: a child with a parent instance and no siblings under that parent
+        // falls back to the parent instance.
+        ScreenSave screen = CreateScreenWithInstances("Parent");
+        InstanceSave parent = screen.Instances[0];
+        InstanceSave child = AddChild(screen, "Child", "Parent");
+        TrackSelectionState();
+        _selectedState.Object.SelectedInstance = child;
+
+        _deleteLogic.PerformConfirmedSingleInstanceDelete(
+            selectedInstance: child,
+            selectedElement: screen,
+            selectedBehavior: null,
+            objectsDeleted: new[] { child },
+            optionsWindow: null);
+
+        _selectedState.Object.SelectedInstance.ShouldBe(parent);
+    }
+
+    [Fact]
+    public void PerformConfirmedSingleInstanceDelete_DeletingLastSibling_SelectsPreviousSibling()
+    {
+        // Characterization: deleting the last sibling falls back to the previous one.
+        ScreenSave screen = CreateScreenWithInstances("InstA", "InstB", "InstC");
+        InstanceSave instB = screen.Instances.Single(i => i.Name == "InstB");
+        InstanceSave instC = screen.Instances.Single(i => i.Name == "InstC");
+        TrackSelectionState();
+        _selectedState.Object.SelectedInstance = instC;
+
+        _deleteLogic.PerformConfirmedSingleInstanceDelete(
+            selectedInstance: instC,
+            selectedElement: screen,
+            selectedBehavior: null,
+            objectsDeleted: new[] { instC },
+            optionsWindow: null);
+
+        _selectedState.Object.SelectedInstance.ShouldBe(instB);
+    }
+
+    [Fact]
+    public void PerformConfirmedSingleInstanceDelete_DeletingMiddleSibling_SelectsNextSibling()
+    {
+        // Characterization: deleting a middle sibling falls back to the next one.
+        ScreenSave screen = CreateScreenWithInstances("InstA", "InstB", "InstC");
+        InstanceSave instB = screen.Instances.Single(i => i.Name == "InstB");
+        InstanceSave instC = screen.Instances.Single(i => i.Name == "InstC");
+        TrackSelectionState();
+        _selectedState.Object.SelectedInstance = instB;
+
+        _deleteLogic.PerformConfirmedSingleInstanceDelete(
+            selectedInstance: instB,
+            selectedElement: screen,
+            selectedBehavior: null,
+            objectsDeleted: new[] { instB },
+            optionsWindow: null);
+
+        _selectedState.Object.SelectedInstance.ShouldBe(instC);
+    }
+
+    [Fact]
+    public void PerformConfirmedSingleInstanceDelete_DeletingOnlyChildWithNoParent_KeepsOwningElementSelected()
+    {
+        // Characterization: deleting the sole top-level instance leaves no sibling or parent,
+        // so selection falls back to the owning element (instance cleared).
+        ScreenSave screen = CreateScreenWithInstances("Inst");
+        InstanceSave instance = screen.Instances[0];
+        TrackSelectionState();
+        _selectedState.Object.SelectedInstance = instance;
+
+        _deleteLogic.PerformConfirmedSingleInstanceDelete(
+            selectedInstance: instance,
+            selectedElement: screen,
+            selectedBehavior: null,
+            objectsDeleted: new[] { instance },
+            optionsWindow: null);
+
+        _selectedState.Object.SelectedInstance.ShouldBeNull();
+        _selectedState.Object.SelectedElement.ShouldBe(screen);
+    }
+
+    [Fact]
     public void PerformConfirmedSingleInstanceDelete_LiveSelectedElementIsNull_RestoresOwningElementBeforeFiringInstanceDelete()
     {
         // Reproduces the production NRE: the user has only the instance highlighted in the

@@ -259,20 +259,12 @@ public class DeleteLogic : IDeleteLogic
 
         if (deletedSelection)
         {
-            var index = siblings.IndexOf(selectedInstance);
-            if (index + 1 < siblings.Count)
-            {
-                _selectedState.SelectedInstance = siblings[index + 1];
-            }
-            else if (index > 0)
-            {
-                _selectedState.SelectedInstance = siblings[index - 1];
-            }
-            else
-            {
-                // no siblings so select the container or null if none exists:
-                _selectedState.SelectedInstance = parentInstance;
-            }
+            SelectAfterInstanceRemoval(
+                siblings,
+                siblings.IndexOf(selectedInstance),
+                new List<InstanceSave> { selectedInstance },
+                parentInstance,
+                selectedElement);
         }
     }
 
@@ -416,7 +408,7 @@ public class DeleteLogic : IDeleteLogic
         if (deletableInstances.Count > 0)
         {
             DeselectInstances(deletableInstances);
-            SelectAfterMultiInstanceRemoval(anchorSiblings, anchorIndex, deletableInstances, anchorParentInstance, anchorElement);
+            SelectAfterInstanceRemoval(anchorSiblings, anchorIndex, deletableInstances, anchorParentInstance, anchorElement);
         }
 
         // 7. Refresh and save for instance parents that were not themselves deleted
@@ -437,12 +429,13 @@ public class DeleteLogic : IDeleteLogic
     }
 
     /// <summary>
-    /// Picks the selection after a multi-instance delete so the editor never goes blank
-    /// (issue #3025). Mirrors the single-instance fallback in PerformConfirmedSingleInstanceDelete:
-    /// a surviving sibling (searching forward then backward from the deleted group), otherwise the
-    /// surviving parent instance, otherwise the owning screen/component.
+    /// Picks the selection after one or more instances are removed so the editor never goes
+    /// blank (issue #3025): a surviving sibling (searching forward then backward from the
+    /// deleted group), otherwise the surviving parent instance, otherwise the owning
+    /// screen/component. Shared by both the single- and multi-instance delete paths; the
+    /// single-instance case passes a one-element <paramref name="deletedInstances"/>.
     /// </summary>
-    private void SelectAfterMultiInstanceRemoval(
+    private void SelectAfterInstanceRemoval(
         List<InstanceSave> anchorSiblings,
         int anchorIndex,
         List<InstanceSave> deletedInstances,
