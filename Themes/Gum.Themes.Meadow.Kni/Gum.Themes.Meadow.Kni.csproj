@@ -1,0 +1,74 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12</LangVersion>
+
+    <PackageId>Gum.Themes.Meadow.Kni</PackageId>
+    <Version>2026.5.31.1</Version>
+    <Authors>Gum Contributors</Authors>
+    <RepositoryUrl>https://github.com/vchelaru/Gum</RepositoryUrl>
+    <Description>A cozy cottagecore theme for Gum UI in cream, sage, peach, teal, sky-blue, and coral. Provides styled visuals for Gum Forms controls with chunky pill buttons, dashed-outline panels, soft drop shadows, and the Baloo 2 + Quicksand typefaces, for KNI and Gum.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\Gum.Themes.Meadow.MonoGame\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.Meadow.MonoGame\Content\Fonts\Baloo2-OFL.txt" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.Meadow.MonoGame\Content\Fonts\Quicksand-OFL.txt" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.Meadow.MonoGame\Content\Fonts\DejaVuSansMono-LICENSE.txt" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Source-share the MonoGame variant's .cs files. A single set of visual +
+         theme code is compiled into both the MonoGame and KNI assemblies. -->
+    <Compile Include="..\Gum.Themes.Meadow.MonoGame\**\*.cs" />
+    <Compile Remove="..\Gum.Themes.Meadow.MonoGame\obj\**" />
+    <Compile Remove="..\Gum.Themes.Meadow.MonoGame\bin\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Re-embed the TTFs from the MonoGame project's Content\Fonts folder
+         under this assembly's Content\Fonts via <Link>, so the resource name
+         resolves to "Gum.Themes.Meadow.Kni.Content.Fonts.<file>" — matching what
+         MeadowTheme.RegisterEmbeddedFont derives from the assembly name. The
+         <Link> is load-bearing; without it the manifest keeps the "..\" path. -->
+    <EmbeddedResource Include="..\Gum.Themes.Meadow.MonoGame\Content\Fonts\Baloo2-SemiBold.ttf">
+      <Link>Content\Fonts\Baloo2-SemiBold.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.Meadow.MonoGame\Content\Fonts\Baloo2-Bold.ttf">
+      <Link>Content\Fonts\Baloo2-Bold.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.Meadow.MonoGame\Content\Fonts\Quicksand-Medium.ttf">
+      <Link>Content\Fonts\Quicksand-Medium.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.Meadow.MonoGame\Content\Fonts\Quicksand-Bold.ttf">
+      <Link>Content\Fonts\Quicksand-Bold.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.Meadow.MonoGame\Content\Fonts\DejaVuSansMono.ttf">
+      <Link>Content\Fonts\DejaVuSansMono.ttf</Link>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="KernSmith.KniGum" Version="*" />
+    <PackageReference Include="nkast.Xna.Framework" Version="4.2.9001">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\MonoGameGum\KniGum\KniGum.csproj" />
+    <ProjectReference Include="..\..\Runtimes\GumShapes\KniGumShapes.csproj" />
+  </ItemGroup>
+</Project>

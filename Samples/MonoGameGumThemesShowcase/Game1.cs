@@ -4,6 +4,7 @@ using Gum.Themes.DarkPro;
 using Gum.Themes.Editor;
 using Gum.Themes.ForestGlade;
 using Gum.Themes.Hazard;
+using Gum.Themes.Meadow;
 using Gum.Themes.Neon;
 using Gum.Themes.Retro95;
 using Gum.Themes.Template;
@@ -88,6 +89,7 @@ public class Game1 : Game
             new ThemeOption("Editor", EditorTheme.Apply, new Color(40, 40, 40)),
             new ThemeOption("Retro 95", Retro95Theme.Apply, Retro95Colors.Surface),
             new ThemeOption("Hazard", HazardTheme.Apply, HazardPalette.Background),
+            new ThemeOption("Meadow", MeadowTheme.Apply, MeadowColors.Cream),
             new ThemeOption("Template Theme", TemplateTheme.Apply, TemplatePalette.Background),
         };
 
