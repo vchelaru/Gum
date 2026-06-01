@@ -127,6 +127,9 @@ public class CustomSetPropertyOnRenderable
             handled = TrySetPropertyOnText(renderableText, graphicalUiElement, propertyName, value);
         }
 #if XNALIKE
+
+
+#if !FRB
         // Issue #2925 — dispatch by RUNTIME type for CircleRuntime / RectangleRuntime before
         // falling through to the renderable-type tree. Both runtimes now own two renderable
         // slots (fill + stroke) and their mContainedObjectAsIpso may be the fill slot, so a
@@ -141,6 +144,7 @@ public class CustomSetPropertyOnRenderable
         {
             handled = TrySetPropertyOnRectangleRuntime(rectangleRuntime, propertyName, value);
         }
+#endif
         else if (renderableIpso is LineCircle)
         {
             handled = TrySetPropertyOnLineCircle(renderableIpso, graphicalUiElement, propertyName, value);
@@ -2179,7 +2183,7 @@ public class CustomSetPropertyOnRenderable
         return fontFilePath;
     }
 
-#if XNALIKE
+#if XNALIKE && !FRB
     // Issue #2925 — legacy variable routing for the two-slot CircleRuntime. The legacy
     // properties (Color/Alpha/Red/Green/Blue) on the runtime are intentionally obsolete and
     // already route to the stroke slot internally, preserving pre-two-slot behavior. Going

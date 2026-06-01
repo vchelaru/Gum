@@ -128,7 +128,7 @@ namespace Gum.Wireframe
                     break;
 
                 case "Rectangle":
-#if MONOGAME || FNA || KNI
+#if (MONOGAME || FNA || KNI) && !FRB
                     // Issue #2925 — prefer a registry-supplied stroked rectangle (Apos.Shapes
                     // RoundedRectangle when MonoGameGumShapes is loaded) over the legacy
                     // LineRectangle. The IStrokedRectangleRenderable interface is XNALIKE-only
@@ -149,7 +149,7 @@ namespace Gum.Wireframe
                     containedObject = rectangle;
                     break;
                 case "Circle":
-#if MONOGAME || FNA || KNI
+#if (MONOGAME || FNA || KNI) && !FRB
                     // Issue #2925 — prefer a registry-supplied stroked circle (Apos.Shapes Circle
                     // when MonoGameGumShapes is loaded) over the legacy LineCircle so the tool
                     // and runtime render the same Apos-backed shape that the MonoGameGum
