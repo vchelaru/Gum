@@ -7,9 +7,9 @@ description: Creates and updates skill files (.claude/skills/*/SKILL.md). Trigge
 
 ## Mental Model
 
-A skill is **a map and a list of landmines** — not an encyclopedia. It points an agent at the right code and docs, and warns about things that are not obvious from reading either. If a fact is already in source or in `docs/`, the skill should *link*, not restate.
+A skill is **a map and a list of landmines**, not an encyclopedia. It points an agent at the right code and docs and warns about what isn't obvious from reading them. If a fact already lives in source or `docs/`, **link, don't restate**.
 
-Think **signpost, not explanation**: a short pointer plus a direction ("the wiring lives in X; watch out for Y"), never a lengthy walkthrough or a code dump. Brevity is a feature, not a compromise — every line is re-read into context on every load, so a skill that explains *less* but points *accurately* is doing its job better than a thorough one.
+A good skill answers three things and stops: **where** the relevant code/docs live, **what gotchas** aren't obvious from reading them, and **what patterns** recur. Default to prose-free pointers and tables; include code only when the snippet is a pattern that can't be conveyed by pointing at a file. Every line is re-read into context on every load, so a skill that says *less* but points *accurately* beats a thorough one.
 
 ## Authoritative Sources (do not duplicate)
 
@@ -18,8 +18,6 @@ Before writing anything, identify where the ground truth already lives:
 - **Source code** — class outlines, property lists, method signatures, call sites.
 - **`docs/` GitBook tree** — user-facing behavior, layout rules, control APIs, tutorials. If a topic has a docs page, link to it.
 - **Other skills** — cross-reference instead of copying. (`gum-layout` and `gum-layout-engine`, for example, deliberately split shallow vs. deep.)
-
-A skill earns its place by covering what these sources *don't*: internal architecture, why pieces fit together, and gotchas.
 
 ## Process
 
@@ -58,8 +56,6 @@ Bad (boilerplate, padded):
 ```
 description: Reference guide for Gum's undo/redo system. Load this when working on undo/redo behavior, the History tab, UndoManager, UndoPlugin, UndoSnapshot, or stale reference issues after undo.
 ```
-
-Multiply by every skill, every session. It adds up.
 
 ## Include
 
