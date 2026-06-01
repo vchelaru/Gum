@@ -1,0 +1,33 @@
+# Gum.Themes.Meadow
+
+A cozy cottagecore theme for Gum UI Forms controls. Pairs chunky sky-blue pill buttons (with a flat "stacked card" drop shadow), dashed-outline cream panels, sage selection accents, and coral sliders, in the rounded Baloo 2 + Quicksand typefaces — for a warm, handmade look.
+
+## Install
+
+Pick the package matching your runtime:
+
+- MonoGame: `dotnet add package Gum.Themes.Meadow.MonoGame`
+- KNI: `dotnet add package Gum.Themes.Meadow.Kni`
+
+## Usage
+
+Call `MeadowTheme.Apply(GraphicsDevice)` once after initializing Gum:
+
+```csharp
+using Gum.Themes.Meadow;
+
+protected override void Initialize()
+{
+    GumService.Default.Initialize(this);
+    MeadowTheme.Apply(GraphicsDevice);
+    base.Initialize();
+}
+```
+
+Every default Forms control now renders in the Meadow style.
+
+## Licensing
+
+- Theme code: MIT (same as Gum).
+- Bundled Baloo 2 and Quicksand fonts: SIL Open Font License (see `Baloo2-OFL.txt` and `Quicksand-OFL.txt`).
+- Bundled DejaVu Sans Mono icon font: Bitstream Vera / DejaVu license (see `DejaVuSansMono-LICENSE.txt`).
