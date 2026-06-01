@@ -16,7 +16,8 @@ can focus on the look instead of the plumbing.
 | `TemplateShapes.cs` | Factory helpers for the Apos.Shapes runtimes (filled rect, stroked border, focus ring, circles). Keeps each visual short. |
 | `TemplateTextInputDecoration.cs` | Shared shape stack + state wiring for TextBox and PasswordBox. |
 | `*Visual.cs` | One per styled control. Each subclasses a `Gum.Forms.DefaultVisuals.V3.*Visual`, swaps in shapes, and re-wires the state callbacks. |
-| `Content/Fonts/` | Embedded TTFs (a body font + an icon font for glyphs the body font lacks). |
+| `Variants/` | Opt-in **Rich** alternates for a representative control subset (pill + hard-offset-shadow button, rounded box, soft focus glow, dashed-outline panel, circular drop-shadow thumb). Not registered by default — copy the ones matching your design. See *Choosing a style* below. |
+| `Content/Fonts/` | Embedded TTFs — a display font, a body font (the multi-font demo), and an icon font for glyphs the others lack. |
 
 The `.Kni` project source-shares every `.cs` from this project and re-embeds the
 fonts under its own assembly name — one set of code, two backend packages.
@@ -54,7 +55,8 @@ fonts under its own assembly name — one set of code, two backend packages.
    every weight). Many modern Google Fonts ship VF-only — if yours does, fetch its
    static weight cuts, or approximate with a static sibling family (e.g. the
    `Condensed` variant) and map one cut to each Gum style slot (`null` → Normal,
-   `"Bold"`, etc.).
+   `"Bold"`, etc.). **google-webfonts-helper** (`gwfh.mranftl.com`) serves static cuts
+   of VF-only Google fonts. This template ships **two** families — see *Two typefaces*.
 4. **Restyle the visuals**, and as you build out a control, move it from the
    "stock V3" block in `RegisterVisuals` up to the styled block.
 5. **Verify by running, not just building.** Build *both* `.MonoGame` and `.Kni`,
@@ -63,18 +65,40 @@ fonts under its own assembly name — one set of code, two backend packages.
    runtime — this is where a font `FileNotFoundException` from an uneven rename shows.
 6. **Publish:** flip `<GeneratePackageOnBuild>` to `true` in both csprojs.
 
-## If your design isn't flat
+## Choosing a style: flat default, or the Rich variants
 
-The template is flat and rectangular — no shadows, gradients, bevels, or pills. The
-palette + shape conventions still apply, but matching a richer look needs shape
-changes beyond a palette swap. Crib from the closest shipped theme:
+The registered visuals are flat and rectangular — no shadows, gradients, bevels, or
+pills. The `Variants/` folder ships **Rich** alternates (`Gum.Themes.Template.Variants`)
+for a representative subset of controls, each demonstrating one technique: a pill
+button with a flat hard-offset "stacked card" shadow, a rounded check box, a soft
+focus-ring glow, a dashed-outline list panel, and a circular drop-shadow slider thumb.
+Each variant copies its flat sibling's palette and state wiring and changes only the
+*shapes*, so the two are interchangeable per control.
+
+They're **not** registered by default — `RegisterVisuals` carries a commented swap-in
+line per control. To adopt one, uncomment its line (or register
+`new Variants.YourControlVisual(...)`), then delete the variant files you don't want.
+
+For looks beyond the gallery, crib from the closest shipped theme:
 
 - **Drop shadows / soft glows** → Bubblegum, plus the "Drop shadows" section of the
-  `gum-theming` skill (use the native Apos.Shapes shadow; don't stack rects).
+  `gum-theming` skill (native Apos.Shapes shadow — *soft* = bump the alpha; *hard*
+  "stacked card" edge = an opaque color with blur 0).
 - **Gradients** → ForestGlade.
 - **Bevels / inset edges** (Win95-style) → Retro95.
 - **Pills / large rounded corners** → a larger `CornerRadius` on the rect shapes.
 - **NineSlice instead of Apos.Shapes** → Editor.
+
+## Two typefaces
+
+`Styling.Text` carries a single family — the **display** default (`FontFamily`), which
+flows to every control. This template also bundles a **body** family (`BodyFontFamily`)
+and opts the typed / list / menu / tooltip visuals into it via
+`TextInstance.Font = TemplateTheme.BodyFontFamily`. Collapse to one family by deleting
+`BodyFontFamily`, its `RegisterBundledFonts` lines, and those per-visual opt-ins; add a
+third family the same way. For a family with no italic cut, point the `Italic` /
+`BoldItalic` style slots at the upright files (as the template does for the body font)
+so a stray italic request still resolves to a real font.
 
 ## Conventions worth keeping
 
