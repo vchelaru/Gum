@@ -138,9 +138,7 @@ NuGet packages: `Gum.Themes.Retro95.MonoGame`, `Gum.Themes.Retro95.Kni`
 
 ### Meadow
 
-{% hint style="warning" %}
-**Screenshot coming soon.** Once `MeadowThemeScreenshot.png` is added to `docs/.gitbook/assets/`, replace this block with a `<figure>` matching the other themes above.
-{% endhint %}
+<figure><img src="../../../.gitbook/assets/31_19 14 05.png" alt=""><figcaption><p>The Meadow theme applied to a sample settings panel.</p></figcaption></figure>
 
 Cozy cottagecore look with chunky sky-blue pill buttons (flat "stacked card" drop shadow), dashed-outline cream panels, sage selection accents, and coral sliders. Bundled fonts: Baloo 2 (display), Quicksand (body), and DejaVu Sans Mono (icons).
 
@@ -159,9 +157,7 @@ NuGet packages: `Gum.Themes.Meadow.MonoGame`, `Gum.Themes.Meadow.Kni`
 
 ### Hazard
 
-{% hint style="warning" %}
-**Screenshot coming soon.** Once `HazardThemeScreenshot.png` is added to `docs/.gitbook/assets/`, replace this block with a `<figure>` matching the other themes above.
-{% endhint %}
+<figure><img src="../../../.gitbook/assets/31_19 13 36.png" alt=""><figcaption><p>The Hazard theme applied to a sample settings panel.</p></figcaption></figure>
 
 Industrial space-salvage HUD inspired by Hardspace: Shipbreaker — signature hazard-yellow on warm near-black, muted-gold borders, and square-cornered chrome. Pressing a button flashes the full hazard-yellow accent with black text. Bundled fonts: Saira Condensed (body and labels) and DejaVu Sans Mono (icons).
 
