@@ -189,24 +189,42 @@ public static class TemplateTheme
 
     private static void RegisterVisuals()
     {
+        // ---- "Rich" Variants gallery (OPT-IN, not registered) ---------------
+        // The Variants\ folder holds richly-decorated alternates of a subset of
+        // these controls (pill button with a drop shadow, rounded/glowing
+        // CheckBox & RadioButton & inputs, dashed-border ListBox, shadowed circle
+        // slider thumb). They reuse this theme's palette and state logic - only
+        // the SHAPES differ - and are NOT registered by default, so the Template's
+        // flat look stays the default. To adopt a richer look: copy the
+        // variant(s) you want into the theme proper (or just uncomment its
+        // registration line below), delete the rest, and uncomment the matching
+        // FrameworkElement.DefaultFormsTemplates assignment that follows each
+        // default registration. Each commented line below shows the exact swap.
+
         // ---- Styled by this theme -------------------------------------------
         FrameworkElement.DefaultFormsTemplates[typeof(Button)] =
             new VisualTemplate((_, c) => new ButtonVisual(tryCreateFormsObject: c));
+        // To use the Rich variant instead: FrameworkElement.DefaultFormsTemplates[typeof(Button)] = new VisualTemplate((_, c) => new Variants.ButtonVisual(tryCreateFormsObject: c));
 
         FrameworkElement.DefaultFormsTemplates[typeof(TextBox)] =
             new VisualTemplate((_, c) => new TextBoxVisual(tryCreateFormsObject: c));
+        // To use the Rich variant instead: FrameworkElement.DefaultFormsTemplates[typeof(TextBox)] = new VisualTemplate((_, c) => new Variants.TextBoxVisual(tryCreateFormsObject: c));
 
         FrameworkElement.DefaultFormsTemplates[typeof(PasswordBox)] =
             new VisualTemplate((_, c) => new PasswordBoxVisual(tryCreateFormsObject: c));
+        // To use the Rich variant instead: FrameworkElement.DefaultFormsTemplates[typeof(PasswordBox)] = new VisualTemplate((_, c) => new Variants.PasswordBoxVisual(tryCreateFormsObject: c));
 
         FrameworkElement.DefaultFormsTemplates[typeof(Slider)] =
             new VisualTemplate((_, c) => new SliderVisual(tryCreateFormsObject: c));
+        // To use the Rich variant instead: FrameworkElement.DefaultFormsTemplates[typeof(Slider)] = new VisualTemplate((_, c) => new Variants.SliderVisual(tryCreateFormsObject: c));
 
         FrameworkElement.DefaultFormsTemplates[typeof(CheckBox)] =
             new VisualTemplate((_, c) => new CheckBoxVisual(tryCreateFormsObject: c));
+        // To use the Rich variant instead: FrameworkElement.DefaultFormsTemplates[typeof(CheckBox)] = new VisualTemplate((_, c) => new Variants.CheckBoxVisual(tryCreateFormsObject: c));
 
         FrameworkElement.DefaultFormsTemplates[typeof(RadioButton)] =
             new VisualTemplate((_, c) => new RadioButtonVisual(tryCreateFormsObject: c));
+        // To use the Rich variant instead: FrameworkElement.DefaultFormsTemplates[typeof(RadioButton)] = new VisualTemplate((_, c) => new Variants.RadioButtonVisual(tryCreateFormsObject: c));
 
         FrameworkElement.DefaultFormsTemplates[typeof(ToggleButton)] =
             new VisualTemplate((_, c) => new ToggleButtonVisual(tryCreateFormsObject: c));
@@ -216,6 +234,7 @@ public static class TemplateTheme
 
         FrameworkElement.DefaultFormsTemplates[typeof(ListBox)] =
             new VisualTemplate((_, c) => new ListBoxVisual(tryCreateFormsObject: c));
+        // To use the Rich variant instead: FrameworkElement.DefaultFormsTemplates[typeof(ListBox)] = new VisualTemplate((_, c) => new Variants.ListBoxVisual(tryCreateFormsObject: c));
 
         FrameworkElement.DefaultFormsTemplates[typeof(ListBoxItem)] =
             new VisualTemplate((_, c) => new ListBoxItemVisual(tryCreateFormsObject: c));
