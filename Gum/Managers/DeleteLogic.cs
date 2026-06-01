@@ -359,6 +359,18 @@ public class DeleteLogic : IDeleteLogic
             .GroupBy(i => i.ParentContainer!)
             .ToList();
 
+        // Capture what's needed to pick a sensible post-delete selection before removal:
+        // GetSiblingsIncludingThis reads ParentContainer, which RemoveInstanceFromElement
+        // clears. Anchor on the first deletable instance whose owning element survives the
+        // delete (issue #3025 — without a fallback the editor went blank after a
+        // multi-instance delete).
+        var selectionAnchor = deletableInstances
+            .FirstOrDefault(i => i.ParentContainer != null && !elements.Contains(i.ParentContainer));
+        var anchorElement = selectionAnchor?.ParentContainer;
+        var anchorSiblings = selectionAnchor?.GetSiblingsIncludingThis() ?? new List<InstanceSave>();
+        var anchorParentInstance = selectionAnchor?.GetParentInstance();
+        var anchorIndex = selectionAnchor != null ? anchorSiblings.IndexOf(selectionAnchor) : -1;
+
         // 2. Remove instances (skip if parent element/behavior is also being deleted)
         foreach (var instance in deletableInstances)
         {
@@ -404,7 +416,7 @@ public class DeleteLogic : IDeleteLogic
         if (deletableInstances.Count > 0)
         {
             DeselectInstances(deletableInstances);
-            _selectedState.SelectedInstance = null;
+            SelectAfterMultiInstanceRemoval(anchorSiblings, anchorIndex, deletableInstances, anchorParentInstance, anchorElement);
         }
 
         // 7. Refresh and save for instance parents that were not themselves deleted
@@ -422,6 +434,61 @@ public class DeleteLogic : IDeleteLogic
         }
 
         _wireframeObjectManager.RefreshAll(true);
+    }
+
+    /// <summary>
+    /// Picks the selection after a multi-instance delete so the editor never goes blank
+    /// (issue #3025). Mirrors the single-instance fallback in PerformConfirmedSingleInstanceDelete:
+    /// a surviving sibling (searching forward then backward from the deleted group), otherwise the
+    /// surviving parent instance, otherwise the owning screen/component.
+    /// </summary>
+    private void SelectAfterMultiInstanceRemoval(
+        List<InstanceSave> anchorSiblings,
+        int anchorIndex,
+        List<InstanceSave> deletedInstances,
+        InstanceSave? anchorParentInstance,
+        ElementSave? anchorElement)
+    {
+        InstanceSave? fallback = null;
+
+        if (anchorIndex >= 0)
+        {
+            for (int i = anchorIndex + 1; i < anchorSiblings.Count && fallback == null; i++)
+            {
+                if (!deletedInstances.Contains(anchorSiblings[i]))
+                {
+                    fallback = anchorSiblings[i];
+                }
+            }
+
+            for (int i = anchorIndex - 1; i >= 0 && fallback == null; i--)
+            {
+                if (!deletedInstances.Contains(anchorSiblings[i]))
+                {
+                    fallback = anchorSiblings[i];
+                }
+            }
+        }
+
+        if (fallback == null && anchorParentInstance != null && !deletedInstances.Contains(anchorParentInstance))
+        {
+            fallback = anchorParentInstance;
+        }
+
+        if (fallback != null)
+        {
+            _selectedState.SelectedInstance = fallback;
+        }
+        else
+        {
+            // No sibling or parent instance survived — fall back to the owning
+            // screen/component so the editor still shows the element instead of going blank.
+            _selectedState.SelectedInstance = null;
+            if (anchorElement != null)
+            {
+                _selectedState.SelectedElement = anchorElement;
+            }
+        }
     }
 
     bool? ShowDeleteDialog(Array objectsToDelete, out DeleteOptionsWindow optionsWindow,
