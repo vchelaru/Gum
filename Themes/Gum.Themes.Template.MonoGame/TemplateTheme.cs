@@ -28,9 +28,26 @@ namespace Gum.Themes.Template;
 /// </summary>
 public static class TemplateTheme
 {
-    /// <summary>Family name the bundled body TTFs are registered under. Use this as
-    /// the <c>Font</c> value on any TextRuntime to get the theme font.</summary>
+    /// <summary>Family name the bundled DISPLAY TTFs are registered under, and the
+    /// theme's default text family (it fills <see cref="Styling.ActiveStyle"/>'s
+    /// Text slots, so controls that don't opt out render in it). Use this as the
+    /// <c>Font</c> value on any TextRuntime to get the display font.
+    /// <para>
+    /// A theme can ship more than one family. This template demonstrates the common
+    /// "display + body" split: a personality face for buttons / labels / titles
+    /// (this <see cref="FontFamily"/>) and a quieter face for typed / list content
+    /// (<see cref="BodyFontFamily"/>). Controls that render entered or tabular text
+    /// opt into the body face explicitly via <c>TextInstance.Font = BodyFontFamily</c>
+    /// (see TextBox, ComboBox, ListBoxItem, MenuItem, Tooltip in this theme).
+    /// </para></summary>
     public const string FontFamily = "DM Mono";
+
+    /// <summary>Family name the bundled BODY TTFs are registered under - the quieter
+    /// face used for typed / list / menu content. Opt into it per visual via
+    /// <c>TextInstance.Font = TemplateTheme.BodyFontFamily</c>; the default is
+    /// <see cref="FontFamily"/>. Delete this (and its registration + the per-visual
+    /// opt-ins) if your design uses a single family.</summary>
+    public const string BodyFontFamily = "Nunito";
 
     /// <summary>Family name the bundled icon font (DejaVu Sans Mono) is registered
     /// under. Use this for glyphs the body font doesn't cover - check marks, close
@@ -77,12 +94,22 @@ public static class TemplateTheme
 
     private static void RegisterBundledFonts()
     {
-        // DM Mono ships no true 700-weight Bold, so Medium (500) maps to Gum's
-        // IsBold slot. Swap these filenames + the family/style mapping for your font.
+        // Display family. DM Mono ships no true 700-weight Bold, so Medium (500)
+        // maps to Gum's IsBold slot. Swap these filenames + the family/style
+        // mapping for your font.
         RegisterEmbeddedFont(FontFamily, "DMMono-Regular.ttf", style: null);
         RegisterEmbeddedFont(FontFamily, "DMMono-Medium.ttf", style: "Bold");
         RegisterEmbeddedFont(FontFamily, "DMMono-Italic.ttf", style: "Italic");
         RegisterEmbeddedFont(FontFamily, "DMMono-MediumItalic.ttf", style: "BoldItalic");
+
+        // Body family (the second family - delete if your design uses one font).
+        // Nunito has no italic cut, so the Italic / BoldItalic style slots point at
+        // the upright Regular / Bold files: a stray italic request then resolves to
+        // a real font (rendered upright) instead of risking a missing-style lookup.
+        RegisterEmbeddedFont(BodyFontFamily, "Nunito-Regular.ttf", style: null);
+        RegisterEmbeddedFont(BodyFontFamily, "Nunito-Bold.ttf", style: "Bold");
+        RegisterEmbeddedFont(BodyFontFamily, "Nunito-Regular.ttf", style: "Italic");
+        RegisterEmbeddedFont(BodyFontFamily, "Nunito-Bold.ttf", style: "BoldItalic");
 
         // Icon font registered under a distinct family name so visual code addresses
         // it explicitly via TemplateTheme.IconFontFamily.

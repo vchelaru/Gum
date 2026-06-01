@@ -38,6 +38,26 @@ internal static class TemplateShapes
         return rect;
     }
 
+    /// <summary>
+    /// A filled rounded rectangle that exactly fills its parent, with a native
+    /// Apos.Shapes drop shadow. Use a translucent <paramref name="shadowColor"/> +
+    /// non-zero <paramref name="blur"/> for a soft Gaussian "lift" (bump the CSS
+    /// alpha ~1.5-2x; sRGB compositing reads it fainter than a browser); use an
+    /// opaque color + <paramref name="blur"/> 0 for a flat "stacked card" offset
+    /// edge (no alpha bump needed - it's opaque). Toggle per state via the
+    /// returned rect's <c>HasDropshadow</c>.
+    /// </summary>
+    public static RectangleRuntime FillWithDropshadow(Color color, float cornerRadius, Color shadowColor, float offsetX, float offsetY, float blur, string name = "Fill")
+    {
+        RectangleRuntime rect = Fill(color, cornerRadius, name);
+        rect.HasDropshadow = true;
+        rect.DropshadowColor = shadowColor;
+        rect.DropshadowOffsetX = offsetX;
+        rect.DropshadowOffsetY = offsetY;
+        rect.DropshadowBlur = blur;
+        return rect;
+    }
+
     /// <summary>A stroked (outline-only) rounded rectangle that exactly fills its parent.</summary>
     public static RectangleRuntime Border(Color color, float cornerRadius = 0f, float thickness = 1f, string name = "Border")
     {
@@ -78,6 +98,22 @@ internal static class TemplateShapes
         circle.IsFilled = true;
         circle.FillColor = color;
         circle.StrokeWidth = 0;
+        return circle;
+    }
+
+    /// <summary>
+    /// A filled circle that exactly fills its parent, with a native Apos.Shapes
+    /// drop shadow - the circular equivalent of <see cref="FillWithDropshadow"/>
+    /// (e.g. under a round slider thumb).
+    /// </summary>
+    public static CircleRuntime FilledCircleWithDropshadow(Color color, Color shadowColor, float offsetX, float offsetY, float blur, string name = "Fill")
+    {
+        CircleRuntime circle = FilledCircle(color, name);
+        circle.HasDropshadow = true;
+        circle.DropshadowColor = shadowColor;
+        circle.DropshadowOffsetX = offsetX;
+        circle.DropshadowOffsetY = offsetY;
+        circle.DropshadowBlur = blur;
         return circle;
     }
 

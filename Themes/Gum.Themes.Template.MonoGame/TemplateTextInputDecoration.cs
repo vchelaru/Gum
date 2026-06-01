@@ -47,6 +47,12 @@ internal sealed class TemplateTextInputDecoration
         // render on top of the shape stack.
         host.AddChild(host.ClipContainer);
 
+        // Typed text uses the quieter BODY family rather than the display default -
+        // the demonstration of multi-font support. Drop these two lines (and the
+        // BodyFontFamily registration) if your theme uses a single family.
+        host.TextInstance.Font = TemplateTheme.BodyFontFamily;
+        host.PlaceholderTextInstance.Font = TemplateTheme.BodyFontFamily;
+
         WireStates(host);
     }
 

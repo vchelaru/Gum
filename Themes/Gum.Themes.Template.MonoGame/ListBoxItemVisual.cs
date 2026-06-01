@@ -33,6 +33,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         AddChild(_fill);
 
         AddChild(TextInstance);
+        TextInstance.Font = TemplateTheme.BodyFontFamily; // row content uses the body face
         // Left-pad the text the same amount the V3 default does (-8 width split),
         // but nudge it in from the row edge so the selected-row fill reads as a
         // band rather than text mashed against the list border.
