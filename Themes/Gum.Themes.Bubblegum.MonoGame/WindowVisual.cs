@@ -57,10 +57,21 @@ public class WindowVisual : BaseWindowVisual
         BorderLeftInstance.Visual.Parent = null;
         BorderRightInstance.Visual.Parent = null;
 
-        _fill = CreateFill();
+        _fill = BubblegumShapes.FillWithDropshadow(
+            color: BubblegumColors.Surface1,
+            cornerRadius: CornerRadius,
+            shadowColor: ShadowColor,
+            offsetX: 0f,
+            offsetY: ShadowOffsetY,
+            blur: ShadowBlur,
+            name: "BubblegumWindowFill");
         AddChild(_fill);
 
-        _border = CreateBorder();
+        _border = BubblegumShapes.Border(
+            color: BubblegumColors.Border,
+            cornerRadius: CornerRadius,
+            thickness: BorderThickness,
+            name: "BubblegumWindowBorder");
         AddChild(_border);
 
         // V3 child order from here on.
@@ -75,83 +86,16 @@ public class WindowVisual : BaseWindowVisual
         AddChild(BorderLeftInstance.Visual);
         AddChild(BorderRightInstance.Visual);
 
-        _titleBarFill = CreateTitleBarFill();
+        // CSS uses a gradient (linear-gradient(135deg,#FF8FB8,var(--acc))); we
+        // approximate with a flat Accent fill. A real gradient would need a
+        // gradient-capable renderable that doesn't exist in the runtime yet.
+        _titleBarFill = BubblegumShapes.Fill(
+            color: BubblegumColors.Accent,
+            name: "BubblegumWindowTitleBarFill");
         _titleBarFill.Parent = TitleBarInstance.Visual;
 
         _titleBarSeparator = CreateTitleBarSeparator();
         _titleBarSeparator.Parent = TitleBarInstance.Visual;
-    }
-
-    private static RectangleRuntime CreateFill()
-    {
-        RectangleRuntime fill = new RectangleRuntime();
-        fill.Name = "BubblegumWindowFill";
-        fill.X = 0;
-        fill.Y = 0;
-        fill.XUnits = GeneralUnitType.PixelsFromMiddle;
-        fill.YUnits = GeneralUnitType.PixelsFromMiddle;
-        fill.XOrigin = HorizontalAlignment.Center;
-        fill.YOrigin = VerticalAlignment.Center;
-        fill.Width = 0;
-        fill.Height = 0;
-        fill.WidthUnits = DimensionUnitType.RelativeToParent;
-        fill.HeightUnits = DimensionUnitType.RelativeToParent;
-        fill.CornerRadius = CornerRadius;
-        fill.IsFilled = true;
-        fill.FillColor = BubblegumColors.Surface1;
-        fill.StrokeWidth = 0;
-        // Native Gaussian drop shadow — replaces the prior three-layer stack.
-        fill.HasDropshadow = true;
-        fill.DropshadowColor = ShadowColor;
-        fill.DropshadowOffsetX = 0f;
-        fill.DropshadowOffsetY = ShadowOffsetY;
-        fill.DropshadowBlur = ShadowBlur;
-        return fill;
-    }
-
-    private static RectangleRuntime CreateBorder()
-    {
-        RectangleRuntime border = new RectangleRuntime();
-        border.Name = "BubblegumWindowBorder";
-        border.X = 0;
-        border.Y = 0;
-        border.XUnits = GeneralUnitType.PixelsFromMiddle;
-        border.YUnits = GeneralUnitType.PixelsFromMiddle;
-        border.XOrigin = HorizontalAlignment.Center;
-        border.YOrigin = VerticalAlignment.Center;
-        border.Width = 0;
-        border.Height = 0;
-        border.WidthUnits = DimensionUnitType.RelativeToParent;
-        border.HeightUnits = DimensionUnitType.RelativeToParent;
-        border.CornerRadius = CornerRadius;
-        border.IsFilled = false;
-        border.StrokeWidth = BorderThickness;
-        border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = BubblegumColors.Border;
-        return border;
-    }
-
-    private static RectangleRuntime CreateTitleBarFill()
-    {
-        // CSS uses a gradient (linear-gradient(135deg,#FF8FB8,var(--acc))); we
-        // approximate with a flat Accent fill. A real gradient would need a
-        // gradient-capable renderable that doesn't exist in the runtime yet.
-        RectangleRuntime fill = new RectangleRuntime();
-        fill.Name = "BubblegumWindowTitleBarFill";
-        fill.X = 0;
-        fill.Y = 0;
-        fill.XUnits = GeneralUnitType.PixelsFromMiddle;
-        fill.YUnits = GeneralUnitType.PixelsFromMiddle;
-        fill.XOrigin = HorizontalAlignment.Center;
-        fill.YOrigin = VerticalAlignment.Center;
-        fill.Width = 0;
-        fill.Height = 0;
-        fill.WidthUnits = DimensionUnitType.RelativeToParent;
-        fill.HeightUnits = DimensionUnitType.RelativeToParent;
-        fill.IsFilled = true;
-        fill.FillColor = BubblegumColors.Accent;
-        fill.StrokeWidth = 0;
-        return fill;
     }
 
     private static RectangleRuntime CreateTitleBarSeparator()

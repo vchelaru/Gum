@@ -5,26 +5,29 @@ using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using RenderingLibrary.Graphics;
 
-namespace Gum.Themes.Template;
+namespace Gum.Themes.Bubblegum;
 
 /// <summary>
-/// Factory helpers for the Apos.Shapes runtimes a theme builds its chrome from.
-/// Every visual in this theme paints itself with the same handful of shapes -
-/// a filled body, a stroked border, an offset focus ring - so those are defined
+/// Bubblegum's copy of the shared-pattern shape factory (the same helper set
+/// <c>TemplateShapes</c> defines for the Template theme). Every visual in this
+/// theme paints its chrome from the same handful of Apos.Shapes runtimes - a
+/// filled body, a stroked border, an offset focus ring - so those are built
 /// once here instead of being hand-rolled (~15 lines each) in every visual.
 ///
-/// This is generic theme INFRASTRUCTURE, not the theme's identity: the methods
-/// take the color / radius / thickness as arguments, and the look comes from what
-/// each visual passes in (read from <see cref="TemplatePalette"/>). The file is
-/// part of the template and is copied into each cloned theme - it is deliberately
-/// NOT a shared library, so a theme stays a self-contained reference.
+/// Bubblegum adds two dropshadow variants (<see cref="FillWithDropshadow"/> and
+/// <see cref="FilledCircleWithDropshadow"/>) on top of the shared set, for the
+/// soft pink "lift" shadows under the Button, Window, ToggleButton, and slider
+/// thumb. The look comes from what each visual passes in (read from
+/// <see cref="BubblegumColors"/> / <see cref="BubblegumPalette"/>), not from
+/// this file - this is generic theme infrastructure, kept self-contained per
+/// theme rather than shared.
 ///
 /// All shapes are centered on and sized RelativeToParent, so they track their
 /// parent's size automatically. A focus ring is sized slightly LARGER than its
-/// parent (via <c>inset</c>) so its stroke sits just outside the body, and starts
-/// hidden (<c>Visible = false</c>) - flip <c>Visible</c> in a state callback.
+/// parent (via <c>inset</c>) so its stroke sits just outside the body, and
+/// starts hidden (<c>Visible = false</c>) - flip <c>Visible</c> in a state callback.
 /// </summary>
-internal static class TemplateShapes
+internal static class BubblegumShapes
 {
     /// <summary>A filled rounded rectangle that exactly fills its parent.</summary>
     public static RectangleRuntime Fill(Color color, float cornerRadius = 0f, string name = "Fill")
@@ -40,12 +43,8 @@ internal static class TemplateShapes
 
     /// <summary>
     /// A filled rounded rectangle that exactly fills its parent, with a native
-    /// Apos.Shapes drop shadow. Use a translucent <paramref name="shadowColor"/> +
-    /// non-zero <paramref name="blur"/> for a soft Gaussian "lift" (bump the CSS
-    /// alpha ~1.5-2x; sRGB compositing reads it fainter than a browser); use an
-    /// opaque color + <paramref name="blur"/> 0 for a flat "stacked card" offset
-    /// edge (no alpha bump needed - it's opaque). Toggle per state via the
-    /// returned rect's <c>HasDropshadow</c>.
+    /// Apos.Shapes Gaussian drop shadow - the soft pink "lift" under Bubblegum's
+    /// Button / Window / ToggleButton bodies.
     /// </summary>
     public static RectangleRuntime FillWithDropshadow(Color color, float cornerRadius, Color shadowColor, float offsetX, float offsetY, float blur, string name = "Fill")
     {
@@ -103,8 +102,7 @@ internal static class TemplateShapes
 
     /// <summary>
     /// A filled circle that exactly fills its parent, with a native Apos.Shapes
-    /// drop shadow - the circular equivalent of <see cref="FillWithDropshadow"/>
-    /// (e.g. under a round slider thumb).
+    /// Gaussian drop shadow - the soft pink shadow under Bubblegum's slider thumb.
     /// </summary>
     public static CircleRuntime FilledCircleWithDropshadow(Color color, Color shadowColor, float offsetX, float offsetY, float blur, string name = "Fill")
     {

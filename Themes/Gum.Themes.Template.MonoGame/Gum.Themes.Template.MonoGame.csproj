@@ -25,6 +25,7 @@
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
     <None Include="Content\Fonts\OFL.txt" Pack="true" PackagePath="\" />
+    <None Include="Content\Fonts\Nunito-OFL.txt" Pack="true" PackagePath="\" />
     <None Include="Content\Fonts\DejaVuSansMono-LICENSE.txt" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
@@ -36,6 +37,10 @@
     <EmbeddedResource Include="Content\Fonts\DMMono-Medium.ttf" />
     <EmbeddedResource Include="Content\Fonts\DMMono-Italic.ttf" />
     <EmbeddedResource Include="Content\Fonts\DMMono-MediumItalic.ttf" />
+    <!-- Body family (the second family demonstrated by this template's multi-font
+         support). Nunito is a humanist sans contrasting DM Mono's monospace display. -->
+    <EmbeddedResource Include="Content\Fonts\Nunito-Regular.ttf" />
+    <EmbeddedResource Include="Content\Fonts\Nunito-Bold.ttf" />
     <!-- DejaVu Sans Mono is bundled as the "icon font" for glyphs the body font
          doesn't cover (Dingbats / Geometric Shapes blocks: check, close, arrows).
          Registered under a distinct family name in TemplateTheme so visual code is

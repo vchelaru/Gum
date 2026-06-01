@@ -41,10 +41,17 @@ public class ScrollBarVisual : BaseScrollBarVisual
         // Optional frame chrome (ShowFrame). Inserted before ThumbContainer so
         // it renders behind the thumb.
         ThumbContainer.Parent = null;
-        _frameFill = CreateFrameFill();
+        _frameFill = BubblegumShapes.Fill(
+            color: BubblegumColors.Surface1,
+            cornerRadius: FrameCornerRadius,
+            name: "BubblegumScrollBarFrameFill");
         _frameFill.Visible = false;
         AddChild(_frameFill);
-        _frameBorder = CreateFrameBorder();
+        _frameBorder = BubblegumShapes.Border(
+            color: BubblegumColors.Border,
+            cornerRadius: FrameCornerRadius,
+            thickness: FrameBorderThickness,
+            name: "BubblegumScrollBarFrameBorder");
         _frameBorder.Visible = false;
         AddChild(_frameBorder);
         AddChild(ThumbContainer);
@@ -139,46 +146,4 @@ public class ScrollBarVisual : BaseScrollBarVisual
         }
     }
 
-    private static RectangleRuntime CreateFrameFill()
-    {
-        RectangleRuntime fill = new RectangleRuntime();
-        fill.Name = "BubblegumScrollBarFrameFill";
-        fill.X = 0;
-        fill.Y = 0;
-        fill.XUnits = GeneralUnitType.PixelsFromMiddle;
-        fill.YUnits = GeneralUnitType.PixelsFromMiddle;
-        fill.XOrigin = HorizontalAlignment.Center;
-        fill.YOrigin = VerticalAlignment.Center;
-        fill.Width = 0;
-        fill.Height = 0;
-        fill.WidthUnits = DimensionUnitType.RelativeToParent;
-        fill.HeightUnits = DimensionUnitType.RelativeToParent;
-        fill.CornerRadius = FrameCornerRadius;
-        fill.IsFilled = true;
-        fill.FillColor = BubblegumColors.Surface1;
-        fill.StrokeWidth = 0;
-        return fill;
-    }
-
-    private static RectangleRuntime CreateFrameBorder()
-    {
-        RectangleRuntime border = new RectangleRuntime();
-        border.Name = "BubblegumScrollBarFrameBorder";
-        border.X = 0;
-        border.Y = 0;
-        border.XUnits = GeneralUnitType.PixelsFromMiddle;
-        border.YUnits = GeneralUnitType.PixelsFromMiddle;
-        border.XOrigin = HorizontalAlignment.Center;
-        border.YOrigin = VerticalAlignment.Center;
-        border.Width = 0;
-        border.Height = 0;
-        border.WidthUnits = DimensionUnitType.RelativeToParent;
-        border.HeightUnits = DimensionUnitType.RelativeToParent;
-        border.CornerRadius = FrameCornerRadius;
-        border.IsFilled = false;
-        border.StrokeWidth = FrameBorderThickness;
-        border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = BubblegumColors.Border;
-        return border;
-    }
 }

@@ -33,6 +33,7 @@ public class TooltipVisual : BaseTooltipVisual
         AddChild(_border);
 
         AddChild(TextInstance);
+        TextInstance.Font = TemplateTheme.BodyFontFamily; // tooltip body uses the body face
         TextInstance.Color = TemplatePalette.Text;
     }
 }

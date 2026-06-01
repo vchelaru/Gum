@@ -44,6 +44,7 @@ public class MenuItemVisual : BaseMenuItemVisual
         AddChild(_fill);
 
         AddChild(ContainerInstance);
+        TextInstance.Font = TemplateTheme.BodyFontFamily; // menu item label uses the body face
 
         // Symmetric padding: shift ContainerInstance in by HorizontalPadding
         // and VerticalPadding, and grow the MenuItem visual by twice that on

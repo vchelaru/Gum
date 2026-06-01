@@ -23,7 +23,10 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         FocusedIndicator.Parent = null;
         TextInstance.Parent = null;
 
-        _fill = CreateFill();
+        _fill = BubblegumShapes.Fill(
+            color: Color.Transparent,
+            cornerRadius: 0f,
+            name: "BubblegumListItemFill");
         AddChild(_fill);
 
         AddChild(TextInstance);
@@ -33,27 +36,6 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         TextInstance.Width = -24f;
 
         WireStates();
-    }
-
-    private static RectangleRuntime CreateFill()
-    {
-        RectangleRuntime fill = new RectangleRuntime();
-        fill.Name = "BubblegumListItemFill";
-        fill.X = 0;
-        fill.Y = 0;
-        fill.XUnits = GeneralUnitType.PixelsFromMiddle;
-        fill.YUnits = GeneralUnitType.PixelsFromMiddle;
-        fill.XOrigin = HorizontalAlignment.Center;
-        fill.YOrigin = VerticalAlignment.Center;
-        fill.Width = 0;
-        fill.Height = 0;
-        fill.WidthUnits = DimensionUnitType.RelativeToParent;
-        fill.HeightUnits = DimensionUnitType.RelativeToParent;
-        fill.CornerRadius = 0f;
-        fill.IsFilled = true;
-        fill.FillColor = Color.Transparent;
-        fill.StrokeWidth = 0;
-        return fill;
     }
 
     private void WireStates()

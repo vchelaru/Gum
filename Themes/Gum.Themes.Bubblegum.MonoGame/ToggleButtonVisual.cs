@@ -45,90 +45,35 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         WidthUnits = DimensionUnitType.Absolute;
         HeightUnits = DimensionUnitType.Absolute;
 
-        _focusRing = CreateFocusRing();
+        _focusRing = BubblegumShapes.FocusRing(
+            color: BubblegumPalette.FocusRing,
+            cornerRadius: CornerRadius,
+            inset: FocusRingInset,
+            thickness: FocusRingThickness,
+            name: "BubblegumToggleFocusRing");
         AddChild(_focusRing);
 
-        _fill = CreateFill();
+        _fill = BubblegumShapes.FillWithDropshadow(
+            color: BubblegumColors.Surface1,
+            cornerRadius: CornerRadius,
+            shadowColor: ShadowColor,
+            offsetX: 0f,
+            offsetY: ShadowOffsetY,
+            blur: ShadowBlur,
+            name: "BubblegumToggleFill");
         AddChild(_fill);
 
-        _border = CreateBorder();
+        _border = BubblegumShapes.Border(
+            color: BubblegumColors.Border,
+            cornerRadius: CornerRadius,
+            thickness: BorderThickness,
+            name: "BubblegumToggleBorder");
         AddChild(_border);
 
         AddChild(TextInstance);
         TextInstance.ApplyState(Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle.Text.Normal);
 
         WireStates();
-    }
-
-    private static RectangleRuntime CreateFill()
-    {
-        RectangleRuntime fill = new RectangleRuntime();
-        fill.Name = "BubblegumToggleFill";
-        fill.X = 0;
-        fill.Y = 0;
-        fill.XUnits = GeneralUnitType.PixelsFromMiddle;
-        fill.YUnits = GeneralUnitType.PixelsFromMiddle;
-        fill.XOrigin = HorizontalAlignment.Center;
-        fill.YOrigin = VerticalAlignment.Center;
-        fill.Width = 0;
-        fill.Height = 0;
-        fill.WidthUnits = DimensionUnitType.RelativeToParent;
-        fill.HeightUnits = DimensionUnitType.RelativeToParent;
-        fill.CornerRadius = CornerRadius;
-        fill.IsFilled = true;
-        fill.FillColor = BubblegumColors.Surface1;
-        fill.StrokeWidth = 0;
-        fill.HasDropshadow = true;
-        fill.DropshadowColor = ShadowColor;
-        fill.DropshadowOffsetX = 0f;
-        fill.DropshadowOffsetY = ShadowOffsetY;
-        fill.DropshadowBlur = ShadowBlur;
-        return fill;
-    }
-
-    private static RectangleRuntime CreateBorder()
-    {
-        RectangleRuntime border = new RectangleRuntime();
-        border.Name = "BubblegumToggleBorder";
-        border.X = 0;
-        border.Y = 0;
-        border.XUnits = GeneralUnitType.PixelsFromMiddle;
-        border.YUnits = GeneralUnitType.PixelsFromMiddle;
-        border.XOrigin = HorizontalAlignment.Center;
-        border.YOrigin = VerticalAlignment.Center;
-        border.Width = 0;
-        border.Height = 0;
-        border.WidthUnits = DimensionUnitType.RelativeToParent;
-        border.HeightUnits = DimensionUnitType.RelativeToParent;
-        border.CornerRadius = CornerRadius;
-        border.IsFilled = false;
-        border.StrokeWidth = BorderThickness;
-        border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = BubblegumColors.Border;
-        return border;
-    }
-
-    private static RectangleRuntime CreateFocusRing()
-    {
-        RectangleRuntime ring = new RectangleRuntime();
-        ring.Name = "BubblegumToggleFocusRing";
-        ring.X = 0;
-        ring.Y = 0;
-        ring.XUnits = GeneralUnitType.PixelsFromMiddle;
-        ring.YUnits = GeneralUnitType.PixelsFromMiddle;
-        ring.XOrigin = HorizontalAlignment.Center;
-        ring.YOrigin = VerticalAlignment.Center;
-        ring.Width = FocusRingInset * 2f;
-        ring.Height = FocusRingInset * 2f;
-        ring.WidthUnits = DimensionUnitType.RelativeToParent;
-        ring.HeightUnits = DimensionUnitType.RelativeToParent;
-        ring.CornerRadius = CornerRadius + FocusRingInset;
-        ring.IsFilled = false;
-        ring.StrokeWidth = FocusRingThickness;
-        ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = BubblegumPalette.FocusRing;
-        ring.Visible = false;
-        return ring;
     }
 
     private void WireStates()

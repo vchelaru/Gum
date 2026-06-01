@@ -64,6 +64,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
         AddChild(_dropdownGlyph);
 
         AddChild(TextInstance);
+        TextInstance.Font = TemplateTheme.BodyFontFamily; // selected-item text uses the body face
         // Match the dropdown ListBoxItem layout: 6 px from the left border,
         // left-aligned, with the frame's right edge clearing the dropdown glyph.
         // V3's default centered layout left ~17 px on the left, which made the

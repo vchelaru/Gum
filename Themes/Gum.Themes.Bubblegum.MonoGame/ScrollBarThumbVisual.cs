@@ -32,31 +32,13 @@ public class ScrollBarThumbVisual : InteractiveGue
         WidthUnits = DimensionUnitType.RelativeToParent;
         HeightUnits = DimensionUnitType.RelativeToParent;
 
-        _body = CreateBody();
+        _body = BubblegumShapes.Fill(
+            color: BubblegumColors.Accent,
+            cornerRadius: CornerRadius,
+            name: "BubblegumScrollThumbBody");
         AddChild(_body);
 
         WireStates();
-    }
-
-    private static RectangleRuntime CreateBody()
-    {
-        RectangleRuntime body = new RectangleRuntime();
-        body.Name = "BubblegumScrollThumbBody";
-        body.X = 0;
-        body.Y = 0;
-        body.XUnits = GeneralUnitType.PixelsFromMiddle;
-        body.YUnits = GeneralUnitType.PixelsFromMiddle;
-        body.XOrigin = HorizontalAlignment.Center;
-        body.YOrigin = VerticalAlignment.Center;
-        body.Width = 0;
-        body.Height = 0;
-        body.WidthUnits = DimensionUnitType.RelativeToParent;
-        body.HeightUnits = DimensionUnitType.RelativeToParent;
-        body.CornerRadius = CornerRadius;
-        body.IsFilled = true;
-        body.FillColor = BubblegumColors.Accent;
-        body.StrokeWidth = 0;
-        return body;
     }
 
     private void WireStates()

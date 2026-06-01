@@ -20,27 +20,9 @@ public class SplitterVisual : BaseSplitterVisual
     {
         Background.Parent = null;
 
-        _fill = CreateFill();
+        _fill = BubblegumShapes.Fill(
+            color: BubblegumColors.AccentLight,
+            name: "BubblegumSplitterFill");
         AddChild(_fill);
-    }
-
-    private static RectangleRuntime CreateFill()
-    {
-        RectangleRuntime fill = new RectangleRuntime();
-        fill.Name = "BubblegumSplitterFill";
-        fill.X = 0;
-        fill.Y = 0;
-        fill.XUnits = GeneralUnitType.PixelsFromMiddle;
-        fill.YUnits = GeneralUnitType.PixelsFromMiddle;
-        fill.XOrigin = HorizontalAlignment.Center;
-        fill.YOrigin = VerticalAlignment.Center;
-        fill.Width = 0;
-        fill.Height = 0;
-        fill.WidthUnits = DimensionUnitType.RelativeToParent;
-        fill.HeightUnits = DimensionUnitType.RelativeToParent;
-        fill.IsFilled = true;
-        fill.FillColor = BubblegumColors.AccentLight;
-        fill.StrokeWidth = 0;
-        return fill;
     }
 }

@@ -63,10 +63,22 @@ public class ButtonVisual : BaseButtonVisual
         WidthUnits = DimensionUnitType.Absolute;
         HeightUnits = DimensionUnitType.Absolute;
 
-        _focusRing = CreateFocusRing();
+        _focusRing = BubblegumShapes.FocusRing(
+            color: new Color(255, 107, 157, 90), // translucent accent
+            cornerRadius: CornerRadius,
+            inset: FocusRingInset,
+            thickness: FocusRingThickness,
+            name: "BubblegumFocusRing");
         AddChild(_focusRing);
 
-        _fill = CreateFill();
+        _fill = BubblegumShapes.FillWithDropshadow(
+            color: BubblegumColors.Accent,
+            cornerRadius: CornerRadius,
+            shadowColor: ShadowColor,
+            offsetX: 0f,
+            offsetY: ShadowOffsetY,
+            blur: ShadowBlur,
+            name: "BubblegumFill");
         AddChild(_fill);
 
         AddChild(TextInstance);
@@ -74,59 +86,6 @@ public class ButtonVisual : BaseButtonVisual
         TextInstance.Color = Color.White;
 
         WireStates();
-    }
-
-    private static RectangleRuntime CreateFill()
-    {
-        RectangleRuntime fill = new RectangleRuntime();
-        fill.Name = "BubblegumFill";
-        fill.X = 0;
-        fill.Y = 0;
-        fill.XUnits = GeneralUnitType.PixelsFromMiddle;
-        fill.YUnits = GeneralUnitType.PixelsFromMiddle;
-        fill.XOrigin = HorizontalAlignment.Center;
-        fill.YOrigin = VerticalAlignment.Center;
-        fill.Width = 0;
-        fill.Height = 0;
-        fill.WidthUnits = DimensionUnitType.RelativeToParent;
-        fill.HeightUnits = DimensionUnitType.RelativeToParent;
-        fill.CornerRadius = CornerRadius;
-        fill.IsFilled = true;
-        fill.FillColor = BubblegumColors.Accent;
-        fill.StrokeWidth = 0;
-        // Native Gaussian drop shadow — replaces the old three-layer stack.
-        // Toggled per state via WireStates (off when pressed/disabled).
-        fill.HasDropshadow = true;
-        fill.DropshadowColor = ShadowColor;
-        fill.DropshadowOffsetX = 0f;
-        fill.DropshadowOffsetY = ShadowOffsetY;
-        fill.DropshadowBlur = ShadowBlur;
-        return fill;
-    }
-
-    private static RectangleRuntime CreateFocusRing()
-    {
-        // Sized to (parent + 2*FocusRingInset) per axis, stroked with
-        // FocusRingThickness translucent accent. Visible only when focused.
-        RectangleRuntime ring = new RectangleRuntime();
-        ring.Name = "BubblegumFocusRing";
-        ring.X = 0;
-        ring.Y = 0;
-        ring.XUnits = GeneralUnitType.PixelsFromMiddle;
-        ring.YUnits = GeneralUnitType.PixelsFromMiddle;
-        ring.XOrigin = HorizontalAlignment.Center;
-        ring.YOrigin = VerticalAlignment.Center;
-        ring.Width = FocusRingInset * 2f;
-        ring.Height = FocusRingInset * 2f;
-        ring.WidthUnits = DimensionUnitType.RelativeToParent;
-        ring.HeightUnits = DimensionUnitType.RelativeToParent;
-        ring.CornerRadius = CornerRadius + FocusRingInset;
-        ring.IsFilled = false;
-        ring.StrokeWidth = FocusRingThickness;
-        ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = new Color(255, 107, 157, 90); // translucent accent
-        ring.Visible = false;
-        return ring;
     }
 
     private void WireStates()

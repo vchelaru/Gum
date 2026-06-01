@@ -24,6 +24,7 @@
   <ItemGroup>
     <None Include="..\Gum.Themes.Template.MonoGame\README.md" Pack="true" PackagePath="\" />
     <None Include="..\Gum.Themes.Template.MonoGame\Content\Fonts\OFL.txt" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.Template.MonoGame\Content\Fonts\Nunito-OFL.txt" Pack="true" PackagePath="\" />
     <None Include="..\Gum.Themes.Template.MonoGame\Content\Fonts\DejaVuSansMono-LICENSE.txt" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
@@ -50,6 +51,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="..\Gum.Themes.Template.MonoGame\Content\Fonts\DMMono-MediumItalic.ttf">
       <Link>Content\Fonts\DMMono-MediumItalic.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.Template.MonoGame\Content\Fonts\Nunito-Regular.ttf">
+      <Link>Content\Fonts\Nunito-Regular.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.Template.MonoGame\Content\Fonts\Nunito-Bold.ttf">
+      <Link>Content\Fonts\Nunito-Bold.ttf</Link>
     </EmbeddedResource>
     <EmbeddedResource Include="..\Gum.Themes.Template.MonoGame\Content\Fonts\DejaVuSansMono.ttf">
       <Link>Content\Fonts\DejaVuSansMono.ttf</Link>

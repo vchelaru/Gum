@@ -2,24 +2,28 @@ using Gum.Forms.DefaultVisuals.V3;
 using Gum.GueDeriving;
 using Microsoft.Xna.Framework;
 
-namespace Gum.Themes.Template;
+namespace Gum.Themes.Template.Variants;
 
 /// <summary>
-/// Decorates a <see cref="TextBoxBaseVisual"/> (the shared base of V3 TextBoxVisual
-/// and PasswordBoxVisual) with the theme's shape stack - focus ring + filled body +
-/// stroked border - and wires the corresponding state callbacks. This lets
-/// <see cref="TextBoxVisual"/> and <see cref="PasswordBoxVisual"/> share their
-/// decoration without a common base class (each already extends its own V3 type).
-///
-/// This is the recommended pattern any time two visuals need identical chrome but
-/// inherit from different bases: extract the shape stack into a helper, hold a
-/// reference to it from each visual so the shapes stay alive for the state callbacks.
+/// "Rich" variant of <see cref="Gum.Themes.Template.TemplateTextInputDecoration"/>.
+/// Compared to the flat decoration this changes ONLY the shapes: the input
+/// CornerRadius is bumped to 8 (vs 2) and the focus ring is a soft
+/// translucent-accent glow (a wider stroke in a translucent accent color) shown on
+/// the Focused state, instead of the flat variant's crisp 1px opaque ring. The
+/// palette tokens, the 4 states, and the BODY-font opt-in are identical to the
+/// flat source.
 /// </summary>
 internal sealed class TemplateTextInputDecoration
 {
-    private const float CornerRadius = 2f;
+    // Rounder input corners (flat source used 2).
+    private const float CornerRadius = 8f;
     private const float BorderThickness = 1f;
-    private const float FocusRingInset = 1f;
+    // Soft glow: a wider, translucent stroke offset further outside the body.
+    private const float FocusRingInset = 2f;
+    private const float FocusRingThickness = 3f;
+
+    // Translucent accent for the soft focus glow.
+    private static readonly Color FocusGlow = new Color(TemplatePalette.Accent, 110);
 
     private readonly RectangleRuntime _focusRing;
     private readonly RectangleRuntime _fill;
@@ -34,7 +38,7 @@ internal sealed class TemplateTextInputDecoration
         host.FocusedIndicator.Parent = null;
         host.ClipContainer.Parent = null;
 
-        _focusRing = TemplateShapes.FocusRing(TemplatePalette.Accent, CornerRadius, FocusRingInset, BorderThickness, "TextInputFocusRing");
+        _focusRing = TemplateShapes.FocusRing(FocusGlow, CornerRadius, FocusRingInset, FocusRingThickness, "TextInputFocusRing");
         host.AddChild(_focusRing);
 
         _fill = TemplateShapes.Fill(TemplatePalette.Surface1, CornerRadius, "TextInputFill");

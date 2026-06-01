@@ -47,86 +47,29 @@ public class SliderThumbVisual : InteractiveGue
         WidthUnits = DimensionUnitType.Absolute;
         HeightUnits = DimensionUnitType.Absolute;
 
-        _focusRing = CreateFocusRing();
+        _focusRing = BubblegumShapes.CircleFocusRing(
+            color: BubblegumPalette.FocusRing,
+            inset: FocusRingInset,
+            thickness: FocusRingThickness,
+            name: "BubblegumSliderThumbFocusRing");
         AddChild(_focusRing);
 
-        _body = CreateBody();
+        _body = BubblegumShapes.FilledCircleWithDropshadow(
+            color: Color.White,
+            shadowColor: ShadowColor,
+            offsetX: 0f,
+            offsetY: ShadowOffsetY,
+            blur: ShadowBlur,
+            name: "BubblegumSliderThumbBody");
         AddChild(_body);
 
-        _border = CreateBorder();
+        _border = BubblegumShapes.CircleBorder(
+            color: BubblegumColors.Accent,
+            thickness: BorderThickness,
+            name: "BubblegumSliderThumbBorder");
         AddChild(_border);
 
         WireStates();
-    }
-
-    private static CircleRuntime CreateBody()
-    {
-        CircleRuntime body = new CircleRuntime();
-        body.Name = "BubblegumSliderThumbBody";
-        body.X = 0;
-        body.Y = 0;
-        body.XUnits = GeneralUnitType.PixelsFromMiddle;
-        body.YUnits = GeneralUnitType.PixelsFromMiddle;
-        body.XOrigin = HorizontalAlignment.Center;
-        body.YOrigin = VerticalAlignment.Center;
-        body.Width = 0;
-        body.Height = 0;
-        body.WidthUnits = DimensionUnitType.RelativeToParent;
-        body.HeightUnits = DimensionUnitType.RelativeToParent;
-        body.IsFilled = true;
-        body.FillColor = Color.White;
-        body.StrokeWidth = 0;
-        // Native Gaussian drop shadow under the thumb — replaces the prior
-        // single-circle approximation. Toggled per state via WireStates.
-        body.HasDropshadow = true;
-        body.DropshadowColor = ShadowColor;
-        body.DropshadowOffsetX = 0f;
-        body.DropshadowOffsetY = ShadowOffsetY;
-        body.DropshadowBlur = ShadowBlur;
-        return body;
-    }
-
-    private static CircleRuntime CreateBorder()
-    {
-        CircleRuntime border = new CircleRuntime();
-        border.Name = "BubblegumSliderThumbBorder";
-        border.X = 0;
-        border.Y = 0;
-        border.XUnits = GeneralUnitType.PixelsFromMiddle;
-        border.YUnits = GeneralUnitType.PixelsFromMiddle;
-        border.XOrigin = HorizontalAlignment.Center;
-        border.YOrigin = VerticalAlignment.Center;
-        border.Width = 0;
-        border.Height = 0;
-        border.WidthUnits = DimensionUnitType.RelativeToParent;
-        border.HeightUnits = DimensionUnitType.RelativeToParent;
-        border.IsFilled = false;
-        border.StrokeWidth = BorderThickness;
-        border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = BubblegumColors.Accent;
-        return border;
-    }
-
-    private static CircleRuntime CreateFocusRing()
-    {
-        CircleRuntime ring = new CircleRuntime();
-        ring.Name = "BubblegumSliderThumbFocusRing";
-        ring.X = 0;
-        ring.Y = 0;
-        ring.XUnits = GeneralUnitType.PixelsFromMiddle;
-        ring.YUnits = GeneralUnitType.PixelsFromMiddle;
-        ring.XOrigin = HorizontalAlignment.Center;
-        ring.YOrigin = VerticalAlignment.Center;
-        ring.Width = FocusRingInset * 2f;
-        ring.Height = FocusRingInset * 2f;
-        ring.WidthUnits = DimensionUnitType.RelativeToParent;
-        ring.HeightUnits = DimensionUnitType.RelativeToParent;
-        ring.IsFilled = false;
-        ring.StrokeWidth = FocusRingThickness;
-        ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = BubblegumPalette.FocusRing;
-        ring.Visible = false;
-        return ring;
     }
 
     private void WireStates()
