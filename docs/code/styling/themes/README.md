@@ -136,6 +136,48 @@ Retro95Theme.Apply(GraphicsDevice);
 
 NuGet packages: `Gum.Themes.Retro95.MonoGame`, `Gum.Themes.Retro95.Kni`
 
+### Meadow
+
+{% hint style="warning" %}
+**Screenshot coming soon.** Once `MeadowThemeScreenshot.png` is added to `docs/.gitbook/assets/`, replace this block with a `<figure>` matching the other themes above.
+{% endhint %}
+
+Cozy cottagecore look with chunky sky-blue pill buttons (flat "stacked card" drop shadow), dashed-outline cream panels, sage selection accents, and coral sliders. Bundled fonts: Baloo 2 (display), Quicksand (body), and DejaVu Sans Mono (icons).
+
+```csharp
+// Initialize
+using Gum.Themes.Meadow;
+
+MeadowTheme.Apply(GraphicsDevice);
+```
+
+{% hint style="info" %}
+For the intended look, clear the back buffer to `MeadowColors.Cream` (`#F7EDD6`).
+{% endhint %}
+
+NuGet packages: `Gum.Themes.Meadow.MonoGame`, `Gum.Themes.Meadow.Kni`
+
+### Hazard
+
+{% hint style="warning" %}
+**Screenshot coming soon.** Once `HazardThemeScreenshot.png` is added to `docs/.gitbook/assets/`, replace this block with a `<figure>` matching the other themes above.
+{% endhint %}
+
+Industrial space-salvage HUD inspired by Hardspace: Shipbreaker — signature hazard-yellow on warm near-black, muted-gold borders, and square-cornered chrome. Pressing a button flashes the full hazard-yellow accent with black text. Bundled fonts: Saira Condensed (body and labels) and DejaVu Sans Mono (icons).
+
+```csharp
+// Initialize
+using Gum.Themes.Hazard;
+
+HazardTheme.Apply(GraphicsDevice);
+```
+
+{% hint style="info" %}
+For the intended look, clear the back buffer to `HazardPalette.Background` (`#0A0A08`).
+{% endhint %}
+
+NuGet packages: `Gum.Themes.Hazard.MonoGame`, `Gum.Themes.Hazard.Kni`
+
 ## Fonts and licensing
 
 All bundled fonts are SIL Open Font License or the Bitstream Vera / DejaVu license — both permit redistribution. License files ship inside each NuGet.
