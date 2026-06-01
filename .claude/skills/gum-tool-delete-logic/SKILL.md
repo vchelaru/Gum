@@ -38,6 +38,10 @@ Used for screens, components, behaviors, and instances. All go through one share
 | `IEditCommands` / `EditCommands` | All user-triggered deletes. Shows dialogs, acquires undo locks, then delegates to `IDeleteLogic`. Only entry point callers should use. |
 | `IDeleteLogic` / `DeleteLogic` | Pure data mutation after confirmation. `Remove*` methods do not show dialogs. `HandleDeleteCommand` is the exception — it orchestrates the DeleteOptionsWindow flow and is only called from `EditCommands.DeleteSelection`. |
 
+## Post-delete selection
+
+After removing instances, selection must fall back to a surviving sibling → parent instance → owning element, or the editor goes blank. Both the single-instance (`PerformConfirmedSingleInstanceDelete`) and multi-instance (`PerformConfirmedMixedTypeDelete`) paths funnel through one helper, `SelectAfterInstanceRemoval`.
+
 ## Callers
 
 All delete actions funnel through `IEditCommands`:

@@ -165,6 +165,47 @@ public class DeleteLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void PerformConfirmedMixedTypeDelete_DeletingAllInstances_SelectsOwningElement()
+    {
+        // Issue #3025: deleting every selected instance left selection empty, so the
+        // editor went blank. With no surviving sibling, selection should fall back to
+        // the owning screen/component.
+        ScreenSave screen = CreateScreenWithInstances("InstA", "InstB");
+        TrackSelectionState();
+        List<InstanceSave> instances = screen.Instances.ToList();
+
+        _deleteLogic.PerformConfirmedMixedTypeDelete(
+            new List<ElementSave>(),
+            new List<BehaviorSave>(),
+            instances,
+            instances.Cast<object>().ToArray(),
+            optionsWindow: null);
+
+        _selectedState.Object.SelectedInstance.ShouldBeNull();
+        _selectedState.Object.SelectedElement.ShouldBe(screen);
+    }
+
+    [Fact]
+    public void PerformConfirmedMixedTypeDelete_DeletingSubsetOfInstances_SelectsRemainingSibling()
+    {
+        // Issue #3025: deleting multiple instances and confirming deselected everything,
+        // leaving the editor blank. A surviving sibling should be selected instead.
+        ScreenSave screen = CreateScreenWithInstances("InstA", "InstB", "InstC");
+        TrackSelectionState();
+        InstanceSave instC = screen.Instances.Single(i => i.Name == "InstC");
+        List<InstanceSave> toDelete = screen.Instances.Where(i => i.Name != "InstC").ToList();
+
+        _deleteLogic.PerformConfirmedMixedTypeDelete(
+            new List<ElementSave>(),
+            new List<BehaviorSave>(),
+            toDelete,
+            toDelete.Cast<object>().ToArray(),
+            optionsWindow: null);
+
+        _selectedState.Object.SelectedInstance.ShouldBe(instC);
+    }
+
+    [Fact]
     public void PerformConfirmedMixedTypeDelete_MultipleInstancesInSameElement_FiresInstancesDeleteOnPluginManager()
     {
         // Regression: deleting multiple instances at once never fired InstancesDelete on the
@@ -188,6 +229,88 @@ public class DeleteLogicTests : BaseTestClass
                     arr.Contains(instances[0]) &&
                     arr.Contains(instances[1]))),
             Times.Once);
+    }
+
+    [Fact]
+    public void PerformConfirmedSingleInstanceDelete_DeletingChildWithParentInstance_SelectsParentInstance()
+    {
+        // Characterization: a child with a parent instance and no siblings under that parent
+        // falls back to the parent instance.
+        ScreenSave screen = CreateScreenWithInstances("Parent");
+        InstanceSave parent = screen.Instances[0];
+        InstanceSave child = AddChild(screen, "Child", "Parent");
+        TrackSelectionState();
+        _selectedState.Object.SelectedInstance = child;
+
+        _deleteLogic.PerformConfirmedSingleInstanceDelete(
+            selectedInstance: child,
+            selectedElement: screen,
+            selectedBehavior: null,
+            objectsDeleted: new[] { child },
+            optionsWindow: null);
+
+        _selectedState.Object.SelectedInstance.ShouldBe(parent);
+    }
+
+    [Fact]
+    public void PerformConfirmedSingleInstanceDelete_DeletingLastSibling_SelectsPreviousSibling()
+    {
+        // Characterization: deleting the last sibling falls back to the previous one.
+        ScreenSave screen = CreateScreenWithInstances("InstA", "InstB", "InstC");
+        InstanceSave instB = screen.Instances.Single(i => i.Name == "InstB");
+        InstanceSave instC = screen.Instances.Single(i => i.Name == "InstC");
+        TrackSelectionState();
+        _selectedState.Object.SelectedInstance = instC;
+
+        _deleteLogic.PerformConfirmedSingleInstanceDelete(
+            selectedInstance: instC,
+            selectedElement: screen,
+            selectedBehavior: null,
+            objectsDeleted: new[] { instC },
+            optionsWindow: null);
+
+        _selectedState.Object.SelectedInstance.ShouldBe(instB);
+    }
+
+    [Fact]
+    public void PerformConfirmedSingleInstanceDelete_DeletingMiddleSibling_SelectsNextSibling()
+    {
+        // Characterization: deleting a middle sibling falls back to the next one.
+        ScreenSave screen = CreateScreenWithInstances("InstA", "InstB", "InstC");
+        InstanceSave instB = screen.Instances.Single(i => i.Name == "InstB");
+        InstanceSave instC = screen.Instances.Single(i => i.Name == "InstC");
+        TrackSelectionState();
+        _selectedState.Object.SelectedInstance = instB;
+
+        _deleteLogic.PerformConfirmedSingleInstanceDelete(
+            selectedInstance: instB,
+            selectedElement: screen,
+            selectedBehavior: null,
+            objectsDeleted: new[] { instB },
+            optionsWindow: null);
+
+        _selectedState.Object.SelectedInstance.ShouldBe(instC);
+    }
+
+    [Fact]
+    public void PerformConfirmedSingleInstanceDelete_DeletingOnlyChildWithNoParent_KeepsOwningElementSelected()
+    {
+        // Characterization: deleting the sole top-level instance leaves no sibling or parent,
+        // so selection falls back to the owning element (instance cleared).
+        ScreenSave screen = CreateScreenWithInstances("Inst");
+        InstanceSave instance = screen.Instances[0];
+        TrackSelectionState();
+        _selectedState.Object.SelectedInstance = instance;
+
+        _deleteLogic.PerformConfirmedSingleInstanceDelete(
+            selectedInstance: instance,
+            selectedElement: screen,
+            selectedBehavior: null,
+            objectsDeleted: new[] { instance },
+            optionsWindow: null);
+
+        _selectedState.Object.SelectedInstance.ShouldBeNull();
+        _selectedState.Object.SelectedElement.ShouldBe(screen);
     }
 
     [Fact]
@@ -516,6 +639,38 @@ public class DeleteLogicTests : BaseTestClass
         // no impact section — message should only contain the item name, no extra impact text
         message.ShouldContain("sprite");
         message.ShouldNotContain("invalid");
+    }
+
+    /// <summary>
+    /// Wires the ISelectedState mock so SelectedInstance/SelectedInstances/SelectedElement
+    /// behave like the real backing store (reads reflect the most recent write), which the
+    /// post-delete selection-fallback logic depends on.
+    /// </summary>
+    private void TrackSelectionState()
+    {
+        List<InstanceSave> selectedInstances = new();
+        InstanceSave? selectedInstance = null;
+        ElementSave? selectedElement = null;
+
+        _selectedState.SetupGet(s => s.SelectedInstances).Returns(() => selectedInstances);
+        _selectedState.SetupSet(s => s.SelectedInstances = It.IsAny<IEnumerable<InstanceSave>>())
+            .Callback<IEnumerable<InstanceSave>>(value =>
+            {
+                selectedInstances = value?.ToList() ?? new();
+                selectedInstance = selectedInstances.FirstOrDefault();
+            });
+
+        _selectedState.SetupGet(s => s.SelectedInstance).Returns(() => selectedInstance);
+        _selectedState.SetupSet(s => s.SelectedInstance = It.IsAny<InstanceSave?>())
+            .Callback<InstanceSave?>(value =>
+            {
+                selectedInstance = value;
+                selectedInstances = value == null ? new() : new() { value };
+            });
+
+        _selectedState.SetupGet(s => s.SelectedElement).Returns(() => selectedElement);
+        _selectedState.SetupSet(s => s.SelectedElement = It.IsAny<ElementSave?>())
+            .Callback<ElementSave?>(value => selectedElement = value);
     }
 
     private ScreenSave CreateScreenWithInstances(params string[] instanceNames)
