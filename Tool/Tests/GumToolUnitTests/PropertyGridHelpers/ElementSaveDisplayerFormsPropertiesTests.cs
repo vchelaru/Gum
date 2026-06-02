@@ -67,6 +67,9 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
         _projectManagerMock.SetupGet(x => x.GumProjectSave).Returns(_project);
         var services = new ServiceCollection();
         services.AddSingleton(_projectManagerMock.Object);
+        // Static Locator path (e.g. GetVariableFromThisOrBase) resolves ISelectedState; register the
+        // same mock the displayer is constructor-injected with so both paths agree.
+        services.AddSingleton(_mocker.GetMock<ISelectedState>().Object);
         _testServiceProvider = services.BuildServiceProvider();
         Locator.Register(_testServiceProvider);
 
@@ -347,6 +350,125 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
         categories.SelectMany(c => c.Members)
             .ShouldNotContain(m => m.Name.EndsWith("DefaultChildContainer"),
                 "DefaultChildContainer should only appear on the component itself, not on instances of it");
+    }
+
+    [Fact]
+    public void GetCategories_InstanceCategoryStateMaterializedByBehaviorToolOnlyReference_StaysHiddenFromInstance()
+    {
+        // Repro #3028: ButtonCategoryState is hidden-from-instances, but the ButtonBehavior's
+        // tool-only reference (ButtonCategoryState = IsEnabled ? "Enabled" : "Disabled") materializes
+        // a value into the instance's state. The grid's "explicitly set" escape hatch then re-surfaces
+        // it as an editable combo that fights IsEnabled. A reference-materialized value is not
+        // user-authored, so it must remain hidden.
+
+        // Component declares the category state variable, its category, and hides it from instances.
+        _buttonComponent.DefaultState.Variables.Add(new VariableSave
+        {
+            Type = "ButtonCategory",
+            Name = "ButtonCategoryState",
+            SetsValue = false
+        });
+        _buttonComponent.Categories.Add(new StateSaveCategory
+        {
+            Name = "ButtonCategory",
+            States = new List<StateSave>
+            {
+                new StateSave { Name = "Enabled" },
+                new StateSave { Name = "Disabled" }
+            }
+        });
+        _buttonComponent.VariablesHiddenFromInstances.Add("ButtonCategoryState");
+
+        // The behavior drives the category state from IsEnabled via a tool-only reference.
+        _buttonBehavior.ToolOnlyVariableReferences.Add(
+            "ButtonCategoryState = IsEnabled ? \"Enabled\" : \"Disabled\"");
+
+        // The materialized value sits in the screen's state, as it would after the applier runs.
+        _screenDefaultState.Variables.Add(new VariableSave
+        {
+            Type = "string",
+            Name = "ButtonInstance.ButtonCategoryState",
+            Value = "Enabled",
+            SetsValue = true
+        });
+
+        List<MemberCategory> categories = new List<MemberCategory>();
+
+        _displayer.GetCategories(
+            instanceOwner: _screen,
+            instance: _buttonInstance,
+            categories: categories,
+            stateSave: _screenDefaultState,
+            stateSaveCategory: null);
+
+        categories.SelectMany(c => c.Members)
+            .ShouldNotContain(m => m.Name.EndsWith("ButtonCategoryState"),
+                "a category state materialized by a behavior tool-only reference is not user-authored and must remain hidden from instances");
+    }
+
+    [Fact]
+    public void GetCategories_InstanceOfDerivedTypeWithInheritedBehaviorToolOnlyReference_StaysHiddenFromInstance()
+    {
+        // Same as the above, but the instance's type is a *derived* component whose BaseType is the
+        // button. The ButtonBehavior (and its tool-only reference) lives on the base, not on the
+        // derived type directly, so the reference-driven detection must walk the inheritance chain -
+        // mirroring IsVariableHiddenRecursively, which already walks BaseType to hide the variable.
+        _buttonComponent.DefaultState.Variables.Add(new VariableSave
+        {
+            Type = "ButtonCategory",
+            Name = "ButtonCategoryState",
+            SetsValue = false
+        });
+        _buttonComponent.Categories.Add(new StateSaveCategory
+        {
+            Name = "ButtonCategory",
+            States = new List<StateSave>
+            {
+                new StateSave { Name = "Enabled" },
+                new StateSave { Name = "Disabled" }
+            }
+        });
+        _buttonComponent.VariablesHiddenFromInstances.Add("ButtonCategoryState");
+        _buttonBehavior.ToolOnlyVariableReferences.Add(
+            "ButtonCategoryState = IsEnabled ? \"Enabled\" : \"Disabled\"");
+
+        // Derived component inherits from the button but does NOT re-declare the behavior.
+        ComponentSave derivedComponent = new ComponentSave
+        {
+            Name = "Controls/FancyButton",
+            BaseType = "Controls/ButtonStandard"
+        };
+        derivedComponent.States.Add(new StateSave { Name = "Default", ParentContainer = derivedComponent });
+        _project.Components.Add(derivedComponent);
+
+        InstanceSave fancyInstance = new InstanceSave
+        {
+            Name = "FancyInstance",
+            BaseType = "Controls/FancyButton",
+            ParentContainer = _screen
+        };
+        _screen.Instances.Add(fancyInstance);
+
+        _screenDefaultState.Variables.Add(new VariableSave
+        {
+            Type = "string",
+            Name = "FancyInstance.ButtonCategoryState",
+            Value = "Enabled",
+            SetsValue = true
+        });
+
+        List<MemberCategory> categories = new List<MemberCategory>();
+
+        _displayer.GetCategories(
+            instanceOwner: _screen,
+            instance: fancyInstance,
+            categories: categories,
+            stateSave: _screenDefaultState,
+            stateSaveCategory: null);
+
+        categories.SelectMany(c => c.Members)
+            .ShouldNotContain(m => m.Name.EndsWith("ButtonCategoryState"),
+                "a category state driven by an inherited behavior tool-only reference must remain hidden from instances of derived types");
     }
 
     [Fact]
