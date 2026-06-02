@@ -47,6 +47,8 @@ for(int i = 0; i < 40; i++)
 
 <figure><img src="../../.gitbook/assets/25_07 59 59.png" alt=""><figcaption><p>ComboBox ListBox with custom Height</p></figcaption></figure>
 
+The ListBox property returns a fully functional ListBox instance. For more information on how to customize the ListBox, see the [ListBox page](listbox.md).
+
 ## Performance with Many Items
 
 If all items in the ComboBox dropdown are the same height (no text wrapping or variable-sized icons), you can improve dropdown open performance by setting `UseFixedStackChildrenSize` on the ListBox's inner panel. This tells the layout engine to measure only the first child and assume all others are the same size, skipping per-child measurement.
