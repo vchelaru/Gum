@@ -146,9 +146,26 @@ public class ContentLoader : IContentLoader
 
     private static Texture2D LoadTextureFromFile(string fileName)
     {
-        Image image = LoadImage(fileName);
-        //Transform it as a texture
+        // Route through FileManager.GetStreamForFile so the FileManager.CustomGetStreamFromFile
+        // hook is honored on Raylib the same way it is on the MonoGame-family loader. Handing the
+        // path straight to raylib's path-based LoadImage bypassed the hook entirely, so .gumpkg
+        // bundles, the GumFromZipFile sample, mobile TitleContainer redirection, and any
+        // in-memory/encrypted asset store silently failed on Raylib (#3033). raylib's in-memory
+        // LoadImageFromMemory takes the file extension (with the leading dot) to pick its decoder.
+        string fileType = "." + FileManager.GetExtension(fileName);
+
+        byte[] fileData;
+        using (var stream = FileManager.GetStreamForFile(fileName))
+        using (var memoryStream = new MemoryStream())
+        {
+            stream.CopyTo(memoryStream);
+            fileData = memoryStream.ToArray();
+        }
+
+        Image image = LoadImageFromMemory(fileType, fileData);
+        // LoadTextureFromImage uploads to the GPU; the CPU-side Image is no longer needed after.
         var toReturn = LoadTextureFromImage(image);
+        UnloadImage(image);
         return toReturn;
     }
 
@@ -198,10 +215,17 @@ public class ContentLoader : IContentLoader
     {
         if (typeof(T) == typeof(Texture2D))
         {
-            Image image = LoadImage(contentName);
-
-            //Transform it as a texture
-            return (T)(object)LoadTextureFromImage(image);
+            // Same hook-honoring path as LoadContent, but "Try" swallows load failures and returns
+            // default rather than propagating the IOException GetStreamForFile throws when missing.
+            try
+            {
+                string fileNameStandardized = StandardizeCaseSensitive(contentName);
+                return (T)(object)LoadTextureFromFile(fileNameStandardized);
+            }
+            catch
+            {
+                return default(T);
+            }
         }
         else
         {
