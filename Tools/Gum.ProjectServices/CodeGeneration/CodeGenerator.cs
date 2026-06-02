@@ -3999,7 +3999,7 @@ public class CodeGenerator
 
 
                 List<VariableSave> variablesForThisInstance = group
-                    .Where(item => GetIfVariableShouldBeIncludedForInstance(instance, item, baseRecursiveVariableFinder))
+                    .Where(item => GetIfVariableShouldBeIncludedForInstance(instance, item, baseRecursiveVariableFinder, baseElement))
                     .ToList();
 
 
@@ -5195,7 +5195,7 @@ public class CodeGenerator
                 var variablesToConsider = defaultState.Variables
                     .Where(item =>
                     {
-                        return GetIfVariableShouldBeIncludedForInstance(instance, item, baseRecursiveVariableFinder);
+                        return GetIfVariableShouldBeIncludedForInstance(instance, item, baseRecursiveVariableFinder, baseElement!);
                     })
                     .ToArray();
                 return variablesToConsider;
@@ -5204,7 +5204,7 @@ public class CodeGenerator
         return new VariableSave[0];
     }
 
-    private static bool GetIfVariableShouldBeIncludedForInstance(InstanceSave? instance, VariableSave item, RecursiveVariableFinder baseRecursiveVariableFinder)
+    private static bool GetIfVariableShouldBeIncludedForInstance(InstanceSave? instance, VariableSave item, RecursiveVariableFinder baseRecursiveVariableFinder, ElementSave instanceBaseElement)
     {
         var shouldInclude =
                                 item.Value != null &&
@@ -5216,6 +5216,16 @@ public class CodeGenerator
         {
             var foundVariable = baseRecursiveVariableFinder.GetVariable(item.GetRootName());
             shouldInclude = foundVariable != null;
+        }
+
+        if (shouldInclude)
+        {
+            // A variable hidden from instances (e.g. a category state materialized from a behavior
+            // tool-only reference like ButtonCategoryState = IsEnabled ? "Enabled" : "Disabled") is
+            // owned by the Forms control's own setter at runtime; baking it into instance-assignment
+            // code is redundant and a latent double-write (#3029). IsVariableHiddenRecursively walks
+            // the BaseType chain, so instances of a type derived from the hiding element are handled too.
+            shouldInclude = !ObjectFinder.Self.IsVariableHiddenRecursively(instanceBaseElement, item.GetRootName());
         }
 
         return shouldInclude;
