@@ -344,15 +344,13 @@ stackPanel.AddChild(listBox);
 ((Gum.Forms.DefaultVisuals.V3.ListBoxVisual)listBox.Visual).MakeHeightSizedToChildren();
 
 button.Click += (_,_) => listBox.Items.Add("Item " + listBox.Items.Count);
-
 ```
 
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA3VQXUsDMRD8KyFPOTjC2b5duQd7fhUUxJaqWCmxt23D5RK4bLQo_neTJlos-pTM7Owwsx90Yi9dR0vsHeTUWak3lpZP1JP8Xvaw7kUH9DmnUkuUQsl3oCWdoli1t0KDIvbwrYiGN5aNFvpA8tOmmZk7Y_B48OD1J0Xxm3z8IV9FT14cotHRl4z34A_7eitVw6I2TOOPz2CHfnXhimIw8DIyQegi8qJraXFsdkSl97_s0TypwpixcJoL03eWn8FaOIVzaZ1Qls-HPNlGJktrPEF-I1q4ArnZ4tTf0d9l795DbJVy10qu2hh7XBG2zJcZqQIcnn-n5aGKDfFYLBRwapo2j6S1cRqzEf38AstbplTxAQAA)
 
 Sizes can also be limited by setting the maximum size of the ClipContainer:
 
-```csharp
-StackPanel stackPanel = new();
+<pre class="language-csharp"><code class="lang-csharp">StackPanel stackPanel = new();
 stackPanel.AddToRoot();
 stackPanel.X = 100;
 stackPanel.Y = 100;
@@ -366,4 +364,6 @@ stackPanel.AddChild(listBox);
 var visual = ((Gum.Forms.DefaultVisuals.V3.ListBoxVisual)listBox.Visual);
 visual.MakeHeightSizedToChildren();
 visual.ClipContainerInstance.MaxHeight = 120;
-```
+
+<strong>button.Click += (_,_) => listBox.Items.Add("Item " + listBox.Items.Count);
+</strong></code></pre>
