@@ -28,6 +28,7 @@ public class ContentLoader : IContentLoader
 
     //List<Atlas> atlases = new List<Atlas>();
 
+    /// <inheritdoc/>
     public T LoadContent<T>(string contentName)
     {
         if(typeof(T) == typeof(Texture2D))
@@ -54,6 +55,7 @@ public class ContentLoader : IContentLoader
         }
     }
 
+    /// <inheritdoc/>
     public T? TryLoadContent<T>( string contentName)
     {
         bool knownType = false;

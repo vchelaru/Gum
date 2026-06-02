@@ -11,8 +11,14 @@ using static Raylib_cs.Raylib;
 
 namespace RenderingLibrary.Content;
 
+/// <summary>
+/// Raylib implementation of <see cref="IContentLoader"/>. Loads textures and fonts via Raylib and
+/// caches them through <see cref="LoaderManager"/> (wrapped in disposable wrappers, since Raylib's
+/// texture/font types are value types).
+/// </summary>
 public class ContentLoader : IContentLoader
 {
+    /// <inheritdoc/>
     public T LoadContent<T>(string contentName)
     {
         if (typeof(T) == typeof(Texture2D))
@@ -187,6 +193,7 @@ public class ContentLoader : IContentLoader
         }
     }
 
+    /// <inheritdoc/>
     public T TryLoadContent<T>(string contentName)
     {
         if (typeof(T) == typeof(Texture2D))

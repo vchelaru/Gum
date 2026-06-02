@@ -33,10 +33,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Remove="Content\LoaderManager.cs" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<Compile Include="..\..\Gum\RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs">
 			<Link>RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs</Link>
 		</Compile>

@@ -102,3 +102,77 @@ Sprite2.SourceFile = "MyFile.png"; // This also goes to disk to load the file
 ```
 
 Be careful setting CacheTextures to false since all existing textures will be disposed. This means that if you have loaded textures which are still being referenced by runtime objects, you will get an exception if those are still being drawn after setting CacheTextures to false.
+
+### Customizing How Content Loads
+
+By default Gum resolves a `SourceFile` name to a texture by reading a file from disk (relative to `FileManager.RelativeDirectory`). You can replace this behavior with your own logic — for example, to load assets from a custom store, or to hand back a texture your game engine has *already* loaded so the same image isn't loaded into memory twice.
+
+Gum performs all of its loading through an `IContentLoader`, which has two methods:
+
+```csharp
+// Class scope
+public interface IContentLoader
+{
+    T LoadContent<T>(string contentName);
+    T TryLoadContent<T>(string contentName);
+}
+```
+
+The active loader is held by `LoaderManager.Self.ContentLoader`. Each runtime (MonoGame, Raylib, and so on) installs a default loader during initialization. To customize loading, assign your own implementation to that property. **This is the same property and the same `IContentLoader` interface on every backend**, so the approach is identical across MonoGame, KNI, FNA, and Raylib.
+
+#### Wrapping the Built-in Loader
+
+The cleanest approach is to *wrap* the built-in loader: intercept only the content names you care about, and forward everything else to the default loader. This keeps Gum's normal file loading — and its texture caching — working for all the assets you don't handle yourself.
+
+```csharp
+// Class scope
+public class CustomContentLoader : RenderingLibrary.Content.IContentLoader
+{
+    RenderingLibrary.Content.IContentLoader _defaultLoader;
+
+    public CustomContentLoader(RenderingLibrary.Content.IContentLoader defaultLoader)
+    {
+        _defaultLoader = defaultLoader;
+    }
+
+    public T LoadContent<T>(string contentName)
+    {
+        // typeof(T) is the standard way to branch in an IContentLoader.
+        if (typeof(T) == typeof(Texture2D) &&
+            MyAssetSource.TryGetTexture(contentName, out Texture2D texture))
+        {
+            return (T)(object)texture;
+        }
+
+        // Forward everything else so default loading and caching still apply.
+        return _defaultLoader.LoadContent<T>(contentName);
+    }
+
+    public T TryLoadContent<T>(string contentName)
+    {
+        if (typeof(T) == typeof(Texture2D) &&
+            MyAssetSource.TryGetTexture(contentName, out Texture2D texture))
+        {
+            return (T)(object)texture;
+        }
+
+        return _defaultLoader.TryLoadContent<T>(contentName);
+    }
+}
+```
+
+Install it after Gum has initialized (so the default loader exists to wrap) but before any content loads:
+
+```csharp
+// Initialize
+var loaderManager = RenderingLibrary.Content.LoaderManager.Self;
+loaderManager.ContentLoader = new CustomContentLoader(loaderManager.ContentLoader);
+```
+
+{% hint style="warning" %}
+Texture caching lives inside the content loader, not above it. A custom `IContentLoader` that does **not** delegate to the built-in loader will bypass Gum's cache (`LoaderManager.CacheTextures`) entirely — every load goes straight to your code. Wrapping the built-in loader, as shown above, preserves caching for the names you forward. If your custom source already manages its own assets, that's usually fine — you simply don't need Gum's cache for those.
+{% endhint %}
+
+#### Loading Through the MonoGame Content Pipeline
+
+On the XNA-family backends (MonoGame/KNI/FNA), the built-in `ContentLoader` also exposes an `XnaContentManager` property. When set, files referenced without an extension are loaded as content-pipeline (`.xnb`) assets through that `ContentManager`. This is an XNA-only convenience; there is no equivalent on Raylib, which has no content pipeline.
