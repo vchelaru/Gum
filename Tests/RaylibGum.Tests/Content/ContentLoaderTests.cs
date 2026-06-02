@@ -109,6 +109,23 @@ public class ContentLoaderTests : BaseTestClass
             font.GlyphCount.ShouldBe(191);
             font.Texture.Width.ShouldBe(256);
             font.Texture.Height.ShouldBe(256);
+
+            // Spot-check that one glyph's metrics were mapped field-for-field (not just counted).
+            // '!' (id=33) in Font18Arial.fnt: x=0 y=92 width=4 height=13 xoffset=1 yoffset=4
+            // xadvance=6 — deliberately a glyph whose width != height and xoffset != yoffset, so a
+            // transposed field is caught. Queried through raylib's own lookup, which also proves
+            // the glyph's Value was set so the glyph is findable.
+            Rectangle atlasRec = Raylib.GetGlyphAtlasRec(font, '!');
+            atlasRec.X.ShouldBe(0f);
+            atlasRec.Y.ShouldBe(92f);
+            atlasRec.Width.ShouldBe(4f);
+            atlasRec.Height.ShouldBe(13f);
+
+            GlyphInfo glyph = Raylib.GetGlyphInfo(font, '!');
+            glyph.Value.ShouldBe(33);
+            glyph.OffsetX.ShouldBe(1);
+            glyph.OffsetY.ShouldBe(4);
+            glyph.AdvanceX.ShouldBe(6);
         }
         finally
         {
