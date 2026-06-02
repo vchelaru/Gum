@@ -26,6 +26,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Gold AngelCode bitmap-font fixture (real Gum font-pipeline output) used by
+         ContentLoader font-loading tests. Copied to output so the tests can read the
+         raw bytes and serve them through an in-memory CustomGetStreamFromFile hook. -->
+    <None Include="Content\FontCache\Font18Arial.fnt" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Content\FontCache\Font18Arial_0.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 

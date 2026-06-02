@@ -1,5 +1,6 @@
 ﻿using RenderingLibrary;
 using RenderingLibrary.Content;
+using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -64,6 +65,18 @@ public class ContentLoader : IContentLoader
             {
                 font = LoadFontEx(contentName, 24, null, 0);
             }
+        }
+        else if (isFnt)
+        {
+            // The .fnt isn't on disk at this path, but it may still be reachable through the
+            // FileManager.CustomGetStreamFromFile hook (e.g. a .gumpkg/zip bundle, the
+            // GumFromZipFile sample, an encrypted/in-memory asset store). raylib's path-based
+            // LoadFont can't see the hook, and LoadFontFromMemory can't resolve a bitmap font's
+            // separate .png page from memory — so parse the .fnt ourselves (reusing
+            // ParsedFontFile), load the page through the already-hooked texture path, and assemble
+            // the raylib Font. Returns null if the hook can't supply the file, in which case we
+            // fall through to the default(Font) handling below. (#3037)
+            font = TryLoadBitmapFontThroughStreamHook(contentName);
         }
 
         if (isFnt && font == null)
@@ -167,6 +180,76 @@ public class ContentLoader : IContentLoader
         var toReturn = LoadTextureFromImage(image);
         UnloadImage(image);
         return toReturn;
+    }
+
+    // Loads an AngelCode bitmap font (.fnt + .png page) through FileManager.GetStreamForFile so the
+    // CustomGetStreamFromFile hook is honored. Used only when the .fnt is not present on disk — the
+    // on-disk path still uses raylib's native LoadFont (see LoadFont). Returns null when the hook
+    // (or disk fallback) can't supply the .fnt, letting the caller fall back to default(Font). #3037
+    private static Font? TryLoadBitmapFontThroughStreamHook(string fntPath)
+    {
+        string fntContents;
+        try
+        {
+            fntContents = FileManager.FromFileText(fntPath);
+        }
+        catch
+        {
+            // No hook, or neither the hook nor disk can supply this .fnt — fall back.
+            return null;
+        }
+
+        ParsedFontFile parsedFontFile = new ParsedFontFile(fntContents);
+
+        string[] pageFileNames = parsedFontFile.GetPagesAsArrayOfStrings;
+        if (pageFileNames.Length == 0)
+        {
+            return null;
+        }
+
+        // Gum's FontCache fonts are single-page, and raylib's Font has a single atlas texture, so
+        // the first page is the atlas. The page path is relative to the .fnt; load it through the
+        // already-hooked texture path so it resolves from the same bundle/stream as the .fnt.
+        string pagePath = FileManager.GetDirectory(fntPath) + pageFileNames[0];
+        Texture2D pageTexture = LoadTextureFromFile(pagePath);
+
+        return BuildFont(parsedFontFile, pageTexture);
+    }
+
+    // Assembles a raylib Font from a parsed .fnt and its already-loaded atlas page. The Recs and
+    // Glyphs arrays are handed to raylib, which frees them in UnloadFont (called by
+    // ManagedFont.Dispose) — so they MUST be allocated with raylib's own allocator (MemAlloc).
+    private static unsafe Font BuildFont(ParsedFontFile parsedFontFile, Texture2D pageTexture)
+    {
+        int glyphCount = parsedFontFile.Chars.Count;
+
+        Rectangle* recs = (Rectangle*)MemAlloc((uint)(glyphCount * sizeof(Rectangle)));
+        GlyphInfo* glyphs = (GlyphInfo*)MemAlloc((uint)(glyphCount * sizeof(GlyphInfo)));
+
+        for (int i = 0; i < glyphCount; i++)
+        {
+            FontFileCharLine charLine = parsedFontFile.Chars[i];
+            recs[i] = new Rectangle(charLine.X, charLine.Y, charLine.Width, charLine.Height);
+            // Image is left default — raylib's DrawTextPro renders glyphs from Recs + the atlas
+            // Texture, not from per-glyph Images.
+            glyphs[i] = new GlyphInfo
+            {
+                Value = charLine.Id,
+                OffsetX = charLine.XOffset,
+                OffsetY = charLine.YOffset,
+                AdvanceX = charLine.XAdvance,
+            };
+        }
+
+        return new Font
+        {
+            BaseSize = parsedFontFile.Info.Size,
+            GlyphCount = glyphCount,
+            GlyphPadding = 0,
+            Texture = pageTexture,
+            Recs = recs,
+            Glyphs = glyphs,
+        };
     }
 
     public static string StandardizeCaseSensitive(string fileName)

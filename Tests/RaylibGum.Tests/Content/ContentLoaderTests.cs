@@ -10,6 +10,130 @@ namespace RaylibGum.Tests.Content;
 
 public class ContentLoaderTests : BaseTestClass
 {
+    // The stream-hook path must not let GetStreamForFile's FileNotFoundException escape when the
+    // .fnt is on neither disk nor the hook: the load falls back to an empty Font. The hook here is
+    // present but serves nothing, exercising the catch/fallback rather than the no-hook path. #3037
+    [Fact]
+    public void LoadContent_Font_WhenFntMissingFromDiskAndHook_ShouldReturnEmptyFontWithoutThrowing()
+    {
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
+        try
+        {
+            LoaderManager.Self.CacheTextures = false;
+            FileManager.CustomGetStreamFromFile = _ => null!;
+
+            string notOnDiskFntPath = Path.Combine(Path.GetTempPath(),
+                "GumRaylibFontMissingTest_" + Guid.NewGuid().ToString("N"), "Missing.fnt");
+
+            Font font = default;
+            Should.NotThrow(() =>
+                font = LoaderManager.Self.ContentLoader.LoadContent<Font>(notOnDiskFntPath));
+
+            font.GlyphCount.ShouldBe(0);
+        }
+        finally
+        {
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+            FileManager.CustomGetStreamFromFile = savedHook;
+        }
+    }
+
+    // The stream-hook path is only taken when the .fnt is absent from disk; an on-disk .fnt still
+    // loads via raylib's native LoadFont, so a normal game's font loading is unchanged. #3037
+    [Fact]
+    public void LoadContent_Font_WhenFntOnDisk_ShouldStillLoadViaNativePath()
+    {
+        string fixtureDirectory = Path.Combine(AppContext.BaseDirectory, "Content", "FontCache");
+        string fntPath = Path.Combine(fixtureDirectory, "Font18Arial.fnt");
+
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
+        try
+        {
+            LoaderManager.Self.CacheTextures = false;
+            FileManager.CustomGetStreamFromFile = null;
+
+            Font font = LoaderManager.Self.ContentLoader.LoadContent<Font>(fntPath);
+
+            font.GlyphCount.ShouldBeGreaterThan(0);
+        }
+        finally
+        {
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+            FileManager.CustomGetStreamFromFile = savedHook;
+        }
+    }
+
+    // Regression for #3037: a bundled bitmap font (.fnt + .png page) loaded via LoadFont used to
+    // bypass CustomGetStreamFromFile entirely — raylib's path-based LoadFont reads straight off
+    // disk. Here both files exist ONLY in memory (served through the hook) and the path handed to
+    // LoadContent points at a directory that does not exist on disk, so a populated Font proves
+    // both the .fnt text AND its page were pulled through the hook.
+    [Fact]
+    public void LoadContent_Font_WithBundledFntServedThroughHook_ShouldLoadGlyphsAndPage()
+    {
+        string fixtureDirectory = Path.Combine(AppContext.BaseDirectory, "Content", "FontCache");
+        byte[] fntBytes = File.ReadAllBytes(Path.Combine(fixtureDirectory, "Font18Arial.fnt"));
+        byte[] pageBytes = File.ReadAllBytes(Path.Combine(fixtureDirectory, "Font18Arial_0.png"));
+
+        Dictionary<string, byte[]> inMemoryFiles = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "Font18Arial.fnt", fntBytes },
+            { "Font18Arial_0.png", pageBytes },
+        };
+
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
+        try
+        {
+            // Disable caching so a prior load of the same logical name can't mask the result.
+            LoaderManager.Self.CacheTextures = false;
+            FileManager.CustomGetStreamFromFile = incomingPath =>
+            {
+                string fileNameOnly = Path.GetFileName(incomingPath);
+                if (inMemoryFiles.TryGetValue(fileNameOnly, out byte[]? bytes))
+                {
+                    return new MemoryStream(bytes);
+                }
+                // null is the hook's documented "I don't have this file" signal.
+                return null!;
+            };
+
+            // A directory that does not exist on disk forces resolution through the hook.
+            string notOnDiskFntPath = Path.Combine(Path.GetTempPath(),
+                "GumRaylibFontHookTest_" + Guid.NewGuid().ToString("N"), "Font18Arial.fnt");
+
+            Font font = LoaderManager.Self.ContentLoader.LoadContent<Font>(notOnDiskFntPath);
+
+            font.GlyphCount.ShouldBe(191);
+            font.Texture.Width.ShouldBe(256);
+            font.Texture.Height.ShouldBe(256);
+
+            // Spot-check that one glyph's metrics were mapped field-for-field (not just counted).
+            // '!' (id=33) in Font18Arial.fnt: x=0 y=92 width=4 height=13 xoffset=1 yoffset=4
+            // xadvance=6 — deliberately a glyph whose width != height and xoffset != yoffset, so a
+            // transposed field is caught. Queried through raylib's own lookup, which also proves
+            // the glyph's Value was set so the glyph is findable.
+            Rectangle atlasRec = Raylib.GetGlyphAtlasRec(font, '!');
+            atlasRec.X.ShouldBe(0f);
+            atlasRec.Y.ShouldBe(92f);
+            atlasRec.Width.ShouldBe(4f);
+            atlasRec.Height.ShouldBe(13f);
+
+            GlyphInfo glyph = Raylib.GetGlyphInfo(font, '!');
+            glyph.Value.ShouldBe(33);
+            glyph.OffsetX.ShouldBe(1);
+            glyph.OffsetY.ShouldBe(4);
+            glyph.AdvanceX.ShouldBe(6);
+        }
+        finally
+        {
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+            FileManager.CustomGetStreamFromFile = savedHook;
+        }
+    }
+
     // Pins the missing-file semantics that changed with #3033. The old path-based LoadImage
     // returned a silent empty Image for a missing file; routing through FileManager.GetStreamForFile
     // means a missing file now throws (an IOException), matching the MonoGame-family loader. Callers
