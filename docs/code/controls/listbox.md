@@ -363,7 +363,7 @@ ListBox listBox = new();
 stackPanel.AddChild(listBox);
 var visual = ((Gum.Forms.DefaultVisuals.V3.ListBoxVisual)listBox.Visual);
 visual.MakeHeightSizedToChildren();
-visual.ClipContainerInstance.MaxHeight = 120;
-
-<strong>button.Click += (_,_) => listBox.Items.Add("Item " + listBox.Items.Count);
-</strong></code></pre>
+<strong>visual.ClipContainerInstance.MaxHeight = 120;
+</strong>
+button.Click += (_,_) => listBox.Items.Add("Item " + listBox.Items.Count);
+</code></pre>
