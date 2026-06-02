@@ -175,7 +175,7 @@ listBox.SelectionChanged += (sender, args) =>
 
 ## Multi-Selection
 
-Multi-selection can be controlled through the SelectionMode property.&#x20;
+Multi-selection can be controlled through the SelectionMode property.
 
 ```csharp
 ListBox listBox = new();
@@ -288,7 +288,7 @@ In other words, you are free to use the item for your game's needs; however, kee
 
 ## Customizing Displayed Property with ListBoxItemFormsType
 
-By default the ListBox calls ToString on each item. This is usually okay if you are dealing with primitive types. For example, the following code adds sequential integers to a ListBox:
+By default the `ListBox` calls `ToString` on each item. This is usually okay if you are dealing with primitive types. For example, the following code adds sequential integers to a ListBox:
 
 ```csharp
 // Initialize
@@ -300,7 +300,7 @@ for (int i = 0; i < 20; i++)
 
 <figure><img src="../../.gitbook/assets/13_09 07 53.png" alt=""><figcaption><p>ListBox displaying integers</p></figcaption></figure>
 
-Often you may want to add a list of items which should not use their ToString method. For example you may have a list of IDs which represent weapons in a dictionary. The display can be customized by inheriting from ListBoxItem as shown in the following code:
+Often you may want to add a list of items which should not use their ToString method. For example you may have a list of IDs which represent weapons in a dictionary. The display can be customized by inheriting from `ListBoxItem` as shown in the following code:
 
 ```csharp
 // Initialize
@@ -323,4 +323,47 @@ class WeaponDisplayingListBoxItem : ListBoxItem
         coreText.RawText = weapon.Name;
     }
 }
+```
+
+## Sizing to Children
+
+`ListBoxes` can be sized to their children. If using code-only, then the `ListBoxVisual` can be obtained by casting to call `MakeHeightSizedToChildren`.
+
+```csharp
+StackPanel stackPanel = new();
+stackPanel.AddToRoot();
+stackPanel.X = 100;
+stackPanel.Y = 100;
+
+var button = new Button();
+stackPanel.AddChild(button);
+button.Text = "Add Item";
+
+ListBox listBox = new();
+stackPanel.AddChild(listBox);
+((Gum.Forms.DefaultVisuals.V3.ListBoxVisual)listBox.Visual).MakeHeightSizedToChildren();
+
+button.Click += (_,_) => listBox.Items.Add("Item " + listBox.Items.Count);
+
+```
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA3VQXUsDMRD8KyFPOTjC2b5duQd7fhUUxJaqWCmxt23D5RK4bLQo_neTJlos-pTM7Owwsx90Yi9dR0vsHeTUWak3lpZP1JP8Xvaw7kUH9DmnUkuUQsl3oCWdoli1t0KDIvbwrYiGN5aNFvpA8tOmmZk7Y_B48OD1J0Xxm3z8IV9FT14cotHRl4z34A_7eitVw6I2TOOPz2CHfnXhimIw8DIyQegi8qJraXFsdkSl97_s0TypwpixcJoL03eWn8FaOIVzaZ1Qls-HPNlGJktrPEF-I1q4ArnZ4tTf0d9l795DbJVy10qu2hh7XBG2zJcZqQIcnn-n5aGKDfFYLBRwapo2j6S1cRqzEf38AstbplTxAQAA)
+
+Sizes can also be limited by setting the maximum size of the ClipContainer:
+
+```csharp
+StackPanel stackPanel = new();
+stackPanel.AddToRoot();
+stackPanel.X = 100;
+stackPanel.Y = 100;
+
+var button = new Button();
+stackPanel.AddChild(button);
+button.Text = "Add Item";
+
+ListBox listBox = new();
+stackPanel.AddChild(listBox);
+var visual = ((Gum.Forms.DefaultVisuals.V3.ListBoxVisual)listBox.Visual);
+visual.MakeHeightSizedToChildren();
+visual.ClipContainerInstance.MaxHeight = 120;
 ```
