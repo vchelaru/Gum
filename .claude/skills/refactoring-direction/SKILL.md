@@ -24,6 +24,10 @@ When refactoring Gum code, **always move toward instances, interfaces, and dedic
 
 If the reason you're tempted to make something `static` is "so a test can call it without constructing the owner," the right answer is the opposite: keep it instance, and either (a) construct the owner in the test with stub dependencies, or (b) extract the logic into a new small class that's cheap to construct. The test's friction is a signal that the owner has too many responsibilities, not that the method should be static.
 
+## Before refactoring across runtimes
+
+If a refactor touches shared runtime/rendering code (`GumCommon`, `RenderingLibrary`, anything under `Runtimes/`, or `MonoGameGum`), read [gum-runtime-topology](../gum-runtime-topology/SKILL.md) first. The same source is compiled into many assemblies and into FlatRedBall via shared projects, so "builds clean in `AllLibraries.sln`" does not mean "didn't break a consumer" (the WPF runtime and FRB are not in that solution).
+
 ## Why this matters in Gum
 
 Gum's tool code is mid-migration from static singletons (`PluginManager.Self`, `*Manager.Self`, etc.) to constructor-injected services. Every new `static` is a step backward and undoes that migration's payoff. The runtime libraries are similar: `GraphicalUiElement` is already bloated, and the project memory explicitly calls out "avoid adding new properties/methods directly to this class — prefer separate controller/manager classes." The direction in this skill is the same direction the rest of the codebase is moving.

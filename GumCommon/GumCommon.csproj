@@ -102,7 +102,6 @@
 		<Compile Include="..\RenderingLibrary\IGumService.cs" Link="RenderingLibrary\IGumService.cs" />
 		<Compile Include="..\RenderingLibrary\INativeTextInput.cs" Link="RenderingLibrary\INativeTextInput.cs" />
 		<Compile Include="..\RenderingLibrary\ISystemManagers.cs" Link="RenderingLibrary\ISystemManagers.cs" />
-		<Compile Include="..\Runtimes\SkiaGum\Content\LoaderManager.cs" Link="Content\LoaderManager.cs" />
 		<Compile Include="..\ToolsUtilities\**\*.cs" Link="Utilities\%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 
