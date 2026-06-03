@@ -20,6 +20,19 @@ public class Renderer : IRenderer
     /// </summary>
     public static bool RenderUsingHierarchy = true;
 
+    /// <summary>
+    /// When true (the default), the render walk skips any renderable that falls entirely outside
+    /// the active clip rectangle, along with its subtree — avoiding draw work for scrolled-off
+    /// content in clipping containers (#2998). Experimental until validated on real projects; set
+    /// false to render all clipped content. Forwards to the backend-agnostic
+    /// <see cref="CameraScissorExtensions.CullOffscreenWhenClipped"/>.
+    /// </summary>
+    public static bool CullOffscreenWhenClipped
+    {
+        get => CameraScissorExtensions.CullOffscreenWhenClipped;
+        set => CameraScissorExtensions.CullOffscreenWhenClipped = value;
+    }
+
     List<Layer> _layers;
     ReadOnlyCollection<Layer> _layersReadOnly;
 
@@ -198,6 +211,19 @@ public class Renderer : IRenderer
 
     private void DrawGumRecursively(IRenderableIpso element, Layer layer)
     {
+        // #2998 off-screen cull: when a clip is active (the scissor stack is non-empty), skip this
+        // element and its subtree if it falls entirely outside the active clip, expanded by a small
+        // margin. Mirrors the XNA orderer cull via the same shared predicate.
+        if (CameraScissorExtensions.CullOffscreenWhenClipped
+            && _scissorStack.Count > 0
+            && CameraScissorExtensions.IsFullyOutside(
+                _camera.GetScissorRectangleFor(layer, element),
+                _scissorStack.Peek(),
+                CameraScissorExtensions.OffscreenCullMarginInPixels))
+        {
+            return;
+        }
+
         element.Render(null);
 
         if (element.ClipsChildren)
