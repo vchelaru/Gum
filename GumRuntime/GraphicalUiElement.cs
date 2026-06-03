@@ -159,6 +159,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         internal set => isFontDirty = value;
     }
 
+    // Set true while UpdateLayout realizes a deferred font (see the isFontDirty flush in
+    // UpdateLayout). While set, the font assignment in CustomSetPropertyOnRenderable skips the
+    // UpdateLayout call it would otherwise make for RelativeToChildren text — the in-progress
+    // layout pass already sizes the element, so that extra call would be redundant (and, because
+    // a no-arg UpdateLayout requests a parent update, would re-enter the current pass). See #2999.
+    internal static bool SuppressLayoutFromFontChange = false;
+
     /// <summary>
     /// The total number of layout calls that have been performed since the application has started running.
     /// This value can be used as a rough indication of the layout cost and to measure whether efforts to reduce
@@ -1935,6 +1942,26 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         UpdateLayoutCallCount++;
 
         #endregion
+
+        // #2999 — realize any font deferred while layout was suspended, now, before this element
+        // measures itself. Font properties set under suspension only flag isFontDirty; a bare
+        // UpdateLayout() (what callers and the font-performance docs use on resume) must load the
+        // font so the element sizes from the real glyphs instead of the fallback font. isFontDirty
+        // is cleared first so the font assignment's own (suppressed) re-entrant layout can't re-load.
+        if (isFontDirty)
+        {
+            isFontDirty = false;
+            bool wasSuppressingLayoutFromFontChange = SuppressLayoutFromFontChange;
+            SuppressLayoutFromFontChange = true;
+            try
+            {
+                UpdateToFontValues();
+            }
+            finally
+            {
+                SuppressLayoutFromFontChange = wasSuppressingLayoutFromFontChange;
+            }
+        }
 
         float widthBeforeLayout = 0;
         float heightBeforeLayout = 0;

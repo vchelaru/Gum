@@ -382,5 +382,50 @@ public class FontServiceTests : BaseTestClass
         capturedCalls.Count.ShouldBe(2);
     }
 
+    [Fact]
+    public void UpdateLayout_ShouldFlushDeferredFontLoad_AfterGlobalSuspendBatch()
+    {
+        // Repro for #2999. Fonts set while IsAllLayoutSuspended is true are deferred
+        // (IsFontDirty). Users — and the font-performance docs — resume by calling
+        // UpdateLayout(), NOT UpdateFontRecursive(). UpdateLayout() must therefore
+        // realize the deferred font; otherwise text renders in the renderer's fallback
+        // font until something else (e.g. a hover re-applying state) loads it.
+        TextRuntime textRuntime = new();
+        List<BmfcSave> capturedCalls = StartCapturingFontCalls();
+
+        GraphicalUiElement.IsAllLayoutSuspended = true;
+        textRuntime.SetProperty("Font", "Consolas");
+        textRuntime.SetProperty("FontSize", 24);
+        GraphicalUiElement.IsAllLayoutSuspended = false;
+
+        textRuntime.UpdateLayout();
+
+        capturedCalls.Count.ShouldBe(1);
+        textRuntime.IsFontDirty.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void UpdateLayout_ShouldFlushDeferredChildFont_WhenCalledOnParent()
+    {
+        // Faithful to #2999's shape: layout suspended at a high level, a child Text
+        // populated under suspension (font deferred), then a bare UpdateLayout() on the
+        // PARENT must realize the child's font via the recursive layout pass — the user's
+        // repro resumes with ItemList.Visual.UpdateLayout(), not UpdateFontRecursive().
+        ContainerRuntime parent = new();
+        TextRuntime childText = new();
+        parent.AddChild(childText);
+        List<BmfcSave> capturedCalls = StartCapturingFontCalls();
+
+        GraphicalUiElement.IsAllLayoutSuspended = true;
+        childText.SetProperty("Font", "Consolas");
+        childText.SetProperty("FontSize", 24);
+        GraphicalUiElement.IsAllLayoutSuspended = false;
+
+        parent.UpdateLayout();
+
+        capturedCalls.Count.ShouldBe(1);
+        childText.IsFontDirty.ShouldBeFalse();
+    }
+
     #endregion
 }

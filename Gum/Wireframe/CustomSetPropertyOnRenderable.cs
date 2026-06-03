@@ -1581,7 +1581,14 @@ public class CustomSetPropertyOnRenderable
                 // If height is relative to children, it could be in a stack
                 graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
             {
-                graphicalUiElement.UpdateLayout();
+                // When this font load is the #2999 deferred-font flush performed from inside
+                // UpdateLayout, the enclosing layout pass already sizes this element, so this
+                // extra UpdateLayout would be redundant and re-entrant (no-arg UpdateLayout also
+                // requests a parent update). Skip it in that case.
+                if (!GraphicalUiElement.SuppressLayoutFromFontChange)
+                {
+                    graphicalUiElement.UpdateLayout();
+                }
             }
         }
 

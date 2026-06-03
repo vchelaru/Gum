@@ -1,7 +1,7 @@
 ---
 name: gum-layout-engine
 description: Deep internals of Gum's layout engine — UpdateLayout call chain, UpdateChildren ordering, stacking pipeline, dirty state, perf. Triggers: debugging/optimizing UpdateLayout/UpdateChildren, RefreshParentRowColumnDimensionForThis, GetWhatToStackAfter, MakeDirty, ResumeLayoutUpdateIfDirtyRecursive, _cachedSiblingIndex.
-trigger_phrase: UpdateLayout internals|UpdateChildren|GetWhatToStackAfter|RefreshParentRowColumnDimensionForThis|MakeDirty|ResumeLayoutUpdateIfDirtyRecursive|_cachedSiblingIndex|layout performance|ChildrenUpdateDepth|GetIfShouldCallUpdateOnParent|UseFixedStackChildrenSize|UpdateLayoutCallCount
+trigger_phrase: UpdateLayout internals|UpdateChildren|GetWhatToStackAfter|RefreshParentRowColumnDimensionForThis|MakeDirty|ResumeLayoutUpdateIfDirtyRecursive|_cachedSiblingIndex|layout performance|ChildrenUpdateDepth|GetIfShouldCallUpdateOnParent|UseFixedStackChildrenSize|UpdateLayoutCallCount|isFontDirty|SuppressLayoutFromFontChange|font during layout
 ---
 
 # Gum Layout Engine Internals
@@ -63,6 +63,14 @@ Entry point: `UpdateLayout(ParentUpdateType, int childrenUpdateDepth, XOrY?)`
 
 12. **Post-layout dimension check** — if size changed and parent depends on
     children, re-update dimensions. If still changed, update parent.
+
+### Deferred font realization (step 4.5)
+
+Right after the parent-delegate early-out, before measuring, a node loads any font deferred while
+layout was suspended (`isFontDirty`, set under `IsAllLayoutSuspended`). This is what makes a bare
+`UpdateLayout()` realize deferred fonts. The font assignment normally calls `UpdateLayout` again
+for `RelativeToChildren` text; that call is suppressed here (`SuppressLayoutFromFontChange`) because
+this pass already sizes the element. See the **gum-property-assignment** skill for the full cascade.
 
 ## UpdateChildren Internals
 

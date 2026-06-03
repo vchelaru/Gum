@@ -103,6 +103,15 @@ Two code paths consume `isFontDirty`:
    then recurses to children. This ordering is critical — if `mIsLayoutSuspended` were still true
    when `UpdateFontRecursive` runs, that element's font load would be skipped.
 
+3. **`UpdateLayout` itself** (#2999): each node realizes its own deferred font at the top of its
+   layout body, *before* it measures itself. So a bare `UpdateLayout()` after lifting
+   `IsAllLayoutSuspended` loads deferred fonts too — callers don't have to also call
+   `UpdateFontRecursive`. The font assignment's own follow-up `UpdateLayout` (the
+   `RelativeToChildren` branch in the string-path `UpdateToFontValues`) is suppressed during this
+   flush via `GraphicalUiElement.SuppressLayoutFromFontChange`, since the in-progress pass already
+   sizes the element; `isFontDirty` is cleared *before* the load so the suppressed re-layout can't
+   re-trigger it.
+
 ### Known gap
 
 When fonts are set via the string path (`SetProperty`) during an `ApplyState` that uses
