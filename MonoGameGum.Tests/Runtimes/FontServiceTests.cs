@@ -427,5 +427,152 @@ public class FontServiceTests : BaseTestClass
         childText.IsFontDirty.ShouldBeFalse();
     }
 
+    [Fact]
+    public void UpdateLayout_ShouldNotLoadFont_WhenNothingIsDirty()
+    {
+        // Hot-path guarantee: when no font is deferred (isFontDirty false), UpdateLayout must do
+        // ZERO font work. This is the steady-state case that runs on every resize/move/frame.
+        TextRuntime textRuntime = new();
+        List<BmfcSave> capturedCalls = StartCapturingFontCalls();
+        textRuntime.SetProperty("Font", "Consolas");   // not suspended -> loads now, clears dirty
+        textRuntime.SetProperty("FontSize", 24);
+        capturedCalls.Clear();                          // ignore the initial (legitimate) loads
+
+        textRuntime.UpdateLayout();
+        textRuntime.UpdateLayout();
+        textRuntime.UpdateLayout();
+
+        capturedCalls.Count.ShouldBe(0);
+        textRuntime.IsFontDirty.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void UpdateLayout_ShouldNotFlushFont_WhileStillSuspended()
+    {
+        // UpdateLayout called while IsAllLayoutSuspended is true must early-out (MakeDirty) and
+        // keep the font deferred — it must not load mid-suspension and defeat the batching.
+        TextRuntime textRuntime = new();
+        List<BmfcSave> capturedCalls = StartCapturingFontCalls();
+
+        try
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = true;
+            textRuntime.SetProperty("Font", "Consolas");
+            textRuntime.SetProperty("FontSize", 24);
+
+            textRuntime.UpdateLayout();   // still suspended
+
+            capturedCalls.Count.ShouldBe(0);
+            textRuntime.IsFontDirty.ShouldBeTrue();
+        }
+        finally
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = false;
+        }
+    }
+
+    [Fact]
+    public void UpdateLayout_ShouldNotFlushDeferredChildFont_WhenChildrenAreNotUpdated()
+    {
+        // Scoping pin: a shallow UpdateLayout (updateChildren: false) visits only this node, so a
+        // dirty CHILD stays deferred. The flush adds no traversal beyond what the layout requests.
+        ContainerRuntime parent = new();
+        TextRuntime childText = new();
+        parent.AddChild(childText);
+        List<BmfcSave> capturedCalls = StartCapturingFontCalls();
+
+        GraphicalUiElement.IsAllLayoutSuspended = true;
+        childText.SetProperty("Font", "Consolas");
+        childText.SetProperty("FontSize", 24);
+        GraphicalUiElement.IsAllLayoutSuspended = false;
+
+        parent.UpdateLayout(updateParent: false, updateChildren: false);
+
+        capturedCalls.Count.ShouldBe(0);
+        childText.IsFontDirty.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void UpdateLayout_ShouldFlushDeferredGrandchildFont_WhenCalledOnRoot()
+    {
+        // Deep-recursion pin: a dirty grandchild is realized by a root UpdateLayout.
+        ContainerRuntime root = new();
+        ContainerRuntime middle = new();
+        TextRuntime grandchildText = new();
+        root.AddChild(middle);
+        middle.AddChild(grandchildText);
+        List<BmfcSave> capturedCalls = StartCapturingFontCalls();
+
+        GraphicalUiElement.IsAllLayoutSuspended = true;
+        grandchildText.SetProperty("Font", "Consolas");
+        grandchildText.SetProperty("FontSize", 24);
+        GraphicalUiElement.IsAllLayoutSuspended = false;
+
+        root.UpdateLayout();
+
+        capturedCalls.Count.ShouldBe(1);
+        grandchildText.IsFontDirty.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void UpdateLayout_ShouldFlushOnlyDirtyChild_LeavingCleanSiblingUntouched()
+    {
+        // Only nodes that actually deferred a font flush; a clean sibling does no font work, and
+        // the dirty one is realized exactly once.
+        ContainerRuntime parent = new();
+        TextRuntime dirtyChild = new();
+        TextRuntime cleanChild = new();
+        parent.AddChild(dirtyChild);
+        parent.AddChild(cleanChild);
+        List<BmfcSave> capturedCalls = StartCapturingFontCalls();
+        cleanChild.SetProperty("Font", "Arial");   // not suspended -> loads now, stays clean
+        cleanChild.SetProperty("FontSize", 18);
+        capturedCalls.Clear();
+
+        GraphicalUiElement.IsAllLayoutSuspended = true;
+        dirtyChild.SetProperty("Font", "Consolas");
+        dirtyChild.SetProperty("FontSize", 24);
+        GraphicalUiElement.IsAllLayoutSuspended = false;
+
+        parent.UpdateLayout();
+
+        capturedCalls.Count.ShouldBe(1);
+        dirtyChild.IsFontDirty.ShouldBeFalse();
+        cleanChild.IsFontDirty.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DeferredFontFlush_ShouldSuppressTheFontAssignmentLayout_DuringTheLoad()
+    {
+        // No-re-entrancy pin. Realizing a font on RelativeToChildren text normally triggers the
+        // font assignment's own UpdateLayout (the RelativeToChildren branch in
+        // CustomSetPropertyOnRenderable); during the #2999 flush that must be suppressed so the
+        // in-progress layout pass isn't re-entered. We capture SuppressLayoutFromFontChange at the
+        // moment of the load: it must be true during the flush and false for a normal load. (We
+        // assert it here rather than via a layout-count delta because the mock harness resolves to
+        // the existing DefaultBitmapFont, so the assignment's layout branch never fires to observe.)
+        TextRuntime textRuntime = new();
+        List<bool> suppressedAtLoadTime = new();
+        _mockFontService.Setup(x => x.CreateFontIfNecessary(It.IsAny<BmfcSave>()))
+            .Callback<BmfcSave>(_ => suppressedAtLoadTime.Add(GraphicalUiElement.SuppressLayoutFromFontChange));
+        CustomSetPropertyOnRenderable.FontService = _mockFontService.Object;
+
+        // Normal (non-suspended) load: the flag must be false.
+        textRuntime.SetProperty("Font", "Consolas");
+        textRuntime.SetProperty("FontSize", 18);
+        suppressedAtLoadTime.ShouldNotBeEmpty();
+        suppressedAtLoadTime.ShouldAllBe(suppressed => suppressed == false);
+        suppressedAtLoadTime.Clear();
+
+        // Deferred flush via UpdateLayout: the flag must be true while the font loads.
+        GraphicalUiElement.IsAllLayoutSuspended = true;
+        textRuntime.SetProperty("FontSize", 24);
+        GraphicalUiElement.IsAllLayoutSuspended = false;
+        textRuntime.UpdateLayout();
+
+        suppressedAtLoadTime.ShouldNotBeEmpty();
+        suppressedAtLoadTime.ShouldAllBe(suppressed => suppressed == true);
+    }
+
     #endregion
 }
