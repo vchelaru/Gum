@@ -1,9 +1,13 @@
 using Gum.Wireframe;
 using Gum.GueDeriving;
+using Microsoft.Xna.Framework.Graphics;
 using Moq;
+using RenderingLibrary.Content;
+using RenderingLibrary.Graphics;
 using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
 using System.Collections.Generic;
+using ToolsUtilities;
 using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
@@ -11,6 +15,13 @@ namespace MonoGameGum.Tests.Runtimes;
 public class FontServiceTests : BaseTestClass
 {
     private readonly Mock<IRuntimeFontService> _mockFontService;
+
+    // Minimal valid .fnt header, enough for BitmapFont to construct a distinct instance from a
+    // null texture. Used to make the font actually change so the assignment's layout branch fires.
+    private const string FntPattern =
+        "info face=\"Arial\" size=-18 bold=0 italic=0 charset=\"\" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0\n" +
+        "common lineHeight=21 base=17 scaleW=256 scaleH=256 pages=1 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4\r\n" +
+        "chars count=223\r\n";
 
     public FontServiceTests()
     {
@@ -572,6 +583,38 @@ public class FontServiceTests : BaseTestClass
 
         suppressedAtLoadTime.ShouldNotBeEmpty();
         suppressedAtLoadTime.ShouldAllBe(suppressed => suppressed == true);
+    }
+
+    [Fact]
+    public void DeferredFontFlush_ShouldNotReenterLayout_WhenTheFontActuallyChanges()
+    {
+        // Behavioral suppression pin using a REAL, distinct BitmapFont (registered under the cache
+        // filename the properties resolve to). Because the resolved font differs from the element's
+        // current BitmapFont, the assignment's RelativeToChildren UpdateLayout branch actually fires
+        // — unlike the mock-default case, which resolves back to DefaultBitmapFont. The flush must
+        // suppress that re-entrant layout: a standalone element runs exactly one layout pass.
+        // (Without the suppression the font assignment re-enters UpdateLayout and the delta is 2.)
+        BitmapFont distinctFont = new BitmapFont((Texture2D)null!, FntPattern);
+        LoaderManager loaderManager = LoaderManager.Self;
+        string fileName = FileManager.Standardize("FontCache\\Font24SomeFont.fnt", preserveCase: true, makeAbsolute: true);
+        loaderManager.AddDisposable(fileName, distinctFont);
+
+        TextRuntime textRuntime = new();   // RelativeToChildren default
+
+        GraphicalUiElement.IsAllLayoutSuspended = true;
+        textRuntime.SetProperty("Font", "SomeFont");
+        textRuntime.SetProperty("FontSize", 24);
+        GraphicalUiElement.IsAllLayoutSuspended = false;
+
+        int countBefore = GraphicalUiElement.UpdateLayoutCallCount;
+        textRuntime.UpdateLayout();
+        int delta = GraphicalUiElement.UpdateLayoutCallCount - countBefore;
+
+        // The distinct font was actually assigned, proving the assignment branch (and thus the
+        // suppression site) was reached — this test genuinely exercises the suppression.
+        textRuntime.BitmapFont.ShouldBe(distinctFont);
+        textRuntime.IsFontDirty.ShouldBeFalse();
+        delta.ShouldBe(1);
     }
 
     #endregion
