@@ -33,13 +33,13 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     }
 
     /// <inheritdoc/>
-    public void BuildDrawList(Layer layer, List<DrawCommand> destination)
+    public void BuildDrawList(Layer layer, List<DrawCommand> destination, Camera? camera = null)
     {
         destination.Clear();
-        ProcessLayerTopLevel(layer, destination);
+        ProcessLayerTopLevel(layer, camera, destination);
     }
 
-    private static void ProcessLayerTopLevel(Layer layer, List<DrawCommand> destination)
+    private static void ProcessLayerTopLevel(Layer layer, Camera? camera, List<DrawCommand> destination)
     {
         ReadOnlyCollection<IRenderableIpso> top = layer.Renderables;
         int count = top.Count;
@@ -66,7 +66,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
                 List<Entry> window = new List<Entry>();
                 for (int i = runStart; i < runEnd; i++)
                 {
-                    ProcessRenderable(top[i], window, destination);
+                    ProcessRenderable(top[i], layer, camera, null, window, destination);
                 }
                 FlushWindow(window, destination);
 
@@ -78,7 +78,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
             List<Entry> window = new List<Entry>();
             for (int i = 0; i < count; i++)
             {
-                ProcessRenderable(top[i], window, destination);
+                ProcessRenderable(top[i], layer, camera, null, window, destination);
             }
             FlushWindow(window, destination);
         }
@@ -86,10 +86,26 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
 
     private static void ProcessRenderable(
         IRenderableIpso renderable,
+        Layer layer,
+        Camera? camera,
+        Rectangle? activeClip,
         List<Entry> currentWindow,
         List<DrawCommand> destination)
     {
         if (!renderable.Visible)
+        {
+            return;
+        }
+
+        // #2998 off-screen cull: skip a renderable (and its subtree) fully outside the active
+        // clip. Gated on a non-null camera, mirroring HierarchicalOrderer — see its rationale.
+        if (camera != null
+            && activeClip.HasValue
+            && CameraScissorExtensions.CullOffscreenWhenClipped
+            && CameraScissorExtensions.IsFullyOutside(
+                camera.GetScissorRectangleFor(layer, renderable),
+                activeClip.Value,
+                CameraScissorExtensions.OffscreenCullMarginInPixels))
         {
             return;
         }
@@ -107,6 +123,14 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
             List<Entry> innerWindow = new List<Entry>();
             AddEntry(renderable, innerWindow);
 
+            // Entering a clipper narrows the active clip for descendants (intersect).
+            Rectangle? childClip = activeClip;
+            if (camera != null)
+            {
+                Rectangle thisClip = camera.GetScissorRectangleFor(layer, renderable);
+                childClip = activeClip.HasValue ? Rectangle.Intersect(activeClip.Value, thisClip) : thisClip;
+            }
+
             if (Renderer.RenderUsingHierarchy && !renderable.IsRenderTarget)
             {
                 ObservableCollection<IRenderableIpso> children = renderable.Children;
@@ -115,7 +139,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
                     int childCount = children.Count;
                     for (int i = 0; i < childCount; i++)
                     {
-                        ProcessRenderable(children[i], innerWindow, destination);
+                        ProcessRenderable(children[i], layer, camera, childClip, innerWindow, destination);
                     }
                 }
             }
@@ -135,7 +159,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
                     int childCount = children.Count;
                     for (int i = 0; i < childCount; i++)
                     {
-                        ProcessRenderable(children[i], currentWindow, destination);
+                        ProcessRenderable(children[i], layer, camera, activeClip, currentWindow, destination);
                     }
                 }
             }

@@ -15,5 +15,12 @@ public interface IRenderableOrderer
     /// <paramref name="destination"/>. Implementations MUST clear <paramref name="destination"/>
     /// before appending so the renderer can pool a single buffer across layers and frames.
     /// </summary>
-    void BuildDrawList(Layer layer, List<DrawCommand> destination);
+    /// <param name="layer">The layer whose renderables are flattened into the ordered draw commands.</param>
+    /// <param name="destination">Caller-owned buffer; cleared, then filled with the ordered commands.</param>
+    /// <param name="camera">
+    /// The render camera, used for the off-screen cull (#2998): renderables falling entirely
+    /// outside an active clip rectangle are skipped. Optional — when null (e.g. order-only unit
+    /// tests) no culling is performed and the full walk is emitted.
+    /// </param>
+    void BuildDrawList(Layer layer, List<DrawCommand> destination, Camera? camera = null);
 }
