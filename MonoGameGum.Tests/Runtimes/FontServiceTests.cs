@@ -617,5 +617,69 @@ public class FontServiceTests : BaseTestClass
         delta.ShouldBe(1);
     }
 
+    [Fact]
+    public void UpdateLayout_ShouldFlushDeferredFontLoad_WhenFontSetViaDirectSetter()
+    {
+        // The font-performance docs use direct setters then UpdateLayout():
+        //   textRuntime.Font = ...; textRuntime.FontSize = ...; textRuntime.UpdateLayout();
+        // That path defers via the instance UpdateToFontValues (not the string SetProperty path),
+        // so it must be flushed by UpdateLayout too.
+        TextRuntime textRuntime = new();
+        List<BmfcSave> capturedCalls = StartCapturingFontCalls();
+
+        GraphicalUiElement.IsAllLayoutSuspended = true;
+        textRuntime.Font = "Consolas";
+        textRuntime.FontSize = 24;
+        GraphicalUiElement.IsAllLayoutSuspended = false;
+
+        textRuntime.UpdateLayout();
+
+        capturedCalls.Count.ShouldBe(1);
+        textRuntime.IsFontDirty.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void UpdateLayout_OnStackedChild_ShouldFlushItsDeferredFont_ViaParentReprocess()
+    {
+        // The #2999 topology is a stack. A child of a stacking parent delegates its UpdateLayout up
+        // to the parent (GetIfShouldCallUpdateOnParent), which reprocesses it as a child. The
+        // deferred-font flush must still happen through that reprocess.
+        ContainerRuntime parent = new();
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        TextRuntime childText = new();
+        parent.AddChild(childText);
+        List<BmfcSave> capturedCalls = StartCapturingFontCalls();
+
+        GraphicalUiElement.IsAllLayoutSuspended = true;
+        childText.SetProperty("Font", "Consolas");
+        childText.SetProperty("FontSize", 24);
+        GraphicalUiElement.IsAllLayoutSuspended = false;
+
+        childText.UpdateLayout();   // delegates to the stacking parent, which reprocesses this child
+
+        capturedCalls.Count.ShouldBe(1);
+        childText.IsFontDirty.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void UpdateLayout_ShouldClearFontDirty_EvenWhenFontCannotBeResolved()
+    {
+        // Hot-path guard against a retry storm: if a deferred font can't be resolved (no FontService,
+        // unknown name), the flush must still clear isFontDirty so it isn't re-attempted on every
+        // subsequent layout.
+        CustomSetPropertyOnRenderable.FontService = null;
+        TextRuntime textRuntime = new();
+
+        GraphicalUiElement.IsAllLayoutSuspended = true;
+        textRuntime.SetProperty("Font", "NonexistentFont12345");
+        textRuntime.SetProperty("FontSize", 24);
+        GraphicalUiElement.IsAllLayoutSuspended = false;
+        textRuntime.IsFontDirty.ShouldBeTrue();   // deferred
+
+        textRuntime.UpdateLayout();
+
+        textRuntime.IsFontDirty.ShouldBeFalse();   // cleared — no per-layout retry
+    }
+
     #endregion
 }
