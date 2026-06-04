@@ -34,9 +34,9 @@ protected override void Update(GameTime gameTime)
 
 The `Cursor` class reports information about what it is over which can be checked in events or in an Update call.
 
-### WindowOver
+### FrameworkElementOver
 
-The `WindowOver` property returns the visual that the `Cursor` is over. The following code shows how to detect the Button that the Cursor is hovering over.
+The `FrameworkElementOver` property returns the FrameworkElement (control) that the `Cursor` is over. The following code shows how to detect and display the control that the button is over.
 
 ```csharp
 // Class scope
@@ -48,6 +48,7 @@ protected override void Initialize()
 
     StackPanel panel = new ();
     panel.AddToRoot();
+    panel.Name = "Button Panel";
     panel.Anchor(Anchor.Center);
     
     for(int i = 0; i < 5; i++)
@@ -68,8 +69,7 @@ protected override void Update(GameTime gameTime)
 {
     GumUI.Update(gameTime);
 
-    var visualOver = GumUI.Cursor.WindowOver;
-    var control = visualOver?.FormsControlAsObject as FrameworkElement;
+    var control = GumUI.Cursor.FrameworkElementOver;
 
     if(control == null)
     {
@@ -85,6 +85,65 @@ protected override void Update(GameTime gameTime)
 ```
 
 <figure><img src="../../.gitbook/assets/20_17 44 14.gif" alt=""><figcaption><p>Cursor.WindowOver displaying the element that the cursor is over</p></figcaption></figure>
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA31RTU8CMRD9K5OeloRsCMYLxINs1JAYNIrx4Hoo7CAN3SnptqAS_rvTFlnw4B5mdj7ezOubnRg3d74WA2c9doVvFH00YvAmOJm_KosLK2sU711RYz1DyzVxL2eoQQc7FF2hSDkltfpGrj07OV89SuKGdbRXQLjNOsOSYpxfV9XUPBnjTnITXsGNpe_1-v2Rd84QxBkp02JpvjQ2Sy4vkBzaMGVhLGSKHCie0huyC8CLAi75P84YJdspaVcS8HfYMkuuJRlqR6LFUukqSz2_xRTlU_x0fymnILkRqHPA4Y0ncK7vS4oyJgIQhT3XKlGITZ0gtl9X0gWhN9LC3JCzJqD5Wi_jvPC2YWFuw8m2xq5uNNYs0sMGLc9UC8iOCF7otW71iBvOXzUxDgxDQdIXbFTjZXsPJo66wf_gYevgjyaH9VGMMEXsfwCN5EJzgAIAAA)
+
+### `VisualOver`
+
+The Cursor class also provides a `VisualOver` property. This can be used to determine the specific Visual that the cursor is over. A Visual will only be returned if the following are true:
+
+1. The Visual's HasEvents is set to true
+2. The Visual inherits from InteractiveGue
+
+If a `VisualOver` is not null, then that visual consumes cursor events. If that visual happens to be the `Visual` for a `FrameworkElement`, then it passes those events to `FrameworkElement`. If the Visual is either not part of a `FrameworkElement`, or if it is a child of a `FrameworkElement`, then it will consume events, preventing the `FrameworkElement` itself from receiving events.
+
+For information on which controls support events, see the [Visual Events page](visual-events.md#visual-types-with-events).
+
+### `HasCursorOver`
+
+`GraphicalUiElement` instances can be manually checked for whether the cursor is overlapping them. `HasCursorOver` method is a pure bounds check - it does not check if the `GraphicalUiElement` inherits from `InteractiveGue`, nor does it perform overlapping tests. This can be used for pure hit-tests.
+
+The following code creates a rectangle and checks if the cursor is overlapping the rectangle:
+
+<pre class="language-csharp"><code class="lang-csharp">using RenderingLibrary; // needed for extension method
+
+// Class scope
+Gum.Forms.Controls.Label label;
+RectangleRuntime rectangle;
+
+protected override void Initialize()
+{
+    GumUI.Initialize(this);
+
+<strong>    label = new Label();
+</strong>    label.AddToRoot();
+
+    rectangle = new RectangleRuntime();
+    rectangle.AddToRoot();
+    rectangle.Width = 100;
+    rectangle.Height = 100;
+    rectangle.X = 100;
+    rectangle.Y = 100;
+
+    base.Initialize();
+}
+
+protected override void Update(GameTime gameTime)
+{
+    GumUI.Update(gameTime);
+
+    var cursor = GumUI.Cursor;
+    var isOver = rectangle.HasCursorOver(
+        cursor.XRespectingGumZoomAndBounds(),
+        cursor.YRespectingGumZoomAndBounds());
+
+    label.Text = $"Cursor is over rectangle: {isOver}";
+
+    base.Update(gameTime);
+}
+</code></pre>
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA31QW0vDMBT-KyH40EEpdY8tPkwfdDAQysRN60O6HLtAk4xc5mXsv3uSzs7J9CWQ73a-c3Z0am-9pIUzHlLqrVCtpcUzRTB7FAZeDZNAU1qB4mCQnYnGMPNBX1IqQTZgUE5nrIGOdOEta1XByjHVdlB55YQEYr6BEpOEEk6wTnwCGqOFXBEFbySGJCMMiGg24XyuK61dxIaMg_r3kFPRX2bcibs1Rlzm-Ql-B6JduzPE4gy2PGC4jd9w5sImW2bIyhurDZJ4vYdpdhO_6AycsPdbCNyPmcz2ksAktert2aICu0ERHhtznrSWE8WvtVfcJqN0kC3_kx2vOIf3sNZF7fN8PO7nYRmiQ5uhS0F2fcF9ryvp_gvGXgjfGwIAAA)
 
 ## Adjusting the Cursor for Scaled or Offset Rendering
 
