@@ -4,6 +4,8 @@
 
 The ListBox control provides a scrollable list of ListBoxItems for displaying and selecting from a list.
 
+ListBox inherits from ScrollViewer, so it supports the same scrolling behavior. This includes the `MouseWheelScrollSpeed` property, which controls how far the list scrolls per mouse-wheel notch. For details see [Mouse Wheel Scroll Speed](scrollviewer/README.md#mouse-wheel-scroll-speed) on the ScrollViewer page.
+
 ## Code Example: Adding a ListBox
 
 The following code adds items to a ListBox when a button is clicked. When an item is added, `ScrollIntoView` is called so the item is shown.
