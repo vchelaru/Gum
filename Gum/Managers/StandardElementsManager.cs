@@ -241,6 +241,8 @@ public class StandardElementsManager
             AddPositioningVariables(stateSave);
             AddDimensionsVariables(stateSave, 100, 100, DimensionVariableAction.DefaultToPercentageOfFile);
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true, Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = null, Name = "RenderTargetTextureSource", Category = "Source",
+                DetailText = "Displays the render target of another Container whose Is Render Target is checked. Takes precedence over SourceFile when set." });
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Animation", Name = "Animate" });
 

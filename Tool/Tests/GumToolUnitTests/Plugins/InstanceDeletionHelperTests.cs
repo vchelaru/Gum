@@ -84,7 +84,7 @@ public class InstanceDeletionHelperTests : BaseTestClass
 
         _helper.DetachChildrenFromInstance(parent);
 
-        _deleteLogic.Verify(x => x.RemoveParentReferencesToInstance(parent, screen), Times.Once);
+        _deleteLogic.Verify(x => x.RemoveReferencesToInstance(parent, screen), Times.Once);
     }
 
     [Fact]
@@ -111,9 +111,9 @@ public class InstanceDeletionHelperTests : BaseTestClass
 
         _helper.DetachChildrenFromInstances(new[] { parent1, parent2, parent3 });
 
-        _deleteLogic.Verify(x => x.RemoveParentReferencesToInstance(parent1, screen), Times.Once);
-        _deleteLogic.Verify(x => x.RemoveParentReferencesToInstance(parent2, screen), Times.Once);
-        _deleteLogic.Verify(x => x.RemoveParentReferencesToInstance(parent3, screen), Times.Once);
+        _deleteLogic.Verify(x => x.RemoveReferencesToInstance(parent1, screen), Times.Once);
+        _deleteLogic.Verify(x => x.RemoveReferencesToInstance(parent2, screen), Times.Once);
+        _deleteLogic.Verify(x => x.RemoveReferencesToInstance(parent3, screen), Times.Once);
     }
 
     [Fact]
@@ -127,8 +127,8 @@ public class InstanceDeletionHelperTests : BaseTestClass
 
         _helper.DetachChildrenFromInstances(new[] { parent1, parent2 });
 
-        _deleteLogic.Verify(x => x.RemoveParentReferencesToInstance(parent1, screen), Times.Once);
-        _deleteLogic.Verify(x => x.RemoveParentReferencesToInstance(parent2, screen), Times.Once);
+        _deleteLogic.Verify(x => x.RemoveReferencesToInstance(parent1, screen), Times.Once);
+        _deleteLogic.Verify(x => x.RemoveReferencesToInstance(parent2, screen), Times.Once);
     }
 
     [Fact]

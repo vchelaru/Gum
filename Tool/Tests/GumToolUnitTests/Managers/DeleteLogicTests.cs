@@ -438,14 +438,14 @@ public class DeleteLogicTests : BaseTestClass
     }
 
     [Fact]
-    public void RemoveParentReferencesToInstance_RemovesParentVariables()
+    public void RemoveReferencesToInstance_RemovesParentVariables()
     {
         var screen = CreateScreenWithInstances("Parent");
         var parent = screen.Instances[0];
         AddChild(screen, "Child1", "Parent");
         AddChild(screen, "Child2", "Parent");
 
-        _deleteLogic.RemoveParentReferencesToInstance(parent, screen);
+        _deleteLogic.RemoveReferencesToInstance(parent, screen);
 
         screen.DefaultState.Variables
             .Where(v => v.GetRootName() == "Parent" && v.Value as string == "Parent")
@@ -453,13 +453,30 @@ public class DeleteLogicTests : BaseTestClass
     }
 
     [Fact]
-    public void RemoveParentReferencesToInstance_WithDottedReference_RemovesIt()
+    public void RemoveReferencesToInstance_RemovesRenderTargetTextureSourceReferences()
+    {
+        // A Sprite's RenderTargetTextureSource stores the name of a sibling render-target Container.
+        // Deleting that Container must drop the dangling reference, the same way Parent references
+        // are cleaned up — otherwise a stale variable points at an instance that no longer exists.
+        var screen = CreateScreenWithInstances("RenderTargetContainer", "SpriteInstance");
+        var renderTargetContainer = screen.Instances[0];
+        screen.DefaultState.SetValue("SpriteInstance.RenderTargetTextureSource", "RenderTargetContainer", "string");
+
+        _deleteLogic.RemoveReferencesToInstance(renderTargetContainer, screen);
+
+        screen.DefaultState.Variables
+            .Where(v => v.GetRootName() == "RenderTargetTextureSource")
+            .ShouldBeEmpty("Render-target references to the deleted container should be removed");
+    }
+
+    [Fact]
+    public void RemoveReferencesToInstance_WithDottedReference_RemovesIt()
     {
         var screen = CreateScreenWithInstances("Parent");
         var parent = screen.Instances[0];
         AddChild(screen, "Child", "Parent.Container");
 
-        _deleteLogic.RemoveParentReferencesToInstance(parent, screen);
+        _deleteLogic.RemoveReferencesToInstance(parent, screen);
 
         screen.DefaultState.Variables
             .Where(v => v.Value is string s && s.StartsWith("Parent."))

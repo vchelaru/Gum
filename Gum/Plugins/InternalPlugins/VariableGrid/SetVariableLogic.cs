@@ -358,6 +358,8 @@ public class SetVariableLogic : ISetVariableLogic
 
             ReactIfChangedMemberIsDefaultChildContainer(parentElement, instance, rootVariableName, oldValue);
 
+            ReactIfChangedMemberIsRenderTargetTextureSource(rootVariableName);
+
             _variableReferenceLogic.ReactIfChangedMemberIsVariableReference(instance, stateSave, rootVariableName, oldValue);
         }
         ReactIfChangedBaseType(instanceContainer, instance, stateSave, rootVariableName, oldValue);
@@ -386,6 +388,19 @@ public class SetVariableLogic : ISetVariableLogic
                 {
                     _fileCommands.TryAutoSaveObject(instanceContainer);
                 }
+            }
+        }
+    }
+
+    private void ReactIfChangedMemberIsRenderTargetTextureSource(string rootVariableName)
+    {
+        VariableSave? variable = _selectedState.SelectedVariableSave;
+
+        if (variable != null && rootVariableName == "RenderTargetTextureSource")
+        {
+            if ((variable.Value as string) == "<NONE>")
+            {
+                variable.Value = null;
             }
         }
     }

@@ -302,6 +302,44 @@ public class SetVariableLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void ReactToPropertyValueChanged_ShouldClearRenderTargetTextureSource_WhenNoneSelected()
+    {
+        // Picking "<NONE>" in the render-target dropdown must clear the variable back to default
+        // rather than persisting the sentinel string (which would read as a set value), mirroring
+        // how Parent and DefaultChildContainer normalize "<NONE>".
+        ComponentSave container = new ComponentSave();
+        container.States.Add(new StateSave());
+        container.DefaultState.ParentContainer = container;
+
+        InstanceSave instance = new InstanceSave();
+        instance.Name = "SpriteInstance";
+        instance.BaseType = "Sprite";
+
+        container.DefaultState.SetValue("SpriteInstance.RenderTargetTextureSource", "<NONE>");
+        VariableSave variable = container.DefaultState.GetVariableSave("SpriteInstance.RenderTargetTextureSource");
+
+        Mock<ISelectedState> selectedState = mocker.GetMock<ISelectedState>();
+        selectedState
+            .Setup(x => x.SelectedStateSave)
+            .Returns(container.DefaultState);
+        selectedState
+            .Setup(x => x.SelectedVariableSave)
+            .Returns(variable);
+
+        _setVariableLogic.ReactToPropertyValueChanged(
+            "RenderTargetTextureSource",
+            null,
+            container,
+            instance,
+            container.DefaultState,
+            refresh: false,
+            recordUndo: false,
+            trySave: false);
+
+        variable.Value.ShouldBeNull();
+    }
+
+    [Fact]
     public void ReactToPropertyValueChanged_ShouldForceRefreshVariables_WhenAssigningStateOnInstance()
     {
         // Repro: BaseComponent has a category "Category1"; an instance of it is placed

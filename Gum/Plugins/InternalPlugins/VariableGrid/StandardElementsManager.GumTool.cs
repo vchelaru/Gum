@@ -122,6 +122,11 @@ public class StandardElementsManagerGumTool : Singleton<StandardElementsManagerG
                 variable.CustomTypeConverter = new AvailableParentsTypeConverter(selectedState);
                 variable.PropertiesToSetOnDisplayer["IsEditable"] = true;
             }
+            else if (variable.Type == "string" && variable.Name == "RenderTargetTextureSource")
+            {
+                variable.CustomTypeConverter =
+                    new AvailableRenderTargetContainersConverter(Locator.GetRequiredService<ISelectedState>());
+            }
             else if (variable.Type == "State" && variable.Name == "State")
             {
                 variable.Category = "States and Visibility";

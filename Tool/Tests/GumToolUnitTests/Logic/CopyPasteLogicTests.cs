@@ -1796,7 +1796,7 @@ public class CopyPasteLogicTests : BaseTestClass
             {
                 element.Instances.Remove(instanceToRemove);
 
-                // Simulate RemoveParentReferencesToInstance
+                // Simulate RemoveReferencesToInstance
                 foreach (var state in element.AllStates)
                 {
                     state.Variables.RemoveAll(item => item.SourceObject == instanceToRemove.Name);

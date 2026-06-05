@@ -876,10 +876,10 @@ public class DeleteLogic : IDeleteLogic
     {
         element.Instances.Remove(instance);
         element.Events.RemoveAll(item => item.GetSourceObject() == instance.Name);
-        RemoveParentReferencesToInstance(instance, element);
+        RemoveReferencesToInstance(instance, element);
     }
 
-    public void RemoveParentReferencesToInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom)
+    public void RemoveReferencesToInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom)
     {
         foreach (StateSave stateSave in elementToRemoveFrom.AllStates)
         {
@@ -893,11 +893,13 @@ public class DeleteLogic : IDeleteLogic
                     // is gone, so the variable should be removed too.
                     stateSave.Variables.RemoveAt(i);
                 }
-                else if (variable.GetRootName() == "Parent" && variable.Value is string valueAsString &&
+                else if ((variable.GetRootName() == "Parent" || variable.GetRootName() == "RenderTargetTextureSource") &&
+                         variable.Value is string valueAsString &&
                          (valueAsString == instanceToRemove.Name || valueAsString.StartsWith(instanceToRemove.Name + ".")))
                 {
-                    // This is a variable that assigns the Parent to the removed object (or a dotted reference like "Parent.Container").
-                    // Since the object is gone, the parent value shouldn't be assigned anymore.
+                    // This is a variable whose value references the removed object by name — either a Parent
+                    // assignment (or a dotted reference like "Parent.Container") or a Sprite's render-target
+                    // source. Since the object is gone, the reference shouldn't be assigned anymore.
                     stateSave.Variables.RemoveAt(i);
                 }
             }

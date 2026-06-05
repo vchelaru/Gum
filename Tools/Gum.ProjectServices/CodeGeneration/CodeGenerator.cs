@@ -5089,6 +5089,44 @@ public class CodeGenerator
             }
         }
         #endregion
+        #region RenderTargetTextureSource
+
+        // RenderTargetTextureSource stores the name of a sibling render-target Container instance.
+        // Like Parent, it resolves to another instance, so it must be emitted as a direct object
+        // reference to that instance's generated field rather than as a string literal.
+        else if (rootName == "RenderTargetTextureSource")
+        {
+            var referencedInstanceName = variable.Value as string;
+
+            if (string.IsNullOrEmpty(referencedInstanceName))
+            {
+                // No render-target source selected; emit nothing rather than a broken assignment.
+                return " ";
+            }
+
+            var referencedInstance = context.Element.GetInstance(referencedInstanceName);
+
+            if (referencedInstance == null)
+            {
+                // The stored name no longer resolves to a sibling instance (renamed/deleted); skip
+                // rather than emit code that won't compile.
+                return " ";
+            }
+
+            var referenceInCode = "this." + _codeGenerationNameVerifier.ToCSharpName(referencedInstanceName);
+
+            // RenderTargetTextureSource is an IRenderableIpso. For MonoGameForms a non-standard
+            // instance's field is the Forms wrapper, so reach its underlying visual.
+            var referencedElement = ObjectFinder.Self.GetElementSave(referencedInstance);
+            if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms &&
+                referencedElement is not StandardElementSave)
+            {
+                referenceInCode += ".Visual";
+            }
+
+            return $"{context.CodePrefixNoTabs}.{GetGumVariableName(variable, context)} = {referenceInCode};";
+        }
+        #endregion
         // ignored variables:
         else if (rootName == "IsXamarinFormsControl" ||
             rootName == "ExposeChildrenEvents" ||
