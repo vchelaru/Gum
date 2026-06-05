@@ -23,6 +23,14 @@ using MonoGameGum.Input;
 #else
 using Gum.GueDeriving;
 using Gum.Input;
+#if RAYLIB
+// Both Gum.Input and Raylib_cs (a project-wide global using on Raylib) define a
+// GamepadButton type, so alias both to disambiguate inside the Raylib read branch
+// of UpdateGamepads.
+using GumGamepadButton = Gum.Input.GamepadButton;
+using RaylibGamepadButton = Raylib_cs.GamepadButton;
+using RaylibGamepadAxis = Raylib_cs.GamepadAxis;
+#endif
 #endif
 
 #if FRB
@@ -522,6 +530,43 @@ public class FormsUtilities
             var gamepadState = Microsoft.Xna.Framework.Input.GamePad.GetState((int)i);
 #endif
             Gamepads[i].Activity(gamepadState, time);
+        }
+#elif RAYLIB
+        // Read native Raylib controller input and push it into the platform-neutral
+        // GamePad holders. Raylib's IsGamepadButtonDown / GetGamepadAxisMovement return
+        // false / 0 for unavailable indices, so no connectivity guard is needed — a
+        // disconnected pad naturally reads as all-released and centered.
+        for (int i = 0; i < Gamepads.Length; i++)
+        {
+            var gamepad = Gamepads[i];
+
+            gamepad.SetButtonState(GumGamepadButton.DPadUp, Raylib.IsGamepadButtonDown(i, RaylibGamepadButton.LeftFaceUp));
+            gamepad.SetButtonState(GumGamepadButton.DPadDown, Raylib.IsGamepadButtonDown(i, RaylibGamepadButton.LeftFaceDown));
+            gamepad.SetButtonState(GumGamepadButton.DPadLeft, Raylib.IsGamepadButtonDown(i, RaylibGamepadButton.LeftFaceLeft));
+            gamepad.SetButtonState(GumGamepadButton.DPadRight, Raylib.IsGamepadButtonDown(i, RaylibGamepadButton.LeftFaceRight));
+
+            // Raylib's right-face buttons map to the XNA/Gum face buttons by position:
+            // RightFaceDown = A, RightFaceRight = B, RightFaceLeft = X, RightFaceUp = Y.
+            gamepad.SetButtonState(GumGamepadButton.A, Raylib.IsGamepadButtonDown(i, RaylibGamepadButton.RightFaceDown));
+            gamepad.SetButtonState(GumGamepadButton.B, Raylib.IsGamepadButtonDown(i, RaylibGamepadButton.RightFaceRight));
+            gamepad.SetButtonState(GumGamepadButton.X, Raylib.IsGamepadButtonDown(i, RaylibGamepadButton.RightFaceLeft));
+            gamepad.SetButtonState(GumGamepadButton.Y, Raylib.IsGamepadButtonDown(i, RaylibGamepadButton.RightFaceUp));
+
+            gamepad.SetButtonState(GumGamepadButton.LeftShoulder, Raylib.IsGamepadButtonDown(i, RaylibGamepadButton.LeftTrigger1));
+            gamepad.SetButtonState(GumGamepadButton.RightShoulder, Raylib.IsGamepadButtonDown(i, RaylibGamepadButton.RightTrigger1));
+
+            gamepad.SetButtonState(GumGamepadButton.Start, Raylib.IsGamepadButtonDown(i, RaylibGamepadButton.MiddleRight));
+            gamepad.SetButtonState(GumGamepadButton.Back, Raylib.IsGamepadButtonDown(i, RaylibGamepadButton.MiddleLeft));
+
+            gamepad.SetButtonState(GumGamepadButton.LeftStick, Raylib.IsGamepadButtonDown(i, RaylibGamepadButton.LeftThumb));
+            gamepad.SetButtonState(GumGamepadButton.RightStick, Raylib.IsGamepadButtonDown(i, RaylibGamepadButton.RightThumb));
+
+            // Raylib reports stick Y as positive-down; flip it to the XNA/Gum convention (positive-up).
+            float leftX = Raylib.GetGamepadAxisMovement(i, RaylibGamepadAxis.LeftX);
+            float leftY = Raylib.GetGamepadAxisMovement(i, RaylibGamepadAxis.LeftY);
+            gamepad.SetLeftStickPosition(leftX, -leftY);
+
+            gamepad.Activity(time);
         }
 #endif
 
