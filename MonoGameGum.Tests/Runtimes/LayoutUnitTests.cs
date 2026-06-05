@@ -2308,6 +2308,100 @@ public class LayoutUnitTests : BaseTestClass
     }
 
     [Fact]
+    public void HeightRelativeToChildren_TopToBottomStack_ShouldIncludeFirstChildYOffset()
+    {
+        // Regression for the MenuFrame bug: a top-anchored Y offset on the FIRST stacked child
+        // (YUnits = PixelsFromSmall, the default) is a real downward nudge that the stack honors
+        // when positioning the child, so it must also feed into the parent's RelativeToChildren
+        // height. PR #2896 fixed centered/large-anchored children inflating the measure, but its
+        // fix discarded the child's Y entirely - including this legitimate offset. Here the single
+        // child is 32 tall at Y = 12, so its bottom edge is 44; the parent must measure to 44, not
+        // 32 (the buggy actual, which clipped the child).
+        ContainerRuntime parent = new();
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+
+        ContainerRuntime child = new();
+        child.Height = 32;
+        child.HeightUnits = DimensionUnitType.Absolute;
+        child.Y = 12;
+        child.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
+        parent.AddChild(child);
+
+        parent.GetAbsoluteHeight().ShouldBe(44);
+    }
+
+    [Fact]
+    public void TopToBottomStack_FirstChild_ShouldPositionAtYOffset()
+    {
+        // The first stacked child has no previous sibling to stack after, so its position is
+        // driven purely by its own top-anchored Y offset. Y = 12 must render at AbsoluteTop 12.
+        ContainerRuntime parent = new();
+        parent.Height = 200;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+
+        ContainerRuntime child = new();
+        child.Height = 32;
+        child.HeightUnits = DimensionUnitType.Absolute;
+        child.Y = 12;
+        child.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
+        parent.AddChild(child);
+
+        child.AbsoluteTop.ShouldBe(12);
+    }
+
+    [Fact]
+    public void TopToBottomStack_NonFirstChild_ShouldOffsetPositionByY()
+    {
+        // A Y offset on a non-first stacked child adds to the stacked position: child2 stacks
+        // after child1's bottom (32) plus its own Y offset (5) = 37 (StackSpacing is 0 here).
+        ContainerRuntime parent = new();
+        parent.Height = 200;
+        parent.HeightUnits = DimensionUnitType.Absolute;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        parent.StackSpacing = 0;
+
+        ContainerRuntime child1 = new();
+        child1.Height = 32;
+        child1.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(child1);
+
+        ContainerRuntime child2 = new();
+        child2.Height = 20;
+        child2.HeightUnits = DimensionUnitType.Absolute;
+        child2.Y = 5;
+        child2.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
+        parent.AddChild(child2);
+
+        child1.AbsoluteTop.ShouldBe(0);
+        child2.AbsoluteTop.ShouldBe(37);
+    }
+
+    [Fact]
+    public void WidthRelativeToChildren_LeftToRightStack_ShouldIncludeFirstChildXOffset()
+    {
+        // Symmetric to HeightRelativeToChildren_TopToBottomStack_ShouldIncludeFirstChildYOffset:
+        // a top-anchored X offset (XUnits = PixelsFromSmall, the default) on a LeftToRight-stacked
+        // child grows the parent's RelativeToChildren width. Child is 32 wide at X = 12, so the
+        // parent must measure to 44.
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+
+        ContainerRuntime child = new();
+        child.Width = 32;
+        child.WidthUnits = DimensionUnitType.Absolute;
+        child.X = 12;
+        child.XUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
+        parent.AddChild(child);
+
+        parent.GetAbsoluteWidth().ShouldBe(44);
+    }
+
+    [Fact]
     public void WidthRelativeToChildren_TopToBottomStack_ShouldUseWidestChild()
     {
         ContainerRuntime parent = new();
