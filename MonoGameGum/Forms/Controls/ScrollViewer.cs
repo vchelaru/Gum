@@ -190,6 +190,19 @@ public class ScrollViewer :
     }
 
     /// <summary>
+    /// The distance the content scrolls per mouse-wheel notch, in the same units
+    /// as <see cref="VerticalScrollBarValue"/>. Applies to both vertical scrolling
+    /// and shift+wheel horizontal scrolling. Defaults to 30.
+    /// </summary>
+    /// <remarks>
+    /// This is independent of <see cref="SmallChange"/>, which controls the scroll
+    /// bar's arrow-button / line increment; changing one does not affect the other.
+    /// Because this property lives on <see cref="ScrollViewer"/>, it is also
+    /// available on ItemsControl, ListBox, and ComboBox.
+    /// </remarks>
+    public double MouseWheelScrollSpeed { get; set; } = 30;
+
+    /// <summary>
     /// The vertical scroll bar value. Assigning this automatically scrolls
     /// the ScrollViewer to the desired location. Percentage-based scrolling
     /// can be perofrmed by using VerticalScrollBarMaximum. 
@@ -628,8 +641,7 @@ public class ScrollViewer :
             {
                 var valueBefore = verticalScrollBar.Value;
 
-                // Do we want to use the small change? Or have some separate value that the user can set?
-                verticalScrollBar.Value -= MainCursor.ZVelocity * verticalScrollBar.SmallChange;
+                verticalScrollBar.Value -= MainCursor.ZVelocity * MouseWheelScrollSpeed;
 
                 args.Handled = verticalScrollBar.Value != valueBefore;
             }
@@ -637,7 +649,7 @@ public class ScrollViewer :
             {
                 var valueBefore = horizontalScrollBar.Value;
 
-                horizontalScrollBar.Value -= MainCursor.ZVelocity * horizontalScrollBar.SmallChange;
+                horizontalScrollBar.Value -= MainCursor.ZVelocity * MouseWheelScrollSpeed;
 
                 args.Handled = horizontalScrollBar.Value != valueBefore;
             }

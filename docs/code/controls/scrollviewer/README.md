@@ -43,6 +43,21 @@ ScrollViewers can be scrolled by the user using by performing any of the followi
 * Using the mouse wheel to scroll vertically
 * Using shift+mouse wheel to scroll horizontally. For more information see the [Horizontal Scrolling](horizontal-scrolling.md) page.
 
+### Mouse Wheel Scroll Speed
+
+The `MouseWheelScrollSpeed` property controls how far the content scrolls per mouse-wheel notch. It applies to both vertical scrolling and shift+wheel horizontal scrolling. Larger values scroll farther per notch; the default is `30`.
+
+```csharp
+// Initialize
+var scrollViewer = new ScrollViewer();
+// Scroll farther per wheel notch than the default of 30.
+scrollViewer.MouseWheelScrollSpeed = 60;
+```
+
+`MouseWheelScrollSpeed` is independent of `SmallChange`, which controls the distance scrolled when clicking the ScrollBar's arrow buttons. Adjusting one does not affect the other.
+
+Because `MouseWheelScrollSpeed` is defined on `ScrollViewer`, it is also available on every control that derives from it, including [ItemsControl](../itemscontrol.md), [ListBox](../listbox.md), and ComboBox.
+
 ## Code Example: Creating a ScrollViewer With Non-Forms Children
 
 The following code creates a ScrollViewer and adds ColoredRectangleRuntimes to the ScrollViewer. Any non-Forms visual object can be added to the ScrollViewer through AddChild.

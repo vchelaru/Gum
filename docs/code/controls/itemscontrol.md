@@ -8,7 +8,7 @@
 ItemsControl is similar to ListBox, but it is more general since it does not support selection. When items are added to the Items property the ItemsControl does not create a control which inherits from ListBoxItem. Similarly, its VisualTemplate does not need to be a type which supports a ListBoxItem.
 {% endhint %}
 
-ItemsControl inherits from ScrollViewer. For more information about inherited proerties, see the [ScrollViewer](scrollviewer/) page.
+ItemsControl inherits from ScrollViewer, so it supports the same scrolling behavior, including the `MouseWheelScrollSpeed` property for tuning mouse-wheel scroll speed. For more information about inherited properties, see the [ScrollViewer](scrollviewer/README.md) page.
 
 ## Code Example: Adding to Items Property
 

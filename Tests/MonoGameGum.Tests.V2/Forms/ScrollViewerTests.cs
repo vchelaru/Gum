@@ -49,6 +49,79 @@ public class ScrollViewerTests
     }
 
     [Fact]
+    public void MouseWheelScroll_ShouldMoveVerticalByMouseWheelScrollSpeed()
+    {
+        ScrollViewer scrollViewer = new();
+        (ScrollBar verticalBar, _) = GetScrollBars(scrollViewer);
+        verticalBar.Minimum = 0;
+        verticalBar.Maximum = 1000;
+        verticalBar.Value = 500;
+
+        scrollViewer.MouseWheelScrollSpeed = 40;
+
+        InvokeMouseWheel(scrollViewer, zVelocity: 1f);
+
+        // One notch (positive ZVelocity) subtracts MouseWheelScrollSpeed from the value.
+        verticalBar.Value.ShouldBe(460);
+    }
+
+    [Fact]
+    public void MouseWheelScroll_WithShiftHeld_ShouldMoveHorizontalByMouseWheelScrollSpeed()
+    {
+        ScrollViewer scrollViewer = new();
+        (ScrollBar verticalBar, ScrollBar horizontalBar) = GetScrollBars(scrollViewer);
+        verticalBar.Minimum = 0;
+        verticalBar.Maximum = 1000;
+        verticalBar.Value = 500;
+        horizontalBar.Minimum = 0;
+        horizontalBar.Maximum = 1000;
+        horizontalBar.Value = 500;
+
+        scrollViewer.MouseWheelScrollSpeed = 40;
+
+        Mock<IInputReceiverKeyboardMonoGame> mockKeyboard = new();
+        mockKeyboard.Setup(k => k.IsShiftDown).Returns(true);
+        FrameworkElement.KeyboardsForUiControl.Add(mockKeyboard.Object);
+        try
+        {
+            InvokeMouseWheel(scrollViewer, zVelocity: 1f);
+        }
+        finally
+        {
+            FrameworkElement.KeyboardsForUiControl.Clear();
+        }
+
+        verticalBar.Value.ShouldBe(500);
+        horizontalBar.Value.ShouldBe(460);
+    }
+
+    [Fact]
+    public void MouseWheelScrollSpeed_ShouldBeIndependentOfSmallChange()
+    {
+        ScrollViewer scrollViewer = new();
+        (ScrollBar verticalBar, _) = GetScrollBars(scrollViewer);
+        verticalBar.Minimum = 0;
+        verticalBar.Maximum = 1000;
+        verticalBar.Value = 500;
+
+        // SmallChange is the arrow-button / line increment; it must no longer
+        // affect mouse-wheel speed now that the two are decoupled.
+        scrollViewer.SmallChange = 5;
+
+        InvokeMouseWheel(scrollViewer, zVelocity: 1f);
+
+        // Moves by the default MouseWheelScrollSpeed (30), not by SmallChange (5).
+        verticalBar.Value.ShouldBe(470);
+    }
+
+    [Fact]
+    public void MouseWheelScrollSpeed_ShouldDefaultToThirty()
+    {
+        ScrollViewer scrollViewer = new();
+        scrollViewer.MouseWheelScrollSpeed.ShouldBe(30);
+    }
+
+    [Fact]
     public void ScrollViewerVisual_ShouldCreateScrollViewerForms()
     {
         var visual = new Gum.Forms.DefaultVisuals.ScrollViewerVisual();
@@ -165,6 +238,40 @@ public class ScrollViewerTests
         {
             FrameworkElement.MainCursor = previousCursor;
             FrameworkElement.MainKeyboard = previousMainKeyboard;
+        }
+    }
+
+    static (ScrollBar vertical, ScrollBar horizontal) GetScrollBars(ScrollViewer scrollViewer)
+    {
+        FieldInfo verticalField = typeof(ScrollViewer).GetField(
+            "verticalScrollBar",
+            BindingFlags.Instance | BindingFlags.NonPublic)!;
+        FieldInfo horizontalField = typeof(ScrollViewer).GetField(
+            "horizontalScrollBar",
+            BindingFlags.Instance | BindingFlags.NonPublic)!;
+        ScrollBar vertical = (ScrollBar)verticalField.GetValue(scrollViewer)!;
+        ScrollBar horizontal = (ScrollBar)horizontalField.GetValue(scrollViewer)!;
+        vertical.ShouldNotBeNull();
+        horizontal.ShouldNotBeNull();
+        return (vertical, horizontal);
+    }
+
+    static void InvokeMouseWheel(ScrollViewer scrollViewer, float zVelocity)
+    {
+        Mock<ICursor> mockCursor = new();
+        mockCursor.Setup(c => c.ZVelocity).Returns(zVelocity);
+        ICursor? previousCursor = FrameworkElement.MainCursor;
+        FrameworkElement.MainCursor = mockCursor.Object;
+        try
+        {
+            MethodInfo handler = typeof(ScrollViewer).GetMethod(
+                "HandleMouseWheelScroll",
+                BindingFlags.Instance | BindingFlags.NonPublic)!;
+            handler.Invoke(scrollViewer, new object[] { scrollViewer.Visual, new RoutedEventArgs() });
+        }
+        finally
+        {
+            FrameworkElement.MainCursor = previousCursor;
         }
     }
 }
