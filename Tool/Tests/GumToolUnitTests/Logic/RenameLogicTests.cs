@@ -90,6 +90,48 @@ public class RenameLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void ReactToInstanceNameChange_UpdatesRenderTargetTextureSourceValue_WhenReferencedInstanceRenamed()
+    {
+        // A Sprite's RenderTargetTextureSource stores the name of a sibling render-target Container.
+        // Renaming that Container must rewrite the stored value, the same way Parent references are
+        // maintained — otherwise the reference goes stale and silently resolves to nothing.
+        ComponentSave element = new ComponentSave { Name = "MainComponent" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = element };
+        element.States.Add(defaultState);
+
+        InstanceSave spriteInstance = new InstanceSave { Name = "SpriteInstance", BaseType = "Sprite", ParentContainer = element };
+        InstanceSave renderTargetContainer = new InstanceSave { Name = "RenderTargetContainer", BaseType = "Container", ParentContainer = element };
+        element.Instances.Add(spriteInstance);
+        element.Instances.Add(renderTargetContainer);
+
+        defaultState.Variables.Add(new VariableSave
+        {
+            Name = "SpriteInstance.RenderTargetTextureSource",
+            Value = "RenderTargetContainer",
+            SetsValue = true,
+            Type = "string",
+        });
+
+        // ReactToInstanceNameChange notifies plugins at the end; give the singleton an empty plugin
+        // list so that call is a no-op, and restore it afterward to avoid cross-test pollution.
+        IEnumerable<Gum.Plugins.BaseClasses.PluginBase> originalPlugins = Gum.Plugins.PluginManager.Self.Plugins;
+        Gum.Plugins.PluginManager.Self.Plugins = new List<Gum.Plugins.BaseClasses.PluginBase>();
+        try
+        {
+            // Simulate the rename already applied to the instance, then react to the name change.
+            renderTargetContainer.Name = "RenamedContainer";
+            defaultState.ReactToInstanceNameChange(renderTargetContainer, "RenderTargetContainer", "RenamedContainer");
+
+            VariableSave variable = defaultState.GetVariableSave("SpriteInstance.RenderTargetTextureSource");
+            (variable.Value as string).ShouldBe("RenamedContainer");
+        }
+        finally
+        {
+            Gum.Plugins.PluginManager.Self.Plugins = originalPlugins;
+        }
+    }
+
+    [Fact]
     public void ApplyElementReferences_VariableReferenceEntry_StringIsUpdated()
     {
         // After apply, a VariableReferences list entry whose right side referenced

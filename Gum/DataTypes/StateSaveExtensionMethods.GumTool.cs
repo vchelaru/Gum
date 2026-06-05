@@ -19,7 +19,11 @@ namespace Gum.DataTypes.Variables
                     variable.Name = newName + "." + variable.Name.Substring((oldName + ".").Length);
                 }
 
-                if (variable.GetRootName() == "Parent" && variable.SetsValue && variable.Value is string valueAsString && !string.IsNullOrEmpty(valueAsString))
+                // Variables whose value is an instance name (Parent, and a Sprite's render-target
+                // source) must have that value rewritten when the referenced instance is renamed, or
+                // the reference goes stale and silently resolves to nothing.
+                var rootName = variable.GetRootName();
+                if ((rootName == "Parent" || rootName == "RenderTargetTextureSource") && variable.SetsValue && variable.Value is string valueAsString && !string.IsNullOrEmpty(valueAsString))
                 {
                     if (valueAsString == oldName)
                     {
