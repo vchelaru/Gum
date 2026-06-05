@@ -301,6 +301,37 @@ namespace RenderingLibrary
     /// </summary>
     public static class CameraScissorExtensions
     {
+        /// <summary>
+        /// When true (the default), the render walk skips any renderable that falls entirely outside
+        /// the active clip rectangle, along with its whole subtree — avoiding draw and render-state
+        /// work for scrolled-off content in ListBoxes, ScrollViewers, ComboBox dropdowns, and any
+        /// clipping container. Set false to render all clipped content (e.g. if a renderable's
+        /// visuals intentionally bleed far past its own bounds). See #2998.
+        /// </summary>
+        public static bool CullOffscreenWhenClipped = true;
+
+        /// <summary>
+        /// Pixels by which a renderable's bounds are expanded before the off-screen cull test, so
+        /// content that bleeds slightly past its own bounds (drop shadows, borders) is not
+        /// prematurely culled. See #2998.
+        /// </summary>
+        public const int OffscreenCullMarginInPixels = 15;
+
+        /// <summary>
+        /// Returns true when <paramref name="bounds"/> lies entirely outside <paramref name="clip"/>,
+        /// expanded outward by <paramref name="margin"/> pixels on every side. Used by the off-screen
+        /// render cull (#2998) to skip renderables that fall completely outside the active clip
+        /// rectangle. The margin absorbs content that bleeds slightly past its own bounds (drop
+        /// shadows, borders) so it is not prematurely culled.
+        /// </summary>
+        public static bool IsFullyOutside(System.Drawing.Rectangle bounds, System.Drawing.Rectangle clip, int margin)
+        {
+            return bounds.Right < clip.Left - margin
+                || bounds.Left > clip.Right + margin
+                || bounds.Bottom < clip.Top - margin
+                || bounds.Top > clip.Bottom + margin;
+        }
+
         public static System.Drawing.Rectangle GetScissorRectangleFor(this Camera camera, Layer layer, IRenderableIpso ipso)
         {
             if (ipso == null)

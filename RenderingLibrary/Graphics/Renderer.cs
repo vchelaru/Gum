@@ -51,6 +51,22 @@ public class Renderer : IRenderer
     /// </summary>
     public static IRenderableOrderer SiblingOrdering { get; set; } = HierarchicalOrderer.Instance;
 
+    /// <summary>
+    /// When true (the default), the render walk skips any renderable that falls entirely outside
+    /// the active clip rectangle, along with its subtree — avoiding draw and render-state work for
+    /// scrolled-off content in ListBoxes, ScrollViewers, etc. (#2998).
+    /// <para>
+    /// Treat as experimental until validated on real projects: set to false to render all clipped
+    /// content if a renderable's visuals intentionally bleed far past its own bounds. Forwards to
+    /// the backend-agnostic <see cref="CameraScissorExtensions.CullOffscreenWhenClipped"/>.
+    /// </para>
+    /// </summary>
+    public static bool CullOffscreenWhenClipped
+    {
+        get => CameraScissorExtensions.CullOffscreenWhenClipped;
+        set => CameraScissorExtensions.CullOffscreenWhenClipped = value;
+    }
+
     #region Fields
 
 
@@ -522,7 +538,7 @@ public class Renderer : IRenderer
         // by itself it produces byte-identical output via HierarchicalOrderer (the default).
         // The recursive Render/Draw helpers below remain in use for the prerender path
         // (RenderToRenderTarget) and the GumBatch immediate-mode path (Renderer.Draw).
-        SiblingOrdering.BuildDrawList(layer, _scratchCommands);
+        SiblingOrdering.BuildDrawList(layer, _scratchCommands, mCamera);
         Submit(_scratchCommands, managers, layer);
 
         _batchOrchestrator.FlushAndReset(managers);
