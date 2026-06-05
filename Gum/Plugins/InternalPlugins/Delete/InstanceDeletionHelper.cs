@@ -110,7 +110,7 @@ public class InstanceDeletionHelper
         if (instance?.ParentContainer == null)
             return;
 
-        _deleteLogic.RemoveParentReferencesToInstance(instance, instance.ParentContainer);
+        _deleteLogic.RemoveReferencesToInstance(instance, instance.ParentContainer);
     }
 
     /// <summary>
@@ -130,14 +130,14 @@ public class InstanceDeletionHelper
             RecursivelyDeleteChildrenOf(child);
 
             // This child may have been removed by the main Delete command. If so, then no need
-            // to do a full removal, just remove parent references:
+            // to do a full removal, just remove references to it:
             if (parentContainer.Instances.Contains(child))
             {
                 _deleteLogic.RemoveInstance(child, parentContainer);
             }
             else
             {
-                _deleteLogic.RemoveParentReferencesToInstance(child, parentContainer);
+                _deleteLogic.RemoveReferencesToInstance(child, parentContainer);
             }
         }
     }

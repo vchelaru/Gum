@@ -876,10 +876,10 @@ public class DeleteLogic : IDeleteLogic
     {
         element.Instances.Remove(instance);
         element.Events.RemoveAll(item => item.GetSourceObject() == instance.Name);
-        RemoveParentReferencesToInstance(instance, element);
+        RemoveReferencesToInstance(instance, element);
     }
 
-    public void RemoveParentReferencesToInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom)
+    public void RemoveReferencesToInstance(InstanceSave instanceToRemove, ElementSave elementToRemoveFrom)
     {
         foreach (StateSave stateSave in elementToRemoveFrom.AllStates)
         {
