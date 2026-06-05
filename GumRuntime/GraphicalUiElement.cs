@@ -6073,9 +6073,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         if (propertyInfo != null && propertyInfo.CanWrite)
         {
 
-            if (value.GetType() != propertyInfo.PropertyType)
+            if (value != null && value.GetType() != propertyInfo.PropertyType)
             {
-                value = System.Convert.ChangeType(value, propertyInfo.PropertyType);
+                // For a Nullable<T> target (e.g. Blend? on Sprite/NineSlice), convert against the
+                // underlying T. Convert.ChangeType cannot produce a Nullable<T> (it throws
+                // InvalidCastException), but a boxed T assigns cleanly into a Nullable<T> property
+                // via SetValue. This is the data-driven path (ApplyState → SetProperty → reflection);
+                // strongly-typed C# setters never reach it.
+                Type targetType = Nullable.GetUnderlyingType(propertyInfo.PropertyType) ?? propertyInfo.PropertyType;
+                if (value.GetType() != targetType)
+                {
+                    value = System.Convert.ChangeType(value, targetType);
+                }
             }
             propertyInfo.SetValue(mContainedObjectAsIpso, value, null);
         }

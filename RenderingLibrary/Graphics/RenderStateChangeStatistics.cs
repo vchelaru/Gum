@@ -21,6 +21,15 @@ namespace RenderingLibrary.Graphics
         public int ShapeBatchBeginCount { get; private set; }
 
         /// <summary>
+        /// The number of GPU draw calls recorded since the last <see cref="Reset"/>. Unlike
+        /// <see cref="ShapeBatchBeginCount"/> (an XNA/Apos.Shapes-specific begin count), this is a
+        /// backend-neutral draw-call total. It is currently populated only by the raylib renderer,
+        /// which owns a <c>RenderBatch</c> and banks its authoritative draw counter at each batch
+        /// flush; other backends leave it at zero until wired.
+        /// </summary>
+        public int DrawCallCount { get; private set; }
+
+        /// <summary>
         /// Records one ShapeBatch begin. Called from the Apos.Shapes runtime whenever it opens
         /// (or re-opens) its ShapeBatch.
         /// </summary>
@@ -30,11 +39,21 @@ namespace RenderingLibrary.Graphics
         }
 
         /// <summary>
+        /// Adds <paramref name="count"/> draw calls to <see cref="DrawCallCount"/>. Called by the
+        /// raylib renderer as it banks the owned <c>RenderBatch</c>'s draw counter at each flush.
+        /// </summary>
+        public void AddDrawCalls(int count)
+        {
+            DrawCallCount += count;
+        }
+
+        /// <summary>
         /// Clears all counters. Called once per frame at the start of <see cref="Renderer.Draw(SystemManagers)"/>.
         /// </summary>
         public void Reset()
         {
             ShapeBatchBeginCount = 0;
+            DrawCallCount = 0;
         }
     }
 }

@@ -124,13 +124,18 @@ void main() {{
 
         Color clear = new Color((byte)0, (byte)0, (byte)0, (byte)0);
 
+        // Every begin/end render-target, blend, and shader state change below flushes the active
+        // render batch. Route them through the renderer's draw-call counter so the shadow's
+        // offscreen draws are banked into the frame's draw-call count (folded into the main count).
+        var counter = global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter;
+
         // 1) Silhouette pass: clear RT_A and let the caller paint a white mask at (radius, radius).
         // Default BLEND_ALPHA is fine here — opaque white onto cleared transparent black gives
         // (1,1,1,1) inside the shape, (0,0,0,0) outside.
-        BeginTextureMode(rtA);
+        counter.BeginTextureMode(rtA);
         ClearBackground(clear);
         drawSilhouetteAt(radius, radius);
-        EndTextureMode();
+        counter.EndTextureMode();
 
         float invTwoSigmaSq = 1f / (2f * sigma * sigma);
         SetShaderValue(_shader, _locInvTwoSigmaSq, invTwoSigmaSq, ShaderUniformDataType.Float);
@@ -149,41 +154,41 @@ void main() {{
         // RTs from RenderTextureService are exact-fit (no oversizing), so the standard raylib
         // negative-height idiom Rectangle(0, 0, rtW, -rtH) reads the full upright content.
         Vector2 hDir = new Vector2(1f / rtW, 0f);
-        BeginTextureMode(rtB);
+        counter.BeginTextureMode(rtB);
         ClearBackground(clear);
-        BeginBlendMode(BlendMode.AlphaPremultiply);
+        counter.BeginBlendMode(BlendMode.AlphaPremultiply);
         SetShaderValue(_shader, _locDirection, hDir, ShaderUniformDataType.Vec2);
-        BeginShaderMode(_shader);
+        counter.BeginShaderMode(_shader);
         // Negative source height flips the v range so the upright top-down content of an RT
         // (stored bottom-up in GL coords) reads correctly.
         DrawTextureRec(rtA.Texture, new Rectangle(0, 0, rtW, -rtH), Vector2.Zero, Color.White);
-        EndShaderMode();
-        EndBlendMode();
-        EndTextureMode();
+        counter.EndShaderMode();
+        counter.EndBlendMode();
+        counter.EndTextureMode();
 
         // 3) Vertical blur RT_B -> RT_A.
         Vector2 vDir = new Vector2(0f, 1f / rtH);
-        BeginTextureMode(rtA);
+        counter.BeginTextureMode(rtA);
         ClearBackground(clear);
-        BeginBlendMode(BlendMode.AlphaPremultiply);
+        counter.BeginBlendMode(BlendMode.AlphaPremultiply);
         SetShaderValue(_shader, _locDirection, vDir, ShaderUniformDataType.Vec2);
-        BeginShaderMode(_shader);
+        counter.BeginShaderMode(_shader);
         DrawTextureRec(rtB.Texture, new Rectangle(0, 0, rtW, -rtH), Vector2.Zero, Color.White);
-        EndShaderMode();
-        EndBlendMode();
-        EndTextureMode();
+        counter.EndShaderMode();
+        counter.EndBlendMode();
+        counter.EndTextureMode();
 
         // 4) Composite RT_A onto the screen, tinted. shadowMinX/Y are the shape's top-left;
         // the RT contains `radius` pixels of falloff padding around the shape, so the on-screen
         // destination starts `radius` pixels up-and-left of that. AlphaPremultiply here too —
         // the RT contents are in premultiplied form (rgb == a, since silhouette was white).
-        BeginBlendMode(BlendMode.AlphaPremultiply);
+        counter.BeginBlendMode(BlendMode.AlphaPremultiply);
         DrawTextureRec(
             rtA.Texture,
             new Rectangle(0, 0, rtW, -rtH),
             new Vector2(shadowMinX - radius, shadowMinY - radius),
             tint);
-        EndBlendMode();
+        counter.EndBlendMode();
     }
 
     /// <summary>
