@@ -15,6 +15,8 @@ namespace Examples.Shapes;
 
 internal class FormsControlsScreen : FrameworkElement
 {
+    private readonly FrameworkElement _initialFocusControl;
+
     public FormsControlsScreen() : base(new ContainerRuntime())
     {
         Dock(Gum.Wireframe.Dock.Fill);
@@ -35,10 +37,16 @@ internal class FormsControlsScreen : FrameworkElement
         button.Text = "I'm a button";
         container.AddChild(button.Visual);
 
-        // Give the first control focus so a connected gamepad has a starting point to
-        // navigate from (the gamepads themselves are registered in Program.Main). See
+        var textBox = new TextBox();
+        container.AddChild(textBox.Visual);
+        textBox.Width = 250;
+        textBox.Placeholder = "Type here…";
+
+        // The TextBox is the starting control given focus when this screen is shown (its
+        // blinking caret makes the current gamepad focus easy to see). Program applies the
+        // focus after the screen is added — see FocusInitialControl and
         // https://docs.flatredball.com/gum/code/events-and-interactivity/gamepad-support.
-        button.IsFocused = true;
+        _initialFocusControl = textBox;
 
         var checkbox = new CheckBox();
         checkbox.Width = 200;
@@ -163,6 +171,16 @@ internal class FormsControlsScreen : FrameworkElement
         };
 
         AddSwitchHint();
+    }
+
+    /// <summary>
+    /// Gives this screen's starting control input focus. Called by Program after the screen
+    /// has been added to the root and the current frame's input has been processed, so a
+    /// connected gamepad has a control to begin navigating from.
+    /// </summary>
+    public void FocusInitialControl()
+    {
+        _initialFocusControl.IsFocused = true;
     }
 
     private void AddSwitchHint()

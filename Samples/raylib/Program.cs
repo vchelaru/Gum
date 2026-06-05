@@ -22,6 +22,11 @@ public class BasicShapes
     static StackPanel? navStrip;
     static FrameworkElement? activeScreen;
 
+    // Set when a screen is shown so its initial gamepad focus is applied after the next
+    // GumUI.Update — ShowScreen runs inside a nav button's Click handler (during Update), and
+    // applying focus there gets cleared by the rest of that frame's input processing.
+    static bool _applyInitialFocusAfterUpdate;
+
     // Manual-camera demo state. When _useManualCamera is true the render loop calls
     // GumUI.Draw(_manualCamera) instead of GumUI.Draw(), exercising the new
     // Draw(Camera2D) overload (#2846). Arrow keys pan; mouse wheel zooms.
@@ -76,6 +81,14 @@ public class BasicShapes
             ClearBackground(new Color(51, 76, 204, 255));
 
             GumUI.Update(GetTime());
+
+            // Apply a freshly-shown screen's initial gamepad focus now that this frame's
+            // input (including the nav-button click that swapped screens) has been processed.
+            if (_applyInitialFocusAfterUpdate)
+            {
+                _applyInitialFocusAfterUpdate = false;
+                (activeScreen as FormsControlsScreen)?.FocusInitialControl();
+            }
 
             if (_useManualCamera)
             {
@@ -199,6 +212,9 @@ public class BasicShapes
         activeScreen.Visual.Y = NavStripHeight;
         activeScreen.Visual.Height = -NavStripHeight;
         activeScreen.AddToRoot();
+
+        // Defer initial gamepad focus to just after the next GumUI.Update (see field comment).
+        _applyInitialFocusAfterUpdate = true;
     }
 
     private static void InitializeStyling()
