@@ -73,6 +73,27 @@ public class PerformanceViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// Toggles the global off-screen render cull (<see cref="Renderer.CullOffscreenWhenClipped"/>):
+    /// when on, renderables that fall entirely outside an active clip region — and their children —
+    /// are skipped. The editor renders continuously, so the begin counts above reflect the change on
+    /// the next frame. Exposed here to validate the (experimental) cull against real projects (#2998).
+    /// </summary>
+    public bool CullOffscreenWhenClipped
+    {
+        get => Renderer.CullOffscreenWhenClipped;
+        set
+        {
+            if (value == Renderer.CullOffscreenWhenClipped)
+            {
+                return;
+            }
+
+            Renderer.CullOffscreenWhenClipped = value;
+            RaiseAllChanged();
+        }
+    }
+
     private static Renderer? ActiveRenderer => SystemManagers.Default?.Renderer;
 
     public event PropertyChangedEventHandler? PropertyChanged;

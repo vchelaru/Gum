@@ -20,6 +20,12 @@
             GroupName="RenderOrder"
             IsChecked="{Binding SortByBatchKey, Mode=TwoWay}" />
 
+        <Label Margin="0,6,0,0" FontWeight="Bold">Off-screen culling:</Label>
+        <CheckBox
+            Margin="8,2,0,2"
+            Content="Cull content outside clip regions"
+            IsChecked="{Binding CullOffscreenWhenClipped, Mode=TwoWay}" />
+
         <Separator Margin="0,6" />
 
         <Grid>
