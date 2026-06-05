@@ -4,7 +4,6 @@ using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Managers;
-using Gum.Renderables;
 using Gum.Wireframe;
 using Raylib_cs;
 using RenderingLibrary.Graphics;
@@ -15,15 +14,20 @@ namespace Examples.Shapes;
 
 internal class FormsControlsScreen : FrameworkElement
 {
+    private readonly FrameworkElement _initialFocusControl;
+
     public FormsControlsScreen() : base(new ContainerRuntime())
     {
         Dock(Gum.Wireframe.Dock.Fill);
 
-        var container = new GraphicalUiElement(new InvisibleRenderable());
+        // Must be an InteractiveGue (ContainerRuntime), not a raw GraphicalUiElement: focus
+        // tabbing walks the focused control's parent via `Parent as InteractiveGue`, so a
+        // non-interactive parent yields no siblings and gamepad/keyboard navigation no-ops.
+        var container = new ContainerRuntime();
         this.AddChild(container);
         container.ChildrenLayout = ChildrenLayout.TopToBottomStack;
         container.WrapsChildren = true;
-        container.StackSpacing = 2;
+        container.StackSpacing = 5;
         container.Width = 0;
         container.WidthUnits = DimensionUnitType.RelativeToParent;
         container.Height = 0;
@@ -34,6 +38,17 @@ internal class FormsControlsScreen : FrameworkElement
         button.Width = 200;
         button.Text = "I'm a button";
         container.AddChild(button.Visual);
+
+        var textBox = new TextBox();
+        container.AddChild(textBox.Visual);
+        textBox.Width = 250;
+        textBox.Placeholder = "Type here…";
+
+        // The TextBox is the starting control given focus when this screen is shown (its
+        // blinking caret makes the current gamepad focus easy to see). Program applies the
+        // focus after the screen is added — see FocusInitialControl and
+        // https://docs.flatredball.com/gum/code/events-and-interactivity/gamepad-support.
+        _initialFocusControl = textBox;
 
         var checkbox = new CheckBox();
         checkbox.Width = 200;
@@ -160,10 +175,20 @@ internal class FormsControlsScreen : FrameworkElement
         AddSwitchHint();
     }
 
+    /// <summary>
+    /// Gives this screen's starting control input focus. Called by Program after the screen
+    /// has been added to the root and the current frame's input has been processed, so a
+    /// connected gamepad has a control to begin navigating from.
+    /// </summary>
+    public void FocusInitialControl()
+    {
+        _initialFocusControl.IsFocused = true;
+    }
+
     private void AddSwitchHint()
     {
         var hint = new TextRuntime();
-        hint.Text = "Press SPACE to switch screens";
+        hint.Text = "Gamepad: D-pad / left stick navigates, A activates";
         hint.XOrigin = HorizontalAlignment.Left;
         hint.YOrigin = VerticalAlignment.Bottom;
         hint.XUnits = GeneralUnitType.PixelsFromSmall;

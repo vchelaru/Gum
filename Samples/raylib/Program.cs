@@ -22,6 +22,11 @@ public class BasicShapes
     static StackPanel? navStrip;
     static FrameworkElement? activeScreen;
 
+    // Set when a screen is shown so its initial gamepad focus is applied after the next
+    // GumUI.Update — ShowScreen runs inside a nav button's Click handler (during Update), and
+    // applying focus there gets cleared by the rest of that frame's input processing.
+    static bool _applyInitialFocusAfterUpdate;
+
     // Manual-camera demo state. When _useManualCamera is true the render loop calls
     // GumUI.Draw(_manualCamera) instead of GumUI.Draw(), exercising the new
     // Draw(Camera2D) overload (#2846). Arrow keys pan; mouse wheel zooms.
@@ -52,6 +57,17 @@ public class BasicShapes
 
         GumUI.Initialize();
 
+        // Enable gamepad + keyboard navigation for Forms controls (see
+        // https://docs.flatredball.com/gum/code/events-and-interactivity/gamepad-support).
+        // GumUI.Update reads the connected controller into these gamepads each frame; the
+        // D-pad / left stick then move focus between controls and A activates the focused
+        // control. UseKeyboardDefaults registers the keyboard so Tab / Shift+Tab navigate the
+        // same way. The starting control is given focus in FormsControlsScreen's constructor.
+        FrameworkElement.GamePadsForUiControl.Clear();
+        FrameworkElement.GamePadsForUiControl.AddRange(GumUI.Gamepads);
+
+        GumUI.UseKeyboardDefaults();
+
         // Demo the auto-fit helpers — flip via the Zoom/Expand radio buttons in the nav strip.
         GumUI.EnableZoomToWindow();
         var standardTexture = SystemManagers.Default.LoadEmbeddedTexture2d("UISpriteSheet.png");
@@ -68,6 +84,14 @@ public class BasicShapes
             ClearBackground(new Color(51, 76, 204, 255));
 
             GumUI.Update(GetTime());
+
+            // Apply a freshly-shown screen's initial gamepad focus now that this frame's
+            // input (including the nav-button click that swapped screens) has been processed.
+            if (_applyInitialFocusAfterUpdate)
+            {
+                _applyInitialFocusAfterUpdate = false;
+                (activeScreen as FormsControlsScreen)?.FocusInitialControl();
+            }
 
             if (_useManualCamera)
             {
@@ -191,6 +215,9 @@ public class BasicShapes
         activeScreen.Visual.Y = NavStripHeight;
         activeScreen.Visual.Height = -NavStripHeight;
         activeScreen.AddToRoot();
+
+        // Defer initial gamepad focus to just after the next GumUI.Update (see field comment).
+        _applyInitialFocusAfterUpdate = true;
     }
 
     private static void InitializeStyling()
