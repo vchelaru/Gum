@@ -25,7 +25,7 @@ internal class FormsControlsScreen : FrameworkElement
         this.AddChild(container);
         container.ChildrenLayout = ChildrenLayout.TopToBottomStack;
         container.WrapsChildren = true;
-        container.StackSpacing = 2;
+        container.StackSpacing = 5;
         container.Width = 0;
         container.WidthUnits = DimensionUnitType.RelativeToParent;
         container.Height = 0;

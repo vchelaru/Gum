@@ -100,12 +100,49 @@ public class BasicShapes
                 GumUI.Draw();
             }
 
+            DrawGamepadDiagnostics();
+
             EndDrawing();
 
             Thread.Sleep(12);
         }
 
         CloseWindow();
+    }
+
+    // TEMPORARY diagnostic overlay for issue #3046 — shows whether raylib sees a gamepad,
+    // its raw left-stick / D-pad / A input, and which Forms control currently has focus.
+    // Remove once controller navigation is confirmed working.
+    private static void DrawGamepadDiagnostics()
+    {
+        int y = 70;
+        const int fontSize = 18;
+
+        bool anyPad = false;
+        for (int i = 0; i < 4; i++)
+        {
+            if (!IsGamepadAvailable(i))
+            {
+                continue;
+            }
+            anyPad = true;
+            float lx = GetGamepadAxisMovement(i, GamepadAxis.LeftX);
+            float ly = GetGamepadAxisMovement(i, GamepadAxis.LeftY);
+            bool dpadDown = IsGamepadButtonDown(i, GamepadButton.LeftFaceDown);
+            bool aDown = IsGamepadButtonDown(i, GamepadButton.RightFaceDown);
+            DrawText($"Pad {i}: LX={lx:0.00} LY={ly:0.00}  DPadDown={dpadDown}  A={aDown}",
+                8, y, fontSize, Color.Yellow);
+            y += 22;
+        }
+
+        if (!anyPad)
+        {
+            DrawText("raylib sees NO gamepad (IsGamepadAvailable false for 0-3)", 8, y, fontSize, Color.Red);
+            y += 22;
+        }
+
+        string focus = InteractiveGue.CurrentInputReceiver?.GetType().Name ?? "null";
+        DrawText($"Focused control: {focus}", 8, y, fontSize, Color.Lime);
     }
 
     // Mirrors MonoGameGumShapesGallery/Game1.BuildNavStrip — horizontal Forms Button strip
