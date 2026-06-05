@@ -164,14 +164,14 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
 
         if (Blend.HasValue)
         {
-            BeginBlendMode(Blend.Value.ToRaylibBlendMode());
+            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend.Value.ToRaylibBlendMode());
         }
 
         DrawTexturePro(Texture.Value, srcRect, destinationRectangle, Vector2.Zero, -absoluteRotation, Color);
 
         if (Blend.HasValue)
         {
-            EndBlendMode();
+            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.EndBlendMode();
         }
     }
 

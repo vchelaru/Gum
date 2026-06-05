@@ -242,7 +242,7 @@ public class NineSlice : RenderableBase, IAnimatable, ITextureCoordinate, IClone
 
         if (Blend.HasValue)
         {
-            BeginBlendMode(Blend.Value.ToRaylibBlendMode());
+            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend.Value.ToRaylibBlendMode());
         }
 
         DrawTextureNPatch(
@@ -255,7 +255,7 @@ public class NineSlice : RenderableBase, IAnimatable, ITextureCoordinate, IClone
 
         if (Blend.HasValue)
         {
-            EndBlendMode();
+            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.EndBlendMode();
         }
     }
 

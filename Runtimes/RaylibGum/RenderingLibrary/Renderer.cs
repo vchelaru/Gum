@@ -75,6 +75,21 @@ public class Renderer : IRenderer
     /// </summary>
     public ShadowBlurRenderer ShadowBlur { get; }
 
+    /// <summary>
+    /// Per-frame render-state-change counters for this renderer, including the authoritative
+    /// <see cref="RenderStateChangeStatistics.DrawCallCount"/> measured via the owned RenderBatch.
+    /// Reset at the start of each <see cref="Draw(SystemManagers)"/> and readable afterward to
+    /// gauge how well a frame batches.
+    /// </summary>
+    public RenderStateChangeStatistics RenderStateChangeStatistics { get; private set; }
+
+    /// <summary>
+    /// Owns a private raylib <c>RenderBatch</c> and counts the GPU draw calls issued during a Gum
+    /// render pass. Renderables that issue raylib state changes (blend / scissor / render-target /
+    /// shader) must route them through this counter's wrapper methods so the count stays accurate.
+    /// </summary>
+    public BatchDrawCallCounter BatchDrawCallCounter { get; private set; }
+
     public static BlendState NormalBlendState
     {
         get;
@@ -91,6 +106,8 @@ public class Renderer : IRenderer
         _layersReadOnly = new ReadOnlyCollection<Layer>(_layers);
         _layers.Add(new Layer());
         ShadowBlur = new ShadowBlurRenderer();
+        RenderStateChangeStatistics = new RenderStateChangeStatistics();
+        BatchDrawCallCounter = new BatchDrawCallCounter();
     }
 
 
@@ -113,6 +130,10 @@ public class Renderer : IRenderer
         // pattern in RenderingLibrary/Graphics/Renderer.cs.
         ShadowBlur.ClearUnusedRenderTargetsLastFrame();
 
+        // Clear last frame's counts before the pass; the owned-batch counter repopulates
+        // DrawCallCount as it banks each flush below.
+        RenderStateChangeStatistics.Reset();
+
         _camera.ClientWidth = Raylib.GetScreenWidth();
         _camera.ClientHeight = Raylib.GetScreenHeight();
 
@@ -126,7 +147,11 @@ public class Renderer : IRenderer
             Rotation = 0,
         };
 
-        Raylib.BeginMode2D(camera2D);
+        // Substitute our owned RenderBatch for raylib's default so its draw counter can be read,
+        // then route the mode/scissor state changes below through the counter so each batch flush
+        // is banked into RenderStateChangeStatistics.DrawCallCount.
+        BatchDrawCallCounter.BeginPass(RenderStateChangeStatistics);
+        BatchDrawCallCounter.BeginMode2D(camera2D);
 
         for (int i = 0; i < layers.Count; i++)
         {
@@ -149,7 +174,8 @@ public class Renderer : IRenderer
             RenderLayer(managers, layer, prerender: false);
         }
 
-        Raylib.EndMode2D();
+        BatchDrawCallCounter.EndMode2D();
+        BatchDrawCallCounter.EndPass();
     }
     public void RenderLayer(ISystemManagers managers, Layer layer, bool prerender = true)
     {
@@ -233,7 +259,7 @@ public class Renderer : IRenderer
                 ? System.Drawing.Rectangle.Intersect(_scissorStack.Peek(), rect)
                 : rect;
             _scissorStack.Push(effective);
-            Raylib.BeginScissorMode(effective.X, effective.Y, effective.Width, effective.Height);
+            BatchDrawCallCounter.BeginScissorMode(effective.X, effective.Y, effective.Width, effective.Height);
         }
 
         if (element.Children != null)
@@ -253,11 +279,11 @@ public class Renderer : IRenderer
             if (_scissorStack.Count > 0)
             {
                 var parent = _scissorStack.Peek();
-                Raylib.BeginScissorMode(parent.X, parent.Y, parent.Width, parent.Height);
+                BatchDrawCallCounter.BeginScissorMode(parent.X, parent.Y, parent.Width, parent.Height);
             }
             else
             {
-                Raylib.EndScissorMode();
+                BatchDrawCallCounter.EndScissorMode();
             }
         }
     }

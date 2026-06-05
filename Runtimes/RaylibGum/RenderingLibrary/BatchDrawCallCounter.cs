@@ -1,0 +1,207 @@
+using Raylib_cs;
+using System;
+using System.Runtime.InteropServices;
+
+namespace RenderingLibrary.Graphics;
+
+/// <summary>
+/// Measures the authoritative number of GPU draw calls the raylib renderer issues for a Gum
+/// render pass, by owning a private <see cref="RenderBatch"/> and reading raylib's own draw
+/// bookkeeping instead of predicting it.
+///
+/// <para><b>Why own a batch:</b> raylib's default render batch is a file-scoped <c>static</c> in
+/// rlgl with no public accessor, so its draw counter can't be read. <c>rlSetRenderBatchActive</c>
+/// lets us substitute a batch we own; raylib then accumulates draws into it with all of its real
+/// grouping rules (texture-change and draw-mode-change splits), and we read the result.</para>
+///
+/// <para><b>Why bank at each flush:</b> raylib resets the batch's <c>DrawCounter</c> to 1 on every
+/// flush (<c>rlDrawRenderBatch</c>), and a flush is forced by every scissor/blend/render-target/
+/// shader/mode change. So a single end-of-pass read would only see the last segment. Instead the
+/// renderer calls <see cref="Bank"/> immediately before each such state change; <see cref="Bank"/>
+/// counts the draw-call slots raylib actually filled this segment (slots with a non-zero vertex
+/// count — exactly what <c>rlDrawRenderBatch</c> would draw) and adds them to the active
+/// <see cref="RenderStateChangeStatistics"/>.</para>
+///
+/// <para><b>Lifecycle:</b> the owned batch is loaded lazily on first use (it needs a live GL
+/// context) and pinned for the process lifetime. Mirroring <c>ShadowBlurRenderer</c>, there is no
+/// explicit unload — raylib's <c>CloseWindow</c> reclaims the GL resources at shutdown.</para>
+/// </summary>
+public sealed unsafe class BatchDrawCallCounter
+{
+    // raylib desktop (GL 3.3) defaults for the internal batch — RL_DEFAULT_BATCH_BUFFERS and
+    // RL_DEFAULT_BATCH_BUFFER_ELEMENTS. Matching them keeps our owned batch's auto-flush behavior
+    // identical to the default batch raylib would otherwise use.
+    private const int DefaultBatchBuffers = 1;
+    private const int DefaultBatchBufferElements = 8192;
+
+    // Single-element array pinned for the process so the RenderBatch lives at a stable address:
+    // rlSetRenderBatchActive stores the pointer, so the struct must not move while it is active.
+    private RenderBatch[] _batchStorage;
+    private GCHandle _pinHandle;
+    private RenderBatch* _batch;
+    private bool _initialized;
+
+    private RenderStateChangeStatistics _statistics;
+    private bool _active;
+
+    /// <summary>
+    /// Activates the owned batch for a render pass and routes subsequent <see cref="Bank"/> calls
+    /// into <paramref name="statistics"/>. If the GL context isn't ready (so the batch can't be
+    /// loaded), counting is silently disabled for the pass and rendering proceeds normally.
+    /// The caller is responsible for resetting <paramref name="statistics"/> before the pass.
+    /// </summary>
+    public void BeginPass(RenderStateChangeStatistics statistics)
+    {
+        EnsureInitialized();
+        if (!_initialized)
+        {
+            _active = false;
+            return;
+        }
+
+        _statistics = statistics;
+        _active = true;
+        // Switching to our batch flushes whatever was queued in the previous (default) batch, so
+        // any draws issued before the Gum pass are accounted to the default batch, not ours.
+        Rlgl.SetRenderBatchActive(_batch);
+    }
+
+    /// <summary>
+    /// Counted wrapper for <see cref="Raylib.BeginMode2D"/>: banks the pending segment, then
+    /// performs the state change (which flushes the batch).
+    /// </summary>
+    public void BeginMode2D(Camera2D camera)
+    {
+        Bank();
+        Raylib.BeginMode2D(camera);
+    }
+
+    /// <summary>Counted wrapper for <see cref="Raylib.EndMode2D"/>.</summary>
+    public void EndMode2D()
+    {
+        Bank();
+        Raylib.EndMode2D();
+    }
+
+    /// <summary>Counted wrapper for <see cref="Raylib.BeginScissorMode"/>.</summary>
+    public void BeginScissorMode(int x, int y, int width, int height)
+    {
+        Bank();
+        Raylib.BeginScissorMode(x, y, width, height);
+    }
+
+    /// <summary>Counted wrapper for <see cref="Raylib.EndScissorMode"/>.</summary>
+    public void EndScissorMode()
+    {
+        Bank();
+        Raylib.EndScissorMode();
+    }
+
+    /// <summary>Counted wrapper for <see cref="Raylib.BeginBlendMode"/>.</summary>
+    public void BeginBlendMode(BlendMode mode)
+    {
+        Bank();
+        Raylib.BeginBlendMode(mode);
+    }
+
+    /// <summary>Counted wrapper for <see cref="Raylib.EndBlendMode"/>.</summary>
+    public void EndBlendMode()
+    {
+        Bank();
+        Raylib.EndBlendMode();
+    }
+
+    /// <summary>Counted wrapper for <see cref="Raylib.BeginTextureMode"/>.</summary>
+    public void BeginTextureMode(RenderTexture2D target)
+    {
+        Bank();
+        Raylib.BeginTextureMode(target);
+    }
+
+    /// <summary>Counted wrapper for <see cref="Raylib.EndTextureMode"/>.</summary>
+    public void EndTextureMode()
+    {
+        Bank();
+        Raylib.EndTextureMode();
+    }
+
+    /// <summary>Counted wrapper for <see cref="Raylib.BeginShaderMode"/>.</summary>
+    public void BeginShaderMode(Shader shader)
+    {
+        Bank();
+        Raylib.BeginShaderMode(shader);
+    }
+
+    /// <summary>Counted wrapper for <see cref="Raylib.EndShaderMode"/>.</summary>
+    public void EndShaderMode()
+    {
+        Bank();
+        Raylib.EndShaderMode();
+    }
+
+    /// <summary>
+    /// Banks the draw calls accumulated since the last flush, then ends the pass and restores
+    /// raylib's default batch. Call after the last draw of the pass.
+    /// </summary>
+    public void EndPass()
+    {
+        if (!_active)
+        {
+            return;
+        }
+
+        Bank();
+        Rlgl.SetRenderBatchActive(null);
+        _active = false;
+        _statistics = null;
+    }
+
+    /// <summary>
+    /// Counts the draw-call slots raylib filled since the previous flush and adds them to the
+    /// active statistics. Must be called immediately before any raylib state change that flushes
+    /// the batch (scissor/blend/render-target/shader/mode). No-op when counting is inactive.
+    /// </summary>
+    public void Bank()
+    {
+        if (!_active)
+        {
+            return;
+        }
+
+        int drawCounter = _batch->DrawCounter;
+        int realDrawCalls = 0;
+        for (int i = 0; i < drawCounter; i++)
+        {
+            // rlDrawRenderBatch only emits slots with vertices, and zeroes every slot's vertex
+            // count on flush — so non-empty slots in [0, DrawCounter) are exactly the GPU draws
+            // for this segment, with no stale or empty-segment overcount.
+            if (_batch->Draws[i].VertexCount > 0)
+            {
+                realDrawCalls++;
+            }
+        }
+
+        _statistics?.AddDrawCalls(realDrawCalls);
+    }
+
+    private void EnsureInitialized()
+    {
+        if (_initialized)
+        {
+            return;
+        }
+
+        // LoadRenderBatch allocates GL vertex buffers, so it requires an initialized window. If the
+        // window isn't ready yet, leave counting disabled for this pass and retry next frame.
+        if (!Raylib.IsWindowReady())
+        {
+            return;
+        }
+
+        _batchStorage = new RenderBatch[1];
+        _pinHandle = GCHandle.Alloc(_batchStorage, GCHandleType.Pinned);
+        _batch = (RenderBatch*)_pinHandle.AddrOfPinnedObject();
+        *_batch = Rlgl.LoadRenderBatch(DefaultBatchBuffers, DefaultBatchBufferElements);
+        _initialized = true;
+    }
+}

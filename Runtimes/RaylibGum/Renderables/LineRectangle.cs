@@ -635,7 +635,7 @@ public class LineRectangle : InvisibleRenderable
         bool useScissor = !rotated;
         if (useScissor)
         {
-            BeginScissorMode((int)ox, (int)oy, (int)MathF.Ceiling(w), (int)MathF.Ceiling(h));
+            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginScissorMode((int)ox, (int)oy, (int)MathF.Ceiling(w), (int)MathF.Ceiling(h));
         }
 
         // Band count: 64 gives near-imperceptible stairstepping at typical UI sizes. Step in
@@ -664,7 +664,7 @@ public class LineRectangle : InvisibleRenderable
 
         if (useScissor)
         {
-            EndScissorMode();
+            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.EndScissorMode();
         }
     }
 
