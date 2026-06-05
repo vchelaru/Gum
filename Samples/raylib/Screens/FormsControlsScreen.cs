@@ -35,6 +35,11 @@ internal class FormsControlsScreen : FrameworkElement
         button.Text = "I'm a button";
         container.AddChild(button.Visual);
 
+        // Give the first control focus so a connected gamepad has a starting point to
+        // navigate from (the gamepads themselves are registered in Program.Main). See
+        // https://docs.flatredball.com/gum/code/events-and-interactivity/gamepad-support.
+        button.IsFocused = true;
+
         var checkbox = new CheckBox();
         checkbox.Width = 200;
         checkbox.Text = "Check me";
@@ -163,7 +168,7 @@ internal class FormsControlsScreen : FrameworkElement
     private void AddSwitchHint()
     {
         var hint = new TextRuntime();
-        hint.Text = "Press SPACE to switch screens";
+        hint.Text = "Gamepad: D-pad / left stick navigates, A activates";
         hint.XOrigin = HorizontalAlignment.Left;
         hint.YOrigin = VerticalAlignment.Bottom;
         hint.XUnits = GeneralUnitType.PixelsFromSmall;
