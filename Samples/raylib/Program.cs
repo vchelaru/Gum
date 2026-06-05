@@ -57,13 +57,16 @@ public class BasicShapes
 
         GumUI.Initialize();
 
-        // Enable gamepad navigation for Forms controls (see
+        // Enable gamepad + keyboard navigation for Forms controls (see
         // https://docs.flatredball.com/gum/code/events-and-interactivity/gamepad-support).
         // GumUI.Update reads the connected controller into these gamepads each frame; the
         // D-pad / left stick then move focus between controls and A activates the focused
-        // control. The starting control is given focus in FormsControlsScreen's constructor.
+        // control. UseKeyboardDefaults registers the keyboard so Tab / Shift+Tab navigate the
+        // same way. The starting control is given focus in FormsControlsScreen's constructor.
         FrameworkElement.GamePadsForUiControl.Clear();
         FrameworkElement.GamePadsForUiControl.AddRange(GumUI.Gamepads);
+
+        GumUI.UseKeyboardDefaults();
 
         // Demo the auto-fit helpers — flip via the Zoom/Expand radio buttons in the nav strip.
         GumUI.EnableZoomToWindow();

@@ -4,7 +4,6 @@ using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Managers;
-using Gum.Renderables;
 using Gum.Wireframe;
 using Raylib_cs;
 using RenderingLibrary.Graphics;
@@ -21,7 +20,10 @@ internal class FormsControlsScreen : FrameworkElement
     {
         Dock(Gum.Wireframe.Dock.Fill);
 
-        var container = new GraphicalUiElement(new InvisibleRenderable());
+        // Must be an InteractiveGue (ContainerRuntime), not a raw GraphicalUiElement: focus
+        // tabbing walks the focused control's parent via `Parent as InteractiveGue`, so a
+        // non-interactive parent yields no siblings and gamepad/keyboard navigation no-ops.
+        var container = new ContainerRuntime();
         this.AddChild(container);
         container.ChildrenLayout = ChildrenLayout.TopToBottomStack;
         container.WrapsChildren = true;
