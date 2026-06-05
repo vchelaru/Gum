@@ -3191,14 +3191,17 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             var asIpso = this as IPositionedSizedObject;
             return asIpso.X + asIpso.Width;
         }
-        else if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.LeftToRightStack)
+        else if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.LeftToRightStack
+            && mXUnits != GeneralUnitType.PixelsFromSmall)
         {
-            // The parent owns this child's X position via stacking, so the child's own
-            // XUnits/XOrigin must not feed back into the parent's width measure. Without
-            // this branch, a stacked child with XUnits = PixelsFromMiddle (or any other
-            // non-PixelsFromSmall unit) would inflate the parent's RelativeToChildren width
-            // through the GetDimensionFromEdges path below, which doubles centered widths
-            // and clamps right-anchored widths against the parent's right edge.
+            // The parent owns this child's X position via stacking, so a non-PixelsFromSmall
+            // XUnits/XOrigin must not feed back into the parent's width measure. Without this
+            // branch, a stacked child with XUnits = PixelsFromMiddle (or PixelsFromLarge) would
+            // inflate the parent's RelativeToChildren width through the GetDimensionFromEdges
+            // path below, which doubles centered widths and clamps right-anchored widths against
+            // the parent's right edge (#2896). A PixelsFromSmall X offset, by contrast, is a real
+            // additive nudge the stack applies on top of the stacked position, so it is allowed to
+            // fall through to the edge path below and grow the parent's required width.
             var asIpso = this as IPositionedSizedObject;
             return asIpso.Width;
         }
@@ -3248,11 +3251,16 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             var asIpso = this as IPositionedSizedObject;
             return asIpso.Y + asIpso.Height;
         }
-        else if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.TopToBottomStack)
+        else if (effectiveParent != null && effectiveParent.ChildrenLayout == ChildrenLayout.TopToBottomStack
+            && mYUnits != GeneralUnitType.PixelsFromSmall)
         {
-            // Symmetric to GetRequiredParentWidth's LeftToRightStack branch: the parent owns
-            // this child's Y position via stacking, so the child's own YUnits/YOrigin must
-            // not feed back into the parent's height measure.
+            // Symmetric to GetRequiredParentWidth's LeftToRightStack branch: the parent owns this
+            // child's Y position via stacking, so a non-PixelsFromSmall YUnits/YOrigin must not
+            // feed back into the parent's height measure (#2896 - PixelsFromMiddle doubles and
+            // PixelsFromLarge clamps through GetDimensionFromEdges). A PixelsFromSmall Y offset is
+            // a real downward nudge the stack applies on top of the stacked position, so it falls
+            // through to the edge path below and grows the parent's required height. This is what
+            // makes a RelativeToChildren stack contain a first child placed at e.g. Y = 12.
             var asIpso = this as IPositionedSizedObject;
             return asIpso.Height;
         }
