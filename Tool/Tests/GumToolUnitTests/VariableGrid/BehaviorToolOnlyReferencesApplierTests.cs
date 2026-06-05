@@ -390,6 +390,50 @@ public class BehaviorToolOnlyReferencesApplierTests : BaseTestClass
     }
 
     [Fact]
+    public void Apply_NonDefaultCategoryState_DoesNotMaterializeSelectorIntoIt()
+    {
+        // Repro #3055: the applier is invoked with whatever state is currently selected.
+        // When that state is a category state (e.g. TextBoxCategory/Focused), materializing
+        // TextBoxCategoryState into it bakes the category's own selector into one of its
+        // states - a self-referential/circular state that re-drives the category back to
+        // "Enabled" on preview, clobbering the state's authored values. Tool-only references
+        // exist only to drive the resting default-state preview, so a non-default state must
+        // be left untouched.
+        BehaviorSave behavior = new BehaviorSave { Name = "TextBoxBehavior" };
+        behavior.FormsProperties.Add(new VariableSave { Type = "bool", Name = "IsEnabled", Value = true });
+        behavior.ToolOnlyVariableReferences.Add(
+            "TextBoxCategoryState = IsEnabled ? \"Enabled\" : \"Disabled\"");
+
+        ComponentSave component = new ComponentSave { Name = "Controls/TextBox", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "TextBoxBehavior" });
+
+        StateSave focusedState = new StateSave { Name = "Focused", ParentContainer = component };
+        focusedState.Variables.Add(new VariableSave
+        {
+            Type = "ColorCategory",
+            Name = "Border.ColorCategoryState",
+            Value = "Primary",
+            SetsValue = true
+        });
+        component.Categories.Add(new StateSaveCategory
+        {
+            Name = "TextBoxCategory",
+            States = new List<StateSave> { focusedState }
+        });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        BehaviorToolOnlyReferencesApplier.Apply(component, focusedState);
+
+        focusedState.Variables.ShouldNotContain(v => v.Name == "TextBoxCategoryState",
+            "a category state must not have its own category's selector materialized into it");
+    }
+
+    [Fact]
     public void Apply_BehaviorWithoutToolOnlyReferences_DoesNothing()
     {
         BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehavior" };

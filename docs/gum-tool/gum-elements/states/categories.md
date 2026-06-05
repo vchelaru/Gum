@@ -133,3 +133,23 @@ The check fires for two cases, on every state of every Screen and Component:
 - A `VariableReferences` row inherited via an active categorized-state assignment on an instance (the `UpgradeButton` shape).
 
 `StandardElements` are skipped — their references commonly evaluate to default values whose missing materialization is the correct on-disk state, not a conflict.
+
+## GUM0003: Category State Sets Its Own Category Selector
+
+A category's selector variable (e.g. `TextBoxCategoryState` for the `TextBoxCategory` category) chooses which state in that category is active. When a state *inside* the category sets that same selector, the result is circular: applying the state re-drives the whole category, which re-applies a (possibly different) state and discards the original state's authored values. Gum surfaces this with warning code **GUM0003**.
+
+### Example
+
+`TextBox` has a `TextBoxCategory` with states `Enabled`, `Disabled`, `Highlighted`, and `Focused`. The `Focused` state sets `Border.ColorCategoryState = "Primary"` (the normal cascade onto a child instance) — but it *also* sets `TextBoxCategoryState = "Enabled"`. Selecting `Focused` immediately re-applies `Enabled`, so the border never shows the `Focused` colors.
+
+### How it got there
+
+This is not normally hand-authored. It is usually materialized data: a tool pass that drives a category selector from a Forms property (for design-time preview) wrote the selector into whichever state was selected at the time, including the category's own states. The applier no longer does this — it only materializes into the default state — but projects edited before that fix can carry the orphaned assignments.
+
+### Fixing it
+
+Remove the self-referential selector variable from the category's states. The selector belongs only on the default (uncategorized) state, where it picks the element's resting state; it should never appear inside the category it selects.
+
+### Detection scope
+
+The check fires on every Screen and Component, for any state inside a category that sets that same category's selector. A state setting a *child instance's* selector (e.g. `Border.ColorCategoryState`, which carries a source object) is the intended cascade and is not flagged.

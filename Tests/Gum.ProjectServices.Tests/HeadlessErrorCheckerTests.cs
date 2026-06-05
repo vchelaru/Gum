@@ -843,4 +843,70 @@ public class HeadlessErrorCheckerTests : BaseTestClass
     }
 
     #endregion
+
+    #region GUM0003 — Category state sets its own category's selector
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0003_WhenCategoryStateSetsItsOwnCategorySelector()
+    {
+        // Repro #3055: a behavior tool-only reference materialized TextBoxCategoryState into
+        // a TextBoxCategory state, so the state selects a state within its own category - a
+        // circular reference that re-drives the category when the state is applied, clobbering
+        // its authored values. This is never valid and must be surfaced.
+        ComponentSave component = new ComponentSave { Name = "Controls/TextBox", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+
+        StateSaveCategory textBoxCategory = new StateSaveCategory { Name = "TextBoxCategory" };
+        StateSave focusedState = new StateSave { Name = "Focused", ParentContainer = component };
+        focusedState.Variables.Add(new VariableSave
+        {
+            Name = "TextBoxCategoryState",
+            Type = "TextBoxCategory",
+            Value = "Enabled",
+            SetsValue = true
+        });
+        textBoxCategory.States.Add(focusedState);
+        component.Categories.Add(textBoxCategory);
+
+        Project.Components.Add(component);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe("GUM0003");
+        error.ElementName.ShouldBe("Controls/TextBox");
+        error.Message.ShouldContain("TextBoxCategory");
+        error.Message.ShouldContain("Focused");
+        error.Severity.ShouldBe(ErrorSeverity.Warning);
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0003_WhenCategoryStateSetsChildCategorySelector()
+    {
+        // The normal cascade: a TextBoxCategory state setting a *child* instance's category
+        // selector (Border.ColorCategoryState) is the intended mechanism and must not be flagged.
+        // It is distinguished by having a SourceObject (the child), unlike the element's own selector.
+        ComponentSave component = new ComponentSave { Name = "Controls/TextBox", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+
+        StateSaveCategory textBoxCategory = new StateSaveCategory { Name = "TextBoxCategory" };
+        StateSave focusedState = new StateSave { Name = "Focused", ParentContainer = component };
+        focusedState.Variables.Add(new VariableSave
+        {
+            Name = "Border.ColorCategoryState",
+            Type = "ColorCategory",
+            Value = "Primary",
+            SetsValue = true
+        });
+        textBoxCategory.States.Add(focusedState);
+        component.Categories.Add(textBoxCategory);
+
+        Project.Components.Add(component);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.ShouldNotContain(e => e.Code == "GUM0003");
+    }
+
+    #endregion
 }
