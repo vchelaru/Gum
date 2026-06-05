@@ -453,6 +453,23 @@ public class DeleteLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void RemoveParentReferencesToInstance_RemovesRenderTargetTextureSourceReferences()
+    {
+        // A Sprite's RenderTargetTextureSource stores the name of a sibling render-target Container.
+        // Deleting that Container must drop the dangling reference, the same way Parent references
+        // are cleaned up — otherwise a stale variable points at an instance that no longer exists.
+        var screen = CreateScreenWithInstances("RenderTargetContainer", "SpriteInstance");
+        var renderTargetContainer = screen.Instances[0];
+        screen.DefaultState.SetValue("SpriteInstance.RenderTargetTextureSource", "RenderTargetContainer", "string");
+
+        _deleteLogic.RemoveParentReferencesToInstance(renderTargetContainer, screen);
+
+        screen.DefaultState.Variables
+            .Where(v => v.GetRootName() == "RenderTargetTextureSource")
+            .ShouldBeEmpty("Render-target references to the deleted container should be removed");
+    }
+
+    [Fact]
     public void RemoveParentReferencesToInstance_WithDottedReference_RemovesIt()
     {
         var screen = CreateScreenWithInstances("Parent");
