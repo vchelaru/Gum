@@ -754,4 +754,30 @@ public class CustomSetPropertyOnRenderable
             }
         }
     }
+
+    /// <summary>
+    /// Detaches <paramref name="renderable"/> from the renderer so it stops drawing. This is the
+    /// remove counterpart to <see cref="AddRenderableToManagers"/> and is wired into
+    /// <see cref="GraphicalUiElement.RemoveRenderableFromManagers"/> by <c>SystemManagers.Initialize</c>
+    /// (issue #3048). Because the Raylib add path is purely layer-based (no Sprite/Shape/TextManager),
+    /// removal just searches the renderer's layers for the renderable and removes it.
+    /// </summary>
+    public static void RemoveRenderableFromManagers(IRenderableIpso renderable, ISystemManagers iSystemManagers)
+    {
+        if (renderable == null)
+        {
+            return;
+        }
+
+        var managers = (SystemManagers)iSystemManagers;
+
+        foreach (var layer in managers.Renderer.Layers)
+        {
+            if (layer.Renderables.Contains(renderable))
+            {
+                layer.Remove(renderable);
+                return;
+            }
+        }
+    }
 }
