@@ -152,6 +152,33 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
     }
 
     [Fact]
+    public void Apply_ShouldCombineChannelDetailText_WhenChannelsAreDisabled()
+    {
+        // A color driven by a variable reference disables (read-only) each Red/Green/Blue channel and
+        // gives each one a subtext describing its assignment. Once collapsed into the single swatch the
+        // per-channel rows are gone, so the swatch must surface the combined per-channel messages -
+        // otherwise the swatch is disabled with no explanation of why (issue #3058).
+        ComponentSave component = MakeColorComponent();
+        MemberCategory category = CategoryWith(
+            DisabledChannel("Red", "=A.Red"),
+            DisabledChannel("Green", "=A.Green"),
+            DisabledChannel("Blue", "=A.Blue"));
+        List<MemberCategory> categories = new() { category };
+
+        _logic.Apply(categories, component, instance: null);
+        CompositeInstanceMember composite = (CompositeInstanceMember)category.Members.Single();
+
+        composite.DetailText.ShouldContain("Red=A.Red");
+        composite.DetailText.ShouldContain("Green=A.Green");
+        composite.DetailText.ShouldContain("Blue=A.Blue");
+    }
+
+    private static InstanceMember DisabledChannel(string name, string detailText)
+    {
+        return new InstanceMember(name, null!) { IsReadOnly = true, DetailText = detailText };
+    }
+
+    [Fact]
     public void Apply_ShouldOfferUnexposeNotExpose_WhenChannelsExposed()
     {
         InstanceSave instance = SetUpInstanceForExpose(out ComponentSave container);

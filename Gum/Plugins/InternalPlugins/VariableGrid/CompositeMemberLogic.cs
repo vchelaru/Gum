@@ -158,13 +158,33 @@ public class CompositeMemberLogic
         composite.SupportsMakeDefault = false;
         composite.DisplayName = ToolsUtilities.StringFunctions.InsertSpacesInCamelCaseString(compositeName);
 
+        // Collapsing the triple removes the per-channel rows, taking their subtext with them. A channel is
+        // disabled (read-only) when it's driven by a variable reference, so surface each disabled channel's
+        // message on the swatch - otherwise the swatch is correctly disabled but with no explanation of why
+        // (issue #3058). Prefixing with the channel root name reconstructs the per-channel assignment line
+        // (e.g. "Red=A.Red") so the user sees every value being assigned individually.
+        List<string> detailSegments = new();
+        for (int i = 0; i < triple.ChannelMembers.Count; i++)
+        {
+            InstanceMember channelMember = triple.ChannelMembers[i];
+            if (channelMember.IsReadOnly && !string.IsNullOrEmpty(channelMember.DetailText))
+            {
+                detailSegments.Add(triple.ChannelRootNames[i] + channelMember.DetailText);
+            }
+        }
+
         // When channels are exposed the swatch stays, but we surface the exposure as subtext so the user can
         // see it's exposed and under which names (the raw per-channel rows used to carry this).
         List<VariableSave> exposedChannelVariables = GetExposedChannelVariables(triple, element, instance);
         if (exposedChannelVariables.Count > 0)
         {
-            composite.DetailText = "Exposed as " +
-                string.Join(", ", exposedChannelVariables.Select((variable) => variable.ExposedAsName));
+            detailSegments.Add("Exposed as " +
+                string.Join(", ", exposedChannelVariables.Select((variable) => variable.ExposedAsName)));
+        }
+
+        if (detailSegments.Count > 0)
+        {
+            composite.DetailText = string.Join("\n", detailSegments);
         }
 
         // Single undo for the whole composite write. The undo lock must live here (Gum-side) because the
