@@ -228,6 +228,20 @@ public class Renderer : IRenderer
     public RenderStateChangeStatistics RenderStateChangeStatistics { get; private set; }
 
     /// <summary>
+    /// Builds a <see cref="DrawStateSummary"/> for the just-completed frame, bucketing
+    /// <see cref="SpriteRenderer.LastFrameDrawStates"/> by begin cause (clip / state / texture) and folding in
+    /// the frame's Apos.Shapes begin count. Call after <see cref="Draw(SystemManagers)"/> to diagnose what is
+    /// driving the SpriteBatch.Begin count — for example, whether a high count is clipping rather than something
+    /// <see cref="BatchKeyGroupedOrderer"/> could reduce.
+    /// </summary>
+    public DrawStateSummary GetDrawStateSummary()
+    {
+        return DrawStateSummary.FromDrawStates(
+            spriteRenderer.LastFrameDrawStates,
+            RenderStateChangeStatistics.ShapeBatchBeginCount);
+    }
+
+    /// <summary>
     /// Controls which XNA BlendState is used for the Rendering Library's Blend.Normal value.
     /// </summary>
     /// <remarks>

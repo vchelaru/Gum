@@ -90,3 +90,34 @@ By Un-set ContainerRuntime Clip
 By ContainerRuntime w/ 1 Textures set(s)
 By Un-set ContainerRuntime Clip
 ```
+
+### Summarizing by cause
+
+Reading individual draw states is precise but tedious when a frame has dozens or hundreds of begins. `Renderer.GetDrawStateSummary` rolls the same data up into a count per cause, so you can see at a glance whether your begins come from clipping, non-clip render-state changes (blend/color/wrap), or texture sets within batches.
+
+```csharp
+// Draw
+DrawStateSummary summary = GumUI.SystemManagers.Renderer.GetDrawStateSummary();
+System.Diagnostics.Debug.WriteLine(summary);
+```
+
+This prints a breakdown similar to:
+
+```
+Draw State Summary: 120 SpriteBatch.Begin(s)
+  Initial:       1
+  Clip changes:  118
+  State changes: 1
+  Texture sets within batches:     40
+  Apos.Shapes ShapeBatch.Begin(s): 0
+```
+
+Use the breakdown to decide where to spend effort:
+
+* **Clip changes dominate** — each `ClipsChildren` container forces a begin on entry and another on exit. Forms controls add clipping containers freely, so a list or grid with many clipping items drives this number up. Reduce it by removing `ClipsChildren` where it isn't needed.
+* **Texture sets are high** — pack sprites, fonts, and the single-pixel texture onto shared PNGs (see [SinglePixelTexture](singlepixeltexture.md)).
+* **`Apos.Shapes` is high** — your scene mixes the `SpriteBatch` and Apos.Shapes batchers, which is the case [BatchKeyGroupedOrderer](batchkeygroupedorderer.md) targets. `SpriteBatch.Begin` counts (the other rows, and the total reported by `LastFrameDrawStates`) do not include Apos.Shapes begins, so this row is the only one the grouped orderer can reduce.
+
+{% hint style="info" %}
+The clip-versus-state split is a heuristic. Clip-exit begins are identified exactly; clip-enter begins are inferred from whether the begin's renderable clips its children. A renderable that both clips and changes a non-clip state in the same begin is counted as a clip change. The totals are exact; only the clip/state attribution is approximate.
+{% endhint %}

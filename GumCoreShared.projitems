@@ -92,6 +92,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\BatchOrchestrator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\BitmapCharacterInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\DrawCommand.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\DrawStateSummary.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Fonts\BitmapFont.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Fonts\BmfcSave.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Fonts\IInMemoryFontCreator.cs" />
