@@ -108,6 +108,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         errors.AddRange(GetInvalidVariableTypeErrorsFor(element));
         errors.AddRange(GetAchxOriginErrorsFor(element, project));
         errors.AddRange(GetVariableReferenceConflictErrorsFor(element));
+        errors.AddRange(GetSelfReferentialCategoryStateErrorsFor(element));
 
         foreach (var source in _additionalErrorSources)
         {
@@ -276,6 +277,57 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         value is float || value is double || value is int || value is long || value is decimal;
 
     private static string FormatValue(object? value) => value?.ToString() ?? "(null)";
+
+    #endregion
+
+    #region GUM0003 — Category state sets its own category's selector
+
+    /// <summary>
+    /// Flags a state inside a category that sets that same category's selector variable
+    /// (e.g. a <c>TextBoxCategory</c> state assigning <c>TextBoxCategoryState</c>). Such a
+    /// self-reference is circular: applying the state re-drives the whole category, discarding
+    /// the state's own authored values. It is never valid - the runtime only avoids an infinite
+    /// loop via a recursion guard - and is the data corruption behind issue #3055.
+    /// A child instance's selector (with a SourceObject, e.g. <c>Border.ColorCategoryState</c>)
+    /// is the intended cascade and is deliberately not flagged.
+    /// </summary>
+    private static List<ErrorResult> GetSelfReferentialCategoryStateErrorsFor(ElementSave element)
+    {
+        var errors = new List<ErrorResult>();
+
+        foreach (var category in element.Categories)
+        {
+            foreach (var state in category.States)
+            {
+                foreach (var variable in state.Variables)
+                {
+                    if (!variable.SetsValue || !string.IsNullOrEmpty(variable.SourceObject))
+                    {
+                        continue;
+                    }
+
+                    if (variable.IsState(element, out _, out StateSaveCategory referencedCategory)
+                        && referencedCategory != null
+                        && referencedCategory.Name == category.Name)
+                    {
+                        errors.Add(new ErrorResult
+                        {
+                            ElementName = element.Name,
+                            Code = "GUM0003",
+                            Severity = ErrorSeverity.Warning,
+                            Message = $"Category \"{category.Name}\" state \"{state.Name}\" sets its own " +
+                                $"category selector \"{variable.Name}\". A state cannot select a state within " +
+                                $"its own category - this is a circular reference that re-drives the category " +
+                                $"when the state is applied, discarding the state's authored values. " +
+                                $"Remove \"{variable.Name}\" from this state."
+                        });
+                    }
+                }
+            }
+        }
+
+        return errors;
+    }
 
     #endregion
 

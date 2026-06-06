@@ -27,6 +27,20 @@ public static class BehaviorToolOnlyReferencesApplier
 {
     public static void Apply(ElementSave element, StateSave stateSave)
     {
+        // Tool-only references exist solely to drive the element's resting design-time
+        // wireframe preview from FormsProperty values, and that resting preview is the
+        // default (uncategorized) state. Materializing into a categorized state bakes a
+        // category selector into a state it doesn't belong to - including the selector's
+        // own category, which produces a self-referential/circular state that re-drives
+        // the category back to its FormsProperty value on preview, clobbering the state's
+        // authored values (issue #3055). Since the references evaluate from single-valued
+        // FormsProperties, they resolve identically in every state anyway, so restricting
+        // to the default state loses nothing.
+        if (element.DefaultState == null || stateSave != element.DefaultState)
+        {
+            return;
+        }
+
         if (element is ComponentSave component)
         {
             ApplyBehaviorsOf(component, instance: null, stateSave);
