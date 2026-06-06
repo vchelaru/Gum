@@ -83,6 +83,7 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
         this.GetSelectedNodes += HandleGetSelectedNodes;
 
         this.VariableSet += HandleVariableSet;
+        this.VariableRemovedFromCategory += HandleVariableRemovedFromCategory;
         this.HighlightTreeNode += HandleHighlightTreeNode;
         this.AfterUndo += HandleAfterUndo;
         this.InstanceDelete += HandleInstanceDelete;
@@ -313,6 +314,14 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
         {
             _elementTreeViewManager.RefreshUi(instance);
         }
+    }
+
+    private void HandleVariableRemovedFromCategory(string variableName, StateSaveCategory category)
+    {
+        // Removing a variable from a category's states can clear an error (e.g. a GUM0003
+        // self-referential category state), so the "!" tree indicator must refresh. The
+        // category belongs to the currently selected element.
+        RefreshErrorIndicatorsForElement(_selectedState.SelectedElement);
     }
 
     private void HandleAfterUndo()

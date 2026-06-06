@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Messages;
 using Gum.Plugins.BaseClasses;
@@ -93,7 +94,16 @@ public class MainErrorsPlugin : PriorityPlugin
         this.InstanceAdd += HandleInstanceAdd;
         this.InstanceDelete += HandleInstanceDelete;
         this.VariableSet += HandleVariableSet;
+        this.VariableRemovedFromCategory += HandleVariableRemovedFromCategory;
         this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
+    }
+
+    private void HandleVariableRemovedFromCategory(string variableName, StateSaveCategory category)
+    {
+        // Removing a variable from a category's states can clear an error (e.g. a GUM0003
+        // self-referential category state), so the Errors tab must refresh. The category
+        // belongs to the currently selected element.
+        UpdateErrorsForElement(_selectedState.SelectedElement);
     }
 
     private void HandleInstanceSelected(ElementSave element, InstanceSave instance)
