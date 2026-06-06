@@ -10,5 +10,7 @@ By default, Gum projects copy content to the bin folder if the content is newer 
 
 You can delete bin/obj folders and re-build your project to verify that content is loading correctly. Alternatively you can try loading the .gumx file that is in the bin folder to see if it visually matches the content in source.
 
-In web projects, the browser might cache old versions of your .gumx project. Clearing browser cache will make sure you are loading the correct .gumx file.
+## Clearing Browser Cache (Web)
+
+On web targets (KNI BlazorGL and other WebAssembly hosts), the browser may serve a cached copy of your `.gumx` project and its files. If your content looks out of date even though the source has changed, the browser cache is a likely culprit. Performing a hard refresh or clearing the browser cache makes sure you are loading the current `.gumx` file rather than a stale cached version.
 

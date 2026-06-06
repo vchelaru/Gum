@@ -158,6 +158,10 @@ protected override void Initialize()
 
 By default the Gum path is relative to your game's Content folder. On KNI BlazorGL (and other WebAssembly hosts) this resolves under `wwwroot/Content`, so the same `"GumProject/GumProject.gumx"` value works on web as long as the project lives at `wwwroot/Content/GumProject/GumProject.gumx`.
 
+{% hint style="info" %}
+On web, the browser can serve a cached copy of your `.gumx` project, so changes may not appear after a rebuild. If your content looks stale, see [Clearing Browser Cache (Web)](../../files-and-fonts/troubleshooting.md#clearing-browser-cache-web).
+{% endhint %}
+
 If your Gum project is not part of the the folder you can still load it by using the "../" prefix to step out of the Content folder. For example, the following code would load a Gum project located at `<exe location>/GumProject/GumProject.gumx`:
 
 ```csharp
