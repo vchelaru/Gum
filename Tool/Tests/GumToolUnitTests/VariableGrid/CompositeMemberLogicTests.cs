@@ -71,16 +71,16 @@ public class CompositeMemberLogicTests : BaseTestClass
     }
 
     [Fact]
-    public void Apply_ShouldNotAddCopyQualifiedVariableNameMenu_ForAffixedColor()
+    public void Apply_ShouldAddCopyQualifiedVariableNameMenu_ForAffixedColor()
     {
-        // VariableReferenceLogic only expands a reference whose right side ends in ".Color", so affixed colors
-        // (e.g. StrokeColor) must not offer a copy item that would produce an unexpandable reference (#3061).
+        // VariableReferenceLogic now expands any composite color reference (StrokeColor -> Stroke channels),
+        // so affixed colors offer the copy item too.
         (MemberCategory category, ComponentSave element) =
             BuildComponentWithChannels("StrokeRed", "StrokeGreen", "StrokeBlue");
 
         CompositeInstanceMember composite = ApplyAndGetComposite(category, element);
 
-        composite.ContextMenuEvents.Keys.ShouldNotContain("Copy Qualified Variable Name");
+        composite.ContextMenuEvents.Keys.ShouldContain("Copy Qualified Variable Name");
     }
 
     [Fact]

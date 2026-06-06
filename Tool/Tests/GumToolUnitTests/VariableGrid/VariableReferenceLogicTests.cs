@@ -23,7 +23,8 @@ public class VariableReferenceLogicTests : BaseTestClass
             _guiCommandsMock.Object,
             new Mock<IWireframeCommands>().Object,
             new Mock<IDialogService>().Object,
-            new Mock<IFileCommands>().Object);
+            new Mock<IFileCommands>().Object,
+            new CompositeMemberRegistry());
     }
 
     #region GetAssignmentSyntax
@@ -80,7 +81,7 @@ public class VariableReferenceLogicTests : BaseTestClass
     public void ReactIfChangedMemberIsVariableReference_ColorAssignment_ExpandsToThreeEntries()
     {
         // "Background.Color" has no explicit left side, so AddImpliedLeftSide runs first,
-        // converting it to "Color = Background.Color", then ExpandColorToRedGreenBlue splits it.
+        // converting it to "Color = Background.Color", then the composite expansion splits it.
         StateSave stateSave = BuildStateWithVariableReferences("VariableReferences", "Background.Color");
 
         _sut.ReactIfChangedMemberIsVariableReference(
@@ -91,6 +92,54 @@ public class VariableReferenceLogicTests : BaseTestClass
         varList.ShouldContain("Red = Background.Red");
         varList.ShouldContain("Green = Background.Green");
         varList.ShouldContain("Blue = Background.Blue");
+    }
+
+    [Fact]
+    public void ReactIfChangedMemberIsVariableReference_FillColorAssignment_ExpandsToFillChannels()
+    {
+        // Affixed colors expand to their affixed channels, the inverse of how CompositeMemberLogic
+        // collapses FillRed/FillGreen/FillBlue into a single "FillColor" swatch.
+        StateSave stateSave = BuildStateWithVariableReferences("VariableReferences", "Background.FillColor");
+
+        _sut.ReactIfChangedMemberIsVariableReference(
+            instance: null, stateSave, changedMember: "VariableReferences", oldValue: null);
+
+        var varList = (List<string>)stateSave.GetVariableListSave("VariableReferences").ValueAsIList;
+        varList.Count.ShouldBe(3);
+        varList.ShouldContain("FillRed = Background.FillRed");
+        varList.ShouldContain("FillGreen = Background.FillGreen");
+        varList.ShouldContain("FillBlue = Background.FillBlue");
+    }
+
+    [Fact]
+    public void ReactIfChangedMemberIsVariableReference_StrokeColorAssignment_ExpandsToStrokeChannels()
+    {
+        StateSave stateSave = BuildStateWithVariableReferences("VariableReferences", "Background.StrokeColor");
+
+        _sut.ReactIfChangedMemberIsVariableReference(
+            instance: null, stateSave, changedMember: "VariableReferences", oldValue: null);
+
+        var varList = (List<string>)stateSave.GetVariableListSave("VariableReferences").ValueAsIList;
+        varList.Count.ShouldBe(3);
+        varList.ShouldContain("StrokeRed = Background.StrokeRed");
+        varList.ShouldContain("StrokeGreen = Background.StrokeGreen");
+        varList.ShouldContain("StrokeBlue = Background.StrokeBlue");
+    }
+
+    [Fact]
+    public void ReactIfChangedMemberIsVariableReference_SuffixedColorAssignment_ExpandsToSuffixedChannels()
+    {
+        // Gradient channels carry a numeric suffix (e.g. Color2 -> Red2/Green2/Blue2).
+        StateSave stateSave = BuildStateWithVariableReferences("VariableReferences", "Background.Color2");
+
+        _sut.ReactIfChangedMemberIsVariableReference(
+            instance: null, stateSave, changedMember: "VariableReferences", oldValue: null);
+
+        var varList = (List<string>)stateSave.GetVariableListSave("VariableReferences").ValueAsIList;
+        varList.Count.ShouldBe(3);
+        varList.ShouldContain("Red2 = Background.Red2");
+        varList.ShouldContain("Green2 = Background.Green2");
+        varList.ShouldContain("Blue2 = Background.Blue2");
     }
 
     [Fact]

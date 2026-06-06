@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 
@@ -27,4 +28,37 @@ public record CompositeMemberDescriptor(
     Type Displayer,
     Type CompositeType,
     Func<IReadOnlyList<object?>, object> Compose,
-    Func<object, object?[]> Decompose);
+    Func<object, object?[]> Decompose)
+{
+    /// <summary>
+    /// The literal token at the heart of <see cref="CompositeNameFormat"/> — the format with the
+    /// <c>{prefix}</c>/<c>{suffix}</c> placeholders removed (e.g. <c>Color</c> from <c>{prefix}Color{suffix}</c>).
+    /// </summary>
+    private string CompositeToken => CompositeNameFormat
+        .Replace("{prefix}", string.Empty)
+        .Replace("{suffix}", string.Empty);
+
+    /// <summary>
+    /// If <paramref name="compositeName"/> is an instance of this descriptor's name format — the
+    /// <see cref="CompositeToken"/> surrounded by some prefix/suffix (e.g. <c>StrokeColor</c>, <c>Color2</c>) —
+    /// outputs the matching channel variable names in <see cref="ChannelRootNames"/> order (e.g.
+    /// <c>StrokeColor</c> -&gt; StrokeRed/StrokeGreen/StrokeBlue) and returns true; otherwise returns false.
+    /// This is the inverse of how <c>CompositeMemberLogic</c> builds the composite name from the channels.
+    /// </summary>
+    public bool TryGetChannelNames(string compositeName, out IReadOnlyList<string> channelNames)
+    {
+        string compositeToken = CompositeToken;
+        int index = compositeName.IndexOf(compositeToken, StringComparison.Ordinal);
+        if (index < 0)
+        {
+            channelNames = Array.Empty<string>();
+            return false;
+        }
+
+        string prefix = compositeName.Substring(0, index);
+        string suffix = compositeName.Substring(index + compositeToken.Length);
+
+        channelNames = ChannelRootNames.Select(token => prefix + token + suffix).ToArray();
+        return true;
+    }
+}

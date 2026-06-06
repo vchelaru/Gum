@@ -227,16 +227,12 @@ public class CompositeMemberLogic
         composite.ContextMenuEvents.Add("Make Default", (_, _) => HandleMakeDefault(triple.ChannelMembers));
 
         // "Copy Qualified Variable Name" copies the swatch's qualified name (e.g.
-        // Components/MyComp.MyInstance.Color) so it can be pasted as the right-hand side of a variable
-        // reference; VariableReferenceLogic expands "Color = ....Color" back into Red/Green/Blue. Scope this to
-        // the standard "Color" composite only: the color-expansion matches exactly leftSide == "Color" &&
-        // rightSide.EndsWith(".Color"), so affixed/gradient colors (StrokeColor, Color1) would produce a name
-        // the reference resolver can't expand (issue #3061).
-        if (compositeName == "Color")
-        {
-            composite.ContextMenuEvents.Add("Copy Qualified Variable Name",
-                (_, _) => Clipboard.SetText(GetCompositeQualifiedName(element, instance, compositeName)));
-        }
+        // Components/MyComp.MyInstance.Color, or ...StrokeColor for an affixed color) so it can be pasted as the
+        // right-hand side of a variable reference. VariableReferenceLogic expands any composite reference back
+        // into its channels via the same registry that built this swatch, so every composite color - plain,
+        // affixed (StrokeColor/FillColor), or gradient (Color2) - is a valid copy target (issue #3061).
+        composite.ContextMenuEvents.Add("Copy Qualified Variable Name",
+            (_, _) => Clipboard.SetText(GetCompositeQualifiedName(element, instance, compositeName)));
 
         TryAddExposeMenu(composite, descriptor, triple, element, instance, exposedChannelVariables);
 
