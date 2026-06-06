@@ -65,6 +65,7 @@
 		<Compile Include="..\..\RenderingLibrary\Graphics\BatchKeyGroupedOrderer.cs" Link="RenderingLibrary\BatchKeyGroupedOrderer.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\BatchOrchestrator.cs" Link="RenderingLibrary\BatchOrchestrator.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\DrawCommand.cs" Link="RenderingLibrary\DrawCommand.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\DrawStateSummary.cs" Link="RenderingLibrary\DrawStateSummary.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\HierarchicalOrderer.cs" Link="RenderingLibrary\HierarchicalOrderer.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\IRenderableOrderer.cs" Link="RenderingLibrary\IRenderableOrderer.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Renderer.cs" Link="RenderingLibrary\Renderer.cs" />

@@ -15,9 +15,16 @@ The default `HierarchicalOrderer` is correct and fast. The grouped orderer helps
 
 Within `SpriteBatch` alone, you can usually reduce flushes yourself by packing fonts and sprites into one atlas (see [SinglePixelTexture](singlepixeltexture.md)). Cross-batcher alternation has no such workaround — that's the case this orderer exists to fix.
 
-### Enabling the orderer
+### Choosing an orderer
 
-Assign the static `Renderer.SiblingOrdering` once during initialization. The default is `HierarchicalOrderer.Instance`.
+`Renderer.SiblingOrdering` is a swap slot: assign it one of the available orderer instances to choose how the main render pass is ordered. The shipped options are:
+
+| Set `Renderer.SiblingOrdering` to | What it does |
+|---|---|
+| `HierarchicalOrderer.Instance` *(default)* | Depth-first walk, one draw per renderable in tree order. No reordering — this is the order Gum has always used. |
+| `BatchKeyGroupedOrderer.Instance` | Reorders draws within layer- and clip-bounded windows so same-`BatchKey` runs become contiguous, cutting batch flushes. Output is pixel-identical to the default. |
+
+Note that the default and the opt-in are **different** types — `HierarchicalOrderer` versus `BatchKeyGroupedOrderer`. Assign the grouped one to turn the optimization on:
 
 ```csharp
 // Initialize
@@ -25,7 +32,7 @@ RenderingLibrary.Graphics.Renderer.SiblingOrdering =
     RenderingLibrary.Graphics.BatchKeyGroupedOrderer.Instance;
 ```
 
-You can flip the property at any time; no teardown is required. The next frame uses the new orderer.
+To switch back, assign `HierarchicalOrderer.Instance`. You can flip the property at any time; no teardown is required, and the next frame uses the new orderer.
 
 ### What it preserves
 
@@ -44,6 +51,8 @@ The grouped orderer is pixel-correct for any scene the default orderer renders c
 ### Measuring the win
 
 Use [LastFrameDrawStates](lastframedrawstates.md) to count `SpriteBatch.Begin` calls before and after enabling the orderer. The grouped orderer should reduce the count substantially on any scene that mixes `SpriteBatch` and Apos.Shapes work; it should leave a single-batcher scene unchanged.
+
+Before reaching for the orderer, confirm it can actually help: call `Renderer.GetDrawStateSummary` (see [Summarizing by cause](lastframedrawstates.md#summarizing-by-cause)) and look at the `Apos.Shapes ShapeBatch.Begin(s)` row. The orderer only collapses alternation between the `SpriteBatch` and Apos.Shapes batchers, so if that row is near zero, your begins come from clipping or texture sets instead — and the orderer will leave the count unchanged no matter what. In that case, reduce `ClipsChildren` usage or atlas your textures rather than switching orderers.
 
 {% hint style="info" %}
 `LastFrameDrawStates` only sees `SpriteBatch.Begin` calls. Apos.Shapes batch starts are not counted, so the total batch count is higher than the reported number. The orderer's effect on `SpriteBatch.Begin` is still a useful proxy for the overall trend.
