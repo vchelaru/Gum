@@ -528,31 +528,16 @@ public class StateReferencingInstanceMember : InstanceMember
         {
             ContextMenuEvents.Add("Copy Qualified Variable Name", (sender, e) =>
             {
-                string qualifiedName;
-
-                if (ElementSave is ScreenSave)
+                if (ElementSave == null)
                 {
-                    qualifiedName = $"Screens/{ElementSave.Name}";
-                }
-                else if (ElementSave is ComponentSave)
-                {
-                    qualifiedName = $"Components/{ElementSave.Name}";
-                }
-                else
-                {
-                    qualifiedName = $"Standards/{ElementSave.Name}";
+                    return;
                 }
 
-                // no need to append instance, the variable name contains the instance name if there is an instance
-                //if(mInstanceSave != null)
-                //{
-                //    qualifiedName += "." + mInstanceSave.Name;
-                //}
-
-                qualifiedName += "." + mVariableName;
+                // No need to append the instance: mVariableName already contains the instance name when there
+                // is an instance.
+                var qualifiedName = _objectFinder.GetQualifiedElementName(ElementSave) + "." + mVariableName;
 
                 Clipboard.SetText(qualifiedName);
-
             });
         }
 

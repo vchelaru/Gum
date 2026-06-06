@@ -31,18 +31,21 @@ public class VariableReferenceLogic : IVariableReferenceLogic
     private readonly IWireframeCommands _wireframeCommands;
     private readonly IDialogService _dialogService;
     private readonly IFileCommands _fileCommands;
+    private readonly ICompositeMemberRegistry _compositeMemberRegistry;
 
     #endregion
 
     public VariableReferenceLogic(IGuiCommands guiCommands,
         IWireframeCommands wireframeCommands,
         IDialogService dialogService,
-        IFileCommands fileCommands)
+        IFileCommands fileCommands,
+        ICompositeMemberRegistry compositeMemberRegistry)
     {
         _guiCommands = guiCommands;
         _wireframeCommands = wireframeCommands;
         _dialogService =  dialogService;
         _fileCommands = fileCommands;
+        _compositeMemberRegistry = compositeMemberRegistry;
     }
 
     public AssignmentExpressionSyntax? GetAssignmentSyntax(string item)
@@ -629,7 +632,9 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
         ///////////////////End Early Out/////////////////////////////////////
 
-        bool didChange = ModifyLines(oldValue, newValueAsList, instance);
+        var ownerElement = ObjectFinder.Self.GetElementContainerOf(stateSave);
+
+        bool didChange = ModifyLines(oldValue, newValueAsList, instance, ownerElement);
 
 
         if (didChange)
@@ -643,7 +648,8 @@ public class VariableReferenceLogic : IVariableReferenceLogic
     #region Line Assignment Expansion / Modifications
 
     static char[] equalsArray = new char[] { '=' };
-    bool ModifyLines(object? oldValue, List<string> newValueAsList, InstanceSave? selectedInstance)
+    bool ModifyLines(object? oldValue, List<string> newValueAsList, InstanceSave? selectedInstance,
+        ElementSave? ownerElement)
     {
         var oldValueAsList = oldValue as List<string>;
 
@@ -704,9 +710,17 @@ public class VariableReferenceLogic : IVariableReferenceLogic
                 {
                     var leftSide = split[0];
                     var rightSide = split[1];
-                    if (leftSide == "Color" && rightSide.EndsWith(".Color"))
+                    // A composite reference (e.g. "Color = X.Color", "StrokeColor = X.StrokeColor") expands into
+                    // one assignment per underlying channel. The registry knows which names are composites and
+                    // what channels they map to, so any registered composite (color today, others later) expands
+                    // with no extra control flow here. We only expand when the reference owner actually has those
+                    // channels - otherwise a non-composite name that merely contains the token (e.g. a literal
+                    // "BackgroundColor" variable) would be mangled into BackgroundRed/Green/Blue.
+                    if (rightSide.EndsWith("." + leftSide) &&
+                        TryGetCompositeChannelNames(leftSide, out var channelNames) &&
+                        OwnerHasAllChannels(channelNames, selectedInstance, ownerElement))
                     {
-                        ExpandColorToRedGreenBlue(newValueAsList, i, rightSide);
+                        ExpandCompositeToChannels(newValueAsList, i, rightSide, leftSide, channelNames);
                     }
                 }
             }
@@ -780,17 +794,66 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         //newValueAsList[i] = split[0] + "=" + split[1];
     }
 
-    private static void ExpandColorToRedGreenBlue(List<string> asList, int i, string rightSide)
+    /// <summary>
+    /// Returns the channel variable names for <paramref name="compositeName"/> if it matches any registered
+    /// composite descriptor (e.g. "StrokeColor" -&gt; StrokeRed/StrokeGreen/StrokeBlue); otherwise false.
+    /// </summary>
+    private bool TryGetCompositeChannelNames(string compositeName, out IReadOnlyList<string> channelNames)
     {
-        // does this thing have a color value?
-        // let's assume "no" for now, eventually may need to fix this up....
-        var withoutVariable = rightSide.Substring(0, rightSide.Length - ".Color".Length);
+        foreach (var descriptor in _compositeMemberRegistry.Descriptors)
+        {
+            if (descriptor.TryGetChannelNames(compositeName, out channelNames))
+            {
+                return true;
+            }
+        }
+
+        channelNames = Array.Empty<string>();
+        return false;
+    }
+
+    /// <summary>
+    /// Returns true only if the reference owner (the selected instance's type, or the owning element for an
+    /// element-level reference) declares a root variable for every channel - i.e. the composite name really is
+    /// a composite on this object. Mirrors the channel-existence check <c>CompositeMemberLogic</c> uses to
+    /// decide whether to build the swatch in the first place.
+    /// </summary>
+    private static bool OwnerHasAllChannels(IReadOnlyList<string> channelNames, InstanceSave? selectedInstance,
+        ElementSave? ownerElement)
+    {
+        var channelOwner = selectedInstance != null
+            ? ObjectFinder.Self.GetElementSave(selectedInstance)
+            : ownerElement;
+
+        if (channelOwner == null)
+        {
+            return false;
+        }
+
+        foreach (var channelName in channelNames)
+        {
+            if (ObjectFinder.Self.GetRootVariable(channelName, channelOwner) == null)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static void ExpandCompositeToChannels(List<string> asList, int i, string rightSide,
+        string compositeName, IReadOnlyList<string> channelNames)
+    {
+        // rightSide ends with "." + compositeName (e.g. "X.StrokeColor"); strip that to get the referenced
+        // object path ("X"), then re-attach each channel name on both sides.
+        var withoutVariable = rightSide.Substring(0, rightSide.Length - ("." + compositeName).Length);
 
         asList.RemoveAt(i);
 
-        asList.Add($"Red = {withoutVariable}.Red");
-        asList.Add($"Green = {withoutVariable}.Green");
-        asList.Add($"Blue = {withoutVariable}.Blue");
+        foreach (var channelName in channelNames)
+        {
+            asList.Add($"{channelName} = {withoutVariable}.{channelName}");
+        }
     }
 
     private static string[] AddImpliedLeftSide(List<string> asList, int i, string[] split)

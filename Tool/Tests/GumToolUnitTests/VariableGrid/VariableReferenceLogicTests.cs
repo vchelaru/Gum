@@ -23,7 +23,8 @@ public class VariableReferenceLogicTests : BaseTestClass
             _guiCommandsMock.Object,
             new Mock<IWireframeCommands>().Object,
             new Mock<IDialogService>().Object,
-            new Mock<IFileCommands>().Object);
+            new Mock<IFileCommands>().Object,
+            new CompositeMemberRegistry());
     }
 
     #region GetAssignmentSyntax
@@ -80,17 +81,81 @@ public class VariableReferenceLogicTests : BaseTestClass
     public void ReactIfChangedMemberIsVariableReference_ColorAssignment_ExpandsToThreeEntries()
     {
         // "Background.Color" has no explicit left side, so AddImpliedLeftSide runs first,
-        // converting it to "Color = Background.Color", then ExpandColorToRedGreenBlue splits it.
-        StateSave stateSave = BuildStateWithVariableReferences("VariableReferences", "Background.Color");
+        // converting it to "Color = Background.Color", then the composite expansion splits it.
+        (StateSave defaultState, VariableListSave<string> varList) =
+            BuildOwnerWithChannelsAndReference("Background.Color", "Red", "Green", "Blue");
 
         _sut.ReactIfChangedMemberIsVariableReference(
-            instance: null, stateSave, changedMember: "VariableReferences", oldValue: null);
+            instance: null, defaultState, changedMember: "VariableReferences", oldValue: null);
 
-        var varList = (List<string>)stateSave.GetVariableListSave("VariableReferences").ValueAsIList;
-        varList.Count.ShouldBe(3);
-        varList.ShouldContain("Red = Background.Red");
-        varList.ShouldContain("Green = Background.Green");
-        varList.ShouldContain("Blue = Background.Blue");
+        varList.Value.Count.ShouldBe(3);
+        varList.Value.ShouldContain("Red = Background.Red");
+        varList.Value.ShouldContain("Green = Background.Green");
+        varList.Value.ShouldContain("Blue = Background.Blue");
+    }
+
+    [Fact]
+    public void ReactIfChangedMemberIsVariableReference_FillColorAssignment_ExpandsToFillChannels()
+    {
+        // Affixed colors expand to their affixed channels, the inverse of how CompositeMemberLogic
+        // collapses FillRed/FillGreen/FillBlue into a single "FillColor" swatch.
+        (StateSave defaultState, VariableListSave<string> varList) =
+            BuildOwnerWithChannelsAndReference("Background.FillColor", "FillRed", "FillGreen", "FillBlue");
+
+        _sut.ReactIfChangedMemberIsVariableReference(
+            instance: null, defaultState, changedMember: "VariableReferences", oldValue: null);
+
+        varList.Value.Count.ShouldBe(3);
+        varList.Value.ShouldContain("FillRed = Background.FillRed");
+        varList.Value.ShouldContain("FillGreen = Background.FillGreen");
+        varList.Value.ShouldContain("FillBlue = Background.FillBlue");
+    }
+
+    [Fact]
+    public void ReactIfChangedMemberIsVariableReference_NonCompositeColorName_IsNotExpanded()
+    {
+        // "BackgroundColor" contains the "Color" token but the owner has no Background* channels, so it is not
+        // a real composite; it must be left intact for normal validation rather than mangled into
+        // BackgroundRed/Green/Blue.
+        (StateSave defaultState, VariableListSave<string> varList) = BuildOwnerWithChannelsAndReference(
+            "BackgroundColor = OtherInstance.BackgroundColor", "Red", "Green", "Blue");
+
+        _sut.ReactIfChangedMemberIsVariableReference(
+            instance: null, defaultState, changedMember: "VariableReferences", oldValue: null);
+
+        varList.Value.Count.ShouldBe(1);
+        varList.Value[0].ShouldBe("BackgroundColor = OtherInstance.BackgroundColor");
+    }
+
+    [Fact]
+    public void ReactIfChangedMemberIsVariableReference_StrokeColorAssignment_ExpandsToStrokeChannels()
+    {
+        (StateSave defaultState, VariableListSave<string> varList) =
+            BuildOwnerWithChannelsAndReference("Background.StrokeColor", "StrokeRed", "StrokeGreen", "StrokeBlue");
+
+        _sut.ReactIfChangedMemberIsVariableReference(
+            instance: null, defaultState, changedMember: "VariableReferences", oldValue: null);
+
+        varList.Value.Count.ShouldBe(3);
+        varList.Value.ShouldContain("StrokeRed = Background.StrokeRed");
+        varList.Value.ShouldContain("StrokeGreen = Background.StrokeGreen");
+        varList.Value.ShouldContain("StrokeBlue = Background.StrokeBlue");
+    }
+
+    [Fact]
+    public void ReactIfChangedMemberIsVariableReference_SuffixedColorAssignment_ExpandsToSuffixedChannels()
+    {
+        // Gradient channels carry a numeric suffix (e.g. Color2 -> Red2/Green2/Blue2).
+        (StateSave defaultState, VariableListSave<string> varList) =
+            BuildOwnerWithChannelsAndReference("Background.Color2", "Red2", "Green2", "Blue2");
+
+        _sut.ReactIfChangedMemberIsVariableReference(
+            instance: null, defaultState, changedMember: "VariableReferences", oldValue: null);
+
+        varList.Value.Count.ShouldBe(3);
+        varList.Value.ShouldContain("Red2 = Background.Red2");
+        varList.Value.ShouldContain("Green2 = Background.Green2");
+        varList.Value.ShouldContain("Blue2 = Background.Blue2");
     }
 
     [Fact]
@@ -488,6 +553,41 @@ public class VariableReferenceLogicTests : BaseTestClass
         varList.Value.Add(item);
         stateSave.VariableLists.Add(varList);
         return stateSave;
+    }
+
+    /// <summary>
+    /// Builds a component (registered in a fresh project on <see cref="ObjectFinder"/>) whose default state
+    /// declares the given channel variables and carries a single VariableReferences line. Composite expansion
+    /// only fires when the reference owner actually has the composite's channels, so the channels must exist
+    /// for the expansion under test to run.
+    /// </summary>
+    private static (StateSave defaultState, VariableListSave<string> varList) BuildOwnerWithChannelsAndReference(
+        string referenceLine, params string[] channelNames)
+    {
+        ComponentSave element = new() { Name = "MyComp" };
+        StateSave defaultState = new() { Name = "Default", ParentContainer = element };
+        element.States.Add(defaultState);
+
+        foreach (string channelName in channelNames)
+        {
+            defaultState.Variables.Add(new VariableSave
+            {
+                Name = channelName,
+                Value = 0,
+                Type = "int",
+                SetsValue = true
+            });
+        }
+
+        VariableListSave<string> varList = new() { Type = "string", Name = "VariableReferences" };
+        varList.Value.Add(referenceLine);
+        defaultState.VariableLists.Add(varList);
+
+        GumProjectSave project = new();
+        project.Components.Add(element);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        return (defaultState, varList);
     }
 
     #endregion
