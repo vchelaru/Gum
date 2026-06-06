@@ -10,6 +10,7 @@ using Gum.Undo;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms;
 using ToolsUtilities;
 using WpfDataUi.DataTypes;
 
@@ -225,6 +226,18 @@ public class CompositeMemberLogic
 
         composite.ContextMenuEvents.Add("Make Default", (_, _) => HandleMakeDefault(triple.ChannelMembers));
 
+        // "Copy Qualified Variable Name" copies the swatch's qualified name (e.g.
+        // Components/MyComp.MyInstance.Color) so it can be pasted as the right-hand side of a variable
+        // reference; VariableReferenceLogic expands "Color = ....Color" back into Red/Green/Blue. Scope this to
+        // the standard "Color" composite only: the color-expansion matches exactly leftSide == "Color" &&
+        // rightSide.EndsWith(".Color"), so affixed/gradient colors (StrokeColor, Color1) would produce a name
+        // the reference resolver can't expand (issue #3061).
+        if (compositeName == "Color")
+        {
+            composite.ContextMenuEvents.Add("Copy Qualified Variable Name",
+                (_, _) => Clipboard.SetText(GetCompositeQualifiedName(element, instance, compositeName)));
+        }
+
         TryAddExposeMenu(composite, descriptor, triple, element, instance, exposedChannelVariables);
 
         int insertIndex = triple.ChannelMembers.Min((member) => category.Members.IndexOf(member));
@@ -381,6 +394,22 @@ public class CompositeMemberLogic
         return instance != null
             ? element.DefaultState.GetVariableSave($"{instance.Name}.{channelRootName}")
             : element.DefaultState.GetVariableSave(channelRootName);
+    }
+
+    /// <summary>
+    /// Builds the project-qualified name of a composite swatch, e.g. <c>Components/MyComp.MyInstance.Color</c>
+    /// (or <c>Components/MyComp.Color</c> when the composite belongs to the element itself). Unlike the
+    /// per-channel rows — whose variable name already bakes in the instance name — the composite must prepend
+    /// the instance name itself. Exposed in internal scope for testing.
+    /// </summary>
+    internal string GetCompositeQualifiedName(ElementSave element, InstanceSave? instance, string compositeName)
+    {
+        string qualifiedName = _objectFinder.GetQualifiedElementName(element) + ".";
+        if (instance != null)
+        {
+            qualifiedName += instance.Name + ".";
+        }
+        return qualifiedName + compositeName;
     }
 
     private string? GetRootVariableName(InstanceMember member, ElementSave element, InstanceSave? instance)

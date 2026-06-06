@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Shouldly;
@@ -8,7 +10,7 @@ using Xunit;
 
 namespace GumToolUnitTests.VariableGrid;
 
-public class CompositeMemberLogicTests
+public class CompositeMemberLogicTests : BaseTestClass
 {
     private readonly CompositeMemberLogic _logic;
     private readonly CompositeMemberDescriptor _colorDescriptor;
@@ -28,6 +30,76 @@ public class CompositeMemberLogicTests
             result[rootName] = new InstanceMember(rootName, null!);
         }
         return result;
+    }
+
+    /// <summary>
+    /// Builds a single-category component whose default state declares the given channel variables, plus a
+    /// matching grid member per channel - enough for <see cref="CompositeMemberLogic.Apply"/> to collapse them
+    /// into a composite swatch.
+    /// </summary>
+    private static (MemberCategory category, ComponentSave element) BuildComponentWithChannels(
+        params string[] channelRootNames)
+    {
+        ComponentSave element = new() { Name = "MyComp" };
+        StateSave defaultState = new() { Name = "Default", ParentContainer = element };
+        element.States.Add(defaultState);
+
+        MemberCategory category = new();
+        foreach (string channelRootName in channelRootNames)
+        {
+            defaultState.Variables.Add(new VariableSave { Name = channelRootName, Value = 0, Type = "int" });
+            category.Members.Add(new InstanceMember(channelRootName, defaultState));
+        }
+
+        return (category, element);
+    }
+
+    private CompositeInstanceMember ApplyAndGetComposite(MemberCategory category, ComponentSave element)
+    {
+        _logic.Apply(new List<MemberCategory> { category }, element, instance: null);
+        return category.Members.OfType<CompositeInstanceMember>().Single();
+    }
+
+    [Fact]
+    public void Apply_ShouldAddCopyQualifiedVariableNameMenu_ForPlainColor()
+    {
+        (MemberCategory category, ComponentSave element) = BuildComponentWithChannels("Red", "Green", "Blue");
+
+        CompositeInstanceMember composite = ApplyAndGetComposite(category, element);
+
+        composite.ContextMenuEvents.Keys.ShouldContain("Copy Qualified Variable Name");
+    }
+
+    [Fact]
+    public void Apply_ShouldNotAddCopyQualifiedVariableNameMenu_ForAffixedColor()
+    {
+        // VariableReferenceLogic only expands a reference whose right side ends in ".Color", so affixed colors
+        // (e.g. StrokeColor) must not offer a copy item that would produce an unexpandable reference (#3061).
+        (MemberCategory category, ComponentSave element) =
+            BuildComponentWithChannels("StrokeRed", "StrokeGreen", "StrokeBlue");
+
+        CompositeInstanceMember composite = ApplyAndGetComposite(category, element);
+
+        composite.ContextMenuEvents.Keys.ShouldNotContain("Copy Qualified Variable Name");
+    }
+
+    [Fact]
+    public void GetCompositeQualifiedName_ShouldIncludeInstanceName_WhenInstanceProvided()
+    {
+        ComponentSave element = new() { Name = "MyComp" };
+        InstanceSave instance = new() { Name = "MyInstance" };
+
+        _logic.GetCompositeQualifiedName(element, instance, "Color")
+            .ShouldBe("Components/MyComp.MyInstance.Color");
+    }
+
+    [Fact]
+    public void GetCompositeQualifiedName_ShouldQualifyWithElementPrefix_WhenNoInstance()
+    {
+        ComponentSave element = new() { Name = "MyComp" };
+
+        _logic.GetCompositeQualifiedName(element, instance: null, "Color")
+            .ShouldBe("Components/MyComp.Color");
     }
 
     [Fact]

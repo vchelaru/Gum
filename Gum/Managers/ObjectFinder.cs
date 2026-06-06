@@ -861,6 +861,22 @@ public class ObjectFinder : IObjectFinder
     #endregion
 
     /// <summary>
+    /// Returns the project-qualified name of <paramref name="element"/> — the element-path prefix
+    /// (<c>Screens/</c>, <c>Components/</c>, or <c>Standards/</c>) followed by the element name, e.g.
+    /// <c>Components/MyComp</c>. This is the form used as the left part of qualified variable names and as
+    /// the element segment of variable references.
+    /// </summary>
+    public string GetQualifiedElementName(ElementSave element)
+    {
+        var prefix =
+            element is ScreenSave ? "Screens/" :
+            element is ComponentSave ? "Components/" :
+            "Standards/";
+
+        return prefix + element.Name;
+    }
+
+    /// <summary>
     /// Returns a list of TypedElementReferences which include all items that reference the argument element.
     /// </summary>
     /// <param name="element">The argument element.</param>
@@ -868,12 +884,7 @@ public class ObjectFinder : IObjectFinder
     public List<TypedElementReference> GetElementReferencesToThis(ElementSave element)
     {
         var elementName = element.Name;
-        var prefix =
-            element is ScreenSave ? "Screens/" :
-            element is ComponentSave ? "Components/" :
-            "Standards/";
-
-        var elementQualifiedName = prefix + elementName;
+        var elementQualifiedName = GetQualifiedElementName(element);
 
         List<TypedElementReference> references = new List<TypedElementReference>();
         foreach (var screen in GumProjectSave.Screens)
