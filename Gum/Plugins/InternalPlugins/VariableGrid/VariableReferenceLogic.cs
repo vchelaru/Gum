@@ -632,7 +632,9 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
         ///////////////////End Early Out/////////////////////////////////////
 
-        bool didChange = ModifyLines(oldValue, newValueAsList, instance);
+        var ownerElement = ObjectFinder.Self.GetElementContainerOf(stateSave);
+
+        bool didChange = ModifyLines(oldValue, newValueAsList, instance, ownerElement);
 
 
         if (didChange)
@@ -646,7 +648,8 @@ public class VariableReferenceLogic : IVariableReferenceLogic
     #region Line Assignment Expansion / Modifications
 
     static char[] equalsArray = new char[] { '=' };
-    bool ModifyLines(object? oldValue, List<string> newValueAsList, InstanceSave? selectedInstance)
+    bool ModifyLines(object? oldValue, List<string> newValueAsList, InstanceSave? selectedInstance,
+        ElementSave? ownerElement)
     {
         var oldValueAsList = oldValue as List<string>;
 
@@ -710,9 +713,12 @@ public class VariableReferenceLogic : IVariableReferenceLogic
                     // A composite reference (e.g. "Color = X.Color", "StrokeColor = X.StrokeColor") expands into
                     // one assignment per underlying channel. The registry knows which names are composites and
                     // what channels they map to, so any registered composite (color today, others later) expands
-                    // with no extra control flow here.
+                    // with no extra control flow here. We only expand when the reference owner actually has those
+                    // channels - otherwise a non-composite name that merely contains the token (e.g. a literal
+                    // "BackgroundColor" variable) would be mangled into BackgroundRed/Green/Blue.
                     if (rightSide.EndsWith("." + leftSide) &&
-                        TryGetCompositeChannelNames(leftSide, out var channelNames))
+                        TryGetCompositeChannelNames(leftSide, out var channelNames) &&
+                        OwnerHasAllChannels(channelNames, selectedInstance, ownerElement))
                     {
                         ExpandCompositeToChannels(newValueAsList, i, rightSide, leftSide, channelNames);
                     }
@@ -804,6 +810,35 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
         channelNames = Array.Empty<string>();
         return false;
+    }
+
+    /// <summary>
+    /// Returns true only if the reference owner (the selected instance's type, or the owning element for an
+    /// element-level reference) declares a root variable for every channel - i.e. the composite name really is
+    /// a composite on this object. Mirrors the channel-existence check <c>CompositeMemberLogic</c> uses to
+    /// decide whether to build the swatch in the first place.
+    /// </summary>
+    private static bool OwnerHasAllChannels(IReadOnlyList<string> channelNames, InstanceSave? selectedInstance,
+        ElementSave? ownerElement)
+    {
+        var channelOwner = selectedInstance != null
+            ? ObjectFinder.Self.GetElementSave(selectedInstance)
+            : ownerElement;
+
+        if (channelOwner == null)
+        {
+            return false;
+        }
+
+        foreach (var channelName in channelNames)
+        {
+            if (ObjectFinder.Self.GetRootVariable(channelName, channelOwner) == null)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static void ExpandCompositeToChannels(List<string> asList, int i, string rightSide,
