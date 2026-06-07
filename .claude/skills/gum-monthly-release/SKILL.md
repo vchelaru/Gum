@@ -61,17 +61,11 @@ Look at — and this is where past drafts went wrong, so read carefully:
 - **Files touched** — used for categorization (Tool vs Runtimes). Pull these via `--json files` on the bulk `pr list` call rather than per-PR.
 - **Author** — for `(thanks @author)` attribution.
 
-**How to pull commits — and the node-limit trap.** You need every PR's commit list (don't draft bullets without it). The tempting one-shot — adding `commits` to a bulk `gh pr list … --json …,commits` — **fails on a busy month** with `GraphQL: … exceeds the maximum limit of 500,000` nodes, because the commits connection multiplies by author sub-connections × page size. Lowering `--limit` helps but is fragile. The bulletproof approach is to loop the canonical PR numbers and fetch each PR's commits individually (run it in the background — ~250 calls take a few minutes):
+**Do NOT dump every PR's commits into one file for yourself to read.** The previous version of this skill looped all ~250 PRs' commits into a single text file and had the *main agent* expand them. That single-context consumption is the root cause of the "it just summarizes" complaint — one agent holding hundreds of PRs' worth of raw commits will compress, no matter how many times the surrounding text says "mandatory." The per-PR commit fetch **and** expansion is therefore delegated to parallel subagents in **Step 3**; each subagent holds only a handful of PRs, so it has no pressure to summarize.
 
-```bash
-out=/tmp/gum_commits_all.txt; > "$out"
-for n in $(git log --no-merges <prev-tag>..origin/main --format="%s" | grep -oE '\(#[0-9]+\)$' | grep -oE '[0-9]+' | sort -un); do
-  gh pr view $n --repo vchelaru/Gum --json number,title,author,commits \
-    --jq '"===== PR #\(.number) [\(.author.login)] \(.title)\n" + ([.commits[].messageHeadline] | map("   - " + .) | join("\n"))' >> "$out" 2>/dev/null
-done
-```
-
-Note: use `gh`'s built-in `--jq` flag — standalone `jq` is **not** installed in this environment, and neither is `python`. (Issue/non-PR numbers in the set just error and are skipped, which is fine.) Then expand each PR into bullets from its commit list, not just its title.
+What you produce in *this* step is just the **batched PR-number list** for that fan-out (plus the metadata above for categorization). Two constraints to carry into Step 3:
+- Subagents fetch commits **per-PR** (`gh pr view <N> --repo vchelaru/Gum --json number,title,author,files,commits`), **never** the bulk `gh pr list … --json …,commits` call — that one blows the GraphQL 500,000-node limit on a busy month (the commits connection multiplies by author sub-connections × page size).
+- Standalone `jq` and `python` are **not** installed in this environment; use `gh`'s built-in `--jq` only. Issue/non-PR numbers in the set just error and are skipped, which is fine.
 
 **Heuristic for when a PR's commits will add content vs. just confirm the title:**
 - "Bump version to ...", "GITBOOK-NNN", `Merge pull request` — commits add nothing; trust the title.
@@ -86,34 +80,52 @@ Note: use `gh`'s built-in `--jq` flag — standalone `jq` is **not** installed i
 
 If a commit message is sparse and intent is genuinely unclear from the diff, **add it to the Open Questions block** rather than guessing.
 
-## Step 3: Translate into user-impact bullets
+## Step 3: Fan out per-PR expansion to parallel subagents
 
-The release-notes style is **user-impact-first, not mechanical**. The reader is a Gum customer trying to decide whether this release matters to them and what they'll see differently. Use the **most recent prior release** as a tone reference (find it via `gh release list --repo vchelaru/Gum --limit 5`):
+**This is the structural fix for the "it just summarizes" problem — treat it as the heart of the skill, not an optimization.** The main agent never reads the raw commits for the whole release. Each PR is handed to a `general-purpose` subagent that reads that PR's commits (and its diff when the commits are sparse) and returns **finished user-impact bullets**. Because each subagent holds only a handful of PRs, it faithfully expands every commit instead of compressing — which is exactly what a single agent reading hundreds of PRs cannot do.
+
+First, grab the tone reference so the subagents can match last month's voice. Use the **most recent prior release** (don't hard-code a tag — it ages):
 
 ```bash
+gh release list --repo vchelaru/Gum --limit 5      # find the previous tag
 gh release view <prior-release-tag> --repo vchelaru/Gum
 ```
 
-Do **not** hard-code a specific tag here — this skill is run monthly and the "tone reference" should always be the previous month's notes, not a fixed example that ages.
+**Batching.** Group the canonical PR numbers into batches of ~8–10. Spawn one subagent per batch, issuing batches in parallel (single message, multiple Agent calls). The harness caps concurrency, so on a big month send them in waves until the **entire** canonical set is covered — every PR is expanded by exactly one subagent, not just the "unclear" ones. (A ~250-PR month is ~25–30 subagents; that's expected and is the point.)
 
-Examples of the translation:
-- Mechanical: *"Refactored TextRuntime font loading."* → User-impact: *"Better error messages when attempting and failing to load fonts due to Gum not being initialized."*
-- Mechanical: *"Added IsTilingMiddleSections property to NineSlice."* → User-impact: *"NineSlices can now optionally tile the middle section sprites in tool and at runtime."*
+**Subagent prompt template** (fill in the batch's PR numbers):
 
-Keep bullets short (one line) unless a feature genuinely needs more. Link to docs (`https://docs.flatredball.com/gum/...`) when relevant.
+> You are expanding Gum PRs into release-notes bullets. For each PR number in this batch — [N1, N2, …] — run `gh pr view <N> --repo vchelaru/Gum --json number,title,author,files,commits`. If the commit list is sparse or the intent is unclear, also read `gh pr diff <N> --repo vchelaru/Gum`, and for PRs whose title references an issue number, `gh issue view <issue-num> --repo vchelaru/Gum` for the user-facing symptom. Standalone `jq`/`python` are not installed; use `gh --jq` only.
+>
+> The style is **user-impact-first, not mechanical**: the reader is a Gum customer deciding whether this release matters to them. Translate, e.g. *"Refactored TextRuntime font loading"* → *"Better error messages when fonts fail to load because Gum wasn't initialized"*; *"Added IsTilingMiddleSections to NineSlice"* → *"NineSlices can now optionally tile the middle section in tool and at runtime."* Keep bullets to one line unless a feature genuinely needs more; link docs (`https://docs.flatredball.com/gum/...`) when relevant.
+>
+> **Expand roll-ups — this is the single most important instruction.** A PR titled "Styling improvements" / "Font improvements" / "FRB fixes" / "Apos Shapes work" / "More work on X" almost always contains *several* distinct user-visible changes in its commit list. Emit **one bullet per distinct change**, never one bullet for the PR. The PR title is never the only signal; the per-commit changelog is. ("Bump version", `GITBOOK-NNN`, `Merge pull request` commits add nothing — for those, trust the title.)
+>
+> **Skip entirely** (return nothing): GitBook auto-syncs (`GITBOOK-NNN`), FRB-integration fix PRs ("FRB fixes" / "Oops fixed FRB" — FlatRedBall-1 patches the maintainer never wants in notes), internal-only first-party plugin/code-organization renames (e.g. `InternalPlugin` → `PriorityPlugin`), and **documentation-only PRs** (new or updated docs pages, troubleshooting sections, doc reorganization, broken-link fixes) — the maintainer does not include documentation in the release notes. For a *mixed* PR that also changes code, still surface the non-documentation user-facing change; only the documentation portion is dropped.
+>
+> **Clarity bar** — every bullet must answer "what changed and why do I care?" without opening the PR or knowing the codebase:
+> - No dangling internal class/method names. *"Property paths shared via the relocated `PropertyPathObserver`"* is unacceptable — name the user scenario or drop the class name.
+> - Fixes name the *symptom and trigger*: *"Fixed Android crash where Gum projects failed to load when bundled in an APK"*, not *"Fixed Android issue."*
+> - Features name the *scenario* the user can now do, not the API that was added.
+> - Omit changes gated behind a compile flag (`FULL_DIAGNOSTICS`), CI-only, or internal first-chance noise the user never sees. Do not invent detail you can't support from the diff — mark it low-confidence instead.
+>
+> Return a JSON array, one object per PR you did **not** skip:
+> `{ "number": N, "author": "login", "section": "tool" | "runtimes" | "both" | "templates" | "omit", "bullets": ["…"], "confidence": "high" | "medium" | "low", "note": "what's unclear, only if medium/low" }`
+> `section: "both"` is for cross-cutting `GumCommon` changes that affect Tool and Runtimes. Prefer `confidence: "low"` over guessing.
 
-### The clarity bar
+**Collect** every subagent's array into one combined list. That pre-digested list — not the raw commits — is what you categorize and consolidate in Steps 4–5. You should not need to re-read individual PR commits in the main context; if one specific bullet is unclear, re-read that one PR, don't re-pull the set.
 
-A finished bullet must answer "what changed and why does the reader care?" without the reader having to open the PR or know the codebase. Concretely, every bullet should pass these checks:
+### If the draft *still* summarizes: escalate to a Workflow
 
-- **No dangling internal jargon.** If a bullet mentions an internal class name (`PropertyPathObserver`, `BitmapFont.DrawTextLines`, `CursorExtensions`), the reader has to know the codebase to decode it. Either explain what it *does for the user* or drop the class name. The user has explicitly flagged that bullets like *"Property paths can now be shared across runtime visuals via the relocated `PropertyPathObserver`"* are unacceptable — they read as code-archeology, not release notes.
-- **Names a user-visible scenario.** "Extra file presence check on desktop platforms" doesn't tell the user what *they* will see differently. Rewrite to name the symptom: *"Removed a spurious 'file not found' first-chance exception at startup when the optional shader file isn't present."*
-- **Says what symptom changed for fixes.** Bullets like "Fixed Android MonoGame issue" or "Improved diagnostics" don't describe what the user was experiencing. A good fix bullet names the visible symptom (crash, wrong position, missing text, etc.) and the trigger condition.
-- **Don't ship internal/diagnostic-only changes as user-facing bullets.** If a change is gated behind a compile flag (`FULL_DIAGNOSTICS`), only fires in CI, or only affects internal first-chance noise that the user wouldn't normally see — omit it from the notes, or surface it in Open Questions to confirm omission.
+This fan-out is a **prose-described** pipeline — the running agent still has to choose to batch the PRs, spawn the waves, and not shortcut. That's a softer guarantee than a deterministic harness. If a future run still comes back compressed (roll-up PRs collapsed to one line, whole sections thinner than the commit history warrants), **that's the signal this prose step wasn't enough, and the next step is to promote Step 3 to a `Workflow`** rather than to add more "be thorough" wording (which won't help — see the diagnosis in the changelog comment that introduced this step).
 
-If you can't pass the bar without inventing details, don't invent — put it in Open Questions and let the user supply the missing context.
+A Workflow makes the fan-out deterministic: `pipeline(prNumbers, fetchCommits, expandToBullets, tagSection)` loops over the canonical PR set with no opportunity to skip or summarize the batch, returning the same structured `{number, section, bullets, confidence}` objects this step's subagents return. The main loop then runs Steps 4–5 over the workflow's output exactly as it does today. Note that a Workflow spawns dozens of agents and costs more tokens, so it requires the user's explicit opt-in each run — surface the option, don't auto-launch it.
 
 ## Step 4: Categorize
+
+Work from the **combined bullet list the Step 3 subagents returned**, not the raw commits. Each bullet already carries a proposed `section`; your job here is to file, consolidate, and de-duplicate them.
+
+**Documentation-only changes are excluded from the curated sections** — the maintainer does not want docs called out in the highlight bullets. The Step 3 subagents already drop them, but double-check that none slipped through as a Gum Tool or Gum Runtimes bullet. (Documentation PRs are *only* excluded from the curated highlights — they still appear in the complete What's Changed list per Step 7.5.)
 
 Sections, in order:
 
@@ -137,14 +149,14 @@ When you can't tell which section a change belongs to, **ask** or add it to Open
 
 The user picks the spotlight features by gut feel: coolest / most impactful for end users. Your job is to **propose**, not decide.
 
-- Choose **the Top 4** from the gathered PRs/commits. Lean toward: net-new features (new controls, new variables, new tools), high-visibility UX changes, cross-platform additions, and things users would talk about. Lean away from: bug fixes, refactors, internal improvements.
+- Choose **the Top 4** from the combined Step 3 bullets. Lean toward: net-new features (new controls, new variables, new tools), high-visibility UX changes, cross-platform additions, and things users would talk about. Lean away from: bug fixes, refactors, internal improvements.
 - Identify **up to 4 additional candidates** — also strong but didn't make your top 4.
 - Place the Top 4 in the **Biggest Changes** section in the markdown, each with:
   - `### <Feature name>` heading
   - 1–3 sentence user-impact description
   - Doc link if available
   - `PLACEHOLDER!!!! IMAGE/GIF for <feature name>` line where the image goes
-- Put the additional candidates in the **Open Questions** block at the bottom (see Step 8) so the user can swap or re-rank.
+- Put the additional candidates in the **Open Questions** block at the bottom (see Step 9) so the user can swap or re-rank.
 
 ## Step 6: Image placeholders
 
@@ -191,27 +203,19 @@ gh pr list --repo vchelaru/Gum --state merged --search "merged:>=YYYY-MM-DD" --l
 Rules for the list:
 - **Order newest-first** (git log default) — matches GitHub's auto-generated "What's Changed".
 - **Exclude** GitBook auto-syncs and FRB-integration PRs (same filters as Step 2). These never appear, not even here.
-- **Keep everything else by default** — this list's job is completeness. Internal refactors that were *omitted from the curated sections* still belong here.
+- **Keep everything else by default** — this list's job is completeness. Internal refactors **and documentation PRs** that were omitted from the curated sections still belong here. (Documentation is excluded from the curated highlights but retained in this complete list.)
 - **Repo-housekeeping is the one trim the user may request** (CLAUDE.md edits, skill-file changes, CI-only PRs, GitBook asset renames, stub-doc adds). Leave them in by default but offer to strip them (see Step 11). Remove with `grep -vxF -e "<exact line>" …` (exact, fixed-string match) — note `grep -P` fails in this environment's locale, and `/`-containing titles break naive `sed /…/d` because `/` is the sed delimiter.
 
 Sanity-check the count against the canonical set (`git log` PR count minus the FRB/GitBook exclusions) before moving on.
 
-## Step 8: Resolve sparse/unclear PRs with parallel subagents
+## Step 8: Route low-confidence bullets into Open Questions
 
-Before writing the Open Questions block, identify every PR whose intent you couldn't confidently translate from title + commit messages alone (titles like "Try me2", "Update GraphicalUiElement.cs", "Font service", or one-word names with no body). For each one, **spawn a `general-purpose` subagent in parallel** (single message, multiple Agent calls) to read the diff and propose a user-impact bullet.
+Every PR was already expanded by a Step 3 subagent, so there is **no separate sparse-PR subagent pass here** — that work moved up-front and now covers the whole release, not just the ambiguous handful. Use the `confidence` field the subagents returned:
 
-Subagent prompt template:
+- **High confidence** → already folded into its section in Step 4, no Open Question needed.
+- **Medium/low confidence** (the subagent left a `note`) → put the proposed bullet in the Open Questions block (Step 9) as "I think this is X — confirm?" with a PR link, using the subagent's `note` for what's unclear — never the unhelpful "what was this?".
 
-> Read the diff for PR #NNNN in this repo: `gh pr view NNNN --repo vchelaru/Gum --json files,commits` plus `gh pr diff NNNN --repo vchelaru/Gum`. The PR title is "<title>" and the body is empty. In under 100 words, tell me:
-> 1. What this PR actually changes from a user's perspective (one-sentence bullet, in the user-impact style of Gum release notes — e.g. "NineSlices can now optionally tile the middle section sprites" not "Added IsTilingMiddleSections property").
-> 2. Which section it belongs in: Gum Tool, Gum Runtimes, both (cross-cutting via GumCommon), or neither (internal/refactor with no user impact, omit from notes).
-> 3. Confidence: high / medium / low. If low, say what's still unclear.
-
-Do **not** spawn subagents for PRs with self-explanatory titles ("Fixed crash when generating fonts for projects with Skia elements", "Added F2 rename for behavior instances") — only the genuinely ambiguous ones. Aim for 3–10 subagents per release; if you're spawning more, your title-reading bar is too low.
-
-Use the subagent results to either:
-- **High confidence** → fold the bullet directly into the appropriate section, no Open Question needed.
-- **Medium/low confidence** → put the proposed bullet in the Open Questions block as "I think this is X — confirm?" with a link, rather than the unhelpful "what was this?".
+Only spawn an additional subagent if a Step 3 result is so thin that even its `note` doesn't let you write a confirmable guess — and then for that one PR only, not a batch.
 
 ## Step 9: Open Questions block
 
@@ -219,7 +223,7 @@ Append a section at the bottom titled `## Open Questions`. It is **not** part of
 
 - **Biggest Changes ranking** — your proposed Top 4 with one-line rationale, plus the additional candidates with one-line rationale, in a way that lets the user re-rank by reordering lines.
 - **Categorization uncertainties** — any PR/commit you weren't sure where to file.
-- **Medium/low-confidence subagent translations** (from Step 8) — present as "I think this is X, confirm?" not as "what was this?".
+- **Medium/low-confidence subagent translations** (the Step 3 bullets routed here in Step 8) — present as "I think this is X, confirm?" not as "what was this?".
 - **Anything else** flagged during drafting.
 
 **Always include a clickable PR link** for any referenced PR: `https://github.com/vchelaru/Gum/pull/NNNN`. Inline it the first time the PR appears in the Open Questions section so the user can jump straight to the diff. Without the link, the user has no fast way to verify your read.
