@@ -137,13 +137,42 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
         StateSave defaultState = new StateSave { Name = "Default" };
         screen.States.Add(defaultState);
 
+        GraphicalUiElement screenRoot = ResolveScreenRoot(root);
+
         HashSet<string> usedNames = new HashSet<string>();
-        foreach (GraphicalUiElement child in root.Children)
+        foreach (GraphicalUiElement child in screenRoot.Children)
         {
             AddInstanceRecursive(child, parentInstanceName: null, screen, defaultState, usedNames, shake);
         }
 
         return screen;
+    }
+
+    // Decides which element's children become the screen's top-level instances. When the supplied root
+    // holds exactly one *authored* element (a custom type, not a standard layout element) that has
+    // children, that element is the screen the user built -- the code-only equivalent of a Gum Screen --
+    // so it is elided and its children are promoted. In every other case (multiple children at the root,
+    // a single standard-type wrapper, or a custom leaf) the root's own children are the top level.
+    private GraphicalUiElement ResolveScreenRoot(GraphicalUiElement root)
+    {
+        if (root.Children.Count == 1
+            && root.Children[0] is GraphicalUiElement onlyChild
+            && onlyChild.Children.Count > 0
+            && IsCustomType(onlyChild))
+        {
+            return onlyChild;
+        }
+        return root;
+    }
+
+    // A custom (game-authored) type's own name is not a standard-element name. Standard runtimes follow
+    // the "<StandardName>Runtime" convention and resolve directly into the catalog; a subclass such as
+    // "MainMenu : ContainerRuntime" does not. (This deliberately checks the concrete type only -- unlike
+    // GetStandardTypeName, which walks the base chain to find the nearest standard ancestor.)
+    private bool IsCustomType(GraphicalUiElement element)
+    {
+        string candidate = StripRuntimeSuffix(element.GetType().Name);
+        return !_defaultStates.ContainsKey(candidate);
     }
 
     /// <inheritdoc />

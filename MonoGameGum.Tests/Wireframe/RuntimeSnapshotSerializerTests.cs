@@ -144,6 +144,84 @@ public class RuntimeSnapshotSerializerTests : BaseTestClass
     }
 
     [Fact]
+    public void CreateScreenSave_ShouldElideCustomScreenWrapperAndPromoteChildren()
+    {
+        // Root -> [custom screen container -> items]: the authored custom type IS the screen (the
+        // code-only equivalent of a Gum Screen), so its children become the screen's top-level
+        // instances and the wrapper itself is not emitted.
+        ContainerRuntime root = new();
+        CustomScreenRuntime mainMenu = new() { Name = "MainMenu" };
+        TextRuntime title = new() { Name = "Title" };
+        ContainerRuntime panel = new() { Name = "Panel" };
+        mainMenu.AddChild(title);
+        mainMenu.AddChild(panel);
+        root.AddChild(mainMenu);
+
+        RuntimeSnapshotSerializer serializer = CreateSerializer();
+        ScreenSave screen = serializer.CreateScreenSave(root, "Snapshot");
+
+        screen.Instances.Select(i => i.Name).ShouldBe(new[] { "Title", "Panel" }, ignoreOrder: true);
+        screen.Instances.Any(i => i.Name == "MainMenu").ShouldBeFalse();
+
+        // Promoted children are top-level, so they carry no Parent variable.
+        StateSave defaultState = screen.States.First(s => s.Name == "Default");
+        defaultState.Variables.Any(v => v.Name == "Title.Parent").ShouldBeFalse();
+    }
+
+    [Fact]
+    public void CreateScreenSave_ShouldKeepStandardContainerWrapperAsInstance()
+    {
+        // A plain ContainerRuntime is a standard layout element, not an authored screen, so it stays a
+        // normal instance with its children nested under it.
+        ContainerRuntime root = new();
+        ContainerRuntime wrapper = new() { Name = "Wrapper" };
+        TextRuntime title = new() { Name = "Title" };
+        wrapper.AddChild(title);
+        root.AddChild(wrapper);
+
+        RuntimeSnapshotSerializer serializer = CreateSerializer();
+        ScreenSave screen = serializer.CreateScreenSave(root, "Snapshot");
+
+        screen.Instances.Any(i => i.Name == "Wrapper").ShouldBeTrue();
+        StateSave defaultState = screen.States.First(s => s.Name == "Default");
+        defaultState.Variables.First(v => v.Name == "Title.Parent").Value.ShouldBe("Wrapper");
+    }
+
+    [Fact]
+    public void CreateScreenSave_ShouldKeepCustomLeafAsInstance()
+    {
+        // A custom type with no children is not a screen (a screen contains things); keep it as an
+        // instance rather than collapsing it into an empty screen.
+        ContainerRuntime root = new();
+        CustomScreenRuntime lonely = new() { Name = "Lonely" };
+        root.AddChild(lonely);
+
+        RuntimeSnapshotSerializer serializer = CreateSerializer();
+        ScreenSave screen = serializer.CreateScreenSave(root, "Snapshot");
+
+        screen.Instances.Select(i => i.Name).ShouldBe(new[] { "Lonely" });
+    }
+
+    [Fact]
+    public void CreateScreenSave_ShouldKeepAllChildrenAtTopLevelWhenRootHasMultiple()
+    {
+        // With more than one element under Root there is no single "screen"; everything becomes a
+        // top-level instance, including a custom type.
+        ContainerRuntime root = new();
+        CustomScreenRuntime mainMenu = new() { Name = "MainMenu" };
+        mainMenu.AddChild(new TextRuntime { Name = "Title" });
+        ContainerRuntime extra = new() { Name = "Extra" };
+        root.AddChild(mainMenu);
+        root.AddChild(extra);
+
+        RuntimeSnapshotSerializer serializer = CreateSerializer();
+        ScreenSave screen = serializer.CreateScreenSave(root, "Snapshot");
+
+        screen.Instances.Any(i => i.Name == "MainMenu").ShouldBeTrue();
+        screen.Instances.Any(i => i.Name == "Extra").ShouldBeTrue();
+    }
+
+    [Fact]
     public void GetReferencedFiles_ShouldReturnDistinctSourceFilePaths()
     {
         ContainerRuntime root = new();
@@ -183,5 +261,11 @@ public class RuntimeSnapshotSerializerTests : BaseTestClass
         RuntimeSnapshotSerializer serializer = CreateSerializer();
 
         serializer.GetStandardTypeName(new GraphicalUiElement()).ShouldBeNull();
+    }
+
+    // Stands in for a game-authored screen/component type (e.g. "MainMenu : ContainerRuntime"). Its own
+    // name is not a standard-element name, so the serializer treats it as custom rather than standard.
+    private class CustomScreenRuntime : ContainerRuntime
+    {
     }
 }
