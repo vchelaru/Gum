@@ -169,6 +169,28 @@ public class RuntimeSnapshotSerializerTests : BaseTestClass
     }
 
     [Fact]
+    public void CreateScreenSave_ShouldElideFormsScreenWrapperAndPromoteChildren()
+    {
+        // A Forms screen's visual is a plain ContainerRuntime with FormsControlAsObject set (the codegen
+        // template does exactly this). Even though it's a standard type, its Forms identity marks it as
+        // the screen, so it is elided and its children become the screen's top-level instances.
+        ContainerRuntime root = new();
+        ContainerRuntime formsScreen = new() { Name = "MainMenu" };
+        formsScreen.FormsControlAsObject = new object();
+        TextRuntime title = new() { Name = "Title" };
+        ContainerRuntime panel = new() { Name = "Panel" };
+        formsScreen.AddChild(title);
+        formsScreen.AddChild(panel);
+        root.AddChild(formsScreen);
+
+        RuntimeSnapshotSerializer serializer = CreateSerializer();
+        ScreenSave screen = serializer.CreateScreenSave(root, "Snapshot");
+
+        screen.Instances.Select(i => i.Name).ShouldBe(new[] { "Title", "Panel" }, ignoreOrder: true);
+        screen.Instances.Any(i => i.Name == "MainMenu").ShouldBeFalse();
+    }
+
+    [Fact]
     public void CreateScreenSave_ShouldKeepStandardContainerWrapperAsInstance()
     {
         // A plain ContainerRuntime is a standard layout element, not an authored screen, so it stays a

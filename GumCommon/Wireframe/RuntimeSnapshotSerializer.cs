@@ -158,12 +158,20 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
         if (root.Children.Count == 1
             && root.Children[0] is GraphicalUiElement onlyChild
             && onlyChild.Children.Count > 0
-            && IsCustomType(onlyChild))
+            && IsAuthoredScreenRoot(onlyChild))
         {
             return onlyChild;
         }
         return root;
     }
+
+    // A single root child is treated as the authored screen when either it is a custom type, or it
+    // carries a Forms control identity. The latter matters because a Forms screen's visual is a plain
+    // ContainerRuntime (a standard type) with FormsControlAsObject set -- its "screen-ness" lives in the
+    // Forms control, not the runtime type. A plain anonymous container is neither, so it stays an instance.
+    private bool IsAuthoredScreenRoot(GraphicalUiElement element) =>
+        IsCustomType(element)
+        || (element is InteractiveGue interactiveGue && interactiveGue.FormsControlAsObject != null);
 
     // A custom (game-authored) type's own name is not a standard-element name. Standard runtimes follow
     // the "<StandardName>Runtime" convention and resolve directly into the catalog; a subclass such as
