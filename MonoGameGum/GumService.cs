@@ -317,12 +317,10 @@ public class GumService : IGumService
     public InteractiveGue ModalRoot => FrameworkElement.ModalRoot;
 
     /// <summary>
-    /// Exports a snapshot of the live UI tree under <see cref="Root"/> to a Gum project at
-    /// <paramref name="filePath"/>, so it can be opened and inspected in the Gum tool. This is the
-    /// runtime inspector's headline path for code-only games, which have no design-time .gumx to open.
-    /// Each runtime element is written as a standard-element instance and the screen is named after the
-    /// file. The snapshot is read-only in practice: editing it in the tool does not round-trip back to
-    /// the running game.
+    /// Exports the live UI tree under <see cref="Root"/> to a Gum project at <paramref name="filePath"/>,
+    /// so it can be opened and inspected in the Gum tool. This is the headline path for code-only games,
+    /// which have no design-time .gumx to open. Each runtime element is written as a standard-element
+    /// instance and the screen is named after the file.
     /// </summary>
     /// <param name="filePath">
     /// Destination project (.gumx) path. Its directory receives the Screens/ and Standards/ subfolders.
