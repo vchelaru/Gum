@@ -2080,5 +2080,20 @@ public class GraphicalUiElementTests : BaseTestClass
         value.ShouldBe("Hello");
     }
 
+    [Fact]
+    public void TryGetProperty_ShouldReturnFalseForParent()
+    {
+        // Parent/child structure is captured structurally by the snapshot serializer, not read as a
+        // scalar -- reflecting GraphicalUiElement.Parent would return the parent object, not a name.
+        ContainerRuntime parent = new() { Name = "Parent" };
+        ContainerRuntime child = new() { Name = "Child" };
+        parent.AddChild(child);
+
+        bool found = child.TryGetProperty("Parent", out object? value);
+
+        found.ShouldBeFalse();
+        value.ShouldBeNull();
+    }
+
     #endregion
 }

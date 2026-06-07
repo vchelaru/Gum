@@ -88,9 +88,11 @@ public static class GraphicalUiElementPropertyReadExtensions
             case nameof(GraphicalUiElement.MinWidth):
                 value = element.MinWidth;
                 return true;
-            // "Parent" is intentionally not returned as a scalar. Unlike its SetProperty counterpart
-            // (which resolves a parent-name string), parent/child structure is captured structurally
-            // when walking the tree, not read as a single value.
+            case "Parent":
+                // "Parent" is intentionally not returned as a scalar. Parent/child structure is captured
+                // structurally by the snapshot serializer (via the qualified "Parent" variable); reflecting
+                // GraphicalUiElement.Parent would return the parent object, not a Gum parent name.
+                return false;
             case "Rotation":
                 value = element.Rotation;
                 return true;

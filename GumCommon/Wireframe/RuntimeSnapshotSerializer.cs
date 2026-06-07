@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 
 namespace Gum.Wireframe;
@@ -23,6 +24,15 @@ public interface IRuntimeSnapshotSerializer
     /// catalog. The result is unshaken — redundant (equal-to-default) values are not yet removed.
     /// </summary>
     StateSave CreateStateForNode(GraphicalUiElement element, string stateName);
+
+    /// <summary>
+    /// Builds a flattened <see cref="ScreenSave"/> snapshot of the live tree rooted at
+    /// <paramref name="root"/>. Each descendant becomes a standard-element <see cref="InstanceSave"/>; the
+    /// screen's default state holds each instance's values as instance-qualified variables, and
+    /// child/parent structure is captured via the qualified "Parent" variable. The root itself maps to the
+    /// screen, not to an instance.
+    /// </summary>
+    ScreenSave CreateScreenSave(GraphicalUiElement root, string screenName);
 }
 
 /// <inheritdoc cref="IRuntimeSnapshotSerializer" />
@@ -92,6 +102,75 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
         }
 
         return state;
+    }
+
+    /// <inheritdoc />
+    public ScreenSave CreateScreenSave(GraphicalUiElement root, string screenName)
+    {
+        ScreenSave screen = new ScreenSave { Name = screenName };
+        StateSave defaultState = new StateSave { Name = "Default" };
+        screen.States.Add(defaultState);
+
+        HashSet<string> usedNames = new HashSet<string>();
+        foreach (GraphicalUiElement child in root.Children)
+        {
+            AddInstanceRecursive(child, parentInstanceName: null, screen, defaultState, usedNames);
+        }
+
+        return screen;
+    }
+
+    private void AddInstanceRecursive(GraphicalUiElement element, string? parentInstanceName,
+        ScreenSave screen, StateSave defaultState, HashSet<string> usedNames)
+    {
+        string typeName = GetStandardTypeName(element) ?? "Container";
+        string instanceName = GenerateUniqueName(element, typeName, usedNames);
+
+        screen.Instances.Add(new InstanceSave { Name = instanceName, BaseType = typeName });
+
+        // The node's catalog values become instance-qualified variables in the screen's default state.
+        StateSave nodeState = CreateStateForNode(element, "Default");
+        foreach (VariableSave variable in nodeState.Variables)
+        {
+            defaultState.Variables.Add(new VariableSave
+            {
+                Name = instanceName + "." + variable.Name,
+                Type = variable.Type,
+                Value = variable.Value,
+                SetsValue = true,
+                Category = variable.Category,
+            });
+        }
+
+        // Non-top-level instances record their parent; top-level instances are children of the screen.
+        if (parentInstanceName != null)
+        {
+            defaultState.Variables.Add(new VariableSave
+            {
+                Name = instanceName + ".Parent",
+                Type = "string",
+                Value = parentInstanceName,
+                SetsValue = true,
+            });
+        }
+
+        foreach (GraphicalUiElement child in element.Children)
+        {
+            AddInstanceRecursive(child, instanceName, screen, defaultState, usedNames);
+        }
+    }
+
+    private static string GenerateUniqueName(GraphicalUiElement element, string typeName, HashSet<string> usedNames)
+    {
+        string baseName = string.IsNullOrEmpty(element.Name) ? typeName : element.Name;
+        string candidate = baseName;
+        int suffix = 1;
+        while (!usedNames.Add(candidate))
+        {
+            candidate = baseName + suffix;
+            suffix++;
+        }
+        return candidate;
     }
 
     private static string StripRuntimeSuffix(string typeName)
