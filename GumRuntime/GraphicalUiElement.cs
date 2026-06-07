@@ -374,8 +374,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                 if (!absoluteVisible && (GetIfParentStacks() || GetIfParentIsAutoGrid() || GetIfParentWidthHeightDependOnChildren()))
                 {
-                    // This updates the parent right away:
-                    Parent?.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentWidthHeightDependOnChildren | ParentUpdateType.IfParentIsAutoGrid, int.MaxValue / 2, null);
+                    // This updates the parent right away. #3066: gate the climb on the parent's size
+                    // delta so hiding a descendant that doesn't change the item's size doesn't relayout
+                    // every sibling in a stacking parent.
+                    Parent?.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentWidthHeightDependOnChildren | ParentUpdateType.IfParentIsAutoGrid, int.MaxValue / 2, null, gateClimbOnSizeChange: true);
 
                 }
                 VisibleChanged?.Invoke(this, EventArgs.Empty);
@@ -1862,7 +1864,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// the update type. For example if ParentUpdateType.IfParentStacks is passed, then an update happens if the parent stacks its children.</param>
     /// <param name="childrenUpdateDepth"></param>
     /// <param name="xOrY"></param>
-    public void UpdateLayout(ParentUpdateType parentUpdateType, int childrenUpdateDepth, XOrY? xOrY = null)
+    /// <param name="gateClimbOnSizeChange">#3066: false for the originating call (the element whose
+    /// property changed / was added), which always climbs one level so its parent re-measures; true
+    /// for the propagated climbs above that, which only continue upward if their own measured size or
+    /// position actually changed. This suppresses the O(N) relayout of a parent's other children when
+    /// a descendant change does not alter the intermediate element's contribution to the parent.</param>
+    public void UpdateLayout(ParentUpdateType parentUpdateType, int childrenUpdateDepth, XOrY? xOrY = null, bool gateClimbOnSizeChange = false)
     {
         var updateParent =
             ((parentUpdateType & ParentUpdateType.All) == ParentUpdateType.All) ||
@@ -1932,11 +1939,21 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         // should update the components
         if (updateParent && GetIfShouldCallUpdateOnParent())
         {
-            var asGue = this.Parent as GraphicalUiElement;
-            // Just climb up one and update from there
-            asGue.UpdateLayout(parentUpdateType, childrenUpdateDepth + 1);
-            ChildrenUpdatingParentLayoutCalls++;
-            return;
+            // #3066: The originating call (gateClimbOnSizeChange == false) climbs unconditionally so
+            // the parent re-measures and accounts for this change (add/remove/visibility/size/etc.) —
+            // this preserves the original eager behavior for the element that actually changed. Each
+            // propagated climb above that runs with gateClimbOnSizeChange == true and falls through to
+            // measure itself; it only continues upward (at the end of this method) if its own size or
+            // position changed, so a parent's other children aren't relaid out when nothing material
+            // changed for them.
+            if (!gateClimbOnSizeChange)
+            {
+                var asGue = this.Parent as GraphicalUiElement;
+                // Just climb up one and update from there
+                asGue.UpdateLayout(parentUpdateType, childrenUpdateDepth + 1, gateClimbOnSizeChange: true);
+                ChildrenUpdatingParentLayoutCalls++;
+                return;
+            }
         }
         // This should be *after* the return when updating the parent otherwise we double-count layouts
         UpdateLayoutCallCount++;
@@ -2236,11 +2253,29 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             }
         }
 
-        // Eventually add more conditions here to make it fire less often
-        // like check the width/height of the parent to see if they're 0
-        if (updateParent && GetIfShouldCallUpdateOnParent())
+        // #3066: propagated climb (see the gate near the top of this method). We were reached via a
+        // descendant's climb (gateClimbOnSizeChange == true) and have now laid out locally; continue
+        // upward only if our own measured size or position actually changed. Otherwise our
+        // contribution to the parent is unchanged and relaying out the parent's other children (e.g.
+        // every sibling in a stack) would be wasted O(N) work. Without a renderable we can't measure
+        // a delta, so climb to stay safe.
+        var sizeOrPositionChanged = mContainedObjectAsIpso == null
+            || widthBeforeLayout != mContainedObjectAsIpso.Width
+            || heightBeforeLayout != mContainedObjectAsIpso.Height
+            || xBeforeLayout != mContainedObjectAsIpso.X
+            || yBeforeLayout != mContainedObjectAsIpso.Y;
+
+        // RelativeToMaxParentOrChildren takes the max of this element's own content size and its
+        // parent's size, so a content change here can be masked by the (stale) parent size — our own
+        // measured size won't change even though the parent's RelativeToChildren size must. Always
+        // climb in that case so the parent re-measures from content.
+        var dependsOnMaxOfParentOrChildren = this.WidthUnits == DimensionUnitType.RelativeToMaxParentOrChildren
+            || this.HeightUnits == DimensionUnitType.RelativeToMaxParentOrChildren;
+
+        if (gateClimbOnSizeChange && updateParent && GetIfShouldCallUpdateOnParent()
+            && (sizeOrPositionChanged || dependsOnMaxOfParentOrChildren))
         {
-            Parent?.UpdateLayout(false, false);
+            (this.Parent as GraphicalUiElement)?.UpdateLayout(parentUpdateType, childrenUpdateDepth + 1, gateClimbOnSizeChange: true);
             ChildrenUpdatingParentLayoutCalls++;
         }
         if (this.mContainedObjectAsIpso != null)

@@ -170,6 +170,54 @@ Returns true if:
 When true, `UpdateLayout` delegates to the parent (step 3 above) instead of
 laying out the element directly. The parent will re-lay out all children.
 
+### The climb decision is structural, not value-based
+
+The climb fires on *topology* — "does the parent stack / depend on children /
+have ratio siblings" — never on whether this element's contribution to the
+parent actually changed. So a one-pixel-irrelevant change to a deeply nested
+element still delegates the whole layout to the topmost dependent ancestor,
+which re-lays out **all** its children. This is why a single change inside one
+item of an N-item stack costs O(N): there is no "did my contribution change?"
+guard before climbing.
+
+### Two climb sites, two depths
+
+- **Top climb** (early-out, step 3): delegates the *entire* layout to the
+  parent *before measuring self*, propagating with `childrenUpdateDepth + 1`.
+  This is the one that actually fires and drives full re-layout.
+- **Bottom climb** (end of `UpdateLayout`): calls the parent with
+  `UpdateLayout(false, false)` → depth **0** (parent re-measures itself but does
+  **not** re-lay out siblings). It is guarded by the *same* condition the top
+  climb already `return`ed on, so on the climb path it is effectively
+  unreachable — a known dead branch, not a second propagation.
+
+### Visibility changes propagate through TWO paths
+
+A visibility toggle does not go through one code path:
+- Becoming **invisible**: the `Visible` setter force-updates the parent
+  *directly* (when the parent stacks / auto-grids / depends on children),
+  independent of `UpdateLayout`'s climb.
+- Becoming **visible**: flows through `UpdateLayout`'s normal climb.
+
+The trap for any "skip the climb unless something changed" optimization: an
+element's **own measured size is unchanged** across a visibility toggle, but its
+**contribution to a content-sized parent** changes (full extent → 0). So a guard
+phrased as "climb only if *my* size changed" is wrong for visibility — it
+silently drops the grow-back when a size-*determining* child reappears. The
+trustworthy signal is the **parent's** size delta after the parent re-measures,
+not the changed element's own size delta. Likewise, for a resize the child's own
+size delta and its contribution coincide, but for visibility they do not.
+
+### Where the O(N) sibling cost actually lives
+
+The expensive part of a climb is the **stacking / auto-grid / ratio** relayout —
+that is what repositions every sibling. A purely *content-sized* (Regular,
+non-stacking) parent has no sibling-reposition cost; its only cost is
+re-measuring ancestors. So suppressing sibling-relayout for a stacked list
+(e.g. ListBox) requires gating the **stacking** climb, which is harder than
+gating the depends-on-children climb (it must also honor the visibility/contribution
+trap above for siblings that stack past an element).
+
 ## Performance Patterns
 
 | Optimization | What it avoids | Where |
