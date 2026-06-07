@@ -401,5 +401,36 @@ namespace Gum.Converters
                     throw new NotImplementedException();
             }
         }
+
+        /// <summary>
+        /// Converts a runtime <see cref="GeneralUnitType"/> back to the axis-specific
+        /// <see cref="PositionUnitType"/> the Gum tool stores. The general enum is axis-agnostic
+        /// (e.g. <see cref="GeneralUnitType.PixelsFromSmall"/> means "from left" on X and "from top"
+        /// on Y), so the axis must be supplied. This is the inverse of
+        /// <see cref="ConvertToGeneralUnit(PositionUnitType)"/>; it is best-effort, since general units
+        /// with no exact per-axis position equivalent fall back to the pixels-from-origin value.
+        /// </summary>
+        /// <param name="generalUnit">The runtime general unit to convert.</param>
+        /// <param name="isXAxis">True for the X axis (XUnits), false for the Y axis (YUnits).</param>
+        public static PositionUnitType ConvertToPositionUnit(GeneralUnitType generalUnit, bool isXAxis)
+        {
+            switch (generalUnit)
+            {
+                case GeneralUnitType.Percentage:
+                    return isXAxis ? PositionUnitType.PercentageWidth : PositionUnitType.PercentageHeight;
+                case GeneralUnitType.PixelsFromLarge:
+                    return isXAxis ? PositionUnitType.PixelsFromRight : PositionUnitType.PixelsFromBottom;
+                case GeneralUnitType.PixelsFromMiddle:
+                    return isXAxis ? PositionUnitType.PixelsFromCenterX : PositionUnitType.PixelsFromCenterY;
+                case GeneralUnitType.PixelsFromMiddleInverted:
+                    // PositionUnitType has no inverted-center on the X axis, so X falls back to center.
+                    return isXAxis ? PositionUnitType.PixelsFromCenterX : PositionUnitType.PixelsFromCenterYInverted;
+                case GeneralUnitType.PixelsFromBaseline:
+                    return PositionUnitType.PixelsFromBaseline;
+                case GeneralUnitType.PixelsFromSmall:
+                default:
+                    return isXAxis ? PositionUnitType.PixelsFromLeft : PositionUnitType.PixelsFromTop;
+            }
+        }
     }
 }

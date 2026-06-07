@@ -26,6 +26,10 @@
 		<ProjectReference Include="..\MonoGameGum\MonoGameGum.csproj" />
 		<ProjectReference Include="..\Runtimes\GumExpressions\GumExpressions.csproj" />
 		<ProjectReference Include="..\Tests\MonoGameGum.TestsCommon\MonoGameGum.TestsCommon.csproj" />
+		<!-- Build-only: ensures gumcli is built (incrementally) for the snapshot CLI-check test, without
+		     importing its assembly (Gum.ProjectServices + MonoGameGum both define the Forms control types,
+		     so importing would be a CS0433 conflict). The test invokes the pre-built gumcli with no rebuild. -->
+		<ProjectReference Include="..\Tools\Gum.Cli\Gum.Cli.csproj" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 
 	<ItemGroup>

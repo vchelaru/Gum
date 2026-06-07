@@ -1952,4 +1952,148 @@ public class GraphicalUiElementTests : BaseTestClass
     }
 
     #endregion
+
+    #region Try Get Property
+
+    [Fact]
+    public void TryGetProperty_ShouldReadBoolProperty()
+    {
+        ContainerRuntime sut = new();
+        sut.Visible = false;
+
+        bool found = sut.TryGetProperty("Visible", out object? value);
+
+        found.ShouldBeTrue();
+        value.ShouldBe(false);
+    }
+
+    [Fact]
+    public void TryGetProperty_ShouldReadEnumProperty()
+    {
+        ContainerRuntime sut = new();
+        sut.WidthUnits = DimensionUnitType.RelativeToChildren;
+
+        bool found = sut.TryGetProperty("WidthUnits", out object? value);
+
+        found.ShouldBeTrue();
+        value.ShouldBe(DimensionUnitType.RelativeToChildren);
+    }
+
+    [Fact]
+    public void TryGetProperty_ShouldReadFloatProperty()
+    {
+        ContainerRuntime sut = new();
+        sut.X = 12.5f;
+
+        bool found = sut.TryGetProperty("X", out object? value);
+
+        found.ShouldBeTrue();
+        value.ShouldBe(12.5f);
+    }
+
+    [Fact]
+    public void TryGetProperty_ShouldReadNullableProperty()
+    {
+        ContainerRuntime sut = new();
+
+        bool foundDefault = sut.TryGetProperty("MaxWidth", out object? defaultValue);
+        foundDefault.ShouldBeTrue();
+        defaultValue.ShouldBeNull();
+
+        sut.MaxWidth = 250f;
+        bool found = sut.TryGetProperty("MaxWidth", out object? value);
+        found.ShouldBeTrue();
+        value.ShouldBe(250f);
+    }
+
+    [Fact]
+    public void TryGetProperty_ShouldReturnFalseForUnknownProperty()
+    {
+        ContainerRuntime sut = new();
+
+        bool found = sut.TryGetProperty("ThisIsNotARealProperty", out object? value);
+
+        found.ShouldBeFalse();
+        value.ShouldBeNull();
+    }
+
+    [Fact]
+    public void TryGetProperty_ShouldConvertXUnitsToPositionUnitType()
+    {
+        // The runtime stores units as the axis-agnostic GeneralUnitType, but the Gum tool stores
+        // XUnits as the X-axis PositionUnitType. The base-set switch converts using the axis.
+        ContainerRuntime sut = new();
+        sut.XUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
+
+        bool found = sut.TryGetProperty("XUnits", out object? value);
+
+        found.ShouldBeTrue();
+        value.ShouldBe(Gum.Managers.PositionUnitType.PixelsFromLeft);
+    }
+
+    [Fact]
+    public void TryGetProperty_ShouldConvertYUnitsToPositionUnitType()
+    {
+        ContainerRuntime sut = new();
+        sut.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
+
+        bool found = sut.TryGetProperty("YUnits", out object? value);
+
+        found.ShouldBeTrue();
+        value.ShouldBe(Gum.Managers.PositionUnitType.PixelsFromTop);
+    }
+
+    [Fact]
+    public void TryGetProperty_ShouldReadColorComponentViaReflection()
+    {
+        // "Red" is not in the base-set switch; it falls through to reflection on the concrete runtime.
+        TextRuntime text = new();
+        text.Red = 123;
+
+        bool found = text.TryGetProperty("Red", out object? value);
+
+        found.ShouldBeTrue();
+        value.ShouldBe(123);
+    }
+
+    [Fact]
+    public void TryGetProperty_ShouldReadFontViaReflection()
+    {
+        TextRuntime text = new();
+        text.Font = "SomeFont";
+
+        bool found = text.TryGetProperty("Font", out object? value);
+
+        found.ShouldBeTrue();
+        value.ShouldBe("SomeFont");
+    }
+
+    [Fact]
+    public void TryGetProperty_ShouldReadTextStringViaReflection()
+    {
+        TextRuntime text = new();
+        text.Text = "Hello";
+
+        bool found = text.TryGetProperty("Text", out object? value);
+
+        found.ShouldBeTrue();
+        value.ShouldBe("Hello");
+    }
+
+    [Fact]
+    public void TryGetProperty_ShouldReturnFalseForParent()
+    {
+        // Parent/child structure is captured structurally by the snapshot serializer, not read as a
+        // scalar -- reflecting GraphicalUiElement.Parent would return the parent object, not a name.
+        ContainerRuntime parent = new() { Name = "Parent" };
+        ContainerRuntime child = new() { Name = "Child" };
+        parent.AddChild(child);
+
+        bool found = child.TryGetProperty("Parent", out object? value);
+
+        found.ShouldBeFalse();
+        value.ShouldBeNull();
+    }
+
+    #endregion
 }
