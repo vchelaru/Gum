@@ -362,6 +362,8 @@ public class GumService : IGumService
         project.Screens.Add(screen);
         project.ScreenReferences.Add(new ElementReference { Name = screenName, ElementType = ElementType.Screen });
 
+        EnsureReferencedStandardsExist(project, screen);
+
         string? directory = Path.GetDirectoryName(filePath);
         if (!string.IsNullOrEmpty(directory))
         {
@@ -374,6 +376,28 @@ public class GumService : IGumService
         if (!string.IsNullOrEmpty(directory))
         {
             CopyReferencedFiles(serializer, screen, directory);
+        }
+    }
+
+    // Instances may reference standard types the default seed omits -- notably deprecated ones like
+    // ColoredRectangle, which new (v3) projects no longer include but an old/live tree may still contain.
+    // Add any such referenced standard so the snapshot's instances don't dangle on a missing base type.
+    private static void EnsureReferencedStandardsExist(GumProjectSave project, ScreenSave screen)
+    {
+        HashSet<string> existing = new(project.StandardElements.Select(standard => standard.Name));
+        foreach (InstanceSave instance in screen.Instances)
+        {
+            string baseType = instance.BaseType;
+            if (string.IsNullOrEmpty(baseType) || existing.Contains(baseType))
+            {
+                continue;
+            }
+
+            if (StandardElementsManager.Self.IsDefaultType(baseType))
+            {
+                StandardElementsManager.Self.AddStandardElementSaveInstance(project, baseType);
+                existing.Add(baseType);
+            }
         }
     }
 

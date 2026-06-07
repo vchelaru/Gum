@@ -167,6 +167,34 @@ public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
     }
 
     [Fact]
+    public void ExportSnapshot_ShouldIncludeStandardForReferencedDeprecatedColoredRectangle()
+    {
+        // New (v3) projects no longer seed ColoredRectangle (it's deprecated), but a live tree may still
+        // contain one. The snapshot must add the referenced standard so the instance's BaseType resolves
+        // rather than dangling on a missing standard element.
+        string tempDirectory = NewTempDirectory();
+        try
+        {
+            GumService service = new();
+#pragma warning disable CS0618 // ColoredRectangle is obsolete but old live trees still contain it.
+            service.Root.AddChild(new ColoredRectangleRuntime { Name = "Rect" });
+#pragma warning restore CS0618
+
+            string gumxPath = Path.Combine(tempDirectory, "Live." + GumProjectSave.ProjectExtension);
+            service.ExportSnapshot(gumxPath);
+
+            GumProjectSave loaded = GumProjectSave.Load(gumxPath, out _);
+            loaded.Screens.First(s => s.Name == "Live").Instances
+                .First(i => i.Name == "Rect").BaseType.ShouldBe("ColoredRectangle");
+            loaded.StandardElements.Any(s => s.Name == "ColoredRectangle").ShouldBeTrue();
+        }
+        finally
+        {
+            DeleteTempDirectory(tempDirectory);
+        }
+    }
+
+    [Fact]
     public void ExportSnapshot_ShouldSetCanvasSizeFromRuntimeCanvas()
     {
         // The exported project's resolution should match the live canvas (the game's resolution), not
