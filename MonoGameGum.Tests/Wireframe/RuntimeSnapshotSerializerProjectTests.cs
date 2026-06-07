@@ -167,6 +167,37 @@ public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
     }
 
     [Fact]
+    public void ExportSnapshot_ShouldSetCanvasSizeFromRuntimeCanvas()
+    {
+        // The exported project's resolution should match the live canvas (the game's resolution), not
+        // the 800x600 GumProjectSave default.
+        float originalWidth = GraphicalUiElement.CanvasWidth;
+        float originalHeight = GraphicalUiElement.CanvasHeight;
+        string tempDirectory = NewTempDirectory();
+        try
+        {
+            GraphicalUiElement.CanvasWidth = 1920;
+            GraphicalUiElement.CanvasHeight = 1080;
+
+            GumService service = new();
+            service.Root.AddChild(new ContainerRuntime { Name = "Panel" });
+
+            string gumxPath = Path.Combine(tempDirectory, "Live." + GumProjectSave.ProjectExtension);
+            service.ExportSnapshot(gumxPath);
+
+            GumProjectSave loaded = GumProjectSave.Load(gumxPath, out _);
+            loaded.DefaultCanvasWidth.ShouldBe(1920);
+            loaded.DefaultCanvasHeight.ShouldBe(1080);
+        }
+        finally
+        {
+            GraphicalUiElement.CanvasWidth = originalWidth;
+            GraphicalUiElement.CanvasHeight = originalHeight;
+            DeleteTempDirectory(tempDirectory);
+        }
+    }
+
+    [Fact]
     public void ExportSnapshot_ShouldCopyReferencedFilesPreservingRelativePath()
     {
         string originalRelativeDirectory = FileManager.RelativeDirectory;

@@ -347,6 +347,18 @@ public class GumService : IGumService
 
         GumProjectSave project = new();
         StandardElementsManager.Self.PopulateProjectWithDefaultStandards(project);
+
+        // Match the project's canvas resolution to the live canvas (the game's resolution) so the
+        // snapshot lays out in the tool exactly as it did at runtime, rather than the 800x600 default.
+        if (GraphicalUiElement.CanvasWidth > 0)
+        {
+            project.DefaultCanvasWidth = (int)GraphicalUiElement.CanvasWidth;
+        }
+        if (GraphicalUiElement.CanvasHeight > 0)
+        {
+            project.DefaultCanvasHeight = (int)GraphicalUiElement.CanvasHeight;
+        }
+
         project.Screens.Add(screen);
         project.ScreenReferences.Add(new ElementReference { Name = screenName, ElementType = ElementType.Screen });
 
