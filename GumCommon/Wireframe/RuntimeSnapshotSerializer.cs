@@ -21,18 +21,22 @@ public interface IRuntimeSnapshotSerializer
 
     /// <summary>
     /// Creates a state holding the element's current values for every variable in its standard type's
-    /// catalog. The result is unshaken — redundant (equal-to-default) values are not yet removed.
+    /// catalog. When <paramref name="shake"/> is false the result is unshaken — every catalog value is
+    /// emitted (heavy but always correct). When true, values equal to the standard-element default are
+    /// pruned: an omitted variable falls back to that same default in the snapshot's embedded standards,
+    /// so the shaken state is equivalent but lighter and reads as "unedited" in the tool.
     /// </summary>
-    StateSave CreateStateForNode(GraphicalUiElement element, string stateName);
+    StateSave CreateStateForNode(GraphicalUiElement element, string stateName, bool shake = false);
 
     /// <summary>
     /// Builds a flattened <see cref="ScreenSave"/> snapshot of the live tree rooted at
     /// <paramref name="root"/>. Each descendant becomes a standard-element <see cref="InstanceSave"/>; the
     /// screen's default state holds each instance's values as instance-qualified variables, and
     /// child/parent structure is captured via the qualified "Parent" variable. The root itself maps to the
-    /// screen, not to an instance.
+    /// screen, not to an instance. When <paramref name="shake"/> is true, equal-to-default values are pruned
+    /// (see <see cref="CreateStateForNode"/>).
     /// </summary>
-    ScreenSave CreateScreenSave(GraphicalUiElement root, string screenName);
+    ScreenSave CreateScreenSave(GraphicalUiElement root, string screenName, bool shake = false);
 }
 
 /// <inheritdoc cref="IRuntimeSnapshotSerializer" />
@@ -75,7 +79,7 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
     }
 
     /// <inheritdoc />
-    public StateSave CreateStateForNode(GraphicalUiElement element, string stateName)
+    public StateSave CreateStateForNode(GraphicalUiElement element, string stateName, bool shake = false)
     {
         StateSave state = new StateSave { Name = stateName };
 
@@ -89,6 +93,14 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
                 // are skipped rather than emitted with a wrong value.
                 if (element.TryGetProperty(defaultVariable.Name, out object? value))
                 {
+                    // The shake prunes values equal to the standard-element default (the in-document
+                    // baseline): an omitted variable resolves to that same default via the snapshot's
+                    // embedded standards, so the result is equivalent but lighter.
+                    if (shake && AreValuesEqual(value, defaultVariable.Value))
+                    {
+                        continue;
+                    }
+
                     state.Variables.Add(new VariableSave
                     {
                         Name = defaultVariable.Name,
@@ -105,7 +117,7 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
     }
 
     /// <inheritdoc />
-    public ScreenSave CreateScreenSave(GraphicalUiElement root, string screenName)
+    public ScreenSave CreateScreenSave(GraphicalUiElement root, string screenName, bool shake = false)
     {
         ScreenSave screen = new ScreenSave { Name = screenName };
         StateSave defaultState = new StateSave { Name = "Default" };
@@ -114,14 +126,14 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
         HashSet<string> usedNames = new HashSet<string>();
         foreach (GraphicalUiElement child in root.Children)
         {
-            AddInstanceRecursive(child, parentInstanceName: null, screen, defaultState, usedNames);
+            AddInstanceRecursive(child, parentInstanceName: null, screen, defaultState, usedNames, shake);
         }
 
         return screen;
     }
 
     private void AddInstanceRecursive(GraphicalUiElement element, string? parentInstanceName,
-        ScreenSave screen, StateSave defaultState, HashSet<string> usedNames)
+        ScreenSave screen, StateSave defaultState, HashSet<string> usedNames, bool shake)
     {
         string typeName = GetStandardTypeName(element) ?? "Container";
         string instanceName = GenerateUniqueName(element, typeName, usedNames);
@@ -129,7 +141,7 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
         screen.Instances.Add(new InstanceSave { Name = instanceName, BaseType = typeName });
 
         // The node's catalog values become instance-qualified variables in the screen's default state.
-        StateSave nodeState = CreateStateForNode(element, "Default");
+        StateSave nodeState = CreateStateForNode(element, "Default", shake);
         foreach (VariableSave variable in nodeState.Variables)
         {
             defaultState.Variables.Add(new VariableSave
@@ -156,9 +168,35 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
 
         foreach (GraphicalUiElement child in element.Children)
         {
-            AddInstanceRecursive(child, instanceName, screen, defaultState, usedNames);
+            AddInstanceRecursive(child, instanceName, screen, defaultState, usedNames, shake);
         }
     }
+
+    // Equality for the shake. Same boxed type compares directly (covers bool/string/enum/int); numeric
+    // cross-type (e.g. an int default vs a float read) compares by value so it is not treated as "edited".
+    private static bool AreValuesEqual(object? a, object? b)
+    {
+        if (a == null)
+        {
+            return b == null;
+        }
+        if (b == null)
+        {
+            return false;
+        }
+        if (a.GetType() == b.GetType())
+        {
+            return a.Equals(b);
+        }
+        if (IsNumeric(a) && IsNumeric(b))
+        {
+            return Convert.ToDouble(a) == Convert.ToDouble(b);
+        }
+        return a.Equals(b);
+    }
+
+    private static bool IsNumeric(object value) =>
+        value is byte or sbyte or short or ushort or int or uint or long or ulong or float or double or decimal;
 
     private static string GenerateUniqueName(GraphicalUiElement element, string typeName, HashSet<string> usedNames)
     {

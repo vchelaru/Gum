@@ -13,6 +13,7 @@ using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -314,6 +315,52 @@ public class GumService : IGumService
     public InteractiveGue PopupRoot => FrameworkElement.PopupRoot;
     /// <inheritdoc/>
     public InteractiveGue ModalRoot => FrameworkElement.ModalRoot;
+
+    /// <summary>
+    /// Exports a snapshot of the live UI tree under <see cref="Root"/> to a Gum project at
+    /// <paramref name="filePath"/>, so it can be opened and inspected in the Gum tool. This is the
+    /// runtime inspector's headline path for code-only games, which have no design-time .gumx to open.
+    /// Each runtime element is written as a standard-element instance and the screen is named after the
+    /// file. The snapshot is read-only in practice: editing it in the tool does not round-trip back to
+    /// the running game.
+    /// </summary>
+    /// <param name="filePath">
+    /// Destination project (.gumx) path. Its directory receives the Screens/ and Standards/ subfolders.
+    /// </param>
+    /// <param name="shake">
+    /// When true (default), values equal to the standard-element default are pruned so the artifact is
+    /// light and reads as "unedited" in the tool. When false, every value is written — heavier, but the
+    /// always-correct baseline-free form.
+    /// </param>
+    public void ExportSnapshot(string filePath, bool shake = true)
+    {
+        // A code-only game may never have triggered standards population; ensure the catalog exists
+        // before reading it (as the serializer's baseline) and writing it (as the project's standards).
+        if (StandardElementsManager.Self.DefaultStates == null)
+        {
+            StandardElementsManager.Self.Initialize();
+        }
+
+        string screenName = Path.GetFileNameWithoutExtension(filePath);
+
+        // Non-null here: the guard above initializes the catalog when it was missing.
+        RuntimeSnapshotSerializer serializer = new(StandardElementsManager.Self.DefaultStates!);
+        ScreenSave screen = serializer.CreateScreenSave(Root, screenName, shake);
+
+        GumProjectSave project = new();
+        StandardElementsManager.Self.PopulateProjectWithDefaultStandards(project);
+        project.Screens.Add(screen);
+        project.ScreenReferences.Add(new ElementReference { Name = screenName, ElementType = ElementType.Screen });
+
+        string? directory = Path.GetDirectoryName(filePath);
+        if (!string.IsNullOrEmpty(directory))
+        {
+            Directory.CreateDirectory(Path.Combine(directory, ElementReference.ScreenSubfolder));
+            Directory.CreateDirectory(Path.Combine(directory, ElementReference.StandardSubfolder));
+        }
+
+        project.Save(filePath, saveElements: true);
+    }
 
     /// <summary>
     /// Re-applies all styles on Root, PopupRoot, and ModalRoot. Call after

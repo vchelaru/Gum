@@ -43,6 +43,62 @@ public class RuntimeSnapshotSerializerTests : BaseTestClass
     }
 
     [Fact]
+    public void CreateStateForNode_Shaken_ShouldKeepValueDifferentFromDefault()
+    {
+        // The standard Container default has Visible = true; a live element that differs must be kept.
+        ContainerRuntime container = new();
+        container.Visible = false;
+
+        RuntimeSnapshotSerializer serializer = CreateSerializer();
+        StateSave state = serializer.CreateStateForNode(container, "Default", shake: true);
+
+        state.Variables.ShouldContain(v => v.Name == "Visible");
+    }
+
+    [Fact]
+    public void CreateStateForNode_Shaken_ShouldOmitValueEqualToDefault()
+    {
+        // Visible = true matches the standard Container default, so the shake prunes it.
+        ContainerRuntime container = new();
+        container.Visible = true;
+
+        RuntimeSnapshotSerializer serializer = CreateSerializer();
+        StateSave state = serializer.CreateStateForNode(container, "Default", shake: true);
+
+        state.Variables.ShouldNotContain(v => v.Name == "Visible");
+    }
+
+    [Fact]
+    public void CreateStateForNode_Unshaken_ShouldKeepValueEqualToDefault()
+    {
+        // Without shaking, even a default-valued variable is emitted (the always-correct, heavy mode).
+        ContainerRuntime container = new();
+        container.Visible = true;
+
+        RuntimeSnapshotSerializer serializer = CreateSerializer();
+        StateSave state = serializer.CreateStateForNode(container, "Default");
+
+        state.Variables.ShouldContain(v => v.Name == "Visible");
+    }
+
+    [Fact]
+    public void CreateScreenSave_Shaken_ShouldOmitDefaultValuedQualifiedVariables()
+    {
+        ContainerRuntime root = new();
+        TextRuntime label = new() { Name = "Label" };
+        label.Text = "Hi";    // differs from the standard Text default ("Hello") -> kept
+        label.Visible = true; // matches the standard default -> pruned
+        root.AddChild(label);
+
+        RuntimeSnapshotSerializer serializer = CreateSerializer();
+        ScreenSave screen = serializer.CreateScreenSave(root, "Snapshot", shake: true);
+
+        StateSave defaultState = screen.States.First(s => s.Name == "Default");
+        defaultState.Variables.ShouldContain(v => v.Name == "Label.Text");
+        defaultState.Variables.ShouldNotContain(v => v.Name == "Label.Visible");
+    }
+
+    [Fact]
     public void CreateScreenSave_ShouldFlattenTreeIntoInstancesWithBaseTypes()
     {
         ContainerRuntime root = new();

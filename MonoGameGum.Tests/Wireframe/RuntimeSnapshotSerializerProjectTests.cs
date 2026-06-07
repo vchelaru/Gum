@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
@@ -15,6 +16,72 @@ namespace MonoGameGum.Tests.Wireframe;
 
 public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
 {
+    [Fact]
+    public void ExportSnapshot_ShouldWriteShakenLoadableProjectFromLiveRoot()
+    {
+        string tempDirectory = NewTempDirectory();
+        try
+        {
+            // Exercise the public entry point: build a live tree under a GumService's Root, then export.
+            GumService service = new();
+            ContainerRuntime panel = new() { Name = "Panel" };
+            TextRuntime label = new() { Name = "Label" };
+            label.Text = "Hi"; // differs from the standard Text default -> survives the shake
+            panel.AddChild(label);
+            service.Root.AddChild(panel);
+
+            string gumxPath = Path.Combine(tempDirectory, "Live." + GumProjectSave.ProjectExtension);
+            service.ExportSnapshot(gumxPath);
+
+            GumProjectSave loaded = GumProjectSave.Load(gumxPath, out GumLoadResult loadResult);
+
+            loaded.ShouldNotBeNull();
+            loadResult.ErrorMessage.ShouldBeNullOrEmpty();
+            loadResult.MissingFiles.ShouldBeEmpty();
+
+            // The screen is named after the file; the live tree is flattened into instances.
+            ScreenSave loadedScreen = loaded.Screens.First(s => s.Name == "Live");
+            loadedScreen.Instances.Select(i => i.Name).ShouldBe(new[] { "Panel", "Label" }, ignoreOrder: true);
+
+            // Shaken by default: the changed value survives, a default-valued one is pruned.
+            StateSave defaultState = loadedScreen.States.First(s => s.Name == "Default");
+            defaultState.Variables.ShouldContain(v => v.Name == "Label.Text");
+            defaultState.Variables.ShouldNotContain(v => v.Name == "Label.Visible");
+        }
+        finally
+        {
+            DeleteTempDirectory(tempDirectory);
+        }
+    }
+
+    [Fact]
+    public void Snapshot_Shaken_ShouldWriteProjectThatLoadsWithoutErrors()
+    {
+        string tempDirectory = NewTempDirectory();
+        try
+        {
+            string gumxPath = BuildAndSaveSnapshot(tempDirectory, shake: true);
+
+            GumProjectSave loaded = GumProjectSave.Load(gumxPath, out GumLoadResult loadResult);
+
+            loaded.ShouldNotBeNull();
+            loadResult.ErrorMessage.ShouldBeNullOrEmpty();
+            loadResult.MissingFiles.ShouldBeEmpty();
+
+            ScreenSave loadedScreen = loaded.Screens.First(s => s.Name == "Snapshot");
+            loadedScreen.Instances.Select(i => i.Name).ShouldBe(new[] { "Panel", "Label" }, ignoreOrder: true);
+
+            // Shaken: Label.Text (="Hi") differs from the default and is kept; Label.Visible matches and is pruned.
+            StateSave defaultState = loadedScreen.States.First(s => s.Name == "Default");
+            defaultState.Variables.ShouldContain(v => v.Name == "Label.Text");
+            defaultState.Variables.ShouldNotContain(v => v.Name == "Label.Visible");
+        }
+        finally
+        {
+            DeleteTempDirectory(tempDirectory);
+        }
+    }
+
     [Fact]
     public void Snapshot_ShouldWriteProjectThatLoadsWithoutErrors()
     {
@@ -40,7 +107,18 @@ public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
     }
 
     [Fact]
+    public async Task Snapshot_Shaken_ShouldPassGumCliCheck()
+    {
+        await RunGumCliCheck(shake: true);
+    }
+
+    [Fact]
     public async Task Snapshot_ShouldPassGumCliCheck()
+    {
+        await RunGumCliCheck(shake: false);
+    }
+
+    private static async Task RunGumCliCheck(bool shake)
     {
         // The full integrity check uses the real CLI. It runs as a separate OS process (not an
         // in-process reference) because Gum.ProjectServices and MonoGameGum both compile the Forms
@@ -49,7 +127,7 @@ public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
         string tempDirectory = NewTempDirectory();
         try
         {
-            string gumxPath = BuildAndSaveSnapshot(tempDirectory);
+            string gumxPath = BuildAndSaveSnapshot(tempDirectory, shake);
             string cliProject = LocateGumCliCsproj();
             string configuration = DetectBuildConfiguration();
 
@@ -87,7 +165,7 @@ public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
         }
     }
 
-    private static string BuildAndSaveSnapshot(string tempDirectory)
+    private static string BuildAndSaveSnapshot(string tempDirectory, bool shake = false)
     {
         StandardElementsManager.Self.Initialize();
 
@@ -103,7 +181,7 @@ public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
         // instances' BaseTypes resolve). Standards population is a composition-root concern, kept out
         // of the catalog-injected serializer.
         RuntimeSnapshotSerializer serializer = new(StandardElementsManager.Self.DefaultStates);
-        ScreenSave screen = serializer.CreateScreenSave(root, "Snapshot");
+        ScreenSave screen = serializer.CreateScreenSave(root, "Snapshot", shake);
 
         GumProjectSave project = new();
         StandardElementsManager.Self.PopulateProjectWithDefaultStandards(project);
