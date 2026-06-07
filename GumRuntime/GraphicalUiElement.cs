@@ -1910,7 +1910,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         #endregion
 
-        #region Early Out - Update Parent and exit
+        #region Originating-call parent climb (early-out; see #3066)
 
         currentDirtyState = null;
 
@@ -4555,6 +4555,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     }
 
 
+    /// <summary>
+    /// Returns whether a layout change on this element must notify its parent — i.e. whether the
+    /// parent's own layout structurally depends on this child: the parent content-sizes
+    /// (GetIfDimensionsDependOnChildren), stacks its children, or has any Ratio-sized sibling.
+    /// </summary>
+    /// <remarks>
+    /// This is a purely STRUCTURAL check — it does not consider whether anything actually changed.
+    /// It is called from both parent-climb sites in UpdateLayout: the unconditional originating
+    /// climb and the size-gated propagated climb (#3066). The "did anything change?" gating lives
+    /// at those call sites, not here, which is why the same predicate appears in two places with
+    /// different surrounding conditions.
+    /// </remarks>
     bool GetIfShouldCallUpdateOnParent()
     {
         var asGue = this.Parent as GraphicalUiElement;
