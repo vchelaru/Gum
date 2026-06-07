@@ -26,10 +26,12 @@ Entry point: `UpdateLayout(ParentUpdateType, int childrenUpdateDepth, XOrY?)`
    and not needed for parent update, call `MakeDirty()` and return. Invisible
    elements also exit if parent is invisible (unless render target).
 
-3. **Early out — propagate to parent** — if `updateParent` is true AND
-   `GetIfShouldCallUpdateOnParent()` is true, call `parent.UpdateLayout()` with
-   `childrenUpdateDepth + 1` and **return**. The parent's layout will update
-   this element as a child. This is how child changes bubble up.
+3. **Propagate to parent (originating call only)** — if `updateParent` AND
+   `GetIfShouldCallUpdateOnParent()`, the *originating* call (the element that
+   changed) hands off to `parent.UpdateLayout()` with `childrenUpdateDepth + 1`
+   and **returns**; the parent lays this element out as a child. A *propagated*
+   climb (already size-gated — see Upward Propagation) instead falls through and
+   re-evaluates whether to keep climbing at the end of the method.
 
 4. **Clear dirty state** — `currentDirtyState = null`. This is critical: it
    prevents double-updates during `ResumeLayoutUpdateIfDirtyRecursive` (see
@@ -61,8 +63,10 @@ Entry point: `UpdateLayout(ParentUpdateType, int childrenUpdateDepth, XOrY?)`
     all children. Children already updated in step 6 are skipped via
     `alreadyUpdated` set.
 
-12. **Post-layout dimension check** — if size changed and parent depends on
-    children, re-update dimensions. If still changed, update parent.
+12. **Post-layout dimension check + gated climb** — re-update dimensions if a
+    child change could have altered them; then, for a propagated climb, continue
+    up to the parent only if this element's own measured size or position
+    actually changed (see Upward Propagation).
 
 ### Deferred font realization (step 4.5)
 
@@ -167,8 +171,44 @@ Returns true if:
 - Parent stacks children (any non-Regular `ChildrenLayout`)
 - Any sibling uses `Ratio` width/height
 
-When true, `UpdateLayout` delegates to the parent (step 3 above) instead of
-laying out the element directly. The parent will re-lay out all children.
+When true, the *originating* call delegates to the parent (flow step 3);
+*propagated* climbs above it are additionally size-gated (see below).
+
+### Upward propagation is incremental and size-gated
+
+A change climbs one level so the parent can re-measure, then continues to the
+grandparent and beyond **only while each level's own measured size or position
+keeps changing**. When a level re-measures unchanged, propagation stops there —
+its siblings and ancestors are not relaid out. That is what keeps a change inside
+one item of an N-item stack from costing O(N-siblings).
+
+The element that actually changed (the *originating* call) always notifies its
+parent **unconditionally**, so the parent can re-measure; only the *propagated*
+climbs above it are size-gated. The `gateClimbOnSizeChange` flag distinguishes
+the two. Why the source can't gate itself:
+
+> An element's own size delta is **not** the same as its contribution to a
+> content-sized or stacking parent. The clearest case is **visibility**: size is
+> unchanged when an element is hidden or shown, but its contribution flips (full
+> extent ↔ 0). Only the parent, by re-measuring, can tell whether the change
+> matters. Gating at the source on the source's own size would silently drop
+> visibility-driven (and add/remove) changes, because the parent would never
+> re-measure.
+
+`RelativeToMaxParentOrChildren` always propagates regardless of its own delta:
+its size is the max of its content and its parent, so a content change can be
+masked by a (stale) parent size while it still feeds the parent's size.
+
+### Visibility changes propagate through TWO paths
+
+A visibility toggle is not one code path:
+- Becoming **invisible**: the `Visible` setter updates the parent *directly*
+  (when the parent stacks / auto-grids / depends on children), separately from
+  `UpdateLayout`'s climb.
+- Becoming **visible**: flows through `UpdateLayout`'s normal (originating) climb.
+
+Both rely on the parent re-measuring — see the contribution-vs-size trap above
+for why the parent, not the toggled element, is the source of truth.
 
 ## Performance Patterns
 
@@ -185,3 +225,19 @@ laying out the element directly. The parent will re-lay out all children.
 
 - `UpdateLayoutCallCount` — total layout calls (incremented after parent propagation check)
 - `ChildrenUpdatingParentLayoutCalls` — times a child triggered parent relayout
+
+### Verifying propagation (and a test-isolation caution)
+
+`UpdateLayoutCallCount` deltas are how you assert propagation didn't over-fire:
+build an N-item stack, make a change that *shouldn't* affect siblings, and assert
+the delta stays flat as N grows rather than scaling. See the layout-call-count
+tests in `LayoutUnitTests`.
+
+If an engine change instead makes the **RaylibGum draw-call-count** tests fail,
+suspect pre-existing **test isolation** before suspecting your change. Those tests
+assert exact draw-call deltas and are sensitive to renderables leaked onto the
+shared layer (an `AddToManagers` with no matching `RemoveFromManagers`); combined
+with run-to-run test ordering that is flaky *on a clean tree too*. A layout change
+can shift render batching just enough to change how often the latent flake trips —
+confirm by running the suite repeatedly on the base branch before assuming you
+caused it.

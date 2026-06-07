@@ -81,6 +81,11 @@ public class TestAssemblyInitialize : XunitTestFramework
 
         GumService.Default.Root.UpdateLayout();
 
+        // #3066: record the post-bootstrap renderables (Root + Forms defaults) so BaseTestClass.Dispose
+        // can sweep anything a test leaks onto the shared layers, keeping draw-call-count tests
+        // isolated from each other regardless of run order.
+        BaseTestClass.CaptureRenderableBaseline();
+
         // Intentionally do NOT call GumService.Default.UseKeyboardDefaults() here.
         // KeyCombo.IsComboPushed returns inside the first iteration of
         // FrameworkElement.KeyboardsForUiControl, so leaving the real Raylib keyboard

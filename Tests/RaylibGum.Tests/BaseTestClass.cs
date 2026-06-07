@@ -2,6 +2,8 @@
 using Gum.Wireframe;
 using Raylib_cs;
 using Gum.Input;
+using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +16,30 @@ namespace RaylibGum.Tests;
 
 public class BaseTestClass : IDisposable
 {
+    // #3066: renderables present right after the assembly bootstrap (Root + Forms defaults).
+    // Anything found on a layer beyond this set was added by a test — typically via AddToManagers
+    // without a matching RemoveFromManagers — and is swept in Dispose. Left in place, a leaked
+    // renderable persists on the shared layer and corrupts later draw-call-count assertions (the
+    // leak coalesces with other tests' content), which surfaced as order-dependent flaky failures.
+    private static readonly HashSet<IRenderableIpso> BaselineRenderables = new();
+
+    /// <summary>
+    /// Records the renderables currently on the renderer's layers as the per-test baseline. Called
+    /// once from the assembly bootstrap (and again after any Uninitialize/re-init) so Dispose can
+    /// sweep anything a test leaks beyond it.
+    /// </summary>
+    internal static void CaptureRenderableBaseline()
+    {
+        BaselineRenderables.Clear();
+        foreach (Layer layer in SystemManagers.Default.Renderer.Layers)
+        {
+            foreach (IRenderableIpso renderable in layer.Renderables)
+            {
+                BaselineRenderables.Add(renderable);
+            }
+        }
+    }
+
     public BaseTestClass()
     {
         GumService.Default.InitializeForTesting();
@@ -59,6 +85,19 @@ public class BaseTestClass : IDisposable
         InteractiveGue.ClearNextClickActions();
 
         GumService.Default.Root.Children!.Clear();
+
+        // #3066: sweep any renderables a test added straight to the renderer layers via
+        // AddToManagers without a matching RemoveFromManagers. Clearing Root.Children above does not
+        // reach those (they are not Root children), so without this they leak across tests. See
+        // BaselineRenderables.
+        foreach (Layer layer in SystemManagers.Default.Renderer.Layers)
+        {
+            List<IRenderableIpso> leaked = layer.Renderables.Where(r => !BaselineRenderables.Contains(r)).ToList();
+            foreach (IRenderableIpso renderable in leaked)
+            {
+                layer.Remove(renderable);
+            }
+        }
 
         // Why aren't these available?
         //GumService.Default.ModalRoot.Children!.Clear();

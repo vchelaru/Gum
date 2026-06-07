@@ -2502,6 +2502,138 @@ public class LayoutUnitTests : BaseTestClass
 
     #endregion
 
+    #region Descendant Change Propagation Under Stacking (issue #3066 invariants)
+
+    // These tests pin the correctness invariants that any "suppress redundant relayout"
+    // optimization for #3066 must preserve: when a descendant of a content-sized item that
+    // lives in a stack changes, following siblings must reposition iff the item's size
+    // actually changed — and must NOT drift when it did not.
+
+    [Fact]
+    public void GrandchildResize_ChangingItemHeight_RepositionsFollowingItemsInStack()
+    {
+        ContainerRuntime stack = new();
+        stack.Height = 0;
+        stack.HeightUnits = DimensionUnitType.RelativeToChildren;
+        stack.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+
+        ContainerRuntime item0 = new();
+        item0.Height = 0;
+        item0.HeightUnits = DimensionUnitType.RelativeToChildren;
+        stack.AddChild(item0);
+
+        // The size-determining descendant (a grandchild of the stack).
+        ContainerRuntime determiner = new();
+        determiner.Height = 30;
+        determiner.HeightUnits = DimensionUnitType.Absolute;
+        item0.AddChild(determiner);
+
+        ContainerRuntime item1 = new();
+        item1.Height = 0;
+        item1.HeightUnits = DimensionUnitType.RelativeToChildren;
+        stack.AddChild(item1);
+
+        ContainerRuntime item1Child = new();
+        item1Child.Height = 30;
+        item1Child.HeightUnits = DimensionUnitType.Absolute;
+        item1.AddChild(item1Child);
+
+        item1.AbsoluteTop.ShouldBe(30);
+
+        // Growing the descendant grows item0, which must push item1 down.
+        determiner.Height = 50;
+        item1.AbsoluteTop.ShouldBe(50);
+    }
+
+    [Fact]
+    public void GrandchildVisibilityToggle_ChangingItemHeight_RepositionsFollowingItemsInStack()
+    {
+        ContainerRuntime stack = new();
+        stack.Height = 0;
+        stack.HeightUnits = DimensionUnitType.RelativeToChildren;
+        stack.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+
+        ContainerRuntime item0 = new();
+        item0.Height = 0;
+        item0.HeightUnits = DimensionUnitType.RelativeToChildren;
+        stack.AddChild(item0);
+
+        // The only descendant of item0, so its visibility determines item0's height.
+        ContainerRuntime determiner = new();
+        determiner.Height = 30;
+        determiner.HeightUnits = DimensionUnitType.Absolute;
+        item0.AddChild(determiner);
+
+        ContainerRuntime item1 = new();
+        item1.Height = 0;
+        item1.HeightUnits = DimensionUnitType.RelativeToChildren;
+        stack.AddChild(item1);
+
+        ContainerRuntime item1Child = new();
+        item1Child.Height = 30;
+        item1Child.HeightUnits = DimensionUnitType.Absolute;
+        item1.AddChild(item1Child);
+
+        item1.AbsoluteTop.ShouldBe(30);
+
+        // Hiding the size-determiner collapses item0 to 0, so item1 must move up.
+        determiner.Visible = false;
+        item1.AbsoluteTop.ShouldBe(0);
+
+        // Showing it again must restore item0's height and push item1 back down.
+        determiner.Visible = true;
+        item1.AbsoluteTop.ShouldBe(30);
+    }
+
+    [Fact]
+    public void GrandchildVisibilityToggle_NotChangingItemHeight_KeepsFollowingItemsInStack()
+    {
+        ContainerRuntime stack = new();
+        stack.Height = 0;
+        stack.HeightUnits = DimensionUnitType.RelativeToChildren;
+        stack.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+
+        ContainerRuntime item0 = new();
+        item0.Height = 0;
+        item0.HeightUnits = DimensionUnitType.RelativeToChildren;
+        stack.AddChild(item0);
+
+        // This child determines item0's height (30).
+        ContainerRuntime sizer = new();
+        sizer.Height = 30;
+        sizer.HeightUnits = DimensionUnitType.Absolute;
+        sizer.Y = 0;
+        item0.AddChild(sizer);
+
+        // This smaller child at the same origin never determines item0's height, so toggling
+        // its visibility must NOT change item0's size or move item1.
+        ContainerRuntime nonDeterminer = new();
+        nonDeterminer.Height = 10;
+        nonDeterminer.HeightUnits = DimensionUnitType.Absolute;
+        nonDeterminer.Y = 0;
+        item0.AddChild(nonDeterminer);
+
+        ContainerRuntime item1 = new();
+        item1.Height = 0;
+        item1.HeightUnits = DimensionUnitType.RelativeToChildren;
+        stack.AddChild(item1);
+
+        ContainerRuntime item1Child = new();
+        item1Child.Height = 30;
+        item1Child.HeightUnits = DimensionUnitType.Absolute;
+        item1.AddChild(item1Child);
+
+        item1.AbsoluteTop.ShouldBe(30);
+
+        nonDeterminer.Visible = false;
+        item1.AbsoluteTop.ShouldBe(30);
+
+        nonDeterminer.Visible = true;
+        item1.AbsoluteTop.ShouldBe(30);
+    }
+
+    #endregion
+
     #region Nested Layout Propagation
 
     [Fact]
@@ -7081,6 +7213,89 @@ public class LayoutUnitTests : BaseTestClass
         // Global suspension should result in fewer layout calls
         // since changes are batched and applied once on resume
         suspendedCalls.ShouldBeLessThan(unsuspendedCalls);
+    }
+
+    // Builds an N-item TopToBottomStack of content-sized (RelativeToChildren) items. Each item
+    // has a height-determining "sizer" child (30) and a smaller "non-determiner" child (10) at the
+    // same origin, so toggling/resizing the non-determiner never changes the item's height. Returns
+    // the first item's non-determiner — the descendant whose change should NOT relayout siblings.
+    private static (ContainerRuntime stack, ContainerRuntime firstNonDeterminer) BuildStackOfContentSizedItems(int itemCount)
+    {
+        ContainerRuntime stack = new();
+        stack.Height = 0;
+        stack.HeightUnits = DimensionUnitType.RelativeToChildren;
+        stack.Width = 200;
+        stack.WidthUnits = DimensionUnitType.Absolute;
+        stack.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+
+        ContainerRuntime firstNonDeterminer = null!;
+        for (int i = 0; i < itemCount; i++)
+        {
+            ContainerRuntime item = new();
+            item.Height = 0;
+            item.HeightUnits = DimensionUnitType.RelativeToChildren;
+            item.Width = 200;
+            item.WidthUnits = DimensionUnitType.Absolute;
+            stack.AddChild(item);
+
+            ContainerRuntime sizer = new();
+            sizer.Height = 30;
+            sizer.HeightUnits = DimensionUnitType.Absolute;
+            sizer.Y = 0;
+            item.AddChild(sizer);
+
+            ContainerRuntime nonDeterminer = new();
+            nonDeterminer.Height = 10;
+            nonDeterminer.HeightUnits = DimensionUnitType.Absolute;
+            nonDeterminer.Y = 0;
+            item.AddChild(nonDeterminer);
+
+            if (i == 0)
+            {
+                firstNonDeterminer = nonDeterminer;
+            }
+        }
+
+        stack.UpdateLayout();
+        return (stack, firstNonDeterminer);
+    }
+
+    [Fact]
+    public void GrandchildResize_NotChangingItemSize_DoesNotScaleLayoutCallsWithSiblingCount()
+    {
+        var (_, smallNonDeterminer) = BuildStackOfContentSizedItems(3);
+        var (_, largeNonDeterminer) = BuildStackOfContentSizedItems(30);
+
+        int before = GraphicalUiElement.UpdateLayoutCallCount;
+        smallNonDeterminer.Height = 15; // still < 30, so the item's height does not change
+        int smallDelta = GraphicalUiElement.UpdateLayoutCallCount - before;
+
+        before = GraphicalUiElement.UpdateLayoutCallCount;
+        largeNonDeterminer.Height = 15;
+        int largeDelta = GraphicalUiElement.UpdateLayoutCallCount - before;
+
+        // The work for a resize that does not change the item's size must not grow with sibling count.
+        largeDelta.ShouldBeLessThanOrEqualTo(smallDelta + 5);
+    }
+
+    [Fact]
+    public void GrandchildVisibilityToggle_NotChangingItemSize_DoesNotScaleLayoutCallsWithSiblingCount()
+    {
+        var (_, smallNonDeterminer) = BuildStackOfContentSizedItems(3);
+        var (_, largeNonDeterminer) = BuildStackOfContentSizedItems(30);
+
+        int before = GraphicalUiElement.UpdateLayoutCallCount;
+        smallNonDeterminer.Visible = false;
+        smallNonDeterminer.Visible = true;
+        int smallDelta = GraphicalUiElement.UpdateLayoutCallCount - before;
+
+        before = GraphicalUiElement.UpdateLayoutCallCount;
+        largeNonDeterminer.Visible = false;
+        largeNonDeterminer.Visible = true;
+        int largeDelta = GraphicalUiElement.UpdateLayoutCallCount - before;
+
+        // The work for a visibility toggle that does not change the item's size must not grow with sibling count.
+        largeDelta.ShouldBeLessThanOrEqualTo(smallDelta + 5);
     }
 
     #endregion
