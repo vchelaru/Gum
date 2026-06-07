@@ -37,6 +37,12 @@ public interface IRuntimeSnapshotSerializer
     /// (see <see cref="CreateStateForNode"/>).
     /// </summary>
     ScreenSave CreateScreenSave(GraphicalUiElement root, string screenName, bool shake = false);
+
+    /// <summary>
+    /// Returns the distinct, non-empty file paths referenced by "SourceFile" variables in the snapshot
+    /// (e.g. Sprite/NineSlice textures), so a caller can bundle those files alongside the project.
+    /// </summary>
+    IEnumerable<string> GetReferencedFiles(ScreenSave screen);
 }
 
 /// <inheritdoc cref="IRuntimeSnapshotSerializer" />
@@ -93,6 +99,14 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
                 // are skipped rather than emitted with a wrong value.
                 if (element.TryGetProperty(defaultVariable.Name, out object? value))
                 {
+                    // Only values Gum can serialize belong in a snapshot. The reflection fallback can
+                    // return runtime-only objects (e.g. a Texture2D for "SourceFile") that the XML
+                    // serializer cannot write; skip those rather than crash the whole save.
+                    if (value != null && !IsSaveSafeValue(value))
+                    {
+                        continue;
+                    }
+
                     // The shake prunes values equal to the standard-element default (the in-document
                     // baseline): an omitted variable resolves to that same default via the snapshot's
                     // embedded standards, so the result is equivalent but lighter.
@@ -130,6 +144,33 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
         }
 
         return screen;
+    }
+
+    /// <inheritdoc />
+    public IEnumerable<string> GetReferencedFiles(ScreenSave screen)
+    {
+        HashSet<string> files = new HashSet<string>();
+        foreach (StateSave state in screen.States)
+        {
+            foreach (VariableSave variable in state.Variables)
+            {
+                if (IsSourceFileVariable(variable.Name)
+                    && variable.Value is string path
+                    && !string.IsNullOrEmpty(path))
+                {
+                    files.Add(path);
+                }
+            }
+        }
+        return files;
+    }
+
+    // "SourceFile" appears instance-qualified in the screen's default state (e.g. "Sprite.SourceFile").
+    private static bool IsSourceFileVariable(string variableName)
+    {
+        int lastDot = variableName.LastIndexOf('.');
+        string unqualified = lastDot >= 0 ? variableName.Substring(lastDot + 1) : variableName;
+        return unqualified == "SourceFile" || unqualified == "Source File";
     }
 
     private void AddInstanceRecursive(GraphicalUiElement element, string? parentInstanceName,
@@ -197,6 +238,11 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
 
     private static bool IsNumeric(object value) =>
         value is byte or sbyte or short or ushort or int or uint or long or ulong or float or double or decimal;
+
+    // The value kinds Gum's save format (and its XML serializer) can represent: strings, bools, the
+    // numeric primitives, and enums. Anything else (a Texture2D, a renderable, ...) must not be emitted.
+    private static bool IsSaveSafeValue(object value) =>
+        value is string || value is bool || value.GetType().IsEnum || IsNumeric(value);
 
     private static string GenerateUniqueName(GraphicalUiElement element, string typeName, HashSet<string> usedNames)
     {

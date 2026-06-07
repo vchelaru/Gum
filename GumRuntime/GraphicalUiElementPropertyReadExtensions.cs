@@ -96,6 +96,15 @@ public static class GraphicalUiElementPropertyReadExtensions
             case "Rotation":
                 value = element.Rotation;
                 return true;
+            case "SourceFile":
+            case "Source File":
+                // The Gum "SourceFile" variable is a file path. The runtime exposes the texture object
+                // (Sprite/NineSlice ".Texture"), not the path -- but the content loader stamps the source
+                // path onto Texture2D.Name, so recover it there. Reflection keeps this reader cross-platform
+                // (no Texture2D reference here). Returns false when there is no texture, so callers skip it
+                // rather than emit a Texture2D the snapshot serializer cannot write.
+                value = TryReadTextureName(element);
+                return value != null;
             case "StackSpacing":
                 value = element.StackSpacing;
                 return true;
@@ -194,6 +203,22 @@ public static class GraphicalUiElementPropertyReadExtensions
     // Memoizes the public, readable, non-indexer property per (runtime type, Gum variable name).
     // A null entry caches "no reflectable property" so repeated misses stay cheap.
     private static readonly ConcurrentDictionary<(Type, string), PropertyInfo?> _propertyCache = new();
+
+    // Recovers a Sprite/NineSlice source path from its texture's Name (stamped by the content loader on
+    // load). Done by reflection so this shared reader needs no reference to the backend texture type.
+    private static string? TryReadTextureName(GraphicalUiElement element)
+    {
+        PropertyInfo? textureProperty = ResolveReflectedProperty(element.GetType(), "Texture");
+        object? texture = textureProperty?.GetValue(element);
+        if (texture == null)
+        {
+            return null;
+        }
+
+        PropertyInfo? nameProperty = ResolveReflectedProperty(texture.GetType(), "Name");
+        string? name = nameProperty?.GetValue(texture) as string;
+        return string.IsNullOrEmpty(name) ? null : name;
+    }
 
     private static PropertyInfo? ResolveReflectedProperty(Type type, string propertyName)
     {

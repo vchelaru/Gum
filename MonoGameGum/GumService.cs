@@ -358,6 +358,50 @@ public class GumService : IGumService
         }
 
         project.Save(filePath, saveElements: true);
+
+        if (!string.IsNullOrEmpty(directory))
+        {
+            CopyReferencedFiles(serializer, screen, directory);
+        }
+    }
+
+    // Bundles the files referenced by the snapshot (Sprite/NineSlice textures, ...) next to the project
+    // so it opens self-contained in the tool. Relative references are copied preserving their relative
+    // path; absolute references already resolve on their own, and missing files are skipped (logged).
+    private static void CopyReferencedFiles(IRuntimeSnapshotSerializer serializer, ScreenSave screen, string snapshotDirectory)
+    {
+        foreach (string referencedPath in serializer.GetReferencedFiles(screen))
+        {
+            if (!FileManager.IsRelative(referencedPath))
+            {
+                continue;
+            }
+
+            string absoluteSource;
+            try
+            {
+                absoluteSource = FileManager.MakeAbsolute(referencedPath);
+            }
+            catch (ArgumentException)
+            {
+                continue;
+            }
+
+            if (!File.Exists(absoluteSource))
+            {
+                System.Diagnostics.Debug.WriteLine($"Snapshot: referenced file not found, skipping: {referencedPath}");
+                continue;
+            }
+
+            string destination = Path.Combine(snapshotDirectory,
+                referencedPath.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar));
+            string? destinationDirectory = Path.GetDirectoryName(destination);
+            if (!string.IsNullOrEmpty(destinationDirectory))
+            {
+                Directory.CreateDirectory(destinationDirectory);
+            }
+            File.Copy(absoluteSource, destination, overwrite: true);
+        }
     }
 
     /// <summary>

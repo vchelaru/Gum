@@ -10,6 +10,7 @@ using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using Shouldly;
+using ToolsUtilities;
 using Xunit;
 
 namespace MonoGameGum.Tests.Wireframe;
@@ -165,10 +166,95 @@ public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
         }
     }
 
+    [Fact]
+    public void ExportSnapshot_ShouldCopyReferencedFilesPreservingRelativePath()
+    {
+        string originalRelativeDirectory = FileManager.RelativeDirectory;
+        string contentDirectory = NewTempDirectory();
+        string snapshotDirectory = NewTempDirectory();
+        try
+        {
+            // Lay a referenced texture file under a content dir, mirroring how a game ships assets.
+            const string relativePath = "UI/button.png";
+            string sourceFile = Path.Combine(contentDirectory, "UI", "button.png");
+            Directory.CreateDirectory(Path.GetDirectoryName(sourceFile)!);
+            File.WriteAllBytes(sourceFile, new byte[] { 1, 2, 3 });
+
+            // Relative SourceFile paths resolve under here (as the content loader resolved them at load).
+            FileManager.RelativeDirectory = contentDirectory;
+
+            GumService service = new();
+            SpriteRuntime sprite = new() { Name = "Sprite" };
+            Microsoft.Xna.Framework.Graphics.Texture2D texture = MakeHeadlessTexture();
+            texture.Name = relativePath;
+            sprite.Texture = texture;
+            service.Root.AddChild(sprite);
+
+            string gumxPath = Path.Combine(snapshotDirectory, "Live." + GumProjectSave.ProjectExtension);
+            service.ExportSnapshot(gumxPath);
+
+            // The referenced file is copied next to the snapshot, preserving its relative path.
+            File.Exists(Path.Combine(snapshotDirectory, "UI", "button.png")).ShouldBeTrue();
+
+            // And the SourceFile variable points at that same relative path.
+            GumProjectSave loaded = GumProjectSave.Load(gumxPath, out _);
+            StateSave defaultState = loaded.Screens.First(s => s.Name == "Live").States.First(s => s.Name == "Default");
+            defaultState.Variables.First(v => v.Name == "Sprite.SourceFile").Value.ShouldBe(relativePath);
+        }
+        finally
+        {
+            FileManager.RelativeDirectory = originalRelativeDirectory;
+            DeleteTempDirectory(contentDirectory);
+            DeleteTempDirectory(snapshotDirectory);
+        }
+    }
+
+    [Fact]
+    public void Snapshot_ShouldSerializeEveryStandardRuntimeType()
+    {
+        // Coverage guard: a snapshot containing one of every standard runtime type must serialize and
+        // reload without error. Sprite and NineSlice carry an in-memory Texture2D -- the snapshot must
+        // not attempt to write that non-serializable object into a VariableSave. (Previously only
+        // Container and Text were ever exercised, so this whole dimension was untested.)
+        ContainerRuntime root = new();
+        root.AddChild(new ContainerRuntime { Name = "ContainerInstance" });
+        root.AddChild(new TextRuntime { Name = "TextInstance", Text = "Hi" });
+        root.AddChild(new RectangleRuntime { Name = "RectangleInstance" });
+        root.AddChild(new CircleRuntime { Name = "CircleInstance" });
+        root.AddChild(new PolygonRuntime { Name = "PolygonInstance" });
+#pragma warning disable CS0618 // ColoredRectangle is obsolete but is still a live standard type to cover.
+        root.AddChild(new ColoredRectangleRuntime { Name = "ColoredRectangleInstance" });
+#pragma warning restore CS0618
+
+        SpriteRuntime sprite = new() { Name = "SpriteInstance" };
+        sprite.Texture = MakeHeadlessTexture();
+        root.AddChild(sprite);
+
+        NineSliceRuntime nineSlice = new() { Name = "NineSliceInstance" };
+        nineSlice.Texture = MakeHeadlessTexture();
+        root.AddChild(nineSlice);
+
+        string tempDirectory = NewTempDirectory();
+        try
+        {
+            string gumxPath = SaveRootAsProject(root, tempDirectory, shake: true);
+
+            GumProjectSave loaded = GumProjectSave.Load(gumxPath, out GumLoadResult loadResult);
+
+            loaded.ShouldNotBeNull();
+            loadResult.ErrorMessage.ShouldBeNullOrEmpty();
+            loadResult.MissingFiles.ShouldBeEmpty();
+
+            loaded.Screens.First(s => s.Name == "Snapshot").Instances.Count.ShouldBe(8);
+        }
+        finally
+        {
+            DeleteTempDirectory(tempDirectory);
+        }
+    }
+
     private static string BuildAndSaveSnapshot(string tempDirectory, bool shake = false)
     {
-        StandardElementsManager.Self.Initialize();
-
         // Build a small live tree: a panel containing a label.
         ContainerRuntime root = new();
         ContainerRuntime panel = new() { Name = "Panel" };
@@ -177,9 +263,18 @@ public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
         root.AddChild(panel);
         panel.AddChild(label);
 
-        // Serialize the tree into a screen, then assemble a full project (standards populated so the
-        // instances' BaseTypes resolve). Standards population is a composition-root concern, kept out
-        // of the catalog-injected serializer.
+        return SaveRootAsProject(root, tempDirectory, shake);
+    }
+
+    /// <summary>
+    /// Serializes an arbitrary live tree into a screen and assembles a full project (standards populated
+    /// so the instances' BaseTypes resolve), saving it to <paramref name="tempDirectory"/>. Standards
+    /// population is a composition-root concern, kept out of the catalog-injected serializer.
+    /// </summary>
+    private static string SaveRootAsProject(GraphicalUiElement root, string tempDirectory, bool shake)
+    {
+        StandardElementsManager.Self.Initialize();
+
         RuntimeSnapshotSerializer serializer = new(StandardElementsManager.Self.DefaultStates);
         ScreenSave screen = serializer.CreateScreenSave(root, "Snapshot", shake);
 
@@ -195,6 +290,12 @@ public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
         project.Save(gumxPath, saveElements: true);
         return gumxPath;
     }
+
+    // Fabricates a Texture2D reference without a GraphicsDevice (its ctor needs one). The snapshot path
+    // only holds the reference; it is never dereferenced, so an uninitialized shell is safe here.
+    private static Microsoft.Xna.Framework.Graphics.Texture2D MakeHeadlessTexture() =>
+        (Microsoft.Xna.Framework.Graphics.Texture2D)System.Runtime.CompilerServices.RuntimeHelpers
+            .GetUninitializedObject(typeof(Microsoft.Xna.Framework.Graphics.Texture2D));
 
     private static string NewTempDirectory()
     {

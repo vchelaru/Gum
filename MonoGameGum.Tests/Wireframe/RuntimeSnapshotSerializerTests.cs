@@ -144,6 +144,24 @@ public class RuntimeSnapshotSerializerTests : BaseTestClass
     }
 
     [Fact]
+    public void GetReferencedFiles_ShouldReturnDistinctSourceFilePaths()
+    {
+        ContainerRuntime root = new();
+        SpriteRuntime sprite = new() { Name = "Sprite" };
+        Microsoft.Xna.Framework.Graphics.Texture2D texture =
+            (Microsoft.Xna.Framework.Graphics.Texture2D)System.Runtime.CompilerServices.RuntimeHelpers
+                .GetUninitializedObject(typeof(Microsoft.Xna.Framework.Graphics.Texture2D));
+        texture.Name = "UI/button.png";
+        sprite.Texture = texture;
+        root.AddChild(sprite);
+
+        RuntimeSnapshotSerializer serializer = CreateSerializer();
+        ScreenSave screen = serializer.CreateScreenSave(root, "Snapshot", shake: true);
+
+        serializer.GetReferencedFiles(screen).ShouldBe(new[] { "UI/button.png" });
+    }
+
+    [Fact]
     public void GetStandardTypeName_ShouldResolveContainerRuntime()
     {
         RuntimeSnapshotSerializer serializer = CreateSerializer();
