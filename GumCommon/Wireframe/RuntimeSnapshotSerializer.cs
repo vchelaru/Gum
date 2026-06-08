@@ -21,18 +21,28 @@ public interface IRuntimeSnapshotSerializer
 
     /// <summary>
     /// Creates a state holding the element's current values for every variable in its standard type's
-    /// catalog. The result is unshaken — redundant (equal-to-default) values are not yet removed.
+    /// catalog. When <paramref name="shake"/> is false the result is unshaken — every catalog value is
+    /// emitted (heavy but always correct). When true, values equal to the standard-element default are
+    /// pruned: an omitted variable falls back to that same default in the snapshot's embedded standards,
+    /// so the shaken state is equivalent but lighter and reads as "unedited" in the tool.
     /// </summary>
-    StateSave CreateStateForNode(GraphicalUiElement element, string stateName);
+    StateSave CreateStateForNode(GraphicalUiElement element, string stateName, bool shake = false);
 
     /// <summary>
     /// Builds a flattened <see cref="ScreenSave"/> snapshot of the live tree rooted at
     /// <paramref name="root"/>. Each descendant becomes a standard-element <see cref="InstanceSave"/>; the
     /// screen's default state holds each instance's values as instance-qualified variables, and
     /// child/parent structure is captured via the qualified "Parent" variable. The root itself maps to the
-    /// screen, not to an instance.
+    /// screen, not to an instance. When <paramref name="shake"/> is true, equal-to-default values are pruned
+    /// (see <see cref="CreateStateForNode"/>).
     /// </summary>
-    ScreenSave CreateScreenSave(GraphicalUiElement root, string screenName);
+    ScreenSave CreateScreenSave(GraphicalUiElement root, string screenName, bool shake = false);
+
+    /// <summary>
+    /// Returns the distinct, non-empty file paths referenced by "SourceFile" variables in the snapshot
+    /// (e.g. Sprite/NineSlice textures), so a caller can bundle those files alongside the project.
+    /// </summary>
+    IEnumerable<string> GetReferencedFiles(ScreenSave screen);
 }
 
 /// <inheritdoc cref="IRuntimeSnapshotSerializer" />
@@ -75,7 +85,7 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
     }
 
     /// <inheritdoc />
-    public StateSave CreateStateForNode(GraphicalUiElement element, string stateName)
+    public StateSave CreateStateForNode(GraphicalUiElement element, string stateName, bool shake = false)
     {
         StateSave state = new StateSave { Name = stateName };
 
@@ -89,6 +99,22 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
                 // are skipped rather than emitted with a wrong value.
                 if (element.TryGetProperty(defaultVariable.Name, out object? value))
                 {
+                    // Only values Gum can serialize belong in a snapshot. The reflection fallback can
+                    // return runtime-only objects (e.g. a Texture2D for "SourceFile") that the XML
+                    // serializer cannot write; skip those rather than crash the whole save.
+                    if (value != null && !IsSaveSafeValue(value))
+                    {
+                        continue;
+                    }
+
+                    // The shake prunes values equal to the standard-element default (the in-document
+                    // baseline): an omitted variable resolves to that same default via the snapshot's
+                    // embedded standards, so the result is equivalent but lighter.
+                    if (shake && AreValuesEqual(value, defaultVariable.Value))
+                    {
+                        continue;
+                    }
+
                     state.Variables.Add(new VariableSave
                     {
                         Name = defaultVariable.Name,
@@ -105,23 +131,87 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
     }
 
     /// <inheritdoc />
-    public ScreenSave CreateScreenSave(GraphicalUiElement root, string screenName)
+    public ScreenSave CreateScreenSave(GraphicalUiElement root, string screenName, bool shake = false)
     {
         ScreenSave screen = new ScreenSave { Name = screenName };
         StateSave defaultState = new StateSave { Name = "Default" };
         screen.States.Add(defaultState);
 
+        GraphicalUiElement screenRoot = ResolveScreenRoot(root);
+
         HashSet<string> usedNames = new HashSet<string>();
-        foreach (GraphicalUiElement child in root.Children)
+        foreach (GraphicalUiElement child in screenRoot.Children)
         {
-            AddInstanceRecursive(child, parentInstanceName: null, screen, defaultState, usedNames);
+            AddInstanceRecursive(child, parentInstanceName: null, screen, defaultState, usedNames, shake);
         }
 
         return screen;
     }
 
+    // Decides which element's children become the screen's top-level instances. When the supplied root
+    // holds exactly one *authored* element (a custom type, not a standard layout element) that has
+    // children, that element is the screen the user built -- the code-only equivalent of a Gum Screen --
+    // so it is elided and its children are promoted. In every other case (multiple children at the root,
+    // a single standard-type wrapper, or a custom leaf) the root's own children are the top level.
+    private GraphicalUiElement ResolveScreenRoot(GraphicalUiElement root)
+    {
+        if (root.Children.Count == 1
+            && root.Children[0] is GraphicalUiElement onlyChild
+            && onlyChild.Children.Count > 0
+            && IsAuthoredScreenRoot(onlyChild))
+        {
+            return onlyChild;
+        }
+        return root;
+    }
+
+    // A single root child is treated as the authored screen when either it is a custom type, or it
+    // carries a Forms control identity. The latter matters because a Forms screen's visual is a plain
+    // ContainerRuntime (a standard type) with FormsControlAsObject set -- its "screen-ness" lives in the
+    // Forms control, not the runtime type. A plain anonymous container is neither, so it stays an instance.
+    private bool IsAuthoredScreenRoot(GraphicalUiElement element) =>
+        IsCustomType(element)
+        || (element is InteractiveGue interactiveGue && interactiveGue.FormsControlAsObject != null);
+
+    // A custom (game-authored) type's own name is not a standard-element name. Standard runtimes follow
+    // the "<StandardName>Runtime" convention and resolve directly into the catalog; a subclass such as
+    // "MainMenu : ContainerRuntime" does not. (This deliberately checks the concrete type only -- unlike
+    // GetStandardTypeName, which walks the base chain to find the nearest standard ancestor.)
+    private bool IsCustomType(GraphicalUiElement element)
+    {
+        string candidate = StripRuntimeSuffix(element.GetType().Name);
+        return !_defaultStates.ContainsKey(candidate);
+    }
+
+    /// <inheritdoc />
+    public IEnumerable<string> GetReferencedFiles(ScreenSave screen)
+    {
+        HashSet<string> files = new HashSet<string>();
+        foreach (StateSave state in screen.States)
+        {
+            foreach (VariableSave variable in state.Variables)
+            {
+                if (IsSourceFileVariable(variable.Name)
+                    && variable.Value is string path
+                    && !string.IsNullOrEmpty(path))
+                {
+                    files.Add(path);
+                }
+            }
+        }
+        return files;
+    }
+
+    // "SourceFile" appears instance-qualified in the screen's default state (e.g. "Sprite.SourceFile").
+    private static bool IsSourceFileVariable(string variableName)
+    {
+        int lastDot = variableName.LastIndexOf('.');
+        string unqualified = lastDot >= 0 ? variableName.Substring(lastDot + 1) : variableName;
+        return unqualified == "SourceFile" || unqualified == "Source File";
+    }
+
     private void AddInstanceRecursive(GraphicalUiElement element, string? parentInstanceName,
-        ScreenSave screen, StateSave defaultState, HashSet<string> usedNames)
+        ScreenSave screen, StateSave defaultState, HashSet<string> usedNames, bool shake)
     {
         string typeName = GetStandardTypeName(element) ?? "Container";
         string instanceName = GenerateUniqueName(element, typeName, usedNames);
@@ -129,7 +219,7 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
         screen.Instances.Add(new InstanceSave { Name = instanceName, BaseType = typeName });
 
         // The node's catalog values become instance-qualified variables in the screen's default state.
-        StateSave nodeState = CreateStateForNode(element, "Default");
+        StateSave nodeState = CreateStateForNode(element, "Default", shake);
         foreach (VariableSave variable in nodeState.Variables)
         {
             defaultState.Variables.Add(new VariableSave
@@ -156,9 +246,40 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
 
         foreach (GraphicalUiElement child in element.Children)
         {
-            AddInstanceRecursive(child, instanceName, screen, defaultState, usedNames);
+            AddInstanceRecursive(child, instanceName, screen, defaultState, usedNames, shake);
         }
     }
+
+    // Equality for the shake. Same boxed type compares directly (covers bool/string/enum/int); numeric
+    // cross-type (e.g. an int default vs a float read) compares by value so it is not treated as "edited".
+    private static bool AreValuesEqual(object? a, object? b)
+    {
+        if (a == null)
+        {
+            return b == null;
+        }
+        if (b == null)
+        {
+            return false;
+        }
+        if (a.GetType() == b.GetType())
+        {
+            return a.Equals(b);
+        }
+        if (IsNumeric(a) && IsNumeric(b))
+        {
+            return Convert.ToDouble(a) == Convert.ToDouble(b);
+        }
+        return a.Equals(b);
+    }
+
+    private static bool IsNumeric(object value) =>
+        value is byte or sbyte or short or ushort or int or uint or long or ulong or float or double or decimal;
+
+    // The value kinds Gum's save format (and its XML serializer) can represent: strings, bools, the
+    // numeric primitives, and enums. Anything else (a Texture2D, a renderable, ...) must not be emitted.
+    private static bool IsSaveSafeValue(object value) =>
+        value is string || value is bool || value.GetType().IsEnum || IsNumeric(value);
 
     private static string GenerateUniqueName(GraphicalUiElement element, string typeName, HashSet<string> usedNames)
     {

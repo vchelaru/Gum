@@ -2007,6 +2007,51 @@ public class GraphicalUiElementTests : BaseTestClass
     }
 
     [Fact]
+    public void TryGetProperty_ShouldReadSourceFileFromTextureNameForNineSlice()
+    {
+        NineSliceRuntime sut = new();
+        sut.Texture = MakeNamedTexture("Images/Frame.png");
+
+        bool found = sut.TryGetProperty("SourceFile", out object? value);
+
+        found.ShouldBeTrue();
+        value.ShouldBe("Images/Frame.png");
+    }
+
+    [Fact]
+    public void TryGetProperty_ShouldReadSourceFileFromTextureNameForSprite()
+    {
+        SpriteRuntime sut = new();
+        sut.Texture = MakeNamedTexture("Images/Icon.png");
+
+        bool found = sut.TryGetProperty("SourceFile", out object? value);
+
+        found.ShouldBeTrue();
+        value.ShouldBe("Images/Icon.png");
+    }
+
+    [Fact]
+    public void TryGetProperty_ShouldReturnFalseForSourceFileWhenNoTexture()
+    {
+        SpriteRuntime sut = new();
+
+        bool found = sut.TryGetProperty("SourceFile", out object? value);
+
+        found.ShouldBeFalse();
+        value.ShouldBeNull();
+    }
+
+    // Fabricates a Texture2D reference (its ctor needs a GraphicsDevice we don't have headlessly) and
+    // stamps a name on it, mirroring what the content loader does when it loads a texture from a file.
+    private static Microsoft.Xna.Framework.Graphics.Texture2D MakeNamedTexture(string name)
+    {
+        var texture = (Microsoft.Xna.Framework.Graphics.Texture2D)System.Runtime.CompilerServices
+            .RuntimeHelpers.GetUninitializedObject(typeof(Microsoft.Xna.Framework.Graphics.Texture2D));
+        texture.Name = name;
+        return texture;
+    }
+
+    [Fact]
     public void TryGetProperty_ShouldReturnFalseForUnknownProperty()
     {
         ContainerRuntime sut = new();

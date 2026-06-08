@@ -13,6 +13,7 @@ using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -314,6 +315,130 @@ public class GumService : IGumService
     public InteractiveGue PopupRoot => FrameworkElement.PopupRoot;
     /// <inheritdoc/>
     public InteractiveGue ModalRoot => FrameworkElement.ModalRoot;
+
+    /// <summary>
+    /// Exports the live UI tree under <see cref="Root"/> to a Gum project at <paramref name="filePath"/>,
+    /// so it can be opened and inspected in the Gum tool. This is the headline path for code-only games,
+    /// which have no design-time .gumx to open. Each runtime element is written as a standard-element
+    /// instance and the screen is named after the file.
+    /// </summary>
+    /// <param name="filePath">
+    /// Destination project (.gumx) path. Its directory receives the Screens/ and Standards/ subfolders.
+    /// </param>
+    /// <param name="shake">
+    /// When true (default), values equal to the standard-element default are pruned so the artifact is
+    /// light and reads as "unedited" in the tool. When false, every value is written — heavier, but the
+    /// always-correct baseline-free form.
+    /// </param>
+    public void ExportSnapshot(string filePath, bool shake = true)
+    {
+        // A code-only game may never have triggered standards population; ensure the catalog exists
+        // before reading it (as the serializer's baseline) and writing it (as the project's standards).
+        if (StandardElementsManager.Self.DefaultStates == null)
+        {
+            StandardElementsManager.Self.Initialize();
+        }
+
+        string screenName = Path.GetFileNameWithoutExtension(filePath);
+
+        // Non-null here: the guard above initializes the catalog when it was missing.
+        RuntimeSnapshotSerializer serializer = new(StandardElementsManager.Self.DefaultStates!);
+        ScreenSave screen = serializer.CreateScreenSave(Root, screenName, shake);
+
+        GumProjectSave project = new();
+        StandardElementsManager.Self.PopulateProjectWithDefaultStandards(project);
+
+        // Match the project's canvas resolution to the live canvas (the game's resolution) so the
+        // snapshot lays out in the tool exactly as it did at runtime, rather than the 800x600 default.
+        if (GraphicalUiElement.CanvasWidth > 0)
+        {
+            project.DefaultCanvasWidth = (int)GraphicalUiElement.CanvasWidth;
+        }
+        if (GraphicalUiElement.CanvasHeight > 0)
+        {
+            project.DefaultCanvasHeight = (int)GraphicalUiElement.CanvasHeight;
+        }
+
+        project.Screens.Add(screen);
+        project.ScreenReferences.Add(new ElementReference { Name = screenName, ElementType = ElementType.Screen });
+
+        EnsureReferencedStandardsExist(project, screen);
+
+        string? directory = Path.GetDirectoryName(filePath);
+        if (!string.IsNullOrEmpty(directory))
+        {
+            Directory.CreateDirectory(Path.Combine(directory, ElementReference.ScreenSubfolder));
+            Directory.CreateDirectory(Path.Combine(directory, ElementReference.StandardSubfolder));
+        }
+
+        project.Save(filePath, saveElements: true);
+
+        if (!string.IsNullOrEmpty(directory))
+        {
+            CopyReferencedFiles(serializer, screen, directory);
+        }
+    }
+
+    // Instances may reference standard types the default seed omits -- notably deprecated ones like
+    // ColoredRectangle, which new (v3) projects no longer include but an old/live tree may still contain.
+    // Add any such referenced standard so the snapshot's instances don't dangle on a missing base type.
+    private static void EnsureReferencedStandardsExist(GumProjectSave project, ScreenSave screen)
+    {
+        HashSet<string> existing = new(project.StandardElements.Select(standard => standard.Name));
+        foreach (InstanceSave instance in screen.Instances)
+        {
+            string baseType = instance.BaseType;
+            if (string.IsNullOrEmpty(baseType) || existing.Contains(baseType))
+            {
+                continue;
+            }
+
+            if (StandardElementsManager.Self.IsDefaultType(baseType))
+            {
+                StandardElementsManager.Self.AddStandardElementSaveInstance(project, baseType);
+                existing.Add(baseType);
+            }
+        }
+    }
+
+    // Bundles the files referenced by the snapshot (Sprite/NineSlice textures, ...) next to the project
+    // so it opens self-contained in the tool. Relative references are copied preserving their relative
+    // path; absolute references already resolve on their own, and missing files are skipped (logged).
+    private static void CopyReferencedFiles(IRuntimeSnapshotSerializer serializer, ScreenSave screen, string snapshotDirectory)
+    {
+        foreach (string referencedPath in serializer.GetReferencedFiles(screen))
+        {
+            if (!FileManager.IsRelative(referencedPath))
+            {
+                continue;
+            }
+
+            string absoluteSource;
+            try
+            {
+                absoluteSource = FileManager.MakeAbsolute(referencedPath);
+            }
+            catch (ArgumentException)
+            {
+                continue;
+            }
+
+            if (!File.Exists(absoluteSource))
+            {
+                System.Diagnostics.Debug.WriteLine($"Snapshot: referenced file not found, skipping: {referencedPath}");
+                continue;
+            }
+
+            string destination = Path.Combine(snapshotDirectory,
+                referencedPath.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar));
+            string? destinationDirectory = Path.GetDirectoryName(destination);
+            if (!string.IsNullOrEmpty(destinationDirectory))
+            {
+                Directory.CreateDirectory(destinationDirectory);
+            }
+            File.Copy(absoluteSource, destination, overwrite: true);
+        }
+    }
 
     /// <summary>
     /// Re-applies all styles on Root, PopupRoot, and ModalRoot. Call after
