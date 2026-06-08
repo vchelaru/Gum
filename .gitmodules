@@ -4,3 +4,4 @@
 [submodule "Sokol.NET"]
 	path = Sokol.NET
 	url = https://github.com/wiredmatt/Sokol.NET.git
+	ignore = dirty
