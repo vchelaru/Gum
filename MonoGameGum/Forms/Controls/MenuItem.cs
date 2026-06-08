@@ -342,22 +342,30 @@ public class MenuItem : ItemsControl
     {
         if (MainCursor.LastInputDevice == InputDevice.Mouse)
         {
+            // Select on push so the sub-item popup opens immediately and can be
+            // dragged through. Clicked is raised on release (HandleClick) so it
+            // fires once per discrete click rather than every frame the button
+            // is held - see issue #3077.
             IsSelected = true;
-            Clicked?.Invoke(this, null);
-            
         }
     }
 
 
     private void HandleClick(object sender, EventArgs args)
     {
-        if (MainCursor.LastInputDevice == InputDevice.TouchScreen &&
+        if (MainCursor.LastInputDevice == InputDevice.Mouse)
+        {
+            // Visual.Click only fires on the push -> release transition while the
+            // cursor remains over the item that was pushed, so this raises Clicked
+            // exactly once per click, matching ButtonBase.
+            Clicked?.Invoke(this, null);
+        }
+        else if (MainCursor.LastInputDevice == InputDevice.TouchScreen &&
             MainCursor.PrimaryClickNoSlide)
         {
             IsSelected = true;
 
             Clicked?.Invoke(this, null);
-
         }
     }
     #endregion
