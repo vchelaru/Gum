@@ -330,6 +330,7 @@
 * [Localization](code/localization.md)
 * [Debugging](code/debugging/README.md)
   * [Hot Reload](code/debugging/hot-reload.md)
+  * [Runtime Snapshot](code/debugging/runtime-snapshot.md)
 * [Binding and MVVM](code/binding-viewmodels/README.md)
   * [Tutorial - Settings Screen](code/binding-viewmodels/tutorial-settings-screen.md)
   * [Tutorial - Task Screen](code/binding-viewmodels/tutorial-task-screen.md)

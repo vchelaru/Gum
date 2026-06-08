@@ -3,6 +3,7 @@
 This section collects tools and techniques for understanding, inspecting, and iterating on your Gum UI while your game is running.
 
 * [Hot Reload](hot-reload.md) — push changes saved in the Gum tool into the running game without restarting, so you can adjust layouts, colors, and component structure and see the results immediately.
+* [Runtime Snapshot](runtime-snapshot.md) — export the live UI tree to a Gum project you can open and inspect in the tool; the reverse of hot reload, and especially useful for code-only UIs.
 
 ## See also
 
