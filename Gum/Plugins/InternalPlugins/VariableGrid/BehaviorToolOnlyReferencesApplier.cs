@@ -103,6 +103,29 @@ public static class BehaviorToolOnlyReferencesApplier
             return;
         }
 
+        // Skip materializing a value identical to the resting wireframe — the value the
+        // reference produces when nothing is authored and every identifier resolves to its
+        // FormsProperty default. The resting state is the empty default state of a throwaway
+        // empty element (no instances, no base type), so every lookup falls straight through
+        // to the fallback, yielding that resting value. The element must be a fresh throwaway,
+        // not the real one: a state carrying the real element would re-resolve the element's
+        // authored default state and defeat the comparison. It also must be the element's
+        // default state (States[0]) and carry a non-null ParentContainer, or
+        // RecursiveVariableFinder/GetValueRecursive throw. When the authored result matches
+        // the resting value, the assignment carries no information beyond the resting preview,
+        // so writing it only spams the state — e.g. every Forms-control instance's
+        // "<Instance>.<X>CategoryState = Enabled" in a screen that overrode nothing
+        // (issue #3080). Only authored deviations from rest (IsEnabled = false, a checked
+        // CheckBox, etc.) are worth materializing.
+        ComponentSave restingOwner = new ComponentSave();
+        StateSave restingState = new StateSave { ParentContainer = restingOwner };
+        restingOwner.States.Add(restingState);
+        EvaluatedSyntax? resting = EvaluatedSyntax.FromSyntaxNode(rightSyntax, restingState, fallback);
+        if (resting != null && Equals(resting.Value, evaluated.Value))
+        {
+            return;
+        }
+
         string effectiveLeft = instance == null ? left : $"{instance.Name}.{left}";
         stateSave.SetValue(effectiveLeft, evaluated.Value, instance);
     }

@@ -131,14 +131,64 @@ public class BehaviorToolOnlyReferencesApplierTests : BaseTestClass
     }
 
     [Fact]
-    public void Apply_StateMissingIdentifier_FallsBackToBehaviorFormsPropertyDefault()
+    public void Apply_ScreenWithUnauthoredButtonInstance_DoesNotMaterializeSelector()
     {
+        // Repro #3080: a screen/component holding many Forms-control instances (buttons,
+        // checkboxes, combos...) got every instance's category selector spammed into its
+        // state - MapCreateButton.ButtonCategoryState, IsStartingMapCheckbox.CheckBoxCategoryState,
+        // etc. - even when the instance authored nothing. The selector value derived purely
+        // from the behavior's FormsProperty default (IsEnabled = true -> "Enabled"), so it
+        // carries no information beyond the resting wireframe and must NOT be written.
+        BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehavior" };
+        behavior.FormsProperties.Add(new VariableSave { Type = "bool", Name = "IsEnabled", Value = true });
+        behavior.ToolOnlyVariableReferences.Add(
+            "ButtonCategoryState = IsEnabled ? \"Enabled\" : \"Disabled\"");
+
+        ComponentSave component = new ComponentSave { Name = "Controls/ButtonStandard", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "ButtonBehavior" });
+
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave screenDefault = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+
+        InstanceSave buttonInstance = new InstanceSave
+        {
+            Name = "ButtonInstance",
+            BaseType = "Controls/ButtonStandard",
+            ParentContainer = screen
+        };
+        screen.Instances.Add(buttonInstance);
+
+        StandardElementSave containerStandard = new StandardElementSave { Name = "Container" };
+        containerStandard.States.Add(new StateSave { Name = "Default", ParentContainer = containerStandard });
+
+        GumProjectSave project = new GumProjectSave();
+        project.StandardElements.Add(containerStandard);
+        project.Components.Add(component);
+        project.Screens.Add(screen);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        BehaviorToolOnlyReferencesApplier.Apply(screen, screenDefault);
+
+        screenDefault.Variables.ShouldNotContain(v => v.Name == "ButtonInstance.ButtonCategoryState",
+            "an instance that authors no driving FormsProperty must not have its selector materialized into the parent state");
+    }
+
+    [Fact]
+    public void Apply_StateMissingIdentifier_DoesNotMaterializeFormsPropertyDefault()
+    {
+        // When nothing is authored, the reference resolves purely from the behavior's
+        // FormsProperty default. That value equals the resting wireframe, so materializing
+        // it into the state adds no information and only spams it (issue #3080). The default
+        // is virtual — "state-empty stays state-empty" — so the selector must not be written.
         BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehavior" };
         behavior.FormsProperties.Add(new VariableSave
         {
             Type = "bool",
             Name = "IsEnabled",
-            Value = false  // declared default, drives the wireframe to "Disabled" with no instance authoring
+            Value = false
         });
         behavior.ToolOnlyVariableReferences.Add(
             "ButtonCategoryState = IsEnabled ? \"Enabled\" : \"Disabled\"");
@@ -155,7 +205,8 @@ public class BehaviorToolOnlyReferencesApplierTests : BaseTestClass
 
         BehaviorToolOnlyReferencesApplier.Apply(component, defaultState);
 
-        defaultState.GetValue("ButtonCategoryState").ShouldBe("Disabled");
+        defaultState.Variables.ShouldNotContain(v => v.Name == "ButtonCategoryState",
+            "a value derived purely from the FormsProperty default equals the resting wireframe and must not be materialized");
     }
 
     [Fact]
@@ -296,8 +347,11 @@ public class BehaviorToolOnlyReferencesApplierTests : BaseTestClass
     }
 
     [Fact]
-    public void Apply_CheckBoxStateEmpty_FallsBackToBehaviorIsCheckedFalseAndIsEnabledTrue()
+    public void Apply_CheckBoxStateEmpty_DoesNotMaterializeFormsPropertyDefault()
     {
+        // With nothing authored, every identifier resolves from the behavior's FormsProperty
+        // defaults (IsEnabled = true, IsChecked = false -> "EnabledOff"). That is the resting
+        // wireframe value, so it must not be materialized into the state (issue #3080).
         BehaviorSave behavior = BuildCheckBoxBehavior();
 
         ComponentSave component = new ComponentSave { Name = "Controls/CheckBox", BaseType = "Container" };
@@ -312,7 +366,8 @@ public class BehaviorToolOnlyReferencesApplierTests : BaseTestClass
 
         BehaviorToolOnlyReferencesApplier.Apply(component, defaultState);
 
-        defaultState.GetValue("CheckBoxCategoryState").ShouldBe("EnabledOff");
+        defaultState.Variables.ShouldNotContain(v => v.Name == "CheckBoxCategoryState",
+            "a value derived purely from the FormsProperty defaults equals the resting wireframe and must not be materialized");
     }
 
     [Fact(Timeout = 5000)]
@@ -328,7 +383,11 @@ public class BehaviorToolOnlyReferencesApplierTests : BaseTestClass
         {
             Type = "string",
             Name = "Toggle",
-            Value = "off"
+            // The FormsProperty default differs from the authored value below so the
+            // authored result ("on") is not suppressed as equal to the resting value
+            // (the resting eval reads Toggle = "on" -> "off"). Keeps this a write-and-
+            // terminate test, not a resting-skip test (issue #3080).
+            Value = "on"
         });
         // RHS reads Toggle, LHS writes Toggle.
         behavior.ToolOnlyVariableReferences.Add(
@@ -365,8 +424,11 @@ public class BehaviorToolOnlyReferencesApplierTests : BaseTestClass
         // B is evaluated against the *already-updated* A. Outcome is deterministic and
         // bounded; no recursion.
         BehaviorSave behavior = new BehaviorSave { Name = "MutualBehavior" };
-        behavior.FormsProperties.Add(new VariableSave { Type = "string", Name = "A", Value = "a0" });
-        behavior.FormsProperties.Add(new VariableSave { Type = "string", Name = "B", Value = "b0" });
+        // FormsProperty defaults differ from the authored a0/b0 below so the authored
+        // results are not suppressed as equal to the resting value (issue #3080); this
+        // stays a write-and-terminate test.
+        behavior.FormsProperties.Add(new VariableSave { Type = "string", Name = "A", Value = "dA" });
+        behavior.FormsProperties.Add(new VariableSave { Type = "string", Name = "B", Value = "dB" });
         behavior.ToolOnlyVariableReferences.Add("A = B + \"->A\"");
         behavior.ToolOnlyVariableReferences.Add("B = A + \"->B\"");
 
@@ -431,6 +493,55 @@ public class BehaviorToolOnlyReferencesApplierTests : BaseTestClass
 
         focusedState.Variables.ShouldNotContain(v => v.Name == "TextBoxCategoryState",
             "a category state must not have its own category's selector materialized into it");
+    }
+
+    [Fact]
+    public void Apply_CheckBoxInstanceAuthoringOnlyIsChecked_StillMaterializesEnabledOn()
+    {
+        // Guard for the resting-comparison fix (#3080): an instance that authors only one of
+        // several driving FormsProperties (IsChecked = true, IsEnabled left at its default) must
+        // still materialize, because the authored result ("EnabledOn") differs from the resting
+        // wireframe ("EnabledOff"). A naive "skip unless every input is authored" gate would
+        // wrongly drop this common case (a checkbox that starts checked).
+        BehaviorSave behavior = BuildCheckBoxBehavior();
+
+        ComponentSave component = new ComponentSave { Name = "Controls/CheckBox", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "CheckBoxBehavior" });
+
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave screenDefault = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+
+        InstanceSave checkBoxInstance = new InstanceSave
+        {
+            Name = "CheckBoxInstance",
+            BaseType = "Controls/CheckBox",
+            ParentContainer = screen
+        };
+        screen.Instances.Add(checkBoxInstance);
+
+        screenDefault.Variables.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "CheckBoxInstance.IsChecked",
+            Value = true,
+            SetsValue = true
+        });
+
+        StandardElementSave containerStandard = new StandardElementSave { Name = "Container" };
+        containerStandard.States.Add(new StateSave { Name = "Default", ParentContainer = containerStandard });
+
+        GumProjectSave project = new GumProjectSave();
+        project.StandardElements.Add(containerStandard);
+        project.Components.Add(component);
+        project.Screens.Add(screen);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        BehaviorToolOnlyReferencesApplier.Apply(screen, screenDefault);
+
+        screenDefault.GetValue("CheckBoxInstance.CheckBoxCategoryState").ShouldBe("EnabledOn");
     }
 
     [Fact]
