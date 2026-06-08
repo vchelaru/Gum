@@ -39,7 +39,7 @@ polish.
   relocate/mirror those as neutral types as part of the port.
 - **Avalonia editors implement the same `IDataUi` contract. Reason:** the grid
   drives editors through the `IDataUi` interface
-  (`c:\git\Gum\WpfDataUi\IDataUi.cs`), not through a WPF base class.
+  (`WpfDataUi\IDataUi.cs`), not through a WPF base class.
   **Direction:** each Avalonia editor implements `IDataUi` (or its Phase 5
   equivalent) so the grid can drive it unchanged.
 - **ViewModels are reused unchanged. Reason:** the VMs are framework-neutral by
@@ -85,11 +85,11 @@ polish.
 ### Property grid (the deep one)
 
 The Variables tab is driven by `WpfDataUi`'s `DataUiGrid`
-(`c:\git\Gum\WpfDataUi\DataUiGrid.cs`), an `ItemsControl`-derived WPF control with
+(`WpfDataUi\DataUiGrid.cs`), an `ItemsControl`-derived WPF control with
 its own member model (`InstanceMember`, `MemberCategory`,
 `TypeMemberDisplayProperties`) and a set of editor user-controls under
-`c:\git\Gum\WpfDataUi\Controls\`. The Variables tab plugin that hosts it lives
-under `c:\git\Gum\Gum\Plugins\InternalPlugins\VariableGrid\`
+`WpfDataUi\Controls\`. The Variables tab plugin that hosts it lives
+under `Gum\Plugins\InternalPlugins\VariableGrid\`
 (`MainPropertyGrid.xaml`, `AddVariableWindow.xaml`, `VariableRemoveButton.xaml`).
 
 1. **Re-author `DataUiGrid` for Avalonia (decision — see Decisions & rationale).**
@@ -109,7 +109,7 @@ under `c:\git\Gum\Gum\Plugins\InternalPlugins\VariableGrid\`
    `PropertyChanged`/`BeforePropertyChanged` event args under
    `WpfDataUi\EventArguments\`) — port the model types, not just the control.
 3. **Reproduce the editor set.** Port the WPF editor displays under
-   `c:\git\Gum\WpfDataUi\Controls\` to Avalonia equivalents and wire them to the
+   `WpfDataUi\Controls\` to Avalonia equivalents and wire them to the
    member model the same way `DataUiGrid` does today. The set to cover:
    `TextBoxDisplay`, `ComboBoxDisplay` / `EditableComboBoxDisplay` (the latter is
    a code-only subclass of `ComboBoxDisplay` with no `.xaml`),
@@ -122,7 +122,7 @@ under `c:\git\Gum\Gum\Plugins\InternalPlugins\VariableGrid\`
    `MultiLineTextBoxDisplay`, and the `SingleDataUiContainer` host row. That is
    **13 `.xaml` editor controls** plus the shared `TextBoxDisplayLogic` /
    `FilePickingLogic` helpers and the `EditableComboBoxDisplay` subclass. Every
-   editor implements `IDataUi` (`c:\git\Gum\WpfDataUi\IDataUi.cs`) — that contract,
+   editor implements `IDataUi` (`WpfDataUi\IDataUi.cs`) — that contract,
    not the WPF base class, is what the grid talks to, so the Avalonia editors must
    implement the same `IDataUi` (or its Phase 5 equivalent) for the grid to drive
    them.
@@ -148,10 +148,10 @@ under `c:\git\Gum\Gum\Plugins\InternalPlugins\VariableGrid\`
 ### Dialog views
 
 Dialog system is view-agnostic via `DialogViewResolver` + `DialogAttribute`
-(`c:\git\Gum\Gum\Services\Dialogs\DialogViewResolver.cs`) and the
+(`Gum\Services\Dialogs\DialogViewResolver.cs`) and the
 `DialogService`/`DialogWindow` pair. ViewModels derive from `DialogViewModel`.
 
-1. Convert the dialog views under `c:\git\Gum\Gum\Services\Dialogs\` to AXAML,
+1. Convert the dialog views under `Gum\Services\Dialogs\` to AXAML,
    reusing their VMs: `MessageDialogView`, `ChoiceDialogView`,
    `GetUserStringDialogView`, `PluginsDialogView`, and the host `DialogWindow`.
 2. **Keep the resolver working for the Avalonia head.** `DialogViewResolver.Scan`
@@ -186,7 +186,7 @@ Dialog system is view-agnostic via `DialogViewResolver` + `DialogAttribute`
 
 ### State animation / timeline views
 
-Under `c:\git\Gum\Gum\StateAnimationPlugin\Views\` — **7 `.xaml` views** plus
+Under `Gum\StateAnimationPlugin\Views\` — **7 `.xaml` views** plus
 three drawing/helper `.cs` files: `MainWindow.xaml`, `Timeline.xaml`
 (+ `Timeline.Resources.cs`, `TimelineOverlay.cs`, `InterpolationTrackControl.cs`),
 `StateView.xaml`, `TimedStateMarkerDisplay.xaml`, and the three animation dialogs
@@ -211,7 +211,7 @@ listed in "Dialog views" above (`AddAnimationDialogView`,
 
 ### Controls
 
-Small custom controls under `c:\git\Gum\Gum\Controls\` plus a couple of
+Small custom controls under `Gum\Controls\` plus a couple of
 color-related views:
 
 - `Spinner.xaml` — numeric up/down style control.
@@ -226,7 +226,7 @@ drawing or rely on WPF-only primitives.
 
 ### Alignment buttons
 
-Cluster under `c:\git\Gum\Gum\Plugins\InternalPlugins\AlignmentButtons\`:
+Cluster under `Gum\Plugins\InternalPlugins\AlignmentButtons\`:
 `AlignmentControl.xaml`, `AlignmentPluginControl.xaml`, `AnchorControl.xaml`,
 `DockControl.xaml`. These are grids of toggle/command buttons that set
 anchor/dock/alignment on the selected instance. Convert to AXAML, mapping the
@@ -240,44 +240,44 @@ Phase 5 seam and Phase 10 shell are in place.
 ## Key files & projects
 
 Property grid:
-- `c:\git\Gum\WpfDataUi\DataUiGrid.cs` — the control to re-author.
-- `c:\git\Gum\WpfDataUi\DataTypes\` — `InstanceMember.cs`, `MemberCategory.cs`,
+- `WpfDataUi\DataUiGrid.cs` — the control to re-author.
+- `WpfDataUi\DataTypes\` — `InstanceMember.cs`, `MemberCategory.cs`,
   `IMemberDefinition.cs`, `TypeMemberDisplayProperties.cs`,
   `MultiSelectInstanceMember.cs`, `CompositeInstanceMember.cs` (the member model
   to port).
-- `c:\git\Gum\WpfDataUi\Controls\` — 13 editor `.xaml` controls (TextBox, ComboBox,
+- `WpfDataUi\Controls\` — 13 editor `.xaml` controls (TextBox, ComboBox,
   CheckBox, NullableBool, Slider, AngleSelector, FileSelection, MultiFile,
   ListBox, StringListTextBox, ToggleButtonOption, PlusMinusTextBox,
   MultiLineTextBox) + `SingleDataUiContainer`, plus the code-only
   `EditableComboBoxDisplay` subclass and the `TextBoxDisplayLogic` /
   `FilePickingLogic` helpers.
-- `c:\git\Gum\WpfDataUi\IDataUi.cs` — the editor contract the grid drives; the
+- `WpfDataUi\IDataUi.cs` — the editor contract the grid drives; the
   Avalonia editors must implement it (or its Phase 5 equivalent).
-- `c:\git\Gum\WpfDataUi\EventArguments\` — `PropertyChangedArgs.cs`,
+- `WpfDataUi\EventArguments\` — `PropertyChangedArgs.cs`,
   `BeforePropertyChangedArgs.cs`.
-- `c:\git\Gum\Gum\Plugins\InternalPlugins\VariableGrid\` — `MainPropertyGrid.xaml`
+- `Gum\Plugins\InternalPlugins\VariableGrid\` — `MainPropertyGrid.xaml`
   (Variables tab host), `AddVariableWindow.xaml`, `VariableRemoveButton.xaml`.
 
 Dialogs:
-- `c:\git\Gum\Gum\Services\Dialogs\` — `DialogViewResolver.cs`,
+- `Gum\Services\Dialogs\` — `DialogViewResolver.cs`,
   `DialogService.cs`, `DialogWindow.xaml(.cs)`, and the four built-in dialog
   views/VMs (`MessageDialog*`, `ChoiceDialog*`, `GetUserStringDialog*`,
   `PluginsDialog*`).
 
 State animation / timeline:
-- `c:\git\Gum\Gum\StateAnimationPlugin\Views\` — `Timeline.xaml(.cs)`,
+- `Gum\StateAnimationPlugin\Views\` — `Timeline.xaml(.cs)`,
   `Timeline.Resources.cs`, `TimelineOverlay.cs`, `InterpolationTrackControl.cs`,
   `MainWindow.xaml`, `StateView.xaml`, `TimedStateMarkerDisplay.xaml`, and the
   animation dialogs.
 
 Controls / alignment:
-- `c:\git\Gum\Gum\Controls\` — `Spinner.xaml`, `ColorPickerSwatch.xaml`,
+- `Gum\Controls\` — `Spinner.xaml`, `ColorPickerSwatch.xaml`,
   `ColorDisplay.xaml`, `TitleFilePathDisplay.xaml`, `MainPanelControl.xaml`.
-- `c:\git\Gum\Gum\Plugins\InternalPlugins\AlignmentButtons\` — the four alignment
+- `Gum\Plugins\InternalPlugins\AlignmentButtons\` — the four alignment
   views.
 
 Reused, do not change:
-- `c:\git\Gum\Gum\Mvvm\ViewModel.cs` and the per-feature ViewModels.
+- `Gum\Mvvm\ViewModel.cs` and the per-feature ViewModels.
 
 ## Dependencies
 
