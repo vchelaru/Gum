@@ -24,7 +24,7 @@ The path must point to the original `.gumx` file that the Gum tool edits. If you
 
 Once enabled, hot reload is fully automatic. `GumService` processes pending reloads during its `Update` call each frame, so no additional code is needed.
 
-<figure><img src="../.gitbook/assets/26_06 11 12.gif" alt=""><figcaption><p>Gum at runtime (top) updating in realtime to changes in the tool (bottom)</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/26_06 11 12.gif" alt=""><figcaption><p>Gum at runtime (top) updating in realtime to changes in the tool (bottom)</p></figcaption></figure>
 
 ## What Gets Reloaded
 
@@ -59,7 +59,7 @@ If your code clears (`= null`) or replaces the `Tag` on a visual that was create
 ## Platform Support
 
 {% hint style="info" %}
-Hot reload requires loose project files on disk; it does not watch inside `.gumpkg` bundles. If a sibling `.gumpkg` exists alongside the loose `.gumx`, the loose path wins (see [pack](../cli/pack.md)) and watchers fire normally. A bundle-only deployment (no loose `.gumx`) loads at startup but cannot hot-reload.
+Hot reload requires loose project files on disk; it does not watch inside `.gumpkg` bundles. If a sibling `.gumpkg` exists alongside the loose `.gumx`, the loose path wins (see [pack](../../cli/pack.md)) and watchers fire normally. A bundle-only deployment (no loose `.gumx`) loads at startup but cannot hot-reload.
 
 If hot reload from a `.gumpkg` (e.g. for a hot-swap-on-deploy workflow) would be useful to you, let us know on [Discord](https://discord.gg/EvqwmSQuBz) or file an issue on [GitHub](https://github.com/vchelaru/Gum/issues) — real usage reports help us prioritize.
 {% endhint %}
