@@ -841,6 +841,34 @@ public class TextBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void TextChangedByUi_ShouldNotRaise_WhenPreviewTextInputHandled()
+    {
+        TextBox textBox = new();
+        textBox.PreviewTextInput += (_, args) => args.Handled = true;
+        int byUiCount = 0;
+        textBox.TextChangedByUi += (_, _) => byUiCount++;
+
+        textBox.HandleCharEntered('a');
+
+        textBox.Text.ShouldBeNullOrEmpty("because a handled PreviewTextInput cancels the insertion");
+        byUiCount.ShouldBe(0, "because no text change occurs when PreviewTextInput is handled");
+    }
+
+    [Fact]
+    public void TextChangedByUi_ShouldNotRaise_WhenReadOnly()
+    {
+        TextBox textBox = new();
+        textBox.IsReadOnly = true;
+        int byUiCount = 0;
+        textBox.TextChangedByUi += (_, _) => byUiCount++;
+
+        textBox.HandleCharEntered('a');
+
+        textBox.Text.ShouldBeNullOrEmpty("because a read-only TextBox ignores typed input");
+        byUiCount.ShouldBe(0, "because no text change occurs on a read-only TextBox");
+    }
+
+    [Fact]
     public void TextChangedByUi_ShouldNotRaise_WhenSetTextNoTranslateCalled()
     {
         TextBox textBox = new();
