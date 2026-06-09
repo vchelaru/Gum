@@ -88,7 +88,10 @@ namespace RenderingLibrary.Graphics
 
             foreach (string fileName in list)
             {
-                toReturn.TextureList.Add(global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Texture2D>(fileName));
+                // On desktop the loader returns null for a missing file instead of throwing; substitute the
+                // invalid-texture placeholder so a null entry doesn't NRE while the animation plays.
+                Texture2D loaded = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Texture2D>(fileName);
+                toReturn.TextureList.Add(loaded ?? Sprite.InvalidTexture);
             }
             return toReturn;
         }

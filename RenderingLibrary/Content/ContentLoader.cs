@@ -121,7 +121,7 @@ public class ContentLoader : IContentLoader
         {
             toReturn = LoadTextureFromFile(fileName, managers);
         }
-        if (LoaderManager.Self.CacheTextures)
+        if (LoaderManager.Self.CacheTextures && toReturn != null)
         {
             LoaderManager.Self.AddDisposable(fileNameStandardized, toReturn);
         }
@@ -181,7 +181,7 @@ public class ContentLoader : IContentLoader
     /// <param name="fileName">The filename to load</param>
     /// <param name="managers">The optional SystemManagers to use when loading the file to obtain a GraphicsDevice</param>
     /// <returns>The loaded Texture2D</returns>
-    private Texture2D LoadTextureFromFile(string fileName, SystemManagers? managers = null)
+    private Texture2D? LoadTextureFromFile(string fileName, SystemManagers? managers = null)
     {
         string fileNameStandardized = FileManager.Standardize(fileName, true, false);
 
@@ -191,6 +191,25 @@ public class ContentLoader : IContentLoader
 
             fileNameStandardized = FileManager.RemoveDotDotSlash(fileNameStandardized);
         }
+
+#if XNALIKE && !FRB
+        // On desktop OSes File.Exists is authoritative, so we can detect a missing file up front and
+        // return null instead of falling into File.OpenRead, which throws (and is caught) once per
+        // missing file on every wireframe rebuild. Those throws are cheap at runtime, but they produce
+        // a first-chance exception per missing file; with a debugger attached that makes selecting a
+        // screen full of missing files take tens of seconds in the Gum tool (issue #3075). We skip the
+        // shortcut when an XnaContentManager is present (it can alias a content-pipeline asset that has
+        // no loose file on disk) and on non-desktop platforms (web/mobile resolve files through
+        // TitleContainer or a host stream hook, where File.Exists is not authoritative). Mirrors the
+        // desktop guard in Renderer.Initialize.
+        bool canCheckFileExists = OperatingSystem.IsWindows()
+            || OperatingSystem.IsLinux()
+            || OperatingSystem.IsMacOS();
+        if (canCheckFileExists && XnaContentManager == null && !System.IO.File.Exists(fileNameStandardized))
+        {
+            return null;
+        }
+#endif
 
         Texture2D toReturn;
         string extension = FileManager.GetExtension(fileName);

@@ -427,14 +427,23 @@ public class CustomSetPropertyOnRenderable
                         texture =
                             loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(value);
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
+                        // Treated the same as a missing file below.
+                        texture = null;
+                    }
+
+                    if (texture == null)
+                    {
+                        // On desktop the loader returns null for a missing file instead of throwing, and a
+                        // genuine load error is funneled here too. Honor MissingFileBehavior; otherwise fall
+                        // back to the invalid-texture placeholder, matching the prior catch behavior.
                         if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
                         {
                             string message = $"Error setting SourceFile on NineSlice named {nineSlice.Name}:\n{value}";
                             throw new System.IO.FileNotFoundException(message);
                         }
-                        // do nothing?
+                        texture = Sprite.InvalidTexture;
                     }
                     nineSlice.SetSingleTexture(texture);
 
@@ -1923,18 +1932,28 @@ public class CustomSetPropertyOnRenderable
                 // We used to check if the file exists. But internally something may
                 // alias a file. Ultimately the content loader should make that decision,
                 // not the GUE
+                Microsoft.Xna.Framework.Graphics.Texture2D? texture = null;
+                Exception? loadException = null;
                 try
                 {
-                    sprite.Texture = loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(value);
+                    texture = loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(value);
                 }
                 catch (Exception ex)
                 // Jan 1, 2025 - we used to only catch certain types of exceptions, but this list keeps growing as there
                 // are a variety of types of crashes that can occur. NineSlice catches all exceptions, so let's just do that!
                 //when (ex is System.IO.FileNotFoundException or System.IO.DirectoryNotFoundException or WebException or IOException)
                 {
+                    loadException = ex;
+                }
+
+                if (texture == null)
+                {
+                    // On desktop the loader returns null for a missing file instead of throwing, and a
+                    // genuine load error is funneled here too (loadException). Report it the same way the
+                    // catch used to.
                     string message = $"Error setting SourceFile on Sprite";
 
-                    if(graphicalUiElement.Tag != null)
+                    if (graphicalUiElement.Tag != null)
                     {
                         message += $" in {graphicalUiElement.Tag}";
                     }
@@ -1943,16 +1962,20 @@ public class CustomSetPropertyOnRenderable
                     message += "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
                     if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
                     {
-                        if(ObjectFinder.Self.GumProjectSave == null)
+                        if (ObjectFinder.Self.GumProjectSave == null)
                         {
                             message += "\nNo Gum project has been loaded";
                         }
 
-                        throw new System.IO.FileNotFoundException(message, ex);
+                        throw new System.IO.FileNotFoundException(message, loadException);
                     }
                     sprite.Texture = null;
 
-                    PropertyAssignmentError?.Invoke(message + "\n" + ex.ToString());
+                    PropertyAssignmentError?.Invoke(loadException != null ? message + "\n" + loadException.ToString() : message);
+                }
+                else
+                {
+                    sprite.Texture = texture;
                 }
                 graphicalUiElement.UpdateLayout();
             }
