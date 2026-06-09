@@ -586,11 +586,6 @@ public class Text : IVisible, IRenderableIpso,
     bool IRenderableIpso.IsRenderTarget => false;
 
 
-    static Text()
-    {
-        GraphicalUiElement.UpdateFontFromProperties += HandleUpdateFontValues;
-    }
-
     public Text() : this(null)
     {
     }
@@ -603,16 +598,6 @@ public class Text : IVisible, IRenderableIpso,
         Font = DefaultFont.BaseSize > 0 ? DefaultFont : GetFontDefault();
         mChildren = new();
         Visible = true;
-    }
-
-    private static void HandleUpdateFontValues(IText text, GraphicalUiElement element)
-    {
-        var asText = text as Text;
-        if(element is TextRuntime asTextRuntime)
-        {
-            asText.FontSize = asTextRuntime.FontSize;
-
-        }
     }
 
     private void UpdateWrappedText()

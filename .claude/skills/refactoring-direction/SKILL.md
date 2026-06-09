@@ -28,6 +28,10 @@ If the reason you're tempted to make something `static` is "so a test can call i
 
 If a refactor touches shared runtime/rendering code (`GumCommon`, `RenderingLibrary`, anything under `Runtimes/`, or `MonoGameGum`), read [gum-runtime-topology](../gum-runtime-topology/SKILL.md) first. The same source is compiled into many assemblies and into FlatRedBall via shared projects, so "builds clean in `AllLibraries.sln`" does not mean "didn't break a consumer" (the WPF runtime and FRB are not in that solution).
 
+## Converging per-platform duplicate files
+
+A recurring Gum refactor is driving two (or more) per-platform copies of the same file toward byte-for-byte identical content, so they can eventually collapse to one `#if`-gated linked source. This is done incrementally — block by block, mirroring `#if RAYLIB` / `#if !RAYLIB` in *both* copies wherever a difference is genuinely platform-specific, so the cross-file diff shrinks toward empty. If you're touching code that exists as duplicated per-platform copies (e.g. `CustomSetPropertyOnRenderable.cs`, `GueDeriving/*Runtime.cs`), read [gum-cross-platform-unification](../gum-cross-platform-unification/SKILL.md) for the full technique before editing.
+
 ## Why this matters in Gum
 
 Gum's tool code is mid-migration from static singletons (`PluginManager.Self`, `*Manager.Self`, etc.) to constructor-injected services. Every new `static` is a step backward and undoes that migration's payoff. The runtime libraries are similar: `GraphicalUiElement` is already bloated, and the project memory explicitly calls out "avoid adding new properties/methods directly to this class — prefer separate controller/manager classes." The direction in this skill is the same direction the rest of the codebase is moving.

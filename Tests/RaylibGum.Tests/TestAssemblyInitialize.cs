@@ -43,6 +43,9 @@ public class TestAssemblyInitialize : XunitTestFramework
     public static void ApplyDefaultTestState()
     {
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+        // Re-establish the font loader here too: tests that tear down GumService null it (GumService
+        // sets UpdateFontFromProperties = null), and this bootstrap is re-run after such teardowns.
+        GraphicalUiElement.UpdateFontFromProperties = CustomSetPropertyOnRenderable.UpdateToFontValues;
 
         // Raylib's LoadEmbeddedTexture2d and MeasureTextEx both require an initialized window.
         // The window is kept hidden for the duration of the test run.

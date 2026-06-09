@@ -126,6 +126,11 @@ public class SystemManagers : ISystemManagers
             GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
             GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
             GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;
+            // Wire the font loader here (not in a renderable's static ctor) so it is re-established on
+            // every Initialize, matching the other delegates and MonoGame's SystemManagers. GumService
+            // teardown nulls UpdateFontFromProperties; without re-wiring here, the direct font-property
+            // setters silently stop loading fonts after a teardown/reinitialize cycle.
+            GraphicalUiElement.UpdateFontFromProperties = CustomSetPropertyOnRenderable.UpdateToFontValues;
 
             // raylib seems to use a resources folder, but I don't think we should make any
             // assumptions
