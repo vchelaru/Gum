@@ -463,8 +463,10 @@ public class CustomSetPropertyOnRenderable
             }
             else if (value is string fontString)
             {
-                textRenderable.FontFamily = fontString;
-
+                if (textRuntime != null)
+                {
+                    textRuntime.Font = fontString;
+                }
 
                 ReactToFontValueChange();
                 handled = true;
@@ -568,14 +570,27 @@ public class CustomSetPropertyOnRenderable
 
     };
 
-    private static void UpdateToFontValues(Text asText, GraphicalUiElement graphicalUiElement)
+    public static void UpdateToFontValues(IText text, GraphicalUiElement graphicalUiElement)
     {
+        var asText = (Text)text;
         var textRuntime = graphicalUiElement as TextRuntime;
 
         var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
 
         if(textRuntime != null)
         {
+            // The font family and size are authoritative on the TextRuntime — both the direct
+            // property setters and the string/state path write them there. Sync them onto the
+            // renderable so its font-based fallbacks (and rendering) stay correct. This subsumes
+            // what the former HandleUpdateFontValues stub did, but also actually loads the font.
+            asText.FontFamily = textRuntime.Font;
+            // Skip the size sync when unchanged: the setter recomputes line height (a native text
+            // measure), and on the double-call string path the second pass would otherwise repeat it.
+            if (asText.FontSize != textRuntime.FontSize)
+            {
+                asText.FontSize = textRuntime.FontSize;
+            }
+
             if (textRuntime.UseCustomFont == true)
             {
                 // todo here:
@@ -588,16 +603,16 @@ public class CustomSetPropertyOnRenderable
                 {
                     fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(asText.FontFamily);
                 }
-                asText.Font = fontFromGum;
+                AssignFontIfChanged(asText, fontFromGum);
             }
             else
             {
-                if (textRuntime.FontSize > 0 && !string.IsNullOrEmpty(asText.FontFamily))
+                if (textRuntime.FontSize > 0 && !string.IsNullOrEmpty(textRuntime.Font))
                 {
 
                     string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
                     textRuntime.FontSize,
-                    asText.FontFamily,
+                    textRuntime.Font,
                     textRuntime.OutlineThickness,
                     textRuntime.UseFontSmoothing,
                     textRuntime.IsItalic,
@@ -605,19 +620,29 @@ public class CustomSetPropertyOnRenderable
 
                     string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
 
-                    //font = loaderManager.GetDisposable(fullFileName) as BitmapFont;
-
-
                     var fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(fullFileName);
                     if (fontFromGum.BaseSize == 0)
                     {
                         fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(asText.FontFamily);
                     }
-                    asText.Font = fontFromGum;
+                    AssignFontIfChanged(asText, fontFromGum);
                 }
             }
         }
 
+    }
+
+    // Mirrors the MonoGame loader's `if (BitmapFont != fontToSet)` guard. A single SetProperty can
+    // reach this loader twice — once via the TextRuntime setter (UpdateFontFromProperties) and once
+    // via the explicit ReactToFontValueChange call — and with font caching on the second load is a
+    // cache hit, so skipping the redundant reassignment keeps it to one font assignment.
+    // Raylib_cs.Font is a struct, so font identity is compared via the loaded atlas texture id.
+    private static void AssignFontIfChanged(Text asText, Raylib_cs.Font font)
+    {
+        if (asText.Font.Texture.Id != font.Texture.Id)
+        {
+            asText.Font = font;
+        }
     }
 
     #endregion

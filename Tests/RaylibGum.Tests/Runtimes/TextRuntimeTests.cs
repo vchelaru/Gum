@@ -1,12 +1,15 @@
 ﻿using Gum.GueDeriving;
+using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using Raylib_cs;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToolsUtilities;
 
 namespace RaylibGum.Tests.Runtimes;
 
@@ -116,6 +119,87 @@ public class TextRuntimeTests : BaseTestClass
     public void DefaultFontSize_ShouldBe18()
     {
         TextRuntime.DefaultFontSize.ShouldBe(18);
+    }
+
+    #endregion
+
+    #region Font Loading
+
+    // #3093: font properties set through the direct C# setters (FontFamily/FontSize/...) must load
+    // the font onto the renderable exactly as the string/ApplyState path does. Differential guard:
+    // the two paths must produce an identical, laid-out Text — the same loaded atlas (proving a real
+    // font loaded, not raylib's small built-in default) AND the same measured width (proving the
+    // correct size, which an atlas/glyph count alone would not catch). The bug routed the direct
+    // setters through Text.HandleUpdateFontValues, a stub that copied FontSize but never loaded the
+    // font, so the direct-setter Text kept the default font.
+    [Fact]
+    public void Font_SetViaDirectProperties_ShouldLoadSameFontAsStatePath()
+    {
+        // Serve the gold Font18Arial fixture (and its page) purely in memory, keyed by file name,
+        // so the (Arial, 18) cache file resolves regardless of disk layout. Mirrors
+        // ContentLoaderTests' bundled-font hook.
+        string fixtureDirectory = Path.Combine(AppContext.BaseDirectory, "Content", "FontCache");
+        Dictionary<string, byte[]> inMemoryFiles = new(StringComparer.OrdinalIgnoreCase)
+        {
+            { "Font18Arial.fnt", File.ReadAllBytes(Path.Combine(fixtureDirectory, "Font18Arial.fnt")) },
+            { "Font18Arial_0.png", File.ReadAllBytes(Path.Combine(fixtureDirectory, "Font18Arial_0.png")) },
+        };
+
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        string savedRelativeDirectory = FileManager.RelativeDirectory;
+        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
+        try
+        {
+            LoaderManager.Self.CacheTextures = false;
+            // Unique (non-existent) relative directory: the font's cache key (the standardized
+            // absolute path) becomes unique to this test run, so a prior test's cached
+            // "Font18Arial.fnt" can't mask the result and resolution is forced through the in-memory
+            // hook. Mirrors the GUID-path isolation in ContentLoaderTests.
+            FileManager.RelativeDirectory = Path.Combine(Path.GetTempPath(),
+                "GumRaylibDirectFontTest_" + Guid.NewGuid().ToString("N")).Replace('\\', '/') + "/";
+            FileManager.CustomGetStreamFromFile = incomingPath =>
+                inMemoryFiles.TryGetValue(Path.GetFileName(incomingPath), out byte[]? bytes)
+                    ? new MemoryStream(bytes)
+                    : null!;
+
+            // Reference: the path that already works — font set through the string / state path.
+            TextRuntime viaState = new();
+            viaState.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            viaState.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            viaState.SetProperty("Font", "Arial");
+            viaState.SetProperty("FontSize", 18);
+            viaState.Text = "Hello World";
+
+            // Subject: the identical font set through the direct C# property setters.
+            TextRuntime viaSetter = new();
+            viaSetter.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            viaSetter.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            viaSetter.FontFamily = "Arial";
+            viaSetter.FontSize = 18;
+            viaSetter.Text = "Hello World";
+
+            var stateFont = ((Gum.Renderables.Text)viaState.RenderableComponent).Font;
+            var setterFont = ((Gum.Renderables.Text)viaSetter.RenderableComponent).Font;
+
+            // Absolute: the direct-setter path actually loaded the real Font18Arial atlas (256x256,
+            // per ContentLoaderTests), not raylib's 128x128 built-in default. Asserting this on the
+            // subject directly (not just "setter == state") means the test still fails if a future
+            // regression broke BOTH paths down to the default font.
+            setterFont.Texture.Width.ShouldBe(256);
+            setterFont.Texture.Height.ShouldBe(256);
+            // Differential: the direct-setter path matches the known-good string/state path on the
+            // loaded atlas ...
+            setterFont.Texture.Width.ShouldBe(stateFont.Texture.Width);
+            setterFont.Texture.Height.ShouldBe(stateFont.Texture.Height);
+            // ... and on measured size (catches a wrong font size, which atlas size alone would not).
+            viaSetter.GetAbsoluteWidth().ShouldBe(viaState.GetAbsoluteWidth());
+        }
+        finally
+        {
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+            FileManager.RelativeDirectory = savedRelativeDirectory;
+            FileManager.CustomGetStreamFromFile = savedHook;
+        }
     }
 
     #endregion

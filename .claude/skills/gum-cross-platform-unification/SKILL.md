@@ -62,6 +62,19 @@ If a runtime class exists on MonoGame, Raylib, Skia, and Sokol:
 
 This ensures changes remain reviewable, TDD stays manageable, and build errors (like those often found in Sokol) don't block the entire unification process.
 
+## Incremental Convergence: Mirror-`#if` Toward an Empty Diff
+
+The end state above (one source + `#if` + csproj link) is reached **incrementally**, by driving two still-separate per-platform copies of the same file toward byte-for-byte identical content — one corresponding block at a time. You do **not** have to convert a whole file, or even a whole method, in one pass. Pick any region that already lines up between the copies — a fragment *inside* a method is fine — and make just those lines identical. Inside-out and bottom-up are fine; top-down is not required.
+
+For each difference inside the region you're converging, apply the same two-bucket classification (historical drift vs. platform-necessary), but at the line/block level:
+
+- **Historical drift** → delete the divergence; make the lines literally identical with **no** guard. (Example for #3039: the `if (GraphicalUiElement.IsAllLayoutSuspended) { graphicalUiElement.IsFontDirty = true; return; }` deferral guard is shared layout bookkeeping that Raylib simply never got — it should become identical, un-`#if`'d, in both copies.)
+- **Platform-necessary** → wrap the same lines in mirrored `#if RAYLIB` / `#if !RAYLIB` **in both copies, at the same spot**, even though only one side's branch is live in each build. (Example: the font-*loader* body — `BitmapFont` vs `Raylib_cs.Font` — stays `#if`-gated.)
+
+Either way, the **cross-file diff for those lines goes to zero** while each platform keeps compiling its own behavior. The metric is literally `git diff --no-index <copyA> <copyB>` shrinking every PR. When it reaches empty, the two files *are* one file: delete one, add a `<Compile Include="…" Link="…">` to the orphaned csproj, done.
+
+**Gotcha that confuses fresh readers:** the canonical "home" copy can already carry `#if RAYLIB` branches that are **dead in its own current build**. `Gum/Wireframe/CustomSetPropertyOnRenderable.cs` is compiled into `MonoGameGum` (where `RAYLIB` is **not** defined), yet it contains `#if RAYLIB … namespace RaylibGum.Renderables;` scaffolding. That is intentional pre-staging for the day `RaylibGum.csproj` drops its local copy (`Runtimes/RaylibGum/Renderables/CustomSetPropertyOnRenderable.cs`) and links the home file instead. Seeing `#if RAYLIB` inside a MonoGame-compiled file is not a bug.
+
 ## Mechanical Steps
 
 1. Read all three per-platform source files end to end. Write down every difference.
@@ -78,5 +91,7 @@ This ensures changes remain reviewable, TDD stays manageable, and build errors (
 ## What This Skill Is Not
 
 Not a general refactoring guide. Not a pattern for unifying non-runtime files. Specifically: the runtime unification pattern (shared source + `#if` + csproj linking) is appropriate because the Raylib and Skia runtime projects are small wrappers around the MonoGame-style API. Do not apply this pattern to tool code, to GumCommon code (which already lives in one place and is shared differently), or to Forms controls (which are linked as a directory glob).
+
+The **convergence technique** above, however, applies to any source that *already exists as per-platform duplicate copies* heading for a single linked home — not only `GueDeriving` wrappers. The canonical non-wrapper example is the string-path dispatch/bridge file `CustomSetPropertyOnRenderable.cs` (MonoGame copy in `Gum/Wireframe/`, Raylib copy in `Runtimes/RaylibGum/Renderables/`). The "don't apply this to tool code" exclusion is about not *inventing* the source-sharing pattern for things that are genuinely single-home; it does not forbid converging files that are already duplicated per platform.
 
 This skill is also **not** the source of truth for *which* runtimes are unified. Roadmap and per-runtime status live in the (gitignored) design docs at `.claude/designs/runtime-unification/` — `RuntimeNorthStar.md` for the workstream-level roadmap, `runtime-refactoring.md` for per-runtime details. Update those when a unification lands; do not duplicate status here.
