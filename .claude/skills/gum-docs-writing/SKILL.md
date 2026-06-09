@@ -166,7 +166,7 @@ For adding or updating XnaFiddle interactive links, see [xnafiddle.md](xnafiddle
 
 - **No reflection** — never use `GetType()`, `typeof()`, `MemberInfo`, or any `System.Reflection` APIs in doc code samples. Use `is` pattern matching instead: `if (device is MonoGameGum.Input.Keyboard)`.
 - **Fully qualify non-Gum types** — any type that is not part of the Gum API must use its fully qualified name. For example, use `System.DateTime` not `DateTime`. Do not rely on implicit `using` statements for non-Gum types.
-- **No debug/console output** — never use `System.Diagnostics.Debug.WriteLine` (breaks in NetFiddle) or `System.Console.WriteLine` (requires user to open the diagnostics window). Instead, show side effects directly in the sample itself — e.g., update a visible label or change a property on a displayed object.
+- **Prefer visible output over console output** — by default, surface a sample's result in the UI itself (update a visible label, change a property on a displayed object) rather than logging it. This keeps the sample XnaFiddle-runnable and lets a reader see the effect — e.g. show "You clicked the button" in a `Label` instead of writing it to the output window. Avoid `System.Console.WriteLine` (requires opening the diagnostics window) and `System.Diagnostics.Debug.WriteLine` (breaks in NetFiddle) on any page intended to be fiddle-able. The one exception is a page whose subject *is* debugging — where the sample's output is a developer-facing diagnostic that nobody will fiddle (e.g. the events troubleshooting page). There, a breakpoint-and-inspect or `Debug.WriteLine` is the natural tool and is acceptable; visible-label output would be contrived.
 
 ## Gotchas
 

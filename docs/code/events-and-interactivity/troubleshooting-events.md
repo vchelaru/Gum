@@ -8,6 +8,38 @@ If a control is not responding to input, its events may be suppressed for a numb
 
 Rather than walking the visual tree by hand, Gum exposes a diagnostic extension method on `Cursor` called `GetEventFailureReason` that returns a human-readable string describing why events are not being raised — or `null` if events should be working.
 
+## Quick Check
+
+If a control is not responding, paste one of the following into your update loop, put a breakpoint on the line, and hover the control while the game runs. Inspect `reason`: if it is `null`, events should be working; otherwise the string tells you exactly what is blocking them.
+
+The `GetEventFailureReason` extension methods live in the `MonoGameGum.Input` namespace, so add this `using` directive:
+
+```csharp
+using MonoGameGum.Input;
+```
+
+When you have a single control of a given type, look it up by type — no field or name required:
+
+```csharp
+// Update
+GumUI.Update(gameTime);
+
+var reason = GumUI.Cursor.GetEventFailureReason<Button>();
+// reason == null → events should be working
+// reason != null → reason describes what is blocking events
+```
+
+When you have several controls of the same type, give the one you are diagnosing a `Name` and look it up by name:
+
+```csharp
+// Update
+GumUI.Update(gameTime);
+
+var reason = GumUI.Cursor.GetEventFailureReason("ConfirmButton");
+```
+
+That is usually all you need. The rest of this page covers the remaining overloads, how to read the diagnostic output, and what to do when the cursor's position does not match the rendered UI.
+
 ## GetEventFailureReason
 
 `GetEventFailureReason` lives on the `ICursor` interface (typically `GumService.Default.Cursor`) and comes in several overloads:
@@ -21,11 +53,6 @@ Rather than walking the visual tree by hand, Gum exposes a diagnostic extension 
 | `GetEventFailureReason(InteractiveGue)` | You want to diagnose a raw visual rather than a Forms control. | `cursor.GetEventFailureReason(myVisual)` |
 
 Because the cursor's position affects the result, call this method in your update loop while attempting to interact with the control.
-
-```csharp
-// Add to using directives
-using MonoGameGum.Input; // Adds GetEventFailureReason extension methods
-```
 
 ### Looking up a control by type
 
