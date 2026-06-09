@@ -48,12 +48,53 @@ public class MenuItemTests : BaseTestClass
     }
 
     [Fact]
+    public void Clicked_ShouldRaiseOnPush_NotOnRelease()
+    {
+        // Pins the WPF-style behavior: a MenuItem activates on push, so Clicked
+        // fires the moment the button goes down - before any release. This guards
+        // against regressing to release (push -> up) semantics.
+        Menu menu = new();
+        menu.AddToRoot();
+        menu.Name = "Menu";
+
+        MenuItem topItem = new();
+        menu.Items.Add(topItem);
+        topItem.Header = "Top Item";
+        topItem.Name = "Top Item";
+
+        int clickedCount = 0;
+        topItem.Clicked += (_, _) => clickedCount++;
+
+        Mock<ICursor> cursor = new();
+        FormsUtilities.SetCursor(cursor.Object);
+        cursor.SetupProperty(x => x.VisualOver);
+        cursor.SetupProperty(x => x.WindowPushed);
+        cursor.Setup(x => x.LastInputDevice).Returns(InputDevice.Mouse);
+
+        GumService.Default.Root.UpdateLayout();
+
+        cursor.Setup(x => x.X).Returns((int)(topItem.Visual.AbsoluteLeft + 1));
+        cursor.Setup(x => x.Y).Returns((int)(topItem.Visual.AbsoluteTop + 1));
+        cursor.Setup(x => x.XRespectingGumZoomAndBounds()).Returns((int)(topItem.Visual.AbsoluteLeft + 1));
+        cursor.Setup(x => x.YRespectingGumZoomAndBounds()).Returns((int)(topItem.Visual.AbsoluteTop + 1));
+
+        // Button goes down but is NOT released this frame.
+        cursor.Setup(x => x.PrimaryPush).Returns(true);
+        cursor.Setup(x => x.PrimaryDown).Returns(true);
+        cursor.Setup(x => x.PrimaryClick).Returns(false);
+
+        GumService.Default.Update(new Microsoft.Xna.Framework.GameTime());
+
+        clickedCount.ShouldBe(1);
+    }
+
+    [Fact]
     public void Clicked_ShouldRaiseOnce_WhenMouseButtonHeldAcrossFrames()
     {
         // Reproduces issue #3077: MenuItem.Clicked fired continuously while the
         // mouse button was held, because it was raised on the push edge and the
         // edge could re-trigger (e.g. a handler calling Cursor.ClearInputValues()).
-        // Clicked should fire exactly once per discrete click (on push -> release).
+        // Clicked still fires on push (WPF behavior) but only once per hold.
         Menu menu = new();
         menu.AddToRoot();
         menu.Name = "Menu";
