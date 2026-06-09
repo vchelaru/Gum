@@ -427,6 +427,136 @@ public class FrameworkElementTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleTab_ShouldNotEscapeModal_WhenTabbingPastEndOfModal()
+    {
+        // Non-modal controls behind the modal, under the regular Root:
+        StackPanel rootStack = new();
+        rootStack.AddToRoot();
+        TextBox usernameTextBox = new() { Name = "Username" };
+        rootStack.AddChild(usernameTextBox);
+        TextBox passwordTextBox = new() { Name = "Password" };
+        rootStack.AddChild(passwordTextBox);
+        Button loginButton = new() { Name = "Login" };
+        rootStack.AddChild(loginButton);
+
+        // Modal controls under ModalRoot:
+        StackPanel modalStack = new() { Name = "ModalStack" };
+        FrameworkElement.ModalRoot.Children.Add(modalStack.Visual);
+        Button okButton = new() { Name = "Ok" };
+        modalStack.AddChild(okButton);
+        Button cancelButton = new() { Name = "Cancel" };
+        modalStack.AddChild(cancelButton);
+
+        okButton.IsFocused = true;
+
+        // Ok -> Cancel:
+        okButton.HandleTab(TabDirection.Down, loop: true);
+        cancelButton.IsFocused.ShouldBeTrue();
+
+        // Cancel is the last modal control. Tabbing past it must wrap back into the
+        // modal, never escaping to the non-modal controls under Root.
+        cancelButton.HandleTab(TabDirection.Down, loop: true);
+        okButton.IsFocused.ShouldBeTrue();
+
+        usernameTextBox.IsFocused.ShouldBeFalse();
+        passwordTextBox.IsFocused.ShouldBeFalse();
+        loginButton.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldNotEscapeModal_WhenShiftTabbingPastStartOfModal()
+    {
+        // Non-modal controls behind the modal, under the regular Root:
+        StackPanel rootStack = new();
+        rootStack.AddToRoot();
+        TextBox usernameTextBox = new() { Name = "Username" };
+        rootStack.AddChild(usernameTextBox);
+        TextBox passwordTextBox = new() { Name = "Password" };
+        rootStack.AddChild(passwordTextBox);
+        Button loginButton = new() { Name = "Login" };
+        rootStack.AddChild(loginButton);
+
+        // Modal controls under ModalRoot:
+        StackPanel modalStack = new() { Name = "ModalStack" };
+        FrameworkElement.ModalRoot.Children.Add(modalStack.Visual);
+        Button okButton = new() { Name = "Ok" };
+        modalStack.AddChild(okButton);
+        Button cancelButton = new() { Name = "Cancel" };
+        modalStack.AddChild(cancelButton);
+
+        okButton.IsFocused = true;
+
+        // Ok is the first modal control. Shift+Tabbing past it must wrap to the last
+        // modal control, never escaping to the non-modal controls under Root.
+        okButton.HandleTab(TabDirection.Up, loop: true);
+        cancelButton.IsFocused.ShouldBeTrue();
+
+        usernameTextBox.IsFocused.ShouldBeFalse();
+        passwordTextBox.IsFocused.ShouldBeFalse();
+        loginButton.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldTrapFocusInTopMostModal_WhenTabbingPastEnd()
+    {
+        // Background modal (added first):
+        StackPanel backgroundModal = new() { Name = "BackgroundModal" };
+        FrameworkElement.ModalRoot.Children.Add(backgroundModal.Visual);
+        Button backgroundOk = new() { Name = "BackgroundOk" };
+        backgroundModal.AddChild(backgroundOk);
+        Button backgroundCancel = new() { Name = "BackgroundCancel" };
+        backgroundModal.AddChild(backgroundCancel);
+
+        // Top-most modal (added last) — only this one should be interactive:
+        StackPanel topModal = new() { Name = "TopModal" };
+        FrameworkElement.ModalRoot.Children.Add(topModal.Visual);
+        Button topOk = new() { Name = "TopOk" };
+        topModal.AddChild(topOk);
+        Button topCancel = new() { Name = "TopCancel" };
+        topModal.AddChild(topCancel);
+
+        topCancel.IsFocused = true;
+
+        // Tabbing past the last control of the top-most modal must wrap back into the
+        // top-most modal, never falling through to the background modal behind it.
+        topCancel.HandleTab(TabDirection.Down, loop: true);
+        topOk.IsFocused.ShouldBeTrue();
+
+        backgroundOk.IsFocused.ShouldBeFalse();
+        backgroundCancel.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HandleTab_ShouldTrapFocusInTopMostModal_WhenShiftTabbingPastStart()
+    {
+        // Background modal (added first):
+        StackPanel backgroundModal = new() { Name = "BackgroundModal" };
+        FrameworkElement.ModalRoot.Children.Add(backgroundModal.Visual);
+        Button backgroundOk = new() { Name = "BackgroundOk" };
+        backgroundModal.AddChild(backgroundOk);
+        Button backgroundCancel = new() { Name = "BackgroundCancel" };
+        backgroundModal.AddChild(backgroundCancel);
+
+        // Top-most modal (added last) — only this one should be interactive:
+        StackPanel topModal = new() { Name = "TopModal" };
+        FrameworkElement.ModalRoot.Children.Add(topModal.Visual);
+        Button topOk = new() { Name = "TopOk" };
+        topModal.AddChild(topOk);
+        Button topCancel = new() { Name = "TopCancel" };
+        topModal.AddChild(topCancel);
+
+        topOk.IsFocused = true;
+
+        // Shift+Tabbing before the first control of the top-most modal must wrap to the
+        // last control of the top-most modal, never falling through to the background modal.
+        topOk.HandleTab(TabDirection.Up, loop: true);
+        topCancel.IsFocused.ShouldBeTrue();
+
+        backgroundOk.IsFocused.ShouldBeFalse();
+        backgroundCancel.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
     public void HandleTab_ShouldNotUnfocus_OnTabOfOnlyElement()
     {
         Button playButton = new ();

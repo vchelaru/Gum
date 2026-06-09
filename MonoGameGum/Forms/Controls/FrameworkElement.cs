@@ -1401,7 +1401,18 @@ public class FrameworkElement : INotifyPropertyChanged
                     if(!isDominant)
 #endif
                     {
-                        if (parentVisual?.Parent != null)
+                        if (IsTopMostModal(parentVisual))
+                        {
+                            // The top-most modal traps tab focus: rather than climbing out to
+                            // ModalRoot (which would let focus fall through to a background modal),
+                            // wrap within this modal's own focusable controls. This mirrors mouse
+                            // input, which is routed only to the top-most modal.
+                            if (loop)
+                            {
+                                didFocusNewItem = HandleTab(tabDirection, null, parentVisual, shouldAskParent: false, loop: false);
+                            }
+                        }
+                        else if (parentVisual?.Parent != null)
                         {
                             var grandparentVisual = parentVisual.Parent as InteractiveGue;
                             didFocusNewItem = HandleTab(tabDirection, parentVisual, grandparentVisual, shouldAskParent: true, loop:loop);
@@ -1450,6 +1461,39 @@ public class FrameworkElement : INotifyPropertyChanged
                     element.IsEnabled &&
                     element.Visual.HasEvents &&
                     element.GamepadTabbingFocusBehavior == TabbingFocusBehavior.FocusableIfInputReceiver;
+    }
+
+    /// <summary>
+    /// Returns whether the argument visual is the top-most (active) modal — the last visible direct
+    /// child of <see cref="ModalRoot"/>. Tab focus is trapped within this element so that keyboard
+    /// navigation cannot fall through to background modals, mirroring the way mouse input is routed
+    /// only to the top-most modal.
+    /// </summary>
+    static bool IsTopMostModal(InteractiveGue? visual)
+    {
+        var modalRoot = ModalRoot;
+        if (visual == null || modalRoot == null || visual.Parent != modalRoot)
+        {
+            return false;
+        }
+
+        var children = modalRoot.Children;
+        if (children == null)
+        {
+            return false;
+        }
+
+        // The top-most modal is the last visible child, matching the input routing in
+        // FormsUtilities which delivers cursor input only to that element.
+        for (int i = children.Count - 1; i > -1; i--)
+        {
+            if (children[i].Visible)
+            {
+                return children[i] == visual;
+            }
+        }
+
+        return false;
     }
 
     #endregion
