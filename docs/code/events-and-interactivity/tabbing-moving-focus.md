@@ -98,6 +98,16 @@ button.IsUsingLeftAndRightGamepadDirectionsForNavigation = false;
 
 `IsUsingLeftAndRightGamepadDirectionsForNavigation` is set to true on all controls except on `Sliders`, which use left/right input for changing the `Slider`'s `Value`.
 
+## Modal Tab Trapping
+
+When you show an element modally by adding it to `GumService.Default.ModalRoot`, tab focus is confined to the controls inside that modal element. Tabbing forward past the last focusable control wraps back to the first, and Shift+Tabbing before the first control wraps to the last. Focus never escapes to the controls behind the modal under the regular `Root`.
+
+This is the keyboard and gamepad counterpart to the input blocking already described for modal popups — see [ModalRoot and PopupRoot](../gum-code-reference/gumservice-gumui/modalroot-and-popuproot.md). A modal captures all interaction until it is dismissed: mouse input is routed only to the top-most modal element, and tab focus is trapped within it.
+
+No extra setup is required. As soon as the modal element is removed from `ModalRoot`, tabbing returns to the controls under `Root`.
+
+When several elements are stacked in `ModalRoot` (for example, one modal opening another), tab focus stays within the top-most modal — the last one added. Focus does not fall through to the modals behind it, consistent with mouse input being routed only to the top-most modal. For this to work, give each modal a single root element (a container, component, or screen) so that its controls are grouped together under `ModalRoot`.
+
 ## Getting Focused Item (CurrentInputReceiver)
 
 The static `InteractiveGue.CurrentInputReceiver` returns the current item that has focus. This can be used to diagnose problems.
