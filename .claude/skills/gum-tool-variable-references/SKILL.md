@@ -113,6 +113,8 @@ A separate variable-reference flavor lives on `BehaviorSave.ToolOnlyVariableRefe
 
 The applier passes a `fallback` resolver into `EvaluatedSyntax.FromSyntaxNode` so identifiers not authored on state fall back to the behavior's `FormsProperty.Value` declarations (mirrors WPF DependencyProperty default values). Plumbed through `RecursiveVariableFinder.Fallback` — any caller that needs the same "default-when-state-empty" shape can use it.
 
+**Evaluating "defaults-only" (footgun):** To ask "what would this resolve to with *nothing* authored?", do **not** pass an empty `StateSave` to `FromSyntaxNode` — `RecursiveVariableFinder` resolves by name through `ParentContainer`, so an empty state owned by a real element still leaks that element's authored values (routes to its `DefaultState`). Call `EvaluatedSyntax.FromSyntaxNodeUsingDefaultsOnly(node, fallback)` instead; it owns the state with a throwaway empty element so every identifier falls through to the `fallback`. The applier uses this for the "skip if equal to resting wireframe" check (issue #3082).
+
 ## Known Gaps
 
 - **Font generation:** `CollectRequiredFonts` (in `HeadlessFontGenerationService`) and `RecursiveVariableFinder` do not resolve variable references. If a font property (Font, FontSize, etc.) is set via a variable reference, the font file may not be generated for that value. The tool-time path works because `VariableChangedThroughReference` fires `PluginManager.VariableSet`, but headless/CLI font generation could miss these. (See issue #2414)

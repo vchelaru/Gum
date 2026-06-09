@@ -31,9 +31,18 @@ public static class StateSaveExtensionMethods
     }
 
     /// <summary>
-    /// Returns the value of the variable name from this state. If not found, will follow inheritance to find 
+    /// Returns the value of the variable name from this state. If not found, will follow inheritance to find
     /// the value from the base.
     /// </summary>
+    /// <remarks>
+    /// Resolution is anchored on <paramref name="stateSave"/>'s <c>ParentContainer</c>, which is
+    /// dereferenced for inheritance: when <paramref name="stateSave"/> is not the element's own
+    /// <c>DefaultState</c>, the walk routes through <c>ParentContainer.DefaultState</c> to find the
+    /// authored value. As a result an <i>empty</i> non-default state owned by a real element still
+    /// returns that element's authored values — to evaluate "with nothing authored" the state must be
+    /// owned by a throwaway element whose only state is its own <c>DefaultState</c>. See
+    /// <c>EvaluatedSyntax.FromSyntaxNodeUsingDefaultsOnly</c> (issue #3082).
+    /// </remarks>
     /// <param name="stateSave">The state in the current element.</param>
     /// <param name="variableName">The variable name</param>
     /// <returns>The value found recursively, where the most-derived value has priority.</returns>

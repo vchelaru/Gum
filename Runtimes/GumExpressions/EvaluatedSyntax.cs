@@ -39,6 +39,19 @@ public class EvaluatedSyntax
 
     #region Parse
 
+    /// <summary>
+    /// Evaluates a parsed right-side expression, resolving unqualified identifiers against
+    /// <paramref name="stateForUnqualifiedRightSide"/>.
+    /// </summary>
+    /// <param name="syntaxNode">The Roslyn syntax node for the right side of an assignment.</param>
+    /// <param name="stateForUnqualifiedRightSide">State used to resolve identifiers. Note that this
+    /// is <b>not</b> the source of truth: <see cref="Gum.DataTypes.RecursiveVariableFinder"/> re-derives
+    /// values <i>by name</i> through this state's <c>ParentContainer</c>, and <c>GetVariableRecursive</c>
+    /// routes any non-default state to the owning element's <c>DefaultState</c>. Consequently an
+    /// <i>empty</i> state owned by a real element still resolves that element's authored values —
+    /// passing one will silently defeat a "what would this resolve to with nothing authored?"
+    /// comparison. To evaluate with nothing authored, use
+    /// <see cref="FromSyntaxNodeUsingDefaultsOnly"/> instead of hand-rolling a throwaway state.</param>
     /// <param name="fallback">Optional resolver consulted when a bare identifier
     /// or member-access lookup against <paramref name="stateForUnqualifiedRightSide"/>
     /// returns null. The Forms-property-promotion apply pipeline uses this to fall
@@ -47,6 +60,36 @@ public class EvaluatedSyntax
     public static EvaluatedSyntax FromSyntaxNode(SyntaxNode syntaxNode, StateSave stateForUnqualifiedRightSide, Func<string, object?>? fallback = null)
     {
         return Evaluate(syntaxNode, stateForUnqualifiedRightSide, fallback);
+    }
+
+    /// <summary>
+    /// Evaluates a parsed right-side expression as if <b>nothing were authored</b>: every identifier
+    /// resolves through <paramref name="fallback"/> (e.g. a behavior's <c>FormsProperty.Value</c>
+    /// defaults) rather than any real element's state. Use this to answer "what would this resolve to
+    /// with nothing authored?" — for instance, to compare an authored result against the resting
+    /// wireframe value and skip materializing a redundant assignment.
+    /// </summary>
+    /// <remarks>
+    /// This exists because <see cref="FromSyntaxNode"/> cannot be made to ignore authored data simply
+    /// by passing an empty state: <see cref="Gum.DataTypes.RecursiveVariableFinder"/> resolves by name
+    /// through the state's <c>ParentContainer</c>, so an empty state owned by a real element leaks that
+    /// element's authored values. The isolation is achieved by owning the state with a throwaway empty
+    /// element (no instances, no base type) whose only state <i>is</i> its <c>DefaultState</c> — so
+    /// <c>GetVariableRecursive</c> never short-circuits to a different state's authored values, finds
+    /// nothing, and falls through to <paramref name="fallback"/>. The element must be a fresh throwaway
+    /// (not the real one), its state must be the element's default state, and the state's
+    /// <c>ParentContainer</c> must be non-null, or <c>RecursiveVariableFinder</c>/<c>GetValueRecursive</c>
+    /// throw. Encapsulating all of that here keeps the constraint impossible to get subtly wrong at a
+    /// call site (see issue #3082).
+    /// </remarks>
+    /// <param name="syntaxNode">The Roslyn syntax node for the right side of an assignment.</param>
+    /// <param name="fallback">Resolver consulted for every identifier, since no state authors any value.</param>
+    public static EvaluatedSyntax FromSyntaxNodeUsingDefaultsOnly(SyntaxNode syntaxNode, Func<string, object?>? fallback)
+    {
+        ComponentSave restingOwner = new ComponentSave();
+        StateSave restingState = new StateSave { ParentContainer = restingOwner };
+        restingOwner.States.Add(restingState);
+        return Evaluate(syntaxNode, restingState, fallback);
     }
 
     private static EvaluatedSyntax Evaluate(SyntaxNode syntaxNode, StateSave stateForUnqualifiedRightSide, Func<string, object?>? fallback = null)
