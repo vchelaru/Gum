@@ -734,6 +734,74 @@ public class EvaluatedSyntaxTests : BaseTestClass
 
     #endregion
 
+    #region DefaultsOnlyEvaluation
+
+    // These tests pin the "evaluate with nothing authored" (defaults-only) behavior of
+    // FromSyntaxNode and the FromSyntaxNodeUsingDefaultsOnly helper that encapsulates it.
+    //
+    // The footgun (see issue #3082): the StateSave handed to FromSyntaxNode is NOT the
+    // source of truth. RecursiveVariableFinder re-derives values by name through
+    // someState.ParentContainer, and GetVariableRecursive routes any non-default state to
+    // the element's DefaultState. So an *empty* state owned by a real element still leaks
+    // that element's authored values, silently defeating a defaults-only comparison.
+
+    private static EvaluatedSyntax EvaluateWithFallback(string expression, StateSave state, Func<string, object?> fallback)
+    {
+        string csharp = EvaluatedSyntax.ConvertToCSharpSyntax(expression);
+        Microsoft.CodeAnalysis.SyntaxNode syntax = SyntaxFactory.ParseExpression(csharp);
+        return EvaluatedSyntax.FromSyntaxNode(syntax, state, fallback);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_EmptyStateOwnedByRealElement_LeaksAuthoredValue()
+    {
+        // The element authors IsEnabled = false in its default state. The fallback (mimicking a
+        // FormsProperty default) says IsEnabled = true. Evaluating against an empty state that is
+        // *owned by the real element* should leak the authored false, NOT use the fallback — this
+        // is the footgun the defaults-only helper exists to avoid.
+        ComponentSave realElement = new ComponentSave { Name = "RealElement" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = realElement };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Name = "IsEnabled",
+            Value = false,
+            Type = "bool",
+            SetsValue = true
+        });
+        realElement.States.Add(defaultState);
+
+        StateSave emptyStateOnRealElement = new StateSave { Name = "Empty", ParentContainer = realElement };
+
+        Func<string, object?> fallback = name => name == "IsEnabled" ? true : null;
+
+        EvaluatedSyntax result = EvaluateWithFallback(
+            "IsEnabled ? \"Enabled\" : \"Disabled\"", emptyStateOnRealElement, fallback);
+
+        result.ShouldNotBeNull();
+        // Leaks the element's authored false -> "Disabled", instead of the fallback's true -> "Enabled".
+        result.Value.ShouldBe("Disabled");
+    }
+
+    [Fact]
+    public void FromSyntaxNodeUsingDefaultsOnly_AuthoredValueOnRealElement_DoesNotLeak()
+    {
+        // Same fallback as the leak test, but the helper isolates from any real element's authored
+        // values: every identifier resolves through the fallback, so IsEnabled -> true -> "Enabled".
+        // This is the sharp guard: the leak test above proves a hand-rolled empty state leaks; this
+        // proves the helper does not.
+        Func<string, object?> fallback = name => name == "IsEnabled" ? true : null;
+
+        string csharp = EvaluatedSyntax.ConvertToCSharpSyntax("IsEnabled ? \"Enabled\" : \"Disabled\"");
+        Microsoft.CodeAnalysis.SyntaxNode syntax = SyntaxFactory.ParseExpression(csharp);
+
+        EvaluatedSyntax result = EvaluatedSyntax.FromSyntaxNodeUsingDefaultsOnly(syntax, fallback);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe("Enabled");
+    }
+
+    #endregion
+
     #region EnumStringEquality
 
     // Variable references like "ScrollBarVisibilityState = VerticalScrollBarVisibility == \"Hidden\" ? ..."

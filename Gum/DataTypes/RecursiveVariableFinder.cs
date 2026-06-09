@@ -115,6 +115,17 @@ public class RecursiveVariableFinder : IVariableFinder
         ContainerType = VariableContainerType.StateSave;
     }
 
+    /// <remarks>
+    /// The supplied <paramref name="stateSave"/> is resolved <i>by name</i> through its
+    /// <c>ParentContainer</c>, not treated as a standalone bag of values: the finder records
+    /// <c>ParentContainer</c> plus the state's <c>Name</c>, and <c>GetVariableRecursive</c> routes any
+    /// non-default state up to the owning element's <c>DefaultState</c>. The <c>ParentContainer</c>
+    /// must therefore be non-null (enforced under <c>FULL_DIAGNOSTICS</c>), and lookups dereference
+    /// <c>ParentContainer.DefaultState</c>. A consequence worth calling out: an <i>empty</i> state owned
+    /// by a real element still resolves that element's authored values — to evaluate "with nothing
+    /// authored" the state must be owned by a throwaway element whose only state is its own
+    /// <c>DefaultState</c>. See <c>EvaluatedSyntax.FromSyntaxNodeUsingDefaultsOnly</c> (issue #3082).
+    /// </remarks>
     public RecursiveVariableFinder(StateSave stateSave)
     {
 #if FULL_DIAGNOSTICS
