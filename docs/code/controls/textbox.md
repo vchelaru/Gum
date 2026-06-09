@@ -46,7 +46,13 @@ The TextBox respects the OS-level repat rate. For example, the following animati
 
 ## PreviewTextInput
 
-The `PreviewTextInput` event is raised whenever text is added to a text box. This includes regular typing and also pasting. This method can be used to react to text before it has been added to the TextBox.
+The `PreviewTextInput` event is raised in response to **user input that adds text** — specifically, regular typing and pasting. It fires *before* the text is applied, so it can be used to react to (and optionally reject) text before it is added to the TextBox.
+
+`PreviewTextInput` is intentionally narrow in scope:
+
+* It is raised **only by user input** (typing and pasting). It is **not** raised when the `Text` property is set in code.
+* It is **not** raised by deletion — backspace, delete, and cut do not raise it, because nothing is being *added*.
+* It is a **pre-change, cancelable preview**, not an after-the-fact notification. To respond to *every* change to the text regardless of source, use the `TextChanged` event instead.
 
 The event includes arguments with a `Handled` property. Setting this to true prevents the Text from being added to the `TextBox`. The argument's `Text` property contains the newly-added text. Keep in mind this can be a longer string if the user has pasted text, so you may need to check all letters rather than only the first.
 
