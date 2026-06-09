@@ -1,1 +1,4 @@
 root: ./docs/
+
+redirects:
+  code/hot-reload: code/debugging/hot-reload.md
