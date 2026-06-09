@@ -537,6 +537,32 @@ public class TextBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleBackspace_ShouldNotLocalizeText_WhenDeletingCharacter()
+    {
+        // Guards the SetTextNoTranslate -> SetTextFromUi rerouting (#3084): user edits
+        // must still bypass localization. Without it, a registered LocalizationService
+        // would translate the post-edit string and replace the user's text.
+        var mockLocalization = new Mock<ILocalizationService>();
+        mockLocalization.Setup(x => x.Translate(It.IsAny<string>())).Returns("TRANSLATED");
+        CustomSetPropertyOnRenderable.LocalizationService = mockLocalization.Object;
+
+        try
+        {
+            TextBox textBox = new();
+            textBox.HandleCharEntered('a');
+            textBox.HandleCharEntered('b');
+
+            textBox.HandleBackspace();
+
+            textBox.Text.ShouldBe("a");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.LocalizationService = null;
+        }
+    }
+
+    [Fact]
     public void HandleCharEntered_ShouldAddCharacter_WhenNonEnterKeyTyped()
     {
         TextBox textBox = new();
@@ -643,6 +669,32 @@ public class TextBoxTests : BaseTestClass
         textBox.IsFocused = true;
         textBox.HandleKeyDown(Gum.Forms.Input.Keys.V, false, false, isCtrlDown: true);
         textBox.Text.ShouldBe("Line1\nLine2", "because TextBox expects a single-character newline for proper caret positioning");
+    }
+
+    [Fact]
+    public void HandleKeyDown_Paste_ShouldNotLocalizeText()
+    {
+        // Companion to HandleBackspace_ShouldNotLocalizeText (#3084): the paste path was
+        // also rerouted from SetTextNoTranslate to SetTextFromUi and must keep bypassing
+        // localization so pasted content is inserted verbatim.
+        var mockLocalization = new Mock<ILocalizationService>();
+        mockLocalization.Setup(x => x.Translate(It.IsAny<string>())).Returns("TRANSLATED");
+        CustomSetPropertyOnRenderable.LocalizationService = mockLocalization.Object;
+
+        try
+        {
+            Gum.Clipboard.ClipboardImplementation.PushStringToClipboard("pasted");
+            TextBox textBox = new();
+            textBox.IsFocused = true;
+
+            textBox.HandleKeyDown(Gum.Forms.Input.Keys.V, false, false, isCtrlDown: true);
+
+            textBox.Text.ShouldBe("pasted");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.LocalizationService = null;
+        }
     }
 
     [Fact]
