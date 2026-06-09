@@ -537,6 +537,32 @@ public class TextBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleBackspace_ShouldNotLocalizeText_WhenDeletingCharacter()
+    {
+        // Guards the SetTextNoTranslate -> SetTextFromUi rerouting (#3084): user edits
+        // must still bypass localization. Without it, a registered LocalizationService
+        // would translate the post-edit string and replace the user's text.
+        var mockLocalization = new Mock<ILocalizationService>();
+        mockLocalization.Setup(x => x.Translate(It.IsAny<string>())).Returns("TRANSLATED");
+        CustomSetPropertyOnRenderable.LocalizationService = mockLocalization.Object;
+
+        try
+        {
+            TextBox textBox = new();
+            textBox.HandleCharEntered('a');
+            textBox.HandleCharEntered('b');
+
+            textBox.HandleBackspace();
+
+            textBox.Text.ShouldBe("a");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.LocalizationService = null;
+        }
+    }
+
+    [Fact]
     public void HandleCharEntered_ShouldAddCharacter_WhenNonEnterKeyTyped()
     {
         TextBox textBox = new();
@@ -643,6 +669,32 @@ public class TextBoxTests : BaseTestClass
         textBox.IsFocused = true;
         textBox.HandleKeyDown(Gum.Forms.Input.Keys.V, false, false, isCtrlDown: true);
         textBox.Text.ShouldBe("Line1\nLine2", "because TextBox expects a single-character newline for proper caret positioning");
+    }
+
+    [Fact]
+    public void HandleKeyDown_Paste_ShouldNotLocalizeText()
+    {
+        // Companion to HandleBackspace_ShouldNotLocalizeText (#3084): the paste path was
+        // also rerouted from SetTextNoTranslate to SetTextFromUi and must keep bypassing
+        // localization so pasted content is inserted verbatim.
+        var mockLocalization = new Mock<ILocalizationService>();
+        mockLocalization.Setup(x => x.Translate(It.IsAny<string>())).Returns("TRANSLATED");
+        CustomSetPropertyOnRenderable.LocalizationService = mockLocalization.Object;
+
+        try
+        {
+            Gum.Clipboard.ClipboardImplementation.PushStringToClipboard("pasted");
+            TextBox textBox = new();
+            textBox.IsFocused = true;
+
+            textBox.HandleKeyDown(Gum.Forms.Input.Keys.V, false, false, isCtrlDown: true);
+
+            textBox.Text.ShouldBe("pasted");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.LocalizationService = null;
+        }
     }
 
     [Fact]
@@ -786,6 +838,139 @@ public class TextBoxTests : BaseTestClass
         var innerTextObject = (RenderingLibrary.Graphics.Text)textInstance.RenderableComponent;
 
         innerTextObject.MaxLettersToShow.ShouldBe(3);
+    }
+
+    [Fact]
+    public void TextChangedByUi_ShouldNotRaise_WhenPreviewTextInputHandled()
+    {
+        TextBox textBox = new();
+        textBox.PreviewTextInput += (_, args) => args.Handled = true;
+        int byUiCount = 0;
+        textBox.TextChangedByUi += (_, _) => byUiCount++;
+
+        textBox.HandleCharEntered('a');
+
+        textBox.Text.ShouldBeNullOrEmpty("because a handled PreviewTextInput cancels the insertion");
+        byUiCount.ShouldBe(0, "because no text change occurs when PreviewTextInput is handled");
+    }
+
+    [Fact]
+    public void TextChangedByUi_ShouldNotRaise_WhenReadOnly()
+    {
+        TextBox textBox = new();
+        textBox.IsReadOnly = true;
+        int byUiCount = 0;
+        textBox.TextChangedByUi += (_, _) => byUiCount++;
+
+        textBox.HandleCharEntered('a');
+
+        textBox.Text.ShouldBeNullOrEmpty("because a read-only TextBox ignores typed input");
+        byUiCount.ShouldBe(0, "because no text change occurs on a read-only TextBox");
+    }
+
+    [Fact]
+    public void TextChangedByUi_ShouldNotRaise_WhenSetTextNoTranslateCalled()
+    {
+        TextBox textBox = new();
+        int byUiCount = 0;
+        int textChangedCount = 0;
+        textBox.TextChangedByUi += (_, _) => byUiCount++;
+        textBox.TextChanged += (_, _) => textChangedCount++;
+
+        textBox.SetTextNoTranslate("hello");
+
+        byUiCount.ShouldBe(0, "because SetTextNoTranslate is a programmatic API, not user input");
+        textChangedCount.ShouldBe(1, "because TextChanged fires regardless of the change's source");
+    }
+
+    [Fact]
+    public void TextChangedByUi_ShouldNotRaise_WhenTextSetProgrammatically()
+    {
+        TextBox textBox = new();
+        int byUiCount = 0;
+        int textChangedCount = 0;
+        textBox.TextChangedByUi += (_, _) => byUiCount++;
+        textBox.TextChanged += (_, _) => textChangedCount++;
+
+        textBox.Text = "hello";
+
+        byUiCount.ShouldBe(0, "because assigning the Text property in code is not a user-driven change");
+        textChangedCount.ShouldBe(1, "because TextChanged fires regardless of the change's source");
+    }
+
+    [Fact]
+    public void TextChangedByUi_ShouldRaise_WhenBackspacePressed()
+    {
+        TextBox textBox = new();
+        textBox.Text = "abc";
+        textBox.CaretIndex = 3;
+        int byUiCount = 0;
+        textBox.TextChangedByUi += (_, _) => byUiCount++;
+
+        textBox.HandleBackspace();
+
+        byUiCount.ShouldBe(1, "because deleting a character via backspace is a user-driven change");
+        textBox.Text.ShouldBe("ab");
+    }
+
+    [Fact]
+    public void TextChangedByUi_ShouldRaise_WhenCharTyped()
+    {
+        TextBox textBox = new();
+        int byUiCount = 0;
+        textBox.TextChangedByUi += (_, _) => byUiCount++;
+
+        textBox.HandleCharEntered('a');
+
+        byUiCount.ShouldBe(1, "because typing a character is a user-driven change");
+    }
+
+    [Fact]
+    public void TextChangedByUi_ShouldRaise_WhenDeletePressed()
+    {
+        TextBox textBox = new();
+        textBox.Text = "abc";
+        textBox.IsFocused = true;
+        textBox.CaretIndex = 0;
+        int byUiCount = 0;
+        textBox.TextChangedByUi += (_, _) => byUiCount++;
+
+        textBox.HandleKeyDown(Gum.Forms.Input.Keys.Delete, false, false, false);
+
+        byUiCount.ShouldBe(1, "because deleting a character via the delete key is a user-driven change");
+        textBox.Text.ShouldBe("bc");
+    }
+
+    [Fact]
+    public void TextChangedByUi_ShouldRaise_WhenNativeKeyboardInputApplied()
+    {
+        NativeKeyboardAccessTextBox textBox = new();
+        int byUiCount = 0;
+        textBox.TextChangedByUi += (_, _) => byUiCount++;
+
+        textBox.InvokeSetTextFromNativeKeyboardInput("user entry");
+
+        byUiCount.ShouldBeGreaterThan(0,
+            "because text entered through the native on-screen keyboard is user-driven input");
+    }
+
+    [Fact]
+    public void TextChangedByUi_ShouldRaise_WhenTextPasted()
+    {
+        Gum.Clipboard.ClipboardImplementation.PushStringToClipboard("xyz");
+        TextBox textBox = new();
+        textBox.IsFocused = true;
+        int byUiCount = 0;
+        int textChangedCount = 0;
+        textBox.TextChangedByUi += (_, _) => byUiCount++;
+        textBox.TextChanged += (_, _) => textChangedCount++;
+
+        textBox.HandleKeyDown(Gum.Forms.Input.Keys.V, false, false, isCtrlDown: true);
+
+        textBox.Text.ShouldBe("xyz");
+        byUiCount.ShouldBeGreaterThan(0, "because pasting is a user-driven change");
+        byUiCount.ShouldBe(textChangedCount,
+            "because for user-driven changes TextChangedByUi fires with the same cadence as TextChanged");
     }
 
     [Fact]

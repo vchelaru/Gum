@@ -38,7 +38,7 @@ public class TextBox : TextBoxBase
     /// </summary>
     protected override void SetTextFromNativeKeyboardInput(string value)
     {
-        SetTextNoTranslate(value);
+        SetTextFromUi(value);
     }
 
     /// <summary>
@@ -93,6 +93,28 @@ public class TextBox : TextBoxBase
         }
     }
 
+    // True only while a user-initiated edit (typing, paste, backspace, delete, cut, or
+    // native-keyboard entry) is being applied. OnTextChanged reads it to decide whether to
+    // raise TextChangedByUi, so programmatic Text/SetTextNoTranslate assignments stay UI-silent.
+    private bool _isUiTextChange;
+
+    /// <summary>
+    /// Applies a user-initiated text change. Identical to <see cref="SetTextNoTranslate"/>
+    /// except that it marks the change as UI-driven so <see cref="TextChangedByUi"/> is raised.
+    /// </summary>
+    private void SetTextFromUi(string? value)
+    {
+        _isUiTextChange = true;
+        try
+        {
+            SetTextNoTranslate(value);
+        }
+        finally
+        {
+            _isUiTextChange = false;
+        }
+    }
+
     /// <summary>
     /// The maximum number of characters to display visually. Characters beyond this count
     /// are hidden but remain in the <see cref="Text"/> string. This is a display-only
@@ -136,9 +158,19 @@ public class TextBox : TextBoxBase
     #region Events
 
     /// <summary>
-    /// Event raised when the Text property changes.
+    /// Event raised when the Text property changes, regardless of the change's source.
     /// </summary>
     public event EventHandler TextChanged;
+
+    /// <summary>
+    /// Event raised when Text changes as a result of user interaction (typing, pasting,
+    /// backspace, delete, cut, or native on-screen keyboard entry). This event is not raised
+    /// when Text is changed in code, such as by assigning the <see cref="Text"/> property or
+    /// calling <see cref="SetTextNoTranslate"/>. This is the text analog of
+    /// <see cref="Primitives.RangeBase.ValueChangedByUi"/>. It is raised after the change is applied
+    /// and fires with the same cadence as <see cref="TextChanged"/> for user-driven changes.
+    /// </summary>
+    public event EventHandler TextChangedByUi;
 
     #endregion
 
@@ -238,8 +270,8 @@ public class TextBox : TextBoxBase
                     // set caretIndex before assigning Text so that the events are
                     // raised with the new caretIndex value
                     caretIndex = System.Math.Min(caretIndex + 1, textAfterAdd.Length);
-                    // Use SetTextNoTranslate because this is user-typed input
-                    SetTextNoTranslate(textAfterAdd);
+                    // Use SetTextFromUi because this is user-typed input
+                    SetTextFromUi(textAfterAdd);
                 }
             }
 
@@ -275,8 +307,8 @@ public class TextBox : TextBoxBase
 
                 var indexToDeleteTo = indexBeforeNullable ?? 0;
 
-                // Use SetTextNoTranslate because this is user-initiated editing
-                SetTextNoTranslate(Text.Remove(indexToDeleteTo, caretIndex - indexToDeleteTo));
+                // Use SetTextFromUi because this is user-initiated editing
+                SetTextFromUi(Text.Remove(indexToDeleteTo, caretIndex - indexToDeleteTo));
 
                 caretIndex = indexToDeleteTo;
                 RefreshCaretAfterEdit();
@@ -288,8 +320,8 @@ public class TextBox : TextBoxBase
                 // caret is at the end of the word, modifying the word will shift the caret to
                 // the left, and that could cause it to shift over two times.
                 caretIndex--;
-                // Use SetTextNoTranslate because this is user-initiated editing
-                SetTextNoTranslate(this.Text.Remove(whereToRemoveFrom, 1));
+                // Use SetTextFromUi because this is user-initiated editing
+                SetTextFromUi(this.Text.Remove(whereToRemoveFrom, 1));
                 RefreshCaretAfterEdit();
             }
         }
@@ -304,8 +336,8 @@ public class TextBox : TextBoxBase
         }
         else if (caretIndex < (Text?.Length ?? 0))
         {
-            // Use SetTextNoTranslate because this is user-initiated editing
-            SetTextNoTranslate(this.Text.Remove(caretIndex, 1));
+            // Use SetTextFromUi because this is user-initiated editing
+            SetTextFromUi(this.Text.Remove(caretIndex, 1));
             RefreshCaretAfterEdit();
         }
     }
@@ -363,8 +395,8 @@ public class TextBox : TextBoxBase
             }
             foreach (var character in whatToPaste)
             {
-                // Use SetTextNoTranslate because this is user-pasted input
-                SetTextNoTranslate(this.Text.Insert(caretIndex, "" + character));
+                // Use SetTextFromUi because this is user-pasted input
+                SetTextFromUi(this.Text.Insert(caretIndex, "" + character));
                 caretIndex++;
             }
 
@@ -383,8 +415,8 @@ public class TextBox : TextBoxBase
         {
             lengthToRemove = Text.Length - selectionStart;
         }
-        // Use SetTextNoTranslate because this is user-initiated editing
-        SetTextNoTranslate(Text.Remove(selectionStart, lengthToRemove));
+        // Use SetTextFromUi because this is user-initiated editing
+        SetTextFromUi(Text.Remove(selectionStart, lengthToRemove));
         CaretIndex = selectionStart;
         SelectionLength = 0;
     }
@@ -428,6 +460,11 @@ public class TextBox : TextBoxBase
         CaretIndex = System.Math.Min(CaretIndex, value?.Length ?? 0);
 
         TextChanged?.Invoke(this, EventArgs.Empty);
+
+        if (_isUiTextChange)
+        {
+            TextChangedByUi?.Invoke(this, EventArgs.Empty);
+        }
 
         UpdatePlaceholderVisibility();
 
