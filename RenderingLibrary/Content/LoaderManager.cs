@@ -270,6 +270,13 @@ namespace RenderingLibrary.Content
                 toReturn = InvalidTexture;
             }
 
+            // On desktop the loader returns null for a missing file instead of throwing. Preserve this
+            // method's contract of returning InvalidTexture (rather than null) when the load fails.
+            if (toReturn == null)
+            {
+                toReturn = InvalidTexture;
+            }
+
             return toReturn;
         }
 

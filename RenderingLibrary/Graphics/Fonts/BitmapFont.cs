@@ -203,6 +203,14 @@ public class BitmapFont : IDisposable
                 // If aliased, the internal loader may redirect. Let it do its job:
                 //if (ToolsUtilities.FileManager.FileExists(mTextureNames[i]))
                 mTextures[i] = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Texture2D>(mTextureNames[i]);
+
+                // On desktop the loader returns null for a missing file instead of throwing; fall back to
+                // the invalid-texture placeholder so a missing font page doesn't NRE downstream.
+                if (mTextures[i] == null)
+                {
+                    // InvalidTexture is initialized at startup, so it is non-null here.
+                    mTextures[i] = RenderingLibrary.Graphics.Sprite.InvalidTexture!;
+                }
             }
         }
     }
@@ -228,6 +236,14 @@ public class BitmapFont : IDisposable
         else
         {
             mTextures[0] = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Texture2D>(textureFile);
+
+            // On desktop the loader returns null for a missing file instead of throwing; fall back to
+            // the invalid-texture placeholder so the mTextures[0].Name access below doesn't NRE.
+            if (mTextures[0] == null)
+            {
+                // InvalidTexture is initialized at startup, so it is non-null here.
+                mTextures[0] = RenderingLibrary.Graphics.Sprite.InvalidTexture!;
+            }
         }
 
         mTextureNames[0] = mTextures[0].Name;
