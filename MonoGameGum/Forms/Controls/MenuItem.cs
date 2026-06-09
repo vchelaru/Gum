@@ -56,6 +56,11 @@ public class MenuItem : ItemsControl
         }
     }
 
+    // Tracks whether Clicked has already been raised for the current mouse hold so
+    // a re-fired push edge cannot raise it repeatedly while the button stays down.
+    // See HandlePush and issue #3077.
+    bool _clickRaisedDuringPush;
+
     protected List<MenuItem> MenuItemsInternal = new List<MenuItem>();
 
     GraphicalUiElement? text;
@@ -335,6 +340,10 @@ public class MenuItem : ItemsControl
     {
         IsHighlighted = false;
 
+        // The cursor left this item, so the current hold is over as far as this
+        // item is concerned - allow the next push to raise Clicked again.
+        _clickRaisedDuringPush = false;
+
         UpdateState();
     }
 
@@ -342,22 +351,38 @@ public class MenuItem : ItemsControl
     {
         if (MainCursor.LastInputDevice == InputDevice.Mouse)
         {
+            // Menu items activate on push (matching WPF).
             IsSelected = true;
-            Clicked?.Invoke(this, null);
-            
+
+            // Push (cursor.PrimaryPush) is normally a single-frame edge, but it can
+            // re-fire across frames while the button stays physically held - most
+            // notably when a Clicked handler calls Cursor.ClearInputValues(), which
+            // resets the last-frame mouse state so the very next frame reports a
+            // fresh push. Guard so Clicked is raised only once per hold; the guard
+            // is cleared on release (HandleClick) or roll-off. See issue #3077.
+            if (!_clickRaisedDuringPush)
+            {
+                _clickRaisedDuringPush = true;
+                Clicked?.Invoke(this, null);
+            }
         }
     }
 
 
     private void HandleClick(object sender, EventArgs args)
     {
-        if (MainCursor.LastInputDevice == InputDevice.TouchScreen &&
+        if (MainCursor.LastInputDevice == InputDevice.Mouse)
+        {
+            // The button was released, ending the current hold, so the next push
+            // is allowed to raise Clicked again.
+            _clickRaisedDuringPush = false;
+        }
+        else if (MainCursor.LastInputDevice == InputDevice.TouchScreen &&
             MainCursor.PrimaryClickNoSlide)
         {
             IsSelected = true;
 
             Clicked?.Invoke(this, null);
-
         }
     }
     #endregion
