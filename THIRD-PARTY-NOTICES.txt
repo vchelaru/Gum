@@ -1,0 +1,719 @@
+================================================================================
+THIRD-PARTY NOTICES
+================================================================================
+
+The Gum UI tool is distributed under the MIT License (see the root LICENSE
+file). The Gum UI tool and the Gum command-line tool also redistribute the
+third-party components listed below, which are provided under their own
+licenses. Those licenses are reproduced (or referenced) here to satisfy their
+attribution / notice requirements.
+
+This file documents components that ship as binaries in the *tool* distribution
+(the editor and the CLI). The runtime NuGet packages Gum publishes
+(Gum.MonoGame, KniGum, FnaGum, Gum.SkiaSharp, Gum.Raylib, etc.) declare their
+own third-party dependencies through NuGet; those are fetched and governed by
+their own licenses on the consumer's machine and are not bundled by Gum. In
+particular, the FreeType font-generation chain is tool-only and never reaches
+the runtime packages, so games consuming the runtime packages take on no
+obligation from it.
+
+--------------------------------------------------------------------------------
+HOW TO ADD A NEW COMPONENT
+--------------------------------------------------------------------------------
+When you add a dependency that is redistributed with the Gum tool (a NuGet
+package or vendored DLL whose managed assembly or native binary ends up in the
+build output), add it to the appropriate license group below. If it introduces
+a license not already represented, add that license's full text (or a canonical
+reference for long, well-known licenses) to the "LICENSE TEXTS" section.
+
+Use this per-component shape inside a license group:
+
+    <name> — <copyright holder>
+        <project / repo URL>
+        [optional note, e.g. native binary vs. managed wrapper]
+
+Note the distinction between a package's declared NuGet license and what it
+actually carries: a managed wrapper may be MIT while the native binary it
+bundles is under a different license. Credit the binary's real license, not
+just the wrapper's nuspec value. The canonical examples below are SkiaSharp
+(MIT wrapper / BSD-3 native Skia) and FreeTypeSharp (MIT wrapper / FreeType-
+License native FreeType).
+
+================================================================================
+COMPONENT INVENTORY (grouped by license)
+================================================================================
+
+--------------------------------------------------------------------------------
+MIT License
+--------------------------------------------------------------------------------
+.NET runtime & Microsoft libraries — © Microsoft Corporation / .NET Foundation
+    https://github.com/dotnet
+    Covers Roslyn (Microsoft.CodeAnalysis.*), Microsoft.Extensions.*,
+    Microsoft.CSharp, Microsoft.Win32.SystemEvents, Microsoft.Xaml.Behaviors.Wpf,
+    and the System.* libraries shipped alongside the tool (System.CodeDom,
+    System.Collections.Immutable, System.ComponentModel.Composition,
+    System.Drawing.Common, System.Management, System.Reflection.Metadata,
+    System.Reflection.MetadataLoadContext, System.Resources.Extensions,
+    System.Text.Json, System.Text.Encodings.Web, and related packages).
+
+BrotliSharpLib — © 2017-2019 master131
+    https://github.com/master131/BrotliSharpLib
+
+CommunityToolkit.Mvvm — © .NET Foundation and Contributors
+    https://github.com/CommunityToolkit/dotnet
+
+ControlzEx — © 2015-2025 Jan Karger, Bastian Schmidt, James Willock
+    https://github.com/ControlzEx/ControlzEx
+
+DynamicExpresso.Core — © Davide Icardi
+    https://github.com/dynamicexpresso/DynamicExpresso
+
+ExCSS — © Tyler Brinks
+    https://github.com/TylerBrinks/ExCSS
+
+FlatRedBall.InterpolationCore — © FlatRedBall, LLC
+    https://github.com/vchelaru/FlatRedBall
+
+FluentIcons.Wpf / FluentIcons.Common — © FluentIcons contributors
+    https://github.com/davidxuang/FluentIcons
+
+FreeTypeSharp — © 2024 ryancheung
+    https://github.com/ryancheung/FreeTypeSharp
+    Managed binding only. The native FreeType binary it bundles is under the
+    FreeType License (see below).
+
+HarfBuzzSharp / SkiaSharp.HarfBuzz — © Microsoft Corporation
+    https://github.com/mono/SkiaSharp
+    Managed bindings. The native HarfBuzz binary (libHarfBuzzSharp) is under the
+    "Old MIT" HarfBuzz license, which is MIT-compatible.
+
+KernSmith / KernSmith.Rasterizers.FreeType — © 2026 KernSmith contributors
+    (Jeremy Swartwood)
+    https://github.com/kaltinril/KernSmith
+
+MaterialDesignThemes.Wpf / MaterialDesignColors — © MaterialDesignInXAML
+    https://github.com/MaterialDesignInXAML/MaterialDesignInXamlToolkit
+
+Microsoft.AppCenter / .Analytics / .Crashes — © Microsoft Corporation
+    https://aka.ms/telgml
+
+Newtonsoft.Json — © 2008 James Newton-King
+    https://www.newtonsoft.com/json
+
+PixiEditor.ColorPicker — © PixiEditor Organization
+    https://github.com/PixiEditor/ColorPicker
+
+SharpCompress — © 2025 Adam Hathcock
+    https://github.com/adamhathcock/sharpcompress
+
+SharpDX (SharpDX.*) — © 2010-2016 Alexandre Mutel
+    http://sharpdx.org/
+
+ShimSkiaSharp / Svg.Model / Svg.Skia — © Wiesław Šoltés
+    https://github.com/wieslawsoltes/Svg.Skia
+    (Svg.Custom, from the same project, is under Ms-PL — see below.)
+
+SkiaSharp / SkiaSharp.Skottie / SkiaSharp.Extended — © Microsoft Corporation
+    https://github.com/mono/SkiaSharp
+    Managed bindings. The native Skia binary (libSkiaSharp) is under the
+    BSD-3-Clause license (see below).
+
+--------------------------------------------------------------------------------
+FreeType License (FTL) — a BSD-style license with a credit clause
+--------------------------------------------------------------------------------
+FreeType (native font rasterizer: freetype.dll / libfreetype.so /
+libfreetype.dylib) — © 1996-2002, 2006 David Turner, Robert Wilhelm, and
+Werner Lemberg
+    https://freetype.org
+    Bundled by FreeTypeSharp and used by the cross-platform KernSmith font
+    generator. FreeType is dual-licensed under the FreeType License (FTL) and
+    GPLv2; Gum uses it under the FTL.
+
+Required credit (per the FTL):
+
+    Portions of this software are copyright (c) 2024 The FreeType Project
+    (https://freetype.org). All rights reserved.
+
+--------------------------------------------------------------------------------
+BSD-3-Clause License
+--------------------------------------------------------------------------------
+SharpVectors (SharpVectors.*) — © 2010-2025 Elinam LLC
+    https://github.com/ElinamLLC/SharpVectors
+
+Skia (native graphics engine, bundled by SkiaSharp as libSkiaSharp) —
+    © Google Inc. and contributors
+    https://skia.org
+
+--------------------------------------------------------------------------------
+Microsoft Public License (Ms-PL)
+--------------------------------------------------------------------------------
+KNI (nkast.Xna.Framework.*, nkast.Kni.Platform.*) — © Konstantin (nkast) and
+    KNI contributors
+    https://github.com/kniengine/kni
+    The XNA-compatible runtime the Gum tool uses for rendering.
+
+Xceed Extended WPF Toolkit (Community Edition, v2.6) — © 2007-2015 Xceed
+    Software Inc.
+    https://github.com/xceedsoftware/wpftoolkit
+    Vendored DLLs: Xceed.Wpf.Toolkit, Xceed.Wpf.DataGrid, Xceed.Wpf.AvalonDock
+    (+ AvalonDock themes). This is the Ms-PL-era community edition; later 4.x
+    releases moved to a different Xceed community license and are not used here.
+
+Svg.Custom — © Wiesław Šoltés
+    https://github.com/wieslawsoltes/Svg.Skia
+
+--------------------------------------------------------------------------------
+Apache License 2.0
+--------------------------------------------------------------------------------
+SQLitePCLRaw (SQLitePCLRaw.*) — © 2014-2024 SourceGear, LLC
+    https://github.com/ericsink/SQLitePCL.raw
+    The managed wrapper is Apache-2.0; the native SQLite engine it bundles
+    (libe_sqlite3 / e_sqlite3) is in the public domain (see below).
+
+CsvHelper — © 2009-2024 Josh Close
+    https://joshclose.github.io/CsvHelper/
+    Dual-licensed "MS-PL OR Apache-2.0"; used here under Apache-2.0.
+
+--------------------------------------------------------------------------------
+GNU Lesser General Public License v3.0 or later (LGPL-3.0-or-later)
+--------------------------------------------------------------------------------
+Fizzler — © 2009 Atif Aziz, Colin Ramsay; portions © 2008 Novell, Inc.
+    https://github.com/atifaziz/Fizzler
+    A CSS-selector engine pulled in transitively via Svg.Custom / Svg.Skia.
+    Distributed as a separate, dynamically-linked assembly (Fizzler.dll) that
+    a recipient may replace. The full LGPL-3.0 text (which incorporates the
+    GNU GPL v3.0 by reference) is available at:
+        https://www.gnu.org/licenses/lgpl-3.0.txt
+        https://www.gnu.org/licenses/gpl-3.0.txt
+
+--------------------------------------------------------------------------------
+Code Project Open License (CPOL) 1.02
+--------------------------------------------------------------------------------
+TargaImage — © 2008 David Polomis ("Paloma")
+    https://www.codeproject.com/Articles/31702/NET-Targa-Image-Reader
+    Vendored TGA image loader (TargaImage.dll). The full CPOL 1.02 text is
+    available at:
+        https://www.codeproject.com/info/cpol10.aspx
+
+--------------------------------------------------------------------------------
+Public Domain
+--------------------------------------------------------------------------------
+StbImageSharp / StbImageWriteSharp — StbSharp
+    https://github.com/StbSharp/StbImageSharp
+    https://github.com/StbSharp/StbImageWriteSharp
+    Released into the public domain (C# ports of Sean Barrett's stb libraries).
+
+SQLite (native engine, bundled by SQLitePCLRaw as libe_sqlite3 / e_sqlite3)
+    https://www.sqlite.org
+    The SQLite source code is in the public domain.
+
+
+================================================================================
+LICENSE TEXTS
+================================================================================
+
+================================================================================
+MIT License (applies to the MIT-licensed components above)
+================================================================================
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+The FreeType Project License (FTL)
+================================================================================
+
+                    The FreeType Project LICENSE
+                    ----------------------------
+
+                            2006-Jan-27
+
+                    Copyright 1996-2002, 2006 by
+          David Turner, Robert Wilhelm, and Werner Lemberg
+
+
+
+Introduction
+============
+
+  The FreeType  Project is distributed in  several archive packages;
+some of them may contain, in addition to the FreeType font engine,
+various tools and  contributions which rely on, or  relate to, the
+FreeType Project.
+
+  This  license applies  to all  files found  in such  packages, and
+which do not  fall under their own explicit  license.  The license
+affects  thus  the  FreeType   font  engine,  the  test  programs,
+documentation and makefiles, at the very least.
+
+  This  license   was  inspired  by  the  BSD,   Artistic,  and  IJG
+(Independent JPEG  Group) licenses, which  all encourage inclusion
+and  use of  free  software in  commercial  and freeware  products
+alike.  As a consequence, its main points are that:
+
+    o We don't promise that this software works. However, we will be
+      interested in any kind of bug reports. (`as is' distribution)
+
+    o You can  use this software for whatever you  want, in parts or
+      full form, without having to pay us. (`royalty-free' usage)
+
+    o You may not pretend that  you wrote this software.  If you use
+      it, or  only parts of it,  in a program,  you must acknowledge
+      somewhere  in  your  documentation  that  you  have  used  the
+      FreeType code. (`credits')
+
+  We  specifically  permit  and  encourage  the  inclusion  of  this
+software, with  or without modifications,  in commercial products.
+We  disclaim  all warranties  covering  The  FreeType Project  and
+assume no liability related to The FreeType Project.
+
+
+  Finally,  many  people  asked  us  for  a  preferred  form  for  a
+credit/disclaimer to use in compliance with this license.  We thus
+encourage you to use the following text:
+
+   """
+    Portions of this software are copyright © <year> The FreeType
+    Project (www.freetype.org).  All rights reserved.
+   """
+
+  Please replace <year> with the value from the FreeType version you
+actually use.
+
+
+Legal Terms
+===========
+
+0. Definitions
+--------------
+
+  Throughout this license,  the terms `package', `FreeType Project',
+and  `FreeType  archive' refer  to  the  set  of files  originally
+distributed  by the  authors  (David Turner,  Robert Wilhelm,  and
+Werner Lemberg) as the `FreeType Project', be they named as alpha,
+beta or final release.
+
+  `You' refers to  the licensee, or person using  the project, where
+`using' is a generic term including compiling the project's source
+code as  well as linking it  to form a  `program' or `executable'.
+This  program is  referred to  as  `a program  using the  FreeType
+engine'.
+
+  This  license applies  to all  files distributed  in  the original
+FreeType  Project,   including  all  source   code,  binaries  and
+documentation,  unless  otherwise  stated   in  the  file  in  its
+original, unmodified form as  distributed in the original archive.
+If you are  unsure whether or not a particular  file is covered by
+this license, you must contact us to verify this.
+
+  The FreeType  Project is copyright (C) 1996-2000  by David Turner,
+Robert Wilhelm, and Werner Lemberg.  All rights reserved except as
+specified below.
+
+1. No Warranty
+--------------
+
+  THE FREETYPE PROJECT  IS PROVIDED `AS IS' WITHOUT  WARRANTY OF ANY
+KIND, EITHER  EXPRESS OR IMPLIED,  INCLUDING, BUT NOT  LIMITED TO,
+WARRANTIES  OF  MERCHANTABILITY   AND  FITNESS  FOR  A  PARTICULAR
+PURPOSE.  IN NO EVENT WILL ANY OF THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE  FOR ANY DAMAGES CAUSED  BY THE USE OR  THE INABILITY TO
+USE, OF THE FREETYPE PROJECT.
+
+2. Redistribution
+-----------------
+
+  This  license  grants  a  worldwide, royalty-free,  perpetual  and
+irrevocable right  and license to use,  execute, perform, compile,
+display,  copy,   create  derivative  works   of,  distribute  and
+sublicense the  FreeType Project (in  both source and  object code
+forms)  and  derivative works  thereof  for  any  purpose; and  to
+authorize others  to exercise  some or all  of the  rights granted
+herein, subject to the following conditions:
+
+    o Redistribution of  source code  must retain this  license file
+      (`FTL.TXT') unaltered; any  additions, deletions or changes to
+      the original  files must be clearly  indicated in accompanying
+      documentation.   The  copyright   notices  of  the  unaltered,
+      original  files must  be  preserved in  all  copies of  source
+      files.
+
+    o Redistribution in binary form must provide a  disclaimer  that
+      states  that  the software is based in part of the work of the
+      FreeType Team,  in  the  distribution  documentation.  We also
+      encourage you to put an URL to the FreeType web page  in  your
+      documentation, though this isn't mandatory.
+
+  These conditions  apply to any  software derived from or  based on
+the FreeType Project,  not just the unmodified files.   If you use
+our work, you  must acknowledge us.  However, no  fee need be paid
+to us.
+
+3. Advertising
+--------------
+
+  Neither the  FreeType authors and  contributors nor you  shall use
+the name of the  other for commercial, advertising, or promotional
+purposes without specific prior written permission.
+
+  We suggest,  but do not require, that  you use one or  more of the
+following phrases to refer  to this software in your documentation
+or advertising  materials: `FreeType Project',  `FreeType Engine',
+`FreeType library', or `FreeType Distribution'.
+
+  As  you have  not signed  this license,  you are  not  required to
+accept  it.   However,  as  the FreeType  Project  is  copyrighted
+material, only  this license, or  another one contracted  with the
+authors, grants you  the right to use, distribute,  and modify it.
+Therefore,  by  using,  distributing,  or modifying  the  FreeType
+Project, you indicate that you understand and accept all the terms
+of this license.
+
+4. Contacts
+-----------
+
+  There are two mailing lists related to FreeType:
+
+    o freetype@nongnu.org
+
+      Discusses general use and applications of FreeType, as well as
+      future and  wanted additions to the  library and distribution.
+      If  you are looking  for support,  start in  this list  if you
+      haven't found anything to help you in the documentation.
+
+    o freetype-devel@nongnu.org
+
+      Discusses bugs,  as well  as engine internals,  design issues,
+      specific licenses, porting, etc.
+
+  Our home page can be found at
+
+    https://www.freetype.org
+
+
+--- end of FTL.TXT ---
+
+================================================================================
+BSD 3-Clause License
+================================================================================
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors
+   may be used to endorse or promote products derived from this software
+   without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+================================================================================
+Microsoft Public License (Ms-PL)
+================================================================================
+
+This license governs use of the accompanying software. If you use the
+software, you accept this license. If you do not accept the license, do not
+use the software.
+
+1. Definitions
+
+The terms "reproduce," "reproduction," "derivative works," and "distribution"
+have the same meaning here as under U.S. copyright law.
+
+A "contribution" is the original software, or any additions or changes to the
+software.
+
+A "contributor" is any person that distributes its contribution under this
+license.
+
+"Licensed patents" are a contributor's patent claims that read directly on its
+contribution.
+
+2. Grant of Rights
+
+(A) Copyright Grant- Subject to the terms of this license, including the
+license conditions and limitations in section 3, each contributor grants you a
+non-exclusive, worldwide, royalty-free copyright license to reproduce its
+contribution, prepare derivative works of its contribution, and distribute its
+contribution or any derivative works that you create.
+
+(B) Patent Grant- Subject to the terms of this license, including the license
+conditions and limitations in section 3, each contributor grants you a
+non-exclusive, worldwide, royalty-free license under its licensed patents to
+make, have made, use, sell, offer for sale, import, and/or otherwise dispose
+of its contribution in the software or derivative works of the contribution in
+the software.
+
+3. Conditions and Limitations
+
+(A) No Trademark License- This license does not grant you rights to use any
+contributors' name, logo, or trademarks.
+
+(B) If you bring a patent claim against any contributor over patents that you
+claim are infringed by the software, your patent license from such contributor
+to the software ends automatically.
+
+(C) If you distribute any portion of the software, you must retain all
+copyright, patent, trademark, and attribution notices that are present in the
+software.
+
+(D) If you distribute any portion of the software in source code form, you may
+do so only under this license by including a complete copy of this license
+with your distribution. If you distribute any portion of the software in
+compiled or object code form, you may only do so under a license that complies
+with this license.
+
+(E) The software is licensed "as-is." You bear the risk of using it. The
+contributors give no express warranties, guarantees or conditions. You may
+have additional consumer rights under your local laws which this license
+cannot change. To the extent permitted under your local laws, the contributors
+exclude the implied warranties of merchantability, fitness for a particular
+purpose and non-infringement.
+
+================================================================================
+Apache License, Version 2.0
+================================================================================
+
+                                 Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
+
+   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+   1. Definitions.
+
+      "License" shall mean the terms and conditions for use, reproduction,
+      and distribution as defined by Sections 1 through 9 of this document.
+
+      "Licensor" shall mean the copyright owner or entity authorized by
+      the copyright owner that is granting the License.
+
+      "Legal Entity" shall mean the union of the acting entity and all
+      other entities that control, are controlled by, or are under common
+      control with that entity. For the purposes of this definition,
+      "control" means (i) the power, direct or indirect, to cause the
+      direction or management of such entity, whether by contract or
+      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+      outstanding shares, or (iii) beneficial ownership of such entity.
+
+      "You" (or "Your") shall mean an individual or Legal Entity
+      exercising permissions granted by this License.
+
+      "Source" form shall mean the preferred form for making modifications,
+      including but not limited to software source code, documentation
+      source, and configuration files.
+
+      "Object" form shall mean any form resulting from mechanical
+      transformation or translation of a Source form, including but
+      not limited to compiled object code, generated documentation,
+      and conversions to other media types.
+
+      "Work" shall mean the work of authorship, whether in Source or
+      Object form, made available under the License, as indicated by a
+      copyright notice that is included in or attached to the work
+      (an example is provided in the Appendix below).
+
+      "Derivative Works" shall mean any work, whether in Source or Object
+      form, that is based on (or derived from) the Work and for which the
+      editorial revisions, annotations, elaborations, or other modifications
+      represent, as a whole, an original work of authorship. For the purposes
+      of this License, Derivative Works shall not include works that remain
+      separable from, or merely link (or bind by name) to the interfaces of,
+      the Work and Derivative Works thereof.
+
+      "Contribution" shall mean any work of authorship, including
+      the original version of the Work and any modifications or additions
+      to that Work or Derivative Works thereof, that is intentionally
+      submitted to Licensor for inclusion in the Work by the copyright owner
+      or by an individual or Legal Entity authorized to submit on behalf of
+      the copyright owner. For the purposes of this definition, "submitted"
+      means any form of electronic, verbal, or written communication sent
+      to the Licensor or its representatives, including but not limited to
+      communication on electronic mailing lists, source code control systems,
+      and issue tracking systems that are managed by, or on behalf of, the
+      Licensor for the purpose of discussing and improving the Work, but
+      excluding communication that is conspicuously marked or otherwise
+      designated in writing by the copyright owner as "Not a Contribution."
+
+      "Contributor" shall mean Licensor and any individual or Legal Entity
+      on behalf of whom a Contribution has been received by Licensor and
+      subsequently incorporated within the Work.
+
+   2. Grant of Copyright License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      copyright license to reproduce, prepare Derivative Works of,
+      publicly display, publicly perform, sublicense, and distribute the
+      Work and such Derivative Works in Source or Object form.
+
+   3. Grant of Patent License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      (except as stated in this section) patent license to make, have made,
+      use, offer to sell, sell, import, and otherwise transfer the Work,
+      where such license applies only to those patent claims licensable
+      by such Contributor that are necessarily infringed by their
+      Contribution(s) alone or by combination of their Contribution(s)
+      with the Work to which such Contribution(s) was submitted. If You
+      institute patent litigation against any entity (including a
+      cross-claim or counterclaim in a lawsuit) alleging that the Work
+      or a Contribution incorporated within the Work constitutes direct
+      or contributory patent infringement, then any patent licenses
+      granted to You under this License for that Work shall terminate
+      as of the date such litigation is filed.
+
+   4. Redistribution. You may reproduce and distribute copies of the
+      Work or Derivative Works thereof in any medium, with or without
+      modifications, and in Source or Object form, provided that You
+      meet the following conditions:
+
+      (a) You must give any other recipients of the Work or
+          Derivative Works a copy of this License; and
+
+      (b) You must cause any modified files to carry prominent notices
+          stating that You changed the files; and
+
+      (c) You must retain, in the Source form of any Derivative Works
+          that You distribute, all copyright, patent, trademark, and
+          attribution notices from the Source form of the Work,
+          excluding those notices that do not pertain to any part of
+          the Derivative Works; and
+
+      (d) If the Work includes a "NOTICE" text file as part of its
+          distribution, then any Derivative Works that You distribute must
+          include a readable copy of the attribution notices contained
+          within such NOTICE file, excluding those notices that do not
+          pertain to any part of the Derivative Works, in at least one
+          of the following places: within a NOTICE text file distributed
+          as part of the Derivative Works; within the Source form or
+          documentation, if provided along with the Derivative Works; or,
+          within a display generated by the Derivative Works, if and
+          wherever such third-party notices normally appear. The contents
+          of the NOTICE file are for informational purposes only and
+          do not modify the License. You may add Your own attribution
+          notices within Derivative Works that You distribute, alongside
+          or as an addendum to the NOTICE text from the Work, provided
+          that such additional attribution notices cannot be construed
+          as modifying the License.
+
+      You may add Your own copyright statement to Your modifications and
+      may provide additional or different license terms and conditions
+      for use, reproduction, or distribution of Your modifications, or
+      for any such Derivative Works as a whole, provided Your use,
+      reproduction, and distribution of the Work otherwise complies with
+      the conditions stated in this License.
+
+   5. Submission of Contributions. Unless You explicitly state otherwise,
+      any Contribution intentionally submitted for inclusion in the Work
+      by You to the Licensor shall be under the terms and conditions of
+      this License, without any additional terms or conditions.
+      Notwithstanding the above, nothing herein shall supersede or modify
+      the terms of any separate license agreement you may have executed
+      with Licensor regarding such Contributions.
+
+   6. Trademarks. This License does not grant permission to use the trade
+      names, trademarks, service marks, or product names of the Licensor,
+      except as required for reasonable and customary use in describing the
+      origin of the Work and reproducing the content of the NOTICE file.
+
+   7. Disclaimer of Warranty. Unless required by applicable law or
+      agreed to in writing, Licensor provides the Work (and each
+      Contributor provides its Contributions) on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+      implied, including, without limitation, any warranties or conditions
+      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+      PARTICULAR PURPOSE. You are solely responsible for determining the
+      appropriateness of using or redistributing the Work and assume any
+      risks associated with Your exercise of permissions under this License.
+
+   8. Limitation of Liability. In no event and under no legal theory,
+      whether in tort (including negligence), contract, or otherwise,
+      unless required by applicable law (such as deliberate and grossly
+      negligent acts) or agreed to in writing, shall any Contributor be
+      liable to You for damages, including any direct, indirect, special,
+      incidental, or consequential damages of any character arising as a
+      result of this License or out of the use or inability to use the
+      Work (including but not limited to damages for loss of goodwill,
+      work stoppage, computer failure or malfunction, or any and all
+      other commercial damages or losses), even if such Contributor
+      has been advised of the possibility of such damages.
+
+   9. Accepting Warranty or Additional Liability. While redistributing
+      the Work or Derivative Works thereof, You may choose to offer,
+      and charge a fee for, acceptance of support, warranty, indemnity,
+      or other liability obligations and/or rights consistent with this
+      License. However, in accepting such obligations, You may act only
+      on Your own behalf and on Your sole responsibility, not on behalf
+      of any other Contributor, and only if You agree to indemnify,
+      defend, and hold each Contributor harmless for any liability
+      incurred by, or claims asserted against, such Contributor by reason
+      of your accepting any such warranty or additional liability.
+
+   END OF TERMS AND CONDITIONS
+
+   APPENDIX: How to apply the Apache License to your work.
+
+      To apply the Apache License to your work, attach the following
+      boilerplate notice, with the fields enclosed by brackets "[]"
+      replaced with your own identifying information. (Don't include
+      the brackets!)  The text should be enclosed in the appropriate
+      comment syntax for the file format. We also recommend that a
+      file or class name and description of purpose be included on the
+      same "printed page" as the copyright notice for easier
+      identification within third-party archives.
+
+   Copyright [yyyy] [name of copyright owner]
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+================================================================================
+Other licenses (referenced by URL)
+================================================================================
+
+GNU Lesser General Public License v3.0 (Fizzler):
+    https://www.gnu.org/licenses/lgpl-3.0.txt
+    (incorporates the GNU General Public License v3.0:
+    https://www.gnu.org/licenses/gpl-3.0.txt)
+
+Code Project Open License (CPOL) 1.02 (TargaImage):
+    https://www.codeproject.com/info/cpol10.aspx
