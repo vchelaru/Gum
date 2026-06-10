@@ -592,6 +592,107 @@ public class DragDropManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void OnNodeSortingDropped_DropElementOnInstanceWithDefaultChild_ParentsToDefaultSlot()
+    {
+        // Regression: dragging an element from the tree onto an instance whose
+        // base component declares a DefaultChildContainer must parent the new
+        // instance to "<instance>.<defaultSlot>", matching paste and
+        // right-click-add. Commit 66df81010 added an early-out in
+        // HandleDroppingInstanceOnTarget guarded by ParentVariableAlreadyMatches,
+        // whose loose prefix matching treated the bare "<instance>" parent (the
+        // value AddInstance writes) as already matching "<instance>.<slot>", so
+        // the slot upgrade was skipped and the child attached to the container
+        // root instead of its default slot.
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ComponentSave listBoxUiContainer = new ComponentSave { Name = "ListBoxUiContainer" };
+        StateSave containerDefault = new StateSave { Name = "Default", ParentContainer = listBoxUiContainer };
+        listBoxUiContainer.States.Add(containerDefault);
+        listBoxUiContainer.Instances.Add(new InstanceSave { Name = "InnerPanel", BaseType = "Container", ParentContainer = listBoxUiContainer });
+        containerDefault.SetValue("DefaultChildContainer", "InnerPanel", "string");
+        project.Components.Add(listBoxUiContainer);
+
+        ScreenSave screen = new ScreenSave { Name = "MainScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        project.Screens.Add(screen);
+
+        InstanceSave listBoxInstance = new InstanceSave { Name = "ListBoxUiContainerInstance", BaseType = "ListBoxUiContainer", ParentContainer = screen };
+        screen.Instances.Add(listBoxInstance);
+
+        // Pin the precondition: the production path relies on this resolving to a
+        // non-empty slot, otherwise the test couldn't reproduce the bug.
+        ObjectFinder.Self.GetDefaultChildName(listBoxInstance, screen.DefaultState)
+            .ShouldBe("InnerPanel", "test setup must produce a default child slot");
+
+        ComponentSave draggedComponent = new ComponentSave { Name = "DraggedComponent" };
+        draggedComponent.States.Add(new StateSave { Name = "Default", ParentContainer = draggedComponent });
+
+        _circularReferenceManager
+            .Setup(x => x.CanTypeBeAddedToElement(It.IsAny<ElementSave>(), It.IsAny<string>()))
+            .Returns(true);
+
+        _mocker.GetMock<ISelectedState>()
+            .Setup(x => x.SelectedStateSave).Returns(screen.DefaultState);
+
+        _mocker.GetMock<IElementCommands>()
+            .Setup(x => x.GetUniqueNameForNewInstance(It.IsAny<ElementSave>(), It.IsAny<ElementSave>()))
+            .Returns("DraggedComponent1");
+
+        // Stand in for ElementCommands.AddInstance — mutate the screen the way the
+        // real command does (append, write the Parent variable to the bare parent
+        // name) so HandleDroppingInstanceOnTarget runs against the same state.
+        _mocker.GetMock<IElementCommands>()
+            .Setup(x => x.AddInstance(
+                It.IsAny<ElementSave>(),
+                It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<int?>()))
+            .Returns((ElementSave element, string name, string? type, string? parentName, int? desiredIndex) =>
+            {
+                InstanceSave inst = new InstanceSave
+                {
+                    Name = name,
+                    BaseType = type ?? string.Empty,
+                    ParentContainer = element
+                };
+                if (desiredIndex.HasValue)
+                {
+                    element.Instances.Insert(desiredIndex.Value, inst);
+                }
+                else
+                {
+                    element.Instances.Add(inst);
+                }
+                if (!string.IsNullOrEmpty(parentName))
+                {
+                    element.DefaultState.SetValue($"{inst.Name}.Parent", parentName, "string");
+                }
+                return inst;
+            });
+
+        Mock<ITreeNode> draggedNode = new Mock<ITreeNode>();
+        draggedNode.Setup(x => x.Tag).Returns(draggedComponent);
+
+        Mock<ITreeNode> targetNode = new Mock<ITreeNode>();
+        targetNode.Setup(x => x.Tag).Returns(listBoxInstance);
+
+        List<ITreeNode> draggedNodes = new() { draggedNode.Object };
+
+        // ProcessDrop's Into-on-InstanceSave shape (see ProcessDrop line 814).
+        DropTarget dropTarget = new DropTarget(screen, listBoxInstance, new DropPosition.Append());
+
+        // Act
+        _dragDropManager.OnNodeSortingDropped(draggedNodes, targetNode.Object, dropTarget);
+
+        // Assert
+        string? parentValue = screen.DefaultState.GetValue("DraggedComponent1.Parent") as string;
+        parentValue.ShouldBe("ListBoxUiContainerInstance.InnerPanel",
+            "the dropped instance must be parented to the target's default child slot, like paste / add do");
+    }
+
+    [Fact]
     public void OnNodeSortingDropped_DropInstanceOnItsCurrentParent_IsNoOp()
     {
         // Dropping an instance onto its current parent must not reorder the

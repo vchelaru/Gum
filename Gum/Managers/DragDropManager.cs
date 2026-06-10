@@ -683,11 +683,13 @@ public class DragDropManager : IDragDropManager
         {
             return string.IsNullOrEmpty(currentParent);
         }
-        // Allow the existing value to be either the parent name or a
-        // "parent.defaultChild" form (which resolves to the same parent).
-        return currentParent == expectedParentName
-            || (currentParent != null && expectedParentName.StartsWith(currentParent + "."))
-            || (currentParent != null && currentParent.StartsWith(expectedParentName + "."));
+        // Exact match only. A bare "parent" and a "parent.defaultChild" slot
+        // are different parentings (container root vs. the default child slot),
+        // so they must NOT be treated as already-matching — otherwise the
+        // early-out skips upgrading a freshly-added instance (created with the
+        // bare parent name by AddInstance) to the parent's default child slot,
+        // leaving it attached to the container root instead of the slot.
+        return currentParent == expectedParentName;
     }
 
     private static InstanceSave? FindLastSiblingOfParent(ElementSave element, InstanceSave parentInstance, InstanceSave excludeInstance)
