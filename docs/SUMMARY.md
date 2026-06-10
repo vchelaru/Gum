@@ -412,3 +412,8 @@
   * [pack](cli/pack.md)
   * [screenshot](cli/screenshot.md)
   * [svg](cli/svg.md)
+
+## Contributing
+
+* [Contributing](contributing/README.md)
+  * [Building and Releasing Gum](contributing/building-and-releasing-gum.md)
