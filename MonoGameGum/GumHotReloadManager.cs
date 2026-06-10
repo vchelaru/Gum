@@ -211,7 +211,9 @@ public class GumHotReloadManager : IGumHotReloadManager
         }
     }
 
-    private void PerformReload(IEnumerable<GraphicalUiElement> roots)
+    // internal (not private) so tests can drive a reload deterministically without the
+    // FileSystemWatcher + debounce. ApplyDiff is exposed for tests for the same reason.
+    internal void PerformReload(IEnumerable<GraphicalUiElement> roots)
     {
         // Materialize so we can iterate twice and so the caller's collection
         // is safe from us modifying it via the rebuild step.

@@ -30,7 +30,7 @@ The watched path is the **source** `.gumx` (the file the Gum tool edits), not th
 - `_projectSourcePath` / `sourceDirectory` — where files change, where `FontCache/` is read from
 - `_binGumDirectory` — snapshot of `FileManager.RelativeDirectory` at `Start()`; where fonts are copied **to** and where the runtime loads from
 
-During `PerformReload`, `FileManager.RelativeDirectory` is temporarily swapped to the source directory so `TryLoadAnimation` resolves `.ganx` files against the live source tree, then restored. If you add any asset-resolving logic to the reload path, respect this swap — or you will read from the wrong directory.
+During `PerformReload`, animations are reloaded by enumerating `*Animations.ganx` under the source directory through a `LooseFileGumFileProvider` rooted there (via `GumService.LoadAnimationsFromProvider`). `FileManager.RelativeDirectory` is **not** swapped — the provider's root is the source directory. (This replaced an older approach that swapped `RelativeDirectory` and probed `FileManager.FileExists` per element.) If you add asset-resolving logic to the reload path, root it at the source directory yourself rather than relying on a global-state swap.
 
 ## Reload Pipeline
 
@@ -50,7 +50,7 @@ The 200 ms debounce coalesces the Gum tool's multi-file save burst into one relo
 
 1. `CopyAndUnloadChangedFonts()` — copies changed `.fnt` files plus matching `<basename>*.png` texture pages from source `FontCache/` to bin `FontCache/`, then `LoaderManager.Dispose`s both so they reload from disk.
 2. `GumProjectSave.Load` + `Initialize`; swap into `ObjectFinder.Self.GumProjectSave`.
-3. Temporarily point `FileManager.RelativeDirectory` at the source directory, call `GumService.TryLoadAnimation` for every element, restore.
+3. Reload animations: enumerate `*Animations.ganx` under the source directory via a `LooseFileGumFileProvider` and load each through `GumService.LoadAnimationsFromProvider` into the new project (no `RelativeDirectory` swap — the provider is rooted at the source dir).
 4. `ApplyDiff(roots, newProject, SystemManagers.Default)` — applies the in-place reconciliation walk described below.
 5. Fire `ReloadCompleted`.
 
@@ -78,7 +78,7 @@ Defined on `GumHotReloadManager` and exposed `public static` for direct test use
 - **Runtime state on design-time visuals is overwritten** by `SetVariablesRecursively`. Games that mutate UI in code need to rerun that logic on `ReloadCompleted`.
 - **Children added with no `Tag`** (or with a `Tag` that isn't an `InstanceSave`) are runtime-owned and preserved. This includes ItemsControl-generated rows and anything the user constructed programmatically.
 - **Reparenting flows through the qualified `<instance>.Parent` variable** — there is no explicit reparent step in the diff. The parent state's `Foo.Parent = "Bar"` line is what re-attaches `Foo` under `Bar` during `SetVariablesRecursively`. This is why both old and new parent visuals must exist before that step runs.
-- **Textures (non-font `.png`) and `.ganx` are watched but not reloaded** in the cache-eviction sense. `.ganx` is only re-read via `TryLoadAnimation` on the new project; `.png` edits require a restart.
+- **Textures (non-font `.png`) and `.ganx` are watched but not reloaded** in the cache-eviction sense. `.ganx` is only re-read by enumerating the source directory into the new project's `ElementAnimations` (via `GumService.LoadAnimationsFromProvider`); `.png` edits require a restart.
 - **`_changedFontFiles` is mutated off the game thread** (watcher callback). It's protected by `_fontFileLock`; any new shared state added must be similarly synchronized.
 - **`Stop()` is idempotent-safe** but does not reset other state — `GumService.Uninitialize` just nulls the manager reference afterward.
 - **Font cache path is built with `FileManager.Standardize(..., preserveCase: true, makeAbsolute: true)`.** The loader's cache keys are case-preserving absolute paths; any eviction added must match that exact shape or it will silently miss.
