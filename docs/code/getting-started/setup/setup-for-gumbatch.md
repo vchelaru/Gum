@@ -2,7 +2,7 @@
 
 ### Introduction
 
-Gum provides a GumBatch object which works similar to SpriteBatch. It can be used for _immediate mode_ rendering, which allows for calling `Begin`, `Draw`, and `End` just like SpriteBatch. This is useful if your project requires mixing Gum and MonoGame rendering, or if you are more comfortable using a SpriteBatch-like interface.
+Gum provides a GumBatch object which works similar to SpriteBatch. It can be used for _immediate mode_ rendering, which allows for calling `Begin`, `Draw`, and `End` just like SpriteBatch. This is useful if your project requires mixing Gum and your game's own rendering, or if you are more comfortable using a SpriteBatch-like interface.
 
 This page assumes you have an existing project (empty or otherwise), and that you have already added Gum. For information on getting your project set up, see the [Adding/Initializing Gum section](adding-initializing-gum/).
 
@@ -12,16 +12,32 @@ Usage of GumBatch is completely optional, and it is only needed if you want to d
 
 This quick start uses **KernSmith** to generate font atlases in memory at runtime. This means you do not need to ship any `.fnt` or `.png` font files with your game — fonts are created on demand from whatever size and family you ask for. KernSmith is the recommended font path for MonoGame and KNI projects.
 
+{% hint style="info" %}
+The KernSmith package (`KernSmith.MonoGameGum` or `KernSmith.KniGum`) is for **dynamic font generation** — it creates a `BitmapFont` from any font and size in memory at runtime. It's the recommended font path for MonoGame and KNI, but it is separate from GumBatch and entirely optional: if you prefer to make and ship your own `.fnt` files, you can skip it and use [Alternative: Loading a .fnt File](#alternative-loading-a-fnt-file) below. For the full picture, see the [Fonts](../../files-and-fonts/fonts.md) hub and [Font Strategies](../../files-and-fonts/font-strategies.md) pages.
+{% endhint %}
+
 To initialize a GumBatch, you must:
 
-* Add the `KernSmith.MonoGameGum` NuGet package to your project
+* Add the KernSmith NuGet package for your runtime
 * Declare a GumBatch at class scope
 * Initialize the Gum SystemManagers
 * Assign a `KernSmithFontCreator` so fonts can be generated on demand
 * Create a `BitmapFont` for whatever font/size you want to draw
 * Draw with GumBatch in your Draw
 
-The following shows a simple Game1.cs file which renders Gum Text using KernSmith:
+The KernSmith package you add depends on your runtime:
+
+{% tabs %}
+{% tab title="MonoGame" %}
+Add the `KernSmith.MonoGameGum` NuGet package to your project.
+{% endtab %}
+
+{% tab title="KNI" %}
+Add the `KernSmith.KniGum` NuGet package to your project.
+{% endtab %}
+{% endtabs %}
+
+The rest of the setup is identical on both runtimes — they share the same `MonoGameGum` API. The following shows a simple Game1.cs file which renders Gum Text using KernSmith:
 
 ```csharp
 using Gum.Wireframe;
