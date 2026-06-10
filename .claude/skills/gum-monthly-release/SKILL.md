@@ -285,10 +285,12 @@ The skill is done when the markdown file contains only the release notes — cur
 ## Out of scope
 
 This skill only writes the markdown draft. It does **not**:
-- Bump NuGet versions (see the `bump-nuget-version` skill)
+- Bump NuGet versions or trigger the package workflow (see `docs/contributing/building-and-releasing-gum.md`)
 - Create the git tag or trigger the GitHub Actions release workflow
 - Draft the breaking-changes migration doc (separate skill, future)
 - Run pre-release flows
+
+The full release process — and where this notes draft fits in it — is orchestrated by the `gum-release` skill.
 
 ## Iterating on the skill itself
 
