@@ -185,6 +185,10 @@ As with the expand example, `Root.UpdateLayout()` is only needed if your game lo
 
 <figure><img src="../../.gitbook/assets/20_07 03 01.gif" alt=""><figcaption><p>Gum responding to resizes by zooming and adjusting canvas sizes</p></figcaption></figure>
 
+{% hint style="info" %}
+`Renderer.Camera.Zoom` also affects immediate-mode drawing with GumBatch, since GumBatch renders through the same camera. See [Relationship with the Camera](../rendering/gumbatch.md#relationship-with-the-camera).
+{% endhint %}
+
 ## RenderTargets, Scaling, and Offsets
 
 Gum can be drawn to a RenderTarget2D which can then be drawn with a SpriteBatch. By using a RenderTarget2D, the entire contents of Gum can be scaled, offset, and even rotated. This type of offset can break interaction unless the Cursor is adjusted in response to these changes by setting its `TransformMatrix`. For more information see the [Cursor TransformMatrix page](../gum-code-reference/cursor/transformmatrix.md).
