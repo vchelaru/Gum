@@ -17,11 +17,13 @@ namespace Gum.Bundle;
 public static class GumBundleLoader
 {
     /// <summary>
-    /// Returns a <see cref="BundleResolution"/> describing how to load <paramref name="projectPath"/>.
+    /// Returns a <see cref="ProjectResolution"/> describing how to load <paramref name="projectPath"/>.
     /// The extension picks the mode: <c>.gumx</c> = loose, <c>.gumpkg</c> = bundle. Any other
-    /// extension throws.
+    /// extension throws. The resolution always carries an <see cref="IGumFileProvider"/> — the
+    /// canonical runtime file seam — that new code (e.g. animation enumeration) should prefer over
+    /// re-deriving paths and probing <see cref="FileManager"/> per element.
     /// </summary>
-    public static BundleResolution Resolve(string projectPath)
+    public static ProjectResolution Resolve(string projectPath)
     {
         if (string.IsNullOrEmpty(projectPath))
         {
@@ -40,8 +42,18 @@ public static class GumBundleLoader
         if (string.Equals(extension, ".gumx", StringComparison.OrdinalIgnoreCase))
         {
             // Loose mode: hand the path straight to GumProjectSave.Load. No probing for a
-            // sibling .gumpkg — if the caller wanted a bundle they would have said so.
-            return new BundleResolution(usedBundle: false, resolvedGumxPath: resolvedPath, previousHook: null);
+            // sibling .gumpkg — if the caller wanted a bundle they would have said so. The
+            // CustomGetStreamFromFile hook is deliberately left untouched: on a real filesystem
+            // GetStreamForFile's File.OpenRead fallback already serves loose files, so installing
+            // an adapter would only add a stricter casing check with no upside. The provider is
+            // carried purely so new enumeration-based code (animation loading) has a seam to use.
+            string? looseDirectory = Path.GetDirectoryName(resolvedPath);
+            string looseRoot = string.IsNullOrEmpty(looseDirectory) ? "." : looseDirectory!;
+            return new ProjectResolution(
+                usedBundle: false,
+                resolvedGumxPath: resolvedPath,
+                fileProvider: new LooseFileGumFileProvider(looseRoot),
+                previousHook: null);
         }
 
         if (!string.Equals(extension, ".gumpkg", StringComparison.OrdinalIgnoreCase))
@@ -108,7 +120,11 @@ public static class GumBundleLoader
                 incomingPath);
         };
 
-        return new BundleResolution(usedBundle: true, resolvedGumxPath: gumxPath, previousHook: previousHook);
+        return new ProjectResolution(
+            usedBundle: true,
+            resolvedGumxPath: gumxPath,
+            fileProvider: provider,
+            previousHook: previousHook);
 #endif
     }
 
@@ -195,12 +211,13 @@ public static class GumBundleLoader
 }
 
 /// <summary>
-/// Result of <see cref="GumBundleLoader.Resolve"/>: whether the loader should treat the
-/// project as bundle-backed, the path to pass to <c>GumProjectSave.Load</c>, and the previous
+/// Result of <see cref="GumBundleLoader.Resolve"/>: whether the loader treated the project as
+/// bundle-backed, the path to pass to <c>GumProjectSave.Load</c>, the <see cref="IGumFileProvider"/>
+/// that owns the project's content, and the previous
 /// <see cref="FileManager.CustomGetStreamFromFile"/> hook (so callers can restore it on dispose
 /// if they need to fully unwind the install).
 /// </summary>
-public class BundleResolution
+public class ProjectResolution
 {
     /// <summary>True if the caller passed a `.gumpkg` and the bundle hook was installed.</summary>
     public bool UsedBundle { get; }
@@ -213,6 +230,15 @@ public class BundleResolution
     public string ResolvedGumxPath { get; }
 
     /// <summary>
+    /// The canonical file source for this project's content: a <see cref="BundleGumFileProvider"/>
+    /// in bundle mode, a <see cref="LooseFileGumFileProvider"/> in loose mode. New runtime code
+    /// should resolve project files through this rather than re-deriving paths and probing
+    /// <see cref="FileManager"/> per file — that path is what produces the cosmetic 404 cascade on
+    /// streaming platforms.
+    /// </summary>
+    public IGumFileProvider FileProvider { get; }
+
+    /// <summary>
     /// The <see cref="FileManager.CustomGetStreamFromFile"/> hook value at the time
     /// <see cref="GumBundleLoader.Resolve"/> ran, or <c>null</c> if none was set or bundle mode
     /// was not selected. Callers that wish to fully uninstall the bundle hook should restore
@@ -220,11 +246,12 @@ public class BundleResolution
     /// </summary>
     public Func<string, Stream>? PreviousHook { get; }
 
-    /// <summary>Initializes a new <see cref="BundleResolution"/>.</summary>
-    public BundleResolution(bool usedBundle, string resolvedGumxPath, Func<string, Stream>? previousHook)
+    /// <summary>Initializes a new <see cref="ProjectResolution"/>.</summary>
+    public ProjectResolution(bool usedBundle, string resolvedGumxPath, IGumFileProvider fileProvider, Func<string, Stream>? previousHook)
     {
         UsedBundle = usedBundle;
         ResolvedGumxPath = resolvedGumxPath;
+        FileProvider = fileProvider;
         PreviousHook = previousHook;
     }
 }

@@ -219,8 +219,6 @@ public class GumHotReloadManager : IGumHotReloadManager
 
         CopyAndUnloadChangedFonts();
 
-        var savedRelativeDirectory = ToolsUtilities.FileManager.RelativeDirectory;
-
         var gumxMtime = File.Exists(_projectSourcePath)
             ? File.GetLastWriteTimeUtc(_projectSourcePath).ToString("HH:mm:ss.fff")
             : "-";
@@ -247,24 +245,14 @@ public class GumHotReloadManager : IGumHotReloadManager
             }
         }
 
-        // Point at the source project directory so TryLoadAnimation finds the updated .ganx files
-        var sourceDirectory = Path.GetDirectoryName(_projectSourcePath)?.Replace('\\', '/');
-        if (sourceDirectory != null && !sourceDirectory.EndsWith("/"))
-        {
-            sourceDirectory += "/";
-        }
-        ToolsUtilities.FileManager.RelativeDirectory = sourceDirectory ?? savedRelativeDirectory;
-
-        foreach (var element in newProject.AllElements)
-        {
-            var animation = GumService.TryLoadAnimation(element);
-            if (animation != null)
-            {
-                newProject.ElementAnimations.Add(animation);
-            }
-        }
-
-        ToolsUtilities.FileManager.RelativeDirectory = savedRelativeDirectory;
+        // Reload animations from the source project directory (loose files on disk) by enumerating
+        // its *Animations.ganx files. Hot reload only ever runs against a real filesystem, so a
+        // LooseFileGumFileProvider rooted at the source directory is the right seam — no need to
+        // mutate FileManager.RelativeDirectory the way the old per-element probe did.
+        string? sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
+        Gum.Bundle.LooseFileGumFileProvider animationProvider = new Gum.Bundle.LooseFileGumFileProvider(
+            string.IsNullOrEmpty(sourceDirectory) ? "." : sourceDirectory);
+        GumService.LoadAnimationsFromProvider(newProject, animationProvider);
 
         System.Diagnostics.Debug.WriteLine(
             $"[HotReload] rootList.Count = {rootList.Count}");

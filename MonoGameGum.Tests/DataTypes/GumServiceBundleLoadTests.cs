@@ -54,7 +54,7 @@ public class GumServiceBundleLoadTests : BaseTestClass, IDisposable
         WriteEntriesAsLooseFiles(_projectDir);
         WriteBundle(_gumpkgPath, _entriesByRelativePath);
 
-        BundleResolution resolution = GumBundleLoader.Resolve(_gumxPath);
+        ProjectResolution resolution = GumBundleLoader.Resolve(_gumxPath);
 
         resolution.UsedBundle.ShouldBeFalse();
         FileManager.CustomGetStreamFromFile.ShouldBeNull();
@@ -71,7 +71,7 @@ public class GumServiceBundleLoadTests : BaseTestClass, IDisposable
     {
         WriteBundle(_gumpkgPath, _entriesByRelativePath);
 
-        BundleResolution resolution = GumBundleLoader.Resolve(_gumpkgPath);
+        ProjectResolution resolution = GumBundleLoader.Resolve(_gumpkgPath);
 
         resolution.UsedBundle.ShouldBeTrue();
         FileManager.CustomGetStreamFromFile.ShouldNotBeNull();
@@ -90,7 +90,7 @@ public class GumServiceBundleLoadTests : BaseTestClass, IDisposable
     {
         WriteEntriesAsLooseFiles(_projectDir);
 
-        BundleResolution resolution = GumBundleLoader.Resolve(_gumxPath);
+        ProjectResolution resolution = GumBundleLoader.Resolve(_gumxPath);
 
         resolution.UsedBundle.ShouldBeFalse();
         FileManager.CustomGetStreamFromFile.ShouldBeNull();
@@ -118,7 +118,7 @@ public class GumServiceBundleLoadTests : BaseTestClass, IDisposable
         File.Exists(_gumxPath).ShouldBeFalse();
 
         WriteBundle(_gumpkgPath, _entriesByRelativePath);
-        BundleResolution resolution = GumBundleLoader.Resolve(_gumpkgPath);
+        ProjectResolution resolution = GumBundleLoader.Resolve(_gumpkgPath);
         resolution.UsedBundle.ShouldBeTrue();
 
         GumProjectSave? bundled = GumProjectSave.Load(resolution.ResolvedGumxPath, out GumLoadResult bundledResult);

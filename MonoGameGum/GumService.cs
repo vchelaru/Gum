@@ -576,6 +576,15 @@ public class GumService : IGumService
     /// </summary>
     public GumLoadResult? LastLoadResult { get; private set; }
 
+    /// <summary>
+    /// The <see cref="ProjectResolution"/> produced when the current project was loaded, or
+    /// <c>null</c> if no project file has been loaded. Carries the project's
+    /// <see cref="IGumFileProvider"/> — the canonical seam runtime code uses to read project
+    /// content (e.g. <see cref="LoadAnimations"/> enumerates animation files through it). Cleared
+    /// by <see cref="Uninitialize"/>.
+    /// </summary>
+    public ProjectResolution? CurrentProjectResolution { get; private set; }
+
 #if XNALIKE
     private Game? _game;
     public Game Game
@@ -718,9 +727,22 @@ public class GumService : IGumService
 #endif
 
     /// <summary>
-    /// Loads animations for all elements in the project.
+    /// Loads animations for all elements in the project by enumerating the project's
+    /// <c>*Animations.ganx</c> files through the loaded project's <see cref="IGumFileProvider"/>.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown if a Gum project hasn't been loaded first</exception>
+    /// <remarks>
+    /// This enumerates once instead of probing <see cref="FileManager.FileExists"/> per element.
+    /// In bundle mode the enumeration is an in-memory dictionary scan — zero I/O, and crucially
+    /// zero cosmetic 404s on browser/streaming platforms (Blazor WASM), where every per-element
+    /// probe was previously a guaranteed-miss HTTP request. In loose mode on a real filesystem it
+    /// is a single directory walk; loose mode on a streaming platform cannot enumerate a directory
+    /// over HTTP, so no animations load there — package the project as a <c>.gumpkg</c> to ship
+    /// animations to those platforms.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if a Gum project hasn't been loaded first, or if no project file provider is available
+    /// (e.g. the project was injected directly rather than loaded via <c>Initialize(...gumProjectFile...)</c>).
+    /// </exception>
     [Obsolete("Experimental - this API may change in future versions")]
     public void LoadAnimations()
     {
@@ -733,44 +755,83 @@ public class GumService : IGumService
                 "Did you call GumUI.Initialize with a valid .gumx first?");
         }
 
-        // Probe each element for a sibling .ganx (animation) file. Elements without
-        // animations are the common case, so most probes legitimately miss. On real
-        // filesystems the miss is silent; on browser/streaming platforms (Blazor WASM)
-        // each miss is logged by the browser as a 404 — that noise is expected and
-        // harmless. Surfaced here once so developers seeing the 404s in DevTools can
-        // connect them to this probe loop instead of chasing them as real failures.
-        Console.WriteLine(
-            "[Gum] Probing each project element for an optional sibling Animations.ganx file. " +
-            "On browser/streaming platforms (e.g. Blazor WASM) elements without animations " +
-            "will appear as 404s in the network/console log — those are expected and benign.");
-
-        foreach (var element in project.AllElements)
+        ProjectResolution? resolution = CurrentProjectResolution;
+        if (resolution == null)
         {
-            var animation = TryLoadAnimation(element);
+            throw new InvalidOperationException(
+                "No project file provider is available. LoadAnimations enumerates animation files " +
+                "through the provider produced when the project is loaded — load the project via " +
+                "Initialize(...gumProjectFile...) before calling LoadAnimations.");
+        }
 
-            if (animation != null)
+        int loaded = LoadAnimationsFromProvider(project, resolution.FileProvider);
+
+        // Loose mode relies on directory enumeration, which streaming platforms (Blazor WASM)
+        // can't do over HTTP — there the enumeration silently returns nothing. Surface that once
+        // so a developer who expected animations isn't left guessing. Bundle mode never has this
+        // problem (the in-memory entry list is the manifest), so it stays quiet.
+        if (!resolution.UsedBundle && loaded == 0)
+        {
+            Console.WriteLine(
+                "[Gum] No animation (*Animations.ganx) files were found for this loosely-loaded project. " +
+                "Loose-mode animation loading enumerates the project directory, which is unavailable on " +
+                "browser/streaming platforms (e.g. Blazor WASM) — package the project as a .gumpkg to " +
+                "load animations on those platforms.");
+        }
+    }
+
+    /// <summary>
+    /// Enumerates <c>*Animations.ganx</c> files from <paramref name="provider"/>, deserializes each,
+    /// and adds the result to <paramref name="project"/>'s <see cref="GumProjectSave.ElementAnimations"/>.
+    /// The element name is derived from the file's path, not from the (stale) value serialized inside
+    /// the file. Returns the number of animation files loaded.
+    /// </summary>
+    internal static int LoadAnimationsFromProvider(GumProjectSave project, IGumFileProvider provider)
+    {
+        // Filename-only pattern (no '/'): GlobMatcher matches it against the file name regardless of
+        // directory depth, so nested component folders (Components/Buttons/MyButtonAnimations.ganx)
+        // are found. A "**/*Animations.ganx" pattern would NOT work — GlobMatcher has no recursive
+        // '**' support and would only match files exactly one folder deep.
+        int loaded = 0;
+        foreach (string path in provider.EnumerateFiles("*Animations.ganx"))
+        {
+            using Stream stream = provider.OpenRead(path);
+            ElementAnimationsSave animation = FileManager.XmlDeserializeFromStream<ElementAnimationsSave>(stream);
+            animation.ElementName = ElementNameFromPath(path);
+            project.ElementAnimations.Add(animation);
+            loaded++;
+        }
+        return loaded;
+    }
+
+    /// <summary>
+    /// Maps an animation file path back to its element name — the inverse of the
+    /// <c>{categoryFolder}/{element.Name}Animations.ganx</c> convention. Strips the
+    /// <c>Animations.ganx</c> suffix and any leading category folder so a nested component path like
+    /// <c>Components/Buttons/MyButtonAnimations.ganx</c> resolves to <c>Buttons/MyButton</c>.
+    /// </summary>
+    internal static string ElementNameFromPath(string path)
+    {
+        const string suffix = "Animations.ganx";
+        string normalized = path.Replace('\\', '/');
+
+        string withoutSuffix = normalized.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)
+            ? normalized.Substring(0, normalized.Length - suffix.Length)
+            : normalized;
+
+        foreach (string categoryFolder in AnimationCategoryFolders)
+        {
+            if (withoutSuffix.StartsWith(categoryFolder, StringComparison.OrdinalIgnoreCase))
             {
-                project.ElementAnimations.Add(animation);
+                return withoutSuffix.Substring(categoryFolder.Length);
             }
         }
+
+        return withoutSuffix;
     }
 
-    internal static ElementAnimationsSave? TryLoadAnimation(ElementSave element)
-    {
-        string prefix = element is ScreenSave ? "Screens/" :
-            element is ComponentSave ? "Components/" :
-            element is StandardElementSave ? "StandardElements/" : string.Empty;
-
-        var fileName = prefix + element.Name + "Animations.ganx";
-
-        if (FileManager.FileExists(fileName))
-        {
-            var animation = FileManager.XmlDeserialize<ElementAnimationsSave>(fileName);
-            animation.ElementName = element.Name;
-            return animation;
-        }
-        return null;
-    }
+    private static readonly string[] AnimationCategoryFolders =
+        { "Screens/", "Components/", "StandardElements/" };
 
 #if XNALIKE
     /// <summary>
@@ -868,8 +929,9 @@ public class GumService : IGumService
             // Resolve loose-vs-bundle off the file extension: ".gumx" = loose, ".gumpkg" = bundle.
             // In bundle mode, installs a CustomGetStreamFromFile hook so runtime asset loads
             // (textures/fonts) also resolve from the bundle.
-            BundleResolution bundleResolution = GumBundleLoader.Resolve(gumProjectFile);
-            gumProject = GumProjectSave.Load(bundleResolution.ResolvedGumxPath, out GumLoadResult loadResult);
+            ProjectResolution projectResolution = GumBundleLoader.Resolve(gumProjectFile);
+            CurrentProjectResolution = projectResolution;
+            gumProject = GumProjectSave.Load(projectResolution.ResolvedGumxPath, out GumLoadResult loadResult);
             LastLoadResult = loadResult;
 
             if (gumProject == null || !string.IsNullOrEmpty(loadResult.ErrorMessage) || loadResult.MissingFiles.Count > 0)
@@ -1099,6 +1161,7 @@ public class GumService : IGumService
         FrameworkElement.DefaultFormsComponents.Clear();
 
         ObjectFinder.Self.GumProjectSave = null;
+        CurrentProjectResolution = null;
 
         LoaderManager.Self.DisposeAndClear();
 
