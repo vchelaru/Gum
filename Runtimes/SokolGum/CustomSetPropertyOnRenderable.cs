@@ -66,86 +66,13 @@ public static class CustomSetPropertyOnRenderable
             handled = extra(renderable, element, propertyName, value);
 
         if (!handled)
-            SetPropertyWithEnumConversion(renderable, element, propertyName, value);
-    }
-
-    /// <summary>
-    /// Reflection fallback that closes two gaps in Gum's core
-    /// <see cref="GraphicalUiElement.SetPropertyThroughReflection"/>: (1) int
-    /// values can't be directly assigned to enum-typed properties, and (2)
-    /// primitive values can't be directly assigned to <see cref="Nullable{T}"/>
-    /// properties. <c>.gumx</c> stores enum variables as their underlying int
-    /// and nullable floats as plain floats, so these two conversions come up
-    /// constantly. Handling them here keeps alignment/overflow/units enums
-    /// and nullable-float properties (like NineSlice's custom border width)
-    /// working without special-casing each one.
-    ///
-    /// If the conversion throws (incompatible types, value out of range,
-    /// undefined enum backing), we fall through to the core reflection
-    /// helper rather than propagate — that matches the behaviour of the
-    /// core path for most other mismatches, so a single bad variable
-    /// doesn't tear down the entire screen load.
-    /// </summary>
-    private static void SetPropertyWithEnumConversion(
-        IRenderableIpso renderable,
-        GraphicalUiElement element,
-        string propertyName,
-        object value)
-    {
-        var prop = renderable.GetType().GetProperty(propertyName);
-        if (prop is not null && prop.CanWrite && value is not null)
         {
-            var targetType = prop.PropertyType;
-
-            if (targetType.IsEnum)
-            {
-                if (value.GetType().IsPrimitive)
-                {
-                    try
-                    {
-                        prop.SetValue(renderable, Enum.ToObject(targetType, value));
-                        return;
-                    }
-                    catch { /* fall through to base reflection helper */ }
-                }
-                else if (value is string enumName)
-                {
-                    // Hand-written .gumx or externally-produced project files
-                    // sometimes store enum values by name ("Center") instead
-                    // of int. Core Gum doesn't handle this conversion either,
-                    // so covering it here closes that compat gap.
-                    try
-                    {
-                        prop.SetValue(renderable, Enum.Parse(targetType, enumName, ignoreCase: true));
-                        return;
-                    }
-                    catch { /* fall through — name not in enum or ambiguous */ }
-                }
-            }
-
-            var underlyingNullable = Nullable.GetUnderlyingType(targetType);
-            if (underlyingNullable is not null)
-            {
-                try
-                {
-                    object? converted;
-                    if (underlyingNullable.IsEnum)
-                    {
-                        converted = value is string enumStr
-                            ? Enum.Parse(underlyingNullable, enumStr, ignoreCase: true)
-                            : Enum.ToObject(underlyingNullable, value);
-                    }
-                    else
-                    {
-                        converted = Convert.ChangeType(value, underlyingNullable);
-                    }
-                    prop.SetValue(renderable, converted);
-                    return;
-                }
-                catch { /* fall through — incompatible primitive → Nullable<T> conversion */ }
-            }
+            // int/string → enum and primitive → Nullable<T> conversions used to be handled by a
+            // local SetPropertyWithEnumConversion wrapper here. Core Gum's SetPropertyThroughReflection
+            // now performs the same conversions (and swallows conversion failures), so the wrapper
+            // was removed — see issue #2924.
+            GraphicalUiElement.SetPropertyThroughReflection(renderable, element, propertyName, value);
         }
-        GraphicalUiElement.SetPropertyThroughReflection(renderable, element, propertyName, value);
     }
 
     /// <summary>

@@ -6125,24 +6125,46 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     {
         System.Reflection.PropertyInfo? propertyInfo = mContainedObjectAsIpso.GetType().GetProperty(propertyName);
 
-        if (propertyInfo != null && propertyInfo.CanWrite)
+        if (propertyInfo == null || !propertyInfo.CanWrite)
         {
+            return;
+        }
 
-            if (value != null && value.GetType() != propertyInfo.PropertyType)
+        if (value != null && value.GetType() != propertyInfo.PropertyType)
+        {
+            // This is the data-driven path (ApplyState → SetProperty → reflection); strongly-typed
+            // C# setters never reach it. .gumx serializes enums as their underlying int (and
+            // hand-written files sometimes by name), and many renderable properties are declared
+            // Nullable<T> (e.g. Blend? on Sprite/NineSlice). Convert.ChangeType handles neither: it
+            // throws on int/string → enum and cannot produce a Nullable<T>. So convert against the
+            // underlying T — routing enums through Enum.ToObject / Enum.Parse — and let the boxed T
+            // assign cleanly into a Nullable<T> property via SetValue.
+            Type targetType = Nullable.GetUnderlyingType(propertyInfo.PropertyType) ?? propertyInfo.PropertyType;
+            if (value.GetType() != targetType)
             {
-                // For a Nullable<T> target (e.g. Blend? on Sprite/NineSlice), convert against the
-                // underlying T. Convert.ChangeType cannot produce a Nullable<T> (it throws
-                // InvalidCastException), but a boxed T assigns cleanly into a Nullable<T> property
-                // via SetValue. This is the data-driven path (ApplyState → SetProperty → reflection);
-                // strongly-typed C# setters never reach it.
-                Type targetType = Nullable.GetUnderlyingType(propertyInfo.PropertyType) ?? propertyInfo.PropertyType;
-                if (value.GetType() != targetType)
+                try
                 {
-                    value = System.Convert.ChangeType(value, targetType);
+                    if (targetType.IsEnum)
+                    {
+                        value = value is string enumName
+                            ? Enum.Parse(targetType, enumName, ignoreCase: true)
+                            : Enum.ToObject(targetType, value);
+                    }
+                    else
+                    {
+                        value = System.Convert.ChangeType(value, targetType);
+                    }
+                }
+                catch
+                {
+                    // One bad variable (incompatible type, undefined enum name, out-of-range value)
+                    // must not tear down the entire screen load — skip this assignment.
+                    return;
                 }
             }
-            propertyInfo.SetValue(mContainedObjectAsIpso, value, null);
         }
+
+        propertyInfo.SetValue(mContainedObjectAsIpso, value, null);
     }
 
     /// <summary>
