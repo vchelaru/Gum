@@ -48,9 +48,10 @@ public class GumBundleLoaderTests : IDisposable
             ("Screens/MainScreen.gusx", childBytes),
         });
 
-        BundleResolution resolution = GumBundleLoader.Resolve(gumpkgPath);
+        ProjectResolution resolution = GumBundleLoader.Resolve(gumpkgPath);
 
         resolution.UsedBundle.ShouldBeTrue();
+        resolution.FileProvider.ShouldBeOfType<BundleGumFileProvider>();
         FileManager.CustomGetStreamFromFile.ShouldNotBeNull();
 
         // The runtime loader passes absolute paths (with platform-native separators) to the
@@ -78,7 +79,7 @@ public class GumBundleLoaderTests : IDisposable
             ("Project.gumx", gumxBytes),
         });
 
-        BundleResolution resolution = GumBundleLoader.Resolve(gumpkgPath);
+        ProjectResolution resolution = GumBundleLoader.Resolve(gumpkgPath);
 
         resolution.UsedBundle.ShouldBeTrue();
         resolution.ResolvedGumxPath.ShouldBe(expectedGumxPath);
@@ -96,10 +97,11 @@ public class GumBundleLoaderTests : IDisposable
         string gumxPath = Path.Combine(_tempDir, "Project.gumx");
         File.WriteAllText(gumxPath, "<GumProjectSave />");
 
-        BundleResolution resolution = GumBundleLoader.Resolve(gumxPath);
+        ProjectResolution resolution = GumBundleLoader.Resolve(gumxPath);
 
         resolution.UsedBundle.ShouldBeFalse();
         resolution.ResolvedGumxPath.ShouldBe(gumxPath);
+        resolution.FileProvider.ShouldBeOfType<LooseFileGumFileProvider>();
         FileManager.CustomGetStreamFromFile.ShouldBeNull();
     }
 
@@ -117,7 +119,7 @@ public class GumBundleLoaderTests : IDisposable
             ("Project.gumx", Encoding.UTF8.GetBytes("<GumProjectSave />")),
         });
 
-        BundleResolution resolution = GumBundleLoader.Resolve(gumxPath);
+        ProjectResolution resolution = GumBundleLoader.Resolve(gumxPath);
 
         resolution.UsedBundle.ShouldBeFalse();
         FileManager.CustomGetStreamFromFile.ShouldBeNull();
@@ -147,7 +149,7 @@ public class GumBundleLoaderTests : IDisposable
         };
         FileManager.CustomGetStreamFromFile = userHook;
 
-        BundleResolution resolution = GumBundleLoader.Resolve(gumpkgPath);
+        ProjectResolution resolution = GumBundleLoader.Resolve(gumpkgPath);
 
         resolution.UsedBundle.ShouldBeTrue();
         FileManager.CustomGetStreamFromFile.ShouldNotBeSameAs(userHook);
