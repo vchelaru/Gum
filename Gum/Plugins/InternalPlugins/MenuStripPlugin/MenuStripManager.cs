@@ -36,6 +36,7 @@ namespace Gum.Managers
         private MenuItem _removeElementMenuItem;
         private MenuItem _removeVariableMenuItem;
         private MenuItem _aboutMenuItem;
+        private MenuItem _thirdPartyLicensesMenuItem;
         private MenuItem _documentationMenuItem;
         private MenuItem _saveAllMenuItem;
         private MenuItem _newProjectMenuItem;
@@ -93,6 +94,7 @@ namespace Gum.Managers
             _removeStateMenuItem = new MenuItem();
             _removeVariableMenuItem = new MenuItem();
             _aboutMenuItem = new MenuItem();
+            _thirdPartyLicensesMenuItem = new MenuItem();
             _documentationMenuItem = new MenuItem();
             _saveAllMenuItem = new MenuItem();
             _newProjectMenuItem = new MenuItem();
@@ -198,6 +200,23 @@ namespace Gum.Managers
                 _dialogService.ShowMessage("Gum version " + version, "About");
             };
 
+            const string thirdPartyNoticesUrl =
+                "https://github.com/vchelaru/Gum/blob/main/THIRD-PARTY-NOTICES.txt";
+            _thirdPartyLicensesMenuItem.Header = "Third-Party Licenses...";
+            _thirdPartyLicensesMenuItem.ToolTip = "Licenses and attributions for third-party components Gum redistributes";
+            _thirdPartyLicensesMenuItem.Click += (_, _) =>
+            {
+                // The notices file ships next to the executable (see Gum.csproj). Fall back to
+                // the copy on GitHub if it can't be found locally.
+                string localPath = System.IO.Path.Combine(AppContext.BaseDirectory, "THIRD-PARTY-NOTICES.txt");
+                string target = System.IO.File.Exists(localPath) ? localPath : thirdPartyNoticesUrl;
+                System.Diagnostics.Process.Start(new ProcessStartInfo
+                {
+                    FileName = target,
+                    UseShellExecute = true
+                });
+            };
+
 
 
             string documentationLink = "https://docs.flatredball.com/gum";
@@ -219,6 +238,7 @@ namespace Gum.Managers
             _helpMenuItem = new MenuItem();
             _helpMenuItem.Header = "Help";
             _helpMenuItem.Items.Add(_aboutMenuItem);
+            _helpMenuItem.Items.Add(_thirdPartyLicensesMenuItem);
             _helpMenuItem.Items.Add(_documentationMenuItem);
 
 

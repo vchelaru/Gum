@@ -76,6 +76,9 @@
 		</Reference>
 	</ItemGroup>
 	<ItemGroup>
+		<None Include="..\THIRD-PARTY-NOTICES.txt" Link="THIRD-PARTY-NOTICES.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 		<None Update="Content\Fonts\Font18Arial_o1.fnt">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
