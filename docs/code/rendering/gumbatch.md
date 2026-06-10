@@ -19,6 +19,18 @@ Core.GumBatch.End();
 ```
 {% endhint %}
 
+### Relationship with the Camera
+
+GumBatch draws through the same `Camera` as the rest of Gum — the one at `GumService.Default.Renderer.Camera`. It does **not** ignore the camera: the camera's `Zoom`, `Position` (`X` and `Y`), and `CameraCenterOnScreen` all apply to everything you draw between `Begin` and `End`. So if you zoom the camera to handle a window resize (see [Resolution and Resizing the Game Window](../layout/resizing-the-game-window.md)), your GumBatch output zooms along with the rest of your UI.
+
+`Begin` also refreshes the camera's client dimensions from the current `GraphicsDevice.Viewport` on every call, so GumBatch always matches the live viewport size.
+
+`Begin` accepts an optional transform: `Begin(Matrix)`. This matrix **composes on top of** the camera transform rather than replacing it — the effective transform is your matrix multiplied with the camera's view.
+
+{% hint style="warning" %}
+Because the matrix composes on top of the camera, setting `Camera.Zoom` to a non-default value **and** passing a scaling matrix to `Begin(Matrix)` applies the scale twice. Drive scaling from a single source: either leave the matrix off and use `Camera.Zoom`, or pass a matrix and keep `Camera.Zoom` at `1`.
+{% endhint %}
+
 ### Rendering TextRuntimes
 
 The most flexible way to draw text with GumBatch is to create a `TextRuntime`. TextRuntimes support all of Gum's layout rules — wrapping, alignment, rotation, sizing — and integrate with Gum's font system so you can set `Font` and `FontSize` directly and let KernSmith create the atlas on demand.
