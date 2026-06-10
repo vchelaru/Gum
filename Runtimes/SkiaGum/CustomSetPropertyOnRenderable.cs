@@ -98,21 +98,12 @@ public class CustomSetPropertyOnRenderable
             case nameof(RenderableShapeBase.Alpha):
                 renderableBase.Alpha = (int)value;
                 return true;
-            // .gumx stores Blend as the non-nullable Gum.RenderingLibrary.Blend enum.
-            // SetPropertyThroughReflection's Convert.ChangeType fallback throws on
-            // enum -> Nullable<enum> (Skia's Blend?), so the assignment has to land here. See
-            // the SilkNetGum sample crash that prompted the Skia branch — every Standards/*.gutx
-            // with a default Blend variable hit the reflection path before this case was added.
-            //
-            // Issue #2937: the Apos.Shapes side (MonoGameGumShapes / KniGumShapes) now also has
-            // a Blend property on its RenderableShapeBase, so it gets its own arm. The type
-            // differs per platform (Skia: Blend?, Apos: non-nullable Gum.RenderingLibrary.Blend),
-            // hence the gate rather than a shared case.
-#if SKIA
-            case nameof(RenderableShapeBase.Blend):
-                renderableBase.Blend = (Blend)value;
-                return true;
-#else
+            // Skia's Blend? is now handled by core SetPropertyThroughReflection, which converts
+            // enum -> Nullable<enum> (issue #2924), so the former SKIA Blend arm here was removed.
+            // The Apos.Shapes arm (MonoGameGumShapes / KniGumShapes, issue #2937) is kept: it's a
+            // non-nullable Blend on a different renderable surface whose runtime does extra
+            // forwarding/translation, so it's left explicit pending a separate audit.
+#if !SKIA
             case nameof(RenderableShapeBase.Blend):
                 renderableBase.Blend = (Gum.RenderingLibrary.Blend)value;
                 return true;
@@ -970,15 +961,11 @@ public class CustomSetPropertyOnRenderable
                 handled = TrySetPropertyOnPolygon(asPolygon, graphicalUiElement, propertyName, value);
             }
         }
-        // Catch-all for RenderableShapeBase derivatives that have no dedicated branch
-        // above (SolidRectangle, LineRectangle, LineGrid, etc.). Without this, those types
-        // skip TrySetPropertiesOnRenderableBase entirely and any RenderableShapeBase property
-        // — most notably Blend? — falls through to SetPropertyThroughReflection's
-        // Convert.ChangeType, which throws on enum -> Nullable<enum>.
-        if (!handled && containedObjectAsIpso is RenderableShapeBase asShapeBase)
-        {
-            handled = TrySetPropertiesOnRenderableBase(asShapeBase, graphicalUiElement, propertyName, value);
-        }
+        // RenderableShapeBase derivatives with no dedicated branch above (SolidRectangle,
+        // LineRectangle, LineGrid, etc.) fall through to the reflection helper below. Core
+        // SetPropertyThroughReflection now converts enum -> Nullable<enum> (issue #2924), so the
+        // #2923 catch-all that routed them through TrySetPropertiesOnRenderableBase purely to
+        // handle Blend? is no longer needed.
         if (!handled)
         {
             GraphicalUiElement.SetPropertyThroughReflection(containedObjectAsIpso, graphicalUiElement, propertyName, value);
