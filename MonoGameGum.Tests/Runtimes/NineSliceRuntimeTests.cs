@@ -101,4 +101,67 @@ public class NineSliceRuntimeTests
         NineSliceRuntime sut = new();
         sut.HasEvents.ShouldBeFalse();
     }
+
+    [Fact]
+    public void PropertyChanged_ShouldRaise_WhenAnimateChanges()
+    {
+        // #3110: these animation/frame setters previously raised NotifyPropertyChanged
+        // only under #if SOKOL. They must notify on all backends so binding consumers
+        // on MonoGame/Raylib/Skia receive the change.
+        NineSliceRuntime sut = new();
+        List<string> changed = new();
+        sut.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        sut.Animate = true;
+
+        changed.ShouldContain(nameof(NineSliceRuntime.Animate));
+    }
+
+    [Fact]
+    public void PropertyChanged_ShouldRaise_WhenAnimationChainsChanges()
+    {
+        NineSliceRuntime sut = new();
+        List<string> changed = new();
+        sut.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        sut.AnimationChains = new AnimationChainList();
+
+        changed.ShouldContain(nameof(NineSliceRuntime.AnimationChains));
+    }
+
+    [Fact]
+    public void PropertyChanged_ShouldRaise_WhenAnimationSpeedChanges()
+    {
+        NineSliceRuntime sut = new();
+        List<string> changed = new();
+        sut.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        sut.AnimationSpeed = 2.0f;
+
+        changed.ShouldContain(nameof(NineSliceRuntime.AnimationSpeed));
+    }
+
+    [Fact]
+    public void PropertyChanged_ShouldRaise_WhenCurrentChainNameChanges()
+    {
+        NineSliceRuntime sut = new();
+        List<string> changed = new();
+        sut.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        sut.CurrentChainName = "SomeChain";
+
+        changed.ShouldContain(nameof(NineSliceRuntime.CurrentChainName));
+    }
+
+    [Fact]
+    public void PropertyChanged_ShouldRaise_WhenCustomFrameTextureCoordinateWidthChanges()
+    {
+        NineSliceRuntime sut = new();
+        List<string> changed = new();
+        sut.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        sut.CustomFrameTextureCoordinateWidth = 8f;
+
+        changed.ShouldContain(nameof(NineSliceRuntime.CustomFrameTextureCoordinateWidth));
+    }
 }

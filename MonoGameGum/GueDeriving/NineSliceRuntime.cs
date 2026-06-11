@@ -201,9 +201,7 @@ public class NineSliceRuntime : InteractiveGue
         set
         {
             ContainedNineSlice.AnimationLogic.Animate = value;
-#if SOKOL
             NotifyPropertyChanged();
-#endif
         }
     }
 
@@ -216,9 +214,7 @@ public class NineSliceRuntime : InteractiveGue
         set
         {
             ContainedNineSlice.AnimationLogic.CurrentChainName = value;
-#if SOKOL
             NotifyPropertyChanged();
-#endif
         }
     }
 
@@ -235,9 +231,7 @@ public class NineSliceRuntime : InteractiveGue
             {
                 UpdateTextureValuesFrom(ContainedNineSlice);
             }
-#if SOKOL
             NotifyPropertyChanged();
-#endif
         }
     }
 
@@ -250,9 +244,7 @@ public class NineSliceRuntime : InteractiveGue
         set
         {
             ContainedNineSlice.AnimationLogic.AnimationSpeed = value;
-#if SOKOL
             NotifyPropertyChanged();
-#endif
         }
     }
 
@@ -316,7 +308,6 @@ public class NineSliceRuntime : InteractiveGue
 
     #endregion
 
-#if XNALIKE || SOKOL || SKIA || RAYLIB
     /// <summary>
     /// Sets the width or height of the nine slice edges in pixels. If null,
     /// the NineSlice uses 1/3 of the texture size. If set, this overrides the
@@ -328,12 +319,9 @@ public class NineSliceRuntime : InteractiveGue
         set
         {
             ContainedNineSlice.CustomFrameTextureCoordinateWidth = value;
-#if SOKOL
             NotifyPropertyChanged();
-#endif
         }
     }
-#endif
 
 #if XNALIKE || SKIA || RAYLIB
     /// <summary>
