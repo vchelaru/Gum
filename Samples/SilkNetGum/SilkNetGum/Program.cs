@@ -5,6 +5,7 @@ using SkiaSharp;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using RenderingLibrary;
+using Gum.Forms.Controls;
 using Gum.Wireframe;
 using Gum.GueDeriving;
 using RenderingLibrary.Graphics;
@@ -35,7 +36,8 @@ unsafe class Program
     private static void* glContext;
     private static bool running = true;
 
-    static GraphicalUiElement Root;
+    static GraphicalUiElement? currentGumxScreen;
+    static FrameworkElement? currentCodeScreen;
     static int currentScreenIndex;
     static TextRuntime instructionsText;
     static SKPaint sKPaint;
@@ -50,7 +52,7 @@ unsafe class Program
     // Code-only screens appended after every screen from the gumx, allowing the
     // sample to exercise runtime features (like the unified NineSliceRuntime) that
     // are not yet authored as Gum screens.
-    private static readonly Func<GraphicalUiElement>[] codeScreenFactories =
+    private static readonly Func<FrameworkElement>[] codeScreenFactories =
     {
         () => new SilkNetGum.Screens.NineSliceScreen(),
         () => new SilkNetGum.Screens.SpriteScreen(),
@@ -92,19 +94,25 @@ unsafe class Program
         // AddToManagers — that way GumService.Default.Update walks the screen and
         // its descendants, which is what advances AnimationChain playback on the
         // SpriteScreen's animated bear row.
-        Root?.RemoveFromRoot();
+        currentGumxScreen?.RemoveFromRoot();
+        currentGumxScreen = null;
+        currentCodeScreen?.RemoveFromRoot();
+        currentCodeScreen = null;
+
         if (currentScreenIndex < gumxScreens.Count)
         {
-            Root = gumxScreens[currentScreenIndex].ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+            currentGumxScreen = gumxScreens[currentScreenIndex].ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+            currentGumxScreen.AddToRoot();
+            currentGumxScreen.Width = GraphicalUiElement.CanvasWidth;
+            currentGumxScreen.Height = GraphicalUiElement.CanvasHeight;
         }
         else
         {
-            Root = codeScreenFactories[currentScreenIndex - gumxScreens.Count]();
+            // Code screens are FrameworkElement and Dock(Fill) themselves, so their visual
+            // fills the canvas without an explicit size assignment here.
+            currentCodeScreen = codeScreenFactories[currentScreenIndex - gumxScreens.Count]();
+            currentCodeScreen.AddToRoot();
         }
-        Root.AddToRoot();
-
-        Root.Width = GraphicalUiElement.CanvasWidth;
-        Root.Height = GraphicalUiElement.CanvasHeight;
     }
 
     private static void Draw()

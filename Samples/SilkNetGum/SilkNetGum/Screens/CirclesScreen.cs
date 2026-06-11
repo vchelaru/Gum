@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using RenderingLibrary.Graphics;
@@ -11,8 +12,6 @@ namespace SilkNetGum.Screens;
 // visual regressions in one backend are easy to spot against the other.
 //
 // What forces the two files apart:
-//   - Base class. Forms (FrameworkElement / Dock / AddChild) hasn't reached the Skia runtime
-//     yet, so this screen derives from GraphicalUiElement and uses Children.Add directly.
 //   - Color type. XNA Microsoft.Xna.Framework.Color becomes SKColor; named colors come from
 //     SkiaSharp.SKColors instead of Color.X.
 //   - The MonoGame CirclesScreen also uses VerticalAlignment from the FRB Forms types in its
@@ -20,10 +19,12 @@ namespace SilkNetGum.Screens;
 //
 // Everything else — section layout, sweep values, property names (Radius, StrokeColor,
 // FillColor, StrokeWidth, gradient props) — is identical to the MonoGame version.
-internal class CirclesScreen : GraphicalUiElement
+internal class CirclesScreen : FrameworkElement
 {
-    public CirclesScreen() : base(new InvisibleRenderable())
+    public CirclesScreen() : base(new ContainerRuntime())
     {
+        Dock(Gum.Wireframe.Dock.Fill);
+
         // Two-column root so the screen grows wide rather than tall as rows accumulate. No
         // ScrollViewer in SkiaGum yet, so this is the cheapest layout that works on both
         // backends (mirrored in MonoGameGumShapesGallery/Screens/CirclesScreen).
@@ -32,7 +33,7 @@ internal class CirclesScreen : GraphicalUiElement
         root.StackSpacing = 24;
         root.X = 10;
         root.Y = 10;
-        this.Children.Add(root);
+        this.AddChild(root);
 
         ContainerRuntime left = BuildColumn();
         ContainerRuntime right = BuildColumn();

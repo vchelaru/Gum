@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using RenderingLibrary.Graphics;
@@ -15,27 +16,27 @@ namespace SilkNetGum.Screens;
 // other.
 //
 // What forces the two files apart:
-//   - Base class. Forms (FrameworkElement / Dock / AddChild) hasn't reached the Skia runtime
-//     yet, so this screen derives from GraphicalUiElement and uses Children.Add directly.
 //   - Color type. Microsoft.Xna.Framework.Color becomes SKColor; named colors come from
 //     SkiaSharp.SKColors.
 //   - Open polylines. MG's LinePolygon doesn't auto-close, so the MG screen omits the
 //     closing point. Skia's Polygon auto-closes when IsClosed = true, so this screen sets
 //     IsClosed = false on the open-polyline cells instead.
-internal class PolygonsScreen : GraphicalUiElement
+internal class PolygonsScreen : FrameworkElement
 {
     const float CellSize = 72;
     const float Center = CellSize / 2;
     const float Radius = 26;
 
-    public PolygonsScreen() : base(new InvisibleRenderable())
+    public PolygonsScreen() : base(new ContainerRuntime())
     {
+        Dock(Gum.Wireframe.Dock.Fill);
+
         ContainerRuntime root = new();
         root.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
         root.StackSpacing = 14;
         root.X = 10;
         root.Y = 10;
-        this.Children.Add(root);
+        this.AddChild(root);
 
         root.Children.Add(BuildSection("Common shapes (triangle, square, pentagon, hexagon)", BuildShapesRow()));
         root.Children.Add(BuildSection("StrokeWidth (1, 2, 4, 8 px) — hexagon outline", BuildStrokeWidthRow()));

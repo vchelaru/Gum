@@ -7,13 +7,15 @@ description: Where runtime-feature demo screens go. Triggers: adding a sample/de
 
 When a runtime feature needs a visual demo (so a human can eyeball it across backends), add a screen to the **three cross-backend feature samples**, keeping them aligned. Shape features are the exception — they go to the shapes gallery instead.
 
+The "**big three**" refers to the three backends below (Silk.NET/Skia, raylib, MonoGame). Note that the **XNA-likes (MonoGame, KNI) are split across two sample projects** — the feature sample *plus* the shapes gallery — for the reason explained under "Shape features" below. So "big three" counts backends, not project folders.
+
 ## The three feature samples (add here by default)
 
 | Sample | Backend | Path | Screen base / registration |
 |---|---|---|---|
 | MonoGameGumInCode | MonoGame (XNA) | `Samples/MonoGameGumInCode/MonoGameGumInCode/` | `FrameworkElement`; nav button in `Game1.BuildNavStrip` |
 | raylib gallery | raylib | `Samples/raylib/` | `FrameworkElement`; nav button in `Program.BuildNavStrip` (`Examples.Shapes` namespace) |
-| SilkNetGum | SkiaSharp via Silk.NET | `Samples/SilkNetGum/SilkNetGum/` | `GraphicalUiElement`; factory in `Program.codeScreenFactories` |
+| SilkNetGum | SkiaSharp via Silk.NET | `Samples/SilkNetGum/SilkNetGum/` | `FrameworkElement`; factory in `Program.codeScreenFactories`, keyboard nav |
 
 Each has a `Screens/` folder with one `*Screen.cs` per feature (`SpriteScreen`, `NineSliceScreen`, …). **MonoGameGumInCode is the reference** — mirror its screen section-for-section in the other two so the same screen can be opened side by side and any per-backend rendering difference stands out as a backend bug. The existing screen headers say exactly this ("Raylib mirror of …", "Mirror of MonoGameGumInCode.Screens…").
 
@@ -22,11 +24,13 @@ Each has a `Screens/` folder with one `*Screen.cs` per feature (`SpriteScreen`, 
 - **Texture paths differ.** MonoGame uses MGCB `Content/` names (`"Frame.png"`); raylib loads from disk (`"resources\\Frame.png"`, copied via the `resources\**\*.*` glob in `GumTest.csproj`); SilkNetGum loads from `Content/GumProject/`. Drop any new texture into each sample's content dir.
 - **Color types differ.** MonoGame `Microsoft.Xna.Framework.Color`, raylib `Raylib_cs.Color`, Skia `SKColor`. Pick the nearest named color per backend.
 - **Not every property exists on every backend.** A runtime property may be `#if`-gated away from a backend (see [[gum-cross-platform-unification]]). If the mirrored screen won't compile, the feature isn't wired on that backend yet — that's the actual work, not the screen.
-- **raylib screens need `using Gum.Forms.Controls;`** for `FrameworkElement`.
+- **raylib and SilkNetGum screens need `using Gum.Forms.Controls;`** for `FrameworkElement`.
 
 ## Shape features → the shapes gallery instead
 
 If the feature touches **shapes** (Circle, Rectangle, RoundedRectangle, Arc, Polygon, Line — anything from [[gum-shapes-xnb-packaging]] / the shape runtimes), do **not** add it to the three samples above. Add it to `Samples/GumShapesGallery/MonoGameGumShapesGallery/` (and its KNI siblings under `Samples/GumShapesGallery/`).
+
+**Why shapes get their own project:** raylib and Skia render shapes natively (built-in, full support), so shape demos for those backends live in the regular feature samples. XNA-likes (MonoGame, KNI) have **no built-in shape rendering** — they must be supplemented with the separate **Gum.Shapes** library, so their shape coverage lives in the dedicated `GumShapesGallery` project rather than `MonoGameGumInCode`. That's the split referenced above. This is expected to be unified eventually.
 
 ## Verification is human-driven
 
