@@ -56,26 +56,40 @@ public abstract class AposShapeRuntime : GraphicalUiElement
         // backend both slots are an Apos shape — the fill factory sets IsFilled=true on its
         // instance, the stroke factory sets IsFilled=false on its instance. The runtime holds
         // both and they draw simultaneously.
+        // Issue #3112 — each slot factory only hands out an Apos shape once ShapeRenderer is
+        // actually initialized. Until then it returns null, which RenderableRegistry treats as
+        // graceful degradation: CircleRuntime / RectangleRuntime fall back to core's no-shapes
+        // default renderable (DefaultStrokedCircleRenderable / DefaultFilledRectangleRenderable).
+        // Without this gate, merely having the shapes assembly loaded — e.g. force-registered by
+        // GumService.Initialize's reflection scan on WASM, where every assembly loads up front —
+        // would route a plain Rectangle/Circle the user never opted into to an Apos renderable
+        // that throws "ShapeRenderer is null" at draw. Returning null! (not null) keeps the
+        // nullable-enabled Func<GraphicalUiElement, T> signature quiet; the registry and the
+        // runtime constructors both expect and handle null here.
         RenderableRegistry.RegisterFactory<Gum.GueDeriving.IFilledCircleRenderable>(gue =>
         {
+            if (!ShapeRenderer.Self.IsInitialized) return null!;
             var shape = new Circle { IsFilled = true };
             WireOnPreRender(shape, gue);
             return shape;
         });
         RenderableRegistry.RegisterFactory<Gum.GueDeriving.IStrokedCircleRenderable>(gue =>
         {
+            if (!ShapeRenderer.Self.IsInitialized) return null!; // #3112 gate (see above)
             var shape = new Circle { IsFilled = false };
             WireOnPreRender(shape, gue);
             return shape;
         });
         RenderableRegistry.RegisterFactory<Gum.GueDeriving.IFilledRectangleRenderable>(gue =>
         {
+            if (!ShapeRenderer.Self.IsInitialized) return null!; // #3112 gate (see above)
             var shape = new RoundedRectangle { IsFilled = true };
             WireOnPreRender(shape, gue);
             return shape;
         });
         RenderableRegistry.RegisterFactory<Gum.GueDeriving.IStrokedRectangleRenderable>(gue =>
         {
+            if (!ShapeRenderer.Self.IsInitialized) return null!; // #3112 gate (see above)
             var shape = new RoundedRectangle { IsFilled = false };
             WireOnPreRender(shape, gue);
             return shape;
