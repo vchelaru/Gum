@@ -1,3 +1,5 @@
+using Gum.Content.AnimationChain;
+using Gum.Graphics.Animation;
 using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
@@ -80,6 +82,20 @@ internal class NineSliceScreen : GraphicalUiElement
         tiled.IsTilingMiddleSections = true;
         tilingRow.Children.Add(tiled);
 
+        // CustomFrameTextureCoordinateWidth: explicit edge thickness (texture pixels) instead
+        // of the default 1/3 split. SquareFrame.png is 64x64, so the default corner is ~21px.
+        AddLabel(container, "CustomFrameTextureCoordinateWidth (default 1/3, 8px, 24px):");
+        ContainerRuntime customWidthRow = AddRow(container);
+        foreach (float? frameWidth in new float?[] { null, 8f, 24f })
+        {
+            NineSliceRuntime ns = new NineSliceRuntime();
+            ns.SourceFileName = "SquareFrame.png";
+            ns.Width = 100;
+            ns.Height = 100;
+            ns.CustomFrameTextureCoordinateWidth = frameWidth;
+            customWidthRow.Children.Add(ns);
+        }
+
         AddLabel(container, "Rotated (25 deg) with BorderScale 1 and 8:");
         ContainerRuntime borderRotRow = AddRow(container);
         borderRotRow.StackSpacing = 60;
@@ -103,6 +119,25 @@ internal class NineSliceScreen : GraphicalUiElement
         rotScale8.Rotation = 25f;
         rotScale8.Y = 50f;
         borderRotRow.Children.Add(rotScale8);
+
+        // AnimationChain-driven nine-slice. The .achx + per-frame textures live in
+        // Content/GumProject/ alongside the other sample assets; the shared
+        // AnimationChainLogic swaps the texture across all nine slices each frame change.
+        // Driven by GumService.Default.Update in Program's render loop.
+        AddLabel(container, "AnimationChain-driven nine-slice (AnimatedFrame1.achx):");
+        NineSliceRuntime animated = new NineSliceRuntime();
+        animated.Width = 160;
+        animated.Height = 64;
+        animated.AnimationChains = LoadAnimatedFrameChain();
+        animated.CurrentChainName = "Animation1";
+        animated.Animate = true;
+        container.Children.Add(animated);
+    }
+
+    private static AnimationChainList LoadAnimatedFrameChain()
+    {
+        AnimationChainListSave save = AnimationChainListSave.FromFile("AnimatedFrame1.achx");
+        return save.ToAnimationChainList();
     }
 
     private static void AddLabel(ContainerRuntime container, string text)

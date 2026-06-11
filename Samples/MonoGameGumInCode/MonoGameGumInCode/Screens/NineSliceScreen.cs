@@ -77,6 +77,20 @@ internal class NineSliceScreen : FrameworkElement
         tiled.IsTilingMiddleSections = true;
         tilingRow.AddChild(tiled);
 
+        // CustomFrameTextureCoordinateWidth: explicit edge thickness (texture pixels) instead
+        // of the default 1/3 split. SquareFrame.png is 64x64, so the default corner is ~21px.
+        AddLabel(container, "CustomFrameTextureCoordinateWidth (default 1/3, 8px, 24px):");
+        var customWidthRow = AddRow(container);
+        foreach (var frameWidth in new float?[] { null, 8f, 24f })
+        {
+            var ns = new NineSliceRuntime();
+            ns.SourceFileName = "SquareFrame.png";
+            ns.Width = 100;
+            ns.Height = 100;
+            ns.CustomFrameTextureCoordinateWidth = frameWidth;
+            customWidthRow.AddChild(ns);
+        }
+
         // BorderScale combined with rotation: same source rotated 25 degrees with
         // BorderScale 1 (left) and BorderScale 8 (right) so border growth is obvious.
         AddLabel(container, "Rotated (25 deg) with BorderScale 1 and 8:");
