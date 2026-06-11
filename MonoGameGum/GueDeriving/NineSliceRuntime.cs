@@ -201,9 +201,7 @@ public class NineSliceRuntime : InteractiveGue
         set
         {
             ContainedNineSlice.AnimationLogic.Animate = value;
-#if SOKOL
             NotifyPropertyChanged();
-#endif
         }
     }
 
@@ -216,9 +214,7 @@ public class NineSliceRuntime : InteractiveGue
         set
         {
             ContainedNineSlice.AnimationLogic.CurrentChainName = value;
-#if SOKOL
             NotifyPropertyChanged();
-#endif
         }
     }
 
@@ -235,9 +231,7 @@ public class NineSliceRuntime : InteractiveGue
             {
                 UpdateTextureValuesFrom(ContainedNineSlice);
             }
-#if SOKOL
             NotifyPropertyChanged();
-#endif
         }
     }
 
@@ -250,9 +244,7 @@ public class NineSliceRuntime : InteractiveGue
         set
         {
             ContainedNineSlice.AnimationLogic.AnimationSpeed = value;
-#if SOKOL
             NotifyPropertyChanged();
-#endif
         }
     }
 
@@ -328,9 +320,7 @@ public class NineSliceRuntime : InteractiveGue
         set
         {
             ContainedNineSlice.CustomFrameTextureCoordinateWidth = value;
-#if SOKOL
             NotifyPropertyChanged();
-#endif
         }
     }
 #endif
