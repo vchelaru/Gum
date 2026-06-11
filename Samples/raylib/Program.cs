@@ -130,6 +130,7 @@ public class BasicShapes
         AddNavButton("Polygons", () => new PolygonsScreen());
         AddNavButton("Arcs", () => new ArcsScreen());
         AddNavButton("Sprite", () => new SpriteScreen());
+        AddNavButton("NineSlice", () => new NineSliceScreen());
 
         AddFitModeRadio("Zoom", isChecked: true, () =>
         {

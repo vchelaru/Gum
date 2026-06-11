@@ -1,4 +1,9 @@
 using Gum.DataTypes;
+using System.Runtime.CompilerServices;
+
+// Exposes internal members (e.g. the NineSlice section-layout math, ComputeDrawSections /
+// NineSliceDrawSection) to the unit test project.
+[assembly: InternalsVisibleTo("RaylibGum.Tests")]
 
 // Gum runtime syntax version — an assembly-level integer the Gum tool's code generator reads
 // to decide which runtime conventions/namespaces to emit code against. This is NOT the .gumx

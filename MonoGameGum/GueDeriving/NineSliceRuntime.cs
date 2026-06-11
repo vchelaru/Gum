@@ -295,7 +295,7 @@ public class NineSliceRuntime : InteractiveGue
 
     #endregion
 
-#if XNALIKE || SOKOL || SKIA
+#if XNALIKE || SOKOL || SKIA || RAYLIB
     /// <summary>
     /// Sets the width or height of the nine slice edges in pixels. If null,
     /// the NineSlice uses 1/3 of the texture size. If set, this overrides the
@@ -314,7 +314,7 @@ public class NineSliceRuntime : InteractiveGue
     }
 #endif
 
-#if XNALIKE || SKIA
+#if XNALIKE || SKIA || RAYLIB
     /// <summary>
     /// Whether to tile (repeat) the middle sections instead of stretching them.
     /// When true, the Top, Bottom, Left, Right, and Center sections are rendered
