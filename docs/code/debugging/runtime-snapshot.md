@@ -2,9 +2,9 @@
 
 ## Introduction
 
-A runtime snapshot exports your live Gum UI — the visual tree exactly as it exists in the running game — to a Gum project you can open and inspect in the Gum tool. It is the reverse of [Hot Reload](hot-reload.md): hot reload pushes changes from the tool into the running game, while a snapshot captures the running game back into a project.
+A runtime snapshot exports your live Gum UI - the visual tree exactly as it exists in the running game - to a Gum project you can open and inspect in the Gum tool. It is the reverse of [Hot Reload](hot-reload.md): hot reload pushes changes from the tool into the running game, while a snapshot captures the running game back into a project.
 
-Snapshots are especially useful for **code-only** UIs (built entirely in C# with no `.gumx` loaded), which otherwise have no design-time artifact to open. A snapshot is also a shareable file — attach it to a bug report so someone else can open your exact runtime layout in the tool.
+Snapshots are especially useful for **code-only** UIs (built entirely in C# with no `.gumx` loaded), which otherwise have no design-time artifact to open. A snapshot is also a shareable file - attach it to a bug report so someone else can open your exact runtime layout in the tool.
 
 {% hint style="info" %}
 A snapshot is a one-way capture. Editing it in the Gum tool does **not** affect the running game — it is a photograph of the tree at the moment you exported it, with no channel back to the game.
@@ -21,11 +21,11 @@ GumUI.ExportSnapshot(@"C:\Temp\GumSnapshot\Snapshot.gumx");
 
 Gum serializes the live tree under its root and writes a complete project at that path: the `.gumx`, a `Screens/` folder, a `Standards/` folder, and copies of any referenced texture files. Open the `.gumx` in the Gum tool to inspect it.
 
-Exporting does work only when you call it — Gum runs no background machinery for snapshots, so frames on which you don't export cost nothing. The export itself is relatively expensive, though: it serializes the entire tree, writes several files, and copies textures to disk. Trigger it from a debug action rather than calling it unconditionally every frame — for example, on a key press while the game runs:
+Gum doesn't automatically export - you must call `ExportSnapshot` whenever you want an export to happen. The export itself is relatively expensive, though: it serializes the entire tree, writes several files, and copies textures to disk. Trigger it from a debug action rather than calling it unconditionally every frame - for example, on a key press while the game runs:
 
 ```csharp
 // Update
-if (GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.F1))
+if (GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.F12))
 {
     GumUI.ExportSnapshot(@"C:\Temp\GumSnapshot\Snapshot.gumx");
 }
@@ -33,14 +33,16 @@ if (GumUI.Keyboard.KeyPushed(Gum.Forms.Input.Keys.F1))
 
 Each export overwrites the same location, so you can adjust your running UI and re-export to capture the new state.
 
+You can open the Gum tool and load your exported project - whenever your project re-exports it, the Gum tool automatically reloads the project, so you can easily update and get new snapshots just by pressing a key (such as F12).
+
 ## What the Snapshot Contains
 
 A snapshot reproduces the running tree as standard-element instances:
 
-* **The visual tree**, flattened into standard elements — `Container`, `Text`, `Sprite`, `NineSlice`, and so on — parented exactly as they are at runtime.
-* **The screen** — your top-level screen maps to the Gum `Screen`. When you add a single screen (such as a Forms screen) to the root, that screen's contents become the screen's instances directly, rather than nesting under an extra wrapper container.
+* **The visual tree**, flattened into standard elements - `Container`, `Text`, `Sprite`, `NineSlice`, and so on - parented exactly as they are at runtime.
+* **The screen** - your top-level screen maps to the Gum `Screen`. When you add a single screen (such as a Forms screen) to the root, that screen's contents become the screen's instances directly, rather than nesting under an extra wrapper container.
 * **Canvas size** matching your game's current resolution, so the layout in the tool matches what you see at runtime.
-* **Referenced textures** — files referenced by `Sprite` and `NineSlice` source files are copied next to the project, preserving their relative path, so the snapshot opens self-contained.
+* **Referenced textures** - files referenced by `Sprite` and `NineSlice` source files are copied next to the project, preserving their relative path, so the snapshot opens self-contained.
 
 ## Shaken and Unshaken Snapshots
 
