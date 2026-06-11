@@ -21,7 +21,7 @@ GumUI.ExportSnapshot(@"C:\Temp\GumSnapshot\Snapshot.gumx");
 
 Gum serializes the live tree under its root and writes a complete project at that path: the `.gumx`, a `Screens/` folder, a `Standards/` folder, and copies of any referenced texture files. Open the `.gumx` in the Gum tool to inspect it.
 
-Exporting is on-demand and has no per-frame cost, so a common pattern is to trigger it from a debug key while the game runs:
+Exporting does work only when you call it — Gum runs no background machinery for snapshots, so frames on which you don't export cost nothing. The export itself is relatively expensive, though: it serializes the entire tree, writes several files, and copies textures to disk. Trigger it from a debug action rather than calling it unconditionally every frame — for example, on a key press while the game runs:
 
 ```csharp
 // Update
