@@ -308,7 +308,6 @@ public class NineSliceRuntime : InteractiveGue
 
     #endregion
 
-#if XNALIKE || SOKOL || SKIA || RAYLIB
     /// <summary>
     /// Sets the width or height of the nine slice edges in pixels. If null,
     /// the NineSlice uses 1/3 of the texture size. If set, this overrides the
@@ -323,7 +322,6 @@ public class NineSliceRuntime : InteractiveGue
             NotifyPropertyChanged();
         }
     }
-#endif
 
 #if XNALIKE || SKIA || RAYLIB
     /// <summary>
