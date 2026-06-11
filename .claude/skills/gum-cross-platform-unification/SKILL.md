@@ -45,6 +45,10 @@ Before writing a single line of the unified file, diff these across all three pl
 
 For other disagreements: pick a default, but state the disagreement and the chosen resolution in your message before writing the code — not after in a summary. If the user disagrees, you've lost two minutes, not a release.
 
+## Never Widen an Obsolete API
+
+When a member gated under `#if` carries `[Obsolete]` (or is otherwise a deprecated back-compat shim) and a *sibling* runtime exposes it on more platforms, **do not "fix the inconsistency" by widening the obsolete member to the missing platforms.** Obsolete APIs are deprecated paths we want consumers off of — adding them to a backend that never had them plants a fresh dead surface in new code. Leave the gate at its current footprint and add a code comment explaining it is intentionally not widened. (Example: `SpriteRuntime` exposes an obsolete `Texture2D? SourceFile` on `#if !SKIA` while `NineSliceRuntime` only had it on `#if XNALIKE` — the right move was to comment both, not to widen NineSlice's. Issue #2908, Bucket 1.) This is the one asymmetry the boyscout/"two platforms agree, the outlier is wrong" heuristics do **not** apply to — for obsolete members, the narrower footprint wins.
+
 ## Lessons From Past Breakage
 
 - ColoredRectangleRuntime unification first pass promoted MG+Raylib from `GraphicalUiElement` to `InteractiveGue` to match Skia. This would have made every decorative colored rectangle in every consumer project start absorbing clicks. Caught and reverted before merge. The correct resolution was the opposite direction — correct Skia down to `GraphicalUiElement`, since nothing in a decorative rectangle should eat events.
