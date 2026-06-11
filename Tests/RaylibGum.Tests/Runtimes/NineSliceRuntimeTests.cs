@@ -112,6 +112,30 @@ public class NineSliceRuntimeTests : BaseTestClass
     }
 
     [Fact]
+    public void BorderScale_ShouldForwardToContainedNineSlice()
+    {
+        NineSliceRuntime sut = new();
+        sut.BorderScale = 3f;
+        ((NineSlice)sut.RenderableComponent).BorderScale.ShouldBe(3f);
+    }
+
+    [Fact]
+    public void CustomFrameTextureCoordinateWidth_ShouldForwardToContainedNineSlice()
+    {
+        NineSliceRuntime sut = new();
+        sut.CustomFrameTextureCoordinateWidth = 7f;
+        ((NineSlice)sut.RenderableComponent).CustomFrameTextureCoordinateWidth.ShouldBe(7f);
+    }
+
+    [Fact]
+    public void IsTilingMiddleSections_ShouldForwardToContainedNineSlice()
+    {
+        NineSliceRuntime sut = new();
+        sut.IsTilingMiddleSections = true;
+        ((NineSlice)sut.RenderableComponent).IsTilingMiddleSections.ShouldBeTrue();
+    }
+
+    [Fact]
     public void Color_ShouldDefaultToWhite()
     {
         NineSliceRuntime sut = new();
