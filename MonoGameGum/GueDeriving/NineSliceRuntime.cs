@@ -273,6 +273,15 @@ public class NineSliceRuntime : InteractiveGue
     }
 #endif
 
+    // Bucket 4 (#2908) decision: the XNA NineSlice renderable keeps nine separate Sprites,
+    // each able to hold its OWN texture (the old "nine separate image files" model — the
+    // _tl/_t/_tr/... suffixed files loaded via SetTexturesUsingPattern). That per-slice
+    // texture model is a legacy approach we no longer support and was never carried to the
+    // single-texture Raylib/Skia/Sokol renderables. We are NOT teaching those backends about
+    // per-slice textures, nor adding a single-texture facade to the XNA renderable, so this
+    // stays a permanent #if XNALIKE gate: on XNA we read the shared texture back through
+    // TopLeftTexture and broadcast writes to all nine slices via SetSingleTexture, while every
+    // other backend has a single Texture property. The branch is the model mismatch, not drift.
     public Texture2D? Texture
     {
         get
