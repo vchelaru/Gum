@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using RenderingLibrary.Graphics;
@@ -13,16 +14,18 @@ namespace SilkNetGum.Screens;
 // should land on the Apos side in the same PR. This is also the reference surface for the
 // raylib Arc port (#2866); features demonstrated here are the parity bar (chord fill is
 // Skia-specific and will not visually match raylib's wedge fill).
-internal class ArcsScreen : GraphicalUiElement
+internal class ArcsScreen : FrameworkElement
 {
-    public ArcsScreen() : base(new InvisibleRenderable())
+    public ArcsScreen() : base(new ContainerRuntime())
     {
+        Dock(Gum.Wireframe.Dock.Fill);
+
         ContainerRuntime root = new();
         root.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
         root.StackSpacing = 24;
         root.X = 10;
         root.Y = 10;
-        this.Children.Add(root);
+        this.AddChild(root);
 
         ContainerRuntime left = BuildColumn();
         ContainerRuntime right = BuildColumn();

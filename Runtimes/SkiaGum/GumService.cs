@@ -1,8 +1,12 @@
 using Gum.DataTypes;
+using Gum.Forms.Controls;
 using Gum.Managers;
+using Gum.Threading;
 using Gum.Wireframe;
 using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using Gum.GueDeriving;
+using SkiaGum.Renderables;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -13,7 +17,7 @@ using System.Threading.Tasks;
 using ToolsUtilities;
 
 namespace SkiaGum;
-public class GumService
+public class GumService : IGumService
 {
     static GumService _default;
     public static GumService Default
@@ -41,6 +45,55 @@ public class GumService
     /// become children of this container. Null until <c>Initialize</c> is called.
     /// </summary>
     public InteractiveGue Root { get; private set; }
+
+    #region IGumService implementation
+
+    // SkiaGum requires a canvas to initialize, so the host-agnostic no-arg Initialize
+    // overloads defined by IGumService are not supported — callers must use one of the
+    // Initialize(SKCanvas, ...) overloads below.
+    void IGumService.Initialize() =>
+        throw new NotSupportedException(
+            "SkiaGum requires a canvas. Call GumService.Default.Initialize(SKCanvas, ...) instead.");
+
+    void IGumService.Initialize(string gumProjectFile) =>
+        throw new NotSupportedException(
+            "SkiaGum requires a canvas. Call GumService.Default.Initialize(SKCanvas, ..., gumProjectFile) instead.");
+
+    IRenderer IGumService.Renderer => SystemManagers.Default.Renderer;
+
+    // Skia is a rendering technology, not a windowing/input system, so there is no built-in
+    // cursor and the Forms input pump (FormsUtilities) is not wired on Skia. Returning null
+    // is intentional; nothing on the Skia path consumes this today (Forms controls render via
+    // their contained visual, which needs no cursor).
+    ICursor IGumService.Cursor => null!;
+
+    float IGumService.CanvasWidth
+    {
+        get => GraphicalUiElement.CanvasWidth;
+        set => GraphicalUiElement.CanvasWidth = value;
+    }
+
+    float IGumService.CanvasHeight
+    {
+        get => GraphicalUiElement.CanvasHeight;
+        set => GraphicalUiElement.CanvasHeight = value;
+    }
+
+    /// <summary>
+    /// Queue used to defer actions onto the main loop. Pending actions are processed at
+    /// the start of each <see cref="Update"/>.
+    /// </summary>
+    public DeferredActionQueue DeferredQueue { get; private set; }
+
+    float? IGumService.GameTime => _hasReceivedUpdate ? (float?)_previousTotalSeconds : null;
+
+    // Skia has no native on-screen keyboard or OS clipboard implementation.
+    INativeTextInput? IGumService.NativeTextInput => null;
+    IGumClipboard? IGumService.Clipboard => null;
+
+    IRenderable IGumService.CreateSpriteRenderable() => new Sprite();
+
+    #endregion
 
     /// <summary>
     /// Initializes Gum for a Skia canvas, optionally loading a Gum project. The canvas
@@ -109,6 +162,15 @@ public class GumService
         Root.AddToManagers(SystemManagers.Default);
         Root.UpdateLayout();
 
+        DeferredQueue = new DeferredActionQueue();
+
+        // Wire this service as the runtime-agnostic default so GumCommon code resolves the
+        // Skia runtime the same way it does MonoGame/raylib — most importantly so that
+        // FrameworkElement.AddToRoot (which adds element.Visual to IGumService.Default.Root)
+        // works on Skia. Forms controls render via their contained visual, so this needs no
+        // input/cursor plumbing.
+        IGumService.Default = this;
+
         IsInitialized = true;
     }
 
@@ -145,6 +207,8 @@ public class GumService
     /// <param name="totalSeconds">Total elapsed time in seconds since startup.</param>
     public void Update(double totalSeconds)
     {
+        DeferredQueue?.ProcessPending();
+
         double delta = _hasReceivedUpdate ? totalSeconds - _previousTotalSeconds : 0;
         _previousTotalSeconds = totalSeconds;
         _hasReceivedUpdate = true;

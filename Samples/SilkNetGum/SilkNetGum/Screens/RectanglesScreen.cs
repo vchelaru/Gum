@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using RenderingLibrary.Graphics;
@@ -11,8 +12,6 @@ namespace SilkNetGum.Screens;
 // visual regressions in one backend are easy to spot against the other.
 //
 // What forces the two files apart:
-//   - Base class. Forms (FrameworkElement / Dock / AddChild) hasn't reached the Skia runtime
-//     yet, so this screen derives from GraphicalUiElement and uses Children.Add directly.
 //   - Color type. XNA Microsoft.Xna.Framework.Color becomes SKColor; named colors come from
 //     SkiaSharp.SKColors instead of Color.X.
 //   - CornerRadius row uses RectangleRuntime with CornerRadius on both sides as of #2771
@@ -23,10 +22,12 @@ namespace SilkNetGum.Screens;
 // Sections the MG side can't currently mirror (gated by missing API on MG RectangleRuntime
 // rather than a design difference): Gradients, Antialiasing, Dropshadow, DashedStrokes. The
 // MG header for those sections will land alongside follow-up plumbing.
-internal class RectanglesScreen : GraphicalUiElement
+internal class RectanglesScreen : FrameworkElement
 {
-    public RectanglesScreen() : base(new InvisibleRenderable())
+    public RectanglesScreen() : base(new ContainerRuntime())
     {
+        Dock(Gum.Wireframe.Dock.Fill);
+
         // Two-column root so the screen grows wide rather than tall as rows accumulate. No
         // ScrollViewer in SkiaGum yet, so this is the cheapest layout that works on both
         // backends (mirrored in MonoGameGumShapesGallery/Screens/RectanglesScreen).
@@ -35,7 +36,7 @@ internal class RectanglesScreen : GraphicalUiElement
         root.StackSpacing = 24;
         root.X = 10;
         root.Y = 10;
-        this.Children.Add(root);
+        this.AddChild(root);
 
         ContainerRuntime left = BuildColumn();
         ContainerRuntime right = BuildColumn();

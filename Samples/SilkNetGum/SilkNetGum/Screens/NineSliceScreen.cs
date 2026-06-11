@@ -1,4 +1,5 @@
 using Gum.Content.AnimationChain;
+using Gum.Forms.Controls;
 using Gum.Graphics.Animation;
 using Gum.GueDeriving;
 using Gum.Managers;
@@ -13,14 +14,11 @@ namespace SilkNetGum.Screens;
 /// SkiaGum Silk.NET host so the two samples can be opened side by side to compare
 /// the unified <see cref="NineSliceRuntime"/> rendering between MonoGame and Skia.
 /// </summary>
-internal class NineSliceScreen : GraphicalUiElement
+internal class NineSliceScreen : FrameworkElement
 {
-    public NineSliceScreen() : base(new InvisibleRenderable())
+    public NineSliceScreen() : base(new ContainerRuntime())
     {
-        this.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        this.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        this.Width = 0;
-        this.Height = 0;
+        Dock(Gum.Wireframe.Dock.Fill);
 
         ContainerRuntime container = new ContainerRuntime();
         container.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
@@ -31,7 +29,7 @@ internal class NineSliceScreen : GraphicalUiElement
         container.Height = -8;
         container.ChildrenLayout = ChildrenLayout.TopToBottomStack;
         container.StackSpacing = 4;
-        this.Children.Add(container);
+        this.AddChild(container);
 
         AddLabel(container, "Default nine-slice (Frame.png) at multiple sizes:");
         ContainerRuntime sizesRow = AddRow(container);

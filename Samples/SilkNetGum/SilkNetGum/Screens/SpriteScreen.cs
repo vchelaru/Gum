@@ -1,4 +1,5 @@
 using Gum.Content.AnimationChain;
+using Gum.Forms.Controls;
 using Gum.Graphics.Animation;
 using Gum.GueDeriving;
 using Gum.Managers;
@@ -19,14 +20,11 @@ namespace SilkNetGum.Screens;
 //   SubtractAlpha -> DstOut. ReplaceAlpha and MinAlpha have no clean SkiaSharp
 //   equivalent and fall through to SrcOver, so those two cells render identically
 //   to Normal — kept in the row anyway to mirror the MG layout 1:1.
-internal class SpriteScreen : GraphicalUiElement
+internal class SpriteScreen : FrameworkElement
 {
-    public SpriteScreen() : base(new InvisibleRenderable())
+    public SpriteScreen() : base(new ContainerRuntime())
     {
-        this.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        this.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        this.Width = 0;
-        this.Height = 0;
+        Dock(Gum.Wireframe.Dock.Fill);
 
         ContainerRuntime container = new ContainerRuntime();
         container.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
@@ -37,7 +35,7 @@ internal class SpriteScreen : GraphicalUiElement
         container.Height = -8;
         container.ChildrenLayout = ChildrenLayout.TopToBottomStack;
         container.StackSpacing = 4;
-        this.Children.Add(container);
+        this.AddChild(container);
 
         // Default sprite at native size — PercentageOfSourceFile + Width/Height = 100
         // means "use the texture's own pixel dimensions".
