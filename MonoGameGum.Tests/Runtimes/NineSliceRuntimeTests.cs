@@ -78,6 +78,17 @@ public class NineSliceRuntimeTests
     }
 
     [Fact]
+    public void Constructor_ShouldDefaultSizeTo100()
+    {
+        // Bucket 1 (#2908): all backends should default a NineSliceRuntime to 100x100.
+        // Previously only the non-XNALIKE backends did so; the XNALIKE ctor left
+        // Width/Height at 0, diverging from Raylib/Skia.
+        NineSliceRuntime sut = new();
+        sut.Width.ShouldBe(100);
+        sut.Height.ShouldBe(100);
+    }
+
+    [Fact]
     public void ExposeChildrenEvents_ShouldBeTrue()
     {
         NineSliceRuntime sut = new();

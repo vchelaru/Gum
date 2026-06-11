@@ -46,6 +46,10 @@ namespace Gum.GueDeriving;
 public class NineSliceRuntime : InteractiveGue
 {
 #if XNALIKE
+    // Bucket 1 (#2908) decision: these per-instance defaults are an XNA-only legacy
+    // surface with no backend-neutral equivalent (texture-coordinate model). They stay
+    // a permanent #if XNALIKE gate rather than being unified or dropped — dropping the
+    // public statics would be an API break for existing MonoGame consumers.
     #region Static Defaults
 
     [Obsolete("This is not currently functional")]
@@ -90,6 +94,10 @@ public class NineSliceRuntime : InteractiveGue
     }
 
 #if XNALIKE
+    // Bucket 1 (#2908) decision: the XNA-typed BlendState surface stays a permanent
+    // #if XNALIKE gate. The backend-neutral Blend? property below is the unified API;
+    // exposing the Microsoft.Xna.Framework BlendState type cannot be done on Raylib/Skia.
+    // Mirrors SpriteRuntime, which made the same call.
     public Microsoft.Xna.Framework.Graphics.BlendState BlendState
     {
         get => ContainedNineSlice.BlendState.ToXNA();
@@ -252,6 +260,10 @@ public class NineSliceRuntime : InteractiveGue
 
     #region Source File / Texture
 
+    // Bucket 1 (#2908) decision: this obsolete shim stays XNALIKE-only and is intentionally
+    // NOT widened to Raylib/Skia. Obsolete APIs are deprecated paths we want consumers off of;
+    // adding them to backends that never had them spreads a dead surface to new code. Replace
+    // usage with Texture / SourceFileName instead.
 #if XNALIKE
     [Obsolete("Use Texture to set Texture2D, or use SourceFileName to set the file")]
     public Texture2D? SourceFile
@@ -345,18 +357,21 @@ public class NineSliceRuntime : InteractiveGue
             _containedNineSlice = new ContainedNineSliceType();
             SetContainedObject(_containedNineSlice);
 
+            // All backends default to 100x100 (#2908). Previously only the non-XNALIKE
+            // branch set this, leaving XNALIKE NineSlices at the GraphicalUiElement
+            // base default (32x32) and diverging from Raylib/Skia.
+            Width = 100;
+            Height = 100;
+
 #if XNALIKE
-            // todo - need to make this work with different relative directories...
-            //this.SourceFileName = DefaultSourceFile;
+            // Per-instance texture-coordinate defaults are an XNA-only legacy feature
+            // (see the Static Defaults region) with no backend-neutral equivalent.
             this.TextureLeft = DefaultTextureLeft;
             this.TextureTop = DefaultTextureTop;
             this.TextureWidth = DefaultTextureWidth;
             this.TextureHeight = DefaultTextureHeight;
 
             this.TextureAddress = DefaultTextureAddress;
-#else
-            Width = 100;
-            Height = 100;
 #endif
         }
     }

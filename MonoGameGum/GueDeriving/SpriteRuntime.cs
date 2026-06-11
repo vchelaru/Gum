@@ -306,6 +306,10 @@ public class SpriteRuntime : GraphicalUiElement
 
     #region Source File/Texture
 
+    // The #if gate on this obsolete Texture2D shim reflects its historical footprint and is
+    // intentionally not widened. Obsolete APIs are deprecated paths; spreading them to backends
+    // that never had them just plants a dead surface in new code. (Skia keeps a separate string
+    // SourceFile below — that one is the live API there, not the obsolete shim.) See NineSliceRuntime.
 #if !SKIA
     /// <summary>
     /// Obsolete. Use Texture instead.
