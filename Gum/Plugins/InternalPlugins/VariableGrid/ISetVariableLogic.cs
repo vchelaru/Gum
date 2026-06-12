@@ -24,4 +24,11 @@ public interface ISetVariableLogic
 
     GeneralResponse PropertyValueChangedOnBehaviorInstance(string memberName, object? oldValue,
         BehaviorSave behavior, BehaviorInstanceSave instance);
+
+    /// <summary>
+    /// Sets a pre-made copy decision for the current batch of file drops. When non-null,
+    /// the "copy or reference?" dialog is suppressed and this value is used instead.
+    /// Pass null to clear the batch decision and restore per-file dialog prompts.
+    /// </summary>
+    void SetBatchFileCopyDecision(bool? shouldCopy);
 }
