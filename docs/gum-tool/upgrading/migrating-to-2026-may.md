@@ -1,12 +1,8 @@
-# Migrating to 2026 June
+# Migrating to 2026 May
 
 ## Introduction
 
-This page discusses breaking changes and other considerations when migrating from `2026 April` to `2026 June`.
-
-{% hint style="warning" %}
-The `2026 June` version of Gum has not yet been released. This page is a work in progress and will be updated when the release is published. In the meantime, if you want to use the changes described below, you will need to build Gum from source.
-{% endhint %}
+This page discusses breaking changes and other considerations when migrating from `2026 April` to `2026 May`.
 
 ## Upgrading Gum Tool
 
@@ -16,7 +12,8 @@ The `2026 June` version of Gum has not yet been released. This page is a work in
 
 To upgrade the Gum tool:
 
-1. Download Gum.zip from the release on Github (link will be added once published)
+1. Download Gum.zip from the release on Github:\
+   [https://github.com/vchelaru/Gum/releases/tag/Release\_June\_11\_2026](https://github.com/vchelaru/Gum/releases/tag/Release_June_11_2026)
 2. Delete the old tool from your machine
 3. Unzip the gum tool to the same location as to not break any file associations
 {% endtab %}
@@ -36,7 +33,7 @@ The tool only shows the new Circle and Rectangle fill, gradient, and drop shadow
 
 ## Upgrading Runtime
 
-The `2026.6` NuGet packages have not yet been published. Once released, upgrade your Gum NuGet packages to the new version. For more information, see the NuGet packages for your particular platform:
+Upgrade your Gum NuGet packages to version **2026.5.31.1**. For more information, see the NuGet packages for your particular platform:
 
 * MonoGame - [https://www.nuget.org/packages/Gum.MonoGame/](https://www.nuget.org/packages/Gum.MonoGame/)
 * KNI - [https://www.nuget.org/packages/Gum.KNI/](https://www.nuget.org/packages/Gum.KNI/)
@@ -164,7 +161,7 @@ error CS0121: The call is ambiguous between the following methods or properties:
 
 If you see `CS0121` on a call like `textBox.AddToRoot();`, add `using Gum.Forms.Controls;` to the file if it isn't already there. No call-site changes are needed.
 
-❌ Old (compiles in April 2026, ambiguous in June 2026 once `Gum.Forms.Controls` is also in scope):
+❌ Old (compiles in April 2026, ambiguous in May 2026 once `Gum.Forms.Controls` is also in scope):
 
 ```csharp
 using MonoGameGum;
@@ -404,7 +401,7 @@ Projects using `FindByName` instantiation are unaffected — generated code keep
 `CircleRuntime` and `RectangleRuntime` are the new fill + stroke shapes, so their inherited single-color members — `Color`, `Red`, `Green`, `Blue`, `Alpha` — and `CircleRuntime.Radius` are superseded by the fill/stroke color API and by `Width` / `Height`. Each is now `[Obsolete]` on **every** backend (MonoGame, FNA, KNI, Raylib, Skia). Existing code keeps compiling, but each reference now produces a `CS0618` compiler warning.
 
 {% hint style="info" %}
-These members were already obsolete on the XNA-likes (MonoGame / FNA / KNI) earlier in this cycle; the June 2026 change extends the same deprecation to Raylib and Skia so the two shapes present one consistent API. If you build for Raylib or Skia you may see new `CS0618` warnings on code that compiled cleanly before.
+These members were already obsolete on the XNA-likes (MonoGame / FNA / KNI) earlier in this cycle; the May 2026 change extends the same deprecation to Raylib and Skia so the two shapes present one consistent API. If you build for Raylib or Skia you may see new `CS0618` warnings on code that compiled cleanly before.
 {% endhint %}
 
 The deprecation applies only to `CircleRuntime` / `RectangleRuntime`. The same members stay non-obsolete on the legacy single-color shapes (`ColoredCircleRuntime`, `RoundedRectangleRuntime`, `ArcRuntime`, etc.), where they remain the primary API — on Skia those shapes share the `SkiaShapeRuntime` base, which is deliberately left unchanged.

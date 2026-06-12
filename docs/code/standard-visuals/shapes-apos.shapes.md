@@ -12,7 +12,7 @@ Each shape has a **fill** and an **outline (stroke)**. The fill is controlled by
 A third shape, `ArcRuntime`, draws a stroked circular arc. It has no direct `CircleRuntime` / `RectangleRuntime` equivalent and remains a current, supported shape.
 
 {% hint style="info" %}
-The fill + outline `CircleRuntime` / `RectangleRuntime` surface described on this page ships in the June 2026 release. Earlier releases used separate `ColoredCircleRuntime` and `RoundedRectangleRuntime` types (documented further down), which are now obsolete shims.
+The fill + outline `CircleRuntime` / `RectangleRuntime` surface described on this page ships in the May 2026 release. Earlier releases used separate `ColoredCircleRuntime` and `RoundedRectangleRuntime` types (documented further down), which are now obsolete shims.
 {% endhint %}
 
 ## Adding Shape Support (Recommended)
@@ -320,7 +320,7 @@ container.Children.Add(rectangle);
 ## Obsolete shape runtimes
 
 {% hint style="info" %}
-**`ColoredCircleRuntime`, `RoundedRectangleRuntime`, `ColoredRectangleRuntime`, and `SolidRectangleRuntime` are obsolete shims being phased out.** Use `CircleRuntime` (for `ColoredCircleRuntime`) and `RectangleRuntime` (for the rectangle variants, with `CornerRadius` covering `RoundedRectangleRuntime`) instead. For the property mapping and the automated code fix, see [Migrating to 2026 June](../../gum-tool/upgrading/migrating-to-2026-june.md). `ArcRuntime` is **not** obsolete — it has no `CircleRuntime` / `RectangleRuntime` equivalent and remains the way to draw a circular arc.
+**`ColoredCircleRuntime`, `RoundedRectangleRuntime`, `ColoredRectangleRuntime`, and `SolidRectangleRuntime` are obsolete shims being phased out.** Use `CircleRuntime` (for `ColoredCircleRuntime`) and `RectangleRuntime` (for the rectangle variants, with `CornerRadius` covering `RoundedRectangleRuntime`) instead. For the property mapping and the automated code fix, see [Migrating to 2026 May](../../gum-tool/upgrading/migrating-to-2026-may.md). `ArcRuntime` is **not** obsolete — it has no `CircleRuntime` / `RectangleRuntime` equivalent and remains the way to draw a circular arc.
 {% endhint %}
 
 The property tables below document the shared surface of the obsolete shims and `ArcRuntime`, which derive from `AposShapeRuntime`. They use older names that differ from the current shapes — for example `Color` (the solid fill) instead of `FillColor`, and per-axis `DropshadowBlurX` / `DropshadowBlurY` instead of the scalar `DropshadowBlur`. For the current `CircleRuntime` / `RectangleRuntime` surface, use the [CircleRuntime and RectangleRuntime](#circleruntime-and-rectangleruntime) tables above.

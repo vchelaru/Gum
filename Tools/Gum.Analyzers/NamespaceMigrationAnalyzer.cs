@@ -24,7 +24,7 @@ public sealed class NamespaceMigrationAnalyzer : DiagnosticAnalyzer
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
         description: "Types from this namespace have been moved to a new namespace as part of the Gum namespace unification. Use the code fix to update automatically.",
-        helpLinkUri: "https://docs.flatredball.com/gum/gum-tool/upgrading/migrating-to-2026-june");
+        helpLinkUri: "https://docs.flatredball.com/gum/gum-tool/upgrading/migrating-to-2026-may");
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
         ImmutableArray.Create(MovedTypeRule);

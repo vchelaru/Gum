@@ -71,7 +71,7 @@ public class ArcRuntimeTests
     // Locked in unification (issue #2728): both backends default IsEndRounded to false
     // (matches Skia's prior behavior and graphics-convention flat caps). Existing Apos
     // consumers who relied on rounded caps must now set IsEndRounded = true explicitly.
-    // See docs/gum-tool/upgrading/migrating-to-2026-june.md.
+    // See docs/gum-tool/upgrading/migrating-to-2026-may.md.
     [Fact]
     public void IsEndRounded_DefaultShouldBeFalse()
     {

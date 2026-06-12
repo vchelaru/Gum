@@ -558,7 +558,7 @@ public class ArcRuntime
     /// <summary>
     /// Gets or sets whether the ends of the arc are rounded. If true, the arc has rounded caps;
     /// if false, the ends are flat. Defaults to false on both backends as of issue #2728 - see
-    /// <c>docs/gum-tool/upgrading/migrating-to-2026-june.md</c>. Existing Apos consumers who relied
+    /// <c>docs/gum-tool/upgrading/migrating-to-2026-may.md</c>. Existing Apos consumers who relied
     /// on the prior rounded default must set this to true explicitly.
     /// </summary>
     public bool IsEndRounded

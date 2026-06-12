@@ -9,7 +9,7 @@ namespace SkiaGum.GueDeriving;
 namespace Gum.GueDeriving;
 #endif
 
-[Obsolete("Use RectangleRuntime with FillColor instead. SolidRectangleRuntime will be removed in a future release. See docs/gum-tool/upgrading/migrating-to-2026-june.md for the full migration guide.")]
+[Obsolete("Use RectangleRuntime with FillColor instead. SolidRectangleRuntime will be removed in a future release. See docs/gum-tool/upgrading/migrating-to-2026-may.md for the full migration guide.")]
 public class SolidRectangleRuntime : InteractiveGue
 {
     SolidRectangle mContainedRectangle;
