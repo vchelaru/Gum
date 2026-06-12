@@ -1051,16 +1051,25 @@ public enum Cursors
 public enum VisualOverBehavior
 {
     /// <summary>
-    /// VisualOver is only set if HasEvents is true and if the visual has events attached. This 
+    /// VisualOver is only set if HasEvents is true and if the visual has events attached. This
     /// exists to support old projects. New projects should use IfHasEventsIsTrue
     /// </summary>
     OnlyIfEventsAreNotNullAndHasEventsIsTrue,
+    /// <summary>
+    /// VisualOver is set whenever HasEvents is true, regardless of whether any specific event has
+    /// a subscriber. This is the default and recommended behavior.
+    /// </summary>
     IfHasEventsIsTrue
 }
 public interface ICursor
 {
+    /// <summary>
+    /// Controls how an element is determined to be "over" the cursor for event purposes. Defaults
+    /// to <see cref="VisualOverBehavior.IfHasEventsIsTrue"/>, matching what
+    /// <c>FormsUtilities.InitializeDefaults</c> assigns; the legacy value exists only for explicit opt-in.
+    /// </summary>
     public static VisualOverBehavior VisualOverBehavior { get; set; } =
-        VisualOverBehavior.OnlyIfEventsAreNotNullAndHasEventsIsTrue;
+        VisualOverBehavior.IfHasEventsIsTrue;
 
     public Cursors? CustomCursor { get; set; }
     InputDevice LastInputDevice { get; }
