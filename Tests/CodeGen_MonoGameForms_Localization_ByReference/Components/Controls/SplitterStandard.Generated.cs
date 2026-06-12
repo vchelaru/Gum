@@ -1,11 +1,11 @@
 //Code for Controls/SplitterStandard (Container)
+using Gum;
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
-using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_Localization_ByReference.Components.Controls;
@@ -16,7 +16,7 @@ partial class SplitterStandard : global::Gum.Forms.Controls.Splitter
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/SplitterStandard");
 #if DEBUG
 if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/SplitterStandard - did you forget to load a Gum project?");
@@ -47,12 +47,9 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        NineSliceInstance = this.Visual?.GetGraphicalUiElementByName("NineSliceInstance") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
+        NineSliceInstance = this.Visual?.GetGraphicalUiElementByName("NineSliceInstance") as global::Gum.GueDeriving.NineSliceRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
-    public void ApplyLocalization()
-    {
-    }
     partial void CustomInitialize();
 }

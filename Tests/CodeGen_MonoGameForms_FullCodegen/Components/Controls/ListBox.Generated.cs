@@ -1,12 +1,12 @@
 //Code for Controls/ListBox (Container)
 using CodeGen_MonoGameForms_FullCodegen.Components.Controls;
+using Gum;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
-using MonoGameGum;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
@@ -135,7 +135,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     protected virtual void AssignParents()
     {
         this.AddChild(Background);
-        ClipAndScrollContainer.AddChild(VerticalScrollBarInstance);
+        ClipAndScrollContainer.AddChild(VerticalScrollBarInstance.Visual);
         ClipContainerParent.AddChild(ClipContainerInstance);
         ClipContainerInstance.AddChild(InnerPanelInstance);
         this.AddChild(FocusedIndicator);

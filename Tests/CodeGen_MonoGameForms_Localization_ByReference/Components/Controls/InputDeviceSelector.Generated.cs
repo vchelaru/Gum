@@ -1,12 +1,12 @@
 //Code for Controls/InputDeviceSelector (Container)
 using CodeGen_MonoGameForms_Localization_ByReference.Components.Controls;
+using Gum;
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
-using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_Localization_ByReference.Components.Controls;
@@ -17,7 +17,7 @@ partial class InputDeviceSelector : global::Gum.Forms.Controls.FrameworkElement
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/InputDeviceSelector");
 #if DEBUG
 if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/InputDeviceSelector - did you forget to load a Gum project?");
@@ -56,12 +56,12 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
-        TextInstance1 = this.Visual?.GetGraphicalUiElementByName("TextInstance1") as global::MonoGameGum.GueDeriving.TextRuntime;
-        ContainerInstance1 = this.Visual?.GetGraphicalUiElementByName("ContainerInstance1") as global::MonoGameGum.GueDeriving.ContainerRuntime;
-        InputDeviceContainerInstance = this.Visual?.GetGraphicalUiElementByName("InputDeviceContainerInstance") as global::MonoGameGum.GueDeriving.ContainerRuntime;
-        ContainerInstance2 = this.Visual?.GetGraphicalUiElementByName("ContainerInstance2") as global::MonoGameGum.GueDeriving.ContainerRuntime;
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::Gum.GueDeriving.NineSliceRuntime;
+        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::Gum.GueDeriving.TextRuntime;
+        TextInstance1 = this.Visual?.GetGraphicalUiElementByName("TextInstance1") as global::Gum.GueDeriving.TextRuntime;
+        ContainerInstance1 = this.Visual?.GetGraphicalUiElementByName("ContainerInstance1") as global::Gum.GueDeriving.ContainerRuntime;
+        InputDeviceContainerInstance = this.Visual?.GetGraphicalUiElementByName("InputDeviceContainerInstance") as global::Gum.GueDeriving.ContainerRuntime;
+        ContainerInstance2 = this.Visual?.GetGraphicalUiElementByName("ContainerInstance2") as global::Gum.GueDeriving.ContainerRuntime;
         InputDeviceSelectionItemInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<InputDeviceSelectionItem>(this.Visual,"InputDeviceSelectionItemInstance");
         InputDeviceSelectionItemInstance1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<InputDeviceSelectionItem>(this.Visual,"InputDeviceSelectionItemInstance1");
         InputDeviceSelectionItemInstance2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<InputDeviceSelectionItem>(this.Visual,"InputDeviceSelectionItemInstance2");
@@ -69,8 +69,5 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
-    public void ApplyLocalization()
-    {
-    }
     partial void CustomInitialize();
 }

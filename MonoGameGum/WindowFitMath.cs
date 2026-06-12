@@ -1,8 +1,4 @@
-#if MONOGAME || KNI || FNA
-namespace MonoGameGum;
-#elif RAYLIB
-namespace RaylibGum;
-#endif
+namespace Gum;
 
 internal static class WindowFitMath
 {

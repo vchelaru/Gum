@@ -27,15 +27,18 @@ using Gum.GueDeriving;
 using MonoGameGum.Input;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-namespace MonoGameGum;
 #elif RAYLIB
 using Gum.GueDeriving;
 using Gum.Input;
 using GameTime = double;
 using Raylib_cs;
 using RaylibGum.Renderables;
-namespace RaylibGum;
 #endif
+
+// The platform-agnostic home for GumService (issue #3119). The legacy
+// MonoGameGum.GumService / RaylibGum.GumService names live on as permanent
+// [Obsolete] subclass shims in GumServiceCompat.cs.
+namespace Gum;
 
 public class GumService : IGumService
 {
@@ -67,12 +70,30 @@ public class GumService : IGumService
     #region Default
     static GumService _default = default!;
 
+#pragma warning disable CS0618 // Type or member is obsolete — Default intentionally returns the
+    // legacy-named subclass shim so existing code typed against it keeps compiling (soft migration,
+    // issue #3119). Because static members are inherited, Gum.GumService.Default and the legacy
+    // namespace's GumService.Default are the same single declaration and the same singleton.
+#if XNALIKE
     /// <summary>
     /// Gets the default instance of the GumService class.
     /// </summary>
     /// <remarks>This property provides a lazily initialized, shared GumService instance for general use. Use
-    /// this instance when a custom configuration is not required.</remarks>
-    public static GumService Default => _default ??= new GumService();
+    /// this instance when a custom configuration is not required. The declared and runtime type is the
+    /// <see cref="MonoGameGum.GumService"/> back-compat subclass so legacy declarations keep compiling.</remarks>
+    public static MonoGameGum.GumService Default =>
+        (MonoGameGum.GumService)(_default ??= new MonoGameGum.GumService());
+#elif RAYLIB
+    /// <summary>
+    /// Gets the default instance of the GumService class.
+    /// </summary>
+    /// <remarks>This property provides a lazily initialized, shared GumService instance for general use. Use
+    /// this instance when a custom configuration is not required. The declared and runtime type is the
+    /// <see cref="RaylibGum.GumService"/> back-compat subclass so legacy declarations keep compiling.</remarks>
+    public static RaylibGum.GumService Default =>
+        (RaylibGum.GumService)(_default ??= new RaylibGum.GumService());
+#endif
+#pragma warning restore CS0618
 
     #endregion
 
@@ -1351,59 +1372,21 @@ public class GumService : IGumService
 #endif
 }
 
-#region GraphicalUiElementExtensionMethods Class
-public static class GraphicalUiElementExtensionMethods
-{
-    /// <summary>
-    /// Adds this element as a child of the GumService root container, making it a top-level
-    /// element that will be rendered and receive layout updates. This is the recommended way
-    /// to display a root-level element — prefer this over the obsolete <c>AddToManagers</c>.
-    /// </summary>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown if GumService has not been initialized.
-    /// </exception>
-    public static void AddToRoot(this GraphicalUiElement element)
-    {
-        if(GumService.Default.IsInitialized == false)
-        {
-            throw new InvalidOperationException("Cannot call AddToRoot because GumService.Default " +
-                "is not initialized - did you remember to initialize Gum first (GumUI.Initialize)?");
-        }
-        GumService.Default.Root.Children.Add(element);
-    }
+// GraphicalUiElementExtensionMethods (AddToRoot/RemoveFromRoot/AddChild) is intentionally
+// NOT in the Gum namespace. AddToRoot/RemoveFromRoot are instance methods on
+// GraphicalUiElement, and the AddChild codegen crutch lives only in the legacy
+// namespaces (GumServiceCompat.cs) so `using Gum;` never makes gue.AddChild(formsChild)
+// ambiguous with Gum.Forms.Controls.FrameworkElementExt.AddChild. See issue #3119.
 
-    /// <summary>
-    /// Removes this element from its parent, effectively removing it from the visual tree.
-    /// This reverses a previous <see cref="AddToRoot(GraphicalUiElement)"/> call.
-    /// </summary>
-    public static void RemoveFromRoot(this GraphicalUiElement element)
-    {
-        element.Parent = null;
-    }
-
-    /// <summary>
-    /// Parents the supplied Forms control under this <see cref="GraphicalUiElement"/>. Used by
-    /// MonoGameForms-output codegen — the generated <c>AssignParents()</c> body routinely calls
-    /// <c>someRuntime.AddChild(someFormsControl)</c> to attach a Forms child to a runtime visual,
-    /// and resolves it through this extension because the canonical
-    /// <see cref="Gum.Forms.Controls.FrameworkElementExt.AddChild"/> lives in <c>Gum.Forms.Controls</c>
-    /// — a namespace generated code does not import (to avoid name collisions with user-authored
-    /// components that share names with built-in Forms types: <c>Label</c>, <c>ListBox</c>, etc.).
-    /// </summary>
-    /// <remarks>
-    /// Hand-written code that imports both <c>MonoGameGum</c> and <c>Gum.Forms.Controls</c> will
-    /// see this overload and the canonical <see cref="Gum.Forms.Controls.FrameworkElementExt.AddChild"/>
-    /// as ambiguous (CS0121) — drop <c>using MonoGameGum;</c> or fully-qualify the call site in
-    /// that situation. See the 2026 May upgrade doc.
-    /// </remarks>
-    public static void AddChild(this GraphicalUiElement element, Gum.Forms.Controls.FrameworkElement child) =>
-        Gum.Forms.Controls.FrameworkElementExt.AddChild(element, child);
-}
-
-#endregion
-
+/// <summary>
+/// Convenience extensions for creating runtime visuals from loaded project elements.
+/// </summary>
 public static class ElementSaveExtensionMethods
 {
+    /// <summary>
+    /// Instantiates a GraphicalUiElement from the supplied ElementSave using the given
+    /// SystemManagers, or <see cref="SystemManagers.Default"/> when omitted.
+    /// </summary>
     public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, SystemManagers? systemManagers = null)
     {
         systemManagers = systemManagers ?? SystemManagers.Default;

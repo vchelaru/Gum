@@ -13,11 +13,19 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
+#if XNALIKE || RAYLIB
+// GumService lives in the Gum namespace (issue #3119). The alias dodges the
+// [Obsolete] legacy shim that unqualified lookup would otherwise find through
+// this file's enclosing MonoGameGum namespace in the XNALIKE build.
+using GumServiceType = Gum.GumService;
+#else
+// Sokol keeps its own GumService (no Gum-namespace move there).
+using GumServiceType = SokolGum.GumService;
+#endif
+
 #if XNALIKE
-using MonoGameGum;
 namespace MonoGameGum.Input;
 #elif RAYLIB
-using RaylibGum;
 namespace Gum.Input;
 #else
 namespace Gum.Input;
@@ -192,7 +200,7 @@ public static class CursorExtensions
 
         if(!isInEventRoots)
         {
-            var gumUI = GumService.Default;
+            var gumUI = GumServiceType.Default;
             if(rootParent != gumUI.Root && rootParent != gumUI.PopupRoot && rootParent != gumUI.ModalRoot)
             {
                 return $"The object must ultimately be added to one of the root objects, but it is not. The top parent {rootParent} is an orphan object";
@@ -464,7 +472,7 @@ public static class CursorExtensions
     private static List<FrameworkElement> FindFrameworkElements(Type? type, string? name)
     {
         var results = new List<FrameworkElement>();
-        var gumUI = GumService.Default;
+        var gumUI = GumServiceType.Default;
 
         Collect(gumUI.Root, results, type, name);
         if (gumUI.PopupRoot != null) Collect(gumUI.PopupRoot, results, type, name);

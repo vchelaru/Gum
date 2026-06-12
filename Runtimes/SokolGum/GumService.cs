@@ -20,7 +20,7 @@ namespace SokolGum;
 /// content-root wiring, optional .gumx loading, and a <see cref="Root"/>
 /// container that elements get parented to via the <c>AddToRoot</c> extension.
 /// </summary>
-public sealed class GumService
+public sealed class GumService : IGumService
 {
     #region Default
 
@@ -42,7 +42,40 @@ public sealed class GumService
             HasEvents = false,
         };
 
+        DeferredQueue = new Gum.Threading.DeferredActionQueue();
     }
+
+    #region IGumService implementation
+
+    void IGumService.Initialize() => Initialize();
+
+    void IGumService.Initialize(string gumProjectFile) => Initialize(gumProjectFile);
+
+    IRenderer IGumService.Renderer => SystemManagers.Renderer;
+
+    ICursor IGumService.Cursor => Cursor;
+
+    /// <inheritdoc/>
+    float? IGumService.GameTime =>
+        // GameTime starts at 0 and only becomes meaningful once Update has run;
+        // treat the pre-Update state as null (matches the Raylib behavior).
+        _hasReceivedUpdate ? (float?)GameTime : null;
+
+    private bool _hasReceivedUpdate;
+
+    /// <inheritdoc/>
+    public Gum.Threading.DeferredActionQueue DeferredQueue { get; private set; }
+
+    /// <inheritdoc/>
+    public Gum.Forms.Controls.INativeTextInput? NativeTextInput => null;
+
+    /// <inheritdoc/>
+    public Gum.Forms.Controls.IGumClipboard? Clipboard => null;
+
+    /// <inheritdoc/>
+    IRenderable IGumService.CreateSpriteRenderable() => new Gum.Renderables.Sprite();
+
+    #endregion
 
     /// <summary>
     /// Gets the default cursor, fed by Sokol mouse events forwarded via
@@ -168,6 +201,7 @@ public sealed class GumService
         SystemManagers = new SystemManagers();
         SystemManagers.Default = SystemManagers;
         ISystemManagers.Default = SystemManagers;
+        IGumService.Default = this;
         SystemManagers.Initialize();
 
         // SystemManagers.Initialize must come first because it assigns the
@@ -268,6 +302,7 @@ public sealed class GumService
 
         SystemManagers.Default = null;
         ISystemManagers.Default = null;
+        IGumService.Default = null;
 
         FileManager.RelativeDirectory = "Content/";
 
@@ -302,8 +337,10 @@ public sealed class GumService
     {
         var difference = gameTime - GameTime;
         GameTime = gameTime;
+        _hasReceivedUpdate = true;
 
         _syncContext?.Update();
+        DeferredQueue.ProcessPending();
 
         FormsUtilities.Update(gameTime, Root);
 
@@ -358,48 +395,7 @@ public static class ElementSaveExtensionMethods
     }
 }
 
-/// <summary>
-/// Extension methods on <see cref="GraphicalUiElement"/> for adding/removing
-/// elements from the GumService root container.
-/// </summary>
-public static class GraphicalUiElementExtensionMethods
-{
-    /// <summary>
-    /// Adds this element as a child of the GumService root container,
-    /// making it a top-level element that will be rendered.
-    /// </summary>
-    public static void AddToRoot(this GraphicalUiElement element)
-    {
-        if (!GumService.Default.IsInitialized)
-        {
-            throw new InvalidOperationException(
-                "Cannot call AddToRoot because GumService.Default is not initialized — "
-                + "call GumService.Default.Initialize(...) first.");
-        }
-        GumService.Default.Root.Children.Add(element);
-    }
-
-    /// <summary>
-    /// Removes this element from its parent, reversing a previous
-    /// <see cref="AddToRoot"/> call.
-    /// </summary>
-    public static void RemoveFromRoot(this GraphicalUiElement element)
-    {
-        element.Parent = null;
-    }
-
-    /// <summary>
-    /// Adds this Forms control's underlying visual to the GumService root
-    /// container. Forms equivalent of <see cref="AddToRoot(GraphicalUiElement)"/>.
-    /// </summary>
-    public static void AddToRoot(this Gum.Forms.Controls.FrameworkElement element)
-    {
-        if (!GumService.Default.IsInitialized)
-        {
-            throw new InvalidOperationException(
-                "Cannot call AddToRoot because GumService.Default is not initialized — "
-                + "call GumService.Default.Initialize(...) first.");
-        }
-        GumService.Default.Root.Children.Add(element.Visual);
-    }
-}
+// AddToRoot / RemoveFromRoot extensions are intentionally NOT here anymore.
+// GraphicalUiElement has instance AddToRoot/RemoveFromRoot (dispatching via
+// IGumService.Default), and Forms controls use Gum.Forms.Controls.FrameworkElementExt.
+// See issue #3119.

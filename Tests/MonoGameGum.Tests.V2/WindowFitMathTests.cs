@@ -1,3 +1,4 @@
+using Gum;
 using Shouldly;
 using Xunit;
 

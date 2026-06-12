@@ -6715,6 +6715,37 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public void RemoveChild(GraphicalUiElement child) => this.Children.Remove(child);
 
+#if !FRB && NET6_0_OR_GREATER
+    /// <summary>
+    /// Adds this element as a child of the active runtime's root container (resolved via
+    /// <see cref="IGumService.Default"/>), making it a top-level element that will be rendered
+    /// and receive layout updates. This is the recommended way to display a root-level
+    /// element — prefer this over the obsolete <c>AddToManagers</c>.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if no <see cref="IGumService"/> has been initialized.
+    /// </exception>
+    public void AddToRoot()
+    {
+        if (IGumService.Default?.IsInitialized != true)
+        {
+            throw new InvalidOperationException(
+                "Cannot call AddToRoot because IGumService.Default is not initialized — " +
+                "did you remember to initialize Gum first (GumService.Default.Initialize)?");
+        }
+        IGumService.Default.Root.Children.Add(this);
+    }
+
+    /// <summary>
+    /// Removes this element from its parent, effectively removing it from the visual tree.
+    /// This reverses a previous <see cref="AddToRoot"/> call.
+    /// </summary>
+    public void RemoveFromRoot()
+    {
+        Parent = null;
+    }
+#endif
+
     /// <summary>
     /// Searches recursively for and returns a GraphicalUiElement in this instance by name. Returns null
     /// if not found.

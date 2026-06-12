@@ -1,12 +1,12 @@
 //Code for Controls/RadioButton (Container)
 using CodeGen_MonoGameForms_Localization_ByReference.Components.Elements;
+using Gum;
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
-using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_Localization_ByReference.Components.Controls;
@@ -17,7 +17,7 @@ partial class RadioButton : global::Gum.Forms.Controls.RadioButton
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/RadioButton");
 #if DEBUG
 if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/RadioButton - did you forget to load a Gum project?");
@@ -81,11 +81,6 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     public TextRuntime TextInstance { get; protected set; }
     public NineSliceRuntime FocusedIndicator { get; protected set; }
 
-    public string Text
-    {
-        get => TextInstance.Text;
-        set => TextInstance.Text = value;
-    }
 
     public RadioButton(InteractiveGue visual) : base(visual)
     {
@@ -99,15 +94,12 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        RadioBackground = this.Visual?.GetGraphicalUiElementByName("RadioBackground") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
+        RadioBackground = this.Visual?.GetGraphicalUiElementByName("RadioBackground") as global::Gum.GueDeriving.NineSliceRuntime;
         Radio = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"Radio");
-        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
-        FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
+        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::Gum.GueDeriving.TextRuntime;
+        FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as global::Gum.GueDeriving.NineSliceRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
-    public void ApplyLocalization()
-    {
-    }
     partial void CustomInitialize();
 }

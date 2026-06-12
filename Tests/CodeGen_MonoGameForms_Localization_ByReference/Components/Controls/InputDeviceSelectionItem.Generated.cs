@@ -1,13 +1,13 @@
 //Code for Controls/InputDeviceSelectionItem (Container)
 using CodeGen_MonoGameForms_Localization_ByReference.Components.Controls;
 using CodeGen_MonoGameForms_Localization_ByReference.Components.Elements;
+using Gum;
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
-using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_Localization_ByReference.Components.Controls;
@@ -18,7 +18,7 @@ partial class InputDeviceSelectionItem : global::Gum.Forms.Controls.FrameworkEle
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/InputDeviceSelectionItem");
 #if DEBUG
 if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/InputDeviceSelectionItem - did you forget to load a Gum project?");
@@ -81,15 +81,12 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
+        Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::Gum.GueDeriving.NineSliceRuntime;
         IconInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"IconInstance");
-        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
+        TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::Gum.GueDeriving.TextRuntime;
         RemoveDeviceButtonInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ButtonClose>(this.Visual,"RemoveDeviceButtonInstance");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
-    public void ApplyLocalization()
-    {
-    }
     partial void CustomInitialize();
 }

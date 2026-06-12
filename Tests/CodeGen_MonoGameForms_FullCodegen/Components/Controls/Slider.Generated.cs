@@ -1,12 +1,12 @@
 //Code for Controls/Slider (Container)
 using CodeGen_MonoGameForms_FullCodegen.Components.Controls;
+using Gum;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
-using MonoGameGum;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
@@ -143,7 +143,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     {
         this.AddChild(TrackInstance);
         TrackInstance.AddChild(TrackBackground);
-        TrackInstance.AddChild(ThumbInstance);
+        TrackInstance.AddChild(ThumbInstance.Visual);
         this.AddChild(FocusedIndicator);
     }
     private void ApplyDefaultVariables()

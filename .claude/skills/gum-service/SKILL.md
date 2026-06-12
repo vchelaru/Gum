@@ -7,7 +7,7 @@ description: GumService — runtime entry point for MonoGame/Raylib/KNI/FNA. Tri
 
 ## What It Is
 
-`GumService` is the runtime-facing API that game developers use to initialize, update, and draw Gum UI. It lives in `MonoGameGum/GumService.cs` (compiled for XNALIKE, RAYLIB via `#if`).
+`GumService` is the runtime-facing API that game developers use to initialize, update, and draw Gum UI. It lives in `MonoGameGum/GumService.cs` (compiled for XNALIKE, RAYLIB via `#if`) under the `Gum` namespace (since issue #3119 / syntax version 3). Legacy `MonoGameGum.GumService` / `RaylibGum.GumService` names are permanent `[Obsolete]` subclass shims in `MonoGameGum/GumServiceCompat.cs` (linked into `RaylibGum.csproj`). `WindowZoomMode`, `GumHotReloadManager`, and related hot-reload types also live in `namespace Gum`.
 
 **Not the CLI.** `Gum.Cli` / `Gum.ProjectServices` are separate tools for headless project validation and codegen.
 
@@ -56,7 +56,8 @@ GumService.Default.Uninitialize()
 
 | File | Purpose |
 |------|---------|
-| `MonoGameGum/GumService.cs` | Main class |
+| `MonoGameGum/GumService.cs` | Main class (`namespace Gum`) |
+| `MonoGameGum/GumServiceCompat.cs` | `[Obsolete]` subclass shims for `MonoGameGum.GumService` / `RaylibGum.GumService`; also holds the `AddChild` codegen crutch and `ToGraphicalUiElement` forwarder |
 | `MonoGameGum/Forms/FormsUtilities.cs` | Input/cursor/gamepad setup; `Uninitialize()` lives here |
 | `GumRuntime/ElementSaveExtensions.GumRuntime.cs` | `ClearRegistrations()` called during Uninitialize |
 | `RenderingLibrary/Content/LoaderManager.cs` | `DisposeAndClear()` called during Uninitialize |

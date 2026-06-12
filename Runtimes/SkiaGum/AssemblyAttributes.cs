@@ -11,4 +11,4 @@ using Gum.DataTypes;
 //
 // The version history is maintained in one place — see:
 // https://docs.flatredball.com/gum/gum-tool/upgrading/syntax-versions
-[assembly: GumSyntaxVersion(Version = 2)]
+[assembly: GumSyntaxVersion(Version = 3)]

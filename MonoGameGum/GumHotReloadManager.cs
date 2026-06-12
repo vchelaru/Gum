@@ -12,11 +12,9 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 
-#if XNALIKE
-namespace MonoGameGum;
-#elif RAYLIB
-namespace RaylibGum;
-#endif
+// Companion types to Gum.GumService (issue #3119) — hot reload is wired via
+// GumService.EnableHotReload, so these live in the same namespace.
+namespace Gum;
 
 #if !IOS && !ANDROID
 
@@ -177,7 +175,9 @@ public class GumHotReloadManager : IGumHotReloadManager
         var destinationFontCache = Path.Combine(_binGumDirectory, "FontCache");
         Directory.CreateDirectory(destinationFontCache);
 
-        var loaderManager = RenderingLibrary.Content.LoaderManager.Self;
+        // global:: needed now that this file is in namespace Gum — a bare
+        // "RenderingLibrary.Content" would resolve against Gum.RenderingLibrary.
+        var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
 
         foreach (var sourceFntPath in changedFonts)
         {
