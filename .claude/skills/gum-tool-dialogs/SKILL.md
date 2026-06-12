@@ -52,6 +52,8 @@ Used by: delete confirmation only (`DeleteLogic.ShowDeleteDialog`).
 
 **Wrong system**: The most common mistake is modifying `DialogWindow.xaml` or `Dialog.cs` expecting it to affect the delete dialog. Always verify which system shows the dialog you're fixing.
 
+**File copy prompt**: The "copy or reference?" dialog shown when a SourceFile/Font path outside the project folder is assigned lives in `SetVariableLogic.AskIfShouldCopy` (`Gum/Plugins/InternalPlugins/VariableGrid/SetVariableLogic.cs`), triggered via `ReactIfChangedMemberIsSourceFile` — not in the drag-drop layer.
+
 **ScrollViewer behavior**: The `Dialog` template wraps content in a ScrollViewer. With `Auto` scrolling, child controls get infinite available height during WPF measure — so internal scroll viewers (like a TreeView) won't scroll. Set `Dialog.ScrollContent="False"` on views that need bounded height for internal scrolling.
 
 **Deferred binding**: `Dialog.OnContentChanged` binds attached properties at `DispatcherPriority.Loaded`, not immediately. Code that reads these values before the dispatch fires will see defaults.
