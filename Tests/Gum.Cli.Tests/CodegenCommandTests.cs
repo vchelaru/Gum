@@ -100,6 +100,91 @@ public class CodegenCommandTests : IDisposable
         contents.ShouldNotContain("\"CodeProjectRoot\": \"\"");
     }
 
+    [Fact]
+    public void Codegen_PrintsResolvedCodeProjectRoot()
+    {
+        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        new ProjectCreator().Create(gumxPath);
+        File.WriteAllText(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"),
+            """
+            {
+              "CodeProjectRoot": "./",
+              "RootNamespace": "TestNamespace",
+              "OutputLibrary": 5,
+              "ObjectInstantiationType": 0,
+              "SyntaxVersion": "*"
+            }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
+
+        // The resolved (absolute) output root must be visible so misconfigured
+        // CodeProjectRoot values (e.g. machine-specific absolute paths) are obvious.
+        result.StandardOutput.ShouldContain(_tempDirectory);
+    }
+
+    [Fact]
+    public void Codegen_WhenProjectHasLocalizationCsv_GeneratedCodeContainsApplyLocalization()
+    {
+        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        new ProjectCreator().Create(gumxPath);
+
+        string screenXml =
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+              <Name>TestScreen</Name>
+              <State>
+                <Name>Default</Name>
+                <Variable>
+                  <Type>string</Type>
+                  <Name>TextInstance.Text</Name>
+                  <Value xsi:type="xsd:string">T_OK</Value>
+                  <SetsValue>true</SetsValue>
+                </Variable>
+              </State>
+              <Instance>
+                <Name>TextInstance</Name>
+                <BaseType>Text</BaseType>
+                <DefinedByBase>false</DefinedByBase>
+              </Instance>
+            </ScreenSave>
+            """;
+        File.WriteAllText(Path.Combine(_tempDirectory, "Screens", "TestScreen.gusx"), screenXml);
+
+        File.WriteAllText(Path.Combine(_tempDirectory, "LocalizationDB.csv"),
+            "String ID,English,Spanish\nT_OK,OK,De acuerdo\n");
+
+        string gumxContent = File.ReadAllText(gumxPath);
+        gumxContent = gumxContent.Replace("</GumProjectSave>",
+            "  <ScreenReference Name=\"TestScreen\" />\n" +
+            "  <LocalizationFile>LocalizationDB.csv</LocalizationFile>\n" +
+            "</GumProjectSave>");
+        File.WriteAllText(gumxPath, gumxContent);
+
+        File.WriteAllText(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"),
+            """
+            {
+              "CodeProjectRoot": "./",
+              "RootNamespace": "TestNamespace",
+              "OutputLibrary": 5,
+              "ObjectInstantiationType": 0,
+              "SyntaxVersion": "*"
+            }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
+
+        result.ExitCode.ShouldBe(0, customMessage: result.StandardError);
+        string generatedPath = Path.Combine(_tempDirectory, "Screens", "TestScreen.Generated.cs");
+        File.Exists(generatedPath).ShouldBeTrue(
+            customMessage: "codegen should have written the generated screen file");
+        string generatedContents = File.ReadAllText(generatedPath);
+        generatedContents.ShouldContain("public void ApplyLocalization()",
+            customMessage: "the project declares a localization CSV, so codegen must load it and emit ApplyLocalization");
+        generatedContents.ShouldContain("Translate(\"T_OK\")");
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_tempDirectory))

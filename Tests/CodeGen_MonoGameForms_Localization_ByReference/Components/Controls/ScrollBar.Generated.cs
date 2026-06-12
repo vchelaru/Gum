@@ -2,11 +2,11 @@
 using CodeGen_MonoGameForms_Localization_ByReference.Components.Controls;
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_Localization_ByReference.Components.Controls;
@@ -17,7 +17,7 @@ partial class ScrollBar : global::Gum.Forms.Controls.ScrollBar
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/ScrollBar");
 #if DEBUG
 if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/ScrollBar - did you forget to load a Gum project?");
@@ -112,8 +112,8 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         base.ReactToVisualChanged();
         UpButtonInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ButtonIcon>(this.Visual,"UpButtonInstance");
         DownButtonInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ButtonIcon>(this.Visual,"DownButtonInstance");
-        TrackInstance = this.Visual?.GetGraphicalUiElementByName("TrackInstance") as global::MonoGameGum.GueDeriving.ContainerRuntime;
-        TrackBackground = this.Visual?.GetGraphicalUiElementByName("TrackBackground") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
+        TrackInstance = this.Visual?.GetGraphicalUiElementByName("TrackInstance") as global::Gum.GueDeriving.ContainerRuntime;
+        TrackBackground = this.Visual?.GetGraphicalUiElementByName("TrackBackground") as global::Gum.GueDeriving.NineSliceRuntime;
         ThumbInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ButtonStandard>(this.Visual,"ThumbInstance");
         CustomInitialize();
     }
