@@ -458,8 +458,7 @@ public partial class InteractiveGue : GraphicalUiElement
                 asInteractive?._losePush != null ||
                 asInteractive?.HoverOver != null ||
                 asInteractive?.Dragging != null ||
-                asInteractive?.MouseWheelScroll != null ||
-                asInteractive?.ClickBubbling != null;
+                asInteractive?.MouseWheelScroll != null;
                 // if it has events and it has a Forms control, then let's consider it a click
                 //|| asInteractive?.FormsControlAsObject != null
                 // Update July 18, 2025 
