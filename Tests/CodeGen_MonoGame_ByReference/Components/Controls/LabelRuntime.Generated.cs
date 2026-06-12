@@ -1,15 +1,15 @@
 //Code for Controls/Label (Text)
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.Controls;
-partial class LabelRuntime : global::MonoGameGum.GueDeriving.TextRuntime
+partial class LabelRuntime : global::Gum.GueDeriving.TextRuntime
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()

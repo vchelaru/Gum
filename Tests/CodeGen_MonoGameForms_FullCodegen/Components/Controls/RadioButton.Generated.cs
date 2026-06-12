@@ -2,11 +2,11 @@
 using CodeGen_MonoGameForms_FullCodegen.Components.Elements;
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
@@ -17,7 +17,7 @@ partial class RadioButton : global::Gum.Forms.Controls.RadioButton
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/RadioButton");
 #if DEBUG
 if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/RadioButton - did you forget to load a Gum project?");
@@ -171,11 +171,6 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     public TextRuntime TextInstance { get; protected set; }
     public NineSliceRuntime FocusedIndicator { get; protected set; }
 
-    public string Text
-    {
-        get => TextInstance.Text;
-        set => TextInstance.Text = value;
-    }
 
     public RadioButton(InteractiveGue visual) : base(visual)
     {
@@ -197,19 +192,19 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     }
     protected virtual void InitializeInstances()
     {
-        RadioBackground = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
+        RadioBackground = new global::Gum.GueDeriving.NineSliceRuntime();
         RadioBackground.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (RadioBackground.ElementSave != null) RadioBackground.AddStatesAndCategoriesRecursivelyToGue(RadioBackground.ElementSave);
         if (RadioBackground.ElementSave != null) RadioBackground.SetInitialState();
         RadioBackground.Name = "RadioBackground";
         Radio = new CodeGen_MonoGameForms_FullCodegen.Components.Elements.Icon();
         Radio.Name = "Radio";
-        TextInstance = new global::MonoGameGum.GueDeriving.TextRuntime();
+        TextInstance = new global::Gum.GueDeriving.TextRuntime();
         TextInstance.ElementSave = ObjectFinder.Self.GetStandardElement("Text");
         if (TextInstance.ElementSave != null) TextInstance.AddStatesAndCategoriesRecursivelyToGue(TextInstance.ElementSave);
         if (TextInstance.ElementSave != null) TextInstance.SetInitialState();
         TextInstance.Name = "TextInstance";
-        FocusedIndicator = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
+        FocusedIndicator = new global::Gum.GueDeriving.NineSliceRuntime();
         FocusedIndicator.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.AddStatesAndCategoriesRecursivelyToGue(FocusedIndicator.ElementSave);
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.SetInitialState();

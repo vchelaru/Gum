@@ -51,7 +51,7 @@ public class CodeGeneratorRenderTargetTextureSourceTests : BaseTestClass
         return component;
     }
 
-    private static void AddVariable(ElementSave element, string name, object value, string type) =>
+    private static void AddVariable(ElementSave element, string name, object? value, string type) =>
         element.DefaultState.Variables.Add(new VariableSave
         {
             Name = name,

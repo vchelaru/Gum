@@ -2,11 +2,11 @@
 using CodeGen_MonoGameForms_FullCodegen.Components.Controls;
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
@@ -17,7 +17,7 @@ partial class Slider : global::Gum.Forms.Controls.Slider
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/Slider");
 #if DEBUG
 if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/Slider - did you forget to load a Gum project?");
@@ -120,19 +120,19 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     }
     protected virtual void InitializeInstances()
     {
-        TrackInstance = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+        TrackInstance = new global::Gum.GueDeriving.ContainerRuntime();
         TrackInstance.ElementSave = ObjectFinder.Self.GetStandardElement("Container");
         if (TrackInstance.ElementSave != null) TrackInstance.AddStatesAndCategoriesRecursivelyToGue(TrackInstance.ElementSave);
         if (TrackInstance.ElementSave != null) TrackInstance.SetInitialState();
         TrackInstance.Name = "TrackInstance";
-        TrackBackground = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
+        TrackBackground = new global::Gum.GueDeriving.NineSliceRuntime();
         TrackBackground.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (TrackBackground.ElementSave != null) TrackBackground.AddStatesAndCategoriesRecursivelyToGue(TrackBackground.ElementSave);
         if (TrackBackground.ElementSave != null) TrackBackground.SetInitialState();
         TrackBackground.Name = "TrackBackground";
         ThumbInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ButtonStandard();
         ThumbInstance.Name = "ThumbInstance";
-        FocusedIndicator = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
+        FocusedIndicator = new global::Gum.GueDeriving.NineSliceRuntime();
         FocusedIndicator.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.AddStatesAndCategoriesRecursivelyToGue(FocusedIndicator.ElementSave);
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.SetInitialState();

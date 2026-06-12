@@ -1,12 +1,12 @@
 //Code for AnimatedComponent (Container)
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.StateAnimation.Runtime;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGenProject.Components;
@@ -17,7 +17,7 @@ partial class AnimatedComponent : global::Gum.Forms.Controls.FrameworkElement
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("AnimatedComponent");
 #if DEBUG
 if(element == null) throw new System.InvalidOperationException("Could not find an element named AnimatedComponent - did you forget to load a Gum project?");

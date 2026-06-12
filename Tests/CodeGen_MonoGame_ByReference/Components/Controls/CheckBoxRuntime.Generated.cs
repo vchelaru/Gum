@@ -2,11 +2,11 @@
 using CodeGen_MonoGame_ByReference.Components.Elements;
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.Controls;
@@ -96,10 +96,10 @@ partial class CheckBoxRuntime : ContainerRuntime
         {
             FormsControlAsObject = new global::Gum.Forms.Controls.CheckBox(this);
         }
-        CheckboxBackground = this.GetGraphicalUiElementByName("CheckboxBackground") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        TextInstance = this.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
+        CheckboxBackground = this.GetGraphicalUiElementByName("CheckboxBackground") as global::Gum.GueDeriving.NineSliceRuntime;
+        TextInstance = this.GetGraphicalUiElementByName("TextInstance") as global::Gum.GueDeriving.TextRuntime;
         Check = this.GetGraphicalUiElementByName("Check") as CodeGen_MonoGame_ByReference.Components.Elements.IconRuntime;
-        FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
+        FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as global::Gum.GueDeriving.NineSliceRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

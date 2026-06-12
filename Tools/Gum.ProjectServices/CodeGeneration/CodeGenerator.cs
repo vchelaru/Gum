@@ -262,6 +262,7 @@ public class CodeGenerator
     private readonly CodeOutputElementSettingsManager _elementSettingsManager;
     private readonly IProjectDirectoryProvider _projectDirectoryProvider;
     private readonly ISyntaxVersionDetectionService? _syntaxVersionDetectionService;
+    private readonly ICollapsedShapeCodeGenLogic _collapsedShapeLogic;
 
     /// <summary>
     /// The current project directory (folder containing the .gumx file). Read lazily from the
@@ -293,6 +294,7 @@ public class CodeGenerator
         _projectDirectoryProvider = projectDirectoryProvider;
         _typeStringResolver = typeStringResolver;
         _syntaxVersionDetectionService = syntaxVersionDetectionService;
+        _collapsedShapeLogic = new CollapsedShapeCodeGenLogic();
     }
 
     /// <summary>
@@ -604,7 +606,19 @@ public class CodeGenerator
             }
 
             string suffix = visualApi == VisualApi.Gum ? "Runtime" : "";
-            className = _codeGenerationNameVerifier.ToCSharpName($"{strippedType}{suffix}", out isPrefixed);
+
+            // #2775 — at syntax version >= 2 the legacy single-color shape standards emit the
+            // collapsed two-slot runtimes. Standard elements only: a component could legally
+            // share a legacy shape's name.
+            string? collapsedName = null;
+            if (visualApi == VisualApi.Gum &&
+                typeof(StandardElementSave).IsAssignableFrom(elementType) &&
+                _collapsedShapeLogic.ShouldCollapse(strippedType, context.ResolvedSyntaxVersion, context.CodeOutputProjectSettings))
+            {
+                collapsedName = _collapsedShapeLogic.TryGetCollapsedRuntimeName(strippedType);
+            }
+
+            className = _codeGenerationNameVerifier.ToCSharpName(collapsedName ?? $"{strippedType}{suffix}", out isPrefixed);
         }
 
         className = className == null ? string.Empty : _codeGenerationNameVerifier.ToCSharpName(className);
@@ -690,7 +704,13 @@ public class CodeGenerator
                 var standardElement = ObjectFinder.Self.GetStandardElement(element.BaseType);
                 if(standardElement != null)
                 {
-                    inheritance = "global::" + GetGueDerivingNamespace(resolvedSyntaxVersion, isSkia: false) + "." + element.BaseType + "Runtime";
+                    // Constructed locally because GetInheritance is static and cannot use the
+                    // injected _collapsedShapeLogic.
+                    ICollapsedShapeCodeGenLogic collapsedShapeLogic = new CollapsedShapeCodeGenLogic();
+                    string runtimeName = collapsedShapeLogic.ShouldCollapse(element.BaseType, resolvedSyntaxVersion, projectSettings)
+                        ? collapsedShapeLogic.TryGetCollapsedRuntimeName(element.BaseType)!
+                        : element.BaseType + "Runtime";
+                    inheritance = "global::" + GetGueDerivingNamespace(resolvedSyntaxVersion, isSkia: false) + "." + runtimeName;
                 }
                 else
                 {
@@ -1460,6 +1480,20 @@ public class CodeGenerator
 
 
                 context.StringBuilder.AppendLine($"{tabs}if ({instanceName}.ElementSave != null) {instanceName}.SetInitialState();");
+
+                // #2775 — SetInitialState applies the legacy default state, whose single-color
+                // variables route to the stroke slot on the collapsed runtimes (#2938 semantics).
+                // Re-establish the legacy shape's default visual; explicit instance variables
+                // follow in ApplyDefaultVariables and override these.
+                if (instanceElement is StandardElementSave standardInstanceElement &&
+                    _collapsedShapeLogic.ShouldCollapse(standardInstanceElement.Name, context.ResolvedSyntaxVersion, context.CodeOutputProjectSettings))
+                {
+                    bool effectiveIsFilled = _collapsedShapeLogic.GetEffectiveIsFilled(context.Element, instance, standardInstanceElement);
+                    foreach (string assignment in _collapsedShapeLogic.GetBaselineAssignments(standardInstanceElement.Name, effectiveIsFilled))
+                    {
+                        context.StringBuilder.AppendLine($"{tabs}{instanceName}.{assignment}");
+                    }
+                }
             }
         }
 
@@ -5070,6 +5104,14 @@ public class CodeGenerator
     {
         InstanceSave? instance = context.Instance;
         var rootName = variable.GetRootName();
+
+        // #2775 — variables with no target on the collapsed shape runtimes are skipped entirely.
+        if (TryGetCollapsedShapeVariableContext(context, out bool collapsedShapeIsFilled) &&
+            _collapsedShapeLogic.ShouldDropVariable(rootName.Replace(" ", ""), collapsedShapeIsFilled))
+        {
+            return " ";
+        }
+
         #region Parent
 
         if (rootName == "Parent" && instance != null)
@@ -5182,7 +5224,7 @@ public class CodeGenerator
         return null;
     }
 
-    private static string GetGumVariableName(VariableSave variable, CodeGenerationContext context)
+    private string GetGumVariableName(VariableSave variable, CodeGenerationContext context)
     {
 #if DEBUG
         if (variable == null)
@@ -5208,8 +5250,45 @@ public class CodeGenerator
             }
         }
 
+        string rootName = variable.GetRootName().Replace(" ", "");
 
-        return variable.GetRootName().Replace(" ", "");
+        // #2775 — legacy single-color shape variables route to the collapsed runtimes'
+        // fill/stroke channel properties.
+        if (TryGetCollapsedShapeVariableContext(context, out bool effectiveIsFilled))
+        {
+            rootName = _collapsedShapeLogic.TranslateVariableRootName(rootName, effectiveIsFilled);
+        }
+
+        return rootName;
+    }
+
+    /// <summary>
+    /// Returns true when the variable owner currently being generated (the instance's base
+    /// element, or the generated element's own base type) is a legacy shape standard element
+    /// whose emission is collapsed (#2775), along with its effective IsFilled value.
+    /// </summary>
+    private bool TryGetCollapsedShapeVariableContext(CodeGenerationContext context, out bool effectiveIsFilled)
+    {
+        effectiveIsFilled = true;
+
+        ElementSave? shapeElement = null;
+        if (context.Instance != null)
+        {
+            shapeElement = ObjectFinder.Self.GetElementSave(context.Instance);
+        }
+        else if (!string.IsNullOrEmpty(context.Element?.BaseType))
+        {
+            shapeElement = ObjectFinder.Self.GetStandardElement(context.Element.BaseType);
+        }
+
+        if (shapeElement is not StandardElementSave standardElement ||
+            !_collapsedShapeLogic.ShouldCollapse(standardElement.Name, context.ResolvedSyntaxVersion, context.CodeOutputProjectSettings))
+        {
+            return false;
+        }
+
+        effectiveIsFilled = _collapsedShapeLogic.GetEffectiveIsFilled(context.Element, context.Instance, standardElement);
+        return true;
     }
 
 

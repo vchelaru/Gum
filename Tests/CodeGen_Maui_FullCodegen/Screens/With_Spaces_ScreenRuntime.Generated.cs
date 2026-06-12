@@ -9,7 +9,7 @@ using RenderingLibrary.Graphics;
 using SkiaGum.GueDeriving;
 using System.Linq;
 namespace CodeGen_Maui_FullCodegen.Screens;
-partial class With_Spaces_ScreenRuntime : Gum.Wireframe.BindableGue
+partial class With_Spaces_ScreenRuntime : Gum.Wireframe.GraphicalUiElement
 {
     public ContainerRuntime Container_With_Spaces { get; protected set; }
     public ContainerRuntime Parent_With_Spaces { get; protected set; }

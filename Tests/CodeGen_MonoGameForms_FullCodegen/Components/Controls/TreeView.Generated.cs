@@ -2,11 +2,11 @@
 using CodeGen_MonoGameForms_FullCodegen.Components.Controls;
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
@@ -17,7 +17,7 @@ partial class TreeView : global::Gum.Forms.Controls.FrameworkElement
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/TreeView");
 #if DEBUG
 if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/TreeView - did you forget to load a Gum project?");
@@ -57,24 +57,24 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     }
     protected virtual void InitializeInstances()
     {
-        Background = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
+        Background = new global::Gum.GueDeriving.NineSliceRuntime();
         Background.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (Background.ElementSave != null) Background.AddStatesAndCategoriesRecursivelyToGue(Background.ElementSave);
         if (Background.ElementSave != null) Background.SetInitialState();
         Background.Name = "Background";
         VerticalScrollBarInstance = new CodeGen_MonoGameForms_FullCodegen.Components.Controls.ScrollBar();
         VerticalScrollBarInstance.Name = "VerticalScrollBarInstance";
-        ClipContainerInstance = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+        ClipContainerInstance = new global::Gum.GueDeriving.ContainerRuntime();
         ClipContainerInstance.ElementSave = ObjectFinder.Self.GetStandardElement("Container");
         if (ClipContainerInstance.ElementSave != null) ClipContainerInstance.AddStatesAndCategoriesRecursivelyToGue(ClipContainerInstance.ElementSave);
         if (ClipContainerInstance.ElementSave != null) ClipContainerInstance.SetInitialState();
         ClipContainerInstance.Name = "ClipContainerInstance";
-        InnerPanelInstance = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+        InnerPanelInstance = new global::Gum.GueDeriving.ContainerRuntime();
         InnerPanelInstance.ElementSave = ObjectFinder.Self.GetStandardElement("Container");
         if (InnerPanelInstance.ElementSave != null) InnerPanelInstance.AddStatesAndCategoriesRecursivelyToGue(InnerPanelInstance.ElementSave);
         if (InnerPanelInstance.ElementSave != null) InnerPanelInstance.SetInitialState();
         InnerPanelInstance.Name = "InnerPanelInstance";
-        FocusedIndicator = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
+        FocusedIndicator = new global::Gum.GueDeriving.NineSliceRuntime();
         FocusedIndicator.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.AddStatesAndCategoriesRecursivelyToGue(FocusedIndicator.ElementSave);
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.SetInitialState();

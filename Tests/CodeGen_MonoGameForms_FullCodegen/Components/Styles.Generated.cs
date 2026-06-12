@@ -1,11 +1,11 @@
 //Code for Styles (Container)
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_FullCodegen.Components;
@@ -16,7 +16,7 @@ partial class Styles : global::Gum.Forms.Controls.FrameworkElement
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Styles");
 #if DEBUG
 if(element == null) throw new System.InvalidOperationException("Could not find an element named Styles - did you forget to load a Gum project?");
@@ -33,18 +33,18 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         });
     }
     public ContainerRuntime Colors { get; protected set; }
-    public ColoredRectangleRuntime Black { get; protected set; }
-    public ColoredRectangleRuntime DarkGray { get; protected set; }
-    public ColoredRectangleRuntime Gray { get; protected set; }
-    public ColoredRectangleRuntime LightGray { get; protected set; }
-    public ColoredRectangleRuntime White { get; protected set; }
-    public ColoredRectangleRuntime PrimaryDark { get; protected set; }
-    public ColoredRectangleRuntime Primary { get; protected set; }
-    public ColoredRectangleRuntime PrimaryLight { get; protected set; }
-    public ColoredRectangleRuntime Success { get; protected set; }
-    public ColoredRectangleRuntime Warning { get; protected set; }
-    public ColoredRectangleRuntime Danger { get; protected set; }
-    public ColoredRectangleRuntime Accent { get; protected set; }
+    public RectangleRuntime Black { get; protected set; }
+    public RectangleRuntime DarkGray { get; protected set; }
+    public RectangleRuntime Gray { get; protected set; }
+    public RectangleRuntime LightGray { get; protected set; }
+    public RectangleRuntime White { get; protected set; }
+    public RectangleRuntime PrimaryDark { get; protected set; }
+    public RectangleRuntime Primary { get; protected set; }
+    public RectangleRuntime PrimaryLight { get; protected set; }
+    public RectangleRuntime Success { get; protected set; }
+    public RectangleRuntime Warning { get; protected set; }
+    public RectangleRuntime Danger { get; protected set; }
+    public RectangleRuntime Accent { get; protected set; }
     public TextRuntime Tiny { get; protected set; }
     public TextRuntime Small { get; protected set; }
     public TextRuntime Normal { get; protected set; }
@@ -83,117 +83,141 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     }
     protected virtual void InitializeInstances()
     {
-        Colors = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+        Colors = new global::Gum.GueDeriving.ContainerRuntime();
         Colors.ElementSave = ObjectFinder.Self.GetStandardElement("Container");
         if (Colors.ElementSave != null) Colors.AddStatesAndCategoriesRecursivelyToGue(Colors.ElementSave);
         if (Colors.ElementSave != null) Colors.SetInitialState();
         Colors.Name = "Colors";
-        Black = new global::MonoGameGum.GueDeriving.ColoredRectangleRuntime();
+        Black = new global::Gum.GueDeriving.RectangleRuntime();
         Black.ElementSave = ObjectFinder.Self.GetStandardElement("ColoredRectangle");
         if (Black.ElementSave != null) Black.AddStatesAndCategoriesRecursivelyToGue(Black.ElementSave);
         if (Black.ElementSave != null) Black.SetInitialState();
+        Black.IsFilled = true;
+        Black.StrokeWidth = 0f;
         Black.Name = "Black";
-        DarkGray = new global::MonoGameGum.GueDeriving.ColoredRectangleRuntime();
+        DarkGray = new global::Gum.GueDeriving.RectangleRuntime();
         DarkGray.ElementSave = ObjectFinder.Self.GetStandardElement("ColoredRectangle");
         if (DarkGray.ElementSave != null) DarkGray.AddStatesAndCategoriesRecursivelyToGue(DarkGray.ElementSave);
         if (DarkGray.ElementSave != null) DarkGray.SetInitialState();
+        DarkGray.IsFilled = true;
+        DarkGray.StrokeWidth = 0f;
         DarkGray.Name = "DarkGray";
-        Gray = new global::MonoGameGum.GueDeriving.ColoredRectangleRuntime();
+        Gray = new global::Gum.GueDeriving.RectangleRuntime();
         Gray.ElementSave = ObjectFinder.Self.GetStandardElement("ColoredRectangle");
         if (Gray.ElementSave != null) Gray.AddStatesAndCategoriesRecursivelyToGue(Gray.ElementSave);
         if (Gray.ElementSave != null) Gray.SetInitialState();
+        Gray.IsFilled = true;
+        Gray.StrokeWidth = 0f;
         Gray.Name = "Gray";
-        LightGray = new global::MonoGameGum.GueDeriving.ColoredRectangleRuntime();
+        LightGray = new global::Gum.GueDeriving.RectangleRuntime();
         LightGray.ElementSave = ObjectFinder.Self.GetStandardElement("ColoredRectangle");
         if (LightGray.ElementSave != null) LightGray.AddStatesAndCategoriesRecursivelyToGue(LightGray.ElementSave);
         if (LightGray.ElementSave != null) LightGray.SetInitialState();
+        LightGray.IsFilled = true;
+        LightGray.StrokeWidth = 0f;
         LightGray.Name = "LightGray";
-        White = new global::MonoGameGum.GueDeriving.ColoredRectangleRuntime();
+        White = new global::Gum.GueDeriving.RectangleRuntime();
         White.ElementSave = ObjectFinder.Self.GetStandardElement("ColoredRectangle");
         if (White.ElementSave != null) White.AddStatesAndCategoriesRecursivelyToGue(White.ElementSave);
         if (White.ElementSave != null) White.SetInitialState();
+        White.IsFilled = true;
+        White.StrokeWidth = 0f;
         White.Name = "White";
-        PrimaryDark = new global::MonoGameGum.GueDeriving.ColoredRectangleRuntime();
+        PrimaryDark = new global::Gum.GueDeriving.RectangleRuntime();
         PrimaryDark.ElementSave = ObjectFinder.Self.GetStandardElement("ColoredRectangle");
         if (PrimaryDark.ElementSave != null) PrimaryDark.AddStatesAndCategoriesRecursivelyToGue(PrimaryDark.ElementSave);
         if (PrimaryDark.ElementSave != null) PrimaryDark.SetInitialState();
+        PrimaryDark.IsFilled = true;
+        PrimaryDark.StrokeWidth = 0f;
         PrimaryDark.Name = "PrimaryDark";
-        Primary = new global::MonoGameGum.GueDeriving.ColoredRectangleRuntime();
+        Primary = new global::Gum.GueDeriving.RectangleRuntime();
         Primary.ElementSave = ObjectFinder.Self.GetStandardElement("ColoredRectangle");
         if (Primary.ElementSave != null) Primary.AddStatesAndCategoriesRecursivelyToGue(Primary.ElementSave);
         if (Primary.ElementSave != null) Primary.SetInitialState();
+        Primary.IsFilled = true;
+        Primary.StrokeWidth = 0f;
         Primary.Name = "Primary";
-        PrimaryLight = new global::MonoGameGum.GueDeriving.ColoredRectangleRuntime();
+        PrimaryLight = new global::Gum.GueDeriving.RectangleRuntime();
         PrimaryLight.ElementSave = ObjectFinder.Self.GetStandardElement("ColoredRectangle");
         if (PrimaryLight.ElementSave != null) PrimaryLight.AddStatesAndCategoriesRecursivelyToGue(PrimaryLight.ElementSave);
         if (PrimaryLight.ElementSave != null) PrimaryLight.SetInitialState();
+        PrimaryLight.IsFilled = true;
+        PrimaryLight.StrokeWidth = 0f;
         PrimaryLight.Name = "PrimaryLight";
-        Success = new global::MonoGameGum.GueDeriving.ColoredRectangleRuntime();
+        Success = new global::Gum.GueDeriving.RectangleRuntime();
         Success.ElementSave = ObjectFinder.Self.GetStandardElement("ColoredRectangle");
         if (Success.ElementSave != null) Success.AddStatesAndCategoriesRecursivelyToGue(Success.ElementSave);
         if (Success.ElementSave != null) Success.SetInitialState();
+        Success.IsFilled = true;
+        Success.StrokeWidth = 0f;
         Success.Name = "Success";
-        Warning = new global::MonoGameGum.GueDeriving.ColoredRectangleRuntime();
+        Warning = new global::Gum.GueDeriving.RectangleRuntime();
         Warning.ElementSave = ObjectFinder.Self.GetStandardElement("ColoredRectangle");
         if (Warning.ElementSave != null) Warning.AddStatesAndCategoriesRecursivelyToGue(Warning.ElementSave);
         if (Warning.ElementSave != null) Warning.SetInitialState();
+        Warning.IsFilled = true;
+        Warning.StrokeWidth = 0f;
         Warning.Name = "Warning";
-        Danger = new global::MonoGameGum.GueDeriving.ColoredRectangleRuntime();
+        Danger = new global::Gum.GueDeriving.RectangleRuntime();
         Danger.ElementSave = ObjectFinder.Self.GetStandardElement("ColoredRectangle");
         if (Danger.ElementSave != null) Danger.AddStatesAndCategoriesRecursivelyToGue(Danger.ElementSave);
         if (Danger.ElementSave != null) Danger.SetInitialState();
+        Danger.IsFilled = true;
+        Danger.StrokeWidth = 0f;
         Danger.Name = "Danger";
-        Accent = new global::MonoGameGum.GueDeriving.ColoredRectangleRuntime();
+        Accent = new global::Gum.GueDeriving.RectangleRuntime();
         Accent.ElementSave = ObjectFinder.Self.GetStandardElement("ColoredRectangle");
         if (Accent.ElementSave != null) Accent.AddStatesAndCategoriesRecursivelyToGue(Accent.ElementSave);
         if (Accent.ElementSave != null) Accent.SetInitialState();
+        Accent.IsFilled = true;
+        Accent.StrokeWidth = 0f;
         Accent.Name = "Accent";
-        Tiny = new global::MonoGameGum.GueDeriving.TextRuntime();
+        Tiny = new global::Gum.GueDeriving.TextRuntime();
         Tiny.ElementSave = ObjectFinder.Self.GetStandardElement("Text");
         if (Tiny.ElementSave != null) Tiny.AddStatesAndCategoriesRecursivelyToGue(Tiny.ElementSave);
         if (Tiny.ElementSave != null) Tiny.SetInitialState();
         Tiny.Name = "Tiny";
-        Small = new global::MonoGameGum.GueDeriving.TextRuntime();
+        Small = new global::Gum.GueDeriving.TextRuntime();
         Small.ElementSave = ObjectFinder.Self.GetStandardElement("Text");
         if (Small.ElementSave != null) Small.AddStatesAndCategoriesRecursivelyToGue(Small.ElementSave);
         if (Small.ElementSave != null) Small.SetInitialState();
         Small.Name = "Small";
-        Normal = new global::MonoGameGum.GueDeriving.TextRuntime();
+        Normal = new global::Gum.GueDeriving.TextRuntime();
         Normal.ElementSave = ObjectFinder.Self.GetStandardElement("Text");
         if (Normal.ElementSave != null) Normal.AddStatesAndCategoriesRecursivelyToGue(Normal.ElementSave);
         if (Normal.ElementSave != null) Normal.SetInitialState();
         Normal.Name = "Normal";
-        Emphasis = new global::MonoGameGum.GueDeriving.TextRuntime();
+        Emphasis = new global::Gum.GueDeriving.TextRuntime();
         Emphasis.ElementSave = ObjectFinder.Self.GetStandardElement("Text");
         if (Emphasis.ElementSave != null) Emphasis.AddStatesAndCategoriesRecursivelyToGue(Emphasis.ElementSave);
         if (Emphasis.ElementSave != null) Emphasis.SetInitialState();
         Emphasis.Name = "Emphasis";
-        Strong = new global::MonoGameGum.GueDeriving.TextRuntime();
+        Strong = new global::Gum.GueDeriving.TextRuntime();
         Strong.ElementSave = ObjectFinder.Self.GetStandardElement("Text");
         if (Strong.ElementSave != null) Strong.AddStatesAndCategoriesRecursivelyToGue(Strong.ElementSave);
         if (Strong.ElementSave != null) Strong.SetInitialState();
         Strong.Name = "Strong";
-        H3 = new global::MonoGameGum.GueDeriving.TextRuntime();
+        H3 = new global::Gum.GueDeriving.TextRuntime();
         H3.ElementSave = ObjectFinder.Self.GetStandardElement("Text");
         if (H3.ElementSave != null) H3.AddStatesAndCategoriesRecursivelyToGue(H3.ElementSave);
         if (H3.ElementSave != null) H3.SetInitialState();
         H3.Name = "H3";
-        H2 = new global::MonoGameGum.GueDeriving.TextRuntime();
+        H2 = new global::Gum.GueDeriving.TextRuntime();
         H2.ElementSave = ObjectFinder.Self.GetStandardElement("Text");
         if (H2.ElementSave != null) H2.AddStatesAndCategoriesRecursivelyToGue(H2.ElementSave);
         if (H2.ElementSave != null) H2.SetInitialState();
         H2.Name = "H2";
-        H1 = new global::MonoGameGum.GueDeriving.TextRuntime();
+        H1 = new global::Gum.GueDeriving.TextRuntime();
         H1.ElementSave = ObjectFinder.Self.GetStandardElement("Text");
         if (H1.ElementSave != null) H1.AddStatesAndCategoriesRecursivelyToGue(H1.ElementSave);
         if (H1.ElementSave != null) H1.SetInitialState();
         H1.Name = "H1";
-        TextStyles = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+        TextStyles = new global::Gum.GueDeriving.ContainerRuntime();
         TextStyles.ElementSave = ObjectFinder.Self.GetStandardElement("Container");
         if (TextStyles.ElementSave != null) TextStyles.AddStatesAndCategoriesRecursivelyToGue(TextStyles.ElementSave);
         if (TextStyles.ElementSave != null) TextStyles.SetInitialState();
         TextStyles.Name = "TextStyles";
-        Title = new global::MonoGameGum.GueDeriving.TextRuntime();
+        Title = new global::Gum.GueDeriving.TextRuntime();
         Title.ElementSave = ObjectFinder.Self.GetStandardElement("Text");
         if (Title.ElementSave != null) Title.AddStatesAndCategoriesRecursivelyToGue(Title.ElementSave);
         if (Title.ElementSave != null) Title.SetInitialState();
@@ -240,50 +264,50 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         this.Colors.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
         this.Colors.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
 
-        this.Black.Blue = 0;
-        this.Black.Green = 0;
-        this.Black.Red = 0;
+        this.Black.FillBlue = 0;
+        this.Black.FillGreen = 0;
+        this.Black.FillRed = 0;
 
-        this.DarkGray.Blue = 80;
-        this.DarkGray.Green = 70;
-        this.DarkGray.Red = 70;
+        this.DarkGray.FillBlue = 80;
+        this.DarkGray.FillGreen = 70;
+        this.DarkGray.FillRed = 70;
 
-        this.Gray.Blue = 130;
-        this.Gray.Green = 130;
-        this.Gray.Red = 130;
+        this.Gray.FillBlue = 130;
+        this.Gray.FillGreen = 130;
+        this.Gray.FillRed = 130;
 
-        this.LightGray.Blue = 170;
-        this.LightGray.Green = 170;
-        this.LightGray.Red = 170;
+        this.LightGray.FillBlue = 170;
+        this.LightGray.FillGreen = 170;
+        this.LightGray.FillRed = 170;
 
 
-        this.PrimaryDark.Blue = 137;
-        this.PrimaryDark.Green = 120;
-        this.PrimaryDark.Red = 4;
+        this.PrimaryDark.FillBlue = 137;
+        this.PrimaryDark.FillGreen = 120;
+        this.PrimaryDark.FillRed = 4;
 
-        this.Primary.Blue = 177;
-        this.Primary.Green = 159;
-        this.Primary.Red = 6;
+        this.Primary.FillBlue = 177;
+        this.Primary.FillGreen = 159;
+        this.Primary.FillRed = 6;
 
-        this.PrimaryLight.Blue = 193;
-        this.PrimaryLight.Green = 180;
-        this.PrimaryLight.Red = 74;
+        this.PrimaryLight.FillBlue = 193;
+        this.PrimaryLight.FillGreen = 180;
+        this.PrimaryLight.FillRed = 74;
 
-        this.Success.Blue = 48;
-        this.Success.Green = 167;
-        this.Success.Red = 62;
+        this.Success.FillBlue = 48;
+        this.Success.FillGreen = 167;
+        this.Success.FillRed = 62;
 
-        this.Warning.Blue = 25;
-        this.Warning.Green = 171;
-        this.Warning.Red = 232;
+        this.Warning.FillBlue = 25;
+        this.Warning.FillGreen = 171;
+        this.Warning.FillRed = 232;
 
-        this.Danger.Blue = 41;
-        this.Danger.Green = 18;
-        this.Danger.Red = 212;
+        this.Danger.FillBlue = 41;
+        this.Danger.FillGreen = 18;
+        this.Danger.FillRed = 212;
 
-        this.Accent.Blue = 138;
-        this.Accent.Green = 48;
-        this.Accent.Red = 140;
+        this.Accent.FillBlue = 138;
+        this.Accent.FillGreen = 48;
+        this.Accent.FillRed = 140;
 
         this.Tiny.FontSize = 10;
         this.Tiny.Text = @"Tiny";

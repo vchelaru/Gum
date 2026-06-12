@@ -1,12 +1,12 @@
 //Code for Controls/KeyboardKey (Container)
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.StateAnimation.Runtime;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
@@ -17,7 +17,7 @@ partial class KeyboardKey : global::Gum.Forms.Controls.Button
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/KeyboardKey");
 #if DEBUG
 if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/KeyboardKey - did you forget to load a Gum project?");
@@ -99,11 +99,6 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     public TextRuntime TextInstance { get; protected set; }
     public NineSliceRuntime FocusedIndicator { get; protected set; }
 
-    public override string Text
-    {
-        get => TextInstance.Text;
-        set => TextInstance.Text = value;
-    }
 
     public KeyboardKey(InteractiveGue visual) : base(visual)
     {
@@ -127,17 +122,17 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     }
     protected virtual void InitializeInstances()
     {
-        Background = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
+        Background = new global::Gum.GueDeriving.NineSliceRuntime();
         Background.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (Background.ElementSave != null) Background.AddStatesAndCategoriesRecursivelyToGue(Background.ElementSave);
         if (Background.ElementSave != null) Background.SetInitialState();
         Background.Name = "Background";
-        TextInstance = new global::MonoGameGum.GueDeriving.TextRuntime();
+        TextInstance = new global::Gum.GueDeriving.TextRuntime();
         TextInstance.ElementSave = ObjectFinder.Self.GetStandardElement("Text");
         if (TextInstance.ElementSave != null) TextInstance.AddStatesAndCategoriesRecursivelyToGue(TextInstance.ElementSave);
         if (TextInstance.ElementSave != null) TextInstance.SetInitialState();
         TextInstance.Name = "TextInstance";
-        FocusedIndicator = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
+        FocusedIndicator = new global::Gum.GueDeriving.NineSliceRuntime();
         FocusedIndicator.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.AddStatesAndCategoriesRecursivelyToGue(FocusedIndicator.ElementSave);
         if (FocusedIndicator.ElementSave != null) FocusedIndicator.SetInitialState();

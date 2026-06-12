@@ -1,11 +1,11 @@
 //Code for Controls/StackPanel (Container)
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGenProject.Components.Controls;
@@ -16,7 +16,7 @@ partial class StackPanel : global::Gum.Forms.Controls.StackPanel
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/StackPanel");
 #if DEBUG
 if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/StackPanel - did you forget to load a Gum project?");

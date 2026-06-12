@@ -1,11 +1,11 @@
 //Code for Elements/Divider (Container)
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Elements;
@@ -16,7 +16,7 @@ partial class Divider : global::Gum.Forms.Controls.FrameworkElement
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Elements/Divider");
 #if DEBUG
 if(element == null) throw new System.InvalidOperationException("Could not find an element named Elements/Divider - did you forget to load a Gum project?");
@@ -56,17 +56,17 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     }
     protected virtual void InitializeInstances()
     {
-        AccentLeft = new global::MonoGameGum.GueDeriving.SpriteRuntime();
+        AccentLeft = new global::Gum.GueDeriving.SpriteRuntime();
         AccentLeft.ElementSave = ObjectFinder.Self.GetStandardElement("Sprite");
         if (AccentLeft.ElementSave != null) AccentLeft.AddStatesAndCategoriesRecursivelyToGue(AccentLeft.ElementSave);
         if (AccentLeft.ElementSave != null) AccentLeft.SetInitialState();
         AccentLeft.Name = "AccentLeft";
-        Line = new global::MonoGameGum.GueDeriving.SpriteRuntime();
+        Line = new global::Gum.GueDeriving.SpriteRuntime();
         Line.ElementSave = ObjectFinder.Self.GetStandardElement("Sprite");
         if (Line.ElementSave != null) Line.AddStatesAndCategoriesRecursivelyToGue(Line.ElementSave);
         if (Line.ElementSave != null) Line.SetInitialState();
         Line.Name = "Line";
-        AccentRight = new global::MonoGameGum.GueDeriving.SpriteRuntime();
+        AccentRight = new global::Gum.GueDeriving.SpriteRuntime();
         AccentRight.ElementSave = ObjectFinder.Self.GetStandardElement("Sprite");
         if (AccentRight.ElementSave != null) AccentRight.AddStatesAndCategoriesRecursivelyToGue(AccentRight.ElementSave);
         if (AccentRight.ElementSave != null) AccentRight.SetInitialState();

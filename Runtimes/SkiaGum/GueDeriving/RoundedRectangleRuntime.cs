@@ -32,7 +32,7 @@ namespace Gum.GueDeriving;
 /// differences are gated behind <c>#if SKIA</c>; the cross-platform shape (constructor defaults,
 /// CornerRadius property, base wiring) is shared.
 /// </remarks>
-[Obsolete("Use RectangleRuntime with CornerRadius (plus FillColor / StrokeColor for the two-slot model) instead. RoundedRectangleRuntime will be removed in a future release. See docs/gum-tool/upgrading/migrating-to-2026-may.md for the full migration guide.")]
+[Obsolete("Use RectangleRuntime with CornerRadius (plus FillColor / StrokeColor for the two-slot model) instead. RoundedRectangleRuntime will be removed in a future release. See docs/gum-tool/upgrading/migrating-to-2026-june.md for the full migration guide.")]
 public class RoundedRectangleRuntime
 #if SKIA
     : SkiaShapeRuntime, IClipPath
