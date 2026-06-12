@@ -1,11 +1,11 @@
 //Code for Controls/MenuItem (Container)
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.Controls;
@@ -73,10 +73,10 @@ partial class MenuItemRuntime : ContainerRuntime
         {
             FormsControlAsObject = new global::Gum.Forms.Controls.MenuItem(this);
         }
-        Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        TextInstance = this.GetGraphicalUiElementByName("TextInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
-        SubmenuIndicatorInstance = this.GetGraphicalUiElementByName("SubmenuIndicatorInstance") as global::MonoGameGum.GueDeriving.TextRuntime;
-        ContainerInstance = this.GetGraphicalUiElementByName("ContainerInstance") as global::MonoGameGum.GueDeriving.ContainerRuntime;
+        Background = this.GetGraphicalUiElementByName("Background") as global::Gum.GueDeriving.NineSliceRuntime;
+        TextInstance = this.GetGraphicalUiElementByName("TextInstance") as global::Gum.GueDeriving.TextRuntime;
+        SubmenuIndicatorInstance = this.GetGraphicalUiElementByName("SubmenuIndicatorInstance") as global::Gum.GueDeriving.TextRuntime;
+        ContainerInstance = this.GetGraphicalUiElementByName("ContainerInstance") as global::Gum.GueDeriving.ContainerRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

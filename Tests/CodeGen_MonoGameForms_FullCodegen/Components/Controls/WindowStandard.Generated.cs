@@ -2,11 +2,11 @@
 using CodeGen_MonoGameForms_FullCodegen.Components.Controls;
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
@@ -17,7 +17,7 @@ partial class WindowStandard : global::Gum.Forms.Window
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/WindowStandard");
 #if DEBUG
 if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/WindowStandard - did you forget to load a Gum project?");
@@ -65,7 +65,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     }
     protected virtual void InitializeInstances()
     {
-        Background = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
+        Background = new global::Gum.GueDeriving.NineSliceRuntime();
         Background.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (Background.ElementSave != null) Background.AddStatesAndCategoriesRecursivelyToGue(Background.ElementSave);
         if (Background.ElementSave != null) Background.SetInitialState();

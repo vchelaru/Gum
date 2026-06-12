@@ -3,11 +3,11 @@ using CodeGenProject.Components;
 using CodeGenProject.Components.Controls;
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGenProject.Screens;
@@ -18,7 +18,7 @@ partial class GeneralScreen : global::Gum.Forms.Controls.FrameworkElement
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("GeneralScreen");
 #if DEBUG
 if(element == null) throw new System.InvalidOperationException("Could not find an element named GeneralScreen - did you forget to load a Gum project?");

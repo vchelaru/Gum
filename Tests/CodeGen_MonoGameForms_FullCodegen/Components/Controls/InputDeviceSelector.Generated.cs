@@ -2,11 +2,11 @@
 using CodeGen_MonoGameForms_FullCodegen.Components.Controls;
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
@@ -17,7 +17,7 @@ partial class InputDeviceSelector : global::Gum.Forms.Controls.FrameworkElement
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/InputDeviceSelector");
 #if DEBUG
 if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/InputDeviceSelector - did you forget to load a Gum project?");
@@ -72,32 +72,32 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     }
     protected virtual void InitializeInstances()
     {
-        Background = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
+        Background = new global::Gum.GueDeriving.NineSliceRuntime();
         Background.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (Background.ElementSave != null) Background.AddStatesAndCategoriesRecursivelyToGue(Background.ElementSave);
         if (Background.ElementSave != null) Background.SetInitialState();
         Background.Name = "Background";
-        TextInstance = new global::MonoGameGum.GueDeriving.TextRuntime();
+        TextInstance = new global::Gum.GueDeriving.TextRuntime();
         TextInstance.ElementSave = ObjectFinder.Self.GetStandardElement("Text");
         if (TextInstance.ElementSave != null) TextInstance.AddStatesAndCategoriesRecursivelyToGue(TextInstance.ElementSave);
         if (TextInstance.ElementSave != null) TextInstance.SetInitialState();
         TextInstance.Name = "TextInstance";
-        TextInstance1 = new global::MonoGameGum.GueDeriving.TextRuntime();
+        TextInstance1 = new global::Gum.GueDeriving.TextRuntime();
         TextInstance1.ElementSave = ObjectFinder.Self.GetStandardElement("Text");
         if (TextInstance1.ElementSave != null) TextInstance1.AddStatesAndCategoriesRecursivelyToGue(TextInstance1.ElementSave);
         if (TextInstance1.ElementSave != null) TextInstance1.SetInitialState();
         TextInstance1.Name = "TextInstance1";
-        ContainerInstance1 = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+        ContainerInstance1 = new global::Gum.GueDeriving.ContainerRuntime();
         ContainerInstance1.ElementSave = ObjectFinder.Self.GetStandardElement("Container");
         if (ContainerInstance1.ElementSave != null) ContainerInstance1.AddStatesAndCategoriesRecursivelyToGue(ContainerInstance1.ElementSave);
         if (ContainerInstance1.ElementSave != null) ContainerInstance1.SetInitialState();
         ContainerInstance1.Name = "ContainerInstance1";
-        InputDeviceContainerInstance = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+        InputDeviceContainerInstance = new global::Gum.GueDeriving.ContainerRuntime();
         InputDeviceContainerInstance.ElementSave = ObjectFinder.Self.GetStandardElement("Container");
         if (InputDeviceContainerInstance.ElementSave != null) InputDeviceContainerInstance.AddStatesAndCategoriesRecursivelyToGue(InputDeviceContainerInstance.ElementSave);
         if (InputDeviceContainerInstance.ElementSave != null) InputDeviceContainerInstance.SetInitialState();
         InputDeviceContainerInstance.Name = "InputDeviceContainerInstance";
-        ContainerInstance2 = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+        ContainerInstance2 = new global::Gum.GueDeriving.ContainerRuntime();
         ContainerInstance2.ElementSave = ObjectFinder.Self.GetStandardElement("Container");
         if (ContainerInstance2.ElementSave != null) ContainerInstance2.AddStatesAndCategoriesRecursivelyToGue(ContainerInstance2.ElementSave);
         if (ContainerInstance2.ElementSave != null) ContainerInstance2.SetInitialState();

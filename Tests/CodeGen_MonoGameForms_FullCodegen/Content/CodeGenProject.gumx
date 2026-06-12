@@ -303,6 +303,11 @@
     <LinkType>ReferenceOriginal</LinkType>
   </ComponentReference>
   <ComponentReference>
+    <Name>LegacyShapes</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
+  <ComponentReference>
     <Name>Spaced Component</Name>
     <ElementType>Component</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
@@ -314,6 +319,11 @@
   </ComponentReference>
   <StandardElementReference>
     <Name>Circle</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>ColoredCircle</Name>
     <ElementType>Standard</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
   </StandardElementReference>
@@ -344,6 +354,11 @@
   </StandardElementReference>
   <StandardElementReference>
     <Name>Rectangle</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>RoundedRectangle</Name>
     <ElementType>Standard</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
   </StandardElementReference>

@@ -1,11 +1,11 @@
 //Code for Elements/CautionLines (Container)
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Elements;
@@ -16,7 +16,7 @@ partial class CautionLines : global::Gum.Forms.Controls.FrameworkElement
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Elements/CautionLines");
 #if DEBUG
 if(element == null) throw new System.InvalidOperationException("Could not find an element named Elements/CautionLines - did you forget to load a Gum project?");
@@ -62,7 +62,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     }
     protected virtual void InitializeInstances()
     {
-        LinesSprite = new global::MonoGameGum.GueDeriving.SpriteRuntime();
+        LinesSprite = new global::Gum.GueDeriving.SpriteRuntime();
         LinesSprite.ElementSave = ObjectFinder.Self.GetStandardElement("Sprite");
         if (LinesSprite.ElementSave != null) LinesSprite.AddStatesAndCategoriesRecursivelyToGue(LinesSprite.ElementSave);
         if (LinesSprite.ElementSave != null) LinesSprite.SetInitialState();

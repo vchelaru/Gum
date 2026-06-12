@@ -2,11 +2,11 @@
 using CodeGen_MonoGame_ByReference.Components.Elements;
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.Elements;
@@ -78,9 +78,9 @@ partial class PercentBarRuntime : ContainerRuntime
     }
     public override void AfterFullCreation()
     {
-        Background = this.GetGraphicalUiElementByName("Background") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        BarContainer = this.GetGraphicalUiElementByName("BarContainer") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
-        Bar = this.GetGraphicalUiElementByName("Bar") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
+        Background = this.GetGraphicalUiElementByName("Background") as global::Gum.GueDeriving.NineSliceRuntime;
+        BarContainer = this.GetGraphicalUiElementByName("BarContainer") as global::Gum.GueDeriving.NineSliceRuntime;
+        Bar = this.GetGraphicalUiElementByName("Bar") as global::Gum.GueDeriving.NineSliceRuntime;
         CautionLinesInstance = this.GetGraphicalUiElementByName("CautionLinesInstance") as CodeGen_MonoGame_ByReference.Components.Elements.CautionLinesRuntime;
         VerticalLinesInstance = this.GetGraphicalUiElementByName("VerticalLinesInstance") as CodeGen_MonoGame_ByReference.Components.Elements.VerticalLinesRuntime;
         CustomInitialize();

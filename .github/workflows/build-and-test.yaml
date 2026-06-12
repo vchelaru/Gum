@@ -94,6 +94,38 @@ jobs:
           dotnet restore "AllLibraries.sln" -p:IncludeAndroid=true --verbosity quiet
           dotnet build "AllLibraries.sln" --configuration Release --no-restore --verbosity quiet -p:WarningLevel=0 -p:IncludeAndroid=true
 
+      # Regenerate every harness project with GumCli and fail if the checked-in
+      # generated code is stale. This forces codegen behavior changes to ship with
+      # their regenerated output in the same PR, which the compile step below then
+      # proves still builds. GumCli exit code 1 means individual elements were
+      # skipped by the per-element error check — expected, several harness projects
+      # contain deliberately-broken fixture elements (e.g. DemoScreenGum's deleted
+      # component reference). Exit code 2+ means the project failed to load and
+      # must fail the build.
+      - name: Codegen Drift Check (Windows Only)
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
+        run: |
+          dotnet build "Tools/Gum.Cli/Gum.Cli.csproj" --configuration Release --verbosity quiet -p:WarningLevel=0
+          $cli = "Tools/Gum.Cli/bin/Release/net8.0/GumCli.exe"
+          $gumxProjects = @(
+            "Tests/CodeGen_Maui_FullCodegen/Content/GumProject/CodeGenTestProject.gumx",
+            "Tests/CodeGen_MonoGame_ByReference/Content/GumProject/CodeGenTestProject.gumx",
+            "Tests/CodeGen_MonoGameForms_ByReference/Content/GumProject/CodeGenTestProject.gumx",
+            "Tests/CodeGen_MonoGameForms_Localization_ByReference/Content/GumProject/LocalizationCodeGenTestProject.gumx",
+            "Tests/CodeGen_MonoGameForms_FullCodegen/Content/CodeGenProject.gumx"
+          )
+          foreach ($gumxProject in $gumxProjects) {
+            & $cli codegen $gumxProject
+            if ($LASTEXITCODE -gt 1) { exit $LASTEXITCODE }
+          }
+          $drift = git status --porcelain -- "Tests/CodeGen_*"
+          if ($drift) {
+            Write-Host "::error::Checked-in generated code is stale. Run 'gumcli codegen' on each Tests/CodeGen_* project (or Tests/GenerateAllCodeGenProjects.bat) and commit the result."
+            Write-Host ($drift -join "`n")
+            git diff -- "Tests/CodeGen_*"
+            exit 1
+          }
+
       - name: Build Generated Code Projects (Windows Only)
         if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
         run: |
@@ -105,6 +137,9 @@ jobs:
 
           dotnet restore "Tests/CodeGen_MonoGameForms_ByReference/CodeGenProject.sln" --verbosity quiet
           dotnet build "Tests/CodeGen_MonoGameForms_ByReference/CodeGenProject.sln" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
+
+          dotnet restore "Tests/CodeGen_MonoGameForms_Localization_ByReference/CodeGen_MonoGameForms_Localization_ByReference.csproj" --verbosity quiet
+          dotnet build "Tests/CodeGen_MonoGameForms_Localization_ByReference/CodeGen_MonoGameForms_Localization_ByReference.csproj" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
 
           dotnet restore "Tests/CodeGen_MonoGameForms_FullCodegen/CodeGen_MonoGameForms_FullCodegen.sln" --verbosity quiet
           dotnet build "Tests/CodeGen_MonoGameForms_FullCodegen/CodeGen_MonoGameForms_FullCodegen.sln" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0

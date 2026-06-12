@@ -2,12 +2,12 @@
 using CodeGen_MonoGameForms_FullCodegen.Components.Elements;
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.StateAnimation.Runtime;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
@@ -18,7 +18,7 @@ partial class TreeViewToggle : global::Gum.Forms.Controls.FrameworkElement
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Controls/TreeViewToggle");
 #if DEBUG
 if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/TreeViewToggle - did you forget to load a Gum project?");
@@ -143,7 +143,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     }
     protected virtual void InitializeInstances()
     {
-        NineSliceInstance = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
+        NineSliceInstance = new global::Gum.GueDeriving.NineSliceRuntime();
         NineSliceInstance.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (NineSliceInstance.ElementSave != null) NineSliceInstance.AddStatesAndCategoriesRecursivelyToGue(NineSliceInstance.ElementSave);
         if (NineSliceInstance.ElementSave != null) NineSliceInstance.SetInitialState();

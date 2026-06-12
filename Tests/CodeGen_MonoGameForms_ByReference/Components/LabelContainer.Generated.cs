@@ -2,11 +2,11 @@
 using CodeGenProject.Components.Controls;
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGenProject.Components;
@@ -17,7 +17,7 @@ partial class LabelContainer : global::Gum.Forms.Controls.FrameworkElement
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("LabelContainer");
 #if DEBUG
 if(element == null) throw new System.InvalidOperationException("Could not find an element named LabelContainer - did you forget to load a Gum project?");
@@ -84,7 +84,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     {
         base.ReactToVisualChanged();
         LabelInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Label>(this.Visual,"LabelInstance");
-        NonLabelShouldAppearAfterLabel = this.Visual?.GetGraphicalUiElementByName("NonLabelShouldAppearAfterLabel") as global::MonoGameGum.GueDeriving.ColoredRectangleRuntime;
+        NonLabelShouldAppearAfterLabel = this.Visual?.GetGraphicalUiElementByName("NonLabelShouldAppearAfterLabel") as global::Gum.GueDeriving.ColoredRectangleRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

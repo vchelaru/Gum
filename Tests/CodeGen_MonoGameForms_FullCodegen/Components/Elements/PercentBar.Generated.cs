@@ -2,11 +2,11 @@
 using CodeGen_MonoGameForms_FullCodegen.Components.Elements;
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Elements;
@@ -17,7 +17,7 @@ partial class PercentBar : global::Gum.Forms.Controls.FrameworkElement
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Elements/PercentBar");
 #if DEBUG
 if(element == null) throw new System.InvalidOperationException("Could not find an element named Elements/PercentBar - did you forget to load a Gum project?");
@@ -101,17 +101,17 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     }
     protected virtual void InitializeInstances()
     {
-        Background = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
+        Background = new global::Gum.GueDeriving.NineSliceRuntime();
         Background.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (Background.ElementSave != null) Background.AddStatesAndCategoriesRecursivelyToGue(Background.ElementSave);
         if (Background.ElementSave != null) Background.SetInitialState();
         Background.Name = "Background";
-        BarContainer = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
+        BarContainer = new global::Gum.GueDeriving.NineSliceRuntime();
         BarContainer.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (BarContainer.ElementSave != null) BarContainer.AddStatesAndCategoriesRecursivelyToGue(BarContainer.ElementSave);
         if (BarContainer.ElementSave != null) BarContainer.SetInitialState();
         BarContainer.Name = "BarContainer";
-        Bar = new global::MonoGameGum.GueDeriving.NineSliceRuntime();
+        Bar = new global::Gum.GueDeriving.NineSliceRuntime();
         Bar.ElementSave = ObjectFinder.Self.GetStandardElement("NineSlice");
         if (Bar.ElementSave != null) Bar.AddStatesAndCategoriesRecursivelyToGue(Bar.ElementSave);
         if (Bar.ElementSave != null) Bar.SetInitialState();

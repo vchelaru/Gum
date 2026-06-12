@@ -1,12 +1,12 @@
 //Code for Elements/DividerHorizontal (Container)
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.StateAnimation.Runtime;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.Elements;
@@ -34,9 +34,9 @@ partial class DividerHorizontalRuntime : ContainerRuntime
     }
     public override void AfterFullCreation()
     {
-        AccentLeft = this.GetGraphicalUiElementByName("AccentLeft") as global::MonoGameGum.GueDeriving.SpriteRuntime;
-        Line = this.GetGraphicalUiElementByName("Line") as global::MonoGameGum.GueDeriving.SpriteRuntime;
-        AccentRight = this.GetGraphicalUiElementByName("AccentRight") as global::MonoGameGum.GueDeriving.SpriteRuntime;
+        AccentLeft = this.GetGraphicalUiElementByName("AccentLeft") as global::Gum.GueDeriving.SpriteRuntime;
+        Line = this.GetGraphicalUiElementByName("Line") as global::Gum.GueDeriving.SpriteRuntime;
+        AccentRight = this.GetGraphicalUiElementByName("AccentRight") as global::Gum.GueDeriving.SpriteRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

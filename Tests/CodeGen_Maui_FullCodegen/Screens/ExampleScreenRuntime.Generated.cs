@@ -9,7 +9,7 @@ using RenderingLibrary.Graphics;
 using SkiaGum.GueDeriving;
 using System.Linq;
 namespace CodeGen_Maui_FullCodegen.Screens;
-partial class ExampleScreenRuntime : Gum.Wireframe.BindableGue
+partial class ExampleScreenRuntime : Gum.Wireframe.GraphicalUiElement
 {
     public ContainerRuntime ContainerInstance { get; protected set; }
     public TextRuntime TextInstance { get; protected set; }

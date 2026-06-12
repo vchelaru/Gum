@@ -1,11 +1,11 @@
 //Code for Elements/CautionLines (Container)
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.Elements;
@@ -42,7 +42,7 @@ partial class CautionLinesRuntime : ContainerRuntime
     }
     public override void AfterFullCreation()
     {
-        LinesSprite = this.GetGraphicalUiElementByName("LinesSprite") as global::MonoGameGum.GueDeriving.SpriteRuntime;
+        LinesSprite = this.GetGraphicalUiElementByName("LinesSprite") as global::Gum.GueDeriving.SpriteRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

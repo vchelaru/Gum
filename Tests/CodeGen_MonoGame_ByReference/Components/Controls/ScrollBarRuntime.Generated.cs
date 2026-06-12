@@ -2,11 +2,11 @@
 using CodeGen_MonoGame_ByReference.Components.Controls;
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGame_ByReference.Components.Controls;
@@ -72,8 +72,8 @@ partial class ScrollBarRuntime : ContainerRuntime
         }
         UpButtonInstance = this.GetGraphicalUiElementByName("UpButtonInstance") as CodeGen_MonoGame_ByReference.Components.Controls.ButtonIconRuntime;
         DownButtonInstance = this.GetGraphicalUiElementByName("DownButtonInstance") as CodeGen_MonoGame_ByReference.Components.Controls.ButtonIconRuntime;
-        TrackInstance = this.GetGraphicalUiElementByName("TrackInstance") as global::MonoGameGum.GueDeriving.ContainerRuntime;
-        TrackBackground = this.GetGraphicalUiElementByName("TrackBackground") as global::MonoGameGum.GueDeriving.NineSliceRuntime;
+        TrackInstance = this.GetGraphicalUiElementByName("TrackInstance") as global::Gum.GueDeriving.ContainerRuntime;
+        TrackBackground = this.GetGraphicalUiElementByName("TrackBackground") as global::Gum.GueDeriving.NineSliceRuntime;
         ThumbInstance = this.GetGraphicalUiElementByName("ThumbInstance") as CodeGen_MonoGame_ByReference.Components.Controls.ButtonStandardRuntime;
         CustomInitialize();
     }
