@@ -34,14 +34,14 @@ public class GumService : IGumService
 
     /// <summary>
     /// Gets whether GumService has been initialized. Used by extension methods
-    /// like <see cref="GraphicalUiElementExtensionMethods.AddToRoot(GraphicalUiElement)"/>
+    /// like <see cref="GraphicalUiElement.AddToRoot()"/>
     /// to guard against calls made before Initialize.
     /// </summary>
     public bool IsInitialized { get; private set; }
 
     /// <summary>
     /// The root container that fills the entire canvas. Elements added via
-    /// <see cref="GraphicalUiElementExtensionMethods.AddToRoot(GraphicalUiElement)"/>
+    /// <see cref="GraphicalUiElement.AddToRoot()"/>
     /// become children of this container. Null until <c>Initialize</c> is called.
     /// </summary>
     public InteractiveGue Root { get; private set; }
@@ -201,7 +201,7 @@ public class GumService : IGumService
     /// number of seconds elapsed since the application started. Drives AnimateSelf on
     /// the root and (via recursion) every descendant — without it, AnimationChain
     /// playback won't advance. Hosts that need this to find their screens must attach
-    /// them via <see cref="GraphicalUiElementExtensionMethods.AddToRoot"/> so they
+    /// them via <see cref="GraphicalUiElement.AddToRoot()"/> so they
     /// become children of <see cref="Root"/>.
     /// </summary>
     /// <param name="totalSeconds">Total elapsed time in seconds since startup.</param>

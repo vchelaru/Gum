@@ -71,8 +71,8 @@ public static class FrameworkElementExt
     /// <summary>
     /// Adds this Forms control's underlying visual to the active runtime's root container,
     /// making it a top-level element. Resolves the root via <see cref="IGumService.Default"/>
-    /// so this works from any runtime that wires the default (currently MonoGame; Sokol/Skia
-    /// have their own AddToRoot extensions).
+    /// so this single implementation works on every runtime (MonoGame/KNI/FNA, Raylib,
+    /// Skia, Sokol — all wire the default during Initialize).
     /// </summary>
     /// <exception cref="InvalidOperationException">
     /// Thrown if no <see cref="IGumService"/> has been initialized.

@@ -1,12 +1,12 @@
 //Code for Elements/PercentBar (Container)
 using CodeGen_MonoGameForms_FullCodegen.Components.Elements;
+using Gum;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
-using MonoGameGum;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Elements;
@@ -127,8 +127,8 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         this.AddChild(Background);
         this.AddChild(BarContainer);
         BarContainer.AddChild(Bar);
-        Bar.AddChild(CautionLinesInstance);
-        Bar.AddChild(VerticalLinesInstance);
+        Bar.AddChild(CautionLinesInstance.Visual);
+        Bar.AddChild(VerticalLinesInstance.Visual);
     }
     private void ApplyDefaultVariables()
     {

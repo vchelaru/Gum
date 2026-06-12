@@ -14,6 +14,7 @@ using static Sokol.SG;
 using static Sokol.SGP;
 using static Sokol.SGlue;
 using static Sokol.SLog;
+using static Sokol.STM;
 
 namespace SokolGumFromFile;
 
@@ -35,6 +36,11 @@ public static unsafe class Program
 
     // MG has _graphics (GraphicsDeviceManager) and _spriteBatch — no Sokol equivalent; dropped.
     private static sg_pass_action _passAction;
+
+    // sokol_time baseline — captured in Init after stm_setup, subtracted on
+    // every Update tick so GumService.Update sees total seconds since startup.
+    // Matches the SokolGum sample's pattern.
+    private static ulong _startTicks;
 
     // Matches MG's `ScreenSave currentGumScreenSave` — replaces the previous
     // `_currentScreenName` string tracking so the two samples line up.
@@ -164,6 +170,9 @@ public static unsafe class Program
             logger = { func = &slog_func },
         });
         sgp_setup(new sgp_desc());
+
+        stm_setup();
+        _startTicks = stm_now();
 
         _passAction = default;
         _passAction.colors[0].load_action = sg_load_action.SG_LOADACTION_CLEAR;
@@ -418,7 +427,7 @@ public static unsafe class Program
 
     private static void Update()
     {
-        GumService.Default.Update();
+        GumService.Default.Update(stm_sec(stm_since(_startTicks)));
 
         // MG also calls GumService.Default.Root.AnimateSelf(elapsedSeconds) —
         // SokolGum's GumService.Update wires animation internally, so no

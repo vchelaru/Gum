@@ -313,6 +313,16 @@ public class CodeGenerator
     }
 
     /// <summary>
+    /// Returns the namespace generated code should import for the runtime's setup/boot API
+    /// (<c>GumService</c>, and — below version 3 — the <c>AddChild</c> extension crutch).
+    /// Version &lt; 3 emits the legacy <c>MonoGameGum</c> namespace, resolved on current
+    /// runtimes via the permanent back-compat shims; version &gt;= 3 emits <c>Gum</c>,
+    /// where <c>GumService</c> lives as of issue #3119.
+    /// </summary>
+    public static string GetGumServiceNamespace(int syntaxVersion) =>
+        syntaxVersion >= 3 ? "Gum" : "MonoGameGum";
+
+    /// <summary>
     /// Resolves the effective syntax version for the supplied project settings using the
     /// injected <see cref="ISyntaxVersionDetectionService"/> when available. Falls back to
     /// parsing <see cref="CodeOutputProjectSettings.SyntaxVersion"/> directly (treating
@@ -373,7 +383,7 @@ public class CodeGenerator
         if (projectSettings.OutputLibrary == OutputLibrary.MonoGame ||
             projectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
         {
-            neededUsings.Add("MonoGameGum");
+            neededUsings.Add(GetGumServiceNamespace(resolvedSyntaxVersion));
             neededUsings.Add(GetGueDerivingNamespace(resolvedSyntaxVersion, isSkia: false));
         }
 
@@ -5116,14 +5126,36 @@ public class CodeGenerator
 
         if (rootName == "Parent" && instance != null)
         {
-            var owner = string.IsNullOrEmpty(variable.Value as string)
+            var ownerName = variable.Value as string;
+            var owner = string.IsNullOrEmpty(ownerName)
                 ? "this"
-                : _codeGenerationNameVerifier.ToCSharpName((string)variable.Value);
+                : _codeGenerationNameVerifier.ToCSharpName(ownerName);
 
             if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
             {
-                return $"{owner}.AddChild({_codeGenerationNameVerifier.ToCSharpName(instance.Name)});";
+                var child = _codeGenerationNameVerifier.ToCSharpName(instance.Name);
 
+                // Syntax version 3+ generated code imports Gum instead of MonoGameGum, so the
+                // legacy MonoGameGum.GraphicalUiElementExtensionMethods.AddChild(GraphicalUiElement,
+                // FrameworkElement) crutch is no longer in scope. When a GraphicalUiElement-typed
+                // owner (standard element instance) parents a Forms-typed child (non-standard
+                // instance), reach the child's underlying visual so the call resolves to the
+                // GraphicalUiElement.AddChild(GraphicalUiElement) instance method.
+                if (context.ResolvedSyntaxVersion >= 3 && !string.IsNullOrEmpty(ownerName))
+                {
+                    var ownerInstance = context.Element.GetInstance(ownerName);
+                    var ownerIsGraphicalUiElement = ownerInstance != null &&
+                        ObjectFinder.Self.GetElementSave(ownerInstance) is StandardElementSave;
+                    var childIsFormsObject =
+                        ObjectFinder.Self.GetElementSave(instance) is not StandardElementSave;
+
+                    if (ownerIsGraphicalUiElement && childIsFormsObject)
+                    {
+                        return $"{owner}.AddChild({child}.Visual);";
+                    }
+                }
+
+                return $"{owner}.AddChild({child});";
             }
             else
             {

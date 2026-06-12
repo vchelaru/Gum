@@ -44,6 +44,68 @@ public class GraphicalUiElementTests : BaseTestClass
         GumService.Default.Root.Children.ShouldContain(child);
     }
 
+    [Fact]
+    public void AddToRoot_ShouldBeInstanceMethod()
+    {
+        // AddToRoot is intentionally an instance method (not an extension) so it
+        // resolves with zero using directives on every runtime. See issue #3119.
+        System.Reflection.MethodInfo? method = typeof(GraphicalUiElement).GetMethod(
+            "AddToRoot",
+            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance,
+            binder: null,
+            types: Type.EmptyTypes,
+            modifiers: null);
+
+        method.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void AddToRoot_ShouldThrow_WhenIGumServiceDefaultIsNotSet()
+    {
+        IGumService? originalDefault = IGumService.Default;
+        try
+        {
+            IGumService.Default = null;
+
+            GraphicalUiElement child = new();
+            InvalidOperationException exception =
+                Should.Throw<InvalidOperationException>(() => child.AddToRoot());
+            exception.Message.ShouldContain("initialize", Case.Insensitive);
+        }
+        finally
+        {
+            IGumService.Default = originalDefault;
+        }
+    }
+
+    #endregion
+
+    #region RemoveFromRoot
+
+    [Fact]
+    public void RemoveFromRoot_ShouldBeInstanceMethod()
+    {
+        System.Reflection.MethodInfo? method = typeof(GraphicalUiElement).GetMethod(
+            "RemoveFromRoot",
+            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance,
+            binder: null,
+            types: Type.EmptyTypes,
+            modifiers: null);
+
+        method.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void RemoveFromRoot_ShouldReverseAddToRoot()
+    {
+        GraphicalUiElement child = new();
+        child.AddToRoot();
+        child.RemoveFromRoot();
+
+        child.Parent.ShouldBeNull();
+        GumService.Default.Root.Children.ShouldNotContain(child);
+    }
+
     #endregion
 
     #region Auto Grid

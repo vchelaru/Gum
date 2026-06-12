@@ -1,12 +1,12 @@
 //Code for Controls/InputDeviceSelector (Container)
 using CodeGen_MonoGameForms_FullCodegen.Components.Controls;
+using Gum;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
-using MonoGameGum;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_FullCodegen.Components.Controls;
@@ -120,10 +120,10 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         this.AddChild(ContainerInstance1);
         this.AddChild(InputDeviceContainerInstance);
         this.AddChild(ContainerInstance2);
-        InputDeviceContainerInstance.AddChild(InputDeviceSelectionItemInstance);
-        InputDeviceContainerInstance.AddChild(InputDeviceSelectionItemInstance1);
-        InputDeviceContainerInstance.AddChild(InputDeviceSelectionItemInstance2);
-        InputDeviceContainerInstance.AddChild(InputDeviceSelectionItemInstance3);
+        InputDeviceContainerInstance.AddChild(InputDeviceSelectionItemInstance.Visual);
+        InputDeviceContainerInstance.AddChild(InputDeviceSelectionItemInstance1.Visual);
+        InputDeviceContainerInstance.AddChild(InputDeviceSelectionItemInstance2.Visual);
+        InputDeviceContainerInstance.AddChild(InputDeviceSelectionItemInstance3.Visual);
     }
     private void ApplyDefaultVariables()
     {

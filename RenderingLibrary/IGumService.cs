@@ -74,9 +74,9 @@ namespace RenderingLibrary
         void Draw();
 
         /// <summary>
-        /// The root container that owns top-level elements. Extension methods like
-        /// <c>AddToRoot</c> dispatch through this so callers in <c>GumCommon</c> can
-        /// add elements without taking a runtime-specific reference.
+        /// The root container that owns top-level elements. <c>GraphicalUiElement.AddToRoot</c>
+        /// and the Forms <c>AddToRoot</c> extension dispatch through this so callers in
+        /// <c>GumCommon</c> can add elements without taking a runtime-specific reference.
         /// </summary>
         InteractiveGue Root { get; }
 

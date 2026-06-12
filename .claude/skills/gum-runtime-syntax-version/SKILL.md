@@ -36,3 +36,13 @@ When the runtime surface that codegen cares about changes in a way that requires
 ## When NOT to bump
 
 Pure renderable / Forms / sample changes that the codegen doesn't pattern-match against. The version is for **codegen gates**, not a general changelog.
+
+## Instance-Member Pattern vs Extension-Method Shims
+
+When migrating a static extension to an instance method on `GraphicalUiElement` (or another GumCommon type), the instance method **entirely eliminates** the need for namespace-migration shims:
+
+- Extension methods require a `using` directive in scope; instance methods need nothing.
+- Two extensions with identical signatures cause CS0121 ambiguity when both namespaces are imported — instance methods sidestep this entirely (they always win over extensions).
+- No `[Obsolete]` spam: the old extension is deleted; call sites resolve to the instance method automatically.
+
+This pattern is viable wherever a GumCommon seam (like `IGumService.Default`) can dispatch the work. Applied to `AddToRoot` / `RemoveFromRoot` at syntax version 3: the per-platform extension classes were deleted and the instance methods dispatch via `IGumService.Default`. See issue #3119.
