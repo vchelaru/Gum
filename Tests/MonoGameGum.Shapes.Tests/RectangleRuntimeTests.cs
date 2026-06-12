@@ -17,6 +17,10 @@ public class RectangleRuntimeTests
     public RectangleRuntimeTests()
     {
         AposShapeRuntime.RegisterRuntimeTypes();
+        // Issue #3112 — the slot-override factories now gate on ShapeRenderer.IsInitialized.
+        // These tests exercise the Apos two-slot model headlessly (no GraphicsDevice), so force
+        // the flag on. ShapeRendererGateTests covers the not-initialized fallback path.
+        ShapeRenderer.Self.SetIsInitializedForTesting(true);
     }
 
     [Fact]

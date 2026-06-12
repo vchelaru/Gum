@@ -22,6 +22,10 @@ public class CircleRuntimeTests
     public CircleRuntimeTests()
     {
         AposShapeRuntime.RegisterRuntimeTypes();
+        // Issue #3112 — the slot-override factories now gate on ShapeRenderer.IsInitialized.
+        // These tests exercise the Apos two-slot model headlessly (no GraphicsDevice), so force
+        // the flag on. ShapeRendererGateTests covers the not-initialized fallback path.
+        ShapeRenderer.Self.SetIsInitializedForTesting(true);
     }
 
     // Issue #2937 — the two-slot model draws fill and stroke as separate renderables. The user

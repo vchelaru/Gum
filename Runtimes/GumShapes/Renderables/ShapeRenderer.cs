@@ -96,6 +96,12 @@ public class ShapeRenderer
 
     public bool IsInitialized { get; private set; }
 
+    // Issue #3112 — test-only seam. Forces IsInitialized without a real GraphicsDevice so the
+    // headless shapes unit tests can exercise the Apos two-slot model (true) or its absence
+    // (false). Production code initializes through Initialize(GraphicsDevice, ContentManager);
+    // this never runs in shipping paths. Reachable via InternalsVisibleTo("MonoGameGum.Shapes.Tests").
+    internal void SetIsInitializedForTesting(bool value) => IsInitialized = value;
+
     public static ShapeRenderer Self
     {
         get
