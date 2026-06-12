@@ -176,6 +176,16 @@ public partial class InteractiveGue : GraphicalUiElement
     public event EventHandler? Click;
 
     /// <summary>
+    /// Event raised when this is clicked by a cursor. Unlike <see cref="Click"/>, which is
+    /// only raised on the clicked element, this bubbling event is first raised on the clicked
+    /// element, then on its parents in sequence. If a handler sets the argument
+    /// <see cref="RoutedEventArgs.Handled"/> to true, then parent objects will not have this
+    /// event raised. This is useful for being notified when anything on an element's surface is
+    /// clicked, even when the click lands on a child.
+    /// </summary>
+    public event Action<object, RoutedEventArgs>? ClickBubbling;
+
+    /// <summary>
     /// Event raised when this is clicked by a cursor. A click occurs
     /// when the cursor is over this and is first pushed, then released.
     /// Preview events are received by parents before children, and if the event
@@ -448,7 +458,8 @@ public partial class InteractiveGue : GraphicalUiElement
                 asInteractive?._losePush != null ||
                 asInteractive?.HoverOver != null ||
                 asInteractive?.Dragging != null ||
-                asInteractive?.MouseWheelScroll != null;
+                asInteractive?.MouseWheelScroll != null ||
+                asInteractive?.ClickBubbling != null;
                 // if it has events and it has a Forms control, then let's consider it a click
                 //|| asInteractive?.FormsControlAsObject != null
                 // Update July 18, 2025 
@@ -518,6 +529,14 @@ public partial class InteractiveGue : GraphicalUiElement
                         {
                             if (cursor.WindowPushed == asInteractive)
                             {
+                                if (handledActions.HandledClickPreview == false)
+                                {
+                                    // A genuine click resolved on its target this frame. Record it
+                                    // (independent of whether Click has subscribers) so the bubbling
+                                    // pass below can raise ClickBubbling on this element and its ancestors.
+                                    handledActions.DidClickOccur = true;
+                                }
+
                                 if (asInteractive.Click != null && handledActions.HandledClickPreview == false)
                                 {
                                     // Should InputDevice be the cursor? Or the underlying hardware?
@@ -576,6 +595,16 @@ public partial class InteractiveGue : GraphicalUiElement
                         var args = new RoutedEventArgs();
                         asInteractive.MouseWheelScroll?.Invoke(asInteractive, args);
                         handledActions.HandledMouseWheel = args.Handled;
+                    }
+
+                    // ClickBubbling is raised child-first as the recursion unwinds. DidClickOccur
+                    // ensures this only runs for the actual click target and its ancestors; a handler
+                    // setting Handled stops it from reaching further ancestors.
+                    if (handledActions.DidClickOccur && handledActions.HandledClick == false)
+                    {
+                        var args = new RoutedEventArgs();
+                        asInteractive.ClickBubbling?.Invoke(asInteractive, args);
+                        handledActions.HandledClick = args.Handled;
                     }
                 }
 
@@ -1162,6 +1191,20 @@ class HandledActions
     public bool HandledClickPreview;
     public bool handledPushPreview;
     public bool SetVisualOver;
+
+    /// <summary>
+    /// Set to true once a primary click has resolved on its target (the element where the
+    /// push originated and the release occurred). This gates the bubbling ClickBubbling event
+    /// so it only fires on the clicked element and its ancestors, not on unrelated elements
+    /// the cursor happens to be over.
+    /// </summary>
+    public bool DidClickOccur;
+
+    /// <summary>
+    /// Set to true when a ClickBubbling handler marks the event Handled, stopping it from
+    /// bubbling to further ancestors.
+    /// </summary>
+    public bool HandledClick;
 }
 public static class GueInteractiveExtensionMethods
 {
