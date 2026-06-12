@@ -187,7 +187,7 @@ internal class ShapeSurveyScreen : FrameworkElement
 
         // Same as the default but with IsEndRounded explicitly set - this is the toggle
         // existing Apos consumers must apply if they relied on the previous rounded default.
-        // Documented in docs/gum-tool/upgrading/migrating-to-2026-may.md.
+        // Documented in docs/gum-tool/upgrading/migrating-to-2026-june.md.
         ArcRuntime rounded = new ArcRuntime();
         rounded.IsEndRounded = true;
         Place(rounded, row, 1, cellW, rowH, size, size);
