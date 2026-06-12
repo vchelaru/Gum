@@ -100,11 +100,22 @@ public static class CodegenCommand
             Console.WriteLine($"Auto-configured code generation settings (CodeProjectRoot: {projectSettings.CodeProjectRoot}, Namespace: {projectSettings.RootNamespace}).");
         }
 
+        // Print the resolved (absolute) output root so misconfigured CodeProjectRoot
+        // values (e.g. machine-specific absolute paths) are obvious in the output.
+        string resolvedCodeProjectRoot = projectSettings.CodeProjectRoot!;
+        if (!Path.IsPathRooted(resolvedCodeProjectRoot))
+        {
+            resolvedCodeProjectRoot = Path.GetFullPath(Path.Combine(projectDirectory!, resolvedCodeProjectRoot));
+        }
+        Console.WriteLine($"Generating code into {resolvedCodeProjectRoot}");
+
         // Build the codegen pipeline
         INameVerifier nameVerifier = new HeadlessNameVerifier();
         var codeGenNameVerifier = new CodeGenerationNameVerifier(nameVerifier);
         var elementSettingsManager = new CodeOutputElementSettingsManager(projectDirectoryProvider);
         var localizationService = new Gum.Localization.LocalizationService();
+        IHeadlessLocalizationLoader localizationLoader = new HeadlessLocalizationLoader(logger);
+        localizationLoader.LoadLocalizationFiles(project, projectDirectory!, localizationService);
         var syntaxVersionDetectionService = new SyntaxVersionDetectionService(logger);
         var codeGenerator = new CodeGenerator(
             codeGenNameVerifier, localizationService, elementSettingsManager, projectDirectoryProvider,

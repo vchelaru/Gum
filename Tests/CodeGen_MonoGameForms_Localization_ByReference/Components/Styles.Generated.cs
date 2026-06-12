@@ -1,11 +1,11 @@
 //Code for Styles (Container)
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_Localization_ByReference.Components;
@@ -16,7 +16,7 @@ partial class Styles : global::Gum.Forms.Controls.FrameworkElement
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Styles");
 #if DEBUG
 if(element == null) throw new System.InvalidOperationException("Could not find an element named Styles - did you forget to load a Gum project?");
@@ -68,29 +68,29 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        Colors = this.Visual?.GetGraphicalUiElementByName("Colors") as global::MonoGameGum.GueDeriving.ContainerRuntime;
-        Black = this.Visual?.GetGraphicalUiElementByName("Black") as global::MonoGameGum.GueDeriving.ColoredRectangleRuntime;
-        DarkGray = this.Visual?.GetGraphicalUiElementByName("DarkGray") as global::MonoGameGum.GueDeriving.ColoredRectangleRuntime;
-        Gray = this.Visual?.GetGraphicalUiElementByName("Gray") as global::MonoGameGum.GueDeriving.ColoredRectangleRuntime;
-        LightGray = this.Visual?.GetGraphicalUiElementByName("LightGray") as global::MonoGameGum.GueDeriving.ColoredRectangleRuntime;
-        White = this.Visual?.GetGraphicalUiElementByName("White") as global::MonoGameGum.GueDeriving.ColoredRectangleRuntime;
-        PrimaryDark = this.Visual?.GetGraphicalUiElementByName("PrimaryDark") as global::MonoGameGum.GueDeriving.ColoredRectangleRuntime;
-        Primary = this.Visual?.GetGraphicalUiElementByName("Primary") as global::MonoGameGum.GueDeriving.ColoredRectangleRuntime;
-        PrimaryLight = this.Visual?.GetGraphicalUiElementByName("PrimaryLight") as global::MonoGameGum.GueDeriving.ColoredRectangleRuntime;
-        Success = this.Visual?.GetGraphicalUiElementByName("Success") as global::MonoGameGum.GueDeriving.ColoredRectangleRuntime;
-        Warning = this.Visual?.GetGraphicalUiElementByName("Warning") as global::MonoGameGum.GueDeriving.ColoredRectangleRuntime;
-        Danger = this.Visual?.GetGraphicalUiElementByName("Danger") as global::MonoGameGum.GueDeriving.ColoredRectangleRuntime;
-        Accent = this.Visual?.GetGraphicalUiElementByName("Accent") as global::MonoGameGum.GueDeriving.ColoredRectangleRuntime;
-        Tiny = this.Visual?.GetGraphicalUiElementByName("Tiny") as global::MonoGameGum.GueDeriving.TextRuntime;
-        Small = this.Visual?.GetGraphicalUiElementByName("Small") as global::MonoGameGum.GueDeriving.TextRuntime;
-        Normal = this.Visual?.GetGraphicalUiElementByName("Normal") as global::MonoGameGum.GueDeriving.TextRuntime;
-        Emphasis = this.Visual?.GetGraphicalUiElementByName("Emphasis") as global::MonoGameGum.GueDeriving.TextRuntime;
-        Strong = this.Visual?.GetGraphicalUiElementByName("Strong") as global::MonoGameGum.GueDeriving.TextRuntime;
-        H3 = this.Visual?.GetGraphicalUiElementByName("H3") as global::MonoGameGum.GueDeriving.TextRuntime;
-        H2 = this.Visual?.GetGraphicalUiElementByName("H2") as global::MonoGameGum.GueDeriving.TextRuntime;
-        H1 = this.Visual?.GetGraphicalUiElementByName("H1") as global::MonoGameGum.GueDeriving.TextRuntime;
-        TextStyles = this.Visual?.GetGraphicalUiElementByName("TextStyles") as global::MonoGameGum.GueDeriving.ContainerRuntime;
-        Title = this.Visual?.GetGraphicalUiElementByName("Title") as global::MonoGameGum.GueDeriving.TextRuntime;
+        Colors = this.Visual?.GetGraphicalUiElementByName("Colors") as global::Gum.GueDeriving.ContainerRuntime;
+        Black = this.Visual?.GetGraphicalUiElementByName("Black") as global::Gum.GueDeriving.ColoredRectangleRuntime;
+        DarkGray = this.Visual?.GetGraphicalUiElementByName("DarkGray") as global::Gum.GueDeriving.ColoredRectangleRuntime;
+        Gray = this.Visual?.GetGraphicalUiElementByName("Gray") as global::Gum.GueDeriving.ColoredRectangleRuntime;
+        LightGray = this.Visual?.GetGraphicalUiElementByName("LightGray") as global::Gum.GueDeriving.ColoredRectangleRuntime;
+        White = this.Visual?.GetGraphicalUiElementByName("White") as global::Gum.GueDeriving.ColoredRectangleRuntime;
+        PrimaryDark = this.Visual?.GetGraphicalUiElementByName("PrimaryDark") as global::Gum.GueDeriving.ColoredRectangleRuntime;
+        Primary = this.Visual?.GetGraphicalUiElementByName("Primary") as global::Gum.GueDeriving.ColoredRectangleRuntime;
+        PrimaryLight = this.Visual?.GetGraphicalUiElementByName("PrimaryLight") as global::Gum.GueDeriving.ColoredRectangleRuntime;
+        Success = this.Visual?.GetGraphicalUiElementByName("Success") as global::Gum.GueDeriving.ColoredRectangleRuntime;
+        Warning = this.Visual?.GetGraphicalUiElementByName("Warning") as global::Gum.GueDeriving.ColoredRectangleRuntime;
+        Danger = this.Visual?.GetGraphicalUiElementByName("Danger") as global::Gum.GueDeriving.ColoredRectangleRuntime;
+        Accent = this.Visual?.GetGraphicalUiElementByName("Accent") as global::Gum.GueDeriving.ColoredRectangleRuntime;
+        Tiny = this.Visual?.GetGraphicalUiElementByName("Tiny") as global::Gum.GueDeriving.TextRuntime;
+        Small = this.Visual?.GetGraphicalUiElementByName("Small") as global::Gum.GueDeriving.TextRuntime;
+        Normal = this.Visual?.GetGraphicalUiElementByName("Normal") as global::Gum.GueDeriving.TextRuntime;
+        Emphasis = this.Visual?.GetGraphicalUiElementByName("Emphasis") as global::Gum.GueDeriving.TextRuntime;
+        Strong = this.Visual?.GetGraphicalUiElementByName("Strong") as global::Gum.GueDeriving.TextRuntime;
+        H3 = this.Visual?.GetGraphicalUiElementByName("H3") as global::Gum.GueDeriving.TextRuntime;
+        H2 = this.Visual?.GetGraphicalUiElementByName("H2") as global::Gum.GueDeriving.TextRuntime;
+        H1 = this.Visual?.GetGraphicalUiElementByName("H1") as global::Gum.GueDeriving.TextRuntime;
+        TextStyles = this.Visual?.GetGraphicalUiElementByName("TextStyles") as global::Gum.GueDeriving.ContainerRuntime;
+        Title = this.Visual?.GetGraphicalUiElementByName("Title") as global::Gum.GueDeriving.TextRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

@@ -1,12 +1,12 @@
 //Code for Elements/DividerVertical (Container)
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.StateAnimation.Runtime;
 using Gum.Wireframe;
 using GumRuntime;
 using MonoGameGum;
-using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_Localization_ByReference.Components.Elements;
@@ -17,7 +17,7 @@ partial class DividerVertical : global::Gum.Forms.Controls.FrameworkElement
     {
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
-            var visual = new global::MonoGameGum.GueDeriving.ContainerRuntime();
+            var visual = new global::Gum.GueDeriving.ContainerRuntime();
             var element = ObjectFinder.Self.GetElementSave("Elements/DividerVertical");
 #if DEBUG
 if(element == null) throw new System.InvalidOperationException("Could not find an element named Elements/DividerVertical - did you forget to load a Gum project?");
@@ -49,9 +49,9 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        AccentTop = this.Visual?.GetGraphicalUiElementByName("AccentTop") as global::MonoGameGum.GueDeriving.SpriteRuntime;
-        Line = this.Visual?.GetGraphicalUiElementByName("Line") as global::MonoGameGum.GueDeriving.SpriteRuntime;
-        AccentRight = this.Visual?.GetGraphicalUiElementByName("AccentRight") as global::MonoGameGum.GueDeriving.SpriteRuntime;
+        AccentTop = this.Visual?.GetGraphicalUiElementByName("AccentTop") as global::Gum.GueDeriving.SpriteRuntime;
+        Line = this.Visual?.GetGraphicalUiElementByName("Line") as global::Gum.GueDeriving.SpriteRuntime;
+        AccentRight = this.Visual?.GetGraphicalUiElementByName("AccentRight") as global::Gum.GueDeriving.SpriteRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
