@@ -353,7 +353,7 @@ GumUI.LocalizationService.CurrentLanguage = 2;
 ```
 
 {% hint style="info" %}
-Automatic runtime language switching requires the June 2026 Gum release or newer. On earlier versions, changing `CurrentLanguage` only affected text assigned _after_ the change — already-displayed text kept its old translation, and the only way to refresh was to recreate the screen.
+Automatic runtime language switching requires the May 2026 Gum release or newer. On earlier versions, changing `CurrentLanguage` only affected text assigned _after_ the change — already-displayed text kept its old translation, and the only way to refresh was to recreate the screen.
 {% endhint %}
 
 The refresh walks `Root`, `PopupRoot`, and `ModalRoot` and re-applies the original string ID assigned to each control's `Text`, `Header`, or `Placeholder`. State-driven text (e.g. a `Highlighted` state that sets `Text` to a different string ID) refreshes correctly because the most recently assigned string ID is what gets re-translated.

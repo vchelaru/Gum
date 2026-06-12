@@ -92,7 +92,7 @@ FrameworkElement anyControl = screenRoot.FindFormsControlByName("OkButton")!;
 This is the cross-layer counterpart to `FindVisual<T>` on `FrameworkElement` — one goes visual → Forms, the other goes Forms → visual.
 
 {% hint style="warning" %}
-`FindFormsControl<T>`, `FindFormsControl<T>(name)`, and `FindFormsControlByName(name)` are available starting in the 2026 June release.
+`FindFormsControl<T>`, `FindFormsControl<T>(name)`, and `FindFormsControlByName(name)` are available starting in the 2026 May release.
 {% endhint %}
 
 ## Ordering

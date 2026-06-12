@@ -2,3 +2,4 @@ root: ./docs/
 
 redirects:
   code/hot-reload: code/debugging/hot-reload.md
+  gum-tool/upgrading/migrating-to-2026-june-2: gum-tool/upgrading/migrating-to-2026-june.md

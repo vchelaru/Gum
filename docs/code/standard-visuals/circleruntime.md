@@ -41,5 +41,5 @@ container.Children.Add(circle);
 ## Legacy color members
 
 {% hint style="warning" %}
-The `Color`, `Red`, `Green`, `Blue`, and `Alpha` members are obsolete and are being phased out. They write the **stroke** color (`CircleRuntime` was historically outline-only) and are kept only for backward compatibility. Use `StrokeColor` for the outline and `FillColor` for the fill instead. For the property mapping and the automated code fix, see [Migrating to 2026 June](../../gum-tool/upgrading/migrating-to-2026-june.md).
+The `Color`, `Red`, `Green`, `Blue`, and `Alpha` members are obsolete and are being phased out. They write the **stroke** color (`CircleRuntime` was historically outline-only) and are kept only for backward compatibility. Use `StrokeColor` for the outline and `FillColor` for the fill instead. For the property mapping and the automated code fix, see [Migrating to 2026 May](../../gum-tool/upgrading/migrating-to-2026-may.md).
 {% endhint %}

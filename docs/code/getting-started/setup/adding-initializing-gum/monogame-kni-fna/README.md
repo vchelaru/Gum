@@ -249,7 +249,7 @@ ShapeRenderer.Self.Initialize();
 ```
 
 {% hint style="info" %}
-The fill + outline `Circle` and `Rectangle` surface ships in the June 2026 release. Before then, you can use it by building Gum from source.
+The fill + outline `Circle` and `Rectangle` surface ships in the May 2026 release. Before then, you can use it by building Gum from source.
 {% endhint %}
 
 For the full set of fill, outline, gradient, drop shadow, and corner-radius properties, see the [Shapes](../../../../standard-visuals/shapes-apos.shapes.md) page.
