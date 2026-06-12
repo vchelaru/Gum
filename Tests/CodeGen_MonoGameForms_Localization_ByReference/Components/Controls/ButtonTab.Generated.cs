@@ -1,11 +1,11 @@
 //Code for Controls/ButtonTab (Container)
-using Gum;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
+using MonoGameGum;
 using RenderingLibrary.Graphics;
 using System.Linq;
 namespace CodeGen_MonoGameForms_Localization_ByReference.Components.Controls;
@@ -95,5 +95,8 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
+    public void ApplyLocalization()
+    {
+    }
     partial void CustomInitialize();
 }
