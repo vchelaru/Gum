@@ -12,10 +12,10 @@ public class GamepadButtonTests : BaseTestClass
     [Fact]
     public void GamepadButton_EveryGumButtonNamePresentInXna_HasMatchingValue()
     {
-        // MonoGameGum.Input.GamePad's explicit IGamePad implementation routes through
-        // `(Buttons)(int)gumButton` casts. That cast is only correct if the numeric
-        // values for same-named entries line up across Gum.Input.GamepadButton and
-        // Microsoft.Xna.Framework.Input.Buttons. Locks the invariant.
+        // The GUM003 analyzer migrates user code from XNA Buttons to Gum.Input.GamepadButton
+        // by same-name rewrite (Buttons.A -> GamepadButton.A), and the MonoGame input driver
+        // maps GamePadState to GamepadButton by name. This locks the name/value parity across
+        // Gum.Input.GamepadButton and Microsoft.Xna.Framework.Input.Buttons that both rely on.
         //
         // Note: Gum.Input.GamepadButton has a few extras (LeftGrip, RightGrip) with
         // no XNA counterpart — they're skipped here because they'd never satisfy

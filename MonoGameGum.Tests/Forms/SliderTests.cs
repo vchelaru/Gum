@@ -2,6 +2,7 @@
 using Gum.Wireframe;
 using Gum.GueDeriving;
 using MonoGameGum.Input;
+using Gum.Input;
 using Moq;
 using Shouldly;
 using System;

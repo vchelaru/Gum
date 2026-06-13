@@ -145,3 +145,65 @@ Because the moved type and its shim share a name, importing **both** the new `Gu
 {% hint style="info" %}
 The unified default visuals (for example `Gum.Forms.DefaultVisuals.DefaultButtonRuntime`) still expose their child runtimes — `TextInstance`, `Background`, and so on — as the deprecated `MonoGameGum.GueDeriving` shim types, exactly as before. If you captured those properties into shim-typed variables, that code keeps working unchanged.
 {% endhint %}
+
+### Gamepad and Keyboard Input Consolidated into `Gum.Input`
+
+The MonoGame runtime now reads input into the same platform-neutral `Gum.Input` types the Raylib runtime already used. The MonoGame-specific `MonoGameGum.Input.GamePad` and `MonoGameGum.Input.AnalogStick` classes have been **removed**, and the rest of the input group — `Keyboard`, `KeyboardStateProcessor`, `AnalogButton`, the `DeadzoneType` / `DeadzoneInterpolationType` enums, and `IInputReceiverKeyboardMonoGame` — has **moved** from `MonoGameGum.Input` to `Gum.Input`. After this change, a single `using Gum.Input;` covers the whole gamepad-and-keyboard surface.
+
+`GumService.Default.Gamepads` and `FrameworkElement.GamePadsForUiControl` now hold `Gum.Input.GamePad` instances (which implement `IGamePad`). The common path — reading a gamepad and querying it for UI navigation — keeps working; the breaking changes below affect code that passed the XNA `Buttons` enum to a gamepad, or that named the moved types by their old `MonoGameGum.Input` namespace.
+
+#### Gamepad button queries take `Gum.Input.GamepadButton` (hard break)
+
+`ButtonDown`, `ButtonPushed`, `ButtonReleased`, and `ButtonRepeatRate` on a gamepad now take `Gum.Input.GamepadButton` instead of the XNA `Microsoft.Xna.Framework.Input.Buttons` enum. There is no implicit conversion (the neutral type lives in `GumCommon`, which has no XNA dependency), so this is a compile error (`CS1503`) at every call site. The enum members share names and values, so the migration is a type swap.
+
+❌ Old:
+
+```csharp
+// Update
+var gamepad = GumService.Default.Gamepads[0];
+if (gamepad.ButtonDown(Microsoft.Xna.Framework.Input.Buttons.A))
+{
+    // ...
+}
+```
+
+✅ New:
+
+```csharp
+// Update
+var gamepad = GumService.Default.Gamepads[0];
+if (gamepad.ButtonDown(Gum.Input.GamepadButton.A))
+{
+    // ...
+}
+```
+
+{% hint style="info" %}
+**Analyzer `GUM003`** flags each `Buttons.X` argument on a gamepad query method and offers a one-click fix that rewrites it to `GamepadButton.X`, so Visual Studio can perform the swap for you.
+{% endhint %}
+
+#### Input types moved to `Gum.Input` (namespace change)
+
+`Keyboard`, `KeyboardStateProcessor`, `AnalogButton`, `DeadzoneType`, `DeadzoneInterpolationType`, and `IInputReceiverKeyboardMonoGame` now live in `Gum.Input`. Code that referenced them through `using MonoGameGum.Input;` needs `using Gum.Input;` added. This is a **partial** move: `Cursor`, `CursorExtensions`, and `KeyCombo` stay in `MonoGameGum.Input`, so if your file uses those too, keep both `using` directives — there is no name collision between the two namespaces.
+
+❌ Old:
+
+```csharp
+using MonoGameGum.Input;
+
+// Class scope
+Keyboard keyboard;
+```
+
+✅ New:
+
+```csharp
+using Gum.Input;
+
+// Class scope
+Keyboard keyboard;
+```
+
+{% hint style="info" %}
+**Analyzer `GUM001`** flags a `using MonoGameGum.Input;` directive whose types have moved and offers a fix that **adds** `using Gum.Input;` (keeping the old `using` for `Cursor` and `KeyCombo`). The warning clears once `Gum.Input` is imported.
+{% endhint %}

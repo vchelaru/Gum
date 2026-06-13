@@ -84,4 +84,102 @@ public class GamePadTests : BaseTestClass
 
         ((IAnalogStick)sut.LeftStick).AsDPadPushed(DPadDirection.Down).ShouldBeFalse();
     }
+
+    // ---- Phase 1 member-parity additions (issue #3137) ----
+
+    [Fact]
+    public void Clear_ResetsButtonDown_Immediately()
+    {
+        GamePad sut = new GamePad();
+        sut.SetButtonState(GamepadButton.A, true);
+        sut.Activity(1);
+
+        sut.Clear();
+
+        sut.ButtonDown(GamepadButton.A).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Clear_PreservesConnectionState_WhenConnected()
+    {
+        GamePad sut = new GamePad();
+        sut.SetConnected(true);
+        sut.Activity(1);
+
+        sut.Clear();
+
+        sut.IsConnected.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Clear_PreservesStickReferences()
+    {
+        GamePad sut = new GamePad();
+        AnalogStick left = sut.LeftStick;
+        AnalogStick right = sut.RightStick;
+
+        sut.Clear();
+
+        ReferenceEquals(sut.LeftStick, left).ShouldBeTrue();
+        ReferenceEquals(sut.RightStick, right).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Constructor_InitializesRightStick()
+    {
+        GamePad sut = new GamePad();
+        sut.RightStick.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void IsConnected_False_WhenNoActivityCalled()
+    {
+        GamePad sut = new GamePad();
+        sut.IsConnected.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsConnected_True_WhenDriverReportsConnected()
+    {
+        GamePad sut = new GamePad();
+        sut.SetConnected(true);
+        sut.Activity(1);
+
+        sut.IsConnected.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void RightStick_AsDPadDown_ReturnsTrue_WhenPushedRight()
+    {
+        GamePad sut = new GamePad();
+        sut.SetRightStickPosition(1, 0);
+        sut.Activity(1);
+
+        sut.RightStick.AsDPadDown(DPadDirection.Right).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void WasDisconnectedThisFrame_True_OnTheFrameConnectionDrops()
+    {
+        GamePad sut = new GamePad();
+        sut.SetConnected(true);
+        sut.Activity(1);
+
+        sut.SetConnected(false);
+        sut.Activity(2);
+
+        sut.WasDisconnectedThisFrame.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void WasDisconnectedThisFrame_False_WhenConnectedBothFrames()
+    {
+        GamePad sut = new GamePad();
+        sut.SetConnected(true);
+        sut.Activity(1);
+        sut.SetConnected(true);
+        sut.Activity(2);
+
+        sut.WasDisconnectedThisFrame.ShouldBeFalse();
+    }
 }

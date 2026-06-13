@@ -121,7 +121,7 @@ public  class ComboBoxTests : BaseTestClass
         comboBox.AddToRoot();
         comboBox.IsDropDownOpen.ShouldBeFalse();
 
-        Mock<MonoGameGum.Input.IInputReceiverKeyboardMonoGame> keyboard = new Mock<MonoGameGum.Input.IInputReceiverKeyboardMonoGame>();
+        Mock<Gum.Input.IInputReceiverKeyboardMonoGame> keyboard = new Mock<Gum.Input.IInputReceiverKeyboardMonoGame>();
         keyboard.As<IInputReceiverKeyboard>()
             .Setup(k => k.KeyPushed(Gum.Forms.Input.Keys.Enter)).Returns(true);
         keyboard.As<IInputReceiverKeyboard>()

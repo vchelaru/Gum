@@ -4,10 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonoGameGum.Input;
+namespace Gum.Input;
 
 public class AnalogButton
 {
+    // On/off hysteresis thresholds for treating the analog value as a digital press.
+    // (Previously borrowed from AnalogStick.DPadOn/OffValue; kept here so AnalogButton
+    // is self-contained now that the XNA-specific AnalogStick has been retired.)
+    const float OnThreshold = 0.55f;
+    const float OffThreshold = 0.45f;
+
     float mPosition = 0;
 
 
@@ -38,11 +44,11 @@ public class AnalogButton
         {
             if (lastIsDownDown)
             {
-                return mPosition > AnalogStick.DPadOffValue;
+                return mPosition > OffThreshold;
             }
             else
             {
-                return mPosition > AnalogStick.DPadOnValue;
+                return mPosition > OnThreshold;
             }
 
         }

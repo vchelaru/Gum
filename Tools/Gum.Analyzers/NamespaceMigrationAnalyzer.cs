@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -68,6 +69,21 @@ public sealed class NamespaceMigrationAnalyzer : DiagnosticAnalyzer
         // All migrations from the same old namespace currently share one new namespace, so the
         // user-facing message only needs the namespace pair (not every type name).
         var firstMigration = migrations[0];
+
+        // Don't flag once the new namespace is already imported. For a full move the code fix
+        // replaces the old using (so it's gone); for a partial move (e.g. MonoGameGum.Input, where
+        // Cursor stays) the old using legitimately remains, so suppressing here is what lets the
+        // warning clear after the fix adds `using <new>;` — otherwise it would warn forever.
+        var newNamespaceAlreadyImported = context.Node.SyntaxTree
+            .GetRoot(context.CancellationToken)
+            .DescendantNodes()
+            .OfType<UsingDirectiveSyntax>()
+            .Any(u => u.Alias == null && u.Name?.ToString() == firstMigration.NewNamespace);
+        if (newNamespaceAlreadyImported)
+        {
+            return;
+        }
+
         var diagnostic = Diagnostic.Create(
             MovedTypeRule,
             usingDirective.GetLocation(),

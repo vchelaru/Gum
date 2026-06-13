@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using System.Runtime.Versioning;
 
-namespace MonoGameGum.Input;
+namespace Gum.Input;
 
 // The [SupportedOSPlatform("android21.0")] attributes on individual members below tell
 // the CA1416 analyzer those methods are Android-only. The file is already inside #if

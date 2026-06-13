@@ -11,11 +11,20 @@ internal readonly struct TypeMigration
     public string NewNamespace { get; }
     public string TypeName { get; }
 
-    public TypeMigration(string oldNamespace, string newNamespace, string typeName)
+    /// <summary>
+    /// True when the old namespace still contains other (non-migrated) types after this move,
+    /// so the code fix must ADD the new <c>using</c> rather than replace the old one (replacing
+    /// would break references to the types that stayed behind). False for a full evacuation,
+    /// where the old <c>using</c> is replaced or removed.
+    /// </summary>
+    public bool OldNamespaceRetained { get; }
+
+    public TypeMigration(string oldNamespace, string newNamespace, string typeName, bool oldNamespaceRetained = false)
     {
         OldNamespace = oldNamespace;
         NewNamespace = newNamespace;
         TypeName = typeName;
+        OldNamespaceRetained = oldNamespaceRetained;
     }
 }
 
@@ -63,7 +72,19 @@ internal static class NamespaceMigrationMapping
         new TypeMigration("SkiaGum.GueDeriving", "Gum.GueDeriving", "TextRuntime"),
         new TypeMigration("SkiaGum.GueDeriving", "Gum.GueDeriving", "ContainerRuntime"),
         new TypeMigration("SkiaGum.GueDeriving", "Gum.GueDeriving", "SpriteRuntime"),
-        new TypeMigration("SkiaGum.GueDeriving", "Gum.GueDeriving", "ColoredRectangleRuntime")
+        new TypeMigration("SkiaGum.GueDeriving", "Gum.GueDeriving", "ColoredRectangleRuntime"),
+        // Input namespace unification (issue #3137): MonoGameGum.Input → Gum.Input.
+        // This is a PARTIAL move — Cursor, CursorExtensions and KeyCombo stay in
+        // MonoGameGum.Input — so each entry is marked oldNamespaceRetained: true and the
+        // code fix ADDS `using Gum.Input;` while keeping `using MonoGameGum.Input;`.
+        new TypeMigration("MonoGameGum.Input", "Gum.Input", "GamePad", oldNamespaceRetained: true),
+        new TypeMigration("MonoGameGum.Input", "Gum.Input", "AnalogStick", oldNamespaceRetained: true),
+        new TypeMigration("MonoGameGum.Input", "Gum.Input", "AnalogButton", oldNamespaceRetained: true),
+        new TypeMigration("MonoGameGum.Input", "Gum.Input", "Keyboard", oldNamespaceRetained: true),
+        new TypeMigration("MonoGameGum.Input", "Gum.Input", "KeyboardStateProcessor", oldNamespaceRetained: true),
+        new TypeMigration("MonoGameGum.Input", "Gum.Input", "IInputReceiverKeyboardMonoGame", oldNamespaceRetained: true),
+        new TypeMigration("MonoGameGum.Input", "Gum.Input", "DeadzoneType", oldNamespaceRetained: true),
+        new TypeMigration("MonoGameGum.Input", "Gum.Input", "DeadzoneInterpolationType", oldNamespaceRetained: true)
     );
 
     /// <summary>

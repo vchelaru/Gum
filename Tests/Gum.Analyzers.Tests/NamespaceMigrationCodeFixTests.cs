@@ -114,6 +114,73 @@ namespace Gum.GueDeriving
     }
 
     [Fact]
+    public async Task UsingMonoGameGumInput_RaisesGum001()
+    {
+        string testCode = @"
+{|GUM001:using MonoGameGum.Input;|}
+
+namespace TestProject
+{
+    class MyClass { }
+}
+
+namespace MonoGameGum.Input
+{
+    public class Cursor { }
+}
+";
+
+        await CodeFixVerifier.VerifyAnalyzerAsync(testCode);
+    }
+
+    [Fact]
+    public async Task CodeFix_AddsGumInputUsing_KeepsMonoGameGumInput_ForPartialMove()
+    {
+        // MonoGameGum.Input is a PARTIAL move (Cursor stays, Keyboard moved to Gum.Input),
+        // so the fix must ADD `using Gum.Input;` while keeping `using MonoGameGum.Input;`.
+        string testCode = @"
+{|GUM001:using MonoGameGum.Input;|}
+
+namespace TestProject
+{
+    class MyClass { }
+}
+
+namespace MonoGameGum.Input
+{
+    public class Cursor { }
+}
+
+namespace Gum.Input
+{
+    public class Keyboard { }
+}
+";
+
+        string fixedCode = @"
+using MonoGameGum.Input;
+using Gum.Input;
+
+namespace TestProject
+{
+    class MyClass { }
+}
+
+namespace MonoGameGum.Input
+{
+    public class Cursor { }
+}
+
+namespace Gum.Input
+{
+    public class Keyboard { }
+}
+";
+
+        await CodeFixVerifier.VerifyCodeFixAsync(testCode, fixedCode);
+    }
+
+    [Fact]
     public async Task CodeFix_RewritesSkiaGumGueDerivingUsing()
     {
         string testCode = @"

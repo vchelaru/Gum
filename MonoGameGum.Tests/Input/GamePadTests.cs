@@ -2,7 +2,8 @@ using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
 using Shouldly;
 using Xunit;
-using GamePad = MonoGameGum.Input.GamePad;
+using GamePad = Gum.Input.GamePad;
+using GamepadButton = Gum.Input.GamepadButton;
 
 namespace MonoGameGum.Tests.Input;
 
@@ -150,7 +151,7 @@ public class GamePadTests
         var sut = new GamePad();
         sut.Activity(CreateGamePadState(), 0);
 
-        sut.ButtonDown(Buttons.A).ShouldBeFalse();
+        sut.ButtonDown(GamepadButton.A).ShouldBeFalse();
     }
 
     [Fact]
@@ -159,7 +160,7 @@ public class GamePadTests
         var sut = new GamePad();
         sut.Activity(CreateGamePadState(aPressed: true), 0);
 
-        sut.ButtonDown(Buttons.A).ShouldBeTrue();
+        sut.ButtonDown(GamepadButton.A).ShouldBeTrue();
     }
 
     [Fact]
@@ -168,7 +169,7 @@ public class GamePadTests
         var sut = new GamePad();
         sut.Activity(CreateGamePadState(bPressed: true), 0);
 
-        sut.ButtonDown(Buttons.B).ShouldBeTrue();
+        sut.ButtonDown(GamepadButton.B).ShouldBeTrue();
     }
 
     [Fact]
@@ -177,7 +178,7 @@ public class GamePadTests
         var sut = new GamePad();
         sut.Activity(CreateGamePadState(dpadDownPressed: true), 0);
 
-        sut.ButtonDown(Buttons.DPadDown).ShouldBeTrue();
+        sut.ButtonDown(GamepadButton.DPadDown).ShouldBeTrue();
     }
 
     [Fact]
@@ -186,7 +187,7 @@ public class GamePadTests
         var sut = new GamePad();
         sut.Activity(CreateGamePadState(dpadLeftPressed: true), 0);
 
-        sut.ButtonDown(Buttons.DPadLeft).ShouldBeTrue();
+        sut.ButtonDown(GamepadButton.DPadLeft).ShouldBeTrue();
     }
 
     [Fact]
@@ -195,7 +196,7 @@ public class GamePadTests
         var sut = new GamePad();
         sut.Activity(CreateGamePadState(dpadRightPressed: true), 0);
 
-        sut.ButtonDown(Buttons.DPadRight).ShouldBeTrue();
+        sut.ButtonDown(GamepadButton.DPadRight).ShouldBeTrue();
     }
 
     [Fact]
@@ -204,7 +205,7 @@ public class GamePadTests
         var sut = new GamePad();
         sut.Activity(CreateGamePadState(dpadUpPressed: true), 0);
 
-        sut.ButtonDown(Buttons.DPadUp).ShouldBeTrue();
+        sut.ButtonDown(GamepadButton.DPadUp).ShouldBeTrue();
     }
 
     [Fact]
@@ -213,7 +214,7 @@ public class GamePadTests
         var sut = new GamePad();
         sut.Activity(CreateGamePadState(leftShoulderPressed: true), 0);
 
-        sut.ButtonDown(Buttons.LeftShoulder).ShouldBeTrue();
+        sut.ButtonDown(GamepadButton.LeftShoulder).ShouldBeTrue();
     }
 
     [Fact]
@@ -222,7 +223,7 @@ public class GamePadTests
         var sut = new GamePad();
         sut.Activity(CreateGamePadState(leftTrigger: 0.4f), 0);
 
-        sut.ButtonDown(Buttons.LeftTrigger).ShouldBeFalse();
+        sut.ButtonDown(GamepadButton.LeftTrigger).ShouldBeFalse();
     }
 
     [Fact]
@@ -231,7 +232,7 @@ public class GamePadTests
         var sut = new GamePad();
         sut.Activity(CreateGamePadState(leftTrigger: 0.6f), 0);
 
-        sut.ButtonDown(Buttons.LeftTrigger).ShouldBeTrue();
+        sut.ButtonDown(GamepadButton.LeftTrigger).ShouldBeTrue();
     }
 
     [Fact]
@@ -240,7 +241,7 @@ public class GamePadTests
         var sut = new GamePad();
         sut.Activity(CreateGamePadState(rightShoulderPressed: true), 0);
 
-        sut.ButtonDown(Buttons.RightShoulder).ShouldBeTrue();
+        sut.ButtonDown(GamepadButton.RightShoulder).ShouldBeTrue();
     }
 
     [Fact]
@@ -249,7 +250,7 @@ public class GamePadTests
         var sut = new GamePad();
         sut.Activity(CreateGamePadState(rightTrigger: 0.4f), 0);
 
-        sut.ButtonDown(Buttons.RightTrigger).ShouldBeFalse();
+        sut.ButtonDown(GamepadButton.RightTrigger).ShouldBeFalse();
     }
 
     [Fact]
@@ -258,7 +259,7 @@ public class GamePadTests
         var sut = new GamePad();
         sut.Activity(CreateGamePadState(rightTrigger: 0.6f), 0);
 
-        sut.ButtonDown(Buttons.RightTrigger).ShouldBeTrue();
+        sut.ButtonDown(GamepadButton.RightTrigger).ShouldBeTrue();
     }
 
     [Fact]
@@ -267,7 +268,7 @@ public class GamePadTests
         var sut = new GamePad();
         sut.Activity(CreateGamePadState(startPressed: true), 0);
 
-        sut.ButtonDown(Buttons.Start).ShouldBeTrue();
+        sut.ButtonDown(GamepadButton.Start).ShouldBeTrue();
     }
 
     [Fact]
@@ -276,7 +277,7 @@ public class GamePadTests
         var sut = new GamePad();
         sut.Activity(CreateGamePadState(xPressed: true), 0);
 
-        sut.ButtonDown(Buttons.X).ShouldBeTrue();
+        sut.ButtonDown(GamepadButton.X).ShouldBeTrue();
     }
 
     [Fact]
@@ -285,7 +286,7 @@ public class GamePadTests
         var sut = new GamePad();
         sut.Activity(CreateGamePadState(yPressed: true), 0);
 
-        sut.ButtonDown(Buttons.Y).ShouldBeTrue();
+        sut.ButtonDown(GamepadButton.Y).ShouldBeTrue();
     }
 
     #endregion
@@ -299,7 +300,7 @@ public class GamePadTests
         sut.Activity(CreateGamePadState(aPressed: true), 0);
         sut.Activity(CreateGamePadState(aPressed: true), 0.016);
 
-        sut.ButtonPushed(Buttons.A).ShouldBeFalse();
+        sut.ButtonPushed(GamepadButton.A).ShouldBeFalse();
     }
 
     [Fact]
@@ -308,7 +309,7 @@ public class GamePadTests
         var sut = new GamePad();
         sut.Activity(CreateGamePadState(), 0);
 
-        sut.ButtonPushed(Buttons.A).ShouldBeFalse();
+        sut.ButtonPushed(GamepadButton.A).ShouldBeFalse();
     }
 
     [Fact]
@@ -318,7 +319,7 @@ public class GamePadTests
         sut.Activity(CreateGamePadState(aPressed: false), 0);
         sut.Activity(CreateGamePadState(aPressed: true), 0.016);
 
-        sut.ButtonPushed(Buttons.A).ShouldBeTrue();
+        sut.ButtonPushed(GamepadButton.A).ShouldBeTrue();
     }
 
     [Fact]
@@ -328,7 +329,7 @@ public class GamePadTests
         sut.Activity(CreateGamePadState(dpadUpPressed: false), 0);
         sut.Activity(CreateGamePadState(dpadUpPressed: true), 0.016);
 
-        sut.ButtonPushed(Buttons.DPadUp).ShouldBeTrue();
+        sut.ButtonPushed(GamepadButton.DPadUp).ShouldBeTrue();
     }
 
     [Fact]
@@ -338,7 +339,7 @@ public class GamePadTests
         sut.Activity(CreateGamePadState(leftTrigger: 0.6f), 0);
         sut.Activity(CreateGamePadState(leftTrigger: 0.7f), 0.016);
 
-        sut.ButtonPushed(Buttons.LeftTrigger).ShouldBeFalse();
+        sut.ButtonPushed(GamepadButton.LeftTrigger).ShouldBeFalse();
     }
 
     [Fact]
@@ -348,7 +349,7 @@ public class GamePadTests
         sut.Activity(CreateGamePadState(leftTrigger: 0.4f), 0);
         sut.Activity(CreateGamePadState(leftTrigger: 0.6f), 0.016);
 
-        sut.ButtonPushed(Buttons.LeftTrigger).ShouldBeTrue();
+        sut.ButtonPushed(GamepadButton.LeftTrigger).ShouldBeTrue();
     }
 
     [Fact]
@@ -358,7 +359,7 @@ public class GamePadTests
         sut.Activity(CreateGamePadState(startPressed: false), 0);
         sut.Activity(CreateGamePadState(startPressed: true), 0.016);
 
-        sut.ButtonPushed(Buttons.Start).ShouldBeTrue();
+        sut.ButtonPushed(GamepadButton.Start).ShouldBeTrue();
     }
 
     #endregion
@@ -372,7 +373,7 @@ public class GamePadTests
         sut.Activity(CreateGamePadState(aPressed: true), 0);
         sut.Activity(CreateGamePadState(aPressed: true), 0.016);
 
-        sut.ButtonReleased(Buttons.A).ShouldBeFalse();
+        sut.ButtonReleased(GamepadButton.A).ShouldBeFalse();
     }
 
     [Fact]
@@ -382,7 +383,7 @@ public class GamePadTests
         sut.Activity(CreateGamePadState(aPressed: false), 0);
         sut.Activity(CreateGamePadState(aPressed: false), 0.016);
 
-        sut.ButtonReleased(Buttons.A).ShouldBeFalse();
+        sut.ButtonReleased(GamepadButton.A).ShouldBeFalse();
     }
 
     [Fact]
@@ -392,7 +393,7 @@ public class GamePadTests
         sut.Activity(CreateGamePadState(aPressed: true), 0);
         sut.Activity(CreateGamePadState(aPressed: false), 0.016);
 
-        sut.ButtonReleased(Buttons.A).ShouldBeTrue();
+        sut.ButtonReleased(GamepadButton.A).ShouldBeTrue();
     }
 
     [Fact]
@@ -402,7 +403,7 @@ public class GamePadTests
         sut.Activity(CreateGamePadState(bPressed: true), 0);
         sut.Activity(CreateGamePadState(bPressed: false), 0.016);
 
-        sut.ButtonReleased(Buttons.B).ShouldBeTrue();
+        sut.ButtonReleased(GamepadButton.B).ShouldBeTrue();
     }
 
     [Fact]
@@ -412,7 +413,7 @@ public class GamePadTests
         sut.Activity(CreateGamePadState(dpadDownPressed: true), 0);
         sut.Activity(CreateGamePadState(dpadDownPressed: false), 0.016);
 
-        sut.ButtonReleased(Buttons.DPadDown).ShouldBeTrue();
+        sut.ButtonReleased(GamepadButton.DPadDown).ShouldBeTrue();
     }
 
     [Fact]
@@ -422,7 +423,7 @@ public class GamePadTests
         sut.Activity(CreateGamePadState(leftTrigger: 0.6f), 0);
         sut.Activity(CreateGamePadState(leftTrigger: 0.4f), 0.016);
 
-        sut.ButtonReleased(Buttons.LeftTrigger).ShouldBeTrue();
+        sut.ButtonReleased(GamepadButton.LeftTrigger).ShouldBeTrue();
     }
 
     [Fact]
@@ -432,7 +433,7 @@ public class GamePadTests
         sut.Activity(CreateGamePadState(rightTrigger: 0.6f), 0);
         sut.Activity(CreateGamePadState(rightTrigger: 0.4f), 0.016);
 
-        sut.ButtonReleased(Buttons.RightTrigger).ShouldBeTrue();
+        sut.ButtonReleased(GamepadButton.RightTrigger).ShouldBeTrue();
     }
 
     #endregion
@@ -445,7 +446,7 @@ public class GamePadTests
         var sut = new GamePad();
         sut.Activity(CreateGamePadState(aPressed: false), 0);
 
-        sut.ButtonRepeatRate(Buttons.A).ShouldBeFalse();
+        sut.ButtonRepeatRate(GamepadButton.A).ShouldBeFalse();
     }
 
     [Fact]
@@ -455,7 +456,7 @@ public class GamePadTests
         sut.Activity(CreateGamePadState(aPressed: false), 0);
         sut.Activity(CreateGamePadState(aPressed: true), 0.016);
 
-        sut.ButtonRepeatRate(Buttons.A).ShouldBeTrue();
+        sut.ButtonRepeatRate(GamepadButton.A).ShouldBeTrue();
     }
 
     [Fact]
@@ -466,7 +467,7 @@ public class GamePadTests
         sut.Activity(CreateGamePadState(aPressed: true), 0.016);
         sut.Activity(CreateGamePadState(aPressed: true), 0.032); // Still within initial delay
 
-        sut.ButtonRepeatRate(Buttons.A).ShouldBeFalse();
+        sut.ButtonRepeatRate(GamepadButton.A).ShouldBeFalse();
     }
 
     [Fact]
@@ -480,7 +481,7 @@ public class GamePadTests
         // Hold for longer than default timeAfterPush (0.35s)
         sut.Activity(CreateGamePadState(aPressed: true), 0.4);
 
-        sut.ButtonRepeatRate(Buttons.A).ShouldBeTrue();
+        sut.ButtonRepeatRate(GamepadButton.A).ShouldBeTrue();
     }
 
     [Fact]
@@ -496,7 +497,7 @@ public class GamePadTests
         // Wait for repeat interval (0.12s default)
         sut.Activity(CreateGamePadState(aPressed: true), 0.53);
 
-        sut.ButtonRepeatRate(Buttons.A).ShouldBeTrue();
+        sut.ButtonRepeatRate(GamepadButton.A).ShouldBeTrue();
     }
 
     [Fact]
@@ -508,10 +509,10 @@ public class GamePadTests
 
         // Custom timings: 0.5s delay, 0.2s repeat
         sut.Activity(CreateGamePadState(aPressed: true), 0.4);
-        sut.ButtonRepeatRate(Buttons.A, timeAfterPush: 0.5, timeBetweenRepeating: 0.2).ShouldBeFalse();
+        sut.ButtonRepeatRate(GamepadButton.A, timeAfterPush: 0.5, timeBetweenRepeating: 0.2).ShouldBeFalse();
 
         sut.Activity(CreateGamePadState(aPressed: true), 0.6);
-        sut.ButtonRepeatRate(Buttons.A, timeAfterPush: 0.5, timeBetweenRepeating: 0.2).ShouldBeTrue();
+        sut.ButtonRepeatRate(GamepadButton.A, timeAfterPush: 0.5, timeBetweenRepeating: 0.2).ShouldBeTrue();
     }
 
     #endregion
@@ -532,7 +533,7 @@ public class GamePadTests
         // Update with no buttons pressed - should NOT report a release
         sut.Activity(CreateGamePadState(aPressed: false), 0.032);
 
-        sut.ButtonReleased(Buttons.A).ShouldBeFalse();
+        sut.ButtonReleased(GamepadButton.A).ShouldBeFalse();
     }
 
     [Fact]
@@ -545,7 +546,7 @@ public class GamePadTests
 
         sut.Activity(CreateGamePadState(aPressed: false), 0.016);
 
-        sut.ButtonPushed(Buttons.A).ShouldBeFalse();
+        sut.ButtonPushed(GamepadButton.A).ShouldBeFalse();
     }
 
     [Fact]
@@ -587,7 +588,7 @@ public class GamePadTests
 
         sut.Clear();
 
-        sut.ButtonDown(Buttons.A).ShouldBeFalse();
+        sut.ButtonDown(GamepadButton.A).ShouldBeFalse();
     }
 
     [Fact]
@@ -599,7 +600,7 @@ public class GamePadTests
 
         sut.Clear();
 
-        sut.ButtonRepeatRate(Buttons.A).ShouldBeFalse();
+        sut.ButtonRepeatRate(GamepadButton.A).ShouldBeFalse();
     }
 
     [Fact]
@@ -613,10 +614,10 @@ public class GamePadTests
         sut.Clear();
 
         // All button queries should return false immediately
-        sut.ButtonDown(Buttons.A).ShouldBeFalse();
-        sut.ButtonPushed(Buttons.A).ShouldBeFalse();
-        sut.ButtonReleased(Buttons.A).ShouldBeFalse();
-        sut.ButtonDown(Buttons.LeftTrigger).ShouldBeFalse();
+        sut.ButtonDown(GamepadButton.A).ShouldBeFalse();
+        sut.ButtonPushed(GamepadButton.A).ShouldBeFalse();
+        sut.ButtonReleased(GamepadButton.A).ShouldBeFalse();
+        sut.ButtonDown(GamepadButton.LeftTrigger).ShouldBeFalse();
     }
 
     [Fact]
@@ -649,8 +650,8 @@ public class GamePadTests
 
         sut.Clear();
 
-        sut.ButtonDown(Buttons.LeftTrigger).ShouldBeFalse();
-        sut.ButtonDown(Buttons.RightTrigger).ShouldBeFalse();
+        sut.ButtonDown(GamepadButton.LeftTrigger).ShouldBeFalse();
+        sut.ButtonDown(GamepadButton.RightTrigger).ShouldBeFalse();
     }
 
     #endregion
@@ -681,7 +682,7 @@ public class GamePadTests
         sut.Activity(CreateGamePadState(aPressed: true), 0.5);
 
         // Verify the push was recorded by checking ButtonPushed returns true
-        sut.ButtonPushed(Buttons.A).ShouldBeTrue();
+        sut.ButtonPushed(GamepadButton.A).ShouldBeTrue();
     }
 
     #endregion

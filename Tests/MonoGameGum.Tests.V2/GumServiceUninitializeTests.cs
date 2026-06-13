@@ -250,7 +250,7 @@ public class GumServiceUninitializeTests
 
         try
         {
-            GamePad[] originalGamepads = FormsUtilities.Gamepads;
+            var originalGamepads = FormsUtilities.Gamepads;
 
             FormsUtilities.Uninitialize();
 

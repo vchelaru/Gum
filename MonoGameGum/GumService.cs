@@ -25,6 +25,7 @@ using Gum.Localization;
 #if XNALIKE
 using Gum.GueDeriving;
 using MonoGameGum.Input;
+using Gum.Input;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 #elif RAYLIB
@@ -134,7 +135,7 @@ public class GumService : IGumService
     /// <summary>
     /// Gets the collection of connected gamepads available to the application.
     /// </summary>
-    public GamePad[] Gamepads => Gum.Forms.FormsUtilities.Gamepads;
+    public Gum.Input.GamePad[] Gamepads => Gum.Forms.FormsUtilities.Gamepads;
 
     public Renderer Renderer => this.SystemManagers.Renderer;
 

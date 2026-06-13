@@ -20,6 +20,9 @@ using Microsoft.Xna.Framework.Graphics;
 using Gum.Forms.DefaultVisuals;
 using Gum.GueDeriving;
 using MonoGameGum.Input;
+// Keyboard, GamePad and the rest of the input group now live in Gum.Input (issue #3137);
+// MonoGameGum.Input is still imported for the Cursor types that have not moved.
+using Gum.Input;
 #else
 using Gum.GueDeriving;
 using Gum.Input;
@@ -83,7 +86,11 @@ public class FormsUtilities
 
     public static Keyboard Keyboard => keyboard;
 
-    public static GamePad[] Gamepads { get; private set; } = new GamePad[4];
+    // Typed explicitly as Gum.Input.GamePad (the platform-neutral holder in GumCommon) rather
+    // than relying on the per-platform `using` so MonoGame and Raylib resolve to the same type.
+    // The MonoGame side is fed by MonoGameGamePadDriver; the Raylib side by the #if RAYLIB branch
+    // of UpdateGamepads below.
+    public static Gum.Input.GamePad[] Gamepads { get; private set; } = new Gum.Input.GamePad[4];
 
 
 #if XNALIKE
@@ -253,7 +260,7 @@ public class FormsUtilities
 
         for (int i = 0; i < Gamepads.Length; i++)
         {
-            Gamepads[i] = new GamePad();
+            Gamepads[i] = new Gum.Input.GamePad();
         }
 
         // Do an initial update to update connectivity
@@ -529,7 +536,9 @@ public class FormsUtilities
 #else
             var gamepadState = Microsoft.Xna.Framework.Input.GamePad.GetState((int)i);
 #endif
-            Gamepads[i].Activity(gamepadState, time);
+            // Read the XNA state into the platform-neutral GamePad holder (GumCommon),
+            // mirroring the Raylib driver branch below.
+            MonoGameGum.Input.MonoGameGamePadDriver.Apply(Gamepads[i], gamepadState, time);
         }
 #elif RAYLIB
         // Read native Raylib controller input and push it into the platform-neutral
@@ -596,7 +605,7 @@ public class FormsUtilities
     {
         cursor = null;
         keyboard = null;
-        Gamepads = new GamePad[4];
+        Gamepads = new Gum.Input.GamePad[4];
     }
 
     public static void RegisterFromFileFormRuntimeDefaults()
