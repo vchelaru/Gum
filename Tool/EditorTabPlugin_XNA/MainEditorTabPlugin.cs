@@ -740,6 +740,12 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         this._wireframeControl.DragEnter += _dragDropManager.OnWireframeDragEnter;
         this._wireframeControl.DragOver += (sender, e) =>
         {
+            // Intentionally does NOT set e.Effect. The effect is chosen once in
+            // OnWireframeDragEnter, and WinForms carries it forward into each DragOver,
+            // so the drop stays valid for the whole drag without re-asserting it here.
+            // This is fine because the entire canvas accepts a drop the same way; if
+            // drop validity ever becomes position-dependent, set the effect per-move
+            // here the way the tree view's DragOver does.
             //this.DoDragDrop(e.Data, DragDropEffects.Move | DragDropEffects.Copy);
             //DragDropManager.Self.HandleDragOver(sender, e);
 
