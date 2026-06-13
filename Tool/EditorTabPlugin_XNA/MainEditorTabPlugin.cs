@@ -962,8 +962,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         nameToAdd = StringFunctions.MakeStringUnique(nameToAdd, existingNames);
 
         InstanceSave instance =
-            _elementCommands.AddInstance(element, nameToAdd);
-        instance.BaseType = baseType;
+            _elementCommands.AddInstance(element, nameToAdd, baseType);
 
         _dragDropManager.SetInstanceToPosition(worldX, worldY, instance);
 
