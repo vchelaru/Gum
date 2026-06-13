@@ -1,4 +1,5 @@
 ﻿using Gum.GueDeriving;
+using Gum.Wireframe;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using Raylib_cs;
@@ -196,6 +197,150 @@ public class TextRuntimeTests : BaseTestClass
         }
         finally
         {
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+            FileManager.RelativeDirectory = savedRelativeDirectory;
+            FileManager.CustomGetStreamFromFile = savedHook;
+        }
+    }
+
+    // #3039: the string / state set path (SetProperty -> CustomSetPropertyOnRenderable.UpdateToFontValues)
+    // must honor IsAllLayoutSuspended and DEFER the font load, exactly as the MonoGame/Tool path does, so
+    // the documented font-batching optimization (docs/.../font-performance.md) is real on Raylib too.
+    // Before the fix this path loaded eagerly on every setter, making the batch a no-op and "accidentally"
+    // masking #2999. Note the font *property* setters already defer (they route through the shared
+    // GraphicalUiElement.UpdateToFontValues, which sets IsFontDirty), so IsFontDirty alone cannot tell the
+    // two builds apart — the discriminator is whether the eager LOAD happened. Detection: the load resolves
+    // the font-cache file through FileManager.CustomGetStreamFromFile; a unique (non-existent) font name +
+    // relative directory guarantees no cache hit and no on-disk file, so any request for that font during
+    // suspension proves the (now-removed) eager load ran.
+    //
+    // These tests mirror the MonoGame contract pinned in MonoGameGum.Tests FontServiceTests
+    // (StringSetPath_*/UpdateLayout_*), so the two runtimes are proven to behave identically.
+    [Fact]
+    public void StringSetPath_ShouldDeferFontLoad_WhenIsAllLayoutSuspended()
+    {
+        string uniqueFontName = NewUniqueFontName();
+        WithFontLoadRecording(uniqueFontName, fontRequestCount =>
+        {
+            // Construct before suspending so the constructor's own (default Arial) load isn't counted —
+            // it uses a different name and so never increments the counter anyway.
+            TextRuntime textRuntime = new();
+
+            GraphicalUiElement.IsAllLayoutSuspended = true;
+            textRuntime.SetProperty("Font", uniqueFontName);
+            textRuntime.SetProperty("FontSize", 23);
+
+            // Deferred: no eager load happened while globally suspended.
+            fontRequestCount().ShouldBe(0);
+            textRuntime.IsFontDirty.ShouldBeTrue();
+
+            // Resume and flush: the single coalesced load now resolves the font, proving the deferral is
+            // realized rather than silently dropped (the #2999 failure mode).
+            GraphicalUiElement.IsAllLayoutSuspended = false;
+            textRuntime.UpdateFontRecursive();
+
+            fontRequestCount().ShouldBeGreaterThan(0);
+            textRuntime.IsFontDirty.ShouldBeFalse();
+        });
+    }
+
+    // Baseline guarding the guard: it is gated ONLY on the suspension flag. With no suspension the string
+    // path must still load immediately — otherwise the fix would silently break the normal render path.
+    [Fact]
+    public void StringSetPath_ShouldLoadFontImmediately_WhenNotSuspended()
+    {
+        string uniqueFontName = NewUniqueFontName();
+        WithFontLoadRecording(uniqueFontName, fontRequestCount =>
+        {
+            TextRuntime textRuntime = new();
+
+            textRuntime.SetProperty("Font", uniqueFontName);
+
+            fontRequestCount().ShouldBeGreaterThan(0);
+            textRuntime.IsFontDirty.ShouldBeFalse();
+        });
+    }
+
+    // Repro shape for #2999. Users — and the font-performance docs — resume a suspended batch with
+    // UpdateLayout(), NOT UpdateFontRecursive(). UpdateLayout() must therefore realize the deferred font;
+    // otherwise text renders in the fallback font until something else re-applies state. Mirrors
+    // MonoGame's UpdateLayout_ShouldFlushDeferredFontLoad_AfterGlobalSuspendBatch.
+    [Fact]
+    public void UpdateLayout_ShouldFlushDeferredFontLoad_AfterGlobalSuspendBatch()
+    {
+        string uniqueFontName = NewUniqueFontName();
+        WithFontLoadRecording(uniqueFontName, fontRequestCount =>
+        {
+            TextRuntime textRuntime = new();
+
+            GraphicalUiElement.IsAllLayoutSuspended = true;
+            textRuntime.SetProperty("Font", uniqueFontName);
+            textRuntime.SetProperty("FontSize", 23);
+            GraphicalUiElement.IsAllLayoutSuspended = false;
+
+            textRuntime.UpdateLayout();
+
+            fontRequestCount().ShouldBeGreaterThan(0);
+            textRuntime.IsFontDirty.ShouldBeFalse();
+        });
+    }
+
+    // Documents (and pins on Raylib) the intentional KNOWN GAP described in the comment block now shared
+    // verbatim with the MonoGame copy of UpdateToFontValues: the static string path defers ONLY for the
+    // global IsAllLayoutSuspended flag, NOT for per-instance SuspendLayout. So a string set under instance
+    // suspension still loads eagerly. Mirrors MonoGame's
+    // StringSetPath_ShouldNotDeferFontGeneration_WhenOnlyInstanceLayoutSuspended — proving the copied
+    // comment's claim is true on Raylib, not just transcribed.
+    [Fact]
+    public void StringSetPath_ShouldNotDeferFontLoad_WhenOnlyInstanceLayoutSuspended()
+    {
+        string uniqueFontName = NewUniqueFontName();
+        WithFontLoadRecording(uniqueFontName, fontRequestCount =>
+        {
+            TextRuntime textRuntime = new();
+
+            textRuntime.SuspendLayout();
+            textRuntime.SetProperty("Font", uniqueFontName);
+
+            fontRequestCount().ShouldBeGreaterThan(0);
+        });
+    }
+
+    private static string NewUniqueFontName() => "GumDeferFontTest_" + Guid.NewGuid().ToString("N");
+
+    // Installs a font-load recording environment and runs <paramref name="body"/> with a callback that
+    // returns how many times a font whose name contains <paramref name="uniqueFontName"/> has been
+    // requested. A unique relative directory + a hook that serves nothing (returns null, the documented
+    // "I don't have this file" signal) guarantee no cache hit and no on-disk file, so every count is a
+    // genuine load attempt. All mutated global state is restored on exit. Mirrors the GUID-path isolation
+    // in ContentLoaderTests and the StartCapturingFontCalls helper in MonoGame's FontServiceTests.
+    private static void WithFontLoadRecording(string uniqueFontName, Action<Func<int>> body)
+    {
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        string savedRelativeDirectory = FileManager.RelativeDirectory;
+        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
+        bool savedSuspended = GraphicalUiElement.IsAllLayoutSuspended;
+        try
+        {
+            LoaderManager.Self.CacheTextures = false;
+            FileManager.RelativeDirectory = Path.Combine(Path.GetTempPath(),
+                "GumRaylibDeferFontTest_" + Guid.NewGuid().ToString("N")).Replace('\\', '/') + "/";
+
+            int fontRequestCount = 0;
+            FileManager.CustomGetStreamFromFile = incomingPath =>
+            {
+                if (incomingPath.Contains(uniqueFontName, StringComparison.OrdinalIgnoreCase))
+                {
+                    fontRequestCount++;
+                }
+                return null!;
+            };
+
+            body(() => fontRequestCount);
+        }
+        finally
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = savedSuspended;
             LoaderManager.Self.CacheTextures = savedCacheTextures;
             FileManager.RelativeDirectory = savedRelativeDirectory;
             FileManager.CustomGetStreamFromFile = savedHook;
