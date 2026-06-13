@@ -13,6 +13,12 @@
 		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
 		<!-- This is always complaining even if we put a min version of 7.0, so let's suppress it:-->
 		<NoWarn>$(NoWarn);CA1416</NoWarn>
+		<!-- Enables the SDK's single-file compatibility analyzer on every build (not just dotnet publish).
+		     This catches IL3000 (Assembly.Location returns "" in single-file) and related APIs at
+		     compile time in Debug builds, before they can silently break the published release. -->
+		<PublishSingleFile>true</PublishSingleFile>
+		<!-- Treat single-file incompatibility as a hard error so it cannot be ignored. -->
+		<WarningsAsErrors>$(WarningsAsErrors);IL3000;IL3001;IL3002</WarningsAsErrors>
 	</PropertyGroup>
 
 	<!-- Define constants for all target frameworks -->

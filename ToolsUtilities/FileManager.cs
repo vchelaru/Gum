@@ -33,7 +33,8 @@ namespace ToolsUtilities
             {
                 if (IsMobile)
                 {
-                    return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).ToLower().Replace("/", "\\") + "\\";
+                    // Assembly.GetExecutingAssembly().Location returns empty string in single-file published apps.
+                    return AppContext.BaseDirectory.ToLower().Replace("/", "\\");
                 }
                 else
                 {

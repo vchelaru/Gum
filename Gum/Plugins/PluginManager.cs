@@ -1043,7 +1043,11 @@ public class PluginManager : IPluginManager
             if (DateTime.TryParse(value, out compatibilityTime))
             {
                 //If compatibility timestamp is newer than current Glue's timestamp, then don't compile plugin
-                if (new FileInfo(Assembly.GetExecutingAssembly().Location).LastWriteTime < compatibilityTime)
+                // Environment.ProcessPath gives the actual EXE path in all deployment modes including
+                // single-file publish, where Assembly.GetExecutingAssembly().Location returns empty string.
+                // If ProcessPath is somehow null, skip the check (treat as compatible).
+                var exePath = Environment.ProcessPath;
+                if (exePath != null && new FileInfo(exePath).LastWriteTime < compatibilityTime)
                 {
                     return false;
                 }

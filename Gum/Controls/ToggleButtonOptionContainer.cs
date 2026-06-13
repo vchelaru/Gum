@@ -130,8 +130,10 @@ namespace Gum.Controls
         protected static BitmapImage CreateBitmapFromFile(string resourceName)
         {
             // make it absolute so the app doesn't look for the files in the current directory, 
-            // which could be outside the Gum.exe location
-            var relativeDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).ToLower() + "/";
+            // which could be outside the Gum.exe location.
+            // Assembly.GetExecutingAssembly().Location returns empty string in single-file published apps;
+            // AppContext.BaseDirectory already includes a trailing separator.
+            var relativeDirectory = AppContext.BaseDirectory.ToLower();
 
             resourceName = relativeDirectory + resourceName;
 
