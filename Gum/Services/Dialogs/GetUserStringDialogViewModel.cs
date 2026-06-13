@@ -15,6 +15,17 @@ public abstract class GetUserStringDialogBaseViewModel : DialogViewModel
     public string? Error { get => Get<string>(); protected set => Set(value); }
     public bool PreSelect { get; protected set; }
     public string? Prefix { get => Get<string>(); set => Set(value); }
+
+    /// <summary>
+    /// When non-null, the dialog shows an optional checkbox with this label. Leave null (the
+    /// default) for a plain text-entry dialog.
+    /// </summary>
+    public string? CheckboxText { get => Get<string>(); set => Set(value); }
+
+    /// <summary>
+    /// The checked state of the optional checkbox shown when <see cref="CheckboxText"/> is set.
+    /// </summary>
+    public bool IsCheckboxChecked { get => Get<bool>(); set => Set(value); }
     
     protected GetUserStringDialogBaseViewModel()
     {

@@ -42,5 +42,10 @@
             Text="{Binding Error}"
             TextWrapping="Wrap"
             Visibility="{Binding Error, Converter={StaticResource NullToVisibilityConverter}}" />
+        <CheckBox
+            Margin="0,8,0,0"
+            Content="{Binding CheckboxText}"
+            IsChecked="{Binding IsCheckboxChecked}"
+            Visibility="{Binding CheckboxText, Converter={StaticResource NullToVisibilityConverter}}" />
     </StackPanel>
 </UserControl>

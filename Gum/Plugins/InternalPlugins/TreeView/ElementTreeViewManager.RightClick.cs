@@ -246,7 +246,10 @@ public partial class ElementTreeViewManager
                 var containerElement = _selectedState.SelectedElement;
                 AddMenuItem("Go to definition", HandleGoToDefinition);
 
-                if (containerElement != null)
+                // "Create Component" promotes a single instance into a new component (the instance's
+                // children become the component's children). Multi-instance promotion isn't supported
+                // yet, so only offer it when exactly one instance is selected.
+                if (containerElement != null && _selectedState.SelectedInstances.Count() == 1)
                 {
                     AddSeparator();
 

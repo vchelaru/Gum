@@ -98,6 +98,14 @@ public class CopyPasteLogicTests : BaseTestClass
         var gumProject = new GumProjectSave();
         ObjectFinder.Self.GumProjectSave = gumProject;
 
+        // ProjectCommands (created by AutoMocker and exercised by CreateComponentFromInstance via
+        // AddComponent) reads the project through IProjectState, so point it at the same instance.
+        _mocker.GetMock<IProjectState>().Setup(x => x.GumProjectSave).Returns(gumProject);
+
+        // AddComponent notifies plugins through the static PluginManager.Self; an empty plugin list
+        // makes that a safe no-op. Mirrors the pattern in RenameLogicTests.
+        PluginManager.Self.Plugins = new List<PluginBase>();
+
         StandardElementSave spriteElement = new StandardElementSave();
         spriteElement.Name = "Sprite";
 
@@ -1781,6 +1789,240 @@ public class CopyPasteLogicTests : BaseTestClass
             "The second paste's container should be parented to the selected ContainerInstance, not itself");
 
         InstanceSave AddChild(string childName, string parentName) => this.AddChild(childName, parentName, screen);
+    }
+
+    #endregion
+
+    #region CreateComponentFromInstance
+
+    [Fact]
+    public void CreateComponentFromInstance_AddsComponentToProject()
+    {
+        ScreenSave screen = CreateScreenWithButton(out InstanceSave myButton, out _, out _, out _);
+
+        ComponentSave component = _copyPasteLogic.CreateComponentFromInstance(myButton, "ButtonComponent", replaceWithInstance: false);
+
+        ObjectFinder.Self.GumProjectSave!.Components.ShouldContain(component);
+    }
+
+    [Fact]
+    public void CreateComponentFromInstance_CopiesChildVariables()
+    {
+        ScreenSave screen = CreateScreenWithButton(out InstanceSave myButton, out _, out _, out _);
+
+        ComponentSave component = _copyPasteLogic.CreateComponentFromInstance(myButton, "ButtonComponent", replaceWithInstance: false);
+
+        component.DefaultState.GetVariableSave("ChildText.Text")?.Value.ShouldBe("Hello");
+    }
+
+    [Fact]
+    public void CreateComponentFromInstance_CopiesChildrenAsInstances()
+    {
+        ScreenSave screen = CreateScreenWithButton(out InstanceSave myButton, out _, out _, out _);
+
+        ComponentSave component = _copyPasteLogic.CreateComponentFromInstance(myButton, "ButtonComponent", replaceWithInstance: false);
+
+        component.Instances.Select(item => item.Name).ShouldBe(new[] { "ChildText", "GrandChild" }, ignoreOrder: true);
+    }
+
+    [Fact]
+    public void CreateComponentFromInstance_CopiesIntrinsicInstanceVariablesToRoot()
+    {
+        ScreenSave screen = CreateScreenWithButton(out InstanceSave myButton, out _, out _, out _);
+
+        ComponentSave component = _copyPasteLogic.CreateComponentFromInstance(myButton, "ButtonComponent", replaceWithInstance: false);
+
+        component.DefaultState.GetVariableSave("Width")?.Value.ShouldBe(200f);
+        component.DefaultState.GetVariableSave("Height")?.Value.ShouldBe(80f);
+    }
+
+    [Fact]
+    public void CreateComponentFromInstance_DoesNotCopyPositionalInstanceVariablesToRoot()
+    {
+        ScreenSave screen = CreateScreenWithButton(out InstanceSave myButton, out _, out _, out _);
+
+        ComponentSave component = _copyPasteLogic.CreateComponentFromInstance(myButton, "ButtonComponent", replaceWithInstance: false);
+
+        // The promoted instance sat at X=50, Y=120 on its parent. A component root must not adopt
+        // a parent-relative position, so those values must not transfer to the component root.
+        object? rootX = component.DefaultState.GetVariableSave("X")?.Value;
+        object? rootY = component.DefaultState.GetVariableSave("Y")?.Value;
+        rootX.ShouldNotBe(50f);
+        rootY.ShouldNotBe(120f);
+    }
+
+    [Fact]
+    public void CreateComponentFromInstance_DoesNotCopyPromotedInstanceAsChild()
+    {
+        ScreenSave screen = CreateScreenWithButton(out InstanceSave myButton, out _, out _, out _);
+
+        ComponentSave component = _copyPasteLogic.CreateComponentFromInstance(myButton, "ButtonComponent", replaceWithInstance: false);
+
+        component.Instances.ShouldNotContain(item => item.Name == "MyButton");
+    }
+
+    [Fact]
+    public void CreateComponentFromInstance_DoesNotCopyUnrelatedSiblingInstance()
+    {
+        ScreenSave screen = CreateScreenWithButton(out InstanceSave myButton, out _, out _, out _);
+
+        ComponentSave component = _copyPasteLogic.CreateComponentFromInstance(myButton, "ButtonComponent", replaceWithInstance: false);
+
+        component.Instances.ShouldNotContain(item => item.Name == "UnrelatedSibling");
+        component.DefaultState.GetVariableSave("UnrelatedSibling.Text").ShouldBeNull();
+    }
+
+    [Fact]
+    public void CreateComponentFromInstance_DropsParentOfDirectChild()
+    {
+        ScreenSave screen = CreateScreenWithButton(out InstanceSave myButton, out _, out _, out _);
+
+        ComponentSave component = _copyPasteLogic.CreateComponentFromInstance(myButton, "ButtonComponent", replaceWithInstance: false);
+
+        // ChildText was parented to MyButton on the screen. Now that MyButton IS the component
+        // root, the direct child attaches to the root, so its Parent variable must be dropped.
+        component.DefaultState.GetVariableSave("ChildText.Parent").ShouldBeNull();
+    }
+
+    [Fact]
+    public void CreateComponentFromInstance_PreservesNestedChildParent()
+    {
+        ScreenSave screen = CreateScreenWithButton(out InstanceSave myButton, out _, out _, out _);
+
+        ComponentSave component = _copyPasteLogic.CreateComponentFromInstance(myButton, "ButtonComponent", replaceWithInstance: false);
+
+        // GrandChild was parented to ChildText (another child), so that relationship is preserved.
+        component.DefaultState.GetVariableSave("GrandChild.Parent")?.Value.ShouldBe("ChildText");
+    }
+
+    [Fact]
+    public void CreateComponentFromInstance_SetsBaseTypeToInstanceBaseType()
+    {
+        ScreenSave screen = CreateScreenWithButton(out InstanceSave myButton, out _, out _, out _);
+
+        ComponentSave component = _copyPasteLogic.CreateComponentFromInstance(myButton, "ButtonComponent", replaceWithInstance: false);
+
+        component.BaseType.ShouldBe("Container");
+    }
+
+    [Fact]
+    public void CreateComponentFromInstance_SetsComponentName()
+    {
+        ScreenSave screen = CreateScreenWithButton(out InstanceSave myButton, out _, out _, out _);
+
+        ComponentSave component = _copyPasteLogic.CreateComponentFromInstance(myButton, "ButtonComponent", replaceWithInstance: false);
+
+        component.Name.ShouldBe("ButtonComponent");
+    }
+
+    [Fact]
+    public void CreateComponentFromInstance_WithoutReplace_LeavesSourceElementUnchanged()
+    {
+        ScreenSave screen = CreateScreenWithButton(out InstanceSave myButton, out _, out _, out _);
+        int instanceCountBefore = screen.Instances.Count;
+
+        _copyPasteLogic.CreateComponentFromInstance(myButton, "ButtonComponent", replaceWithInstance: false);
+
+        screen.Instances.Count.ShouldBe(instanceCountBefore);
+        screen.Instances.ShouldContain(myButton);
+    }
+
+    [Fact]
+    public void CreateComponentFromInstance_WithReplace_AddsInstanceOfNewComponent()
+    {
+        SetupDeleteLogicMock();
+        ScreenSave screen = CreateScreenWithButton(out InstanceSave myButton, out _, out _, out _);
+
+        _copyPasteLogic.CreateComponentFromInstance(myButton, "ButtonComponent", replaceWithInstance: true);
+
+        InstanceSave? replacement = screen.Instances.FirstOrDefault(item => item.Name == "MyButton");
+        replacement.ShouldNotBeNull();
+        replacement!.BaseType.ShouldBe("ButtonComponent");
+    }
+
+    [Fact]
+    public void CreateComponentFromInstance_WithReplace_DoesNotKeepIntrinsicVariablesOnReplacement()
+    {
+        SetupDeleteLogicMock();
+        ScreenSave screen = CreateScreenWithButton(out InstanceSave myButton, out _, out _, out _);
+
+        _copyPasteLogic.CreateComponentFromInstance(myButton, "ButtonComponent", replaceWithInstance: true);
+
+        // Width is intrinsic and now lives on the component root; the replacement instance should
+        // inherit it rather than carry a redundant override.
+        screen.DefaultState.GetVariableSave("MyButton.Width").ShouldBeNull();
+    }
+
+    [Fact]
+    public void CreateComponentFromInstance_WithReplace_PreservesPositionOnReplacement()
+    {
+        SetupDeleteLogicMock();
+        ScreenSave screen = CreateScreenWithButton(out InstanceSave myButton, out _, out _, out _);
+
+        _copyPasteLogic.CreateComponentFromInstance(myButton, "ButtonComponent", replaceWithInstance: true);
+
+        screen.DefaultState.GetVariableSave("MyButton.X")?.Value.ShouldBe(50f);
+        screen.DefaultState.GetVariableSave("MyButton.Y")?.Value.ShouldBe(120f);
+    }
+
+    [Fact]
+    public void CreateComponentFromInstance_WithReplace_RemovesOriginalChildren()
+    {
+        SetupDeleteLogicMock();
+        ScreenSave screen = CreateScreenWithButton(out InstanceSave myButton, out _, out _, out _);
+
+        _copyPasteLogic.CreateComponentFromInstance(myButton, "ButtonComponent", replaceWithInstance: true);
+
+        screen.Instances.ShouldNotContain(item => item.Name == "ChildText");
+        screen.Instances.ShouldNotContain(item => item.Name == "GrandChild");
+    }
+
+    [Fact]
+    public void CreateComponentFromInstance_WithReplace_RequestsSingleUndoLock()
+    {
+        SetupDeleteLogicMock();
+        Mock<IUndoManager> undoManager = _mocker.GetMock<IUndoManager>();
+        ScreenSave screen = CreateScreenWithButton(out InstanceSave myButton, out _, out _, out _);
+
+        _copyPasteLogic.CreateComponentFromInstance(myButton, "ButtonComponent", replaceWithInstance: true);
+
+        undoManager.Verify(x => x.RequestLock(), Times.Once);
+    }
+
+    /// <summary>
+    /// Builds a screen containing MyButton (a Container at X=50,Y=120,Width=200,Height=80) with a
+    /// direct child ChildText (Text, "Hello"), a nested GrandChild parented to ChildText, and an
+    /// UnrelatedSibling that is not part of the MyButton subtree.
+    /// </summary>
+    private ScreenSave CreateScreenWithButton(out InstanceSave myButton, out InstanceSave childText,
+        out InstanceSave grandChild, out InstanceSave unrelatedSibling)
+    {
+        ScreenSave screen = new ScreenSave { Name = "MainScreen" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(defaultState);
+        ObjectFinder.Self.GumProjectSave!.Screens.Add(screen);
+
+        myButton = new InstanceSave { Name = "MyButton", BaseType = "Container", ParentContainer = screen };
+        childText = new InstanceSave { Name = "ChildText", BaseType = "Text", ParentContainer = screen };
+        grandChild = new InstanceSave { Name = "GrandChild", BaseType = "Container", ParentContainer = screen };
+        unrelatedSibling = new InstanceSave { Name = "UnrelatedSibling", BaseType = "Text", ParentContainer = screen };
+        screen.Instances.Add(myButton);
+        screen.Instances.Add(childText);
+        screen.Instances.Add(grandChild);
+        screen.Instances.Add(unrelatedSibling);
+
+        defaultState.SetValue("ChildText.Parent", "MyButton", "string");
+        defaultState.SetValue("GrandChild.Parent", "ChildText", "string");
+
+        defaultState.SetValue("MyButton.X", 50f, "float");
+        defaultState.SetValue("MyButton.Y", 120f, "float");
+        defaultState.SetValue("MyButton.Width", 200f, "float");
+        defaultState.SetValue("MyButton.Height", 80f, "float");
+
+        defaultState.SetValue("ChildText.Text", "Hello", "string");
+        defaultState.SetValue("UnrelatedSibling.Text", "Unrelated", "string");
+
+        return screen;
     }
 
     #endregion

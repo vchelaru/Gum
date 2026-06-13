@@ -1157,6 +1157,178 @@ public class CopyPasteLogic : ICopyPasteLogic
 
     #endregion
 
+    /// <summary>
+    /// Variable root names that describe an instance's placement relative to its parent. When an
+    /// instance is promoted into a component, these stay on the replacement instance rather than
+    /// moving to the component root — a component's root has no meaningful parent-relative position
+    /// (see <see cref="ToolCommands.ProjectCommands.PrepareNewComponentSave"/>, which likewise nulls
+    /// X/Y on new component roots). There is no data-driven "is positional" flag on authored
+    /// variables (the Category is only populated on the standard-element definitions), so this set
+    /// is maintained explicitly. It mirrors the "Position" category in
+    /// <see cref="Managers.StandardElementsManager"/> plus the Parent attachment.
+    /// </summary>
+    private static readonly HashSet<string> PositionalRootNames = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "X", "Y", "XUnits", "YUnits", "XOrigin", "YOrigin", "Parent"
+    };
+
+    /// <inheritdoc/>
+    public ComponentSave CreateComponentFromInstance(InstanceSave instance, string componentName, bool replaceWithInstance)
+    {
+        ElementSave sourceElement = instance.ParentContainer
+            ?? throw new InvalidOperationException(
+                $"The instance {instance.Name} must have a ParentContainer to be promoted into a component.");
+        StateSave sourceDefault = sourceElement.DefaultState;
+
+        // The instance's type becomes the component's base type; the rest of the new-component
+        // setup (default-state seeding, type converters, nulling the root position) is shared
+        // with the regular "add component" flow.
+        ComponentSave component = new ComponentSave();
+        _projectCommands.PrepareNewComponentSave(component, componentName, instance.BaseType);
+        StateSave componentDefault = component.DefaultState;
+
+        // GetAllInstancesAndChildrenOf includes the instance itself - but the instance BECOMES the
+        // component root rather than one of its children, so exclude it from the copied set.
+        List<InstanceSave> descendants = GetAllInstancesAndChildrenOf(new List<InstanceSave> { instance }, sourceElement)
+            .Where(item => item.Name != instance.Name)
+            .ToList();
+        HashSet<string> descendantNames = new HashSet<string>(descendants.Select(item => item.Name), StringComparer.Ordinal);
+
+        foreach (InstanceSave descendant in descendants)
+        {
+            component.Instances.Add(new InstanceSave
+            {
+                Name = descendant.Name,
+                BaseType = descendant.BaseType,
+                Locked = descendant.Locked,
+                ParentContainer = component,
+            });
+        }
+
+        // Copy each descendant's variables into the component, re-rooting Parent attachments:
+        // a direct child of the promoted instance now attaches to the component root.
+        foreach (VariableSave variable in sourceDefault.Variables)
+        {
+            if (string.IsNullOrEmpty(variable.SourceObject) || !descendantNames.Contains(variable.SourceObject))
+            {
+                continue;
+            }
+
+            VariableSave clone = variable.Clone();
+            clone.ExposedAsName = null;
+
+            if (clone.GetRootName() == "Parent" && clone.Value is string parentValue)
+            {
+                if (parentValue == instance.Name)
+                {
+                    // Attaches to the new component root - no Parent variable needed.
+                    continue;
+                }
+                if (parentValue.StartsWith(instance.Name + "."))
+                {
+                    // Was attached to a default child container of the promoted instance; keep only
+                    // the child-container suffix now that that instance is the root.
+                    clone.Value = parentValue.Substring(instance.Name.Length + 1);
+                }
+            }
+
+            componentDefault.Variables.Add(clone);
+        }
+
+        foreach (VariableListSave variableList in sourceDefault.VariableLists)
+        {
+            if (!string.IsNullOrEmpty(variableList.SourceObject) && descendantNames.Contains(variableList.SourceObject))
+            {
+                componentDefault.VariableLists.Add(variableList.Clone());
+            }
+        }
+
+        // Copy the promoted instance's own intrinsic variables onto the component root (unqualified).
+        // Parent-relative position is deliberately skipped - it stays with the instance (see
+        // PositionalRootNames) and is re-applied to the replacement instance below if needed.
+        foreach (VariableSave variable in sourceDefault.Variables)
+        {
+            if (variable.SourceObject != instance.Name)
+            {
+                continue;
+            }
+            string rootName = variable.GetRootName();
+            if (PositionalRootNames.Contains(rootName))
+            {
+                continue;
+            }
+            VariableSave clone = variable.Clone();
+            clone.Name = rootName;
+            clone.ExposedAsName = null;
+            componentDefault.Variables.RemoveAll(item => item.Name == rootName);
+            componentDefault.Variables.Add(clone);
+        }
+
+        foreach (VariableListSave variableList in sourceDefault.VariableLists)
+        {
+            if (variableList.SourceObject != instance.Name)
+            {
+                continue;
+            }
+            string rootName = variableList.GetRootName();
+            VariableListSave clone = variableList.Clone();
+            clone.Name = rootName;
+            componentDefault.VariableLists.RemoveAll(item => item.Name == rootName);
+            componentDefault.VariableLists.Add(clone);
+        }
+
+        _standardElementsManagerGumTool.FixCustomTypeConverters(component);
+        _projectCommands.AddComponent(component);
+
+        if (replaceWithInstance)
+        {
+            ReplaceSubtreeWithComponentInstance(instance, sourceElement, sourceDefault, descendants, component);
+        }
+
+        return component;
+    }
+
+    /// <summary>
+    /// Phase 2 of <see cref="CreateComponentFromInstance"/>: removes the promoted instance and all
+    /// its descendants from the source element and drops in a single instance of the new component,
+    /// preserving the original instance's name and parent-relative position. Recorded as one undo.
+    /// </summary>
+    private void ReplaceSubtreeWithComponentInstance(InstanceSave instance, ElementSave sourceElement,
+        StateSave sourceDefault, List<InstanceSave> descendants, ComponentSave component)
+    {
+        using var undoLock = _undoManager.RequestLock();
+
+        // The instance's position was NOT moved to the component root, so capture it before the
+        // delete (which strips the instance's variables) and re-apply it to the replacement.
+        List<VariableSave> positionalVariables = sourceDefault.Variables
+            .Where(item => item.SourceObject == instance.Name && PositionalRootNames.Contains(item.GetRootName()))
+            .Select(item => item.Clone())
+            .ToList();
+
+        foreach (InstanceSave descendant in descendants)
+        {
+            _deleteLogic.RemoveInstance(descendant, sourceElement);
+        }
+        _deleteLogic.RemoveInstance(instance, sourceElement);
+
+        InstanceSave replacement = new InstanceSave
+        {
+            Name = instance.Name,
+            BaseType = component.Name,
+            ParentContainer = sourceElement,
+        };
+        sourceElement.Instances.Add(replacement);
+
+        foreach (VariableSave positionalVariable in positionalVariables)
+        {
+            sourceDefault.Variables.RemoveAll(item => item.Name == positionalVariable.Name);
+            sourceDefault.Variables.Add(positionalVariable);
+        }
+
+        _pluginManager.InstanceAdd(sourceElement, replacement);
+        _fileCommands.TryAutoSaveElement(sourceElement);
+    }
+
     private List<InstanceSave> GetAllInstancesAndChildrenOf(List<InstanceSave> explicitlySelectedInstances, ElementSave container)
     {
         List<InstanceSave> listToFill = new List<InstanceSave>();
