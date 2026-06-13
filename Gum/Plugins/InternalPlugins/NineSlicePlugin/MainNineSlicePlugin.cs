@@ -49,8 +49,8 @@ internal class MainNineSlicePlugin : PriorityPlugin
 
     static string GetExecutingDirectory()
     {
-        string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        return path;
+        // Assembly.GetExecutingAssembly().Location returns empty string in single-file published apps.
+        return AppContext.BaseDirectory;
     }
 
 }

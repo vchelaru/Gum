@@ -239,8 +239,8 @@ public class FileCommands : IFileCommands
     // Method copied from MineNineSlicePlugin.cs, potential candidate for DRY refactor
     static string GetExecutingDirectory()
     {
-        string path = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        return path;
+        // Assembly.GetExecutingAssembly().Location returns empty string in single-file published apps.
+        return AppContext.BaseDirectory;
     }
 
     public void ForceSaveElement(ElementSave element)
