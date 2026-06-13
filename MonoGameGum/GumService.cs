@@ -367,6 +367,12 @@ public class GumService : IGumService
         ScreenSave screen = serializer.CreateScreenSave(Root, screenName, shake);
 
         GumProjectSave project = new();
+        // A snapshot seeds the full default standards (the current native variable surface), so it
+        // genuinely uses native-version features. Stamp NativeVersion explicitly -- the ctor default is
+        // the older fallback for legacy files lacking a <Version>, which would make the tool's
+        // variable-grid version gate hide the newer-only (v3 shape) variables. Matches the new-project
+        // factories (ProjectManager.CreateNewProject, ProjectCreator.Create).
+        project.Version = GumProjectSave.NativeVersion;
         StandardElementsManager.Self.PopulateProjectWithDefaultStandards(project);
 
         // Match the project's canvas resolution to the live canvas (the game's resolution) so the
