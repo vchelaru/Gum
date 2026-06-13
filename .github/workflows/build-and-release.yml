@@ -89,20 +89,24 @@ jobs:
 
       # Plugins are built by GumFull.sln and copied to bin/Release/Plugins via their own
       # post-build events (which use $(SolutionDir) and don't run during dotnet publish).
+      # Use wildcard source so Copy-Item copies the *contents* into the destination folder
+      # rather than nesting the folder inside it (which happens when the destination already exists).
+      # dotnet publish creates dist/publish/Plugins/ for Plugins/readme.txt, so -Destination
+      # "dist/publish/Plugins" already exists and a non-wildcard copy would produce Plugins/Plugins/.
       - name: Copy plugins to publish output
         shell: pwsh
         run: |
           if (Test-Path "Gum/bin/Release/Plugins") {
-            Copy-Item -Path "Gum/bin/Release/Plugins" -Destination "dist/publish/Plugins" -Recurse -Force
+            New-Item -ItemType Directory -Force -Path "dist/publish/Plugins" | Out-Null
+            Copy-Item -Path "Gum/bin/Release/Plugins/*" -Destination "dist/publish/Plugins" -Recurse -Force
           }
 
-      # GumCli is copied to bin/Release/GumCli by the CopyGumCli target in Gum.csproj.
-      # The target fires during the build step above (OutDir = bin/Release/, not the publish dir).
       - name: Copy GumCli to publish output
         shell: pwsh
         run: |
           if (Test-Path "Gum/bin/Release/GumCli") {
-            Copy-Item -Path "Gum/bin/Release/GumCli" -Destination "dist/publish/GumCli" -Recurse -Force
+            New-Item -ItemType Directory -Force -Path "dist/publish/GumCli" | Out-Null
+            Copy-Item -Path "Gum/bin/Release/GumCli/*" -Destination "dist/publish/GumCli" -Recurse -Force
           }
 
       # 1) Package the publish output
