@@ -85,7 +85,7 @@ jobs:
       # All managed assemblies are bundled into Gum.exe; the .NET runtime is still required.
       # -r win-x64 is required for PublishSingleFile even when not self-contained.
       - name: Publish Gum (single-file)
-        run: dotnet publish Gum/Gum.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true --no-restore -o dist/publish
+        run: dotnet publish Gum/Gum.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o dist/publish
 
       # Plugins are built by GumFull.sln and copied to bin/Release/Plugins via their own
       # post-build events (which use $(SolutionDir) and don't run during dotnet publish).
