@@ -4,6 +4,10 @@
 
 The RenderTargetTextureSource property allows a Sprite to render a texture produced by a different ContainerRuntime which is drawing to a render target. This feature allows a render target to be scaled, rotated, positioned, stacked, or to use any other Gum layout functionality.
 
+{% hint style="info" %}
+To set up this same pattern in the Gum tool, see [Rotating and Scaling Clipped Contents](../../../gum-tool/tutorials-and-examples/examples/rotating-and-scaling-clipped-contents.md).
+{% endhint %}
+
 ## RenderTargetTextureSource Requirements
 
 To use RenderTargetTextureSource, the following must exist:

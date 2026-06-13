@@ -30,5 +30,5 @@ Once a container is rendered to a render target, additional special effects can 
 * Rotating
 * Rendering portions using texture coordinates
 
-For more information see the [SpriteRuntime RenderTargetTextureSource](../../../code/standard-visuals/spriteruntime/rendertargettexturesource.md) documentation.
+For a step-by-step tool walkthrough of rotating and scaling a clipped container, see [Rotating and Scaling Clipped Contents](../../tutorials-and-examples/examples/rotating-and-scaling-clipped-contents.md). For the same pattern in code, see the [SpriteRuntime RenderTargetTextureSource](../../../code/standard-visuals/spriteruntime/rendertargettexturesource.md) documentation.
 

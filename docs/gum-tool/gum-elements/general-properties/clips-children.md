@@ -5,3 +5,5 @@ The `Clips Children` property controls whether children of a component or contai
 ![Clips Children set to true prevents children from rendering outside of the container's bounds](<../../../.gitbook/assets/16_05 41 09.gif>)
 
 Children outside of the bounds of a container with Clips Children set to true can also be clipped by setting a container's [Is Render Target](../container/is-render-target.md) value to true.
+
+The clip region is always axis-aligned, so rotating a container that clips its children leaves the clip region unrotated. To rotate a container *and* keep its contents clipped, see [Rotating and Scaling Clipped Contents](../../tutorials-and-examples/examples/rotating-and-scaling-clipped-contents.md).
