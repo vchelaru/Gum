@@ -953,4 +953,52 @@ public class DragDropManagerTests : BaseTestClass
 
         // Assert - no exception thrown is the success condition
     }
+
+    [Fact]
+    public void GetFileDropBlockedReason_ReturnsNull_WhenComponentAndStateSelected()
+    {
+        ComponentSave component = new ComponentSave { Name = "MyComponent" };
+        StateSave state = new StateSave { Name = "Default" };
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedElement).Returns(component);
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedStateSave).Returns(state);
+
+        string? reason = _dragDropManager.GetFileDropBlockedReason();
+
+        reason.ShouldBeNull();
+    }
+
+    [Fact]
+    public void GetFileDropBlockedReason_ReturnsReason_WhenNoElementSelected()
+    {
+        // SelectedElement is left null (AutoMocker default).
+        string? reason = _dragDropManager.GetFileDropBlockedReason();
+
+        reason.ShouldNotBeNull();
+        reason.ShouldContain("no Screen or Component");
+    }
+
+    [Fact]
+    public void GetFileDropBlockedReason_ReturnsReason_WhenNoStateSelected()
+    {
+        ComponentSave component = new ComponentSave { Name = "MyComponent" };
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedElement).Returns(component);
+        // SelectedStateSave is left null (AutoMocker default).
+
+        string? reason = _dragDropManager.GetFileDropBlockedReason();
+
+        reason.ShouldNotBeNull();
+        reason.ShouldContain("no state");
+    }
+
+    [Fact]
+    public void GetFileDropBlockedReason_ReturnsReason_WhenStandardElementSelected()
+    {
+        StandardElementSave standardElement = new StandardElementSave { Name = "Sprite" };
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedStandardElement).Returns(standardElement);
+
+        string? reason = _dragDropManager.GetFileDropBlockedReason();
+
+        reason.ShouldNotBeNull();
+        reason.ShouldContain("Sprite");
+    }
 }

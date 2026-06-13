@@ -112,6 +112,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
     readonly ScrollbarService _scrollbarService;
     private readonly IGuiCommands _guiCommands;
+    private readonly IOutputManager _outputManager;
     private readonly LocalizationService _localizationService;
     private readonly ScreenshotService _screenshotService;
     private readonly SelectionManager _selectionManager;
@@ -154,6 +155,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
         _scrollbarService = new ScrollbarService(_projectManager);
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+        _outputManager = Locator.GetRequiredService<IOutputManager>();
         _localizationService = Locator.GetRequiredService<LocalizationService>();
         _editingManager = new EditingManager(
             Locator.GetRequiredService<IWireframeObjectManager>(),
@@ -794,10 +796,27 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
             return;
         }
 
-        // Handle file drops
+        // Handle file drops.
+        // Wrapped in try/catch because exceptions thrown inside a WinForms/OLE
+        // DragDrop handler are swallowed by the drag loop — a failed drop then
+        // looks like drag+drop silently "stopped working". Surfacing it in the
+        // output window makes the failure diagnosable (#3128).
+        try
+        {
+            HandleWireframeFileDrop(e);
+        }
+        catch (Exception ex)
+        {
+            _outputManager.AddError($"Drag+drop failed while handling the dropped file(s): {ex}");
+        }
+    }
 
+    private void HandleWireframeFileDrop(System.Windows.Forms.DragEventArgs e)
+    {
         if (!CanDrop())
+        {
             return;
+        }
 
         float worldX, worldY;
         Renderer.Self.Camera.ScreenToWorld(InputLibrary.Cursor.Self.X, InputLibrary.Cursor.Self.Y, out worldX, out worldY);
@@ -805,6 +824,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
         if (files == null)
         {
+            _guiCommands.PrintOutput("File drop ignored: the drag payload contained no file data.");
             return;
         }
 
@@ -816,6 +836,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         {
             if (!_dragDropManager.IsValidExtensionForFileDrop(files[0]))
             {
+                _guiCommands.PrintOutput($"File drop ignored: '{System.IO.Path.GetFileName(files[0])}' is not a supported texture or font file.");
                 handled = true;
             }
         }
@@ -836,6 +857,11 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
             string[] validFiles = files
                 .Where(f => _dragDropManager.IsValidExtensionForFileDrop(f))
                 .ToArray();
+
+            if (validFiles.Length == 0)
+            {
+                _guiCommands.PrintOutput("File drop ignored: none of the dropped files are supported texture or font files.");
+            }
 
             List<string> outsideProjectFiles = validFiles
                 .Where(f => !FileManager.IsRelativeTo(f, _fileLocations.ProjectFolder))
@@ -1075,9 +1101,13 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
     private bool CanDrop()
     {
-        return _selectedState.SelectedStandardElement == null &&    // Don't allow dropping on standard elements
-               _selectedState.SelectedElement != null &&            // An element must be selected
-               _selectedState.SelectedStateSave != null;            // A state must be selected
+        string? blockedReason = _dragDropManager.GetFileDropBlockedReason();
+        if (blockedReason != null)
+        {
+            _guiCommands.PrintOutput($"File drop ignored: {blockedReason}.");
+            return false;
+        }
+        return true;
     }
 
     private void TryHandleFileDropOnInstance(float worldX, float worldY, string[] files, ref bool handled, ref bool shouldUpdate)
