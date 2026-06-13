@@ -1075,19 +1075,41 @@ public class DragDropManager : IDragDropManager
         }
     }
 
+    /// <inheritdoc/>
+    public string? GetFileDropBlockedReason()
+    {
+        if (_selectedState.SelectedStandardElement != null)
+        {
+            return $"a Standard element ({_selectedState.SelectedStandardElement.Name}) is selected — select a Screen or Component instead";
+        }
+        if (_selectedState.SelectedElement == null)
+        {
+            return "no Screen or Component is selected";
+        }
+        if (_selectedState.SelectedStateSave == null)
+        {
+            return "no state is selected";
+        }
+        return null;
+    }
+
     public void OnWireframeDragEnter(object? sender, DragEventArgs e)
     {
-        var canDropFile =
-            _selectedState.SelectedStandardElement == null &&    // Don't allow dropping on standard elements
-            _selectedState.SelectedElement != null &&            // An element must be selected
-            _selectedState.SelectedStateSave != null &&
-            e.Data.GetDataPresent(DataFormats.FileDrop);            // A state must be selected
+        var hasFileDrop = e.Data.GetDataPresent(DataFormats.FileDrop);
+        var fileDropBlockedReason = GetFileDropBlockedReason();
+        var canDropFile = hasFileDrop && fileDropBlockedReason == null;
 
         var isNodes = e.HasData<List<TreeNode>>() || e.HasData<TreeNode>();
 
         if (canDropFile || isNodes)
         {
             e.Effect = DragDropEffects.Copy;
+        }
+        else if (hasFileDrop && fileDropBlockedReason != null)
+        {
+            // The drop is being rejected (no Copy cursor). Surface why so an
+            // otherwise-silent "drag+drop stopped working" is diagnosable (#3128).
+            _guiCommands.PrintOutput($"File drag rejected: {fileDropBlockedReason}.");
         }
     }
 

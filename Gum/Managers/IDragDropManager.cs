@@ -15,6 +15,15 @@ public interface IDragDropManager
     /// </summary>
     IEnumerable<string> ValidFontExtensions { get; }
 
+    /// <summary>
+    /// Returns a human-readable reason why dragging a texture/font file onto the
+    /// wireframe is currently blocked by the editor selection, or null when a file
+    /// drop is allowed. Used both to gate the drop and to surface diagnostics in the
+    /// output window when a drop silently does nothing. Considers only the selection
+    /// state, not whether the drag payload actually contains files.
+    /// </summary>
+    string? GetFileDropBlockedReason();
+
     bool IsValidExtensionForFileDrop(string file);
     void OnFilesDroppedInTreeView(string[] files);
     void OnNodeObjectDroppedInWireframe(object draggedObject);
