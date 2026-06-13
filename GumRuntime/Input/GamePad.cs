@@ -33,16 +33,40 @@ public class GamePad : IGamePad
 
     float _incomingLeftStickX;
     float _incomingLeftStickY;
+    float _incomingRightStickX;
+    float _incomingRightStickY;
+
+    // Connection is pushed in by the driver each frame, then committed by Activity so
+    // WasDisconnectedThisFrame can observe the current/last transition.
+    bool _incomingConnected;
+    bool _currentConnected;
+    bool _lastConnected;
 
     AnalogStick _leftStick;
+    AnalogStick _rightStick;
 
     /// <summary>
     /// The left analog stick. Always non-null even if the physical controller has no analog stick.
     /// </summary>
     public AnalogStick LeftStick => _leftStick;
 
+    /// <summary>
+    /// The right analog stick. Always non-null even if the physical controller has no analog stick.
+    /// </summary>
+    public AnalogStick RightStick => _rightStick;
+
     /// <inheritdoc/>
     IAnalogStick IGamePad.LeftStick => _leftStick;
+
+    /// <summary>
+    /// Whether the controller was connected as of the last committed frame.
+    /// </summary>
+    public bool IsConnected => _currentConnected;
+
+    /// <summary>
+    /// Whether the controller was connected last frame but is not connected this frame.
+    /// </summary>
+    public bool WasDisconnectedThisFrame => _lastConnected && !_currentConnected;
 
     /// <summary>
     /// Creates a new gamepad with all inputs in their neutral (released / centered) state.
@@ -55,6 +79,7 @@ public class GamePad : IGamePad
         _lastButtonPush = new double[ButtonCount];
         _lastButtonRepeatRate = new double[ButtonCount];
         _leftStick = new AnalogStick();
+        _rightStick = new AnalogStick();
     }
 
     static int GetButtonIndex(GamepadButton button) =>
@@ -83,6 +108,26 @@ public class GamePad : IGamePad
     }
 
     /// <summary>
+    /// Sets the right analog stick position for the current frame, in the XNA/Gum convention
+    /// (X: -1 left to +1 right, Y: -1 down to +1 up). Called by the platform input driver
+    /// before <see cref="Activity"/> commits the frame.
+    /// </summary>
+    public void SetRightStickPosition(float x, float y)
+    {
+        _incomingRightStickX = x;
+        _incomingRightStickY = y;
+    }
+
+    /// <summary>
+    /// Sets whether the controller is connected for the current frame. Called by the platform
+    /// input driver before <see cref="Activity"/> commits the frame.
+    /// </summary>
+    public void SetConnected(bool isConnected)
+    {
+        _incomingConnected = isConnected;
+    }
+
+    /// <summary>
     /// Commits the state pushed in via the setters and advances repeat-rate timing.
     /// Called once per frame by the platform input driver after the setters.
     /// </summary>
@@ -90,6 +135,9 @@ public class GamePad : IGamePad
     public void Activity(double time)
     {
         _currentTime = time;
+
+        _lastConnected = _currentConnected;
+        _currentConnected = _incomingConnected;
 
         for (int i = 0; i < ButtonCount; i++)
         {
@@ -106,6 +154,37 @@ public class GamePad : IGamePad
         }
 
         _leftStick.Update(_incomingLeftStickX, _incomingLeftStickY, time);
+        _rightStick.Update(_incomingRightStickX, _incomingRightStickY, time);
+    }
+
+    /// <summary>
+    /// Clears all transient input state (buttons, sticks, repeat timing) while preserving
+    /// connection status and the <see cref="LeftStick"/>/<see cref="RightStick"/> references.
+    /// Resets the current and last frames together so no spurious push/release is reported
+    /// on the next <see cref="Activity"/>.
+    /// </summary>
+    public void Clear()
+    {
+        System.Array.Clear(_incomingButtonDown, 0, ButtonCount);
+        System.Array.Clear(_currentButtonDown, 0, ButtonCount);
+        System.Array.Clear(_lastButtonDown, 0, ButtonCount);
+        System.Array.Clear(_lastButtonPush, 0, ButtonCount);
+        System.Array.Clear(_lastButtonRepeatRate, 0, ButtonCount);
+
+        _incomingLeftStickX = 0;
+        _incomingLeftStickY = 0;
+        _incomingRightStickX = 0;
+        _incomingRightStickY = 0;
+
+        // Preserve connection: collapse last/incoming onto current so IsConnected is
+        // unchanged and WasDisconnectedThisFrame is false after the clear.
+        _incomingConnected = _currentConnected;
+        _lastConnected = _currentConnected;
+
+        _currentTime = 0;
+
+        _leftStick.Clear();
+        _rightStick.Clear();
     }
 
     #endregion
@@ -205,11 +284,33 @@ public class AnalogStick : IAnalogStick
     const float DPadOnValue = 0.55f;
     const float DPadOffValue = 0.45f;
 
-    // Below this magnitude the stick is treated as centered, to ignore resting drift.
-    const float Deadzone = 0.1f;
-
     const double DefaultTimeAfterPush = 0.35;
     const double DefaultTimeBetweenRepeating = 0.12;
+
+    /// <summary>
+    /// Below this magnitude the stick is treated as centered, to ignore resting drift.
+    /// Defaults to 0.1; set to 0 to disable deadzone processing entirely.
+    /// </summary>
+    public float Deadzone { get; set; } = 0.1f;
+
+    /// <summary>
+    /// Whether the deadzone is applied to the stick's radial magnitude (<see cref="DeadzoneType.Radial"/>)
+    /// or to each axis independently (<see cref="DeadzoneType.Cross"/>). Radial matches the behavior
+    /// prior to the deadzone properties being introduced.
+    /// </summary>
+    public DeadzoneType DeadzoneType { get; set; } = DeadzoneType.Radial;
+
+    /// <summary>
+    /// How values past the deadzone are scaled back toward the edge. <see cref="DeadzoneInterpolationType.Instant"/>
+    /// passes them through unchanged; Linear/Quadratic ramp from the deadzone edge for finer low-end control.
+    /// </summary>
+    public DeadzoneInterpolationType DeadzoneInterpolation { get; set; }
+
+    /// <summary>
+    /// Whether the post-deadzone position is clamped so its magnitude never exceeds 1.
+    /// Recommended for top-down games.
+    /// </summary>
+    public bool IsMaxPositionNormalized { get; set; } = false;
 
     float _x;
     float _y;
@@ -292,10 +393,22 @@ public class AnalogStick : IAnalogStick
     {
         _currentTime = time;
 
-        if ((x * x) + (y * y) < Deadzone * Deadzone)
+        if (Deadzone > 0)
         {
-            x = 0;
-            y = 0;
+            switch (DeadzoneType)
+            {
+                case DeadzoneType.Radial:
+                    ApplyRadialDeadzone(ref x, ref y);
+                    break;
+                case DeadzoneType.Cross:
+                    ApplyCrossDeadzone(ref x, ref y);
+                    break;
+            }
+        }
+
+        if (IsMaxPositionNormalized && (x * x) + (y * y) > 1)
+        {
+            Normalize(ref x, ref y);
         }
 
         // Capture the previous down-state (using the previous position) before moving to the
@@ -314,6 +427,112 @@ public class AnalogStick : IAnalogStick
             {
                 _lastDPadPush[i] = time;
             }
+        }
+    }
+
+    void ApplyRadialDeadzone(ref float x, ref float y)
+    {
+        float lengthSquared = (x * x) + (y * y);
+        if (lengthSquared < Deadzone * Deadzone)
+        {
+            x = 0;
+            y = 0;
+            return;
+        }
+
+        if (DeadzoneInterpolation == DeadzoneInterpolationType.Instant)
+        {
+            return;
+        }
+
+        float length = (float)System.Math.Sqrt(lengthSquared);
+        float range = 1 - Deadzone;
+        float ratio = (length - Deadzone) / range;
+        if (DeadzoneInterpolation == DeadzoneInterpolationType.Quadratic)
+        {
+            ratio = EaseIn(ratio);
+        }
+
+        NormalizeOrRight(ref x, ref y);
+        x *= ratio;
+        y *= ratio;
+    }
+
+    void ApplyCrossDeadzone(ref float x, ref float y)
+    {
+        x = ApplyCrossDeadzoneToAxis(x);
+        y = ApplyCrossDeadzoneToAxis(y);
+    }
+
+    float ApplyCrossDeadzoneToAxis(float value)
+    {
+        if (value < Deadzone && value > -Deadzone)
+        {
+            return 0;
+        }
+
+        switch (DeadzoneInterpolation)
+        {
+            case DeadzoneInterpolationType.Linear:
+                {
+                    float range = 1 - Deadzone;
+                    float distanceBeyondDeadzone = System.Math.Abs(value) - Deadzone;
+                    return System.Math.Sign(value) * (distanceBeyondDeadzone / range);
+                }
+            case DeadzoneInterpolationType.Quadratic:
+                {
+                    float range = 1 - Deadzone;
+                    float distanceBeyondDeadzone = System.Math.Abs(value) - Deadzone;
+                    return System.Math.Sign(value) * EaseIn(distanceBeyondDeadzone / range);
+                }
+            default: // Instant: pass the value through unchanged.
+                return value;
+        }
+    }
+
+    static void Normalize(ref float x, ref float y)
+    {
+        float length = (float)System.Math.Sqrt((x * x) + (y * y));
+        if (length != 0)
+        {
+            x /= length;
+            y /= length;
+        }
+    }
+
+    // Normalizes the (x, y) pair, falling back to a unit vector pointing right when the
+    // input is zero (matching MonoGameGum.Input.AnalogStick's NormalizedOrRight).
+    static void NormalizeOrRight(ref float x, ref float y)
+    {
+        if (x != 0 || y != 0)
+        {
+            Normalize(ref x, ref y);
+        }
+        else
+        {
+            x = 1;
+            y = 0;
+        }
+    }
+
+    // Quadratic ease-in over a unit duration: f(t) = t*t. Matches MonoGameGum.Input.AnalogStick.
+    static float EaseIn(float ratio) => ratio * ratio;
+
+    /// <summary>
+    /// Resets the stick to its neutral (centered) state, clearing current and previous
+    /// frames together so no spurious DPad push/release is reported on the next update.
+    /// </summary>
+    public void Clear()
+    {
+        _x = 0;
+        _y = 0;
+        _currentTime = 0;
+
+        System.Array.Clear(_lastDPadDown, 0, _lastDPadDown.Length);
+        for (int i = 0; i < _lastDPadPush.Length; i++)
+        {
+            _lastDPadPush[i] = -1;
+            _lastDPadRepeatRate[i] = -1;
         }
     }
 }
@@ -436,4 +655,35 @@ public enum DPadDirection
     Down,
     Left,
     Right
+}
+
+/// <summary>
+/// How an <see cref="AnalogStick"/> applies its deadzone: against the stick's radial
+/// magnitude, or to each axis independently.
+/// </summary>
+public enum DeadzoneType
+{
+    Radial = 0,
+    //BoundingBox = 1, // Not currently supported
+    Cross
+}
+
+/// <summary>
+/// How an <see cref="AnalogStick"/> scales values that lie beyond the deadzone.
+/// </summary>
+public enum DeadzoneInterpolationType
+{
+    /// <summary>
+    /// No interpolation is performed. Values less than the deadzone are set to 0; values past it pass through unchanged.
+    /// </summary>
+    Instant,
+    /// <summary>
+    /// Linear interpolation is performed for values greater than the deadzone.
+    /// </summary>
+    Linear,
+    /// <summary>
+    /// Quadratic (ease-in) interpolation is performed for values greater than the deadzone. This increases
+    /// accuracy at lower values (closer to the deadzone) so small movements are easier to perform.
+    /// </summary>
+    Quadratic
 }
