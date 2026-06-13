@@ -195,6 +195,30 @@ public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
     }
 
     [Fact]
+    public void ExportSnapshot_ShouldStampNativeVersion()
+    {
+        // A snapshot seeds the full default standards (the v3 shape variable surface), so it genuinely
+        // uses native-version features and must stamp NativeVersion -- not the older ctor default, which
+        // would make the tool's variable-grid version gate hide the new Circle/Rectangle shape variables.
+        string tempDirectory = NewTempDirectory();
+        try
+        {
+            GumService service = new();
+            service.Root.AddChild(new ContainerRuntime { Name = "Panel" });
+
+            string gumxPath = Path.Combine(tempDirectory, "Live." + GumProjectSave.ProjectExtension);
+            service.ExportSnapshot(gumxPath);
+
+            GumProjectSave loaded = GumProjectSave.Load(gumxPath, out _);
+            loaded.Version.ShouldBe(GumProjectSave.NativeVersion);
+        }
+        finally
+        {
+            DeleteTempDirectory(tempDirectory);
+        }
+    }
+
+    [Fact]
     public void ExportSnapshot_ShouldSetCanvasSizeFromRuntimeCanvas()
     {
         // The exported project's resolution should match the live canvas (the game's resolution), not
