@@ -76,18 +76,43 @@ jobs:
 
           Write-Host "Updated AssemblyInfo.cs to version $version"
 
-      # Build GUM TOOL (GumFull.sln includes Gum.Cli, which gets copied into the tool output)
+      # Build GUM TOOL (GumFull.sln includes Gum.Cli, which gets copied into the tool output;
+      # plugins use $(SolutionDir) in their post-build events so they must be built via the solution)
       - name: Build Gum Tool
         run: dotnet build GumFull.sln -c Release --no-restore -p:ExcludeIOS=true -p:ExcludeAndroid=true
-      
-      # 1) Package the entire directory exactly as-is
-      - name: Package entire Release folder
+
+      # Publish Gum as a framework-dependent single-file bundle.
+      # All managed assemblies are bundled into Gum.exe; the .NET runtime is still required.
+      # -r win-x64 is required for PublishSingleFile even when not self-contained.
+      - name: Publish Gum (single-file)
+        run: dotnet publish Gum/Gum.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true --no-restore -o dist/publish
+
+      # Plugins are built by GumFull.sln and copied to bin/Release/Plugins via their own
+      # post-build events (which use $(SolutionDir) and don't run during dotnet publish).
+      - name: Copy plugins to publish output
+        shell: pwsh
+        run: |
+          if (Test-Path "Gum/bin/Release/Plugins") {
+            Copy-Item -Path "Gum/bin/Release/Plugins" -Destination "dist/publish/Plugins" -Recurse -Force
+          }
+
+      # GumCli is copied to bin/Release/GumCli by the CopyGumCli target in Gum.csproj.
+      # The target fires during the build step above (OutDir = bin/Release/, not the publish dir).
+      - name: Copy GumCli to publish output
+        shell: pwsh
+        run: |
+          if (Test-Path "Gum/bin/Release/GumCli") {
+            Copy-Item -Path "Gum/bin/Release/GumCli" -Destination "dist/publish/GumCli" -Recurse -Force
+          }
+
+      # 1) Package the publish output
+      - name: Package release
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
           $zip = "dist/Gum.zip"
           if (Test-Path $zip) { Remove-Item $zip -Force }
-          Compress-Archive -Path "Gum/bin/Release/*" -DestinationPath $zip
+          Compress-Archive -Path "dist/publish/*" -DestinationPath $zip
 
       # 2) Compute tag + title depending on the kind of release
       - name: Compute tag + title
