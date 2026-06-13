@@ -4,7 +4,11 @@ using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
 using XnaColor = Microsoft.Xna.Framework.Color;
 
+#if FRB
 namespace MonoGameGum.Renderables;
+#else
+namespace Gum.Renderables;
+#endif
 
 /// <summary>
 /// Core-default <see cref="IStrokedRectangleRenderable"/> implementation. Draws as an outline

@@ -13,7 +13,7 @@ public class DefaultVisualShimTypeTests : BaseTestClass
     [Fact]
     public void V1_DefaultButtonRuntime_TextInstance_ShouldBeShimType()
     {
-        var sut = new MonoGameGum.Forms.DefaultVisuals.DefaultButtonRuntime();
+        var sut = new Gum.Forms.DefaultVisuals.DefaultButtonRuntime();
 #pragma warning disable CS0618
         sut.TextInstance.ShouldBeOfType<MonoGameGum.GueDeriving.TextRuntime>();
 #pragma warning restore CS0618

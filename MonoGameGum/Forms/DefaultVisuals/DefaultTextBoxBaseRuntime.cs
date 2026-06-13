@@ -18,7 +18,11 @@ using System.Threading.Tasks;
 using Styling = Gum.Forms.DefaultVisuals.Styling;
 
 
+#if FRB
 namespace MonoGameGum.Forms.DefaultVisuals
+#else
+namespace Gum.Forms.DefaultVisuals
+#endif
 {
     public abstract class DefaultTextBoxBaseRuntime : InteractiveGue
     {

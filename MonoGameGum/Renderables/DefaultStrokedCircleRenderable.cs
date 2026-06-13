@@ -3,7 +3,11 @@ using Gum.GueDeriving;
 using RenderingLibrary.Math.Geometry;
 using XnaColor = Microsoft.Xna.Framework.Color;
 
+#if FRB
 namespace MonoGameGum.Renderables;
+#else
+namespace Gum.Renderables;
+#endif
 
 /// <summary>
 /// Core-default <see cref="IStrokedCircleRenderable"/> implementation. Draws as an outline
@@ -49,8 +53,8 @@ public class DefaultStrokedCircleRenderable : LineCircle, IStrokedCircleRenderab
         // LineCircle.Color is System.Drawing.Color; the interface speaks XNA Color. Convert
         // both directions via the same extensions that CircleRuntime's legacy Color setter
         // historically used.
-        get => RenderingLibrary.Graphics.XNAExtensions.ToXNA(this.Color);
-        set => this.Color = RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
+        get => global::RenderingLibrary.Graphics.XNAExtensions.ToXNA(this.Color);
+        set => this.Color = global::RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
     }
 
     // Stored but unused: LineCircle has no stroke-width concept. Setting this is intentionally

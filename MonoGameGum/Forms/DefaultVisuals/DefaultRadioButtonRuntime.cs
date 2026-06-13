@@ -19,7 +19,11 @@ using System.Threading.Tasks;
 using Styling = Gum.Forms.DefaultVisuals.Styling;
 
 
+#if FRB
 namespace MonoGameGum.Forms.DefaultVisuals;
+#else
+namespace Gum.Forms.DefaultVisuals;
+#endif
 public class DefaultRadioButtonRuntime : InteractiveGue
 {
     public TextRuntime TextInstance { get; private set; }
@@ -74,7 +78,7 @@ public class DefaultRadioButtonRuntime : InteractiveGue
             var text = new TextRuntime();
             text.X = 28;
             text.Y = 0;
-            text.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
+            text.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
             text.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
             text.Width = -36;
             text.Height = 0;

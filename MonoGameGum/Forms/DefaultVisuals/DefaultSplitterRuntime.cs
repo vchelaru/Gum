@@ -15,7 +15,11 @@ using System.Threading.Tasks;
 
 using Styling = Gum.Forms.DefaultVisuals.Styling;
 
+#if FRB
 namespace MonoGameGum.Forms.DefaultVisuals;
+#else
+namespace Gum.Forms.DefaultVisuals;
+#endif
 public class DefaultSplitterRuntime : InteractiveGue
 {
     public DefaultSplitterRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())

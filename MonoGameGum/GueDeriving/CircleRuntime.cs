@@ -30,7 +30,7 @@ using ColorExtensions = ToolsUtilitiesStandard.Helpers.ColorExtensions;
 using ContainedCircleType = global::RenderingLibrary.Math.Geometry.LineCircle;
 using global::RenderingLibrary.Math.Geometry;
 using Gum.DataTypes;
-using MonoGameGum.Renderables;
+using Gum.Renderables;
 #endif
 
 #if FRB
@@ -667,7 +667,7 @@ public class CircleRuntime : GraphicalUiElement
     /// <see cref="IAntialiasedRenderable"/>. Visual effect requires the optional
     /// MonoGameGumShapes (Apos.Shapes) package; without it neither slot implements the
     /// interface and the value round-trips on the runtime but renders as a no-op —
-    /// <see cref="MonoGameGum.Renderables.DefaultStrokedCircleRenderable"/> wraps
+    /// <see cref="Gum.Renderables.DefaultStrokedCircleRenderable"/> wraps
     /// <c>LineCircle</c>, which has no AA concept.
     /// </remarks>
     public bool IsAntialiased
@@ -1199,7 +1199,7 @@ public class CircleRuntime : GraphicalUiElement
     /// </summary>
     /// <remarks>
     /// Visual dashing requires the optional MonoGameGumShapes (Apos.Shapes) package; without
-    /// it the stroke slot is <see cref="MonoGameGum.Renderables.DefaultStrokedCircleRenderable"/>
+    /// it the stroke slot is <see cref="Gum.Renderables.DefaultStrokedCircleRenderable"/>
     /// (wraps <c>LineCircle</c>, no dash concept) and this setter is a visual no-op. The
     /// backing field still round-trips so user code is forward-compatible with adding the
     /// package later. Pushed each frame in <see cref="PreRender"/> with the same ScreenPixel

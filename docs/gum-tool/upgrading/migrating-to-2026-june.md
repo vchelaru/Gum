@@ -111,3 +111,37 @@ The per-platform `GraphicalUiElementExtensionMethods.AddToRoot / RemoveFromRoot`
 ### `MonoGameGum.ElementSaveExtensionMethods.ToGraphicalUiElement` Is Now `[Obsolete]`
 
 A back-compat forwarder in `MonoGameGum.ElementSaveExtensionMethods` now delegates to `Gum.ElementSaveExtensionMethods.ToGraphicalUiElement` and is marked `[Obsolete]`. Existing code keeps compiling with a `CS0618` warning. To migrate, add `using Gum;` and drop `using MonoGameGum;` if it is no longer needed for other symbols.
+
+### More Public Types Moved to the Unified `Gum` Namespace
+
+Continuing the namespace unification, several more public types have moved from `MonoGameGum.*` namespaces to their unified `Gum.*` equivalents so you can drop `using MonoGameGum;` from more of your code. Each is a **soft break**: a permanent `[Obsolete]` shim remains in the old `MonoGameGum.*` namespace, so existing code keeps compiling and produces a `CS0618` warning that names the new namespace.
+
+| Old namespace | New namespace | Types |
+|---|---|---|
+| `MonoGameGum.ExtensionMethods` | `Gum.ExtensionMethods` | `IReadOnlyListExtensionMethods` |
+| `MonoGameGum.Renderables` | `Gum.Renderables` | `DefaultFilledRectangleRenderable`, `DefaultStrokedCircleRenderable`, `DefaultStrokedRectangleRenderable` |
+| `MonoGameGum.Forms.DefaultVisuals` | `Gum.Forms.DefaultVisuals` | `DefaultButtonRuntime`, `DefaultCheckboxRuntime`, … `DefaultWindowRuntime` (all default-visual runtimes) |
+
+To migrate, change the `using` directive:
+
+❌ Old:
+```csharp
+using MonoGameGum.Forms.DefaultVisuals;
+
+// Initialize
+var visual = new DefaultButtonRuntime();
+```
+
+✅ New:
+```csharp
+using Gum.Forms.DefaultVisuals;
+
+// Initialize
+var visual = new DefaultButtonRuntime();
+```
+
+Because the moved type and its shim share a name, importing **both** the new `Gum.*` namespace and the old `MonoGameGum.*` namespace at the same time produces a `CS0104` ambiguity. Remove the old `MonoGameGum.*` `using` directive.
+
+{% hint style="info" %}
+The unified default visuals (for example `Gum.Forms.DefaultVisuals.DefaultButtonRuntime`) still expose their child runtimes — `TextInstance`, `Background`, and so on — as the deprecated `MonoGameGum.GueDeriving` shim types, exactly as before. If you captured those properties into shim-typed variables, that code keeps working unchanged.
+{% endhint %}

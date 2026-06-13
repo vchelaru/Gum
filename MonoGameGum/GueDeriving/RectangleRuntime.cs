@@ -33,7 +33,7 @@ using ColorExtensions = ToolsUtilitiesStandard.Helpers.ColorExtensions;
 using ContainedLineRectangle = global::RenderingLibrary.Math.Geometry.LineRectangle;
 using global::RenderingLibrary.Math.Geometry;
 using Gum.DataTypes;
-using MonoGameGum.Renderables;
+using Gum.Renderables;
 #endif
 
 #if FRB

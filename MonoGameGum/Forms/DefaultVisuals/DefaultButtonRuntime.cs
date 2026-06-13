@@ -17,7 +17,11 @@ using System.Threading.Tasks;
 
 using Styling = Gum.Forms.DefaultVisuals.Styling;
 
+#if FRB
 namespace MonoGameGum.Forms.DefaultVisuals;
+#else
+namespace Gum.Forms.DefaultVisuals;
+#endif
 
 public class DefaultButtonRuntime : InteractiveGue
 {
@@ -57,7 +61,7 @@ public class DefaultButtonRuntime : InteractiveGue
             TextInstance.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
             TextInstance.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
             TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
-            TextInstance.VerticalAlignment = RenderingLibrary.Graphics.VerticalAlignment.Center;
+            TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
             this.Children.Add(TextInstance);
 
             FocusedIndicator = new RectangleRuntime();
