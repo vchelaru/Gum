@@ -833,16 +833,32 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
         if (!handled)
         {
-            foreach (string file in files)
-            {
-                if (!_dragDropManager.IsValidExtensionForFileDrop(file))
-                    continue;
+            string[] validFiles = files
+                .Where(f => _dragDropManager.IsValidExtensionForFileDrop(f))
+                .ToArray();
 
-                string fileName = FileManager.MakeRelative(file, _fileLocations.ProjectFolder);
-                AddNewInstanceForDrop(fileName, worldX, worldY);
-                shouldUpdate = true;
+            List<string> outsideProjectFiles = validFiles
+                .Where(f => !FileManager.IsRelativeTo(f, _fileLocations.ProjectFolder))
+                .ToList();
+
+            bool cancelDrop = false;
+
+            if (outsideProjectFiles.Count >= 2)
+            {
+                cancelDrop = !HandleBatchFilesOutsideProject(outsideProjectFiles, ref validFiles);
             }
 
+            if (!cancelDrop)
+            {
+                foreach (string file in validFiles)
+                {
+                    string fileName = FileManager.MakeRelative(file, _fileLocations.ProjectFolder);
+                    AddNewInstanceForDrop(fileName, worldX, worldY);
+                    shouldUpdate = true;
+                }
+
+                _setVariableLogic.SetBatchFileCopyDecision(shouldCopy: null);
+            }
         }
         if (shouldUpdate)
         {
@@ -851,6 +867,61 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
             _wireframeObjectManager.RefreshAll(true);
         }
+    }
+
+    /// <summary>
+    /// Shows a single consolidated dialog for all files that are outside the project folder,
+    /// then either pre-copies them into the project folder (updating <paramref name="validFiles"/>)
+    /// or sets the batch copy decision so SetVariableLogic suppresses per-file dialogs.
+    /// </summary>
+    /// <returns>false if the user cancelled and the drop should be aborted; true otherwise.</returns>
+    private bool HandleBatchFilesOutsideProject(List<string> outsideProjectFiles, ref string[] validFiles)
+    {
+        string fileList = string.Join("\n", outsideProjectFiles.Select(System.IO.Path.GetFileName));
+        string message = $"The following {outsideProjectFiles.Count} files are outside the project folder:\n\n{fileList}\n\nWhat would you like to do?";
+
+        DialogChoices<string> choices = new()
+        {
+            ["reference-current"] = "Reference all files in their current locations",
+            ["copy-relative"] = "Copy all files to the Gum project folder and reference the copies"
+        };
+
+        string? result = _dialogService.ShowChoices(message, choices, canCancel: true);
+
+        if (result == null)
+        {
+            return false;
+        }
+
+        if (result == "copy-relative")
+        {
+            List<string> updatedFiles = validFiles.ToList();
+            foreach (string file in outsideProjectFiles)
+            {
+                string destPath = System.IO.Path.Combine(_fileLocations.ProjectFolder, System.IO.Path.GetFileName(file));
+                try
+                {
+                    System.IO.File.Copy(file, destPath, overwrite: true);
+                    int idx = updatedFiles.IndexOf(file);
+                    if (idx >= 0)
+                    {
+                        updatedFiles[idx] = destPath;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _dialogService.ShowMessage($"Error copying {System.IO.Path.GetFileName(file)}:\n{ex.Message}");
+                }
+            }
+            validFiles = updatedFiles.ToArray();
+        }
+        else
+        {
+            // "reference-current": tell SetVariableLogic not to prompt per file
+            _setVariableLogic.SetBatchFileCopyDecision(shouldCopy: false);
+        }
+
+        return true;
     }
 
     private string? GetBaseTypeForExtension(string fileName)

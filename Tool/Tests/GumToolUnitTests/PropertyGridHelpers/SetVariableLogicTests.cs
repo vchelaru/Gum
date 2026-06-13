@@ -4,6 +4,7 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.PropertyGridHelpers;
+using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Moq;
 using Moq.AutoMock;
@@ -14,8 +15,9 @@ namespace GumToolUnitTests.PropertyGridHelpers;
 public class SetVariableLogicTests : BaseTestClass
 {
     private readonly AutoMocker mocker;
-
+    private readonly FakeDialogService _fakeDialogService;
     private readonly SetVariableLogic _setVariableLogic;
+
     public SetVariableLogicTests()
     {
         mocker = new();
@@ -26,6 +28,9 @@ public class SetVariableLogicTests : BaseTestClass
         mocker.GetMock<IProjectState>()
             .Setup(x => x.ProjectDirectory)
             .Returns("c:/TestProject/");
+
+        _fakeDialogService = new FakeDialogService();
+        mocker.Use<IDialogService>(_fakeDialogService);
 
         _setVariableLogic = mocker.CreateInstance<SetVariableLogic>();
         StandardElementsManager.Self.Initialize();
@@ -462,6 +467,71 @@ public class SetVariableLogicTests : BaseTestClass
         bool result = SetVariableLogic.IsStateVariable("Category1State", screen, instance);
 
         result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ReactToPropertyValueChanged_ShouldNotShowCopyDialog_WhenBatchFileCopyDecisionIsSetToFalse()
+    {
+        // A SourceFile path that resolves outside the project folder should normally
+        // trigger the "copy or reference?" dialog. With SetBatchFileCopyDecision(false),
+        // the dialog must be suppressed and the response must succeed (reference-in-place).
+        ComponentSave container = new ComponentSave();
+        container.States.Add(new StateSave());
+        container.DefaultState.ParentContainer = container;
+
+        InstanceSave instance = new InstanceSave();
+        instance.Name = "SpriteInstance";
+        instance.BaseType = "Sprite";
+
+        // "../../ExternalFolder/image.png" resolves to c:/ExternalFolder/image.png,
+        // which is outside c:/TestProject/.
+        container.DefaultState.SetValue("SpriteInstance.SourceFile", "../../ExternalFolder/image.png");
+
+        mocker.GetMock<ISelectedState>()
+            .Setup(x => x.SelectedStateSave)
+            .Returns(container.DefaultState);
+
+        _setVariableLogic.SetBatchFileCopyDecision(shouldCopy: false);
+
+        GeneralResponse response = _setVariableLogic.ReactToPropertyValueChanged(
+            "SourceFile", null, container, instance, container.DefaultState, refresh: false,
+            recordUndo: false, trySave: false);
+
+        _setVariableLogic.SetBatchFileCopyDecision(shouldCopy: null);
+
+        response.Succeeded.ShouldBeTrue();
+        _fakeDialogService.ShowChoiceCallCount.ShouldBe(0);
+    }
+
+    private class FakeDialogService : IDialogService
+    {
+        public int ShowChoiceCallCount { get; private set; }
+        public Action<ChoiceDialogViewModel>? ChoiceDialogStub { get; set; }
+
+        public MessageDialogResult ShowMessage(string message, string? title = null, MessageDialogStyle? style = null)
+            => MessageDialogResult.Canceled;
+
+        public bool Show<T>(T dialogViewModel) where T : DialogViewModel => false;
+
+        public bool Show<T>(Action<T>? initializer, out T viewModel) where T : DialogViewModel
+        {
+            if (typeof(T) == typeof(ChoiceDialogViewModel))
+            {
+                ChoiceDialogViewModel choice = new ChoiceDialogViewModel();
+                initializer?.Invoke((T)(object)choice);
+                ChoiceDialogStub?.Invoke(choice);
+                ShowChoiceCallCount++;
+                viewModel = (T)(object)choice;
+                return false;
+            }
+
+            viewModel = null!;
+            return false;
+        }
+
+        public string? GetUserString(string message, string? title = null, GetUserStringOptions? options = null) => null;
+
+        public List<string>? OpenFile(OpenFileDialogOptions? options = null) => null;
     }
 
     [Fact(Skip = "ProjectManager.Self needs to be removed")]

@@ -91,6 +91,10 @@ public class SetVariableLogic : ISetVariableLogic
     private readonly IProjectState _projectState;
     private readonly IProjectManager _projectManager;
 
+    // When non-null, AskIfShouldCopy returns this value without showing a dialog.
+    // Used by OnWireframeDrop to consolidate the per-file copy prompt into one dialog.
+    private bool? _batchFileCopyDecision;
+
     public SetVariableLogic(ISelectedState selectedState,
         INameVerifier nameVerifier,
         IRenameLogic renameLogic,
@@ -861,8 +865,19 @@ public class SetVariableLogic : ISetVariableLogic
         return whyInvalid;
     }
 
+    /// <inheritdoc/>
+    public void SetBatchFileCopyDecision(bool? shouldCopy)
+    {
+        _batchFileCopyDecision = shouldCopy;
+    }
+
     private bool? AskIfShouldCopy(VariableSave variable, string value)
     {
+        if (_batchFileCopyDecision.HasValue)
+        {
+            return _batchFileCopyDecision.Value;
+        }
+
         bool? shouldCopy = false;
 
         // Ask the user what to do - make it relative?
