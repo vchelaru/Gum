@@ -1401,6 +1401,7 @@ public class FrameworkElement : INotifyPropertyChanged
                     if(!isDominant)
 #endif
                     {
+#if !FRB
                         if (IsTopMostModal(parentVisual))
                         {
                             // The top-most modal traps tab focus: rather than climbing out to
@@ -1412,7 +1413,9 @@ public class FrameworkElement : INotifyPropertyChanged
                                 didFocusNewItem = HandleTab(tabDirection, null, parentVisual, shouldAskParent: false, loop: false);
                             }
                         }
-                        else if (parentVisual?.Parent != null)
+                        else
+#endif
+                        if (parentVisual?.Parent != null)
                         {
                             var grandparentVisual = parentVisual.Parent as InteractiveGue;
                             didFocusNewItem = HandleTab(tabDirection, parentVisual, grandparentVisual, shouldAskParent: true, loop:loop);
@@ -1463,6 +1466,7 @@ public class FrameworkElement : INotifyPropertyChanged
                     element.GamepadTabbingFocusBehavior == TabbingFocusBehavior.FocusableIfInputReceiver;
     }
 
+#if !FRB
     /// <summary>
     /// Returns whether the argument visual is the top-most (active) modal — the last visible direct
     /// child of <see cref="ModalRoot"/>. Tab focus is trapped within this element so that keyboard
@@ -1495,6 +1499,7 @@ public class FrameworkElement : INotifyPropertyChanged
 
         return false;
     }
+#endif
 
     #endregion
 
