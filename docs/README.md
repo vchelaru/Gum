@@ -6,6 +6,8 @@ Gum is the best Game UI Layout tool available. It provides a flexible, efficient
 
 The Gum layout engine can also be included in any .NET project without requiring the use of a particular graphical API.
 
+To download the Gum UI tool and start building your UI, see the [Setup](gum-tool/setup/README.md) page.
+
 ### Powerful WYSIWYG Editor
 
 Gum UI includes advanced layout functionality to create and preview your UI

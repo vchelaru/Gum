@@ -1,6 +1,9 @@
 # Setup
 
-Latest release and release history (including older releases):\
+Download the latest release directly:\
+[https://github.com/vchelaru/Gum/releases/latest](https://github.com/vchelaru/Gum/releases/latest)
+
+Release history (including older releases):\
 [https://github.com/vchelaru/Gum/releases](https://github.com/vchelaru/Gum/releases)
 
 Gum Source Code:\
