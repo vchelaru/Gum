@@ -1,7 +1,6 @@
 ﻿using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals;
 using Gum.Wireframe;
-using MonoGameGum.Forms.DefaultVisuals;
 using Gum.GueDeriving;
 using MonoGameGum.Input;
 using Moq;

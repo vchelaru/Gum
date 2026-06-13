@@ -1,6 +1,5 @@
 #pragma warning disable CS0618, GUM001 // Default visuals intentionally use deprecated MonoGameGum.GueDeriving shim types for backward compatibility until V1/V2/V3 visuals are retired. See issue #2715.
 using Gum.Wireframe;
-using MonoGameGum;
 using Gum.Forms.Controls;
 #if XNALIKE
 using MonoGameGum.GueDeriving;
@@ -17,7 +16,11 @@ using System.Threading.Tasks;
 using Styling = Gum.Forms.DefaultVisuals.Styling;
 
 
+#if FRB
 namespace MonoGameGum.Forms.DefaultVisuals;
+#else
+namespace Gum.Forms.DefaultVisuals;
+#endif
 
 public class DefaultWindowRuntime : InteractiveGue
 {

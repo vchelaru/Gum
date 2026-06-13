@@ -14,7 +14,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if FRB
 namespace MonoGameGum.Forms.DefaultVisuals;
+#else
+namespace Gum.Forms.DefaultVisuals;
+#endif
 
 public class DefaultTextBoxRuntime : DefaultTextBoxBaseRuntime
 {

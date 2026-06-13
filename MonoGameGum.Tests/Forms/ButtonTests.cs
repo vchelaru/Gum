@@ -24,7 +24,7 @@ public class ButtonTests : BaseTestClass
 
         button.Visual.ShouldNotBeNull();
 
-        button.Visual.ShouldBeOfType<MonoGameGum.Forms.DefaultVisuals.DefaultButtonRuntime>();
+        button.Visual.ShouldBeOfType<Gum.Forms.DefaultVisuals.DefaultButtonRuntime>();
     }
 
     [Fact]

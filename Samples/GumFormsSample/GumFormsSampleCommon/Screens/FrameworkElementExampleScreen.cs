@@ -89,7 +89,7 @@ namespace GumFormsSample.Screens
             CustomMenuItem.Header = "Custom Dropdown";
             var customScrollViewerVisualTemplate = new VisualTemplate(() =>
             {
-                var toReturn = new MonoGameGum.Forms.DefaultVisuals.DefaultScrollViewerRuntime();
+                var toReturn = new Gum.Forms.DefaultVisuals.DefaultScrollViewerRuntime();
                 toReturn.MakeSizedToChildren();
                 var background = toReturn.GetGraphicalUiElementByName("Background")
                     as ColoredRectangleRuntime;
@@ -173,7 +173,7 @@ namespace GumFormsSample.Screens
             stackPanel.AddChild(comboBox);
 
             // We can also create buttons through their visual type:
-            var buttonRuntime = new MonoGameGum.Forms.DefaultVisuals.DefaultButtonRuntime();
+            var buttonRuntime = new Gum.Forms.DefaultVisuals.DefaultButtonRuntime();
             buttonRuntime.Width = 100;
             buttonRuntime.Height = 50;
             buttonRuntime.TextInstance.Text = "Other Button!";

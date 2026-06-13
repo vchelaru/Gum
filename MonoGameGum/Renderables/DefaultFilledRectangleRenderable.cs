@@ -4,7 +4,11 @@ using RenderingLibrary.Graphics;
 using SysDrawColor = System.Drawing.Color;
 using XnaColor = Microsoft.Xna.Framework.Color;
 
+#if FRB
 namespace MonoGameGum.Renderables;
+#else
+namespace Gum.Renderables;
+#endif
 
 /// <summary>
 /// Core-default <see cref="IFilledRectangleRenderable"/> implementation. Draws as a solid
