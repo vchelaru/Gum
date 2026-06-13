@@ -73,3 +73,19 @@ The savings are both in file size, but also in line number which makes comparing
 * SplashScreenGum Screen: 63 -> 37 lines
 * PlayerHud Component: 2646 -> 1309 lines
 * Circle Standard Element File: 165 -> 72 lines
+
+## Version 3
+
+**Required Gum Tool Version**: 2026 May (or later)
+
+This version unlocks the expanded **Circle** and **Rectangle** shape variables — fill, gradient, drop shadow, stroke-and-fill, and antialiasing — along with the Circle `Radius` -> `Width`/`Height` change. The tool only shows these new variable categories for projects at version 3 or later, so a project still at version 2 keeps the new shape variables hidden even on a tool build that supports them.
+
+✅No manual changes are needed to your project beyond changing the version number.
+
+Unlike Version 2, which is a real XML-format change requiring a **File** -> **Save All** to rewrite every file, Version 3 uses the **same XML format** as Version 2. The version bump exists only to unlock the new variable surface and to make older tool builds refuse the file rather than silently dropping the new variables on the next save. There is **no format conversion or Save All step** — you only change the `<Version>` number.
+
+❗Be sure that your entire team is using the new version of Gum (2026 May or later) before making this upgrade. As with Version 2, mixing tool versions across a team can produce a "hybrid" file which can break a project.
+
+{% hint style="info" %}
+New projects created with the 2026 May tool (or later) are stamped Version 3 automatically. Only projects created before this release need the manual bump.
+{% endhint %}
