@@ -23,3 +23,7 @@ Holding the SHIFT key snaps angles to 15 degree increments.
 The [X Origin](x-origin.md) and [Y Origin](y-origin.md) properties define the point of rotation for an object. The following animation shows how changing origin values can affect rotation.
 
 ![Objects rotate about their origin.](<../../../.gitbook/assets/16_08 14 23.gif>)
+
+{% hint style="info" %}
+Rotation does not rotate the clip region of a container that clips its children, so rotating a container with [Clips Children](clips-children.md) set to `true` will look broken. To rotate a container *and* keep its contents clipped, see [Rotating and Scaling Clipped Contents](../../tutorials-and-examples/examples/rotating-and-scaling-clipped-contents.md).
+{% endhint %}
