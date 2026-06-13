@@ -415,6 +415,13 @@
   * [screenshot](cli/screenshot.md)
   * [svg](cli/svg.md)
 
+## Using Gum with AI
+
+* [Using Gum with AI](ai/README.md)
+  * [MCP Documentation Server](ai/mcp-server.md)
+  * [GumCli for Agents](ai/gumcli-for-agents.md)
+  * [AI Skills](ai/ai-skills.md)
+
 ## Contributing
 
 * [Contributing](contributing/README.md)
