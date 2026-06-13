@@ -1,10 +1,11 @@
 namespace Gum.Input;
 
 /// <summary>
-/// Platform-neutral abstraction over a gamepad. Implementations live in each runtime
-/// (MonoGame's <c>MonoGameGum.Input.GamePad</c>, the headless stub in
-/// <see cref="GamePad"/>) so code in <c>GumCommon</c> can reference gamepads
-/// without depending on platform-typed APIs.
+/// Platform-neutral abstraction over a gamepad, implemented by the shared
+/// <see cref="GamePad"/> holder in <c>GumCommon</c>. Each platform feeds that holder
+/// through an input driver (the MonoGame and Raylib branches of
+/// <c>FormsUtilities.UpdateGamepads</c>) so code in <c>GumCommon</c> can reference
+/// gamepads without depending on platform-typed APIs.
 /// </summary>
 public interface IGamePad
 {
@@ -36,10 +37,9 @@ public interface IGamePad
 }
 
 /// <summary>
-/// Platform-neutral abstraction over an analog stick. Implementations live in each
-/// runtime (<c>MonoGameGum.Input.AnalogStick</c>, the headless stub in
-/// <see cref="AnalogStick"/>) so code in <c>GumCommon</c> can read DPad-like
-/// directional input without depending on platform-typed math types.
+/// Platform-neutral abstraction over an analog stick, implemented by the shared
+/// <see cref="AnalogStick"/> in <c>GumCommon</c>, so code in <c>GumCommon</c> can read
+/// DPad-like directional input without depending on platform-typed math types.
 /// </summary>
 public interface IAnalogStick
 {

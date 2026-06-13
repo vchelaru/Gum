@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonoGameGum.Input;
+namespace Gum.Input;
 
 public class AnalogButton
 {

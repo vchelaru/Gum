@@ -3,7 +3,7 @@ using Gum.Forms.Controls;
 using System;
 using System.Threading.Tasks;
 
-namespace MonoGameGum.Input;
+namespace Gum.Input;
 
 /// <summary>
 /// MonoGame / KNI implementation of <see cref="INativeTextInput"/>. Wraps

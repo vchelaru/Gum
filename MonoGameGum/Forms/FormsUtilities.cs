@@ -20,6 +20,9 @@ using Microsoft.Xna.Framework.Graphics;
 using Gum.Forms.DefaultVisuals;
 using Gum.GueDeriving;
 using MonoGameGum.Input;
+// Keyboard, GamePad and the rest of the input group now live in Gum.Input (issue #3137);
+// MonoGameGum.Input is still imported for the Cursor types that have not moved.
+using Gum.Input;
 #else
 using Gum.GueDeriving;
 using Gum.Input;

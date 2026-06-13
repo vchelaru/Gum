@@ -3,6 +3,7 @@ using Gum.Wireframe;
 using Microsoft.Xna.Framework.Input;
 using Gum.GueDeriving;
 using MonoGameGum.Input;
+using Gum.Input;
 using Moq;
 using Shouldly;
 using System;

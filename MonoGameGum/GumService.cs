@@ -25,6 +25,7 @@ using Gum.Localization;
 #if XNALIKE
 using Gum.GueDeriving;
 using MonoGameGum.Input;
+using Gum.Input;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 #elif RAYLIB

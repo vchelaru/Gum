@@ -4,6 +4,7 @@ using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals;
 using Gum.GueDeriving;
 using MonoGameGum.Input;
+using Gum.Input;
 using Moq;
 using Shouldly;
 using System;

@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ToolsUtilities;
 
-namespace MonoGameGum.Input;
+namespace Gum.Input;
 
 
 /// <summary>
