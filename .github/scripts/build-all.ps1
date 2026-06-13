@@ -33,11 +33,18 @@ foreach ($sln in $slns) {
     }
 
     Write-Host "Building $(Split-Path $sln -Leaf)"
+    # PublishAot=false: a few samples set <PublishAot>true</PublishAot>. On `dotnet build`
+    # (this script never publishes) AOT does not actually compile to native — it only forces
+    # resolution of the host-RID (win-x64) runtime pack, which the RID-less `dotnet restore`
+    # above never downloads, so the build fails with "runtime pack ... was not downloaded".
+    # Disabling AOT for the build removes that pointless requirement without losing coverage,
+    # since AOT is only exercised on publish.
     dotnet build $sln `
       --configuration Release `
       --no-restore `
       --verbosity minimal `
       --property WarningLevel=0 `
+      --property PublishAot=false `
       -clp:ErrorsOnly
 
     if ($LASTEXITCODE -ne 0) {
