@@ -1,4 +1,5 @@
 ﻿using Gum.GueDeriving;
+using Gum.Wireframe;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using Raylib_cs;
@@ -196,6 +197,74 @@ public class TextRuntimeTests : BaseTestClass
         }
         finally
         {
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+            FileManager.RelativeDirectory = savedRelativeDirectory;
+            FileManager.CustomGetStreamFromFile = savedHook;
+        }
+    }
+
+    // #3039: the string / state set path (SetProperty -> CustomSetPropertyOnRenderable.UpdateToFontValues)
+    // must honor IsAllLayoutSuspended and DEFER the font load, exactly as the MonoGame/Tool path does, so
+    // the documented font-batching optimization (docs/.../font-performance.md) is real on Raylib too.
+    // Before the fix this path loaded eagerly on every setter, making the batch a no-op and "accidentally"
+    // masking #2999. Note the font *property* setters already defer (they route through the shared
+    // GraphicalUiElement.UpdateToFontValues, which sets IsFontDirty), so IsFontDirty alone cannot tell the
+    // two builds apart — the discriminator is whether the eager LOAD happened. Detection: the load resolves
+    // the font-cache file through FileManager.CustomGetStreamFromFile; a unique (non-existent) font name +
+    // relative directory guarantees no cache hit and no on-disk file, so any request for that font during
+    // suspension proves the (now-removed) eager load ran.
+    [Fact]
+    public void StringSetPath_ShouldDeferFontLoad_WhenIsAllLayoutSuspended()
+    {
+        string uniqueFontName = "GumDeferFontTest_" + Guid.NewGuid().ToString("N");
+
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        string savedRelativeDirectory = FileManager.RelativeDirectory;
+        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
+        bool savedSuspended = GraphicalUiElement.IsAllLayoutSuspended;
+        try
+        {
+            LoaderManager.Self.CacheTextures = false;
+            // Unique relative directory: the font's cache key (its standardized absolute path) becomes
+            // unique to this run, so a prior test's cache can't mask the result and resolution is forced
+            // through the in-memory hook. Mirrors the GUID-path isolation in ContentLoaderTests.
+            FileManager.RelativeDirectory = Path.Combine(Path.GetTempPath(),
+                "GumRaylibDeferFontTest_" + Guid.NewGuid().ToString("N")).Replace('\\', '/') + "/";
+
+            int fontRequestCount = 0;
+            FileManager.CustomGetStreamFromFile = incomingPath =>
+            {
+                if (incomingPath.Contains(uniqueFontName, StringComparison.OrdinalIgnoreCase))
+                {
+                    fontRequestCount++;
+                }
+                // null is the hook's documented "I don't have this file" signal.
+                return null!;
+            };
+
+            // Construct before suspending so the constructor's own (default Arial) load isn't counted —
+            // it uses a different name and so never increments the counter anyway.
+            TextRuntime textRuntime = new();
+
+            GraphicalUiElement.IsAllLayoutSuspended = true;
+            textRuntime.SetProperty("Font", uniqueFontName);
+            textRuntime.SetProperty("FontSize", 23);
+
+            // Deferred: no eager load happened while globally suspended.
+            fontRequestCount.ShouldBe(0);
+            textRuntime.IsFontDirty.ShouldBeTrue();
+
+            // Resume and flush: the single coalesced load now resolves the font, proving the deferral is
+            // realized rather than silently dropped (the #2999 failure mode).
+            GraphicalUiElement.IsAllLayoutSuspended = false;
+            textRuntime.UpdateFontRecursive();
+
+            fontRequestCount.ShouldBeGreaterThan(0);
+            textRuntime.IsFontDirty.ShouldBeFalse();
+        }
+        finally
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = savedSuspended;
             LoaderManager.Self.CacheTextures = savedCacheTextures;
             FileManager.RelativeDirectory = savedRelativeDirectory;
             FileManager.CustomGetStreamFromFile = savedHook;
