@@ -44,7 +44,7 @@ public sealed class GamepadButtonMigrationAnalyzer : DiagnosticAnalyzer
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
         description: "The MonoGame runtime now uses the platform-neutral Gum.Input.GamePad, whose button query methods take Gum.Input.GamepadButton instead of Microsoft.Xna.Framework.Input.Buttons. Same-named members share values, so the code fix rewrites Buttons.X to GamepadButton.X.",
-        helpLinkUri: "https://docs.flatredball.com/gum/gum-tool/upgrading/migrating-to-2026-may");
+        helpLinkUri: "https://docs.flatredball.com/gum/gum-tool/upgrading/migrating-to-2026-june");
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
         ImmutableArray.Create(GamepadButtonRule);
