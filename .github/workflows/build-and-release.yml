@@ -87,6 +87,18 @@ jobs:
       - name: Publish Gum (single-file)
         run: dotnet publish Gum/Gum.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o dist/publish
 
+      # Some content files (e.g. apos-shapes.xnb) are deposited into bin/Release/Content/ by
+      # plugin post-build events (EditorTabPlugin_XNA copies the XNB from Runtimes/GumShapes/).
+      # dotnet publish has no knowledge of files placed there outside of project items, so we
+      # merge the full build-output Content/ folder into the publish output.
+      - name: Copy content to publish output
+        shell: pwsh
+        run: |
+          if (Test-Path "Gum/bin/Release/Content") {
+            New-Item -ItemType Directory -Force -Path "dist/publish/Content" | Out-Null
+            Copy-Item -Path "Gum/bin/Release/Content/*" -Destination "dist/publish/Content" -Recurse -Force
+          }
+
       # Plugins are built by GumFull.sln and copied to bin/Release/Plugins via their own
       # post-build events (which use $(SolutionDir) and don't run during dotnet publish).
       # Use wildcard source so Copy-Item copies the *contents* into the destination folder
