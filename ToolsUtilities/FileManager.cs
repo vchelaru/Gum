@@ -170,6 +170,19 @@ namespace ToolsUtilities
                         return true;
                     }
 
+#if NET6_0_OR_GREATER
+                    // macOS .app bundles ship loose content in Contents/Resources/ rather than next to
+                    // the executable in Contents/MacOS/, so probe the rebased path as well (issue #731).
+                    if (System.OperatingSystem.IsMacOS())
+                    {
+                        string? resourcesPath = GetMacOSBundleResourcesPath(fileName, ExeLocation);
+                        if (resourcesPath != null && File.Exists(resourcesPath))
+                        {
+                            return true;
+                        }
+                    }
+#endif
+
                     // A host (e.g. Gum's own bundle loader, or a game-installed asset zip)
                     // may resolve files that aren't on the real filesystem. Probe through
                     // the same seam GetStreamForFile uses so consumers like the deferred-
@@ -504,6 +517,49 @@ namespace ToolsUtilities
             return Standardize(pathToMakeAbsolute, true, true);// RelativeDirectory + pathToMakeAbsolute;
         }
 
+        /// <summary>
+        /// Rebases an executable-relative absolute path onto the sibling <c>Contents/Resources/</c>
+        /// directory of a macOS <c>.app</c> bundle. In a bundle the executable lives in
+        /// <c>&lt;Bundle&gt;.app/Contents/MacOS/</c> but loose content typically ships in
+        /// <c>&lt;Bundle&gt;.app/Contents/Resources/</c>, so a path resolved relative to the executable
+        /// directory will not find content that was placed in Resources (issue #731).
+        /// </summary>
+        /// <param name="absolutePath">An absolute path that was resolved relative to the executable directory.</param>
+        /// <param name="exeDirectory">The executable directory (typically <see cref="ExeLocation"/>), expected to end in <c>Contents/MacOS/</c>.</param>
+        /// <returns>
+        /// The equivalent path under <c>Contents/Resources/</c>, or <see langword="null"/> if
+        /// <paramref name="exeDirectory"/> is not a <c>Contents/MacOS/</c> bundle directory or
+        /// <paramref name="absolutePath"/> does not live under it. This is pure path math with no OS or
+        /// filesystem dependency; callers gate invocation on macOS and probe the returned path's existence.
+        /// </returns>
+        public static string? GetMacOSBundleResourcesPath(string absolutePath, string exeDirectory)
+        {
+            if (string.IsNullOrEmpty(absolutePath) || string.IsNullOrEmpty(exeDirectory))
+            {
+                return null;
+            }
+
+            char separator = Path.DirectorySeparatorChar;
+            absolutePath = absolutePath.Replace('\\', separator).Replace('/', separator);
+            exeDirectory = exeDirectory.Replace('\\', separator).Replace('/', separator);
+
+            string macOsSuffix = $"{separator}Contents{separator}MacOS{separator}";
+            if (!exeDirectory.EndsWith(macOsSuffix, StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            // Only rebase paths that actually resolve under the executable directory.
+            if (!absolutePath.StartsWith(exeDirectory, StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            string resourcesDirectory = exeDirectory.Substring(0, exeDirectory.Length - macOsSuffix.Length)
+                + $"{separator}Contents{separator}Resources{separator}";
+            return resourcesDirectory + absolutePath.Substring(exeDirectory.Length);
+        }
+
         public static string MakeRelative(string pathToMakeRelative, string pathToMakeRelativeTo)
         {
             return MakeRelative(pathToMakeRelative, pathToMakeRelativeTo, false);
@@ -802,6 +858,20 @@ namespace ToolsUtilities
                 {
                     fileName = fileName.Replace('\\', Path.DirectorySeparatorChar)
                         .Replace('/', Path.DirectorySeparatorChar);
+
+#if NET6_0_OR_GREATER
+                    // In a macOS .app bundle the executable is in Contents/MacOS/ but loose content
+                    // ships in Contents/Resources/. Gum anchored fileName on the executable directory,
+                    // so if it isn't there, retry against the bundle's Resources directory (issue #731).
+                    if (System.OperatingSystem.IsMacOS() && !File.Exists(fileName))
+                    {
+                        string? resourcesPath = GetMacOSBundleResourcesPath(fileName, ExeLocation);
+                        if (resourcesPath != null && File.Exists(resourcesPath))
+                        {
+                            fileName = resourcesPath;
+                        }
+                    }
+#endif
 
                     return System.IO.File.OpenRead(fileName);
                 }

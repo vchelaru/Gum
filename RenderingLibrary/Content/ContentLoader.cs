@@ -205,7 +205,18 @@ public class ContentLoader : IContentLoader
         bool canCheckFileExists = OperatingSystem.IsWindows()
             || OperatingSystem.IsLinux()
             || OperatingSystem.IsMacOS();
-        if (canCheckFileExists && XnaContentManager == null && !System.IO.File.Exists(fileNameStandardized))
+
+        bool existsOnDisk = System.IO.File.Exists(fileNameStandardized);
+        if (!existsOnDisk && OperatingSystem.IsMacOS())
+        {
+            // In a macOS .app bundle, content ships in Contents/Resources/ rather than next to the
+            // executable, so a file missing at the exe-relative path may still exist there. Don't bail
+            // early in that case; GetStreamForFile below performs the same rebase when opening (issue #731).
+            string? resourcesPath = FileManager.GetMacOSBundleResourcesPath(fileNameStandardized, FileManager.ExeLocation);
+            existsOnDisk = resourcesPath != null && System.IO.File.Exists(resourcesPath);
+        }
+
+        if (canCheckFileExists && XnaContentManager == null && !existsOnDisk)
         {
             return null;
         }

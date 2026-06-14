@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    End-to-end harness for issue #731. This project is NOT part of any solution and is not a unit-test
+    project: it is published and packaged into a real macOS .app bundle by the macOS CI job, then run
+    from Contents/MacOS/ to prove Gum resolves loose content shipped in Contents/Resources/. See the
+    "macOS .app bundle content resolution (issue #731)" step in .github/workflows/build-and-test.yaml.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>MacOSBundle.Harness</AssemblyName>
+    <RootNamespace>MacOSBundle.Harness</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+  </ItemGroup>
+
+</Project>

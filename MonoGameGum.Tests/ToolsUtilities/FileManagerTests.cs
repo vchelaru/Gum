@@ -62,4 +62,77 @@ public class FileManagerTests : IDisposable
         text.ShouldBe("Test content A");
         text2.ShouldBe("Test content A2");
     }
+
+    // --- macOS .app bundle content resolution (issue #731) ---------------------------------------
+    // In a macOS .app bundle the executable lives in <Bundle>.app/Contents/MacOS/ but loose content
+    // ships in <Bundle>.app/Contents/Resources/. GetMacOSBundleResourcesPath is the pure path-math
+    // seam that rebases an exe-relative absolute path onto the sibling Resources directory. It is OS-
+    // and filesystem-agnostic (it takes the exe directory as a parameter), so these tests exercise the
+    // real fix logic on every CI OS, not just macos-15. The end-to-end "launch from a real .app" check
+    // lives in the macOS-only CI step.
+
+    private static string Bundle(params string[] segments) =>
+        Path.DirectorySeparatorChar + string.Join(Path.DirectorySeparatorChar, segments);
+
+    [Fact]
+    public void GetMacOSBundleResourcesPath_ShouldRebaseOntoResources_WhenExeIsInMacOSBundle()
+    {
+        string exeDirectory = Bundle("Apps", "MyGame.app", "Contents", "MacOS") + Path.DirectorySeparatorChar;
+        string absolutePath = exeDirectory + Path.Combine("Content", "fonts", "test.fnt");
+
+        string? result = FileManager.GetMacOSBundleResourcesPath(absolutePath, exeDirectory);
+
+        result.ShouldBe(Bundle("Apps", "MyGame.app", "Contents", "Resources", "Content", "fonts", "test.fnt"));
+    }
+
+    [Fact]
+    public void GetMacOSBundleResourcesPath_ShouldReturnNull_WhenExeIsNotInBundle()
+    {
+        string exeDirectory = Bundle("Apps", "MyGame") + Path.DirectorySeparatorChar;
+        string absolutePath = exeDirectory + Path.Combine("Content", "fonts", "test.fnt");
+
+        FileManager.GetMacOSBundleResourcesPath(absolutePath, exeDirectory).ShouldBeNull();
+    }
+
+    [Fact]
+    public void GetMacOSBundleResourcesPath_ShouldReturnNull_WhenPathIsNotUnderExeDirectory()
+    {
+        string exeDirectory = Bundle("Apps", "MyGame.app", "Contents", "MacOS") + Path.DirectorySeparatorChar;
+        string absolutePath = Bundle("SomewhereElse", "Content", "fonts", "test.fnt");
+
+        FileManager.GetMacOSBundleResourcesPath(absolutePath, exeDirectory).ShouldBeNull();
+    }
+
+    [Fact]
+    public void GetMacOSBundleResourcesPath_ShouldResolveRealFile_WhenContentShippedInResources()
+    {
+        // Build a real .app directory layout in a temp dir: content physically in Resources, nothing
+        // under MacOS. This proves the rebased path points at the actual on-disk file.
+        string bundleRoot = Path.Combine(Path.GetTempPath(), "GumBundleTest_" + Guid.NewGuid().ToString("N"));
+        string exeDirectory = Path.Combine(bundleRoot, "MyGame.app", "Contents", "MacOS") + Path.DirectorySeparatorChar;
+        string resourcesContentDirectory = Path.Combine(bundleRoot, "MyGame.app", "Contents", "Resources", "Content", "fonts");
+        try
+        {
+            Directory.CreateDirectory(exeDirectory);
+            Directory.CreateDirectory(resourcesContentDirectory);
+            string realFile = Path.Combine(resourcesContentDirectory, "test.fnt");
+            File.WriteAllText(realFile, "font data");
+
+            string exeRelativePath = exeDirectory + Path.Combine("Content", "fonts", "test.fnt");
+            File.Exists(exeRelativePath).ShouldBeFalse();
+
+            string? rebased = FileManager.GetMacOSBundleResourcesPath(exeRelativePath, exeDirectory);
+
+            rebased.ShouldNotBeNull();
+            File.Exists(rebased).ShouldBeTrue();
+            File.ReadAllText(rebased!).ShouldBe("font data");
+        }
+        finally
+        {
+            if (Directory.Exists(bundleRoot))
+            {
+                Directory.Delete(bundleRoot, recursive: true);
+            }
+        }
+    }
 }
