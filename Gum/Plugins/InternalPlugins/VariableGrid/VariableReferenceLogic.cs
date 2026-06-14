@@ -32,6 +32,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
     private readonly IDialogService _dialogService;
     private readonly IFileCommands _fileCommands;
     private readonly ICompositeMemberRegistry _compositeMemberRegistry;
+    private readonly IDispatcher _dispatcher;
 
     #endregion
 
@@ -39,13 +40,15 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         IWireframeCommands wireframeCommands,
         IDialogService dialogService,
         IFileCommands fileCommands,
-        ICompositeMemberRegistry compositeMemberRegistry)
+        ICompositeMemberRegistry compositeMemberRegistry,
+        IDispatcher dispatcher)
     {
         _guiCommands = guiCommands;
         _wireframeCommands = wireframeCommands;
         _dialogService =  dialogService;
         _fileCommands = fileCommands;
         _compositeMemberRegistry = compositeMemberRegistry;
+        _dispatcher = dispatcher;
     }
 
     public AssignmentExpressionSyntax? GetAssignmentSyntax(string item)
@@ -455,9 +458,23 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
                 if (failures.Count > 0)
                 {
-                    ShowFailureMessage(failures);
-
+                    // Comment the invalid lines synchronously so the data model is consistent
+                    // before any refresh runs.
                     CommentFailures(newDirectValue, failures);
+
+                    // Defer the failure dialog instead of showing it inline. A VariableReferences
+                    // edit is frequently committed by focus loss when the user clicks a different
+                    // instance; a synchronous modal here pumps the WPF message loop in the middle
+                    // of the commit, interleaving the pending selection change and leaving the
+                    // variable grid painted for the previously-selected instance (issue #566).
+                    // Posting at background priority lets the commit and the selection change
+                    // settle first, then shows the dialog and re-refreshes the grid against the
+                    // now-current selection.
+                    _dispatcher.Post(() =>
+                    {
+                        ShowFailureMessage(failures);
+                        _guiCommands.RefreshVariables(force: true);
+                    });
                 }
             }
         }

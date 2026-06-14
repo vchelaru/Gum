@@ -7,6 +7,7 @@ using Gum.Services;
 using Gum.Services.Dialogs;
 using Moq;
 using Shouldly;
+using System;
 using System.Collections.Generic;
 
 namespace GumToolUnitTests.VariableGrid;
@@ -14,17 +15,22 @@ namespace GumToolUnitTests.VariableGrid;
 public class VariableReferenceLogicTests : BaseTestClass
 {
     private readonly Mock<IGuiCommands> _guiCommandsMock;
+    private readonly Mock<IDialogService> _dialogServiceMock;
+    private readonly Mock<IDispatcher> _dispatcherMock;
     private readonly VariableReferenceLogic _sut;
 
     public VariableReferenceLogicTests()
     {
         _guiCommandsMock = new Mock<IGuiCommands>();
+        _dialogServiceMock = new Mock<IDialogService>();
+        _dispatcherMock = new Mock<IDispatcher>();
         _sut = new VariableReferenceLogic(
             _guiCommandsMock.Object,
             new Mock<IWireframeCommands>().Object,
-            new Mock<IDialogService>().Object,
+            _dialogServiceMock.Object,
             new Mock<IFileCommands>().Object,
-            new CompositeMemberRegistry());
+            new CompositeMemberRegistry(),
+            _dispatcherMock.Object);
     }
 
     #region GetAssignmentSyntax
@@ -235,6 +241,57 @@ public class VariableReferenceLogicTests : BaseTestClass
     #endregion
 
     #region DoVariableReferenceReaction
+
+    [Fact]
+    public void DoVariableReferenceReaction_InvalidLine_CommentsImmediatelyButDefersFailureDialog()
+    {
+        // Repro for issue #566: an invalid VariableReferences line is committed by focus loss
+        // when the user clicks a different instance. The failure dialog used to be shown
+        // synchronously inside the reaction, which pumps the WPF message loop in the middle of
+        // the commit; that interleaves the pending selection change and leaves the variable grid
+        // painted for the previously-selected instance. The line must still be commented out
+        // synchronously (data stays consistent), but the dialog must be deferred via the
+        // dispatcher so the commit and selection change settle first.
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        // "X" does not exist on the screen, so validation fails for this line.
+        ScreenSave screen = BuildScreenWithVariableReference(
+            line: "X = Y",
+            out StateSave defaultState,
+            out VariableListSave<string> varList);
+        project.Screens.Add(screen);
+
+        Action? postedAction = null;
+        _dispatcherMock.Setup(x => x.Post(It.IsAny<Action>()))
+            .Callback<Action>(action => postedAction = action);
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: screen,
+            leftSideInstance: null,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "VariableReferences",
+            trySave: false);
+
+        // Commented synchronously so the data model is consistent regardless of the dialog.
+        varList.Value[0].ShouldStartWith("//");
+
+        // The dialog is deferred, not shown inline during the reaction.
+        _dispatcherMock.Verify(x => x.Post(It.IsAny<Action>()), Times.Once);
+        _dialogServiceMock.Verify(
+            x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()),
+            Times.Never);
+
+        // Once the deferred action runs (after selection settles), the dialog is shown and the
+        // grid is refreshed against the now-current selection.
+        postedAction.ShouldNotBeNull();
+        postedAction!.Invoke();
+        _dialogServiceMock.Verify(
+            x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()),
+            Times.Once);
+        _guiCommandsMock.Verify(x => x.RefreshVariables(true), Times.Once);
+    }
 
     [Fact]
     public void DoVariableReferenceReaction_InstanceVariableSet_PropagatesDeepReference()
