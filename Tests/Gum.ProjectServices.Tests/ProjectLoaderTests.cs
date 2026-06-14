@@ -615,4 +615,163 @@ public class ProjectLoaderTests
             Directory.Delete(tempDir, recursive: true);
         }
     }
+
+    // The tests below pin behaviors discussed in issue #537 (missing/corrupt file handling)
+    // that were implemented but previously unguarded: a single corrupt element file must not
+    // abort the whole load, a missing element file must be flagged (not silently recreated),
+    // and a filename/internal-name mismatch must be surfaced.
+
+    [Fact]
+    public void Load_ShouldContinueLoadingOtherElements_WhenOneElementFileHasMalformedXml()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), "GumLoaderTest_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        string gumxPath = Path.Combine(tempDir, "Test.gumx");
+        try
+        {
+            ProjectCreator creator = new ProjectCreator();
+            creator.Create(gumxPath);
+
+            string componentDir = Path.Combine(tempDir, "Components");
+
+            // A genuinely malformed file (unclosed tag) — this throws during deserialization,
+            // unlike the wrong-element-name cases which XmlSerializer silently drops.
+            File.WriteAllText(Path.Combine(componentDir, "CorruptComponent.gucx"), """
+                <?xml version="1.0" encoding="utf-8"?>
+                <ComponentSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                  <Name>CorruptComponent</Name>
+                  <BaseType>Container
+                """);
+
+            File.WriteAllText(Path.Combine(componentDir, "GoodComponent.gucx"), """
+                <?xml version="1.0" encoding="utf-8"?>
+                <ComponentSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                  <Name>GoodComponent</Name>
+                  <BaseType>Container</BaseType>
+                </ComponentSave>
+                """);
+
+            string gumxContent = File.ReadAllText(gumxPath);
+            gumxContent = gumxContent.Replace("</GumProjectSave>",
+                """  <ComponentReference Name="CorruptComponent" />""" + "\n" +
+                """  <ComponentReference Name="GoodComponent" />""" + "\n</GumProjectSave>");
+            File.WriteAllText(gumxPath, gumxContent);
+
+            ProjectLoadResult result = _sut.Load(gumxPath);
+
+            // The corrupt file must not abort the load...
+            result.Success.ShouldBeTrue();
+            // ...the valid sibling must still be loaded...
+            result.Project!.Components.ShouldContain(c => c.Name == "GoodComponent");
+            // ...and the corruption must be surfaced as an error, not swallowed.
+            result.LoadErrors.ShouldContain(e =>
+                e.ElementName == "CorruptComponent" &&
+                e.Severity == ErrorSeverity.Error &&
+                e.Message.Contains("Malformed XML"));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Load_ShouldFlagElementAsSourceFileMissing_WhenElementFileIsMissing()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), "GumLoaderTest_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        string gumxPath = Path.Combine(tempDir, "Test.gumx");
+        try
+        {
+            ProjectCreator creator = new ProjectCreator();
+            creator.Create(gumxPath);
+
+            string gumxContent = File.ReadAllText(gumxPath);
+            gumxContent = gumxContent.Replace("</GumProjectSave>",
+                """  <ComponentReference Name="GhostComponent" />""" + "\n</GumProjectSave>");
+            File.WriteAllText(gumxPath, gumxContent);
+
+            ProjectLoadResult result = _sut.Load(gumxPath);
+
+            // The element is kept in memory but flagged — this is what the tree view's
+            // "!" indicator keys off, independently of the LoadErrors list.
+            result.Success.ShouldBeTrue();
+            ComponentSave ghost = result.Project!.Components.ShouldHaveSingleItem();
+            ghost.Name.ShouldBe("GhostComponent");
+            ghost.IsSourceFileMissing.ShouldBeTrue();
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Load_ShouldNotWriteEmptyElementFile_WhenElementFileIsMissing()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), "GumLoaderTest_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        string gumxPath = Path.Combine(tempDir, "Test.gumx");
+        try
+        {
+            ProjectCreator creator = new ProjectCreator();
+            creator.Create(gumxPath);
+
+            string gumxContent = File.ReadAllText(gumxPath);
+            gumxContent = gumxContent.Replace("</GumProjectSave>",
+                """  <ComponentReference Name="GhostComponent" />""" + "\n</GumProjectSave>");
+            File.WriteAllText(gumxPath, gumxContent);
+
+            string missingFilePath = Path.Combine(tempDir, "Components", "GhostComponent.gucx");
+
+            ProjectLoadResult result = _sut.Load(gumxPath);
+
+            // Loading must not silently recreate the missing file as an empty element —
+            // that would be the destructive behavior issue #537 was most concerned about.
+            result.Success.ShouldBeTrue();
+            File.Exists(missingFilePath).ShouldBeFalse();
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Load_ShouldReportNameMismatch_WhenElementXmlNameDiffersFromReference()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), "GumLoaderTest_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        string gumxPath = Path.Combine(tempDir, "Test.gumx");
+        try
+        {
+            ProjectCreator creator = new ProjectCreator();
+            creator.Create(gumxPath);
+
+            string componentDir = Path.Combine(tempDir, "Components");
+            // File found by reference name "Renamed", but its internal <Name> disagrees —
+            // the symptom of a file renamed on disk without updating the XML.
+            File.WriteAllText(Path.Combine(componentDir, "Renamed.gucx"), """
+                <?xml version="1.0" encoding="utf-8"?>
+                <ComponentSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                  <Name>OriginalName</Name>
+                  <BaseType>Container</BaseType>
+                </ComponentSave>
+                """);
+
+            string gumxContent = File.ReadAllText(gumxPath);
+            gumxContent = gumxContent.Replace("</GumProjectSave>",
+                """  <ComponentReference Name="Renamed" />""" + "\n</GumProjectSave>");
+            File.WriteAllText(gumxPath, gumxContent);
+
+            ProjectLoadResult result = _sut.Load(gumxPath);
+
+            result.Success.ShouldBeTrue();
+            result.LoadErrors.ShouldContain(e => e.Message.Contains("has its name set to"));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
 }
