@@ -230,3 +230,38 @@ jobs:
           path: "TestResults/*.trx"
           reporter: dotnet-trx
           fail-on-error: true
+
+      # End-to-end verification for issue #731: Gum looked for loose content relative to the executable,
+      # which is wrong inside a macOS .app bundle (exe in Contents/MacOS/, content in Contents/Resources/).
+      # The unit tests above cover the path-rebasing logic on every OS; this step is the only thing that
+      # exercises the real bundle layout by publishing a tiny harness, assembling a genuine .app, and
+      # running it from Contents/MacOS/. The harness exits non-zero if Gum fails to resolve the content,
+      # so `set -e` turns that into a failed build. This is what removes the need to test #731 by hand.
+      - name: macOS .app bundle content resolution (issue #731)
+        if: runner.os == 'macOS' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        run: |
+          set -euo pipefail
+
+          ARCH=$(uname -m)
+          if [ "$ARCH" = "arm64" ]; then RID="osx-arm64"; else RID="osx-x64"; fi
+          echo "Publishing #731 harness for $RID"
+
+          dotnet publish Tests/MacOSBundle.Harness/MacOSBundle.Harness.csproj -c Release -r "$RID" --self-contained true -o "$RUNNER_TEMP/harness-publish"
+
+          APP="$RUNNER_TEMP/MacOSBundleHarness.app"
+          rm -rf "$APP"
+          mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/Content"
+
+          # Executable + runtime live in Contents/MacOS/.
+          cp -R "$RUNNER_TEMP/harness-publish/." "$APP/Contents/MacOS/"
+
+          # Content ships ONLY in Contents/Resources/ — the layout that broke #731. The harness also
+          # asserts the file is absent next to the executable, so the bundle rebase is genuinely tested.
+          # The fix keys off the Contents/MacOS -> Contents/Resources path relationship via
+          # AppContext.BaseDirectory, so no Info.plist / NSBundle wiring is required.
+          printf 'gum-bundle-ok' > "$APP/Contents/Resources/Content/macos-bundle-test.txt"
+
+          chmod +x "$APP/Contents/MacOS/MacOSBundle.Harness"
+
+          echo "Running harness from inside the .app bundle (its exit code is the assertion)..."
+          "$APP/Contents/MacOS/MacOSBundle.Harness"
