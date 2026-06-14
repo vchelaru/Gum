@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Managers;
@@ -23,6 +24,15 @@ public class ProjectLoader : IProjectLoader
 
         string projectDirectory = Path.GetDirectoryName(Path.GetFullPath(filePath)) ?? "";
 
+        // A merge/rebase can leave git conflict markers in the .gumx, which makes it invalid XML.
+        // Detect that here, before deserialization, so the user gets an actionable message instead
+        // of the parser's cryptic line/column error. A conflicted .gumx can't load, so this is fatal.
+        if (ContainsGitConflictMarkers(File.ReadAllText(filePath)))
+        {
+            result.ErrorMessage = ConflictMarkerMessage(Path.GetFileName(filePath));
+            return result;
+        }
+
         StandardElementsManager.Self.Initialize();
         // INTERIM: bridges shapes (Arc/ColoredCircle/RoundedRectangle/Line) and Skia
         // (Canvas/Svg/LottieAnimation) into headless loading. Remove once these are
@@ -42,8 +52,19 @@ public class ProjectLoader : IProjectLoader
             else
             {
                 project.Initialize();
-                result.LoadErrors.AddRange(
-                    ParseElementLoadErrors(gumLoadResult.ErrorMessage));
+
+                var elementLoadErrors = ParseElementLoadErrors(gumLoadResult.ErrorMessage);
+                var conflictErrors = DetectConflictMarkers(project, projectDirectory);
+
+                // A conflicted element file is invalid XML, so it ALSO failed to deserialize and
+                // produced a cryptic "Malformed XML" entry via ParseElementLoadErrors. Drop those
+                // duplicates so the clear conflict-marker message is the only error for that element.
+                var conflictElementNames = new HashSet<string>(
+                    conflictErrors.Select(e => e.ElementName));
+                elementLoadErrors.RemoveAll(e => conflictElementNames.Contains(e.ElementName));
+
+                result.LoadErrors.AddRange(elementLoadErrors);
+                result.LoadErrors.AddRange(conflictErrors);
                 result.LoadErrors.AddRange(
                     ConvertMissingFiles(gumLoadResult.MissingFiles, projectDirectory));
                 result.LoadErrors.AddRange(
@@ -230,6 +251,77 @@ public class ProjectLoader : IProjectLoader
 
         return errors;
     }
+
+    /// <summary>
+    /// Scans each referenced element/behavior file for unresolved git conflict markers and reports
+    /// an <see cref="ErrorSeverity.Error"/> per conflicted file. Iterates the project's references
+    /// (not the loaded element lists) because a conflicted file is invalid XML and never makes it
+    /// into those lists. Mirrors the per-element error model used by <see cref="DetectSilentlyDroppedContent"/>.
+    /// </summary>
+    private static List<ErrorResult> DetectConflictMarkers(
+        GumProjectSave project, string projectDirectory)
+    {
+        var errors = new List<ErrorResult>();
+
+        void Check(string name, string subfolder, string extension)
+        {
+            string path = Path.Combine(projectDirectory, subfolder, name + "." + extension);
+            if (File.Exists(path) && ContainsGitConflictMarkers(File.ReadAllText(path)))
+            {
+                errors.Add(new ErrorResult
+                {
+                    ElementName = name,
+                    Message = ConflictMarkerMessage(name + "." + extension),
+                    Severity = ErrorSeverity.Error
+                });
+            }
+        }
+
+        foreach (var reference in project.ScreenReferences)
+        {
+            Check(reference.Name, ElementReference.ScreenSubfolder, GumProjectSave.ScreenExtension);
+        }
+        foreach (var reference in project.ComponentReferences)
+        {
+            Check(reference.Name, ElementReference.ComponentSubfolder, GumProjectSave.ComponentExtension);
+        }
+        foreach (var reference in project.StandardElementReferences)
+        {
+            Check(reference.Name, ElementReference.StandardSubfolder, GumProjectSave.StandardExtension);
+        }
+        foreach (var reference in project.BehaviorReferences)
+        {
+            Check(reference.Name, BehaviorReference.Subfolder, BehaviorReference.Extension);
+        }
+
+        return errors;
+    }
+
+    /// <summary>
+    /// Returns true if the raw file text contains an unresolved git conflict marker. Git always
+    /// writes the markers (<c>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</c>, <c>=======</c>, <c>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</c>)
+    /// at the start of a line; valid Gum XML never does (angle brackets in content are escaped),
+    /// so a start-of-line match is an unambiguous signal with effectively no false positives.
+    /// </summary>
+    private static bool ContainsGitConflictMarkers(string content)
+    {
+        foreach (string line in content.Split('\n'))
+        {
+            if (line.StartsWith("<<<<<<<") ||
+                line.StartsWith("=======") ||
+                line.StartsWith(">>>>>>>"))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>Builds the shared, actionable conflict-marker error message for the given file.</summary>
+    private static string ConflictMarkerMessage(string fileName) =>
+        $"{fileName} contains unresolved git conflict markers (<<<<<<< / ======= / >>>>>>>). " +
+        "Resolve the conflict in your editor (e.g. VS Code) and reload.";
 
     /// <summary>
     /// Converts missing file paths into <see cref="ErrorResult"/> entries with Warning severity.
