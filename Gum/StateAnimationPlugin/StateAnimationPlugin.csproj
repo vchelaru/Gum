@@ -19,12 +19,6 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="SaveClasses\**" />
-    <EmbeddedResource Remove="SaveClasses\**" />
-    <None Remove="SaveClasses\**" />
-    <Page Remove="SaveClasses\**" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\CommonFormsAndControls\CommonFormsAndControls.csproj" />
     <ProjectReference Include="..\Gum.csproj" />
     <ProjectReference Include="..\..\InputLibrary\InputLibrary.csproj" />
