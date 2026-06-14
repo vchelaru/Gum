@@ -2,6 +2,7 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
+using Gum.Dialogs;
 using Gum.Gui.Windows;
 using Gum.Logic;
 using Gum.Managers;
@@ -644,89 +645,13 @@ public class EditCommands : IEditCommands
 
     public void ShowCreateComponentFromInstancesDialog()
     {
-        var element = _selectedState.SelectedElement;
-        var instances = _selectedState.SelectedInstances.ToList();
-        if (instances == null || instances.Count == 0 || element == null)
+        InstanceSave? instance = _selectedState.SelectedInstance;
+        if (instance == null || _selectedState.SelectedElement == null)
         {
-            _dialogService.ShowMessage("You must first save the project before adding a new component");
+            return;
         }
-        else if (instances is List<InstanceSave>)
-        {
-            FilePath filePath = element.Name;
-            var nameWithoutPath = filePath.FileNameNoPath;
 
-            string message = "Name of the new component";
-            string title = "Create a component";
-
-            GetUserStringOptions options = new()
-            {
-                InitialValue = $"{nameWithoutPath}Component",
-                Validator = x => _nameVerifier.IsComponentNameAlreadyUsed(x) ? "A component with this name already exists!" : null
-            };
-            //tiwcw.Option = $"Replace {nameWithoutPath} and all children with an instance of the new component";
-
-            if (_dialogService.GetUserString(message, title, options) is { } name)
-            {
-                //bool replace = tiwcw.Checked
-
-                string whyNotValid;
-                _nameVerifier.IsElementNameValid(name, "", null, out whyNotValid);
-
-                if (string.IsNullOrEmpty(whyNotValid))
-                {
-                    ComponentSave componentSave = new ComponentSave();
-                    componentSave.BaseType = "Container";
-                    string folder = null;
-                    if (!string.IsNullOrEmpty(folder))
-                    {
-                        folder += "/";
-                    }
-                    componentSave.Name = folder + name;
-
-                    StateSave defaultState;
-
-                    // Clone instances
-                    foreach (var instance in instances)
-                    {
-                        // Clone will fail if we are cloning an InstanceSave
-                        // in a behavior because its type is BehaviorInstanceSave.
-                        // Therefore, we will just manually create a copy:
-                        //var instanceSave = instance.Clone();
-                        //var instanceSave = instance.Clone();
-                        var instanceSave = new InstanceSave();
-                        instanceSave.Name = instance.Name;
-                        instanceSave.BaseType = instance.BaseType;
-                        instanceSave.DefinedByBase = instance.DefinedByBase;
-                        instanceSave.Locked = instance.Locked;
-                        instanceSave.ParentContainer = componentSave;
-
-                        componentSave.Instances.Add(instanceSave);
-                    }
-
-                    // Clone states
-                    foreach (var state in element.States)
-                    {
-                        if (element.DefaultState == state)
-                        {
-                            defaultState = state.Clone();
-
-                            componentSave.Initialize(defaultState);
-                            continue;
-                        }
-                        componentSave.States.Add(state.Clone());
-                    }
-
-                    _standardElementsManagerGumTool.FixCustomTypeConverters(componentSave);
-                    _projectCommands.AddComponent(componentSave);
-
-                }
-                else
-                {
-                    _dialogService.ShowMessage($"Invalid name for new component: {whyNotValid}");
-                    ShowCreateComponentFromInstancesDialog();
-                }
-            }
-        }
+        _dialogService.Show<CreateComponentDialogViewModel>(viewModel => viewModel.Instance = instance);
     }
 
     #endregion

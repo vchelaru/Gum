@@ -97,11 +97,11 @@ public class ProjectCommands
         _selectedState.SelectedComponent = componentSave;
     }
 
-    public void PrepareNewComponentSave(ComponentSave componentSave, string componentName)
+    public void PrepareNewComponentSave(ComponentSave componentSave, string componentName, string baseType = "Container")
     {
         componentSave.Name = componentName;
 
-        componentSave.BaseType = "Container";
+        componentSave.BaseType = baseType;
 
         componentSave.InitializeDefaultAndComponentVariables();
         _standardElementsManagerGumTool.FixCustomTypeConverters(componentSave);
