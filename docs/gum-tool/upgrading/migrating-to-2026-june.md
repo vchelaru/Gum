@@ -8,7 +8,43 @@ This page discusses breaking changes and other considerations when migrating fro
 The `2026 June` version of Gum has not yet been released. This page is a work in progress and will be updated when the release is published. In the meantime, if you want to use the changes described below, you will need to build Gum from source.
 {% endhint %}
 
-## Upgrading Gum Tool
+## What Changed at a Glance
+
+`2026 June` finishes the namespace unification that began in `2026 May`. The setup/boot API and the input API move out of the platform-specific `MonoGameGum` / `RaylibGum` namespaces and into the unified `Gum` / `Gum.Input` namespaces ([syntax version 3](syntax-versions.md)). The code generator now emits the unified `using` directives, and a bundled Roslyn analyzer rewrites most call sites for you.
+
+For most projects, upgrading is a matter of swapping a few `using` directives:
+
+| Replace | With |
+|---|---|
+| `using MonoGameGum;` (for `GumService`, `WindowZoomMode`, hot-reload types) | `using Gum;` |
+| `using MonoGameGum.Forms.DefaultVisuals;` (and `MonoGameGum.ExtensionMethods` / `MonoGameGum.Renderables`) | `using Gum.Forms.DefaultVisuals;` (etc.) |
+| `using MonoGameGum.Input;` (for `Keyboard`, gamepad types, deadzone enums) | `using Gum.Input;` |
+
+### Steps for most projects
+
+1. Upgrade the Gum tool and your Gum NuGet packages (see [Upgrading the Gum Tool](#upgrading-the-gum-tool) and [Upgrading the Runtime](#upgrading-the-runtime)).
+2. In your code, replace the old `MonoGameGum.*` / `RaylibGum.*` `using` directives with the unified `Gum.*` equivalents above, removing the old directive so the two don't collide.
+3. Run the bundled `Gum.Analyzers` "Fix all in solution" (analyzers **GUM001** / **GUM003**) to apply most of these rewrites automatically.
+
+{% hint style="info" %}
+**The runtime classes themselves already moved in `2026 May`, not June.** `TextRuntime`, `ContainerRuntime`, `SpriteRuntime`, `NineSliceRuntime`, the shape runtimes (`CircleRuntime`, `RectangleRuntime`, etc.), and the rest of the `GueDeriving` types are now canonically in the unified `Gum.GueDeriving` namespace. The old `MonoGameGum.GueDeriving` / `SkiaGum.GueDeriving` names remain only as `[Obsolete]` shims that forward to the unified classes. If your project still has `using MonoGameGum.GueDeriving;` directives, that move and its analyzer fix are covered in [Migrating to 2026 May](migrating-to-2026-may.md) and [Syntax Version 1](syntax-version-1.md).
+{% endhint %}
+
+### Severity reference
+
+Most changes are **soft breaks**: a permanent `[Obsolete]` shim keeps the old name compiling with a `CS0618` warning until you migrate. A few are **hard breaks** that fail to compile and need a manual (or analyzer-assisted) edit — they are called out below.
+
+| Change | Old | New | Break type |
+|---|---|---|---|
+| `GumService` | `MonoGameGum` / `RaylibGum` | `Gum` | Soft — obsolete shim (`CS0618`) |
+| `WindowZoomMode` and hot-reload types | `MonoGameGum` / `RaylibGum` | `Gum` | **Hard** — `CS0246` (enums/types can't be shimmed) |
+| `AddToRoot` / `RemoveFromRoot` | platform extension method | instance method on `GraphicalUiElement` | None — call sites unchanged |
+| `ElementSaveExtensionMethods.ToGraphicalUiElement` | `MonoGameGum` | `Gum` | Soft — obsolete forwarder (`CS0618`) |
+| `IReadOnlyListExtensionMethods`, default-filled/stroked renderables, default-visual runtimes | `MonoGameGum.ExtensionMethods` / `.Renderables` / `.Forms.DefaultVisuals` | `Gum.*` | Soft — obsolete shims (`CS0618`) |
+| `Keyboard`, `KeyboardStateProcessor`, `AnalogButton`, deadzone enums, `IInputReceiverKeyboardMonoGame` | `MonoGameGum.Input` | `Gum.Input` | Namespace move — add `using Gum.Input;` (GUM001) |
+| Gamepad button query arguments | XNA `Buttons` | `Gum.Input.GamepadButton` | **Hard** — `CS1503` (no implicit conversion; GUM003) |
+
+## Upgrading the Gum Tool
 
 {% tabs %}
 {% tab title="Windows" %}
@@ -26,7 +62,7 @@ Run the upgrade `gum upgrade` or `~/bin/gum upgrade`
 {% endtab %}
 {% endtabs %}
 
-## Upgrading Runtime
+## Upgrading the Runtime
 
 The `2026.6` NuGet packages have not yet been published. Once released, upgrade your Gum NuGet packages to the new version. For more information, see the NuGet packages for your particular platform:
 
@@ -48,9 +84,9 @@ If using the Apos.Shapes library, update the library for your target platform:
 
 For other platforms you need to build Gum from source.
 
-See below for breaking changes and updates.
+## Breaking Changes and Migrations
 
-### `GumService`, `WindowZoomMode`, and Hot-Reload Types Moved to `Gum` Namespace
+### Setup/boot API (`GumService`, `WindowZoomMode`, hot-reload) moved to the `Gum` Namespace
 
 `GumService` (along with `WindowZoomMode`, `GumHotReloadManager`, and related hot-reload types) has been moved from the platform-specific `MonoGameGum` / `RaylibGum` namespace to the unified `Gum` namespace ([syntax version 3](syntax-versions.md)). The code generator now emits `using Gum;` instead of `using MonoGameGum;` when the detected runtime syntax version is 3 or higher.
 
@@ -143,7 +179,7 @@ var visual = new DefaultButtonRuntime();
 Because the moved type and its shim share a name, importing **both** the new `Gum.*` namespace and the old `MonoGameGum.*` namespace at the same time produces a `CS0104` ambiguity. Remove the old `MonoGameGum.*` `using` directive.
 
 {% hint style="info" %}
-The unified default visuals (for example `Gum.Forms.DefaultVisuals.DefaultButtonRuntime`) still expose their child runtimes — `TextInstance`, `Background`, and so on — as the deprecated `MonoGameGum.GueDeriving` shim types, exactly as before. If you captured those properties into shim-typed variables, that code keeps working unchanged.
+The runtime classes these default visuals are built from — `TextRuntime`, `ContainerRuntime`, and so on — already live in `Gum.GueDeriving` (moved in `2026 May`; see the note in [What Changed at a Glance](#what-changed-at-a-glance)). For source compatibility, the child-runtime properties on a default visual (`TextInstance`, `Background`, etc.) are still **typed** as the `[Obsolete]` `MonoGameGum.GueDeriving` shim aliases, which derive from the unified classes. So if you captured those properties into shim-typed variables, that code keeps compiling unchanged.
 {% endhint %}
 
 ### Gamepad and Keyboard Input Consolidated into `Gum.Input`
