@@ -32,10 +32,6 @@ https://docs.flatredball.com/gum/
 
 [![Star History Chart](https://api.star-history.com/svg?repos=vchelaru/gum&type=Date)](https://www.star-history.com/#vchelaru/gum&Date)
 
-### Star Velocity
-
-[![Sparkline](https://stars.medv.io/vchelaru/Gum.svg)](https://stars.medv.io/vchelaru/Gum)
-
 ### Contributors
 
 <a href="https://github.com/vchelaru/gum/graphs/contributors">
