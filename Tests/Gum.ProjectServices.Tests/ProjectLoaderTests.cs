@@ -515,6 +515,66 @@ public class ProjectLoaderTests
     }
 
     [Fact]
+    public void Load_ShouldReportError_WhenElementFileContainsGitConflictMarkers()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), "GumLoaderTest_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        string gumxPath = Path.Combine(tempDir, "Test.gumx");
+        try
+        {
+            ProjectCreator creator = new ProjectCreator();
+            creator.Create(gumxPath);
+
+            string componentDir = Path.Combine(tempDir, "Components");
+
+            // A healthy sibling component that must remain unaffected.
+            File.WriteAllText(Path.Combine(componentDir, "GoodComponent.gucx"), """
+                <?xml version="1.0" encoding="utf-8"?>
+                <ComponentSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                  <Name>GoodComponent</Name>
+                  <BaseType>Container</BaseType>
+                </ComponentSave>
+                """);
+
+            // A component file left with unresolved git conflict markers (invalid XML).
+            File.WriteAllText(Path.Combine(componentDir, "ConflictComponent.gucx"), """
+                <?xml version="1.0" encoding="utf-8"?>
+                <ComponentSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                  <Name>ConflictComponent</Name>
+                <<<<<<< HEAD
+                  <BaseType>Container</BaseType>
+                =======
+                  <BaseType>Sprite</BaseType>
+                >>>>>>> other-branch
+                </ComponentSave>
+                """);
+
+            string gumxContent = File.ReadAllText(gumxPath);
+            gumxContent = gumxContent.Replace("</GumProjectSave>",
+                """  <ComponentReference Name="GoodComponent" />""" + "\n" +
+                """  <ComponentReference Name="ConflictComponent" />""" + "\n</GumProjectSave>");
+            File.WriteAllText(gumxPath, gumxContent);
+
+            ProjectLoadResult result = _sut.Load(gumxPath);
+
+            // Project still loads; the healthy sibling is present and error-free.
+            result.Success.ShouldBeTrue();
+            result.Project!.Components.ShouldContain(c => c.Name == "GoodComponent");
+            result.LoadErrors.ShouldNotContain(e => e.ElementName == "GoodComponent");
+
+            // The conflicted element gets a clear, dedicated conflict-marker error.
+            result.LoadErrors.ShouldContain(e =>
+                e.ElementName == "ConflictComponent" &&
+                e.Severity == ErrorSeverity.Error &&
+                e.Message.Contains("conflict marker"));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
     public void Load_ShouldReturnError_WhenFileDoesNotExist()
     {
         ProjectLoadResult result = _sut.Load("C:/nonexistent/path/project.gumx");
@@ -531,6 +591,38 @@ public class ProjectLoaderTests
 
         result.Success.ShouldBeFalse();
         result.Project.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Load_ShouldReturnFatalError_WhenGumxContainsGitConflictMarkers()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), "GumCliTest_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        string gumxPath = Path.Combine(tempDir, "Conflicted.gumx");
+        try
+        {
+            File.WriteAllText(gumxPath, """
+                <?xml version="1.0" encoding="utf-8"?>
+                <GumProjectSave>
+                <<<<<<< HEAD
+                  <DefaultCanvasWidth>800</DefaultCanvasWidth>
+                =======
+                  <DefaultCanvasWidth>1024</DefaultCanvasWidth>
+                >>>>>>> other-branch
+                </GumProjectSave>
+                """);
+
+            ProjectLoadResult result = _sut.Load(gumxPath);
+
+            result.Success.ShouldBeFalse();
+            result.Project.ShouldBeNull();
+            result.ErrorMessage.ShouldNotBeNullOrEmpty();
+            result.ErrorMessage!.ShouldContain("conflict marker");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
     }
 
     [Fact]
