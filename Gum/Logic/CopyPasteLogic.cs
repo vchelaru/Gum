@@ -1278,11 +1278,22 @@ public class CopyPasteLogic : ICopyPasteLogic
         }
 
         _standardElementsManagerGumTool.FixCustomTypeConverters(component);
-        _projectCommands.AddComponent(component);
 
         if (replaceWithInstance)
         {
+            // The undo for the replace is recorded against the SOURCE element. Its baseline snapshot
+            // was captured when the user selected the instance. AddComponent selects the new
+            // component, and if that selection change happened outside the undo lock, the undo
+            // baseline would be overwritten to the component — leaving RecordUndo to diff the source
+            // element against a component snapshot (a corrupt, unusable undo). Holding the lock
+            // across AddComponent suppresses that RecordState so the source-element baseline survives.
+            using var undoLock = _undoManager.RequestLock();
+            _projectCommands.AddComponent(component);
             ReplaceSubtreeWithComponentInstance(instance, sourceElement, sourceDefault, descendants, component);
+        }
+        else
+        {
+            _projectCommands.AddComponent(component);
         }
 
         return component;
@@ -1296,7 +1307,8 @@ public class CopyPasteLogic : ICopyPasteLogic
     private void ReplaceSubtreeWithComponentInstance(InstanceSave instance, ElementSave sourceElement,
         StateSave sourceDefault, List<InstanceSave> descendants, ComponentSave component)
     {
-        using var undoLock = _undoManager.RequestLock();
+        // The undo lock is taken by the caller (CreateComponentFromInstance) so that AddComponent's
+        // selection change is also covered — see the comment there.
 
         // The instance's position was NOT moved to the component root, so capture it before the
         // delete (which strips the instance's variables) and re-apply it to the replacement.

@@ -1981,6 +1981,34 @@ public class CopyPasteLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void CreateComponentFromInstance_WithReplace_HoldsUndoLockWhileSelectingNewComponent()
+    {
+        // The replace records its undo against the SOURCE element, whose baseline snapshot is
+        // captured (by UndoPlugin's RecordState) when the user selects the instance. AddComponent
+        // selects the new component; UndoPlugin records state on element selection, and RecordState
+        // is a no-op only while an undo lock is held. So the lock MUST already be held when
+        // AddComponent changes the selection - otherwise the source-element baseline is overwritten
+        // with a component snapshot and the resulting undo is corrupt.
+        SetupDeleteLogicMock();
+        ScreenSave screen = CreateScreenWithButton(out InstanceSave myButton, out _, out _, out _);
+
+        bool lockRequested = false;
+        bool lockHeldWhenComponentSelected = false;
+        _mocker.GetMock<IUndoManager>()
+            .Setup(x => x.RequestLock())
+            .Callback(() => lockRequested = true);
+        _selectedState
+            .SetupSet(x => x.SelectedComponent = It.IsAny<ComponentSave>())
+            .Callback<ComponentSave>(_ => lockHeldWhenComponentSelected = lockRequested);
+
+        _copyPasteLogic.CreateComponentFromInstance(myButton, "ButtonComponent", replaceWithInstance: true);
+
+        lockHeldWhenComponentSelected.ShouldBeTrue(
+            "the undo lock must be held before AddComponent selects the new component, otherwise " +
+            "UndoPlugin overwrites the source element's undo baseline with a component snapshot");
+    }
+
+    [Fact]
     public void CreateComponentFromInstance_WithReplace_RemovesOriginalChildren()
     {
         SetupDeleteLogicMock();
