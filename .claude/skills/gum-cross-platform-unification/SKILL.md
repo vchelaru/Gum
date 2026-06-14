@@ -17,6 +17,8 @@ Shape runtimes that exist on the Apos.Shapes side (`MonoGameGumShapes` / `KniGum
 
 Why a different home: these runtimes wrap Skia-specific renderables on one side and Apos.Shapes-specific renderables on the other. Neither platform's renderable surface aligns with the MonoGame/Raylib/Sokol axis, so putting the canonical file in `MonoGameGum/GueDeriving/` would be misleading. Reference implementation: `RoundedRectangleRuntime.cs`. Platform divergence uses `#if SKIA` (no `RAYLIB` / `XNALIKE` involved on this pair).
 
+**Scope of this pair — do not over-generalize.** This Apos↔Skia pairing covers only the **Apos-specific** runtimes (`RoundedRectangleRuntime`, `ColoredCircleRuntime`, `ArcRuntime`, `LineRuntime`). It is **not** a statement that shape support is MonoGame/Skia-only or that raylib lacks shapes. The general-purpose `RectangleRuntime`/`CircleRuntime` are unified on the normal `MonoGameGum/GueDeriving/` axis (`#if RAYLIB`/`SOKOL`/`SKIA`/`XNALIKE`) and reach full filled/rounded/shadowed capability on **every** backend — raylib included (it wraps the fully-featured `LineRectangle`/`LineCircle`). See [gum-runtime-topology](../gum-runtime-topology/SKILL.md) "Shapes are NOT MonoGame/Skia-only" for the per-backend renderable table.
+
 ## Disagreements Are the Whole Job
 
 When three files diverge, every difference falls into one of two buckets:
