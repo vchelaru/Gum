@@ -10,6 +10,7 @@ using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
+using Gum.Wireframe;
 using Moq;
 using Moq.AutoMock;
 using SharpVectors.Dom;
@@ -1966,6 +1967,20 @@ public class CopyPasteLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void CreateComponentFromInstance_WithReplace_RefreshesWireframe()
+    {
+        SetupDeleteLogicMock();
+        Mock<IWireframeObjectManager> wireframeObjectManager = _mocker.GetMock<IWireframeObjectManager>();
+        ScreenSave screen = CreateScreenWithButton(out InstanceSave myButton, out _, out _, out _);
+
+        _copyPasteLogic.CreateComponentFromInstance(myButton, "ButtonComponent", replaceWithInstance: true);
+
+        // Without a wireframe rebuild the replacement instance renders blank until the user
+        // reselects the screen, so the replace must refresh the wireframe itself.
+        wireframeObjectManager.Verify(x => x.RefreshAll(It.IsAny<bool>(), It.IsAny<bool>()), Times.AtLeastOnce);
+    }
+
+    [Fact]
     public void CreateComponentFromInstance_WithReplace_RemovesOriginalChildren()
     {
         SetupDeleteLogicMock();
@@ -1975,6 +1990,21 @@ public class CopyPasteLogicTests : BaseTestClass
 
         screen.Instances.ShouldNotContain(item => item.Name == "ChildText");
         screen.Instances.ShouldNotContain(item => item.Name == "GrandChild");
+    }
+
+    [Fact]
+    public void CreateComponentFromInstance_WithReplace_SelectsReplacementInstance()
+    {
+        SetupDeleteLogicMock();
+        ScreenSave screen = CreateScreenWithButton(out InstanceSave myButton, out _, out _, out _);
+
+        _copyPasteLogic.CreateComponentFromInstance(myButton, "ButtonComponent", replaceWithInstance: true);
+
+        // AddComponent selects the new component and RemoveInstance clears the instance selection,
+        // so the replace must explicitly re-select the new instance of the component.
+        _selectedState.VerifySet(x => x.SelectedInstance = It.Is<InstanceSave>(
+            instance => instance != null && instance.Name == "MyButton" && instance.BaseType == "ButtonComponent"),
+            Times.Once);
     }
 
     [Fact]

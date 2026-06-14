@@ -1327,6 +1327,14 @@ public class CopyPasteLogic : ICopyPasteLogic
 
         _pluginManager.InstanceAdd(sourceElement, replacement);
         _fileCommands.TryAutoSaveElement(sourceElement);
+
+        // Rebuild the wireframe + tree so the replacement renders with its component's children
+        // right away (otherwise it stays blank until the element is reselected), and leave the new
+        // instance selected — AddComponent had selected the new component and the delete cleared the
+        // instance selection.
+        _wireframeObjectManager.RefreshAll(true);
+        _guiCommands.RefreshElementTreeView(sourceElement);
+        _selectedState.SelectedInstance = replacement;
     }
 
     private List<InstanceSave> GetAllInstancesAndChildrenOf(List<InstanceSave> explicitlySelectedInstances, ElementSave container)
