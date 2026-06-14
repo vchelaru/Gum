@@ -11,6 +11,21 @@ A skill is **a map and a list of landmines**, not an encyclopedia. It points an 
 
 A good skill answers three things and stops: **where** the relevant code/docs live, **what gotchas** aren't obvious from reading them, and **what patterns** recur. Default to prose-free pointers and tables; include code only when the snippet is a pattern that can't be conveyed by pointing at a file. Every line is re-read into context on every load, so a skill that says *less* but points *accurately* beats a thorough one.
 
+## Growing a Skill — Damped Response
+
+A skill is rarely written whole; it grows as questions pull on it. **Don't answer a question 100% inside the skill.** Treat demand as an elastic pull and the skill as an object resting in sand: a question pulls toward a fuller answer, the skill responds **damped** (moves part-way, not all the way), and **retains** its new position — the sand means it doesn't snap back. Over many questions this settles the skill at the best *average* of real demand without overfitting to any one question. It's a leaky integrator of demand, not a transcript of the last conversation.
+
+**Default: a 100% pull moves ~20%.** When a question *could* be answered in full inside the skill, add only its broad orienting fifth — a concrete signpost plus a one-sentence shape of the answer — not the whole walkthrough. Because the position is retained, a genuinely recurring question reaches full coverage in a few pulls, while a one-off never bloats the skill past its signpost. This is also why creating a thin, broad skill is cheap and reversible: easy to add, easy to delete if demand never returns.
+
+Why damped: chasing every specific detail down into the skill bloats it, scatters its focus, rots, and front-loads context future agents won't need. Most questions are one-offs. Let the skill grow only where demand actually, repeatedly pulls.
+
+**Two exceptions — place these by hand, at full strength, not through the elastic:**
+
+1. **Landmines.** A non-obvious, expensive-to-rediscover gotcha that *isn't* evident from the source you point at is a sharp fact, not a sample to be averaged. Damping it smears a precise truth into a vague gesture — the worst outcome. State it fully and firmly. (This is the "list of landmines" half of the mental model above.)
+2. **Bimodal pull.** When a skill is dragged toward a low-density middle between two genuinely distinct sub-topics, don't settle in the valley — it serves neither. Split into two skills, each with its own focus. A pull toward the empty middle *is* the signal to fission.
+
+**Signpost quality bar.** A nudge must name *where to look* — a file, class, or relationship — not merely assert that something exists. "Animation events interact with children" raises a question without reducing search cost; "see event dispatch in `X.cs` — children suppress Y because Z" reduces it. A vague signpost is worse than none: it costs context and resolves nothing.
+
 ## Authoritative Sources (do not duplicate)
 
 Before writing anything, identify where the ground truth already lives:
