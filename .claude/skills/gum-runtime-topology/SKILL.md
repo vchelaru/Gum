@@ -22,7 +22,25 @@ Gum has **no single "runtime" assembly**. The same `RenderingLibrary.*` / `GumCo
 
 ## Render backends
 
-XNA-family (`MonoGameGum`, `KniGum`, `FnaGum`), `RaylibGum`, `SkiaGum` (+ hosts `SkiaGum.Maui`, `SkiaGum.Wpf`), `SokolGum`. Shape runtimes: `MonoGameGumShapes`/`KniGumShapes` (Apos.Shapes) ↔ `SkiaGum` pair. For the per-runtime file-sharing/unification pattern see [gum-cross-platform-unification](../gum-cross-platform-unification/SKILL.md).
+XNA-family (`MonoGameGum`, `KniGum`, `FnaGum`), `RaylibGum`, `SkiaGum` (+ hosts `SkiaGum.Maui`, `SkiaGum.Wpf`), `SokolGum`. For the per-runtime file-sharing/unification pattern see [gum-cross-platform-unification](../gum-cross-platform-unification/SKILL.md).
+
+### Shapes are NOT MonoGame/Skia-only — no backend is the outlier
+
+Shape runtimes (`RectangleRuntime`/`CircleRuntime` — corner radius, two-slot fill/stroke, drop shadows, dashed strokes, gradients) are **unified across all backends, and every backend reaches full capability** via its recommended renderable; only the contained renderable differs:
+
+| Backend | Contained renderable (recommended path) |
+|---|---|
+| raylib / Sokol | `LineRectangle` / `LineCircle` |
+| Skia | `RoundedRectangle` (#2818) |
+| XNA-family **+ Apos.Shapes** (`MonoGameGumShapes`/`KniGumShapes`, recommended) | Apos `RoundedRectangle` |
+| XNA-family, no Apos | `SolidRectangle`+`LineRectangle` split — degraded fallback, no real radius/shadow |
+
+The no-Apos XNA split is a **degraded fallback, not a separate tier or an outlier**. Two traps that produced wrong conclusions here:
+
+- ⚠ **Don't infer capability from type names.** raylib's `LineRectangle`/`LineCircle` are full filled + rounded + drop-shadowed shapes (they mirror Apos/Skia — see the `<inheritdoc cref="SkiaGum...SkiaShapeRuntime">` in `Runtimes/RaylibGum/Renderables/`), despite the outline-suggesting names. A directory listing is not the API surface — read the renderable.
+- ⚠ The `MonoGameGumShapes`/`KniGumShapes` ↔ `SkiaGum` **"pair"** (in [gum-cross-platform-unification](../gum-cross-platform-unification/SKILL.md)) is only a *source-sharing* link for the **Apos-specific** `RoundedRectangleRuntime`/`ColoredCircleRuntime` types — **not** a claim that shape support is MonoGame/Skia-only or that raylib lacks it.
+
+Consequence for themes: a rounded/shadowed theme's visual code (`new RectangleRuntime { CornerRadius = …, HasDropshadow = … }`) is portable to raylib at the type level — the shape layer is a non-issue.
 
 ## Three source-sharing mechanisms (each is a separate landmine)
 
