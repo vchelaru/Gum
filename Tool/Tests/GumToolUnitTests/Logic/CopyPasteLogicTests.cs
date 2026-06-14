@@ -1838,6 +1838,40 @@ public class CopyPasteLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void CreateComponentFromInstance_CopiesNonReferenceVariableLists()
+    {
+        ScreenSave screen = CreateScreenWithButton(out InstanceSave myButton, out _, out _, out _);
+        VariableListSave<float> childList = new VariableListSave<float> { Name = "ChildText.Points", Type = "float" };
+        childList.ValueAsIList.Add(1f);
+        childList.ValueAsIList.Add(2f);
+        screen.DefaultState.VariableLists.Add(childList);
+
+        ComponentSave component = _copyPasteLogic.CreateComponentFromInstance(myButton, "ButtonComponent", replaceWithInstance: false);
+
+        // Only VariableReferences lists are dropped; ordinary list-typed variables must survive.
+        component.DefaultState.VariableLists.ShouldContain(item => item.Name == "ChildText.Points");
+    }
+
+    [Fact]
+    public void CreateComponentFromInstance_DoesNotCopyChildVariableReferences()
+    {
+        ScreenSave screen = CreateScreenWithButton(out InstanceSave myButton, out _, out _, out _);
+        VariableListSave<string> childReferences = new VariableListSave<string> { Name = "ChildText.VariableReferences", Type = "string" };
+        childReferences.ValueAsIList.Add("FontSize = MyButton.Height");
+        screen.DefaultState.VariableLists.Add(childReferences);
+        // A variable reference materializes its resolved value as a hard scalar in the same state;
+        // that scalar is what preserves the value, so the reference row itself can be dropped.
+        screen.DefaultState.SetValue("ChildText.FontSize", 28, "int");
+
+        ComponentSave component = _copyPasteLogic.CreateComponentFromInstance(myButton, "ButtonComponent", replaceWithInstance: false);
+
+        // The reference (which pointed at the now-promoted instance) is dropped...
+        component.DefaultState.VariableLists.ShouldNotContain(item => item.Name == "ChildText.VariableReferences");
+        // ...but the materialized value is preserved.
+        component.DefaultState.GetVariableSave("ChildText.FontSize")?.Value.ShouldBe(28);
+    }
+
+    [Fact]
     public void CreateComponentFromInstance_DoesNotCopyPositionalInstanceVariablesToRoot()
     {
         ScreenSave screen = CreateScreenWithButton(out InstanceSave myButton, out _, out _, out _);
@@ -1860,6 +1894,21 @@ public class CopyPasteLogicTests : BaseTestClass
         ComponentSave component = _copyPasteLogic.CreateComponentFromInstance(myButton, "ButtonComponent", replaceWithInstance: false);
 
         component.Instances.ShouldNotContain(item => item.Name == "MyButton");
+    }
+
+    [Fact]
+    public void CreateComponentFromInstance_DoesNotCopyPromotedInstanceVariableReferencesToRoot()
+    {
+        ScreenSave screen = CreateScreenWithButton(out InstanceSave myButton, out _, out _, out _);
+        VariableListSave<string> buttonReferences = new VariableListSave<string> { Name = "MyButton.VariableReferences", Type = "string" };
+        buttonReferences.ValueAsIList.Add("Width = SomeOtherInstance.Width");
+        screen.DefaultState.VariableLists.Add(buttonReferences);
+
+        ComponentSave component = _copyPasteLogic.CreateComponentFromInstance(myButton, "ButtonComponent", replaceWithInstance: false);
+
+        // The promoted instance's reference row must not become a root-level VariableReferences list;
+        // its materialized scalar (Width=200, asserted elsewhere) carries the value.
+        component.DefaultState.VariableLists.ShouldNotContain(item => item.GetRootName() == "VariableReferences");
     }
 
     [Fact]

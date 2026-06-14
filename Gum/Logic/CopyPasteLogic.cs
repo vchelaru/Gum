@@ -1237,6 +1237,13 @@ public class CopyPasteLogic : ICopyPasteLogic
 
         foreach (VariableListSave variableList in sourceDefault.VariableLists)
         {
+            // Skip VariableReferences: a reference materializes its resolved value as a hard scalar
+            // in the same state (copied above as a normal variable), so the value is preserved while
+            // the reference row itself — which may point at the now-promoted instance — is dropped.
+            if (variableList.GetRootName() == "VariableReferences")
+            {
+                continue;
+            }
             if (!string.IsNullOrEmpty(variableList.SourceObject) && descendantNames.Contains(variableList.SourceObject))
             {
                 componentDefault.VariableLists.Add(variableList.Clone());
@@ -1271,6 +1278,11 @@ public class CopyPasteLogic : ICopyPasteLogic
                 continue;
             }
             string rootName = variableList.GetRootName();
+            // See note above: VariableReferences are excluded; their materialized scalar carries the value.
+            if (rootName == "VariableReferences")
+            {
+                continue;
+            }
             VariableListSave clone = variableList.Clone();
             clone.Name = rootName;
             componentDefault.VariableLists.RemoveAll(item => item.Name == rootName);
