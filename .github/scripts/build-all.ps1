@@ -11,17 +11,28 @@ $ErrorActionPreference = 'Continue'
 $failures = [System.Collections.Generic.List[string]]::new()
 $successes = [System.Collections.Generic.List[string]]::new()
 
+# Solutions that can't be built by this generic windows-runner sweep and need dedicated CI.
+# MauiSkiaGum is a MAUI multi-platform app: its net9.0-windows (WinUI) head is self-contained
+# and needs the win-x64 runtime pack (NETSDK1112) the RID-less restore can't supply, and its
+# net9.0-ios head can't build on a Windows runner at all (needs a Mac). Build it in a dedicated
+# MAUI workflow instead.
+$excludeLeafNames = @('MauiSkiaGum.sln')
+
 $slns = Get-ChildItem -Path $Path -Recurse -File |
         Where-Object { $_.Extension -in '.sln', '.slnx' } |
+        Where-Object { $excludeLeafNames -notcontains $_.Name } |
         Select-Object -ExpandProperty FullName
 
 if (-not $slns) {
     Write-Warning "No .sln / .slnx files found under '$Path'."
     exit 1
-} 
+}
 else {
     Write-Host "Found $($slns.Count) solution(s):"
     $slns | ForEach-Object { Write-Host "  - $_" }
+    if ($excludeLeafNames.Count -gt 0) {
+        Write-Host "Skipping (excluded, need dedicated CI): $($excludeLeafNames -join ', ')"
+    }
 }
 
 foreach ($sln in $slns) {
