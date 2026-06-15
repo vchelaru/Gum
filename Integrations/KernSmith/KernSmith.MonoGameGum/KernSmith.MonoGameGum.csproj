@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+    <PackageId>KernSmith.MonoGameGum</PackageId>
+    <Version>2026.6.15.1</Version>
+    <Authors>Kaltinril (Jeremy Swartwood), Gum Contributors</Authors>
+    <Description>Runtime bitmap font generation for MonoGame + Gum games using KernSmith. Generates BitmapFont instances entirely in memory — no disk I/O required. Wire up with one line: CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithFontCreator(GraphicsDevice);</Description>
+    <PackageProjectUrl>https://github.com/vchelaru/Gum</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/vchelaru/Gum</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>kernsmith;gum;monogame;bitmap-font;font-generation;game-dev;runtime</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\KernSmith.GumCommon\KernSmith.GumCommon.csproj" />
+    <ProjectReference Include="..\..\..\MonoGameGum\MonoGameGum.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
+  </ItemGroup>
+
+</Project>

@@ -45,7 +45,7 @@
          sibling Gum.Themes.Editor.MonoGame project marks this PrivateAssets="All",
          which is likely a latent bug there since the Editor theme has the same
          runtime requirement. -->
-    <PackageReference Include="KernSmith.MonoGameGum" Version="*" />
+    <ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.MonoGameGum\KernSmith.MonoGameGum.csproj" />
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>

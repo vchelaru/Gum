@@ -23,9 +23,9 @@
     <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="KernSmith.MonoGameGum" Version="*">
+    <ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.MonoGameGum\KernSmith.MonoGameGum.csproj">
 		<PrivateAssets>All</PrivateAssets>
-	</PackageReference>
+	</ProjectReference>
 	<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>

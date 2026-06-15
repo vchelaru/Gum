@@ -44,7 +44,7 @@
     <!-- KernSmith is a runtime dependency of the theme (MeadowTheme.Apply
          constructs KernSmithFontCreator and calls RegisterFont). It must flow
          transitively to consumers - hence no PrivateAssets here. -->
-    <PackageReference Include="KernSmith.MonoGameGum" Version="*" />
+    <ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.MonoGameGum\KernSmith.MonoGameGum.csproj" />
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>

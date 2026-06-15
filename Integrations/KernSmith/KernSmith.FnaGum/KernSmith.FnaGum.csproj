@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <PackageId>KernSmith.FnaGum</PackageId>
+    <Version>2026.6.15.1</Version>
+    <Authors>Kaltinril (Jeremy Swartwood), Gum Contributors</Authors>
+    <Description>Runtime bitmap font generation for FNA + Gum games using KernSmith. Generates BitmapFont instances entirely in memory — no disk I/O required.</Description>
+    <PackageProjectUrl>https://github.com/vchelaru/Gum</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/vchelaru/Gum</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>kernsmith;gum;fna;bitmap-font;font-generation;game-dev;runtime</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\KernSmith.MonoGameGum\KernSmithFontCreator.cs" Link="KernSmithFontCreator.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\KernSmith.GumCommon\KernSmith.GumCommon.csproj" />
+    <ProjectReference Include="..\..\..\MonoGameGum\FnaGum\FnaGum.csproj" />
+    <ProjectReference Include="..\..\..\fna\FNA.Core.csproj" PrivateAssets="All" />
+  </ItemGroup>
+
+</Project>
