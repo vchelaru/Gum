@@ -64,16 +64,19 @@ public class KernSmithRaylibFontCreator : IRaylibFontCreator
     /// <inheritdoc/>
     public unsafe Raylib_cs.Font? TryCreateFont(BmfcSave bmfcSave)
     {
-        BmFontResult result = GumFontGenerator.Generate(bmfcSave, _backend);
+        // autofitTexture makes KernSmith pack the whole glyph set onto ONE page, sized to the
+        // smallest power-of-two that fits. raylib's Font holds a single atlas texture, so the
+        // multi-page result the default atlas produces at larger sizes can't be represented —
+        // later-page glyphs would sample the wrong texture region and render as garbage.
+        BmFontResult result = GumFontGenerator.Generate(bmfcSave, _backend, autofitTexture: true);
 
-        if (result.Pages.Count == 0)
+        // Autofit yields a single page; guard defensively (e.g. an empty glyph set) and fall back
+        // to the existing system-font path rather than render a partial atlas.
+        if (result.Pages.Count != 1)
         {
             return null;
         }
 
-        // raylib's Font has a single atlas texture, so it is inherently single-page (the existing
-        // ContentLoader bitmap-font path makes the same assumption). KernSmith packs Gum's default
-        // character ranges into one page at typical sizes; use page 0.
         AtlasPage page = result.Pages[0];
 
         Texture2D texture;
