@@ -223,6 +223,56 @@ foreach (var item in listBox.SelectedItems)
 int count = listBox.SelectedItems.Count;
 ```
 
+## Keyboard and Gamepad Navigation
+
+A `ListBox` uses a two-level focus model:
+
+- **Top-level focus** — the `ListBox` itself is focused (`IsFocused` is `true`). In this state, input moves focus *between controls* (tabbing), not within the list. This is the state a `ListBox` is in right after you set `IsFocused = true`.
+- **Item-level focus** — focus has moved *into* the list (`DoListItemsHaveFocus` is `true`). Now the up and down arrow keys and the d-pad move the highlighted item, and the `SelectionChanged` event fires as the selection changes.
+
+By default the user moves from top-level to item-level focus by pressing the confirm input — Enter on the keyboard, or the A button on a gamepad. This is the extra "enter the list" press.
+
+{% hint style="warning" %}
+A `ListBox` only responds to the keyboard or gamepad once that input device is registered with Gum Forms. Unlike a `TextBox` — which receives keyboard input whenever it is focused — a `ListBox` does **nothing** in response to arrow keys until a keyboard is added to `FrameworkElement.KeyboardsForUiControl`. The simplest way is `GumUI.UseKeyboardDefaults()` for the keyboard and `GumUI.UseGamepadDefaults()` for gamepads. Each only needs to be called once, at startup.
+{% endhint %}
+
+### Starting directly on an item
+
+To skip that press and have the list start with an item already focused — navigable immediately by the arrow keys or d-pad — set `SelectedIndex` first, then set `DoListItemsHaveFocus` to `true`:
+
+```csharp
+// Initialize
+// Register the keyboard so the ListBox receives arrow-key input.
+// This only needs to be called once, at startup.
+GumUI.UseKeyboardDefaults();
+
+var listBox = new ListBox();
+listBox.Items.Add("Option 1");
+listBox.Items.Add("Option 2");
+listBox.Items.Add("Option 3");
+listBox.AddToRoot();
+
+listBox.SelectedIndex = 0;             // choose the item to start on
+listBox.DoListItemsHaveFocus = true;   // give that item focus directly
+```
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACoWQywrCMBBF935FyKqCFB87iwulqEFBULvLJjYjBNKMNEl94b-b1gq66nLuOTNc5kmZXfmCTokrPQwIVUY5JbR6QMhoQBmLMwsbuJ9QlDKFs_Da2aifcMNNJUqilXULvJEZMXAl28_U8JbEzEFh47mUEae7i1NoyIjTDmPcaUz-jcCOuEd0bbdvfgANuQPJjIS65fBnJ8W6b3N7LSpYYu5tUOpfJPTVewNcnZ3EHgEAAA)
+
+Setting `DoListItemsHaveFocus = true` also forces `IsFocused = true`, so you do not need to set both.
+
+{% hint style="warning" %}
+Order matters. `DoListItemsHaveFocus` only moves the visible focus onto an item if a `SelectedIndex` is already set. If you set `DoListItemsHaveFocus = true` while `SelectedIndex` is `-1` (nothing selected), no item appears focused until the first arrow or d-pad press. Set `SelectedIndex` first.
+{% endhint %}
+
+### Controlling how focus leaves the items
+
+Two properties control how focus exits item-level navigation:
+
+- `CanListItemsLoseFocus` (default `true`) — when `true`, pressing the back/cancel input (the B button) returns focus to the top level. Set this to `false` when the `ListBox` is the only focusable control on the screen, so focus can never leave the items. Setting it to `false` while the `ListBox` is focused also moves focus into the items immediately.
+- `LoseListItemFocusOnPrimaryInput` (default `true`) — when `true`, the confirm input (A button / Enter) selects the highlighted item and returns focus to the top level. Set this to `false` when the confirm input should act on the item — for example toggling a `CheckBox` in a custom item template — without leaving item-level focus.
+
+For the specific keys and buttons each input device uses, see [Keyboard Support](../events-and-interactivity/keyboard-support.md#listbox-navigation) and [Gamepad Support](../events-and-interactivity/gamepad-support.md#listbox-navigation).
+
 ## Reordering With Drag+Drop
 
 The `DragDropReorderMode` controls whether the user can automatically reorder `ListBoxItems` by pushing on an item and dragging it to a new location. By default this value is set to `NoReorder`, but it can be changed to enable reordering.

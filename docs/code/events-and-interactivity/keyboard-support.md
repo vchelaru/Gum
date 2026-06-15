@@ -9,3 +9,16 @@ For information on tabbing with the keyboard, see the [Tabbing](tabbing-moving-f
 ## TextBox Input
 
 TextBoxes receive input from the keyboard if they are focused. A TextBox's focus can be set in code by setting IsFocused to true, or through the UI by clicking on the TextBox or by tabbing to the TextBox. For more information see the TextBox page.
+
+## ListBox Navigation
+
+Unlike a TextBox, a `ListBox` does not receive keyboard input simply by being focused — a keyboard must first be registered with `FrameworkElement.KeyboardsForUiControl`. Call `GumUI.UseKeyboardDefaults()` once at startup to do this. Without it, the arrow keys do nothing even when the `ListBox` is focused.
+
+```csharp
+// Initialize
+GumUI.UseKeyboardDefaults();
+```
+
+A focused `ListBox` starts at the top level, where it participates in [tabbing](tabbing-moving-focus.md) between controls. Press Enter to move focus into the items; the up and down arrow keys then move the highlighted item, and Enter selects the highlighted item and returns focus to the top level.
+
+To have a `ListBox` start with an item already focused — so the arrow keys work without first pressing Enter — see [Keyboard and Gamepad Navigation](../controls/listbox.md#keyboard-and-gamepad-navigation) on the ListBox page.
