@@ -242,21 +242,21 @@ To skip that press and have the list start with an item already focused — navi
 
 ```csharp
 // Initialize
+// Register the keyboard so the ListBox receives arrow-key input.
+// This only needs to be called once, at startup.
+GumUI.UseKeyboardDefaults();
+
 var listBox = new ListBox();
 listBox.Items.Add("Option 1");
 listBox.Items.Add("Option 2");
 listBox.Items.Add("Option 3");
 listBox.AddToRoot();
 
-// Register the keyboard so the ListBox receives arrow-key input.
-// This only needs to be called once, at startup.
-GumUI.UseKeyboardDefaults();
-
 listBox.SelectedIndex = 0;             // choose the item to start on
 listBox.DoListItemsHaveFocus = true;   // give that item focus directly
 ```
 
-[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACoWQywrCMBBF935FyKqCFB87iwulqEFBULvLJjYjBNKMNEl94b-b1gq66nLmnpk7d56U2ZUv6JS40sOAUGWUU0KrB4QerURJtLJugTcyIwauZPupon7CTavEzEFh47mUEae7i1NoyIjTDmLcSUz-iaAdcY_oGm9uwtkZizMLG7ifUJQyhbPw2tlW_84dQEPuQDIjoU4x_NmZYp2n8V6LCpaYexuQ-hcJffXe5gTi-B4BAAA)
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACoWQywrCMBBF935FyKqCFB87iwulqEFBULvLJjYjBNKMNEl94b-b1gq66nLuOTNc5kmZXfmCTokrPQwIVUY5JbR6QMhoQBmLMwsbuJ9QlDKFs_Da2aifcMNNJUqilXULvJEZMXAl28_U8JbEzEFh47mUEae7i1NoyIjTDmPcaUz-jcCOuEd0bbdvfgANuQPJjIS65fBnJ8W6b3N7LSpYYu5tUOpfJPTVewNcnZ3EHgEAAA)
 
 Setting `DoListItemsHaveFocus = true` also forces `IsFocused = true`, so you do not need to set both.
 
