@@ -104,14 +104,18 @@ for(int i = 0; i < 10; i++)
 
 Notice that since the `StackPanel` has had `Anchor(Anchor.Center)` called, it remains centered as it wraps and expands horizontally.
 
-## Bottom-Up Stacking
+## Bottom-Up and Right-to-Left Stacking
 
 A `StackPanel's` `Visual` only provides two possible stacking modes:
 
 * `ChildrenLayout.TopToBottomStack` (default)
 * `ChildrenLayout.LeftToRightStack`&#x20;
 
-By combining Dock and ChildrenLayout, we can create bottom-up and right-to-left stacking. The following code shows how to create a bottom-up stack similar to a chat room or command line:
+There is no dedicated "bottom-up" or "right-to-left" mode, but you can create either by combining `Anchor` (or `Dock`) with `ChildrenLayout`. In both cases the `StackPanel` is anchored to one edge, so it stays pinned to that edge and grows in the opposite direction as children are added.
+
+### Bottom-Up Stacking
+
+The following code creates a bottom-up stack similar to a chat room or command line. The `StackPanel` is anchored to the bottom, so newly-added children appear at the bottom and older children are pushed up:
 
 ```csharp
 // Class scope
@@ -145,6 +149,47 @@ protected override void Update(GameTime gameTime)
 ```
 
 <figure><img src="../../.gitbook/assets/17_19 12 47.gif" alt=""><figcaption><p>Bottom-up stack</p></figcaption></figure>
+
+### Right-to-Left Stacking
+
+Right-to-left stacking uses the same approach horizontally: set `ChildrenLayout` to `LeftToRightStack` and anchor the `StackPanel` to the right. The stack stays pinned to the right edge and grows toward the left as children are added, so the newest item appears on the right:
+
+```csharp
+// Class scope
+StackPanel stackPanel;
+
+protected override void Initialize()
+{
+    GumUI.Initialize(this);
+
+    stackPanel = new StackPanel();
+    stackPanel.AddToRoot();
+    stackPanel.Anchor(Gum.Wireframe.Anchor.Right);
+    stackPanel.Visual.ChildrenLayout =
+        Gum.Managers.ChildrenLayout.LeftToRightStack;
+
+    base.Initialize();
+}
+
+protected override void Update(GameTime gameTime)
+{
+    GumUI.Update(gameTime);
+
+    if(GumUI.Keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
+    {
+        var label = new Label();
+        stackPanel.AddChild(label);
+        int index = stackPanel.Children.Count;
+        label.Text = $"Item {index}";
+    }
+
+    base.Update(gameTime);
+}
+```
+
+{% hint style="warning" %}
+TODO: Add a gif showing right-to-left stacking (newest item appearing on the right, older items pushed to the left).
+{% endhint %}
 
 ## Evenly-Sized Stacked Children
 
