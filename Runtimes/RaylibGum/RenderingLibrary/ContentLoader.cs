@@ -216,6 +216,16 @@ public class ContentLoader : IContentLoader
         return BuildFont(parsedFontFile, pageTexture);
     }
 
+    // Entry point for in-memory font creators in other assemblies (e.g. KernSmith.RaylibGum):
+    // parse the .fnt text and assemble a raylib Font around the supplied atlas texture. Exposed
+    // (instead of BuildFont) so callers never name ParsedFontFile, which is compiled into BOTH
+    // GumCommon and RaylibGum — referencing it across the assembly boundary is an ambiguous-type
+    // (CS0433) error. See InternalsVisibleTo in Properties/AssemblyInfo.cs.
+    internal static Font BuildFontFromFntText(string fntText, Texture2D pageTexture)
+    {
+        return BuildFont(new ParsedFontFile(fntText), pageTexture);
+    }
+
     // Assembles a raylib Font from a parsed .fnt and its already-loaded atlas page. The Recs and
     // Glyphs arrays are handed to raylib, which frees them in UnloadFont (called by
     // ManagedFont.Dispose) — so they MUST be allocated with raylib's own allocator (MemAlloc).

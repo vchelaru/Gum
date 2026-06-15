@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Uploading KernSmith's raw RGBA atlas pages to a raylib Texture2D pins the managed
+         byte[] and writes a Raylib_cs.Image's Data pointer (see KernSmithRaylibFontCreator). -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+    <PackageId>KernSmith.RaylibGum</PackageId>
+    <Version>2026.6.15.1</Version>
+    <Authors>Kaltinril (Jeremy Swartwood), Gum Contributors</Authors>
+    <Description>Runtime bitmap font generation for raylib + Gum games using KernSmith. Generates Raylib_cs.Font instances entirely in memory — no .fnt files required. Wire up with one line: CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreator();</Description>
+    <PackageProjectUrl>https://github.com/vchelaru/Gum</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/vchelaru/Gum</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>kernsmith;gum;raylib;bitmap-font;font-generation;game-dev;runtime</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\KernSmith.GumCommon\KernSmith.GumCommon.csproj" />
+    <ProjectReference Include="..\..\..\Runtimes\RaylibGum\RaylibGum.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Raylib-cs" Version="7.0.1" />
+  </ItemGroup>
+
+</Project>
