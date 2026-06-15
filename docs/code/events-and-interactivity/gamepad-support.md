@@ -108,7 +108,7 @@ for (int i = 0; i < gamepads.Count; i++)
 
 ## ListBox Navigation
 
-When a `ListBox` has focus, pressing up or down on the D-pad (or tilting the left stick up or down) moves the selection through the list. The `SelectionChanged` event fires each time the selected item changes.
+When a `ListBox` is focused, press the A button to move focus into the items. Once the items have focus, pressing up or down on the D-pad (or tilting the left stick up or down) moves the highlighted selection through the list, and the `SelectionChanged` event fires each time the selected item changes. Pressing A again selects the highlighted item and returns focus to the top level; pressing B returns focus to the top level without selecting.
 
 The following example adds items to a `ListBox`, enables gamepad input, and reacts to selection changes:
 
@@ -132,7 +132,9 @@ listBox.IsFocused = true;
 ```
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACqVSYUtCMRT9LvgfLqMPSvJSKwLFwDRNCBRTIhjEdBddPTfZ9tIS_3v3zZQ0yKB92e69595zdrZVNgPAOq6dzFgFvE2wEDJKK69ErD6Q0uxNWIiV8zdmCTXQuID7TZTLV7n-qkSPSvop1cvF4rfsHarJ1FO6dFk8BA-JxVGJ2KOm8GLwPkcXNdUMtVNGp-U0FdVHzsSJxx9j_zGg43HmorqUOc66c09oKHGW_x1RPoo4P4q42EdQbWD6xvjgJdfBazHCeOt0et74nJ6ip9TKq-IuHuAydZeznkXnIJmfSbPQQEQTMcO5kOANjKdCTxAcxjhORXC26z_k3-p62GIboVfCaQ1yzwUQduLyULvmesU10NqTccLZphFlBVb7s1B2Ry-0rwP7OrC1LIlcGPt6GyM9mo_aFPeEdC1jh6phtLcmjhoxChv0_Q1Pd-qnonP0L4adgCEj3N7DUMc4cXSvWvj2VZbNrLOZT_A5IeIQAwAA)
 
-Pressing down selects the next item and pressing up selects the previous item. The selection does not wrap when it reaches the first or last item.
+After running, press A to enter the list, then press down to move to the next item and up to move to the previous item. The selection does not wrap when it reaches the first or last item.
+
+To have the list start with an item already focused — so the D-pad navigates immediately without first pressing A — see [Keyboard and Gamepad Navigation](../controls/listbox.md#keyboard-and-gamepad-navigation) on the ListBox page.
 
 ## Slider Adjustment
 
