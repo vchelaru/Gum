@@ -232,6 +232,10 @@ A `ListBox` uses a two-level focus model:
 
 By default the user moves from top-level to item-level focus by pressing the confirm input — Enter on the keyboard, or the A button on a gamepad. This is the extra "enter the list" press.
 
+{% hint style="warning" %}
+A `ListBox` only responds to the keyboard or gamepad once that input device is registered with Gum Forms. Unlike a `TextBox` — which receives keyboard input whenever it is focused — a `ListBox` does **nothing** in response to arrow keys until a keyboard is added to `FrameworkElement.KeyboardsForUiControl`. The simplest way is `GumUI.UseKeyboardDefaults()` for the keyboard and `GumUI.UseGamepadDefaults()` for gamepads. Each only needs to be called once, at startup.
+{% endhint %}
+
 ### Starting directly on an item
 
 To skip that press and have the list start with an item already focused — navigable immediately by the arrow keys or d-pad — set `SelectedIndex` first, then set `DoListItemsHaveFocus` to `true`:
@@ -244,11 +248,15 @@ listBox.Items.Add("Option 2");
 listBox.Items.Add("Option 3");
 listBox.AddToRoot();
 
+// Register the keyboard so the ListBox receives arrow-key input.
+// This only needs to be called once, at startup.
+GumUI.UseKeyboardDefaults();
+
 listBox.SelectedIndex = 0;             // choose the item to start on
 listBox.DoListItemsHaveFocus = true;   // give that item focus directly
 ```
 
-[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACqtW8ix2L81VslIoKSpN1VFQyszLLMlMzMmsSgWKKZUlFinkZBaXOOVXKNgq5KWWK_hAeBqa1jF5UBk9z5LU3GI9x5QUjRgl_4KSzPw8BcMYJQIqjAiqMEZVAZQLyQ_Kzy8B240QD07NSU0uSU3xzEtJBbnSAEmPSz7IvWCzPRLLUt3yk0uLgUpAfrVWquUCAPaJhQr-AAAA)
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACoWQywrCMBBF935FyKqCFB87iwulqEFBULvLJjYjBNKMNEl94b-b1gq66nLmnpk7d56U2ZUv6JS40sOAUGWUU0KrB4QerURJtLJugTcyIwauZPupon7CTavEzEFh47mUEae7i1NoyIjTDmLcSUz-iaAdcY_oGm9uwtkZizMLG7ifUJQyhbPw2tlW_84dQEPuQDIjoU4x_NmZYp2n8V6LCpaYexuQ-hcJffXe5gTi-B4BAAA)
 
 Setting `DoListItemsHaveFocus = true` also forces `IsFocused = true`, so you do not need to set both.
 
