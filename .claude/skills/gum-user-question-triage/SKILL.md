@@ -14,6 +14,12 @@ Use when the user pastes a question from someone (Discord text, a GitHub issue, 
 
 For a **GitHub issue**, read both `gh issue view <num>` and `gh issue view <num> --comments` before deciding — comments often reclassify the ask.
 
+**Then decide the surface — tool or code.** The docs split into the **Gum Tool** (`docs/gum-tool/`, the WYSIWYG editor — menus, properties, editor workflows) and **Code** (`docs/code/`, runtime C# APIs). The *same* question usually has a different answer in each, so don't assume. (Tool cues: "in the editor", a menu/property/tab name, a screenshot. Code cues: C#, "in code", a class or method name.)
+
+- **Obvious which surface** → answer for that one only.
+- **Not obvious** → treat it as possibly both: run two investigations (`docs/gum-tool/` *and* `docs/code/`) and give two answers.
+- **Investigation is hard or hinges on what they meant** → ask the user to clarify the surface (and specifics) before digging deep.
+
 ## 2. Where to Look: skills orient, docs cite, code confirms
 
 These are **roles, not a strict sequence** — you'll often touch all three in one pass. The point is what each is *for*:
