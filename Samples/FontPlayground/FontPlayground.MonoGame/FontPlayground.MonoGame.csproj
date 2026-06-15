@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RollForward>Major</RollForward>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <TieredCompilation>false</TieredCompilation>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\MonoGameGum\MonoGameGum.csproj" />
+    <ProjectReference Include="..\..\..\Integrations\KernSmith\KernSmith.MonoGameGum\KernSmith.MonoGameGum.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Shared\FontPlaygroundScreen.cs" Link="FontPlaygroundScreen.cs" />
+  </ItemGroup>
+</Project>
