@@ -4432,26 +4432,44 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     private void GetCellDimensions(int indexInSiblingList, out int xIndex, out int yIndex, out float cellWidth, out float cellHeight)
     {
         var effectiveParent = EffectiveParentGue;
-        var xRows = effectiveParent.AutoGridHorizontalCells;
-        var yRows = effectiveParent.AutoGridVerticalCells;
-        if (xRows < 1) xRows = 1;
-        if (yRows < 1) yRows = 1;
+        var columnCount = effectiveParent.AutoGridHorizontalCells;
+        var rowCount = effectiveParent.AutoGridVerticalCells;
+        if (columnCount < 1) columnCount = 1;
+        if (rowCount < 1) rowCount = 1;
+
+        var childCount = effectiveParent.Children?.Count ?? 0;
 
         if (effectiveParent.ChildrenLayout == ChildrenLayout.AutoGridHorizontal)
         {
-            xIndex = indexInSiblingList % xRows;
-            yIndex = indexInSiblingList / xRows;
+            xIndex = indexInSiblingList % columnCount;
+            yIndex = indexInSiblingList / columnCount;
+
+            // The number of columns is fixed by AutoGridHorizontalCells, but AutoGridVerticalCells
+            // is only a *minimum* row count - the grid grows more rows as children are added. The
+            // cell height must be divided by that grown row count, not by the raw (minimum)
+            // AutoGridVerticalCells; otherwise, once rows spill past the minimum, each cell ends up
+            // taller than one row and the rows spread apart with every added item. This mirrors the
+            // row count used when sizing the parent (see UpdateHeight).
+            var requiredRowCount = (int)Math.Ceiling((float)childCount / columnCount);
+            rowCount = System.Math.Max(rowCount, requiredRowCount);
         }
         else // vertical
         {
-            yIndex = indexInSiblingList % yRows;
-            xIndex = indexInSiblingList / yRows;
-        }
-        var parentWidth = effectiveParent.GetAbsoluteWidth() - (xRows - 1) * effectiveParent.StackSpacing;
-        var parentHeight = effectiveParent.GetAbsoluteHeight() - (yRows - 1) * effectiveParent.StackSpacing;
+            yIndex = indexInSiblingList % rowCount;
+            xIndex = indexInSiblingList / rowCount;
 
-        cellWidth = (parentWidth / xRows) ;
-        cellHeight = (parentHeight / yRows);
+            // Symmetric to the horizontal case: rows are fixed by AutoGridVerticalCells, while
+            // AutoGridHorizontalCells is only a minimum column count that grows with the child
+            // count. Cell width is divided by that grown column count. This mirrors the column
+            // count used when sizing the parent (see UpdateWidth).
+            var requiredColumnCount = (int)Math.Ceiling((float)childCount / rowCount);
+            columnCount = System.Math.Max(columnCount, requiredColumnCount);
+        }
+        var parentWidth = effectiveParent.GetAbsoluteWidth() - (columnCount - 1) * effectiveParent.StackSpacing;
+        var parentHeight = effectiveParent.GetAbsoluteHeight() - (rowCount - 1) * effectiveParent.StackSpacing;
+
+        cellWidth = (parentWidth / columnCount);
+        cellHeight = (parentHeight / rowCount);
 
         // January 15, 2025
         // If a parent height

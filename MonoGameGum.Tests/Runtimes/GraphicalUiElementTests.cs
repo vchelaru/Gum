@@ -469,6 +469,109 @@ public class GraphicalUiElementTests : BaseTestClass
         fillContainer2.AbsoluteTop.ShouldBe(0);
     }
 
+    [Fact]
+    public void AutoGridHorizontal_ShouldPackRows_WhenRowsSpillPastVerticalCells()
+    {
+        // Repro for #3166: an AutoGridHorizontal whose height is RelativeToChildren
+        // (e.g. a ListBox InnerPanel). AutoGridVerticalCells is a *minimum* row count;
+        // once the child count needs more rows than that, the rows must stay one cell
+        // apart, not spread further apart with each added row. The parent height is
+        // sized off max(AutoGridVerticalCells, requiredRows) rows, and the cell height
+        // (which drives row offsets) must use that same row count - not the raw
+        // AutoGridVerticalCells - or rows spread once they spill past the minimum.
+        ContainerRuntime container = new();
+        container.Width = 200;
+        container.WidthUnits = DimensionUnitType.Absolute;
+        container.Height = 0;
+        container.HeightUnits = DimensionUnitType.RelativeToChildren;
+
+        container.ChildrenLayout = Gum.Managers.ChildrenLayout.AutoGridHorizontal;
+        container.AutoGridHorizontalCells = 2;
+        container.AutoGridVerticalCells = 2;
+
+        for (int i = 0; i < 6; i++)
+        {
+            ContainerRuntime child = new();
+            child.WidthUnits = DimensionUnitType.Absolute;
+            child.Width = 100;
+            child.HeightUnits = DimensionUnitType.Absolute;
+            child.Height = 100;
+            container.AddChild(child);
+        }
+
+        // 6 children in a 2-column grid => 3 rows (spilling past the 2 minimum rows),
+        // each 100 tall.
+        container.GetAbsoluteHeight().ShouldBe(300);
+
+        container.Children[0].AbsoluteX.ShouldBe(0);
+        container.Children[0].AbsoluteY.ShouldBe(0);
+
+        container.Children[1].AbsoluteX.ShouldBe(100);
+        container.Children[1].AbsoluteY.ShouldBe(0);
+
+        container.Children[2].AbsoluteX.ShouldBe(0);
+        container.Children[2].AbsoluteY.ShouldBe(100);
+
+        container.Children[3].AbsoluteX.ShouldBe(100);
+        container.Children[3].AbsoluteY.ShouldBe(100);
+
+        container.Children[4].AbsoluteX.ShouldBe(0);
+        container.Children[4].AbsoluteY.ShouldBe(200);
+
+        container.Children[5].AbsoluteX.ShouldBe(100);
+        container.Children[5].AbsoluteY.ShouldBe(200);
+    }
+
+    [Fact]
+    public void AutoGridVertical_ShouldPackColumns_WhenColumnsSpillPastHorizontalCells()
+    {
+        // Symmetric counterpart to AutoGridHorizontal_ShouldPackRows_WhenRowsSpillPastVerticalCells (#3166):
+        // an AutoGridVertical whose width is RelativeToChildren. AutoGridHorizontalCells
+        // is a *minimum* column count; once the child count needs more columns than that,
+        // the columns must stay one cell apart rather than spreading.
+        ContainerRuntime container = new();
+        container.Height = 200;
+        container.HeightUnits = DimensionUnitType.Absolute;
+        container.Width = 0;
+        container.WidthUnits = DimensionUnitType.RelativeToChildren;
+
+        container.ChildrenLayout = Gum.Managers.ChildrenLayout.AutoGridVertical;
+        container.AutoGridVerticalCells = 2;
+        container.AutoGridHorizontalCells = 2;
+
+        for (int i = 0; i < 6; i++)
+        {
+            ContainerRuntime child = new();
+            child.WidthUnits = DimensionUnitType.Absolute;
+            child.Width = 100;
+            child.HeightUnits = DimensionUnitType.Absolute;
+            child.Height = 100;
+            container.AddChild(child);
+        }
+
+        // 6 children in a 2-row grid => 3 columns (spilling past the 2 minimum columns),
+        // each 100 wide.
+        container.GetAbsoluteWidth().ShouldBe(300);
+
+        container.Children[0].AbsoluteX.ShouldBe(0);
+        container.Children[0].AbsoluteY.ShouldBe(0);
+
+        container.Children[1].AbsoluteX.ShouldBe(0);
+        container.Children[1].AbsoluteY.ShouldBe(100);
+
+        container.Children[2].AbsoluteX.ShouldBe(100);
+        container.Children[2].AbsoluteY.ShouldBe(0);
+
+        container.Children[3].AbsoluteX.ShouldBe(100);
+        container.Children[3].AbsoluteY.ShouldBe(100);
+
+        container.Children[4].AbsoluteX.ShouldBe(200);
+        container.Children[4].AbsoluteY.ShouldBe(0);
+
+        container.Children[5].AbsoluteX.ShouldBe(200);
+        container.Children[5].AbsoluteY.ShouldBe(100);
+    }
+
     #endregion
 
     #region Animation
