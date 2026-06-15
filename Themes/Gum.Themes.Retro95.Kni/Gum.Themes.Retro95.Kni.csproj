@@ -44,7 +44,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="KernSmith.KniGum" Version="*" />
+    <ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.KniGum\KernSmith.KniGum.csproj" />
     <PackageReference Include="nkast.Xna.Framework" Version="4.2.9001">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
