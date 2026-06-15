@@ -83,6 +83,22 @@ on:
         description: 'GumCli'
         type: boolean
         default: true
+      # KernSmith font integrations: default to false. These package IDs are still
+      # owned by the KernSmith maintainer on nuget.org (ownership transfer pending),
+      # so leave them unchecked until the Gum publishing account is a confirmed
+      # co-owner — otherwise the push fails with 403.
+      pkg_KernSmithGumCommon:
+        description: 'KernSmith.GumCommon'
+        type: boolean
+        default: false
+      pkg_KernSmithMonoGame:
+        description: 'KernSmith.MonoGameGum'
+        type: boolean
+        default: false
+      pkg_KernSmithKni:
+        description: 'KernSmith.KniGum'
+        type: boolean
+        default: false
 
 env:
   DOTNET_VERSIONS: '6.0.x;8.0.x;9.0.x' # Multiple .NET versions
@@ -181,6 +197,9 @@ jobs:
         if ('${{ github.event.inputs.pkg_Expressions }}' -eq 'true') { $selected += 'Gum.Expressions' }
         if ('${{ github.event.inputs.pkg_Sokol }}' -eq 'true') { $selected += 'Gum.sokol' }
         if ('${{ github.event.inputs.pkg_GumCli }}' -eq 'true') { $selected += 'GumCli' }
+        if ('${{ github.event.inputs.pkg_KernSmithGumCommon }}' -eq 'true') { $selected += 'KernSmith.GumCommon' }
+        if ('${{ github.event.inputs.pkg_KernSmithMonoGame }}' -eq 'true') { $selected += 'KernSmith.MonoGameGum' }
+        if ('${{ github.event.inputs.pkg_KernSmithKni }}' -eq 'true') { $selected += 'KernSmith.KniGum' }
         $themesSelected = ('${{ github.event.inputs.pkg_Themes }}' -eq 'true')
 
         Write-Host "Selected packages: $($selected -join ', ')"
@@ -218,6 +237,9 @@ jobs:
         if ('${{ github.event.inputs.pkg_Expressions }}' -eq 'true') { $selected += 'Gum.Expressions' }
         if ('${{ github.event.inputs.pkg_Sokol }}' -eq 'true') { $selected += 'Gum.sokol' }
         if ('${{ github.event.inputs.pkg_GumCli }}' -eq 'true') { $selected += 'GumCli' }
+        if ('${{ github.event.inputs.pkg_KernSmithGumCommon }}' -eq 'true') { $selected += 'KernSmith.GumCommon' }
+        if ('${{ github.event.inputs.pkg_KernSmithMonoGame }}' -eq 'true') { $selected += 'KernSmith.MonoGameGum' }
+        if ('${{ github.event.inputs.pkg_KernSmithKni }}' -eq 'true') { $selected += 'KernSmith.KniGum' }
         $themesSelected = ('${{ github.event.inputs.pkg_Themes }}' -eq 'true')
 
         Write-Host "Selected packages: $($selected -join ', ')"
