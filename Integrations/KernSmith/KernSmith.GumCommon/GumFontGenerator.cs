@@ -22,19 +22,11 @@ public static class GumFontGenerator
     /// Use <see cref="RasterizerBackend.StbTrueType"/> on platforms where native
     /// libraries are unavailable (e.g., Blazor WASM).
     /// </param>
-    /// <param name="autofitTexture">
-    /// When true, KernSmith picks the smallest power-of-two texture that fits all glyphs on a
-    /// single page (overriding the BmfcSave atlas size). Single-texture backends such as raylib —
-    /// whose <c>Raylib_cs.Font</c> holds exactly one atlas — require this; otherwise large fonts
-    /// spill across multiple pages the backend cannot represent.
-    /// </param>
-    public static BmFontResult Generate(BmfcSave bmfcSave, RasterizerBackend? backend = null, bool autofitTexture = false)
+    public static BmFontResult Generate(BmfcSave bmfcSave, RasterizerBackend? backend = null)
     {
         FontGeneratorOptions options = BuildOptions(bmfcSave);
         if (backend.HasValue)
             options.Backend = backend.Value;
-        if (autofitTexture)
-            options.AutofitTexture = true;
         return string.IsNullOrEmpty(bmfcSave.FontFile)
             ? BmFont.GenerateFromSystem(bmfcSave.FontName, options)
             : BmFont.Generate(bmfcSave.FontFile, options);

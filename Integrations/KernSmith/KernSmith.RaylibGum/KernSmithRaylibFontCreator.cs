@@ -19,6 +19,13 @@ namespace KernSmith.Gum;
 /// </remarks>
 public class KernSmithRaylibFontCreator : IRaylibFontCreator
 {
+    // Atlas ceiling handed to KernSmith. KernSmith sizes each page to the smallest power-of-two
+    // that fits, UP TO this max — so a generous ceiling collapses the whole glyph set onto one page
+    // (sized to need, not to the ceiling) for any size this is used with, while staying within the
+    // GL_MAX_TEXTURE_SIZE of effectively all GPUs. The default 512x256 is too small and spills to
+    // multiple pages at larger sizes, which raylib's single-texture Font cannot represent.
+    private const int SingleAtlasMaxSize = 4096;
+
     private readonly RasterizerBackend? _backend;
 
     /// <summary>
@@ -64,14 +71,17 @@ public class KernSmithRaylibFontCreator : IRaylibFontCreator
     /// <inheritdoc/>
     public unsafe Raylib_cs.Font? TryCreateFont(BmfcSave bmfcSave)
     {
-        // autofitTexture makes KernSmith pack the whole glyph set onto ONE page, sized to the
-        // smallest power-of-two that fits. raylib's Font holds a single atlas texture, so the
-        // multi-page result the default atlas produces at larger sizes can't be represented —
-        // later-page glyphs would sample the wrong texture region and render as garbage.
-        BmFontResult result = GumFontGenerator.Generate(bmfcSave, _backend, autofitTexture: true);
+        // Force the whole glyph set onto a single page (raylib's Font is single-texture). The
+        // default 512x256 atlas spills to multiple pages at larger sizes — later-page glyphs would
+        // sample the wrong region and render as garbage — so request a generous atlas ceiling and
+        // let KernSmith size the actual page down to fit.
+        bmfcSave.OutputWidth = SingleAtlasMaxSize;
+        bmfcSave.OutputHeight = SingleAtlasMaxSize;
+        BmFontResult result = GumFontGenerator.Generate(bmfcSave, _backend);
 
-        // Autofit yields a single page; guard defensively (e.g. an empty glyph set) and fall back
-        // to the existing system-font path rather than render a partial atlas.
+        // Expected to be a single page for any practical size; guard defensively (empty glyph set,
+        // or a glyph set too large for the ceiling) and fall back to the existing system-font path
+        // rather than render a partial atlas.
         if (result.Pages.Count != 1)
         {
             return null;
