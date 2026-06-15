@@ -109,6 +109,17 @@ public class CustomSetPropertyOnRenderable
     public static IInMemoryFontCreator? InMemoryFontCreator { get; set; }
 #endif
 
+#if RAYLIB
+    /// <summary>
+    /// Optional in-memory font creator. When set, font generation bypasses disk entirely — the
+    /// creator produces a <see cref="Raylib_cs.Font"/> directly from a <see cref="BmfcSave"/>
+    /// descriptor (for example, by rasterizing an atlas with KernSmith). If null or if creation
+    /// returns null, falls back to the existing disk / system-font path. Raylib parallel to the
+    /// <c>#if !RAYLIB</c> <see cref="IInMemoryFontCreator"/> property above.
+    /// </summary>
+    public static IRaylibFontCreator? InMemoryFontCreator { get; set; }
+#endif
+
     public static event Action<string>? PropertyAssignmentError;
 
 
@@ -644,6 +655,42 @@ public class CustomSetPropertyOnRenderable
             {
                 if (textRuntime.FontSize > 0 && !string.IsNullOrEmpty(textRuntime.Font))
                 {
+                    // Try in-memory font creation first (no disk I/O). Mirrors the MonoGame path in
+                    // Gum/Wireframe/CustomSetPropertyOnRenderable.cs: build a BmfcSave from the text
+                    // properties and ask the creator (e.g. KernSmith) to rasterize a Raylib_cs.Font.
+                    // A successful result is assigned directly; null/failure falls through to the
+                    // existing FontCache .fnt → system-font path below.
+                    if (InMemoryFontCreator != null)
+                    {
+                        try
+                        {
+                            global::RenderingLibrary.Graphics.Fonts.BmfcSave bmfcSave =
+                                new global::RenderingLibrary.Graphics.Fonts.BmfcSave();
+                            bmfcSave.FontSize = textRuntime.FontSize;
+                            bmfcSave.OutlineThickness = textRuntime.OutlineThickness;
+                            bmfcSave.UseSmoothing = textRuntime.UseFontSmoothing;
+                            bmfcSave.IsItalic = textRuntime.IsItalic;
+                            bmfcSave.IsBold = textRuntime.IsBold;
+                            bmfcSave.FontName = textRuntime.Font;
+
+                            var gumProject = ObjectFinder.Self.GumProjectSave;
+                            bmfcSave.Ranges = gumProject?.FontRanges
+                                ?? global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetEffectiveDefaultRanges();
+                            bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
+                            bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
+
+                            Raylib_cs.Font? createdFont = InMemoryFontCreator.TryCreateFont(bmfcSave);
+                            if (createdFont.HasValue && createdFont.Value.BaseSize != 0)
+                            {
+                                AssignFontIfChanged(asText, createdFont.Value);
+                                return;
+                            }
+                        }
+                        catch
+                        {
+                            // Fall through to the disk / system-font path.
+                        }
+                    }
 
                     string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
                     textRuntime.FontSize,
