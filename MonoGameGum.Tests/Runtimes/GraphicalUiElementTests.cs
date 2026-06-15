@@ -271,7 +271,7 @@ public class GraphicalUiElementTests : BaseTestClass
     }
 
     [Fact]
-    public void AutoGridHorizontal_ShouldSizeHeight_AccordingToColumnCount_WithSpillover()
+    public void AutoGridHorizontal_ShouldGrowHeight_AsRowsSpillPastVerticalCells()
     {
         ContainerRuntime container = new();
         container.Height = 0;
@@ -388,7 +388,7 @@ public class GraphicalUiElementTests : BaseTestClass
     }
 
     [Fact]
-    public void AutoGridVertical_ShouldSizeWidth_AccordingToRowCount_WithSpillover()
+    public void AutoGridVertical_ShouldGrowWidth_AsColumnsSpillPastHorizontalCells()
     {
         ContainerRuntime container = new();
         container.Width = 0;
