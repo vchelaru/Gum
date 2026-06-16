@@ -22,6 +22,29 @@ Specifically it supports:
 
 Gum exports to human-readable XML, and can be extended either using MEF or by modifying the source code directly.
 
+## Beautiful UI, styled in one line
+
+Gum Forms controls look clean by default, and a single line of code restyles **every** control with a built-in theme — same UI, completely different look. Pick one of the shipped themes or author your own.
+
+```csharp
+DarkProTheme.Apply(GraphicsDevice); // one line — every control restyled
+```
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/.gitbook/assets/DarkProThemeScreenshot.png" alt="DarkPro theme" width="260"><br/>DarkPro</td>
+    <td align="center"><img src="docs/.gitbook/assets/BubblegumThemeScreenshot.png" alt="Bubblegum theme" width="260"><br/>Bubblegum</td>
+    <td align="center"><img src="docs/.gitbook/assets/NeonThemeScreenshot.png" alt="Neon theme" width="260"><br/>Neon</td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/.gitbook/assets/Retro95ThemeScreenshot.png" alt="Retro 95 theme" width="260"><br/>Retro 95</td>
+    <td align="center"><img src="docs/.gitbook/assets/ForestGladeThemeScreenshot.png" alt="Forest Glade theme" width="260"><br/>Forest Glade</td>
+    <td align="center"><img src="docs/.gitbook/assets/EditorThemeScreenshot.png" alt="Editor theme" width="260"><br/>Editor</td>
+  </tr>
+</table>
+
+See the [full theme gallery and usage →](https://docs.flatredball.com/gum/code/styling/themes)
+
 Tutorials and documentation can be found here:
 
 https://docs.flatredball.com/gum/

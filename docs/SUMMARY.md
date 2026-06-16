@@ -206,6 +206,7 @@
       * [Multiple Screens](code/getting-started/tutorials/gum-project-forms-tutorial/multiple-screens.md)
     * [Gum Code-Only Tutorial](code/getting-started/tutorials/code-only-gum-forms-tutorial/README.md)
       * [Setup](code/getting-started/tutorials/code-only-gum-forms-tutorial/setup.md)
+      * [Applying a Theme](code/getting-started/tutorials/code-only-gum-forms-tutorial/applying-a-theme.md)
       * [Forms Controls](code/getting-started/tutorials/code-only-gum-forms-tutorial/forms-controls.md)
       * [ListBox Items](code/getting-started/tutorials/code-only-gum-forms-tutorial/listbox-items.md)
       * [Input in Forms](code/getting-started/tutorials/code-only-gum-forms-tutorial/input-in-forms.md)

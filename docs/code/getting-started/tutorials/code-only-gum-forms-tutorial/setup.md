@@ -128,4 +128,4 @@ Now that we have Gum running, we can add controls to our `StackPanel` (`mainPane
 
 ## Conclusion
 
-Now that we have a basic project set up with a single `Button`. The next tutorial covers the most common forms controls.
+Now that we have a basic project set up with a single `Button`, the next page shows how to restyle the entire UI with a [theme](applying-a-theme.md) — an optional step. After that, the tutorials cover the most common forms controls.
