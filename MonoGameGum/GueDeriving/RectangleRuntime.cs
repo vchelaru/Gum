@@ -214,16 +214,28 @@ public class RectangleRuntime : GraphicalUiElement
     /// </summary>
     public override void PreRender()
     {
+        var camera = this.EffectiveManagers?.Renderer?.Camera;
+        float cameraZoom = camera?.Zoom ?? 1f;
+
         float strokeWidth = _strokeWidth;
-        if (_strokeWidthUnits == DimensionUnitType.ScreenPixel)
+        if (_strokeWidthUnits == DimensionUnitType.ScreenPixel && camera != null)
         {
-            var camera = this.EffectiveManagers?.Renderer?.Camera;
-            if (camera != null)
-            {
-                strokeWidth /= camera.Zoom;
-            }
+            strokeWidth /= cameraZoom;
         }
-        ContainedLineRectangle.LinePixelWidth = strokeWidth;
+
+        // Mirror the XNALIKE/Apos PreRender's AA compensation (#2814 cross-backend parity): the
+        // backend's antialiasing widens the rendered stroke by ~1px, so the geometric width handed
+        // to the primitive is reduced by that contribution to keep the VISIBLE width equal to the
+        // nominal StrokeWidth. raylib's MSAA spreads the geometric edge the same way, so without
+        // this a nominal 1px border renders visibly thicker than the Apos/Skia backends.
+        const float aaContribution = 1f;
+        const float minThicknessEpsilon = 0.01f;
+        float aaContributionWorld = aaContribution / cameraZoom;
+        float renderableStrokeWidth = strokeWidth <= 0
+            ? 0f
+            : System.Math.Max(minThicknessEpsilon, strokeWidth - aaContributionWorld);
+
+        ContainedLineRectangle.LinePixelWidth = renderableStrokeWidth;
     }
 #endif
 

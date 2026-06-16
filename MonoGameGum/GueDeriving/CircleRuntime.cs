@@ -1514,16 +1514,28 @@ public class CircleRuntime : GraphicalUiElement
     /// </summary>
     public override void PreRender()
     {
+        var camera = this.EffectiveManagers?.Renderer?.Camera;
+        float cameraZoom = camera?.Zoom ?? 1f;
+
         float strokeWidth = _strokeWidth;
-        if (_strokeWidthUnits == DimensionUnitType.ScreenPixel)
+        if (_strokeWidthUnits == DimensionUnitType.ScreenPixel && camera != null)
         {
-            var camera = this.EffectiveManagers?.Renderer?.Camera;
-            if (camera != null)
-            {
-                strokeWidth /= camera.Zoom;
-            }
+            strokeWidth /= cameraZoom;
         }
-        ContainedLineCircle.StrokeWidth = strokeWidth;
+
+        // Mirror the XNALIKE/Apos PreRender's AA compensation (#2814 cross-backend parity): the
+        // backend's antialiasing widens the rendered stroke by ~1px, so the geometric width handed
+        // to the primitive is reduced by that contribution to keep the VISIBLE width equal to the
+        // nominal StrokeWidth. Without this a nominal 1px ring renders visibly thicker than the
+        // Apos/Skia backends. Same fix as RectangleRuntime.PreRender.
+        const float aaContribution = 1f;
+        const float minThicknessEpsilon = 0.01f;
+        float aaContributionWorld = aaContribution / cameraZoom;
+        float renderableStrokeWidth = strokeWidth <= 0
+            ? 0f
+            : System.Math.Max(minThicknessEpsilon, strokeWidth - aaContributionWorld);
+
+        ContainedLineCircle.StrokeWidth = renderableStrokeWidth;
     }
 #endif
 
