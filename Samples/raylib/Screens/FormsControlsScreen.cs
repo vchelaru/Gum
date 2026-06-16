@@ -127,6 +127,32 @@ internal class FormsControlsScreen : FrameworkElement
             comboBox.Items.Add($"Item {i}");
         }
 
+        // Menu / MenuItem / PasswordBox / Image route through the V3 default visuals that
+        // were enabled on raylib in issue #3174 — included here so the gallery exercises them.
+        var menu = new Menu();
+        container.AddChild(menu.Visual);
+        var fileMenuItem = new MenuItem { Header = "File" };
+        fileMenuItem.Items.Add(new MenuItem { Header = "New" });
+        fileMenuItem.Items.Add(new MenuItem { Header = "Open" });
+        var recentMenuItem = new MenuItem { Header = "Recent" };
+        recentMenuItem.Items.Add(new MenuItem { Header = "Project A" });
+        recentMenuItem.Items.Add(new MenuItem { Header = "Project B" });
+        fileMenuItem.Items.Add(recentMenuItem);
+        menu.Items.Add(fileMenuItem);
+        var editMenuItem = new MenuItem { Header = "Edit" };
+        editMenuItem.Items.Add(new MenuItem { Header = "Copy" });
+        editMenuItem.Items.Add(new MenuItem { Header = "Paste" });
+        menu.Items.Add(editMenuItem);
+
+        var passwordBox = new PasswordBox();
+        container.AddChild(passwordBox.Visual);
+        passwordBox.Width = 250;
+        passwordBox.Placeholder = "Password…";
+
+        var image = new Gum.Forms.Controls.Image();
+        container.AddChild(image.Visual);
+        image.Source = "resources\\gum-logo-normal-64.png";
+
         var splitterStackPanel = new StackPanel();
         container.AddChild(splitterStackPanel);
         splitterStackPanel.Spacing = 1;

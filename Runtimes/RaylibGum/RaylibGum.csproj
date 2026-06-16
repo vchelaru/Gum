@@ -110,6 +110,9 @@
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\LabelVisual.cs" Link="Forms\DefaultVisuals\V3\LabelVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ListBoxItemVisual.cs" Link="Forms\DefaultVisuals\V3\ListBoxItemVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ListBoxVisual.cs" Link="Forms\DefaultVisuals\V3\ListBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\MenuItemVisual.cs" Link="Forms\DefaultVisuals\V3\MenuItemVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\MenuVisual.cs" Link="Forms\DefaultVisuals\V3\MenuVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\PasswordBoxVisual.cs" Link="Forms\DefaultVisuals\V3\PasswordBoxVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\RadioButtonVisual.cs" Link="Forms\DefaultVisuals\V3\RadioButtonVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ScrollBarVisual.cs" Link="Forms\DefaultVisuals\V3\ScrollBarVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ScrollViewerVisual.cs" Link="Forms\DefaultVisuals\V3\ScrollViewerVisual.cs" />
