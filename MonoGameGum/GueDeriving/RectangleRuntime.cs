@@ -224,19 +224,16 @@ public class RectangleRuntime : GraphicalUiElement
             strokeWidth /= cameraZoom;
         }
 
-        // Mirror the XNALIKE/Apos PreRender's AA compensation (#2814 cross-backend parity): the
-        // backend's antialiasing widens the rendered stroke by ~1px, so the geometric width handed
-        // to the primitive is reduced by that contribution to keep the VISIBLE width equal to the
-        // nominal StrokeWidth. raylib's MSAA spreads the geometric edge the same way, so without
-        // this a nominal 1px border renders visibly thicker than the Apos/Skia backends.
-        const float aaContribution = 1f;
-        const float minThicknessEpsilon = 0.01f;
-        float aaContributionWorld = aaContribution / cameraZoom;
-        float renderableStrokeWidth = strokeWidth <= 0
-            ? 0f
-            : System.Math.Max(minThicknessEpsilon, strokeWidth - aaContributionWorld);
-
-        ContainedLineRectangle.LinePixelWidth = renderableStrokeWidth;
+        // Issue #3183 — raylib gets NO AA compensation (unlike the Apos/XNALIKE PreRender below).
+        // Apos.Shapes subtracts a ~1px geometric contribution but adds it back as a ~1px
+        // antialiasing band, so its VISIBLE stroke width is preserved. raylib's MSAA only smooths
+        // the edges of the geometry it is handed — it adds no width — so the geometric width IS the
+        // visible width. Pushing StrokeWidth straight through matches the Apos reference pixel-for-
+        // pixel across stroke widths (verified by the shape-parity screenshot harness). A prior
+        // attempt (#3179) mirrored Apos's subtraction here without Apos's add-back, which collapsed
+        // a nominal 1px outline to ~0.01px — invisible. StrokeWidth <= 0 still pushes literal 0 so
+        // LineRectangle's positive-width gate suppresses the stroke (the fill-only-shape fix above).
+        ContainedLineRectangle.LinePixelWidth = strokeWidth <= 0 ? 0f : strokeWidth;
     }
 #endif
 

@@ -306,12 +306,11 @@ public class PolygonRuntime : InteractiveGue
                 strokeWidth /= camera.Zoom;
             }
         }
-        // Issue #3183 — deliberately NOT applying the RectangleRuntime/CircleRuntime AA
-        // compensation here. The shape-parity harness measured it as a net wash-to-regression for
-        // polygons: thin (1px) outlines vanish under the ~1px subtraction (moving further from the
-        // MonoGame line primitive that draws them), while thicker outlines improve only marginally.
-        // Left uncompensated until the harness shows a compensation that helps thin AND thick
-        // strokes. See the issue notes for the harness evidence.
+        // Issue #3183 — raylib shape strokes get NO AA compensation: the geometric width handed to
+        // the primitive IS the visible width (raylib's MSAA only smooths edges, it adds no width),
+        // so pushing StrokeWidth straight through matches the MonoGame line primitive. See
+        // RectangleRuntime.PreRender for the full rationale, including why the #3179 attempt to
+        // subtract a ~1px Apos-style AA contribution made thin strokes vanish.
         ContainedPolygon.LinePixelWidth = strokeWidth;
     }
 #endif
