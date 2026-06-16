@@ -3,7 +3,11 @@ using Gum.DataTypes.Variables;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Wireframe;
+#if RAYLIB
+using Raylib_cs;
+#else
 using Microsoft.Xna.Framework;
+#endif
 using RenderingLibrary.Graphics;
 
 namespace Gum.Themes.Template.Variants;
@@ -30,7 +34,8 @@ public class SliderThumbVisual : InteractiveGue
     // Soft Gaussian shadow under the thumb (translucent accent + blur > 0).
     private const float ShadowOffsetY = 2f;
     private const float ShadowBlur = 8f;
-    private static readonly Color ShadowColor = new Color(TemplatePalette.AccentPressed, 130);
+    private static readonly Color ShadowColor = new Color(
+        (int)TemplatePalette.AccentPressed.R, (int)TemplatePalette.AccentPressed.G, (int)TemplatePalette.AccentPressed.B, 130);
 
     private readonly CircleRuntime _focusRing;
     private readonly CircleRuntime _body;

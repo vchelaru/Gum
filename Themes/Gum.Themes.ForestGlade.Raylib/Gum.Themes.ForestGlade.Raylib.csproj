@@ -1,0 +1,68 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12</LangVersion>
+    <!-- Selects the raylib branch of the shared theme sources (Color via Raylib_cs; raylib font
+         creator + no-op shape init in the ThemePlatform/ThemeShapePlatform shims). -->
+    <DefineConstants>$(DefineConstants);RAYLIB</DefineConstants>
+
+    <PackageId>Gum.Themes.ForestGlade.Raylib</PackageId>
+    <Version>2026.5.12.1</Version>
+    <Authors>Gum Contributors</Authors>
+    <RepositoryUrl>https://github.com/vchelaru/Gum</RepositoryUrl>
+    <Description>A lush canopy / forest theme for Gum UI. Provides styled visuals for Gum Forms controls with a leaf-shaped corner silhouette (asymmetric per-corner radii), saturated greens against a deep canopy backdrop, sunlit yellow accents, and the Nunito / Fraunces typefaces, for raylib and Gum.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\Gum.Themes.ForestGlade.MonoGame\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.ForestGlade.MonoGame\Content\Fonts\Nunito-LICENSE.txt" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.ForestGlade.MonoGame\Content\Fonts\Fraunces-LICENSE.txt" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.ForestGlade.MonoGame\Content\Fonts\DejaVuSansMono-LICENSE.txt" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Source-share the MonoGame variant's .cs files; the RAYLIB symbol above swaps the
+         per-backend branches. The shims live outside that folder, so they are linked explicitly. -->
+    <Compile Include="..\Gum.Themes.ForestGlade.MonoGame\**\*.cs" />
+    <Compile Remove="..\Gum.Themes.ForestGlade.MonoGame\obj\**" />
+    <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
+    <Compile Include="..\Shared\ThemeShapePlatform.cs" Link="ThemeShapePlatform.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Re-embed the TTFs from the MonoGame project's Content\Fonts folder, mapped under this
+         assembly's Content\Fonts via <Link> so the resource name resolves to
+         "Gum.Themes.ForestGlade.Raylib.Content.Fonts.<file>" — matching what
+         ForestGladeTheme.RegisterEmbeddedFont derives from the assembly name. -->
+    <EmbeddedResource Include="..\Gum.Themes.ForestGlade.MonoGame\Content\Fonts\Nunito-Regular.ttf">
+      <Link>Content\Fonts\Nunito-Regular.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.ForestGlade.MonoGame\Content\Fonts\Nunito-Bold.ttf">
+      <Link>Content\Fonts\Nunito-Bold.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.ForestGlade.MonoGame\Content\Fonts\Fraunces-BoldItalic.ttf">
+      <Link>Content\Fonts\Fraunces-BoldItalic.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.ForestGlade.MonoGame\Content\Fonts\DejaVuSansMono.ttf">
+      <Link>Content\Fonts\DejaVuSansMono.ttf</Link>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Raylib-cs" Version="7.0.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\Runtimes\RaylibGum\RaylibGum.csproj" />
+    <!-- KernSmith is a runtime dependency (the theme generates fonts at runtime), so it flows
+         transitively to consumers — not PrivateAssets=All. No Apos.Shapes package: RaylibGum
+         renders RectangleRuntime / CircleRuntime natively. -->
+    <ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.RaylibGum\KernSmith.RaylibGum.csproj" />
+  </ItemGroup>
+</Project>

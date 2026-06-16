@@ -28,6 +28,8 @@
   <ItemGroup>
     <Compile Include="..\Gum.Themes.ForestGlade.MonoGame\**\*.cs" />
     <Compile Remove="..\Gum.Themes.ForestGlade.MonoGame\obj\**" />
+    <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
+    <Compile Include="..\Shared\ThemeShapePlatform.cs" Link="ThemeShapePlatform.cs" />
   </ItemGroup>
   <ItemGroup>
     <!-- Re-embed the TTFs from the MonoGame project's Content\Fonts folder

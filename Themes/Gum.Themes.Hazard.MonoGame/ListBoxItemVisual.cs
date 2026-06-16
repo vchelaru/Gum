@@ -2,7 +2,11 @@ using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Wireframe;
+#if RAYLIB
+using Raylib_cs;
+#else
 using Microsoft.Xna.Framework;
+#endif
 using RenderingLibrary.Graphics;
 using BaseListBoxItemVisual = Gum.Forms.DefaultVisuals.V3.ListBoxItemVisual;
 
@@ -29,7 +33,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
 
         // Square-cornered fill so the row tiles flush inside the rounded ListBox
         // shell (the shell's border masks the corners). Starts transparent.
-        _fill = HazardShapes.Fill(Color.Transparent, cornerRadius: 0f, "HazardListItemFill");
+        _fill = HazardShapes.Fill(new Color(0, 0, 0, 0), cornerRadius: 0f, "HazardListItemFill");
         AddChild(_fill);
 
         AddChild(TextInstance);
@@ -52,7 +56,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         // text to black Ink (.sv-lb-item.sel) — the same treatment as a selected
         // ComboBox option, so an unfocused list still shows what's selected.
         States.Enabled.Apply = () => ApplyPalette(
-            fill: Color.Transparent, text: HazardPalette.Text);
+            fill: new Color(0, 0, 0, 0), text: HazardPalette.Text);
 
         States.Highlighted.Apply = () => ApplyPalette(
             fill: HazardPalette.Surface2, text: HazardPalette.TextBright);
@@ -64,7 +68,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
             fill: HazardPalette.Accent, text: HazardPalette.PressedText);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fill: Color.Transparent, text: HazardPalette.DisabledText);
+            fill: new Color(0, 0, 0, 0), text: HazardPalette.DisabledText);
     }
 
     private void ApplyPalette(Color fill, Color text)

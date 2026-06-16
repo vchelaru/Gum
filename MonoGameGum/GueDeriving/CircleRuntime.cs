@@ -8,6 +8,7 @@ using Gum.Converters;
 #endif
 
 #if RAYLIB
+using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Renderables;
 using Color = Raylib_cs.Color;
@@ -489,6 +490,44 @@ public class CircleRuntime : GraphicalUiElement
             ContainedLineCircle.GradientOuterRadius = value;
             NotifyPropertyChanged();
         }
+    }
+
+    // Issue #3175 — additional raylib parity surface so theme source written against the richer
+    // Apos.Shapes gradient feature set (endpoint / radius units) compiles unchanged on raylib. The
+    // raylib LineCircle renderable does not consume these yet, so the values round-trip on the
+    // runtime as forward compat (mirrors the RectangleRuntime block). When the renderable gains
+    // support, push them through like the GradientX1 setter above.
+
+    GeneralUnitType _gradientX1Units;
+    /// <summary>Unit for <see cref="GradientX1"/>. Parity surface, not yet rendered on raylib.</summary>
+    public GeneralUnitType GradientX1Units
+    {
+        get => _gradientX1Units;
+        set { _gradientX1Units = value; NotifyPropertyChanged(); }
+    }
+
+    GeneralUnitType _gradientY1Units;
+    /// <inheritdoc cref="GradientX1Units"/>
+    public GeneralUnitType GradientY1Units
+    {
+        get => _gradientY1Units;
+        set { _gradientY1Units = value; NotifyPropertyChanged(); }
+    }
+
+    DimensionUnitType _gradientInnerRadiusUnits;
+    /// <summary>Unit for <see cref="GradientInnerRadius"/>. Parity surface, not yet rendered on raylib.</summary>
+    public DimensionUnitType GradientInnerRadiusUnits
+    {
+        get => _gradientInnerRadiusUnits;
+        set { _gradientInnerRadiusUnits = value; NotifyPropertyChanged(); }
+    }
+
+    DimensionUnitType _gradientOuterRadiusUnits;
+    /// <inheritdoc cref="GradientInnerRadiusUnits"/>
+    public DimensionUnitType GradientOuterRadiusUnits
+    {
+        get => _gradientOuterRadiusUnits;
+        set { _gradientOuterRadiusUnits = value; NotifyPropertyChanged(); }
     }
 #endif
 

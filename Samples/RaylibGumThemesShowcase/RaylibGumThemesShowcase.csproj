@@ -24,6 +24,13 @@
          KernSmith.RaylibGum (runtime font generation), so this sample wires nothing extra. -->
     <ProjectReference Include="..\..\Themes\Gum.Themes.Editor.Raylib\Gum.Themes.Editor.Raylib.csproj" />
     <ProjectReference Include="..\..\Themes\Gum.Themes.DarkPro.Raylib\Gum.Themes.DarkPro.Raylib.csproj" />
+    <ProjectReference Include="..\..\Themes\Gum.Themes.Bubblegum.Raylib\Gum.Themes.Bubblegum.Raylib.csproj" />
+    <ProjectReference Include="..\..\Themes\Gum.Themes.ForestGlade.Raylib\Gum.Themes.ForestGlade.Raylib.csproj" />
+    <ProjectReference Include="..\..\Themes\Gum.Themes.Hazard.Raylib\Gum.Themes.Hazard.Raylib.csproj" />
+    <ProjectReference Include="..\..\Themes\Gum.Themes.Meadow.Raylib\Gum.Themes.Meadow.Raylib.csproj" />
+    <ProjectReference Include="..\..\Themes\Gum.Themes.Neon.Raylib\Gum.Themes.Neon.Raylib.csproj" />
+    <ProjectReference Include="..\..\Themes\Gum.Themes.Retro95.Raylib\Gum.Themes.Retro95.Raylib.csproj" />
+    <ProjectReference Include="..\..\Themes\Gum.Themes.Template.Raylib\Gum.Themes.Template.Raylib.csproj" />
   </ItemGroup>
 
 </Project>

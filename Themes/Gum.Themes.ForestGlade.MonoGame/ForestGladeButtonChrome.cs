@@ -2,7 +2,11 @@ using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Wireframe;
+#if RAYLIB
+using Raylib_cs;
+#else
 using Microsoft.Xna.Framework;
+#endif
 using RenderingLibrary.Graphics;
 
 namespace Gum.Themes.ForestGlade;
@@ -150,7 +154,13 @@ internal sealed class ForestGladeButtonChrome
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = ForestGladeColors.SunPale * 0.45f;
+        // 0.45 scalar dim of SunPale, written channel-wise so it compiles on both XNA (which has a
+        // Color * float operator) and raylib (which does not).
+        ring.StrokeColor = new Color(
+            (int)(ForestGladeColors.SunPale.R * 0.45f),
+            (int)(ForestGladeColors.SunPale.G * 0.45f),
+            (int)(ForestGladeColors.SunPale.B * 0.45f),
+            (int)(ForestGladeColors.SunPale.A * 0.45f));
         ring.Visible = false;
         return ring;
     }

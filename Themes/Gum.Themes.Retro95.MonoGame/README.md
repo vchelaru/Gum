@@ -8,10 +8,11 @@ Pick the package matching your runtime:
 
 - MonoGame: `dotnet add package Gum.Themes.Retro95.MonoGame`
 - KNI: `dotnet add package Gum.Themes.Retro95.Kni`
+- raylib: `dotnet add package Gum.Themes.Retro95.Raylib`
 
 ## Usage
 
-Call `Retro95Theme.Apply(GraphicsDevice)` once after initializing Gum:
+Call the parameterless `Retro95Theme.Apply()` once after initializing Gum — the same call on every backend:
 
 ```csharp
 using Gum.Themes.Retro95;
@@ -19,12 +20,15 @@ using Gum.Themes.Retro95;
 protected override void Initialize()
 {
     GumService.Default.Initialize(this);
-    Retro95Theme.Apply(GraphicsDevice);
+    Retro95Theme.Apply();
     base.Initialize();
 }
 ```
 
 Every default Forms control now renders in the Retro95 style.
+
+> On MonoGame/KNI a legacy `Retro95Theme.Apply(GraphicsDevice)` overload remains for source
+> compatibility; the graphics device is now resolved internally, so prefer `Apply()`.
 
 ## Licensing
 

@@ -4,13 +4,13 @@ An industrial space-salvage HUD theme for [Gum](https://github.com/vchelaru/Gum)
 
 The theme ships per rendering backend. Install the one matching your runtime:
 
-```
-dotnet add package Gum.Themes.Hazard.MonoGame
-```
+- MonoGame: `dotnet add package Gum.Themes.Hazard.MonoGame`
+- KNI: `dotnet add package Gum.Themes.Hazard.Kni`
+- raylib: `dotnet add package Gum.Themes.Hazard.Raylib`
 
 ## Usage
 
-Call `HazardTheme.Apply` after initializing Gum:
+Call the parameterless `HazardTheme.Apply()` once after initializing Gum — the same call on every backend:
 
 ```csharp
 using Gum.Themes.Hazard;
@@ -19,12 +19,15 @@ protected override void Initialize()
 {
     GumService.Default.Initialize(this, DefaultVisualsVersion.Newest);
 
-    HazardTheme.Apply(GraphicsDevice);
+    HazardTheme.Apply();
 
     var button = new Button();
     button.Text = "EXTRACT";
 }
 ```
+
+> On MonoGame/KNI a legacy `HazardTheme.Apply(GraphicsDevice)` overload remains for source
+> compatibility; the graphics device is now resolved internally, so prefer `Apply()`.
 
 Interactive states echo the source HUD: hover brightens the border and text, **pressing a button flashes the full hazard-yellow accent with black text**, and active states (a checked CheckBox, an On ToggleButton, a selected list row) fill with the accent and switch to ink-black text.
 

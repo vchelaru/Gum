@@ -1,6 +1,10 @@
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.GueDeriving;
+#if RAYLIB
+using Raylib_cs;
+#else
 using Microsoft.Xna.Framework;
+#endif
 
 namespace Gum.Themes.Template.Variants;
 
@@ -23,7 +27,8 @@ internal sealed class TemplateTextInputDecoration
     private const float FocusRingThickness = 3f;
 
     // Translucent accent for the soft focus glow.
-    private static readonly Color FocusGlow = new Color(TemplatePalette.Accent, 110);
+    private static readonly Color FocusGlow = new Color(
+        (int)TemplatePalette.Accent.R, (int)TemplatePalette.Accent.G, (int)TemplatePalette.Accent.B, 110);
 
     private readonly RectangleRuntime _focusRing;
     private readonly RectangleRuntime _fill;

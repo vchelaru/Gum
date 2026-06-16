@@ -3,7 +3,11 @@ using Gum.DataTypes;
 using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
+#if RAYLIB
+using Raylib_cs;
+#else
 using Microsoft.Xna.Framework;
+#endif
 using RenderingLibrary.Graphics;
 using BaseMenuItemVisual = Gum.Forms.DefaultVisuals.V3.MenuItemVisual;
 
@@ -73,11 +77,11 @@ public class MenuItemVisual : BaseMenuItemVisual
 
     private void WireStates()
     {
-        States.Enabled.Apply = () => Apply(Color.Transparent, Retro95Colors.Text);
+        States.Enabled.Apply = () => Apply(new Color(0, 0, 0, 0), Retro95Colors.Text);
         States.Highlighted.Apply = () => Apply(Retro95Colors.Selection, Retro95Colors.SelectionText);
         States.Selected.Apply = () => Apply(Retro95Colors.Selection, Retro95Colors.SelectionText);
         States.Focused.Apply = () => Apply(Retro95Colors.Selection, Retro95Colors.SelectionText);
-        States.Disabled.Apply = () => Apply(Color.Transparent, Retro95Colors.DisabledText);
+        States.Disabled.Apply = () => Apply(new Color(0, 0, 0, 0), Retro95Colors.DisabledText);
     }
 
     private void Apply(Color fill, Color text)
@@ -100,7 +104,7 @@ public class MenuItemVisual : BaseMenuItemVisual
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.IsFilled = true;
-        fill.FillColor = Color.Transparent;
+        fill.FillColor = new Color(0, 0, 0, 0);
         fill.StrokeWidth = 0;
         return fill;
     }

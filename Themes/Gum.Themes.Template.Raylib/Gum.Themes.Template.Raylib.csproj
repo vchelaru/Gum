@@ -1,0 +1,81 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12</LangVersion>
+    <!-- Selects the raylib branch of the shared theme sources (Color via Raylib_cs; raylib font
+         creator + no-op shape init in the ThemePlatform/ThemeShapePlatform shims). -->
+    <DefineConstants>$(DefineConstants);RAYLIB</DefineConstants>
+
+    <PackageId>Gum.Themes.Template.Raylib</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Gum Contributors</Authors>
+    <RepositoryUrl>https://github.com/vchelaru/Gum</RepositoryUrl>
+    <Description>Starting point for building a new Gum theme. Clone this project, rename Template -> YourTheme, fill in the palette from your CSS, swap the fonts, and restyle the visuals. Provides styled visuals for Gum Forms controls with raylib and Gum.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <!-- This is a template, not a shipped package, so it does not emit a .nupkg on
+         build. Flip to true once you have cloned it into a real theme. -->
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\Gum.Themes.Template.MonoGame\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.Template.MonoGame\Content\Fonts\OFL.txt" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.Template.MonoGame\Content\Fonts\Nunito-OFL.txt" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.Template.MonoGame\Content\Fonts\DejaVuSansMono-LICENSE.txt" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Source-share the MonoGame variant's .cs files; the RAYLIB symbol above swaps the
+         per-backend branches. The shims live outside that folder, so they are linked explicitly. -->
+    <Compile Include="..\Gum.Themes.Template.MonoGame\**\*.cs" />
+    <Compile Remove="..\Gum.Themes.Template.MonoGame\obj\**" />
+    <Compile Remove="..\Gum.Themes.Template.MonoGame\bin\**" />
+    <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
+    <Compile Include="..\Shared\ThemeShapePlatform.cs" Link="ThemeShapePlatform.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Re-embed the TTFs from the MonoGame project's Content\Fonts folder, but map
+         them under this assembly's Content\Fonts via <Link> so the resource name
+         resolves to "Gum.Themes.Template.Raylib.Content.Fonts.<file>" - matching what
+         TemplateTheme.RegisterEmbeddedFont derives from the assembly name. The
+         <Link> is load-bearing; without it the manifest name keeps the "..\" path. -->
+    <EmbeddedResource Include="..\Gum.Themes.Template.MonoGame\Content\Fonts\DMMono-Regular.ttf">
+      <Link>Content\Fonts\DMMono-Regular.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.Template.MonoGame\Content\Fonts\DMMono-Medium.ttf">
+      <Link>Content\Fonts\DMMono-Medium.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.Template.MonoGame\Content\Fonts\DMMono-Italic.ttf">
+      <Link>Content\Fonts\DMMono-Italic.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.Template.MonoGame\Content\Fonts\DMMono-MediumItalic.ttf">
+      <Link>Content\Fonts\DMMono-MediumItalic.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.Template.MonoGame\Content\Fonts\Nunito-Regular.ttf">
+      <Link>Content\Fonts\Nunito-Regular.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.Template.MonoGame\Content\Fonts\Nunito-Bold.ttf">
+      <Link>Content\Fonts\Nunito-Bold.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.Template.MonoGame\Content\Fonts\DejaVuSansMono.ttf">
+      <Link>Content\Fonts\DejaVuSansMono.ttf</Link>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Raylib-cs" Version="7.0.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\Runtimes\RaylibGum\RaylibGum.csproj" />
+    <!-- KernSmith is a runtime dependency (the theme generates fonts at runtime), so it flows
+         transitively to consumers — not PrivateAssets=All. No Apos.Shapes package: RaylibGum
+         renders RectangleRuntime / CircleRuntime natively. -->
+    <ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.RaylibGum\KernSmith.RaylibGum.csproj" />
+  </ItemGroup>
+</Project>

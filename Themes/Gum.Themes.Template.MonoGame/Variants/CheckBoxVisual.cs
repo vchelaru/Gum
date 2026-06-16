@@ -2,7 +2,11 @@ using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Wireframe;
+#if RAYLIB
+using Raylib_cs;
+#else
 using Microsoft.Xna.Framework;
+#endif
 using RenderingLibrary.Graphics;
 using BaseCheckBoxVisual = Gum.Forms.DefaultVisuals.V3.CheckBoxVisual;
 
@@ -38,7 +42,8 @@ public class CheckBoxVisual : BaseCheckBoxVisual
     private const float GlyphContainerSize = 24f;
 
     // Translucent accent for the soft focus glow.
-    private static readonly Color FocusGlow = new Color(TemplatePalette.Accent, 110);
+    private static readonly Color FocusGlow = new Color(
+        (int)TemplatePalette.Accent.R, (int)TemplatePalette.Accent.G, (int)TemplatePalette.Accent.B, 110);
 
     private readonly RectangleRuntime _focusRing;
     private readonly RectangleRuntime _boxFill;

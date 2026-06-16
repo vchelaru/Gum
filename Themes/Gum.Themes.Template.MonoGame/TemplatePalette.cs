@@ -1,4 +1,8 @@
+#if RAYLIB
+using Raylib_cs;
+#else
 using Microsoft.Xna.Framework;
+#endif
 // Brings in ColorExtensions.Adjust / ToGrayscale (lighten/darken helpers shipped
 // with V3 styling). Used below to COMPUTE derived state colors instead of
 // hand-storing them.

@@ -2,6 +2,11 @@ using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Wireframe;
+#if RAYLIB
+using Raylib_cs;
+#else
+using Microsoft.Xna.Framework;
+#endif
 using RenderingLibrary.Graphics;
 using BaseScrollBarVisual = Gum.Forms.DefaultVisuals.V3.ScrollBarVisual;
 
@@ -208,7 +213,7 @@ public class ScrollBarVisual : BaseScrollBarVisual
         return t;
     }
 
-    private static RectangleRuntime NewStretched(string name, Microsoft.Xna.Framework.Color color)
+    private static RectangleRuntime NewStretched(string name, Color color)
     {
         RectangleRuntime r = new RectangleRuntime();
         r.Name = name;

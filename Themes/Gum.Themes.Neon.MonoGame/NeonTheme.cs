@@ -6,10 +6,9 @@ using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.Wireframe;
 using GumRuntime;
-using KernSmith.Gum;
-using Microsoft.Xna.Framework;
+#if !RAYLIB
 using Microsoft.Xna.Framework.Graphics;
-using MonoGameAndGum.Renderables;
+#endif
 using RenderingLibrary.Graphics.Fonts;
 
 namespace Gum.Themes.Neon;
@@ -59,12 +58,9 @@ public static class NeonTheme
     /// and text tokens, and registers the theme's visuals as the default
     /// templates for Forms controls.
     /// </summary>
-    /// <param name="graphicsDevice">The active <see cref="GraphicsDevice"/>;
-    /// required by KernSmith to rasterize fonts into textures.</param>
-    public static void Apply(GraphicsDevice graphicsDevice)
+    public static void Apply()
     {
-        CustomSetPropertyOnRenderable.InMemoryFontCreator =
-            new KernSmithFontCreator(graphicsDevice);
+        ThemePlatform.WireInMemoryFontCreator();
 
         // Pre-register the icon glyphs the theme renders as Text rather than
         // as sprite-sheet icons. KernSmith bakes only the characters it has
@@ -75,15 +71,11 @@ public static class NeonTheme
         //   ▼ ▲ ◀ ▶  — ComboBox arrow + ScrollBar buttons (Geometric Shapes)
         BmfcSave.AddCharacters("✓✕▼▲◀▶");
 
-        // Neon's visuals build their bodies out of Apos.Shapes-backed
-        // RectangleRuntime / CircleRuntime instances, which
-        // require ShapeRenderer to be initialized. Guard in case the host app
-        // already initialized it (mixing themes / using shape runtimes
-        // elsewhere).
-        if (!ShapeRenderer.Self.IsInitialized)
-        {
-            ShapeRenderer.Self.Initialize();
-        }
+        // Neon's visuals build their bodies out of shape-backed
+        // RectangleRuntime / CircleRuntime instances. On MonoGame/KNI this
+        // requires the Apos.Shapes ShapeRenderer to be initialized; on raylib
+        // the shapes render natively and this is a no-op.
+        ThemeShapePlatform.InitializeShapeRenderer();
 
         RegisterBundledFonts();
 
@@ -91,6 +83,15 @@ public static class NeonTheme
 
         RegisterVisuals();
     }
+
+#if !RAYLIB
+    /// <summary>
+    /// Backwards-compatible overload retained for existing MonoGame/KNI callers. The graphics
+    /// device is now resolved internally from the active Gum renderer, so the argument is ignored;
+    /// prefer the parameterless <see cref="Apply()"/>.
+    /// </summary>
+    public static void Apply(GraphicsDevice graphicsDevice) => Apply();
+#endif
 
     private static void RegisterBundledFonts()
     {
@@ -134,14 +135,7 @@ public static class NeonTheme
         stream.CopyTo(buffer);
         byte[] fontBytes = buffer.ToArray();
 
-        if (style == null)
-        {
-            KernSmithFontCreator.RegisterFont(family, fontBytes);
-        }
-        else
-        {
-            KernSmithFontCreator.RegisterFont(family, fontBytes, style: style);
-        }
+        ThemePlatform.RegisterFont(family, fontBytes, style);
     }
 
     private static void ConfigureStyling()

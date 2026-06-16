@@ -2,7 +2,11 @@ using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Wireframe;
+#if RAYLIB
+using Raylib_cs;
+#else
 using Microsoft.Xna.Framework;
+#endif
 using RenderingLibrary.Graphics;
 using BaseCheckBoxVisual = Gum.Forms.DefaultVisuals.V3.CheckBoxVisual;
 
@@ -288,7 +292,13 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         _dashIndicator.Visible = glyph == GlyphKind.Dash;
         if (glyph == GlyphKind.Dash)
         {
-            _dashIndicator.FillColor = border == MeadowColors.Disabled
+            // Channel-wise equality so it compiles on both XNA (Color has ==) and raylib (no == operator).
+            bool borderIsDisabled =
+                border.R == MeadowColors.Disabled.R &&
+                border.G == MeadowColors.Disabled.G &&
+                border.B == MeadowColors.Disabled.B &&
+                border.A == MeadowColors.Disabled.A;
+            _dashIndicator.FillColor = borderIsDisabled
                 ? MeadowColors.Disabled : MeadowColors.SageDark;
         }
         if (glyphColor.HasValue)

@@ -2,7 +2,11 @@ using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.GueDeriving;
+#if RAYLIB
+using Raylib_cs;
+#else
 using Microsoft.Xna.Framework;
+#endif
 using RenderingLibrary.Graphics;
 
 namespace Gum.Themes.Meadow;
@@ -94,7 +98,7 @@ internal sealed class MeadowTextInputDecoration
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = Color.Transparent;
+        border.StrokeColor = new Color(0, 0, 0, 0);
         return border;
     }
 
@@ -124,7 +128,7 @@ internal sealed class MeadowTextInputDecoration
     private void WireStates(TextBoxBaseVisual host)
     {
         host.States.Enabled.Apply = () => Apply(host,
-            fill: MeadowColors.PeachLight, border: Color.Transparent,
+            fill: MeadowColors.PeachLight, border: new Color(0, 0, 0, 0),
             text: MeadowColors.TealDark, placeholder: MeadowColors.Muted,
             caret: MeadowColors.Teal, selection: MeadowColors.Sage, ring: false);
 

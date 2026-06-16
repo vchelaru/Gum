@@ -3,7 +3,11 @@ using Gum.DataTypes;
 using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
+#if RAYLIB
+using Raylib_cs;
+#else
 using Microsoft.Xna.Framework;
+#endif
 using RenderingLibrary.Graphics;
 using BaseMenuItemVisual = Gum.Forms.DefaultVisuals.V3.MenuItemVisual;
 
@@ -29,7 +33,7 @@ public class MenuItemVisual : BaseMenuItemVisual
         ContainerInstance.Parent = null;
 
         _fill = BubblegumShapes.Fill(
-            color: Color.Transparent,
+            color: new Color(0, 0, 0, 0),
             name: "BubblegumMenuItemFill");
         AddChild(_fill);
 
@@ -75,7 +79,7 @@ public class MenuItemVisual : BaseMenuItemVisual
     private void WireStates()
     {
         States.Enabled.Apply = () => ApplyPalette(
-            fill: Color.Transparent, text: BubblegumColors.Text);
+            fill: new Color(0, 0, 0, 0), text: BubblegumColors.Text);
 
         States.Highlighted.Apply = () => ApplyPalette(
             fill: BubblegumPalette.HoverOption, text: BubblegumColors.Text);
@@ -87,7 +91,7 @@ public class MenuItemVisual : BaseMenuItemVisual
             fill: BubblegumPalette.HoverOption, text: BubblegumColors.Text);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fill: Color.Transparent, text: BubblegumColors.Disabled);
+            fill: new Color(0, 0, 0, 0), text: BubblegumColors.Disabled);
     }
 
     private void ApplyPalette(Color fill, Color text)

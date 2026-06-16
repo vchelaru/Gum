@@ -4,6 +4,11 @@ using Gum.DataTypes.Variables;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Wireframe;
+#if RAYLIB
+using Raylib_cs;
+#else
+using Microsoft.Xna.Framework;
+#endif
 using RenderingLibrary.Graphics;
 
 namespace Gum.Themes.Retro95;
@@ -80,7 +85,7 @@ public class SliderThumbVisual : InteractiveGue
         category.States.Add(state);
     }
 
-    private void Apply(BevelMode mode, Microsoft.Xna.Framework.Color fill)
+    private void Apply(BevelMode mode, Color fill)
     {
         _bevel.SetMode(mode);
         _bevel.SetFill(fill);

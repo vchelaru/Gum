@@ -1,7 +1,14 @@
 using System;
 using Gum;
+using Gum.Themes.Bubblegum;
 using Gum.Themes.DarkPro;
 using Gum.Themes.Editor;
+using Gum.Themes.ForestGlade;
+using Gum.Themes.Hazard;
+using Gum.Themes.Meadow;
+using Gum.Themes.Neon;
+using Gum.Themes.Retro95;
+using Gum.Themes.Template;
 using MonoGameGumThemesShowcase.Screens;
 using Raylib_cs;
 using static Raylib_cs.Raylib;
@@ -59,6 +66,13 @@ public static class Program
         {
             new ThemeOption("Editor", EditorTheme.Apply, new Color(40, 40, 40, 255)),
             new ThemeOption("Dark Pro", DarkProTheme.Apply, DarkProColors.Background),
+            new ThemeOption("Bubblegum", BubblegumTheme.Apply, BubblegumColors.Background),
+            new ThemeOption("Forest Glade", ForestGladeTheme.Apply, ForestGladeColors.CanopyDeep),
+            new ThemeOption("Hazard", HazardTheme.Apply, HazardPalette.Background),
+            new ThemeOption("Meadow", MeadowTheme.Apply, MeadowColors.Cream),
+            new ThemeOption("Neon", NeonTheme.Apply, NeonColors.Background),
+            new ThemeOption("Retro 95", Retro95Theme.Apply, Retro95Colors.Surface),
+            new ThemeOption("Template", TemplateTheme.Apply, TemplatePalette.Background),
         };
 
         _currentScreenFactory = () => new AllControlsScreen();

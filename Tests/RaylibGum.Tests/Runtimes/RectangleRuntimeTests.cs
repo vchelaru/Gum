@@ -196,7 +196,10 @@ public class RectangleRuntimeTests : BaseTestClass
         sut.StrokeWidth.ShouldBe(5f);
 
         sut.PreRender();
-        ((LineRectangle)sut.RenderableComponent!).LinePixelWidth.ShouldBe(5f);
+        // The geometric width handed to the renderable is reduced by the ~1px AA contribution
+        // (commit "Fix raylib stroke width rendering ~1px too thick vs Apos/MonoGame") so the
+        // VISIBLE width equals the nominal StrokeWidth across backends. At zoom 1 that is 5 - 1 = 4.
+        ((LineRectangle)sut.RenderableComponent!).LinePixelWidth.ShouldBe(4f);
     }
 
     [Fact]
@@ -318,5 +321,55 @@ public class RectangleRuntimeTests : BaseTestClass
         inner.GradientY2.ShouldBe(28f);
         inner.GradientInnerRadius.ShouldBe(4f);
         inner.GradientOuterRadius.ShouldBe(28f);
+    }
+
+    // Issue #3175 — parity surface for theme source written against the richer Apos.Shapes feature
+    // set. The raylib renderable does not consume these yet, so they round-trip on the runtime as
+    // forward compat; this pins that contract so a future renderable hookup is a deliberate change.
+    [Fact]
+    public void CustomCornerRadii_RoundTrip()
+    {
+        RectangleRuntime sut = new();
+
+        sut.CustomRadiusTopLeft = 1f;
+        sut.CustomRadiusTopRight = 2f;
+        sut.CustomRadiusBottomRight = 3f;
+        sut.CustomRadiusBottomLeft = 4f;
+
+        sut.CustomRadiusTopLeft.ShouldBe(1f);
+        sut.CustomRadiusTopRight.ShouldBe(2f);
+        sut.CustomRadiusBottomRight.ShouldBe(3f);
+        sut.CustomRadiusBottomLeft.ShouldBe(4f);
+    }
+
+    [Fact]
+    public void GradientUnits_RoundTrip()
+    {
+        RectangleRuntime sut = new();
+
+        sut.GradientX1Units = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        sut.GradientY1Units = Gum.Converters.GeneralUnitType.PixelsFromSmall;
+        sut.GradientX2Units = Gum.Converters.GeneralUnitType.PixelsFromLarge;
+        sut.GradientY2Units = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        sut.GradientInnerRadiusUnits = Gum.DataTypes.DimensionUnitType.ScreenPixel;
+        sut.GradientOuterRadiusUnits = Gum.DataTypes.DimensionUnitType.ScreenPixel;
+
+        sut.GradientX1Units.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromMiddle);
+        sut.GradientY1Units.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromSmall);
+        sut.GradientX2Units.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromLarge);
+        sut.GradientY2Units.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromMiddle);
+        sut.GradientInnerRadiusUnits.ShouldBe(Gum.DataTypes.DimensionUnitType.ScreenPixel);
+        sut.GradientOuterRadiusUnits.ShouldBe(Gum.DataTypes.DimensionUnitType.ScreenPixel);
+    }
+
+    [Fact]
+    public void IsAntialiased_RoundTrips_AndDefaultsTrue()
+    {
+        RectangleRuntime sut = new();
+
+        sut.IsAntialiased.ShouldBeTrue();
+
+        sut.IsAntialiased = false;
+        sut.IsAntialiased.ShouldBeFalse();
     }
 }

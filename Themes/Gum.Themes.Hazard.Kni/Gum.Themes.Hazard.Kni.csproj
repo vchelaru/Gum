@@ -30,6 +30,9 @@
     <Compile Include="..\Gum.Themes.Hazard.MonoGame\**\*.cs" />
     <Compile Remove="..\Gum.Themes.Hazard.MonoGame\obj\**" />
     <Compile Remove="..\Gum.Themes.Hazard.MonoGame\bin\**" />
+    <!-- Per-backend shims live outside the MonoGame project folder; link them explicitly. -->
+    <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
+    <Compile Include="..\Shared\ThemeShapePlatform.cs" Link="ThemeShapePlatform.cs" />
   </ItemGroup>
   <ItemGroup>
     <!-- Re-embed the TTFs from the MonoGame project's Content\Fonts folder, but map
