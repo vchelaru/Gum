@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Raylib-cs" Version="7.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\..\Runtimes\RaylibGum\RaylibGum.csproj" />
+    <ProjectReference Include="..\..\..\Integrations\KernSmith\KernSmith.RaylibGum\KernSmith.RaylibGum.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Shared, platform-neutral playground UI (same file the MonoGame host links). -->
+    <Compile Include="..\Shared\FontPlaygroundScreen.cs" Link="FontPlaygroundScreen.cs" />
+  </ItemGroup>
+
+</Project>

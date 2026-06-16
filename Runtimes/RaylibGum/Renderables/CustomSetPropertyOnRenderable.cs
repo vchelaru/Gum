@@ -109,6 +109,17 @@ public class CustomSetPropertyOnRenderable
     public static IInMemoryFontCreator? InMemoryFontCreator { get; set; }
 #endif
 
+#if RAYLIB
+    /// <summary>
+    /// Optional in-memory font creator. When set, font generation bypasses disk entirely — the
+    /// creator produces a <see cref="Raylib_cs.Font"/> directly from a <see cref="BmfcSave"/>
+    /// descriptor (for example, by rasterizing an atlas with KernSmith). If null or if creation
+    /// returns null, falls back to the existing disk / system-font path. Raylib parallel to the
+    /// <c>#if !RAYLIB</c> <see cref="IInMemoryFontCreator"/> property above.
+    /// </summary>
+    public static IRaylibFontCreator? InMemoryFontCreator { get; set; }
+#endif
+
     public static event Action<string>? PropertyAssignmentError;
 
 
@@ -644,7 +655,6 @@ public class CustomSetPropertyOnRenderable
             {
                 if (textRuntime.FontSize > 0 && !string.IsNullOrEmpty(textRuntime.Font))
                 {
-
                     string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
                     textRuntime.FontSize,
                     textRuntime.Font,
@@ -654,6 +664,51 @@ public class CustomSetPropertyOnRenderable
                     textRuntime.IsBold);
 
                     string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
+
+                    // Cache hit: reuse the already-generated/loaded font rather than regenerating.
+                    // A Raylib_cs.Font wraps an unmanaged GPU texture, so regenerating on every font
+                    // property change would leak VRAM (the previous texture is never reclaimed). This
+                    // is the LoaderManager cache the MonoGame path also uses.
+                    if (loaderManager.GetDisposable(fullFileName) is ManagedFont cachedManagedFont)
+                    {
+                        AssignFontIfChanged(asText, cachedManagedFont.Font);
+                        return;
+                    }
+
+                    // In-memory font creation (no disk I/O). The BmfcSave construction below is kept
+                    // byte-identical to the MonoGame path in Gum/Wireframe/CustomSetPropertyOnRenderable.cs;
+                    // only the created-font type (Raylib_cs.Font vs BitmapFont) and how it is cached are
+                    // necessarily platform-gated. Null/failure falls through to the FontCache .fnt path.
+                    if (InMemoryFontCreator != null)
+                    {
+                        try
+                        {
+                            BmfcSave bmfcSave = new BmfcSave();
+                            bmfcSave.FontSize = textRuntime.FontSize;
+                            bmfcSave.OutlineThickness = textRuntime.OutlineThickness;
+                            bmfcSave.UseSmoothing = textRuntime.UseFontSmoothing;
+                            bmfcSave.IsItalic = textRuntime.IsItalic;
+                            bmfcSave.IsBold = textRuntime.IsBold;
+                            bmfcSave.FontName = textRuntime.Font;
+
+                            var gumProject = ObjectFinder.Self.GumProjectSave;
+                            bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
+                            bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
+                            bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
+
+                            Raylib_cs.Font? createdFont = InMemoryFontCreator.TryCreateFont(bmfcSave);
+                            if (createdFont.HasValue && createdFont.Value.BaseSize != 0)
+                            {
+                                loaderManager.AddDisposable(fullFileName, new ManagedFont(createdFont.Value));
+                                AssignFontIfChanged(asText, createdFont.Value);
+                                return;
+                            }
+                        }
+                        catch
+                        {
+                            // Fall through to the disk / system-font path.
+                        }
+                    }
 
                     var fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(fullFileName);
                     if (fontFromGum.BaseSize == 0)
