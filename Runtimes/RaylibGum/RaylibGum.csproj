@@ -165,6 +165,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <!--
+	    Image, Menu, MenuItem, and PasswordBox are owned by GumCommon (migrated in PR #2887)
+	    and arrive here via the GumCommon ProjectReference below - exactly like Button,
+	    ListBox, FrameworkElement, etc. in the larger Remove block further down. These four
+	    are Removed for the SAME reason: the Forms\Controls\**\*.cs glob above would otherwise
+	    compile a second copy alongside GumCommon's, producing duplicate types across two
+	    assemblies (the IAnimatable double-type class of bug). A Remove here means "already
+	    provided by GumCommon, don't double-compile" - it does NOT mean these control classes
+	    are excluded from raylib. They are fully available via the GumCommon reference.
+	  -->
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Image.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Menu.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\MenuItem.cs" />
