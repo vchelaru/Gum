@@ -420,7 +420,12 @@ public class LineCircle : InvisibleRenderable
         // StrokeWidth) so the ring never bleeds past the nominal bounds — mirrors Skia's
         // RenderableShapeBase.IsOffsetAppliedForStroke contract, which the #2790 gallery's
         // "inscribed in 64x64 frame" row treats as the visual acceptance.
-        bool runStroke = StrokeColor.HasValue || !runFill;
+        // Issue #3183 — gate the stroke pass on a positive StrokeWidth. The default StrokeColor
+        // is non-null (white), so a fill-only disk (IsFilled = true, StrokeWidth = 0) would
+        // otherwise keep runStroke true and draw a zero/near-zero-width DrawRing in the stroke
+        // color. Mirrors the Apos RenderableShapeBase.HasVisibleOutput contract
+        // (IsFilled || StrokeWidth > 0). A fresh shape (StrokeWidth defaults to 1) keeps its ring.
+        bool runStroke = (StrokeColor.HasValue || !runFill) && StrokeWidth > 0f;
 
         // Skia parity (#2757): SkiaShapeRuntime.RefreshSlotGradients auto-gates each slot's
         // UseGradient flag by whether that slot has a non-null color, so a cell with both

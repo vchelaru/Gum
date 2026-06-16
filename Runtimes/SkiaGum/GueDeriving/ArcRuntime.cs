@@ -419,6 +419,10 @@ public class ArcRuntime : GraphicalUiElement
                 thickness /= camera.Zoom;
             }
         }
+        // Issue #3183 — raylib shape strokes get NO AA compensation: the geometric width IS the
+        // visible width (MSAA adds none). The arc band is a DrawRing filled annulus already at the
+        // nominal Thickness, so the band width is pushed straight through. See
+        // RectangleRuntime.PreRender for the full rationale.
         ContainedLineArc.Thickness = thickness;
     }
 

@@ -435,7 +435,15 @@ public class LineRectangle : InvisibleRenderable
         // unrotated, solid case we use DrawRectangleLinesEx which gives a proper inset thick
         // outline. Rotated or dashed paths fall back to per-edge DrawLineEx so the rotation
         // composition and dash perimeter-walk apply cleanly.
-        bool runStroke = StrokeColor.HasValue || !runFill;
+        //
+        // Issue #3183 — gate the stroke pass on a positive LinePixelWidth. The default StrokeColor
+        // is non-null (white), so a fill-only shape (IsFilled = true, StrokeWidth = 0) would
+        // otherwise keep runStroke true and raylib's DrawRectangleRoundedLinesEx paints a ~1px
+        // white hairline at width 0 (visible on the Dark Pro slider track / scrollbars). Mirrors
+        // the Apos RenderableShapeBase.HasVisibleOutput contract (IsFilled || StrokeWidth > 0),
+        // which Circle/RoundedRectangle/Arc early-return on so a zero-width stroke draws nothing.
+        // A fresh shape (StrokeWidth defaults to 1) keeps its outline.
+        bool runStroke = (StrokeColor.HasValue || !runFill) && LinePixelWidth > 0f;
 
         // Skia parity (#2757): SkiaShapeRuntime.RefreshSlotGradients auto-gates each slot's
         // UseGradient flag by whether that slot has a non-null color, so a cell with both
