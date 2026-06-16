@@ -221,15 +221,18 @@ public class ContentLoader : IContentLoader
     // (instead of BuildFont) so callers never name ParsedFontFile, which is compiled into BOTH
     // GumCommon and RaylibGum — referencing it across the assembly boundary is an ambiguous-type
     // (CS0433) error. See InternalsVisibleTo in Properties/AssemblyInfo.cs.
-    internal static Font BuildFontFromFntText(string fntText, Texture2D pageTexture)
+    // pageYOffsets, when supplied, shifts each glyph's atlas Y by its source page's offset. This
+    // lets a single-texture consumer (KernSmith.RaylibGum) merge KernSmith's multiple atlas pages
+    // into one stacked texture and still map every glyph correctly — raylib's Font holds one texture.
+    internal static Font BuildFontFromFntText(string fntText, Texture2D pageTexture, int[]? pageYOffsets = null)
     {
-        return BuildFont(new ParsedFontFile(fntText), pageTexture);
+        return BuildFont(new ParsedFontFile(fntText), pageTexture, pageYOffsets);
     }
 
     // Assembles a raylib Font from a parsed .fnt and its already-loaded atlas page. The Recs and
     // Glyphs arrays are handed to raylib, which frees them in UnloadFont (called by
     // ManagedFont.Dispose) — so they MUST be allocated with raylib's own allocator (MemAlloc).
-    private static unsafe Font BuildFont(ParsedFontFile parsedFontFile, Texture2D pageTexture)
+    private static unsafe Font BuildFont(ParsedFontFile parsedFontFile, Texture2D pageTexture, int[]? pageYOffsets = null)
     {
         int glyphCount = parsedFontFile.Chars.Count;
 
@@ -239,7 +242,8 @@ public class ContentLoader : IContentLoader
         for (int i = 0; i < glyphCount; i++)
         {
             FontFileCharLine charLine = parsedFontFile.Chars[i];
-            recs[i] = new Rectangle(charLine.X, charLine.Y, charLine.Width, charLine.Height);
+            int recY = charLine.Y + (pageYOffsets != null ? pageYOffsets[charLine.Page] : 0);
+            recs[i] = new Rectangle(charLine.X, recY, charLine.Width, charLine.Height);
             // Image is left default — raylib's DrawTextPro renders glyphs from Recs + the atlas
             // Texture, not from per-glyph Images.
             glyphs[i] = new GlyphInfo

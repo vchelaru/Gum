@@ -69,34 +69,59 @@ public class KernSmithRaylibFontCreator : IRaylibFontCreator
         => BmFont.ClearRegisteredFonts();
 
     /// <inheritdoc/>
-    public unsafe Raylib_cs.Font? TryCreateFont(BmfcSave bmfcSave)
+    public Raylib_cs.Font? TryCreateFont(BmfcSave bmfcSave)
     {
-        // Force the whole glyph set onto a single page (raylib's Font is single-texture). The
-        // default 512x256 atlas spills to multiple pages at larger sizes — later-page glyphs would
-        // sample the wrong region and render as garbage — so request a generous atlas ceiling and
-        // let KernSmith size the actual page down to fit.
+        // A generous atlas ceiling keeps the common case on a single page (KernSmith sizes the page
+        // down to fit within it), so most fonts take the fast path below. Larger glyph sets that
+        // still span multiple pages are merged into one texture afterward — raylib's Font is
+        // single-texture, so it can't hold a page array the way the MonoGame BitmapFont does.
         bmfcSave.OutputWidth = SingleAtlasMaxSize;
         bmfcSave.OutputHeight = SingleAtlasMaxSize;
         BmFontResult result = GumFontGenerator.Generate(bmfcSave, _backend);
 
-        // Expected to be a single page for any practical size; guard defensively (empty glyph set,
-        // or a glyph set too large for the ceiling) and fall back to the existing system-font path
-        // rather than render a partial atlas.
-        if (result.Pages.Count != 1)
+        if (result.Pages.Count == 0)
         {
             return null;
         }
 
-        AtlasPage page = result.Pages[0];
+        if (result.Pages.Count == 1)
+        {
+            AtlasPage page = result.Pages[0];
+            Texture2D texture = UploadTexture(page.PixelData, page.Width, page.Height);
+            return ContentLoader.BuildFontFromFntText(result.FntText, texture);
+        }
 
+        // Merge KernSmith's pages into a single texture. KernSmith sizes every page identically
+        // (PackResult.PageWidth/Height), so stacking them vertically is a contiguous copy and each
+        // glyph's atlas Y is shifted by its page's offset. Mirrors the MonoGame creator, which hands
+        // BitmapFont a texture array — same behavior (a usable font for any glyph set), no fallback.
+        int pageWidth = result.Pages[0].Width;
+        int pageHeight = result.Pages[0].Height;
+        int pageCount = result.Pages.Count;
+
+        byte[] merged = new byte[pageWidth * pageHeight * pageCount * 4];
+        int[] pageYOffsets = new int[pageCount];
+        for (int i = 0; i < pageCount; i++)
+        {
+            byte[] pagePixels = result.Pages[i].PixelData;
+            System.Array.Copy(pagePixels, 0, merged, i * pagePixels.Length, pagePixels.Length);
+            pageYOffsets[i] = i * pageHeight;
+        }
+
+        Texture2D mergedTexture = UploadTexture(merged, pageWidth, pageHeight * pageCount);
+        return ContentLoader.BuildFontFromFntText(result.FntText, mergedTexture, pageYOffsets);
+    }
+
+    private static unsafe Texture2D UploadTexture(byte[] pixels, int width, int height)
+    {
         Texture2D texture;
-        fixed (byte* pixels = page.PixelData)
+        fixed (byte* p = pixels)
         {
             Image image = new Image
             {
-                Data = pixels,
-                Width = page.Width,
-                Height = page.Height,
+                Data = p,
+                Width = width,
+                Height = height,
                 Mipmaps = 1,
                 Format = Raylib_cs.PixelFormat.UncompressedR8G8B8A8,
             };
@@ -104,7 +129,6 @@ public class KernSmithRaylibFontCreator : IRaylibFontCreator
             // to stay valid for the duration of this call.
             texture = Raylib.LoadTextureFromImage(image);
         }
-
-        return ContentLoader.BuildFontFromFntText(result.FntText, texture);
+        return texture;
     }
 }
