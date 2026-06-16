@@ -36,7 +36,7 @@ protected override void Initialize()
 }
 ```
 
-The pattern is the same for every theme — only the `using` namespace, NuGet package, and `Apply` call change. Pick a theme from the sections below and substitute its name in.
+The pattern is the same for every theme — only the `using` namespace, NuGet package, and `Apply` call change. Pick a theme from the sections below, then copy the tab matching your rendering backend for a ready-to-paste install command and initialization snippet.
 
 A few things to keep in mind:
 
@@ -52,14 +52,30 @@ A few things to keep in mind:
 
 Flat dark editor/tool chrome — intended for tool and editor interfaces rather than in-game UI. Ships with two extra controls beyond the standard Forms set: `PropertyGridVisual` and `Expander`. See the [Editor Theme](editor-theme.md) page for details on those controls.
 
+{% tabs %}
+{% tab title="MonoGame" %}
+```bash
+dotnet add package Gum.Themes.Editor.MonoGame
+```
 ```csharp
 // Initialize
 using Gum.Themes.Editor;
 
 EditorTheme.Apply(GraphicsDevice);
 ```
+{% endtab %}
+{% tab title="KNI" %}
+```bash
+dotnet add package Gum.Themes.Editor.Kni
+```
+```csharp
+// Initialize
+using Gum.Themes.Editor;
 
-NuGet packages: `Gum.Themes.Editor.MonoGame`, `Gum.Themes.Editor.Kni`
+EditorTheme.Apply(GraphicsDevice);
+```
+{% endtab %}
+{% endtabs %}
 
 ### DarkPro
 
@@ -67,14 +83,30 @@ NuGet packages: `Gum.Themes.Editor.MonoGame`, `Gum.Themes.Editor.Kni`
 
 Modern code-editor dark theme with a VS Code / JetBrains feel. Bundled fonts: DM Mono (body) and DejaVu Sans Mono (icons).
 
+{% tabs %}
+{% tab title="MonoGame" %}
+```bash
+dotnet add package Gum.Themes.DarkPro.MonoGame
+```
 ```csharp
 // Initialize
 using Gum.Themes.DarkPro;
 
 DarkProTheme.Apply(GraphicsDevice);
 ```
+{% endtab %}
+{% tab title="KNI" %}
+```bash
+dotnet add package Gum.Themes.DarkPro.Kni
+```
+```csharp
+// Initialize
+using Gum.Themes.DarkPro;
 
-NuGet packages: `Gum.Themes.DarkPro.MonoGame`, `Gum.Themes.DarkPro.Kni`
+DarkProTheme.Apply(GraphicsDevice);
+```
+{% endtab %}
+{% endtabs %}
 
 ### Bubblegum
 
@@ -82,14 +114,30 @@ NuGet packages: `Gum.Themes.DarkPro.MonoGame`, `Gum.Themes.DarkPro.Kni`
 
 Pastel pink casual-game look with rounded pill buttons and soft drop shadows. Bundled font: Nunito.
 
+{% tabs %}
+{% tab title="MonoGame" %}
+```bash
+dotnet add package Gum.Themes.Bubblegum.MonoGame
+```
 ```csharp
 // Initialize
 using Gum.Themes.Bubblegum;
 
 BubblegumTheme.Apply(GraphicsDevice);
 ```
+{% endtab %}
+{% tab title="KNI" %}
+```bash
+dotnet add package Gum.Themes.Bubblegum.Kni
+```
+```csharp
+// Initialize
+using Gum.Themes.Bubblegum;
 
-NuGet packages: `Gum.Themes.Bubblegum.MonoGame`, `Gum.Themes.Bubblegum.Kni`
+BubblegumTheme.Apply(GraphicsDevice);
+```
+{% endtab %}
+{% endtabs %}
 
 ### Forest Glade
 
@@ -97,18 +145,34 @@ NuGet packages: `Gum.Themes.Bubblegum.MonoGame`, `Gum.Themes.Bubblegum.Kni`
 
 Lush green nature-themed look with gradient leaf-shaped buttons (sharp top-left / bottom-right corners, rounded top-right / bottom-left), a deep canopy background, and soft text drop shadows. Bundled font: Nunito.
 
+{% tabs %}
+{% tab title="MonoGame" %}
+```bash
+dotnet add package Gum.Themes.ForestGlade.MonoGame
+```
 ```csharp
 // Initialize
 using Gum.Themes.ForestGlade;
 
 ForestGladeTheme.Apply(GraphicsDevice);
 ```
+{% endtab %}
+{% tab title="KNI" %}
+```bash
+dotnet add package Gum.Themes.ForestGlade.Kni
+```
+```csharp
+// Initialize
+using Gum.Themes.ForestGlade;
+
+ForestGladeTheme.Apply(GraphicsDevice);
+```
+{% endtab %}
+{% endtabs %}
 
 {% hint style="info" %}
 For the intended look, clear the back buffer to `ForestGladeColors.CanopyDeep`.
 {% endhint %}
-
-NuGet packages: `Gum.Themes.ForestGlade.MonoGame`, `Gum.Themes.ForestGlade.Kni`
 
 ### Neon
 
@@ -116,18 +180,34 @@ NuGet packages: `Gum.Themes.ForestGlade.MonoGame`, `Gum.Themes.ForestGlade.Kni`
 
 Cyberpunk / neon-glow dark theme with a saturated cyan accent and a Gaussian glow on focus. Bundled fonts: Share Tech Mono (body), Orbitron (titles), and DejaVu Sans Mono (icons).
 
+{% tabs %}
+{% tab title="MonoGame" %}
+```bash
+dotnet add package Gum.Themes.Neon.MonoGame
+```
 ```csharp
 // Initialize
 using Gum.Themes.Neon;
 
 NeonTheme.Apply(GraphicsDevice);
 ```
+{% endtab %}
+{% tab title="KNI" %}
+```bash
+dotnet add package Gum.Themes.Neon.Kni
+```
+```csharp
+// Initialize
+using Gum.Themes.Neon;
+
+NeonTheme.Apply(GraphicsDevice);
+```
+{% endtab %}
+{% endtabs %}
 
 {% hint style="info" %}
 For the intended look, clear the back buffer to `NeonColors.Background` (`#060612`).
 {% endhint %}
-
-NuGet packages: `Gum.Themes.Neon.MonoGame`, `Gum.Themes.Neon.Kni`
 
 ### Retro95
 
@@ -135,14 +215,30 @@ NuGet packages: `Gum.Themes.Neon.MonoGame`, `Gum.Themes.Neon.Kni`
 
 Windows 95 "Classic" battleship-gray chrome with raised/sunken bevels and navy selection. Bundled fonts: Nunito (MS Sans Serif stand-in) and DejaVu Sans Mono (icons).
 
+{% tabs %}
+{% tab title="MonoGame" %}
+```bash
+dotnet add package Gum.Themes.Retro95.MonoGame
+```
 ```csharp
 // Initialize
 using Gum.Themes.Retro95;
 
 Retro95Theme.Apply(GraphicsDevice);
 ```
+{% endtab %}
+{% tab title="KNI" %}
+```bash
+dotnet add package Gum.Themes.Retro95.Kni
+```
+```csharp
+// Initialize
+using Gum.Themes.Retro95;
 
-NuGet packages: `Gum.Themes.Retro95.MonoGame`, `Gum.Themes.Retro95.Kni`
+Retro95Theme.Apply(GraphicsDevice);
+```
+{% endtab %}
+{% endtabs %}
 
 ### Meadow
 
@@ -150,18 +246,34 @@ NuGet packages: `Gum.Themes.Retro95.MonoGame`, `Gum.Themes.Retro95.Kni`
 
 Cozy cottagecore look with chunky sky-blue pill buttons (flat "stacked card" drop shadow), dashed-outline cream panels, sage selection accents, and coral sliders. Bundled fonts: Baloo 2 (display), Quicksand (body), and DejaVu Sans Mono (icons).
 
+{% tabs %}
+{% tab title="MonoGame" %}
+```bash
+dotnet add package Gum.Themes.Meadow.MonoGame
+```
 ```csharp
 // Initialize
 using Gum.Themes.Meadow;
 
 MeadowTheme.Apply(GraphicsDevice);
 ```
+{% endtab %}
+{% tab title="KNI" %}
+```bash
+dotnet add package Gum.Themes.Meadow.Kni
+```
+```csharp
+// Initialize
+using Gum.Themes.Meadow;
+
+MeadowTheme.Apply(GraphicsDevice);
+```
+{% endtab %}
+{% endtabs %}
 
 {% hint style="info" %}
 For the intended look, clear the back buffer to `MeadowColors.Cream` (`#F7EDD6`).
 {% endhint %}
-
-NuGet packages: `Gum.Themes.Meadow.MonoGame`, `Gum.Themes.Meadow.Kni`
 
 ### Hazard
 
@@ -169,18 +281,34 @@ NuGet packages: `Gum.Themes.Meadow.MonoGame`, `Gum.Themes.Meadow.Kni`
 
 Industrial space-salvage HUD inspired by Hardspace: Shipbreaker — signature hazard-yellow on warm near-black, muted-gold borders, and square-cornered chrome. Pressing a button flashes the full hazard-yellow accent with black text. Bundled fonts: Saira Condensed (body and labels) and DejaVu Sans Mono (icons).
 
+{% tabs %}
+{% tab title="MonoGame" %}
+```bash
+dotnet add package Gum.Themes.Hazard.MonoGame
+```
 ```csharp
 // Initialize
 using Gum.Themes.Hazard;
 
 HazardTheme.Apply(GraphicsDevice);
 ```
+{% endtab %}
+{% tab title="KNI" %}
+```bash
+dotnet add package Gum.Themes.Hazard.Kni
+```
+```csharp
+// Initialize
+using Gum.Themes.Hazard;
+
+HazardTheme.Apply(GraphicsDevice);
+```
+{% endtab %}
+{% endtabs %}
 
 {% hint style="info" %}
 For the intended look, clear the back buffer to `HazardPalette.Background` (`#0A0A08`).
 {% endhint %}
-
-NuGet packages: `Gum.Themes.Hazard.MonoGame`, `Gum.Themes.Hazard.Kni`
 
 ## Fonts and licensing
 
