@@ -110,6 +110,9 @@
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\LabelVisual.cs" Link="Forms\DefaultVisuals\V3\LabelVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ListBoxItemVisual.cs" Link="Forms\DefaultVisuals\V3\ListBoxItemVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ListBoxVisual.cs" Link="Forms\DefaultVisuals\V3\ListBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\MenuItemVisual.cs" Link="Forms\DefaultVisuals\V3\MenuItemVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\MenuVisual.cs" Link="Forms\DefaultVisuals\V3\MenuVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\PasswordBoxVisual.cs" Link="Forms\DefaultVisuals\V3\PasswordBoxVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\RadioButtonVisual.cs" Link="Forms\DefaultVisuals\V3\RadioButtonVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ScrollBarVisual.cs" Link="Forms\DefaultVisuals\V3\ScrollBarVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ScrollViewerVisual.cs" Link="Forms\DefaultVisuals\V3\ScrollViewerVisual.cs" />
@@ -165,6 +168,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <!--
+	    Image, Menu, MenuItem, and PasswordBox are owned by GumCommon (migrated in PR #2887)
+	    and arrive here via the GumCommon ProjectReference below - exactly like Button,
+	    ListBox, FrameworkElement, etc. in the larger Remove block further down. These four
+	    are Removed for the SAME reason: the Forms\Controls\**\*.cs glob above would otherwise
+	    compile a second copy alongside GumCommon's, producing duplicate types across two
+	    assemblies (the IAnimatable double-type class of bug). A Remove here means "already
+	    provided by GumCommon, don't double-compile" - it does NOT mean these control classes
+	    are excluded from raylib. They are fully available via the GumCommon reference.
+	  -->
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Image.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\Menu.cs" />
 	  <Compile Remove="..\..\MonoGameGum\Forms\Controls\MenuItem.cs" />

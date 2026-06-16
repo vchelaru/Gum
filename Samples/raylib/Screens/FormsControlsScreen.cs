@@ -20,13 +20,16 @@ internal class FormsControlsScreen : FrameworkElement
     {
         Dock(Gum.Wireframe.Dock.Fill);
 
+        // Root layout: a vertical stack holding the Menu at the very top (just below the nav
+        // strip) and, beneath it, a two-column row. Splitting the controls across two columns
+        // keeps them from spilling off the bottom on smaller resolutions.
+        //
         // Must be an InteractiveGue (ContainerRuntime), not a raw GraphicalUiElement: focus
         // tabbing walks the focused control's parent via `Parent as InteractiveGue`, so a
         // non-interactive parent yields no siblings and gamepad/keyboard navigation no-ops.
         var container = new ContainerRuntime();
         this.AddChild(container);
         container.ChildrenLayout = ChildrenLayout.TopToBottomStack;
-        container.WrapsChildren = true;
         container.StackSpacing = 5;
         container.Width = 0;
         container.WidthUnits = DimensionUnitType.RelativeToParent;
@@ -34,13 +37,47 @@ internal class FormsControlsScreen : FrameworkElement
         container.HeightUnits = DimensionUnitType.RelativeToParent;
         container.ClipsChildren = true;
 
+        // Menu / MenuItem / PasswordBox / Image route through the V3 default visuals that
+        // were enabled on raylib in issue #3174 — included here so the gallery exercises them.
+        // The Menu sits at the very top so its drop-down submenus have room to open below it.
+        var menu = new Menu();
+        container.AddChild(menu.Visual);
+        var fileMenuItem = new MenuItem { Header = "File" };
+        fileMenuItem.Items.Add(new MenuItem { Header = "New" });
+        fileMenuItem.Items.Add(new MenuItem { Header = "Open" });
+        var recentMenuItem = new MenuItem { Header = "Recent" };
+        recentMenuItem.Items.Add(new MenuItem { Header = "Project A" });
+        recentMenuItem.Items.Add(new MenuItem { Header = "Project B" });
+        fileMenuItem.Items.Add(recentMenuItem);
+        menu.Items.Add(fileMenuItem);
+        var editMenuItem = new MenuItem { Header = "Edit" };
+        editMenuItem.Items.Add(new MenuItem { Header = "Copy" });
+        editMenuItem.Items.Add(new MenuItem { Header = "Paste" });
+        menu.Items.Add(editMenuItem);
+
+        // Two side-by-side columns beneath the menu. Fixed-width columns (rather than
+        // RelativeToChildren) keep the layout free of circular width dependencies with the
+        // StackPanels nested inside them.
+        var columns = new ContainerRuntime();
+        container.AddChild(columns);
+        columns.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        columns.StackSpacing = 20;
+        columns.Width = 0;
+        columns.WidthUnits = DimensionUnitType.RelativeToParent;
+        columns.Height = 0;
+        columns.HeightUnits = DimensionUnitType.RelativeToChildren;
+
+        var leftColumn = AddColumn(columns);
+        var rightColumn = AddColumn(columns);
+
+        // ----- Left column -----
         var button = new Button();
         button.Width = 200;
         button.Text = "I'm a button";
-        container.AddChild(button.Visual);
+        leftColumn.AddChild(button.Visual);
 
         var textBox = new TextBox();
-        container.AddChild(textBox.Visual);
+        leftColumn.AddChild(textBox.Visual);
         textBox.Width = 250;
         textBox.Placeholder = "Type here…";
 
@@ -53,10 +90,10 @@ internal class FormsControlsScreen : FrameworkElement
         var checkbox = new CheckBox();
         checkbox.Width = 200;
         checkbox.Text = "Check me";
-        container.AddChild(checkbox.Visual);
+        leftColumn.AddChild(checkbox.Visual);
 
         var slider = new Slider();
-        container.AddChild(slider.Visual);
+        leftColumn.AddChild(slider.Visual);
         slider.Minimum = 0;
         slider.Maximum = 30;
         slider.TicksFrequency = 1;
@@ -68,11 +105,11 @@ internal class FormsControlsScreen : FrameworkElement
             Debug.WriteLine($"Finished setting Value: {slider.Value}");
 
         var label = new Label();
-        container.AddChild(label.Visual);
+        leftColumn.AddChild(label.Visual);
         label.Text = "This is a Gum label";
 
         var scrollViewer = new ScrollViewer();
-        container.AddChild(scrollViewer.Visual);
+        leftColumn.AddChild(scrollViewer.Visual);
         scrollViewer.Width = 200;
         scrollViewer.Height = 200;
         scrollViewer.Visual.WidthUnits = DimensionUnitType.Absolute;
@@ -91,7 +128,7 @@ internal class FormsControlsScreen : FrameworkElement
         }
 
         var stackPanel = new StackPanel();
-        container.AddChild(stackPanel.Visual);
+        leftColumn.AddChild(stackPanel.Visual);
 
         var easyRadioButton = new RadioButton();
         stackPanel.AddChild(easyRadioButton);
@@ -105,13 +142,14 @@ internal class FormsControlsScreen : FrameworkElement
         stackPanel.AddChild(hardRadioButton);
         hardRadioButton.Text = "Hard";
 
+        // ----- Right column -----
         var listBox = new ListBox();
-        container.AddChild(listBox.Visual);
+        rightColumn.AddChild(listBox.Visual);
         listBox.Width = 300;
         listBox.Height = 200;
 
         var addButton = new Button();
-        container.AddChild(addButton.Visual);
+        rightColumn.AddChild(addButton.Visual);
         addButton.Text = "Add to ListBox";
         addButton.Click += (s, e) =>
         {
@@ -121,18 +159,28 @@ internal class FormsControlsScreen : FrameworkElement
         };
 
         var comboBox = new ComboBox();
-        container.AddChild(comboBox.Visual);
+        rightColumn.AddChild(comboBox.Visual);
         for (int i = 0; i < 10; i++)
         {
             comboBox.Items.Add($"Item {i}");
         }
 
+        var passwordBox = new PasswordBox();
+        rightColumn.AddChild(passwordBox.Visual);
+        passwordBox.Width = 250;
+        passwordBox.Placeholder = "Password…";
+
+        var image = new Gum.Forms.Controls.Image();
+        rightColumn.AddChild(image.Visual);
+        image.Source = "resources\\gum-logo-normal-64.png";
+
         var splitterStackPanel = new StackPanel();
-        container.AddChild(splitterStackPanel);
+        rightColumn.AddChild(splitterStackPanel);
         splitterStackPanel.Spacing = 1;
 
         var listBox1 = new ListBox();
         splitterStackPanel.AddChild(listBox1);
+        listBox1.Height = 120;
         for (int i = 0; i < 10; i++)
         {
             listBox1.Items.Add("List Item " + i);
@@ -145,6 +193,7 @@ internal class FormsControlsScreen : FrameworkElement
 
         var listBox2 = new ListBox();
         splitterStackPanel.AddChild(listBox2);
+        listBox2.Height = 120;
         for (int i = 0; i < 10; i++)
         {
             listBox2.Items.Add("List Item " + i);
@@ -173,6 +222,22 @@ internal class FormsControlsScreen : FrameworkElement
         };
 
         AddSwitchHint();
+    }
+
+    /// <summary>
+    /// Creates a fixed-width, top-to-bottom stacking column and adds it to <paramref name="parent"/>.
+    /// </summary>
+    private static ContainerRuntime AddColumn(ContainerRuntime parent)
+    {
+        var column = new ContainerRuntime();
+        parent.AddChild(column);
+        column.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+        column.StackSpacing = 5;
+        column.Width = 330;
+        column.WidthUnits = DimensionUnitType.Absolute;
+        column.Height = 0;
+        column.HeightUnits = DimensionUnitType.RelativeToChildren;
+        return column;
     }
 
     /// <summary>
