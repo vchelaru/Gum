@@ -1,6 +1,11 @@
 using Gum.Forms.Controls;
 using BaseListBoxItemVisual = Gum.Forms.DefaultVisuals.V3.ListBoxItemVisual;
 using Gum.GueDeriving;
+#if RAYLIB
+using Raylib_cs;
+#else
+using Microsoft.Xna.Framework;
+#endif
 
 namespace Gum.Themes.Editor;
 
@@ -9,8 +14,8 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
     public ListBoxItemVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) :
         base(fullInstantiation, tryCreateFormsObject)
     {
-        this.HighlightedBackgroundColor = new Microsoft.Xna.Framework.Color(70, 70, 70);
-        this.SelectedBackgroundColor = new Microsoft.Xna.Framework.Color(0, 92, 128);
+        this.HighlightedBackgroundColor = new Color(70, 70, 70);
+        this.SelectedBackgroundColor = new Color(0, 92, 128);
 
         var rectangle = new RectangleRuntime();
         this.Children.Add(rectangle);

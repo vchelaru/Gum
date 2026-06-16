@@ -4,7 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BaseScrollViewerVisual = Gum.Forms.DefaultVisuals.V3.ScrollViewerVisual;
-
+#if RAYLIB
+using Raylib_cs;
+#else
+using Microsoft.Xna.Framework;
+#endif
 
 namespace Gum.Themes.Editor;
 
@@ -13,6 +17,6 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
     public ScrollViewerVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) :
         base(fullInstantiation, tryCreateFormsObject)
     {
-        this.BackgroundColor = new Microsoft.Xna.Framework.Color(27, 27, 27);
+        this.BackgroundColor = new Color(27, 27, 27);
     }
 }

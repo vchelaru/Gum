@@ -131,6 +131,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KernSmith.FnaGum", "Integra
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KernSmith.RaylibGum", "Integrations\KernSmith\KernSmith.RaylibGum\KernSmith.RaylibGum.csproj", "{3C46766A-AB0B-44A6-A300-7CEC71F8784E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gum.Themes.Editor.Raylib", "Themes\Gum.Themes.Editor.Raylib\Gum.Themes.Editor.Raylib.csproj", "{EE661625-1E12-4909-9045-B2B720DF7379}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -1152,6 +1154,24 @@ Global
 		{3C46766A-AB0B-44A6-A300-7CEC71F8784E}.Release|x64.Build.0 = Release|Any CPU
 		{3C46766A-AB0B-44A6-A300-7CEC71F8784E}.Release|x86.ActiveCfg = Release|Any CPU
 		{3C46766A-AB0B-44A6-A300-7CEC71F8784E}.Release|x86.Build.0 = Release|Any CPU
+		{EE661625-1E12-4909-9045-B2B720DF7379}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE661625-1E12-4909-9045-B2B720DF7379}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE661625-1E12-4909-9045-B2B720DF7379}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{EE661625-1E12-4909-9045-B2B720DF7379}.Debug|x64.Build.0 = Debug|Any CPU
+		{EE661625-1E12-4909-9045-B2B720DF7379}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{EE661625-1E12-4909-9045-B2B720DF7379}.Debug|x86.Build.0 = Debug|Any CPU
+		{EE661625-1E12-4909-9045-B2B720DF7379}.Release_No_Diagnostics|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE661625-1E12-4909-9045-B2B720DF7379}.Release_No_Diagnostics|Any CPU.Build.0 = Debug|Any CPU
+		{EE661625-1E12-4909-9045-B2B720DF7379}.Release_No_Diagnostics|x64.ActiveCfg = Debug|Any CPU
+		{EE661625-1E12-4909-9045-B2B720DF7379}.Release_No_Diagnostics|x64.Build.0 = Debug|Any CPU
+		{EE661625-1E12-4909-9045-B2B720DF7379}.Release_No_Diagnostics|x86.ActiveCfg = Debug|Any CPU
+		{EE661625-1E12-4909-9045-B2B720DF7379}.Release_No_Diagnostics|x86.Build.0 = Debug|Any CPU
+		{EE661625-1E12-4909-9045-B2B720DF7379}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE661625-1E12-4909-9045-B2B720DF7379}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE661625-1E12-4909-9045-B2B720DF7379}.Release|x64.ActiveCfg = Release|Any CPU
+		{EE661625-1E12-4909-9045-B2B720DF7379}.Release|x64.Build.0 = Release|Any CPU
+		{EE661625-1E12-4909-9045-B2B720DF7379}.Release|x86.ActiveCfg = Release|Any CPU
+		{EE661625-1E12-4909-9045-B2B720DF7379}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1213,6 +1233,7 @@ Global
 		{8846A3E6-C446-473B-9114-400B8AB4D7AE} = {4958D7D8-4791-2CCE-6FFA-082B65933577}
 		{216BAD5A-2145-4FA6-99CE-15271594E778} = {4958D7D8-4791-2CCE-6FFA-082B65933577}
 		{3C46766A-AB0B-44A6-A300-7CEC71F8784E} = {4958D7D8-4791-2CCE-6FFA-082B65933577}
+		{EE661625-1E12-4909-9045-B2B720DF7379} = {90F7E5FD-146B-406A-C97D-A0D358256D37}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {01002AE6-0158-417E-9B83-D4234361EC1B}

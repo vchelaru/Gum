@@ -235,9 +235,9 @@ Holding the helper reference in a `private readonly` field (rather than construc
 
 ## csproj gotcha: PrivateAssets on KernSmith
 
-If your theme calls `KernSmithFontCreator` directly, KernSmith is a runtime dependency — it must flow transitively to consumers. **Do not** mark it `<PrivateAssets>All</PrivateAssets>` on the `<PackageReference>`. MonoGame.Framework can stay private (consumers always bring their own).
+If your theme generates fonts at runtime (any theme that wires KernSmith — directly or via the `ThemePlatform` shim below), KernSmith is a runtime dependency — it must flow transitively to consumers. **Do not** mark it `<PrivateAssets>All</PrivateAssets>` on the KernSmith reference. MonoGame.Framework / nkast / Raylib-cs can stay private (consumers always bring their own).
 
-`Gum.Themes.Editor.MonoGame` currently has `PrivateAssets=All` on KernSmith — that's a latent bug; consumers would need to install KernSmith manually even though the theme depends on it.
+The original Editor theme shipped `PrivateAssets=All` on KernSmith — a latent bug (consumers would have to install KernSmith manually); it was corrected when the `.Raylib` variant landed. Mirror the corrected `Gum.Themes.Editor.*` csprojs for new themes.
 
 ## Visual-side inheritance doesn't match Forms-side inheritance
 
@@ -268,6 +268,16 @@ Pattern (see `Themes/Gum.Themes.DarkPro.MonoGame/` and `Themes/Gum.Themes.DarkPr
 - Inside `RegisterEmbeddedFont` (or wherever you read TTFs from manifest), derive the prefix from `assembly.GetName().Name` — **not** a hard-coded string. The same source compiles in both assemblies and finds its fonts in both.
 
 Match versions across the two csprojs so they read as one logical release.
+
+## raylib theme variants
+
+A theme adds raylib support with a third source-sharing project, `Gum.Themes.<Name>.Raylib.csproj`, alongside the MonoGame/KNI pair. raylib is **not** XNA-shaped, so the naive KNI-style source-share (which links *all* `.cs`, `Apply` included) doesn't work directly. Three things diverge; isolate them so the theme bodies stay platform-agnostic and source-shared across all three projects. See `Themes/Gum.Themes.Editor.*` for the worked example.
+
+- **`Color` namespace.** V3 visuals get `Color` from a global `using Raylib_cs;` baked into `RaylibGum.csproj`, but a theme assembly doesn't inherit that — and global usings are avoided here so theme authors copying a theme aren't surprised. So guard the import per file: `#if RAYLIB using Raylib_cs; #else using Microsoft.Xna.Framework; #endif`. Replace any fully-qualified `new Microsoft.Xna.Framework.Color(...)` with `new Color(...)` so the guarded import resolves it. `new Color(r,g,b)` exists on both types.
+- **`Apply` signature + font creator** live in a shared shim, `Themes/Shared/ThemePlatform.cs`, `<Compile>`-linked into every theme project (it's the single home for `#if RAYLIB`). `ThemePlatform.WireInMemoryFontCreator()` assigns `CustomSetPropertyOnRenderable.InMemoryFontCreator` to `new KernSmithRaylibFontCreator()` on raylib, or `new KernSmithFontCreator(gd)` on XNA-likes — where `gd` is read from `SystemManagers.Default.Renderer.GraphicsDevice` (no longer a parameter). So `Apply()` is **parameterless on every backend** and the theme body is `#if`-free. Keep a `#if !RAYLIB public static void Apply(GraphicsDevice gd) => Apply();` back-compat overload so existing MonoGame/KNI callers (and the `Action<GraphicsDevice>`-keyed showcase) still compile.
+- **Shapes init** (`ShapeRenderer.Self.Initialize()`) is XNA-like-only; raylib renders shapes natively. Editor is NineSlice-only so it doesn't hit this. When the first shape-heavy theme gets a raylib variant, that line needs the same shim treatment — but note Editor's `ThemePlatform` deliberately omits it (the shim would otherwise force every theme, NineSlice ones included, to reference the Apos.Shapes package).
+
+The `.Raylib.csproj` defines `RAYLIB`, references `RaylibGum.csproj` + `KernSmith.RaylibGum` + `Raylib-cs`, and source-shares via `<Compile Include="..\Gum.Themes.<Name>.MonoGame\**\*.cs" />` plus the shim link. Runtime-verify with `Samples/RaylibGumThemesShowcase` — `Apply` and font loading only fail at runtime, not compile.
 
 ## InteractiveGue children capture input — reattach in V3 order
 

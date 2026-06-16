@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Raylib-cs" Version="7.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\Runtimes\RaylibGum\RaylibGum.csproj" />
+    <!-- The theme package is the only Gum reference a consumer needs: it transitively brings
+         KernSmith.RaylibGum (runtime font generation), so this sample wires nothing extra. -->
+    <ProjectReference Include="..\..\Themes\Gum.Themes.Editor.Raylib\Gum.Themes.Editor.Raylib.csproj" />
+  </ItemGroup>
+
+</Project>

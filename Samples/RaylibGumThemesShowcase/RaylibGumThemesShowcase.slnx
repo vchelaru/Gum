@@ -1,0 +1,11 @@
+<Solution>
+  <Project Path="RaylibGumThemesShowcase.csproj" />
+  <Folder Name="/Libraries/">
+    <Project Path="../../GumCommon/GumCommon.csproj" />
+    <Project Path="../../Runtimes/RaylibGum/RaylibGum.csproj" />
+    <Project Path="../../Integrations/KernSmith/KernSmith.RaylibGum/KernSmith.RaylibGum.csproj" />
+  </Folder>
+  <Folder Name="/Themes/">
+    <Project Path="../../Themes/Gum.Themes.Editor.Raylib/Gum.Themes.Editor.Raylib.csproj" />
+  </Folder>
+</Solution>
