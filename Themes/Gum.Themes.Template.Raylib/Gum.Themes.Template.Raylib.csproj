@@ -16,8 +16,10 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
-    <!-- This is a template, not a shipped package, so it does not emit a .nupkg on
-         build. Flip to true once you have cloned it into a real theme. -->
+    <!-- This is a template, not a shipped package: IsPackable=false keeps `dotnet pack`
+         (the CI publish path) from emitting a .nupkg, and GeneratePackageOnBuild=false keeps
+         local builds from doing so. Flip both once you have cloned it into a real theme. -->
+    <IsPackable>false</IsPackable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IncludeSymbols>true</IncludeSymbols>
