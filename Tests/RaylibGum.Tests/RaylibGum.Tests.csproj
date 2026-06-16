@@ -23,6 +23,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Runtimes\RaylibGum\RaylibGum.csproj" />
+    <!-- Referenced so the in-memory font creator can be exercised end-to-end (KernSmith atlas
+         generation -> raylib Texture2D upload -> Raylib_cs.Font). -->
+    <ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.RaylibGum\KernSmith.RaylibGum.csproj" />
   </ItemGroup>
 
   <ItemGroup>
