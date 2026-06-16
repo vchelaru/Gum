@@ -34,4 +34,18 @@ internal static class ThemePlatform
         CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithFontCreator(graphicsDevice);
 #endif
     }
+
+    /// <summary>
+    /// Registers an embedded TTF (raw bytes) under a family/style with the backend's KernSmith
+    /// creator, so a theme's bundled fonts resolve without the consumer copying font files. Both
+    /// backends expose the same static <c>RegisterFont</c> surface; this only hides the type name.
+    /// </summary>
+    public static void RegisterFont(string familyName, byte[] fontData, string? style = null)
+    {
+#if RAYLIB
+        KernSmithRaylibFontCreator.RegisterFont(familyName, fontData, style);
+#else
+        KernSmithFontCreator.RegisterFont(familyName, fontData, style);
+#endif
+    }
 }

@@ -20,9 +20,10 @@
   <ItemGroup>
     <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
     <ProjectReference Include="..\..\Runtimes\RaylibGum\RaylibGum.csproj" />
-    <!-- The theme package is the only Gum reference a consumer needs: it transitively brings
+    <!-- The theme packages are the only Gum reference a consumer needs: each transitively brings
          KernSmith.RaylibGum (runtime font generation), so this sample wires nothing extra. -->
     <ProjectReference Include="..\..\Themes\Gum.Themes.Editor.Raylib\Gum.Themes.Editor.Raylib.csproj" />
+    <ProjectReference Include="..\..\Themes\Gum.Themes.DarkPro.Raylib\Gum.Themes.DarkPro.Raylib.csproj" />
   </ItemGroup>
 
 </Project>

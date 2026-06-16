@@ -1,5 +1,6 @@
 using System;
 using Gum;
+using Gum.Themes.DarkPro;
 using Gum.Themes.Editor;
 using MonoGameGumThemesShowcase.Screens;
 using Raylib_cs;
@@ -8,18 +9,34 @@ using static Raylib_cs.Raylib;
 namespace RaylibGumThemesShowcase;
 
 /// <summary>
-/// raylib host for the Gum themes showcase. It applies a theme and drives the same
-/// <see cref="ShowcaseScreen"/>s the MonoGame host (<c>MonoGameGumThemesShowcase</c>) uses — the
-/// screen sources are source-shared between the two projects so the two render identically and can
-/// be compared side by side. The host is otherwise stock raylib + Gum.
+/// raylib host for the Gum themes showcase. It drives the same <see cref="ShowcaseScreen"/>s the
+/// MonoGame host (<c>MonoGameGumThemesShowcase</c>) uses — the screen sources are source-shared
+/// between the two projects, so the two render identically and can be compared side by side.
 ///
-/// F1: all-controls screen. F2: screenshot panel. Only the Editor theme has a raylib variant so
-/// far; as more theme variants land, add them to <see cref="ApplyTheme"/> (and a number-key swap,
-/// mirroring the MonoGame host).
+/// Number keys swap the active theme (only themes with a raylib variant are listed); F1/F2 swap the
+/// screen. Add a theme to <see cref="_themes"/> as each gains a <c>.Raylib</c> variant.
 /// </summary>
 public static class Program
 {
+    private sealed class ThemeOption
+    {
+        public string Name { get; }
+        public Action Apply { get; }
+        public Color ClearColor { get; }
+
+        public ThemeOption(string name, Action apply, Color clearColor)
+        {
+            Name = name;
+            Apply = apply;
+            ClearColor = clearColor;
+        }
+    }
+
+    private static ThemeOption[] _themes;
+    private static int _currentThemeIndex;
+    private static Color _clearColor;
     private static ShowcaseScreen _currentScreen;
+    private static Func<ShowcaseScreen> _currentScreenFactory;
 
     public static void Main()
     {
@@ -30,28 +47,30 @@ public static class Program
         GumService.Default.CanvasHeight = screenHeight;
 
         SetConfigFlags(ConfigFlags.Msaa4xHint | ConfigFlags.ResizableWindow);
-        InitWindow(screenWidth, screenHeight, "Gum raylib - Editor Theme Showcase  (F1/F2 swap screen)");
+        InitWindow(screenWidth, screenHeight, "Gum raylib - Themes Showcase");
 
         GumService.Default.Initialize();
         GumService.Default.UseKeyboardDefaults();
 
-        ApplyTheme();
+        // Each theme's parameterless Apply() wires KernSmith for in-memory font generation and
+        // installs that theme's visuals as the defaults. Editor has no named background color, so a
+        // sensible dark surround is used.
+        _themes = new[]
+        {
+            new ThemeOption("Editor", EditorTheme.Apply, new Color(40, 40, 40, 255)),
+            new ThemeOption("Dark Pro", DarkProTheme.Apply, DarkProColors.Background),
+        };
 
-        SwitchScreen(() => new AllControlsScreen());
+        _currentScreenFactory = () => new AllControlsScreen();
+        ApplyTheme(0);
+        RebuildScreen();
 
         while (!WindowShouldClose())
         {
-            if (IsKeyPressed(KeyboardKey.F1))
-            {
-                SwitchScreen(() => new AllControlsScreen());
-            }
-            else if (IsKeyPressed(KeyboardKey.F2))
-            {
-                SwitchScreen(() => new ScreenshotScreen());
-            }
+            HandleInput();
 
             BeginDrawing();
-            ClearBackground(new Color(40, 40, 40, 255));
+            ClearBackground(_clearColor);
 
             GumService.Default.Update(GetTime());
             GumService.Default.Draw();
@@ -62,16 +81,47 @@ public static class Program
         CloseWindow();
     }
 
-    // Installs the theme's default templates / styling. One parameterless call applies the theme on
-    // every backend: it wires KernSmith for in-memory font generation (no .fnt files shipped) and
-    // installs the Editor visuals as the defaults.
-    private static void ApplyTheme()
+    private static void HandleInput()
     {
-        EditorTheme.Apply();
+        if (IsKeyPressed(KeyboardKey.F1))
+        {
+            SwitchScreen(() => new AllControlsScreen());
+        }
+        else if (IsKeyPressed(KeyboardKey.F2))
+        {
+            SwitchScreen(() => new ScreenshotScreen());
+        }
+
+        // Number keys 1..N swap the active theme and rebuild the current screen so its controls
+        // re-resolve their visuals from the newly-installed default templates.
+        for (int i = 0; i < _themes.Length; i++)
+        {
+            if (IsKeyPressed(KeyboardKey.One + i) && i != _currentThemeIndex)
+            {
+                ApplyTheme(i);
+                RebuildScreen();
+                break;
+            }
+        }
+    }
+
+    private static void ApplyTheme(int index)
+    {
+        _currentThemeIndex = index;
+        ThemeOption theme = _themes[index];
+        theme.Apply();
+        _clearColor = theme.ClearColor;
+        SetWindowTitle($"Gum raylib - Themes Showcase  -  {index + 1}. {theme.Name}  (1-{_themes.Length} theme, F1/F2 screen)");
+    }
+
+    private static void RebuildScreen()
+    {
+        SwitchScreen(_currentScreenFactory);
     }
 
     private static void SwitchScreen(Func<ShowcaseScreen> factory)
     {
+        _currentScreenFactory = factory;
         _currentScreen?.Destroy();
         _currentScreen = factory();
         _currentScreen.Build();
