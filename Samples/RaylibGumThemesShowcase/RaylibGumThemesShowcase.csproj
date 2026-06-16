@@ -12,6 +12,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Source-share the exact showcase screens from the MonoGame host so the two stay identical
+         for side-by-side comparison. They are platform-neutral Gum.Forms code. -->
+    <Compile Include="..\MonoGameGumThemesShowcase\Screens\*.cs" Link="Screens\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
     <ProjectReference Include="..\..\Runtimes\RaylibGum\RaylibGum.csproj" />
     <!-- The theme package is the only Gum reference a consumer needs: it transitively brings
