@@ -1,7 +1,11 @@
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
+#if RAYLIB
+using Raylib_cs;
+#else
 using Microsoft.Xna.Framework;
+#endif
 using RenderingLibrary.Graphics;
 using BaseComboBoxVisual = Gum.Forms.DefaultVisuals.V3.ComboBoxVisual;
 
@@ -104,7 +108,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = Color.Transparent;
+        border.StrokeColor = new Color(0, 0, 0, 0);
         return border;
     }
 
@@ -159,7 +163,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
     private void WireStates()
     {
         States.Enabled.Apply = () => Apply(
-            fill: MeadowColors.PeachLight, border: Color.Transparent,
+            fill: MeadowColors.PeachLight, border: new Color(0, 0, 0, 0),
             text: MeadowColors.TealDark, glyph: MeadowColors.CoralDark, ring: false);
 
         States.Highlighted.Apply = () => Apply(

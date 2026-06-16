@@ -1,7 +1,11 @@
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
+#if RAYLIB
+using Raylib_cs;
+#else
 using Microsoft.Xna.Framework;
+#endif
 using RenderingLibrary.Graphics;
 using BaseListBoxItemVisual = Gum.Forms.DefaultVisuals.V3.ListBoxItemVisual;
 
@@ -51,7 +55,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = 0f;
         fill.IsFilled = true;
-        fill.FillColor = Color.Transparent;
+        fill.FillColor = new Color(0, 0, 0, 0);
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -59,7 +63,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
     private void WireStates()
     {
         States.Enabled.Apply = () => ApplyPalette(
-            fill: Color.Transparent, text: NeonColors.Text);
+            fill: new Color(0, 0, 0, 0), text: NeonColors.Text);
 
         States.Highlighted.Apply = () => ApplyPalette(
             fill: NeonPalette.HoverRow, text: NeonColors.Text);
@@ -71,7 +75,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
             fill: NeonPalette.SelectedRow, text: NeonColors.Accent);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fill: Color.Transparent, text: NeonColors.Disabled);
+            fill: new Color(0, 0, 0, 0), text: NeonColors.Disabled);
     }
 
     private void ApplyPalette(Color fill, Color text)

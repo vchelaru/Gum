@@ -2,7 +2,11 @@ using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Wireframe;
+#if RAYLIB
+using Raylib_cs;
+#else
 using Microsoft.Xna.Framework;
+#endif
 using RenderingLibrary.Graphics;
 using BaseListBoxItemVisual = Gum.Forms.DefaultVisuals.V3.ListBoxItemVisual;
 
@@ -59,7 +63,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = 0f;
         fill.IsFilled = true;
-        fill.FillColor = Color.Transparent;
+        fill.FillColor = new Color(0, 0, 0, 0);
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -72,7 +76,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         // selected; selected+focused brightens to full Accent to mark which row
         // the keyboard will move from.
         States.Enabled.Apply = () => ApplyPalette(
-            fill: Color.Transparent, text: DarkProColors.Text);
+            fill: new Color(0, 0, 0, 0), text: DarkProColors.Text);
 
         States.Highlighted.Apply = () => ApplyPalette(
             fill: DarkProColors.Surface2, text: DarkProColors.Text);
@@ -84,7 +88,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
             fill: DarkProColors.Accent, text: DarkProColors.Text);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fill: Color.Transparent, text: DarkProColors.DisabledText);
+            fill: new Color(0, 0, 0, 0), text: DarkProColors.DisabledText);
     }
 
     private void ApplyPalette(Color fill, Color text)

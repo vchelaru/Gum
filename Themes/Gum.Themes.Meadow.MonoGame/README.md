@@ -8,10 +8,11 @@ Pick the package matching your runtime:
 
 - MonoGame: `dotnet add package Gum.Themes.Meadow.MonoGame`
 - KNI: `dotnet add package Gum.Themes.Meadow.Kni`
+- raylib: `dotnet add package Gum.Themes.Meadow.Raylib`
 
 ## Usage
 
-Call `MeadowTheme.Apply(GraphicsDevice)` once after initializing Gum:
+Call the parameterless `MeadowTheme.Apply()` once after initializing Gum — the same call on every backend:
 
 ```csharp
 using Gum.Themes.Meadow;
@@ -19,12 +20,15 @@ using Gum.Themes.Meadow;
 protected override void Initialize()
 {
     GumService.Default.Initialize(this);
-    MeadowTheme.Apply(GraphicsDevice);
+    MeadowTheme.Apply();
     base.Initialize();
 }
 ```
 
 Every default Forms control now renders in the Meadow style.
+
+> On MonoGame/KNI a legacy `MeadowTheme.Apply(GraphicsDevice)` overload remains for source
+> compatibility; the graphics device is now resolved internally, so prefer `Apply()`.
 
 ## Licensing
 

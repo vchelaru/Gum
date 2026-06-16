@@ -2,7 +2,11 @@ using Gum.DataTypes;
 using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
+#if RAYLIB
+using Raylib_cs;
+#else
 using Microsoft.Xna.Framework;
+#endif
 using BaseMenuItemVisual = Gum.Forms.DefaultVisuals.V3.MenuItemVisual;
 
 namespace Gum.Themes.Template;
@@ -40,7 +44,7 @@ public class MenuItemVisual : BaseMenuItemVisual
         ContainerInstance.Parent = null;
 
         // Square-cornered fill so items tile flush; starts transparent (rest).
-        _fill = TemplateShapes.Fill(Color.Transparent, cornerRadius: 0f, "MenuItemFill");
+        _fill = TemplateShapes.Fill(new Color(0, 0, 0, 0), cornerRadius: 0f, "MenuItemFill");
         AddChild(_fill);
 
         AddChild(ContainerInstance);
@@ -96,7 +100,7 @@ public class MenuItemVisual : BaseMenuItemVisual
         // helper toggled Background.Visible directly; we replace the entire
         // state body so we don't need to keep V3's NineSlice attached.
         States.Enabled.Apply = () => ApplyPalette(
-            fill: Color.Transparent, text: TemplatePalette.Text);
+            fill: new Color(0, 0, 0, 0), text: TemplatePalette.Text);
 
         States.Highlighted.Apply = () => ApplyPalette(
             fill: TemplatePalette.Surface2, text: TemplatePalette.Text);
@@ -108,7 +112,7 @@ public class MenuItemVisual : BaseMenuItemVisual
             fill: TemplatePalette.Surface2, text: TemplatePalette.Text);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fill: Color.Transparent, text: TemplatePalette.DisabledText);
+            fill: new Color(0, 0, 0, 0), text: TemplatePalette.DisabledText);
     }
 
     private void ApplyPalette(Color fill, Color text)

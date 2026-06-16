@@ -1,6 +1,10 @@
 using Gum.DataTypes;
 using Gum.GueDeriving;
+#if RAYLIB
+using Raylib_cs;
+#else
 using Microsoft.Xna.Framework;
+#endif
 using BaseButtonVisual = Gum.Forms.DefaultVisuals.V3.ButtonVisual;
 
 namespace Gum.Themes.Template.Variants;

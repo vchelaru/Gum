@@ -25,11 +25,14 @@
   <ItemGroup>
     <Compile Include="..\Gum.Themes.Editor.MonoGame\**\*.cs" />
     <Compile Remove="..\Gum.Themes.Editor.MonoGame\obj\**" />
+    <!-- Shared platform shim (lives outside the MonoGame project folder, so the glob above
+         does not pick it up). -->
+    <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.KniGum\KernSmith.KniGum.csproj">
-      <PrivateAssets>All</PrivateAssets>
-    </ProjectReference>
+    <!-- KernSmith is a runtime dependency (the theme generates fonts at runtime), so it must flow
+         transitively to consumers — do NOT mark it PrivateAssets=All. -->
+    <ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.KniGum\KernSmith.KniGum.csproj" />
     <PackageReference Include="nkast.Xna.Framework" Version="4.2.9001">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>

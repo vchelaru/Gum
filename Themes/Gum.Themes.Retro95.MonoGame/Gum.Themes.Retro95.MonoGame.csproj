@@ -25,6 +25,12 @@
     <None Include="Content\Fonts\DejaVuSansMono-LICENSE.txt" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Shared platform shims: isolate the per-backend font-creator + shape-renderer wiring so
+         Retro95Theme stays platform-agnostic and source-shares cleanly into .Kni and .Raylib. -->
+    <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
+    <Compile Include="..\Shared\ThemeShapePlatform.cs" Link="ThemeShapePlatform.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <!-- Nunito (SIL OFL) is bundled as a stand-in for the Win95-era MS Sans Serif,
          which is proprietary and not redistributable. Nunito's rounded humanist
          shapes don't match the CSS-source 'IBM Plex Sans' verbatim, but it pairs

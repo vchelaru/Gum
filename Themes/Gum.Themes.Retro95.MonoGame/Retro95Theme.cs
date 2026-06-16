@@ -6,10 +6,9 @@ using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.Wireframe;
 using GumRuntime;
-using KernSmith.Gum;
-using Microsoft.Xna.Framework;
+#if !RAYLIB
 using Microsoft.Xna.Framework.Graphics;
-using MonoGameAndGum.Renderables;
+#endif
 using RenderingLibrary.Graphics.Fonts;
 
 namespace Gum.Themes.Retro95;
@@ -50,12 +49,9 @@ public static class Retro95Theme
     /// and registers the theme's visuals as the default templates for Forms
     /// controls.
     /// </summary>
-    /// <param name="graphicsDevice">The active <see cref="GraphicsDevice"/>;
-    /// required by KernSmith to rasterize fonts into textures.</param>
-    public static void Apply(GraphicsDevice graphicsDevice)
+    public static void Apply()
     {
-        CustomSetPropertyOnRenderable.InMemoryFontCreator =
-            new KernSmithFontCreator(graphicsDevice);
+        ThemePlatform.WireInMemoryFontCreator();
 
         // Pre-register every non-ASCII glyph the theme renders as Text rather
         // than as a sprite-sheet icon. KernSmith bakes only declared characters
@@ -64,20 +60,26 @@ public static class Retro95Theme
         // All live in the bundled DejaVu Sans Mono icon font.
         BmfcSave.AddCharacters("✓✕▼▲◀▶■");
 
-        // Retro95's RadioButton uses CircleRuntime (the only circular
-        // chrome in the theme — everything else is a rectangular bevel built
-        // from RectangleRuntime strips). Apos.Shapes' ShapeRenderer
-        // must be initialized for that one control. Guarded for the case
-        // where the host app already initialized it.
-        if (!ShapeRenderer.Self.IsInitialized)
-        {
-            ShapeRenderer.Self.Initialize();
-        }
+        // Retro95's RadioButton uses CircleRuntime (the only circular chrome in the theme —
+        // everything else is a rectangular bevel built from RectangleRuntime strips). Apos.Shapes'
+        // ShapeRenderer must be initialized for that one control on XNA-like backends. The shim
+        // no-ops on raylib (shapes render natively there) so consumers don't need to know the
+        // theme uses shapes internally.
+        ThemeShapePlatform.InitializeShapeRenderer();
 
         RegisterBundledFonts();
         ConfigureStyling();
         RegisterVisuals();
     }
+
+#if !RAYLIB
+    /// <summary>
+    /// Backwards-compatible overload retained for existing MonoGame/KNI callers. The graphics
+    /// device is now resolved internally from the active Gum renderer, so the argument is ignored;
+    /// prefer the parameterless <see cref="Apply()"/>.
+    /// </summary>
+    public static void Apply(GraphicsDevice graphicsDevice) => Apply();
+#endif
 
     private static void RegisterBundledFonts()
     {
@@ -88,10 +90,10 @@ public static class Retro95Theme
 
     private static void RegisterEmbeddedFont(string family, string fileName, string? style)
     {
-        // Resource prefix is derived from the assembly name so this code works
-        // in both the MonoGame and KNI variants without forking. The KNI csproj
-        // re-embeds the TTFs via <Link> so the resource path inside that
-        // assembly is "<assembly-name>.Content.Fonts.<file>".
+        // Resource prefix is derived from the assembly name so this code works in all three
+        // variants (Gum.Themes.Retro95.MonoGame / .Kni / .Raylib) without forking. The .Kni and
+        // .Raylib csprojs re-embed the TTFs via <Link> so the resource path inside each assembly
+        // is "<assembly-name>.Content.Fonts.<file>".
         Assembly assembly = typeof(Retro95Theme).Assembly;
         string resourceName = $"{assembly.GetName().Name}.Content.Fonts.{fileName}";
 
@@ -107,14 +109,7 @@ public static class Retro95Theme
         stream.CopyTo(buffer);
         byte[] fontBytes = buffer.ToArray();
 
-        if (style == null)
-        {
-            KernSmithFontCreator.RegisterFont(family, fontBytes);
-        }
-        else
-        {
-            KernSmithFontCreator.RegisterFont(family, fontBytes, style: style);
-        }
+        ThemePlatform.RegisterFont(family, fontBytes, style);
     }
 
     private static void ConfigureStyling()

@@ -26,6 +26,12 @@
     <None Include="Content\Fonts\DejaVuSansMono-LICENSE.txt" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Shared platform shims: isolate the per-backend font-creator + shape-renderer wiring so
+         NeonTheme stays platform-agnostic and source-shares cleanly into .Kni and .Raylib. -->
+    <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
+    <Compile Include="..\Shared\ThemeShapePlatform.cs" Link="ThemeShapePlatform.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <!-- Share Tech Mono (SIL OFL) is the body typeface from the Neon CSS spec. -->
     <EmbeddedResource Include="Content\Fonts\ShareTechMono-Regular.ttf" />
     <!-- Orbitron (SIL OFL) is used for title-bar headings (CSS uses it on

@@ -6,10 +6,9 @@ using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.Wireframe;
 using GumRuntime;
-using KernSmith.Gum;
-using Microsoft.Xna.Framework;
+#if !RAYLIB
 using Microsoft.Xna.Framework.Graphics;
-using MonoGameAndGum.Renderables;
+#endif
 using RenderingLibrary.Graphics.Fonts;
 using V3 = Gum.Forms.DefaultVisuals.V3;
 
@@ -63,12 +62,9 @@ public static class TemplateTheme
     /// theme's color and text tokens, and registers the theme's visuals as the
     /// default templates for Forms controls.
     /// </summary>
-    /// <param name="graphicsDevice">The active <see cref="GraphicsDevice"/>; required
-    /// by KernSmith to rasterize fonts into textures.</param>
-    public static void Apply(GraphicsDevice graphicsDevice)
+    public static void Apply()
     {
-        CustomSetPropertyOnRenderable.InMemoryFontCreator =
-            new KernSmithFontCreator(graphicsDevice);
+        ThemePlatform.WireInMemoryFontCreator();
 
         // Pre-register any glyphs visuals render as Text rather than as sprite-sheet
         // icons. KernSmith bakes only the characters it has been told about, so
@@ -78,12 +74,10 @@ public static class TemplateTheme
         BmfcSave.AddCharacters("✓▼◀▶");
 
         // The visuals build their bodies from Apos.Shapes-backed RectangleRuntime /
-        // CircleRuntime instances, which require ShapeRenderer to be initialized.
-        // Guard for the case where the host app already initialized it.
-        if (!ShapeRenderer.Self.IsInitialized)
-        {
-            ShapeRenderer.Self.Initialize();
-        }
+        // CircleRuntime instances, which require ShapeRenderer to be initialized on
+        // XNA-like backends. The shim no-ops on raylib (shapes render natively there)
+        // and guards against the host app having already initialized it.
+        ThemeShapePlatform.InitializeShapeRenderer();
 
         RegisterBundledFonts();
 
@@ -91,6 +85,15 @@ public static class TemplateTheme
 
         RegisterVisuals();
     }
+
+#if !RAYLIB
+    /// <summary>
+    /// Backwards-compatible overload retained for existing MonoGame/KNI callers. The graphics
+    /// device is now resolved internally from the active Gum renderer, so the argument is ignored;
+    /// prefer the parameterless <see cref="Apply()"/>.
+    /// </summary>
+    public static void Apply(GraphicsDevice graphicsDevice) => Apply();
+#endif
 
     private static void RegisterBundledFonts()
     {
@@ -119,9 +122,9 @@ public static class TemplateTheme
     private static void RegisterEmbeddedFont(string family, string fileName, string? style)
     {
         // Resource prefix is derived from the assembly name so this code works in
-        // both the MonoGame and KNI variants without forking. The KNI csproj
-        // re-embeds the TTFs via <Link> so the resource path inside that assembly is
-        // "<assembly-name>.Content.Fonts.<file>".
+        // all three variants (MonoGame / KNI / raylib) without forking. The .Kni and
+        // .Raylib csprojs re-embed the TTFs via <Link> so the resource path inside
+        // each assembly is "<assembly-name>.Content.Fonts.<file>".
         //
         // CLONE GOTCHA: this resolves only when the assembly name equals the
         // project's root namespace (the fonts are embedded under RootNamespace but
@@ -144,14 +147,7 @@ public static class TemplateTheme
         stream.CopyTo(buffer);
         byte[] fontBytes = buffer.ToArray();
 
-        if (style == null)
-        {
-            KernSmithFontCreator.RegisterFont(family, fontBytes);
-        }
-        else
-        {
-            KernSmithFontCreator.RegisterFont(family, fontBytes, style: style);
-        }
+        ThemePlatform.RegisterFont(family, fontBytes, style);
     }
 
     private static void ConfigureStyling()

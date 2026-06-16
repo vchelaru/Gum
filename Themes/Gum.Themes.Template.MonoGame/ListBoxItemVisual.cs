@@ -2,7 +2,11 @@ using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Wireframe;
+#if RAYLIB
+using Raylib_cs;
+#else
 using Microsoft.Xna.Framework;
+#endif
 using RenderingLibrary.Graphics;
 using BaseListBoxItemVisual = Gum.Forms.DefaultVisuals.V3.ListBoxItemVisual;
 
@@ -29,7 +33,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
 
         // Square-cornered fill so the row tiles flush inside the rounded ListBox
         // shell (the shell's border masks the corners). Starts transparent.
-        _fill = TemplateShapes.Fill(Color.Transparent, cornerRadius: 0f, "ListItemFill");
+        _fill = TemplateShapes.Fill(new Color(0, 0, 0, 0), cornerRadius: 0f, "ListItemFill");
         AddChild(_fill);
 
         AddChild(TextInstance);
@@ -53,7 +57,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         // selected; selected+focused brightens to full Accent to mark which row
         // the keyboard will move from.
         States.Enabled.Apply = () => ApplyPalette(
-            fill: Color.Transparent, text: TemplatePalette.Text);
+            fill: new Color(0, 0, 0, 0), text: TemplatePalette.Text);
 
         States.Highlighted.Apply = () => ApplyPalette(
             fill: TemplatePalette.Surface2, text: TemplatePalette.Text);
@@ -65,7 +69,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
             fill: TemplatePalette.Accent, text: TemplatePalette.Text);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fill: Color.Transparent, text: TemplatePalette.DisabledText);
+            fill: new Color(0, 0, 0, 0), text: TemplatePalette.DisabledText);
     }
 
     private void ApplyPalette(Color fill, Color text)

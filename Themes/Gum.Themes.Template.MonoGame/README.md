@@ -11,7 +11,7 @@ can focus on the look instead of the plumbing.
 
 | File | Role |
 |------|------|
-| `TemplateTheme.cs` | Entry point. `Apply(GraphicsDevice)` registers fonts, sets the shared styling tokens, and installs the visuals as the default Forms templates. |
+| `TemplateTheme.cs` | Entry point. The parameterless `Apply()` registers fonts, sets the shared styling tokens, and installs the visuals as the default Forms templates. |
 | `TemplatePalette.cs` | **The one place colors live.** Base tokens transcribed from your design's CSS, plus derived hover/press colors computed via `Adjust`. |
 | `TemplateShapes.cs` | Factory helpers for the Apos.Shapes runtimes (filled rect, stroked border, focus ring, circles). Keeps each visual short. |
 | `TemplateTextInputDecoration.cs` | Shared shape stack + state wiring for TextBox and PasswordBox. |
@@ -19,12 +19,37 @@ can focus on the look instead of the plumbing.
 | `Variants/` | Opt-in **Rich** alternates for a representative control subset (pill + hard-offset-shadow button, rounded box, soft focus glow, dashed-outline panel, circular drop-shadow thumb). Not registered by default — copy the ones matching your design. See *Choosing a style* below. |
 | `Content/Fonts/` | Embedded TTFs — a display font, a body font (the multi-font demo), and an icon font for glyphs the others lack. |
 
-The `.Kni` project source-shares every `.cs` from this project and re-embeds the
-fonts under its own assembly name — one set of code, two backend packages.
+The `.Kni` and `.Raylib` projects source-share every `.cs` from this project and
+re-embed the fonts under their own assembly names — one set of code, three backend
+packages.
+
+## Consuming a built theme
+
+A finished clone ships one package per rendering backend; install the one matching
+your runtime:
+
+```
+dotnet add package Gum.Themes.Template.MonoGame
+dotnet add package Gum.Themes.Template.Kni
+dotnet add package Gum.Themes.Template.Raylib
+```
+
+Then call the parameterless `Apply()` after initializing Gum — the same call on
+every backend:
+
+```csharp
+using Gum.Themes.Template;
+
+// after GumService.Default.Initialize(...)
+TemplateTheme.Apply();
+```
+
+> On MonoGame/KNI a legacy `TemplateTheme.Apply(GraphicsDevice)` overload remains for
+> source compatibility; the graphics device is now resolved internally, so prefer `Apply()`.
 
 ## Making your own theme
 
-1. **Clone both projects** (`.MonoGame` and `.Kni`) and rename `Template` →
+1. **Clone all three projects** (`.MonoGame`, `.Kni`, and `.Raylib`) and rename `Template` →
    `YourTheme`: folder names, file names, the `<PackageId>`, the `namespace`, and the
    four `Template*` type names (`TemplateTheme`, `TemplatePalette`, `TemplateShapes`,
    `TemplateTextInputDecoration`). The per-control visual class names (`ButtonVisual`,
@@ -36,7 +61,7 @@ fonts under its own assembly name — one set of code, two backend packages.
    not `"TemplateBoxFill"`), so the only theme-owned `Template` tokens are the
    namespace and those four type names — rename exactly those (a whole-word /
    case-sensitive replace of each), and leave the framework identifiers alone.
-   **Leave `<AssemblyName>` and `<RootNamespace>` unset** in both csprojs: they
+   **Leave `<AssemblyName>` and `<RootNamespace>` unset** in all three csprojs: they
    default to the project name and must stay equal, because the embedded fonts are
    looked up by assembly name but live under the root namespace. If those diverge,
    the build still succeeds but fonts throw `FileNotFoundException` at runtime — so
@@ -47,7 +72,7 @@ fonts under its own assembly name — one set of code, two backend packages.
    not a cage — add tokens for anything your design defines (extra accents,
    success/danger, etc.) and delete the ones you don't use.
 3. **Swap the fonts.** Drop your TTFs into `Content/Fonts/`, update the
-   `<EmbeddedResource>` entries in both csprojs, and update `FontFamily` /
+   `<EmbeddedResource>` entries in all three csprojs, and update `FontFamily` /
    `IconFontFamily` / `RegisterBundledFonts` in the theme class. Keep the license
    files alongside the fonts and packed in the csproj.
    **Need static TTFs, not a variable font.** KernSmith rasterizes static TTFs; it
@@ -59,11 +84,11 @@ fonts under its own assembly name — one set of code, two backend packages.
    of VF-only Google fonts. This template ships **two** families — see *Two typefaces*.
 4. **Restyle the visuals**, and as you build out a control, move it from the
    "stock V3" block in `RegisterVisuals` up to the styled block.
-5. **Verify by running, not just building.** Build *both* `.MonoGame` and `.Kni`,
-   then add the theme to the `MonoGameGumThemesShowcase` sample (a `ProjectReference`
+5. **Verify by running, not just building.** Build all three (`.MonoGame`, `.Kni`,
+   and `.Raylib`), then add the theme to the `MonoGameGumThemesShowcase` sample (a `ProjectReference`
    plus one `ThemeOption` entry) and run it. `Apply` and font loading only fail at
    runtime — this is where a font `FileNotFoundException` from an uneven rename shows.
-6. **Publish:** flip `<GeneratePackageOnBuild>` to `true` in both csprojs.
+6. **Publish:** flip `<GeneratePackageOnBuild>` to `true` in all three csprojs.
 
 ## Choosing a style: flat default, or the Rich variants
 

@@ -6,10 +6,9 @@ using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.Wireframe;
 using GumRuntime;
-using KernSmith.Gum;
-using Microsoft.Xna.Framework;
+#if !RAYLIB
 using Microsoft.Xna.Framework.Graphics;
-using MonoGameAndGum.Renderables;
+#endif
 using RenderingLibrary.Graphics.Fonts;
 
 namespace Gum.Themes.Bubblegum;
@@ -48,12 +47,9 @@ public static class BubblegumTheme
     /// Bubblegum color and text tokens, and registers the theme's visuals as
     /// the default templates for Forms controls.
     /// </summary>
-    /// <param name="graphicsDevice">The active <see cref="GraphicsDevice"/>;
-    /// required by KernSmith to rasterize fonts into textures.</param>
-    public static void Apply(GraphicsDevice graphicsDevice)
+    public static void Apply()
     {
-        CustomSetPropertyOnRenderable.InMemoryFontCreator =
-            new KernSmithFontCreator(graphicsDevice);
+        ThemePlatform.WireInMemoryFontCreator();
 
         // Pre-register the icon glyphs the theme renders as Text rather than as
         // sprite-sheet icons. KernSmith bakes only the characters it has been
@@ -63,14 +59,11 @@ public static class BubblegumTheme
         // Sans Mono icon font (Nunito's subset doesn't cover them).
         BmfcSave.AddCharacters("✓▼");
 
-        // Bubblegum's visuals build their bodies out of Apos.Shapes-backed
-        // RectangleRuntime / CircleRuntime instances, which require ShapeRenderer
-        // to be initialized. Guard for the case where the host app already
-        // initialized it (mixing themes / using shape runtimes elsewhere).
-        if (!ShapeRenderer.Self.IsInitialized)
-        {
-            ShapeRenderer.Self.Initialize();
-        }
+        // Bubblegum's visuals build their bodies out of Apos.Shapes-backed RectangleRuntime /
+        // CircleRuntime instances, which require ShapeRenderer to be initialized on XNA-like
+        // backends. The shim no-ops on raylib (shapes render natively there) so consumers don't
+        // need to know the theme uses shapes internally.
+        ThemeShapePlatform.InitializeShapeRenderer();
 
         RegisterBundledFonts();
 
@@ -78,6 +71,15 @@ public static class BubblegumTheme
 
         RegisterVisuals();
     }
+
+#if !RAYLIB
+    /// <summary>
+    /// Backwards-compatible overload retained for existing MonoGame/KNI callers. The graphics
+    /// device is now resolved internally from the active Gum renderer, so the argument is ignored;
+    /// prefer the parameterless <see cref="Apply()"/>.
+    /// </summary>
+    public static void Apply(GraphicsDevice graphicsDevice) => Apply();
+#endif
 
     private static void RegisterBundledFonts()
     {
@@ -116,14 +118,7 @@ public static class BubblegumTheme
         stream.CopyTo(buffer);
         byte[] fontBytes = buffer.ToArray();
 
-        if (style == null)
-        {
-            KernSmithFontCreator.RegisterFont(family, fontBytes);
-        }
-        else
-        {
-            KernSmithFontCreator.RegisterFont(family, fontBytes, style: style);
-        }
+        ThemePlatform.RegisterFont(family, fontBytes, style);
     }
 
     private static void ConfigureStyling()

@@ -1,7 +1,11 @@
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
+#if RAYLIB
+using Raylib_cs;
+#else
 using Microsoft.Xna.Framework;
+#endif
 using RenderingLibrary.Graphics;
 using BaseListBoxItemVisual = Gum.Forms.DefaultVisuals.V3.ListBoxItemVisual;
 
@@ -33,7 +37,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         _fill.WidthUnits = DimensionUnitType.RelativeToParent;
         _fill.HeightUnits = DimensionUnitType.RelativeToParent;
         _fill.IsFilled = true;
-        _fill.FillColor = Color.Transparent;
+        _fill.FillColor = new Color(0, 0, 0, 0);
         _fill.StrokeWidth = 0;
         AddChild(_fill);
 
@@ -53,11 +57,11 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         // but that's a modernization — keeping the historical behavior here
         // makes selected items stand out unambiguously from "the row my cursor
         // happens to be over."
-        States.Enabled.Apply = () => Apply(Color.Transparent, Retro95Colors.Text);
-        States.Highlighted.Apply = () => Apply(Color.Transparent, Retro95Colors.Text);
+        States.Enabled.Apply = () => Apply(new Color(0, 0, 0, 0), Retro95Colors.Text);
+        States.Highlighted.Apply = () => Apply(new Color(0, 0, 0, 0), Retro95Colors.Text);
         States.Selected.Apply = () => Apply(Retro95Colors.Selection, Retro95Colors.SelectionText);
         States.Focused.Apply = () => Apply(Retro95Colors.Selection, Retro95Colors.SelectionText);
-        States.Disabled.Apply = () => Apply(Color.Transparent, Retro95Colors.DisabledText);
+        States.Disabled.Apply = () => Apply(new Color(0, 0, 0, 0), Retro95Colors.DisabledText);
     }
 
     private void Apply(Color fill, Color text)

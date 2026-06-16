@@ -25,6 +25,12 @@
     <None Include="Content\Fonts\DejaVuSansMono-LICENSE.txt" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Shared platform shims: isolate the per-backend font-creator + shape-renderer wiring so
+         BubblegumTheme stays platform-agnostic and source-shares cleanly into .Kni and .Raylib. -->
+    <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
+    <Compile Include="..\Shared\ThemeShapePlatform.cs" Link="ThemeShapePlatform.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <!-- Nunito (SIL OFL) bundled as the theme typeface. Four-style coverage:
          Regular / Bold / Italic / BoldItalic. The bubblegum design uses weights
          700-900; all collapse onto the "Bold" slot. -->

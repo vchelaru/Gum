@@ -12,23 +12,26 @@ dotnet add package Gum.Themes.Editor.MonoGame
 dotnet add package Gum.Themes.Editor.Kni
 ```
 
+```
+dotnet add package Gum.Themes.Editor.Raylib
+```
+
 ## Usage
 
-Call `EditorTheme.Apply` after initializing Gum:
+Call the parameterless `EditorTheme.Apply()` after initializing Gum — the same call on every backend:
 
 ```csharp
 using Gum.Themes.Editor;
 
-protected override void Initialize()
-{
-    GumService.Default.Initialize(this, DefaultVisualsVersion.Newest);
+// after GumService.Default.Initialize(...)
+EditorTheme.Apply();
 
-    EditorTheme.Apply(GraphicsDevice);
-
-    var button = new Button();
-    button.Text = "Click Me";
-}
+var button = new Button();
+button.Text = "Click Me";
 ```
+
+> On MonoGame/KNI a legacy `EditorTheme.Apply(GraphicsDevice)` overload remains for source
+> compatibility; the graphics device is now resolved internally, so prefer `Apply()`.
 
 ## Documentation
 

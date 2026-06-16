@@ -3,9 +3,12 @@ using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.Wireframe;
+#if RAYLIB
+using Raylib_cs;
+#else
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using KernSmith.Gum;
+#endif
 using GumRuntime;
 using RenderingLibrary.Graphics.Fonts;
 
@@ -13,10 +16,14 @@ namespace Gum.Themes.Editor;
 
 public static class EditorTheme
 {
-    public static void Apply(GraphicsDevice graphicsDevice)
+    /// <summary>
+    /// Applies the Editor theme: wires runtime font generation, configures styling, and registers
+    /// the themed Forms control visuals as the active default templates. Call once after Gum has
+    /// been initialized (<c>GumService.Initialize</c>).
+    /// </summary>
+    public static void Apply()
     {
-        CustomSetPropertyOnRenderable.InMemoryFontCreator =
-            new KernSmithFontCreator(graphicsDevice);
+        ThemePlatform.WireInMemoryFontCreator();
 
         // Register special characters used by editor theme visuals (e.g., ExpanderVisual arrows)
         BmfcSave.AddCharacters("►▼");
@@ -50,6 +57,15 @@ public static class EditorTheme
 
         RegisterVisuals();
     }
+
+#if !RAYLIB
+    /// <summary>
+    /// Backwards-compatible overload retained for existing MonoGame/KNI callers. The graphics
+    /// device is now resolved internally from the active Gum renderer, so the argument is ignored;
+    /// prefer the parameterless <see cref="Apply()"/>.
+    /// </summary>
+    public static void Apply(GraphicsDevice graphicsDevice) => Apply();
+#endif
 
     private static void RegisterVisuals()
     {

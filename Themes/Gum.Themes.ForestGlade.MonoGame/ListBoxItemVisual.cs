@@ -1,7 +1,11 @@
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
+#if RAYLIB
+using Raylib_cs;
+#else
 using Microsoft.Xna.Framework;
+#endif
 using RenderingLibrary.Graphics;
 using BaseListBoxItemVisual = Gum.Forms.DefaultVisuals.V3.ListBoxItemVisual;
 
@@ -58,7 +62,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = 0f;
         fill.IsFilled = true;
-        fill.FillColor = Color.Transparent;
+        fill.FillColor = new Color(0, 0, 0, 0);
         fill.StrokeWidth = 0;
         // Selected row CSS: linear-gradient(90deg, rgba(71,246,65,.22), rgba(71,246,65,.05))
         // — leaf-bright fading from left to right. Gradient is enabled here
@@ -105,7 +109,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         Color selRight = new Color(71, 246, 65, 13);    // CSS .05
 
         States.Enabled.Apply = () => ApplyPalette(
-            fillLeft: Color.Transparent, fillRight: Color.Transparent,
+            fillLeft: new Color(0, 0, 0, 0), fillRight: new Color(0, 0, 0, 0),
             text: ForestGladeColors.Text, stripe: false);
 
         States.Highlighted.Apply = () => ApplyPalette(
@@ -121,7 +125,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
             text: ForestGladeColors.SunPale, stripe: true);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fillLeft: Color.Transparent, fillRight: Color.Transparent,
+            fillLeft: new Color(0, 0, 0, 0), fillRight: new Color(0, 0, 0, 0),
             text: ForestGladeColors.Disabled, stripe: false);
     }
 

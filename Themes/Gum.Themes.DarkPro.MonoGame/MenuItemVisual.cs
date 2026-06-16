@@ -3,7 +3,11 @@ using Gum.DataTypes;
 using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
+#if RAYLIB
+using Raylib_cs;
+#else
 using Microsoft.Xna.Framework;
+#endif
 using RenderingLibrary.Graphics;
 using BaseMenuItemVisual = Gum.Forms.DefaultVisuals.V3.MenuItemVisual;
 
@@ -96,7 +100,7 @@ public class MenuItemVisual : BaseMenuItemVisual
         // helper toggled Background.Visible directly; we replace the entire
         // state body so we don't need to keep V3's NineSlice attached.
         States.Enabled.Apply = () => ApplyPalette(
-            fill: Color.Transparent, text: DarkProColors.Text);
+            fill: new Color(0, 0, 0, 0), text: DarkProColors.Text);
 
         States.Highlighted.Apply = () => ApplyPalette(
             fill: DarkProColors.Surface2, text: DarkProColors.Text);
@@ -108,7 +112,7 @@ public class MenuItemVisual : BaseMenuItemVisual
             fill: DarkProColors.Surface2, text: DarkProColors.Text);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fill: Color.Transparent, text: DarkProColors.DisabledText);
+            fill: new Color(0, 0, 0, 0), text: DarkProColors.DisabledText);
     }
 
     private void ApplyPalette(Color fill, Color text)
@@ -133,7 +137,7 @@ public class MenuItemVisual : BaseMenuItemVisual
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.IsFilled = true;
-        fill.FillColor = Color.Transparent;
+        fill.FillColor = new Color(0, 0, 0, 0);
         fill.StrokeWidth = 0;
         return fill;
     }

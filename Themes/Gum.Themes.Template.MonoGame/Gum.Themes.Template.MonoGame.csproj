@@ -13,9 +13,11 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
-    <!-- This is a template, not a shipped package, so it does not emit a .nupkg on
-         build. Flip to true once you have cloned it into a real theme. The rest of
-         the packaging metadata above is left intact so the clone is publish-ready. -->
+    <!-- This is a template, not a shipped package: IsPackable=false keeps `dotnet pack`
+         (the CI publish path) from emitting a .nupkg, and GeneratePackageOnBuild=false keeps
+         local builds from doing so. Flip both once you have cloned it into a real theme. The
+         rest of the packaging metadata above is left intact so the clone is publish-ready. -->
+    <IsPackable>false</IsPackable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IncludeSymbols>true</IncludeSymbols>
@@ -27,6 +29,12 @@
     <None Include="Content\Fonts\OFL.txt" Pack="true" PackagePath="\" />
     <None Include="Content\Fonts\Nunito-OFL.txt" Pack="true" PackagePath="\" />
     <None Include="Content\Fonts\DejaVuSansMono-LICENSE.txt" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Shared platform shims: isolate the per-backend font-creator + shape-renderer wiring so
+         TemplateTheme stays platform-agnostic and source-shares cleanly into .Kni and .Raylib. -->
+    <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
+    <Compile Include="..\Shared\ThemeShapePlatform.cs" Link="ThemeShapePlatform.cs" />
   </ItemGroup>
   <ItemGroup>
     <!-- TTFs are embedded so TemplateTheme.Apply can register them via the

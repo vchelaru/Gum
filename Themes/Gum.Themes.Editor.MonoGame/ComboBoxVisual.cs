@@ -1,6 +1,11 @@
 using BaseComboBoxVisual = Gum.Forms.DefaultVisuals.V3.ComboBoxVisual;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.GueDeriving;
+#if RAYLIB
+using Raylib_cs;
+#else
+using Microsoft.Xna.Framework;
+#endif
 
 namespace Gum.Themes.Editor;
 
@@ -24,12 +29,12 @@ public class ComboBoxVisual : BaseComboBoxVisual
         this.States.Highlighted.Apply += () =>
         {
             rectangle.Visible = true;
-            rectangle.Color = new Microsoft.Xna.Framework.Color(150, 150, 150);
+            rectangle.Color = new Color(150, 150, 150);
         };
         this.States.Pushed.Apply += () =>
         {
             rectangle.Visible = true;
-            rectangle.Color = new Microsoft.Xna.Framework.Color(255, 255, 255);
+            rectangle.Color = new Color(255, 255, 255);
         };
         this.States.Disabled.Apply += () =>
         {

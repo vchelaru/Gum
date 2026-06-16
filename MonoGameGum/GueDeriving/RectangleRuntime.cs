@@ -8,6 +8,7 @@ using Gum.Converters;
 #endif
 
 #if RAYLIB
+using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Renderables;
 using Color = Raylib_cs.Color;
@@ -214,16 +215,28 @@ public class RectangleRuntime : GraphicalUiElement
     /// </summary>
     public override void PreRender()
     {
+        var camera = this.EffectiveManagers?.Renderer?.Camera;
+        float cameraZoom = camera?.Zoom ?? 1f;
+
         float strokeWidth = _strokeWidth;
-        if (_strokeWidthUnits == DimensionUnitType.ScreenPixel)
+        if (_strokeWidthUnits == DimensionUnitType.ScreenPixel && camera != null)
         {
-            var camera = this.EffectiveManagers?.Renderer?.Camera;
-            if (camera != null)
-            {
-                strokeWidth /= camera.Zoom;
-            }
+            strokeWidth /= cameraZoom;
         }
-        ContainedLineRectangle.LinePixelWidth = strokeWidth;
+
+        // Mirror the XNALIKE/Apos PreRender's AA compensation (#2814 cross-backend parity): the
+        // backend's antialiasing widens the rendered stroke by ~1px, so the geometric width handed
+        // to the primitive is reduced by that contribution to keep the VISIBLE width equal to the
+        // nominal StrokeWidth. raylib's MSAA spreads the geometric edge the same way, so without
+        // this a nominal 1px border renders visibly thicker than the Apos/Skia backends.
+        const float aaContribution = 1f;
+        const float minThicknessEpsilon = 0.01f;
+        float aaContributionWorld = aaContribution / cameraZoom;
+        float renderableStrokeWidth = strokeWidth <= 0
+            ? 0f
+            : System.Math.Max(minThicknessEpsilon, strokeWidth - aaContributionWorld);
+
+        ContainedLineRectangle.LinePixelWidth = renderableStrokeWidth;
     }
 #endif
 
@@ -559,6 +572,101 @@ public class RectangleRuntime : GraphicalUiElement
             ContainedLineRectangle.DropshadowBlurY = value;
             NotifyPropertyChanged();
         }
+    }
+
+    // Issue #3175 — additional raylib parity surface so theme source written against the richer
+    // Apos.Shapes feature set (per-corner radii, gradient-endpoint units, antialias toggle)
+    // compiles unchanged on raylib. The raylib LineRectangle renderable does not consume these
+    // yet, so the values round-trip on the runtime as forward compat (same pattern as the SOKOL
+    // StrokeDashLength note above). When the renderable gains support, push them through the way
+    // the GradientX1 / CornerRadius setters above already do.
+
+    bool _isAntialiased = true;
+    /// <inheritdoc cref="CircleRuntime.IsAntialiased"/>
+    public bool IsAntialiased
+    {
+        get => _isAntialiased;
+        set { _isAntialiased = value; NotifyPropertyChanged(); }
+    }
+
+    float? _customRadiusTopLeft;
+    /// <summary>Top-left corner radius override; <c>null</c> falls back to <see cref="CornerRadius"/>. Parity surface, not yet rendered on raylib.</summary>
+    public float? CustomRadiusTopLeft
+    {
+        get => _customRadiusTopLeft;
+        set { _customRadiusTopLeft = value; NotifyPropertyChanged(); }
+    }
+
+    float? _customRadiusTopRight;
+    /// <inheritdoc cref="CustomRadiusTopLeft"/>
+    public float? CustomRadiusTopRight
+    {
+        get => _customRadiusTopRight;
+        set { _customRadiusTopRight = value; NotifyPropertyChanged(); }
+    }
+
+    float? _customRadiusBottomLeft;
+    /// <inheritdoc cref="CustomRadiusTopLeft"/>
+    public float? CustomRadiusBottomLeft
+    {
+        get => _customRadiusBottomLeft;
+        set { _customRadiusBottomLeft = value; NotifyPropertyChanged(); }
+    }
+
+    float? _customRadiusBottomRight;
+    /// <inheritdoc cref="CustomRadiusTopLeft"/>
+    public float? CustomRadiusBottomRight
+    {
+        get => _customRadiusBottomRight;
+        set { _customRadiusBottomRight = value; NotifyPropertyChanged(); }
+    }
+
+    GeneralUnitType _gradientX1Units;
+    /// <summary>Unit for <see cref="GradientX1"/>. Parity surface, not yet rendered on raylib.</summary>
+    public GeneralUnitType GradientX1Units
+    {
+        get => _gradientX1Units;
+        set { _gradientX1Units = value; NotifyPropertyChanged(); }
+    }
+
+    GeneralUnitType _gradientY1Units;
+    /// <inheritdoc cref="GradientX1Units"/>
+    public GeneralUnitType GradientY1Units
+    {
+        get => _gradientY1Units;
+        set { _gradientY1Units = value; NotifyPropertyChanged(); }
+    }
+
+    GeneralUnitType _gradientX2Units;
+    /// <inheritdoc cref="GradientX1Units"/>
+    public GeneralUnitType GradientX2Units
+    {
+        get => _gradientX2Units;
+        set { _gradientX2Units = value; NotifyPropertyChanged(); }
+    }
+
+    GeneralUnitType _gradientY2Units;
+    /// <inheritdoc cref="GradientX1Units"/>
+    public GeneralUnitType GradientY2Units
+    {
+        get => _gradientY2Units;
+        set { _gradientY2Units = value; NotifyPropertyChanged(); }
+    }
+
+    DimensionUnitType _gradientInnerRadiusUnits;
+    /// <summary>Unit for <see cref="GradientInnerRadius"/>. Parity surface, not yet rendered on raylib.</summary>
+    public DimensionUnitType GradientInnerRadiusUnits
+    {
+        get => _gradientInnerRadiusUnits;
+        set { _gradientInnerRadiusUnits = value; NotifyPropertyChanged(); }
+    }
+
+    DimensionUnitType _gradientOuterRadiusUnits;
+    /// <inheritdoc cref="GradientInnerRadiusUnits"/>
+    public DimensionUnitType GradientOuterRadiusUnits
+    {
+        get => _gradientOuterRadiusUnits;
+        set { _gradientOuterRadiusUnits = value; NotifyPropertyChanged(); }
     }
 #endif
 

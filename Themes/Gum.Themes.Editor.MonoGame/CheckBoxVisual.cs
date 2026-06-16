@@ -1,5 +1,10 @@
 using BaseCheckBoxVisual = Gum.Forms.DefaultVisuals.V3.CheckBoxVisual;
 using Gum.GueDeriving;
+#if RAYLIB
+using Raylib_cs;
+#else
+using Microsoft.Xna.Framework;
+#endif
 
 namespace Gum.Themes.Editor;
 
@@ -25,23 +30,23 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         this.States.HighlightedOn.Apply += () =>
         {
             rectangle.Visible = true;
-            rectangle.Color = new Microsoft.Xna.Framework.Color(150, 150, 150);
+            rectangle.Color = new Color(150, 150, 150);
         };
         this.States.HighlightedOff.Apply += () =>
         {
             rectangle.Visible = true;
-            rectangle.Color = new Microsoft.Xna.Framework.Color(150, 150, 150);
+            rectangle.Color = new Color(150, 150, 150);
         };
 
         this.States.PushedOn.Apply += () =>
         {
             rectangle.Visible = true;
-            rectangle.Color = new Microsoft.Xna.Framework.Color(255, 255, 255);
+            rectangle.Color = new Color(255, 255, 255);
         };
         this.States.PushedOff.Apply += () =>
         {
             rectangle.Visible = true;
-            rectangle.Color = new Microsoft.Xna.Framework.Color(255, 255, 255);
+            rectangle.Color = new Color(255, 255, 255);
         };
 
         this.States.DisabledOn.Apply += () =>

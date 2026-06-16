@@ -13,8 +13,10 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
-    <!-- This is a template, not a shipped package, so it does not emit a .nupkg on
-         build. Flip to true once you have cloned it into a real theme. -->
+    <!-- This is a template, not a shipped package: IsPackable=false keeps `dotnet pack`
+         (the CI publish path) from emitting a .nupkg, and GeneratePackageOnBuild=false keeps
+         local builds from doing so. Flip both once you have cloned it into a real theme. -->
+    <IsPackable>false</IsPackable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IncludeSymbols>true</IncludeSymbols>
@@ -33,6 +35,9 @@
     <Compile Include="..\Gum.Themes.Template.MonoGame\**\*.cs" />
     <Compile Remove="..\Gum.Themes.Template.MonoGame\obj\**" />
     <Compile Remove="..\Gum.Themes.Template.MonoGame\bin\**" />
+    <!-- Shared platform shims (live outside the MonoGame project folder, so the glob misses them). -->
+    <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
+    <Compile Include="..\Shared\ThemeShapePlatform.cs" Link="ThemeShapePlatform.cs" />
   </ItemGroup>
   <ItemGroup>
     <!-- Re-embed the TTFs from the MonoGame project's Content\Fonts folder, but map

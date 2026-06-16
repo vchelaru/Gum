@@ -6,10 +6,9 @@ using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.Wireframe;
 using GumRuntime;
-using KernSmith.Gum;
-using Microsoft.Xna.Framework;
+#if !RAYLIB
 using Microsoft.Xna.Framework.Graphics;
-using MonoGameAndGum.Renderables;
+#endif
 using RenderingLibrary.Graphics.Fonts;
 using V3 = Gum.Forms.DefaultVisuals.V3;
 
@@ -43,12 +42,9 @@ public static class HazardTheme
     /// theme's color and text tokens, and registers the theme's visuals as the
     /// default templates for Forms controls.
     /// </summary>
-    /// <param name="graphicsDevice">The active <see cref="GraphicsDevice"/>; required
-    /// by KernSmith to rasterize fonts into textures.</param>
-    public static void Apply(GraphicsDevice graphicsDevice)
+    public static void Apply()
     {
-        CustomSetPropertyOnRenderable.InMemoryFontCreator =
-            new KernSmithFontCreator(graphicsDevice);
+        ThemePlatform.WireInMemoryFontCreator();
 
         // Pre-register any glyphs visuals render as Text rather than as sprite-sheet
         // icons. KernSmith bakes only the characters it has been told about, so
@@ -58,13 +54,10 @@ public static class HazardTheme
         // body font (Saira Condensed lacks the Dingbats / Geometric Shapes blocks).
         BmfcSave.AddCharacters("✓▼");
 
-        // The visuals build their bodies from Apos.Shapes-backed RectangleRuntime /
-        // CircleRuntime instances, which require ShapeRenderer to be initialized.
-        // Guard for the case where the host app already initialized it.
-        if (!ShapeRenderer.Self.IsInitialized)
-        {
-            ShapeRenderer.Self.Initialize();
-        }
+        // The visuals build their bodies from shape-backed RectangleRuntime /
+        // CircleRuntime instances; on XNA-like backends those require ShapeRenderer
+        // to be initialized (no-op on raylib, which renders shapes natively).
+        ThemeShapePlatform.InitializeShapeRenderer();
 
         RegisterBundledFonts();
 
@@ -72,6 +65,15 @@ public static class HazardTheme
 
         RegisterVisuals();
     }
+
+#if !RAYLIB
+    /// <summary>
+    /// Backwards-compatible overload retained for existing MonoGame/KNI callers. The graphics
+    /// device is now resolved internally from the active Gum renderer, so the argument is ignored;
+    /// prefer the parameterless <see cref="Apply()"/>.
+    /// </summary>
+    public static void Apply(GraphicsDevice graphicsDevice) => Apply();
+#endif
 
     private static void RegisterBundledFonts()
     {
@@ -114,14 +116,7 @@ public static class HazardTheme
         stream.CopyTo(buffer);
         byte[] fontBytes = buffer.ToArray();
 
-        if (style == null)
-        {
-            KernSmithFontCreator.RegisterFont(family, fontBytes);
-        }
-        else
-        {
-            KernSmithFontCreator.RegisterFont(family, fontBytes, style: style);
-        }
+        ThemePlatform.RegisterFont(family, fontBytes, style);
     }
 
     private static void ConfigureStyling()

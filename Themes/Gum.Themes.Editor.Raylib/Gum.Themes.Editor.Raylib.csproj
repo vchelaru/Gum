@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12</LangVersion>
+    <!-- Selects the raylib branch of the shared theme sources (Color via Raylib_cs, raylib font
+         creator in ThemePlatform). The .MonoGame / .Kni variants leave this undefined. -->
+    <DefineConstants>$(DefineConstants);RAYLIB</DefineConstants>
+
+    <PackageId>Gum.Themes.Editor.Raylib</PackageId>
+    <Version>2026.4.5.1</Version>
+    <Authors>Gum Contributors</Authors>
+    <RepositoryUrl>https://github.com/vchelaru/Gum</RepositoryUrl>
+    <Description>An editor-focused theme for Gum UI. Provides styled visuals for building tool and editor interfaces with raylib and Gum.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\Gum.Themes.Editor.MonoGame\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Source-share every theme .cs from the MonoGame variant; the RAYLIB symbol above swaps the
+         per-backend branches. The shim lives outside that folder, so it is linked explicitly. -->
+    <Compile Include="..\Gum.Themes.Editor.MonoGame\**\*.cs" />
+    <Compile Remove="..\Gum.Themes.Editor.MonoGame\obj\**" />
+    <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Color (Raylib_cs.Color) resolves through this package on the RAYLIB branch of the theme
+         sources; the theme imports it explicitly (no global using). -->
+    <PackageReference Include="Raylib-cs" Version="7.0.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\Runtimes\RaylibGum\RaylibGum.csproj" />
+    <!-- KernSmith is a runtime dependency (the theme generates fonts at runtime), so it flows
+         transitively to consumers — not PrivateAssets=All. -->
+    <ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.RaylibGum\KernSmith.RaylibGum.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,7 +1,11 @@
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
+#if RAYLIB
+using Raylib_cs;
+#else
 using Microsoft.Xna.Framework;
+#endif
 using RenderingLibrary.Graphics;
 using BaseWindowVisual = Gum.Forms.DefaultVisuals.V3.WindowVisual;
 

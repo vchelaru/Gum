@@ -6,25 +6,26 @@ The theme ships per rendering backend. Install the one matching your runtime:
 
 ```
 dotnet add package Gum.Themes.DarkPro.MonoGame
+dotnet add package Gum.Themes.DarkPro.Kni
+dotnet add package Gum.Themes.DarkPro.Raylib
 ```
 
 ## Usage
 
-Call `DarkProTheme.Apply` after initializing Gum:
+Call the parameterless `DarkProTheme.Apply()` after initializing Gum — the same call on every backend:
 
 ```csharp
 using Gum.Themes.DarkPro;
 
-protected override void Initialize()
-{
-    GumService.Default.Initialize(this, DefaultVisualsVersion.Newest);
+// after GumService.Default.Initialize(...)
+DarkProTheme.Apply();
 
-    DarkProTheme.Apply(GraphicsDevice);
-
-    var button = new Button();
-    button.Text = "Click Me";
-}
+var button = new Button();
+button.Text = "Click Me";
 ```
+
+> On MonoGame/KNI a legacy `DarkProTheme.Apply(GraphicsDevice)` overload remains for source
+> compatibility; the graphics device is now resolved internally, so prefer `Apply()`.
 
 ## Bundled Fonts
 

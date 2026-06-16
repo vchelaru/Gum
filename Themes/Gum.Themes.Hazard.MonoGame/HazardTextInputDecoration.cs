@@ -1,6 +1,10 @@
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.GueDeriving;
+#if RAYLIB
+using Raylib_cs;
+#else
 using Microsoft.Xna.Framework;
+#endif
 
 namespace Gum.Themes.Hazard;
 

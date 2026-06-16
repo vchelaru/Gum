@@ -186,7 +186,10 @@ public class CircleRuntimeTests : BaseTestClass
         sut.StrokeWidth.ShouldBe(5f);
 
         sut.PreRender();
-        ((LineCircle)sut.RenderableComponent!).StrokeWidth.ShouldBe(5f);
+        // The geometric width handed to the renderable is reduced by the ~1px AA contribution
+        // (commit "Fix raylib stroke width rendering ~1px too thick vs Apos/MonoGame") so the
+        // VISIBLE width equals the nominal StrokeWidth across backends. At zoom 1 that is 5 - 1 = 4.
+        ((LineCircle)sut.RenderableComponent!).StrokeWidth.ShouldBe(4f);
     }
 
     [Fact]
@@ -282,5 +285,24 @@ public class CircleRuntimeTests : BaseTestClass
         inner.GradientY2.ShouldBe(28f);
         inner.GradientInnerRadius.ShouldBe(4f);
         inner.GradientOuterRadius.ShouldBe(28f);
+    }
+
+    // Issue #3175 — parity surface for theme source written against the richer Apos.Shapes gradient
+    // feature set. The raylib renderable does not consume these yet, so they round-trip on the
+    // runtime as forward compat; this pins that contract so a future renderable hookup is deliberate.
+    [Fact]
+    public void GradientUnits_RoundTrip()
+    {
+        CircleRuntime sut = new();
+
+        sut.GradientX1Units = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        sut.GradientY1Units = Gum.Converters.GeneralUnitType.PixelsFromSmall;
+        sut.GradientInnerRadiusUnits = Gum.DataTypes.DimensionUnitType.ScreenPixel;
+        sut.GradientOuterRadiusUnits = Gum.DataTypes.DimensionUnitType.ScreenPixel;
+
+        sut.GradientX1Units.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromMiddle);
+        sut.GradientY1Units.ShouldBe(Gum.Converters.GeneralUnitType.PixelsFromSmall);
+        sut.GradientInnerRadiusUnits.ShouldBe(Gum.DataTypes.DimensionUnitType.ScreenPixel);
+        sut.GradientOuterRadiusUnits.ShouldBe(Gum.DataTypes.DimensionUnitType.ScreenPixel);
     }
 }

@@ -1,7 +1,11 @@
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
+#if RAYLIB
+using Raylib_cs;
+#else
 using Microsoft.Xna.Framework;
+#endif
 using RenderingLibrary.Graphics;
 using BaseListBoxItemVisual = Gum.Forms.DefaultVisuals.V3.ListBoxItemVisual;
 
@@ -59,7 +63,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = Color.Transparent;
+        fill.FillColor = new Color(0, 0, 0, 0);
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -92,7 +96,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
     private void WireStates()
     {
         States.Enabled.Apply = () => ApplyPalette(
-            fill: Color.Transparent, text: MeadowColors.TealDark, selected: false);
+            fill: new Color(0, 0, 0, 0), text: MeadowColors.TealDark, selected: false);
 
         States.Highlighted.Apply = () => ApplyPalette(
             fill: MeadowPalette.HoverRow, text: MeadowColors.TealDark, selected: false);
@@ -104,7 +108,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
             fill: MeadowPalette.SelectedRow, text: MeadowPalette.SelectedRowText, selected: true);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fill: Color.Transparent, text: MeadowColors.DisabledInk, selected: false);
+            fill: new Color(0, 0, 0, 0), text: MeadowColors.DisabledInk, selected: false);
     }
 
     private void ApplyPalette(Color fill, Color text, bool selected)

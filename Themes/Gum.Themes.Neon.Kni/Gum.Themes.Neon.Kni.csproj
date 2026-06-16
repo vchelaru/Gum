@@ -28,6 +28,9 @@
   <ItemGroup>
     <Compile Include="..\Gum.Themes.Neon.MonoGame\**\*.cs" />
     <Compile Remove="..\Gum.Themes.Neon.MonoGame\obj\**" />
+    <!-- Shared platform shims (live outside the MonoGame project folder, so the glob misses them). -->
+    <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
+    <Compile Include="..\Shared\ThemeShapePlatform.cs" Link="ThemeShapePlatform.cs" />
   </ItemGroup>
   <ItemGroup>
     <!-- Re-embed the TTFs from the MonoGame project's Content\Fonts folder

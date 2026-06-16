@@ -10,10 +10,11 @@ Pick the package matching your runtime:
 
 - MonoGame: `dotnet add package Gum.Themes.ForestGlade.MonoGame`
 - KNI: `dotnet add package Gum.Themes.ForestGlade.Kni`
+- raylib: `dotnet add package Gum.Themes.ForestGlade.Raylib`
 
 ## Usage
 
-Call `ForestGladeTheme.Apply(GraphicsDevice)` once after initializing Gum:
+Call the parameterless `ForestGladeTheme.Apply()` once after initializing Gum — the same call on every backend:
 
 ```csharp
 using Gum.Themes.ForestGlade;
@@ -21,10 +22,13 @@ using Gum.Themes.ForestGlade;
 protected override void Initialize()
 {
     GumService.Default.Initialize(this);
-    ForestGladeTheme.Apply(GraphicsDevice);
+    ForestGladeTheme.Apply();
     base.Initialize();
 }
 ```
+
+> On MonoGame/KNI a legacy `ForestGladeTheme.Apply(GraphicsDevice)` overload remains for source
+> compatibility; the graphics device is now resolved internally, so prefer `Apply()`.
 
 Every default Forms control now renders in the Forest Glade style. For best effect, clear your back buffer to the canopy background:
 

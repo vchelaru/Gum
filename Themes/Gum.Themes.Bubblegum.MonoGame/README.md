@@ -8,10 +8,11 @@ Pick the package matching your runtime:
 
 - MonoGame: `dotnet add package Gum.Themes.Bubblegum.MonoGame`
 - KNI: `dotnet add package Gum.Themes.Bubblegum.Kni`
+- raylib: `dotnet add package Gum.Themes.Bubblegum.Raylib`
 
 ## Usage
 
-Call `BubblegumTheme.Apply(GraphicsDevice)` once after initializing Gum:
+Call the parameterless `BubblegumTheme.Apply()` once after initializing Gum — the same call on every backend:
 
 ```csharp
 using Gum.Themes.Bubblegum;
@@ -19,12 +20,15 @@ using Gum.Themes.Bubblegum;
 protected override void Initialize()
 {
     GumService.Default.Initialize(this);
-    BubblegumTheme.Apply(GraphicsDevice);
+    BubblegumTheme.Apply();
     base.Initialize();
 }
 ```
 
 Every default Forms control now renders in the Bubblegum style.
+
+> On MonoGame/KNI a legacy `BubblegumTheme.Apply(GraphicsDevice)` overload remains for source
+> compatibility; the graphics device is now resolved internally, so prefer `Apply()`.
 
 ## Licensing
 

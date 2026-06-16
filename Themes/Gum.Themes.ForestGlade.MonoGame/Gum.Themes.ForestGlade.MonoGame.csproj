@@ -26,6 +26,11 @@
     <None Include="Content\Fonts\DejaVuSansMono-LICENSE.txt" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Per-backend shims source-shared across the MonoGame/KNI/Raylib theme variants. -->
+    <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
+    <Compile Include="..\Shared\ThemeShapePlatform.cs" Link="ThemeShapePlatform.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <!-- Nunito (SIL OFL) is the body typeface from the Forest Glade CSS spec
          (the body 'ff' token). Regular + Bold so Gum's IsBold slot resolves
          correctly. -->

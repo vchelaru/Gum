@@ -2,7 +2,11 @@ using Gum.Converters;
 using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Wireframe;
+#if RAYLIB
+using Raylib_cs;
+#else
 using Microsoft.Xna.Framework;
+#endif
 using RenderingLibrary.Graphics;
 using BaseRadioButtonVisual = Gum.Forms.DefaultVisuals.V3.RadioButtonVisual;
 
@@ -39,7 +43,8 @@ public class RadioButtonVisual : BaseRadioButtonVisual
     private const float BoxToLabelGap = 8f;
 
     // Translucent accent for the soft focus glow.
-    private static readonly Color FocusGlow = new Color(TemplatePalette.Accent, 110);
+    private static readonly Color FocusGlow = new Color(
+        (int)TemplatePalette.Accent.R, (int)TemplatePalette.Accent.G, (int)TemplatePalette.Accent.B, 110);
 
     private readonly CircleRuntime _focusRing;
     private readonly CircleRuntime _outerFill;

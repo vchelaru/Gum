@@ -72,7 +72,7 @@ on:
         type: boolean
         default: true
       pkg_Themes:
-        description: 'Gum.Themes.* (all themes, MonoGame + Kni)'
+        description: 'Gum.Themes.* (all shipped themes, MonoGame + Kni + Raylib; Template is excluded)'
         type: boolean
         default: true
       pkg_Sokol:

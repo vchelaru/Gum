@@ -23,9 +23,14 @@
     <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.MonoGameGum\KernSmith.MonoGameGum.csproj">
-		<PrivateAssets>All</PrivateAssets>
-	</ProjectReference>
+    <!-- Shared platform shim: isolates the per-backend font-creator wiring so EditorTheme stays
+         platform-agnostic and source-shares cleanly into the .Kni and .Raylib variants. -->
+    <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- KernSmith is a runtime dependency (the theme generates fonts at runtime), so it must flow
+         transitively to consumers — do NOT mark it PrivateAssets=All. -->
+    <ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.MonoGameGum\KernSmith.MonoGameGum.csproj" />
 	<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
