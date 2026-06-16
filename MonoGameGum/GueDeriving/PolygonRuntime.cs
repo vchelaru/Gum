@@ -306,6 +306,12 @@ public class PolygonRuntime : InteractiveGue
                 strokeWidth /= camera.Zoom;
             }
         }
+        // Issue #3183 — deliberately NOT applying the RectangleRuntime/CircleRuntime AA
+        // compensation here. The shape-parity harness measured it as a net wash-to-regression for
+        // polygons: thin (1px) outlines vanish under the ~1px subtraction (moving further from the
+        // MonoGame line primitive that draws them), while thicker outlines improve only marginally.
+        // Left uncompensated until the harness shows a compensation that helps thin AND thick
+        // strokes. See the issue notes for the harness evidence.
         ContainedPolygon.LinePixelWidth = strokeWidth;
     }
 #endif

@@ -419,6 +419,13 @@ public class ArcRuntime : GraphicalUiElement
                 thickness /= camera.Zoom;
             }
         }
+        // Issue #3183 — deliberately NOT applying the RectangleRuntime/CircleRuntime AA
+        // compensation here. The arc band is a DrawRing *filled annulus* whose visible width
+        // already equals the nominal Thickness, so subtracting a ~1px AA contribution over-thins
+        // it: the shape-parity harness measured every arc band moving visibly FURTHER from the
+        // Apos reference with the compensation applied (mean per-cell diff roughly doubling). The
+        // ~1px-too-thick problem the compensation solves is specific to DrawRectangleLinesEx-style
+        // strokes, not DrawRing bands. See the issue notes for the harness evidence.
         ContainedLineArc.Thickness = thickness;
     }
 
