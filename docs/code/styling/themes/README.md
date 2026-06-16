@@ -10,9 +10,9 @@ The same sample settings panel, rendered by six different themes. The full catal
 
 ## Introduction
 
-A **theme** is a per-backend NuGet package that restyles every default Gum Forms control with a single call. After calling `GumService.Default.Initialize(...)`, calling `<Name>Theme.Apply(GraphicsDevice)` swaps the default visuals for the theme's visuals — every `Button`, `TextBox`, `CheckBox`, `ComboBox`, etc. created afterward renders in that theme's style.
+A **theme** is a per-backend NuGet package that restyles every default Gum Forms control with a single call. After calling `GumService.Default.Initialize(...)`, calling `<Name>Theme.Apply` swaps the default visuals for the theme's visuals — every `Button`, `TextBox`, `CheckBox`, `ComboBox`, etc. created afterward renders in that theme's style.
 
-Themes ship one NuGet per rendering backend (for example `Gum.Themes.DarkPro.MonoGame` and `Gum.Themes.DarkPro.Kni`) so each package only carries the assets and references it needs.
+Themes ship one NuGet per rendering backend (for example `Gum.Themes.DarkPro.MonoGame`, `Gum.Themes.DarkPro.Kni`, and `Gum.Themes.DarkPro.Raylib`) so each package only carries the assets and references it needs.
 
 {% hint style="warning" %}
 All themes install and initialize KernSmith for dynamic font generation. Also, all themes except `Editor` install and initialize Apos.Shapes for vector art rendering. For more information see the [KernSmith](../../files-and-fonts/font-strategies.md#dynamic-kernsmith-generation) and [Apos.Shapes](../../standard-visuals/shapes-apos.shapes.md) pages.
@@ -37,6 +37,18 @@ protected override void Initialize()
 ```
 
 The pattern is the same for every theme — only the `using` namespace, NuGet package, and `Apply` call change. Pick a theme from the sections below, then copy the tab matching your rendering backend for a ready-to-paste install command and initialization snippet.
+
+<!-- MAINTAINER: The MonoGame/KNI tabs and examples show Apply(GraphicsDevice) because the
+     stable (May 2026 and earlier) theme packages only expose that overload. From the June 2026
+     release on, Apply() is parameterless on every backend. Once June-or-later packages are the
+     supported minimum, delete the dated "Apply signature" note in the hint below and simplify
+     every Apply(GraphicsDevice) on this page to Apply(). -->
+
+{% hint style="warning" %}
+**Raylib theme packages are in preview.** Install them with the `--prerelease` flag, as shown in each theme's **Raylib** tab. The **MonoGame** and **KNI** packages are stable.
+
+**`Apply` signature:** On **Raylib** — and on **MonoGame** / **KNI** packages from **June 2026 and later** — `Apply()` takes no arguments. On **MonoGame** / **KNI** packages from **May 2026 and earlier**, pass the `GraphicsDevice` as the MonoGame and KNI tabs below show: `Apply(GraphicsDevice)`.
+{% endhint %}
 
 A few things to keep in mind:
 
@@ -75,6 +87,17 @@ using Gum.Themes.Editor;
 EditorTheme.Apply(GraphicsDevice);
 ```
 {% endtab %}
+{% tab title="Raylib" %}
+```bash
+dotnet add package Gum.Themes.Editor.Raylib --prerelease
+```
+```csharp
+// Initialize
+using Gum.Themes.Editor;
+
+EditorTheme.Apply();
+```
+{% endtab %}
 {% endtabs %}
 
 ### DarkPro
@@ -104,6 +127,17 @@ dotnet add package Gum.Themes.DarkPro.Kni
 using Gum.Themes.DarkPro;
 
 DarkProTheme.Apply(GraphicsDevice);
+```
+{% endtab %}
+{% tab title="Raylib" %}
+```bash
+dotnet add package Gum.Themes.DarkPro.Raylib --prerelease
+```
+```csharp
+// Initialize
+using Gum.Themes.DarkPro;
+
+DarkProTheme.Apply();
 ```
 {% endtab %}
 {% endtabs %}
@@ -137,6 +171,17 @@ using Gum.Themes.Bubblegum;
 BubblegumTheme.Apply(GraphicsDevice);
 ```
 {% endtab %}
+{% tab title="Raylib" %}
+```bash
+dotnet add package Gum.Themes.Bubblegum.Raylib --prerelease
+```
+```csharp
+// Initialize
+using Gum.Themes.Bubblegum;
+
+BubblegumTheme.Apply();
+```
+{% endtab %}
 {% endtabs %}
 
 ### Forest Glade
@@ -166,6 +211,17 @@ dotnet add package Gum.Themes.ForestGlade.Kni
 using Gum.Themes.ForestGlade;
 
 ForestGladeTheme.Apply(GraphicsDevice);
+```
+{% endtab %}
+{% tab title="Raylib" %}
+```bash
+dotnet add package Gum.Themes.ForestGlade.Raylib --prerelease
+```
+```csharp
+// Initialize
+using Gum.Themes.ForestGlade;
+
+ForestGladeTheme.Apply();
 ```
 {% endtab %}
 {% endtabs %}
@@ -203,6 +259,17 @@ using Gum.Themes.Neon;
 NeonTheme.Apply(GraphicsDevice);
 ```
 {% endtab %}
+{% tab title="Raylib" %}
+```bash
+dotnet add package Gum.Themes.Neon.Raylib --prerelease
+```
+```csharp
+// Initialize
+using Gum.Themes.Neon;
+
+NeonTheme.Apply();
+```
+{% endtab %}
 {% endtabs %}
 
 {% hint style="info" %}
@@ -238,6 +305,17 @@ using Gum.Themes.Retro95;
 Retro95Theme.Apply(GraphicsDevice);
 ```
 {% endtab %}
+{% tab title="Raylib" %}
+```bash
+dotnet add package Gum.Themes.Retro95.Raylib --prerelease
+```
+```csharp
+// Initialize
+using Gum.Themes.Retro95;
+
+Retro95Theme.Apply();
+```
+{% endtab %}
 {% endtabs %}
 
 ### Meadow
@@ -267,6 +345,17 @@ dotnet add package Gum.Themes.Meadow.Kni
 using Gum.Themes.Meadow;
 
 MeadowTheme.Apply(GraphicsDevice);
+```
+{% endtab %}
+{% tab title="Raylib" %}
+```bash
+dotnet add package Gum.Themes.Meadow.Raylib --prerelease
+```
+```csharp
+// Initialize
+using Gum.Themes.Meadow;
+
+MeadowTheme.Apply();
 ```
 {% endtab %}
 {% endtabs %}
@@ -304,6 +393,17 @@ using Gum.Themes.Hazard;
 HazardTheme.Apply(GraphicsDevice);
 ```
 {% endtab %}
+{% tab title="Raylib" %}
+```bash
+dotnet add package Gum.Themes.Hazard.Raylib --prerelease
+```
+```csharp
+// Initialize
+using Gum.Themes.Hazard;
+
+HazardTheme.Apply();
+```
+{% endtab %}
 {% endtabs %}
 
 {% hint style="info" %}
@@ -316,11 +416,11 @@ All bundled fonts are SIL Open Font License or the Bitstream Vera / DejaVu licen
 
 ## Supported backends
 
-Themes are currently published only for **MonoGame** and **KNI**. If you'd like to see a theme published for **FNA**, **Raylib**, or **Skia**, please open an issue or start a discussion on the [Gum GitHub repo](https://github.com/vchelaru/Gum).
+Themes are published for **MonoGame**, **KNI**, and **Raylib** (Raylib in preview — see the note under [Usage](#usage)). If you'd like to see a theme published for **FNA** or **Skia**, please open an issue or start a discussion on the [Gum GitHub repo](https://github.com/vchelaru/Gum).
 
 ## Requirements
 
 * .NET 8.0+
-* MonoGame 3.8+ (for the MonoGame packages) or KNI (for the KNI packages)
-* [Gum.MonoGame](https://www.nuget.org/packages/Gum.MonoGame) or [Gum.Kni](https://www.nuget.org/packages/Gum.Kni)
+* MonoGame 3.8+ (for the MonoGame packages), KNI (for the KNI packages), or Raylib (for the Raylib packages)
+* [Gum.MonoGame](https://www.nuget.org/packages/Gum.MonoGame), [Gum.Kni](https://www.nuget.org/packages/Gum.Kni), or [Gum.raylib](https://www.nuget.org/packages/Gum.raylib)
 * [KernSmith.MonoGameGum](https://www.nuget.org/packages/KernSmith.MonoGameGum) — optional, only needed when using runtime in-memory font generation
