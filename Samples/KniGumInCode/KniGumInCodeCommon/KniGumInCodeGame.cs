@@ -183,7 +183,7 @@ public class KniGumInCodeGame : Game
         lineRectangle.Y = 10;
         lineRectangle.Width = 120;
         lineRectangle.Height = 24;
-        lineRectangle.Color = Color.Pink;
+        lineRectangle.StrokeColor = Color.Pink;
         container.Children.Add(lineRectangle);
 
 

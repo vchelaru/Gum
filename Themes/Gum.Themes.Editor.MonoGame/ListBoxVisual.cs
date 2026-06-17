@@ -17,7 +17,7 @@ public class ListBoxVisual : BaseListBoxVisual
 
         var rectangle = new RectangleRuntime();
         Background.Children.Add(rectangle);
-        rectangle.Color = new Color(60, 60, 60);
+        rectangle.StrokeColor = new Color(60, 60, 60);
         rectangle.Dock(Gum.Wireframe.Dock.Fill);
     }
 }

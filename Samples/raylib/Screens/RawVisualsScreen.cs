@@ -89,9 +89,10 @@ internal class RawVisualsScreen : FrameworkElement
         var lineRectangle = new RectangleRuntime();
         lineRectangle.Width = 80;
         lineRectangle.Height = 80;
-        lineRectangle.IsDotted = true;
-        lineRectangle.Color = new Color(80, 160, 200, 255);
-        lineRectangle.LineWidth = 3f;
+        lineRectangle.StrokeDashLength = 2f;
+        lineRectangle.StrokeGapLength = 2f;
+        lineRectangle.StrokeColor = new Color(80, 160, 200, 255);
+        lineRectangle.StrokeWidth = 3f;
         row.AddChild(lineRectangle);
 
         var rotatedLineRect = new RectangleRuntime();

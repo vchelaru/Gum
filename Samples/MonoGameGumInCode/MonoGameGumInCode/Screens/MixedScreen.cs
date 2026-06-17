@@ -36,8 +36,8 @@ internal class MixedScreen : FrameworkElement
         lineRectangle.Y = 10;
         lineRectangle.Width = 120;
         lineRectangle.Height = 24;
-        lineRectangle.LineWidth = 5;
-        lineRectangle.Color = Color.Purple;
+        lineRectangle.StrokeWidth = 5;
+        lineRectangle.StrokeColor = Color.Purple;
         container.Children.Add(lineRectangle);
 
         AddText(container, "This is a sprite:");
