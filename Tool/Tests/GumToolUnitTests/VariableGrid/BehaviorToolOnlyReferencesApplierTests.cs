@@ -768,6 +768,108 @@ public class BehaviorToolOnlyReferencesApplierTests : BaseTestClass
         defaultState.GetValue("ChildrenLayout").ShouldBe(ChildrenLayout.TopToBottomStack);
     }
 
+    [Fact]
+    public void GetUnderlyingMembersDrivenBy_ComponentLevelSpacing_ReturnsStackSpacing()
+    {
+        // Component-level (instance == null) resolution: the component itself carries the behavior.
+        // Mirrors editing Spacing on the Controls/StackPanel component directly.
+        BehaviorSave behavior = BuildStackPanelBehavior();
+
+        ComponentSave component = new ComponentSave { Name = "Controls/StackPanel", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "StackPanelBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        IReadOnlyList<string> result = BehaviorToolOnlyReferencesApplier.GetUnderlyingMembersDrivenBy(component, instance: null, "Spacing");
+
+        result.ShouldContain("StackSpacing");
+    }
+
+    [Fact]
+    public void GetUnderlyingMembersDrivenBy_OrientationOnInstance_ReturnsChildrenLayoutOnly()
+    {
+        // Orientation drives ChildrenLayout (via the ternary reference) but not StackSpacing.
+        (ScreenSave screen, InstanceSave stackInstance) = BuildScreenWithStackPanelInstance();
+
+        IReadOnlyList<string> result = BehaviorToolOnlyReferencesApplier.GetUnderlyingMembersDrivenBy(screen, stackInstance, "Orientation");
+
+        result.ShouldContain("ChildrenLayout");
+        result.ShouldNotContain("StackSpacing");
+    }
+
+    [Fact]
+    public void GetUnderlyingMembersDrivenBy_SpacingOnInstance_ReturnsStackSpacingOnly()
+    {
+        // Spacing drives StackSpacing (via "StackSpacing = Spacing") but not ChildrenLayout - so a
+        // Spacing scrub must push only StackSpacing to the live element, not re-stack it (issue #3191).
+        (ScreenSave screen, InstanceSave stackInstance) = BuildScreenWithStackPanelInstance();
+
+        IReadOnlyList<string> result = BehaviorToolOnlyReferencesApplier.GetUnderlyingMembersDrivenBy(screen, stackInstance, "Spacing");
+
+        result.ShouldContain("StackSpacing");
+        result.ShouldNotContain("ChildrenLayout");
+    }
+
+    [Fact]
+    public void GetUnderlyingMembersDrivenBy_UnrelatedMember_ReturnsEmpty()
+    {
+        // A normal variable (X) is referenced by no behavior tool-only reference, so it drives no
+        // underlying member and the wireframe should fall back to its usual incremental handling.
+        (ScreenSave screen, InstanceSave stackInstance) = BuildScreenWithStackPanelInstance();
+
+        IReadOnlyList<string> result = BehaviorToolOnlyReferencesApplier.GetUnderlyingMembersDrivenBy(screen, stackInstance, "X");
+
+        result.ShouldBeEmpty();
+    }
+
+    private static BehaviorSave BuildStackPanelBehavior()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "StackPanelBehavior" };
+        behavior.FormsProperties.Add(new VariableSave { Type = "Orientation", Name = "Orientation", Value = "Vertical" });
+        behavior.FormsProperties.Add(new VariableSave { Type = "float", Name = "Spacing", Value = 0f });
+        behavior.ToolOnlyVariableReferences.Add(
+            "ChildrenLayout = Orientation == \"Horizontal\" ? \"LeftToRightStack\" : \"TopToBottomStack\"");
+        behavior.ToolOnlyVariableReferences.Add("StackSpacing = Spacing");
+        return behavior;
+    }
+
+    private static (ScreenSave screen, InstanceSave stackInstance) BuildScreenWithStackPanelInstance()
+    {
+        BehaviorSave behavior = BuildStackPanelBehavior();
+
+        ComponentSave component = new ComponentSave { Name = "Controls/StackPanel", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "StackPanelBehavior" });
+
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave screenDefault = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+
+        InstanceSave stackInstance = new InstanceSave
+        {
+            Name = "StackInstance",
+            BaseType = "Controls/StackPanel",
+            ParentContainer = screen
+        };
+        screen.Instances.Add(stackInstance);
+
+        StandardElementSave containerStandard = new StandardElementSave { Name = "Container" };
+        containerStandard.States.Add(new StateSave { Name = "Default", ParentContainer = containerStandard });
+
+        GumProjectSave project = new GumProjectSave();
+        project.StandardElements.Add(containerStandard);
+        project.Components.Add(component);
+        project.Screens.Add(screen);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        return (screen, stackInstance);
+    }
+
     private static BehaviorSave BuildCheckBoxBehavior()
     {
         BehaviorSave behavior = new BehaviorSave { Name = "CheckBoxBehavior" };

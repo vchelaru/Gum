@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
@@ -53,6 +54,100 @@ public static class BehaviorToolOnlyReferencesApplier
                 ApplyBehaviorsOf(instanceComponent, instance, stateSave);
             }
         }
+    }
+
+    /// <summary>
+    /// Returns the underlying (visual) variable names that the relevant element's behavior
+    /// <see cref="BehaviorSave.ToolOnlyVariableReferences"/> drive from <paramref name="changedMember"/> -
+    /// i.e. the left-hand sides of reference lines whose right-hand side reads
+    /// <paramref name="changedMember"/>. For a StackPanel, "Spacing" yields ["StackSpacing"] (from
+    /// <c>StackSpacing = Spacing</c>) and "Orientation" yields ["ChildrenLayout"] (from
+    /// <c>ChildrenLayout = Orientation == ...</c>).
+    ///
+    /// Forms-promotion aliases (Spacing, Orientation) are not themselves visual properties, so the
+    /// wireframe preview cannot push them onto a live <c>GraphicalUiElement</c>. This lets the editor
+    /// resolve the underlying visual variable(s) - which the state-level <see cref="Apply"/> has already
+    /// materialized - so scrubbing an alias updates the preview incrementally instead of forcing a full
+    /// rebuild (issue #3191). Returns an empty list when the changed member drives no reference.
+    /// </summary>
+    /// <param name="element">The element being edited (the container of <paramref name="instance"/>, or
+    /// the behavior-carrying component itself when <paramref name="instance"/> is null).</param>
+    /// <param name="instance">The instance whose variable changed, or null for an element-level edit.</param>
+    /// <param name="changedMember">The unqualified name of the variable that changed (e.g. "Spacing").</param>
+    public static IReadOnlyList<string> GetUnderlyingMembersDrivenBy(ElementSave element, InstanceSave? instance, string changedMember)
+    {
+        if (string.IsNullOrEmpty(changedMember))
+        {
+            return Array.Empty<string>();
+        }
+
+        ComponentSave? component = instance != null
+            ? ObjectFinder.Self.GetElementSave(instance.BaseType) as ComponentSave
+            : element as ComponentSave;
+
+        if (component == null)
+        {
+            return Array.Empty<string>();
+        }
+
+        List<string>? driven = null;
+
+        foreach (ElementBehaviorReference reference in component.Behaviors)
+        {
+            BehaviorSave? behavior = ObjectFinder.Self.GetBehavior(reference);
+            if (behavior == null || behavior.ToolOnlyVariableReferences.Count == 0)
+            {
+                continue;
+            }
+
+            foreach (string referenceLine in behavior.ToolOnlyVariableReferences)
+            {
+                if (string.IsNullOrWhiteSpace(referenceLine) || referenceLine.TrimStart().StartsWith("//"))
+                {
+                    continue;
+                }
+
+                int equalsIndex = referenceLine.IndexOf('=');
+                if (equalsIndex < 0)
+                {
+                    continue;
+                }
+
+                string left = referenceLine.Substring(0, equalsIndex).Trim();
+                string right = referenceLine.Substring(equalsIndex + 1).Trim();
+
+                if (left.Length == 0 || !RightSideReadsIdentifier(right, changedMember))
+                {
+                    continue;
+                }
+
+                driven ??= new List<string>();
+                if (!driven.Contains(left))
+                {
+                    driven.Add(left);
+                }
+            }
+        }
+
+        if (driven == null)
+        {
+            return Array.Empty<string>();
+        }
+
+        return driven;
+    }
+
+    /// <summary>
+    /// Returns true if <paramref name="right"/> (the right-hand side of a reference assignment) reads
+    /// <paramref name="identifier"/> as a bare identifier. Parsed with Roslyn so an identifier that only
+    /// appears inside a string literal (e.g. <c>Foo == "Spacing"</c>) does not count as a read.
+    /// </summary>
+    private static bool RightSideReadsIdentifier(string right, string identifier)
+    {
+        SyntaxNode tree = CSharpSyntaxTree.ParseText(right).GetCompilationUnitRoot();
+        return tree.DescendantNodes()
+            .OfType<IdentifierNameSyntax>()
+            .Any(id => id.Identifier.ValueText == identifier);
     }
 
     private static void ApplyBehaviorsOf(ComponentSave component, InstanceSave? instance, StateSave stateSave)
