@@ -119,7 +119,32 @@ public static class BehaviorToolOnlyReferencesApplier
         }
 
         string effectiveLeft = instance == null ? left : $"{instance.Name}.{left}";
+
+        // Coerce the evaluated value to the left-hand variable's declared type before
+        // writing it - the same step the state-level VariableReferences apply path performs
+        // via EvaluatedSyntax.CastTo (see ApplyVariableReferencesOnSpecificOwner). The
+        // tool-only applier evaluates the RHS directly, so without this an enum-typed target
+        // like ChildrenLayout would store the raw string a ternary produces instead of the
+        // boxed enum (which the typed wireframe setter and int-on-disk serializer require).
+        string? leftSideType = ResolveLeftSideType(effectiveLeft, instance, stateSave);
+        if (leftSideType != null)
+        {
+            evaluated.CastTo(leftSideType);
+        }
+
         stateSave.SetValue(effectiveLeft, evaluated.Value, instance);
+    }
+
+    private static string? ResolveLeftSideType(string qualifiedLeftName, InstanceSave? instance, StateSave stateSave)
+    {
+        VariableSave? variableOnState = stateSave.Variables.FirstOrDefault(item => item.Name == qualifiedLeftName);
+        if (variableOnState?.Type != null)
+        {
+            return variableOnState.Type;
+        }
+
+        ElementSave? elementOwningInstance = instance?.ParentContainer ?? stateSave.ParentContainer;
+        return ObjectFinder.Self.GetRootVariable(qualifiedLeftName, elementOwningInstance)?.Type;
     }
 
     /// <summary>

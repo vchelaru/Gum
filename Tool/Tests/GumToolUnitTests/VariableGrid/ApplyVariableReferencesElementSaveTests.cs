@@ -379,4 +379,39 @@ public class ApplyVariableReferencesElementSaveTests : BaseTestClass
     }
 
     #endregion
+
+    #region EnumCoercion
+
+    [Fact]
+    public void ApplyVariableReferences_EnumTypedTarget_CoercesStringNameToEnum()
+    {
+        // A reference whose RHS resolves to a string (a literal, or a ternary like
+        // Orientation == "Horizontal" ? "LeftToRightStack" : "TopToBottomStack") and whose
+        // left side is an enum-typed variable must materialize the boxed enum, not a raw
+        // string. The typed wireframe setter (GraphicalUiElement's ChildrenLayout switch)
+        // and int-on-disk serialization both require the enum value.
+        ScreenSave screen = BuildScreenWithReference(
+            "ChildrenLayout = \"LeftToRightStack\"",
+            ("ChildrenLayout", ChildrenLayout.TopToBottomStack, "ChildrenLayout"));
+
+        screen.ApplyVariableReferences(screen.DefaultState);
+
+        screen.DefaultState.GetValue("ChildrenLayout").ShouldBe(ChildrenLayout.LeftToRightStack);
+    }
+
+    [Fact]
+    public void ApplyVariableReferences_EnumTypedTarget_CoercesIntToEnum()
+    {
+        // An integer right side targeting an enum variable is coerced through the enum's
+        // underlying value (Enum.ToObject), matching how enums round-trip as ints on disk.
+        ScreenSave screen = BuildScreenWithReference(
+            "ChildrenLayout = 2",
+            ("ChildrenLayout", ChildrenLayout.TopToBottomStack, "ChildrenLayout"));
+
+        screen.ApplyVariableReferences(screen.DefaultState);
+
+        screen.DefaultState.GetValue("ChildrenLayout").ShouldBe(ChildrenLayout.LeftToRightStack);
+    }
+
+    #endregion
 }

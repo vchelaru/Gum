@@ -84,6 +84,52 @@ public class BehaviorToolOnlyReferencesApplierTests : BaseTestClass
     }
 
     [Fact]
+    public void Apply_EnumTypedTarget_CoercesToEnumNotRawString()
+    {
+        // Behavior-applier-specific: the tool-only applier evaluates the RHS directly rather
+        // than through the state-level apply path, so it must perform the same left-type
+        // coercion (EvaluatedSyntax.CastTo) that path does - otherwise an enum-typed target
+        // like ChildrenLayout would store the raw string a ternary produces. The coercion
+        // mechanism itself is covered by ApplyVariableReferencesElementSaveTests; this pins
+        // that the behavior applier actually invokes it. Models StackPanelBehavior mapping
+        // its Orientation FormsProperty onto the visual ChildrenLayout.
+        BehaviorSave behavior = new BehaviorSave { Name = "StackPanelBehavior" };
+        behavior.FormsProperties.Add(new VariableSave { Type = "Orientation", Name = "Orientation", Value = "Vertical" });
+        behavior.ToolOnlyVariableReferences.Add(
+            "ChildrenLayout = Orientation == \"Horizontal\" ? \"LeftToRightStack\" : \"TopToBottomStack\"");
+
+        ComponentSave component = new ComponentSave { Name = "Controls/StackPanel", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Type = "Orientation",
+            Name = "Orientation",
+            Value = "Horizontal",
+            SetsValue = true
+        });
+        // The component authors ChildrenLayout (as the real Controls/StackPanel does), which
+        // is also how the applier resolves the left-hand side's declared enum type.
+        defaultState.Variables.Add(new VariableSave
+        {
+            Type = "ChildrenLayout",
+            Name = "ChildrenLayout",
+            Value = ChildrenLayout.TopToBottomStack,
+            SetsValue = true
+        });
+        component.States.Add(defaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "StackPanelBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        BehaviorToolOnlyReferencesApplier.Apply(component, defaultState);
+
+        defaultState.GetValue("ChildrenLayout").ShouldBe(ChildrenLayout.LeftToRightStack);
+    }
+
+    [Fact]
     public void Apply_ScreenWithButtonInstanceIsEnabledFalse_WritesQualifiedDisabledCategoryState()
     {
         BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehavior" };
