@@ -98,15 +98,17 @@ internal class RawVisualsScreen : FrameworkElement
         var rotatedLineRect = new RectangleRuntime();
         rotatedLineRect.Width = 80;
         rotatedLineRect.Height = 80;
-        rotatedLineRect.IsDotted = true;
-        rotatedLineRect.Color = new Color(80, 160, 200, 255);
-        rotatedLineRect.LineWidth = 1f;
+        rotatedLineRect.StrokeDashLength = 2f;
+        rotatedLineRect.StrokeGapLength = 2f;
+        rotatedLineRect.StrokeColor = new Color(80, 160, 200, 255);
+        rotatedLineRect.StrokeWidth = 1f;
         rotatedLineRect.Rotation = -20;
         row.AddChild(rotatedLineRect);
 
         var polygon = new PolygonRuntime();
         polygon.Color = new Color(80, 160, 200, 255);
-        polygon.IsDotted = true;
+        polygon.StrokeDashLength = 2f;
+        polygon.StrokeGapLength = 2f;
         polygon.SetPoints(new Vector2[]
         {
             new Vector2(0, 0),
@@ -121,7 +123,8 @@ internal class RawVisualsScreen : FrameworkElement
 
         var rotatedPolygon = new PolygonRuntime();
         rotatedPolygon.Color = new Color(80, 160, 200, 255);
-        rotatedPolygon.IsDotted = true;
+        rotatedPolygon.StrokeDashLength = 2f;
+        rotatedPolygon.StrokeGapLength = 2f;
         rotatedPolygon.SetPoints(new Vector2[]
         {
             new Vector2(0, 0),

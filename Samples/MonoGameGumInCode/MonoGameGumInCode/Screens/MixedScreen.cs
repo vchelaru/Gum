@@ -107,7 +107,8 @@ internal class MixedScreen : FrameworkElement
         polygon.Color = Color.Red;
 
         // width/heights are used for layout
-        polygon.IsDotted = true;
+        polygon.StrokeDashLength = 2f;
+        polygon.StrokeGapLength = 2f;
         polygon.SetPoints(new System.Numerics.Vector2[]
         {
             new System.Numerics.Vector2(30, 0),
