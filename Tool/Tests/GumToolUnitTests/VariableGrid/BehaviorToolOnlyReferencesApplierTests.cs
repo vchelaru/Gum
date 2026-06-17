@@ -130,6 +130,68 @@ public class BehaviorToolOnlyReferencesApplierTests : BaseTestClass
     }
 
     [Fact]
+    public void Apply_ScreenWithStackPanelInstanceOrientationHorizontal_WritesEnumChildrenLayout()
+    {
+        // Repro of the editor crash (string "LeftToRightStack" reaching the typed ChildrenLayout
+        // setter): a StackPanel instance on a screen with Orientation = Horizontal. The instance
+        // path resolves the left-side enum type via ObjectFinder.GetRootVariable (the value is not
+        // authored on the screen) - distinct from the component-default path, which reads the
+        // authored variable. The materialized value must still be the boxed ChildrenLayout enum.
+        BehaviorSave behavior = new BehaviorSave { Name = "StackPanelBehavior" };
+        behavior.FormsProperties.Add(new VariableSave { Type = "Orientation", Name = "Orientation", Value = "Vertical" });
+        behavior.ToolOnlyVariableReferences.Add(
+            "ChildrenLayout = Orientation == \"Horizontal\" ? \"LeftToRightStack\" : \"TopToBottomStack\"");
+
+        ComponentSave component = new ComponentSave { Name = "Controls/StackPanel", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "StackPanelBehavior" });
+
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave screenDefault = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+
+        InstanceSave stackInstance = new InstanceSave
+        {
+            Name = "StackInstance",
+            BaseType = "Controls/StackPanel",
+            ParentContainer = screen
+        };
+        screen.Instances.Add(stackInstance);
+
+        screenDefault.Variables.Add(new VariableSave
+        {
+            Type = "Orientation",
+            Name = "StackInstance.Orientation",
+            Value = "Horizontal",
+            SetsValue = true
+        });
+
+        // The Container standard declares ChildrenLayout so the applier can resolve the instance's
+        // left-side type via GetRootVariable (the value itself is not authored on the screen).
+        StandardElementSave containerStandard = new StandardElementSave { Name = "Container" };
+        StateSave containerDefault = new StateSave { Name = "Default", ParentContainer = containerStandard };
+        containerDefault.Variables.Add(new VariableSave
+        {
+            Type = "ChildrenLayout",
+            Name = "ChildrenLayout",
+            Value = ChildrenLayout.TopToBottomStack,
+            SetsValue = true
+        });
+        containerStandard.States.Add(containerDefault);
+
+        GumProjectSave project = new GumProjectSave();
+        project.StandardElements.Add(containerStandard);
+        project.Components.Add(component);
+        project.Screens.Add(screen);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        BehaviorToolOnlyReferencesApplier.Apply(screen, screenDefault);
+
+        screenDefault.GetValue("StackInstance.ChildrenLayout").ShouldBe(ChildrenLayout.LeftToRightStack);
+    }
+
+    [Fact]
     public void Apply_ScreenWithButtonInstanceIsEnabledFalse_WritesQualifiedDisabledCategoryState()
     {
         BehaviorSave behavior = new BehaviorSave { Name = "ButtonBehavior" };
