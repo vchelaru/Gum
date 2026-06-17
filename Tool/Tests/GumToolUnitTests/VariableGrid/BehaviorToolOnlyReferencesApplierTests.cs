@@ -672,6 +672,102 @@ public class BehaviorToolOnlyReferencesApplierTests : BaseTestClass
         defaultState.Variables.ShouldBeEmpty();
     }
 
+    [Fact]
+    public void Apply_InstanceDriverReturnsToDefault_RemovesStaleMaterializedValue()
+    {
+        // Repro: a StackPanel instance had Orientation = Horizontal, which materialized
+        // ChildrenLayout = LeftToRightStack. Setting Orientation back to Vertical (its default)
+        // makes the reference resolve to the resting value (TopToBottomStack), so ChildrenLayout
+        // belongs at its default. The stale LeftToRightStack must be removed - otherwise the
+        // resting-skip (issue #3080) leaves it behind and the instance keeps rendering horizontally.
+        BehaviorSave behavior = new BehaviorSave { Name = "StackPanelBehavior" };
+        behavior.FormsProperties.Add(new VariableSave { Type = "Orientation", Name = "Orientation", Value = "Vertical" });
+        behavior.ToolOnlyVariableReferences.Add(
+            "ChildrenLayout = Orientation == \"Horizontal\" ? \"LeftToRightStack\" : \"TopToBottomStack\"");
+
+        ComponentSave component = new ComponentSave { Name = "Controls/StackPanel", BaseType = "Container" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "StackPanelBehavior" });
+
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave screenDefault = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+
+        InstanceSave stackInstance = new InstanceSave
+        {
+            Name = "StackInstance",
+            BaseType = "Controls/StackPanel",
+            ParentContainer = screen
+        };
+        screen.Instances.Add(stackInstance);
+
+        // Orientation is back at its default (Vertical); a stale ChildrenLayout from a prior
+        // Orientation = Horizontal still sits on the instance.
+        screenDefault.Variables.Add(new VariableSave
+        {
+            Type = "Orientation",
+            Name = "StackInstance.Orientation",
+            Value = "Vertical",
+            SetsValue = true
+        });
+        screenDefault.Variables.Add(new VariableSave
+        {
+            Type = "ChildrenLayout",
+            Name = "StackInstance.ChildrenLayout",
+            Value = ChildrenLayout.LeftToRightStack,
+            SetsValue = true
+        });
+
+        StandardElementSave containerStandard = new StandardElementSave { Name = "Container" };
+        containerStandard.States.Add(new StateSave { Name = "Default", ParentContainer = containerStandard });
+
+        GumProjectSave project = new GumProjectSave();
+        project.StandardElements.Add(containerStandard);
+        project.Components.Add(component);
+        project.Screens.Add(screen);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        BehaviorToolOnlyReferencesApplier.Apply(screen, screenDefault);
+
+        screenDefault.Variables.ShouldNotContain(v => v.Name == "StackInstance.ChildrenLayout",
+            "a value materialized while the driver was non-default must be removed when the driver returns to its default, so the variable resets to its default rather than rendering stale");
+    }
+
+    [Fact]
+    public void Apply_ComponentOwnDefaultAtResting_KeepsAuthoredBaseline()
+    {
+        // The element's own default state holds the authored baseline - Controls/StackPanel sets
+        // ChildrenLayout = TopToBottomStack so it stacks. The resting-skip cleanup must only reset
+        // instance-level materialized values; it must NOT strip the component's own authored value
+        // (instance == null), or the StackPanel loses its stacking layout entirely.
+        BehaviorSave behavior = new BehaviorSave { Name = "StackPanelBehavior" };
+        behavior.FormsProperties.Add(new VariableSave { Type = "Orientation", Name = "Orientation", Value = "Vertical" });
+        behavior.ToolOnlyVariableReferences.Add(
+            "ChildrenLayout = Orientation == \"Horizontal\" ? \"LeftToRightStack\" : \"TopToBottomStack\"");
+
+        ComponentSave component = new ComponentSave { Name = "Controls/StackPanel", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Type = "ChildrenLayout",
+            Name = "ChildrenLayout",
+            Value = ChildrenLayout.TopToBottomStack,
+            SetsValue = true
+        });
+        component.States.Add(defaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "StackPanelBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        BehaviorToolOnlyReferencesApplier.Apply(component, defaultState);
+
+        defaultState.GetValue("ChildrenLayout").ShouldBe(ChildrenLayout.TopToBottomStack);
+    }
+
     private static BehaviorSave BuildCheckBoxBehavior()
     {
         BehaviorSave behavior = new BehaviorSave { Name = "CheckBoxBehavior" };
