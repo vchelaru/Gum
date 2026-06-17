@@ -16,4 +16,8 @@
       <BehaviorName>StackPanelBehavior</BehaviorName>
     </ElementBehaviorReference>
   </Behaviors>
+  <VariablesHiddenFromInstances>
+    <string>StackSpacing</string>
+    <string>ChildrenLayout</string>
+  </VariablesHiddenFromInstances>
 </ComponentSave>
