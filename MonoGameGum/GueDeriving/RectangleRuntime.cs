@@ -683,6 +683,14 @@ public class RectangleRuntime : GraphicalUiElement
             NotifyPropertyChanged();
         }
     }
+#elif RAYLIB
+    // Alias the stroke alpha (see the Color property below for the full rationale).
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
+    public int Alpha
+    {
+        get => _strokeColor.A;
+        set => StrokeColor = new Color(_strokeColor.R, _strokeColor.G, _strokeColor.B, (byte)value);
+    }
 #elif !SKIA
     [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
     public int Alpha
@@ -708,6 +716,14 @@ public class RectangleRuntime : GraphicalUiElement
             _stroke.Color = new Color((byte)value, current.G, current.B, current.A);
             NotifyPropertyChanged();
         }
+    }
+#elif RAYLIB
+    // Alias the stroke red channel (see the Color property below for the full rationale).
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
+    public int Red
+    {
+        get => _strokeColor.R;
+        set => StrokeColor = new Color((byte)value, _strokeColor.G, _strokeColor.B, _strokeColor.A);
     }
 #elif !SKIA
     [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
@@ -735,6 +751,14 @@ public class RectangleRuntime : GraphicalUiElement
             NotifyPropertyChanged();
         }
     }
+#elif RAYLIB
+    // Alias the stroke green channel (see the Color property below for the full rationale).
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
+    public int Green
+    {
+        get => _strokeColor.G;
+        set => StrokeColor = new Color(_strokeColor.R, (byte)value, _strokeColor.B, _strokeColor.A);
+    }
 #elif !SKIA
     [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
     public int Green
@@ -760,6 +784,14 @@ public class RectangleRuntime : GraphicalUiElement
             _stroke.Color = new Color(current.R, current.G, (byte)value, current.A);
             NotifyPropertyChanged();
         }
+    }
+#elif RAYLIB
+    // Alias the stroke blue channel (see the Color property below for the full rationale).
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
+    public int Blue
+    {
+        get => _strokeColor.B;
+        set => StrokeColor = new Color(_strokeColor.R, _strokeColor.G, (byte)value, _strokeColor.A);
     }
 #elif !SKIA
     [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
@@ -792,7 +824,20 @@ public class RectangleRuntime : GraphicalUiElement
             _stroke.Color = value;
             NotifyPropertyChanged();
         }
-#elif RAYLIB || SOKOL
+#elif RAYLIB
+        // The legacy single-color surface aliases the stroke color, matching XNALIKE where Color and
+        // StrokeColor are the same _stroke.Color field. raylib's renderer draws StrokeColor ?? Color
+        // and the ctor seeds StrokeColor opaque-white, so writing the renderable's de-prioritized
+        // Color slot here (as it did before) was silently shadowed — legacy `Color = x` outlines
+        // (every Editor-theme outline) rendered white. Route through StrokeColor so the legacy write
+        // reaches the rendered slot.
+        [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
+        get => _strokeColor;
+        [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
+        set => StrokeColor = value;
+#elif SOKOL
+        // SOKOL's renderable has no separate StrokeColor slot, so its legacy Color IS the rendered
+        // color — keep writing it directly.
         [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
         get => ContainedLineRectangle.Color;
         [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]

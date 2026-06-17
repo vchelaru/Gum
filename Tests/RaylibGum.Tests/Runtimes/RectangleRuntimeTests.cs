@@ -93,6 +93,40 @@ public class RectangleRuntimeTests : BaseTestClass
         sut.Color.ShouldBe(expected);
     }
 
+    // Editor-theme outlines (ListBox/TextBox/Button/CheckBox/ComboBox) set their RectangleRuntime
+    // outline via the legacy Color property, e.g. `rectangle.Color = new Color(60, 60, 60)`. The
+    // raylib renderer draws `StrokeColor ?? Color`, and the ctor seeds StrokeColor opaque-white, so
+    // a legacy Color write landed in the de-prioritized Color slot and the outline rendered white
+    // instead of the themed gray (MonoGame was correct because there Color and StrokeColor are the
+    // same field). Legacy Color must drive the rendered stroke slot. Round-trip alone (above) did not
+    // catch this — it read back the same dead slot it wrote.
+    [Fact]
+    public void Color_Setter_ShouldDriveRenderedStrokeColor_NotBeShadowedBySeededStrokeColor()
+    {
+        RectangleRuntime sut = new();
+        sut.Color = new Color(60, 60, 60, 255);
+
+        LineRectangle inner = (LineRectangle)sut.RenderableComponent!;
+        // The renderer draws StrokeColor ?? Color, so the legacy write must reach the rendered slot.
+        Color renderedStroke = inner.StrokeColor ?? inner.Color;
+        renderedStroke.R.ShouldBe((byte)60);
+        renderedStroke.G.ShouldBe((byte)60);
+        renderedStroke.B.ShouldBe((byte)60);
+    }
+
+    // Same shadowing bug as Color, via the per-channel legacy member: a legacy channel write must
+    // reach the rendered stroke slot, not the de-prioritized Color slot.
+    [Fact]
+    public void Red_Setter_ShouldDriveRenderedStrokeColor_NotBeShadowedBySeededStrokeColor()
+    {
+        RectangleRuntime sut = new();
+        sut.Red = 60;
+
+        LineRectangle inner = (LineRectangle)sut.RenderableComponent!;
+        Color renderedStroke = inner.StrokeColor ?? inner.Color;
+        renderedStroke.R.ShouldBe((byte)60);
+    }
+
     [Fact]
     public void Green_ShouldRoundTrip()
     {
