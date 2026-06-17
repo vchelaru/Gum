@@ -1,4 +1,5 @@
 using Raylib_cs;
+using RenderingLibrary;
 using RenderingLibrary.Content;
 using Shouldly;
 using System;
@@ -57,6 +58,45 @@ public class ContentLoaderTests : BaseTestClass
             Font font = LoaderManager.Self.ContentLoader.LoadContent<Font>(fntPath);
 
             font.GlyphCount.ShouldBeGreaterThan(0);
+        }
+        finally
+        {
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+            FileManager.CustomGetStreamFromFile = savedHook;
+        }
+    }
+
+    // The line-metrics registry (which lets a raylib Text recover the .fnt's lineHeight/base, since
+    // Raylib_cs.Font has no field for them) is keyed by atlas texture id. Loading a .fnt registers an
+    // entry; that entry MUST be dropped when the font is unloaded, because raylib can later hand the
+    // freed texture id to a different font — a stale entry would then give that font the wrong line
+    // height. This pins the load-registers / dispose-removes lifecycle.
+    [Fact]
+    public void ManagedFont_Dispose_ShouldRemoveRegisteredLineMetrics()
+    {
+        string fixtureDirectory = Path.Combine(AppContext.BaseDirectory, "Content", "FontCache");
+        string fntPath = Path.Combine(fixtureDirectory, "Font18Arial.fnt");
+
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
+        try
+        {
+            // No caching: we own the only ManagedFont for this load, so disposing it is the sole
+            // UnloadFont (no cached copy to double-free) and the registry entry's lifetime is ours.
+            LoaderManager.Self.CacheTextures = false;
+            FileManager.CustomGetStreamFromFile = null;
+
+            Font font = LoaderManager.Self.ContentLoader.LoadContent<Font>(fntPath);
+            uint textureId = font.Texture.Id;
+
+            // Loaded: Font18Arial.fnt's lineHeight/base are registered against the atlas texture id.
+            RaylibFontMetricsRegistry.TryGet(textureId, out _).ShouldBeTrue();
+
+            ManagedFont managedFont = new ManagedFont(font);
+            managedFont.Dispose();
+
+            // Unloaded: the entry is gone, so a reused texture id cannot return stale metrics.
+            RaylibFontMetricsRegistry.TryGet(textureId, out _).ShouldBeFalse();
         }
         finally
         {
