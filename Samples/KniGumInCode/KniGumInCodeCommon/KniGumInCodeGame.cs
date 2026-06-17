@@ -183,7 +183,7 @@ public class KniGumInCodeGame : Game
         lineRectangle.Y = 10;
         lineRectangle.Width = 120;
         lineRectangle.Height = 24;
-        lineRectangle.Color = Color.Pink;
+        lineRectangle.StrokeColor = Color.Pink;
         container.Children.Add(lineRectangle);
 
 
@@ -222,7 +222,8 @@ public class KniGumInCodeGame : Game
 
         polygon.Width = size;
         polygon.Height = size;
-        polygon.IsDotted = true;
+        polygon.StrokeDashLength = 2f;
+        polygon.StrokeGapLength = 2f;
         polygon.SetPoints(new System.Numerics.Vector2[]
         {
             new System.Numerics.Vector2(0, 0),

@@ -42,13 +42,13 @@ public class TextBoxVisual : BaseTextBoxVisual
 
         States.Highlighted.Apply += () =>
         {
-            outline.Color = new Color(150, 150, 150);
+            outline.StrokeColor = new Color(150, 150, 150);
             outline.Visible = true;
         };
 
         States.Focused.Apply += () =>
         {
-            outline.Color = new Color(192, 222, 255);
+            outline.StrokeColor = new Color(192, 222, 255);
             outline.Visible = true;
         };
     }
