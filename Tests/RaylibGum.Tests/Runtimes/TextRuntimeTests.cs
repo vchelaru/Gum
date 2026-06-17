@@ -437,6 +437,109 @@ public class TextRuntimeTests : BaseTestClass
 
     #endregion
 
+    #region LineHeight
+
+    // The raylib Font struct (Raylib_cs.Font) carries only BaseSize — it has no line-height or
+    // baseline field — so when a Gum .fnt bitmap font is loaded, its common.lineHeight is discarded
+    // and the Text renderable reconstructed line height as MeasureTextEx("M") ≈ BaseSize. That drops
+    // the descender region MonoGame's BitmapFont.LineHeightInPixels keeps. For the gold fixture,
+    // Font18Arial.fnt declares lineHeight=21 (base=17, size=18), so raylib reported 18 where MonoGame
+    // reports 21. Because a Text — and therefore a ListBoxItem sized RelativeToChildren — measures to
+    // its line height, raylib list items came out ~3px shorter, removing the gap below the text that
+    // MonoGame shows.
+    [Fact]
+    public void LineHeightInPixels_ShouldMatchFntLineHeight_IncludingDescenderRegion()
+    {
+        WithFont18Arial(() =>
+        {
+            TextRuntime text = new();
+            text.SetProperty("Font", "Arial");
+            text.SetProperty("FontSize", 18);
+            text.Text = "List item 1";
+
+            Gum.Renderables.Text renderable = (Gum.Renderables.Text)text.RenderableComponent;
+
+            renderable.LineHeightInPixels.ShouldBe(21);
+        });
+    }
+
+    // The descender region (lineHeight - base = 21 - 17 = 4 for Font18Arial) was hardcoded to 2 on the
+    // raylib renderable. DescenderHeight feeds text baseline anchoring in GraphicalUiElement, so it
+    // must come from the loaded font, matching the MonoGame BitmapFont (DescenderHeight = lineHeight -
+    // base) rather than a constant.
+    [Fact]
+    public void DescenderHeight_ShouldMatchFntLineHeightMinusBase()
+    {
+        WithFont18Arial(() =>
+        {
+            TextRuntime text = new();
+            text.SetProperty("Font", "Arial");
+            text.SetProperty("FontSize", 18);
+            text.Text = "List item 1";
+
+            Gum.Renderables.Text renderable = (Gum.Renderables.Text)text.RenderableComponent;
+
+            renderable.DescenderHeight.ShouldBe(4);
+        });
+    }
+
+    // The user-facing symptom: a ListBoxItem is sized RelativeToChildren to the Text inside it, so the
+    // item height tracks the Text's reported height. A single-line Text must report its font's full
+    // line height (21), not BaseSize (18) — otherwise raylib list items are 3px shorter than MonoGame
+    // and lose the gap below the text.
+    [Fact]
+    public void GetAbsoluteHeight_ForSingleLineRelativeToChildren_ShouldMatchFntLineHeight()
+    {
+        WithFont18Arial(() =>
+        {
+            TextRuntime text = new();
+            text.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            text.Height = 0;
+            text.SetProperty("Font", "Arial");
+            text.SetProperty("FontSize", 18);
+            text.Text = "List item 1";
+
+            text.GetAbsoluteHeight().ShouldBe(21);
+        });
+    }
+
+    // Serves the gold Font18Arial fixture (.fnt + page) purely in memory, keyed by file name, so the
+    // (Arial, 18) font-cache file resolves regardless of disk layout, then restores all mutated global
+    // state. Mirrors the in-memory hook setup in Font_SetViaDirectProperties.
+    private static void WithFont18Arial(Action body)
+    {
+        string fixtureDirectory = Path.Combine(AppContext.BaseDirectory, "Content", "FontCache");
+        Dictionary<string, byte[]> inMemoryFiles = new(StringComparer.OrdinalIgnoreCase)
+        {
+            { "Font18Arial.fnt", File.ReadAllBytes(Path.Combine(fixtureDirectory, "Font18Arial.fnt")) },
+            { "Font18Arial_0.png", File.ReadAllBytes(Path.Combine(fixtureDirectory, "Font18Arial_0.png")) },
+        };
+
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        string savedRelativeDirectory = FileManager.RelativeDirectory;
+        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
+        try
+        {
+            LoaderManager.Self.CacheTextures = false;
+            FileManager.RelativeDirectory = Path.Combine(Path.GetTempPath(),
+                "GumRaylibLineHeightTest_" + Guid.NewGuid().ToString("N")).Replace('\\', '/') + "/";
+            FileManager.CustomGetStreamFromFile = incomingPath =>
+                inMemoryFiles.TryGetValue(Path.GetFileName(incomingPath), out byte[]? bytes)
+                    ? new MemoryStream(bytes)
+                    : null!;
+
+            body();
+        }
+        finally
+        {
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+            FileManager.RelativeDirectory = savedRelativeDirectory;
+            FileManager.CustomGetStreamFromFile = savedHook;
+        }
+    }
+
+    #endregion
+
     #region MaxNumberOfLines
 
     [Fact]

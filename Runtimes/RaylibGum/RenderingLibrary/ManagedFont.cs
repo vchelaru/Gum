@@ -35,6 +35,9 @@ public class ManagedFont : IDisposable
     {
         if (!disposed)
         {
+            // Drop any recorded line metrics first — raylib may reuse this texture id after UnloadFont,
+            // and a stale entry would hand the next font the wrong line height.
+            RaylibFontMetricsRegistry.Remove(Font.Texture.Id);
             Raylib_cs.Raylib.UnloadFont(Font);
             disposed = true;
         }
