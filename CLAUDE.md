@@ -43,6 +43,14 @@ Examples:
 
 If a runtime change is in `GumCommon` and you've already built `MonoGameGum.Tests`, that pulls in `GumCommon` and `MonoGameGum` transitively — no need to also build the solution.
 
+**Running focused tool unit tests (`GumToolUnitTests`).** Building this project triggers the plugin projects' post-build copy, which uses `$(SolutionDir)`. To run the csproj directly, supply it — with **backslashes** (forward slashes break the `copy`/`md` steps):
+
+```
+dotnet test Tool/Tests/GumToolUnitTests/GumToolUnitTests.csproj -p:SolutionDir='C:\path\to\repo\' --filter "ClassName"
+```
+
+If the Gum tool is **running**, it locks `Gum/bin/Debug/Plugins/*` and that copy fails with "Access denied". Add `-p:BuildProjectReferences=false` to run the tests against the already-built `Gum.dll` without re-copying plugins (rebuild tool source separately first if you changed it). This avoids having to close the user's running tool.
+
 ## Code Style
 
 See `.claude/code-style.md` for all code style rules. Read that file before writing or editing any code.
