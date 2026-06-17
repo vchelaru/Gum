@@ -200,6 +200,26 @@ ButtonCategoryState = Background.Visible ? "Enabled" : "Disabled"
 
 If the right side is a literal string, Gum validates it against the category's state names and comments out the line if there is no match.
 
+### Enum Assignment
+
+Variables whose type is an enumeration — such as `ChildrenLayout`, or unit and alignment types like `XUnits` and `WidthUnits` — can be assigned using the enum value's name as a string. Gum converts the name to the matching enum value:
+
+```csharp
+ChildrenLayout = "LeftToRightStack"
+```
+
+Because the right side is a string, an enum can also be selected with a ternary or driven from another variable. For example, a container can switch its layout direction based on a `bool`:
+
+```csharp
+ChildrenLayout = IsHorizontal ? "LeftToRightStack" : "TopToBottomStack"
+```
+
+The name must match one of the enum's values; if it does not, the assignment is not applied. An enum variable can also be assigned from another variable of the same enum type, or from the enum's underlying integer value:
+
+```csharp
+ChildrenLayout = OtherContainer.ChildrenLayout
+```
+
 {% hint style="warning" %}
 Gum treats the prefixes `Components/`, `Screens/`, and `Standards/` as special prefixes and does not consider this to be a division operator. Therefore, you should not name variables Components, Screens, or Standards as these are reserved words. Other variable references can freely use the forward slash character to create division.
 
