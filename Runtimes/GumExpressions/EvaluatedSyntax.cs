@@ -731,6 +731,83 @@ public class EvaluatedSyntax
                 return true;
         }
 
+        // Enum targets (e.g. ChildrenLayout, XUnits): a reference can produce a string
+        // (a literal, or a ternary like Orientation == "Horizontal" ? "LeftToRightStack"
+        // : "TopToBottomStack") or an int, but the materialized value must be the boxed
+        // enum. Consumers such as GraphicalUiElement's typed ChildrenLayout setter and the
+        // int-on-disk serializer require it - a raw string is silently dropped at apply
+        // time. Mirrors GraphicalUiElement.SetPropertyThroughReflection's enum branch.
+        if (desiredType != null && this.Value != null)
+        {
+            Type? enumType = ResolveEnumType(desiredType);
+            if (enumType != null)
+            {
+                try
+                {
+                    this.Value = this.Value is string enumName
+                        ? Enum.Parse(enumType, enumName, ignoreCase: true)
+                        : Enum.ToObject(enumType, this.Value);
+                    this.EvaluatedType = desiredType;
+                    return true;
+                }
+                catch
+                {
+                    // Undefined enum name or out-of-range value: report a failed cast (the
+                    // caller leaves the reference unapplied) rather than crashing the apply.
+                    return false;
+                }
+            }
+        }
+
         return false;
+    }
+
+    /// <summary>
+    /// Optional override for resolving a Gum type-name string (e.g. "ChildrenLayout") to its
+    /// CLR <see cref="Type"/> during <see cref="CastTo"/>. When null, a cached reflection scan
+    /// over loaded assemblies is used. The Gum tool can assign its TypeManager here for
+    /// faster/more precise resolution.
+    /// </summary>
+    public static Func<string, Type?>? TypeResolver { get; set; }
+
+    static readonly Dictionary<string, Type?> enumTypeCache = new Dictionary<string, Type?>();
+
+    private static Type? ResolveEnumType(string typeName)
+    {
+        if (TypeResolver != null)
+        {
+            Type? resolved = TypeResolver(typeName);
+            return resolved?.IsEnum == true ? resolved : null;
+        }
+
+        lock (enumTypeCache)
+        {
+            if (enumTypeCache.TryGetValue(typeName, out Type? cached))
+            {
+                return cached;
+            }
+
+            Type? found = null;
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                try
+                {
+                    found = assembly.GetTypes().FirstOrDefault(t => t.IsEnum && t.Name == typeName);
+                }
+                catch
+                {
+                    // A dynamic or partially-loaded assembly can throw from GetTypes(); it
+                    // won't hold a Gum enum, so skip it rather than failing resolution.
+                }
+
+                if (found != null)
+                {
+                    break;
+                }
+            }
+
+            enumTypeCache[typeName] = found;
+            return found;
+        }
     }
 }

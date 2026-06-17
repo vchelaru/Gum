@@ -6262,7 +6262,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     break;
                 case "ChildrenLayout":
                 case "Children Layout":
-                    this.ChildrenLayout = (ChildrenLayout)value!;
+                    this.ChildrenLayout = ToEnum<ChildrenLayout>(value);
                     toReturn = true;
                     break;
                 case "ClipsChildren":
@@ -6302,7 +6302,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     break;
                 case "HeightUnits":
                 case "Height Units":
-                    this.HeightUnits = (DimensionUnitType)value!;
+                    this.HeightUnits = ToEnum<DimensionUnitType>(value);
                     toReturn = true;
                     break;
                 case nameof(IgnoredByParentSize):
@@ -6381,7 +6381,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     break;
                 case "TextureAddress":
                 case "Texture Address":
-                    this.TextureAddress = (Gum.Managers.TextureAddress)value!;
+                    this.TextureAddress = ToEnum<Gum.Managers.TextureAddress>(value);
                     toReturn = true;
                     break;
                 case "Visible":
@@ -6394,7 +6394,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     break;
                 case "WidthUnits":
                 case "Width Units":
-                    this.WidthUnits = (DimensionUnitType)value!;
+                    this.WidthUnits = ToEnum<DimensionUnitType>(value);
                     toReturn = true;
                     break;
                 case "X":
@@ -6403,7 +6403,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     break;
                 case "XOrigin":
                 case "X Origin":
-                    this.XOrigin = (HorizontalAlignment)value!;
+                    this.XOrigin = ToEnum<HorizontalAlignment>(value);
                     toReturn = true;
                     break;
                 case "XUnits":
@@ -6417,7 +6417,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     break;
                 case "YOrigin":
                 case "Y Origin":
-                    this.YOrigin = (VerticalAlignment)value!;
+                    this.YOrigin = ToEnum<VerticalAlignment>(value);
                     toReturn = true;
                     break;
                 case "YUnits":
@@ -6493,6 +6493,21 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         return toReturn;
     }
+
+    /// <summary>
+    /// Coerces a data-driven value to the enum type <typeparamref name="T"/> for the hardcoded
+    /// property switch in <see cref="TrySetValueOnThis"/>. ApplyState/SetProperty feed values that
+    /// may arrive already boxed as the enum, as a string name (variable references and hand-written
+    /// .gumx files), or as the underlying int (.gumx serializes enums as int). A plain cast throws
+    /// on the latter two, which under FULL_DIAGNOSTICS tears down the editor. This mirrors
+    /// <see cref="SetPropertyThroughReflection"/>'s enum handling so the GUE-property path is as
+    /// tolerant as the renderable path; a genuinely invalid value still throws (surfaced under
+    /// FULL_DIAGNOSTICS, skipped in release by the surrounding catch).
+    /// </summary>
+    private static T ToEnum<T>(object? value) where T : struct, Enum =>
+        value is T typed ? typed
+        : value is string name ? (T)Enum.Parse(typeof(T), name, ignoreCase: true)
+        : (T)Enum.ToObject(typeof(T), value!);
 
     public void ApplyStateRecursive(string categoryName, string stateName)
     {

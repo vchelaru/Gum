@@ -112,14 +112,54 @@ public static class BehaviorToolOnlyReferencesApplier
         // (issue #3080). Only authored deviations from rest (IsEnabled = false, a checked
         // CheckBox, etc.) are worth materializing. The throwaway-element ceremony required to
         // evaluate "with nothing authored" lives in FromSyntaxNodeUsingDefaultsOnly (issue #3082).
+        string effectiveLeft = instance == null ? left : $"{instance.Name}.{left}";
+
         EvaluatedSyntax? resting = EvaluatedSyntax.FromSyntaxNodeUsingDefaultsOnly(rightSyntax, fallback);
         if (resting != null && Equals(resting.Value, evaluated.Value))
         {
+            // The reference resolves to its resting (default) value, so the target belongs at its
+            // default. For an instance - where the reference owns the (hidden) variable - remove any
+            // value materialized while the driver was non-default so it resets to default instead of
+            // persisting stale after the driver returns to default (e.g. ChildrenLayout =
+            // LeftToRightStack left behind when Orientation goes Horizontal -> Vertical). The element's
+            // own default state (instance == null) holds the authored baseline, so leave it alone -
+            // issue #3080 only suppressed the write; it never cleaned up a prior one.
+            if (instance != null)
+            {
+                VariableSave? stale = stateSave.Variables.FirstOrDefault(v => v.Name == effectiveLeft);
+                if (stale != null)
+                {
+                    stateSave.Variables.Remove(stale);
+                }
+            }
             return;
         }
 
-        string effectiveLeft = instance == null ? left : $"{instance.Name}.{left}";
+        // Coerce the evaluated value to the left-hand variable's declared type before
+        // writing it - the same step the state-level VariableReferences apply path performs
+        // via EvaluatedSyntax.CastTo (see ApplyVariableReferencesOnSpecificOwner). The
+        // tool-only applier evaluates the RHS directly, so without this an enum-typed target
+        // like ChildrenLayout would store the raw string a ternary produces instead of the
+        // boxed enum (which the typed wireframe setter and int-on-disk serializer require).
+        string? leftSideType = ResolveLeftSideType(effectiveLeft, instance, stateSave);
+        if (leftSideType != null)
+        {
+            evaluated.CastTo(leftSideType);
+        }
+
         stateSave.SetValue(effectiveLeft, evaluated.Value, instance);
+    }
+
+    private static string? ResolveLeftSideType(string qualifiedLeftName, InstanceSave? instance, StateSave stateSave)
+    {
+        VariableSave? variableOnState = stateSave.Variables.FirstOrDefault(item => item.Name == qualifiedLeftName);
+        if (variableOnState?.Type != null)
+        {
+            return variableOnState.Type;
+        }
+
+        ElementSave? elementOwningInstance = instance?.ParentContainer ?? stateSave.ParentContainer;
+        return ObjectFinder.Self.GetRootVariable(qualifiedLeftName, elementOwningInstance)?.Type;
     }
 
     /// <summary>

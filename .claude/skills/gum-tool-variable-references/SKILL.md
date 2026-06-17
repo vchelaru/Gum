@@ -70,6 +70,12 @@ SetVariableLogic (variable change entry point)
 - In the tool: `CustomEvaluateExpression` is set by `MainVariableGridPlugin` to use `EvaluatedSyntax` (Roslyn parsing with full expression support).
 - At runtime (no tool): Falls back to `RecursiveVariableFinder` with simple dot-path lookup — no expression support, just direct variable resolution.
 
+### Left-Side Type Coercion
+
+Before the evaluated right side is written, it is coerced to the left variable's declared type via `EvaluatedSyntax.CastTo(desiredType)` (`desiredType` resolved from the existing state variable, else `ObjectFinder.GetRootVariable`). `CastTo` handles numeric widening/narrowing, `ToString` for string targets, **and enum targets** — a string (e.g. a ternary result `"LeftToRightStack"`) is parsed via `Enum.Parse`, an int via `Enum.ToObject`. The boxed enum is required: typed consumers like `GraphicalUiElement`'s `ChildrenLayout` setter and int-on-disk serialization reject a raw string. The enum CLR type is resolved by a cached reflection scan (`EvaluatedSyntax.ResolveEnumType`), overridable via the static `EvaluatedSyntax.TypeResolver`.
+
+`CastTo` is the single coercion point shared by three callers: state-level apply (`GetRightSideValue`/`GumExpressionService`), grid **validation** (`VariableReferenceLogic.AddFailureForLine`, so a valid enum reference is not auto-commented), and the behavior tool-only applier (`BehaviorToolOnlyReferencesApplier`). The behavior applier evaluates the RHS directly rather than via `GetRightSideValue`, so it resolves the left type and calls `CastTo` itself — without that an enum-typed behavior reference would store a raw string.
+
 ### Author-Time Materialization Is The Model
 
 When the tool resolves a `VariableReferences` row — interactive edit, Make Default, the handful of `ElementCommands` paths — `ApplyVariableReferences` writes the evaluated right-hand-side as a **hard scalar** into the same `StateSave`'s `Variables`. The references row and the materialized scalar are *both* persisted to disk. Lookup never re-evaluates the reference: scalar resolution finds the materialized value directly.

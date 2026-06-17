@@ -407,6 +407,50 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
     }
 
     [Fact]
+    public void GetCategories_InstanceStandardEnumVariableMaterializedByBehaviorToolOnlyReference_StaysHiddenFromInstance()
+    {
+        // The #3028 fix must generalize from category-state variables to ordinary enum variables.
+        // StackPanelBehavior drives the visual ChildrenLayout enum from its Orientation FormsProperty
+        // (ChildrenLayout = Orientation == "Horizontal" ? "LeftToRightStack" : "TopToBottomStack").
+        // When the component hides ChildrenLayout from instances, the materialized value must stay
+        // hidden - it must not re-surface via the "explicitly set" escape hatch the way it would if
+        // the behavior-driven detection only recognized category-state (<X>State) variables.
+        _buttonComponent.DefaultState.Variables.Add(new VariableSave
+        {
+            Type = "ChildrenLayout",
+            Name = "ChildrenLayout",
+            Value = ChildrenLayout.TopToBottomStack,
+            SetsValue = true
+        });
+        _buttonComponent.VariablesHiddenFromInstances.Add("ChildrenLayout");
+
+        _buttonBehavior.ToolOnlyVariableReferences.Add(
+            "ChildrenLayout = Orientation == \"Horizontal\" ? \"LeftToRightStack\" : \"TopToBottomStack\"");
+
+        // The materialized value sits in the screen's state, as it would after the applier runs.
+        _screenDefaultState.Variables.Add(new VariableSave
+        {
+            Type = "ChildrenLayout",
+            Name = "ButtonInstance.ChildrenLayout",
+            Value = ChildrenLayout.LeftToRightStack,
+            SetsValue = true
+        });
+
+        List<MemberCategory> categories = new List<MemberCategory>();
+
+        _displayer.GetCategories(
+            instanceOwner: _screen,
+            instance: _buttonInstance,
+            categories: categories,
+            stateSave: _screenDefaultState,
+            stateSaveCategory: null);
+
+        categories.SelectMany(c => c.Members)
+            .ShouldNotContain(m => m.Name.EndsWith("ChildrenLayout"),
+                "a standard enum variable materialized by a behavior tool-only reference must remain hidden from instances");
+    }
+
+    [Fact]
     public void GetCategories_InstanceOfDerivedTypeWithInheritedBehaviorToolOnlyReference_StaysHiddenFromInstance()
     {
         // Same as the above, but the instance's type is a *derived* component whose BaseType is the

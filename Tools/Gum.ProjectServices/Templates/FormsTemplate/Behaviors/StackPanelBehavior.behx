@@ -14,6 +14,8 @@
     <Value xsi:type="xsd:float">0</Value>
     <Description>Pixels of space between adjacent children along the stack axis.</Description>
   </FormsProperty>
+  <ToolOnlyVariableReference>ChildrenLayout = Orientation == "Horizontal" ? "LeftToRightStack" : "TopToBottomStack"</ToolOnlyVariableReference>
+  <ToolOnlyVariableReference>StackSpacing = Spacing</ToolOnlyVariableReference>
   <RequiredInstances />
   <RequiredAnimations />
 </BehaviorSave>
