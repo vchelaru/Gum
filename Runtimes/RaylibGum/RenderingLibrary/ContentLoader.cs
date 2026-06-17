@@ -59,7 +59,12 @@ public class ContentLoader : IContentLoader
         {
             if (isFnt)
             {
-                font = Raylib.LoadFont(contentName);
+                Font loadedFont = Raylib.LoadFont(contentName);
+                font = loadedFont;
+                // raylib's native loader discards the .fnt's lineHeight/base, so re-parse the on-disk
+                // file to record them (same registry the in-memory/KernSmith path populates via
+                // BuildFont). Keyed by atlas texture id so the Text renderable can recover them.
+                RegisterFontMetricsFromFnt(File.ReadAllText(contentName), loadedFont.Texture.Id);
             }
             else
             {
@@ -255,7 +260,7 @@ public class ContentLoader : IContentLoader
             };
         }
 
-        return new Font
+        Font font = new Font
         {
             BaseSize = parsedFontFile.Info.Size,
             GlyphCount = glyphCount,
@@ -264,6 +269,30 @@ public class ContentLoader : IContentLoader
             Recs = recs,
             Glyphs = glyphs,
         };
+
+        // raylib's Font has no lineHeight/base field, so record the .fnt's values keyed by the atlas
+        // texture id. The Text renderable uses these for line height and descender so raylib matches
+        // the MonoGame BitmapFont; without it, line height collapses to BaseSize (no descender region).
+        RaylibFontMetricsRegistry.Register(pageTexture.Id, parsedFontFile.Common.LineHeight, parsedFontFile.Common.Base);
+
+        return font;
+    }
+
+    // Parses just the lineHeight/base out of a .fnt's text and records them against the loaded font's
+    // atlas texture id. Used by the native on-disk path, which loads through raylib's own .fnt loader
+    // (so it never goes through BuildFont). A malformed .fnt simply skips registration — the Text
+    // renderable then falls back to native measurement.
+    private static void RegisterFontMetricsFromFnt(string fntText, uint textureId)
+    {
+        try
+        {
+            ParsedFontFile parsedFontFile = new ParsedFontFile(fntText);
+            RaylibFontMetricsRegistry.Register(textureId, parsedFontFile.Common.LineHeight, parsedFontFile.Common.Base);
+        }
+        catch
+        {
+            // Leave unregistered; line height falls back to MeasureTextEx in the Text renderable.
+        }
     }
 
     public static string StandardizeCaseSensitive(string fileName)

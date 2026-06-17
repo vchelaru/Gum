@@ -86,6 +86,13 @@ public class Text : IVisible, IRenderableIpso,
     private int _lineHeightInPixels;
 
     /// <summary>
+    /// The descender height (line height minus baseline) as defined by the font, ignoring FontScale.
+    /// Recovered from the loaded .fnt's lineHeight/base; defaults to 2 for fonts without recorded
+    /// metrics (raylib's built-in default font, TTF loaded via LoadFontEx).
+    /// </summary>
+    private int _descenderHeight = 2;
+
+    /// <summary>
     /// Stores the width of the text object's texture before it has had a chance to render, not including
     /// the FontScale.
     /// </summary>
@@ -210,7 +217,23 @@ public class Text : IVisible, IRenderableIpso,
         {
             throw new InvalidOperationException("Cannot measure text because IsWindowReady() is false - did you remember to call InitWindow first?");
         }
-        _lineHeightInPixels = (int)(MeasureTextEx(_font, "M", _font.BaseSize, 0).Y + .5);
+
+        // A Gum bitmap font records its .fnt lineHeight/base when loaded (keyed by atlas texture id),
+        // because raylib's Font struct can't hold them. Use those so line height includes the
+        // descender region exactly as the MonoGame BitmapFont does — otherwise a Text (and any
+        // container sized RelativeToChildren around it, e.g. a ListBoxItem) is short by that region.
+        // Fonts without recorded metrics (raylib's built-in default, TTF via LoadFontEx) fall back to
+        // native measurement, which returns ~BaseSize.
+        if (RaylibFontMetricsRegistry.TryGet(_font.Texture.Id, out var metrics))
+        {
+            _lineHeightInPixels = metrics.LineHeight;
+            _descenderHeight = metrics.LineHeight - metrics.BaselineY;
+        }
+        else
+        {
+            _lineHeightInPixels = (int)(MeasureTextEx(_font, "M", _font.BaseSize, 0).Y + .5);
+            _descenderHeight = 2;
+        }
     }
 
     public ObservableCollection<IRenderableIpso> Children
@@ -308,7 +331,7 @@ public class Text : IVisible, IRenderableIpso,
         }
     }
 
-    public float DescenderHeight => 2;
+    public float DescenderHeight => _descenderHeight;
 
     public float FontScale { get; set; } = 1;
 
