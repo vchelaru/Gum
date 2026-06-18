@@ -425,6 +425,28 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
             });
         }
 
+        // Seed Component-base variables the live visual cannot supply -- notably the "State" selector, which
+        // is save-time metadata with no runtime property to read. An authored component carries these, so
+        // without them the tool back-fills them on load and force-saves the whole project. Sourcing from the
+        // catalog keeps a single source of truth and auto-covers any future Component-base meta-variable.
+        if (_defaultStates.TryGetValue("Component", out StateSave? componentBaseState))
+        {
+            foreach (VariableSave baseVariable in componentBaseState.Variables)
+            {
+                if (FindVariable(componentDefault, baseVariable.Name) == null)
+                {
+                    componentDefault.Variables.Add(new VariableSave
+                    {
+                        Name = baseVariable.Name,
+                        Type = baseVariable.Type,
+                        Value = baseVariable.Value,
+                        SetsValue = baseVariable.SetsValue,
+                        Category = baseVariable.Category,
+                    });
+                }
+            }
+        }
+
         // The baseline's descendants become the component's (flat, parent-linked) instances.
         HashSet<string> usedNames = new HashSet<string>();
         foreach (GraphicalUiElement child in pristine.Children)

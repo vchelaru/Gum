@@ -287,6 +287,26 @@ public class RuntimeSnapshotSerializerTests : BaseTestClass
     }
 
     [Fact]
+    public void CreateScreenSave_WithBaselineProvider_ShouldSeedComponentBaseStateVariable()
+    {
+        ContainerRuntime root = new();
+        ContainerRuntime formsScreen = new() { Name = "MainMenu" };
+        formsScreen.FormsControlAsObject = new object();
+        formsScreen.AddChild(MakeLiveButton("OkButton", "OK"));
+        root.AddChild(formsScreen);
+
+        RuntimeSnapshotSerializer serializer = CreateSerializerWithButtonBaseline();
+        serializer.CreateScreenSave(root, "Snapshot", shake: true);
+
+        // A synthesized component must carry the Component-base "State" selector variable. The live visual
+        // can't supply it (it is save-time metadata, not a runtime property), so without explicit seeding the
+        // tool back-fills it on load and force-saves the whole project.
+        ComponentSave component = serializer.SynthesizedComponents.First(c => c.Name == "FakeButton");
+        StateSave defaultState = component.States.First(s => s.Name == "Default");
+        defaultState.Variables.ShouldContain(v => v.Name == "State");
+    }
+
+    [Fact]
     public void CreateScreenSave_WithBaselineProvider_ShouldSynthesizeComponentForFormsControl()
     {
         ContainerRuntime root = new();
