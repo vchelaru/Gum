@@ -402,10 +402,15 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
 
     private ComponentEntry BuildComponentEntry(Type controlType, GraphicalUiElement pristine, bool shake)
     {
+        // The component derives from the baseline root's own standard type when it resolves -- e.g. a Label
+        // whose visual root is a Text (DefaultLabelRuntime : TextRuntime) becomes a Text-based component so
+        // its text/font/color are captured. InteractiveGue-rooted controls (Button, Panel, ScrollViewer)
+        // resolve to null and fall back to Container.
+        string componentBaseType = GetStandardTypeName(pristine) ?? ComponentBaseType;
         ComponentSave component = new ComponentSave
         {
             Name = MakeUniqueComponentName(controlType.Name),
-            BaseType = ComponentBaseType,
+            BaseType = componentBaseType,
         };
         StateSave componentDefault = new StateSave { Name = "Default" };
         component.States.Add(componentDefault);
@@ -413,9 +418,8 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
         Dictionary<GraphicalUiElement, string> nodeToInstanceName = new Dictionary<GraphicalUiElement, string>();
 
         // The baseline root maps to the component element itself: its catalog values become element-level
-        // (unqualified) default variables, exactly how a hand-authored component holds its own values. Read
-        // against the component base type so an InteractiveGue-rooted control still emits its root geometry.
-        StateSave rootState = CreateStateForType(pristine, "Default", shake, ComponentBaseType);
+        // (unqualified) default variables, read against that same resolved base type.
+        StateSave rootState = CreateStateForType(pristine, "Default", shake, componentBaseType);
         foreach (VariableSave variable in rootState.Variables)
         {
             componentDefault.Variables.Add(new VariableSave
@@ -470,9 +474,14 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
     {
         entry.NodeToInstanceName.TryGetValue(pristineNode, out string? componentInstanceName);
 
-        // The control root (no instance-name entry) is read against the component base type to match how it
-        // was emitted in BuildComponentEntry; inner nodes use their own resolved standard type.
-        string? typeName = componentInstanceName == null ? ComponentBaseType : GetStandardTypeName(liveNode);
+        // Match how each node was emitted in BuildComponentEntry: a node uses its own resolved standard
+        // type; the control root (no instance-name entry) falls back to the component base type when it does
+        // not resolve (an InteractiveGue-rooted control).
+        string? typeName = GetStandardTypeName(liveNode);
+        if (typeName == null && componentInstanceName == null)
+        {
+            typeName = ComponentBaseType;
+        }
         if (typeName != null && _defaultStates.TryGetValue(typeName, out StateSave? defaultStateForType))
         {
             foreach (VariableSave defaultVariable in defaultStateForType.Variables)

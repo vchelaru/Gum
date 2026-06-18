@@ -307,6 +307,31 @@ public class RuntimeSnapshotSerializerTests : BaseTestClass
     }
 
     [Fact]
+    public void CreateScreenSave_WithBaselineProvider_ShouldDeriveComponentFromRootStandardType()
+    {
+        // A Label-like Forms control whose visual root is a Text (DefaultLabelRuntime : TextRuntime). The
+        // synthesized component must derive from Text and capture the Text value -- not be forced to
+        // Container, which drops the text entirely so nothing renders.
+        ContainerRuntime root = new();
+        ContainerRuntime formsScreen = new() { Name = "MainMenu" };
+        formsScreen.FormsControlAsObject = new object();
+
+        TextRuntime liveLabel = new() { Name = "TextInstance" };
+        liveLabel.FormsControlAsObject = new FakeLabel();
+        liveLabel.Text = "Score: 0";
+        formsScreen.AddChild(liveLabel);
+        root.AddChild(formsScreen);
+
+        RuntimeSnapshotSerializer serializer =
+            new(StandardElementsManager.Self.DefaultStates, FakeLabelBaseline);
+        serializer.CreateScreenSave(root, "Snapshot", shake: true);
+
+        ComponentSave component = serializer.SynthesizedComponents.First(c => c.Name == "FakeLabel");
+        component.BaseType.ShouldBe("Text");
+        component.States.First(s => s.Name == "Default").Variables.ShouldContain(v => v.Name == "Text");
+    }
+
+    [Fact]
     public void CreateScreenSave_WithBaselineProvider_ShouldSynthesizeComponentForFormsControl()
     {
         ContainerRuntime root = new();
@@ -556,6 +581,23 @@ public class RuntimeSnapshotSerializerTests : BaseTestClass
     // Stand-in for a Forms control type (e.g. Button). Its type name becomes the synthesized component name.
     private class FakeButton
     {
+    }
+
+    // Stand-in for a Label-like Forms control whose visual root is a Text (like DefaultLabelRuntime).
+    private class FakeLabel
+    {
+    }
+
+    // A pristine FakeLabel template: a bare Text whose root carries the label text (no children).
+    private static GraphicalUiElement? FakeLabelBaseline(Type type)
+    {
+        if (type != typeof(FakeLabel))
+        {
+            return null;
+        }
+        TextRuntime label = new();
+        label.Text = "Label";
+        return label;
     }
 
     // Two control types that share the simple name "CollidingControl" but live in different "namespaces"
