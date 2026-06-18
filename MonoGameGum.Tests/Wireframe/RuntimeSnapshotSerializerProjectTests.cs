@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
@@ -289,6 +290,58 @@ public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
             FileManager.RelativeDirectory = originalRelativeDirectory;
             DeleteTempDirectory(contentDirectory);
             DeleteTempDirectory(snapshotDirectory);
+        }
+    }
+
+    [Fact]
+    public void ExportSnapshot_ShouldSynthesizeComponentForFormsButtons()
+    {
+        // End-to-end: two live Forms Buttons should collapse into one shared "Button" component plus two
+        // thin instances, and the project must round-trip through load without errors (a missing base type
+        // for any of the component's inner standards would surface here).
+        string tempDirectory = NewTempDirectory();
+        try
+        {
+            GumService service = new();
+
+            Button okButton = new() { Name = "OkButton" };
+            okButton.Text = "OK";
+            okButton.X = 30; // a root-level geometry delta on an InteractiveGue-rooted control
+            service.Root.AddChild(okButton.Visual);
+
+            Button cancelButton = new() { Name = "CancelButton" };
+            cancelButton.Text = "Cancel";
+            service.Root.AddChild(cancelButton.Visual);
+
+            string gumxPath = Path.Combine(tempDirectory, "Live." + GumProjectSave.ProjectExtension);
+            service.ExportSnapshot(gumxPath);
+
+            GumProjectSave loaded = GumProjectSave.Load(gumxPath, out GumLoadResult loadResult);
+
+            loaded.ShouldNotBeNull();
+            loadResult.ErrorMessage.ShouldBeNullOrEmpty();
+            loadResult.MissingFiles.ShouldBeEmpty();
+
+            // One component shared by both buttons; the inner Text child is not flattened into the screen.
+            loaded.Components.Count(c => c.Name == "Button").ShouldBe(1);
+            ScreenSave loadedScreen = loaded.Screens.First(s => s.Name == "Live");
+            loadedScreen.Instances.Where(i => i.BaseType == "Button").Select(i => i.Name)
+                .ShouldBe(new[] { "OkButton", "CancelButton" }, ignoreOrder: true);
+
+            // Each instance carries its own label via the component's synthesized exposed text variable.
+            StateSave defaultState = loadedScreen.States.First(s => s.Name == "Default");
+            defaultState.Variables.Any(v => v.Name.StartsWith("OkButton.") && (v.Value as string) == "OK")
+                .ShouldBeTrue();
+            defaultState.Variables.Any(v => v.Name.StartsWith("CancelButton.") && (v.Value as string) == "Cancel")
+                .ShouldBeTrue();
+
+            // The control root's geometry survives even though DefaultButtonRuntime is not itself a standard
+            // type -- it is read against the component's Container base type.
+            defaultState.Variables.First(v => v.Name == "OkButton.X").Value.ShouldBe(30f);
+        }
+        finally
+        {
+            DeleteTempDirectory(tempDirectory);
         }
     }
 

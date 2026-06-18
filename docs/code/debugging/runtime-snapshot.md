@@ -40,6 +40,7 @@ You can open the Gum tool and load your exported project - whenever your project
 A snapshot reproduces the running tree as standard-element instances:
 
 * **The visual tree**, flattened into standard elements - `Container`, `Text`, `Sprite`, `NineSlice`, and so on - parented exactly as they are at runtime.
+* **Forms controls** - a control such as `Button` or `CheckBox` is recognized and collapsed into a synthesized component named after the control type, with each control becoming a thin instance of it (ten buttons share one `Button` component). Per-instance differences (the button's text, its position, ...) are kept as overrides so each instance still looks exactly as it did at runtime. Controls whose live structure does not match their default template - notably list-like controls (`ListBox`, `ComboBox`, `Menu`) that fill themselves with items at runtime - stay flattened into standard elements instead, so the snapshot always matches what you saw.
 * **The screen** - your top-level screen maps to the Gum `Screen`. When you add a single screen (such as a Forms screen) to the root, that screen's contents become the screen's instances directly, rather than nesting under an extra wrapper container.
 * **Canvas size** matching your game's current resolution, so the layout in the tool matches what you see at runtime.
 * **Referenced textures** - files referenced by `Sprite` and `NineSlice` source files are copied next to the project, preserving their relative path, so the snapshot opens self-contained.

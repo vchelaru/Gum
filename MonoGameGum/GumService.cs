@@ -363,8 +363,11 @@ public class GumService : IGumService
 
         string screenName = Path.GetFileNameWithoutExtension(filePath);
 
-        // Non-null here: the guard above initializes the catalog when it was missing.
-        RuntimeSnapshotSerializer serializer = new(StandardElementsManager.Self.DefaultStates!);
+        // Non-null here: the guard above initializes the catalog when it was missing. The baseline provider
+        // lets the serializer collapse Forms-control subtrees (Button, CheckBox, ...) into synthesized
+        // components by diffing each against the control type's pristine default-template visual.
+        RuntimeSnapshotSerializer serializer = new(StandardElementsManager.Self.DefaultStates!,
+            type => FrameworkElement.GetGraphicalUiElementForFrameworkElement(type));
         ScreenSave screen = serializer.CreateScreenSave(Root, screenName, shake);
 
         GumProjectSave project = new();
@@ -390,13 +393,25 @@ public class GumService : IGumService
         project.Screens.Add(screen);
         project.ScreenReferences.Add(new ElementReference { Name = screenName, ElementType = ElementType.Screen });
 
-        EnsureReferencedStandardsExist(project, screen);
+        // Forms-control subtrees collapse into reusable components (one per control type) plus thin instances.
+        foreach (ComponentSave component in serializer.SynthesizedComponents)
+        {
+            project.Components.Add(component);
+            project.ComponentReferences.Add(
+                new ElementReference { Name = component.Name, ElementType = ElementType.Component });
+        }
+
+        EnsureReferencedStandardsExist(project, screen, serializer.SynthesizedComponents);
 
         string? directory = Path.GetDirectoryName(filePath);
         if (!string.IsNullOrEmpty(directory))
         {
             Directory.CreateDirectory(Path.Combine(directory, ElementReference.ScreenSubfolder));
             Directory.CreateDirectory(Path.Combine(directory, ElementReference.StandardSubfolder));
+            if (serializer.SynthesizedComponents.Count > 0)
+            {
+                Directory.CreateDirectory(Path.Combine(directory, ElementReference.ComponentSubfolder));
+            }
         }
 
         project.Save(filePath, saveElements: true);
@@ -410,10 +425,23 @@ public class GumService : IGumService
     // Instances may reference standard types the default seed omits -- notably deprecated ones like
     // ColoredRectangle, which new (v3) projects no longer include but an old/live tree may still contain.
     // Add any such referenced standard so the snapshot's instances don't dangle on a missing base type.
-    private static void EnsureReferencedStandardsExist(GumProjectSave project, ScreenSave screen)
+    // Synthesized components carry instances too, so their base types are checked alongside the screen's.
+    private static void EnsureReferencedStandardsExist(GumProjectSave project, ScreenSave screen,
+        IReadOnlyList<ComponentSave> components)
     {
         HashSet<string> existing = new(project.StandardElements.Select(standard => standard.Name));
-        foreach (InstanceSave instance in screen.Instances)
+
+        EnsureStandardsForInstances(project, screen.Instances, existing);
+        foreach (ComponentSave component in components)
+        {
+            EnsureStandardsForInstances(project, component.Instances, existing);
+        }
+    }
+
+    private static void EnsureStandardsForInstances(GumProjectSave project, IEnumerable<InstanceSave> instances,
+        HashSet<string> existing)
+    {
+        foreach (InstanceSave instance in instances)
         {
             string baseType = instance.BaseType;
             if (string.IsNullOrEmpty(baseType) || existing.Contains(baseType))

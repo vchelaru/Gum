@@ -243,44 +243,61 @@ public class ProjectManager : IProjectManager
 
         if (_gumProjectSave != null)
         {
-            bool wasModified = false;
+            // Each load-time repair pass that actually changes something records its name here. If the list
+            // is non-empty the project is re-saved (forcing all contained elements to disk). Carrying the
+            // names -- rather than a single bool -- makes it visible in the Output tab which pass dirtied a
+            // freshly-loaded project, which is otherwise painful to track down.
+            List<string> modifications = new List<string>();
             ObjectFinder.Self.EnableCache();
             {
 
-                wasModified = _gumProjectSave.Initialize(
+                // Initialize is the heaviest pass; have it report which specific elements it changed so a
+                // re-save's cause is identifiable rather than a bare "Initialize".
+                List<string> initializeModifications = new List<string>();
+                if (_gumProjectSave.Initialize(
                     // tolerate this so we don't immediately crash the tool
-                    tolerateMissingDefaultStates:true);
+                    tolerateMissingDefaultStates: true, initializeModifications))
+                {
+                    foreach (string reason in initializeModifications)
+                    {
+                        modifications.Add($"Initialize/{reason}");
+                    }
+                    if (initializeModifications.Count == 0)
+                    {
+                        modifications.Add("Initialize");
+                    }
+                }
                 _standardElementsManagerGumTool.FixCustomTypeConverters(_gumProjectSave);
                 RecreateMissingStandardElements();
 
                 if (RecreateMissingDefinedByBaseObjects())
                 {
-                    wasModified = true;
+                    modifications.Add(nameof(RecreateMissingDefinedByBaseObjects));
                 }
 
                 if (_gumProjectSave.AddNewStandardElementTypes())
                 {
-                    wasModified = true;
+                    modifications.Add("AddNewStandardElementTypes");
                 }
                 if (FixSlashesInNames(_gumProjectSave))
                 {
-                    wasModified = true;
+                    modifications.Add(nameof(FixSlashesInNames));
                 }
                 if (RemoveSpacesInVariables(_gumProjectSave))
                 {
-                    wasModified = true;
+                    modifications.Add(nameof(RemoveSpacesInVariables));
                 }
                 if (_gumProjectSave.MigrateCircleRadiusToWidthHeight())
                 {
-                    wasModified = true;
+                    modifications.Add("MigrateCircleRadiusToWidthHeight");
                 }
                 if (_gumProjectSave.StripCircleRectangleGradientColor1())
                 {
-                    wasModified = true;
+                    modifications.Add("StripCircleRectangleGradientColor1");
                 }
                 if (RemoveDuplicateVariables(_gumProjectSave))
                 {
-                    wasModified = true;
+                    modifications.Add(nameof(RemoveDuplicateVariables));
                 }
 
                 _gumProjectSave.FixStandardVariables();
@@ -297,7 +314,7 @@ public class ProjectManager : IProjectManager
 
             if (FixRecursiveAssignments(_gumProjectSave))
             {
-                wasModified = true;
+                modifications.Add(nameof(FixRecursiveAssignments));
             }
             PluginManager.Self.ProjectLoad(_gumProjectSave);
 
@@ -312,8 +329,10 @@ public class ProjectManager : IProjectManager
 
             _standardElementsManagerGumTool.RefreshStateVariablesThroughPlugins();
 
-            if (wasModified)
+            if (modifications.Count > 0)
             {
+                _guiCommands.PrintOutput(
+                    $"Re-saving \"{fileName}\" on load because it was modified by: {string.Join(", ", modifications)}");
                 SaveProject(forceSaveContainedElements: true);
             }
         }

@@ -15,7 +15,18 @@ namespace Gum.DataTypes
         /// <param name="gumProjectSave">The GumProjectSave</param>
         /// <param name="tolerateMissingDefaultStates">Whether to tolerate missing default states. If false, 
         /// exceptions are thrown if there is a missing standard state. If true, missing states will not throw an exception.</param>
-        public static bool Initialize(this GumProjectSave gumProjectSave, bool tolerateMissingDefaultStates = false)
+        /// <summary>
+        /// Initializes a loaded project's elements (adding any missing default-state variables, parenting
+        /// states, applying the Version&lt;1 SetsValue fixup, etc.), returning whether anything changed so
+        /// the caller can decide to re-save.
+        /// </summary>
+        /// <param name="modifications">
+        /// Optional. When provided, each element this call modifies appends a short reason (e.g.
+        /// "Standard:Container", "Component:Button") so a caller can report <em>why</em> a freshly-loaded
+        /// project was considered dirty. The bool return is unchanged; pass null (default) to ignore.
+        /// </param>
+        public static bool Initialize(this GumProjectSave gumProjectSave, bool tolerateMissingDefaultStates = false,
+            ICollection<string>? modifications = null)
         {
             bool wasModified = false;
 
@@ -32,7 +43,11 @@ namespace Gum.DataTypes
                     StateSave? stateSave = StandardElementsManager.Self.GetDefaultStateFor(standardElementSave.Name);
                     // this will result in extra variables being
                     // added
-                    wasModified = standardElementSave.Initialize(stateSave) || wasModified;
+                    if (standardElementSave.Initialize(stateSave))
+                    {
+                        wasModified = true;
+                        modifications?.Add($"Standard:{standardElementSave.Name}");
+                    }
 
                     if(stateSave != null)
                     {
@@ -61,7 +76,11 @@ namespace Gum.DataTypes
             foreach (ScreenSave screenSave in gumProjectSave.Screens)
             {
                 var stateSave = StandardElementsManager.Self.GetDefaultStateFor("Screen");
-                wasModified = screenSave.Initialize(stateSave, tolerateMissingDefaultStates) || wasModified;
+                if (screenSave.Initialize(stateSave, tolerateMissingDefaultStates))
+                {
+                    wasModified = true;
+                    modifications?.Add($"Screen:{screenSave.Name}");
+                }
             }
 
 
@@ -96,14 +115,18 @@ namespace Gum.DataTypes
                 //    defaultStateSave = ses.DefaultState;
                 //}
 
-                if (componentSave.Initialize(new StateSave { Name = "Default" }))
+                List<string>? defaultStateAdded = modifications != null ? new List<string>() : null;
+                if (componentSave.Initialize(new StateSave { Name = "Default" }, modifications: defaultStateAdded))
                 {
                     wasModified = true;
+                    modifications?.Add($"Component:{componentSave.Name} (default-state init{FormatAddedVariables(defaultStateAdded)})");
                 }
 
-                if (componentSave.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Component")))
+                List<string>? componentBaseAdded = modifications != null ? new List<string>() : null;
+                if (componentSave.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Component"), modifications: componentBaseAdded))
                 {
                     wasModified = true;
+                    modifications?.Add($"Component:{componentSave.Name} (Component-base init{FormatAddedVariables(componentBaseAdded)})");
                 }
             }
 
@@ -113,6 +136,7 @@ namespace Gum.DataTypes
                 if (behavior.Initialize())
                 {
                     wasModified = true;
+                    modifications?.Add($"Behavior:{behavior.Name}");
                 }
             }
 
@@ -155,9 +179,21 @@ namespace Gum.DataTypes
                 }
                 gumProjectSave.Version = 1;
                 wasModified = true;
+                modifications?.Add("VersionUpgradeBelow1");
             }
 
             return wasModified;
+        }
+
+        // Formats the variable names a component-Initialize pass back-filled, for the load-modification
+        // diagnostics (empty when nothing was added or when detail collection was not requested).
+        private static string FormatAddedVariables(List<string>? added)
+        {
+            if (added == null || added.Count == 0)
+            {
+                return "";
+            }
+            return "; added: " + string.Join(", ", added);
         }
 
         public static void SortElementAndBehaviors(this GumProjectSave gumProjectSave)
