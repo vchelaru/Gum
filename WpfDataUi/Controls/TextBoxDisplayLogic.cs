@@ -458,6 +458,34 @@ namespace WpfDataUi.Controls
             return succeeded;
         }
 
+        /// <summary>
+        /// Snaps a label-drag's accumulated (unrounded) total to the drag resolution. Returns the
+        /// value unchanged when <paramref name="rounding"/> is null; an integer resolution snaps
+        /// half-away-from-zero (e.g. 12.8 -> 13 at 1px). This is the exact value the drag applies -
+        /// the raw per-tick mouse delta must NOT be re-added afterward, or DPI-scaled fractional
+        /// deltas leak back into a 1px-rounded value (issue #3191).
+        /// </summary>
+        public static double SnapDraggedValue(double unroundedValue, decimal? rounding)
+        {
+            if (rounding == null)
+            {
+                return unroundedValue;
+            }
+
+            bool isInt = Math.Abs(rounding.Value - (int)rounding.Value) < .0001m;
+            double rounded = RoundToMultiple(unroundedValue, (double)rounding.Value);
+            if (isInt)
+            {
+                rounded = (int)(Math.Round(rounded) + (Math.Sign(rounded) * .5f));
+            }
+            return rounded;
+        }
+
+        private static double RoundToMultiple(double valueToRound, double multipleOf)
+        {
+            return ((int)(Math.Sign(valueToRound) * .5f + valueToRound / multipleOf)) * multipleOf;
+        }
+
         public static object TryHandleMathOperation(string usableString, Type instancePropertyType)
         {
             if (instancePropertyType == typeof(float) ||

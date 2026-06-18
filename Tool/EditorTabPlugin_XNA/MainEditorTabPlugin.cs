@@ -588,15 +588,28 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
         var supportsIncrementalChange = PropertiesSupportingIncrementalChange.Contains(unqualifiedMember);
 
+        // A Forms-promoted alias (e.g. Spacing, Orientation) is not itself a visual property, but a
+        // behavior ToolOnlyVariableReference drives one or more underlying visual variables from it
+        // (Spacing -> StackSpacing, Orientation -> ChildrenLayout). Those underlying variables were
+        // just materialized into the state by BehaviorToolOnlyReferencesApplier and are themselves
+        // incrementally updatable, so resolve them and take the fast in-place path instead of a full
+        // RefreshAll on every scrub tick (issue #3191).
+        var aliasDrivenMembers = BehaviorToolOnlyReferencesApplier
+            .GetUnderlyingMembersDrivenBy(element, instance, unqualifiedMember)
+            .Where(PropertiesSupportingIncrementalChange.Contains)
+            .ToList();
+
+        var canIncrementallyUpdate = supportsIncrementalChange || aliasDrivenMembers.Count > 0;
+
         // If the values are the same they may have been set to be the same by a plugin that
         // didn't allow the assignment, so don't go through the work of saving and refreshing.
         // Update January 19, 2025 - actually for incrmeental changes just use it, it will be fast
-        if (!areSame || supportsIncrementalChange)
+        if (!areSame || canIncrementallyUpdate)
         {
 
             // if a deep reference is set, then this is more complicated than a single variable assignment, so we should
             // force everything. This makes debugging a little more difficult, but it keeps the wireframe accurate without having to track individual assignments.
-            if (PropertiesSupportingIncrementalChange.Contains(unqualifiedMember) &&
+            if (canIncrementallyUpdate &&
             // June 19, 2024 - if the value is null (from default assignment), we
             // can't set this single value - it requires a recursive variable finder.
             // for simplicity (for now?) we will just refresh all:
@@ -651,12 +664,35 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
                         }
                     }
 
-                    gue.SetProperty(unqualifiedMember, value);
+                    // The directly-changed member maps to a visual property only when it is itself
+                    // incrementally supported; a Forms alias (e.g. Spacing) has no matching GUE property,
+                    // so pushing it would be a no-op - skip it and push the underlying member(s) instead.
+                    var didPush = false;
+                    if (supportsIncrementalChange)
+                    {
+                        gue.SetProperty(unqualifiedMember, value);
+                        didPush = true;
+                    }
+
+                    // Push each underlying visual variable the alias drives, using the value the
+                    // behavior applier already materialized into the state. If none resolved (e.g. the
+                    // edit was on a non-default state, where the applier doesn't materialize), didPush
+                    // stays false so we fall back to RefreshAll rather than silently skipping the update.
+                    foreach (var aliasMember in aliasDrivenMembers)
+                    {
+                        var aliasQualifiedName = instance != null ? instance.Name + "." + aliasMember : aliasMember;
+                        var aliasValue = state.GetValue(aliasQualifiedName);
+                        if (aliasValue != null)
+                        {
+                            gue.SetProperty(aliasMember, aliasValue);
+                            didPush = true;
+                        }
+                    }
 
                     _wireframeObjectManager.RootGue?.ApplyVariableReferences(state);
                     //gue.ApplyVariableReferences(_selectedState.SelectedStateSave);
 
-                    handledByDirectSet = !disposedFile;
+                    handledByDirectSet = didPush && !disposedFile;
                 }
                 if (gue != null && value is string valueAsString && unqualifiedMember == "Text" && _localizationService.HasDatabase)
                 {

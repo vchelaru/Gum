@@ -94,4 +94,32 @@ public class TextBoxDisplayLogicTests
 
         result.ShouldNotBeNull();
     }
+
+    [Fact]
+    public void SnapDraggedValue_FineRounding_SnapsToHundredths()
+    {
+        TextBoxDisplayLogic.SnapDraggedValue(12.834, 0.01m).ShouldBe(12.83, 0.0001);
+    }
+
+    [Fact]
+    public void SnapDraggedValue_IntegerRounding_SnapsAwayFromZeroAtHalf()
+    {
+        TextBoxDisplayLogic.SnapDraggedValue(12.5, 1m).ShouldBe(13.0);
+        TextBoxDisplayLogic.SnapDraggedValue(-12.5, 1m).ShouldBe(-13.0);
+    }
+
+    [Fact]
+    public void SnapDraggedValue_IntegerRounding_SnapsFractionToWholeNumber()
+    {
+        // The label-drag accumulates a fractional total (e.g. from DPI-scaled mouse deltas);
+        // with 1px rounding the applied value must be whole, never 12.8 (issue #3191).
+        TextBoxDisplayLogic.SnapDraggedValue(12.8, 1m).ShouldBe(13.0);
+        TextBoxDisplayLogic.SnapDraggedValue(12.2, 1m).ShouldBe(12.0);
+    }
+
+    [Fact]
+    public void SnapDraggedValue_NullRounding_ReturnsValueUnchanged()
+    {
+        TextBoxDisplayLogic.SnapDraggedValue(12.8, null).ShouldBe(12.8);
+    }
 }

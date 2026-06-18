@@ -34,6 +34,23 @@ namespace WpfDataUi.Controls
 
         public bool EnableLabelDragValueChange { get; set; } = true;
 
+        /// <summary>
+        /// Resets the label-drag scrub configuration to its declared defaults when this control is
+        /// returned to the SingleDataUiContainer pool. TextBoxDisplay controls are recycled across
+        /// variables, and only the keys a variable lists in PropertiesToSetOnDisplayer get re-applied
+        /// on reuse. A variable that overrode these for fractional precision (LineHeightMultiplier and
+        /// BorderScale use .01 rounding / .02 multiplier) would otherwise leak that config to the next
+        /// consumer, so a plain 1px variable such as StackSpacing or the Forms-promoted Spacing would
+        /// scrub in fractions (issue #3191). Consumers that need non-default values re-apply them via
+        /// PropertiesToSetOnDisplayer after this runs.
+        /// </summary>
+        public virtual void ResetForPooling()
+        {
+            LabelDragValueRounding = 1;
+            LabelDragChangeMultiplier = 1;
+            EnableLabelDragValueChange = true;
+        }
+
         public InstanceMember? InstanceMember
         {
             get => _instanceMember;
@@ -434,25 +451,19 @@ namespace WpfDataUi.Controls
                     if(difference != 0)
                     {
                         unroundedValue += difference * (double)LabelDragChangeMultiplier;
-                        var rounded = unroundedValue;
-                        if(LabelDragValueRounding != null)
-                        {
-                            var isInt = Math.Abs(LabelDragValueRounding.Value - (int)LabelDragValueRounding.Value) < .0001m;
 
-                            rounded = RoundDouble(unroundedValue, (double)LabelDragValueRounding.Value);
+                        // Apply the snapped accumulator directly. This previously re-added
+                        // difference * multiplier on top of the rounded value (via GetValueInDirection),
+                        // which put the raw, DPI-scaled fractional mouse delta back into the result - so a
+                        // 1px-rounded variable still landed on values like 12.8 on a scaled display
+                        // (issue #3191). unroundedValue already includes this tick's movement.
+                        var rounded = TextBoxDisplayLogic.SnapDraggedValue(unroundedValue, LabelDragValueRounding);
 
-                            if(isInt)
-                            {
-                                rounded = (int)(System.Math.Round(rounded) + (System.Math.Sign(rounded) * .5f));
-                            }
-                        }
-
-                        var getValueStatus = TryGetValueOnUi(out object? valueOnInstance);
+                        var getValueStatus = TryGetValueOnUi(out _);
 
                         if(getValueStatus == ApplyValueResult.Success)
                         {
-                            var newValue = mTextBoxLogic.GetValueInDirection(difference * (double)LabelDragChangeMultiplier, rounded);
-                            TrySetValueOnUi(newValue);
+                            TrySetValueOnUi(rounded);
                             lastApplyValueResult = mTextBoxLogic.TryApplyToInstance(SetPropertyCommitType.Intermediate);
                         }
                     }
@@ -481,11 +492,6 @@ namespace WpfDataUi.Controls
         }
 
         #endregion
-
-        public double RoundDouble(double valueToRound, double multipleOf)
-        {
-            return ((int)(System.Math.Sign(valueToRound) * .5f + valueToRound / multipleOf)) * multipleOf;
-        }
 
         private void NullableCheckBox_Checked(object? sender, RoutedEventArgs e)
         {
