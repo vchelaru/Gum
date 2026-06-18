@@ -115,16 +115,18 @@ namespace Gum.DataTypes
                 //    defaultStateSave = ses.DefaultState;
                 //}
 
-                if (componentSave.Initialize(new StateSave { Name = "Default" }))
+                List<string>? defaultStateAdded = modifications != null ? new List<string>() : null;
+                if (componentSave.Initialize(new StateSave { Name = "Default" }, modifications: defaultStateAdded))
                 {
                     wasModified = true;
-                    modifications?.Add($"Component:{componentSave.Name} (default-state init)");
+                    modifications?.Add($"Component:{componentSave.Name} (default-state init{FormatAddedVariables(defaultStateAdded)})");
                 }
 
-                if (componentSave.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Component")))
+                List<string>? componentBaseAdded = modifications != null ? new List<string>() : null;
+                if (componentSave.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Component"), modifications: componentBaseAdded))
                 {
                     wasModified = true;
-                    modifications?.Add($"Component:{componentSave.Name} (Component-base init)");
+                    modifications?.Add($"Component:{componentSave.Name} (Component-base init{FormatAddedVariables(componentBaseAdded)})");
                 }
             }
 
@@ -181,6 +183,17 @@ namespace Gum.DataTypes
             }
 
             return wasModified;
+        }
+
+        // Formats the variable names a component-Initialize pass back-filled, for the load-modification
+        // diagnostics (empty when nothing was added or when detail collection was not requested).
+        private static string FormatAddedVariables(List<string>? added)
+        {
+            if (added == null || added.Count == 0)
+            {
+                return "";
+            }
+            return "; added: " + string.Join(", ", added);
         }
 
         public static void SortElementAndBehaviors(this GumProjectSave gumProjectSave)

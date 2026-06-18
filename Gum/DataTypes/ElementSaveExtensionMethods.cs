@@ -43,11 +43,21 @@ namespace Gum.DataTypes
 
     public static class ElementSaveExtensionMethods
     {
-        public static bool Initialize(this ElementSave elementSave, StateSave? defaultState, bool tolerateMissingDefaultStates = false)
+        /// <summary>
+        /// Initializes an element after load: ensures a default state, back-fills variables from
+        /// <paramref name="defaultState"/>, fixes state-variable types, and initializes instances. Returns
+        /// whether anything was changed.
+        /// </summary>
+        /// <param name="modifications">
+        /// Optional. When provided, the names of any variables back-filled into the element's default state
+        /// are appended, so a caller can report which variables made a freshly-loaded element dirty.
+        /// </param>
+        public static bool Initialize(this ElementSave elementSave, StateSave? defaultState, bool tolerateMissingDefaultStates = false,
+            ICollection<string>? modifications = null)
         {
             bool wasModified = false;
 
-            if (AddAndModifyVariablesAccordingToDefault(elementSave, defaultState))
+            if (AddAndModifyVariablesAccordingToDefault(elementSave, defaultState, modifications))
             {
                 wasModified = true;
             }
@@ -104,7 +114,8 @@ namespace Gum.DataTypes
             }
         }
 
-        private static bool AddAndModifyVariablesAccordingToDefault(ElementSave elementSave, StateSave? defaultState)
+        private static bool AddAndModifyVariablesAccordingToDefault(ElementSave elementSave, StateSave? defaultState,
+            ICollection<string>? modifications = null)
         {
             bool wasModified = false;
             // Use States and not AllStates because we want to make sure we
@@ -114,6 +125,7 @@ namespace Gum.DataTypes
                 StateSave stateToAdd = defaultState.Clone();
                 elementSave.States.Add(stateToAdd);
                 wasModified = true;
+                modifications?.Add("(created default state)");
             }
             else if (elementSave.States.Count != 0 && defaultState != null)
             {
@@ -144,6 +156,7 @@ namespace Gum.DataTypes
                     if (existingVariable == null)
                     {
                         wasModified = true;
+                        modifications?.Add(variableSave.Name);
                         elementSave.DefaultState.Variables.Add(variableSave.Clone());
                     }
                     else
@@ -185,6 +198,7 @@ namespace Gum.DataTypes
                     if (existingList == null)
                     {
                         wasModified = true;
+                        modifications?.Add(variableList.Name);
                         // this type doesn't have this list yet, so let's add it
                         elementSave.DefaultState.VariableLists.Add(variableList.Clone());
                     }
