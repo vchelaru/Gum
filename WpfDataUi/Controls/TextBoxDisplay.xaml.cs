@@ -34,6 +34,23 @@ namespace WpfDataUi.Controls
 
         public bool EnableLabelDragValueChange { get; set; } = true;
 
+        /// <summary>
+        /// Resets the label-drag scrub configuration to its declared defaults when this control is
+        /// returned to the SingleDataUiContainer pool. TextBoxDisplay controls are recycled across
+        /// variables, and only the keys a variable lists in PropertiesToSetOnDisplayer get re-applied
+        /// on reuse. A variable that overrode these for fractional precision (LineHeightMultiplier and
+        /// BorderScale use .01 rounding / .02 multiplier) would otherwise leak that config to the next
+        /// consumer, so a plain 1px variable such as StackSpacing or the Forms-promoted Spacing would
+        /// scrub in fractions (issue #3191). Consumers that need non-default values re-apply them via
+        /// PropertiesToSetOnDisplayer after this runs.
+        /// </summary>
+        public virtual void ResetForPooling()
+        {
+            LabelDragValueRounding = 1;
+            LabelDragChangeMultiplier = 1;
+            EnableLabelDragValueChange = true;
+        }
+
         public InstanceMember? InstanceMember
         {
             get => _instanceMember;
