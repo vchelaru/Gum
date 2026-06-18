@@ -39,8 +39,18 @@ public interface IRuntimeSnapshotSerializer
     ScreenSave CreateScreenSave(GraphicalUiElement root, string screenName, bool shake = false);
 
     /// <summary>
+    /// The components synthesized during the most recent <see cref="CreateScreenSave"/> call — one per
+    /// distinct Forms-control type that was collapsed from a flattened subtree into a reusable component
+    /// (e.g. a "Button" component shared by every button instance). Empty when no baseline provider was
+    /// supplied or no Forms-control subtree qualified. A caller assembling the snapshot project must add
+    /// these to <c>GumProjectSave.Components</c> (and their references).
+    /// </summary>
+    IReadOnlyList<ComponentSave> SynthesizedComponents { get; }
+
+    /// <summary>
     /// Returns the distinct, non-empty file paths referenced by "SourceFile" variables in the snapshot
-    /// (e.g. Sprite/NineSlice textures), so a caller can bundle those files alongside the project.
+    /// (e.g. Sprite/NineSlice textures), so a caller can bundle those files alongside the project. Includes
+    /// files referenced by <see cref="SynthesizedComponents"/>, not just the screen.
     /// </summary>
     IEnumerable<string> GetReferencedFiles(ScreenSave screen);
 }
@@ -50,7 +60,19 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
 {
     private const string RuntimeSuffix = "Runtime";
 
+    // Synthesized Forms-control components are emitted as Container-based components, and their control root
+    // is read against the Container catalog (its visual root may be an InteractiveGue subclass that does not
+    // resolve to a standard type on its own).
+    private const string ComponentBaseType = "Container";
+
     private readonly IReadOnlyDictionary<string, StateSave> _defaultStates;
+    private readonly Func<Type, GraphicalUiElement?>? _formsBaselineProvider;
+
+    // Synthesized components produced by CreateScreenSave (one per Forms-control type), and a per-type
+    // cache so repeated instances of a control share one component. Both reset at the start of every
+    // CreateScreenSave so a reused serializer does not leak state between snapshots.
+    private readonly List<ComponentSave> _synthesizedComponents;
+    private readonly Dictionary<Type, ComponentEntry?> _componentCache;
 
     /// <summary>
     /// Creates a serializer that reads runtime values against the supplied standard-element catalog.
@@ -59,10 +81,24 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
     /// The standard-element default states keyed by type name — the authority on which variables Gum
     /// understands per type. Typically <c>StandardElementsManager.Self.DefaultStates</c>.
     /// </param>
-    public RuntimeSnapshotSerializer(IReadOnlyDictionary<string, StateSave> defaultStates)
+    /// <param name="formsBaselineProvider">
+    /// Optional. Given a Forms-control type (e.g. <c>typeof(Button)</c>), returns a pristine baseline visual
+    /// for that control — typically <c>FrameworkElement.GetGraphicalUiElementForFrameworkElement</c>, which
+    /// instantiates the registered <c>DefaultFormsTemplates</c> entry. When supplied, Forms-control subtrees
+    /// are collapsed into synthesized components diffed against this baseline; when null, the tree is
+    /// flattened exactly as before (every node becomes a standard-element instance).
+    /// </param>
+    public RuntimeSnapshotSerializer(IReadOnlyDictionary<string, StateSave> defaultStates,
+        Func<Type, GraphicalUiElement?>? formsBaselineProvider = null)
     {
         _defaultStates = defaultStates;
+        _formsBaselineProvider = formsBaselineProvider;
+        _synthesizedComponents = new List<ComponentSave>();
+        _componentCache = new Dictionary<Type, ComponentEntry?>();
     }
+
+    /// <inheritdoc />
+    public IReadOnlyList<ComponentSave> SynthesizedComponents => _synthesizedComponents;
 
     /// <inheritdoc />
     public string? GetStandardTypeName(GraphicalUiElement element)
@@ -87,9 +123,17 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
     /// <inheritdoc />
     public StateSave CreateStateForNode(GraphicalUiElement element, string stateName, bool shake = false)
     {
+        return CreateStateForType(element, stateName, shake, GetStandardTypeName(element));
+    }
+
+    // Reads an element's values against an explicitly chosen standard type's catalog. CreateStateForNode
+    // uses the element's own resolved type; the component root is read against the component base type
+    // (Container) so a control root that does not itself resolve to a standard (e.g. an InteractiveGue
+    // subclass like DefaultButtonRuntime) still contributes its geometry/visibility.
+    private StateSave CreateStateForType(GraphicalUiElement element, string stateName, bool shake, string? typeName)
+    {
         StateSave state = new StateSave { Name = stateName };
 
-        string? typeName = GetStandardTypeName(element);
         if (typeName != null && _defaultStates.TryGetValue(typeName, out StateSave? defaultState))
         {
             foreach (VariableSave defaultVariable in defaultState.Variables)
@@ -133,16 +177,21 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
     /// <inheritdoc />
     public ScreenSave CreateScreenSave(GraphicalUiElement root, string screenName, bool shake = false)
     {
+        _synthesizedComponents.Clear();
+        _componentCache.Clear();
+
         ScreenSave screen = new ScreenSave { Name = screenName };
         StateSave defaultState = new StateSave { Name = "Default" };
         screen.States.Add(defaultState);
 
         GraphicalUiElement screenRoot = ResolveScreenRoot(root);
 
+        bool allowComponentization = _formsBaselineProvider != null;
         HashSet<string> usedNames = new HashSet<string>();
         foreach (GraphicalUiElement child in screenRoot.Children)
         {
-            AddInstanceRecursive(child, parentInstanceName: null, screen, defaultState, usedNames, shake);
+            AddInstanceRecursive(child, parentInstanceName: null, screen, defaultState, usedNames, shake,
+                allowComponentization);
         }
 
         return screen;
@@ -187,7 +236,17 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
     public IEnumerable<string> GetReferencedFiles(ScreenSave screen)
     {
         HashSet<string> files = new HashSet<string>();
-        foreach (StateSave state in screen.States)
+        AddReferencedFiles(screen, files);
+        foreach (ComponentSave component in _synthesizedComponents)
+        {
+            AddReferencedFiles(component, files);
+        }
+        return files;
+    }
+
+    private static void AddReferencedFiles(ElementSave element, HashSet<string> files)
+    {
+        foreach (StateSave state in element.States)
         {
             foreach (VariableSave variable in state.Variables)
             {
@@ -199,7 +258,6 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
                 }
             }
         }
-        return files;
     }
 
     // "SourceFile" appears instance-qualified in the screen's default state (e.g. "Sprite.SourceFile").
@@ -211,14 +269,31 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
     }
 
     private void AddInstanceRecursive(GraphicalUiElement element, string? parentInstanceName,
-        ScreenSave screen, StateSave defaultState, HashSet<string> usedNames, bool shake)
+        ElementSave targetElement, StateSave defaultState, HashSet<string> usedNames, bool shake,
+        bool allowComponentization, Dictionary<GraphicalUiElement, string>? nodeToInstanceName = null)
     {
+        // A Forms-control subtree can collapse into a single synthesized-component instance instead of a
+        // flattened soup of standards -- but only when doing so reproduces the live visuals exactly (see
+        // TryComponentize). Disabled while building a component's own internals so a control's baseline is
+        // not itself re-componentized.
+        if (allowComponentization
+            && element is InteractiveGue formsElement
+            && formsElement.FormsControlAsObject != null
+            && TryComponentize(formsElement, parentInstanceName, targetElement, defaultState, usedNames, shake))
+        {
+            return;
+        }
+
         string typeName = GetStandardTypeName(element) ?? "Container";
         string instanceName = GenerateUniqueName(element, typeName, usedNames);
+        if (nodeToInstanceName != null)
+        {
+            nodeToInstanceName[element] = instanceName;
+        }
 
-        screen.Instances.Add(new InstanceSave { Name = instanceName, BaseType = typeName });
+        targetElement.Instances.Add(new InstanceSave { Name = instanceName, BaseType = typeName });
 
-        // The node's catalog values become instance-qualified variables in the screen's default state.
+        // The node's catalog values become instance-qualified variables in the element's default state.
         StateSave nodeState = CreateStateForNode(element, "Default", shake);
         foreach (VariableSave variable in nodeState.Variables)
         {
@@ -232,7 +307,7 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
             });
         }
 
-        // Non-top-level instances record their parent; top-level instances are children of the screen.
+        // Non-top-level instances record their parent; top-level instances are children of the element.
         if (parentInstanceName != null)
         {
             defaultState.Variables.Add(new VariableSave
@@ -246,8 +321,266 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
 
         foreach (GraphicalUiElement child in element.Children)
         {
-            AddInstanceRecursive(child, instanceName, screen, defaultState, usedNames, shake);
+            AddInstanceRecursive(child, instanceName, targetElement, defaultState, usedNames, shake,
+                allowComponentization, nodeToInstanceName);
         }
+    }
+
+    // Attempts to emit a Forms-control subtree as a thin instance of a synthesized component plus its
+    // per-instance overrides. Returns false (so the caller flattens instead) when there is no baseline for
+    // the control type, or when the live subtree does not structurally match the baseline -- in which case
+    // componentizing would lose visuals, and the always-correct flattened form is used.
+    private bool TryComponentize(InteractiveGue element, string? parentInstanceName,
+        ElementSave targetElement, StateSave defaultState, HashSet<string> usedNames, bool shake)
+    {
+        Type controlType = element.FormsControlAsObject!.GetType();
+
+        ComponentEntry? entry = GetOrBuildComponentEntry(controlType, shake);
+        if (entry == null)
+        {
+            return false;
+        }
+
+        // Fidelity gate: only componentize when the live subtree aligns 1:1 with the pristine baseline.
+        if (!StructuralMatches(element, entry.PristineRoot))
+        {
+            return false;
+        }
+
+        // The component is only added to the output once it is actually used by an instance, so a baseline
+        // that every instance ends up rejecting never produces an orphan component.
+        if (!entry.Emitted)
+        {
+            _synthesizedComponents.Add(entry.Component);
+            entry.Emitted = true;
+        }
+
+        string instanceName = GenerateUniqueName(element, controlType.Name, usedNames);
+        targetElement.Instances.Add(new InstanceSave { Name = instanceName, BaseType = controlType.Name });
+
+        EmitOverridesRecursive(element, entry.PristineRoot, entry, instanceName, defaultState);
+
+        if (parentInstanceName != null)
+        {
+            defaultState.Variables.Add(new VariableSave
+            {
+                Name = instanceName + ".Parent",
+                Type = "string",
+                Value = parentInstanceName,
+                SetsValue = true,
+            });
+        }
+
+        return true;
+    }
+
+    // Builds (and caches) the component for a control type from its pristine baseline, or caches a miss
+    // (null) when no baseline is available. The build reads the baseline only -- never a live instance --
+    // so the component stays neutral and every instance diffs against the same canonical values.
+    private ComponentEntry? GetOrBuildComponentEntry(Type controlType, bool shake)
+    {
+        if (_componentCache.TryGetValue(controlType, out ComponentEntry? cached))
+        {
+            return cached;
+        }
+
+        GraphicalUiElement? pristine = _formsBaselineProvider?.Invoke(controlType);
+        ComponentEntry? entry = pristine == null ? null : BuildComponentEntry(controlType, pristine, shake);
+        _componentCache[controlType] = entry;
+        return entry;
+    }
+
+    private ComponentEntry BuildComponentEntry(Type controlType, GraphicalUiElement pristine, bool shake)
+    {
+        ComponentSave component = new ComponentSave { Name = controlType.Name, BaseType = ComponentBaseType };
+        StateSave componentDefault = new StateSave { Name = "Default" };
+        component.States.Add(componentDefault);
+
+        Dictionary<GraphicalUiElement, string> nodeToInstanceName = new Dictionary<GraphicalUiElement, string>();
+
+        // The baseline root maps to the component element itself: its catalog values become element-level
+        // (unqualified) default variables, exactly how a hand-authored component holds its own values. Read
+        // against the component base type so an InteractiveGue-rooted control still emits its root geometry.
+        StateSave rootState = CreateStateForType(pristine, "Default", shake, ComponentBaseType);
+        foreach (VariableSave variable in rootState.Variables)
+        {
+            componentDefault.Variables.Add(new VariableSave
+            {
+                Name = variable.Name,
+                Type = variable.Type,
+                Value = variable.Value,
+                SetsValue = true,
+                Category = variable.Category,
+            });
+        }
+
+        // The baseline's descendants become the component's (flat, parent-linked) instances.
+        HashSet<string> usedNames = new HashSet<string>();
+        foreach (GraphicalUiElement child in pristine.Children)
+        {
+            AddInstanceRecursive(child, parentInstanceName: null, component, componentDefault, usedNames,
+                shake, allowComponentization: false, nodeToInstanceName);
+        }
+
+        return new ComponentEntry(component, pristine, componentDefault, nodeToInstanceName);
+    }
+
+    // Walks the live and pristine subtrees in lockstep (StructuralMatches guarantees they align), emitting
+    // each value that differs from the baseline as an instance override. Root deltas map straight to the
+    // component element and become direct instance variables; deltas on inner nodes require a synthesized
+    // exposed variable on the component, since Gum resolves an instance variable only one level deep.
+    private void EmitOverridesRecursive(GraphicalUiElement liveNode, GraphicalUiElement pristineNode,
+        ComponentEntry entry, string instanceName, StateSave screenDefaultState)
+    {
+        entry.NodeToInstanceName.TryGetValue(pristineNode, out string? componentInstanceName);
+
+        // The control root (no instance-name entry) is read against the component base type to match how it
+        // was emitted in BuildComponentEntry; inner nodes use their own resolved standard type.
+        string? typeName = componentInstanceName == null ? ComponentBaseType : GetStandardTypeName(liveNode);
+        if (typeName != null && _defaultStates.TryGetValue(typeName, out StateSave? defaultStateForType))
+        {
+            foreach (VariableSave defaultVariable in defaultStateForType.Variables)
+            {
+                if (!liveNode.TryGetProperty(defaultVariable.Name, out object? liveValue))
+                {
+                    continue;
+                }
+                if (liveValue != null && !IsSaveSafeValue(liveValue))
+                {
+                    continue;
+                }
+
+                bool pristineHas = pristineNode.TryGetProperty(defaultVariable.Name, out object? pristineValue);
+                if (pristineHas && AreValuesEqual(liveValue, pristineValue))
+                {
+                    // Equal to the baseline -> already represented by the component; nothing to override.
+                    continue;
+                }
+
+                string overrideName;
+                if (componentInstanceName == null)
+                {
+                    overrideName = instanceName + "." + defaultVariable.Name;
+                }
+                else
+                {
+                    string internalPath = componentInstanceName + "." + defaultVariable.Name;
+                    string exposedName = EnsureExposed(entry, internalPath, defaultVariable.Type,
+                        pristineHas, pristineValue);
+                    overrideName = instanceName + "." + exposedName;
+                }
+
+                screenDefaultState.Variables.Add(new VariableSave
+                {
+                    Name = overrideName,
+                    Type = defaultVariable.Type,
+                    Value = liveValue,
+                    SetsValue = true,
+                    Category = defaultVariable.Category,
+                });
+            }
+        }
+
+        for (int i = 0; i < liveNode.Children.Count && i < pristineNode.Children.Count; i++)
+        {
+            if (liveNode.Children[i] is GraphicalUiElement liveChild
+                && pristineNode.Children[i] is GraphicalUiElement pristineChild)
+            {
+                EmitOverridesRecursive(liveChild, pristineChild, entry, instanceName, screenDefaultState);
+            }
+        }
+    }
+
+    // Ensures the component exposes the inner variable at <paramref name="internalPath"/> (e.g.
+    // "TextInstance.Text") and returns the exposed name an instance uses to override it. The exposure is
+    // declared once per path and shared by every instance of the control type.
+    private string EnsureExposed(ComponentEntry entry, string internalPath, string type,
+        bool pristineHas, object? pristineValue)
+    {
+        if (entry.ExposedNamesByPath.TryGetValue(internalPath, out string? existing))
+        {
+            return existing;
+        }
+
+        string exposedName = GenerateExposedName(internalPath, entry.UsedExposedNames);
+
+        // The exposure resolves through a component default-state variable for the inner path. It is usually
+        // already present (emitted while building the component); if the shake pruned it (value equal to the
+        // standard default), re-add it carrying the baseline value so the component still renders pristine.
+        VariableSave? componentVariable = FindVariable(entry.DefaultState, internalPath);
+        if (componentVariable == null)
+        {
+            componentVariable = new VariableSave
+            {
+                Name = internalPath,
+                Type = type,
+                Value = pristineHas ? pristineValue : null,
+                SetsValue = pristineHas,
+            };
+            entry.DefaultState.Variables.Add(componentVariable);
+        }
+        componentVariable.ExposedAsName = exposedName;
+
+        entry.ExposedNamesByPath[internalPath] = exposedName;
+        return exposedName;
+    }
+
+    // Exposed names must be a single token (an instance variable resolves only one level deep), so the
+    // dotted inner path is flattened to underscores and de-duplicated within the component.
+    private static string GenerateExposedName(string internalPath, HashSet<string> usedNames)
+    {
+        string baseName = internalPath.Replace('.', '_');
+        string candidate = baseName;
+        int suffix = 1;
+        while (!usedNames.Add(candidate))
+        {
+            candidate = baseName + suffix;
+            suffix++;
+        }
+        return candidate;
+    }
+
+    // The fidelity gate. The live and pristine subtrees match when every node shares the same standard type
+    // and the same child count/order. A mismatch (most commonly runtime-added children a control's template
+    // lacks, such as ListBox items) means componentizing would lose visuals, so the caller flattens instead.
+    private bool StructuralMatches(GraphicalUiElement live, GraphicalUiElement pristine)
+    {
+        if (GetStandardTypeName(live) != GetStandardTypeName(pristine))
+        {
+            return false;
+        }
+        if (live.Children.Count != pristine.Children.Count)
+        {
+            return false;
+        }
+        for (int i = 0; i < live.Children.Count; i++)
+        {
+            if (live.Children[i] is GraphicalUiElement liveChild
+                && pristine.Children[i] is GraphicalUiElement pristineChild)
+            {
+                if (!StructuralMatches(liveChild, pristineChild))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static VariableSave? FindVariable(StateSave state, string name)
+    {
+        foreach (VariableSave variable in state.Variables)
+        {
+            if (variable.Name == name)
+            {
+                return variable;
+            }
+        }
+        return null;
     }
 
     // Equality for the shake. Same boxed type compares directly (covers bool/string/enum/int); numeric
@@ -301,5 +634,31 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
             return typeName.Substring(0, typeName.Length - RuntimeSuffix.Length);
         }
         return typeName;
+    }
+
+    // The cached state for one synthesized component: the component itself, the pristine baseline tree it was
+    // built from (kept so every instance diffs against the same canonical values), the map from each baseline
+    // node to its instance name within the component (the root maps to no entry -> element-level), and the
+    // bookkeeping for exposed variables synthesized on demand.
+    private class ComponentEntry
+    {
+        public ComponentSave Component { get; }
+        public GraphicalUiElement PristineRoot { get; }
+        public StateSave DefaultState { get; }
+        public Dictionary<GraphicalUiElement, string> NodeToInstanceName { get; }
+        public Dictionary<string, string> ExposedNamesByPath { get; }
+        public HashSet<string> UsedExposedNames { get; }
+        public bool Emitted { get; set; }
+
+        public ComponentEntry(ComponentSave component, GraphicalUiElement pristineRoot, StateSave defaultState,
+            Dictionary<GraphicalUiElement, string> nodeToInstanceName)
+        {
+            Component = component;
+            PristineRoot = pristineRoot;
+            DefaultState = defaultState;
+            NodeToInstanceName = nodeToInstanceName;
+            ExposedNamesByPath = new Dictionary<string, string>();
+            UsedExposedNames = new HashSet<string>();
+        }
     }
 }

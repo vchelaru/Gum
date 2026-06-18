@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
@@ -285,9 +286,176 @@ public class RuntimeSnapshotSerializerTests : BaseTestClass
         serializer.GetStandardTypeName(new GraphicalUiElement()).ShouldBeNull();
     }
 
+    [Fact]
+    public void CreateScreenSave_WithBaselineProvider_ShouldSynthesizeComponentForFormsControl()
+    {
+        ContainerRuntime root = new();
+        ContainerRuntime formsScreen = new() { Name = "MainMenu" };
+        formsScreen.FormsControlAsObject = new object();
+        formsScreen.AddChild(MakeLiveButton("OkButton", "OK"));
+        root.AddChild(formsScreen);
+
+        RuntimeSnapshotSerializer serializer = CreateSerializerWithButtonBaseline();
+        ScreenSave screen = serializer.CreateScreenSave(root, "Snapshot", shake: true);
+
+        // The button collapses to a single component instance, not a flattened soup of standards.
+        serializer.SynthesizedComponents.Select(c => c.Name).ShouldContain("FakeButton");
+        screen.Instances.Count.ShouldBe(1);
+        InstanceSave instance = screen.Instances.Single();
+        instance.Name.ShouldBe("OkButton");
+        instance.BaseType.ShouldBe("FakeButton");
+        // The button's inner Text child is owned by the component, not flattened into the screen.
+        screen.Instances.Any(i => i.Name == "TextInstance").ShouldBeFalse();
+    }
+
+    [Fact]
+    public void CreateScreenSave_WithBaselineProvider_ShouldExposeAndOverrideInternalDelta()
+    {
+        ContainerRuntime root = new();
+        ContainerRuntime formsScreen = new() { Name = "MainMenu" };
+        formsScreen.FormsControlAsObject = new object();
+        formsScreen.AddChild(MakeLiveButton("OkButton", "OK"));
+        root.AddChild(formsScreen);
+
+        RuntimeSnapshotSerializer serializer = CreateSerializerWithButtonBaseline();
+        ScreenSave screen = serializer.CreateScreenSave(root, "Snapshot", shake: true);
+
+        // The component exposes the inner TextInstance.Text so each instance can carry its own label.
+        ComponentSave component = serializer.SynthesizedComponents.First(c => c.Name == "FakeButton");
+        VariableSave exposed = component.States.First(s => s.Name == "Default").Variables
+            .First(v => v.Name == "TextInstance.Text");
+        exposed.ExposedAsName.ShouldNotBeNullOrEmpty();
+
+        // The instance overrides the exposed variable with its own value.
+        StateSave screenDefault = screen.States.First(s => s.Name == "Default");
+        VariableSave overrideVar = screenDefault.Variables.First(v => v.Name == "OkButton." + exposed.ExposedAsName);
+        overrideVar.Value.ShouldBe("OK");
+    }
+
+    [Fact]
+    public void CreateScreenSave_WithBaselineProvider_ShouldDeduplicateComponentAcrossInstances()
+    {
+        ContainerRuntime root = new();
+        ContainerRuntime formsScreen = new() { Name = "MainMenu" };
+        formsScreen.FormsControlAsObject = new object();
+        formsScreen.AddChild(MakeLiveButton("OkButton", "OK"));
+        formsScreen.AddChild(MakeLiveButton("CancelButton", "Cancel"));
+        root.AddChild(formsScreen);
+
+        RuntimeSnapshotSerializer serializer = CreateSerializerWithButtonBaseline();
+        ScreenSave screen = serializer.CreateScreenSave(root, "Snapshot", shake: true);
+
+        // Ten buttons -> one component + N thin instances; here two distinct-text buttons share one component.
+        serializer.SynthesizedComponents.Count(c => c.Name == "FakeButton").ShouldBe(1);
+        screen.Instances.Count.ShouldBe(2);
+        screen.Instances.Select(i => i.BaseType).Distinct().ShouldBe(new[] { "FakeButton" });
+
+        ComponentSave component = serializer.SynthesizedComponents.First(c => c.Name == "FakeButton");
+        string exposedName = component.States.First(s => s.Name == "Default").Variables
+            .First(v => v.Name == "TextInstance.Text").ExposedAsName!;
+        StateSave screenDefault = screen.States.First(s => s.Name == "Default");
+        screenDefault.Variables.First(v => v.Name == "OkButton." + exposedName).Value.ShouldBe("OK");
+        screenDefault.Variables.First(v => v.Name == "CancelButton." + exposedName).Value.ShouldBe("Cancel");
+    }
+
+    [Fact]
+    public void CreateScreenSave_WithBaselineProvider_ShouldEmitRootDeltaAsDirectInstanceVariable()
+    {
+        ContainerRuntime root = new();
+        ContainerRuntime formsScreen = new() { Name = "MainMenu" };
+        formsScreen.FormsControlAsObject = new object();
+        ContainerRuntime liveButton = MakeLiveButton("OkButton", "Button"); // text matches pristine -> no inner delta
+        liveButton.Width = 250; // a root-level delta
+        formsScreen.AddChild(liveButton);
+        root.AddChild(formsScreen);
+
+        RuntimeSnapshotSerializer serializer = CreateSerializerWithButtonBaseline();
+        ScreenSave screen = serializer.CreateScreenSave(root, "Snapshot", shake: true);
+
+        // Root-level deltas map straight to the component element, so they are direct single-dot instance
+        // variables with no exposure indirection.
+        StateSave screenDefault = screen.States.First(s => s.Name == "Default");
+        screenDefault.Variables.First(v => v.Name == "OkButton.Width").Value.ShouldBe(250f);
+        ComponentSave component = serializer.SynthesizedComponents.First(c => c.Name == "FakeButton");
+        component.States.First(s => s.Name == "Default").Variables.Any(v => v.ExposedAsName == "Width").ShouldBeFalse();
+    }
+
+    [Fact]
+    public void CreateScreenSave_WithBaselineProvider_ShouldFallBackToFlatteningWhenStructureDiverges()
+    {
+        ContainerRuntime root = new();
+        ContainerRuntime formsScreen = new() { Name = "MainMenu" };
+        formsScreen.FormsControlAsObject = new object();
+        // The live button has an extra child the pristine baseline lacks (e.g. a runtime-added icon).
+        ContainerRuntime liveButton = MakeLiveButton("OkButton", "OK");
+        liveButton.AddChild(new SpriteRuntime { Name = "ExtraIcon" });
+        formsScreen.AddChild(liveButton);
+        root.AddChild(formsScreen);
+
+        RuntimeSnapshotSerializer serializer = CreateSerializerWithButtonBaseline();
+        ScreenSave screen = serializer.CreateScreenSave(root, "Snapshot", shake: true);
+
+        // The fidelity gate rejects componentization (it would drop the extra child), so the subtree stays
+        // flattened exactly as it is today.
+        serializer.SynthesizedComponents.ShouldBeEmpty();
+        screen.Instances.Any(i => i.Name == "OkButton").ShouldBeTrue();
+        screen.Instances.Any(i => i.Name == "TextInstance").ShouldBeTrue();
+        screen.Instances.Any(i => i.Name == "ExtraIcon").ShouldBeTrue();
+    }
+
+    [Fact]
+    public void CreateScreenSave_WithoutBaselineProvider_ShouldNotSynthesizeComponents()
+    {
+        ContainerRuntime root = new();
+        ContainerRuntime formsScreen = new() { Name = "MainMenu" };
+        formsScreen.FormsControlAsObject = new object();
+        formsScreen.AddChild(MakeLiveButton("OkButton", "OK"));
+        root.AddChild(formsScreen);
+
+        RuntimeSnapshotSerializer serializer = CreateSerializer(); // no baseline provider
+        ScreenSave screen = serializer.CreateScreenSave(root, "Snapshot", shake: true);
+
+        serializer.SynthesizedComponents.ShouldBeEmpty();
+        // Without a baseline there is nothing to diff against, so the button stays flattened.
+        screen.Instances.Any(i => i.Name == "OkButton").ShouldBeTrue();
+        screen.Instances.Any(i => i.Name == "TextInstance").ShouldBeTrue();
+    }
+
+    private static ContainerRuntime MakeLiveButton(string name, string text)
+    {
+        ContainerRuntime button = new() { Name = name };
+        button.FormsControlAsObject = new FakeButton();
+        TextRuntime textInstance = new() { Name = "TextInstance" };
+        textInstance.Text = text;
+        button.AddChild(textInstance);
+        return button;
+    }
+
+    // A pristine FakeButton template: a container holding a single "TextInstance" Text child.
+    private static GraphicalUiElement? FakeButtonBaseline(Type type)
+    {
+        if (type != typeof(FakeButton))
+        {
+            return null;
+        }
+        ContainerRuntime button = new();
+        TextRuntime textInstance = new() { Name = "TextInstance" };
+        textInstance.Text = "Button";
+        button.AddChild(textInstance);
+        return button;
+    }
+
+    private static RuntimeSnapshotSerializer CreateSerializerWithButtonBaseline() =>
+        new RuntimeSnapshotSerializer(StandardElementsManager.Self.DefaultStates, FakeButtonBaseline);
+
     // Stands in for a game-authored screen/component type (e.g. "MainMenu : ContainerRuntime"). Its own
     // name is not a standard-element name, so the serializer treats it as custom rather than standard.
     private class CustomScreenRuntime : ContainerRuntime
+    {
+    }
+
+    // Stand-in for a Forms control type (e.g. Button). Its type name becomes the synthesized component name.
+    private class FakeButton
     {
     }
 }
