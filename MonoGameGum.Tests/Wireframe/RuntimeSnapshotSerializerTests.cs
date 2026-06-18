@@ -404,6 +404,44 @@ public class RuntimeSnapshotSerializerTests : BaseTestClass
     }
 
     [Fact]
+    public void CreateScreenSave_WithBaselineProvider_ShouldUniquelyNameComponentsForSameSimpleNamedControlTypes()
+    {
+        // Two distinct control types can share a simple type name (e.g. a Button defined in two namespaces).
+        // Each must become its own uniquely-named component rather than colliding on a single element name.
+        ContainerRuntime root = new();
+        ContainerRuntime formsScreen = new() { Name = "MainMenu" };
+        formsScreen.FormsControlAsObject = new object();
+
+        ContainerRuntime widgetA = new() { Name = "WidgetA" };
+        widgetA.FormsControlAsObject = new NamespaceA.CollidingControl();
+        widgetA.AddChild(new TextRuntime { Name = "TextInstance", Text = "A" });
+
+        ContainerRuntime widgetB = new() { Name = "WidgetB" };
+        widgetB.FormsControlAsObject = new NamespaceB.CollidingControl();
+        widgetB.AddChild(new TextRuntime { Name = "TextInstance", Text = "B" });
+
+        formsScreen.AddChild(widgetA);
+        formsScreen.AddChild(widgetB);
+        root.AddChild(formsScreen);
+
+        RuntimeSnapshotSerializer serializer =
+            new(StandardElementsManager.Self.DefaultStates, CollidingControlBaseline);
+        ScreenSave screen = serializer.CreateScreenSave(root, "Snapshot", shake: true);
+
+        // Both types share the simple name "CollidingControl", but the two components get distinct names.
+        serializer.SynthesizedComponents.Count.ShouldBe(2);
+        serializer.SynthesizedComponents.Select(c => c.Name).Distinct().Count().ShouldBe(2);
+        serializer.SynthesizedComponents.ShouldAllBe(c => c.Name.StartsWith("CollidingControl"));
+
+        // Every component instance resolves to a real synthesized component by BaseType (no dangling base).
+        string[] componentNames = serializer.SynthesizedComponents.Select(c => c.Name).ToArray();
+        foreach (InstanceSave instance in screen.Instances)
+        {
+            componentNames.ShouldContain(instance.BaseType);
+        }
+    }
+
+    [Fact]
     public void CreateScreenSave_WithoutBaselineProvider_ShouldNotSynthesizeComponents()
     {
         ContainerRuntime root = new();
@@ -448,6 +486,18 @@ public class RuntimeSnapshotSerializerTests : BaseTestClass
     private static RuntimeSnapshotSerializer CreateSerializerWithButtonBaseline() =>
         new RuntimeSnapshotSerializer(StandardElementsManager.Self.DefaultStates, FakeButtonBaseline);
 
+    // Baseline for either same-simple-named colliding control type: a container with a single Text child.
+    private static GraphicalUiElement? CollidingControlBaseline(Type type)
+    {
+        if (type != typeof(NamespaceA.CollidingControl) && type != typeof(NamespaceB.CollidingControl))
+        {
+            return null;
+        }
+        ContainerRuntime control = new();
+        control.AddChild(new TextRuntime { Name = "TextInstance" });
+        return control;
+    }
+
     // Stands in for a game-authored screen/component type (e.g. "MainMenu : ContainerRuntime"). Its own
     // name is not a standard-element name, so the serializer treats it as custom rather than standard.
     private class CustomScreenRuntime : ContainerRuntime
@@ -457,5 +507,21 @@ public class RuntimeSnapshotSerializerTests : BaseTestClass
     // Stand-in for a Forms control type (e.g. Button). Its type name becomes the synthesized component name.
     private class FakeButton
     {
+    }
+
+    // Two control types that share the simple name "CollidingControl" but live in different "namespaces"
+    // (distinct declaring types), used to prove synthesized component names are de-collided.
+    private static class NamespaceA
+    {
+        internal class CollidingControl
+        {
+        }
+    }
+
+    private static class NamespaceB
+    {
+        internal class CollidingControl
+        {
+        }
     }
 }

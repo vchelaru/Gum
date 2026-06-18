@@ -68,11 +68,14 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
     private readonly IReadOnlyDictionary<string, StateSave> _defaultStates;
     private readonly Func<Type, GraphicalUiElement?>? _formsBaselineProvider;
 
-    // Synthesized components produced by CreateScreenSave (one per Forms-control type), and a per-type
-    // cache so repeated instances of a control share one component. Both reset at the start of every
-    // CreateScreenSave so a reused serializer does not leak state between snapshots.
+    // Synthesized components produced by CreateScreenSave (one per Forms-control type), a per-type cache so
+    // repeated instances of a control share one component, and the set of component names already taken (so
+    // two control types with the same simple name -- e.g. a Button in two different namespaces -- do not
+    // collide on one element name). All reset at the start of every CreateScreenSave so a reused serializer
+    // does not leak state between snapshots.
     private readonly List<ComponentSave> _synthesizedComponents;
     private readonly Dictionary<Type, ComponentEntry?> _componentCache;
+    private readonly HashSet<string> _usedComponentNames;
 
     /// <summary>
     /// Creates a serializer that reads runtime values against the supplied standard-element catalog.
@@ -95,6 +98,7 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
         _formsBaselineProvider = formsBaselineProvider;
         _synthesizedComponents = new List<ComponentSave>();
         _componentCache = new Dictionary<Type, ComponentEntry?>();
+        _usedComponentNames = new HashSet<string>();
     }
 
     /// <inheritdoc />
@@ -179,6 +183,7 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
     {
         _synthesizedComponents.Clear();
         _componentCache.Clear();
+        _usedComponentNames.Clear();
 
         ScreenSave screen = new ScreenSave { Name = screenName };
         StateSave defaultState = new StateSave { Name = "Default" };
@@ -355,8 +360,10 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
             entry.Emitted = true;
         }
 
+        // BaseType uses the component's (possibly de-collided) name, not the raw type name, so the instance
+        // resolves to the component even when two control types share a simple name.
         string instanceName = GenerateUniqueName(element, controlType.Name, usedNames);
-        targetElement.Instances.Add(new InstanceSave { Name = instanceName, BaseType = controlType.Name });
+        targetElement.Instances.Add(new InstanceSave { Name = instanceName, BaseType = entry.Component.Name });
 
         EmitOverridesRecursive(element, entry.PristineRoot, entry, instanceName, defaultState);
 
@@ -392,7 +399,11 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
 
     private ComponentEntry BuildComponentEntry(Type controlType, GraphicalUiElement pristine, bool shake)
     {
-        ComponentSave component = new ComponentSave { Name = controlType.Name, BaseType = ComponentBaseType };
+        ComponentSave component = new ComponentSave
+        {
+            Name = MakeUniqueComponentName(controlType.Name),
+            BaseType = ComponentBaseType,
+        };
         StateSave componentDefault = new StateSave { Name = "Default" };
         component.States.Add(componentDefault);
 
@@ -523,6 +534,20 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
 
         entry.ExposedNamesByPath[internalPath] = exposedName;
         return exposedName;
+    }
+
+    // Component names must be unique within the snapshot. Two distinct control types can share a simple type
+    // name (e.g. a Button in two namespaces), so the second is de-collided with a numeric suffix.
+    private string MakeUniqueComponentName(string typeName)
+    {
+        string candidate = typeName;
+        int suffix = 1;
+        while (!_usedComponentNames.Add(candidate))
+        {
+            candidate = typeName + suffix;
+            suffix++;
+        }
+        return candidate;
     }
 
     // Exposed names must be a single token (an instance variable resolves only one level deep), so the
