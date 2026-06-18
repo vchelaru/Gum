@@ -462,6 +462,35 @@ public class RuntimeSnapshotSerializerTests : BaseTestClass
     }
 
     [Fact]
+    public void CreateScreenSave_FlattenedFormsControl_ShouldCaptureGeometryAgainstContainerFallback()
+    {
+        // StackPanel/ScrollViewer/Panel visuals are InteractiveGue-rooted, so GetStandardTypeName is null.
+        // When such a control is flattened (no baseline, or it fails the fidelity gate) it still becomes a
+        // Container instance -- and must capture its geometry against that Container fallback, not emit
+        // nothing and render at the standard default (150x150 at the top-left).
+        ContainerRuntime root = new();
+        ContainerRuntime formsScreen = new() { Name = "MainMenu" };
+        formsScreen.FormsControlAsObject = new object();
+
+        InteractiveGue column = new() { Name = "LeftColumn" };
+        column.FormsControlAsObject = new object();
+        column.Width = 33;
+        column.WidthUnits = Gum.DataTypes.DimensionUnitType.Percentage;
+        formsScreen.AddChild(column);
+        root.AddChild(formsScreen);
+
+        // No baseline for the control type, so it cannot be componentized -> it flattens.
+        RuntimeSnapshotSerializer serializer =
+            new(StandardElementsManager.Self.DefaultStates, _ => null);
+        ScreenSave screen = serializer.CreateScreenSave(root, "Snapshot", shake: true);
+
+        StateSave defaultState = screen.States.First(s => s.Name == "Default");
+        defaultState.Variables.First(v => v.Name == "LeftColumn.Width").Value.ShouldBe(33f);
+        defaultState.Variables.First(v => v.Name == "LeftColumn.WidthUnits").Value
+            .ShouldBe(Gum.DataTypes.DimensionUnitType.Percentage);
+    }
+
+    [Fact]
     public void CreateScreenSave_WithoutBaselineProvider_ShouldNotSynthesizeComponents()
     {
         ContainerRuntime root = new();

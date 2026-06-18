@@ -299,7 +299,10 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
         targetElement.Instances.Add(new InstanceSave { Name = instanceName, BaseType = typeName });
 
         // The node's catalog values become instance-qualified variables in the element's default state.
-        StateSave nodeState = CreateStateForNode(element, "Default", shake);
+        // Read against the resolved BaseType (with the same "Container" fallback used above), not the node's
+        // own GetStandardTypeName -- an InteractiveGue-rooted Forms visual (StackPanel/ScrollViewer/Panel)
+        // resolves to null there, which would emit no geometry and leave the instance at the default size.
+        StateSave nodeState = CreateStateForType(element, "Default", shake, typeName);
         foreach (VariableSave variable in nodeState.Variables)
         {
             defaultState.Variables.Add(new VariableSave
