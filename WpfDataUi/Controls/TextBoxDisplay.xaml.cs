@@ -451,25 +451,19 @@ namespace WpfDataUi.Controls
                     if(difference != 0)
                     {
                         unroundedValue += difference * (double)LabelDragChangeMultiplier;
-                        var rounded = unroundedValue;
-                        if(LabelDragValueRounding != null)
-                        {
-                            var isInt = Math.Abs(LabelDragValueRounding.Value - (int)LabelDragValueRounding.Value) < .0001m;
 
-                            rounded = RoundDouble(unroundedValue, (double)LabelDragValueRounding.Value);
+                        // Apply the snapped accumulator directly. This previously re-added
+                        // difference * multiplier on top of the rounded value (via GetValueInDirection),
+                        // which put the raw, DPI-scaled fractional mouse delta back into the result - so a
+                        // 1px-rounded variable still landed on values like 12.8 on a scaled display
+                        // (issue #3191). unroundedValue already includes this tick's movement.
+                        var rounded = TextBoxDisplayLogic.SnapDraggedValue(unroundedValue, LabelDragValueRounding);
 
-                            if(isInt)
-                            {
-                                rounded = (int)(System.Math.Round(rounded) + (System.Math.Sign(rounded) * .5f));
-                            }
-                        }
-
-                        var getValueStatus = TryGetValueOnUi(out object? valueOnInstance);
+                        var getValueStatus = TryGetValueOnUi(out _);
 
                         if(getValueStatus == ApplyValueResult.Success)
                         {
-                            var newValue = mTextBoxLogic.GetValueInDirection(difference * (double)LabelDragChangeMultiplier, rounded);
-                            TrySetValueOnUi(newValue);
+                            TrySetValueOnUi(rounded);
                             lastApplyValueResult = mTextBoxLogic.TryApplyToInstance(SetPropertyCommitType.Intermediate);
                         }
                     }
@@ -498,11 +492,6 @@ namespace WpfDataUi.Controls
         }
 
         #endregion
-
-        public double RoundDouble(double valueToRound, double multipleOf)
-        {
-            return ((int)(System.Math.Sign(valueToRound) * .5f + valueToRound / multipleOf)) * multipleOf;
-        }
 
         private void NullableCheckBox_Checked(object? sender, RoutedEventArgs e)
         {
