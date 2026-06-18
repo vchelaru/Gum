@@ -18,6 +18,8 @@
         <Setter Property="IsReadOnly" Value="True" />
         <Setter Property="materialDesign:TextFieldAssist.UnderlineBrush" Value="Transparent" />
         <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Background}" />
+        <!--  Force ragged-left text; the MaterialDesignTextBox base style otherwise justifies wrapped output (see issue #3194).  -->
+        <Setter Property="TextAlignment" Value="Left" />
     </Style>
 
     <Style

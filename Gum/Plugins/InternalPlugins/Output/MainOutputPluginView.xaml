@@ -32,6 +32,7 @@
       VerticalAlignment="Stretch"
       VerticalContentAlignment="Top"
       behaviors:TextBoxAutoScroll.AutoScrollToEnd="True"
+      FontFamily="Consolas"
       Style="{DynamicResource Frb.Styles.Textbox.Readonly}"
       TabIndex="0"
       Text="{Binding OutputText, Mode=OneWay}"
