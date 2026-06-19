@@ -10,13 +10,13 @@ using ShadowDusk.Core;
 namespace MonoGameGumInCode.Screens;
 
 /// <summary>
-/// Demonstrates <see cref="ContainerRuntime.RenderTargetEffect"/> (issue #816): a shader is
-/// applied to a render-target container when its cached texture is blitted back to the screen,
-/// acting as a post-process over the whole container's contents.
+/// Demonstrates <see cref="ContainerRuntime.RenderTargetEffect"/> (issue #816): a shader applied
+/// to a render-target container when its cached texture is blitted back to the screen, acting as
+/// a post-process over the whole container.
 ///
-/// Two identical containers are shown side by side — the left renders normally, the right has a
-/// grayscale shader assigned. The .fx is compiled at runtime with ShadowDusk (no content
-/// pipeline / MGCB step required); the resulting bytes are handed to a MonoGame
+/// Two identical red bears are shown side by side — the left renders normally, the right is a
+/// render-target container with a grayscale shader assigned. The .fx is compiled at runtime with
+/// ShadowDusk (no content pipeline); the resulting bytes are handed to a MonoGame
 /// <see cref="Effect"/> that Gum core neither compiles nor loads.
 /// </summary>
 internal class RenderTargetEffectScreen : FrameworkElement
@@ -66,111 +66,83 @@ technique SpriteDrawing
     {
         Dock(Gum.Wireframe.Dock.Fill);
 
-        var container = new ContainerRuntime();
-        container.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        container.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        container.X = 4;
-        container.Y = 4;
-        container.Width = -8;
-        container.Height = -8;
-        container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
-        container.StackSpacing = 8;
-        this.AddChild(container);
+        var root = new ContainerRuntime();
+        root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        root.X = 4;
+        root.Y = 4;
+        root.Width = -8;
+        root.Height = -8;
+        root.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        root.StackSpacing = 16;
+        this.AddChild(root);
 
-        // Compile the shader once. On failure (e.g. the runtime can't load the compiled bytes),
-        // the right container falls back to no effect. The status label below reports the
-        // outcome at the very top so it's never ambiguous / cropped off-screen.
-        Effect grayscale = TryCompileGrayscale(out string compileError);
+        Effect grayscale = TryCompileGrayscale(out string status);
+        WriteStatusFile(status);
 
-        var status = new TextRuntime();
-        status.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        status.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        status.Width = 0;
-        status.Height = 0;
-        if (grayscale != null)
-        {
-            status.Text = "RenderTargetEffect demo - shader compiled OK. The right container should render grayscale.";
-            status.Color = Color.White;
-        }
-        else
-        {
-            status.Text = "RenderTargetEffect demo - SHADER COMPILE FAILED:\n" + compileError;
-            status.Color = Color.OrangeRed;
-        }
-        container.AddChild(status);
+        var statusLabel = new TextRuntime();
+        statusLabel.Text = status;
+        statusLabel.Color = grayscale != null ? Color.White : Color.OrangeRed;
+        statusLabel.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        statusLabel.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        statusLabel.Width = 0;
+        statusLabel.Height = 0;
+        root.AddChild(statusLabel);
 
-        var row = AddRow(container);
-        row.AddChild(BuildDemoContainer("Normal", effect: null, errorMessage: null));
-        row.AddChild(BuildDemoContainer("Grayscale", effect: grayscale, errorMessage: compileError));
+        var row = new ContainerRuntime();
+        row.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+        row.StackSpacing = 48;
+        row.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        row.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        row.Width = 0;
+        row.Height = 0;
+        root.AddChild(row);
+
+        // Left: a plain red bear (no render target, no shader).
+        row.AddChild(BuildCell("Normal", effect: null));
+
+        // Right: the same red bear inside a render-target container with the grayscale shader.
+        row.AddChild(BuildCell("Render target + grayscale shader", effect: grayscale));
     }
 
-    private static ContainerRuntime BuildDemoContainer(string caption, Effect effect, string errorMessage)
+    private static ContainerRuntime BuildCell(string caption, Effect effect)
     {
         var cell = new ContainerRuntime();
         cell.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
-        cell.StackSpacing = 4;
+        cell.StackSpacing = 6;
         cell.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         cell.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
 
         AddLabel(cell, caption);
 
-        // The render target holds colorful content so the grayscale post-process is obvious.
-        var renderTarget = new ContainerRuntime();
-        renderTarget.IsRenderTarget = true;
-        renderTarget.Width = 220;
-        renderTarget.Height = 180;
-        renderTarget.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
-        renderTarget.StackSpacing = 6;
+        var holder = new ContainerRuntime();
+        holder.Width = 128;
+        holder.Height = 128;
 
-        var bearRow = new ContainerRuntime();
-        bearRow.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
-        bearRow.StackSpacing = 6;
-        bearRow.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        bearRow.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        foreach (var tint in new[] { Color.Red, Color.LightGreen, Color.CornflowerBlue })
-        {
-            var bear = new SpriteRuntime();
-            bear.SourceFileName = "BearTexture.png";
-            bear.Width = 56;
-            bear.Height = 56;
-            bear.Color = tint;
-            bearRow.AddChild(bear);
-        }
-        renderTarget.AddChild(bearRow);
-
-        var colorText = new TextRuntime();
-        colorText.Text = "Colorful content";
-        colorText.Color = Color.Gold;
-        renderTarget.AddChild(colorText);
+        // A single vivid-red bear so the grayscale post-process is unmistakable (red -> gray).
+        var bear = new SpriteRuntime();
+        bear.SourceFileName = "BearTexture.png";
+        bear.Width = 128;
+        bear.Height = 128;
+        bear.Color = Color.Red;
+        holder.AddChild(bear);
 
         if (effect != null)
         {
-            renderTarget.RenderTargetEffect = effect;
+            holder.IsRenderTarget = true;
+            holder.RenderTargetEffect = effect;
         }
 
-        cell.AddChild(renderTarget);
-
-        if (!string.IsNullOrEmpty(errorMessage))
-        {
-            var error = new TextRuntime();
-            error.Text = "Shader compile failed:\n" + errorMessage;
-            error.Color = Color.OrangeRed;
-            error.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-            error.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-            cell.AddChild(error);
-        }
-
+        cell.AddChild(holder);
         return cell;
     }
 
-    private static Effect TryCompileGrayscale(out string errorMessage)
+    private static Effect TryCompileGrayscale(out string status)
     {
-        errorMessage = null;
-
         var graphicsDevice = SystemManagers.Default.Renderer.GraphicsDevice;
         if (graphicsDevice == null)
         {
-            errorMessage = "GraphicsDevice not available.";
+            status = "SHADER COMPILE FAILED: GraphicsDevice not available.";
             return null;
         }
 
@@ -182,18 +154,34 @@ technique SpriteDrawing
 
             if (result.IsSuccess)
             {
+                status = "Shader compiled OK - the right bear should render grayscale.";
                 return new Effect(graphicsDevice, result.Value.Data);
             }
 
-            errorMessage = string.Join("\n", result.Error.Select(e => e.Message));
+            status = "SHADER COMPILE FAILED:\n" + string.Join("\n", result.Error.Select(e => e.Message));
             return null;
         }
         catch (System.Exception e)
         {
             // A thrown error here is typically a missing/unloadable native compiler asset rather
             // than a shader-syntax problem; surface it instead of taking down the screen.
-            errorMessage = e.GetType().Name + ": " + e.Message;
+            status = "SHADER COMPILE THREW: " + e.GetType().Name + ": " + e.Message;
             return null;
+        }
+    }
+
+    // Diagnostic: also write the compile status next to the executable so it can be inspected
+    // without reading the on-screen label.
+    private static void WriteStatusFile(string status)
+    {
+        try
+        {
+            string path = System.IO.Path.Combine(System.AppContext.BaseDirectory, "rt-effect-status.txt");
+            System.IO.File.WriteAllText(path, status);
+        }
+        catch
+        {
+            // Diagnostics only — never let this affect the screen.
         }
     }
 
@@ -206,18 +194,5 @@ technique SpriteDrawing
         label.Width = 0;
         label.Height = 0;
         container.AddChild(label);
-    }
-
-    private static ContainerRuntime AddRow(ContainerRuntime container)
-    {
-        var row = new ContainerRuntime();
-        row.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
-        row.StackSpacing = 24;
-        row.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        row.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        row.Width = 0;
-        row.Height = 0;
-        container.AddChild(row);
-        return row;
     }
 }
