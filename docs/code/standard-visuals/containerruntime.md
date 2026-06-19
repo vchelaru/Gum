@@ -55,3 +55,49 @@ var textRuntime = new TextRuntime();
 textRuntime.Text = "I do not need my AddToManagers method called either.";
 childContainer.Children.Add(textRuntime);
 ```
+
+### Render Target Shaders (RenderTargetEffect)
+
+A ContainerRuntime can render its entire contents to a render target and then apply a shader (an `Effect`) when that render target is drawn back to the screen. Because the shader runs over the container's whole composited image, it acts as a post-process over everything inside the container — useful for grayscale, blur, glow, tint, and similar full-container effects.
+
+This uses two properties together:
+
+1. `IsRenderTarget` set to `true` — the container composites its children into a render target instead of drawing them directly.
+2. `RenderTargetEffect` set to an `Effect` — the shader bound for the single draw that blits that render target to the screen.
+
+{% hint style="info" %}
+`RenderTargetEffect` is available only on the XNA-like runtimes (MonoGame, KNI, and FNA), where the effect is a `Microsoft.Xna.Framework.Graphics.Effect`.
+{% endhint %}
+
+Gum does not compile or load the shader for you — you supply an already-constructed `Effect`. You can load it however you like: the MonoGame content pipeline, `new Effect(graphicsDevice, bytes)` with precompiled shader bytes (no content pipeline required), or a runtime `.fx` compiler such as ShadowDusk.
+
+#### Example - Applying a shader to a container
+
+```csharp
+// Initialize
+var container = new ContainerRuntime();
+container.Width = 200;
+container.Height = 200;
+container.IsRenderTarget = true;
+
+// Load the Effect however you prefer - here through the MonoGame content pipeline.
+container.RenderTargetEffect = Content.Load<Microsoft.Xna.Framework.Graphics.Effect>("Grayscale");
+
+var bear = new SpriteRuntime();
+bear.SourceFileName = "Bear.png";
+container.Children.Add(bear);
+
+container.AddToManagers(SystemManagers.Default, null);
+```
+
+The shader is applied to the container's render target as a whole, so every child inside the container (sprites, text, nested containers) is affected at once. The container can be nested anywhere in your layout — the effect is applied whether the render-target container is a root object or deeply nested inside other containers.
+
+#### Shader requirements
+
+The effect must follow the standard MonoGame 2D `SpriteBatch` shader convention: a pixel shader that samples the sprite texture, with the vertex transform supplied by `SpriteBatch` through the usual `MatrixTransform` parameter (the same shape used by the standard MonoGame 2D shader examples). An effect that hardcodes its own projection matrix will not position correctly.
+
+Because the `Effect` instance is yours, you can update its parameters each frame - for example animating a blur radius or passing elapsed time - before drawing.
+
+{% hint style="info" %}
+To instead display a container's render target as a regular Sprite (so it can be scaled, rotated, or stacked) rather than post-processing it in place, see [RenderTargetTextureSource](spriteruntime/rendertargettexturesource.md).
+{% endhint %}
