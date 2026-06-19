@@ -354,6 +354,13 @@ public class GumService : IGumService
     /// </param>
     public void ExportSnapshot(string filePath, bool shake = true)
     {
+        // Resolve to an absolute path up front. A bare/relative file name (e.g. "MyTestSnapshot.gumx", as
+        // the samples pass) would otherwise make Path.GetDirectoryName below return "", skipping the whole
+        // directory block that extracts embedded textures and copies referenced files -- leaving those
+        // textures unresolved (blank in the tool). project.Save resolves relative paths against the current
+        // directory anyway, so this changes only the directory computation, not where the project is written.
+        filePath = Path.GetFullPath(filePath);
+
         // A code-only game may never have triggered standards population; ensure the catalog exists
         // before reading it (as the serializer's baseline) and writing it (as the project's standards).
         if (StandardElementsManager.Self.DefaultStates == null)

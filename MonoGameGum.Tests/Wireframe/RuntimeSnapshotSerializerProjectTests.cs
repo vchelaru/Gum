@@ -294,6 +294,50 @@ public class RuntimeSnapshotSerializerProjectTests : BaseTestClass
     }
 
     [Fact]
+    public void ExportSnapshot_WithRelativeFilePath_ShouldStillProcessReferencedFiles()
+    {
+        // Regression: a bare relative file name (as the GameUiSamples F1 snapshot passes,
+        // ExportSnapshot("MyTestSnapshot.gumx")) made Path.GetDirectoryName return "", so the whole
+        // directory block -- referenced-file copying AND embedded-texture extraction -- was skipped, leaving
+        // textures unresolved (blank in the tool). The path must resolve to an absolute directory so that
+        // work runs no matter how the caller spells the path.
+        string originalRelativeDirectory = FileManager.RelativeDirectory;
+        string originalCurrentDirectory = Directory.GetCurrentDirectory();
+        string contentDirectory = NewTempDirectory();
+        string snapshotDirectory = NewTempDirectory();
+        try
+        {
+            const string relativePath = "UI/button.png";
+            string sourceFile = Path.Combine(contentDirectory, "UI", "button.png");
+            Directory.CreateDirectory(Path.GetDirectoryName(sourceFile)!);
+            File.WriteAllBytes(sourceFile, new byte[] { 1, 2, 3 });
+            FileManager.RelativeDirectory = contentDirectory;
+
+            GumService service = new();
+            SpriteRuntime sprite = new() { Name = "Sprite" };
+            Microsoft.Xna.Framework.Graphics.Texture2D texture = MakeHeadlessTexture();
+            texture.Name = relativePath;
+            sprite.Texture = texture;
+            service.Root.AddChild(sprite);
+
+            // Run with the snapshot directory as the working directory and a bare relative file name.
+            Directory.CreateDirectory(snapshotDirectory);
+            Directory.SetCurrentDirectory(snapshotDirectory);
+            service.ExportSnapshot("Live." + GumProjectSave.ProjectExtension);
+
+            // The referenced file is copied next to the snapshot (the directory block was not skipped).
+            File.Exists(Path.Combine(snapshotDirectory, "UI", "button.png")).ShouldBeTrue();
+        }
+        finally
+        {
+            Directory.SetCurrentDirectory(originalCurrentDirectory);
+            FileManager.RelativeDirectory = originalRelativeDirectory;
+            DeleteTempDirectory(contentDirectory);
+            DeleteTempDirectory(snapshotDirectory);
+        }
+    }
+
+    [Fact]
     public void FillUnresolvedTextureSourceFiles_ShouldDedupeByTextureAndFillPlaceholders()
     {
         // Two references to one shared texture instance plus one to a distinct texture: the shared texture
