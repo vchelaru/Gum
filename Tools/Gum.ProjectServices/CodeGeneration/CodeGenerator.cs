@@ -5201,6 +5201,21 @@ public class CodeGenerator
             return $"{context.CodePrefixNoTabs}.{GetGumVariableName(variable, context)} = {referenceInCode};";
         }
         #endregion
+        #region SourceShaderFile
+
+        // SourceShaderFile is a plain string file reference (e.g. a .fx path) on a render-target
+        // Container; the runtime property is named identically, so the default path emits the
+        // assignment with no remap. The only special case is an empty value: skip it rather than
+        // emit a pointless this.X.SourceShaderFile = ""; line (mirrors RenderTargetTextureSource).
+        else if (rootName == "SourceShaderFile")
+        {
+            if (string.IsNullOrEmpty(variable.Value as string))
+            {
+                return " ";
+            }
+            // Non-empty: fall through to the default string-assignment path.
+        }
+        #endregion
         // ignored variables:
         else if (rootName == "IsXamarinFormsControl" ||
             rootName == "ExposeChildrenEvents" ||

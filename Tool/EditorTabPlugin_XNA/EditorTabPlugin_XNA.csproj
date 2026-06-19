@@ -39,6 +39,13 @@
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<!--
+			ShadowDusk compiles a render-target Container's SourceShaderFile (.fx) into an Effect at
+			runtime (no content pipeline) for the WYSIWYG preview; see RenderTargetShaderResolver.
+			Pulls native shader-compiler binaries transitively (e.g. win-x64 libvkd3d-shader-1.dll),
+			which the PostBuild step copies alongside the plugin so they load when invoked.
+		-->
+		<PackageReference Include="ShadowDusk.Compiler" Version="0.8.0" />
 		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.2.9001" />
 		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" />
 		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
@@ -61,5 +68,36 @@
 	</ItemGroup>
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
 	  <Exec Command="&#xD;&#xA;echo Copying to &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;&#xD;&#xA;IF NOT EXIST &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot; md &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)XnaAndWinforms.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)KniGum.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)KniGumShapes.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)Apos.Shapes.KNI.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)FontStashSharp*.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)Xna*.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;IF NOT EXIST &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Content&quot; md &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Content\&quot;&#xD;&#xA;copy &quot;$(SolutionDir)Runtimes\GumShapes\buildTransitive\Content\Windows\apos-shapes.xnb&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Content\&quot;" />
+
+	  <!--
+	    ShadowDusk (render-target .fx -> Effect resolver, see RenderTargetShaderResolver) is loaded
+	    as part of this dynamically-loaded plugin, so its managed assemblies and native shader
+	    compiler binaries must be deployed by hand (a LoadFrom'd plugin does not get its own
+	    .deps.json native mapping honored). Managed DLLs go next to the plugin so Assembly.LoadFrom
+	    resolves them; the win-x64 native binaries are copied to BOTH the plugin's own
+	    runtimes\win-x64\native (ShadowDusk's resolver probes relative to its assemblies) and the
+	    Gum.exe app-base runtimes\win-x64\native (probed relative to AppContext.BaseDirectory),
+	    covering both lookup strategies. The tool only runs on Windows x64, so only win-x64 is copied.
+	  -->
+	  <ItemGroup>
+	    <ShadowDuskManagedToCopy Include="$(TargetDir)ShadowDusk*.dll" />
+	    <!--
+	      Only ShadowDusk's shader-compiler toolchain natives (DXC: dxcompiler/dxil, vkd3d-shader,
+	      SPIRV-Cross). Scoped globs deliberately exclude unrelated win-x64 natives (SkiaSharp,
+	      sqlite, freetype) so this step never overwrites the versions Gum.exe ships with.
+	    -->
+	    <ShadowDuskNativeToCopy Include="$(TargetDir)runtimes\win-x64\native\dx*.dll" />
+	    <ShadowDuskNativeToCopy Include="$(TargetDir)runtimes\win-x64\native\*vkd3d*.dll" />
+	    <ShadowDuskNativeToCopy Include="$(TargetDir)runtimes\win-x64\native\spirv*.dll" />
+	  </ItemGroup>
+	  <Copy SourceFiles="@(ShadowDuskManagedToCopy)"
+	        DestinationFolder="$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
+	        SkipUnchangedFiles="true" />
+	  <Copy SourceFiles="@(ShadowDuskNativeToCopy)"
+	        DestinationFolder="$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\runtimes\win-x64\native"
+	        SkipUnchangedFiles="true" />
+	  <Copy SourceFiles="@(ShadowDuskNativeToCopy)"
+	        DestinationFolder="$(SolutionDir)Gum\bin\$(ConfigurationName)\runtimes\win-x64\native"
+	        SkipUnchangedFiles="true" />
 	</Target>
 </Project>
