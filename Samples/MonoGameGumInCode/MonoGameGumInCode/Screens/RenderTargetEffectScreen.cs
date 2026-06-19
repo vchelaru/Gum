@@ -77,13 +77,27 @@ technique SpriteDrawing
         container.StackSpacing = 8;
         this.AddChild(container);
 
-        AddLabel(container,
-            "RenderTargetEffect: identical render-target containers, the right one post-processed by a grayscale shader.");
-
         // Compile the shader once. On failure (e.g. the runtime can't load the compiled bytes),
-        // the right container falls back to no effect and a visible message is shown so the
-        // outcome isn't silently ambiguous.
+        // the right container falls back to no effect. The status label below reports the
+        // outcome at the very top so it's never ambiguous / cropped off-screen.
         Effect grayscale = TryCompileGrayscale(out string compileError);
+
+        var status = new TextRuntime();
+        status.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        status.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        status.Width = 0;
+        status.Height = 0;
+        if (grayscale != null)
+        {
+            status.Text = "RenderTargetEffect demo - shader compiled OK. The right container should render grayscale.";
+            status.Color = Color.White;
+        }
+        else
+        {
+            status.Text = "RenderTargetEffect demo - SHADER COMPILE FAILED:\n" + compileError;
+            status.Color = Color.OrangeRed;
+        }
+        container.AddChild(status);
 
         var row = AddRow(container);
         row.AddChild(BuildDemoContainer("Normal", effect: null, errorMessage: null));
@@ -160,17 +174,27 @@ technique SpriteDrawing
             return null;
         }
 
-        var compiler = new EffectCompiler();
-        Result<CompiledShader, ShaderError[]> result =
-            compiler.Compile(GrayscaleFx, new CompilerOptions { Target = PlatformTarget.OpenGL });
-
-        if (result.IsSuccess)
+        try
         {
-            return new Effect(graphicsDevice, result.Value.Data);
-        }
+            var compiler = new EffectCompiler();
+            Result<CompiledShader, ShaderError[]> result =
+                compiler.Compile(GrayscaleFx, new CompilerOptions { Target = PlatformTarget.OpenGL });
 
-        errorMessage = string.Join("\n", result.Error.Select(e => e.Message));
-        return null;
+            if (result.IsSuccess)
+            {
+                return new Effect(graphicsDevice, result.Value.Data);
+            }
+
+            errorMessage = string.Join("\n", result.Error.Select(e => e.Message));
+            return null;
+        }
+        catch (System.Exception e)
+        {
+            // A thrown error here is typically a missing/unloadable native compiler asset rather
+            // than a shader-syntax problem; surface it instead of taking down the screen.
+            errorMessage = e.GetType().Name + ": " + e.Message;
+            return null;
+        }
     }
 
     private static void AddLabel(ContainerRuntime container, string text)

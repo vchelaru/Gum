@@ -5,6 +5,8 @@ using Gum.GueDeriving;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
+using ShadowDusk.Compiler;
+using ShadowDusk.Core;
 using Shouldly;
 using Xunit;
 
@@ -97,6 +99,133 @@ public class RenderTargetEffectTests : BaseTestClass
         {
             effect.Dispose();
         }
+    }
+
+    // Same grayscale shader the RenderTargetEffectScreen sample uses, compiled at runtime via
+    // ShadowDusk. Kept here (duplicated) so this test fully reproduces the sample's pipeline.
+    private const string GrayscaleFx = @"
+#if OPENGL
+    #define VS_SHADERMODEL vs_3_0
+    #define PS_SHADERMODEL ps_3_0
+#else
+    #define VS_SHADERMODEL vs_4_0_level_9_1
+    #define PS_SHADERMODEL ps_4_0_level_9_1
+#endif
+
+Texture2D SpriteTexture;
+
+sampler2D SpriteTextureSampler = sampler_state
+{
+    Texture = <SpriteTexture>;
+};
+
+struct VertexShaderOutput
+{
+    float4 Position : SV_POSITION;
+    float4 Color : COLOR0;
+    float2 TextureCoordinates : TEXCOORD0;
+};
+
+float4 MainPS(VertexShaderOutput input) : COLOR0
+{
+    float4 color = tex2D(SpriteTextureSampler, input.TextureCoordinates) * input.Color;
+    float gray = dot(color.rgb, float3(0.299, 0.587, 0.114));
+    return float4(gray, gray, gray, color.a);
+}
+
+technique SpriteDrawing
+{
+    pass P0
+    {
+        PixelShader = compile PS_SHADERMODEL MainPS();
+    }
+};
+";
+
+    [Fact]
+    public void RenderTargetEffect_GrayscaleShader_ActuallyGraysThePixels()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        GraphicsDevice gd = game.GraphicsDevice;
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+
+        // 1) Compile the sample's grayscale .fx with ShadowDusk (no content pipeline).
+        EffectCompiler compiler = new();
+        Result<CompiledShader, ShaderError[]> compileResult =
+            compiler.Compile(GrayscaleFx, new CompilerOptions { Target = PlatformTarget.OpenGL });
+
+        compileResult.IsSuccess.ShouldBeTrue(
+            compileResult.IsFailure
+                ? "ShadowDusk failed to compile the grayscale shader:\n" +
+                    string.Join("\n", compileResult.Error.Select(e => e.Message))
+                : "");
+
+        using Effect grayscale = new(gd, compileResult.Value.Data);
+
+        // 2) A solid-red render-target container.
+        ContainerRuntime container = new();
+        container.X = 0;
+        container.Y = 0;
+        container.Width = 64;
+        container.Height = 64;
+        container.IsRenderTarget = true;
+
+#pragma warning disable CS0618 // ColoredRectangleRuntime is obsolete; simplest solid fill without the shape dependency.
+        ColoredRectangleRuntime red = new();
+#pragma warning restore CS0618
+        red.Width = 64;
+        red.Height = 64;
+        red.Color = Color.Red;
+        container.AddChild(red);
+
+        container.AddToManagers(managers, null);
+        container.UpdateLayout();
+
+        // 3) Render with the grayscale effect, then again without it as a control.
+        container.RenderTargetEffect = grayscale;
+        Color withEffect = RenderToCaptureAndSample(gd, renderer, managers);
+
+        container.RenderTargetEffect = null;
+        Color withoutEffect = RenderToCaptureAndSample(gd, renderer, managers);
+
+        // Control: the unmodified blit is clearly red (red channel dominates).
+        withoutEffect.R.ShouldBeGreaterThan((byte)150);
+        ((int)withoutEffect.R - withoutEffect.G).ShouldBeGreaterThan(80);
+
+        // With grayscale: the channels collapse to roughly equal (R ≈ G ≈ B).
+        Math.Abs(withEffect.R - withEffect.G).ShouldBeLessThan(25);
+        Math.Abs(withEffect.R - withEffect.B).ShouldBeLessThan(25);
+    }
+
+    /// <summary>
+    /// Renders the current managers tree into an off-screen capture target (PreserveContents so
+    /// Gum's own mid-frame render-target switches don't wipe it), drawing twice so the first
+    /// frame's one-time render-target setup doesn't skew the captured pixels, then returns a
+    /// pixel sampled from inside the 64x64 container at the top-left.
+    /// </summary>
+    private static Color RenderToCaptureAndSample(GraphicsDevice gd, Renderer renderer, SystemManagers managers)
+    {
+        const int w = 128;
+        const int h = 128;
+        using RenderTarget2D capture = new(gd, w, h, false, SurfaceFormat.Color, DepthFormat.None, 0,
+            RenderTargetUsage.PreserveContents);
+
+        for (int i = 0; i < 2; i++)
+        {
+            gd.SetRenderTarget(capture);
+            gd.Clear(Color.Black);
+            renderer.Draw(managers);
+        }
+        gd.SetRenderTarget(null);
+
+        Color[] data = new Color[w * h];
+        capture.GetData(data);
+
+        // Container sits at (0,0) sized 64x64; sample well inside it.
+        return data[(20 * w) + 20];
     }
 
     /// <summary>
