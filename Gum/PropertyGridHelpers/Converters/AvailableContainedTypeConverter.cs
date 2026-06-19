@@ -47,10 +47,13 @@ namespace Gum.PropertyGridHelpers.Converters
             }
 
             var instance = _selectedState.SelectedInstance;
-            if(instance != null)
+            var currentElement = _selectedState.SelectedElement;
+            // During a project load/refresh the grid can rebuild while selection is transiently
+            // inconsistent: SelectedInstance non-null while SelectedElement is null (the element
+            // was cleared but a stale instance reference remains). Guard both (see issue #3196).
+            if (instance != null && currentElement != null)
             {
                 var instanceName = instance.Name;
-                var currentElement = _selectedState.SelectedElement;
 
                 foreach(var otherInstance in currentElement.Instances)
                 {
