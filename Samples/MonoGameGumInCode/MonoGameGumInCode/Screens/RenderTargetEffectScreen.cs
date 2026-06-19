@@ -48,9 +48,10 @@ struct VertexShaderOutput
 
 float4 MainPS(VertexShaderOutput input) : COLOR0
 {
+    // DIAGNOSTIC (issue #816): output solid magenta on the sprite's silhouette. This makes it
+    // unmistakable whether the render-target shader is being applied at all in the sample.
     float4 color = tex2D(SpriteTextureSampler, input.TextureCoordinates) * input.Color;
-    float gray = dot(color.rgb, float3(0.299, 0.587, 0.114));
-    return float4(gray, gray, gray, color.a);
+    return float4(1.0, 0.0, 1.0, color.a);
 }
 
 technique SpriteDrawing
@@ -101,8 +102,8 @@ technique SpriteDrawing
         // Left: a plain red bear (no render target, no shader).
         row.AddChild(BuildCell("Normal", effect: null));
 
-        // Right: the same red bear inside a render-target container with the grayscale shader.
-        row.AddChild(BuildCell("Render target + grayscale shader", effect: grayscale));
+        // Right: the same red bear inside a render-target container with the shader.
+        row.AddChild(BuildCell("Render target + shader (should be MAGENTA)", effect: grayscale));
     }
 
     private static ContainerRuntime BuildCell(string caption, Effect effect)
@@ -154,7 +155,7 @@ technique SpriteDrawing
 
             if (result.IsSuccess)
             {
-                status = "Shader compiled OK - the right bear should render grayscale.";
+                status = "Shader compiled OK - DIAGNOSTIC: the right bear should be MAGENTA if the effect is applied.";
                 return new Effect(graphicsDevice, result.Value.Data);
             }
 

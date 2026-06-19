@@ -200,6 +200,51 @@ technique SpriteDrawing
         Math.Abs(withEffect.R - withEffect.B).ShouldBeLessThan(25);
     }
 
+    [Fact]
+    public void RenderTargetEffect_GrayscaleShader_GraysThePixels_UnderCameraZoom()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        GraphicsDevice gd = game.GraphicsDevice;
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+
+        EffectCompiler compiler = new();
+        Result<CompiledShader, ShaderError[]> compileResult =
+            compiler.Compile(GrayscaleFx, new CompilerOptions { Target = PlatformTarget.OpenGL });
+        compileResult.IsSuccess.ShouldBeTrue(
+            compileResult.IsFailure ? string.Join("\n", compileResult.Error.Select(e => e.Message)) : "");
+        using Effect grayscale = new(gd, compileResult.Value.Data);
+
+        ContainerRuntime container = new();
+        container.X = 0;
+        container.Y = 0;
+        container.Width = 100;
+        container.Height = 100;
+        container.IsRenderTarget = true;
+
+#pragma warning disable CS0618
+        ColoredRectangleRuntime red = new();
+#pragma warning restore CS0618
+        red.Width = 100;
+        red.Height = 100;
+        red.Color = Color.Red;
+        container.AddChild(red);
+
+        container.AddToManagers(managers, null);
+        container.UpdateLayout();
+
+        // Reproduce the sample's GumService.EnableZoomToWindow() — it just sets a camera zoom.
+        renderer.Camera.Zoom = 2f;
+
+        container.RenderTargetEffect = grayscale;
+        Color withEffect = RenderToCaptureAndSample(gd, renderer, managers);
+
+        Math.Abs(withEffect.R - withEffect.G).ShouldBeLessThan(25);
+        Math.Abs(withEffect.R - withEffect.B).ShouldBeLessThan(25);
+    }
+
     /// <summary>
     /// Renders the current managers tree into an off-screen capture target (PreserveContents so
     /// Gum's own mid-frame render-target switches don't wipe it), drawing twice so the first
