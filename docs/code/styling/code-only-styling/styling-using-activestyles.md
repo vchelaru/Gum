@@ -124,7 +124,13 @@ By changing these colors, controls are created using the new colors:
 
 ## Styling and Fonts
 
-The `Styling` object includes properties for adjusting font values. For example, the `Normal` state can be modified to change an app's font. The following code relies on KernSmith for dynamic font creation. For more information on dynamic fonts and information on using KernSmith, see the [Font Strategies](../../files-and-fonts/font-strategies.md#dynamic-kernsmith-generation) page.
+Just as `Styling.ActiveStyle.Colors` controls the colors of every control created after it is set, `Styling.ActiveStyle.Text` controls their fonts — so a single assignment restyles text across the entire project without modifying individual controls. It exposes three text states:
+
+* `Normal` — the default font, applied to the text of most controls (`Button`, `Label`, `TextBox`, `ListBoxItem`, and so on).
+* `Strong` — a bold variant, applied by `ComboBox`.
+* `Emphasis` — an italic variant (not applied by the built-in controls; available when you apply it to your own text).
+
+Set the `Font`, `FontSize`, `IsBold`, or `IsItalic` values on a state to change it. The following code relies on KernSmith for dynamic font creation. For more information on dynamic fonts and information on using KernSmith, see the [Font Strategies](../../files-and-fonts/font-strategies.md#dynamic-kernsmith-generation) page.
 
 ```csharp
 // initialize
