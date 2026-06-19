@@ -245,6 +245,59 @@ technique SpriteDrawing
         Math.Abs(withEffect.R - withEffect.B).ShouldBeLessThan(25);
     }
 
+    [Fact]
+    public void RenderTargetEffect_GrayscaleShader_GraysThePixels_WhenDeeplyNested()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        GraphicsDevice gd = game.GraphicsDevice;
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+
+        EffectCompiler compiler = new();
+        Result<CompiledShader, ShaderError[]> compileResult =
+            compiler.Compile(GrayscaleFx, new CompilerOptions { Target = PlatformTarget.OpenGL });
+        compileResult.IsSuccess.ShouldBeTrue(
+            compileResult.IsFailure ? string.Join("\n", compileResult.Error.Select(e => e.Message)) : "");
+        using Effect grayscale = new(gd, compileResult.Value.Data);
+
+        // Mirror the sample's nesting: root -> row -> cell -> holder(render target) -> red.
+        ContainerRuntime root = new();
+        root.X = 0;
+        root.Y = 0;
+        ContainerRuntime row = new();
+        root.AddChild(row);
+        ContainerRuntime cell = new();
+        row.AddChild(cell);
+
+        ContainerRuntime holder = new();
+        holder.X = 0;
+        holder.Y = 0;
+        holder.Width = 100;
+        holder.Height = 100;
+        holder.IsRenderTarget = true;
+
+#pragma warning disable CS0618
+        ColoredRectangleRuntime red = new();
+#pragma warning restore CS0618
+        red.Width = 100;
+        red.Height = 100;
+        red.Color = Color.Red;
+        // Set the effect before AddToManagers, exactly as the sample's screen does.
+        holder.RenderTargetEffect = grayscale;
+        holder.AddChild(red);
+        cell.AddChild(holder);
+
+        root.AddToManagers(managers, null);
+        root.UpdateLayout();
+
+        Color withEffect = RenderToCaptureAndSample(gd, renderer, managers);
+
+        Math.Abs(withEffect.R - withEffect.G).ShouldBeLessThan(25);
+        Math.Abs(withEffect.R - withEffect.B).ShouldBeLessThan(25);
+    }
+
     /// <summary>
     /// Renders the current managers tree into an off-screen capture target (PreserveContents so
     /// Gum's own mid-frame render-target switches don't wipe it), drawing twice so the first

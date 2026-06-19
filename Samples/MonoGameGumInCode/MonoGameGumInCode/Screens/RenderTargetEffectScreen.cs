@@ -14,10 +14,10 @@ namespace MonoGameGumInCode.Screens;
 /// to a render-target container when its cached texture is blitted back to the screen, acting as
 /// a post-process over the whole container.
 ///
-/// Two identical red bears are shown side by side — the left renders normally, the right is a
-/// render-target container with a grayscale shader assigned. The .fx is compiled at runtime with
-/// ShadowDusk (no content pipeline); the resulting bytes are handed to a MonoGame
-/// <see cref="Effect"/> that Gum core neither compiles nor loads.
+/// Left is the unmodified bear. Right is the same bear inside a render-target container with a
+/// grayscale shader assigned. The .fx is compiled at runtime with ShadowDusk (no content
+/// pipeline); the resulting bytes are handed to a MonoGame <see cref="Effect"/> that Gum core
+/// neither compiles nor loads.
 /// </summary>
 internal class RenderTargetEffectScreen : FrameworkElement
 {
@@ -48,10 +48,9 @@ struct VertexShaderOutput
 
 float4 MainPS(VertexShaderOutput input) : COLOR0
 {
-    // DIAGNOSTIC (issue #816): output solid magenta on the sprite's silhouette. This makes it
-    // unmistakable whether the render-target shader is being applied at all in the sample.
     float4 color = tex2D(SpriteTextureSampler, input.TextureCoordinates) * input.Color;
-    return float4(1.0, 0.0, 1.0, color.a);
+    float gray = dot(color.rgb, float3(0.299, 0.587, 0.114));
+    return float4(gray, gray, gray, color.a);
 }
 
 technique SpriteDrawing
@@ -79,7 +78,6 @@ technique SpriteDrawing
         this.AddChild(root);
 
         Effect grayscale = TryCompileGrayscale(out string status);
-        WriteStatusFile(status);
 
         var statusLabel = new TextRuntime();
         statusLabel.Text = status;
@@ -99,11 +97,11 @@ technique SpriteDrawing
         row.Height = 0;
         root.AddChild(row);
 
-        // Left: a plain red bear (no render target, no shader).
-        row.AddChild(BuildCell("Normal", effect: null));
+        // Left: the unmodified bear (no render target, no shader).
+        row.AddChild(BuildCell("Original", effect: null));
 
-        // Right: the same red bear inside a render-target container with the shader.
-        row.AddChild(BuildCell("Render target + shader (should be MAGENTA)", effect: grayscale));
+        // Right: the same bear inside a render-target container with the grayscale shader.
+        row.AddChild(BuildCell("Render target + grayscale shader", effect: grayscale));
     }
 
     private static ContainerRuntime BuildCell(string caption, Effect effect)
@@ -120,12 +118,10 @@ technique SpriteDrawing
         holder.Width = 128;
         holder.Height = 128;
 
-        // A single vivid-red bear so the grayscale post-process is unmistakable (red -> gray).
         var bear = new SpriteRuntime();
         bear.SourceFileName = "BearTexture.png";
         bear.Width = 128;
         bear.Height = 128;
-        bear.Color = Color.Red;
         holder.AddChild(bear);
 
         if (effect != null)
@@ -155,7 +151,7 @@ technique SpriteDrawing
 
             if (result.IsSuccess)
             {
-                status = "Shader compiled OK - DIAGNOSTIC: the right bear should be MAGENTA if the effect is applied.";
+                status = "Shader compiled at runtime (ShadowDusk). The right bear renders grayscale.";
                 return new Effect(graphicsDevice, result.Value.Data);
             }
 
@@ -168,21 +164,6 @@ technique SpriteDrawing
             // than a shader-syntax problem; surface it instead of taking down the screen.
             status = "SHADER COMPILE THREW: " + e.GetType().Name + ": " + e.Message;
             return null;
-        }
-    }
-
-    // Diagnostic: also write the compile status next to the executable so it can be inspected
-    // without reading the on-screen label.
-    private static void WriteStatusFile(string status)
-    {
-        try
-        {
-            string path = System.IO.Path.Combine(System.AppContext.BaseDirectory, "rt-effect-status.txt");
-            System.IO.File.WriteAllText(path, status);
-        }
-        catch
-        {
-            // Diagnostics only — never let this affect the screen.
         }
     }
 
