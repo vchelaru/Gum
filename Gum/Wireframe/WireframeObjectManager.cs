@@ -188,14 +188,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
 
                     if(RootGue != null)
                     {
-                        // Always set default first, then if the selected state is not the default, then apply that after:
-                        RootGue.SetVariablesRecursively(elementSave, elementSave.DefaultState);
-                        var selectedState = _selectedState.SelectedStateSave;
-                        if(selectedState != null && selectedState != elementSave.DefaultState)
-                        {
-                            RootGue.ApplyState(selectedState);
-                        }
-
+                        ApplySelectedStateAfterCreation(RootGue, elementSave);
 
                         AddAllIpsos(RootGue);
                     }
@@ -233,6 +226,24 @@ public partial class WireframeObjectManager : IWireframeObjectManager
         }
         ElementShowing = elementSave;
 
+    }
+
+    /// <summary>
+    /// Applies the selected state to a freshly created wireframe root. The default state was
+    /// already applied by <c>ToGraphicalUiElement</c> (SetInitialState) inside
+    /// CreateGraphicalUiElement, so it must not be applied a second time here.
+    /// </summary>
+    internal void ApplySelectedStateAfterCreation(GraphicalUiElement rootGue, ElementSave elementSave)
+    {
+        // The default state was already applied by ToGraphicalUiElement (SetInitialState) inside
+        // CreateGraphicalUiElement above, so it must NOT be re-applied here — doing so applied every
+        // default-state variable twice per rebuild (issue #3212). Only the selected state needs
+        // applying, and only when it differs from the default.
+        var selectedState = _selectedState.SelectedStateSave;
+        if (selectedState != null && selectedState != elementSave.DefaultState)
+        {
+            rootGue.ApplyState(selectedState);
+        }
     }
 
 

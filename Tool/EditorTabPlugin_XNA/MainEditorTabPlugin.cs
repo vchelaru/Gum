@@ -141,6 +141,10 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly IWireframeObjectManager _wireframeObjectManager;
 
+    // Suppresses the redundant second wireframe rebuild when selecting an element forces its
+    // default state (state event rebuilds) and then fires the element event for the same element.
+    private readonly WireframeRefreshCoordinator _wireframeRefreshCoordinator = new();
+
 
     // This is used to punch through the selected and go back up to the top. More info here:
     // https://github.com/vchelaru/Gum/issues/1810
@@ -714,11 +718,18 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         }
     }
 
-    // todo - When a new element is selected, a new state is selected too
-    // need to only handle this 1 time. Currently there is a double-refresh
+    // When a new element is selected, its default state is selected too, so both
+    // HandleStateSelected and HandleElementSelected fire in one cascade. The redundant second
+    // rebuild is now suppressed via _wireframeRefreshCoordinator (issue #3212).
     private void HandleElementSelected(ElementSave save)
     {
-        _wireframeObjectManager.RefreshAll(forceLayout: true);
+        // Selecting an element forces its default state first, so HandleStateSelected has already
+        // rebuilt the wireframe for this element earlier in the same synchronous cascade. Skip the
+        // redundant rebuild here, but still refresh the selection visuals.
+        if (_wireframeRefreshCoordinator.ShouldRebuildOnElementSelected(save))
+        {
+            _wireframeObjectManager.RefreshAll(forceLayout: true);
+        }
 
         _selectionManager.Refresh();
 
@@ -1351,6 +1362,10 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
     private void HandleStateSelected(StateSave? save)
     {
         _wireframeObjectManager.RefreshAll(forceLayout: true);
+        // Record that this rebuild happened for the current element so the ElementSelected event
+        // that follows in the same cascade (when an element is selected) can skip its redundant
+        // rebuild. See WireframeRefreshCoordinator.
+        _wireframeRefreshCoordinator.OnStateRebuild(_selectedState.SelectedElement);
     }
 
     private void wireframeControl1_MouseDown(object? sender, MouseEventArgs e)
