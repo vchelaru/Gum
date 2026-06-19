@@ -326,11 +326,11 @@ public class CustomSetPropertyOnRenderable
     /// With no resolver registered this is a graceful no-op (the container renders unshaded),
     /// matching how a missing texture degrades. Called internally by the string property path.
     /// </summary>
-    public static void AssignSourceShaderFileOnContainer(InvisibleRenderable invisibleRenderable, GraphicalUiElement graphicalUiElement, string? value)
+    public static void AssignSourceShaderFileOnContainer(IRenderTargetRenderable effectOwner, GraphicalUiElement graphicalUiElement, string? value)
     {
         if (string.IsNullOrEmpty(value))
         {
-            invisibleRenderable.RenderTargetEffect = null;
+            effectOwner.RenderTargetEffect = null;
             return;
         }
 
@@ -356,7 +356,7 @@ public class CustomSetPropertyOnRenderable
             var cachedEffect = loaderManager.GetDisposable(value);
             if (cachedEffect != null)
             {
-                invisibleRenderable.RenderTargetEffect = cachedEffect;
+                effectOwner.RenderTargetEffect = cachedEffect;
                 return;
             }
         }
@@ -392,7 +392,7 @@ public class CustomSetPropertyOnRenderable
                 }
                 throw new System.IO.FileNotFoundException(message, resolveException);
             }
-            invisibleRenderable.RenderTargetEffect = null;
+            effectOwner.RenderTargetEffect = null;
             PropertyAssignmentError?.Invoke(resolveException != null ? message + "\n" + resolveException.ToString() : message);
             return;
         }
@@ -402,7 +402,7 @@ public class CustomSetPropertyOnRenderable
             loaderManager.AddDisposable(value, disposableEffect);
         }
 
-        invisibleRenderable.RenderTargetEffect = resolvedEffect;
+        effectOwner.RenderTargetEffect = resolvedEffect;
     }
 
     private static bool TrySetPropertyOnNineSlice(NineSlice nineSlice, GraphicalUiElement graphicalUiElement, string propertyName, object value, bool handled)
@@ -1808,6 +1808,14 @@ public class CustomSetPropertyOnRenderable
         else if(propertyName == "IsRenderTarget")
         {
             ((LineRectangle)mContainedObjectAsIpso).IsRenderTarget = value as bool? ?? false;
+            handled = true;
+        }
+        else if (propertyName == "SourceShaderFile")
+        {
+            // The Gum editor backs Containers with a LineRectangle, so the render-target
+            // post-process shader resolves onto the LineRectangle's IRenderTargetRenderable slot
+            // (the runtime's InvisibleRenderable path does the same in TrySetPropertyOnInvisbileRenderable).
+            AssignSourceShaderFileOnContainer((LineRectangle)mContainedObjectAsIpso, graphicalUiElement, value as string);
             handled = true;
         }
 

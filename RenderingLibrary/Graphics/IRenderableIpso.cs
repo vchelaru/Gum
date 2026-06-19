@@ -25,6 +25,29 @@ public interface IRenderableIpso : IRenderable, IPositionedSizedObject, IVisible
 
 }
 
+/// <summary>
+/// Implemented by renderables that can act as a render target: their children are drawn into an
+/// offscreen texture which is then blitted back to the screen, optionally post-processed. This is
+/// the shared home for render-target state that is NOT universal to every renderable, so the
+/// <c>Renderer</c> can drive render-target rendering without knowing the concrete renderable type.
+/// Both the runtime container renderable (<see cref="RenderableBase"/>, e.g.
+/// <c>InvisibleRenderable</c>) and the Gum editor's container renderable
+/// (<see cref="RenderingLibrary.Math.Geometry.LineRectangle"/>, which carries the editor outline)
+/// implement it. The universal render-target inputs — <c>IsRenderTarget</c> and <c>Alpha</c> —
+/// already live on <see cref="IRenderableIpso"/>; this interface is the place to add further
+/// render-target-only state in the future.
+/// </summary>
+public interface IRenderTargetRenderable
+{
+    /// <summary>
+    /// Optional post-process effect applied when the render target's cached texture is blitted back
+    /// to the screen (issue #816). Typed <c>object?</c> so the shared rendering layer stays
+    /// backend-agnostic; the xnalike <c>Renderer</c> casts it to a MonoGame <c>Effect</c>. Null
+    /// means the container is blitted unshaded.
+    /// </summary>
+    object? RenderTargetEffect { get; set; }
+}
+
 
 public static class IRenderableIpsoExtensions
 {

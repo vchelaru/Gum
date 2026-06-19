@@ -462,6 +462,58 @@ technique SpriteDrawing
         }
     }
 
+    // #3210: the Gum editor backs a Container with a LineRectangle (the outline visual), not the
+    // runtime's InvisibleRenderable, so the render-target effect must be carried via the shared
+    // IRenderTargetRenderable interface that both implement. Mirror the editor's setup here: a GUE
+    // whose contained renderable is a LineRectangle, made a render target with a SourceShaderFile.
+    [Fact]
+    public void SourceShaderFile_GraysThePixels_WhenContainerRenderableIsLineRectangle()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        GraphicsDevice gd = game.GraphicsDevice;
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+
+        string fxPath = WriteTempShader(GrayscaleFx);
+        try
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = path => CompileShader(gd, path);
+
+            GraphicalUiElement container = new(new RenderingLibrary.Math.Geometry.LineRectangle(managers));
+            container.X = 0;
+            container.Y = 0;
+            container.Width = 64;
+            container.Height = 64;
+
+#pragma warning disable CS0618
+            ColoredRectangleRuntime red = new();
+#pragma warning restore CS0618
+            red.Width = 64;
+            red.Height = 64;
+            red.Color = Color.Red;
+            container.AddChild(red);
+
+            container.AddToManagers(managers, null);
+            container.UpdateLayout();
+
+            // Route through the string property path exactly as the editor's variable grid does.
+            container.SetProperty("IsRenderTarget", true);
+            container.SetProperty("SourceShaderFile", fxPath);
+
+            Color withEffect = RenderToCaptureAndSample(gd, renderer, managers);
+
+            Math.Abs(withEffect.R - withEffect.G).ShouldBeLessThan(25);
+            Math.Abs(withEffect.R - withEffect.B).ShouldBeLessThan(25);
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            File.Delete(fxPath);
+        }
+    }
+
     [Fact]
     public void SourceShaderFile_IsNoOp_WhenNoResolverRegistered()
     {
