@@ -23,11 +23,9 @@ The Texture Filter property controls how sprites and other textures are sampled 
 * **Point** (default) — nearest-neighbor sampling. Each screen pixel takes the color of the single nearest texel, so edges stay crisp and hard. This is the right choice for pixel-art, where blending would soften the intended look.
 * **Linear** — bilinear sampling. Each screen pixel blends the nearest texels, producing a smoothed, antialiased result when a texture is scaled. This usually looks better for high-resolution art and for UI that is rendered at many different sizes.
 
-You can change Texture Filter at any time in **Project Properties**. The editor preview updates immediately so you can compare the two.
+You can change Texture Filter at any time in **Project Properties**. The preview updates immediately so you can compare the two.
 
-{% hint style="warning" %}
-**Texture Filter currently affects only the editor preview.** The value is saved in the project, but the runtime does not yet apply it automatically — a game that loads the project still renders with **Point** filtering until you set the filter in code. See [Texture Filtering](../code/rendering/texture-filtering.md) for how to enable Linear filtering at runtime.
-{% endhint %}
+To control texture filtering from game code, see [Texture Filtering](../code/rendering/texture-filtering.md).
 
 {% hint style="warning" %}
 Screenshot needed: a side-by-side of the same scaled sprite rendered with **Point** vs **Linear** filtering in the editor.
