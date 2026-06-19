@@ -1,4 +1,6 @@
+using System;
 using System.IO;
+using System.Linq;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
 using ShadowDusk.Compiler;
@@ -19,42 +21,51 @@ internal static class RenderTargetShaderResolver
 {
     /// <summary>
     /// Compiles the <c>.fx</c> at <paramref name="absolutePath"/> (already made absolute by the
-    /// runtime against <c>FileManager.RelativeDirectory</c>) into an <see cref="Effect"/>, or
-    /// returns <c>null</c> on any failure so resolution degrades per
-    /// <c>GraphicalUiElement.MissingFileBehavior</c> (the tool uses <c>ConsumeSilently</c>),
-    /// mirroring how a missing texture renders unshaded rather than crashing the editor.
+    /// runtime against <c>FileManager.RelativeDirectory</c>) into an <see cref="Effect"/>. On any
+    /// failure this <b>throws with a descriptive message</b> rather than silently returning null, so
+    /// the reason is visible: the caller
+    /// (<c>CustomSetPropertyOnRenderable.AssignSourceShaderFileOnContainer</c>) includes the thrown
+    /// message in the error it reports to the tool's Output window, and honors
+    /// <c>GraphicalUiElement.MissingFileBehavior</c> (the tool uses <c>ConsumeSilently</c>, so the
+    /// container just renders unshaded after the message is logged). Failure modes surfaced this
+    /// way: GraphicsDevice not ready, file missing, ShadowDusk compile errors, and KNI rejecting the
+    /// compiled bytecode (or a native compiler binary failing to load).
     /// </summary>
     public static object? Resolve(string absolutePath)
     {
         // The GraphicsDevice only exists once the wireframe is initialized; the resolver is invoked
-        // during rendering, so it is normally present. Guard anyway — a transient null degrades to
-        // unshaded rather than throwing.
+        // during rendering, so it is normally present.
         GraphicsDevice? graphicsDevice = SystemManagers.Default?.Renderer?.GraphicsDevice;
-        // File.Exists is false for null/empty too, so it covers a missing path as well as a missing
-        // file. The runtime only invokes the resolver with a non-empty absolute path, so this is
-        // really guarding the GraphicsDevice-not-ready and file-missing cases.
-        if (graphicsDevice == null || !File.Exists(absolutePath))
+        if (graphicsDevice == null)
         {
-            return null;
+            throw new InvalidOperationException(
+                "Cannot compile the render-target shader: the GraphicsDevice is not available yet.");
         }
 
-        try
+        // File.Exists is false for null/empty too; the runtime only calls the resolver with a
+        // non-empty absolute path, so this really reports a genuinely missing file.
+        if (!File.Exists(absolutePath))
         {
-            EffectCompiler compiler = new EffectCompiler();
-            // The tool renders through KNI's DirectX 11 backend (nkast.Kni.Platform.WinForms.DX11),
-            // so the shader must be compiled to DXBC for the device to accept it — not the OpenGL
-            // target a DesktopGL game would use.
-            var result = compiler.Compile(
-                File.ReadAllText(absolutePath),
-                new CompilerOptions { Target = PlatformTarget.DirectX });
+            throw new FileNotFoundException("Render-target shader file not found: " + absolutePath, absolutePath);
+        }
 
-            return result.IsSuccess ? new Effect(graphicsDevice, result.Value.Data) : null;
-        }
-        catch
+        EffectCompiler compiler = new EffectCompiler();
+        // The tool renders through KNI's DirectX 11 backend (nkast.Kni.Platform.WinForms.DX11), so
+        // the shader must be compiled to DXBC for the device to accept it — not the OpenGL target a
+        // DesktopGL game would use.
+        Result<CompiledShader, ShaderError[]> result = compiler.Compile(
+            File.ReadAllText(absolutePath),
+            new CompilerOptions { Target = PlatformTarget.DirectX });
+
+        if (result.IsFailure)
         {
-            // A throw here is typically a missing/unloadable native compiler asset rather than a
-            // shader-syntax error; treat it as a failed resolve so the container renders unshaded.
-            return null;
+            throw new InvalidOperationException(
+                "ShadowDusk could not compile the render-target shader '" + absolutePath + "':\n" +
+                string.Join("\n", result.Error.Select(error => error.Message)));
         }
+
+        // If KNI rejects the compiled bytecode (or a native compiler binary fails to load), the
+        // resulting exception propagates and is surfaced by the caller just like a compile error.
+        return new Effect(graphicsDevice, result.Value.Data);
     }
 }

@@ -304,6 +304,25 @@ technique SpriteDrawing
     // ---- SourceShaderFile (issue #3206): the .fx file-reference path that resolves into
     // RenderTargetEffect via a pluggable, consumer-registered resolver. ----
 
+    // Diagnostic for #3210: the Gum tool renders through KNI's DirectX 11 backend, so its resolver
+    // (RenderTargetShaderResolver) compiles for PlatformTarget.DirectX — a path none of the
+    // OpenGL-targeted tests in this file exercise. Verify ShadowDusk can actually produce DXBC for
+    // the grayscale shader (no GraphicsDevice needed for the compile itself).
+    [Fact]
+    public void Compile_GrayscaleShader_ForDirectXTarget_Succeeds()
+    {
+        EffectCompiler compiler = new();
+        Result<CompiledShader, ShaderError[]> compileResult =
+            compiler.Compile(GrayscaleFx, new CompilerOptions { Target = PlatformTarget.DirectX });
+
+        compileResult.IsSuccess.ShouldBeTrue(
+            compileResult.IsFailure
+                ? "ShadowDusk failed to compile the grayscale shader for DirectX:\n" +
+                    string.Join("\n", compileResult.Error.Select(e => e.Message))
+                : "");
+        compileResult.Value.Data.Length.ShouldBeGreaterThan(0);
+    }
+
     [Fact]
     public void SourceShaderFile_CompilesOnce_WhenReferencedByMultipleContainers()
     {
