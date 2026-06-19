@@ -610,16 +610,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     #endregion
 
     public bool IsRenderTarget => mContainedObjectAsIpso?.IsRenderTarget == true;
-
-    /// <summary>
-    /// The optional render-target post-process effect carried by the contained renderable
-    /// (see <see cref="RenderingLibrary.Graphics.RenderableBase.RenderTargetEffect"/>).
-    /// Mirrors <see cref="IsRenderTarget"/>: the renderer reads this on the contained
-    /// renderable for a top-level render target, but on this wrapper when the render target
-    /// is nested (the walk yields the wrapper, not the contained renderable).
-    /// </summary>
-    public object? RenderTargetEffect => (mContainedObjectAsIpso as global::RenderingLibrary.Graphics.RenderableBase)?.RenderTargetEffect;
-
     int IRenderableIpso.Alpha => mContainedObjectAsIpso?.Alpha ?? 255;
 
     public GeneralUnitType XUnits
