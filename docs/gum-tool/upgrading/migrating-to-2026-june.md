@@ -4,10 +4,6 @@
 
 This page discusses breaking changes and other considerations when migrating from `2026 May` to `2026 June`.
 
-{% hint style="warning" %}
-The `2026 June` version of Gum has not yet been released. This page is a work in progress and will be updated when the release is published. In the meantime, if you want to use the changes described below, you will need to build Gum from source.
-{% endhint %}
-
 ## What Changed at a Glance
 
 `2026 June` finishes the namespace unification that began in `2026 May`. The setup/boot API and the input API move out of the platform-specific `MonoGameGum` / `RaylibGum` namespaces and into the unified `Gum` / `Gum.Input` namespaces ([syntax version 3](syntax-versions.md)). The code generator now emits the unified `using` directives, and a bundled Roslyn analyzer rewrites most call sites for you.
@@ -52,7 +48,7 @@ Most changes are **soft breaks**: a permanent `[Obsolete]` shim keeps the old na
 
 To upgrade the Gum tool:
 
-1. Download Gum.zip from the release on Github (link will be added once published)
+1. Download Gum.zip from the [June 19, 2026 release on GitHub](https://github.com/vchelaru/Gum/releases/tag/Release_June_19_2026)
 2. Delete the old tool from your machine
 3. Unzip the gum tool to the same location as to not break any file associations
 {% endtab %}
@@ -64,7 +60,7 @@ Run the upgrade `gum upgrade` or `~/bin/gum upgrade`
 
 ## Upgrading the Runtime
 
-The `2026.6` NuGet packages have not yet been published. Once released, upgrade your Gum NuGet packages to the new version. For more information, see the NuGet packages for your particular platform:
+The `2026 June` runtime ships as NuGet version **`2026.6.19.1`**. Upgrade your Gum NuGet packages to this version. For more information, see the NuGet packages for your particular platform:
 
 * MonoGame - [https://www.nuget.org/packages/Gum.MonoGame/](https://www.nuget.org/packages/Gum.MonoGame/)
 * KNI - [https://www.nuget.org/packages/Gum.KNI/](https://www.nuget.org/packages/Gum.KNI/)

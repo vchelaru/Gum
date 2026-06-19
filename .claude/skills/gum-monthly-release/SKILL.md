@@ -74,7 +74,7 @@ What you produce in *this* step is just the **batched PR-number list** for that 
 
 **Filter out GitBook auto-sync commits** (`GITBOOK-NNN: ...`) — these are docs auto-syncs from the GitBook integration, not changelog material.
 
-**Filter out FRB-integration fix PRs.** PRs titled "FRB fixes" / "Oops fixed FRB" / similar are FlatRedBall-1-integration patches. FRB1 has a different syntax than the rest of Gum and breaks under refactors from time to time; the maintainer has stated these never need to be called out in Gum release notes. Always omit them — do **not** put them in Open Questions either.
+**Filter out FRB-integration PRs entirely — and that includes the What's Changed list, not just the curated sections.** This covers more than PRs literally titled "FRB fixes" / "Oops fixed FRB": any FlatRedBall-1 build-compat patch qualifies — e.g. titles like "Fix FRB build: ...", PRs that gate Gum code under `#if !FRB`, or "Added #ifs and file includes into FRB". FRB1 has a different syntax than the rest of Gum and breaks under refactors from time to time; the maintainer has stated these **never** need to be called out in Gum release notes — not in the curated highlights and not in the complete What's Changed list. Always omit them, do **not** put them in Open Questions, and do **not** ask the user whether to keep them.
 
 **Filter out internal-only plugin/code-organization renames** unless the maintainer explicitly says otherwise. Renames like `InternalPlugin` → `PriorityPlugin` are internal even if the symbol looks public — first-party plugin classes are not part of the consumer API. When in doubt, surface in Open Questions, not as a Breaking Change.
 
@@ -188,6 +188,9 @@ Below the curated sections (and above the Full Changelog placeholder), emit a `#
 git log --no-merges <prev-tag>..origin/main --format="%s" \
   | grep -vE '^GITBOOK-' \
   | grep -vE '^FRB fixes' \
+  | grep -vE '^Oops fixed FRB' \
+  | grep -vE '^Fix FRB build' \
+  | grep -vE '#if !FRB' \
   | grep -vE '^Added #ifs and file includes into FRB' \
   | sed 's/^/- /'
 ```
