@@ -319,7 +319,7 @@ public class StandardElementsManager
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsRenderTarget", Category = "Rendering" });
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceShaderFile", IsFile = true, Category = "Rendering",
-                DetailText = "A .fx post-process shader applied when this render-target Container is drawn back to the screen. Only used when Is Render Target is checked, and requires a consumer-registered shader resolver to render." });
+                DetailText = "A .fx post-process shader applied to this container's contents when it is drawn to the screen." });
 
             var alphaValue = CreateAlphaVariable();
             stateSave.Variables.Add(alphaValue);
