@@ -354,6 +354,13 @@ public class GumService : IGumService
     /// </param>
     public void ExportSnapshot(string filePath, bool shake = true)
     {
+        // Resolve to an absolute path up front. A bare/relative file name (e.g. "MyTestSnapshot.gumx", as
+        // the samples pass) would otherwise make Path.GetDirectoryName below return "", skipping the whole
+        // directory block that extracts embedded textures and copies referenced files -- leaving those
+        // textures unresolved (blank in the tool). project.Save resolves relative paths against the current
+        // directory anyway, so this changes only the directory computation, not where the project is written.
+        filePath = Path.GetFullPath(filePath);
+
         // A code-only game may never have triggered standards population; ensure the catalog exists
         // before reading it (as the serializer's baseline) and writing it (as the project's standards).
         if (StandardElementsManager.Self.DefaultStates == null)
@@ -412,6 +419,10 @@ public class GumService : IGumService
             {
                 Directory.CreateDirectory(Path.Combine(directory, ElementReference.ComponentSubfolder));
             }
+
+            // Save embedded/generated textures (e.g. the Forms default visuals' shared sheet) to files and
+            // fill their SourceFile paths BEFORE Save, so the written XML carries the resolved paths.
+            ExtractUnresolvedTextures(serializer, directory);
         }
 
         project.Save(filePath, saveElements: true);
@@ -462,8 +473,26 @@ public class GumService : IGumService
     // path; absolute references already resolve on their own, and missing files are skipped (logged).
     private static void CopyReferencedFiles(IRuntimeSnapshotSerializer serializer, ScreenSave screen, string snapshotDirectory)
     {
+        // Textures extracted from embedded/generated sources are already written next to the project by
+        // ExtractUnresolvedTextures, yet their now-filled SourceFile paths also surface in GetReferencedFiles.
+        // Skip them here: they don't exist under the content directory (so the copy would just log a miss),
+        // and a coincidentally same-named content file must not clobber the extracted PNG.
+        HashSet<string> extractedPaths = new();
+        foreach (UnresolvedTextureReference reference in serializer.UnresolvedTextureReferences)
+        {
+            if (reference.SourceFileVariable.Value is string extractedPath && !string.IsNullOrEmpty(extractedPath))
+            {
+                extractedPaths.Add(extractedPath);
+            }
+        }
+
         foreach (string referencedPath in serializer.GetReferencedFiles(screen))
         {
+            if (extractedPaths.Contains(referencedPath))
+            {
+                continue;
+            }
+
             if (!FileManager.IsRelative(referencedPath))
             {
                 continue;
@@ -493,6 +522,71 @@ public class GumService : IGumService
                 Directory.CreateDirectory(destinationDirectory);
             }
             File.Copy(absoluteSource, destination, overwrite: true);
+        }
+    }
+
+    // Extracts textures the serializer captured but could not resolve to a file path -- embedded or
+    // runtime-generated Texture2Ds (notably the Forms default visuals' shared UISpriteSheet) whose Name is
+    // unset, so the snapshot has valid texture coordinates but no file to slice. Saves each unique texture
+    // to a PNG next to the project and writes the relative path into its placeholder SourceFile variable so
+    // the slices render in the tool. The actual Texture2D.SaveAsPng is XNALIKE-only; on other backends the
+    // textures stay unresolved (no regression -- they were blank before this existed).
+    private static void ExtractUnresolvedTextures(IRuntimeSnapshotSerializer serializer, string snapshotDirectory)
+    {
+#if XNALIKE
+        if (serializer.UnresolvedTextureReferences.Count == 0)
+        {
+            return;
+        }
+
+        Directory.CreateDirectory(snapshotDirectory);
+
+        FillUnresolvedTextureSourceFiles(serializer.UnresolvedTextureReferences, (texture, relativePath) =>
+        {
+            if (texture is not Texture2D texture2D)
+            {
+                return false;
+            }
+            try
+            {
+                using FileStream stream = File.Create(Path.Combine(snapshotDirectory, relativePath));
+                texture2D.SaveAsPng(stream, texture2D.Width, texture2D.Height);
+                return true;
+            }
+            catch (Exception e)
+            {
+                System.Diagnostics.Debug.WriteLine($"Snapshot: failed to save embedded texture: {e.Message}");
+                return false;
+            }
+        });
+#endif
+    }
+
+    // Pure orchestration over the serializer's unresolved textures: dedupe by texture instance, give each a
+    // relative file name, persist it via the supplied saver, and write the resulting path into the placeholder
+    // SourceFile variable. The saver seam keeps the GPU-bound Texture2D.SaveAsPng out of this method so the
+    // dedup/path-fill logic is testable headlessly. A texture the saver declines (returns false) is left
+    // unresolved -- its placeholder keeps its null value, rendering blank rather than dangling on a bad path.
+    internal static void FillUnresolvedTextureSourceFiles(
+        IReadOnlyList<UnresolvedTextureReference> references, Func<object, string, bool> trySaveTexture)
+    {
+        // Dedupe by texture instance (not value): the one shared sheet -> one file, many filled placeholders.
+        Dictionary<object, string> savedRelativePaths = new(ReferenceEqualityComparer.Instance);
+        int index = 0;
+        foreach (UnresolvedTextureReference reference in references)
+        {
+            if (!savedRelativePaths.TryGetValue(reference.Texture, out string? relativePath))
+            {
+                string candidate = $"EmbeddedTexture{index}.png";
+                if (!trySaveTexture(reference.Texture, candidate))
+                {
+                    continue;
+                }
+                relativePath = candidate;
+                index++;
+                savedRelativePaths[reference.Texture] = relativePath;
+            }
+            reference.SourceFileVariable.Value = relativePath;
         }
     }
 
