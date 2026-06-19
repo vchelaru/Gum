@@ -119,6 +119,19 @@ instance-level `SuspendLayout` (not `IsAllLayoutSuspended`), fonts still load im
 one disk read per property assignment. This is the `MonoGame ApplyState` path; fixing it
 requires solving the cascading layout problem described in `CustomSetPropertyOnRenderable`.
 
+### Why deferral is font-specific: 1:1 file references load immediately
+
+Deferral exists only because ~6 font properties (Font, FontSize, IsBold, IsItalic,
+UseFontSmoothing, OutlineThickness) collapse into a *single* cache filename — without
+`isFontDirty`, each property assignment during a load would trigger a redundant intermediate disk
+read of the same `.fnt`.
+
+A 1:1 file-reference asset has no such many-to-one mapping: one property holds one path that maps
+to one file. So textures (`SourceFile` → `AssignSourceFileOnSprite`) and render-target shaders
+(`SourceShaderFile` → `AssignSourceShaderFileOnContainer`, #3206) resolve **immediately** on
+assignment — no dirty flag, no deferral. Both cache the resolved asset in `LoaderManager` by
+normalized path so a file referenced by multiple elements loads once.
+
 ---
 
 ## Key Files

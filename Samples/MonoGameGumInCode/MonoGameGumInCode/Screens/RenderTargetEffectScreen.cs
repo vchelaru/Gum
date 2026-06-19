@@ -1,3 +1,4 @@
+using System.IO;
 using System.Linq;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
@@ -10,57 +11,24 @@ using ShadowDusk.Core;
 namespace MonoGameGumInCode.Screens;
 
 /// <summary>
-/// Demonstrates <see cref="ContainerRuntime.RenderTargetEffect"/> (issue #816): a shader applied
-/// to a render-target container when its cached texture is blitted back to the screen, acting as
-/// a post-process over the whole container.
-///
-/// Left is the unmodified bear. Right is the same bear inside a render-target container with a
-/// grayscale shader assigned. The .fx is compiled at runtime with ShadowDusk (no content
-/// pipeline); the resulting bytes are handed to a MonoGame <see cref="Effect"/> that Gum core
-/// neither compiles nor loads.
+/// Demonstrates two ways to apply a post-process shader to a render-target container (the shader
+/// runs when the container's cached texture is blitted back to the screen, acting as a post-process
+/// over the whole container):
+/// <list type="bullet">
+/// <item>Middle cell — compile an <see cref="Effect"/> in code and assign it to
+/// <see cref="ContainerRuntime.RenderTargetEffect"/> directly (issue #816).</item>
+/// <item>Right cell — reference the .fx by path via <see cref="ContainerRuntime.SourceShaderFile"/>
+/// (issue #3206). Gum resolves the path through the app-registered
+/// <see cref="Gum.Wireframe.CustomSetPropertyOnRenderable.RenderTargetEffectResolver"/> (wired in
+/// <c>Game1.Initialize</c>); Gum core itself neither compiles nor loads the shader.</item>
+/// </list>
+/// Both cells use the same <c>Content/Grayscale.fx</c>, compiled at runtime with ShadowDusk (no
+/// content pipeline). Left is the unmodified bear for comparison.
 /// </summary>
 internal class RenderTargetEffectScreen : FrameworkElement
 {
-    // Canonical MonoGame 2D post-process effect: the technique declares only a pixel shader, so
-    // SpriteBatch supplies the vertex transform. Compiled for the OpenGL (DesktopGL) target.
-    const string GrayscaleFx = @"
-#if OPENGL
-    #define VS_SHADERMODEL vs_3_0
-    #define PS_SHADERMODEL ps_3_0
-#else
-    #define VS_SHADERMODEL vs_4_0_level_9_1
-    #define PS_SHADERMODEL ps_4_0_level_9_1
-#endif
-
-Texture2D SpriteTexture;
-
-sampler2D SpriteTextureSampler = sampler_state
-{
-    Texture = <SpriteTexture>;
-};
-
-struct VertexShaderOutput
-{
-    float4 Position : SV_POSITION;
-    float4 Color : COLOR0;
-    float2 TextureCoordinates : TEXCOORD0;
-};
-
-float4 MainPS(VertexShaderOutput input) : COLOR0
-{
-    float4 color = tex2D(SpriteTextureSampler, input.TextureCoordinates) * input.Color;
-    float gray = dot(color.rgb, float3(0.299, 0.587, 0.114));
-    return float4(gray, gray, gray, color.a);
-}
-
-technique SpriteDrawing
-{
-    pass P0
-    {
-        PixelShader = compile PS_SHADERMODEL MainPS();
-    }
-};
-";
+    // Relative to FileManager.RelativeDirectory (set to "Content/" by GumService.Initialize).
+    private const string ShaderFileName = "Grayscale.fx";
 
     public RenderTargetEffectScreen() : base(new ContainerRuntime())
     {
@@ -77,11 +45,16 @@ technique SpriteDrawing
         root.StackSpacing = 16;
         this.AddChild(root);
 
-        Effect grayscale = TryCompileGrayscale(out string status);
+        // Compile once up front: this drives the middle cell (RenderTargetEffect set in code) and
+        // the status label. The right cell only wires SourceShaderFile when this succeeds — runtime
+        // MissingFileBehavior is ThrowException, so resolving a shader that can't compile would
+        // throw; gating on a known-good compile keeps the demo degrading the same way both cells do.
+        Effect inCodeEffect =
+            CompileEffectFromFile(ToolsUtilities.FileManager.RelativeDirectory + ShaderFileName, out string status);
 
         var statusLabel = new TextRuntime();
         statusLabel.Text = status;
-        statusLabel.Color = grayscale != null ? Color.White : Color.OrangeRed;
+        statusLabel.Color = inCodeEffect != null ? Color.White : Color.OrangeRed;
         statusLabel.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         statusLabel.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         statusLabel.Width = 0;
@@ -98,13 +71,18 @@ technique SpriteDrawing
         root.AddChild(row);
 
         // Left: the unmodified bear (no render target, no shader).
-        row.AddChild(BuildCell("Original", effect: null));
+        row.AddChild(BuildCell("Original", effect: null, sourceShaderFile: null));
 
-        // Right: the same bear inside a render-target container with the grayscale shader.
-        row.AddChild(BuildCell("Render target + grayscale shader", effect: grayscale));
+        // Middle: the grayscale Effect compiled in code and assigned directly.
+        row.AddChild(BuildCell("RenderTargetEffect (set in code)", effect: inCodeEffect, sourceShaderFile: null));
+
+        // Right: the same shader referenced by file path; Gum's registered resolver loads it.
+        row.AddChild(BuildCell("SourceShaderFile (.fx reference)",
+            effect: null,
+            sourceShaderFile: inCodeEffect != null ? ShaderFileName : null));
     }
 
-    private static ContainerRuntime BuildCell(string caption, Effect effect)
+    private static ContainerRuntime BuildCell(string caption, Effect effect, string sourceShaderFile)
     {
         var cell = new ContainerRuntime();
         cell.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
@@ -129,12 +107,26 @@ technique SpriteDrawing
             holder.IsRenderTarget = true;
             holder.RenderTargetEffect = effect;
         }
+        else if (!string.IsNullOrEmpty(sourceShaderFile))
+        {
+            holder.IsRenderTarget = true;
+            holder.SourceShaderFile = sourceShaderFile;
+        }
 
         cell.AddChild(holder);
         return cell;
     }
 
-    private static Effect TryCompileGrayscale(out string status)
+    /// <summary>
+    /// Compiles the .fx text at <paramref name="path"/> into a MonoGame <see cref="Effect"/> via
+    /// ShadowDusk (no content pipeline), or returns null on failure. This is also the body of the
+    /// <see cref="Gum.Wireframe.CustomSetPropertyOnRenderable.RenderTargetEffectResolver"/> the app
+    /// registers in <c>Game1.Initialize</c>, so a Container's <c>SourceShaderFile</c> resolves
+    /// through exactly this code.
+    /// </summary>
+    public static Effect CompileEffectFromFile(string path) => CompileEffectFromFile(path, out _);
+
+    private static Effect CompileEffectFromFile(string path, out string status)
     {
         var graphicsDevice = SystemManagers.Default.Renderer.GraphicsDevice;
         if (graphicsDevice == null)
@@ -143,15 +135,21 @@ technique SpriteDrawing
             return null;
         }
 
+        if (!File.Exists(path))
+        {
+            status = "SHADER FILE NOT FOUND: " + path;
+            return null;
+        }
+
         try
         {
             var compiler = new EffectCompiler();
             Result<CompiledShader, ShaderError[]> result =
-                compiler.Compile(GrayscaleFx, new CompilerOptions { Target = PlatformTarget.OpenGL });
+                compiler.Compile(File.ReadAllText(path), new CompilerOptions { Target = PlatformTarget.OpenGL });
 
             if (result.IsSuccess)
             {
-                status = "Shader compiled at runtime (ShadowDusk). The right bear renders grayscale.";
+                status = "Shader compiled at runtime (ShadowDusk). Middle and right bears render grayscale.";
                 return new Effect(graphicsDevice, result.Value.Data);
             }
 

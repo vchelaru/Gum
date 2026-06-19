@@ -108,6 +108,20 @@ public class CustomSetPropertyOnRenderable
     public static IInMemoryFontCreator? InMemoryFontCreator { get; set; }
 #endif
 
+    /// <summary>
+    /// Optional resolver that turns a render-target shader file reference (e.g. a <c>.fx</c> path
+    /// assigned via <c>ContainerRuntime.SourceShaderFile</c>) into a platform effect object, which
+    /// is stored in <see cref="RenderableBase.RenderTargetEffect"/>. Gum core ships no shader
+    /// loader; a separate opt-in library (the shader equivalent of Gum.Shapes) or the consumer
+    /// registers this — typically capturing its own graphics device in the closure. The returned
+    /// object is boxed into the backend-agnostic <see cref="RenderableBase.RenderTargetEffect"/>
+    /// slot (on xnalike, a <c>Microsoft.Xna.Framework.Graphics.Effect</c>). If null, assigning a
+    /// shader file is a graceful no-op and the container renders unshaded. Return null to signal a
+    /// failed load (missing file / compile error); resolution then honors
+    /// <see cref="GraphicalUiElement.MissingFileBehavior"/>, mirroring sprite source-file handling.
+    /// </summary>
+    public static Func<string, object?>? RenderTargetEffectResolver { get; set; }
+
     public static event Action<string>? PropertyAssignmentError;
 
     /// <summary>
@@ -173,7 +187,7 @@ public class CustomSetPropertyOnRenderable
         }
         else if (renderableIpso is InvisibleRenderable)
         {
-            handled = TrySetPropertyOnInvisbileRenderable(renderableIpso, propertyName, value, handled);
+            handled = TrySetPropertyOnInvisbileRenderable(renderableIpso, graphicalUiElement, propertyName, value, handled);
         }
 
         if(!handled && AdditionalPropertyOnRenderable != null)
@@ -269,13 +283,17 @@ public class CustomSetPropertyOnRenderable
         return handled;
     }
 
-    private static bool TrySetPropertyOnInvisbileRenderable(IRenderableIpso renderableIpso, string propertyName, object value, bool handled)
+    private static bool TrySetPropertyOnInvisbileRenderable(IRenderableIpso renderableIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value, bool handled)
     {
         bool didSet = false;
         switch (propertyName)
         {
             case "IsRenderTarget":
                 (renderableIpso as InvisibleRenderable).IsRenderTarget = value as bool? ?? false;
+                didSet = true;
+                break;
+            case "SourceShaderFile":
+                AssignSourceShaderFileOnContainer(renderableIpso as InvisibleRenderable, graphicalUiElement, value as string);
                 didSet = true;
                 break;
             case "Alpha":
@@ -296,6 +314,95 @@ public class CustomSetPropertyOnRenderable
         }
 
         return didSet;
+    }
+
+    /// <summary>
+    /// Resolves a render-target shader file reference (e.g. a <c>.fx</c> path) into a platform
+    /// effect via <see cref="RenderTargetEffectResolver"/> and stores it in the container's
+    /// <see cref="RenderableBase.RenderTargetEffect"/> slot. Mirrors
+    /// <see cref="AssignSourceFileOnSprite"/>: the resolved effect is cached in
+    /// <see cref="LoaderManager"/> by normalized path so a .fx referenced by multiple containers
+    /// loads once, and a failed resolve honors <see cref="GraphicalUiElement.MissingFileBehavior"/>.
+    /// With no resolver registered this is a graceful no-op (the container renders unshaded),
+    /// matching how a missing texture degrades. Called internally by the string property path.
+    /// </summary>
+    public static void AssignSourceShaderFileOnContainer(InvisibleRenderable invisibleRenderable, GraphicalUiElement graphicalUiElement, string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            invisibleRenderable.RenderTargetEffect = null;
+            return;
+        }
+
+        // No resolver registered: render unshaded rather than crash. A separate opt-in library
+        // (the shader equivalent of Gum.Shapes) or the consumer registers the resolver.
+        if (RenderTargetEffectResolver == null)
+        {
+            return;
+        }
+
+        var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+
+        if (ToolsUtilities.FileManager.IsRelative(value) && ToolsUtilities.FileManager.IsUrl(value) == false)
+        {
+            value = ToolsUtilities.FileManager.RelativeDirectory + value;
+            value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
+        }
+
+        // LoaderManager caches by normalized path (same convention as the texture cache) so a .fx
+        // shared by multiple containers compiles/loads once. The resolver only does path -> effect.
+        if (loaderManager.CacheTextures)
+        {
+            var cachedEffect = loaderManager.GetDisposable(value);
+            if (cachedEffect != null)
+            {
+                invisibleRenderable.RenderTargetEffect = cachedEffect;
+                return;
+            }
+        }
+
+        object? resolvedEffect = null;
+        Exception? resolveException = null;
+        try
+        {
+            resolvedEffect = RenderTargetEffectResolver(value);
+        }
+        catch (Exception ex)
+        {
+            resolveException = ex;
+        }
+
+        if (resolvedEffect == null)
+        {
+            // Resolver registered but couldn't produce an effect (missing .fx or compile error).
+            // Mirror Sprite source-file handling: honor MissingFileBehavior, else report the error.
+            string message = $"Error setting SourceShaderFile on Container";
+            if (graphicalUiElement.Tag != null)
+            {
+                message += $" in {graphicalUiElement.Tag}";
+            }
+            message += $"\n{value}";
+            message += "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory";
+            message += "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
+            if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
+            {
+                if (ObjectFinder.Self.GumProjectSave == null)
+                {
+                    message += "\nNo Gum project has been loaded";
+                }
+                throw new System.IO.FileNotFoundException(message, resolveException);
+            }
+            invisibleRenderable.RenderTargetEffect = null;
+            PropertyAssignmentError?.Invoke(resolveException != null ? message + "\n" + resolveException.ToString() : message);
+            return;
+        }
+
+        if (loaderManager.CacheTextures && resolvedEffect is IDisposable disposableEffect)
+        {
+            loaderManager.AddDisposable(value, disposableEffect);
+        }
+
+        invisibleRenderable.RenderTargetEffect = resolvedEffect;
     }
 
     private static bool TrySetPropertyOnNineSlice(NineSlice nineSlice, GraphicalUiElement graphicalUiElement, string propertyName, object value, bool handled)

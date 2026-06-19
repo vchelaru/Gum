@@ -44,6 +44,11 @@
     <None Update="Content\**\*.achx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <!-- Raw .fx text (NOT built through MGCB) — RenderTargetEffectScreen compiles it at runtime
+         via ShadowDusk and references it by path through ContainerRuntime.SourceShaderFile (#3206). -->
+    <None Update="Content\**\*.fx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Content\OutlinedFont\" />
