@@ -16,4 +16,20 @@ public class InvisibleRenderable : BaseTestClass
         var clone = sut.Clone() as RenderingLibrary.Graphics.InvisibleRenderable;
         clone.ShouldNotBeNull();
     }
+
+    [Fact]
+    public void RenderTargetEffect_ShouldDefaultToNull()
+    {
+        RenderingLibrary.Graphics.InvisibleRenderable sut = new();
+        sut.RenderTargetEffect.ShouldBeNull();
+    }
+
+    [Fact]
+    public void RenderTargetEffect_ShouldRoundTrip()
+    {
+        RenderingLibrary.Graphics.InvisibleRenderable sut = new();
+        object effect = new object();
+        sut.RenderTargetEffect = effect;
+        sut.RenderTargetEffect.ShouldBeSameAs(effect);
+    }
 }

@@ -70,6 +70,13 @@ public class ContainerRuntimeTests
     }
 
     [Fact]
+    public void RenderTargetEffect_ShouldDefaultToNull()
+    {
+        ContainerRuntime sut = new();
+        sut.RenderTargetEffect.ShouldBeNull();
+    }
+
+    [Fact]
     public void Visible_ShouldBeTrue_ByDefault()
     {
         ContainerRuntime sut = new();

@@ -135,7 +135,7 @@ public class SpriteRenderer
 
     }
 
-    public void BeginSpriteBatch(RenderStateVariables renderStates, Layer layer, BeginType beginType, Camera camera, object objectStartingSpriteBatch)
+    public void BeginSpriteBatch(RenderStateVariables renderStates, Layer layer, BeginType beginType, Camera camera, object objectStartingSpriteBatch, Effect? effectOverride = null)
     {
         // Use the full camera transform for both UsingEffect and non-UsingEffect paths.
         // Historically the UsingEffect branch returned a layer-zoom-only matrix because the
@@ -185,7 +185,15 @@ public class SpriteRenderer
 
         Effect effectiveEffect = null;
 
-        if (Renderer.UseCustomEffectRendering)
+        // A render-target container can supply its own post-process shader. When present it
+        // replaces Gum's BasicEffect/CustomEffect for this Begin: the override handles its own
+        // pixel work and receives the vertex transform via the SpriteBatch transformMatrix
+        // (the same matrix shapes consume), so the blit stays aligned with the rest of the layer.
+        if (effectOverride != null)
+        {
+            effectiveEffect = effectOverride;
+        }
+        else if (Renderer.UseCustomEffectRendering)
         {
             var effectManager = Renderer.CustomEffectManager;
 
