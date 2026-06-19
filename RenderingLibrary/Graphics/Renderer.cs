@@ -924,12 +924,13 @@ public class Renderer : IRenderer
         renderTargetRenderableSprite.Width = renderTarget.Width / Camera.Zoom;
         renderTargetRenderableSprite.Height = renderTarget.Height / Camera.Zoom;
 
-        // The main-pass walk yields the contained renderable (a RenderableBase) for a top-level
-        // render target, but the GraphicalUiElement wrapper for a nested one. The effect slot
-        // lives on RenderableBase (a runtime-specific concern, deliberately not on the GUE base),
-        // so for the wrapper we read it off its contained RenderableComponent.
-        var renderTargetEffect = ((renderable as RenderableBase)
-            ?? ((renderable as Gum.Wireframe.GraphicalUiElement)?.RenderableComponent as RenderableBase))
+        // The main-pass walk yields the contained renderable for a top-level render target, but the
+        // GraphicalUiElement wrapper for a nested one. The effect slot lives on the shared
+        // IRenderTargetRenderable interface (implemented by the runtime's RenderableBase containers
+        // AND the editor's LineRectangle containers), so read it directly off the renderable, or off
+        // the wrapper's contained RenderableComponent.
+        var renderTargetEffect = ((renderable as IRenderTargetRenderable)
+            ?? ((renderable as Gum.Wireframe.GraphicalUiElement)?.RenderableComponent as IRenderTargetRenderable))
             ?.RenderTargetEffect as Effect;
 
         if (renderTargetEffect == null)

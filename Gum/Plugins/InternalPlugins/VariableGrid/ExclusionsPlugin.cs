@@ -54,9 +54,9 @@ public class ExclusionsPlugin : PriorityPlugin
         switch(rootName)
         {
             case "Alpha":
-                return GetIfAlphaIsExcluded(finder);
             case "Blend":
-                return GetIfBlendIsExcluded(finder);
+            case "SourceShaderFile":
+                return GetIfRenderTargetOnlyVariableIsExcluded(finder);
             case "AutoGridHorizontalCells":
             case "AutoGridVerticalCells":
                 return GetIfAutoGridIsExcluded(finder);
@@ -139,19 +139,10 @@ public class ExclusionsPlugin : PriorityPlugin
         }
     }
 
-    private bool GetIfBlendIsExcluded(RecursiveVariableFinder finder)
+    // Alpha, Blend, and SourceShaderFile only have an effect on a render-target Container, so hide
+    // them on a non-render-target Container (mirroring how the runtime ignores them there).
+    private bool GetIfRenderTargetOnlyVariableIsExcluded(RecursiveVariableFinder finder)
     {
-        if (IsSelectionContainer)
-        {
-            return finder.GetValue("IsRenderTarget") as bool? == false;
-        }
-        return false;
-    }
-
-
-    private bool GetIfAlphaIsExcluded(RecursiveVariableFinder finder)
-    {
-
         if (IsSelectionContainer)
         {
             return finder.GetValue("IsRenderTarget") as bool? == false;

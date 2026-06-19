@@ -145,3 +145,10 @@ Set `IsExpanded = false` on the `MemberCategory` before passing to `SetCategorie
 ### Forcing a full grid rebuild
 
 Call `PropertyGridManager.RefreshEntireGrid(force: true)`. The `force` flag bypasses the same-target optimization and always recreates categories.
+
+### Writing a variable's `DetailText` (the grid help blurb)
+
+A `VariableSave.DetailText` renders as the help text under that variable in the Variables tab. It is **end-user authoring help shown inside the running tool**, so write it from the tool user's perspective and keep it to what they're choosing right now. Two recurring mistakes when adding a standard variable in `StandardElementsManager`:
+
+- **Don't restate a visibility condition the exclusion logic already enforces.** If the variable is hidden unless some other variable is set (via `ExclusionsPlugin`), the user only ever sees it when that condition holds — "only used when X is checked" is redundant noise.
+- **Don't leak runtime/integration/implementation details the tool user neither sees nor controls** — e.g. "requires a consumer-registered resolver," codegen specifics, or platform backends. Those belong in code-side XML docs or the runtime skill, not in tool UI help. (`SourceShaderFile` originally carried both mistakes because the text was lifted from the runtime/issue framing.)

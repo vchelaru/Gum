@@ -51,6 +51,9 @@
     <Variable Type="float" Name="Rotation" Category="Flip and Rotation" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
+    <Variable IsFile="true" Type="string" Name="SourceShaderFile" Category="Rendering" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
     <Variable Type="float" Name="StackSpacing" Category="Children" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>

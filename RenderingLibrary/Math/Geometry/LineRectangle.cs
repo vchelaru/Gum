@@ -9,7 +9,7 @@ using Matrix = System.Numerics.Matrix4x4;
 
 namespace RenderingLibrary.Math.Geometry;
 
-public class LineRectangle : SpriteBatchRenderableBase, IVisible, IRenderableIpso, ISetClipsChildren
+public class LineRectangle : SpriteBatchRenderableBase, IVisible, IRenderableIpso, ISetClipsChildren, IRenderTargetRenderable
 {
     #region Fields
 
@@ -191,6 +191,11 @@ public class LineRectangle : SpriteBatchRenderableBase, IVisible, IRenderableIps
         // containers in Gum, so adding it here too
         set;
     }
+
+    /// <inheritdoc/>
+    // Like IsRenderTarget above, this exists because the Gum editor backs Containers with a
+    // LineRectangle, so a render-target Container's post-process shader has to live here too.
+    public object? RenderTargetEffect { get; set; }
 
 
     public int Alpha => Color.A;

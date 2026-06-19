@@ -779,9 +779,14 @@ public partial class PropertyGridManager
         {
             foreach (var member in category.Members)
             {
-                if((member as StateReferencingInstanceMember)?.RootVariableName == "CustomFontFile")
+                var rootVariableName = (member as StateReferencingInstanceMember)?.RootVariableName;
+                if(rootVariableName == "CustomFontFile")
                 {
-                    member.PropertiesToSetOnDisplayer.Add("Filter", "Bitmap Font Generator Font|*.fnt");
+                    member.PropertiesToSetOnDisplayer["Filter"] = "Bitmap Font Generator Font|*.fnt";
+                }
+                else if(rootVariableName == "SourceShaderFile")
+                {
+                    member.PropertiesToSetOnDisplayer["Filter"] = "Effect File (*.fx)|*.fx";
                 }
             }
         }

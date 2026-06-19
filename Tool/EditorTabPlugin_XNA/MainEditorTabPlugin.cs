@@ -221,6 +221,10 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
         GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;
         CustomSetPropertyOnRenderable.FontService = Locator.GetRequiredService<IFontManager>();
+        // Gum core ships no shader loader, so the tool registers a resolver that compiles a
+        // render-target Container's SourceShaderFile (.fx) into an Effect at runtime (ShadowDusk),
+        // letting the WYSIWYG preview render shaded containers. Mirrors FontService above.
+        CustomSetPropertyOnRenderable.RenderTargetEffectResolver = EditorTabPlugin_XNA.Services.RenderTargetShaderResolver.Resolve;
         CustomSetPropertyOnRenderable.PropertyAssignmentError += HandlePropertyAssignmentError;
 
         AssignEvents();

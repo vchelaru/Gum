@@ -304,6 +304,25 @@ technique SpriteDrawing
     // ---- SourceShaderFile (issue #3206): the .fx file-reference path that resolves into
     // RenderTargetEffect via a pluggable, consumer-registered resolver. ----
 
+    // Diagnostic for #3210: the Gum tool renders through KNI's DirectX 11 backend, so its resolver
+    // (RenderTargetShaderResolver) compiles for PlatformTarget.DirectX — a path none of the
+    // OpenGL-targeted tests in this file exercise. Verify ShadowDusk can actually produce DXBC for
+    // the grayscale shader (no GraphicsDevice needed for the compile itself).
+    [Fact]
+    public void Compile_GrayscaleShader_ForDirectXTarget_Succeeds()
+    {
+        EffectCompiler compiler = new();
+        Result<CompiledShader, ShaderError[]> compileResult =
+            compiler.Compile(GrayscaleFx, new CompilerOptions { Target = PlatformTarget.DirectX });
+
+        compileResult.IsSuccess.ShouldBeTrue(
+            compileResult.IsFailure
+                ? "ShadowDusk failed to compile the grayscale shader for DirectX:\n" +
+                    string.Join("\n", compileResult.Error.Select(e => e.Message))
+                : "");
+        compileResult.Value.Data.Length.ShouldBeGreaterThan(0);
+    }
+
     [Fact]
     public void SourceShaderFile_CompilesOnce_WhenReferencedByMultipleContainers()
     {
@@ -431,6 +450,58 @@ technique SpriteDrawing
 
             // The .fx reference resolves through the string path (SetProperty) into RenderTargetEffect.
             container.SourceShaderFile = fxPath;
+            Color withEffect = RenderToCaptureAndSample(gd, renderer, managers);
+
+            Math.Abs(withEffect.R - withEffect.G).ShouldBeLessThan(25);
+            Math.Abs(withEffect.R - withEffect.B).ShouldBeLessThan(25);
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            File.Delete(fxPath);
+        }
+    }
+
+    // #3210: the Gum editor backs a Container with a LineRectangle (the outline visual), not the
+    // runtime's InvisibleRenderable, so the render-target effect must be carried via the shared
+    // IRenderTargetRenderable interface that both implement. Mirror the editor's setup here: a GUE
+    // whose contained renderable is a LineRectangle, made a render target with a SourceShaderFile.
+    [Fact]
+    public void SourceShaderFile_GraysThePixels_WhenContainerRenderableIsLineRectangle()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        GraphicsDevice gd = game.GraphicsDevice;
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+
+        string fxPath = WriteTempShader(GrayscaleFx);
+        try
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = path => CompileShader(gd, path);
+
+            GraphicalUiElement container = new(new RenderingLibrary.Math.Geometry.LineRectangle(managers));
+            container.X = 0;
+            container.Y = 0;
+            container.Width = 64;
+            container.Height = 64;
+
+#pragma warning disable CS0618
+            ColoredRectangleRuntime red = new();
+#pragma warning restore CS0618
+            red.Width = 64;
+            red.Height = 64;
+            red.Color = Color.Red;
+            container.AddChild(red);
+
+            container.AddToManagers(managers, null);
+            container.UpdateLayout();
+
+            // Route through the string property path exactly as the editor's variable grid does.
+            container.SetProperty("IsRenderTarget", true);
+            container.SetProperty("SourceShaderFile", fxPath);
+
             Color withEffect = RenderToCaptureAndSample(gd, renderer, managers);
 
             Math.Abs(withEffect.R - withEffect.G).ShouldBeLessThan(25);
