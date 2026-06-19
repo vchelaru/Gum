@@ -314,6 +314,7 @@
 * [Rendering](code/rendering/README.md)
   * [GumBatch](code/rendering/gumbatch.md)
   * [Rendering Custom Graphics](code/rendering/rendering-custom-graphics.md)
+  * [Texture Filtering](code/rendering/texture-filtering.md)
 * [Ordering, Layers, and Popups](code/ordering-layers-and-popups/README.md)
   * [Object Order](code/ordering-layers-and-popups/object-order.md)
   * [Mixing Gum and 3D](code/ordering-layers-and-popups/mixing-gum-and-3d.md)
