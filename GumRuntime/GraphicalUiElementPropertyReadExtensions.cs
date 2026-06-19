@@ -204,13 +204,27 @@ public static class GraphicalUiElementPropertyReadExtensions
     // A null entry caches "no reflectable property" so repeated misses stay cheap.
     private static readonly ConcurrentDictionary<(Type, string), PropertyInfo?> _propertyCache = new();
 
+    /// <summary>
+    /// Reads the live texture object (a Sprite/NineSlice ".Texture") for this element, if any, without
+    /// taking a dependency on the backend Texture2D type. The snapshot serializer uses this to detect a
+    /// texture that has no resolvable file path (an embedded/runtime-generated texture whose Name is unset)
+    /// so a platform layer can extract it to a file.
+    /// </summary>
+    /// <param name="element">The element to read from.</param>
+    /// <param name="texture">The live texture object when present; otherwise null.</param>
+    /// <returns>True when the element exposes a non-null texture; otherwise false.</returns>
+    public static bool TryGetTexture(this GraphicalUiElement element, out object? texture)
+    {
+        PropertyInfo? textureProperty = ResolveReflectedProperty(element.GetType(), "Texture");
+        texture = textureProperty?.GetValue(element);
+        return texture != null;
+    }
+
     // Recovers a Sprite/NineSlice source path from its texture's Name (stamped by the content loader on
     // load). Done by reflection so this shared reader needs no reference to the backend texture type.
     private static string? TryReadTextureName(GraphicalUiElement element)
     {
-        PropertyInfo? textureProperty = ResolveReflectedProperty(element.GetType(), "Texture");
-        object? texture = textureProperty?.GetValue(element);
-        if (texture == null)
+        if (!element.TryGetTexture(out object? texture) || texture == null)
         {
             return null;
         }

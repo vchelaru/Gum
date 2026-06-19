@@ -245,6 +245,74 @@ public class RuntimeSnapshotSerializerTests : BaseTestClass
     }
 
     [Fact]
+    public void CreateScreenSave_WhenTextureHasNoFilePath_ShouldRecordUnresolvedTextureReference()
+    {
+        // An embedded/runtime-generated texture has no Texture2D.Name (no source path the content loader
+        // stamps on file-backed textures), so the snapshot captures coordinates but can give no SourceFile.
+        // The serializer must surface the texture plus a placeholder variable for the platform layer to
+        // save the texture and fill the path -- otherwise the slice points at a texture the tool can't load.
+        ContainerRuntime root = new();
+        SpriteRuntime sprite = new() { Name = "Sprite" };
+        Microsoft.Xna.Framework.Graphics.Texture2D texture = MakeHeadlessTexture(); // Name is null
+        sprite.Texture = texture;
+        root.AddChild(sprite);
+
+        RuntimeSnapshotSerializer serializer = CreateSerializer();
+        ScreenSave screen = serializer.CreateScreenSave(root, "Snapshot", shake: true);
+
+        UnresolvedTextureReference reference = serializer.UnresolvedTextureReferences.ShouldHaveSingleItem();
+        reference.Texture.ShouldBeSameAs(texture);
+
+        // The placeholder lives in the screen default state, qualified by the instance name, awaiting a path.
+        StateSave defaultState = screen.States.First(s => s.Name == "Default");
+        VariableSave placeholder = defaultState.Variables.First(v => v.Name == "Sprite.SourceFile");
+        reference.SourceFileVariable.ShouldBeSameAs(placeholder);
+        placeholder.Value.ShouldBeNull();
+    }
+
+    [Fact]
+    public void CreateScreenSave_WhenTextureHasFilePath_ShouldNotRecordUnresolvedTextureReference()
+    {
+        // A file-backed texture carries its source path on Texture2D.Name, so SourceFile resolves normally
+        // and there is nothing to extract.
+        ContainerRuntime root = new();
+        SpriteRuntime sprite = new() { Name = "Sprite" };
+        Microsoft.Xna.Framework.Graphics.Texture2D texture = MakeHeadlessTexture();
+        texture.Name = "UI/button.png";
+        sprite.Texture = texture;
+        root.AddChild(sprite);
+
+        RuntimeSnapshotSerializer serializer = CreateSerializer();
+        ScreenSave screen = serializer.CreateScreenSave(root, "Snapshot", shake: true);
+
+        serializer.UnresolvedTextureReferences.ShouldBeEmpty();
+        StateSave defaultState = screen.States.First(s => s.Name == "Default");
+        defaultState.Variables.First(v => v.Name == "Sprite.SourceFile").Value.ShouldBe("UI/button.png");
+    }
+
+    [Fact]
+    public void CreateScreenSave_WhenTextureSharedAcrossInstances_ShouldRecordReferenceForEachSharingOneTexture()
+    {
+        // The Forms default visuals share one embedded sprite sheet across many sprites/NineSlices. Each
+        // instance records its own placeholder, but all reference the same texture instance, so the platform
+        // layer can dedupe them down to a single saved file.
+        ContainerRuntime root = new();
+        Microsoft.Xna.Framework.Graphics.Texture2D shared = MakeHeadlessTexture();
+        SpriteRuntime first = new() { Name = "First" };
+        first.Texture = shared;
+        SpriteRuntime second = new() { Name = "Second" };
+        second.Texture = shared;
+        root.AddChild(first);
+        root.AddChild(second);
+
+        RuntimeSnapshotSerializer serializer = CreateSerializer();
+        serializer.CreateScreenSave(root, "Snapshot", shake: true);
+
+        serializer.UnresolvedTextureReferences.Count.ShouldBe(2);
+        serializer.UnresolvedTextureReferences.Select(r => r.Texture).Distinct().Count().ShouldBe(1);
+    }
+
+    [Fact]
     public void GetReferencedFiles_ShouldReturnDistinctSourceFilePaths()
     {
         ContainerRuntime root = new();
@@ -533,6 +601,29 @@ public class RuntimeSnapshotSerializerTests : BaseTestClass
         screen.Instances.Any(i => i.Name == "TextInstance").ShouldBeTrue();
     }
 
+    [Fact]
+    public void CreateScreenSave_WithBaselineProvider_ShouldRecordUnresolvedTextureForComponentChild()
+    {
+        // The actual reported scenario: a Forms control (e.g. ScrollViewer) draws its Background NineSlice
+        // from the embedded sheet. When the control componentizes, that background lives in the synthesized
+        // component's default state -- and still needs its embedded texture extracted, just like a flattened
+        // sprite, or the component renders blank.
+        ContainerRuntime root = new();
+        ContainerRuntime formsScreen = new() { Name = "MainMenu" };
+        formsScreen.FormsControlAsObject = new object();
+        formsScreen.AddChild(MakeLiveTexturedControl("Widget"));
+        root.AddChild(formsScreen);
+
+        RuntimeSnapshotSerializer serializer =
+            new(StandardElementsManager.Self.DefaultStates, TexturedControlBaseline);
+        serializer.CreateScreenSave(root, "Snapshot", shake: true);
+
+        ComponentSave component = serializer.SynthesizedComponents.First(c => c.Name == "FakeTexturedControl");
+        StateSave componentDefault = component.States.First(s => s.Name == "Default");
+        componentDefault.Variables.ShouldContain(v => v.Name == "Background.SourceFile");
+        serializer.UnresolvedTextureReferences.ShouldContain(r => r.SourceFileVariable.Name == "Background.SourceFile");
+    }
+
     private static ContainerRuntime MakeLiveButton(string name, string text)
     {
         ContainerRuntime button = new() { Name = name };
@@ -542,6 +633,39 @@ public class RuntimeSnapshotSerializerTests : BaseTestClass
         button.AddChild(textInstance);
         return button;
     }
+
+    // A live textured Forms control: a container holding a single "Background" sprite whose embedded-style
+    // texture has no Name (mirrors the Forms default visuals' shared UISpriteSheet).
+    private static ContainerRuntime MakeLiveTexturedControl(string name)
+    {
+        ContainerRuntime control = new() { Name = name };
+        control.FormsControlAsObject = new FakeTexturedControl();
+        SpriteRuntime background = new() { Name = "Background" };
+        background.Texture = MakeHeadlessTexture();
+        control.AddChild(background);
+        return control;
+    }
+
+    // A pristine FakeTexturedControl template, structurally matching the live control so it componentizes.
+    private static GraphicalUiElement? TexturedControlBaseline(Type type)
+    {
+        if (type != typeof(FakeTexturedControl))
+        {
+            return null;
+        }
+        ContainerRuntime control = new();
+        SpriteRuntime background = new() { Name = "Background" };
+        background.Texture = MakeHeadlessTexture();
+        control.AddChild(background);
+        return control;
+    }
+
+    // Fabricates a Texture2D reference without a GraphicsDevice (its ctor needs one). The snapshot path only
+    // holds the reference and reads its Name; an uninitialized shell (Name == null) stands in for an embedded
+    // texture that has no resolvable file path.
+    private static Microsoft.Xna.Framework.Graphics.Texture2D MakeHeadlessTexture() =>
+        (Microsoft.Xna.Framework.Graphics.Texture2D)System.Runtime.CompilerServices.RuntimeHelpers
+            .GetUninitializedObject(typeof(Microsoft.Xna.Framework.Graphics.Texture2D));
 
     // A pristine FakeButton template: a container holding a single "TextInstance" Text child.
     private static GraphicalUiElement? FakeButtonBaseline(Type type)
@@ -585,6 +709,12 @@ public class RuntimeSnapshotSerializerTests : BaseTestClass
 
     // Stand-in for a Label-like Forms control whose visual root is a Text (like DefaultLabelRuntime).
     private class FakeLabel
+    {
+    }
+
+    // Stand-in for a Forms control whose visual carries a textured "Background" child (like the V2/V3
+    // default visuals that draw backgrounds from the embedded UISpriteSheet).
+    private class FakeTexturedControl
     {
     }
 

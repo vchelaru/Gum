@@ -53,6 +53,49 @@ public interface IRuntimeSnapshotSerializer
     /// files referenced by <see cref="SynthesizedComponents"/>, not just the screen.
     /// </summary>
     IEnumerable<string> GetReferencedFiles(ScreenSave screen);
+
+    /// <summary>
+    /// The texture references captured during the most recent <see cref="CreateScreenSave"/> that could not
+    /// be given a "SourceFile" path, because the live texture is embedded or runtime-generated (its
+    /// Texture2D.Name -- the source path the content loader stamps on file-backed textures -- is unset).
+    /// Each entry pairs the live texture object with the placeholder "SourceFile" <see cref="VariableSave"/>
+    /// awaiting a path. A platform layer must save each <see cref="UnresolvedTextureReference.Texture"/> to a
+    /// file and write the relative path into its <see cref="UnresolvedTextureReference.SourceFileVariable"/>;
+    /// the serializer cannot, as Texture2D saving is backend-specific. Mirrors the
+    /// <see cref="GetReferencedFiles"/> split: the platform-agnostic serializer surfaces what it cannot
+    /// resolve, the platform layer does the file I/O.
+    /// </summary>
+    IReadOnlyList<UnresolvedTextureReference> UnresolvedTextureReferences { get; }
+}
+
+/// <summary>
+/// A texture the snapshot serializer captured but could not give a "SourceFile" path, because the live
+/// texture is embedded or runtime-generated (its Texture2D.Name is unset). Surfaced via
+/// <see cref="IRuntimeSnapshotSerializer.UnresolvedTextureReferences"/> for a platform layer to save and
+/// fill. See that property for the full contract.
+/// </summary>
+public sealed class UnresolvedTextureReference
+{
+    /// <summary>
+    /// The live texture object (a backend Texture2D), kept as <see cref="object"/> so the serializer stays
+    /// platform-agnostic. The platform layer casts it to the concrete texture type to save it.
+    /// </summary>
+    public object Texture { get; }
+
+    /// <summary>
+    /// The placeholder "SourceFile" variable in the snapshot (instance-qualified in its owning state) whose
+    /// <see cref="VariableSave.Value"/> the platform layer sets to the saved texture's relative path.
+    /// </summary>
+    public VariableSave SourceFileVariable { get; }
+
+    /// <summary>
+    /// Creates a reference pairing a live texture with the placeholder variable awaiting its saved path.
+    /// </summary>
+    public UnresolvedTextureReference(object texture, VariableSave sourceFileVariable)
+    {
+        Texture = texture;
+        SourceFileVariable = sourceFileVariable;
+    }
 }
 
 /// <inheritdoc cref="IRuntimeSnapshotSerializer" />
@@ -77,6 +120,10 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
     private readonly Dictionary<Type, ComponentEntry?> _componentCache;
     private readonly HashSet<string> _usedComponentNames;
 
+    // Textures captured during CreateScreenSave that have no resolvable file path (embedded/generated).
+    // Reset per snapshot so a reused serializer does not leak references between snapshots.
+    private readonly List<UnresolvedTextureReference> _unresolvedTextureReferences;
+
     /// <summary>
     /// Creates a serializer that reads runtime values against the supplied standard-element catalog.
     /// </summary>
@@ -99,10 +146,14 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
         _synthesizedComponents = new List<ComponentSave>();
         _componentCache = new Dictionary<Type, ComponentEntry?>();
         _usedComponentNames = new HashSet<string>();
+        _unresolvedTextureReferences = new List<UnresolvedTextureReference>();
     }
 
     /// <inheritdoc />
     public IReadOnlyList<ComponentSave> SynthesizedComponents => _synthesizedComponents;
+
+    /// <inheritdoc />
+    public IReadOnlyList<UnresolvedTextureReference> UnresolvedTextureReferences => _unresolvedTextureReferences;
 
     /// <inheritdoc />
     public string? GetStandardTypeName(GraphicalUiElement element)
@@ -184,6 +235,7 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
         _synthesizedComponents.Clear();
         _componentCache.Clear();
         _usedComponentNames.Clear();
+        _unresolvedTextureReferences.Clear();
 
         ScreenSave screen = new ScreenSave { Name = screenName };
         StateSave defaultState = new StateSave { Name = "Default" };
@@ -265,6 +317,66 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
         }
     }
 
+    // Records a texture the snapshot captured coordinates for but could not give a SourceFile path, because
+    // the live texture is embedded/runtime-generated (its Texture2D.Name -- the source path the content
+    // loader stamps on file-backed textures -- is unset). Adds a placeholder SourceFile variable to the
+    // owning state and pairs it with the texture object so a platform layer can save the Texture2D to a file
+    // and fill the path. Without this the slice has valid texture coordinates but no texture to slice, so it
+    // renders blank in the tool. Shared by the screen-instance path and the component-internals path.
+    private void RecordUnresolvedTextureIfNeeded(GraphicalUiElement element, string typeName,
+        StateSave owningState, string? instanceName)
+    {
+        if (!_defaultStates.TryGetValue(typeName, out StateSave? typeDefault))
+        {
+            return;
+        }
+        VariableSave? sourceFileCatalogVariable = FindSourceFileVariable(typeDefault);
+        if (sourceFileCatalogVariable == null)
+        {
+            // Not a textured standard type (no SourceFile in its catalog) -- nothing to extract.
+            return;
+        }
+
+        string qualifiedName = instanceName == null
+            ? sourceFileCatalogVariable.Name
+            : instanceName + "." + sourceFileCatalogVariable.Name;
+
+        // A resolvable path was already emitted (file-backed texture) -- nothing to extract.
+        if (FindVariable(owningState, qualifiedName) != null)
+        {
+            return;
+        }
+
+        // No path, but the live element still has a texture: it is embedded/generated. Capture the texture
+        // and a placeholder variable (carrying the catalog's name/type/category) for the platform layer to
+        // fill once it saves a file.
+        if (element.TryGetTexture(out object? texture) && texture != null)
+        {
+            VariableSave placeholder = new VariableSave
+            {
+                Name = qualifiedName,
+                Type = sourceFileCatalogVariable.Type,
+                Value = null,
+                SetsValue = true,
+                Category = sourceFileCatalogVariable.Category,
+            };
+            owningState.Variables.Add(placeholder);
+            _unresolvedTextureReferences.Add(new UnresolvedTextureReference(texture, placeholder));
+        }
+    }
+
+    private static VariableSave? FindSourceFileVariable(StateSave state)
+    {
+        foreach (VariableSave variable in state.Variables)
+        {
+            if (variable.Name == "SourceFile" || variable.Name == "Source File")
+            {
+                return variable;
+            }
+        }
+        return null;
+    }
+
     // "SourceFile" appears instance-qualified in the screen's default state (e.g. "Sprite.SourceFile").
     private static bool IsSourceFileVariable(string variableName)
     {
@@ -314,6 +426,8 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
                 Category = variable.Category,
             });
         }
+
+        RecordUnresolvedTextureIfNeeded(element, typeName, defaultState, instanceName);
 
         // Non-top-level instances record their parent; top-level instances are children of the element.
         if (parentInstanceName != null)
@@ -431,6 +545,8 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
                 Category = variable.Category,
             });
         }
+
+        RecordUnresolvedTextureIfNeeded(pristine, componentBaseType, componentDefault, instanceName: null);
 
         // Seed Component-base variables the live visual cannot supply -- notably the "State" selector, which
         // is save-time metadata with no runtime property to read. An authored component carries these, so
