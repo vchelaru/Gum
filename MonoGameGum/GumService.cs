@@ -1091,6 +1091,7 @@ public class GumService : IGumService
 
             ObjectFinder.Self.GumProjectSave = gumProject;
             gumProject.Initialize();
+            ApplyProjectTextureFilter(gumProject);
             Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
 
             var absoluteFile = gumProjectFile;
@@ -1107,6 +1108,33 @@ public class GumService : IGumService
         }
 
         return gumProject;
+    }
+
+    /// <summary>
+    /// Applies the project's <see cref="GumProjectSave.TextureFilter"/> setting (configured in the
+    /// editor's Project Properties) to the runtime so sprites render with the same filtering the
+    /// editor previewed (issue #3199). Called automatically during project load.
+    /// </summary>
+    /// <remarks>
+    /// Precedence: this runs during <c>Initialize</c>, so a per-layer
+    /// <c>Layer.IsLinearFilteringEnabled</c> (when non-null) still wins, and
+    /// code that assigns <see cref="Renderer.TextureFilter"/> after <c>Initialize</c> returns
+    /// overrides the project value. <c>"Linear"</c> is the string the editor stores for linear
+    /// filtering; any other value (including null) maps to point filtering.
+    /// </remarks>
+    internal static void ApplyProjectTextureFilter(GumProjectSave gumProject)
+    {
+        bool useLinearFiltering = string.Equals(gumProject?.TextureFilter, "Linear", StringComparison.Ordinal);
+
+#if XNALIKE
+        Renderer.TextureFilter = useLinearFiltering ? TextureFilter.Linear : TextureFilter.Point;
+#elif RAYLIB
+        // raylib has no global sampler state; the filter is a per-texture property applied at load
+        // time, so ContentLoader reads this when creating sprite textures (see ContentLoader.cs).
+        ContentLoader.DefaultTextureFilter = useLinearFiltering
+            ? Raylib_cs.TextureFilter.Bilinear
+            : Raylib_cs.TextureFilter.Point;
+#endif
     }
 
     private void ApplyStandardElementDefaults(GumProjectSave gumProject)

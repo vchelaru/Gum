@@ -24,6 +24,8 @@ GumService.Default.Uninitialize()
 
 `Initialize` throws if called twice without an intervening `Uninitialize`.
 
+**Only the `gumProjectFile` overload loads a project.** `Initialize(game, gumProjectFile)` loads the `.gumx` and runs the project-load path — which applies project-level settings (standard-element defaults, localization, and the project's `TextureFilter` → `Renderer.TextureFilter`, issue #3199). The `Initialize(game, DefaultVisualsVersion)` / parameterless overloads are **code-only** and never touch that path. So when manually verifying anything that depends on a loaded project, you must pass the `.gumx` path or the behavior under test never runs. The cheapest from-file smoke test is `Initialize(game, "GumProject/GumProject.gumx")` plus a `SpriteRuntime` (`SourceFileName` set, scaled up) added to `Root`.
+
 ## Singleton Pattern
 
 `Default` is lazily initialized via `??=`. `Uninitialize()` sets `_default = null`, so after teardown `GumService.Default` creates a **fresh instance** — any stored reference to the old instance is now orphaned.
