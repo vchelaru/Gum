@@ -1,7 +1,10 @@
+using System;
+using System.IO;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Gum.GueDeriving;
+using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
@@ -296,6 +299,271 @@ technique SpriteDrawing
 
         Math.Abs(withEffect.R - withEffect.G).ShouldBeLessThan(25);
         Math.Abs(withEffect.R - withEffect.B).ShouldBeLessThan(25);
+    }
+
+    // ---- SourceShaderFile (issue #3206): the .fx file-reference path that resolves into
+    // RenderTargetEffect via a pluggable, consumer-registered resolver. ----
+
+    [Fact]
+    public void SourceShaderFile_CompilesOnce_WhenReferencedByMultipleContainers()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        GraphicsDevice gd = game.GraphicsDevice;
+
+        string fxPath = WriteTempShader(GrayscaleFx);
+        int invocationCount = 0;
+        try
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = path =>
+            {
+                invocationCount++;
+                return CompileShader(gd, path);
+            };
+
+            ContainerRuntime first = new();
+            first.IsRenderTarget = true;
+            first.SourceShaderFile = fxPath;
+
+            ContainerRuntime second = new();
+            second.IsRenderTarget = true;
+            second.SourceShaderFile = fxPath;
+
+            // The second container referencing the same .fx must hit the LoaderManager cache.
+            invocationCount.ShouldBe(1);
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            File.Delete(fxPath);
+        }
+    }
+
+    [Fact]
+    public void SourceShaderFile_GraysThePixels_WhenDeeplyNested()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        GraphicsDevice gd = game.GraphicsDevice;
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+
+        string fxPath = WriteTempShader(GrayscaleFx);
+        try
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = path => CompileShader(gd, path);
+
+            // Mirror the sample's nesting: root -> row -> cell -> holder(render target) -> red.
+            ContainerRuntime root = new();
+            root.X = 0;
+            root.Y = 0;
+            ContainerRuntime row = new();
+            root.AddChild(row);
+            ContainerRuntime cell = new();
+            row.AddChild(cell);
+
+            ContainerRuntime holder = new();
+            holder.X = 0;
+            holder.Y = 0;
+            holder.Width = 100;
+            holder.Height = 100;
+            holder.IsRenderTarget = true;
+
+#pragma warning disable CS0618
+            ColoredRectangleRuntime red = new();
+#pragma warning restore CS0618
+            red.Width = 100;
+            red.Height = 100;
+            red.Color = Color.Red;
+            holder.SourceShaderFile = fxPath;
+            holder.AddChild(red);
+            cell.AddChild(holder);
+
+            root.AddToManagers(managers, null);
+            root.UpdateLayout();
+
+            Color withEffect = RenderToCaptureAndSample(gd, renderer, managers);
+
+            Math.Abs(withEffect.R - withEffect.G).ShouldBeLessThan(25);
+            Math.Abs(withEffect.R - withEffect.B).ShouldBeLessThan(25);
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            File.Delete(fxPath);
+        }
+    }
+
+    [Fact]
+    public void SourceShaderFile_GraysThePixels_WhenResolverRegistered()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        GraphicsDevice gd = game.GraphicsDevice;
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+
+        string fxPath = WriteTempShader(GrayscaleFx);
+        try
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = path => CompileShader(gd, path);
+
+            ContainerRuntime container = new();
+            container.X = 0;
+            container.Y = 0;
+            container.Width = 64;
+            container.Height = 64;
+            container.IsRenderTarget = true;
+
+#pragma warning disable CS0618
+            ColoredRectangleRuntime red = new();
+#pragma warning restore CS0618
+            red.Width = 64;
+            red.Height = 64;
+            red.Color = Color.Red;
+            container.AddChild(red);
+
+            container.AddToManagers(managers, null);
+            container.UpdateLayout();
+
+            // The .fx reference resolves through the string path (SetProperty) into RenderTargetEffect.
+            container.SourceShaderFile = fxPath;
+            Color withEffect = RenderToCaptureAndSample(gd, renderer, managers);
+
+            Math.Abs(withEffect.R - withEffect.G).ShouldBeLessThan(25);
+            Math.Abs(withEffect.R - withEffect.B).ShouldBeLessThan(25);
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            File.Delete(fxPath);
+        }
+    }
+
+    [Fact]
+    public void SourceShaderFile_IsNoOp_WhenNoResolverRegistered()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        GraphicsDevice gd = game.GraphicsDevice;
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+
+        // No resolver registered (clear any leakage from a prior test).
+        CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+
+        ContainerRuntime container = new();
+        container.X = 0;
+        container.Y = 0;
+        container.Width = 64;
+        container.Height = 64;
+        container.IsRenderTarget = true;
+
+#pragma warning disable CS0618
+        ColoredRectangleRuntime red = new();
+#pragma warning restore CS0618
+        red.Width = 64;
+        red.Height = 64;
+        red.Color = Color.Red;
+        container.AddChild(red);
+
+        container.AddToManagers(managers, null);
+        container.UpdateLayout();
+
+        // With no resolver the assignment is a graceful no-op (no crash); the container renders
+        // unshaded, so the pixel stays red.
+        container.SourceShaderFile = "Shaders/DoesNotMatter.fx";
+        Color result = RenderToCaptureAndSample(gd, renderer, managers);
+
+        result.R.ShouldBeGreaterThan((byte)150);
+        ((int)result.R - result.G).ShouldBeGreaterThan(80);
+    }
+
+    [Fact]
+    public void SourceShaderFile_RaisesPropertyAssignmentError_WhenResolverFailsAndConsumingSilently()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        MissingFileBehavior previousBehavior = GraphicalUiElement.MissingFileBehavior;
+        string? reportedError = null;
+        Action<string> handler = message => reportedError = message;
+        try
+        {
+            GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
+            CustomSetPropertyOnRenderable.PropertyAssignmentError += handler;
+            // Resolver registered but unable to produce an effect (missing .fx / compile failure).
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = _ => null;
+
+            ContainerRuntime container = new();
+            container.IsRenderTarget = true;
+
+            // ConsumeSilently must not throw; it reports through PropertyAssignmentError instead.
+            container.SourceShaderFile = "Shaders/Missing.fx";
+
+            reportedError.ShouldNotBeNull();
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.PropertyAssignmentError -= handler;
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            GraphicalUiElement.MissingFileBehavior = previousBehavior;
+        }
+    }
+
+    [Fact]
+    public void SourceShaderFile_Throws_WhenResolverFailsAndMissingFileBehaviorIsThrow()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        MissingFileBehavior previousBehavior = GraphicalUiElement.MissingFileBehavior;
+        try
+        {
+            GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ThrowException;
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = _ => null;
+
+            ContainerRuntime container = new();
+            container.IsRenderTarget = true;
+
+            Should.Throw<FileNotFoundException>(() => container.SourceShaderFile = "Shaders/Missing.fx");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            GraphicalUiElement.MissingFileBehavior = previousBehavior;
+        }
+    }
+
+    /// <summary>
+    /// Writes the given shader source to a unique temp .fx file and returns its absolute path.
+    /// </summary>
+    private static string WriteTempShader(string source)
+    {
+        string path = Path.Combine(Path.GetTempPath(), "GumSourceShaderTest_" + Guid.NewGuid().ToString("N") + ".fx");
+        File.WriteAllText(path, source);
+        return path;
+    }
+
+    /// <summary>
+    /// Stand-in for a consumer's resolver: reads the .fx at <paramref name="path"/>, compiles it
+    /// with ShadowDusk, and returns a MonoGame <see cref="Effect"/> (or null on compile failure).
+    /// </summary>
+    private static Effect? CompileShader(GraphicsDevice gd, string path)
+    {
+        string source = File.ReadAllText(path);
+        EffectCompiler compiler = new();
+        Result<CompiledShader, ShaderError[]> result =
+            compiler.Compile(source, new CompilerOptions { Target = PlatformTarget.OpenGL });
+        if (result.IsFailure)
+        {
+            return null;
+        }
+        return new Effect(gd, result.Value.Data);
     }
 
     /// <summary>

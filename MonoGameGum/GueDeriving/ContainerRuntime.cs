@@ -70,6 +70,21 @@ public class ContainerRuntime : InteractiveGue
             }
         }
     }
+
+    /// <summary>
+    /// A file reference (e.g. a <c>.fx</c> path) to a post-process shader applied when this
+    /// container is drawn back to the screen as a render target. Mirrors how a Sprite references a
+    /// texture: setting this routes through the string property path, which resolves the reference
+    /// via <see cref="Gum.Wireframe.CustomSetPropertyOnRenderable.RenderTargetEffectResolver"/> and
+    /// assigns the result to <see cref="RenderTargetEffect"/>. With no resolver registered the
+    /// assignment is a graceful no-op (the container renders unshaded). Only has an effect when
+    /// <see cref="IsRenderTarget"/> is true. Write-only: there is no backing field; the resolved
+    /// effect is read back via <see cref="RenderTargetEffect"/>.
+    /// </summary>
+    public string? SourceShaderFile
+    {
+        set => base.SetProperty("SourceShaderFile", value);
+    }
 #endif
 
 
