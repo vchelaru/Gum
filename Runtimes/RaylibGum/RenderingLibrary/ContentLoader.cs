@@ -19,6 +19,15 @@ namespace RenderingLibrary.Content;
 /// </summary>
 public class ContentLoader : IContentLoader
 {
+    /// <summary>
+    /// The texture filter applied to sprite textures as they are loaded. Set from the project's
+    /// <see cref="Gum.DataTypes.GumProjectSave.TextureFilter"/> during <c>GumService.Initialize</c>
+    /// (issue #3199). Unlike the XNA-family backends, raylib has no global sampler state — filtering
+    /// is a per-texture property applied at load time — so the loaded value is read here rather than
+    /// in the Renderer. Fonts intentionally keep point filtering (see <c>Text.cs</c>).
+    /// </summary>
+    public static Raylib_cs.TextureFilter DefaultTextureFilter { get; set; } = Raylib_cs.TextureFilter.Point;
+
     /// <inheritdoc/>
     public T LoadContent<T>(string contentName)
     {
@@ -183,6 +192,9 @@ public class ContentLoader : IContentLoader
         Image image = LoadImageFromMemory(fileType, fileData);
         // LoadTextureFromImage uploads to the GPU; the CPU-side Image is no longer needed after.
         var toReturn = LoadTextureFromImage(image);
+        // Apply the project's texture filter (issue #3199). raylib defaults new textures to point
+        // filtering, so this only changes behavior when the project requested linear/bilinear.
+        SetTextureFilter(toReturn, DefaultTextureFilter);
         UnloadImage(image);
         return toReturn;
     }

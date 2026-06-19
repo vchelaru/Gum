@@ -233,6 +233,11 @@ public class GumHotReloadManager : IGumHotReloadManager
         newProject.Initialize();
         ObjectFinder.Self.GumProjectSave = newProject;
 
+        // Re-apply the project's texture filter so editing it in the tool carries over on reload
+        // (issue #3199). On XNALIKE this takes effect on the next Draw; on raylib it affects
+        // textures loaded after this point (already-cached textures keep their prior filter).
+        GumService.ApplyProjectTextureFilter(newProject);
+
         foreach (var element in newProject.AllElements)
         {
             var defaultState = element.DefaultState;
