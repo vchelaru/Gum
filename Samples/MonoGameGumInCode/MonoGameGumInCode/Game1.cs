@@ -77,6 +77,7 @@ namespace MonoGameGumInCode
             AddNavButton("NineSlice", () => ShowScreen<NineSliceScreen>());
             AddNavButton("Sprite", () => ShowScreen<SpriteScreen>());
             AddNavButton("Clip", () => ShowScreen<ClipScreen>());
+            AddNavButton("RT Effect", () => ShowScreen<RenderTargetEffectScreen>());
 
             AddFitModeRadio("Zoom", isChecked: true, () => GumService.Default.EnableZoomToWindow());
             AddFitModeRadio("Expand", isChecked: false, () => GumService.Default.EnableExpandToWindow());

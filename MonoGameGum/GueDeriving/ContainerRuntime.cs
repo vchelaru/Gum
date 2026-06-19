@@ -51,6 +51,27 @@ public class ContainerRuntime : InteractiveGue
         }
     }
 
+#if XNALIKE
+    /// <summary>
+    /// An optional shader applied when this container is drawn back to the screen as a
+    /// render target. Only has an effect when <see cref="IsRenderTarget"/> is true. The
+    /// effect is bound for the single sprite draw that blits the container's render target
+    /// to the screen, so it acts as a post-process over the whole container's contents.
+    /// </summary>
+    public global::Microsoft.Xna.Framework.Graphics.Effect? RenderTargetEffect
+    {
+        get => (RenderableComponent as InvisibleRenderable)?.RenderTargetEffect
+            as global::Microsoft.Xna.Framework.Graphics.Effect;
+        set
+        {
+            if (RenderableComponent is InvisibleRenderable invisibleRenderable)
+            {
+                invisibleRenderable.RenderTargetEffect = value;
+            }
+        }
+    }
+#endif
+
 
 #if !SKIA && !SOKOL
     public BlendStateAlias BlendState

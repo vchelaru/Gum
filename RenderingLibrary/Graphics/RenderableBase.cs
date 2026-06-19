@@ -11,6 +11,17 @@ public abstract class RenderableBase : IVisible, IRenderableIpso,
     ISetClipsChildren
 {
     public bool IsRenderTarget { get; set; }
+
+    /// <summary>
+    /// An optional platform-specific effect (shader) applied when this renderable is drawn
+    /// back to the screen as a render target (only used when <see cref="IsRenderTarget"/> is true).
+    /// Typed as <see cref="object"/> because the shared rendering layer cannot reference a
+    /// specific backend's effect type; the xnalike <c>Renderer</c> casts it to a MonoGame
+    /// <c>Effect</c>. Set this via the strongly-typed runtime property
+    /// (e.g. <c>ContainerRuntime.RenderTargetEffect</c>) rather than assigning it directly.
+    /// </summary>
+    public object? RenderTargetEffect { get; set; }
+
     /// <inheritdoc/>
     public bool AbsoluteVisible => ((IVisible)this).GetAbsoluteVisible();
     /// <inheritdoc/>

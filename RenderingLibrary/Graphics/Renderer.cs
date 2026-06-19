@@ -847,21 +847,7 @@ public class Renderer : IRenderer
 
                 if(renderTarget != null)
                 {
-                    var renderableAlpha = renderable.Alpha;
-                    renderableAlpha = System.Math.Min(255, renderableAlpha);
-                    renderableAlpha = System.Math.Max(0, renderableAlpha);
-
-                    var color = System.Drawing.Color.FromArgb(
-                        renderableAlpha, Color.White
-                        );
-
-                    renderTargetRenderableSprite.X = System.Math.Max(renderable.GetAbsoluteX(), Camera.AbsoluteLeft);
-                    renderTargetRenderableSprite.Y = System.Math.Max(renderable.GetAbsoluteY(), Camera.AbsoluteTop);
-                    renderTargetRenderableSprite.Width = renderTarget.Width / Camera.Zoom;
-                    renderTargetRenderableSprite.Height = renderTarget.Height / Camera.Zoom;
-
-
-                    Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees:renderable.Rotation, objectCausingRendering: renderable);
+                    DrawRenderTargetToScreen(renderable, renderTarget, managers, layer);
                 }
             }
             else
@@ -920,6 +906,52 @@ public class Renderer : IRenderer
         }
     }
 
+    /// <summary>
+    /// Blits a render-target container's cached texture to the screen. When the container has a
+    /// <see cref="RenderableBase.RenderTargetEffect"/>, that shader is bound for this single
+    /// draw so it post-processes the whole container; otherwise the texture is drawn normally.
+    /// </summary>
+    private void DrawRenderTargetToScreen(IRenderableIpso renderable, RenderTarget2D renderTarget, SystemManagers managers, Layer layer)
+    {
+        var renderableAlpha = renderable.Alpha;
+        renderableAlpha = System.Math.Min(255, renderableAlpha);
+        renderableAlpha = System.Math.Max(0, renderableAlpha);
+
+        var color = System.Drawing.Color.FromArgb(renderableAlpha, Color.White);
+
+        renderTargetRenderableSprite.X = System.Math.Max(renderable.GetAbsoluteX(), Camera.AbsoluteLeft);
+        renderTargetRenderableSprite.Y = System.Math.Max(renderable.GetAbsoluteY(), Camera.AbsoluteTop);
+        renderTargetRenderableSprite.Width = renderTarget.Width / Camera.Zoom;
+        renderTargetRenderableSprite.Height = renderTarget.Height / Camera.Zoom;
+
+        // The main-pass walk yields the contained renderable (a RenderableBase) for a top-level
+        // render target, but the GraphicalUiElement wrapper for a nested one. The effect slot
+        // lives on RenderableBase (a runtime-specific concern, deliberately not on the GUE base),
+        // so for the wrapper we read it off its contained RenderableComponent.
+        var renderTargetEffect = ((renderable as RenderableBase)
+            ?? ((renderable as Gum.Wireframe.GraphicalUiElement)?.RenderableComponent as RenderableBase))
+            ?.RenderTargetEffect as Effect;
+
+        if (renderTargetEffect == null)
+        {
+            Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees: renderable.Rotation, objectCausingRendering: renderable);
+        }
+        else
+        {
+            // Bind the container's post-process shader for just this blit. Flush whatever batch
+            // is open (sprites or a custom Apos.Shapes batch) so prior draws paint first, re-begin
+            // the SpriteBatch with the effect overridden, draw the target, then re-begin with the
+            // normal effect so following renderables are unaffected. Mirrors the mid-walk
+            // clip-change flush in Draw/AdjustRenderStates.
+            _batchOrchestrator.FlushAndReset(managers);
+
+            spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, renderable, effectOverride: renderTargetEffect);
+            Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees: renderable.Rotation, objectCausingRendering: renderable);
+
+            spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, renderable);
+        }
+    }
+
     private void SubmitDrawRenderable(IRenderableIpso renderable, SystemManagers managers, Layer layer)
     {
         // Non-clip state (blend / color / wrap) is reapplied here. Clip-scope handling is
@@ -935,18 +967,7 @@ public class Renderer : IRenderer
 
             if (renderTarget != null)
             {
-                var renderableAlpha = renderable.Alpha;
-                renderableAlpha = System.Math.Min(255, renderableAlpha);
-                renderableAlpha = System.Math.Max(0, renderableAlpha);
-
-                var color = System.Drawing.Color.FromArgb(renderableAlpha, Color.White);
-
-                renderTargetRenderableSprite.X = System.Math.Max(renderable.GetAbsoluteX(), Camera.AbsoluteLeft);
-                renderTargetRenderableSprite.Y = System.Math.Max(renderable.GetAbsoluteY(), Camera.AbsoluteTop);
-                renderTargetRenderableSprite.Width = renderTarget.Width / Camera.Zoom;
-                renderTargetRenderableSprite.Height = renderTarget.Height / Camera.Zoom;
-
-                Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees: renderable.Rotation, objectCausingRendering: renderable);
+                DrawRenderTargetToScreen(renderable, renderTarget, managers, layer);
             }
         }
         else
