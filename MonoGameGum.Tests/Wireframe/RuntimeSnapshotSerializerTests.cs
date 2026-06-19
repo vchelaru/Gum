@@ -331,6 +331,28 @@ public class RuntimeSnapshotSerializerTests : BaseTestClass
     }
 
     [Fact]
+    public void CreateScreenSave_SpriteRenderableBackedElement_ShouldEmitSpriteInstanceWithSourceFile()
+    {
+        // The reported FrbClicker case: purchased-item Images are a bare InteractiveGue + Sprite renderable
+        // (Forms Image's visual), not a SpriteRuntime. They must serialize as Sprite instances carrying the
+        // icon SourceFile -- not as empty Container instances (which lose the image entirely).
+        ContainerRuntime root = new();
+        Microsoft.Xna.Framework.Graphics.Texture2D texture = MakeHeadlessTexture();
+        texture.Name = "UI/icon.png";
+        RenderingLibrary.Graphics.Sprite spriteRenderable = new(texture: null);
+        spriteRenderable.Texture = texture;
+        InteractiveGue image = new(spriteRenderable) { Name = "Image" };
+        root.AddChild(image);
+
+        RuntimeSnapshotSerializer serializer = CreateSerializer();
+        ScreenSave screen = serializer.CreateScreenSave(root, "Snapshot", shake: true);
+
+        screen.Instances.First(i => i.Name == "Image").BaseType.ShouldBe("Sprite");
+        StateSave defaultState = screen.States.First(s => s.Name == "Default");
+        defaultState.Variables.First(v => v.Name == "Image.SourceFile").Value.ShouldBe("UI/icon.png");
+    }
+
+    [Fact]
     public void GetStandardTypeName_ShouldResolveContainerRuntime()
     {
         RuntimeSnapshotSerializer serializer = CreateSerializer();
@@ -352,6 +374,32 @@ public class RuntimeSnapshotSerializerTests : BaseTestClass
         RuntimeSnapshotSerializer serializer = CreateSerializer();
 
         serializer.GetStandardTypeName(new GraphicalUiElement()).ShouldBeNull();
+    }
+
+    [Fact]
+    public void GetStandardTypeName_ShouldResolveSpriteRenderableBackedElementAsSprite()
+    {
+        // A bare InteractiveGue whose renderable is a Sprite (e.g. a Forms Image's visual) does not follow
+        // the "<Standard>Runtime" type-name convention, so resolving by type name alone returns null. It must
+        // still resolve to "Sprite" via its renderable -- the same class of bug the Label fix addressed for
+        // type-name-convention roots, generalized here to renderable-backed elements.
+        RenderingLibrary.Graphics.Sprite spriteRenderable = new(texture: null);
+        InteractiveGue element = new(spriteRenderable);
+
+        RuntimeSnapshotSerializer serializer = CreateSerializer();
+
+        serializer.GetStandardTypeName(element).ShouldBe("Sprite");
+    }
+
+    [Fact]
+    public void GetStandardTypeName_ShouldResolveFormsImageVisualAsSprite()
+    {
+        // Ties the fix to the actual reported type: a real Forms Image's visual must resolve to "Sprite".
+        Gum.Forms.Controls.Image image = new();
+
+        RuntimeSnapshotSerializer serializer = CreateSerializer();
+
+        serializer.GetStandardTypeName(image.Visual).ShouldBe("Sprite");
     }
 
     [Fact]

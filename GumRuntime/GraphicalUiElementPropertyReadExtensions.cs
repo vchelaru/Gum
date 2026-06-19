@@ -215,8 +215,22 @@ public static class GraphicalUiElementPropertyReadExtensions
     /// <returns>True when the element exposes a non-null texture; otherwise false.</returns>
     public static bool TryGetTexture(this GraphicalUiElement element, out object? texture)
     {
+        // Standard runtimes (SpriteRuntime/NineSliceRuntime) expose Texture directly on the runtime type.
         PropertyInfo? textureProperty = ResolveReflectedProperty(element.GetType(), "Texture");
         texture = textureProperty?.GetValue(element);
+        if (texture != null)
+        {
+            return true;
+        }
+
+        // A bare InteractiveGue (e.g. a Forms Image's visual) has no Texture property of its own -- the
+        // texture lives on its Sprite/NineSlice renderable. Read it from there so the snapshot still finds it.
+        object? renderable = element.RenderableComponent;
+        if (renderable != null)
+        {
+            PropertyInfo? renderableTextureProperty = ResolveReflectedProperty(renderable.GetType(), "Texture");
+            texture = renderableTextureProperty?.GetValue(renderable);
+        }
         return texture != null;
     }
 

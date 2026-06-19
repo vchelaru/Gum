@@ -172,6 +172,24 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
             }
             type = type.BaseType;
         }
+
+        // Fall back to the renderable's type. An element can wrap a standard renderable (Sprite/Text/
+        // NineSlice) without being the matching *Runtime -- notably a Forms Image's visual, a bare
+        // InteractiveGue whose renderable is a Sprite. Its "standard-ness" lives in the renderable, not the
+        // type name, so without this it resolves to null and flattens to a bare Container, losing the image.
+        // The renderable type names (Sprite/Text/NineSlice) match the catalog names directly. (This
+        // generalizes the Label fix -- which only covered type-name-convention roots -- to any element
+        // backed by a standard renderable, so the same class of bug does not recur per new control.)
+        Type? renderableType = element.RenderableComponent?.GetType();
+        while (renderableType != null)
+        {
+            if (_defaultStates.ContainsKey(renderableType.Name))
+            {
+                return renderableType.Name;
+            }
+            renderableType = renderableType.BaseType;
+        }
+
         return null;
     }
 
