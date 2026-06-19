@@ -32,4 +32,8 @@ Outline quality tends to be better if it appears before the regular font color. 
 
 <figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>The first Text is using a custom Hiero font, the second is using a default font</p></figcaption></figure>
 
+{% hint style="info" %}
+If you are creating fonts in code rather than through the tool, colored outlines can be generated programmatically — no hand-editing of the .png required. See [Advanced Font Effects — Outline Color](../../../code/files-and-fonts/advanced-font-effects.md#outline-color).
+{% endhint %}
+
 For more information on custom fonts, see the [Use Custom Font](use-custom-font.md) page.
