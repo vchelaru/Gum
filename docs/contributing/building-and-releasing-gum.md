@@ -34,7 +34,3 @@ The skill writes a draft to `temp/` and walks through any open questions with yo
 3. Add the generated notes and screenshots to the GitHub release. Fill in the **Full Changelog** compare link once the tag exists.
 4. Create or update the [migration documentation](../gum-tool/upgrading/README.md) if there are breaking changes.
 5. Announce the release across the community channels: FRB Discord, MonoGame Discord, MGE Discord, Kni Discord, Twitter, Bluesky, and the MonoGame community forum.
-
-## FlatRedBall Integration
-
-Gum is a dependency in FRBDK builds, so Gum must be built and uploaded to FlatRedBall's FTP **before** running the FlatRedBall GitHub Actions. Otherwise the FRB build will pick up the previous Gum version.
