@@ -73,6 +73,31 @@ public class SelectedStateTests : BaseTestClass
     }
 
     [Fact]
+    public void SelectedElement_FiresStateSelectedBeforeElementSelected()
+    {
+        // WireframeRefreshCoordinator (issue #3212) relies on the state event firing BEFORE the
+        // element event when an element is selected: HandleStateSelected rebuilds the wireframe and
+        // records the element, then HandleElementSelected skips its redundant rebuild for that same
+        // element. If this cascade order is ever reversed, the element rebuild would no longer be
+        // suppressed and the double-rebuild (and duplicate missing-file errors) would silently return.
+        ScreenSave screen = CreateScreen("TestScreen");
+        var invocationOrder = new List<string>();
+        _pluginManager
+            .Setup(p => p.ReactToStateSaveSelected(It.IsAny<StateSave>()))
+            .Callback(() => invocationOrder.Add(nameof(PluginManager.ReactToStateSaveSelected)));
+        _pluginManager
+            .Setup(p => p.ElementSelected(It.IsAny<ElementSave>()))
+            .Callback(() => invocationOrder.Add(nameof(PluginManager.ElementSelected)));
+
+        _selectedState.SelectedElement = screen;
+
+        invocationOrder.ShouldContain(nameof(PluginManager.ReactToStateSaveSelected));
+        invocationOrder.ShouldContain(nameof(PluginManager.ElementSelected));
+        invocationOrder.IndexOf(nameof(PluginManager.ReactToStateSaveSelected))
+            .ShouldBeLessThan(invocationOrder.IndexOf(nameof(PluginManager.ElementSelected)));
+    }
+
+    [Fact]
     public void SelectedElement_SetWhileNoInstanceSelected_DoesNotFireInstanceSelected()
     {
         // The new InstanceSelected fire-on-silent-clear should only trigger when an
