@@ -1,0 +1,24 @@
+# Decision Records (ADRs)
+
+An **Architecture Decision Record (ADR)** captures one significant decision: the context that
+forced it, the decision made, and the consequences. ADRs are **append-only** — once accepted, a
+record is not rewritten. If a decision is reversed or changed, write a *new* ADR and mark this
+one `Superseded by NNNN`.
+
+This convention exists so the *reasoning* behind direction survives context clears, the passage
+of time, and new collaborators — you can always answer "why is it this way?" without
+re-litigating it.
+
+## Conventions
+
+- Filename: `NNNN-short-kebab-title.md`, zero-padded and sequential (`0001-…`, `0002-…`).
+- Copy `0000-template.md` to start a new record.
+- Status flow: `Proposed` → `Accepted` → optionally `Superseded by NNNN` / `Deprecated`.
+- One decision per ADR. Small and focused beats comprehensive.
+
+## Index
+
+| #    | Title                                            | Status   | Date       |
+|------|--------------------------------------------------|----------|------------|
+| [0001](0001-track-direction-in-checked-in-markdown.md) | Track project direction in checked-in Markdown | Accepted | 2026-06-20 |
+| [0002](0002-target-code-first-frameworks-not-engines.md) | Target code-first C# frameworks, not full engines | Accepted | 2026-06-20 |

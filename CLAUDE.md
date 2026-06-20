@@ -7,6 +7,10 @@ This project (Gum) provides UI solutions for game developers using C#. It includ
 * Runtime libraries for various platforms including MonoGame, KNI, and FNA. Also SkiaSharp and raylib.
 * A tool also called Gum or Gum UI or Gum UI tool which is a WYSIWYG editor for game UI
 
+## Project Direction
+
+High-level direction for Gum — vision, roadmap, open strategic questions, and decision records (ADRs) — lives in `Direction/` at the repo root. **For any discussion of Gum's high-level goals, roadmap, or strategic decisions, read `Direction/README.md` first**, then the specific file for the topic. This is the strategy layer (*what* and *why*); it is separate from the operational guidance in this file and in the skills/agents (*how*), and from the published user-facing docs in `docs/`.
+
 ## Agent Workflow
 
 For every task, invoke the appropriate agent from `.claude/agents/` before proceeding. The agent's instructions provide guidelines for how the task should be performed. Before doing any work, announce which agent you are using such as "Invoking coder agent for this task..."
