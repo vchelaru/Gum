@@ -71,6 +71,21 @@ guarantee. *Risk:* medium; the VM conversion is the bulk.
 effort, then decide the reach-vs-cost question (see `open-questions.md` and the roadmap **Later**
 item) with data instead of a guess.
 
+## Definition of done — every change lands a *tested* unit
+
+This effort's payoff *is* testability, so the bar for every change is not just "logic moved out of
+the view" but "logic moved into a unit that now has a test." Specifically:
+
+- **Each change migrates code into a testable class** — a service, ViewModel, or utility — not
+  merely shuffled within a view-bound class.
+- **TDD it when the change adds or alters behavior:** failing test first, then the change.
+- **Pin it when the change is behavior-preserving:** a pure extraction/move still gets a
+  *characterization (pinning) test* on the newly-extracted unit afterward — even though a pure
+  refactor would otherwise be test-exempt. An extracted-but-untested seam has done the hard part
+  and skipped the reward; capitalizing on the new seam is the whole point.
+
+The operational *how* lives in the `tdd` and `refactoring-direction` skills.
+
 ## Ordering rationale
 
 The order is chosen so each phase de-risks the next: instrument before changing (Phase 0 is the

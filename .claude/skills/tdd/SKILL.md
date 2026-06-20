@@ -20,3 +20,5 @@ No "the cause is obvious, I'll skip the test" exception — that reasoning is ho
 Run the test yourself via Bash. A failure you only reasoned about is not a failure.
 
 Exceptions: docs, csproj/projitems plumbing, pure renames, dead-code removal, cosmetic edits. When in doubt, write the test.
+
+Note: **extracting logic into a new class/service/ViewModel is not a pure rename.** Even when the move preserves behavior, pin the new unit with a characterization test — see [refactoring-direction](../refactoring-direction/SKILL.md). The exemption above is for renames and cosmetics, not for relocating logic into a newly-testable seam.
