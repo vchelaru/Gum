@@ -27,6 +27,10 @@ Horizons describe *confidence and proximity*, not fixed dates:
   Avalonia (the Mac/Linux editor bet), this is the key enabler; if it doesn't, it still improves
   testability (logic becomes unit-testable without the UI), maintainability, and contributor
   friendliness — valuable under every branch of the editor decision.
+  - **Plan & decisions:** the phased approach lives in [`ui-decoupling-plan.md`](ui-decoupling-plan.md);
+    the architecture calls are recorded in
+    [ADR-0003](decisions/0003-decouple-tool-ui-from-logic.md) (the approach) and
+    [ADR-0004](decisions/0004-viewmodels-expose-neutral-presentation-state.md) (the ViewModel rule).
 
 ## Next
 

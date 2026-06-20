@@ -1529,11 +1529,15 @@ public class GumService : IGumService
 #endif
 }
 
-// GraphicalUiElementExtensionMethods (AddToRoot/RemoveFromRoot/AddChild) is intentionally
-// NOT in the Gum namespace. AddToRoot/RemoveFromRoot are instance methods on
-// GraphicalUiElement, and the AddChild codegen crutch lives only in the legacy
-// namespaces (GumServiceCompat.cs) so `using Gum;` never makes gue.AddChild(formsChild)
-// ambiguous with Gum.Forms.Controls.FrameworkElementExt.AddChild. See issue #3119.
+// AddToRoot/RemoveFromRoot and AddChild/RemoveChild are all instance methods on
+// GraphicalUiElement (the latter pair added in GumCommon/Forms/GraphicalUiElement.Forms.cs),
+// so gue.AddToRoot()/gue.AddChild(formsChild) work under just `using Gum;` — no
+// Gum.Forms.Controls or legacy MonoGameGum/RaylibGum import needed, hence no collision with
+// user components named Label/StackPanel/etc. Instance methods also win overload resolution
+// over Gum.Forms.Controls.FrameworkElementExt.AddChild, so importing both namespaces is never
+// ambiguous (CS0121). The AddChild extension in GumServiceCompat.cs remains only so older
+// generated code (syntax versions 0-2) that imports the legacy namespace keeps compiling.
+// See issues #3119 and #3226.
 
 /// <summary>
 /// Convenience extensions for creating runtime visuals from loaded project elements.
