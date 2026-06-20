@@ -47,6 +47,8 @@ Examples:
 
 If a runtime change is in `GumCommon` and you've already built `MonoGameGum.Tests`, that pulls in `GumCommon` and `MonoGameGum` transitively — no need to also build the solution.
 
+**Don't initialize the FNA or Sokol submodules — or build `AllLibraries.sln`, which pulls them in — unless your change actually touches FNA or Sokol code.** A fresh clone/worktree leaves these submodules uninitialized; initializing them triggers a large recursive clone (FNA → SDL/FAudio/FNA3D/…) that can cost many minutes of wall-clock for near-zero added signal. For runtime/library changes, build the individual csprojs instead: `MonoGameGum.Tests` (covers `GumCommon` + `MonoGameGum`), plus `KniGum`, `RaylibGum`, and `SkiaGum`/`SkiaGum.Wpf` as relevant (none need submodules). `FnaGum` is `XNALIKE` — the same compile family as MonoGame/KNI, so if those build it almost certainly does — and Sokol is experimental; neither justifies a submodule clone for a typical `GumCommon` change. Build `AllLibraries.sln` (after the submodules are initialized) only when the change genuinely spans FNA/Sokol.
+
 **Running focused tool unit tests (`GumToolUnitTests`).** Building this project triggers the plugin projects' post-build copy, which uses `$(SolutionDir)`. To run the csproj directly, supply it — with **backslashes** (forward slashes break the `copy`/`md` steps):
 
 ```
