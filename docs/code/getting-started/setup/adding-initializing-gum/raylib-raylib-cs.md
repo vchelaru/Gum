@@ -77,11 +77,11 @@ public class Program
 </strong>
         while (!Raylib.WindowShouldClose())
         {
+<strong>            GumUI.Update(Raylib.GetTime());
+</strong>
             Raylib.BeginDrawing();
             Raylib.ClearBackground(Raylib_cs.Color.SkyBlue);
-
-<strong>            GumUI.Update(Raylib.GetTime());
-</strong><strong>            GumUI.Draw();
+<strong>            GumUI.Draw();
 </strong>
             Raylib.EndDrawing();
         }
