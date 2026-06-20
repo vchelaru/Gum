@@ -18,6 +18,12 @@
 	  <ProjectReference Include="..\..\Runtimes\SkiaGum\SkiaGum.csproj" />
 	</ItemGroup>
 
+	<!-- Render-only GumService (evicted from Gum.SkiaSharp core, #3218). Shared source,
+	     file-linked so these tests exercise the relocated Gum.GumService. -->
+	<ItemGroup>
+	  <Compile Include="..\..\Runtimes\SkiaGum.Standalone\GumService.cs" Link="GumService.cs" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<Using Include="Xunit" />
 	</ItemGroup>

@@ -9,7 +9,7 @@ using Gum.Forms.Controls;
 using Gum.Wireframe;
 using Gum.GueDeriving;
 using RenderingLibrary.Graphics;
-using SkiaGum;
+using Gum;
 using SilkNetGum.Screens;
 using Gum.Managers;
 using GumRuntime;
@@ -47,6 +47,8 @@ unsafe class Program
     static int windowWidth = 1400;
     static int windowHeight = 900;
 
+    static GumService GumUI => GumService.Default;
+
     #endregion
 
     // Code-only screens appended after every screen from the gumx, allowing the
@@ -64,7 +66,7 @@ unsafe class Program
 
     private static void InitializeGum(SKCanvas canvas)
     {
-        GumService.Default.Initialize(canvas, "Content/GumProject/GumProject.gumx");
+        GumUI.Initialize(canvas, "Content/GumProject/GumProject.gumx");
 
         LoadScreen(0);
 
@@ -118,7 +120,7 @@ unsafe class Program
     private static void Draw()
     {
 
-        GumService.Default.Draw();
+        GumUI.Draw();
 
         canvas.Flush();
     }
@@ -373,12 +375,17 @@ unsafe class Program
                             if (ev.Window.Event == (byte)WindowEventID.Resized)
                             {
                                 gl.Viewport(0, 0, (uint)ev.Window.Data1, (uint)ev.Window.Data2);
-                                GumService.Default.HandleResize(ev.Window.Data1, ev.Window.Data2);
+                                GumUI.HandleResize(ev.Window.Data1, ev.Window.Data2);
                             }
                             break;
                     }
                 }
 
+
+                // Per-frame Update drives AnimateSelf (and any other Forms
+                // input/activity pumps). Without this the .achx animation row
+                // on SpriteScreen shows the first frame and never advances.
+                GumUI.Update(totalTime.Elapsed.TotalSeconds);
 
 
 
@@ -391,11 +398,6 @@ unsafe class Program
                 // canvas.Clear(SKColors.Cyan);
                 //_renderer.Render(canvas);
 
-
-                // Per-frame Update drives AnimateSelf (and any other Forms
-                // input/activity pumps). Without this the .achx animation row
-                // on SpriteScreen shows the first frame and never advances.
-                GumService.Default.Update(totalTime.Elapsed.TotalSeconds);
 
                 Draw();
 

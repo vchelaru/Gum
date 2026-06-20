@@ -27,6 +27,12 @@
 	  <ProjectReference Include="..\..\..\Runtimes\SkiaGum\SkiaGum.csproj" />
 	</ItemGroup>
 
+	<!-- Render-only GumService (evicted from Gum.SkiaSharp core, #3218). Shared source,
+	     file-linked here until this sample becomes the Gum.SilkNet game-host runtime (#2738). -->
+	<ItemGroup>
+	  <Compile Include="..\..\..\Runtimes\SkiaGum.Standalone\GumService.cs" Link="GumService.cs" />
+	</ItemGroup>
+
 	<ItemGroup>
 	  <None Update="Content\GumProject\**\*.*">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

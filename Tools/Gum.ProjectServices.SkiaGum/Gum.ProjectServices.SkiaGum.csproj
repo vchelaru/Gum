@@ -11,4 +11,10 @@
 		<ProjectReference Include="..\..\Runtimes\SkiaGum\SkiaGum.csproj" />
 	</ItemGroup>
 
+	<!-- Render-only GumService (evicted from Gum.SkiaSharp core, #3218). Shared source,
+	     file-linked so this headless SVG-export host can drive GumService.Initialize(canvas). -->
+	<ItemGroup>
+		<Compile Include="..\..\Runtimes\SkiaGum.Standalone\GumService.cs" Link="GumService.cs" />
+	</ItemGroup>
+
 </Project>
