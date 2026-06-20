@@ -8,7 +8,7 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 using MonoGameGum.GueDeriving;
-using MonoGameGum;
+using Gum;
 using RenderingLibrary;
 using GameUiSamples.Components;
 using Microsoft.Xna.Framework;

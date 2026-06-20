@@ -12,7 +12,7 @@ using RenderingLibrary;
 using System;
 using GameUiSamples.Services;
 using Microsoft.Xna.Framework;
-using MonoGameGum;
+using Gum;
 using GameUiSamples.Components;
 using MonoGameGum.Forms;
 using MonoGameGum.ExtensionMethods;

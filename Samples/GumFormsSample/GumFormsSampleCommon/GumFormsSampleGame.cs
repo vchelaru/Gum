@@ -4,7 +4,7 @@ using GumFormsSample.Screens;
 using GumFormsSample.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGameGum;
+using Gum;
 using Gum.Forms.Controls;
 using System;
 

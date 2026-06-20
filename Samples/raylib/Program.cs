@@ -2,8 +2,8 @@ using Gum.Converters;
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.Wireframe;
+using Gum;
 using Raylib_cs;
-using RaylibGum;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
@@ -78,11 +78,6 @@ public class BasicShapes
 
         while (!WindowShouldClose())
         {
-            BeginDrawing();
-            // Matches MonoGameGumShapesGallery's clear color so visual diffs across galleries
-            // stay attributable to the shape code, not the page background.
-            ClearBackground(new Color(51, 76, 204, 255));
-
             GumUI.Update(GetTime());
 
             // Apply a freshly-shown screen's initial gamepad focus now that this frame's
@@ -96,6 +91,15 @@ public class BasicShapes
             if (_useManualCamera)
             {
                 UpdateManualCameraFromInput();
+            }
+
+            BeginDrawing();
+            // Matches MonoGameGumShapesGallery's clear color so visual diffs across galleries
+            // stay attributable to the shape code, not the page background.
+            ClearBackground(new Color(51, 76, 204, 255));
+
+            if (_useManualCamera)
+            {
                 GumUI.Draw(_manualCamera);
             }
             else

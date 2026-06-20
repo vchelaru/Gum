@@ -6,7 +6,7 @@ using GumRuntime;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using MonoGameGum;
+using Gum;
 using MonoGameGum.Forms;
 using Gum.GueDeriving;
 using MonoGameGum.Input;

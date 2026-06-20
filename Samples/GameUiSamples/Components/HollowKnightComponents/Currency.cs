@@ -9,7 +9,7 @@ using System.Linq;
 
 using MonoGameGum.GueDeriving;
 using System;
-using MonoGameGum;
+using Gum;
 using Microsoft.Xna.Framework;
 namespace GameUiSamples.Components;
 

@@ -10,7 +10,7 @@ using Gum.GueDeriving;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Gum.Wireframe;
-using MonoGameGum;
+using Gum;
 using Gum.Forms.Controls;
 
 namespace KniGumInCode;
