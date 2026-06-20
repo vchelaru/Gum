@@ -35,6 +35,7 @@ Most changes are **soft breaks**: a permanent `[Obsolete]` shim keeps the old na
 | `GumService` | `MonoGameGum` / `RaylibGum` | `Gum` | Soft — obsolete shim (`CS0618`) |
 | `WindowZoomMode` and hot-reload types | `MonoGameGum` / `RaylibGum` | `Gum` | **Hard** — `CS0246` (enums/types can't be shimmed) |
 | `AddToRoot` / `RemoveFromRoot` | platform extension method | instance method on `GraphicalUiElement` | None — call sites unchanged |
+| `AddChild` / `RemoveChild` (Forms control under a visual) | `Gum.Forms.Controls` extension / `MonoGameGum` shim | instance method on `GraphicalUiElement` | None — call sites unchanged |
 | `ElementSaveExtensionMethods.ToGraphicalUiElement` | `MonoGameGum` | `Gum` | Soft — obsolete forwarder (`CS0618`) |
 | `IReadOnlyListExtensionMethods`, default-filled/stroked renderables, default-visual runtimes | `MonoGameGum.ExtensionMethods` / `.Renderables` / `.Forms.DefaultVisuals` | `Gum.*` | Soft — obsolete shims (`CS0618`) |
 | `Keyboard`, `KeyboardStateProcessor`, `AnalogButton`, deadzone enums, `IInputReceiverKeyboardMonoGame` | `MonoGameGum.Input` | `Gum.Input` | Namespace move — add `using Gum.Input;` (GUM001) |
@@ -139,6 +140,14 @@ If `using Gum;` conflicts with something in your project, use the fully-qualifie
 `AddToRoot()` and `RemoveFromRoot()` are now instance methods on `GraphicalUiElement`, dispatching through `IGumService.Default`. No `using` directive is needed at all — call sites that previously needed `using MonoGameGum;` (or `using RaylibGum;` / `using SokolGum;`) solely for these methods can drop that `using` if it is not needed for other reasons.
 
 The per-platform `GraphicalUiElementExtensionMethods.AddToRoot / RemoveFromRoot` extension methods that previously lived in each platform namespace have been deleted. Since instance methods always win over extension methods in C#, call sites of the form `element.AddToRoot();` continue to compile and work identically — they now resolve to the instance method rather than the extension. No call-site changes are needed.
+
+### `AddChild` / `RemoveChild` for Forms Controls Are Now Instance Methods
+
+Parenting a Forms control under a visual — `gue.AddChild(formsControl)` / `gue.RemoveChild(formsControl)` — previously required `using Gum.Forms.Controls;` (for the `FrameworkElementExt` extension) or the legacy `using MonoGameGum;` / `using RaylibGum;` shim. Importing `Gum.Forms.Controls` drags in the Forms control type names (`Label`, `StackPanel`, …), which collide (`CS0104`) with user components named the same way.
+
+`AddChild(FrameworkElement)` and `RemoveChild(FrameworkElement)` are now also instance methods on `GraphicalUiElement`, so `gue.AddChild(formsControl)` compiles under just `using Gum;` — no Forms-control or platform `using` needed, hence no name collision. Because instance methods win overload resolution over extension methods, importing both `Gum;` and `Gum.Forms.Controls;` is never ambiguous (`CS0121`); the instance method always resolves.
+
+Unlike `AddToRoot` / `RemoveFromRoot`, the existing `Gum.Forms.Controls.FrameworkElementExt.AddChild` extension and the legacy `MonoGameGum` / `RaylibGum` shim are **not** deleted — they remain for FlatRedBall and older generated code, so no existing call sites change.
 
 ### `MonoGameGum.ElementSaveExtensionMethods.ToGraphicalUiElement` Is Now `[Obsolete]`
 
