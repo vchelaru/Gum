@@ -139,12 +139,12 @@ public class Program
 
         while (!Raylib.WindowShouldClose())
         {
+            // Update game/UI state first, then render it.
+            GumUI.Update(Raylib.GetTime());
+
             Raylib.BeginDrawing();
             Raylib.ClearBackground(Raylib_cs.Color.SkyBlue);
-
-            GumUI.Update(Raylib.GetTime());
             GumUI.Draw();
-
             Raylib.EndDrawing();
         }
         Raylib.CloseWindow();
