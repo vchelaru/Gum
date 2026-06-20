@@ -1,0 +1,45 @@
+{
+  "description": "Phase 0 coupling burn-down dashboard for the Gum tool UI/logic decoupling effort (issue #3225). Each 'ratchetedBaseline' is the maximum the ratchet test (CouplingRatchetTests) allows for that metric. A Phase 1 PR that removes coupling LOWERS the relevant number here in the SAME diff that removes the coupling -- that is what makes the burn-down self-proving. The numbers are produced by CouplingScanner (the canonical, deterministic counting method); to recompute after a change run CouplingRatchetTests.Scanner_DumpMeasuredMetrics_ForBaselineUpdates and read the values from the test output.",
+  "measuredOnUtc": "2026-06-20",
+  "toolSourceRelativePath": "Gum",
+  "metrics": {
+    "selfStaticReferences": {
+      "ratchetedBaseline": 194,
+      "rule": "Count of '.Self' static-singleton references (regex \\.Self\\b, so '.SelfManager' does not count) across every .cs file under Gum/ (excluding bin/obj), MINUS the 'ObjectFinder.Self' sub-count. ObjectFinder.Self is the sanctioned static singleton (repo CLAUDE.md) that will never be removed, so it is excluded from the ratchet to keep the burn-down meaningful.",
+      "context": {
+        "totalSelf": 477,
+        "objectFinderSelfExcluded": 283,
+        "note": "ratchetedBaseline = totalSelf - objectFinderSelfExcluded."
+      }
+    },
+    "windowsCouplingInViewModels": {
+      "ratchetedBaseline": 146,
+      "rule": "Within ViewModel files only (filename matches *ViewModel.cs or partial *ViewModel.*.cs), count (A) every 'using System.Windows*;' import line PLUS (B) every whole-word occurrence of an unambiguous WPF type the VMs use unqualified: Visibility, Brush, Brushes, SolidColorBrush, Application, Dispatcher, RoutedEventArgs, BitmapImage, Thickness, FrameworkElement. (A) and (B) never overlap, so there is no double-counting. Ambiguous simple names (Color, Point, Size, Key, Control) are deliberately EXCLUDED because they collide with XNA / System.Drawing / Gum / WinForms types and would misfire. The handoff estimate (~192) counted additional ambiguous tokens; this rule is the deterministic, defensible subset.",
+      "limitation": "A count of 0 is NECESSARY-BUT-NOT-SUFFICIENT for 'the VM layer is WPF-free': because the ambiguous simple names (Color, Point, Size, Key, Control) are excluded, a ViewModel that uses a fully-qualified System.Windows.Point / System.Windows.Media.Color WITHOUT any 'using System.Windows*' line is invisible to this metric. A Phase 3 completion audit MUST also grep for fully-qualified 'System.Windows.' inside VM files, not rely on this count alone.",
+      "context": {
+        "usingDirectiveLines": 33,
+        "allowListTypeOccurrences": 113,
+        "viewModelFilesContainingWpf": 21
+      }
+    },
+    "inlineDialogSites": {
+      "ratchetedBaseline": 7,
+      "rule": "Across every .cs file under Gum/ (excluding bin/obj) EXCEPT the dialog infrastructure itself (any path under Services/Dialogs/), count 'MessageBox.Show' occurrences PLUS '*Window(' construction occurrences (regex new\\s+[\\w.]*Window\\s*\\(, which matches a bare 'new Window(', a simple 'new FooWindow(', AND a qualified 'new Ns.FooWindow('). Raw textual scan: commented-out occurrences are counted (conservative for a ratchet).",
+      "context": {
+        "messageBoxShow": 3,
+        "newWindowConstructions": 4,
+        "windowSites": "new Views.CodeWindow( (MainCodeOutputPlugin), new DeleteOptionsWindow( (DeleteLogic), new FileListWindow( (VariableListConverter), new StateAnimationPlugin.Views.MainWindow( (MainStateAnimationPlugin)",
+        "note": "2 of the 3 MessageBox.Show occurrences are currently commented out (MultiSelectTreeView has the only live one; DeleteLogic and PluginManager are commented). OpenFileDialog/SaveFileDialog (3 more inline file-dialog sites) also bypass IDialogService but are out of this metric's documented scope (MessageBox + *Window only)."
+      }
+    },
+    "interfaceTypeLeaks": {
+      "ratchetedBaseline": 11,
+      "rule": "Across every .cs file under Gum/ (excluding bin/obj), count WinForms/WPF type references that appear INSIDE an interface body (brace-matched, comment/string-aware). Two groups, no overlap: (1) any fully-qualified 'System.Windows.*' reference; (2) a documented allow-list of distinctive types used unqualified: FrameworkElement, FrameworkContentElement, UIElement, Spinner, DragEventArgs, KeyPressEventArgs, MouseEventArgs. A member referencing N leak types contributes N. Stale 'using System.Windows.Forms;' outside any interface body (e.g. ISelectedState.cs) does NOT count -- only the body is scanned. Known leaks: ITabManager (System.Windows.Forms.Control + FrameworkElement), IGuiCommands.ShowSpinner (returns WPF Spinner), IDragDropManager (DragEventArgs + KeyPressEventArgs), IHotkeyManager (5 qualified System.Windows.* refs).",
+      "limitation": "The brace matcher can UNDER-count: a leak that appears AFTER a default-interface-method body containing an interpolated string with a nested '}'-bearing string literal (e.g. $\"{(x ? \"a}\" : \"b\")}\") is missed, because the stray '}' prematurely closes the interface body. Immaterial today since Gum's interfaces are signature-only (no default method bodies); pinned by CouplingScannerTests.CountInterfaceTypeLeaks_UnderCountsLeakAfterDefaultBodyWithBraceBearingInterpolatedString.",
+      "context": {
+        "qualifiedSystemWindows": 7,
+        "unqualifiedAllowList": 4
+      }
+    }
+  }
+}
