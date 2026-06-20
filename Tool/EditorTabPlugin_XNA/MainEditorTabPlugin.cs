@@ -228,7 +228,10 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         // Gum core ships no shader loader, so the tool registers a resolver that compiles a
         // render-target Container's SourceShaderFile (.fx) into an Effect at runtime (ShadowDusk),
         // letting the WYSIWYG preview render shaded containers. Mirrors FontService above.
-        CustomSetPropertyOnRenderable.RenderTargetEffectResolver = EditorTabPlugin_XNA.Services.RenderTargetShaderResolver.Resolve;
+        // Wrapped so a successful compile is reported to the Output window — the resolver only
+        // surfaces failures (via PropertyAssignmentError), so without this a working shader is
+        // silent and users can't tell it actually compiled.
+        CustomSetPropertyOnRenderable.RenderTargetEffectResolver = ResolveAndReportRenderTargetShader;
         CustomSetPropertyOnRenderable.PropertyAssignmentError += HandlePropertyAssignmentError;
 
         AssignEvents();
@@ -245,6 +248,22 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
     private void HandlePropertyAssignmentError(string obj)
     {
         _guiCommands.PrintOutput(obj);
+    }
+
+    // Compiles the .fx via the tool-side resolver and, on success, reports it to the Output window.
+    // The resolver only ever logs failures (it throws, which AssignSourceShaderFileOnContainer turns
+    // into a PropertyAssignmentError), so a working shader would otherwise compile silently. A
+    // successful return is logged here; failures keep propagating to the existing error path. Note
+    // the underlying effect is cached by path in LoaderManager, so this fires once per actual
+    // compile (a cache hit skips the resolver), which is exactly the "it compiled" signal we want.
+    private object? ResolveAndReportRenderTargetShader(string absolutePath)
+    {
+        object? effect = EditorTabPlugin_XNA.Services.RenderTargetShaderResolver.Resolve(absolutePath);
+        if (effect != null)
+        {
+            _guiCommands.PrintOutput($"Compiled render-target shader for the preview:\n{absolutePath}");
+        }
+        return effect;
     }
 
     private void AssignEvents()
