@@ -976,6 +976,30 @@ public class GridTests : BaseTestClass
     }
 
     [Fact]
+    public void AutoRowWithMaxHeight_ShouldStillClamp_WhenChildResizes()
+    {
+        Grid grid = new Grid();
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto, MaxHeight = 100 });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+        Panel child = new Panel();
+        child.Width = 50;
+        child.WidthUnits = DimensionUnitType.Absolute;
+        child.Height = 40;
+        child.HeightUnits = DimensionUnitType.Absolute;
+        grid.AddChild(child, row: 0, column: 0);
+
+        // Grow the child beyond MaxHeight via a resize. An Auto row with a Min/MaxHeight still
+        // relies on the SizeChanged-driven refresh to re-run ApplyMinMaxAutoRowHeights, so the
+        // guard that skips plain Auto rows must NOT skip this case.
+        child.Height = 200;
+
+        GraphicalUiElement rowContainer = (GraphicalUiElement)grid.Visual.Children[0];
+        rowContainer.HeightUnits.ShouldBe(DimensionUnitType.Absolute);
+        rowContainer.Height.ShouldBe(100f);
+    }
+
+    [Fact]
     public void CellContainer_InAbsoluteRow_ShouldHaveRelativeToParentHeight()
     {
         Grid grid = new Grid();
@@ -1223,6 +1247,78 @@ public class GridTests : BaseTestClass
         GridLength length = new GridLength(2, GridUnitType.Star);
 
         length.IsStar.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void PlainAutoRow_ResizeCost_ShouldMatchNonAutoRow_WhenChildResizes()
+    {
+        // A plain Auto row must rely on Gum's native RelativeToChildren propagation exactly like a
+        // Star row — neither should rebuild + reparent the whole subtree on a child resize. Compare
+        // the layout-call cost of the two; before the fix the Auto row's storm dwarfed the Star
+        // row's because OnChildSizeChanged forced a full RefreshLayout for any Auto row.
+        int autoRowDelta = MeasureNestedChildResizeLayoutCalls(useAutoRow: true);
+        int starRowDelta = MeasureNestedChildResizeLayoutCalls(useAutoRow: false);
+
+        autoRowDelta.ShouldBeLessThanOrEqualTo(starRowDelta + 4);
+    }
+
+    [Fact]
+    public void PlainAutoRow_ShouldNotRebuildCells_WhenChildSizeChanges()
+    {
+        Grid grid = new Grid();
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+        Panel child = new Panel();
+        child.Width = 50;
+        child.WidthUnits = DimensionUnitType.Absolute;
+        child.Height = 30;
+        child.HeightUnits = DimensionUnitType.Absolute;
+        grid.AddChild(child, row: 0, column: 0);
+
+        GraphicalUiElement rowContainer = (GraphicalUiElement)grid.Visual.Children[0];
+        GraphicalUiElement cellBefore = (GraphicalUiElement)rowContainer.Children[0];
+
+        // A plain Auto row (no Min/Max) is handled natively by Gum's RelativeToChildren
+        // propagation, so a child resize must not trigger a full Grid rebuild. RefreshLayoutCore
+        // recreates every cell container, so an unchanged cell-container instance proves no rebuild.
+        child.Height = 80;
+
+        GraphicalUiElement rowContainerAfter = (GraphicalUiElement)grid.Visual.Children[0];
+        GraphicalUiElement cellAfter = (GraphicalUiElement)rowContainerAfter.Children[0];
+        cellAfter.ShouldBeSameAs(cellBefore);
+    }
+
+    private static int MeasureNestedChildResizeLayoutCalls(bool useAutoRow)
+    {
+        Grid grid = new Grid();
+        grid.RowDefinitions.Add(new RowDefinition
+        {
+            Height = useAutoRow ? GridLength.Auto : new GridLength(1, GridUnitType.Star)
+        });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+        // A non-trivial nested subtree: re-parenting it (which a full rebuild does) forces a full
+        // layout pass over the whole subtree, amplifying the cost of an unnecessary refresh.
+        Panel outer = new Panel();
+        outer.Width = 100;
+        outer.WidthUnits = DimensionUnitType.Absolute;
+        outer.Height = 100;
+        outer.HeightUnits = DimensionUnitType.Absolute;
+        for (int i = 0; i < 12; i++)
+        {
+            Panel leaf = new Panel();
+            leaf.Width = 40;
+            leaf.WidthUnits = DimensionUnitType.Absolute;
+            leaf.Height = 10;
+            leaf.HeightUnits = DimensionUnitType.Absolute;
+            outer.AddChild(leaf);
+        }
+        grid.AddChild(outer, row: 0, column: 0);
+
+        int before = GraphicalUiElement.UpdateLayoutCallCount;
+        outer.Width = 123;
+        return GraphicalUiElement.UpdateLayoutCallCount - before;
     }
 
     [Fact]

@@ -518,17 +518,22 @@ public class Grid :
             }
         }
 
-        bool hasAutoRow = false;
+        // A plain Auto row is RelativeToChildren, and Gum propagates RelativeToChildren height
+        // changes natively, so a child resize needs no refresh. The only resize-driven work an
+        // Auto row requires is re-applying Min/MaxHeight clamping (ApplyMinMaxAutoRowHeights);
+        // this guard mirrors that method's early-out so plain Auto rows skip the full rebuild.
+        bool needsRefreshForAutoRow = false;
         foreach (RowDefinition row in RowDefinitions)
         {
-            if (row.Height.IsAuto)
+            if (row.Height.IsAuto &&
+                (row.MinHeight > 0f || !float.IsPositiveInfinity(row.MaxHeight)))
             {
-                hasAutoRow = true;
+                needsRefreshForAutoRow = true;
                 break;
             }
         }
 
-        if (hasAutoColumn || hasAutoRow)
+        if (hasAutoColumn || needsRefreshForAutoRow)
         {
             RefreshLayout();
         }
