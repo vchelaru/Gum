@@ -22,3 +22,5 @@ re-litigating it.
 |------|--------------------------------------------------|----------|------------|
 | [0001](0001-track-direction-in-checked-in-markdown.md) | Track project direction in checked-in Markdown | Accepted | 2026-06-20 |
 | [0002](0002-target-code-first-frameworks-not-engines.md) | Target code-first C# frameworks, not full engines | Accepted | 2026-06-20 |
+| [0003](0003-decouple-tool-ui-from-logic.md) | Decouple the Gum tool's UI from its application logic | Accepted | 2026-06-20 |
+| [0004](0004-viewmodels-expose-neutral-presentation-state.md) | ViewModels expose resolved display state in neutral types | Accepted | 2026-06-20 |

@@ -24,6 +24,8 @@ When refactoring Gum code, **always move toward instances, interfaces, and dedic
 
 If the reason you're tempted to make something `static` is "so a test can call it without constructing the owner," the right answer is the opposite: keep it instance, and either (a) construct the owner in the test with stub dependencies, or (b) extract the logic into a new small class that's cheap to construct. The test's friction is a signal that the owner has too many responsibilities, not that the method should be static.
 
+**An extraction-for-testability is not done until the extracted unit has a test.** When you pull logic into a new class/service/ViewModel/utility specifically to make it testable, add the test before considering the refactor complete — test-first if the move also changes behavior, or a *characterization (pinning) test* capturing current behavior if the move preserves it. Do not let the [tdd](../tdd/SKILL.md) skill's refactor/rename exemption talk you out of it: extracting a new unit is not a pure rename, and an extracted-but-untested seam wastes the entire point of the extraction.
+
 ## Before refactoring across runtimes
 
 If a refactor touches shared runtime/rendering code (`GumCommon`, `RenderingLibrary`, anything under `Runtimes/`, or `MonoGameGum`), read [gum-runtime-topology](../gum-runtime-topology/SKILL.md) first. The same source is compiled into many assemblies and into FlatRedBall via shared projects, so "builds clean in `AllLibraries.sln`" does not mean "didn't break a consumer" (the WPF runtime and FRB are not in that solution).
