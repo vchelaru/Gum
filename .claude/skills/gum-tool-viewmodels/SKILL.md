@@ -41,24 +41,25 @@ public bool CanImport => IsPreviewLoaded && !IsLoading;
 
 The boundary is **logic vs. theming**:
 
-- **Logic** — what to show, when, in what state — lives on the VM as `[DependsOn]` computed properties. Examples: `Visibility`, `FontStyle`, display strings, enabled/disabled flags. XAML binds directly. Unit-testable.
+- **Logic** — what to show, when, in what state — lives on the VM as `[DependsOn]` computed properties, in **framework-neutral types** (ADR-0004). Examples: `bool` visibility flags, `FontStyle`, display strings, enabled/disabled flags. XAML binds directly (a `bool` visibility flag through a stock `BooleanToVisibilityConverter`). Unit-testable, and the VM stays eligible for the headless assembly.
 - **Theming** — which brush, which font size — stays in XAML so `{DynamicResource ...}` can repaint on a runtime theme switch. Not testable, by necessity (DynamicResource only resolves through a `FrameworkElement`).
 
 Do **not** use `IValueConverter` or `DataTrigger` for logic. The one exception is themed brushes (see below).
 
-Visibility example:
+Visibility example — expose a **`bool`**, not WPF `Visibility` (ADR-0004), so the VM can move into the headless assembly:
 
 ```csharp
 [DependsOn(nameof(ErrorMessage))]
-public Visibility ErrorMessageVisibility =>
-    string.IsNullOrEmpty(ErrorMessage) ? Visibility.Collapsed : Visibility.Visible;
+public bool IsErrorMessageVisible => !string.IsNullOrEmpty(ErrorMessage);
 ```
 
-XAML then binds directly:
+XAML binds through the stock `BooleanToVisibilityConverter` (a pure type-adapter, not logic):
 
 ```xml
-<TextBlock Visibility="{Binding ErrorMessageVisibility}" />
+<TextBlock Visibility="{Binding IsErrorMessageVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
 ```
+
+**Never expose `System.Windows` types from a VM** — `Visibility`, `Color`, `Brush`, `WriteableBitmap`. They pin the VM to the WPF assembly and defeat the compiler-enforced logic↔view boundary. Resolve display state in neutral types instead: `bool` for visibility, Gum's color type (`RenderingLibrary` has one) for colors, a color in place of a `Brush`, `byte[]`/a Gum image for pixels. Framework types live only in the view/converter layer. See `Direction/decisions/0004-viewmodels-expose-neutral-presentation-state.md`.
 
 VMs in `GumCommon` or runtime projects must stay UI-agnostic — this rule is for tool code only.
 

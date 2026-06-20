@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Windows;
 
 namespace ImportFromGumxPlugin.ViewModels;
 
@@ -42,10 +41,9 @@ public class ImportTreeNodeViewModel : ViewModel
     /// <summary>True when this row has at least one diff entry to display.</summary>
     public bool HasStandardDiffRows => _standardDiffRows != null && _standardDiffRows.Count > 0;
 
-    /// <summary>Visibility of the "Details..." button next to the checkbox. Shown iff there are diff rows.</summary>
+    /// <summary>Whether the "Details..." button next to the checkbox is shown. True iff there are diff rows.</summary>
     [DependsOn(nameof(StandardDiffRows))]
-    public Visibility DetailsButtonVisibility =>
-        HasStandardDiffRows ? Visibility.Visible : Visibility.Collapsed;
+    public bool IsDetailsButtonVisible => HasStandardDiffRows;
 
     public InclusionState InclusionState
     {
