@@ -131,13 +131,3 @@ public static void Main()
 ```
 
 <figure><img src="../../../../.gitbook/assets/10_07 36 10.gif" alt=""><figcaption><p>Button in raylib responding to clicks</p></figcaption></figure>
-
-{% hint style="warning" %}
-As of August 2025 the raylib implementation is missing a few controls. Specifically the controls that are not present are:
-
-* PasswordBox
-
-Additionally, raylib Gum does not currently read input from keyboards or gamepads.
-
-If your game needs these capabilities, or if you would like to help contribute to develop them, please post on our [GitHub issues](https://github.com/vchelaru/Gum/issues) or [join our Discord](https://discord.gg/uQSam6w36d).
-{% endhint %}

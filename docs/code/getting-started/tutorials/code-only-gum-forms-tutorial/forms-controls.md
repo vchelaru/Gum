@@ -16,7 +16,7 @@ Forms controls are a collection of classes which provide common UI behavior. You
 * StackPanel
 * TextBox
 
-All controls are in the `MonoGameGum.Forms.Controls` namespace.
+All controls are in the `Gum.Forms.Controls` namespace.
 
 {% hint style="info" %}
 Forms naming is based on naming from WPF. If you are familiar with WPF or similar libraries like Avalonia, you may find many of the names and concepts familiar.

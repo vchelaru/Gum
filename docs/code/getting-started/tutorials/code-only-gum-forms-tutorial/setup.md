@@ -10,36 +10,68 @@ This tutorial uses Gum's default visuals to keep the dependency footprint minima
 
 ## Introduction
 
-This tutorial walks you through turning an empty MonoGame project into a code-only Gum project, which acts as a starting point for the rest of the tutorials.
+This tutorial walks you through turning an empty MonoGame or Raylib project into a code-only Gum project, which acts as a starting point for the rest of the tutorials.
 
 This tutorial covers:
 
 * Adding Gum NuGet packages
-* Modifying your Game class to support Gum and Gum Forms
+* Adding the code to initialize, update, and draw Gum
 * Adding your first Gum control (Button)
+
+Everything after you have a root container is identical across MonoGame and Raylib. The only part that differs is the host application skeleton on this Setup page — once Gum is initialized, the rest of the tutorial series is fully shared.
 
 ## Adding Gum NuGet Packages
 
-Before writing any code, we must add the Gum NuGet package. Add the Gum.MonoGame package to your game. For more information see the [Setup page](https://docs.flatredball.com/gum/code/monogame/setup).
+Before writing any code, add the Gum NuGet package for your platform.
 
-Once you are finished, your game project should reference the `Gum.MonoGame` project.
+{% tabs %}
+{% tab title="MonoGame" %}
+Add the `Gum.MonoGame` package to your game. For more information see the [MonoGame/KNI/FNA setup page](../../setup/adding-initializing-gum/monogame-kni-fna/README.md).
+
+Once you are finished, your game project should reference the `Gum.MonoGame` package.
 
 <figure><img src="../../../../.gitbook/assets/NuGetGum.png" alt=""><figcaption><p>Gum.MonoGame NuGet package</p></figcaption></figure>
+{% endtab %}
+
+{% tab title="Raylib" %}
+Add the `Gum.raylib` package to your game ([https://www.nuget.org/packages/Gum.raylib](https://www.nuget.org/packages/Gum.raylib)). For more information see the [raylib setup page](../../setup/adding-initializing-gum/raylib-raylib-cs.md).
+
+Modify csproj:
+
+```xml
+<PackageReference Include="Gum.raylib" />
+```
+
+Or add through the command line:
+
+```bash
+dotnet add package Gum.raylib
+```
+{% endtab %}
+{% endtabs %}
 
 ## Adding Gum to Your Game
 
-Gum requires a few lines of code to get started. A simplified Game class with the required calls would look like the following code:
+Gum requires a few lines of code to get started. The host application skeleton differs by platform — MonoGame uses a `Game` subclass whose `Initialize`/`Update`/`Draw` methods the framework calls for you, while Raylib uses a `Program.Main` with a game loop you own. The Gum calls themselves are the same on both backends: initialize once, then update and draw each frame.
 
+A simplified host with the required calls would look like the following code:
+
+{% tabs %}
+{% tab title="MonoGame" %}
 ```csharp
+using Microsoft.Xna.Framework;
+using Gum;
 using Gum.Forms;
 using Gum.Forms.Controls;
+
+namespace MyGumProject;
 
 public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
-    
+
     GumService GumUI => GumService.Default;
-    
+
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
@@ -50,10 +82,10 @@ public class Game1 : Game
     protected override void Initialize()
     {
         GumUI.Initialize(this);
-            
+
         var mainPanel = new StackPanel();
         mainPanel.AddToRoot();
-        
+
         base.Initialize();
     }
 
@@ -71,64 +103,94 @@ public class Game1 : Game
     }
 }
 ```
+{% endtab %}
+
+{% tab title="Raylib" %}
+```csharp
+using Gum;
+using Gum.Forms;
+using Gum.Forms.Controls;
+using Raylib_cs;
+
+namespace MyGumProject;
+
+public class Program
+{
+    static GumService GumUI => GumService.Default;
+
+    // STAThread is required if you deploy using NativeAOT on Windows - See https://github.com/raylib-cs/raylib-cs/issues/301
+    [STAThread]
+    public static void Main()
+    {
+        const int screenWidth = 800;
+        const int screenHeight = 450;
+
+        Raylib.InitWindow(screenWidth, screenHeight, "Gum Sample");
+        Raylib.SetTargetFPS(60);
+
+        // This tells Gum to use the entire screen
+        GumUI.CanvasWidth = screenWidth;
+        GumUI.CanvasHeight = screenHeight;
+
+        GumUI.Initialize();
+
+        var mainPanel = new StackPanel();
+        mainPanel.AddToRoot();
+
+        while (!Raylib.WindowShouldClose())
+        {
+            Raylib.BeginDrawing();
+            Raylib.ClearBackground(Raylib_cs.Color.SkyBlue);
+
+            GumUI.Update(Raylib.GetTime());
+            GumUI.Draw();
+
+            Raylib.EndDrawing();
+        }
+        Raylib.CloseWindow();
+    }
+}
+```
+{% endtab %}
+{% endtabs %}
 
 The code above includes the following sections:
 
-* Initialize - The Initialize method prepares Gum for use. It must be called one time for every Gum project.
-* Once Gum is initialized, we can create controls such as the `StackPanel` which contains all other controls. By calling `AddToRoot`, the `mainPanel` is drawn and receives input. All items added to the `StackPanel` will also be drawn and receive input, so we only need to call `AddToRoot` on the `StackPanel`.
+* Initialize - the initialization code prepares Gum for use. It must be called one time for every Gum project. Once Gum is initialized, we can create controls such as the `StackPanel` which contains all other controls. By calling `AddToRoot`, the `mainPanel` is drawn and receives input. All items added to the `StackPanel` will also be drawn and receive input, so we only need to call `AddToRoot` on the `StackPanel`.
 
 ```csharp
 // Initialize
-GumUI.Initialize(this);
 var mainPanel = new StackPanel();
 mainPanel.AddToRoot();
 ```
 
 * Update - this updates the internal keyboard, mouse, and gamepad instances and applies default behavior to any forms components. For example, if a `Button` is added to the `StackPanel`, this code is responsible for checking if the cursor is overlapping the `Button` and adjusting the highlight/pressed state appropriately.
 
-```csharp
-// Update
-GumUI.Update(gameTime);
-```
+* Draw - this draws all Gum objects to the screen. This does not yet perform any drawing since `StackPanels` are invisible, but we'll be adding controls later in this tutorial.
 
-* Draw - this method draws all Gum objects to the screen. This method does not yet perform any drawing since `StackPanels` are invisible, but we'll be adding controls later in this tutorial.
+We can run our project to see a blank screen filled with the clear color.
 
-```csharp
-// Draw
-GumUI.Draw();
-```
-
-We can run our project to see a blank (cornflower blue) screen.
-
-<figure><img src="../../../../.gitbook/assets/image (2) (1).png" alt=""><figcaption><p>Empty MonoGame project</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (2) (1).png" alt=""><figcaption><p>Empty project</p></figcaption></figure>
 
 ### Adding Controls
 
-Now that we have Gum running, we can add controls to our `StackPanel` (`mainPanel`). The following code in Initialize adds a `Button` which responds to being clicked by modifying its `Text` property:
+Now that we have Gum running, we can add controls to our `StackPanel` (`mainPanel`). The following code adds a `Button` which responds to being clicked by modifying its `Text` property. Add it right after `mainPanel` is created:
 
-<pre class="language-csharp"><code class="lang-csharp">protected override void Initialize()
-{
-    GumUI.Initialize(this);
-
-    var mainPanel = new StackPanel();
-    mainPanel.Visual.AddToRoot();
-
-<strong>    // Creates a button instance
-</strong><strong>    var button = new Button();
-</strong><strong>    // Adds the button as a child so that it is drawn and has its
-</strong><strong>    // events raised
-</strong><strong>    mainPanel.AddChild(button);
-</strong><strong>    // Initial button text before being clicked
-</strong><strong>    button.Text = "Click Me";
-</strong><strong>    // Makes the button wider so the text fits
-</strong><strong>    button.Width = 350;
-</strong><strong>    // Click event can be handled with a lambda
-</strong><strong>    button.Click += (_, _) =>
-</strong><strong>        button.Text = $"Clicked at {System.DateTime.Now}";
-</strong>
-    base.Initialize();
-}
-</code></pre>
+```csharp
+// Initialize
+// Creates a button instance
+var button = new Button();
+// Adds the button as a child so that it is drawn and has its
+// events raised
+mainPanel.AddChild(button);
+// Initial button text before being clicked
+button.Text = "Click Me";
+// Makes the button wider so the text fits
+button.Width = 350;
+// Click event can be handled with a lambda
+button.Click += (_, _) =>
+    button.Text = $"Clicked at {System.DateTime.Now}";
+```
 
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA12NSwvCMBCE_8oSPFSQUBQvSg--EA-KaNGLINEsdGmagN34xP9uH6LibWfmm9mHmOVTn4kenzy2BFliUobuKHrirE6QKbJLZdFABBYvsGZ1TCsjaPZ39hPLDeVeGTnQOnYr57iKy4WDZ3b2XR9W4q9adEYJGR3UaBnWl4zxykVz58Ow3R4ZOqYwx1p9oS1pTgqq0w2_Zg1X6DCCYN-CfROiUncm__ONn33UoBge61vOmMmxYowpQ7lwl-f7r3i-AEs5ZmU0AQAA)
 

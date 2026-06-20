@@ -158,6 +158,8 @@ protected override void Initialize()
 
 **Platform-agnostic by default:** prefer `// Initialize` over MonoGame-specific phrasing unless the page is explicitly MonoGame-only. This supports Raylib and other runtimes.
 
+**Irreducible per-platform syntax → tabs, don't ask.** First try to collapse a sample to a single platform-neutral form. When the syntax genuinely *cannot* collapse — most often because a member's **type** differs per backend (e.g. `KeyCombo.PushedKey` / `KeyEventArgs.Key` is XNA `Microsoft.Xna.Framework.Input.Keys` on MonoGame but `Gum.Forms.Input.Keys` on Raylib, same names/values but distinct types; or a host skeleton that's a `Game` subclass vs a `Program.Main` loop) — wrap just those blocks in GitBook `{% tabs %}` with one `{% tab %}` per platform (e.g. `MonoGame` / `Raylib`). This is the standard, expected treatment for irreducible divergence; use it without asking. Keep the surrounding prose shared above/below the tabs — only the code that truly differs goes inside.
+
 ## XnaFiddle Links
 
 For adding or updating XnaFiddle interactive links, see [xnafiddle.md](xnafiddle.md).
