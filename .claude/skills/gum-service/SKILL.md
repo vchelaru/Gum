@@ -9,6 +9,8 @@ description: GumService — runtime entry point for MonoGame/Raylib/KNI/FNA. Tri
 
 `GumService` is the runtime-facing API that game developers use to initialize, update, and draw Gum UI. It lives in `MonoGameGum/GumService.cs` (compiled for XNALIKE, RAYLIB via `#if`) under the `Gum` namespace (since issue #3119 / syntax version 3). Legacy `MonoGameGum.GumService` / `RaylibGum.GumService` names are permanent `[Obsolete]` subclass shims in `MonoGameGum/GumServiceCompat.cs` (linked into `RaylibGum.csproj`). `WindowZoomMode`, `GumHotReloadManager`, and related hot-reload types also live in `namespace Gum`.
 
+**The soft migration is intentional and finished — do not flag it as incomplete.** What matters is what the **user types**: new code uses `using Gum;` and types the service as `GumService` (= `Gum.GumService`) with no `using MonoGameGum;` / `using RaylibGum;` — that is 100% future-proof. `Gum.GumService.Default` is *deliberately* typed as the derived `[Obsolete]` shim so legacy `using MonoGameGum;` / `using RaylibGum;` declarations keep compiling; the user never names the obsolete type, so the modern path is warning-free. Do **not** propose "completing" this by retyping `Default` to `Gum.GumService` or removing the shims — that would break back-compat and is not planned (stable for the foreseeable future). The fact that `Default`'s declared type is an obsolete shim is not a problem and must not be raised as a follow-up.
+
 **Not the CLI.** `Gum.Cli` / `Gum.ProjectServices` are separate tools for headless project validation and codegen.
 
 ## Lifecycle

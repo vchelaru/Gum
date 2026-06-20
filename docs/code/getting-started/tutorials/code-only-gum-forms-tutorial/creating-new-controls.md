@@ -20,7 +20,7 @@ using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Forms.DefaultVisuals;
 
-namespace MonoGameAndGum.Components;
+namespace MyGame.Components;
 
 // By inheriting from Panel we get a
 // Visual object automatically instead
@@ -200,18 +200,14 @@ For more information on working with NineSliceRuntime, see the [NineSliceRuntime
 
 `TextInputDialog` includes a `Label` named `prompt`. This is defined at class scope so that the prompt can be assigned per-instance.
 
-For example, we could change our code in Game1 to set the prompt text as shown in the following code block:
+For example, we could set the prompt text in our initialization code as shown in the following code block:
 
 ```csharp
-protected override void Initialize()
-{
-    GumUi.Initialize(this);
-
-    var dialog = new TextInputDialog();
-    dialog.AddToRoot();
-    dialog.Anchor(Gum.Wireframe.Anchor.Center);
-    dialog.PromptText = "Enter character name:";
-}
+// Initialize
+var dialog = new TextInputDialog();
+dialog.AddToRoot();
+dialog.Anchor(Gum.Wireframe.Anchor.Center);
+dialog.PromptText = "Enter character name:";
 ```
 
 [Try on XnaFiddle.NET](https://xnafiddle.net/#code=H4sIAAAAAAAAA51V3U_bMBB_719h9SmVJgs2nqiYVJpR0MZAtMBeTXJNrLp25DgtH-J_39lJEydNxVhfGt_nz3fn3xU5lwm5VlLN2BpmxXo8KJwIP-mF0ut8T0CnShqtRK3xvOmsgBA036B83zGEJSuEeeB5wUROH77VEXikVa6Whv6RjF5oDLZVevWBms40y1IeIZBBVjwJHpFIsDwnC3g2VzIrTMiZUAk5JbdMghi8DQj-frEnECTTap0Z9LSiyjs32qa7dSobxClLL_tLwJCz75UrtQbjWpfv6cgZ2TBRQGnz3srUQRiMOplMynP6yGOTYpSvJ-O24hJ4kppKU6s2TJMnFq0SrQoZo1bClvzmEuaYEe4KafgaglEn1iSOpykXcdC4eiaNkIYqWgW2l49cw9L2wInoBRei38NestCASObmRWBl6SQyfAP2BHSeaW5gngKYXu9JlomXuWEGgj73-mLU9XbUKQSXErTTVIXASNHKCfwSNGaIh0W2-2fk-KjXYCKjVOlOCUohnYI0oA_Wtoni4yxnpcLnpvIAtDpO6eEZtcdt-MOiIAZPp8NOQazwXD1X2Rbl6aN8lZN_r1JSz-bRvqp83qXFveQmRzNbtJAZtnjJAHkAB1HmXEmrtiJ6B4LZ3i7ULdNYy-5YF8Yo-al2NnPd-Ppj2ki9zp_0G9xojpgQoJJo5J3opdL8FemQiQ5itTp3ASq45SE4AKDGuvPy7Haiusc3P7utjZiMQPxPPt_Ts_XFdd6pEw53bPbe4Vy7AI6Rae1_RbQ7eg5hg-_0mkmW4HQmNWk7m2I9B2319vP-ynJoI9ttjDZNu1TBiLzVsapb9yYM7FMcjWsC1spAZCAmagNa8xjIRvGYXOEoIhfzV9gjYweMegY24hfS3mYPoO1E41LzCmm7E5c7qHl3Ld5vbEs725uFulPK9Ok-w0CVT7PMGoKIUqZZZL8kRjgd-vybg3_TUXt5HajdfRZbmrZ9WeDTJkn10V_Iyro26mTvV3-AINRs-w_5W_NBpwKYDqZK2PIpLZdCbUGf48r2MJWYXfwuUifcw_k--AsSDKA7VAkAAA)
