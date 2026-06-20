@@ -81,6 +81,13 @@ Either way, the **cross-file diff for those lines goes to zero** while each plat
 
 **Gotcha that confuses fresh readers:** the canonical "home" copy can already carry `#if RAYLIB` branches that are **dead in its own current build**. `Gum/Wireframe/CustomSetPropertyOnRenderable.cs` is compiled into `MonoGameGum` (where `RAYLIB` is **not** defined), yet it contains `#if RAYLIB … namespace RaylibGum.Renderables;` scaffolding. That is intentional pre-staging for the day `RaylibGum.csproj` drops its local copy (`Runtimes/RaylibGum/Renderables/CustomSetPropertyOnRenderable.cs`) and links the home file instead. Seeing `#if RAYLIB` inside a MonoGame-compiled file is not a bug.
 
+**Gotcha — the `#nullable` context travels with the consuming project, not the file.** A
+file-linked shared source compiles under each consumer's `<Nullable>` setting, and host
+projects disagree (e.g. `SkiaGum.Wpf` has no `<Nullable>`, so a linked file's `string?`
+annotations raise CS8632 there). Put `#nullable enable` at the top of the shared file so its
+annotations stay valid and warning-free in every consumer regardless of their setting. (Issue
+#3218, relocating the render-only `GumService` into WPF/MAUI/Silk hosts with differing settings.)
+
 ## Mechanical Steps
 
 1. Read all three per-platform source files end to end. Write down every difference.
@@ -100,4 +107,4 @@ Not a general refactoring guide. Not a pattern for unifying non-runtime files. S
 
 The **convergence technique** above, however, applies to any source that *already exists as per-platform duplicate copies* heading for a single linked home — not only `GueDeriving` wrappers. The canonical non-wrapper example is the string-path dispatch/bridge file `CustomSetPropertyOnRenderable.cs` (MonoGame copy in `Gum/Wireframe/`, Raylib copy in `Runtimes/RaylibGum/Renderables/`). The "don't apply this to tool code" exclusion is about not *inventing* the source-sharing pattern for things that are genuinely single-home; it does not forbid converging files that are already duplicated per platform.
 
-This skill is also **not** the source of truth for *which* runtimes are unified. Roadmap and per-runtime status live in the (gitignored) design docs at `.claude/designs/runtime-unification/` — `RuntimeNorthStar.md` for the workstream-level roadmap, `runtime-refactoring.md` for per-runtime details. Update those when a unification lands; do not duplicate status here.
+This skill is also **not** the source of truth for *which* runtimes are unified. Roadmap and per-runtime status live in the (gitignored) design docs at `.claude/designs/runtime-unification/` — `RuntimeNorthStar.md` for the workstream-level roadmap, `RuntimeUnificationAndRefactor.md` for per-runtime details. Update those when a unification lands; do not duplicate status here.

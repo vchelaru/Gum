@@ -15,4 +15,10 @@
     <ProjectReference Include="..\SkiaGum\SkiaGum.csproj" />
   </ItemGroup>
 
+  <!-- Render-only GumService (evicted from Gum.SkiaSharp core, #3218). Shared source,
+       file-linked here so this host lib ships its own Gum.GumService. -->
+  <ItemGroup>
+    <Compile Include="..\SkiaGum.Standalone\GumService.cs" Link="GumService.cs" />
+  </ItemGroup>
+
 </Project>

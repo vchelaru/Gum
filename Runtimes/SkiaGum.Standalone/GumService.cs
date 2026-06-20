@@ -1,3 +1,8 @@
+// This is shared source file-linked into host projects with differing <Nullable>
+// settings (e.g. SkiaGum.Wpf does not enable it), so declare the nullable context
+// here to keep the file's annotations valid and warning-free everywhere.
+#nullable enable
+
 using Gum.DataTypes;
 using Gum.Forms.Controls;
 using Gum.Managers;
@@ -11,15 +16,20 @@ using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using ToolsUtilities;
 
-namespace SkiaGum;
+// Render-only GumService for SkiaSharp host environments (WPF, MAUI, Silk.NET,
+// standalone bring-your-own-canvas). namespace Gum / type GumService mirrors the
+// game-host GumService (MonoGameGum/GumService.cs) so user code is portable across
+// hosts. This file is shared source: it is NOT compiled into Gum.SkiaSharp (which is
+// rendering-only) but file-linked into each host lib/sample/tool that needs it.
+// See .claude/designs/runtime-unification/GumServiceHostModel.md (issues #3218, #2738).
+namespace Gum;
 public class GumService : IGumService
 {
-    static GumService _default;
+    static GumService? _default;
     public static GumService Default
     {
         get
@@ -44,7 +54,7 @@ public class GumService : IGumService
     /// <see cref="GraphicalUiElement.AddToRoot()"/>
     /// become children of this container. Null until <c>Initialize</c> is called.
     /// </summary>
-    public InteractiveGue Root { get; private set; }
+    public InteractiveGue Root { get; private set; } = null!;
 
     #region IGumService implementation
 
@@ -83,7 +93,7 @@ public class GumService : IGumService
     /// Queue used to defer actions onto the main loop. Pending actions are processed at
     /// the start of each <see cref="Update"/>.
     /// </summary>
-    public DeferredActionQueue DeferredQueue { get; private set; }
+    public DeferredActionQueue DeferredQueue { get; private set; } = null!;
 
     float? IGumService.GameTime => _hasReceivedUpdate ? (float?)_previousTotalSeconds : null;
 
@@ -126,7 +136,7 @@ public class GumService : IGumService
         SystemManagers.Default.Initialize();
         SystemManagers.Default.Renderer.ClearsCanvas = false;
 
-        GumProjectSave gumProject = null;
+        GumProjectSave? gumProject = null;
 
         if (!string.IsNullOrEmpty(gumProjectFile))
         {
