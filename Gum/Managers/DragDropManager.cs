@@ -19,13 +19,8 @@ using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Reflection.Metadata;
-using System.Windows.Forms;
-using System.Windows.Navigation;
-using Gum.Extensions;
 using ToolsUtilities;
 using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.Plugins.InternalPlugins.VariableGrid;
@@ -712,11 +707,6 @@ public class DragDropManager : IDragDropManager
         return last;
     }
 
-    public void HandleKeyPress(KeyPressEventArgs e)
-    {
-        int m = 3;
-    }
-
     #endregion
 
     #region General Functions
@@ -1093,24 +1083,25 @@ public class DragDropManager : IDragDropManager
         return null;
     }
 
-    public void OnWireframeDragEnter(object? sender, DragEventArgs e)
+    /// <inheritdoc/>
+    public DragAcceptDecision DecideWireframeDragEffect(bool hasFileDrop, bool hasNodes)
     {
-        var hasFileDrop = e.Data.GetDataPresent(DataFormats.FileDrop);
-        var fileDropBlockedReason = GetFileDropBlockedReason();
-        var canDropFile = hasFileDrop && fileDropBlockedReason == null;
+        string? fileDropBlockedReason = GetFileDropBlockedReason();
+        bool canDropFile = hasFileDrop && fileDropBlockedReason == null;
 
-        var isNodes = e.HasData<List<TreeNode>>() || e.HasData<TreeNode>();
-
-        if (canDropFile || isNodes)
+        if (canDropFile || hasNodes)
         {
-            e.Effect = DragDropEffects.Copy;
+            return new DragAcceptDecision(Accept: true, BlockedReason: null);
         }
-        else if (hasFileDrop && fileDropBlockedReason != null)
+
+        if (hasFileDrop && fileDropBlockedReason != null)
         {
             // The drop is being rejected (no Copy cursor). Surface why so an
             // otherwise-silent "drag+drop stopped working" is diagnosable (#3128).
-            _guiCommands.PrintOutput($"File drag rejected: {fileDropBlockedReason}.");
+            return new DragAcceptDecision(Accept: false, BlockedReason: fileDropBlockedReason);
         }
+
+        return new DragAcceptDecision(Accept: false, BlockedReason: null);
     }
 
     private void SaveAndRefresh()
