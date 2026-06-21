@@ -26,7 +26,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using ToolsUtilities;
-using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace Gum;
 
@@ -36,34 +35,20 @@ public class ProjectManager : IProjectManager
 
     GumProjectSave? _gumProjectSave;
 
-    static ProjectManager mSelf;
-
     bool mHaveErrorsOccurredLoadingProject = false;
 
-    private ISelectedState _selectedState;
-    private IElementCommands _elementCommands;
-    private IDialogService _dialogService;
-    private IGuiCommands _guiCommands;
-    private IFileCommands _fileCommands;
-    private IMessenger _messenger;
-    private IFileWatchManager _fileWatchManager;
-    private StandardElementsManagerGumTool _standardElementsManagerGumTool;
+    private readonly ISelectedState _selectedState;
+    private readonly Lazy<IElementCommands> _elementCommands;
+    private readonly IDialogService _dialogService;
+    private readonly IGuiCommands _guiCommands;
+    private readonly Lazy<IFileCommands> _fileCommands;
+    private readonly IMessenger _messenger;
+    private readonly Lazy<IFileWatchManager> _fileWatchManager;
+    private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
 
     #endregion
 
     #region Properties
-
-    public static ProjectManager Self
-    {
-        get
-        {
-            if (mSelf == null)
-            {
-                mSelf = new ProjectManager();
-            }
-            return mSelf;
-        }
-    }
 
     public GumProjectSave? GumProjectSave => _gumProjectSave;
 
@@ -85,9 +70,24 @@ public class ProjectManager : IProjectManager
     #region Methods
 
 
-    private ProjectManager()
+    public ProjectManager(
+        ISelectedState selectedState,
+        Lazy<IElementCommands> elementCommands,
+        IDialogService dialogService,
+        IGuiCommands guiCommands,
+        Lazy<IFileCommands> fileCommands,
+        IMessenger messenger,
+        Lazy<IFileWatchManager> fileWatchManager,
+        IStandardElementsManagerGumTool standardElementsManagerGumTool)
     {
-
+        _selectedState = selectedState;
+        _elementCommands = elementCommands;
+        _dialogService = dialogService;
+        _guiCommands = guiCommands;
+        _fileCommands = fileCommands;
+        _messenger = messenger;
+        _fileWatchManager = fileWatchManager;
+        _standardElementsManagerGumTool = standardElementsManagerGumTool;
     }
 
     public void LoadSettings()
@@ -97,15 +97,6 @@ public class ProjectManager : IProjectManager
 
     public async Task Initialize()
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _elementCommands = Locator.GetRequiredService<IElementCommands>();
-        _dialogService = Locator.GetRequiredService<IDialogService>();
-        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        _fileCommands = Locator.GetRequiredService<IFileCommands>();
-        _messenger =  Locator.GetRequiredService<IMessenger>();
-        _fileWatchManager = Locator.GetRequiredService<IFileWatchManager>();
-        _standardElementsManagerGumTool = Locator.GetRequiredService<StandardElementsManagerGumTool>();
-
         await CommandLineManager.Self.ReadCommandLine();
 
         if (!CommandLineManager.Self.ShouldExitImmediately)
@@ -114,7 +105,7 @@ public class ProjectManager : IProjectManager
 
             if (!isShift && !string.IsNullOrEmpty(CommandLineManager.Self.GlueProjectToLoad))
             {
-                _fileCommands.LoadProject(CommandLineManager.Self.GlueProjectToLoad);
+                _fileCommands.Value.LoadProject(CommandLineManager.Self.GlueProjectToLoad);
 
                 if (!string.IsNullOrEmpty(CommandLineManager.Self.ElementName))
                 {
@@ -123,7 +114,7 @@ public class ProjectManager : IProjectManager
             }
             else if (!isShift && !string.IsNullOrEmpty(GeneralSettingsFile.LastProject))
             {
-                _fileCommands.LoadProject(GeneralSettingsFile.LastProject);
+                _fileCommands.Value.LoadProject(GeneralSettingsFile.LastProject);
 
                 if(GumProjectSave == null)
                 {
@@ -145,7 +136,7 @@ public class ProjectManager : IProjectManager
         {
             if(CommandLineManager.Self.ShouldCodeGenAll)
             {
-                _fileCommands.LoadProject(CommandLineManager.Self.GlueProjectToLoad);
+                _fileCommands.Value.LoadProject(CommandLineManager.Self.GlueProjectToLoad);
 
                 await _messenger.SendAsync(new RequestCodeGenerationMessage());
             }
@@ -169,32 +160,28 @@ public class ProjectManager : IProjectManager
 
         PluginManager.Self.ProjectLoad(_gumProjectSave);
 
-        _fileCommands.LoadLocalizationFile();
+        _fileCommands.Value.LoadLocalizationFile();
     }
 
     public bool LoadProject()
     {
-        var openFileDialog = new OpenFileDialog();
-
-        openFileDialog.Filter = "Gum Project (*.gumx)|*.gumx";
-        openFileDialog.Title = "Select project to load";
-
-        DialogResult result = openFileDialog.ShowDialog();
-
-
-
-        if (result == DialogResult.OK)
+        List<string>? files = _dialogService.OpenFile(new OpenFileDialogOptions
         {
-            string fileName = openFileDialog.FileName;
+            Filter = "Gum Project (*.gumx)|*.gumx",
+            Title = "Select project to load",
+        });
 
+        string? fileName = files?.FirstOrDefault();
+
+        if (fileName != null)
+        {
             _selectedState.SelectedInstance = null;
             _selectedState.SelectedElement = null;
 
-            _fileCommands.LoadProject(fileName);
+            _fileCommands.Value.LoadProject(fileName);
 
             return true;
         }
-
 
         return false;
     }
@@ -352,7 +339,7 @@ public class ProjectManager : IProjectManager
 
         if (_gumProjectSave != null)
         {
-            _fileCommands.LoadLocalizationFile();
+            _fileCommands.Value.LoadLocalizationFile();
         }
 
         GeneralSettingsFile.AddToRecentFilesIfNew(fileName);
@@ -755,31 +742,31 @@ public class ProjectManager : IProjectManager
             {
                 PluginManager.Self.BeforeSavingProjectSave(GumProjectSave);
 
-                _elementCommands.SortVariables();
+                _elementCommands.Value.SortVariables();
 
                 bool saveContainedElements = isNewProject || forceSaveContainedElements;
 
                 try
                 {
 
-                    _fileWatchManager.IgnoreNextChangeUntil(GumProjectSave.FullFileName);
+                    _fileWatchManager.Value.IgnoreNextChangeUntil(GumProjectSave.FullFileName);
 
                     if (saveContainedElements)
                     {
                         foreach (var screenSave in GumProjectSave.Screens)
                         {
                             PluginManager.Self.BeforeSavingElementSave(screenSave);
-                            _fileWatchManager.IgnoreNextChangeUntil(screenSave.GetFullPathXmlFile());
+                            _fileWatchManager.Value.IgnoreNextChangeUntil(screenSave.GetFullPathXmlFile());
                         }
                         foreach (var componentSave in GumProjectSave.Components)
                         {
                             PluginManager.Self.BeforeSavingElementSave(componentSave);
-                            _fileWatchManager.IgnoreNextChangeUntil(componentSave.GetFullPathXmlFile());
+                            _fileWatchManager.Value.IgnoreNextChangeUntil(componentSave.GetFullPathXmlFile());
                         }
                         foreach (var standardElementSave in GumProjectSave.StandardElements)
                         {
                             PluginManager.Self.BeforeSavingElementSave(standardElementSave);
-                            _fileWatchManager.IgnoreNextChangeUntil(standardElementSave.GetFullPathXmlFile());
+                            _fileWatchManager.Value.IgnoreNextChangeUntil(standardElementSave.GetFullPathXmlFile());
                         }
                     }
 
@@ -868,17 +855,17 @@ public class ProjectManager : IProjectManager
         {
             shouldSave = false;
 
-            var openFileDialog = new SaveFileDialog();
-
-            openFileDialog.Filter = "Gum Project (*.gumx)|*.gumx";
-            openFileDialog.Title = "Where would you like to save the Gum project?";
-
-            DialogResult result = openFileDialog.ShowDialog();
-
-
-            if (result == DialogResult.OK)
+            string? chosenFileName = _dialogService.SaveFile(new SaveFileDialogOptions
             {
-                FilePath desiredLocation = openFileDialog.FileName;
+                Filter = "Gum Project (*.gumx)|*.gumx",
+                Title = "Where would you like to save the Gum project?",
+            });
+
+            bool shouldProceed = chosenFileName != null;
+
+            if (shouldProceed)
+            {
+                FilePath desiredLocation = chosenFileName!;
                 var directory = desiredLocation.GetDirectoryContainingThis();
 
                 if(directory.Exists())
@@ -888,19 +875,19 @@ public class ProjectManager : IProjectManager
 
                     if(files.Length > 0 || directories.Length > 0)
                     {
-                        var areYouSure = _dialogService.ShowYesNoMessage(
+                        bool areYouSure = _dialogService.ShowYesNoMessage(
                             $"The location\n\n{directory}\n\nis not empty. It's best to save new Gum projects in " +
                             $"an empty folder. Do you want to continue?");
 
-                        result = areYouSure ? DialogResult.OK : DialogResult.Cancel;
+                        shouldProceed = areYouSure;
                     }
                 }
             }
 
-            if(result == DialogResult.OK)
+            if(shouldProceed)
             {
-                GumProjectSave.FullFileName = openFileDialog.FileName;
-                var filePath = new FilePath(openFileDialog.FileName);
+                GumProjectSave.FullFileName = chosenFileName!;
+                var filePath = new FilePath(chosenFileName!);
                 PluginManager.Self.ProjectLocationSet(filePath);
                 WpfDataUi.Controls.FilePickingLogic.FolderRelativeTo = filePath.GetDirectoryContainingThis().FullPath;
 

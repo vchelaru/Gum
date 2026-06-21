@@ -88,13 +88,11 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IPluginManager>(provider => provider.GetRequiredService<PluginManager>());
         services.AddSingleton<TypeManager>(TypeManager.Self);
         services.AddSingleton<ITypeManager>(provider => provider.GetRequiredService<TypeManager>());
-        services.AddSingleton<ProjectManager>(ProjectManager.Self);
+        services.AddSingleton<ProjectManager>();
         services.AddSingleton<StandardElementsManagerGumTool>(StandardElementsManagerGumTool.Self);
         services.AddSingleton<IStandardElementsManagerGumTool>(provider => provider.GetRequiredService<StandardElementsManagerGumTool>());
         services.AddSingleton<IProjectManager>(provider => provider.GetRequiredService<ProjectManager>());
         services.AddSingleton<IProjectState, ProjectState>();
-        // We can do this once we get rid of usages of ProjectManager.Self because we have to inject. Until then, we can't do this.
-        //services.AddSingleton<ProjectManager>(ProjectManager.Self);
 
         // singletons
         services.AddSingleton<ICircularReferenceManager, CircularReferenceManager>();

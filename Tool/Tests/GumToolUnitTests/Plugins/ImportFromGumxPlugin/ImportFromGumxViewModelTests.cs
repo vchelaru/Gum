@@ -378,6 +378,7 @@ public class ImportFromGumxViewModelTests
         }
         public string? GetUserString(string message, string? title = null, GetUserStringOptions? options = null) => null;
         public List<string>? OpenFile(OpenFileDialogOptions? options = null) => null;
+        public string? SaveFile(SaveFileDialogOptions? options = null) => null;
     }
 
     private class FakeImportLogic : IImportLogic
