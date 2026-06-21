@@ -669,7 +669,17 @@ public class CustomSetPropertyOnRenderable
                     // A Raylib_cs.Font wraps an unmanaged GPU texture, so regenerating on every font
                     // property change would leak VRAM (the previous texture is never reclaimed). This
                     // is the LoaderManager cache the MonoGame path also uses.
-                    if (loaderManager.GetDisposable(fullFileName) is ManagedFont cachedManagedFont)
+                    //
+                    // Only short-circuit on a USABLE cached font (BaseSize != 0). When no FontCache .fnt
+                    // exists on disk and no stream hook supplies it, the loader caches an empty
+                    // default(Font) (BaseSize 0) under this key (ContentLoader.LoadFont). Without this
+                    // guard the early-return would hand that empty font to every text after the first
+                    // instead of falling through to the disk / system-font fallback below — so text lost
+                    // its font and, being RelativeToChildren, collapsed to zero size. Mirrors the MonoGame
+                    // path, which assigns the resolved font once at the end rather than early-returning on
+                    // any cache entry.
+                    if (loaderManager.GetDisposable(fullFileName) is ManagedFont cachedManagedFont
+                        && cachedManagedFont.Font.BaseSize != 0)
                     {
                         AssignFontIfChanged(asText, cachedManagedFont.Font);
                         return;
