@@ -52,12 +52,12 @@ public class SkiaGumSvgExportServiceTests : IDisposable
     }
 
     // Broader guard for the same bug class as #3259 (a shape standard type silently dropped from
-    // SVG export because its runtime was never registered in SkiaGum). These are the v3 default
-    // standard types that self-render a visible outline from nothing but a size — so the exported
-    // SVG must contain a draw element. (The other v3 standards either render nothing by default —
-    // Container — or need content a bare instance lacks: a texture for Sprite/NineSlice, points
-    // for Polygon, a string for Text. Legacy shapes like ColoredRectangle/Arc aren't part of a v3
-    // project, so they have no base element to resolve here.)
+    // SVG export because its runtime was never registered in SkiaGum). These are the shape standard
+    // types that ProjectCreator seeds into a v3 project AND that self-render a visible outline from
+    // nothing but a size — so the exported SVG must contain a draw element. (Arc/ColoredCircle/
+    // RoundedRectangle are current shapes too, but not part of a v3 seed — see the Arc test below
+    // for how a project that uses one carries its own standard. Container renders nothing by
+    // default; Sprite/NineSlice/Polygon/Text need content a bare instance lacks.)
     [Theory]
     [InlineData("Rectangle")]
     [InlineData("Circle")]
@@ -75,18 +75,68 @@ public class SkiaGumSvgExportServiceTests : IDisposable
             $"Expected the exported SVG for a '{baseType}' instance to contain a draw element, but it did not.{Environment.NewLine}SVG:{Environment.NewLine}{svg}");
     }
 
+    // Arc is a current shapes-library standard type (NOT deprecated — only ColoredRectangle is, per
+    // StandardElementsManager._deprecatedStandardTypeNames). Unlike Rectangle/Circle it is not part
+    // of ProjectCreator's v3 seed, so a project that uses an Arc ships its own Arc standard element.
+    // Seed one with GetArcState's real defaults (Thickness 10, StartAngle 0, SweepAngle 90) and
+    // confirm the Arc renders through SkiaGum's SVG export — i.e. its runtime is registered like
+    // Rectangle's now is. (A bare Arc instance with no seeded standard exports nothing, but that is
+    // a missing-base-element fixture condition, not a render gap.)
+    [Fact]
+    public void ExportSvg_ArcInstance_WithSeededStandard_ShouldRenderADrawElement()
+    {
+        StandardElementSave arcStandard = new StandardElementSave { Name = "Arc" };
+        StateSave arcState = new StateSave { Name = "Default", ParentContainer = arcStandard };
+        arcStandard.States.Add(arcState);
+        arcState.Variables.Add(new VariableSave { Name = "Thickness", Type = "float", Value = 10f, SetsValue = true });
+        arcState.Variables.Add(new VariableSave { Name = "StartAngle", Type = "float", Value = 0f, SetsValue = true });
+        arcState.Variables.Add(new VariableSave { Name = "SweepAngle", Type = "float", Value = 90f, SetsValue = true });
+
+        string svg = ExportScreenWithInstance(
+            "Arc",
+            new[] { arcStandard },
+            new VariableSave { Name = "ShapeInstance.X", Type = "float", Value = 10f, SetsValue = true },
+            new VariableSave { Name = "ShapeInstance.Y", Type = "float", Value = 10f, SetsValue = true },
+            new VariableSave { Name = "ShapeInstance.Width", Type = "float", Value = 100f, SetsValue = true },
+            new VariableSave { Name = "ShapeInstance.Height", Type = "float", Value = 80f, SetsValue = true });
+
+        bool hasDrawElement = DrawElementTags.Any(svg.Contains);
+        hasDrawElement.ShouldBeTrue(
+            $"Expected the exported SVG for an Arc instance to contain a draw element, but it did not.{Environment.NewLine}SVG:{Environment.NewLine}{svg}");
+    }
+
+    private string ExportScreenWithInstance(string baseType, params VariableSave[] instanceVariables) =>
+        ExportScreenWithInstance(baseType, standardsToSeed: null, instanceVariables);
+
     /// <summary>
     /// Builds a v3 project on disk (via <see cref="ProjectCreator"/>, which seeds the standard
-    /// elements) with a Screen named "Screen" containing a single instance named "ShapeInstance"
-    /// of <paramref name="baseType"/> carrying the given variables, exports it to SVG, asserts the
-    /// export succeeded, and returns the SVG file contents.
+    /// elements) plus any extra <paramref name="standardsToSeed"/>, with a Screen named "Screen"
+    /// containing a single instance named "ShapeInstance" of <paramref name="baseType"/> carrying
+    /// the given variables, exports it to SVG, asserts the export succeeded, and returns the SVG
+    /// file contents.
     /// </summary>
-    private string ExportScreenWithInstance(string baseType, params VariableSave[] instanceVariables)
+    private string ExportScreenWithInstance(
+        string baseType,
+        IEnumerable<StandardElementSave>? standardsToSeed,
+        params VariableSave[] instanceVariables)
     {
         string projectPath = Path.Combine(_tempDirectory, "Project.gumx");
 
         ProjectCreator creator = new ProjectCreator();
         GumProjectSave project = creator.Create(projectPath);
+
+        if (standardsToSeed != null)
+        {
+            foreach (StandardElementSave standard in standardsToSeed)
+            {
+                project.StandardElements.Add(standard);
+                project.StandardElementReferences.Add(new ElementReference
+                {
+                    Name = standard.Name,
+                    ElementType = ElementType.Standard,
+                });
+            }
+        }
 
         ScreenSave screen = new ScreenSave { Name = "Screen" };
         StateSave defaultState = new StateSave { Name = "Default", ParentContainer = screen };
