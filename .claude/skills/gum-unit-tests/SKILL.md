@@ -24,6 +24,10 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
 - Disable parallel execution in every test project (`[assembly: CollectionBehavior(DisableTestParallelization = true)]`) — Gum uses global singletons.
 - Use named parameters for boolean literals.
 
+## Test at production defaults
+
+When a feature's tests disable a production default for isolation (e.g. `LoaderManager.Self.CacheTextures = false`), remember that default is **on** in real apps — so any code path that only runs with it on is left untested. Treat "this test turns a production default off" as a smell: keep at least one test that exercises the path at the production default. (A raylib font regression survived review because every font test ran with caching off, which made a new cache-hit branch dead code.)
+
 ## Headless Tests (ProjectServices, MonoGameGum.Tests.V2)
 
 Read `BaseTestClass` before adding setup — it handles singleton init, a ready-made `GumProjectSave`, and `Dispose` cleanup. Don't repeat that in subclasses.
