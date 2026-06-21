@@ -26,7 +26,7 @@ The detected version is displayed in the Code tab under "Project-Wide Code Gener
 | 3 | 2026.6.x | Setup/boot API namespace unification (non-breaking). `GumService` (with its companions `WindowZoomMode` and the hot-reload types) moves from `MonoGameGum` / `RaylibGum` to the unified `Gum` namespace; generated code emits `using Gum;` instead of `using MonoGameGum;`. The legacy names continue to work via permanent `[Obsolete]` subclass shims, and `GumService.Default` still returns the legacy-named type so existing declarations keep compiling. `AddToRoot` / `RemoveFromRoot` become instance methods on `GraphicalUiElement` (no `using` needed at all). See issue #3119. |
 | 4 | TBD | Layout enum namespace unification (breaking). Enums like `DimensionUnitType`, `ChildrenLayout`, `HorizontalAlignment`, etc. move to a unified namespace. The bundled Roslyn analyzer provides one-click migration. |
 
-When a new syntax version is introduced, the corresponding monthly migration page will document the specific changes. See the [runtime refactoring plan](../../contributing/runtime-refactoring.md) for full details.
+When a new syntax version is introduced, the corresponding monthly migration page will document the specific changes.
 
 ## What Happens When You Upgrade
 

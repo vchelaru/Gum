@@ -70,7 +70,7 @@ checkBox.Text = "Three State CheckBox";
 checkBox.IsThreeState = true;
 ```
 
-[Try on XnaFiddle.NET](...)
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACqtW8ix2L81VsiopKk3VUcrMyyzJTMzJrEpVslIqSyxSSM5ITc52yq9QsFXISy1XcIZyNTStY_JgcnqOKSkh-UH5-SWowiGpFSVAfTFKIRlFqakKwSWJJalwE2KUkJV6FoPVQJTYKoAcY61UCwA0LOBQnQAAAA)
 
 ## CheckBox Width and Height
 

@@ -20,8 +20,6 @@ You can clone the repository and open the projects in your favorite IDE (like Vi
 
 The direct link to the samples is here: [https://github.com/vchelaru/Gum/tree/main/Samples](https://github.com/vchelaru/Gum/tree/main/Samples)
 
-For more information about the Sample projects, see the [Samples page](/broken/pages/j0sr8sjbLY1OWWfXcQwa).
-
 ### What is the Gum UI Tool?
 
 The Gum UI Tool (usually called "Gum") is a visual editor for creating layouts using the Gum layout engine. Gum has been used on many commercial games to create all types of UI ranging from standard game HUDs to complex forms-based UIs. Gum can be used for any type of game.

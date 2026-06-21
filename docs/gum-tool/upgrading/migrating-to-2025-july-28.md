@@ -57,4 +57,4 @@ If your game references a platform-specific library such as MonoGame, Kni, FNA, 
 
 If you do not do this, you may get error messages indicating that a class is defined in two separate projects causing ambiguity.
 
-For more information, review the document for [adding source to your game project](/broken/pages/brEbOftKY9q9zolHNbMF).
+For more information, see the **Adding Source (Optional)** section of the [setup page for your platform](../../code/getting-started/setup/adding-initializing-gum/README.md).
