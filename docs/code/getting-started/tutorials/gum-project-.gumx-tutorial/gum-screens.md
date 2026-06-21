@@ -91,7 +91,7 @@ We can modify the displayed string by getting an instance of the Text and modify
 
 <pre class="language-diff"><code class="lang-diff">protected override void Initialize()
 {
-    var gumProject = MonoGameGum.GumService.Default.Initialize(
+    var gumProject = GumService.Default.Initialize(
         this,
         // This is relative to Content:
         "GumProject/GumProject.gumx");      
@@ -119,7 +119,7 @@ We can also interact with Forms objects in code. The base type for all Forms obj
 ```diff
 protected override void Initialize()
 {
-    var gumProject = MonoGameGum.GumService.Default.Initialize(
+    var gumProject = GumService.Default.Initialize(
         this,
         // This is relative to Content:
         "GumProject/GumProject.gumx");      
