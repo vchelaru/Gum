@@ -506,6 +506,11 @@ public class TextRuntimeTests : BaseTestClass
     // Serves the gold Font18Arial fixture (.fnt + page) purely in memory, keyed by file name, so the
     // (Arial, 18) font-cache file resolves regardless of disk layout, then restores all mutated global
     // state. Mirrors the in-memory hook setup in Font_SetViaDirectProperties.
+    //
+    // Caching is disabled here for isolation (so a prior test's cached font can't mask the result),
+    // which means helpers like this one do NOT exercise the LoaderManager cache-hit path. Caching-on
+    // coverage of the font path lives in TextRuntimeFontCachingRegressionTests — see the "test at
+    // production defaults" rule in the gum-unit-tests skill.
     private static void WithFont18Arial(Action body)
     {
         string fixtureDirectory = Path.Combine(AppContext.BaseDirectory, "Content", "FontCache");

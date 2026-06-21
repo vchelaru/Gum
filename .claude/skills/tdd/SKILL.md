@@ -22,3 +22,9 @@ Run the test yourself via Bash. A failure you only reasoned about is not a failu
 Exceptions: docs, csproj/projitems plumbing, pure renames, dead-code removal, cosmetic edits. When in doubt, write the test.
 
 Note: **extracting logic into a new class/service/ViewModel is not a pure rename.** Even when the move preserves behavior, pin the new unit with a characterization test — see [refactoring-direction](../refactoring-direction/SKILL.md). The exemption above is for renames and cosmetics, not for relocating logic into a newly-testable seam.
+
+## A new branch is a behavior change — cover it
+
+A cache check, early-return, guard, or "while I'm here" optimization that alters control flow needs its own test — even when it's bolted onto already-working code and isn't the feature you set out to build. These are the classic blind spot: there's no ticket for them, so nobody asks "what covers this?", and a green-only test passes with or without the branch.
+
+Red-first still applies: after adding a branch, **remove or invert it and confirm a test goes red.** If nothing fails, your change is uncovered — write the test that reaches it. (A real regression shipped exactly this way: a font-loader cache-hit early-return added alongside a feature, reached by no test because every existing font test disabled caching.)
