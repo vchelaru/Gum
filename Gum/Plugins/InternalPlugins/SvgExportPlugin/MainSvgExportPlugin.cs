@@ -2,10 +2,7 @@ using Gum.DataTypes;
 using Gum.Plugins.BaseClasses;
 using Gum.Services;
 using Gum.ToolStates;
-using System;
 using System.ComponentModel.Composition;
-using System.Diagnostics;
-using System.IO;
 using System.Windows.Controls;
 
 namespace Gum.Plugins.InternalPlugins.SvgExportPlugin;
@@ -16,11 +13,15 @@ internal class MainSvgExportPlugin : PriorityPlugin
     private MenuItem _exportSvgMenuItem;
     private readonly ISelectedState _selectedState;
     private readonly IProjectState _projectState;
+    private readonly ISvgExportCommand _svgExportCommand;
 
     public MainSvgExportPlugin()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _projectState = Locator.GetRequiredService<IProjectState>();
+        // SVG export is plugin-specific, so the command is instantiated here rather than
+        // registered app-wide. _dialogService/_guiCommands come from PluginBase's ctor.
+        _svgExportCommand = new SvgExportCommand(_dialogService, _guiCommands);
     }
 
     public override void StartUp()
@@ -72,83 +73,6 @@ internal class MainSvgExportPlugin : PriorityPlugin
             return;
         }
 
-        var dlg = new Microsoft.Win32.SaveFileDialog
-        {
-            DefaultExt = ".svg",
-            Filter = "SVG Files (*.svg)|*.svg",
-            FileName = element.Name + ".svg",
-        };
-
-        if (dlg.ShowDialog() != true)
-        {
-            return;
-        }
-
-        string gumCliPath = FindGumCliPath();
-
-        if (gumCliPath == null)
-        {
-            _guiCommands.PrintOutput("Could not find gumcli. Expected in GumCli subfolder next to Gum.exe.");
-            return;
-        }
-
-        string projectPath = projectSave.FullFileName;
-        string elementName = element.Name;
-        string outputPath = dlg.FileName;
-
-        RunGumCliSvgExport(gumCliPath, projectPath, elementName, outputPath);
-    }
-
-    private void RunGumCliSvgExport(string gumCliPath, string projectPath, string elementName, string outputPath)
-    {
-        try
-        {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = gumCliPath,
-                Arguments = $"svg \"{projectPath}\" \"{elementName}\" --output \"{outputPath}\"",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-
-            using var process = Process.Start(startInfo);
-            if (process == null)
-            {
-                _guiCommands.PrintOutput("Failed to start gumcli process.");
-                return;
-            }
-
-            string stdout = process.StandardOutput.ReadToEnd();
-            string stderr = process.StandardError.ReadToEnd();
-            process.WaitForExit();
-
-            if (process.ExitCode == 0)
-            {
-                _guiCommands.PrintOutput(stdout.TrimEnd());
-            }
-            else
-            {
-                _guiCommands.PrintOutput($"SVG export failed (exit code {process.ExitCode}): {stderr.TrimEnd()}");
-            }
-        }
-        catch (Exception ex)
-        {
-            _guiCommands.PrintOutput($"SVG export error: {ex.Message}");
-        }
-    }
-
-    private static string? FindGumCliPath()
-    {
-        string exeDir = AppDomain.CurrentDomain.BaseDirectory;
-        string cliPath = Path.Combine(exeDir, "GumCli", "gumcli.exe");
-
-        if (File.Exists(cliPath))
-        {
-            return cliPath;
-        }
-
-        return null;
+        _svgExportCommand.ExportElementToSvg(element, projectSave);
     }
 }
