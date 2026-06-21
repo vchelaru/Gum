@@ -532,9 +532,11 @@ public class SetVariableLogicTests : BaseTestClass
         public string? GetUserString(string message, string? title = null, GetUserStringOptions? options = null) => null;
 
         public List<string>? OpenFile(OpenFileDialogOptions? options = null) => null;
+
+        public string? SaveFile(SaveFileDialogOptions? options = null) => null;
     }
 
-    [Fact(Skip = "ProjectManager.Self needs to be removed")]
+    [Fact]
     public void ReactToPropertyValueChanged_ShouldAddTextureAddressValues_WhenSettingTextureAddresOnNineSlice()
     {
         ComponentSave container = new ComponentSave();
