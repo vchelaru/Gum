@@ -84,7 +84,8 @@ public class DragDropManagerTests : BaseTestClass
                 It.IsAny<InstanceSave?>(),
                 It.IsAny<ISelectedState?>(),
                 It.IsAny<List<StateSave>?>(),
-                It.IsAny<HashSet<string>?>()))
+                It.IsAny<HashSet<string>?>(),
+                It.IsAny<List<InstanceSave>?>()))
             .Returns(new List<InstanceSave> { draggedInstance });
 
         DropTarget dropTarget = new DropTarget(destinationComponent, null, new DropPosition.InsertAt(1));
@@ -356,7 +357,8 @@ public class DragDropManagerTests : BaseTestClass
                 It.IsAny<InstanceSave?>(),
                 It.IsAny<ISelectedState?>(),
                 It.IsAny<List<StateSave>?>(),
-                It.IsAny<HashSet<string>?>()))
+                It.IsAny<HashSet<string>?>(),
+                It.IsAny<List<InstanceSave>?>()))
             .Returns(new List<InstanceSave> { draggedInstance });
 
         DropTarget dropTarget = new DropTarget(destinationComponent, null, new DropPosition.InsertAt(1));

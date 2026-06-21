@@ -922,6 +922,96 @@ public class CopyPasteLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void OnPaste_Instance_ParentOnlySelected_ShouldSelectOnlyNewParent()
+    {
+        /*
+         * Container  (selected at copy time)
+         *    Child
+         * Container1 <--- pasted, should be selected
+         *    Child1  <--- pasted, should NOT be selected
+         */
+
+        ScreenSave screen = CreateDefaultScreen();
+        InstanceSave container = screen.Instances[0];
+        container.Name = "Container";
+        AddChild("Child", "Container", screen);
+
+        SelectInstances(container);
+
+        _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(4);
+
+        _currentSelectedInstances.Count.ShouldBe(1,
+            "because only the parent was selected at copy time, so only the new parent should be selected");
+        _currentSelectedInstances[0].Name.ShouldBe("Container1");
+    }
+
+    [Fact]
+    public void OnPaste_Instance_ChildSelected_ShouldSelectOnlyNewChild()
+    {
+        /*
+         * Container
+         *    Child  (selected at copy time)
+         *       Grandchild
+         * Pasted as siblings under Container:
+         *    Child1       <--- pasted, should be selected
+         *       Grandchild1 <--- pasted, should NOT be selected
+         */
+
+        ScreenSave screen = CreateDefaultScreen();
+        InstanceSave container = screen.Instances[0];
+        container.Name = "Container";
+        InstanceSave child = AddChild("Child", "Container", screen);
+        AddChild("Grandchild", "Child", screen);
+
+        SelectInstances(child);
+
+        _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(5);
+
+        _currentSelectedInstances.Count.ShouldBe(1,
+            "because only the child was selected at copy time, so only the new child should be " +
+            "selected, not the grandchild that was dragged along recursively");
+        _currentSelectedInstances[0].Name.ShouldBe("Child1");
+    }
+
+    [Fact]
+    public void OnPaste_MultipleInstances_SubsetSelected_ShouldSelectOnlyNewCopiesOfSelected()
+    {
+        /*
+         * ParentA (selected at copy time)
+         *    ChildA
+         * ParentB (selected at copy time)
+         *    ChildB
+         * After paste, four new instances exist; only the two new parents should be selected.
+         */
+
+        ScreenSave screen = CreateDefaultScreen();
+        InstanceSave parentA = screen.Instances[0];
+        parentA.Name = "ParentA";
+        AddChild("ChildA", "ParentA", screen);
+
+        InstanceSave parentB = AddChild("ParentB", "", screen);
+        AddChild("ChildB", "ParentB", screen);
+
+        SelectInstances(parentA, parentB);
+
+        _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(8);
+
+        _currentSelectedInstances.Count.ShouldBe(2,
+            "because only the two parents were selected at copy time, not their children");
+        _currentSelectedInstances.Select(item => item.Name).OrderBy(name => name)
+            .ShouldBe(new[] { "ParentA1", "ParentB1" });
+    }
+
+    [Fact]
     public void OnPaste_InstanceWithDottedSubInstanceParent_InDifferentScreen_ShouldPreserveHierarchy()
     {
         /*

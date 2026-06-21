@@ -477,7 +477,8 @@ public class CopyPasteLogic : ICopyPasteLogic
         {
             PasteInstanceSaves(CopiedData.CopiedInstancesRecursive, CopiedData.CopiedStates, selectedElement, _selectedState.SelectedInstance,
                 baseElementDefaultStates: CopiedData.CopiedBaseElementDefaultStates,
-                itemsOwnedByReachableStates: CopiedData.CopiedNamesOwnedByReachableStates);
+                itemsOwnedByReachableStates: CopiedData.CopiedNamesOwnedByReachableStates,
+                instancesToSelectAfterPaste: CopiedData.CopiedInstancesSelected);
         }
         else
         {
@@ -633,6 +634,10 @@ public class CopyPasteLogic : ICopyPasteLogic
     /// <param name="copiedStates"></param>
     /// <param name="targetElement"></param>
     /// <param name="selectedInstance"></param>
+    /// <param name="instancesToSelectAfterPaste">The source instances whose new copies should end up
+    /// selected after the paste. Pass the explicitly-selected (non-recursive) set so that pasting a parent
+    /// does not also leave its recursively-dragged children selected. When null, every new instance is
+    /// selected (the legacy behavior used by drag-drop and the top-level paste path).</param>
     /// <returns>The newly-created instances</returns>
     public List<InstanceSave> PasteInstanceSaves(List<InstanceSave> instancesToCopy,
         List<StateSave> copiedStates,
@@ -640,7 +645,8 @@ public class CopyPasteLogic : ICopyPasteLogic
         InstanceSave? selectedInstance,
         ISelectedState? forcedSelectedState = null,
         List<StateSave>? baseElementDefaultStates = null,
-        HashSet<string>? itemsOwnedByReachableStates = null)
+        HashSet<string>? itemsOwnedByReachableStates = null,
+        List<InstanceSave>? instancesToSelectAfterPaste = null)
     {
         /////////////////////////Early Out///////////////////////
         if (targetElement is StandardElementSave)
@@ -1036,11 +1042,42 @@ public class CopyPasteLogic : ICopyPasteLogic
         //var hasSelectionChangedStore = _hasChangedSelectionSinceCopy;
 
         isSelectionCausedByPaste = true;
-        selectedState.SelectedInstances = newInstances;
+        selectedState.SelectedInstances = GetInstancesToSelectAfterPaste(newInstances, oldNewNameDictionary, instancesToSelectAfterPaste);
         _hasChangedSelectionSinceCopy = false;
         isSelectionCausedByPaste = false;
 
         return newInstances;
+    }
+
+    // Narrows the post-paste selection to mirror what was selected at copy time. Pasting a parent
+    // also recursively duplicates its children, but only the originally-selected instances (passed in
+    // sourceInstancesToSelect) should remain selected. Falls back to selecting every new instance when
+    // no source selection is supplied (drag-drop / top-level paste) or when none of the selected source
+    // names map to a new instance (a defensive guard against odd repeat-paste states).
+    private static List<InstanceSave> GetInstancesToSelectAfterPaste(
+        List<InstanceSave> newInstances,
+        Dictionary<string, string> oldNewNameDictionary,
+        List<InstanceSave>? sourceInstancesToSelect)
+    {
+        if (sourceInstancesToSelect == null || sourceInstancesToSelect.Count == 0)
+        {
+            return newInstances;
+        }
+
+        HashSet<string> newNamesToSelect = new();
+        foreach (InstanceSave sourceInstance in sourceInstancesToSelect)
+        {
+            if (oldNewNameDictionary.TryGetValue(sourceInstance.Name, out string? newName))
+            {
+                newNamesToSelect.Add(newName);
+            }
+        }
+
+        List<InstanceSave> toSelect = newInstances
+            .Where(item => newNamesToSelect.Contains(item.Name))
+            .ToList();
+
+        return toSelect.Count > 0 ? toSelect : newInstances;
     }
 
     int GetIndexOfInstanceByName(ElementSave element, InstanceSave instance)
