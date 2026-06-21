@@ -71,6 +71,126 @@ public class RoundedRectangleRenderableTests
         size.ShouldBe(new Vector2(100, 60));
     }
 
+    // Issue #3268 — concentric-corner fix. ComputeFillDrawRect insets the fill by FillInset on
+    // every side, which moves each corner's center inward by (inset, inset). Keeping the full
+    // CornerRadius there leaves the fill arc NON-concentric with the stroke's inner edge, opening
+    // a background gap that is ~0 along the straight edges and widest at the 45° point of each
+    // corner. The fix reduces the fill's corner radius by FillInset (clamped at 0) so the corner
+    // center stays put — the classic "inner radius = outer radius − inset" rule. The shadow pass
+    // draws the fill at full size (no inset), so it must keep the full radius.
+
+    [Fact]
+    public void ComputeFillCornerRadius_BodyPass_NoInset_ReturnsRadius()
+    {
+        RoundedRectangle sut = new() { CornerRadius = 18f, FillInset = 0f };
+
+        sut.ComputeFillCornerRadius(isShadowPass: false).ShouldBe(18f);
+    }
+
+    [Fact]
+    public void ComputeFillCornerRadius_BodyPass_WithInset_ReducesByInset()
+    {
+        RoundedRectangle sut = new() { CornerRadius = 18f, FillInset = 4f };
+
+        // Concentric rule: inner radius = outer radius − inset.
+        sut.ComputeFillCornerRadius(isShadowPass: false).ShouldBe(14f);
+    }
+
+    [Fact]
+    public void ComputeFillCornerRadius_BodyPass_InsetExceedsRadius_ClampsToZero()
+    {
+        RoundedRectangle sut = new() { CornerRadius = 3f, FillInset = 10f };
+
+        sut.ComputeFillCornerRadius(isShadowPass: false).ShouldBe(0f);
+    }
+
+    [Fact]
+    public void ComputeFillCornerRadius_ShadowPass_IgnoresInset()
+    {
+        RoundedRectangle sut = new() { CornerRadius = 18f, FillInset = 4f };
+
+        // Shadow fill draws at full size, so it keeps the full radius.
+        sut.ComputeFillCornerRadius(isShadowPass: true).ShouldBe(18f);
+    }
+
+    [Fact]
+    public void ComputeFillCornerRadii_BodyPass_WithInset_ReducesEachCorner()
+    {
+        RoundedRectangle sut = new()
+        {
+            CornerRadius = 18f,
+            CustomRadiusTopLeft = 20f,
+            CustomRadiusTopRight = 16f,
+            CustomRadiusBottomRight = 12f,
+            CustomRadiusBottomLeft = 8f,
+            FillInset = 4f,
+        };
+
+        var (topLeft, topRight, bottomRight, bottomLeft) = sut.ComputeFillCornerRadii(isShadowPass: false);
+
+        topLeft.ShouldBe(16f);
+        topRight.ShouldBe(12f);
+        bottomRight.ShouldBe(8f);
+        bottomLeft.ShouldBe(4f);
+    }
+
+    [Fact]
+    public void ComputeFillCornerRadii_NullCorner_FallsBackToCornerRadiusThenReduces()
+    {
+        // A null per-corner override resolves to CornerRadius (matching HasCustomCorners) and is
+        // then reduced by the inset like any other corner.
+        RoundedRectangle sut = new()
+        {
+            CornerRadius = 18f,
+            CustomRadiusTopLeft = 20f,
+            CustomRadiusTopRight = null,
+            CustomRadiusBottomRight = null,
+            CustomRadiusBottomLeft = null,
+            FillInset = 4f,
+        };
+
+        var (topLeft, topRight, bottomRight, bottomLeft) = sut.ComputeFillCornerRadii(isShadowPass: false);
+
+        topLeft.ShouldBe(16f);
+        topRight.ShouldBe(14f);   // (18 fallback) − 4
+        bottomRight.ShouldBe(14f);
+        bottomLeft.ShouldBe(14f);
+    }
+
+    [Fact]
+    public void ComputeFillCornerRadii_InsetExceedsCorner_ClampsToZero()
+    {
+        RoundedRectangle sut = new()
+        {
+            CornerRadius = 18f,
+            CustomRadiusTopLeft = 2f,
+            FillInset = 10f,
+        };
+
+        var (topLeft, _, _, _) = sut.ComputeFillCornerRadii(isShadowPass: false);
+
+        topLeft.ShouldBe(0f);
+    }
+
+    [Fact]
+    public void ComputeFillCornerRadii_ShadowPass_IgnoresInset()
+    {
+        RoundedRectangle sut = new()
+        {
+            CornerRadius = 18f,
+            CustomRadiusTopLeft = 20f,
+            FillInset = 4f,
+        };
+
+        var (topLeft, topRight, bottomRight, bottomLeft) = sut.ComputeFillCornerRadii(isShadowPass: true);
+
+        // Full size on the shadow pass → full custom radius (20) and full fallback (18).
+        topLeft.ShouldBe(20f);
+        topRight.ShouldBe(18f);
+        bottomRight.ShouldBe(18f);
+        bottomLeft.ShouldBe(18f);
+    }
+
     // Bug: the pixel-center AA offset (position += 0.5, size -= 1) that aligns an antialiased
     // edge to the SCREEN pixel grid (Apos issue #12) was applied in WORLD units, ignoring camera
     // zoom. Like the AA halo (#2936) it must be divided by cameraZoom so it stays a constant

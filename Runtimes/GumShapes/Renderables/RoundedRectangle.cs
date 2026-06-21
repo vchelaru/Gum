@@ -95,6 +95,44 @@ public class RoundedRectangle : RenderableShapeBase,
     }
 
     /// <summary>
+    /// Issue #3268 — corner-radius companion to <see cref="ComputeFillDrawRect"/>. Insetting the
+    /// fill by <see cref="FillInset"/> on every side moves each corner's center inward by
+    /// <c>(inset, inset)</c>; keeping the full <see cref="CornerRadius"/> there leaves the fill arc
+    /// NON-concentric with the stroke's inner edge, opening a background gap that is ~0 along the
+    /// straight edges and widest at the 45° point of each corner. Reducing the radius by the same
+    /// inset (clamped at 0) keeps the corner center fixed — the classic "inner radius = outer
+    /// radius − inset" rule — so the inset fill stays concentric with the stroke. Returns the full
+    /// radius on the shadow pass (which draws the fill at full size, see
+    /// <see cref="ComputeFillDrawRect"/>) or when there is no inset.
+    /// </summary>
+    public float ComputeFillCornerRadius(bool isShadowPass)
+    {
+        if (isShadowPass || FillInset <= 0f)
+        {
+            return CornerRadius;
+        }
+        return System.Math.Max(0f, CornerRadius - FillInset);
+    }
+
+    /// <summary>
+    /// Per-corner analog of <see cref="ComputeFillCornerRadius"/> for the <c>CustomRadius*</c> path
+    /// (#3268), in Apos.Shapes' <c>CornerRadii</c> order (top-left, top-right, bottom-right,
+    /// bottom-left). Each corner resolves its null override against <see cref="CornerRadius"/>
+    /// exactly as <see cref="HasCustomCorners"/> does, then is reduced by <see cref="FillInset"/>
+    /// (clamped at 0) on the inset body pass so all four corners stay concentric with the stroke.
+    /// Returns the full radii on the shadow pass or when there is no inset.
+    /// </summary>
+    public (float topLeft, float topRight, float bottomRight, float bottomLeft) ComputeFillCornerRadii(bool isShadowPass)
+    {
+        float inset = isShadowPass || FillInset <= 0f ? 0f : FillInset;
+        return (
+            System.Math.Max(0f, (CustomRadiusTopLeft ?? CornerRadius) - inset),
+            System.Math.Max(0f, (CustomRadiusTopRight ?? CornerRadius) - inset),
+            System.Math.Max(0f, (CustomRadiusBottomRight ?? CornerRadius) - inset),
+            System.Math.Max(0f, (CustomRadiusBottomLeft ?? CornerRadius) - inset));
+    }
+
+    /// <summary>
     /// Insets the draw rect by the pixel-center AA alignment offset
     /// (<see cref="RenderableShapeBase.GetAntiAliasWorldOffset"/>): the top-left moves in by the
     /// offset and each dimension shrinks by twice it, keeping the rect centered. Scaled by
@@ -262,24 +300,36 @@ public class RoundedRectangle : RenderableShapeBase,
             // analog) so a semi-transparent stroke shows the background through it, not the
             // fill. The shadow pass (forcedColor != null) must NOT inherit the inset, or its
             // outer edge falls short of the body's outer edge (#2958).
-            var (fillPosition, fillSize) = ComputeFillDrawRect(position, size, isShadowPass: forcedColor != null);
+            bool isShadowPass = forcedColor != null;
+            var (fillPosition, fillSize) = ComputeFillDrawRect(position, size, isShadowPass);
+
+            // Issue #3268 — shrink the corner radius by the same inset so the inset fill stays
+            // concentric with the stroke's inner edge (no gap opens at the rounded corners). Gated
+            // on isShadowPass identically to the rect inset above.
+            float fillRadius = ComputeFillCornerRadius(isShadowPass);
+            Apos.Shapes.CornerRadii fillCorners = default;
+            if (hasCustomCorners)
+            {
+                var (tl, tr, br, bl) = ComputeFillCornerRadii(isShadowPass);
+                fillCorners = new Apos.Shapes.CornerRadii(tl, tr, br, bl);
+            }
 
             if (ShouldPaintGradient(forcedColor))
             {
                 var gradient = base.GetGradient(absoluteLeft, absoluteTop, rotationRadians);
 
                 if (hasCustomCorners)
-                    sb.DrawRectangle(fillPosition, fillSize, gradient, gradient, thickness, corners, rotationRadians, antiAliasSize);
+                    sb.DrawRectangle(fillPosition, fillSize, gradient, gradient, thickness, fillCorners, rotationRadians, antiAliasSize);
                 else
-                    sb.DrawRectangle(fillPosition, fillSize, gradient, gradient, thickness, CornerRadius, rotationRadians, antiAliasSize);
+                    sb.DrawRectangle(fillPosition, fillSize, gradient, gradient, thickness, fillRadius, rotationRadians, antiAliasSize);
             }
             else
             {
                 var color = forcedColor ?? Color;
                 if (hasCustomCorners)
-                    sb.DrawRectangle(fillPosition, fillSize, color, color, thickness, corners, rotationRadians, antiAliasSize);
+                    sb.DrawRectangle(fillPosition, fillSize, color, color, thickness, fillCorners, rotationRadians, antiAliasSize);
                 else
-                    sb.DrawRectangle(fillPosition, fillSize, color, color, thickness, CornerRadius, rotationRadians, antiAliasSize);
+                    sb.DrawRectangle(fillPosition, fillSize, color, color, thickness, fillRadius, rotationRadians, antiAliasSize);
             }
         }
         else
