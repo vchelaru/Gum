@@ -143,7 +143,7 @@ Now that we have a Gum project added to the .csproj, we can load the Gum project
 {% tabs %}
 {% tab title="Full Code" %}
 ```csharp
-using MonoGameGum;
+using Gum;
 
 public class Game1 : Game
 {
@@ -184,7 +184,7 @@ public class Game1 : Game
 
 {% tab title="Diff" %}
 ```diff
-using MonoGameGum;
+using Gum;
 
 public class Game1 : Game
 {
