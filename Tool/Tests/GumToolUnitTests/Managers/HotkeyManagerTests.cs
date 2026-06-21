@@ -1,6 +1,10 @@
 using Gum.Commands;
+using Gum.DataTypes;
+using Gum.DataTypes.Variables;
+using Gum.Input;
 using Gum.Logic;
 using Gum.Managers;
+using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
 using Gum.Services.Dialogs;
@@ -25,6 +29,7 @@ public class HotkeyManagerTests : BaseTestClass
     private readonly Mock<IUndoManager> _undoManager;
     private readonly Mock<IEditCommands> _editCommands;
     private readonly Mock<IReorderLogic> _reorderLogic;
+    private readonly Mock<IPluginManager> _pluginManager;
     private readonly HotkeyManager _hotkeyManager;
 
     public HotkeyManagerTests()
@@ -40,6 +45,7 @@ public class HotkeyManagerTests : BaseTestClass
         _undoManager = new Mock<IUndoManager>();
         _editCommands = new Mock<IEditCommands>();
         _reorderLogic = new Mock<IReorderLogic>();
+        _pluginManager = new Mock<IPluginManager>();
 
         _hotkeyManager = new HotkeyManager(
             _guiCommands.Object,
@@ -52,15 +58,104 @@ public class HotkeyManagerTests : BaseTestClass
             _copyPasteLogic.Object,
             _undoManager.Object,
             _editCommands.Object,
-            _reorderLogic.Object
+            _reorderLogic.Object,
+            _pluginManager.Object
         );
+    }
+
+    [Fact]
+    public void IsPressed_KeyData_NudgeUp5_RequiresShift()
+    {
+        // NudgeUp5 is Shift+Up: the Shift modifier bit is required.
+        _hotkeyManager.NudgeUp5.IsPressed(System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.Up).ShouldBeTrue();
+        _hotkeyManager.NudgeUp5.IsPressed(System.Windows.Forms.Keys.Up).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsPressed_KeyData_NudgeUp_MatchesUp_AndIgnoresShiftBit()
+    {
+        // NudgeUp is a plain Up with no modifier requirement. The keyData flags overload must
+        // strip modifier bits to extract the key code, so Shift+Up still matches the key part.
+        _hotkeyManager.NudgeUp.IsPressed(System.Windows.Forms.Keys.Up).ShouldBeTrue();
+        _hotkeyManager.NudgeUp.IsPressed(System.Windows.Forms.Keys.Down).ShouldBeFalse();
+        _hotkeyManager.NudgeUp.IsPressed(System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.Up).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsPressed_KeyData_ReorderUp_MatchesAltPlusKey()
+    {
+        // ReorderUp is Alt+Up: matches only when both the Alt flag and the Up key code are present.
+        _hotkeyManager.ReorderUp.IsPressed(System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.Up).ShouldBeTrue();
+        _hotkeyManager.ReorderUp.IsPressed(System.Windows.Forms.Keys.Up).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsPressed_KeyData_ResizeFromCenter_MatchesAltOnly()
+    {
+        // ResizeFromCenter is Alt with no key: matches the bare Alt modifier, not Alt+other.
+        _hotkeyManager.ResizeFromCenter.IsPressed(System.Windows.Forms.Keys.Alt).ShouldBeTrue();
+        _hotkeyManager.ResizeFromCenter.IsPressed(System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.C).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsPressed_KeyEventArgs_Copy_RequiresCtrlPlusC()
+    {
+        _hotkeyManager.Copy.IsPressed(new System.Windows.Forms.KeyEventArgs(System.Windows.Forms.Keys.C | System.Windows.Forms.Keys.Control)).ShouldBeTrue();
+        _hotkeyManager.Copy.IsPressed(new System.Windows.Forms.KeyEventArgs(System.Windows.Forms.Keys.C)).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsPressed_KeyEventArgs_Delete_MatchesDelete()
+    {
+        _hotkeyManager.Delete.IsPressed(new System.Windows.Forms.KeyEventArgs(System.Windows.Forms.Keys.Delete)).ShouldBeTrue();
+        _hotkeyManager.Delete.IsPressed(new System.Windows.Forms.KeyEventArgs(System.Windows.Forms.Keys.C)).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ProcessCmdKeyWireframe_Arrow_NudgesOnePixel_AndRaisesVariableSet()
+    {
+        (ComponentSave element, InstanceSave instance) = SetUpSelectedInstance(x: 10f, y: 20f);
+
+        bool handled = _hotkeyManager.ProcessCmdKeyWireframe(System.Windows.Forms.Keys.Up);
+
+        handled.ShouldBeTrue();
+        _elementCommands.Verify(e => e.MoveSelectedObjectsBy(0f, -1f), Times.Once);
+        _undoManager.Verify(u => u.RecordState(), Times.Once);
+        // Only the moved axis (Y) raises VariableSet, carrying the pre-move value.
+        _pluginManager.Verify(p => p.VariableSet(element, instance, "Y", 20f), Times.Once);
+        _pluginManager.Verify(
+            p => p.VariableSet(It.IsAny<ElementSave>(), It.IsAny<InstanceSave>(), "X", It.IsAny<object>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public void ProcessCmdKeyWireframe_LockedInstance_DoesNothing()
+    {
+        SetUpSelectedInstance(x: 10f, y: 20f, locked: true);
+
+        bool handled = _hotkeyManager.ProcessCmdKeyWireframe(System.Windows.Forms.Keys.Up);
+
+        handled.ShouldBeFalse();
+        _elementCommands.Verify(e => e.MoveSelectedObjectsBy(It.IsAny<float>(), It.IsAny<float>()), Times.Never);
+        _undoManager.Verify(u => u.RecordState(), Times.Never);
+    }
+
+    [Fact]
+    public void ProcessCmdKeyWireframe_ShiftArrow_NudgesFivePixels()
+    {
+        SetUpSelectedInstance(x: 10f, y: 20f);
+
+        bool handled = _hotkeyManager.ProcessCmdKeyWireframe(System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.Up);
+
+        handled.ShouldBeTrue();
+        _elementCommands.Verify(e => e.MoveSelectedObjectsBy(0f, -5f), Times.Once);
     }
 
     [Fact]
     public void ZoomCameraIn_KeyCombination_ShouldBeCtrlPlus()
     {
         // Verify zoom hotkey configuration
-        _hotkeyManager.ZoomCameraIn.Key.ShouldBe(System.Windows.Forms.Keys.Add);
+        _hotkeyManager.ZoomCameraIn.Key.ShouldBe(GumKey.Add);
         _hotkeyManager.ZoomCameraIn.IsCtrlDown.ShouldBeTrue();
     }
 
@@ -68,7 +163,7 @@ public class HotkeyManagerTests : BaseTestClass
     public void ZoomCameraInAlternative_KeyCombination_ShouldBeCtrlOemPlus()
     {
         // Verify alternative zoom hotkey configuration
-        _hotkeyManager.ZoomCameraInAlternative.Key.ShouldBe(System.Windows.Forms.Keys.Oemplus);
+        _hotkeyManager.ZoomCameraInAlternative.Key.ShouldBe(GumKey.Oemplus);
         _hotkeyManager.ZoomCameraInAlternative.IsCtrlDown.ShouldBeTrue();
     }
 
@@ -76,7 +171,7 @@ public class HotkeyManagerTests : BaseTestClass
     public void ZoomCameraOut_KeyCombination_ShouldBeCtrlMinus()
     {
         // Verify zoom out hotkey configuration
-        _hotkeyManager.ZoomCameraOut.Key.ShouldBe(System.Windows.Forms.Keys.Subtract);
+        _hotkeyManager.ZoomCameraOut.Key.ShouldBe(GumKey.Subtract);
         _hotkeyManager.ZoomCameraOut.IsCtrlDown.ShouldBeTrue();
     }
 
@@ -84,7 +179,26 @@ public class HotkeyManagerTests : BaseTestClass
     public void ZoomCameraOutAlternative_KeyCombination_ShouldBeCtrlOemMinus()
     {
         // Verify alternative zoom out hotkey configuration
-        _hotkeyManager.ZoomCameraOutAlternative.Key.ShouldBe(System.Windows.Forms.Keys.OemMinus);
+        _hotkeyManager.ZoomCameraOutAlternative.Key.ShouldBe(GumKey.OemMinus);
         _hotkeyManager.ZoomCameraOutAlternative.IsCtrlDown.ShouldBeTrue();
+    }
+
+    private (ComponentSave element, InstanceSave instance) SetUpSelectedInstance(float x, float y, bool locked = false)
+    {
+        ComponentSave element = new ComponentSave();
+        element.States.Add(new StateSave());
+        element.DefaultState.ParentContainer = element;
+
+        InstanceSave instance = new InstanceSave { Name = "MyInstance", BaseType = "Container" };
+        instance.Locked = locked;
+        element.Instances.Add(instance);
+
+        element.DefaultState.SetValue("MyInstance.X", x);
+        element.DefaultState.SetValue("MyInstance.Y", y);
+
+        _selectedState.Setup(s => s.SelectedInstance).Returns(instance);
+        _selectedState.Setup(s => s.SelectedElement).Returns(element);
+
+        return (element, instance);
     }
 }
