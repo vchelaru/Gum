@@ -64,7 +64,11 @@ barrier (bus-factor insurance). *Risk:* high volume, low per-change risk.
 **Phase 3 — Extract logic into the headless assembly.** Move WPF-free logic into a net8.0 assembly
 so the boundary is compiler-enforced. Convert the ViewModels that reach into `System.Windows.*` to
 neutral types per **ADR-0004**. *Payoff:* the testability ceiling jumps; the boundary becomes a
-guarantee. *Risk:* medium; the VM conversion is the bulk.
+guarantee. *Risk:* medium; the VM conversion is the bulk. *Status:* the boundary was already proven
+end-to-end by the #3229 spike (PR #3231) — `ImportTreeNodeViewModel` now lives in headless
+`Gum.ProjectServices` with its `Visibility` converted to `bool`, unit-tested with no WPF. That was a
+forward de-risk only; **bulk** VM migration remains gated on Phase 2's static drain and on deciding
+the permanent home (grow `Gum.ProjectServices` vs. a dedicated `Gum.Core`/`Gum.Presentation`).
 
 **Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap).
 - *4a — Element tree:* decouple `ElementTreeViewManager` from `TreeNode`; the already-migrated

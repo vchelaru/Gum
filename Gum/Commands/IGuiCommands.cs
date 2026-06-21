@@ -1,5 +1,4 @@
-﻿using Gum.Controls;
-using Gum.DataTypes;
+﻿using Gum.DataTypes;
 
 namespace Gum.Commands;
 public interface IGuiCommands
@@ -13,5 +12,9 @@ public interface IGuiCommands
     void PrintOutput(string output);
     void ToggleToolVisibility();
     void FocusSearch();
-    Spinner ShowSpinner();
+
+    /// <summary>
+    /// Shows a progress spinner and returns it as a framework-neutral <see cref="ISpinner"/>.
+    /// </summary>
+    ISpinner ShowSpinner();
 }

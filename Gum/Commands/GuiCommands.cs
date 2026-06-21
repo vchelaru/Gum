@@ -122,7 +122,8 @@ public class GuiCommands : IGuiCommands
         PluginManager.Self.FocusSearch();
     }
 
-    public Spinner ShowSpinner()
+    /// <inheritdoc/>
+    public ISpinner ShowSpinner()
     {
         var spinner = new Gum.Controls.Spinner();
         spinner.Show();
