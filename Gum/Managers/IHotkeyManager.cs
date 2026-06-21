@@ -44,5 +44,5 @@ public interface IHotkeyManager
     void HandleKeyDownElementTreeView(System.Windows.Forms.KeyEventArgs e);
     void HandleEditorKeyDown(System.Windows.Forms.KeyEventArgs e);
     void HandleKeyUpWireframe(System.Windows.Forms.KeyEventArgs e);
-    bool ProcessCmdKeyWireframe(ref System.Windows.Forms.Message msg, System.Windows.Forms.Keys keyData);
+    bool ProcessCmdKeyWireframe(System.Windows.Forms.Keys keyData);
 }

@@ -123,7 +123,7 @@ public class WireframeControl : GraphicsDeviceControl
 
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
-        bool handled = _hotkeyManager.ProcessCmdKeyWireframe(ref msg, keyData);
+        bool handled = _hotkeyManager.ProcessCmdKeyWireframe(keyData);
 
         if (handled)
         {
