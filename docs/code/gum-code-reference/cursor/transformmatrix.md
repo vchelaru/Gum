@@ -11,7 +11,7 @@ public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
 
-    GumService GumUI => MonoGameGum.GumService.Default;
+    GumService GumUI => GumService.Default;
 
     SpriteBatch _spriteBatch;
     RenderTarget2D _renderTarget;

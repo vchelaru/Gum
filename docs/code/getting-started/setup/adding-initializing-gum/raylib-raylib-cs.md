@@ -51,7 +51,7 @@ Add code to your Program class to Initialize, Update, and Draw Gum as shown in t
 
 <pre class="language-csharp"><code class="lang-csharp"><strong>using Gum.Forms.Controls;
 </strong><strong>using Gum.Wireframe;
-</strong><strong>using RaylibGum;
+</strong><strong>using Gum;
 </strong>using Raylib_cs;
 namespace raylibExample1;
 

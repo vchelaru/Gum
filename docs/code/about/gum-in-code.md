@@ -12,7 +12,7 @@ Gum can be used fully in code. A code-only setup requires minimal code. The foll
 </strong><strong>using Gum.Wireframe;
 </strong>using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-<strong>using MonoGameGum;
+<strong>using Gum;
 </strong>using System;
 
 namespace MonoGameAndGum;

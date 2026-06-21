@@ -44,7 +44,7 @@ using Gum.Wireframe;
 using KernSmith.Gum;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGameGum;
+using Gum;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Graphics.Fonts;
 
@@ -63,7 +63,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        MonoGameGum.GumService.Default.Initialize(this);
+        GumService.Default.Initialize(this);
 
         CustomSetPropertyOnRenderable.InMemoryFontCreator =
             new KernSmithFontCreator(GraphicsDevice);

@@ -102,7 +102,7 @@ public class Game1 : Game
 
 {% tab title="No Generated Code" %}
 <pre class="language-csharp"><code class="lang-csharp">using Gum.Wireframe; // for PlayAnimation extension method
-using MonoGameGum; // needed for ToGraphicalUiElement() extension method
+using Gum; // for GumService and the ToGraphicalUiElement() extension method
 
 public class Game1 : Game
 {

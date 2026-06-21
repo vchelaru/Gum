@@ -125,7 +125,7 @@ Add code to your Game class to Initialize, Update, and Draw Gum as shown in the 
 
 <pre class="language-csharp"><code class="lang-csharp">using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-<strong>using MonoGameGum;
+<strong>using Gum;
 </strong><strong>using Gum.Forms;
 </strong><strong>using Gum.Forms.Controls;
 </strong>
@@ -170,7 +170,7 @@ public class Game1 : Game
 {% tab title="Core (Nez)" %}
 Next, add code to your Core-inheriting class to Initialize, Update, and Draw Gum as shown in the following code block:
 
-<pre class="language-csharp"><code class="lang-csharp"><strong>using MonoGameGum;
+<pre class="language-csharp"><code class="lang-csharp"><strong>using Gum;
 </strong><strong>using Gum.Forms;
 </strong>
 public class Game1 : Core

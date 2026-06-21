@@ -121,7 +121,7 @@ Add a Click handler to our button which removes the existing screen and creates 
 {% tabs %}
 {% tab title="Full Code" %}
 ```csharp
-using MonoGameGum;
+using Gum;
 
 partial class Screen1
 {
@@ -140,7 +140,7 @@ partial class Screen1
 
 {% tab title="Diff" %}
 ```diff
-using MonoGameGum;
+using Gum;
 
 partial class Screen1
 {
@@ -161,7 +161,7 @@ partial class Screen1
 {% tabs %}
 {% tab title="Full Code" %}
 ```csharp
-using MonoGameGum;
+using Gum;
 
 partial class Screen2
 {
@@ -179,7 +179,7 @@ partial class Screen2
 {% endtab %}
 
 {% tab title="Diff" %}
-<pre class="language-diff"><code class="lang-diff">using MonoGameGum;
+<pre class="language-diff"><code class="lang-diff">using Gum;
 
 partial class Screen2
 {

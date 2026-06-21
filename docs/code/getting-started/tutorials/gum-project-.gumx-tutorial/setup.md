@@ -122,7 +122,7 @@ The steps to do this are:
 Now that we have a Gum project added to the .csproj, we can load the Gum project. We need to add code to Initialize, Update, and Draw. A simplified Game class with these calls would look like the following code:
 
 ```csharp
-using MonoGameGum;
+using Gum;
 
 public class Game1 : Game
 {

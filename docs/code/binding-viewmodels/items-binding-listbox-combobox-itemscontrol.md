@@ -227,7 +227,7 @@ using Gum.Mvvm;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGameGum;
+using Gum;
 using Gum.GueDeriving;
 using System.Collections.ObjectModel;
 
