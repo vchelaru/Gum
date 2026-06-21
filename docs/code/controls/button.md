@@ -100,9 +100,9 @@ void HandleClick(object sender, EventArgs args)
     var device = "Unknown";
     if (args is Gum.Wireframe.InputEventArgs inputEventArgs)
     {
-        if (inputEventArgs.InputDevice is MonoGameGum.Input.Keyboard)
+        if (inputEventArgs.InputDevice is Gum.Input.Keyboard)
             device = "Keyboard";
-        else if (inputEventArgs.InputDevice is MonoGameGum.Input.GamePad)
+        else if (inputEventArgs.InputDevice is Gum.Input.GamePad)
             device = "GamePad";
     }
     button.Text = $"Clicked at {DateTime.Now:T} via {device}";
