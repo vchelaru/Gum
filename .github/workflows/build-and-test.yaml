@@ -156,6 +156,9 @@ jobs:
       # When you add a new test project, decide which bucket it belongs to and
       # update both this list and the comments below.
       #
+      # Bucket A suites BLOCK the merge — a red test fails the job (no
+      # continue-on-error). Keep them green.
+      #
       # Bucket A — RUN IN CI (headless: pure data, IO, codegen, analyzers, or
       # MonoGame's headless TestGame harness):
       #   - MonoGameGum.Tests              (headless TestGame harness)
@@ -168,6 +171,10 @@ jobs:
       #                                     tests self-gate by OS, no screenshot
       #                                     tests exist yet — if one is added,
       #                                     fence it with a Trait and exclude here)
+      #   - SkiaGum.Tests                  (renders into an in-memory CPU raster
+      #                                     SKSurface — no GPU / window / GL. It
+      #                                     was wrongly excluded as "needs a
+      #                                     window"; it is fully headless. #3233)
       #
       # Bucket B — DEFERRED, NEEDS INVESTIGATION (likely safe in part, but may
       # mix headless and graphics-using tests in the same project; would need
@@ -176,54 +183,85 @@ jobs:
       #                                     verify before enabling)
       #   - MonoGameGum.Tests.V3           (same — verify before enabling)
       #
-      # Bucket C — WILL NOT RUN IN CI (require a real graphics device / window;
+      # Bucket C — EXPERIMENTAL / ADVISORY (need a real GL context; run
+      # continue-on-error so they never block, and are covered by a mandatory
+      # local pre-merge run instead — see the gum-unit-tests skill):
+      #   - RaylibGum.Tests                (raylib's InitWindow needs an OpenGL
+      #                                     3.3 context, which GitHub's Windows
+      #                                     runners lack. #3233 probes it ADVISORY
+      #                                     on macOS to learn whether a hidden
+      #                                     GLFW window inits on the runner; if it
+      #                                     proves reliable it graduates to a
+      #                                     blocking Bucket-A step. Until then,
+      #                                     anyone touching the raylib runtime
+      #                                     MUST run this suite locally.)
+      #
+      # Bucket D — WILL NOT RUN IN CI (require a real graphics device / window;
       # do NOT add these even if they look tempting):
       #   - MonoGameGum.IntegrationTests   (integration → real GraphicsDevice)
       #   - MonoGameGum.Shapes.Tests       (shape rendering → GraphicsDevice)
       #   - MonoGameFum.FromFile.Tests     (instantiates real visuals)
-      #   - RaylibGum.Tests                (raylib opens a window on init)
-      #   - SkiaGum.Tests                  (Skia pipeline wires through window
-      #                                     plumbing that doesn't cooperate
-      #                                     headless on CI runners)
       # ---------------------------------------------------------------------
 
+      # continue-on-error was removed from the Bucket-A suites below (#3233): a red
+      # test now fails the job and blocks the merge. Note the trade-off — the first
+      # failing suite short-circuits the suites listed after it; the "Publish Test
+      # Results" step runs with always() so whatever trx were produced are still
+      # reported. raylib stays advisory (continue-on-error) and is kept out of the
+      # dorny report so it can never color the blocking result.
       - name: MonoGameGum.Tests
         if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
         run: dotnet test "MonoGameGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
-        continue-on-error: true
 
       - name: SokolGum.Tests
         if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
         run: dotnet test "Tests/SokolGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
-        continue-on-error: true
 
       - name: GumToolUnitTests (Windows Only)
         if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
         run: dotnet test "Tool/Tests/GumToolUnitTests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
-        continue-on-error: true
 
       - name: Gum.Bundle.Tests
         if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
         run: dotnet test "Tests/Gum.Bundle.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
-        continue-on-error: true
 
       - name: Gum.ProjectServices.Tests
         if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
         run: dotnet test "Tests/Gum.ProjectServices.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
-        continue-on-error: true
 
       - name: Gum.Analyzers.Tests
         if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
         run: dotnet test "Tests/Gum.Analyzers.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
-        continue-on-error: true
 
       - name: Gum.Cli.Tests
         if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
         run: dotnet test "Tests/Gum.Cli.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      # SkiaGum.Tests renders into an in-memory CPU raster SKSurface (no GPU / window /
+      # GL), so it runs headless on CI like the suites above and blocks on failure. It
+      # was previously excluded by mistake — the old comment claimed it needed window
+      # plumbing, which is not true of these tests. #3233
+      - name: SkiaGum.Tests
+        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        run: dotnet test "Tests/SkiaGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      # EXPERIMENT (#3233, advisory): raylib's InitWindow needs an OpenGL 3.3 context.
+      # GitHub's Windows runners only expose the GL 1.1 software rasterizer, but macOS
+      # ships a system GL that may satisfy a hidden GLFW window — so we probe it here on
+      # macOS only to learn whether the suite can run headless on the runner. It is
+      # continue-on-error (never blocks) and writes to a separate results dir that the
+      # dorny report does NOT scan, so a crash/red here cannot color the blocking
+      # report — read this step's log for the result. If it proves reliable, promote it
+      # to a blocking Bucket-A step; otherwise the local pre-merge run is the floor
+      # (see the gum-unit-tests skill). timeout guards against a hang waiting on a display.
+      - name: 'RaylibGum.Tests (macOS experiment, advisory) #3233'
+        if: runner.os == 'macOS' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        run: dotnet test "Tests/RaylibGum.Tests" --configuration Release --no-build --logger "console;verbosity=normal" --results-directory "TestResults-Raylib-Experiment"
         continue-on-error: true
+        timeout-minutes: 10
 
       - name: Publish Test Results
-        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        if: always() && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
         uses: dorny/test-reporter@v2
         with:
           name: Tests ${{ matrix.os }}
