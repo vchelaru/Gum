@@ -677,7 +677,6 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             onAfterClickSelect: this.ObjectTreeView_AfterClickSelect,
             onAfterSelect: this.ObjectTreeView_AfterSelect_1,
             onKeyDown: this.ObjectTreeView_KeyDown,
-            onKeyPress: this.ObjectTreeView_KeyPress,
             onMouseClick: this.ObjectTreeView_MouseClick,
             onMouseMove: (x, y) => HandleMouseOver(x, y),
             onFontChanged: (sender, _) =>
@@ -851,11 +850,6 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
     {
         _viewCreator.ApplyThemeColors();
-    }
-
-    private void ObjectTreeView_KeyPress(object? sender, KeyPressEventArgs e)
-    {
-        _dragDropManager.HandleKeyPress(e);
     }
 
     private void DelayExpandHoveredNode(TreeNode hoveredNode)

@@ -56,7 +56,6 @@ internal class ElementTreeViewCreator
     /// <param name="onAfterClickSelect">Handler for AfterClickSelect on the tree view.</param>
     /// <param name="onAfterSelect">Handler for AfterSelect on the tree view.</param>
     /// <param name="onKeyDown">Handler for KeyDown on the tree view.</param>
-    /// <param name="onKeyPress">Handler for KeyPress on the tree view.</param>
     /// <param name="onMouseClick">Handler for MouseClick on the tree view.</param>
     /// <param name="onMouseMove">Handler for mouse move (x, y) on the tree view.</param>
     /// <param name="onFontChanged">Handler for FontChanged on the tree view.</param>
@@ -75,7 +74,6 @@ internal class ElementTreeViewCreator
         TreeViewEventHandler onAfterClickSelect,
         TreeViewEventHandler onAfterSelect,
         KeyEventHandler onKeyDown,
-        KeyPressEventHandler onKeyPress,
         MouseEventHandler onMouseClick,
         Action<int, int> onMouseMove,
         EventHandler onFontChanged,
@@ -92,7 +90,7 @@ internal class ElementTreeViewCreator
         Action onDeepSearchChecked)
     {
         CreateObjectTreeView(
-            onAfterClickSelect, onAfterSelect, onKeyDown, onKeyPress,
+            onAfterClickSelect, onAfterSelect, onKeyDown,
             onMouseClick, onMouseMove, onFontChanged, onDragOver, onDragDrop,
             onQueryContinueDrag, onValidateSortingDrop, onNodeSortingDropped, onGiveFeedback);
 
@@ -180,7 +178,6 @@ internal class ElementTreeViewCreator
         TreeViewEventHandler onAfterClickSelect,
         TreeViewEventHandler onAfterSelect,
         KeyEventHandler onKeyDown,
-        KeyPressEventHandler onKeyPress,
         MouseEventHandler onMouseClick,
         Action<int, int> onMouseMove,
         EventHandler onFontChanged,
@@ -210,7 +207,6 @@ internal class ElementTreeViewCreator
         this.ObjectTreeView.AfterClickSelect += onAfterClickSelect;
         this.ObjectTreeView.AfterSelect += onAfterSelect;
         this.ObjectTreeView.KeyDown += onKeyDown;
-        this.ObjectTreeView.KeyPress += onKeyPress;
         this.ObjectTreeView.PreviewKeyDown += (_, _) => { };
         this.ObjectTreeView.MouseClick += onMouseClick;
         this.ObjectTreeView.BackColor =

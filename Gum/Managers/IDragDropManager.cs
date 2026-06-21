@@ -1,7 +1,6 @@
 using Gum.DataTypes;
 using Gum.Plugins.InternalPlugins.TreeView;
 using System.Collections.Generic;
-using System.Windows.Forms;
 
 namespace Gum.Managers;
 
@@ -33,9 +32,18 @@ public interface IDragDropManager
     /// behavior drops where flat-list semantics do not apply.
     /// </summary>
     void OnNodeSortingDropped(IEnumerable<ITreeNode> draggedNodes, ITreeNode targetNode, DropTarget? dropTarget);
-    void OnWireframeDragEnter(object? sender, DragEventArgs e);
+
+    /// <summary>
+    /// Decides whether a drag entering the wireframe should be accepted, given a
+    /// framework-neutral description of the drag payload. The WinForms drag-enter
+    /// glue in the view inspects the payload (file drop / node payload), calls this,
+    /// then applies the decision (sets the Copy effect, surfaces the blocked reason).
+    /// </summary>
+    /// <param name="hasFileDrop">True when the payload contains dropped files.</param>
+    /// <param name="hasNodes">True when the payload contains tree-node data.</param>
+    DragAcceptDecision DecideWireframeDragEffect(bool hasFileDrop, bool hasNodes);
+
     void SetInstanceToPosition(float worldX, float worldY, InstanceSave instance);
     /// <inheritdoc cref="OnNodeSortingDropped"/>
     bool ValidateNodeSorting(IEnumerable<ITreeNode> draggedNodes, ITreeNode targetNode, DropTarget? dropTarget);
-    void HandleKeyPress(KeyPressEventArgs e);
 }

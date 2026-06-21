@@ -807,7 +807,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
 
         this._wireframeControl.DragDrop += OnWireframeDrop;
-        this._wireframeControl.DragEnter += _dragDropManager.OnWireframeDragEnter;
+        this._wireframeControl.DragEnter += OnWireframeDragEnter;
         this._wireframeControl.DragOver += (sender, e) =>
         {
             // Intentionally does NOT set e.Effect. The effect is chosen once in
@@ -850,6 +850,26 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
         IEffectiveThemeSettings themeSettings = Locator.GetRequiredService<IThemingService>().EffectiveSettings;
         ApplyThemeSettings(themeSettings);
+    }
+
+    internal void OnWireframeDragEnter(object? sender, System.Windows.Forms.DragEventArgs e)
+    {
+        // WinForms glue only: inspect the drag payload, ask the neutral manager
+        // whether to accept it, then apply the decision. The accept/reject logic
+        // itself lives in DragDropManager.DecideWireframeDragEffect.
+        bool hasFileDrop = e.Data.GetDataPresent(System.Windows.Forms.DataFormats.FileDrop);
+        bool hasNodes = e.HasData<List<TreeNode>>() || e.HasData<TreeNode>();
+
+        DragAcceptDecision decision = _dragDropManager.DecideWireframeDragEffect(hasFileDrop, hasNodes);
+
+        if (decision.Accept)
+        {
+            e.Effect = System.Windows.Forms.DragDropEffects.Copy;
+        }
+        else if (decision.BlockedReason != null)
+        {
+            _guiCommands.PrintOutput($"File drag rejected: {decision.BlockedReason}.");
+        }
     }
 
     internal void OnWireframeDrop(object? sender, System.Windows.Forms.DragEventArgs e)

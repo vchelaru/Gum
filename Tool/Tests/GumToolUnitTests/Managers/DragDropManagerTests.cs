@@ -955,6 +955,60 @@ public class DragDropManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void DecideWireframeDragEffect_FilesAllowed_Accepts()
+    {
+        // A file drop with a Screen/Component + state selected is allowed, so
+        // GetFileDropBlockedReason() returns null and the drop is accepted.
+        ComponentSave component = new ComponentSave { Name = "MyComponent" };
+        StateSave state = new StateSave { Name = "Default" };
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedElement).Returns(component);
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedStateSave).Returns(state);
+
+        DragAcceptDecision decision = _dragDropManager.DecideWireframeDragEffect(hasFileDrop: true, hasNodes: false);
+
+        decision.Accept.ShouldBeTrue();
+        decision.BlockedReason.ShouldBeNull();
+    }
+
+    [Fact]
+    public void DecideWireframeDragEffect_Neither_Rejects()
+    {
+        // Neither a file drop nor a node payload: nothing to accept, nothing to
+        // surface as a blocked reason.
+        DragAcceptDecision decision = _dragDropManager.DecideWireframeDragEffect(hasFileDrop: false, hasNodes: false);
+
+        decision.Accept.ShouldBeFalse();
+        decision.BlockedReason.ShouldBeNull();
+    }
+
+    [Fact]
+    public void DecideWireframeDragEffect_Nodes_Accepts()
+    {
+        // A node payload is always accepted regardless of selection state — even
+        // when a file drop would be blocked, the node drop still wins.
+        DragAcceptDecision decision = _dragDropManager.DecideWireframeDragEffect(hasFileDrop: false, hasNodes: true);
+
+        decision.Accept.ShouldBeTrue();
+        decision.BlockedReason.ShouldBeNull();
+    }
+
+    [Fact]
+    public void DecideWireframeDragEffect_FilesBlocked_RejectsAndSurfacesReason()
+    {
+        // A file drop while a Standard element is selected is blocked (#3128): the
+        // drop is rejected and the reason is surfaced so the otherwise-silent
+        // failure is diagnosable.
+        StandardElementSave standardElement = new StandardElementSave { Name = "Sprite" };
+        _mocker.GetMock<ISelectedState>().Setup(x => x.SelectedStandardElement).Returns(standardElement);
+
+        DragAcceptDecision decision = _dragDropManager.DecideWireframeDragEffect(hasFileDrop: true, hasNodes: false);
+
+        decision.Accept.ShouldBeFalse();
+        decision.BlockedReason.ShouldNotBeNull();
+        decision.BlockedReason.ShouldContain("Sprite");
+    }
+
+    [Fact]
     public void GetFileDropBlockedReason_ReturnsNull_WhenComponentAndStateSelected()
     {
         ComponentSave component = new ComponentSave { Name = "MyComponent" };
