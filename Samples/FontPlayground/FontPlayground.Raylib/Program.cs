@@ -39,10 +39,11 @@ public static class Program
 
         while (!WindowShouldClose())
         {
+            GumService.Default.Update(GetTime());
+
             BeginDrawing();
             ClearBackground(new Color(30, 30, 46, 255));
 
-            GumService.Default.Update(GetTime());
             GumService.Default.Draw();
 
             EndDrawing();

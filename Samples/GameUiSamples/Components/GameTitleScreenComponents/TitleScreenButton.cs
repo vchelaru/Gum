@@ -10,7 +10,7 @@ using System.Linq;
 using MonoGameGum.GueDeriving;
 using Gum.Forms.Controls;
 using Gum.Forms;
-using MonoGameGum;
+using Gum;
 namespace GameUiSamples.Components;
 
 partial class TitleScreenButton

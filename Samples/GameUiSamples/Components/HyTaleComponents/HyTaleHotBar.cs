@@ -2,7 +2,7 @@ using GameUiSamples.Data;
 using Gum.Forms.Controls;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using MonoGameGum;
+using Gum;
 using MonoGameGum.ExtensionMethods;
 using System;
 using System.Collections.Generic;

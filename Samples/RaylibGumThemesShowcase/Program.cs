@@ -83,10 +83,11 @@ public static class Program
         {
             HandleInput();
 
+            GumService.Default.Update(GetTime());
+
             BeginDrawing();
             ClearBackground(_clearColor);
 
-            GumService.Default.Update(GetTime());
             GumService.Default.Draw();
 
             EndDrawing();

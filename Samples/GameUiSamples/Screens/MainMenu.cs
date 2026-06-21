@@ -11,7 +11,7 @@ using MonoGameGum.GueDeriving;
 using System;
 using GameUiSamples.Screens.FrbClicker;
 using Gum.Forms.Controls;
-using MonoGameGum;
+using Gum;
 namespace GameUiSamples.Screens;
 
 partial class MainMenu

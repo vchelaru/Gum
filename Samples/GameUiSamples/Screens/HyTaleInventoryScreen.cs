@@ -2,7 +2,7 @@ using GameUiSamples.Components;
 using GameUiSamples.Services;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
-using MonoGameGum;
+using Gum;
 using RenderingLibrary.Graphics;
 using System;
 using System.Linq;

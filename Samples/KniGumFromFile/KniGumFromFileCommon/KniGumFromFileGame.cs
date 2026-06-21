@@ -20,7 +20,7 @@ using KniGumFromFile.ComponentRuntimes;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using ToolsUtilities;
-using MonoGameGum;
+using Gum;
 using Gum.Forms;
 
 namespace KniGumFromFile;

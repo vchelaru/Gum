@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGameAndGum.Renderables;
-using MonoGameGum;
+using Gum;
 using GumShapesGallery.Screens;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
