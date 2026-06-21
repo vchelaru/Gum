@@ -304,7 +304,7 @@ The VisualTemplate lets you customize the type of ListBoxItem created for the Li
 // Initialize
 // assign the template before adding new list items
 listBox.VisualTemplate =
-    new MonoGameGum.Forms.VisualTemplate(() =>
+    new Gum.Forms.VisualTemplate(() =>
         // do not create a forms object because this template will be
         // automatically added to a ListBoxItem by the ListBox:
         new CustomListBoxItemRuntime(tryCreateFormsObject:false));
@@ -316,7 +316,7 @@ The VisualTemplate class can optionally pass a parameter representing the item i
 // Initialize
 // assign the template before adding new list items
 listBox.VisualTemplate =
-    new MonoGameGum.Forms.VisualTemplate((item) =>
+    new Gum.Forms.VisualTemplate((item) =>
     {
         // Be sure you know the type before casting:
         var itemAsInt = (int)item;

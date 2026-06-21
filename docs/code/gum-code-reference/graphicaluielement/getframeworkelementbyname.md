@@ -7,7 +7,7 @@
 `GetFrameworkElementByName` is an extension method so it requires the following using statement:
 
 ```csharp
-using MonoGameGum.Forms;
+using Gum.Forms;
 ```
 
 `GetFrameworkElementByName` searches recursively so it will return the first instance with a matching name even if that instance is nested within other components.

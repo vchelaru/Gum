@@ -71,7 +71,7 @@ private void HandleClick(object sender, EventArgs args)
     // Click events can come from the cursor or even manually invoked with
     // no backing input device, so checks are needed
     if(args is InputEventArgs inputEventArgs &&
-        inputEventArgs.InputDevice is MonoGameGum.Input.GamePad gamePad)
+        inputEventArgs.InputDevice is Gum.Input.GamePad gamePad)
     {
         var index = Array.IndexOf(GumService.Default.Gamepads, gamePad);
         TextInstance.Text = $"Clicked with gamepad index {index} at {DateTime.Now}";
@@ -90,7 +90,7 @@ for (int i = 0; i < gamepads.Count; i++)
 {
     var gamepad = gamepads[i];
 
-    if(gamepad.ButtonPushed(Microsoft.Xna.Framework.Input.Buttons.A))
+    if(gamepad.ButtonPushed(Gum.Input.GamepadButton.A))
     {
         var focusedElement = InteractiveGue.CurrentInputReceiver;
 
