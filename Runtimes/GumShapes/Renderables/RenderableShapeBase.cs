@@ -531,10 +531,16 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
     /// the 50% line drift far past R (giving the "way too big" shadow that #2950 reports).
     /// In that case the helper truncates the inner ramp at <c>rDisk = 0</c>, widens aaSize
     /// to <c>R + B/2</c> so the outer edge still sits where the desired curve says, and
-    /// returns an <paramref name="alphaScale"/> &lt; 1 so the (clamped) smoothstep still
-    /// passes through both anchors (R, 0.5) and (R + B/2, 0). The cost is that the center
+    /// returns an <c>alphaScale</c> &lt; 1. The cost is that the center
     /// of the shadow is no longer 100% opaque — which is *correct*: a circle whose blur
     /// extends beyond its diameter genuinely should not have a solid black center.
+    /// </para>
+    /// <para>
+    /// Issue #2955 — that <c>alphaScale</c> also carries an energy-preservation factor
+    /// <c>(2R/B)²</c> for the <c>B &gt; 2R</c> case. Without it the anchored curve saturates the
+    /// center at ~0.5 as blur grows (a screen-filling 50% gray); the factor instead lets the
+    /// shadow fade toward a faint glow the way a true Gaussian (CSS box-shadow / Skia) does. It is
+    /// exactly 1 at <c>B = 2R</c>, so the moderate-blur branch is unaffected and continuous.
     /// </para>
     /// <para>
     /// <paramref name="cameraZoom"/> is folded into <c>effectiveAaSize</c> (which is returned
@@ -561,11 +567,21 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
         }
         // blur > 2R: truncate inner edge to rDisk = 0, widen aaSize to R + B/2, and scale
         // base alpha so smoothstep(0,1, R/(R + B/2)) lands the curve at α = 0.5 at r = R.
-        // alphaScale = 0.5 / (1 - smoothstep(R / aaSizeWorld)).
+        // anchorAlpha = 0.5 / (1 - smoothstep(R / aaSizeWorld)).
         float aaSizeWorld = hostRadius + blur * 0.5f;
         float t = hostRadius / aaSizeWorld;
         float smoothstep = 3f * t * t - 2f * t * t * t;
-        float alphaScale = 0.5f / (1f - smoothstep);
+        float anchorAlpha = 0.5f / (1f - smoothstep);
+        // Issue #2955 — energy preservation. anchorAlpha alone saturates the center at 0.5 as
+        // B → ∞ (a screen-filling 50% gray); a true Gaussian instead spreads the disk's fixed
+        // area-mass over an ever-larger region, so peak alpha falls as ~(2R/B)². Fold that factor
+        // in so the shadow fades toward a faint glow as blur outgrows the diameter, matching
+        // CSS box-shadow / Skia. The factor is exactly 1 at B = 2R (this branch's lower bound),
+        // so it leaves the moderate-blur curve untouched and is continuous across the boundary;
+        // for blur > 2R it is strictly < 1, so no min() clamp is needed.
+        float energyScale = 2f * hostRadius / blur;
+        energyScale *= energyScale;
+        float alphaScale = anchorAlpha * energyScale;
         return (
             0f,
             MathFunctions.RoundToInt(aaSizeWorld * cameraZoom),

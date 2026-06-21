@@ -294,8 +294,13 @@ public class CircleRenderableTests
     // So the 50% line sits exactly at the host radius R (matching CSS box-shadow / Figma /
     // Photoshop). When B > 2R the inner ramp edge would be negative; Apos.Shapes clamps such
     // a radius to 0, sliding the entire ramp outward. The helper truncates the inner ramp at
-    // rDisk = 0, widens aaSize so the outer edge still sits at R + B/2, and reduces base
-    // alpha so the (still-smoothstep) curve passes through (R, 0.5) and (R + B/2, 0).
+    // rDisk = 0 and widens aaSize so the outer edge still sits at R + B/2.
+    //
+    // Issue #2955 — for B > 2R the helper also multiplies in an energy-preservation factor
+    // (2R/B)^2 so the shadow fades toward a faint glow as blur outgrows the diameter, the way a
+    // true Gaussian (which spreads fixed disk-area mass over a growing region) does — instead of
+    // saturating the center at ~0.5 (screen-filling gray). The factor is exactly 1 at B = 2R, so
+    // it changes nothing for B <= 2R and is continuous across the boundary.
     //
     // Apos's AA falloff is `3t^2 - 2t^3` (smoothstep), confirmed empirically. Because
     // smoothstep is symmetric (smoothstep(0.5) = 0.5), the standard case math is identical
@@ -341,20 +346,43 @@ public class CircleRenderableTests
     }
 
     [Fact]
-    public void ComputeShadowDrawGeometry_BlurGreaterThanTwoRadius_TruncatesAndScalesAlpha()
+    public void ComputeShadowDrawGeometry_BlurGreaterThanTwoRadius_TruncatesAndAppliesEnergyFalloff()
     {
         // User's repro: R = 36, B = 250. Expected from the math:
         //   aaSize_world = R + B/2 = 161
         //   t = R / aaSize = 36 / 161 = 0.2236
         //   smoothstep = 3t^2 - 2t^3 = 0.1276
-        //   alphaScale = 0.5 / (1 - 0.1276) = 0.5731
+        //   anchorAlpha = 0.5 / (1 - 0.1276) = 0.5731
+        //   energyScale = (2R/B)^2 = (72/250)^2 = 0.08294   (issue #2955)
+        //   alphaScale = anchorAlpha * energyScale = 0.04754
+        // 0.04754 lands right on the true-Gaussian center alpha (2R^2/B^2 ~= 0.041) instead of
+        // the old screen-filling ~0.5731. effRadius/effAaSize (the geometry) are unchanged.
         Circle sut = new() { DropshadowBlurX = 250f };
 
         (float effRadius, int effAaSize, float alphaScale) = sut.ComputeShadowDrawGeometry(hostRadius: 36f, cameraZoom: 1f);
 
         effRadius.ShouldBe(0f);
         effAaSize.ShouldBe(161);
-        alphaScale.ShouldBe(0.5731f, tolerance: 0.001f);
+        alphaScale.ShouldBe(0.04754f, tolerance: 0.001f);
+    }
+
+    [Fact]
+    public void ComputeShadowDrawGeometry_ExtremeBlur_AlphaFadesTowardZeroNotHalf()
+    {
+        // Issue #2955 regression guard. Without the energy-preservation factor the strict-anchor
+        // alphaScale saturates at ~0.5 as B -> infinity (a screen-filling 50% gray). With it, the
+        // shadow keeps fading: a larger blur must yield a strictly smaller alphaScale, and at
+        // extreme blur it must be nowhere near the old 0.5 floor.
+        Circle sut = new();
+
+        sut.DropshadowBlurX = 250f;
+        float alphaAt250 = sut.ComputeShadowDrawGeometry(hostRadius: 36f, cameraZoom: 1f).alphaScale;
+
+        sut.DropshadowBlurX = 1000f;
+        float alphaAt1000 = sut.ComputeShadowDrawGeometry(hostRadius: 36f, cameraZoom: 1f).alphaScale;
+
+        alphaAt1000.ShouldBeLessThan(alphaAt250);
+        alphaAt1000.ShouldBeLessThan(0.05f);
     }
 
     [Fact]
