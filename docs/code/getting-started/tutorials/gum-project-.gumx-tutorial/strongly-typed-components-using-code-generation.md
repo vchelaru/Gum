@@ -22,7 +22,7 @@ This tutorial does not require any of the instances from the previous tutorial. 
 
 If you would like a simpler starting point, feel free to delete all content in your TitleScreen in Gum, and feel free to delete all code aside from the bare minimum for your project.
 
-For a full example of what your Game code might look like, see the start of the [Gum Forms](/broken/pages/eV3NKAEskUjucqKpK8kt#introduction) tutorial.
+For a full example of what your Game code might look like, see the start of the [Gum Forms](../gum-project-forms-tutorial/README.md#introduction) tutorial.
 {% endhint %}
 
 ## Creating a Component

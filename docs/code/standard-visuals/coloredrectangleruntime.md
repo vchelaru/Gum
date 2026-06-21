@@ -23,9 +23,3 @@ coloredRectangleRuntime.AddToManagers();
 ```
 
 The output is a white rectangle:
-
-### Gradient
-
-ColoredRectangleRuntime can display gradients. For information on gradients see the [ColoredRectangle gradient page](../../gum-tool/gum-elements/coloredrectangle/gradient.md).
-
-The output is a gradient rectangle:
