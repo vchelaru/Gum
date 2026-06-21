@@ -166,6 +166,8 @@ jobs:
       #   - GumToolUnitTests               (WPF tool unit tests; Windows only)
       #   - Gum.Bundle.Tests               (brotli/tar/format; pure IO)
       #   - Gum.ProjectServices.Tests      (headless project loading, codegen)
+      #   - Gum.ProjectServices.SkiaGum.Tests (SkiaGum SVG export — renders into
+      #                                     SKSvgCanvas, CPU-only like SkiaGum.Tests)
       #   - Gum.Analyzers.Tests            (Roslyn analyzers; pure compilation)
       #   - Gum.Cli.Tests                  (CLI subcommand smoke tests; fonts
       #                                     tests self-gate by OS, no screenshot
@@ -241,6 +243,13 @@ jobs:
       - name: SkiaGum.Tests
         if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
         run: dotnet test "Tests/SkiaGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      # SkiaGum-backed SVG export service (gumcli svg / tool File ▸ Export). Drives
+      # SkiaGumSvgExportService end-to-end via SKSvgCanvas — CPU-only, fully headless
+      # like SkiaGum.Tests above, so it blocks on failure too. #3259
+      - name: Gum.ProjectServices.SkiaGum.Tests
+        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        run: dotnet test "Tests/Gum.ProjectServices.SkiaGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       # --- RaylibGum.Tests via Mesa llvmpipe software GL (Windows, #3250) ---------
       # raylib's InitWindow needs an OpenGL 3.3 context the GPU-less runners lack.

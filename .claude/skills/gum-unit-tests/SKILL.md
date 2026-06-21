@@ -17,6 +17,7 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
 | `MonoGameGum.IntegrationTests` | `Tests/MonoGameGum.IntegrationTests/` | Requires a real `GraphicsDevice`: content loading, renderer teardown, full `GumService` lifecycle |
 | `RaylibGum.Tests` | `Tests/RaylibGum.Tests/` | raylib runtime (incl. the `#if RAYLIB` branches of the source-shared `GueDeriving/*Runtime.cs`) |
 | `SkiaGum.Tests` | `Tests/SkiaGum.Tests/` | Skia runtime and shape runtimes |
+| `Gum.ProjectServices.SkiaGum.Tests` | `Tests/Gum.ProjectServices.SkiaGum.Tests/` | SkiaGum-backed SVG export (`SkiaGumSvgExportService`, the service behind `gumcli svg` / tool File ▸ Export); drives `SKSvgCanvas` headlessly |
 
 **When in doubt, put tests in `MonoGameGum.Tests/`.** Only use V2/V3 projects for tests that exercise visual-version-specific behavior.
 

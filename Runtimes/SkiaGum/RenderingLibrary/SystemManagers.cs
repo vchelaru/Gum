@@ -123,9 +123,15 @@ namespace RenderingLibrary
                 "Polygon",
                 () => new PolygonRuntime());
 
-            //ElementSaveExtensions.RegisterGueInstantiation(
-            //    "Rectangle",
-            //    () => new RectangleRuntime());
+            // Issue #3259 — the v3 "Rectangle" standard type (filled/rounded/stroked) renders
+            // through RectangleRuntime, whose SKIA build wraps a RoundedRectangle fill+stroke
+            // pair (#2814/#2818). Without this registration SkiaGum created no renderable for a
+            // "Rectangle" base type, so the shape was silently dropped from SVG export (gumcli
+            // svg / tool File ▸ Export) and any SkiaGum-hosted render — only Text/Container/etc.
+            // drew. The XNALIKE/raylib backends register the same runtime in their SystemManagers.
+            ElementSaveExtensions.RegisterGueInstantiation(
+                "Rectangle",
+                () => new RectangleRuntime());
 
             ElementSaveExtensions.RegisterGueInstantiation(
                 "Sprite",
