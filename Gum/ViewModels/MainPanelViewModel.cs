@@ -15,7 +15,6 @@ using Gum.Plugins;
 using Gum.Services;
 using Gum.Settings;
 using Microsoft.Extensions.Options;
-using Control = System.Windows.Forms.Control;
 
 namespace Gum.Controls;
 
@@ -102,10 +101,6 @@ public class MainPanelViewModel : ViewModel, ITabManager, IRecipient<Application
             }
         }
     }
-
-    public PluginTab AddControl(System.Windows.Forms.Control control, string tabTitle,
-        TabLocation tabLocation) =>
-        AddControl(new System.Windows.Forms.Integration.WindowsFormsHost() { Child = control }, tabTitle, tabLocation);
 
     public PluginTab AddControl(FrameworkElement element, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom)
     {
