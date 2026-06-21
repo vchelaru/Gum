@@ -1,5 +1,4 @@
 using Gum.Commands;
-using Gum.Controls;
 using Gum.Logic.FileWatch;
 using Gum.ProjectServices.FontGeneration;
 using System;
@@ -15,7 +14,7 @@ public class ToolFontGenerationCallbacks : IFontGenerationCallbacks
 {
     private readonly IGuiCommands _guiCommands;
     private readonly IFileWatchIgnoreList _fileWatchIgnoreList;
-    private Spinner? _currentSpinner;
+    private ISpinner? _currentSpinner;
 
     public ToolFontGenerationCallbacks(IGuiCommands guiCommands, IFileWatchIgnoreList fileWatchIgnoreList)
     {
@@ -29,7 +28,7 @@ public class ToolFontGenerationCallbacks : IFontGenerationCallbacks
     /// <inheritdoc/>
     public IDisposable? ShowSpinner()
     {
-        Spinner spinner = _guiCommands.ShowSpinner();
+        ISpinner spinner = _guiCommands.ShowSpinner();
         _currentSpinner = spinner;
         return new SpinnerHandle(this, spinner);
     }
@@ -37,7 +36,7 @@ public class ToolFontGenerationCallbacks : IFontGenerationCallbacks
     /// <inheritdoc/>
     public void OnFontProgress(int completed, int total)
     {
-        Spinner? spinner = _currentSpinner;
+        ISpinner? spinner = _currentSpinner;
         if (spinner == null)
         {
             return;
@@ -45,9 +44,7 @@ public class ToolFontGenerationCallbacks : IFontGenerationCallbacks
 
         if (completed == 0)
         {
-            // SetTotal must run on the UI thread; use Invoke (synchronous) so the bar
-            // is fully initialized before any IncrementProgress calls arrive.
-            spinner.Dispatcher.BeginInvoke(() => spinner.SetTotal(total));
+            spinner.SetTotal(total);
         }
         else
         {
@@ -61,9 +58,9 @@ public class ToolFontGenerationCallbacks : IFontGenerationCallbacks
     private sealed class SpinnerHandle : IDisposable
     {
         private readonly ToolFontGenerationCallbacks _owner;
-        private readonly Spinner _spinner;
+        private readonly ISpinner _spinner;
 
-        public SpinnerHandle(ToolFontGenerationCallbacks owner, Spinner spinner)
+        public SpinnerHandle(ToolFontGenerationCallbacks owner, ISpinner spinner)
         {
             _owner = owner;
             _spinner = spinner;

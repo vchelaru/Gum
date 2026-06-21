@@ -1,11 +1,13 @@
+using Gum.Commands;
 using System.Windows;
 
 namespace Gum.Controls;
 
 /// <summary>
-/// A progress dialog shown during font generation.
+/// A progress dialog shown during font generation. Exposed to logic as the framework-neutral
+/// <see cref="ISpinner"/>.
 /// </summary>
-public partial class Spinner : Window
+public partial class Spinner : Window, ISpinner
 {
     private int _completed;
     private int _total;
@@ -32,23 +34,20 @@ public partial class Spinner : Window
         InitializeComponent();
     }
 
-    /// <summary>
-    /// Sets the total number of fonts to generate and resets the progress bar.
-    /// Must be called from the UI thread.
-    /// </summary>
+    /// <inheritdoc/>
     public void SetTotal(int total)
     {
-        _total = total;
-        _completed = 0;
-        FontProgressBar.Maximum = total;
-        FontProgressBar.Value = 0;
-        CountLabel.Text = $"0/{total}";
+        Dispatcher.BeginInvoke(() =>
+        {
+            _total = total;
+            _completed = 0;
+            FontProgressBar.Maximum = total;
+            FontProgressBar.Value = 0;
+            CountLabel.Text = $"0/{total}";
+        });
     }
 
-    /// <summary>
-    /// Increments the completed count by one and updates the progress bar and label.
-    /// Safe to call from any thread; dispatches to the UI thread automatically.
-    /// </summary>
+    /// <inheritdoc/>
     public void IncrementProgress()
     {
         Dispatcher.BeginInvoke(() =>
