@@ -6,6 +6,7 @@ using System.Linq;
 using ToolsUtilities;
 using Gum.Managers;
 using Gum.Commands;
+using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 
@@ -19,12 +20,14 @@ internal class CodeGenerationService
     private readonly CodeOutputElementSettingsManager _elementSettingsManager;
     private readonly IGuiCommands _guiCommands;
     private readonly IDialogService _dialogService;
+    private readonly IRetryService _retryService;
 
     public CodeGenerationService(IGuiCommands guiCommands, CodeGenerator codeGenerator,
         IDialogService dialogService,
         CustomCodeGenerator customCodeGenerator,
         CodeGenerationNameVerifier nameVerifier,
-        IProjectDirectoryProvider projectDirectoryProvider)
+        IProjectDirectoryProvider projectDirectoryProvider,
+        IRetryService retryService)
     {
         _codeGenerator = codeGenerator;
         _customCodeGenerator = customCodeGenerator;
@@ -32,6 +35,7 @@ internal class CodeGenerationService
         _elementSettingsManager = new CodeOutputElementSettingsManager(projectDirectoryProvider);
         _guiCommands = guiCommands;
         _dialogService = dialogService;
+        _retryService = retryService;
     }
 
 
@@ -139,7 +143,7 @@ internal class CodeGenerationService
             hasDirectory = false;
             try
             {
-                GumCommands.Self.TryMultipleTimes(() =>
+                _retryService.TryMultipleTimes(() =>
                     System.IO.Directory.CreateDirectory(codeDirectory.FullPath));
                 hasDirectory = true;
             }
@@ -151,7 +155,7 @@ internal class CodeGenerationService
 
         if (hasDirectory)
         {
-            GumCommands.Self.TryMultipleTimes(() => System.IO.File.WriteAllText(generatedFileName.FullPath, contents));
+            _retryService.TryMultipleTimes(() => System.IO.File.WriteAllText(generatedFileName.FullPath, contents));
 
             message += $"Generated code to {FileManager.RemovePath(generatedFileName.FullPath)}";
 

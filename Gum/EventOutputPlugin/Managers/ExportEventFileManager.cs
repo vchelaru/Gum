@@ -17,6 +17,7 @@ namespace EventOutputPlugin.Managers;
 public class ExportEventFileManager
 {
     private static readonly IFileCommands _fileCommands = Locator.GetRequiredService<IFileCommands>();
+    private static readonly IRetryService _retryService = Locator.GetRequiredService<IRetryService>();
     const string masterFileName = "gum_events.json";
     static ExportedEventCollection? events;
 
@@ -155,7 +156,7 @@ public class ExportEventFileManager
             // using indented formatting results in "unminified" JSON. This is desired
             // to prevent merge conflicts.
             var serialized = JsonConvert.SerializeObject(Events, Formatting.Indented);
-            GumCommands.Self.TryMultipleTimes(
+            _retryService.TryMultipleTimes(
                 () =>
                 {
                     var directoryName = file.GetDirectoryContainingThis().FullPath;

@@ -45,6 +45,7 @@ public class ProjectManager : IProjectManager
     private readonly IMessenger _messenger;
     private readonly Lazy<IFileWatchManager> _fileWatchManager;
     private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
+    private readonly IRetryService _retryService;
 
     #endregion
 
@@ -78,7 +79,8 @@ public class ProjectManager : IProjectManager
         Lazy<IFileCommands> fileCommands,
         IMessenger messenger,
         Lazy<IFileWatchManager> fileWatchManager,
-        IStandardElementsManagerGumTool standardElementsManagerGumTool)
+        IStandardElementsManagerGumTool standardElementsManagerGumTool,
+        IRetryService retryService)
     {
         _selectedState = selectedState;
         _elementCommands = elementCommands;
@@ -88,6 +90,7 @@ public class ProjectManager : IProjectManager
         _messenger = messenger;
         _fileWatchManager = fileWatchManager;
         _standardElementsManagerGumTool = standardElementsManagerGumTool;
+        _retryService = retryService;
     }
 
     public void LoadSettings()
@@ -772,7 +775,7 @@ public class ProjectManager : IProjectManager
 
                     // todo - this should go through the plugin...
 
-                    GumCommands.Self.TryMultipleTimes(() => GumProjectSave.Save(GumProjectSave.FullFileName, saveContainedElements));
+                    _retryService.TryMultipleTimes(() => GumProjectSave.Save(GumProjectSave.FullFileName, saveContainedElements));
                     succeeded = true;
 
                     if (succeeded && saveContainedElements)
@@ -794,7 +797,7 @@ public class ProjectManager : IProjectManager
                 catch (UnauthorizedAccessException exception)
                 {
                     var tempFileName = FileManager.RemoveExtension(GumProjectSave.FullFileName) + DateTime.Now.ToString("s") + "gumx";
-                    GumCommands.Self.TryMultipleTimes(() => GumProjectSave.Save(tempFileName, saveContainedElements));
+                    _retryService.TryMultipleTimes(() => GumProjectSave.Save(tempFileName, saveContainedElements));
 
                     string fileName = TryGetFileNameFromException(exception);
                     if (fileName != null && IsFileReadOnly(fileName))

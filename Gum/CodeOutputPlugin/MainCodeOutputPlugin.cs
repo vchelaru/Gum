@@ -94,7 +94,7 @@ public class MainCodeOutputPlugin : PluginBase
         _selectedState = Locator.GetRequiredService<ISelectedState>();
 
         var customCodeGenerator = new CustomCodeGenerator(_codeGenerator, _codeGenerationNameVerifier);
-        _codeGenerationService = new CodeGenerationService(_guiCommands, _codeGenerator, _dialogService, customCodeGenerator, _codeGenerationNameVerifier, _projectDirectoryProvider);
+        _codeGenerationService = new CodeGenerationService(_guiCommands, _codeGenerator, _dialogService, customCodeGenerator, _codeGenerationNameVerifier, _projectDirectoryProvider, Locator.GetRequiredService<IRetryService>());
         _renameService = new RenameService(
             _codeGenerationService,
             _codeGenerator,
