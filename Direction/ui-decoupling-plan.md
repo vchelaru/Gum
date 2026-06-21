@@ -38,10 +38,18 @@ The premise "swap WPF for Avalonia" mis-locates the cost. The mapping found:
 
 Each lists its goal, the payoff if Avalonia never ships, and the main risk.
 
-**Phase 0 — Instrument the burn-down.** Establish a measurable coupling budget (counts of `.Self`
-calls, `System.Windows.*` usages in VMs, inline dialog/`MessageBox` sites, WinForms-type leaks in
-interfaces) and, ideally, a guard test that fails when a VM imports `System.Windows`. *Payoff:*
-turns "we're decoupling" into a number that can't silently regress. *Risk:* trivial.
+**Phase 0 — Baseline the burn-down (one-time measurement).** Take a one-time grep snapshot of the
+coupling budget (counts of `.Self` calls, `System.Windows.*` usages in VMs, inline dialog/`MessageBox`
+sites, WinForms-type leaks in interfaces) so progress is legible. *Payoff:* turns "we're decoupling"
+into a number. *Risk:* trivial. **Superseded note (2026-06-20):** an earlier draft made Phase 0 a
+*permanent* "ratchet" test that scans source and counts `System.Windows.*` usages. That was abandoned
+(PR #3228 closed): it largely duplicates what the **compiler** enforces for free the moment a
+VM/interface moves into the headless no-WPF assembly (Phase 3 — proven end-to-end by the #3229
+boundary spike). The enforcement mechanism is the **project-reference compiler boundary**, not a
+custom scanner; the baselines above are a one-time grep, not a standing test. If a guard is ever
+wanted for the few patterns the compiler *can't* catch (`.Self` statics, `MessageBox.Show`), use a
+Roslyn banned-API analyzer (`Microsoft.CodeAnalysis.BannedApiAnalyzers`) — compile-time, ~1 line per
+rule.
 
 **Phase 1 — Kill the shallow scatter & seal the leaky seams.** Gum-owned key enum to replace
 `Keys`; abstract drag-drop off the WinForms types; move the lone `Form` and the inline dialogs

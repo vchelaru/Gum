@@ -11,6 +11,9 @@
     mc:Ignorable="d">
 
     <UserControl.Resources>
+        <!-- Stock converter: ImportTreeNodeViewModel exposes a neutral bool (ADR-0004); the view turns
+             it into WPF Visibility here, in the thin view layer. -->
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
         <Style x:Key="ImportItemCheckBoxStyle" TargetType="CheckBox"
                BasedOn="{StaticResource {x:Type CheckBox}}" />
     </UserControl.Resources>
@@ -134,7 +137,7 @@
                                     <TextBlock
                                         Margin="8,0,0,0"
                                         VerticalAlignment="Center"
-                                        Visibility="{Binding DetailsButtonVisibility}">
+                                        Visibility="{Binding IsDetailsButtonVisible, Converter={StaticResource BoolToVisibilityConverter}}">
                                         <Hyperlink
                                             Command="{Binding DataContext.ShowStandardDiffCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                             CommandParameter="{Binding}">
