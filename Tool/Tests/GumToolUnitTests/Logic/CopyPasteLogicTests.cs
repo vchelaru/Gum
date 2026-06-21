@@ -949,6 +949,37 @@ public class CopyPasteLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void OnPaste_Instance_ParentAndChildSelected_ShouldSelectBothNewCopies()
+    {
+        /*
+         * Inverse guard against over-narrowing: when BOTH the parent and its child were
+         * selected at copy time, BOTH new copies should be selected after paste.
+         *
+         * Container  (selected at copy time)
+         *    Child   (selected at copy time)
+         * Container1 <--- pasted, should be selected
+         *    Child1  <--- pasted, should ALSO be selected
+         */
+
+        ScreenSave screen = CreateDefaultScreen();
+        InstanceSave container = screen.Instances[0];
+        container.Name = "Container";
+        InstanceSave child = AddChild("Child", "Container", screen);
+
+        SelectInstances(container, child);
+
+        _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(4);
+
+        _currentSelectedInstances.Count.ShouldBe(2,
+            "because both the parent and child were selected at copy time, so both new copies should be selected");
+        _currentSelectedInstances.Select(item => item.Name).OrderBy(name => name)
+            .ShouldBe(new[] { "Child1", "Container1" });
+    }
+
+    [Fact]
     public void OnPaste_Instance_ChildSelected_ShouldSelectOnlyNewChild()
     {
         /*
