@@ -122,6 +122,10 @@ Keep boyscout fixes non-invasive in the structural sense — don't restructure c
 
 By the time you reach this stage, the new tests should already exist and be green (see "Test-Driven Development (Required)" above). Build via Bash and run the related test suite to check for regressions in adjacent areas. Output: changed files + brief why. Focus on correctness and brevity over cleverness.
 
+**raylib changes are not covered by CI — run `RaylibGum.Tests` locally before finishing.** raylib's `InitWindow` needs a GL 3.3 context the CI runners can't provide (a macOS probe hung at window creation and was removed), so `RaylibGum.Tests` does not run in CI (#3233). If your change touches the raylib runtime — including the `#if RAYLIB` branches of a source-shared `GueDeriving/*Runtime.cs` — a green CI run proves nothing about raylib; you must run that suite yourself and update any assertion pinning the old behavior. See the `gum-unit-tests` skill. (`SkiaGum.Tests` *does* block in CI — it is headless CPU raster — so it needs no special local step.)
+
+Sequence that local run so it never stalls other work: **open the PR first** (the headless CI suites run on GitHub in parallel while you test locally), keep working, and do the raylib run as a **background task, last** — once the change is otherwise complete. Surface that the background run is in progress so it can be discussed while it finishes.
+
 **Zero new warnings policy** — after every change, verify that no new compiler warnings were introduced. If a warning cannot be fixed (e.g., an unused event on a test fake that satisfies an interface contract), suppress it with `#pragma warning disable`/`restore` and a comment explaining why the suppression is justified.
 
 **Boyscout warnings** — apply the boyscout principle to existing warnings too. Fix pre-existing warnings in the same method you're editing, nearby methods in the same file, or the entire class if it's small. You've already loaded the context, so the cost is low. Don't chase warnings into unrelated files.

@@ -20,7 +20,9 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
 
 **When in doubt, put tests in `MonoGameGum.Tests/`.** Only use V2/V3 projects for tests that exercise visual-version-specific behavior.
 
-**`RaylibGum.Tests` and `SkiaGum.Tests` are excluded from CI** (they open a window / wire a GPU pipeline on init — see `build-and-test.yaml`). A green CI run does **not** prove they pass. When you change behavior that the raylib/Skia runtimes cover — including the `#if RAYLIB`/`#if SKIA` branches of a source-shared runtime — run these projects locally yourself, and update any assertion that pins the old behavior. (Issue #3234: #3183 changed the raylib stroke-width PreRender but left these two projects' tests asserting the pre-#3183 value; CI was green, so it shipped red.)
+**`SkiaGum.Tests` runs in CI as a blocking suite** (#3233) — it renders into an in-memory CPU raster `SKSurface`, so it is fully headless despite the name. A red Skia test now fails the job like any other Bucket-A suite.
+
+**`RaylibGum.Tests` does NOT run in CI.** raylib's `InitWindow` needs an OpenGL 3.3 context the GitHub runners can't provide; #3233 tried an advisory macOS probe and it *hung* at window creation (GLFW/Cocoa needs the main thread + a window server), so it was removed — a green CI run says **nothing** about the raylib suite. Therefore: **if you change behavior the raylib runtime covers — including the `#if RAYLIB` branches of a source-shared `GueDeriving/*Runtime.cs` — you MUST run `RaylibGum.Tests` locally before opening the PR**, and update any assertion that pins the old behavior. CI cannot do this for you; this local run is the merge floor. (Issue #3234: #3183 changed the raylib stroke-width PreRender but left the suite asserting the pre-#3183 value; CI was green, so it shipped red.)
 
 ## Key Rules
 
