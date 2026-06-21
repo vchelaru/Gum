@@ -175,6 +175,11 @@ jobs:
       #                                     SKSurface — no GPU / window / GL. It
       #                                     was wrongly excluded as "needs a
       #                                     window"; it is fully headless. #3233)
+      #   - RaylibGum.Tests                (raylib runtime; Windows-only. Needs an
+      #                                     OpenGL 3.3 context the GPU-less runners
+      #                                     lack, supplied by Mesa llvmpipe software
+      #                                     GL dropped in by the "Install Mesa" step
+      #                                     right before it. #3250)
       #
       # Bucket B — DEFERRED, NEEDS INVESTIGATION (likely safe in part, but may
       # mix headless and graphics-using tests in the same project; would need
@@ -183,25 +188,11 @@ jobs:
       #                                     verify before enabling)
       #   - MonoGameGum.Tests.V3           (same — verify before enabling)
       #
-      # Bucket C — ADVISORY ONLY, NOT YET BLOCKING (#3250): RaylibGum.Tests now
-      # runs on the Windows job behind Mesa llvmpipe software GL, but as a
-      # continue-on-error probe — a red or hung raylib suite does NOT fail the job.
-      # The mandatory local pre-merge run is still the floor for raylib-runtime
-      # changes until this probe is proven stable and promoted to Bucket A (#3250
-      # Phase 2) — see the gum-unit-tests skill and the advisory steps below:
-      #   - RaylibGum.Tests                (raylib's InitWindow needs an OpenGL 3.3
-      #                                     context the GPU-less runners lack. #3233
-      #                                     probed a hidden window on the macOS
-      #                                     runner: the native lib + GLFW backend
-      #                                     loaded but InitWindow then HUNG at window
-      #                                     creation (GLFW/Cocoa needs the main
-      #                                     thread + a window server; xUnit runs off
-      #                                     the main thread) and was removed — GL
-      #                                     availability was never even reached.
-      #                                     #3250 supplies software GL via Mesa
-      #                                     llvmpipe on the Windows job instead
-      #                                     (Win32 window creation is not main-
-      #                                     thread-coupled like Cocoa).)
+      # Bucket C — (empty) RaylibGum.Tests used to live here as "cannot run in CI
+      # yet". It graduated to Bucket A in #3250: the macOS probe hung at GLFW/Cocoa
+      # window creation, but the Windows job supplies software GL via Mesa llvmpipe
+      # (Win32 window creation is not main-thread-coupled like Cocoa), so it now
+      # runs headless and blocks. See the Install Mesa + RaylibGum.Tests steps below.
       #
       # Bucket D — WILL NOT RUN IN CI (require a real graphics device / window;
       # do NOT add these even if they look tempting):
@@ -251,7 +242,7 @@ jobs:
         if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
         run: dotnet test "Tests/SkiaGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
-      # --- Advisory: RaylibGum.Tests via Mesa llvmpipe software GL (#3250) --------
+      # --- RaylibGum.Tests via Mesa llvmpipe software GL (Windows, #3250) ---------
       # raylib's InitWindow needs an OpenGL 3.3 context the GPU-less runners lack.
       # Mesa's llvmpipe is a software GL rasterizer; raylib's native lib imports
       # opengl32.dll by name, and Windows resolves that from the test host's own
@@ -259,18 +250,16 @@ jobs:
       # glapi siblings) next to the built test binaries overrides the GL-less system
       # stub with a working software implementation. An earlier macOS probe (#3233)
       # HUNG at window creation (GLFW/Cocoa needs the main thread); Win32 window
-      # creation is not main-thread-coupled, so this is the next lever (Bucket C).
+      # creation is not main-thread-coupled, so it works headless here.
       #
-      # Kept ADVISORY: continue-on-error so a red/hung raylib suite never fails the
-      # job, a timeout-minutes guard so a hang can't burn the whole job budget, and
-      # a SEPARATE results dir (TestResultsRaylib) so its trx stays out of the
-      # blocking "Publish Test Results" reporter above. Promote to a blocking
-      # Bucket-A step only once proven green and stable across several runs, and at
-      # that point drop the raylib local-run floor from the gum-unit-tests skill,
-      # the coder agent, and this comment (#3250 Phase 2).
-      - name: "Install Mesa llvmpipe (Windows, advisory — #3250)"
+      # This is a BLOCKING Bucket-A suite (promoted from an advisory probe in #3250
+      # after a clean 351/351 run). The install step feeds that blocking gate, so
+      # its download is retried against transient GitHub-releases hiccups; the
+      # timeout-minutes guard on the test step stays so a hang fails fast instead of
+      # burning the job budget, and the trx now lands in the shared TestResults dir
+      # so the "Publish Test Results" reporter gates on it like every other suite.
+      - name: "Install Mesa llvmpipe (Windows, #3250)"
         if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
-        continue-on-error: true
         run: |
           $ErrorActionPreference = "Stop"
           $ProgressPreference = "SilentlyContinue"   # Invoke-WebRequest is far faster without progress rendering
@@ -279,8 +268,16 @@ jobs:
           $url = "https://github.com/pal1000/mesa-dist-win/releases/download/$ver/$asset"
           $archive = Join-Path $env:RUNNER_TEMP $asset
           $extract = Join-Path $env:RUNNER_TEMP "mesa"
-          Write-Host "Downloading $url"
-          Invoke-WebRequest -Uri $url -OutFile $archive
+          # Retry the download — this feeds a blocking gate, so a transient GitHub
+          # releases hiccup must not red the whole job on the first attempt.
+          for ($i = 1; $i -le 3; $i++) {
+            try { Write-Host "Downloading $url (attempt $i)"; Invoke-WebRequest -Uri $url -OutFile $archive; break }
+            catch {
+              if ($i -eq 3) { throw }
+              Write-Host "Download failed: $($_.Exception.Message). Retrying in $(5 * $i)s..."
+              Start-Sleep -Seconds (5 * $i)
+            }
+          }
           7z x $archive "-o$extract" -y -bso0 -bsp0
           # Find the x64 GL runtime in the archive and copy that folder's DLLs next
           # to the RaylibGum.Tests binaries (the test host's exe directory).
@@ -294,13 +291,12 @@ jobs:
             Where-Object { $_.Name -match "opengl32|gallium|glapi|dxil" } |
             Format-Table Name, Length
 
-      - name: "RaylibGum.Tests (Windows, advisory — #3250)"
+      - name: "RaylibGum.Tests (Windows, #3250)"
         if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
         timeout-minutes: 10
-        continue-on-error: true
         env:
           GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
-        run: dotnet test "Tests/RaylibGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResultsRaylib"
+        run: dotnet test "Tests/RaylibGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Publish Test Results
         if: always() && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
