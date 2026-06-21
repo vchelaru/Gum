@@ -275,6 +275,43 @@ public class ImportFromGumxViewModelTests
         textStandardLeaf.StandardDiffRows.ShouldBeNull();
     }
 
+    // ── browse command (#3263) ────────────────────────────────────────────
+
+    [Fact]
+    public async Task BrowseCommand_Cancelled_LeavesSourcePathUnchangedAndDoesNotLoad()
+    {
+        _dialogService.OpenFileStub = _ => null;
+
+        await _sut.BrowseCommand.ExecuteAsync(null);
+
+        _dialogService.OpenFileCallCount.ShouldBe(1);
+        _sut.SourcePath.ShouldBeEmpty();
+        _sut.ErrorMessage.ShouldBeNull();
+        _sut.IsPreviewLoaded.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task BrowseCommand_FileChosen_SetsSourcePathAndAttemptsLoad()
+    {
+        // A path the user "picks" that is guaranteed not to exist, so the chained load
+        // deterministically fails (no real .gumx required).
+        string chosenPath = Path.Combine(
+            Path.GetTempPath(), "GumImportBrowseTest_" + Guid.NewGuid().ToString("N") + ".gumx");
+        _dialogService.OpenFileStub = _ => new List<string> { chosenPath };
+
+        await _sut.BrowseCommand.ExecuteAsync(null);
+
+        _dialogService.OpenFileCallCount.ShouldBe(1);
+        _dialogService.LastOpenFileOptions.ShouldNotBeNull();
+        _dialogService.LastOpenFileOptions!.Title.ShouldBe("Open Gum Project");
+        _dialogService.LastOpenFileOptions.Filter.ShouldContain("*.gumx");
+
+        _sut.SourcePath.ShouldBe(chosenPath);
+        // The browse flow chains into LoadPreviewCommand; the chosen file does not exist,
+        // so the load surfaces an error — proof the load was attempted, not skipped.
+        _sut.ErrorMessage.ShouldNotBeNullOrEmpty();
+    }
+
     // ── conflict-resolution dialog (#2644) ────────────────────────────────
 
     [Fact]
@@ -357,6 +394,10 @@ public class ImportFromGumxViewModelTests
         public ChoiceDialogViewModel? LastChoiceDialog { get; private set; }
         public int ShowChoiceCallCount { get; private set; }
 
+        public Func<OpenFileDialogOptions?, List<string>?>? OpenFileStub { get; set; }
+        public OpenFileDialogOptions? LastOpenFileOptions { get; private set; }
+        public int OpenFileCallCount { get; private set; }
+
         public MessageDialogResult ShowMessage(string message, string? title = null, MessageDialogStyle? style = null)
             => MessageDialogResult.Canceled;
         public bool Show<T>(T dialogViewModel) where T : DialogViewModel => false;
@@ -377,7 +418,12 @@ public class ImportFromGumxViewModelTests
             return false;
         }
         public string? GetUserString(string message, string? title = null, GetUserStringOptions? options = null) => null;
-        public List<string>? OpenFile(OpenFileDialogOptions? options = null) => null;
+        public List<string>? OpenFile(OpenFileDialogOptions? options = null)
+        {
+            LastOpenFileOptions = options;
+            OpenFileCallCount++;
+            return OpenFileStub?.Invoke(options);
+        }
         public string? SaveFile(SaveFileDialogOptions? options = null) => null;
     }
 

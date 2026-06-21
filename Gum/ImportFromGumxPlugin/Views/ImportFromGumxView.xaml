@@ -47,11 +47,10 @@
                     VerticalContentAlignment="Center" />
 
                 <Button
-                    x:Name="BrowseButton"
                     Grid.Column="1"
                     Content="Browse..."
                     Padding="8,2"
-                    Click="OnBrowseClick"
+                    Command="{Binding BrowseCommand}"
                     Visibility="{Binding BrowseButtonVisibility}" />
             </Grid>
 

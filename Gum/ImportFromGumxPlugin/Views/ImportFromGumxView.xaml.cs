@@ -1,6 +1,5 @@
 using Gum.Services.Dialogs;
 using ImportFromGumxPlugin.ViewModels;
-using Microsoft.Win32;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -16,24 +15,6 @@ public partial class ImportFromGumxView : UserControl
     public ImportFromGumxView()
     {
         InitializeComponent();
-    }
-
-    private async void OnBrowseClick(object sender, RoutedEventArgs e)
-    {
-        var dialog = new OpenFileDialog
-        {
-            Filter = "Gum Project Files (*.gumx)|*.gumx|All Files (*.*)|*.*",
-            Title = "Open Gum Project"
-        };
-
-        if (dialog.ShowDialog() == true && DataContext is ImportFromGumxViewModel vm)
-        {
-            vm.SourcePath = dialog.FileName;
-            if (vm.LoadPreviewCommand.CanExecute(null))
-            {
-                await vm.LoadPreviewCommand.ExecuteAsync(null);
-            }
-        }
     }
 
     private async void OnSourcePathKeyDown(object sender, KeyEventArgs e)

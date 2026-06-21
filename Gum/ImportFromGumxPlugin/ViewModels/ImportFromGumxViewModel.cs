@@ -158,6 +158,13 @@ public class ImportFromGumxViewModel : DialogViewModel
     /// </summary>
     public RelayCommand<ImportTreeNodeViewModel> ShowStandardDiffCommand { get; }
 
+    /// <summary>
+    /// Prompts the user (via <see cref="IDialogService"/>) for a source <c>.gumx</c> file, then
+    /// sets <see cref="SourcePath"/> and loads its preview. Bound to the "Browse..." button;
+    /// a no-op if the user cancels the picker.
+    /// </summary>
+    public AsyncRelayCommand BrowseCommand { get; }
+
     public ImportFromGumxViewModel(
         GumxSourceService sourceService,
         GumxDependencyResolver dependencyResolver,
@@ -176,6 +183,7 @@ public class ImportFromGumxViewModel : DialogViewModel
 
         LoadPreviewCommand = new AsyncRelayCommand(ExecuteLoadPreviewAsync, CanExecuteLoadPreview);
         ShowStandardDiffCommand = new RelayCommand<ImportTreeNodeViewModel>(ExecuteShowStandardDiff);
+        BrowseCommand = new AsyncRelayCommand(ExecuteBrowseAsync);
     }
 
     private void ExecuteShowStandardDiff(ImportTreeNodeViewModel? row)
@@ -185,6 +193,24 @@ public class ImportFromGumxViewModel : DialogViewModel
         StandardDiffDetailsViewModel detailsVm =
             new StandardDiffDetailsViewModel(row.DisplayName, row.StandardDiffRows);
         _dialogService.Show(detailsVm);
+    }
+
+    private async Task ExecuteBrowseAsync()
+    {
+        List<string>? selectedFiles = _dialogService.OpenFile(new OpenFileDialogOptions
+        {
+            Title = "Open Gum Project",
+            Filter = "Gum Project Files (*.gumx)|*.gumx|All Files (*.*)|*.*"
+        });
+
+        string? selectedPath = selectedFiles?.FirstOrDefault();
+        if (string.IsNullOrEmpty(selectedPath)) { return; }
+
+        SourcePath = selectedPath;
+        if (LoadPreviewCommand.CanExecute(null))
+        {
+            await LoadPreviewCommand.ExecuteAsync(null);
+        }
     }
 
     public override bool CanExecuteAffirmative() => IsPreviewLoaded && !IsLoading;
