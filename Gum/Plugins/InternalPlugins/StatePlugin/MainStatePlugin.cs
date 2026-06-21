@@ -39,7 +39,6 @@ public class MainStatePlugin : PriorityPlugin
     private readonly ObjectFinder _objectFinder;
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly ICopyPasteLogic _copyPasteLogic;
-    private readonly StateTreeViewManager _stateTreeViewManager;
 
     #endregion
 
@@ -64,11 +63,6 @@ public class MainStatePlugin : PriorityPlugin
             _guiCommands,
             _fileCommands,
             _copyPasteLogic);
-
-        _stateTreeViewManager = new StateTreeViewManager(
-            _stateTreeViewRightClickService,
-            _hotkeyManager,
-            _selectedState);
 
         stateTreeViewModel = new StateTreeViewModel(_stateTreeViewRightClickService,
             selectedState);
