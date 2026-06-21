@@ -149,6 +149,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gum.Themes.Retro95.Raylib",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gum.Themes.Template.Raylib", "Themes\Gum.Themes.Template.Raylib\Gum.Themes.Template.Raylib.csproj", "{5A3BA47A-7EFC-46A5-B28F-49085E4B7A19}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gum.ProjectServices.SkiaGum.Tests", "Tests\Gum.ProjectServices.SkiaGum.Tests\Gum.ProjectServices.SkiaGum.Tests.csproj", "{9642D9F2-2087-450A-B6DD-80A3E0A05571}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -1332,6 +1334,24 @@ Global
 		{5A3BA47A-7EFC-46A5-B28F-49085E4B7A19}.Release|x64.Build.0 = Release|Any CPU
 		{5A3BA47A-7EFC-46A5-B28F-49085E4B7A19}.Release|x86.ActiveCfg = Release|Any CPU
 		{5A3BA47A-7EFC-46A5-B28F-49085E4B7A19}.Release|x86.Build.0 = Release|Any CPU
+		{9642D9F2-2087-450A-B6DD-80A3E0A05571}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9642D9F2-2087-450A-B6DD-80A3E0A05571}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9642D9F2-2087-450A-B6DD-80A3E0A05571}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9642D9F2-2087-450A-B6DD-80A3E0A05571}.Debug|x64.Build.0 = Debug|Any CPU
+		{9642D9F2-2087-450A-B6DD-80A3E0A05571}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9642D9F2-2087-450A-B6DD-80A3E0A05571}.Debug|x86.Build.0 = Debug|Any CPU
+		{9642D9F2-2087-450A-B6DD-80A3E0A05571}.Release_No_Diagnostics|Any CPU.ActiveCfg = Debug|Any CPU
+		{9642D9F2-2087-450A-B6DD-80A3E0A05571}.Release_No_Diagnostics|Any CPU.Build.0 = Debug|Any CPU
+		{9642D9F2-2087-450A-B6DD-80A3E0A05571}.Release_No_Diagnostics|x64.ActiveCfg = Debug|Any CPU
+		{9642D9F2-2087-450A-B6DD-80A3E0A05571}.Release_No_Diagnostics|x64.Build.0 = Debug|Any CPU
+		{9642D9F2-2087-450A-B6DD-80A3E0A05571}.Release_No_Diagnostics|x86.ActiveCfg = Debug|Any CPU
+		{9642D9F2-2087-450A-B6DD-80A3E0A05571}.Release_No_Diagnostics|x86.Build.0 = Debug|Any CPU
+		{9642D9F2-2087-450A-B6DD-80A3E0A05571}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9642D9F2-2087-450A-B6DD-80A3E0A05571}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9642D9F2-2087-450A-B6DD-80A3E0A05571}.Release|x64.ActiveCfg = Release|Any CPU
+		{9642D9F2-2087-450A-B6DD-80A3E0A05571}.Release|x64.Build.0 = Release|Any CPU
+		{9642D9F2-2087-450A-B6DD-80A3E0A05571}.Release|x86.ActiveCfg = Release|Any CPU
+		{9642D9F2-2087-450A-B6DD-80A3E0A05571}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1402,6 +1422,7 @@ Global
 		{FB9924E0-3607-4693-B472-88DCEB00B14D} = {90F7E5FD-146B-406A-C97D-A0D358256D37}
 		{80F871A3-4A72-4905-B849-62ED179B221B} = {90F7E5FD-146B-406A-C97D-A0D358256D37}
 		{5A3BA47A-7EFC-46A5-B28F-49085E4B7A19} = {90F7E5FD-146B-406A-C97D-A0D358256D37}
+		{9642D9F2-2087-450A-B6DD-80A3E0A05571} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {01002AE6-0158-417E-9B83-D4234361EC1B}
