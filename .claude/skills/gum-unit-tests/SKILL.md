@@ -15,8 +15,12 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
 | `MonoGameGum.Tests.V2` | `Tests/MonoGameGum.Tests.V2/` | Tests specific to V2 default visuals |
 | `MonoGameGum.Tests.V3` | `Tests/MonoGameGum.Tests.V3/` | Tests specific to V3 default visuals |
 | `MonoGameGum.IntegrationTests` | `Tests/MonoGameGum.IntegrationTests/` | Requires a real `GraphicsDevice`: content loading, renderer teardown, full `GumService` lifecycle |
+| `RaylibGum.Tests` | `Tests/RaylibGum.Tests/` | raylib runtime (incl. the `#if RAYLIB` branches of the source-shared `GueDeriving/*Runtime.cs`) |
+| `SkiaGum.Tests` | `Tests/SkiaGum.Tests/` | Skia runtime and shape runtimes |
 
 **When in doubt, put tests in `MonoGameGum.Tests/`.** Only use V2/V3 projects for tests that exercise visual-version-specific behavior.
+
+**`RaylibGum.Tests` and `SkiaGum.Tests` are excluded from CI** (they open a window / wire a GPU pipeline on init — see `build-and-test.yaml`). A green CI run does **not** prove they pass. When you change behavior that the raylib/Skia runtimes cover — including the `#if RAYLIB`/`#if SKIA` branches of a source-shared runtime — run these projects locally yourself, and update any assertion that pins the old behavior. (Issue #3234: #3183 changed the raylib stroke-width PreRender but left these two projects' tests asserting the pre-#3183 value; CI was green, so it shipped red.)
 
 ## Key Rules
 
