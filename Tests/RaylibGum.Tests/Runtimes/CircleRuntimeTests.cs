@@ -186,10 +186,12 @@ public class CircleRuntimeTests : BaseTestClass
         sut.StrokeWidth.ShouldBe(5f);
 
         sut.PreRender();
-        // The geometric width handed to the renderable is reduced by the ~1px AA contribution
-        // (commit "Fix raylib stroke width rendering ~1px too thick vs Apos/MonoGame") so the
-        // VISIBLE width equals the nominal StrokeWidth across backends. At zoom 1 that is 5 - 1 = 4.
-        ((LineCircle)sut.RenderableComponent!).StrokeWidth.ShouldBe(4f);
+        // Issue #3183 — raylib gets NO AA compensation: the geometric width handed to the
+        // renderable IS the visible width (raylib's MSAA adds no width, unlike Apos.Shapes, which
+        // subtracts a ~1px geometric contribution then adds it back as an AA band). So PreRender
+        // pushes the nominal StrokeWidth straight through. The earlier #3179 subtraction (5 - 1 = 4)
+        // collapsed a nominal 1px ring to ~0.01px (invisible) and was reverted. At zoom 1 this is 5.
+        ((LineCircle)sut.RenderableComponent!).StrokeWidth.ShouldBe(5f);
     }
 
     [Fact]
