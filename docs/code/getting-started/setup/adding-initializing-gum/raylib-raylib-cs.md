@@ -110,7 +110,7 @@ GumExpressionService.Initialize();
 
 If linking to source instead of NuGet, add `<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj` to your solution.
 
-For more information, see the [Runtime Variable References](../../../../styling/runtime-variable-references.md) page.
+For more information, see the [Runtime Variable References](../../../styling/runtime-variable-references.md) page.
 
 ## Adding a Button (Testing the Setup)
 
