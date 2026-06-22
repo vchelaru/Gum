@@ -27,7 +27,7 @@ namespace Gum.DataTypes
                 return false;
             }
 
-            Type type = TypeManager.Self.GetTypeFromString(variableSave.Type);
+            Type type = Locator.GetRequiredService<ITypeManager>().GetTypeFromString(variableSave.Type);
 
             if (type == null)
             {
@@ -68,7 +68,7 @@ namespace Gum.DataTypes
                 }
                 else
                 {
-                    return TypeManager.Self.GetTypeFromString(variableSave.Type);
+                    return Locator.GetRequiredService<ITypeManager>().GetTypeFromString(variableSave.Type);
                 }
             }
             else

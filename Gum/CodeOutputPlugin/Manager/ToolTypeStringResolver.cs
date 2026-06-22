@@ -9,9 +9,16 @@ namespace CodeOutputPlugin.Manager;
 /// </summary>
 internal class ToolTypeStringResolver : ITypeStringResolver
 {
+    private readonly ITypeManager _typeManager;
+
+    public ToolTypeStringResolver(ITypeManager typeManager)
+    {
+        _typeManager = typeManager;
+    }
+
     /// <inheritdoc/>
     public Type? GetTypeFromString(string typeAsString)
     {
-        return TypeManager.Self.GetTypeFromString(typeAsString);
+        return _typeManager.GetTypeFromString(typeAsString);
     }
 }

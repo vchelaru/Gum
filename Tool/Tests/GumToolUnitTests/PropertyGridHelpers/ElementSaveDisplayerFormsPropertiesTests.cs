@@ -32,7 +32,8 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
     public ElementSaveDisplayerFormsPropertiesTests()
     {
         StandardElementsManager.Self.Initialize();
-        Gum.Reflection.TypeManager.Self.Initialize();
+        var typeManager = new Gum.Reflection.TypeManager();
+        typeManager.Initialize();
 
         _buttonBehavior = new BehaviorSave { Name = "ButtonBehavior" };
         _buttonBehavior.FormsProperties.Add(new VariableSave
@@ -70,6 +71,10 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
         // Static Locator path (e.g. GetVariableFromThisOrBase) resolves ISelectedState; register the
         // same mock the displayer is constructor-injected with so both paths agree.
         services.AddSingleton(_mocker.GetMock<ISelectedState>().Object);
+        // The static Locator path (extension methods like GetIsEnumeration/GetRuntimeType)
+        // resolves ITypeManager; register the same real instance the displayer is
+        // constructor-injected with so both paths agree.
+        services.AddSingleton<Gum.Reflection.ITypeManager>(typeManager);
         _testServiceProvider = services.BuildServiceProvider();
         Locator.Register(_testServiceProvider);
 
@@ -80,7 +85,7 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
             .Setup(x => x.SelectedElement)
             .Returns(_screen);
 
-        _mocker.Use(Gum.Reflection.TypeManager.Self);
+        _mocker.Use(typeManager);
 
         _mocker.GetMock<IVariableSaveLogic>()
             .Setup(x => x.GetIfVariableIsActive(It.IsAny<VariableSave>(), It.IsAny<ElementSave>(), It.IsAny<InstanceSave>()))

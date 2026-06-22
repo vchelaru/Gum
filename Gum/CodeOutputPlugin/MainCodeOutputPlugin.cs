@@ -8,6 +8,7 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
+using Gum.Reflection;
 using Gum.Services;
 using Gum.ToolStates;
 using Newtonsoft.Json;
@@ -82,7 +83,7 @@ public class MainCodeOutputPlugin : PluginBase
 
         _codeGenerationNameVerifier = new CodeGenerationNameVerifier(_nameVerifier);
         _elementSettingsManager = new CodeOutputElementSettingsManager(_projectDirectoryProvider);
-        var typeStringResolver = new ToolTypeStringResolver();
+        var typeStringResolver = new ToolTypeStringResolver(Locator.GetRequiredService<ITypeManager>());
 
         var codeGenLoggerForDetection = new ToolCodeGenLogger(Locator.GetRequiredService<IOutputManager>());
         var syntaxVersionDetectionService = new SyntaxVersionDetectionService(codeGenLoggerForDetection);
