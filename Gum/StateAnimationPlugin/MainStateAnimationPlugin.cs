@@ -4,6 +4,7 @@ using Gum;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Messages;
 using Gum.Plugins;
@@ -37,16 +38,18 @@ public class MainStateAnimationPlugin : PluginBase
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
     private readonly IMessenger _messenger;
+    private readonly IOutputManager _outputManager;
+    private readonly IFileWatchManager _fileWatchManager;
     private readonly Func<ElementAnimationsViewModel> _animationVmFactory;
 
     #region Fields
     private readonly DuplicateService _duplicateService;
     private readonly AnimationFilePathService _animationFilePathService;
     private readonly ElementDeleteService _elementDeleteService;
-    private readonly RenameManager _renameManager;
+    private readonly IRenameManager _renameManager;
     private readonly ISettingsManager _settingsManager;
     private readonly IProjectState _projectState;
-    private readonly AnimationCollectionViewModelManager _animationCollectionViewModelManager;
+    private readonly IAnimationCollectionViewModelManager _animationCollectionViewModelManager;
     ElementAnimationsViewModel? _viewModel;
 
     StateAnimationPlugin.Views.MainWindow? _mainWindow;
@@ -91,15 +94,24 @@ public class MainStateAnimationPlugin : PluginBase
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _nameVerifier = Locator.GetRequiredService<INameVerifier>();
         _messenger = Locator.GetRequiredService<IMessenger>();
-
-        _animationVmFactory = () => new ElementAnimationsViewModel(_nameVerifier, _dialogService);
-        _duplicateService = new DuplicateService();
-        _animationFilePathService = new AnimationFilePathService();
-        _elementDeleteService = new ElementDeleteService(_animationFilePathService);
-        _renameManager = RenameManager.Self;
-        _settingsManager = new SettingsManager();
+        _outputManager = Locator.GetRequiredService<IOutputManager>();
+        _fileWatchManager = Locator.GetRequiredService<IFileWatchManager>();
         _projectState = Locator.GetRequiredService<IProjectState>();
-        _animationCollectionViewModelManager = AnimationCollectionViewModelManager.Self;
+
+        _animationFilePathService = new AnimationFilePathService(_selectedState);
+        _duplicateService = new DuplicateService();
+        _elementDeleteService = new ElementDeleteService(_animationFilePathService);
+        _settingsManager = new SettingsManager();
+
+        // The factory closure reads _animationCollectionViewModelManager and _renameManager lazily
+        // (when invoked, after both are assigned just below), which breaks the
+        // ACVMM -> ElementAnimationsViewModel -> RenameManager construction cycle without a Lazy<T>.
+        _animationVmFactory = () => new ElementAnimationsViewModel(
+            _nameVerifier, _dialogService, _animationCollectionViewModelManager, _renameManager);
+        _animationCollectionViewModelManager = new AnimationCollectionViewModelManager(
+            _selectedState, _outputManager, _fileWatchManager, _animationFilePathService, _animationVmFactory);
+        _renameManager = new RenameManager(
+            _selectedState, _outputManager, _animationFilePathService, _animationCollectionViewModelManager);
     }
 
     public override void StartUp()
@@ -308,7 +320,7 @@ public class MainStateAnimationPlugin : PluginBase
         }
 
         // forces a refresh:
-        _viewModel = new ElementAnimationsViewModel(_nameVerifier, _dialogService);
+        _viewModel = _animationVmFactory();
 
         RefreshViewModel();
     }
@@ -496,7 +508,7 @@ public class MainStateAnimationPlugin : PluginBase
         
         if (_viewModel == null)
         {
-            _viewModel = new(_nameVerifier, _dialogService);
+            _viewModel = _animationVmFactory();
         }
         if(currentlyReferencedElement != null)
         {

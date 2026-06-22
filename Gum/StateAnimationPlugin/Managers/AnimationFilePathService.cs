@@ -1,5 +1,4 @@
 ﻿using Gum.DataTypes;
-using Gum.Services;
 using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
@@ -10,14 +9,16 @@ using ToolsUtilities;
 
 namespace StateAnimationPlugin.Managers;
 
-internal class AnimationFilePathService
+public class AnimationFilePathService : IAnimationFilePathService
 {
     private readonly ISelectedState _selectedState;
-    public AnimationFilePathService()
+
+    public AnimationFilePathService(ISelectedState selectedState)
     {
-        _selectedState = _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _selectedState = selectedState;
     }
-    
+
+    /// <inheritdoc/>
     public FilePath? GetAbsoluteAnimationFileNameFor(string elementName)
     {
         var selectedElement = _selectedState.SelectedElement;
@@ -37,6 +38,7 @@ internal class AnimationFilePathService
         }
     }
 
+    /// <inheritdoc/>
     public FilePath? GetAbsoluteAnimationFileNameFor(ElementSave elementSave)
     {
         var fullPathXmlForElement = elementSave.GetFullPathXmlFile();

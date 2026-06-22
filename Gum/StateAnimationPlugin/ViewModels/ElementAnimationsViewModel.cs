@@ -44,6 +44,8 @@ public partial class ElementAnimationsViewModel : ViewModel
     private readonly INameVerifier _nameVerifier;
     private readonly IDialogService _dialogService;
     private readonly NameValidator _nameValidator;
+    private readonly IAnimationCollectionViewModelManager _animationCollectionViewModelManager;
+    private readonly IRenameManager _renameManager;
     private AnimatedKeyframeViewModel? _copiedKeyframe;
 
     #endregion
@@ -210,7 +212,8 @@ public partial class ElementAnimationsViewModel : ViewModel
     #endregion
 
 
-    public ElementAnimationsViewModel(INameVerifier nameVerifier, IDialogService dialogService)
+    public ElementAnimationsViewModel(INameVerifier nameVerifier, IDialogService dialogService,
+        IAnimationCollectionViewModelManager animationCollectionViewModelManager, IRenameManager renameManager)
     {
         ClampInterpolationVisuals = true;
         CurrentGameSpeed = "100%";
@@ -232,6 +235,8 @@ public partial class ElementAnimationsViewModel : ViewModel
         _nameVerifier = nameVerifier;
         _nameValidator = new NameValidator(_nameVerifier);
         _dialogService = dialogService;
+        _animationCollectionViewModelManager = animationCollectionViewModelManager;
+        _renameManager = renameManager;
 
         RefreshAnimationsRightClickMenuItems();
     }
@@ -242,7 +247,7 @@ public partial class ElementAnimationsViewModel : ViewModel
 
         foreach (var animation in save.Animations)
         {
-            var vm = AnimationViewModel.FromSave(animation, element);
+            var vm = AnimationViewModel.FromSave(animation, element, _animationCollectionViewModelManager);
             Animations.Add(vm);
         }
     }
@@ -374,7 +379,7 @@ public partial class ElementAnimationsViewModel : ViewModel
             var oldAnimationName = SelectedAnimation.Name;
             SelectedAnimation.Name = result;
 
-            StateAnimationPlugin.Managers.RenameManager.Self.HandleRename(
+            _renameManager.HandleRename(
                 SelectedAnimation, 
                 oldAnimationName, Animations, Element);
         }
@@ -442,7 +447,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         var copyOfAnimation = SelectedAnimation.Clone();
 
         copyOfAnimation.Name = $"Copy of {copyOfAnimation.Name}";
-        StateAnimationPlugin.Managers.RenameManager.Self.HandleRename(
+        _renameManager.HandleRename(
             copyOfAnimation,
             SelectedAnimation.Name, Animations, Element);
 
@@ -627,7 +632,7 @@ public partial class ElementAnimationsViewModel : ViewModel
             var instanceElement = ObjectFinder.Self.GetElementSave(instance);
             if (instanceElement != null)
             {
-                var animationSave = AnimationCollectionViewModelManager.Self.GetElementAnimationsSave(instanceElement);
+                var animationSave = _animationCollectionViewModelManager.GetElementAnimationsSave(instanceElement);
                 if (animationSave != null && animationSave.Animations.Count != 0)
                 {
                     acvm = new AnimationContainerViewModel(_selectedState.SelectedElement, instance);
@@ -647,7 +652,7 @@ public partial class ElementAnimationsViewModel : ViewModel
             return;
         }
 
-        SubAnimationSelectionDialogViewModel window = new();
+        SubAnimationSelectionDialogViewModel window = new(_animationCollectionViewModelManager);
         window.AnimationToExclude = SelectedAnimation;
         window.AnimationContainers = CreateAnimationContainers();
 

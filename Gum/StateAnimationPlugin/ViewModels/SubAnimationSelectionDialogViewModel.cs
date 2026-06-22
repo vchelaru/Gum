@@ -2,6 +2,7 @@
 using Gum.Managers;
 using Gum.Services.Dialogs;
 using Gum.StateAnimation.SaveClasses;
+using Gum.ToolStates;
 using StateAnimationPlugin.Managers;
 using System;
 using System.Collections.Generic;
@@ -16,8 +17,9 @@ namespace StateAnimationPlugin.ViewModels;
 
 public class SubAnimationSelectionDialogViewModel : DialogViewModel
 {
-    private readonly AnimationFilePathService _animationFilePathService = new();
+    private readonly IAnimationFilePathService _animationFilePathService;
     private readonly IOutputManager _outputManager;
+    private readonly IAnimationCollectionViewModelManager _animationCollectionViewModelManager;
 
     public List<AnimationContainerViewModel>? AnimationContainers { get; set; }
     public AnimationContainerViewModel? SelectedContainer
@@ -53,9 +55,11 @@ public class SubAnimationSelectionDialogViewModel : DialogViewModel
 
     public override bool CanExecuteAffirmative() => SelectedAnimation is not null;
 
-    public SubAnimationSelectionDialogViewModel()
+    public SubAnimationSelectionDialogViewModel(IAnimationCollectionViewModelManager animationCollectionViewModelManager)
     {
         _outputManager = Locator.GetRequiredService<IOutputManager>();
+        _animationFilePathService = new AnimationFilePathService(Locator.GetRequiredService<ISelectedState>());
+        _animationCollectionViewModelManager = animationCollectionViewModelManager;
     }
 
 
@@ -83,7 +87,7 @@ public class SubAnimationSelectionDialogViewModel : DialogViewModel
                 foreach (var item in save.Animations)
                 {
                     AnimationViewModel toReturn = AnimationViewModel.FromSave(
-                        item, elementSave!);
+                        item, elementSave!, _animationCollectionViewModelManager);
 
                     toReturn.Name = item.Name;
                     toReturn.ContainingInstance = container.InstanceSave;

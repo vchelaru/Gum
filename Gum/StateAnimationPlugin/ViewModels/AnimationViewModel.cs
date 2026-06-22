@@ -148,7 +148,7 @@ public partial class AnimationViewModel : ViewModel
         return clone;
     }
 
-    public static AnimationViewModel FromSave(AnimationSave save, ElementSave element, ElementAnimationsSave? allAnimationSaves = null)
+    public static AnimationViewModel FromSave(AnimationSave save, ElementSave element, IAnimationCollectionViewModelManager animationCollectionViewModelManager, ElementAnimationsSave? allAnimationSaves = null)
     {
         AnimationViewModel toReturn = new AnimationViewModel();
         toReturn.Name = save.Name;
@@ -182,7 +182,7 @@ public partial class AnimationViewModel : ViewModel
             {
                 if(allAnimationSaves == null)
                 {
-                    allAnimationSaves = AnimationCollectionViewModelManager.Self.GetElementAnimationsSave(element);
+                    allAnimationSaves = animationCollectionViewModelManager.GetElementAnimationsSave(element);
                 }
 
                 animationSave = allAnimationSaves?.Animations.FirstOrDefault(item => item.Name == animationReference.RootName);
@@ -200,7 +200,7 @@ public partial class AnimationViewModel : ViewModel
 
                     if(instanceElement != null)
                     {
-                        var allAnimations = AnimationCollectionViewModelManager.Self.GetElementAnimationsSave(instanceElement);
+                        var allAnimations = animationCollectionViewModelManager.GetElementAnimationsSave(instanceElement);
 
                         animationSave = allAnimations?.Animations.FirstOrDefault(item => item.Name == animationReference.RootName);
                         subAnimationElement = instanceElement;
@@ -212,7 +212,7 @@ public partial class AnimationViewModel : ViewModel
 
             if(animationSave != null && subAnimationElement != null)
             {
-                newVm.SubAnimationViewModel = AnimationViewModel.FromSave(animationSave, subAnimationElement, subAnimationSiblings);
+                newVm.SubAnimationViewModel = AnimationViewModel.FromSave(animationSave, subAnimationElement, animationCollectionViewModelManager, subAnimationSiblings);
             }
 
 
@@ -463,7 +463,7 @@ public static class ListExtension
 
 public static class AnimationSaveExtensions
 {
-    public static float GetLength(this AnimationSave animation, ElementSave elementSave, ElementAnimationsSave allAnimationSaves)
+    public static float GetLength(this AnimationSave animation, ElementSave elementSave, ElementAnimationsSave allAnimationSaves, IAnimationCollectionViewModelManager animationCollectionViewModelManager)
     {
         float lastState = animation.States.Max(item => item.Time);
 
@@ -491,7 +491,7 @@ public static class AnimationSaveExtensions
 
                         if(instanceElement != null)
                         {
-                            var instanceAnimations = AnimationCollectionViewModelManager.Self.GetElementAnimationsSave(instanceElement);
+                            var instanceAnimations = animationCollectionViewModelManager.GetElementAnimationsSave(instanceElement);
 
                             subAnimationSave = instanceAnimations?.Animations.FirstOrDefault(item => item.Name == subAnimation.RootName);
                             subAnimationElement = instanceElement;
@@ -504,7 +504,7 @@ public static class AnimationSaveExtensions
                 {
                     endOfLastSubAnimation = 
                         System.Math.Max( endOfLastSubAnimation,
-                        subAnimation.Time + subAnimationSave.GetLength(subAnimationElement, subAnimationSiblings));
+                        subAnimation.Time + subAnimationSave.GetLength(subAnimationElement, subAnimationSiblings, animationCollectionViewModelManager));
                 }
             }
         }
