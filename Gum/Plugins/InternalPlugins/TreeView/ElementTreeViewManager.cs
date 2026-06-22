@@ -239,8 +239,6 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _ => StandardElementImageIndex,
     };
 
-    static ElementTreeViewManager mSelf;
-
     // Part of the phantom right-click workaround. Subscribed in Initialize(),
     // checked in ObjectTreeView_MouseClick(). See comments at both sites.
     private MouseButtons _lastMouseDownButton;
@@ -290,18 +288,6 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     #endregion
 
     #region Properties
-
-    public static ElementTreeViewManager Self
-    {
-        get 
-        {
-            if (mSelf == null)
-            {
-                mSelf = new ElementTreeViewManager();
-            }
-            return mSelf; 
-        }
-    }
 
     public ITreeNode? SelectedNode
     {
@@ -401,34 +387,55 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     #endregion
 
-    public ElementTreeViewManager()
+    public ElementTreeViewManager(
+        ISelectedState selectedState,
+        IEditCommands editCommands,
+        IGuiCommands guiCommands,
+        IDialogService dialogService,
+        IFileCommands fileCommands,
+        IHotkeyManager hotkeyManager,
+        ITabManager tabManager,
+        ICopyPasteLogic copyPasteLogic,
+        IMessenger messenger,
+        IDeleteLogic deleteLogic,
+        IUndoManager undoManager,
+        IWireframeObjectManager wireframeObjectManager,
+        FileLocations fileLocations,
+        IElementCommands elementCommands,
+        INameVerifier nameVerifier,
+        ISetVariableLogic setVariableLogic,
+        ICircularReferenceManager circularReferenceManager,
+        IFavoriteComponentManager favoriteComponentManager,
+        IProjectState projectState,
+        StandardElementsManagerGumTool standardElementsManagerGumTool,
+        IDragDropManager dragDropManager)
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _editCommands = Locator.GetRequiredService<IEditCommands>();
-        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        _dialogService = Locator.GetRequiredService<IDialogService>();
-        _fileCommands = Locator.GetRequiredService<IFileCommands>();
-        _hotkeyManager = Locator.GetRequiredService<IHotkeyManager>();
-        _tabManager = Locator.GetRequiredService<ITabManager>();
-        _copyPasteLogic = Locator.GetRequiredService<ICopyPasteLogic>();
-        _messenger = Locator.GetRequiredService<IMessenger>();
+        _selectedState = selectedState;
+        _editCommands = editCommands;
+        _guiCommands = guiCommands;
+        _dialogService = dialogService;
+        _fileCommands = fileCommands;
+        _hotkeyManager = hotkeyManager;
+        _tabManager = tabManager;
+        _copyPasteLogic = copyPasteLogic;
+        _messenger = messenger;
         _messenger.RegisterAll(this);
-        _deleteLogic = Locator.GetRequiredService<IDeleteLogic>();
-        _undoManager = Locator.GetRequiredService<IUndoManager>();
-        _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
-        _fileLocations = Locator.GetRequiredService<FileLocations>();
-        _elementCommands = Locator.GetRequiredService<IElementCommands>();
-        _nameVerifier = Locator.GetRequiredService<INameVerifier>();
-        _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
-        _circularReferenceManager = Locator.GetRequiredService<ICircularReferenceManager>();
-        _favoriteComponentManager = Locator.GetRequiredService<IFavoriteComponentManager>();
-        _projectState = Locator.GetRequiredService<IProjectState>();
-        _standardElementsManagerGumTool = Locator.GetRequiredService<StandardElementsManagerGumTool>();
+        _deleteLogic = deleteLogic;
+        _undoManager = undoManager;
+        _wireframeObjectManager = wireframeObjectManager;
+        _fileLocations = fileLocations;
+        _elementCommands = elementCommands;
+        _nameVerifier = nameVerifier;
+        _setVariableLogic = setVariableLogic;
+        _circularReferenceManager = circularReferenceManager;
+        _favoriteComponentManager = favoriteComponentManager;
+        _projectState = projectState;
+        _standardElementsManagerGumTool = standardElementsManagerGumTool;
         _collapseToggleService = new CollapseToggleService();
         _recordedSelectedInstances = new List<InstanceSave>();
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
         AddCursor = GetAddCursor();
-        _dragDropManager = Locator.GetRequiredService<IDragDropManager>();
+        _dragDropManager = dragDropManager;
         _viewCreator = new ElementTreeViewCreator();
 
         Cursor GetAddCursor()

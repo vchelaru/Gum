@@ -95,6 +95,10 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IProjectManager>(provider => provider.GetRequiredService<ProjectManager>());
         services.AddSingleton<ICommandLineManager, CommandLineManager>();
         services.AddSingleton<IProjectState, ProjectState>();
+        // ElementTreeViewManager: drained from a static Self singleton (#3286). Concrete is needed for the
+        // Initialize() call in Program.cs (two-stage initialization); no interface is extracted because it is a
+        // bloated WinForms-coupled UI class whose only consumer couples to internal/UI-typed members.
+        services.AddSingleton<ElementTreeViewManager>();
 
         // singletons
         services.AddSingleton<ICircularReferenceManager, CircularReferenceManager>();
