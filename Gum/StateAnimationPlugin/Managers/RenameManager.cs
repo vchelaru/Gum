@@ -15,17 +15,23 @@ using Gum.Services;
 
 namespace StateAnimationPlugin.Managers
 {
-    class RenameManager : Singleton<RenameManager>
+    public class RenameManager : IRenameManager
     {
-        private readonly AnimationFilePathService _animationFilePathService;
+        private readonly IAnimationFilePathService _animationFilePathService;
         private readonly ISelectedState _selectedState;
         private readonly IOutputManager _outputManager;
+        private readonly IAnimationCollectionViewModelManager _animationCollectionViewModelManager;
 
-        public RenameManager()
+        public RenameManager(
+            ISelectedState selectedState,
+            IOutputManager outputManager,
+            IAnimationFilePathService animationFilePathService,
+            IAnimationCollectionViewModelManager animationCollectionViewModelManager)
         {
-            _animationFilePathService = new AnimationFilePathService();
-            _selectedState = Locator.GetRequiredService<ISelectedState>();
-            _outputManager = Locator.GetRequiredService<IOutputManager>();
+            _selectedState = selectedState;
+            _outputManager = outputManager;
+            _animationFilePathService = animationFilePathService;
+            _animationCollectionViewModelManager = animationCollectionViewModelManager;
         }
 
         public void HandleRename(ElementSave elementSave, string oldName, ElementAnimationsViewModel viewModel)
@@ -46,7 +52,7 @@ namespace StateAnimationPlugin.Managers
                 {
                     if(shouldSave)
                     {
-                        AnimationCollectionViewModelManager.Self.Save(viewModel);
+                        _animationCollectionViewModelManager.Save(viewModel);
                     }
                     succeeded = true;
                 }

@@ -1,44 +1,45 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.ToolStates;
 using Gum.StateAnimation.SaveClasses;
 using StateAnimationPlugin.ViewModels;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ToolsUtilities;
-using Gum.Services;
-using Gum.Services.Dialogs;
 
 namespace StateAnimationPlugin.Managers;
 
-public class AnimationCollectionViewModelManager : Singleton<AnimationCollectionViewModelManager>
+/// <summary>
+/// Loads and saves an element's animations, bridging the on-disk <see cref="ElementAnimationsSave"/>
+/// and the editable <see cref="ElementAnimationsViewModel"/>. Instantiated by
+/// <see cref="MainStateAnimationPlugin"/>; not an app-wide service.
+/// </summary>
+public class AnimationCollectionViewModelManager : IAnimationCollectionViewModelManager
 {
-    AnimationFilePathService _animationFilePathService;
+    private readonly IAnimationFilePathService _animationFilePathService;
     private readonly ISelectedState _selectedState;
-    private readonly INameVerifier _nameVerifier;
     private readonly IFileWatchManager _fileWatchManager;
     private readonly Func<ElementAnimationsViewModel> _animationVmFactory;
     private readonly IOutputManager _outputManager;
 
-    public AnimationCollectionViewModelManager()
+    public AnimationCollectionViewModelManager(
+        ISelectedState selectedState,
+        IOutputManager outputManager,
+        IFileWatchManager fileWatchManager,
+        IAnimationFilePathService animationFilePathService,
+        Func<ElementAnimationsViewModel> animationVmFactory)
     {
-        _animationFilePathService = new AnimationFilePathService();
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _nameVerifier = Locator.GetRequiredService<INameVerifier>();
-        _outputManager = Locator.GetRequiredService<IOutputManager>();
-        IDialogService dialogService = Locator.GetRequiredService<IDialogService>();
-        _fileWatchManager = Locator.GetRequiredService<IFileWatchManager>();
-        _animationVmFactory = () => new(_nameVerifier, dialogService);
+        _selectedState = selectedState;
+        _outputManager = outputManager;
+        _fileWatchManager = fileWatchManager;
+        _animationFilePathService = animationFilePathService;
+        _animationVmFactory = animationVmFactory;
     }
 
+    /// <inheritdoc/>
     public ElementAnimationsViewModel? GetAnimationCollectionViewModel(ElementSave? element)
     {
-        if(element == null)
+        if (element == null)
         {
             return null;
         }
@@ -53,21 +54,19 @@ public class AnimationCollectionViewModelManager : Singleton<AnimationCollection
         toReturn.Element = element;
 
         return toReturn;
-
     }
 
+    /// <inheritdoc/>
     public ElementAnimationsSave? GetElementAnimationsSave(ElementSave element)
     {
         ElementAnimationsSave? model = null;
         var fileName = _animationFilePathService.GetAbsoluteAnimationFileNameFor(element);
-
 
         if (fileName?.Exists() == true)
         {
             try
             {
                 model = FileManager.XmlDeserialize<ElementAnimationsSave>(fileName.FullPath);
-
             }
             catch (Exception exception)
             {
@@ -78,6 +77,7 @@ public class AnimationCollectionViewModelManager : Singleton<AnimationCollection
         return model;
     }
 
+    /// <inheritdoc/>
     public void Save(ElementAnimationsViewModel viewModel)
     {
         var currentElement = _selectedState.SelectedElement;
@@ -89,7 +89,7 @@ public class AnimationCollectionViewModelManager : Singleton<AnimationCollection
 
         var fileName = _animationFilePathService.GetAbsoluteAnimationFileNameFor(currentElement);
 
-        if(fileName != null)
+        if (fileName != null)
         {
             var save = viewModel.ToSave();
 
@@ -97,6 +97,4 @@ public class AnimationCollectionViewModelManager : Singleton<AnimationCollection
             FileManager.XmlSerialize(save, fileName.FullPath);
         }
     }
-
-
 }
