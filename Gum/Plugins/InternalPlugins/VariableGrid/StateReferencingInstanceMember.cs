@@ -34,6 +34,7 @@ public class StateReferencingInstanceMember : InstanceMember
     #region Fields
 
     ObjectFinder _objectFinder;
+    private readonly ITypeManager _typeManager;
     private readonly IHotkeyManager _hotkeyManager;
     private readonly IUndoManager _undoManager;
     private readonly IDeleteVariableService _deleteVariableLogic;
@@ -262,7 +263,8 @@ public class StateReferencingInstanceMember : InstanceMember
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
         ISetVariableLogic setVariableLogic,
-        IWireframeObjectManager wireframeObjectManager) :
+        IWireframeObjectManager wireframeObjectManager,
+        ITypeManager typeManager) :
         base(variableName, stateSave)
     {
         _editVariablesService = editVariableService;
@@ -276,6 +278,7 @@ public class StateReferencingInstanceMember : InstanceMember
         _fileCommands = fileCommands;
         _setVariableLogic = setVariableLogic;
         _wireframeObjectManager = wireframeObjectManager;
+        _typeManager = typeManager;
         StateSaveCategory = stateSaveCategory;
         InstanceSave = instanceSave;
         mStateSave = stateSave;
@@ -1231,7 +1234,7 @@ public class StateReferencingInstanceMember : InstanceMember
 
         if (variableSave?.Type != null)
         {
-            return TypeManager.Self.GetTypeFromString(variableSave.Type);
+            return _typeManager.GetTypeFromString(variableSave.Type);
         }
         else
         {
@@ -1289,7 +1292,7 @@ public class StateReferencingInstanceMember : InstanceMember
 
         if (!string.IsNullOrEmpty(typeName))
         {
-            return TypeManager.Self.GetTypeFromString($"List<{typeName}>");
+            return _typeManager.GetTypeFromString($"List<{typeName}>");
         }
         else
         {

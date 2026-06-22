@@ -108,7 +108,7 @@ namespace SkiaPlugin
 
         private void RegisterEnumTypes()
         {
-            TypeManager.Self.AddType(typeof(GradientType));
+            Locator.GetRequiredService<ITypeManager>().AddType(typeof(GradientType));
         }
 
         private void AddMenuItems()

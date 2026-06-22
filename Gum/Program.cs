@@ -107,7 +107,7 @@ namespace Gum
 
             MigrateAppSettings(services, projectManager.GeneralSettingsFile);
             services.GetRequiredService<IThemingService>().ApplyInitialTheme();
-            TypeManager.Self.Initialize();
+            services.GetRequiredService<ITypeManager>().Initialize();
 
             ElementTreeViewManager.Self.Initialize();
 

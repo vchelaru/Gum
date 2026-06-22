@@ -5,6 +5,7 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers;
+using Gum.Reflection;
 using Gum.Services;
 using Gum.ToolStates;
 using Gum.Undo;
@@ -58,7 +59,8 @@ public class StateReferencingInstanceMemberTests
             _mocker.Get<IGuiCommands>(),
             _mocker.Get<IFileCommands>(),
             setVariableLogic.Object,
-            _mocker.Get<IWireframeObjectManager>());
+            _mocker.Get<IWireframeObjectManager>(),
+            _mocker.Get<ITypeManager>());
     }
 
     [Fact]

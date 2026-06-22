@@ -10,20 +10,6 @@ public class TypeManager : ITypeManager
 {
     List<Type> mTypes;
 
-    static TypeManager mSelf;
-
-    public static TypeManager Self
-    {
-        get
-        {
-            if (mSelf == null)
-            {
-                mSelf = new TypeManager();
-            }
-            return mSelf;
-        }
-    }
-
     public void AddType(Type type)
     {
         mTypes.Add(type);
