@@ -90,7 +90,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<TypeManager>(TypeManager.Self);
         services.AddSingleton<ITypeManager>(provider => provider.GetRequiredService<TypeManager>());
         services.AddSingleton<ProjectManager>();
-        services.AddSingleton<StandardElementsManagerGumTool>(StandardElementsManagerGumTool.Self);
+        services.AddSingleton<StandardElementsManagerGumTool>();
         services.AddSingleton<IStandardElementsManagerGumTool>(provider => provider.GetRequiredService<StandardElementsManagerGumTool>());
         services.AddSingleton<IProjectManager>(provider => provider.GetRequiredService<ProjectManager>());
         services.AddSingleton<ICommandLineManager, CommandLineManager>();

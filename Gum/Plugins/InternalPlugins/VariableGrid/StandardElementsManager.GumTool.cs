@@ -25,7 +25,7 @@ public interface IStandardElementsManagerGumTool
     void RefreshStateVariablesThroughPlugins();
 }
 
-public class StandardElementsManagerGumTool : Singleton<StandardElementsManagerGumTool>, IStandardElementsManagerGumTool
+public class StandardElementsManagerGumTool : IStandardElementsManagerGumTool
 {
     public void Initialize()
     {

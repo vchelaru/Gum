@@ -23,7 +23,7 @@ public class InheritanceLogicTests : BaseTestClass
         _sut = new InheritanceLogic(
             _fileCommands.Object,
             _guiCommands.Object,
-            StandardElementsManagerGumTool.Self);
+            new StandardElementsManagerGumTool());
     }
 
     [Fact]
