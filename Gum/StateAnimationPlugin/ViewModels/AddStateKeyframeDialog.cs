@@ -1,5 +1,6 @@
 ﻿using Gum.DataTypes;
 using Gum.Services.Dialogs;
+using StateAnimationPlugin.Managers;
 using System.Collections.ObjectModel;
 using System.Linq;
 
@@ -7,6 +8,13 @@ namespace StateAnimationPlugin.ViewModels;
 
 internal class AddStateKeyframeDialog : DialogViewModel
 {
+    private readonly IBitmapLoader _bitmapLoader;
+
+    public AddStateKeyframeDialog(IBitmapLoader bitmapLoader)
+    {
+        _bitmapLoader = bitmapLoader;
+    }
+
     public AnimatedKeyframeViewModel? Result { get; private set; }
 
     public ElementSave? ElementSave
@@ -47,7 +55,7 @@ internal class AddStateKeyframeDialog : DialogViewModel
 
     public override void OnAffirmative()
     {
-        Result = new AnimatedKeyframeViewModel()
+        Result = new AnimatedKeyframeViewModel(_bitmapLoader)
         {
             StateName = SelectedState!,
             HasValidState = true,

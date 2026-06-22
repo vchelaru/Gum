@@ -43,6 +43,12 @@ Every `StateSave` must have `ParentContainer` set — `GetValueRecursive` traver
 
 `InternalsVisibleTo` is set up in `Gum.ProjectServices.csproj` for `Gum.ProjectServices.Tests` — internal members are directly accessible.
 
+## WPF-touching tool code (GumToolUnitTests) needs an STA thread
+
+xUnit's runner is **MTA**, but WPF `FrameworkElement`s (`MenuItem`, `Menu`, `ComboBox`, …) throw `InvalidOperationException: The calling thread must be STA` when constructed. If a tool class news up a WPF control — often a ViewModel building right-click `MenuItem`s in its constructor — build it inside a `RunOnSta(() => { ... })` helper that runs the body on an `ApartmentState.STA` thread and rethrows. Copy the helper from `MenuStripManagerTests` / `RenameManagerTests`; there is no shared base for it.
+
+**Verify the real construction blocker empirically before designing around an assumed one.** A quick throwaway probe (construct the object, see what actually throws) beats reasoning: e.g. `BitmapFrame` PNG decode and most non-control VM constructors run fine on MTA, so the blocker is usually the WPF control, not the singleton/resource you suspected.
+
 ## Integration Tests (MonoGameGum.IntegrationTests)
 
 Use this project for anything requiring a real `GraphicsDevice`. Each test creates a minimal nested `Game` subclass, calls `game.RunOneFrame()` to trigger `Initialize`, then asserts. See `Tests/MonoGameGum.IntegrationTests/MonoGameGum/GumServiceUnitTests.cs` for the established pattern. Always call `LoaderManager.Self?.DisposeAndClear()` in the `Game.Dispose` override to prevent state leaking across tests via the singleton.

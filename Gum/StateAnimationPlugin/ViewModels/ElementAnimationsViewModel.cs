@@ -46,6 +46,7 @@ public partial class ElementAnimationsViewModel : ViewModel
     private readonly NameValidator _nameValidator;
     private readonly IAnimationCollectionViewModelManager _animationCollectionViewModelManager;
     private readonly IRenameManager _renameManager;
+    private readonly IBitmapLoader _bitmapLoader;
     private AnimatedKeyframeViewModel? _copiedKeyframe;
 
     #endregion
@@ -213,7 +214,8 @@ public partial class ElementAnimationsViewModel : ViewModel
 
 
     public ElementAnimationsViewModel(INameVerifier nameVerifier, IDialogService dialogService,
-        IAnimationCollectionViewModelManager animationCollectionViewModelManager, IRenameManager renameManager)
+        IAnimationCollectionViewModelManager animationCollectionViewModelManager, IRenameManager renameManager,
+        IBitmapLoader bitmapLoader)
     {
         ClampInterpolationVisuals = true;
         CurrentGameSpeed = "100%";
@@ -227,9 +229,9 @@ public partial class ElementAnimationsViewModel : ViewModel
         mPlayTimer.Interval = new TimeSpan(0, 0, 0, 0, mTimerFrequencyInMs);
         mPlayTimer.Tick += HandlePlayTimerTick;
 
-        mPlayBitmap = BitmapLoader.Self.LoadImage("PlayIcon.png");
+        mPlayBitmap = bitmapLoader.LoadImage("PlayIcon.png");
 
-        mStopBitmap = BitmapLoader.Self.LoadImage("StopIcon.png");
+        mStopBitmap = bitmapLoader.LoadImage("StopIcon.png");
 
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _nameVerifier = nameVerifier;
@@ -237,6 +239,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         _dialogService = dialogService;
         _animationCollectionViewModelManager = animationCollectionViewModelManager;
         _renameManager = renameManager;
+        _bitmapLoader = bitmapLoader;
 
         RefreshAnimationsRightClickMenuItems();
     }
@@ -247,7 +250,7 @@ public partial class ElementAnimationsViewModel : ViewModel
 
         foreach (var animation in save.Animations)
         {
-            var vm = AnimationViewModel.FromSave(animation, element, _animationCollectionViewModelManager);
+            var vm = AnimationViewModel.FromSave(animation, element, _animationCollectionViewModelManager, _bitmapLoader);
             Animations.Add(vm);
         }
     }
@@ -604,7 +607,7 @@ public partial class ElementAnimationsViewModel : ViewModel
 
             if (_dialogService.Show(dialogViewModel))
             {
-                var newAnimation = new AnimationViewModel()
+                var newAnimation = new AnimationViewModel(_bitmapLoader)
                 {
                     Name = dialogViewModel.Name,
                     Loops = dialogViewModel.Loops
@@ -652,13 +655,13 @@ public partial class ElementAnimationsViewModel : ViewModel
             return;
         }
 
-        SubAnimationSelectionDialogViewModel window = new(_animationCollectionViewModelManager);
+        SubAnimationSelectionDialogViewModel window = new(_animationCollectionViewModelManager, _bitmapLoader);
         window.AnimationToExclude = SelectedAnimation;
         window.AnimationContainers = CreateAnimationContainers();
 
         if (_dialogService.Show(window) && window.SelectedAnimation is { } selectedAnimation)
         {
-            AnimatedKeyframeViewModel newVm = new AnimatedKeyframeViewModel();
+            AnimatedKeyframeViewModel newVm = new AnimatedKeyframeViewModel(_bitmapLoader);
             if (selectedAnimation.ContainingInstance != null)
             {
                 newVm.AnimationName = selectedAnimation.ContainingInstance.Name + "." + selectedAnimation.Name;
@@ -696,7 +699,7 @@ public partial class ElementAnimationsViewModel : ViewModel
 
         if (_dialogService.GetUserString("Enter new event name", "New event") is { } result)
         {
-            AnimatedKeyframeViewModel newVm = new AnimatedKeyframeViewModel();
+            AnimatedKeyframeViewModel newVm = new AnimatedKeyframeViewModel(_bitmapLoader);
             newVm.EventName = result;
 
             if (SelectedAnimation.SelectedKeyframe != null)

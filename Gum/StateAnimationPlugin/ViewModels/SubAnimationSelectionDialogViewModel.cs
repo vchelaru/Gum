@@ -20,6 +20,7 @@ public class SubAnimationSelectionDialogViewModel : DialogViewModel
     private readonly IAnimationFilePathService _animationFilePathService;
     private readonly IOutputManager _outputManager;
     private readonly IAnimationCollectionViewModelManager _animationCollectionViewModelManager;
+    private readonly IBitmapLoader _bitmapLoader;
 
     public List<AnimationContainerViewModel>? AnimationContainers { get; set; }
     public AnimationContainerViewModel? SelectedContainer
@@ -55,11 +56,13 @@ public class SubAnimationSelectionDialogViewModel : DialogViewModel
 
     public override bool CanExecuteAffirmative() => SelectedAnimation is not null;
 
-    public SubAnimationSelectionDialogViewModel(IAnimationCollectionViewModelManager animationCollectionViewModelManager)
+    public SubAnimationSelectionDialogViewModel(IAnimationCollectionViewModelManager animationCollectionViewModelManager,
+        IBitmapLoader bitmapLoader)
     {
         _outputManager = Locator.GetRequiredService<IOutputManager>();
         _animationFilePathService = new AnimationFilePathService(Locator.GetRequiredService<ISelectedState>());
         _animationCollectionViewModelManager = animationCollectionViewModelManager;
+        _bitmapLoader = bitmapLoader;
     }
 
 
@@ -87,7 +90,7 @@ public class SubAnimationSelectionDialogViewModel : DialogViewModel
                 foreach (var item in save.Animations)
                 {
                     AnimationViewModel toReturn = AnimationViewModel.FromSave(
-                        item, elementSave!, _animationCollectionViewModelManager);
+                        item, elementSave!, _animationCollectionViewModelManager, _bitmapLoader);
 
                     toReturn.Name = item.Name;
                     toReturn.ContainingInstance = container.InstanceSave;
