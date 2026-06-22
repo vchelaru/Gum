@@ -33,7 +33,7 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
     public MainTreeViewPlugin()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _elementTreeViewManager = ElementTreeViewManager.Self;
+        _elementTreeViewManager = Locator.GetRequiredService<ElementTreeViewManager>();
         _userProjectSettingsManager = Locator.GetRequiredService<IUserProjectSettingsManager>();
         _messenger = Locator.GetRequiredService<IMessenger>();
 

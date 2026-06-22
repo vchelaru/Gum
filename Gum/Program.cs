@@ -109,7 +109,7 @@ namespace Gum
             services.GetRequiredService<IThemingService>().ApplyInitialTheme();
             services.GetRequiredService<ITypeManager>().Initialize();
 
-            ElementTreeViewManager.Self.Initialize();
+            services.GetRequiredService<ElementTreeViewManager>().Initialize();
 
             (services.GetRequiredService<IWireframeObjectManager>() as WireframeObjectManager).Initialize();
             // This has to be initialized very early because other things depend on it.

@@ -102,21 +102,6 @@ public class ScrollbarService
 
     public void HandleCameraChanged()
     {
-        // I don't think we need to update
-        // the canvas width or height anymore.
-        // We do that whenever an object is selected...
-        //if (ProjectManager.Self.GumProjectSave != null)
-        //{
-
-        //    scrollBarControlLogic.SetDisplayedArea(
-        //        ProjectManager.Self.GumProjectSave.DefaultCanvasWidth,
-        //        ProjectManager.Self.GumProjectSave.DefaultCanvasHeight);
-        //}
-        //else
-        //{
-        //    scrollBarControlLogic.SetDisplayedArea(800, 600);
-        //}
-
         scrollBarControlLogic.UpdateScrollBars();
         scrollBarControlLogic.UpdateScrollBarsToCameraPosition();
     }

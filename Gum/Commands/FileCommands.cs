@@ -258,11 +258,6 @@ public class FileCommands : IFileCommands
         {
             bool succeeded = true;
 
-            // April 10, 2023
-            // This is potentially slow, dishonest (SaveElement should only save the element), and prevents multi-select edit
-            // from properly creating a single undo state:
-            //UndoManager.Self.RecordUndo();
-
             bool doesProjectNeedToSave = false;
             bool shouldSave = _projectManager.AskUserForProjectNameIfNecessary(out doesProjectNeedToSave);
 
