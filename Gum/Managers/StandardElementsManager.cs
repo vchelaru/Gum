@@ -241,7 +241,7 @@ public class StandardElementsManager
             AddPositioningVariables(stateSave);
             AddDimensionsVariables(stateSave, 100, 100, DimensionVariableAction.DefaultToPercentageOfFile);
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true, Category = "Source" });
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = null, Name = "RenderTargetTextureSource", Category = "Source",
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = null, Name = "RenderTargetTextureSource", Category = "Source", MinimumGumxVersion = V3StandardSurfaceVersion,
                 DetailText = "Displays the render target of another Container whose Is Render Target is checked. Takes precedence over SourceFile when set." });
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Animation", Name = "Animate" });
@@ -318,7 +318,7 @@ public class StandardElementsManager
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsRenderTarget", Category = "Rendering" });
 
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceShaderFile", IsFile = true, Category = "Rendering",
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceShaderFile", IsFile = true, Category = "Rendering", MinimumGumxVersion = V3StandardSurfaceVersion,
                 DetailText = "A .fx post-process shader applied to this container's contents when it is drawn to the screen." });
 
             var alphaValue = CreateAlphaVariable();
@@ -411,12 +411,12 @@ public class StandardElementsManager
             // exposure must precede UseGradient so users can scope a gradient to the outline
             // only by flipping IsFilled = false (the fill slot's gradient is gated on _isFilled
             // in SkiaShapeRuntime.RefreshSlotGradients).
-            AddFillAndStrokeVariables(stateSave, category: "Rendering");
+            AddFillAndStrokeVariables(stateSave, category: "Rendering", minimumGumxVersion: V3StandardSurfaceVersion);
             // Issue #3009 — Circle drives the gradient start from the active body color, so no
             // standalone Color1 (Red1/Green1/Blue1/Alpha1).
-            AddGradientVariables(stateSave, includeStartColor: false);
-            AddDropshadowVariables(stateSave);
-            AddBlendVariable(stateSave);
+            AddGradientVariables(stateSave, includeStartColor: false, minimumGumxVersion: V3StandardSurfaceVersion);
+            AddDropshadowVariables(stateSave, minimumGumxVersion: V3StandardSurfaceVersion);
+            AddBlendVariable(stateSave, minimumGumxVersion: V3StandardSurfaceVersion);
 
             // Although rotating a circle about its center does nothing we add rotation because you can rotate it about a different origin
             AddRotationVariable(stateSave);
@@ -452,16 +452,16 @@ public class StandardElementsManager
 
             // v3 (#2929 / #2931): mirror of the Circle block above — see comment there for why
             // AddColorVariables is intentionally omitted.
-            AddFillAndStrokeVariables(stateSave, category: "Rendering");
+            AddFillAndStrokeVariables(stateSave, category: "Rendering", minimumGumxVersion: V3StandardSurfaceVersion);
             // CornerRadius absorbs the legacy RoundedRectangle's rounded-corner surface so that
             // standard can be retired; default 0 keeps the historical hard-cornered visual. Only
             // Rectangle gets this (a Circle has no corners). Gated to v3 in ShapeVariableVersionGate.
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "CornerRadius", Category = "Rendering" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "CornerRadius", Category = "Rendering", MinimumGumxVersion = V3StandardSurfaceVersion });
             // Issue #3009 — Rectangle drives the gradient start from the active body color, so no
             // standalone Color1 (Red1/Green1/Blue1/Alpha1).
-            AddGradientVariables(stateSave, includeStartColor: false);
-            AddDropshadowVariables(stateSave);
-            AddBlendVariable(stateSave);
+            AddGradientVariables(stateSave, includeStartColor: false, minimumGumxVersion: V3StandardSurfaceVersion);
+            AddDropshadowVariables(stateSave, minimumGumxVersion: V3StandardSurfaceVersion);
+            AddBlendVariable(stateSave, minimumGumxVersion: V3StandardSurfaceVersion);
 
             AddRotationVariable(stateSave);
 
@@ -565,7 +565,7 @@ public class StandardElementsManager
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomFrameTextureCoordinateWidth", Category = "Source" });
 
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsTilingMiddleSections", Category = "Source" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsTilingMiddleSections", Category = "Source", MinimumGumxVersion = V3StandardSurfaceVersion });
 
             AddVariableReferenceList(stateSave);
 
@@ -1237,6 +1237,36 @@ public class StandardElementsManager
         state.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
     }
 
+    // Variables that are part of the v3 native standard surface (the #2929/#2931/#2950 shape
+    // expansion on Circle/Rectangle, plus the later RenderTargetTextureSource / SourceShaderFile /
+    // IsTilingMiddleSections additions) carry this as their MinimumGumxVersion. The load-time
+    // back-fill (GumProjectSaveExtensionMethods.Initialize) skips any variable whose
+    // MinimumGumxVersion exceeds the project's version, so a pre-v3 project (e.g. an older FRB1
+    // project pinned to an older Gum runtime) is left byte-stable instead of being injected with
+    // standard variables its runtime can't compile. See FlatRedBall issue #1881.
+    private const int V3StandardSurfaceVersion = (int)GumProjectSave.GumxVersions.ShapeVariableExpansion;
+
+    // Stamps MinimumGumxVersion on the variables a default-state builder just appended (those at
+    // index >= startIndex) so the load-time back-fill can gate them by project version. A 0 version
+    // is a no-op (the default), keeping the legacy-shape call sites untouched.
+    private static void TagMinimumGumxVersion(StateSave state, int startIndex, int minimumGumxVersion)
+    {
+        if (minimumGumxVersion == 0)
+        {
+            return;
+        }
+        for (int i = startIndex; i < state.Variables.Count; i++)
+        {
+            state.Variables[i].MinimumGumxVersion = minimumGumxVersion;
+        }
+    }
+
+    /// <summary>
+    /// Appends the gradient variables (UseGradient, GradientType, the gradient endpoint positions
+    /// and units, the radial inner/outer radius, and the Color2 second stop) to a standard
+    /// element's default state. Shared by the plain Circle/Rectangle and the legacy Skia shapes.
+    /// </summary>
+    /// <param name="state">The default state to append the gradient variables to.</param>
     /// <param name="includeStartColor">
     /// When true (the default, for Arc and the legacy ColoredCircle/RoundedRectangle/Line shapes)
     /// the standalone gradient start color channels (Red1/Green1/Blue1/Alpha1) are added. Issue
@@ -1244,8 +1274,15 @@ public class StandardElementsManager
     /// (FillColor/StrokeColor) instead of a standalone Color1, so they pass false and these
     /// channels are omitted entirely. Color2 (the standalone second stop) is always added.
     /// </param>
-    public static void AddGradientVariables(StateSave state, bool includeStartColor = true)
+    /// <param name="minimumGumxVersion">
+    /// When non-zero, stamps each appended variable's <see cref="VariableSave.MinimumGumxVersion"/>
+    /// so the load-time back-fill gates them for older projects. Legacy-shape call sites pass 0
+    /// (gradients predate v3 there); the plain Circle/Rectangle pass the v3 surface version.
+    /// </param>
+    public static void AddGradientVariables(StateSave state, bool includeStartColor = true, int minimumGumxVersion = 0)
     {
+        int startIndex = state.Variables.Count;
+
         List<object> xUnitsExclusions = new List<object>();
         xUnitsExclusions.Add(PositionUnitType.PixelsFromTop);
         xUnitsExclusions.Add(PositionUnitType.PercentageHeight);
@@ -1308,11 +1345,15 @@ public class StandardElementsManager
         state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Red2", Category = "Rendering" });
         state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "Green2", Category = "Rendering" });
         state.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Blue2", Category = "Rendering" });
+
+        TagMinimumGumxVersion(state, startIndex, minimumGumxVersion);
     }
 
 
-    public static void AddDropshadowVariables(StateSave stateSave)
+    public static void AddDropshadowVariables(StateSave stateSave, int minimumGumxVersion = 0)
     {
+        int startIndex = stateSave.Variables.Count;
+
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "HasDropshadow", Category = "Dropshadow" });
 
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0f, Name = "DropshadowOffsetX", Category = "Dropshadow" });
@@ -1324,6 +1365,8 @@ public class StandardElementsManager
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "DropshadowRed", Category = "Dropshadow" });
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "DropshadowGreen", Category = "Dropshadow" });
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "DropshadowBlue", Category = "Dropshadow" });
+
+        TagMinimumGumxVersion(stateSave, startIndex, minimumGumxVersion);
     }
 
     public static void AddStrokeAndFilledVariables(StateSave stateSave)
@@ -1346,8 +1389,10 @@ public class StandardElementsManager
     // fill, which preserves stroke-only visuals for code-only constructions): IsFilled = false
     // + opaque white fill, so the checkbox honestly says "no fill" and flipping it lights up a
     // visible fill instead of being a no-op against alpha 0.
-    public static void AddFillAndStrokeVariables(StateSave stateSave, string category = "Rendering")
+    public static void AddFillAndStrokeVariables(StateSave stateSave, string category = "Rendering", int minimumGumxVersion = 0)
     {
+        int startIndex = stateSave.Variables.Count;
+
         // Stroke section. Dashed strokes aren't supported on plain Circle / Rectangle, so unlike
         // the legacy AddStrokeAndFilledVariables there is no StrokeDashLength / StrokeGapLength here.
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 2.0f, Name = "StrokeWidth", Category = category });
@@ -1364,11 +1409,13 @@ public class StandardElementsManager
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "FillRed", Category = category });
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "FillGreen", Category = category });
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 255, Name = "FillBlue", Category = category });
+
+        TagMinimumGumxVersion(stateSave, startIndex, minimumGumxVersion);
     }
 
-    public static void AddBlendVariable(StateSave stateSave)
+    public static void AddBlendVariable(StateSave stateSave, int minimumGumxVersion = 0)
     {
-        var blendariable = new VariableSave { SetsValue = true, Type = "Blend", Value = Gum.RenderingLibrary.Blend.Normal, Name = "Blend", Category = "Rendering" };
+        var blendariable = new VariableSave { SetsValue = true, Type = "Blend", Value = Gum.RenderingLibrary.Blend.Normal, Name = "Blend", Category = "Rendering", MinimumGumxVersion = minimumGumxVersion };
 
         stateSave.Variables.Add(blendariable);
     }

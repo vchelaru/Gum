@@ -17,6 +17,12 @@ The `GumProjectSave` **constructor** does NOT default to `NativeVersion`. It def
 
 A **brand-new project** is the opposite case — it seeds the latest standard-element variable surface up front, so it is honestly at `NativeVersion`. The new-project factories (`ProjectManager.CreateNewProject` for the tool, `ProjectCreator.Create` for headless/CLI) therefore stamp `Version = NativeVersion` explicitly in their initializers rather than relying on the ctor default. When adding a new way to create a project, set the version there too — and bump any verbatim-copied template `.gumx` (e.g. the Forms/theme templates) only if its bundled standards actually contain the newer variable surface.
 
+### The standard-element back-fill gate — tag new standard variables (FRB #1881)
+
+On every load, `GumProjectSaveExtensionMethods.Initialize` back-fills each standard element with the tool's current `StandardElementsManager` default variables. This is **version-gated**: it skips any default variable whose `VariableSave.MinimumGumxVersion` exceeds the project's `Version`. **When you add a variable to a standard element's default state that an older runtime won't have, you MUST tag it** — pass `minimumGumxVersion:` to the `Add*Variables` helper, or set `MinimumGumxVersion = …` on the inline `new VariableSave { … }`. Pin it to the *version that introduced the surface* (e.g. `ShapeVariableExpansion`), **not** the floating `NativeVersion` — a floating tag would gate the variable out of projects that legitimately have it after the next bump.
+
+Skip the tag (leave it 0 = always back-fill) only for variables every supported runtime already has. Forgetting the tag is exactly how FRB #1881 happened: opening a pre-v3 project injected the v3 shape surface into its `.gutx`, and FRB1 (which generates its own runtime classes from the standard elements) then emitted code referencing properties its pinned older runtime lacked — a wall of CS0246. This back-fill gate is **separate from** the variable-grid display gate (`ShapeVariableVersionGate`) and the runtime `GumSyntaxVersion` codegen gate; the three don't share a list, so a new variable may need entries in more than one.
+
 ## The three load-time behaviors
 
 `ProjectManager.LoadProject` (~line 201 and ~288 per recent research) compares the file's `Version` against `NativeVersion`:
