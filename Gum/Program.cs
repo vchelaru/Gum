@@ -86,7 +86,7 @@ namespace Gum
 
             await InitializeGum(host.Services).ConfigureAwait(true);
 
-            if (CommandLineManager.Self.ShouldExitImmediately)
+            if (host.Services.GetRequiredService<ICommandLineManager>().ShouldExitImmediately)
             {
                 await host.StopAsync().ConfigureAwait(true);
                 return RunResponseCodes.Success;

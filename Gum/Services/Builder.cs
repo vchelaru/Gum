@@ -1,3 +1,4 @@
+using Gum.CommandLine;
 using Gum.Commands;
 using Gum.Controls;
 using Gum.Logic;
@@ -92,6 +93,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<StandardElementsManagerGumTool>(StandardElementsManagerGumTool.Self);
         services.AddSingleton<IStandardElementsManagerGumTool>(provider => provider.GetRequiredService<StandardElementsManagerGumTool>());
         services.AddSingleton<IProjectManager>(provider => provider.GetRequiredService<ProjectManager>());
+        services.AddSingleton<ICommandLineManager, CommandLineManager>();
         services.AddSingleton<IProjectState, ProjectState>();
 
         // singletons

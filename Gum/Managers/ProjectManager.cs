@@ -46,6 +46,9 @@ public class ProjectManager : IProjectManager
     private readonly Lazy<IFileWatchManager> _fileWatchManager;
     private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
     private readonly IRetryService _retryService;
+    // Lazy because CommandLineManager depends back on IProjectManager (ReadCommandLine's
+    // rebuild-fonts path reads GumProjectSave) — deferring it breaks the construction cycle.
+    private readonly Lazy<ICommandLineManager> _commandLineManager;
 
     #endregion
 
@@ -80,7 +83,8 @@ public class ProjectManager : IProjectManager
         IMessenger messenger,
         Lazy<IFileWatchManager> fileWatchManager,
         IStandardElementsManagerGumTool standardElementsManagerGumTool,
-        IRetryService retryService)
+        IRetryService retryService,
+        Lazy<ICommandLineManager> commandLineManager)
     {
         _selectedState = selectedState;
         _elementCommands = elementCommands;
@@ -91,6 +95,7 @@ public class ProjectManager : IProjectManager
         _fileWatchManager = fileWatchManager;
         _standardElementsManagerGumTool = standardElementsManagerGumTool;
         _retryService = retryService;
+        _commandLineManager = commandLineManager;
     }
 
     public void LoadSettings()
@@ -100,19 +105,19 @@ public class ProjectManager : IProjectManager
 
     public async Task Initialize()
     {
-        await CommandLineManager.Self.ReadCommandLine();
+        await _commandLineManager.Value.ReadCommandLine();
 
-        if (!CommandLineManager.Self.ShouldExitImmediately)
+        if (!_commandLineManager.Value.ShouldExitImmediately)
         {
             var isShift = (Control.ModifierKeys & Keys.Shift) != 0;
 
-            if (!isShift && !string.IsNullOrEmpty(CommandLineManager.Self.GlueProjectToLoad))
+            if (!isShift && !string.IsNullOrEmpty(_commandLineManager.Value.GlueProjectToLoad))
             {
-                _fileCommands.Value.LoadProject(CommandLineManager.Self.GlueProjectToLoad);
+                _fileCommands.Value.LoadProject(_commandLineManager.Value.GlueProjectToLoad);
 
-                if (!string.IsNullOrEmpty(CommandLineManager.Self.ElementName))
+                if (!string.IsNullOrEmpty(_commandLineManager.Value.ElementName))
                 {
-                    _selectedState.SelectedElement = ObjectFinder.Self.GetElementSave(CommandLineManager.Self.ElementName);
+                    _selectedState.SelectedElement = ObjectFinder.Self.GetElementSave(_commandLineManager.Value.ElementName);
                 }
             }
             else if (!isShift && !string.IsNullOrEmpty(GeneralSettingsFile.LastProject))
@@ -137,9 +142,9 @@ public class ProjectManager : IProjectManager
         }
         else
         {
-            if(CommandLineManager.Self.ShouldCodeGenAll)
+            if(_commandLineManager.Value.ShouldCodeGenAll)
             {
-                _fileCommands.Value.LoadProject(CommandLineManager.Self.GlueProjectToLoad);
+                _fileCommands.Value.LoadProject(_commandLineManager.Value.GlueProjectToLoad);
 
                 await _messenger.SendAsync(new RequestCodeGenerationMessage());
             }

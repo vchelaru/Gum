@@ -1,6 +1,5 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.Managers;
-using Gum.Services;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,7 +12,43 @@ using Gum.Services.Fonts;
 
 namespace Gum.CommandLine
 {
-    public class CommandLineManager : Singleton<CommandLineManager>
+    /// <summary>
+    /// Parses the process command-line arguments and exposes the resulting startup intent
+    /// (which project/element to load, whether to code-gen or rebuild fonts, and whether the
+    /// tool should exit immediately rather than show its window).
+    /// </summary>
+    public interface ICommandLineManager
+    {
+        /// <summary>
+        /// The .gumx project the command line requested be loaded, or null if none was specified.
+        /// </summary>
+        string GlueProjectToLoad { get; }
+
+        /// <summary>
+        /// True when the command line requested an immediate exit after processing (for example a
+        /// headless code-gen or font rebuild), so the tool should not run its main window loop.
+        /// </summary>
+        bool ShouldExitImmediately { get; }
+
+        /// <summary>
+        /// True when the command line requested code generation for the whole project.
+        /// </summary>
+        bool ShouldCodeGenAll { get; }
+
+        /// <summary>
+        /// The element the command line requested be selected after load, or null if none was specified.
+        /// </summary>
+        string ElementName { get; }
+
+        /// <summary>
+        /// Parses the process command-line arguments (<see cref="Environment.GetCommandLineArgs"/>)
+        /// and populates this manager's properties accordingly.
+        /// </summary>
+        Task ReadCommandLine();
+    }
+
+    /// <inheritdoc cref="ICommandLineManager"/>
+    public class CommandLineManager : ICommandLineManager
     {
         private readonly IFontManager _fontManager;
         private readonly IGuiCommands _guiCommands;
@@ -23,15 +58,20 @@ namespace Gum.CommandLine
 
         #region Fields/Properties
 
+        /// <inheritdoc/>
         public string GlueProjectToLoad
         {
             get;
             private set;
         }
 
-        public bool ShouldExitImmediately { get; set; }
+        /// <inheritdoc/>
+        public bool ShouldExitImmediately { get; private set; }
+
+        /// <inheritdoc/>
         public bool ShouldCodeGenAll { get; private set; }
 
+        /// <inheritdoc/>
         public string ElementName
         {
             get;
@@ -40,18 +80,30 @@ namespace Gum.CommandLine
 
         #endregion
 
-        public CommandLineManager()
+        public CommandLineManager(
+            IFontManager fontManager,
+            IGuiCommands guiCommands,
+            IFileCommands fileCommands,
+            IMessenger messenger,
+            IProjectManager projectManager)
         {
-            _fontManager = Locator.GetRequiredService<IFontManager>();
-            _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-            _fileCommands = Locator.GetRequiredService<IFileCommands>();
-            _messenger = Locator.GetRequiredService<IMessenger>();
-            _projectManager = Locator.GetRequiredService<IProjectManager>();
+            _fontManager = fontManager;
+            _guiCommands = guiCommands;
+            _fileCommands = fileCommands;
+            _messenger = messenger;
+            _projectManager = projectManager;
         }
 
-        public async Task ReadCommandLine()
+        /// <inheritdoc/>
+        public Task ReadCommandLine() => ReadCommandLine(Environment.GetCommandLineArgs());
+
+        /// <summary>
+        /// Parses the supplied command-line arguments and populates this manager's properties.
+        /// Prefer the parameterless <see cref="ReadCommandLine()"/> in production; this overload
+        /// exists so the parsing logic can be exercised with explicit arguments in tests.
+        /// </summary>
+        public async Task ReadCommandLine(string[] commandLineArgs)
         {
-            string[] commandLineArgs = Environment.GetCommandLineArgs();
             _guiCommands.PrintOutput(commandLineArgs.Length + " command line argument(s)...");
 
             for(int i = 0; i < commandLineArgs.Length; i++)
