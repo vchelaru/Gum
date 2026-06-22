@@ -44,7 +44,7 @@ public class MainStateAnimationPlugin : PluginBase
     private readonly AnimationFilePathService _animationFilePathService;
     private readonly ElementDeleteService _elementDeleteService;
     private readonly RenameManager _renameManager;
-    private readonly SettingsManager _settingsManager;
+    private readonly ISettingsManager _settingsManager;
     private readonly IProjectState _projectState;
     private readonly AnimationCollectionViewModelManager _animationCollectionViewModelManager;
     ElementAnimationsViewModel? _viewModel;
@@ -97,7 +97,7 @@ public class MainStateAnimationPlugin : PluginBase
         _animationFilePathService = new AnimationFilePathService();
         _elementDeleteService = new ElementDeleteService(_animationFilePathService);
         _renameManager = RenameManager.Self;
-        _settingsManager = SettingsManager.Self;
+        _settingsManager = new SettingsManager();
         _projectState = Locator.GetRequiredService<IProjectState>();
         _animationCollectionViewModelManager = AnimationCollectionViewModelManager.Self;
     }
