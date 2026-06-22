@@ -119,14 +119,14 @@ public partial class AnimationViewModel : ViewModel
 
     #region Methods
 
-    public AnimationViewModel()
+    public AnimationViewModel(IBitmapLoader bitmapLoader)
     {
         Keyframes = new ObservableCollection<AnimatedKeyframeViewModel>();
         Keyframes.CollectionChanged += HandleKeyframeCollectionChanged;
 
-        mLoopBitmap = BitmapLoader.Self.LoadImage("LoopIcon.png");
+        mLoopBitmap = bitmapLoader.LoadImage("LoopIcon.png");
 
-        mPlayOnceBitmap = BitmapLoader.Self.LoadImage("PlayOnceIcon.png");
+        mPlayOnceBitmap = bitmapLoader.LoadImage("PlayOnceIcon.png");
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
     }
@@ -148,15 +148,15 @@ public partial class AnimationViewModel : ViewModel
         return clone;
     }
 
-    public static AnimationViewModel FromSave(AnimationSave save, ElementSave element, IAnimationCollectionViewModelManager animationCollectionViewModelManager, ElementAnimationsSave? allAnimationSaves = null)
+    public static AnimationViewModel FromSave(AnimationSave save, ElementSave element, IAnimationCollectionViewModelManager animationCollectionViewModelManager, IBitmapLoader bitmapLoader, ElementAnimationsSave? allAnimationSaves = null)
     {
-        AnimationViewModel toReturn = new AnimationViewModel();
+        AnimationViewModel toReturn = new AnimationViewModel(bitmapLoader);
         toReturn.Name = save.Name;
         toReturn.Loops = save.Loops;
 
         foreach(var eventSave in save.Events)
         {
-            var newViewModel = AnimatedKeyframeViewModel.FromSave(eventSave, element);
+            var newViewModel = AnimatedKeyframeViewModel.FromSave(eventSave, element, bitmapLoader);
 
             toReturn.Keyframes.Add(newViewModel);
         }
@@ -165,7 +165,7 @@ public partial class AnimationViewModel : ViewModel
         {
             var foundState = GetStateFromCategorizedName(stateSave.StateName, element);
 
-            var newAnimatedStateViewModel = AnimatedKeyframeViewModel.FromSave(stateSave, element);
+            var newAnimatedStateViewModel = AnimatedKeyframeViewModel.FromSave(stateSave, element, bitmapLoader);
 
             newAnimatedStateViewModel.HasValidState = foundState != null;
 
@@ -208,11 +208,11 @@ public partial class AnimationViewModel : ViewModel
                     }
                 }
             }
-            var newVm = AnimatedKeyframeViewModel.FromSave(animationReference, element);
+            var newVm = AnimatedKeyframeViewModel.FromSave(animationReference, element, bitmapLoader);
 
             if(animationSave != null && subAnimationElement != null)
             {
-                newVm.SubAnimationViewModel = AnimationViewModel.FromSave(animationSave, subAnimationElement, animationCollectionViewModelManager, subAnimationSiblings);
+                newVm.SubAnimationViewModel = AnimationViewModel.FromSave(animationSave, subAnimationElement, animationCollectionViewModelManager, bitmapLoader, subAnimationSiblings);
             }
 
 

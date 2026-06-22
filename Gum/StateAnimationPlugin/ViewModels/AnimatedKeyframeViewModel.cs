@@ -24,9 +24,10 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
 
     AnimationViewModel? mSubAnimationViewModel;
 
-    static BitmapFrame mStateBitmap;
-    static BitmapFrame mAnimationBitmap;
-    static BitmapFrame mEventBitmap;
+    private readonly IBitmapLoader _bitmapLoader;
+    readonly BitmapFrame mStateBitmap;
+    readonly BitmapFrame mAnimationBitmap;
+    readonly BitmapFrame mEventBitmap;
     #endregion
 
     #region Properties
@@ -240,25 +241,25 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
     }
 
 
-    static BitmapFrame mExclamationIcon;
+    readonly BitmapFrame mExclamationIcon;
     public BitmapFrame ExclamationIcon => mExclamationIcon;
 
     #endregion
 
     #region Methods
 
-    static AnimatedKeyframeViewModel()
+    public AnimatedKeyframeViewModel(IBitmapLoader bitmapLoader)
     {
-        mStateBitmap = BitmapLoader.Self.LoadImage("StateAnimationIcon.png");
-        mAnimationBitmap = BitmapLoader.Self.LoadImage("ReferencedAnimationIcon.png");
-        mEventBitmap = BitmapLoader.Self.LoadImage("NamedEventIcon.png");
-        mExclamationIcon = BitmapLoader.Self.LoadImage("redExclamation.png");
-
+        _bitmapLoader = bitmapLoader;
+        mStateBitmap = bitmapLoader.LoadImage("StateAnimationIcon.png");
+        mAnimationBitmap = bitmapLoader.LoadImage("ReferencedAnimationIcon.png");
+        mEventBitmap = bitmapLoader.LoadImage("NamedEventIcon.png");
+        mExclamationIcon = bitmapLoader.LoadImage("redExclamation.png");
     }
 
     public AnimatedKeyframeViewModel Clone()
     {
-        var newInstance = new AnimatedKeyframeViewModel();
+        var newInstance = new AnimatedKeyframeViewModel(_bitmapLoader);
 
         newInstance.StateName = StateName;
         newInstance.AnimationName = AnimationName;
@@ -277,9 +278,9 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
         return newInstance;
     }
 
-    public static AnimatedKeyframeViewModel FromSave(AnimatedStateSave save, ElementSave elementSave)
+    public static AnimatedKeyframeViewModel FromSave(AnimatedStateSave save, ElementSave elementSave, IBitmapLoader bitmapLoader)
     {
-        AnimatedKeyframeViewModel toReturn = new AnimatedKeyframeViewModel();
+        AnimatedKeyframeViewModel toReturn = new AnimatedKeyframeViewModel(bitmapLoader);
 
         toReturn.StateName = save.StateName;
         toReturn.Time = save.Time;
@@ -291,9 +292,9 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
         return toReturn;
     }
 
-    public static AnimatedKeyframeViewModel FromSave(AnimationReferenceSave save, ElementSave elementSave)
+    public static AnimatedKeyframeViewModel FromSave(AnimationReferenceSave save, ElementSave elementSave, IBitmapLoader bitmapLoader)
     {
-        AnimatedKeyframeViewModel toReturn = new AnimatedKeyframeViewModel();
+        AnimatedKeyframeViewModel toReturn = new AnimatedKeyframeViewModel(bitmapLoader);
 
         toReturn.AnimationName = save.Name;
         toReturn.Time = save.Time;
@@ -302,9 +303,9 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
         return toReturn;
     }
 
-    public static AnimatedKeyframeViewModel FromSave(NamedEventSave save, ElementSave elementSave)
+    public static AnimatedKeyframeViewModel FromSave(NamedEventSave save, ElementSave elementSave, IBitmapLoader bitmapLoader)
     {
-        AnimatedKeyframeViewModel toReturn = new AnimatedKeyframeViewModel();
+        AnimatedKeyframeViewModel toReturn = new AnimatedKeyframeViewModel(bitmapLoader);
         toReturn.EventName = save.Name;
         toReturn.Time = save.Time;
 
