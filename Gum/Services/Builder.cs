@@ -118,6 +118,7 @@ file static class ServiceCollectionExtensions
                 provider.GetRequiredService<IFontGenerationCallbacks>()));
         services.AddSingleton<IFontManager, FontManager>();
         services.AddSingleton<IHotkeyManager, HotkeyManager>();
+        services.AddSingleton<IRetryService, RetryService>();
         services.AddSingleton<LocalizationService>();
         services.AddSingleton<ILocalizationService>(provider => provider.GetRequiredService<LocalizationService>());
         services.AddSingleton<ISelectedState, SelectedState>();
