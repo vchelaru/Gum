@@ -4,7 +4,6 @@ using Gum.Controls;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
-using Gum.Debug;
 using Gum.Managers;
 using Gum.Messages;
 using Gum.Plugins;
@@ -490,13 +489,8 @@ public class SelectedState : ISelectedState
         {
             var stateContainerBefore = snapshot.SelectedStateContainer;
 
-            var parent = snapshot.SelectedInstance!.ParentContainer;
             var elementAfter = ObjectFinder.Self.GetElementContainerOf(snapshot.SelectedInstance);
             var behaviorAfter = ObjectFinder.Self.GetBehaviorContainerOf(snapshot.SelectedInstance);
-
-            // It's okay if the parent isn't part of the project, we could have deleted the entire component and instance
-            // through the top level menu, which would mean the parent is no longer here:
-            //ProjectVerifier.Self.AssertIsPartOfProject(parent);
 
             if (elementAfter != null || behaviorAfter != null)
             {
