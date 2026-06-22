@@ -99,6 +99,10 @@ file static class ServiceCollectionExtensions
         // Initialize() call in Program.cs (two-stage initialization); no interface is extracted because it is a
         // bloated WinForms-coupled UI class whose only consumer couples to internal/UI-typed members.
         services.AddSingleton<ElementTreeViewManager>();
+        // PropertyGridManager: drained from a static Self singleton (#3288), same pattern as ElementTreeViewManager.
+        // Concrete (no interface) because it is a bloated WinForms/WPF-coupled UI class. SelectedState and GuiCommands
+        // are both consumers AND dependencies of it, so they break the construction cycle by injecting Lazy<PropertyGridManager>.
+        services.AddSingleton<PropertyGridManager>();
 
         // singletons
         services.AddSingleton<ICircularReferenceManager, CircularReferenceManager>();

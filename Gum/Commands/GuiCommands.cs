@@ -40,19 +40,23 @@ public class GuiCommands : IGuiCommands
     private readonly Lazy<ISelectedState> _lazySelectedState;
     private readonly IDispatcher _dispatcher;
     private readonly IOutputManager _outputManager;
+    // Lazy because PropertyGridManager depends on IGuiCommands; this breaks the DI construction cycle.
+    private readonly Lazy<PropertyGridManager> _lazyPropertyGridManager;
 
     private ISelectedState _selectedState => _lazySelectedState.Value;
 
     #endregion
 
     public GuiCommands(
-        Lazy<ISelectedState> lazySelectedState, 
-        IDispatcher dispatcher, 
-        IOutputManager outputManager)
+        Lazy<ISelectedState> lazySelectedState,
+        IDispatcher dispatcher,
+        IOutputManager outputManager,
+        Lazy<PropertyGridManager> lazyPropertyGridManager)
     {
         _lazySelectedState = lazySelectedState;
         _dispatcher = dispatcher;
         _outputManager = outputManager;
+        _lazyPropertyGridManager = lazyPropertyGridManager;
     }
     
     public void BroadcastRefreshBehaviorView()
@@ -78,7 +82,7 @@ public class GuiCommands : IGuiCommands
     /// </summary>
     public void RefreshVariableValues()
     {
-        PropertyGridManager.Self.RefreshVariablesDataGridValues();
+        _lazyPropertyGridManager.Value.RefreshVariablesDataGridValues();
     }
 
     public void RefreshElementTreeView()

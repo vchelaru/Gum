@@ -28,7 +28,7 @@ public class MainVariableGridPlugin : PriorityPlugin
     public MainVariableGridPlugin()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _propertyGridManager = PropertyGridManager.Self;
+        _propertyGridManager = Locator.GetRequiredService<PropertyGridManager>();
         _variableReferenceLogic = Locator.GetRequiredService<IVariableReferenceLogic>();
         GumExpressionService.Initialize();
     }
@@ -139,7 +139,7 @@ public class MainVariableGridPlugin : PriorityPlugin
     {
         // custom states are states where an animation is playing. This slows down
         // the animation considerably so let's not do it:
-        //PropertyGridManager.Self.RefreshVariablesDataGridValues();
+        //_propertyGridManager.RefreshVariablesDataGridValues();
     }
 
     private void HandleTreeNodeSelected(TreeNode? node)
