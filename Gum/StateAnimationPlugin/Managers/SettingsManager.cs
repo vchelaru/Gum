@@ -1,57 +1,66 @@
-﻿using Gum.Managers;
 using Newtonsoft.Json;
 using StateAnimationPlugin.Models;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ToolsUtilities;
 
 namespace StateAnimationPlugin.Managers
 {
-    public class SettingsManager : Singleton<SettingsManager>
+    /// <summary>
+    /// Loads and persists the State Animation plugin's global settings to a JSON file.
+    /// Instantiated by <see cref="MainStateAnimationPlugin"/>; not an app-wide service.
+    /// </summary>
+    public class SettingsManager : ISettingsManager
     {
-        public AnimationPluginSettings GlobalSettings { get; private set; } = new();
+        private readonly FilePath _globalSettingsFilePath;
 
-        FilePath GlobalSettingsFilePath
+        /// <inheritdoc/>
+        public AnimationPluginSettings GlobalSettings { get; private set; }
+
+        /// <summary>
+        /// Creates a new <see cref="SettingsManager"/>.
+        /// </summary>
+        /// <param name="globalSettingsFilePath">
+        /// The file the global settings are read from and written to. When null (the default used
+        /// by the running tool), the per-user application-data location is used.
+        /// </param>
+        public SettingsManager(FilePath? globalSettingsFilePath = null)
         {
-            get
-            {
-                return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + 
-                    @"\Gum\AnimationPlugin\GlobalAnimationSettings.json";
-            }
+            GlobalSettings = new AnimationPluginSettings();
+            _globalSettingsFilePath = globalSettingsFilePath ?? new FilePath(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) +
+                    @"\Gum\AnimationPlugin\GlobalAnimationSettings.json");
         }
 
+        /// <inheritdoc/>
         public void LoadOrCreateSettings()
         {
-            if (GlobalSettingsFilePath.Exists())
+            if (_globalSettingsFilePath.Exists())
             {
-                var text = System.IO.File.ReadAllText(GlobalSettingsFilePath.FullPath);
+                var text = System.IO.File.ReadAllText(_globalSettingsFilePath.FullPath);
 
                 GlobalSettings = JsonConvert.DeserializeObject<AnimationPluginSettings>(text) ??
                     new AnimationPluginSettings();
             }
 
-            if(GlobalSettings == null)
+            if (GlobalSettings == null)
             {
                 GlobalSettings = new AnimationPluginSettings();
-
             }
         }
 
+        /// <inheritdoc/>
         public void SaveSettings()
         {
             var text = JsonConvert.SerializeObject(GlobalSettings);
 
-            var directory = GlobalSettingsFilePath.GetDirectoryContainingThis();
+            var directory = _globalSettingsFilePath.GetDirectoryContainingThis();
 
-            if(directory != null)
+            if (directory != null)
             {
                 System.IO.Directory.CreateDirectory(directory.FullPath);
             }
 
-            System.IO.File.WriteAllText(GlobalSettingsFilePath.FullPath, text);
+            System.IO.File.WriteAllText(_globalSettingsFilePath.FullPath, text);
         }
     }
 }
