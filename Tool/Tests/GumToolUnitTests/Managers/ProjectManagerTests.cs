@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum;
+using Gum.CommandLine;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Logic.FileWatch;
@@ -30,6 +31,7 @@ public class ProjectManagerTests : BaseTestClass
     private readonly Mock<IFileWatchManager> _fileWatchManager;
     private readonly Mock<IStandardElementsManagerGumTool> _standardElementsManagerGumTool;
     private readonly Mock<IRetryService> _retryService;
+    private readonly Mock<ICommandLineManager> _commandLineManager;
     private readonly ProjectManager _projectManager;
 
     public ProjectManagerTests()
@@ -43,6 +45,7 @@ public class ProjectManagerTests : BaseTestClass
         _fileWatchManager = new Mock<IFileWatchManager>();
         _standardElementsManagerGumTool = new Mock<IStandardElementsManagerGumTool>();
         _retryService = new Mock<IRetryService>();
+        _commandLineManager = new Mock<ICommandLineManager>();
 
         _projectManager = new ProjectManager(
             _selectedState.Object,
@@ -53,7 +56,8 @@ public class ProjectManagerTests : BaseTestClass
             _messenger.Object,
             new Lazy<IFileWatchManager>(() => _fileWatchManager.Object),
             _standardElementsManagerGumTool.Object,
-            _retryService.Object);
+            _retryService.Object,
+            new Lazy<ICommandLineManager>(() => _commandLineManager.Object));
     }
 
     [Fact]
