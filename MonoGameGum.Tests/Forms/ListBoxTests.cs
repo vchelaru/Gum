@@ -1998,5 +1998,42 @@ public class ListBoxTests : BaseTestClass
         separator.Parent.ShouldBeNull();
     }
 
+    [Fact]
+    public void InsertDecorationBefore_PlacesDecorationAheadOfTheAnchorRow()
+    {
+        // Issue #3305: the Before placement puts the decoration immediately ahead of its anchor
+        // row's visual, while Items/ListBoxItems stay pure.
+        ListBox listBox = new();
+        listBox.Items!.Add("A");
+        listBox.Items!.Add("B");
+        listBox.Items!.Add("C");
+
+        ColoredRectangleRuntime separator = new();
+        listBox.InsertDecorationBefore("B", separator);
+
+        ObservableCollection<GraphicalUiElement> panel = listBox.InnerPanel.Children;
+        panel.Count.ShouldBe(4);
+        panel[0].ShouldBe(listBox.ListBoxItems[0].Visual); // A
+        panel[1].ShouldBe(separator);                      // decoration before B
+        panel[2].ShouldBe(listBox.ListBoxItems[1].Visual); // B
+        panel[3].ShouldBe(listBox.ListBoxItems[2].Visual); // C
+
+        listBox.Items!.Count.ShouldBe(3);
+        listBox.ListBoxItems.Count.ShouldBe(3);
+    }
+
+    [Fact]
+    public void InsertDecorationAfter_WithAnchorNotInItems_Throws()
+    {
+        // Issue #3305: anchoring to an item that is not in Items is a programming error and must
+        // be rejected rather than silently dropping the decoration.
+        ListBox listBox = new();
+        listBox.Items!.Add("A");
+
+        ColoredRectangleRuntime separator = new();
+
+        Should.Throw<ArgumentException>(() => listBox.InsertDecorationAfter("not-in-list", separator));
+    }
+
     #endregion
 }
