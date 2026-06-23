@@ -346,7 +346,7 @@ public class ItemsControl : ScrollViewer
                             var newFrameworkItem = asGue?.FormsControlAsObject as FrameworkElement;
                             if (newFrameworkItem != null)
                             {
-                                HandleCollectionItemRemoved(indexInItems);
+                                HandleCollectionItemRemoved(indexInItems, newFrameworkItem);
                             }
                         }
                     }
@@ -506,7 +506,7 @@ public class ItemsControl : ScrollViewer
     }
 
     protected virtual void HandleCollectionNewItemCreated(FrameworkElement newItem, int newItemIndex) { }
-    protected virtual void HandleCollectionItemRemoved(int indexToRemoveFrom) { }
+    protected virtual void HandleCollectionItemRemoved(int indexToRemoveFrom, FrameworkElement removedItem) { }
     protected virtual void HandleCollectionReset() { }
     protected virtual void HandleCollectionReplace(int index) { }
     protected virtual void HandleCollectionItemMoved(int oldIndex, int newIndex) { }
