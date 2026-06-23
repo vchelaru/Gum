@@ -1,5 +1,4 @@
 ﻿using Gum.Plugins.BaseClasses;
-using Gum.Services;
 using Gum.ToolStates;
 using System.ComponentModel.Composition;
 using System.Windows.Forms;
@@ -13,9 +12,10 @@ namespace Gum.Plugins.AlignmentButtons
 
         private PluginTab _tab;
 
-        public AlignmentMainPlugin()
+        [ImportingConstructor]
+        public AlignmentMainPlugin(ISelectedState selectedState)
         {
-            _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _selectedState = selectedState;
         }
         
         public override void StartUp()

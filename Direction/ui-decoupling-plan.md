@@ -131,6 +131,40 @@ line): `ISelectedState`, `IElementCommands`, `IUndoManager`, `IProjectManager`, 
 `IFileCommands`, `ITabManager`, `MenuStripManager`, `IDialogService`, `IWireframeCommands`,
 `IFontManager`, `IProjectState`, `IImportLogic`, `IFileWatchManager`.
 
+### Shortcut: batch by bridge-cost — added 2026-06-23
+
+The cheapest, safest pass is the set of plugins whose **every** ctor-time dep is *already* in the
+`AddExportedValue` block. Those drain with **no `PluginManager.cs` change at all** — pure
+`[ImportingConstructor]` edits — so many fit in one homogeneous, low-risk PR. Sort the remaining
+plugins by how many *new* bridges they cost and clear the zero-cost tier first; keep the
+bridge-adding ones for their own batches. Nuance: a plugin that service-locates in `StartUp`
+instead of the ctor still drains the same way — **relocate the assignment into the
+`[ImportingConstructor]`** (construction precedes `StartUp`, so it stays behavior-preserving).
+
+### Drained so far (plugin ctor passes)
+
+- **#3313** — PluginBase shared services → MEF `[Import]` properties (the base-class drain that
+  unblocked every per-plugin ctor drain).
+- **#3317** — MainSkiaPlugin, MainFontPlugin, MainGumFormsPlugin, MainDuplicateVariablePlugin
+  (added the `IWireframeCommands` / `IFontManager` / `IProjectState` / `IImportLogic` /
+  `IFileWatchManager` bridges).
+- **this PR (2026-06-23)** — AlignmentMainPlugin, MainCirclePlugin, MainParentPlugin, UndoPlugin,
+  MainMenuStripPlugin. **Added zero bridges** — every dep (`ISelectedState`, `IUndoManager`,
+  concrete `MenuStripManager`) was already in the block.
+
+### Remaining plugin targets (triage ledger — prune as drained)
+
+- **One new bridge each (next easy batch):** `MainInheritancePlugin` (ctor needs concrete
+  `InheritanceLogic` — check for an `IInheritanceLogic` and prefer it, else bridge the concrete);
+  `MainFavoriteComponentPlugin` (needs `IFavoriteComponentManager`; its lookup is in `StartUp`, so
+  move it into the ctor per the nuance above).
+- **Medium (1–3 new bridges, some switching a concrete to its interface):** `DeleteObjectPlugin`,
+  `MainErrorsPlugin`, `MainVariableGridPlugin`, `MainFileWatchPlugin`, `MainHideShowToolsPlugin`.
+- **Heavies (own PR each — large ctors and/or `Locator.GetRequiredService<PluginManager>()`
+  self-injection cycle risk):** `MainEditorTabPlugin` (Tool/EditorTabPlugin_XNA),
+  `MainCodeOutputPlugin`, `MainTreeViewPlugin` (pulls the 3k-line `ElementTreeViewManager`),
+  `MainPropertiesWindowPlugin`, `MainStatePlugin`, `MainTextureCoordinatePlugin`.
+
 ## Definition of done — every change lands a *tested* unit
 
 This effort's payoff *is* testability, so the bar for every change is not just "logic moved out of

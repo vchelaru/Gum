@@ -5,7 +5,6 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using System;
 using Gum.ToolStates;
-using Gum.Services;
 
 namespace Gum.Undo;
 
@@ -14,10 +13,11 @@ public class UndoPlugin : PriorityPlugin
 {
     private readonly ISelectedState _selectedState;
     private readonly IUndoManager _undoManager;
-    public UndoPlugin() 
+    [ImportingConstructor]
+    public UndoPlugin(ISelectedState selectedState, IUndoManager undoManager)
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _undoManager = Locator.GetRequiredService<IUndoManager>();
+        _selectedState = selectedState;
+        _undoManager = undoManager;
     }
 
     public override void StartUp()
