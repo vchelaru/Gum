@@ -305,7 +305,7 @@ A _decoration_ is an inert visual — a separator line, a group header, or other
 
 ### Adding a Separator Between Groups
 
-The shipped `ListBoxSeparator` visual is a thin, filled horizontal line you can drop between rows. Anchor it to a data item with `InsertDecorationAfter` (or `InsertDecorationBefore`):
+A thin, filled horizontal line makes a natural separator. Build one from any inert visual — a `RectangleRuntime` works well — and anchor it to a data item with `InsertDecorationAfter` (or `InsertDecorationBefore`):
 
 ```csharp
 // Initialize
@@ -353,8 +353,8 @@ The three add methods differ only in how the anchor is chosen:
 Because decorations stay out of `Items`, binding a ListBox to a typed `ObservableCollection<T>` remains valid with decorations present — the bound collection only ever contains your data objects. See [Items Binding (ListBox, ComboBox, ItemsControl)](../binding-viewmodels/items-binding-listbox-combobox-itemscontrol.md).
 {% endhint %}
 
-{% hint style="warning" %}
-`ListBoxSeparator` ships with the MonoGame, KNI, FNA, and Raylib runtimes. In FlatRedBall — or any project without the GueDeriving runtime visuals — pass your own `GraphicalUiElement` to `AddDecoration` / `InsertDecorationAfter` / `InsertDecorationBefore` instead.
+{% hint style="info" %}
+The decoration methods are defined on `ItemsControl` / `ListBox`, so they are available on every runtime. The visual you pass in is your own: any `GraphicalUiElement` works, so pick a type your platform provides (for example a `RectangleRuntime` on MonoGame/KNI/FNA/Raylib).
 {% endhint %}
 
 ## Customizing with VisualTemplate
