@@ -829,6 +829,14 @@ public class PluginManager : IPluginManager
             batch.AddExportedValue<IUndoManager>(Locator.GetRequiredService<IUndoManager>());
             batch.AddExportedValue<IProjectManager>(Locator.GetRequiredService<IProjectManager>());
 
+            // Shared services consumed by PluginBase (via property imports) and by individual
+            // plugins that need them at construction time (via [ImportingConstructor]).
+            batch.AddExportedValue<IGuiCommands>(Locator.GetRequiredService<IGuiCommands>());
+            batch.AddExportedValue<IFileCommands>(Locator.GetRequiredService<IFileCommands>());
+            batch.AddExportedValue<ITabManager>(Locator.GetRequiredService<ITabManager>());
+            batch.AddExportedValue<MenuStripManager>(Locator.GetRequiredService<MenuStripManager>());
+            batch.AddExportedValue<IDialogService>(Locator.GetRequiredService<IDialogService>());
+
 
             var container = new CompositionContainer(catalog);
 
