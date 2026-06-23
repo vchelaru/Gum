@@ -83,6 +83,54 @@ the permanent home (grow `Gum.ProjectServices` vs. a dedicated `Gum.Core`/`Gum.P
 effort, then decide the reach-vs-cost question (see `open-questions.md` and the roadmap **Later**
 item) with data instead of a guess.
 
+## Phase 2 — working notes (transient scaffolding)
+
+> **Why this section exists, and the rule that governs it.** Phase 2 is a many-pass grind — a
+> handful of `.Self`/`Locator` drains per PR — and each pass tends to re-derive the same mechanics.
+> **Rule: if you research something during a pass that a *later* pass of this phase will need too,
+> record it here** rather than re-discovering it. This is deliberately *transient* — when Phase 2
+> closes, distill anything still true into the `refactoring-direction` skill and delete the rest.
+> The permanent operational *how* lives in the skills (see the "Definition of done" note below);
+> this is only the live ledger for the in-flight work, kept here so it doesn't pollute the
+> general-purpose skill/`CLAUDE.md` with phase-specific churn. Date additions.
+>
+> **Treat this section as a flywheel — leave it faster to use after every pass.** Recording new
+> facts is only half the job. On each iteration also *prune* what's now stale or wrong, *sharpen*
+> the recipe wherever this pass hit friction, and write down the shortcut you wish you'd had at the
+> start. If a pass felt slow, that slowness is a defect *in this doc* — fix it here before moving
+> on, so each drain costs less than the one before. The explicit goal is to go faster every
+> iteration.
+
+### Draining a plugin's `Locator` constructor (MEF parts) — added 2026-06-23
+
+Plugins are MEF parts, so they can't pull from the host DI container directly; a service must be
+*bridged* into the plugin container before a plugin can inject it.
+
+- **The `batch.AddExportedValue<…>` block in `PluginManager.LoadPlugins` is the live list of
+  what's injectable into plugins.** Read it to see what's already bridged — don't re-derive the
+  set. Anything in that block can be taken as an `[ImportingConstructor]` parameter by any plugin.
+- **Recipe per plugin:** convert the parameterless ctor (which calls `Locator.GetRequiredService<T>()`)
+  to `[ImportingConstructor]` taking its ctor-time deps as parameters. For a dep already in the
+  block, just take it. For a dep *not* yet bridged, add one
+  `AddExportedValue<T>(Locator.GetRequiredService<T>())` line to the block first — this *relocates*
+  the `Locator` call to the composition root, it doesn't delete it. (If the plugin was already
+  resolving `T` via `Locator`, `T` is registered in `Builder.cs`, so the bridge resolves with no
+  new `Builder.cs` work.)
+- **Inject the interface, not the concrete.** If a field is the concrete `Foo : IFoo`, switch it to
+  `IFoo` and bridge `IFoo` (confirm the interface carries the members the plugin uses).
+- **Only ctor-time lookups are in scope.** `Locator` calls inside `StartUp`, event handlers, and
+  menu-click lambdas stay. PluginBase's inherited `[Import]` properties (`_dialogService`,
+  `_fileCommands`, `_guiCommands`, `_tabManager`, `_menuStripManager`) are set *after* construction,
+  so a ctor-needed dep must be a ctor param even when PluginBase also exposes it.
+- **Verify:** build via `GumFull.sln` (plugin post-builds need `$(SolutionDir)`), then launch the
+  tool — a MEF composition failure shows an "Error loading plugins" dialog with zero plugins, so
+  "tool opens with all tabs and menus present" is the all-clear.
+
+**Bridged into the plugin container as of 2026-06-23** (snapshot — trust `LoadPlugins`, not this
+line): `ISelectedState`, `IElementCommands`, `IUndoManager`, `IProjectManager`, `IGuiCommands`,
+`IFileCommands`, `ITabManager`, `MenuStripManager`, `IDialogService`, `IWireframeCommands`,
+`IFontManager`, `IProjectState`, `IImportLogic`, `IFileWatchManager`.
+
 ## Definition of done — every change lands a *tested* unit
 
 This effort's payoff *is* testability, so the bar for every change is not just "logic moved out of

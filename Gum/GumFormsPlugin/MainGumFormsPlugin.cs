@@ -36,11 +36,14 @@ internal class MainGumFormsPlugin : PluginBase
 
     #endregion
 
-    public MainGumFormsPlugin()
+    [ImportingConstructor]
+    public MainGumFormsPlugin(
+        IImportLogic importLogic,
+        IFileWatchManager fileWatchManager)
     {
         _formsFileService = new FormsFileService();
-        _importLogic = Locator.GetRequiredService<IImportLogic>();
-        _fileWatchManager = Locator.GetRequiredService<IFileWatchManager>();
+        _importLogic = importLogic;
+        _fileWatchManager = fileWatchManager;
     }
 
     public override void StartUp()

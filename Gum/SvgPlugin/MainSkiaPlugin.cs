@@ -33,16 +33,20 @@ namespace SkiaPlugin
         public override Version Version => new Version(1, 1);
         
         private readonly ISelectedState _selectedState;
-        private readonly WireframeCommands _wireframeCommands;
+        private readonly IWireframeCommands _wireframeCommands;
         private readonly IDialogService _dialogService;
 
         #endregion
 
-        public MainSkiaPlugin()
+        [ImportingConstructor]
+        public MainSkiaPlugin(
+            ISelectedState selectedState,
+            IWireframeCommands wireframeCommands,
+            IDialogService dialogService)
         {
-            _selectedState = Locator.GetRequiredService<ISelectedState>();
-            _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
-            _dialogService = Locator.GetRequiredService<IDialogService>();
+            _selectedState = selectedState;
+            _wireframeCommands = wireframeCommands;
+            _dialogService = dialogService;
         }
         
         public override bool ShutDown(PluginShutDownReason shutDownReason)

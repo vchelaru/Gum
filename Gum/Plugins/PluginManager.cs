@@ -29,6 +29,9 @@ using CommunityToolkit.Mvvm.Messaging;
 using Gum.Services.Dialogs;
 using Gum.Undo;
 using Gum.Localization;
+using Gum.Services.Fonts;
+using Gum.Plugins.ImportPlugin.Manager;
+using Gum.Logic.FileWatch;
 
 namespace Gum.Plugins;
 
@@ -836,6 +839,16 @@ public class PluginManager : IPluginManager
             batch.AddExportedValue<ITabManager>(Locator.GetRequiredService<ITabManager>());
             batch.AddExportedValue<MenuStripManager>(Locator.GetRequiredService<MenuStripManager>());
             batch.AddExportedValue<IDialogService>(Locator.GetRequiredService<IDialogService>());
+
+            // Per-plugin services needed at construction time (via [ImportingConstructor]):
+            // MainSkiaPlugin (IWireframeCommands), MainFontPlugin (IFontManager, IProjectState),
+            // MainGumFormsPlugin (IImportLogic, IFileWatchManager). IProjectState and
+            // IFileWatchManager are also stepping stones for later, heavier plugin drains.
+            batch.AddExportedValue<IWireframeCommands>(Locator.GetRequiredService<IWireframeCommands>());
+            batch.AddExportedValue<IFontManager>(Locator.GetRequiredService<IFontManager>());
+            batch.AddExportedValue<IProjectState>(Locator.GetRequiredService<IProjectState>());
+            batch.AddExportedValue<IImportLogic>(Locator.GetRequiredService<IImportLogic>());
+            batch.AddExportedValue<IFileWatchManager>(Locator.GetRequiredService<IFileWatchManager>());
 
 
             var container = new CompositionContainer(catalog);
