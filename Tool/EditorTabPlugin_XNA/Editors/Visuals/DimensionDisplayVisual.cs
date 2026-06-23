@@ -42,7 +42,7 @@ public class DimensionDisplayVisual : EditorVisualBase
         _uiSettingsService = context.UiSettingsService;
 
         var systemManagers = SystemManagers.Default;
-        var toolFontService = ToolFontService.Self;
+        var toolFontService = context.ToolFontService;
 
         // Initialize middle line
         _middleLine = new Line(systemManagers);

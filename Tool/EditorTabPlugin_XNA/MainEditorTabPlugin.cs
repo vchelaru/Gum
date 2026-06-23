@@ -140,6 +140,8 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
     private readonly IDialogService _dialogService;
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly IWireframeObjectManager _wireframeObjectManager;
+    private readonly IToolFontService _toolFontService;
+    private readonly IToolLayerService _toolLayerService;
 
     // Suppresses the redundant second wireframe rebuild when selecting an element forces its
     // default state (state event rebuilds) and then fires the element event for the same element.
@@ -185,6 +187,11 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
         _layerService = new Services.LayerService();
 
+        // Plugin-scoped services (not registered in Builder.cs): the editor tab owns the single
+        // instance of each and threads it down to the XNA objects it constructs. See issue #3294.
+        _toolFontService = new ToolFontService();
+        _toolLayerService = new ToolLayerService();
+
         _selectionManager = new SelectionManager(
             _selectedState,
             undoManager,
@@ -198,7 +205,8 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
             _elementCommands,
             _fileCommands,
             _setVariableLogic,
-            _uiSettingsService);
+            _uiSettingsService,
+            _toolFontService);
 
         _screenshotService = new ScreenshotService(_selectionManager);
         _singlePixelTextureService = new SinglePixelTextureService();
@@ -768,12 +776,14 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
 
         _wireframeControl.Initialize(
-            gumEditorPanel, 
-            _hotkeyManager, 
-            _selectionManager, 
+            gumEditorPanel,
+            _hotkeyManager,
+            _selectionManager,
             _dragDropManager,
             _editorViewModel,
-            _projectManager);
+            _projectManager,
+            _toolFontService,
+            _toolLayerService);
         var systemManagers = _wireframeControl.SystemManagers;
 
 
@@ -1367,7 +1377,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         {
             _backgroundManager.Activity();
             _wireframeObjectManager.Activity();
-            ToolLayerService.Self.Activity();
+            _toolLayerService.Activity();
         };
 
     }

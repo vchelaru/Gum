@@ -62,7 +62,8 @@ public abstract class WireframeEditor
         IUiSettingsService uiSettingsService,
         Layer layer,
         Color lineColor,
-        Color textColor)
+        Color textColor,
+        IToolFontService toolFontService)
     {
         // Create shared EditorContext and MoveInputHandler
         _context = new EditorContext(
@@ -79,7 +80,8 @@ public abstract class WireframeEditor
             uiSettingsService,
             layer,
             lineColor,
-            textColor);
+            textColor,
+            toolFontService);
 
         _moveInputHandler = new MoveInputHandler(_context);
     }

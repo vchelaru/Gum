@@ -33,8 +33,8 @@ public enum RulerSide
 public class Ruler
 {
     #region Fields / Properties
-    private ToolFontService _toolFontService;
-    private ToolLayerService _toolLayerService;
+    private IToolFontService _toolFontService;
+    private IToolLayerService _toolLayerService;
     private readonly IHotkeyManager _hotkeyManager;
     GraphicsDeviceControl mControl;
     SystemManagers mManagers;
@@ -215,8 +215,8 @@ public class Ruler
     public Ruler(GraphicsDeviceControl control, 
         SystemManagers managers, 
         Cursor cursor, 
-        ToolFontService toolFontService, 
-        ToolLayerService toolLayerService, 
+        IToolFontService toolFontService,
+        IToolLayerService toolLayerService,
         LayerService layerService,
         IHotkeyManager hotkeyManager)
     {

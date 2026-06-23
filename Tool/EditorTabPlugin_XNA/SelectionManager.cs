@@ -86,6 +86,7 @@ public class SelectionManager : ISelectionManager
     private readonly IFileCommands _fileCommands;
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly IUiSettingsService _uiSettingsService;
+    private readonly IToolFontService _toolFontService;
 
     public virtual bool IsOverBody
     {
@@ -213,9 +214,11 @@ public class SelectionManager : ISelectionManager
         IElementCommands elementCommands,
         IFileCommands fileCommands,
         ISetVariableLogic setVariableLogic,
-        IUiSettingsService uiSettingsService)
+        IUiSettingsService uiSettingsService,
+        IToolFontService toolFontService)
     {
         _selectedState = selectedState;
+        _toolFontService = toolFontService;
         _editingManager = editingManager;
         _undoManager = undoManager;
         _dialogService = dialogService;
@@ -820,7 +823,8 @@ public class SelectionManager : ISelectionManager
                         _undoManager,
                         _variableInCategoryPropagationLogic,
                         _wireframeObjectManager,
-                        _uiSettingsService);
+                        _uiSettingsService,
+                        _toolFontService);
                 }
             }
         }
@@ -858,7 +862,8 @@ public class SelectionManager : ISelectionManager
             _undoManager,
             _variableInCategoryPropagationLogic,
             _wireframeObjectManager,
-            _uiSettingsService);
+            _uiSettingsService,
+            _toolFontService);
     }
 
     #region New Explicit Input Processing System

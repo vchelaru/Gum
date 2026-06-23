@@ -56,7 +56,8 @@ public class SelectionManagerHighlightTests : BaseTestClass
             Mock.Of<IElementCommands>(),
             Mock.Of<IFileCommands>(),
             Mock.Of<ISetVariableLogic>(),
-            Mock.Of<IUiSettingsService>());
+            Mock.Of<IUiSettingsService>(),
+            Mock.Of<IToolFontService>());
 
         _layerService = new Mock<LayerService>();
         _selectionManager.Initialize(_layerService.Object);

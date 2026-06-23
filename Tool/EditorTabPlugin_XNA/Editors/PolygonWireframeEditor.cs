@@ -71,7 +71,8 @@ public class PolygonWireframeEditor : WireframeEditor
         IUndoManager undoManager,
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         IWireframeObjectManager wireframeObjectManager,
-        IUiSettingsService uiSettingsService)
+        IUiSettingsService uiSettingsService,
+        IToolFontService toolFontService)
         : base(
               hotkeyManager,
               selectionManager,
@@ -86,7 +87,8 @@ public class PolygonWireframeEditor : WireframeEditor
               uiSettingsService,
               layer,
               System.Drawing.Color.White,
-              System.Drawing.Color.White)
+              System.Drawing.Color.White,
+              toolFontService)
     {
         this.layer = layer;
 

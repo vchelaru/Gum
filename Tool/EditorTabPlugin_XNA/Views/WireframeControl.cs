@@ -41,6 +41,8 @@ public class WireframeControl : GraphicsDeviceControl
     private IProjectManager _projectManager;
     private SelectionManager _selectionManager;
     private IDragDropManager _dragDropManager;
+    private IToolFontService _toolFontService;
+    private IToolLayerService _toolLayerService;
     LineRectangle mCanvasBounds;
 
     public Color ScreenBoundsColor = Color.LightBlue;
@@ -146,12 +148,16 @@ public class WireframeControl : GraphicsDeviceControl
         SelectionManager selectionManager,
         IDragDropManager dragDropManager,
         EditorViewModel editorViewModel,
-        IProjectManager projectManager)
+        IProjectManager projectManager,
+        IToolFontService toolFontService,
+        IToolLayerService toolLayerService)
     {
         _selectionManager = selectionManager;
         _dragDropManager = dragDropManager;
         _hotkeyManager = hotkeyManager;
         _projectManager = projectManager;
+        _toolFontService = toolFontService;
+        _toolLayerService = toolLayerService;
         try
         {
             LoaderManager.Self.ContentLoader = new ContentLoader();
@@ -175,8 +181,8 @@ public class WireframeControl : GraphicsDeviceControl
 
             InitializeDefaultTypeInstantiation();
 
-            ToolFontService.Self.Initialize();
-            ToolLayerService.Self.Initialize();
+            _toolFontService.Initialize();
+            _toolLayerService.Initialize();
 
             Renderer.TextureFilter = TextureFilter.Point;
 
@@ -282,14 +288,14 @@ public class WireframeControl : GraphicsDeviceControl
         TopRuler = new Ruler(this, 
             SystemManagers.Default,
             InputLibrary.Cursor.Self,
-            ToolFontService.Self,
-            ToolLayerService.Self,
+            _toolFontService,
+            _toolLayerService,
             layerService,
             _hotkeyManager);
         LeftRuler = new Ruler(this, SystemManagers.Default,
             InputLibrary.Cursor.Self,
-            ToolFontService.Self,
-            ToolLayerService.Self,
+            _toolFontService,
+            _toolLayerService,
             layerService,
             _hotkeyManager);
         LeftRuler.RulerSide = RulerSide.Left;
