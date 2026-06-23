@@ -1,6 +1,5 @@
 ﻿using Gum.Commands;
 using Gum.Managers;
-using Gum.Services;
 using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
@@ -11,17 +10,23 @@ namespace Gum.Logic.FileWatch;
 
 public class FileWatchLogic
 {
-    IFileWatchManager _fileWatchManager;
+    private readonly IFileWatchManager _fileWatchManager;
     private readonly IGuiCommands _guiCommands;
     private readonly IProjectState _projectState;
+    private readonly IProjectManager _projectManager;
 
     public bool Enabled => _fileWatchManager.Enabled;
 
-    public FileWatchLogic()
+    public FileWatchLogic(
+        IFileWatchManager fileWatchManager,
+        IGuiCommands guiCommands,
+        IProjectState projectState,
+        IProjectManager projectManager)
     {
-        _fileWatchManager = Locator.GetRequiredService<IFileWatchManager>();
-        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        _projectState = Locator.GetRequiredService<IProjectState>();
+        _fileWatchManager = fileWatchManager;
+        _guiCommands = guiCommands;
+        _projectState = projectState;
+        _projectManager = projectManager;
     }
 
     public void HandleProjectLoaded()
@@ -36,7 +41,7 @@ public class FileWatchLogic
     public void RefreshRootDirectory()
     {
 
-        if (Locator.GetRequiredService<IProjectManager>().GumProjectSave?.FullFileName != null)
+        if (_projectManager.GumProjectSave?.FullFileName != null)
         {
             var directories = GetFileWatchRootDirectories();
             _fileWatchManager.EnableWithDirectories(directories);
@@ -86,7 +91,7 @@ public class FileWatchLogic
             }
         }
 
-        FilePath gumProjectFilePath = Locator.GetRequiredService<IProjectManager>().GumProjectSave.FullFileName;
+        FilePath gumProjectFilePath = _projectManager.GumProjectSave.FullFileName;
 
         if (gumProjectFilePath != null)
         {
