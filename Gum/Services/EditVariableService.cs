@@ -10,7 +10,6 @@ using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
 using Gum.Plugins.VariableGrid;
 using Gum.ToolCommands;
 using Gum.ToolStates;
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -53,18 +52,21 @@ public class EditVariableService : IEditVariableService
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly IUndoManager _undoManager;
+    private readonly Func<AddVariableViewModel> _addVariableViewModelFactory;
 
     public EditVariableService(IRenameLogic renameLogic,
         IDialogService dialogService,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        IUndoManager undoManager)
+        IUndoManager undoManager,
+        Func<AddVariableViewModel> addVariableViewModelFactory)
     {
         _renameLogic = renameLogic;
         _dialogService = dialogService;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _undoManager = undoManager;
+        _addVariableViewModelFactory = addVariableViewModelFactory;
     }
 
     public void TryAddEditVariableOptions(InstanceMember instanceMember, VariableSave variableSave, IStateContainer stateListCategoryContainer)
@@ -195,7 +197,7 @@ public class EditVariableService : IEditVariableService
         }
 
         // We can re-use the logic in the AddVariableViewModel:
-        var vm = Locator.GetRequiredService<AddVariableViewModel>();
+        var vm = _addVariableViewModelFactory();
         vm.RenameType = RenameType.ExposedName;
         vm.ApplyVariableReferenceChanges(changeResponse, newName, oldName, changedElements);
 
