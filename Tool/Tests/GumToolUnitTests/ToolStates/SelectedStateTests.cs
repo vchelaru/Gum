@@ -7,6 +7,7 @@ using Gum.Plugins;
 using Gum.ToolStates;
 using Moq;
 using Shouldly;
+using System;
 
 namespace GumToolUnitTests.ToolStates;
 
@@ -25,7 +26,10 @@ public class SelectedStateTests : BaseTestClass
         _selectedState = new SelectedState(
             _guiCommands.Object,
             _pluginManager.Object,
-            _messenger.Object);
+            _messenger.Object,
+            // SelectedBehaviorVariable (the only PropertyGridManager use) is not exercised here,
+            // so the factory is never invoked.
+            new Lazy<PropertyGridManager>(() => null!));
     }
 
     [Fact]

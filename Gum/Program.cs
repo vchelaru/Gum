@@ -116,7 +116,7 @@ namespace Gum
 
             // ProperGridManager before MenuStripManager. Why does it need to be initialized before MainMenuStripPlugin?
             // Is htere a way to move this to a plugin?
-            PropertyGridManager.Self.InitializeEarly();
+            services.GetRequiredService<PropertyGridManager>().InitializeEarly();
 
             PluginManager.Self.Initialize();
 

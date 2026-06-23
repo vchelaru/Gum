@@ -558,7 +558,6 @@ public class SetVariableLogic : ISetVariableLogic
     private void ReactIfChangedMemberIsCustomFont(ElementSave parentElement, string changedMember, object oldValue)
     {
         // FIXME: This react needs a proper if condition
-        //PropertyGridManager.Self.RefreshUI(force: true);
     }
 
     private void ReactIfChangedMemberIsUnitType(ElementSave parentElement, string changedMember, object oldValueAsObject)

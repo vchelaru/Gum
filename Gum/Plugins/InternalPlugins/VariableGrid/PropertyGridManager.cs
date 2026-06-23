@@ -48,8 +48,6 @@ public partial class PropertyGridManager
     WpfDataUi.DataUiGrid mVariablesDataGrid;
     MainPropertyGrid mainControl;
 
-    static PropertyGridManager mPropertyGridManager;
-
     ElementSaveDisplayer mPropertyGridDisplayer;
 
     //ToolStripMenuItem mExposeVariable;
@@ -83,20 +81,6 @@ public partial class PropertyGridManager
 
     #region Properties
 
-    [Obsolete("Remove this - all calls to this should instead rely on the PluginManager")]
-    public static PropertyGridManager Self
-    {
-        get
-        {
-            if (mPropertyGridManager == null)
-            {
-                mPropertyGridManager = new PropertyGridManager();
-            }
-            return mPropertyGridManager;
-        }
-    }
-
-
     public VariableSave SelectedBehaviorVariable
     {
         get
@@ -111,26 +95,37 @@ public partial class PropertyGridManager
 
     #endregion
 
-    public PropertyGridManager()
+    public PropertyGridManager(
+        ISelectedState selectedState,
+        IExposeVariableService exposeVariableService,
+        IUndoManager undoManager,
+        IGuiCommands guiCommands,
+        IFileCommands fileCommands,
+        ISetVariableLogic setVariableLogic,
+        IDialogService dialogService,
+        LocalizationService localizationService,
+        ITabManager tabManager,
+        IWireframeObjectManager wireframeObjectManager,
+        TypeManager typeManager,
+        IPluginManager pluginManager,
+        IProjectState projectState,
+        IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _exposeVariableService =
-            Locator.GetRequiredService<IExposeVariableService>();
-        _undoManager =
-            Locator.GetRequiredService<IUndoManager>();
-        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+        _selectedState = selectedState;
+        _exposeVariableService = exposeVariableService;
+        _undoManager = undoManager;
+        _guiCommands = guiCommands;
         _objectFinder = ObjectFinder.Self;
-        _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
-        _dialogService = Locator.GetRequiredService<IDialogService>();
-        _fileCommands = Locator.GetRequiredService<IFileCommands>();
-        _localizationService = Locator.GetRequiredService<LocalizationService>();
-        _tabManager = Locator.GetRequiredService<ITabManager>();
-        _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
-        _typeManager = Locator.GetRequiredService<TypeManager>();
-        _pluginManager = Locator.GetRequiredService<IPluginManager>();
-        _projectState = Locator.GetRequiredService<IProjectState>();
-        _stateSaveCategoryDisplayer = new StateSaveCategoryDisplayer(
-            Locator.GetRequiredService<IVariableInCategoryPropagationLogic>());
+        _setVariableLogic = setVariableLogic;
+        _dialogService = dialogService;
+        _fileCommands = fileCommands;
+        _localizationService = localizationService;
+        _tabManager = tabManager;
+        _wireframeObjectManager = wireframeObjectManager;
+        _typeManager = typeManager;
+        _pluginManager = pluginManager;
+        _projectState = projectState;
+        _stateSaveCategoryDisplayer = new StateSaveCategoryDisplayer(variableInCategoryPropagationLogic);
     }
 
     // Normally plugins will initialize through the PluginManager. This needs to happen earlier (see where it's called for info)
@@ -180,7 +175,7 @@ public partial class PropertyGridManager
 
     private void HandleBehaviorVariableSelected(object? sender, EventArgs e)
     {
-        _selectedState.SelectedBehaviorVariable = PropertyGridManager.Self.SelectedBehaviorVariable;
+        _selectedState.SelectedBehaviorVariable = this.SelectedBehaviorVariable;
     }
 
     private void HandleAddVariable(object? sender, EventArgs e)

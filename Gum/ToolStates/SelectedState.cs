@@ -27,6 +27,8 @@ public class SelectedState : ISelectedState
     private readonly IGuiCommands _guiCommands;
     private readonly PluginManager _pluginManager;
     private readonly IMessenger _messenger;
+    // Lazy because PropertyGridManager depends on ISelectedState; this breaks the DI construction cycle.
+    private readonly Lazy<PropertyGridManager> _lazyPropertyGridManager;
     SelectedStateSnapshot snapshot = new SelectedStateSnapshot();
 
     #endregion
@@ -341,11 +343,13 @@ public class SelectedState : ISelectedState
 
     public SelectedState(IGuiCommands guiCommands,
         PluginManager pluginManager,
-        IMessenger messenger)
+        IMessenger messenger,
+        Lazy<PropertyGridManager> lazyPropertyGridManager)
     {
         _guiCommands = guiCommands;
         _pluginManager = pluginManager;
         _messenger = messenger;
+        _lazyPropertyGridManager = lazyPropertyGridManager;
     }
 
     #region Instance
@@ -746,7 +750,7 @@ public class SelectedState : ISelectedState
             snapshot.SelectedBehaviorVariable = variable;
 
             // This should go through a plugin, an dshould be on the HandleSelect method
-            PropertyGridManager.Self.SelectedBehaviorVariable = variable;
+            _lazyPropertyGridManager.Value.SelectedBehaviorVariable = variable;
         }
     }
 
