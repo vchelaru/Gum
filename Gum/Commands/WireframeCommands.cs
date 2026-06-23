@@ -6,9 +6,12 @@ namespace Gum.Commands;
 public class WireframeCommands : IWireframeCommands
 {
     private readonly IWireframeObjectManager _wireframeObjectManager;
-    public WireframeCommands(IWireframeObjectManager wireframeObjectManager)
+    private readonly PluginManager _pluginManager;
+    public WireframeCommands(IWireframeObjectManager wireframeObjectManager,
+        PluginManager pluginManager)
     {
         _wireframeObjectManager = wireframeObjectManager;
+        _pluginManager = pluginManager;
     }
 
     public void Refresh(bool forceLayout = true, bool forceReloadContent = false)
@@ -23,7 +26,7 @@ public class WireframeCommands : IWireframeCommands
         set
         {
             areRulersVisible = value;
-            PluginManager.Self.WireframePropertyChanged(nameof(AreRulersVisible));
+            _pluginManager.WireframePropertyChanged(nameof(AreRulersVisible));
         }
     }
 
@@ -34,7 +37,7 @@ public class WireframeCommands : IWireframeCommands
         set
         {
             areCanvasBoundsVisible = value;
-            PluginManager.Self.WireframePropertyChanged(nameof(AreCanvasBoundsVisible));
+            _pluginManager.WireframePropertyChanged(nameof(AreCanvasBoundsVisible));
         }
     }
 
@@ -45,7 +48,7 @@ public class WireframeCommands : IWireframeCommands
         set
         {
             isBackgroundGridVisible = value;
-            PluginManager.Self.WireframePropertyChanged(nameof(IsBackgroundGridVisible));
+            _pluginManager.WireframePropertyChanged(nameof(IsBackgroundGridVisible));
         }
     }
 
@@ -57,7 +60,7 @@ public class WireframeCommands : IWireframeCommands
         set
         {
             areHighlightsVisible = value;
-            PluginManager.Self.WireframePropertyChanged(nameof(AreHighlightsVisible));
+            _pluginManager.WireframePropertyChanged(nameof(AreHighlightsVisible));
         }
     }
 }

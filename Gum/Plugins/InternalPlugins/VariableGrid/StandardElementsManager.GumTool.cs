@@ -27,6 +27,13 @@ public interface IStandardElementsManagerGumTool
 
 public class StandardElementsManagerGumTool : IStandardElementsManagerGumTool
 {
+    private readonly IPluginManager _pluginManager;
+
+    public StandardElementsManagerGumTool(IPluginManager pluginManager)
+    {
+        _pluginManager = pluginManager;
+    }
+
     public void Initialize()
     {
         var defaultStates =
@@ -199,7 +206,7 @@ public class StandardElementsManagerGumTool : IStandardElementsManagerGumTool
 #if GUM
         foreach (var kvp in StandardElementsManager.Self.DefaultStates)
         {
-            PluginManager.Self.ModifyDefaultStandardState(kvp.Key, kvp.Value);
+            _pluginManager.ModifyDefaultStandardState(kvp.Key, kvp.Value);
         }
 #endif
     }

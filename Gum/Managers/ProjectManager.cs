@@ -49,6 +49,7 @@ public class ProjectManager : IProjectManager
     // Lazy because CommandLineManager depends back on IProjectManager (ReadCommandLine's
     // rebuild-fonts path reads GumProjectSave) — deferring it breaks the construction cycle.
     private readonly Lazy<ICommandLineManager> _commandLineManager;
+    private readonly IPluginManager _pluginManager;
 
     #endregion
 
@@ -84,7 +85,8 @@ public class ProjectManager : IProjectManager
         Lazy<IFileWatchManager> fileWatchManager,
         IStandardElementsManagerGumTool standardElementsManagerGumTool,
         IRetryService retryService,
-        Lazy<ICommandLineManager> commandLineManager)
+        Lazy<ICommandLineManager> commandLineManager,
+        IPluginManager pluginManager)
     {
         _selectedState = selectedState;
         _elementCommands = elementCommands;
@@ -96,6 +98,7 @@ public class ProjectManager : IProjectManager
         _standardElementsManagerGumTool = standardElementsManagerGumTool;
         _retryService = retryService;
         _commandLineManager = commandLineManager;
+        _pluginManager = pluginManager;
     }
 
     public void LoadSettings()
@@ -166,7 +169,7 @@ public class ProjectManager : IProjectManager
 
         StandardElementsManager.Self.PopulateProjectWithDefaultStandards(_gumProjectSave);
 
-        PluginManager.Self.ProjectLoad(_gumProjectSave);
+        _pluginManager.ProjectLoad(_gumProjectSave);
 
         _fileCommands.Value.LoadLocalizationFile();
     }
@@ -311,7 +314,7 @@ public class ProjectManager : IProjectManager
             {
                 modifications.Add(nameof(FixRecursiveAssignments));
             }
-            PluginManager.Self.ProjectLoad(_gumProjectSave);
+            _pluginManager.ProjectLoad(_gumProjectSave);
 
             if (_gumProjectSave.Version < (int)GumProjectSave.GumxVersions.AttributeVersion)
             {
@@ -748,7 +751,7 @@ public class ProjectManager : IProjectManager
 
             if (shouldSave)
             {
-                PluginManager.Self.BeforeSavingProjectSave(GumProjectSave);
+                _pluginManager.BeforeSavingProjectSave(GumProjectSave);
 
                 _elementCommands.Value.SortVariables();
 
@@ -763,17 +766,17 @@ public class ProjectManager : IProjectManager
                     {
                         foreach (var screenSave in GumProjectSave.Screens)
                         {
-                            PluginManager.Self.BeforeSavingElementSave(screenSave);
+                            _pluginManager.BeforeSavingElementSave(screenSave);
                             _fileWatchManager.Value.IgnoreNextChangeUntil(screenSave.GetFullPathXmlFile());
                         }
                         foreach (var componentSave in GumProjectSave.Components)
                         {
-                            PluginManager.Self.BeforeSavingElementSave(componentSave);
+                            _pluginManager.BeforeSavingElementSave(componentSave);
                             _fileWatchManager.Value.IgnoreNextChangeUntil(componentSave.GetFullPathXmlFile());
                         }
                         foreach (var standardElementSave in GumProjectSave.StandardElements)
                         {
-                            PluginManager.Self.BeforeSavingElementSave(standardElementSave);
+                            _pluginManager.BeforeSavingElementSave(standardElementSave);
                             _fileWatchManager.Value.IgnoreNextChangeUntil(standardElementSave.GetFullPathXmlFile());
                         }
                     }
@@ -787,15 +790,15 @@ public class ProjectManager : IProjectManager
                     {
                         foreach (var screenSave in GumProjectSave.Screens)
                         {
-                            PluginManager.Self.AfterSavingElementSave(screenSave);
+                            _pluginManager.AfterSavingElementSave(screenSave);
                         }
                         foreach (var componentSave in GumProjectSave.Components)
                         {
-                            PluginManager.Self.AfterSavingElementSave(componentSave);
+                            _pluginManager.AfterSavingElementSave(componentSave);
                         }
                         foreach (var standardElementSave in GumProjectSave.StandardElements)
                         {
-                            PluginManager.Self.AfterSavingElementSave(standardElementSave);
+                            _pluginManager.AfterSavingElementSave(standardElementSave);
                         }
                     }
                 }
@@ -820,7 +823,7 @@ public class ProjectManager : IProjectManager
 
                 if (succeeded)
                 {
-                    PluginManager.Self.ProjectSave(GumProjectSave);
+                    _pluginManager.ProjectSave(GumProjectSave);
                     GeneralSettingsFile.AddToRecentFilesIfNew(GumProjectSave.FullFileName);
                     GeneralSettingsFile.LastProject = GumProjectSave.FullFileName;
                     GeneralSettingsFile.Save();
@@ -896,7 +899,7 @@ public class ProjectManager : IProjectManager
             {
                 GumProjectSave.FullFileName = chosenFileName!;
                 var filePath = new FilePath(chosenFileName!);
-                PluginManager.Self.ProjectLocationSet(filePath);
+                _pluginManager.ProjectLocationSet(filePath);
                 WpfDataUi.Controls.FilePickingLogic.FolderRelativeTo = filePath.GetDirectoryContainingThis().FullPath;
 
                 shouldSave = true;

@@ -10,7 +10,7 @@ namespace Gum.DataTypes.Variables
 {
     internal static class StateSaveExtensionMethodsGumTool
     {
-        public static void ReactToInstanceNameChange(this StateSave stateSave, InstanceSave instanceSave, string oldName, string newName)
+        public static void ReactToInstanceNameChange(this StateSave stateSave, InstanceSave instanceSave, string oldName, string newName, IPluginManager pluginManager)
         {
             foreach (VariableSave variable in stateSave.Variables)
             {
@@ -48,7 +48,7 @@ namespace Gum.DataTypes.Variables
                 }
             }
 
-            PluginManager.Self.InstanceRename(instanceSave.ParentContainer, instanceSave, oldName);
+            pluginManager.InstanceRename(instanceSave.ParentContainer, instanceSave, oldName);
 
         }
 

@@ -19,16 +19,19 @@ public class VariableInCategoryPropagationLogic : IVariableInCategoryPropagation
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly IDialogService _dialogService;
+    private readonly IPluginManager _pluginManager;
 
     public VariableInCategoryPropagationLogic(IUndoManager undoManager,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        IPluginManager pluginManager)
     {
         _undoManager = undoManager;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _dialogService = dialogService;
+        _pluginManager = pluginManager;
     }
 
     public void PropagateVariablesInCategory(string memberName, ElementSave element, StateSaveCategory categoryToPropagate)
@@ -206,7 +209,7 @@ public class VariableInCategoryPropagationLogic : IVariableInCategoryPropagation
                 // we really need a refresh - something was removed.
                 _guiCommands.RefreshVariables(force:true);
 
-                PluginManager.Self.VariableRemovedFromCategory(variableName, stateCategory);
+                _pluginManager.VariableRemovedFromCategory(variableName, stateCategory);
             }
         }
     }

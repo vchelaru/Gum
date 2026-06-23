@@ -3,6 +3,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Logic;
 using Gum.Managers;
+using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Moq;
 using Shouldly;
@@ -23,7 +24,7 @@ public class InheritanceLogicTests : BaseTestClass
         _sut = new InheritanceLogic(
             _fileCommands.Object,
             _guiCommands.Object,
-            new StandardElementsManagerGumTool());
+            new StandardElementsManagerGumTool(new Mock<IPluginManager>().Object));
     }
 
     [Fact]

@@ -18,6 +18,7 @@ public class ProjectCommands
     private readonly IProjectManager _projectManager;
     private readonly IProjectState _projectState;
     private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
+    private readonly IPluginManager _pluginManager;
 
     #endregion
 
@@ -26,7 +27,8 @@ public class ProjectCommands
         IFileCommands fileCommands,
         IProjectManager projectManager,
         IProjectState projectState,
-        StandardElementsManagerGumTool standardElementsManagerGumTool)
+        StandardElementsManagerGumTool standardElementsManagerGumTool,
+        IPluginManager pluginManager)
     {
         _selectedState = selectedState;
         _guiCommands = guiCommands;
@@ -34,6 +36,7 @@ public class ProjectCommands
         _projectManager = projectManager;
         _projectState = projectState;
         _standardElementsManagerGumTool = standardElementsManagerGumTool;
+        _pluginManager = pluginManager;
     }
     
     #region Screens
@@ -65,7 +68,7 @@ public class ProjectCommands
         _fileCommands.TryAutoSaveProject();
         _fileCommands.TryAutoSaveElement(screenSave);
 
-        Plugins.PluginManager.Self.ElementAdd(screenSave);
+        _pluginManager.ElementAdd(screenSave);
     }
 
     #endregion
@@ -92,7 +95,7 @@ public class ProjectCommands
 
         _fileCommands.TryAutoSaveProject();
         _fileCommands.TryAutoSaveElement(componentSave);
-        Plugins.PluginManager.Self.ElementAdd(componentSave);
+        _pluginManager.ElementAdd(componentSave);
 
         _selectedState.SelectedComponent = componentSave;
     }

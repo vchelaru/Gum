@@ -87,18 +87,6 @@ public class PluginManager : IPluginManager
 
     #region Properties
 
-    public static PluginManager Self
-    {
-        get
-        {
-            if (mGlobalInstance == null)
-            {
-                mGlobalInstance = new PluginManager();
-            }
-            return mGlobalInstance;
-        }
-    }
-
     static string PluginSettingsSaveFileName
     {
         get
@@ -604,7 +592,7 @@ public class PluginManager : IPluginManager
     public void AfterRender() =>
         CallMethodOnPlugin(plugin => plugin.CallAfterRender());
 
-    internal void ReactToFileChanged(FilePath filePath) =>
+    public void ReactToFileChanged(FilePath filePath) =>
         CallMethodOnPlugin(plugin => plugin.CallReactToFileChanged(filePath));
     
 
@@ -739,6 +727,7 @@ public class PluginManager : IPluginManager
         LoadPluginSettings();
         LoadPlugins(this);
         mInstances.Add(this);
+        mGlobalInstance = this;
     }
 
     private void LoadPluginSettings()

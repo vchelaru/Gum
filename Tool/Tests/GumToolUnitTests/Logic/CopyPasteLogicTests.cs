@@ -103,10 +103,6 @@ public class CopyPasteLogicTests : BaseTestClass
         // AddComponent) reads the project through IProjectState, so point it at the same instance.
         _mocker.GetMock<IProjectState>().Setup(x => x.GumProjectSave).Returns(gumProject);
 
-        // AddComponent notifies plugins through the static PluginManager.Self; an empty plugin list
-        // makes that a safe no-op. Mirrors the pattern in RenameLogicTests.
-        PluginManager.Self.Plugins = new List<PluginBase>();
-
         StandardElementSave spriteElement = new StandardElementSave();
         spriteElement.Name = "Sprite";
 

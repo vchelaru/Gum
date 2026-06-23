@@ -51,6 +51,7 @@ internal class ExposeVariableService : IExposeVariableService
     private readonly INameVerifier _nameVerifier;
     private readonly IDialogService _dialogService;
     private readonly IVariableSaveLogic _variableSaveLogic;
+    private readonly IPluginManager _pluginManager;
 
     public ExposeVariableService(
         IUndoManager undoManager,
@@ -60,7 +61,8 @@ internal class ExposeVariableService : IExposeVariableService
         ISelectedState selectedState,
         INameVerifier nameVerifier,
         IDialogService dialogService,
-        IVariableSaveLogic variableSaveLogic)
+        IVariableSaveLogic variableSaveLogic,
+        IPluginManager pluginManager)
     {
         _undoManager = undoManager;
         _guiCommands = guiCommands;
@@ -70,6 +72,7 @@ internal class ExposeVariableService : IExposeVariableService
         _nameVerifier = nameVerifier;
         _dialogService = dialogService;
         _variableSaveLogic = variableSaveLogic;
+        _pluginManager = pluginManager;
     }
 
     public OptionallyAttemptedGeneralResponse<VariableSave> HandleExposeVariableClick(InstanceSave instanceSave, string rootVariableName)
@@ -185,7 +188,7 @@ internal class ExposeVariableService : IExposeVariableService
 
         variableSave.ExposedAsName = exposedName;
 
-        PluginManager.Self.VariableAdd(elementSave, exposedName);
+        _pluginManager.VariableAdd(elementSave, exposedName);
 
         _fileCommands.TryAutoSaveCurrentElement();
         _guiCommands.RefreshVariables(force: true);
@@ -280,7 +283,7 @@ internal class ExposeVariableService : IExposeVariableService
         var oldExposedName = variableSave.ExposedAsName;
         variableSave.ExposedAsName = null;
 
-        PluginManager.Self.VariableDelete(elementSave, oldExposedName);
+        _pluginManager.VariableDelete(elementSave, oldExposedName);
         _fileCommands.TryAutoSaveCurrentElement();
         _guiCommands.RefreshVariables(force: true);
     }

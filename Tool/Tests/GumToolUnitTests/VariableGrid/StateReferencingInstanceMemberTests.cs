@@ -3,6 +3,7 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers;
 using Gum.Reflection;
@@ -60,7 +61,8 @@ public class StateReferencingInstanceMemberTests
             _mocker.Get<IFileCommands>(),
             setVariableLogic.Object,
             _mocker.Get<IWireframeObjectManager>(),
-            _mocker.Get<ITypeManager>());
+            _mocker.Get<ITypeManager>(),
+            _mocker.Get<IPluginManager>());
     }
 
     [Fact]

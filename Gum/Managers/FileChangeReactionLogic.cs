@@ -92,7 +92,7 @@ namespace Gum.Managers
                 ReactToLocalizationFileChanged(file);
             }
 
-            PluginManager.Self.ReactToFileChanged(file);
+            _pluginManager.ReactToFileChanged(file);
         }
 
         private void ReactToLocalizationFileChanged(FilePath file)

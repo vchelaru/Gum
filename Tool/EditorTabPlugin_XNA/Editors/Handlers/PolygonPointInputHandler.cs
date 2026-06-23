@@ -3,6 +3,8 @@ using System.Linq;
 using System.Numerics;
 using System.Windows.Forms;
 using Gum.DataTypes.Variables;
+using Gum.Plugins;
+using Gum.Services;
 using Gum.Wireframe.Editors.Visuals;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -350,7 +352,7 @@ public class PolygonPointInputHandler : InputHandlerBase
             if (oldValue != possiblyChangedVariableList)
             {
                 var instance = selectedElement?.GetInstance(possiblyChangedVariableList.SourceObject);
-                Gum.Plugins.PluginManager.Self.VariableSet(selectedElement, instance, 
+                Locator.GetRequiredService<IPluginManager>().VariableSet(selectedElement, instance,
                     possiblyChangedVariableList.GetRootName(), oldValue);
             }
         }

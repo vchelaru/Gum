@@ -48,6 +48,7 @@ public class AddVariableViewModel : DialogViewModel
     private readonly IFileCommands _fileCommands;
     private readonly INameVerifier _nameVerifier;
     private readonly IDialogService _dialogService;
+    private readonly IPluginManager _pluginManager;
 
     public List<string> AvailableTypes
     {
@@ -107,7 +108,8 @@ public class AddVariableViewModel : DialogViewModel
         IFileCommands fileCommands,
         INameVerifier nameVerifier,
         ISelectedState selectedState,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        IPluginManager pluginManager)
     {
         _guiCommands = guiCommands;
         _undoManager = undoManager;
@@ -116,6 +118,7 @@ public class AddVariableViewModel : DialogViewModel
         _nameVerifier = nameVerifier;
         _selectedState = selectedState;
         _dialogService = dialogService;
+        _pluginManager = pluginManager;
 
         AvailableTypes = new List<string>();
         AvailableTypes.Add("float");
@@ -219,7 +222,7 @@ public class AddVariableViewModel : DialogViewModel
             }
             _guiCommands.RefreshVariables(force: true);
 
-            PluginManager.Self.VariableAdd(element, name);
+            _pluginManager.VariableAdd(element, name);
         }
     }
 

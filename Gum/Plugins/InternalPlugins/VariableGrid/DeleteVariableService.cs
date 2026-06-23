@@ -27,18 +27,21 @@ public class DeleteVariableService : IDeleteVariableService
     private readonly IGuiCommands _guiCommands;
     private readonly IRenameLogic _renameLogic;
     private readonly IDialogService _dialogService;
+    private readonly IPluginManager _pluginManager;
 
     public DeleteVariableService(IUndoManager undoManager,
         IFileCommands fileCommands,
         IGuiCommands guiCommands,
         IRenameLogic renameLogic,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        IPluginManager pluginManager)
     {
         _undoManager = undoManager;
         _fileCommands = fileCommands;
         _guiCommands = guiCommands;
         _renameLogic = renameLogic;
         _dialogService = dialogService;
+        _pluginManager = pluginManager;
     }
 
     public bool CanDeleteVariable(VariableSave variable)
@@ -75,7 +78,7 @@ public class DeleteVariableService : IDeleteVariableService
 
             _guiCommands.RefreshVariables(force: true);
 
-            PluginManager.Self.VariableDelete(elementSave, variable.Name);
+            _pluginManager.VariableDelete(elementSave, variable.Name);
         }
     }
 

@@ -45,6 +45,7 @@ public class StateReferencingInstanceMember : InstanceMember
     private readonly ISelectedState _selectedState;
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly IWireframeObjectManager _wireframeObjectManager;
+    private readonly IPluginManager _pluginManager;
     StateSave mStateSave;
     string mVariableName;
     public InstanceSave? InstanceSave { get; private set; }
@@ -264,7 +265,8 @@ public class StateReferencingInstanceMember : InstanceMember
         IFileCommands fileCommands,
         ISetVariableLogic setVariableLogic,
         IWireframeObjectManager wireframeObjectManager,
-        ITypeManager typeManager) :
+        ITypeManager typeManager,
+        IPluginManager pluginManager) :
         base(variableName, stateSave)
     {
         _editVariablesService = editVariableService;
@@ -279,6 +281,7 @@ public class StateReferencingInstanceMember : InstanceMember
         _setVariableLogic = setVariableLogic;
         _wireframeObjectManager = wireframeObjectManager;
         _typeManager = typeManager;
+        _pluginManager = pluginManager;
         StateSaveCategory = stateSaveCategory;
         InstanceSave = instanceSave;
         mStateSave = stateSave;
@@ -1065,7 +1068,7 @@ public class StateReferencingInstanceMember : InstanceMember
             _guiCommands.RefreshVariables(force: true);
             _wireframeObjectManager.RefreshAll(true);
 
-            PluginManager.Self.VariableSet(selectedElement, selectedInstance, variableName, oldValue);
+            _pluginManager.VariableSet(selectedElement, selectedInstance, variableName, oldValue);
 
             if (affectsTreeView)
             {

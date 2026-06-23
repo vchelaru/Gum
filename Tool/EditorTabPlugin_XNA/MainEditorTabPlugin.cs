@@ -435,7 +435,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
     private void HandleHighlightedIpsoChanged(IPositionedSizedObject? ipso)
     {
-        PluginManager.Self.HighlightTreeNode(ipso);
+        Locator.GetRequiredService<PluginManager>().HighlightTreeNode(ipso);
     }
 
     private void HandleStateDelete(StateSave save)
@@ -799,7 +799,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         this._wireframeControl.Parent.Resize += (_, _) =>
         {
             UpdateWireframeControlSizes();
-            PluginManager.Self.HandleWireframeResized();
+            Locator.GetRequiredService<PluginManager>().HandleWireframeResized();
         };
 
         //this._wireframeControl.MouseClick += wireframeControl1_MouseClick;
@@ -831,7 +831,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         };
         _wireframeControl.CameraChanged += () =>
         {
-            PluginManager.Self.CameraChanged();
+            Locator.GetRequiredService<PluginManager>().CameraChanged();
         };
 
         this._wireframeControl.KeyDown += (o, args) =>

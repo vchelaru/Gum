@@ -28,6 +28,7 @@ public class FileCommands : IFileCommands
     private readonly IOutputManager _outputManager;
     private readonly IProjectManager _projectManager;
     private readonly IProjectState _projectState;
+    private readonly IPluginManager _pluginManager;
 
     public FileCommands(ISelectedState selectedState,
         Lazy<IUndoManager> undoManager,
@@ -37,7 +38,8 @@ public class FileCommands : IFileCommands
         IOutputManager outputManager,
         IFileWatchIgnoreList fileWatchIgnoreList,
         IProjectManager projectManager,
-        IProjectState projectState)
+        IProjectState projectState,
+        IPluginManager pluginManager)
     {
         _selectedState = selectedState;
         _undoManager = undoManager;
@@ -48,6 +50,7 @@ public class FileCommands : IFileCommands
         _outputManager = outputManager;
         _projectManager = projectManager;
         _projectState = projectState;
+        _pluginManager = pluginManager;
 
     }
 
@@ -268,7 +271,7 @@ public class FileCommands : IFileCommands
 
             if (shouldSave)
             {
-                PluginManager.Self.BeforeSavingElementSave(elementSave);
+                _pluginManager.BeforeSavingElementSave(elementSave);
 
                 var fileName = elementSave.GetFullPathXmlFile();
 
@@ -317,11 +320,11 @@ public class FileCommands : IFileCommands
                 if (succeeded)
                 {
                     _outputManager.AddOutput("Saved " + elementSave + " to " + fileName);
-                    PluginManager.Self.AfterSavingElementSave(elementSave);
+                    _pluginManager.AfterSavingElementSave(elementSave);
                 }
             }
 
-            PluginManager.Self.Export(elementSave);
+            _pluginManager.Export(elementSave);
         }
     }
 
