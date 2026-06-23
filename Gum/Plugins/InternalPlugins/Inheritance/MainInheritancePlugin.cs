@@ -2,7 +2,6 @@
 using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
-using Gum.Services;
 using System.ComponentModel.Composition;
 
 namespace Gum.Plugins.Inheritance;
@@ -12,9 +11,10 @@ public class MainInheritancePlugin : PriorityPlugin
 {
     private readonly InheritanceLogic _inheritanceLogic;
 
-    public MainInheritancePlugin()
+    [ImportingConstructor]
+    public MainInheritancePlugin(InheritanceLogic inheritanceLogic)
     {
-        _inheritanceLogic = Locator.GetRequiredService<InheritanceLogic>();
+        _inheritanceLogic = inheritanceLogic;
     }
 
     public override void StartUp()

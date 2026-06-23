@@ -31,6 +31,7 @@ using Gum.Undo;
 using Gum.Localization;
 using Gum.Services.Fonts;
 using Gum.Plugins.ImportPlugin.Manager;
+using Gum.Logic;
 using Gum.Logic.FileWatch;
 
 namespace Gum.Plugins;
@@ -849,6 +850,11 @@ public class PluginManager : IPluginManager
             batch.AddExportedValue<IProjectState>(Locator.GetRequiredService<IProjectState>());
             batch.AddExportedValue<IImportLogic>(Locator.GetRequiredService<IImportLogic>());
             batch.AddExportedValue<IFileWatchManager>(Locator.GetRequiredService<IFileWatchManager>());
+
+            // MainInheritancePlugin (InheritanceLogic) and MainFavoriteComponentPlugin
+            // (IFavoriteComponentManager) construction-time deps:
+            batch.AddExportedValue<InheritanceLogic>(Locator.GetRequiredService<InheritanceLogic>());
+            batch.AddExportedValue<IFavoriteComponentManager>(Locator.GetRequiredService<IFavoriteComponentManager>());
 
 
             var container = new CompositionContainer(catalog);
