@@ -240,7 +240,7 @@ need fixed-size / percentage overloads and isn't worth it now):
 | --- | --- | --- |
 | T6 | Add `BubblegumShapes` (port from `TemplateShapes`; add soft drop-shadow fill variant) | refactoring-specialist |
 | T7 | Migrate full-parent shapes in each Bubblegum visual to factory calls; delete dead inline `Create*` | refactoring-specialist |
-| T8 | Build both backends + showcase smoke test; confirm zero visual regression | qa |
+| T8 | Build both backends + showcase smoke test; confirm zero visual regression | manual |
 
 **Risk** — subtle positioning drift if a factory default differs from an inline
 value (e.g. `StrokeWidthUnits`, origin/units). The factory was extracted from the
