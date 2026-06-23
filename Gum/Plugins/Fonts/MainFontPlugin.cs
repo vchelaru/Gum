@@ -1,7 +1,6 @@
 ﻿using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Plugins.BaseClasses;
-using Gum.Services;
 using Gum.ToolStates;
 using System;
 using System.ComponentModel.Composition;
@@ -22,12 +21,17 @@ public class MainFontPlugin : PriorityPlugin
     private readonly IDialogService _dialogService;
     private readonly IProjectState _projectState;
 
-    public MainFontPlugin()
+    [ImportingConstructor]
+    public MainFontPlugin(
+        IGuiCommands guiCommands,
+        IFontManager fontManager,
+        IDialogService dialogService,
+        IProjectState projectState)
     {
-        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        _fontManager = Locator.GetRequiredService<IFontManager>();
-        _dialogService = Locator.GetRequiredService<IDialogService>();
-        _projectState = Locator.GetRequiredService<IProjectState>();
+        _guiCommands = guiCommands;
+        _fontManager = fontManager;
+        _dialogService = dialogService;
+        _projectState = projectState;
     }
 
     public override void StartUp()
