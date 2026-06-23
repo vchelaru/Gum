@@ -152,6 +152,39 @@ public class ProjectManagerTests : BaseTestClass
         _fileCommands.Verify(f => f.LoadProject(It.IsAny<string>()), Times.Never);
     }
 
+    // IDialogService.Show has an out parameter, which Moq can only populate through a
+    // callback delegate whose signature mirrors the method; this delegate provides that shape.
+    private delegate void ShowChoiceDialogCallback(
+        Action<ChoiceDialogViewModel>? initializer,
+        out ChoiceDialogViewModel viewModel);
+
+    [Fact]
+    public void ShowReadOnlyDialog_ShowsChoiceDialog_ThroughInjectedDialogService()
+    {
+        string fileName = "c:/projects/ReadOnly.gumx";
+        ChoiceDialogViewModel shownDialog = new ChoiceDialogViewModel();
+
+        _dialogService
+            .Setup(d => d.Show(It.IsAny<Action<ChoiceDialogViewModel>>(), out It.Ref<ChoiceDialogViewModel>.IsAny))
+            .Callback(new ShowChoiceDialogCallback(
+                (Action<ChoiceDialogViewModel>? initializer, out ChoiceDialogViewModel viewModel) =>
+                {
+                    viewModel = shownDialog;
+                    initializer?.Invoke(shownDialog);
+                }))
+            .Returns(false);
+
+        _projectManager.ShowReadOnlyDialog(fileName);
+
+        // The dialog is shown through the injected IDialogService (not a static Locator),
+        // and its message names the offending file and explains that it is read-only.
+        _dialogService.Verify(
+            d => d.Show(It.IsAny<Action<ChoiceDialogViewModel>>(), out It.Ref<ChoiceDialogViewModel>.IsAny),
+            Times.Once);
+        shownDialog.Message.ShouldContain(fileName);
+        shownDialog.Message.ShouldContain("read-only");
+    }
+
     // ProjectManager exposes no setter for its current project (it is assigned only by
     // CreateNewProject / LoadProject, which do heavy I/O and plugin work unsuitable for a
     // unit test), so the private field is set directly to drive the save-name flow.

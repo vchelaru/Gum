@@ -909,10 +909,9 @@ public class ProjectManager : IProjectManager
         return shouldSave;
     }
 
-    public static void ShowReadOnlyDialog(string fileName)
+    /// <inheritdoc/>
+    public void ShowReadOnlyDialog(string fileName)
     {
-        IDialogService dialogService = Locator.GetRequiredService<IDialogService>();
-
         string message = "Could not save the file\n\n" + fileName + "\n\nbecause it is read-only." +
             "What would you like to do?";
         DialogChoices<string> choices = new()
@@ -921,7 +920,7 @@ public class ProjectManager : IProjectManager
             ["open-folder"] = "Open folder containing file"
         };
 
-        string? result = dialogService.ShowChoices(message, choices);
+        string? result = _dialogService.ShowChoices(message, choices);
 
         if (result == "open-folder")
         {
