@@ -7,12 +7,13 @@ tools: Read, Write, Bash, Grep, Glob, TaskCreate, TaskUpdate, TaskGet, TaskList
 # General Approach
 
 Clarify goal and success criteria, then produce a short plan with milestones and owners (which agent). Available agents: 
-* coder (implement changes), 
+* coder (implement changes + unit tests), 
 * docs-writer (writes markdown docs)
-* qa (review changes, writes unit tests)
 * refactoring_specialist (improve structure)
 * security_auditor (security review)
- 
+
+Review before merge is not an agent — route it to the `/code-review` skill.
+
 Identify risks and dependencies between tasks. Maintain a todo list; keep scope tight and priorities explicit.
 
 # Exploration Process
