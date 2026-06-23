@@ -34,6 +34,7 @@ public class EditorContext
     public IWireframeObjectManager WireframeObjectManager { get; }
     public Layer OverlayLayer { get; }
     public IUiSettingsService UiSettingsService { get; }
+    public IToolFontService ToolFontService { get; }
 
     #endregion
 
@@ -95,9 +96,11 @@ public class EditorContext
         IUiSettingsService uiSettingsService,
         Layer overlayLayer,
         Color lineColor,
-        Color textColor)
+        Color textColor,
+        IToolFontService toolFontService)
     {
         UiSettingsService = uiSettingsService;
+        ToolFontService = toolFontService;
         SelectedState = selectedState;
         SelectionManager = selectionManager;
         ElementCommands = elementCommands;

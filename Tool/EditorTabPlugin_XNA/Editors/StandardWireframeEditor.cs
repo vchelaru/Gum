@@ -95,7 +95,8 @@ public class StandardWireframeEditor : WireframeEditor
         IUndoManager undoManager,
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         IWireframeObjectManager wireframeObjectManager,
-        IUiSettingsService uiSettingsService)
+        IUiSettingsService uiSettingsService,
+        IToolFontService toolFontService)
         : base(
               hotkeyManager,
               selectionManager,
@@ -110,7 +111,8 @@ public class StandardWireframeEditor : WireframeEditor
               uiSettingsService,
               layer,
               lineColor,
-              textColor)
+              textColor,
+              toolFontService)
     {
         _elementCommands = elementCommands;
         _wireframeObjectManager = wireframeObjectManager;

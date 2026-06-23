@@ -12,7 +12,7 @@ namespace Gum.Wireframe
 {
     public class DistanceArrows
     {
-        private ToolLayerService _toolLayerService;
+        private IToolLayerService _toolLayerService;
         Arrow Arrow1;
         Arrow Arrow2;
 
@@ -64,7 +64,7 @@ namespace Gum.Wireframe
             }
         }
 
-        public DistanceArrows(SystemManagers systemManagers, ToolFontService toolFontService, ToolLayerService toolLayerService)
+        public DistanceArrows(SystemManagers systemManagers, IToolFontService toolFontService, IToolLayerService toolLayerService)
         {
             _toolLayerService = toolLayerService;
             Arrow1 = new Arrow();
