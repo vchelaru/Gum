@@ -118,14 +118,15 @@ namespace Gum
             // Is htere a way to move this to a plugin?
             services.GetRequiredService<PropertyGridManager>().InitializeEarly();
 
-            PluginManager.Self.Initialize();
+            PluginManager pluginManager = services.GetRequiredService<PluginManager>();
+            pluginManager.Initialize();
 
             StandardElementsManager.Self.Initialize();
             StandardElementsManager.Self.CustomGetDefaultState =
-                PluginManager.Self.GetDefaultStateFor;
+                pluginManager.GetDefaultStateFor;
 
             ElementSaveExtensions.VariableChangedThroughReference +=
-                Gum.Plugins.PluginManager.Self.VariableSet;
+                pluginManager.VariableSet;
 
             Locator.GetRequiredService<StandardElementsManagerGumTool>().Initialize();
 
@@ -137,7 +138,7 @@ namespace Gum
             // does, then we need to make sure that the wireframe controls
             // are set up properly before that happens.
             // XnaInitialize is where wireframe controls are initialized.
-            PluginManager.Self.XnaInitialized();
+            pluginManager.XnaInitialized();
 
             await projectManager.Initialize();
 

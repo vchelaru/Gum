@@ -534,7 +534,8 @@ public class ElementSaveDisplayer
                     _fileCommands,
                     _setVariableLogic,
                     _wireframeObjectManager,
-                    _typeManager);
+                    _typeManager,
+                    _pluginManager);
 
                 // moved to internal
                 //srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
@@ -682,7 +683,8 @@ public class ElementSaveDisplayer
                     _fileCommands,
                     _setVariableLogic,
                     _wireframeObjectManager,
-                    _typeManager);
+                    _typeManager,
+                    _pluginManager);
 
                 // Surface the behavior's declared default (FormsProperty.Value) so the grid
                 // reflects e.g. IsEnabled = true even before the user authors anything. The
@@ -743,7 +745,8 @@ public class ElementSaveDisplayer
             _fileCommands,
             _setVariableLogic,
             _wireframeObjectManager,
-            _typeManager
+            _typeManager,
+            _pluginManager
             );
 
         // Override the display name if specified in PropertyData

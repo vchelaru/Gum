@@ -318,7 +318,7 @@ class MainPropertiesWindowPlugin : PriorityPlugin
                 break;
         }
 
-        PluginManager.Self.ProjectPropertySet(e.PropertyName);
+        Locator.GetRequiredService<IPluginManager>().ProjectPropertySet(e.PropertyName);
 
         if (shouldSaveAndRefresh)
         {

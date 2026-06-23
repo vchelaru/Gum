@@ -180,7 +180,7 @@ public class MainBehaviorsPlugin : PriorityPlugin
                 // _elementCommands.AddBehaviorTo only raises BehaviorReferencesChanged
                 // when a real (project-existing) behavior is added. Pure removals — e.g.
                 // unchecking only a stale orphan — would otherwise leave error state stale.
-                PluginManager.Self.BehaviorReferencesChanged(component);
+                Locator.GetRequiredService<PluginManager>().BehaviorReferencesChanged(component);
             }
             viewModel.UpdateTo(component);
 

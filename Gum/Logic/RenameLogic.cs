@@ -1008,7 +1008,7 @@ public class RenameLogic : IRenameLogic
             {
                 foreach (StateSave stateSave in _selectedState.SelectedElement.AllStates)
                 {
-                    stateSave.ReactToInstanceNameChange(instance, oldName, newName);
+                    stateSave.ReactToInstanceNameChange(instance, oldName, newName, _pluginManager);
                 }
 
                 foreach (var eventSave in _selectedState.SelectedElement.Events)

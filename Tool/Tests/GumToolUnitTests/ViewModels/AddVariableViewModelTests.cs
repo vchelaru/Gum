@@ -3,6 +3,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
+using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
 using Gum.ToolCommands;
 using Gum.ToolStates;
@@ -23,6 +24,7 @@ public class AddVariableViewModelTests : BaseTestClass
     private readonly Mock<IFileCommands> _fileCommands;
     private readonly Mock<INameVerifier> _nameVerifier;
     private readonly Mock<IDialogService> _dialogService;
+    private readonly Mock<IPluginManager> _pluginManager;
     private readonly AddVariableViewModel _viewModel;
     private readonly ComponentSave _component;
 
@@ -39,6 +41,7 @@ public class AddVariableViewModelTests : BaseTestClass
         _fileCommands = new Mock<IFileCommands>();
         _nameVerifier = new Mock<INameVerifier>();
         _dialogService = new Mock<IDialogService>();
+        _pluginManager = new Mock<IPluginManager>();
 
         _selectedState.Setup(x => x.SelectedElement).Returns(_component);
         _selectedState.Setup(x => x.SelectedBehavior).Returns((BehaviorSave?)null);
@@ -55,7 +58,8 @@ public class AddVariableViewModelTests : BaseTestClass
             _fileCommands.Object,
             _nameVerifier.Object,
             _selectedState.Object,
-            _dialogService.Object);
+            _dialogService.Object,
+            _pluginManager.Object);
 
         var gumProject = new GumProjectSave();
         gumProject.Components.Add(_component);

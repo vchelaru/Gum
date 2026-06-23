@@ -8,6 +8,7 @@ using EditorTabPlugin_XNA.ExtensionMethods;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Plugins;
+using Gum.Services;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math;
@@ -666,7 +667,7 @@ public class ResizeInputHandler : InputHandlerBase
             if (DoValuesDiffer(stateSave, possiblyChangedVariableList.Name, oldValue))
             {
                 var instance = element.GetInstance(possiblyChangedVariableList.SourceObject);
-                PluginManager.Self.VariableSet(element, instance, possiblyChangedVariableList.GetRootName(), oldValue);
+                Locator.GetRequiredService<IPluginManager>().VariableSet(element, instance, possiblyChangedVariableList.GetRootName(), oldValue);
             }
         }
 

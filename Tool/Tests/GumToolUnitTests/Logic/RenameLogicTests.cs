@@ -3,6 +3,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
+using Gum.Plugins;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Moq;
@@ -112,23 +113,13 @@ public class RenameLogicTests : BaseTestClass
             Type = "string",
         });
 
-        // ReactToInstanceNameChange notifies plugins at the end; give the singleton an empty plugin
-        // list so that call is a no-op, and restore it afterward to avoid cross-test pollution.
-        IEnumerable<Gum.Plugins.BaseClasses.PluginBase> originalPlugins = Gum.Plugins.PluginManager.Self.Plugins;
-        Gum.Plugins.PluginManager.Self.Plugins = new List<Gum.Plugins.BaseClasses.PluginBase>();
-        try
-        {
-            // Simulate the rename already applied to the instance, then react to the name change.
-            renderTargetContainer.Name = "RenamedContainer";
-            defaultState.ReactToInstanceNameChange(renderTargetContainer, "RenderTargetContainer", "RenamedContainer");
+        // ReactToInstanceNameChange notifies plugins at the end; a stub plugin manager makes that a no-op.
+        IPluginManager pluginManager = new Mock<IPluginManager>().Object;
+        renderTargetContainer.Name = "RenamedContainer";
+        defaultState.ReactToInstanceNameChange(renderTargetContainer, "RenderTargetContainer", "RenamedContainer", pluginManager);
 
-            VariableSave variable = defaultState.GetVariableSave("SpriteInstance.RenderTargetTextureSource");
-            (variable.Value as string).ShouldBe("RenamedContainer");
-        }
-        finally
-        {
-            Gum.Plugins.PluginManager.Self.Plugins = originalPlugins;
-        }
+        VariableSave variable = defaultState.GetVariableSave("SpriteInstance.RenderTargetTextureSource");
+        (variable.Value as string).ShouldBe("RenamedContainer");
     }
 
     [Fact]

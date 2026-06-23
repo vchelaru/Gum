@@ -188,7 +188,7 @@ public class EditorContext
             if (DoValuesDiffer(stateSave, possiblyChangedVariableList.Name, oldValue))
             {
                 var instance = element.GetInstance(possiblyChangedVariableList.SourceObject);
-                Gum.Plugins.PluginManager.Self.VariableSet(element, instance, possiblyChangedVariableList.GetRootName(), oldValue);
+                Locator.GetRequiredService<Gum.Plugins.IPluginManager>().VariableSet(element, instance, possiblyChangedVariableList.GetRootName(), oldValue);
             }
         }
 

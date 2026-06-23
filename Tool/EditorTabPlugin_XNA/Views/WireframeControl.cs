@@ -342,7 +342,7 @@ public class WireframeControl : GraphicsDeviceControl
                 if (TopRuler.IsCursorOver == false && LeftRuler.IsCursorOver == false)
                 {
                     var shouldForceNoHighlight = mouseHasEntered == false &&
-                        PluginManager.Self.GetIfShouldSuppressRemoveEditorHighlight() == false;
+                        Locator.GetRequiredService<PluginManager>().GetIfShouldSuppressRemoveEditorHighlight() == false;
 
 
                     _selectionManager.Activity(shouldForceNoHighlight);
@@ -398,11 +398,11 @@ public class WireframeControl : GraphicsDeviceControl
         {
             GraphicsDevice.Clear(BackgroundColor);
 
-            PluginManager.Self.BeforeRender();
+            Locator.GetRequiredService<PluginManager>().BeforeRender();
 
             Renderer.Self.Draw((SystemManagers)null);
 
-            PluginManager.Self.AfterRender();
+            Locator.GetRequiredService<PluginManager>().AfterRender();
 
         }
     }

@@ -42,6 +42,7 @@ public class GuiCommands : IGuiCommands
     private readonly IOutputManager _outputManager;
     // Lazy because PropertyGridManager depends on IGuiCommands; this breaks the DI construction cycle.
     private readonly Lazy<PropertyGridManager> _lazyPropertyGridManager;
+    private readonly PluginManager _pluginManager;
 
     private ISelectedState _selectedState => _lazySelectedState.Value;
 
@@ -51,17 +52,19 @@ public class GuiCommands : IGuiCommands
         Lazy<ISelectedState> lazySelectedState,
         IDispatcher dispatcher,
         IOutputManager outputManager,
-        Lazy<PropertyGridManager> lazyPropertyGridManager)
+        Lazy<PropertyGridManager> lazyPropertyGridManager,
+        PluginManager pluginManager)
     {
         _lazySelectedState = lazySelectedState;
         _dispatcher = dispatcher;
         _outputManager = outputManager;
         _lazyPropertyGridManager = lazyPropertyGridManager;
+        _pluginManager = pluginManager;
     }
     
     public void BroadcastRefreshBehaviorView()
     {
-        PluginManager.Self.RefreshBehaviorView(
+        _pluginManager.RefreshBehaviorView(
             _selectedState.SelectedElement);
     }
 
@@ -69,12 +72,12 @@ public class GuiCommands : IGuiCommands
 
     public void RefreshStateTreeView()
     {
-        PluginManager.Self.RefreshStateTreeView();
+        _pluginManager.RefreshStateTreeView();
     }
 
     public void RefreshVariables(bool force = false)
     {
-        PluginManager.Self.RefreshVariableView(force);
+        _pluginManager.RefreshVariableView(force);
     }
 
     /// <summary>
@@ -87,12 +90,12 @@ public class GuiCommands : IGuiCommands
 
     public void RefreshElementTreeView()
     {
-        PluginManager.Self.RefreshElementTreeView();
+        _pluginManager.RefreshElementTreeView();
     }
 
     public void RefreshElementTreeView(IInstanceContainer instanceContainer)
     {
-        PluginManager.Self.RefreshElementTreeView(instanceContainer);
+        _pluginManager.RefreshElementTreeView(instanceContainer);
     }
 
     #endregion
@@ -123,7 +126,7 @@ public class GuiCommands : IGuiCommands
 
     public void FocusSearch()
     {
-        PluginManager.Self.FocusSearch();
+        _pluginManager.FocusSearch();
     }
 
     /// <inheritdoc/>

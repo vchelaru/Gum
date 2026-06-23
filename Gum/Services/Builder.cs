@@ -85,7 +85,9 @@ file static class ServiceCollectionExtensions
 
         // static singletons
         services.AddSingleton<IObjectFinder>(ObjectFinder.Self);
-        services.AddSingleton<PluginManager>(PluginManager.Self);
+        // PluginManager: drained from a static Self singleton (#3291). DI-constructed (empty ctor); Initialize()
+        // (Program.cs) does the heavy two-stage setup and registers the global instance for the static plugin machinery.
+        services.AddSingleton<PluginManager>();
         services.AddSingleton<IPluginManager>(provider => provider.GetRequiredService<PluginManager>());
         services.AddSingleton<TypeManager>();
         services.AddSingleton<ITypeManager>(provider => provider.GetRequiredService<TypeManager>());

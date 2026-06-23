@@ -374,6 +374,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private readonly IProjectState _projectState;
     private readonly ICollapseToggleService _collapseToggleService;
     private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
+    private readonly PluginManager _pluginManager;
 
     public bool HasMouseOver
     {
@@ -408,7 +409,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         IFavoriteComponentManager favoriteComponentManager,
         IProjectState projectState,
         StandardElementsManagerGumTool standardElementsManagerGumTool,
-        IDragDropManager dragDropManager)
+        IDragDropManager dragDropManager,
+        PluginManager pluginManager)
     {
         _selectedState = selectedState;
         _editCommands = editCommands;
@@ -431,6 +433,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _favoriteComponentManager = favoriteComponentManager;
         _projectState = projectState;
         _standardElementsManagerGumTool = standardElementsManagerGumTool;
+        _pluginManager = pluginManager;
         _collapseToggleService = new CollapseToggleService();
         _recordedSelectedInstances = new List<InstanceSave>();
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
@@ -2081,7 +2084,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 _selectedState.SelectedBehaviors = behaviors;
             }
 
-            PluginManager.Self.TreeNodeSelected(selectedTreeNode);
+            _pluginManager.TreeNodeSelected(selectedTreeNode);
 
         }
         finally
@@ -2368,9 +2371,9 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             whatToHighlight = _wireframeObjectManager.GetRepresentation(instance, null);
         }
 
-        if(PluginManager.Self.IsInitialized)
+        if(_pluginManager.IsInitialized)
         {
-            PluginManager.Self.SetHighlightedIpso(whatToHighlight);
+            _pluginManager.SetHighlightedIpso(whatToHighlight);
         }
     }
 

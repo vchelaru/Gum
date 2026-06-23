@@ -66,6 +66,8 @@ public interface IPluginManager
 
     void ReactToStateSaveSelected(StateSave? stateSave);
 
+    void ReactToFileChanged(FilePath filePath);
+
     void ReactToCustomStateSaveSelected(StateSave stateSave);
     void RefreshStateTreeView();
     void RefreshElementTreeView(IInstanceContainer? instanceContainer = null);
