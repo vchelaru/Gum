@@ -296,6 +296,72 @@ listBox.DragDropReorderMode = DragDropReorderMode.Immediate;
 
 <figure><img src="../../.gitbook/assets/13_09 06 43.gif" alt=""><figcaption><p>ListBoxItems reordering</p></figcaption></figure>
 
+## Decorations and Separators
+
+A *decoration* is an inert visual — a separator line, a group header, or other chrome — that renders between rows but is not part of the list's data. A decoration lives in the ListBox's `InnerPanel.Children` alongside the row visuals, so it appears inline between items, but it belongs to **neither `Items` nor `ListBoxItems`**. As a result:
+
+* `SelectedIndex` and `SelectedObject` stay contiguous. The row after a decoration keeps its data index, so adding a decoration never shifts your indices.
+* A decoration can never be selected, clicked to select, or reached by keyboard or gamepad navigation. Clicking it does nothing, and arrow or d-pad navigation skips over it.
+
+### Adding a Separator Between Groups
+
+The shipped `ListBoxSeparator` visual is a thin, filled horizontal line you can drop between rows. Anchor it to a data item with `InsertDecorationAfter` (or `InsertDecorationBefore`):
+
+```csharp
+// Initialize
+var listBox = new ListBox();
+listBox.AddToRoot();
+listBox.X = 50;
+listBox.Y = 50;
+listBox.Width = 400;
+listBox.Height = 300;
+
+// First group
+listBox.Items.Add("Resume");
+listBox.Items.Add("Options");
+
+// Second group
+listBox.Items.Add("Quit to Menu");
+listBox.Items.Add("Quit to Desktop");
+
+// Drop a separator between the two groups, anchored to the last item of the first group.
+var separator = new ListBoxSeparator();
+listBox.InsertDecorationAfter("Options", separator);
+```
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACn2RQUvDQBCF7_kVw55aCG1BvVg8VIK1oIitoMV4WJtpM9juhN3ZRhT_u5vUkkTQ437v7Xs7O58RgJq5qd-pcxDrMa6Ad2Q2LpBnFZTB1GOClvYBqpfaQIaE9JY-MJjUXlvYkpNLfocLMFjCzeHU649T86MMJln2wHNm6dCncONs1ALL3-CRMskDPB216TXSJpeAT2qcmuEQrsg6gY1lXzTGmeDOVeW9VM3R-R2mqv2Atn5XCLFxB0MducAVm-y_zHtPAsJwi8b_nXx0JejehItWQ2K5AA0OC221sIVXlBLRgOQIUvKh28WgzSpni1kVU2lbHYal0AG8rsG6GX-QmmopTWhnLYsj7mxiZhxaScLAQQvfMFkL2vanxE1ef6yir-gbt2GNrj0CAAA)
+
+{% hint style="warning" %}
+**Screenshot placeholder:** a ListBox showing the two groups (`Resume`, `Options` above the line; `Quit to Menu`, `Quit to Desktop` below it) with the thin gray separator between them.
+{% endhint %}
+
+`ListBoxSeparator` inherits from `RectangleRuntime`, so you can tune its appearance through the inherited members — `Height`, the `Fill` color channels (`FillRed`, `FillGreen`, `FillBlue`, `FillAlpha`), and so on. A decoration does not have to be a separator: pass any `GraphicalUiElement` (for example a `Label` used as a group header) to the same methods.
+
+### Anchoring and Lifetime
+
+A decoration is **anchored to a data item**, not to a fixed position:
+
+* It follows its anchor item when the list is reordered — including the drag-and-drop reordering described in **Reordering With Drag+Drop** above.
+* It is automatically removed when its anchor item is removed from `Items`.
+
+The three add methods differ only in how the anchor is chosen:
+
+| Method | Anchor |
+|---|---|
+| `AddDecoration(visual)` | The item that is **currently last** in `Items` (the "add now" case). Items added afterward appear below the decoration. If `Items` is empty, the decoration is placed at the end of the panel. |
+| `InsertDecorationAfter(item, visual)` | Immediately **after** the given item's row. |
+| `InsertDecorationBefore(item, visual)` | Immediately **before** the given item's row. |
+
+`InsertDecorationAfter` and `InsertDecorationBefore` throw an `ArgumentException` if the anchor item is not in `Items`. Call `RemoveDecoration(visual)` to take a decoration out manually; it returns `true` if the visual was a tracked decoration. Re-adding a decoration that is already tracked re-anchors it rather than adding it twice.
+
+{% hint style="info" %}
+Because decorations stay out of `Items`, binding a ListBox to a typed `ObservableCollection<T>` remains valid with decorations present — the bound collection only ever contains your data objects. See [Items Binding (ListBox, ComboBox, ItemsControl)](../binding-viewmodels/items-binding-listbox-combobox-itemscontrol.md).
+{% endhint %}
+
+{% hint style="warning" %}
+`ListBoxSeparator` ships with the MonoGame, KNI, FNA, and Raylib runtimes. In FlatRedBall — or any project without the GueDeriving runtime visuals — pass your own `GraphicalUiElement` to `AddDecoration` / `InsertDecorationAfter` / `InsertDecorationBefore` instead.
+{% endhint %}
+
 ## Customizing with VisualTemplate
 
 The VisualTemplate lets you customize the type of ListBoxItem created for the ListBox. The following code shows how to assign a VisualTemplate to a runtime object named CustomListBoxItemRuntime:
