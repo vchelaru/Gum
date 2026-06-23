@@ -1,6 +1,5 @@
 ﻿using Gum.DataTypes;
 using Gum.Plugins.BaseClasses;
-using Gum.Services;
 using Gum.ToolStates;
 using System.ComponentModel.Composition;
 
@@ -11,9 +10,10 @@ namespace Gum.Plugins.CirclePlugin
     {
         private readonly ISelectedState _selectedState;
 
-        public MainCirclePlugin()
+        [ImportingConstructor]
+        public MainCirclePlugin(ISelectedState selectedState)
         {
-            _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _selectedState = selectedState;
         }
         
         public override void StartUp()

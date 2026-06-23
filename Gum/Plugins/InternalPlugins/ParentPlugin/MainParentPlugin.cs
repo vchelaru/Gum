@@ -1,7 +1,6 @@
 ﻿using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
-using Gum.Services;
 using Gum.ToolStates;
 using System.ComponentModel.Composition;
 using System.Linq;
@@ -13,9 +12,10 @@ namespace Gum.Plugins.ParentPlugin
     {
         private readonly ISelectedState _selectedState;
 
-        public MainParentPlugin()
+        [ImportingConstructor]
+        public MainParentPlugin(ISelectedState selectedState)
         {
-            _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _selectedState = selectedState;
         }
         
         public override void StartUp()

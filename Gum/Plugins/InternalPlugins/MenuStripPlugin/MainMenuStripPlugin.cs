@@ -13,7 +13,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Gum.Commands;
-using Gum.Services;
 
 namespace Gum.Plugins.InternalPlugins.MenuStripPlugin;
 
@@ -22,9 +21,10 @@ public class MainMenuStripPlugin : PriorityPlugin
 {
     private readonly MenuStripManager _menuStripManager;
 
-    public MainMenuStripPlugin()
+    [ImportingConstructor]
+    public MainMenuStripPlugin(MenuStripManager menuStripManager)
     {
-        _menuStripManager = Locator.GetRequiredService<MenuStripManager>();
+        _menuStripManager = menuStripManager;
     }
     
     public override void StartUp()
