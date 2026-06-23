@@ -1794,4 +1794,246 @@ public class ListBoxTests : BaseTestClass
                 "but IsFontDirty is still true.");
         }
     }
+
+    #region Decorations (issue #3305)
+
+    [Fact]
+    public void InsertDecorationAfter_RendersBetweenRows_AndKeepsItemsAndSelectionContiguous()
+    {
+        // Issue #3305: a decoration (here a ColoredRectangle) lives in InnerPanel.Children so it
+        // renders between rows, but it is in neither Items nor ListBoxItems. SelectedIndex stays
+        // contiguous (the row after the decoration is index 2, not 3) and can never be a decoration.
+        ListBox listBox = new();
+        listBox.Items!.Add("A");
+        listBox.Items!.Add("B");
+        listBox.Items!.Add("C");
+
+        ColoredRectangleRuntime separator = new();
+        listBox.InsertDecorationAfter("B", separator);
+
+        listBox.Items!.Count.ShouldBe(3);
+        listBox.ListBoxItems.Count.ShouldBe(3);
+
+        ObservableCollection<GraphicalUiElement> panel = listBox.InnerPanel.Children;
+        panel.Count.ShouldBe(4);
+        panel[0].ShouldBe(listBox.ListBoxItems[0].Visual); // A
+        panel[1].ShouldBe(listBox.ListBoxItems[1].Visual); // B
+        panel[2].ShouldBe(separator);                      // decoration
+        panel[3].ShouldBe(listBox.ListBoxItems[2].Visual); // C
+
+        listBox.SelectedObject = "C";
+        listBox.SelectedIndex.ShouldBe(2);
+    }
+
+    [Fact]
+    public void AddDecoration_ThenAddItems_KeepsItemVisualOrderCorrect_WithBoundTypedItems()
+    {
+        // Issue #3305: the shared ItemsControl base inserts each new item's visual at its Items
+        // index into InnerPanel.Children. A decoration occupies a panel slot without an Items slot,
+        // so without index translation items added after a decoration land in the wrong panel slot.
+        // Also verifies a bound typed ObservableCollection<string> stays valid alongside decorations.
+        ObservableCollection<string> items = new() { "A", "B" };
+        ListBox listBox = new();
+        listBox.Items = items;
+
+        ColoredRectangleRuntime separator = new();
+        listBox.AddDecoration(separator); // "add now" -> after the current last item ("B")
+
+        items.Add("C");
+        items.Add("D");
+
+        ObservableCollection<GraphicalUiElement> panel = listBox.InnerPanel.Children;
+        panel.Count.ShouldBe(5);
+        panel[0].ShouldBe(listBox.ListBoxItems[0].Visual); // A
+        panel[1].ShouldBe(listBox.ListBoxItems[1].Visual); // B
+        panel[2].ShouldBe(separator);
+        panel[3].ShouldBe(listBox.ListBoxItems[2].Visual); // C
+        panel[4].ShouldBe(listBox.ListBoxItems[3].Visual); // D
+
+        items.ShouldBe(new[] { "A", "B", "C", "D" });
+        listBox.ListBoxItems.Count.ShouldBe(4);
+        listBox.ListBoxItems[2].BindingContext.ShouldBe("C");
+        listBox.ListBoxItems[3].BindingContext.ShouldBe("D");
+    }
+
+    [Fact]
+    public void Click_OnDecoration_ShouldNotChangeSelection()
+    {
+        // Issue #3305: clicking a decoration must be inert - it must not deselect the current item
+        // or raise SelectionChanged (and, by extension, must not close a parent ComboBox).
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        listBox.Items!.Add("A");
+        listBox.Items!.Add("B");
+        listBox.Items!.Add("C");
+
+        ColoredRectangleRuntime separator = new();
+        separator.Height = 30;
+        listBox.InsertDecorationAfter("A", separator);
+
+        listBox.SelectedObject = "C";
+
+        int fireCount = 0;
+        listBox.SelectionChanged += (_, _) => fireCount++;
+
+        Mock<ICursor> cursor = SetupForPush();
+        float cx = separator.GetAbsoluteX() + separator.GetAbsoluteWidth() / 2;
+        float cy = separator.GetAbsoluteY() + separator.GetAbsoluteHeight() / 2;
+        cursor.Setup(c => c.XRespectingGumZoomAndBounds()).Returns(cx);
+        cursor.Setup(c => c.YRespectingGumZoomAndBounds()).Returns(cy);
+        cursor.Setup(c => c.X).Returns((int)cx);
+        cursor.Setup(c => c.Y).Returns((int)cy);
+        cursor.SetupProperty(x => x.VisualOver);
+        cursor.SetupProperty(x => x.WindowPushed);
+
+        GueInteractiveExtensionMethods.DoUiActivityRecursively(listBox.Visual, cursor.Object, null!, 0);
+
+        listBox.SelectedObject.ShouldBe("C");
+        fireCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void DownArrow_NavigationSkipsDecoration()
+    {
+        // Issue #3305: keyboard/gamepad navigation moves through rows (ListBoxItems), so a
+        // decoration sitting between two rows is skipped - down from "A" selects "B", not the
+        // decoration.
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        listBox.Items!.Add("A");
+        listBox.Items!.Add("B");
+        listBox.Items!.Add("C");
+
+        ColoredRectangleRuntime separator = new();
+        listBox.InsertDecorationAfter("A", separator);
+
+        listBox.SelectedIndex = 0;
+        listBox.DoListItemsHaveFocus = true;
+
+        Mock<IInputReceiverKeyboardMonoGame> keyboard = new();
+        keyboard.As<IInputReceiverKeyboard>()
+            .Setup(k => k.KeyTyped(Gum.Forms.Input.Keys.Down)).Returns(true);
+        keyboard.As<IInputReceiverKeyboard>()
+            .Setup(k => k.KeysTyped).Returns(new List<Gum.Forms.Input.Keys>());
+        FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
+
+        listBox.OnFocusUpdate();
+
+        listBox.SelectedObject.ShouldBe("B");
+        listBox.SelectedIndex.ShouldBe(1);
+    }
+
+    [Fact]
+    public void RemovingAnchorItem_RemovesTheDecoration()
+    {
+        // Issue #3305: a decoration is anchored to a data item, so removing that item removes the
+        // decoration too - it never outlives the row it was attached to.
+        ListBox listBox = new();
+        listBox.Items!.Add("A");
+        listBox.Items!.Add("B");
+        listBox.Items!.Add("C");
+
+        ColoredRectangleRuntime separator = new();
+        listBox.InsertDecorationAfter("B", separator);
+
+        listBox.InnerPanel.Children.Count.ShouldBe(4);
+
+        listBox.Items!.Remove("B");
+
+        listBox.InnerPanel.Children.Count.ShouldBe(2);
+        listBox.InnerPanel.Children.Contains(separator).ShouldBeFalse();
+        separator.Parent.ShouldBeNull();
+        listBox.ListBoxItems.Count.ShouldBe(2);
+        listBox.ListBoxItems[0].BindingContext.ShouldBe("A");
+        listBox.ListBoxItems[1].BindingContext.ShouldBe("C");
+    }
+
+    [Fact]
+    public void ReorderItems_KeepsCollectionsInSync_AndDecorationFollowsAnchor()
+    {
+        // Issue #3305: reordering with a decoration present keeps Items, ListBoxItems, and
+        // InnerPanel.Children in sync, and the decoration follows its anchor item to its new spot.
+        ObservableCollection<string> items = new() { "A", "B", "C" };
+        ListBox listBox = new();
+        listBox.Items = items;
+
+        ColoredRectangleRuntime separator = new();
+        listBox.InsertDecorationAfter("A", separator); // panel: A, sep, B, C
+
+        items.Move(0, 2); // A -> end. Items: B, C, A
+
+        items.ShouldBe(new[] { "B", "C", "A" });
+        listBox.ListBoxItems.Count.ShouldBe(3);
+        listBox.ListBoxItems[0].BindingContext.ShouldBe("B");
+        listBox.ListBoxItems[1].BindingContext.ShouldBe("C");
+        listBox.ListBoxItems[2].BindingContext.ShouldBe("A");
+
+        ObservableCollection<GraphicalUiElement> panel = listBox.InnerPanel.Children;
+        panel.Count.ShouldBe(4);
+        panel[0].ShouldBe(listBox.ListBoxItems[0].Visual); // B
+        panel[1].ShouldBe(listBox.ListBoxItems[1].Visual); // C
+        panel[2].ShouldBe(listBox.ListBoxItems[2].Visual); // A
+        panel[3].ShouldBe(separator);                      // decoration followed A
+    }
+
+    [Fact]
+    public void ListBoxSeparator_UsedAsDecoration_IsInPanelButNotAnItemOrRow()
+    {
+        // Issue #3305: the shipped ListBoxSeparator convenience visual is a plain decoration - it
+        // renders in the panel but is never data (Items) or a selectable row (ListBoxItems), and
+        // RemoveDecoration takes it back out.
+        ListBox listBox = new();
+        listBox.Items!.Add("A");
+        listBox.Items!.Add("B");
+
+        ListBoxSeparator separator = new();
+        listBox.AddDecoration(separator);
+
+        listBox.InnerPanel.Children.Contains(separator).ShouldBeTrue();
+        listBox.Items!.Contains(separator).ShouldBeFalse();
+        listBox.ListBoxItems.Any(item => ReferenceEquals(item.Visual, separator)).ShouldBeFalse();
+
+        listBox.RemoveDecoration(separator).ShouldBeTrue();
+        listBox.InnerPanel.Children.Contains(separator).ShouldBeFalse();
+        separator.Parent.ShouldBeNull();
+    }
+
+    [Fact]
+    public void InsertDecorationBefore_PlacesDecorationAheadOfTheAnchorRow()
+    {
+        // Issue #3305: the Before placement puts the decoration immediately ahead of its anchor
+        // row's visual, while Items/ListBoxItems stay pure.
+        ListBox listBox = new();
+        listBox.Items!.Add("A");
+        listBox.Items!.Add("B");
+        listBox.Items!.Add("C");
+
+        ColoredRectangleRuntime separator = new();
+        listBox.InsertDecorationBefore("B", separator);
+
+        ObservableCollection<GraphicalUiElement> panel = listBox.InnerPanel.Children;
+        panel.Count.ShouldBe(4);
+        panel[0].ShouldBe(listBox.ListBoxItems[0].Visual); // A
+        panel[1].ShouldBe(separator);                      // decoration before B
+        panel[2].ShouldBe(listBox.ListBoxItems[1].Visual); // B
+        panel[3].ShouldBe(listBox.ListBoxItems[2].Visual); // C
+
+        listBox.Items!.Count.ShouldBe(3);
+        listBox.ListBoxItems.Count.ShouldBe(3);
+    }
+
+    [Fact]
+    public void InsertDecorationAfter_WithAnchorNotInItems_Throws()
+    {
+        // Issue #3305: anchoring to an item that is not in Items is a programming error and must
+        // be rejected rather than silently dropping the decoration.
+        ListBox listBox = new();
+        listBox.Items!.Add("A");
+
+        ColoredRectangleRuntime separator = new();
+
+        Should.Throw<ArgumentException>(() => listBox.InsertDecorationAfter("not-in-list", separator));
+    }
+
+    #endregion
 }
