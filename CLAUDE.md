@@ -21,13 +21,14 @@ Also load any skill whose trigger matches the area you're working in — before 
 
 Available agents:
 - **coder** — Writing or modifying code and unit tests for new features or bugs
-- **qa** — Testing, reviewing changes, and verifying correctness
 - **refactoring-specialist** — Refactoring and improving code structure
 - **docs-writer** — Writing or updating documentation
 - **product-manager** — Breaking down tasks and tracking progress
 - **security-auditor** — Security reviews and vulnerability assessments
 
 Select the agent that best matches the task at hand. For tasks that span multiple concerns (e.g., implement a feature and write tests), invoke the relevant agents in sequence.
+
+**Reviewing changes before merge is not a dedicated agent.** Use the `/code-review` skill — it covers correctness bugs *and* quality/refactoring cleanups in one pass (`/code-review ultra` runs a deep multi-agent cloud review). The coder writes its own unit tests; the `tdd` skill owns test discipline and the testability gate.
 
 ## Improving Guidance Files Alongside Work
 

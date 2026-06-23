@@ -375,6 +375,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private readonly ICollapseToggleService _collapseToggleService;
     private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
     private readonly PluginManager _pluginManager;
+    private readonly IDispatcher _dispatcher;
 
     public bool HasMouseOver
     {
@@ -410,7 +411,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         IProjectState projectState,
         StandardElementsManagerGumTool standardElementsManagerGumTool,
         IDragDropManager dragDropManager,
-        PluginManager pluginManager)
+        PluginManager pluginManager,
+        IDispatcher dispatcher)
     {
         _selectedState = selectedState;
         _editCommands = editCommands;
@@ -434,6 +436,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _projectState = projectState;
         _standardElementsManagerGumTool = standardElementsManagerGumTool;
         _pluginManager = pluginManager;
+        _dispatcher = dispatcher;
         _collapseToggleService = new CollapseToggleService();
         _recordedSelectedInstances = new List<InstanceSave>();
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
@@ -724,7 +727,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             {
                 if (e.Action != DragAction.Continue)
                 {
-                    Locator.GetRequiredService<IDispatcher>().Post(() =>
+                    _dispatcher.Post(() =>
                     {
                         OnSelect(ObjectTreeView.SelectedNode);
                     });
@@ -1042,7 +1045,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     private void AddAndRemoveScreensComponentsStandardsAndBehaviors()
     {
-        var gumProject = Locator.GetRequiredService<IProjectManager>().GumProjectSave;
+        var gumProject = _projectState.GumProjectSave;
         /////////////Early Out////////////////
         if (gumProject == null)
             return;
@@ -1056,7 +1059,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         #region Add nodes that haven't been added yet
 
-        foreach (ScreenSave screenSave in Locator.GetRequiredService<IProjectManager>().GumProjectSave.Screens)
+        foreach (ScreenSave screenSave in gumProject.Screens)
         {
             var treeNode = GetTreeNodeFor(screenSave);
             if (treeNode == null && ShouldShow(screenSave))
@@ -1068,7 +1071,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             }
         }
 
-        foreach (ComponentSave componentSave in Locator.GetRequiredService<IProjectManager>().GumProjectSave.Components)
+        foreach (ComponentSave componentSave in gumProject.Components)
         {
             if (GetTreeNodeFor(componentSave) == null && ShouldShow(componentSave))
             {
@@ -1084,7 +1087,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             }
         }
 
-        foreach (StandardElementSave standardSave in Locator.GetRequiredService<IProjectManager>().GumProjectSave.StandardElements)
+        foreach (StandardElementSave standardSave in gumProject.StandardElements)
         {
             if (standardSave.Name != "Component")
             {
@@ -1095,7 +1098,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             }
         }
 
-        foreach(BehaviorSave behaviorSave in Locator.GetRequiredService<IProjectManager>().GumProjectSave.Behaviors)
+        foreach(BehaviorSave behaviorSave in gumProject.Behaviors)
         {
             if(GetTreeNodeFor(behaviorSave) == null && ShouldShow(behaviorSave))
             {
@@ -1186,7 +1189,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
             if(behavior != null)
             {
-                if(behavior == null || !Locator.GetRequiredService<IProjectManager>().GumProjectSave.Behaviors.Contains(behavior) || !ShouldShow(behavior))
+                if(behavior == null || !gumProject.Behaviors.Contains(behavior) || !ShouldShow(behavior))
                 {
                     mBehaviorsTreeNode.Nodes.RemoveAt(i);
                 }
@@ -2633,6 +2636,9 @@ public static class TreeNodeExtensionMethods
             treeNode.IsTopBehaviorTreeNode()
             )
         {
+            // Locator is retained here (not ctor-injected): this is a static extension method on TreeNode,
+            // so there is no instance to hold injected IProjectManager/IDialogService fields. IProjectManager
+            // and IDialogService are both DI-registered; the only blocker to draining is the static context.
             if (Locator.GetRequiredService<IProjectManager>().GumProjectSave == null ||
                 string.IsNullOrEmpty(Locator.GetRequiredService<IProjectManager>().GumProjectSave.FullFileName))
             {

@@ -1,6 +1,10 @@
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.PropertyGridHelpers.Converters;
+using Gum.ToolStates;
+using Moq;
 using Shouldly;
 using System.Linq;
 using WpfDataUi.Controls;
@@ -10,6 +14,9 @@ namespace GumToolUnitTests.Managers;
 
 public class StandardElementsManagerTests : BaseTestClass
 {
+    private static StandardElementsManagerGumTool CreateSut(ISelectedState? selectedState = null) =>
+        new(Mock.Of<IPluginManager>(), selectedState ?? Mock.Of<ISelectedState>());
+
     // FillAlpha / StrokeAlpha / DropshadowAlpha are 0-255 byte channels just like the legacy
     // Alpha, so they should get the same SliderDisplay with a [0, 255] range rather than a
     // plain int textbox.
@@ -22,12 +29,28 @@ public class StandardElementsManagerTests : BaseTestClass
         var state = new StateSave();
         state.Variables.Add(new VariableSave { Type = "int", Name = variableName });
 
-        StandardElementsManagerGumTool.SetPreferredDisplayers(state);
+        CreateSut().SetPreferredDisplayers(state);
 
         var variable = state.Variables.First();
         variable.PreferredDisplayer.ShouldBe(typeof(SliderDisplay));
         variable.PropertiesToSetOnDisplayer["MinValue"].ShouldBe(0.0);
         variable.PropertiesToSetOnDisplayer["MaxValue"].ShouldBe(255.0);
+    }
+
+    // Pins the static->instance drain: the Parent variable's type converter is built from the
+    // injected ISelectedState. Before the drain SetPreferredDisplayers pulled ISelectedState from
+    // the static Locator (which throws in a unit test); now it must come from the constructor.
+    [Fact]
+    public void SetPreferredDisplayers_AssignsAvailableParentsConverter_FromInjectedSelectedState()
+    {
+        StateSave state = new StateSave();
+        state.Variables.Add(new VariableSave { Type = "string", Name = "Parent" });
+
+        CreateSut().SetPreferredDisplayers(state);
+
+        VariableSave variable = state.Variables.First();
+        variable.CustomTypeConverter.ShouldBeOfType<AvailableParentsTypeConverter>();
+        variable.PropertiesToSetOnDisplayer["IsEditable"].ShouldBe(true);
     }
 
     [Theory]

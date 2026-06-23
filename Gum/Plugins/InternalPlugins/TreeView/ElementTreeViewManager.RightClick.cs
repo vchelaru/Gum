@@ -680,7 +680,7 @@ public partial class ElementTreeViewManager
 
     private bool GuardProjectSaved(string? reason = null)
     {
-        if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(Locator.GetRequiredService<IProjectManager>().GumProjectSave.FullFileName))
+        if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(_projectState.GumProjectSave.FullFileName))
         {
             _dialogService.ShowMessage("You must first save the project");
             return false;
