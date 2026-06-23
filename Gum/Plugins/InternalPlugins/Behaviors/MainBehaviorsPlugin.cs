@@ -30,12 +30,16 @@ public class MainBehaviorsPlugin : PriorityPlugin
     PluginTab behaviorsTab;
 
     [ImportingConstructor]
-    public MainBehaviorsPlugin(ISelectedState selectedState)
+    public MainBehaviorsPlugin(
+        ISelectedState selectedState,
+        IElementCommands elementCommands,
+        IUndoManager undoManager,
+        IProjectManager projectManager)
     {
         _selectedState = selectedState;
-        _elementCommands = Locator.GetRequiredService<IElementCommands>();
-        _undoManager = Locator.GetRequiredService<IUndoManager>();
-        _projectManager = Locator.GetRequiredService<IProjectManager>();
+        _elementCommands = elementCommands;
+        _undoManager = undoManager;
+        _projectManager = projectManager;
     }
 
     public override void StartUp()

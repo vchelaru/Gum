@@ -21,6 +21,7 @@ using Gum.Wireframe;
 using Gum.ToolStates;
 using Gum.Managers;
 using Gum.Services;
+using Gum.ToolCommands;
 using RenderingLibrary;
 using System.Numerics;
 using Gum.Commands;
@@ -824,7 +825,10 @@ public class PluginManager : IPluginManager
 
             var batch = new CompositionBatch();
             batch.AddExportedValue<ISelectedState>(Locator.GetRequiredService<ISelectedState>());
-            
+            batch.AddExportedValue<IElementCommands>(Locator.GetRequiredService<IElementCommands>());
+            batch.AddExportedValue<IUndoManager>(Locator.GetRequiredService<IUndoManager>());
+            batch.AddExportedValue<IProjectManager>(Locator.GetRequiredService<IProjectManager>());
+
 
             var container = new CompositionContainer(catalog);
 
