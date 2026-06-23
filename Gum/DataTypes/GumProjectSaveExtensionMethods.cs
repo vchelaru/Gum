@@ -41,9 +41,14 @@ namespace Gum.DataTypes
                 try
                 {
                     StateSave? stateSave = StandardElementsManager.Self.GetDefaultStateFor(standardElementSave.Name);
+                    // Skip back-filling variables newer than the loaded project's version so an
+                    // older project (e.g. a pre-v3 FRB1 project pinned to an older Gum runtime) is
+                    // left byte-stable rather than injected with standard variables its generated
+                    // runtime code can't compile against. See FlatRedBall issue #1881.
+                    StateSave? effectiveDefaultState = FilterDefaultStateForProjectVersion(stateSave, gumProjectSave.Version);
                     // this will result in extra variables being
                     // added
-                    if (standardElementSave.Initialize(stateSave))
+                    if (standardElementSave.Initialize(effectiveDefaultState))
                     {
                         wasModified = true;
                         modifications?.Add($"Standard:{standardElementSave.Name}");
@@ -296,6 +301,40 @@ namespace Gum.DataTypes
             }
         }
 
+        /// <summary>
+        /// Returns the standard-element default state to use when back-filling a loaded element,
+        /// with any variable whose <see cref="VariableSave.MinimumGumxVersion"/> exceeds
+        /// <paramref name="projectVersion"/> removed. Variables default to MinimumGumxVersion 0, so
+        /// pre-v3 variables and every non-shape standard pass through untouched (the original state
+        /// is returned with no clone). Only when a gated variable is actually present does this clone
+        /// and prune, so an older project is not injected with newer standard variables its (older,
+        /// pinned) runtime can't compile. See FlatRedBall issue #1881.
+        /// </summary>
+        private static StateSave? FilterDefaultStateForProjectVersion(StateSave? defaultState, int projectVersion)
+        {
+            if (defaultState == null)
+            {
+                return null;
+            }
+
+            // Gather the gated names off the canonical (un-cloned) default first, then prune by
+            // name — the version tag is read here, before any Clone, so the prune doesn't depend on
+            // whether StateSave.Clone preserves the transient MinimumGumxVersion.
+            HashSet<string> gatedVariableNames = defaultState.Variables
+                .Where(variable => variable.MinimumGumxVersion > projectVersion)
+                .Select(variable => variable.Name)
+                .ToHashSet();
+
+            if (gatedVariableNames.Count == 0)
+            {
+                return defaultState;
+            }
+
+            StateSave filtered = defaultState.Clone();
+            filtered.Variables.RemoveAll(variable => gatedVariableNames.Contains(variable.Name));
+            return filtered;
+        }
+
         public static void FixStandardVariables(this GumProjectSave gumProjectSave)
         {
             foreach (var element in gumProjectSave.StandardElements)
@@ -306,6 +345,14 @@ namespace Gum.DataTypes
                     foreach (var variable in defaultState.Variables)
                     {
                         var variableInLoadedElement = element.DefaultState.GetVariableSave(variable.Name);
+
+                        if (variableInLoadedElement == null)
+                        {
+                            // A version-gated variable that wasn't back-filled into this (older)
+                            // project — there is nothing on the loaded element to reconcile. See
+                            // FilterDefaultStateForProjectVersion / FRB #1881.
+                            continue;
+                        }
 
                         variableInLoadedElement.CanOnlyBeSetInDefaultState = variable.CanOnlyBeSetInDefaultState;
                         variableInLoadedElement.DesiredOrder = variable.DesiredOrder;

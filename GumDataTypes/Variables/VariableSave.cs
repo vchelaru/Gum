@@ -186,6 +186,20 @@ public class VariableSave
         set;
     }
 
+    /// <summary>
+    /// The minimum <see cref="GumProjectSave.GumxVersions"/> a project must declare for the
+    /// load-time standard-element back-fill to inject this variable. 0 (the default) means "always
+    /// back-fill". Set on the canonical default-state definitions in <c>StandardElementsManager</c>
+    /// for variables that postdate the v2 baseline (the v3 shape surface, plus
+    /// RenderTargetTextureSource / SourceShaderFile / IsTilingMiddleSections);
+    /// <c>GumProjectSaveExtensionMethods.Initialize</c> skips any whose value exceeds the project's
+    /// version so older projects (e.g. an FRB1 project pinned to an older Gum runtime) stay
+    /// byte-stable and their generated runtime code doesn't reference properties the runtime lacks.
+    /// Transient authoring metadata on the in-memory defaults; never serialized. See FRB issue #1881.
+    /// </summary>
+    [XmlIgnore]
+    public int MinimumGumxVersion { get; set; }
+
     [XmlIgnore]
     public Dictionary<string, object?> PropertiesToSetOnDisplayer { get; private set; } = new Dictionary<string, object?>();
 
