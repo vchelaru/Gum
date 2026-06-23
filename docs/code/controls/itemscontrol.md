@@ -45,3 +45,7 @@ for(int i = 0; i < 20; i++)
 }
 ```
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACmWOPwvCMBDF90K_w5EppSJRcLE6iIN2FcElSyHRHrQJpFcFS7-7ly7-u-Udv8e7e0OaAIiyO_StWAOF3s4mgg4JqwaflrG4VwGQbNvtvaPgG9iCsw8oP5DMCs2ZN5jvjDn7k_f0b13QUM1Hlkr9WkeLt5rYW6yid_VBoiNAJqpg2XCINc8z7QbtgOcrP3WKv6UWcQctIAeMFUaRJuML5gZQPvEAAAA)
+
+## Decorations
+
+`ItemsControl` supports inert *decorations* — separators, headers, and other chrome that render between rows without becoming items. Add them with `AddDecoration`, `InsertDecorationAfter`, and `InsertDecorationBefore`. Because these methods are defined on `ItemsControl`, they are also available on `ListBox`, where the behavior and the shipped `ListBoxSeparator` visual are documented in full — see [Decorations and Separators](listbox.md#decorations-and-separators) on the ListBox page.
