@@ -4,7 +4,6 @@ using Gum.Plugins.BaseClasses;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Text;
-using Gum.Services;
 using Gum.Services.Dialogs;
 
 namespace Gum.Plugins.InternalPlugins.DuplicateVariablePlugin
@@ -14,9 +13,10 @@ namespace Gum.Plugins.InternalPlugins.DuplicateVariablePlugin
     {
         private readonly IDialogService _dialogService;
         
-        public MainDuplicateVariablePlugin()
+        [ImportingConstructor]
+        public MainDuplicateVariablePlugin(IDialogService dialogService)
         {
-            _dialogService = Locator.GetRequiredService<IDialogService>();
+            _dialogService = dialogService;
         }
         
         public override void StartUp()

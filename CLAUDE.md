@@ -70,17 +70,11 @@ There is a dedicated later phase for draining the remaining `.Self` singletons w
 
 **`ObjectFinder.Self` is the exception.** It is intentionally still a static singleton across the entire codebase (tool, runtimes, tests). There is no `IObjectFinder` interface, and replacing it is a project-wide refactor — do not attempt it as drive-by cleanup. Calls to `ObjectFinder.Self.GetBaseElements(...)`, `ObjectFinder.Self.GetDefaultChildName(...)`, etc. are acceptable in any context.
 
-## Searching C# Code — Use the Roslyn Analyzer, Not Grep
+## Searching C# Code
 
-For any **semantic** question about C# code, use the Roslyn-backed LSP tool, **not** `Grep`/`grep`. The LSP resolves the actual symbol; grep only matches text, which forces you to hand-classify the hits (is this a registered service, a plugin, a view, a converter?) — an error-prone step that has produced wrong conclusions before (e.g. naming a class as a refactor target when it had zero matching calls). Reach for the LSP operation that fits the question:
+There is **no Roslyn/LSP semantic search in this environment** — the local LSP plugin was unreliable (slow workspace-load races on this large repo) and has been disabled. Use `Grep` for searches, and delegate broad "who references/calls/implements this" sweeps to the `Explore` agent, which reads excerpts and can distinguish definitions from uses.
 
-- **"Where is this defined?"** → `goToDefinition`
-- **"What are *all* the references to this symbol?"** → `findReferences`
-- **"Who calls this / what's the construction path?"** (e.g. hunting a DI construction cycle) → `prepareCallHierarchy` + `incomingCalls` / `outgoingCalls`
-- **"What implements this interface / overrides this member?"** → `goToImplementation`
-- **"Find a type or member by name across the solution"** → `workspaceSymbol`
-
-`Grep` is still correct for **non-semantic** text searches — string literals, comments, `.csproj`/XML/config, build/log output, or finding an initial foothold before you have a symbol. The line is simple: once the question is *about a symbol* (who defines/references/calls/implements it), switch to Roslyn.
+Because grep matches **text, not symbols**, classify hits before drawing conclusions — a name match doesn't tell you whether it's a definition, a registered service, a plugin, a view, or a converter. Trusting raw match counts has produced wrong conclusions before (e.g. naming a class as a refactor target when it had zero *real* call sites). Read the surrounding code at each hit, and distinguish declarations (`class Foo`, the `Foo(` ctor, `: Foo` bases) from usages, rather than counting matches.
 
 ## Investigating Third-Party Libraries
 
