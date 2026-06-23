@@ -38,15 +38,19 @@ public static class DefaultStateManager
 #if GUM
     internal static void UpdateDisplayersForStandards()
     {
-        Gum.Plugins.InternalPlugins.VariableGrid.StandardElementsManagerGumTool.SetPreferredDisplayers(StandardElementsManager.GetArcState());
-        Gum.Plugins.InternalPlugins.VariableGrid.StandardElementsManagerGumTool.SetPreferredDisplayers(StandardElementsManager.GetColoredCircleState());
-        Gum.Plugins.InternalPlugins.VariableGrid.StandardElementsManagerGumTool.SetPreferredDisplayers(StandardElementsManager.GetLineState());
-        Gum.Plugins.InternalPlugins.VariableGrid.StandardElementsManagerGumTool.SetPreferredDisplayers(StandardElementsManager.GetRoundedRectangleState());
+        // SvgPlugin is a separate plugin assembly outside the main DI container, so it resolves
+        // the (now instance) StandardElementsManagerGumTool through the service Locator.
+        Gum.Plugins.InternalPlugins.VariableGrid.IStandardElementsManagerGumTool standardElementsManagerGumTool =
+            Locator.GetRequiredService<Gum.Plugins.InternalPlugins.VariableGrid.IStandardElementsManagerGumTool>();
 
-        Gum.Plugins.InternalPlugins.VariableGrid.StandardElementsManagerGumTool.SetPreferredDisplayers(GetCanvasState());
-        Gum.Plugins.InternalPlugins.VariableGrid.StandardElementsManagerGumTool.SetPreferredDisplayers(GetSvgState());
-        Gum.Plugins.InternalPlugins.VariableGrid.StandardElementsManagerGumTool.SetPreferredDisplayers(GetLottieAnimationState());
+        standardElementsManagerGumTool.SetPreferredDisplayers(StandardElementsManager.GetArcState());
+        standardElementsManagerGumTool.SetPreferredDisplayers(StandardElementsManager.GetColoredCircleState());
+        standardElementsManagerGumTool.SetPreferredDisplayers(StandardElementsManager.GetLineState());
+        standardElementsManagerGumTool.SetPreferredDisplayers(StandardElementsManager.GetRoundedRectangleState());
 
+        standardElementsManagerGumTool.SetPreferredDisplayers(GetCanvasState());
+        standardElementsManagerGumTool.SetPreferredDisplayers(GetSvgState());
+        standardElementsManagerGumTool.SetPreferredDisplayers(GetLottieAnimationState());
     }
 #endif
 

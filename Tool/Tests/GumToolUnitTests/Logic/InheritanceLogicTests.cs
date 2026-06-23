@@ -5,6 +5,7 @@ using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.ToolStates;
 using Moq;
 using Shouldly;
 
@@ -24,7 +25,7 @@ public class InheritanceLogicTests : BaseTestClass
         _sut = new InheritanceLogic(
             _fileCommands.Object,
             _guiCommands.Object,
-            new StandardElementsManagerGumTool(new Mock<IPluginManager>().Object));
+            new StandardElementsManagerGumTool(new Mock<IPluginManager>().Object, new Mock<ISelectedState>().Object));
     }
 
     [Fact]
