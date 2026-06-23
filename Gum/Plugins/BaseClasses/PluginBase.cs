@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Linq;
 using Gum.DataTypes;
 using Gum.Gui.Windows;
@@ -27,12 +28,23 @@ namespace Gum.Plugins.BaseClasses;
 
 public abstract class PluginBase : IPlugin
 {
-    protected readonly IGuiCommands _guiCommands;
-    protected readonly IFileCommands _fileCommands;
-    protected readonly ITabManager _tabManager;
-    protected readonly IDialogService _dialogService;
-    private readonly MenuStripManager _menuStripManager;
-    
+    // These shared services are supplied by MEF as property imports. They are bridged into
+    // the plugin container in PluginManager.LoadPlugins (AddExportedValue). MEF sets them
+    // after construction and before StartUp(), so reference them in StartUp()/handlers, not
+    // in a plugin constructor (a plugin needing one at construction time should inject it via
+    // its own [ImportingConstructor] instead).
+    protected IGuiCommands _guiCommands;
+    protected IFileCommands _fileCommands;
+    protected ITabManager _tabManager;
+    protected IDialogService _dialogService;
+    private MenuStripManager _menuStripManager;
+
+    [Import] public IGuiCommands GuiCommands { get => _guiCommands; set => _guiCommands = value; }
+    [Import] public IFileCommands FileCommands { get => _fileCommands; set => _fileCommands = value; }
+    [Import] public ITabManager TabManager { get => _tabManager; set => _tabManager = value; }
+    [Import] public IDialogService DialogService { get => _dialogService; set => _dialogService = value; }
+    [Import] public MenuStripManager MenuStripManager { get => _menuStripManager; set => _menuStripManager = value; }
+
     #region Events
 
     public event Action<GumProjectSave>? ProjectLoad;
@@ -250,15 +262,6 @@ public abstract class PluginBase : IPlugin
     public abstract string FriendlyName { get; }
 
     public virtual Version Version => new Version(1, 0);
-
-    protected PluginBase()
-    {
-        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        _fileCommands = Locator.GetRequiredService<IFileCommands>();
-        _tabManager = Locator.GetRequiredService<ITabManager>();
-        _menuStripManager = Locator.GetRequiredService<MenuStripManager>();
-        _dialogService = Locator.GetRequiredService<IDialogService>();
-    }
 
     public virtual void FillTopLevelNames(ElementSave element, List<TopLevelName> names) { }
 

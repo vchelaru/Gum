@@ -27,12 +27,13 @@ public class DeleteObjectPlugin : PriorityPlugin
     private readonly IDeleteLogic _deleteLogic;
     private readonly InstanceDeletionHelper _instanceDeletionHelper;
 
-    public DeleteObjectPlugin()
+    [ImportingConstructor]
+    public DeleteObjectPlugin(IGuiCommands guiCommands, IFileCommands fileCommands)
     {
         _elementCommands = Locator.GetRequiredService<IElementCommands>();
         _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
         _deleteLogic = Locator.GetRequiredService<IDeleteLogic>();
-        _instanceDeletionHelper = new InstanceDeletionHelper(_deleteLogic, _guiCommands, _wireframeCommands, _fileCommands);
+        _instanceDeletionHelper = new InstanceDeletionHelper(_deleteLogic, guiCommands, _wireframeCommands, fileCommands);
     }
 
     public override void StartUp()

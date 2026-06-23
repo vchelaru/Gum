@@ -71,7 +71,8 @@ public class MainCodeOutputPlugin : PluginBase
 
     #region Init/Startup
 
-    public MainCodeOutputPlugin()
+    [ImportingConstructor]
+    public MainCodeOutputPlugin(IGuiCommands guiCommands, IDialogService dialogService)
     {
         codeOutputProjectSettings = new CodeOutputProjectSettings();
 
@@ -95,13 +96,13 @@ public class MainCodeOutputPlugin : PluginBase
         _selectedState = Locator.GetRequiredService<ISelectedState>();
 
         var customCodeGenerator = new CustomCodeGenerator(_codeGenerator, _codeGenerationNameVerifier);
-        _codeGenerationService = new CodeGenerationService(_guiCommands, _codeGenerator, _dialogService, customCodeGenerator, _codeGenerationNameVerifier, _projectDirectoryProvider, Locator.GetRequiredService<IRetryService>());
+        _codeGenerationService = new CodeGenerationService(guiCommands, _codeGenerator, dialogService, customCodeGenerator, _codeGenerationNameVerifier, _projectDirectoryProvider, Locator.GetRequiredService<IRetryService>());
         _renameService = new RenameService(
             _codeGenerationService,
             _codeGenerator,
             customCodeGenerator,
             _codeGenerationNameVerifier,
-            _dialogService,
+            dialogService,
             _projectDirectoryProvider);
 
         _messenger = Locator.GetRequiredService<IMessenger>();

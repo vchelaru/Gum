@@ -45,7 +45,7 @@ public class MainStatePlugin : PriorityPlugin
     #region Initialize
 
     [ImportingConstructor]
-    public MainStatePlugin(ISelectedState selectedState)
+    public MainStatePlugin(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands)
     {
         _selectedState = selectedState;
         var elementCommands = Locator.GetRequiredService<IElementCommands>();
@@ -60,8 +60,8 @@ public class MainStatePlugin : PriorityPlugin
             elementCommands,
             editCommands,
             dialogService,
-            _guiCommands,
-            _fileCommands,
+            guiCommands,
+            fileCommands,
             _copyPasteLogic);
 
         stateTreeViewModel = new StateTreeViewModel(_stateTreeViewRightClickService,

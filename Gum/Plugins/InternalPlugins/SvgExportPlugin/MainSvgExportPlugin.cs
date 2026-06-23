@@ -1,6 +1,8 @@
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Plugins.BaseClasses;
 using Gum.Services;
+using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using System.ComponentModel.Composition;
 using System.Windows.Controls;
@@ -15,13 +17,15 @@ internal class MainSvgExportPlugin : PriorityPlugin
     private readonly IProjectState _projectState;
     private readonly ISvgExportCommand _svgExportCommand;
 
-    public MainSvgExportPlugin()
+    [ImportingConstructor]
+    public MainSvgExportPlugin(IDialogService dialogService, IGuiCommands guiCommands)
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _projectState = Locator.GetRequiredService<IProjectState>();
         // SVG export is plugin-specific, so the command is instantiated here rather than
-        // registered app-wide. _dialogService/_guiCommands come from PluginBase's ctor.
-        _svgExportCommand = new SvgExportCommand(_dialogService, _guiCommands);
+        // registered app-wide. These services are injected (they are also property-injected
+        // into PluginBase for use in StartUp()/handlers).
+        _svgExportCommand = new SvgExportCommand(dialogService, guiCommands);
     }
 
     public override void StartUp()
