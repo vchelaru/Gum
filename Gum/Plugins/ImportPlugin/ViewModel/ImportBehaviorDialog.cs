@@ -1,7 +1,6 @@
 ﻿using Gum.Commands;
 using Gum.Managers;
 using Gum.Plugins.ImportPlugin.Manager;
-using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using System.Collections.Generic;
@@ -19,6 +18,7 @@ public class ImportBehaviorDialog : ImportBaseDialogViewModel
     private readonly ISelectedState _selectedState;
     private readonly IImportLogic _importLogic;
     private readonly IProjectState _projectState;
+    private readonly IProjectManager _projectManager;
 
     public override string Title => "Import Behavior";
     public override string BrowseFileFilter => "Behavior Files (*.behaviors)|*.behaviors";
@@ -29,8 +29,8 @@ public class ImportBehaviorDialog : ImportBaseDialogViewModel
         ISelectedState selectedState,
         IDialogService dialogService,
         IImportLogic importLogic,
-        IProjectState projectState
-
+        IProjectState projectState,
+        IProjectManager projectManager
         ) : base(dialogService)
     {
         _fileCommands = fileCommands;
@@ -38,6 +38,7 @@ public class ImportBehaviorDialog : ImportBaseDialogViewModel
         _selectedState = selectedState;
         _importLogic = importLogic;
         _projectState = projectState;
+        _projectManager = projectManager;
 
         List<FilePath> behaviorFilesNotInProject = FileManager.GetAllFilesInDirectory(
             _projectState.BehaviorFilePath.FullPath, "behx")
@@ -61,7 +62,7 @@ public class ImportBehaviorDialog : ImportBaseDialogViewModel
         BehaviorSave lastImportedBehavior = null;
 
         string desiredDirectory = FileManager.GetDirectory(
-            Locator.GetRequiredService<IProjectManager>().GumProjectSave.FullFileName) + "Behaviors/";
+            _projectManager.GumProjectSave.FullFileName) + "Behaviors/";
 
         foreach (string file in SelectedFiles)
         {

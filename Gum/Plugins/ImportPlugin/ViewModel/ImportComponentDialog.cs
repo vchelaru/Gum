@@ -1,7 +1,6 @@
 ﻿using Gum.Commands;
 using Gum.Managers;
 using Gum.Plugins.ImportPlugin.Manager;
-using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using System.Collections.Generic;
@@ -30,14 +29,15 @@ public class ImportComponentDialog : ImportBaseDialogViewModel
         ISelectedState selectedState,
         IDialogService dialogService,
         IImportLogic importLogic,
-        IProjectState projectState)
+        IProjectState projectState,
+        IProjectManager projectManager)
         : base(dialogService)
     {
         _fileCommands = fileCommands;
         _guiCommands = guiCommands;
         _selectedState = selectedState;
         _importLogic = importLogic;
-        _projectManager = Locator.GetRequiredService<IProjectManager>();
+        _projectManager = projectManager;
         _projectState = projectState;
 
         List<FilePath> componentFilesNotInProject = FileManager.GetAllFilesInDirectory(
