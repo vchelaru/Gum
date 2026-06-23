@@ -45,6 +45,12 @@ public partial class PropertyGridManager
     private readonly TypeManager _typeManager;
     private readonly IPluginManager _pluginManager;
     private readonly IProjectState _projectState;
+    private readonly ICompositeMemberRegistry _compositeMemberRegistry;
+    private readonly INameVerifier _nameVerifier;
+    private readonly IDeleteVariableService _deleteVariableService;
+    private readonly IEditVariableService _editVariableService;
+    private readonly IHotkeyManager _hotkeyManager;
+    private readonly IVariableSaveLogic _variableSaveLogic;
     WpfDataUi.DataUiGrid mVariablesDataGrid;
     MainPropertyGrid mainControl;
 
@@ -109,7 +115,13 @@ public partial class PropertyGridManager
         TypeManager typeManager,
         IPluginManager pluginManager,
         IProjectState projectState,
-        IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
+        IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
+        ICompositeMemberRegistry compositeMemberRegistry,
+        INameVerifier nameVerifier,
+        IDeleteVariableService deleteVariableService,
+        IEditVariableService editVariableService,
+        IHotkeyManager hotkeyManager,
+        IVariableSaveLogic variableSaveLogic)
     {
         _selectedState = selectedState;
         _exposeVariableService = exposeVariableService;
@@ -125,6 +137,12 @@ public partial class PropertyGridManager
         _typeManager = typeManager;
         _pluginManager = pluginManager;
         _projectState = projectState;
+        _compositeMemberRegistry = compositeMemberRegistry;
+        _nameVerifier = nameVerifier;
+        _deleteVariableService = deleteVariableService;
+        _editVariableService = editVariableService;
+        _hotkeyManager = hotkeyManager;
+        _variableSaveLogic = variableSaveLogic;
         _stateSaveCategoryDisplayer = new StateSaveCategoryDisplayer(variableInCategoryPropagationLogic);
     }
 
@@ -137,12 +155,9 @@ public partial class PropertyGridManager
             _undoManager,
             _guiCommands,
             _objectFinder,
-            Locator.GetRequiredService<ICompositeMemberRegistry>(),
+            _compositeMemberRegistry,
             _dialogService,
-            Locator.GetRequiredService<Gum.Managers.INameVerifier>());
-        var deleteVariableService = Locator.GetRequiredService<IDeleteVariableService>();
-        var editVariableService = Locator.GetRequiredService<IEditVariableService>();
-        var hotkeyManager = Locator.GetRequiredService<IHotkeyManager>();
+            _nameVerifier);
 
         mPropertyGridDisplayer = new ElementSaveDisplayer(
             new SubtextLogic(),
@@ -150,11 +165,11 @@ public partial class PropertyGridManager
             _selectedState,
             _undoManager,
             _pluginManager,
-            Locator.GetRequiredService<IVariableSaveLogic>(),
-            editVariableService,
+            _variableSaveLogic,
+            _editVariableService,
             _exposeVariableService,
-            hotkeyManager,
-            deleteVariableService,
+            _hotkeyManager,
+            _deleteVariableService,
             _guiCommands,
             _fileCommands,
             _setVariableLogic,
@@ -166,7 +181,7 @@ public partial class PropertyGridManager
 
         mVariablesDataGrid = mainControl.DataGrid;
 
-        VariableViewModel = new Plugins.VariableGrid.MainControlViewModel(deleteVariableService, editVariableService);
+        VariableViewModel = new Plugins.VariableGrid.MainControlViewModel(_deleteVariableService, _editVariableService);
         VariableViewModel.AddVariableButtonVisibility = System.Windows.Visibility.Collapsed;
         mainControl.DataContext = VariableViewModel;
         mainControl.SelectedBehaviorVariableChanged += HandleBehaviorVariableSelected;
