@@ -4,7 +4,6 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.PropertyGridHelpers.Converters;
-using Gum.Services;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using RenderingLibrary.Graphics;
@@ -23,15 +22,18 @@ public interface IStandardElementsManagerGumTool
     void FixCustomTypeConverters(GumProjectSave project);
     void FixCustomTypeConverters(ElementSave elementSave);
     void RefreshStateVariablesThroughPlugins();
+    void SetPreferredDisplayers(StateSave state);
 }
 
 public class StandardElementsManagerGumTool : IStandardElementsManagerGumTool
 {
     private readonly IPluginManager _pluginManager;
+    private readonly ISelectedState _selectedState;
 
-    public StandardElementsManagerGumTool(IPluginManager pluginManager)
+    public StandardElementsManagerGumTool(IPluginManager pluginManager, ISelectedState selectedState)
     {
         _pluginManager = pluginManager;
+        _selectedState = selectedState;
     }
 
     public void Initialize()
@@ -42,7 +44,7 @@ public class StandardElementsManagerGumTool : IStandardElementsManagerGumTool
             new AvailableContainedTypeConverter();
 
         defaultStates["Component"].Variables
-            .Add(new VariableSave { SetsValue = true, Type = "State", Value = null, Name = "State", CustomTypeConverter = new AvailableStatesConverter(null, Locator.GetRequiredService<ISelectedState>()) });
+            .Add(new VariableSave { SetsValue = true, Type = "State", Value = null, Name = "State", CustomTypeConverter = new AvailableStatesConverter(null, _selectedState) });
 
         foreach (var state in StandardElementsManager.Self.DefaultStates.Values)
         {
@@ -56,7 +58,7 @@ public class StandardElementsManagerGumTool : IStandardElementsManagerGumTool
 
     }
 
-    public static void SetPreferredDisplayers(StateSave state)
+    public void SetPreferredDisplayers(StateSave state)
     {
         foreach (var variable in state.Variables)
         {
@@ -125,19 +127,18 @@ public class StandardElementsManagerGumTool : IStandardElementsManagerGumTool
             }
             else if (variable.Type == "string" && variable.Name == "Parent")
             {
-                var selectedState = Locator.GetRequiredService<ISelectedState>();
-                variable.CustomTypeConverter = new AvailableParentsTypeConverter(selectedState);
+                variable.CustomTypeConverter = new AvailableParentsTypeConverter(_selectedState);
                 variable.PropertiesToSetOnDisplayer["IsEditable"] = true;
             }
             else if (variable.Type == "string" && variable.Name == "RenderTargetTextureSource")
             {
                 variable.CustomTypeConverter =
-                    new AvailableRenderTargetContainersConverter(Locator.GetRequiredService<ISelectedState>());
+                    new AvailableRenderTargetContainersConverter(_selectedState);
             }
             else if (variable.Type == "State" && variable.Name == "State")
             {
                 variable.Category = "States and Visibility";
-                variable.CustomTypeConverter = new AvailableStatesConverter(null, Locator.GetRequiredService<ISelectedState>());
+                variable.CustomTypeConverter = new AvailableStatesConverter(null, _selectedState);
             }
             else if (variable.Name == "Red" ||
                 variable.Name == "Green" ||
@@ -190,7 +191,7 @@ public class StandardElementsManagerGumTool : IStandardElementsManagerGumTool
 
             if (foundVariable != null)
             {
-                foundVariable.CustomTypeConverter = new AvailableStatesConverter(stateSaveCategory.Name, Locator.GetRequiredService<ISelectedState>());
+                foundVariable.CustomTypeConverter = new AvailableStatesConverter(stateSaveCategory.Name, _selectedState);
             }
         }
     }
