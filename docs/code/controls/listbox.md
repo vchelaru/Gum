@@ -4,7 +4,7 @@
 
 The ListBox control provides a scrollable list of ListBoxItems for displaying and selecting from a list.
 
-ListBox inherits from ScrollViewer, so it supports the same scrolling behavior. This includes the `MouseWheelScrollSpeed` property, which controls how far the list scrolls per mouse-wheel notch. For details see [Mouse Wheel Scroll Speed](scrollviewer/README.md#mouse-wheel-scroll-speed) on the ScrollViewer page.
+ListBox inherits from ScrollViewer, so it supports the same scrolling behavior. This includes the `MouseWheelScrollSpeed` property, which controls how far the list scrolls per mouse-wheel notch. For details see [Mouse Wheel Scroll Speed](scrollviewer/#mouse-wheel-scroll-speed) on the ScrollViewer page.
 
 ## Code Example: Adding a ListBox
 
@@ -227,8 +227,8 @@ int count = listBox.SelectedItems.Count;
 
 A `ListBox` uses a two-level focus model:
 
-- **Top-level focus** — the `ListBox` itself is focused (`IsFocused` is `true`). In this state, input moves focus *between controls* (tabbing), not within the list. This is the state a `ListBox` is in right after you set `IsFocused = true`.
-- **Item-level focus** — focus has moved *into* the list (`DoListItemsHaveFocus` is `true`). Now the up and down arrow keys and the d-pad move the highlighted item, and the `SelectionChanged` event fires as the selection changes.
+* **Top-level focus** — the `ListBox` itself is focused (`IsFocused` is `true`). In this state, input moves focus _between controls_ (tabbing), not within the list. This is the state a `ListBox` is in right after you set `IsFocused = true`.
+* **Item-level focus** — focus has moved _into_ the list (`DoListItemsHaveFocus` is `true`). Now the up and down arrow keys and the d-pad move the highlighted item, and the `SelectionChanged` event fires as the selection changes.
 
 By default the user moves from top-level to item-level focus by pressing the confirm input — Enter on the keyboard, or the A button on a gamepad. This is the extra "enter the list" press.
 
@@ -268,8 +268,8 @@ Order matters. `DoListItemsHaveFocus` only moves the visible focus onto an item 
 
 Two properties control how focus exits item-level navigation:
 
-- `CanListItemsLoseFocus` (default `true`) — when `true`, pressing the back/cancel input (the B button) returns focus to the top level. Set this to `false` when the `ListBox` is the only focusable control on the screen, so focus can never leave the items. Setting it to `false` while the `ListBox` is focused also moves focus into the items immediately.
-- `LoseListItemFocusOnPrimaryInput` (default `true`) — when `true`, the confirm input (A button / Enter) selects the highlighted item and returns focus to the top level. Set this to `false` when the confirm input should act on the item — for example toggling a `CheckBox` in a custom item template — without leaving item-level focus.
+* `CanListItemsLoseFocus` (default `true`) — when `true`, pressing the back/cancel input (the B button) returns focus to the top level. Set this to `false` when the `ListBox` is the only focusable control on the screen, so focus can never leave the items. Setting it to `false` while the `ListBox` is focused also moves focus into the items immediately.
+* `LoseListItemFocusOnPrimaryInput` (default `true`) — when `true`, the confirm input (A button / Enter) selects the highlighted item and returns focus to the top level. Set this to `false` when the confirm input should act on the item — for example toggling a `CheckBox` in a custom item template — without leaving item-level focus.
 
 For the specific keys and buttons each input device uses, see [Keyboard Support](../events-and-interactivity/keyboard-support.md#listbox-navigation) and [Gamepad Support](../events-and-interactivity/gamepad-support.md#listbox-navigation).
 
@@ -298,7 +298,7 @@ listBox.DragDropReorderMode = DragDropReorderMode.Immediate;
 
 ## Decorations and Separators
 
-A *decoration* is an inert visual — a separator line, a group header, or other chrome — that renders between rows but is not part of the list's data. A decoration lives in the ListBox's `InnerPanel.Children` alongside the row visuals, so it appears inline between items, but it belongs to **neither `Items` nor `ListBoxItems`**. As a result:
+A _decoration_ is an inert visual — a separator line, a group header, or other chrome — that renders between rows but is not part of the list's data. A decoration lives in the ListBox's `InnerPanel.Children` alongside the row visuals, so it appears inline between items, but it belongs to **neither `Items` nor `ListBoxItems`**. As a result:
 
 * `SelectedIndex` and `SelectedObject` stay contiguous. The row after a decoration keeps its data index, so adding a decoration never shifts your indices.
 * A decoration can never be selected, clicked to select, or reached by keyboard or gamepad navigation. Clicking it does nothing, and arrow or d-pad navigation skips over it.
@@ -325,17 +325,12 @@ listBox.Items.Add("Quit to Menu");
 listBox.Items.Add("Quit to Desktop");
 
 // Drop a separator between the two groups, anchored to the last item of the first group.
-var separator = new ListBoxSeparator();
+var separator = new RectangleRuntime();
+separator.Height = 2;
+separator.Width = 0;
+separator.WidthUnits = DimensionUnitType.RelativeToParent;
 listBox.InsertDecorationAfter("Options", separator);
 ```
-
-[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACn2RQUvDQBCF7_kVw55aCG1BvVg8VIK1oIitoMV4WJtpM9juhN3ZRhT_u5vUkkTQ437v7Xs7O58RgJq5qd-pcxDrMa6Ad2Q2LpBnFZTB1GOClvYBqpfaQIaE9JY-MJjUXlvYkpNLfocLMFjCzeHU649T86MMJln2wHNm6dCncONs1ALL3-CRMskDPB216TXSJpeAT2qcmuEQrsg6gY1lXzTGmeDOVeW9VM3R-R2mqv2Atn5XCLFxB0MducAVm-y_zHtPAsJwi8b_nXx0JejehItWQ2K5AA0OC221sIVXlBLRgOQIUvKh28WgzSpni1kVU2lbHYal0AG8rsG6GX-QmmopTWhnLYsj7mxiZhxaScLAQQvfMFkL2vanxE1ef6yir-gbt2GNrj0CAAA)
-
-{% hint style="warning" %}
-**Screenshot placeholder:** a ListBox showing the two groups (`Resume`, `Options` above the line; `Quit to Menu`, `Quit to Desktop` below it) with the thin gray separator between them.
-{% endhint %}
-
-`ListBoxSeparator` inherits from `RectangleRuntime`, so you can tune its appearance through the inherited members — `Height`, the `Fill` color channels (`FillRed`, `FillGreen`, `FillBlue`, `FillAlpha`), and so on. A decoration does not have to be a separator: pass any `GraphicalUiElement` (for example a `Label` used as a group header) to the same methods.
 
 ### Anchoring and Lifetime
 
@@ -346,11 +341,11 @@ A decoration is **anchored to a data item**, not to a fixed position:
 
 The three add methods differ only in how the anchor is chosen:
 
-| Method | Anchor |
-|---|---|
-| `AddDecoration(visual)` | The item that is **currently last** in `Items` (the "add now" case). Items added afterward appear below the decoration. If `Items` is empty, the decoration is placed at the end of the panel. |
-| `InsertDecorationAfter(item, visual)` | Immediately **after** the given item's row. |
-| `InsertDecorationBefore(item, visual)` | Immediately **before** the given item's row. |
+| Method                                 | Anchor                                                                                                                                                                                         |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AddDecoration(visual)`                | The item that is **currently last** in `Items` (the "add now" case). Items added afterward appear below the decoration. If `Items` is empty, the decoration is placed at the end of the panel. |
+| `InsertDecorationAfter(item, visual)`  | Immediately **after** the given item's row.                                                                                                                                                    |
+| `InsertDecorationBefore(item, visual)` | Immediately **before** the given item's row.                                                                                                                                                   |
 
 `InsertDecorationAfter` and `InsertDecorationBefore` throw an `ArgumentException` if the anchor item is not in `Items`. Call `RemoveDecoration(visual)` to take a decoration out manually; it returns `true` if the visual was a tracked decoration. Re-adding a decoration that is already tracked re-anchors it rather than adding it twice.
 
