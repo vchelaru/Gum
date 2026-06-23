@@ -1,6 +1,5 @@
 ﻿using Gum.DataTypes;
 using Gum.Managers;
-using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
@@ -17,16 +16,19 @@ public class AddComponentDialogViewModel : GetUserStringDialogBaseViewModel
     private readonly ISelectedState _selectedState;
     private readonly ProjectCommands _projectCommands;
     private readonly FileLocations _fileLocations;
+    private readonly IProjectState _projectState;
 
-    public AddComponentDialogViewModel(INameVerifier nameVerifier, 
-        ISelectedState selectedState, 
+    public AddComponentDialogViewModel(INameVerifier nameVerifier,
+        ISelectedState selectedState,
         ProjectCommands projectCommands,
-        FileLocations fileLocations)
+        FileLocations fileLocations,
+        IProjectState projectState)
     {
         _nameVerifier = nameVerifier;
         _selectedState = selectedState;
         _projectCommands = projectCommands;
         _fileLocations = fileLocations;
+        _projectState = projectState;
     }
 
     public override void OnAffirmative()
@@ -43,8 +45,7 @@ public class AddComponentDialogViewModel : GetUserStringDialogBaseViewModel
         FilePath? path = nodeToAddTo?.GetFullFilePath();
         if (nodeToAddTo == null || !nodeToAddTo.IsPartOfComponentsFolderStructure())
         {
-            var projectState = Locator.GetRequiredService<IProjectState>();
-            path = projectState.ComponentFilePath;
+            path = _projectState.ComponentFilePath;
         }
 
         if (path != null)
