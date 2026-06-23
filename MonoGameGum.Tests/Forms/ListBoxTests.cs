@@ -453,6 +453,82 @@ public class ListBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void Items_RemoveRealItemAfterNonListBoxItem_ShouldRemoveTheCorrectRow()
+    {
+        // Issue #556 (negative path): removing a real item that sits after a non-ListBoxItem used to
+        // remove the WRONG ListBoxItem — the #1380 bounds-check band-aid removed at the InnerPanel
+        // index, which is offset by the non-ListBoxItem. Removal is now by reference.
+        Gum.Forms.DefaultVisuals.ButtonVisual button = new();
+
+        ListBox listBox = new();
+        listBox.Items!.Add("A");
+        listBox.Items!.Add(button);
+        listBox.Items!.Add("B");
+        listBox.Items!.Add("C");
+
+        listBox.Items!.Remove("B");
+
+        listBox.ListBoxItems.Count.ShouldBe(2);
+        listBox.ListBoxItems[0].BindingContext.ShouldBe("A");
+        listBox.ListBoxItems[1].BindingContext.ShouldBe("C");
+    }
+
+    [Fact]
+    public void Items_RemoveNonListBoxItem_ShouldNotRemoveAnyRow()
+    {
+        // Issue #556 (negative path): removing the non-ListBoxItem itself must not drop a real row.
+        // The old index-based removal would RemoveAt the non-ListBoxItem's InnerPanel index and take
+        // a real ListBoxItem with it.
+        Gum.Forms.DefaultVisuals.ButtonVisual button = new();
+
+        ListBox listBox = new();
+        listBox.Items!.Add("A");
+        listBox.Items!.Add(button);
+        listBox.Items!.Add("B");
+
+        listBox.Items!.Remove(button);
+
+        listBox.Items!.Count.ShouldBe(2);
+        listBox.ListBoxItems.Count.ShouldBe(2);
+        listBox.ListBoxItems[0].BindingContext.ShouldBe("A");
+        listBox.ListBoxItems[1].BindingContext.ShouldBe("B");
+    }
+
+    [Fact]
+    public void Click_OnNonListBoxItem_ShouldNotChangeSelection()
+    {
+        // Issue #556 (the original worry): a non-ListBoxItem mixed into Items must be inert —
+        // clicking it must not deselect the current item or raise SelectionChanged.
+        Gum.Forms.DefaultVisuals.ButtonVisual button = new();
+
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        listBox.Items!.Add("A");
+        listBox.Items!.Add(button);
+        listBox.Items!.Add("B");
+
+        listBox.SelectedObject = "A";
+
+        int fireCount = 0;
+        listBox.SelectionChanged += (_, _) => fireCount++;
+
+        Mock<ICursor> cursor = SetupForPush();
+        var cx = button.GetAbsoluteX() + button.GetAbsoluteWidth() / 2;
+        var cy = button.GetAbsoluteY() + button.GetAbsoluteHeight() / 2;
+        cursor.Setup(c => c.XRespectingGumZoomAndBounds()).Returns(cx);
+        cursor.Setup(c => c.YRespectingGumZoomAndBounds()).Returns(cy);
+        cursor.Setup(c => c.X).Returns((int)cx);
+        cursor.Setup(c => c.Y).Returns((int)cy);
+        cursor.SetupProperty(x => x.VisualOver);
+        cursor.SetupProperty(x => x.WindowPushed);
+
+        GueInteractiveExtensionMethods.DoUiActivityRecursively(listBox.Visual, cursor.Object, null!, 0);
+
+        listBox.SelectedObject.ShouldBe("A");
+        fireCount.ShouldBe(0);
+    }
+
+    [Fact]
     public void Items_InsertAt_ShouldProperlyInsert()
     {
         ListBox listBox = new();
