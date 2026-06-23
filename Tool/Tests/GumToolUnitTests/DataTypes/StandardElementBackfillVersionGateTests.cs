@@ -196,6 +196,28 @@ public class StandardElementBackfillVersionGateTests : BaseTestClass
         variable.MinimumGumxVersion.ShouldBe(0);
     }
 
+    [Theory]
+    // The gate only skips AUTO-injecting a gated variable into a pre-v3 standard. A value the user
+    // explicitly set on a v2 project must survive the load untouched — the back-fill never removes
+    // or rewrites a variable already present in the loaded element. (FRB #1881 maintainer call:
+    // "they should, of course, still work if they were manually set before on V2".)
+    [InlineData("Container", "SourceShaderFile", "Effects/Bloom.fx")]
+    [InlineData("Sprite", "RenderTargetTextureSource", "BackgroundContainer")]
+    public void Initialize_PreservesManuallySetGatedVariable_OnPreV3Project(
+        string standardName, string variableName, string value)
+    {
+        GumProjectSave project = MakeProjectWithBareStandard(standardName, PreV3, "Visible");
+        StateSave loadedDefault = project.StandardElements.Single(e => e.Name == standardName).DefaultState;
+        loadedDefault.Variables.Add(new VariableSave { Name = variableName, Type = "string", Value = value, SetsValue = true });
+
+        project.Initialize();
+
+        VariableSave preserved = project.StandardElements.Single(e => e.Name == standardName).DefaultState
+            .Variables.FirstOrDefault(v => v.Name == variableName);
+        preserved.ShouldNotBeNull();
+        preserved.Value.ShouldBe(value);
+    }
+
     [Fact]
     public void FixStandardVariables_DoesNotThrow_WhenGatedVariablesAreAbsent_OnPreV3Project()
     {
