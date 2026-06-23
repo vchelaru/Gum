@@ -145,6 +145,7 @@
 		<Compile Include="..\SkiaGum\GueDeriving\ArcRuntime.cs" Link="GueDeriving\ArcRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\GueDeriving\NineSliceRuntime.cs" Link="GueDeriving\NineSliceRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\GueDeriving\RectangleRuntime.cs" Link="GueDeriving\RectangleRuntime.cs" />
+		<Compile Include="..\..\MonoGameGum\GueDeriving\ListBoxSeparator.cs" Link="GueDeriving\ListBoxSeparator.cs" />
 		<Compile Include="..\..\MonoGameGum\GueDeriving\PolygonRuntime.cs" Link="GueDeriving\PolygonRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\GumService.cs" Link="GumService.cs" />
 		<Compile Include="..\..\MonoGameGum\GumServiceCompat.cs" Link="GumServiceCompat.cs" />

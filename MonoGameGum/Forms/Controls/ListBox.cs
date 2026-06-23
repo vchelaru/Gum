@@ -927,29 +927,58 @@ public class ListBox : ItemsControl, IInputReceiver
 
                 void MoveItem(int oldIndex, int newIndex)
                 {
-                    var item = Items[oldIndex];
+                    // oldIndex/newIndex are InnerPanel.Children indices. A decoration occupies a
+                    // panel slot but is in neither Items nor ListBoxItemsInternal, so translate to
+                    // each space rather than assuming the three align. See issue #3305.
+                    var draggedListBoxItem = visual.FormsControlAsObject as ListBoxItem;
+                    var targetListBoxItem =
+                        (visual.Parent.Children[newIndex] as InteractiveGue)?.FormsControlAsObject as ListBoxItem;
+
+                    // Dropping onto a decoration (or any non-row visual) is not a reorder; ignore it.
+                    if (draggedListBoxItem == null || targetListBoxItem == null)
+                    {
+                        return;
+                    }
+
+                    int itemsOld = Items.IndexOf(draggedListBoxItem.DataObject);
+                    int itemsNew = Items.IndexOf(targetListBoxItem.DataObject);
+                    if (itemsOld < 0 || itemsNew < 0)
+                    {
+                        return;
+                    }
+
+                    var item = Items[itemsOld];
 
                     _suppressCollectionChangedToBase = true;
 
-                    Items.RemoveAt(oldIndex);
-                    Items.Insert(newIndex, item);
+                    Items.RemoveAt(itemsOld);
+                    Items.Insert(itemsNew, item);
 
                     _suppressCollectionChangedToBase = false;
 
                     var isBound = this.PropertyRegistry.GetBindingExpression(nameof(Items)) != null;
                     if (Items is not INotifyCollectionChanged || !isBound)
                     {
-                        // If we are bound, just move
-                        visual.Parent.Children.Move(oldIndex, newIndex);
-                        var itemToMove = ListBoxItemsInternal[oldIndex];
+                        // Row-space positions for ListBoxItemsInternal, computed against the
+                        // pre-move panel (decorations excluded). See issue #3305.
+                        int rowOld = CountListBoxItemsInPanelBefore(oldIndex);
+                        int rowNew = CountListBoxItemsInPanelBefore(newIndex);
 
-                        var listBoxItemReplaced = ListBoxItemsInternal[newIndex];
+                        // The panel move stays in panel space - both indices are panel indices.
+                        visual.Parent.Children.Move(oldIndex, newIndex);
+                        var itemToMove = ListBoxItemsInternal[rowOld];
+
+                        var listBoxItemReplaced = ListBoxItemsInternal[rowNew];
                         // This probably got highlighted by the cursor when dragging over it, so let's
                         // unhighlight it so it doesn't flicker:
                         listBoxItemReplaced.IsHighlighted = false;
 
-                        ListBoxItemsInternal.RemoveAt(oldIndex);
-                        ListBoxItemsInternal.Insert(newIndex, itemToMove);
+                        ListBoxItemsInternal.RemoveAt(rowOld);
+                        ListBoxItemsInternal.Insert(rowNew, itemToMove);
+
+                        // The moved item visual carried its anchor; reposition any decorations so
+                        // they stay adjacent to their anchor items. See issue #3305.
+                        ReconcileDecorations();
                     }
 
                 }
