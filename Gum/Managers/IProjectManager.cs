@@ -23,4 +23,10 @@ public interface IProjectManager
     bool SaveProject(bool forceSaveContainedElements = false);
     string MakeAbsoluteIfNecessary(string textureAsString);
     bool AskUserForProjectNameIfNecessary(out bool isProjectNew);
+
+    /// <summary>
+    /// Shows a dialog informing the user that the given file is read-only and
+    /// offers to open the folder containing it.
+    /// </summary>
+    void ShowReadOnlyDialog(string fileName);
 }

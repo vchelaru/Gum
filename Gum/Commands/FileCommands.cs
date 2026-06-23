@@ -280,7 +280,7 @@ public class FileCommands : IFileCommands
 
                 if (isReadOnly)
                 {
-                    ProjectManager.ShowReadOnlyDialog(fileName.FullPath);
+                    _projectManager.ShowReadOnlyDialog(fileName.FullPath);
                 }
                 else
                 {
@@ -493,7 +493,7 @@ public class FileCommands : IFileCommands
 
                 if (isReadOnly)
                 {
-                    ProjectManager.ShowReadOnlyDialog(fileName);
+                    _projectManager.ShowReadOnlyDialog(fileName);
                 }
                 else
                 {
