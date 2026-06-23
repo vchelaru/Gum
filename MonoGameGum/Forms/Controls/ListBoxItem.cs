@@ -61,6 +61,15 @@ public class ListBoxItem :
         }
     }
 
+    /// <summary>
+    /// The object in the owning ListBox's Items collection that this row represents. For a data
+    /// item this is the bound data object; for a ListBoxItem added directly it is the item itself.
+    /// The ListBox resolves selection by this reference rather than assuming Items and
+    /// ListBoxItems share an index, so a non-ListBoxItem visual mixed into the list cannot drift
+    /// selection onto the wrong object. See issue #556.
+    /// </summary>
+    internal object? DataObject { get; set; }
+
     #endregion
 
     #region Events

@@ -225,8 +225,10 @@ public class Menu : ItemsControl
     //}
 
 
-    protected override void HandleCollectionItemRemoved(int inexToRemoveFrom)
+    protected override void HandleCollectionItemRemoved(int inexToRemoveFrom, FrameworkElement removedItem)
     {
+        // removedItem is accepted to match the base signature (issue #556 reworked ListBox to
+        // remove by reference). Menu keeps its existing index-based removal unchanged.
         MenuItemsInternal.RemoveAt(inexToRemoveFrom);
     }
 

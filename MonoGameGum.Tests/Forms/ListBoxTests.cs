@@ -413,6 +413,122 @@ public class ListBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void Items_AddListBoxItemAfterNonListBoxItem_ShouldNotThrowAndStayInSync()
+    {
+        // Issue #556: a non-ListBoxItem visual (here a Button) added to Items occupies an
+        // InnerPanel slot but NOT a ListBoxItemsInternal slot. Adding a real item after it
+        // used to call ListBoxItemsInternal.Insert at the InnerPanel index (2) on a
+        // 1-element list, throwing ArgumentOutOfRangeException during the add.
+        Gum.Forms.DefaultVisuals.ButtonVisual button = new();
+
+        ListBox listBox = new();
+        listBox.Items!.Add("A");
+        listBox.Items!.Add(button);
+
+        Should.NotThrow(() => listBox.Items!.Add("B"));
+
+        listBox.Items!.Count.ShouldBe(3);
+        listBox.ListBoxItems.Count.ShouldBe(2);
+        listBox.ListBoxItems[0].BindingContext.ShouldBe("A");
+        listBox.ListBoxItems[1].BindingContext.ShouldBe("B");
+    }
+
+    [Fact]
+    public void Items_SelectRowAfterNonListBoxItem_ShouldResolveCorrectDataObject()
+    {
+        // Issue #556: selection resolved the data object by index alignment between
+        // ListBoxItemsInternal and Items (Items[ListBoxItemsInternal.IndexOf(item)]). With a
+        // non-ListBoxItem (Button) between two real items, selecting the second real row
+        // resolved to the Button instead of "B". Selection must resolve by reference.
+        Gum.Forms.DefaultVisuals.ButtonVisual button = new();
+
+        ListBox listBox = new();
+        listBox.Items!.Add("A");
+        listBox.Items!.Add(button);
+        listBox.Items!.Add("B");
+
+        listBox.ListBoxItems[1].IsSelected = true;
+
+        listBox.SelectedObject.ShouldBe("B");
+    }
+
+    [Fact]
+    public void Items_RemoveRealItemAfterNonListBoxItem_ShouldRemoveTheCorrectRow()
+    {
+        // Issue #556 (negative path): removing a real item that sits after a non-ListBoxItem used to
+        // remove the WRONG ListBoxItem — the #1380 bounds-check band-aid removed at the InnerPanel
+        // index, which is offset by the non-ListBoxItem. Removal is now by reference.
+        Gum.Forms.DefaultVisuals.ButtonVisual button = new();
+
+        ListBox listBox = new();
+        listBox.Items!.Add("A");
+        listBox.Items!.Add(button);
+        listBox.Items!.Add("B");
+        listBox.Items!.Add("C");
+
+        listBox.Items!.Remove("B");
+
+        listBox.ListBoxItems.Count.ShouldBe(2);
+        listBox.ListBoxItems[0].BindingContext.ShouldBe("A");
+        listBox.ListBoxItems[1].BindingContext.ShouldBe("C");
+    }
+
+    [Fact]
+    public void Items_RemoveNonListBoxItem_ShouldNotRemoveAnyRow()
+    {
+        // Issue #556 (negative path): removing the non-ListBoxItem itself must not drop a real row.
+        // The old index-based removal would RemoveAt the non-ListBoxItem's InnerPanel index and take
+        // a real ListBoxItem with it.
+        Gum.Forms.DefaultVisuals.ButtonVisual button = new();
+
+        ListBox listBox = new();
+        listBox.Items!.Add("A");
+        listBox.Items!.Add(button);
+        listBox.Items!.Add("B");
+
+        listBox.Items!.Remove(button);
+
+        listBox.Items!.Count.ShouldBe(2);
+        listBox.ListBoxItems.Count.ShouldBe(2);
+        listBox.ListBoxItems[0].BindingContext.ShouldBe("A");
+        listBox.ListBoxItems[1].BindingContext.ShouldBe("B");
+    }
+
+    [Fact]
+    public void Click_OnNonListBoxItem_ShouldNotChangeSelection()
+    {
+        // Issue #556 (the original worry): a non-ListBoxItem mixed into Items must be inert —
+        // clicking it must not deselect the current item or raise SelectionChanged.
+        Gum.Forms.DefaultVisuals.ButtonVisual button = new();
+
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        listBox.Items!.Add("A");
+        listBox.Items!.Add(button);
+        listBox.Items!.Add("B");
+
+        listBox.SelectedObject = "A";
+
+        int fireCount = 0;
+        listBox.SelectionChanged += (_, _) => fireCount++;
+
+        Mock<ICursor> cursor = SetupForPush();
+        var cx = button.GetAbsoluteX() + button.GetAbsoluteWidth() / 2;
+        var cy = button.GetAbsoluteY() + button.GetAbsoluteHeight() / 2;
+        cursor.Setup(c => c.XRespectingGumZoomAndBounds()).Returns(cx);
+        cursor.Setup(c => c.YRespectingGumZoomAndBounds()).Returns(cy);
+        cursor.Setup(c => c.X).Returns((int)cx);
+        cursor.Setup(c => c.Y).Returns((int)cy);
+        cursor.SetupProperty(x => x.VisualOver);
+        cursor.SetupProperty(x => x.WindowPushed);
+
+        GueInteractiveExtensionMethods.DoUiActivityRecursively(listBox.Visual, cursor.Object, null!, 0);
+
+        listBox.SelectedObject.ShouldBe("A");
+        fireCount.ShouldBe(0);
+    }
+
+    [Fact]
     public void Items_InsertAt_ShouldProperlyInsert()
     {
         ListBox listBox = new();
@@ -1563,6 +1679,81 @@ public class ListBoxTests : BaseTestClass
         listBox.OnFocusUpdate();
 
         listBox.DoListItemsHaveFocus.ShouldBeTrue();
+    }
+
+    private class DisplayItem
+    {
+        public string Name { get; set; } = "";
+        public override string ToString() => Name;
+    }
+
+    [Fact]
+    public void DisplayMemberPath_WithNonListBoxItemInItems_ShouldUpdateRowsByReference()
+    {
+        // Issue #556: the DisplayMemberPath setter walked Items[i]/ListBoxItems[i] in parallel,
+        // which misaligns (and goes out of range) when a non-ListBoxItem is in Items. It must
+        // resolve each row's data object by reference.
+        Gum.Forms.DefaultVisuals.ButtonVisual button = new();
+
+        ListBox listBox = new();
+        listBox.Items!.Add(new DisplayItem { Name = "Alpha" });
+        listBox.Items!.Add(button);
+        listBox.Items!.Add(new DisplayItem { Name = "Beta" });
+
+        listBox.DisplayMemberPath = "Name";
+
+        listBox.ListBoxItems.Count.ShouldBe(2);
+        listBox.ListBoxItems[0].ToString().ShouldBe("Alpha");
+        listBox.ListBoxItems[1].ToString().ShouldBe("Beta");
+    }
+
+    [Fact]
+    public void DoListItemsHaveFocus_SetTrueWhenSelectedRowAfterNonListBoxItem_ShouldNotThrow()
+    {
+        // Issue #556: SelectedIndex is an Items-space index; with a non-ListBoxItem (Button) in
+        // Items it can exceed ListBoxItemsInternal.Count. DoListItemsHaveFocus indexed
+        // ListBoxItemsInternal by SelectedIndex and threw. It must resolve the row by reference.
+        Gum.Forms.DefaultVisuals.ButtonVisual button = new();
+
+        ListBox listBox = new();
+        listBox.Items!.Add("A");
+        listBox.Items!.Add(button);
+        listBox.Items!.Add("B");
+
+        listBox.SelectedObject = "B"; // SelectedIndex == 2 in Items space, but only 2 rows exist
+
+        Should.NotThrow(() => listBox.DoListItemsHaveFocus = true);
+
+        listBox.ListBoxItems[1].IsFocused.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void DownArrow_WithNonListBoxItemBetweenRows_ShouldSelectNextRowNotTheNonListBoxItem()
+    {
+        // Issue #556: arrow navigation moved SelectedIndex in Items space and then indexed
+        // ListBoxItemsInternal with it, so a non-ListBoxItem (Button) in Items made the selection
+        // land on the unselectable Button instead of the next real row.
+        Gum.Forms.DefaultVisuals.ButtonVisual button = new();
+
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        listBox.Items!.Add("A");
+        listBox.Items!.Add(button);
+        listBox.Items!.Add("B");
+
+        listBox.SelectedObject = "A";
+        listBox.DoListItemsHaveFocus = true;
+
+        Mock<IInputReceiverKeyboardMonoGame> keyboard = new();
+        keyboard.As<IInputReceiverKeyboard>()
+            .Setup(k => k.KeyTyped(Gum.Forms.Input.Keys.Down)).Returns(true);
+        keyboard.As<IInputReceiverKeyboard>()
+            .Setup(k => k.KeysTyped).Returns(new List<Gum.Forms.Input.Keys>());
+        FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
+
+        listBox.OnFocusUpdate();
+
+        listBox.SelectedObject.ShouldBe("B");
     }
 
     [Fact]

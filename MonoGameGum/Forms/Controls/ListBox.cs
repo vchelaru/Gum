@@ -199,9 +199,12 @@ public class ListBox : ItemsControl, IInputReceiver
 
             doListBoxItemsHaveFocus = value;
 
-            if (SelectedIndex > -1 && SelectedIndex < ListBoxItemsInternal.Count)
+            // SelectedIndex is an Items-space index; resolve the focused row by reference so a
+            // non-ListBoxItem visual in Items can't push the index out of range (issue #556).
+            var selectedRowIndex = GetRowIndexForData(SelectedObject);
+            if (selectedRowIndex > -1 && selectedRowIndex < ListBoxItemsInternal.Count)
             {
-                ListBoxItemsInternal[SelectedIndex].IsFocused = doListBoxItemsHaveFocus;
+                ListBoxItemsInternal[selectedRowIndex].IsFocused = doListBoxItemsHaveFocus;
             }
         }
     }
@@ -442,23 +445,22 @@ public class ListBox : ItemsControl, IInputReceiver
             {
                 base.DisplayMemberPath = value;
 
-                for(int i = 0; i < Items.Count; i++)
+                foreach (var listBoxItem in ListBoxItemsInternal)
                 {
-                    var listBoxItem = ListBoxItems[i];
+                    // Resolve each row's data object by reference, not Items[i] (issue #556).
+                    var item = listBoxItem.DataObject;
 
                     if(value == string.Empty)
                     {
-                        listBoxItem.UpdateToObject(Items[i]);
+                        listBoxItem.UpdateToObject(item);
                     }
                     else
                     {
-                        var item = Items[i];
-                        var display = item.GetType()
+                        var display = item?.GetType()
                             .GetProperty(DisplayMemberPath)
-                            .GetValue(item, null) as string;
+                            ?.GetValue(item, null) as string;
                         listBoxItem.UpdateToObject(display);
                     }
-
                 }
             }
         }
@@ -541,6 +543,8 @@ public class ListBox : ItemsControl, IInputReceiver
             {
                 if(item is InteractiveGue interactiveGue && interactiveGue.FormsControlAsObject is ListBoxItem listBoxItem)
                 {
+                    // A directly-added ListBoxItem is its own backing object in Items (issue #556).
+                    listBoxItem.DataObject = listBoxItem;
                     this.Items.Add(listBoxItem);
                     if(this.Items is not INotifyCollectionChanged )
                     {
@@ -569,6 +573,8 @@ public class ListBox : ItemsControl, IInputReceiver
         {
             // the user provided a list box item, so just use that directly instead of creating a new one
             item = (ListBoxItem)o;
+            // The item IS its own backing object in the Items collection (issue #556).
+            item.DataObject = o;
         }
         else
         {
@@ -587,6 +593,7 @@ public class ListBox : ItemsControl, IInputReceiver
             CallUpdateToObject(o, item);
 
             item.BindingContext = o;
+            item.DataObject = o;
         }
 
         return item;
@@ -684,13 +691,16 @@ public class ListBox : ItemsControl, IInputReceiver
             return;
         }
 
-        var clickedIndex = ListBoxItemsInternal.IndexOf(listBoxItem);
-        if (clickedIndex < 0 || clickedIndex >= Items.Count)
+        // Resolve the clicked data object by reference, not by assuming ListBoxItemsInternal and
+        // Items share an index (issue #556). clickedRowIndex is in ListBoxItem-row space and is used
+        // only for Extended-mode range selection, which also operates in row space.
+        var clickedRowIndex = ListBoxItemsInternal.IndexOf(listBoxItem);
+        if (clickedRowIndex < 0)
         {
             return;
         }
 
-        var clickedItem = Items[clickedIndex];
+        var clickedItem = listBoxItem.DataObject;
 
         // Check if modifier keys are pressed (only for mouse/pointer input)
         bool isCtrlDown = false;
@@ -776,19 +786,21 @@ public class ListBox : ItemsControl, IInputReceiver
                     if (selectedItemsCollection.Count > 0)
                     {
                         var anchorItem = selectedItemsCollection[0];
-                        var anchorIndex = Items.IndexOf(anchorItem);
+                        // Range is computed in ListBoxItem-row space so non-ListBoxItem visuals
+                        // don't shift or corrupt it (issue #556).
+                        var anchorRowIndex = GetRowIndexForData(anchorItem);
 
-                        if (anchorIndex >= 0)
+                        if (anchorRowIndex >= 0)
                         {
-                            var minIndex = System.Math.Min(anchorIndex, clickedIndex);
-                            var maxIndex = System.Math.Max(anchorIndex, clickedIndex);
+                            var minIndex = System.Math.Min(anchorRowIndex, clickedRowIndex);
+                            var maxIndex = System.Math.Max(anchorRowIndex, clickedRowIndex);
 
-                            // Select all enabled items in range
+                            // Select all enabled rows in range
                             for (int i = minIndex; i <= maxIndex; i++)
                             {
                                 if (i < ListBoxItemsInternal.Count && ListBoxItemsInternal[i].IsEnabled)
                                 {
-                                    var itemInRange = Items[i];
+                                    var itemInRange = ListBoxItemsInternal[i].DataObject;
                                     if (!selectedItemsCollection.Contains(itemInRange))
                                     {
                                         selectedItemsCollection.Add(itemInRange);
@@ -947,6 +959,65 @@ public class ListBox : ItemsControl, IInputReceiver
 
     #endregion
 
+    #region Reference resolution helpers (issue #556)
+
+    // Items, ListBoxItemsInternal, and InnerPanel.Children are three different index spaces that
+    // only line up when every Items entry maps 1:1 to a ListBoxItem. A non-ListBoxItem visual mixed
+    // into the list breaks that alignment, so selection/sync/nav resolve by reference through these
+    // helpers instead of cross-indexing the collections.
+
+    /// <summary>
+    /// Returns the index in ListBoxItemsInternal (row space) of the row whose backing data object
+    /// matches <paramref name="data"/>, or -1. SelectedIndex is an Items-space index and must not be
+    /// used to index ListBoxItemsInternal when non-ListBoxItem visuals are present.
+    /// </summary>
+    private int GetRowIndexForData(object? data)
+    {
+        for (int i = 0; i < ListBoxItemsInternal.Count; i++)
+        {
+            if (Equals(ListBoxItemsInternal[i].DataObject, data))
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /// <summary>
+    /// Returns the ListBoxItem whose backing data object matches <paramref name="data"/>, or null.
+    /// </summary>
+    private ListBoxItem? GetListBoxItemForData(object? data)
+    {
+        var row = GetRowIndexForData(data);
+        return row >= 0 ? ListBoxItemsInternal[row] : null;
+    }
+
+    /// <summary>
+    /// Counts the ListBoxItems among InnerPanel.Children before <paramref name="panelIndex"/>.
+    /// Translates an InnerPanel index (which may include non-ListBoxItem visuals) into the matching
+    /// ListBoxItemsInternal insert position.
+    /// </summary>
+    private int CountListBoxItemsInPanelBefore(int panelIndex)
+    {
+        var children = InnerPanel?.Children;
+        if (children == null)
+        {
+            return 0;
+        }
+        int limit = System.Math.Min(panelIndex, children.Count);
+        int count = 0;
+        for (int i = 0; i < limit; i++)
+        {
+            if ((children[i] as InteractiveGue)?.FormsControlAsObject is ListBoxItem)
+            {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    #endregion
+
     #region Selection Synchronization
 
     /// <summary>
@@ -966,7 +1037,8 @@ public class ListBox : ItemsControl, IInputReceiver
         for (int i = 0; i < ListBoxItemsInternal.Count; i++)
         {
             var listBoxItem = ListBoxItemsInternal[i];
-            var item = i < (Items?.Count ?? 0) ? Items![i] : listBoxItem;
+            // Resolve each row's data object by reference, not by Items[i] (issue #556).
+            var item = listBoxItem.DataObject;
 
             bool shouldBeSelected = selectedItemsCollection.Contains(item);
 
@@ -1019,15 +1091,12 @@ public class ListBox : ItemsControl, IInputReceiver
                 {
                     foreach (var item in e.NewItems)
                     {
-                        var index = Items?.IndexOf(item) ?? -1;
-                        if (index >= 0 && index < ListBoxItemsInternal.Count)
+                        // Find the row by reference, not by Items.IndexOf -> ListBoxItemsInternal[i] (issue #556).
+                        var listBoxItem = GetListBoxItemForData(item);
+                        if (listBoxItem != null && !listBoxItem.IsSelected)
                         {
-                            var listBoxItem = ListBoxItemsInternal[index];
-                            if (!listBoxItem.IsSelected)
-                            {
-                                listBoxItem.IsSelected = true;
-                                selectionChangedArgs.AddedItems.Add(item);
-                            }
+                            listBoxItem.IsSelected = true;
+                            selectionChangedArgs.AddedItems.Add(item);
                         }
                     }
                 }
@@ -1038,15 +1107,11 @@ public class ListBox : ItemsControl, IInputReceiver
                 {
                     foreach (var item in e.OldItems)
                     {
-                        var index = Items?.IndexOf(item) ?? -1;
-                        if (index >= 0 && index < ListBoxItemsInternal.Count)
+                        var listBoxItem = GetListBoxItemForData(item);
+                        if (listBoxItem != null && listBoxItem.IsSelected)
                         {
-                            var listBoxItem = ListBoxItemsInternal[index];
-                            if (listBoxItem.IsSelected)
-                            {
-                                listBoxItem.IsSelected = false;
-                                selectionChangedArgs.RemovedItems.Add(item);
-                            }
+                            listBoxItem.IsSelected = false;
+                            selectionChangedArgs.RemovedItems.Add(item);
                         }
                     }
                 }
@@ -1060,8 +1125,7 @@ public class ListBox : ItemsControl, IInputReceiver
                     if (listBoxItem.IsSelected)
                     {
                         listBoxItem.IsSelected = false;
-                        var item = i < (Items?.Count ?? 0) ? Items![i] : listBoxItem;
-                        selectionChangedArgs.RemovedItems.Add(item);
+                        selectionChangedArgs.RemovedItems.Add(listBoxItem.DataObject);
                     }
                 }
                 break;
@@ -1071,15 +1135,11 @@ public class ListBox : ItemsControl, IInputReceiver
                 {
                     foreach (var item in e.OldItems)
                     {
-                        var index = Items?.IndexOf(item) ?? -1;
-                        if (index >= 0 && index < ListBoxItemsInternal.Count)
+                        var listBoxItem = GetListBoxItemForData(item);
+                        if (listBoxItem != null && listBoxItem.IsSelected)
                         {
-                            var listBoxItem = ListBoxItemsInternal[index];
-                            if (listBoxItem.IsSelected)
-                            {
-                                listBoxItem.IsSelected = false;
-                                selectionChangedArgs.RemovedItems.Add(item);
-                            }
+                            listBoxItem.IsSelected = false;
+                            selectionChangedArgs.RemovedItems.Add(item);
                         }
                     }
                 }
@@ -1087,15 +1147,11 @@ public class ListBox : ItemsControl, IInputReceiver
                 {
                     foreach (var item in e.NewItems)
                     {
-                        var index = Items?.IndexOf(item) ?? -1;
-                        if (index >= 0 && index < ListBoxItemsInternal.Count)
+                        var listBoxItem = GetListBoxItemForData(item);
+                        if (listBoxItem != null && !listBoxItem.IsSelected)
                         {
-                            var listBoxItem = ListBoxItemsInternal[index];
-                            if (!listBoxItem.IsSelected)
-                            {
-                                listBoxItem.IsSelected = true;
-                                selectionChangedArgs.AddedItems.Add(item);
-                            }
+                            listBoxItem.IsSelected = true;
+                            selectionChangedArgs.AddedItems.Add(item);
                         }
                     }
                 }
@@ -1187,7 +1243,11 @@ public class ListBox : ItemsControl, IInputReceiver
     {
         if (newItem is ListBoxItem listBoxItem)
         {
-            ListBoxItemsInternal.Insert(newItemIndex, listBoxItem);
+            // newItemIndex is the InnerPanel.Children index, which may include non-ListBoxItem
+            // visuals (issue #556). Translate it to the matching ListBoxItemsInternal position so a
+            // ListBoxItem added after a non-ListBoxItem doesn't insert at an out-of-range index.
+            var internalIndex = CountListBoxItemsInPanelBefore(newItemIndex);
+            ListBoxItemsInternal.Insert(internalIndex, listBoxItem);
             listBoxItem.AssignListBoxEvents(
                 HandleItemSelected,
                 HandleItemFocused,
@@ -1202,6 +1262,8 @@ public class ListBox : ItemsControl, IInputReceiver
 
             if (!_isAddingFromItemsCollection && !Items.Contains(listBoxItem))
             {
+                // Directly-added ListBoxItem is its own backing object in Items (issue #556).
+                listBoxItem.DataObject = listBoxItem;
                 Items.Insert(newItemIndex, listBoxItem);
             }
         }
@@ -1209,24 +1271,19 @@ public class ListBox : ItemsControl, IInputReceiver
 
 
     /// <summary>
-    /// Handles the removal of an item from the Items collection at the specified index by also
-    /// removing the corresponding ListBoxItem from the internal ListBoxItemsInternal collection.
+    /// Removes the ListBoxItem corresponding to a removed visual from ListBoxItemsInternal.
     /// </summary>
-    /// <param name="indexToRemoveFrom">The index in the Items collection.</param>
-    protected override void HandleCollectionItemRemoved(int indexToRemoveFrom)
+    /// <param name="indexToRemoveFrom">The InnerPanel.Children index the visual was removed from. Unused; kept for the base contract.</param>
+    /// <param name="removedItem">The FrameworkElement whose visual was removed.</param>
+    protected override void HandleCollectionItemRemoved(int indexToRemoveFrom, FrameworkElement removedItem)
     {
-        // indexToRemoveFrom is the index of the index in the Items list. 
-        // See the ListBoxItems for information on why this index many not
-        // align with ListBoxItemsInternal.
-        // A full solution should probably start from the top of the controls and count
-        // through all of them to find the ListBoxItems, but we can quickly solve this bug
-        // with a bounds check:
-        // https://github.com/vchelaru/Gum/issues/1380#issuecomment-3736165558
-        // This also is covered in a unit test:
-        // Items_Clear_ShouldWorkWhenAddingButtonVisual
-        if(indexToRemoveFrom < ListBoxItemsInternal.Count)
+        // Remove by reference, not by index (issue #556). The InnerPanel index can include
+        // non-ListBoxItem visuals, and removedItem may itself be a non-ListBoxItem (e.g. a Button)
+        // that was never in ListBoxItemsInternal — in which case there is nothing to remove. This
+        // supersedes the bounds-check band-aid from #1380, which could remove the wrong row.
+        if (removedItem is ListBoxItem listBoxItem)
         {
-            ListBoxItemsInternal.RemoveAt(indexToRemoveFrom);
+            ListBoxItemsInternal.Remove(listBoxItem);
         }
     }
 
@@ -1237,7 +1294,13 @@ public class ListBox : ItemsControl, IInputReceiver
 
     protected override void HandleCollectionReplace(int index)
     {
-        ListBoxItemsInternal[index].UpdateToObject(Items[index]);
+        // index is an InnerPanel.Children index that may include non-ListBoxItem visuals (issue
+        // #556). This path is only reached when InnerPanel.Children is replaced directly; guard the
+        // bounds so a mismatch between the collections can't throw.
+        if (index >= 0 && index < ListBoxItemsInternal.Count && index < (Items?.Count ?? 0))
+        {
+            ListBoxItemsInternal[index].UpdateToObject(Items[index]);
+        }
     }
 
 
@@ -1278,7 +1341,15 @@ public class ListBox : ItemsControl, IInputReceiver
     {
         if (itemIndex != -1)
         {
-            var visual = ListBoxItemsInternal[itemIndex];
+            // itemIndex is an Items-space index; map it to the matching row by reference, since
+            // ListBoxItemsInternal may not align with Items when non-ListBoxItem visuals are
+            // present (issue #556).
+            var data = itemIndex >= 0 && itemIndex < (Items?.Count ?? 0) ? Items![itemIndex] : null;
+            var visual = data != null ? GetListBoxItemForData(data) : null;
+            if (visual == null)
+            {
+                return;
+            }
 
             var visualAsIpso = (IPositionedSizedObject)visual.Visual;
             var visualTop = visualAsIpso.Y;
@@ -1703,9 +1774,12 @@ public class ListBox : ItemsControl, IInputReceiver
         if (wraps && direction != null)
         {
 
-            if (SelectedIndex > -1 && SelectedIndex < ListBoxItems.Count)
+            // Navigate in ListBoxItem-row space (issue #556): SelectedIndex is an Items-space index
+            // and GetListBoxIndexAt returns a row index, so the two must not be cross-assigned.
+            var currentRow = GetRowIndexForData(SelectedObject);
+            if (currentRow > -1 && currentRow < ListBoxItemsInternal.Count)
             {
-                var currentSelection = this.ListBoxItemsInternal[SelectedIndex].Visual;
+                var currentSelection = this.ListBoxItemsInternal[currentRow].Visual;
 
                 var offsetToCheck = InnerPanel.StackSpacing + AdditionalOffsetToCheckForDPadNavigation;
 
@@ -1737,14 +1811,16 @@ public class ListBox : ItemsControl, IInputReceiver
 
                 if (index != null)
                 {
-                    SelectedIndex = index.Value;
-                    this.ListBoxItemsInternal[SelectedIndex].IsFocused = true;
+                    // index is a row index; select that row's data via its Items index so selection
+                    // and scroll-into-view stay correct without cross-indexing (issue #556).
+                    SelectedIndex = Items!.IndexOf(ListBoxItemsInternal[index.Value].DataObject);
+                    this.ListBoxItemsInternal[index.Value].IsFocused = true;
                 }
             }
-            else
+            else if (ListBoxItemsInternal.Count > 0)
             {
-                SelectedIndex = 0;
-                this.ListBoxItemsInternal[SelectedIndex].IsFocused = true;
+                SelectedIndex = Items!.IndexOf(ListBoxItemsInternal[0].DataObject);
+                this.ListBoxItemsInternal[0].IsFocused = true;
             }
 
             // The fallback behavior is kinda confusing, so let's just handle it if it wraps.
@@ -1758,42 +1834,48 @@ public class ListBox : ItemsControl, IInputReceiver
         {
             if (direction == RepositionDirections.Down || direction == RepositionDirections.Right)
             {
-                if (Items.Count > 0)
+                if (ListBoxItemsInternal.Count > 0)
                 {
-                    if (SelectedIndex < 0 && Items.Count > 0)
+                    // Move through rows (ListBoxItem space) so non-ListBoxItem visuals are skipped and
+                    // ListBoxItemsInternal is never indexed by an Items-space index (issue #556).
+                    var currentRow = GetRowIndexForData(SelectedObject);
+                    if (currentRow < 0)
                     {
-                        SelectedIndex = 0;
+                        currentRow = 0;
                     }
-                    else if (SelectedIndex < Items.Count - 1)
+                    else if (currentRow < ListBoxItemsInternal.Count - 1)
                     {
-                        SelectedIndex++;
+                        currentRow++;
                     }
-                    this.ListBoxItemsInternal[SelectedIndex].IsFocused = true;
+                    SelectedIndex = Items!.IndexOf(ListBoxItemsInternal[currentRow].DataObject);
+                    this.ListBoxItemsInternal[currentRow].IsFocused = true;
                 }
             }
             else if (direction == RepositionDirections.Up || direction == RepositionDirections.Left)
             {
-                if (Items.Count > 0)
+                if (ListBoxItemsInternal.Count > 0)
                 {
-                    if (SelectedIndex < 0 && Items.Count > 0)
+                    var currentRow = GetRowIndexForData(SelectedObject);
+                    if (currentRow < 0)
                     {
-                        SelectedIndex = 0;
+                        currentRow = 0;
                     }
-                    else if (SelectedIndex > 0)
+                    else if (currentRow > 0)
                     {
-                        SelectedIndex--;
+                        currentRow--;
                     }
-
-                    this.ListBoxItemsInternal[SelectedIndex].IsFocused = true;
+                    SelectedIndex = Items!.IndexOf(ListBoxItemsInternal[currentRow].DataObject);
+                    this.ListBoxItemsInternal[currentRow].IsFocused = true;
                 }
             }
         }
 
         if (pressedButton)
         {
-            if(SelectedIndex != -1)
+            var selectedRow = GetRowIndexForData(SelectedObject);
+            if(selectedRow != -1)
             {
-                HandleListBoxItemPushed(this.ListBoxItemsInternal[SelectedIndex], EventArgs.Empty);
+                HandleListBoxItemPushed(this.ListBoxItemsInternal[selectedRow], EventArgs.Empty);
             }
             if (CanListItemsLoseFocus)
             {
