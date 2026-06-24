@@ -36,6 +36,7 @@ using Gum.Logic.FileWatch;
 using Gum.Controls;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Plugins.InternalPlugins.Hotkey.ViewModels;
+using Gum.PropertyGridHelpers;
 
 namespace Gum.Plugins;
 
@@ -886,6 +887,18 @@ public class PluginManager : IPluginManager
             // deps are already bridged above).
             batch.AddExportedValue<IDispatcher>(Locator.GetRequiredService<IDispatcher>());
             batch.AddExportedValue<IWireframeObjectManager>(Locator.GetRequiredService<IWireframeObjectManager>());
+
+            // Heavy-tier ctor drains (combined PR): MainTextureCoordinatePlugin and MainStatePlugin,
+            // which share IHotkeyManager. MainTextureCoordinatePlugin adds ISetVariableLogic;
+            // MainStatePlugin adds IEditCommands, ICopyPasteLogic, IVariableInCategoryPropagationLogic.
+            // Their remaining ctor-time deps (ISelectedState, IGuiCommands, IFileCommands, IElementCommands,
+            // IDialogService, IWireframeCommands, IUndoManager, ITabManager, IProjectManager,
+            // IFileWatchManager, IMessenger) are already bridged above.
+            batch.AddExportedValue<ISetVariableLogic>(Locator.GetRequiredService<ISetVariableLogic>());
+            batch.AddExportedValue<IHotkeyManager>(Locator.GetRequiredService<IHotkeyManager>());
+            batch.AddExportedValue<IEditCommands>(Locator.GetRequiredService<IEditCommands>());
+            batch.AddExportedValue<ICopyPasteLogic>(Locator.GetRequiredService<ICopyPasteLogic>());
+            batch.AddExportedValue<IVariableInCategoryPropagationLogic>(Locator.GetRequiredService<IVariableInCategoryPropagationLogic>());
 
 
             var container = new CompositionContainer(catalog);

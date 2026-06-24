@@ -25,8 +25,8 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
     #region Fields/Properties
 
     PluginTab textureCoordinatePluginTab = default!;
-    ISelectedState _selectedState;
-    IWireframeCommands _wireframeCommands;
+    readonly ISelectedState _selectedState;
+    readonly IWireframeCommands _wireframeCommands;
     TextureCoordinateDisplayController _displayController;
     MainControlViewModel _viewModel;
     ExposedTextureCoordinateLogic _exposedCoordinateLogic;
@@ -46,33 +46,44 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
 
     #endregion
 
-    public MainTextureCoordinatePlugin()
+    [ImportingConstructor]
+    public MainTextureCoordinatePlugin(
+        ISelectedState selectedState,
+        IWireframeCommands wireframeCommands,
+        IUndoManager undoManager,
+        IGuiCommands guiCommands,
+        IFileCommands fileCommands,
+        ISetVariableLogic setVariableLogic,
+        ITabManager tabManager,
+        IHotkeyManager hotkeyManager,
+        IProjectManager projectManager,
+        IFileWatchManager fileWatchManager,
+        IMessenger messenger)
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _wireframeCommands = Locator.GetRequiredService<IWireframeCommands>();
+        _selectedState = selectedState;
+        _wireframeCommands = wireframeCommands;
 
         _displayController = new TextureCoordinateDisplayController(
-            Locator.GetRequiredService<ISelectedState>(),
-            Locator.GetRequiredService<IUndoManager>(),
-            Locator.GetRequiredService<IGuiCommands>(),
-            Locator.GetRequiredService<IFileCommands>(),
-            Locator.GetRequiredService<ISetVariableLogic>(),
-            Locator.GetRequiredService<ITabManager>(),
-            Locator.GetRequiredService<IHotkeyManager>(),
+            selectedState,
+            undoManager,
+            guiCommands,
+            fileCommands,
+            setVariableLogic,
+            tabManager,
+            hotkeyManager,
             new ScrollBarLogicWpf());
 
         _viewModel = new (
-            Locator.GetRequiredService<IProjectManager>(),
-            Locator.GetRequiredService<IFileCommands>(),
-            Locator.GetRequiredService<IFileWatchManager>(),
-            Locator.GetRequiredService<IGuiCommands>(),
+            projectManager,
+            fileCommands,
+            fileWatchManager,
+            guiCommands,
             _displayController);
-        
 
+        messenger.RegisterAll(this);
 
-        Locator.GetRequiredService<IMessenger>().RegisterAll(this);
-
-
+        // ObjectFinder is the sanctioned static singleton; this Locator call resolves
+        // ObjectFinder.Self and is intentionally not drained.
         _exposedCoordinateLogic = new ExposedTextureCoordinateLogic(
             Locator.GetRequiredService<IObjectFinder>());
     }
