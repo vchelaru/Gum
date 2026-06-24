@@ -333,7 +333,9 @@ drains. Grep counts name *text*, not *drain targets*; classify each hit by where
 - **`RenderingLibrary`/`InputLibrary` runtime singletons (~130) — scoped OUT (sanctioned).** The old
   open question is resolved: `Renderer`, `ShapeManager`, `SpriteManager`, `TimeManager`,
   `LoaderManager`, `Cursor`, `Keyboard` are shared across all runtimes → `ObjectFinder` treatment,
-  not a tool-DI drain.
+  not a tool-DI drain. The drain line is **ownership** — tool-owned singletons stay in scope,
+  runtime-owned ones do not; the permanent form of this rule lives in the `refactoring-direction`
+  skill (rule 4).
 - **`StandardElementsManager` (51) — NOT a drain; `ObjectFinder`-class.** It lives in `GumDataTypes`
   (excluded from `Gum.csproj`, compiled via GumCommon) and is `.Self`-used across runtimes
   (`GumService`, Skia/Raylib/Sokol `SystemManagers`), `Gum.ProjectServices`, `Gum.Cli`, and ~30 test
@@ -364,6 +366,30 @@ few method-body/`StartUp` lookups noted above). **Phase 2 as a whole is still ea
 the visible plugin entry points are now injected, but the ~224 `Locator` fallback sites behind them —
 inside the services those plugins consume — are largely untouched. Don't read "all plugins drained" as
 "Phase 2 nearly done"; the next front is the service-layer self-location, not more plugins.
+
+### Next up (post-plugin Phase 2) — added 2026-06-24
+
+The plugin ctor-drain pass is done and the runtime singletons are scoped out, so the next front is
+the **service layer**: the ~90 drainable *tool-DI* `.Self` sites and the ~224
+`Locator.GetRequiredService` fallback sites *inside* the services the plugins now inject. Suggested
+ordering (cheapest, highest-confidence first):
+
+- **First bite — `SelectedState.Self` → injected `ISelectedState`.** The interface already exists, is
+  DI-registered, and is injected everywhere as `_selectedState`; the remaining ~16 `.Self` calls are
+  laggard call sites. Pure call-site migration, low risk — a good warm-up for the service-layer pass.
+- **Then the bigger tool-DI `.Self` targets:** `StandardElementsManager` (~51 — first check whether an
+  interface exists; if not, extract one or register the concrete, *then* migrate call sites — likely
+  its own PR), then `GumCommands`, `UnitConverter`, etc. Leave `PluginManager.Self` for later — it
+  carries the same self-injection cycle smell deliberately kept in the drained plugins.
+- **The real bulk — the ~224 `Locator` fallback:** services that self-locate their own deps instead of
+  taking them via the ctor. Drain the biggest self-locating services first. Same recipe as the plugins,
+  minus the MEF bridge (these are host-container, not MEF parts): inject the interface, break any
+  construction cycle with `Lazy<T>` on the *consumer's* edge (rule 4 of the `refactoring-direction`
+  skill).
+- **Do NOT drain:** `ObjectFinder.Self` and the `RenderingLibrary`/`InputLibrary` runtime singletons
+  (see the resolved scoping question above and the `refactoring-direction` skill).
+
+Definition of done below still applies to each of these: every drain lands a *tested* unit.
 
 ## Definition of done — every change lands a *tested* unit
 
