@@ -9,7 +9,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Gum.Commands;
-using Gum.Services;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
 
@@ -17,14 +16,21 @@ namespace CodeOutputPlugin.Manager;
 
 public class ParentSetLogic
 {
-    private readonly ISelectedState _selectedState = Locator.GetRequiredService<ISelectedState>();
-    private readonly IDialogService _dialogService = Locator.GetRequiredService<IDialogService>();
-    private readonly IFileCommands _fileCommands = Locator.GetRequiredService<IFileCommands>();
+    private readonly ISelectedState _selectedState;
+    private readonly IDialogService _dialogService;
+    private readonly IFileCommands _fileCommands;
     private readonly CodeGenerator _codeGenerator;
 
-    public ParentSetLogic(CodeGenerator codeGenerator)
+    public ParentSetLogic(
+        CodeGenerator codeGenerator,
+        ISelectedState selectedState,
+        IDialogService dialogService,
+        IFileCommands fileCommands)
     {
         _codeGenerator = codeGenerator;
+        _selectedState = selectedState;
+        _dialogService = dialogService;
+        _fileCommands = fileCommands;
     }
 
     public void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue, CodeOutputProjectSettings codeOutputProjectSettings)

@@ -1,7 +1,9 @@
-﻿using FlatRedBall.SpecializedXnaControls;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using FlatRedBall.SpecializedXnaControls;
 using Gum;
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.Dialogs;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
@@ -89,7 +91,9 @@ public class TextureCoordinateDisplayController : IDisposable
         ISetVariableLogic setVariableLogic,
         ITabManager tabManager,
         IHotkeyManager hotkeyManager,
-        ScrollBarLogicWpf scrollBarLogic)
+        ScrollBarLogicWpf scrollBarLogic,
+        IMessenger messenger,
+        IThemingService themingService)
     {
         _selectedState = selectedState;
         _undoManager = undoManager;
@@ -100,7 +104,7 @@ public class TextureCoordinateDisplayController : IDisposable
         _hotkeyManager = hotkeyManager;
         _scrollBarLogic = scrollBarLogic;
 
-        _backgroundManager = new BackgroundManager();
+        _backgroundManager = new BackgroundManager(messenger, themingService);
         _lineGridManager = new LineGridManager();
         _nineSliceGuideManager = new NineSliceGuideManager();
         _textureOutlineManager = new TextureOutlineManager();
