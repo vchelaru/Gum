@@ -63,8 +63,6 @@ public class ParentSetLogic
         {
             currentState.SetValue($"{instance.Name}.Parent", oldValue, "string");
 
-            // Maybe an output message is not obvious enough?
-            //GumCommands.Self.GuiCommands.PrintOutput(childResponse.Message);
             _dialogService.ShowMessage(response.Message);
         }
         else if(!string.IsNullOrEmpty(response.Message))

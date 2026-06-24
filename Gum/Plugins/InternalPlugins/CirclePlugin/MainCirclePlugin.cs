@@ -67,11 +67,6 @@ namespace Gum.Plugins.CirclePlugin
                 }
             }
             // todo - handle element
-
-            //if(shouldRefreshGrid)
-            //{
-            //    GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
-            //}
         }
     }
 }

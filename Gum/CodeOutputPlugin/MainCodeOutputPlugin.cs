@@ -371,8 +371,6 @@ public class MainCodeOutputPlugin : PluginBase
 
     private void HandleViewCodeClicked(object? sender, EventArgs e)
     {
-        //GumCommands.Self.GuiCommands.ShowControl(control);
-
         if(_selectedState.SelectedElement != null)
         {
             LoadCodeSettingsFile(_selectedState.SelectedElement);
