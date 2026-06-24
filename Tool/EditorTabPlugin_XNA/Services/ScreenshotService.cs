@@ -1,6 +1,5 @@
 ﻿using Gum.Commands;
 using Gum.Plugins.BaseClasses;
-using Gum.Services;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using RenderingLibrary.Graphics;
@@ -16,14 +15,17 @@ internal class ScreenshotService
     string? nextScreenshotFileLocation = null;
     Microsoft.Xna.Framework.Graphics.RenderTarget2D renderTarget;
     private readonly SelectionManager _selectionManager;
-    private readonly WireframeCommands _wireframeCommands;
+    private readonly IWireframeCommands _wireframeCommands;
     private readonly IGuiCommands _guiCommands;
 
-    public ScreenshotService(SelectionManager selectionManager)
+    public ScreenshotService(
+        SelectionManager selectionManager,
+        IWireframeCommands wireframeCommands,
+        IGuiCommands guiCommands)
     {
         _selectionManager = selectionManager;
-        _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
-        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
+        _wireframeCommands = wireframeCommands;
+        _guiCommands = guiCommands;
     }
 
     public void InitializeMenuItem(System.Windows.Controls.MenuItem item)
