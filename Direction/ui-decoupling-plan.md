@@ -143,14 +143,15 @@ Plugins are MEF parts, so they can't pull from the host DI container directly; a
   tool — a MEF composition failure shows an "Error loading plugins" dialog with zero plugins, so
   "tool opens with all tabs and menus present" is the all-clear.
 
-**Bridged into the plugin container as of 2026-06-23** (snapshot — trust `LoadPlugins`, not this
+**Bridged into the plugin container as of 2026-06-24** (snapshot — trust `LoadPlugins`, not this
 line): `ISelectedState`, `IElementCommands`, `IUndoManager`, `IProjectManager`, `IGuiCommands`,
 `IFileCommands`, `ITabManager`, `MenuStripManager`, `IDialogService`, `IWireframeCommands`,
 `IFontManager`, `IProjectState`, `IImportLogic`, `IFileWatchManager`, `InheritanceLogic`,
 `IFavoriteComponentManager`, `MainPanelViewModel`, `PropertyGridManager`, `IVariableReferenceLogic`,
 `IErrorChecker`, `IMessenger`, `FileWatchLogic`, `PeriodicUiTimer`, `IDeleteLogic`, `HotkeyViewModel`,
 `MainOutputViewModel`, `IDispatcher`, `IWireframeObjectManager`, `ISetVariableLogic`, `IHotkeyManager`,
-`IEditCommands`, `ICopyPasteLogic`, `IVariableInCategoryPropagationLogic`.
+`IEditCommands`, `ICopyPasteLogic`, `IVariableInCategoryPropagationLogic`, `ElementTreeViewManager`,
+`IUserProjectSettingsManager`, `IOutputManager`.
 
 ### Shortcut: batch by bridge-cost — added 2026-06-23
 
@@ -213,7 +214,7 @@ instead of the ctor still drains the same way — **relocate the assignment into
   in `HandlePropertyChanged` — the host-into-its-own-plugin cycle smell, not a drain target. Left the
   `[Import("LocalizationService")]` property untouched (already real DI). No cycle-break and no
   accessibility bump needed — all seven deps are public and registered in `Builder.cs`.
-- **this PR (2026-06-23)** — MainTextureCoordinatePlugin + MainStatePlugin (the two cheapest,
+- **#3326 (2026-06-23)** — MainTextureCoordinatePlugin + MainStatePlugin (the two cheapest,
   cycle-free heavies, drained together). **Deliberate deviation from the "own PR each" heavies
   framing:** they share `IHotkeyManager` and adjoin the same bridge block, so one combined PR avoids
   two near-identical edits to `LoadPlugins`. **Five new bridges:** `ISetVariableLogic` +
@@ -235,16 +236,34 @@ instead of the ctor still drains the same way — **relocate the assignment into
   No cycle-break and no accessibility bump needed — all five interfaces are public and registered in
   `Builder.cs`. Also fixed a stale bullet in the `refactoring-specialist` agent file that claimed
   plugins can't receive DI.
+- **this PR (2026-06-24)** — MainTreeViewPlugin (third heavy). **Three new bridges:** concrete
+  `ElementTreeViewManager` (the ~3k-line WinForms tree manager — registered concrete with no interface
+  in `Builder.cs`, drained from a `.Self` static back in #3286), `IUserProjectSettingsManager`, and
+  `IOutputManager`. Its other four ctor-time deps (`ISelectedState`, `IMessenger`, `IErrorChecker`,
+  `IProjectState`) were already bridged. Converted the parameterless ctor (seven `Locator` lines) to
+  an `[ImportingConstructor]`; the inline `new TreeViewStateService(_userProjectSettingsManager,
+  outputManager)` stays (plain construction, not a `Locator` call) — `outputManager` is now a ctor
+  param consumed only to build it, mirroring the old local `var`. **Cycle scout (the flagged risk):
+  no cycle.** `ElementTreeViewManager`'s own ctor takes `PluginManager`, but that's not a construction
+  cycle: ETVM is a *host*-container singleton (built before `LoadPlugins`), the plugin is only a
+  *consumer* of it (never a dependency), and plugins live in the MEF container so ETVM can't depend on
+  one. The plugin already resolved ETVM via `Locator` today, so the bridge just moves that same
+  host-container resolution microscopically earlier — no `Lazy<T>` needed (contrast the
+  `PropertyGridManager`/`SelectedState` case in `Builder.cs`, where the consumer *is* also a dependency
+  and `Lazy<>` is required). One new `using` in `PluginManager.cs`
+  (`Gum.Plugins.InternalPlugins.TreeView` for `ElementTreeViewManager`); the other two namespaces were
+  already imported. **Kept `using Gum.Services;`** — `Locator` was *not* its only use: the plugin
+  references `UiBaseFontSizeChangedMessage` (in `Gum.Services`) via `IRecipient<…>`. No accessibility
+  bump needed — all three new bridges are public and registered in `Builder.cs`.
 
 ### Remaining plugin targets (triage ledger — prune as drained)
 
 - **Heavies (own PR each — large ctors and/or `Locator.GetRequiredService<PluginManager>()`
-  self-injection cycle risk).** Easiest-first, with rough new-bridge cost: `MainTreeViewPlugin`
-  (~3; pulls the 3k-line `ElementTreeViewManager` — before combining it with anything, verify it
-  doesn't construct/own that manager in a way that creates a DI cycle) → `MainCodeOutputPlugin`
+  self-injection cycle risk).** Easiest-first, with rough new-bridge cost: `MainCodeOutputPlugin`
   (~5) → `MainEditorTabPlugin` (~12; Tool/EditorTabPlugin_XNA — keep this one its own PR). Drained:
-  `MainPropertiesWindowPlugin` (#3325), `MainTextureCoordinatePlugin` + `MainStatePlugin` (this PR).
-  These three are the substantive plugin ctor-drain work that remains.
+  `MainPropertiesWindowPlugin` (#3325), `MainTextureCoordinatePlugin` + `MainStatePlugin` (#3326),
+  `MainTreeViewPlugin` (this PR — the `ElementTreeViewManager` cycle was scouted and found benign;
+  see the entry above). These two are the substantive plugin ctor-drain work that remains.
 - **Scouted and left as out-of-scope** (no ctor/`StartUp` lookup to relocate — re-confirm before
   re-touching): `MainBehaviorsPlugin` (already ctor-clean; only `Locator<PluginManager>()` in an event
   handler — the cycle smell) and `MainRecentFilesPlugin` (only method-body/event-handler
@@ -274,11 +293,13 @@ above are only the front door. Measured on this PR's base (`grep` over `Gum/` + 
   tool-DI `.Self` surface drops to ~90 (`StandardElementsManager`, `SelectedState`, `GumCommands`,
   `PluginManager`, `UnitConverter`, …).
 
-**Honest standing:** the *plugin ctor-drain* sub-workstream is roughly half-cleared (the easy tiers
-are done; the heavies — TreeView/EditorTab/State/Properties — are the hard, cycle-prone tail and
-carry most of the remaining plugin effort). **Phase 2 as a whole is early-to-mid (~20–30%)**: the
-visible plugin entry points are getting injected, but the ~224 `Locator` fallback sites behind them
-are largely untouched. Don't read "most plugins drained" as "Phase 2 nearly done."
+**Honest standing:** the *plugin ctor-drain* sub-workstream is mostly cleared (the easy tiers and
+all the heavies except `MainCodeOutputPlugin` and `MainEditorTabPlugin` are done; every drained heavy
+so far — Properties/TextureCoordinate/State/TreeView — turned out cycle-free, so the "cycle-prone
+tail" fear hasn't materialized; `MainEditorTabPlugin` with its ~12 deps remains the one genuinely
+large unknown). **Phase 2 as a whole is early-to-mid (~20–30%)**: the visible plugin entry points are
+getting injected, but the ~224 `Locator` fallback sites behind them are largely untouched. Don't read
+"most plugins drained" as "Phase 2 nearly done."
 
 ## Definition of done — every change lands a *tested* unit
 
