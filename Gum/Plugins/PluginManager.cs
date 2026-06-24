@@ -940,7 +940,7 @@ public class PluginManager : IPluginManager
             batch.AddExportedValue<IDragDropManager>(Locator.GetRequiredService<IDragDropManager>());
             batch.AddExportedValue<WireframeCommands>(Locator.GetRequiredService<WireframeCommands>());
 
-            // EditingManager drain: MainEditorTabPlugin builds EditingManager, which now injects
+            // EditingManager drain (#3338): MainEditorTabPlugin builds EditingManager, which now injects
             // ICircularReferenceManager (drained from a ctor-body Locator call). Its other drained dep,
             // IFavoriteComponentManager, is already bridged above.
             batch.AddExportedValue<ICircularReferenceManager>(Locator.GetRequiredService<ICircularReferenceManager>());
