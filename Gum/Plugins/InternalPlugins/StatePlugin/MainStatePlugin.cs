@@ -15,7 +15,6 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using System.Windows.Forms;
 using Gum.Commands;
-using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.Logic;
@@ -45,16 +44,16 @@ public class MainStatePlugin : PriorityPlugin
     #region Initialize
 
     [ImportingConstructor]
-    public MainStatePlugin(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands)
+    public MainStatePlugin(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands,
+        IElementCommands elementCommands, IEditCommands editCommands, IDialogService dialogService,
+        IHotkeyManager hotkeyManager, IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
+        ICopyPasteLogic copyPasteLogic)
     {
         _selectedState = selectedState;
-        var elementCommands = Locator.GetRequiredService<IElementCommands>();
-        var editCommands = Locator.GetRequiredService<IEditCommands>();
-        var dialogService = Locator.GetRequiredService<IDialogService>();
-        _hotkeyManager = Locator.GetRequiredService<IHotkeyManager>();
+        _hotkeyManager = hotkeyManager;
         _objectFinder = ObjectFinder.Self;
-        _variableInCategoryPropagationLogic = Locator.GetRequiredService<IVariableInCategoryPropagationLogic>();
-        _copyPasteLogic = Locator.GetRequiredService<ICopyPasteLogic>();
+        _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
+        _copyPasteLogic = copyPasteLogic;
         _stateTreeViewRightClickService = new StateTreeViewRightClickService(
             _selectedState,
             elementCommands,

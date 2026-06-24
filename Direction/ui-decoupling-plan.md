@@ -149,7 +149,8 @@ line): `ISelectedState`, `IElementCommands`, `IUndoManager`, `IProjectManager`, 
 `IFontManager`, `IProjectState`, `IImportLogic`, `IFileWatchManager`, `InheritanceLogic`,
 `IFavoriteComponentManager`, `MainPanelViewModel`, `PropertyGridManager`, `IVariableReferenceLogic`,
 `IErrorChecker`, `IMessenger`, `FileWatchLogic`, `PeriodicUiTimer`, `IDeleteLogic`, `HotkeyViewModel`,
-`MainOutputViewModel`, `IDispatcher`, `IWireframeObjectManager`.
+`MainOutputViewModel`, `IDispatcher`, `IWireframeObjectManager`, `ISetVariableLogic`, `IHotkeyManager`,
+`IEditCommands`, `ICopyPasteLogic`, `IVariableInCategoryPropagationLogic`.
 
 ### Shortcut: batch by bridge-cost — added 2026-06-23
 
@@ -200,7 +201,7 @@ instead of the ctor still drains the same way — **relocate the assignment into
   (no in-scope lookup):** MainBehaviorsPlugin (already ctor-clean; only `Locator<PluginManager>()` in
   an event handler — the self-injection cycle smell) and MainRecentFilesPlugin (its `IProjectManager`
   lookups are all in method bodies / event handlers — keeps `using Gum.Services;`).
-- **this PR (2026-06-23)** — MainPropertiesWindowPlugin (first of the heavies). **Two new bridges:**
+- **#3325 (2026-06-23)** — MainPropertiesWindowPlugin (first of the heavies). **Two new bridges:**
   interfaces `IDispatcher` and `IWireframeObjectManager` (both namespaces already imported in
   `PluginManager.cs`, so no new `using`). Its other five ctor-time deps — `IFontManager`,
   `IWireframeCommands`, `IDialogService`, `FileWatchLogic`, `IProjectState` — were already bridged.
@@ -212,15 +213,38 @@ instead of the ctor still drains the same way — **relocate the assignment into
   in `HandlePropertyChanged` — the host-into-its-own-plugin cycle smell, not a drain target. Left the
   `[Import("LocalizationService")]` property untouched (already real DI). No cycle-break and no
   accessibility bump needed — all seven deps are public and registered in `Builder.cs`.
+- **this PR (2026-06-23)** — MainTextureCoordinatePlugin + MainStatePlugin (the two cheapest,
+  cycle-free heavies, drained together). **Deliberate deviation from the "own PR each" heavies
+  framing:** they share `IHotkeyManager` and adjoin the same bridge block, so one combined PR avoids
+  two near-identical edits to `LoadPlugins`. **Five new bridges:** `ISetVariableLogic` +
+  `IHotkeyManager` (Texture Coordinate), `IEditCommands` + `ICopyPasteLogic` +
+  `IVariableInCategoryPropagationLogic` (State); `IHotkeyManager` is shared. Only one new `using`
+  in `PluginManager.cs` (`Gum.PropertyGridHelpers`); the other four namespaces were already imported.
+  MainTextureCoordinatePlugin: parameterless ctor → `[ImportingConstructor]` (11 distinct ctor-time
+  deps); repeated services — `IGuiCommands`, `IFileCommands` — injected once and reused across the
+  `TextureCoordinateDisplayController` / `MainControlViewModel` / `ExposedTextureCoordinateLogic`
+  constructions; took `IMessenger` as a param and kept `messenger.RegisterAll(this)` at construction.
+  **Kept the lone `Locator<IObjectFinder>()`** (resolves the sanctioned `ObjectFinder.Self`, not a
+  drain target), so `using Gum.Services;` stays in that file; tightened the two injected service
+  fields to `readonly`. MainStatePlugin (already `[ImportingConstructor]`): added six params
+  (`IElementCommands`, `IEditCommands`, `IDialogService`, `IHotkeyManager`,
+  `IVariableInCategoryPropagationLogic`, `ICopyPasteLogic`) and deleted the six ctor-body `Locator`
+  lines. `IDialogService` is also PluginBase's `_dialogService` `[Import]`, but it's consumed at
+  construction (before property injection runs), so it **must** be a ctor param. `_objectFinder =
+  ObjectFinder.Self` stays (sanctioned). Dropped `using Gum.Services;` (Locator was its only use).
+  No cycle-break and no accessibility bump needed — all five interfaces are public and registered in
+  `Builder.cs`. Also fixed a stale bullet in the `refactoring-specialist` agent file that claimed
+  plugins can't receive DI.
 
 ### Remaining plugin targets (triage ledger — prune as drained)
 
 - **Heavies (own PR each — large ctors and/or `Locator.GetRequiredService<PluginManager>()`
-  self-injection cycle risk).** Easiest-first, with rough new-bridge cost (none need cycle-breaks or
-  accessibility bumps): `MainTextureCoordinatePlugin` (~2–3) → `MainStatePlugin` (~4) →
-  `MainTreeViewPlugin` (~3; pulls the 3k-line `ElementTreeViewManager`) → `MainCodeOutputPlugin` (~5)
-  → `MainEditorTabPlugin` (~12; Tool/EditorTabPlugin_XNA). `MainPropertiesWindowPlugin` drained (this
-  PR). These are the substantive plugin ctor-drain work that remains.
+  self-injection cycle risk).** Easiest-first, with rough new-bridge cost: `MainTreeViewPlugin`
+  (~3; pulls the 3k-line `ElementTreeViewManager` — before combining it with anything, verify it
+  doesn't construct/own that manager in a way that creates a DI cycle) → `MainCodeOutputPlugin`
+  (~5) → `MainEditorTabPlugin` (~12; Tool/EditorTabPlugin_XNA — keep this one its own PR). Drained:
+  `MainPropertiesWindowPlugin` (#3325), `MainTextureCoordinatePlugin` + `MainStatePlugin` (this PR).
+  These three are the substantive plugin ctor-drain work that remains.
 - **Scouted and left as out-of-scope** (no ctor/`StartUp` lookup to relocate — re-confirm before
   re-touching): `MainBehaviorsPlugin` (already ctor-clean; only `Locator<PluginManager>()` in an event
   handler — the cycle smell) and `MainRecentFilesPlugin` (only method-body/event-handler
