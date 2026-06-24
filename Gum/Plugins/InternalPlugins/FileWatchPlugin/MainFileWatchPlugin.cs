@@ -19,16 +19,24 @@ public class MainFileWatchPlugin : PriorityPlugin
 {
     #region Fields/Properties
 
-    PeriodicUiTimer refreshDisplayTimer;
+    private readonly PeriodicUiTimer refreshDisplayTimer;
 
     FileWatchViewModel viewModel;
 
     PluginTab pluginTab;
     System.Windows.Controls.MenuItem showFileWatchMenuItem;
-    private IFileWatchManager _fileWatchManager;
-    private FileWatchLogic _fileWatchLogic;
+    private readonly IFileWatchManager _fileWatchManager;
+    private readonly FileWatchLogic _fileWatchLogic;
 
     #endregion
+
+    [ImportingConstructor]
+    public MainFileWatchPlugin(IFileWatchManager fileWatchManager, FileWatchLogic fileWatchLogic, PeriodicUiTimer periodicUiTimer)
+    {
+        _fileWatchManager = fileWatchManager;
+        _fileWatchLogic = fileWatchLogic;
+        refreshDisplayTimer = periodicUiTimer;
+    }
 
     public override void StartUp()
     {
@@ -36,9 +44,6 @@ public class MainFileWatchPlugin : PriorityPlugin
 
         viewModel = new FileWatchViewModel();
         control.DataContext = viewModel;
-
-        _fileWatchManager = Locator.GetRequiredService<IFileWatchManager>();
-        _fileWatchLogic = Locator.GetRequiredService<FileWatchLogic>();
 
         viewModel.PropertyChanged += HandleViewModelPropertyChanged;
 
@@ -53,7 +58,6 @@ public class MainFileWatchPlugin : PriorityPlugin
         showFileWatchMenuItem.Click += HandleShowFileWatch;
 
         const int millisecondsTimerFrequency = 200;
-        refreshDisplayTimer = Locator.GetRequiredService<PeriodicUiTimer>();
         refreshDisplayTimer.Tick += HandleRefreshDisplayTimerElapsed;
         refreshDisplayTimer.Start(TimeSpan.FromMilliseconds(millisecondsTimerFrequency));
 

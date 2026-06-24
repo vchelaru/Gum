@@ -7,7 +7,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using Gum.Controls;
-using Gum.Services;
 
 namespace Gum.Plugins.InternalPlugins.HideShowTools;
 
@@ -17,9 +16,10 @@ internal class MainHideShowToolsPlugin : PriorityPlugin
     private MenuItem _hideShowMenuItem;
     private readonly MainPanelViewModel _mainPanelViewModel;
 
-    public MainHideShowToolsPlugin()
+    [ImportingConstructor]
+    public MainHideShowToolsPlugin(MainPanelViewModel mainPanelViewModel)
     {
-        _mainPanelViewModel = Locator.GetRequiredService<MainPanelViewModel>();
+        _mainPanelViewModel = mainPanelViewModel;
     }
 
     public override void StartUp()

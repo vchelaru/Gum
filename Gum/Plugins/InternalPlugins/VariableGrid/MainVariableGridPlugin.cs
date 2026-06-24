@@ -5,12 +5,10 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Mvvm;
-using Gum.Services;
 
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
 using GumRuntime;
-using HarfBuzzSharp;
 using System;
 using System.ComponentModel.Composition;
 using System.Windows.Forms;
@@ -20,16 +18,17 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid;
 [Export(typeof(PluginBase))]
 public class MainVariableGridPlugin : PriorityPlugin
 {
-    PropertyGridManager _propertyGridManager;
+    private readonly PropertyGridManager _propertyGridManager;
     private readonly IVariableReferenceLogic _variableReferenceLogic;
     private readonly ISelectedState _selectedState;
     private readonly VariableGridSelectionCoordinator _selectionCoordinator = new();
 
-    public MainVariableGridPlugin()
+    [ImportingConstructor]
+    public MainVariableGridPlugin(ISelectedState selectedState, PropertyGridManager propertyGridManager, IVariableReferenceLogic variableReferenceLogic)
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _propertyGridManager = Locator.GetRequiredService<PropertyGridManager>();
-        _variableReferenceLogic = Locator.GetRequiredService<IVariableReferenceLogic>();
+        _selectedState = selectedState;
+        _propertyGridManager = propertyGridManager;
+        _variableReferenceLogic = variableReferenceLogic;
         GumExpressionService.Initialize();
     }
 

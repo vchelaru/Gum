@@ -122,6 +122,16 @@ Plugins are MEF parts, so they can't pull from the host DI container directly; a
   menu-click lambdas stay. PluginBase's inherited `[Import]` properties (`_dialogService`,
   `_fileCommands`, `_guiCommands`, `_tabManager`, `_menuStripManager`) are set *after* construction,
   so a ctor-needed dep must be a ctor param even when PluginBase also exposes it.
+- **A `StartUp`-resolved field that's *also* wired up there (`.Tick +=`, `.Start(...)`) only
+  relocates the *resolution* to the ctor — the wiring stays in `StartUp`.** Construction precedes
+  `StartUp`, so assigning the field earlier is behavior-preserving; the subscription/start are
+  lifecycle, not construction. (Live case: `MainFileWatchPlugin`'s `PeriodicUiTimer`.)
+- **`using` bookkeeping has two traps.** (1) Bridging a *concrete* type may need a new `using` in
+  `PluginManager.cs` (e.g. `Gum.Controls` for `MainPanelViewModel`, `Gum.Plugins.InternalPlugins.VariableGrid`
+  for `IVariableReferenceLogic`). (2) Don't reflexively drop `using Gum.Services;` from a drained
+  plugin — it's only safe when `Locator` was the *only* thing it provided. Keep it if a
+  still-referenced lookup remains (Errors' per-call `IProjectState`) or if a bridged type lives in
+  that namespace (`PeriodicUiTimer` is in `Gum.Services`).
 - **Verify:** build via `GumFull.sln` (plugin post-builds need `$(SolutionDir)`), then launch the
   tool — a MEF composition failure shows an "Error loading plugins" dialog with zero plugins, so
   "tool opens with all tabs and menus present" is the all-clear.
@@ -130,7 +140,8 @@ Plugins are MEF parts, so they can't pull from the host DI container directly; a
 line): `ISelectedState`, `IElementCommands`, `IUndoManager`, `IProjectManager`, `IGuiCommands`,
 `IFileCommands`, `ITabManager`, `MenuStripManager`, `IDialogService`, `IWireframeCommands`,
 `IFontManager`, `IProjectState`, `IImportLogic`, `IFileWatchManager`, `InheritanceLogic`,
-`IFavoriteComponentManager`.
+`IFavoriteComponentManager`, `MainPanelViewModel`, `PropertyGridManager`, `IVariableReferenceLogic`,
+`IErrorChecker`, `IMessenger`, `FileWatchLogic`, `PeriodicUiTimer`.
 
 ### Shortcut: batch by bridge-cost — added 2026-06-23
 
@@ -152,32 +163,66 @@ instead of the ctor still drains the same way — **relocate the assignment into
 - **#3319 (2026-06-23)** — AlignmentMainPlugin, MainCirclePlugin, MainParentPlugin, UndoPlugin,
   MainMenuStripPlugin. **Added zero bridges** — every dep (`ISelectedState`, `IUndoManager`,
   concrete `MenuStripManager`) was already in the block.
-- **this PR (2026-06-23)** — MainInheritancePlugin, MainFavoriteComponentPlugin. **One bridge each:**
+- **#3320 (2026-06-23)** — MainInheritancePlugin, MainFavoriteComponentPlugin. **One bridge each:**
   concrete `InheritanceLogic` (no `IInheritanceLogic` exists, so bridge the concrete) and interface
   `IFavoriteComponentManager`. MainFavoriteComponentPlugin had no ctor and resolved in `StartUp`;
   added an `[ImportingConstructor]`, moved the assignment into it, tightened the field to `readonly`.
+- **this PR (2026-06-23)** — MainHideShowToolsPlugin, MainVariableGridPlugin, MainErrorsPlugin,
+  MainFileWatchPlugin. **Seven new bridges:** concretes `MainPanelViewModel`, `PropertyGridManager`,
+  `FileWatchLogic` (no interfaces); interfaces `IVariableReferenceLogic`, `IErrorChecker`,
+  `IMessenger`; plus transient `PeriodicUiTimer`. HideShow/VariableGrid had parameterless ctors;
+  Errors/FileWatch had none and resolved in `StartUp` — both got a new `[ImportingConstructor]` with
+  the assignments relocated (FileWatch keeps the timer's `.Tick`/`.Start` wiring in `StartUp` — only
+  the resolution moved). Tightened the relocated fields to `readonly`; dropped a stray
+  `using HarfBuzzSharp;` from VariableGrid (boyscout). Errors keeps `using Gum.Services;` (its
+  per-call `IProjectState` lookup stays); FileWatch keeps it too (`PeriodicUiTimer` is in that namespace).
 
 ### Remaining plugin targets (triage ledger — prune as drained)
 
-- **Medium / next batch (1–3 new bridges each; scouted 2026-06-23 — counts below exclude deps
-  already bridged and non-ctor `Locator` calls, which stay). Ordered cheapest-first:**
-  - `MainHideShowToolsPlugin` — *cheapest, same shape as MainInheritancePlugin.* Parameterless ctor,
-    1 dep: concrete `MainPanelViewModel` (no interface). **1 new bridge.**
-  - `MainVariableGridPlugin` — parameterless ctor, 3 deps: `ISelectedState` (bridged), concrete
-    `PropertyGridManager`, `IVariableReferenceLogic`. **2 new bridges.**
-  - `MainErrorsPlugin` — no ctor; resolves in `StartUp`: `IErrorChecker`, `IMessenger`,
-    `ISelectedState` (bridged). **2 new bridges**, assignments move into a new `[ImportingConstructor]`.
-    Its `IProjectState` lookup is inside a method (not ctor-time) — leave it.
-  - `MainFileWatchPlugin` — resolves in `StartUp`: `IFileWatchManager` (bridged), concrete
-    `FileWatchLogic`, `PeriodicUiTimer`. **~2 new bridges** (confirm `PeriodicUiTimer` is ctor-time).
-  - `DeleteObjectPlugin` — *most involved.* Already `[ImportingConstructor]`; ctor body still
-    service-locates `IElementCommands` (bridged — just add a param), `IDeleteLogic` (**1 new bridge**),
-    and concrete `WireframeCommands` (prefer the bridged `IWireframeCommands` — verify it carries the
-    members used). The interface switch is the extra cost here.
+- **Medium / next: `DeleteObjectPlugin`** — the cheapest-first four (HideShow, VariableGrid, Errors,
+  FileWatch) are drained (see "Drained so far"). This is *the most involved of the medium tier — the
+  lone one needing an interface switch.* Already `[ImportingConstructor]`; ctor body still
+  service-locates `IElementCommands` (bridged — just add a param), `IDeleteLogic` (**1 new bridge**),
+  and concrete `WireframeCommands` (prefer the bridged `IWireframeCommands` — verify it carries the
+  members used). The interface switch is the extra cost here.
 - **Heavies (own PR each — large ctors and/or `Locator.GetRequiredService<PluginManager>()`
   self-injection cycle risk):** `MainEditorTabPlugin` (Tool/EditorTabPlugin_XNA),
   `MainCodeOutputPlugin`, `MainTreeViewPlugin` (pulls the 3k-line `ElementTreeViewManager`),
   `MainPropertiesWindowPlugin`, `MainStatePlugin`, `MainTextureCoordinatePlugin`.
+- **Not yet scouted (triage before picking — could be cheap or could be non-ctor-only):**
+  `MainBehaviorsPlugin`, `MainHotkeyPlugin`, `MainRecentFilesPlugin`, `MainOutputPlugin`,
+  `MainSvgExportPlugin`. For each: open it, find where it calls `Locator`, and decide if it's a
+  ctor/`StartUp` lookup (in scope) or only body/event-handler lookups (out of scope — leave it).
+- **Grep caveat when finding undrained plugins.** `grep -rl "Locator.GetRequiredService"
+  Gum/Plugins/InternalPlugins` over-reports: an already-drained plugin reappears if it kept a
+  *deliberate* non-ctor lookup (e.g. `MainErrorsPlugin`'s per-call `IProjectState`). It also
+  under-reports — a heavy can be ctor-undrained yet not match if its lookups are all in the body.
+  Classify each hit by *where* the call is (ctor/`StartUp` vs method body), don't trust the file list.
+
+### Phase 2 progress gauge — added 2026-06-23
+
+Phase 2 = *drain every `.Self`* **and** *retire the `Locator` fallback* — the plugin ctor passes
+above are only the front door. Measured on this PR's base (`grep` over `Gum/` + `Tool/` `.cs`):
+
+- **`Locator.GetRequiredService` call sites: ~224.** This is the fallback Phase 2 must drive to
+  zero. Plugin bridges *relocate* these (composition root) but don't reduce the count much; the
+  bulk are inside services that still self-locate.
+- **`.Self` call sites: ~700 total, but ~476 are `ObjectFinder.Self`** (sanctioned — stays). So the
+  **drainable** `.Self` surface is **~224**, dominated by `StandardElementsManager` (51),
+  `Cursor` (36), `Renderer` (33), `ShapeManager` (32), `LoaderManager` (22), `SelectedState` (16).
+- **Open scoping question that swings the estimate:** ~130 of those drainable `.Self` calls are
+  `RenderingLibrary` runtime/input singletons (`Renderer`, `ShapeManager`, `SpriteManager`,
+  `TimeManager`, `LoaderManager`, `Cursor`, `Keyboard`). These are shared across *all* runtimes, not
+  tool-only — they may deserve the same sanctioned-exception treatment as `ObjectFinder` rather than
+  a tool-DI drain. Decide this before counting them as Phase 2 debt. If they're out of scope, the
+  tool-DI `.Self` surface drops to ~90 (`StandardElementsManager`, `SelectedState`, `GumCommands`,
+  `PluginManager`, `UnitConverter`, …).
+
+**Honest standing:** the *plugin ctor-drain* sub-workstream is roughly half-cleared (the easy tiers
+are done; the heavies — TreeView/EditorTab/State/Properties — are the hard, cycle-prone tail and
+carry most of the remaining plugin effort). **Phase 2 as a whole is early-to-mid (~20–30%)**: the
+visible plugin entry points are getting injected, but the ~224 `Locator` fallback sites behind them
+are largely untouched. Don't read "most plugins drained" as "Phase 2 nearly done."
 
 ## Definition of done — every change lands a *tested* unit
 
