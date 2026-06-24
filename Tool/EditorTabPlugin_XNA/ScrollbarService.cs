@@ -3,7 +3,6 @@ using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.EditorTab.Views;
-using Gum.Services;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using RenderingLibrary;
@@ -21,10 +20,13 @@ public class ScrollbarService
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IProjectManager _projectManager;
 
-    public ScrollbarService(IProjectManager projectManager)
+    public ScrollbarService(
+        ISelectedState selectedState,
+        IWireframeObjectManager wireframeObjectManager,
+        IProjectManager projectManager)
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
+        _selectedState = selectedState;
+        _wireframeObjectManager = wireframeObjectManager;
         _projectManager = projectManager;
     }
     

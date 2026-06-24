@@ -34,16 +34,19 @@ public partial class EditingManager : IEditingManager
         IReorderLogic reorderLogic,
         IElementCommands elementCommands,
         INameVerifier nameVerifier,
-        ISetVariableLogic setVariableLogic)
+        ISetVariableLogic setVariableLogic,
+        ISelectedState selectedState,
+        ICircularReferenceManager circularReferenceManager,
+        IFavoriteComponentManager favoriteComponentManager)
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _selectedState = selectedState;
         _reorderLogic = reorderLogic;
         _wireframeObjectManager = wireframeObjectManager;
         _elementCommands = elementCommands;
         _nameVerifier = nameVerifier;
         _setVariableLogic = setVariableLogic;
-        _circularReferenceManager = Locator.GetRequiredService<ICircularReferenceManager>();
-        _favoriteComponentManager = Locator.GetRequiredService<IFavoriteComponentManager>();
+        _circularReferenceManager = circularReferenceManager;
+        _favoriteComponentManager = favoriteComponentManager;
     }
 
     public void Initialize(System.Windows.Controls.ContextMenu contextMenu)

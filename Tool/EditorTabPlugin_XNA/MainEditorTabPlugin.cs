@@ -141,6 +141,8 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
     private readonly IDialogService _dialogService;
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly IWireframeObjectManager _wireframeObjectManager;
+    private readonly ICircularReferenceManager _circularReferenceManager;
+    private readonly IFavoriteComponentManager _favoriteComponentManager;
     private readonly IToolFontService _toolFontService;
     private readonly IToolLayerService _toolLayerService;
 
@@ -177,7 +179,9 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         WireframeCommands wireframeCommands,
         IMessenger messenger,
         IThemingService themingService,
-        IDragDropManager dragDropManager)
+        IDragDropManager dragDropManager,
+        ICircularReferenceManager circularReferenceManager,
+        IFavoriteComponentManager favoriteComponentManager)
     {
         _selectedState = selectedState;
         _projectManager = projectManager;
@@ -196,14 +200,19 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         _wireframeCommands = wireframeCommands;
         _themingService = themingService;
         _dragDropManager = dragDropManager;
+        _circularReferenceManager = circularReferenceManager;
+        _favoriteComponentManager = favoriteComponentManager;
 
-        _scrollbarService = new ScrollbarService(_projectManager);
+        _scrollbarService = new ScrollbarService(_selectedState, _wireframeObjectManager, _projectManager);
         _editingManager = new EditingManager(
             _wireframeObjectManager,
             reorderLogic,
             _elementCommands,
             nameVerifier,
-            _setVariableLogic
+            _setVariableLogic,
+            _selectedState,
+            _circularReferenceManager,
+            _favoriteComponentManager
             );
 
         _layerService = new Services.LayerService();
