@@ -10,6 +10,7 @@ using Gum.ToolCommands;
 using Gum.Commands;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Services.Dialogs;
+using Gum.Dialogs;
 using Gum.Undo;
 using Gum.Localization;
 using Gum.Services.Fonts;
@@ -88,5 +89,15 @@ internal static class PluginBridgedServiceTypes
         typeof(ITypeManager),
         typeof(LocalizationService),
         typeof(IRetryService),
+
+        // MainEditorTabPlugin drain (#3331). WireframeCommands is the concrete (BackgroundManager's ctor
+        // takes it), distinct from the IWireframeCommands interface bridged above though it resolves to the
+        // same singleton.
+        typeof(IReorderLogic),
+        typeof(FileLocations),
+        typeof(IUiSettingsService),
+        typeof(IThemingService),
+        typeof(IDragDropManager),
+        typeof(WireframeCommands),
     };
 }
