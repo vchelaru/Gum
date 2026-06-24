@@ -881,6 +881,12 @@ public class PluginManager : IPluginManager
             batch.AddExportedValue<HotkeyViewModel>(Locator.GetRequiredService<HotkeyViewModel>());
             batch.AddExportedValue<MainOutputViewModel>(Locator.GetRequiredService<MainOutputViewModel>());
 
+            // Heavy-tier ctor drain: MainPropertiesWindowPlugin (IDispatcher, IWireframeObjectManager;
+            // its IFontManager / IWireframeCommands / IDialogService / FileWatchLogic / IProjectState
+            // deps are already bridged above).
+            batch.AddExportedValue<IDispatcher>(Locator.GetRequiredService<IDispatcher>());
+            batch.AddExportedValue<IWireframeObjectManager>(Locator.GetRequiredService<IWireframeObjectManager>());
+
 
             var container = new CompositionContainer(catalog);
 

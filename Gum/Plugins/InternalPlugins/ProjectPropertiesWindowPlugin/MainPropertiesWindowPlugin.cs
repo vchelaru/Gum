@@ -43,7 +43,7 @@ class MainPropertiesWindowPlugin : PriorityPlugin
     #endregion
 
     private readonly IFontManager _fontManager;
-    private readonly WireframeCommands _wireframeCommands;
+    private readonly IWireframeCommands _wireframeCommands;
     private readonly IDialogService _dialogService;
     private readonly IDispatcher _dispatcher;
     private readonly IWireframeObjectManager _wireframeObjectManager;
@@ -53,15 +53,23 @@ class MainPropertiesWindowPlugin : PriorityPlugin
 
     private PluginTab? _pluginTab;
 
-    public MainPropertiesWindowPlugin()
+    [ImportingConstructor]
+    public MainPropertiesWindowPlugin(
+        IFontManager fontManager,
+        IWireframeCommands wireframeCommands,
+        IDialogService dialogService,
+        IDispatcher dispatcher,
+        IWireframeObjectManager wireframeObjectManager,
+        FileWatchLogic fileWatchLogic,
+        IProjectState projectState)
     {
-        _fontManager = Locator.GetRequiredService<IFontManager>();
-        _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
-        _dialogService = Locator.GetRequiredService<IDialogService>();
-        _dispatcher = Locator.GetRequiredService<IDispatcher>();
-        _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
-        _fileWatchLogic = Locator.GetRequiredService<FileWatchLogic>();
-        _projectState = Locator.GetRequiredService<IProjectState>();
+        _fontManager = fontManager;
+        _wireframeCommands = wireframeCommands;
+        _dialogService = dialogService;
+        _dispatcher = dispatcher;
+        _wireframeObjectManager = wireframeObjectManager;
+        _fileWatchLogic = fileWatchLogic;
+        _projectState = projectState;
     }
 
     public override void StartUp()

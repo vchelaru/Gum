@@ -149,7 +149,7 @@ line): `ISelectedState`, `IElementCommands`, `IUndoManager`, `IProjectManager`, 
 `IFontManager`, `IProjectState`, `IImportLogic`, `IFileWatchManager`, `InheritanceLogic`,
 `IFavoriteComponentManager`, `MainPanelViewModel`, `PropertyGridManager`, `IVariableReferenceLogic`,
 `IErrorChecker`, `IMessenger`, `FileWatchLogic`, `PeriodicUiTimer`, `IDeleteLogic`, `HotkeyViewModel`,
-`MainOutputViewModel`.
+`MainOutputViewModel`, `IDispatcher`, `IWireframeObjectManager`.
 
 ### Shortcut: batch by bridge-cost — added 2026-06-23
 
@@ -184,7 +184,7 @@ instead of the ctor still drains the same way — **relocate the assignment into
   the resolution moved). Tightened the relocated fields to `readonly`; dropped a stray
   `using HarfBuzzSharp;` from VariableGrid (boyscout). Errors keeps `using Gum.Services;` (its
   per-call `IProjectState` lookup stays); FileWatch keeps it too (`PeriodicUiTimer` is in that namespace).
-- **this PR (2026-06-23)** — DeleteObjectPlugin, MainHotkeyPlugin, MainOutputPlugin,
+- **#3323 (2026-06-23)** — DeleteObjectPlugin, MainHotkeyPlugin, MainOutputPlugin,
   MainSvgExportPlugin (the whole remaining cheap/medium tier in one PR). **Three new bridges:**
   `IDeleteLogic`, transient VM `HotkeyViewModel`, singleton VM `MainOutputViewModel` (also the
   `IOutputManager` instance). DeleteObjectPlugin was already `[ImportingConstructor]`: moved its
@@ -200,14 +200,27 @@ instead of the ctor still drains the same way — **relocate the assignment into
   (no in-scope lookup):** MainBehaviorsPlugin (already ctor-clean; only `Locator<PluginManager>()` in
   an event handler — the self-injection cycle smell) and MainRecentFilesPlugin (its `IProjectManager`
   lookups are all in method bodies / event handlers — keeps `using Gum.Services;`).
+- **this PR (2026-06-23)** — MainPropertiesWindowPlugin (first of the heavies). **Two new bridges:**
+  interfaces `IDispatcher` and `IWireframeObjectManager` (both namespaces already imported in
+  `PluginManager.cs`, so no new `using`). Its other five ctor-time deps — `IFontManager`,
+  `IWireframeCommands`, `IDialogService`, `FileWatchLogic`, `IProjectState` — were already bridged.
+  Converted the parameterless ctor (seven `Locator.GetRequiredService` lines) to an
+  `[ImportingConstructor]`, and switched the field from concrete `WireframeCommands` to the bridged
+  `IWireframeCommands` (safe — only `.Refresh()` is used). **Out-of-scope lookups deliberately kept**
+  (so `using Gum.Services;` stays): the two `Locator<IProjectManager>()` method-body lookups
+  (`HandleProjectLoad`/`HandlePropertiesClicked`) and the `Locator<IPluginManager>()` self-injection
+  in `HandlePropertyChanged` — the host-into-its-own-plugin cycle smell, not a drain target. Left the
+  `[Import("LocalizationService")]` property untouched (already real DI). No cycle-break and no
+  accessibility bump needed — all seven deps are public and registered in `Builder.cs`.
 
 ### Remaining plugin targets (triage ledger — prune as drained)
 
 - **Heavies (own PR each — large ctors and/or `Locator.GetRequiredService<PluginManager>()`
-  self-injection cycle risk):** `MainEditorTabPlugin` (Tool/EditorTabPlugin_XNA),
-  `MainCodeOutputPlugin`, `MainTreeViewPlugin` (pulls the 3k-line `ElementTreeViewManager`),
-  `MainPropertiesWindowPlugin`, `MainStatePlugin`, `MainTextureCoordinatePlugin`. With the
-  cheap/medium tier now drained, these are the substantive plugin ctor-drain work that remains.
+  self-injection cycle risk).** Easiest-first, with rough new-bridge cost (none need cycle-breaks or
+  accessibility bumps): `MainTextureCoordinatePlugin` (~2–3) → `MainStatePlugin` (~4) →
+  `MainTreeViewPlugin` (~3; pulls the 3k-line `ElementTreeViewManager`) → `MainCodeOutputPlugin` (~5)
+  → `MainEditorTabPlugin` (~12; Tool/EditorTabPlugin_XNA). `MainPropertiesWindowPlugin` drained (this
+  PR). These are the substantive plugin ctor-drain work that remains.
 - **Scouted and left as out-of-scope** (no ctor/`StartUp` lookup to relocate — re-confirm before
   re-touching): `MainBehaviorsPlugin` (already ctor-clean; only `Locator<PluginManager>()` in an event
   handler — the cycle smell) and `MainRecentFilesPlugin` (only method-body/event-handler

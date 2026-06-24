@@ -68,7 +68,7 @@ The Gum tool has been progressively migrated to constructor-injected services (`
 
 There is a dedicated later phase for draining the remaining `.Self` singletons wholesale, but if one is **blocking the task in front of you** — typically because the class can't be unit-tested until it takes its dependencies via the constructor — drain it on the spot in the same PR rather than deferring or asking about phase timing. See the `refactoring-direction` skill for the judgment call and for breaking the DI construction cycle that the `Self`+`Initialize`+`Locator` pattern usually hides (inject the back-edge dependency as `Lazy<T>`).
 
-**`ObjectFinder.Self` is the exception.** It is intentionally still a static singleton across the entire codebase (tool, runtimes, tests). There is no `IObjectFinder` interface, and replacing it is a project-wide refactor — do not attempt it as drive-by cleanup. Calls to `ObjectFinder.Self.GetBaseElements(...)`, `ObjectFinder.Self.GetDefaultChildName(...)`, etc. are acceptable in any context.
+**`ObjectFinder.Self` is the exception.** It is intentionally still a static singleton across the entire codebase (tool, runtimes, tests). An `IObjectFinder` interface does exist and is even DI-registered (`Builder.cs` binds it to the `ObjectFinder.Self` instance), but the ~476 `.Self` call sites are intentionally left as-is: replacing them wholesale is a project-wide refactor — do not attempt it as drive-by cleanup. Calls to `ObjectFinder.Self.GetBaseElements(...)`, `ObjectFinder.Self.GetDefaultChildName(...)`, etc. are acceptable in any context.
 
 ## Searching C# Code
 
