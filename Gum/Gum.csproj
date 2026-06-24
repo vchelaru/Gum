@@ -477,7 +477,6 @@
 		<Compile Remove="Managers\ObjectFinder.cs" />
 		<Compile Remove="Managers\StandardElementsManager.cs" />
 		<Compile Remove="Mvvm\ViewModel.cs" />
-		<Compile Remove="Plugins\InternalPlugins\AlignmentButtons\AlignmentControl.xaml.cs" />
 		<Compile Remove="RenderingLibrary\Blend.cs" />
 		<Compile Remove="RenderingLibrary\BlendExtensions.cs" />
 		<Compile Remove="Wireframe\CustomSetPropertyOnRenderable.cs" />
@@ -488,7 +487,6 @@
 		<None Remove="GumIcon.ico" />
 		<None Remove="GumLogo64.png" />
 		<None Remove="GumLogo64Light.png" />
-		<Page Remove="Plugins\InternalPlugins\AlignmentButtons\AlignmentControl.xaml" />
 	</ItemGroup>
 	<!-- When built from GumFull.sln (which includes Gum.Cli), copy CLI output into GumCli subfolder.
 	     This target does NOT build Gum.Cli itself — the solution handles that. When building from

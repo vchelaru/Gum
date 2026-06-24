@@ -9,7 +9,7 @@ namespace Gum.Plugins.AlignmentButtons
 {
     
     /// <summary>
-    /// Interaction logic for AlignmentControl.xaml
+    /// Interaction logic for DockControl.xaml
     /// </summary>
     public partial class DockControl : UserControl
     {

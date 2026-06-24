@@ -322,16 +322,37 @@ above are only the front door. Measured on this PR's base (`grep` over `Gum/` + 
 - **`Locator.GetRequiredService` call sites: ~224.** This is the fallback Phase 2 must drive to
   zero. Plugin bridges *relocate* these (composition root) but don't reduce the count much; the
   bulk are inside services that still self-locate.
-- **`.Self` call sites: ~700 total, but ~476 are `ObjectFinder.Self`** (sanctioned — stays). So the
-  **drainable** `.Self` surface is **~224**, dominated by `StandardElementsManager` (51),
-  `Cursor` (36), `Renderer` (33), `ShapeManager` (32), `LoaderManager` (22), `SelectedState` (16).
-- **Open scoping question that swings the estimate:** ~130 of those drainable `.Self` calls are
-  `RenderingLibrary` runtime/input singletons (`Renderer`, `ShapeManager`, `SpriteManager`,
-  `TimeManager`, `LoaderManager`, `Cursor`, `Keyboard`). These are shared across *all* runtimes, not
-  tool-only — they may deserve the same sanctioned-exception treatment as `ObjectFinder` rather than
-  a tool-DI drain. Decide this before counting them as Phase 2 debt. If they're out of scope, the
-  tool-DI `.Self` surface drops to ~90 (`StandardElementsManager`, `SelectedState`, `GumCommands`,
-  `PluginManager`, `UnitConverter`, …).
+- **`.Self` call sites: ~700 total, but ~476 are `ObjectFinder.Self`** (sanctioned — stays). The
+  earlier "drainable ~224 / residual tool-DI ~90" figures **over-counted** — auditing the named
+  targets one by one (below) collapsed the residual to nearly nothing.
+
+**Correction (2026-06-24, `p2-closeout` PR) — the `.Self` front is effectively closed.** Three of the
+four biggest named tool-DI `.Self` targets were grep mirages or `ObjectFinder`-class singletons, not
+drains. Grep counts name *text*, not *drain targets*; classify each hit by where it lives
+(dead/commented/shared-library/runtime) before calling it Phase 2 debt.
+- **`RenderingLibrary`/`InputLibrary` runtime singletons (~130) — scoped OUT (sanctioned).** The old
+  open question is resolved: `Renderer`, `ShapeManager`, `SpriteManager`, `TimeManager`,
+  `LoaderManager`, `Cursor`, `Keyboard` are shared across all runtimes → `ObjectFinder` treatment,
+  not a tool-DI drain.
+- **`StandardElementsManager` (51) — NOT a drain; `ObjectFinder`-class.** It lives in `GumDataTypes`
+  (excluded from `Gum.csproj`, compiled via GumCommon) and is `.Self`-used across runtimes
+  (`GumService`, Skia/Raylib/Sokol `SystemManagers`), `Gum.ProjectServices`, `Gum.Cli`, and ~30 test
+  files. The "51" counted Gum/+Tool/ hits that include GumCommon source. Draining it is a
+  project-wide refactor with `ObjectFinder`'s exact blast radius — sanction it, don't drain it.
+- **`SelectedState` (16) — DONE (deleted, not drained).** All 16 lived in `AlignmentControl.xaml.cs`,
+  which `Gum.csproj` excluded from the build (`<Compile Remove>`/`<Page Remove>`) — orphaned dead code
+  superseded by `AlignmentPluginControl`/`AnchorControl`/`DockControl`. Deleted the file; the live
+  `ISelectedState` is already injected everywhere as `_selectedState`. `SelectedState.Self` → 0.
+- **`GumCommands` — already 0 live.** Its only compiled use was the dead `AlignmentControl` (3 calls);
+  the other 3 grep hits were commented-out code (removed in the same PR). `GumCommands.Self` → 0.
+- **`UnitConverter` (7) — leave; `ObjectFinder`-class.** A stateless pure-math singleton in
+  `GumDataTypes`; nothing to mock, and injecting it would mean extracting an interface for a math
+  helper or injecting a concrete (both wrong per `refactoring-direction`).
+- **`PluginManager` (5) — deferred** (self-injection cycle smell), unchanged.
+
+  **Net:** the genuinely-drainable tool-DI `.Self` surface is now ~empty. Phase 2's remaining bulk is
+  **entirely the ~224 `Locator.GetRequiredService` self-locating services** inside the consumed
+  services — that, not `.Self`, is the next front.
 
 **Honest standing:** the *plugin ctor-drain* sub-workstream is **complete** — every substantive
 plugin ctor (Properties/TextureCoordinate/State/TreeView/CodeOutput/StateAnimation/EditorTab) now
