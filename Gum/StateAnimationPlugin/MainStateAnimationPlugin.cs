@@ -10,7 +10,6 @@ using Gum.Messages;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Gum.Responses;
-using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.StateAnimation.SaveClasses;
 using Gum.ToolStates;
@@ -90,14 +89,21 @@ public class MainStateAnimationPlugin : PluginBase
 
     #region StartUp/ShutDown
 
-    public MainStateAnimationPlugin()
+    [ImportingConstructor]
+    public MainStateAnimationPlugin(
+        ISelectedState selectedState,
+        INameVerifier nameVerifier,
+        IMessenger messenger,
+        IOutputManager outputManager,
+        IFileWatchManager fileWatchManager,
+        IProjectState projectState)
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _nameVerifier = Locator.GetRequiredService<INameVerifier>();
-        _messenger = Locator.GetRequiredService<IMessenger>();
-        _outputManager = Locator.GetRequiredService<IOutputManager>();
-        _fileWatchManager = Locator.GetRequiredService<IFileWatchManager>();
-        _projectState = Locator.GetRequiredService<IProjectState>();
+        _selectedState = selectedState;
+        _nameVerifier = nameVerifier;
+        _messenger = messenger;
+        _outputManager = outputManager;
+        _fileWatchManager = fileWatchManager;
+        _projectState = projectState;
 
         _animationFilePathService = new AnimationFilePathService(_selectedState);
         _duplicateService = new DuplicateService();
