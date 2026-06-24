@@ -68,6 +68,8 @@ The Gum tool has been progressively migrated to constructor-injected services (`
 
 **Load the `refactoring-direction` skill before any refactoring** (and before draining a singleton). It owns the static-singleton rules: drain a blocking singleton on the spot — in the same PR — rather than deferring or asking about phase timing; how to break the DI construction cycle the `Self`+`Initialize`+`Locator` pattern hides (inject the back-edge as `Lazy<T>`); and the **sanctioned exceptions that must never be drained** — `ObjectFinder.Self` and the `RenderingLibrary`/`InputLibrary` runtime singletons (`Renderer.Self`, `Cursor.Self`, etc.).
 
+When draining a **plugin** ctor (`Locator`/`.Self` → `[ImportingConstructor]`), `AllPluginsCompositionTests` guards that every plugin still composes via MEF. If the drain bridges a *new* service in `PluginManager.LoadPlugins`, mirror that type into `PluginBridgedServiceTypes.All` or the test goes red — see the `gum-tool-plugins` skill.
+
 ## Searching C# Code
 
 There is **no Roslyn/LSP semantic search in this environment** — the local LSP plugin was unreliable (slow workspace-load races on this large repo) and has been disabled. Use `Grep` for searches, and delegate broad "who references/calls/implements this" sweeps to the `Explore` agent, which reads excerpts and can distinguish definitions from uses.
