@@ -22,6 +22,8 @@ Every `FrameworkElement` has a `Visual` property of type `InteractiveGue` (which
 - `FrameworkElement.X/Y/Width/Height/etc.` — all forward to `Visual`; there is no separate logical sizing
 - `ActualWidth` / `ActualHeight` — computed pixel values, read from `Visual.GetAbsoluteWidth/Height()`
 
+**The control does not own or know its visual's internal structure.** The `Visual` is arbitrary and pluggable — the code-only default (`*Visual`/`Default*Runtime`), a tool-authored component with Forms behaviors, or a custom `InteractiveGue` subclass — and the control knows only the **named children** it looks up in `ReactToVisualChanged` (which may be absent). So "a Window has an `InnerPanelInstance` that fills it" is a property of *one visual*, not of `Window`. Any feature that depends on internal layout (e.g. sizing the content host to children) must live in a **visual**, never in the control, and cannot be assumed across visuals — which is why `WindowVisual.MakeSizedToChildren()` is on the visual. See **gum-forms-default-visuals**.
+
 ## Two Construction Paths
 
 **Forms-first** (`new Button()`): The default constructor calls `GetGraphicalUiElementFor(this)` which looks up `DefaultFormsTemplates` (or the older `DefaultFormsComponents`) to find the registered visual type, instantiates it with `createFormsInternally: false`, and assigns it as `Visual`. This path requires the type to be registered before the constructor runs.
