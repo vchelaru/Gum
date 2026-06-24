@@ -128,6 +128,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
     private readonly IProjectManager _projectManager;
     private EditorViewModel _editorViewModel;
     private readonly FileLocations _fileLocations;
+    private readonly IThemingService _themingService;
     private IDragDropManager _dragDropManager;
     WireframeControl _wireframeControl;
 
@@ -154,36 +155,56 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
     #endregion
 
-    public MainEditorTabPlugin()
+    [ImportingConstructor]
+    public MainEditorTabPlugin(
+        ISelectedState selectedState,
+        IProjectManager projectManager,
+        IGuiCommands guiCommands,
+        IOutputManager outputManager,
+        LocalizationService localizationService,
+        IReorderLogic reorderLogic,
+        INameVerifier nameVerifier,
+        IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
+        IWireframeObjectManager wireframeObjectManager,
+        FileLocations fileLocations,
+        IUndoManager undoManager,
+        IDialogService dialogService,
+        IHotkeyManager hotkeyManager,
+        IElementCommands elementCommands,
+        IFileCommands fileCommands,
+        ISetVariableLogic setVariableLogic,
+        IUiSettingsService uiSettingsService,
+        WireframeCommands wireframeCommands,
+        IMessenger messenger,
+        IThemingService themingService,
+        IDragDropManager dragDropManager)
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _projectManager = Locator.GetRequiredService<IProjectManager>();
+        _selectedState = selectedState;
+        _projectManager = projectManager;
+        _guiCommands = guiCommands;
+        _outputManager = outputManager;
+        _localizationService = localizationService;
+        _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
+        _wireframeObjectManager = wireframeObjectManager;
+        _fileLocations = fileLocations;
+        _dialogService = dialogService;
+        _hotkeyManager = hotkeyManager;
+        _elementCommands = elementCommands;
+        _fileCommands = fileCommands;
+        _setVariableLogic = setVariableLogic;
+        _uiSettingsService = uiSettingsService;
+        _wireframeCommands = wireframeCommands;
+        _themingService = themingService;
+        _dragDropManager = dragDropManager;
 
         _scrollbarService = new ScrollbarService(_projectManager);
-        _guiCommands = Locator.GetRequiredService<IGuiCommands>();
-        _outputManager = Locator.GetRequiredService<IOutputManager>();
-        _localizationService = Locator.GetRequiredService<LocalizationService>();
         _editingManager = new EditingManager(
-            Locator.GetRequiredService<IWireframeObjectManager>(),
-            Locator.GetRequiredService<IReorderLogic>(),
-            Locator.GetRequiredService<IElementCommands>(),
-            Locator.GetRequiredService<INameVerifier>(),
-            Locator.GetRequiredService<ISetVariableLogic>()
+            _wireframeObjectManager,
+            reorderLogic,
+            _elementCommands,
+            nameVerifier,
+            _setVariableLogic
             );
-        _variableInCategoryPropagationLogic = Locator.GetRequiredService<IVariableInCategoryPropagationLogic>();
-        _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
-        _fileLocations = Locator.GetRequiredService<FileLocations>();
-
-        IUndoManager undoManager = Locator.GetRequiredService<IUndoManager>();
-        IDialogService dialogService = Locator.GetRequiredService<IDialogService>();
-        _dialogService = dialogService;
-        IHotkeyManager hotkeyManager = Locator.GetRequiredService<IHotkeyManager>();
-
-        _elementCommands = Locator.GetRequiredService<IElementCommands>();
-        _fileCommands = Locator.GetRequiredService<IFileCommands>();
-        _setVariableLogic = Locator.GetRequiredService<ISetVariableLogic>();
-        _uiSettingsService = Locator.GetRequiredService<IUiSettingsService>();
-        _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
 
         _layerService = new Services.LayerService();
 
@@ -196,8 +217,8 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
             _selectedState,
             undoManager,
             _editingManager,
-            dialogService,
-            hotkeyManager,
+            _dialogService,
+            _hotkeyManager,
             _variableInCategoryPropagationLogic,
             _wireframeObjectManager,
             _projectManager,
@@ -210,19 +231,18 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
         _screenshotService = new ScreenshotService(_selectionManager);
         _singlePixelTextureService = new SinglePixelTextureService();
-        _backgroundManager = new BackgroundManager(_wireframeCommands, 
-            Locator.GetRequiredService<IMessenger>(), 
-            Locator.GetRequiredService<IThemingService>());
-        _dragDropManager = Locator.GetRequiredService<IDragDropManager>();
-        _hotkeyManager = hotkeyManager;
+        _backgroundManager = new BackgroundManager(_wireframeCommands, messenger, _themingService);
+
+        // Host-into-its-own-plugin self-injection: PluginManager can't be a ctor param (it owns this
+        // plugin's construction), so it stays a body Locator call — a cycle smell, not a drain target.
         PluginManager pluginManager = Locator.GetRequiredService<PluginManager>();
 
         _editorViewModel = new EditorViewModel(
-            pluginManager, 
-            _fileCommands, 
+            pluginManager,
+            _fileCommands,
             _wireframeObjectManager);
 
-        Locator.GetRequiredService<IMessenger>().RegisterAll(this);
+        messenger.RegisterAll(this);
     }
 
     public override void StartUp()
@@ -858,7 +878,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
         UpdateWireframeControlSizes();
 
-        IEffectiveThemeSettings themeSettings = Locator.GetRequiredService<IThemingService>().EffectiveSettings;
+        IEffectiveThemeSettings themeSettings = _themingService.EffectiveSettings;
         ApplyThemeSettings(themeSettings);
     }
 
