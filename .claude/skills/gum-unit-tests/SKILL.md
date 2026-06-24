@@ -49,6 +49,15 @@ xUnit's runner is **MTA**, but WPF `FrameworkElement`s (`MenuItem`, `Menu`, `Com
 
 **Verify the real construction blocker empirically before designing around an assumed one.** A quick throwaway probe (construct the object, see what actually throws) beats reasoning: e.g. `BitmapFrame` PNG decode and most non-control VM constructors run fine on MTA, so the blocker is usually the WPF control, not the singleton/resource you suspected.
 
+## Plugin/DI composition tests (GumToolUnitTests)
+
+`AllPluginsCompositionTests` composes **every** tool plugin through MEF the way `PluginManager.LoadPlugins` does, and `ServiceProviderCompositionSpikeTests` resolves the bridged services from the real `Builder.cs` container. Two reusable techniques live there:
+
+- **Stub anything headlessly without running its constructor.** `RuntimeHelpers.GetUninitializedObject(type)` fabricates a concrete instance (even a heavy WinForms/WPF host singleton) with no ctor call; a Moq proxy covers interfaces/abstract types. Composition/DI only needs the dependency to *exist* as the right type, so this avoids STA/graphics setup entirely. (Run the composition on `RunOnSta` regardless — some plugin *constructors* still touch WPF.)
+- **Satisfy not-yet-drained plugins' direct `Locator.GetRequiredService<T>()` ctor calls** with a catch-all `IServiceProvider` registered via `Locator.Register(...)`; remove it in `Dispose` (Locator has no `Unregister` — `RenameManagerTests` shows the reflection teardown).
+
+Keep the MEF batch an **explicit** mirror of `LoadPlugins` (not a catch-all export provider) so a plugin gaining an unbridged `[ImportingConstructor]` dependency turns the test red — that regression signal is the whole point. See the `gum-tool-plugins` skill for keeping `PluginBridgedServiceTypes.All` in sync during drains.
+
 ## Integration Tests (MonoGameGum.IntegrationTests)
 
 Use this project for anything requiring a real `GraphicsDevice`. Each test creates a minimal nested `Game` subclass, calls `game.RunOneFrame()` to trigger `Initialize`, then asserts. See `Tests/MonoGameGum.IntegrationTests/MonoGameGum/GumServiceUnitTests.cs` for the established pattern. Always call `LoaderManager.Self?.DisposeAndClear()` in the `Game.Dispose` override to prevent state leaking across tests via the singleton.
