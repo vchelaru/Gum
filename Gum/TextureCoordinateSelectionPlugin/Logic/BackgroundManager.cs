@@ -1,7 +1,6 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Gum;
 using Gum.Dialogs;
-using Gum.Services;
 using Gum.Settings;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
@@ -37,10 +36,10 @@ public class BackgroundManager : IVisualOverlayManager, IRecipient<ThemeChangedM
         }
     }
 
-    public BackgroundManager()
+    public BackgroundManager(IMessenger messenger, IThemingService themingService)
     {
-        _messenger = Locator.GetRequiredService<IMessenger>();
-        _themingService = Locator.GetRequiredService<IThemingService>();
+        _messenger = messenger;
+        _themingService = themingService;
         _messenger.RegisterAll(this);
     }
 

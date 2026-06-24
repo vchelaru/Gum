@@ -1,5 +1,6 @@
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.Dialogs;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Plugins;
@@ -58,7 +59,8 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
         IHotkeyManager hotkeyManager,
         IProjectManager projectManager,
         IFileWatchManager fileWatchManager,
-        IMessenger messenger)
+        IMessenger messenger,
+        IThemingService themingService)
     {
         _selectedState = selectedState;
         _wireframeCommands = wireframeCommands;
@@ -71,7 +73,9 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
             setVariableLogic,
             tabManager,
             hotkeyManager,
-            new ScrollBarLogicWpf());
+            new ScrollBarLogicWpf(),
+            messenger,
+            themingService);
 
         _viewModel = new (
             projectManager,

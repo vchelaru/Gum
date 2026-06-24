@@ -123,7 +123,7 @@ public class MainCodeOutputPlugin : PluginBase
         _codeOutputProjectSettingsManager = new CodeOutputProjectSettingsManager(
             codeGenLogger, _projectDirectoryProvider);
 
-        _parentSetLogic = new ParentSetLogic(_codeGenerator);
+        _parentSetLogic = new ParentSetLogic(_codeGenerator, _selectedState, dialogService, _fileCommands);
 
         _messenger.Register<RequestCodeGenerationMessage>(
             this,
