@@ -1,0 +1,92 @@
+// Usings mirror Gum.Plugins.PluginManager so the bridged-service typeofs below resolve against the same
+// symbols PluginManager.LoadPlugins uses.
+using System;
+using Gum.Wireframe;
+using Gum.ToolStates;
+using Gum.Managers;
+using Gum.Services;
+using Gum.Reflection;
+using Gum.ToolCommands;
+using Gum.Commands;
+using CommunityToolkit.Mvvm.Messaging;
+using Gum.Services.Dialogs;
+using Gum.Undo;
+using Gum.Localization;
+using Gum.Services.Fonts;
+using Gum.Plugins.ImportPlugin.Manager;
+using Gum.Logic;
+using Gum.Logic.FileWatch;
+using Gum.Controls;
+using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.Plugins.InternalPlugins.Hotkey.ViewModels;
+using Gum.Plugins.InternalPlugins.TreeView;
+using Gum.PropertyGridHelpers;
+
+namespace GumToolUnitTests.Plugins;
+
+/// <summary>
+/// The full set of services <see cref="Gum.Plugins.PluginManager"/>.LoadPlugins bridges into the plugin
+/// <c>CompositionContainer</c>, in source order. Single source of truth shared by
+/// <see cref="AllPluginsCompositionTests"/> (which supplies stubs for them to MEF) and
+/// <see cref="ServiceProviderCompositionSpikeTests"/> (which resolves them from the real container).
+///
+/// This hand-duplicates the list inside <c>LoadPlugins</c>. The intended end state is to extract an internal
+/// <c>ComposePlugins(...)</c> from <c>LoadPlugins</c> so both the production code and these tests share one
+/// list and this array disappears — tracked as a FOLLOW-UP PR. Until then, a drain that bridges a new
+/// service in <c>LoadPlugins</c> must add it here too, or the composition test goes red.
+/// </summary>
+internal static class PluginBridgedServiceTypes
+{
+    internal static readonly Type[] All =
+    {
+        typeof(ISelectedState),
+        typeof(IElementCommands),
+        typeof(IUndoManager),
+        typeof(IProjectManager),
+
+        typeof(IGuiCommands),
+        typeof(IFileCommands),
+        typeof(ITabManager),
+        typeof(MenuStripManager),
+        typeof(IDialogService),
+
+        typeof(IWireframeCommands),
+        typeof(IFontManager),
+        typeof(IProjectState),
+        typeof(IImportLogic),
+        typeof(IFileWatchManager),
+
+        typeof(InheritanceLogic),
+        typeof(IFavoriteComponentManager),
+
+        typeof(MainPanelViewModel),
+        typeof(PropertyGridManager),
+        typeof(IVariableReferenceLogic),
+        typeof(IErrorChecker),
+        typeof(IMessenger),
+        typeof(FileWatchLogic),
+        typeof(PeriodicUiTimer),
+
+        typeof(IDeleteLogic),
+        typeof(HotkeyViewModel),
+        typeof(MainOutputViewModel),
+
+        typeof(IDispatcher),
+        typeof(IWireframeObjectManager),
+
+        typeof(ISetVariableLogic),
+        typeof(IHotkeyManager),
+        typeof(IEditCommands),
+        typeof(ICopyPasteLogic),
+        typeof(IVariableInCategoryPropagationLogic),
+
+        typeof(ElementTreeViewManager),
+        typeof(IUserProjectSettingsManager),
+        typeof(IOutputManager),
+
+        typeof(INameVerifier),
+        typeof(ITypeManager),
+        typeof(LocalizationService),
+        typeof(IRetryService),
+    };
+}

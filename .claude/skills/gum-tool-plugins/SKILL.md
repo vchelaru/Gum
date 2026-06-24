@@ -84,3 +84,9 @@ Visualization/rendering is handled by **external** plugin projects, not by Gum.c
 **VariableSet vs. VariableSetLate**: Two events for the same change. Use `VariableSet` to respond to a change; use `VariableSetLate` for cleanup/refresh that should run after all other plugins have responded.
 
 **Finding which plugin owns a feature**: Search `StartUp()` methods for the event subscription. E.g., to find what handles `VariableSet`, grep for `VariableSet +=` in `InternalPlugins/`. The subscribing plugin is the owner.
+
+## Composition is guarded by a headless test
+
+`AllPluginsCompositionTests` (`Tool/Tests/GumToolUnitTests/Plugins/`) composes **every** plugin through MEF exactly as `PluginManager.LoadPlugins` does — the automated replacement for manually launching Gum to confirm plugins load. A missing/typo'd bridge or a bad `[ImportingConstructor]` signature fails it as a red `CompositionException`.
+
+**When draining a plugin to `[ImportingConstructor]`:** if the drain adds a *new* service to the `batch.AddExportedValue<T>(...)` list in `LoadPlugins`, mirror that type into `PluginBridgedServiceTypes.All` (same test folder) — it is a hand-maintained duplicate of that list and the test goes red otherwise. Reusing services already in the list needs no test change. (`ServiceProviderCompositionSpikeTests` resolves the same set from the real `Builder.cs` container, catching DI cycles / missing registrations.) A follow-up to extract an internal `ComposePlugins(...)` from `LoadPlugins` will delete the duplicate list.
