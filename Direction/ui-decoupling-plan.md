@@ -189,6 +189,40 @@ instead of the ctor still drains the same way — **relocate the assignment into
   self-injection cycle risk):** `MainEditorTabPlugin` (Tool/EditorTabPlugin_XNA),
   `MainCodeOutputPlugin`, `MainTreeViewPlugin` (pulls the 3k-line `ElementTreeViewManager`),
   `MainPropertiesWindowPlugin`, `MainStatePlugin`, `MainTextureCoordinatePlugin`.
+- **Not yet scouted (triage before picking — could be cheap or could be non-ctor-only):**
+  `MainBehaviorsPlugin`, `MainHotkeyPlugin`, `MainRecentFilesPlugin`, `MainOutputPlugin`,
+  `MainSvgExportPlugin`. For each: open it, find where it calls `Locator`, and decide if it's a
+  ctor/`StartUp` lookup (in scope) or only body/event-handler lookups (out of scope — leave it).
+- **Grep caveat when finding undrained plugins.** `grep -rl "Locator.GetRequiredService"
+  Gum/Plugins/InternalPlugins` over-reports: an already-drained plugin reappears if it kept a
+  *deliberate* non-ctor lookup (e.g. `MainErrorsPlugin`'s per-call `IProjectState`). It also
+  under-reports — a heavy can be ctor-undrained yet not match if its lookups are all in the body.
+  Classify each hit by *where* the call is (ctor/`StartUp` vs method body), don't trust the file list.
+
+### Phase 2 progress gauge — added 2026-06-23
+
+Phase 2 = *drain every `.Self`* **and** *retire the `Locator` fallback* — the plugin ctor passes
+above are only the front door. Measured on this PR's base (`grep` over `Gum/` + `Tool/` `.cs`):
+
+- **`Locator.GetRequiredService` call sites: ~224.** This is the fallback Phase 2 must drive to
+  zero. Plugin bridges *relocate* these (composition root) but don't reduce the count much; the
+  bulk are inside services that still self-locate.
+- **`.Self` call sites: ~700 total, but ~476 are `ObjectFinder.Self`** (sanctioned — stays). So the
+  **drainable** `.Self` surface is **~224**, dominated by `StandardElementsManager` (51),
+  `Cursor` (36), `Renderer` (33), `ShapeManager` (32), `LoaderManager` (22), `SelectedState` (16).
+- **Open scoping question that swings the estimate:** ~130 of those drainable `.Self` calls are
+  `RenderingLibrary` runtime/input singletons (`Renderer`, `ShapeManager`, `SpriteManager`,
+  `TimeManager`, `LoaderManager`, `Cursor`, `Keyboard`). These are shared across *all* runtimes, not
+  tool-only — they may deserve the same sanctioned-exception treatment as `ObjectFinder` rather than
+  a tool-DI drain. Decide this before counting them as Phase 2 debt. If they're out of scope, the
+  tool-DI `.Self` surface drops to ~90 (`StandardElementsManager`, `SelectedState`, `GumCommands`,
+  `PluginManager`, `UnitConverter`, …).
+
+**Honest standing:** the *plugin ctor-drain* sub-workstream is roughly half-cleared (the easy tiers
+are done; the heavies — TreeView/EditorTab/State/Properties — are the hard, cycle-prone tail and
+carry most of the remaining plugin effort). **Phase 2 as a whole is early-to-mid (~20–30%)**: the
+visible plugin entry points are getting injected, but the ~224 `Locator` fallback sites behind them
+are largely untouched. Don't read "most plugins drained" as "Phase 2 nearly done."
 
 ## Definition of done — every change lands a *tested* unit
 
