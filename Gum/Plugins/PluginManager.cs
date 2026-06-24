@@ -36,6 +36,7 @@ using Gum.Logic.FileWatch;
 using Gum.Controls;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Plugins.InternalPlugins.Hotkey.ViewModels;
+using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.PropertyGridHelpers;
 
 namespace Gum.Plugins;
@@ -899,6 +900,16 @@ public class PluginManager : IPluginManager
             batch.AddExportedValue<IEditCommands>(Locator.GetRequiredService<IEditCommands>());
             batch.AddExportedValue<ICopyPasteLogic>(Locator.GetRequiredService<ICopyPasteLogic>());
             batch.AddExportedValue<IVariableInCategoryPropagationLogic>(Locator.GetRequiredService<IVariableInCategoryPropagationLogic>());
+
+            // Heavy-tier ctor drain: MainTreeViewPlugin. ElementTreeViewManager is the ~3k-line WinForms
+            // tree manager (host singleton, registered concrete — no interface, see Builder.cs). It takes
+            // PluginManager in its own ctor, but that's not a construction cycle here: it's resolved from the
+            // host container (already built before LoadPlugins) and the plugin is only a consumer of it, never
+            // a dependency. IUserProjectSettingsManager and IOutputManager feed its TreeViewStateService.
+            // Its other ctor-time deps (ISelectedState, IMessenger, IErrorChecker, IProjectState) are bridged above.
+            batch.AddExportedValue<ElementTreeViewManager>(Locator.GetRequiredService<ElementTreeViewManager>());
+            batch.AddExportedValue<IUserProjectSettingsManager>(Locator.GetRequiredService<IUserProjectSettingsManager>());
+            batch.AddExportedValue<IOutputManager>(Locator.GetRequiredService<IOutputManager>());
 
 
             var container = new CompositionContainer(catalog);

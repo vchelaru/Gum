@@ -30,19 +30,26 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
     private readonly IErrorChecker _errorChecker;
     private readonly IProjectState _projectState;
 
-    public MainTreeViewPlugin()
+    [ImportingConstructor]
+    public MainTreeViewPlugin(
+        ISelectedState selectedState,
+        ElementTreeViewManager elementTreeViewManager,
+        IUserProjectSettingsManager userProjectSettingsManager,
+        IMessenger messenger,
+        IOutputManager outputManager,
+        IErrorChecker errorChecker,
+        IProjectState projectState)
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _elementTreeViewManager = Locator.GetRequiredService<ElementTreeViewManager>();
-        _userProjectSettingsManager = Locator.GetRequiredService<IUserProjectSettingsManager>();
-        _messenger = Locator.GetRequiredService<IMessenger>();
+        _selectedState = selectedState;
+        _elementTreeViewManager = elementTreeViewManager;
+        _userProjectSettingsManager = userProjectSettingsManager;
+        _messenger = messenger;
 
         // Create plugin-specific service with required dependencies
-        var outputManager = Locator.GetRequiredService<IOutputManager>();
         _treeViewStateService = new TreeViewStateService(_userProjectSettingsManager, outputManager);
 
-        _errorChecker = Locator.GetRequiredService<IErrorChecker>();
-        _projectState = Locator.GetRequiredService<IProjectState>();
+        _errorChecker = errorChecker;
+        _projectState = projectState;
 
         // Register to receive ApplicationTeardownMessage
         _messenger.RegisterAll(this);
