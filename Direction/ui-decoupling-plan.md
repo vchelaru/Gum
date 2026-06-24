@@ -67,8 +67,27 @@ neutral types per **ADR-0004**. *Payoff:* the testability ceiling jumps; the bou
 guarantee. *Risk:* medium; the VM conversion is the bulk. *Status:* the boundary was already proven
 end-to-end by the #3229 spike (PR #3231) — `ImportTreeNodeViewModel` now lives in headless
 `Gum.ProjectServices` with its `Visibility` converted to `bool`, unit-tested with no WPF. That was a
-forward de-risk only; **bulk** VM migration remains gated on Phase 2's static drain and on deciding
-the permanent home (grow `Gum.ProjectServices` vs. a dedicated `Gum.Core`/`Gum.Presentation`).
+forward de-risk only; **bulk** VM migration remains gated on Phase 2's static drain.
+The permanent-home question is now **decided — ADR-0005**: a dedicated `Gum.Presentation` (net8.0,
+no WPF) assembly, stood up and proven with its first real slice (`FileWatchViewModel` relocated out
+of `Gum.csproj`, namespace preserved, with a headless pinning test). `ImportTreeNodeViewModel`
+should later migrate from `Gum.ProjectServices` into `Gum.Presentation` so all VMs share one home.
+
+> **Scouting finding (2026-06-24) that sets the bulk-migration order.** A full pass over the ~35
+> tool VMs found a hard split: every VM with a *clean* dependency closure injects **zero**
+> interfaces (e.g. `FileWatchViewModel`, `UndoItemViewModel`, `MainOutputViewModel`), while every
+> VM that *does* inject a service pulls a WPF/WinForms-coupled contract into its closure —
+> `IHotkeyManager` exposes `System.Windows.Forms.Keys`/`KeyEventArgs`; `IDialogService` is generic
+> over the tool-bound `DialogViewModel`; `StateTreeViewModel` injects a concrete service with no
+> interface seam. So **interface relocation is the real gate, not the VM move**: the cheap leaf VMs
+> move for free, but the interesting (service-backed) VMs can't follow until the WPF types are first
+> lifted out of those shared interfaces (Phase 1's "stop interfaces returning view types" work).
+> Two more cross-assembly wrinkles to budget for: (1) `Builder.cs`'s VM auto-registration scans
+> only `typeof(GumBuilder).Assembly`, so a DI-resolved VM moved to `Gum.Presentation` needs that
+> scan (and `AddViewModelFuncFactories`) extended to the new assembly; (2) `DialogViewResolver`
+> scans the *VM's own assembly* for its view, so a relocated `DialogViewModel` needs the resolver
+> taught to also scan the tool assembly. The first slice sidestepped both by picking a leaf VM that
+> is `new`-constructed and code-behind-bound.
 
 **Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap).
 - *4a — Element tree:* decouple `ElementTreeViewManager` from `TreeNode`; the already-migrated
