@@ -255,7 +255,7 @@ instead of the ctor still drains the same way — **relocate the assignment into
   already imported. **Kept `using Gum.Services;`** — `Locator` was *not* its only use: the plugin
   references `UiBaseFontSizeChangedMessage` (in `Gum.Services`) via `IRecipient<…>`. No accessibility
   bump needed — all three new bridges are public and registered in `Builder.cs`.
-- **this PR (2026-06-24)** — MainStateAnimationPlugin
+- **#3329 (2026-06-24)** — MainStateAnimationPlugin
   (`StateAnimationPlugin/MainStateAnimationPlugin.cs`) — was omitted from the triage below entirely.
   **Zero new bridges** — all six ctor-time deps (`ISelectedState`, `INameVerifier`, `IMessenger`,
   `IOutputManager`, `IFileWatchManager`, `IProjectState`) were already in the block (`INameVerifier`
@@ -276,7 +276,7 @@ instead of the ctor still drains the same way — **relocate the assignment into
   `ElementTreeViewManager` cycle was scouted and found benign), `MainCodeOutputPlugin` (#3328 —
   finished a partial conversion that already had a 2-param `[ImportingConstructor]`; only 4 new
   bridges, not the ~5 estimated, since #3327 already bridged `IOutputManager`; no cycle),
-  `MainStateAnimationPlugin` (this PR — never catalogued here; zero new bridges since all six ctor
+  `MainStateAnimationPlugin` (#3329 — never catalogued here; zero new bridges since all six ctor
   deps were already bridged, and its construction cycle was already broken by a VM factory closure).
   `MainEditorTabPlugin` is the one substantive plugin ctor-drain that remains.
 - **Scouted and left as out-of-scope** (no ctor/`StartUp` lookup to relocate — re-confirm before
