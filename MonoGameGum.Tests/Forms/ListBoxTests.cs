@@ -1977,25 +1977,24 @@ public class ListBoxTests : BaseTestClass
     }
 
     [Fact]
-    public void ListBoxSeparator_UsedAsDecoration_IsInPanelButNotAnItemOrRow()
+    public void Decoration_IsInPanelButNotAnItemOrRow_AndRemoveDecorationTakesItOut()
     {
-        // Issue #3305: the shipped ListBoxSeparator convenience visual is a plain decoration - it
-        // renders in the panel but is never data (Items) or a selectable row (ListBoxItems), and
-        // RemoveDecoration takes it back out.
+        // Issue #3305: a decoration is a plain visual - it renders in the panel but is never data
+        // (Items) or a selectable row (ListBoxItems), and RemoveDecoration takes it back out.
         ListBox listBox = new();
         listBox.Items!.Add("A");
         listBox.Items!.Add("B");
 
-        ListBoxSeparator separator = new();
-        listBox.AddDecoration(separator);
+        RectangleRuntime decoration = new();
+        listBox.AddDecoration(decoration);
 
-        listBox.InnerPanel.Children.Contains(separator).ShouldBeTrue();
-        listBox.Items!.Contains(separator).ShouldBeFalse();
-        listBox.ListBoxItems.Any(item => ReferenceEquals(item.Visual, separator)).ShouldBeFalse();
+        listBox.InnerPanel.Children.Contains(decoration).ShouldBeTrue();
+        listBox.Items!.Contains(decoration).ShouldBeFalse();
+        listBox.ListBoxItems.Any(item => ReferenceEquals(item.Visual, decoration)).ShouldBeFalse();
 
-        listBox.RemoveDecoration(separator).ShouldBeTrue();
-        listBox.InnerPanel.Children.Contains(separator).ShouldBeFalse();
-        separator.Parent.ShouldBeNull();
+        listBox.RemoveDecoration(decoration).ShouldBeTrue();
+        listBox.InnerPanel.Children.Contains(decoration).ShouldBeFalse();
+        decoration.Parent.ShouldBeNull();
     }
 
     [Fact]

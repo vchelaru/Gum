@@ -48,4 +48,4 @@ for(int i = 0; i < 20; i++)
 
 ## Decorations
 
-`ItemsControl` supports inert *decorations* — separators, headers, and other chrome that render between rows without becoming items. Add them with `AddDecoration`, `InsertDecorationAfter`, and `InsertDecorationBefore`. Because these methods are defined on `ItemsControl`, they are also available on `ListBox`, where the behavior and the shipped `ListBoxSeparator` visual are documented in full — see [Decorations and Separators](listbox.md#decorations-and-separators) on the ListBox page.
+`ItemsControl` supports inert *decorations* — separators, headers, and other chrome that render between rows without becoming items. Add them with `AddDecoration`, `InsertDecorationAfter`, and `InsertDecorationBefore`. Because these methods are defined on `ItemsControl`, they are also available on `ListBox`, where the behavior is documented in full — see [Decorations and Separators](listbox.md#decorations-and-separators) on the ListBox page.
