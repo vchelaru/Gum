@@ -27,6 +27,7 @@ using RenderingLibrary;
 using System.Numerics;
 using Gum.Commands;
 using CommunityToolkit.Mvvm.Messaging;
+using Gum.Dialogs;
 using Gum.Services.Dialogs;
 using Gum.Undo;
 using Gum.Localization;
@@ -921,6 +922,23 @@ public class PluginManager : IPluginManager
             batch.AddExportedValue<ITypeManager>(Locator.GetRequiredService<ITypeManager>());
             batch.AddExportedValue<LocalizationService>(Locator.GetRequiredService<LocalizationService>());
             batch.AddExportedValue<IRetryService>(Locator.GetRequiredService<IRetryService>());
+
+            // Heavy-tier ctor drain: MainEditorTabPlugin (external Tool/EditorTabPlugin_XNA — the central
+            // editor/wireframe plugin). IReorderLogic and INameVerifier feed the EditingManager it builds;
+            // FileLocations is used for drag-drop file paths; IUiSettingsService feeds the SelectionManager;
+            // IThemingService feeds the BackgroundManager and the theme apply; IDragDropManager handles wireframe
+            // drops; WireframeCommands (concrete — passed to BackgroundManager, whose ctor takes the concrete) is
+            // distinct from the already-bridged IWireframeCommands interface but resolves to the same singleton.
+            // Its remaining ctor-time deps (ISelectedState, IProjectManager, IGuiCommands, IOutputManager,
+            // LocalizationService, IVariableInCategoryPropagationLogic, IWireframeObjectManager, IUndoManager,
+            // IDialogService, IHotkeyManager, IElementCommands, IFileCommands, ISetVariableLogic, IMessenger) are
+            // bridged above. PluginManager stays a body Locator call (host-into-its-own-plugin cycle smell).
+            batch.AddExportedValue<IReorderLogic>(Locator.GetRequiredService<IReorderLogic>());
+            batch.AddExportedValue<FileLocations>(Locator.GetRequiredService<FileLocations>());
+            batch.AddExportedValue<IUiSettingsService>(Locator.GetRequiredService<IUiSettingsService>());
+            batch.AddExportedValue<IThemingService>(Locator.GetRequiredService<IThemingService>());
+            batch.AddExportedValue<IDragDropManager>(Locator.GetRequiredService<IDragDropManager>());
+            batch.AddExportedValue<WireframeCommands>(Locator.GetRequiredService<WireframeCommands>());
 
 
             var container = new CompositionContainer(catalog);

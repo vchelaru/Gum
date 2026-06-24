@@ -151,7 +151,9 @@ line): `ISelectedState`, `IElementCommands`, `IUndoManager`, `IProjectManager`, 
 `IErrorChecker`, `IMessenger`, `FileWatchLogic`, `PeriodicUiTimer`, `IDeleteLogic`, `HotkeyViewModel`,
 `MainOutputViewModel`, `IDispatcher`, `IWireframeObjectManager`, `ISetVariableLogic`, `IHotkeyManager`,
 `IEditCommands`, `ICopyPasteLogic`, `IVariableInCategoryPropagationLogic`, `ElementTreeViewManager`,
-`IUserProjectSettingsManager`, `IOutputManager`.
+`IUserProjectSettingsManager`, `IOutputManager`, `INameVerifier`, `ITypeManager`, `LocalizationService`,
+`IRetryService` (these four from #3328), `IReorderLogic`, `FileLocations`, `IUiSettingsService`,
+`IThemingService`, `IDragDropManager`, `WireframeCommands` (these six from #3330).
 
 ### Shortcut: batch by bridge-cost — added 2026-06-23
 
@@ -266,19 +268,42 @@ instead of the ctor still drains the same way — **relocate the assignment into
   fields lazily at invoke-time, *after* both are assigned) — plain `new`, not a `Locator` call, so the
   drain left it untouched. Dropped `using Gum.Services;` (Locator was its only use). No accessibility
   bump — all six deps are public and registered in `Builder.cs`.
+- **#3330 (2026-06-24)** — MainEditorTabPlugin
+  (`Tool/EditorTabPlugin_XNA/MainEditorTabPlugin.cs` — the external, central editor/wireframe plugin
+  and the last substantive plugin ctor-drain). Converted the parameterless ctor (~22 `Locator` lookups)
+  to a 21-param `[ImportingConstructor]`. **Six new bridges:** interfaces `IReorderLogic`,
+  `IUiSettingsService`, `IThemingService`, `IDragDropManager`; concretes `FileLocations` and
+  `WireframeCommands`. The concrete `WireframeCommands` is distinct from the already-bridged
+  `IWireframeCommands` interface (resolves to the same singleton): the field is passed to
+  `BackgroundManager`, whose ctor takes the *concrete* type, and `BackgroundManager.cs` was outside this
+  PR's file boundary — so the "otherwise bridge concrete" branch applied instead of switching the field
+  to the interface. Four service types were resolved twice in the old ctor (`IWireframeObjectManager`,
+  `IElementCommands`, `ISetVariableLogic`, `IMessenger`) — injected once and reused (the inline
+  `EditingManager`/`SelectionManager`/`BackgroundManager` constructions now take the injected
+  fields/params). `IMessenger` is param-only (no field), used twice — `BackgroundManager` arg +
+  `messenger.RegisterAll(this)`. One new `using` in `PluginManager.cs` (`Gum.Dialogs` for
+  `IThemingService`); the other five bridge namespaces were already imported. **Sanctioned drive-by:**
+  the method-body `Locator<IThemingService>()` in `HandleXnaInitialized` now reuses the injected
+  `_themingService` field. **Kept in the body (not drain targets):** the four `Locator<PluginManager>()`
+  self-injection calls (ctor + three event handlers — the host-into-its-own-plugin cycle smell) and the
+  StartUp `Locator<IFontManager>()` (StartUp-time, not a ctor dep). `using Gum.Services;` stays (still
+  needed for `Locator` and `UiBaseFontSizeChangedMessage`). **No cycle / no `Lazy<T>`:** all 21 injected
+  deps are host-container singletons built before `LoadPlugins`, so MEF only constructs the plugin from
+  pre-built deps — same benign topology scouted in #3327. No accessibility bump — all 21 deps are public
+  and registered in `Builder.cs`. **This finishes the plugin ctor-drain pass.**
 
 ### Remaining plugin targets (triage ledger — prune as drained)
 
-- **Heavies (own PR each — large ctors and/or `Locator.GetRequiredService<PluginManager>()`
-  self-injection cycle risk).** Remaining: `MainEditorTabPlugin` (~12; Tool/EditorTabPlugin_XNA —
-  keep this one its own PR). Drained: `MainPropertiesWindowPlugin` (#3325),
-  `MainTextureCoordinatePlugin` + `MainStatePlugin` (#3326), `MainTreeViewPlugin` (#3327 — the
-  `ElementTreeViewManager` cycle was scouted and found benign), `MainCodeOutputPlugin` (#3328 —
-  finished a partial conversion that already had a 2-param `[ImportingConstructor]`; only 4 new
-  bridges, not the ~5 estimated, since #3327 already bridged `IOutputManager`; no cycle),
-  `MainStateAnimationPlugin` (#3329 — never catalogued here; zero new bridges since all six ctor
-  deps were already bridged, and its construction cycle was already broken by a VM factory closure).
-  `MainEditorTabPlugin` is the one substantive plugin ctor-drain that remains.
+- **Heavies (own PR each).** ✅ **All drained — the plugin ctor-drain pass is complete.**
+  `MainPropertiesWindowPlugin` (#3325), `MainTextureCoordinatePlugin` + `MainStatePlugin` (#3326),
+  `MainTreeViewPlugin` (#3327 — the `ElementTreeViewManager` cycle was scouted and found benign),
+  `MainCodeOutputPlugin` (#3328 — finished a partial conversion that already had a 2-param
+  `[ImportingConstructor]`; only 4 new bridges, not the ~5 estimated, since #3327 already bridged
+  `IOutputManager`; no cycle), `MainStateAnimationPlugin` (#3329 — never catalogued here; zero new
+  bridges since all six ctor deps were already bridged, and its construction cycle was already broken by
+  a VM factory closure), `MainEditorTabPlugin` (#3330 — the last and largest; 21-param ctor, six new
+  bridges, no cycle). Every drained heavy turned out cycle-free, so the "cycle-prone tail" fear never
+  materialized.
 - **Scouted and left as out-of-scope** (no ctor/`StartUp` lookup to relocate — re-confirm before
   re-touching): `MainBehaviorsPlugin` (already ctor-clean; only `Locator<PluginManager>()` in an event
   handler — the cycle smell) and `MainRecentFilesPlugin` (only method-body/event-handler
@@ -308,14 +333,16 @@ above are only the front door. Measured on this PR's base (`grep` over `Gum/` + 
   tool-DI `.Self` surface drops to ~90 (`StandardElementsManager`, `SelectedState`, `GumCommands`,
   `PluginManager`, `UnitConverter`, …).
 
-**Honest standing:** the *plugin ctor-drain* sub-workstream is nearly cleared — only
-`MainEditorTabPlugin` remains. Every drained heavy so far —
-Properties/TextureCoordinate/State/TreeView/CodeOutput — turned out cycle-free, so the "cycle-prone
-tail" fear never materialized; `MainEditorTabPlugin` with its ~12 deps (and its external
-Tool/EditorTabPlugin_XNA home) is the one genuinely large unknown left. **Phase 2 as a whole is
-early-to-mid (~20–30%)**: the visible plugin entry points are getting injected, but the ~224
-`Locator` fallback sites behind them are largely untouched. Don't read "most plugins drained" as
-"Phase 2 nearly done."
+**Honest standing:** the *plugin ctor-drain* sub-workstream is **complete** — every substantive
+plugin ctor (Properties/TextureCoordinate/State/TreeView/CodeOutput/StateAnimation/EditorTab) now
+takes its ctor-time deps via `[ImportingConstructor]`, and all turned out cycle-free, so the
+"cycle-prone tail" fear never materialized — even the largest, `MainEditorTabPlugin` (21 deps, the
+external Tool/EditorTabPlugin_XNA home), needed no `Lazy<T>`. What remains under "plugins" is only the
+deliberately-kept non-ctor lookups (the `Locator<PluginManager>()` self-injection cycle smells, and a
+few method-body/`StartUp` lookups noted above). **Phase 2 as a whole is still early-to-mid (~20–30%)**:
+the visible plugin entry points are now injected, but the ~224 `Locator` fallback sites behind them —
+inside the services those plugins consume — are largely untouched. Don't read "all plugins drained" as
+"Phase 2 nearly done"; the next front is the service-layer self-location, not more plugins.
 
 ## Definition of done — every change lands a *tested* unit
 
