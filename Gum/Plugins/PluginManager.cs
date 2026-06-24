@@ -21,6 +21,7 @@ using Gum.Wireframe;
 using Gum.ToolStates;
 using Gum.Managers;
 using Gum.Services;
+using Gum.Reflection;
 using Gum.ToolCommands;
 using RenderingLibrary;
 using System.Numerics;
@@ -910,6 +911,16 @@ public class PluginManager : IPluginManager
             batch.AddExportedValue<ElementTreeViewManager>(Locator.GetRequiredService<ElementTreeViewManager>());
             batch.AddExportedValue<IUserProjectSettingsManager>(Locator.GetRequiredService<IUserProjectSettingsManager>());
             batch.AddExportedValue<IOutputManager>(Locator.GetRequiredService<IOutputManager>());
+
+            // Heavy-tier ctor drain: MainCodeOutputPlugin. These feed the code-generation services it
+            // builds in its ctor (CodeGenerator/CodeGenerationService/etc.): INameVerifier and ITypeManager
+            // for name/type resolution, LocalizationService for generated-text handling, IRetryService for
+            // the file-write retry path. Its other ctor-time deps (IGuiCommands, IDialogService, IProjectState,
+            // IOutputManager, ISelectedState, IMessenger, IFileCommands) are bridged above.
+            batch.AddExportedValue<INameVerifier>(Locator.GetRequiredService<INameVerifier>());
+            batch.AddExportedValue<ITypeManager>(Locator.GetRequiredService<ITypeManager>());
+            batch.AddExportedValue<LocalizationService>(Locator.GetRequiredService<LocalizationService>());
+            batch.AddExportedValue<IRetryService>(Locator.GetRequiredService<IRetryService>());
 
 
             var container = new CompositionContainer(catalog);

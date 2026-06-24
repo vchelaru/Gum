@@ -259,11 +259,13 @@ instead of the ctor still drains the same way — **relocate the assignment into
 ### Remaining plugin targets (triage ledger — prune as drained)
 
 - **Heavies (own PR each — large ctors and/or `Locator.GetRequiredService<PluginManager>()`
-  self-injection cycle risk).** Easiest-first, with rough new-bridge cost: `MainCodeOutputPlugin`
-  (~5) → `MainEditorTabPlugin` (~12; Tool/EditorTabPlugin_XNA — keep this one its own PR). Drained:
-  `MainPropertiesWindowPlugin` (#3325), `MainTextureCoordinatePlugin` + `MainStatePlugin` (#3326),
-  `MainTreeViewPlugin` (this PR — the `ElementTreeViewManager` cycle was scouted and found benign;
-  see the entry above). These two are the substantive plugin ctor-drain work that remains.
+  self-injection cycle risk).** Remaining: `MainEditorTabPlugin` (~12; Tool/EditorTabPlugin_XNA —
+  keep this one its own PR). Drained: `MainPropertiesWindowPlugin` (#3325),
+  `MainTextureCoordinatePlugin` + `MainStatePlugin` (#3326), `MainTreeViewPlugin` (#3327 — the
+  `ElementTreeViewManager` cycle was scouted and found benign), `MainCodeOutputPlugin` (this PR —
+  finished a partial conversion that already had a 2-param `[ImportingConstructor]`; only 4 new
+  bridges, not the ~5 estimated, since #3327 already bridged `IOutputManager`; no cycle).
+  `MainEditorTabPlugin` is the one substantive plugin ctor-drain that remains.
 - **Scouted and left as out-of-scope** (no ctor/`StartUp` lookup to relocate — re-confirm before
   re-touching): `MainBehaviorsPlugin` (already ctor-clean; only `Locator<PluginManager>()` in an event
   handler — the cycle smell) and `MainRecentFilesPlugin` (only method-body/event-handler
@@ -293,13 +295,14 @@ above are only the front door. Measured on this PR's base (`grep` over `Gum/` + 
   tool-DI `.Self` surface drops to ~90 (`StandardElementsManager`, `SelectedState`, `GumCommands`,
   `PluginManager`, `UnitConverter`, …).
 
-**Honest standing:** the *plugin ctor-drain* sub-workstream is mostly cleared (the easy tiers and
-all the heavies except `MainCodeOutputPlugin` and `MainEditorTabPlugin` are done; every drained heavy
-so far — Properties/TextureCoordinate/State/TreeView — turned out cycle-free, so the "cycle-prone
-tail" fear hasn't materialized; `MainEditorTabPlugin` with its ~12 deps remains the one genuinely
-large unknown). **Phase 2 as a whole is early-to-mid (~20–30%)**: the visible plugin entry points are
-getting injected, but the ~224 `Locator` fallback sites behind them are largely untouched. Don't read
-"most plugins drained" as "Phase 2 nearly done."
+**Honest standing:** the *plugin ctor-drain* sub-workstream is nearly cleared — only
+`MainEditorTabPlugin` remains. Every drained heavy so far —
+Properties/TextureCoordinate/State/TreeView/CodeOutput — turned out cycle-free, so the "cycle-prone
+tail" fear never materialized; `MainEditorTabPlugin` with its ~12 deps (and its external
+Tool/EditorTabPlugin_XNA home) is the one genuinely large unknown left. **Phase 2 as a whole is
+early-to-mid (~20–30%)**: the visible plugin entry points are getting injected, but the ~224
+`Locator` fallback sites behind them are largely untouched. Don't read "most plugins drained" as
+"Phase 2 nearly done."
 
 ## Definition of done — every change lands a *tested* unit
 
