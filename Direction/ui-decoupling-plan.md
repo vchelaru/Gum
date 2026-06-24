@@ -128,10 +128,17 @@ Plugins are MEF parts, so they can't pull from the host DI container directly; a
   lifecycle, not construction. (Live case: `MainFileWatchPlugin`'s `PeriodicUiTimer`.)
 - **`using` bookkeeping has two traps.** (1) Bridging a *concrete* type may need a new `using` in
   `PluginManager.cs` (e.g. `Gum.Controls` for `MainPanelViewModel`, `Gum.Plugins.InternalPlugins.VariableGrid`
-  for `IVariableReferenceLogic`). (2) Don't reflexively drop `using Gum.Services;` from a drained
-  plugin — it's only safe when `Locator` was the *only* thing it provided. Keep it if a
-  still-referenced lookup remains (Errors' per-call `IProjectState`) or if a bridged type lives in
-  that namespace (`PeriodicUiTimer` is in `Gum.Services`).
+  for `IVariableReferenceLogic`, `Gum.Plugins.InternalPlugins.Hotkey.ViewModels` for `HotkeyViewModel`).
+  (2) Don't reflexively drop `using Gum.Services;` from a drained plugin — it's only safe when `Locator`
+  was the *only* thing it provided. Keep it if a still-referenced lookup remains (Errors' per-call
+  `IProjectState`, RecentFiles' method-body `IProjectManager`) or if a bridged type lives in that
+  namespace (`PeriodicUiTimer` is in `Gum.Services`).
+- **Injecting an *internal* type costs an accessibility bump.** A `public [ImportingConstructor]`
+  param must be at least as accessible as the ctor, so an internal ViewModel/service injected this way
+  must be made `public` (else **CS0051**). That can cascade: **CS0053** then fires if the now-public
+  type exposes a public member whose type is still internal (e.g. a nested item-VM) — bump those too.
+  The already-injected VMs (`MainPanelViewModel`, `PropertyGridManager`) are public, so this only
+  brings the new one in line. (Live case: `HotkeyViewModel` + its exposed `HotkeyItemViewModel`.)
 - **Verify:** build via `GumFull.sln` (plugin post-builds need `$(SolutionDir)`), then launch the
   tool — a MEF composition failure shows an "Error loading plugins" dialog with zero plugins, so
   "tool opens with all tabs and menus present" is the all-clear.
@@ -141,7 +148,8 @@ line): `ISelectedState`, `IElementCommands`, `IUndoManager`, `IProjectManager`, 
 `IFileCommands`, `ITabManager`, `MenuStripManager`, `IDialogService`, `IWireframeCommands`,
 `IFontManager`, `IProjectState`, `IImportLogic`, `IFileWatchManager`, `InheritanceLogic`,
 `IFavoriteComponentManager`, `MainPanelViewModel`, `PropertyGridManager`, `IVariableReferenceLogic`,
-`IErrorChecker`, `IMessenger`, `FileWatchLogic`, `PeriodicUiTimer`.
+`IErrorChecker`, `IMessenger`, `FileWatchLogic`, `PeriodicUiTimer`, `IDeleteLogic`, `HotkeyViewModel`,
+`MainOutputViewModel`.
 
 ### Shortcut: batch by bridge-cost — added 2026-06-23
 
@@ -167,7 +175,7 @@ instead of the ctor still drains the same way — **relocate the assignment into
   concrete `InheritanceLogic` (no `IInheritanceLogic` exists, so bridge the concrete) and interface
   `IFavoriteComponentManager`. MainFavoriteComponentPlugin had no ctor and resolved in `StartUp`;
   added an `[ImportingConstructor]`, moved the assignment into it, tightened the field to `readonly`.
-- **this PR (2026-06-23)** — MainHideShowToolsPlugin, MainVariableGridPlugin, MainErrorsPlugin,
+- **#3322 (2026-06-23)** — MainHideShowToolsPlugin, MainVariableGridPlugin, MainErrorsPlugin,
   MainFileWatchPlugin. **Seven new bridges:** concretes `MainPanelViewModel`, `PropertyGridManager`,
   `FileWatchLogic` (no interfaces); interfaces `IVariableReferenceLogic`, `IErrorChecker`,
   `IMessenger`; plus transient `PeriodicUiTimer`. HideShow/VariableGrid had parameterless ctors;
@@ -176,23 +184,34 @@ instead of the ctor still drains the same way — **relocate the assignment into
   the resolution moved). Tightened the relocated fields to `readonly`; dropped a stray
   `using HarfBuzzSharp;` from VariableGrid (boyscout). Errors keeps `using Gum.Services;` (its
   per-call `IProjectState` lookup stays); FileWatch keeps it too (`PeriodicUiTimer` is in that namespace).
+- **this PR (2026-06-23)** — DeleteObjectPlugin, MainHotkeyPlugin, MainOutputPlugin,
+  MainSvgExportPlugin (the whole remaining cheap/medium tier in one PR). **Three new bridges:**
+  `IDeleteLogic`, transient VM `HotkeyViewModel`, singleton VM `MainOutputViewModel` (also the
+  `IOutputManager` instance). DeleteObjectPlugin was already `[ImportingConstructor]`: moved its
+  `IDeleteLogic`/`IWireframeCommands` lookups to params, switched the field from concrete
+  `WireframeCommands` to the bridged `IWireframeCommands` (safe — `InstanceDeletionHelper` already took
+  the interface and only `.Refresh()` is used), and **removed a dead injected `IElementCommands`**
+  (assigned, never read) plus its now-stray `using Gum.ToolCommands`. MainSvgExportPlugin (already
+  `[ImportingConstructor]`): added `ISelectedState` + `IProjectState` params — both already bridged,
+  zero new bridges. Hotkey/Output had no ctor and resolved their VM in `StartUp`; both got a new
+  `[ImportingConstructor]` with the resolution relocated (Hotkey's `HotkeyViewModel` + its exposed
+  `HotkeyItemViewModel` had to be made `public` — see the CS0051/CS0053 recipe bullet). Dropped
+  `using Gum.Services;` from all four (Locator was each one's only use of it). **Scouted but left
+  (no in-scope lookup):** MainBehaviorsPlugin (already ctor-clean; only `Locator<PluginManager>()` in
+  an event handler — the self-injection cycle smell) and MainRecentFilesPlugin (its `IProjectManager`
+  lookups are all in method bodies / event handlers — keeps `using Gum.Services;`).
 
 ### Remaining plugin targets (triage ledger — prune as drained)
 
-- **Medium / next: `DeleteObjectPlugin`** — the cheapest-first four (HideShow, VariableGrid, Errors,
-  FileWatch) are drained (see "Drained so far"). This is *the most involved of the medium tier — the
-  lone one needing an interface switch.* Already `[ImportingConstructor]`; ctor body still
-  service-locates `IElementCommands` (bridged — just add a param), `IDeleteLogic` (**1 new bridge**),
-  and concrete `WireframeCommands` (prefer the bridged `IWireframeCommands` — verify it carries the
-  members used). The interface switch is the extra cost here.
 - **Heavies (own PR each — large ctors and/or `Locator.GetRequiredService<PluginManager>()`
   self-injection cycle risk):** `MainEditorTabPlugin` (Tool/EditorTabPlugin_XNA),
   `MainCodeOutputPlugin`, `MainTreeViewPlugin` (pulls the 3k-line `ElementTreeViewManager`),
-  `MainPropertiesWindowPlugin`, `MainStatePlugin`, `MainTextureCoordinatePlugin`.
-- **Not yet scouted (triage before picking — could be cheap or could be non-ctor-only):**
-  `MainBehaviorsPlugin`, `MainHotkeyPlugin`, `MainRecentFilesPlugin`, `MainOutputPlugin`,
-  `MainSvgExportPlugin`. For each: open it, find where it calls `Locator`, and decide if it's a
-  ctor/`StartUp` lookup (in scope) or only body/event-handler lookups (out of scope — leave it).
+  `MainPropertiesWindowPlugin`, `MainStatePlugin`, `MainTextureCoordinatePlugin`. With the
+  cheap/medium tier now drained, these are the substantive plugin ctor-drain work that remains.
+- **Scouted and left as out-of-scope** (no ctor/`StartUp` lookup to relocate — re-confirm before
+  re-touching): `MainBehaviorsPlugin` (already ctor-clean; only `Locator<PluginManager>()` in an event
+  handler — the cycle smell) and `MainRecentFilesPlugin` (only method-body/event-handler
+  `IProjectManager` lookups).
 - **Grep caveat when finding undrained plugins.** `grep -rl "Locator.GetRequiredService"
   Gum/Plugins/InternalPlugins` over-reports: an already-drained plugin reappears if it kept a
   *deliberate* non-ctor lookup (e.g. `MainErrorsPlugin`'s per-call `IProjectState`). It also

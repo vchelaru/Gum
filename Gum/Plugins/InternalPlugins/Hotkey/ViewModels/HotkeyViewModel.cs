@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Gum.Plugins.InternalPlugins.Hotkey.ViewModels
 {
-    class HotkeyViewModel : ViewModel
+    public class HotkeyViewModel : ViewModel
     {
         private IHotkeyManager _hotkeyManager;
 
@@ -68,7 +68,7 @@ namespace Gum.Plugins.InternalPlugins.Hotkey.ViewModels
         }
     }
 
-    class HotkeyItemViewModel
+    public class HotkeyItemViewModel
     {
         public string Display { get; set; }
 

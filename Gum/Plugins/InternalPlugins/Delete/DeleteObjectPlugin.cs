@@ -7,9 +7,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using System.Windows.Controls;
 using Gum.Commands;
-using Gum.ToolCommands;
 using ToolsUtilities;
-using Gum.Services;
 using Gum.Managers;
 
 namespace Gum.Gui.Plugins;
@@ -22,17 +20,19 @@ public class DeleteObjectPlugin : PriorityPlugin
     private GroupBox deleteGroupBox;
     private RadioButton deleteJustParent;
     private RadioButton deleteAllContainedObjects;
-    private readonly IElementCommands _elementCommands;
-    private readonly WireframeCommands _wireframeCommands;
+    private readonly IWireframeCommands _wireframeCommands;
     private readonly IDeleteLogic _deleteLogic;
     private readonly InstanceDeletionHelper _instanceDeletionHelper;
 
     [ImportingConstructor]
-    public DeleteObjectPlugin(IGuiCommands guiCommands, IFileCommands fileCommands)
+    public DeleteObjectPlugin(
+        IGuiCommands guiCommands,
+        IFileCommands fileCommands,
+        IDeleteLogic deleteLogic,
+        IWireframeCommands wireframeCommands)
     {
-        _elementCommands = Locator.GetRequiredService<IElementCommands>();
-        _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
-        _deleteLogic = Locator.GetRequiredService<IDeleteLogic>();
+        _wireframeCommands = wireframeCommands;
+        _deleteLogic = deleteLogic;
         _instanceDeletionHelper = new InstanceDeletionHelper(_deleteLogic, guiCommands, _wireframeCommands, fileCommands);
     }
 
