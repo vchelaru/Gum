@@ -153,7 +153,7 @@ line): `ISelectedState`, `IElementCommands`, `IUndoManager`, `IProjectManager`, 
 `IEditCommands`, `ICopyPasteLogic`, `IVariableInCategoryPropagationLogic`, `ElementTreeViewManager`,
 `IUserProjectSettingsManager`, `IOutputManager`, `INameVerifier`, `ITypeManager`, `LocalizationService`,
 `IRetryService` (these four from #3328), `IReorderLogic`, `FileLocations`, `IUiSettingsService`,
-`IThemingService`, `IDragDropManager`, `WireframeCommands` (these six from #3330).
+`IThemingService`, `IDragDropManager`, `WireframeCommands` (these six from #3331).
 
 ### Shortcut: batch by bridge-cost — added 2026-06-23
 
@@ -268,7 +268,7 @@ instead of the ctor still drains the same way — **relocate the assignment into
   fields lazily at invoke-time, *after* both are assigned) — plain `new`, not a `Locator` call, so the
   drain left it untouched. Dropped `using Gum.Services;` (Locator was its only use). No accessibility
   bump — all six deps are public and registered in `Builder.cs`.
-- **#3330 (2026-06-24)** — MainEditorTabPlugin
+- **#3331 (2026-06-24)** — MainEditorTabPlugin
   (`Tool/EditorTabPlugin_XNA/MainEditorTabPlugin.cs` — the external, central editor/wireframe plugin
   and the last substantive plugin ctor-drain). Converted the parameterless ctor (~22 `Locator` lookups)
   to a 21-param `[ImportingConstructor]`. **Six new bridges:** interfaces `IReorderLogic`,
@@ -301,7 +301,7 @@ instead of the ctor still drains the same way — **relocate the assignment into
   `[ImportingConstructor]`; only 4 new bridges, not the ~5 estimated, since #3327 already bridged
   `IOutputManager`; no cycle), `MainStateAnimationPlugin` (#3329 — never catalogued here; zero new
   bridges since all six ctor deps were already bridged, and its construction cycle was already broken by
-  a VM factory closure), `MainEditorTabPlugin` (#3330 — the last and largest; 21-param ctor, six new
+  a VM factory closure), `MainEditorTabPlugin` (#3331 — the last and largest; 21-param ctor, six new
   bridges, no cycle). Every drained heavy turned out cycle-free, so the "cycle-prone tail" fear never
   materialized.
 - **Scouted and left as out-of-scope** (no ctor/`StartUp` lookup to relocate — re-confirm before
