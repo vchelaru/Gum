@@ -99,5 +99,9 @@ internal static class PluginBridgedServiceTypes
         typeof(IThemingService),
         typeof(IDragDropManager),
         typeof(WireframeCommands),
+
+        // EditingManager drain: ICircularReferenceManager is bridged for the EditingManager that
+        // MainEditorTabPlugin constructs (its other drained dep, IFavoriteComponentManager, is above).
+        typeof(ICircularReferenceManager),
     };
 }
