@@ -48,6 +48,8 @@ public class MainStateAnimationPlugin : PluginBase
     private readonly IRenameManager _renameManager;
     private readonly ISettingsManager _settingsManager;
     private readonly IProjectState _projectState;
+    private readonly IProjectManager _projectManager;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IAnimationCollectionViewModelManager _animationCollectionViewModelManager;
     private readonly IBitmapLoader _bitmapLoader;
     ElementAnimationsViewModel? _viewModel;
@@ -96,7 +98,9 @@ public class MainStateAnimationPlugin : PluginBase
         IMessenger messenger,
         IOutputManager outputManager,
         IFileWatchManager fileWatchManager,
-        IProjectState projectState)
+        IProjectState projectState,
+        IProjectManager projectManager,
+        IWireframeObjectManager wireframeObjectManager)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
@@ -104,10 +108,12 @@ public class MainStateAnimationPlugin : PluginBase
         _outputManager = outputManager;
         _fileWatchManager = fileWatchManager;
         _projectState = projectState;
+        _projectManager = projectManager;
+        _wireframeObjectManager = wireframeObjectManager;
 
         _animationFilePathService = new AnimationFilePathService(_selectedState);
-        _duplicateService = new DuplicateService();
-        _elementDeleteService = new ElementDeleteService(_animationFilePathService);
+        _duplicateService = new DuplicateService(_dialogService, _projectManager);
+        _elementDeleteService = new ElementDeleteService(_animationFilePathService, _dialogService);
         _settingsManager = new SettingsManager();
         _bitmapLoader = new BitmapLoader();
 
@@ -115,7 +121,8 @@ public class MainStateAnimationPlugin : PluginBase
         // (when invoked, after both are assigned just below), which breaks the
         // ACVMM -> ElementAnimationsViewModel -> RenameManager construction cycle without a Lazy<T>.
         _animationVmFactory = () => new ElementAnimationsViewModel(
-            _nameVerifier, _dialogService, _animationCollectionViewModelManager, _renameManager, _bitmapLoader);
+            _nameVerifier, _dialogService, _animationCollectionViewModelManager, _renameManager, _bitmapLoader,
+            _selectedState, _wireframeObjectManager, _outputManager);
         _animationCollectionViewModelManager = new AnimationCollectionViewModelManager(
             _selectedState, _outputManager, _fileWatchManager, _animationFilePathService, _animationVmFactory);
         _renameManager = new RenameManager(

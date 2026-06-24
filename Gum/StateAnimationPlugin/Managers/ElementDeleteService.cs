@@ -6,7 +6,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
-using Gum.Services;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
 
@@ -18,13 +17,13 @@ internal class ElementDeleteService
     private readonly IDialogService _dialogService;
     private CheckBox deleteAnimationFileCheckbox;
 
-    public ElementDeleteService(AnimationFilePathService animationFilePathService)
+    public ElementDeleteService(AnimationFilePathService animationFilePathService, IDialogService dialogService)
     {
         _animationFilePathService = animationFilePathService;
         deleteAnimationFileCheckbox = new CheckBox();
         deleteAnimationFileCheckbox.IsChecked = true;
         deleteAnimationFileCheckbox.Width = 220;
-        _dialogService = Locator.GetRequiredService<IDialogService>();
+        _dialogService = dialogService;
     }
 
     internal void HandleDeleteOptionsWindowShow(DeleteOptionsWindow deleteWindow, Array objectsToDelete)

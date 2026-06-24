@@ -18,7 +18,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.Input;
-using Gum.Services;
 using Gum.StateAnimation.Runtime;
 
 namespace StateAnimationPlugin.ViewModels;
@@ -119,7 +118,7 @@ public partial class AnimationViewModel : ViewModel
 
     #region Methods
 
-    public AnimationViewModel(IBitmapLoader bitmapLoader)
+    public AnimationViewModel(IBitmapLoader bitmapLoader, ISelectedState selectedState, IWireframeObjectManager wireframeObjectManager)
     {
         Keyframes = new ObservableCollection<AnimatedKeyframeViewModel>();
         Keyframes.CollectionChanged += HandleKeyframeCollectionChanged;
@@ -127,8 +126,8 @@ public partial class AnimationViewModel : ViewModel
         mLoopBitmap = bitmapLoader.LoadImage("LoopIcon.png");
 
         mPlayOnceBitmap = bitmapLoader.LoadImage("PlayOnceIcon.png");
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _wireframeObjectManager = Locator.GetRequiredService<IWireframeObjectManager>();
+        _selectedState = selectedState;
+        _wireframeObjectManager = wireframeObjectManager;
     }
 
     public AnimationViewModel Clone()
@@ -148,9 +147,9 @@ public partial class AnimationViewModel : ViewModel
         return clone;
     }
 
-    public static AnimationViewModel FromSave(AnimationSave save, ElementSave element, IAnimationCollectionViewModelManager animationCollectionViewModelManager, IBitmapLoader bitmapLoader, ElementAnimationsSave? allAnimationSaves = null)
+    public static AnimationViewModel FromSave(AnimationSave save, ElementSave element, IAnimationCollectionViewModelManager animationCollectionViewModelManager, IBitmapLoader bitmapLoader, ISelectedState selectedState, IWireframeObjectManager wireframeObjectManager, ElementAnimationsSave? allAnimationSaves = null)
     {
-        AnimationViewModel toReturn = new AnimationViewModel(bitmapLoader);
+        AnimationViewModel toReturn = new AnimationViewModel(bitmapLoader, selectedState, wireframeObjectManager);
         toReturn.Name = save.Name;
         toReturn.Loops = save.Loops;
 
@@ -212,7 +211,7 @@ public partial class AnimationViewModel : ViewModel
 
             if(animationSave != null && subAnimationElement != null)
             {
-                newVm.SubAnimationViewModel = AnimationViewModel.FromSave(animationSave, subAnimationElement, animationCollectionViewModelManager, bitmapLoader, subAnimationSiblings);
+                newVm.SubAnimationViewModel = AnimationViewModel.FromSave(animationSave, subAnimationElement, animationCollectionViewModelManager, bitmapLoader, selectedState, wireframeObjectManager, subAnimationSiblings);
             }
 
 
