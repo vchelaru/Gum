@@ -4,7 +4,6 @@ using System;
 using System.ComponentModel.Composition;
 using System.Windows.Controls;
 using Gum.Plugins.InternalPlugins.Hotkey.ViewModels;
-using Gum.Services;
 
 namespace Gum.Plugins.InternalPlugins.Hotkey
 {
@@ -14,13 +13,20 @@ namespace Gum.Plugins.InternalPlugins.Hotkey
         PluginTab pluginTab;
         HotkeyView hotkeyView;
         MenuItem menuItem;
+        private readonly HotkeyViewModel _hotkeyViewModel;
+
+        [ImportingConstructor]
+        public MainHotkeyPlugin(HotkeyViewModel hotkeyViewModel)
+        {
+            _hotkeyViewModel = hotkeyViewModel;
+        }
 
         public override void StartUp()
         {
             menuItem = this.AddMenuItemTo("View Hotkeys", HandleToggleTabVisibility, "View");
             hotkeyView = new Views.HotkeyView()
             {
-                DataContext = Locator.GetRequiredService<HotkeyViewModel>()
+                DataContext = _hotkeyViewModel
             };
             pluginTab = base.CreateTab(hotkeyView, "Hotkeys", TabLocation.CenterBottom);
             pluginTab.TabShown += HandleTabShown;

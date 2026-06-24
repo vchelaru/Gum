@@ -35,6 +35,7 @@ using Gum.Logic;
 using Gum.Logic.FileWatch;
 using Gum.Controls;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.Plugins.InternalPlugins.Hotkey.ViewModels;
 
 namespace Gum.Plugins;
 
@@ -870,6 +871,15 @@ public class PluginManager : IPluginManager
             batch.AddExportedValue<IMessenger>(Locator.GetRequiredService<IMessenger>());
             batch.AddExportedValue<FileWatchLogic>(Locator.GetRequiredService<FileWatchLogic>());
             batch.AddExportedValue<PeriodicUiTimer>(Locator.GetRequiredService<PeriodicUiTimer>());
+
+            // Cheap/medium-tier ctor drains: DeleteObjectPlugin (IDeleteLogic; its IWireframeCommands
+            // dep is already bridged above), MainHotkeyPlugin (HotkeyViewModel),
+            // MainOutputPlugin (MainOutputViewModel). HotkeyViewModel is a transient ViewModel
+            // (auto-registered via the ViewModel scan in Builder.cs); this bridges the single instance the
+            // plugin's tab consumes. MainOutputViewModel is the IOutputManager singleton.
+            batch.AddExportedValue<IDeleteLogic>(Locator.GetRequiredService<IDeleteLogic>());
+            batch.AddExportedValue<HotkeyViewModel>(Locator.GetRequiredService<HotkeyViewModel>());
+            batch.AddExportedValue<MainOutputViewModel>(Locator.GetRequiredService<MainOutputViewModel>());
 
 
             var container = new CompositionContainer(catalog);
