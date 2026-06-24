@@ -229,7 +229,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
             _uiSettingsService,
             _toolFontService);
 
-        _screenshotService = new ScreenshotService(_selectionManager);
+        _screenshotService = new ScreenshotService(_selectionManager, _wireframeCommands, _guiCommands);
         _singlePixelTextureService = new SinglePixelTextureService();
         _backgroundManager = new BackgroundManager(_wireframeCommands, messenger, _themingService);
 
