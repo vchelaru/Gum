@@ -129,7 +129,8 @@ Plugins are MEF parts, so they can't pull from the host DI container directly; a
 **Bridged into the plugin container as of 2026-06-23** (snapshot — trust `LoadPlugins`, not this
 line): `ISelectedState`, `IElementCommands`, `IUndoManager`, `IProjectManager`, `IGuiCommands`,
 `IFileCommands`, `ITabManager`, `MenuStripManager`, `IDialogService`, `IWireframeCommands`,
-`IFontManager`, `IProjectState`, `IImportLogic`, `IFileWatchManager`.
+`IFontManager`, `IProjectState`, `IImportLogic`, `IFileWatchManager`, `InheritanceLogic`,
+`IFavoriteComponentManager`.
 
 ### Shortcut: batch by bridge-cost — added 2026-06-23
 
@@ -148,18 +149,31 @@ instead of the ctor still drains the same way — **relocate the assignment into
 - **#3317** — MainSkiaPlugin, MainFontPlugin, MainGumFormsPlugin, MainDuplicateVariablePlugin
   (added the `IWireframeCommands` / `IFontManager` / `IProjectState` / `IImportLogic` /
   `IFileWatchManager` bridges).
-- **this PR (2026-06-23)** — AlignmentMainPlugin, MainCirclePlugin, MainParentPlugin, UndoPlugin,
+- **#3319 (2026-06-23)** — AlignmentMainPlugin, MainCirclePlugin, MainParentPlugin, UndoPlugin,
   MainMenuStripPlugin. **Added zero bridges** — every dep (`ISelectedState`, `IUndoManager`,
   concrete `MenuStripManager`) was already in the block.
+- **this PR (2026-06-23)** — MainInheritancePlugin, MainFavoriteComponentPlugin. **One bridge each:**
+  concrete `InheritanceLogic` (no `IInheritanceLogic` exists, so bridge the concrete) and interface
+  `IFavoriteComponentManager`. MainFavoriteComponentPlugin had no ctor and resolved in `StartUp`;
+  added an `[ImportingConstructor]`, moved the assignment into it, tightened the field to `readonly`.
 
 ### Remaining plugin targets (triage ledger — prune as drained)
 
-- **One new bridge each (next easy batch):** `MainInheritancePlugin` (ctor needs concrete
-  `InheritanceLogic` — check for an `IInheritanceLogic` and prefer it, else bridge the concrete);
-  `MainFavoriteComponentPlugin` (needs `IFavoriteComponentManager`; its lookup is in `StartUp`, so
-  move it into the ctor per the nuance above).
-- **Medium (1–3 new bridges, some switching a concrete to its interface):** `DeleteObjectPlugin`,
-  `MainErrorsPlugin`, `MainVariableGridPlugin`, `MainFileWatchPlugin`, `MainHideShowToolsPlugin`.
+- **Medium / next batch (1–3 new bridges each; scouted 2026-06-23 — counts below exclude deps
+  already bridged and non-ctor `Locator` calls, which stay). Ordered cheapest-first:**
+  - `MainHideShowToolsPlugin` — *cheapest, same shape as MainInheritancePlugin.* Parameterless ctor,
+    1 dep: concrete `MainPanelViewModel` (no interface). **1 new bridge.**
+  - `MainVariableGridPlugin` — parameterless ctor, 3 deps: `ISelectedState` (bridged), concrete
+    `PropertyGridManager`, `IVariableReferenceLogic`. **2 new bridges.**
+  - `MainErrorsPlugin` — no ctor; resolves in `StartUp`: `IErrorChecker`, `IMessenger`,
+    `ISelectedState` (bridged). **2 new bridges**, assignments move into a new `[ImportingConstructor]`.
+    Its `IProjectState` lookup is inside a method (not ctor-time) — leave it.
+  - `MainFileWatchPlugin` — resolves in `StartUp`: `IFileWatchManager` (bridged), concrete
+    `FileWatchLogic`, `PeriodicUiTimer`. **~2 new bridges** (confirm `PeriodicUiTimer` is ctor-time).
+  - `DeleteObjectPlugin` — *most involved.* Already `[ImportingConstructor]`; ctor body still
+    service-locates `IElementCommands` (bridged — just add a param), `IDeleteLogic` (**1 new bridge**),
+    and concrete `WireframeCommands` (prefer the bridged `IWireframeCommands` — verify it carries the
+    members used). The interface switch is the extra cost here.
 - **Heavies (own PR each — large ctors and/or `Locator.GetRequiredService<PluginManager>()`
   self-injection cycle risk):** `MainEditorTabPlugin` (Tool/EditorTabPlugin_XNA),
   `MainCodeOutputPlugin`, `MainTreeViewPlugin` (pulls the 3k-line `ElementTreeViewManager`),

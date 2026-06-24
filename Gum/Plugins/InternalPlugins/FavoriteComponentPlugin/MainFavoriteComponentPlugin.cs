@@ -1,7 +1,6 @@
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
-using Gum.Services;
 using System.ComponentModel.Composition;
 
 namespace Gum.Plugins.FavoriteComponentPlugin;
@@ -9,11 +8,16 @@ namespace Gum.Plugins.FavoriteComponentPlugin;
 [Export(typeof(PluginBase))]
 public class MainFavoriteComponentPlugin : PriorityPlugin
 {
-    private IFavoriteComponentManager _favoriteComponentManager;
+    private readonly IFavoriteComponentManager _favoriteComponentManager;
+
+    [ImportingConstructor]
+    public MainFavoriteComponentPlugin(IFavoriteComponentManager favoriteComponentManager)
+    {
+        _favoriteComponentManager = favoriteComponentManager;
+    }
 
     public override void StartUp()
     {
-        _favoriteComponentManager = Locator.GetRequiredService<IFavoriteComponentManager>();
         this.ElementDelete += HandleElementDelete;
         this.ElementRename += HandleElementRename;
     }
