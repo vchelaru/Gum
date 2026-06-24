@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Gum.Services;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
 
@@ -15,14 +14,17 @@ namespace StateAnimationPlugin.Managers
     public class DuplicateService
     {
         private readonly IDialogService _dialogService;
-        public DuplicateService()
+        private readonly IProjectManager _projectManager;
+
+        public DuplicateService(IDialogService dialogService, IProjectManager projectManager)
         {
-            _dialogService = Locator.GetRequiredService<IDialogService>();
+            _dialogService = dialogService;
+            _projectManager = projectManager;
         }
-        
+
         public void HandleDuplicate(ElementSave oldElement, ElementSave newElement)
         {
-            var project = Locator.GetRequiredService<IProjectManager>().GumProjectSave;
+            var project = _projectManager.GumProjectSave;
             //////////////////////Early Out////////////////////
             if(project == null)
             {

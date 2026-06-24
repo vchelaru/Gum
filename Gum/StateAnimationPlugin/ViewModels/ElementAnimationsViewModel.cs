@@ -22,7 +22,6 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.Input;
 using Gum.Mvvm;
 using Gum.Wireframe;
-using Gum.Services;
 using Gum.Services.Dialogs;
 
 namespace StateAnimationPlugin.ViewModels;
@@ -47,6 +46,8 @@ public partial class ElementAnimationsViewModel : ViewModel
     private readonly IAnimationCollectionViewModelManager _animationCollectionViewModelManager;
     private readonly IRenameManager _renameManager;
     private readonly IBitmapLoader _bitmapLoader;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
+    private readonly IOutputManager _outputManager;
     private AnimatedKeyframeViewModel? _copiedKeyframe;
 
     #endregion
@@ -215,7 +216,8 @@ public partial class ElementAnimationsViewModel : ViewModel
 
     public ElementAnimationsViewModel(INameVerifier nameVerifier, IDialogService dialogService,
         IAnimationCollectionViewModelManager animationCollectionViewModelManager, IRenameManager renameManager,
-        IBitmapLoader bitmapLoader)
+        IBitmapLoader bitmapLoader, ISelectedState selectedState, IWireframeObjectManager wireframeObjectManager,
+        IOutputManager outputManager)
     {
         ClampInterpolationVisuals = true;
         CurrentGameSpeed = "100%";
@@ -233,13 +235,15 @@ public partial class ElementAnimationsViewModel : ViewModel
 
         mStopBitmap = bitmapLoader.LoadImage("StopIcon.png");
 
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _selectedState = selectedState;
         _nameVerifier = nameVerifier;
         _nameValidator = new NameValidator(_nameVerifier);
         _dialogService = dialogService;
         _animationCollectionViewModelManager = animationCollectionViewModelManager;
         _renameManager = renameManager;
         _bitmapLoader = bitmapLoader;
+        _wireframeObjectManager = wireframeObjectManager;
+        _outputManager = outputManager;
 
         RefreshAnimationsRightClickMenuItems();
     }
@@ -250,7 +254,7 @@ public partial class ElementAnimationsViewModel : ViewModel
 
         foreach (var animation in save.Animations)
         {
-            var vm = AnimationViewModel.FromSave(animation, element, _animationCollectionViewModelManager, _bitmapLoader);
+            var vm = AnimationViewModel.FromSave(animation, element, _animationCollectionViewModelManager, _bitmapLoader, _selectedState, _wireframeObjectManager);
             Animations.Add(vm);
         }
     }
@@ -607,7 +611,7 @@ public partial class ElementAnimationsViewModel : ViewModel
 
             if (_dialogService.Show(dialogViewModel))
             {
-                var newAnimation = new AnimationViewModel(_bitmapLoader)
+                var newAnimation = new AnimationViewModel(_bitmapLoader, _selectedState, _wireframeObjectManager)
                 {
                     Name = dialogViewModel.Name,
                     Loops = dialogViewModel.Loops
@@ -655,7 +659,7 @@ public partial class ElementAnimationsViewModel : ViewModel
             return;
         }
 
-        SubAnimationSelectionDialogViewModel window = new(_animationCollectionViewModelManager, _bitmapLoader);
+        SubAnimationSelectionDialogViewModel window = new(_animationCollectionViewModelManager, _bitmapLoader, _outputManager, _selectedState, _wireframeObjectManager);
         window.AnimationToExclude = SelectedAnimation;
         window.AnimationContainers = CreateAnimationContainers();
 

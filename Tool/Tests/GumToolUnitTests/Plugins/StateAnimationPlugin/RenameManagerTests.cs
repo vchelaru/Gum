@@ -1,18 +1,14 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
-using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Gum.Wireframe;
-using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Shouldly;
 using StateAnimationPlugin.Managers;
 using StateAnimationPlugin.ViewModels;
 using System;
-using System.Collections.Generic;
-using System.Reflection;
 using System.Threading;
 using Xunit;
 
@@ -21,26 +17,16 @@ namespace GumToolUnitTests.Plugins.StateAnimationPlugin;
 /// <summary>
 /// Characterization tests pinning the keyframe-mutating <see cref="RenameManager"/> overloads.
 /// These were deferred when ACVMM/RenameManager were drained (#3281) because the animation view
-/// models could not be constructed in isolation. They can now: <see cref="BitmapLoader"/> is an
-/// injectable <see cref="IBitmapLoader"/> (stubbed here), the remaining ViewModel constructor
-/// dependencies are satisfied via the service locator, and <see cref="ElementAnimationsViewModel"/>'s
-/// WPF right-click <c>MenuItem</c> creation is handled by building it on an STA thread.
+/// models could not be constructed in isolation. They can now: the animation view models take all
+/// of their dependencies via the constructor (stubbed here with Moq), and
+/// <see cref="ElementAnimationsViewModel"/>'s WPF right-click <c>MenuItem</c> creation is handled
+/// by building it on an STA thread.
 /// </summary>
 public class RenameManagerTests : BaseTestClass
 {
-    private readonly IServiceProvider _testServiceProvider;
     private readonly IBitmapLoader _bitmapLoader = Mock.Of<IBitmapLoader>();
-
-    public RenameManagerTests()
-    {
-        // AnimationViewModel/ElementAnimationsViewModel still resolve ISelectedState and
-        // IWireframeObjectManager from the locator in their constructors.
-        ServiceCollection services = new ServiceCollection();
-        services.AddSingleton(Mock.Of<ISelectedState>());
-        services.AddSingleton(Mock.Of<IWireframeObjectManager>());
-        _testServiceProvider = services.BuildServiceProvider();
-        Locator.Register(_testServiceProvider);
-    }
+    private readonly ISelectedState _selectedState = Mock.Of<ISelectedState>();
+    private readonly IWireframeObjectManager _wireframeObjectManager = Mock.Of<IWireframeObjectManager>();
 
     [Fact]
     public void HandleRename_Animation_RenamesMatchingKeyframeAnimationNames()
@@ -53,7 +39,7 @@ public class RenameManagerTests : BaseTestClass
 
             AnimationViewModel animation = CreateAnimationWithKeyframes(
                 Keyframe(animationName: "OldAnim"));
-            AnimationViewModel renamed = new AnimationViewModel(_bitmapLoader) { Name = "NewAnim" };
+            AnimationViewModel renamed = new AnimationViewModel(_bitmapLoader, _selectedState, _wireframeObjectManager) { Name = "NewAnim" };
 
             RenameManager renameManager = CreateRenameManager();
 
@@ -132,7 +118,7 @@ public class RenameManagerTests : BaseTestClass
 
     private AnimationViewModel CreateAnimationWithKeyframes(params AnimatedKeyframeViewModel[] keyframes)
     {
-        AnimationViewModel animation = new AnimationViewModel(_bitmapLoader);
+        AnimationViewModel animation = new AnimationViewModel(_bitmapLoader, _selectedState, _wireframeObjectManager);
         foreach (AnimatedKeyframeViewModel keyframe in keyframes)
         {
             animation.Keyframes.Add(keyframe);
@@ -147,7 +133,10 @@ public class RenameManagerTests : BaseTestClass
             Mock.Of<IDialogService>(),
             Mock.Of<IAnimationCollectionViewModelManager>(),
             Mock.Of<IRenameManager>(),
-            _bitmapLoader);
+            _bitmapLoader,
+            _selectedState,
+            _wireframeObjectManager,
+            Mock.Of<IOutputManager>());
         foreach (AnimationViewModel animation in animations)
         {
             viewModel.Animations.Add(animation);
@@ -183,15 +172,5 @@ public class RenameManagerTests : BaseTestClass
         {
             throw new Exception("Test body threw on the STA thread.", caught);
         }
-    }
-
-    public override void Dispose()
-    {
-        PropertyInfo prop = typeof(Locator).GetProperty(
-            "ServiceProviders", BindingFlags.NonPublic | BindingFlags.Static)!;
-        List<IServiceProvider> providers = (List<IServiceProvider>)prop.GetValue(null)!;
-        providers.Remove(_testServiceProvider);
-
-        base.Dispose();
     }
 }

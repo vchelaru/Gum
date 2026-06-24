@@ -3,6 +3,7 @@ using Gum.Managers;
 using Gum.Services.Dialogs;
 using Gum.StateAnimation.SaveClasses;
 using Gum.ToolStates;
+using Gum.Wireframe;
 using StateAnimationPlugin.Managers;
 using System;
 using System.Collections.Generic;
@@ -10,7 +11,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Gum.Services;
 using ToolsUtilities;
 
 namespace StateAnimationPlugin.ViewModels;
@@ -19,6 +19,8 @@ public class SubAnimationSelectionDialogViewModel : DialogViewModel
 {
     private readonly IAnimationFilePathService _animationFilePathService;
     private readonly IOutputManager _outputManager;
+    private readonly ISelectedState _selectedState;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IAnimationCollectionViewModelManager _animationCollectionViewModelManager;
     private readonly IBitmapLoader _bitmapLoader;
 
@@ -57,10 +59,13 @@ public class SubAnimationSelectionDialogViewModel : DialogViewModel
     public override bool CanExecuteAffirmative() => SelectedAnimation is not null;
 
     public SubAnimationSelectionDialogViewModel(IAnimationCollectionViewModelManager animationCollectionViewModelManager,
-        IBitmapLoader bitmapLoader)
+        IBitmapLoader bitmapLoader, IOutputManager outputManager, ISelectedState selectedState,
+        IWireframeObjectManager wireframeObjectManager)
     {
-        _outputManager = Locator.GetRequiredService<IOutputManager>();
-        _animationFilePathService = new AnimationFilePathService(Locator.GetRequiredService<ISelectedState>());
+        _outputManager = outputManager;
+        _selectedState = selectedState;
+        _wireframeObjectManager = wireframeObjectManager;
+        _animationFilePathService = new AnimationFilePathService(selectedState);
         _animationCollectionViewModelManager = animationCollectionViewModelManager;
         _bitmapLoader = bitmapLoader;
     }
@@ -90,7 +95,7 @@ public class SubAnimationSelectionDialogViewModel : DialogViewModel
                 foreach (var item in save.Animations)
                 {
                     AnimationViewModel toReturn = AnimationViewModel.FromSave(
-                        item, elementSave!, _animationCollectionViewModelManager, _bitmapLoader);
+                        item, elementSave!, _animationCollectionViewModelManager, _bitmapLoader, _selectedState, _wireframeObjectManager);
 
                     toReturn.Name = item.Name;
                     toReturn.ContainingInstance = container.InstanceSave;
