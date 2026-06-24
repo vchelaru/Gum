@@ -24,3 +24,4 @@ re-litigating it.
 | [0002](0002-target-code-first-frameworks-not-engines.md) | Target code-first C# frameworks, not full engines | Accepted | 2026-06-20 |
 | [0003](0003-decouple-tool-ui-from-logic.md) | Decouple the Gum tool's UI from its application logic | Accepted | 2026-06-20 |
 | [0004](0004-viewmodels-expose-neutral-presentation-state.md) | ViewModels expose resolved display state in neutral types | Accepted | 2026-06-20 |
+| [0005](0005-headless-presentation-assembly.md) | Home for the headless presentation layer: a dedicated `Gum.Presentation` assembly | Accepted | 2026-06-24 |
