@@ -66,11 +66,9 @@ See `.claude/code-style.md` for all code style rules. Read that file before writ
 
 The Gum tool has been progressively migrated to constructor-injected services (`ISelectedState`, `IDialogService`, `IUndoManager`, `PluginManager`, etc.). When editing tool code, prefer the injected service over the static singleton if both exist (e.g. use the injected `_pluginManager` rather than `PluginManager.Self`).
 
-There is a dedicated later phase for draining the remaining `.Self` singletons wholesale, but if one is **blocking the task in front of you** — typically because the class can't be unit-tested until it takes its dependencies via the constructor — drain it on the spot in the same PR rather than deferring or asking about phase timing. See the `refactoring-direction` skill for the judgment call and for breaking the DI construction cycle that the `Self`+`Initialize`+`Locator` pattern usually hides (inject the back-edge dependency as `Lazy<T>`).
+**Load the `refactoring-direction` skill before any refactoring** (and before draining a singleton). It owns the static-singleton rules: drain a blocking singleton on the spot — in the same PR — rather than deferring or asking about phase timing; how to break the DI construction cycle the `Self`+`Initialize`+`Locator` pattern hides (inject the back-edge as `Lazy<T>`); and the **sanctioned exceptions that must never be drained** — `ObjectFinder.Self` and the `RenderingLibrary`/`InputLibrary` runtime singletons (`Renderer.Self`, `Cursor.Self`, etc.).
 
 When draining a **plugin** ctor (`Locator`/`.Self` → `[ImportingConstructor]`), `AllPluginsCompositionTests` guards that every plugin still composes via MEF. If the drain bridges a *new* service in `PluginManager.LoadPlugins`, mirror that type into `PluginBridgedServiceTypes.All` or the test goes red — see the `gum-tool-plugins` skill.
-
-**`ObjectFinder.Self` is the exception.** It is intentionally still a static singleton across the entire codebase (tool, runtimes, tests). An `IObjectFinder` interface does exist and is even DI-registered (`Builder.cs` binds it to the `ObjectFinder.Self` instance), but the ~476 `.Self` call sites are intentionally left as-is: replacing them wholesale is a project-wide refactor — do not attempt it as drive-by cleanup. Calls to `ObjectFinder.Self.GetBaseElements(...)`, `ObjectFinder.Self.GetDefaultChildName(...)`, etc. are acceptable in any context.
 
 ## Searching C# Code
 

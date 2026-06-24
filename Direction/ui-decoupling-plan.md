@@ -322,16 +322,20 @@ above are only the front door. Measured on this PR's base (`grep` over `Gum/` + 
 - **`Locator.GetRequiredService` call sites: ~224.** This is the fallback Phase 2 must drive to
   zero. Plugin bridges *relocate* these (composition root) but don't reduce the count much; the
   bulk are inside services that still self-locate.
-- **`.Self` call sites: ~700 total, but ~476 are `ObjectFinder.Self`** (sanctioned — stays). So the
-  **drainable** `.Self` surface is **~224**, dominated by `StandardElementsManager` (51),
-  `Cursor` (36), `Renderer` (33), `ShapeManager` (32), `LoaderManager` (22), `SelectedState` (16).
-- **Open scoping question that swings the estimate:** ~130 of those drainable `.Self` calls are
-  `RenderingLibrary` runtime/input singletons (`Renderer`, `ShapeManager`, `SpriteManager`,
-  `TimeManager`, `LoaderManager`, `Cursor`, `Keyboard`). These are shared across *all* runtimes, not
-  tool-only — they may deserve the same sanctioned-exception treatment as `ObjectFinder` rather than
-  a tool-DI drain. Decide this before counting them as Phase 2 debt. If they're out of scope, the
-  tool-DI `.Self` surface drops to ~90 (`StandardElementsManager`, `SelectedState`, `GumCommands`,
-  `PluginManager`, `UnitConverter`, …).
+- **`.Self` call sites: ~700 total, but ~476 are `ObjectFinder.Self`** (sanctioned — stays), and a
+  further ~130 are `RenderingLibrary` / `InputLibrary` runtime singletons (also sanctioned — see the
+  resolved question below). So the **drainable tool-DI `.Self` surface is ~90**, dominated by
+  `StandardElementsManager` (51) and `SelectedState` (16), then `GumCommands`, `PluginManager`,
+  `UnitConverter`, ….
+- **Scoping question — RESOLVED (2026-06-24): runtime singletons are out, permanently, in any phase.**
+  The ~130 drainable `.Self` calls that hit `RenderingLibrary` / `InputLibrary` runtime singletons
+  (`Renderer`, `ShapeManager`, `SpriteManager`, `LoaderManager`, `Cursor`, `Keyboard`, …) are **not**
+  Phase 2 (or any-phase) drain targets — they get the same sanctioned-exception treatment as
+  `ObjectFinder.Self`. Rationale: they live in the cross-platform runtime libraries and are shared by
+  *every* runtime (MonoGame/KNI/FNA/Skia/Raylib) as well as the tool; DI-draining them is a
+  runtime-wide refactor outside the tool's UI/logic decoupling goal. The drain line is **ownership** —
+  tool-owned singletons stay in scope, runtime-owned ones do not. The permanent form of this rule lives
+  in the `refactoring-direction` skill (rule 4).
 
 **Honest standing:** the *plugin ctor-drain* sub-workstream is **complete** — every substantive
 plugin ctor (Properties/TextureCoordinate/State/TreeView/CodeOutput/StateAnimation/EditorTab) now
@@ -343,6 +347,30 @@ few method-body/`StartUp` lookups noted above). **Phase 2 as a whole is still ea
 the visible plugin entry points are now injected, but the ~224 `Locator` fallback sites behind them —
 inside the services those plugins consume — are largely untouched. Don't read "all plugins drained" as
 "Phase 2 nearly done"; the next front is the service-layer self-location, not more plugins.
+
+### Next up (post-plugin Phase 2) — added 2026-06-24
+
+The plugin ctor-drain pass is done and the runtime singletons are scoped out, so the next front is
+the **service layer**: the ~90 drainable *tool-DI* `.Self` sites and the ~224
+`Locator.GetRequiredService` fallback sites *inside* the services the plugins now inject. Suggested
+ordering (cheapest, highest-confidence first):
+
+- **First bite — `SelectedState.Self` → injected `ISelectedState`.** The interface already exists, is
+  DI-registered, and is injected everywhere as `_selectedState`; the remaining ~16 `.Self` calls are
+  laggard call sites. Pure call-site migration, low risk — a good warm-up for the service-layer pass.
+- **Then the bigger tool-DI `.Self` targets:** `StandardElementsManager` (~51 — first check whether an
+  interface exists; if not, extract one or register the concrete, *then* migrate call sites — likely
+  its own PR), then `GumCommands`, `UnitConverter`, etc. Leave `PluginManager.Self` for later — it
+  carries the same self-injection cycle smell deliberately kept in the drained plugins.
+- **The real bulk — the ~224 `Locator` fallback:** services that self-locate their own deps instead of
+  taking them via the ctor. Drain the biggest self-locating services first. Same recipe as the plugins,
+  minus the MEF bridge (these are host-container, not MEF parts): inject the interface, break any
+  construction cycle with `Lazy<T>` on the *consumer's* edge (rule 4 of the `refactoring-direction`
+  skill).
+- **Do NOT drain:** `ObjectFinder.Self` and the `RenderingLibrary`/`InputLibrary` runtime singletons
+  (see the resolved scoping question above and the `refactoring-direction` skill).
+
+Definition of done below still applies to each of these: every drain lands a *tested* unit.
 
 ## Definition of done — every change lands a *tested* unit
 
