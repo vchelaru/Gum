@@ -98,6 +98,7 @@
 		<ProjectReference Include="..\GumCommon\GumCommon.csproj" />
 		<ProjectReference Include="..\Runtimes\GumExpressions\GumExpressions.csproj" />
 		<ProjectReference Include="..\Tools\Gum.ProjectServices\Gum.ProjectServices.csproj" />
+		<ProjectReference Include="..\Tools\Gum.Presentation\Gum.Presentation.csproj" />
 		<ProjectReference Include="..\InputLibrary\InputLibrary.csproj" />
 		<ProjectReference Include="..\WpfDataUi\WpfDataUi.csproj" />
 	</ItemGroup>
