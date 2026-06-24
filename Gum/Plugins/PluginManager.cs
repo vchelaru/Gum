@@ -33,6 +33,8 @@ using Gum.Services.Fonts;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Logic;
 using Gum.Logic.FileWatch;
+using Gum.Controls;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.Plugins;
 
@@ -855,6 +857,19 @@ public class PluginManager : IPluginManager
             // (IFavoriteComponentManager) construction-time deps:
             batch.AddExportedValue<InheritanceLogic>(Locator.GetRequiredService<InheritanceLogic>());
             batch.AddExportedValue<IFavoriteComponentManager>(Locator.GetRequiredService<IFavoriteComponentManager>());
+
+            // Medium-tier plugin ctor drains (cheapest-first batch): MainHideShowToolsPlugin
+            // (MainPanelViewModel), MainVariableGridPlugin (PropertyGridManager,
+            // IVariableReferenceLogic), MainErrorsPlugin (IErrorChecker, IMessenger),
+            // MainFileWatchPlugin (FileWatchLogic, PeriodicUiTimer). PeriodicUiTimer is
+            // transient; this bridges the single instance MainFileWatchPlugin consumes.
+            batch.AddExportedValue<MainPanelViewModel>(Locator.GetRequiredService<MainPanelViewModel>());
+            batch.AddExportedValue<PropertyGridManager>(Locator.GetRequiredService<PropertyGridManager>());
+            batch.AddExportedValue<IVariableReferenceLogic>(Locator.GetRequiredService<IVariableReferenceLogic>());
+            batch.AddExportedValue<IErrorChecker>(Locator.GetRequiredService<IErrorChecker>());
+            batch.AddExportedValue<IMessenger>(Locator.GetRequiredService<IMessenger>());
+            batch.AddExportedValue<FileWatchLogic>(Locator.GetRequiredService<FileWatchLogic>());
+            batch.AddExportedValue<PeriodicUiTimer>(Locator.GetRequiredService<PeriodicUiTimer>());
 
 
             var container = new CompositionContainer(catalog);

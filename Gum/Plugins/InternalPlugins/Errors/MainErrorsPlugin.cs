@@ -21,28 +21,30 @@ public class MainErrorsPlugin : PriorityPlugin
     #region Fields/Properties
 
     AllErrorsViewModel viewModel;
-    IErrorChecker errorChecker;
-    private IMessenger _messenger;
+    private readonly IErrorChecker errorChecker;
+    private readonly IMessenger _messenger;
     ErrorDisplay control;
     PluginTab tabPage;
     private ErrorTabHeader _tabPageHeader;
-    private ISelectedState _selectedState;
+    private readonly ISelectedState _selectedState;
 
     #endregion
+
+    [ImportingConstructor]
+    public MainErrorsPlugin(IErrorChecker errorChecker, IMessenger messenger, ISelectedState selectedState)
+    {
+        this.errorChecker = errorChecker;
+        _messenger = messenger;
+        _selectedState = selectedState;
+    }
 
     public override void StartUp()
     {
         viewModel = new AllErrorsViewModel();
 
-        errorChecker = Locator.GetRequiredService<IErrorChecker>();
-
-        _messenger = Locator.GetRequiredService<IMessenger>();
-
         _messenger.Register<RequestErrorRefreshMessage>(
             this,
             (_, message) => HandleErrorRefreshRequest(message));
-
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
 
         CreateViews();
 
