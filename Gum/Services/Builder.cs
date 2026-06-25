@@ -92,6 +92,10 @@ file static class ServiceCollectionExtensions
         // IUndoPluginNotifier: narrow headless port (ADR-0005 Phase 3) so UndoManager no longer depends on the
         // concrete PluginManager. Resolves to the same PluginManager singleton, so plugin calls fire as before.
         services.AddSingleton<IUndoPluginNotifier>(provider => provider.GetRequiredService<PluginManager>());
+        // IDeletePluginNotifier: narrow headless port (ADR-0005 Phase 3) so DeleteLogic no longer depends on the
+        // concrete PluginManager for delete notifications. Resolves to the same PluginManager singleton, so plugin
+        // calls fire as before. The two WPF-coupled delete calls (ShowDeleteDialog/DeleteConfirmed) remain on IPluginManager.
+        services.AddSingleton<IDeletePluginNotifier>(provider => provider.GetRequiredService<PluginManager>());
         services.AddSingleton<TypeManager>();
         services.AddSingleton<ITypeManager>(provider => provider.GetRequiredService<TypeManager>());
         services.AddSingleton<ProjectManager>();
