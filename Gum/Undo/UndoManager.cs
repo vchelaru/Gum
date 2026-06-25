@@ -13,101 +13,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Windows.Controls;
 using ToolsUtilities;
 
 namespace Gum.Undo;
-
-#region UndoLock
-public class UndoLock : IDisposable
-{
-    private readonly UndoManager _undoManager;
-
-    public UndoLock(UndoManager manager)
-    {
-        _undoManager = manager;
-    }
-    
-    public void Dispose()
-    {
-        _undoManager.UndoLocks.Remove(this);
-    }
-}
-
-#endregion
-
-#region ElementHistory
-
-public class HistoryAction
-{
-    public UndoSnapshot UndoState { get; set; }
-    public UndoSnapshot RedoState { get; set; }
-
-    public override string ToString()
-    {
-        return $"Undo:{UndoState}";
-    }
-}
-
-public class ElementHistory
-{
-    public ElementSave FinalState { get; set; }
-
-    /// <summary>
-    /// A list of actions for the current element, where the most recent action is at the end of the list.
-    /// </summary>
-    public List<HistoryAction> Actions { get; set; } = new List<HistoryAction>();
-
-    /// <summary>
-    /// The index of the next undo to perform. If this is -1, then there are no undos to perform.
-    /// Note that this means that the next redo to perform is at UndoIndex + 1.
-    /// </summary>
-    public int UndoIndex { get; set; } = -1;
-}
-
-#endregion
-
-#region BehaviorHistory
-
-public class BehaviorSnapshot
-{
-    public BehaviorSave Behavior { get; set; }
-}
-
-public class BehaviorHistoryAction
-{
-    public BehaviorSnapshot UndoState { get; set; }
-    public BehaviorSnapshot? RedoState { get; set; }
-}
-
-public class BehaviorHistory
-{
-    public List<BehaviorHistoryAction> Actions { get; set; } = new List<BehaviorHistoryAction>();
-
-    /// <summary>
-    /// The index of the next undo to perform. If this is -1, there are no undos to perform.
-    /// </summary>
-    public int UndoIndex { get; set; } = -1;
-}
-
-#endregion
-
-#region UndoOperation
-
-public enum UndoOperation
-{
-    Undo,
-    Redo,
-    EntireHistoryChange,
-    HistoryAppended
-}
-
-public class UndoOperationEventArgs : EventArgs
-{
-    public UndoOperation Operation { get; set; }
-}
-
-#endregion
 
 public class UndoManager : IUndoManager
 {
@@ -448,7 +356,10 @@ public class UndoManager : IUndoManager
 
     public UndoLock RequestLock()
     {
-        var undoLock = new UndoLock(this);
+        // UndoLock lives in the headless Gum.Presentation assembly and can no longer reach back
+        // into UndoManager directly, so we hand it the removal as a callback (ADR-0005 Phase 3).
+        UndoLock undoLock = null!;
+        undoLock = new UndoLock(() => UndoLocks.Remove(undoLock));
 
         UndoLocks.Add(undoLock);
 

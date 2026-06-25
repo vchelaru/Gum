@@ -68,6 +68,21 @@ public class UndoManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void RequestLock_WhenDisposed_RemovesLockFromUndoLocks()
+    {
+        // Pins the UndoLock back-edge: RequestLock registers the lock, and disposing it
+        // removes the same lock from UndoManager's UndoLocks collection. This behavior must
+        // survive UndoLock moving headless (its Dispose now invokes an injected callback
+        // instead of reaching back into UndoManager directly). See ADR-0005 Phase 3.
+        var undoLock = _undoManager.RequestLock();
+        _undoManager.UndoLocks.ShouldContain(undoLock);
+
+        undoLock.Dispose();
+
+        _undoManager.UndoLocks.ShouldNotContain(undoLock);
+    }
+
+    [Fact]
     public void PerformRedo_ShouldRestoreBehavior_AfterUndoingBehaviorAdd()
     {
         ComponentSave component = _selectedState.Object.SelectedComponent!;
