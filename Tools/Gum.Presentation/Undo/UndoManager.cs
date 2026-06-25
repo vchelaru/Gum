@@ -4,9 +4,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
-using Gum.Managers;
 using Gum.ToolStates;
-using Gum.Wireframe;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -769,39 +767,34 @@ public class UndoManager : IUndoManager
         return addedAndRemovedInstances;
     }
 
-    // Normally we wouldn't do this in the pattern but the originator itself
-    // can't be found without project-wide knowledge...so we have to do some type-specific
-    // logic.
-    ElementSave GetWhatToApplyTo(UndoObject undoObject)
-    {
-        object parentAsObject = undoObject.Parent;
-        ElementSave parentAsElementSave = parentAsObject as ElementSave;
-        return parentAsElementSave;
-
-        //if (undoObject.StateSave != null)
-        //{
-        //    if (parentAsElementSave != null)
-        //    {
-        //        // for now we will just assume the default state
-        //        return parentAsElementSave.DefaultState;
-        //    }
-        //}
-        //if (undoObject.Instances != null)
-        //{
-        //    if (parentAsElementSave != null)
-        //    {
-        //        return parentAsElementSave.Instances;
-        //    }
-        //}
-
-        //return null;
-
-    }
-
     void ApplyStateVariables(StateSave undoStateSave, StateSave toApplyTo, ElementSave parent)
     {
-        toApplyTo.SetFrom(undoStateSave);
+        SetStateContentsFrom(toApplyTo, undoStateSave);
+    }
 
+    // Copies a state's name, variables, and variable lists onto another state. This was the tool-only
+    // StateSave.SetFrom extension; it moved into the headless layer along with UndoManager (ADR-0005
+    // Phase 3) since UndoManager was its only caller. FixEnumerations is called unconditionally,
+    // matching the tool's prior behavior (the extension guarded it with #if GUM, and GUM is defined in
+    // the tool build).
+    private static void SetStateContentsFrom(StateSave stateSave, StateSave otherStateSave)
+    {
+        stateSave.Name = otherStateSave.Name;
+
+        stateSave.Variables.Clear();
+        stateSave.VariableLists.Clear();
+
+        foreach (VariableSave variable in otherStateSave.Variables)
+        {
+            stateSave.Variables.Add(variable.Clone());
+        }
+
+        foreach (VariableListSave variableList in otherStateSave.VariableLists)
+        {
+            stateSave.VariableLists.Add(FileManager.CloneSaveObject(variableList));
+        }
+
+        stateSave.FixEnumerations();
     }
 
     private void PropagateVariableRenames(ElementSave parent,
@@ -1077,7 +1070,7 @@ public class UndoManager : IUndoManager
             target.Categories.Add(category);
         }
 
-        target.RequiredVariables.SetFrom(snapshot.Behavior.RequiredVariables);
+        SetStateContentsFrom(target.RequiredVariables, snapshot.Behavior.RequiredVariables);
 
         target.RequiredInstances.Clear();
         foreach (var instance in snapshot.Behavior.RequiredInstances)

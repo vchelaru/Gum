@@ -19,6 +19,10 @@
 
 	<ItemGroup>
 		<InternalsVisibleTo Include="Gum.Presentation.Tests" />
+		<!-- UndoManagerTests live in GumToolUnitTests and reach UndoManager's internal UndoLocks.
+		     UndoManager moved here from Gum.csproj (ADR-0005 Phase 3); Gum.csproj already granted
+		     this via Gum/Properties/AssemblyInfo.cs, so the grant moves with the class. -->
+		<InternalsVisibleTo Include="GumToolUnitTests" />
 	</ItemGroup>
 
 	<ItemGroup>
