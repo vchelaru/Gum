@@ -5,7 +5,6 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
-using Gum.Plugins;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using System;
@@ -26,7 +25,7 @@ public class UndoManager : IUndoManager
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly IMessenger _messenger;
-    private readonly PluginManager _pluginManager;
+    private readonly IUndoPluginNotifier _pluginNotifier;
 
     internal ObservableCollection<UndoLock> UndoLocks { get; private set; }
 
@@ -75,14 +74,14 @@ public class UndoManager : IUndoManager
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
         IMessenger messenger,
-        PluginManager pluginManager)
+        IUndoPluginNotifier pluginNotifier)
     {
         _selectedState = selectedState;
         _renameLogic = renameLogic;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _messenger = messenger;
-        _pluginManager = pluginManager;
+        _pluginNotifier = pluginNotifier;
 
         UndoLocks = new ObservableCollection<UndoLock>();
         UndoLocks.CollectionChanged += HandleUndoLockChanged;
@@ -507,9 +506,9 @@ public class UndoManager : IUndoManager
         {
             foreach(var addedInstance in addedAndRemovedInstances.Value.Added)
             {
-                _pluginManager.InstanceAdd(toApplyTo, addedInstance);
+                _pluginNotifier.InstanceAdd(toApplyTo, addedInstance);
             }
-            _pluginManager.InstancesDelete(toApplyTo, addedAndRemovedInstances.Value.Removed);
+            _pluginNotifier.InstancesDelete(toApplyTo, addedAndRemovedInstances.Value.Removed);
         }
 
         if (shouldRefreshStateTreeView)
@@ -1097,7 +1096,7 @@ public class UndoManager : IUndoManager
 
         _guiCommands.RefreshStateTreeView();
 
-        _pluginManager.BehaviorSelected(behavior);
+        _pluginNotifier.BehaviorSelected(behavior);
 
         _fileCommands.TryAutoSaveBehavior(behavior);
     }

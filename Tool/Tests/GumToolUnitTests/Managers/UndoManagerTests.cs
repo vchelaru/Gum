@@ -4,8 +4,6 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
-using Gum.Plugins;
-using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
 using Gum.Undo;
 using Moq;
@@ -24,7 +22,7 @@ public class UndoManagerTests : BaseTestClass
     private readonly Mock<IGuiCommands> _guiCommands;
     private readonly Mock<IFileCommands> _fileCommands;
     private readonly Mock<IMessenger> _messenger;
-    private readonly Mock<PluginManager> _pluginManager;
+    private readonly Mock<IUndoPluginNotifier> _pluginNotifier;
     private readonly UndoManager _undoManager;
 
     public UndoManagerTests()
@@ -34,8 +32,7 @@ public class UndoManagerTests : BaseTestClass
         _guiCommands = new Mock<IGuiCommands>();
         _fileCommands = new Mock<IFileCommands>();
         _messenger = new Mock<IMessenger>();
-        _pluginManager = new Mock<PluginManager>();
-        _pluginManager.Object.Plugins = new List<PluginBase>();
+        _pluginNotifier = new Mock<IUndoPluginNotifier>();
 
         ComponentSave component = new();
         component.States.Add(new Gum.DataTypes.Variables.StateSave 
@@ -63,7 +60,7 @@ public class UndoManagerTests : BaseTestClass
             _guiCommands.Object,
             _fileCommands.Object,
             _messenger.Object,
-            _pluginManager.Object
+            _pluginNotifier.Object
             );
     }
 
@@ -192,7 +189,7 @@ public class UndoManagerTests : BaseTestClass
         _undoManager.RecordUndo();
         _undoManager.PerformUndo();
 
-        _pluginManager.Verify(x => x.InstanceAdd(It.IsAny<ElementSave>(), It.IsAny<InstanceSave>()),
+        _pluginNotifier.Verify(x => x.InstanceAdd(It.IsAny<ElementSave>(), It.IsAny<InstanceSave>()),
             Times.Once);
     }
 
@@ -215,9 +212,33 @@ public class UndoManagerTests : BaseTestClass
         _undoManager.RecordUndo();
         _undoManager.PerformUndo();
 
-        _pluginManager.Verify(
+        _pluginNotifier.Verify(
             x => x.InstancesDelete(It.IsAny<ElementSave>(), It.IsAny<InstanceSave[]>()),
             Times.Once);
+    }
+
+    [Fact]
+    public void PerformUndo_OnBehaviorChange_ShouldNotifyPluginOfBehaviorSelected()
+    {
+        // Pins the third undo->plugin notification (alongside InstanceAdd / InstancesDelete above):
+        // a behavior undo must still fire BehaviorSelected. This is the call that now travels through the
+        // narrow IUndoPluginNotifier port rather than the concrete PluginManager (ADR-0005 Phase 3).
+        var behavior = new BehaviorSave { Name = "MyBehavior" };
+        var category = new StateSaveCategory { Name = "MyCategory" };
+        behavior.Categories.Add(category);
+
+        _selectedState
+            .Setup(x => x.SelectedBehavior)
+            .Returns(behavior);
+
+        _undoManager.RecordBehaviorState();
+
+        category.States.Add(new StateSave { Name = "State1" });
+
+        _undoManager.RecordBehaviorUndo();
+        _undoManager.PerformUndo();
+
+        _pluginNotifier.Verify(x => x.BehaviorSelected(behavior), Times.Once);
     }
 
 

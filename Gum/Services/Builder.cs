@@ -89,6 +89,9 @@ file static class ServiceCollectionExtensions
         // (Program.cs) does the heavy two-stage setup and registers the global instance for the static plugin machinery.
         services.AddSingleton<PluginManager>();
         services.AddSingleton<IPluginManager>(provider => provider.GetRequiredService<PluginManager>());
+        // IUndoPluginNotifier: narrow headless port (ADR-0005 Phase 3) so UndoManager no longer depends on the
+        // concrete PluginManager. Resolves to the same PluginManager singleton, so plugin calls fire as before.
+        services.AddSingleton<IUndoPluginNotifier>(provider => provider.GetRequiredService<PluginManager>());
         services.AddSingleton<TypeManager>();
         services.AddSingleton<ITypeManager>(provider => provider.GetRequiredService<TypeManager>());
         services.AddSingleton<ProjectManager>();
