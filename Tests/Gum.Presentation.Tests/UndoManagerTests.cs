@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -14,7 +14,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GumToolUnitTests.Managers;
+namespace Gum.Presentation.Tests;
 public class UndoManagerTests : BaseTestClass
 {
     private readonly Mock<ISelectedState> _selectedState;
@@ -35,7 +35,7 @@ public class UndoManagerTests : BaseTestClass
         _pluginNotifier = new Mock<IUndoPluginNotifier>();
 
         ComponentSave component = new();
-        component.States.Add(new Gum.DataTypes.Variables.StateSave 
+        component.States.Add(new Gum.DataTypes.Variables.StateSave
         {
             Name="Default"
         });
@@ -262,7 +262,7 @@ public class UndoManagerTests : BaseTestClass
             component,
             elementHistory.Actions[0].UndoState.Element);
 
-        comparisonInformation.ToString().ShouldBe("Variables in Default: X=10");   
+        comparisonInformation.ToString().ShouldBe("Variables in Default: X=10");
     }
 
     [Fact]
@@ -535,4 +535,108 @@ public class UndoManagerTests : BaseTestClass
         behavior.Categories[0].States.Count.ShouldBe(0);
     }
 
+    // ---------------------------------------------------------------------------------------------
+    // New headless coverage (added when the suite was migrated out of GumToolUnitTests into
+    // Gum.Presentation.Tests). These exercise core undo/redo control-flow branches that the ported
+    // tests above did not reach — the empty-history early-outs, the RequestLock defer-until-disposed
+    // contract, the redo-stack truncation on a divergent edit, ClearAll, and the post-undo autosave
+    // port interaction — all against mocked ports with no UI present.
+    // ---------------------------------------------------------------------------------------------
+
+    [Fact]
+    public void CanRedo_ShouldReturnFalse_WhenNoChangesRecorded()
+    {
+        _undoManager.CanRedo().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void CanUndo_ShouldReturnFalse_WhenNoChangesRecorded()
+    {
+        _undoManager.CanUndo().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ClearAll_ShouldDiscardUndoHistory()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        component.DefaultState.SetValue("X", 10f);
+
+        _undoManager.RecordState();
+        component.DefaultState.SetValue("X", 11f);
+        _undoManager.RecordUndo();
+        _undoManager.CanUndo().ShouldBeTrue();
+
+        _undoManager.ClearAll();
+
+        _undoManager.CanUndo().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void PerformRedo_AfterDivergentChange_ShouldNotBeAvailable()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        component.DefaultState.SetValue("X", 10f);
+
+        _undoManager.RecordState();
+        component.DefaultState.SetValue("X", 11f);
+        _undoManager.RecordUndo();
+
+        // Undo back to 10; a redo to 11 is now available.
+        _undoManager.PerformUndo();
+        _undoManager.CanRedo().ShouldBeTrue();
+
+        // A new, divergent edit discards the redo branch (the truncation path in RecordUndo).
+        component.DefaultState.SetValue("X", 20f);
+        _undoManager.RecordUndo();
+
+        _undoManager.CanRedo().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void PerformUndo_ShouldTriggerProjectAutoSave()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        component.DefaultState.SetValue("X", 10f);
+
+        _undoManager.RecordState();
+        component.DefaultState.SetValue("X", 11f);
+        _undoManager.RecordUndo();
+
+        _undoManager.PerformUndo();
+
+        // TryAutoSaveProject has an optional parameter; supply it explicitly so the Moq
+        // expression tree compiles (CS0854). UndoManager calls it with the default.
+        _fileCommands.Verify(x => x.TryAutoSaveProject(It.IsAny<bool>()), Times.Once);
+    }
+
+    [Fact]
+    public void PerformUndo_WhenNothingRecorded_ShouldLeaveValueUnchanged()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        component.DefaultState.SetValue("X", 7f);
+
+        _undoManager.PerformUndo();
+
+        component.DefaultState.GetValueOrDefault<float>("X").ShouldBe(7f);
+    }
+
+    [Fact]
+    public void RequestLock_ShouldDeferRecording_UntilDisposed()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        component.DefaultState.SetValue("X", 10f);
+        _undoManager.RecordState();
+
+        UndoLock undoLock = _undoManager.RequestLock();
+        component.DefaultState.SetValue("X", 11f);
+
+        // While the lock is held, RecordUndo is suppressed, so nothing is recorded yet.
+        _undoManager.CanUndo().ShouldBeFalse();
+
+        undoLock.Dispose();
+
+        // Disposing the last lock fires RecordUndo once, capturing the change as a single undo.
+        _undoManager.CanUndo().ShouldBeTrue();
+        _undoManager.CurrentElementHistory.Actions.Count.ShouldBe(1);
+    }
 }
