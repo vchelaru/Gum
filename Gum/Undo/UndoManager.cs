@@ -21,7 +21,7 @@ public class UndoManager : IUndoManager
     #region Fields
 
     private readonly ISelectedState _selectedState;
-    private readonly IRenameLogic _renameLogic;
+    private readonly IUndoRenameLogic _renameLogic;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly IMessenger _messenger;
@@ -69,8 +69,8 @@ public class UndoManager : IUndoManager
 
     #endregion
 
-    public UndoManager(ISelectedState selectedState, 
-        IRenameLogic renameLogic, 
+    public UndoManager(ISelectedState selectedState,
+        IUndoRenameLogic renameLogic,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
         IMessenger messenger,
