@@ -247,7 +247,17 @@ public class HotkeyManager : IHotkeyManager
     #region App Wide Keys
 
 
-    public bool PreviewKeyDownAppWide(System.Windows.Input.KeyEventArgs e, bool enableEntireAppZoom = true)
+    public bool PreviewKeyDownAppWide(GumKeyEventArgs e, bool enableEntireAppZoom = true)
+    {
+        // Rebuild the WPF key event the matching logic consumes, run it, and copy Handled back onto the
+        // framework-neutral args. ToWpf() reads live modifier state via the keyboard device, as before.
+        System.Windows.Input.KeyEventArgs wpfE = e.ToWinFormsKeyEventArgs().ToWpf();
+        bool result = PreviewKeyDownAppWideInternal(wpfE, enableEntireAppZoom);
+        e.Handled = wpfE.Handled;
+        return result;
+    }
+
+    private bool PreviewKeyDownAppWideInternal(System.Windows.Input.KeyEventArgs e, bool enableEntireAppZoom = true)
     {
         Action? match = (e.Key, Keyboard.Modifiers) switch
         {
@@ -278,20 +288,31 @@ public class HotkeyManager : IHotkeyManager
 
     #region Element Tree View
 
-    public void HandleKeyDownElementTreeView(KeyEventArgs e)
+    public void HandleKeyDownElementTreeView(GumKeyEventArgs e)
     {
-        if (PreviewKeyDownAppWide(e.ToWpf()))
+        // Rebuild the WinForms key event the matching logic consumes, run the existing logic unchanged,
+        // then copy Handled/SuppressKeyPress back onto the framework-neutral args for the boundary caller.
+        KeyEventArgs winE = e.ToWinFormsKeyEventArgs();
+        try
         {
-            e.Handled = true;
-            return;
-        }
+            if (PreviewKeyDownAppWideInternal(winE.ToWpf()))
+            {
+                winE.Handled = true;
+                return;
+            }
 
-        HandleCopyCutPaste(e);
-        HandleDelete(e);
-        HandleReorder(e);
-        TryHandleCtrlF(e);
-        HandleGoToDefinition(e);
-        HandleRename(e);
+            HandleCopyCutPaste(winE);
+            HandleDelete(winE);
+            HandleReorder(winE);
+            TryHandleCtrlF(winE);
+            HandleGoToDefinition(winE);
+            HandleRename(winE);
+        }
+        finally
+        {
+            e.Handled = winE.Handled;
+            e.SuppressKeyPress = winE.SuppressKeyPress;
+        }
     }
 
     private void HandleRename(KeyEventArgs e)
@@ -426,27 +447,38 @@ public class HotkeyManager : IHotkeyManager
 
     #region Wireframe Control
 
-    public void HandleEditorKeyDown(KeyEventArgs e)
+    public void HandleEditorKeyDown(GumKeyEventArgs e)
     {
-        if (PreviewKeyDownAppWide(e.ToWpf(), enableEntireAppZoom: false))
+        // Rebuild the WinForms key event the matching logic consumes, run the existing logic unchanged,
+        // then copy Handled/SuppressKeyPress back onto the framework-neutral args for the boundary caller.
+        KeyEventArgs winE = e.ToWinFormsKeyEventArgs();
+        try
         {
-            e.Handled = true;
-            return;
+            if (PreviewKeyDownAppWideInternal(winE.ToWpf(), enableEntireAppZoom: false))
+            {
+                winE.Handled = true;
+                return;
+            }
+
+            HandleCopyCutPaste(winE);
+
+            HandleDelete(winE);
+            // Up moves the control "up" in the tree view, but when you are in the wireframe
+            // up should move it the opposite direction. We'll see how it goes...
+            // Update - inverting is not a good idea because it will work differently when
+            // dealing with stack layouts, and that's more complexity than I want to handle
+            HandleReorder(winE);
+
+            HandleGoToDefinition(winE);
         }
-
-        HandleCopyCutPaste(e);
-
-        HandleDelete(e);
-        // Up moves the control "up" in the tree view, but when you are in the wireframe
-        // up should move it the opposite direction. We'll see how it goes...
-        // Update - inverting is not a good idea because it will work differently when
-        // dealing with stack layouts, and that's more complexity than I want to handle
-        HandleReorder(e);
-
-        HandleGoToDefinition(e);
+        finally
+        {
+            e.Handled = winE.Handled;
+            e.SuppressKeyPress = winE.SuppressKeyPress;
+        }
     }
 
-    public void HandleKeyUpWireframe(KeyEventArgs e)
+    public void HandleKeyUpWireframe()
     {
         if (_isNudging)
         {

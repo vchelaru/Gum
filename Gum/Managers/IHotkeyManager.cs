@@ -40,10 +40,29 @@ public interface IHotkeyManager
     KeyCombination ZoomCameraOutAlternative { get; }
     KeyCombination Rename { get; }
 
-    bool PreviewKeyDownAppWide(System.Windows.Input.KeyEventArgs e, bool enableEntireAppZoom = true);
-    void HandleKeyDownElementTreeView(System.Windows.Forms.KeyEventArgs e);
-    void HandleEditorKeyDown(System.Windows.Forms.KeyEventArgs e);
-    void HandleKeyUpWireframe(System.Windows.Forms.KeyEventArgs e);
+    /// <summary>
+    /// Handles application-wide hotkeys (search, undo/redo, zoom). Callers at the WinForms/WPF boundary
+    /// translate their framework key event into a <see cref="Gum.Input.GumKeyEventArgs"/> and read
+    /// <see cref="Gum.Input.GumKeyEventArgs.Handled"/> back. Returns true if the key was handled.
+    /// </summary>
+    bool PreviewKeyDownAppWide(Gum.Input.GumKeyEventArgs e, bool enableEntireAppZoom = true);
+
+    /// <summary>
+    /// Handles element-tree-view key presses (copy/cut/paste, delete, reorder, rename, etc.). The caller
+    /// reads <see cref="Gum.Input.GumKeyEventArgs.Handled"/> / <see cref="Gum.Input.GumKeyEventArgs.SuppressKeyPress"/>
+    /// back to decide whether to swallow the key.
+    /// </summary>
+    void HandleKeyDownElementTreeView(Gum.Input.GumKeyEventArgs e);
+
+    /// <summary>
+    /// Handles wireframe/editor key presses (copy/cut/paste, delete, reorder, go-to-definition). The caller
+    /// reads <see cref="Gum.Input.GumKeyEventArgs.Handled"/> / <see cref="Gum.Input.GumKeyEventArgs.SuppressKeyPress"/>
+    /// back to decide whether to swallow the key.
+    /// </summary>
+    void HandleEditorKeyDown(Gum.Input.GumKeyEventArgs e);
+
+    /// <summary>Finalizes a nudge gesture (records undo, auto-saves) when a wireframe key is released.</summary>
+    void HandleKeyUpWireframe();
 
     /// <summary>
     /// Handles wireframe command keys (arrow-key nudging) using Gum's framework-neutral
