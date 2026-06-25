@@ -29,7 +29,7 @@ using ToolsUtilities;
 
 namespace Gum;
 
-public class ProjectManager : IProjectManager
+public class ProjectManager : IProjectManager, IDeleteProjectProvider
 {
     #region Fields
 

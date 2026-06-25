@@ -31,7 +31,7 @@ public class DeleteLogicTests : BaseTestClass
     private readonly Mock<IPluginManager> _pluginManager;
     private readonly Mock<IDeletePluginNotifier> _deletePluginNotifier;
     private readonly Mock<IWireframeObjectManager> _wireframeObjectManager;
-    private readonly Mock<IProjectManager> _projectManager;
+    private readonly Mock<IDeleteProjectProvider> _deleteProjectProvider;
     private readonly Mock<IReferenceFinder> _referenceFinder;
     private readonly GumProjectSave _gumProject;
 
@@ -45,7 +45,7 @@ public class DeleteLogicTests : BaseTestClass
         _pluginManager = _mocker.GetMock<IPluginManager>();
         _deletePluginNotifier = _mocker.GetMock<IDeletePluginNotifier>();
         _wireframeObjectManager = _mocker.GetMock<IWireframeObjectManager>();
-        _projectManager = _mocker.GetMock<IProjectManager>();
+        _deleteProjectProvider = _mocker.GetMock<IDeleteProjectProvider>();
         _referenceFinder = _mocker.GetMock<IReferenceFinder>();
 
         _referenceFinder
@@ -66,12 +66,12 @@ public class DeleteLogicTests : BaseTestClass
             _pluginManager.Object,
             _deletePluginNotifier.Object,
             _wireframeObjectManager.Object,
-            _projectManager.Object,
+            _deleteProjectProvider.Object,
             _referenceFinder.Object);
 
         _gumProject = new GumProjectSave();
         ObjectFinder.Self.GumProjectSave = _gumProject;
-        _projectManager.Setup(m => m.GumProjectSave).Returns(_gumProject);
+        _deleteProjectProvider.Setup(m => m.GumProjectSave).Returns(_gumProject);
     }
 
     [Fact]
