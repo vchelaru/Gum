@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using Gum.Mvvm;
-using Microsoft.Xaml.Behaviors.Core;
 
 namespace Gum.Services.Dialogs;
 
