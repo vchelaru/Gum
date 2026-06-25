@@ -8,6 +8,44 @@ on:
   workflow_dispatch:
 
 jobs:
+  # The Gum tool (Gum.sln) builds with neither submodules nor .NET mobile
+  # workloads: it contains no FNA/Sokol projects and no mobile-TFM projects
+  # (MonoGameGum/RaylibGum are not in it; the in-solution KniGum defaults to
+  # net8.0). Isolating the tool build + its WPF unit tests onto their own
+  # Windows runner lets this lane skip the ~5 min submodule-init + workload-
+  # restore setup tax that the runtime lane (Build-and-Test) pays, shrinking
+  # overall PR wall-clock for free (standard runners cost nothing on a public
+  # repo). This lane installs no workloads on purpose; if it ever fails on a
+  # missing workload, the error names exactly which one to add here. (#3349)
+  #
+  # Skipped on push to main: the tool was already validated in the PR, and unlike
+  # Build-and-Test this lane seeds no cache, so there is nothing to do on push.
+  Build-Tool:
+    if: github.event_name != 'push'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - name: Setup .NET SDKs
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Build Gum (tool)
+        run: |
+          dotnet restore "Gum.sln" --verbosity quiet
+          dotnet build "Gum.sln" --configuration Release --no-restore --verbosity quiet -p:WarningLevel=0
+      - name: GumToolUnitTests
+        run: dotnet test "Tool/Tests/GumToolUnitTests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+      - name: Publish Test Results
+        if: always()
+        uses: dorny/test-reporter@v2
+        with:
+          name: Tests Tool (Windows)
+          path: "TestResults/*.trx"
+          reporter: dotnet-trx
+          fail-on-error: true
+
   Build-and-Test:
     strategy:
       matrix:
@@ -78,11 +116,8 @@ jobs:
 
       # On push to main, the only purpose is to seed the workload cache.
       # If the cache already exists, skip the entire build and test.
-      - name: Build Gum (Windows Only)
-        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
-        run: |
-          dotnet restore "Gum.sln" --verbosity quiet
-          dotnet build "Gum.sln" --configuration Release --no-restore --verbosity quiet -p:WarningLevel=0
+      # (The Gum tool is built + unit-tested in the separate Build-Tool job at
+      # the top of this file, which needs neither submodules nor workloads. #3349)
 
       # IncludeAndroid=true forces KniGum's net9.0-android TFM to be included so CI
       # actually validates the #if ANDROID code compiles. KniGum uses opt-in for Android
@@ -163,7 +198,9 @@ jobs:
       # MonoGame's headless TestGame harness):
       #   - MonoGameGum.Tests              (headless TestGame harness)
       #   - SokolGum.Tests                 (Sokol; headless)
-      #   - GumToolUnitTests               (WPF tool unit tests; Windows only)
+      #   - GumToolUnitTests               (WPF tool unit tests; Windows only —
+      #                                     now runs in the separate Build-Tool
+      #                                     job at the top of this file, #3349)
       #   - Gum.Bundle.Tests               (brotli/tar/format; pure IO)
       #   - Gum.ProjectServices.Tests      (headless project loading, codegen)
       #   - Gum.ProjectServices.SkiaGum.Tests (SkiaGum SVG export — renders into
@@ -215,10 +252,6 @@ jobs:
       - name: SokolGum.Tests
         if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
         run: dotnet test "Tests/SokolGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
-
-      - name: GumToolUnitTests (Windows Only)
-        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
-        run: dotnet test "Tool/Tests/GumToolUnitTests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Gum.Bundle.Tests
         if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
