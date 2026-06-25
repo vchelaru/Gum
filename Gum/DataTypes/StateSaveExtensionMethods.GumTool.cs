@@ -51,35 +51,5 @@ namespace Gum.DataTypes.Variables
             pluginManager.InstanceRename(instanceSave.ParentContainer, instanceSave, oldName);
 
         }
-
-        public static void SetFrom(this StateSave stateSave, StateSave otherStateSave)
-        {
-            stateSave.Name = otherStateSave.Name;
-            // We don't want to do this because the otherStateSave may not have a parent
-            //stateSave.ParentContainer = otherStateSave.ParentContainer;
-
-            stateSave.Variables.Clear();
-            stateSave.VariableLists.Clear();
-
-            foreach (VariableSave variable in otherStateSave.Variables)
-            {
-                // This causes a lot of XML serialize/deserialize which can be slow
-                // Attempting to speed this up like this:
-                //stateSave.Variables.Add(FileManager.CloneSaveObject(variable));
-                stateSave.Variables.Add(variable.Clone());
-            }
-
-            foreach (VariableListSave variableList in otherStateSave.VariableLists)
-            {
-                stateSave.VariableLists.Add(FileManager.CloneSaveObject(variableList));
-            }
-
-#if GUM
-
-            stateSave.FixEnumerations();
-#endif
-        }
-
-
     }
 }
