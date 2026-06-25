@@ -402,7 +402,7 @@ public class ResizeInputHandler : InputHandlerBase
             heightMultiplier *= (((IPositionedSizedObject)ipso).Height / _resizeHandlesVisual.Handles.Height);
         }
 
-        if (Context.HotkeyManager.ResizeFromCenter.IsPressedInControl())
+        if (Context.HotkeyManager.IsPressedInControl(Context.HotkeyManager.ResizeFromCenter))
         {
             if (widthMultiplier != 0)
             {
@@ -517,7 +517,7 @@ public class ResizeInputHandler : InputHandlerBase
         InstanceSave? instanceSave,
         List<ElementWithState> elementStack)
     {
-        var isAxisLocked = Context.HotkeyManager.LockMovementToAxis.IsPressedInControl();
+        var isAxisLocked = Context.HotkeyManager.IsPressedInControl(Context.HotkeyManager.LockMovementToAxis);
         if (!isAxisLocked) return;
 
         bool supportsLockedAxis =

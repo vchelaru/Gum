@@ -70,7 +70,7 @@ public class RotationInputHandler : InputHandlerBase
         var rotationValueDegrees = -MathHelper.ToDegrees(angleInRadians);
 
         // Snap to 15 degrees if hotkey pressed
-        if (Context.HotkeyManager.SnapRotationTo15Degrees.IsPressedInControl())
+        if (Context.HotkeyManager.IsPressedInControl(Context.HotkeyManager.SnapRotationTo15Degrees))
         {
             rotationValueDegrees = MathFunctions.RoundFloat(rotationValueDegrees, 15);
         }

@@ -1039,7 +1039,7 @@ public class SelectionManager : ISelectionManager
         context.IsOverElementBody = IsOverBody;
 
         // Check modifiers
-        context.IsMultiSelectHeld = _hotkeyManager.MultiSelect.IsPressedInControl();
+        context.IsMultiSelectHeld = _hotkeyManager.IsPressedInControl(_hotkeyManager.MultiSelect);
 
         // Find what element is under cursor (for normal selection)
         if (!context.IsOverHandle)

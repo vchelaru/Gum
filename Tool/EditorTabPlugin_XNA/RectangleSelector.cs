@@ -81,7 +81,7 @@ public class RectangleSelector
         _startY = worldY;
         _currentX = worldX;
         _currentY = worldY;
-        _isAdditive = _hotkeyManager.MultiSelect.IsPressedInControl();
+        _isAdditive = _hotkeyManager.IsPressedInControl(_hotkeyManager.MultiSelect);
         _hasMovedEnough = false;
         _hasValidPush = true;
     }
@@ -96,7 +96,7 @@ public class RectangleSelector
 
         // Activate rectangle selector only when dragging
         // Check conditions: shift held OR not over element body
-        bool shouldActivate = _hotkeyManager.MultiSelect.IsPressedInControl() || !_selectionManager.IsOverBody;
+        bool shouldActivate = _hotkeyManager.IsPressedInControl(_hotkeyManager.MultiSelect) || !_selectionManager.IsOverBody;
 
         if (!shouldActivate) return;
 
@@ -180,7 +180,7 @@ public class RectangleSelector
     public System.Windows.Forms.Cursor? GetCursorToShow()
     {
         // Show crosshair when shift is held to indicate rectangle select mode
-        if (_hotkeyManager.MultiSelect.IsPressedInControl())
+        if (_hotkeyManager.IsPressedInControl(_hotkeyManager.MultiSelect))
         {
             return System.Windows.Forms.Cursors.Cross;
         }
