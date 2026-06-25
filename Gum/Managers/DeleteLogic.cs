@@ -29,7 +29,7 @@ public class DeleteLogic : IDeleteLogic
     private readonly IPluginManager _pluginManager;
     private readonly IDeletePluginNotifier _deletePluginNotifier;
     private readonly IWireframeObjectManager _wireframeObjectManager;
-    private readonly IProjectManager _projectManager;
+    private readonly IDeleteProjectProvider _deleteProjectProvider;
     private readonly IReferenceFinder _referenceFinder;
 
     public DeleteLogic(
@@ -40,7 +40,7 @@ public class DeleteLogic : IDeleteLogic
         IPluginManager pluginManager,
         IDeletePluginNotifier deletePluginNotifier,
         IWireframeObjectManager wireframeObjectManager,
-        IProjectManager projectManager,
+        IDeleteProjectProvider deleteProjectProvider,
         IReferenceFinder referenceFinder)
     {
         _selectedState = selectedState;
@@ -50,7 +50,7 @@ public class DeleteLogic : IDeleteLogic
         _pluginManager = pluginManager;
         _deletePluginNotifier = deletePluginNotifier;
         _wireframeObjectManager = wireframeObjectManager;
-        _projectManager = projectManager;
+        _deleteProjectProvider = deleteProjectProvider;
         _referenceFinder = referenceFinder;
     }
 
@@ -784,7 +784,7 @@ public class DeleteLogic : IDeleteLogic
         {
             var behaviorNames = componentSave.Behaviors.Select(item => item.BehaviorName);
 
-            foreach (var behavior in _projectManager.GumProjectSave.Behaviors.Where(item => behaviorNames.Contains(item.Name)))
+            foreach (var behavior in _deleteProjectProvider.GumProjectSave.Behaviors.Where(item => behaviorNames.Contains(item.Name)))
             {
                 bool needsCategory = behavior.Categories.Any(item => item.Name == category.Name);
 
@@ -952,7 +952,7 @@ public class DeleteLogic : IDeleteLogic
 
     public void RemoveElement(ElementSave element)
     {
-        var gps = _projectManager.GumProjectSave;
+        var gps = _deleteProjectProvider.GumProjectSave;
         var name = element.Name;
         var removed = false;
 
@@ -995,7 +995,7 @@ public class DeleteLogic : IDeleteLogic
     public void RemoveBehavior(BehaviorSave behavior)
     {
         var behaviorName = behavior.Name;
-        var gps = _projectManager.GumProjectSave;
+        var gps = _deleteProjectProvider.GumProjectSave;
 
         gps.BehaviorReferences.RemoveAll(item => item.Name == behaviorName);
         gps.Behaviors.Remove(behavior);

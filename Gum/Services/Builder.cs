@@ -102,6 +102,10 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<StandardElementsManagerGumTool>();
         services.AddSingleton<IStandardElementsManagerGumTool>(provider => provider.GetRequiredService<StandardElementsManagerGumTool>());
         services.AddSingleton<IProjectManager>(provider => provider.GetRequiredService<ProjectManager>());
+        // IDeleteProjectProvider: narrow headless port (ADR-0005 Phase 3) so DeleteLogic reads the loaded
+        // project through a single-property port instead of the wider IProjectManager. Resolves to the same
+        // ProjectManager singleton, so it returns the live GumProjectSave exactly as before.
+        services.AddSingleton<IDeleteProjectProvider>(provider => provider.GetRequiredService<ProjectManager>());
         services.AddSingleton<ICommandLineManager, CommandLineManager>();
         services.AddSingleton<IProjectState, ProjectState>();
         // ElementTreeViewManager: drained from a static Self singleton (#3286). Concrete is needed for the
