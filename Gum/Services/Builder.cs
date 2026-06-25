@@ -94,7 +94,8 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IUndoPluginNotifier>(provider => provider.GetRequiredService<PluginManager>());
         // IDeletePluginNotifier: narrow headless port (ADR-0005 Phase 3) so DeleteLogic no longer depends on the
         // concrete PluginManager for delete notifications. Resolves to the same PluginManager singleton, so plugin
-        // calls fire as before. The two WPF-coupled delete calls (ShowDeleteDialog/DeleteConfirmed) remain on IPluginManager.
+        // calls fire as before. The two WPF-coupled delete calls (ShowDeleteDialog/DeleteConfirmed) now live behind
+        // IDeleteDialogService (see AddDialogs), removing DeleteLogic's last dependency on IPluginManager.
         services.AddSingleton<IDeletePluginNotifier>(provider => provider.GetRequiredService<PluginManager>());
         services.AddSingleton<TypeManager>();
         services.AddSingleton<ITypeManager>(provider => provider.GetRequiredService<TypeManager>());
@@ -215,6 +216,11 @@ file static class ServiceCollectionExtensions
     {
         services.AddSingleton<IDialogViewResolver, DialogViewResolver>();
         services.AddSingleton<IDialogService, DialogService>();
+        // IDeleteDialogService: headless seam (ADR-0005 Phase 3) over the standalone
+        // DeleteOptionsWindow so DeleteLogic no longer references WPF or the concrete plugin
+        // host for the delete-confirmation dialog. The WPF-coupled DeleteDialogService impl
+        // owns the window plus the ShowDeleteDialog/DeleteConfirmed plugin calls.
+        services.AddSingleton<IDeleteDialogService, DeleteDialogService>();
 
         return services;
     }

@@ -26,9 +26,9 @@ public class DeleteLogicTests : BaseTestClass
     private readonly DeleteLogic _deleteLogic;
     private readonly Mock<ISelectedState> _selectedState;
     private readonly Mock<IDialogService> _dialogService;
+    private readonly Mock<IDeleteDialogService> _deleteDialogService;
     private readonly Mock<IGuiCommands> _guiCommands;
     private readonly Mock<IFileCommands> _fileCommands;
-    private readonly Mock<IPluginManager> _pluginManager;
     private readonly Mock<IDeletePluginNotifier> _deletePluginNotifier;
     private readonly Mock<IWireframeObjectManager> _wireframeObjectManager;
     private readonly Mock<IDeleteProjectProvider> _deleteProjectProvider;
@@ -40,9 +40,9 @@ public class DeleteLogicTests : BaseTestClass
         _mocker = new AutoMocker();
         _selectedState = _mocker.GetMock<ISelectedState>();
         _dialogService = _mocker.GetMock<IDialogService>();
+        _deleteDialogService = _mocker.GetMock<IDeleteDialogService>();
         _guiCommands = _mocker.GetMock<IGuiCommands>();
         _fileCommands = _mocker.GetMock<IFileCommands>();
-        _pluginManager = _mocker.GetMock<IPluginManager>();
         _deletePluginNotifier = _mocker.GetMock<IDeletePluginNotifier>();
         _wireframeObjectManager = _mocker.GetMock<IWireframeObjectManager>();
         _deleteProjectProvider = _mocker.GetMock<IDeleteProjectProvider>();
@@ -61,9 +61,9 @@ public class DeleteLogicTests : BaseTestClass
         _deleteLogic = new DeleteLogic(
             _selectedState.Object,
             _dialogService.Object,
+            _deleteDialogService.Object,
             _guiCommands.Object,
             _fileCommands.Object,
-            _pluginManager.Object,
             _deletePluginNotifier.Object,
             _wireframeObjectManager.Object,
             _deleteProjectProvider.Object,
@@ -182,7 +182,7 @@ public class DeleteLogicTests : BaseTestClass
             new List<BehaviorSave>(),
             instances,
             instances.Cast<object>().ToArray(),
-            optionsWindow: null);
+            deleteDialogResult: null);
 
         _selectedState.Object.SelectedInstance.ShouldBeNull();
         _selectedState.Object.SelectedElement.ShouldBe(screen);
@@ -203,7 +203,7 @@ public class DeleteLogicTests : BaseTestClass
             new List<BehaviorSave>(),
             toDelete,
             toDelete.Cast<object>().ToArray(),
-            optionsWindow: null);
+            deleteDialogResult: null);
 
         _selectedState.Object.SelectedInstance.ShouldBe(instC);
     }
@@ -223,7 +223,7 @@ public class DeleteLogicTests : BaseTestClass
             new List<BehaviorSave>(),
             instances,
             instances.Cast<object>().ToArray(),
-            optionsWindow: null);
+            deleteDialogResult: null);
 
         _deletePluginNotifier.Verify(
             p => p.InstancesDelete(
@@ -251,7 +251,7 @@ public class DeleteLogicTests : BaseTestClass
             selectedElement: screen,
             selectedBehavior: null,
             objectsDeleted: new[] { child },
-            optionsWindow: null);
+            deleteDialogResult: null);
 
         _selectedState.Object.SelectedInstance.ShouldBe(parent);
     }
@@ -271,7 +271,7 @@ public class DeleteLogicTests : BaseTestClass
             selectedElement: screen,
             selectedBehavior: null,
             objectsDeleted: new[] { instC },
-            optionsWindow: null);
+            deleteDialogResult: null);
 
         _selectedState.Object.SelectedInstance.ShouldBe(instB);
     }
@@ -291,7 +291,7 @@ public class DeleteLogicTests : BaseTestClass
             selectedElement: screen,
             selectedBehavior: null,
             objectsDeleted: new[] { instB },
-            optionsWindow: null);
+            deleteDialogResult: null);
 
         _selectedState.Object.SelectedInstance.ShouldBe(instC);
     }
@@ -311,7 +311,7 @@ public class DeleteLogicTests : BaseTestClass
             selectedElement: screen,
             selectedBehavior: null,
             objectsDeleted: new[] { instance },
-            optionsWindow: null);
+            deleteDialogResult: null);
 
         _selectedState.Object.SelectedInstance.ShouldBeNull();
         _selectedState.Object.SelectedElement.ShouldBe(screen);
@@ -342,9 +342,35 @@ public class DeleteLogicTests : BaseTestClass
             selectedElement: screen,
             selectedBehavior: null,
             objectsDeleted: new[] { instance },
-            optionsWindow: null);
+            deleteDialogResult: null);
 
         selectedAtFireTime.ShouldBe(screen);
+    }
+
+    [Fact]
+    public void PerformConfirmedSingleInstanceDelete_NotifiesDeleteDialogServiceAndRemovesInstance()
+    {
+        // Pins that the post-confirmation plugin notification now routes through the headless
+        // IDeleteDialogService seam (ADR-0005 Phase 3) — carrying the dialog result and the exact
+        // objects being deleted — rather than the concrete PluginManager, and that the confirmed
+        // instance is actually removed from its owning element.
+        ScreenSave screen = CreateScreenWithInstances("InstA", "InstB");
+        InstanceSave instA = screen.Instances.Single(i => i.Name == "InstA");
+        TrackSelectionState();
+        _selectedState.Object.SelectedInstance = instA;
+
+        IDeleteDialogResult dialogResult = Mock.Of<IDeleteDialogResult>();
+        InstanceSave[] objectsDeleted = { instA };
+
+        _deleteLogic.PerformConfirmedSingleInstanceDelete(
+            selectedInstance: instA,
+            selectedElement: screen,
+            selectedBehavior: null,
+            objectsDeleted: objectsDeleted,
+            deleteDialogResult: dialogResult);
+
+        screen.Instances.ShouldNotContain(instA);
+        _deleteDialogService.Verify(d => d.NotifyConfirmed(dialogResult, objectsDeleted), Times.Once);
     }
 
     [Fact]
