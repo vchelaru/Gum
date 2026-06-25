@@ -29,6 +29,7 @@ public class DeleteLogicTests : BaseTestClass
     private readonly Mock<IGuiCommands> _guiCommands;
     private readonly Mock<IFileCommands> _fileCommands;
     private readonly Mock<IPluginManager> _pluginManager;
+    private readonly Mock<IDeletePluginNotifier> _deletePluginNotifier;
     private readonly Mock<IWireframeObjectManager> _wireframeObjectManager;
     private readonly Mock<IProjectManager> _projectManager;
     private readonly Mock<IReferenceFinder> _referenceFinder;
@@ -42,6 +43,7 @@ public class DeleteLogicTests : BaseTestClass
         _guiCommands = _mocker.GetMock<IGuiCommands>();
         _fileCommands = _mocker.GetMock<IFileCommands>();
         _pluginManager = _mocker.GetMock<IPluginManager>();
+        _deletePluginNotifier = _mocker.GetMock<IDeletePluginNotifier>();
         _wireframeObjectManager = _mocker.GetMock<IWireframeObjectManager>();
         _projectManager = _mocker.GetMock<IProjectManager>();
         _referenceFinder = _mocker.GetMock<IReferenceFinder>();
@@ -62,6 +64,7 @@ public class DeleteLogicTests : BaseTestClass
             _guiCommands.Object,
             _fileCommands.Object,
             _pluginManager.Object,
+            _deletePluginNotifier.Object,
             _wireframeObjectManager.Object,
             _projectManager.Object,
             _referenceFinder.Object);
@@ -206,11 +209,12 @@ public class DeleteLogicTests : BaseTestClass
     }
 
     [Fact]
-    public void PerformConfirmedMixedTypeDelete_MultipleInstancesInSameElement_FiresInstancesDeleteOnPluginManager()
+    public void PerformConfirmedMixedTypeDelete_MultipleInstancesInSameElement_FiresInstancesDeleteThroughPluginNotifier()
     {
-        // Regression: deleting multiple instances at once never fired InstancesDelete on the
-        // plugin manager, so plugins listening for instance removal (e.g. the codegen plugin
-        // that regenerates a screen's .Generated.cs) never refreshed.
+        // Regression: deleting multiple instances at once never fired InstancesDelete, so plugins
+        // listening for instance removal (e.g. the codegen plugin that regenerates a screen's
+        // .Generated.cs) never refreshed. This notification now travels through the narrow
+        // IDeletePluginNotifier port rather than the concrete PluginManager (ADR-0005 Phase 3).
         ScreenSave screen = CreateScreenWithInstances("InstA", "InstB");
         List<InstanceSave> instances = screen.Instances.ToList();
 
@@ -221,7 +225,7 @@ public class DeleteLogicTests : BaseTestClass
             instances.Cast<object>().ToArray(),
             optionsWindow: null);
 
-        _pluginManager.Verify(
+        _deletePluginNotifier.Verify(
             p => p.InstancesDelete(
                 screen,
                 It.Is<InstanceSave[]>(arr =>
@@ -329,7 +333,7 @@ public class DeleteLogicTests : BaseTestClass
             .Callback<ElementSave?>(e => liveSelectedElement = e);
 
         ElementSave? selectedAtFireTime = null;
-        _pluginManager
+        _deletePluginNotifier
             .Setup(p => p.InstanceDelete(It.IsAny<ElementSave>(), instance))
             .Callback(() => selectedAtFireTime = liveSelectedElement);
 
@@ -361,7 +365,7 @@ public class DeleteLogicTests : BaseTestClass
             .Callback<ElementSave?>(e => liveSelectedElement = e);
 
         ElementSave? selectedAtFireTime = null;
-        _pluginManager
+        _deletePluginNotifier
             .Setup(p => p.InstanceDelete(screen, instance))
             .Callback(() => selectedAtFireTime = liveSelectedElement);
 
@@ -399,6 +403,19 @@ public class DeleteLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void RemoveBehavior_FiresBehaviorDeletedThroughPluginNotifier()
+    {
+        // Pins that the behavior-deleted notification still fires, now through the narrow
+        // IDeletePluginNotifier port rather than the concrete PluginManager (ADR-0005 Phase 3).
+        BehaviorSave behavior = new BehaviorSave { Name = "TestBehavior" };
+        _gumProject.Behaviors.Add(behavior);
+
+        _deleteLogic.RemoveBehavior(behavior);
+
+        _deletePluginNotifier.Verify(p => p.BehaviorDeleted(behavior), Times.Once);
+    }
+
+    [Fact]
     public void RemoveElement_Component_RemovesFromProjectLists()
     {
         ComponentSave component = new ComponentSave { Name = "TestComponent" };
@@ -422,6 +439,19 @@ public class DeleteLogicTests : BaseTestClass
 
         _gumProject.Screens.ShouldNotContain(screen);
         _gumProject.ScreenReferences.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void RemoveElement_Screen_FiresElementDeleteThroughPluginNotifier()
+    {
+        // Pins that the element-deleted notification still fires, now through the narrow
+        // IDeletePluginNotifier port rather than the concrete PluginManager (ADR-0005 Phase 3).
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        _gumProject.Screens.Add(screen);
+
+        _deleteLogic.RemoveElement(screen);
+
+        _deletePluginNotifier.Verify(p => p.ElementDelete(screen), Times.Once);
     }
 
     [Fact]

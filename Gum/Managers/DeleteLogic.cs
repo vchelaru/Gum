@@ -27,6 +27,7 @@ public class DeleteLogic : IDeleteLogic
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly IPluginManager _pluginManager;
+    private readonly IDeletePluginNotifier _deletePluginNotifier;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IProjectManager _projectManager;
     private readonly IReferenceFinder _referenceFinder;
@@ -37,6 +38,7 @@ public class DeleteLogic : IDeleteLogic
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
         IPluginManager pluginManager,
+        IDeletePluginNotifier deletePluginNotifier,
         IWireframeObjectManager wireframeObjectManager,
         IProjectManager projectManager,
         IReferenceFinder referenceFinder)
@@ -46,6 +48,7 @@ public class DeleteLogic : IDeleteLogic
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _pluginManager = pluginManager;
+        _deletePluginNotifier = deletePluginNotifier;
         _wireframeObjectManager = wireframeObjectManager;
         _projectManager = projectManager;
         _referenceFinder = referenceFinder;
@@ -54,7 +57,7 @@ public class DeleteLogic : IDeleteLogic
 
     public void HandleDeleteCommand()
     {
-        var handled = _pluginManager.TryHandleDelete();
+        var handled = _deletePluginNotifier.TryHandleDelete();
         if (!handled)
         {
             DoDeletingLogic();
@@ -239,7 +242,7 @@ public class DeleteLogic : IDeleteLogic
         else if (selectedBehavior != null && selectedInstance is BehaviorInstanceSave behaviorInstanceToDelete)
         {
             selectedBehavior.RequiredInstances.Remove(behaviorInstanceToDelete);
-            _pluginManager.BehaviorInstanceDelete(selectedBehavior, behaviorInstanceToDelete);
+            _deletePluginNotifier.BehaviorInstanceDelete(selectedBehavior, behaviorInstanceToDelete);
         }
 
         // Restore the owning element to live SelectedState before firing InstanceDelete.
@@ -251,7 +254,7 @@ public class DeleteLogic : IDeleteLogic
             _selectedState.SelectedElement = selectedElement;
         }
 
-        _pluginManager.InstanceDelete(selectedElement, selectedInstance);
+        _deletePluginNotifier.InstanceDelete(selectedElement, selectedInstance);
 
         var deletedSelection = _selectedState.SelectedInstance == selectedInstance;
 
@@ -385,7 +388,7 @@ public class DeleteLogic : IDeleteLogic
         //    this, multi-instance deletes leave plugin-owned state stale.
         foreach (var group in instancesByElementParent)
         {
-            _pluginManager.InstancesDelete(group.Key, group.ToArray());
+            _deletePluginNotifier.InstancesDelete(group.Key, group.ToArray());
         }
 
         // 4. Remove elements
@@ -770,7 +773,7 @@ public class DeleteLogic : IDeleteLogic
         _guiCommands.RefreshVariables();
         _wireframeObjectManager.RefreshAll(true);
 
-        _pluginManager.CategoryDelete(category);
+        _deletePluginNotifier.CategoryDelete(category);
     }
 
     public List<BehaviorSave> GetBehaviorsNeedingCategory(StateSaveCategory category, ComponentSave? componentSave)
@@ -802,7 +805,7 @@ public class DeleteLogic : IDeleteLogic
         int index = stateCategory?.States.IndexOf(stateSave) ?? -1;
 
         RemoveState(stateSave, _selectedState.SelectedStateContainer);
-        _pluginManager.StateDelete(stateSave);
+        _deletePluginNotifier.StateDelete(stateSave);
 
         _guiCommands.RefreshVariables();
         _wireframeObjectManager.RefreshAll(true);
@@ -864,7 +867,7 @@ public class DeleteLogic : IDeleteLogic
         // notifying plugins to avoid NREs and stale-state misroutes.
         _selectedState.SelectedElement = elementToRemoveFrom;
 
-        _pluginManager.InstanceDelete(elementToRemoveFrom, instanceToRemove);
+        _deletePluginNotifier.InstanceDelete(elementToRemoveFrom, instanceToRemove);
 
         if (_selectedState.SelectedInstance == instanceToRemove)
         {
@@ -922,7 +925,7 @@ public class DeleteLogic : IDeleteLogic
         }
 
 
-        _pluginManager.InstancesDelete(elementToRemoveFrom, instances.ToArray());
+        _deletePluginNotifier.InstancesDelete(elementToRemoveFrom, instances.ToArray());
 
         DeselectInstances(instances);
     }
@@ -972,7 +975,7 @@ public class DeleteLogic : IDeleteLogic
             {
                 _selectedState.SelectedElement = null;
             }
-            _pluginManager.ElementDelete(element);
+            _deletePluginNotifier.ElementDelete(element);
             _fileCommands.TryAutoSaveProject();
         }
     }
@@ -1010,7 +1013,7 @@ public class DeleteLogic : IDeleteLogic
 
         _selectedState.SelectedBehavior = null;
 
-        _pluginManager.BehaviorDeleted(behavior);
+        _deletePluginNotifier.BehaviorDeleted(behavior);
 
         _guiCommands.RefreshStateTreeView();
         _guiCommands.RefreshVariables();
