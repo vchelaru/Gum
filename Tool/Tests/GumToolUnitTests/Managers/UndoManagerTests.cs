@@ -18,7 +18,7 @@ namespace GumToolUnitTests.Managers;
 public class UndoManagerTests : BaseTestClass
 {
     private readonly Mock<ISelectedState> _selectedState;
-    private readonly Mock<IRenameLogic> _renameLogic;
+    private readonly Mock<IUndoRenameLogic> _renameLogic;
     private readonly Mock<IGuiCommands> _guiCommands;
     private readonly Mock<IFileCommands> _fileCommands;
     private readonly Mock<IMessenger> _messenger;
@@ -28,7 +28,7 @@ public class UndoManagerTests : BaseTestClass
     public UndoManagerTests()
     {
         _selectedState = new Mock<ISelectedState>();
-        _renameLogic = new Mock<IRenameLogic>();
+        _renameLogic = new Mock<IUndoRenameLogic>();
         _guiCommands = new Mock<IGuiCommands>();
         _fileCommands = new Mock<IFileCommands>();
         _messenger = new Mock<IMessenger>();
@@ -344,6 +344,33 @@ public class UndoManagerTests : BaseTestClass
             "NewName",
             "OldName",
             It.IsAny<HashSet<ElementSave>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public void PerformUndo_OnElementRename_ShouldDelegateToRenameLogicHandleRename()
+    {
+        // Pins the third RenameLogic call routed through the narrow IUndoRenameLogic port
+        // (alongside GetChangesForRenamedVariable / ApplyVariableRenameChanges, covered by the two
+        // rename-delegation tests above): undoing an element whose Name changed must re-apply the
+        // rename via HandleRename so references stay consistent. This is the call that now travels
+        // through IUndoRenameLogic rather than the full IRenameLogic (ADR-0005 Phase 3, mirroring #3355).
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        component.Name = "OriginalName";
+
+        _undoManager.RecordState();
+
+        component.Name = "RenamedName";
+
+        _undoManager.RecordUndo();
+        _undoManager.PerformUndo();
+
+        _renameLogic.Verify(x => x.HandleRename(
+            It.IsAny<IInstanceContainer>(),
+            It.IsAny<InstanceSave>(),
+            "RenamedName",
+            NameChangeAction.Rename,
+            false),
             Times.Once);
     }
 

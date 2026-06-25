@@ -170,7 +170,11 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IVariableSaveLogic, VariableSaveLogic>();
         services.AddSingleton<IVariableReferenceLogic, VariableReferenceLogic>();
         services.AddSingleton<IReferenceFinder, ReferenceFinder>();
-        services.AddSingleton<IRenameLogic, RenameLogic>();
+        services.AddSingleton<RenameLogic>();
+        services.AddSingleton<IRenameLogic>(provider => provider.GetRequiredService<RenameLogic>());
+        // IUndoRenameLogic: narrow headless rename port (ADR-0005 Phase 3) so UndoManager no longer depends on the
+        // full IRenameLogic. Resolves to the same RenameLogic singleton, so rename calls fire as before.
+        services.AddSingleton<IUndoRenameLogic>(provider => provider.GetRequiredService<RenameLogic>());
         services.AddSingleton<ISetVariableLogic, SetVariableLogic>();
 
         services.AddSingleton<WireframeCommands>();

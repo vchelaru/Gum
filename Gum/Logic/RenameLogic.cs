@@ -22,84 +22,10 @@ using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.Logic;
 
-#region Enums
-
-public enum NameChangeAction
-{
-    Move,
-    Rename
-}
-
-#endregion
-
-#region VariableChange Class
-
-public class VariableChange
-{
-    public IStateContainer Container;
-    public StateSaveCategory Category;
-    public StateSave State;
-    public VariableSave Variable;
-    public object NewValue;
-
-}
-
-public enum SideOfEquals
-{
-    Left,
-    Right,
-    Both
-}
-public class VariableReferenceChange
-{
-    public ElementSave Container;
-    public VariableListSave VariableReferenceList;
-    public int LineIndex;
-    public SideOfEquals ChangedSide;
-}
-
-public class VariableChangeResponse
-{
-    public List<VariableChange> VariableChanges = new List<VariableChange>();
-    public List<VariableReferenceChange> VariableReferenceChanges = new List<VariableReferenceChange>();
-
-    public string GetChangesDetails()
-    {
-        var details = string.Empty;
-
-        if (VariableChanges.Count > 0)
-        {
-            if (!string.IsNullOrEmpty(details)) details += "\n\n";
-            details += "This will also rename the following variables:";
-            foreach (var change in VariableChanges)
-            {
-                var containerName = change.Container is ElementSave elementSave
-                    ? elementSave.Name
-                    : change.Container.ToString();
-                details += $"\n• {change.Variable.Name} in {containerName}";
-            }
-        }
-
-        if (VariableReferenceChanges.Count > 0)
-        {
-            if (!string.IsNullOrEmpty(details)) details += "\n\n";
-            details += "This will also modify the following variable references:";
-            foreach (var change in VariableReferenceChanges)
-            {
-                try
-                {
-                    var line = change.VariableReferenceList.ValueAsIList[change.LineIndex];
-                    details += $"\n• {line} in {change.Container.Name}";
-                }
-                catch { }
-            }
-        }
-
-        return details;
-    }
-}
-
-#endregion
+// NameChangeAction, SideOfEquals, VariableChange, VariableReferenceChange, and VariableChangeResponse
+// were relocated to the headless Gum.Presentation assembly (Tools/Gum.Presentation/Logic/RenameChangeTypes.cs)
+// so the undo subsystem's narrow IUndoRenameLogic port can reference them without depending on the tool
+// (ADR-0005 Phase 3). They keep the Gum.Logic namespace, so consumers here compile unchanged.
 
 #region ElementReferences Class
 
@@ -486,7 +412,7 @@ public class CategoryReferences
 
 #endregion
 
-public class RenameLogic : IRenameLogic
+public class RenameLogic : IRenameLogic, IUndoRenameLogic
 {
     static bool isRenamingXmlFile;
 
