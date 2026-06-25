@@ -54,7 +54,7 @@ internal enum PluginCategories
 
 #endregion
 
-public class PluginManager : IPluginManager
+public class PluginManager : IPluginManager, IUndoPluginNotifier
 {
     #region Fields
 
