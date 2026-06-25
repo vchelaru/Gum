@@ -28,17 +28,6 @@ using Gum.Plugins.InternalPlugins.VariableGrid;
 namespace Gum.Managers;
 
 
-public interface ITreeNode
-{
-    object? Tag { get; }
-    FilePath GetFullFilePath();
-    ITreeNode? Parent { get; }
-    string Text { get; }
-    string FullPath { get; }
-
-    void Expand();
-}
-
 public class DragDropManager : IDragDropManager
 {
     #region Fields
