@@ -5,6 +5,7 @@
   xmlns:controlzex="urn:controlzex"
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:local="clr-namespace:Gum.Services.Dialogs"
+  xmlns:presentation="clr-namespace:Gum.Services.Dialogs;assembly=Gum.Presentation"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   x:Name="Root"
   Title="{Binding (local:Dialog.DialogTitle), ElementName=DialogImpl}"
@@ -57,7 +58,7 @@
                 <Setter TargetName="ActionsPresenter" Property="Content" Value="{Binding}" />
                 <Setter TargetName="ActionsPresenter" Property="ContentTemplate">
                   <Setter.Value>
-                    <DataTemplate DataType="{x:Type local:DialogViewModel}">
+                    <DataTemplate DataType="{x:Type presentation:DialogViewModel}">
                       <Grid>
                         <Grid.ColumnDefinitions>
                           <ColumnDefinition Width="*" />

@@ -71,10 +71,3 @@ public sealed class GetUserStringDialogViewModel : GetUserStringDialogBaseViewMo
 
     protected override string? Validate(string? value) => Validator?.Invoke(value) ?? base.Validate(value);
 }
-
-public class GetUserStringOptions
-{
-    public Func<string?,string?>? Validator { get; set; }
-    public string? InitialValue { get; set; }
-    public bool PreSelect { get; set; }
-}
