@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
+using Gum.Input;
 using Gum.Dialogs;
 using Gum.Managers;
 using Gum.Services;
@@ -47,7 +48,12 @@ public partial class MainWindow : WindowChromeWindow, IRecipient<CloseMainWindow
         InitializeComponent();
         menuStripManager.PopulateMenu(this.MainMenu);
 
-        this.PreviewKeyDown += (_,e) => hotkeyManager.PreviewKeyDownAppWide(e);
+        this.PreviewKeyDown += (_, e) =>
+        {
+            GumKeyEventArgs keyArgs = e.ToGumKeyEventArgs();
+            hotkeyManager.PreviewKeyDownAppWide(keyArgs);
+            e.Handled = keyArgs.Handled;
+        };
         this.PreviewMouseDown += OnPreviewMouseDown;
         this.Loaded += (_, _) =>
         {

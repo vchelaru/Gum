@@ -1,6 +1,7 @@
 using CommonFormsAndControls;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
+using Gum.Input;
 using Gum.Controls;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -2121,7 +2122,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             OnSelect((SelectedNode as TreeNodeWrapper)?.Node);
         }
 
-        _hotkeyManager.HandleKeyDownElementTreeView(e);
+        GumKeyEventArgs keyArgs = e.ToGumKeyEventArgs();
+        _hotkeyManager.HandleKeyDownElementTreeView(keyArgs);
+        e.Handled = keyArgs.Handled;
+        e.SuppressKeyPress = keyArgs.SuppressKeyPress;
 
         if (didTreeViewHaveFocus)
         {

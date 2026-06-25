@@ -1,5 +1,5 @@
-﻿using EditorTabPlugin_XNA.ExtensionMethods;
-using EditorTabPlugin_XNA.ViewModels;
+﻿using EditorTabPlugin_XNA.ViewModels;
+using Gum.Input;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins;
@@ -115,13 +115,16 @@ public class WireframeControl : GraphicsDeviceControl
 
     void HandleKeyDown(object? sender, KeyEventArgs e)
     {
-        _hotkeyManager.HandleEditorKeyDown(e);
+        GumKeyEventArgs keyArgs = e.ToGumKeyEventArgs();
+        _hotkeyManager.HandleEditorKeyDown(keyArgs);
+        e.Handled = keyArgs.Handled;
+        e.SuppressKeyPress = keyArgs.SuppressKeyPress;
         _cameraController.HandleKeyPress(e);
     }
 
     private void HandleKeyUp(object? sender, KeyEventArgs e)
     {
-        _hotkeyManager.HandleKeyUpWireframe(e);
+        _hotkeyManager.HandleKeyUpWireframe();
     }
 
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
