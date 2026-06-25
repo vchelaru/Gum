@@ -35,6 +35,8 @@ Used by: delete confirmation only (`DeleteLogic.ShowDeleteDialog`).
 
 **Not managed by DialogService** — no view model, no template selection, no attached property binding. Changes to `DialogWindow.xaml` or `Dialog.cs` have **zero effect** on this window.
 
+**Headless / ADR-0005 implication**: the MVVM `DialogService` and its `IDialogService` contract are already headless (relocated to `Gum.Presentation`), so dialogs on that path don't couple their callers to WPF. `DeleteOptionsWindow` does — and it is the reason `DeleteLogic` cannot fully relocate to the headless presentation layer. The coupling is the extension point itself: `PluginManager.ShowDeleteDialog(window)` / `DeleteConfirmed(window)` hand plugins a concrete WPF `StackPanel` to add `UIElement`s to. That "mutate a live WPF panel" contract cannot be expressed headlessly as-is. Decoupling it is a **plugin-facing API change**, not a mechanical move: replace the panel-injection with a data-driven options model (option descriptors — label + bool + callback) that the headless layer owns and the WPF (later Avalonia) shell renders. Until that contract changes, the last `IPluginManager` calls and `using Gum.Gui.Windows;` cannot leave `DeleteLogic`.
+
 ## Key Files
 
 | File | System | Purpose |
