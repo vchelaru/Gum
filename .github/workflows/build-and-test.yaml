@@ -240,6 +240,9 @@ jobs:
       #                                     job at the top of this file, #3349)
       #   - Gum.Bundle.Tests               (brotli/tar/format; pure IO)
       #   - Gum.ProjectServices.Tests      (headless project loading, codegen)
+      #   - Gum.Presentation.Tests         (headless undo/redo + relocated tool
+      #                                     ViewModels; references Gum.Presentation
+      #                                     alone, no WPF/WinForms — ADR-0005)
       #   - Gum.ProjectServices.SkiaGum.Tests (SkiaGum SVG export — renders into
       #                                     SKSvgCanvas, CPU-only like SkiaGum.Tests)
       #   - Gum.Analyzers.Tests            (Roslyn analyzers; pure compilation)
@@ -297,6 +300,10 @@ jobs:
       - name: Gum.ProjectServices.Tests
         if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
         run: dotnet test "Tests/Gum.ProjectServices.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      - name: Gum.Presentation.Tests
+        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        run: dotnet test "Tests/Gum.Presentation.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Gum.Analyzers.Tests
         if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
