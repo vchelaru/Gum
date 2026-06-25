@@ -458,13 +458,19 @@ public class HotkeyManager : IHotkeyManager
 
     bool _isNudging;
 
-    public bool ProcessCmdKeyWireframe(Keys keyData)
+    public bool ProcessCmdKeyWireframe(GumKey? key, bool isShiftDown, bool isCtrlDown, bool isAltDown)
     {
-        bool handled = false;
+        // The interface is framework-neutral (GumKey, not WinForms Keys). Rebuild the Keys value the
+        // nudge logic matches against: GumKey values equal Win32 virtual-key codes (pinned by GumKeyTests),
+        // so the key is a pure cast, and the modifier bits are re-applied from the booleans. Reconstructing
+        // here keeps HandleNudge / KeyCombination.IsPressed unchanged and behavior identical — including the
+        // existing suppression of nudging while Ctrl/Alt are held (Ctrl+arrow pans the camera instead).
+        Keys keyData = key.HasValue ? (Keys)(int)key.Value : Keys.None;
+        if (isShiftDown) { keyData |= Keys.Shift; }
+        if (isCtrlDown) { keyData |= Keys.Control; }
+        if (isAltDown) { keyData |= Keys.Alt; }
 
-        handled = HandleNudge(keyData);
-
-        return handled;
+        return HandleNudge(keyData);
     }
 
     private bool HandleNudge(Keys keyData)

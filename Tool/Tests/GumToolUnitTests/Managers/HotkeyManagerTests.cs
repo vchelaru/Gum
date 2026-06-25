@@ -116,7 +116,7 @@ public class HotkeyManagerTests : BaseTestClass
     {
         (ComponentSave element, InstanceSave instance) = SetUpSelectedInstance(x: 10f, y: 20f);
 
-        bool handled = _hotkeyManager.ProcessCmdKeyWireframe(System.Windows.Forms.Keys.Up);
+        bool handled = _hotkeyManager.ProcessCmdKeyWireframe(GumKey.Up, isShiftDown: false, isCtrlDown: false, isAltDown: false);
 
         handled.ShouldBeTrue();
         _elementCommands.Verify(e => e.MoveSelectedObjectsBy(0f, -1f), Times.Once);
@@ -129,11 +129,23 @@ public class HotkeyManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void ProcessCmdKeyWireframe_CtrlArrow_DoesNotNudge()
+    {
+        // Ctrl+arrow pans the camera elsewhere, so it must not also nudge the selection here.
+        SetUpSelectedInstance(x: 10f, y: 20f);
+
+        bool handled = _hotkeyManager.ProcessCmdKeyWireframe(GumKey.Up, isShiftDown: false, isCtrlDown: true, isAltDown: false);
+
+        handled.ShouldBeFalse();
+        _elementCommands.Verify(e => e.MoveSelectedObjectsBy(It.IsAny<float>(), It.IsAny<float>()), Times.Never);
+    }
+
+    [Fact]
     public void ProcessCmdKeyWireframe_LockedInstance_DoesNothing()
     {
         SetUpSelectedInstance(x: 10f, y: 20f, locked: true);
 
-        bool handled = _hotkeyManager.ProcessCmdKeyWireframe(System.Windows.Forms.Keys.Up);
+        bool handled = _hotkeyManager.ProcessCmdKeyWireframe(GumKey.Up, isShiftDown: false, isCtrlDown: false, isAltDown: false);
 
         handled.ShouldBeFalse();
         _elementCommands.Verify(e => e.MoveSelectedObjectsBy(It.IsAny<float>(), It.IsAny<float>()), Times.Never);
@@ -145,7 +157,7 @@ public class HotkeyManagerTests : BaseTestClass
     {
         SetUpSelectedInstance(x: 10f, y: 20f);
 
-        bool handled = _hotkeyManager.ProcessCmdKeyWireframe(System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.Up);
+        bool handled = _hotkeyManager.ProcessCmdKeyWireframe(GumKey.Up, isShiftDown: true, isCtrlDown: false, isAltDown: false);
 
         handled.ShouldBeTrue();
         _elementCommands.Verify(e => e.MoveSelectedObjectsBy(0f, -5f), Times.Once);
