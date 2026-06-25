@@ -22,136 +22,6 @@ using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.Managers;
 
-#region KeyCombination Class
-public class KeyCombination
-{
-    public GumKey? Key { get; set; }
-    public bool IsCtrlDown { get; set; }
-    public bool IsShiftDown { get; set; }
-    public bool IsAltDown { get; set; }
-
-    public static KeyCombination Pressed(GumKey key) => new KeyCombination { Key = key };
-    public static KeyCombination Ctrl(GumKey key) => new KeyCombination { Key = key, IsCtrlDown = true };
-    public static KeyCombination Alt(GumKey? key = null) => new KeyCombination { Key = key, IsAltDown = true };
-    public static KeyCombination Shift(GumKey? key = null) => new KeyCombination { Key = key, IsShiftDown = true };
-
-    // GumKey values are defined equal to Win32 virtual-key codes (pinned by GumKeyTests),
-    // so converting the bound key to the WinForms Keys enum is a pure cast.
-    private Keys ToWinFormsKey(GumKey key) => (Keys)(int)key;
-
-    public bool IsPressed(KeyEventArgs args)
-    {
-        if (IsCtrlDown && (args.Modifiers & Keys.Control) != Keys.Control) return false;
-        if (IsShiftDown && (args.Modifiers & Keys.Shift) != Keys.Shift) return false;
-        if (IsAltDown && (args.Modifiers & Keys.Alt) != Keys.Alt) return false;
-
-        return Key == null || args.KeyCode == ToWinFormsKey(Key.Value);
-    }
-
-    public bool IsPressed(System.Windows.Input.KeyEventArgs args)
-    {
-        if (IsCtrlDown && (args.KeyboardDevice.Modifiers & System.Windows.Input.ModifierKeys.Control) != System.Windows.Input.ModifierKeys.Control) return false;
-        if (IsShiftDown && (args.KeyboardDevice.Modifiers & System.Windows.Input.ModifierKeys.Shift) != System.Windows.Input.ModifierKeys.Shift) return false;
-        if (IsAltDown && (args.KeyboardDevice.Modifiers & System.Windows.Input.ModifierKeys.Alt) != System.Windows.Input.ModifierKeys.Alt) return false;
-
-        if(Key == null)
-        {
-            return true;
-        }
-        else
-        {
-            var expectedWpfKey = System.Windows.Input.KeyInterop.KeyFromVirtualKey((int)Key.Value);
-            return args.Key == expectedWpfKey || args.SystemKey == expectedWpfKey;
-
-        }
-    }
-
-    public bool IsPressed(Keys keyData)
-    {
-        Keys extracted = keyData;
-
-        if (IsAltDown)
-        {
-            if (Key == null)
-            {
-                return keyData == Keys.Alt;
-            }
-            else
-            {
-                return keyData == (Keys.Alt | ToWinFormsKey(Key.Value));
-            }
-        }
-        else
-        {
-            if (keyData >= Keys.KeyCode)
-            {
-                int value = (int)(keyData) + (int)Keys.Modifiers;
-
-                extracted = (Keys)value;
-            }
-
-            bool shiftDown = (keyData & Keys.Shift) == Keys.Shift;
-            bool ctrlDown = (keyData & Keys.Control) == Keys.Control;
-            bool altDown = (keyData & Keys.Alt) == Keys.Alt;
-
-            if (IsCtrlDown && !ctrlDown) return false;
-            if (IsShiftDown && !shiftDown) return false;
-            if (IsAltDown && !altDown) return false;
-
-            return Key == null || extracted == ToWinFormsKey(Key.Value);
-
-        }
-
-    }
-
-    public virtual bool IsPressedInControl()
-    {
-        if (IsCtrlDown && (Control.ModifierKeys & Keys.Control) != Keys.Control) return false;
-        if (IsShiftDown && (Control.ModifierKeys & Keys.Shift) != Keys.Shift) return false;
-        if (IsAltDown && (Control.ModifierKeys & Keys.Alt) != Keys.Alt) return false;
-
-        return Key == null || (Control.ModifierKeys & Keys.KeyCode) == ToWinFormsKey(Key.Value);
-    }
-
-    public override string ToString()
-    {
-        string toReturn = "";
-
-        if (IsCtrlDown)
-        {
-            toReturn += "Ctrl";
-        }
-        if (IsShiftDown)
-        {
-            if(toReturn.Length != 0)
-            {
-                toReturn += "+";
-            }
-            toReturn += "Shift";
-        }
-        if (IsAltDown)
-        {
-            if (toReturn.Length != 0)
-            {
-                toReturn += "+";
-            }
-            toReturn += "Alt";
-        }
-
-        if (Key != null)
-        {
-            if (toReturn.Length != 0)
-            {
-                toReturn += "+";
-            }
-            toReturn += Key.ToString();
-        }
-
-        return toReturn;
-    }
-}
-#endregion
-
 public class HotkeyManager : IHotkeyManager
 {
     public KeyCombination Delete { get; private set; } = KeyCombination.Pressed(GumKey.Delete);
@@ -242,6 +112,17 @@ public class HotkeyManager : IHotkeyManager
         _editCommands = editCommands;
         _reorderLogic = reorderLogic;
         _pluginManager = pluginManager;
+    }
+
+    public bool IsPressedInControl(KeyCombination combo)
+    {
+        // Reads the live WinForms modifier state (Control.ModifierKeys). This stays in the tool layer
+        // (off the now-headless KeyCombination) and on the interface so it remains mockable in tests.
+        if (combo.IsCtrlDown && (Control.ModifierKeys & Keys.Control) != Keys.Control) return false;
+        if (combo.IsShiftDown && (Control.ModifierKeys & Keys.Shift) != Keys.Shift) return false;
+        if (combo.IsAltDown && (Control.ModifierKeys & Keys.Alt) != Keys.Alt) return false;
+
+        return combo.Key == null || (Control.ModifierKeys & Keys.KeyCode) == (Keys)(int)combo.Key.Value;
     }
 
     #region App Wide Keys

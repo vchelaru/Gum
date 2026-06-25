@@ -65,6 +65,14 @@ public interface IHotkeyManager
     void HandleKeyUpWireframe();
 
     /// <summary>
+    /// Returns true if <paramref name="combo"/>'s modifiers are currently held according to the live OS
+    /// modifier state. The framework read lives in the implementation; this stays on the interface (rather
+    /// than becoming a <c>KeyCombination</c> extension like the <c>IsPressed</c> overloads) so it remains
+    /// mockable.
+    /// </summary>
+    bool IsPressedInControl(KeyCombination combo);
+
+    /// <summary>
     /// Handles wireframe command keys (arrow-key nudging) using Gum's framework-neutral
     /// <see cref="Gum.Input.GumKey"/> so this interface stays free of WinForms. Callers at the WinForms
     /// boundary translate <c>System.Windows.Forms.Keys</c> via <c>ToGumKey()</c> and pass the modifier

@@ -40,6 +40,12 @@ takes on no presentation code.
   framework-specific implementations must be split out to the shell.
 - **Watch-out:** the split only pays off if logic actually *leaves* the view code-behind (the
   view-wall classes) — otherwise it just re-duplicates into the Avalonia shell.
+- **Watch-out (relocation mechanics):** when a relocated interface returns a value object (e.g.
+  `KeyCombination`), that object's framework-coupled methods go to the shell as **extension methods** —
+  *except* any method that is mocked **through the interface** in tests. Moq cannot intercept a static
+  extension call, so such a method must instead be **promoted to an interface method** on the manager
+  (e.g. `IHotkeyManager.IsPressedInControl(KeyCombination)`, PR #3345). Unmocked framework methods
+  (`KeyCombination.IsPressed(...)`) stay extensions with no call-site churn when the namespace is kept.
 - **Follow-up:** per-interface placement (which implementations move to `Gum.Presentation` vs. stay
   in the shell) is Phase 3 execution detail, not decided here.
 

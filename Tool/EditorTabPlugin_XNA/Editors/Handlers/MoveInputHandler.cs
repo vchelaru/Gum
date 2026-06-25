@@ -50,7 +50,7 @@ public class MoveInputHandler : InputHandlerBase
         // When multi-select key is held, don't claim the push.
         // Shift+click on body should add to selection via the rectangle-selector fallback,
         // not start a move operation.
-        if (Context.HotkeyManager.MultiSelect.IsPressedInControl())
+        if (Context.HotkeyManager.IsPressedInControl(Context.HotkeyManager.MultiSelect))
         {
             return false;
         }
@@ -79,7 +79,7 @@ public class MoveInputHandler : InputHandlerBase
         if (Context.HasChangedAnythingSinceLastPush)
         {
             // Apply axis lock if held
-            if (Context.HotkeyManager.LockMovementToAxis.IsPressedInControl())
+            if (Context.HotkeyManager.IsPressedInControl(Context.HotkeyManager.LockMovementToAxis))
             {
                 ApplyAxisLockToSelectedState();
                 Context.GuiCommands.RefreshVariables();
@@ -167,7 +167,7 @@ public class MoveInputHandler : InputHandlerBase
 
     private void ApplyAxisLockIfNeeded()
     {
-        bool isLockedToAxis = Context.HotkeyManager.LockMovementToAxis.IsPressedInControl();
+        bool isLockedToAxis = Context.HotkeyManager.IsPressedInControl(Context.HotkeyManager.LockMovementToAxis);
         if (!isLockedToAxis) return;
 
         var selectedInstances = Context.SelectedState.SelectedInstances;

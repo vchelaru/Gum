@@ -406,11 +406,11 @@ public class Ruler
 
             if (RulerSide == RulerSide.Left)
             {
-                if (_hotkeyManager.NudgeUp.IsPressedInControl())
+                if (_hotkeyManager.IsPressedInControl(_hotkeyManager.NudgeUp))
                 {
                     nudgeYOffset--;
                 }
-                else if (_hotkeyManager.NudgeDown.IsPressedInControl())
+                else if (_hotkeyManager.IsPressedInControl(_hotkeyManager.NudgeDown))
                 {
                     nudgeYOffset++;
                 }
@@ -418,11 +418,11 @@ public class Ruler
             }
             else
             {
-                if (_hotkeyManager.NudgeLeft.IsPressedInControl())
+                if (_hotkeyManager.IsPressedInControl(_hotkeyManager.NudgeLeft))
                 {
                     nudgeXOffset--;
                 }
-                else if (_hotkeyManager.NudgeRight.IsPressedInControl())
+                else if (_hotkeyManager.IsPressedInControl(_hotkeyManager.NudgeRight))
                 {
                     nudgeXOffset++;
                 }

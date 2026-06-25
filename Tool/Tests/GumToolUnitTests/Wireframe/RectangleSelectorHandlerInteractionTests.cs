@@ -33,7 +33,7 @@ public class RectangleSelectorHandlerInteractionTests : BaseTestClass
         _mockLayer = new Mock<Layer>();
 
         // Setup the hotkey manager to use our test flag
-        _mockHotkeyManager.Setup(x => x.MultiSelect.IsPressedInControl())
+        _mockHotkeyManager.Setup(x => x.IsPressedInControl(It.IsAny<KeyCombination>()))
             .Returns(() => _isShiftPressed);
 
         _rectangleSelector = new RectangleSelector(
