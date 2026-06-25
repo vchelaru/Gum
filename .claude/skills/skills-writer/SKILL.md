@@ -85,7 +85,7 @@ description: Reference guide for Gum's undo/redo system. Load this when working 
 - Anything already in `docs/` — link instead of restating.
 - Full class outlines or property lists — read source directly.
 - Code examples unless the snippet captures an irreplaceable pattern.
-- Time-sensitive info (versions, dates, migration notes).
+- **In-flight migration / refactor STATE** — what's done *now*, what currently blocks what, what's left, "X is already headless," "Y can't move until Z." This **inverts to false the moment the work lands**, turning the skill into an active liar that every future agent re-reads as fact. Skills hold *timeless* structure only. Transient progress belongs in the ephemeral working ledger; durable design *direction* belongs in the relevant ADR (`Direction/decisions/`), not the skill. (Subsumes the old "migration notes" rule, plus versions and dates — any time-sensitive fact.)
 - Anything Claude already knows from general C# or .NET knowledge.
 
 ## Output
