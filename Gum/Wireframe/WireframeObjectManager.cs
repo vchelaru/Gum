@@ -21,16 +21,6 @@ using Rectangle = System.Drawing.Rectangle;
 
 namespace Gum.Wireframe;
 
-#region Enums
-
-public enum InstanceFetchType
-{
-    InstanceInCurrentElement,
-    DeepInstance
-}
-
-#endregion
-
 public partial class WireframeObjectManager : IWireframeObjectManager
 {
     #region Properties
