@@ -1,4 +1,5 @@
-﻿using EditorTabPlugin_XNA.ViewModels;
+﻿using EditorTabPlugin_XNA.ExtensionMethods;
+using EditorTabPlugin_XNA.ViewModels;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins;
@@ -125,7 +126,12 @@ public class WireframeControl : GraphicsDeviceControl
 
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
-        bool handled = _hotkeyManager.ProcessCmdKeyWireframe(keyData);
+        // Translate the WinForms key at this boundary so IHotkeyManager stays framework-neutral.
+        bool handled = _hotkeyManager.ProcessCmdKeyWireframe(
+            keyData.ToGumKey(),
+            isShiftDown: (keyData & Keys.Shift) == Keys.Shift,
+            isCtrlDown: (keyData & Keys.Control) == Keys.Control,
+            isAltDown: (keyData & Keys.Alt) == Keys.Alt);
 
         if (handled)
         {

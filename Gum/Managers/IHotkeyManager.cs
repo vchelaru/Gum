@@ -44,5 +44,12 @@ public interface IHotkeyManager
     void HandleKeyDownElementTreeView(System.Windows.Forms.KeyEventArgs e);
     void HandleEditorKeyDown(System.Windows.Forms.KeyEventArgs e);
     void HandleKeyUpWireframe(System.Windows.Forms.KeyEventArgs e);
-    bool ProcessCmdKeyWireframe(System.Windows.Forms.Keys keyData);
+
+    /// <summary>
+    /// Handles wireframe command keys (arrow-key nudging) using Gum's framework-neutral
+    /// <see cref="Gum.Input.GumKey"/> so this interface stays free of WinForms. Callers at the WinForms
+    /// boundary translate <c>System.Windows.Forms.Keys</c> via <c>ToGumKey()</c> and pass the modifier
+    /// state explicitly. Returns true if the key was handled.
+    /// </summary>
+    bool ProcessCmdKeyWireframe(Gum.Input.GumKey? key, bool isShiftDown, bool isCtrlDown, bool isAltDown);
 }
