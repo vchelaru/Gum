@@ -1,5 +1,7 @@
 using Gum.Controls;
 using System;
+using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -60,28 +62,56 @@ public partial class DialogWindow : WindowChromeWindow
         {
             if (DataContext is MessageDialogViewModel messageVm && !string.IsNullOrEmpty(messageVm.Message))
             {
-                TrySetClipboardText(messageVm.Message);
+                try
+                {
+                    TrySetClipboardText(messageVm.Message);
+                }
+                catch
+                {
+                    // Copying the dialog text is a convenience; never let a clipboard failure
+                    // crash the tool from this key handler (issue #3368). TrySetClipboard already
+                    // swallows the transient COMException, so this only guards against anything
+                    // unexpected Clipboard.SetText might throw.
+                }
                 e.Handled = true;
             }
         }
     }
 
-    private static void TrySetClipboardText(string text, int retries = 3)
+    private static void TrySetClipboardText(string text) =>
+        TrySetClipboard(() => Clipboard.SetText(text), retries: 10, delayMilliseconds: 10);
+
+    /// <summary>
+    /// Runs a clipboard operation, retrying when Windows raises the transient
+    /// CLIPBRD_E_CANT_OPEN <see cref="COMException"/> (only one process may hold the
+    /// clipboard open at a time, so clipboard managers, RDP sessions, and browsers
+    /// routinely block it for short windows). Gives up silently after
+    /// <paramref name="retries"/> attempts — a best-effort copy must never crash the
+    /// tool (issue #3368).
+    /// </summary>
+    /// <returns>True if the operation succeeded; false if every attempt failed.</returns>
+    internal static bool TrySetClipboard(Action setClipboard, int retries, int delayMilliseconds)
     {
         for (int i = 0; i < retries; i++)
         {
             try
             {
-                Clipboard.SetText(text);
-                return;
+                setClipboard();
+                return true;
             }
-            catch (System.Runtime.InteropServices.COMException)
+            catch (COMException)
             {
                 if (i == retries - 1)
-                    throw;
-                System.Threading.Thread.Sleep(10);
+                {
+                    return false;
+                }
+                if (delayMilliseconds > 0)
+                {
+                    Thread.Sleep(delayMilliseconds);
+                }
             }
         }
+        return false;
     }
 
     private void ScrollViewer_PreviewMouseWheel(object? sender, MouseWheelEventArgs e)
