@@ -102,6 +102,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         {
             errors.AddRange(GetBehaviorErrorsFor(asComponent, project));
         }
+        errors.AddRange(GetMissingSourceFileErrorsFor(element));
         errors.AddRange(GetMissingElementBaseTypeErrorFor(element));
         errors.AddRange(GetMissingBaseTypeErrorsFor(element));
         errors.AddRange(GetParentErrorsFor(element));
@@ -490,6 +491,42 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                     }
                 }
             }
+        }
+
+        return errors;
+    }
+
+    #endregion
+
+    #region GUM0004 — Missing source file
+
+    /// <summary>
+    /// Surfaces elements whose backing file (.gusx/.gucx/.gutx) was not found on disk when the
+    /// project loaded. <see cref="ElementReference.ToElementSave{T}"/> sets
+    /// <see cref="ElementSave.IsSourceFileMissing"/> in that case and the tree shows a red "!",
+    /// but without this check the Errors tab stays empty - leaving the user no way to find out
+    /// why the element is flagged (issue #3309).
+    /// This is intentionally a listed error only; it must not block saving (see the historical
+    /// comment in ElementReference.ToElementSave), because saving the element is exactly what
+    /// recreates the missing file.
+    /// </summary>
+    private static List<ErrorResult> GetMissingSourceFileErrorsFor(ElementSave element)
+    {
+        var errors = new List<ErrorResult>();
+
+        if (element.IsSourceFileMissing)
+        {
+            var expectedRelativePath = $"{element.Subfolder}/{element.Name}.{element.FileExtension}";
+            errors.Add(new ErrorResult
+            {
+                ElementName = element.Name,
+                Code = "GUM0004",
+                Severity = ErrorSeverity.Error,
+                Message = $"The source file for \"{element.Name}\" is missing. Gum expected it at " +
+                    $"\"{expectedRelativePath}\" but could not find it on disk. The element still exists " +
+                    $"in the project in memory - saving it will recreate the file, or restore the file " +
+                    $"to resolve this error."
+            });
         }
 
         return errors;
