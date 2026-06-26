@@ -1,4 +1,5 @@
 using Gum.Commands;
+using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Services;
 using System;
@@ -166,7 +167,24 @@ public class FileWatchManager : IFileWatchManager
 
     private void HandleFileSystemDelete(object? sender, FileSystemEventArgs e)
     {
-        // do anything?
+        var fileName = new FilePath(e.FullPath);
+        // Detect deletion of an element file so the tool can flag the element's source as missing
+        // (red "!" / GUM0004) instead of silently diverging from disk (issue #3367). Enqueue it
+        // like a change - the flush re-checks existence, so a delete-then-recreate (atomic save)
+        // within the debounce window collapses back into a normal reload. Non-element deletes are
+        // left unhandled, as before.
+        if (IsElementFileExtension(fileName))
+        {
+            HandleFileSystemChange(fileName);
+        }
+    }
+
+    private static bool IsElementFileExtension(FilePath file)
+    {
+        var extension = file.Extension;
+        return extension == GumProjectSave.ScreenExtension
+            || extension == GumProjectSave.ComponentExtension
+            || extension == GumProjectSave.StandardExtension;
     }
 
     private void HandleFileSystemChange(object? sender, FileSystemEventArgs e)
@@ -178,6 +196,14 @@ public class FileWatchManager : IFileWatchManager
 
         // for some reason if we include created here, we'll get double-adds for XML files like screens...
         if (e.ChangeType != WatcherChangeTypes.Created || !isGum)
+        {
+            HandleFileSystemChange(fileName);
+        }
+        // ...except when the Created file is the reappearance of an element we previously flagged
+        // missing (issue #3367). A restore (e.g. Explorer's undo-delete) fires only a Created - no
+        // Change - so without this the red "!" / GUM0004 would never clear. Limiting it to flagged
+        // elements keeps normal saves (which Gum ignore-lists anyway) on the suppressed path.
+        else if (_fileChangeReactionLogic.IsReappearanceOfMissingSourceElement(fileName))
         {
             HandleFileSystemChange(fileName);
         }
@@ -311,6 +337,7 @@ public class FileWatchManager : IFileWatchManager
         {
             var candidateFiles = _changedFilesWaitingForFlush.Keys.ToList();
             var filesToProcess = new List<FilePath>();
+            var deletedElementFiles = new List<FilePath>();
             foreach (var file in candidateFiles)
             {
                 var readiness = GetFileReadiness(file);
@@ -321,11 +348,15 @@ public class FileWatchManager : IFileWatchManager
                 }
                 else if (readiness == FileReadiness.Drop)
                 {
-                    // File no longer exists (e.g. atomic-save temp that was
-                    // renamed away) or is otherwise unprocessable. Drop it
-                    // silently — this is the normal path during agent edits
-                    // and doesn't warrant user-visible noise.
                     _changedFilesWaitingForFlush.TryRemove(file, out _);
+
+                    // Drop usually means an atomic-save temp that was renamed away. But an element
+                    // file that's still gone at flush time is a real deletion the user should see
+                    // (issue #3367) — route it to the delete reaction instead of dropping silently.
+                    if (IsElementFileExtension(file) && !IsTransientTempFile(file))
+                    {
+                        deletedElementFiles.Add(file);
+                    }
                 }
                 // else Locked: leave in queue and retry next cycle (e.g. git is writing it).
             }
@@ -354,6 +385,25 @@ public class FileWatchManager : IFileWatchManager
                     if (PrintFileChangesToOutput)
                     {
                         _guiCommands.PrintOutput($"Error reacting to file change for {file}: {ex.Message}");
+                    }
+                }
+            }
+
+            foreach (var file in deletedElementFiles)
+            {
+                try
+                {
+                    _fileChangeReactionLogic.ReactToFileDeleted(file);
+                    if (PrintFileChangesToOutput)
+                    {
+                        _guiCommands.PrintOutput($"Element file deletion processed: {file}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (PrintFileChangesToOutput)
+                    {
+                        _guiCommands.PrintOutput($"Error reacting to file deletion for {file}: {ex.Message}");
                     }
                 }
             }
