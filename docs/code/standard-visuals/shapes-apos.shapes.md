@@ -137,13 +137,15 @@ public class Game1 : Game
         circle.AddToRoot();
         circle.Width = 100;
         circle.Height = 100;
+        circle.IsFilled = true;
         circle.FillColor = Color.Red;
 
         var rectangle = new RectangleRuntime();
         rectangle.AddToRoot();
         rectangle.X = 100;
         rectangle.CornerRadius = 15;
-        rectangle.FillColor = Color.Blue; // the fill color is the gradient start, so light it up
+        rectangle.IsFilled = true; // FillColor is the gradient start, so show the fill
+        rectangle.FillColor = Color.Blue;
         rectangle.UseGradient = true;
         rectangle.Color2 = Color.Green;
 
@@ -179,7 +181,7 @@ public class Game1 : Game
 
 `CircleRuntime` and `RectangleRuntime` are the current shape runtimes. Each has a **fill** and an **outline (stroke)**, plus optional gradient, drop shadow, dashed-outline, and anti-aliasing effects. `RectangleRuntime` adds rounded-corner support.
 
-A freshly-constructed shape renders as a **stroke-only outline**: `FillColor` defaults to transparent, `StrokeColor` defaults to white, and `StrokeWidth` defaults to `1`. Assign a visible `FillColor` to light up the fill, or set `StrokeWidth` to `0` to hide the outline. A `CircleRuntime` is 32 × 32 by default; a `RectangleRuntime` is 50 × 50.
+A freshly-constructed shape renders as a **stroke-only outline**: `IsFilled` defaults to `false`, so the fill is gated off even though `FillColor` defaults to opaque white. `StrokeColor` defaults to white and `StrokeWidth` defaults to `1`. Set `IsFilled = true` to show the fill (assigning `FillColor` alone does not show it), or set `StrokeWidth` to `0` to hide the outline. A `CircleRuntime` is 32 × 32 by default; a `RectangleRuntime` is 50 × 50.
 
 {% hint style="info" %}
 On MonoGame, KNI, and FNA the outline and geometry render without the shapes package, but the fill and effects (gradient, drop shadow, dashed stroke, anti-aliasing, `Blend`) only draw once the `Gum.Shapes.<platform>` package is added — otherwise the values round-trip but silently do not draw. Skia and .NET MAUI support the full surface natively; raylib supports a near-full subset (see [Shape Support Across Platforms](../../gum-tool/gum-elements/skia-standard-elements/shapes-platform-support.md)).
@@ -204,9 +206,13 @@ A `CircleRuntime` also exposes a `Radius` property, but sizing through `Width` /
 
 | Property | Type | Description |
 | --- | --- | --- |
-| `FillColor` | `Color` | The fill color. Defaults to transparent, so a freshly-constructed shape renders as an outline only — assign a visible color to light up the fill. |
+| `FillColor` | `Color` | The fill color. Defaults to opaque white, but the fill is gated off because `IsFilled` defaults to `false` — so a freshly-constructed shape renders as an outline only. Set `IsFilled = true` to render the fill. |
 | `FillRed`, `FillGreen`, `FillBlue`, `FillAlpha` | `int` | Individual fill channels (0–255). |
-| `IsFilled` | `bool` | Gates the fill. `true` by default; setting it to `false` renders an outline-only shape without discarding `FillColor`. |
+| `IsFilled` | `bool` | The canonical fill gate. Defaults to `false`, so a freshly-constructed shape is outline-only; set it to `true` to render the fill. Assigning `FillColor` alone does not show the fill. |
+
+{% hint style="info" %}
+**Why `IsFilled` defaults to `false`:** `CircleRuntime` and `RectangleRuntime` are historically outline-only, so a freshly-constructed shape stays a stroke-only outline for visual back-compat. The default pairs `IsFilled = false` with an **opaque white** `FillColor` — so flipping `IsFilled = true` alone yields a visible white fill with no need to also assign a color. (The earlier pairing of `IsFilled = true` with a *transparent* `FillColor` was a footgun: setting `IsFilled = true` left the shape invisible until you also assigned a `FillColor`.)
+{% endhint %}
 
 ### Outline (stroke)
 
@@ -277,6 +283,7 @@ A filled circle with a soft drop shadow:
 var circle = new CircleRuntime();
 circle.Width = 100;
 circle.Height = 100;
+circle.IsFilled = true;
 circle.FillColor = Color.Red;
 circle.HasDropshadow = true;
 circle.DropshadowColor = Color.Black;
@@ -294,7 +301,8 @@ var rectangle = new RectangleRuntime();
 rectangle.Width = 200;
 rectangle.Height = 80;
 rectangle.CornerRadius = 12;
-rectangle.FillColor = Color.Blue; // the fill color is the gradient start, so light it up
+rectangle.IsFilled = true; // FillColor is the gradient start, so show the fill
+rectangle.FillColor = Color.Blue;
 rectangle.UseGradient = true;
 rectangle.Color2 = Color.Green;
 container.Children.Add(rectangle);
