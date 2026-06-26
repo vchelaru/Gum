@@ -105,6 +105,72 @@ public class SkiaGumSvgExportServiceTests : IDisposable
             $"Expected the exported SVG for an Arc instance to contain a draw element, but it did not.{Environment.NewLine}SVG:{Environment.NewLine}{svg}");
     }
 
+    // Regression test for issue #3324: SVG export threw
+    // "Could not get the default state for type Line" whenever the project contained a Line
+    // standard element, because SkiaGum's SystemManagers wired Arc/ColoredCircle/RoundedRectangle/
+    // Canvas/Svg/LottieAnimation into CustomGetDefaultState but omitted Line. Like Arc, Line is not
+    // part of ProjectCreator's v3 seed, so a project that uses one ships its own Line standard. Seed
+    // one with GetLineState's real defaults (IsRounded false, StrokeWidth 2) and confirm the Line
+    // both exports without throwing AND renders a draw element (its runtime is now registered, the
+    // same #3259-class "silently dropped" gap that the Rectangle/Arc cases above guard against).
+    [Fact]
+    public void ExportSvg_LineInstance_WithSeededStandard_ShouldRenderADrawElement()
+    {
+        StandardElementSave lineStandard = new StandardElementSave { Name = "Line" };
+        StateSave lineState = new StateSave { Name = "Default", ParentContainer = lineStandard };
+        lineStandard.States.Add(lineState);
+        lineState.Variables.Add(new VariableSave { Name = "IsRounded", Type = "bool", Value = false, SetsValue = true });
+        lineState.Variables.Add(new VariableSave { Name = "StrokeWidth", Type = "float", Value = 2f, SetsValue = true });
+
+        string svg = ExportScreenWithInstance(
+            "Line",
+            new[] { lineStandard },
+            new VariableSave { Name = "ShapeInstance.X", Type = "float", Value = 10f, SetsValue = true },
+            new VariableSave { Name = "ShapeInstance.Y", Type = "float", Value = 10f, SetsValue = true },
+            new VariableSave { Name = "ShapeInstance.Width", Type = "float", Value = 100f, SetsValue = true },
+            new VariableSave { Name = "ShapeInstance.Height", Type = "float", Value = 80f, SetsValue = true });
+
+        bool hasDrawElement = DrawElementTags.Any(svg.Contains);
+        hasDrawElement.ShouldBeTrue(
+            $"Expected the exported SVG for a Line instance to contain a draw element, but it did not.{Environment.NewLine}SVG:{Environment.NewLine}{svg}");
+    }
+
+    // Full coverage for issue #3324 across EVERY extended standard type — the shapes
+    // (Arc/ColoredCircle/RoundedRectangle/Line) and the Skia-only types (Canvas/Svg/LottieAnimation).
+    // None are in ProjectCreator's v3 seed, so each is seeded as its own standard, which is the exact
+    // condition that triggered the crash: GumProjectSave.Initialize calls GetDefaultStateFor for every
+    // standard in the project, and any type missing from the SkiaGum SystemManagers' CustomGetDefaultState
+    // switch threw "Could not get the default state for type X", failing the whole export. This pins all
+    // seven against that regression. (Export-success is the uniform assertion: Canvas/Svg/LottieAnimation
+    // render nothing without children or a SourceFile; per-shape render coverage lives in the tests above.)
+    [Theory]
+    [InlineData("Arc")]
+    [InlineData("ColoredCircle")]
+    [InlineData("RoundedRectangle")]
+    [InlineData("Line")]
+    [InlineData("Canvas")]
+    [InlineData("Svg")]
+    [InlineData("LottieAnimation")]
+    public void ExportSvg_ExtendedStandardType_WithSeededStandard_ShouldExportWithoutThrowing(string baseType)
+    {
+        StandardElementSave standard = new StandardElementSave { Name = baseType };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = standard };
+        standard.States.Add(defaultState);
+        defaultState.Variables.Add(new VariableSave { Name = "Visible", Type = "bool", Value = true, SetsValue = true });
+
+        // ExportScreenWithInstance asserts result.Success internally; before the fix this threw
+        // InvalidOperationException for any extended type absent from the SystemManagers switch.
+        string svg = ExportScreenWithInstance(
+            baseType,
+            new[] { standard },
+            new VariableSave { Name = "ShapeInstance.X", Type = "float", Value = 10f, SetsValue = true },
+            new VariableSave { Name = "ShapeInstance.Y", Type = "float", Value = 10f, SetsValue = true },
+            new VariableSave { Name = "ShapeInstance.Width", Type = "float", Value = 100f, SetsValue = true },
+            new VariableSave { Name = "ShapeInstance.Height", Type = "float", Value = 80f, SetsValue = true });
+
+        svg.ShouldNotBeNullOrEmpty();
+    }
+
     private string ExportScreenWithInstance(string baseType, params VariableSave[] instanceVariables) =>
         ExportScreenWithInstance(baseType, standardsToSeed: null, instanceVariables);
 
