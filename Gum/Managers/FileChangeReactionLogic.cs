@@ -177,6 +177,25 @@ namespace Gum.Managers
             return null;
         }
 
+        /// <summary>
+        /// True when <paramref name="file"/> is the reappearance on disk of an element whose source
+        /// we previously flagged missing (issue #3367) - a loaded element maps to this path and is
+        /// currently <see cref="ElementSave.IsSourceFileMissing"/>. The file watcher uses this to
+        /// process the lone Created event a restore fires (normally suppressed for Gum XML files, to
+        /// avoid double reloads on save) so the element reloads from disk and the flag clears.
+        /// </summary>
+        public bool IsReappearanceOfMissingSourceElement(FilePath file)
+            => IsReappearanceOfMissingSourceElement(file, _fileCommands.ProjectDirectory);
+
+        public static bool IsReappearanceOfMissingSourceElement(FilePath file, FilePath projectDirectory)
+        {
+            var elementName = GetElementNameForElementFile(file, projectDirectory);
+            if (elementName == null) return false;
+
+            var element = ObjectFinder.Self.GetElementSave(elementName);
+            return element != null && element.IsSourceFileMissing;
+        }
+
         private void ReactToLocalizationFileChanged(FilePath file)
         {
             var gumProject = _projectState.GumProjectSave;

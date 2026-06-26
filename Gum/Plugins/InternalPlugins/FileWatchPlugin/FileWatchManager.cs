@@ -199,6 +199,14 @@ public class FileWatchManager : IFileWatchManager
         {
             HandleFileSystemChange(fileName);
         }
+        // ...except when the Created file is the reappearance of an element we previously flagged
+        // missing (issue #3367). A restore (e.g. Explorer's undo-delete) fires only a Created - no
+        // Change - so without this the red "!" / GUM0004 would never clear. Limiting it to flagged
+        // elements keeps normal saves (which Gum ignore-lists anyway) on the suppressed path.
+        else if (_fileChangeReactionLogic.IsReappearanceOfMissingSourceElement(fileName))
+        {
+            HandleFileSystemChange(fileName);
+        }
     }
 
     private void HandleFileSystemChange(FilePath fileName)
