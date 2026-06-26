@@ -803,10 +803,14 @@ public class GumProjectSave
 
             foreach (var screenSave in Screens)
             {
+                // Don't recreate a file the user deleted and whose element is only an in-memory
+                // missing-source stub - saving would silently undo the deletion (issue #3369).
+                if (screenSave.IsSourceFileMissing) continue;
                 screenSave.Save(directory + ElementReference.ScreenSubfolder + "/" + screenSave.Name + "." + ScreenExtension, useCompact);
             }
             foreach (var componentSave in Components)
             {
+                if (componentSave.IsSourceFileMissing) continue;
                 componentSave.Save(directory + ElementReference.ComponentSubfolder + "/" + componentSave.Name + "." + ComponentExtension, useCompact);
             }
             SaveStandardElements(directory, useCompact);
@@ -817,6 +821,11 @@ public class GumProjectSave
     {
         foreach (var standardElement in StandardElements)
         {
+            // A missing-source standard is an in-memory stub for a .gutx the user removed (and
+            // declined to recreate). Persisting it here would silently recreate the file - and
+            // from a default reconstruction, not the original - overriding the user's intent
+            // and churning version control (issue #3369).
+            if (standardElement.IsSourceFileMissing) continue;
 
             const int maxNumberOfTries = 6;
             const int msBetweenSaves = 100;
