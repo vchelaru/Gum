@@ -327,6 +327,9 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
     public bool IsTruncatingWithEllipsisOnLastLine { get; set; }
 
+    /// <inheritdoc/>
+    public bool IsHeightDependentOnLines { get; set; }
+
     string? mRawText;
     public string? RawText
     {

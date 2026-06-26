@@ -137,6 +137,9 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
 
     public bool IsTruncatingWithEllipsisOnLastLine { get; set; }
 
+    /// <inheritdoc/>
+    public bool IsHeightDependentOnLines { get; set; }
+
     public bool IsItalic
     {
         get => _isItalic; set
