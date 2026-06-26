@@ -28,6 +28,8 @@ public interface IEditVariableService
 {
     VariableEditMode GetAvailableEditModeFor(VariableSave variableSave, IStateContainer stateCategoryListContainer);
 
+    string? GetEditVariableMenuLabel(VariableSave variableSave, IStateContainer stateListCategoryContainer);
+
     void ShowEditVariableWindow(VariableSave variable, IStateContainer container);
 
     void TryAddEditVariableOptions(InstanceMember instanceMember, VariableSave variableSave, IStateContainer stateListCategoryContainer);
@@ -71,18 +73,32 @@ public class EditVariableService : IEditVariableService
 
     public void TryAddEditVariableOptions(InstanceMember instanceMember, VariableSave variableSave, IStateContainer stateListCategoryContainer)
     {
-        if (CanEditVariable(variableSave, stateListCategoryContainer))
+        if (GetEditVariableMenuLabel(variableSave, stateListCategoryContainer) is { } label)
         {
-            instanceMember.ContextMenuEvents.Add($"Edit Variable [{variableSave.Name}]", (sender, e) =>
+            instanceMember.ContextMenuEvents.Add(label, (sender, e) =>
             {
                 ShowEditVariableWindow(variableSave, stateListCategoryContainer);
             });
         }
     }
 
-    bool CanEditVariable(VariableSave variableSave, IStateContainer stateListCategoryContainer)
+    /// <summary>
+    /// Returns the context-menu label for editing the given variable, or null when the variable
+    /// offers no edit action. The wording reflects the available edit mode: an exposed variable can
+    /// only be renamed ("Rename Variable [...]"), while a custom or behavior variable opens the full
+    /// Add/Edit Variable dialog ("Edit Variable [...]").
+    /// </summary>
+    public string? GetEditVariableMenuLabel(VariableSave variableSave, IStateContainer stateListCategoryContainer)
     {
-        return GetAvailableEditModeFor(variableSave, stateListCategoryContainer) != VariableEditMode.None;
+        var editMode = GetAvailableEditModeFor(variableSave, stateListCategoryContainer);
+        return editMode switch
+        {
+            // Exposing only renames the exposed name; the full type/value edit is not available, so
+            // don't promise "Edit", and show the exposed name (what's actually being renamed).
+            VariableEditMode.ExposedName => $"Rename Variable [{variableSave.ExposedAsName}]",
+            VariableEditMode.FullEdit => $"Edit Variable [{variableSave.Name}]",
+            _ => null
+        };
     }
 
     public VariableEditMode GetAvailableEditModeFor(VariableSave variableSave, IStateContainer stateCategoryListContainer)

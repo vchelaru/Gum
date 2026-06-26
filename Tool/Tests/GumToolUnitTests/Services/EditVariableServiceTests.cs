@@ -57,6 +57,53 @@ public class EditVariableServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void GetEditVariableMenuLabel_ShouldReturnEditVariable_ForCustomVariable()
+    {
+        ComponentSave component = new ComponentSave { Name = "TestComponent" };
+
+        VariableSave variable = new VariableSave
+        {
+            Name = "MyCustomVar",
+            IsCustomVariable = true
+        };
+
+        string label = _service.GetEditVariableMenuLabel(variable, component);
+
+        label.ShouldBe("Edit Variable [MyCustomVar]");
+    }
+
+    [Fact]
+    public void GetEditVariableMenuLabel_ShouldReturnNull_WhenNotEditable()
+    {
+        ComponentSave component = new ComponentSave { Name = "TestComponent" };
+
+        VariableSave variable = new VariableSave
+        {
+            Name = "MyInstance.SomeVar"
+        };
+
+        string label = _service.GetEditVariableMenuLabel(variable, component);
+
+        label.ShouldBeNull();
+    }
+
+    [Fact]
+    public void GetEditVariableMenuLabel_ShouldReturnRenameVariable_ForExposedVariable()
+    {
+        ComponentSave component = new ComponentSave { Name = "TestComponent" };
+
+        VariableSave variable = new VariableSave
+        {
+            Name = "MyInstance.SomeVar",
+            ExposedAsName = "MyExposedName"
+        };
+
+        string label = _service.GetEditVariableMenuLabel(variable, component);
+
+        label.ShouldBe("Rename Variable [MyExposedName]");
+    }
+
+    [Fact]
     public void RenameExposedVariable_ShouldRequestUndoLock()
     {
         var component = new ComponentSave();
