@@ -4,9 +4,15 @@
 
 `CircleRuntime` draws a circle with a **fill** and an **outline (stroke)**. The circle is sized to fit within its `Width` × `Height` bounds. The fill is set by `FillColor`; the outline is set by `StrokeColor` and `StrokeWidth`. On top of fill and outline, a `CircleRuntime` can also render a gradient, a drop shadow, and a dashed outline.
 
-A freshly-constructed `CircleRuntime` renders as a **stroke-only outline** — `FillColor` defaults to transparent, `StrokeColor` defaults to white, and `StrokeWidth` defaults to `1`. Assign a visible `FillColor` to light up the fill, or set `StrokeWidth` to `0` to hide the outline.
+A freshly-constructed `CircleRuntime` is 32 × 32 and renders as a **stroke-only outline** — `IsFilled` defaults to `false`, so the fill is gated off even though `FillColor` defaults to opaque white. `StrokeColor` defaults to white and `StrokeWidth` defaults to `1`. Set `IsFilled = true` to show the fill (assigning `FillColor` alone does not show it), or set `StrokeWidth` to `0` to hide the outline.
+
+`IsFilled` defaults to `false` because `CircleRuntime` is historically outline-only. It pairs with an opaque white `FillColor`, so setting `IsFilled = true` alone yields a visible white fill — see [Shapes](shapes-apos.shapes.md#fill) for the full rationale.
 
 For the full property surface — fill, outline, gradient, drop shadow, dashed stroke, and the platform/package requirements — see the [Shapes](shapes-apos.shapes.md#circleruntime-and-rectangleruntime) page. The examples below cover the common cases.
+
+{% hint style="info" %}
+A `CircleRuntime` also exposes a `Radius` property, but sizing through `Width` / `Height` is recommended — it keeps the circle consistent with every other visual and participates in the layout system. Setting `Radius` simply sets `Width` and `Height` to `Radius × 2`.
+{% endhint %}
 
 {% hint style="info" %}
 On MonoGame, KNI, and FNA the outline and geometry render out of the box, but the **fill** and the richer effects (gradient, drop shadow, dashed stroke, anti-aliasing) only draw once the `Gum.Shapes.<platform>` package is added — otherwise they are stored and round-trip but silently do not draw. Skia, .NET MAUI, and raylib support the full surface natively. See the [Shapes](shapes-apos.shapes.md) page for setup.
@@ -27,14 +33,15 @@ container.Children.Add(circle);
 
 <figure><img src="../../.gitbook/assets/07_06 14 58.png" alt=""><figcaption><p>Green outlined circle</p></figcaption></figure>
 
-To fill the circle, assign a visible `FillColor`. On MonoGame, KNI, and FNA the fill requires the shape support package (see the [Shapes](shapes-apos.shapes.md) page):
+To fill the circle, set `IsFilled = true` and assign a `FillColor`. On MonoGame, KNI, and FNA the fill requires the shape support package (see the [Shapes](shapes-apos.shapes.md) page):
 
 ```csharp
 // Initialize
 var circle = new CircleRuntime();
 circle.Width = 128;
 circle.Height = 128;
-circle.FillColor = Color.Green; // light up the fill
+circle.IsFilled = true;
+circle.FillColor = Color.Green; // show the fill
 container.Children.Add(circle);
 ```
 
