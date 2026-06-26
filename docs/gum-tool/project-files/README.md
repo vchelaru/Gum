@@ -115,6 +115,17 @@ This is an append-only log. Deleting a screen adds a "deleted" event rather than
 
 This file is transient and user-specific. It **should not be committed** to version control.
 
+## Missing Source Files (GUM0004)
+
+If the Gum tool opens a project whose `.gumx` references an element (screen, component, or standard element) but the matching element file is not found on disk, the element still appears in the tree with a red "!" indicator. This can happen when an element file is deleted, renamed, or moved outside the Gum tool — for example by a version-control operation that removes the file while the project is open.
+
+When this happens the Gum tool reports a **GUM0004** error in the [Errors tab](../editor-tab.md), naming the element and the path where its file was expected (for example `Components/Button.gucx`). The element itself is still present in memory, so the project keeps working. To resolve the error, either:
+
+* **Restore the missing file** — undo the deletion or move it back to the expected location, then reload the project.
+* **Re-save the element** — saving the element (for example by editing it) recreates the file from the in-memory copy.
+
+GUM0004 is a listed error only; it does not block saving the project.
+
 ## Version Control (.gitignore)
 
 The following `.gitignore` entries are recommended for Gum projects:

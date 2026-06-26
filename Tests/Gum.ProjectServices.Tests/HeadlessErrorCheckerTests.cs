@@ -909,4 +909,43 @@ public class HeadlessErrorCheckerTests : BaseTestClass
     }
 
     #endregion
+
+    #region GUM0004 — Missing source file
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0004_WhenElementSourceFileExists()
+    {
+        // A normally-loaded element has IsSourceFileMissing == false (the flag is only
+        // set by ElementReference.ToElementSave when the .gucx/.gusx/.gutx isn't on disk).
+        ComponentSave component = new ComponentSave { Name = "RealComponent", BaseType = "Container" };
+        Project.Components.Add(component);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.ShouldNotContain(e => e.Code == "GUM0004");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0004_WhenElementSourceFileIsMissing()
+    {
+        // Repro #3309: when an element's backing file is missing on disk, the tree shows a
+        // red "!" (driven by IsSourceFileMissing) but the Errors tab stays empty because
+        // missing-source was never surfaced as an ErrorResult. Surface it so the user can
+        // see why the element is flagged and where the file was expected.
+        ComponentSave component = new ComponentSave { Name = "GhostComponent" };
+        component.IsSourceFileMissing = true;
+        Project.Components.Add(component);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe("GUM0004");
+        error.ElementName.ShouldBe("GhostComponent");
+        error.Severity.ShouldBe(ErrorSeverity.Error);
+        error.Message.ShouldContain("GhostComponent");
+        error.Message.ShouldContain("Components");
+        error.Message.ShouldContain(".gucx");
+    }
+
+    #endregion
 }

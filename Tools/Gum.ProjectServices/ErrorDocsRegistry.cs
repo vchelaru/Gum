@@ -16,6 +16,7 @@ public class ErrorDocsRegistry : IErrorDocsRegistry
             ["GUM0001"] = "gum-tool/gum-elements/behaviors#behavior-instance-requirements",
             ["GUM0002"] = "gum-tool/gum-elements/states/categories#gum0002-variable-reference-conflicts-with-explicit-set",
             ["GUM0003"] = "gum-tool/gum-elements/states/categories#gum0003-category-state-sets-its-own-category-selector",
+            ["GUM0004"] = "gum-tool/project-files#missing-source-files-gum0004",
         };
     }
 
