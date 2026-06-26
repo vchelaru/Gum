@@ -98,22 +98,31 @@ namespace RenderingLibrary
 
         private void RegisterComponentRuntimeInstantiations()
         {
+            // Construct the SkiaGum.GueDeriving shim subclasses (not the new Gum.GueDeriving base
+            // types). This file has `using Gum.GueDeriving;`, so an unqualified `new ContainerRuntime()`
+            // resolves to the base type — but already-generated user code casts the loaded instance to
+            // the deprecated shim namespace (`... as SkiaGum.GueDeriving.ContainerRuntime`), and that
+            // cast only succeeds when the instance is the most-derived shim. Instantiating the base
+            // yields null and a NullReferenceException downstream (issue #3380). Mirrors the same fix
+            // in RenderingLibrary.SystemManagers (MonoGame) and AposShapeRuntime. Drop the
+            // qualification once the SkiaGum.GueDeriving shims are removed.
+#pragma warning disable CS0618 // Type or member is obsolete
             ElementSaveExtensions.RegisterGueInstantiation(
                 "Arc",
-                () => new ArcRuntime());
+                () => new global::SkiaGum.GueDeriving.ArcRuntime());
 
             ElementSaveExtensions.RegisterGueInstantiation(
                 "Circle",
-                () => new CircleRuntime());
+                () => new global::SkiaGum.GueDeriving.CircleRuntime());
 
             ElementSaveExtensions.RegisterGueInstantiation(
                 "ColoredCircle",
-                () => new ColoredCircleRuntime());
+                () => new global::SkiaGum.GueDeriving.ColoredCircleRuntime());
 
 
             ElementSaveExtensions.RegisterGueInstantiation(
                 "Container",
-                () => new ContainerRuntime());
+                () => new global::SkiaGum.GueDeriving.ContainerRuntime());
 
             // Issue #3324 — without this registration a "Line" standard type created no
             // renderable, so a Line was silently dropped from SVG export (the same #3259-class
@@ -121,7 +130,7 @@ namespace RenderingLibrary
             // AposShapeRuntime. Pairs with the "Line" arm added to HandleCustomGetDefaultState.
             ElementSaveExtensions.RegisterGueInstantiation(
                 "Line",
-                () => new LineRuntime());
+                () => new global::SkiaGum.GueDeriving.LineRuntime());
 
             //ElementSaveExtensions.RegisterGueInstantiation(
             //    "NineSlice",
@@ -129,7 +138,7 @@ namespace RenderingLibrary
 
             ElementSaveExtensions.RegisterGueInstantiation(
                 "Polygon",
-                () => new PolygonRuntime());
+                () => new global::SkiaGum.GueDeriving.PolygonRuntime());
 
             // Issue #3259 — the v3 "Rectangle" standard type (filled/rounded/stroked) renders
             // through RectangleRuntime, whose SKIA build wraps a RoundedRectangle fill+stroke
@@ -137,17 +146,19 @@ namespace RenderingLibrary
             // "Rectangle" base type, so the shape was silently dropped from SVG export (gumcli
             // svg / tool File ▸ Export) and any SkiaGum-hosted render — only Text/Container/etc.
             // drew. The XNALIKE/raylib backends register the same runtime in their SystemManagers.
+            // RectangleRuntime has no SkiaGum.GueDeriving shim, so it stays the canonical base type.
             ElementSaveExtensions.RegisterGueInstantiation(
                 "Rectangle",
                 () => new RectangleRuntime());
 
             ElementSaveExtensions.RegisterGueInstantiation(
                 "Sprite",
-                () => new SpriteRuntime());
+                () => new global::SkiaGum.GueDeriving.SpriteRuntime());
 
             ElementSaveExtensions.RegisterGueInstantiation(
                 "Text",
-                () => new TextRuntime());
+                () => new global::SkiaGum.GueDeriving.TextRuntime());
+#pragma warning restore CS0618
         }
 
         private IRenderable? HandleCreateGraphicalComponent(string type, ISystemManagers managers)
