@@ -2,7 +2,6 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
-using Gum.Gui.Windows;
 using Gum.Logic;
 using Gum.Plugins;
 using Gum.Services;
@@ -14,9 +13,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
 using ToolsUtilities;
-using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace Gum.Managers;
 
@@ -24,9 +21,9 @@ public class DeleteLogic : IDeleteLogic
 {
     private readonly ISelectedState _selectedState;
     private readonly IDialogService _dialogService;
+    private readonly IDeleteDialogService _deleteDialogService;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
-    private readonly IPluginManager _pluginManager;
     private readonly IDeletePluginNotifier _deletePluginNotifier;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IDeleteProjectProvider _deleteProjectProvider;
@@ -35,9 +32,9 @@ public class DeleteLogic : IDeleteLogic
     public DeleteLogic(
         ISelectedState selectedState,
         IDialogService dialogService,
+        IDeleteDialogService deleteDialogService,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        IPluginManager pluginManager,
         IDeletePluginNotifier deletePluginNotifier,
         IWireframeObjectManager wireframeObjectManager,
         IDeleteProjectProvider deleteProjectProvider,
@@ -45,9 +42,9 @@ public class DeleteLogic : IDeleteLogic
     {
         _selectedState = selectedState;
         _dialogService = dialogService;
+        _deleteDialogService = deleteDialogService;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
-        _pluginManager = pluginManager;
         _deletePluginNotifier = deletePluginNotifier;
         _wireframeObjectManager = wireframeObjectManager;
         _deleteProjectProvider = deleteProjectProvider;
@@ -97,7 +94,7 @@ public class DeleteLogic : IDeleteLogic
         }
 
         Array? objectsDeleted = null;
-        DeleteOptionsWindow? optionsWindow = null;
+        IDeleteDialogResult? deleteDialogResult = null;
 
         var selectedElements = _selectedState.SelectedElements;
         var selectedInstance = _selectedState.SelectedInstance;
@@ -121,19 +118,16 @@ public class DeleteLogic : IDeleteLogic
             }
             else
             {
-                //DialogResult result =
-                //    MessageBox.Show("Are you sure you'd like to delete " + instance.Name + "?", "Delete instance?", MessageBoxButtons.YesNo);
-                var result = ShowDeleteDialog(array, out optionsWindow);
+                var result = ShowDeleteDialog(array);
 
-
-                if (result == true)
+                if (result.Result == true)
                 {
                     PerformConfirmedSingleInstanceDelete(
                         selectedInstance,
                         selectedElements.FirstOrDefault(),
                         selectedBehavior,
                         array,
-                        optionsWindow);
+                        result);
                     objectsDeleted = null; // prevent double-firing at the end of DoDeletingLogic
                 }
                 else
@@ -149,10 +143,9 @@ public class DeleteLogic : IDeleteLogic
 
             if (array.Length > 0)
             {
+                deleteDialogResult = ShowDeleteDialog(array);
 
-                var result = ShowDeleteDialog(array, out optionsWindow);
-
-                if (result == true)
+                if (deleteDialogResult.Result == true)
                 {
                     objectsDeleted = array;
 
@@ -188,9 +181,9 @@ public class DeleteLogic : IDeleteLogic
                     return;
             }
 
-            var result = ShowDeleteDialog(array, out optionsWindow);
+            deleteDialogResult = ShowDeleteDialog(array);
 
-            if (result == true)
+            if (deleteDialogResult.Result == true)
             {
                 objectsDeleted = array;
                 foreach(var item in array)
@@ -216,7 +209,7 @@ public class DeleteLogic : IDeleteLogic
 
         if (shouldDelete)
         {
-            _pluginManager.DeleteConfirmed(optionsWindow, objectsDeleted);
+            _deleteDialogService.NotifyConfirmed(deleteDialogResult!, objectsDeleted);
         }
     }
 
@@ -225,7 +218,7 @@ public class DeleteLogic : IDeleteLogic
         ElementSave? selectedElement,
         BehaviorSave? selectedBehavior,
         Array objectsDeleted,
-        DeleteOptionsWindow? optionsWindow)
+        IDeleteDialogResult? deleteDialogResult)
     {
         var siblings = selectedInstance.GetSiblingsIncludingThis();
         var parentInstance = selectedInstance.GetParentInstance();
@@ -233,7 +226,7 @@ public class DeleteLogic : IDeleteLogic
         // Fire DeleteConfirmed before removal so plugins can still find
         // children via parent reference variables (e.g. "Child.Parent = thisInstance").
         // RemoveInstanceFromElement destroys those references, breaking GetChildrenOf.
-        _pluginManager.DeleteConfirmed(optionsWindow!, objectsDeleted);
+        _deleteDialogService.NotifyConfirmed(deleteDialogResult!, objectsDeleted);
 
         if (selectedElement != null)
         {
@@ -320,11 +313,11 @@ public class DeleteLogic : IDeleteLogic
         }
 
         var combinedArray = combinedList.ToArray();
-        var result = ShowDeleteDialog(combinedArray, out var optionsWindow, instancesFromBase);
+        var result = ShowDeleteDialog(combinedArray, instancesFromBase);
 
-        if (result != true) return;
+        if (result.Result != true) return;
 
-        PerformConfirmedMixedTypeDelete(elements, behaviors, deletableInstances, combinedArray, optionsWindow);
+        PerformConfirmedMixedTypeDelete(elements, behaviors, deletableInstances, combinedArray, result);
     }
 
     internal void PerformConfirmedMixedTypeDelete(
@@ -332,7 +325,7 @@ public class DeleteLogic : IDeleteLogic
         List<BehaviorSave> behaviors,
         List<InstanceSave> deletableInstances,
         Array combinedArray,
-        DeleteOptionsWindow? optionsWindow)
+        IDeleteDialogResult? deleteDialogResult)
     {
         // Cache behavior parents before removal (GetBehaviorContainerOf won't find them after)
         var affectedBehaviorParents = deletableInstances
@@ -344,7 +337,7 @@ public class DeleteLogic : IDeleteLogic
         // 1. Notify plugins before removal so they can still find children via
         //    parent reference variables (e.g. "Child.Parent = thisInstance").
         //    RemoveInstanceFromElement destroys those references, breaking GetChildrenOf.
-        _pluginManager.DeleteConfirmed(optionsWindow!, combinedArray);
+        _deleteDialogService.NotifyConfirmed(deleteDialogResult!, combinedArray);
 
         // Group instances by their (non-deleted) parent element. Used both for the
         // post-removal InstancesDelete plugin notification and for the file-save pass below.
@@ -487,13 +480,10 @@ public class DeleteLogic : IDeleteLogic
         }
     }
 
-    bool? ShowDeleteDialog(Array objectsToDelete, out DeleteOptionsWindow optionsWindow,
+    IDeleteDialogResult ShowDeleteDialog(Array objectsToDelete,
         List<InstanceSave>? instancesFromBase = null)
     {
-
-        string titleText;
-
-        titleText = "Delete?";
+        string titleText = "Delete?";
         if (objectsToDelete.Length == 1)
         {
             var objectToDelete = objectsToDelete.GetValue(0);
@@ -515,20 +505,9 @@ public class DeleteLogic : IDeleteLogic
             }
         }
 
-        optionsWindow = new DeleteOptionsWindow();
-        optionsWindow.Title = titleText;
-        optionsWindow.Message = BuildDeleteDialogMessage(objectsToDelete, instancesFromBase);
-        optionsWindow.ObjectsToDelete = objectsToDelete;
+        var message = BuildDeleteDialogMessage(objectsToDelete, instancesFromBase);
 
-        // do this in Loaded so it has height
-        //_guiCommands.MoveToCursor(optionsWindow);
-
-        _pluginManager.ShowDeleteDialog(optionsWindow, objectsToDelete);
-
-        var result = optionsWindow.ShowDialog();
-
-
-        return result;
+        return _deleteDialogService.ShowDeleteDialog(titleText, message, objectsToDelete);
     }
 
     internal string BuildDeleteDialogMessage(Array objectsToDelete, List<InstanceSave>? instancesFromBase = null)
