@@ -26,6 +26,20 @@ public class StandardElementsManagerTests
     }
 
     [Fact]
+    public void AddStandardElementSaveInstance_ShouldThrowArgumentException_ForPluginStandard()
+    {
+        // The Skia shapes (Arc, Canvas, Line, Svg, LottieAnimation) are added by a plugin and are
+        // never placed in the built-in defaults, so recreating one through this method must surface a
+        // clear, typed error instead of a cryptic KeyNotFoundException from the mDefaults indexer (#3373).
+        StandardElementsManager self = StandardElementsManager.Self;
+        self.RefreshDefaults();
+
+        GumProjectSave project = new GumProjectSave();
+
+        Should.Throw<ArgumentException>(() => self.AddStandardElementSaveInstance(project, "Arc"));
+    }
+
+    [Fact]
     public void CircleDefault_ShouldExposeWidthAndHeight_NotRadius()
     {
         StandardElementsManager self = StandardElementsManager.Self;

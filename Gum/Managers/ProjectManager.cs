@@ -665,7 +665,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider
         return didChange;
     }
 
-    private void RecreateMissingStandardElements()
+    internal void RecreateMissingStandardElements()
     {
         List<StandardElementSave> missingElements = new List<StandardElementSave>();
         foreach (var element in _gumProjectSave.StandardElements)
@@ -677,8 +677,21 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider
             }
         }
 
+        List<string> unrecreatableStandardNames = new List<string>();
+
         foreach (var element in missingElements)
         {
+            // Plugin-contributed standards (the Skia shapes Arc/Canvas/Line/Svg/LottieAnimation and the
+            // legacy ColoredCircle/RoundedRectangle) are not in StandardElementsManager's built-in
+            // defaults, so the tool can't rebuild them from mDefaults -- clicking "Yes" used to crash
+            // with a KeyNotFoundException (#3373). Collect them and inform the user instead of offering
+            // a Yes/No we can't honor.
+            if (!StandardElementsManager.Self.IsDefaultType(element.Name))
+            {
+                unrecreatableStandardNames.Add(element.Name);
+                continue;
+            }
+
             var result = _dialogService.ShowYesNoMessage(
                 "The following standard is missing: " + element.Name + "  Recreate it?", "Recreate " + element.Name + "?");
 
@@ -687,12 +700,22 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider
                 _gumProjectSave.StandardElements.RemoveAll(item => item.Name == element.Name);
                 _gumProjectSave.StandardElementReferences.RemoveAll(item => item.Name == element.Name);
 
-                var newElement = StandardElementsManager.Self.AddStandardElementSaveInstance(_gumProjectSave, element.Name);
+                StandardElementsManager.Self.AddStandardElementSaveInstance(_gumProjectSave, element.Name);
 
                 string gumProjectDirectory = FileManager.GetDirectory(_gumProjectSave.FullFileName);
 
                 _gumProjectSave.SaveStandardElements(gumProjectDirectory);
             }
+        }
+
+        if (unrecreatableStandardNames.Count > 0)
+        {
+            string names = string.Join(", ", unrecreatableStandardNames);
+            _dialogService.ShowMessage(
+                $"The following standard element(s) are missing and can't be recreated automatically " +
+                $"because they are provided by a plugin: {names}.\n\n" +
+                $"Restore the matching Standards/<name>.gutx file from version control, or re-add the " +
+                $"plugin that provides it (for the Skia shapes: Plugins → Add Skia).");
         }
     }
 
