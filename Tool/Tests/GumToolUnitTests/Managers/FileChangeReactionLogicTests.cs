@@ -1,3 +1,4 @@
+using Gum.DataTypes;
 using Gum.Managers;
 using Shouldly;
 using System.Collections.Generic;
@@ -9,6 +10,55 @@ namespace GumToolUnitTests.Managers;
 
 public class FileChangeReactionLogicTests
 {
+    [Fact]
+    public void FlagElementForDeletedFile_ShouldSetIsSourceFileMissing_WhenDeletedFileMapsToLoadedElement()
+    {
+        // Repro #3367: an element's source file is deleted on disk while the tool is running.
+        // The element must be flagged (red "!" / GUM0004) but NOT reloaded/removed — the in-memory
+        // copy stays authoritative.
+        GumProjectSave project = new GumProjectSave();
+        ComponentSave component = new ComponentSave { Name = "MyButton" };
+        project.Components.Add(component);
+        ObjectFinder.Self.GumProjectSave = project;
+        try
+        {
+            FilePath projectDirectory = new FilePath(@"C:\proj\");
+            FilePath deletedFile = new FilePath(@"C:\proj\Components\MyButton.gucx");
+
+            ElementSave? flagged = FileChangeReactionLogic.FlagElementForDeletedFile(deletedFile, projectDirectory);
+
+            flagged.ShouldBe(component);
+            component.IsSourceFileMissing.ShouldBeTrue();
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    [Fact]
+    public void FlagElementForDeletedFile_ShouldReturnNull_WhenDeletedFileMapsToNoLoadedElement()
+    {
+        GumProjectSave project = new GumProjectSave();
+        ComponentSave component = new ComponentSave { Name = "MyButton" };
+        project.Components.Add(component);
+        ObjectFinder.Self.GumProjectSave = project;
+        try
+        {
+            FilePath projectDirectory = new FilePath(@"C:\proj\");
+            FilePath deletedFile = new FilePath(@"C:\proj\Components\Unrelated.gucx");
+
+            ElementSave? flagged = FileChangeReactionLogic.FlagElementForDeletedFile(deletedFile, projectDirectory);
+
+            flagged.ShouldBeNull();
+            component.IsSourceFileMissing.ShouldBeFalse();
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
     [Fact]
     public void IsLocalizationFile_ReturnsFalse_WhenChangedFileIsUnrelated()
     {

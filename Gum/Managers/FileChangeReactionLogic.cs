@@ -95,6 +95,88 @@ namespace Gum.Managers
             _pluginManager.ReactToFileChanged(file);
         }
 
+        /// <summary>
+        /// Reacts to an element file (.gusx/.gucx/.gutx) that was deleted on disk while the tool
+        /// is running. The flush routes here (instead of the change path) only once the file is
+        /// confirmed gone, so a delete-then-recreate within the debounce window is handled as a
+        /// normal reload instead. See <see cref="ReactToElementSaveDeleted"/> for why the element
+        /// is flagged rather than reloaded.
+        /// </summary>
+        public void ReactToFileDeleted(FilePath file)
+        {
+            var extension = file.Extension;
+            if (extension == GumProjectSave.ScreenExtension || extension == GumProjectSave.ComponentExtension ||
+                extension == GumProjectSave.StandardExtension)
+            {
+                ReactToElementSaveDeleted(file);
+            }
+        }
+
+        private void ReactToElementSaveDeleted(FilePath file)
+        {
+            // Defensive: the flush already gates on the file being gone, but if a delete event was
+            // really a transient delete-then-recreate (atomic save) the file is back by now - in
+            // which case the change path, not this one, should handle it.
+            if (file.Exists()) return;
+
+            var element = FlagElementForDeletedFile(file, _fileCommands.ProjectDirectory);
+            if (element == null) return;
+
+            _guiCommands.RefreshElementTreeView();
+            _pluginManager.ElementReloaded(element);
+        }
+
+        /// <summary>
+        /// Maps an element file path (.gusx/.gucx/.gutx) to the name ObjectFinder uses - the path
+        /// relative to its type folder, e.g. "MyButton" or "Sub/MyButton". Returns null when the
+        /// file isn't under the project directory (the same early-out the change path applied).
+        /// </summary>
+        internal static string? GetElementNameForElementFile(FilePath file, FilePath projectDirectory)
+        {
+            if (projectDirectory == null) return null;
+            if (!projectDirectory.IsRootOf(file)) return null;
+
+            FilePath standardized = file.RemoveExtension().StandardizedCaseSensitive;
+            var relativeToFolderForType = standardized.RelativeTo(projectDirectory).Replace("\\", "/");
+
+            if (relativeToFolderForType.StartsWith("Screens/"))
+            {
+                relativeToFolderForType = relativeToFolderForType.Substring("Screens/".Length);
+            }
+            else if (relativeToFolderForType.StartsWith("Components/"))
+            {
+                relativeToFolderForType = relativeToFolderForType.Substring("Components/".Length);
+            }
+            else if (relativeToFolderForType.StartsWith("Standards/"))
+            {
+                relativeToFolderForType = relativeToFolderForType.Substring("Standards/".Length);
+            }
+            return relativeToFolderForType;
+        }
+
+        /// <summary>
+        /// Finds the loaded element whose source file was deleted and flags it
+        /// <see cref="ElementSave.IsSourceFileMissing"/> so the tree shows the red "!" and the
+        /// Errors tab lists GUM0004 (issue #3367). The element is deliberately NOT reloaded or
+        /// removed: the in-memory copy is authoritative and may hold unsaved edits, and saving it
+        /// re-creates the file (clearing the flag). Returns the flagged element, or null when the
+        /// path maps to no loaded element or it was already flagged (so the caller can skip the
+        /// UI refresh).
+        /// </summary>
+        public static ElementSave? FlagElementForDeletedFile(FilePath deletedFile, FilePath projectDirectory)
+        {
+            var elementName = GetElementNameForElementFile(deletedFile, projectDirectory);
+            if (elementName == null) return null;
+
+            var element = ObjectFinder.Self.GetElementSave(elementName);
+            if (element != null && !element.IsSourceFileMissing)
+            {
+                element.IsSourceFileMissing = true;
+                return element;
+            }
+            return null;
+        }
+
         private void ReactToLocalizationFileChanged(FilePath file)
         {
             var gumProject = _projectState.GumProjectSave;
@@ -289,27 +371,10 @@ namespace Gum.Managers
         private void ReactToElementSaveChanged(FilePath file)
         {
             var projectDirectory = _fileCommands.ProjectDirectory;
+            var relativeToFolderForType = GetElementNameForElementFile(file, projectDirectory);
             ////////////////////////Early Out////////////////////////////
-            if (projectDirectory == null) return;
-            if (!projectDirectory.IsRootOf(file)) return;
+            if (relativeToFolderForType == null) return;
             ///////////////////////End Early Out/////////////////////////
-
-            FilePath standardized = file.RemoveExtension().StandardizedCaseSensitive;
-            var relativeToFolderForType = standardized.RelativeTo(projectDirectory).Replace("\\", "/");
-
-            if(relativeToFolderForType.StartsWith("Screens/"))
-            {
-                relativeToFolderForType = relativeToFolderForType.Substring("Screens/".Length);
-            }
-            else if(relativeToFolderForType.StartsWith("Components/"))
-            {
-                relativeToFolderForType = relativeToFolderForType.Substring("Components/".Length);
-            }
-            else if(relativeToFolderForType.StartsWith("Standards/"))
-            {
-                relativeToFolderForType = relativeToFolderForType.Substring("Standards/".Length);
-            }
-
 
             var element = ObjectFinder.Self.GetElementSave(relativeToFolderForType);
 
