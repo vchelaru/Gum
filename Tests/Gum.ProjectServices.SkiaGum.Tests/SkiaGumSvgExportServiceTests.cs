@@ -105,6 +105,36 @@ public class SkiaGumSvgExportServiceTests : IDisposable
             $"Expected the exported SVG for an Arc instance to contain a draw element, but it did not.{Environment.NewLine}SVG:{Environment.NewLine}{svg}");
     }
 
+    // Regression test for issue #3324: SVG export threw
+    // "Could not get the default state for type Line" whenever the project contained a Line
+    // standard element, because SkiaGum's SystemManagers wired Arc/ColoredCircle/RoundedRectangle/
+    // Canvas/Svg/LottieAnimation into CustomGetDefaultState but omitted Line. Like Arc, Line is not
+    // part of ProjectCreator's v3 seed, so a project that uses one ships its own Line standard. Seed
+    // one with GetLineState's real defaults (IsRounded false, StrokeWidth 2) and confirm the Line
+    // both exports without throwing AND renders a draw element (its runtime is now registered, the
+    // same #3259-class "silently dropped" gap that the Rectangle/Arc cases above guard against).
+    [Fact]
+    public void ExportSvg_LineInstance_WithSeededStandard_ShouldRenderADrawElement()
+    {
+        StandardElementSave lineStandard = new StandardElementSave { Name = "Line" };
+        StateSave lineState = new StateSave { Name = "Default", ParentContainer = lineStandard };
+        lineStandard.States.Add(lineState);
+        lineState.Variables.Add(new VariableSave { Name = "IsRounded", Type = "bool", Value = false, SetsValue = true });
+        lineState.Variables.Add(new VariableSave { Name = "StrokeWidth", Type = "float", Value = 2f, SetsValue = true });
+
+        string svg = ExportScreenWithInstance(
+            "Line",
+            new[] { lineStandard },
+            new VariableSave { Name = "ShapeInstance.X", Type = "float", Value = 10f, SetsValue = true },
+            new VariableSave { Name = "ShapeInstance.Y", Type = "float", Value = 10f, SetsValue = true },
+            new VariableSave { Name = "ShapeInstance.Width", Type = "float", Value = 100f, SetsValue = true },
+            new VariableSave { Name = "ShapeInstance.Height", Type = "float", Value = 80f, SetsValue = true });
+
+        bool hasDrawElement = DrawElementTags.Any(svg.Contains);
+        hasDrawElement.ShouldBeTrue(
+            $"Expected the exported SVG for a Line instance to contain a draw element, but it did not.{Environment.NewLine}SVG:{Environment.NewLine}{svg}");
+    }
+
     private string ExportScreenWithInstance(string baseType, params VariableSave[] instanceVariables) =>
         ExportScreenWithInstance(baseType, standardsToSeed: null, instanceVariables);
 

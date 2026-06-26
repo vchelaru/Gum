@@ -115,6 +115,14 @@ namespace RenderingLibrary
                 "Container",
                 () => new ContainerRuntime());
 
+            // Issue #3324 — without this registration a "Line" standard type created no
+            // renderable, so a Line was silently dropped from SVG export (the same #3259-class
+            // gap that hit Rectangle). The XNALIKE/Apos backend registers the same runtime in
+            // AposShapeRuntime. Pairs with the "Line" arm added to HandleCustomGetDefaultState.
+            ElementSaveExtensions.RegisterGueInstantiation(
+                "Line",
+                () => new LineRuntime());
+
             //ElementSaveExtensions.RegisterGueInstantiation(
             //    "NineSlice",
             //    () => new NineSliceRuntime());
@@ -169,6 +177,10 @@ namespace RenderingLibrary
                 "Arc" => StandardElementsManager.GetArcState(),
                 "Canvas" => DefaultStateManager.GetCanvasState(),
                 "ColoredCircle" => StandardElementsManager.GetColoredCircleState(),
+                // Issue #3324 — Line was the one extended shape type missing here, so headless
+                // SVG export (gumcli svg / File ▸ Export) threw "Could not get the default state
+                // for type Line" during GumProjectSave.Initialize for any project containing one.
+                "Line" => StandardElementsManager.GetLineState(),
                 "LottieAnimation" => DefaultStateManager.GetLottieAnimationState(),
                 "RoundedRectangle" => StandardElementsManager.GetRoundedRectangleState(),
                 "Svg" => DefaultStateManager.GetSvgState(),
