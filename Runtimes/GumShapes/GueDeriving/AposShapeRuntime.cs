@@ -98,21 +98,34 @@ public abstract class AposShapeRuntime : GraphicalUiElement
         if (_registered) return;
         _registered = true;
 
+        // Construct the MonoGameGum.GueDeriving shim subclasses (not the new Gum.GueDeriving
+        // base types). This file's namespace is Gum.GueDeriving on non-FRB builds, so an
+        // unqualified `new RoundedRectangleRuntime()` would resolve to the base type — but
+        // already-generated user code casts the loaded instance to the deprecated shim namespace
+        // (`... as global::MonoGameGum.GueDeriving.RoundedRectangleRuntime`), and that cast only
+        // succeeds when the instance is the most-derived shim. Instantiating the base yields null
+        // and a NullReferenceException downstream (issue #3380). Mirrors the same fix in
+        // RenderingLibrary.SystemManagers.RegisterComponentRuntimeInstantiations for the standard
+        // (non-Apos) runtime types. On FRB builds these qualified names resolve to FRB's own
+        // MonoGameGum.GueDeriving types, matching the prior behavior. Drop the qualification once
+        // the MonoGameGum.GueDeriving shims are removed.
+#pragma warning disable CS0618 // Type or member is obsolete
         ElementSaveExtensions.RegisterGueInstantiation(
             "Arc",
-            () => new ArcRuntime());
+            () => new global::MonoGameGum.GueDeriving.ArcRuntime());
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "ColoredCircle",
-            () => new ColoredCircleRuntime());
+            () => new global::MonoGameGum.GueDeriving.ColoredCircleRuntime());
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "Line",
-            () => new LineRuntime());
+            () => new global::MonoGameGum.GueDeriving.LineRuntime());
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "RoundedRectangle",
-            () => new RoundedRectangleRuntime());
+            () => new global::MonoGameGum.GueDeriving.RoundedRectangleRuntime());
+#pragma warning restore CS0618
 
         StandardElementsManager.Self.CustomGetDefaultState += HandleCustomGetDefaultState;
 
