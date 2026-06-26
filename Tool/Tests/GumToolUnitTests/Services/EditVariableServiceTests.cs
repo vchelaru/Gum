@@ -100,7 +100,7 @@ public class EditVariableServiceTests : BaseTestClass
 
         string label = _service.GetEditVariableMenuLabel(variable, component);
 
-        label.ShouldBe("Rename Variable [MyInstance.SomeVar]");
+        label.ShouldBe("Rename Variable [MyExposedName]");
     }
 
     [Fact]

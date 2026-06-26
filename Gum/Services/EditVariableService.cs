@@ -93,8 +93,9 @@ public class EditVariableService : IEditVariableService
         var editMode = GetAvailableEditModeFor(variableSave, stateListCategoryContainer);
         return editMode switch
         {
-            // Exposing only renames; the full type/value edit is not available, so don't promise "Edit".
-            VariableEditMode.ExposedName => $"Rename Variable [{variableSave.Name}]",
+            // Exposing only renames the exposed name; the full type/value edit is not available, so
+            // don't promise "Edit", and show the exposed name (what's actually being renamed).
+            VariableEditMode.ExposedName => $"Rename Variable [{variableSave.ExposedAsName}]",
             VariableEditMode.FullEdit => $"Edit Variable [{variableSave.Name}]",
             _ => null
         };
