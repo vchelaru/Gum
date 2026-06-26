@@ -1,6 +1,6 @@
 ---
 name: gum-tool-dialogs
-description: Gum dialog/popup systems. Triggers: DialogService, DialogWindow, DeleteOptionsWindow, dialog scrolling/layout, adding new dialog types.
+description: Gum dialog/popup systems. Triggers: DialogService, DialogWindow, DeleteOptionsWindow, dialog scrolling/layout, adding new dialog types, ShowMessage/ShowYesNoMessage, mocking IDialogService in unit tests.
 ---
 
 # Gum Dialog Systems Reference
@@ -57,3 +57,9 @@ Used by: delete confirmation only (`DeleteLogic.ShowDeleteDialog`).
 **ScrollViewer behavior**: The `Dialog` template wraps content in a ScrollViewer. With `Auto` scrolling, child controls get infinite available height during WPF measure — so internal scroll viewers (like a TreeView) won't scroll. Set `Dialog.ScrollContent="False"` on views that need bounded height for internal scrolling.
 
 **Deferred binding**: `Dialog.OnContentChanged` binds attached properties at `DispatcherPriority.Loaded`, not immediately. Code that reads these values before the dispatch fires will see defaults.
+
+## Testing Dialog Interactions (mocking IDialogService)
+
+`IDialogService` exposes one message primitive: `ShowMessage(message, title?, MessageDialogStyle?)`, returning a `MessageDialogResult` enum (`Affirmative` / `Negative` / `Canceled`; `Negative == 0` is the unmocked Moq default → a `Mock<IDialogService>` returns "No" unless you set it up). The friendly helpers — `ShowYesNoMessage`, `ShowChoices`, etc. — are **extension methods** in `IDialogServiceExt`, so a Moq mock can only `Setup`/`Verify` the underlying `ShowMessage`. A Yes/No prompt arrives as `ShowMessage(msg, title, MessageDialogStyle.YesNo)`.
+
+Gotcha: `MessageDialogStyle` is a **class**, and `.Ok` / `.YesNo` / `.OkCancel` each `new` up a fresh instance with no equality override — you cannot match a specific style by reference or equality. Distinguish a styled prompt (Yes/No, OK/Cancel) from a plain informational popup by **`style != null` vs `style == null`** — a bare `ShowMessage(msg)` passes `null` — or by inspecting `AffirmativeText`.

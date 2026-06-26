@@ -953,8 +953,20 @@ public class StandardElementsManager
 
     public StandardElementSave AddStandardElementSaveInstance(GumProjectSave gumProjectSave, string type)
     {
+        if (!mDefaults.TryGetValue(type, out StateSave defaultState))
+        {
+            // Plugin-contributed standards (the Skia shapes Arc/Canvas/Line/Svg/LottieAnimation and
+            // the legacy ColoredCircle/RoundedRectangle) are never placed in mDefaults, so they can't
+            // be rebuilt here. Throw a clear, typed error instead of letting the indexer surface a
+            // cryptic KeyNotFoundException -- callers must filter to built-in types first (#3373).
+            throw new ArgumentException(
+                $"'{type}' is not a built-in standard element type, so it can't be created from the " +
+                $"default states. Plugin-contributed standards must be added by their owning plugin.",
+                nameof(type));
+        }
+
         StandardElementSave elementSave = new StandardElementSave();
-        elementSave.Initialize(mDefaults[type]);
+        elementSave.Initialize(defaultState);
         elementSave.Name = type;
 
         

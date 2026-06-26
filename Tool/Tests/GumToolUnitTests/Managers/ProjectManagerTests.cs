@@ -152,6 +152,68 @@ public class ProjectManagerTests : BaseTestClass
         _fileCommands.Verify(f => f.LoadProject(It.IsAny<string>()), Times.Never);
     }
 
+    [Fact]
+    public void RecreateMissingStandardElements_DoesNotCrash_AndInforms_ForMissingPluginStandard()
+    {
+        // Repro of #3373: clicking "Yes" to recreate a missing Skia standard (Arc) crashed with
+        // KeyNotFoundException because Arc is not in StandardElementsManager's built-in defaults. The
+        // tool must not offer a Yes/No it cannot honor; it leaves the element flagged and shows a
+        // single informational message instead.
+        GumProjectSave project = new GumProjectSave();
+        project.StandardElements.Add(new StandardElementSave { Name = "Arc", IsSourceFileMissing = true });
+        SetCurrentProject(project);
+
+        // Simulate the user clicking "Yes" on any recreate prompt -- the pre-fix crash path.
+        _dialogService
+            .Setup(d => d.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.Is<MessageDialogStyle?>(s => s != null)))
+            .Returns(MessageDialogResult.Affirmative);
+
+        Should.NotThrow(() => _projectManager.RecreateMissingStandardElements());
+
+        // No Yes/No prompt (the only call with a non-null style) is offered for a plugin standard.
+        _dialogService.Verify(
+            d => d.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.Is<MessageDialogStyle?>(s => s != null)),
+            Times.Never);
+        // A single informational message (null style) names the missing standard.
+        _dialogService.Verify(
+            d => d.ShowMessage(
+                It.Is<string>(m => m.Contains("Arc")),
+                It.IsAny<string?>(),
+                It.Is<MessageDialogStyle?>(s => s == null)),
+            Times.Once);
+        // The element is left in place (still flagged missing) rather than removed.
+        project.StandardElements.ShouldContain(e => e.Name == "Arc");
+    }
+
+    [Fact]
+    public void RecreateMissingStandardElements_PromptsToRecreate_ForMissingBuiltInStandard()
+    {
+        // A built-in standard (Sprite) lives in StandardElementsManager's defaults, so the tool can
+        // rebuild it and still offers the Yes/No prompt. Declining leaves the project untouched and
+        // shows no plugin-standard informational message.
+        GumProjectSave project = new GumProjectSave();
+        project.StandardElements.Add(new StandardElementSave { Name = "Sprite", IsSourceFileMissing = true });
+        SetCurrentProject(project);
+
+        _dialogService
+            .Setup(d => d.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.Is<MessageDialogStyle?>(s => s != null)))
+            .Returns(MessageDialogResult.Negative);
+
+        _projectManager.RecreateMissingStandardElements();
+
+        // The Yes/No recreate prompt (non-null style) is offered for a built-in standard...
+        _dialogService.Verify(
+            d => d.ShowMessage(
+                It.Is<string>(m => m.Contains("Sprite")),
+                It.IsAny<string?>(),
+                It.Is<MessageDialogStyle?>(s => s != null)),
+            Times.Once);
+        // ...and no informational (null style) message is shown for it.
+        _dialogService.Verify(
+            d => d.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.Is<MessageDialogStyle?>(s => s == null)),
+            Times.Never);
+    }
+
     // IDialogService.Show has an out parameter, which Moq can only populate through a
     // callback delegate whose signature mirrors the method; this delegate provides that shape.
     private delegate void ShowChoiceDialogCallback(
