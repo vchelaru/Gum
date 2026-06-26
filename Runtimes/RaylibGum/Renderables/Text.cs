@@ -309,6 +309,9 @@ public class Text : IVisible, IRenderableIpso,
 
     public bool IsTruncatingWithEllipsisOnLastLine { get; set; }
 
+    /// <inheritdoc/>
+    public bool IsHeightDependentOnLines { get; set; }
+
     public string Name
     {
         get;

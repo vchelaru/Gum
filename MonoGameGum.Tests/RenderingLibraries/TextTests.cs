@@ -51,6 +51,54 @@ char id=37   x=161   y=0     width=22    height=20    xoffset=1     yoffset=6   
         return font;
     }
 
+    // Regression guard for the #3372 fix: when the height is a real, independent constraint,
+    // TextOverflowVerticalMode.TruncateLine MUST still clip to the number of fully-fitting
+    // lines. The fix only removes the content-derived (RelativeToChildren) height->lines
+    // feedback; it must not disable height-based truncation for fixed-height text (the
+    // DialogBox pagination path relies on this). Tested at the renderable level because this
+    // is the pure UpdateLines contract — the lineHeight is 21 (from basicBMFontFileData), so
+    // a height of 52 leaves room for two full lines and a partial third.
+    [Fact]
+    public void UpdateLines_TruncateLine_WithFixedHeight_ClipsToFittingLines()
+    {
+        BitmapFont font = new BitmapFont((Texture2D)null!, basicBMFontFileData);
+        font.SetFontPattern(256, 256);
+
+        Text text = new Text();
+        text.BitmapFont = font;
+        text.TextOverflowVerticalMode = TextOverflowVerticalMode.TruncateLine;
+        text.Width = 1000; // wide enough that the explicit lines never wrap
+        text.Height = 52;  // two full 21px lines plus a partial third
+
+        text.RawText = "Line1\nLine2\nLine3";
+
+        text.WrappedText.Count.ShouldBe(2,
+            "Because TruncateLine with a fixed height must clip to the number of fully-fitting lines");
+    }
+
+    // The #3372 fix at the renderable level: when the layout marks the Height as content-derived
+    // (IsHeightDependentOnLines = true, set by GraphicalUiElement for RelativeToChildren height),
+    // TruncateLine must NOT cap the lines by Height — every line renders even when Height is smaller
+    // than the content. Same arrangement as the clip guard above, only the flag differs.
+    [Fact]
+    public void UpdateLines_TruncateLine_WithHeightDependentOnLines_DoesNotClip()
+    {
+        BitmapFont font = new BitmapFont((Texture2D)null!, basicBMFontFileData);
+        font.SetFontPattern(256, 256);
+
+        Text text = new Text();
+        text.BitmapFont = font;
+        text.TextOverflowVerticalMode = TextOverflowVerticalMode.TruncateLine;
+        text.IsHeightDependentOnLines = true;
+        text.Width = 1000;
+        text.Height = 52; // smaller than the three 21px lines, but content-derived so it must not clip
+
+        text.RawText = "Line1\nLine2\nLine3";
+
+        text.WrappedText.Count.ShouldBe(3,
+            "Because a content-derived Height must not be used to truncate the very lines it was derived from");
+    }
+
     [Fact]
     public void MeasureString_WithStyleAndNoBitmapFont_DoesNotThrow()
     {

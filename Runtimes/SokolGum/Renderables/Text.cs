@@ -154,6 +154,10 @@ public sealed class Text : RenderableBase, IText, IWrappedText, IFormsText, IClo
     public TextOverflowVerticalMode   TextOverflowVerticalMode   { get; set; } = TextOverflowVerticalMode.SpillOver;
 
     public bool IsTruncatingWithEllipsisOnLastLine { get; set; }
+
+    /// <inheritdoc/>
+    public bool IsHeightDependentOnLines { get; set; }
+
     public bool IsMidWordLineBreakEnabled { get; set; }
 
     /// <summary>Line-to-line spacing multiplier. 1.0 = font-native line height.</summary>

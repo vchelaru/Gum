@@ -18,6 +18,17 @@ public interface IWrappedText : IText
     int LineHeightInPixels { get; }
     bool IsTruncatingWithEllipsisOnLastLine { get; }
 
+    /// <summary>
+    /// Whether this text's Height is derived from its own lines (content), as opposed to being an
+    /// independent constraint. When true, <see cref="TextOverflowVerticalMode.TruncateLine"/> must NOT
+    /// limit the number of lines by Height — doing so would be a circular dependency (the height comes
+    /// from the lines, so capping the lines by that height progressively collapses the text). This is
+    /// pushed by the layout (GraphicalUiElement) and is true when the element's HeightUnits is
+    /// RelativeToChildren. The renderable itself has no concept of HeightUnits, which is why the layout
+    /// sets this, mirroring how a RelativeToChildren width pushes a null wrap Width onto the renderable.
+    /// </summary>
+    bool IsHeightDependentOnLines { get; set; }
+
     float MeasureString(string text);
 
     bool IsMidWordLineBreakEnabled { get; }
@@ -32,7 +43,12 @@ public static class IWrappedTextExtensions
     {
         var effectiveMaxNumberOfLines = textInstance.MaxNumberOfLines;
 
-        if (textInstance.TextOverflowVerticalMode == TextOverflowVerticalMode.TruncateLine)
+        // The Height-derived line cap only makes sense when Height is an independent constraint. When
+        // Height is derived from the lines (RelativeToChildren), capping the lines by that height is a
+        // circular dependency that collapses the text (issue #3372), so skip it — an explicit
+        // MaxNumberOfLines still applies below.
+        if (textInstance.TextOverflowVerticalMode == TextOverflowVerticalMode.TruncateLine
+            && !textInstance.IsHeightDependentOnLines)
         {
 
             var maxLinesFromHeight = (int)(textInstance.Height / textInstance.LineHeightInPixels);

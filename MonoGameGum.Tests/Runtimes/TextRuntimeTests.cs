@@ -1106,4 +1106,94 @@ $"chars count=223\r\n";
 
     #endregion
 
+    #region TextOverflowVerticalMode + RelativeToChildren (issue #3372)
+
+    // Issue #3372 background: a Text sized HeightUnits=RelativeToChildren derives its
+    // height from its own WrappedTextHeight (height = WrappedTextHeight + Height-offset).
+    // With TextOverflowVerticalMode.TruncateLine, UpdateLines then derives a max line
+    // count back from that height:
+    //     maxLinesFromHeight = (int)(Height / LineHeightInPixels)
+    // That is a circular dependency: a negative Height offset (commonly used to tighten
+    // line spacing) drops the height below the content's natural height, the integer
+    // division floors to one-too-few lines, and because pushing the height re-triggers
+    // wrapping, each layout pass shaves off another line. The two tests below pin the two
+    // agreed invariants: (1) when height follows content, every line renders; (2) a
+    // negative offset shrinks the bounds below the rendered text height without dropping
+    // a line.
+
+    // Invariant 1 (+ stability): RelativeToChildren height is derived from content, so the
+    // height-based line cap must not fire — all lines render regardless of a negative
+    // Height offset, and they keep rendering across repeated layouts (no progressive
+    // "leave and return" collapse). An explicit MaxNumberOfLines is a separate constraint,
+    // covered below.
+    [Fact]
+    public void TruncateLine_WithRelativeToChildrenHeight_ShouldRenderAllLinesStablyAcrossLayouts()
+    {
+        TextRuntime sut = new();
+        sut.HeightUnits = DimensionUnitType.RelativeToChildren;
+        sut.Height = -1;
+
+        Text renderable = (Text)sut.RenderableComponent;
+        renderable.TextOverflowVerticalMode = TextOverflowVerticalMode.TruncateLine;
+
+        sut.Text = "Line1\nLine2\nLine3";
+
+        sut.UpdateLayout();
+        sut.UpdateLayout();
+        sut.UpdateLayout();
+
+        sut.WrappedText.Count.ShouldBe(3,
+            "Because RelativeToChildren height follows content, so no line may be truncated by the derived height, stably across layouts");
+    }
+
+    // Invariant 2: a negative Height offset shrinks the layout bounds below the rendered
+    // text height (the "tighten spacing" intent) by exactly the offset — and, per
+    // invariant 1, without dropping the line (so the rendered height stays positive).
+    [Fact]
+    public void RelativeToChildrenHeight_WithNegativeOffset_ShouldShrinkBoundsBelowRenderedTextHeight()
+    {
+        const float heightOffset = -5;
+
+        TextRuntime sut = new();
+        sut.HeightUnits = DimensionUnitType.RelativeToChildren;
+        sut.Height = heightOffset;
+
+        Text renderable = (Text)sut.RenderableComponent;
+        renderable.TextOverflowVerticalMode = TextOverflowVerticalMode.TruncateLine;
+
+        sut.Text = "Hello";
+        sut.UpdateLayout();
+
+        float renderedHeight = renderable.WrappedTextHeight;
+        renderedHeight.ShouldBeGreaterThan(0, "Because the single line must still be rendered");
+        sut.GetAbsoluteHeight().ShouldBe(renderedHeight + heightOffset,
+            "Because the bounds are the full rendered height plus the (negative) offset");
+        sut.GetAbsoluteHeight().ShouldBeLessThan(renderedHeight);
+        sut.GetAbsoluteHeight().ShouldBeGreaterThan(0);
+    }
+
+    // The exact issue #3372 repro: vertical truncation + RelativeToChildren height +
+    // negative offset + an explicit one-line cap. An explicit MaxNumberOfLines is NOT the
+    // height-derived cap and must still apply, so the text shows exactly one line — not
+    // zero (the bug) and not all three.
+    [Fact]
+    public void TruncateLine_WithRelativeToChildrenHeightAndMaxNumberOfLines_ShouldHonorMaxNumberOfLines()
+    {
+        TextRuntime sut = new();
+        sut.HeightUnits = DimensionUnitType.RelativeToChildren;
+        sut.Height = -1;
+        sut.MaxNumberOfLines = 1;
+
+        Text renderable = (Text)sut.RenderableComponent;
+        renderable.TextOverflowVerticalMode = TextOverflowVerticalMode.TruncateLine;
+
+        sut.Text = "Line1\nLine2\nLine3";
+        sut.UpdateLayout();
+
+        sut.WrappedText.Count.ShouldBe(1,
+            "Because an explicit MaxNumberOfLines still caps wrapping, even though the height-derived cap is gone");
+    }
+
+    #endregion
+
 }

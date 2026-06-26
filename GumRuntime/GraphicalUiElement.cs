@@ -2365,6 +2365,16 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     {
         float pixelHeightToSet = mHeight;
 
+        // Tell a contained text whether its Height is derived from its own lines, so
+        // TextOverflowVerticalMode.TruncateLine does not cap the lines by a height that came from
+        // those lines (issue #3372). Set before the switch because the RelativeToChildren branch below
+        // temporarily reassigns the text's Width, which re-wraps it. Mirrors how a RelativeToChildren
+        // width pushes a null wrap Width onto the renderable.
+        if (mContainedObjectAsIpso is IWrappedText wrappedText)
+        {
+            wrappedText.IsHeightDependentOnLines = mHeightUnit == DimensionUnitType.RelativeToChildren;
+        }
+
         switch (mHeightUnit)
         {
 
