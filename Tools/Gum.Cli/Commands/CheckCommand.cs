@@ -63,7 +63,9 @@ public static class CheckCommand
         }
 
         ITypeResolver typeResolver = new DefaultTypeResolver();
-        IHeadlessErrorChecker checker = new HeadlessErrorChecker(typeResolver);
+        IHeadlessErrorChecker checker = new HeadlessErrorChecker(
+            typeResolver,
+            new IAdditionalErrorSource[] { new AnimationKeyframeErrorSource(new FileElementAnimationsProvider()) });
         IReadOnlyList<ErrorResult> checkerErrors = checker.GetAllErrors(loadResult.Project!);
 
         var allErrors = new List<ErrorResult>();

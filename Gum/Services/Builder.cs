@@ -171,8 +171,12 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IUserProjectSettingsManager, UserProjectSettingsManager>();
         services.AddSingleton<ProjectServices.ITypeResolver>(provider =>
             new TypeManagerTypeResolverAdapter(provider.GetRequiredService<Reflection.ITypeManager>()));
+        services.AddSingleton<ProjectServices.IElementAnimationsProvider, ProjectServices.FileElementAnimationsProvider>();
+        services.AddSingleton<ProjectServices.IAdditionalErrorSource, ProjectServices.AnimationKeyframeErrorSource>();
         services.AddSingleton<ProjectServices.IHeadlessErrorChecker>(provider =>
-            new ProjectServices.HeadlessErrorChecker(provider.GetRequiredService<ProjectServices.ITypeResolver>()));
+            new ProjectServices.HeadlessErrorChecker(
+                provider.GetRequiredService<ProjectServices.ITypeResolver>(),
+                provider.GetServices<ProjectServices.IAdditionalErrorSource>()));
         services.AddSingleton<ProjectServices.IErrorDocsRegistry, ProjectServices.ErrorDocsRegistry>();
         services.AddSingleton<ErrorChecker>();
         services.AddSingleton<IErrorChecker>(provider => provider.GetRequiredService<ErrorChecker>());

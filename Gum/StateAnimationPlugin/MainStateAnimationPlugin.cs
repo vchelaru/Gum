@@ -168,7 +168,11 @@ public class MainStateAnimationPlugin : PluginBase
         this.DeleteOptionsWindowShow += _elementDeleteService.HandleDeleteOptionsWindowShow;
         this.DeleteConfirmed += _elementDeleteService.HandleConfirmDelete;
 
-        this.GetAllErrors += HandleGetAllErrors;
+        // Animation "keyframe references a missing state" errors are now detected per-element by
+        // the headless AnimationKeyframeErrorSource (issue #3293), which reads the .ganx so it
+        // works on project open and on edits regardless of selection. Contributing them here too
+        // (from this plugin's per-selection view model) would duplicate those errors for the
+        // selected element, so this plugin no longer subscribes to GetAllErrors.
     }
 
     private void HandleElementSelected(ElementSave? element)
@@ -692,23 +696,6 @@ public class MainStateAnimationPlugin : PluginBase
         }
 
         return response;
-    }
-
-    private IEnumerable<ErrorViewModel> HandleGetAllErrors()
-    {
-        if(_viewModel == null)
-        {
-            return Enumerable.Empty<ErrorViewModel>();
-        }
-
-        var toReturn = this._viewModel.GetErrors();
-
-        foreach(var item in toReturn)
-        {
-            item.OwnerPlugin = this;
-        }
-
-        return toReturn;
     }
 
     private List<AnimationSave> GetAnimationsReferencingState(StateSave state, ElementSave? element)
