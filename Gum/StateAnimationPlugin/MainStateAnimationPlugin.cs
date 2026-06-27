@@ -275,10 +275,6 @@ public class MainStateAnimationPlugin : PluginBase
         var element = _selectedState.SelectedElement;
         if (element != null && _viewModel != null)
         {
-            // Rewrite keyframe references BEFORE recomputing errors. Doing it the other way around
-            // (the previous order) recomputed errors while the keyframe still pointed at the old
-            // name, then rewrote it without recomputing — leaving a stale missing-state error that
-            // showed the new name with the broken-reference icon (issue #3383).
             RefreshAfterStateRename(_renameManager, _viewModel, element, stateSave, oldName);
         }
 
@@ -485,27 +481,9 @@ public class MainStateAnimationPlugin : PluginBase
 
     private void RefreshAvailableStates()
     {
-        var referencedStateNames = _viewModel?.Animations
-            .SelectMany(animation => animation.Keyframes)
-            .Select(keyframe => keyframe.StateName)
-            ?? Enumerable.Empty<string>();
-
-        var states = BuildAvailableStateNames(_selectedState.SelectedElement, referencedStateNames);
-
-        AvailableStates.ReplaceWith(states);
-    }
-
-    /// <summary>
-    /// Builds the state names offered by the StateView state ComboBox: every state on the element
-    /// (uncategorized and "Category/State"), plus any <paramref name="referencedStateNames"/> a
-    /// keyframe still points at that the element no longer has. Keeping the dangling names in the
-    /// list prevents the two-way-bound ComboBox from nulling the selected keyframe's StateName when
-    /// its referenced state is renamed or deleted — which would otherwise turn a broken state
-    /// keyframe into an event keyframe (issue #3386).
-    /// </summary>
-    internal static List<string> BuildAvailableStateNames(ElementSave? element, IEnumerable<string> referencedStateNames)
-    {
         var states = new List<string>();
+
+        var element = _selectedState.SelectedElement;
 
         if (element != null)
         {
@@ -517,15 +495,7 @@ public class MainStateAnimationPlugin : PluginBase
             }
         }
 
-        foreach (var referenced in referencedStateNames)
-        {
-            if (!string.IsNullOrEmpty(referenced) && !states.Contains(referenced))
-            {
-                states.Add(referenced);
-            }
-        }
-
-        return states;
+        AvailableStates.ReplaceWith(states);
     }
 
     private void CreateViewModel()
