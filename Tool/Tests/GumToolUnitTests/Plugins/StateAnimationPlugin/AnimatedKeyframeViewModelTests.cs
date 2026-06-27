@@ -2,6 +2,8 @@ using Moq;
 using Shouldly;
 using StateAnimationPlugin.Managers;
 using StateAnimationPlugin.ViewModels;
+using System.Collections.Generic;
+using System.ComponentModel;
 using Xunit;
 
 namespace GumToolUnitTests.Plugins.StateAnimationPlugin;
@@ -15,6 +17,24 @@ namespace GumToolUnitTests.Plugins.StateAnimationPlugin;
 public class AnimatedKeyframeViewModelTests : BaseTestClass
 {
     private readonly IBitmapLoader _bitmapLoader = Mock.Of<IBitmapLoader>();
+
+    [Fact]
+    public void ChangingHasValidState_RaisesPropertyChanged_ForIsMissingReference()
+    {
+        // The keyframe-list icon reacts to error recomputation only because HasValidState now
+        // notifies and IsMissingReference depends on it; this pins that reactive contract.
+        AnimatedKeyframeViewModel keyframe = new AnimatedKeyframeViewModel(_bitmapLoader)
+        {
+            StateName = "Cat/Idle",
+            HasValidState = true,
+        };
+        List<string> changed = new List<string>();
+        keyframe.PropertyChanged += (_, e) => changed.Add(e.PropertyName ?? "");
+
+        keyframe.HasValidState = false;
+
+        changed.ShouldContain(nameof(AnimatedKeyframeViewModel.IsMissingReference));
+    }
 
     [Fact]
     public void IsMissingReference_IsFalse_ForEventKeyframe()
