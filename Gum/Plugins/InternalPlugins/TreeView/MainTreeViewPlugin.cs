@@ -233,7 +233,7 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
         }
     }
 
-    private void HandleElementSelected(ElementSave save)
+    private void HandleElementSelected(ElementSave? save)
     {
         _elementTreeViewManager.SuppressCallAfterClickSelect = true;
         try
@@ -251,6 +251,13 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
         {
             _elementTreeViewManager.SuppressCallAfterClickSelect = false;
         }
+
+        // The Errors tab refreshes on selection (MainErrorsPlugin), but the tree "!" indicator
+        // was only refreshed by other events (VariableSet, undo, add/delete, reload). Without
+        // this, an error first surfaced by selection (e.g. an animation frame referencing a
+        // missing state) shows in the Errors tab but the node's icon stays stale until an
+        // unrelated refresh fires. Refreshing here keeps the two paths in sync.
+        RefreshErrorIndicatorsForElement(save);
     }
 
     private void MainTreeViewPlugin_InstanceSelected(DataTypes.ElementSave element, DataTypes.InstanceSave instance)
