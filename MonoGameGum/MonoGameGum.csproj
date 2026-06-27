@@ -6,10 +6,18 @@
 			installed. ExcludeIOS=true skips the iOS target (no iOS workload needed);
 			ExcludeAndroid=true skips the Android target (no Android workload needed). CI uses
 			both escape hatches because the release runner only has the base .NET SDK installed.
+
+			The mobile targets are net9.0-* and are additionally gated on the active SDK being
+			.NET 9+. A .NET 8 SDK cannot evaluate a net9.0-* TFM at all (NETSDK1139), and that
+			evaluation happens during NuGet restore — where ProjectReference AdditionalProperties
+			like ExcludeIOS do NOT flow — so source-linkers pinned to the .NET 8 SDK would
+			otherwise break on restore before the build-time escape hatches ever apply. The
+			SDK gate keeps net8.0-SDK restores clean while net9+ SDK builds still get the mobile
+			TFMs.
 		-->
 		<TargetFrameworks>net8.0</TargetFrameworks>
-		<TargetFrameworks Condition="'$(ExcludeIOS)' != 'true'">$(TargetFrameworks);net9.0-ios</TargetFrameworks>
-		<TargetFrameworks Condition="'$(ExcludeAndroid)' != 'true'">$(TargetFrameworks);net9.0-android</TargetFrameworks>
+		<TargetFrameworks Condition="'$(ExcludeIOS)' != 'true' AND $([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0'))">$(TargetFrameworks);net9.0-ios</TargetFrameworks>
+		<TargetFrameworks Condition="'$(ExcludeAndroid)' != 'true' AND $([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0'))">$(TargetFrameworks);net9.0-android</TargetFrameworks>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
