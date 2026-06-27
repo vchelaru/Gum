@@ -234,7 +234,7 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
         }
     }
 
-    private void HandleElementSelected(ElementSave? save)
+    private void HandleElementSelected(ElementSave save)
     {
         _elementTreeViewManager.SuppressCallAfterClickSelect = true;
         try
@@ -252,12 +252,6 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
         {
             _elementTreeViewManager.SuppressCallAfterClickSelect = false;
         }
-
-        // Mirror MainErrorsPlugin: refresh this element's "!" indicator on selection so
-        // structural errors surface immediately. Plugin-contributed errors (e.g. the
-        // animation missing-state error) are only valid once their plugin recomputes after
-        // selection — those are picked up via RequestErrorRefreshMessage (see Receive below).
-        RefreshErrorIndicatorsForElement(save);
     }
 
     private void MainTreeViewPlugin_InstanceSelected(DataTypes.ElementSave element, DataTypes.InstanceSave instance)
@@ -299,12 +293,14 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
 
     void IRecipient<RequestErrorRefreshMessage>.Receive(RequestErrorRefreshMessage message)
     {
-        // Plugins broadcast this after recomputing their errors and viewmodels (e.g. the
-        // animation plugin on selection, state add/delete/rename, variable set). The Errors
-        // tab already refreshes here (MainErrorsPlugin); the tree "!" indicator must too, or
-        // it lags until an unrelated event fires. Because the broadcast happens after the
-        // recompute, the selected element's error state is current — unlike the per-event
-        // handlers above, which (as a PriorityPlugin) run before non-priority plugins refresh.
+        // Plugins broadcast this after recomputing their errors/viewmodels (the animation
+        // plugin does so when an element is selected). MainErrorsPlugin refreshes the Errors
+        // tab from the same signal; the tree "!" indicator must too, or it lags until an
+        // unrelated event fires. The broadcast happens AFTER the recompute, so the selected
+        // element's error state is current here — unlike the per-event handlers above, which
+        // (as a PriorityPlugin) run before non-priority plugins such as the animation plugin
+        // refresh. (Renaming a state does NOT yet refresh through here: the rename leaves the
+        // animation error in an inconsistent in-memory state at broadcast time — see #3383.)
         RefreshErrorIndicatorsForElement(_selectedState.SelectedElement);
     }
 
