@@ -168,6 +168,11 @@ public class MainStateAnimationPlugin : PluginBase
         this.DeleteOptionsWindowShow += _elementDeleteService.HandleDeleteOptionsWindowShow;
         this.DeleteConfirmed += _elementDeleteService.HandleConfirmDelete;
 
+        // Undo/redo restore element state without firing the granular StateAdd/StateDelete events, so
+        // recompute the view model (and its keyframe error state) afterward — otherwise a broken
+        // keyframe's error icon stays stale until the element is reselected (issue #3386).
+        this.AfterUndo += HandleAfterUndo;
+
         // Animation "keyframe references a missing state" errors are now detected per-element by
         // the headless AnimationKeyframeErrorSource (issue #3293), which reads the .ganx so it
         // works on project open and on edits regardless of selection. Contributing them here too
@@ -293,6 +298,11 @@ public class MainStateAnimationPlugin : PluginBase
     {
         renameManager.HandleRename(stateSave, oldName, viewModel);
         viewModel.RefreshErrors(element);
+    }
+
+    private void HandleAfterUndo()
+    {
+        RefreshViewModel();
     }
 
     private void HandleStateAdd(StateSave state)
