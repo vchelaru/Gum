@@ -33,13 +33,29 @@
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top" />
 
+            <!--  Rendered as Error-colored foreground text (not a colored background block):
+                  Frb.Colors.Error flips lightness between light/dark themes, so no single
+                  foreground reads on it as a background. This matches how errors are shown
+                  elsewhere in the app and stays readable in both themes. See issue #3385.  -->
+            <TextBlock
+                x:Name="NotFoundLabel"
+                Grid.Row="0"
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
+                Margin="0,0,0,2"
+                FontWeight="Bold"
+                Foreground="{DynamicResource Frb.Brushes.Error}"
+                Text="Could not find state or animation"
+                TextWrapping="Wrap"
+                Visibility="{Binding HasInvalidStateVisibility, TargetNullValue=Collapsed, FallbackValue=Collapsed}" />
+
             <!--<Label Grid.Row="0" x:Name="NameLabel" Grid.ColumnSpan="2" Content="{Binding DisplayName, FallbackValue=StateName}"></Label>-->
             <!--  Editable so a renamed/deleted referenced state can't be coerced to null by the
                   Selector (which would collapse a broken state keyframe into an event). Text is a
                   plain string binding, unconstrained by the item list. See issue #3386.  -->
             <ComboBox
                 x:Name="StateComboBox"
-                Grid.Row="0"
+                Grid.Row="1"
                 Grid.Column="0"
                 Grid.ColumnSpan="2"
                 Margin="0,0,0,1"
@@ -50,34 +66,26 @@
                 Visibility="{Binding StateComboBoxVisibility}" />
 
             <TextBlock
-                Grid.Row="1"
+                Grid.Row="2"
                 Grid.Column="0"
                 Margin="0,0,4,0"
                 VerticalAlignment="Center"
                 Text="Time" />
 
             <TextBlock
-                Grid.Row="2"
+                Grid.Row="3"
                 Grid.Column="0"
                 Margin="0,0,4,0"
                 VerticalAlignment="Center"
                 Text="Interpolation Type"
                 Visibility="{Binding InterpolationElementVisibility}" />
             <TextBlock
-                Grid.Row="3"
+                Grid.Row="4"
                 Grid.Column="0"
                 Margin="0,0,4,0"
                 VerticalAlignment="Center"
                 Text="In/Out"
                 Visibility="{Binding InterpolationElementVisibility}" />
-            <TextBlock
-                x:Name="NotFoundLabel"
-                Grid.Row="4"
-                Grid.Column="0"
-                Grid.ColumnSpan="2"
-                Background="{DynamicResource Frb.Brushes.Error}"
-                Text="Could not find state or animation"
-                Visibility="{Binding HasInvalidStateVisibility, TargetNullValue=Collapsed, FallbackValue=Collapsed}" />
 
             <TextBlock
                 Grid.Row="5"
@@ -89,7 +97,7 @@
                 TextWrapping="Wrap" />
             <TextBox
                 x:Name="TimeTextBox"
-                Grid.Row="1"
+                Grid.Row="2"
                 Grid.Column="1"
                 Margin="0,1"
                 HorizontalContentAlignment="Center"
@@ -99,7 +107,7 @@
 
             <ComboBox
                 x:Name="InterpolationTypeComboBox"
-                Grid.Row="2"
+                Grid.Row="3"
                 Grid.Column="1"
                 Margin="0,1"
                 VerticalContentAlignment="Center"
@@ -107,7 +115,7 @@
                 Visibility="{Binding InterpolationElementVisibility}" />
             <ComboBox
                 x:Name="EasingTypeComboBox"
-                Grid.Row="3"
+                Grid.Row="4"
                 Grid.Column="1"
                 Margin="0,1"
                 VerticalAlignment="Center"
