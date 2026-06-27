@@ -461,13 +461,27 @@ public class MainStateAnimationPlugin : PluginBase
 
     private void RefreshAvailableStates()
     {
-        // we always create the view model after refreshing states, so we can new up an observable collection:
+        var referencedStateNames = _viewModel?.Animations
+            .SelectMany(animation => animation.Keyframes)
+            .Select(keyframe => keyframe.StateName)
+            ?? Enumerable.Empty<string>();
 
-        //AvailableStates = new ObservableCollection<string>();
+        var states = BuildAvailableStateNames(_selectedState.SelectedElement, referencedStateNames);
 
+        AvailableStates.ReplaceWith(states);
+    }
+
+    /// <summary>
+    /// Builds the state names offered by the StateView state ComboBox: every state on the element
+    /// (uncategorized and "Category/State"), plus any <paramref name="referencedStateNames"/> a
+    /// keyframe still points at that the element no longer has. Keeping the dangling names in the
+    /// list prevents the two-way-bound ComboBox from nulling the selected keyframe's StateName when
+    /// its referenced state is renamed or deleted — which would otherwise turn a broken state
+    /// keyframe into an event keyframe (issue #3386).
+    /// </summary>
+    internal static List<string> BuildAvailableStateNames(ElementSave? element, IEnumerable<string> referencedStateNames)
+    {
         var states = new List<string>();
-
-        var element = _selectedState.SelectedElement;
 
         if (element != null)
         {
@@ -477,10 +491,17 @@ public class MainStateAnimationPlugin : PluginBase
             {
                 states.AddRange(category.States.Select(item => category.Name + "/" + item.Name));
             }
-
         }
 
-        AvailableStates.ReplaceWith(states);
+        foreach (var referenced in referencedStateNames)
+        {
+            if (!string.IsNullOrEmpty(referenced) && !states.Contains(referenced))
+            {
+                states.Add(referenced);
+            }
+        }
+
+        return states;
     }
 
     private void CreateViewModel()
