@@ -13,5 +13,10 @@ public partial class AddAnimationDialogView : UserControl
     public AddAnimationDialogView()
     {
         InitializeComponent();
+        Loaded += (_, _) =>
+        {
+            NameTextBox.Focus();
+            NameTextBox.SelectAll();
+        };
     }
 }

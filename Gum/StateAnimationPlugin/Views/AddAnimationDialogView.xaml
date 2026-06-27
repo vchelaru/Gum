@@ -19,7 +19,7 @@
     </UserControl.Resources>
     <StackPanel Margin="4">
         <TextBlock Margin="0,0,0,4" Text="Animation name:" />
-        <TextBox Margin="0,0,0,8" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBox x:Name="NameTextBox" Margin="0,0,0,8" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
 
         <TextBlock
             Margin="0,0,0,8"
