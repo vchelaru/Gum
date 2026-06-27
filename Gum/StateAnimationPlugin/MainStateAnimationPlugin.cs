@@ -267,12 +267,36 @@ public class MainStateAnimationPlugin : PluginBase
 
     private void HandleStateRename(StateSave stateSave, string oldName)
     {
-        RefreshViewModel();
-
-        if (_selectedState.SelectedElement != null && _viewModel != null)
+        if (_viewModel == null)
         {
-            _renameManager.HandleRename(stateSave, oldName, _viewModel);
+            CreateViewModel();
         }
+
+        var element = _selectedState.SelectedElement;
+        if (element != null && _viewModel != null)
+        {
+            // Rewrite keyframe references BEFORE recomputing errors. Doing it the other way around
+            // (the previous order) recomputed errors while the keyframe still pointed at the old
+            // name, then rewrote it without recomputing — leaving a stale missing-state error that
+            // showed the new name with the broken-reference icon (issue #3383).
+            RefreshAfterStateRename(_renameManager, _viewModel, element, stateSave, oldName);
+        }
+
+        // Refresh available states / DataContext and re-broadcast. RefreshErrors runs again here,
+        // but it is idempotent and rename is not a hot path.
+        RefreshViewModel();
+    }
+
+    /// <summary>
+    /// Applies a state rename to <paramref name="viewModel"/>'s keyframe references and then
+    /// recomputes errors, in that order. The order matters: recomputing before the rewrite leaves a
+    /// stale "references a missing state" error on the renamed keyframe (issue #3383).
+    /// </summary>
+    internal static void RefreshAfterStateRename(IRenameManager renameManager,
+        ElementAnimationsViewModel viewModel, ElementSave element, StateSave stateSave, string oldName)
+    {
+        renameManager.HandleRename(stateSave, oldName, viewModel);
+        viewModel.RefreshErrors(element);
     }
 
     private void HandleStateAdd(StateSave state)

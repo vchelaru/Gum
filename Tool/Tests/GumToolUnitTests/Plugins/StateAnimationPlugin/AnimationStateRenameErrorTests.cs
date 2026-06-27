@@ -6,6 +6,7 @@ using Gum.ToolStates;
 using Gum.Wireframe;
 using Moq;
 using Shouldly;
+using StateAnimationPlugin;
 using StateAnimationPlugin.Managers;
 using StateAnimationPlugin.ViewModels;
 using System;
@@ -20,7 +21,8 @@ namespace GumToolUnitTests.Plugins.StateAnimationPlugin;
 /// <c>GetErrors</c>) and how a state rename propagates to animation keyframes. Companion to
 /// <see cref="RenameManagerTests"/>: those pin the keyframe-mutating overloads in isolation, these
 /// pin the resulting error state — the same error the tree "!" indicator and the Errors tab surface
-/// (issue #3293) and that a rename leaves stale (issue #3383).
+/// (issue #3293), and that a rename must rewrite the keyframe before recomputing so it leaves no
+/// stale error (issue #3383).
 ///
 /// These were the behaviors repeatedly mis-read while reasoning about #3293/#3383; they are pinned
 /// here so future changes start from executable ground truth rather than speculation.
@@ -84,13 +86,13 @@ public class AnimationStateRenameErrorTests : BaseTestClass
     }
 
     [Fact]
-    public void RenameSequence_AsThePluginRunsIt_LeavesStaleError()
+    public void RefreshAfterStateRename_RewritesKeyframeThenRecomputes_LeavingNoStaleError()
     {
-        // Models MainStateAnimationPlugin.HandleStateRename ordering: RefreshViewModel (which calls
-        // RefreshErrors and broadcasts RequestErrorRefreshMessage) runs BEFORE the keyframe is
-        // rewritten, and errors are never recomputed afterward. This pins the #3383 root cause that
-        // makes the tree/Errors-tab refresh look broken: a rename leaves the error state stale until
-        // a full refresh (re-selecting the element) rebuilds it.
+        // Models MainStateAnimationPlugin.HandleStateRename. The keyframe reference must be rewritten
+        // BEFORE errors are recomputed. The old order (recompute, THEN rewrite, never recompute again)
+        // left a stale missing-state error: the keyframe showed the new name but kept the broken-
+        // reference icon (#3383, made visible by the #3386 icon). RefreshAfterStateRename owns the
+        // correct order; if its two steps are swapped this assertion fails.
         RunOnSta(() =>
         {
             ComponentSave element = ElementWithCategorizedState("Cat", "Idle");
@@ -98,19 +100,11 @@ public class AnimationStateRenameErrorTests : BaseTestClass
             ElementAnimationsViewModel viewModel = CreateViewModelWith(
                 CreateAnimationWithKeyframes(Keyframe(stateName: "Cat/Idle")));
 
-            idle.Name = "Walk";                              // state already renamed when the event fires
-            viewModel.RefreshErrors(element);                // plugin's RefreshViewModel: keyframe still "Cat/Idle"
-            RenameManagerFor(element).HandleRename(idle, "Idle", viewModel); // keyframe -> "Cat/Walk"
+            idle.Name = "Walk";  // state already renamed when the plugin event fires
+            MainStateAnimationPlugin.RefreshAfterStateRename(
+                RenameManagerFor(element), viewModel, element, idle, "Idle");
 
-            // The plugin does NOT recompute errors after the rewrite, so HasValidState is stale:
-            // it was computed when the keyframe still read "Cat/Idle". The keyframe now correctly
-            // reads "Cat/Walk", yet GetErrors still reports it as missing — a stale false positive.
             viewModel.Animations[0].Keyframes[0].StateName.ShouldBe("Cat/Walk");
-            viewModel.GetErrors().Count().ShouldBe(1);
-            viewModel.GetErrors().Single().Message.ShouldContain("Cat/Walk");
-
-            // Recomputing (what re-selecting the element does) clears the stale error.
-            viewModel.RefreshErrors(element);
             viewModel.GetErrors().ShouldBeEmpty();
         });
     }
