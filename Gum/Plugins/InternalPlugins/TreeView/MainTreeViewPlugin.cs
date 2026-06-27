@@ -14,13 +14,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Gum.DataTypes.Variables;
+using Gum.Messages;
 using Gum.Services;
 using RenderingLibrary;
 
 namespace Gum.Plugins.InternalPlugins.TreeView;
 
 [Export(typeof(PluginBase))]
-internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardownMessage>, IRecipient<UiBaseFontSizeChangedMessage>
+internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardownMessage>, IRecipient<UiBaseFontSizeChangedMessage>, IRecipient<RequestErrorRefreshMessage>
 {
     private readonly ISelectedState _selectedState;
     private readonly ElementTreeViewManager _elementTreeViewManager;
@@ -252,11 +253,10 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
             _elementTreeViewManager.SuppressCallAfterClickSelect = false;
         }
 
-        // The Errors tab refreshes on selection (MainErrorsPlugin), but the tree "!" indicator
-        // was only refreshed by other events (VariableSet, undo, add/delete, reload). Without
-        // this, an error first surfaced by selection (e.g. an animation frame referencing a
-        // missing state) shows in the Errors tab but the node's icon stays stale until an
-        // unrelated refresh fires. Refreshing here keeps the two paths in sync.
+        // Mirror MainErrorsPlugin: refresh this element's "!" indicator on selection so
+        // structural errors surface immediately. Plugin-contributed errors (e.g. the
+        // animation missing-state error) are only valid once their plugin recomputes after
+        // selection — those are picked up via RequestErrorRefreshMessage (see Receive below).
         RefreshErrorIndicatorsForElement(save);
     }
 
@@ -295,6 +295,17 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
     void IRecipient<UiBaseFontSizeChangedMessage>.Receive(UiBaseFontSizeChangedMessage message)
     {
         _elementTreeViewManager.UpdateCollapseButtonSizes(message.Size);
+    }
+
+    void IRecipient<RequestErrorRefreshMessage>.Receive(RequestErrorRefreshMessage message)
+    {
+        // Plugins broadcast this after recomputing their errors and viewmodels (e.g. the
+        // animation plugin on selection, state add/delete/rename, variable set). The Errors
+        // tab already refreshes here (MainErrorsPlugin); the tree "!" indicator must too, or
+        // it lags until an unrelated event fires. Because the broadcast happens after the
+        // recompute, the selected element's error state is current — unlike the per-event
+        // handlers above, which (as a PriorityPlugin) run before non-priority plugins refresh.
+        RefreshErrorIndicatorsForElement(_selectedState.SelectedElement);
     }
 
     private void RefreshErrorIndicatorsForElement(ElementSave? element)
