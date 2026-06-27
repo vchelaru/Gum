@@ -826,6 +826,100 @@ public class BehaviorToolOnlyReferencesApplierTests : BaseTestClass
         result.ShouldBeEmpty();
     }
 
+    [Fact]
+    public void Apply_TextBoxTextWrappingWrap_WritesMultiLineModeCategoryState()
+    {
+        // Models the TextBoxBehavior line-mode reference: authoring TextWrapping = Wrap must
+        // drive the visual LineModeCategoryState to "Multi" at design time, mirroring the
+        // runtime's UpdateStateForSingleOrMultiLine. Without it the wireframe never previews
+        // multi-line and (in older projects) the caret stays single-line.
+        BehaviorSave behavior = BuildTextBoxLineModeBehavior();
+
+        ComponentSave component = new ComponentSave { Name = "Controls/TextBox", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Type = "TextWrapping",
+            Name = "TextWrapping",
+            Value = "Wrap",
+            SetsValue = true
+        });
+        component.States.Add(defaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "TextBoxBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        BehaviorToolOnlyReferencesApplier.Apply(component, defaultState);
+
+        defaultState.GetValue("LineModeCategoryState").ShouldBe("Multi");
+    }
+
+    [Fact]
+    public void Apply_TextBoxAcceptsReturnTrue_WritesMultiLineModeCategoryState()
+    {
+        // AcceptsReturn = true with TextWrapping left at its NoWrap default still produces a
+        // vertically-growing text box, so the reference collapses to "Multi" (the TextBox
+        // component has no MultiNoWrap state, matching the runtime fallback).
+        BehaviorSave behavior = BuildTextBoxLineModeBehavior();
+
+        ComponentSave component = new ComponentSave { Name = "Controls/TextBox", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Type = "bool",
+            Name = "AcceptsReturn",
+            Value = true,
+            SetsValue = true
+        });
+        component.States.Add(defaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "TextBoxBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        BehaviorToolOnlyReferencesApplier.Apply(component, defaultState);
+
+        defaultState.GetValue("LineModeCategoryState").ShouldBe("Multi");
+    }
+
+    [Fact]
+    public void Apply_TextBoxLineModeAtDefaults_DoesNotMaterializeLineModeCategoryState()
+    {
+        // NoWrap + AcceptsReturn=false resolve to "Single", which equals the resting wireframe;
+        // per #3080 the resting value must not be materialized into the state.
+        BehaviorSave behavior = BuildTextBoxLineModeBehavior();
+
+        ComponentSave component = new ComponentSave { Name = "Controls/TextBox", BaseType = "Container" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        component.States.Add(defaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "TextBoxBehavior" });
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(component);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        BehaviorToolOnlyReferencesApplier.Apply(component, defaultState);
+
+        defaultState.Variables.ShouldNotContain(v => v.Name == "LineModeCategoryState",
+            "the default line mode resolves to the resting \"Single\" value and must not be materialized");
+    }
+
+    private static BehaviorSave BuildTextBoxLineModeBehavior()
+    {
+        BehaviorSave behavior = new BehaviorSave { Name = "TextBoxBehavior" };
+        behavior.FormsProperties.Add(new VariableSave { Type = "TextWrapping", Name = "TextWrapping", Value = "NoWrap" });
+        behavior.FormsProperties.Add(new VariableSave { Type = "bool", Name = "AcceptsReturn", Value = false });
+        behavior.ToolOnlyVariableReferences.Add(
+            "LineModeCategoryState = TextWrapping == \"Wrap\" ? \"Multi\" : (AcceptsReturn ? \"Multi\" : \"Single\")");
+        return behavior;
+    }
+
     private static BehaviorSave BuildStackPanelBehavior()
     {
         BehaviorSave behavior = new BehaviorSave { Name = "StackPanelBehavior" };

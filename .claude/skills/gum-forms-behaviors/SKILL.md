@@ -95,14 +95,17 @@ Authored documentation persisted alongside the FormsProperty declaration in the 
 
 ### Covered today
 
+> **Snapshot, not a live reference.** Standard Forms behaviors (`.behx`) and components (`.gucx`) are *copied* into a project at creation time from `Tools/Gum.ProjectServices/Templates/`. Later improvements — new `FormsProperty` declarations, new `ToolOnlyVariableReference`s, additional `VariablesHiddenFromInstances` entries — do **not** retroactively land on existing projects; only projects created afterward get them. An older project must be migrated by hand, so a "feature works in a new project but not mine" report usually means the project's snapshot predates the improvement. (Concrete case: a project whose `TextBoxBehavior` lacks the `TextWrapping` FormsProperty and whose `Controls/TextBox.gucx` doesn't yet hide `LineModeCategoryState` — the user sets the raw visual line-mode to `Multi`, the text wraps, but the forms line-mode never engages and the caret stays single-line.)
+
 State-mapped (FormsProperty + ToolOnlyVariableReference, three-tier default resolution):
 - `IsEnabled` — every standard Forms behavior. Behaviors with no Disabled visual still get the `FormsProperty` (runtime reflection works) but no reference (no visual state to drive).
 - `IsChecked` — CheckBox, RadioButton, Toggle, with nested-ternary references combining IsEnabled and IsChecked into the appropriate `<X>CategoryState` slot.
 - `VerticalScrollBarVisibility` — ScrollViewer, mapped to the existing `ScrollBarVisibility` category via `ScrollBarVisibilityState = VerticalScrollBarVisibility == "Hidden" ? "NoScrollBar" : "VerticalScrollVisible"`. The `==` comparison relies on the enum↔string bridge in `EvaluatedSyntax.AreEqual` — see the `gum-tool-save-classes` skill for the int-on-disk vs boxed-enum-in-memory roundtrip. Project-side state authoring decides what each state actually changes visually.
+- `TextWrapping` + `AcceptsReturn` — TextBox. The **line-mode pair**: both drive the visual `LineModeCategory` (`Single`/`Multi`) via `LineModeCategoryState = TextWrapping == "Wrap" ? "Multi" : (AcceptsReturn ? "Multi" : "Single")`, mirroring the runtime's `TextBoxBase.UpdateStateForSingleOrMultiLine`. `LineModeCategoryState` is hidden via `VariablesHiddenFromInstances` on `Controls/TextBox.gucx` so the forms properties are the single source of truth. The TextBox component has only `Single`/`Multi` (no `MultiNoWrap`), so the AcceptsReturn-only case collapses to `Multi`, matching the runtime fallback. Caret/line math keys off these forms properties (`TextBoxBase.IsSingleLineMode`), **not** the visual state — so a project that sets the visual `LineModeCategoryState` directly (e.g. an older project where it isn't hidden) wraps the text but leaves the caret single-line. PasswordBox declares both FormsProperties but its component has no `LineModeCategory`, so no reference is wired there.
 
 Logical-only (FormsProperty only — runtime reflects directly):
 - `ToolTip` — every standard Forms behavior.
-- TextBox/PasswordBox: `AcceptsReturn`, `AcceptsTab`, `IsReadOnly`, `Placeholder`, `MaxLength` (`int?`), `TextWrapping`.
+- TextBox/PasswordBox: `AcceptsTab`, `IsReadOnly`, `Placeholder`, `MaxLength` (`int?`).
 - TextBox-only: `MaxLettersToShow` (`int?`), `MaxNumberOfLines` (`int?`).
 - Slider/ScrollBar (RangeBase): `Minimum`, `Maximum`, `Value`, `SmallChange`, `LargeChange`.
 - Slider-only: `TicksFrequency`, `IsSnapToTickEnabled`.
