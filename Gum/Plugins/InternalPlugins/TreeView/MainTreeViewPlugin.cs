@@ -14,13 +14,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Gum.DataTypes.Variables;
+using Gum.Messages;
 using Gum.Services;
 using RenderingLibrary;
 
 namespace Gum.Plugins.InternalPlugins.TreeView;
 
 [Export(typeof(PluginBase))]
-internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardownMessage>, IRecipient<UiBaseFontSizeChangedMessage>
+internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardownMessage>, IRecipient<UiBaseFontSizeChangedMessage>, IRecipient<RequestErrorRefreshMessage>
 {
     private readonly ISelectedState _selectedState;
     private readonly ElementTreeViewManager _elementTreeViewManager;
@@ -288,6 +289,20 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
     void IRecipient<UiBaseFontSizeChangedMessage>.Receive(UiBaseFontSizeChangedMessage message)
     {
         _elementTreeViewManager.UpdateCollapseButtonSizes(message.Size);
+    }
+
+    void IRecipient<RequestErrorRefreshMessage>.Receive(RequestErrorRefreshMessage message)
+    {
+        // A full error refresh (RequestingPlugin == null) is requested after an edit changes an
+        // element's error set but fires no structural plugin event — notably an animation keyframe
+        // edit (MainStateAnimationPlugin.HandleDataChange), which only saves the .ganx. Re-check the
+        // selected element's "!" indicator (detection itself is selection-independent and headless;
+        // this is purely the refresh trigger). Plugin-scoped requests (RequestingPlugin != null,
+        // sent on view-model refresh / selection) are ignored so selection is NOT a refresh trigger.
+        if (message.RequestingPlugin == null)
+        {
+            RefreshErrorIndicatorsForElement(_selectedState.SelectedElement);
+        }
     }
 
     private void RefreshErrorIndicatorsForElement(ElementSave? element)

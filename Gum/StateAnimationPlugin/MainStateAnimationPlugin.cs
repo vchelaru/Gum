@@ -628,6 +628,13 @@ public class MainStateAnimationPlugin : PluginBase
             {
                 _guiCommands.PrintOutput($"Could not save animations for {_viewModel?.Element}:\n{exc}");
             }
+
+            // The edit changed which states/animations the keyframes reference, so an animation
+            // error (e.g. a keyframe pointing at a now-missing state) may have appeared or cleared.
+            // No structural plugin event fires for an animation edit, so request a full error
+            // refresh; the headless checker re-reads the just-saved .ganx. RequestingPlugin is left
+            // null (full refresh) so both the Errors tab and the tree "!" indicator re-check.
+            _messenger.Send(new RequestErrorRefreshMessage());
         }
     }
 
