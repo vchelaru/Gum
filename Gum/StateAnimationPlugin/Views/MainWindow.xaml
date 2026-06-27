@@ -324,6 +324,12 @@
                                                     <DataTrigger Binding="{Binding StateName, Converter={StaticResource NullToBoolConverter}}" Value="True">
                                                         <Setter Property="Icon" Value="Database" />
                                                     </DataTrigger>
+                                                    <!--  A keyframe whose state/animation reference is missing (issue #3386): swap to a red error icon so it's obvious which keyframe is broken without selecting each one.  -->
+                                                    <DataTrigger Binding="{Binding IsMissingReference}" Value="True">
+                                                        <Setter Property="Icon" Value="ErrorCircle" />
+                                                        <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Error}" />
+                                                        <Setter Property="ToolTip" Value="This keyframe references a state or animation that no longer exists." />
+                                                    </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
                                         </wpf:FluentIcon.Style>
