@@ -164,10 +164,23 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
 
     public bool HasValidState
     {
-        get;
-        set;
+        get => Get<bool>();
+        set => Set(value);
     }
 
+    /// <summary>
+    /// True when this keyframe points at a state or animation whose reference is missing
+    /// (<see cref="HasValidState"/> is false). Named events are never considered broken. Drives the
+    /// broken-keyframe icon in the keyframe list (issue #3386); mirrors the broken-keyframe condition
+    /// in <c>AnimationViewModel.GetErrors</c>.
+    /// </summary>
+    [DependsOn(nameof(HasValidState))]
+    [DependsOn(nameof(StateName))]
+    [DependsOn(nameof(AnimationName))]
+    public bool IsMissingReference =>
+        !HasValidState && (!string.IsNullOrEmpty(StateName) || !string.IsNullOrEmpty(AnimationName));
+
+    [DependsOn(nameof(HasValidState))]
     public System.Windows.Visibility HasInvalidStateVisibility
     {
         get
@@ -183,6 +196,8 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
         }
     }
 
+    [DependsOn(nameof(HasValidState))]
+    [DependsOn(nameof(EventName))]
     public SolidColorBrush LabelBrush
     {
         get

@@ -215,7 +215,9 @@ public partial class AnimationViewModel : ViewModel
             }
 
 
-            newVm.HasValidState = animationReference != null;
+            // Mirror RefreshErrors: a sub-animation keyframe is valid only when its referenced
+            // animation actually resolved (animationReference is the loop variable and never null).
+            newVm.HasValidState = newVm.SubAnimationViewModel != null;
 
             toReturn.Keyframes.Add(newVm);
 

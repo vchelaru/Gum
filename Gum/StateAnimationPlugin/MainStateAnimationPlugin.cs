@@ -168,6 +168,11 @@ public class MainStateAnimationPlugin : PluginBase
         this.DeleteOptionsWindowShow += _elementDeleteService.HandleDeleteOptionsWindowShow;
         this.DeleteConfirmed += _elementDeleteService.HandleConfirmDelete;
 
+        // Undo/redo restore element state without firing the granular StateAdd/StateDelete events, so
+        // recompute the view model (and its keyframe error state) afterward — otherwise a broken
+        // keyframe's error icon stays stale until the element is reselected (issue #3386).
+        this.AfterUndo += HandleAfterUndo;
+
         // Animation "keyframe references a missing state" errors are now detected per-element by
         // the headless AnimationKeyframeErrorSource (issue #3293), which reads the .ganx so it
         // works on project open and on edits regardless of selection. Contributing them here too
@@ -267,12 +272,37 @@ public class MainStateAnimationPlugin : PluginBase
 
     private void HandleStateRename(StateSave stateSave, string oldName)
     {
-        RefreshViewModel();
-
-        if (_selectedState.SelectedElement != null && _viewModel != null)
+        if (_viewModel == null)
         {
-            _renameManager.HandleRename(stateSave, oldName, _viewModel);
+            CreateViewModel();
         }
+
+        var element = _selectedState.SelectedElement;
+        if (element != null && _viewModel != null)
+        {
+            RefreshAfterStateRename(_renameManager, _viewModel, element, stateSave, oldName);
+        }
+
+        // Refresh available states / DataContext and re-broadcast. RefreshErrors runs again here,
+        // but it is idempotent and rename is not a hot path.
+        RefreshViewModel();
+    }
+
+    /// <summary>
+    /// Applies a state rename to <paramref name="viewModel"/>'s keyframe references and then
+    /// recomputes errors, in that order. The order matters: recomputing before the rewrite leaves a
+    /// stale "references a missing state" error on the renamed keyframe (issue #3383).
+    /// </summary>
+    internal static void RefreshAfterStateRename(IRenameManager renameManager,
+        ElementAnimationsViewModel viewModel, ElementSave element, StateSave stateSave, string oldName)
+    {
+        renameManager.HandleRename(stateSave, oldName, viewModel);
+        viewModel.RefreshErrors(element);
+    }
+
+    private void HandleAfterUndo()
+    {
+        RefreshViewModel();
     }
 
     private void HandleStateAdd(StateSave state)
@@ -461,10 +491,6 @@ public class MainStateAnimationPlugin : PluginBase
 
     private void RefreshAvailableStates()
     {
-        // we always create the view model after refreshing states, so we can new up an observable collection:
-
-        //AvailableStates = new ObservableCollection<string>();
-
         var states = new List<string>();
 
         var element = _selectedState.SelectedElement;
@@ -477,7 +503,6 @@ public class MainStateAnimationPlugin : PluginBase
             {
                 states.AddRange(category.States.Select(item => category.Name + "/" + item.Name));
             }
-
         }
 
         AvailableStates.ReplaceWith(states);

@@ -34,6 +34,9 @@
                 VerticalAlignment="Top" />
 
             <!--<Label Grid.Row="0" x:Name="NameLabel" Grid.ColumnSpan="2" Content="{Binding DisplayName, FallbackValue=StateName}"></Label>-->
+            <!--  Editable so a renamed/deleted referenced state can't be coerced to null by the
+                  Selector (which would collapse a broken state keyframe into an event). Text is a
+                  plain string binding, unconstrained by the item list. See issue #3386.  -->
             <ComboBox
                 x:Name="StateComboBox"
                 Grid.Row="0"
@@ -41,8 +44,9 @@
                 Grid.ColumnSpan="2"
                 Margin="0,0,0,1"
                 Padding="0"
+                IsEditable="True"
                 ItemsSource="{Binding AvailableStates}"
-                SelectedItem="{Binding StateName}"
+                Text="{Binding StateName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                 Visibility="{Binding StateComboBoxVisibility}" />
 
             <TextBlock
