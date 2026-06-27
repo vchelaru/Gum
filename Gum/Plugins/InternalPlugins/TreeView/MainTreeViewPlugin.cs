@@ -14,14 +14,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Gum.DataTypes.Variables;
-using Gum.Messages;
 using Gum.Services;
 using RenderingLibrary;
 
 namespace Gum.Plugins.InternalPlugins.TreeView;
 
 [Export(typeof(PluginBase))]
-internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardownMessage>, IRecipient<UiBaseFontSizeChangedMessage>, IRecipient<RequestErrorRefreshMessage>
+internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardownMessage>, IRecipient<UiBaseFontSizeChangedMessage>
 {
     private readonly ISelectedState _selectedState;
     private readonly ElementTreeViewManager _elementTreeViewManager;
@@ -289,19 +288,6 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
     void IRecipient<UiBaseFontSizeChangedMessage>.Receive(UiBaseFontSizeChangedMessage message)
     {
         _elementTreeViewManager.UpdateCollapseButtonSizes(message.Size);
-    }
-
-    void IRecipient<RequestErrorRefreshMessage>.Receive(RequestErrorRefreshMessage message)
-    {
-        // Plugins broadcast this after recomputing their errors/viewmodels (the animation
-        // plugin does so when an element is selected). MainErrorsPlugin refreshes the Errors
-        // tab from the same signal; the tree "!" indicator must too, or it lags until an
-        // unrelated event fires. The broadcast happens AFTER the recompute, so the selected
-        // element's error state is current here — unlike the per-event handlers above, which
-        // (as a PriorityPlugin) run before non-priority plugins such as the animation plugin
-        // refresh. (Renaming a state does NOT yet refresh through here: the rename leaves the
-        // animation error in an inconsistent in-memory state at broadcast time — see #3383.)
-        RefreshErrorIndicatorsForElement(_selectedState.SelectedElement);
     }
 
     private void RefreshErrorIndicatorsForElement(ElementSave? element)
