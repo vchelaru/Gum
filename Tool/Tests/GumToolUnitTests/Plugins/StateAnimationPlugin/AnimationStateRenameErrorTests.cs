@@ -20,10 +20,15 @@ namespace GumToolUnitTests.Plugins.StateAnimationPlugin;
 /// <c>GetErrors</c>) and how a state rename propagates to animation keyframes. Companion to
 /// <see cref="RenameManagerTests"/>: those pin the keyframe-mutating overloads in isolation, these
 /// pin the resulting error state — the same error the tree "!" indicator and the Errors tab surface
-/// (issue #3293) and that a rename leaves stale (issue #3383).
+/// (issue #3293).
 ///
-/// These were the behaviors repeatedly mis-read while reasoning about #3293/#3383; they are pinned
-/// here so future changes start from executable ground truth rather than speculation.
+/// <para>
+/// <see cref="HandleRename_OfCategorizedState_RewritesKeyframeAndClearsErrorOnRefresh"/> is the
+/// #3383 regression guard for the fixed plugin ordering: the keyframe is rewritten <em>before</em>
+/// errors are recomputed, so no stale missing-state error survives the rename. (The WPF
+/// ComboBox-binding half of #3383 — the selection nulling that dropped the reference — is verified
+/// manually, since it needs a WPF host.)
+/// </para>
 /// </summary>
 public class AnimationStateRenameErrorTests : BaseTestClass
 {
@@ -43,8 +48,11 @@ public class AnimationStateRenameErrorTests : BaseTestClass
 
             // Mirror RenameLogic.RenameState: the model is renamed first, then plugins are notified.
             idle.Name = "Walk";
-            RenameManagerFor(element).HandleRename(idle, "Idle", viewModel);
 
+            // Fixed plugin ordering (#3383): rewrite the keyframe BEFORE recomputing errors. The
+            // pre-fix plugin recomputed errors first (against the still-old keyframe name) and never
+            // re-ran them, leaving a stale missing-state error; this is the regression guard.
+            RenameManagerFor(element).HandleRename(idle, "Idle", viewModel);
             viewModel.Animations[0].Keyframes[0].StateName.ShouldBe("Cat/Walk");
 
             viewModel.RefreshErrors(element);
@@ -79,38 +87,6 @@ public class AnimationStateRenameErrorTests : BaseTestClass
 
             viewModel.RefreshErrors(element);
 
-            viewModel.GetErrors().ShouldBeEmpty();
-        });
-    }
-
-    [Fact]
-    public void RenameSequence_AsThePluginRunsIt_LeavesStaleError()
-    {
-        // Models MainStateAnimationPlugin.HandleStateRename ordering: RefreshViewModel (which calls
-        // RefreshErrors and broadcasts RequestErrorRefreshMessage) runs BEFORE the keyframe is
-        // rewritten, and errors are never recomputed afterward. This pins the #3383 root cause that
-        // makes the tree/Errors-tab refresh look broken: a rename leaves the error state stale until
-        // a full refresh (re-selecting the element) rebuilds it.
-        RunOnSta(() =>
-        {
-            ComponentSave element = ElementWithCategorizedState("Cat", "Idle");
-            StateSave idle = element.Categories[0].States[0];
-            ElementAnimationsViewModel viewModel = CreateViewModelWith(
-                CreateAnimationWithKeyframes(Keyframe(stateName: "Cat/Idle")));
-
-            idle.Name = "Walk";                              // state already renamed when the event fires
-            viewModel.RefreshErrors(element);                // plugin's RefreshViewModel: keyframe still "Cat/Idle"
-            RenameManagerFor(element).HandleRename(idle, "Idle", viewModel); // keyframe -> "Cat/Walk"
-
-            // The plugin does NOT recompute errors after the rewrite, so HasValidState is stale:
-            // it was computed when the keyframe still read "Cat/Idle". The keyframe now correctly
-            // reads "Cat/Walk", yet GetErrors still reports it as missing — a stale false positive.
-            viewModel.Animations[0].Keyframes[0].StateName.ShouldBe("Cat/Walk");
-            viewModel.GetErrors().Count().ShouldBe(1);
-            viewModel.GetErrors().Single().Message.ShouldContain("Cat/Walk");
-
-            // Recomputing (what re-selecting the element does) clears the stale error.
-            viewModel.RefreshErrors(element);
             viewModel.GetErrors().ShouldBeEmpty();
         });
     }

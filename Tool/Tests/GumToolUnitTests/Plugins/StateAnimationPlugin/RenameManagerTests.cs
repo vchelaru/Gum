@@ -68,6 +68,27 @@ public class RenameManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleRename_State_OfReferencedState_PersistsAnimations()
+    {
+        RunOnSta(() =>
+        {
+            ElementAnimationsViewModel viewModel = CreateViewModelWith(
+                CreateAnimationWithKeyframes(Keyframe(stateName: "OldState")));
+
+            // Unlike the ElementSave overload, the StateSave overload used to leave the rewritten
+            // keyframe unsaved, so a dangling missing-state error could reappear on reload (#3383).
+            Mock<IAnimationCollectionViewModelManager> manager = new Mock<IAnimationCollectionViewModelManager>();
+            RenameManager renameManager = CreateRenameManager(manager.Object);
+
+            renameManager.HandleRename(
+                new StateSave { Name = "NewState" }, "OldState", viewModel);
+
+            viewModel.Animations[0].Keyframes[0].StateName.ShouldBe("NewState");
+            manager.Verify(m => m.Save(viewModel), Times.Once);
+        });
+    }
+
+    [Fact]
     public void HandleRename_State_RenamesMatchingKeyframeStateName()
     {
         RunOnSta(() =>
@@ -82,6 +103,27 @@ public class RenameManagerTests : BaseTestClass
                 new StateSave { Name = "NewState" }, "OldState", viewModel);
 
             viewModel.Animations[0].Keyframes[0].StateName.ShouldBe("NewState");
+        });
+    }
+
+    [Fact]
+    public void HandleRename_State_WhenNoKeyframeReferencesIt_DoesNotPersist()
+    {
+        RunOnSta(() =>
+        {
+            ElementAnimationsViewModel viewModel = CreateViewModelWith(
+                CreateAnimationWithKeyframes(Keyframe(stateName: "Unrelated")));
+
+            // A rename of a state no keyframe references should not rewrite anything, so there is
+            // nothing to persist — avoid a needless .ganx write on every unrelated state rename.
+            Mock<IAnimationCollectionViewModelManager> manager = new Mock<IAnimationCollectionViewModelManager>();
+            RenameManager renameManager = CreateRenameManager(manager.Object);
+
+            renameManager.HandleRename(
+                new StateSave { Name = "NewState" }, "OldState", viewModel);
+
+            viewModel.Animations[0].Keyframes[0].StateName.ShouldBe("Unrelated");
+            manager.Verify(m => m.Save(It.IsAny<ElementAnimationsViewModel>()), Times.Never);
         });
     }
 
@@ -144,13 +186,14 @@ public class RenameManagerTests : BaseTestClass
         return viewModel;
     }
 
-    private static RenameManager CreateRenameManager()
+    private static RenameManager CreateRenameManager(
+        IAnimationCollectionViewModelManager? animationCollectionViewModelManager = null)
     {
         return new RenameManager(
             Mock.Of<ISelectedState>(),
             Mock.Of<IOutputManager>(),
             Mock.Of<IAnimationFilePathService>(),
-            Mock.Of<IAnimationCollectionViewModelManager>());
+            animationCollectionViewModelManager ?? Mock.Of<IAnimationCollectionViewModelManager>());
     }
 
     /// <summary>

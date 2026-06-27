@@ -127,11 +127,14 @@ namespace StateAnimationPlugin.Managers
             string prefix = "";
             if(parentCategory != null)
             {
-                prefix = parentCategory + "/";
+                // Use .Name explicitly rather than relying on StateSaveCategory.ToString() returning
+                // the name — the rest of the keyframe name handling keys off category.Name.
+                prefix = parentCategory.Name + "/";
             }
 
             oldName = prefix + oldName;
 
+            bool didRename = false;
             foreach(var animation in viewModel.Animations)
             {
                 foreach(var keyframe in animation.Keyframes)
@@ -139,8 +142,17 @@ namespace StateAnimationPlugin.Managers
                     if(keyframe.StateName == oldName)
                     {
                         keyframe.StateName = prefix + stateSave.Name;
+                        didRename = true;
                     }
                 }
+            }
+
+            // Persist the rewritten keyframe references so the corrected state name survives a
+            // reload. Unlike the ElementSave overload, this path previously left the .ganx unsaved,
+            // so a dangling missing-state error could reappear after reloading the element. (#3383)
+            if(didRename)
+            {
+                _animationCollectionViewModelManager.Save(viewModel);
             }
         }
 

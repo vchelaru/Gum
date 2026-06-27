@@ -267,12 +267,29 @@ public class MainStateAnimationPlugin : PluginBase
 
     private void HandleStateRename(StateSave stateSave, string oldName)
     {
-        RefreshViewModel();
-
-        if (_selectedState.SelectedElement != null && _viewModel != null)
+        var element = _selectedState.SelectedElement;
+        if (element != null && _viewModel != null)
         {
+            // RenameLogic renames the state in the model BEFORE notifying plugins, so stateSave
+            // already holds the new name. Rewrite the keyframes referencing the old name BEFORE
+            // RefreshViewModel rebuilds AvailableStates. Seed the post-rename name into the existing
+            // AvailableStates first so the keyframe ComboBox's two-way SelectedItem binding accepts
+            // the rewritten StateName instead of nulling the (now-absent) old selection — that null
+            // is what dropped the reference and left a stale missing-state error. (#3383)
+            var category = element.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
+            var newName = category != null ? category.Name + "/" + stateSave.Name : stateSave.Name;
+            if (!AvailableStates.Contains(newName))
+            {
+                AvailableStates.Add(newName);
+            }
+
             _renameManager.HandleRename(stateSave, oldName, _viewModel);
         }
+
+        // Rebuild AvailableStates from the model and recompute errors against the rewritten
+        // keyframes; CreateViewModel broadcasts RequestErrorRefreshMessage so the Errors tab and
+        // the tree "!" indicator re-check.
+        RefreshViewModel();
     }
 
     private void HandleStateAdd(StateSave state)
