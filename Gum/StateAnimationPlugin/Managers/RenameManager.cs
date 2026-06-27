@@ -134,7 +134,13 @@ namespace StateAnimationPlugin.Managers
 
             oldName = prefix + oldName;
 
-            bool didRename = false;
+            // Rewrite only — do NOT save here. Assigning keyframe.StateName raises PropertyChanged,
+            // which the plugin persists through its centralized HandleDataChange (AnyChange) save:
+            // the same single save path the InstanceSave overload above relies on. A second explicit
+            // save would write the .ganx twice per rename and trip external (and Gum's own) file
+            // watchers on a change that already settled. The ElementSave overload saves explicitly
+            // only because renaming the element file changes no keyframe property, so nothing
+            // triggers the implicit save there. (#3383)
             foreach(var animation in viewModel.Animations)
             {
                 foreach(var keyframe in animation.Keyframes)
@@ -142,17 +148,8 @@ namespace StateAnimationPlugin.Managers
                     if(keyframe.StateName == oldName)
                     {
                         keyframe.StateName = prefix + stateSave.Name;
-                        didRename = true;
                     }
                 }
-            }
-
-            // Persist the rewritten keyframe references so the corrected state name survives a
-            // reload. Unlike the ElementSave overload, this path previously left the .ganx unsaved,
-            // so a dangling missing-state error could reappear after reloading the element. (#3383)
-            if(didRename)
-            {
-                _animationCollectionViewModelManager.Save(viewModel);
             }
         }
 
