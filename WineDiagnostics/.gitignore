@@ -1,0 +1,5 @@
+# Build + run artifacts for the diagnostic suite
+dist/
+gum-mac-diagnostics.zip
+results_*/
+*.tar.gz

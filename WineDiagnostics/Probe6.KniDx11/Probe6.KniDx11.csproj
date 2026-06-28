@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <UseWindowsForms>true</UseWindowsForms>
+    <!-- KNI's graphics APIs trip the platform-compatibility analyzer; the tool suppresses it too. -->
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Same KNI runtime + DX11 WinForms platform the Gum tool (Gum.csproj) references. -->
+    <PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" />
+    <PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.2.9001" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Probe.Common\Probe.Common.csproj" />
+  </ItemGroup>
+
+</Project>

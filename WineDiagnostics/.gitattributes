@@ -1,0 +1,3 @@
+# The macOS runner must keep Unix line endings or bash on the Mac fails with a
+# "bad interpreter" error. Force LF regardless of the committer's platform.
+*.sh text eol=lf

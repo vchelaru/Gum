@@ -1,0 +1,10 @@
+<Solution>
+  <Project Path="Probe.Common/Probe.Common.csproj" />
+  <Project Path="Probe0.Runtime/Probe0.Runtime.csproj" />
+  <Project Path="Probe1.Wpf/Probe1.Wpf.csproj" />
+  <Project Path="Probe2.WinForms/Probe2.WinForms.csproj" />
+  <Project Path="Probe3.WindowsFormsHost/Probe3.WindowsFormsHost.csproj" />
+  <Project Path="Probe4.SkiaCpu/Probe4.SkiaCpu.csproj" />
+  <Project Path="Probe5.Direct3D11/Probe5.Direct3D11.csproj" />
+  <Project Path="Probe6.KniDx11/Probe6.KniDx11.csproj" />
+</Solution>

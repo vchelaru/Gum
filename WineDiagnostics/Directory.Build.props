@@ -1,0 +1,24 @@
+<Project>
+
+  <!--
+    Shared MSBuild properties for the Wine diagnostic probe suite.
+
+    This suite is STANDALONE: it is intentionally NOT part of GumFull.sln or
+    AllLibraries.sln. It builds the smallest possible programs that each exercise
+    ONE layer of the Gum tool's startup stack (runtime, WPF, WinForms, the
+    WinForms-in-WPF host, SkiaSharp, raw Direct3D 11, and the KNI DX11 device the
+    tool actually creates). A macOS user runs the published exes under Wine to
+    find which layer fails to launch. See README.md.
+
+    All probes target net8.0-windows to match the Gum tool's TFM, so they load
+    the same .NET 8 desktop runtime (dotnetdesktop8) inside the Wine prefix.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <Platforms>AnyCPU</Platforms>
+  </PropertyGroup>
+
+</Project>
