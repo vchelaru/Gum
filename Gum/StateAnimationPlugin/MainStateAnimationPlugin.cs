@@ -351,13 +351,84 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
 
     private void HandleAfterUndo()
     {
+        // Capture the selection before the forced rebuild below replaces the view model (and with it
+        // every AnimationViewModel/keyframe instance), then reselect by identity afterward so the
+        // user's animation + keyframe selection survives undo/redo — mirroring element-undo's state
+        // selection restore (#3406).
+        var selectedAnimationName = _viewModel?.SelectedAnimation?.Name;
+        var selectedKeyframe = _viewModel?.SelectedAnimation?.SelectedKeyframe;
+
         // Repaint the tab from the just-restored .ganx, then re-arm undo recording. The flag spanned
         // the .ganx write (ApplyAnimations) through this repaint so neither flushed a spurious undo.
         // forceReload bypasses CreateViewModel's same-element early-out: an in-place undo leaves the
         // selected element unchanged, so without forcing it the stale view model would survive and the
         // tab would keep showing the pre-undo animations until the element was reselected (#3406).
         RefreshViewModel(forceReload: true);
+
+        if (_viewModel != null)
+        {
+            var keyframeToReselect = RestoreAnimationSelection(_viewModel, selectedAnimationName, selectedKeyframe);
+
+            if (keyframeToReselect != null && _viewModel.SelectedAnimation is { } reselectedAnimation)
+            {
+                // Setting SelectedAnimation above rebinds the keyframes ListBox's ItemsSource, and that
+                // rebind resets its SelectedItem — writing null back through the two-way SelectedKeyframe
+                // binding — on the next layout pass. A synchronous assignment here would be clobbered by
+                // it, so defer the keyframe reselect to DispatcherPriority.Background, which runs after the
+                // rebind. Without this the keyframe (and the right-side property panel bound to it) is lost
+                // on undo even though the animation stays selected (#3406).
+                _mainWindow?.Dispatcher.BeginInvoke(
+                    new Action(() => reselectedAnimation.SelectedKeyframe = keyframeToReselect),
+                    System.Windows.Threading.DispatcherPriority.Background);
+            }
+        }
+
         _isApplyingUndo = false;
+    }
+
+    /// <summary>
+    /// Reselects the animation named <paramref name="animationName"/> on a freshly-rebuilt
+    /// <paramref name="viewModel"/> and returns the keyframe within it matching <paramref name="keyframe"/>
+    /// by content (for the caller to apply once the keyframes ListBox has rebound — see
+    /// <see cref="HandleAfterUndo"/>). Best-effort: a missing animation returns null with no selection
+    /// change; a missing keyframe returns null but the animation is still reselected — mirroring
+    /// element-undo's silent selection drop when the selected object no longer exists.
+    /// </summary>
+    internal static AnimatedKeyframeViewModel? RestoreAnimationSelection(ElementAnimationsViewModel viewModel,
+        string? animationName, AnimatedKeyframeViewModel? keyframe)
+    {
+        if (animationName == null)
+        {
+            return null;
+        }
+
+        var animation = viewModel.Animations.FirstOrDefault(item => item.Name == animationName);
+        if (animation == null)
+        {
+            return null;
+        }
+
+        viewModel.SelectedAnimation = animation;
+
+        if (keyframe == null)
+        {
+            return null;
+        }
+
+        return animation.Keyframes.FirstOrDefault(item => AreSameKeyframe(item, keyframe));
+    }
+
+    /// <summary>
+    /// Identity match for a keyframe across a view-model rebuild: same discriminator (state /
+    /// sub-animation / event name) and time. Used to reselect the previously-selected keyframe on the
+    /// new instances after an undo/redo reload.
+    /// </summary>
+    private static bool AreSameKeyframe(AnimatedKeyframeViewModel first, AnimatedKeyframeViewModel second)
+    {
+        return first.StateName == second.StateName
+            && first.AnimationName == second.AnimationName
+            && first.EventName == second.EventName
+            && first.Time == second.Time;
     }
 
     private void HandleStateAdd(StateSave state)

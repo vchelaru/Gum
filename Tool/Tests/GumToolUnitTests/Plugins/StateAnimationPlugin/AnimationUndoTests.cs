@@ -133,6 +133,74 @@ public class AnimationUndoTests : BaseTestClass
         shouldReload.ShouldBeTrue();
     }
 
+    [Fact]
+    public void RestoreAnimationSelection_ReselectsAnimationAndReturnsMatchingKeyframe_ByIdentity()
+    {
+        // After an undo forces the view model to rebuild, the previously-selected animation is
+        // reselected and the keyframe matching by content (state/sub-animation/event name + time) is
+        // returned, so the caller can reapply it once the keyframes ListBox has rebound. This is what
+        // keeps the user's selection — and the right-side property panel — across the reload.
+        RunOnSta(() =>
+        {
+            ElementAnimationsViewModel rebuilt = ViewModelWithAnimation("Anim", out AnimationViewModel animation,
+                Keyframe("Default", 0f), Keyframe("Highlighted", 1f));
+            AnimatedKeyframeViewModel previouslySelected = Keyframe("Highlighted", 1f);
+
+            AnimatedKeyframeViewModel? matched =
+                MainStateAnimationPlugin.RestoreAnimationSelection(rebuilt, "Anim", previouslySelected);
+
+            rebuilt.SelectedAnimation.ShouldBe(animation);
+            matched.ShouldNotBeNull();
+            matched!.StateName.ShouldBe("Highlighted");
+            matched.Time.ShouldBe(1f);
+        });
+    }
+
+    [Fact]
+    public void RestoreAnimationSelection_ReselectsAnimationButReturnsNull_WhenKeyframeNoLongerExists()
+    {
+        // If the undo removed the keyframe that was selected, the match fails (returns null) while the
+        // animation is still reselected. Mirrors element-undo's silent selection drop when the selected
+        // object no longer exists.
+        RunOnSta(() =>
+        {
+            ElementAnimationsViewModel rebuilt = ViewModelWithAnimation("Anim", out AnimationViewModel animation,
+                Keyframe("Default", 0f));
+            AnimatedKeyframeViewModel removed = Keyframe("Highlighted", 1f);
+
+            AnimatedKeyframeViewModel? matched =
+                MainStateAnimationPlugin.RestoreAnimationSelection(rebuilt, "Anim", removed);
+
+            rebuilt.SelectedAnimation.ShouldBe(animation);
+            matched.ShouldBeNull();
+        });
+    }
+
+    private AnimatedKeyframeViewModel Keyframe(string stateName, float time)
+        => new(_bitmapLoader) { StateName = stateName, Time = time };
+
+    private ElementAnimationsViewModel ViewModelWithAnimation(string animationName, out AnimationViewModel animation,
+        params AnimatedKeyframeViewModel[] keyframes)
+    {
+        animation = new AnimationViewModel(_bitmapLoader, _selectedState, _wireframeObjectManager) { Name = animationName };
+        foreach (AnimatedKeyframeViewModel keyframe in keyframes)
+        {
+            animation.Keyframes.Add(keyframe);
+        }
+
+        ElementAnimationsViewModel viewModel = new(
+            Mock.Of<INameVerifier>(),
+            Mock.Of<IDialogService>(),
+            Mock.Of<IAnimationCollectionViewModelManager>(),
+            Mock.Of<IRenameManager>(),
+            _bitmapLoader,
+            _selectedState,
+            _wireframeObjectManager,
+            Mock.Of<IOutputManager>());
+        viewModel.Animations.Add(animation);
+        return viewModel;
+    }
+
     private ElementAnimationsViewModel CreateViewModel(IDialogService dialogService, out AnimationViewModel animation)
     {
         animation = new AnimationViewModel(_bitmapLoader, _selectedState, _wireframeObjectManager) { Name = "Anim" };
