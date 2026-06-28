@@ -148,6 +148,13 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<ISelectedState, SelectedState>();
         services.AddSingleton<INameVerifier, NameVerifier>();
         services.AddSingleton<IUndoManager, UndoManager>();
+        // Late-bound seam for folding animation edits into the element undo snapshot (#3406). The relay
+        // is what UndoManager/ElementUndoStrategy receive at construction; the animation plugin registers
+        // itself as the real provider in its StartUp (via IAnimationUndoProviderRegistrar, bridged into
+        // the plugin MEF container). Both interfaces resolve to the one relay singleton.
+        services.AddSingleton<AnimationUndoProviderRelay>();
+        services.AddSingleton<IAnimationUndoProvider>(provider => provider.GetRequiredService<AnimationUndoProviderRelay>());
+        services.AddSingleton<IAnimationUndoProviderRegistrar>(provider => provider.GetRequiredService<AnimationUndoProviderRelay>());
         services.AddSingleton<IEditVariableService, EditVariableService>();
         services.AddSingleton<IDeleteVariableService, DeleteVariableService>();
         services.AddSingleton<IExposeVariableService, ExposeVariableService>();

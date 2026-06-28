@@ -4,6 +4,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
+using Gum.StateAnimation.SaveClasses;
 using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
@@ -26,6 +27,7 @@ public class ElementUndoStrategy : IUndoStrategy
     private readonly IFileCommands _fileCommands;
     private readonly IMessenger _messenger;
     private readonly IUndoPluginNotifier _pluginNotifier;
+    private readonly IAnimationUndoProvider _animationUndoProvider;
     private readonly Func<bool> _areUndoLocksActive;
     private readonly Action<UndoOperation> _raiseUndosChanged;
 
@@ -60,6 +62,7 @@ public class ElementUndoStrategy : IUndoStrategy
         IFileCommands fileCommands,
         IMessenger messenger,
         IUndoPluginNotifier pluginNotifier,
+        IAnimationUndoProvider animationUndoProvider,
         Func<bool> areUndoLocksActive,
         Action<UndoOperation> raiseUndosChanged)
     {
@@ -69,6 +72,7 @@ public class ElementUndoStrategy : IUndoStrategy
         _fileCommands = fileCommands;
         _messenger = messenger;
         _pluginNotifier = pluginNotifier;
+        _animationUndoProvider = animationUndoProvider;
         _areUndoLocksActive = areUndoLocksActive;
         _raiseUndosChanged = raiseUndosChanged;
     }
@@ -108,6 +112,11 @@ public class ElementUndoStrategy : IUndoStrategy
             }
             recordedSnapshot.StateName = _selectedState.SelectedStateSave?.Name;
             recordedSnapshot.CategoryName = _selectedState.SelectedStateCategorySave?.Name;
+
+            // Capture the element's animations as part of the same baseline. GetCurrentAnimations
+            // returns the live tab contents when loaded, else the .ganx, else null when the element
+            // has no animations. This is a freshly-produced object, so it is safe to hold as-is.
+            recordedSnapshot.Animations = _animationUndoProvider.GetCurrentAnimations(_selectedState.SelectedElement);
         }
 
         //PrintStatus("RecordState");
@@ -154,8 +163,14 @@ public class ElementUndoStrategy : IUndoStrategy
             }
         }
 
+        // The live animation state, diffed against the baseline captured on selection / after the
+        // previous record. baselineAnimations restores on undo; currentAnimations re-applies on redo.
+        var baselineAnimations = recordedSnapshot.Animations;
+        var currentAnimations = _animationUndoProvider.GetCurrentAnimations(newElement);
+
         UndoSnapshot undoSnapshot = TryGetUndoSnapshotToAdd(newStateSave, newElement, oldState,
-            recordedSnapshot.Element, recordedSnapshot.CategoryName, recordedSnapshot.StateName);
+            recordedSnapshot.Element, recordedSnapshot.CategoryName, recordedSnapshot.StateName,
+            baselineAnimations, currentAnimations);
 
         if (undoSnapshot != null)
         {
@@ -178,7 +193,8 @@ public class ElementUndoStrategy : IUndoStrategy
                 history.Actions.Add(action);
                 history.UndoIndex = history.Actions.Count - 1;
 
-                var redoSnapshot = TryGetUndoSnapshotToAdd(oldState, recordedSnapshot.Element, newStateSave, newElement, recordedSnapshot.CategoryName, recordedSnapshot.StateName);
+                var redoSnapshot = TryGetUndoSnapshotToAdd(oldState, recordedSnapshot.Element, newStateSave, newElement, recordedSnapshot.CategoryName, recordedSnapshot.StateName,
+                    currentAnimations, baselineAnimations);
 
                 if(redoSnapshot != null)
                 {
@@ -204,7 +220,8 @@ public class ElementUndoStrategy : IUndoStrategy
     /// Checks if anything has changed and if so returns an UndoSnapshot
     /// </summary>
     private UndoSnapshot? TryGetUndoSnapshotToAdd(StateSave newState, ElementSave newElement,
-        StateSave oldState, ElementSave oldElement, string categoryName, string stateName)
+        StateSave oldState, ElementSave oldElement, string categoryName, string stateName,
+        ElementAnimationsSave? oldAnimations, ElementAnimationsSave? newAnimations)
     {
         bool doStatesDiffer = FileManager.AreSaveObjectsEqual(oldState, newState) == false;
         bool doStateCategoriesDiffer =
@@ -215,6 +232,7 @@ public class ElementUndoStrategy : IUndoStrategy
         bool doBehaviorsDiffer = FileManager.AreSaveObjectsEqual(oldElement.Behaviors, newElement.Behaviors) == false;
         bool doVariablesHiddenFromInstancesDiffer =
             FileManager.AreSaveObjectsEqual(oldElement.VariablesHiddenFromInstances, newElement.VariablesHiddenFromInstances) == false;
+        bool doAnimationsDiffer = FileManager.AreSaveObjectsEqual(oldAnimations, newAnimations) == false;
 
         // Why do we care if the user selected a different state?
         // This seems to cause bugs, and we don't care about undoing selections...
@@ -225,7 +243,7 @@ public class ElementUndoStrategy : IUndoStrategy
         UndoSnapshot? snapshotToAdd = null;
 
         bool didAnythingChange = doStatesDiffer || doStateCategoriesDiffer || doInstanceListsDiffer || doTypesDiffer || doNamesDiffer ||
-            doBehaviorsDiffer || doVariablesHiddenFromInstancesDiffer
+            doBehaviorsDiffer || doVariablesHiddenFromInstancesDiffer || doAnimationsDiffer
             //|| doesSelectedStateDiffer
             ;
         if (didAnythingChange)
@@ -265,7 +283,14 @@ public class ElementUndoStrategy : IUndoStrategy
             {
                 Element = clone,
                 CategoryName = categoryName,
-                StateName = stateName
+                StateName = stateName,
+                // Null when unchanged (mirrors the States/Instances trick); otherwise the animations
+                // to restore. oldAnimations being null but differing means the element had no
+                // animations before, so restore to an empty save rather than null (null would read as
+                // "no animation change to apply").
+                Animations = doAnimationsDiffer
+                    ? (oldAnimations != null ? FileManager.CloneSaveObject(oldAnimations) : new ElementAnimationsSave())
+                    : null
             };
         }
 
@@ -677,6 +702,14 @@ public class ElementUndoStrategy : IUndoStrategy
                 listOfStates = toApplyTo.Categories
                     .FirstOrDefault(item => item.Name == undoSnapshot.CategoryName)?.States;
             }
+        }
+
+        // Restore animations only on a real apply. The History tab calls this with
+        // propagateNameChanges == false to dry-run snapshots against a throwaway element clone; doing
+        // the .ganx write there would corrupt the on-disk animations just to build a description.
+        if (propagateNameChanges && undoSnapshot.Animations != null)
+        {
+            _animationUndoProvider.ApplyAnimations(toApplyTo, undoSnapshot.Animations);
         }
 
         return addedAndRemovedInstances;

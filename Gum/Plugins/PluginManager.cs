@@ -945,6 +945,10 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
             // IFavoriteComponentManager, is already bridged above.
             batch.AddExportedValue<ICircularReferenceManager>(Locator.GetRequiredService<ICircularReferenceManager>());
 
+            // Animation undo (#3406): MainStateAnimationPlugin injects this to register itself as the
+            // live IAnimationUndoProvider with the already-constructed UndoManager/ElementUndoStrategy.
+            batch.AddExportedValue<IAnimationUndoProviderRegistrar>(Locator.GetRequiredService<IAnimationUndoProviderRegistrar>());
+
 
             var container = new CompositionContainer(catalog);
 

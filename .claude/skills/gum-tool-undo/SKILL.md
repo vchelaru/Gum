@@ -47,6 +47,12 @@ The undo system records changes to:
 - State additions, removals, and variable changes within states
 - Category additions and removals
 - Variable exposure and unexposure
+- **Element animations** (the `.ganx` sidecar) — folded into the element's `UndoSnapshot.Animations`
+  so an animation edit undoes **atomically** with the state rename/delete it was made next to (#3406).
+  Keyframes reference states by name, so the two are coupled and must restore together or the
+  reference desyncs. `ElementUndoStrategy` captures/diffs/applies animations through the headless
+  `IAnimationUndoProvider` seam; the animation plugin implements it (reading the live tab or the
+  `.ganx`) and flushes a record from its `HandleDataChange` choke point via an empty `RequestLock`.
 
 ## How Recording Works
 

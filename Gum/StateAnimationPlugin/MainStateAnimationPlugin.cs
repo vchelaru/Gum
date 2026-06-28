@@ -13,6 +13,7 @@ using Gum.Responses;
 using Gum.Services.Dialogs;
 using Gum.StateAnimation.SaveClasses;
 using Gum.ToolStates;
+using Gum.Undo;
 using Gum.Wireframe;
 using StateAnimationPlugin.Managers;
 using StateAnimationPlugin.ViewModels;
@@ -32,14 +33,20 @@ using System.Windows.Controls;
 namespace StateAnimationPlugin;
 
 [Export(typeof(PluginBase))]
-public class MainStateAnimationPlugin : PluginBase
+public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
 {
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
     private readonly IMessenger _messenger;
     private readonly IOutputManager _outputManager;
     private readonly IFileWatchManager _fileWatchManager;
+    private readonly IUndoManager _undoManager;
+    private readonly IAnimationUndoProviderRegistrar _animationUndoProviderRegistrar;
     private readonly Func<ElementAnimationsViewModel> _animationVmFactory;
+
+    // True while an undo/redo is restoring animations to disk and the tab is repainting from it.
+    // Guards HandleDataChange from flushing a *new* undo for the change the undo itself just made.
+    private bool _isApplyingUndo;
 
     #region Fields
     private readonly DuplicateService _duplicateService;
@@ -100,7 +107,9 @@ public class MainStateAnimationPlugin : PluginBase
         IFileWatchManager fileWatchManager,
         IProjectState projectState,
         IProjectManager projectManager,
-        IWireframeObjectManager wireframeObjectManager)
+        IWireframeObjectManager wireframeObjectManager,
+        IUndoManager undoManager,
+        IAnimationUndoProviderRegistrar animationUndoProviderRegistrar)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
@@ -110,6 +119,8 @@ public class MainStateAnimationPlugin : PluginBase
         _projectState = projectState;
         _projectManager = projectManager;
         _wireframeObjectManager = wireframeObjectManager;
+        _undoManager = undoManager;
+        _animationUndoProviderRegistrar = animationUndoProviderRegistrar;
 
         _animationFilePathService = new AnimationFilePathService(_selectedState);
         _duplicateService = new DuplicateService(_dialogService, _projectManager);
@@ -131,10 +142,43 @@ public class MainStateAnimationPlugin : PluginBase
 
     public override void StartUp()
     {
+        // Register as the live animation provider so the element undo strategy can fold this
+        // element's animations into its snapshot (#3406). UndoManager was constructed at DI time,
+        // before any plugin existed, so it holds a relay that this call now points at us.
+        _animationUndoProviderRegistrar.Register(this);
+
         CreateMenuItems();
         CreateAnimationWindow();
         AssignEvents();
     }
+
+    #region IAnimationUndoProvider
+
+    ElementAnimationsSave? IAnimationUndoProvider.GetCurrentAnimations(ElementSave element)
+    {
+        // Prefer the live tab contents when this element is the one loaded; otherwise read the .ganx.
+        ElementAnimationsSave? save = _viewModel?.Element == element
+            ? _viewModel!.ToSave()
+            : _animationCollectionViewModelManager.GetElementAnimationsSave(element);
+
+        // Normalize "no animations" to null so a null-vs-null diff compares equal (no spurious undo).
+        if (save == null || save.Animations.Count == 0)
+        {
+            return null;
+        }
+
+        return save;
+    }
+
+    void IAnimationUndoProvider.ApplyAnimations(ElementSave element, ElementAnimationsSave animations)
+    {
+        // Suppress undo recording for the write itself and the after-undo tab repaint that follows
+        // (HandleAfterUndo clears the flag once the repaint is done).
+        _isApplyingUndo = true;
+        _animationCollectionViewModelManager.SaveElementAnimations(element, animations);
+    }
+
+    #endregion
 
     private void CreateMenuItems()
     {
@@ -307,7 +351,105 @@ public class MainStateAnimationPlugin : PluginBase
 
     private void HandleAfterUndo()
     {
-        RefreshViewModel();
+        // Capture the selection before the forced rebuild below replaces the view model (and with it
+        // every AnimationViewModel/keyframe instance), then reselect by identity afterward so the
+        // user's animation + keyframe selection survives undo/redo — mirroring element-undo's state
+        // selection restore (#3406). Index + count are captured alongside the keyframe so the reselect
+        // can fall back to position when the undo reverted the selected keyframe's own value (see
+        // RestoreAnimationSelection).
+        var selectedAnimation = _viewModel?.SelectedAnimation;
+        var selectedKeyframe = selectedAnimation?.SelectedKeyframe;
+        var selection = new AnimationSelectionState(
+            selectedAnimation?.Name,
+            selectedKeyframe,
+            selectedKeyframe != null ? selectedAnimation!.Keyframes.IndexOf(selectedKeyframe) : -1,
+            selectedAnimation?.Keyframes.Count ?? 0);
+
+        // Repaint the tab from the just-restored .ganx, then re-arm undo recording. The flag spanned
+        // the .ganx write (ApplyAnimations) through this repaint so neither flushed a spurious undo.
+        // forceReload bypasses CreateViewModel's same-element early-out: an in-place undo leaves the
+        // selected element unchanged, so without forcing it the stale view model would survive and the
+        // tab would keep showing the pre-undo animations until the element was reselected (#3406).
+        RefreshViewModel(forceReload: true);
+
+        if (_viewModel != null)
+        {
+            RestoreAnimationSelection(_viewModel, selection);
+        }
+
+        _isApplyingUndo = false;
+    }
+
+    /// <summary>The animation/keyframe selection captured before an undo rebuilds the view model.</summary>
+    internal readonly record struct AnimationSelectionState(
+        string? AnimationName,
+        AnimatedKeyframeViewModel? Keyframe,
+        int KeyframeIndex,
+        int KeyframeCount);
+
+    /// <summary>
+    /// Reselects, on a freshly-rebuilt <paramref name="viewModel"/>, the animation and keyframe captured
+    /// in <paramref name="selection"/>. The keyframe is matched by content; if that fails because the
+    /// undo reverted the selected keyframe's <em>own</em> value (e.g. its time), it falls back to the
+    /// captured index — but only when the keyframe count is unchanged, so an add/delete undo (which
+    /// changes the count) drops the selection rather than grabbing a neighbor. Returns the matched
+    /// keyframe (or null). Best-effort, mirroring element-undo's silent selection drop when the selected
+    /// object no longer exists.
+    /// </summary>
+    /// <remarks>
+    /// The keyframe is selected on the animation <em>before</em> the animation is made the active
+    /// SelectedAnimation. That ordering matters: setting SelectedAnimation rebinds the keyframes
+    /// ListBox's ItemsSource, and the ListBox initializes its SelectedItem from the (two-way) bound
+    /// SelectedKeyframe at bind time. If SelectedKeyframe is still null then, the ListBox settles on no
+    /// selection and a later assignment gets reset; pre-setting it means the ListBox binds straight to
+    /// the right, already-present keyframe — so the selection (and the right-side property panel) sticks
+    /// without any dispatcher timing games (#3406).
+    /// </remarks>
+    internal static AnimatedKeyframeViewModel? RestoreAnimationSelection(ElementAnimationsViewModel viewModel,
+        AnimationSelectionState selection)
+    {
+        if (selection.AnimationName == null)
+        {
+            return null;
+        }
+
+        var animation = viewModel.Animations.FirstOrDefault(item => item.Name == selection.AnimationName);
+        if (animation == null)
+        {
+            return null;
+        }
+
+        AnimatedKeyframeViewModel? matched = null;
+        if (selection.Keyframe != null)
+        {
+            matched = animation.Keyframes.FirstOrDefault(item => AreSameKeyframe(item, selection.Keyframe));
+
+            if (matched == null
+                && animation.Keyframes.Count == selection.KeyframeCount
+                && selection.KeyframeIndex >= 0
+                && selection.KeyframeIndex < animation.Keyframes.Count)
+            {
+                matched = animation.Keyframes[selection.KeyframeIndex];
+            }
+        }
+
+        animation.SelectedKeyframe = matched;
+        viewModel.SelectedAnimation = animation;
+
+        return matched;
+    }
+
+    /// <summary>
+    /// Identity match for a keyframe across a view-model rebuild: same discriminator (state /
+    /// sub-animation / event name) and time. Used to reselect the previously-selected keyframe on the
+    /// new instances after an undo/redo reload.
+    /// </summary>
+    private static bool AreSameKeyframe(AnimatedKeyframeViewModel first, AnimatedKeyframeViewModel second)
+    {
+        return first.StateName == second.StateName
+            && first.AnimationName == second.AnimationName
+            && first.EventName == second.EventName
+            && first.Time == second.Time;
     }
 
     private void HandleStateAdd(StateSave state)
@@ -487,11 +629,11 @@ public class MainStateAnimationPlugin : PluginBase
         }
     }
 
-    private void RefreshViewModel()
+    private void RefreshViewModel(bool forceReload = false)
     {
         RefreshAvailableStates();
 
-        CreateViewModel();
+        CreateViewModel(forceReload);
 
         if (_mainWindow != null)
         {
@@ -548,7 +690,20 @@ public class MainStateAnimationPlugin : PluginBase
         return states;
     }
 
-    private void CreateViewModel()
+    /// <summary>
+    /// Decides whether <see cref="CreateViewModel"/> should rebuild the view model from the element's
+    /// .ganx. Normally the view model is only reloaded when the selected element changes; an in-place
+    /// undo/redo restores the .ganx without changing the selection, so the after-undo path passes
+    /// <paramref name="forceReload"/> to repaint the tab immediately rather than keeping the stale view
+    /// model until the element is reselected (#3406).
+    /// </summary>
+    internal static bool ShouldReloadViewModel(ElementSave? currentlyReferencedElement,
+        ElementSave? selectedElement, bool forceReload)
+    {
+        return currentlyReferencedElement != selectedElement || forceReload;
+    }
+
+    private void CreateViewModel(bool forceReload = false)
     {
         ElementSave? currentlyReferencedElement = null;
         if (_viewModel != null)
@@ -558,7 +713,7 @@ public class MainStateAnimationPlugin : PluginBase
 
         var element = _selectedState.SelectedElement;
 
-        if (currentlyReferencedElement != element)
+        if (ShouldReloadViewModel(currentlyReferencedElement, element, forceReload))
         {
             if (_projectState.GumProjectSave?.FullFileName == null)
             {
@@ -692,6 +847,17 @@ public class MainStateAnimationPlugin : PluginBase
             catch (Exception exc)
             {
                 _guiCommands.PrintOutput($"Could not save animations for {_viewModel?.Element}:\n{exc}");
+            }
+
+            // Fold this animation edit into the selected element's undo timeline. Opening and disposing
+            // an undo lock fires the element strategy's TryRecord, whose baseline (captured on selection
+            // / after the previous record) now differs from the just-saved animations, so it records the
+            // change atomically with any element edit and re-baselines. One mechanism covers every
+            // persisted gesture — keyframe add/delete/paste, time/interpolation/loop edits. Skipped while
+            // an undo is being applied, so restoring animations doesn't record a brand-new undo (#3406).
+            if (!_isApplyingUndo)
+            {
+                using (_undoManager.RequestLock()) { }
             }
 
             // The edit changed which states/animations the keyframes reference, so an animation

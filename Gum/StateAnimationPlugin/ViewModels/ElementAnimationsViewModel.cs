@@ -358,10 +358,9 @@ public partial class ElementAnimationsViewModel : ViewModel
 
     private void HandleDeleteKeyframe(object? sender, System.Windows.RoutedEventArgs e)
     {
-        if(SelectedAnimation != null && SelectedAnimation.SelectedKeyframe != null)
-        {
-            SelectedAnimation.Keyframes.Remove(SelectedAnimation.SelectedKeyframe);
-        }
+        // Route the right-click "Delete Keyframe" through the same method as the Delete hotkey so both
+        // get the confirmation prompt and clear the selection identically.
+        DeleteSelectedKeyframe();
     }
 
     private void HandleRenameAnimation(object? sender, System.Windows.RoutedEventArgs e)
@@ -750,6 +749,10 @@ public partial class ElementAnimationsViewModel : ViewModel
     {
         if (SelectedAnimation?.SelectedKeyframe != null)
         {
+            if (!_dialogService.ShowYesNoMessage("Delete the selected keyframe?", "Delete?"))
+            {
+                return;
+            }
             SelectedAnimation.Keyframes.Remove(SelectedAnimation.SelectedKeyframe);
             SelectedAnimation.SelectedKeyframe = null;
         }

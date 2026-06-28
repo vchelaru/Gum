@@ -26,4 +26,11 @@ public interface IAnimationCollectionViewModelManager
     /// Persists the given view model's animations to the selected element's animation file.
     /// </summary>
     void Save(ElementAnimationsViewModel viewModel);
+
+    /// <summary>
+    /// Persists an already-built <see cref="ElementAnimationsSave"/> to the given element's animation
+    /// file, suppressing the resulting file-watch event. Used by undo/redo, which restores a captured
+    /// animations snapshot (not a live view model) for the element it is applying to.
+    /// </summary>
+    void SaveElementAnimations(ElementSave element, ElementAnimationsSave save);
 }
