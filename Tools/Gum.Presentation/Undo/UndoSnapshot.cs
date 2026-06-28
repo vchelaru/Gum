@@ -1,6 +1,7 @@
 ﻿using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
+using Gum.StateAnimation.SaveClasses;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -144,6 +145,15 @@ public class UndoSnapshot
     public ElementSave Element;
     public string CategoryName;
     public string StateName;
+
+    /// <summary>
+    /// The element's animations captured alongside its element data, so an animation edit undoes
+    /// atomically with the element edit it was made next to (#3406). Null means "no animation change
+    /// in this snapshot" (the same null-when-unchanged convention used for <see cref="ElementSave.States"/>
+    /// and <see cref="ElementSave.Instances"/>); an empty <see cref="ElementAnimationsSave"/> means
+    /// "restore the element to having no animations".
+    /// </summary>
+    public ElementAnimationsSave? Animations;
 
     public override string ToString()
     {

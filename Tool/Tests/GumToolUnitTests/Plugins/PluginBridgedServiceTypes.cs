@@ -103,5 +103,9 @@ internal static class PluginBridgedServiceTypes
         // EditingManager drain (#3338): ICircularReferenceManager is bridged for the EditingManager that
         // MainEditorTabPlugin constructs (its other drained dep, IFavoriteComponentManager, is above).
         typeof(ICircularReferenceManager),
+
+        // Animation undo (#3406): MainStateAnimationPlugin injects this to register itself as the live
+        // IAnimationUndoProvider with UndoManager/ElementUndoStrategy.
+        typeof(IAnimationUndoProviderRegistrar),
     };
 }

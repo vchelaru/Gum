@@ -4,6 +4,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
+using Gum.StateAnimation.SaveClasses;
 using Gum.ToolStates;
 using Gum.Undo;
 using Moq;
@@ -13,6 +14,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToolsUtilities;
 
 namespace Gum.Presentation.Tests;
 public class UndoManagerTests : BaseTestClass
@@ -23,7 +25,34 @@ public class UndoManagerTests : BaseTestClass
     private readonly Mock<IFileCommands> _fileCommands;
     private readonly Mock<IMessenger> _messenger;
     private readonly Mock<IUndoPluginNotifier> _pluginNotifier;
+    private readonly FakeAnimationUndoProvider _animationUndoProvider;
     private readonly UndoManager _undoManager;
+
+    /// <summary>
+    /// Stands in for the animation plugin's <see cref="IAnimationUndoProvider"/>. Backs each element's
+    /// animations with an in-memory store (the headless analogue of the .ganx). GetCurrentAnimations
+    /// returns a clone (so the strategy's captured baseline doesn't alias the store, mirroring how the
+    /// real provider returns a fresh ToSave()/deserialize) and normalizes an empty save to null, just
+    /// like the real provider does for an element with no animations. ApplyAnimations writes a clone back.
+    /// </summary>
+    private sealed class FakeAnimationUndoProvider : IAnimationUndoProvider
+    {
+        public Dictionary<ElementSave, ElementAnimationsSave> Store { get; } = new();
+
+        public ElementAnimationsSave? GetCurrentAnimations(ElementSave element)
+        {
+            if (!Store.TryGetValue(element, out var save) || save == null || save.Animations.Count == 0)
+            {
+                return null;
+            }
+            return FileManager.CloneSaveObject(save);
+        }
+
+        public void ApplyAnimations(ElementSave element, ElementAnimationsSave animations)
+        {
+            Store[element] = FileManager.CloneSaveObject(animations);
+        }
+    }
 
     public UndoManagerTests()
     {
@@ -33,6 +62,7 @@ public class UndoManagerTests : BaseTestClass
         _fileCommands = new Mock<IFileCommands>();
         _messenger = new Mock<IMessenger>();
         _pluginNotifier = new Mock<IUndoPluginNotifier>();
+        _animationUndoProvider = new FakeAnimationUndoProvider();
 
         ComponentSave component = new();
         component.States.Add(new Gum.DataTypes.Variables.StateSave
@@ -60,7 +90,8 @@ public class UndoManagerTests : BaseTestClass
             _guiCommands.Object,
             _fileCommands.Object,
             _messenger.Object,
-            _pluginNotifier.Object
+            _pluginNotifier.Object,
+            _animationUndoProvider
             );
     }
 
@@ -776,5 +807,126 @@ public class UndoManagerTests : BaseTestClass
         _selectedState.VerifySet(
             x => x.SelectedStateSave = It.Is<StateSave>(state => state.Name == "Default"),
             Times.AtLeastOnce);
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // Animation undo (#3406). Animations are folded into the element's UndoSnapshot via the injected
+    // IAnimationUndoProvider (here the in-memory FakeAnimationUndoProvider), so an animation edit and
+    // the element edit it was made next to undo/redo as one atomic action. The headline guard is the
+    // combined state-rename + keyframe-reference change: both must revert from a single undo, or the
+    // keyframe desyncs from the state it names.
+    // ---------------------------------------------------------------------------------------------
+
+    private static ElementAnimationsSave AnimationsWithKeyframes(string animationName, params string[] keyframeStateNames)
+    {
+        var save = new ElementAnimationsSave();
+        var animation = new AnimationSave { Name = animationName };
+        float time = 0;
+        foreach (var stateName in keyframeStateNames)
+        {
+            animation.States.Add(new AnimatedStateSave { StateName = stateName, Time = time++ });
+        }
+        save.Animations.Add(animation);
+        return save;
+    }
+
+    [Fact]
+    public void PerformRedo_OnAnimationKeyframeDelete_ShouldReapplyTheDeletion()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        _animationUndoProvider.Store[component] = AnimationsWithKeyframes("Anim", "Default", "Highlighted");
+
+        _undoManager.RecordState();
+
+        // Simulate deleting the second keyframe in the live Animations tab.
+        _animationUndoProvider.Store[component] = AnimationsWithKeyframes("Anim", "Default");
+
+        _undoManager.RecordUndo();
+        _undoManager.PerformUndo();
+        _animationUndoProvider.Store[component].Animations[0].States.Count.ShouldBe(2);
+
+        _undoManager.PerformRedo();
+
+        _animationUndoProvider.Store[component].Animations[0].States.Count.ShouldBe(1);
+        _animationUndoProvider.Store[component].Animations[0].States[0].StateName.ShouldBe("Default");
+    }
+
+    [Fact]
+    public void PerformUndo_OnAnimationKeyframeDelete_ShouldRestoreTheKeyframe()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        _animationUndoProvider.Store[component] = AnimationsWithKeyframes("Anim", "Default", "Highlighted");
+
+        _undoManager.RecordState();
+
+        // Simulate deleting the second keyframe in the live Animations tab.
+        _animationUndoProvider.Store[component] = AnimationsWithKeyframes("Anim", "Default");
+
+        _undoManager.RecordUndo();
+        _undoManager.PerformUndo();
+
+        _animationUndoProvider.Store[component].Animations[0].States.Count.ShouldBe(2);
+        _animationUndoProvider.Store[component].Animations[0].States[1].StateName.ShouldBe("Highlighted");
+    }
+
+    [Fact]
+    public void PerformUndo_OnCombinedStateRenameAndKeyframeEdit_ShouldUndoBothAtomically()
+    {
+        // The desync guard. A keyframe references an element state by name ("Category/State"), so a
+        // state rename is one logical edit that changes BOTH the element data and the keyframe. It
+        // must record as a single snapshot and undo both halves together; otherwise Ctrl+Z reverts
+        // the rename while the keyframe still points at the new name (a dangling reference).
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        var category = new StateSaveCategory { Name = "Category" };
+        category.States.Add(new StateSave { Name = "Old", ParentContainer = component });
+        component.Categories.Add(category);
+
+        _animationUndoProvider.Store[component] = AnimationsWithKeyframes("Anim", "Category/Old");
+
+        _undoManager.RecordState();
+
+        // One logical edit: rename the state on the element and rewrite the keyframe that names it.
+        component.Categories[0].States[0].Name = "New";
+        _animationUndoProvider.Store[component] = AnimationsWithKeyframes("Anim", "Category/New");
+
+        _undoManager.RecordUndo();
+
+        // A single atomic action captures the coupled change.
+        _undoManager.CurrentElementHistory.Actions.Count.ShouldBe(1);
+
+        _undoManager.PerformUndo();
+
+        // Both halves revert from the one undo, keeping the keyframe and the state name in sync.
+        component.Categories[0].States[0].Name.ShouldBe("Old");
+        _animationUndoProvider.Store[component].Animations[0].States[0].StateName.ShouldBe("Category/Old");
+    }
+
+    [Fact]
+    public void RecordUndo_OnElementOnlyChange_ShouldLeaveSnapshotAnimationsNull()
+    {
+        // An element edit with no animation change must leave the snapshot's Animations null (the
+        // null-when-unchanged convention), so applying the undo touches no .ganx.
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        _animationUndoProvider.Store[component] = AnimationsWithKeyframes("Anim", "Default");
+
+        component.DefaultState.SetValue("X", 10f);
+        _undoManager.RecordState();
+        component.DefaultState.SetValue("X", 11f);
+        _undoManager.RecordUndo();
+
+        var action = _undoManager.CurrentElementHistory.Actions.Single();
+        action.UndoState.Animations.ShouldBeNull();
+        action.RedoState!.Animations.ShouldBeNull();
+    }
+
+    [Fact]
+    public void RecordUndo_WithNoAnimationsAndNoEdit_ShouldRecordNothing()
+    {
+        // An element with no animations (provider returns null) and no edit must produce no undo: a
+        // null-vs-null animation diff has to compare equal, or every selection would record spuriously.
+        _undoManager.RecordState();
+        _undoManager.RecordUndo();
+
+        _undoManager.CanUndo().ShouldBeFalse();
     }
 }

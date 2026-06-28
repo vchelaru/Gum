@@ -3,6 +3,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Plugins.InternalPlugins.Undos;
 using Gum.Services;
+using Gum.StateAnimation.SaveClasses;
 using Gum.ToolStates;
 using Gum.Undo;
 using System;
@@ -190,14 +191,16 @@ namespace Gum.Plugins.Undos
 
                 var comparisonInformationDisplay = comparisonInformation.ToString();
 
-                if (string.IsNullOrEmpty(comparisonInformationDisplay))
-                {
-                    undoStringList.Insert(0, "Unknown Undo");
-                }
-                else
-                {
-                    undoStringList.Insert(0, comparisonInformation.ToString());
-                }
+                // The element diff above ignores animations (they live in the .ganx, not the element).
+                // Describe the action's animation change directly from its snapshot: UndoState.Animations
+                // is the pre-change state, RedoState.Animations the post-change state.
+                var animationDisplay = DescribeAnimationChange(undo.UndoState.Animations, undo.RedoState?.Animations);
+
+                var parts = new List<string>();
+                if (!string.IsNullOrEmpty(comparisonInformationDisplay)) parts.Add(comparisonInformationDisplay);
+                if (!string.IsNullOrEmpty(animationDisplay)) parts.Add(animationDisplay);
+
+                undoStringList.Insert(0, parts.Count > 0 ? string.Join("\n    ", parts) : "Unknown Undo");
 
                 _undoManager.ApplyUndoSnapshotToElement(undo.UndoState, selectedElementClone, false);
 
@@ -209,6 +212,41 @@ namespace Gum.Plugins.Undos
 
 
             return undoStringList;
+        }
+
+        /// <summary>
+        /// Describes how an action changed an element's animations, for the History tab. Compares the
+        /// snapshot's pre-change animations (<see cref="UndoSnapshot.Animations"/> on the undo state)
+        /// against the post-change animations (on the redo state). Returns an empty string when the
+        /// action did not touch animations.
+        /// </summary>
+        internal static string DescribeAnimationChange(ElementAnimationsSave? before, ElementAnimationsSave? after)
+        {
+            if (before == null && after == null)
+            {
+                return string.Empty;
+            }
+
+            var beforeAnimations = before?.Animations ?? new List<AnimationSave>();
+            var afterAnimations = after?.Animations ?? new List<AnimationSave>();
+
+            var beforeNames = beforeAnimations.Select(item => item.Name).ToHashSet();
+            var afterNames = afterAnimations.Select(item => item.Name).ToHashSet();
+
+            var added = afterAnimations.Where(item => !beforeNames.Contains(item.Name)).Select(item => item.Name).ToList();
+            var removed = beforeAnimations.Where(item => !afterNames.Contains(item.Name)).Select(item => item.Name).ToList();
+            var modified = afterAnimations
+                .Where(item => beforeNames.Contains(item.Name)
+                    && !FileManager.AreSaveObjectsEqual(item, beforeAnimations.First(other => other.Name == item.Name)))
+                .Select(item => item.Name)
+                .ToList();
+
+            var lines = new List<string>();
+            if (added.Count > 0) lines.Add($"Add animation: {string.Join(", ", added)}");
+            if (removed.Count > 0) lines.Add($"Remove animation: {string.Join(", ", removed)}");
+            if (modified.Count > 0) lines.Add($"Modify animation: {string.Join(", ", modified)}");
+
+            return string.Join("\n    ", lines);
         }
 
         private ElementSave GetSelectedElementClone()

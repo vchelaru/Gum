@@ -97,4 +97,16 @@ public class AnimationCollectionViewModelManager : IAnimationCollectionViewModel
             FileManager.XmlSerialize(save, fileName.FullPath);
         }
     }
+
+    /// <inheritdoc/>
+    public void SaveElementAnimations(ElementSave element, ElementAnimationsSave save)
+    {
+        var fileName = _animationFilePathService.GetAbsoluteAnimationFileNameFor(element);
+
+        if (fileName != null)
+        {
+            _fileWatchManager.IgnoreNextChangeUntil(fileName.FullPath);
+            FileManager.XmlSerialize(save, fileName.FullPath);
+        }
+    }
 }

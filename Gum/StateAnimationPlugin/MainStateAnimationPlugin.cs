@@ -13,6 +13,7 @@ using Gum.Responses;
 using Gum.Services.Dialogs;
 using Gum.StateAnimation.SaveClasses;
 using Gum.ToolStates;
+using Gum.Undo;
 using Gum.Wireframe;
 using StateAnimationPlugin.Managers;
 using StateAnimationPlugin.ViewModels;
@@ -32,14 +33,20 @@ using System.Windows.Controls;
 namespace StateAnimationPlugin;
 
 [Export(typeof(PluginBase))]
-public class MainStateAnimationPlugin : PluginBase
+public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
 {
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
     private readonly IMessenger _messenger;
     private readonly IOutputManager _outputManager;
     private readonly IFileWatchManager _fileWatchManager;
+    private readonly IUndoManager _undoManager;
+    private readonly IAnimationUndoProviderRegistrar _animationUndoProviderRegistrar;
     private readonly Func<ElementAnimationsViewModel> _animationVmFactory;
+
+    // True while an undo/redo is restoring animations to disk and the tab is repainting from it.
+    // Guards HandleDataChange from flushing a *new* undo for the change the undo itself just made.
+    private bool _isApplyingUndo;
 
     #region Fields
     private readonly DuplicateService _duplicateService;
@@ -100,7 +107,9 @@ public class MainStateAnimationPlugin : PluginBase
         IFileWatchManager fileWatchManager,
         IProjectState projectState,
         IProjectManager projectManager,
-        IWireframeObjectManager wireframeObjectManager)
+        IWireframeObjectManager wireframeObjectManager,
+        IUndoManager undoManager,
+        IAnimationUndoProviderRegistrar animationUndoProviderRegistrar)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
@@ -110,6 +119,8 @@ public class MainStateAnimationPlugin : PluginBase
         _projectState = projectState;
         _projectManager = projectManager;
         _wireframeObjectManager = wireframeObjectManager;
+        _undoManager = undoManager;
+        _animationUndoProviderRegistrar = animationUndoProviderRegistrar;
 
         _animationFilePathService = new AnimationFilePathService(_selectedState);
         _duplicateService = new DuplicateService(_dialogService, _projectManager);
@@ -131,10 +142,43 @@ public class MainStateAnimationPlugin : PluginBase
 
     public override void StartUp()
     {
+        // Register as the live animation provider so the element undo strategy can fold this
+        // element's animations into its snapshot (#3406). UndoManager was constructed at DI time,
+        // before any plugin existed, so it holds a relay that this call now points at us.
+        _animationUndoProviderRegistrar.Register(this);
+
         CreateMenuItems();
         CreateAnimationWindow();
         AssignEvents();
     }
+
+    #region IAnimationUndoProvider
+
+    ElementAnimationsSave? IAnimationUndoProvider.GetCurrentAnimations(ElementSave element)
+    {
+        // Prefer the live tab contents when this element is the one loaded; otherwise read the .ganx.
+        ElementAnimationsSave? save = _viewModel?.Element == element
+            ? _viewModel!.ToSave()
+            : _animationCollectionViewModelManager.GetElementAnimationsSave(element);
+
+        // Normalize "no animations" to null so a null-vs-null diff compares equal (no spurious undo).
+        if (save == null || save.Animations.Count == 0)
+        {
+            return null;
+        }
+
+        return save;
+    }
+
+    void IAnimationUndoProvider.ApplyAnimations(ElementSave element, ElementAnimationsSave animations)
+    {
+        // Suppress undo recording for the write itself and the after-undo tab repaint that follows
+        // (HandleAfterUndo clears the flag once the repaint is done).
+        _isApplyingUndo = true;
+        _animationCollectionViewModelManager.SaveElementAnimations(element, animations);
+    }
+
+    #endregion
 
     private void CreateMenuItems()
     {
@@ -307,7 +351,10 @@ public class MainStateAnimationPlugin : PluginBase
 
     private void HandleAfterUndo()
     {
+        // Repaint the tab from the just-restored .ganx, then re-arm undo recording. The flag spanned
+        // the .ganx write (ApplyAnimations) through this repaint so neither flushed a spurious undo.
         RefreshViewModel();
+        _isApplyingUndo = false;
     }
 
     private void HandleStateAdd(StateSave state)
@@ -692,6 +739,17 @@ public class MainStateAnimationPlugin : PluginBase
             catch (Exception exc)
             {
                 _guiCommands.PrintOutput($"Could not save animations for {_viewModel?.Element}:\n{exc}");
+            }
+
+            // Fold this animation edit into the selected element's undo timeline. Opening and disposing
+            // an undo lock fires the element strategy's TryRecord, whose baseline (captured on selection
+            // / after the previous record) now differs from the just-saved animations, so it records the
+            // change atomically with any element edit and re-baselines. One mechanism covers every
+            // persisted gesture — keyframe add/delete/paste, time/interpolation/loop edits. Skipped while
+            // an undo is being applied, so restoring animations doesn't record a brand-new undo (#3406).
+            if (!_isApplyingUndo)
+            {
+                using (_undoManager.RequestLock()) { }
             }
 
             // The edit changed which states/animations the keyframes reference, so an animation
