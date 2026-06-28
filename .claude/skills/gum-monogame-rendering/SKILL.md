@@ -11,7 +11,7 @@ This skill covers the XNA-family backends only (MonoGame / KNI / FNA). Skia, Ray
 
 ### Layered path — `Renderer.RenderLayer`
 
-Used by the Gum tool and any consumer with sorted `Layer.Renderables`. Walks every renderable in the layer in order. `Renderer.Draw(SystemManagers, List<Layer>)` and `Renderer.Draw(SystemManagers, Layer)` share a **once-per-host-frame** render-target sweep: the first draw after `SystemManagers.Activity` advances time (or an explicit `Renderer.BeginFrame()`) calls `ClearUnusedRenderTargetsLastFrame()`; subsequent `Draw(layer)` calls in the same host frame accumulate `_usedThisFrame` marks without re-sweeping (#3416). FRB's `GumIdb.Update` already calls `Activity(TimeManager.CurrentTime)` before draw.
+Used by the Gum tool and any consumer with sorted `Layer.Renderables`. Walks every renderable in the layer in order. `Renderer.Draw(SystemManagers, List<Layer>)` and `Renderer.Draw(SystemManagers, Layer)` share a **once-per-host-frame** render-target sweep: the first draw after `SystemManagers.Activity` advances time (or an explicit `Renderer.BeginFrame()`) calls `ClearUnusedRenderTargetsLastFrame()`; subsequent `Draw(layer)` calls in the same host frame accumulate `_usedThisFrame` marks without re-sweeping (#3416). FRB's `GumIdb.Update` already calls `Activity(TimeManager.CurrentTime)` before draw. `Draw(SystemManagers)` (the GumService path) calls `EndFrame()` after each full draw so hosts that skip Activity still get a fresh sweep token on the next full draw.
 
 ```csharp
 spriteRenderer.BeginSpriteBatch(..., BeginType.Push, ...);  // outer SpriteBatch begin

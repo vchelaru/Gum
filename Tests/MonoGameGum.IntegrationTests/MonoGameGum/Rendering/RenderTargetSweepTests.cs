@@ -104,6 +104,34 @@ public class RenderTargetSweepTests : BaseTestClass
         renderer.HasCachedRenderTarget(owner).ShouldBeTrue();
     }
 
+    [Fact]
+    public void FullDrawWithoutActivity_ShouldDisposeCachedRenderTarget_WhenRenderTargetContainerIsRemoved()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+
+        ContainerRuntime container = CreateRenderTargetContainer();
+        container.AddToManagers(managers, null);
+        container.UpdateLayout();
+
+        IRenderableIpso owner = (IRenderableIpso)container.RenderableComponent;
+
+        // GumService.Draw() path — no Activity, but Draw(SystemManagers) ends with EndFrame().
+        renderer.Draw(managers);
+        renderer.HasCachedRenderTarget(owner).ShouldBeTrue();
+
+        container.RemoveFromManagers();
+
+        renderer.Draw(managers);
+        renderer.HasCachedRenderTarget(owner).ShouldBeTrue();
+
+        renderer.Draw(managers);
+        renderer.HasCachedRenderTarget(owner).ShouldBeFalse();
+    }
+
     private static ContainerRuntime CreateRenderTargetContainer()
     {
         ContainerRuntime container = new();

@@ -407,13 +407,15 @@ public class Renderer : IRenderer
     /// <summary>
     /// Opens a host-frame draw batch for render-target cache lifecycle. Sweeps unused GPU
     /// targets from prior frames exactly once. Hosts normally rely on
-    /// <see cref="SystemManagers.Activity"/> advancing <paramref name="currentTime"/> each
-    /// frame instead of calling this directly; use it when Gum draws without a preceding
-    /// Activity pass.
+    /// <see cref="SystemManagers.Activity"/> advancing time each frame instead of calling
+    /// this directly; use it when Gum draws without a preceding Activity pass.
     /// </summary>
     public void BeginFrame()
     {
-        TrySweepUnusedRenderTargetsAtFrameBoundary();
+        lock (LockObject)
+        {
+            TrySweepUnusedRenderTargetsAtFrameBoundary();
+        }
     }
 
     /// <summary>
@@ -423,12 +425,18 @@ public class Renderer : IRenderer
     /// </summary>
     public void EndFrame()
     {
-        _renderTargetSweepCompletedForHostFrame = false;
+        lock (LockObject)
+        {
+            _renderTargetSweepCompletedForHostFrame = false;
+        }
     }
 
     internal void NotifyHostFrameAdvanced()
     {
-        _renderTargetSweepCompletedForHostFrame = false;
+        lock (LockObject)
+        {
+            _renderTargetSweepCompletedForHostFrame = false;
+        }
     }
 
     private void TrySweepUnusedRenderTargetsAtFrameBoundary()
@@ -454,6 +462,7 @@ public class Renderer : IRenderer
         Draw(managers, _layers);
 
         ForceEnd();
+        EndFrame();
     }
 
     /// <summary>
