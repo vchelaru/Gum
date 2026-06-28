@@ -709,6 +709,14 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                     e.Effect = DragDropEffects.Copy;
                 }
 
+                // allow Standards-palette chip drops onto a Screen/Component (or instance) node
+                if (e.Data?.GetDataPresent(DragDropManager.StandardElementNameDataFormat) == true)
+                {
+                    e.Effect = GetChipDropTargetNode(e) != null
+                        ? DragDropEffects.Copy
+                        : DragDropEffects.None;
+                }
+
                 // auto expand hovered nodes when they're collapsed
                 var treeview = (MultiSelectTreeView?)sender;
                 Point? pointWithinTreeview = treeview?.PointToClient(new Point(e.X, e.Y));
@@ -722,6 +730,13 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 if (e.Data?.GetData(System.Windows.Forms.DataFormats.FileDrop) is string[] files)
                 {
                     _dragDropManager.OnFilesDroppedInTreeView(files);
+                }
+                else if (e.Data?.GetData(DragDropManager.StandardElementNameDataFormat) is string standardTypeName
+                    && GetChipDropTargetNode(e) is { } targetNode
+                    && ObjectFinder.Self.GetStandardElement(standardTypeName) is { } standardElement)
+                {
+                    _dragDropManager.HandleDroppedStandardElementOnTreeNode(
+                        standardElement, new TreeNodeWrapper(targetNode));
                 }
             },
             onQueryContinueDrag: (_, e) =>
@@ -790,7 +805,133 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         ObjectTreeView.AfterExpand += (_, _) => _collapseToggleService.OnNodeManuallyChanged();
         ObjectTreeView.AfterCollapse += (_, _) => _collapseToggleService.OnNodeManuallyChanged();
 
+        ConfigureStandardsPalette();
+
         RefreshUi();
+    }
+
+    private void ConfigureStandardsPalette()
+    {
+        var palette = _viewCreator.StandardsPalette;
+
+        palette.CurrentElementNameProvider = () =>
+            _selectedState.SelectedElement is { } element && element is not StandardElementSave
+                ? element.Name
+                : null;
+
+        palette.AddToCurrentRequested = AddStandardInstanceToCurrentElement;
+
+        palette.EditDefaultsRequested = typeName =>
+        {
+            if (ObjectFinder.Self.GetStandardElement(typeName) is { } standardElement)
+            {
+                _selectedState.SelectedElement = standardElement;
+            }
+        };
+
+        ApplyStandardsPaletteMode();
+    }
+
+    /// <summary>
+    /// Applies the current UseStandardsPalette setting: removes or restores the Standard folder in
+    /// the tree, shows or hides the chip palette, and (when on) repopulates the chips. Call after the
+    /// setting is toggled and whenever a project loads.
+    /// </summary>
+    public void ApplyStandardsPaletteMode()
+    {
+        bool usePalette = _projectState.GeneralSettings?.UseStandardsPalette == true;
+
+        if (mStandardElementsTreeNode != null)
+        {
+            bool isInTree = ObjectTreeView.Nodes.Contains(mStandardElementsTreeNode);
+            if (usePalette && isInTree)
+            {
+                ObjectTreeView.Nodes.Remove(mStandardElementsTreeNode);
+            }
+            else if (!usePalette && !isInTree)
+            {
+                // Restore in canonical order: after Components, before Behaviors.
+                int insertIndex = mBehaviorsTreeNode != null
+                    ? ObjectTreeView.Nodes.IndexOf(mBehaviorsTreeNode)
+                    : ObjectTreeView.Nodes.Count;
+                if (insertIndex < 0)
+                {
+                    insertIndex = ObjectTreeView.Nodes.Count;
+                }
+                ObjectTreeView.Nodes.Insert(insertIndex, mStandardElementsTreeNode);
+            }
+        }
+
+        var palette = _viewCreator.StandardsPalette;
+        palette.Visibility = usePalette ? Visibility.Visible : Visibility.Collapsed;
+        if (usePalette)
+        {
+            RefreshStandardsPaletteChips();
+        }
+    }
+
+    /// <summary>
+    /// Highlights the palette chip matching the selected element when it is a standard (so the chip
+    /// being edited via "Edit defaults..." is visibly indicated), or clears the highlight otherwise.
+    /// </summary>
+    public void HighlightStandardInPalette(ElementSave? selectedElement)
+    {
+        string? typeName = selectedElement is StandardElementSave ? selectedElement.Name : null;
+        _viewCreator.StandardsPalette.SetSelectedStandardType(typeName);
+    }
+
+    private void RefreshStandardsPaletteChips()
+    {
+        var gumProject = _projectState.GumProjectSave;
+        List<string> typeNames = gumProject == null
+            ? new List<string>()
+            : gumProject.StandardElements
+                .Where(standard => standard.Name != "Component")
+                .Select(standard => standard.Name)
+                .ToList();
+
+        _viewCreator.StandardsPalette.RefreshChips(typeNames);
+    }
+
+    private void AddStandardInstanceToCurrentElement(string typeName)
+    {
+        var target = _selectedState.SelectedElement;
+        if (target == null || target is StandardElementSave)
+        {
+            return;
+        }
+
+        if (ObjectFinder.Self.GetStandardElement(typeName) is not { } standardElement)
+        {
+            return;
+        }
+
+        using var undoLock = _undoManager.RequestLock();
+        string name = _elementCommands.GetUniqueNameForNewInstance(standardElement, target);
+        _elementCommands.AddInstance(target, name, typeName);
+    }
+
+    /// <summary>
+    /// Returns the tree node under the drag cursor if it is a valid Standards-chip drop target
+    /// (a Screen/Component element, or an instance within one); otherwise null.
+    /// </summary>
+    private TreeNode? GetChipDropTargetNode(DragEventArgs e)
+    {
+        Point clientPoint = ObjectTreeView.PointToClient(new Point(e.X, e.Y));
+        TreeNode? node = ObjectTreeView.GetNodeAt(clientPoint);
+        if (node == null)
+        {
+            return null;
+        }
+        if (node.Tag is ElementSave element && element is not StandardElementSave)
+        {
+            return node;
+        }
+        if (node.Tag is InstanceSave)
+        {
+            return node;
+        }
+        return null;
     }
 
     /// <summary>
@@ -1316,7 +1457,13 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
             mStandardElementsTreeNode = new TreeNode("Standard");
             mStandardElementsTreeNode.ImageIndex = FolderImageIndex;
-            ObjectTreeView.Nodes.Add(mStandardElementsTreeNode);
+            // When the experimental Standards palette is on, the Standard folder is replaced by the
+            // chip palette, so it is not shown in the tree. The node object is still kept (and still
+            // populated) so toggling the setting at runtime can restore it without a full rebuild.
+            if (_projectState.GeneralSettings?.UseStandardsPalette != true)
+            {
+                ObjectTreeView.Nodes.Add(mStandardElementsTreeNode);
+            }
 
             mBehaviorsTreeNode = new TreeNode("Behaviors");
             mBehaviorsTreeNode.ImageIndex = FolderImageIndex;
@@ -1589,6 +1736,15 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     {
         if (IsInUiInitiatedSelection) return;
 
+        // When the Standards palette is on, standard elements have no visible tree node (the "Standard"
+        // folder is detached from the tree). Selecting one as data is valid — the variable grid loads
+        // its defaults via the selection cascade — but a detached node must not be pushed into the
+        // WinForms TreeView, which would throw. Skip the visual sync in that case.
+        if (treeNode != null && treeNode.TreeView != ObjectTreeView)
+        {
+            return;
+        }
+
         if (ObjectTreeView.SelectedNode != treeNode)
         {
             // See comment above about why we have to manually raise the AfterClick
@@ -1646,6 +1802,15 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
         SelectRecordedSelection();
         _collapseToggleService.RestoreExpandedPaths(ObjectTreeView, expandedPaths);
+
+        // Keep the chip palette in sync with the project's standards. A full tree rebuild is the
+        // signal that standard elements may have changed (e.g. "Add Skia Standard Elements", which
+        // only calls RefreshElementTreeView and raises no ElementAdd event). RefreshChips is
+        // idempotent, so this is a no-op when the standard set is unchanged.
+        if (_projectState.GeneralSettings?.UseStandardsPalette == true)
+        {
+            RefreshStandardsPaletteChips();
+        }
     }
 
 

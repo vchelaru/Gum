@@ -49,6 +49,94 @@ public class DragDropManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleDroppedStandardElementOnTreeNode_OnInstance_ParentsAndRefreshesWireframe()
+    {
+        // Issue #973: dropping a Standards-palette chip onto an instance must parent the new
+        // instance to that instance AND refresh the wireframe afterward, exactly like dragging a
+        // Standard element node does. The chip path passed a null DropTarget, which skipped
+        // HandleDroppedElementSave's onto-instance branch (HandleDroppingInstanceOnTarget + the
+        // explicit post-parent RefreshAll). AddInstance refreshes BEFORE writing the Parent
+        // variable, so the new instance was left visually un-parented until the next drop forced
+        // another refresh.
+        ScreenSave screen = new ScreenSave { Name = "MainScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+
+        InstanceSave containerInstance = new InstanceSave { Name = "ContainerInstance", BaseType = "Container", ParentContainer = screen };
+        screen.Instances.Add(containerInstance);
+
+        StandardElementSave circleStandard = new StandardElementSave { Name = "Circle" };
+
+        _circularReferenceManager
+            .Setup(x => x.CanTypeBeAddedToElement(It.IsAny<ElementSave>(), It.IsAny<string>()))
+            .Returns(true);
+
+        _mocker.GetMock<ISelectedState>()
+            .Setup(x => x.SelectedStateSave).Returns(screen.DefaultState);
+
+        _mocker.GetMock<IElementCommands>()
+            .Setup(x => x.GetUniqueNameForNewInstance(It.IsAny<ElementSave>(), It.IsAny<ElementSave>()))
+            .Returns("CircleInstance");
+
+        // Stand in for the real AddInstance: append the instance and write the bare Parent name,
+        // matching the production command, so HandleDroppingInstanceOnTarget runs against real state.
+        _mocker.GetMock<IElementCommands>()
+            .Setup(x => x.AddInstance(
+                It.IsAny<ElementSave>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<int?>()))
+            .Returns((ElementSave element, string name, string? type, string? parentName, int? desiredIndex) =>
+            {
+                InstanceSave inst = new InstanceSave { Name = name, BaseType = type ?? string.Empty, ParentContainer = element };
+                element.Instances.Add(inst);
+                if (!string.IsNullOrEmpty(parentName))
+                {
+                    element.DefaultState.SetValue($"{inst.Name}.Parent", parentName, "string");
+                }
+                return inst;
+            });
+
+        Mock<ITreeNode> targetNode = new Mock<ITreeNode>();
+        targetNode.Setup(x => x.Tag).Returns(containerInstance);
+
+        // Act
+        _dragDropManager.HandleDroppedStandardElementOnTreeNode(circleStandard, targetNode.Object);
+
+        // Assert: parented in data ...
+        string? parentValue = screen.DefaultState.GetValue("CircleInstance.Parent") as string;
+        parentValue.ShouldBe("ContainerInstance");
+
+        // ... and the wireframe is refreshed AFTER parenting so the child attaches at drop time.
+        _mocker.GetMock<IWireframeObjectManager>()
+            .Verify(x => x.RefreshAll(true, false), Times.AtLeastOnce,
+                "dropping a chip onto an instance must run the onto-instance parenting branch, which refreshes the wireframe after the parent is set");
+    }
+
+    [Fact]
+    public void HandleDroppedStandardElementOnTreeNode_OnComponent_AddsInstanceOfStandardType()
+    {
+        // Arrange: dropping a "Text" chip onto a Component should create a Text instance on it,
+        // reusing the same creation path as dragging the Standard element node.
+        StandardElementSave textStandard = new StandardElementSave();
+        textStandard.Name = "Text";
+
+        ComponentSave targetComponent = new ComponentSave();
+        targetComponent.Name = "TargetComponent";
+        targetComponent.States.Add(new StateSave());
+
+        Mock<ITreeNode> targetNode = new Mock<ITreeNode>();
+        targetNode.Setup(x => x.Tag).Returns(targetComponent);
+
+        _circularReferenceManager
+            .Setup(x => x.CanTypeBeAddedToElement(It.IsAny<ElementSave>(), It.IsAny<string>()))
+            .Returns(true);
+
+        // Act
+        _dragDropManager.HandleDroppedStandardElementOnTreeNode(textStandard, targetNode.Object);
+
+        // Assert
+        _mocker.GetMock<IElementCommands>()
+            .Verify(x => x.AddInstance(targetComponent, It.IsAny<string>(), "Text", null, (int?)null), Times.Once);
+    }
+
+    [Fact]
     public void OnNodeSortingDropped_DropInstance_ShouldInsertAtIndex_OnDifferentElement()
     {
         // Arrange

@@ -9,7 +9,9 @@ using System.Diagnostics;
 using System.Linq;
 using Gum.Commands;
 using Gum.Dialogs;
+using Gum.Messages;
 using Gum.Services.Dialogs;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace Gum.Managers
 {
@@ -23,6 +25,7 @@ namespace Gum.Managers
         private readonly IDialogService _dialogService;
         private readonly IFileCommands _fileCommands;
         private readonly IProjectManager _projectManager;
+        private readonly IMessenger _messenger;
 
         private Menu _menu;
 
@@ -45,6 +48,7 @@ namespace Gum.Managers
         private MenuItem _managePluginsMenuItem;
         private MenuItem _undoMenuItem;
         private MenuItem _redoMenuItem;
+        private MenuItem _standardsPaletteMenuItem;
 
         #endregion
 
@@ -54,7 +58,8 @@ namespace Gum.Managers
             IEditCommands editCommands,
             IDialogService dialogService,
             IFileCommands fileCommands,
-            IProjectManager projectManager)
+            IProjectManager projectManager,
+            IMessenger messenger)
         {
             _selectedState = selectedState;
             _undoManager = undoManager;
@@ -62,6 +67,7 @@ namespace Gum.Managers
             _dialogService = dialogService;
             _fileCommands = fileCommands;
             _projectManager = projectManager;
+            _messenger = messenger;
         }
 
         public void PopulateMenu(Menu menu)
@@ -265,6 +271,31 @@ namespace Gum.Managers
             {
                 _dialogService.Show<ThemingDialogViewModel>();
             });
+
+            // Experimental: replace the Standard tree folder with a chip palette at the bottom of the
+            // Project panel. Opt-in while experimental; persisted in the global settings file. The
+            // settings file is loaded after PopulateMenu, so read it defensively here; RefreshUI() syncs
+            // the checkmark once settings are available.
+            _standardsPaletteMenuItem = new MenuItem
+            {
+                Header = "Standards palette (experimental)",
+                IsCheckable = true,
+                IsChecked = _projectManager.GeneralSettingsFile?.UseStandardsPalette ?? false
+            };
+            // WPF toggles IsChecked before Click fires for a checkable item.
+            _standardsPaletteMenuItem.Click += (_, _) =>
+            {
+                var settings = _projectManager.GeneralSettingsFile;
+                if (settings == null)
+                {
+                    return;
+                }
+                settings.UseStandardsPalette = _standardsPaletteMenuItem.IsChecked;
+                settings.Save();
+                _messenger.Send(new StandardsPaletteSettingChangedMessage(settings.UseStandardsPalette));
+            };
+            _viewMenuItem.Items.Add(_standardsPaletteMenuItem);
+
             _menu.Items.Add(_viewMenuItem);
             _menu.Items.Add(_contentMenuItem);
             _menu.Items.Add(_pluginsMenuItem);
@@ -315,6 +346,12 @@ namespace Gum.Managers
 
         public void RefreshUI()
         {
+            // The settings file loads after PopulateMenu, so keep the checkmark in sync here.
+            if (_standardsPaletteMenuItem != null && _projectManager.GeneralSettingsFile is { } generalSettings)
+            {
+                _standardsPaletteMenuItem.IsChecked = generalSettings.UseStandardsPalette;
+            }
+
             if (_selectedState.SelectedStateSave != null && _selectedState.SelectedStateSave.Name != "Default")
             {
                 _removeStateMenuItem.Header = "State " + _selectedState.SelectedStateSave.Name;

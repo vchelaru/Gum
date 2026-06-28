@@ -30,6 +30,13 @@ namespace Gum.Managers;
 
 public class DragDropManager : IDragDropManager
 {
+    /// <summary>
+    /// Drag-and-drop data format used by the Standards chip palette. The payload is the standard
+    /// type name (e.g. "Text"). Shared by the WPF chip (drag source) and the WinForms tree /
+    /// XNA wireframe drop targets so they can recognize a chip drag across the WPF/WinForms boundary.
+    /// </summary>
+    public const string StandardElementNameDataFormat = "GumStandardElementName";
+
     #region Fields
 
     private readonly ICircularReferenceManager _circularReferenceManager;
@@ -133,6 +140,26 @@ public class DragDropManager : IDragDropManager
     #endregion
 
     #region Drop Element (like components) on TreeView
+
+    /// <inheritdoc/>
+    public void HandleDroppedStandardElementOnTreeNode(StandardElementSave standardElement, ITreeNode targetTreeNode)
+    {
+        // Reuse the exact same path as dragging a Standard element node onto a Screen/Component.
+        // Build an Append DropTarget describing the drop target: a null DropTarget would skip
+        // HandleDroppedElementSave's onto-instance branch (which parents the new instance to the
+        // target instance AND refreshes the wireframe afterward). Since AddInstance refreshes the
+        // wireframe BEFORE writing the Parent variable, skipping that branch leaves a chip dropped
+        // onto an instance visually un-parented until the next refresh (#973).
+        DropTarget? dropTarget = targetTreeNode.Tag switch
+        {
+            InstanceSave targetInstance => new DropTarget(targetInstance.ParentContainer, targetInstance, new DropPosition.Append()),
+            ElementSave targetElement => new DropTarget(targetElement, null, new DropPosition.Append()),
+            _ => null
+        };
+
+        using var undoLock = _undoManager.RequestLock();
+        HandleDroppedElementSave(standardElement, targetTreeNode, targetTreeNode.Tag, targetTreeNode, dropTarget);
+    }
 
     private void HandleDroppedElementSave(object draggedComponentOrElement, ITreeNode treeNodeDroppedOn, object targetTag, ITreeNode targetTreeNode, DropTarget? dropTarget)
     {

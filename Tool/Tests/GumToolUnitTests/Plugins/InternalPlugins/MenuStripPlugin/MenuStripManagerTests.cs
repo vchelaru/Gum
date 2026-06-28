@@ -1,5 +1,7 @@
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.Managers;
+using Gum.Settings;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Services.Dialogs;
@@ -20,6 +22,7 @@ public class MenuStripManagerTests : BaseTestClass
     private readonly Mock<IDialogService> _dialogService;
     private readonly Mock<IFileCommands> _fileCommands;
     private readonly Mock<IProjectManager> _projectManager;
+    private readonly Mock<IMessenger> _messenger;
     private readonly MenuStripManager _menuStripManager;
 
     public MenuStripManagerTests()
@@ -30,6 +33,8 @@ public class MenuStripManagerTests : BaseTestClass
         _dialogService = new Mock<IDialogService>();
         _fileCommands = new Mock<IFileCommands>();
         _projectManager = new Mock<IProjectManager>();
+        _projectManager.Setup(x => x.GeneralSettingsFile).Returns(new GeneralSettingsFile());
+        _messenger = new Mock<IMessenger>();
 
         _menuStripManager = new MenuStripManager(
             _selectedState.Object,
@@ -37,7 +42,8 @@ public class MenuStripManagerTests : BaseTestClass
             _editCommands.Object,
             _dialogService.Object,
             _fileCommands.Object,
-            _projectManager.Object
+            _projectManager.Object,
+            _messenger.Object
         );
     }
 
@@ -253,7 +259,8 @@ public class MenuStripManagerTests : BaseTestClass
                 _editCommands.Object,
                 _dialogService.Object,
                 _fileCommands.Object,
-                _projectManager.Object);
+                _projectManager.Object,
+                _messenger.Object);
             Menu secondMenu = new Menu();
             secondManager.PopulateMenu(secondMenu);
 

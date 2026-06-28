@@ -21,7 +21,7 @@ using RenderingLibrary;
 namespace Gum.Plugins.InternalPlugins.TreeView;
 
 [Export(typeof(PluginBase))]
-internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardownMessage>, IRecipient<UiBaseFontSizeChangedMessage>, IRecipient<RequestErrorRefreshMessage>
+internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardownMessage>, IRecipient<UiBaseFontSizeChangedMessage>, IRecipient<RequestErrorRefreshMessage>, IRecipient<StandardsPaletteSettingChangedMessage>
 {
     private readonly ISelectedState _selectedState;
     private readonly ElementTreeViewManager _elementTreeViewManager;
@@ -185,6 +185,9 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
         _userProjectSettingsManager.LoadForProject(save.FullFileName);
         _treeViewStateService.LoadAndApplyState(_elementTreeViewManager.ObjectTreeView);
         RefreshErrorIndicatorsForAllElements();
+
+        // Repopulate the Standards chip palette for the newly-loaded project's standard types.
+        _elementTreeViewManager.ApplyStandardsPaletteMode();
     }
 
     private void HandleElementAdd(ElementSave save)
@@ -236,6 +239,8 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
 
     private void HandleElementSelected(ElementSave save)
     {
+        _elementTreeViewManager.HighlightStandardInPalette(save);
+
         _elementTreeViewManager.SuppressCallAfterClickSelect = true;
         try
         {
@@ -256,6 +261,12 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
 
     private void MainTreeViewPlugin_InstanceSelected(DataTypes.ElementSave element, DataTypes.InstanceSave instance)
     {
+        // Selecting an instance means a standard's defaults are no longer the edit target.
+        if (instance != null)
+        {
+            _elementTreeViewManager.HighlightStandardInPalette(null);
+        }
+
         if(element != null || instance != null)
         {
             // The selection already happened and plugin events already fired.
@@ -289,6 +300,11 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
     void IRecipient<UiBaseFontSizeChangedMessage>.Receive(UiBaseFontSizeChangedMessage message)
     {
         _elementTreeViewManager.UpdateCollapseButtonSizes(message.Size);
+    }
+
+    void IRecipient<StandardsPaletteSettingChangedMessage>.Receive(StandardsPaletteSettingChangedMessage message)
+    {
+        _elementTreeViewManager.ApplyStandardsPaletteMode();
     }
 
     void IRecipient<RequestErrorRefreshMessage>.Receive(RequestErrorRefreshMessage message)

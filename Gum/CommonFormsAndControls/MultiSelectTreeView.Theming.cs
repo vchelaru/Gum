@@ -683,7 +683,10 @@ public partial class MultiSelectTreeView
             TreeNode[] dragged = ExtractDraggedNodes(e.Data);
             if (dragged.Length == 0)
             {
-                base.OnDragDrop(e);
+                // External (non-node) drop, e.g. a file or a Standards-palette chip. The DragDrop
+                // event is raised by base.OnDragDrop in the finally block below — do NOT also raise it
+                // here, or every external drop fires the consumer's handler twice (which doubled
+                // chip-created instances, #973).
                 return;
             }
 
@@ -695,7 +698,6 @@ public partial class MultiSelectTreeView
             if (node == null || kind == DropKind.None)
             {
                 ClearDropAdornment();
-                base.OnDragDrop(e);
                 return;
             }
 
@@ -708,7 +710,6 @@ public partial class MultiSelectTreeView
                 if (args.Cancel)
                 {
                     ClearDropAdornment();
-                    base.OnDragDrop(e);
                     return;
                 }
                 node = args.TargetNode;
