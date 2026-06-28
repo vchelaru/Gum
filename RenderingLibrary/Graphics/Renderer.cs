@@ -417,6 +417,15 @@ public class Renderer : IRenderer
         ForceEnd();
     }
 
+    /// <summary>
+    /// For integration tests — whether <paramref name="owner"/> still has a cached offscreen
+    /// render target in this renderer's <see cref="RenderTargetService"/>.
+    /// </summary>
+    internal bool HasCachedRenderTarget(IRenderableIpso owner)
+    {
+        return renderTargetService.HasCachedRenderTarget(owner);
+    }
+
     public void Draw(SystemManagers managers, Layer layer)
     {
         // So that 2 controls don't render at the same time.
@@ -429,6 +438,8 @@ public class Renderer : IRenderer
                 mCamera.ClientLeft = GraphicsDevice.Viewport.X;
                 mCamera.ClientTop = GraphicsDevice.Viewport.Y;
             }
+
+            renderTargetService.ClearUnusedRenderTargetsLastFrame();
 
             var oldSampler = GraphicsDevice.SamplerStates[0];
 
