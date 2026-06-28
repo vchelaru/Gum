@@ -66,6 +66,13 @@ public partial class AnimationViewModel : ViewModel
         set => Set(value);
     }
 
+    /// <summary>
+    /// True when any keyframe references a missing state or animation. Drives the animation-list
+    /// error icon (issue #3401); mirrors <see cref="GetErrors"/> and
+    /// <see cref="AnimatedKeyframeViewModel.IsMissingReference"/>.
+    /// </summary>
+    public bool HasBrokenKeyframe => Keyframes.Any(keyframe => keyframe.IsMissingReference);
+
     public ObservableCollection<AnimatedKeyframeViewModel> Keyframes { get; private set; }
 
     public event PropertyChangedEventHandler? FramePropertyChanged;
@@ -270,6 +277,7 @@ public partial class AnimationViewModel : ViewModel
         NotifyPropertyChanged(nameof(Length));
 
         NotifyPropertyChanged(nameof(Keyframes));
+        NotifyPropertyChanged(nameof(HasBrokenKeyframe));
 
         if (_selectedState.SelectedElement != null)
         {
@@ -301,9 +309,19 @@ public partial class AnimationViewModel : ViewModel
                     RefreshCumulativeStates(_selectedState.SelectedElement);
                 }
                 break;
-
+            case nameof(AnimatedKeyframeViewModel.HasValidState):
+            case nameof(AnimatedKeyframeViewModel.AnimationName):
+            case nameof(AnimatedKeyframeViewModel.IsMissingReference):
+                NotifyPropertyChanged(nameof(HasBrokenKeyframe));
+                return;
             default:
                 return;
+        }
+
+        if (e.PropertyName is nameof(AnimatedKeyframeViewModel.StateName)
+            or nameof(AnimatedKeyframeViewModel.AnimationName))
+        {
+            NotifyPropertyChanged(nameof(HasBrokenKeyframe));
         }
 
         FramePropertyChanged?.Invoke(sender, e);
@@ -431,6 +449,8 @@ public partial class AnimationViewModel : ViewModel
                 keyframe.HasValidState = keyframe.SubAnimationViewModel != null;
             }
         }
+
+        NotifyPropertyChanged(nameof(HasBrokenKeyframe));
     }
 
     #endregion
