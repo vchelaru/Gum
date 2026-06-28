@@ -23,6 +23,8 @@ The tool is `net8.0-windows` and stacks several native layers. Under Wine these 
 | SkiaSharp (CPU raster) | SVG/Lottie rendering (CPU -> texture; the GL path is compiled out of the tool) | `Probe4.SkiaCpu` |
 | Direct3D 11 (raw) | The graphics API KNI renders through - Wine must translate it to the host GPU | `Probe5.Direct3D11` |
 | KNI on DX11 | The design-canvas `GraphicsDevice` the tool actually creates | `Probe6.KniDx11` |
+| MonoGame OpenGL | Alternative backend (SDL2 / OpenGL) - does the GL path dodge the D3D limit? | `Probe7.MonoGameDesktopGL` |
+| MonoGame DX11 | Alternative backend (Direct3D 11), tries HiDef then Reach | `Probe8.MonoGameWindowsDX` |
 
 The prime suspect is the **Direct3D 11** path. On macOS, OpenGL is deprecated and capped at 4.1, so
 Wine must translate D3D11 either through WineD3D-over-OpenGL (often insufficient for D3D11) or through
@@ -92,8 +94,15 @@ Read the summary top-to-bottom and find the **first non-PASS**:
 - **`Probe5` fails (raw D3D11)** -> the Direct3D 11 translation layer can't produce a device on this
   Mac/Wine/renderer combination. This is the most likely culprit. Re-run after switching the renderer
   (`~/bin/gum vulkan` vs `~/bin/gum opengl`) and confirming MoltenVK is installed - then compare.
-- **`Probe5` PASSES but `Probe6` fails** -> D3D11 works, but the KNI DX11 backend specifically does
-  not. That's a KNI-vs-Wine issue worth reporting upstream to KNI with the `Probe6` log.
+- **`Probe5` PASSES but `Probe6` fails** -> D3D11 works, but not at the feature level the tool's KNI
+  device asks for (`GraphicsProfile.FL10_0` = feature level 10.0). Compare `Probe5`'s reported
+  `FeatureLevel` with `Probe6`'s `Reach (FL9.1)` line: if raw D3D11 maxes out at 9_x, the tool is
+  simply requesting more than Wine-on-macOS provides.
+- **`Probe7` PASSES** -> the OpenGL path works here. Moving the tool to an OpenGL backend would
+  sidestep the Direct3D feature-level ceiling entirely.
+- **`Probe8` reports `HighestWorkingProfile = Reach`** -> the Direct3D path only supports a low
+  feature level on this Mac; lowering the tool's `GraphicsProfile` from `FL10_0` toward `Reach` is a
+  candidate fix.
 
 A probe whose result is `CRASH (no result line)` died before it could even write its result - the
 `.console.log` (with the `WINEDEBUG` backtrace) and the `.dmp` are the evidence in that case.

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <UseWindowsForms>true</UseWindowsForms>
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- MonoGame's Direct3D 11 desktop backend, hosted in WinForms like the tool hosts KNI. -->
+    <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Probe.Common\Probe.Common.csproj" />
+  </ItemGroup>
+
+</Project>

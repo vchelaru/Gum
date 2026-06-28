@@ -30,7 +30,9 @@ $projects = @(
     "Probe3.WindowsFormsHost",
     "Probe4.SkiaCpu",
     "Probe5.Direct3D11",
-    "Probe6.KniDx11"
+    "Probe6.KniDx11",
+    "Probe7.MonoGameDesktopGL",
+    "Probe8.MonoGameWindowsDX"
 )
 
 $selfContainedFlag = $SelfContained.IsPresent ? "true" : "false"

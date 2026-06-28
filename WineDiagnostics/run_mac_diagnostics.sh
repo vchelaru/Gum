@@ -53,6 +53,8 @@ PROBES=(
     "Probe4.SkiaCpu"
     "Probe5.Direct3D11"
     "Probe6.KniDx11"
+    "Probe7.MonoGameDesktopGL"
+    "Probe8.MonoGameWindowsDX"
 )
 
 # Diagnostics: first-chance exceptions + DLL load tracing, and a .NET managed crash dump.

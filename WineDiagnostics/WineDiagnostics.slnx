@@ -7,4 +7,6 @@
   <Project Path="Probe4.SkiaCpu/Probe4.SkiaCpu.csproj" />
   <Project Path="Probe5.Direct3D11/Probe5.Direct3D11.csproj" />
   <Project Path="Probe6.KniDx11/Probe6.KniDx11.csproj" />
+  <Project Path="Probe7.MonoGameDesktopGL/Probe7.MonoGameDesktopGL.csproj" />
+  <Project Path="Probe8.MonoGameWindowsDX/Probe8.MonoGameWindowsDX.csproj" />
 </Solution>

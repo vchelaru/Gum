@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- MonoGame's OpenGL desktop backend (SDL2 + OpenGL), dominant version in the repo. -->
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Probe.Common\Probe.Common.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -10,8 +10,9 @@ namespace Probe6.KniDx11;
 /// Probe 6 - the real test. Creates a KNI <see cref="GraphicsDevice"/> on the DirectX 11 WinForms
 /// platform exactly the way the Gum tool does (see <c>XnaAndWinforms.GraphicsDeviceService</c>):
 /// <c>new GraphicsDevice(GraphicsAdapter.DefaultAdapter, GraphicsProfile.FL10_0, parameters)</c>
-/// against a real window handle, then clears and presents a few frames. If probe 5 (raw D3D11) PASSES
-/// but this FAILS, the problem is KNI-specific; if both fail, it is the D3D11 translation layer.
+/// against a real window handle, then clears and presents a few frames. If that fails it retries at
+/// GraphicsProfile.Reach (feature level 9.1) to reveal whether lowering the tool's requested profile
+/// would let it start - which is what matters when Wine on macOS only exposes a low feature level.
 /// </summary>
 internal static class Program
 {
@@ -42,25 +43,25 @@ internal static class Program
 
             form.Shown += (_, _) =>
             {
+                ProbeLog.Step("Querying GraphicsAdapter.DefaultAdapter");
+                GraphicsAdapter adapter = GraphicsAdapter.DefaultAdapter;
+                ProbeLog.Info("Adapter", adapter.Description ?? "(null)");
+
+                ProbeLog.Step("Building PresentationParameters (Color back buffer / Depth24, real window handle)");
+                PresentationParameters parameters = new PresentationParameters
+                {
+                    BackBufferWidth = Math.Max(form.ClientSize.Width, 1),
+                    BackBufferHeight = Math.Max(form.ClientSize.Height, 1),
+                    BackBufferFormat = SurfaceFormat.Color,
+                    DepthStencilFormat = DepthFormat.Depth24,
+                    DeviceWindowHandle = form.Handle,
+                    PresentationInterval = PresentInterval.Immediate,
+                    RenderTargetUsage = RenderTargetUsage.PreserveContents,
+                    IsFullScreen = false,
+                };
+
                 try
                 {
-                    ProbeLog.Step("Querying GraphicsAdapter.DefaultAdapter");
-                    GraphicsAdapter adapter = GraphicsAdapter.DefaultAdapter;
-                    ProbeLog.Info("Adapter", adapter.Description ?? "(null)");
-
-                    ProbeLog.Step("Building PresentationParameters (Color back buffer / Depth24, real window handle)");
-                    PresentationParameters parameters = new PresentationParameters
-                    {
-                        BackBufferWidth = Math.Max(form.ClientSize.Width, 1),
-                        BackBufferHeight = Math.Max(form.ClientSize.Height, 1),
-                        BackBufferFormat = SurfaceFormat.Color,
-                        DepthStencilFormat = DepthFormat.Depth24,
-                        DeviceWindowHandle = form.Handle,
-                        PresentationInterval = PresentInterval.Immediate,
-                        RenderTargetUsage = RenderTargetUsage.PreserveContents,
-                        IsFullScreen = false,
-                    };
-
                     ProbeLog.Step("Creating KNI GraphicsDevice (GraphicsProfile.FL10_0) - the exact call the Gum tool makes");
                     device = new GraphicsDevice(adapter, GraphicsProfile.FL10_0, parameters);
                     ProbeLog.Step("GraphicsDevice created - KNI DX11 backend initialized");
@@ -75,6 +76,21 @@ internal static class Program
                 catch (Exception ex)
                 {
                     ProbeLog.RecordFailure(ex);
+
+                    // The tool's FL10_0 call failed. Does a lower profile work? If so, lowering the
+                    // tool's requested GraphicsProfile is a candidate fix for macOS/Wine.
+                    try
+                    {
+                        ProbeLog.Step("Retrying at GraphicsProfile.Reach (feature level 9.1) to see if a lower profile works");
+                        using GraphicsDevice fallback = new GraphicsDevice(adapter, GraphicsProfile.Reach, parameters);
+                        fallback.Clear(Color.CornflowerBlue);
+                        fallback.Present();
+                        ProbeLog.Info("Reach (FL9.1)", "OK - lowering the tool's GraphicsProfile would let it start");
+                    }
+                    catch (Exception fallbackEx)
+                    {
+                        ProbeLog.Info("Reach (FL9.1)", "FAILED: " + fallbackEx.Message);
+                    }
                 }
                 finally
                 {
