@@ -116,12 +116,21 @@ Single-file change; revert `GraphicsDeviceService.cs` to restore the prior behav
    so the run log shows the actual failure. Still a Debug build for this diagnostic step;
    a Release build is the right config for the eventual launch test.
 
+## Baseline (captured 2026-06-28 - `backtrace_orig.txt`)
+
+The stock released `Gum.exe` (no changes) crashes on the Mac at the **identical**
+signature as the husk crash: page fault on read to `0x0` at `kernelbase+0xd887`, same
+`coreclr`/`ntdll` frames, on the **.NET Finalizer** thread. This **confirms** the
+original crash is the FL10_0 finalizer-husk NULL-deref - NOT a clean main-thread
+`NoSuitableGraphicsDeviceException` as first described. It also explains why Run 2
+(construct-and-catch) reproduced it exactly (the husk is still created) and why Run 3
+(construct-once via `IsProfileSupported`) is the correct fix (no husk -> got past graphics).
+
 ## Methodology note (course-correction)
 
-The graphics root cause was inferred from the probe suite, and the first builds were
-**Debug** - we never captured the *original released app's* crash as a baseline. Before
-drawing more conclusions we must (a) capture the stock released `Gum.exe` crash on the
-Mac (`~/bin/gum > ~/orig-output.log 2>&1`) to confirm where it actually dies, and
-(b) read the real `WireframeControl.Initialize` exception from Run 4. Probe evidence that
-`FL10_0` fails is solid, and Run 3 reaching wireframe init is consistent with graphics
-being the first blocker - but the baseline confirms it rather than assuming it.
+The graphics root cause was first *inferred* from the probe suite and tested with **Debug**
+builds; the original released-app baseline was captured only later. Lesson: capture the real
+app's crash first. The probe inference (`FL10_0` fails) turned out correct on the cause, but
+the failure *mechanism* (finalizer husk, not a main-thread throw) was only pinned down by the
+baseline. Outstanding: read the real `WireframeControl.Initialize` exception from the Run 4
+build (`patched-output.log`) - a separate downstream blocker the original app never reached.
