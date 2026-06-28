@@ -83,6 +83,7 @@ public class Renderer : IRenderer
     GraphicsDevice mGraphicsDevice;
 
     private RenderTargetService renderTargetService;
+    private bool _renderTargetSweepCompletedForHostFrame;
     Camera mCamera;
 
     Texture2D mSinglePixelTexture;
@@ -403,6 +404,52 @@ public class Renderer : IRenderer
 
     #endregion
 
+    /// <summary>
+    /// Opens a host-frame draw batch for render-target cache lifecycle. Sweeps unused GPU
+    /// targets from prior frames exactly once. Hosts normally rely on
+    /// <see cref="SystemManagers.Activity"/> advancing time each frame instead of calling
+    /// this directly; use it when Gum draws without a preceding Activity pass.
+    /// </summary>
+    public void BeginFrame()
+    {
+        lock (LockObject)
+        {
+            TrySweepUnusedRenderTargetsAtFrameBoundary();
+        }
+    }
+
+    /// <summary>
+    /// Optional frame end for hosts that issue multiple Gum draw batches without advancing
+    /// Activity time. Resets the once-per-frame sweep token so the next
+    /// <see cref="BeginFrame"/> or draw call can sweep again.
+    /// </summary>
+    public void EndFrame()
+    {
+        lock (LockObject)
+        {
+            _renderTargetSweepCompletedForHostFrame = false;
+        }
+    }
+
+    internal void NotifyHostFrameAdvanced()
+    {
+        lock (LockObject)
+        {
+            _renderTargetSweepCompletedForHostFrame = false;
+        }
+    }
+
+    private void TrySweepUnusedRenderTargetsAtFrameBoundary()
+    {
+        if (_renderTargetSweepCompletedForHostFrame)
+        {
+            return;
+        }
+
+        renderTargetService.ClearUnusedRenderTargetsLastFrame();
+        _renderTargetSweepCompletedForHostFrame = true;
+    }
+
     public void Draw(SystemManagers managers)
     {
         ClearPerformanceRecordingVariables();
@@ -415,6 +462,16 @@ public class Renderer : IRenderer
         Draw(managers, _layers);
 
         ForceEnd();
+        EndFrame();
+    }
+
+    /// <summary>
+    /// For integration tests — whether <paramref name="owner"/> still has a cached offscreen
+    /// render target in this renderer's <see cref="RenderTargetService"/>.
+    /// </summary>
+    internal bool HasCachedRenderTarget(IRenderableIpso owner)
+    {
+        return renderTargetService.HasCachedRenderTarget(owner);
     }
 
     public void Draw(SystemManagers managers, Layer layer)
@@ -429,6 +486,8 @@ public class Renderer : IRenderer
                 mCamera.ClientLeft = GraphicsDevice.Viewport.X;
                 mCamera.ClientTop = GraphicsDevice.Viewport.Y;
             }
+
+            TrySweepUnusedRenderTargetsAtFrameBoundary();
 
             var oldSampler = GraphicsDevice.SamplerStates[0];
 
@@ -479,7 +538,7 @@ public class Renderer : IRenderer
                 mCamera.ClientTop = GraphicsDevice.Viewport.Y;
             }
 
-            renderTargetService.ClearUnusedRenderTargetsLastFrame();
+            TrySweepUnusedRenderTargetsAtFrameBoundary();
 
 
             mRenderStateVariables.BlendState = Renderer.NormalBlendState;

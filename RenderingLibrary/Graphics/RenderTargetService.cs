@@ -79,6 +79,15 @@ public abstract class RenderTargetServiceBase<TRenderTarget>
     }
 
     /// <summary>
+    /// Whether a render target is currently cached for <paramref name="owner"/>, regardless of
+    /// whether it was marked used this frame. Intended for tests and diagnostics.
+    /// </summary>
+    public bool HasCachedRenderTarget(IRenderableIpso owner)
+    {
+        return _renderTargets.ContainsKey(owner);
+    }
+
+    /// <summary>
     /// Returns the cached render target for this owner without allocating or marking it used.
     /// Returns <c>default</c> if none exists. Useful when a later pass needs to read what an
     /// earlier pass rendered without bumping the lifecycle.
