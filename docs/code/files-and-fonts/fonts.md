@@ -6,7 +6,7 @@ Gum supports several font loading strategies. The right one depends on your char
 
 This page is a decision tree. Pick the path that matches your game, then follow the link for the full details and code samples.
 
-For the API surface (which properties on `TextRuntime` control the font), see the [TextRuntime Fonts](../standard-visuals/textruntime/fonts.md) page.
+For the API surface (which properties on `TextRuntime` control the font, including baked drop shadow), see the [TextRuntime Fonts](../standard-visuals/textruntime/fonts.md) page.
 
 ## Pick a Strategy
 
@@ -14,11 +14,11 @@ For the API surface (which properties on `TextRuntime` control the font), see th
 
 **Use dynamic font generation.** No font files on disk, no cache to manage, no preloading needed. The first time a `(font, size, style)` combination is used, the atlas is generated in memory — fast enough for most games with small character sets to do during gameplay without a noticeable hitch.
 
-How this works depends on the runtime: MonoGame and KNI use the KernSmith NuGet package. SkiaGum has its own built-in dynamic generation. Raylib, Sokol, and FNA don't have dynamic generation today — for those, follow Path D.
+How this works depends on the runtime: MonoGame, KNI, and Raylib use the KernSmith NuGet package. SkiaGum has its own built-in dynamic generation. Sokol and FNA don't have dynamic generation today — for those, follow Path D.
 
 This is the default recommendation for most projects.
 
-→ See [Font Strategies — Dynamic KernSmith](font-strategies.md#dynamic-kernsmith-generation) (MonoGame/KNI) or [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum).
+→ See [Font Strategies — Dynamic KernSmith](font-strategies.md#dynamic-kernsmith-generation) (MonoGame, KNI, or Raylib) or [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum).
 
 ### Path B — Large charset (CJK), single locale per build
 
@@ -37,7 +37,7 @@ This is the default recommendation for most projects.
 **Use the build-time FontCache.** Useful when:
 
 * You want pixel-perfect determinism (atlases are checked into source control and never regenerated).
-* Dynamic generation is not yet available for your runtime (Raylib, Sokol, FNA today).
+* Dynamic generation is not yet available for your runtime (Sokol and FNA today).
 * You have hand-tuned `.fnt` files from another tool and want to ship them as-is.
 
 The Gum tool generates these atlases automatically while you edit your project. There is no opt-out yet.
@@ -53,9 +53,11 @@ The Gum tool generates these atlases automatically while you edit your project. 
 * [Font Localization](font-localization.md) — current behavior, known limitations, and the per-locale design that's coming.
 * [Font Cache](font-cache.md) — the build-time `.fnt` atlas system, naming convention, and when to use it.
 
-## Need Outline Color, Shadows, or Gradients?
+## Need Outline Color, Gradients, or Other KernSmith Extras?
 
-The strategies above all drive fonts through `TextRuntime`'s property surface, which exposes only a subset of what KernSmith can actually generate. If you want outline color (not just thickness), drop shadows, gradient fills, SDF, color fonts, custom glyph subsets, or a non-default rasterizer backend, build a `BitmapFont` via KernSmith yourself and assign it directly. See [Advanced Font Effects](advanced-font-effects.md) for the per-effect catalog and [Font Strategies — Direct BitmapFont Assignment](font-strategies.md#direct-bitmapfont-assignment) for the construction walkthrough.
+The strategies above drive fonts through `TextRuntime`'s property surface. That includes baked drop shadow (`HasDropshadow` and the dropshadow fields) — see [TextRuntime Fonts](../standard-visuals/textruntime/fonts.md#baked-drop-shadow).
+
+For effects still outside the property surface — outline color (not just thickness), gradient fills, SDF, color fonts, custom glyph subsets, or a non-default rasterizer backend — build a `BitmapFont` via KernSmith yourself and assign it directly. See [Advanced Font Effects](advanced-font-effects.md) for the per-effect catalog and [Font Strategies — Direct BitmapFont Assignment](font-strategies.md#direct-bitmapfont-assignment) for the construction walkthrough.
 
 ## Known Limitations
 
@@ -70,6 +72,6 @@ The following items are not yet supported. None of them are dealbreakers for shi
 
 ## Related Pages
 
-* [TextRuntime Fonts](../standard-visuals/textruntime/fonts.md) — the API reference: properties on `TextRuntime` that control font selection.
+* [TextRuntime Fonts](../standard-visuals/textruntime/fonts.md) — the API reference: properties on `TextRuntime` that control font selection, including baked drop shadow.
 * [BitmapFont](bitmapfont.md) — text measurement API and character info.
 * [File Loading](file-loading.md) — `RelativeDirectory`, file caching, and general file loading.

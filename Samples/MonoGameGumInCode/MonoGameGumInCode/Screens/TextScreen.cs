@@ -5,6 +5,9 @@ using Microsoft.Xna.Framework;
 using RenderingLibrary.Graphics;
 
 namespace MonoGameGumInCode.Screens;
+
+// Reference screen for TextRuntime font behavior. Raylib and SilkNetGum mirror the KernSmith
+// baked-shadow rows where that backend supports them (#3414 / #2724).
 internal class TextScreen : FrameworkElement
 {
     public TextScreen() : base(new ContainerRuntime())
@@ -14,7 +17,6 @@ internal class TextScreen : FrameworkElement
         var container = new ContainerRuntime();
         container.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         container.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        // Give it 2 pixels on each side so text doesn't bump up against the edge of the screen
         container.X = 2;
         container.Y = 2;
         container.Width = -4;
@@ -27,14 +29,48 @@ internal class TextScreen : FrameworkElement
         textRuntime.Text = "Hi, I'm default text";
         container.Children.Add(textRuntime);
 
+        AddSectionLabel(container, "Baked drop shadow (HasDropshadow = true, first-enable defaults):");
+        var shadowDefault = new TextRuntime();
+        shadowDefault.Text = "Soft baked shadow";
+        shadowDefault.FontSize = 24;
+        shadowDefault.HasDropshadow = true;
+        container.Children.Add(shadowDefault);
+
+        AddSectionLabel(container, "Baked drop shadow (colored, offset, blur):");
+        var shadowColored = new TextRuntime();
+        shadowColored.Text = "Pink shadow";
+        shadowColored.FontSize = 24;
+        shadowColored.HasDropshadow = true;
+        shadowColored.DropshadowColor = new Color(220, 40, 160, 220);
+        shadowColored.DropshadowOffsetX = 2;
+        shadowColored.DropshadowOffsetY = 4;
+        shadowColored.DropshadowBlur = 4;
+        container.Children.Add(shadowColored);
+
+        AddSectionLabel(container, "Baked drop shadow + outline:");
+        var shadowOutline = new TextRuntime();
+        shadowOutline.Text = "Shadow and outline";
+        shadowOutline.FontSize = 24;
+        shadowOutline.OutlineThickness = 2;
+        shadowOutline.HasDropshadow = true;
+        container.Children.Add(shadowOutline);
+
         var withOutline = new TextRuntime();
         withOutline.Text = "I am text that has an outline.";
-        (withOutline.Component as RenderingLibrary.Graphics.Text).RenderBoundary = true;
+        (withOutline.Component as Text).RenderBoundary = true;
         container.Children.Add(withOutline);
 
         AddCustomOutlineText(container, Color.Red);
         AddCustomOutlineText(container, Color.DarkGreen);
         AddCustomOutlineText(container, Color.Blue);
+    }
+
+    private static void AddSectionLabel(ContainerRuntime container, string text)
+    {
+        var label = new TextRuntime();
+        label.Text = text;
+        label.FontSize = 14;
+        container.Children.Add(label);
     }
 
     private static void AddCustomOutlineText(ContainerRuntime container, Color color)

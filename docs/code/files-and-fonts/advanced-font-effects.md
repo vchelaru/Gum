@@ -2,12 +2,14 @@
 
 ## Introduction
 
-KernSmith can generate fonts with effects that the `TextRuntime` property surface does not expose — outline color, drop shadows, gradient fills, SDF, color fonts, custom glyph subsets, and a choice of rasterizer backend. These all live on `KernSmith.FontGeneratorOptions`, but `BmfcSave` (the descriptor that drives the property path) only carries a small slice of those fields.
+KernSmith can generate fonts with effects that the `TextRuntime` property surface does not expose — outline color, gradient fills, SDF, color fonts, custom glyph subsets, and a choice of rasterizer backend. Drop shadow is on the property path when `HasDropshadow` is set (see [TextRuntime Fonts](../standard-visuals/textruntime/fonts.md#baked-drop-shadow)); the fields below cover the rest. They all live on `KernSmith.FontGeneratorOptions`, but `BmfcSave` (the descriptor that drives the property path) only carries a small slice of those fields.
 
 This page catalogs the effects available today and shows the `FontGeneratorOptions` fields that drive each one.
 
 {% hint style="info" %}
-These effects require constructing a `BitmapFont` via KernSmith yourself and assigning it directly to `TextRuntime.BitmapFont`. They are not reachable through `Font`, `FontSize`, `OutlineThickness`, or any other `TextRuntime` property — `BmfcSave` does not carry the fields they need.
+**Property path vs direct KernSmith:** `TextRuntime` exposes baked drop shadow through `HasDropshadow`, `DropshadowColor` (+ channel mirrors), `DropshadowOffsetX/Y`, and `DropshadowBlur` when an `InMemoryFontCreator` is registered — see [TextRuntime Fonts](../standard-visuals/textruntime/fonts.md#baked-drop-shadow).
+
+Everything else on this page still requires constructing a `BitmapFont` via KernSmith yourself and assigning it directly to `TextRuntime.BitmapFont` — outline color, gradient fills, SDF, color fonts, custom glyphs, backend selection, `HardShadow`, and custom `Padding`. `BmfcSave` does not carry those fields.
 
 For the full construction walkthrough (helper method, channel layout caveat, and `BmfcSave`-vs-from-scratch flows), see [Font Strategies — Direct BitmapFont Assignment](font-strategies.md#direct-bitmapfont-assignment). This page focuses on the per-effect options without repeating that setup.
 {% endhint %}
@@ -48,7 +50,17 @@ options.Channels = new KernSmith.Output.ChannelConfig(
 
 ## Drop Shadow
 
-Drop shadows are baked into the atlas itself — the glyph and its shadow render in a single draw call. Set `ShadowOffsetX/Y` to position the shadow, `ShadowR/G/B` for color, and optionally `ShadowOpacity`, `ShadowBlur`, and `HardShadow`:
+Drop shadows are baked into the atlas itself — the glyph and its shadow render in a single draw call. The property path covers the common case; direct `FontGeneratorOptions` remains for extras KernSmith exposes but `TextRuntime` does not.
+
+### Property path (`TextRuntime`)
+
+Set `HasDropshadow` and the dropshadow fields on a `TextRuntime` when KernSmith is wired up. Gum maps them through `BmfcSave` → `GumFontGenerator` at generation time. See [TextRuntime Fonts — Baked drop shadow](../standard-visuals/textruntime/fonts.md#baked-drop-shadow) for defaults, cache behavior, and a short sample.
+
+### Direct `FontGeneratorOptions`
+
+Use this path when you need KernSmith-only knobs (`HardShadow`, custom `Padding`, or shadow combined with effects not on `BmfcSave`) or when building a shared `BitmapFont` outside the property system.
+
+Set `ShadowOffsetX/Y` to position the shadow, `ShadowR/G/B` for color, and optionally `ShadowOpacity`, `ShadowBlur`, and `HardShadow`:
 
 ```csharp
 // Initialize
@@ -68,6 +80,10 @@ BitmapFont bitmapFont = CreateBitmapFont(result, GraphicsDevice);
 ```
 
 Because the shadow is baked into the glyph's own atlas cell, you may need to increase `Padding` to give the shadow room — otherwise blurred shadows can clip at the cell edge.
+
+{% hint style="info" %}
+When `HasDropshadow` is true on the property path, `GumFontGenerator` leaves `ChannelConfig` unset so KernSmith keeps full RGBA in the atlas. A custom `Channels` assignment on a shadowed font routes through KernSmith's channel compositor and can discard baked shadow color — the same reason outlined fonts use a different layout than plain text. On the direct path, mirror that rule: do not override `Channels` when baking shadow unless you know the compositor layout you need.
+{% endhint %}
 
 ## Gradient Fill
 
@@ -220,4 +236,4 @@ options.EnableHinting = false;
 
 * [Font Strategies — Direct BitmapFont Assignment](font-strategies.md#direct-bitmapfont-assignment) — full construction walkthrough.
 * [BitmapFont](bitmapfont.md) — the runtime type these samples produce.
-* [TextRuntime Fonts](../standard-visuals/textruntime/fonts.md) — the property surface these effects bypass.
+* [TextRuntime Fonts](../standard-visuals/textruntime/fonts.md) — the property surface; baked drop shadow and the fields that bypass direct assignment.

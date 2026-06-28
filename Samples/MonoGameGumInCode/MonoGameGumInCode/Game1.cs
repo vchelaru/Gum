@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Gum;
+using KernSmith.Gum;
 using MonoGameGumInCode.Screens;
 using RenderingLibrary;
 
@@ -43,6 +44,9 @@ namespace MonoGameGumInCode
         protected override void Initialize()
         {
             GumService.Default.Initialize(this);
+
+            CustomSetPropertyOnRenderable.InMemoryFontCreator =
+                new KernSmithFontCreator(GraphicsDevice);
 
             // Issue #3206: Gum core ships no shader loader, so the app registers a resolver that
             // turns a ContainerRuntime.SourceShaderFile (.fx path) into a platform Effect. Here it
