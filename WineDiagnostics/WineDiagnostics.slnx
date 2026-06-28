@@ -2,6 +2,9 @@
   <Project Path="Probe.Common/Probe.Common.csproj" />
   <Project Path="Probe0.Runtime/Probe0.Runtime.csproj" />
   <Project Path="Probe1.Wpf/Probe1.Wpf.csproj" />
+  <Project Path="Probe10.KniProfileScan/Probe10.KniProfileScan.csproj" />
+  <Project Path="Probe11.SkiaHarfBuzz/Probe11.SkiaHarfBuzz.csproj" />
+  <Project Path="Probe12.Wmi/Probe12.Wmi.csproj" />
   <Project Path="Probe2.WinForms/Probe2.WinForms.csproj" />
   <Project Path="Probe3.WindowsFormsHost/Probe3.WindowsFormsHost.csproj" />
   <Project Path="Probe4.SkiaCpu/Probe4.SkiaCpu.csproj" />
@@ -9,4 +12,5 @@
   <Project Path="Probe6.KniDx11/Probe6.KniDx11.csproj" />
   <Project Path="Probe7.MonoGameDesktopGL/Probe7.MonoGameDesktopGL.csproj" />
   <Project Path="Probe8.MonoGameWindowsDX/Probe8.MonoGameWindowsDX.csproj" />
+  <Project Path="Probe9.KniDesktopGL/Probe9.KniDesktopGL.csproj" />
 </Solution>

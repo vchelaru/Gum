@@ -55,6 +55,10 @@ PROBES=(
     "Probe6.KniDx11"
     "Probe7.MonoGameDesktopGL"
     "Probe8.MonoGameWindowsDX"
+    "Probe9.KniDesktopGL"
+    "Probe10.KniProfileScan"
+    "Probe11.SkiaHarfBuzz"
+    "Probe12.Wmi"
 )
 
 # Diagnostics: first-chance exceptions + DLL load tracing, and a .NET managed crash dump.

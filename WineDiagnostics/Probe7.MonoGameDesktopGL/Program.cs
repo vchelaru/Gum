@@ -64,10 +64,38 @@ internal sealed class ProbeGame : Game
         if (_frames == 1)
         {
             ProbeLog.Step("First frame drawn via OpenGL");
+            ReportTextureCapability();
         }
         if (_frames >= 5)
         {
             Exit();
+        }
+    }
+
+    /// <summary>
+    /// Confirms the OpenGL path can allocate the large surfaces the tool wanted FL10_0 for (8192).
+    /// If these succeed, switching to a GL backend is a no-downgrade fix.
+    /// </summary>
+    private void ReportTextureCapability()
+    {
+        try
+        {
+            using Texture2D big = new Texture2D(GraphicsDevice, 8192, 8192);
+            ProbeLog.Info("Texture2D 8192x8192", "OK (the capability FL10_0 was requested for)");
+        }
+        catch (Exception ex)
+        {
+            ProbeLog.Info("Texture2D 8192x8192", "FAILED: " + ex.Message);
+        }
+
+        try
+        {
+            using RenderTarget2D rt = new RenderTarget2D(GraphicsDevice, 8192, 8192);
+            ProbeLog.Info("RenderTarget2D 8192x8192", "OK");
+        }
+        catch (Exception ex)
+        {
+            ProbeLog.Info("RenderTarget2D 8192x8192", "FAILED: " + ex.Message);
         }
     }
 }

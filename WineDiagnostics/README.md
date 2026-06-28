@@ -25,6 +25,10 @@ The tool is `net8.0-windows` and stacks several native layers. Under Wine these 
 | KNI on DX11 | The design-canvas `GraphicsDevice` the tool actually creates | `Probe6.KniDx11` |
 | MonoGame OpenGL | Alternative backend (SDL2 / OpenGL) - does the GL path dodge the D3D limit? | `Probe7.MonoGameDesktopGL` |
 | MonoGame DX11 | Alternative backend (Direct3D 11), tries HiDef then Reach | `Probe8.MonoGameWindowsDX` |
+| KNI OpenGL | Can KNI keep its API but render via OpenGL (smallest fix)? | `Probe9.KniDesktopGL` |
+| KNI DX profile scan | Highest Direct3D profile this prefix supports | `Probe10.KniProfileScan` |
+| Skia HarfBuzz | Extra Skia native lib (text shaping) loads | `Probe11.SkiaHarfBuzz` |
+| WMI (System.Management) | Does WMI respond under Wine (tool/telemetry uses it)? | `Probe12.Wmi` |
 
 The prime suspect is the **Direct3D 11** path. On macOS, OpenGL is deprecated and capped at 4.1, so
 Wine must translate D3D11 either through WineD3D-over-OpenGL (often insufficient for D3D11) or through
