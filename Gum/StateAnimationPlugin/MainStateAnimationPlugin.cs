@@ -159,6 +159,11 @@ public class MainStateAnimationPlugin : PluginBase
 
         this.CategoryRename += HandleCategoryRename;
 
+        // Deleting a whole category (and its states) doesn't fire the granular StateDelete event, so
+        // recompute the view model afterward — otherwise a keyframe that referenced a state in the
+        // deleted category keeps its non-error icon until the element is reselected (issue #3392).
+        this.CategoryDelete += HandleCategoryDelete;
+
         this.ElementRename += HandleElementRename;
         this.ElementDuplicate += HandleElementDuplicate;
 
@@ -311,6 +316,11 @@ public class MainStateAnimationPlugin : PluginBase
     }
 
     private void HandleStateDelete(StateSave state)
+    {
+        RefreshViewModel();
+    }
+
+    private void HandleCategoryDelete(StateSaveCategory category)
     {
         RefreshViewModel();
     }
