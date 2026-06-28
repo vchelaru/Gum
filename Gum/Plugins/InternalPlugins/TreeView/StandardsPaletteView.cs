@@ -231,7 +231,7 @@ internal class StandardsPaletteView : Border
             Background = Brushes.Transparent,
             Cursor = Cursors.Hand,
             Child = content,
-            ToolTip = $"Drag onto a Screen/Component or the canvas to add a {typeName}.\nRight-click for more options."
+            ToolTip = $"Drag onto a Screen/Component or the canvas to add a {typeName}.\nCtrl+click to add it to the current Screen/Component.\nRight-click for more options."
         };
         chip.SetResourceReference(Border.BorderBrushProperty, "Frb.Brushes.Border");
 
@@ -279,6 +279,15 @@ internal class StandardsPaletteView : Border
 
         chip.PreviewMouseLeftButtonDown += (_, e) =>
         {
+            // Ctrl+click is a shortcut for "Add to current element" (the right-click action) — add an
+            // instance of this standard to the open Screen/Component without dragging.
+            if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+            {
+                AddToCurrentRequested?.Invoke(typeName);
+                e.Handled = true;
+                return;
+            }
+
             pressed = true;
             startPoint = e.GetPosition(null);
         };
