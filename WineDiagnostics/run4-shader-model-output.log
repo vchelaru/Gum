@@ -1,0 +1,695 @@
+Launching patched Gum.exe
+  dir    : /Users/kaltinril/gum-patched
+  prefix : /Users/kaltinril/.wine_gum_dotnet8
+002c:err:wineboot:process_run_key Error running cmd L"C:\\windows\\system32\\winemenubuilder.exe -a -r" (2).
+0024:fixme:process:GetProcessGroupAffinity (FFFFFFFFFFFFFFFF,000000000029F294,0000000000000000): stub
+0024:fixme:heap:GetNumaHighestNodeNumber semi-stub: 000000000029F230
+0024:fixme:process:GetProcessGroupAffinity (FFFFFFFFFFFFFFFF,000000000029F230,0000000000000000): stub
+0024:fixme:seh:WerRegisterRuntimeExceptionModule (L"C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App\\8.0.12\\mscordaccore.dll", 00006FFFFE300000) stub
+0024:fixme:ntdll:NtQuerySystemInformation info_class SYSTEM_PERFORMANCE_INFORMATION
+0024:fixme:thread:set_native_thread_name setting other thread name not supported
+[mvk-info] MoltenVK version 1.4.1, supporting Vulkan version 1.4.334.
+	The following 153 Vulkan extensions are supported:
+	VK_KHR_16bit_storage v1
+	VK_KHR_8bit_storage v1
+	VK_KHR_bind_memory2 v1
+	VK_KHR_buffer_device_address v1
+	VK_KHR_calibrated_timestamps v1
+	VK_KHR_copy_commands2 v1
+	VK_KHR_create_renderpass2 v1
+	VK_KHR_dedicated_allocation v3
+	VK_KHR_deferred_host_operations v4
+	VK_KHR_depth_stencil_resolve v1
+	VK_KHR_descriptor_update_template v1
+	VK_KHR_device_group v4
+	VK_KHR_device_group_creation v1
+	VK_KHR_driver_properties v1
+	VK_KHR_dynamic_rendering v1
+	VK_KHR_dynamic_rendering_local_read v1
+	VK_KHR_external_fence v1
+	VK_KHR_external_fence_capabilities v1
+	VK_KHR_external_memory v1
+	VK_KHR_external_memory_capabilities v1
+	VK_KHR_external_semaphore v1
+	VK_KHR_external_semaphore_capabilities v1
+	VK_KHR_format_feature_flags2 v2
+	VK_KHR_fragment_shader_barycentric v1
+	VK_KHR_get_memory_requirements2 v1
+	VK_KHR_get_physical_device_properties2 v2
+	VK_KHR_get_surface_capabilities2 v1
+	VK_KHR_global_priority v1
+	VK_KHR_image_format_list v1
+	VK_KHR_imageless_framebuffer v1
+	VK_KHR_incremental_present v2
+	VK_KHR_index_type_uint8 v1
+	VK_KHR_line_rasterization v1
+	VK_KHR_load_store_op_none v1
+	VK_KHR_maintenance1 v2
+	VK_KHR_maintenance2 v1
+	VK_KHR_maintenance3 v1
+	VK_KHR_maintenance4 v2
+	VK_KHR_maintenance5 v1
+	VK_KHR_maintenance6 v1
+	VK_KHR_maintenance7 v1
+	VK_KHR_maintenance8 v1
+	VK_KHR_maintenance9 v1
+	VK_KHR_map_memory2 v1
+	VK_KHR_multiview v1
+	VK_KHR_portability_subset v1
+	VK_KHR_present_id v1
+	VK_KHR_present_id2 v1
+	VK_KHR_present_wait v1
+	VK_KHR_present_wait2 v1
+	VK_KHR_push_descriptor v2
+	VK_KHR_relaxed_block_layout v1
+	VK_KHR_robustness2 v1
+	VK_KHR_sampler_mirror_clamp_to_edge v3
+	VK_KHR_sampler_ycbcr_conversion v14
+	VK_KHR_separate_depth_stencil_layouts v1
+	VK_KHR_shader_draw_parameters v1
+	VK_KHR_shader_expect_assume v1
+	VK_KHR_shader_float_controls v4
+	VK_KHR_shader_float_controls2 v1
+	VK_KHR_shader_float16_int8 v1
+	VK_KHR_shader_fma v1
+	VK_KHR_shader_integer_dot_product v1
+	VK_KHR_shader_maximal_reconvergence v1
+	VK_KHR_shader_non_semantic_info v1
+	VK_KHR_shader_quad_control v1
+	VK_KHR_shader_relaxed_extended_instruction v1
+	VK_KHR_shader_subgroup_extended_types v1
+	VK_KHR_shader_subgroup_rotate v2
+	VK_KHR_shader_subgroup_uniform_control_flow v1
+	VK_KHR_shader_terminate_invocation v1
+	VK_KHR_spirv_1_4 v1
+	VK_KHR_storage_buffer_storage_class v1
+	VK_KHR_surface v25
+	VK_KHR_surface_maintenance1 v1
+	VK_KHR_surface_protected_capabilities v1
+	VK_KHR_swapchain v70
+	VK_KHR_swapchain_maintenance1 v1
+	VK_KHR_swapchain_mutable_format v1
+	VK_KHR_synchronization2 v1
+	VK_KHR_timeline_semaphore v2
+	VK_KHR_uniform_buffer_standard_layout v1
+	VK_KHR_variable_pointers v1
+	VK_KHR_vertex_attribute_divisor v1
+	VK_KHR_vulkan_memory_model v3
+	VK_KHR_zero_initialize_workgroup_memory v1
+	VK_EXT_4444_formats v1
+	VK_EXT_buffer_device_address v2
+	VK_EXT_calibrated_timestamps v2
+	VK_EXT_debug_marker v4
+	VK_EXT_debug_report v10
+	VK_EXT_debug_utils v2
+	VK_EXT_depth_clip_control v1
+	VK_EXT_descriptor_indexing v2
+	VK_EXT_extended_dynamic_state v1
+	VK_EXT_extended_dynamic_state2 v1
+	VK_EXT_extended_dynamic_state3 v2
+	VK_EXT_external_memory_host v1
+	VK_EXT_external_memory_metal v1
+	VK_EXT_fragment_shader_interlock v1
+	VK_EXT_global_priority v2
+	VK_EXT_global_priority_query v1
+	VK_EXT_hdr_metadata v3
+	VK_EXT_headless_surface v1
+	VK_EXT_host_image_copy v1
+	VK_EXT_host_query_reset v1
+	VK_EXT_image_2d_view_of_3d v1
+	VK_EXT_image_robustness v1
+	VK_EXT_index_type_uint8 v1
+	VK_EXT_inline_uniform_block v1
+	VK_EXT_layer_settings v2
+	VK_EXT_legacy_dithering v2
+	VK_EXT_line_rasterization v1
+	VK_EXT_load_store_op_none v1
+	VK_EXT_memory_budget v1
+	VK_EXT_metal_objects v2
+	VK_EXT_metal_surface v1
+	VK_EXT_non_seamless_cube_map v1
+	VK_EXT_pipeline_creation_cache_control v3
+	VK_EXT_pipeline_creation_feedback v1
+	VK_EXT_pipeline_robustness v1
+	VK_EXT_post_depth_coverage v1
+	VK_EXT_primitive_topology_list_restart v1
+	VK_EXT_private_data v1
+	VK_EXT_provoking_vertex v1
+	VK_EXT_robustness2 v1
+	VK_EXT_sample_locations v1
+	VK_EXT_scalar_block_layout v1
+	VK_EXT_separate_stencil_usage v1
+	VK_EXT_shader_atomic_float v1
+	VK_EXT_shader_demote_to_helper_invocation v1
+	VK_EXT_shader_stencil_export v1
+	VK_EXT_shader_subgroup_ballot v1
+	VK_EXT_shader_subgroup_vote v1
+	VK_EXT_shader_viewport_index_layer v1
+	VK_EXT_subgroup_size_control v2
+	VK_EXT_surface_maintenance1 v1
+	VK_EXT_swapchain_colorspace v5
+	VK_EXT_swapchain_maintenance1 v1
+	VK_EXT_texel_buffer_alignment v1
+	VK_EXT_texture_compression_astc_hdr v1
+	VK_EXT_tooling_info v1
+	VK_EXT_vertex_attribute_divisor v3
+	VK_AMD_gpu_shader_half_float v2
+	VK_AMD_negative_viewport_height v1
+	VK_AMD_shader_image_load_store_lod v1
+	VK_AMD_shader_trinary_minmax v1
+	VK_GOOGLE_display_timing v1
+	VK_IMG_format_pvrtc v1
+	VK_INTEL_shader_integer_functions2 v1
+	VK_MVK_macos_surface v3
+	VK_MVK_moltenvk v37
+	VK_NV_fragment_shader_barycentric v1
+[mvk-info] GPU device:
+	model: AMD Radeon Pro Vega 56
+	type: Discrete
+	vendorID: 0x1002
+	deviceID: 0x6867
+	pipelineCacheUUID: DB445FF2-0F07-0200-0000-000100000000
+	GPU memory available: 8176 MB
+	GPU memory used: 0 MB
+	Metal Shading Language 3.2
+	supports the following GPU Features:
+		GPU Family Metal 3
+		GPU Family Mac 2
+		Read-Write Texture Tier 2
+[mvk-info] Created VkInstance for Vulkan version 1.0.334, as requested by app, with the following 3 Vulkan extensions enabled:
+	VK_KHR_external_memory_capabilities v1
+	VK_KHR_external_semaphore_capabilities v1
+	VK_KHR_get_physical_device_properties2 v2
+0024:fixme:ntdll:EtwEventSetInformation (deadbeef, 2, 00000001005C5D98, 34) stub
+0024:fixme:ntdll:EtwEventSetInformation (deadbeef, 2, 00000001005B9E00, 17) stub
+0024:fixme:ntdll:RtlGetCurrentProcessorNumberEx (000000000029DDE0) :semi-stub
+0024:fixme:ntdll:EtwEventSetInformation (deadbeef, 2, 000000020542F190, 41) stub
+0024:fixme:ntdll:EtwEventSetInformation (deadbeef, 2, 00000001005BAC90, 51) stub
+0024:fixme:ntdll:EtwEventSetInformation (deadbeef, 2, 00000001005C1C40, 38) stub
+0024:fixme:ntdll:EtwEventSetInformation (deadbeef, 2, 0000000205440A70, 31) stub
+0024:fixme:nls:get_dummy_preferred_ui_language (0x8 0x409 000000000029D970 0000000000000000 000000000029D968) returning a dummy value (current locale)
+0024:fixme:nls:get_dummy_preferred_ui_language (0x8 0x409 000000000029D970 000000000029D8C0 000000000029D968) returning a dummy value (current locale)
+0024:fixme:ntdll:EtwEventSetInformation (deadbeef, 2, 00000002054E84B0, 43) stub
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Production
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: Z:\Users\kaltinril\gum-patched
+0024:fixme:ntdll:NtQuerySystemInformation SystemLeapSecondInformation - stub
+0024:fixme:msg:ChangeWindowMessageFilter c03d 00000001
+0024:fixme:dwmapi:DwmAttachMilContent (000000000001005C) stub
+013c:fixme:gdi:GdiEntry13 stub
+013c:err:winediag:wined3d_dll_init Using the OpenGL renderer.
+[mvk-info] MoltenVK version 1.4.1, supporting Vulkan version 1.4.334.
+	The following 153 Vulkan extensions are supported:
+	VK_KHR_16bit_storage v1
+	VK_KHR_8bit_storage v1
+	VK_KHR_bind_memory2 v1
+	VK_KHR_buffer_device_address v1
+	VK_KHR_calibrated_timestamps v1
+	VK_KHR_copy_commands2 v1
+	VK_KHR_create_renderpass2 v1
+	VK_KHR_dedicated_allocation v3
+	VK_KHR_deferred_host_operations v4
+	VK_KHR_depth_stencil_resolve v1
+	VK_KHR_descriptor_update_template v1
+	VK_KHR_device_group v4
+	VK_KHR_device_group_creation v1
+	VK_KHR_driver_properties v1
+	VK_KHR_dynamic_rendering v1
+	VK_KHR_dynamic_rendering_local_read v1
+	VK_KHR_external_fence v1
+	VK_KHR_external_fence_capabilities v1
+	VK_KHR_external_memory v1
+	VK_KHR_external_memory_capabilities v1
+	VK_KHR_external_semaphore v1
+	VK_KHR_external_semaphore_capabilities v1
+	VK_KHR_format_feature_flags2 v2
+	VK_KHR_fragment_shader_barycentric v1
+	VK_KHR_get_memory_requirements2 v1
+	VK_KHR_get_physical_device_properties2 v2
+	VK_KHR_get_surface_capabilities2 v1
+	VK_KHR_global_priority v1
+	VK_KHR_image_format_list v1
+	VK_KHR_imageless_framebuffer v1
+	VK_KHR_incremental_present v2
+	VK_KHR_index_type_uint8 v1
+	VK_KHR_line_rasterization v1
+	VK_KHR_load_store_op_none v1
+	VK_KHR_maintenance1 v2
+	VK_KHR_maintenance2 v1
+	VK_KHR_maintenance3 v1
+	VK_KHR_maintenance4 v2
+	VK_KHR_maintenance5 v1
+	VK_KHR_maintenance6 v1
+	VK_KHR_maintenance7 v1
+	VK_KHR_maintenance8 v1
+	VK_KHR_maintenance9 v1
+	VK_KHR_map_memory2 v1
+	VK_KHR_multiview v1
+	VK_KHR_portability_subset v1
+	VK_KHR_present_id v1
+	VK_KHR_present_id2 v1
+	VK_KHR_present_wait v1
+	VK_KHR_present_wait2 v1
+	VK_KHR_push_descriptor v2
+	VK_KHR_relaxed_block_layout v1
+	VK_KHR_robustness2 v1
+	VK_KHR_sampler_mirror_clamp_to_edge v3
+	VK_KHR_sampler_ycbcr_conversion v14
+	VK_KHR_separate_depth_stencil_layouts v1
+	VK_KHR_shader_draw_parameters v1
+	VK_KHR_shader_expect_assume v1
+	VK_KHR_shader_float_controls v4
+	VK_KHR_shader_float_controls2 v1
+	VK_KHR_shader_float16_int8 v1
+	VK_KHR_shader_fma v1
+	VK_KHR_shader_integer_dot_product v1
+	VK_KHR_shader_maximal_reconvergence v1
+	VK_KHR_shader_non_semantic_info v1
+	VK_KHR_shader_quad_control v1
+	VK_KHR_shader_relaxed_extended_instruction v1
+	VK_KHR_shader_subgroup_extended_types v1
+	VK_KHR_shader_subgroup_rotate v2
+	VK_KHR_shader_subgroup_uniform_control_flow v1
+	VK_KHR_shader_terminate_invocation v1
+	VK_KHR_spirv_1_4 v1
+	VK_KHR_storage_buffer_storage_class v1
+	VK_KHR_surface v25
+	VK_KHR_surface_maintenance1 v1
+	VK_KHR_surface_protected_capabilities v1
+	VK_KHR_swapchain v70
+	VK_KHR_swapchain_maintenance1 v1
+	VK_KHR_swapchain_mutable_format v1
+	VK_KHR_synchronization2 v1
+	VK_KHR_timeline_semaphore v2
+	VK_KHR_uniform_buffer_standard_layout v1
+	VK_KHR_variable_pointers v1
+	VK_KHR_vertex_attribute_divisor v1
+	VK_KHR_vulkan_memory_model v3
+	VK_KHR_zero_initialize_workgroup_memory v1
+	VK_EXT_4444_formats v1
+	VK_EXT_buffer_device_address v2
+	VK_EXT_calibrated_timestamps v2
+	VK_EXT_debug_marker v4
+	VK_EXT_debug_report v10
+	VK_EXT_debug_utils v2
+	VK_EXT_depth_clip_control v1
+	VK_EXT_descriptor_indexing v2
+	VK_EXT_extended_dynamic_state v1
+	VK_EXT_extended_dynamic_state2 v1
+	VK_EXT_extended_dynamic_state3 v2
+	VK_EXT_external_memory_host v1
+	VK_EXT_external_memory_metal v1
+	VK_EXT_fragment_shader_interlock v1
+	VK_EXT_global_priority v2
+	VK_EXT_global_priority_query v1
+	VK_EXT_hdr_metadata v3
+	VK_EXT_headless_surface v1
+	VK_EXT_host_image_copy v1
+	VK_EXT_host_query_reset v1
+	VK_EXT_image_2d_view_of_3d v1
+	VK_EXT_image_robustness v1
+	VK_EXT_index_type_uint8 v1
+	VK_EXT_inline_uniform_block v1
+	VK_EXT_layer_settings v2
+	VK_EXT_legacy_dithering v2
+	VK_EXT_line_rasterization v1
+	VK_EXT_load_store_op_none v1
+	VK_EXT_memory_budget v1
+	VK_EXT_metal_objects v2
+	VK_EXT_metal_surface v1
+	VK_EXT_non_seamless_cube_map v1
+	VK_EXT_pipeline_creation_cache_control v3
+	VK_EXT_pipeline_creation_feedback v1
+	VK_EXT_pipeline_robustness v1
+	VK_EXT_post_depth_coverage v1
+	VK_EXT_primitive_topology_list_restart v1
+	VK_EXT_private_data v1
+	VK_EXT_provoking_vertex v1
+	VK_EXT_robustness2 v1
+	VK_EXT_sample_locations v1
+	VK_EXT_scalar_block_layout v1
+	VK_EXT_separate_stencil_usage v1
+	VK_EXT_shader_atomic_float v1
+	VK_EXT_shader_demote_to_helper_invocation v1
+	VK_EXT_shader_stencil_export v1
+	VK_EXT_shader_subgroup_ballot v1
+	VK_EXT_shader_subgroup_vote v1
+	VK_EXT_shader_viewport_index_layer v1
+	VK_EXT_subgroup_size_control v2
+	VK_EXT_surface_maintenance1 v1
+	VK_EXT_swapchain_colorspace v5
+	VK_EXT_swapchain_maintenance1 v1
+	VK_EXT_texel_buffer_alignment v1
+	VK_EXT_texture_compression_astc_hdr v1
+	VK_EXT_tooling_info v1
+	VK_EXT_vertex_attribute_divisor v3
+	VK_AMD_gpu_shader_half_float v2
+	VK_AMD_negative_viewport_height v1
+	VK_AMD_shader_image_load_store_lod v1
+	VK_AMD_shader_trinary_minmax v1
+	VK_GOOGLE_display_timing v1
+	VK_IMG_format_pvrtc v1
+	VK_INTEL_shader_integer_functions2 v1
+	VK_MVK_macos_surface v3
+	VK_MVK_moltenvk v37
+	VK_NV_fragment_shader_barycentric v1
+[mvk-info] GPU device:
+	model: AMD Radeon Pro Vega 56
+	type: Discrete
+	vendorID: 0x1002
+	deviceID: 0x6867
+	pipelineCacheUUID: DB445FF2-0F07-0200-0000-000100000000
+	GPU memory available: 8176 MB
+	GPU memory used: 0 MB
+	Metal Shading Language 3.2
+	supports the following GPU Features:
+		GPU Family Metal 3
+		GPU Family Mac 2
+		Read-Write Texture Tier 2
+[mvk-info] Created VkInstance for Vulkan version 1.0.334, as requested by app, with the following 3 Vulkan extensions enabled:
+	VK_KHR_external_memory_capabilities v1
+	VK_KHR_external_semaphore_capabilities v1
+	VK_KHR_get_physical_device_properties2 v2
+013c:fixme:dwrite:dwritefactory_CreateMonitorRenderingParams (0000000000000001): monitor setting ignored
+0024:fixme:system:GetThreadDpiHostingBehavior (): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (1): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (0): stub
+0024:fixme:font:find_matching_face Untranslated charset 255
+0024:fixme:font:get_nearest_charset returning DEFAULT_CHARSET face->fs.fsCsb[0] = 00000000 file = L"\\??\\Z:\\System\\Library\\Fonts\\Apple Braille Pinpoint 6 Dot.ttf"
+0024:fixme:font:find_matching_face Untranslated charset 255
+0024:fixme:font:get_nearest_charset returning DEFAULT_CHARSET face->fs.fsCsb[0] = 00000000 file = L"\\??\\Z:\\System\\Library\\Fonts\\Supplemental\\Baghdad.ttc"
+0024:fixme:font:find_matching_face Untranslated charset 255
+0024:fixme:font:get_nearest_charset returning DEFAULT_CHARSET face->fs.fsCsb[0] = 00000000 file = L"\\??\\Z:\\System\\Library\\Fonts\\Supplemental\\Gujarati Sangam MN.ttc"
+0024:fixme:font:find_matching_face Untranslated charset 255
+0024:fixme:font:get_nearest_charset returning DEFAULT_CHARSET face->fs.fsCsb[0] = 00000000 file = L"\\??\\Z:\\System\\Library\\Fonts\\Supplemental\\Gurmukhi Sangam MN.ttc"
+0024:fixme:font:find_matching_face Untranslated charset 255
+0024:fixme:font:get_nearest_charset returning DEFAULT_CHARSET face->fs.fsCsb[0] = 00000000 file = L"\\??\\Z:\\System\\Library\\Fonts\\HelveticaNeue.ttc"
+0024:fixme:font:find_matching_face Untranslated charset 255
+0024:fixme:font:get_nearest_charset returning DEFAULT_CHARSET face->fs.fsCsb[0] = 00000000 file = L"\\??\\Z:\\System\\Library\\Fonts\\Supplemental\\Hoefler Text Ornaments.ttf"
+0024:fixme:font:find_matching_face Untranslated charset 255
+0024:fixme:font:get_nearest_charset returning DEFAULT_CHARSET face->fs.fsCsb[0] = 00000000 file = L"\\??\\Z:\\System\\Library\\Fonts\\Supplemental\\ITFDevanagari.ttc"
+0024:fixme:font:find_matching_face Untranslated charset 255
+0024:fixme:font:get_nearest_charset returning DEFAULT_CHARSET face->fs.fsCsb[0] = 00000000 file = L"\\??\\Z:\\System\\Library\\Fonts\\Supplemental\\ITFDevanagari.ttc"
+0024:fixme:font:find_matching_face Untranslated charset 255
+0024:fixme:font:get_nearest_charset returning DEFAULT_CHARSET face->fs.fsCsb[0] = 00000000 file = L"\\??\\Z:\\System\\Library\\Fonts\\Supplemental\\Kailasa.ttc"
+0024:fixme:font:find_matching_face Untranslated charset 255
+0024:fixme:font:get_nearest_charset returning DEFAULT_CHARSET face->fs.fsCsb[0] = 00000000 file = L"\\??\\Z:\\System\\Library\\Fonts\\KohinoorGujarati.ttc"
+0024:fixme:font:find_matching_face Untranslated charset 255
+0024:fixme:font:get_nearest_charset returning DEFAULT_CHARSET face->fs.fsCsb[0] = 00000000 file = L"\\??\\Z:\\System\\Library\\Fonts\\Supplemental\\KufiStandardGK.ttc"
+0024:fixme:font:find_matching_face Untranslated charset 255
+0024:fixme:font:get_nearest_charset returning DEFAULT_CHARSET face->fs.fsCsb[0] = 00000000 file = L"\\??\\Z:\\System\\Library\\Fonts\\Supplemental\\Nadeem.ttc"
+0024:fixme:font:find_matching_face Untranslated charset 255
+0024:fixme:font:get_nearest_charset returning DEFAULT_CHARSET face->fs.fsCsb[0] = 00000000 file = L"\\??\\Z:\\System\\Library\\Fonts\\Supplemental\\Skia.ttf"
+0024:fixme:font:find_matching_face Untranslated charset 255
+0024:fixme:font:get_nearest_charset returning DEFAULT_CHARSET face->fs.fsCsb[0] = 00000000 file = L"\\??\\Z:\\System\\Library\\Fonts\\ZapfDingbats.ttf"
+0024:fixme:system:GetThreadDpiHostingBehavior (): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (1): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (0): stub
+0024:fixme:system:GetThreadDpiHostingBehavior (): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (1): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (0): stub
+0024:fixme:system:GetThreadDpiHostingBehavior (): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (1): stub
+0024:fixme:unwind:call_user_apc_dispatcher flags 0x3 are not supported.
+0024:fixme:system:SetThreadDpiHostingBehavior (0): stub
+0024:fixme:system:GetThreadDpiHostingBehavior (): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (1): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (0): stub
+0024:fixme:system:GetThreadDpiHostingBehavior (): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (1): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (0): stub
+0024:fixme:gdiplus:resample_bitmap_pixel Unimplemented interpolation 7
+0024:fixme:system:GetThreadDpiHostingBehavior (): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (1): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (0): stub
+GraphicsFactory not found.
+Initialize graphics with 'GraphicsFactory.RegisterGraphicsFactory(new ConcreteGraphicsFactory());'.
+Registering Concrete GraphicsFactoryStrategy through reflection.
+0024:fixme:dxgi:dxgi_output_GetDisplayModeList iface 0000000006005B40, format DXGI_FORMAT_R8G8B8A8_UNORM, flags 0, mode_count 000000000029D4A8, modes 0000000000000000 partial stub!
+0024:fixme:dxgi:dxgi_output_GetDisplayModeList iface 0000000006005B40, format DXGI_FORMAT_R8G8B8A8_UNORM, flags 0, mode_count 000000000029D4A8, modes 0000000207B4B6A0 partial stub!
+0024:fixme:dxgi:dxgi_output_GetDisplayModeList iface 0000000006005B40, format DXGI_FORMAT_B8G8R8A8_UNORM, flags 0, mode_count 000000000029D4A8, modes 0000000000000000 partial stub!
+0024:fixme:dxgi:dxgi_output_GetDisplayModeList iface 0000000006005B40, format DXGI_FORMAT_B8G8R8A8_UNORM, flags 0, mode_count 000000000029D4A8, modes 0000000207B4BE40 partial stub!
+0024:fixme:dxgi:dxgi_output_GetDisplayModeList iface 0000000006005B40, format DXGI_FORMAT_B5G6R5_UNORM, flags 0, mode_count 000000000029D4A8, modes 0000000000000000 partial stub!
+0024:fixme:dxgi:dxgi_output_GetDisplayModeList iface 0000000006005B40, format DXGI_FORMAT_B5G6R5_UNORM, flags 0, mode_count 000000000029D4A8, modes 0000000207B4C348 partial stub!
+0148:fixme:d3d:wined3d_context_gl_init OpenGL implementation does not support GL_PRIMITIVE_RESTART_FIXED_INDEX.
+0148:err:d3d:wined3d_check_gl_call >>>>>>> GL_INVALID_FRAMEBUFFER_OPERATION (0x506) from glClear @ /Users/gcenx/Documents/GitHub/wine-private/dlls/wined3d/context_gl.c / 2245.
+014c:fixme:d3d:wined3d_context_gl_init OpenGL implementation does not support GL_PRIMITIVE_RESTART_FIXED_INDEX.
+014c:err:d3d:wined3d_check_gl_call >>>>>>> GL_INVALID_FRAMEBUFFER_OPERATION (0x506) from glClear @ /Users/gcenx/Documents/GitHub/wine-private/dlls/wined3d/context_gl.c / 2245.
+[Gum/XnaAndWinforms] Graphics profile selected: HiDef
+0150:fixme:d3d:wined3d_context_gl_init OpenGL implementation does not support GL_PRIMITIVE_RESTART_FIXED_INDEX.
+0150:err:d3d:wined3d_check_gl_call >>>>>>> GL_INVALID_FRAMEBUFFER_OPERATION (0x506) from glClear @ /Users/gcenx/Documents/GitHub/wine-private/dlls/wined3d/context_gl.c / 2245.
+0024:fixme:dxgi:DXGID3D10CreateDevice Ignoring flags 0x20.
+0154:fixme:d3d:wined3d_context_gl_init OpenGL implementation does not support GL_PRIMITIVE_RESTART_FIXED_INDEX.
+0154:err:d3d:wined3d_check_gl_call >>>>>>> GL_INVALID_FRAMEBUFFER_OPERATION (0x506) from glClear @ /Users/gcenx/Documents/GitHub/wine-private/dlls/wined3d/context_gl.c / 2245.
+0024:fixme:d3d11:d3d_rasterizer_state_init Ignoring MultisampleEnable 0x1.
+0024:fixme:d3d:wined3d_check_device_multisample_type multisample_type 32 not handled yet.
+0024:fixme:d3d:wined3d_swapchain_init The application requested more than one back buffer, this is not properly supported.
+Please configure the application to use double buffering (1 back buffer) if possible.
+0024:fixme:system:GetThreadDpiHostingBehavior (): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (1): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (0): stub
+0024:fixme:system:GetThreadDpiHostingBehavior (): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (1): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (0): stub
+0024:fixme:system:GetThreadDpiHostingBehavior (): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (1): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (0): stub
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 6 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 9 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 5 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 12 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 8 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 15 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 12 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 15 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 6 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 12 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 9 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 15 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 12 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 15 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 5 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 15 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 8 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 15 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 6 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 15 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 9 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 15 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 18 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 18 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 18 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 18 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 8 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 15 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 15 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 9 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 15 unknown DWORDs.
+0024:fixme:d3d_shader:shader_dxbc_process_section Skipping 15 unknown DWORDs.
+TitleContainerFactory not found.
+Initialize title with 'TitleContainerFactory.RegisterTitleContainerFactory(new ConcreteTitleContainerFactory());'.
+Registering Concrete TitleContainerFactoryStrategy through reflection.
+[Gum/WireframeControl] Initialize failed:
+System.NotSupportedException: Shader model 4.0 is not supported by the current graphics profile 'HiDef'.
+   at Microsoft.Xna.Platform.Graphics.ConcreteShader..ctor(GraphicsContextStrategy contextStrategy, ShaderVersion shaderVersion, Byte[] shaderBytecode, SamplerInfo[] samplers, Int32[] cBuffers, VertexAttribute[] attributes)
+   at Microsoft.Xna.Platform.Graphics.ConcretePixelShader..ctor(GraphicsContextStrategy contextStrategy, ShaderVersion shaderVersion, Byte[] shaderBytecode, SamplerInfo[] samplers, Int32[] cBuffers, VertexAttribute[] attributes)
+   at Microsoft.Xna.Platform.Graphics.ConcreteGraphicsContext.CreatePixelShaderStrategy(ShaderVersion shaderVersion, Byte[] shaderBytecode, SamplerInfo[] samplers, Int32[] cBuffers, VertexAttribute[] attributes)
+   at Microsoft.Xna.Platform.Graphics.PixelShader..ctor(GraphicsDevice graphicsDevice, ShaderVersion shaderVersion, Byte[] shaderBytecode, SamplerInfo[] samplers, Int32[] cBuffers, VertexAttribute[] attributes)
+   at Microsoft.Xna.Framework.Graphics.Effect.KNIFXReader11.ReadShader()
+   at Microsoft.Xna.Framework.Graphics.Effect.KNIFXReader11.ReadShaders()
+   at Microsoft.Xna.Framework.Graphics.Effect.KNIFXReader11.ReadEffect()
+   at Microsoft.Xna.Framework.Graphics.Effect..ctor(GraphicsDevice graphicsDevice, Byte[] effectCode, Int32 index, Int32 count)
+   at Microsoft.Xna.Framework.Content.EffectReader.Read(ContentReader input, Effect existingInstance)
+   at Microsoft.Xna.Framework.Content.ContentTypeReader`1.Read(ContentReader input, Object existingInstance)
+   at Microsoft.Xna.Framework.Content.ContentReader.ReadObject[T](T existingInstance)
+   at Microsoft.Xna.Framework.Content.ContentReader.ReadObject[T]()
+   at Microsoft.Xna.Framework.Content.ContentReader.ReadAsset[T]()
+   at Microsoft.Xna.Framework.Content.ContentManager.ReadAsset[T](String assetName, Action`1 recordDisposableObject)
+   at Microsoft.Xna.Framework.Content.ContentManager.Load[T](String assetName)
+   at Apos.Shapes.ShapeBatch..ctor(GraphicsDevice graphicsDevice, ContentManager content, Effect effect)
+   at MonoGameAndGum.Renderables.ShapeRenderer.Initialize(GraphicsDevice graphicsDevice, ContentManager contentManager)
+   at Gum.Plugins.InternalPlugins.EditorTab.Views.WireframeControl.Initialize(Panel wireframeParentPanel, IHotkeyManager hotkeyManager, SelectionManager selectionManager, IDragDropManager dragDropManager, EditorViewModel editorViewModel, IProjectManager projectManager, IToolFontService toolFontService, IToolLayerService toolLayerService) in C:\git\Gum\Tool\EditorTabPlugin_XNA\Views\WireframeControl.cs:line 188
+0024:fixme:win:RegisterPowerSettingNotification (000000000001009A,{02731015-4510-4526-99e6-e5a17ebd1aea},0): stub
+0024:fixme:wtsapi:WTSRegisterSessionNotification Stub 000000000006008E 0x00000000
+0024:fixme:msg:ChangeWindowMessageFilterEx 000000000006008E c03a 1 000000000029AE18
+0024:fixme:msg:ChangeWindowMessageFilterEx 000000000006008E 111 1 000000000029AE18
+0024:fixme:ntdll:EtwEventSetInformation (deadbeef, 2, 00000001005C1818, 40) stub
+0024:fixme:dwmapi:DwmSetWindowAttribute (000000000006008E, 23, 000000000029AC90, 4) stub
+0024:fixme:dwmapi:DwmGetWindowAttribute attribute 5 not implemented.
+0024:fixme:dwmapi:DwmExtendFrameIntoClientArea (000000000006008E, 000000000029A458) stub
+0024:fixme:wtsapi:WTSRegisterSessionNotification Stub 00000000000300A0 0x00000000
+0024:fixme:msg:ChangeWindowMessageFilterEx 00000000000300A0 c03a 1 000000000029AD38
+0024:fixme:msg:ChangeWindowMessageFilterEx 00000000000300A0 111 1 000000000029AD38
+0024:fixme:dwrite:dwritetextanalyzer_AnalyzeNumberSubstitution (00000000063D6850 0 3 00000000063D6890): stub
+0024:fixme:dwmapi:DwmGetWindowAttribute attribute 5 not implemented.
+0024:fixme:dwmapi:DwmExtendFrameIntoClientArea (00000000000300A0, 000000000029A378) stub
+013c:fixme:seh:WerRegisterMemoryBlock (00006FFFFDC43C00 10240) stub
+013c:fixme:seh:WerRegisterMemoryBlock (00006FFFFDC3C1A0 4) stub
+0024:fixme:gdiplus:GdipGetFamilyName No support for handling of multiple languages!
+0024:fixme:system:GetThreadDpiHostingBehavior (): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (1): stub
+0024:fixme:system:GetThreadDpiHostingBehavior (): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (1): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (0): stub
+0024:fixme:system:GetThreadDpiHostingBehavior (): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (1): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (0): stub
+0024:fixme:system:GetThreadDpiHostingBehavior (): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (1): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (0): stub
+0024:fixme:system:GetThreadDpiHostingBehavior (): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (1): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (0): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (0): stub
+0024:fixme:system:GetThreadDpiHostingBehavior (): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (1): stub
+0024:fixme:system:GetThreadDpiHostingBehavior (): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (1): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (0): stub
+0024:fixme:system:GetThreadDpiHostingBehavior (): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (1): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (0): stub
+0024:fixme:system:GetThreadDpiHostingBehavior (): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (1): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (0): stub
+0024:fixme:system:GetThreadDpiHostingBehavior (): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (1): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (0): stub
+0024:fixme:system:SetThreadDpiHostingBehavior (0): stub
+013c:fixme:dwmapi:DwmGetCompositionTimingInfo (0000000000000000 00000000053AFC70)
+0024:fixme:d3d:wined3d_check_device_multisample_type multisample_type 32 not handled yet.
+0024:fixme:dxgi:d3d11_swapchain_GetDesc Ignoring ScanlineOrdering and Scaling.
+0024:fixme:dxgi:d3d11_swapchain_GetDesc Ignoring ScanlineOrdering and Scaling.
+0024:fixme:dxgi:d3d11_swapchain_ResizeBuffers Ignoring flags 0x2.
+0024:fixme:d3d:wined3d_check_device_multisample_type multisample_type 32 not handled yet.
+Process terminated. Assertion failed.
+BackgroundManager.Initialize must be called before Activity
+   at EditorTabPlugin_XNA.Services.BackgroundManager.Activity() in C:\git\Gum\Tool\EditorTabPlugin_XNA\Services\BackgroundManager.cs:line 101
+   at Gum.Plugins.InternalPlugins.EditorTab.MainEditorTabPlugin.<HandleWireframeInitialized>b__81_0() in C:\git\Gum\Tool\EditorTabPlugin_XNA\MainEditorTabPlugin.cs:line 1421
+   at XnaAndWinforms.GraphicsDeviceControl.OnPaint(PaintEventArgs e)
+   at System.Windows.Forms.Control.PaintWithErrorHandling(PaintEventArgs e, Int16 layer)
+   at System.Windows.Forms.Control.WmPaint(Message& m)
+   at System.Windows.Forms.Control.WndProc(Message& m)
+   at System.Windows.Forms.Control.ControlNativeWindow.WndProc(Message& m)
+   at System.Windows.Forms.NativeWindow.Callback(HWND hWnd, MessageId msg, WPARAM wparam, LPARAM lparam)
+   at MS.Win32.UnsafeNativeMethods.DispatchMessage(MSG& msg)
+   at MS.Win32.UnsafeNativeMethods.DispatchMessage(MSG& msg)
+   at System.Windows.Threading.Dispatcher.PushFrameImpl(DispatcherFrame frame)
+   at System.Windows.Window.ShowHelper(Object booleanBox)
+   at System.Windows.Window.Show()
+   at System.Windows.Window.ShowDialog()
+   at Gum.Services.Dialogs.DialogService.ShowMessage(String message, String title, MessageDialogStyle style) in C:\git\Gum\Gum\Services\Dialogs\DialogService.cs:line 41
+   at Gum.Plugins.InternalPlugins.EditorTab.Views.WireframeControl.Initialize(Panel wireframeParentPanel, IHotkeyManager hotkeyManager, SelectionManager selectionManager, IDragDropManager dragDropManager, EditorViewModel editorViewModel, IProjectManager projectManager, IToolFontService toolFontService, IToolLayerService toolLayerService) in C:\git\Gum\Tool\EditorTabPlugin_XNA\Views\WireframeControl.cs:line 188
+   at Gum.Plugins.InternalPlugins.EditorTab.MainEditorTabPlugin.HandleXnaInitialized() in C:\git\Gum\Tool\EditorTabPlugin_XNA\MainEditorTabPlugin.cs:line 807
+   at Gum.Plugins.BaseClasses.PluginBase.CallXnaInitialized() in C:\git\Gum\Gum\Plugins\BaseClasses\PluginBase.cs:line 526
+   at Gum.Plugins.PluginManager.<>c.<XnaInitialized>b__98_0(PluginBase plugin) in C:\git\Gum\Gum\Plugins\PluginManager.cs:line 593
+   at Gum.Plugins.PluginManager.CallMethodOnPlugin(Action`1 methodToCall, String methodName) in C:\git\Gum\Gum\Plugins\PluginManager.cs:line 173
+   at Gum.Plugins.PluginManager.XnaInitialized() in C:\git\Gum\Gum\Plugins\PluginManager.cs:line 593
+   at Gum.Program.InitializeGum(IServiceProvider services) in C:\git\Gum\Gum\Program.cs:line 141
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+   at Gum.Program.InitializeGum(IServiceProvider services)
+   at Gum.Program.MainAsync(String[] args) in C:\git\Gum\Gum\Program.cs:line 87
+   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)
+   at Gum.Program.MainAsync(String[] args)
+   at Gum.Program.Main(String[] args) in C:\git\Gum\Gum\Program.cs:line 50
+0024:fixme:advapi:RegisterEventSourceW ((null),L".NET Runtime"): stub
+0024:fixme:advapi:ReportEventW (00000000CAFE4242,0x0001,0x0000,0x00000401,0000000000000000,0x0001,0x00000000,0000000000298C90,0000000000000000): stub
+0024:err:eventlog:ReportEventW L"Application: Gum.exe\n"
+0024:err:eventlog:ReportEventW L"CoreCLR Version: 8.0.1224.60305\n"
+0024:err:eventlog:ReportEventW L".NET Version: 8.0.12\n"
+0024:err:eventlog:ReportEventW L"Description: The application requested process termination through System.Environment.FailFast.\n"
+0024:err:eventlog:ReportEventW L"Message: BackgroundManager.Initialize must be called before Activity\r\n"
+0024:err:eventlog:ReportEventW L"   at EditorTabPlugin_XNA.Services.BackgroundManager.Activity() in C:\\git\\Gum\\Tool\\EditorTabPlugin_XNA\\Services\\BackgroundManager.cs:line 101\r\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Plugins.InternalPlugins.EditorTab.MainEditorTabPlugin.<HandleWireframeInitialized>b__81_0() in C:\\git\\Gum\\Tool\\EditorTabPlugin_XNA\\MainEditorTabPlugin.cs:line 1421\r\n"
+0024:err:eventlog:ReportEventW L"   at XnaAndWinforms.GraphicsDeviceControl.OnPaint(PaintEventArgs e)\r\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Forms.Control.PaintWithErrorHandling(PaintEventArgs e, Int16 layer)\r\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Forms.Control.WmPaint(Message& m)\r\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Forms.Control.WndProc(Message& m)\r\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Forms.Control.ControlNativeWindow.WndProc(Message& m)\r\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Forms.NativeWindow.Callback(HWND hWnd, MessageId msg, WPARAM wparam, LPARAM lparam)\r\n"
+0024:err:eventlog:ReportEventW L"   at MS.Win32.UnsafeNativeMethods.DispatchMessage(MSG& msg)\r\n"
+0024:err:eventlog:ReportEventW L"   at MS.Win32.UnsafeNativeMethods.DispatchMessage(MSG& msg)\r\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Threading.Dispatcher.PushFrameImpl(DispatcherFrame frame)\r\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Window.ShowHelper(Object booleanBox)\r\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Window.Show()\r\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Window.ShowDialog()\r\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Services.Dialogs.DialogService.ShowMessage(String message, String title, MessageDialogStyle style) in C:\\git\\Gum\\Gum\\Services\\Dialogs\\DialogService.cs:line 41\r\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Plugins.InternalPlugins.EditorTab.Views.WireframeControl.Initialize(Panel wireframeParentPanel, IHotkeyManager hotkeyManager, SelectionManager selectionManager, IDragDropManager dragDropManager, EditorViewModel editorViewModel, IProjectManager projectManager, IToolFontService to"...
+0024:err:eventlog:ReportEventW L"   at Gum.Plugins.InternalPlugins.EditorTab.MainEditorTabPlugin.HandleXnaInitialized() in C:\\git\\Gum\\Tool\\EditorTabPlugin_XNA\\MainEditorTabPlugin.cs:line 807\r\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Plugins.BaseClasses.PluginBase.CallXnaInitialized() in C:\\git\\Gum\\Gum\\Plugins\\BaseClasses\\PluginBase.cs:line 526\r\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Plugins.PluginManager.<>c.<XnaInitialized>b__98_0(PluginBase plugin) in C:\\git\\Gum\\Gum\\Plugins\\PluginManager.cs:line 593\r\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Plugins.PluginManager.CallMethodOnPlugin(Action`1 methodToCall, String methodName) in C:\\git\\Gum\\Gum\\Plugins\\PluginManager.cs:line 173\r\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Plugins.PluginManager.XnaInitialized() in C:\\git\\Gum\\Gum\\Plugins\\PluginManager.cs:line 593\r\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Program.InitializeGum(IServiceProvider services) in C:\\git\\Gum\\Gum\\Program.cs:line 141\r\n"
+0024:err:eventlog:ReportEventW L"   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)\r\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Program.InitializeGum(IServiceProvider services)\r\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Program.MainAsync(String[] args) in C:\\git\\Gum\\Gum\\Program.cs:line 87\r\n"
+0024:err:eventlog:ReportEventW L"   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)\r\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Program.MainAsync(String[] args)\r\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Program.Main(String[] args) in C:\\git\\Gum\\Gum\\Program.cs:line 50\n"
+0024:err:eventlog:ReportEventW L"Description: The process was terminated due to an unhandled exception.System.Diagnostics.DebugProvider+DebugAssertException: BackgroundManager.Initialize must be called before Activity\r\n"
+0024:err:eventlog:ReportEventW L"   at EditorTabPlugin_XNA.Services.BackgroundManager.Activity() in C:\\git\\Gum\\Tool\\EditorTabPlugin_XNA\\Services\\BackgroundManager.cs:line 101\r\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Plugins.InternalPlugins.EditorTab.MainEditorTabPlugin.<HandleWireframeInitialized>b__81_0() in C:\\git\\Gum\\Tool\\EditorTabPlugin_XNA\\MainEditorTabPlugin.cs:line 1421\r\n"
+0024:err:eventlog:ReportEventW L"   at XnaAndWinforms.GraphicsDeviceControl.OnPaint(PaintEventArgs e)\r\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Forms.Control.PaintWithErrorHandling(PaintEventArgs e, Int16 layer)\r\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Forms.Control.WmPaint(Message& m)\r\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Forms.Control.WndProc(Message& m)\r\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Forms.Control.ControlNativeWindow.WndProc(Message& m)\r\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Forms.NativeWindow.Callback(HWND hWnd, MessageId msg, WPARAM wparam, LPARAM lparam)\r\n"
+0024:err:eventlog:ReportEventW L"   at MS.Win32.UnsafeNativeMethods.DispatchMessage(MSG& msg)\r\n"
+0024:err:eventlog:ReportEventW L"   at MS.Win32.UnsafeNativeMethods.DispatchMessage(MSG& msg)\r\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Threading.Dispatcher.PushFrameImpl(DispatcherFrame frame)\r\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Window.ShowHelper(Object booleanBox)\r\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Window.Show()\r\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Window.ShowDialog()\r\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Services.Dialogs.DialogService.ShowMessage(String message, String title, MessageDialogStyle style) in C:\\git\\Gum\\Gum\\Services\\Dialogs\\DialogService.cs:line 41\r\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Plugins.InternalPlugins.EditorTab.Views.WireframeControl.Initialize(Panel wireframeParentPanel, IHotkeyManager hotkeyManager, SelectionManager selectionManager, IDragDropManager dragDropManager, EditorViewModel editorViewModel, IProjectManager projectManager, IToolFontService to"...
+0024:err:eventlog:ReportEventW L"   at Gum.Plugins.InternalPlugins.EditorTab.MainEditorTabPlugin.HandleXnaInitialized() in C:\\git\\Gum\\Tool\\EditorTabPlugin_XNA\\MainEditorTabPlugin.cs:line 807\r\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Plugins.BaseClasses.PluginBase.CallXnaInitialized() in C:\\git\\Gum\\Gum\\Plugins\\BaseClasses\\PluginBase.cs:line 526\r\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Plugins.PluginManager.<>c.<XnaInitialized>b__98_0(PluginBase plugin) in C:\\git\\Gum\\Gum\\Plugins\\PluginManager.cs:line 593\r\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Plugins.PluginManager.CallMethodOnPlugin(Action`1 methodToCall, String methodName) in C:\\git\\Gum\\Gum\\Plugins\\PluginManager.cs:line 173\r\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Plugins.PluginManager.XnaInitialized() in C:\\git\\Gum\\Gum\\Plugins\\PluginManager.cs:line 593\r\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Program.InitializeGum(IServiceProvider services) in C:\\git\\Gum\\Gum\\Program.cs:line 141\r\n"
+0024:err:eventlog:ReportEventW L"   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)\r\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Program.InitializeGum(IServiceProvider services)\r\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Program.MainAsync(String[] args) in C:\\git\\Gum\\Gum\\Program.cs:line 87\r\n"
+0024:err:eventlog:ReportEventW L"   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[TStateMachine](TStateMachine& stateMachine)\r\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Program.MainAsync(String[] args)\r\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Program.Main(String[] args) in C:\\git\\Gum\\Gum\\Program.cs:line 50\n"
+0024:err:eventlog:ReportEventW L"Stack:\n"
+0024:err:eventlog:ReportEventW L"   at System.Environment.FailFast(System.String, System.Exception, System.String)\n"
+0024:err:eventlog:ReportEventW L"   at System.Diagnostics.Debug.Fail(System.String, System.String)\n"
+0024:err:eventlog:ReportEventW L"   at EditorTabPlugin_XNA.Services.BackgroundManager.Activity()\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Plugins.InternalPlugins.EditorTab.MainEditorTabPlugin.<HandleWireframeInitialized>b__81_0()\n"
+0024:err:eventlog:ReportEventW L"   at XnaAndWinforms.GraphicsDeviceControl.OnPaint(System.Windows.Forms.PaintEventArgs)\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Forms.Control.PaintWithErrorHandling(System.Windows.Forms.PaintEventArgs, Int16)\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Forms.Control.WmPaint(System.Windows.Forms.Message ByRef)\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Forms.Control.WndProc(System.Windows.Forms.Message ByRef)\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Forms.Control+ControlNativeWindow.WndProc(System.Windows.Forms.Message ByRef)\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Forms.NativeWindow.Callback(Windows.Win32.Foundation.HWND, Windows.Win32.MessageId, Windows.Win32.Foundation.WPARAM, Windows.Win32.Foundation.LPARAM)\n"
+0024:err:eventlog:ReportEventW L"   at MS.Win32.UnsafeNativeMethods.DispatchMessage(System.Windows.Interop.MSG ByRef)\n"
+0024:err:eventlog:ReportEventW L"   at MS.Win32.UnsafeNativeMethods.DispatchMessage(System.Windows.Interop.MSG ByRef)\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Threading.Dispatcher.PushFrameImpl(System.Windows.Threading.DispatcherFrame)\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Window.ShowHelper(System.Object)\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Window.Show()\n"
+0024:err:eventlog:ReportEventW L"   at System.Windows.Window.ShowDialog()\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Services.Dialogs.DialogService.ShowMessage(System.String, System.String, Gum.Services.Dialogs.MessageDialogStyle)\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Plugins.InternalPlugins.EditorTab.Views.WireframeControl.Initialize(System.Windows.Forms.Panel, Gum.Managers.IHotkeyManager, Gum.Wireframe.SelectionManager, Gum.Managers.IDragDropManager, EditorTabPlugin_XNA.ViewModels.EditorViewModel, Gum.Managers.IProjectManager, Gum.Managers."...
+0024:err:eventlog:ReportEventW L"   at Gum.Plugins.InternalPlugins.EditorTab.MainEditorTabPlugin.HandleXnaInitialized()\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Plugins.BaseClasses.PluginBase.CallXnaInitialized()\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Plugins.PluginManager+<>c.<XnaInitialized>b__98_0(Gum.Plugins.BaseClasses.PluginBase)\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Plugins.PluginManager.CallMethodOnPlugin(System.Action`1<Gum.Plugins.BaseClasses.PluginBase>, System.String)\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Plugins.PluginManager.XnaInitialized()\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Program+<InitializeGum>d__2.MoveNext()\n"
+0024:err:eventlog:ReportEventW L"   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[[System.__Canon, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]](System.__Canon ByRef)\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Program.InitializeGum(System.IServiceProvider)\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Program+<MainAsync>d__1.MoveNext()\n"
+0024:err:eventlog:ReportEventW L"   at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[[System.__Canon, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]](System.__Canon ByRef)\n"
+0024:err:eventlog:ReportEventW L"   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1[[System.Int32, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]].Start[[System.__Canon, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]](Syst"...
+0024:err:eventlog:ReportEventW L"   at Gum.Program.MainAsync(System.String[])\n"
+0024:err:eventlog:ReportEventW L"   at Gum.Program.Main(System.String[])\n"
+0024:fixme:advapi:DeregisterEventSource (00000000CAFE4242) stub
+0024:err:seh:NtRaiseException Unhandled exception code 80131623 flags 0 addr 0x10082822b

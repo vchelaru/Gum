@@ -134,3 +134,38 @@ app's crash first. The probe inference (`FL10_0` fails) turned out correct on th
 the failure *mechanism* (finalizer husk, not a main-thread throw) was only pinned down by the
 baseline. Outstanding: read the real `WireframeControl.Initialize` exception from the Run 4
 build (`patched-output.log`) - a separate downstream blocker the original app never reached.
+
+## Run 4 result - THE REAL CEILING (revised conclusion)
+
+`patched-output.log`: `Graphics profile selected: HiDef`, then
+`System.NotSupportedException: Shader model 4.0 is not supported by the current graphics
+profile 'HiDef'` from `Apos.Shapes.ShapeBatch..ctor` -> `ShapeRenderer.Initialize` ->
+`WireframeControl.Initialize:188`.
+
+The root constraint is a single thing: **WineD3D on this Mac caps Direct3D at feature
+level 9_3, but the tool needs FL10.0** - for the device (`FL10_0`) AND for the
+Apos.Shapes shaders (Shader Model 4.0). Lowering the device profile is therefore a
+**dead end**: it gets past device creation but dies loading SM4.0 shaders, because
+SM4.0 requires FL10.0 regardless of the chosen profile. The `GraphicsDeviceService`
+profile-fallback change is at best a graceful-degrade safety net; it does NOT make
+the Mac work.
+
+### The real fix: lift the D3D feature level (no app code change)
+
+Make Wine expose FL11 by routing D3D11 through **DXVK -> Vulkan -> MoltenVK -> Metal**
+instead of WineD3D-over-OpenGL (which is stuck at 9_3 because macOS GL is capped at 4.1).
+The **Linux** setup already installs DXVK; the **macOS** setup script does NOT (it only
+installs MoltenVK and sets the WineD3D renderer to vulkan, which still caps at 9_3). So
+the actual setup gap is: add `winetricks dxvk` to `setup_gum_mac.sh`. With DXVK active,
+the UNMODIFIED tool should run (FL10_0 device + SM4.0 shaders both supported).
+
+Confirm cheaply with the probe suite after `winetricks dxvk`: Probe5's reported
+`FeatureLevel` should jump from `9_3` to `11_0` and Probe6 (KNI `FL10_0`) should flip to
+PASS. Then run the stock tool.
+
+### Alternative (code): the OpenGL backend
+
+Switch the tool's KNI platform to `nkast.Kni.Platform.SDL2.GL`. Probe9 proved KNI runs
+over OpenGL on the real GPU (no FL ceiling); GL shaders sidestep the SM4.0/FL10.0 D3D
+limit. Bigger change (GL-compiled Apos.Shapes content + re-hosting the GL surface in the
+WinForms shell). Pursue only if DXVK-on-macOS proves unworkable.
