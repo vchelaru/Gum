@@ -17,10 +17,25 @@ namespace Gum.Plugins.InternalPlugins.TreeView;
 /// </summary>
 internal class StandardsPaletteView : Border
 {
+    // Below this per-cell width a chip can't fit its icon + label, so it collapses to a centered
+    // icon. Below TwoColumnMinWidth the grid drops from two columns to one.
+    private const double LabelMinCellWidth = 66;
+    private const double TwoColumnMinWidth = 160;
+
     private readonly Func<string, ImageSource?> _iconResolver;
     private readonly UniformGrid _chipsPanel;
     private readonly Dictionary<string, Border> _chipsByType = new();
+    private readonly List<ChipVisual> _chipVisuals = new();
     private string? _selectedTypeName;
+
+    /// <summary>References to a chip's adjustable parts, used to adapt its layout as the panel resizes.</summary>
+    private sealed class ChipVisual
+    {
+        public Border Chip = null!;
+        public StackPanel Content = null!;
+        public Image? Icon;
+        public TextBlock Label = null!;
+    }
 
     /// <summary>Raised with the standard type name when "Add to current ..." is clicked on a chip.</summary>
     public Action<string>? AddToCurrentRequested { get; set; }
@@ -68,10 +83,42 @@ internal class StandardsPaletteView : Border
         header.Children.Add(hint);
 
         _chipsPanel = new UniformGrid { Columns = 2 };
+        _chipsPanel.SizeChanged += (_, _) => UpdateChipLayout();
 
         root.Children.Add(header);
         root.Children.Add(_chipsPanel);
         Child = root;
+    }
+
+    /// <summary>
+    /// Adapts the chip grid to the available width: two columns when wide, one when narrow, and a
+    /// centered icon-only chip when a cell is too tight to fit the label. This keeps the icon visible
+    /// (and unclipped) instead of clamping every chip to a fixed half-width cell.
+    /// </summary>
+    private void UpdateChipLayout()
+    {
+        double available = _chipsPanel.ActualWidth;
+        if (available <= 0 || _chipVisuals.Count == 0)
+        {
+            return;
+        }
+
+        int columns = available >= TwoColumnMinWidth ? 2 : 1;
+        _chipsPanel.Columns = columns;
+
+        double cellWidth = available / columns;
+        bool compact = cellWidth < LabelMinCellWidth;
+
+        foreach (ChipVisual visual in _chipVisuals)
+        {
+            visual.Label.Visibility = compact ? Visibility.Collapsed : Visibility.Visible;
+            visual.Content.HorizontalAlignment = compact ? HorizontalAlignment.Center : HorizontalAlignment.Left;
+            visual.Chip.Padding = compact ? new Thickness(4) : new Thickness(8, 5, 8, 5);
+            if (visual.Icon != null)
+            {
+                visual.Icon.Margin = compact ? new Thickness(0) : new Thickness(0, 0, 6, 0);
+            }
+        }
     }
 
     /// <summary>
@@ -82,12 +129,14 @@ internal class StandardsPaletteView : Border
     {
         _chipsPanel.Children.Clear();
         _chipsByType.Clear();
+        _chipVisuals.Clear();
         foreach (string typeName in standardTypeNames)
         {
             Border chip = CreateChip(typeName);
             _chipsByType[typeName] = chip;
             _chipsPanel.Children.Add(chip);
         }
+        UpdateChipLayout();
     }
 
     /// <summary>
@@ -130,17 +179,19 @@ internal class StandardsPaletteView : Border
             VerticalAlignment = VerticalAlignment.Center
         };
 
+        Image? iconImage = null;
         ImageSource? icon = _iconResolver(typeName + ".png");
         if (icon != null)
         {
-            content.Children.Add(new Image
+            iconImage = new Image
             {
                 Source = icon,
                 Width = 14,
                 Height = 14,
                 Margin = new Thickness(0, 0, 6, 0),
                 VerticalAlignment = VerticalAlignment.Center
-            });
+            };
+            content.Children.Add(iconImage);
         }
 
         TextBlock label = new TextBlock
@@ -178,6 +229,14 @@ internal class StandardsPaletteView : Border
 
         WireDrag(chip, typeName);
         chip.ContextMenu = CreateChipContextMenu(typeName);
+
+        _chipVisuals.Add(new ChipVisual
+        {
+            Chip = chip,
+            Content = content,
+            Icon = iconImage,
+            Label = label
+        });
 
         return chip;
     }
