@@ -353,7 +353,10 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
     {
         // Repaint the tab from the just-restored .ganx, then re-arm undo recording. The flag spanned
         // the .ganx write (ApplyAnimations) through this repaint so neither flushed a spurious undo.
-        RefreshViewModel();
+        // forceReload bypasses CreateViewModel's same-element early-out: an in-place undo leaves the
+        // selected element unchanged, so without forcing it the stale view model would survive and the
+        // tab would keep showing the pre-undo animations until the element was reselected (#3406).
+        RefreshViewModel(forceReload: true);
         _isApplyingUndo = false;
     }
 
@@ -534,11 +537,11 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
         }
     }
 
-    private void RefreshViewModel()
+    private void RefreshViewModel(bool forceReload = false)
     {
         RefreshAvailableStates();
 
-        CreateViewModel();
+        CreateViewModel(forceReload);
 
         if (_mainWindow != null)
         {
@@ -595,7 +598,20 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
         return states;
     }
 
-    private void CreateViewModel()
+    /// <summary>
+    /// Decides whether <see cref="CreateViewModel"/> should rebuild the view model from the element's
+    /// .ganx. Normally the view model is only reloaded when the selected element changes; an in-place
+    /// undo/redo restores the .ganx without changing the selection, so the after-undo path passes
+    /// <paramref name="forceReload"/> to repaint the tab immediately rather than keeping the stale view
+    /// model until the element is reselected (#3406).
+    /// </summary>
+    internal static bool ShouldReloadViewModel(ElementSave? currentlyReferencedElement,
+        ElementSave? selectedElement, bool forceReload)
+    {
+        return currentlyReferencedElement != selectedElement || forceReload;
+    }
+
+    private void CreateViewModel(bool forceReload = false)
     {
         ElementSave? currentlyReferencedElement = null;
         if (_viewModel != null)
@@ -605,7 +621,7 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
 
         var element = _selectedState.SelectedElement;
 
-        if (currentlyReferencedElement != element)
+        if (ShouldReloadViewModel(currentlyReferencedElement, element, forceReload))
         {
             if (_projectState.GumProjectSave?.FullFileName == null)
             {

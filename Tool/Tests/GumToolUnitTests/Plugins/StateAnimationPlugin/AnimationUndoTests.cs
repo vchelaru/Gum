@@ -7,6 +7,7 @@ using Gum.ToolStates;
 using Gum.Wireframe;
 using Moq;
 using Shouldly;
+using StateAnimationPlugin;
 using StateAnimationPlugin.Managers;
 using StateAnimationPlugin.ViewModels;
 using System;
@@ -87,6 +88,49 @@ public class AnimationUndoTests : BaseTestClass
     public void DescribeAnimationChange_ReturnsEmpty_WhenNeitherSnapshotHasAnimations()
     {
         UndosViewModel.DescribeAnimationChange(null, null).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ShouldReloadViewModel_ReturnsTrue_WhenForcedEvenThoughElementUnchanged()
+    {
+        // The after-undo path passes forceReload: true so the tab repaints from the just-restored
+        // .ganx even when the selected element is the same one already loaded (issue #3406 follow-up).
+        ComponentSave element = new();
+
+        bool shouldReload = MainStateAnimationPlugin.ShouldReloadViewModel(
+            currentlyReferencedElement: element,
+            selectedElement: element,
+            forceReload: true);
+
+        shouldReload.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ShouldReloadViewModel_ReturnsFalse_WhenElementUnchangedAndNotForced()
+    {
+        // The stale-VM early-out the normal refresh path relies on: same element, no reload.
+        ComponentSave element = new();
+
+        bool shouldReload = MainStateAnimationPlugin.ShouldReloadViewModel(
+            currentlyReferencedElement: element,
+            selectedElement: element,
+            forceReload: false);
+
+        shouldReload.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ShouldReloadViewModel_ReturnsTrue_WhenElementChanged()
+    {
+        ComponentSave currentElement = new();
+        ComponentSave selectedElement = new();
+
+        bool shouldReload = MainStateAnimationPlugin.ShouldReloadViewModel(
+            currentlyReferencedElement: currentElement,
+            selectedElement: selectedElement,
+            forceReload: false);
+
+        shouldReload.ShouldBeTrue();
     }
 
     private ElementAnimationsViewModel CreateViewModel(IDialogService dialogService, out AnimationViewModel animation)
