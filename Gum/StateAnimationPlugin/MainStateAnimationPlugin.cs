@@ -367,33 +367,28 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
 
         if (_viewModel != null)
         {
-            var keyframeToReselect = RestoreAnimationSelection(_viewModel, selectedAnimationName, selectedKeyframe);
-
-            if (keyframeToReselect != null && _viewModel.SelectedAnimation is { } reselectedAnimation)
-            {
-                // Setting SelectedAnimation above rebinds the keyframes ListBox's ItemsSource, and that
-                // rebind resets its SelectedItem — writing null back through the two-way SelectedKeyframe
-                // binding — on the next layout pass. A synchronous assignment here would be clobbered by
-                // it, so defer the keyframe reselect to DispatcherPriority.Background, which runs after the
-                // rebind. Without this the keyframe (and the right-side property panel bound to it) is lost
-                // on undo even though the animation stays selected (#3406).
-                _mainWindow?.Dispatcher.BeginInvoke(
-                    new Action(() => reselectedAnimation.SelectedKeyframe = keyframeToReselect),
-                    System.Windows.Threading.DispatcherPriority.Background);
-            }
+            RestoreAnimationSelection(_viewModel, selectedAnimationName, selectedKeyframe);
         }
 
         _isApplyingUndo = false;
     }
 
     /// <summary>
-    /// Reselects the animation named <paramref name="animationName"/> on a freshly-rebuilt
-    /// <paramref name="viewModel"/> and returns the keyframe within it matching <paramref name="keyframe"/>
-    /// by content (for the caller to apply once the keyframes ListBox has rebound — see
-    /// <see cref="HandleAfterUndo"/>). Best-effort: a missing animation returns null with no selection
-    /// change; a missing keyframe returns null but the animation is still reselected — mirroring
-    /// element-undo's silent selection drop when the selected object no longer exists.
+    /// Reselects, on a freshly-rebuilt <paramref name="viewModel"/>, the animation named
+    /// <paramref name="animationName"/> and the keyframe within it matching <paramref name="keyframe"/>
+    /// by content. Returns the matched keyframe (or null). Best-effort: a missing animation returns null
+    /// with no selection change; a missing keyframe reselects the animation with no keyframe selected —
+    /// mirroring element-undo's silent selection drop when the selected object no longer exists.
     /// </summary>
+    /// <remarks>
+    /// The keyframe is selected on the animation <em>before</em> the animation is made the active
+    /// SelectedAnimation. That ordering matters: setting SelectedAnimation rebinds the keyframes
+    /// ListBox's ItemsSource, and the ListBox initializes its SelectedItem from the (two-way) bound
+    /// SelectedKeyframe at bind time. If SelectedKeyframe is still null then, the ListBox settles on no
+    /// selection and a later assignment gets reset; pre-setting it means the ListBox binds straight to
+    /// the right, already-present keyframe — so the selection (and the right-side property panel) sticks
+    /// without any dispatcher timing games (#3406).
+    /// </remarks>
     internal static AnimatedKeyframeViewModel? RestoreAnimationSelection(ElementAnimationsViewModel viewModel,
         string? animationName, AnimatedKeyframeViewModel? keyframe)
     {
@@ -408,14 +403,14 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
             return null;
         }
 
+        var matched = keyframe == null
+            ? null
+            : animation.Keyframes.FirstOrDefault(item => AreSameKeyframe(item, keyframe));
+
+        animation.SelectedKeyframe = matched;
         viewModel.SelectedAnimation = animation;
 
-        if (keyframe == null)
-        {
-            return null;
-        }
-
-        return animation.Keyframes.FirstOrDefault(item => AreSameKeyframe(item, keyframe));
+        return matched;
     }
 
     /// <summary>

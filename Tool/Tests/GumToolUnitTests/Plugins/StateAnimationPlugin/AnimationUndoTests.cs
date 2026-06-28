@@ -153,6 +153,8 @@ public class AnimationUndoTests : BaseTestClass
             matched.ShouldNotBeNull();
             matched!.StateName.ShouldBe("Highlighted");
             matched.Time.ShouldBe(1f);
+            // Selected on the animation, and pre-set before it became the active animation.
+            animation.SelectedKeyframe.ShouldBe(matched);
         });
     }
 
@@ -173,6 +175,7 @@ public class AnimationUndoTests : BaseTestClass
 
             rebuilt.SelectedAnimation.ShouldBe(animation);
             matched.ShouldBeNull();
+            animation.SelectedKeyframe.ShouldBeNull();
         });
     }
 
