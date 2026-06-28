@@ -145,9 +145,20 @@ public class DragDropManager : IDragDropManager
     public void HandleDroppedStandardElementOnTreeNode(StandardElementSave standardElement, ITreeNode targetTreeNode)
     {
         // Reuse the exact same path as dragging a Standard element node onto a Screen/Component.
-        // A null DropTarget makes HandleDroppedElementInElement append the new instance.
+        // Build an Append DropTarget describing the drop target: a null DropTarget would skip
+        // HandleDroppedElementSave's onto-instance branch (which parents the new instance to the
+        // target instance AND refreshes the wireframe afterward). Since AddInstance refreshes the
+        // wireframe BEFORE writing the Parent variable, skipping that branch leaves a chip dropped
+        // onto an instance visually un-parented until the next refresh (#973).
+        DropTarget? dropTarget = targetTreeNode.Tag switch
+        {
+            InstanceSave targetInstance => new DropTarget(targetInstance.ParentContainer, targetInstance, new DropPosition.Append()),
+            ElementSave targetElement => new DropTarget(targetElement, null, new DropPosition.Append()),
+            _ => null
+        };
+
         using var undoLock = _undoManager.RequestLock();
-        HandleDroppedElementSave(standardElement, targetTreeNode, targetTreeNode.Tag, targetTreeNode, dropTarget: null);
+        HandleDroppedElementSave(standardElement, targetTreeNode, targetTreeNode.Tag, targetTreeNode, dropTarget);
     }
 
     private void HandleDroppedElementSave(object draggedComponentOrElement, ITreeNode treeNodeDroppedOn, object targetTag, ITreeNode targetTreeNode, DropTarget? dropTarget)
