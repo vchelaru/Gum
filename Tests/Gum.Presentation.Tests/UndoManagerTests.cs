@@ -649,6 +649,29 @@ public class UndoManagerTests : BaseTestClass
     // ---------------------------------------------------------------------------------------------
 
     [Fact]
+    public void GetBehaviorActionDescription_ShouldDescribeAddedState()
+    {
+        // Pins the History-tab wording that moved from UndosViewModel into BehaviorUndoStrategy (#3403):
+        // diffing a before (UndoState) without the state against an after (RedoState) with it yields
+        // the "Add states" line. Keeps the description output byte-identical across the move.
+        var before = new BehaviorSave { Name = "MyBehavior" };
+        before.Categories.Add(new StateSaveCategory { Name = "MyCategory" });
+
+        var after = new BehaviorSave { Name = "MyBehavior" };
+        var afterCategory = new StateSaveCategory { Name = "MyCategory" };
+        afterCategory.States.Add(new StateSave { Name = "State1" });
+        after.Categories.Add(afterCategory);
+
+        var action = new BehaviorHistoryAction
+        {
+            UndoState = new BehaviorSnapshot { Behavior = before },
+            RedoState = new BehaviorSnapshot { Behavior = after }
+        };
+
+        BehaviorUndoStrategy.GetBehaviorActionDescription(action).ShouldBe("Add states: State1");
+    }
+
+    [Fact]
     public void PerformRedo_ShouldReAddCategory_AfterUndoingCategoryAdd()
     {
         ComponentSave component = _selectedState.Object.SelectedComponent!;
