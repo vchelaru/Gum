@@ -63,15 +63,44 @@ class GraphicsDeviceService : IGraphicsDeviceService
         parameters.RenderTargetUsage = RenderTargetUsage.PreserveContents;
         parameters.IsFullScreen = false;
 
-        graphicsDevice = new GraphicsDevice(GraphicsAdapter.DefaultAdapter,
-                                            // It's 2016, so pretty much every computer should support hidef
-                                            // We do this to support 4k textures
-                                            // Actually it's 2025! And KNI supports 8192 so let's do that:
-                                            // There are even higher feature levels supported which can go 
-                                            // to 16384, but we probably don't need that...yet?
-                                            // https://github.com/kniEngine/kni/blob/e0dce132bccf36bb02dd0007fa5ce6a3e3c620bf/Platforms/Graphics/.DX11/ConcreteGraphicsCapabilities.cs#L29
-                                            GraphicsProfile.FL10_0,
-                                            parameters);
+        graphicsDevice = CreateGraphicsDevice(parameters);
+    }
+
+
+    /// <summary>
+    /// Creates the graphics device, preferring the highest feature level the adapter supports.
+    /// FL10_0 (guaranteed 8192-texture support) is ideal and is what real Windows GPUs get, but it
+    /// has no built-in fallback and throws on adapters that top out lower - notably Wine on macOS,
+    /// which exposes only feature level 9_3 and would otherwise crash the tool on launch. Falling
+    /// back through HiDef and Reach lets the tool still start (at a lower max texture size) instead
+    /// of failing outright. On hardware that supports FL10_0 the first attempt succeeds, so behavior
+    /// there is unchanged.
+    /// </summary>
+    static GraphicsDevice CreateGraphicsDevice(PresentationParameters parameters)
+    {
+        // Highest-to-lowest. KNI supports FL10_0 (8192 textures); HiDef/Reach negotiate down to
+        // whatever the adapter actually provides (e.g. 9_3 = 4096 textures under Wine on macOS).
+        GraphicsProfile[] profilesHighestToLowest =
+        {
+            GraphicsProfile.FL10_0,
+            GraphicsProfile.HiDef,
+            GraphicsProfile.Reach,
+        };
+
+        NoSuitableGraphicsDeviceException? lastException = null;
+        foreach (GraphicsProfile profile in profilesHighestToLowest)
+        {
+            try
+            {
+                return new GraphicsDevice(GraphicsAdapter.DefaultAdapter, profile, parameters);
+            }
+            catch (NoSuitableGraphicsDeviceException exception)
+            {
+                lastException = exception;
+            }
+        }
+
+        throw lastException ?? new NoSuitableGraphicsDeviceException("No supported graphics profile could create a device.");
     }
 
 
