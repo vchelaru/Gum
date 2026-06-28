@@ -304,22 +304,24 @@ internal class StandardsPaletteView : Border
 
     private static void SetChipDragActive(Border chip, bool isDragging)
     {
-        if (isDragging)
+        // Only the fill/border colors change (never thickness or size), so the chip emphasizes in
+        // place without shifting its neighbors. When not dragging, the caller restores the normal /
+        // selected look via ApplyChipSelectionVisual.
+        if (!isDragging)
         {
-            // Emphasize the source chip so it stands out as "the one being dragged": a thicker, solid
-            // primary border and a filled background (no dimming, which would read as de-emphasized).
-            chip.BorderThickness = new Thickness(2);
-            if (Application.Current?.TryFindResource("Frb.Brushes.Primary") is Brush primary)
-            {
-                chip.BorderBrush = primary;
-            }
-            chip.Background = Application.Current?.TryFindResource("Frb.Brushes.Primary.Transparent") is Brush fill
-                ? fill
-                : Brushes.Transparent;
+            return;
         }
-        else
+
+        if (Application.Current?.TryFindResource("Frb.Brushes.Primary") is SolidColorBrush primary)
         {
-            chip.BorderThickness = new Thickness(1);
+            chip.BorderBrush = primary;
+            // A theme-derived, semi-transparent primary wash: stands out clearly as the active drag
+            // source while keeping the label readable, and adapts to dark/light since it comes from
+            // the theme's Primary color.
+            Color c = primary.Color;
+            SolidColorBrush fill = new SolidColorBrush(Color.FromArgb(0x80, c.R, c.G, c.B));
+            fill.Freeze();
+            chip.Background = fill;
         }
     }
 
