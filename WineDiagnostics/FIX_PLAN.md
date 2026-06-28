@@ -169,3 +169,40 @@ Switch the tool's KNI platform to `nkast.Kni.Platform.SDL2.GL`. Probe9 proved KN
 over OpenGL on the real GPU (no FL ceiling); GL shaders sidestep the SM4.0/FL10.0 D3D
 limit. Bigger change (GL-compiled Apos.Shapes content + re-hosting the GL surface in the
 WinForms shell). Pursue only if DXVK-on-macOS proves unworkable.
+
+## FINAL CONCLUSION - DXVK is unworkable on vanilla wine here; why Mac != Linux
+
+DXVK was tested both ways and is a dead end on this setup:
+- **DXVK 3.0** (winetricks default): requires Vulkan 1.3; MoltenVK doesn't expose it ->
+  "No adapters found" -> `D3D11CreateDevice` E_FAIL.
+- **DXVK 1.10.3** (Vulkan 1.1): loads, but wine+MoltenVK only provides a **Vulkan 1.0**
+  instance with a thin feature set, so DXVK probes FL11_0..9_1 and **none are supported**
+  -> no D3D11 device at any level. Stock tool crashes at the husk again.
+
+So the three GPU paths on this Mac:
+
+| Path | Result |
+| --- | --- |
+| WineD3D (D3D11 over OpenGL) | works but capped at **FL 9_3** - too low (tool needs FL10.0 device + SM4.0 shaders) |
+| DXVK (D3D11 over Vulkan/MoltenVK) | **cannot create a device** - MoltenVK's Vulkan is too limited for DXVK |
+| Native OpenGL (Probe7/Probe9) | **works** - real GPU (Vega 56), HiDef, 8192 textures |
+
+**Why Linux works and Mac doesn't, definitively:** Gum's editor renders with KNI Direct3D 11
+at feature level 10.0. On Linux, wine routes D3D11 -> DXVK -> the native Vulkan driver (full
+Vulkan 1.3) -> FL11, so it works. On macOS there is no native Vulkan; the only Vulkan is
+**MoltenVK (Vulkan-on-Metal), which is too incomplete for DXVK to create a D3D11 device**, and
+the WineD3D fallback is capped at FL 9_3 by macOS's deprecated OpenGL (4.1). The same free
+wine + DXVK recipe cannot work on Mac because MoltenVK is not a real Vulkan driver.
+
+### Realistic paths to a working tool on Mac (no more cheap scripts)
+
+1. **CrossOver / Apple Game Porting Toolkit** - run the UNMODIFIED tool under a wine that has a
+   real D3D11->Metal layer (CrossOver's DXMT / GPTK's D3DMetal), which exposes FL11 on Metal.
+   No app code change; different (CrossOver = paid) runtime than the free wine recipe.
+2. **OpenGL rendering backend in the tool** - proven on this Mac by Probe7/Probe9, fully in our
+   control, but real engineering: KNI has no WinForms+GL platform, so the editor's embedded
+   `GraphicsDeviceControl` (DX11) host must be replaced with an OpenGL-hosting control, and
+   Apos.Shapes (and any other tool effects) need GL-compiled content.
+
+The `GraphicsDeviceService` profile-fallback change committed earlier is only a graceful-degrade
+safety net (no more hard husk crash); it is NOT a Mac fix on its own.
