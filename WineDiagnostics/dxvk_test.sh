@@ -1,94 +1,94 @@
 #!/bin/bash
 ###############################################################################
-# dxvk_test.sh - one-shot macOS test of the "lift the D3D ceiling with DXVK" fix.
+# dxvk_test.sh (v2) - one-shot macOS test using DXVK 1.10.3.
 #
-# Does everything so you don't have to type on the second machine:
-#   1. Installs DXVK into the Gum wine prefix (D3D11 -> Vulkan -> MoltenVK -> Metal).
-#   2. Re-runs Probe5 (raw D3D11) + Probe6 (KNI FL10_0) to confirm the Direct3D
-#      feature level lifted from 9_3, and prints a verdict.
-#   3. Launches the STOCK, UNMODIFIED Gum.exe to see if it now starts.
-#   4. Bundles every log into ~/dxvk_test_results.tar.gz to send back.
+# DXVK 2.x/3.x require Vulkan 1.3, which MoltenVK does not fully expose, so they
+# fail with "No adapters found". DXVK 1.10.3 only needs Vulkan 1.1, which MoltenVK
+# supports - so it can actually lift Wine's Direct3D ceiling to FL11 via Metal.
+#
+# Steps (no manual typing on the Mac beyond running this):
+#   1. Download DXVK 1.10.3 and install its d3d11/dxgi into the Gum wine prefix.
+#   2. Run Probe5 (console, quick) to check the Direct3D feature level + verdict.
+#   3. Launch the STOCK, UNMODIFIED Gum.exe to see if it now starts.
+#   4. Bundle all logs into ~/dxvk_test_results.tar.gz to send back.
 #
 # Usage:  chmod +x dxvk_test.sh && ./dxvk_test.sh [PROBE_DIR]
-#   PROBE_DIR  folder holding the probe exes (default: ~/gum-diag). Optional; if the
-#              probes aren't found, step 2 is skipped and it still tests the tool.
 ###############################################################################
 set -u
 
 PREFIX="${WINEPREFIX:-$HOME/.wine_gum_dotnet8}"
 PROBE_DIR="${1:-$HOME/gum-diag}"
+DXVK_VER="1.10.3"
 RESULTS="$HOME/dxvk_test_results_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$RESULTS"
 
-echo "=== Gum macOS DXVK test ==="
+echo "=== Gum macOS DXVK $DXVK_VER test ==="
 echo "prefix  : $PREFIX"
-echo "probes  : $PROBE_DIR"
 echo "results : $RESULTS"
 echo
 
 # --- preflight ---------------------------------------------------------------
 if [ ! -d "$PREFIX" ]; then echo "ERROR: wine prefix not found: $PREFIX"; exit 1; fi
 if ! command -v wine >/dev/null 2>&1; then echo "ERROR: 'wine' not on PATH"; exit 1; fi
-if ! command -v winetricks >/dev/null 2>&1; then echo "ERROR: 'winetricks' not on PATH"; exit 1; fi
 
 export WINEPREFIX="$PREFIX"
-# DOTNET_ROOT* break dotnet apps under wine (Gum issue #1957).
 unset DOTNET_ROOT DOTNET_ROOT_X64
 
-# Help wine/DXVK find MoltenVK's Vulkan driver if Homebrew installed it.
+# Point Wine's Vulkan at Homebrew's MoltenVK if present.
 if command -v brew >/dev/null 2>&1; then
     MVK_ICD="$(brew --prefix molten-vk 2>/dev/null)/share/vulkan/icd.d/MoltenVK_icd.json"
-    if [ -f "$MVK_ICD" ]; then
-        export VK_ICD_FILENAMES="$MVK_ICD"
-        echo "MoltenVK ICD: $MVK_ICD"
-        echo
-    fi
+    [ -f "$MVK_ICD" ] && export VK_ICD_FILENAMES="$MVK_ICD" && echo "MoltenVK ICD: $MVK_ICD" && echo
 fi
 
-# --- 1) install DXVK ---------------------------------------------------------
-echo "[1/3] Installing DXVK into the prefix (this can take a minute)..."
-winetricks -q dxvk > "$RESULTS/dxvk_install.log" 2>&1
-echo "      done  ->  $RESULTS/dxvk_install.log"
+# --- 1) install DXVK 1.10.3 --------------------------------------------------
+TARBALL="/tmp/dxvk-$DXVK_VER.tar.gz"
+URL="https://github.com/doitsujin/dxvk/releases/download/v$DXVK_VER/dxvk-$DXVK_VER.tar.gz"
+SYS32="$PREFIX/drive_c/windows/system32"
+
+echo "[1/3] Downloading DXVK $DXVK_VER..."
+if ! curl -L -o "$TARBALL" "$URL" > "$RESULTS/dxvk_download.log" 2>&1; then
+    echo "ERROR: download failed (see $RESULTS/dxvk_download.log)"; exit 1
+fi
+rm -rf "/tmp/dxvk-$DXVK_VER"
+tar -xzf "$TARBALL" -C /tmp
+
+echo "      Installing DXVK $DXVK_VER d3d11/dxgi/d3d10core/d3d9 (x64) into the prefix..."
+: > "$RESULTS/dxvk_install.log"
+for dll in d3d11 dxgi d3d10core d3d9; do
+    cp "/tmp/dxvk-$DXVK_VER/x64/$dll.dll" "$SYS32/" 2>> "$RESULTS/dxvk_install.log" \
+        && echo "        copied $dll.dll" \
+        || echo "        WARN: could not copy $dll.dll"
+    wine reg add "HKCU\\Software\\Wine\\DllOverrides" /v "$dll" /t REG_SZ /d native /f >> "$RESULTS/dxvk_install.log" 2>&1
+done
+echo "      done."
 echo
 
-# --- 2) confirm the ceiling lifted via the probes ----------------------------
+# --- 2) confirm the feature level (Probe5 - console, no window to hang) -------
 P5=$(find "$PROBE_DIR" -iname "Probe5.Direct3D11.exe" -type f 2>/dev/null | head -1)
-P6=$(find "$PROBE_DIR" -iname "Probe6.KniDx11.exe" -type f 2>/dev/null | head -1)
 if [ -n "$P5" ]; then
-    echo "[2/3] Re-checking the Direct3D feature level..."
+    echo "[2/3] Checking the Direct3D feature level (Probe5)..."
     export PROBE_LOG_DIR="$RESULTS"
-    export PROBE_HOLD_SECONDS=1
     WINEDEBUG=-all wine "$P5" > "$RESULTS/Probe5.console.log" 2>&1
-    [ -n "$P6" ] && WINEDEBUG=-all wine "$P6" > "$RESULTS/Probe6.console.log" 2>&1
-
-    echo "      --- Probe5 (raw D3D11) ---"
-    grep -aE "FeatureLevel|Result" "$RESULTS/Probe5.Direct3D11.log" 2>/dev/null | sed 's/^/        /'
-    echo "      --- Probe6 (KNI FL10_0) ---"
-    grep -aE "RESULT:|Reach|FL10_0|Adapter" "$RESULTS/Probe6.KniDx11.log" 2>/dev/null | sed 's/^/        /'
-
+    grep -aE "FeatureLevel|Result|RESULT" "$RESULTS/Probe5.Direct3D11.log" 2>/dev/null | sed 's/^/        /'
     if grep -aqE "FeatureLevel = (1[012]_)" "$RESULTS/Probe5.Direct3D11.log" 2>/dev/null; then
-        echo "      VERDICT: ceiling LIFTED above 9_3 - DXVK is working; the stock tool should run."
+        echo "      VERDICT: ceiling LIFTED to FL10/11 via DXVK+MoltenVK - the stock tool should run."
     else
-        echo "      VERDICT: still capped (no FL10/11) - DXVK likely not active. Check dxvk_install.log"
-        echo "               and that MoltenVK is installed (brew install molten-vk)."
+        echo "      VERDICT: still no FL10+ - DXVK init likely failed; see Probe5.console.log."
     fi
     echo
 else
-    echo "[2/3] Probe exes not found under $PROBE_DIR - skipping the ceiling check."
-    echo "      (re-run as './dxvk_test.sh /path/to/probe/folder' to include it)"
+    echo "[2/3] Probe5 not found under $PROBE_DIR - skipping ceiling check."
     echo
 fi
 
 # --- 3) launch the stock (unmodified) Gum ------------------------------------
 GUM_EXE=$(find "$PREFIX/drive_c" -iname "Gum.exe" -type f 2>/dev/null | head -1)
 if [ -z "$GUM_EXE" ]; then
-    echo "ERROR: stock Gum.exe not found under $PREFIX/drive_c (run setup_gum_mac.sh first)."
-    exit 1
+    echo "ERROR: stock Gum.exe not found under $PREFIX/drive_c"; exit 1
 fi
 echo "[3/3] Launching STOCK Gum.exe: $GUM_EXE"
-echo "      If DXVK lifted the ceiling, the editor window should open."
-echo "      -> Close the Gum window when you're done looking; this script then finishes."
-echo "      (output + any crash backtrace -> $RESULTS/gum-stock-output.log)"
+echo "      If it works, the editor window opens - CLOSE it when done and the script finishes."
+echo "      (output + any backtrace -> $RESULTS/gum-stock-output.log)"
 WINEDEBUG=+seh wine "$GUM_EXE" > "$RESULTS/gum-stock-output.log" 2>&1
 
 # --- bundle ------------------------------------------------------------------
@@ -96,4 +96,4 @@ echo
 BUNDLE="$HOME/dxvk_test_results.tar.gz"
 tar -czf "$BUNDLE" -C "$(dirname "$RESULTS")" "$(basename "$RESULTS")"
 echo "=== done ==="
-echo "Send this back: $BUNDLE"
+echo "Send back: $BUNDLE"
