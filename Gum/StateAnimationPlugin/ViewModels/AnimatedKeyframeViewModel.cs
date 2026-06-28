@@ -180,6 +180,36 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
     public bool IsMissingReference =>
         !HasValidState && (!string.IsNullOrEmpty(StateName) || !string.IsNullOrEmpty(AnimationName));
 
+    /// <summary>
+    /// The message shown when this keyframe's referenced state or animation is missing. Names the
+    /// specific reference (and its category, for a categorized state) so the user can find the broken
+    /// keyframe without hunting. Shown via <see cref="HasInvalidStateVisibility"/> (issue #3400).
+    /// </summary>
+    [DependsOn(nameof(StateName))]
+    [DependsOn(nameof(AnimationName))]
+    public string MissingReferenceMessage
+    {
+        get
+        {
+            if (!string.IsNullOrEmpty(StateName))
+            {
+                int slashIndex = StateName.IndexOf('/');
+                if (slashIndex >= 0)
+                {
+                    string category = StateName.Substring(0, slashIndex);
+                    string state = StateName.Substring(slashIndex + 1);
+                    return $"Could not find state \"{state}\" in category \"{category}\"";
+                }
+                return $"Could not find state \"{StateName}\"";
+            }
+            else if (!string.IsNullOrEmpty(AnimationName))
+            {
+                return $"Could not find animation \"{AnimationName}\"";
+            }
+            return "Could not find state or animation";
+        }
+    }
+
     [DependsOn(nameof(HasValidState))]
     public System.Windows.Visibility HasInvalidStateVisibility
     {

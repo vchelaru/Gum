@@ -83,4 +83,37 @@ public class AnimatedKeyframeViewModelTests : BaseTestClass
 
         keyframe.IsMissingReference.ShouldBeTrue();
     }
+
+    [Fact]
+    public void MissingReferenceMessage_NamesAnimation_ForAnimationKeyframe()
+    {
+        AnimatedKeyframeViewModel keyframe = new AnimatedKeyframeViewModel(_bitmapLoader)
+        {
+            AnimationName = "Spin",
+        };
+
+        keyframe.MissingReferenceMessage.ShouldBe("Could not find animation \"Spin\"");
+    }
+
+    [Fact]
+    public void MissingReferenceMessage_NamesCategoryAndState_ForCategorizedState()
+    {
+        AnimatedKeyframeViewModel keyframe = new AnimatedKeyframeViewModel(_bitmapLoader)
+        {
+            StateName = "ButtonStates/Highlighted",
+        };
+
+        keyframe.MissingReferenceMessage.ShouldBe("Could not find state \"Highlighted\" in category \"ButtonStates\"");
+    }
+
+    [Fact]
+    public void MissingReferenceMessage_NamesStateOnly_ForUncategorizedState()
+    {
+        AnimatedKeyframeViewModel keyframe = new AnimatedKeyframeViewModel(_bitmapLoader)
+        {
+            StateName = "Highlighted",
+        };
+
+        keyframe.MissingReferenceMessage.ShouldBe("Could not find state \"Highlighted\"");
+    }
 }
