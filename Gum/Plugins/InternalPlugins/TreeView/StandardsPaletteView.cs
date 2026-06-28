@@ -229,7 +229,8 @@ internal class StandardsPaletteView : Border
             Padding = new Thickness(8, 5, 8, 5),
             Margin = new Thickness(2),
             Background = Brushes.Transparent,
-            Cursor = Cursors.Hand,
+            // Plain arrow, not the Hand pointer — a chip isn't a hyperlink.
+            Cursor = Cursors.Arrow,
             Child = content,
             ToolTip = $"Drag onto a Screen/Component or the canvas to add a {typeName}.\nCtrl+click to add it to the current Screen/Component.\nRight-click for more options."
         };
