@@ -306,7 +306,9 @@ internal class StandardsPaletteView : Border
     {
         if (isDragging)
         {
-            chip.Opacity = 0.6;
+            // Emphasize the source chip so it stands out as "the one being dragged": a thicker, solid
+            // primary border and a filled background (no dimming, which would read as de-emphasized).
+            chip.BorderThickness = new Thickness(2);
             if (Application.Current?.TryFindResource("Frb.Brushes.Primary") is Brush primary)
             {
                 chip.BorderBrush = primary;
@@ -317,7 +319,7 @@ internal class StandardsPaletteView : Border
         }
         else
         {
-            chip.Opacity = 1.0;
+            chip.BorderThickness = new Thickness(1);
         }
     }
 
