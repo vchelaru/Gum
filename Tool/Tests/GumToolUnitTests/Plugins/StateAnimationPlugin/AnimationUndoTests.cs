@@ -204,6 +204,53 @@ public class AnimationUndoTests : BaseTestClass
         });
     }
 
+    [Fact]
+    public void RestoreAnimationSelection_FallsBackToAnimationIndex_WhenSelectedAnimationWasRenamed()
+    {
+        // An external .ganx edit renamed the selected animation, so the captured name ("OldName")
+        // matches nothing in the rebuilt view model. Because the animation count is unchanged, fall
+        // back to the captured slot so the same row stays selected through the rename (#3410), and the
+        // keyframe is re-matched on it by content.
+        RunOnSta(() =>
+        {
+            ElementAnimationsViewModel rebuilt = ViewModelWithAnimation("NewName", out AnimationViewModel animation,
+                Keyframe("Default", 0f), Keyframe("Highlighted", 1f));
+            var selection = new MainStateAnimationPlugin.AnimationSelectionState(
+                "OldName", Keyframe("Highlighted", 1f), KeyframeIndex: 1, KeyframeCount: 2,
+                AnimationIndex: 0, AnimationCount: 1);
+
+            AnimatedKeyframeViewModel? matched =
+                MainStateAnimationPlugin.RestoreAnimationSelection(rebuilt, selection);
+
+            rebuilt.SelectedAnimation.ShouldBe(animation);
+            matched.ShouldNotBeNull();
+            matched!.StateName.ShouldBe("Highlighted");
+            animation.SelectedKeyframe.ShouldBe(matched);
+        });
+    }
+
+    [Fact]
+    public void RestoreAnimationSelection_DropsAnimationSelection_WhenRenamedAndAnimationCountChanged()
+    {
+        // The selected animation's name doesn't match AND the animation count changed (an animation was
+        // added/deleted in the external edit), so reselecting by index would grab an unrelated row.
+        // Drop the selection cleanly instead.
+        RunOnSta(() =>
+        {
+            ElementAnimationsViewModel rebuilt = ViewModelWithAnimation("NewName", out AnimationViewModel _,
+                Keyframe("Default", 0f));
+            var selection = new MainStateAnimationPlugin.AnimationSelectionState(
+                "OldName", Keyframe("Default", 0f), KeyframeIndex: 0, KeyframeCount: 1,
+                AnimationIndex: 1, AnimationCount: 2);
+
+            AnimatedKeyframeViewModel? matched =
+                MainStateAnimationPlugin.RestoreAnimationSelection(rebuilt, selection);
+
+            rebuilt.SelectedAnimation.ShouldBeNull();
+            matched.ShouldBeNull();
+        });
+    }
+
     private AnimatedKeyframeViewModel Keyframe(string stateName, float time)
         => new(_bitmapLoader) { StateName = stateName, Time = time };
 

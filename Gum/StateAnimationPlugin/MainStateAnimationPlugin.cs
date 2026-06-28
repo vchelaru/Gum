@@ -28,6 +28,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using ToolsUtilities;
 
 
 namespace StateAnimationPlugin;
@@ -211,6 +212,12 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
         this.ElementRename += HandleElementRename;
         this.ElementDuplicate += HandleElementDuplicate;
 
+        // Live-reload the tab when the selected element's .ganx is edited on disk (issue #3410).
+        // FileChangeReactionLogic owns no animation data (the .ganx is a per-element sidecar loaded
+        // on demand here, not part of GumProjectSave), so the reload lives in this plugin rather than
+        // in the core dispatch.
+        this.ReactToFileChanged += HandleFileChanged;
+
         this.GetDeleteStateResponse = HandleGetDeleteStateResponse;
         this.GetDeleteStateCategoryResponse = HandleGetDeleteStateCategoryResponse;
 
@@ -227,6 +234,49 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
         // works on project open and on edits regardless of selection. Contributing them here too
         // (from this plugin's per-selection view model) would duplicate those errors for the
         // selected element, so this plugin no longer subscribes to GetAllErrors.
+    }
+
+    private void HandleFileChanged(FilePath filePath)
+    {
+        var selectedElement = _selectedState.SelectedElement;
+        var selectedElementAnimationFile = selectedElement != null
+            ? _animationFilePathService.GetAbsoluteAnimationFileNameFor(selectedElement)
+            : null;
+
+        if (ShouldReloadAnimationsForChangedFile(filePath, selectedElementAnimationFile))
+        {
+            // Capture the selection before the rebuild replaces every animation/keyframe instance, then
+            // reapply it so the external edit doesn't deselect the user's animation + keyframe (#3410).
+            var selection = CaptureAnimationSelection(_viewModel);
+
+            // forceReload bypasses CreateViewModel's same-element early-out: the external edit doesn't
+            // change the selection, so without forcing it the stale view model would survive and the
+            // tab would keep showing the pre-edit animations until the element was reselected. Mirrors
+            // the after-undo repaint (#3406).
+            RefreshViewModel(forceReload: true);
+
+            if (_viewModel != null)
+            {
+                RestoreAnimationSelection(_viewModel, selection);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Decides whether an on-disk file change should live-reload the Animations tab (issue #3410):
+    /// true only when <paramref name="changedFile"/> is a <c>.ganx</c> and is the selected element's
+    /// own animation sidecar (<paramref name="selectedElementAnimationFile"/>). Other elements' .ganx
+    /// files reload lazily when that element is next selected, so they are ignored here.
+    /// </summary>
+    internal static bool ShouldReloadAnimationsForChangedFile(FilePath changedFile,
+        FilePath? selectedElementAnimationFile)
+    {
+        if (changedFile.Extension != "ganx")
+        {
+            return false;
+        }
+
+        return selectedElementAnimationFile != null && changedFile == selectedElementAnimationFile;
     }
 
     private void HandleElementSelected(ElementSave? element)
@@ -357,13 +407,7 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
         // selection restore (#3406). Index + count are captured alongside the keyframe so the reselect
         // can fall back to position when the undo reverted the selected keyframe's own value (see
         // RestoreAnimationSelection).
-        var selectedAnimation = _viewModel?.SelectedAnimation;
-        var selectedKeyframe = selectedAnimation?.SelectedKeyframe;
-        var selection = new AnimationSelectionState(
-            selectedAnimation?.Name,
-            selectedKeyframe,
-            selectedKeyframe != null ? selectedAnimation!.Keyframes.IndexOf(selectedKeyframe) : -1,
-            selectedAnimation?.Keyframes.Count ?? 0);
+        var selection = CaptureAnimationSelection(_viewModel);
 
         // Repaint the tab from the just-restored .ganx, then re-arm undo recording. The flag spanned
         // the .ganx write (ApplyAnimations) through this repaint so neither flushed a spurious undo.
@@ -380,19 +424,46 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
         _isApplyingUndo = false;
     }
 
-    /// <summary>The animation/keyframe selection captured before an undo rebuilds the view model.</summary>
+    /// <summary>
+    /// The animation/keyframe selection captured before a forced view-model rebuild (undo/redo or an
+    /// external .ganx reload). Carries both the identity (animation name + keyframe content) and the
+    /// position (animation/keyframe index + sibling counts) so <see cref="RestoreAnimationSelection"/>
+    /// can fall back to the slot when the identity changed — e.g. the selected animation was renamed.
+    /// </summary>
     internal readonly record struct AnimationSelectionState(
         string? AnimationName,
         AnimatedKeyframeViewModel? Keyframe,
         int KeyframeIndex,
-        int KeyframeCount);
+        int KeyframeCount,
+        int AnimationIndex = -1,
+        int AnimationCount = 0);
+
+    /// <summary>
+    /// Snapshots the currently-selected animation and keyframe (identity + position) so the selection
+    /// can be reapplied after a forced view-model rebuild replaces every animation/keyframe instance.
+    /// Pairs with <see cref="RestoreAnimationSelection"/>.
+    /// </summary>
+    internal static AnimationSelectionState CaptureAnimationSelection(ElementAnimationsViewModel? viewModel)
+    {
+        var selectedAnimation = viewModel?.SelectedAnimation;
+        var selectedKeyframe = selectedAnimation?.SelectedKeyframe;
+        return new AnimationSelectionState(
+            selectedAnimation?.Name,
+            selectedKeyframe,
+            selectedKeyframe != null ? selectedAnimation!.Keyframes.IndexOf(selectedKeyframe) : -1,
+            selectedAnimation?.Keyframes.Count ?? 0,
+            selectedAnimation != null && viewModel != null ? viewModel.Animations.IndexOf(selectedAnimation) : -1,
+            viewModel?.Animations.Count ?? 0);
+    }
 
     /// <summary>
     /// Reselects, on a freshly-rebuilt <paramref name="viewModel"/>, the animation and keyframe captured
-    /// in <paramref name="selection"/>. The keyframe is matched by content; if that fails because the
+    /// in <paramref name="selection"/>. The animation is matched by name; if that fails because it was
+    /// renamed (e.g. an external .ganx edit), it falls back to the captured animation index when the
+    /// animation count is unchanged. The keyframe is then matched by content; if that fails because the
     /// undo reverted the selected keyframe's <em>own</em> value (e.g. its time), it falls back to the
-    /// captured index — but only when the keyframe count is unchanged, so an add/delete undo (which
-    /// changes the count) drops the selection rather than grabbing a neighbor. Returns the matched
+    /// captured index — but only when the keyframe count is unchanged, so an add/delete (which
+    /// changes the count) drops that selection rather than grabbing a neighbor. Returns the matched
     /// keyframe (or null). Best-effort, mirroring element-undo's silent selection drop when the selected
     /// object no longer exists.
     /// </summary>
@@ -414,6 +485,19 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
         }
 
         var animation = viewModel.Animations.FirstOrDefault(item => item.Name == selection.AnimationName);
+
+        // The selected animation may have been renamed by an external .ganx edit, so the captured name
+        // matches nothing. Fall back to the captured slot when the animation count is unchanged, keeping
+        // the same row selected through the rename (#3410). A count change means an add/delete, where
+        // grabbing a neighbor by index would be wrong, so the selection drops instead.
+        if (animation == null
+            && viewModel.Animations.Count == selection.AnimationCount
+            && selection.AnimationIndex >= 0
+            && selection.AnimationIndex < viewModel.Animations.Count)
+        {
+            animation = viewModel.Animations[selection.AnimationIndex];
+        }
+
         if (animation == null)
         {
             return null;
