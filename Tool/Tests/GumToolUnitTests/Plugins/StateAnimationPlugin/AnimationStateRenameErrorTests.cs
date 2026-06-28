@@ -10,6 +10,7 @@ using StateAnimationPlugin;
 using StateAnimationPlugin.Managers;
 using StateAnimationPlugin.ViewModels;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Xunit;
@@ -51,6 +52,29 @@ public class AnimationStateRenameErrorTests : BaseTestClass
 
             viewModel.RefreshErrors(element);
             viewModel.GetErrors().ShouldBeEmpty();
+        });
+    }
+
+    [Fact]
+    public void GetAvailableStates_PreservesKeyframeStateName_WhenItsCategoryWasDeleted()
+    {
+        // Deleting a category recomputes the available-state list bound to the editable state
+        // ComboBox. If the still-referenced "Cat/Idle" were dropped from that list, the ComboBox
+        // would coerce its Text (bound to StateName) to empty, collapsing the broken state keyframe
+        // into an event (flag icon) instead of showing the red broken-reference icon (issue #3392).
+        // GetAvailableStates must keep the referenced-but-missing state so the ComboBox holds its
+        // selection; brokenness is still reported separately via RefreshErrors/HasValidState.
+        RunOnSta(() =>
+        {
+            ComponentSave element = ElementWithCategorizedState("Cat", "Idle");
+            ElementAnimationsViewModel viewModel = CreateViewModelWith(
+                CreateAnimationWithKeyframes(Keyframe(stateName: "Cat/Idle")));
+
+            element.Categories.Clear();  // delete the whole category, as DeleteLogic does
+
+            List<string> availableStates = MainStateAnimationPlugin.GetAvailableStates(element, viewModel);
+
+            availableStates.ShouldContain("Cat/Idle");
         });
     }
 

@@ -501,9 +501,21 @@ public class MainStateAnimationPlugin : PluginBase
 
     private void RefreshAvailableStates()
     {
-        var states = new List<string>();
+        AvailableStates.ReplaceWith(GetAvailableStates(_selectedState.SelectedElement, _viewModel));
+    }
 
-        var element = _selectedState.SelectedElement;
+    /// <summary>
+    /// Builds the state names shown in each keyframe's state ComboBox: every state on the element,
+    /// plus any state still referenced by a keyframe even though it no longer exists on the element.
+    /// Keeping a referenced-but-missing state in the list matters because the ComboBox is editable
+    /// with its Text bound to the keyframe's StateName — if the referenced item left the ItemsSource,
+    /// the ComboBox would coerce its Text (and thus StateName) to empty, collapsing a broken state
+    /// keyframe into an event (issue #3392). The keyframe stays flagged as broken via
+    /// HasValidState/RefreshErrors, which is computed against the element, not this list.
+    /// </summary>
+    internal static List<string> GetAvailableStates(ElementSave? element, ElementAnimationsViewModel? viewModel)
+    {
+        var states = new List<string>();
 
         if (element != null)
         {
@@ -515,7 +527,25 @@ public class MainStateAnimationPlugin : PluginBase
             }
         }
 
-        AvailableStates.ReplaceWith(states);
+        // Keep any state still referenced by a keyframe even though it no longer exists on the
+        // element (e.g. its category was just deleted). The editable state ComboBox binds its Text to
+        // the keyframe's StateName; if the referenced item left this list it would coerce StateName to
+        // empty, collapsing the broken state keyframe into an event (issue #3392).
+        if (viewModel != null)
+        {
+            foreach (var animation in viewModel.Animations)
+            {
+                foreach (var keyframe in animation.Keyframes)
+                {
+                    if (!string.IsNullOrEmpty(keyframe.StateName) && !states.Contains(keyframe.StateName))
+                    {
+                        states.Add(keyframe.StateName);
+                    }
+                }
+            }
+        }
+
+        return states;
     }
 
     private void CreateViewModel()
