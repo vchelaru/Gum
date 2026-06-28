@@ -304,7 +304,7 @@ public class Text : IVisible, IRenderableIpso,
     public Color Color
     {
         get; set;
-    } = Color.DarkGray;
+    } = Color.White;
 
 
     public bool IsTruncatingWithEllipsisOnLastLine { get; set; }

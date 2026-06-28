@@ -122,6 +122,16 @@ public class TextRuntimeTests : BaseTestClass
         TextRuntime.DefaultFontSize.ShouldBe(18);
     }
 
+    [Fact]
+    public void NewInstance_ShouldDefaultToWhite_ForParityWithRenderingLibraryText()
+    {
+        TextRuntime sut = new();
+        sut.Red.ShouldBe(255);
+        sut.Green.ShouldBe(255);
+        sut.Blue.ShouldBe(255);
+        sut.Alpha.ShouldBe(255);
+    }
+
     #endregion
 
     #region Font Loading
