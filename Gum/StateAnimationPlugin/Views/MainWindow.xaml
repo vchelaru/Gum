@@ -205,6 +205,7 @@
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition />
                                 </Grid.ColumnDefinitions>
                                 <ToggleButton IsChecked="{Binding Loops, Mode=TwoWay}">
@@ -235,8 +236,19 @@
                                         </Style>
                                     </ToggleButton.Style>
                                 </ToggleButton>
-                                <TextBlock
+                                <wpf:FluentIcon
                                     Grid.Column="1"
+                                    Icon="ErrorCircle"
+                                    Visibility="{Binding HasBrokenKeyframe, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <wpf:FluentIcon.Style>
+                                        <Style BasedOn="{StaticResource FluentIcon.ButtonSize}" TargetType="{x:Type wpf:FluentIcon}">
+                                            <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Error}" />
+                                            <Setter Property="ToolTip" Value="This animation contains a keyframe that references a missing state or animation." />
+                                        </Style>
+                                    </wpf:FluentIcon.Style>
+                                </wpf:FluentIcon>
+                                <TextBlock
+                                    Grid.Column="2"
                                     Margin="6,0,0,0"
                                     VerticalAlignment="Center"
                                     Text="{Binding Name}" />
