@@ -134,20 +134,21 @@ public class AnimationUndoTests : BaseTestClass
     }
 
     [Fact]
-    public void RestoreAnimationSelection_ReselectsAnimationAndReturnsMatchingKeyframe_ByIdentity()
+    public void RestoreAnimationSelection_ReselectsAnimationAndReturnsMatchingKeyframe_ByContent()
     {
         // After an undo forces the view model to rebuild, the previously-selected animation is
         // reselected and the keyframe matching by content (state/sub-animation/event name + time) is
-        // returned, so the caller can reapply it once the keyframes ListBox has rebound. This is what
-        // keeps the user's selection — and the right-side property panel — across the reload.
+        // selected on it. This is what keeps the user's selection — and the right-side property panel —
+        // across the reload when the selected keyframe itself was unchanged by the undo.
         RunOnSta(() =>
         {
             ElementAnimationsViewModel rebuilt = ViewModelWithAnimation("Anim", out AnimationViewModel animation,
                 Keyframe("Default", 0f), Keyframe("Highlighted", 1f));
-            AnimatedKeyframeViewModel previouslySelected = Keyframe("Highlighted", 1f);
+            var selection = new MainStateAnimationPlugin.AnimationSelectionState(
+                "Anim", Keyframe("Highlighted", 1f), KeyframeIndex: 1, KeyframeCount: 2);
 
             AnimatedKeyframeViewModel? matched =
-                MainStateAnimationPlugin.RestoreAnimationSelection(rebuilt, "Anim", previouslySelected);
+                MainStateAnimationPlugin.RestoreAnimationSelection(rebuilt, selection);
 
             rebuilt.SelectedAnimation.ShouldBe(animation);
             matched.ShouldNotBeNull();
@@ -159,19 +160,43 @@ public class AnimationUndoTests : BaseTestClass
     }
 
     [Fact]
-    public void RestoreAnimationSelection_ReselectsAnimationButReturnsNull_WhenKeyframeNoLongerExists()
+    public void RestoreAnimationSelection_FallsBackToIndex_WhenSelectedKeyframesOwnValueWasReverted()
     {
-        // If the undo removed the keyframe that was selected, the match fails (returns null) while the
-        // animation is still reselected. Mirrors element-undo's silent selection drop when the selected
-        // object no longer exists.
+        // The user's repro: select a keyframe, change its time 5 -> 4, undo. The reverted keyframe is
+        // back at time 5, so the captured keyframe (time 4) matches nothing by content; since the count
+        // is unchanged, fall back to the captured index so the keyframe the user was editing stays
+        // selected (with its time showing 5 again).
+        RunOnSta(() =>
+        {
+            ElementAnimationsViewModel rebuilt = ViewModelWithAnimation("Anim", out AnimationViewModel animation,
+                Keyframe("Default", 0f), Keyframe("Highlighted", 5f));
+            var selection = new MainStateAnimationPlugin.AnimationSelectionState(
+                "Anim", Keyframe("Highlighted", 4f), KeyframeIndex: 1, KeyframeCount: 2);
+
+            AnimatedKeyframeViewModel? matched =
+                MainStateAnimationPlugin.RestoreAnimationSelection(rebuilt, selection);
+
+            matched.ShouldNotBeNull();
+            matched!.Time.ShouldBe(5f);
+            animation.SelectedKeyframe.ShouldBe(matched);
+        });
+    }
+
+    [Fact]
+    public void RestoreAnimationSelection_DropsKeyframeSelection_WhenCountChanged()
+    {
+        // Undo of an add removes the selected keyframe and changes the count. Content match fails and
+        // the index fallback is suppressed (count differs), so the keyframe selection drops cleanly
+        // rather than grabbing a neighbor. The animation is still reselected.
         RunOnSta(() =>
         {
             ElementAnimationsViewModel rebuilt = ViewModelWithAnimation("Anim", out AnimationViewModel animation,
                 Keyframe("Default", 0f));
-            AnimatedKeyframeViewModel removed = Keyframe("Highlighted", 1f);
+            var selection = new MainStateAnimationPlugin.AnimationSelectionState(
+                "Anim", Keyframe("Highlighted", 1f), KeyframeIndex: 1, KeyframeCount: 2);
 
             AnimatedKeyframeViewModel? matched =
-                MainStateAnimationPlugin.RestoreAnimationSelection(rebuilt, "Anim", removed);
+                MainStateAnimationPlugin.RestoreAnimationSelection(rebuilt, selection);
 
             rebuilt.SelectedAnimation.ShouldBe(animation);
             matched.ShouldBeNull();

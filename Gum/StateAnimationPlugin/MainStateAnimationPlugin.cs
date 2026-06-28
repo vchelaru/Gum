@@ -354,9 +354,16 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
         // Capture the selection before the forced rebuild below replaces the view model (and with it
         // every AnimationViewModel/keyframe instance), then reselect by identity afterward so the
         // user's animation + keyframe selection survives undo/redo — mirroring element-undo's state
-        // selection restore (#3406).
-        var selectedAnimationName = _viewModel?.SelectedAnimation?.Name;
-        var selectedKeyframe = _viewModel?.SelectedAnimation?.SelectedKeyframe;
+        // selection restore (#3406). Index + count are captured alongside the keyframe so the reselect
+        // can fall back to position when the undo reverted the selected keyframe's own value (see
+        // RestoreAnimationSelection).
+        var selectedAnimation = _viewModel?.SelectedAnimation;
+        var selectedKeyframe = selectedAnimation?.SelectedKeyframe;
+        var selection = new AnimationSelectionState(
+            selectedAnimation?.Name,
+            selectedKeyframe,
+            selectedKeyframe != null ? selectedAnimation!.Keyframes.IndexOf(selectedKeyframe) : -1,
+            selectedAnimation?.Keyframes.Count ?? 0);
 
         // Repaint the tab from the just-restored .ganx, then re-arm undo recording. The flag spanned
         // the .ganx write (ApplyAnimations) through this repaint so neither flushed a spurious undo.
@@ -367,18 +374,27 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
 
         if (_viewModel != null)
         {
-            RestoreAnimationSelection(_viewModel, selectedAnimationName, selectedKeyframe);
+            RestoreAnimationSelection(_viewModel, selection);
         }
 
         _isApplyingUndo = false;
     }
 
+    /// <summary>The animation/keyframe selection captured before an undo rebuilds the view model.</summary>
+    internal readonly record struct AnimationSelectionState(
+        string? AnimationName,
+        AnimatedKeyframeViewModel? Keyframe,
+        int KeyframeIndex,
+        int KeyframeCount);
+
     /// <summary>
-    /// Reselects, on a freshly-rebuilt <paramref name="viewModel"/>, the animation named
-    /// <paramref name="animationName"/> and the keyframe within it matching <paramref name="keyframe"/>
-    /// by content. Returns the matched keyframe (or null). Best-effort: a missing animation returns null
-    /// with no selection change; a missing keyframe reselects the animation with no keyframe selected —
-    /// mirroring element-undo's silent selection drop when the selected object no longer exists.
+    /// Reselects, on a freshly-rebuilt <paramref name="viewModel"/>, the animation and keyframe captured
+    /// in <paramref name="selection"/>. The keyframe is matched by content; if that fails because the
+    /// undo reverted the selected keyframe's <em>own</em> value (e.g. its time), it falls back to the
+    /// captured index — but only when the keyframe count is unchanged, so an add/delete undo (which
+    /// changes the count) drops the selection rather than grabbing a neighbor. Returns the matched
+    /// keyframe (or null). Best-effort, mirroring element-undo's silent selection drop when the selected
+    /// object no longer exists.
     /// </summary>
     /// <remarks>
     /// The keyframe is selected on the animation <em>before</em> the animation is made the active
@@ -390,22 +406,32 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
     /// without any dispatcher timing games (#3406).
     /// </remarks>
     internal static AnimatedKeyframeViewModel? RestoreAnimationSelection(ElementAnimationsViewModel viewModel,
-        string? animationName, AnimatedKeyframeViewModel? keyframe)
+        AnimationSelectionState selection)
     {
-        if (animationName == null)
+        if (selection.AnimationName == null)
         {
             return null;
         }
 
-        var animation = viewModel.Animations.FirstOrDefault(item => item.Name == animationName);
+        var animation = viewModel.Animations.FirstOrDefault(item => item.Name == selection.AnimationName);
         if (animation == null)
         {
             return null;
         }
 
-        var matched = keyframe == null
-            ? null
-            : animation.Keyframes.FirstOrDefault(item => AreSameKeyframe(item, keyframe));
+        AnimatedKeyframeViewModel? matched = null;
+        if (selection.Keyframe != null)
+        {
+            matched = animation.Keyframes.FirstOrDefault(item => AreSameKeyframe(item, selection.Keyframe));
+
+            if (matched == null
+                && animation.Keyframes.Count == selection.KeyframeCount
+                && selection.KeyframeIndex >= 0
+                && selection.KeyframeIndex < animation.Keyframes.Count)
+            {
+                matched = animation.Keyframes[selection.KeyframeIndex];
+            }
+        }
 
         animation.SelectedKeyframe = matched;
         viewModel.SelectedAnimation = animation;
