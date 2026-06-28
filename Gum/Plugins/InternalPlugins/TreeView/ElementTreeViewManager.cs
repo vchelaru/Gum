@@ -870,6 +870,16 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
     }
 
+    /// <summary>
+    /// Highlights the palette chip matching the selected element when it is a standard (so the chip
+    /// being edited via "Edit defaults..." is visibly indicated), or clears the highlight otherwise.
+    /// </summary>
+    public void HighlightStandardInPalette(ElementSave? selectedElement)
+    {
+        string? typeName = selectedElement is StandardElementSave ? selectedElement.Name : null;
+        _viewCreator.StandardsPalette.SetSelectedStandardType(typeName);
+    }
+
     private void RefreshStandardsPaletteChips()
     {
         var gumProject = _projectState.GumProjectSave;

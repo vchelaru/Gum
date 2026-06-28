@@ -19,6 +19,8 @@ internal class StandardsPaletteView : Border
 {
     private readonly Func<string, ImageSource?> _iconResolver;
     private readonly UniformGrid _chipsPanel;
+    private readonly Dictionary<string, Border> _chipsByType = new();
+    private string? _selectedTypeName;
 
     /// <summary>Raised with the standard type name when "Add to current ..." is clicked on a chip.</summary>
     public Action<string>? AddToCurrentRequested { get; set; }
@@ -41,13 +43,16 @@ internal class StandardsPaletteView : Border
 
         StackPanel root = new StackPanel();
 
-        DockPanel header = new DockPanel { Margin = new Thickness(2, 0, 2, 6) };
+        // WrapPanel so the hint flows onto its own line instead of overlapping the title when the
+        // Project panel is narrow.
+        WrapPanel header = new WrapPanel { Margin = new Thickness(2, 0, 2, 6) };
         TextBlock title = new TextBlock
         {
             Text = "STANDARDS",
             FontSize = 10.5,
             FontWeight = FontWeights.SemiBold,
-            VerticalAlignment = VerticalAlignment.Center
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 8, 0)
         };
         title.SetResourceReference(TextBlock.ForegroundProperty, "Frb.Brushes.Foreground");
         TextBlock hint = new TextBlock
@@ -55,14 +60,12 @@ internal class StandardsPaletteView : Border
             Text = "drag onto tree or canvas",
             FontSize = 10,
             FontStyle = FontStyles.Italic,
-            HorizontalAlignment = HorizontalAlignment.Right,
             VerticalAlignment = VerticalAlignment.Center,
             Opacity = 0.6
         };
         hint.SetResourceReference(TextBlock.ForegroundProperty, "Frb.Brushes.Foreground");
-        DockPanel.SetDock(hint, Dock.Right);
-        header.Children.Add(hint);
         header.Children.Add(title);
+        header.Children.Add(hint);
 
         _chipsPanel = new UniformGrid { Columns = 2 };
 
@@ -78,9 +81,44 @@ internal class StandardsPaletteView : Border
     public void RefreshChips(IReadOnlyList<string> standardTypeNames)
     {
         _chipsPanel.Children.Clear();
+        _chipsByType.Clear();
         foreach (string typeName in standardTypeNames)
         {
-            _chipsPanel.Children.Add(CreateChip(typeName));
+            Border chip = CreateChip(typeName);
+            _chipsByType[typeName] = chip;
+            _chipsPanel.Children.Add(chip);
+        }
+    }
+
+    /// <summary>
+    /// Highlights the chip for the given standard type to show it is the one currently being edited
+    /// (its defaults are selected), or clears the highlight when <paramref name="typeName"/> is null.
+    /// </summary>
+    public void SetSelectedStandardType(string? typeName)
+    {
+        _selectedTypeName = typeName;
+        foreach (var pair in _chipsByType)
+        {
+            ApplyChipSelectionVisual(pair.Value, pair.Key == typeName);
+        }
+    }
+
+    private static void ApplyChipSelectionVisual(Border chip, bool isSelected)
+    {
+        if (isSelected)
+        {
+            if (Application.Current?.TryFindResource("Frb.Brushes.Primary") is Brush primary)
+            {
+                chip.BorderBrush = primary;
+            }
+            chip.Background = Application.Current?.TryFindResource("Frb.Brushes.Primary.Transparent") is Brush fill
+                ? fill
+                : Brushes.Transparent;
+        }
+        else
+        {
+            chip.SetResourceReference(Border.BorderBrushProperty, "Frb.Brushes.Border");
+            chip.Background = Brushes.Transparent;
         }
     }
 
@@ -128,7 +166,7 @@ internal class StandardsPaletteView : Border
         };
         chip.SetResourceReference(Border.BorderBrushProperty, "Frb.Brushes.Border");
 
-        // Hover highlight.
+        // Hover highlight (the selected chip keeps its highlight when the mouse leaves).
         chip.MouseEnter += (_, _) =>
         {
             if (Application.Current?.TryFindResource("Frb.Brushes.Primary") is Brush primary)
@@ -136,7 +174,7 @@ internal class StandardsPaletteView : Border
                 chip.BorderBrush = primary;
             }
         };
-        chip.MouseLeave += (_, _) => chip.SetResourceReference(Border.BorderBrushProperty, "Frb.Brushes.Border");
+        chip.MouseLeave += (_, _) => ApplyChipSelectionVisual(chip, _selectedTypeName == typeName);
 
         WireDrag(chip, typeName);
         chip.ContextMenu = CreateChipContextMenu(typeName);
