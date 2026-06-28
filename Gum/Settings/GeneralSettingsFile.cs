@@ -53,6 +53,17 @@ namespace Gum.Settings
             set;
         }
 
+        /// <summary>
+        /// When true, the experimental "Standards palette" UI is used: the Standard folder is
+        /// removed from the element tree and the standard types are shown as a draggable chip
+        /// palette at the bottom of the Project panel instead. Opt-in while experimental.
+        /// </summary>
+        public bool UseStandardsPalette
+        {
+            get;
+            set;
+        }
+
         public int FrameRate
         {
             get;
@@ -131,6 +142,7 @@ namespace Gum.Settings
         {
             ShowTextOutlines = false;
             AutoSave = true;
+            UseStandardsPalette = false;
             FrameRate = 30;
             LeftAndEverythingSplitterDistance = 196;
             PreviewSplitterDistance = 558;

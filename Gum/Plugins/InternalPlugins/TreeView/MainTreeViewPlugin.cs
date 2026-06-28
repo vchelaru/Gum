@@ -21,7 +21,7 @@ using RenderingLibrary;
 namespace Gum.Plugins.InternalPlugins.TreeView;
 
 [Export(typeof(PluginBase))]
-internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardownMessage>, IRecipient<UiBaseFontSizeChangedMessage>, IRecipient<RequestErrorRefreshMessage>
+internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardownMessage>, IRecipient<UiBaseFontSizeChangedMessage>, IRecipient<RequestErrorRefreshMessage>, IRecipient<StandardsPaletteSettingChangedMessage>
 {
     private readonly ISelectedState _selectedState;
     private readonly ElementTreeViewManager _elementTreeViewManager;
@@ -185,6 +185,9 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
         _userProjectSettingsManager.LoadForProject(save.FullFileName);
         _treeViewStateService.LoadAndApplyState(_elementTreeViewManager.ObjectTreeView);
         RefreshErrorIndicatorsForAllElements();
+
+        // Repopulate the Standards chip palette for the newly-loaded project's standard types.
+        _elementTreeViewManager.ApplyStandardsPaletteMode();
     }
 
     private void HandleElementAdd(ElementSave save)
@@ -289,6 +292,11 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
     void IRecipient<UiBaseFontSizeChangedMessage>.Receive(UiBaseFontSizeChangedMessage message)
     {
         _elementTreeViewManager.UpdateCollapseButtonSizes(message.Size);
+    }
+
+    void IRecipient<StandardsPaletteSettingChangedMessage>.Receive(StandardsPaletteSettingChangedMessage message)
+    {
+        _elementTreeViewManager.ApplyStandardsPaletteMode();
     }
 
     void IRecipient<RequestErrorRefreshMessage>.Receive(RequestErrorRefreshMessage message)

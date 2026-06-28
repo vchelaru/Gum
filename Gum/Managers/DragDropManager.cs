@@ -30,6 +30,13 @@ namespace Gum.Managers;
 
 public class DragDropManager : IDragDropManager
 {
+    /// <summary>
+    /// Drag-and-drop data format used by the Standards chip palette. The payload is the standard
+    /// type name (e.g. "Text"). Shared by the WPF chip (drag source) and the WinForms tree /
+    /// XNA wireframe drop targets so they can recognize a chip drag across the WPF/WinForms boundary.
+    /// </summary>
+    public const string StandardElementNameDataFormat = "GumStandardElementName";
+
     #region Fields
 
     private readonly ICircularReferenceManager _circularReferenceManager;
@@ -133,6 +140,15 @@ public class DragDropManager : IDragDropManager
     #endregion
 
     #region Drop Element (like components) on TreeView
+
+    /// <inheritdoc/>
+    public void HandleDroppedStandardElementOnTreeNode(StandardElementSave standardElement, ITreeNode targetTreeNode)
+    {
+        // Reuse the exact same path as dragging a Standard element node onto a Screen/Component.
+        // A null DropTarget makes HandleDroppedElementInElement append the new instance.
+        using var undoLock = _undoManager.RequestLock();
+        HandleDroppedElementSave(standardElement, targetTreeNode, targetTreeNode.Tag, targetTreeNode, dropTarget: null);
+    }
 
     private void HandleDroppedElementSave(object draggedComponentOrElement, ITreeNode treeNodeDroppedOn, object targetTag, ITreeNode targetTreeNode, DropTarget? dropTarget)
     {

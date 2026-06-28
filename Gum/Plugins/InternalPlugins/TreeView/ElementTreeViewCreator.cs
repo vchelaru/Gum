@@ -48,6 +48,13 @@ internal class ElementTreeViewCreator
     internal System.Windows.Controls.Button CollapseAllButton { get; private set; } = null!;
     internal System.Windows.Controls.Button CollapseToElementButton { get; private set; } = null!;
 
+    /// <summary>
+    /// The experimental Standards chip palette pinned to the bottom of the Project panel. Hidden
+    /// (collapsed) unless the UseStandardsPalette setting is on; the manager toggles its visibility
+    /// and populates its chips.
+    /// </summary>
+    internal StandardsPaletteView StandardsPalette { get; private set; } = null!;
+
     #endregion
 
     /// <summary>
@@ -110,6 +117,10 @@ internal class ElementTreeViewCreator
         grid.RowDefinitions.Add(
             new System.Windows.Controls.RowDefinition()
             { Height = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
+        // Row 4: the Standards chip palette, pinned below the tree.
+        grid.RowDefinitions.Add(
+            new System.Windows.Controls.RowDefinition()
+            { Height = System.Windows.GridLength.Auto });
 
         ObjectTreeView.Dock = DockStyle.Fill;
 
@@ -155,6 +166,13 @@ internal class ElementTreeViewCreator
 
         Grid.SetRow(FlatList, 3);
         grid.Children.Add(FlatList);
+
+        StandardsPalette = new StandardsPaletteView(GetWpfImageSourceForKey)
+        {
+            Visibility = Visibility.Collapsed
+        };
+        Grid.SetRow(StandardsPalette, 4);
+        grid.Children.Add(StandardsPalette);
 
         searchBarUi.GotKeyboardFocus += (_, _) => UpdateCheckBoxVisibility();
         searchBarUi.LostKeyboardFocus += (_, _) => UpdateCheckBoxVisibility();

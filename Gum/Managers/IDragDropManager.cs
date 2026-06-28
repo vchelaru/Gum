@@ -26,6 +26,15 @@ public interface IDragDropManager
     bool IsValidExtensionForFileDrop(string file);
     void OnFilesDroppedInTreeView(string[] files);
     void OnNodeObjectDroppedInWireframe(object draggedObject);
+
+    /// <summary>
+    /// Creates an instance of the given standard type on the Screen/Component represented by
+    /// (or containing) the dropped-on tree node. Used by the Standards chip palette so dragging
+    /// a chip onto the tree reuses the same creation path as dragging a Standard element node.
+    /// </summary>
+    /// <param name="standardElement">The standard element whose type the new instance will be.</param>
+    /// <param name="targetTreeNode">The tree node the chip was dropped on.</param>
+    void HandleDroppedStandardElementOnTreeNode(StandardElementSave standardElement, ITreeNode targetTreeNode);
     /// <summary>
     /// Handle a drag-drop reorder. <paramref name="dropTarget"/> describes the
     /// destination element and flat-list position; it is null for folder or

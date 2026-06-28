@@ -898,10 +898,13 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         // itself lives in DragDropManager.DecideWireframeDragEffect.
         bool hasFileDrop = e.Data.GetDataPresent(System.Windows.Forms.DataFormats.FileDrop);
         bool hasNodes = e.HasData<List<TreeNode>>() || e.HasData<TreeNode>();
+        bool hasStandardChip = e.Data.GetDataPresent(DragDropManager.StandardElementNameDataFormat);
 
         DragAcceptDecision decision = _dragDropManager.DecideWireframeDragEffect(hasFileDrop, hasNodes);
 
-        if (decision.Accept)
+        // A Standards-palette chip is accepted like a dragged Standard node — the drop creates an
+        // instance of that type on the open Screen/Component at the cursor position.
+        if (decision.Accept || hasStandardChip)
         {
             e.Effect = System.Windows.Forms.DragDropEffects.Copy;
         }
@@ -913,6 +916,17 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
     internal void OnWireframeDrop(object? sender, System.Windows.Forms.DragEventArgs e)
     {
+        // Handle Standards-palette chip drops: create + position an instance of the chip's type,
+        // reusing the same path as a dragged Standard node.
+        if (e.Data.GetData(DragDropManager.StandardElementNameDataFormat) is string standardTypeName)
+        {
+            if (ObjectFinder.Self.GetStandardElement(standardTypeName) is { } standardElement)
+            {
+                _dragDropManager.OnNodeObjectDroppedInWireframe(standardElement);
+            }
+            return;
+        }
+
         // Handle node drops
         List<TreeNode>? droppedNodes = e switch
         {

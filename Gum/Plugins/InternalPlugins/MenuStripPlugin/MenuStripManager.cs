@@ -9,7 +9,9 @@ using System.Diagnostics;
 using System.Linq;
 using Gum.Commands;
 using Gum.Dialogs;
+using Gum.Messages;
 using Gum.Services.Dialogs;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace Gum.Managers
 {
@@ -23,6 +25,7 @@ namespace Gum.Managers
         private readonly IDialogService _dialogService;
         private readonly IFileCommands _fileCommands;
         private readonly IProjectManager _projectManager;
+        private readonly IMessenger _messenger;
 
         private Menu _menu;
 
@@ -54,7 +57,8 @@ namespace Gum.Managers
             IEditCommands editCommands,
             IDialogService dialogService,
             IFileCommands fileCommands,
-            IProjectManager projectManager)
+            IProjectManager projectManager,
+            IMessenger messenger)
         {
             _selectedState = selectedState;
             _undoManager = undoManager;
@@ -62,6 +66,7 @@ namespace Gum.Managers
             _dialogService = dialogService;
             _fileCommands = fileCommands;
             _projectManager = projectManager;
+            _messenger = messenger;
         }
 
         public void PopulateMenu(Menu menu)
@@ -265,6 +270,25 @@ namespace Gum.Managers
             {
                 _dialogService.Show<ThemingDialogViewModel>();
             });
+
+            // Experimental: replace the Standard tree folder with a chip palette at the bottom of the
+            // Project panel. Opt-in while experimental; persisted in the global settings file.
+            var standardsPaletteItem = new MenuItem
+            {
+                Header = "Standards palette (experimental)",
+                IsCheckable = true,
+                IsChecked = _projectManager.GeneralSettingsFile.UseStandardsPalette
+            };
+            // WPF toggles IsChecked before Click fires for a checkable item.
+            standardsPaletteItem.Click += (_, _) =>
+            {
+                var settings = _projectManager.GeneralSettingsFile;
+                settings.UseStandardsPalette = standardsPaletteItem.IsChecked;
+                settings.Save();
+                _messenger.Send(new StandardsPaletteSettingChangedMessage(settings.UseStandardsPalette));
+            };
+            _viewMenuItem.Items.Add(standardsPaletteItem);
+
             _menu.Items.Add(_viewMenuItem);
             _menu.Items.Add(_contentMenuItem);
             _menu.Items.Add(_pluginsMenuItem);

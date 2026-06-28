@@ -49,6 +49,33 @@ public class DragDropManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleDroppedStandardElementOnTreeNode_OnComponent_AddsInstanceOfStandardType()
+    {
+        // Arrange: dropping a "Text" chip onto a Component should create a Text instance on it,
+        // reusing the same creation path as dragging the Standard element node.
+        StandardElementSave textStandard = new StandardElementSave();
+        textStandard.Name = "Text";
+
+        ComponentSave targetComponent = new ComponentSave();
+        targetComponent.Name = "TargetComponent";
+        targetComponent.States.Add(new StateSave());
+
+        Mock<ITreeNode> targetNode = new Mock<ITreeNode>();
+        targetNode.Setup(x => x.Tag).Returns(targetComponent);
+
+        _circularReferenceManager
+            .Setup(x => x.CanTypeBeAddedToElement(It.IsAny<ElementSave>(), It.IsAny<string>()))
+            .Returns(true);
+
+        // Act
+        _dragDropManager.HandleDroppedStandardElementOnTreeNode(textStandard, targetNode.Object);
+
+        // Assert
+        _mocker.GetMock<IElementCommands>()
+            .Verify(x => x.AddInstance(targetComponent, It.IsAny<string>(), "Text", null, (int?)null), Times.Once);
+    }
+
+    [Fact]
     public void OnNodeSortingDropped_DropInstance_ShouldInsertAtIndex_OnDifferentElement()
     {
         // Arrange
