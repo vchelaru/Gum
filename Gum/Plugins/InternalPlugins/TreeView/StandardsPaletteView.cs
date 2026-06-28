@@ -29,6 +29,7 @@ internal class StandardsPaletteView : Border
     private readonly List<ChipVisual> _chipVisuals = new();
     private readonly List<string> _currentTypeNames = new();
     private string? _selectedTypeName;
+    private Border? _draggingChip;
 
     /// <summary>References to a chip's adjustable parts, used to adapt its layout as the panel resizes.</summary>
     private sealed class ChipVisual
@@ -234,15 +235,28 @@ internal class StandardsPaletteView : Border
         };
         chip.SetResourceReference(Border.BorderBrushProperty, "Frb.Brushes.Border");
 
-        // Hover highlight (the selected chip keeps its highlight when the mouse leaves).
+        // Hover highlight (the selected chip keeps its highlight when the mouse leaves). While this
+        // chip is the active drag source, the hover handlers must not touch its look — the drag
+        // begins by the cursor leaving the chip, and a MouseLeave reset would wipe the drag fill.
         chip.MouseEnter += (_, _) =>
         {
+            if (_draggingChip == chip)
+            {
+                return;
+            }
             if (Application.Current?.TryFindResource("Frb.Brushes.Primary") is Brush primary)
             {
                 chip.BorderBrush = primary;
             }
         };
-        chip.MouseLeave += (_, _) => ApplyChipSelectionVisual(chip, _selectedTypeName == typeName);
+        chip.MouseLeave += (_, _) =>
+        {
+            if (_draggingChip == chip)
+            {
+                return;
+            }
+            ApplyChipSelectionVisual(chip, _selectedTypeName == typeName);
+        };
 
         WireDrag(chip, typeName);
         chip.ContextMenu = CreateChipContextMenu(typeName);
@@ -289,29 +303,27 @@ internal class StandardsPaletteView : Border
 
             // Highlight the source chip for the duration of the (blocking) drag so it's clear which
             // standard is being dragged, then restore its normal/selected look when the drop finishes.
-            SetChipDragActive(chip, true);
+            // _draggingChip suppresses the hover handlers so the immediate MouseLeave (the cursor
+            // leaves the chip as the drag starts) doesn't wipe the drag fill.
+            _draggingChip = chip;
+            SetChipDragActive(chip);
             try
             {
                 DragDrop.DoDragDrop(chip, data, DragDropEffects.Copy);
             }
             finally
             {
-                SetChipDragActive(chip, false);
+                _draggingChip = null;
                 ApplyChipSelectionVisual(chip, _selectedTypeName == typeName);
             }
         };
     }
 
-    private static void SetChipDragActive(Border chip, bool isDragging)
+    private static void SetChipDragActive(Border chip)
     {
         // Only the fill/border colors change (never thickness or size), so the chip emphasizes in
-        // place without shifting its neighbors. When not dragging, the caller restores the normal /
-        // selected look via ApplyChipSelectionVisual.
-        if (!isDragging)
-        {
-            return;
-        }
-
+        // place without shifting its neighbors. The caller restores the normal / selected look via
+        // ApplyChipSelectionVisual when the drag ends.
         if (Application.Current?.TryFindResource("Frb.Brushes.Primary") is SolidColorBrush primary)
         {
             chip.BorderBrush = primary;
