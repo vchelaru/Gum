@@ -639,4 +639,142 @@ public class UndoManagerTests : BaseTestClass
         _undoManager.CanUndo().ShouldBeTrue();
         _undoManager.CurrentElementHistory.Actions.Count.ShouldBe(1);
     }
+
+    // ---------------------------------------------------------------------------------------------
+    // Backfill for the strategy-extraction refactor (#3403). These pin the element/behavior tricky
+    // paths the existing suite left uncovered before UndoManager is split into per-domain strategies:
+    // the element REDO paths (variable value, instance add, category add), selection restore after
+    // undo, and the behavior required-variables track. They are green against the current
+    // (pre-refactor) UndoManager and must stay green after the split.
+    // ---------------------------------------------------------------------------------------------
+
+    [Fact]
+    public void GetBehaviorActionDescription_ShouldDescribeAddedState()
+    {
+        // Pins the History-tab wording that moved from UndosViewModel into BehaviorUndoStrategy (#3403):
+        // diffing a before (UndoState) without the state against an after (RedoState) with it yields
+        // the "Add states" line. Keeps the description output byte-identical across the move.
+        var before = new BehaviorSave { Name = "MyBehavior" };
+        before.Categories.Add(new StateSaveCategory { Name = "MyCategory" });
+
+        var after = new BehaviorSave { Name = "MyBehavior" };
+        var afterCategory = new StateSaveCategory { Name = "MyCategory" };
+        afterCategory.States.Add(new StateSave { Name = "State1" });
+        after.Categories.Add(afterCategory);
+
+        var action = new BehaviorHistoryAction
+        {
+            UndoState = new BehaviorSnapshot { Behavior = before },
+            RedoState = new BehaviorSnapshot { Behavior = after }
+        };
+
+        BehaviorUndoStrategy.GetBehaviorActionDescription(action).ShouldBe("Add states: State1");
+    }
+
+    [Fact]
+    public void PerformRedo_ShouldReAddCategory_AfterUndoingCategoryAdd()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        var categoryName = "MyCategory";
+
+        _undoManager.RecordState();
+
+        component.Categories.Add(new StateSaveCategory { Name = categoryName });
+
+        _undoManager.RecordUndo();
+        _undoManager.PerformUndo();
+
+        component.Categories.Count.ShouldBe(0);
+
+        _undoManager.PerformRedo();
+
+        component.Categories.Count.ShouldBe(1);
+        component.Categories[0].Name.ShouldBe(categoryName);
+    }
+
+    [Fact]
+    public void PerformRedo_ShouldReAddInstance_AfterUndoingInstanceAdd()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+
+        _undoManager.RecordState();
+
+        component.Instances.Add(new InstanceSave
+        {
+            Name = "Instance1",
+            BaseType = "Sprite",
+            ParentContainer = component
+        });
+
+        _undoManager.RecordUndo();
+        _undoManager.PerformUndo();
+
+        component.Instances.Count.ShouldBe(0);
+
+        _undoManager.PerformRedo();
+
+        component.Instances.Count.ShouldBe(1);
+        component.Instances[0].Name.ShouldBe("Instance1");
+    }
+
+    [Fact]
+    public void PerformRedo_ShouldRestoreNewValue_AfterUndoingVariableChange()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+
+        component.DefaultState.SetValue("X", 10f);
+        _undoManager.RecordState();
+        component.DefaultState.SetValue("X", 11f);
+        _undoManager.RecordUndo();
+
+        _undoManager.PerformUndo();
+        component.DefaultState.GetValueOrDefault<float>("X").ShouldBe(10f);
+
+        _undoManager.PerformRedo();
+        component.DefaultState.GetValueOrDefault<float>("X").ShouldBe(11f);
+    }
+
+    [Fact]
+    public void PerformRedo_ShouldRestoreRequiredVariable_AfterUndoingBehaviorRequiredVariableAdd()
+    {
+        var behavior = new BehaviorSave { Name = "MyBehavior" };
+        var requiredVariableName = "MyRequiredVariable";
+
+        _selectedState
+            .Setup(x => x.SelectedBehavior)
+            .Returns(behavior);
+
+        _undoManager.RecordBehaviorState();
+
+        behavior.RequiredVariables.Variables.Add(new VariableSave { Name = requiredVariableName, Type = "float" });
+
+        _undoManager.RecordBehaviorUndo();
+        _undoManager.PerformUndo();
+
+        behavior.RequiredVariables.Variables.Count.ShouldBe(0);
+
+        _undoManager.PerformRedo();
+
+        behavior.RequiredVariables.Variables.Count.ShouldBe(1);
+        behavior.RequiredVariables.Variables[0].Name.ShouldBe(requiredVariableName);
+    }
+
+    [Fact]
+    public void PerformUndo_ShouldRestoreSelectedState()
+    {
+        // Pins selection restore: after an undo, UndoManager re-selects the state matching the
+        // snapshot's StateName (here the "Default" state set up in the test fixture).
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        component.DefaultState.SetValue("X", 10f);
+
+        _undoManager.RecordState();
+        component.DefaultState.SetValue("X", 11f);
+        _undoManager.RecordUndo();
+
+        _undoManager.PerformUndo();
+
+        _selectedState.VerifySet(
+            x => x.SelectedStateSave = It.Is<StateSave>(state => state.Name == "Default"),
+            Times.AtLeastOnce);
+    }
 }

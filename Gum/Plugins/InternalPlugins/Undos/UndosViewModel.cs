@@ -86,80 +86,9 @@ namespace Gum.Plugins.Undos
 
             foreach (var action in behaviorHistory.Actions)
             {
-                var description = GetBehaviorActionDescription(action);
+                var description = BehaviorUndoStrategy.GetBehaviorActionDescription(action);
                 _historyItems.Add(new UndoItemViewModel { Display = description });
             }
-        }
-
-        private static string GetBehaviorActionDescription(BehaviorHistoryAction action)
-        {
-            var before = action.UndoState.Behavior;
-            var after = action.RedoState?.Behavior;
-
-            if (after == null)
-            {
-                return "Behavior change";
-            }
-
-            var parts = new List<string>();
-
-            var beforeCategoryNames = before.Categories.Select(c => c.Name).ToHashSet();
-            var afterCategoryNames = after.Categories.Select(c => c.Name).ToHashSet();
-
-            var addedCategoryNames = afterCategoryNames.Except(beforeCategoryNames).ToList();
-            var removedCategoryNames = beforeCategoryNames.Except(afterCategoryNames).ToList();
-
-            if (addedCategoryNames.Count > 0)
-            {
-                parts.Add($"Add categories: {string.Join(", ", addedCategoryNames)}");
-            }
-            if (removedCategoryNames.Count > 0)
-            {
-                parts.Add($"Remove categories: {string.Join(", ", removedCategoryNames)}");
-            }
-
-            var addedStateNames = new List<string>();
-            var removedStateNames = new List<string>();
-            foreach (var afterCategory in after.Categories)
-            {
-                var beforeCategory = before.Categories.FirstOrDefault(c => c.Name == afterCategory.Name);
-                if (beforeCategory == null)
-                {
-                    continue;
-                }
-
-                var beforeStateNames = beforeCategory.States.Select(s => s.Name).ToHashSet();
-                var afterStateNames = afterCategory.States.Select(s => s.Name).ToHashSet();
-
-                addedStateNames.AddRange(afterStateNames.Except(beforeStateNames));
-                removedStateNames.AddRange(beforeStateNames.Except(afterStateNames));
-            }
-
-            if (addedStateNames.Count > 0)
-            {
-                parts.Add($"Add states: {string.Join(", ", addedStateNames)}");
-            }
-            if (removedStateNames.Count > 0)
-            {
-                parts.Add($"Remove states: {string.Join(", ", removedStateNames)}");
-            }
-
-            var beforeInstanceNames = before.RequiredInstances.Select(i => i.Name).ToHashSet();
-            var afterInstanceNames = after.RequiredInstances.Select(i => i.Name).ToHashSet();
-
-            var addedInstanceNames = afterInstanceNames.Except(beforeInstanceNames).ToList();
-            var removedInstanceNames = beforeInstanceNames.Except(afterInstanceNames).ToList();
-
-            if (addedInstanceNames.Count > 0)
-            {
-                parts.Add($"Add instances: {string.Join(", ", addedInstanceNames)}");
-            }
-            if (removedInstanceNames.Count > 0)
-            {
-                parts.Add($"Remove instances: {string.Join(", ", removedInstanceNames)}");
-            }
-
-            return parts.Count > 0 ? string.Join("\n    ", parts) : "Behavior change";
         }
 
         void TrimAtIndex()
@@ -247,7 +176,7 @@ namespace Gum.Plugins.Undos
                 elementToClone = elementHistory.FinalState;
             }
 
-            selectedElementClone = UndoManager.CloneWithFixedEnumerations(elementToClone);
+            selectedElementClone = ElementUndoStrategy.CloneWithFixedEnumerations(elementToClone);
 
             List<string> undoStringList = new List<string>();
 
@@ -289,7 +218,7 @@ namespace Gum.Plugins.Undos
 
             if (_selectedState.SelectedElement != null)
             {
-                return UndoManager.CloneWithFixedEnumerations(_selectedState.SelectedElement);
+                return ElementUndoStrategy.CloneWithFixedEnumerations(_selectedState.SelectedElement);
             }
 
             return null;
