@@ -49,9 +49,6 @@
     <Folder Include="Libraries\" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\redExclamation.png" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="FlatRedBall.InterpolationCore" Version="2025.4.22.1" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Newtonsoft.Json">
