@@ -33,7 +33,7 @@ Key contract difference: each `Renderer.Draw` is one top-level renderable. If a 
 The layered path runs a recursive `PreRender` pass on `layer.Renderables` **before** `BeginSpriteBatch`. That pass does two jobs:
 
 1. Calls `renderable.PreRender()` on every visible renderable, depth-first. This is the hook `RenderableShapeBase.PreRender` uses to invoke `OnPreRender`, which is wired by `AposShapeRuntime.SetContainedShape` to call `AposShapeRuntime.PreRender`. That's where runtime-only properties (notably `StrokeWidth` with its unit handling) get pushed onto the contained renderable. Without this walk, the renderable keeps its own default values (e.g. `RenderableShapeBase._strokeWidth = 2`) regardless of what the runtime was assigned.
-2. For any renderable with `IsRenderTarget == true`, calls `RenderToRenderTarget` — which sets a render target on the GraphicsDevice and runs its own SpriteBatch cycle inside.
+2. For any renderable with `IsRenderTarget == true`, calls `RenderToRenderTarget` — which sets a render target on the GraphicsDevice and runs its own SpriteBatch cycle inside. **Invisible** render targets (`Visible == false`) skip this bake unless a visible `IRenderTargetTextureReferencer` on any layer references them via `RenderTargetTextureSource` (#1643) — the reference set is collected once per host frame across all layers before the bake pass runs.
 
 Phase 2 is why the full PreRender walk **must** run before `BeginSpriteBatch` — once the outer SpriteBatch is begun, you can't safely change the render target or start a nested cycle.
 

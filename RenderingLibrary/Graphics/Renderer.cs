@@ -85,6 +85,8 @@ public class Renderer : IRenderer
     private RenderTargetService renderTargetService;
     private bool _renderTargetSweepCompletedForHostFrame;
     private bool _allLayersPreRenderedForHostFrame;
+    private bool _referencedRenderTargetsCollectedForHostFrame;
+    private readonly HashSet<IRenderableIpso> _referencedRenderTargetOwners = new();
     Camera mCamera;
 
     Texture2D mSinglePixelTexture;
@@ -430,6 +432,7 @@ public class Renderer : IRenderer
         {
             _renderTargetSweepCompletedForHostFrame = false;
             _allLayersPreRenderedForHostFrame = false;
+            _referencedRenderTargetsCollectedForHostFrame = false;
         }
     }
 
@@ -439,6 +442,7 @@ public class Renderer : IRenderer
         {
             _renderTargetSweepCompletedForHostFrame = false;
             _allLayersPreRenderedForHostFrame = false;
+            _referencedRenderTargetsCollectedForHostFrame = false;
         }
     }
 
@@ -482,6 +486,8 @@ public class Renderer : IRenderer
 
     private void PreRenderLayersCore(IReadOnlyList<Layer> layers)
     {
+        EnsureReferencedRenderTargetsCollected();
+
         for (int i = 0; i < layers.Count; i++)
         {
             SetFilteringForLayer(layers[i]);
@@ -725,28 +731,81 @@ public class Renderer : IRenderer
             return;
         }
 
+        EnsureReferencedRenderTargetsCollected();
+
         for (int i = 0; i < count; i++)
         {
             var renderable = renderables[i];
-            if(renderable.Visible || 
-                // If it's a render target, then we want to render it fully:
-                renderable.IsRenderTarget)
+            bool shouldBakeRenderTarget = ShouldRenderToRenderTarget(renderable);
+            if (renderable.Visible || shouldBakeRenderTarget)
             {
 
                 renderable.PreRender();
 
                 // Some Gum objects, like GraphicalUiElements, may not have children if the object hasn't
                 // yet been assigned a visual. Just skip over it...
-                if((renderable.Visible || renderable.IsRenderTarget) && renderable.Children != null)
+                if ((renderable.Visible || shouldBakeRenderTarget) && renderable.Children != null)
                 {
                     PreRender(renderable.Children);
                 }
-                if(renderable.IsRenderTarget)
+                if (shouldBakeRenderTarget)
                 {
                     RenderToRenderTarget(renderable, SystemManagers.Default);
                 }
             }
         }
+    }
+
+    private void EnsureReferencedRenderTargetsCollected()
+    {
+        if (_referencedRenderTargetsCollectedForHostFrame)
+        {
+            return;
+        }
+
+        _referencedRenderTargetOwners.Clear();
+        for (int i = 0; i < _layers.Count; i++)
+        {
+            CollectReferencedRenderTargets(_layers[i].Renderables);
+        }
+
+        _referencedRenderTargetsCollectedForHostFrame = true;
+    }
+
+    private void CollectReferencedRenderTargets(IList<IRenderableIpso> renderables)
+    {
+        int count = renderables.Count;
+        for (int i = 0; i < count; i++)
+        {
+            IRenderableIpso renderable = renderables[i];
+            if (renderable.Visible && renderable is IRenderTargetTextureReferencer textureReferencer &&
+                textureReferencer.RenderTargetTextureSource != null)
+            {
+                _referencedRenderTargetOwners.Add(
+                    ResolveRenderTargetCacheOwner(textureReferencer.RenderTargetTextureSource));
+            }
+
+            if (renderable.Visible && renderable.Children != null)
+            {
+                CollectReferencedRenderTargets(renderable.Children);
+            }
+        }
+    }
+
+    private bool ShouldRenderToRenderTarget(IRenderableIpso renderable)
+    {
+        if (!renderable.IsRenderTarget)
+        {
+            return false;
+        }
+
+        if (renderable.Visible)
+        {
+            return true;
+        }
+
+        EnsureReferencedRenderTargetsCollected();
+        return _referencedRenderTargetOwners.Contains(ResolveRenderTargetCacheOwner(renderable));
     }
 
     private void PreRenderWithSourceRenderTargets(IList<IRenderableIpso> renderables)
