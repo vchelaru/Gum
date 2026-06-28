@@ -102,7 +102,26 @@ Single-file change; revert `GraphicsDeviceService.cs` to restore the prior behav
    with a NULL page fault on the **.NET Finalizer** thread, deep in `coreclr`: the
    discarded failed-`FL10_0` device gets finalized and its native release crashes
    under Wine.
-3. **Run 3 - construct-once via `IsProfileSupported` (current).** Select the highest
-   supported profile, construct once, never leave a failed-device husk. Logs the
-   chosen profile to stdout (`[Gum/XnaAndWinforms] Graphics profile selected: ...`).
-   Building/packaging for Mac test.
+3. **Run 3 - construct-once via `IsProfileSupported`.** Logged
+   `Graphics profile selected: HiDef` and the device was created - **graphics is no
+   longer the blocker.** Execution reached `WireframeControl.Initialize`, which then
+   threw an exception; the app's `catch` calls `DialogService.ShowMessage("Error
+   initializing the wireframe control...")`, and the modal dialog's repaint tripped a
+   `Debug.Assert` in `BackgroundManager.Activity` ("Initialize must be called before
+   Activity") -> `FailFast`. That assert is **Debug-build-only** (stripped in Release),
+   i.e. a secondary artifact of testing a Debug build; the *real* failure is the caught
+   exception inside `WireframeControl.Initialize`, whose text we do not yet have.
+4. **Run 4 - capture the real wireframe exception (current).** Added a stdout log of
+   the caught exception in `WireframeControl.Initialize` (fires before the dialog/assert)
+   so the run log shows the actual failure. Still a Debug build for this diagnostic step;
+   a Release build is the right config for the eventual launch test.
+
+## Methodology note (course-correction)
+
+The graphics root cause was inferred from the probe suite, and the first builds were
+**Debug** - we never captured the *original released app's* crash as a baseline. Before
+drawing more conclusions we must (a) capture the stock released `Gum.exe` crash on the
+Mac (`~/bin/gum > ~/orig-output.log 2>&1`) to confirm where it actually dies, and
+(b) read the real `WireframeControl.Initialize` exception from Run 4. Probe evidence that
+`FL10_0` fails is solid, and Run 3 reaching wireframe init is consistent with graphics
+being the first blocker - but the baseline confirms it rather than assuming it.

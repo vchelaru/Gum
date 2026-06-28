@@ -248,6 +248,9 @@ public class WireframeControl : GraphicsDeviceControl
         }
         catch (Exception exception)
         {
+            // Diagnostic: surface the real wireframe-init failure to stdout so it is captured in the
+            // run log even if the subsequent error dialog re-enters and aborts (macOS/Wine bring-up).
+            System.Console.WriteLine("[Gum/WireframeControl] Initialize failed:\n" + exception);
             var message = "Error initializing the wireframe control\n\n" + exception;
             _dialogService.ShowMessage(message);
         }
