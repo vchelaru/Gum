@@ -1,6 +1,7 @@
 using Gum.Managers;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -26,6 +27,7 @@ internal class StandardsPaletteView : Border
     private readonly UniformGrid _chipsPanel;
     private readonly Dictionary<string, Border> _chipsByType = new();
     private readonly List<ChipVisual> _chipVisuals = new();
+    private readonly List<string> _currentTypeNames = new();
     private string? _selectedTypeName;
 
     /// <summary>References to a chip's adjustable parts, used to adapt its layout as the panel resizes.</summary>
@@ -127,14 +129,29 @@ internal class StandardsPaletteView : Border
     /// </summary>
     public void RefreshChips(IReadOnlyList<string> standardTypeNames)
     {
+        // Idempotent: callers refresh on every tree rebuild, but the standard set rarely changes.
+        // Skipping the rebuild when the names are unchanged avoids needless WPF churn and preserves
+        // hover / selection highlight state.
+        if (standardTypeNames.SequenceEqual(_currentTypeNames))
+        {
+            return;
+        }
+
         _chipsPanel.Children.Clear();
         _chipsByType.Clear();
         _chipVisuals.Clear();
+        _currentTypeNames.Clear();
+        _currentTypeNames.AddRange(standardTypeNames);
         foreach (string typeName in standardTypeNames)
         {
             Border chip = CreateChip(typeName);
             _chipsByType[typeName] = chip;
             _chipsPanel.Children.Add(chip);
+        }
+        // A rebuild drops the highlight; re-apply it for the still-selected type.
+        if (_selectedTypeName != null && _chipsByType.TryGetValue(_selectedTypeName, out Border? selectedChip))
+        {
+            ApplyChipSelectionVisual(selectedChip, isSelected: true);
         }
         UpdateChipLayout();
     }

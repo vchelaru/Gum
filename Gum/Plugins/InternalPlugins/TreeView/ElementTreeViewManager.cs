@@ -1802,6 +1802,15 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
         SelectRecordedSelection();
         _collapseToggleService.RestoreExpandedPaths(ObjectTreeView, expandedPaths);
+
+        // Keep the chip palette in sync with the project's standards. A full tree rebuild is the
+        // signal that standard elements may have changed (e.g. "Add Skia Standard Elements", which
+        // only calls RefreshElementTreeView and raises no ElementAdd event). RefreshChips is
+        // idempotent, so this is a no-op when the standard set is unchanged.
+        if (_projectState.GeneralSettings?.UseStandardsPalette == true)
+        {
+            RefreshStandardsPaletteChips();
+        }
     }
 
 
