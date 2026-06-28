@@ -68,39 +68,37 @@ class GraphicsDeviceService : IGraphicsDeviceService
 
 
     /// <summary>
-    /// Creates the graphics device, preferring the highest feature level the adapter supports.
-    /// FL10_0 (guaranteed 8192-texture support) is ideal and is what real Windows GPUs get, but it
-    /// has no built-in fallback and throws on adapters that top out lower - notably Wine on macOS,
-    /// which exposes only feature level 9_3 and would otherwise crash the tool on launch. Falling
-    /// back through HiDef and Reach lets the tool still start (at a lower max texture size) instead
-    /// of failing outright. On hardware that supports FL10_0 the first attempt succeeds, so behavior
-    /// there is unchanged.
+    /// Creates the graphics device at the highest profile the adapter actually supports. Support is
+    /// queried up front so the device is constructed exactly once.
     /// </summary>
+    /// <remarks>
+    /// We must NOT construct-and-catch (try FL10_0, fall back on the exception): a GraphicsDevice
+    /// whose constructor throws - e.g. FL10_0 under Wine on macOS, which tops out at feature level
+    /// 9_3 - leaves a half-initialized, finalizable device behind, and its finalizer later crashes
+    /// (NULL page fault on the .NET Finalizer thread) releasing native D3D resources under Wine.
+    /// Querying <see cref="GraphicsAdapter.IsProfileSupported"/> avoids ever creating that husk.
+    /// On real Windows GPUs FL10_0 is supported, so the device is created exactly as before
+    /// (8192-texture support); on macOS/Wine it drops to the supported level so the tool launches.
+    /// </remarks>
     static GraphicsDevice CreateGraphicsDevice(PresentationParameters parameters)
     {
-        // Highest-to-lowest. KNI supports FL10_0 (8192 textures); HiDef/Reach negotiate down to
-        // whatever the adapter actually provides (e.g. 9_3 = 4096 textures under Wine on macOS).
-        GraphicsProfile[] profilesHighestToLowest =
-        {
-            GraphicsProfile.FL10_0,
-            GraphicsProfile.HiDef,
-            GraphicsProfile.Reach,
-        };
+        GraphicsAdapter adapter = GraphicsAdapter.DefaultAdapter;
 
-        NoSuitableGraphicsDeviceException? lastException = null;
-        foreach (GraphicsProfile profile in profilesHighestToLowest)
+        // Highest to lowest. Reach is the guaranteed floor (always supported).
+        GraphicsProfile chosenProfile = GraphicsProfile.Reach;
+        foreach (GraphicsProfile profile in new[] { GraphicsProfile.FL10_0, GraphicsProfile.HiDef, GraphicsProfile.Reach })
         {
-            try
+            if (adapter.IsProfileSupported(profile))
             {
-                return new GraphicsDevice(GraphicsAdapter.DefaultAdapter, profile, parameters);
-            }
-            catch (NoSuitableGraphicsDeviceException exception)
-            {
-                lastException = exception;
+                chosenProfile = profile;
+                break;
             }
         }
 
-        throw lastException ?? new NoSuitableGraphicsDeviceException("No supported graphics profile could create a device.");
+        // Surfaced in the run log so we can confirm which profile was selected under Wine.
+        System.Console.WriteLine("[Gum/XnaAndWinforms] Graphics profile selected: " + chosenProfile);
+
+        return new GraphicsDevice(adapter, chosenProfile, parameters);
     }
 
 

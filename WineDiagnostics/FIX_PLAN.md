@@ -38,8 +38,14 @@ the WinForms-in-WPF host, SkiaSharp (CPU + HarfBuzz), and raw `D3D11CreateDevice
 
 ### Fix B - minimal, ship first (this phase)
 
-Replace the single hard `GraphicsProfile.FL10_0` with a **fallback ladder**:
-`FL10_0 -> HiDef -> Reach`, taking the first profile that creates a device.
+Pick the highest profile the adapter reports via `GraphicsAdapter.IsProfileSupported`
+(`FL10_0 -> HiDef -> Reach`) and construct the device **exactly once**.
+
+> Note: an earlier attempt used construct-and-catch (try `FL10_0`, fall back on the
+> exception). That got the device created on the Mac but crashed the **.NET
+> Finalizer** thread (NULL page fault) - the failed `FL10_0` device left a
+> half-initialized, finalizable husk whose native D3D release crashes under Wine.
+> Querying support up front avoids ever creating that husk. See the iteration log.
 
 - **Windows:** `FL10_0` succeeds first - behavior is **unchanged** (8192 textures).
 - **macOS/Wine:** `FL10_0` and `HiDef`(*) fall to whatever the adapter supports
@@ -85,3 +91,18 @@ as a follow-up.
 ## Rollback
 
 Single-file change; revert `GraphicsDeviceService.cs` to restore the prior behavior.
+
+## Iteration log (Mac testing)
+
+1. **Run 1 - baseline crash.** Stock tool: `NoSuitableGraphicsDeviceException` -
+   adapter does not support `FL10_0`. Root cause confirmed.
+2. **Run 2 - construct-and-catch.** `FL10_0 -> HiDef -> Reach` via try/catch. The
+   device was created (`wined3d_cs` thread up; `d3d11`/`wined3d`/`libMoltenVK`/AMD
+   driver all loaded) - the FL10_0 blocker is **passed**. But the process crashed
+   with a NULL page fault on the **.NET Finalizer** thread, deep in `coreclr`: the
+   discarded failed-`FL10_0` device gets finalized and its native release crashes
+   under Wine.
+3. **Run 3 - construct-once via `IsProfileSupported` (current).** Select the highest
+   supported profile, construct once, never leave a failed-device husk. Logs the
+   chosen profile to stdout (`[Gum/XnaAndWinforms] Graphics profile selected: ...`).
+   Building/packaging for Mac test.
