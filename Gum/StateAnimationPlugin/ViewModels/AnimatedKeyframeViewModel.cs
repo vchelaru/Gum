@@ -255,10 +255,6 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
         }
     }
 
-
-    readonly BitmapFrame mExclamationIcon;
-    public BitmapFrame ExclamationIcon => mExclamationIcon;
-
     #endregion
 
     #region Methods
@@ -269,7 +265,6 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
         mStateBitmap = bitmapLoader.LoadImage("StateAnimationIcon.png");
         mAnimationBitmap = bitmapLoader.LoadImage("ReferencedAnimationIcon.png");
         mEventBitmap = bitmapLoader.LoadImage("NamedEventIcon.png");
-        mExclamationIcon = bitmapLoader.LoadImage("redExclamation.png");
     }
 
     public AnimatedKeyframeViewModel Clone()
