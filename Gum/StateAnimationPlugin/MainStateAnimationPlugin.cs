@@ -28,6 +28,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using ToolsUtilities;
 
 
 namespace StateAnimationPlugin;
@@ -211,6 +212,12 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
         this.ElementRename += HandleElementRename;
         this.ElementDuplicate += HandleElementDuplicate;
 
+        // Live-reload the tab when the selected element's .ganx is edited on disk (issue #3410).
+        // FileChangeReactionLogic owns no animation data (the .ganx is a per-element sidecar loaded
+        // on demand here, not part of GumProjectSave), so the reload lives in this plugin rather than
+        // in the core dispatch.
+        this.ReactToFileChanged += HandleFileChanged;
+
         this.GetDeleteStateResponse = HandleGetDeleteStateResponse;
         this.GetDeleteStateCategoryResponse = HandleGetDeleteStateCategoryResponse;
 
@@ -227,6 +234,40 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
         // works on project open and on edits regardless of selection. Contributing them here too
         // (from this plugin's per-selection view model) would duplicate those errors for the
         // selected element, so this plugin no longer subscribes to GetAllErrors.
+    }
+
+    private void HandleFileChanged(FilePath filePath)
+    {
+        var selectedElement = _selectedState.SelectedElement;
+        var selectedElementAnimationFile = selectedElement != null
+            ? _animationFilePathService.GetAbsoluteAnimationFileNameFor(selectedElement)
+            : null;
+
+        if (ShouldReloadAnimationsForChangedFile(filePath, selectedElementAnimationFile))
+        {
+            // forceReload bypasses CreateViewModel's same-element early-out: the external edit doesn't
+            // change the selection, so without forcing it the stale view model would survive and the
+            // tab would keep showing the pre-edit animations until the element was reselected. Mirrors
+            // the after-undo repaint (#3406).
+            RefreshViewModel(forceReload: true);
+        }
+    }
+
+    /// <summary>
+    /// Decides whether an on-disk file change should live-reload the Animations tab (issue #3410):
+    /// true only when <paramref name="changedFile"/> is a <c>.ganx</c> and is the selected element's
+    /// own animation sidecar (<paramref name="selectedElementAnimationFile"/>). Other elements' .ganx
+    /// files reload lazily when that element is next selected, so they are ignored here.
+    /// </summary>
+    internal static bool ShouldReloadAnimationsForChangedFile(FilePath changedFile,
+        FilePath? selectedElementAnimationFile)
+    {
+        if (changedFile.Extension != "ganx")
+        {
+            return false;
+        }
+
+        return selectedElementAnimationFile != null && changedFile == selectedElementAnimationFile;
     }
 
     private void HandleElementSelected(ElementSave? element)

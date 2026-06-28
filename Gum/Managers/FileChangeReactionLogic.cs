@@ -78,11 +78,10 @@ namespace Gum.Managers
                     ReactToProjectChanged(file);
                 }
             }
-            else if(extension == "ganx")
-            {
-                _outputManager.AddOutput($"Gum detected a changed animation file: \n{file}" +
-                    $"Gum does not currently support reloading animation files, so you should restart Gum to reload this file.");
-            }
+            // .ganx (animation collection) reload is handled by the StateAnimationPlugin via the
+            // _pluginManager.ReactToFileChanged call below. The animation data is a per-element
+            // sidecar owned by that plugin (not part of GumProjectSave), so there is no core-side
+            // reload to perform here (issue #3410).
             else if(extension == "behx")
             {
                 ReactToBehaviorChanged(file);
