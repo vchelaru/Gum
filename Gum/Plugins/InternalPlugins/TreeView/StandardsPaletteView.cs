@@ -258,7 +258,7 @@ internal class StandardsPaletteView : Border
         return chip;
     }
 
-    private void WireDrag(UIElement chip, string typeName)
+    private void WireDrag(Border chip, string typeName)
     {
         Point startPoint = default;
         bool pressed = false;
@@ -269,7 +269,7 @@ internal class StandardsPaletteView : Border
             startPoint = e.GetPosition(null);
         };
         chip.PreviewMouseLeftButtonUp += (_, _) => pressed = false;
-        chip.MouseMove += (sender, e) =>
+        chip.MouseMove += (_, e) =>
         {
             if (!pressed || e.LeftButton != MouseButtonState.Pressed)
             {
@@ -286,8 +286,39 @@ internal class StandardsPaletteView : Border
             pressed = false;
             DataObject data = new DataObject();
             data.SetData(DragDropManager.StandardElementNameDataFormat, typeName);
-            DragDrop.DoDragDrop((DependencyObject)sender, data, DragDropEffects.Copy);
+
+            // Highlight the source chip for the duration of the (blocking) drag so it's clear which
+            // standard is being dragged, then restore its normal/selected look when the drop finishes.
+            SetChipDragActive(chip, true);
+            try
+            {
+                DragDrop.DoDragDrop(chip, data, DragDropEffects.Copy);
+            }
+            finally
+            {
+                SetChipDragActive(chip, false);
+                ApplyChipSelectionVisual(chip, _selectedTypeName == typeName);
+            }
         };
+    }
+
+    private static void SetChipDragActive(Border chip, bool isDragging)
+    {
+        if (isDragging)
+        {
+            chip.Opacity = 0.6;
+            if (Application.Current?.TryFindResource("Frb.Brushes.Primary") is Brush primary)
+            {
+                chip.BorderBrush = primary;
+            }
+            chip.Background = Application.Current?.TryFindResource("Frb.Brushes.Primary.Transparent") is Brush fill
+                ? fill
+                : Brushes.Transparent;
+        }
+        else
+        {
+            chip.Opacity = 1.0;
+        }
     }
 
     private ContextMenu CreateChipContextMenu(string typeName)
