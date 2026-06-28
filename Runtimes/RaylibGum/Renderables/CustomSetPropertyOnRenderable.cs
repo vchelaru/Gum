@@ -655,13 +655,8 @@ public class CustomSetPropertyOnRenderable
             {
                 if (textRuntime.FontSize > 0 && !string.IsNullOrEmpty(textRuntime.Font))
                 {
-                    string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
-                    textRuntime.FontSize,
-                    textRuntime.Font,
-                    textRuntime.OutlineThickness,
-                    textRuntime.UseFontSmoothing,
-                    textRuntime.IsItalic,
-                    textRuntime.IsBold);
+                    string fontName = textRuntime.GetFontCacheFileName(
+                        BmfcSave.IsFontFilePath(textRuntime.Font) ? textRuntime.Font : null);
 
                     string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
 
@@ -694,12 +689,7 @@ public class CustomSetPropertyOnRenderable
                         try
                         {
                             BmfcSave bmfcSave = new BmfcSave();
-                            bmfcSave.FontSize = textRuntime.FontSize;
-                            bmfcSave.OutlineThickness = textRuntime.OutlineThickness;
-                            bmfcSave.UseSmoothing = textRuntime.UseFontSmoothing;
-                            bmfcSave.IsItalic = textRuntime.IsItalic;
-                            bmfcSave.IsBold = textRuntime.IsBold;
-                            bmfcSave.FontName = textRuntime.Font;
+                            textRuntime.CopyFontGenerationFieldsTo(bmfcSave, resolvedFontFilePath: null);
 
                             var gumProject = ObjectFinder.Self.GumProjectSave;
                             bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();

@@ -203,6 +203,94 @@ public class TextRuntime : InteractiveGue
         set { outlineThickness = value; UpdateToFontValues(); }
     }
 
+    bool hasDropshadow;
+    public bool HasDropshadow
+    {
+        get => hasDropshadow;
+        set
+        {
+            if (value && !hasDropshadow)
+            {
+                SeedDefaultDropshadowIfUnset();
+            }
+
+            hasDropshadow = value;
+            UpdateToFontValues();
+        }
+    }
+
+    byte dropshadowRed;
+    byte dropshadowGreen;
+    byte dropshadowBlue;
+    byte dropshadowAlpha = 180;
+
+    public SokolGum.Color DropshadowColor
+    {
+        get => new SokolGum.Color(dropshadowRed, dropshadowGreen, dropshadowBlue, dropshadowAlpha);
+        set
+        {
+            dropshadowRed = value.R;
+            dropshadowGreen = value.G;
+            dropshadowBlue = value.B;
+            dropshadowAlpha = value.A;
+            UpdateToFontValues();
+        }
+    }
+
+    public int DropshadowRed
+    {
+        get => dropshadowRed;
+        set { dropshadowRed = (byte)value; UpdateToFontValues(); }
+    }
+
+    public int DropshadowGreen
+    {
+        get => dropshadowGreen;
+        set { dropshadowGreen = (byte)value; UpdateToFontValues(); }
+    }
+
+    public int DropshadowBlue
+    {
+        get => dropshadowBlue;
+        set { dropshadowBlue = (byte)value; UpdateToFontValues(); }
+    }
+
+    public int DropshadowAlpha
+    {
+        get => dropshadowAlpha;
+        set { dropshadowAlpha = (byte)value; UpdateToFontValues(); }
+    }
+
+    float dropshadowOffsetX;
+    public float DropshadowOffsetX
+    {
+        get => dropshadowOffsetX;
+        set { dropshadowOffsetX = value; UpdateToFontValues(); }
+    }
+
+    float dropshadowOffsetY;
+    public float DropshadowOffsetY
+    {
+        get => dropshadowOffsetY;
+        set { dropshadowOffsetY = value; UpdateToFontValues(); }
+    }
+
+    float dropshadowBlur;
+    public float DropshadowBlur
+    {
+        get => dropshadowBlur;
+        set { dropshadowBlur = Math.Max(0f, value); UpdateToFontValues(); }
+    }
+
+    void SeedDefaultDropshadowIfUnset()
+    {
+        if (dropshadowOffsetX == 0f && dropshadowOffsetY == 0f && dropshadowBlur == 0f)
+        {
+            dropshadowOffsetY = 3f;
+            dropshadowBlur = 2f;
+        }
+    }
+
     public string? Text
     {
         get => ContainedText.RawText;
