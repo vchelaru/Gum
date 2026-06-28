@@ -58,6 +58,7 @@ unsafe class Program
     {
         () => new SilkNetGum.Screens.NineSliceScreen(),
         () => new SilkNetGum.Screens.SpriteScreen(),
+        () => new SilkNetGum.Screens.TextScreen(),
         () => new SilkNetGum.Screens.CirclesScreen(),
         () => new SilkNetGum.Screens.RectanglesScreen(),
         () => new SilkNetGum.Screens.ArcsScreen(),

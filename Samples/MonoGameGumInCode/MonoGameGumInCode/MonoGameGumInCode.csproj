@@ -33,6 +33,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\GumCommon\GumCommon.csproj" />
     <ProjectReference Include="..\..\..\MonoGameGum\MonoGameGum.csproj" />
+    <ProjectReference Include="..\..\..\Integrations\KernSmith\KernSmith.MonoGameGum\KernSmith.MonoGameGum.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Content\**\*.png">

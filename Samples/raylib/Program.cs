@@ -3,7 +3,9 @@ using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.Wireframe;
 using Gum;
+using KernSmith.Gum;
 using Raylib_cs;
+using RaylibGum.Renderables;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
@@ -56,6 +58,8 @@ public class BasicShapes
         InitWindow(screenWidth, screenHeight, "Gum raylib gallery");
 
         GumUI.Initialize();
+
+        CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreator();
 
         // Enable gamepad + keyboard navigation for Forms controls (see
         // https://docs.flatredball.com/gum/code/events-and-interactivity/gamepad-support).
@@ -135,6 +139,7 @@ public class BasicShapes
         AddNavButton("Arcs", () => new ArcsScreen());
         AddNavButton("Sprite", () => new SpriteScreen());
         AddNavButton("NineSlice", () => new NineSliceScreen());
+        AddNavButton("Text", () => new TextScreen());
 
         AddFitModeRadio("Zoom", isChecked: true, () =>
         {

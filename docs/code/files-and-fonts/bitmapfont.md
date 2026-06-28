@@ -16,7 +16,7 @@ A `BitmapFont` can be built from several sources:
 
 A single `BitmapFont` instance can be assigned to any number of `TextRuntime`s via `TextRuntime.BitmapFont`. The atlas textures are shared, so reuse costs nothing extra at draw time.
 
-For the full strategy comparison — when to assign a `BitmapFont` directly vs. drive fonts through `TextRuntime` properties — see [Font Strategies — Direct BitmapFont Assignment](font-strategies.md#direct-bitmapfont-assignment). For effects only available through direct construction (outline color, drop shadows, gradients, SDF, color fonts), see [Advanced Font Effects](advanced-font-effects.md).
+For the full strategy comparison — when to assign a `BitmapFont` directly vs. drive fonts through `TextRuntime` properties — see [Font Strategies — Direct BitmapFont Assignment](font-strategies.md#direct-bitmapfont-assignment). Baked drop shadow is available on the property path ([TextRuntime Fonts](../standard-visuals/textruntime/fonts.md#baked-drop-shadow)); for outline color, gradients, SDF, color fonts, and other KernSmith-only extras, see [Advanced Font Effects](advanced-font-effects.md).
 
 ## Measuring Text
 

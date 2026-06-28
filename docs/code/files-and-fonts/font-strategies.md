@@ -6,7 +6,7 @@ This page covers each font loading strategy in detail with code samples and trad
 
 The strategies are:
 
-* [Dynamic KernSmith Generation](#dynamic-kernsmith-generation) — recommended for MonoGame and KNI.
+* [Dynamic KernSmith Generation](#dynamic-kernsmith-generation) — recommended for MonoGame, KNI, and Raylib.
 * [Dynamic Generation on SkiaGum](#dynamic-generation-on-skiagum) — SkiaGum rasterizes glyphs itself, separate from KernSmith.
 * [Custom Font File](#custom-font-file) — load a specific `.fnt` file you ship with the game.
 * [Direct BitmapFont Assignment](#direct-bitmapfont-assignment) — fully manual.
@@ -18,14 +18,14 @@ The strategies are:
 |---|---|
 | MonoGame | Yes — via KernSmith. |
 | KNI | Yes — via KernSmith. |
+| Raylib | Yes — via KernSmith (`KernSmith.RaylibGum`). |
 | FNA | Not yet. If you need it, let us know on Discord or [open an issue](https://github.com/vchelaru/Gum/issues). |
-| Raylib | Not yet. Use the [Build-Time Font Cache](#build-time-font-cache) for now. |
 | Sokol | Not yet. Use the [Build-Time Font Cache](#build-time-font-cache) for now. |
 | SkiaGum | Yes — uses SkiaSharp's own glyph rasterization. See [Dynamic Generation on SkiaGum](#dynamic-generation-on-skiagum). |
 
 ## Dynamic KernSmith Generation
 
-KernSmith is an in-memory font generator for the XNA-family runtimes (MonoGame and KNI today). Install the NuGet package for your runtime and KernSmith generates font atlases at runtime so you can freely change font properties without managing files on disk.
+KernSmith is an in-memory font generator for MonoGame, KNI, and Raylib. Install the NuGet package for your runtime and KernSmith generates font atlases at runtime so you can freely change font properties without managing files on disk.
 
 {% tabs %}
 {% tab title="MonoGame" %}
@@ -40,7 +40,7 @@ CustomSetPropertyOnRenderable.InMemoryFontCreator =
     new KernSmithFontCreator(GraphicsDevice);
 ```
 
-Once this is set up, font properties work automatically. Setting `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, and `UseFontSmoothing` on a `TextRuntime` generates the needed font in memory without any font files on disk:
+Once this is set up, font properties work automatically. Setting `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, `UseFontSmoothing`, and baked drop shadow (`HasDropshadow` plus the dropshadow fields) on a `TextRuntime` generates the needed font in memory without any font files on disk:
 
 ```csharp
 // Initialize
@@ -80,14 +80,35 @@ text.AddToRoot();
 ```
 {% endtab %}
 
+{% tab title="Raylib" %}
+1. Add the `KernSmith.RaylibGum` NuGet package to your project.
+2. Assign the `InMemoryFontCreator` after initializing Gum:
+
+```csharp
+// Initialize
+GumService.Default.Initialize();
+
+CustomSetPropertyOnRenderable.InMemoryFontCreator =
+    new KernSmithRaylibFontCreator();
+```
+
+Once this is set up, font properties work automatically — the same `TextRuntime` fields as MonoGame/KNI, including baked drop shadow. See [TextRuntime Fonts — Baked drop shadow](../standard-visuals/textruntime/fonts.md#baked-drop-shadow).
+
+```csharp
+// Initialize
+var text = new TextRuntime();
+text.Text = "Hello, World!";
+text.Font = "Times New Roman";
+text.FontSize = 24;
+text.IsBold = true;
+text.AddToRoot();
+```
+{% endtab %}
+
 {% tab title="FNA" %}
 KernSmith is not currently published for FNA. If you need dynamic font generation on FNA, let us know on Discord or [open an issue](https://github.com/vchelaru/Gum/issues) — the request helps us prioritize.
 
 In the meantime, use the [Build-Time Font Cache](#build-time-font-cache) strategy.
-{% endtab %}
-
-{% tab title="Raylib" %}
-Dynamic font generation is not yet available on Raylib. Use the [Build-Time Font Cache](#build-time-font-cache) strategy.
 {% endtab %}
 
 {% tab title="Sokol" %}
@@ -155,7 +176,7 @@ Registered fonts take priority over system fonts. If you register a font with th
 ### When to Use This Strategy
 
 * You're using Latin, Cyrillic, Greek, or another small-charset script.
-* You want to change font, size, style, or outline thickness without rebuilding atlases.
+* You want to change font, size, style, outline thickness, or baked drop shadow without rebuilding atlases.
 * You don't want to check generated `.fnt` files into source control.
 * For CJK or other large charsets, this strategy still works — but you should pair it with [Font Preloading](font-preloading.md) so the per-atlas generation cost happens on a loading screen rather than during gameplay.
 
@@ -218,7 +239,7 @@ The easiest way to mark all content as "Copy to Output Directory" is to use wild
 You can construct a `BitmapFont` yourself and assign it directly, bypassing the font property system entirely. Two sources for the `BitmapFont` are common:
 
 * [From a .fnt file on disk](#from-a-fnt-file-on-disk) — when you already have a baked atlas.
-* [From KernSmith with custom options](#from-kernsmith-with-custom-options) — when you want visual effects (outline color, shadows, gradients, SDF, color fonts, custom glyph subsets) or backend control that the `TextRuntime` property surface does not expose.
+* [From KernSmith with custom options](#from-kernsmith-with-custom-options) — when you want visual effects (outline color, gradient fills, SDF, color fonts, custom glyph subsets) or backend control beyond what `TextRuntime` exposes. Baked drop shadow is on the property path — see [TextRuntime Fonts](../standard-visuals/textruntime/fonts.md#baked-drop-shadow).
 
 {% hint style="warning" %}
 Once a `BitmapFont` is assigned directly, do not set font component properties (`Font`, `FontSize`, etc.) or `UseCustomFont` on the same `TextRuntime`. Those properties trigger the font loading system, which overwrites the directly assigned `BitmapFont`.
@@ -239,12 +260,12 @@ text.AddToRoot();
 
 ### From KernSmith with Custom Options
 
-`TextRuntime` exposes only a subset of the options KernSmith actually supports (`Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, `UseFontSmoothing`). To use effects like outline color, drop shadows, gradient fills, SDF, color fonts, custom glyph subsets, or a non-default rasterizer backend, build a `BitmapFont` yourself by calling KernSmith directly, then assign it.
+`TextRuntime` exposes a subset of KernSmith's options (`Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, `UseFontSmoothing`, and baked drop shadow via `HasDropshadow` and the dropshadow fields). To use outline color, gradient fills, SDF, color fonts, custom glyph subsets, or a non-default rasterizer backend, build a `BitmapFont` yourself by calling KernSmith directly, then assign it.
 
 For the full catalog of effects available through this path, see [Advanced Font Effects](advanced-font-effects.md).
 
 {% hint style="info" %}
-This path requires the KernSmith package for your runtime (`KernSmith.MonoGameGum` or `KernSmith.KniGum`). The bridge type `GumFontGenerator` lives in `KernSmith.GumCommon`, which is a transitive dependency.
+This path requires the KernSmith package for your runtime (`KernSmith.MonoGameGum`, `KernSmith.KniGum`, or `KernSmith.RaylibGum`). The bridge type `GumFontGenerator` lives in `KernSmith.GumCommon`, which is a transitive dependency.
 {% endhint %}
 
 #### Flow 1: Start from a BmfcSave, mutate options, then generate
@@ -347,14 +368,14 @@ foreach (var label in titleLabels)
 
 * You want a single `BitmapFont` instance shared across many `TextRuntime`s without each one re-loading from disk.
 * You're loading fonts from a non-standard source (embedded resource, network, custom pipeline) and want to keep the load step out of the property-driven path.
-* You need effects that `TextRuntime` does not expose — outline color, drop shadows, gradient fills, SDF, color fonts, or custom glyph subsets. See [Advanced Font Effects](advanced-font-effects.md).
+* You need effects that `TextRuntime` does not expose — outline color, gradient fills, SDF, color fonts, or custom glyph subsets. Baked drop shadow is on the property path. See [Advanced Font Effects](advanced-font-effects.md).
 * You need a custom character set that doesn't match any `BmfcSave.Ranges` value you'd want to ship.
 * You need to override the rasterizer backend — for example forcing `RasterizerBackend.StbTrueType` on Blazor WASM where the native FreeType library isn't available.
 
 ## Build-Time Font Cache
 
 {% hint style="info" %}
-This approach is primarily useful when your project already has pre-generated font files from the Gum tool, or when dynamic font generation is not yet available for your runtime (Raylib, Sokol, FNA today). For MonoGame and KNI, [Dynamic KernSmith Generation](#dynamic-kernsmith-generation) is the recommended approach; for SkiaGum see [Dynamic Generation on SkiaGum](#dynamic-generation-on-skiagum).
+This approach is primarily useful when your project already has pre-generated font files from the Gum tool, or when dynamic font generation is not yet available for your runtime (Sokol and FNA today). For MonoGame, KNI, and Raylib, [Dynamic KernSmith Generation](#dynamic-kernsmith-generation) is the recommended approach; for SkiaGum see [Dynamic Generation on SkiaGum](#dynamic-generation-on-skiagum).
 {% endhint %}
 
 If `UseCustomFont` is `false` (the default) and no `InMemoryFontCreator` is registered, a `TextRuntime`'s font is determined by its font component values. These values combine to produce a file name, and the corresponding `.fnt` file must already exist in a `FontCache` folder.
@@ -364,7 +385,7 @@ For the naming convention, generation rules, and full details, see [Font Cache](
 ### When to Use This Strategy
 
 * Pixel-perfect determinism: the atlas in source control is the atlas the player sees, every time.
-* Dynamic generation isn't available for your runtime (Raylib, Sokol, FNA today).
+* Dynamic generation isn't available for your runtime (Sokol and FNA today).
 * You want zero runtime CPU cost for font generation (atlases are loaded from disk, not generated).
 
 ## Missing Font Exceptions
