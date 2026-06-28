@@ -378,6 +378,12 @@ public partial class SystemManagers : ISystemManagers
         Renderer.EndFrame();
     }
 
+    /// <inheritdoc cref="Renderer.PreRenderLayers"/>
+    public void PreRenderLayers(IReadOnlyList<Layer> layers)
+    {
+        Renderer.PreRenderLayers(layers);
+    }
+
     public void Draw()
     {
         Renderer.Draw(this);

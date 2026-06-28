@@ -41,6 +41,22 @@ The GumBatch path (`Renderer.Begin/Draw/End`) calls `BeginSpriteBatch` immediate
 
 Practical consequence: any new "runtime resolves a property in `PreRender` and pushes it to the renderable" pattern (the `AposShapeRuntime.StrokeWidth` shape) works on both entry paths, but only the layered path renders nested render targets.
 
+## Cross-Layer `RenderTargetTextureSource` and Per-Layer Draw (issues #3416 / #3417)
+
+`Sprite.RenderTargetTextureSource` lets a sprite sample a cached offscreen target owned by a render-target container on **another** layer. The multi-layer `Draw(SystemManagers, List<Layer>)` path already ran a two-pass pre-render (bake all layers, then bind referencer textures on all layers) before compositing. Per-layer `Draw(SystemManagers, Layer)` — the FRB / `GumIdb` default — did not, so cross-layer references went stale.
+
+**Per-layer draw contract (post-#3417):**
+
+1. **Once per host frame** (first `Draw(Layer)` or explicit `PreRenderLayers`): `TryPreRenderAllLayersForHostFrame` → `PreRenderLayersCore(_layers)` — bake every layer's render targets, then bind every layer's `IRenderTargetTextureReferencer` textures. Token resets when `SystemManagers.Activity` time advances (`NotifyHostFrameAdvanced`) or `EndFrame()` runs.
+2. **Every `Draw(Layer)` call** (even when step 1 already ran): `PreRender(currentLayer.Renderables)` + `PreRenderWithSourceRenderTargets(currentLayer.Renderables)` — same per-layer hooks the legacy path always ran. Do **not** skip step 2 when the all-layer bake already ran; layout hooks and texture rebind still need to run for the layer being composited.
+3. **Compositing:** `RenderLayer(..., prerender: false)`.
+
+Optional explicit API: `SystemManagers.PreRenderLayers(layers)` / `Renderer.PreRenderLayers(layers)` — bake+bind without drawing (for hosts that want to separate pre-render from compositing).
+
+`ResolveRenderTargetCacheOwner` maps a `GraphicalUiElement` `RenderTargetTextureSource` to its `RenderableComponent` for cache lookup — the cache key is always the contained `IRenderableIpso`, not the GUE wrapper.
+
+**Integration tests:** `CrossLayerRenderTargetTextureSourceTests` (per-layer draw, consumer-first and source-first order) + `RenderTargetSweepTests` (#3416 sweep). Tests share `SystemManagers.Default`; advance Activity time uniquely each frame (`AdvanceHostFrame`) so once-per-frame tokens reset.
+
 ## Render-Target Post-Process Effects (issue #816)
 
 A render-target container can carry a post-process shader applied when its cached texture is blitted **back** to the screen — not while children render *into* the target. Storage is `RenderableBase.RenderTargetEffect`, typed `object?` so the shared (non-XNA) rendering layer stays backend-agnostic; the xnalike `Renderer` casts it to a MonoGame `Effect`. The user-facing setter is the strongly-typed `ContainerRuntime.RenderTargetEffect` (`#if XNALIKE`).

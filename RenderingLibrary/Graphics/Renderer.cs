@@ -84,6 +84,7 @@ public class Renderer : IRenderer
 
     private RenderTargetService renderTargetService;
     private bool _renderTargetSweepCompletedForHostFrame;
+    private bool _allLayersPreRenderedForHostFrame;
     Camera mCamera;
 
     Texture2D mSinglePixelTexture;
@@ -428,6 +429,7 @@ public class Renderer : IRenderer
         lock (LockObject)
         {
             _renderTargetSweepCompletedForHostFrame = false;
+            _allLayersPreRenderedForHostFrame = false;
         }
     }
 
@@ -436,6 +438,7 @@ public class Renderer : IRenderer
         lock (LockObject)
         {
             _renderTargetSweepCompletedForHostFrame = false;
+            _allLayersPreRenderedForHostFrame = false;
         }
     }
 
@@ -448,6 +451,60 @@ public class Renderer : IRenderer
 
         renderTargetService.ClearUnusedRenderTargetsLastFrame();
         _renderTargetSweepCompletedForHostFrame = true;
+    }
+
+    /// <summary>
+    /// Bakes render targets and binds <see cref="IRenderTargetTextureReferencer"/> textures for
+    /// the supplied layers without compositing them. Per-layer hosts (or FRB drawing Gum layers
+    /// across multiple draw calls) should call this once per frame with every layer that can
+    /// supply a <see cref="IRenderTargetTextureReferencer.RenderTargetTextureSource"/> before
+    /// any <see cref="Draw(SystemManagers, Layer)"/> compositing pass.
+    /// </summary>
+    public void PreRenderLayers(IReadOnlyList<Layer> layers)
+    {
+        lock (LockObject)
+        {
+            PreRenderLayersCore(layers);
+            _allLayersPreRenderedForHostFrame = true;
+        }
+    }
+
+    private void TryPreRenderAllLayersForHostFrame()
+    {
+        if (_allLayersPreRenderedForHostFrame)
+        {
+            return;
+        }
+
+        PreRenderLayersCore(_layers);
+        _allLayersPreRenderedForHostFrame = true;
+    }
+
+    private void PreRenderLayersCore(IReadOnlyList<Layer> layers)
+    {
+        for (int i = 0; i < layers.Count; i++)
+        {
+            SetFilteringForLayer(layers[i]);
+            PreRender(layers[i].Renderables);
+        }
+
+        for (int i = 0; i < layers.Count; i++)
+        {
+            SetFilteringForLayer(layers[i]);
+            PreRenderWithSourceRenderTargets(layers[i].Renderables);
+        }
+    }
+
+    private void SetFilteringForLayer(Layer layer)
+    {
+        if (layer.IsLinearFilteringEnabled != null)
+        {
+            mRenderStateVariables.Filtering = layer.IsLinearFilteringEnabled.Value;
+        }
+        else
+        {
+            mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
+        }
     }
 
     public void Draw(SystemManagers managers)
@@ -494,28 +551,13 @@ public class Renderer : IRenderer
             mRenderStateVariables.BlendState = Renderer.NormalBlendState;
             mRenderStateVariables.Wrap = false;
 
-            if (layer.IsLinearFilteringEnabled != null)
-            {
-                mRenderStateVariables.Filtering = layer.IsLinearFilteringEnabled.Value;
-            }
-            else
-            {
-                mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
-            }
+            TryPreRenderAllLayersForHostFrame();
 
+            SetFilteringForLayer(layer);
             PreRender(layer.Renderables);
-
             PreRenderWithSourceRenderTargets(layer.Renderables);
 
-            if (layer.IsLinearFilteringEnabled != null)
-            {
-                mRenderStateVariables.Filtering = layer.IsLinearFilteringEnabled.Value;
-            }
-            else
-            {
-                mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
-            }
-
+            SetFilteringForLayer(layer);
             RenderLayer(managers, layer, prerender:false);
 
             if (oldSampler != null)
@@ -544,33 +586,12 @@ public class Renderer : IRenderer
             mRenderStateVariables.BlendState = Renderer.NormalBlendState;
             mRenderStateVariables.Wrap = false;
 
-            for (int i = 0; i < layers.Count; i++)
-            {
-                var layer = layers[i];
-                if(layer.IsLinearFilteringEnabled != null)
-                {
-                    mRenderStateVariables.Filtering = layer.IsLinearFilteringEnabled.Value;
-                }
-                else
-                {
-                    mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
-                }
-                PreRender(layer.Renderables);
-
-                PreRenderWithSourceRenderTargets(layer.Renderables);
-            }
+            PreRenderLayersCore(layers);
 
             for (int i = 0; i < layers.Count; i++)
             {
                 Layer layer = layers[i];
-                if (layer.IsLinearFilteringEnabled != null)
-                {
-                    mRenderStateVariables.Filtering = layer.IsLinearFilteringEnabled.Value;
-                }
-                else
-                {
-                    mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
-                }
+                SetFilteringForLayer(layer);
                 RenderLayer(managers, layer, prerender:false);
             }
         }
@@ -743,8 +764,9 @@ public class Renderer : IRenderer
             if (renderable.Visible && renderable is IRenderTargetTextureReferencer textureReferencer &&
                 textureReferencer.RenderTargetTextureSource != null)
             {
-                textureReferencer.Texture = renderTargetService.GetExistingRenderTarget(
+                IRenderableIpso cacheOwner = ResolveRenderTargetCacheOwner(
                     textureReferencer.RenderTargetTextureSource);
+                textureReferencer.Texture = renderTargetService.GetExistingRenderTarget(cacheOwner);
             }
 
             if (renderable.Visible && renderable.Children != null)
@@ -752,6 +774,16 @@ public class Renderer : IRenderer
                 PreRenderWithSourceRenderTargets(renderable.Children);
             }
         }
+    }
+
+    private static IRenderableIpso ResolveRenderTargetCacheOwner(IRenderableIpso source)
+    {
+        if (source is GraphicalUiElement gue && gue.RenderableComponent is IRenderableIpso contained)
+        {
+            return contained;
+        }
+
+        return source;
     }
 
     GumBatch gumBatch;
