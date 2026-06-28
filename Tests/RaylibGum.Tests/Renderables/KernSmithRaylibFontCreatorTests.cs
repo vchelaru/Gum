@@ -39,4 +39,30 @@ public class KernSmithRaylibFontCreatorTests : BaseTestClass
         font.Value.GlyphCount.ShouldBeGreaterThan(0);
         font.Value.Texture.Id.ShouldBeGreaterThan(0u);
     }
+
+    [Fact]
+    public void TryCreateFont_WithDropshadow_ProducesUsableFont()
+    {
+        KernSmithRaylibFontCreator creator = new KernSmithRaylibFontCreator();
+
+        BmfcSave bmfcSave = new BmfcSave
+        {
+            FontName = "Arial",
+            FontSize = 32,
+            UseSmoothing = true,
+            Ranges = "65",
+            HasDropshadow = true,
+            DropshadowOffsetX = 2f,
+            DropshadowOffsetY = 2f,
+            DropshadowBlur = 2f,
+            DropshadowAlpha = 255,
+        };
+
+        Raylib_cs.Font? font = creator.TryCreateFont(bmfcSave);
+
+        font.ShouldNotBeNull();
+        font!.Value.BaseSize.ShouldBe(32);
+        font.Value.GlyphCount.ShouldBeGreaterThan(0);
+        font.Value.Texture.Id.ShouldBeGreaterThan(0u);
+    }
 }

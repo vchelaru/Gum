@@ -37,6 +37,13 @@ public class FontPlaygroundScreen
     private Slider _outlineSlider = null!;
     private Label _outlineLabel = null!;
     private CheckBox _smoothingCheckBox = null!;
+    private CheckBox _dropshadowCheckBox = null!;
+    private Slider _dropshadowOffsetXSlider = null!;
+    private Slider _dropshadowOffsetYSlider = null!;
+    private Slider _dropshadowBlurSlider = null!;
+    private Label _dropshadowOffsetXLabel = null!;
+    private Label _dropshadowOffsetYLabel = null!;
+    private Label _dropshadowBlurLabel = null!;
     private TextRuntime _previewText = null!;
 
     /// <summary>
@@ -129,6 +136,53 @@ public class FontPlaygroundScreen
         _smoothingCheckBox.Unchecked += (_, _) => ApplyFontSettings();
         controlsPanel.AddChild(_smoothingCheckBox);
 
+        // Drop shadow (KernSmith baked atlas)
+        _dropshadowCheckBox = new CheckBox();
+        _dropshadowCheckBox.Text = "Drop Shadow";
+        _dropshadowCheckBox.Width = 240;
+        _dropshadowCheckBox.Checked += (_, _) => ApplyFontSettings();
+        _dropshadowCheckBox.Unchecked += (_, _) => ApplyFontSettings();
+        controlsPanel.AddChild(_dropshadowCheckBox);
+
+        _dropshadowOffsetXLabel = new Label();
+        controlsPanel.AddChild(_dropshadowOffsetXLabel);
+
+        _dropshadowOffsetXSlider = new Slider();
+        _dropshadowOffsetXSlider.Width = 240;
+        _dropshadowOffsetXSlider.Minimum = 0;
+        _dropshadowOffsetXSlider.Maximum = 8;
+        _dropshadowOffsetXSlider.IsSnapToTickEnabled = true;
+        _dropshadowOffsetXSlider.TicksFrequency = 1;
+        _dropshadowOffsetXSlider.Value = 2;
+        _dropshadowOffsetXSlider.ValueChanged += (_, _) => ApplyFontSettings();
+        controlsPanel.AddChild(_dropshadowOffsetXSlider);
+
+        _dropshadowOffsetYLabel = new Label();
+        controlsPanel.AddChild(_dropshadowOffsetYLabel);
+
+        _dropshadowOffsetYSlider = new Slider();
+        _dropshadowOffsetYSlider.Width = 240;
+        _dropshadowOffsetYSlider.Minimum = 0;
+        _dropshadowOffsetYSlider.Maximum = 8;
+        _dropshadowOffsetYSlider.IsSnapToTickEnabled = true;
+        _dropshadowOffsetYSlider.TicksFrequency = 1;
+        _dropshadowOffsetYSlider.Value = 2;
+        _dropshadowOffsetYSlider.ValueChanged += (_, _) => ApplyFontSettings();
+        controlsPanel.AddChild(_dropshadowOffsetYSlider);
+
+        _dropshadowBlurLabel = new Label();
+        controlsPanel.AddChild(_dropshadowBlurLabel);
+
+        _dropshadowBlurSlider = new Slider();
+        _dropshadowBlurSlider.Width = 240;
+        _dropshadowBlurSlider.Minimum = 0;
+        _dropshadowBlurSlider.Maximum = 8;
+        _dropshadowBlurSlider.IsSnapToTickEnabled = true;
+        _dropshadowBlurSlider.TicksFrequency = 1;
+        _dropshadowBlurSlider.Value = 2;
+        _dropshadowBlurSlider.ValueChanged += (_, _) => ApplyFontSettings();
+        controlsPanel.AddChild(_dropshadowBlurSlider);
+
         // Preview
         _previewText = new TextRuntime();
         _previewText.Text = "The quick brown fox 0123";
@@ -154,9 +208,15 @@ public class FontPlaygroundScreen
     {
         int fontSize = (int)_fontSizeSlider.Value;
         int outlineThickness = (int)_outlineSlider.Value;
+        int shadowOffsetX = (int)_dropshadowOffsetXSlider.Value;
+        int shadowOffsetY = (int)_dropshadowOffsetYSlider.Value;
+        int shadowBlur = (int)_dropshadowBlurSlider.Value;
 
         _fontSizeLabel.Text = $"Font Size: {fontSize}";
         _outlineLabel.Text = $"Outline Thickness: {outlineThickness}";
+        _dropshadowOffsetXLabel.Text = $"Shadow Offset X: {shadowOffsetX}";
+        _dropshadowOffsetYLabel.Text = $"Shadow Offset Y: {shadowOffsetY}";
+        _dropshadowBlurLabel.Text = $"Shadow Blur: {shadowBlur}";
 
         _previewText.Font = _fontFamilyComboBox.SelectedObject as string ?? "Arial";
         _previewText.FontSize = fontSize;
@@ -164,5 +224,9 @@ public class FontPlaygroundScreen
         _previewText.IsItalic = _italicCheckBox.IsChecked == true;
         _previewText.OutlineThickness = outlineThickness;
         _previewText.UseFontSmoothing = _smoothingCheckBox.IsChecked == true;
+        _previewText.HasDropshadow = _dropshadowCheckBox.IsChecked == true;
+        _previewText.DropshadowOffsetX = shadowOffsetX;
+        _previewText.DropshadowOffsetY = shadowOffsetY;
+        _previewText.DropshadowBlur = shadowBlur;
     }
 }

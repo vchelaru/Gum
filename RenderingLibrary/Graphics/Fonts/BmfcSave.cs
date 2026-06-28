@@ -47,6 +47,47 @@ public class BmfcSave
     public bool IsBold = false;
 
     /// <summary>
+    /// When true, KernSmith bakes a drop shadow into the font atlas using the dropshadow fields below.
+    /// When false, dropshadow fields are ignored and do not affect <see cref="FontCacheFileName"/>.
+    /// </summary>
+    public bool HasDropshadow = false;
+
+    /// <summary>
+    /// Horizontal shadow offset in pixels passed to KernSmith.
+    /// </summary>
+    public float DropshadowOffsetX = 0f;
+
+    /// <summary>
+    /// Vertical shadow offset in pixels passed to KernSmith.
+    /// </summary>
+    public float DropshadowOffsetY = 0f;
+
+    /// <summary>
+    /// Shadow blur radius passed to KernSmith as a single scalar.
+    /// </summary>
+    public float DropshadowBlur = 0f;
+
+    /// <summary>
+    /// Shadow color red channel (0-255). Decomposed into KernSmith RGB at generation time.
+    /// </summary>
+    public byte DropshadowRed = 0;
+
+    /// <summary>
+    /// Shadow color green channel (0-255).
+    /// </summary>
+    public byte DropshadowGreen = 0;
+
+    /// <summary>
+    /// Shadow color blue channel (0-255).
+    /// </summary>
+    public byte DropshadowBlue = 0;
+
+    /// <summary>
+    /// Shadow color alpha channel (0-255). Decomposed into KernSmith <c>ShadowOpacity</c> as alpha/255.
+    /// </summary>
+    public byte DropshadowAlpha = 0;
+
+    /// <summary>
     /// The .ttf font file path when using a file-based font, or null/empty for system fonts.
     /// </summary>
     public string? FontFile = null;
@@ -552,7 +593,22 @@ public class BmfcSave
     {
         get
         {
-            return GetFontCacheFileNameFor(FontSize, FontName, OutlineThickness, UseSmoothing, IsItalic, IsBold, FontFile);
+            return GetFontCacheFileNameFor(
+                FontSize,
+                FontName,
+                OutlineThickness,
+                UseSmoothing,
+                IsItalic,
+                IsBold,
+                FontFile,
+                HasDropshadow,
+                DropshadowOffsetX,
+                DropshadowOffsetY,
+                DropshadowBlur,
+                DropshadowRed,
+                DropshadowGreen,
+                DropshadowBlue,
+                DropshadowAlpha);
         }
 
     }
@@ -572,7 +628,10 @@ public class BmfcSave
     /// as the font name and a "_ttf" suffix is appended to prevent collision with same-named system fonts.</param>
     /// <returns>A relative file path under "FontCache/" suitable for caching this font.</returns>
     public static string GetFontCacheFileNameFor(int fontSize, string fontName, int outline, bool useFontSmoothing,
-        bool isItalic = false, bool isBold = false, string? fontFilePath = null)
+        bool isItalic = false, bool isBold = false, string? fontFilePath = null,
+        bool hasDropshadow = false, float dropshadowOffsetX = 0f, float dropshadowOffsetY = 0f,
+        float dropshadowBlur = 0f, byte dropshadowRed = 0, byte dropshadowGreen = 0, byte dropshadowBlue = 0,
+        byte dropshadowAlpha = 0)
     {
         string fileName = null;
 
@@ -617,11 +676,28 @@ public class BmfcSave
             fileName += "_Bold";
         }
 
+        if (hasDropshadow)
+        {
+            fileName += "_ds"
+                + FormatCacheKeyFloat(dropshadowOffsetX) + "_"
+                + FormatCacheKeyFloat(dropshadowOffsetY) + "_"
+                + FormatCacheKeyFloat(dropshadowBlur) + "_"
+                + dropshadowRed + "_"
+                + dropshadowGreen + "_"
+                + dropshadowBlue + "_"
+                + dropshadowAlpha;
+        }
+
         fileName += ".fnt";
 
         fileName = System.IO.Path.Combine("FontCache", fileName);
 
         return fileName;
+    }
+
+    private static string FormatCacheKeyFloat(float value)
+    {
+        return value.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
     }
 
 

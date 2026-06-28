@@ -11,6 +11,7 @@ using Gum.RenderingLibrary;
 using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using RenderingLibrary.Graphics.Fonts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -269,6 +270,7 @@ public class TextRuntime : InteractiveGue
     /// * IsBold
     /// * UseFontSmoothing
     /// * OutlineThickness
+    /// * HasDropshadow and dropshadow fields (when <see cref="HasDropshadow"/> is true)
     /// </summary>
     public bool UseCustomFont
     {
@@ -368,6 +370,171 @@ public class TextRuntime : InteractiveGue
         get { return outlineThickness; }
         set { outlineThickness = value; UpdateToFontValues(); }
     }
+
+    bool hasDropshadow;
+    /// <summary>
+    /// When true, KernSmith bakes a drop shadow into the font atlas using the dropshadow fields below.
+    /// </summary>
+    public bool HasDropshadow
+    {
+        get => hasDropshadow;
+        set
+        {
+            if (value && !hasDropshadow)
+            {
+                SeedDefaultDropshadowIfUnset();
+            }
+
+            hasDropshadow = value;
+            UpdateToFontValues();
+        }
+    }
+
+    byte dropshadowRed;
+    byte dropshadowGreen;
+    byte dropshadowBlue;
+    byte dropshadowAlpha = 180;
+
+    /// <summary>
+    /// Color of the baked glyph drop shadow. Alpha is decomposed into KernSmith opacity at generation time.
+    /// </summary>
+    public Color DropshadowColor
+    {
+        get => new Color(dropshadowRed, dropshadowGreen, dropshadowBlue, dropshadowAlpha);
+        set
+        {
+#if SKIA
+            dropshadowRed = value.Red;
+            dropshadowGreen = value.Green;
+            dropshadowBlue = value.Blue;
+            dropshadowAlpha = value.Alpha;
+#else
+            dropshadowRed = value.R;
+            dropshadowGreen = value.G;
+            dropshadowBlue = value.B;
+            dropshadowAlpha = value.A;
+#endif
+            UpdateToFontValues();
+        }
+    }
+
+    public int DropshadowRed
+    {
+        get => dropshadowRed;
+        set { dropshadowRed = (byte)value; UpdateToFontValues(); }
+    }
+
+    public int DropshadowGreen
+    {
+        get => dropshadowGreen;
+        set { dropshadowGreen = (byte)value; UpdateToFontValues(); }
+    }
+
+    public int DropshadowBlue
+    {
+        get => dropshadowBlue;
+        set { dropshadowBlue = (byte)value; UpdateToFontValues(); }
+    }
+
+    public int DropshadowAlpha
+    {
+        get => dropshadowAlpha;
+        set { dropshadowAlpha = (byte)value; UpdateToFontValues(); }
+    }
+
+    float dropshadowOffsetX;
+    public float DropshadowOffsetX
+    {
+        get => dropshadowOffsetX;
+        set { dropshadowOffsetX = value; UpdateToFontValues(); }
+    }
+
+    float dropshadowOffsetY;
+    public float DropshadowOffsetY
+    {
+        get => dropshadowOffsetY;
+        set { dropshadowOffsetY = value; UpdateToFontValues(); }
+    }
+
+    float dropshadowBlur;
+    /// <summary>
+    /// Blur radius for the baked drop shadow, passed to KernSmith as a single scalar.
+    /// </summary>
+    public float DropshadowBlur
+    {
+        get => dropshadowBlur;
+        set { dropshadowBlur = Math.Max(0f, value); UpdateToFontValues(); }
+    }
+
+    /// <summary>
+    /// Applies the first-enable defaults for baked shadow so toggling <see cref="HasDropshadow"/>
+    /// on at runtime produces a visible dark shadow without further setup.
+    /// </summary>
+    void SeedDefaultDropshadowIfUnset()
+    {
+        if (dropshadowOffsetX == 0f && dropshadowOffsetY == 0f && dropshadowBlur == 0f)
+        {
+            dropshadowOffsetY = 3f;
+            dropshadowBlur = 2f;
+        }
+    }
+
+#if !FRB
+    /// <summary>
+    /// Copies font-generation fields (including dropshadow) onto a <see cref="RenderingLibrary.Graphics.Fonts.BmfcSave"/>
+    /// for KernSmith or disk-cache font creation.
+    /// </summary>
+    internal void CopyFontGenerationFieldsTo(BmfcSave bmfcSave, string? resolvedFontFilePath)
+    {
+        bmfcSave.FontSize = FontSize;
+        bmfcSave.OutlineThickness = OutlineThickness;
+        bmfcSave.UseSmoothing = UseFontSmoothing;
+        bmfcSave.IsItalic = IsItalic;
+        bmfcSave.IsBold = IsBold;
+        bmfcSave.HasDropshadow = HasDropshadow;
+        bmfcSave.DropshadowOffsetX = DropshadowOffsetX;
+        bmfcSave.DropshadowOffsetY = DropshadowOffsetY;
+        bmfcSave.DropshadowBlur = DropshadowBlur;
+        bmfcSave.DropshadowRed = dropshadowRed;
+        bmfcSave.DropshadowGreen = dropshadowGreen;
+        bmfcSave.DropshadowBlue = dropshadowBlue;
+        bmfcSave.DropshadowAlpha = dropshadowAlpha;
+
+        if (resolvedFontFilePath != null)
+        {
+            bmfcSave.FontFile = resolvedFontFilePath;
+            bmfcSave.FontName = System.IO.Path.GetFileNameWithoutExtension(resolvedFontFilePath);
+        }
+        else
+        {
+            bmfcSave.FontName = Font;
+            bmfcSave.FontFile = null;
+        }
+    }
+
+    /// <summary>
+    /// Gets the FontCache file name for the current font property tuple, including dropshadow when enabled.
+    /// </summary>
+    internal string GetFontCacheFileName(string? fontFilePath)
+    {
+        return BmfcSave.GetFontCacheFileNameFor(
+            FontSize,
+            Font,
+            OutlineThickness,
+            UseFontSmoothing,
+            IsItalic,
+            IsBold,
+            fontFilePath,
+            HasDropshadow,
+            DropshadowOffsetX,
+            DropshadowOffsetY,
+            DropshadowBlur,
+            dropshadowRed,
+            dropshadowGreen,
+            dropshadowBlue,
+            dropshadowAlpha);
+    }
+#endif
 
     public TextOverflowHorizontalMode TextOverflowHorizontalMode
     {

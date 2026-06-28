@@ -52,6 +52,32 @@ public static class GumFontGenerator
         options.MaxTextureWidth = bmfcSave.OutputWidth;
         options.MaxTextureHeight = bmfcSave.OutputHeight;
 
+        ApplyChannelLayout(bmfcSave, options);
+
+        List<int> codepoints = ParseCharRanges(bmfcSave.Ranges);
+        options.Characters = CharacterSet.FromChars(codepoints);
+
+        ApplyShadowOptions(bmfcSave, options);
+
+        return options;
+    }
+
+    /// <summary>
+    /// Selects BMFont channel layout for Gum's text renderer, or leaves channels at the KernSmith
+    /// default when baked effects need full RGBA preserved.
+    /// </summary>
+    private static void ApplyChannelLayout(BmfcSave bmfcSave, FontGeneratorOptions options)
+    {
+        // Drop shadow (and outline/shadow combos) are composited to RGBA by KernSmith's effect
+        // pipeline. A custom ChannelConfig routes through ChannelCompositor, which rebuilds RGB from
+        // alpha masks only — discarding baked shadow color and forcing white (RGB=One), so the
+        // runtime's text-color modulate tints the shadow the same as the glyph. Leave Channels unset
+        // so AtlasBuilder blits the RGBA glyphs directly.
+        if (bmfcSave.HasDropshadow)
+        {
+            return;
+        }
+
         // Match bmfont.exe channel layout so Gum's runtime renders correctly.
         // No outline: alpha=glyph shape, RGB=white (One). Glyph is white text with alpha transparency.
         // With outline: alpha=outline, RGB=glyph. Outline uses color channels.
@@ -71,11 +97,22 @@ public static class GumFontGenerator
                 Green: ChannelContent.Glyph,
                 Blue: ChannelContent.Glyph);
         }
+    }
 
-        List<int> codepoints = ParseCharRanges(bmfcSave.Ranges);
-        options.Characters = CharacterSet.FromChars(codepoints);
+    private static void ApplyShadowOptions(BmfcSave bmfcSave, FontGeneratorOptions options)
+    {
+        if (!bmfcSave.HasDropshadow)
+        {
+            return;
+        }
 
-        return options;
+        options.ShadowOffsetX = (int)MathF.Round(bmfcSave.DropshadowOffsetX);
+        options.ShadowOffsetY = (int)MathF.Round(bmfcSave.DropshadowOffsetY);
+        options.ShadowBlur = (int)MathF.Round(bmfcSave.DropshadowBlur);
+        options.ShadowR = bmfcSave.DropshadowRed;
+        options.ShadowG = bmfcSave.DropshadowGreen;
+        options.ShadowB = bmfcSave.DropshadowBlue;
+        options.ShadowOpacity = bmfcSave.DropshadowAlpha / 255f;
     }
 
     /// <summary>
