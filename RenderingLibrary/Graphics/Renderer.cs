@@ -83,6 +83,7 @@ public class Renderer : IRenderer
     GraphicsDevice mGraphicsDevice;
 
     private RenderTargetService renderTargetService;
+    private bool _renderTargetSweepCompletedForHostFrame;
     Camera mCamera;
 
     Texture2D mSinglePixelTexture;
@@ -403,6 +404,44 @@ public class Renderer : IRenderer
 
     #endregion
 
+    /// <summary>
+    /// Opens a host-frame draw batch for render-target cache lifecycle. Sweeps unused GPU
+    /// targets from prior frames exactly once. Hosts normally rely on
+    /// <see cref="SystemManagers.Activity"/> advancing <paramref name="currentTime"/> each
+    /// frame instead of calling this directly; use it when Gum draws without a preceding
+    /// Activity pass.
+    /// </summary>
+    public void BeginFrame()
+    {
+        TrySweepUnusedRenderTargetsAtFrameBoundary();
+    }
+
+    /// <summary>
+    /// Optional frame end for hosts that issue multiple Gum draw batches without advancing
+    /// Activity time. Resets the once-per-frame sweep token so the next
+    /// <see cref="BeginFrame"/> or draw call can sweep again.
+    /// </summary>
+    public void EndFrame()
+    {
+        _renderTargetSweepCompletedForHostFrame = false;
+    }
+
+    internal void NotifyHostFrameAdvanced()
+    {
+        _renderTargetSweepCompletedForHostFrame = false;
+    }
+
+    private void TrySweepUnusedRenderTargetsAtFrameBoundary()
+    {
+        if (_renderTargetSweepCompletedForHostFrame)
+        {
+            return;
+        }
+
+        renderTargetService.ClearUnusedRenderTargetsLastFrame();
+        _renderTargetSweepCompletedForHostFrame = true;
+    }
+
     public void Draw(SystemManagers managers)
     {
         ClearPerformanceRecordingVariables();
@@ -439,7 +478,7 @@ public class Renderer : IRenderer
                 mCamera.ClientTop = GraphicsDevice.Viewport.Y;
             }
 
-            renderTargetService.ClearUnusedRenderTargetsLastFrame();
+            TrySweepUnusedRenderTargetsAtFrameBoundary();
 
             var oldSampler = GraphicsDevice.SamplerStates[0];
 
@@ -490,7 +529,7 @@ public class Renderer : IRenderer
                 mCamera.ClientTop = GraphicsDevice.Viewport.Y;
             }
 
-            renderTargetService.ClearUnusedRenderTargetsLastFrame();
+            TrySweepUnusedRenderTargetsAtFrameBoundary();
 
 
             mRenderStateVariables.BlendState = Renderer.NormalBlendState;

@@ -39,6 +39,7 @@ namespace RenderingLibrary;
 public partial class SystemManagers : ISystemManagers
 {
     int mPrimaryThreadId;
+    private double _lastActivityTime = double.NaN;
 
     static bool IsMobile =>
 #if NET6_0_OR_GREATER
@@ -347,6 +348,12 @@ public partial class SystemManagers : ISystemManagers
     /// <exception cref="InvalidOperationException">Exception thrown if the SystemManagers hasn't yet been initialized.</exception>
     public void Activity(double currentTime)
     {
+        if (currentTime != _lastActivityTime)
+        {
+            _lastActivityTime = currentTime;
+            Renderer.NotifyHostFrameAdvanced();
+        }
+
 #if !RAYLIB
 #if FULL_DIAGNOSTICS
         if (SpriteManager == null)
@@ -357,6 +364,18 @@ public partial class SystemManagers : ISystemManagers
 
         SpriteManager.Activity(currentTime);
 #endif
+    }
+
+    /// <inheritdoc cref="Renderer.BeginFrame"/>
+    public void BeginFrame()
+    {
+        Renderer.BeginFrame();
+    }
+
+    /// <inheritdoc cref="Renderer.EndFrame"/>
+    public void EndFrame()
+    {
+        Renderer.EndFrame();
     }
 
     public void Draw()
