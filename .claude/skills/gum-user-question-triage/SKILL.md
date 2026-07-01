@@ -42,6 +42,7 @@ If a skill or code answers the "why" but **no doc does**, that's a docs-gap sign
 ## 4. Always Produce
 
 1. **A paste-able reply** — human voice, no AI padding. Lead with the answer, include the docs URL when one exists, keep it to a few sentences. Point to the [Discord](https://discord.gg/EvqwmSQuBz) or a GitHub issue only when genuinely useful.
+   - **Never use an em dash (—) in the reply.** They read as AI-generated. Rewrite with a comma, parentheses, a colon, or two sentences instead.
    - **Deliver it as a file, not inline.** Pasting markdown straight from the terminal into Discord/GitHub mangles the formatting. Instead: `Write` the reply to a `.md` file (use a temp path like `C:\Users\vchel\AppData\Local\Temp\gum-reply-<slug>.md`), then open it with `Start-Process <path>` (Windows `start`) so the user can copy clean source from their editor/viewer. Keep your terminal response to the working notes + a short `## Summary` that links the file — don't duplicate the full reply inline.
 2. **Confidence + justification** for any doc/API fix you propose (rubric below).
 3. **An issue** — only for outcomes C/D, and only *after* the user agrees. Then `gh issue create` with a descriptive title (reference related issue numbers like `#3163` when relevant). No template or label is required; labels are freeform and often omitted.
