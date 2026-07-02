@@ -140,6 +140,7 @@ public class BasicShapes
         AddNavButton("Sprite", () => new SpriteScreen());
         AddNavButton("NineSlice", () => new NineSliceScreen());
         AddNavButton("Text", () => new TextScreen());
+        AddNavButton("Render Target", () => new RenderTargetScreen());
 
         AddFitModeRadio("Zoom", isChecked: true, () =>
         {
