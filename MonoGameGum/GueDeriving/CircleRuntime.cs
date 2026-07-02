@@ -702,8 +702,7 @@ public class CircleRuntime : GraphicalUiElement
         set
         {
             _blend = value;
-            if (_fill is IBlendedRenderable fillBlend) fillBlend.Blend = value;
-            if (_stroke is IBlendedRenderable strokeBlend) strokeBlend.Blend = value;
+            ShapeStrokePreRenderMath.PushBlend(value, _fill as IBlendedRenderable, _stroke as IBlendedRenderable);
             NotifyPropertyChanged();
         }
     }
@@ -1105,62 +1104,11 @@ public class CircleRuntime : GraphicalUiElement
         var camera = this.EffectiveManagers?.Renderer?.Camera;
         float cameraZoom = camera?.Zoom ?? 1f;
 
-        float strokeWidth = _strokeWidth;
-        float strokeDashLength = _strokeDashLength;
-        float strokeGapLength = _strokeGapLength;
-        if (_strokeWidthUnits == DimensionUnitType.ScreenPixel && camera != null)
-        {
-            // Mirrors AposShapeRuntime.PreRender — dash and gap scale alongside stroke
-            // width so a "1 px dotted" pattern stays 1 px on screen regardless of zoom.
-            strokeWidth /= cameraZoom;
-            strokeDashLength /= cameraZoom;
-            strokeGapLength /= cameraZoom;
-        }
-        // Two distinct cases for what to push to the renderable's StrokeWidth — don't collapse
-        // them, the difference is load-bearing:
-        //
-        // 1. User explicitly set StrokeWidth <= 0 → push a literal 0 (#2950 follow-up).
-        //    StrokeWidth = 0 is the canonical hide-stroke gate since #2938 made StrokeColor
-        //    non-nullable, so the user wants NO stroke at all. The renderable's
-        //    HasVisibleOutput predicate then short-circuits Circle.Render to skip the
-        //    stroke-slot draw entirely. **Do NOT route this case through the AA-compensation
-        //    path below** — the epsilon floor would push 0.01, the renderable's
-        //    HasVisibleOutput would return true (StrokeWidth > 0), and Apos's 1 px AA fringe
-        //    would render a hairline of stroke color the user thought they had disabled.
-        //
-        // 2. User set a positive StrokeWidth → subtract the 1 px Apos AA contribution
-        //    (#2790). Apos.Shapes' DrawCircle renders aaSize pixels of AA halo OUTSIDE the
-        //    nominal thickness; Circle.Render passes aaSize = 1 when IsAntialiased is true.
-        //    Skia fits AA WITHIN the thickness, so the same user-set StrokeWidth would
-        //    otherwise read 1 px wider on Apos than on Skia. The result is floored at a tiny
-        //    positive epsilon — NOT to hide a "0 means don't draw" case (that's handled
-        //    above by case 1), but to keep thin strokes like StrokeWidth = 1 visible: after
-        //    subtracting the AA contribution the math would be 0, which Apos refuses to draw
-        //    even with aaSize > 0. The epsilon push pairs with the 1 px AA halo to produce
-        //    the intended ~1 px visible stroke. Gated by IAntialiasedRenderable so the core
-        //    stroke default (LineCircle wrapper, no AA concept) still receives the raw value.
-        const float aposAaContribution = 1f;
-        const float aposMinThicknessEpsilon = 0.01f;
-        // Issue #2936 — aposAaContribution is in SCREEN pixels (Apos's hardcoded 1 px AA halo).
-        // Convert to world units before mixing with strokeWidth, which has already been
-        // resolved to world units above. At cameraZoom = 1 this is a no-op (original #2790
-        // behavior preserved); at cameraZoom > 1 the world value shrinks proportionally, which
-        // is what closes the gap below.
-        float aposAaContributionWorld = aposAaContribution / cameraZoom;
-        float renderableStrokeWidth;
-        if (strokeWidth <= 0)
-        {
-            renderableStrokeWidth = 0f;
-        }
-        else if (_isAntialiased && _stroke is IAntialiasedRenderable)
-        {
-            renderableStrokeWidth = Math.Max(aposMinThicknessEpsilon, strokeWidth - aposAaContributionWorld);
-        }
-        else
-        {
-            renderableStrokeWidth = strokeWidth;
-        }
-        _stroke.StrokeWidth = renderableStrokeWidth;
+        var strokeMath = ShapeStrokePreRenderMath.Compute(
+            _strokeWidth, _strokeDashLength, _strokeGapLength, _strokeWidthUnits,
+            _isAntialiased, _stroke is IAntialiasedRenderable, cameraZoom, _stroke.Color.A);
+
+        _stroke.StrokeWidth = strokeMath.StrokeWidth;
 
         // Issue #2796: push dash/gap to the stroke slot when it supports dashing. Skipped
         // for slots that don't implement the interface (core DefaultStrokedCircleRenderable
@@ -1171,8 +1119,8 @@ public class CircleRuntime : GraphicalUiElement
         // distinct — runtime just pushes the user's values through unchanged.
         if (_stroke is IDashedStrokeRenderable strokeDashed)
         {
-            strokeDashed.StrokeDashLength = strokeDashLength;
-            strokeDashed.StrokeGapLength = strokeGapLength;
+            strokeDashed.StrokeDashLength = strokeMath.DashLength;
+            strokeDashed.StrokeGapLength = strokeMath.GapLength;
         }
 
         // Issue #2798: push AA to both slots so a single setter flips fill + stroke together.
@@ -1192,41 +1140,17 @@ public class CircleRuntime : GraphicalUiElement
         }
 
         // Issue #2834 — when both slots are visible, push a radius inset to the fill so its
-        // rendered outer AA halo sits inside the stroke's opaque band. Two separate
-        // antialiased Apos draws at the same radius composite their AA pixels, producing a
-        // red fringe outside the white stroke (the Apos symptom; Skia shows a mirror-image
-        // pink halo on the inside).
+        // rendered outer AA halo sits inside the stroke's opaque band (see
+        // ShapeStrokePreRenderMath.Compute for the fill-inset calculation and rationale).
         //
         // We can't mutate fillSized.Width/Height to do this — the fill IS the runtime's
         // contained sizing object, so mutating its Width feeds back into layout and the
         // shrink accumulates each frame until the circle vanishes. Inset is pushed via the
         // dedicated FillRadiusInset property instead; Width/Height stay layout-owned, and
         // the Apos Circle subtracts the inset from its computed radius at render time.
-        //
-        // Inset per side = max(renderableStrokeWidth, aposAaContribution when AA on).
-        // renderableStrokeWidth alone aligns fine for thick strokes, but hairline (1 px)
-        // strokes push a sub-pixel epsilon to Apos so the AA halo (still ~1 px) dominates
-        // and would re-create the overlap without the floor.
-        //
-        // Gated on stroke visibility: alpha 0 OR StrokeWidth 0 means the stroke isn't drawn,
-        // and inset would render a thin background ring where the stroke would have been.
-        // Issue #2938 made StrokeWidth = 0 the canonical hide-stroke gate (StrokeColor is now
-        // non-nullable); the alpha guard stays as the pre-existing #2834 path.
         if (_fill != null)
         {
-            float fillRadiusInset = 0f;
-            if (_stroke.Color.A > 0 && _strokeWidth > 0)
-            {
-                fillRadiusInset = renderableStrokeWidth;
-                if (_isAntialiased && _stroke is IAntialiasedRenderable)
-                {
-                    // #2936: aaContribution in WORLD units (= 1 screen px / zoom). At Zoom > 1
-                    // this is < 1 world unit, so the inset no longer over-shrinks the fill
-                    // relative to the visible stroke band's inward extent.
-                    fillRadiusInset = Math.Max(fillRadiusInset, aposAaContributionWorld);
-                }
-            }
-            _fill.FillRadiusInset = fillRadiusInset;
+            _fill.FillRadiusInset = strokeMath.FillInset;
         }
 
         // Do NOT call base.PreRender() — same caveat as AposShapeRuntime.PreRender. Forwarding
