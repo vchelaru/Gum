@@ -56,6 +56,23 @@ A few things to keep in mind:
 * **Call `Apply` after `Initialize` and before constructing Forms controls.** Controls capture their visuals at construction time, so any control built before `Apply` will keep the default styling.
 * **Themes compose with per-control styling.** For tweaking a single control on top of a theme, see [Code-Only Styling](../code-only-styling/styling-using-activestyles.md) and [Control Customization in Gum Tool](../control-customization-in-gum-tool.md).
 
+### Customizing a theme's colors and fonts
+
+Every theme exposes a mutable `XyzStyling.ActiveStyle` object — its own analog of V3's [`Styling.ActiveStyle`](../code-only-styling/styling-using-activestyles.md), and mutated the same way: set properties on `Colors`/`Text` *before* calling the theme's `Apply()`, not after. Controls created after `Apply()` pick up the change; this is the same "mutate before construct" creation-order rule that page documents for V3's own styling.
+
+```csharp
+// Initialize
+using Gum.Themes.DarkPro;
+
+DarkProStyling.ActiveStyle.Colors.Accent = Color.Purple;
+
+DarkProTheme.Apply(GraphicsDevice);
+```
+
+Every theme's `Colors` exposes the same four guardrail properties — `TextPrimary`, `TextMuted`, `Primary`, and `Accent` — which also flow into V3's own `Styling.ActiveStyle.Colors` for any stock, un-restyled control the theme leaves in place. On some themes these are the theme's real, settable color names directly. On others — where the theme already had its own color vocabulary before the guardrail existed — they're get-only aliases onto a differently named real property; for example Forest Glade's `Colors.Accent` is a read-only alias for `Colors.LeafBright`. Assign the theme's real property in that case; the guardrail alias reflects the change automatically, the same "reactivity is free" behavior as any other derived color. The "How to customize" example under each theme below names the real, settable property to use.
+
+`Text.FontFamily` selects among **already-registered** font families — it doesn't register a new one. Each theme registers its bundled TTFs once, inside `Apply()` / `RegisterBundledFonts()`, under a fixed family name exposed as a `BundledFontFamily` constant (e.g. `DarkProTheme.BundledFontFamily`). Reassigning `Text.FontFamily` only works if the family you name is already registered this way — either one of the theme's own bundled constants, or a font already installed on the host system, such as `"Consolas"` on Windows. KernSmith can resolve an installed system font by name without any explicit registration step, the same as the `Consolas` example on the [Styling Using ActiveStyles](../code-only-styling/styling-using-activestyles.md) page.
+
 ## Available themes
 
 ### Editor
@@ -100,6 +117,26 @@ EditorTheme.Apply();
 {% endtab %}
 {% endtabs %}
 
+#### How to customize
+
+```csharp
+// Initialize
+using Gum.Themes.Editor;
+
+EditorStyling.ActiveStyle.Colors.TextPrimary = new Color(210, 225, 255);
+EditorStyling.ActiveStyle.Colors.TextMuted = new Color(120, 130, 150);
+EditorStyling.ActiveStyle.Colors.Primary = new Color(40, 46, 64);
+EditorStyling.ActiveStyle.Colors.Accent = new Color(255, 196, 84);
+EditorStyling.ActiveStyle.Colors.Selection = new Color(64, 52, 16);
+EditorStyling.ActiveStyle.Text.FontFamily = "Consolas";
+
+EditorTheme.Apply(GraphicsDevice);
+```
+
+{% hint style="warning" %}
+Screenshot placeholder — replace with an `EditorCustomized` screenshot showing the above customization applied, captured via the Customize checkbox in `MonoGameGumThemesShowcase`.
+{% endhint %}
+
 ### DarkPro
 
 <figure><img src="../../../.gitbook/assets/DarkProThemeScreenshot.png" alt="DarkPro theme preview"><figcaption><p>The DarkPro theme applied to a sample settings panel.</p></figcaption></figure>
@@ -142,6 +179,26 @@ DarkProTheme.Apply();
 {% endtab %}
 {% endtabs %}
 
+#### How to customize
+
+```csharp
+// Initialize
+using Gum.Themes.DarkPro;
+
+DarkProStyling.ActiveStyle.Colors.Text = new Color(220, 220, 225);
+DarkProStyling.ActiveStyle.Colors.Muted = new Color(150, 150, 160);
+DarkProStyling.ActiveStyle.Colors.Surface1 = new Color(30, 34, 42);
+DarkProStyling.ActiveStyle.Colors.Accent = new Color(198, 120, 255);
+DarkProStyling.ActiveStyle.Colors.AccentDark = new Color(110, 60, 150);
+DarkProStyling.ActiveStyle.Text.FontFamily = "Consolas";
+
+DarkProTheme.Apply(GraphicsDevice);
+```
+
+{% hint style="warning" %}
+Screenshot placeholder — replace with a `DarkProCustomized` screenshot showing the above customization applied, captured via the Customize checkbox in `MonoGameGumThemesShowcase`.
+{% endhint %}
+
 ### Bubblegum
 
 <figure><img src="../../../.gitbook/assets/BubblegumThemeScreenshot.png" alt="Bubblegum theme preview"><figcaption><p>The Bubblegum theme applied to a sample settings panel.</p></figcaption></figure>
@@ -183,6 +240,26 @@ BubblegumTheme.Apply();
 ```
 {% endtab %}
 {% endtabs %}
+
+#### How to customize
+
+```csharp
+// Initialize
+using Gum.Themes.Bubblegum;
+
+BubblegumStyling.ActiveStyle.Colors.Text = new Color(35, 20, 60);
+BubblegumStyling.ActiveStyle.Colors.Muted = new Color(150, 120, 190);
+BubblegumStyling.ActiveStyle.Colors.Surface1 = new Color(255, 250, 253);
+BubblegumStyling.ActiveStyle.Colors.Accent = new Color(120, 200, 255);
+BubblegumStyling.ActiveStyle.Colors.AccentLight = new Color(210, 240, 255);
+BubblegumStyling.ActiveStyle.Text.FontSize = 16;
+
+BubblegumTheme.Apply(GraphicsDevice);
+```
+
+{% hint style="warning" %}
+Screenshot placeholder — replace with a `BubblegumCustomized` screenshot showing the above customization applied, captured via the Customize checkbox in `MonoGameGumThemesShowcase`.
+{% endhint %}
 
 ### Forest Glade
 
@@ -228,6 +305,27 @@ ForestGladeTheme.Apply();
 
 {% hint style="info" %}
 For the intended look, clear the back buffer to `ForestGladeStyling.ActiveStyle.Colors.CanopyDeep`.
+{% endhint %}
+
+#### How to customize
+
+```csharp
+// Initialize
+using Gum.Themes.ForestGlade;
+
+ForestGladeStyling.ActiveStyle.Colors.Text = new Color(255, 246, 224);
+ForestGladeStyling.ActiveStyle.Colors.Muted = new Color(196, 168, 130);
+ForestGladeStyling.ActiveStyle.Colors.CanopyDeep = new Color(48, 24, 10);
+ForestGladeStyling.ActiveStyle.Colors.LeafBright = new Color(255, 176, 59);
+ForestGladeStyling.ActiveStyle.Colors.ButtonRestFillTop = new Color(230, 140, 40);
+ForestGladeStyling.ActiveStyle.Colors.ButtonRestFillBottom = new Color(180, 90, 20);
+ForestGladeStyling.ActiveStyle.Text.FontSize = 15;
+
+ForestGladeTheme.Apply(GraphicsDevice);
+```
+
+{% hint style="warning" %}
+Screenshot placeholder — replace with a `ForestGladeCustomized` screenshot showing the above customization applied, captured via the Customize checkbox in `MonoGameGumThemesShowcase`.
 {% endhint %}
 
 ### Neon
@@ -276,6 +374,26 @@ NeonTheme.Apply();
 For the intended look, clear the back buffer to `NeonStyling.ActiveStyle.Colors.Background` (`#060612`).
 {% endhint %}
 
+#### How to customize
+
+```csharp
+// Initialize
+using Gum.Themes.Neon;
+
+NeonStyling.ActiveStyle.Colors.Text = new Color(255, 224, 250);
+NeonStyling.ActiveStyle.Colors.Muted = new Color(128, 80, 128);
+NeonStyling.ActiveStyle.Colors.Surface1 = new Color(24, 8, 28);
+NeonStyling.ActiveStyle.Colors.Accent = new Color(255, 0, 200);
+NeonStyling.ActiveStyle.Colors.Glow = new Color(255, 0, 200);
+NeonStyling.ActiveStyle.Text.FontSize = 14;
+
+NeonTheme.Apply(GraphicsDevice);
+```
+
+{% hint style="warning" %}
+Screenshot placeholder — replace with a `NeonCustomized` screenshot showing the above customization applied, captured via the Customize checkbox in `MonoGameGumThemesShowcase`.
+{% endhint %}
+
 ### Retro95
 
 <figure><img src="../../../.gitbook/assets/Retro95ThemeScreenshot.png" alt="Retro95 theme preview"><figcaption><p>The Retro95 theme applied to a sample settings panel.</p></figcaption></figure>
@@ -317,6 +435,26 @@ Retro95Theme.Apply();
 ```
 {% endtab %}
 {% endtabs %}
+
+#### How to customize
+
+```csharp
+// Initialize
+using Gum.Themes.Retro95;
+
+Retro95Styling.ActiveStyle.Colors.Text = new Color(0, 0, 0);
+Retro95Styling.ActiveStyle.Colors.DisabledText = new Color(110, 110, 110);
+Retro95Styling.ActiveStyle.Colors.Surface = new Color(0, 128, 128);
+Retro95Styling.ActiveStyle.Colors.Selection = new Color(128, 0, 0);
+Retro95Styling.ActiveStyle.Colors.HighlightOuter = new Color(200, 255, 255);
+Retro95Styling.ActiveStyle.Text.FontSize = 13;
+
+Retro95Theme.Apply(GraphicsDevice);
+```
+
+{% hint style="warning" %}
+Screenshot placeholder — replace with a `Retro95Customized` screenshot showing the above customization applied, captured via the Customize checkbox in `MonoGameGumThemesShowcase`.
+{% endhint %}
 
 ### Meadow
 
@@ -364,6 +502,26 @@ MeadowTheme.Apply();
 For the intended look, clear the back buffer to `MeadowStyling.ActiveStyle.Colors.Cream` (`#F7EDD6`).
 {% endhint %}
 
+#### How to customize
+
+```csharp
+// Initialize
+using Gum.Themes.Meadow;
+
+MeadowStyling.ActiveStyle.Colors.TealDark = new Color(20, 80, 70);
+MeadowStyling.ActiveStyle.Colors.Muted = new Color(150, 130, 110);
+MeadowStyling.ActiveStyle.Colors.Cream2 = new Color(255, 248, 235);
+MeadowStyling.ActiveStyle.Colors.Blue = new Color(237, 154, 120);
+MeadowStyling.ActiveStyle.Colors.Coral = new Color(70, 173, 230);
+MeadowStyling.ActiveStyle.Text.FontSize = 16;
+
+MeadowTheme.Apply(GraphicsDevice);
+```
+
+{% hint style="warning" %}
+Screenshot placeholder — replace with a `MeadowCustomized` screenshot showing the above customization applied, captured via the Customize checkbox in `MonoGameGumThemesShowcase`.
+{% endhint %}
+
 ### Hazard
 
 <figure><img src="../../../.gitbook/assets/31_19 13 36.png" alt=""><figcaption><p>The Hazard theme applied to a sample settings panel.</p></figcaption></figure>
@@ -408,6 +566,26 @@ HazardTheme.Apply();
 
 {% hint style="info" %}
 For the intended look, clear the back buffer to `HazardStyling.ActiveStyle.Colors.Background` (`#0A0A08`).
+{% endhint %}
+
+#### How to customize
+
+```csharp
+// Initialize
+using Gum.Themes.Hazard;
+
+HazardStyling.ActiveStyle.Colors.Text = new Color(227, 100, 40);
+HazardStyling.ActiveStyle.Colors.Muted = new Color(120, 70, 38);
+HazardStyling.ActiveStyle.Colors.Surface1 = new Color(18, 16, 7);
+HazardStyling.ActiveStyle.Colors.Accent = new Color(244, 90, 26);
+HazardStyling.ActiveStyle.Colors.TextBright = new Color(255, 140, 59);
+HazardStyling.ActiveStyle.Text.FontSize = 16;
+
+HazardTheme.Apply(GraphicsDevice);
+```
+
+{% hint style="warning" %}
+Screenshot placeholder — replace with a `HazardCustomized` screenshot showing the above customization applied, captured via the Customize checkbox in `MonoGameGumThemesShowcase`.
 {% endhint %}
 
 ## Fonts and licensing
