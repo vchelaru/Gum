@@ -83,6 +83,25 @@ public class CircleRuntimeTests : BaseTestClass
         sut.Color.ShouldBe(Color.White);
     }
 
+    // Issue #3444 — `circle.Color = X` must render the same outline color on raylib as it does
+    // on MonoGame. The raylib LineCircle resolves the visible stroke as `StrokeColor ?? Color`,
+    // and a fresh CircleRuntime seeds a non-null white StrokeColor. Writing only the legacy Color
+    // slot was therefore silently shadowed (white ring) while MonoGame (single Color slot) drew
+    // the assigned color. Assert on the *resolved* visible stroke, not a Color→Color round-trip
+    // (which reads the same shadowed slot and passes even with the bug).
+    [Fact]
+    public void Color_ShouldDriveVisibleStroke_MatchingMonoGame()
+    {
+        CircleRuntime sut = new();
+        Color expected = new Color(80, 200, 120, 255);
+
+        sut.Color = expected;
+
+        LineCircle inner = (LineCircle)sut.RenderableComponent!;
+        Color visibleStroke = inner.StrokeColor ?? inner.Color;
+        visibleStroke.ShouldBe(expected);
+    }
+
     [Fact]
     public void Color_ShouldRoundTrip()
     {
