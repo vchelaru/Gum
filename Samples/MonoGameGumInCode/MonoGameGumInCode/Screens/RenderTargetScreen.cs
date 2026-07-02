@@ -212,11 +212,16 @@ internal class RenderTargetScreen : FrameworkElement
     }
 
     // The render target is sized to the container's bounds, so a child larger than the container is
-    // truncated to it. A green circle (140 dia) overflows the 90x90 target: its top-left arc curves
-    // inside the target (frame shows in that corner), while the right and bottom edges are sliced
-    // flat exactly at the target boundary — beyond it, in the frame margin, there is no green. The
-    // curve-vs-flat-cut contrast makes the truncation unmistakable (vs a solid rect, which just looks
-    // like a smaller rect). This is texture-size truncation, not the ClipsChildren scissor path.
+    // truncated to it. A checkerboard larger than the 90x90 target, offset so its cells are cut
+    // mid-cell at the boundary, makes the truncation unmistakable: full cells inside, partial cells
+    // sliced at the target edge, and clean frame margin beyond (the pattern simply stops at the
+    // boundary). A solid rect would just look like a smaller rect. This is texture-size truncation,
+    // not the ClipsChildren scissor path (#3440).
+    //
+    // NOTE: these comparison cells must use only primitives that render identically on both backends
+    // with no extra dependencies — i.e. solid ColoredRectangleRuntime. Do NOT use CircleRuntime /
+    // RoundedRectangleRuntime here: they route through Apos.Shapes, which this sample does not
+    // reference, so they'd render on raylib but not here — misleading in a comparison.
     private static GraphicalUiElement BuildOverflow()
     {
         var holder = BuildFrame(150, 110);
@@ -228,17 +233,31 @@ internal class RenderTargetScreen : FrameworkElement
         group.Height = 90;
         group.IsRenderTarget = true;
 
-        var circle = new CircleRuntime();
-        circle.Width = 140;
-        circle.Height = 140;
-        circle.X = 8;
-        circle.Y = 8;
-        circle.FillColor = new Color(80, 200, 120, 255);
-        circle.IsFilled = true;
-        group.AddChild(circle);
+        var board = BuildCheckerboard(8, 8, 22, new Color(80, 200, 120, 255), new Color(230, 150, 40, 255));
+        board.X = -18;
+        board.Y = -18;
+        group.AddChild(board);
 
         holder.AddChild(group);
         return holder;
+    }
+
+    // A grid of alternating solid-color cells, larger than the render target it goes in so the
+    // pattern is visibly sliced at the target boundary.
+    private static ContainerRuntime BuildCheckerboard(int columns, int rows, float cellSize, Color a, Color b)
+    {
+        var board = new ContainerRuntime();
+        board.Width = columns * cellSize;
+        board.Height = rows * cellSize;
+        for (int row = 0; row < rows; row++)
+        {
+            for (int column = 0; column < columns; column++)
+            {
+                Color color = (row + column) % 2 == 0 ? a : b;
+                board.AddChild(Rect(column * cellSize, row * cellSize, cellSize, cellSize, color));
+            }
+        }
+        return board;
     }
 
     // clip-inside-RT: deferred, see #3440. A "ClipsChildren descendant inside an RT" cell used to

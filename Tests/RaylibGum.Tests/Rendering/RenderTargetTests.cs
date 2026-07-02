@@ -455,10 +455,11 @@ public class RenderTargetTests : BaseTestClass
     }
 
     // The render target is sized to the container's bounds, so a child larger than the container is
-    // truncated to the container (the "Overflow clipped" sample cell). A 140-dia green circle in a
-    // 90x90 target: the target texture stays 90x90 (not 140), the target center reads green, and a
-    // corner the offset circle never reaches stays empty — proving both the texture-size truncation
-    // and that a real (non-box-filling) shape survived the bake.
+    // truncated to the container (the "Overflow clipped" sample cell). A checkerboard board larger
+    // than the 90x90 target: the target texture stays 90x90 (not the board's 176x176), and an
+    // in-bounds cell reads its opaque color — proving texture-size truncation while the pattern
+    // survives the bake. (The sample uses only solid rects here — no Apos.Shapes primitives — so it
+    // renders identically on both backends.)
     [Fact]
     public void Draw_ChildLargerThanRenderTarget_TruncatesToContainerBounds()
     {
@@ -469,14 +470,29 @@ public class RenderTargetTests : BaseTestClass
         container.Height = 90;
         container.IsRenderTarget = true;
 
-        CircleRuntime circle = new();
-        circle.Width = 140;
-        circle.Height = 140;
-        circle.X = 8;
-        circle.Y = 8;
-        circle.FillColor = new Color((byte)80, (byte)200, (byte)120, (byte)255);
-        circle.IsFilled = true;
-        container.Children.Add(circle);
+        // 8x8 board of 22px cells (176x176), offset so it overflows the 90x90 target on all sides.
+        const int cellSize = 22;
+        Color green = new((byte)80, (byte)200, (byte)120, (byte)255);
+        Color orange = new((byte)230, (byte)150, (byte)40, (byte)255);
+        ContainerRuntime board = new();
+        board.X = -18;
+        board.Y = -18;
+        board.Width = 8 * cellSize;
+        board.Height = 8 * cellSize;
+        for (int row = 0; row < 8; row++)
+        {
+            for (int column = 0; column < 8; column++)
+            {
+                ColoredRectangleRuntime cell = new();
+                cell.X = column * cellSize;
+                cell.Y = row * cellSize;
+                cell.Width = cellSize;
+                cell.Height = cellSize;
+                cell.Color = (row + column) % 2 == 0 ? green : orange;
+                board.Children.Add(cell);
+            }
+        }
+        container.Children.Add(board);
 
         GumService.Default.Root.Children.Add(container);
         GumService.Default.Root.UpdateLayout();
@@ -485,16 +501,15 @@ public class RenderTargetTests : BaseTestClass
 
         RenderTexture2D renderTexture = Renderer.Self.TryGetBakedRenderTargetFor(container)!.Value;
 
-        // Truncated to the 90x90 container, not the 140x140 child.
+        // Truncated to the 90x90 container, not the 176x176 board.
         renderTexture.Texture.Width.ShouldBe(90);
         renderTexture.Texture.Height.ShouldBe(90);
 
-        // The offset circle covers the middle but not the top-left corner of the target.
+        // The center cell (row/col 2, even -> green) baked as an opaque cell color.
         Color mid = ReadRenderTargetPixel(renderTexture, 45, 45);
-        Color corner = ReadRenderTargetPixel(renderTexture, 5, 5);
+        mid.A.ShouldBeGreaterThan((byte)200);
         mid.G.ShouldBeGreaterThan((byte)150);
         mid.R.ShouldBeLessThan((byte)150);
-        corner.A.ShouldBeLessThan((byte)50);
 
         GumService.Default.Root.Children.Clear();
     }
