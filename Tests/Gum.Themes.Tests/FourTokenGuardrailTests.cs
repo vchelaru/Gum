@@ -3,6 +3,7 @@ using Gum.Themes.Bubblegum;
 using Gum.Themes.DarkPro;
 using Gum.Themes.Editor;
 using Gum.Themes.ForestGlade;
+using Gum.Themes.Hazard;
 using Gum.Themes.Meadow;
 using Gum.Themes.Neon;
 using Gum.Themes.Retro95;
@@ -30,6 +31,7 @@ public class FourTokenGuardrailTests
         yield return new object[] { typeof(ForestGladeColors), "ForestGladeColors" };
         yield return new object[] { typeof(MeadowColors), "MeadowColors" };
         yield return new object[] { typeof(NeonColors), "NeonColors" };
+        yield return new object[] { typeof(HazardColors), "HazardColors" };
     }
 
     [Theory]
@@ -188,6 +190,27 @@ public class FourTokenGuardrailTests
         NeonStyling.ActiveStyle.Colors.Accent = accent;
 
         NeonTheme.ConfigureStyling();
+
+        V3Styling.ActiveStyle.Colors.TextPrimary.ShouldBe(textPrimary);
+        V3Styling.ActiveStyle.Colors.TextMuted.ShouldBe(textMuted);
+        V3Styling.ActiveStyle.Colors.Primary.ShouldBe(primary);
+        V3Styling.ActiveStyle.Colors.Accent.ShouldBe(accent);
+    }
+
+    [Fact]
+    public void HazardTheme_ConfigureStyling_SyncsFourGuardrailTokensIntoV3Styling()
+    {
+        Color textPrimary = new Color(18, 29, 40);
+        Color textMuted = new Color(51, 62, 73);
+        Color primary = new Color(84, 95, 106);
+        Color accent = new Color(107, 117, 127);
+
+        HazardStyling.ActiveStyle.Colors.Text = textPrimary;
+        HazardStyling.ActiveStyle.Colors.Muted = textMuted;
+        HazardStyling.ActiveStyle.Colors.Surface1 = primary;
+        HazardStyling.ActiveStyle.Colors.Accent = accent;
+
+        HazardTheme.ConfigureStyling();
 
         V3Styling.ActiveStyle.Colors.TextPrimary.ShouldBe(textPrimary);
         V3Styling.ActiveStyle.Colors.TextMuted.ShouldBe(textMuted);

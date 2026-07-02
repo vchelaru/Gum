@@ -50,6 +50,6 @@ See `Content/Fonts/SairaCondensed-OFL.txt` for the Saira license.
 
 ### `"Saira Condensed Icons"` — internal glyphs
 
-DejaVu Sans Mono (Bitstream Vera / DejaVu license; redistribution permitted). Used by the theme's visuals for glyphs Saira Condensed doesn't cover — the CheckBox check (`✓`) and the ComboBox dropdown arrow (`▼`), which live in the Dingbats and Geometric Shapes Unicode blocks. The family name is also exposed as `HazardTheme.IconFontFamily` if you need to render the same glyphs yourself.
+DejaVu Sans Mono (Bitstream Vera / DejaVu license; redistribution permitted). Used by the theme's visuals for glyphs Saira Condensed doesn't cover — the CheckBox check (`✓`) and the ComboBox dropdown arrow (`▼`), which live in the Dingbats and Geometric Shapes Unicode blocks. The family name is also exposed as `HazardStyling.ActiveStyle.Text.IconFontFamily` if you need to render the same glyphs yourself.
 
 See `Content/Fonts/DejaVuSansMono-LICENSE.txt` for the DejaVu license.

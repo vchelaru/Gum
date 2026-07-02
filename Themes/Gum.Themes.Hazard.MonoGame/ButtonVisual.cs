@@ -40,13 +40,13 @@ public class ButtonVisual : BaseButtonVisual
         WidthUnits = DimensionUnitType.Absolute;
         HeightUnits = DimensionUnitType.Absolute;
 
-        _focusRing = HazardShapes.FocusRing(HazardPalette.Accent, CornerRadius, FocusRingInset, BorderThickness);
+        _focusRing = HazardShapes.FocusRing(HazardStyling.ActiveStyle.Colors.Accent, CornerRadius, FocusRingInset, BorderThickness);
         AddChild(_focusRing);
 
-        _fill = HazardShapes.Fill(HazardPalette.Surface1, CornerRadius);
+        _fill = HazardShapes.Fill(HazardStyling.ActiveStyle.Colors.Surface1, CornerRadius);
         AddChild(_fill);
 
-        _border = HazardShapes.Border(HazardPalette.Border, CornerRadius, BorderThickness);
+        _border = HazardShapes.Border(HazardStyling.ActiveStyle.Colors.Border, CornerRadius, BorderThickness);
         AddChild(_border);
 
         // Re-attach the base TextInstance on top of the new shape stack.
@@ -62,27 +62,27 @@ public class ButtonVisual : BaseButtonVisual
         // the now-detached NineSlice background and underline indicator, neither of
         // which is in this visual's render tree any more.
         States.Enabled.Apply = () => ApplyPalette(
-            fill: HazardPalette.Surface1, border: HazardPalette.Border, text: HazardPalette.Text, showFocusRing: false);
+            fill: HazardStyling.ActiveStyle.Colors.Surface1, border: HazardStyling.ActiveStyle.Colors.Border, text: HazardStyling.ActiveStyle.Colors.Text, showFocusRing: false);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            fill: HazardPalette.HoverFill, border: HazardPalette.BorderHover, text: HazardPalette.TextBright, showFocusRing: false);
+            fill: HazardStyling.ActiveStyle.Colors.HoverFill, border: HazardStyling.ActiveStyle.Colors.BorderHover, text: HazardStyling.ActiveStyle.Colors.TextBright, showFocusRing: false);
 
         States.Focused.Apply = () => ApplyPalette(
-            fill: HazardPalette.Surface1, border: HazardPalette.Accent, text: HazardPalette.Text, showFocusRing: true);
+            fill: HazardStyling.ActiveStyle.Colors.Surface1, border: HazardStyling.ActiveStyle.Colors.Accent, text: HazardStyling.ActiveStyle.Colors.Text, showFocusRing: true);
 
         States.HighlightedFocused.Apply = () => ApplyPalette(
-            fill: HazardPalette.HoverFill, border: HazardPalette.Accent, text: HazardPalette.TextBright, showFocusRing: true);
+            fill: HazardStyling.ActiveStyle.Colors.HoverFill, border: HazardStyling.ActiveStyle.Colors.Accent, text: HazardStyling.ActiveStyle.Colors.TextBright, showFocusRing: true);
 
         // Pressed flashes the full hazard-yellow accent with black ink text - the
         // design's signature button-press feedback (.sv-btn.pre).
         States.Pushed.Apply = () => ApplyPalette(
-            fill: HazardPalette.Accent, border: HazardPalette.Accent, text: HazardPalette.PressedText, showFocusRing: false);
+            fill: HazardStyling.ActiveStyle.Colors.Accent, border: HazardStyling.ActiveStyle.Colors.Accent, text: HazardStyling.ActiveStyle.Colors.PressedText, showFocusRing: false);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fill: HazardPalette.DisabledFill, border: HazardPalette.DisabledBorder, text: HazardPalette.DisabledText, showFocusRing: false);
+            fill: HazardStyling.ActiveStyle.Colors.DisabledFill, border: HazardStyling.ActiveStyle.Colors.DisabledBorder, text: HazardStyling.ActiveStyle.Colors.DisabledText, showFocusRing: false);
 
         States.DisabledFocused.Apply = () => ApplyPalette(
-            fill: HazardPalette.DisabledFill, border: HazardPalette.DisabledBorder, text: HazardPalette.DisabledText, showFocusRing: true);
+            fill: HazardStyling.ActiveStyle.Colors.DisabledFill, border: HazardStyling.ActiveStyle.Colors.DisabledBorder, text: HazardStyling.ActiveStyle.Colors.DisabledText, showFocusRing: true);
     }
 
     private void ApplyPalette(Color fill, Color border, Color text, bool showFocusRing)

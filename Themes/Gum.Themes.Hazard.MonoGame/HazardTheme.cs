@@ -20,21 +20,27 @@ namespace Gum.Themes.Hazard;
 /// Saira Condensed type). Call <see cref="Apply"/> once after initializing Gum to
 /// register the bundled fonts, configure the shared
 /// <see cref="Styling.ActiveStyle"/> tokens, and install the theme's visuals as the
-/// default templates for Forms controls. Colors come from <see cref="HazardPalette"/>.
+/// default templates for Forms controls. Colors come from
+/// <see cref="HazardStyling.ActiveStyle"/>'s <see cref="HazardColors"/>.
 /// </summary>
 public static class HazardTheme
 {
-    /// <summary>Family name the bundled body/label TTFs are registered under. Use
-    /// this as the <c>Font</c> value on any TextRuntime to get the theme font.</summary>
-    public const string FontFamily = "Saira Condensed";
+    /// <summary>
+    /// Fixed family name the bundled Saira Condensed TTFs are registered under.
+    /// Font <em>registration</em> is intentionally decoupled from font
+    /// <em>selection</em> (<see cref="HazardText.FontFamily"/>, mutable) —
+    /// reassigning the selection before <see cref="Apply"/> can never corrupt
+    /// this registration.
+    /// </summary>
+    internal const string BundledFontFamily = "Saira Condensed";
 
-    /// <summary>Family name the bundled icon font (DejaVu Sans Mono) is registered
-    /// under. Use this for glyphs the body font doesn't cover - check marks,
-    /// combo/scrollbar arrows (Dingbats and Geometric Shapes blocks).</summary>
-    public const string IconFontFamily = "Saira Condensed Icons";
-
-    /// <summary>Default text size used by the theme (the design's <c>--fs: 15px</c>).</summary>
-    public const int FontSize = 15;
+    /// <summary>
+    /// Fixed family name the bundled icon font (DejaVu Sans Mono) is registered
+    /// under. See <see cref="BundledFontFamily"/> for why this is a fixed
+    /// constant rather than the mutable <see cref="HazardText.IconFontFamily"/>
+    /// selection.
+    /// </summary>
+    internal const string BundledIconFontFamily = "Saira Condensed Icons";
 
     /// <summary>
     /// Applies the theme: wires KernSmith as the in-memory font creator, registers
@@ -80,12 +86,12 @@ public static class HazardTheme
         // Saira Condensed Regular -> Normal; SemiBold (600) maps to Gum's IsBold
         // slot, matching the design's uppercase label/heading weight. Saira
         // Condensed ships no italic, and the Forms styling never requests one.
-        RegisterEmbeddedFont(FontFamily, "SairaCondensed-Regular.ttf", style: null);
-        RegisterEmbeddedFont(FontFamily, "SairaCondensed-SemiBold.ttf", style: "Bold");
+        RegisterEmbeddedFont(BundledFontFamily, "SairaCondensed-Regular.ttf", style: null);
+        RegisterEmbeddedFont(BundledFontFamily, "SairaCondensed-SemiBold.ttf", style: "Bold");
 
         // Icon font registered under a distinct family name so visual code addresses
-        // it explicitly via HazardTheme.IconFontFamily.
-        RegisterEmbeddedFont(IconFontFamily, "DejaVuSansMono.ttf", style: null);
+        // it explicitly via HazardStyling.ActiveStyle.Text.IconFontFamily.
+        RegisterEmbeddedFont(BundledIconFontFamily, "DejaVuSansMono.ttf", style: null);
     }
 
     private static void RegisterEmbeddedFont(string family, string fileName, string? style)
@@ -119,15 +125,20 @@ public static class HazardTheme
         ThemePlatform.RegisterFont(family, fontBytes, style);
     }
 
-    private static void ConfigureStyling()
+    // Internal (not private) so Tests/Gum.Themes.Tests can exercise the guardrail-token sync
+    // (TextPrimary/TextMuted/Primary/Accent → V3.Styling.ActiveStyle.Colors) without going
+    // through Apply(), which requires a real GraphicsDevice for font wiring and can't run
+    // headlessly in a unit test. See Gum.Themes.Hazard.MonoGame.csproj's InternalsVisibleTo.
+    internal static void ConfigureStyling()
     {
         Styling styling = Styling.ActiveStyle;
+        HazardText text = HazardStyling.ActiveStyle.Text;
 
         styling.Text.Normal.Clear();
         styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = FontFamily });
+            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
         styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = FontSize });
+            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
         styling.Text.Normal.Variables.Add(
             new VariableSave { Name = "IsBold", Type = "bool", Value = false });
         styling.Text.Normal.Variables.Add(
@@ -135,21 +146,23 @@ public static class HazardTheme
 
         styling.Text.Strong.Clear();
         styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = FontFamily });
+            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
         styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = FontSize });
+            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
         styling.Text.Strong.Variables.Add(
             new VariableSave { Name = "IsBold", Type = "bool", Value = true });
         styling.Text.Strong.Variables.Add(
             new VariableSave { Name = "IsItalic", Type = "bool", Value = false });
 
-        // The four Styling.Colors slots that overlap with V3's vocabulary. The rest of
-        // the palette is read directly from HazardPalette by the visuals. These four
-        // also color the controls left at their stock V3 visual (e.g. Label).
-        styling.Colors.TextPrimary = HazardPalette.Text;
-        styling.Colors.TextMuted = HazardPalette.Muted;
-        styling.Colors.Primary = HazardPalette.Surface1;
-        styling.Colors.Accent = HazardPalette.Accent;
+        // The four Styling.Colors slots that overlap with V3's vocabulary; they
+        // also color the controls left at their stock V3 visual (e.g. Label). We push
+        // only the 4-token guardrail (TextPrimary, TextMuted, Primary, Accent) and the
+        // visuals read the rest of the palette from HazardStyling.ActiveStyle.Colors directly.
+        HazardColors colors = HazardStyling.ActiveStyle.Colors;
+        styling.Colors.TextPrimary = colors.TextPrimary;
+        styling.Colors.TextMuted = colors.TextMuted;
+        styling.Colors.Primary = colors.Primary;
+        styling.Colors.Accent = colors.Accent;
     }
 
     private static void RegisterVisuals()

@@ -88,7 +88,7 @@ public class Game1 : Game
             new ThemeOption("Bubblegum", BubblegumTheme.Apply, BubblegumStyling.ActiveStyle.Colors.Background),
             new ThemeOption("Editor", EditorTheme.Apply, new Color(40, 40, 40)),
             new ThemeOption("Retro 95", Retro95Theme.Apply, Retro95Styling.ActiveStyle.Colors.Surface),
-            new ThemeOption("Hazard", HazardTheme.Apply, HazardPalette.Background),
+            new ThemeOption("Hazard", HazardTheme.Apply, HazardStyling.ActiveStyle.Colors.Background),
             new ThemeOption("Meadow", MeadowTheme.Apply, MeadowStyling.ActiveStyle.Colors.Cream),
             new ThemeOption("Template Theme", TemplateTheme.Apply, TemplatePalette.Background),
         };

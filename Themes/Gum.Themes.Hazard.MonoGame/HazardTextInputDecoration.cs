@@ -38,13 +38,13 @@ internal sealed class HazardTextInputDecoration
         host.FocusedIndicator.Parent = null;
         host.ClipContainer.Parent = null;
 
-        _focusRing = HazardShapes.FocusRing(HazardPalette.Accent, CornerRadius, FocusRingInset, BorderThickness, "TextInputFocusRing");
+        _focusRing = HazardShapes.FocusRing(HazardStyling.ActiveStyle.Colors.Accent, CornerRadius, FocusRingInset, BorderThickness, "TextInputFocusRing");
         host.AddChild(_focusRing);
 
-        _fill = HazardShapes.Fill(HazardPalette.Surface1, CornerRadius, "TextInputFill");
+        _fill = HazardShapes.Fill(HazardStyling.ActiveStyle.Colors.Surface1, CornerRadius, "TextInputFill");
         host.AddChild(_fill);
 
-        _border = HazardShapes.Border(HazardPalette.Border, CornerRadius, BorderThickness, "TextInputBorder");
+        _border = HazardShapes.Border(HazardStyling.ActiveStyle.Colors.Border, CornerRadius, BorderThickness, "TextInputBorder");
         host.AddChild(_border);
 
         // Re-attach the ClipContainer last so text / placeholder / caret / selection
@@ -60,16 +60,16 @@ internal sealed class HazardTextInputDecoration
         // The border transitions Border (rest) -> BorderHover (hover hint) -> Accent +
         // focus ring (focused).
         host.States.Enabled.Apply = () => Apply(host,
-            fill: HazardPalette.Surface1, border: HazardPalette.Border, text: HazardPalette.Text, ring: false);
+            fill: HazardStyling.ActiveStyle.Colors.Surface1, border: HazardStyling.ActiveStyle.Colors.Border, text: HazardStyling.ActiveStyle.Colors.Text, ring: false);
 
         host.States.Highlighted.Apply = () => Apply(host,
-            fill: HazardPalette.Surface1, border: HazardPalette.BorderHover, text: HazardPalette.Text, ring: false);
+            fill: HazardStyling.ActiveStyle.Colors.Surface1, border: HazardStyling.ActiveStyle.Colors.BorderHover, text: HazardStyling.ActiveStyle.Colors.Text, ring: false);
 
         host.States.Focused.Apply = () => Apply(host,
-            fill: HazardPalette.Surface1, border: HazardPalette.Accent, text: HazardPalette.Text, ring: true);
+            fill: HazardStyling.ActiveStyle.Colors.Surface1, border: HazardStyling.ActiveStyle.Colors.Accent, text: HazardStyling.ActiveStyle.Colors.Text, ring: true);
 
         host.States.Disabled.Apply = () => Apply(host,
-            fill: HazardPalette.DisabledFill, border: HazardPalette.DisabledBorder, text: HazardPalette.DisabledText, ring: false);
+            fill: HazardStyling.ActiveStyle.Colors.DisabledFill, border: HazardStyling.ActiveStyle.Colors.DisabledBorder, text: HazardStyling.ActiveStyle.Colors.DisabledText, ring: false);
     }
 
     private void Apply(TextBoxBaseVisual host, Color fill, Color border, Color text, bool ring)
@@ -77,9 +77,9 @@ internal sealed class HazardTextInputDecoration
         _fill.FillColor = fill;
         _border.StrokeColor = border;
         host.TextInstance.Color = text;
-        host.PlaceholderTextInstance.Color = HazardPalette.Placeholder;
+        host.PlaceholderTextInstance.Color = HazardStyling.ActiveStyle.Colors.Placeholder;
         host.CaretInstance.Color = text;
-        host.SelectionInstance.Color = HazardPalette.AccentPressed;
+        host.SelectionInstance.Color = HazardStyling.ActiveStyle.Colors.AccentPressed;
         _focusRing.Visible = ring;
     }
 }

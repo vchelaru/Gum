@@ -56,19 +56,19 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         // text to black Ink (.sv-lb-item.sel) — the same treatment as a selected
         // ComboBox option, so an unfocused list still shows what's selected.
         States.Enabled.Apply = () => ApplyPalette(
-            fill: new Color(0, 0, 0, 0), text: HazardPalette.Text);
+            fill: new Color(0, 0, 0, 0), text: HazardStyling.ActiveStyle.Colors.Text);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            fill: HazardPalette.Surface2, text: HazardPalette.TextBright);
+            fill: HazardStyling.ActiveStyle.Colors.Surface2, text: HazardStyling.ActiveStyle.Colors.TextBright);
 
         States.Selected.Apply = () => ApplyPalette(
-            fill: HazardPalette.Selection, text: HazardPalette.PressedText);
+            fill: HazardStyling.ActiveStyle.Colors.Selection, text: HazardStyling.ActiveStyle.Colors.PressedText);
 
         States.Focused.Apply = () => ApplyPalette(
-            fill: HazardPalette.Accent, text: HazardPalette.PressedText);
+            fill: HazardStyling.ActiveStyle.Colors.Accent, text: HazardStyling.ActiveStyle.Colors.PressedText);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fill: new Color(0, 0, 0, 0), text: HazardPalette.DisabledText);
+            fill: new Color(0, 0, 0, 0), text: HazardStyling.ActiveStyle.Colors.DisabledText);
     }
 
     private void ApplyPalette(Color fill, Color text)

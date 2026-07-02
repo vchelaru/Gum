@@ -23,7 +23,7 @@ public class SplitterVisual : BaseSplitterVisual
     {
         Background.Parent = null;
 
-        _fill = HazardShapes.Fill(HazardPalette.Border, cornerRadius: 0f, "HazardSplitterFill");
+        _fill = HazardShapes.Fill(HazardStyling.ActiveStyle.Colors.Border, cornerRadius: 0f, "HazardSplitterFill");
         AddChild(_fill);
     }
 }

@@ -26,13 +26,13 @@ public class TooltipVisual : BaseTooltipVisual
         Background.Parent = null;
         TextInstance.Parent = null;
 
-        _fill = HazardShapes.Fill(HazardPalette.Surface1, CornerRadius);
+        _fill = HazardShapes.Fill(HazardStyling.ActiveStyle.Colors.Surface1, CornerRadius);
         AddChild(_fill);
 
-        _border = HazardShapes.Border(HazardPalette.Border, CornerRadius, BorderThickness);
+        _border = HazardShapes.Border(HazardStyling.ActiveStyle.Colors.Border, CornerRadius, BorderThickness);
         AddChild(_border);
 
         AddChild(TextInstance);
-        TextInstance.Color = HazardPalette.Text;
+        TextInstance.Color = HazardStyling.ActiveStyle.Colors.Text;
     }
 }

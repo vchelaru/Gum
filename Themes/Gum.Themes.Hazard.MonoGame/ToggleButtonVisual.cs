@@ -41,13 +41,13 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         WidthUnits = DimensionUnitType.Absolute;
         HeightUnits = DimensionUnitType.Absolute;
 
-        _focusRing = HazardShapes.FocusRing(HazardPalette.Accent, CornerRadius, FocusRingInset, BorderThickness);
+        _focusRing = HazardShapes.FocusRing(HazardStyling.ActiveStyle.Colors.Accent, CornerRadius, FocusRingInset, BorderThickness);
         AddChild(_focusRing);
 
-        _fill = HazardShapes.Fill(HazardPalette.Surface1, CornerRadius);
+        _fill = HazardShapes.Fill(HazardStyling.ActiveStyle.Colors.Surface1, CornerRadius);
         AddChild(_fill);
 
-        _border = HazardShapes.Border(HazardPalette.Border, CornerRadius, BorderThickness);
+        _border = HazardShapes.Border(HazardStyling.ActiveStyle.Colors.Border, CornerRadius, BorderThickness);
         AddChild(_border);
 
         AddChild(TextInstance);
@@ -60,63 +60,63 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
     {
         // Off variants: same palette as the standard Hazard Button.
         States.EnabledOff.Apply = () => ApplyPalette(
-            fill: HazardPalette.Surface1, border: HazardPalette.Border,
-            text: HazardPalette.Text, showFocusRing: false);
+            fill: HazardStyling.ActiveStyle.Colors.Surface1, border: HazardStyling.ActiveStyle.Colors.Border,
+            text: HazardStyling.ActiveStyle.Colors.Text, showFocusRing: false);
 
         States.HighlightedOff.Apply = () => ApplyPalette(
-            fill: HazardPalette.HoverFill, border: HazardPalette.Accent,
-            text: HazardPalette.Text, showFocusRing: false);
+            fill: HazardStyling.ActiveStyle.Colors.HoverFill, border: HazardStyling.ActiveStyle.Colors.Accent,
+            text: HazardStyling.ActiveStyle.Colors.Text, showFocusRing: false);
 
         States.PushedOff.Apply = () => ApplyPalette(
-            fill: HazardPalette.PressedFill, border: HazardPalette.Accent,
-            text: HazardPalette.Text, showFocusRing: false);
+            fill: HazardStyling.ActiveStyle.Colors.PressedFill, border: HazardStyling.ActiveStyle.Colors.Accent,
+            text: HazardStyling.ActiveStyle.Colors.Text, showFocusRing: false);
 
         States.FocusedOff.Apply = () => ApplyPalette(
-            fill: HazardPalette.Surface1, border: HazardPalette.Accent,
-            text: HazardPalette.Text, showFocusRing: true);
+            fill: HazardStyling.ActiveStyle.Colors.Surface1, border: HazardStyling.ActiveStyle.Colors.Accent,
+            text: HazardStyling.ActiveStyle.Colors.Text, showFocusRing: true);
 
         States.HighlightedFocusedOff.Apply = () => ApplyPalette(
-            fill: HazardPalette.HoverFill, border: HazardPalette.Accent,
-            text: HazardPalette.Text, showFocusRing: true);
+            fill: HazardStyling.ActiveStyle.Colors.HoverFill, border: HazardStyling.ActiveStyle.Colors.Accent,
+            text: HazardStyling.ActiveStyle.Colors.Text, showFocusRing: true);
 
         States.DisabledOff.Apply = () => ApplyPalette(
-            fill: HazardPalette.DisabledFill, border: HazardPalette.DisabledBorder,
-            text: HazardPalette.DisabledText, showFocusRing: false);
+            fill: HazardStyling.ActiveStyle.Colors.DisabledFill, border: HazardStyling.ActiveStyle.Colors.DisabledBorder,
+            text: HazardStyling.ActiveStyle.Colors.DisabledText, showFocusRing: false);
 
         States.DisabledFocusedOff.Apply = () => ApplyPalette(
-            fill: HazardPalette.DisabledFill, border: HazardPalette.DisabledBorder,
-            text: HazardPalette.DisabledText, showFocusRing: true);
+            fill: HazardStyling.ActiveStyle.Colors.DisabledFill, border: HazardStyling.ActiveStyle.Colors.DisabledBorder,
+            text: HazardStyling.ActiveStyle.Colors.DisabledText, showFocusRing: true);
 
         // On variants: hazard-yellow accent-filled body so the active state is
         // unmistakable. Text flips to PressedText (black ink) for legibility
         // against the saturated accent fill.
         States.EnabledOn.Apply = () => ApplyPalette(
-            fill: HazardPalette.Accent, border: HazardPalette.Accent,
-            text: HazardPalette.PressedText, showFocusRing: false);
+            fill: HazardStyling.ActiveStyle.Colors.Accent, border: HazardStyling.ActiveStyle.Colors.Accent,
+            text: HazardStyling.ActiveStyle.Colors.PressedText, showFocusRing: false);
 
         States.HighlightedOn.Apply = () => ApplyPalette(
-            fill: HazardPalette.AccentHover, border: HazardPalette.AccentHover,
-            text: HazardPalette.PressedText, showFocusRing: false);
+            fill: HazardStyling.ActiveStyle.Colors.AccentHover, border: HazardStyling.ActiveStyle.Colors.AccentHover,
+            text: HazardStyling.ActiveStyle.Colors.PressedText, showFocusRing: false);
 
         States.PushedOn.Apply = () => ApplyPalette(
-            fill: HazardPalette.AccentPressed, border: HazardPalette.AccentPressed,
-            text: HazardPalette.PressedText, showFocusRing: false);
+            fill: HazardStyling.ActiveStyle.Colors.AccentPressed, border: HazardStyling.ActiveStyle.Colors.AccentPressed,
+            text: HazardStyling.ActiveStyle.Colors.PressedText, showFocusRing: false);
 
         States.FocusedOn.Apply = () => ApplyPalette(
-            fill: HazardPalette.Accent, border: HazardPalette.Accent,
-            text: HazardPalette.PressedText, showFocusRing: true);
+            fill: HazardStyling.ActiveStyle.Colors.Accent, border: HazardStyling.ActiveStyle.Colors.Accent,
+            text: HazardStyling.ActiveStyle.Colors.PressedText, showFocusRing: true);
 
         States.HighlightedFocusedOn.Apply = () => ApplyPalette(
-            fill: HazardPalette.AccentHover, border: HazardPalette.AccentHover,
-            text: HazardPalette.PressedText, showFocusRing: true);
+            fill: HazardStyling.ActiveStyle.Colors.AccentHover, border: HazardStyling.ActiveStyle.Colors.AccentHover,
+            text: HazardStyling.ActiveStyle.Colors.PressedText, showFocusRing: true);
 
         States.DisabledOn.Apply = () => ApplyPalette(
-            fill: HazardPalette.DisabledFill, border: HazardPalette.DisabledBorder,
-            text: HazardPalette.DisabledText, showFocusRing: false);
+            fill: HazardStyling.ActiveStyle.Colors.DisabledFill, border: HazardStyling.ActiveStyle.Colors.DisabledBorder,
+            text: HazardStyling.ActiveStyle.Colors.DisabledText, showFocusRing: false);
 
         States.DisabledFocusedOn.Apply = () => ApplyPalette(
-            fill: HazardPalette.DisabledFill, border: HazardPalette.DisabledBorder,
-            text: HazardPalette.DisabledText, showFocusRing: true);
+            fill: HazardStyling.ActiveStyle.Colors.DisabledFill, border: HazardStyling.ActiveStyle.Colors.DisabledBorder,
+            text: HazardStyling.ActiveStyle.Colors.DisabledText, showFocusRing: true);
     }
 
     private void ApplyPalette(Color fill, Color border, Color text, bool showFocusRing)

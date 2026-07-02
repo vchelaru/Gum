@@ -74,10 +74,10 @@ public class ScrollBarVisual : BaseScrollBarVisual
         // thumb. Used for free-floating scrollbars (not inside a ListBox /
         // ScrollViewer shell) to give the bar a visible container.
         ThumbContainer.Parent = null;
-        _frameFill = HazardShapes.Fill(HazardPalette.Surface1, FrameCornerRadius, "HazardScrollBarFrameFill");
+        _frameFill = HazardShapes.Fill(HazardStyling.ActiveStyle.Colors.Surface1, FrameCornerRadius, "HazardScrollBarFrameFill");
         _frameFill.Visible = false;
         AddChild(_frameFill);
-        _frameBorder = HazardShapes.Border(HazardPalette.Border, FrameCornerRadius, FrameBorderThickness, "HazardScrollBarFrameBorder");
+        _frameBorder = HazardShapes.Border(HazardStyling.ActiveStyle.Colors.Border, FrameCornerRadius, FrameBorderThickness, "HazardScrollBarFrameBorder");
         _frameBorder.Visible = false;
         AddChild(_frameBorder);
         AddChild(ThumbContainer);

@@ -99,19 +99,19 @@ public class MenuItemVisual : BaseMenuItemVisual
         // helper toggled Background.Visible directly; we replace the entire
         // state body so we don't need to keep V3's NineSlice attached.
         States.Enabled.Apply = () => ApplyPalette(
-            fill: new Color(0, 0, 0, 0), text: HazardPalette.Text);
+            fill: new Color(0, 0, 0, 0), text: HazardStyling.ActiveStyle.Colors.Text);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            fill: HazardPalette.Surface2, text: HazardPalette.TextBright);
+            fill: HazardStyling.ActiveStyle.Colors.Surface2, text: HazardStyling.ActiveStyle.Colors.TextBright);
 
         States.Selected.Apply = () => ApplyPalette(
-            fill: HazardPalette.Selection, text: HazardPalette.PressedText);
+            fill: HazardStyling.ActiveStyle.Colors.Selection, text: HazardStyling.ActiveStyle.Colors.PressedText);
 
         States.Focused.Apply = () => ApplyPalette(
-            fill: HazardPalette.Surface2, text: HazardPalette.TextBright);
+            fill: HazardStyling.ActiveStyle.Colors.Surface2, text: HazardStyling.ActiveStyle.Colors.TextBright);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fill: new Color(0, 0, 0, 0), text: HazardPalette.DisabledText);
+            fill: new Color(0, 0, 0, 0), text: HazardStyling.ActiveStyle.Colors.DisabledText);
     }
 
     private void ApplyPalette(Color fill, Color text)

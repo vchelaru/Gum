@@ -53,10 +53,10 @@ public class WindowVisual : BaseWindowVisual
         BorderLeftInstance.Visual.Parent = null;
         BorderRightInstance.Visual.Parent = null;
 
-        _fill = HazardShapes.Fill(HazardPalette.Surface1, CornerRadius, "HazardWindowFill");
+        _fill = HazardShapes.Fill(HazardStyling.ActiveStyle.Colors.Surface1, CornerRadius, "HazardWindowFill");
         AddChild(_fill);
 
-        _border = HazardShapes.Border(HazardPalette.Border, CornerRadius, BorderThickness, "HazardWindowBorder");
+        _border = HazardShapes.Border(HazardStyling.ActiveStyle.Colors.Border, CornerRadius, BorderThickness, "HazardWindowBorder");
         AddChild(_border);
 
         // V3 order from here on.
@@ -74,7 +74,7 @@ public class WindowVisual : BaseWindowVisual
         // Olive Band fill child of the title bar so the drag area is visibly
         // chrome (.sv-win-bar). GraphicalUiElement subclasses (RectangleRuntime)
         // don't intercept events, so this won't block the title bar's drag handling.
-        _titleBarFill = HazardShapes.Fill(HazardPalette.Band, cornerRadius: 0f, "HazardWindowTitleBarFill");
+        _titleBarFill = HazardShapes.Fill(HazardStyling.ActiveStyle.Colors.Band, cornerRadius: 0f, "HazardWindowTitleBarFill");
         _titleBarFill.Parent = TitleBarInstance.Visual;
 
         // 1 px Border-colored separator pinned to the bottom edge of the
@@ -99,7 +99,7 @@ public class WindowVisual : BaseWindowVisual
         separator.WidthUnits = DimensionUnitType.RelativeToParent;
         separator.HeightUnits = DimensionUnitType.Absolute;
         separator.IsFilled = true;
-        separator.FillColor = HazardPalette.Border;
+        separator.FillColor = HazardStyling.ActiveStyle.Colors.Border;
         separator.StrokeWidth = 0;
         return separator;
     }
