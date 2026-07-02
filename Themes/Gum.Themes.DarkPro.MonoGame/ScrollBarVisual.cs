@@ -205,7 +205,7 @@ public class ScrollBarVisual : BaseScrollBarVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = FrameCornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = DarkProColors.Surface1;
+        fill.FillColor = DarkProStyling.ActiveStyle.Colors.Surface1;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -228,7 +228,7 @@ public class ScrollBarVisual : BaseScrollBarVisual
         border.IsFilled = false;
         border.StrokeWidth = FrameBorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = DarkProColors.Border;
+        border.StrokeColor = DarkProStyling.ActiveStyle.Colors.Border;
         return border;
     }
 }

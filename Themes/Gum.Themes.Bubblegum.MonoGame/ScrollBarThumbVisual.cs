@@ -37,7 +37,7 @@ public class ScrollBarThumbVisual : InteractiveGue
         HeightUnits = DimensionUnitType.RelativeToParent;
 
         _body = BubblegumShapes.Fill(
-            color: BubblegumColors.Accent,
+            color: BubblegumStyling.ActiveStyle.Colors.Accent,
             cornerRadius: CornerRadius,
             name: "BubblegumScrollThumbBody");
         AddChild(_body);
@@ -52,25 +52,25 @@ public class ScrollBarThumbVisual : InteractiveGue
         AddCategory(_buttonCategory);
 
         Add(_buttonCategory, FrameworkElement.EnabledStateName,
-            () => _body.FillColor = BubblegumColors.Accent);
+            () => _body.FillColor = BubblegumStyling.ActiveStyle.Colors.Accent);
 
         Add(_buttonCategory, FrameworkElement.HighlightedStateName,
-            () => _body.FillColor = BubblegumColors.AccentHover);
+            () => _body.FillColor = BubblegumStyling.ActiveStyle.Colors.AccentHover);
 
         Add(_buttonCategory, FrameworkElement.PushedStateName,
-            () => _body.FillColor = BubblegumColors.AccentDark);
+            () => _body.FillColor = BubblegumStyling.ActiveStyle.Colors.AccentDark);
 
         Add(_buttonCategory, FrameworkElement.FocusedStateName,
-            () => _body.FillColor = BubblegumColors.Accent);
+            () => _body.FillColor = BubblegumStyling.ActiveStyle.Colors.Accent);
 
         Add(_buttonCategory, FrameworkElement.HighlightedFocusedStateName,
-            () => _body.FillColor = BubblegumColors.AccentHover);
+            () => _body.FillColor = BubblegumStyling.ActiveStyle.Colors.AccentHover);
 
         Add(_buttonCategory, FrameworkElement.DisabledStateName,
-            () => _body.FillColor = BubblegumColors.Disabled);
+            () => _body.FillColor = BubblegumStyling.ActiveStyle.Colors.Disabled);
 
         Add(_buttonCategory, FrameworkElement.DisabledFocusedStateName,
-            () => _body.FillColor = BubblegumColors.Disabled);
+            () => _body.FillColor = BubblegumStyling.ActiveStyle.Colors.Disabled);
     }
 
     private static void Add(StateSaveCategory category, string name, System.Action apply)

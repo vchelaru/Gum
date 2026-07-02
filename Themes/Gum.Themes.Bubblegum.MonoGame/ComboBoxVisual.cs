@@ -48,7 +48,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
         TextInstance.Parent = null;
 
         _focusRing = BubblegumShapes.FocusRing(
-            color: BubblegumPalette.FocusRing,
+            color: BubblegumStyling.ActiveStyle.Colors.FocusRing,
             cornerRadius: CornerRadius,
             inset: FocusRingInset,
             thickness: FocusRingThickness,
@@ -56,13 +56,13 @@ public class ComboBoxVisual : BaseComboBoxVisual
         AddChild(_focusRing);
 
         _fill = BubblegumShapes.Fill(
-            color: BubblegumColors.Surface1,
+            color: BubblegumStyling.ActiveStyle.Colors.Surface1,
             cornerRadius: CornerRadius,
             name: "BubblegumComboFill");
         AddChild(_fill);
 
         _border = BubblegumShapes.Border(
-            color: BubblegumColors.Border,
+            color: BubblegumStyling.ActiveStyle.Colors.Border,
             cornerRadius: CornerRadius,
             thickness: BorderThickness,
             name: "BubblegumComboBorder");
@@ -99,47 +99,47 @@ public class ComboBoxVisual : BaseComboBoxVisual
         glyph.HeightUnits = DimensionUnitType.Absolute;
         glyph.HorizontalAlignment = HorizontalAlignment.Center;
         glyph.VerticalAlignment = VerticalAlignment.Center;
-        glyph.Font = BubblegumTheme.IconFontFamily;
+        glyph.Font = BubblegumStyling.ActiveStyle.Text.IconFontFamily;
         glyph.FontSize = GlyphFontSize;
         glyph.Text = "▼";
-        glyph.Color = BubblegumColors.Accent;
+        glyph.Color = BubblegumStyling.ActiveStyle.Colors.Accent;
         return glyph;
     }
 
     private void WireStates()
     {
         States.Enabled.Apply = () => Apply(
-            border: BubblegumColors.Border, text: BubblegumColors.Text,
-            glyph: BubblegumColors.Accent, ring: false, fillDisabled: false);
+            border: BubblegumStyling.ActiveStyle.Colors.Border, text: BubblegumStyling.ActiveStyle.Colors.Text,
+            glyph: BubblegumStyling.ActiveStyle.Colors.Accent, ring: false, fillDisabled: false);
 
         States.Highlighted.Apply = () => Apply(
-            border: BubblegumColors.Accent, text: BubblegumColors.Text,
-            glyph: BubblegumColors.Accent, ring: false, fillDisabled: false);
+            border: BubblegumStyling.ActiveStyle.Colors.Accent, text: BubblegumStyling.ActiveStyle.Colors.Text,
+            glyph: BubblegumStyling.ActiveStyle.Colors.Accent, ring: false, fillDisabled: false);
 
         States.Focused.Apply = () => Apply(
-            border: BubblegumColors.Accent, text: BubblegumColors.Text,
-            glyph: BubblegumColors.Accent, ring: true, fillDisabled: false);
+            border: BubblegumStyling.ActiveStyle.Colors.Accent, text: BubblegumStyling.ActiveStyle.Colors.Text,
+            glyph: BubblegumStyling.ActiveStyle.Colors.Accent, ring: true, fillDisabled: false);
 
         States.HighlightedFocused.Apply = () => Apply(
-            border: BubblegumColors.Accent, text: BubblegumColors.Text,
-            glyph: BubblegumColors.Accent, ring: true, fillDisabled: false);
+            border: BubblegumStyling.ActiveStyle.Colors.Accent, text: BubblegumStyling.ActiveStyle.Colors.Text,
+            glyph: BubblegumStyling.ActiveStyle.Colors.Accent, ring: true, fillDisabled: false);
 
         States.Pushed.Apply = () => Apply(
-            border: BubblegumColors.AccentDark, text: BubblegumColors.Text,
-            glyph: BubblegumColors.AccentDark, ring: false, fillDisabled: false);
+            border: BubblegumStyling.ActiveStyle.Colors.AccentDark, text: BubblegumStyling.ActiveStyle.Colors.Text,
+            glyph: BubblegumStyling.ActiveStyle.Colors.AccentDark, ring: false, fillDisabled: false);
 
         States.Disabled.Apply = () => Apply(
-            border: BubblegumColors.Disabled, text: BubblegumColors.Disabled,
-            glyph: BubblegumColors.Disabled, ring: false, fillDisabled: true);
+            border: BubblegumStyling.ActiveStyle.Colors.Disabled, text: BubblegumStyling.ActiveStyle.Colors.Disabled,
+            glyph: BubblegumStyling.ActiveStyle.Colors.Disabled, ring: false, fillDisabled: true);
 
         States.DisabledFocused.Apply = () => Apply(
-            border: BubblegumColors.Disabled, text: BubblegumColors.Disabled,
-            glyph: BubblegumColors.Disabled, ring: true, fillDisabled: true);
+            border: BubblegumStyling.ActiveStyle.Colors.Disabled, text: BubblegumStyling.ActiveStyle.Colors.Disabled,
+            glyph: BubblegumStyling.ActiveStyle.Colors.Disabled, ring: true, fillDisabled: true);
     }
 
     private void Apply(Color border, Color text, Color glyph, bool ring, bool fillDisabled)
     {
-        _fill.FillColor = fillDisabled ? BubblegumColors.DisabledFill : BubblegumColors.Surface1;
+        _fill.FillColor = fillDisabled ? BubblegumStyling.ActiveStyle.Colors.DisabledFill : BubblegumStyling.ActiveStyle.Colors.Surface1;
         _border.StrokeColor = border;
         TextInstance.Color = text;
         _dropdownGlyph.Color = glyph;

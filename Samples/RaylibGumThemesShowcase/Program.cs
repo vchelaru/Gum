@@ -65,8 +65,8 @@ public static class Program
         _themes = new[]
         {
             new ThemeOption("Editor", EditorTheme.Apply, new Color(40, 40, 40, 255)),
-            new ThemeOption("Dark Pro", DarkProTheme.Apply, DarkProColors.Background),
-            new ThemeOption("Bubblegum", BubblegumTheme.Apply, BubblegumColors.Background),
+            new ThemeOption("Dark Pro", DarkProTheme.Apply, DarkProStyling.ActiveStyle.Colors.Background),
+            new ThemeOption("Bubblegum", BubblegumTheme.Apply, BubblegumStyling.ActiveStyle.Colors.Background),
             new ThemeOption("Forest Glade", ForestGladeTheme.Apply, ForestGladeColors.CanopyDeep),
             new ThemeOption("Hazard", HazardTheme.Apply, HazardPalette.Background),
             new ThemeOption("Meadow", MeadowTheme.Apply, MeadowColors.Cream),

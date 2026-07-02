@@ -45,7 +45,7 @@ public class SplitterVisual : BaseSplitterVisual
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.IsFilled = true;
-        fill.FillColor = DarkProColors.Border;
+        fill.FillColor = DarkProStyling.ActiveStyle.Colors.Border;
         fill.StrokeWidth = 0;
         return fill;
     }

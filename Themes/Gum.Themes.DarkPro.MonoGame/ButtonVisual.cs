@@ -75,7 +75,7 @@ public class ButtonVisual : BaseButtonVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = DarkProColors.Surface1;
+        fill.FillColor = DarkProStyling.ActiveStyle.Colors.Surface1;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -98,7 +98,7 @@ public class ButtonVisual : BaseButtonVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = DarkProColors.Border;
+        border.StrokeColor = DarkProStyling.ActiveStyle.Colors.Border;
         return border;
     }
 
@@ -123,7 +123,7 @@ public class ButtonVisual : BaseButtonVisual
         ring.IsFilled = false;
         ring.StrokeWidth = BorderThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = DarkProColors.Accent;
+        ring.StrokeColor = DarkProStyling.ActiveStyle.Colors.Accent;
         ring.Visible = false;
         return ring;
     }
@@ -135,45 +135,45 @@ public class ButtonVisual : BaseButtonVisual
         // and the underline FocusedIndicator, neither of which exists in
         // this visual's render tree any more.
         States.Enabled.Apply = () => ApplyPalette(
-            fill: DarkProColors.Surface1,
-            border: DarkProColors.Border,
-            text: DarkProColors.Text,
+            fill: DarkProStyling.ActiveStyle.Colors.Surface1,
+            border: DarkProStyling.ActiveStyle.Colors.Border,
+            text: DarkProStyling.ActiveStyle.Colors.Text,
             showFocusRing: false);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            fill: DarkProColors.Surface2,
-            border: DarkProColors.Accent,
-            text: DarkProColors.Text,
+            fill: DarkProStyling.ActiveStyle.Colors.Surface2,
+            border: DarkProStyling.ActiveStyle.Colors.Accent,
+            text: DarkProStyling.ActiveStyle.Colors.Text,
             showFocusRing: false);
 
         States.Focused.Apply = () => ApplyPalette(
-            fill: DarkProColors.Surface1,
-            border: DarkProColors.Accent,
-            text: DarkProColors.Text,
+            fill: DarkProStyling.ActiveStyle.Colors.Surface1,
+            border: DarkProStyling.ActiveStyle.Colors.Accent,
+            text: DarkProStyling.ActiveStyle.Colors.Text,
             showFocusRing: true);
 
         States.HighlightedFocused.Apply = () => ApplyPalette(
-            fill: DarkProColors.Surface2,
-            border: DarkProColors.Accent,
-            text: DarkProColors.Text,
+            fill: DarkProStyling.ActiveStyle.Colors.Surface2,
+            border: DarkProStyling.ActiveStyle.Colors.Accent,
+            text: DarkProStyling.ActiveStyle.Colors.Text,
             showFocusRing: true);
 
         States.Pushed.Apply = () => ApplyPalette(
-            fill: DarkProColors.PressedFill,
-            border: DarkProColors.Accent,
-            text: DarkProColors.Text,
+            fill: DarkProStyling.ActiveStyle.Colors.PressedFill,
+            border: DarkProStyling.ActiveStyle.Colors.Accent,
+            text: DarkProStyling.ActiveStyle.Colors.Text,
             showFocusRing: false);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fill: DarkProColors.DisabledFill,
-            border: DarkProColors.DisabledBorder,
-            text: DarkProColors.DisabledText,
+            fill: DarkProStyling.ActiveStyle.Colors.DisabledFill,
+            border: DarkProStyling.ActiveStyle.Colors.DisabledBorder,
+            text: DarkProStyling.ActiveStyle.Colors.DisabledText,
             showFocusRing: false);
 
         States.DisabledFocused.Apply = () => ApplyPalette(
-            fill: DarkProColors.DisabledFill,
-            border: DarkProColors.DisabledBorder,
-            text: DarkProColors.DisabledText,
+            fill: DarkProStyling.ActiveStyle.Colors.DisabledFill,
+            border: DarkProStyling.ActiveStyle.Colors.DisabledBorder,
+            text: DarkProStyling.ActiveStyle.Colors.DisabledText,
             showFocusRing: true);
     }
 

@@ -63,7 +63,7 @@ public class ScrollBarThumbVisual : InteractiveGue
         body.HeightUnits = DimensionUnitType.RelativeToParent;
         body.CornerRadius = CornerRadius;
         body.IsFilled = true;
-        body.FillColor = DarkProColors.Border;
+        body.FillColor = DarkProStyling.ActiveStyle.Colors.Border;
         body.StrokeWidth = 0;
         return body;
     }
@@ -75,28 +75,28 @@ public class ScrollBarThumbVisual : InteractiveGue
         AddCategory(_buttonCategory);
 
         Add(_buttonCategory, FrameworkElement.EnabledStateName,
-            () => _body.FillColor = DarkProColors.Border);
+            () => _body.FillColor = DarkProStyling.ActiveStyle.Colors.Border);
 
         Add(_buttonCategory, FrameworkElement.HighlightedStateName,
-            () => _body.FillColor = DarkProColors.BorderHover);
+            () => _body.FillColor = DarkProStyling.ActiveStyle.Colors.BorderHover);
 
         Add(_buttonCategory, FrameworkElement.PushedStateName,
-            () => _body.FillColor = DarkProColors.Muted);
+            () => _body.FillColor = DarkProStyling.ActiveStyle.Colors.Muted);
 
         // No focus ring on a scroll-bar thumb — keyboard scroll focus lives
         // on the scrollable container, not the thumb itself. Match the
         // Enabled / Highlighted look so a focused thumb still de-emphasizes.
         Add(_buttonCategory, FrameworkElement.FocusedStateName,
-            () => _body.FillColor = DarkProColors.Border);
+            () => _body.FillColor = DarkProStyling.ActiveStyle.Colors.Border);
 
         Add(_buttonCategory, FrameworkElement.HighlightedFocusedStateName,
-            () => _body.FillColor = DarkProColors.BorderHover);
+            () => _body.FillColor = DarkProStyling.ActiveStyle.Colors.BorderHover);
 
         Add(_buttonCategory, FrameworkElement.DisabledStateName,
-            () => _body.FillColor = DarkProColors.DisabledBorder);
+            () => _body.FillColor = DarkProStyling.ActiveStyle.Colors.DisabledBorder);
 
         Add(_buttonCategory, FrameworkElement.DisabledFocusedStateName,
-            () => _body.FillColor = DarkProColors.DisabledBorder);
+            () => _body.FillColor = DarkProStyling.ActiveStyle.Colors.DisabledBorder);
     }
 
     private static void Add(StateSaveCategory category, string name, System.Action apply)

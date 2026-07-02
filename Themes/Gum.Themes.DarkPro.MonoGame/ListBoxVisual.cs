@@ -79,7 +79,7 @@ public class ListBoxVisual : BaseListBoxVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = DarkProColors.Surface1;
+        fill.FillColor = DarkProStyling.ActiveStyle.Colors.Surface1;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -102,7 +102,7 @@ public class ListBoxVisual : BaseListBoxVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = DarkProColors.Border;
+        border.StrokeColor = DarkProStyling.ActiveStyle.Colors.Border;
         return border;
     }
 
@@ -124,7 +124,7 @@ public class ListBoxVisual : BaseListBoxVisual
         ring.IsFilled = false;
         ring.StrokeWidth = BorderThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = DarkProColors.Accent;
+        ring.StrokeColor = DarkProStyling.ActiveStyle.Colors.Accent;
         ring.Visible = false;
         return ring;
     }
@@ -137,30 +137,30 @@ public class ListBoxVisual : BaseListBoxVisual
         // TextBox does, since the natural progression is hover → focus and the
         // gray→blue transition reads as a state shift.
         States.Enabled.Apply = () => ApplyPalette(
-            border: DarkProColors.Border, showFocusRing: false);
+            border: DarkProStyling.ActiveStyle.Colors.Border, showFocusRing: false);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            border: DarkProColors.BorderHover, showFocusRing: false);
+            border: DarkProStyling.ActiveStyle.Colors.BorderHover, showFocusRing: false);
 
         States.Focused.Apply = () => ApplyPalette(
-            border: DarkProColors.Accent, showFocusRing: true);
+            border: DarkProStyling.ActiveStyle.Colors.Accent, showFocusRing: true);
 
         States.HighlightedFocused.Apply = () => ApplyPalette(
-            border: DarkProColors.Accent, showFocusRing: true);
+            border: DarkProStyling.ActiveStyle.Colors.Accent, showFocusRing: true);
 
         States.Pushed.Apply = () => ApplyPalette(
-            border: DarkProColors.Accent, showFocusRing: false);
+            border: DarkProStyling.ActiveStyle.Colors.Accent, showFocusRing: false);
 
         States.Disabled.Apply = () => ApplyPalette(
-            border: DarkProColors.DisabledBorder, showFocusRing: false, fillDisabled: true);
+            border: DarkProStyling.ActiveStyle.Colors.DisabledBorder, showFocusRing: false, fillDisabled: true);
 
         States.DisabledFocused.Apply = () => ApplyPalette(
-            border: DarkProColors.DisabledBorder, showFocusRing: true, fillDisabled: true);
+            border: DarkProStyling.ActiveStyle.Colors.DisabledBorder, showFocusRing: true, fillDisabled: true);
     }
 
     private void ApplyPalette(Color border, bool showFocusRing, bool fillDisabled = false)
     {
-        _fill.FillColor = fillDisabled ? DarkProColors.DisabledFill : DarkProColors.Surface1;
+        _fill.FillColor = fillDisabled ? DarkProStyling.ActiveStyle.Colors.DisabledFill : DarkProStyling.ActiveStyle.Colors.Surface1;
         _border.StrokeColor = border;
         _focusRing.Visible = showFocusRing;
     }

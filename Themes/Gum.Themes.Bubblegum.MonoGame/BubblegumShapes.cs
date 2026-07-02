@@ -22,8 +22,8 @@ namespace Gum.Themes.Bubblegum;
 /// <see cref="FilledCircleWithDropshadow"/>) on top of the shared set, for the
 /// soft pink "lift" shadows under the Button, Window, ToggleButton, and slider
 /// thumb. The look comes from what each visual passes in (read from
-/// <see cref="BubblegumColors"/> / <see cref="BubblegumPalette"/>), not from
-/// this file - this is generic theme infrastructure, kept self-contained per
+/// <see cref="BubblegumStyling.ActiveStyle"/>'s <see cref="BubblegumColors"/>), not
+/// from this file - this is generic theme infrastructure, kept self-contained per
 /// theme rather than shared.
 ///
 /// All shapes are centered on and sized RelativeToParent, so they track their

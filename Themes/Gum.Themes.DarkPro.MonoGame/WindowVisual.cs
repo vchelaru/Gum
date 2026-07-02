@@ -105,7 +105,7 @@ public class WindowVisual : BaseWindowVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = DarkProColors.Surface1;
+        fill.FillColor = DarkProStyling.ActiveStyle.Colors.Surface1;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -128,7 +128,7 @@ public class WindowVisual : BaseWindowVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = DarkProColors.Border;
+        border.StrokeColor = DarkProStyling.ActiveStyle.Colors.Border;
         return border;
     }
 
@@ -147,7 +147,7 @@ public class WindowVisual : BaseWindowVisual
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.IsFilled = true;
-        fill.FillColor = DarkProColors.Surface2;
+        fill.FillColor = DarkProStyling.ActiveStyle.Colors.Surface2;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -167,7 +167,7 @@ public class WindowVisual : BaseWindowVisual
         separator.WidthUnits = DimensionUnitType.RelativeToParent;
         separator.HeightUnits = DimensionUnitType.Absolute;
         separator.IsFilled = true;
-        separator.FillColor = DarkProColors.Border;
+        separator.FillColor = DarkProStyling.ActiveStyle.Colors.Border;
         separator.StrokeWidth = 0;
         return separator;
     }

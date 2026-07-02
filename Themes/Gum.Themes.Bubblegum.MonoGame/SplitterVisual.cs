@@ -21,7 +21,7 @@ public class SplitterVisual : BaseSplitterVisual
         Background.Parent = null;
 
         _fill = BubblegumShapes.Fill(
-            color: BubblegumColors.AccentLight,
+            color: BubblegumStyling.ActiveStyle.Colors.AccentLight,
             name: "BubblegumSplitterFill");
         AddChild(_fill);
     }

@@ -35,7 +35,7 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         ScrollAndClipContainer.Parent = null;
 
         _focusRing = BubblegumShapes.FocusRing(
-            color: BubblegumPalette.FocusRing,
+            color: BubblegumStyling.ActiveStyle.Colors.FocusRing,
             cornerRadius: CornerRadius,
             inset: FocusRingInset,
             thickness: FocusRingThickness,
@@ -43,7 +43,7 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         AddChild(_focusRing);
 
         _fill = BubblegumShapes.Fill(
-            color: BubblegumColors.Surface1,
+            color: BubblegumStyling.ActiveStyle.Colors.Surface1,
             cornerRadius: CornerRadius,
             name: "BubblegumScrollViewerFill");
         AddChild(_fill);
@@ -55,7 +55,7 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         AddChild(ScrollAndClipContainer);
 
         _border = BubblegumShapes.Border(
-            color: BubblegumColors.Border,
+            color: BubblegumStyling.ActiveStyle.Colors.Border,
             cornerRadius: CornerRadius,
             thickness: BorderThickness,
             name: "BubblegumScrollViewerBorder");
@@ -70,13 +70,13 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
     {
         States.Enabled.Apply = () =>
         {
-            _border.StrokeColor = BubblegumColors.Border;
+            _border.StrokeColor = BubblegumStyling.ActiveStyle.Colors.Border;
             _focusRing.Visible = false;
         };
 
         States.Focused.Apply = () =>
         {
-            _border.StrokeColor = BubblegumColors.Accent;
+            _border.StrokeColor = BubblegumStyling.ActiveStyle.Colors.Accent;
             _focusRing.Visible = true;
         };
     }

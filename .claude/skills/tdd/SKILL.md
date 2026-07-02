@@ -14,6 +14,7 @@ Test projects to look in (pick the one that compiles the source you're editing):
 - `Tests/SkiaGum.Tests/` — for `SkiaGum/`
 - `Tool/Tests/GumToolUnitTests/` — for `Gum/` tool-side code
 - `Tests/Gum.Cli.Tests/` — for `Gum.Cli/`
+- `Tests/Gum.Themes.Tests/` — for `Themes/`
 
 No "the cause is obvious, I'll skip the test" exception — that reasoning is how silent regressions ship. **If you're about to edit one of the directories above without a failing test open, stop.**
 

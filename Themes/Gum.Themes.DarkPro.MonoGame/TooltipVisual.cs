@@ -36,7 +36,7 @@ public class TooltipVisual : BaseTooltipVisual
         AddChild(_border);
 
         AddChild(TextInstance);
-        TextInstance.Color = DarkProColors.Text;
+        TextInstance.Color = DarkProStyling.ActiveStyle.Colors.Text;
     }
 
     private static RectangleRuntime CreateFill()
@@ -55,7 +55,7 @@ public class TooltipVisual : BaseTooltipVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = DarkProColors.Surface1;
+        fill.FillColor = DarkProStyling.ActiveStyle.Colors.Surface1;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -78,7 +78,7 @@ public class TooltipVisual : BaseTooltipVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = DarkProColors.Border;
+        border.StrokeColor = DarkProStyling.ActiveStyle.Colors.Border;
         return border;
     }
 }

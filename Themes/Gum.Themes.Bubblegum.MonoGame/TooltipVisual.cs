@@ -25,19 +25,19 @@ public class TooltipVisual : BaseTooltipVisual
         TextInstance.Parent = null;
 
         _fill = BubblegumShapes.Fill(
-            color: BubblegumColors.Surface1,
+            color: BubblegumStyling.ActiveStyle.Colors.Surface1,
             cornerRadius: CornerRadius,
             name: "BubblegumTooltipFill");
         AddChild(_fill);
 
         _border = BubblegumShapes.Border(
-            color: BubblegumColors.Border,
+            color: BubblegumStyling.ActiveStyle.Colors.Border,
             cornerRadius: CornerRadius,
             thickness: BorderThickness,
             name: "BubblegumTooltipBorder");
         AddChild(_border);
 
         AddChild(TextInstance);
-        TextInstance.Color = BubblegumColors.Text;
+        TextInstance.Color = BubblegumStyling.ActiveStyle.Colors.Text;
     }
 }
