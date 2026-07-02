@@ -12,7 +12,7 @@ public class ScrollBarVisual : BaseScrollBarVisual
     public ScrollBarVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) :
         base(fullInstantiation, tryCreateFormsObject)
     {
-        this.TrackBackgroundColor = new Color(10, 10, 10);
-        this.ThumbInstance.BackgroundColor = new Color(60, 60, 60);
+        this.TrackBackgroundColor = EditorStyling.ActiveStyle.Colors.RecessedBackground;
+        this.ThumbInstance.BackgroundColor = EditorStyling.ActiveStyle.Colors.Primary;
     }
 }

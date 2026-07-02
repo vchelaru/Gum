@@ -20,7 +20,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
 
         this.FocusedIndicator.Parent = null;
 
-        DropdownIndicatorColor = Styling.ActiveStyle.Colors.TextPrimary;
+        DropdownIndicatorColor = EditorStyling.ActiveStyle.Colors.TextPrimary;
 
         this.States.Enabled.Apply += () =>
         {
@@ -29,12 +29,12 @@ public class ComboBoxVisual : BaseComboBoxVisual
         this.States.Highlighted.Apply += () =>
         {
             rectangle.Visible = true;
-            rectangle.StrokeColor = new Color(150, 150, 150);
+            rectangle.StrokeColor = EditorStyling.ActiveStyle.Colors.BorderHover;
         };
         this.States.Pushed.Apply += () =>
         {
             rectangle.Visible = true;
-            rectangle.StrokeColor = new Color(255, 255, 255);
+            rectangle.StrokeColor = EditorStyling.ActiveStyle.Colors.BorderPushed;
         };
         this.States.Disabled.Apply += () =>
         {
