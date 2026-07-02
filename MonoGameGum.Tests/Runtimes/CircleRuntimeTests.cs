@@ -250,6 +250,22 @@ public class CircleRuntimeTests : BaseTestClass
     }
 
     [Fact]
+    public void LegacyChannelSetters_ComposeColor()
+    {
+        CircleRuntime sut = new();
+
+        sut.Red = 11;
+        sut.Green = 22;
+        sut.Blue = 33;
+        sut.Alpha = 44;
+
+        sut.Color.ShouldBe(new Color(11, 22, 33, 44));
+
+        IStrokedCircleRenderable stroke = sut.RenderableComponent.ShouldBeAssignableTo<IStrokedCircleRenderable>()!;
+        stroke.Color.ShouldBe(new Color(11, 22, 33, 44));
+    }
+
+    [Fact]
     public void LegacyColor_RoutesToStrokeRenderable()
     {
         CircleRuntime sut = new();
