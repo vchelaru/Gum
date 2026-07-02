@@ -185,6 +185,78 @@ public class CodegenCommandTests : IDisposable
         generatedContents.ShouldContain("Translate(\"T_OK\")");
     }
 
+    [Fact]
+    public void Codegen_WhenRaylibOutputLibrary_GeneratesFindByNameWiring()
+    {
+        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        new ProjectCreator().Create(gumxPath);
+
+        string screenXml =
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+              <Name>TestScreen</Name>
+              <Instance>
+                <Name>TextInstance</Name>
+                <BaseType>Text</BaseType>
+                <DefinedByBase>false</DefinedByBase>
+              </Instance>
+            </ScreenSave>
+            """;
+        File.WriteAllText(Path.Combine(_tempDirectory, "Screens", "TestScreen.gusx"), screenXml);
+
+        string gumxContent = File.ReadAllText(gumxPath);
+        gumxContent = gumxContent.Replace("</GumProjectSave>",
+            "  <ScreenReference Name=\"TestScreen\" />\n</GumProjectSave>");
+        File.WriteAllText(gumxPath, gumxContent);
+
+        File.WriteAllText(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"),
+            """
+            {
+              "CodeProjectRoot": "./",
+              "RootNamespace": "TestNamespace",
+              "OutputLibrary": 6,
+              "ObjectInstantiationType": 1,
+              "SyntaxVersion": "*"
+            }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
+
+        result.ExitCode.ShouldBe(0, customMessage: result.StandardError);
+        // Plain (non-Forms) codegen names the generated class "<Element>Runtime" — same
+        // convention as plain MonoGame — so the file is TestScreenRuntime.Generated.cs.
+        string generatedPath = Path.Combine(_tempDirectory, "Screens", "TestScreenRuntime.Generated.cs");
+        File.Exists(generatedPath).ShouldBeTrue(
+            customMessage: "codegen should have written the generated screen file");
+        string generatedContents = File.ReadAllText(generatedPath);
+        generatedContents.ShouldContain("using Gum.GueDeriving;");
+        generatedContents.ShouldContain("SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default)");
+    }
+
+    [Fact]
+    public void Codegen_WhenRaylibWithFullyInCode_ReturnsExitCode1WithClearError()
+    {
+        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        new ProjectCreator().Create(gumxPath);
+
+        File.WriteAllText(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"),
+            """
+            {
+              "CodeProjectRoot": "./",
+              "RootNamespace": "TestNamespace",
+              "OutputLibrary": 6,
+              "ObjectInstantiationType": 0,
+              "SyntaxVersion": "*"
+            }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
+
+        result.ExitCode.ShouldBe(1);
+        result.StandardError.ShouldContain("FindByName");
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_tempDirectory))

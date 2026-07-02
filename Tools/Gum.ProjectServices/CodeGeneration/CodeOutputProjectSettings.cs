@@ -13,7 +13,8 @@ public enum OutputLibrary
     Skia = 2,
     Maui = 3,
     MonoGame = 4,
-    MonoGameForms = 5
+    MonoGameForms = 5,
+    Raylib = 6
 }
 
 public enum ObjectInstantiationType

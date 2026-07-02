@@ -139,6 +139,21 @@ public class CodeGenerationAutoSetupServiceTests : IDisposable
     }
 
     [Fact]
+    public void Run_WhenRaylibPackageReferencePresent_SetsOutputLibraryToRaylib()
+    {
+        string csprojPath = Path.Combine(_tempDirectory, "MyGame.csproj");
+        File.WriteAllText(csprojPath,
+            "<Project><ItemGroup><PackageReference Include=\"Raylib-cs\" Version=\"7.0.1\" /></ItemGroup></Project>");
+        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        File.WriteAllText(gumxPath, "");
+
+        AutoSetupResult result = _sut.Run(gumxPath);
+
+        result.Success.ShouldBeTrue();
+        result.Settings!.OutputLibrary.ShouldBe(OutputLibrary.Raylib);
+    }
+
+    [Fact]
     public void Run_WhenNoCsprojFound_ReturnsFailure()
     {
         // Use an isolated subdirectory of GetTempPath() which typically has no .csproj

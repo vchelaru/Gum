@@ -100,6 +100,16 @@ public static class CodegenCommand
             Console.WriteLine($"Auto-configured code generation settings (CodeProjectRoot: {projectSettings.CodeProjectRoot}, Namespace: {projectSettings.RootNamespace}).");
         }
 
+        try
+        {
+            CodeGenerator.AssertSupportedCombination(projectSettings);
+        }
+        catch (NotSupportedException ex)
+        {
+            Console.Error.WriteLine($"error: {ex.Message}");
+            return 1;
+        }
+
         // Print the resolved (absolute) output root so misconfigured CodeProjectRoot
         // values (e.g. machine-specific absolute paths) are obvious in the output.
         string resolvedCodeProjectRoot = projectSettings.CodeProjectRoot!;

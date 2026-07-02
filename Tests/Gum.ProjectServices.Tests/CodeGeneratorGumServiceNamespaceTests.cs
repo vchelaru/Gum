@@ -74,6 +74,25 @@ public class CodeGeneratorGumServiceNamespaceTests : BaseTestClass
         result.ShouldBe("Gum");
     }
 
+    [Fact]
+    public void GetGumServiceNamespace_RaylibVersion1_ReturnsRaylibGum()
+    {
+        // Raylib's back-compat shim lives in the RaylibGum namespace (GumServiceCompat.cs's
+        // #elif RAYLIB branch), not MonoGameGum — using the MonoGame shim namespace would not
+        // compile against RaylibGum.
+        string result = CodeGenerator.GetGumServiceNamespace(syntaxVersion: 1, isRaylib: true);
+
+        result.ShouldBe("RaylibGum");
+    }
+
+    [Fact]
+    public void GetGumServiceNamespace_RaylibVersion3_ReturnsGum()
+    {
+        string result = CodeGenerator.GetGumServiceNamespace(syntaxVersion: 3, isRaylib: true);
+
+        result.ShouldBe("Gum");
+    }
+
     #endregion
 
     #region CollectUsingNamespaces
@@ -147,6 +166,30 @@ public class CodeGeneratorGumServiceNamespaceTests : BaseTestClass
             resolvedSyntaxVersion: 3);
 
         usings.ShouldContain("Gum");
+        usings.ShouldNotContain("MonoGameGum");
+    }
+
+    [Fact]
+    public void CollectUsingNamespaces_RaylibVersion1_EmitsRaylibGumUsing()
+    {
+        ComponentSave component = new ComponentSave { Name = "Widgets/Host" };
+        Project.Components.Add(component);
+        ObjectFinder.Self.GumProjectSave = Project;
+
+        CodeGenerator generator = CreateCodeGenerator();
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            OutputLibrary = OutputLibrary.Raylib,
+            RootNamespace = "MyGame",
+        };
+
+        IReadOnlyList<string> usings = generator.CollectUsingNamespaces(
+            component,
+            elementSettings: null,
+            settings,
+            resolvedSyntaxVersion: 1);
+
+        usings.ShouldContain("RaylibGum");
         usings.ShouldNotContain("MonoGameGum");
     }
 
