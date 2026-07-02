@@ -13,11 +13,11 @@ public class ListBoxVisual : BaseListBoxVisual
     public ListBoxVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) :
         base(fullInstantiation, tryCreateFormsObject)
     {
-        this.BackgroundColor = new Color(27, 27, 27);
+        this.BackgroundColor = EditorStyling.ActiveStyle.Colors.PanelBackground;
 
         var rectangle = new RectangleRuntime();
         Background.Children.Add(rectangle);
-        rectangle.StrokeColor = new Color(60, 60, 60);
+        rectangle.StrokeColor = EditorStyling.ActiveStyle.Colors.Primary;
         rectangle.Dock(Gum.Wireframe.Dock.Fill);
     }
 }

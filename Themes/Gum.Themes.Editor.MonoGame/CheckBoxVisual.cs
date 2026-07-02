@@ -30,23 +30,23 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         this.States.HighlightedOn.Apply += () =>
         {
             rectangle.Visible = true;
-            rectangle.StrokeColor = new Color(150, 150, 150);
+            rectangle.StrokeColor = EditorStyling.ActiveStyle.Colors.BorderHover;
         };
         this.States.HighlightedOff.Apply += () =>
         {
             rectangle.Visible = true;
-            rectangle.StrokeColor = new Color(150, 150, 150);
+            rectangle.StrokeColor = EditorStyling.ActiveStyle.Colors.BorderHover;
         };
 
         this.States.PushedOn.Apply += () =>
         {
             rectangle.Visible = true;
-            rectangle.StrokeColor = new Color(255, 255, 255);
+            rectangle.StrokeColor = EditorStyling.ActiveStyle.Colors.BorderPushed;
         };
         this.States.PushedOff.Apply += () =>
         {
             rectangle.Visible = true;
-            rectangle.StrokeColor = new Color(255, 255, 255);
+            rectangle.StrokeColor = EditorStyling.ActiveStyle.Colors.BorderPushed;
         };
 
         this.States.DisabledOn.Apply += () =>

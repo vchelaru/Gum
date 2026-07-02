@@ -28,32 +28,7 @@ public static class EditorTheme
         // Register special characters used by editor theme visuals (e.g., ExpanderVisual arrows)
         BmfcSave.AddCharacters("►▼");
 
-        var styling = Styling.ActiveStyle;
-
-        styling.Text.Normal.Clear();
-        styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = "Arial" });
-        styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = 15 });
-        styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "IsBold", Type = "bool", Value = false });
-        styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "IsItalic", Type = "bool", Value = false });
-
-        styling.Text.Strong.Clear();
-        styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = "Arial" });
-        styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = 15 });
-        styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "IsBold", Type = "bool", Value = true });
-        styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "IsItalic", Type = "bool", Value = false });
-
-        styling.Colors.TextPrimary = new Color(180, 180, 180);
-        styling.Colors.TextMuted = new Color(88, 88, 88);
-
-        styling.Colors.Primary = new Color(60, 60, 60);
+        ConfigureStyling();
 
         RegisterVisuals();
     }
@@ -66,6 +41,45 @@ public static class EditorTheme
     /// </summary>
     public static void Apply(GraphicsDevice graphicsDevice) => Apply();
 #endif
+
+    // Internal (not private) so Tests/Gum.Themes.Tests can exercise the guardrail-token sync
+    // (TextPrimary/TextMuted/Primary/Accent → V3.Styling.ActiveStyle.Colors) without going
+    // through Apply(), which requires a real GraphicsDevice for font wiring and can't run
+    // headlessly in a unit test. See Gum.Themes.Editor.MonoGame.csproj's InternalsVisibleTo.
+    internal static void ConfigureStyling()
+    {
+        Styling styling = Styling.ActiveStyle;
+        EditorText text = EditorStyling.ActiveStyle.Text;
+
+        styling.Text.Normal.Clear();
+        styling.Text.Normal.Variables.Add(
+            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
+        styling.Text.Normal.Variables.Add(
+            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
+        styling.Text.Normal.Variables.Add(
+            new VariableSave { Name = "IsBold", Type = "bool", Value = false });
+        styling.Text.Normal.Variables.Add(
+            new VariableSave { Name = "IsItalic", Type = "bool", Value = false });
+
+        styling.Text.Strong.Clear();
+        styling.Text.Strong.Variables.Add(
+            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
+        styling.Text.Strong.Variables.Add(
+            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
+        styling.Text.Strong.Variables.Add(
+            new VariableSave { Name = "IsBold", Type = "bool", Value = true });
+        styling.Text.Strong.Variables.Add(
+            new VariableSave { Name = "IsItalic", Type = "bool", Value = false });
+
+        EditorColors colors = EditorStyling.ActiveStyle.Colors;
+        styling.Colors.TextPrimary = colors.TextPrimary;
+        styling.Colors.TextMuted = colors.TextMuted;
+        styling.Colors.Primary = colors.Primary;
+        // Bug fix: Editor previously omitted this line, so V3.Styling.ActiveStyle.Colors.Accent
+        // never got the theme's accent color — the only one of the 9 shipped themes with this
+        // gap. See FourTokenGuardrailTests.EditorTheme_ConfigureStyling_SyncsFourGuardrailTokensIntoV3Styling.
+        styling.Colors.Accent = colors.Accent;
+    }
 
     private static void RegisterVisuals()
     {

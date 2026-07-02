@@ -20,12 +20,12 @@ public class TextBoxVisual : BaseTextBoxVisual
 
         this.FocusedIndicator.Parent = null;
 
-        PlaceholderColor = Styling.ActiveStyle.Colors.TextMuted;
-        ForegroundColor = Styling.ActiveStyle.Colors.TextPrimary;
-        BackgroundColor = new Color(10, 10, 10);
-        SelectionBackgroundColor = new Color(0, 92, 128);
+        PlaceholderColor = EditorStyling.ActiveStyle.Colors.TextMuted;
+        ForegroundColor = EditorStyling.ActiveStyle.Colors.TextPrimary;
+        BackgroundColor = EditorStyling.ActiveStyle.Colors.RecessedBackground;
+        SelectionBackgroundColor = EditorStyling.ActiveStyle.Colors.Selection;
         SelectionInstance.Blend = Gum.RenderingLibrary.Blend.Additive;
-        CaretColor = new Color(192, 222, 255);
+        CaretColor = EditorStyling.ActiveStyle.Colors.Accent;
 
         var selectionParent = SelectionInstance.Parent;
         selectionParent.Children.Move(selectionParent.Children.IndexOf(SelectionInstance), selectionParent.Children.Count - 1);
@@ -42,13 +42,13 @@ public class TextBoxVisual : BaseTextBoxVisual
 
         States.Highlighted.Apply += () =>
         {
-            outline.StrokeColor = new Color(150, 150, 150);
+            outline.StrokeColor = EditorStyling.ActiveStyle.Colors.BorderHover;
             outline.Visible = true;
         };
 
         States.Focused.Apply += () =>
         {
-            outline.StrokeColor = new Color(192, 222, 255);
+            outline.StrokeColor = EditorStyling.ActiveStyle.Colors.Accent;
             outline.Visible = true;
         };
     }

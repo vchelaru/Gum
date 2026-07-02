@@ -21,6 +21,7 @@
     <ProjectReference Include="..\MonoGameGum.TestsCommon\MonoGameGum.TestsCommon.csproj" />
     <ProjectReference Include="..\..\Themes\Gum.Themes.DarkPro.MonoGame\Gum.Themes.DarkPro.MonoGame.csproj" />
     <ProjectReference Include="..\..\Themes\Gum.Themes.Bubblegum.MonoGame\Gum.Themes.Bubblegum.MonoGame.csproj" />
+    <ProjectReference Include="..\..\Themes\Gum.Themes.Editor.MonoGame\Gum.Themes.Editor.MonoGame.csproj" />
   </ItemGroup>
 
   <ItemGroup>

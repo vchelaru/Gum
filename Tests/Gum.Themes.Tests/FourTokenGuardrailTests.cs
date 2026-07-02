@@ -1,6 +1,7 @@
 using System.Reflection;
 using Gum.Themes.Bubblegum;
 using Gum.Themes.DarkPro;
+using Gum.Themes.Editor;
 using Microsoft.Xna.Framework;
 using Shouldly;
 using V3Styling = Gum.Forms.DefaultVisuals.V3.Styling;
@@ -20,6 +21,7 @@ public class FourTokenGuardrailTests
     {
         yield return new object[] { typeof(DarkProColors), "DarkProColors" };
         yield return new object[] { typeof(BubblegumColors), "BubblegumColors" };
+        yield return new object[] { typeof(EditorColors), "EditorColors" };
     }
 
     [Theory]
@@ -73,6 +75,27 @@ public class FourTokenGuardrailTests
         BubblegumStyling.ActiveStyle.Colors.Accent = accent;
 
         BubblegumTheme.ConfigureStyling();
+
+        V3Styling.ActiveStyle.Colors.TextPrimary.ShouldBe(textPrimary);
+        V3Styling.ActiveStyle.Colors.TextMuted.ShouldBe(textMuted);
+        V3Styling.ActiveStyle.Colors.Primary.ShouldBe(primary);
+        V3Styling.ActiveStyle.Colors.Accent.ShouldBe(accent);
+    }
+
+    [Fact]
+    public void EditorTheme_ConfigureStyling_SyncsFourGuardrailTokensIntoV3Styling()
+    {
+        Color textPrimary = new Color(13, 24, 35);
+        Color textMuted = new Color(46, 57, 68);
+        Color primary = new Color(79, 90, 101);
+        Color accent = new Color(102, 112, 122);
+
+        EditorStyling.ActiveStyle.Colors.TextPrimary = textPrimary;
+        EditorStyling.ActiveStyle.Colors.TextMuted = textMuted;
+        EditorStyling.ActiveStyle.Colors.Primary = primary;
+        EditorStyling.ActiveStyle.Colors.Accent = accent;
+
+        EditorTheme.ConfigureStyling();
 
         V3Styling.ActiveStyle.Colors.TextPrimary.ShouldBe(textPrimary);
         V3Styling.ActiveStyle.Colors.TextMuted.ShouldBe(textMuted);
