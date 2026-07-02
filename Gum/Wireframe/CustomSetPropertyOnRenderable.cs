@@ -2390,3 +2390,46 @@ public class CustomSetPropertyOnRenderable
     }
 #endif
 }
+
+#if FRB
+// FRB compiles Gum source without a TextRuntime, so the shared font-loading code above uses
+// GraphicalUiElement directly and cannot see TextRuntime's font-cache helpers (which live behind
+// #if !FRB). These extension methods provide the same helpers on GraphicalUiElement for the FRB
+// build. FRB's GraphicalUiElement has no dropshadow font properties, so dropshadow is intentionally
+// omitted here (matching the pre-#3413 inline behavior on FRB).
+internal static class FrbGraphicalUiElementFontExtensions
+{
+    internal static string GetFontCacheFileName(this GraphicalUiElement textRuntime, string? fontFilePath)
+    {
+        return BmfcSave.GetFontCacheFileNameFor(
+            textRuntime.FontSize,
+            textRuntime.Font,
+            textRuntime.OutlineThickness,
+            textRuntime.UseFontSmoothing,
+            textRuntime.IsItalic,
+            textRuntime.IsBold,
+            fontFilePath);
+    }
+
+    internal static void CopyFontGenerationFieldsTo(this GraphicalUiElement textRuntime,
+        BmfcSave bmfcSave, string? resolvedFontFilePath)
+    {
+        bmfcSave.FontSize = textRuntime.FontSize;
+        bmfcSave.OutlineThickness = textRuntime.OutlineThickness;
+        bmfcSave.UseSmoothing = textRuntime.UseFontSmoothing;
+        bmfcSave.IsItalic = textRuntime.IsItalic;
+        bmfcSave.IsBold = textRuntime.IsBold;
+
+        if (resolvedFontFilePath != null)
+        {
+            bmfcSave.FontFile = resolvedFontFilePath;
+            bmfcSave.FontName = System.IO.Path.GetFileNameWithoutExtension(resolvedFontFilePath);
+        }
+        else
+        {
+            bmfcSave.FontName = textRuntime.Font;
+            bmfcSave.FontFile = null;
+        }
+    }
+}
+#endif

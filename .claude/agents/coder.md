@@ -75,6 +75,14 @@ Gating pattern:
 
 Don't `#if` away entire types or methods unless you've confirmed no caller references them across targets — that's a much harder refactor.
 
+## Guard symmetry — a member behind `#if !FRB` cannot be called from shared un-guarded code
+
+The mirror of the rule above, and the single most common way a Gum change silently breaks FRB1: you add a method/property behind `#if !FRB` (e.g. on `TextRuntime`, which does not exist under FRB — FRB uses `GraphicalUiElement` directly), then call it from **shared** code that compiles under both FRB and non-FRB. The non-FRB build is green, so the break is invisible until the FRB canary runs — which is exactly what CI does not gate on. This broke FRB in #3413 (`GetFontCacheFileName`/`CopyFontGenerationFieldsTo`).
+
+So whenever you add or move a member behind **any** platform `#if` (`!FRB`, `!RAYLIB`, `XNALIKE`, etc.):
+1. `grep` for every call site of that member. If any lives in un-guarded shared source, the call site must be guarded too **or** you must provide a same-named shim for the excluded platform (an FRB-only extension method on `GraphicalUiElement` is the established pattern — see `CustomSetPropertyOnRenderable.cs`).
+2. Run the FRB canary build (`frb-build-verification` skill) from the **primary checkout** before finishing — it is the only build that exercises the `#if FRB` path, and worktrees cannot run it.
+
 # Test-Driven Development (Required)
 
 **For new features: you must TDD.** Write a failing test that captures the desired behavior, then implement to make it pass.
