@@ -212,8 +212,11 @@ internal class RenderTargetScreen : FrameworkElement
     }
 
     // The render target is sized to the container's bounds, so a child larger than the container is
-    // clipped to it (matching behavior across backends). The green child is 220x220 but the target
-    // is 90x90.
+    // truncated to it. A green circle (140 dia) overflows the 90x90 target: its top-left arc curves
+    // inside the target (frame shows in that corner), while the right and bottom edges are sliced
+    // flat exactly at the target boundary — beyond it, in the frame margin, there is no green. The
+    // curve-vs-flat-cut contrast makes the truncation unmistakable (vs a solid rect, which just looks
+    // like a smaller rect). This is texture-size truncation, not the ClipsChildren scissor path.
     private static GraphicalUiElement BuildOverflow()
     {
         var holder = BuildFrame(150, 110);
@@ -224,7 +227,16 @@ internal class RenderTargetScreen : FrameworkElement
         group.Width = 90;
         group.Height = 90;
         group.IsRenderTarget = true;
-        group.AddChild(Rect(0, 0, 220, 220, new Color(80, 200, 120, 255)));
+
+        var circle = new CircleRuntime();
+        circle.Width = 140;
+        circle.Height = 140;
+        circle.X = 8;
+        circle.Y = 8;
+        circle.FillColor = new Color(80, 200, 120, 255);
+        circle.IsFilled = true;
+        group.AddChild(circle);
+
         holder.AddChild(group);
         return holder;
     }

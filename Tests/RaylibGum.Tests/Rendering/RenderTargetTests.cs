@@ -454,6 +454,51 @@ public class RenderTargetTests : BaseTestClass
         GumService.Default.Root.Children.Clear();
     }
 
+    // The render target is sized to the container's bounds, so a child larger than the container is
+    // truncated to the container (the "Overflow clipped" sample cell). A 140-dia green circle in a
+    // 90x90 target: the target texture stays 90x90 (not 140), the target center reads green, and a
+    // corner the offset circle never reaches stays empty — proving both the texture-size truncation
+    // and that a real (non-box-filling) shape survived the bake.
+    [Fact]
+    public void Draw_ChildLargerThanRenderTarget_TruncatesToContainerBounds()
+    {
+        ContainerRuntime container = new();
+        container.X = 0;
+        container.Y = 0;
+        container.Width = 90;
+        container.Height = 90;
+        container.IsRenderTarget = true;
+
+        CircleRuntime circle = new();
+        circle.Width = 140;
+        circle.Height = 140;
+        circle.X = 8;
+        circle.Y = 8;
+        circle.FillColor = new Color((byte)80, (byte)200, (byte)120, (byte)255);
+        circle.IsFilled = true;
+        container.Children.Add(circle);
+
+        GumService.Default.Root.Children.Add(container);
+        GumService.Default.Root.UpdateLayout();
+
+        DrawOnce();
+
+        RenderTexture2D renderTexture = Renderer.Self.TryGetBakedRenderTargetFor(container)!.Value;
+
+        // Truncated to the 90x90 container, not the 140x140 child.
+        renderTexture.Texture.Width.ShouldBe(90);
+        renderTexture.Texture.Height.ShouldBe(90);
+
+        // The offset circle covers the middle but not the top-left corner of the target.
+        Color mid = ReadRenderTargetPixel(renderTexture, 45, 45);
+        Color corner = ReadRenderTargetPixel(renderTexture, 5, 5);
+        mid.G.ShouldBeGreaterThan((byte)150);
+        mid.R.ShouldBeLessThan((byte)150);
+        corner.A.ShouldBeLessThan((byte)50);
+
+        GumService.Default.Root.Children.Clear();
+    }
+
     private static ColoredRectangleRuntime FullRect(Color color)
     {
         ColoredRectangleRuntime rect = new();
