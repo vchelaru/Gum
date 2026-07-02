@@ -265,8 +265,9 @@ internal class RenderTargetScreen : FrameworkElement
     // rectangle and demonstrates nothing, which is why the child must be a circle.)
     //
     // Same outline-circle rules as BuildOverflow: leave IsFilled off and set the ring via Color (NOT
-    // StrokeColor) so it renders identically on MonoGame and raylib. Kept identical to the MonoGame
-    // sample's BuildClipsChildrenInside.
+    // StrokeColor) so it renders identically on MonoGame and raylib. The clip window is a sub-region
+    // of the render target, so the empty area to its right is the RT extending past the clip. Kept
+    // identical to the MonoGame sample's BuildClipsChildrenInside.
     static GraphicalUiElement BuildClipsChildrenInside()
     {
         ContainerRuntime holder = BuildFrame(150, 110);
@@ -291,13 +292,7 @@ internal class RenderTargetScreen : FrameworkElement
         circle.Color = new Color((byte)220, (byte)60, (byte)60, (byte)255);
         clip.Children.Add(circle);
 
-        // A solid marker to the right of the clip window (still inside the render target) proves the
-        // RT itself extends past the clip: the circle is sliced by ClipsChildren, not by the RT bounds.
-        ColoredRectangleRuntime marker =
-            Rect(95, 10, 45, 90, new Color((byte)60, (byte)120, (byte)220, (byte)255));
-
         group.Children.Add(clip);
-        group.Children.Add(marker);
         holder.Children.Add(group);
         return holder;
     }
