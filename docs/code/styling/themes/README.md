@@ -123,11 +123,15 @@ EditorTheme.Apply();
 // Initialize
 using Gum.Themes.Editor;
 
-EditorStyling.ActiveStyle.Colors.TextPrimary = new Color(210, 225, 255);
-EditorStyling.ActiveStyle.Colors.TextMuted = new Color(120, 130, 150);
-EditorStyling.ActiveStyle.Colors.Primary = new Color(40, 46, 64);
-EditorStyling.ActiveStyle.Colors.Accent = new Color(255, 196, 84);
-EditorStyling.ActiveStyle.Colors.Selection = new Color(64, 52, 16);
+EditorStyling.ActiveStyle.Colors.Accent = new Color(140, 190, 255);
+EditorStyling.ActiveStyle.Colors.TextPrimary = new Color(210, 220, 255);
+EditorStyling.ActiveStyle.Colors.TextMuted = new Color(100, 110, 140);
+EditorStyling.ActiveStyle.Colors.Primary = new Color(50, 60, 90);
+EditorStyling.ActiveStyle.Colors.BorderHover = new Color(120, 150, 210);
+EditorStyling.ActiveStyle.Colors.BorderPushed = new Color(220, 230, 255);
+EditorStyling.ActiveStyle.Colors.Selection = new Color(30, 80, 200);
+EditorStyling.ActiveStyle.Colors.PanelBackground = new Color(18, 20, 32);
+EditorStyling.ActiveStyle.Colors.RecessedBackground = new Color(8, 10, 20);
 EditorStyling.ActiveStyle.Text.FontFamily = "Consolas";
 
 EditorTheme.Apply(GraphicsDevice);
@@ -185,12 +189,13 @@ DarkProTheme.Apply();
 // Initialize
 using Gum.Themes.DarkPro;
 
-DarkProStyling.ActiveStyle.Colors.Text = new Color(220, 220, 225);
-DarkProStyling.ActiveStyle.Colors.Muted = new Color(150, 150, 160);
-DarkProStyling.ActiveStyle.Colors.Surface1 = new Color(30, 34, 42);
-DarkProStyling.ActiveStyle.Colors.Accent = new Color(198, 120, 255);
-DarkProStyling.ActiveStyle.Colors.AccentDark = new Color(110, 60, 150);
-DarkProStyling.ActiveStyle.Text.FontFamily = "Consolas";
+DarkProStyling.ActiveStyle.Colors.Accent = new Color(214, 64, 214);
+DarkProStyling.ActiveStyle.Colors.Text = new Color(245, 240, 235);
+DarkProStyling.ActiveStyle.Colors.Muted = new Color(150, 140, 135);
+// A serif reads as an obviously different font from the bundled DM Mono —
+// a different monospace font would look "basically the same" at a glance.
+DarkProStyling.ActiveStyle.Text.FontFamily = "Georgia";
+DarkProStyling.ActiveStyle.Text.FontSize = 20;
 
 DarkProTheme.Apply(GraphicsDevice);
 ```
@@ -247,12 +252,17 @@ BubblegumTheme.Apply();
 // Initialize
 using Gum.Themes.Bubblegum;
 
-BubblegumStyling.ActiveStyle.Colors.Text = new Color(35, 20, 60);
-BubblegumStyling.ActiveStyle.Colors.Muted = new Color(150, 120, 190);
-BubblegumStyling.ActiveStyle.Colors.Surface1 = new Color(255, 250, 253);
-BubblegumStyling.ActiveStyle.Colors.Accent = new Color(120, 200, 255);
-BubblegumStyling.ActiveStyle.Colors.AccentLight = new Color(210, 240, 255);
-BubblegumStyling.ActiveStyle.Text.FontSize = 16;
+// Surface1/Background/Border/Placeholder are what TextBox actually reads for its
+// fill/border/placeholder — Accent/Text alone only move the caret and typed text.
+BubblegumStyling.ActiveStyle.Colors.Accent = new Color(40, 190, 190);
+BubblegumStyling.ActiveStyle.Colors.Text = new Color(20, 30, 60);
+BubblegumStyling.ActiveStyle.Colors.Muted = new Color(110, 120, 150);
+BubblegumStyling.ActiveStyle.Colors.Surface1 = new Color(235, 250, 250);
+BubblegumStyling.ActiveStyle.Colors.Background = new Color(230, 250, 248);
+BubblegumStyling.ActiveStyle.Colors.Border = new Color(120, 200, 200);
+BubblegumStyling.ActiveStyle.Colors.Placeholder = new Color(140, 170, 180);
+BubblegumStyling.ActiveStyle.Text.FontFamily = "Consolas";
+BubblegumStyling.ActiveStyle.Text.FontSize = 18;
 
 BubblegumTheme.Apply(GraphicsDevice);
 ```
@@ -313,13 +323,19 @@ For the intended look, clear the back buffer to `ForestGladeStyling.ActiveStyle.
 // Initialize
 using Gum.Themes.ForestGlade;
 
-ForestGladeStyling.ActiveStyle.Colors.Text = new Color(255, 246, 224);
-ForestGladeStyling.ActiveStyle.Colors.Muted = new Color(196, 168, 130);
-ForestGladeStyling.ActiveStyle.Colors.CanopyDeep = new Color(48, 24, 10);
-ForestGladeStyling.ActiveStyle.Colors.LeafBright = new Color(255, 176, 59);
-ForestGladeStyling.ActiveStyle.Colors.ButtonRestFillTop = new Color(230, 140, 40);
-ForestGladeStyling.ActiveStyle.Colors.ButtonRestFillBottom = new Color(180, 90, 20);
-ForestGladeStyling.ActiveStyle.Text.FontSize = 15;
+// ButtonVisual reads the Rest/Hover gradient-stop pairs and the glow/shadow tokens
+// directly — LeafBright alone leaves the button fill, shadow, and hover glow on the
+// old green palette, so gradients and glows matter more here than a font swap.
+ForestGladeStyling.ActiveStyle.Colors.LeafBright = new Color(255, 105, 180);
+ForestGladeStyling.ActiveStyle.Colors.Text = new Color(255, 240, 245);
+ForestGladeStyling.ActiveStyle.Colors.Muted = new Color(200, 150, 165);
+ForestGladeStyling.ActiveStyle.Colors.ButtonRestFillTop = new Color(255, 130, 190);
+ForestGladeStyling.ActiveStyle.Colors.ButtonRestFillBottom = new Color(220, 60, 140);
+ForestGladeStyling.ActiveStyle.Colors.ButtonHoverFillTop = new Color(255, 160, 210);
+ForestGladeStyling.ActiveStyle.Colors.ButtonHoverFillBottom = new Color(255, 105, 180);
+ForestGladeStyling.ActiveStyle.Colors.DarkShadow = new Color(60, 0, 40, 200);
+ForestGladeStyling.ActiveStyle.Colors.GlowStrong = new Color(255, 105, 180, 170);
+ForestGladeStyling.ActiveStyle.Colors.GlowMedium = new Color(255, 105, 180, 110);
 
 ForestGladeTheme.Apply(GraphicsDevice);
 ```
@@ -380,12 +396,15 @@ For the intended look, clear the back buffer to `NeonStyling.ActiveStyle.Colors.
 // Initialize
 using Gum.Themes.Neon;
 
-NeonStyling.ActiveStyle.Colors.Text = new Color(255, 224, 250);
-NeonStyling.ActiveStyle.Colors.Muted = new Color(128, 80, 128);
-NeonStyling.ActiveStyle.Colors.Surface1 = new Color(24, 8, 28);
+// Surface1 is what ListBoxVisual fills its background with, and Surface2 is its
+// hover-row tint — both need to move together or a hovered row looks stale.
 NeonStyling.ActiveStyle.Colors.Accent = new Color(255, 0, 200);
-NeonStyling.ActiveStyle.Colors.Glow = new Color(255, 0, 200);
-NeonStyling.ActiveStyle.Text.FontSize = 14;
+NeonStyling.ActiveStyle.Colors.Text = new Color(255, 250, 200);
+NeonStyling.ActiveStyle.Colors.Muted = new Color(140, 110, 160);
+NeonStyling.ActiveStyle.Colors.Surface1 = new Color(40, 10, 40);
+NeonStyling.ActiveStyle.Colors.Surface2 = new Color(55, 15, 55);
+NeonStyling.ActiveStyle.Text.FontFamily = "Consolas";
+NeonStyling.ActiveStyle.Text.FontSize = 17;
 
 NeonTheme.Apply(GraphicsDevice);
 ```
@@ -442,12 +461,19 @@ Retro95Theme.Apply();
 // Initialize
 using Gum.Themes.Retro95;
 
-Retro95Styling.ActiveStyle.Colors.Text = new Color(0, 0, 0);
-Retro95Styling.ActiveStyle.Colors.DisabledText = new Color(110, 110, 110);
+// Surface also drives the app's own clear color if you follow the pattern from the
+// Usage section above — Retro95 is the one theme where the outer backdrop is a real,
+// settable token rather than a separate literal.
 Retro95Styling.ActiveStyle.Colors.Surface = new Color(0, 128, 128);
-Retro95Styling.ActiveStyle.Colors.Selection = new Color(128, 0, 0);
+Retro95Styling.ActiveStyle.Colors.WhiteFill = new Color(220, 255, 255);
+Retro95Styling.ActiveStyle.Colors.Selection = new Color(128, 0, 32);
+Retro95Styling.ActiveStyle.Colors.HighlightInner = new Color(150, 220, 220);
 Retro95Styling.ActiveStyle.Colors.HighlightOuter = new Color(200, 255, 255);
-Retro95Styling.ActiveStyle.Text.FontSize = 13;
+Retro95Styling.ActiveStyle.Colors.ShadowInner = new Color(0, 80, 80);
+Retro95Styling.ActiveStyle.Colors.ShadowOuter = new Color(0, 50, 50);
+Retro95Styling.ActiveStyle.Colors.DisabledText = new Color(110, 70, 70);
+Retro95Styling.ActiveStyle.Text.FontFamily = "Consolas";
+Retro95Styling.ActiveStyle.Text.FontSize = 15;
 
 Retro95Theme.Apply(GraphicsDevice);
 ```
@@ -508,12 +534,21 @@ For the intended look, clear the back buffer to `MeadowStyling.ActiveStyle.Color
 // Initialize
 using Gum.Themes.Meadow;
 
-MeadowStyling.ActiveStyle.Colors.TealDark = new Color(20, 80, 70);
-MeadowStyling.ActiveStyle.Colors.Muted = new Color(150, 130, 110);
-MeadowStyling.ActiveStyle.Colors.Cream2 = new Color(255, 248, 235);
-MeadowStyling.ActiveStyle.Colors.Blue = new Color(237, 154, 120);
-MeadowStyling.ActiveStyle.Colors.Coral = new Color(70, 173, 230);
-MeadowStyling.ActiveStyle.Text.FontSize = 16;
+// Blue/BlueDark/BlueHover are the button's rest/pressed/hover fills — changing only
+// Blue leaves the shadow and hover states on the old sky-blue gradient. SageDark is
+// the checkbox/radio checked color; PeachDark is the shared border/outline token
+// (ListBox, input fields, dashed panels, splitter).
+MeadowStyling.ActiveStyle.Colors.Blue = new Color(230, 90, 70);
+MeadowStyling.ActiveStyle.Colors.BlueDark = new Color(150, 45, 35);
+MeadowStyling.ActiveStyle.Colors.BlueHover = new Color(245, 130, 105);
+MeadowStyling.ActiveStyle.Colors.TealDark = new Color(90, 40, 80);
+MeadowStyling.ActiveStyle.Colors.Muted = new Color(170, 130, 150);
+MeadowStyling.ActiveStyle.Colors.SageDark = new Color(170, 90, 140);
+MeadowStyling.ActiveStyle.Colors.PeachDark = new Color(200, 150, 175);
+MeadowStyling.ActiveStyle.Colors.Cream = new Color(238, 222, 235);
+MeadowStyling.ActiveStyle.Colors.Cream2 = new Color(245, 232, 242);
+MeadowStyling.ActiveStyle.Text.FontFamily = "Consolas";
+MeadowStyling.ActiveStyle.Text.FontSize = 17;
 
 MeadowTheme.Apply(GraphicsDevice);
 ```
@@ -574,12 +609,22 @@ For the intended look, clear the back buffer to `HazardStyling.ActiveStyle.Color
 // Initialize
 using Gum.Themes.Hazard;
 
-HazardStyling.ActiveStyle.Colors.Text = new Color(227, 100, 40);
-HazardStyling.ActiveStyle.Colors.Muted = new Color(120, 70, 38);
-HazardStyling.ActiveStyle.Colors.Surface1 = new Color(18, 16, 7);
-HazardStyling.ActiveStyle.Colors.Accent = new Color(244, 90, 26);
-HazardStyling.ActiveStyle.Colors.TextBright = new Color(255, 140, 59);
-HazardStyling.ActiveStyle.Text.FontSize = 16;
+// Selection (ListBox/MenuItem selected-row fill) and TextBright (its hover-row text)
+// default to the same hazard-yellow as Accent, and AccentPressed (Slider thumb press)
+// is a separate explicit token not derived from Accent — all three need to move with
+// it. Border/BorderHover is the shared outline every restyled control uses (ListBox
+// panel, Slider track, TextBox), so it has to move too or those three still read gold.
+HazardStyling.ActiveStyle.Colors.Accent = new Color(40, 140, 255);
+HazardStyling.ActiveStyle.Colors.Text = new Color(200, 230, 255);
+HazardStyling.ActiveStyle.Colors.Muted = new Color(90, 110, 140);
+HazardStyling.ActiveStyle.Colors.Selection = new Color(40, 140, 255);
+HazardStyling.ActiveStyle.Colors.TextBright = new Color(150, 200, 255);
+HazardStyling.ActiveStyle.Colors.AccentPressed = new Color(20, 100, 200);
+HazardStyling.ActiveStyle.Colors.Border = new Color(30, 70, 130);
+HazardStyling.ActiveStyle.Colors.BorderHover = new Color(70, 130, 200);
+HazardStyling.ActiveStyle.Colors.Placeholder = new Color(100, 120, 150);
+HazardStyling.ActiveStyle.Text.FontFamily = "Consolas";
+HazardStyling.ActiveStyle.Text.FontSize = 17;
 
 HazardTheme.Apply(GraphicsDevice);
 ```
