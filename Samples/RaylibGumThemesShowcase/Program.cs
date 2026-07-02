@@ -303,23 +303,37 @@ public static class Program
 
     private static void SetForestGladeCustomized(bool customized)
     {
+        // No font swap here — gradients and glows are the theme's most visually
+        // load-bearing tokens, and ButtonVisual/ForestGladeButtonChrome read the
+        // Rest/Hover gradient-stop pairs and DarkShadow/GlowStrong/GlowMedium directly,
+        // independent of LeafBright. Leaving Accent/Text/Muted unchanged left the button
+        // fill, its shadow, and its hover glow all on the old green palette.
         var colors = ForestGladeStyling.ActiveStyle.Colors;
-        var text = ForestGladeStyling.ActiveStyle.Text;
         if (customized)
         {
             colors.LeafBright = new Color(255, 105, 180);
             colors.Text = new Color(255, 240, 245);
             colors.Muted = new Color(200, 150, 165);
-            text.FontFamily = "Consolas";
-            text.FontSize = 18;
+            colors.ButtonRestFillTop = new Color(255, 130, 190);
+            colors.ButtonRestFillBottom = new Color(220, 60, 140);
+            colors.ButtonHoverFillTop = new Color(255, 160, 210);
+            colors.ButtonHoverFillBottom = new Color(255, 105, 180);
+            colors.DarkShadow = new Color(60, 0, 40, 200);
+            colors.GlowStrong = new Color(255, 105, 180, 170);
+            colors.GlowMedium = new Color(255, 105, 180, 110);
         }
         else
         {
             colors.LeafBright = new Color(71, 246, 65);
             colors.Text = new Color(241, 255, 240);
             colors.Muted = new Color(155, 186, 163);
-            text.FontFamily = "Nunito"; // ForestGladeTheme.BundledFontFamily is internal; mirrors it
-            text.FontSize = 14;
+            colors.ButtonRestFillTop = new Color(15, 196, 72);
+            colors.ButtonRestFillBottom = new Color(0, 140, 46);
+            colors.ButtonHoverFillTop = new Color(44, 219, 92);
+            colors.ButtonHoverFillBottom = new Color(8, 178, 59);
+            colors.DarkShadow = new Color(0, 60, 30, 200);
+            colors.GlowStrong = new Color(71, 246, 65, 170);
+            colors.GlowMedium = new Color(71, 246, 65, 110);
         }
     }
 
@@ -435,13 +449,18 @@ public static class Program
             // hover-row text — both defaulted to the same hazard-yellow as Accent, so only
             // changing Accent left selected/hovered list rows still orange. AccentPressed is
             // a separate explicit token (not derived from Accent), so the Slider thumb's
-            // pressed state was the same gap.
+            // pressed state was the same gap. Border/BorderHover are the shared muted-gold
+            // outline every restyled control uses (ListBox panel, Slider track, TextBox) —
+            // this is what was still reading "yellow" on all three even after Accent moved.
             colors.Accent = new Color(40, 140, 255);
             colors.Text = new Color(200, 230, 255);
             colors.Muted = new Color(90, 110, 140);
             colors.Selection = new Color(40, 140, 255);
             colors.TextBright = new Color(150, 200, 255);
             colors.AccentPressed = new Color(20, 100, 200);
+            colors.Border = new Color(30, 70, 130);
+            colors.BorderHover = new Color(70, 130, 200);
+            colors.Placeholder = new Color(100, 120, 150);
             text.FontFamily = "Consolas";
             text.FontSize = 17;
         }
@@ -453,6 +472,9 @@ public static class Program
             colors.Selection = new Color(244, 200, 26);
             colors.TextBright = new Color(248, 212, 59);
             colors.AccentPressed = new Color(201, 163, 12);
+            colors.Border = new Color(74, 63, 22);
+            colors.BorderHover = new Color(140, 117, 31);
+            colors.Placeholder = new Color(120, 102, 38);
             text.FontFamily = "Saira Condensed"; // HazardTheme.BundledFontFamily is internal; mirrors it
             text.FontSize = 15;
         }
