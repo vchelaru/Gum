@@ -55,13 +55,13 @@ public class ComboBoxVisual : BaseComboBoxVisual
         DropdownIndicator.Parent = null;
         TextInstance.Parent = null;
 
-        _focusRing = HazardShapes.FocusRing(HazardPalette.Accent, CornerRadius, FocusRingInset, BorderThickness);
+        _focusRing = HazardShapes.FocusRing(HazardStyling.ActiveStyle.Colors.Accent, CornerRadius, FocusRingInset, BorderThickness);
         AddChild(_focusRing);
 
-        _fill = HazardShapes.Fill(HazardPalette.Surface1, CornerRadius);
+        _fill = HazardShapes.Fill(HazardStyling.ActiveStyle.Colors.Surface1, CornerRadius);
         AddChild(_fill);
 
-        _border = HazardShapes.Border(HazardPalette.Border, CornerRadius, BorderThickness);
+        _border = HazardShapes.Border(HazardStyling.ActiveStyle.Colors.Border, CornerRadius, BorderThickness);
         AddChild(_border);
 
         _dropdownGlyph = CreateDropdownGlyph();
@@ -99,10 +99,10 @@ public class ComboBoxVisual : BaseComboBoxVisual
         glyph.HeightUnits = DimensionUnitType.Absolute;
         glyph.HorizontalAlignment = HorizontalAlignment.Center;
         glyph.VerticalAlignment = VerticalAlignment.Center;
-        glyph.Font = HazardTheme.IconFontFamily;
+        glyph.Font = HazardStyling.ActiveStyle.Text.IconFontFamily;
         glyph.FontSize = GlyphFontSize;
         glyph.Text = "▼";
-        glyph.Color = HazardPalette.Muted;
+        glyph.Color = HazardStyling.ActiveStyle.Colors.Muted;
         return glyph;
     }
 
@@ -114,37 +114,37 @@ public class ComboBoxVisual : BaseComboBoxVisual
         // full Text on hover/focus/press so the user gets visible "this is alive"
         // feedback distinct from the border.
         States.Enabled.Apply = () => Apply(
-            border: HazardPalette.Border, text: HazardPalette.Text,
-            glyph: HazardPalette.Muted, ring: false, fillDisabled: false);
+            border: HazardStyling.ActiveStyle.Colors.Border, text: HazardStyling.ActiveStyle.Colors.Text,
+            glyph: HazardStyling.ActiveStyle.Colors.Muted, ring: false, fillDisabled: false);
 
         States.Highlighted.Apply = () => Apply(
-            border: HazardPalette.BorderHover, text: HazardPalette.Text,
-            glyph: HazardPalette.Text, ring: false, fillDisabled: false);
+            border: HazardStyling.ActiveStyle.Colors.BorderHover, text: HazardStyling.ActiveStyle.Colors.Text,
+            glyph: HazardStyling.ActiveStyle.Colors.Text, ring: false, fillDisabled: false);
 
         States.Focused.Apply = () => Apply(
-            border: HazardPalette.Accent, text: HazardPalette.Text,
-            glyph: HazardPalette.Text, ring: true, fillDisabled: false);
+            border: HazardStyling.ActiveStyle.Colors.Accent, text: HazardStyling.ActiveStyle.Colors.Text,
+            glyph: HazardStyling.ActiveStyle.Colors.Text, ring: true, fillDisabled: false);
 
         States.HighlightedFocused.Apply = () => Apply(
-            border: HazardPalette.Accent, text: HazardPalette.Text,
-            glyph: HazardPalette.Text, ring: true, fillDisabled: false);
+            border: HazardStyling.ActiveStyle.Colors.Accent, text: HazardStyling.ActiveStyle.Colors.Text,
+            glyph: HazardStyling.ActiveStyle.Colors.Text, ring: true, fillDisabled: false);
 
         States.Pushed.Apply = () => Apply(
-            border: HazardPalette.Accent, text: HazardPalette.Text,
-            glyph: HazardPalette.Text, ring: false, fillDisabled: false);
+            border: HazardStyling.ActiveStyle.Colors.Accent, text: HazardStyling.ActiveStyle.Colors.Text,
+            glyph: HazardStyling.ActiveStyle.Colors.Text, ring: false, fillDisabled: false);
 
         States.Disabled.Apply = () => Apply(
-            border: HazardPalette.DisabledBorder, text: HazardPalette.DisabledText,
-            glyph: HazardPalette.DisabledText, ring: false, fillDisabled: true);
+            border: HazardStyling.ActiveStyle.Colors.DisabledBorder, text: HazardStyling.ActiveStyle.Colors.DisabledText,
+            glyph: HazardStyling.ActiveStyle.Colors.DisabledText, ring: false, fillDisabled: true);
 
         States.DisabledFocused.Apply = () => Apply(
-            border: HazardPalette.DisabledBorder, text: HazardPalette.DisabledText,
-            glyph: HazardPalette.DisabledText, ring: true, fillDisabled: true);
+            border: HazardStyling.ActiveStyle.Colors.DisabledBorder, text: HazardStyling.ActiveStyle.Colors.DisabledText,
+            glyph: HazardStyling.ActiveStyle.Colors.DisabledText, ring: true, fillDisabled: true);
     }
 
     private void Apply(Color border, Color text, Color glyph, bool ring, bool fillDisabled)
     {
-        _fill.FillColor = fillDisabled ? HazardPalette.DisabledFill : HazardPalette.Surface1;
+        _fill.FillColor = fillDisabled ? HazardStyling.ActiveStyle.Colors.DisabledFill : HazardStyling.ActiveStyle.Colors.Surface1;
         _border.StrokeColor = border;
         TextInstance.Color = text;
         _dropdownGlyph.Color = glyph;

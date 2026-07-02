@@ -45,7 +45,7 @@ public class TooltipVisual : BaseTooltipVisual
         AddChild(_outerRight);
 
         AddChild(TextInstance);
-        TextInstance.Color = Retro95Colors.Text;
+        TextInstance.Color = Retro95Styling.ActiveStyle.Colors.Text;
     }
 
     private static RectangleRuntime NewStretched(string name, Color color)
@@ -71,7 +71,7 @@ public class TooltipVisual : BaseTooltipVisual
         RectangleRuntime r = new RectangleRuntime();
         r.Name = name;
         r.IsFilled = true;
-        r.FillColor = Retro95Colors.Text;
+        r.FillColor = Retro95Styling.ActiveStyle.Colors.Text;
         r.StrokeWidth = 0;
         if (horizontal)
         {

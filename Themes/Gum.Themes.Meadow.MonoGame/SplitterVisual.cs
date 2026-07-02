@@ -40,7 +40,7 @@ public class SplitterVisual : BaseSplitterVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = 3f;
         fill.IsFilled = true;
-        fill.FillColor = MeadowColors.PeachDark;
+        fill.FillColor = MeadowStyling.ActiveStyle.Colors.PeachDark;
         fill.StrokeWidth = 0;
         return fill;
     }

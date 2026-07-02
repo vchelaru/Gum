@@ -54,19 +54,19 @@ public class ButtonVisual : BaseButtonVisual
         WidthUnits = DimensionUnitType.Absolute;
         HeightUnits = DimensionUnitType.Absolute;
 
-        _focusRing = TemplateShapes.FocusRing(TemplatePalette.Accent, CornerRadius, FocusRingInset, BorderThickness);
+        _focusRing = TemplateShapes.FocusRing(TemplateStyling.ActiveStyle.Colors.Accent, CornerRadius, FocusRingInset, BorderThickness);
         AddChild(_focusRing);
 
         _fill = TemplateShapes.FillWithDropshadow(
-            color: TemplatePalette.Surface1,
+            color: TemplateStyling.ActiveStyle.Colors.Surface1,
             cornerRadius: CornerRadius,
-            shadowColor: TemplatePalette.AccentPressed,
+            shadowColor: TemplateStyling.ActiveStyle.Colors.AccentPressed,
             offsetX: 0f,
             offsetY: ShadowOffsetY,
             blur: ShadowBlur);
         AddChild(_fill);
 
-        _border = TemplateShapes.Border(TemplatePalette.Border, CornerRadius, BorderThickness);
+        _border = TemplateShapes.Border(TemplateStyling.ActiveStyle.Colors.Border, CornerRadius, BorderThickness);
         AddChild(_border);
 
         // Re-attach the base TextInstance on top of the new shape stack.
@@ -82,27 +82,27 @@ public class ButtonVisual : BaseButtonVisual
         // the now-detached NineSlice background and underline indicator, neither of
         // which is in this visual's render tree any more.
         States.Enabled.Apply = () => ApplyPalette(
-            fill: TemplatePalette.Surface1, border: TemplatePalette.Border, text: TemplatePalette.Text, showFocusRing: false, showShadow: true);
+            fill: TemplateStyling.ActiveStyle.Colors.Surface1, border: TemplateStyling.ActiveStyle.Colors.Border, text: TemplateStyling.ActiveStyle.Colors.Text, showFocusRing: false, showShadow: true);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            fill: TemplatePalette.HoverFill, border: TemplatePalette.Accent, text: TemplatePalette.Text, showFocusRing: false, showShadow: true);
+            fill: TemplateStyling.ActiveStyle.Colors.HoverFill, border: TemplateStyling.ActiveStyle.Colors.Accent, text: TemplateStyling.ActiveStyle.Colors.Text, showFocusRing: false, showShadow: true);
 
         States.Focused.Apply = () => ApplyPalette(
-            fill: TemplatePalette.Surface1, border: TemplatePalette.Accent, text: TemplatePalette.Text, showFocusRing: true, showShadow: true);
+            fill: TemplateStyling.ActiveStyle.Colors.Surface1, border: TemplateStyling.ActiveStyle.Colors.Accent, text: TemplateStyling.ActiveStyle.Colors.Text, showFocusRing: true, showShadow: true);
 
         States.HighlightedFocused.Apply = () => ApplyPalette(
-            fill: TemplatePalette.HoverFill, border: TemplatePalette.Accent, text: TemplatePalette.Text, showFocusRing: true, showShadow: true);
+            fill: TemplateStyling.ActiveStyle.Colors.HoverFill, border: TemplateStyling.ActiveStyle.Colors.Accent, text: TemplateStyling.ActiveStyle.Colors.Text, showFocusRing: true, showShadow: true);
 
         // Pressed/Disabled drop the shadow so the button reads as "down" / inert
         // (mirrors how the Bubblegum Button toggles _fill.HasDropshadow).
         States.Pushed.Apply = () => ApplyPalette(
-            fill: TemplatePalette.PressedFill, border: TemplatePalette.Accent, text: TemplatePalette.Text, showFocusRing: false, showShadow: false);
+            fill: TemplateStyling.ActiveStyle.Colors.PressedFill, border: TemplateStyling.ActiveStyle.Colors.Accent, text: TemplateStyling.ActiveStyle.Colors.Text, showFocusRing: false, showShadow: false);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fill: TemplatePalette.DisabledFill, border: TemplatePalette.DisabledBorder, text: TemplatePalette.DisabledText, showFocusRing: false, showShadow: false);
+            fill: TemplateStyling.ActiveStyle.Colors.DisabledFill, border: TemplateStyling.ActiveStyle.Colors.DisabledBorder, text: TemplateStyling.ActiveStyle.Colors.DisabledText, showFocusRing: false, showShadow: false);
 
         States.DisabledFocused.Apply = () => ApplyPalette(
-            fill: TemplatePalette.DisabledFill, border: TemplatePalette.DisabledBorder, text: TemplatePalette.DisabledText, showFocusRing: true, showShadow: false);
+            fill: TemplateStyling.ActiveStyle.Colors.DisabledFill, border: TemplateStyling.ActiveStyle.Colors.DisabledBorder, text: TemplateStyling.ActiveStyle.Colors.DisabledText, showFocusRing: true, showShadow: false);
     }
 
     private void ApplyPalette(Color fill, Color border, Color text, bool showFocusRing, bool showShadow)

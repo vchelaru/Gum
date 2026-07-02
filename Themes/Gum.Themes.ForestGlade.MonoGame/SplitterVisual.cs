@@ -39,7 +39,7 @@ public class SplitterVisual : BaseSplitterVisual
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.IsFilled = true;
-        fill.FillColor = ForestGladePalette.VineCord;
+        fill.FillColor = ForestGladeStyling.ActiveStyle.Colors.VineCord;
         fill.StrokeWidth = 0;
         return fill;
     }

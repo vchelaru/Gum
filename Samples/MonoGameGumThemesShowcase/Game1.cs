@@ -82,15 +82,15 @@ public class Game1 : Game
         // Retro95 chrome is its Surface (battleship gray).
         _themes = new[]
         {
-            new ThemeOption("Forest Glade", ForestGladeTheme.Apply, ForestGladeColors.CanopyDeep),
-            new ThemeOption("Neon", NeonTheme.Apply, NeonColors.Background),
+            new ThemeOption("Forest Glade", ForestGladeTheme.Apply, ForestGladeStyling.ActiveStyle.Colors.CanopyDeep),
+            new ThemeOption("Neon", NeonTheme.Apply, NeonStyling.ActiveStyle.Colors.Background),
             new ThemeOption("Dark Pro", DarkProTheme.Apply, DarkProStyling.ActiveStyle.Colors.Background),
             new ThemeOption("Bubblegum", BubblegumTheme.Apply, BubblegumStyling.ActiveStyle.Colors.Background),
             new ThemeOption("Editor", EditorTheme.Apply, new Color(40, 40, 40)),
-            new ThemeOption("Retro 95", Retro95Theme.Apply, Retro95Colors.Surface),
-            new ThemeOption("Hazard", HazardTheme.Apply, HazardPalette.Background),
-            new ThemeOption("Meadow", MeadowTheme.Apply, MeadowColors.Cream),
-            new ThemeOption("Template Theme", TemplateTheme.Apply, TemplatePalette.Background),
+            new ThemeOption("Retro 95", Retro95Theme.Apply, Retro95Styling.ActiveStyle.Colors.Surface),
+            new ThemeOption("Hazard", HazardTheme.Apply, HazardStyling.ActiveStyle.Colors.Background),
+            new ThemeOption("Meadow", MeadowTheme.Apply, MeadowStyling.ActiveStyle.Colors.Cream),
+            new ThemeOption("Template Theme", TemplateTheme.Apply, TemplateStyling.ActiveStyle.Colors.Background),
         };
 
         // F1: all controls. F2: screenshot panel.

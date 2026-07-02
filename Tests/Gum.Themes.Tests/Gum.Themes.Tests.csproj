@@ -22,6 +22,12 @@
     <ProjectReference Include="..\..\Themes\Gum.Themes.DarkPro.MonoGame\Gum.Themes.DarkPro.MonoGame.csproj" />
     <ProjectReference Include="..\..\Themes\Gum.Themes.Bubblegum.MonoGame\Gum.Themes.Bubblegum.MonoGame.csproj" />
     <ProjectReference Include="..\..\Themes\Gum.Themes.Editor.MonoGame\Gum.Themes.Editor.MonoGame.csproj" />
+    <ProjectReference Include="..\..\Themes\Gum.Themes.Retro95.MonoGame\Gum.Themes.Retro95.MonoGame.csproj" />
+    <ProjectReference Include="..\..\Themes\Gum.Themes.ForestGlade.MonoGame\Gum.Themes.ForestGlade.MonoGame.csproj" />
+    <ProjectReference Include="..\..\Themes\Gum.Themes.Meadow.MonoGame\Gum.Themes.Meadow.MonoGame.csproj" />
+    <ProjectReference Include="..\..\Themes\Gum.Themes.Neon.MonoGame\Gum.Themes.Neon.MonoGame.csproj" />
+    <ProjectReference Include="..\..\Themes\Gum.Themes.Hazard.MonoGame\Gum.Themes.Hazard.MonoGame.csproj" />
+    <ProjectReference Include="..\..\Themes\Gum.Themes.Template.MonoGame\Gum.Themes.Template.MonoGame.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -34,8 +34,6 @@ public class SliderThumbVisual : InteractiveGue
     // Soft Gaussian shadow under the thumb (translucent accent + blur > 0).
     private const float ShadowOffsetY = 2f;
     private const float ShadowBlur = 8f;
-    private static readonly Color ShadowColor = new Color(
-        (int)TemplatePalette.AccentPressed.R, (int)TemplatePalette.AccentPressed.G, (int)TemplatePalette.AccentPressed.B, 130);
 
     private readonly CircleRuntime _focusRing;
     private readonly CircleRuntime _body;
@@ -50,12 +48,12 @@ public class SliderThumbVisual : InteractiveGue
         WidthUnits = DimensionUnitType.Absolute;
         HeightUnits = DimensionUnitType.Absolute;
 
-        _focusRing = TemplateShapes.CircleFocusRing(TemplatePalette.Accent, FocusRingInset, BorderThickness);
+        _focusRing = TemplateShapes.CircleFocusRing(TemplateStyling.ActiveStyle.Colors.Accent, FocusRingInset, BorderThickness);
         AddChild(_focusRing);
 
         _body = TemplateShapes.FilledCircleWithDropshadow(
-            color: TemplatePalette.Accent,
-            shadowColor: ShadowColor,
+            color: TemplateStyling.ActiveStyle.Colors.Accent,
+            shadowColor: TemplateStyling.ActiveStyle.Colors.AccentPressedGlow,
             offsetX: 0f,
             offsetY: ShadowOffsetY,
             blur: ShadowBlur,
@@ -72,25 +70,25 @@ public class SliderThumbVisual : InteractiveGue
         AddCategory(_buttonCategory);
 
         Add(_buttonCategory, FrameworkElement.EnabledStateName,
-            () => Apply(body: TemplatePalette.Accent, ring: false, showShadow: true));
+            () => Apply(body: TemplateStyling.ActiveStyle.Colors.Accent, ring: false, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.HighlightedStateName,
-            () => Apply(body: TemplatePalette.AccentHover, ring: false, showShadow: true));
+            () => Apply(body: TemplateStyling.ActiveStyle.Colors.AccentHover, ring: false, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.PushedStateName,
-            () => Apply(body: TemplatePalette.AccentPressed, ring: false, showShadow: true));
+            () => Apply(body: TemplateStyling.ActiveStyle.Colors.AccentPressed, ring: false, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.FocusedStateName,
-            () => Apply(body: TemplatePalette.Accent, ring: true, showShadow: true));
+            () => Apply(body: TemplateStyling.ActiveStyle.Colors.Accent, ring: true, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.HighlightedFocusedStateName,
-            () => Apply(body: TemplatePalette.AccentHover, ring: true, showShadow: true));
+            () => Apply(body: TemplateStyling.ActiveStyle.Colors.AccentHover, ring: true, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.DisabledStateName,
-            () => Apply(body: TemplatePalette.DisabledAccent, ring: false, showShadow: false));
+            () => Apply(body: TemplateStyling.ActiveStyle.Colors.DisabledAccent, ring: false, showShadow: false));
 
         Add(_buttonCategory, FrameworkElement.DisabledFocusedStateName,
-            () => Apply(body: TemplatePalette.DisabledAccent, ring: true, showShadow: false));
+            () => Apply(body: TemplateStyling.ActiveStyle.Colors.DisabledAccent, ring: true, showShadow: false));
     }
 
     private static void Add(StateSaveCategory category, string name, System.Action apply)

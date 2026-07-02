@@ -19,7 +19,7 @@ namespace Gum.Themes.Hazard;
 ///
 /// This is generic theme INFRASTRUCTURE, not the theme's identity: the methods
 /// take the color / radius / thickness as arguments, and the look comes from what
-/// each visual passes in (read from <see cref="HazardPalette"/>). The file is
+/// each visual passes in (read from <see cref="HazardStyling.ActiveStyle"/>). The file is
 /// part of the template and is copied into each cloned theme - it is deliberately
 /// NOT a shared library, so a theme stays a self-contained reference.
 ///

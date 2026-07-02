@@ -42,10 +42,10 @@ public class SliderThumbVisual : InteractiveGue
         WidthUnits = DimensionUnitType.Absolute;
         HeightUnits = DimensionUnitType.Absolute;
 
-        _focusRing = HazardShapes.CircleFocusRing(HazardPalette.Accent, FocusRingInset, BorderThickness);
+        _focusRing = HazardShapes.CircleFocusRing(HazardStyling.ActiveStyle.Colors.Accent, FocusRingInset, BorderThickness);
         AddChild(_focusRing);
 
-        _body = HazardShapes.FilledCircle(HazardPalette.Accent, "ThumbBody");
+        _body = HazardShapes.FilledCircle(HazardStyling.ActiveStyle.Colors.Accent, "ThumbBody");
         AddChild(_body);
 
         WireStates();
@@ -58,25 +58,25 @@ public class SliderThumbVisual : InteractiveGue
         AddCategory(_buttonCategory);
 
         Add(_buttonCategory, FrameworkElement.EnabledStateName,
-            () => Apply(body: HazardPalette.Accent, ring: false));
+            () => Apply(body: HazardStyling.ActiveStyle.Colors.Accent, ring: false));
 
         Add(_buttonCategory, FrameworkElement.HighlightedStateName,
-            () => Apply(body: HazardPalette.AccentHover, ring: false));
+            () => Apply(body: HazardStyling.ActiveStyle.Colors.AccentHover, ring: false));
 
         Add(_buttonCategory, FrameworkElement.PushedStateName,
-            () => Apply(body: HazardPalette.AccentPressed, ring: false));
+            () => Apply(body: HazardStyling.ActiveStyle.Colors.AccentPressed, ring: false));
 
         Add(_buttonCategory, FrameworkElement.FocusedStateName,
-            () => Apply(body: HazardPalette.Accent, ring: true));
+            () => Apply(body: HazardStyling.ActiveStyle.Colors.Accent, ring: true));
 
         Add(_buttonCategory, FrameworkElement.HighlightedFocusedStateName,
-            () => Apply(body: HazardPalette.AccentHover, ring: true));
+            () => Apply(body: HazardStyling.ActiveStyle.Colors.AccentHover, ring: true));
 
         Add(_buttonCategory, FrameworkElement.DisabledStateName,
-            () => Apply(body: HazardPalette.DisabledAccent, ring: false));
+            () => Apply(body: HazardStyling.ActiveStyle.Colors.DisabledAccent, ring: false));
 
         Add(_buttonCategory, FrameworkElement.DisabledFocusedStateName,
-            () => Apply(body: HazardPalette.DisabledAccent, ring: true));
+            () => Apply(body: HazardStyling.ActiveStyle.Colors.DisabledAccent, ring: true));
     }
 
     private static void Add(StateSaveCategory category, string name, System.Action apply)

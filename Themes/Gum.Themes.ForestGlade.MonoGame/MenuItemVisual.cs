@@ -79,19 +79,19 @@ public class MenuItemVisual : BaseMenuItemVisual
         Color hoverFill = new Color(232, 255, 117, 26); // ~10% alpha tint
 
         States.Enabled.Apply = () => ApplyPalette(
-            fill: new Color(0, 0, 0, 0), text: ForestGladeColors.Text);
+            fill: new Color(0, 0, 0, 0), text: ForestGladeStyling.ActiveStyle.Colors.Text);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            fill: hoverFill, text: ForestGladeColors.Text);
+            fill: hoverFill, text: ForestGladeStyling.ActiveStyle.Colors.Text);
 
         States.Selected.Apply = () => ApplyPalette(
-            fill: ForestGladePalette.SelectedRow, text: ForestGladeColors.SunPale);
+            fill: ForestGladeStyling.ActiveStyle.Colors.SelectedRow, text: ForestGladeStyling.ActiveStyle.Colors.SunPale);
 
         States.Focused.Apply = () => ApplyPalette(
-            fill: hoverFill, text: ForestGladeColors.Text);
+            fill: hoverFill, text: ForestGladeStyling.ActiveStyle.Colors.Text);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fill: new Color(0, 0, 0, 0), text: ForestGladeColors.Disabled);
+            fill: new Color(0, 0, 0, 0), text: ForestGladeStyling.ActiveStyle.Colors.Disabled);
     }
 
     private void ApplyPalette(Color fill, Color text)

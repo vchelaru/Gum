@@ -36,13 +36,13 @@ public class ListBoxVisual : BaseListBoxVisual
         FocusedIndicator.Parent = null;
         ClipAndScrollContainer.Parent = null;
 
-        _focusRing = HazardShapes.FocusRing(HazardPalette.Accent, CornerRadius, FocusRingInset, BorderThickness);
+        _focusRing = HazardShapes.FocusRing(HazardStyling.ActiveStyle.Colors.Accent, CornerRadius, FocusRingInset, BorderThickness);
         AddChild(_focusRing);
 
-        _fill = HazardShapes.Fill(HazardPalette.Surface1, CornerRadius);
+        _fill = HazardShapes.Fill(HazardStyling.ActiveStyle.Colors.Surface1, CornerRadius);
         AddChild(_fill);
 
-        _border = HazardShapes.Border(HazardPalette.Border, CornerRadius, BorderThickness);
+        _border = HazardShapes.Border(HazardStyling.ActiveStyle.Colors.Border, CornerRadius, BorderThickness);
         AddChild(_border);
 
         // Reattach the scroll/clip container last so list items render above the
@@ -69,30 +69,30 @@ public class ListBoxVisual : BaseListBoxVisual
         // TextBox does, since the natural progression is hover → focus and the
         // gray→blue transition reads as a state shift.
         States.Enabled.Apply = () => ApplyPalette(
-            border: HazardPalette.Border, showFocusRing: false);
+            border: HazardStyling.ActiveStyle.Colors.Border, showFocusRing: false);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            border: HazardPalette.BorderHover, showFocusRing: false);
+            border: HazardStyling.ActiveStyle.Colors.BorderHover, showFocusRing: false);
 
         States.Focused.Apply = () => ApplyPalette(
-            border: HazardPalette.Accent, showFocusRing: true);
+            border: HazardStyling.ActiveStyle.Colors.Accent, showFocusRing: true);
 
         States.HighlightedFocused.Apply = () => ApplyPalette(
-            border: HazardPalette.Accent, showFocusRing: true);
+            border: HazardStyling.ActiveStyle.Colors.Accent, showFocusRing: true);
 
         States.Pushed.Apply = () => ApplyPalette(
-            border: HazardPalette.Accent, showFocusRing: false);
+            border: HazardStyling.ActiveStyle.Colors.Accent, showFocusRing: false);
 
         States.Disabled.Apply = () => ApplyPalette(
-            border: HazardPalette.DisabledBorder, showFocusRing: false, fillDisabled: true);
+            border: HazardStyling.ActiveStyle.Colors.DisabledBorder, showFocusRing: false, fillDisabled: true);
 
         States.DisabledFocused.Apply = () => ApplyPalette(
-            border: HazardPalette.DisabledBorder, showFocusRing: true, fillDisabled: true);
+            border: HazardStyling.ActiveStyle.Colors.DisabledBorder, showFocusRing: true, fillDisabled: true);
     }
 
     private void ApplyPalette(Color border, bool showFocusRing, bool fillDisabled = false)
     {
-        _fill.FillColor = fillDisabled ? HazardPalette.DisabledFill : HazardPalette.Surface1;
+        _fill.FillColor = fillDisabled ? HazardStyling.ActiveStyle.Colors.DisabledFill : HazardStyling.ActiveStyle.Colors.Surface1;
         _border.StrokeColor = border;
         _focusRing.Visible = showFocusRing;
     }

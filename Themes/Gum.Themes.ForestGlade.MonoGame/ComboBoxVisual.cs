@@ -137,7 +137,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = ForestGladeColors.AccentHalo;
+        ring.StrokeColor = ForestGladeStyling.ActiveStyle.Colors.AccentHalo;
         ring.Visible = false;
         return ring;
     }
@@ -157,10 +157,10 @@ public class ComboBoxVisual : BaseComboBoxVisual
         glyph.HeightUnits = DimensionUnitType.Absolute;
         glyph.HorizontalAlignment = HorizontalAlignment.Center;
         glyph.VerticalAlignment = VerticalAlignment.Center;
-        glyph.Font = ForestGladeTheme.IconFontFamily;
+        glyph.Font = ForestGladeStyling.ActiveStyle.Text.IconFontFamily;
         glyph.FontSize = GlyphFontSize;
         glyph.Text = "▼";
-        glyph.Color = ForestGladeColors.SunPale;
+        glyph.Color = ForestGladeStyling.ActiveStyle.Colors.SunPale;
         return glyph;
     }
 
@@ -168,43 +168,43 @@ public class ComboBoxVisual : BaseComboBoxVisual
     {
         Color restBorder = new Color(232, 255, 117, 56);
         Color hoverBorder = new Color(232, 255, 117, 115);
-        Color focusBorder = ForestGladeColors.LeafBright;
+        Color focusBorder = ForestGladeStyling.ActiveStyle.Colors.LeafBright;
         Color disabledBorder = new Color(232, 255, 117, 20);
 
         States.Enabled.Apply = () => Apply(
-            border: restBorder, text: ForestGladeColors.Text,
-            glyph: ForestGladeColors.SunPale, ring: false, fillDisabled: false);
+            border: restBorder, text: ForestGladeStyling.ActiveStyle.Colors.Text,
+            glyph: ForestGladeStyling.ActiveStyle.Colors.SunPale, ring: false, fillDisabled: false);
 
         States.Highlighted.Apply = () => Apply(
-            border: hoverBorder, text: ForestGladeColors.Text,
-            glyph: ForestGladeColors.SunPale, ring: false, fillDisabled: false);
+            border: hoverBorder, text: ForestGladeStyling.ActiveStyle.Colors.Text,
+            glyph: ForestGladeStyling.ActiveStyle.Colors.SunPale, ring: false, fillDisabled: false);
 
         States.Focused.Apply = () => Apply(
-            border: focusBorder, text: ForestGladeColors.Text,
-            glyph: ForestGladeColors.SunPale, ring: true, fillDisabled: false);
+            border: focusBorder, text: ForestGladeStyling.ActiveStyle.Colors.Text,
+            glyph: ForestGladeStyling.ActiveStyle.Colors.SunPale, ring: true, fillDisabled: false);
 
         States.HighlightedFocused.Apply = () => Apply(
-            border: focusBorder, text: ForestGladeColors.Text,
-            glyph: ForestGladeColors.SunPale, ring: true, fillDisabled: false);
+            border: focusBorder, text: ForestGladeStyling.ActiveStyle.Colors.Text,
+            glyph: ForestGladeStyling.ActiveStyle.Colors.SunPale, ring: true, fillDisabled: false);
 
         States.Pushed.Apply = () => Apply(
-            border: focusBorder, text: ForestGladeColors.Text,
-            glyph: ForestGladeColors.SunPale, ring: false, fillDisabled: false);
+            border: focusBorder, text: ForestGladeStyling.ActiveStyle.Colors.Text,
+            glyph: ForestGladeStyling.ActiveStyle.Colors.SunPale, ring: false, fillDisabled: false);
 
         // Disabled text uses Muted (not the near-black Disabled token) so the
         // currently-selected value stays legible.
         States.Disabled.Apply = () => Apply(
-            border: disabledBorder, text: ForestGladeColors.Muted,
-            glyph: ForestGladeColors.Muted, ring: false, fillDisabled: true);
+            border: disabledBorder, text: ForestGladeStyling.ActiveStyle.Colors.Muted,
+            glyph: ForestGladeStyling.ActiveStyle.Colors.Muted, ring: false, fillDisabled: true);
 
         States.DisabledFocused.Apply = () => Apply(
-            border: disabledBorder, text: ForestGladeColors.Muted,
-            glyph: ForestGladeColors.Muted, ring: true, fillDisabled: true);
+            border: disabledBorder, text: ForestGladeStyling.ActiveStyle.Colors.Muted,
+            glyph: ForestGladeStyling.ActiveStyle.Colors.Muted, ring: true, fillDisabled: true);
     }
 
     private void Apply(Color border, Color text, Color glyph, bool ring, bool fillDisabled)
     {
-        Color baseFill = fillDisabled ? ForestGladePalette.InputFillDisabled : ForestGladePalette.InputFill;
+        Color baseFill = fillDisabled ? ForestGladeStyling.ActiveStyle.Colors.InputFillDisabled : ForestGladeStyling.ActiveStyle.Colors.InputFill;
         _fill.FillColor = Darken(baseFill, 0.65f);
         _fill.Color2 = baseFill;
         _border.StrokeColor = border;

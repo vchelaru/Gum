@@ -56,117 +56,117 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
 
         // -------- Off (muted moss canopy fill, sun-pale text) --------
         States.EnabledOff.Apply = () => _chrome.Apply(
-            fillTop: ForestGladePalette.ButtonDisabledFillTop,
-            fillBottom: ForestGladePalette.ButtonDisabledFillBottom,
-            border: ForestGladeColors.Border,
-            shadow: ForestGladePalette.DarkShadow,
+            fillTop: ForestGladeStyling.ActiveStyle.Colors.ButtonDisabledFillTop,
+            fillBottom: ForestGladeStyling.ActiveStyle.Colors.ButtonDisabledFillBottom,
+            border: ForestGladeStyling.ActiveStyle.Colors.Border,
+            shadow: ForestGladeStyling.ActiveStyle.Colors.DarkShadow,
             shadowOffsetY: ForestGladeButtonChrome.RestShadowOffsetY,
             shadowBlur: ForestGladeButtonChrome.RestShadowBlur,
-            text: ForestGladeColors.Muted, textShadow: textShadow, ring: false);
+            text: ForestGladeStyling.ActiveStyle.Colors.Muted, textShadow: textShadow, ring: false);
 
         States.HighlightedOff.Apply = () => _chrome.Apply(
-            fillTop: ForestGladePalette.ButtonDisabledFillTop,
-            fillBottom: ForestGladePalette.ButtonDisabledFillBottom,
-            border: ForestGladeColors.BorderHover,
-            shadow: ForestGladePalette.GlowMedium,
+            fillTop: ForestGladeStyling.ActiveStyle.Colors.ButtonDisabledFillTop,
+            fillBottom: ForestGladeStyling.ActiveStyle.Colors.ButtonDisabledFillBottom,
+            border: ForestGladeStyling.ActiveStyle.Colors.BorderHover,
+            shadow: ForestGladeStyling.ActiveStyle.Colors.GlowMedium,
             shadowOffsetY: 0f, shadowBlur: ForestGladeButtonChrome.HoverGlowBlur,
-            text: ForestGladeColors.Text, textShadow: textShadow, ring: false);
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, textShadow: textShadow, ring: false);
 
         States.PushedOff.Apply = () => _chrome.Apply(
-            fillTop: ForestGladePalette.ButtonDisabledFillBottom,
-            fillBottom: ForestGladePalette.ButtonDisabledFillBottom,
-            border: ForestGladeColors.BorderHover,
-            shadow: ForestGladePalette.DarkShadow,
+            fillTop: ForestGladeStyling.ActiveStyle.Colors.ButtonDisabledFillBottom,
+            fillBottom: ForestGladeStyling.ActiveStyle.Colors.ButtonDisabledFillBottom,
+            border: ForestGladeStyling.ActiveStyle.Colors.BorderHover,
+            shadow: ForestGladeStyling.ActiveStyle.Colors.DarkShadow,
             shadowOffsetY: 0f, shadowBlur: 0f,
-            text: ForestGladeColors.Text, textShadow: textShadow, ring: false);
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, textShadow: textShadow, ring: false);
 
         States.FocusedOff.Apply = () => _chrome.Apply(
-            fillTop: ForestGladePalette.ButtonDisabledFillTop,
-            fillBottom: ForestGladePalette.ButtonDisabledFillBottom,
-            border: ForestGladeColors.BorderHover,
-            shadow: ForestGladePalette.GlowStrong,
+            fillTop: ForestGladeStyling.ActiveStyle.Colors.ButtonDisabledFillTop,
+            fillBottom: ForestGladeStyling.ActiveStyle.Colors.ButtonDisabledFillBottom,
+            border: ForestGladeStyling.ActiveStyle.Colors.BorderHover,
+            shadow: ForestGladeStyling.ActiveStyle.Colors.GlowStrong,
             shadowOffsetY: 0f, shadowBlur: ForestGladeButtonChrome.HoverGlowBlur,
-            text: ForestGladeColors.Text, textShadow: textShadow, ring: true);
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, textShadow: textShadow, ring: true);
 
         States.HighlightedFocusedOff.Apply = () => _chrome.Apply(
-            fillTop: ForestGladePalette.ButtonDisabledFillTop,
-            fillBottom: ForestGladePalette.ButtonDisabledFillBottom,
-            border: ForestGladeColors.BorderHover,
-            shadow: ForestGladePalette.GlowStrong,
+            fillTop: ForestGladeStyling.ActiveStyle.Colors.ButtonDisabledFillTop,
+            fillBottom: ForestGladeStyling.ActiveStyle.Colors.ButtonDisabledFillBottom,
+            border: ForestGladeStyling.ActiveStyle.Colors.BorderHover,
+            shadow: ForestGladeStyling.ActiveStyle.Colors.GlowStrong,
             shadowOffsetY: 0f, shadowBlur: ForestGladeButtonChrome.HoverGlowBlur,
-            text: ForestGladeColors.Text, textShadow: textShadow, ring: true);
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, textShadow: textShadow, ring: true);
 
         States.DisabledOff.Apply = () => _chrome.Apply(
-            fillTop: ForestGladePalette.ButtonDisabledFillTop,
-            fillBottom: ForestGladePalette.ButtonDisabledFillBottom,
+            fillTop: ForestGladeStyling.ActiveStyle.Colors.ButtonDisabledFillTop,
+            fillBottom: ForestGladeStyling.ActiveStyle.Colors.ButtonDisabledFillBottom,
             border: disabledBorder,
-            shadow: ForestGladePalette.DarkShadow,
+            shadow: ForestGladeStyling.ActiveStyle.Colors.DarkShadow,
             shadowOffsetY: 0f, shadowBlur: 0f,
-            text: ForestGladeColors.Disabled, textShadow: textShadow, ring: false);
+            text: ForestGladeStyling.ActiveStyle.Colors.Disabled, textShadow: textShadow, ring: false);
 
         States.DisabledFocusedOff.Apply = () => _chrome.Apply(
-            fillTop: ForestGladePalette.ButtonDisabledFillTop,
-            fillBottom: ForestGladePalette.ButtonDisabledFillBottom,
+            fillTop: ForestGladeStyling.ActiveStyle.Colors.ButtonDisabledFillTop,
+            fillBottom: ForestGladeStyling.ActiveStyle.Colors.ButtonDisabledFillBottom,
             border: disabledBorder,
-            shadow: ForestGladePalette.DarkShadow,
+            shadow: ForestGladeStyling.ActiveStyle.Colors.DarkShadow,
             shadowOffsetY: 0f, shadowBlur: 0f,
-            text: ForestGladeColors.Disabled, textShadow: textShadow, ring: true);
+            text: ForestGladeStyling.ActiveStyle.Colors.Disabled, textShadow: textShadow, ring: true);
 
         // -------- On (bright leaf-green gradient, dark text) --------
         States.EnabledOn.Apply = () => _chrome.Apply(
-            fillTop: ForestGladePalette.ButtonHoverFillTop,
-            fillBottom: ForestGladePalette.ButtonRestFillBottom,
-            border: ForestGladeColors.SunPale,
-            shadow: ForestGladePalette.GlowMedium,
+            fillTop: ForestGladeStyling.ActiveStyle.Colors.ButtonHoverFillTop,
+            fillBottom: ForestGladeStyling.ActiveStyle.Colors.ButtonRestFillBottom,
+            border: ForestGladeStyling.ActiveStyle.Colors.SunPale,
+            shadow: ForestGladeStyling.ActiveStyle.Colors.GlowMedium,
             shadowOffsetY: 0f, shadowBlur: ForestGladeButtonChrome.RestShadowBlur,
             text: onText, textShadow: onTextShadow, ring: false);
 
         States.HighlightedOn.Apply = () => _chrome.Apply(
-            fillTop: ForestGladePalette.ButtonHoverFillTop,
-            fillBottom: ForestGladePalette.ButtonHoverFillBottom,
-            border: ForestGladeColors.SunPale,
-            shadow: ForestGladePalette.GlowStrong,
+            fillTop: ForestGladeStyling.ActiveStyle.Colors.ButtonHoverFillTop,
+            fillBottom: ForestGladeStyling.ActiveStyle.Colors.ButtonHoverFillBottom,
+            border: ForestGladeStyling.ActiveStyle.Colors.SunPale,
+            shadow: ForestGladeStyling.ActiveStyle.Colors.GlowStrong,
             shadowOffsetY: 0f, shadowBlur: ForestGladeButtonChrome.HoverGlowBlur,
             text: onText, textShadow: onTextShadow, ring: false);
 
         States.PushedOn.Apply = () => _chrome.Apply(
-            fillTop: ForestGladePalette.ButtonPushedFillTop,
-            fillBottom: ForestGladePalette.ButtonPushedFillBottom,
-            border: ForestGladeColors.SunPale,
-            shadow: ForestGladePalette.DarkShadow,
+            fillTop: ForestGladeStyling.ActiveStyle.Colors.ButtonPushedFillTop,
+            fillBottom: ForestGladeStyling.ActiveStyle.Colors.ButtonPushedFillBottom,
+            border: ForestGladeStyling.ActiveStyle.Colors.SunPale,
+            shadow: ForestGladeStyling.ActiveStyle.Colors.DarkShadow,
             shadowOffsetY: 0f, shadowBlur: ForestGladeButtonChrome.PushedGlowBlur,
             text: pushedOnText, textShadow: pushedOnTextShadow, ring: false);
 
         States.FocusedOn.Apply = () => _chrome.Apply(
-            fillTop: ForestGladePalette.ButtonHoverFillTop,
-            fillBottom: ForestGladePalette.ButtonRestFillBottom,
-            border: ForestGladeColors.SunPale,
-            shadow: ForestGladePalette.GlowStrong,
+            fillTop: ForestGladeStyling.ActiveStyle.Colors.ButtonHoverFillTop,
+            fillBottom: ForestGladeStyling.ActiveStyle.Colors.ButtonRestFillBottom,
+            border: ForestGladeStyling.ActiveStyle.Colors.SunPale,
+            shadow: ForestGladeStyling.ActiveStyle.Colors.GlowStrong,
             shadowOffsetY: 0f, shadowBlur: ForestGladeButtonChrome.HoverGlowBlur,
             text: onText, textShadow: onTextShadow, ring: true);
 
         States.HighlightedFocusedOn.Apply = () => _chrome.Apply(
-            fillTop: ForestGladePalette.ButtonHoverFillTop,
-            fillBottom: ForestGladePalette.ButtonHoverFillBottom,
-            border: ForestGladeColors.SunPale,
-            shadow: ForestGladePalette.GlowStrong,
+            fillTop: ForestGladeStyling.ActiveStyle.Colors.ButtonHoverFillTop,
+            fillBottom: ForestGladeStyling.ActiveStyle.Colors.ButtonHoverFillBottom,
+            border: ForestGladeStyling.ActiveStyle.Colors.SunPale,
+            shadow: ForestGladeStyling.ActiveStyle.Colors.GlowStrong,
             shadowOffsetY: 0f, shadowBlur: ForestGladeButtonChrome.HoverGlowBlur,
             text: onText, textShadow: onTextShadow, ring: true);
 
         States.DisabledOn.Apply = () => _chrome.Apply(
-            fillTop: ForestGladePalette.ButtonDisabledFillTop,
-            fillBottom: ForestGladePalette.ButtonDisabledFillBottom,
+            fillTop: ForestGladeStyling.ActiveStyle.Colors.ButtonDisabledFillTop,
+            fillBottom: ForestGladeStyling.ActiveStyle.Colors.ButtonDisabledFillBottom,
             border: disabledBorder,
-            shadow: ForestGladePalette.DarkShadow,
+            shadow: ForestGladeStyling.ActiveStyle.Colors.DarkShadow,
             shadowOffsetY: 0f, shadowBlur: 0f,
-            text: ForestGladeColors.Disabled, textShadow: textShadow, ring: false);
+            text: ForestGladeStyling.ActiveStyle.Colors.Disabled, textShadow: textShadow, ring: false);
 
         States.DisabledFocusedOn.Apply = () => _chrome.Apply(
-            fillTop: ForestGladePalette.ButtonDisabledFillTop,
-            fillBottom: ForestGladePalette.ButtonDisabledFillBottom,
+            fillTop: ForestGladeStyling.ActiveStyle.Colors.ButtonDisabledFillTop,
+            fillBottom: ForestGladeStyling.ActiveStyle.Colors.ButtonDisabledFillBottom,
             border: disabledBorder,
-            shadow: ForestGladePalette.DarkShadow,
+            shadow: ForestGladeStyling.ActiveStyle.Colors.DarkShadow,
             shadowOffsetY: 0f, shadowBlur: 0f,
-            text: ForestGladeColors.Disabled, textShadow: textShadow, ring: true);
+            text: ForestGladeStyling.ActiveStyle.Colors.Disabled, textShadow: textShadow, ring: true);
     }
 }

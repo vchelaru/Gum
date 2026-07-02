@@ -79,7 +79,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         circle.WidthUnits = DimensionUnitType.Absolute;
         circle.HeightUnits = DimensionUnitType.Absolute;
         circle.IsFilled = true;
-        circle.FillColor = HazardPalette.Surface1;
+        circle.FillColor = HazardStyling.ActiveStyle.Colors.Surface1;
         circle.StrokeWidth = 0;
         return circle;
     }
@@ -101,7 +101,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         circle.IsFilled = false;
         circle.StrokeWidth = BorderThickness;
         circle.StrokeWidthUnits = DimensionUnitType.Absolute;
-        circle.StrokeColor = HazardPalette.Border;
+        circle.StrokeColor = HazardStyling.ActiveStyle.Colors.Border;
         return circle;
     }
 
@@ -125,7 +125,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         ring.IsFilled = false;
         ring.StrokeWidth = BorderThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = HazardPalette.Accent;
+        ring.StrokeColor = HazardStyling.ActiveStyle.Colors.Accent;
         ring.Visible = false;
         return ring;
     }
@@ -149,7 +149,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         dot.WidthUnits = DimensionUnitType.Absolute;
         dot.HeightUnits = DimensionUnitType.Absolute;
         dot.IsFilled = true;
-        dot.FillColor = HazardPalette.Accent;
+        dot.FillColor = HazardStyling.ActiveStyle.Colors.Accent;
         dot.StrokeWidth = 0;
         dot.Visible = false;
         return dot;
@@ -159,36 +159,36 @@ public class RadioButtonVisual : BaseRadioButtonVisual
     {
         // -------- Unselected (Off) --------
         States.EnabledOff.Apply = () => Apply(
-            fill: HazardPalette.Surface1, border: HazardPalette.Border,
-            text: HazardPalette.Text, innerVisible: false, ring: false);
+            fill: HazardStyling.ActiveStyle.Colors.Surface1, border: HazardStyling.ActiveStyle.Colors.Border,
+            text: HazardStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: false);
 
         // Border tracks interaction state only — the inner dot alone signals
         // value. Hover/Highlighted gets BorderHover (matching TextBox's softer
         // hover→focus progression), focus drives Accent + ring, and the same
         // pattern is mirrored on On below.
         States.HighlightedOff.Apply = () => Apply(
-            fill: HazardPalette.Surface2, border: HazardPalette.BorderHover,
-            text: HazardPalette.Text, innerVisible: false, ring: false);
+            fill: HazardStyling.ActiveStyle.Colors.Surface2, border: HazardStyling.ActiveStyle.Colors.BorderHover,
+            text: HazardStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: false);
 
         States.FocusedOff.Apply = () => Apply(
-            fill: HazardPalette.Surface1, border: HazardPalette.Accent,
-            text: HazardPalette.Text, innerVisible: false, ring: true);
+            fill: HazardStyling.ActiveStyle.Colors.Surface1, border: HazardStyling.ActiveStyle.Colors.Accent,
+            text: HazardStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: true);
 
         States.HighlightedFocusedOff.Apply = () => Apply(
-            fill: HazardPalette.Surface2, border: HazardPalette.Accent,
-            text: HazardPalette.Text, innerVisible: false, ring: true);
+            fill: HazardStyling.ActiveStyle.Colors.Surface2, border: HazardStyling.ActiveStyle.Colors.Accent,
+            text: HazardStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: true);
 
         States.PushedOff.Apply = () => Apply(
-            fill: HazardPalette.PressedFill, border: HazardPalette.Accent,
-            text: HazardPalette.Text, innerVisible: false, ring: false);
+            fill: HazardStyling.ActiveStyle.Colors.PressedFill, border: HazardStyling.ActiveStyle.Colors.Accent,
+            text: HazardStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: false);
 
         States.DisabledOff.Apply = () => Apply(
-            fill: HazardPalette.DisabledFill, border: HazardPalette.DisabledBorder,
-            text: HazardPalette.DisabledText, innerVisible: false, ring: false);
+            fill: HazardStyling.ActiveStyle.Colors.DisabledFill, border: HazardStyling.ActiveStyle.Colors.DisabledBorder,
+            text: HazardStyling.ActiveStyle.Colors.DisabledText, innerVisible: false, ring: false);
 
         States.DisabledFocusedOff.Apply = () => Apply(
-            fill: HazardPalette.DisabledFill, border: HazardPalette.DisabledBorder,
-            text: HazardPalette.DisabledText, innerVisible: false, ring: true);
+            fill: HazardStyling.ActiveStyle.Colors.DisabledFill, border: HazardStyling.ActiveStyle.Colors.DisabledBorder,
+            text: HazardStyling.ActiveStyle.Colors.DisabledText, innerVisible: false, ring: true);
 
         // -------- Selected (On) --------
         // Selecting brings the ring to full Accent and fills the inner dot with
@@ -196,39 +196,39 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         // the accent ring + dot signal the value. Pressed deepens the dot to
         // AccentPressed amber (.sv-rad.pre.sel).
         States.EnabledOn.Apply = () => Apply(
-            fill: HazardPalette.Surface1, border: HazardPalette.Accent,
-            text: HazardPalette.Text, innerVisible: true, innerColor: HazardPalette.Accent,
+            fill: HazardStyling.ActiveStyle.Colors.Surface1, border: HazardStyling.ActiveStyle.Colors.Accent,
+            text: HazardStyling.ActiveStyle.Colors.Text, innerVisible: true, innerColor: HazardStyling.ActiveStyle.Colors.Accent,
             ring: false);
 
         States.HighlightedOn.Apply = () => Apply(
-            fill: HazardPalette.Surface2, border: HazardPalette.Accent,
-            text: HazardPalette.TextBright, innerVisible: true, innerColor: HazardPalette.Accent,
+            fill: HazardStyling.ActiveStyle.Colors.Surface2, border: HazardStyling.ActiveStyle.Colors.Accent,
+            text: HazardStyling.ActiveStyle.Colors.TextBright, innerVisible: true, innerColor: HazardStyling.ActiveStyle.Colors.Accent,
             ring: false);
 
         States.FocusedOn.Apply = () => Apply(
-            fill: HazardPalette.Surface1, border: HazardPalette.Accent,
-            text: HazardPalette.Text, innerVisible: true, innerColor: HazardPalette.Accent,
+            fill: HazardStyling.ActiveStyle.Colors.Surface1, border: HazardStyling.ActiveStyle.Colors.Accent,
+            text: HazardStyling.ActiveStyle.Colors.Text, innerVisible: true, innerColor: HazardStyling.ActiveStyle.Colors.Accent,
             ring: true);
 
         States.HighlightedFocusedOn.Apply = () => Apply(
-            fill: HazardPalette.Surface2, border: HazardPalette.Accent,
-            text: HazardPalette.Text, innerVisible: true, innerColor: HazardPalette.Accent,
+            fill: HazardStyling.ActiveStyle.Colors.Surface2, border: HazardStyling.ActiveStyle.Colors.Accent,
+            text: HazardStyling.ActiveStyle.Colors.Text, innerVisible: true, innerColor: HazardStyling.ActiveStyle.Colors.Accent,
             ring: true);
 
         States.PushedOn.Apply = () => Apply(
-            fill: HazardPalette.PressedFill, border: HazardPalette.Accent,
-            text: HazardPalette.Text, innerVisible: true, innerColor: HazardPalette.AccentPressed,
+            fill: HazardStyling.ActiveStyle.Colors.PressedFill, border: HazardStyling.ActiveStyle.Colors.Accent,
+            text: HazardStyling.ActiveStyle.Colors.Text, innerVisible: true, innerColor: HazardStyling.ActiveStyle.Colors.AccentPressed,
             ring: false);
 
         States.DisabledOn.Apply = () => Apply(
-            fill: HazardPalette.DisabledFill, border: HazardPalette.DisabledBorder,
-            text: HazardPalette.DisabledText, innerVisible: true,
-            innerColor: HazardPalette.DisabledText, ring: false);
+            fill: HazardStyling.ActiveStyle.Colors.DisabledFill, border: HazardStyling.ActiveStyle.Colors.DisabledBorder,
+            text: HazardStyling.ActiveStyle.Colors.DisabledText, innerVisible: true,
+            innerColor: HazardStyling.ActiveStyle.Colors.DisabledText, ring: false);
 
         States.DisabledFocusedOn.Apply = () => Apply(
-            fill: HazardPalette.DisabledFill, border: HazardPalette.DisabledBorder,
-            text: HazardPalette.DisabledText, innerVisible: true,
-            innerColor: HazardPalette.DisabledText, ring: true);
+            fill: HazardStyling.ActiveStyle.Colors.DisabledFill, border: HazardStyling.ActiveStyle.Colors.DisabledBorder,
+            text: HazardStyling.ActiveStyle.Colors.DisabledText, innerVisible: true,
+            innerColor: HazardStyling.ActiveStyle.Colors.DisabledText, ring: true);
     }
 
     private void Apply(Color fill, Color border, Color text, bool innerVisible, bool ring,

@@ -26,14 +26,14 @@ public class TooltipVisual : BaseTooltipVisual
         Background.Parent = null;
         TextInstance.Parent = null;
 
-        _fill = TemplateShapes.Fill(TemplatePalette.Surface1, CornerRadius);
+        _fill = TemplateShapes.Fill(TemplateStyling.ActiveStyle.Colors.Surface1, CornerRadius);
         AddChild(_fill);
 
-        _border = TemplateShapes.Border(TemplatePalette.Border, CornerRadius, BorderThickness);
+        _border = TemplateShapes.Border(TemplateStyling.ActiveStyle.Colors.Border, CornerRadius, BorderThickness);
         AddChild(_border);
 
         AddChild(TextInstance);
-        TextInstance.Font = TemplateTheme.BodyFontFamily; // tooltip body uses the body face
-        TextInstance.Color = TemplatePalette.Text;
+        TextInstance.Font = TemplateStyling.ActiveStyle.Text.BodyFontFamily; // tooltip body uses the body face
+        TextInstance.Color = TemplateStyling.ActiveStyle.Colors.Text;
     }
 }

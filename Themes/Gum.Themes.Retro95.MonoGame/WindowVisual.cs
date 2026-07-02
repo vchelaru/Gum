@@ -129,7 +129,7 @@ public class WindowVisual : BaseWindowVisual
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.IsFilled = true;
-        fill.FillColor = Retro95Colors.Selection;
+        fill.FillColor = Retro95Styling.ActiveStyle.Colors.Selection;
         fill.StrokeWidth = 0;
         return fill;
     }

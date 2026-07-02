@@ -131,7 +131,7 @@ internal sealed class ForestGladeTextInputDecoration
         ring.IsFilled = false;
         ring.StrokeWidth = FocusHaloThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = ForestGladeColors.AccentHalo;
+        ring.StrokeColor = ForestGladeStyling.ActiveStyle.Colors.AccentHalo;
         ring.Visible = false;
         return ring;
     }
@@ -140,31 +140,31 @@ internal sealed class ForestGladeTextInputDecoration
     {
         Color restBorder = new Color(232, 255, 117, 56);   // CSS .22
         Color hoverBorder = new Color(232, 255, 117, 115); // CSS .45
-        Color focusBorder = ForestGladeColors.LeafBright;
+        Color focusBorder = ForestGladeStyling.ActiveStyle.Colors.LeafBright;
         Color disabledBorder = new Color(232, 255, 117, 20); // CSS .08
 
         host.States.Enabled.Apply = () => Apply(host,
-            fill: ForestGladePalette.InputFill, border: restBorder,
-            text: ForestGladeColors.Text, placeholder: ForestGladeColors.Placeholder,
-            caret: ForestGladeColors.SunPale, selection: ForestGladeColors.AccentDim,
+            fill: ForestGladeStyling.ActiveStyle.Colors.InputFill, border: restBorder,
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, placeholder: ForestGladeStyling.ActiveStyle.Colors.Placeholder,
+            caret: ForestGladeStyling.ActiveStyle.Colors.SunPale, selection: ForestGladeStyling.ActiveStyle.Colors.AccentDim,
             haloVisible: false, glow: false);
 
         host.States.Highlighted.Apply = () => Apply(host,
-            fill: ForestGladePalette.InputFill, border: hoverBorder,
-            text: ForestGladeColors.Text, placeholder: ForestGladeColors.Placeholder,
-            caret: ForestGladeColors.SunPale, selection: ForestGladeColors.AccentDim,
+            fill: ForestGladeStyling.ActiveStyle.Colors.InputFill, border: hoverBorder,
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, placeholder: ForestGladeStyling.ActiveStyle.Colors.Placeholder,
+            caret: ForestGladeStyling.ActiveStyle.Colors.SunPale, selection: ForestGladeStyling.ActiveStyle.Colors.AccentDim,
             haloVisible: false, glow: false);
 
         host.States.Focused.Apply = () => Apply(host,
-            fill: ForestGladePalette.InputFillFocused, border: focusBorder,
-            text: ForestGladeColors.Text, placeholder: ForestGladeColors.Placeholder,
-            caret: ForestGladeColors.SunPale, selection: ForestGladeColors.AccentDim,
+            fill: ForestGladeStyling.ActiveStyle.Colors.InputFillFocused, border: focusBorder,
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, placeholder: ForestGladeStyling.ActiveStyle.Colors.Placeholder,
+            caret: ForestGladeStyling.ActiveStyle.Colors.SunPale, selection: ForestGladeStyling.ActiveStyle.Colors.AccentDim,
             haloVisible: true, glow: true);
 
         host.States.Disabled.Apply = () => Apply(host,
-            fill: ForestGladePalette.InputFillDisabled, border: disabledBorder,
-            text: ForestGladeColors.Disabled, placeholder: ForestGladeColors.Placeholder,
-            caret: ForestGladeColors.Disabled, selection: ForestGladeColors.AccentDim,
+            fill: ForestGladeStyling.ActiveStyle.Colors.InputFillDisabled, border: disabledBorder,
+            text: ForestGladeStyling.ActiveStyle.Colors.Disabled, placeholder: ForestGladeStyling.ActiveStyle.Colors.Placeholder,
+            caret: ForestGladeStyling.ActiveStyle.Colors.Disabled, selection: ForestGladeStyling.ActiveStyle.Colors.AccentDim,
             haloVisible: false, glow: false);
     }
 
@@ -179,7 +179,7 @@ internal sealed class ForestGladeTextInputDecoration
         _fill.HasDropshadow = glow;
         if (glow)
         {
-            _fill.DropshadowColor = ForestGladePalette.GlowMedium;
+            _fill.DropshadowColor = ForestGladeStyling.ActiveStyle.Colors.GlowMedium;
             _fill.DropshadowOffsetX = 0f;
             _fill.DropshadowOffsetY = 0f;
             _fill.DropshadowBlur = FocusGlowBlur;

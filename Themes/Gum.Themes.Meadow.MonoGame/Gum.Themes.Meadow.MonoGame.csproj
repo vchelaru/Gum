@@ -60,4 +60,10 @@
     <ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
     <ProjectReference Include="..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Lets Tests/Gum.Themes.Tests call the internal ConfigureStyling() directly to exercise
+         the 4-token guardrail sync without going through Apply(), which needs a real
+         GraphicsDevice for font wiring and can't run headlessly in a unit test. -->
+    <InternalsVisibleTo Include="Gum.Themes.Tests" />
+  </ItemGroup>
 </Project>

@@ -57,7 +57,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         // Theme pre-registers ✓ via BmfcSave so KernSmith bakes it. Rendered
         // in the DejaVu-backed icon family because Nunito doesn't cover the
         // Dingbats block.
-        _checkGlyph.Font = ForestGladeTheme.IconFontFamily;
+        _checkGlyph.Font = ForestGladeStyling.ActiveStyle.Text.IconFontFamily;
         _checkGlyph.FontSize = 16;
         _checkGlyph.Text = "✓";
         _checkGlyph.Color = new Color(5, 63, 31); // CSS .fg-ck stroke #053f1f
@@ -142,7 +142,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = ForestGladeColors.AccentHalo;
+        ring.StrokeColor = ForestGladeStyling.ActiveStyle.Colors.AccentHalo;
         ring.Visible = false;
         return ring;
     }
@@ -183,7 +183,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         dash.HeightUnits = DimensionUnitType.Absolute;
         dash.CornerRadius = 1f;
         dash.IsFilled = true;
-        dash.FillColor = ForestGladeColors.SunPale;
+        dash.FillColor = ForestGladeStyling.ActiveStyle.Colors.SunPale;
         dash.StrokeWidth = 0;
         return dash;
     }
@@ -192,9 +192,9 @@ public class CheckBoxVisual : BaseCheckBoxVisual
     {
         Color restBorder = new Color(232, 255, 117, 76);   // CSS .fg-cbox .30
         Color hoverBorder = new Color(232, 255, 117, 140); // CSS hover .55
-        Color focusBorder = ForestGladeColors.LeafBright;
+        Color focusBorder = ForestGladeStyling.ActiveStyle.Colors.LeafBright;
         Color restFill = new Color(3, 28, 32);
-        Color checkedFill = ForestGladeColors.LeafBright;
+        Color checkedFill = ForestGladeStyling.ActiveStyle.Colors.LeafBright;
         Color pushedCheckedFill = new Color(0, 126, 41);   // CSS pushed gradient mid
         Color disabledBorder = new Color(232, 255, 117, 26);
         Color disabledFill = new Color(8, 16, 18);
@@ -202,99 +202,99 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         // -------- Unchecked --------
         States.EnabledOff.Apply = () => Apply(
             fill: restFill, border: restBorder,
-            text: ForestGladeColors.Text, glyph: GlyphKind.None, ring: false);
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: false);
 
         States.HighlightedOff.Apply = () => Apply(
             fill: restFill, border: hoverBorder,
-            text: ForestGladeColors.Text, glyph: GlyphKind.None, ring: false);
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: false);
 
         States.FocusedOff.Apply = () => Apply(
             fill: restFill, border: focusBorder,
-            text: ForestGladeColors.Text, glyph: GlyphKind.None, ring: true);
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: true);
 
         States.HighlightedFocusedOff.Apply = () => Apply(
             fill: restFill, border: focusBorder,
-            text: ForestGladeColors.Text, glyph: GlyphKind.None, ring: true);
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: true);
 
         States.PushedOff.Apply = () => Apply(
             fill: restFill, border: focusBorder,
-            text: ForestGladeColors.Text, glyph: GlyphKind.None, ring: false);
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: false);
 
         States.DisabledOff.Apply = () => Apply(
             fill: disabledFill, border: disabledBorder,
-            text: ForestGladeColors.Disabled, glyph: GlyphKind.None, ring: false);
+            text: ForestGladeStyling.ActiveStyle.Colors.Disabled, glyph: GlyphKind.None, ring: false);
 
         States.DisabledFocusedOff.Apply = () => Apply(
             fill: disabledFill, border: disabledBorder,
-            text: ForestGladeColors.Disabled, glyph: GlyphKind.None, ring: true);
+            text: ForestGladeStyling.ActiveStyle.Colors.Disabled, glyph: GlyphKind.None, ring: true);
 
         // -------- Checked --------
         Color darkGlyph = new Color(5, 63, 31);
         Color brightGlyph = new Color(214, 245, 176);
 
         States.EnabledOn.Apply = () => Apply(
-            fill: checkedFill, border: ForestGladeColors.SunPale,
-            text: ForestGladeColors.Text, glyph: GlyphKind.Check, glyphColor: darkGlyph,
+            fill: checkedFill, border: ForestGladeStyling.ActiveStyle.Colors.SunPale,
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: darkGlyph,
             ring: false);
 
         States.HighlightedOn.Apply = () => Apply(
-            fill: checkedFill, border: ForestGladeColors.SunPale,
-            text: ForestGladeColors.Text, glyph: GlyphKind.Check, glyphColor: darkGlyph,
+            fill: checkedFill, border: ForestGladeStyling.ActiveStyle.Colors.SunPale,
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: darkGlyph,
             ring: false);
 
         States.FocusedOn.Apply = () => Apply(
-            fill: checkedFill, border: ForestGladeColors.SunPale,
-            text: ForestGladeColors.Text, glyph: GlyphKind.Check, glyphColor: darkGlyph,
+            fill: checkedFill, border: ForestGladeStyling.ActiveStyle.Colors.SunPale,
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: darkGlyph,
             ring: true);
 
         States.HighlightedFocusedOn.Apply = () => Apply(
-            fill: checkedFill, border: ForestGladeColors.SunPale,
-            text: ForestGladeColors.Text, glyph: GlyphKind.Check, glyphColor: darkGlyph,
+            fill: checkedFill, border: ForestGladeStyling.ActiveStyle.Colors.SunPale,
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: darkGlyph,
             ring: true);
 
         States.PushedOn.Apply = () => Apply(
-            fill: pushedCheckedFill, border: ForestGladeColors.SunPale,
-            text: ForestGladeColors.Text, glyph: GlyphKind.Check, glyphColor: brightGlyph,
+            fill: pushedCheckedFill, border: ForestGladeStyling.ActiveStyle.Colors.SunPale,
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: brightGlyph,
             ring: false);
 
         States.DisabledOn.Apply = () => Apply(
             fill: disabledFill, border: disabledBorder,
-            text: ForestGladeColors.Disabled, glyph: GlyphKind.Check,
-            glyphColor: ForestGladeColors.Disabled, ring: false);
+            text: ForestGladeStyling.ActiveStyle.Colors.Disabled, glyph: GlyphKind.Check,
+            glyphColor: ForestGladeStyling.ActiveStyle.Colors.Disabled, ring: false);
 
         States.DisabledFocusedOn.Apply = () => Apply(
             fill: disabledFill, border: disabledBorder,
-            text: ForestGladeColors.Disabled, glyph: GlyphKind.Check,
-            glyphColor: ForestGladeColors.Disabled, ring: true);
+            text: ForestGladeStyling.ActiveStyle.Colors.Disabled, glyph: GlyphKind.Check,
+            glyphColor: ForestGladeStyling.ActiveStyle.Colors.Disabled, ring: true);
 
         // -------- Indeterminate --------
         States.EnabledIndeterminate.Apply = () => Apply(
-            fill: restFill, border: ForestGladeColors.SunPale,
-            text: ForestGladeColors.Text, glyph: GlyphKind.Dash, ring: false);
+            fill: restFill, border: ForestGladeStyling.ActiveStyle.Colors.SunPale,
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: false);
 
         States.HighlightedIndeterminate.Apply = () => Apply(
-            fill: restFill, border: ForestGladeColors.SunPale,
-            text: ForestGladeColors.Text, glyph: GlyphKind.Dash, ring: false);
+            fill: restFill, border: ForestGladeStyling.ActiveStyle.Colors.SunPale,
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: false);
 
         States.FocusedIndeterminate.Apply = () => Apply(
-            fill: restFill, border: ForestGladeColors.SunPale,
-            text: ForestGladeColors.Text, glyph: GlyphKind.Dash, ring: true);
+            fill: restFill, border: ForestGladeStyling.ActiveStyle.Colors.SunPale,
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: true);
 
         States.HighlightedFocusedIndeterminate.Apply = () => Apply(
-            fill: restFill, border: ForestGladeColors.SunPale,
-            text: ForestGladeColors.Text, glyph: GlyphKind.Dash, ring: true);
+            fill: restFill, border: ForestGladeStyling.ActiveStyle.Colors.SunPale,
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: true);
 
         States.PushedIndeterminate.Apply = () => Apply(
-            fill: restFill, border: ForestGladeColors.SunPale,
-            text: ForestGladeColors.Text, glyph: GlyphKind.Dash, ring: false);
+            fill: restFill, border: ForestGladeStyling.ActiveStyle.Colors.SunPale,
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: false);
 
         States.DisabledIndeterminate.Apply = () => Apply(
             fill: disabledFill, border: disabledBorder,
-            text: ForestGladeColors.Disabled, glyph: GlyphKind.Dash, ring: false);
+            text: ForestGladeStyling.ActiveStyle.Colors.Disabled, glyph: GlyphKind.Dash, ring: false);
 
         States.DisabledFocusedIndeterminate.Apply = () => Apply(
             fill: disabledFill, border: disabledBorder,
-            text: ForestGladeColors.Disabled, glyph: GlyphKind.Dash, ring: true);
+            text: ForestGladeStyling.ActiveStyle.Colors.Disabled, glyph: GlyphKind.Dash, ring: true);
     }
 
     private enum GlyphKind { None, Check, Dash }

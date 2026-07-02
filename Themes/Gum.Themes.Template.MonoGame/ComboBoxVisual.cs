@@ -55,20 +55,20 @@ public class ComboBoxVisual : BaseComboBoxVisual
         DropdownIndicator.Parent = null;
         TextInstance.Parent = null;
 
-        _focusRing = TemplateShapes.FocusRing(TemplatePalette.Accent, CornerRadius, FocusRingInset, BorderThickness);
+        _focusRing = TemplateShapes.FocusRing(TemplateStyling.ActiveStyle.Colors.Accent, CornerRadius, FocusRingInset, BorderThickness);
         AddChild(_focusRing);
 
-        _fill = TemplateShapes.Fill(TemplatePalette.Surface1, CornerRadius);
+        _fill = TemplateShapes.Fill(TemplateStyling.ActiveStyle.Colors.Surface1, CornerRadius);
         AddChild(_fill);
 
-        _border = TemplateShapes.Border(TemplatePalette.Border, CornerRadius, BorderThickness);
+        _border = TemplateShapes.Border(TemplateStyling.ActiveStyle.Colors.Border, CornerRadius, BorderThickness);
         AddChild(_border);
 
         _dropdownGlyph = CreateDropdownGlyph();
         AddChild(_dropdownGlyph);
 
         AddChild(TextInstance);
-        TextInstance.Font = TemplateTheme.BodyFontFamily; // selected-item text uses the body face
+        TextInstance.Font = TemplateStyling.ActiveStyle.Text.BodyFontFamily; // selected-item text uses the body face
         // Match the dropdown ListBoxItem layout: 6 px from the left border,
         // left-aligned, with the frame's right edge clearing the dropdown glyph.
         // V3's default centered layout left ~17 px on the left, which made the
@@ -100,10 +100,10 @@ public class ComboBoxVisual : BaseComboBoxVisual
         glyph.HeightUnits = DimensionUnitType.Absolute;
         glyph.HorizontalAlignment = HorizontalAlignment.Center;
         glyph.VerticalAlignment = VerticalAlignment.Center;
-        glyph.Font = TemplateTheme.IconFontFamily;
+        glyph.Font = TemplateStyling.ActiveStyle.Text.IconFontFamily;
         glyph.FontSize = GlyphFontSize;
         glyph.Text = "▼";
-        glyph.Color = TemplatePalette.Muted;
+        glyph.Color = TemplateStyling.ActiveStyle.Colors.Muted;
         return glyph;
     }
 
@@ -115,37 +115,37 @@ public class ComboBoxVisual : BaseComboBoxVisual
         // full Text on hover/focus/press so the user gets visible "this is alive"
         // feedback distinct from the border.
         States.Enabled.Apply = () => Apply(
-            border: TemplatePalette.Border, text: TemplatePalette.Text,
-            glyph: TemplatePalette.Muted, ring: false, fillDisabled: false);
+            border: TemplateStyling.ActiveStyle.Colors.Border, text: TemplateStyling.ActiveStyle.Colors.Text,
+            glyph: TemplateStyling.ActiveStyle.Colors.Muted, ring: false, fillDisabled: false);
 
         States.Highlighted.Apply = () => Apply(
-            border: TemplatePalette.BorderHover, text: TemplatePalette.Text,
-            glyph: TemplatePalette.Text, ring: false, fillDisabled: false);
+            border: TemplateStyling.ActiveStyle.Colors.BorderHover, text: TemplateStyling.ActiveStyle.Colors.Text,
+            glyph: TemplateStyling.ActiveStyle.Colors.Text, ring: false, fillDisabled: false);
 
         States.Focused.Apply = () => Apply(
-            border: TemplatePalette.Accent, text: TemplatePalette.Text,
-            glyph: TemplatePalette.Text, ring: true, fillDisabled: false);
+            border: TemplateStyling.ActiveStyle.Colors.Accent, text: TemplateStyling.ActiveStyle.Colors.Text,
+            glyph: TemplateStyling.ActiveStyle.Colors.Text, ring: true, fillDisabled: false);
 
         States.HighlightedFocused.Apply = () => Apply(
-            border: TemplatePalette.Accent, text: TemplatePalette.Text,
-            glyph: TemplatePalette.Text, ring: true, fillDisabled: false);
+            border: TemplateStyling.ActiveStyle.Colors.Accent, text: TemplateStyling.ActiveStyle.Colors.Text,
+            glyph: TemplateStyling.ActiveStyle.Colors.Text, ring: true, fillDisabled: false);
 
         States.Pushed.Apply = () => Apply(
-            border: TemplatePalette.Accent, text: TemplatePalette.Text,
-            glyph: TemplatePalette.Text, ring: false, fillDisabled: false);
+            border: TemplateStyling.ActiveStyle.Colors.Accent, text: TemplateStyling.ActiveStyle.Colors.Text,
+            glyph: TemplateStyling.ActiveStyle.Colors.Text, ring: false, fillDisabled: false);
 
         States.Disabled.Apply = () => Apply(
-            border: TemplatePalette.DisabledBorder, text: TemplatePalette.DisabledText,
-            glyph: TemplatePalette.DisabledText, ring: false, fillDisabled: true);
+            border: TemplateStyling.ActiveStyle.Colors.DisabledBorder, text: TemplateStyling.ActiveStyle.Colors.DisabledText,
+            glyph: TemplateStyling.ActiveStyle.Colors.DisabledText, ring: false, fillDisabled: true);
 
         States.DisabledFocused.Apply = () => Apply(
-            border: TemplatePalette.DisabledBorder, text: TemplatePalette.DisabledText,
-            glyph: TemplatePalette.DisabledText, ring: true, fillDisabled: true);
+            border: TemplateStyling.ActiveStyle.Colors.DisabledBorder, text: TemplateStyling.ActiveStyle.Colors.DisabledText,
+            glyph: TemplateStyling.ActiveStyle.Colors.DisabledText, ring: true, fillDisabled: true);
     }
 
     private void Apply(Color border, Color text, Color glyph, bool ring, bool fillDisabled)
     {
-        _fill.FillColor = fillDisabled ? TemplatePalette.DisabledFill : TemplatePalette.Surface1;
+        _fill.FillColor = fillDisabled ? TemplateStyling.ActiveStyle.Colors.DisabledFill : TemplateStyling.ActiveStyle.Colors.Surface1;
         _border.StrokeColor = border;
         TextInstance.Color = text;
         _dropdownGlyph.Color = glyph;

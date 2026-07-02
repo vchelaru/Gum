@@ -72,7 +72,7 @@ public class ListBoxVisual : BaseListBoxVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = NeonColors.Surface1;
+        fill.FillColor = NeonStyling.ActiveStyle.Colors.Surface1;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -95,7 +95,7 @@ public class ListBoxVisual : BaseListBoxVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = NeonColors.Border;
+        border.StrokeColor = NeonStyling.ActiveStyle.Colors.Border;
         return border;
     }
 
@@ -117,7 +117,7 @@ public class ListBoxVisual : BaseListBoxVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = NeonPalette.FocusRing;
+        ring.StrokeColor = NeonStyling.ActiveStyle.Colors.FocusRing;
         ring.Visible = false;
         return ring;
     }
@@ -125,30 +125,30 @@ public class ListBoxVisual : BaseListBoxVisual
     private void WireStates()
     {
         States.Enabled.Apply = () => ApplyPalette(
-            border: NeonColors.Border, showFocusRing: false);
+            border: NeonStyling.ActiveStyle.Colors.Border, showFocusRing: false);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            border: NeonColors.Accent, showFocusRing: false);
+            border: NeonStyling.ActiveStyle.Colors.Accent, showFocusRing: false);
 
         States.Focused.Apply = () => ApplyPalette(
-            border: NeonColors.Accent, showFocusRing: true);
+            border: NeonStyling.ActiveStyle.Colors.Accent, showFocusRing: true);
 
         States.HighlightedFocused.Apply = () => ApplyPalette(
-            border: NeonColors.Accent, showFocusRing: true);
+            border: NeonStyling.ActiveStyle.Colors.Accent, showFocusRing: true);
 
         States.Pushed.Apply = () => ApplyPalette(
-            border: NeonColors.Accent, showFocusRing: false);
+            border: NeonStyling.ActiveStyle.Colors.Accent, showFocusRing: false);
 
         States.Disabled.Apply = () => ApplyPalette(
-            border: NeonColors.Disabled, showFocusRing: false, fillDisabled: true);
+            border: NeonStyling.ActiveStyle.Colors.Disabled, showFocusRing: false, fillDisabled: true);
 
         States.DisabledFocused.Apply = () => ApplyPalette(
-            border: NeonColors.Disabled, showFocusRing: true, fillDisabled: true);
+            border: NeonStyling.ActiveStyle.Colors.Disabled, showFocusRing: true, fillDisabled: true);
     }
 
     private void ApplyPalette(Color border, bool showFocusRing, bool fillDisabled = false)
     {
-        _fill.FillColor = fillDisabled ? NeonColors.Disabled : NeonColors.Surface1;
+        _fill.FillColor = fillDisabled ? NeonStyling.ActiveStyle.Colors.Disabled : NeonStyling.ActiveStyle.Colors.Surface1;
         _border.StrokeColor = border;
         _focusRing.Visible = showFocusRing;
     }

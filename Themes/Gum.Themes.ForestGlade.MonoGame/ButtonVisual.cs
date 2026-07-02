@@ -36,7 +36,7 @@ public class ButtonVisual : BaseButtonVisual
         // the text-shadow's font fields. Otherwise the shadow's first bake
         // would hit TextRuntime's Arial-18 default and throw.
         TextInstance.ApplyState(Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle.Text.Normal);
-        TextInstance.Color = ForestGladeColors.Text;
+        TextInstance.Color = ForestGladeStyling.ActiveStyle.Colors.Text;
 
         _chrome = new ForestGladeButtonChrome(this, TextInstance);
 
@@ -57,60 +57,60 @@ public class ButtonVisual : BaseButtonVisual
         Color disabledTextShadow = new Color(0, 0, 0, 60);
 
         States.Enabled.Apply = () => _chrome.Apply(
-            fillTop: ForestGladePalette.ButtonRestFillTop,
-            fillBottom: ForestGladePalette.ButtonRestFillBottom,
-            border: ForestGladeColors.Border,
-            shadow: ForestGladePalette.DarkShadow,
+            fillTop: ForestGladeStyling.ActiveStyle.Colors.ButtonRestFillTop,
+            fillBottom: ForestGladeStyling.ActiveStyle.Colors.ButtonRestFillBottom,
+            border: ForestGladeStyling.ActiveStyle.Colors.Border,
+            shadow: ForestGladeStyling.ActiveStyle.Colors.DarkShadow,
             shadowOffsetY: ForestGladeButtonChrome.RestShadowOffsetY,
             shadowBlur: ForestGladeButtonChrome.RestShadowBlur,
-            text: ForestGladeColors.Text, textShadow: textShadow, ring: false);
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, textShadow: textShadow, ring: false);
 
         States.Highlighted.Apply = () => _chrome.Apply(
-            fillTop: ForestGladePalette.ButtonHoverFillTop,
-            fillBottom: ForestGladePalette.ButtonHoverFillBottom,
-            border: ForestGladeColors.BorderHover,
-            shadow: ForestGladePalette.GlowStrong,
+            fillTop: ForestGladeStyling.ActiveStyle.Colors.ButtonHoverFillTop,
+            fillBottom: ForestGladeStyling.ActiveStyle.Colors.ButtonHoverFillBottom,
+            border: ForestGladeStyling.ActiveStyle.Colors.BorderHover,
+            shadow: ForestGladeStyling.ActiveStyle.Colors.GlowStrong,
             shadowOffsetY: 0f, shadowBlur: ForestGladeButtonChrome.HoverGlowBlur,
-            text: ForestGladeColors.Text, textShadow: textShadow, ring: false);
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, textShadow: textShadow, ring: false);
 
         States.Focused.Apply = () => _chrome.Apply(
-            fillTop: ForestGladePalette.ButtonRestFillTop,
-            fillBottom: ForestGladePalette.ButtonRestFillBottom,
-            border: ForestGladeColors.BorderHover,
-            shadow: ForestGladePalette.GlowStrong,
+            fillTop: ForestGladeStyling.ActiveStyle.Colors.ButtonRestFillTop,
+            fillBottom: ForestGladeStyling.ActiveStyle.Colors.ButtonRestFillBottom,
+            border: ForestGladeStyling.ActiveStyle.Colors.BorderHover,
+            shadow: ForestGladeStyling.ActiveStyle.Colors.GlowStrong,
             shadowOffsetY: 0f, shadowBlur: ForestGladeButtonChrome.HoverGlowBlur,
-            text: ForestGladeColors.Text, textShadow: textShadow, ring: true);
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, textShadow: textShadow, ring: true);
 
         States.HighlightedFocused.Apply = () => _chrome.Apply(
-            fillTop: ForestGladePalette.ButtonHoverFillTop,
-            fillBottom: ForestGladePalette.ButtonHoverFillBottom,
-            border: ForestGladeColors.BorderHover,
-            shadow: ForestGladePalette.GlowStrong,
+            fillTop: ForestGladeStyling.ActiveStyle.Colors.ButtonHoverFillTop,
+            fillBottom: ForestGladeStyling.ActiveStyle.Colors.ButtonHoverFillBottom,
+            border: ForestGladeStyling.ActiveStyle.Colors.BorderHover,
+            shadow: ForestGladeStyling.ActiveStyle.Colors.GlowStrong,
             shadowOffsetY: 0f, shadowBlur: ForestGladeButtonChrome.HoverGlowBlur,
-            text: ForestGladeColors.Text, textShadow: textShadow, ring: true);
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, textShadow: textShadow, ring: true);
 
         States.Pushed.Apply = () => _chrome.Apply(
-            fillTop: ForestGladePalette.ButtonPushedFillTop,
-            fillBottom: ForestGladePalette.ButtonPushedFillBottom,
-            border: ForestGladeColors.Border,
-            shadow: ForestGladePalette.DarkShadow,
+            fillTop: ForestGladeStyling.ActiveStyle.Colors.ButtonPushedFillTop,
+            fillBottom: ForestGladeStyling.ActiveStyle.Colors.ButtonPushedFillBottom,
+            border: ForestGladeStyling.ActiveStyle.Colors.Border,
+            shadow: ForestGladeStyling.ActiveStyle.Colors.DarkShadow,
             shadowOffsetY: 0f, shadowBlur: ForestGladeButtonChrome.PushedGlowBlur,
             text: pushedText, textShadow: pushedTextShadow, ring: false);
 
         States.Disabled.Apply = () => _chrome.Apply(
-            fillTop: ForestGladePalette.ButtonDisabledFillTop,
-            fillBottom: ForestGladePalette.ButtonDisabledFillBottom,
+            fillTop: ForestGladeStyling.ActiveStyle.Colors.ButtonDisabledFillTop,
+            fillBottom: ForestGladeStyling.ActiveStyle.Colors.ButtonDisabledFillBottom,
             border: new Color(232, 255, 117, 26),
-            shadow: ForestGladePalette.DarkShadow,
+            shadow: ForestGladeStyling.ActiveStyle.Colors.DarkShadow,
             shadowOffsetY: 0f, shadowBlur: 0f,
-            text: ForestGladeColors.Disabled, textShadow: disabledTextShadow, ring: false);
+            text: ForestGladeStyling.ActiveStyle.Colors.Disabled, textShadow: disabledTextShadow, ring: false);
 
         States.DisabledFocused.Apply = () => _chrome.Apply(
-            fillTop: ForestGladePalette.ButtonDisabledFillTop,
-            fillBottom: ForestGladePalette.ButtonDisabledFillBottom,
+            fillTop: ForestGladeStyling.ActiveStyle.Colors.ButtonDisabledFillTop,
+            fillBottom: ForestGladeStyling.ActiveStyle.Colors.ButtonDisabledFillBottom,
             border: new Color(232, 255, 117, 26),
-            shadow: ForestGladePalette.DarkShadow,
+            shadow: ForestGladeStyling.ActiveStyle.Colors.DarkShadow,
             shadowOffsetY: 0f, shadowBlur: 0f,
-            text: ForestGladeColors.Disabled, textShadow: disabledTextShadow, ring: true);
+            text: ForestGladeStyling.ActiveStyle.Colors.Disabled, textShadow: disabledTextShadow, ring: true);
     }
 }

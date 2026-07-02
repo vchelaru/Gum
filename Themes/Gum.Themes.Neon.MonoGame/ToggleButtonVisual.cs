@@ -31,7 +31,6 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
     /// </summary>
     private const float ShadowOffsetY = 0f;
     private const float ShadowBlur = 36f;
-    private static readonly Color ShadowColor = NeonPalette.GlowStrong;
 
     private readonly RectangleRuntime _focusRing;
     private readonly RectangleRuntime _fill;
@@ -84,10 +83,10 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = NeonColors.Surface1;
+        fill.FillColor = NeonStyling.ActiveStyle.Colors.Surface1;
         fill.StrokeWidth = 0;
         fill.HasDropshadow = true;
-        fill.DropshadowColor = ShadowColor;
+        fill.DropshadowColor = NeonStyling.ActiveStyle.Colors.GlowStrong;
         fill.DropshadowOffsetX = 0f;
         fill.DropshadowOffsetY = ShadowOffsetY;
         fill.DropshadowBlur = ShadowBlur;
@@ -112,7 +111,7 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = NeonColors.Border;
+        border.StrokeColor = NeonStyling.ActiveStyle.Colors.Border;
         return border;
     }
 
@@ -134,7 +133,7 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = NeonPalette.FocusRing;
+        ring.StrokeColor = NeonStyling.ActiveStyle.Colors.FocusRing;
         ring.Visible = false;
         return ring;
     }
@@ -144,32 +143,32 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         // Off variants: white pill with pink border, pink text. Shadow on
         // except for pressed/disabled, matching the Button state pattern.
         States.EnabledOff.Apply = () => ApplyPalette(
-            fill: NeonColors.Surface1, border: NeonColors.Border,
-            text: NeonColors.Text, showShadow: true, showFocusRing: false);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Border,
+            text: NeonStyling.ActiveStyle.Colors.Text, showShadow: true, showFocusRing: false);
 
         States.HighlightedOff.Apply = () => ApplyPalette(
-            fill: NeonColors.Surface1, border: NeonColors.Accent,
-            text: NeonColors.Text, showShadow: true, showFocusRing: false);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, showShadow: true, showFocusRing: false);
 
         States.PushedOff.Apply = () => ApplyPalette(
-            fill: NeonColors.Surface1, border: NeonColors.Accent,
-            text: NeonColors.Text, showShadow: false, showFocusRing: false);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, showShadow: false, showFocusRing: false);
 
         States.FocusedOff.Apply = () => ApplyPalette(
-            fill: NeonColors.Surface1, border: NeonColors.Accent,
-            text: NeonColors.Text, showShadow: true, showFocusRing: true);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, showShadow: true, showFocusRing: true);
 
         States.HighlightedFocusedOff.Apply = () => ApplyPalette(
-            fill: NeonColors.Surface1, border: NeonColors.Accent,
-            text: NeonColors.Text, showShadow: true, showFocusRing: true);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, showShadow: true, showFocusRing: true);
 
         States.DisabledOff.Apply = () => ApplyPalette(
-            fill: NeonColors.Disabled, border: NeonColors.Disabled,
-            text: NeonColors.Disabled, showShadow: false, showFocusRing: false);
+            fill: NeonStyling.ActiveStyle.Colors.Disabled, border: NeonStyling.ActiveStyle.Colors.Disabled,
+            text: NeonStyling.ActiveStyle.Colors.Disabled, showShadow: false, showFocusRing: false);
 
         States.DisabledFocusedOff.Apply = () => ApplyPalette(
-            fill: NeonColors.Disabled, border: NeonColors.Disabled,
-            text: NeonColors.Disabled, showShadow: false, showFocusRing: true);
+            fill: NeonStyling.ActiveStyle.Colors.Disabled, border: NeonStyling.ActiveStyle.Colors.Disabled,
+            text: NeonStyling.ActiveStyle.Colors.Disabled, showShadow: false, showFocusRing: true);
 
         // On variants: solid accent body, dark text against the bright cyan.
         // Hover/focus do NOT modulate the fill (the prior translucent-on-hover
@@ -177,31 +176,31 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         // tinge against the leftover pink shadow). State emphasis comes from
         // the focus ring + the (now cyan, not pink) glow.
         States.EnabledOn.Apply = () => ApplyPalette(
-            fill: NeonColors.Accent, border: NeonColors.Accent,
-            text: NeonColors.Background, showShadow: true, showFocusRing: false);
+            fill: NeonStyling.ActiveStyle.Colors.Accent, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Background, showShadow: true, showFocusRing: false);
 
         States.HighlightedOn.Apply = () => ApplyPalette(
-            fill: NeonColors.Accent, border: NeonColors.Accent,
-            text: NeonColors.Background, showShadow: true, showFocusRing: false);
+            fill: NeonStyling.ActiveStyle.Colors.Accent, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Background, showShadow: true, showFocusRing: false);
 
         States.PushedOn.Apply = () => ApplyPalette(
-            fill: NeonColors.Accent, border: NeonColors.Accent,
-            text: NeonColors.Background, showShadow: false, showFocusRing: false);
+            fill: NeonStyling.ActiveStyle.Colors.Accent, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Background, showShadow: false, showFocusRing: false);
 
         States.FocusedOn.Apply = () => ApplyPalette(
-            fill: NeonColors.Accent, border: NeonColors.Accent,
-            text: NeonColors.Background, showShadow: true, showFocusRing: true);
+            fill: NeonStyling.ActiveStyle.Colors.Accent, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Background, showShadow: true, showFocusRing: true);
 
         States.HighlightedFocusedOn.Apply = () => ApplyPalette(
-            fill: NeonColors.Accent, border: NeonColors.Accent,
-            text: NeonColors.Background, showShadow: true, showFocusRing: true);
+            fill: NeonStyling.ActiveStyle.Colors.Accent, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Background, showShadow: true, showFocusRing: true);
 
         States.DisabledOn.Apply = () => ApplyPalette(
-            fill: NeonColors.Disabled, border: NeonColors.Disabled,
+            fill: NeonStyling.ActiveStyle.Colors.Disabled, border: NeonStyling.ActiveStyle.Colors.Disabled,
             text: Color.White, showShadow: false, showFocusRing: false);
 
         States.DisabledFocusedOn.Apply = () => ApplyPalette(
-            fill: NeonColors.Disabled, border: NeonColors.Disabled,
+            fill: NeonStyling.ActiveStyle.Colors.Disabled, border: NeonStyling.ActiveStyle.Colors.Disabled,
             text: Color.White, showShadow: false, showFocusRing: true);
     }
 

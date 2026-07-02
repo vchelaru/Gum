@@ -74,10 +74,10 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = MeadowColors.White;
+        fill.FillColor = MeadowStyling.ActiveStyle.Colors.White;
         fill.StrokeWidth = 0;
         fill.HasDropshadow = false;
-        fill.DropshadowColor = MeadowColors.BlueDark;
+        fill.DropshadowColor = MeadowStyling.ActiveStyle.Colors.BlueDark;
         fill.DropshadowOffsetX = 0f;
         fill.DropshadowOffsetY = ShadowOffsetY;
         fill.DropshadowBlur = ShadowBlur;
@@ -102,7 +102,7 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = MeadowColors.PeachDark;
+        border.StrokeColor = MeadowStyling.ActiveStyle.Colors.PeachDark;
         return border;
     }
 
@@ -124,7 +124,7 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = MeadowColors.SageDark;
+        ring.StrokeColor = MeadowStyling.ActiveStyle.Colors.SageDark;
         ring.Visible = false;
         return ring;
     }
@@ -133,61 +133,61 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
     {
         // Off: white pill, peach border, teal text, no shadow (flat outline).
         States.EnabledOff.Apply = () => ApplyPalette(
-            fill: MeadowColors.White, border: MeadowColors.PeachDark,
-            text: MeadowColors.TealDark, showShadow: false, showFocusRing: false);
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.PeachDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, showShadow: false, showFocusRing: false);
 
         States.HighlightedOff.Apply = () => ApplyPalette(
-            fill: MeadowColors.White, border: MeadowColors.SageDark,
-            text: MeadowColors.TealDark, showShadow: false, showFocusRing: false);
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.SageDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, showShadow: false, showFocusRing: false);
 
         States.PushedOff.Apply = () => ApplyPalette(
-            fill: MeadowColors.White, border: MeadowColors.Teal,
-            text: MeadowColors.TealDark, showShadow: false, showFocusRing: false);
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.Teal,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, showShadow: false, showFocusRing: false);
 
         States.FocusedOff.Apply = () => ApplyPalette(
-            fill: MeadowColors.White, border: MeadowColors.SageDark,
-            text: MeadowColors.TealDark, showShadow: false, showFocusRing: true);
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.SageDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, showShadow: false, showFocusRing: true);
 
         States.HighlightedFocusedOff.Apply = () => ApplyPalette(
-            fill: MeadowColors.White, border: MeadowColors.SageDark,
-            text: MeadowColors.TealDark, showShadow: false, showFocusRing: true);
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.SageDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, showShadow: false, showFocusRing: true);
 
         States.DisabledOff.Apply = () => ApplyPalette(
-            fill: MeadowColors.Cream2, border: MeadowColors.Disabled,
-            text: MeadowColors.DisabledInk, showShadow: false, showFocusRing: false);
+            fill: MeadowStyling.ActiveStyle.Colors.Cream2, border: MeadowStyling.ActiveStyle.Colors.Disabled,
+            text: MeadowStyling.ActiveStyle.Colors.DisabledInk, showShadow: false, showFocusRing: false);
 
         States.DisabledFocusedOff.Apply = () => ApplyPalette(
-            fill: MeadowColors.Cream2, border: MeadowColors.Disabled,
-            text: MeadowColors.DisabledInk, showShadow: false, showFocusRing: true);
+            fill: MeadowStyling.ActiveStyle.Colors.Cream2, border: MeadowStyling.ActiveStyle.Colors.Disabled,
+            text: MeadowStyling.ActiveStyle.Colors.DisabledInk, showShadow: false, showFocusRing: true);
 
         // On: blue pill with the hard offset shadow, white text.
         States.EnabledOn.Apply = () => ApplyPalette(
-            fill: MeadowColors.Blue, border: MeadowColors.Blue,
-            text: MeadowColors.White, showShadow: true, showFocusRing: false);
+            fill: MeadowStyling.ActiveStyle.Colors.Blue, border: MeadowStyling.ActiveStyle.Colors.Blue,
+            text: MeadowStyling.ActiveStyle.Colors.White, showShadow: true, showFocusRing: false);
 
         States.HighlightedOn.Apply = () => ApplyPalette(
-            fill: MeadowColors.BlueHover, border: MeadowColors.BlueHover,
-            text: MeadowColors.White, showShadow: true, showFocusRing: false);
+            fill: MeadowStyling.ActiveStyle.Colors.BlueHover, border: MeadowStyling.ActiveStyle.Colors.BlueHover,
+            text: MeadowStyling.ActiveStyle.Colors.White, showShadow: true, showFocusRing: false);
 
         States.PushedOn.Apply = () => ApplyPalette(
-            fill: MeadowColors.BlueDark, border: MeadowColors.BlueDark,
-            text: MeadowColors.White, showShadow: false, showFocusRing: false);
+            fill: MeadowStyling.ActiveStyle.Colors.BlueDark, border: MeadowStyling.ActiveStyle.Colors.BlueDark,
+            text: MeadowStyling.ActiveStyle.Colors.White, showShadow: false, showFocusRing: false);
 
         States.FocusedOn.Apply = () => ApplyPalette(
-            fill: MeadowColors.Blue, border: MeadowColors.Blue,
-            text: MeadowColors.White, showShadow: true, showFocusRing: true);
+            fill: MeadowStyling.ActiveStyle.Colors.Blue, border: MeadowStyling.ActiveStyle.Colors.Blue,
+            text: MeadowStyling.ActiveStyle.Colors.White, showShadow: true, showFocusRing: true);
 
         States.HighlightedFocusedOn.Apply = () => ApplyPalette(
-            fill: MeadowColors.BlueHover, border: MeadowColors.BlueHover,
-            text: MeadowColors.White, showShadow: true, showFocusRing: true);
+            fill: MeadowStyling.ActiveStyle.Colors.BlueHover, border: MeadowStyling.ActiveStyle.Colors.BlueHover,
+            text: MeadowStyling.ActiveStyle.Colors.White, showShadow: true, showFocusRing: true);
 
         States.DisabledOn.Apply = () => ApplyPalette(
-            fill: MeadowColors.Disabled, border: MeadowColors.Disabled,
-            text: MeadowColors.Cream2, showShadow: false, showFocusRing: false);
+            fill: MeadowStyling.ActiveStyle.Colors.Disabled, border: MeadowStyling.ActiveStyle.Colors.Disabled,
+            text: MeadowStyling.ActiveStyle.Colors.Cream2, showShadow: false, showFocusRing: false);
 
         States.DisabledFocusedOn.Apply = () => ApplyPalette(
-            fill: MeadowColors.Disabled, border: MeadowColors.Disabled,
-            text: MeadowColors.Cream2, showShadow: false, showFocusRing: true);
+            fill: MeadowStyling.ActiveStyle.Colors.Disabled, border: MeadowStyling.ActiveStyle.Colors.Disabled,
+            text: MeadowStyling.ActiveStyle.Colors.Cream2, showShadow: false, showFocusRing: true);
     }
 
     private void ApplyPalette(Color fill, Color border, Color text, bool showShadow, bool showFocusRing)

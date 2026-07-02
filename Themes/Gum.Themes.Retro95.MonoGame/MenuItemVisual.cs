@@ -77,11 +77,11 @@ public class MenuItemVisual : BaseMenuItemVisual
 
     private void WireStates()
     {
-        States.Enabled.Apply = () => Apply(new Color(0, 0, 0, 0), Retro95Colors.Text);
-        States.Highlighted.Apply = () => Apply(Retro95Colors.Selection, Retro95Colors.SelectionText);
-        States.Selected.Apply = () => Apply(Retro95Colors.Selection, Retro95Colors.SelectionText);
-        States.Focused.Apply = () => Apply(Retro95Colors.Selection, Retro95Colors.SelectionText);
-        States.Disabled.Apply = () => Apply(new Color(0, 0, 0, 0), Retro95Colors.DisabledText);
+        States.Enabled.Apply = () => Apply(new Color(0, 0, 0, 0), Retro95Styling.ActiveStyle.Colors.Text);
+        States.Highlighted.Apply = () => Apply(Retro95Styling.ActiveStyle.Colors.Selection, Retro95Styling.ActiveStyle.Colors.SelectionText);
+        States.Selected.Apply = () => Apply(Retro95Styling.ActiveStyle.Colors.Selection, Retro95Styling.ActiveStyle.Colors.SelectionText);
+        States.Focused.Apply = () => Apply(Retro95Styling.ActiveStyle.Colors.Selection, Retro95Styling.ActiveStyle.Colors.SelectionText);
+        States.Disabled.Apply = () => Apply(new Color(0, 0, 0, 0), Retro95Styling.ActiveStyle.Colors.DisabledText);
     }
 
     private void Apply(Color fill, Color text)

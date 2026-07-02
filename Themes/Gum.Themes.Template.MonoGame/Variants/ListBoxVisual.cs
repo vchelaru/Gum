@@ -47,13 +47,13 @@ public class ListBoxVisual : BaseListBoxVisual
         FocusedIndicator.Parent = null;
         ClipAndScrollContainer.Parent = null;
 
-        _focusRing = TemplateShapes.FocusRing(TemplatePalette.Accent, CornerRadius, FocusRingInset, BorderThickness);
+        _focusRing = TemplateShapes.FocusRing(TemplateStyling.ActiveStyle.Colors.Accent, CornerRadius, FocusRingInset, BorderThickness);
         AddChild(_focusRing);
 
-        _fill = TemplateShapes.Fill(TemplatePalette.Surface1, CornerRadius);
+        _fill = TemplateShapes.Fill(TemplateStyling.ActiveStyle.Colors.Surface1, CornerRadius);
         AddChild(_fill);
 
-        _border = TemplateShapes.Border(TemplatePalette.Border, CornerRadius, BorderThickness);
+        _border = TemplateShapes.Border(TemplateStyling.ActiveStyle.Colors.Border, CornerRadius, BorderThickness);
         // Dashed stroke - rendered natively by Apos.Shapes (one node, no faked rects).
         _border.StrokeDashLength = DashLength;
         _border.StrokeGapLength = GapLength;
@@ -83,30 +83,30 @@ public class ListBoxVisual : BaseListBoxVisual
         // TextBox does, since the natural progression is hover → focus and the
         // gray→blue transition reads as a state shift.
         States.Enabled.Apply = () => ApplyPalette(
-            border: TemplatePalette.Border, showFocusRing: false);
+            border: TemplateStyling.ActiveStyle.Colors.Border, showFocusRing: false);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            border: TemplatePalette.BorderHover, showFocusRing: false);
+            border: TemplateStyling.ActiveStyle.Colors.BorderHover, showFocusRing: false);
 
         States.Focused.Apply = () => ApplyPalette(
-            border: TemplatePalette.Accent, showFocusRing: true);
+            border: TemplateStyling.ActiveStyle.Colors.Accent, showFocusRing: true);
 
         States.HighlightedFocused.Apply = () => ApplyPalette(
-            border: TemplatePalette.Accent, showFocusRing: true);
+            border: TemplateStyling.ActiveStyle.Colors.Accent, showFocusRing: true);
 
         States.Pushed.Apply = () => ApplyPalette(
-            border: TemplatePalette.Accent, showFocusRing: false);
+            border: TemplateStyling.ActiveStyle.Colors.Accent, showFocusRing: false);
 
         States.Disabled.Apply = () => ApplyPalette(
-            border: TemplatePalette.DisabledBorder, showFocusRing: false, fillDisabled: true);
+            border: TemplateStyling.ActiveStyle.Colors.DisabledBorder, showFocusRing: false, fillDisabled: true);
 
         States.DisabledFocused.Apply = () => ApplyPalette(
-            border: TemplatePalette.DisabledBorder, showFocusRing: true, fillDisabled: true);
+            border: TemplateStyling.ActiveStyle.Colors.DisabledBorder, showFocusRing: true, fillDisabled: true);
     }
 
     private void ApplyPalette(Color border, bool showFocusRing, bool fillDisabled = false)
     {
-        _fill.FillColor = fillDisabled ? TemplatePalette.DisabledFill : TemplatePalette.Surface1;
+        _fill.FillColor = fillDisabled ? TemplateStyling.ActiveStyle.Colors.DisabledFill : TemplateStyling.ActiveStyle.Colors.Surface1;
         _border.StrokeColor = border;
         _focusRing.Visible = showFocusRing;
     }

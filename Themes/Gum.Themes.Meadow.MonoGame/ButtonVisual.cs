@@ -58,7 +58,7 @@ public class ButtonVisual : BaseButtonVisual
 
         AddChild(TextInstance);
         TextInstance.ApplyState(Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle.Text.Normal);
-        TextInstance.Color = MeadowColors.White;
+        TextInstance.Color = MeadowStyling.ActiveStyle.Colors.White;
 
         WireStates();
     }
@@ -79,11 +79,11 @@ public class ButtonVisual : BaseButtonVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = MeadowColors.Blue;
+        fill.FillColor = MeadowStyling.ActiveStyle.Colors.Blue;
         fill.StrokeWidth = 0;
         // Hard offset shadow — flat, opaque, no blur. Toggled per state.
         fill.HasDropshadow = true;
-        fill.DropshadowColor = MeadowColors.BlueDark;
+        fill.DropshadowColor = MeadowStyling.ActiveStyle.Colors.BlueDark;
         fill.DropshadowOffsetX = 0f;
         fill.DropshadowOffsetY = ShadowOffsetY;
         fill.DropshadowBlur = ShadowBlur;
@@ -108,7 +108,7 @@ public class ButtonVisual : BaseButtonVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = MeadowColors.SageDark;
+        ring.StrokeColor = MeadowStyling.ActiveStyle.Colors.SageDark;
         ring.Visible = false;
         return ring;
     }
@@ -116,33 +116,33 @@ public class ButtonVisual : BaseButtonVisual
     private void WireStates()
     {
         States.Enabled.Apply = () => ApplyPalette(
-            fill: MeadowColors.Blue, text: MeadowColors.White,
+            fill: MeadowStyling.ActiveStyle.Colors.Blue, text: MeadowStyling.ActiveStyle.Colors.White,
             showShadow: true, showFocusRing: false);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            fill: MeadowColors.BlueHover, text: MeadowColors.White,
+            fill: MeadowStyling.ActiveStyle.Colors.BlueHover, text: MeadowStyling.ActiveStyle.Colors.White,
             showShadow: true, showFocusRing: false);
 
         States.Focused.Apply = () => ApplyPalette(
-            fill: MeadowColors.Blue, text: MeadowColors.White,
+            fill: MeadowStyling.ActiveStyle.Colors.Blue, text: MeadowStyling.ActiveStyle.Colors.White,
             showShadow: true, showFocusRing: true);
 
         States.HighlightedFocused.Apply = () => ApplyPalette(
-            fill: MeadowColors.BlueHover, text: MeadowColors.White,
+            fill: MeadowStyling.ActiveStyle.Colors.BlueHover, text: MeadowStyling.ActiveStyle.Colors.White,
             showShadow: true, showFocusRing: true);
 
         // Pressed sinks into the page: darker fill, shadow off (CSS drops the
         // 4 px edge and translates the button down on press).
         States.Pushed.Apply = () => ApplyPalette(
-            fill: MeadowColors.BlueDark, text: MeadowColors.White,
+            fill: MeadowStyling.ActiveStyle.Colors.BlueDark, text: MeadowStyling.ActiveStyle.Colors.White,
             showShadow: false, showFocusRing: false);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fill: MeadowColors.Disabled, text: MeadowColors.Cream2,
+            fill: MeadowStyling.ActiveStyle.Colors.Disabled, text: MeadowStyling.ActiveStyle.Colors.Cream2,
             showShadow: false, showFocusRing: false);
 
         States.DisabledFocused.Apply = () => ApplyPalette(
-            fill: MeadowColors.Disabled, text: MeadowColors.Cream2,
+            fill: MeadowStyling.ActiveStyle.Colors.Disabled, text: MeadowStyling.ActiveStyle.Colors.Cream2,
             showShadow: false, showFocusRing: true);
     }
 

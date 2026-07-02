@@ -45,7 +45,7 @@ public class MenuVisual : BaseMenuVisual
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.IsFilled = true;
-        fill.FillColor = Retro95Colors.Surface;
+        fill.FillColor = Retro95Styling.ActiveStyle.Colors.Surface;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -64,7 +64,7 @@ public class MenuVisual : BaseMenuVisual
         separator.WidthUnits = DimensionUnitType.RelativeToParent;
         separator.HeightUnits = DimensionUnitType.Absolute;
         separator.IsFilled = true;
-        separator.FillColor = Retro95Colors.HairlineDivider;
+        separator.FillColor = Retro95Styling.ActiveStyle.Colors.HairlineDivider;
         separator.StrokeWidth = 0;
         return separator;
     }

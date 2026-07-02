@@ -28,7 +28,7 @@ public class MenuVisual : BaseMenuVisual
         Background.Parent = null;
         InnerPanelInstance.Parent = null;
 
-        _fill = HazardShapes.Fill(HazardPalette.Surface1, cornerRadius: 0f, "HazardMenuFill");
+        _fill = HazardShapes.Fill(HazardStyling.ActiveStyle.Colors.Surface1, cornerRadius: 0f, "HazardMenuFill");
         AddChild(_fill);
 
         // Bottom hairline is an edge-anchored strip, not a full-parent shape, so
@@ -54,7 +54,7 @@ public class MenuVisual : BaseMenuVisual
         separator.WidthUnits = DimensionUnitType.RelativeToParent;
         separator.HeightUnits = DimensionUnitType.Absolute;
         separator.IsFilled = true;
-        separator.FillColor = HazardPalette.Border;
+        separator.FillColor = HazardStyling.ActiveStyle.Colors.Border;
         separator.StrokeWidth = 0;
         return separator;
     }

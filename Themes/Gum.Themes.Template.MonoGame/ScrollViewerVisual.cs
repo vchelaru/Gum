@@ -35,13 +35,13 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         FocusedIndicator.Parent = null;
         ScrollAndClipContainer.Parent = null;
 
-        _focusRing = TemplateShapes.FocusRing(TemplatePalette.Accent, CornerRadius, FocusRingInset, BorderThickness);
+        _focusRing = TemplateShapes.FocusRing(TemplateStyling.ActiveStyle.Colors.Accent, CornerRadius, FocusRingInset, BorderThickness);
         AddChild(_focusRing);
 
-        _fill = TemplateShapes.Fill(TemplatePalette.Surface1, CornerRadius);
+        _fill = TemplateShapes.Fill(TemplateStyling.ActiveStyle.Colors.Surface1, CornerRadius);
         AddChild(_fill);
 
-        _border = TemplateShapes.Border(TemplatePalette.Border, CornerRadius, BorderThickness);
+        _border = TemplateShapes.Border(TemplateStyling.ActiveStyle.Colors.Border, CornerRadius, BorderThickness);
         AddChild(_border);
 
         AddChild(ScrollAndClipContainer);
@@ -66,13 +66,13 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         // applies, but they're harmless because FocusedIndicator has no parent.
         States.Enabled.Apply = () =>
         {
-            _border.StrokeColor = TemplatePalette.Border;
+            _border.StrokeColor = TemplateStyling.ActiveStyle.Colors.Border;
             _focusRing.Visible = false;
         };
 
         States.Focused.Apply = () =>
         {
-            _border.StrokeColor = TemplatePalette.Accent;
+            _border.StrokeColor = TemplateStyling.ActiveStyle.Colors.Accent;
             _focusRing.Visible = true;
         };
     }

@@ -75,7 +75,7 @@ public sealed class Retro95DottedFocusRect
         _rect.StrokeDashLength = DashLength;
         _rect.StrokeGapLength = GapLength;
         _rect.IsAntialiased = false;
-        _rect.StrokeColor = Retro95Colors.Text;
+        _rect.StrokeColor = Retro95Styling.ActiveStyle.Colors.Text;
         _container.AddChild(_rect);
     }
 

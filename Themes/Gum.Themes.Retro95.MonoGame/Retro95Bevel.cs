@@ -80,7 +80,7 @@ public sealed class Retro95Bevel
         _innerBottom = innerBottom;
     }
 
-    /// <summary>The central fill rectangle. Color defaults to <see cref="Retro95Colors.Surface"/>.</summary>
+    /// <summary>The central fill rectangle. Color defaults to <see cref="Retro95Styling.ActiveStyle.Colors.Surface"/>.</summary>
     public RectangleRuntime Fill => _fill;
 
     /// <summary>
@@ -91,7 +91,7 @@ public sealed class Retro95Bevel
     public static Retro95Bevel AddTo(GraphicalUiElement parent, BevelMode mode, Color? fillColor = null)
     {
         RectangleRuntime fill = NewStretchedRect("Retro95BevelFill");
-        fill.FillColor = fillColor ?? Retro95Colors.Surface;
+        fill.FillColor = fillColor ?? Retro95Styling.ActiveStyle.Colors.Surface;
         parent.AddChild(fill);
 
         RectangleRuntime outerTop = NewEdgeStrip("Retro95BevelOuterTop", Edge.Top, OuterStripThickness, inset: 0f);
@@ -128,26 +128,26 @@ public sealed class Retro95Bevel
         {
             case BevelMode.Raised:
                 // top-left light, bottom-right dark
-                _outerTop.FillColor = Retro95Colors.HighlightOuter;
-                _outerLeft.FillColor = Retro95Colors.HighlightOuter;
-                _innerTop.FillColor = Retro95Colors.HighlightInner;
-                _innerLeft.FillColor = Retro95Colors.HighlightInner;
-                _outerBottom.FillColor = Retro95Colors.ShadowOuter;
-                _outerRight.FillColor = Retro95Colors.ShadowOuter;
-                _innerBottom.FillColor = Retro95Colors.ShadowInner;
-                _innerRight.FillColor = Retro95Colors.ShadowInner;
+                _outerTop.FillColor = Retro95Styling.ActiveStyle.Colors.HighlightOuter;
+                _outerLeft.FillColor = Retro95Styling.ActiveStyle.Colors.HighlightOuter;
+                _innerTop.FillColor = Retro95Styling.ActiveStyle.Colors.HighlightInner;
+                _innerLeft.FillColor = Retro95Styling.ActiveStyle.Colors.HighlightInner;
+                _outerBottom.FillColor = Retro95Styling.ActiveStyle.Colors.ShadowOuter;
+                _outerRight.FillColor = Retro95Styling.ActiveStyle.Colors.ShadowOuter;
+                _innerBottom.FillColor = Retro95Styling.ActiveStyle.Colors.ShadowInner;
+                _innerRight.FillColor = Retro95Styling.ActiveStyle.Colors.ShadowInner;
                 break;
 
             case BevelMode.Sunken:
                 // top-left dark, bottom-right light
-                _outerTop.FillColor = Retro95Colors.ShadowOuter;
-                _outerLeft.FillColor = Retro95Colors.ShadowOuter;
-                _innerTop.FillColor = Retro95Colors.ShadowInner;
-                _innerLeft.FillColor = Retro95Colors.ShadowInner;
-                _outerBottom.FillColor = Retro95Colors.HighlightOuter;
-                _outerRight.FillColor = Retro95Colors.HighlightOuter;
-                _innerBottom.FillColor = Retro95Colors.HighlightInner;
-                _innerRight.FillColor = Retro95Colors.HighlightInner;
+                _outerTop.FillColor = Retro95Styling.ActiveStyle.Colors.ShadowOuter;
+                _outerLeft.FillColor = Retro95Styling.ActiveStyle.Colors.ShadowOuter;
+                _innerTop.FillColor = Retro95Styling.ActiveStyle.Colors.ShadowInner;
+                _innerLeft.FillColor = Retro95Styling.ActiveStyle.Colors.ShadowInner;
+                _outerBottom.FillColor = Retro95Styling.ActiveStyle.Colors.HighlightOuter;
+                _outerRight.FillColor = Retro95Styling.ActiveStyle.Colors.HighlightOuter;
+                _innerBottom.FillColor = Retro95Styling.ActiveStyle.Colors.HighlightInner;
+                _innerRight.FillColor = Retro95Styling.ActiveStyle.Colors.HighlightInner;
                 break;
 
             case BevelMode.Inset:
@@ -155,22 +155,22 @@ public sealed class Retro95Bevel
                 // outer light + inner shadow on bottom-right. Same as Sunken
                 // but with the highlight/shadow swapped on the inner ring so
                 // the white inner band reads as the input fill catching light.
-                _outerTop.FillColor = Retro95Colors.ShadowInner;
-                _outerLeft.FillColor = Retro95Colors.ShadowInner;
-                _innerTop.FillColor = Retro95Colors.ShadowOuter;
-                _innerLeft.FillColor = Retro95Colors.ShadowOuter;
-                _outerBottom.FillColor = Retro95Colors.HighlightInner;
-                _outerRight.FillColor = Retro95Colors.HighlightInner;
-                _innerBottom.FillColor = Retro95Colors.HighlightOuter;
-                _innerRight.FillColor = Retro95Colors.HighlightOuter;
+                _outerTop.FillColor = Retro95Styling.ActiveStyle.Colors.ShadowInner;
+                _outerLeft.FillColor = Retro95Styling.ActiveStyle.Colors.ShadowInner;
+                _innerTop.FillColor = Retro95Styling.ActiveStyle.Colors.ShadowOuter;
+                _innerLeft.FillColor = Retro95Styling.ActiveStyle.Colors.ShadowOuter;
+                _outerBottom.FillColor = Retro95Styling.ActiveStyle.Colors.HighlightInner;
+                _outerRight.FillColor = Retro95Styling.ActiveStyle.Colors.HighlightInner;
+                _innerBottom.FillColor = Retro95Styling.ActiveStyle.Colors.HighlightOuter;
+                _innerRight.FillColor = Retro95Styling.ActiveStyle.Colors.HighlightOuter;
                 break;
 
             case BevelMode.StatusPanel:
                 // 1-pixel inverse bevel — only the outer ring is colored, inner ring matches the fill.
-                _outerTop.FillColor = Retro95Colors.ShadowInner;
-                _outerLeft.FillColor = Retro95Colors.ShadowInner;
-                _outerBottom.FillColor = Retro95Colors.HighlightOuter;
-                _outerRight.FillColor = Retro95Colors.HighlightOuter;
+                _outerTop.FillColor = Retro95Styling.ActiveStyle.Colors.ShadowInner;
+                _outerLeft.FillColor = Retro95Styling.ActiveStyle.Colors.ShadowInner;
+                _outerBottom.FillColor = Retro95Styling.ActiveStyle.Colors.HighlightOuter;
+                _outerRight.FillColor = Retro95Styling.ActiveStyle.Colors.HighlightOuter;
                 _innerTop.FillColor = _fill.FillColor;
                 _innerLeft.FillColor = _fill.FillColor;
                 _innerBottom.FillColor = _fill.FillColor;

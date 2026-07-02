@@ -68,10 +68,10 @@ public class SliderThumbVisual : InteractiveGue
         body.WidthUnits = DimensionUnitType.RelativeToParent;
         body.HeightUnits = DimensionUnitType.RelativeToParent;
         body.IsFilled = true;
-        body.FillColor = MeadowColors.White;
+        body.FillColor = MeadowStyling.ActiveStyle.Colors.White;
         body.StrokeWidth = 0;
         body.HasDropshadow = true;
-        body.DropshadowColor = MeadowPalette.ThumbShadow;
+        body.DropshadowColor = MeadowStyling.ActiveStyle.Colors.ThumbShadow;
         body.DropshadowOffsetX = 0f;
         body.DropshadowOffsetY = ShadowOffsetY;
         body.DropshadowBlur = ShadowBlur;
@@ -95,7 +95,7 @@ public class SliderThumbVisual : InteractiveGue
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = MeadowColors.Blue;
+        ring.StrokeColor = MeadowStyling.ActiveStyle.Colors.Blue;
         ring.Visible = false;
         return ring;
     }
@@ -107,25 +107,25 @@ public class SliderThumbVisual : InteractiveGue
         AddCategory(_buttonCategory);
 
         Add(_buttonCategory, FrameworkElement.EnabledStateName,
-            () => Apply(body: MeadowColors.White, ring: false, showShadow: true));
+            () => Apply(body: MeadowStyling.ActiveStyle.Colors.White, ring: false, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.HighlightedStateName,
-            () => Apply(body: MeadowColors.White, ring: false, showShadow: true));
+            () => Apply(body: MeadowStyling.ActiveStyle.Colors.White, ring: false, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.PushedStateName,
-            () => Apply(body: MeadowColors.Cream2, ring: false, showShadow: true));
+            () => Apply(body: MeadowStyling.ActiveStyle.Colors.Cream2, ring: false, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.FocusedStateName,
-            () => Apply(body: MeadowColors.White, ring: true, showShadow: true));
+            () => Apply(body: MeadowStyling.ActiveStyle.Colors.White, ring: true, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.HighlightedFocusedStateName,
-            () => Apply(body: MeadowColors.White, ring: true, showShadow: true));
+            () => Apply(body: MeadowStyling.ActiveStyle.Colors.White, ring: true, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.DisabledStateName,
-            () => Apply(body: MeadowColors.Cream2, ring: false, showShadow: false));
+            () => Apply(body: MeadowStyling.ActiveStyle.Colors.Cream2, ring: false, showShadow: false));
 
         Add(_buttonCategory, FrameworkElement.DisabledFocusedStateName,
-            () => Apply(body: MeadowColors.Cream2, ring: true, showShadow: false));
+            () => Apply(body: MeadowStyling.ActiveStyle.Colors.Cream2, ring: true, showShadow: false));
     }
 
     private static void Add(StateSaveCategory category, string name, System.Action apply)

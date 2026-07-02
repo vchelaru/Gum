@@ -36,7 +36,7 @@ public class TooltipVisual : BaseTooltipVisual
         AddChild(_border);
 
         AddChild(TextInstance);
-        TextInstance.Color = ForestGladeColors.Text;
+        TextInstance.Color = ForestGladeStyling.ActiveStyle.Colors.Text;
     }
 
     private static RectangleRuntime CreateFill()
@@ -53,7 +53,7 @@ public class TooltipVisual : BaseTooltipVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         ForestGladeLeaf.ApplyMedium(fill);
         fill.IsFilled = true;
-        fill.FillColor = ForestGladePalette.WindowBody;
+        fill.FillColor = ForestGladeStyling.ActiveStyle.Colors.WindowBody;
         fill.StrokeWidth = 0;
         return fill;
     }

@@ -39,7 +39,7 @@ public class SplitterVisual : BaseSplitterVisual
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.IsFilled = true;
-        fill.FillColor = NeonColors.AccentDim;
+        fill.FillColor = NeonStyling.ActiveStyle.Colors.AccentDim;
         fill.StrokeWidth = 0;
         return fill;
     }

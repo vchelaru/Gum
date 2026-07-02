@@ -41,13 +41,13 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         WidthUnits = DimensionUnitType.Absolute;
         HeightUnits = DimensionUnitType.Absolute;
 
-        _focusRing = TemplateShapes.FocusRing(TemplatePalette.Accent, CornerRadius, FocusRingInset, BorderThickness);
+        _focusRing = TemplateShapes.FocusRing(TemplateStyling.ActiveStyle.Colors.Accent, CornerRadius, FocusRingInset, BorderThickness);
         AddChild(_focusRing);
 
-        _fill = TemplateShapes.Fill(TemplatePalette.Surface1, CornerRadius);
+        _fill = TemplateShapes.Fill(TemplateStyling.ActiveStyle.Colors.Surface1, CornerRadius);
         AddChild(_fill);
 
-        _border = TemplateShapes.Border(TemplatePalette.Border, CornerRadius, BorderThickness);
+        _border = TemplateShapes.Border(TemplateStyling.ActiveStyle.Colors.Border, CornerRadius, BorderThickness);
         AddChild(_border);
 
         AddChild(TextInstance);
@@ -60,63 +60,63 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
     {
         // Off variants: same palette as the standard Template Button.
         States.EnabledOff.Apply = () => ApplyPalette(
-            fill: TemplatePalette.Surface1, border: TemplatePalette.Border,
-            text: TemplatePalette.Text, showFocusRing: false);
+            fill: TemplateStyling.ActiveStyle.Colors.Surface1, border: TemplateStyling.ActiveStyle.Colors.Border,
+            text: TemplateStyling.ActiveStyle.Colors.Text, showFocusRing: false);
 
         States.HighlightedOff.Apply = () => ApplyPalette(
-            fill: TemplatePalette.HoverFill, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, showFocusRing: false);
+            fill: TemplateStyling.ActiveStyle.Colors.HoverFill, border: TemplateStyling.ActiveStyle.Colors.Accent,
+            text: TemplateStyling.ActiveStyle.Colors.Text, showFocusRing: false);
 
         States.PushedOff.Apply = () => ApplyPalette(
-            fill: TemplatePalette.PressedFill, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, showFocusRing: false);
+            fill: TemplateStyling.ActiveStyle.Colors.PressedFill, border: TemplateStyling.ActiveStyle.Colors.Accent,
+            text: TemplateStyling.ActiveStyle.Colors.Text, showFocusRing: false);
 
         States.FocusedOff.Apply = () => ApplyPalette(
-            fill: TemplatePalette.Surface1, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, showFocusRing: true);
+            fill: TemplateStyling.ActiveStyle.Colors.Surface1, border: TemplateStyling.ActiveStyle.Colors.Accent,
+            text: TemplateStyling.ActiveStyle.Colors.Text, showFocusRing: true);
 
         States.HighlightedFocusedOff.Apply = () => ApplyPalette(
-            fill: TemplatePalette.HoverFill, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, showFocusRing: true);
+            fill: TemplateStyling.ActiveStyle.Colors.HoverFill, border: TemplateStyling.ActiveStyle.Colors.Accent,
+            text: TemplateStyling.ActiveStyle.Colors.Text, showFocusRing: true);
 
         States.DisabledOff.Apply = () => ApplyPalette(
-            fill: TemplatePalette.DisabledFill, border: TemplatePalette.DisabledBorder,
-            text: TemplatePalette.DisabledText, showFocusRing: false);
+            fill: TemplateStyling.ActiveStyle.Colors.DisabledFill, border: TemplateStyling.ActiveStyle.Colors.DisabledBorder,
+            text: TemplateStyling.ActiveStyle.Colors.DisabledText, showFocusRing: false);
 
         States.DisabledFocusedOff.Apply = () => ApplyPalette(
-            fill: TemplatePalette.DisabledFill, border: TemplatePalette.DisabledBorder,
-            text: TemplatePalette.DisabledText, showFocusRing: true);
+            fill: TemplateStyling.ActiveStyle.Colors.DisabledFill, border: TemplateStyling.ActiveStyle.Colors.DisabledBorder,
+            text: TemplateStyling.ActiveStyle.Colors.DisabledText, showFocusRing: true);
 
         // On variants: accent-filled body so the active state is unmistakable.
         // Text flips to PressedText (a light-blue from the source palette) for
         // legibility against the saturated accent fill.
         States.EnabledOn.Apply = () => ApplyPalette(
-            fill: TemplatePalette.Accent, border: TemplatePalette.Accent,
-            text: TemplatePalette.PressedText, showFocusRing: false);
+            fill: TemplateStyling.ActiveStyle.Colors.Accent, border: TemplateStyling.ActiveStyle.Colors.Accent,
+            text: TemplateStyling.ActiveStyle.Colors.PressedText, showFocusRing: false);
 
         States.HighlightedOn.Apply = () => ApplyPalette(
-            fill: TemplatePalette.AccentHover, border: TemplatePalette.AccentHover,
-            text: TemplatePalette.PressedText, showFocusRing: false);
+            fill: TemplateStyling.ActiveStyle.Colors.AccentHover, border: TemplateStyling.ActiveStyle.Colors.AccentHover,
+            text: TemplateStyling.ActiveStyle.Colors.PressedText, showFocusRing: false);
 
         States.PushedOn.Apply = () => ApplyPalette(
-            fill: TemplatePalette.AccentPressed, border: TemplatePalette.AccentPressed,
-            text: TemplatePalette.PressedText, showFocusRing: false);
+            fill: TemplateStyling.ActiveStyle.Colors.AccentPressed, border: TemplateStyling.ActiveStyle.Colors.AccentPressed,
+            text: TemplateStyling.ActiveStyle.Colors.PressedText, showFocusRing: false);
 
         States.FocusedOn.Apply = () => ApplyPalette(
-            fill: TemplatePalette.Accent, border: TemplatePalette.Accent,
-            text: TemplatePalette.PressedText, showFocusRing: true);
+            fill: TemplateStyling.ActiveStyle.Colors.Accent, border: TemplateStyling.ActiveStyle.Colors.Accent,
+            text: TemplateStyling.ActiveStyle.Colors.PressedText, showFocusRing: true);
 
         States.HighlightedFocusedOn.Apply = () => ApplyPalette(
-            fill: TemplatePalette.AccentHover, border: TemplatePalette.AccentHover,
-            text: TemplatePalette.PressedText, showFocusRing: true);
+            fill: TemplateStyling.ActiveStyle.Colors.AccentHover, border: TemplateStyling.ActiveStyle.Colors.AccentHover,
+            text: TemplateStyling.ActiveStyle.Colors.PressedText, showFocusRing: true);
 
         States.DisabledOn.Apply = () => ApplyPalette(
-            fill: TemplatePalette.DisabledFill, border: TemplatePalette.DisabledBorder,
-            text: TemplatePalette.DisabledText, showFocusRing: false);
+            fill: TemplateStyling.ActiveStyle.Colors.DisabledFill, border: TemplateStyling.ActiveStyle.Colors.DisabledBorder,
+            text: TemplateStyling.ActiveStyle.Colors.DisabledText, showFocusRing: false);
 
         States.DisabledFocusedOn.Apply = () => ApplyPalette(
-            fill: TemplatePalette.DisabledFill, border: TemplatePalette.DisabledBorder,
-            text: TemplatePalette.DisabledText, showFocusRing: true);
+            fill: TemplateStyling.ActiveStyle.Colors.DisabledFill, border: TemplateStyling.ActiveStyle.Colors.DisabledBorder,
+            text: TemplateStyling.ActiveStyle.Colors.DisabledText, showFocusRing: true);
     }
 
     private void ApplyPalette(Color fill, Color border, Color text, bool showFocusRing)

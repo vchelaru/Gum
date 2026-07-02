@@ -23,33 +23,35 @@ namespace Gum.Themes.ForestGlade;
 public static class ForestGladeTheme
 {
     /// <summary>
-    /// Family name the bundled Nunito TTFs are registered under. Body
+    /// Fixed family name the bundled Nunito TTFs are registered under. Body
     /// typeface from the CSS spec (<c>--ff: 'Nunito'</c>). Regular and Bold
     /// faces are both registered so Gum's IsBold slot resolves correctly.
+    /// Font <em>registration</em> is intentionally decoupled from font
+    /// <em>selection</em> (<see cref="ForestGladeText.FontFamily"/>, mutable) —
+    /// reassigning the selection before <see cref="Apply"/> can never corrupt
+    /// this registration.
     /// </summary>
-    public const string FontFamily = "Nunito";
+    internal const string BundledFontFamily = "Nunito";
 
     /// <summary>
-    /// Family name the bundled Fraunces TTF is registered under. CSS uses
+    /// Fixed family name the bundled Fraunces TTF is registered under. CSS uses
     /// Fraunces italic on the Window title bar only
     /// (<c>--ff-display: 'Fraunces'</c>, <c>.fg-win-title</c>). The single
-    /// embedded face is Fraunces 144pt Bold Italic.
+    /// embedded face is Fraunces 144pt Bold Italic. See <see cref="BundledFontFamily"/>
+    /// for why this is a fixed constant rather than the mutable
+    /// <see cref="ForestGladeText.TitleFontFamily"/> selection.
     /// </summary>
-    public const string TitleFontFamily = "Fraunces";
+    internal const string BundledTitleFontFamily = "Fraunces";
 
     /// <summary>
-    /// Family name the bundled icon font (DejaVu Sans Mono) is registered
+    /// Fixed family name the bundled icon font (DejaVu Sans Mono) is registered
     /// under. Used for glyphs Nunito doesn't cover — check marks, dropdown
     /// chevrons, scroll-bar arrows, decorative flower glyph on the Window
-    /// title (Dingbats and Geometric Shapes blocks).
+    /// title (Dingbats and Geometric Shapes blocks). See <see cref="BundledFontFamily"/>
+    /// for why this is a fixed constant rather than the mutable
+    /// <see cref="ForestGladeText.IconFontFamily"/> selection.
     /// </summary>
-    public const string IconFontFamily = "Forest Glade Icons";
-
-    /// <summary>
-    /// Default text size used by the theme. Matches the source mockup's
-    /// <c>--fs</c> token (14px).
-    /// </summary>
-    public const int FontSize = 14;
+    internal const string BundledIconFontFamily = "Forest Glade Icons";
 
     /// <summary>
     /// Applies the Forest Glade theme: wires KernSmith as the in-memory
@@ -98,17 +100,17 @@ public static class ForestGladeTheme
     private static void RegisterBundledFonts()
     {
         // Nunito body typeface — Regular and Bold faces.
-        RegisterEmbeddedFont(FontFamily, "Nunito-Regular.ttf", style: null);
-        RegisterEmbeddedFont(FontFamily, "Nunito-Bold.ttf", style: "Bold");
+        RegisterEmbeddedFont(BundledFontFamily, "Nunito-Regular.ttf", style: null);
+        RegisterEmbeddedFont(BundledFontFamily, "Nunito-Bold.ttf", style: "Bold");
 
         // Fraunces 144pt Bold Italic — the display face used on the
         // Window title bar. Registered as the family's italic slot since
         // CSS applies font-style: italic alongside font-weight: 700.
-        RegisterEmbeddedFont(TitleFontFamily, "Fraunces-BoldItalic.ttf", style: "Italic");
+        RegisterEmbeddedFont(BundledTitleFontFamily, "Fraunces-BoldItalic.ttf", style: "Italic");
 
         // Icon font registered under a distinct family name so visual code
-        // addresses it explicitly via ForestGladeTheme.IconFontFamily.
-        RegisterEmbeddedFont(IconFontFamily, "DejaVuSansMono.ttf", style: null);
+        // addresses it explicitly via ForestGladeStyling.ActiveStyle.Text.IconFontFamily.
+        RegisterEmbeddedFont(BundledIconFontFamily, "DejaVuSansMono.ttf", style: null);
     }
 
     private static void RegisterEmbeddedFont(string family, string fileName, string? style)
@@ -135,15 +137,20 @@ public static class ForestGladeTheme
         ThemePlatform.RegisterFont(family, fontBytes, style);
     }
 
-    private static void ConfigureStyling()
+    // Internal (not private) so Tests/Gum.Themes.Tests can exercise the guardrail-token sync
+    // (TextPrimary/TextMuted/Primary/Accent → V3.Styling.ActiveStyle.Colors) without going
+    // through Apply(), which requires a real GraphicsDevice for font wiring and can't run
+    // headlessly in a unit test. See Gum.Themes.ForestGlade.MonoGame.csproj's InternalsVisibleTo.
+    internal static void ConfigureStyling()
     {
         Styling styling = Styling.ActiveStyle;
+        ForestGladeText text = ForestGladeStyling.ActiveStyle.Text;
 
         styling.Text.Normal.Clear();
         styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = FontFamily });
+            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
         styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = FontSize });
+            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
         styling.Text.Normal.Variables.Add(
             new VariableSave { Name = "IsBold", Type = "bool", Value = false });
         styling.Text.Normal.Variables.Add(
@@ -151,18 +158,22 @@ public static class ForestGladeTheme
 
         styling.Text.Strong.Clear();
         styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = FontFamily });
+            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
         styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = FontSize });
+            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
         styling.Text.Strong.Variables.Add(
             new VariableSave { Name = "IsBold", Type = "bool", Value = true });
         styling.Text.Strong.Variables.Add(
             new VariableSave { Name = "IsItalic", Type = "bool", Value = false });
 
-        styling.Colors.TextPrimary = ForestGladeColors.Text;
-        styling.Colors.TextMuted = ForestGladeColors.Muted;
-        styling.Colors.Primary = ForestGladeColors.CanopyDeep;
-        styling.Colors.Accent = ForestGladeColors.LeafBright;
+        // Forest Glade tokens (see forest-glade.css :root for the source palette). We push
+        // only the 4-token guardrail (TextPrimary, TextMuted, Primary, Accent) and the
+        // visuals read the rest of the palette from ForestGladeStyling.ActiveStyle.Colors directly.
+        ForestGladeColors colors = ForestGladeStyling.ActiveStyle.Colors;
+        styling.Colors.TextPrimary = colors.TextPrimary;
+        styling.Colors.TextMuted = colors.TextMuted;
+        styling.Colors.Primary = colors.Primary;
+        styling.Colors.Accent = colors.Accent;
     }
 
     private static void RegisterVisuals()

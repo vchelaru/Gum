@@ -60,7 +60,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
         AddChild(_dropdownGlyph);
 
         AddChild(TextInstance);
-        TextInstance.Font = MeadowTheme.BodyFontFamily;
+        TextInstance.Font = MeadowStyling.ActiveStyle.Text.BodyFontFamily;
         TextInstance.X = TextLeftPadding;
         TextInstance.XUnits = GeneralUnitType.PixelsFromSmall;
         TextInstance.XOrigin = HorizontalAlignment.Left;
@@ -85,7 +85,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = MeadowColors.PeachLight;
+        fill.FillColor = MeadowStyling.ActiveStyle.Colors.PeachLight;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -130,7 +130,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = MeadowPalette.BlueFocusRing;
+        ring.StrokeColor = MeadowStyling.ActiveStyle.Colors.BlueFocusRing;
         ring.Visible = false;
         return ring;
     }
@@ -153,42 +153,42 @@ public class ComboBoxVisual : BaseComboBoxVisual
         glyph.HeightUnits = DimensionUnitType.Absolute;
         glyph.HorizontalAlignment = HorizontalAlignment.Center;
         glyph.VerticalAlignment = VerticalAlignment.Center;
-        glyph.Font = MeadowTheme.IconFontFamily;
+        glyph.Font = MeadowStyling.ActiveStyle.Text.IconFontFamily;
         glyph.FontSize = GlyphFontSize;
         glyph.Text = "▼";
-        glyph.Color = MeadowColors.CoralDark;
+        glyph.Color = MeadowStyling.ActiveStyle.Colors.CoralDark;
         return glyph;
     }
 
     private void WireStates()
     {
         States.Enabled.Apply = () => Apply(
-            fill: MeadowColors.PeachLight, border: new Color(0, 0, 0, 0),
-            text: MeadowColors.TealDark, glyph: MeadowColors.CoralDark, ring: false);
+            fill: MeadowStyling.ActiveStyle.Colors.PeachLight, border: new Color(0, 0, 0, 0),
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: MeadowStyling.ActiveStyle.Colors.CoralDark, ring: false);
 
         States.Highlighted.Apply = () => Apply(
-            fill: MeadowColors.PeachLight, border: MeadowColors.PeachDark,
-            text: MeadowColors.TealDark, glyph: MeadowColors.CoralDark, ring: false);
+            fill: MeadowStyling.ActiveStyle.Colors.PeachLight, border: MeadowStyling.ActiveStyle.Colors.PeachDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: MeadowStyling.ActiveStyle.Colors.CoralDark, ring: false);
 
         States.Focused.Apply = () => Apply(
-            fill: MeadowColors.White, border: MeadowColors.Blue,
-            text: MeadowColors.TealDark, glyph: MeadowColors.CoralDark, ring: true);
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.Blue,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: MeadowStyling.ActiveStyle.Colors.CoralDark, ring: true);
 
         States.HighlightedFocused.Apply = () => Apply(
-            fill: MeadowColors.White, border: MeadowColors.Blue,
-            text: MeadowColors.TealDark, glyph: MeadowColors.CoralDark, ring: true);
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.Blue,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: MeadowStyling.ActiveStyle.Colors.CoralDark, ring: true);
 
         States.Pushed.Apply = () => Apply(
-            fill: MeadowColors.PeachLight, border: MeadowColors.PeachDark,
-            text: MeadowColors.TealDark, glyph: MeadowColors.Coral, ring: false);
+            fill: MeadowStyling.ActiveStyle.Colors.PeachLight, border: MeadowStyling.ActiveStyle.Colors.PeachDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: MeadowStyling.ActiveStyle.Colors.Coral, ring: false);
 
         States.Disabled.Apply = () => Apply(
-            fill: MeadowColors.Cream2, border: MeadowColors.Disabled,
-            text: MeadowColors.DisabledInk, glyph: MeadowColors.DisabledInk, ring: false);
+            fill: MeadowStyling.ActiveStyle.Colors.Cream2, border: MeadowStyling.ActiveStyle.Colors.Disabled,
+            text: MeadowStyling.ActiveStyle.Colors.DisabledInk, glyph: MeadowStyling.ActiveStyle.Colors.DisabledInk, ring: false);
 
         States.DisabledFocused.Apply = () => Apply(
-            fill: MeadowColors.Cream2, border: MeadowColors.Disabled,
-            text: MeadowColors.DisabledInk, glyph: MeadowColors.DisabledInk, ring: true);
+            fill: MeadowStyling.ActiveStyle.Colors.Cream2, border: MeadowStyling.ActiveStyle.Colors.Disabled,
+            text: MeadowStyling.ActiveStyle.Colors.DisabledInk, glyph: MeadowStyling.ActiveStyle.Colors.DisabledInk, ring: true);
     }
 
     private void Apply(Color fill, Color border, Color text, Color glyph, bool ring)

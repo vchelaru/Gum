@@ -37,7 +37,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         AddChild(_fill);
 
         AddChild(TextInstance);
-        TextInstance.Font = TemplateTheme.BodyFontFamily; // row content uses the body face
+        TextInstance.Font = TemplateStyling.ActiveStyle.Text.BodyFontFamily; // row content uses the body face
         // Left-pad the text the same amount the V3 default does (-8 width split),
         // but nudge it in from the row edge so the selected-row fill reads as a
         // band rather than text mashed against the list border.
@@ -57,19 +57,19 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         // selected; selected+focused brightens to full Accent to mark which row
         // the keyboard will move from.
         States.Enabled.Apply = () => ApplyPalette(
-            fill: new Color(0, 0, 0, 0), text: TemplatePalette.Text);
+            fill: new Color(0, 0, 0, 0), text: TemplateStyling.ActiveStyle.Colors.Text);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            fill: TemplatePalette.Surface2, text: TemplatePalette.Text);
+            fill: TemplateStyling.ActiveStyle.Colors.Surface2, text: TemplateStyling.ActiveStyle.Colors.Text);
 
         States.Selected.Apply = () => ApplyPalette(
-            fill: TemplatePalette.Selection, text: TemplatePalette.Text);
+            fill: TemplateStyling.ActiveStyle.Colors.Selection, text: TemplateStyling.ActiveStyle.Colors.Text);
 
         States.Focused.Apply = () => ApplyPalette(
-            fill: TemplatePalette.Accent, text: TemplatePalette.Text);
+            fill: TemplateStyling.ActiveStyle.Colors.Accent, text: TemplateStyling.ActiveStyle.Colors.Text);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fill: new Color(0, 0, 0, 0), text: TemplatePalette.DisabledText);
+            fill: new Color(0, 0, 0, 0), text: TemplateStyling.ActiveStyle.Colors.DisabledText);
     }
 
     private void ApplyPalette(Color fill, Color text)

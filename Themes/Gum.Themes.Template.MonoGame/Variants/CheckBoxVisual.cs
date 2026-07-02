@@ -41,10 +41,6 @@ public class CheckBoxVisual : BaseCheckBoxVisual
     // Latin but its Dingbats / Geometric Shapes glyphs are wider than the cell).
     private const float GlyphContainerSize = 24f;
 
-    // Translucent accent for the soft focus glow.
-    private static readonly Color FocusGlow = new Color(
-        (int)TemplatePalette.Accent.R, (int)TemplatePalette.Accent.G, (int)TemplatePalette.Accent.B, 110);
-
     private readonly RectangleRuntime _focusRing;
     private readonly RectangleRuntime _boxFill;
     private readonly RectangleRuntime _boxBorder;
@@ -78,10 +74,10 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         // the Dingbats block where U+2713 ✓ lives. The character is pre-baked
         // into the icon font's atlas via BmfcSave.AddCharacters in
         // TemplateTheme.Apply.
-        _checkGlyph.Font = TemplateTheme.IconFontFamily;
+        _checkGlyph.Font = TemplateStyling.ActiveStyle.Text.IconFontFamily;
         _checkGlyph.FontSize = 22;
         _checkGlyph.Text = "✓";
-        _checkGlyph.Color = TemplatePalette.Accent;
+        _checkGlyph.Color = TemplateStyling.ActiveStyle.Colors.Accent;
         _checkGlyph.Visible = false;
 
         _dashIndicator = CreateDashIndicator();
@@ -107,7 +103,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         fill.HeightUnits = DimensionUnitType.Absolute;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = TemplatePalette.Surface1;
+        fill.FillColor = TemplateStyling.ActiveStyle.Colors.Surface1;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -130,7 +126,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = TemplatePalette.Border;
+        border.StrokeColor = TemplateStyling.ActiveStyle.Colors.Border;
         return border;
     }
 
@@ -154,7 +150,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = FocusGlow;
+        ring.StrokeColor = TemplateStyling.ActiveStyle.Colors.AccentGlow;
         ring.Visible = false;
         return ring;
     }
@@ -203,7 +199,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         dash.HeightUnits = DimensionUnitType.Absolute;
         dash.CornerRadius = 1f;
         dash.IsFilled = true;
-        dash.FillColor = TemplatePalette.Accent;
+        dash.FillColor = TemplateStyling.ActiveStyle.Colors.Accent;
         dash.StrokeWidth = 0;
         return dash;
     }
@@ -212,104 +208,104 @@ public class CheckBoxVisual : BaseCheckBoxVisual
     {
         // -------- Unchecked (Off) --------
         States.EnabledOff.Apply = () => Apply(
-            fill: TemplatePalette.Surface1, border: TemplatePalette.Border,
-            text: TemplatePalette.Text, glyph: GlyphKind.None, ring: false);
+            fill: TemplateStyling.ActiveStyle.Colors.Surface1, border: TemplateStyling.ActiveStyle.Colors.Border,
+            text: TemplateStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: false);
 
         // Border tracks interaction state only — the inside glyph alone signals
         // value. Hover/Highlighted gets BorderHover (matching TextBox's softer
         // hover→focus progression), focus drives Accent + ring, and the same
         // pattern is mirrored on On / Indeterminate below.
         States.HighlightedOff.Apply = () => Apply(
-            fill: TemplatePalette.Surface2, border: TemplatePalette.BorderHover,
-            text: TemplatePalette.Text, glyph: GlyphKind.None, ring: false);
+            fill: TemplateStyling.ActiveStyle.Colors.Surface2, border: TemplateStyling.ActiveStyle.Colors.BorderHover,
+            text: TemplateStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: false);
 
         States.FocusedOff.Apply = () => Apply(
-            fill: TemplatePalette.Surface1, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, glyph: GlyphKind.None, ring: true);
+            fill: TemplateStyling.ActiveStyle.Colors.Surface1, border: TemplateStyling.ActiveStyle.Colors.Accent,
+            text: TemplateStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: true);
 
         States.HighlightedFocusedOff.Apply = () => Apply(
-            fill: TemplatePalette.Surface2, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, glyph: GlyphKind.None, ring: true);
+            fill: TemplateStyling.ActiveStyle.Colors.Surface2, border: TemplateStyling.ActiveStyle.Colors.Accent,
+            text: TemplateStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: true);
 
         States.PushedOff.Apply = () => Apply(
-            fill: TemplatePalette.PressedFill, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, glyph: GlyphKind.None, ring: false);
+            fill: TemplateStyling.ActiveStyle.Colors.PressedFill, border: TemplateStyling.ActiveStyle.Colors.Accent,
+            text: TemplateStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: false);
 
         States.DisabledOff.Apply = () => Apply(
-            fill: TemplatePalette.DisabledFill, border: TemplatePalette.DisabledBorder,
-            text: TemplatePalette.DisabledText, glyph: GlyphKind.None, ring: false);
+            fill: TemplateStyling.ActiveStyle.Colors.DisabledFill, border: TemplateStyling.ActiveStyle.Colors.DisabledBorder,
+            text: TemplateStyling.ActiveStyle.Colors.DisabledText, glyph: GlyphKind.None, ring: false);
 
         States.DisabledFocusedOff.Apply = () => Apply(
-            fill: TemplatePalette.DisabledFill, border: TemplatePalette.DisabledBorder,
-            text: TemplatePalette.DisabledText, glyph: GlyphKind.None, ring: true);
+            fill: TemplateStyling.ActiveStyle.Colors.DisabledFill, border: TemplateStyling.ActiveStyle.Colors.DisabledBorder,
+            text: TemplateStyling.ActiveStyle.Colors.DisabledText, glyph: GlyphKind.None, ring: true);
 
         // -------- Checked (On) --------
         // Border mirrors the Off variants exactly — the value is communicated solely by
         // the glyph inside. Keeps the three value states (Off / On / Indeterminate)
         // visually identical in chrome and distinguished only by what appears inside.
         States.EnabledOn.Apply = () => Apply(
-            fill: TemplatePalette.Surface1, border: TemplatePalette.Border,
-            text: TemplatePalette.Text, glyph: GlyphKind.Check, glyphColor: TemplatePalette.Accent,
+            fill: TemplateStyling.ActiveStyle.Colors.Surface1, border: TemplateStyling.ActiveStyle.Colors.Border,
+            text: TemplateStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: TemplateStyling.ActiveStyle.Colors.Accent,
             ring: false);
 
         States.HighlightedOn.Apply = () => Apply(
-            fill: TemplatePalette.Surface2, border: TemplatePalette.BorderHover,
-            text: TemplatePalette.Text, glyph: GlyphKind.Check, glyphColor: TemplatePalette.Accent,
+            fill: TemplateStyling.ActiveStyle.Colors.Surface2, border: TemplateStyling.ActiveStyle.Colors.BorderHover,
+            text: TemplateStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: TemplateStyling.ActiveStyle.Colors.Accent,
             ring: false);
 
         States.FocusedOn.Apply = () => Apply(
-            fill: TemplatePalette.Surface1, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, glyph: GlyphKind.Check, glyphColor: TemplatePalette.Accent,
+            fill: TemplateStyling.ActiveStyle.Colors.Surface1, border: TemplateStyling.ActiveStyle.Colors.Accent,
+            text: TemplateStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: TemplateStyling.ActiveStyle.Colors.Accent,
             ring: true);
 
         States.HighlightedFocusedOn.Apply = () => Apply(
-            fill: TemplatePalette.Surface2, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, glyph: GlyphKind.Check, glyphColor: TemplatePalette.Accent,
+            fill: TemplateStyling.ActiveStyle.Colors.Surface2, border: TemplateStyling.ActiveStyle.Colors.Accent,
+            text: TemplateStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: TemplateStyling.ActiveStyle.Colors.Accent,
             ring: true);
 
         States.PushedOn.Apply = () => Apply(
-            fill: TemplatePalette.PressedFill, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, glyph: GlyphKind.Check, glyphColor: TemplatePalette.Accent,
+            fill: TemplateStyling.ActiveStyle.Colors.PressedFill, border: TemplateStyling.ActiveStyle.Colors.Accent,
+            text: TemplateStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: TemplateStyling.ActiveStyle.Colors.Accent,
             ring: false);
 
         States.DisabledOn.Apply = () => Apply(
-            fill: TemplatePalette.DisabledFill, border: TemplatePalette.DisabledBorder,
-            text: TemplatePalette.DisabledText, glyph: GlyphKind.Check,
-            glyphColor: TemplatePalette.DisabledText, ring: false);
+            fill: TemplateStyling.ActiveStyle.Colors.DisabledFill, border: TemplateStyling.ActiveStyle.Colors.DisabledBorder,
+            text: TemplateStyling.ActiveStyle.Colors.DisabledText, glyph: GlyphKind.Check,
+            glyphColor: TemplateStyling.ActiveStyle.Colors.DisabledText, ring: false);
 
         States.DisabledFocusedOn.Apply = () => Apply(
-            fill: TemplatePalette.DisabledFill, border: TemplatePalette.DisabledBorder,
-            text: TemplatePalette.DisabledText, glyph: GlyphKind.Check,
-            glyphColor: TemplatePalette.DisabledText, ring: true);
+            fill: TemplateStyling.ActiveStyle.Colors.DisabledFill, border: TemplateStyling.ActiveStyle.Colors.DisabledBorder,
+            text: TemplateStyling.ActiveStyle.Colors.DisabledText, glyph: GlyphKind.Check,
+            glyphColor: TemplateStyling.ActiveStyle.Colors.DisabledText, ring: true);
 
         // -------- Indeterminate --------
         States.EnabledIndeterminate.Apply = () => Apply(
-            fill: TemplatePalette.Surface1, border: TemplatePalette.Border,
-            text: TemplatePalette.Text, glyph: GlyphKind.Dash, ring: false);
+            fill: TemplateStyling.ActiveStyle.Colors.Surface1, border: TemplateStyling.ActiveStyle.Colors.Border,
+            text: TemplateStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: false);
 
         States.HighlightedIndeterminate.Apply = () => Apply(
-            fill: TemplatePalette.Surface2, border: TemplatePalette.BorderHover,
-            text: TemplatePalette.Text, glyph: GlyphKind.Dash, ring: false);
+            fill: TemplateStyling.ActiveStyle.Colors.Surface2, border: TemplateStyling.ActiveStyle.Colors.BorderHover,
+            text: TemplateStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: false);
 
         States.FocusedIndeterminate.Apply = () => Apply(
-            fill: TemplatePalette.Surface1, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, glyph: GlyphKind.Dash, ring: true);
+            fill: TemplateStyling.ActiveStyle.Colors.Surface1, border: TemplateStyling.ActiveStyle.Colors.Accent,
+            text: TemplateStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: true);
 
         States.HighlightedFocusedIndeterminate.Apply = () => Apply(
-            fill: TemplatePalette.Surface2, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, glyph: GlyphKind.Dash, ring: true);
+            fill: TemplateStyling.ActiveStyle.Colors.Surface2, border: TemplateStyling.ActiveStyle.Colors.Accent,
+            text: TemplateStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: true);
 
         States.PushedIndeterminate.Apply = () => Apply(
-            fill: TemplatePalette.PressedFill, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, glyph: GlyphKind.Dash, ring: false);
+            fill: TemplateStyling.ActiveStyle.Colors.PressedFill, border: TemplateStyling.ActiveStyle.Colors.Accent,
+            text: TemplateStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: false);
 
         States.DisabledIndeterminate.Apply = () => Apply(
-            fill: TemplatePalette.DisabledFill, border: TemplatePalette.DisabledBorder,
-            text: TemplatePalette.DisabledText, glyph: GlyphKind.Dash, ring: false);
+            fill: TemplateStyling.ActiveStyle.Colors.DisabledFill, border: TemplateStyling.ActiveStyle.Colors.DisabledBorder,
+            text: TemplateStyling.ActiveStyle.Colors.DisabledText, glyph: GlyphKind.Dash, ring: false);
 
         States.DisabledFocusedIndeterminate.Apply = () => Apply(
-            fill: TemplatePalette.DisabledFill, border: TemplatePalette.DisabledBorder,
-            text: TemplatePalette.DisabledText, glyph: GlyphKind.Dash, ring: true);
+            fill: TemplateStyling.ActiveStyle.Colors.DisabledFill, border: TemplateStyling.ActiveStyle.Colors.DisabledBorder,
+            text: TemplateStyling.ActiveStyle.Colors.DisabledText, glyph: GlyphKind.Dash, ring: true);
     }
 
     private enum GlyphKind { None, Check, Dash }

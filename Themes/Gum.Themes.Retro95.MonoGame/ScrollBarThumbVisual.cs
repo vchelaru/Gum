@@ -42,19 +42,19 @@ public class ScrollBarThumbVisual : InteractiveGue
         AddCategory(_buttonCategory);
 
         Add(_buttonCategory, FrameworkElement.EnabledStateName,
-            () => Apply(mode: BevelMode.Raised, fill: Retro95Colors.Surface));
+            () => Apply(mode: BevelMode.Raised, fill: Retro95Styling.ActiveStyle.Colors.Surface));
         Add(_buttonCategory, FrameworkElement.HighlightedStateName,
-            () => Apply(mode: BevelMode.Raised, fill: Retro95Colors.SurfaceHover));
+            () => Apply(mode: BevelMode.Raised, fill: Retro95Styling.ActiveStyle.Colors.SurfaceHover));
         Add(_buttonCategory, FrameworkElement.PushedStateName,
-            () => Apply(mode: BevelMode.Sunken, fill: Retro95Colors.Surface));
+            () => Apply(mode: BevelMode.Sunken, fill: Retro95Styling.ActiveStyle.Colors.Surface));
         Add(_buttonCategory, FrameworkElement.FocusedStateName,
-            () => Apply(mode: BevelMode.Raised, fill: Retro95Colors.Surface));
+            () => Apply(mode: BevelMode.Raised, fill: Retro95Styling.ActiveStyle.Colors.Surface));
         Add(_buttonCategory, FrameworkElement.HighlightedFocusedStateName,
-            () => Apply(mode: BevelMode.Raised, fill: Retro95Colors.SurfaceHover));
+            () => Apply(mode: BevelMode.Raised, fill: Retro95Styling.ActiveStyle.Colors.SurfaceHover));
         Add(_buttonCategory, FrameworkElement.DisabledStateName,
-            () => Apply(mode: BevelMode.Raised, fill: Retro95Colors.Surface));
+            () => Apply(mode: BevelMode.Raised, fill: Retro95Styling.ActiveStyle.Colors.Surface));
         Add(_buttonCategory, FrameworkElement.DisabledFocusedStateName,
-            () => Apply(mode: BevelMode.Raised, fill: Retro95Colors.Surface));
+            () => Apply(mode: BevelMode.Raised, fill: Retro95Styling.ActiveStyle.Colors.Surface));
     }
 
     private static void Add(StateSaveCategory category, string name, System.Action apply)

@@ -114,7 +114,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         c.IsFilled = false;
         c.StrokeWidth = FocusRingThickness;
         c.StrokeWidthUnits = DimensionUnitType.Absolute;
-        c.StrokeColor = ForestGladeColors.AccentHalo;
+        c.StrokeColor = ForestGladeStyling.ActiveStyle.Colors.AccentHalo;
         c.Visible = false;
         return c;
     }
@@ -135,7 +135,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         dot.WidthUnits = DimensionUnitType.Absolute;
         dot.HeightUnits = DimensionUnitType.Absolute;
         dot.IsFilled = true;
-        dot.FillColor = ForestGladeColors.SunPale;
+        dot.FillColor = ForestGladeStyling.ActiveStyle.Colors.SunPale;
         dot.StrokeWidth = 0;
         dot.Visible = false;
         return dot;
@@ -145,75 +145,75 @@ public class RadioButtonVisual : BaseRadioButtonVisual
     {
         Color restBorder = new Color(232, 255, 117, 76);
         Color hoverBorder = new Color(232, 255, 117, 140);
-        Color selectedBorder = ForestGladeColors.SunPale;
+        Color selectedBorder = ForestGladeStyling.ActiveStyle.Colors.SunPale;
         Color restFill = new Color(3, 28, 32);
         Color disabledBorder = new Color(232, 255, 117, 26);
         Color disabledFill = new Color(8, 16, 18);
-        Color innerSelected = ForestGladeColors.SunPale;
+        Color innerSelected = ForestGladeStyling.ActiveStyle.Colors.SunPale;
         Color innerPushed = new Color(0, 126, 41); // CSS pushed gradient mid
 
         // -------- Off --------
         States.EnabledOff.Apply = () => Apply(
             fill: restFill, border: restBorder,
-            text: ForestGladeColors.Text, innerVisible: false, ring: false);
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: false);
 
         States.HighlightedOff.Apply = () => Apply(
             fill: restFill, border: hoverBorder,
-            text: ForestGladeColors.Text, innerVisible: false, ring: false);
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: false);
 
         States.FocusedOff.Apply = () => Apply(
-            fill: restFill, border: ForestGladeColors.LeafBright,
-            text: ForestGladeColors.Text, innerVisible: false, ring: true);
+            fill: restFill, border: ForestGladeStyling.ActiveStyle.Colors.LeafBright,
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: true);
 
         States.HighlightedFocusedOff.Apply = () => Apply(
-            fill: restFill, border: ForestGladeColors.LeafBright,
-            text: ForestGladeColors.Text, innerVisible: false, ring: true);
+            fill: restFill, border: ForestGladeStyling.ActiveStyle.Colors.LeafBright,
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: true);
 
         States.PushedOff.Apply = () => Apply(
-            fill: restFill, border: ForestGladeColors.LeafBright,
-            text: ForestGladeColors.Text, innerVisible: false, ring: false);
+            fill: restFill, border: ForestGladeStyling.ActiveStyle.Colors.LeafBright,
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: false);
 
         States.DisabledOff.Apply = () => Apply(
             fill: disabledFill, border: disabledBorder,
-            text: ForestGladeColors.Disabled, innerVisible: false, ring: false);
+            text: ForestGladeStyling.ActiveStyle.Colors.Disabled, innerVisible: false, ring: false);
 
         States.DisabledFocusedOff.Apply = () => Apply(
             fill: disabledFill, border: disabledBorder,
-            text: ForestGladeColors.Disabled, innerVisible: false, ring: true);
+            text: ForestGladeStyling.ActiveStyle.Colors.Disabled, innerVisible: false, ring: true);
 
         // -------- On --------
         States.EnabledOn.Apply = () => Apply(
             fill: restFill, border: selectedBorder,
-            text: ForestGladeColors.Text, innerVisible: true, innerColor: innerSelected,
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, innerVisible: true, innerColor: innerSelected,
             ring: false);
 
         States.HighlightedOn.Apply = () => Apply(
             fill: restFill, border: selectedBorder,
-            text: ForestGladeColors.Text, innerVisible: true, innerColor: innerSelected,
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, innerVisible: true, innerColor: innerSelected,
             ring: false);
 
         States.FocusedOn.Apply = () => Apply(
             fill: restFill, border: selectedBorder,
-            text: ForestGladeColors.Text, innerVisible: true, innerColor: innerSelected,
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, innerVisible: true, innerColor: innerSelected,
             ring: true);
 
         States.HighlightedFocusedOn.Apply = () => Apply(
             fill: restFill, border: selectedBorder,
-            text: ForestGladeColors.Text, innerVisible: true, innerColor: innerSelected,
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, innerVisible: true, innerColor: innerSelected,
             ring: true);
 
         States.PushedOn.Apply = () => Apply(
             fill: restFill, border: selectedBorder,
-            text: ForestGladeColors.Text, innerVisible: true, innerColor: innerPushed,
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, innerVisible: true, innerColor: innerPushed,
             ring: false);
 
         States.DisabledOn.Apply = () => Apply(
             fill: disabledFill, border: disabledBorder,
-            text: ForestGladeColors.Disabled, innerVisible: false, ring: false);
+            text: ForestGladeStyling.ActiveStyle.Colors.Disabled, innerVisible: false, ring: false);
 
         States.DisabledFocusedOn.Apply = () => Apply(
             fill: disabledFill, border: disabledBorder,
-            text: ForestGladeColors.Disabled, innerVisible: false, ring: true);
+            text: ForestGladeStyling.ActiveStyle.Colors.Disabled, innerVisible: false, ring: true);
     }
 
     private void Apply(Color fill, Color border, Color text, bool innerVisible, bool ring,

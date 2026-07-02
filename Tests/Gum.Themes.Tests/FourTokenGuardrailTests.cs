@@ -2,6 +2,12 @@ using System.Reflection;
 using Gum.Themes.Bubblegum;
 using Gum.Themes.DarkPro;
 using Gum.Themes.Editor;
+using Gum.Themes.ForestGlade;
+using Gum.Themes.Hazard;
+using Gum.Themes.Meadow;
+using Gum.Themes.Neon;
+using Gum.Themes.Retro95;
+using Gum.Themes.Template;
 using Microsoft.Xna.Framework;
 using Shouldly;
 using V3Styling = Gum.Forms.DefaultVisuals.V3.Styling;
@@ -22,6 +28,12 @@ public class FourTokenGuardrailTests
         yield return new object[] { typeof(DarkProColors), "DarkProColors" };
         yield return new object[] { typeof(BubblegumColors), "BubblegumColors" };
         yield return new object[] { typeof(EditorColors), "EditorColors" };
+        yield return new object[] { typeof(Retro95Colors), "Retro95Colors" };
+        yield return new object[] { typeof(ForestGladeColors), "ForestGladeColors" };
+        yield return new object[] { typeof(MeadowColors), "MeadowColors" };
+        yield return new object[] { typeof(NeonColors), "NeonColors" };
+        yield return new object[] { typeof(HazardColors), "HazardColors" };
+        yield return new object[] { typeof(TemplateColors), "TemplateColors" };
     }
 
     [Theory]
@@ -96,6 +108,132 @@ public class FourTokenGuardrailTests
         EditorStyling.ActiveStyle.Colors.Accent = accent;
 
         EditorTheme.ConfigureStyling();
+
+        V3Styling.ActiveStyle.Colors.TextPrimary.ShouldBe(textPrimary);
+        V3Styling.ActiveStyle.Colors.TextMuted.ShouldBe(textMuted);
+        V3Styling.ActiveStyle.Colors.Primary.ShouldBe(primary);
+        V3Styling.ActiveStyle.Colors.Accent.ShouldBe(accent);
+    }
+
+    [Fact]
+    public void Retro95Theme_ConfigureStyling_SyncsFourGuardrailTokensIntoV3Styling()
+    {
+        Color textPrimary = new Color(14, 25, 36);
+        Color textMuted = new Color(47, 58, 69);
+        Color primary = new Color(80, 91, 102);
+        Color accent = new Color(103, 113, 123);
+
+        Retro95Styling.ActiveStyle.Colors.Text = textPrimary;
+        Retro95Styling.ActiveStyle.Colors.DisabledText = textMuted;
+        Retro95Styling.ActiveStyle.Colors.Surface = primary;
+        Retro95Styling.ActiveStyle.Colors.Selection = accent;
+
+        Retro95Theme.ConfigureStyling();
+
+        V3Styling.ActiveStyle.Colors.TextPrimary.ShouldBe(textPrimary);
+        V3Styling.ActiveStyle.Colors.TextMuted.ShouldBe(textMuted);
+        V3Styling.ActiveStyle.Colors.Primary.ShouldBe(primary);
+        V3Styling.ActiveStyle.Colors.Accent.ShouldBe(accent);
+    }
+
+    [Fact]
+    public void ForestGladeTheme_ConfigureStyling_SyncsFourGuardrailTokensIntoV3Styling()
+    {
+        Color textPrimary = new Color(15, 26, 37);
+        Color textMuted = new Color(48, 59, 70);
+        Color primary = new Color(81, 92, 103);
+        Color accent = new Color(104, 114, 124);
+
+        ForestGladeStyling.ActiveStyle.Colors.Text = textPrimary;
+        ForestGladeStyling.ActiveStyle.Colors.Muted = textMuted;
+        ForestGladeStyling.ActiveStyle.Colors.CanopyDeep = primary;
+        ForestGladeStyling.ActiveStyle.Colors.LeafBright = accent;
+
+        ForestGladeTheme.ConfigureStyling();
+
+        V3Styling.ActiveStyle.Colors.TextPrimary.ShouldBe(textPrimary);
+        V3Styling.ActiveStyle.Colors.TextMuted.ShouldBe(textMuted);
+        V3Styling.ActiveStyle.Colors.Primary.ShouldBe(primary);
+        V3Styling.ActiveStyle.Colors.Accent.ShouldBe(accent);
+    }
+
+    [Fact]
+    public void MeadowTheme_ConfigureStyling_SyncsFourGuardrailTokensIntoV3Styling()
+    {
+        Color textPrimary = new Color(16, 27, 38);
+        Color textMuted = new Color(49, 60, 71);
+        Color primary = new Color(82, 93, 104);
+        Color accent = new Color(105, 115, 125);
+
+        MeadowStyling.ActiveStyle.Colors.TealDark = textPrimary;
+        MeadowStyling.ActiveStyle.Colors.Muted = textMuted;
+        MeadowStyling.ActiveStyle.Colors.Cream2 = primary;
+        MeadowStyling.ActiveStyle.Colors.Blue = accent;
+
+        MeadowTheme.ConfigureStyling();
+
+        V3Styling.ActiveStyle.Colors.TextPrimary.ShouldBe(textPrimary);
+        V3Styling.ActiveStyle.Colors.TextMuted.ShouldBe(textMuted);
+        V3Styling.ActiveStyle.Colors.Primary.ShouldBe(primary);
+        V3Styling.ActiveStyle.Colors.Accent.ShouldBe(accent);
+    }
+
+    [Fact]
+    public void NeonTheme_ConfigureStyling_SyncsFourGuardrailTokensIntoV3Styling()
+    {
+        Color textPrimary = new Color(17, 28, 39);
+        Color textMuted = new Color(50, 61, 72);
+        Color primary = new Color(83, 94, 105);
+        Color accent = new Color(106, 116, 126);
+
+        NeonStyling.ActiveStyle.Colors.Text = textPrimary;
+        NeonStyling.ActiveStyle.Colors.Muted = textMuted;
+        NeonStyling.ActiveStyle.Colors.Surface1 = primary;
+        NeonStyling.ActiveStyle.Colors.Accent = accent;
+
+        NeonTheme.ConfigureStyling();
+
+        V3Styling.ActiveStyle.Colors.TextPrimary.ShouldBe(textPrimary);
+        V3Styling.ActiveStyle.Colors.TextMuted.ShouldBe(textMuted);
+        V3Styling.ActiveStyle.Colors.Primary.ShouldBe(primary);
+        V3Styling.ActiveStyle.Colors.Accent.ShouldBe(accent);
+    }
+
+    [Fact]
+    public void HazardTheme_ConfigureStyling_SyncsFourGuardrailTokensIntoV3Styling()
+    {
+        Color textPrimary = new Color(18, 29, 40);
+        Color textMuted = new Color(51, 62, 73);
+        Color primary = new Color(84, 95, 106);
+        Color accent = new Color(107, 117, 127);
+
+        HazardStyling.ActiveStyle.Colors.Text = textPrimary;
+        HazardStyling.ActiveStyle.Colors.Muted = textMuted;
+        HazardStyling.ActiveStyle.Colors.Surface1 = primary;
+        HazardStyling.ActiveStyle.Colors.Accent = accent;
+
+        HazardTheme.ConfigureStyling();
+
+        V3Styling.ActiveStyle.Colors.TextPrimary.ShouldBe(textPrimary);
+        V3Styling.ActiveStyle.Colors.TextMuted.ShouldBe(textMuted);
+        V3Styling.ActiveStyle.Colors.Primary.ShouldBe(primary);
+        V3Styling.ActiveStyle.Colors.Accent.ShouldBe(accent);
+    }
+
+    [Fact]
+    public void TemplateTheme_ConfigureStyling_SyncsFourGuardrailTokensIntoV3Styling()
+    {
+        Color textPrimary = new Color(19, 30, 41);
+        Color textMuted = new Color(52, 63, 74);
+        Color primary = new Color(85, 96, 107);
+        Color accent = new Color(108, 118, 128);
+
+        TemplateStyling.ActiveStyle.Colors.Text = textPrimary;
+        TemplateStyling.ActiveStyle.Colors.Muted = textMuted;
+        TemplateStyling.ActiveStyle.Colors.Surface1 = primary;
+        TemplateStyling.ActiveStyle.Colors.Accent = accent;
+
+        TemplateTheme.ConfigureStyling();
 
         V3Styling.ActiveStyle.Colors.TextPrimary.ShouldBe(textPrimary);
         V3Styling.ActiveStyle.Colors.TextMuted.ShouldBe(textMuted);

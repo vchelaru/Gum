@@ -68,7 +68,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         c.WidthUnits = DimensionUnitType.Absolute;
         c.HeightUnits = DimensionUnitType.Absolute;
         c.IsFilled = true;
-        c.FillColor = NeonColors.Surface1;
+        c.FillColor = NeonStyling.ActiveStyle.Colors.Surface1;
         c.StrokeWidth = 0;
         return c;
     }
@@ -90,7 +90,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         c.IsFilled = false;
         c.StrokeWidth = BorderThickness;
         c.StrokeWidthUnits = DimensionUnitType.Absolute;
-        c.StrokeColor = NeonColors.Border;
+        c.StrokeColor = NeonStyling.ActiveStyle.Colors.Border;
         return c;
     }
 
@@ -111,7 +111,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         c.IsFilled = false;
         c.StrokeWidth = FocusRingThickness;
         c.StrokeWidthUnits = DimensionUnitType.Absolute;
-        c.StrokeColor = NeonPalette.FocusRing;
+        c.StrokeColor = NeonStyling.ActiveStyle.Colors.FocusRing;
         c.Visible = false;
         return c;
     }
@@ -132,7 +132,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         dot.WidthUnits = DimensionUnitType.Absolute;
         dot.HeightUnits = DimensionUnitType.Absolute;
         dot.IsFilled = true;
-        dot.FillColor = NeonColors.Accent;
+        dot.FillColor = NeonStyling.ActiveStyle.Colors.Accent;
         dot.StrokeWidth = 0;
         dot.Visible = false;
         return dot;
@@ -142,66 +142,66 @@ public class RadioButtonVisual : BaseRadioButtonVisual
     {
         // -------- Off --------
         States.EnabledOff.Apply = () => Apply(
-            fill: NeonColors.Surface1, border: NeonColors.Border,
-            text: NeonColors.Text, innerVisible: false, ring: false);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Border,
+            text: NeonStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: false);
 
         States.HighlightedOff.Apply = () => Apply(
-            fill: NeonColors.Surface1, border: NeonColors.Accent,
-            text: NeonColors.Text, innerVisible: false, ring: false);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: false);
 
         States.FocusedOff.Apply = () => Apply(
-            fill: NeonColors.Surface1, border: NeonColors.Accent,
-            text: NeonColors.Text, innerVisible: false, ring: true);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: true);
 
         States.HighlightedFocusedOff.Apply = () => Apply(
-            fill: NeonColors.Surface1, border: NeonColors.Accent,
-            text: NeonColors.Text, innerVisible: false, ring: true);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: true);
 
         States.PushedOff.Apply = () => Apply(
-            fill: NeonColors.Surface1, border: NeonColors.Accent,
-            text: NeonColors.Text, innerVisible: false, ring: false);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: false);
 
         States.DisabledOff.Apply = () => Apply(
-            fill: NeonColors.Disabled, border: NeonColors.Disabled,
-            text: NeonColors.Disabled, innerVisible: false, ring: false);
+            fill: NeonStyling.ActiveStyle.Colors.Disabled, border: NeonStyling.ActiveStyle.Colors.Disabled,
+            text: NeonStyling.ActiveStyle.Colors.Disabled, innerVisible: false, ring: false);
 
         States.DisabledFocusedOff.Apply = () => Apply(
-            fill: NeonColors.Disabled, border: NeonColors.Disabled,
-            text: NeonColors.Disabled, innerVisible: false, ring: true);
+            fill: NeonStyling.ActiveStyle.Colors.Disabled, border: NeonStyling.ActiveStyle.Colors.Disabled,
+            text: NeonStyling.ActiveStyle.Colors.Disabled, innerVisible: false, ring: true);
 
         // -------- On --------
         States.EnabledOn.Apply = () => Apply(
-            fill: NeonColors.Surface1, border: NeonColors.Accent,
-            text: NeonColors.Text, innerVisible: true, innerColor: NeonColors.Accent,
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, innerVisible: true, innerColor: NeonStyling.ActiveStyle.Colors.Accent,
             ring: false);
 
         States.HighlightedOn.Apply = () => Apply(
-            fill: NeonColors.Surface1, border: NeonColors.Accent,
-            text: NeonColors.Text, innerVisible: true, innerColor: NeonColors.Accent,
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, innerVisible: true, innerColor: NeonStyling.ActiveStyle.Colors.Accent,
             ring: false);
 
         States.FocusedOn.Apply = () => Apply(
-            fill: NeonColors.Surface1, border: NeonColors.Accent,
-            text: NeonColors.Text, innerVisible: true, innerColor: NeonColors.Accent,
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, innerVisible: true, innerColor: NeonStyling.ActiveStyle.Colors.Accent,
             ring: true);
 
         States.HighlightedFocusedOn.Apply = () => Apply(
-            fill: NeonColors.Surface1, border: NeonColors.Accent,
-            text: NeonColors.Text, innerVisible: true, innerColor: NeonColors.Accent,
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, innerVisible: true, innerColor: NeonStyling.ActiveStyle.Colors.Accent,
             ring: true);
 
         States.PushedOn.Apply = () => Apply(
-            fill: NeonColors.Surface1, border: NeonColors.Accent,
-            text: NeonColors.Text, innerVisible: true, innerColor: NeonColors.Accent,
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, innerVisible: true, innerColor: NeonStyling.ActiveStyle.Colors.Accent,
             ring: false);
 
         States.DisabledOn.Apply = () => Apply(
-            fill: NeonColors.Disabled, border: NeonColors.Disabled,
-            text: NeonColors.Disabled, innerVisible: false, ring: false);
+            fill: NeonStyling.ActiveStyle.Colors.Disabled, border: NeonStyling.ActiveStyle.Colors.Disabled,
+            text: NeonStyling.ActiveStyle.Colors.Disabled, innerVisible: false, ring: false);
 
         States.DisabledFocusedOn.Apply = () => Apply(
-            fill: NeonColors.Disabled, border: NeonColors.Disabled,
-            text: NeonColors.Disabled, innerVisible: false, ring: true);
+            fill: NeonStyling.ActiveStyle.Colors.Disabled, border: NeonStyling.ActiveStyle.Colors.Disabled,
+            text: NeonStyling.ActiveStyle.Colors.Disabled, innerVisible: false, ring: true);
     }
 
     private void Apply(Color fill, Color border, Color text, bool innerVisible, bool ring,

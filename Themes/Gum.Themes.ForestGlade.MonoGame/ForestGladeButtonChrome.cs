@@ -107,7 +107,7 @@ internal sealed class ForestGladeButtonChrome
         fill.GradientY2 = 0f;
 
         fill.HasDropshadow = true;
-        fill.DropshadowColor = ForestGladePalette.DarkShadow;
+        fill.DropshadowColor = ForestGladeStyling.ActiveStyle.Colors.DarkShadow;
         fill.DropshadowOffsetX = 0f;
         fill.DropshadowOffsetY = RestShadowOffsetY;
         fill.DropshadowBlur = RestShadowBlur;
@@ -130,7 +130,7 @@ internal sealed class ForestGladeButtonChrome
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = ForestGladeColors.Border;
+        border.StrokeColor = ForestGladeStyling.ActiveStyle.Colors.Border;
         return border;
     }
 
@@ -157,10 +157,10 @@ internal sealed class ForestGladeButtonChrome
         // 0.45 scalar dim of SunPale, written channel-wise so it compiles on both XNA (which has a
         // Color * float operator) and raylib (which does not).
         ring.StrokeColor = new Color(
-            (int)(ForestGladeColors.SunPale.R * 0.45f),
-            (int)(ForestGladeColors.SunPale.G * 0.45f),
-            (int)(ForestGladeColors.SunPale.B * 0.45f),
-            (int)(ForestGladeColors.SunPale.A * 0.45f));
+            (int)(ForestGladeStyling.ActiveStyle.Colors.SunPale.R * 0.45f),
+            (int)(ForestGladeStyling.ActiveStyle.Colors.SunPale.G * 0.45f),
+            (int)(ForestGladeStyling.ActiveStyle.Colors.SunPale.B * 0.45f),
+            (int)(ForestGladeStyling.ActiveStyle.Colors.SunPale.A * 0.45f));
         ring.Visible = false;
         return ring;
     }

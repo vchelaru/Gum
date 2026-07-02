@@ -57,22 +57,22 @@ public class SliderThumbVisual : InteractiveGue
         // ShowFocusRect / HideFocusRect; the button category here only handles
         // hover / press / disabled chrome.
         Add(_buttonCategory, FrameworkElement.EnabledStateName,
-            () => Apply(mode: BevelMode.Raised, fill: Retro95Colors.Surface));
+            () => Apply(mode: BevelMode.Raised, fill: Retro95Styling.ActiveStyle.Colors.Surface));
         Add(_buttonCategory, FrameworkElement.HighlightedStateName,
-            () => Apply(mode: BevelMode.Raised, fill: Retro95Colors.SurfaceHover));
+            () => Apply(mode: BevelMode.Raised, fill: Retro95Styling.ActiveStyle.Colors.SurfaceHover));
         Add(_buttonCategory, FrameworkElement.PushedStateName,
-            () => Apply(mode: BevelMode.Sunken, fill: Retro95Colors.Surface));
+            () => Apply(mode: BevelMode.Sunken, fill: Retro95Styling.ActiveStyle.Colors.Surface));
         Add(_buttonCategory, FrameworkElement.FocusedStateName,
-            () => Apply(mode: BevelMode.Raised, fill: Retro95Colors.Surface));
+            () => Apply(mode: BevelMode.Raised, fill: Retro95Styling.ActiveStyle.Colors.Surface));
         Add(_buttonCategory, FrameworkElement.HighlightedFocusedStateName,
-            () => Apply(mode: BevelMode.Raised, fill: Retro95Colors.SurfaceHover));
+            () => Apply(mode: BevelMode.Raised, fill: Retro95Styling.ActiveStyle.Colors.SurfaceHover));
         // Win95 disabled-thumb look uses a single-tone bevel (no inner highlight
         // band) — StatusPanel mode collapses the inner ring to match the fill,
         // producing the flat "drained" appearance the OS used.
         Add(_buttonCategory, FrameworkElement.DisabledStateName,
-            () => Apply(mode: BevelMode.StatusPanel, fill: Retro95Colors.DisabledThumb));
+            () => Apply(mode: BevelMode.StatusPanel, fill: Retro95Styling.ActiveStyle.Colors.DisabledThumb));
         Add(_buttonCategory, FrameworkElement.DisabledFocusedStateName,
-            () => Apply(mode: BevelMode.StatusPanel, fill: Retro95Colors.DisabledThumb));
+            () => Apply(mode: BevelMode.StatusPanel, fill: Retro95Styling.ActiveStyle.Colors.DisabledThumb));
     }
 
     public void ShowFocusRect() => _focusRect.Show();

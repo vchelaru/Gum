@@ -64,7 +64,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         // "Nunito Icons" family. Nunito itself (humanist sans-serif) doesn't
         // cover the Dingbats block. NeonTheme.Apply pre-registers the
         // glyph via BmfcSave.AddCharacters so KernSmith bakes it into the atlas.
-        _checkGlyph.Font = NeonTheme.IconFontFamily;
+        _checkGlyph.Font = NeonStyling.ActiveStyle.Text.IconFontFamily;
         _checkGlyph.FontSize = 18;
         _checkGlyph.Text = "✓";
         _checkGlyph.Color = Color.White;
@@ -93,7 +93,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         fill.HeightUnits = DimensionUnitType.Absolute;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = NeonColors.Surface1;
+        fill.FillColor = NeonStyling.ActiveStyle.Colors.Surface1;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -116,7 +116,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = NeonColors.Border;
+        border.StrokeColor = NeonStyling.ActiveStyle.Colors.Border;
         return border;
     }
 
@@ -138,7 +138,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = NeonPalette.FocusRing;
+        ring.StrokeColor = NeonStyling.ActiveStyle.Colors.FocusRing;
         ring.Visible = false;
         return ring;
     }
@@ -180,7 +180,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         dash.HeightUnits = DimensionUnitType.Absolute;
         dash.CornerRadius = 1f;
         dash.IsFilled = true;
-        dash.FillColor = NeonColors.Accent;
+        dash.FillColor = NeonStyling.ActiveStyle.Colors.Accent;
         dash.StrokeWidth = 0;
         return dash;
     }
@@ -189,102 +189,102 @@ public class CheckBoxVisual : BaseCheckBoxVisual
     {
         // -------- Unchecked (Off) --------
         States.EnabledOff.Apply = () => Apply(
-            fill: NeonColors.Surface1, border: NeonColors.Border,
-            text: NeonColors.Text, glyph: GlyphKind.None, ring: false);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Border,
+            text: NeonStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: false);
 
         States.HighlightedOff.Apply = () => Apply(
-            fill: NeonColors.Surface1, border: NeonColors.Accent,
-            text: NeonColors.Text, glyph: GlyphKind.None, ring: false);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: false);
 
         States.FocusedOff.Apply = () => Apply(
-            fill: NeonColors.Surface1, border: NeonColors.Accent,
-            text: NeonColors.Text, glyph: GlyphKind.None, ring: true);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: true);
 
         States.HighlightedFocusedOff.Apply = () => Apply(
-            fill: NeonColors.Surface1, border: NeonColors.Accent,
-            text: NeonColors.Text, glyph: GlyphKind.None, ring: true);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: true);
 
         States.PushedOff.Apply = () => Apply(
-            fill: NeonColors.Surface1, border: NeonColors.Accent,
-            text: NeonColors.Text, glyph: GlyphKind.None, ring: false);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: false);
 
         States.DisabledOff.Apply = () => Apply(
-            fill: NeonColors.Disabled, border: NeonColors.Disabled,
-            text: NeonColors.Disabled, glyph: GlyphKind.None, ring: false);
+            fill: NeonStyling.ActiveStyle.Colors.Disabled, border: NeonStyling.ActiveStyle.Colors.Disabled,
+            text: NeonStyling.ActiveStyle.Colors.Disabled, glyph: GlyphKind.None, ring: false);
 
         States.DisabledFocusedOff.Apply = () => Apply(
-            fill: NeonColors.Disabled, border: NeonColors.Disabled,
-            text: NeonColors.Disabled, glyph: GlyphKind.None, ring: true);
+            fill: NeonStyling.ActiveStyle.Colors.Disabled, border: NeonStyling.ActiveStyle.Colors.Disabled,
+            text: NeonStyling.ActiveStyle.Colors.Disabled, glyph: GlyphKind.None, ring: true);
 
         // -------- Checked (On) --------
         // Accent-filled box, white check glyph (matches .bb-chk.chk).
         States.EnabledOn.Apply = () => Apply(
-            fill: NeonPalette.CheckedFill, border: NeonColors.Accent,
-            text: NeonColors.Text, glyph: GlyphKind.Check, glyphColor: NeonColors.Accent,
+            fill: NeonStyling.ActiveStyle.Colors.CheckedFill, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: NeonStyling.ActiveStyle.Colors.Accent,
             ring: false);
 
         // Hover/push on a checked box uses a brighter pre-blended fill so the
         // state shift is actually visible — without this, checked and
         // checked+hover were pixel-identical.
         States.HighlightedOn.Apply = () => Apply(
-            fill: NeonPalette.CheckedHoverFill, border: NeonColors.Accent,
-            text: NeonColors.Text, glyph: GlyphKind.Check, glyphColor: NeonColors.Accent,
+            fill: NeonStyling.ActiveStyle.Colors.CheckedHoverFill, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: NeonStyling.ActiveStyle.Colors.Accent,
             ring: false);
 
         States.FocusedOn.Apply = () => Apply(
-            fill: NeonPalette.CheckedFill, border: NeonColors.Accent,
-            text: NeonColors.Text, glyph: GlyphKind.Check, glyphColor: NeonColors.Accent,
+            fill: NeonStyling.ActiveStyle.Colors.CheckedFill, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: NeonStyling.ActiveStyle.Colors.Accent,
             ring: true);
 
         States.HighlightedFocusedOn.Apply = () => Apply(
-            fill: NeonPalette.CheckedHoverFill, border: NeonColors.Accent,
-            text: NeonColors.Text, glyph: GlyphKind.Check, glyphColor: NeonColors.Accent,
+            fill: NeonStyling.ActiveStyle.Colors.CheckedHoverFill, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: NeonStyling.ActiveStyle.Colors.Accent,
             ring: true);
 
         States.PushedOn.Apply = () => Apply(
-            fill: NeonPalette.CheckedPushedFill, border: NeonColors.Accent,
-            text: NeonColors.Text, glyph: GlyphKind.Check, glyphColor: NeonColors.Accent,
+            fill: NeonStyling.ActiveStyle.Colors.CheckedPushedFill, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: NeonStyling.ActiveStyle.Colors.Accent,
             ring: false);
 
         States.DisabledOn.Apply = () => Apply(
-            fill: NeonColors.Disabled, border: NeonColors.Disabled,
-            text: NeonColors.Disabled, glyph: GlyphKind.Check,
-            glyphColor: NeonColors.Disabled, ring: false);
+            fill: NeonStyling.ActiveStyle.Colors.Disabled, border: NeonStyling.ActiveStyle.Colors.Disabled,
+            text: NeonStyling.ActiveStyle.Colors.Disabled, glyph: GlyphKind.Check,
+            glyphColor: NeonStyling.ActiveStyle.Colors.Disabled, ring: false);
 
         States.DisabledFocusedOn.Apply = () => Apply(
-            fill: NeonColors.Disabled, border: NeonColors.Disabled,
-            text: NeonColors.Disabled, glyph: GlyphKind.Check,
-            glyphColor: NeonColors.Disabled, ring: true);
+            fill: NeonStyling.ActiveStyle.Colors.Disabled, border: NeonStyling.ActiveStyle.Colors.Disabled,
+            text: NeonStyling.ActiveStyle.Colors.Disabled, glyph: GlyphKind.Check,
+            glyphColor: NeonStyling.ActiveStyle.Colors.Disabled, ring: true);
 
         // -------- Indeterminate --------
         // .bb-chk.ind keeps the white fill and just shows the dash, with accent border.
         States.EnabledIndeterminate.Apply = () => Apply(
-            fill: NeonColors.Surface1, border: NeonColors.Accent,
-            text: NeonColors.Text, glyph: GlyphKind.Dash, ring: false);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: false);
 
         States.HighlightedIndeterminate.Apply = () => Apply(
-            fill: NeonColors.Surface1, border: NeonColors.Accent,
-            text: NeonColors.Text, glyph: GlyphKind.Dash, ring: false);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: false);
 
         States.FocusedIndeterminate.Apply = () => Apply(
-            fill: NeonColors.Surface1, border: NeonColors.Accent,
-            text: NeonColors.Text, glyph: GlyphKind.Dash, ring: true);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: true);
 
         States.HighlightedFocusedIndeterminate.Apply = () => Apply(
-            fill: NeonColors.Surface1, border: NeonColors.Accent,
-            text: NeonColors.Text, glyph: GlyphKind.Dash, ring: true);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: true);
 
         States.PushedIndeterminate.Apply = () => Apply(
-            fill: NeonColors.Surface1, border: NeonColors.Accent,
-            text: NeonColors.Text, glyph: GlyphKind.Dash, ring: false);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent,
+            text: NeonStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: false);
 
         States.DisabledIndeterminate.Apply = () => Apply(
-            fill: NeonColors.Disabled, border: NeonColors.Disabled,
-            text: NeonColors.Disabled, glyph: GlyphKind.Dash, ring: false);
+            fill: NeonStyling.ActiveStyle.Colors.Disabled, border: NeonStyling.ActiveStyle.Colors.Disabled,
+            text: NeonStyling.ActiveStyle.Colors.Disabled, glyph: GlyphKind.Dash, ring: false);
 
         States.DisabledFocusedIndeterminate.Apply = () => Apply(
-            fill: NeonColors.Disabled, border: NeonColors.Disabled,
-            text: NeonColors.Disabled, glyph: GlyphKind.Dash, ring: true);
+            fill: NeonStyling.ActiveStyle.Colors.Disabled, border: NeonStyling.ActiveStyle.Colors.Disabled,
+            text: NeonStyling.ActiveStyle.Colors.Disabled, glyph: GlyphKind.Dash, ring: true);
     }
 
     private enum GlyphKind { None, Check, Dash }

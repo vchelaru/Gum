@@ -58,7 +58,7 @@ public class ScrollBarThumbVisual : InteractiveGue
         body.HeightUnits = DimensionUnitType.RelativeToParent;
         body.CornerRadius = CornerRadius;
         body.IsFilled = true;
-        body.FillColor = NeonPalette.ScrollThumb;
+        body.FillColor = NeonStyling.ActiveStyle.Colors.ScrollThumb;
         body.StrokeWidth = 0;
         return body;
     }
@@ -72,25 +72,25 @@ public class ScrollBarThumbVisual : InteractiveGue
         // Muted steel-blue at rest. Hover/push step toward cyan but stay a
         // shade below full Accent so the scroll bar reads as secondary chrome.
         Add(_buttonCategory, FrameworkElement.EnabledStateName,
-            () => _body.FillColor = NeonPalette.ScrollThumb);
+            () => _body.FillColor = NeonStyling.ActiveStyle.Colors.ScrollThumb);
 
         Add(_buttonCategory, FrameworkElement.HighlightedStateName,
-            () => _body.FillColor = NeonPalette.ScrollThumbHover);
+            () => _body.FillColor = NeonStyling.ActiveStyle.Colors.ScrollThumbHover);
 
         Add(_buttonCategory, FrameworkElement.PushedStateName,
-            () => _body.FillColor = NeonPalette.ScrollThumbHover);
+            () => _body.FillColor = NeonStyling.ActiveStyle.Colors.ScrollThumbHover);
 
         Add(_buttonCategory, FrameworkElement.FocusedStateName,
-            () => _body.FillColor = NeonPalette.ScrollThumb);
+            () => _body.FillColor = NeonStyling.ActiveStyle.Colors.ScrollThumb);
 
         Add(_buttonCategory, FrameworkElement.HighlightedFocusedStateName,
-            () => _body.FillColor = NeonPalette.ScrollThumbHover);
+            () => _body.FillColor = NeonStyling.ActiveStyle.Colors.ScrollThumbHover);
 
         Add(_buttonCategory, FrameworkElement.DisabledStateName,
-            () => _body.FillColor = NeonColors.Disabled);
+            () => _body.FillColor = NeonStyling.ActiveStyle.Colors.Disabled);
 
         Add(_buttonCategory, FrameworkElement.DisabledFocusedStateName,
-            () => _body.FillColor = NeonColors.Disabled);
+            () => _body.FillColor = NeonStyling.ActiveStyle.Colors.Disabled);
     }
 
     private static void Add(StateSaveCategory category, string name, System.Action apply)

@@ -70,7 +70,7 @@ public class ListBoxVisual : BaseListBoxVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = MeadowColors.Cream2;
+        fill.FillColor = MeadowStyling.ActiveStyle.Colors.Cream2;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -93,7 +93,7 @@ public class ListBoxVisual : BaseListBoxVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = MeadowColors.PeachDark;
+        border.StrokeColor = MeadowStyling.ActiveStyle.Colors.PeachDark;
         border.StrokeDashLength = DashLength;
         border.StrokeGapLength = GapLength;
         return border;
@@ -101,12 +101,12 @@ public class ListBoxVisual : BaseListBoxVisual
 
     private void WireStates()
     {
-        States.Enabled.Apply = () => _border.StrokeColor = MeadowColors.PeachDark;
-        States.Highlighted.Apply = () => _border.StrokeColor = MeadowColors.PeachDark;
-        States.Focused.Apply = () => _border.StrokeColor = MeadowColors.SageDark;
-        States.HighlightedFocused.Apply = () => _border.StrokeColor = MeadowColors.SageDark;
-        States.Pushed.Apply = () => _border.StrokeColor = MeadowColors.SageDark;
-        States.Disabled.Apply = () => _border.StrokeColor = MeadowColors.Disabled;
-        States.DisabledFocused.Apply = () => _border.StrokeColor = MeadowColors.Disabled;
+        States.Enabled.Apply = () => _border.StrokeColor = MeadowStyling.ActiveStyle.Colors.PeachDark;
+        States.Highlighted.Apply = () => _border.StrokeColor = MeadowStyling.ActiveStyle.Colors.PeachDark;
+        States.Focused.Apply = () => _border.StrokeColor = MeadowStyling.ActiveStyle.Colors.SageDark;
+        States.HighlightedFocused.Apply = () => _border.StrokeColor = MeadowStyling.ActiveStyle.Colors.SageDark;
+        States.Pushed.Apply = () => _border.StrokeColor = MeadowStyling.ActiveStyle.Colors.SageDark;
+        States.Disabled.Apply = () => _border.StrokeColor = MeadowStyling.ActiveStyle.Colors.Disabled;
+        States.DisabledFocused.Apply = () => _border.StrokeColor = MeadowStyling.ActiveStyle.Colors.Disabled;
     }
 }

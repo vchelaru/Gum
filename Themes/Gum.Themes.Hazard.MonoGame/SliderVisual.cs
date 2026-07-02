@@ -45,7 +45,7 @@ public class SliderVisual : BaseSliderVisual
         // overridden; the fill bar is left-anchored percentage geometry, built inline.
         TrackBackground.Parent = null;
 
-        _track = HazardShapes.Fill(HazardPalette.Surface2, TrackCornerRadius, "SliderTrack");
+        _track = HazardShapes.Fill(HazardStyling.ActiveStyle.Colors.Surface2, TrackCornerRadius, "SliderTrack");
         _track.Height = TrackHeight;
         _track.HeightUnits = DimensionUnitType.Absolute;
         TrackInstance.AddChild(_track);
@@ -53,7 +53,7 @@ public class SliderVisual : BaseSliderVisual
         _fill = CreateFillBar();
         TrackInstance.AddChild(_fill);
 
-        _trackBorder = HazardShapes.Border(HazardPalette.Border, TrackCornerRadius, BorderThickness, "SliderTrackBorder");
+        _trackBorder = HazardShapes.Border(HazardStyling.ActiveStyle.Colors.Border, TrackCornerRadius, BorderThickness, "SliderTrackBorder");
         _trackBorder.Height = TrackHeight;
         _trackBorder.HeightUnits = DimensionUnitType.Absolute;
         TrackInstance.AddChild(_trackBorder);
@@ -141,20 +141,20 @@ public class SliderVisual : BaseSliderVisual
         fill.HeightUnits = DimensionUnitType.Absolute;
         fill.CornerRadius = TrackCornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = HazardPalette.Accent;
+        fill.FillColor = HazardStyling.ActiveStyle.Colors.Accent;
         fill.StrokeWidth = 0;
         return fill;
     }
 
     private void WireStates()
     {
-        States.Enabled.Apply = () => ApplyTrack(HazardPalette.Surface2, HazardPalette.Border, HazardPalette.Accent);
-        States.Highlighted.Apply = () => ApplyTrack(HazardPalette.Surface2, HazardPalette.Border, HazardPalette.Accent);
-        States.HighlightedFocused.Apply = () => ApplyTrack(HazardPalette.Surface2, HazardPalette.Border, HazardPalette.Accent);
-        States.Focused.Apply = () => ApplyTrack(HazardPalette.Surface2, HazardPalette.Border, HazardPalette.Accent);
-        States.Pushed.Apply = () => ApplyTrack(HazardPalette.Surface2, HazardPalette.Border, HazardPalette.Accent);
-        States.Disabled.Apply = () => ApplyTrack(HazardPalette.DisabledFill, HazardPalette.DisabledBorder, HazardPalette.DisabledAccent);
-        States.DisabledFocused.Apply = () => ApplyTrack(HazardPalette.DisabledFill, HazardPalette.DisabledBorder, HazardPalette.DisabledAccent);
+        States.Enabled.Apply = () => ApplyTrack(HazardStyling.ActiveStyle.Colors.Surface2, HazardStyling.ActiveStyle.Colors.Border, HazardStyling.ActiveStyle.Colors.Accent);
+        States.Highlighted.Apply = () => ApplyTrack(HazardStyling.ActiveStyle.Colors.Surface2, HazardStyling.ActiveStyle.Colors.Border, HazardStyling.ActiveStyle.Colors.Accent);
+        States.HighlightedFocused.Apply = () => ApplyTrack(HazardStyling.ActiveStyle.Colors.Surface2, HazardStyling.ActiveStyle.Colors.Border, HazardStyling.ActiveStyle.Colors.Accent);
+        States.Focused.Apply = () => ApplyTrack(HazardStyling.ActiveStyle.Colors.Surface2, HazardStyling.ActiveStyle.Colors.Border, HazardStyling.ActiveStyle.Colors.Accent);
+        States.Pushed.Apply = () => ApplyTrack(HazardStyling.ActiveStyle.Colors.Surface2, HazardStyling.ActiveStyle.Colors.Border, HazardStyling.ActiveStyle.Colors.Accent);
+        States.Disabled.Apply = () => ApplyTrack(HazardStyling.ActiveStyle.Colors.DisabledFill, HazardStyling.ActiveStyle.Colors.DisabledBorder, HazardStyling.ActiveStyle.Colors.DisabledAccent);
+        States.DisabledFocused.Apply = () => ApplyTrack(HazardStyling.ActiveStyle.Colors.DisabledFill, HazardStyling.ActiveStyle.Colors.DisabledBorder, HazardStyling.ActiveStyle.Colors.DisabledAccent);
     }
 
     private void ApplyTrack(Color trackFill, Color border, Color fillBar)

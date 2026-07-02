@@ -84,7 +84,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = NeonColors.Surface1;
+        fill.FillColor = NeonStyling.ActiveStyle.Colors.Surface1;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -107,7 +107,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = NeonColors.Border;
+        border.StrokeColor = NeonStyling.ActiveStyle.Colors.Border;
         return border;
     }
 
@@ -129,7 +129,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = NeonPalette.FocusRing;
+        ring.StrokeColor = NeonStyling.ActiveStyle.Colors.FocusRing;
         ring.Visible = false;
         return ring;
     }
@@ -153,50 +153,50 @@ public class ComboBoxVisual : BaseComboBoxVisual
         glyph.HeightUnits = DimensionUnitType.Absolute;
         glyph.HorizontalAlignment = HorizontalAlignment.Center;
         glyph.VerticalAlignment = VerticalAlignment.Center;
-        glyph.Font = NeonTheme.IconFontFamily;
+        glyph.Font = NeonStyling.ActiveStyle.Text.IconFontFamily;
         glyph.FontSize = GlyphFontSize;
         glyph.Text = "▼";
-        glyph.Color = NeonColors.Accent;
+        glyph.Color = NeonStyling.ActiveStyle.Colors.Accent;
         return glyph;
     }
 
     private void WireStates()
     {
         States.Enabled.Apply = () => Apply(
-            border: NeonColors.Border, text: NeonColors.Text,
-            glyph: NeonColors.Accent, ring: false, fillDisabled: false);
+            border: NeonStyling.ActiveStyle.Colors.Border, text: NeonStyling.ActiveStyle.Colors.Text,
+            glyph: NeonStyling.ActiveStyle.Colors.Accent, ring: false, fillDisabled: false);
 
         States.Highlighted.Apply = () => Apply(
-            border: NeonColors.Accent, text: NeonColors.Text,
-            glyph: NeonColors.Accent, ring: false, fillDisabled: false);
+            border: NeonStyling.ActiveStyle.Colors.Accent, text: NeonStyling.ActiveStyle.Colors.Text,
+            glyph: NeonStyling.ActiveStyle.Colors.Accent, ring: false, fillDisabled: false);
 
         States.Focused.Apply = () => Apply(
-            border: NeonColors.Accent, text: NeonColors.Text,
-            glyph: NeonColors.Accent, ring: true, fillDisabled: false);
+            border: NeonStyling.ActiveStyle.Colors.Accent, text: NeonStyling.ActiveStyle.Colors.Text,
+            glyph: NeonStyling.ActiveStyle.Colors.Accent, ring: true, fillDisabled: false);
 
         States.HighlightedFocused.Apply = () => Apply(
-            border: NeonColors.Accent, text: NeonColors.Text,
-            glyph: NeonColors.Accent, ring: true, fillDisabled: false);
+            border: NeonStyling.ActiveStyle.Colors.Accent, text: NeonStyling.ActiveStyle.Colors.Text,
+            glyph: NeonStyling.ActiveStyle.Colors.Accent, ring: true, fillDisabled: false);
 
         States.Pushed.Apply = () => Apply(
-            border: NeonColors.Accent, text: NeonColors.Text,
-            glyph: NeonColors.Accent, ring: false, fillDisabled: false);
+            border: NeonStyling.ActiveStyle.Colors.Accent, text: NeonStyling.ActiveStyle.Colors.Text,
+            glyph: NeonStyling.ActiveStyle.Colors.Accent, ring: false, fillDisabled: false);
 
         // Disabled text uses Muted (not the near-black Disabled token) so the
         // currently-selected value stays legible — otherwise a disabled combo
         // looks empty, which reads as a bug.
         States.Disabled.Apply = () => Apply(
-            border: NeonColors.DisabledBorder, text: NeonColors.Muted,
-            glyph: NeonColors.Muted, ring: false, fillDisabled: true);
+            border: NeonStyling.ActiveStyle.Colors.DisabledBorder, text: NeonStyling.ActiveStyle.Colors.Muted,
+            glyph: NeonStyling.ActiveStyle.Colors.Muted, ring: false, fillDisabled: true);
 
         States.DisabledFocused.Apply = () => Apply(
-            border: NeonColors.DisabledBorder, text: NeonColors.Muted,
-            glyph: NeonColors.Muted, ring: true, fillDisabled: true);
+            border: NeonStyling.ActiveStyle.Colors.DisabledBorder, text: NeonStyling.ActiveStyle.Colors.Muted,
+            glyph: NeonStyling.ActiveStyle.Colors.Muted, ring: true, fillDisabled: true);
     }
 
     private void Apply(Color border, Color text, Color glyph, bool ring, bool fillDisabled)
     {
-        _fill.FillColor = fillDisabled ? NeonColors.Background : NeonColors.Surface1;
+        _fill.FillColor = fillDisabled ? NeonStyling.ActiveStyle.Colors.Background : NeonStyling.ActiveStyle.Colors.Surface1;
         _border.StrokeColor = border;
         TextInstance.Color = text;
         _dropdownGlyph.Color = glyph;
