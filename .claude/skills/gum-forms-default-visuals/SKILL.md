@@ -50,6 +50,10 @@ Centralized style constants consumed by V2+ visuals:
 - `Text` — Font configuration (Normal, Strong, Emphasis)
 - Loads embedded `UISpriteSheet.png` by default via `UseDefaults()`
 
+`Styling.ActiveStyle` is read at **construction time only** — set it before creating controls; existing controls don't retroactively restyle.
+
+Every V3 `*Visual` seeds `BackgroundColor`/`ForegroundColor` from `Styling.ActiveStyle.Colors.*`, but those setters don't paint — they call `FormsControl?.UpdateState()`, which re-runs the active state's `StateSave.Apply` lambda, which derives the real color via `ColorExtensions.Adjust`/`.ToGrayscale()` off the two base colors. **Never set `visual.Background.Color` directly** — the next state transition overwrites it. To override one state's look, clear and reassign its `Apply` lambda, then call `UpdateState()`.
+
 ## Named Children Convention
 
 Forms controls locate children by name (e.g., `"TextInstance"`, `"FocusIndicator"`, `"InnerPanel"`). If a visual omits an expected named child, the Forms control silently skips it (or throws under `FULL_DIAGNOSTICS`). When building custom visuals, match the names the Forms control looks up in its `ReactToVisualChanged`.
@@ -63,3 +67,8 @@ Forms controls locate children by name (e.g., `"TextInstance"`, `"FocusIndicator
 | `MonoGameGum/Forms/DefaultVisuals/Styling.cs` | Centralized colors, textures, fonts |
 | `MonoGameGum/Forms/FormsUtilities.cs` | `InitializeDefaults()` — registers visuals in `DefaultFormsTemplates` |
 | `MonoGameGum/Forms/Controls/FrameworkElement.cs` | `DefaultFormsTemplates` dictionary and Forms-first construction |
+
+## Cross-references
+
+- Restyling these visuals as a distributable, palette-driven package: [gum-theming](../gum-theming/SKILL.md).
+- `ColorExtensions.Adjust`/`.ToGrayscale()` live alongside `Styling` in `MonoGameGum/Forms/DefaultVisuals/V3/Styling.cs`.
