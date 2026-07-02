@@ -95,7 +95,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = DarkProColors.Surface1;
+        fill.FillColor = DarkProStyling.ActiveStyle.Colors.Surface1;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -118,7 +118,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = DarkProColors.Border;
+        border.StrokeColor = DarkProStyling.ActiveStyle.Colors.Border;
         return border;
     }
 
@@ -140,7 +140,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
         ring.IsFilled = false;
         ring.StrokeWidth = BorderThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = DarkProColors.Accent;
+        ring.StrokeColor = DarkProStyling.ActiveStyle.Colors.Accent;
         ring.Visible = false;
         return ring;
     }
@@ -164,10 +164,10 @@ public class ComboBoxVisual : BaseComboBoxVisual
         glyph.HeightUnits = DimensionUnitType.Absolute;
         glyph.HorizontalAlignment = HorizontalAlignment.Center;
         glyph.VerticalAlignment = VerticalAlignment.Center;
-        glyph.Font = DarkProTheme.IconFontFamily;
+        glyph.Font = DarkProStyling.ActiveStyle.Text.IconFontFamily;
         glyph.FontSize = GlyphFontSize;
         glyph.Text = "▼";
-        glyph.Color = DarkProColors.Muted;
+        glyph.Color = DarkProStyling.ActiveStyle.Colors.Muted;
         return glyph;
     }
 
@@ -179,37 +179,37 @@ public class ComboBoxVisual : BaseComboBoxVisual
         // full Text on hover/focus/press so the user gets visible "this is alive"
         // feedback distinct from the border.
         States.Enabled.Apply = () => Apply(
-            border: DarkProColors.Border, text: DarkProColors.Text,
-            glyph: DarkProColors.Muted, ring: false, fillDisabled: false);
+            border: DarkProStyling.ActiveStyle.Colors.Border, text: DarkProStyling.ActiveStyle.Colors.Text,
+            glyph: DarkProStyling.ActiveStyle.Colors.Muted, ring: false, fillDisabled: false);
 
         States.Highlighted.Apply = () => Apply(
-            border: DarkProColors.BorderHover, text: DarkProColors.Text,
-            glyph: DarkProColors.Text, ring: false, fillDisabled: false);
+            border: DarkProStyling.ActiveStyle.Colors.BorderHover, text: DarkProStyling.ActiveStyle.Colors.Text,
+            glyph: DarkProStyling.ActiveStyle.Colors.Text, ring: false, fillDisabled: false);
 
         States.Focused.Apply = () => Apply(
-            border: DarkProColors.Accent, text: DarkProColors.Text,
-            glyph: DarkProColors.Text, ring: true, fillDisabled: false);
+            border: DarkProStyling.ActiveStyle.Colors.Accent, text: DarkProStyling.ActiveStyle.Colors.Text,
+            glyph: DarkProStyling.ActiveStyle.Colors.Text, ring: true, fillDisabled: false);
 
         States.HighlightedFocused.Apply = () => Apply(
-            border: DarkProColors.Accent, text: DarkProColors.Text,
-            glyph: DarkProColors.Text, ring: true, fillDisabled: false);
+            border: DarkProStyling.ActiveStyle.Colors.Accent, text: DarkProStyling.ActiveStyle.Colors.Text,
+            glyph: DarkProStyling.ActiveStyle.Colors.Text, ring: true, fillDisabled: false);
 
         States.Pushed.Apply = () => Apply(
-            border: DarkProColors.Accent, text: DarkProColors.Text,
-            glyph: DarkProColors.Text, ring: false, fillDisabled: false);
+            border: DarkProStyling.ActiveStyle.Colors.Accent, text: DarkProStyling.ActiveStyle.Colors.Text,
+            glyph: DarkProStyling.ActiveStyle.Colors.Text, ring: false, fillDisabled: false);
 
         States.Disabled.Apply = () => Apply(
-            border: DarkProColors.DisabledBorder, text: DarkProColors.DisabledText,
-            glyph: DarkProColors.DisabledText, ring: false, fillDisabled: true);
+            border: DarkProStyling.ActiveStyle.Colors.DisabledBorder, text: DarkProStyling.ActiveStyle.Colors.DisabledText,
+            glyph: DarkProStyling.ActiveStyle.Colors.DisabledText, ring: false, fillDisabled: true);
 
         States.DisabledFocused.Apply = () => Apply(
-            border: DarkProColors.DisabledBorder, text: DarkProColors.DisabledText,
-            glyph: DarkProColors.DisabledText, ring: true, fillDisabled: true);
+            border: DarkProStyling.ActiveStyle.Colors.DisabledBorder, text: DarkProStyling.ActiveStyle.Colors.DisabledText,
+            glyph: DarkProStyling.ActiveStyle.Colors.DisabledText, ring: true, fillDisabled: true);
     }
 
     private void Apply(Color border, Color text, Color glyph, bool ring, bool fillDisabled)
     {
-        _fill.FillColor = fillDisabled ? DarkProColors.DisabledFill : DarkProColors.Surface1;
+        _fill.FillColor = fillDisabled ? DarkProStyling.ActiveStyle.Colors.DisabledFill : DarkProStyling.ActiveStyle.Colors.Surface1;
         _border.StrokeColor = border;
         TextInstance.Color = text;
         _dropdownGlyph.Color = glyph;

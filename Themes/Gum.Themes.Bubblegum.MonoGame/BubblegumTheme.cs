@@ -22,23 +22,19 @@ namespace Gum.Themes.Bubblegum;
 public static class BubblegumTheme
 {
     /// <summary>
-    /// Family name the bundled Nunito TTFs are registered under. Use this as the
-    /// <c>Font</c> property value on any TextRuntime to get the theme font.
+    /// Fixed family name the bundled Nunito TTFs are registered under. Font
+    /// <em>registration</em> is intentionally decoupled from font <em>selection</em>
+    /// (<see cref="BubblegumText.FontFamily"/>, mutable) — reassigning the selection
+    /// before <see cref="Apply"/> can never corrupt this registration.
     /// </summary>
-    public const string FontFamily = "Nunito";
+    internal const string BundledFontFamily = "Nunito";
 
     /// <summary>
-    /// Family name the bundled icon font (DejaVu Sans Mono) is registered under.
-    /// Use this for glyphs Nunito doesn't cover — check marks, dropdown chevrons,
-    /// arrow indicators (Dingbats and Geometric Shapes blocks).
+    /// Fixed family name the bundled icon font (DejaVu Sans Mono) is registered under.
+    /// See <see cref="BundledFontFamily"/> for why this is a fixed constant rather than
+    /// the mutable <see cref="BubblegumText.IconFontFamily"/> selection.
     /// </summary>
-    public const string IconFontFamily = "Nunito Icons";
-
-    /// <summary>
-    /// Default text size used by the theme. Matches the source mockup's
-    /// <c>--fs</c> token (14px).
-    /// </summary>
-    public const int FontSize = 14;
+    internal const string BundledIconFontFamily = "Nunito Icons";
 
     /// <summary>
     /// Applies the Bubblegum theme: wires KernSmith as the in-memory font
@@ -87,14 +83,14 @@ public static class BubblegumTheme
         // straight to Nunito-Bold (unlike Dark Pro's Medium-as-Bold mapping
         // for DM Mono). Bubblegum's CSS uses weights 700-900; all collapse to
         // the Bold slot in Gum's four-style font model.
-        RegisterEmbeddedFont(FontFamily, "Nunito-Regular.ttf", style: null);
-        RegisterEmbeddedFont(FontFamily, "Nunito-Bold.ttf", style: "Bold");
-        RegisterEmbeddedFont(FontFamily, "Nunito-Italic.ttf", style: "Italic");
-        RegisterEmbeddedFont(FontFamily, "Nunito-BoldItalic.ttf", style: "BoldItalic");
+        RegisterEmbeddedFont(BundledFontFamily, "Nunito-Regular.ttf", style: null);
+        RegisterEmbeddedFont(BundledFontFamily, "Nunito-Bold.ttf", style: "Bold");
+        RegisterEmbeddedFont(BundledFontFamily, "Nunito-Italic.ttf", style: "Italic");
+        RegisterEmbeddedFont(BundledFontFamily, "Nunito-BoldItalic.ttf", style: "BoldItalic");
 
         // Icon font registered under a distinct family name so visual code
-        // addresses it explicitly via BubblegumTheme.IconFontFamily.
-        RegisterEmbeddedFont(IconFontFamily, "DejaVuSansMono.ttf", style: null);
+        // addresses it explicitly via BubblegumStyling.ActiveStyle.Text.IconFontFamily.
+        RegisterEmbeddedFont(BundledIconFontFamily, "DejaVuSansMono.ttf", style: null);
     }
 
     private static void RegisterEmbeddedFont(string family, string fileName, string? style)
@@ -121,15 +117,20 @@ public static class BubblegumTheme
         ThemePlatform.RegisterFont(family, fontBytes, style);
     }
 
-    private static void ConfigureStyling()
+    // Internal (not private) so Tests/Gum.Themes.Tests can exercise the guardrail-token sync
+    // (TextPrimary/TextMuted/Primary/Accent → V3.Styling.ActiveStyle.Colors) without going
+    // through Apply(), which requires a real GraphicsDevice for font wiring and can't run
+    // headlessly in a unit test. See Gum.Themes.Bubblegum.MonoGame.csproj's InternalsVisibleTo.
+    internal static void ConfigureStyling()
     {
         Styling styling = Styling.ActiveStyle;
+        BubblegumText text = BubblegumStyling.ActiveStyle.Text;
 
         styling.Text.Normal.Clear();
         styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = FontFamily });
+            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
         styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = FontSize });
+            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
         styling.Text.Normal.Variables.Add(
             new VariableSave { Name = "IsBold", Type = "bool", Value = false });
         styling.Text.Normal.Variables.Add(
@@ -137,18 +138,22 @@ public static class BubblegumTheme
 
         styling.Text.Strong.Clear();
         styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = FontFamily });
+            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
         styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = FontSize });
+            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
         styling.Text.Strong.Variables.Add(
             new VariableSave { Name = "IsBold", Type = "bool", Value = true });
         styling.Text.Strong.Variables.Add(
             new VariableSave { Name = "IsItalic", Type = "bool", Value = false });
 
-        styling.Colors.TextPrimary = BubblegumColors.Text;
-        styling.Colors.TextMuted = BubblegumColors.Muted;
-        styling.Colors.Primary = BubblegumColors.Surface1;
-        styling.Colors.Accent = BubblegumColors.Accent;
+        // Bubblegum tokens (see gum-styles.css :root for the source palette). We push
+        // only the 4-token guardrail (TextPrimary, TextMuted, Primary, Accent) and the
+        // visuals read the rest of the palette from BubblegumStyling.ActiveStyle.Colors directly.
+        BubblegumColors colors = BubblegumStyling.ActiveStyle.Colors;
+        styling.Colors.TextPrimary = colors.TextPrimary;
+        styling.Colors.TextMuted = colors.TextMuted;
+        styling.Colors.Primary = colors.Primary;
+        styling.Colors.Accent = colors.Accent;
     }
 
     private static void RegisterVisuals()

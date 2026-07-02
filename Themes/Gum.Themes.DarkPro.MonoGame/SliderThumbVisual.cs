@@ -64,7 +64,7 @@ public class SliderThumbVisual : InteractiveGue
         body.WidthUnits = DimensionUnitType.RelativeToParent;
         body.HeightUnits = DimensionUnitType.RelativeToParent;
         body.IsFilled = true;
-        body.FillColor = DarkProColors.Accent;
+        body.FillColor = DarkProStyling.ActiveStyle.Colors.Accent;
         body.StrokeWidth = 0;
         return body;
     }
@@ -88,7 +88,7 @@ public class SliderThumbVisual : InteractiveGue
         ring.IsFilled = false;
         ring.StrokeWidth = BorderThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = DarkProColors.Accent;
+        ring.StrokeColor = DarkProStyling.ActiveStyle.Colors.Accent;
         ring.Visible = false;
         return ring;
     }
@@ -100,25 +100,25 @@ public class SliderThumbVisual : InteractiveGue
         AddCategory(_buttonCategory);
 
         Add(_buttonCategory, FrameworkElement.EnabledStateName,
-            () => Apply(body: DarkProColors.Accent, ring: false));
+            () => Apply(body: DarkProStyling.ActiveStyle.Colors.Accent, ring: false));
 
         Add(_buttonCategory, FrameworkElement.HighlightedStateName,
-            () => Apply(body: DarkProColors.HoverAccent, ring: false));
+            () => Apply(body: DarkProStyling.ActiveStyle.Colors.HoverAccent, ring: false));
 
         Add(_buttonCategory, FrameworkElement.PushedStateName,
-            () => Apply(body: DarkProColors.AccentPressed, ring: false));
+            () => Apply(body: DarkProStyling.ActiveStyle.Colors.AccentPressed, ring: false));
 
         Add(_buttonCategory, FrameworkElement.FocusedStateName,
-            () => Apply(body: DarkProColors.Accent, ring: true));
+            () => Apply(body: DarkProStyling.ActiveStyle.Colors.Accent, ring: true));
 
         Add(_buttonCategory, FrameworkElement.HighlightedFocusedStateName,
-            () => Apply(body: DarkProColors.HoverAccent, ring: true));
+            () => Apply(body: DarkProStyling.ActiveStyle.Colors.HoverAccent, ring: true));
 
         Add(_buttonCategory, FrameworkElement.DisabledStateName,
-            () => Apply(body: DarkProColors.DisabledThumb, ring: false));
+            () => Apply(body: DarkProStyling.ActiveStyle.Colors.DisabledThumb, ring: false));
 
         Add(_buttonCategory, FrameworkElement.DisabledFocusedStateName,
-            () => Apply(body: DarkProColors.DisabledThumb, ring: true));
+            () => Apply(body: DarkProStyling.ActiveStyle.Colors.DisabledThumb, ring: true));
     }
 
     private static void Add(StateSaveCategory category, string name, System.Action apply)

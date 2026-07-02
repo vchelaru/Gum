@@ -35,7 +35,7 @@ internal sealed class BubblegumTextInputDecoration
         host.ClipContainer.Parent = null;
 
         _focusRing = BubblegumShapes.FocusRing(
-            color: BubblegumPalette.FocusRing,
+            color: BubblegumStyling.ActiveStyle.Colors.FocusRing,
             cornerRadius: CornerRadius,
             inset: FocusRingInset,
             thickness: FocusRingThickness,
@@ -43,7 +43,7 @@ internal sealed class BubblegumTextInputDecoration
         host.AddChild(_focusRing);
 
         _fill = BubblegumShapes.Fill(
-            color: BubblegumColors.Surface1,
+            color: BubblegumStyling.ActiveStyle.Colors.Surface1,
             cornerRadius: CornerRadius,
             name: "BubblegumTextInputFill");
         host.AddChild(_fill);
@@ -57,7 +57,7 @@ internal sealed class BubblegumTextInputDecoration
         host.AddChild(host.ClipContainer);
 
         _border = BubblegumShapes.Border(
-            color: BubblegumColors.Border,
+            color: BubblegumStyling.ActiveStyle.Colors.Border,
             cornerRadius: CornerRadius,
             thickness: BorderThickness,
             name: "BubblegumTextInputBorder");
@@ -69,24 +69,24 @@ internal sealed class BubblegumTextInputDecoration
     private void WireStates(TextBoxBaseVisual host)
     {
         host.States.Enabled.Apply = () => Apply(host,
-            fill: BubblegumColors.Surface1, border: BubblegumColors.Border,
-            text: BubblegumColors.Text, placeholder: BubblegumColors.Placeholder,
-            caret: BubblegumColors.Accent, selection: BubblegumColors.AccentLight, ring: false);
+            fill: BubblegumStyling.ActiveStyle.Colors.Surface1, border: BubblegumStyling.ActiveStyle.Colors.Border,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, placeholder: BubblegumStyling.ActiveStyle.Colors.Placeholder,
+            caret: BubblegumStyling.ActiveStyle.Colors.Accent, selection: BubblegumStyling.ActiveStyle.Colors.AccentLight, ring: false);
 
         host.States.Highlighted.Apply = () => Apply(host,
-            fill: BubblegumColors.Surface1, border: BubblegumColors.Accent,
-            text: BubblegumColors.Text, placeholder: BubblegumColors.Placeholder,
-            caret: BubblegumColors.Accent, selection: BubblegumColors.AccentLight, ring: false);
+            fill: BubblegumStyling.ActiveStyle.Colors.Surface1, border: BubblegumStyling.ActiveStyle.Colors.Accent,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, placeholder: BubblegumStyling.ActiveStyle.Colors.Placeholder,
+            caret: BubblegumStyling.ActiveStyle.Colors.Accent, selection: BubblegumStyling.ActiveStyle.Colors.AccentLight, ring: false);
 
         host.States.Focused.Apply = () => Apply(host,
-            fill: BubblegumColors.Surface1, border: BubblegumColors.Accent,
-            text: BubblegumColors.Text, placeholder: BubblegumColors.Placeholder,
-            caret: BubblegumColors.Accent, selection: BubblegumColors.AccentLight, ring: true);
+            fill: BubblegumStyling.ActiveStyle.Colors.Surface1, border: BubblegumStyling.ActiveStyle.Colors.Accent,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, placeholder: BubblegumStyling.ActiveStyle.Colors.Placeholder,
+            caret: BubblegumStyling.ActiveStyle.Colors.Accent, selection: BubblegumStyling.ActiveStyle.Colors.AccentLight, ring: true);
 
         host.States.Disabled.Apply = () => Apply(host,
-            fill: BubblegumColors.DisabledFill, border: BubblegumColors.Disabled,
-            text: BubblegumColors.Disabled, placeholder: BubblegumColors.Disabled,
-            caret: BubblegumColors.Disabled, selection: BubblegumColors.AccentLight, ring: false);
+            fill: BubblegumStyling.ActiveStyle.Colors.DisabledFill, border: BubblegumStyling.ActiveStyle.Colors.Disabled,
+            text: BubblegumStyling.ActiveStyle.Colors.Disabled, placeholder: BubblegumStyling.ActiveStyle.Colors.Disabled,
+            caret: BubblegumStyling.ActiveStyle.Colors.Disabled, selection: BubblegumStyling.ActiveStyle.Colors.AccentLight, ring: false);
     }
 
     private void Apply(TextBoxBaseVisual host, Color fill, Color border, Color text,

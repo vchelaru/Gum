@@ -84,8 +84,8 @@ public class Game1 : Game
         {
             new ThemeOption("Forest Glade", ForestGladeTheme.Apply, ForestGladeColors.CanopyDeep),
             new ThemeOption("Neon", NeonTheme.Apply, NeonColors.Background),
-            new ThemeOption("Dark Pro", DarkProTheme.Apply, DarkProColors.Background),
-            new ThemeOption("Bubblegum", BubblegumTheme.Apply, BubblegumColors.Background),
+            new ThemeOption("Dark Pro", DarkProTheme.Apply, DarkProStyling.ActiveStyle.Colors.Background),
+            new ThemeOption("Bubblegum", BubblegumTheme.Apply, BubblegumStyling.ActiveStyle.Colors.Background),
             new ThemeOption("Editor", EditorTheme.Apply, new Color(40, 40, 40)),
             new ThemeOption("Retro 95", Retro95Theme.Apply, Retro95Colors.Surface),
             new ThemeOption("Hazard", HazardTheme.Apply, HazardPalette.Background),

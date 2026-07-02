@@ -77,7 +77,7 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = DarkProColors.Surface1;
+        fill.FillColor = DarkProStyling.ActiveStyle.Colors.Surface1;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -100,7 +100,7 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = DarkProColors.Border;
+        border.StrokeColor = DarkProStyling.ActiveStyle.Colors.Border;
         return border;
     }
 
@@ -122,7 +122,7 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         ring.IsFilled = false;
         ring.StrokeWidth = BorderThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = DarkProColors.Accent;
+        ring.StrokeColor = DarkProStyling.ActiveStyle.Colors.Accent;
         ring.Visible = false;
         return ring;
     }
@@ -139,13 +139,13 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         // applies, but they're harmless because FocusedIndicator has no parent.
         States.Enabled.Apply = () =>
         {
-            _border.StrokeColor = DarkProColors.Border;
+            _border.StrokeColor = DarkProStyling.ActiveStyle.Colors.Border;
             _focusRing.Visible = false;
         };
 
         States.Focused.Apply = () =>
         {
-            _border.StrokeColor = DarkProColors.Accent;
+            _border.StrokeColor = DarkProStyling.ActiveStyle.Colors.Accent;
             _focusRing.Visible = true;
         };
     }

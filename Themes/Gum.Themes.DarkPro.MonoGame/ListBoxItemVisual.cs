@@ -76,19 +76,19 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         // selected; selected+focused brightens to full Accent to mark which row
         // the keyboard will move from.
         States.Enabled.Apply = () => ApplyPalette(
-            fill: new Color(0, 0, 0, 0), text: DarkProColors.Text);
+            fill: new Color(0, 0, 0, 0), text: DarkProStyling.ActiveStyle.Colors.Text);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            fill: DarkProColors.Surface2, text: DarkProColors.Text);
+            fill: DarkProStyling.ActiveStyle.Colors.Surface2, text: DarkProStyling.ActiveStyle.Colors.Text);
 
         States.Selected.Apply = () => ApplyPalette(
-            fill: DarkProColors.AccentDark, text: DarkProColors.Text);
+            fill: DarkProStyling.ActiveStyle.Colors.AccentDark, text: DarkProStyling.ActiveStyle.Colors.Text);
 
         States.Focused.Apply = () => ApplyPalette(
-            fill: DarkProColors.Accent, text: DarkProColors.Text);
+            fill: DarkProStyling.ActiveStyle.Colors.Accent, text: DarkProStyling.ActiveStyle.Colors.Text);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fill: new Color(0, 0, 0, 0), text: DarkProColors.DisabledText);
+            fill: new Color(0, 0, 0, 0), text: DarkProStyling.ActiveStyle.Colors.DisabledText);
     }
 
     private void ApplyPalette(Color fill, Color text)

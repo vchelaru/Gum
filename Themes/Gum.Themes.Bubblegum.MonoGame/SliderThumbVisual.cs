@@ -52,7 +52,7 @@ public class SliderThumbVisual : InteractiveGue
         HeightUnits = DimensionUnitType.Absolute;
 
         _focusRing = BubblegumShapes.CircleFocusRing(
-            color: BubblegumPalette.FocusRing,
+            color: BubblegumStyling.ActiveStyle.Colors.FocusRing,
             inset: FocusRingInset,
             thickness: FocusRingThickness,
             name: "BubblegumSliderThumbFocusRing");
@@ -68,7 +68,7 @@ public class SliderThumbVisual : InteractiveGue
         AddChild(_body);
 
         _border = BubblegumShapes.CircleBorder(
-            color: BubblegumColors.Accent,
+            color: BubblegumStyling.ActiveStyle.Colors.Accent,
             thickness: BorderThickness,
             name: "BubblegumSliderThumbBorder");
         AddChild(_border);
@@ -83,25 +83,25 @@ public class SliderThumbVisual : InteractiveGue
         AddCategory(_buttonCategory);
 
         Add(_buttonCategory, FrameworkElement.EnabledStateName,
-            () => Apply(body: Color.White, border: BubblegumColors.Accent, ring: false, showShadow: true));
+            () => Apply(body: Color.White, border: BubblegumStyling.ActiveStyle.Colors.Accent, ring: false, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.HighlightedStateName,
-            () => Apply(body: Color.White, border: BubblegumColors.Accent, ring: false, showShadow: true));
+            () => Apply(body: Color.White, border: BubblegumStyling.ActiveStyle.Colors.Accent, ring: false, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.PushedStateName,
-            () => Apply(body: BubblegumColors.AccentLight, border: BubblegumColors.AccentDark, ring: false, showShadow: true));
+            () => Apply(body: BubblegumStyling.ActiveStyle.Colors.AccentLight, border: BubblegumStyling.ActiveStyle.Colors.AccentDark, ring: false, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.FocusedStateName,
-            () => Apply(body: Color.White, border: BubblegumColors.Accent, ring: true, showShadow: true));
+            () => Apply(body: Color.White, border: BubblegumStyling.ActiveStyle.Colors.Accent, ring: true, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.HighlightedFocusedStateName,
-            () => Apply(body: Color.White, border: BubblegumColors.Accent, ring: true, showShadow: true));
+            () => Apply(body: Color.White, border: BubblegumStyling.ActiveStyle.Colors.Accent, ring: true, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.DisabledStateName,
-            () => Apply(body: BubblegumColors.DisabledFill, border: BubblegumColors.Disabled, ring: false, showShadow: false));
+            () => Apply(body: BubblegumStyling.ActiveStyle.Colors.DisabledFill, border: BubblegumStyling.ActiveStyle.Colors.Disabled, ring: false, showShadow: false));
 
         Add(_buttonCategory, FrameworkElement.DisabledFocusedStateName,
-            () => Apply(body: BubblegumColors.DisabledFill, border: BubblegumColors.Disabled, ring: true, showShadow: false));
+            () => Apply(body: BubblegumStyling.ActiveStyle.Colors.DisabledFill, border: BubblegumStyling.ActiveStyle.Colors.Disabled, ring: true, showShadow: false));
     }
 
     private static void Add(StateSaveCategory category, string name, System.Action apply)

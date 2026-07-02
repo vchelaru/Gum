@@ -48,6 +48,6 @@ See `Content/Fonts/OFL.txt` for the DM Mono license.
 
 ### `"DM Mono Icons"` — internal glyphs
 
-DejaVu Sans Mono (Bitstream Vera / DejaVu license; redistribution permitted). Used by the theme's visuals for glyphs DM Mono doesn't cover — check marks, close buttons, combo and scrollbar arrows (Dingbats and Geometric Shapes Unicode blocks). The family name is also exposed as `DarkProTheme.IconFontFamily` if you need to render the same glyphs yourself.
+DejaVu Sans Mono (Bitstream Vera / DejaVu license; redistribution permitted). Used by the theme's visuals for glyphs DM Mono doesn't cover — check marks, close buttons, combo and scrollbar arrows (Dingbats and Geometric Shapes Unicode blocks). The family name is also exposed as `DarkProStyling.ActiveStyle.Text.IconFontFamily` if you need to render the same glyphs yourself.
 
 See `Content/Fonts/DejaVuSansMono-LICENSE.txt` for the DejaVu license.

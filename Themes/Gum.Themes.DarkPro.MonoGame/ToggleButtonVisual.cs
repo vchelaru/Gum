@@ -73,7 +73,7 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = DarkProColors.Surface1;
+        fill.FillColor = DarkProStyling.ActiveStyle.Colors.Surface1;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -96,7 +96,7 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = DarkProColors.Border;
+        border.StrokeColor = DarkProStyling.ActiveStyle.Colors.Border;
         return border;
     }
 
@@ -118,7 +118,7 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         ring.IsFilled = false;
         ring.StrokeWidth = BorderThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = DarkProColors.Accent;
+        ring.StrokeColor = DarkProStyling.ActiveStyle.Colors.Accent;
         ring.Visible = false;
         return ring;
     }
@@ -127,63 +127,63 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
     {
         // Off variants: same palette as the standard Dark Pro Button.
         States.EnabledOff.Apply = () => ApplyPalette(
-            fill: DarkProColors.Surface1, border: DarkProColors.Border,
-            text: DarkProColors.Text, showFocusRing: false);
+            fill: DarkProStyling.ActiveStyle.Colors.Surface1, border: DarkProStyling.ActiveStyle.Colors.Border,
+            text: DarkProStyling.ActiveStyle.Colors.Text, showFocusRing: false);
 
         States.HighlightedOff.Apply = () => ApplyPalette(
-            fill: DarkProColors.Surface2, border: DarkProColors.Accent,
-            text: DarkProColors.Text, showFocusRing: false);
+            fill: DarkProStyling.ActiveStyle.Colors.Surface2, border: DarkProStyling.ActiveStyle.Colors.Accent,
+            text: DarkProStyling.ActiveStyle.Colors.Text, showFocusRing: false);
 
         States.PushedOff.Apply = () => ApplyPalette(
-            fill: DarkProColors.PressedFill, border: DarkProColors.Accent,
-            text: DarkProColors.Text, showFocusRing: false);
+            fill: DarkProStyling.ActiveStyle.Colors.PressedFill, border: DarkProStyling.ActiveStyle.Colors.Accent,
+            text: DarkProStyling.ActiveStyle.Colors.Text, showFocusRing: false);
 
         States.FocusedOff.Apply = () => ApplyPalette(
-            fill: DarkProColors.Surface1, border: DarkProColors.Accent,
-            text: DarkProColors.Text, showFocusRing: true);
+            fill: DarkProStyling.ActiveStyle.Colors.Surface1, border: DarkProStyling.ActiveStyle.Colors.Accent,
+            text: DarkProStyling.ActiveStyle.Colors.Text, showFocusRing: true);
 
         States.HighlightedFocusedOff.Apply = () => ApplyPalette(
-            fill: DarkProColors.Surface2, border: DarkProColors.Accent,
-            text: DarkProColors.Text, showFocusRing: true);
+            fill: DarkProStyling.ActiveStyle.Colors.Surface2, border: DarkProStyling.ActiveStyle.Colors.Accent,
+            text: DarkProStyling.ActiveStyle.Colors.Text, showFocusRing: true);
 
         States.DisabledOff.Apply = () => ApplyPalette(
-            fill: DarkProColors.DisabledFill, border: DarkProColors.DisabledBorder,
-            text: DarkProColors.DisabledText, showFocusRing: false);
+            fill: DarkProStyling.ActiveStyle.Colors.DisabledFill, border: DarkProStyling.ActiveStyle.Colors.DisabledBorder,
+            text: DarkProStyling.ActiveStyle.Colors.DisabledText, showFocusRing: false);
 
         States.DisabledFocusedOff.Apply = () => ApplyPalette(
-            fill: DarkProColors.DisabledFill, border: DarkProColors.DisabledBorder,
-            text: DarkProColors.DisabledText, showFocusRing: true);
+            fill: DarkProStyling.ActiveStyle.Colors.DisabledFill, border: DarkProStyling.ActiveStyle.Colors.DisabledBorder,
+            text: DarkProStyling.ActiveStyle.Colors.DisabledText, showFocusRing: true);
 
         // On variants: accent-filled body so the active state is unmistakable.
         // Text flips to PressedText (a light-blue from the source mockup) for
         // legibility against the saturated accent fill.
         States.EnabledOn.Apply = () => ApplyPalette(
-            fill: DarkProColors.Accent, border: DarkProColors.Accent,
-            text: DarkProColors.PressedText, showFocusRing: false);
+            fill: DarkProStyling.ActiveStyle.Colors.Accent, border: DarkProStyling.ActiveStyle.Colors.Accent,
+            text: DarkProStyling.ActiveStyle.Colors.PressedText, showFocusRing: false);
 
         States.HighlightedOn.Apply = () => ApplyPalette(
-            fill: DarkProColors.HoverAccent, border: DarkProColors.HoverAccent,
-            text: DarkProColors.PressedText, showFocusRing: false);
+            fill: DarkProStyling.ActiveStyle.Colors.HoverAccent, border: DarkProStyling.ActiveStyle.Colors.HoverAccent,
+            text: DarkProStyling.ActiveStyle.Colors.PressedText, showFocusRing: false);
 
         States.PushedOn.Apply = () => ApplyPalette(
-            fill: DarkProColors.AccentPressed, border: DarkProColors.AccentPressed,
-            text: DarkProColors.PressedText, showFocusRing: false);
+            fill: DarkProStyling.ActiveStyle.Colors.AccentPressed, border: DarkProStyling.ActiveStyle.Colors.AccentPressed,
+            text: DarkProStyling.ActiveStyle.Colors.PressedText, showFocusRing: false);
 
         States.FocusedOn.Apply = () => ApplyPalette(
-            fill: DarkProColors.Accent, border: DarkProColors.Accent,
-            text: DarkProColors.PressedText, showFocusRing: true);
+            fill: DarkProStyling.ActiveStyle.Colors.Accent, border: DarkProStyling.ActiveStyle.Colors.Accent,
+            text: DarkProStyling.ActiveStyle.Colors.PressedText, showFocusRing: true);
 
         States.HighlightedFocusedOn.Apply = () => ApplyPalette(
-            fill: DarkProColors.HoverAccent, border: DarkProColors.HoverAccent,
-            text: DarkProColors.PressedText, showFocusRing: true);
+            fill: DarkProStyling.ActiveStyle.Colors.HoverAccent, border: DarkProStyling.ActiveStyle.Colors.HoverAccent,
+            text: DarkProStyling.ActiveStyle.Colors.PressedText, showFocusRing: true);
 
         States.DisabledOn.Apply = () => ApplyPalette(
-            fill: DarkProColors.DisabledFill, border: DarkProColors.DisabledBorder,
-            text: DarkProColors.DisabledText, showFocusRing: false);
+            fill: DarkProStyling.ActiveStyle.Colors.DisabledFill, border: DarkProStyling.ActiveStyle.Colors.DisabledBorder,
+            text: DarkProStyling.ActiveStyle.Colors.DisabledText, showFocusRing: false);
 
         States.DisabledFocusedOn.Apply = () => ApplyPalette(
-            fill: DarkProColors.DisabledFill, border: DarkProColors.DisabledBorder,
-            text: DarkProColors.DisabledText, showFocusRing: true);
+            fill: DarkProStyling.ActiveStyle.Colors.DisabledFill, border: DarkProStyling.ActiveStyle.Colors.DisabledBorder,
+            text: DarkProStyling.ActiveStyle.Colors.DisabledText, showFocusRing: true);
     }
 
     private void ApplyPalette(Color fill, Color border, Color text, bool showFocusRing)

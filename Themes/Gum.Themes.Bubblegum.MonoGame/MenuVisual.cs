@@ -25,7 +25,7 @@ public class MenuVisual : BaseMenuVisual
         InnerPanelInstance.Parent = null;
 
         _fill = BubblegumShapes.Fill(
-            color: BubblegumColors.Surface1,
+            color: BubblegumStyling.ActiveStyle.Colors.Surface1,
             name: "BubblegumMenuFill");
         AddChild(_fill);
 
@@ -50,7 +50,7 @@ public class MenuVisual : BaseMenuVisual
         separator.WidthUnits = DimensionUnitType.RelativeToParent;
         separator.HeightUnits = DimensionUnitType.Absolute;
         separator.IsFilled = true;
-        separator.FillColor = BubblegumColors.Border;
+        separator.FillColor = BubblegumStyling.ActiveStyle.Colors.Border;
         separator.StrokeWidth = 0;
         return separator;
     }

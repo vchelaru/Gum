@@ -22,23 +22,19 @@ namespace Gum.Themes.DarkPro;
 public static class DarkProTheme
 {
     /// <summary>
-    /// Family name the bundled DM Mono TTFs are registered under. Use this as
-    /// the <c>Font</c> property value on any TextRuntime to get the theme font.
+    /// Fixed family name the bundled DM Mono TTFs are registered under. Font
+    /// <em>registration</em> is intentionally decoupled from font <em>selection</em>
+    /// (<see cref="DarkProText.FontFamily"/>, mutable) — reassigning the selection
+    /// before <see cref="Apply"/> can never corrupt this registration.
     /// </summary>
-    public const string FontFamily = "DM Mono";
+    internal const string BundledFontFamily = "DM Mono";
 
     /// <summary>
-    /// Family name the bundled icon font (DejaVu Sans Mono) is registered under.
-    /// Use this for glyphs DM Mono doesn't cover - check marks, close buttons,
-    /// combo/scrollbar arrows, etc. (Dingbats and Geometric Shapes blocks).
+    /// Fixed family name the bundled icon font (DejaVu Sans Mono) is registered under.
+    /// See <see cref="BundledFontFamily"/> for why this is a fixed constant rather than
+    /// the mutable <see cref="DarkProText.IconFontFamily"/> selection.
     /// </summary>
-    public const string IconFontFamily = "DM Mono Icons";
-
-    /// <summary>
-    /// Default text size used by the theme. Matches the Dark Pro mockup's
-    /// <c>--fs</c> token (14px).
-    /// </summary>
-    public const int FontSize = 14;
+    internal const string BundledIconFontFamily = "DM Mono Icons";
 
     /// <summary>
     /// Applies the Dark Pro theme: wires KernSmith as the in-memory font
@@ -86,14 +82,14 @@ public static class DarkProTheme
         // DM Mono's true 700-weight Bold variant is not shipped; Medium (500)
         // maps to Gum's IsBold slot because the Dark Pro design uses 500 as
         // the emphasis weight. Consumers can override by re-registering.
-        RegisterEmbeddedFont(FontFamily, "DMMono-Regular.ttf", style: null);
-        RegisterEmbeddedFont(FontFamily, "DMMono-Medium.ttf", style: "Bold");
-        RegisterEmbeddedFont(FontFamily, "DMMono-Italic.ttf", style: "Italic");
-        RegisterEmbeddedFont(FontFamily, "DMMono-MediumItalic.ttf", style: "BoldItalic");
+        RegisterEmbeddedFont(BundledFontFamily, "DMMono-Regular.ttf", style: null);
+        RegisterEmbeddedFont(BundledFontFamily, "DMMono-Medium.ttf", style: "Bold");
+        RegisterEmbeddedFont(BundledFontFamily, "DMMono-Italic.ttf", style: "Italic");
+        RegisterEmbeddedFont(BundledFontFamily, "DMMono-MediumItalic.ttf", style: "BoldItalic");
 
         // Icon font (DejaVu Sans Mono) registered under a distinct family name
-        // so the visual code addresses it explicitly via DarkProTheme.IconFontFamily.
-        RegisterEmbeddedFont(IconFontFamily, "DejaVuSansMono.ttf", style: null);
+        // so the visual code addresses it explicitly via DarkProStyling.ActiveStyle.Text.IconFontFamily.
+        RegisterEmbeddedFont(BundledIconFontFamily, "DejaVuSansMono.ttf", style: null);
     }
 
     private static void RegisterEmbeddedFont(string family, string fileName, string? style)
@@ -120,15 +116,20 @@ public static class DarkProTheme
         ThemePlatform.RegisterFont(family, fontBytes, style);
     }
 
-    private static void ConfigureStyling()
+    // Internal (not private) so Tests/Gum.Themes.Tests can exercise the guardrail-token sync
+    // (TextPrimary/TextMuted/Primary/Accent → V3.Styling.ActiveStyle.Colors) without going
+    // through Apply(), which requires a real GraphicsDevice for font wiring and can't run
+    // headlessly in a unit test. See Gum.Themes.DarkPro.MonoGame.csproj's InternalsVisibleTo.
+    internal static void ConfigureStyling()
     {
         Styling styling = Styling.ActiveStyle;
+        DarkProText text = DarkProStyling.ActiveStyle.Text;
 
         styling.Text.Normal.Clear();
         styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = FontFamily });
+            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
         styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = FontSize });
+            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
         styling.Text.Normal.Variables.Add(
             new VariableSave { Name = "IsBold", Type = "bool", Value = false });
         styling.Text.Normal.Variables.Add(
@@ -136,9 +137,9 @@ public static class DarkProTheme
 
         styling.Text.Strong.Clear();
         styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = FontFamily });
+            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
         styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = FontSize });
+            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
         styling.Text.Strong.Variables.Add(
             new VariableSave { Name = "IsBold", Type = "bool", Value = true });
         styling.Text.Strong.Variables.Add(
@@ -146,14 +147,14 @@ public static class DarkProTheme
 
         // Dark Pro tokens (see gum-styles.css :root for the source palette).
         // The Styling.Colors slots don't map 1:1 with the Dark Pro tokens, so
-        // we set what overlaps (TextPrimary, TextMuted, Primary, Accent) and
-        // the visuals carry the rest of the palette inline. Promoting the
-        // full Dark Pro palette into a typed Styling extension is a planned
-        // follow-up once more visuals land.
-        styling.Colors.TextPrimary = DarkProColors.Text;
-        styling.Colors.TextMuted = DarkProColors.Muted;
-        styling.Colors.Primary = DarkProColors.Surface1;
-        styling.Colors.Accent = DarkProColors.Accent;
+        // we push only the 4-token guardrail (TextPrimary, TextMuted, Primary, Accent)
+        // and the visuals read the rest of the palette from DarkProStyling.ActiveStyle.Colors
+        // directly.
+        DarkProColors colors = DarkProStyling.ActiveStyle.Colors;
+        styling.Colors.TextPrimary = colors.TextPrimary;
+        styling.Colors.TextMuted = colors.TextMuted;
+        styling.Colors.Primary = colors.Primary;
+        styling.Colors.Accent = colors.Accent;
     }
 
     private static void RegisterVisuals()

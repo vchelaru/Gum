@@ -65,10 +65,10 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         // the Dingbats block where U+2713 ✓ lives. The character is pre-baked
         // into the icon font's atlas via BmfcSave.AddCharacters in
         // DarkProTheme.Apply.
-        _checkGlyph.Font = DarkProTheme.IconFontFamily;
+        _checkGlyph.Font = DarkProStyling.ActiveStyle.Text.IconFontFamily;
         _checkGlyph.FontSize = 22;
         _checkGlyph.Text = "✓";
-        _checkGlyph.Color = DarkProColors.Accent;
+        _checkGlyph.Color = DarkProStyling.ActiveStyle.Colors.Accent;
         _checkGlyph.Visible = false;
 
         _dashIndicator = CreateDashIndicator();
@@ -94,7 +94,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         fill.HeightUnits = DimensionUnitType.Absolute;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = DarkProColors.Surface1;
+        fill.FillColor = DarkProStyling.ActiveStyle.Colors.Surface1;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -117,7 +117,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = DarkProColors.Border;
+        border.StrokeColor = DarkProStyling.ActiveStyle.Colors.Border;
         return border;
     }
 
@@ -141,7 +141,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         ring.IsFilled = false;
         ring.StrokeWidth = BorderThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = DarkProColors.Accent;
+        ring.StrokeColor = DarkProStyling.ActiveStyle.Colors.Accent;
         ring.Visible = false;
         return ring;
     }
@@ -190,7 +190,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         dash.HeightUnits = DimensionUnitType.Absolute;
         dash.CornerRadius = 1f;
         dash.IsFilled = true;
-        dash.FillColor = DarkProColors.Accent;
+        dash.FillColor = DarkProStyling.ActiveStyle.Colors.Accent;
         dash.StrokeWidth = 0;
         return dash;
     }
@@ -199,104 +199,104 @@ public class CheckBoxVisual : BaseCheckBoxVisual
     {
         // -------- Unchecked (Off) --------
         States.EnabledOff.Apply = () => Apply(
-            fill: DarkProColors.Surface1, border: DarkProColors.Border,
-            text: DarkProColors.Text, glyph: GlyphKind.None, ring: false);
+            fill: DarkProStyling.ActiveStyle.Colors.Surface1, border: DarkProStyling.ActiveStyle.Colors.Border,
+            text: DarkProStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: false);
 
         // Border tracks interaction state only — the inside glyph alone signals
         // value. Hover/Highlighted gets BorderHover (matching TextBox's softer
         // hover→focus progression), focus drives Accent + ring, and the same
         // pattern is mirrored on On / Indeterminate below.
         States.HighlightedOff.Apply = () => Apply(
-            fill: DarkProColors.Surface2, border: DarkProColors.BorderHover,
-            text: DarkProColors.Text, glyph: GlyphKind.None, ring: false);
+            fill: DarkProStyling.ActiveStyle.Colors.Surface2, border: DarkProStyling.ActiveStyle.Colors.BorderHover,
+            text: DarkProStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: false);
 
         States.FocusedOff.Apply = () => Apply(
-            fill: DarkProColors.Surface1, border: DarkProColors.Accent,
-            text: DarkProColors.Text, glyph: GlyphKind.None, ring: true);
+            fill: DarkProStyling.ActiveStyle.Colors.Surface1, border: DarkProStyling.ActiveStyle.Colors.Accent,
+            text: DarkProStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: true);
 
         States.HighlightedFocusedOff.Apply = () => Apply(
-            fill: DarkProColors.Surface2, border: DarkProColors.Accent,
-            text: DarkProColors.Text, glyph: GlyphKind.None, ring: true);
+            fill: DarkProStyling.ActiveStyle.Colors.Surface2, border: DarkProStyling.ActiveStyle.Colors.Accent,
+            text: DarkProStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: true);
 
         States.PushedOff.Apply = () => Apply(
-            fill: DarkProColors.PressedFill, border: DarkProColors.Accent,
-            text: DarkProColors.Text, glyph: GlyphKind.None, ring: false);
+            fill: DarkProStyling.ActiveStyle.Colors.PressedFill, border: DarkProStyling.ActiveStyle.Colors.Accent,
+            text: DarkProStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: false);
 
         States.DisabledOff.Apply = () => Apply(
-            fill: DarkProColors.DisabledFill, border: DarkProColors.DisabledBorder,
-            text: DarkProColors.DisabledText, glyph: GlyphKind.None, ring: false);
+            fill: DarkProStyling.ActiveStyle.Colors.DisabledFill, border: DarkProStyling.ActiveStyle.Colors.DisabledBorder,
+            text: DarkProStyling.ActiveStyle.Colors.DisabledText, glyph: GlyphKind.None, ring: false);
 
         States.DisabledFocusedOff.Apply = () => Apply(
-            fill: DarkProColors.DisabledFill, border: DarkProColors.DisabledBorder,
-            text: DarkProColors.DisabledText, glyph: GlyphKind.None, ring: true);
+            fill: DarkProStyling.ActiveStyle.Colors.DisabledFill, border: DarkProStyling.ActiveStyle.Colors.DisabledBorder,
+            text: DarkProStyling.ActiveStyle.Colors.DisabledText, glyph: GlyphKind.None, ring: true);
 
         // -------- Checked (On) --------
         // Border mirrors the Off variants exactly — the value is communicated solely by
         // the glyph inside. Keeps the three value states (Off / On / Indeterminate)
         // visually identical in chrome and distinguished only by what appears inside.
         States.EnabledOn.Apply = () => Apply(
-            fill: DarkProColors.Surface1, border: DarkProColors.Border,
-            text: DarkProColors.Text, glyph: GlyphKind.Check, glyphColor: DarkProColors.Accent,
+            fill: DarkProStyling.ActiveStyle.Colors.Surface1, border: DarkProStyling.ActiveStyle.Colors.Border,
+            text: DarkProStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: DarkProStyling.ActiveStyle.Colors.Accent,
             ring: false);
 
         States.HighlightedOn.Apply = () => Apply(
-            fill: DarkProColors.Surface2, border: DarkProColors.BorderHover,
-            text: DarkProColors.Text, glyph: GlyphKind.Check, glyphColor: DarkProColors.Accent,
+            fill: DarkProStyling.ActiveStyle.Colors.Surface2, border: DarkProStyling.ActiveStyle.Colors.BorderHover,
+            text: DarkProStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: DarkProStyling.ActiveStyle.Colors.Accent,
             ring: false);
 
         States.FocusedOn.Apply = () => Apply(
-            fill: DarkProColors.Surface1, border: DarkProColors.Accent,
-            text: DarkProColors.Text, glyph: GlyphKind.Check, glyphColor: DarkProColors.Accent,
+            fill: DarkProStyling.ActiveStyle.Colors.Surface1, border: DarkProStyling.ActiveStyle.Colors.Accent,
+            text: DarkProStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: DarkProStyling.ActiveStyle.Colors.Accent,
             ring: true);
 
         States.HighlightedFocusedOn.Apply = () => Apply(
-            fill: DarkProColors.Surface2, border: DarkProColors.Accent,
-            text: DarkProColors.Text, glyph: GlyphKind.Check, glyphColor: DarkProColors.Accent,
+            fill: DarkProStyling.ActiveStyle.Colors.Surface2, border: DarkProStyling.ActiveStyle.Colors.Accent,
+            text: DarkProStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: DarkProStyling.ActiveStyle.Colors.Accent,
             ring: true);
 
         States.PushedOn.Apply = () => Apply(
-            fill: DarkProColors.PressedFill, border: DarkProColors.Accent,
-            text: DarkProColors.Text, glyph: GlyphKind.Check, glyphColor: DarkProColors.Accent,
+            fill: DarkProStyling.ActiveStyle.Colors.PressedFill, border: DarkProStyling.ActiveStyle.Colors.Accent,
+            text: DarkProStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: DarkProStyling.ActiveStyle.Colors.Accent,
             ring: false);
 
         States.DisabledOn.Apply = () => Apply(
-            fill: DarkProColors.DisabledFill, border: DarkProColors.DisabledBorder,
-            text: DarkProColors.DisabledText, glyph: GlyphKind.Check,
-            glyphColor: DarkProColors.DisabledText, ring: false);
+            fill: DarkProStyling.ActiveStyle.Colors.DisabledFill, border: DarkProStyling.ActiveStyle.Colors.DisabledBorder,
+            text: DarkProStyling.ActiveStyle.Colors.DisabledText, glyph: GlyphKind.Check,
+            glyphColor: DarkProStyling.ActiveStyle.Colors.DisabledText, ring: false);
 
         States.DisabledFocusedOn.Apply = () => Apply(
-            fill: DarkProColors.DisabledFill, border: DarkProColors.DisabledBorder,
-            text: DarkProColors.DisabledText, glyph: GlyphKind.Check,
-            glyphColor: DarkProColors.DisabledText, ring: true);
+            fill: DarkProStyling.ActiveStyle.Colors.DisabledFill, border: DarkProStyling.ActiveStyle.Colors.DisabledBorder,
+            text: DarkProStyling.ActiveStyle.Colors.DisabledText, glyph: GlyphKind.Check,
+            glyphColor: DarkProStyling.ActiveStyle.Colors.DisabledText, ring: true);
 
         // -------- Indeterminate --------
         States.EnabledIndeterminate.Apply = () => Apply(
-            fill: DarkProColors.Surface1, border: DarkProColors.Border,
-            text: DarkProColors.Text, glyph: GlyphKind.Dash, ring: false);
+            fill: DarkProStyling.ActiveStyle.Colors.Surface1, border: DarkProStyling.ActiveStyle.Colors.Border,
+            text: DarkProStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: false);
 
         States.HighlightedIndeterminate.Apply = () => Apply(
-            fill: DarkProColors.Surface2, border: DarkProColors.BorderHover,
-            text: DarkProColors.Text, glyph: GlyphKind.Dash, ring: false);
+            fill: DarkProStyling.ActiveStyle.Colors.Surface2, border: DarkProStyling.ActiveStyle.Colors.BorderHover,
+            text: DarkProStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: false);
 
         States.FocusedIndeterminate.Apply = () => Apply(
-            fill: DarkProColors.Surface1, border: DarkProColors.Accent,
-            text: DarkProColors.Text, glyph: GlyphKind.Dash, ring: true);
+            fill: DarkProStyling.ActiveStyle.Colors.Surface1, border: DarkProStyling.ActiveStyle.Colors.Accent,
+            text: DarkProStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: true);
 
         States.HighlightedFocusedIndeterminate.Apply = () => Apply(
-            fill: DarkProColors.Surface2, border: DarkProColors.Accent,
-            text: DarkProColors.Text, glyph: GlyphKind.Dash, ring: true);
+            fill: DarkProStyling.ActiveStyle.Colors.Surface2, border: DarkProStyling.ActiveStyle.Colors.Accent,
+            text: DarkProStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: true);
 
         States.PushedIndeterminate.Apply = () => Apply(
-            fill: DarkProColors.PressedFill, border: DarkProColors.Accent,
-            text: DarkProColors.Text, glyph: GlyphKind.Dash, ring: false);
+            fill: DarkProStyling.ActiveStyle.Colors.PressedFill, border: DarkProStyling.ActiveStyle.Colors.Accent,
+            text: DarkProStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: false);
 
         States.DisabledIndeterminate.Apply = () => Apply(
-            fill: DarkProColors.DisabledFill, border: DarkProColors.DisabledBorder,
-            text: DarkProColors.DisabledText, glyph: GlyphKind.Dash, ring: false);
+            fill: DarkProStyling.ActiveStyle.Colors.DisabledFill, border: DarkProStyling.ActiveStyle.Colors.DisabledBorder,
+            text: DarkProStyling.ActiveStyle.Colors.DisabledText, glyph: GlyphKind.Dash, ring: false);
 
         States.DisabledFocusedIndeterminate.Apply = () => Apply(
-            fill: DarkProColors.DisabledFill, border: DarkProColors.DisabledBorder,
-            text: DarkProColors.DisabledText, glyph: GlyphKind.Dash, ring: true);
+            fill: DarkProStyling.ActiveStyle.Colors.DisabledFill, border: DarkProStyling.ActiveStyle.Colors.DisabledBorder,
+            text: DarkProStyling.ActiveStyle.Colors.DisabledText, glyph: GlyphKind.Dash, ring: true);
     }
 
     private enum GlyphKind { None, Check, Dash }

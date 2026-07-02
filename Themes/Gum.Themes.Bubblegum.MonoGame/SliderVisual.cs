@@ -114,7 +114,7 @@ public class SliderVisual : BaseSliderVisual
         track.HeightUnits = DimensionUnitType.Absolute;
         track.CornerRadius = TrackCornerRadius;
         track.IsFilled = true;
-        track.FillColor = BubblegumColors.AccentLight;
+        track.FillColor = BubblegumStyling.ActiveStyle.Colors.AccentLight;
         track.StrokeWidth = 0;
         return track;
     }
@@ -135,20 +135,20 @@ public class SliderVisual : BaseSliderVisual
         fill.HeightUnits = DimensionUnitType.Absolute;
         fill.CornerRadius = TrackCornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = BubblegumColors.Accent;
+        fill.FillColor = BubblegumStyling.ActiveStyle.Colors.Accent;
         fill.StrokeWidth = 0;
         return fill;
     }
 
     private void WireStates()
     {
-        States.Enabled.Apply = () => ApplyTrack(BubblegumColors.AccentLight, BubblegumColors.Accent);
-        States.Highlighted.Apply = () => ApplyTrack(BubblegumColors.AccentLight, BubblegumColors.Accent);
-        States.HighlightedFocused.Apply = () => ApplyTrack(BubblegumColors.AccentLight, BubblegumColors.Accent);
-        States.Focused.Apply = () => ApplyTrack(BubblegumColors.AccentLight, BubblegumColors.Accent);
-        States.Pushed.Apply = () => ApplyTrack(BubblegumColors.AccentLight, BubblegumColors.Accent);
-        States.Disabled.Apply = () => ApplyTrack(BubblegumColors.DisabledFill, BubblegumColors.Disabled);
-        States.DisabledFocused.Apply = () => ApplyTrack(BubblegumColors.DisabledFill, BubblegumColors.Disabled);
+        States.Enabled.Apply = () => ApplyTrack(BubblegumStyling.ActiveStyle.Colors.AccentLight, BubblegumStyling.ActiveStyle.Colors.Accent);
+        States.Highlighted.Apply = () => ApplyTrack(BubblegumStyling.ActiveStyle.Colors.AccentLight, BubblegumStyling.ActiveStyle.Colors.Accent);
+        States.HighlightedFocused.Apply = () => ApplyTrack(BubblegumStyling.ActiveStyle.Colors.AccentLight, BubblegumStyling.ActiveStyle.Colors.Accent);
+        States.Focused.Apply = () => ApplyTrack(BubblegumStyling.ActiveStyle.Colors.AccentLight, BubblegumStyling.ActiveStyle.Colors.Accent);
+        States.Pushed.Apply = () => ApplyTrack(BubblegumStyling.ActiveStyle.Colors.AccentLight, BubblegumStyling.ActiveStyle.Colors.Accent);
+        States.Disabled.Apply = () => ApplyTrack(BubblegumStyling.ActiveStyle.Colors.DisabledFill, BubblegumStyling.ActiveStyle.Colors.Disabled);
+        States.DisabledFocused.Apply = () => ApplyTrack(BubblegumStyling.ActiveStyle.Colors.DisabledFill, BubblegumStyling.ActiveStyle.Colors.Disabled);
     }
 
     private void ApplyTrack(Color trackFill, Color fillBar)

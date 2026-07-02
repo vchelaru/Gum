@@ -68,7 +68,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         c.WidthUnits = DimensionUnitType.Absolute;
         c.HeightUnits = DimensionUnitType.Absolute;
         c.IsFilled = true;
-        c.FillColor = BubblegumColors.Surface1;
+        c.FillColor = BubblegumStyling.ActiveStyle.Colors.Surface1;
         c.StrokeWidth = 0;
         return c;
     }
@@ -90,7 +90,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         c.IsFilled = false;
         c.StrokeWidth = BorderThickness;
         c.StrokeWidthUnits = DimensionUnitType.Absolute;
-        c.StrokeColor = BubblegumColors.Border;
+        c.StrokeColor = BubblegumStyling.ActiveStyle.Colors.Border;
         return c;
     }
 
@@ -111,7 +111,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         c.IsFilled = false;
         c.StrokeWidth = FocusRingThickness;
         c.StrokeWidthUnits = DimensionUnitType.Absolute;
-        c.StrokeColor = BubblegumPalette.FocusRing;
+        c.StrokeColor = BubblegumStyling.ActiveStyle.Colors.FocusRing;
         c.Visible = false;
         return c;
     }
@@ -132,7 +132,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         dot.WidthUnits = DimensionUnitType.Absolute;
         dot.HeightUnits = DimensionUnitType.Absolute;
         dot.IsFilled = true;
-        dot.FillColor = BubblegumColors.Accent;
+        dot.FillColor = BubblegumStyling.ActiveStyle.Colors.Accent;
         dot.StrokeWidth = 0;
         dot.Visible = false;
         return dot;
@@ -142,66 +142,66 @@ public class RadioButtonVisual : BaseRadioButtonVisual
     {
         // -------- Off --------
         States.EnabledOff.Apply = () => Apply(
-            fill: BubblegumColors.Surface1, border: BubblegumColors.Border,
-            text: BubblegumColors.Text, innerVisible: false, ring: false);
+            fill: BubblegumStyling.ActiveStyle.Colors.Surface1, border: BubblegumStyling.ActiveStyle.Colors.Border,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: false);
 
         States.HighlightedOff.Apply = () => Apply(
-            fill: BubblegumColors.Surface1, border: BubblegumColors.Accent,
-            text: BubblegumColors.Text, innerVisible: false, ring: false);
+            fill: BubblegumStyling.ActiveStyle.Colors.Surface1, border: BubblegumStyling.ActiveStyle.Colors.Accent,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: false);
 
         States.FocusedOff.Apply = () => Apply(
-            fill: BubblegumColors.Surface1, border: BubblegumColors.Accent,
-            text: BubblegumColors.Text, innerVisible: false, ring: true);
+            fill: BubblegumStyling.ActiveStyle.Colors.Surface1, border: BubblegumStyling.ActiveStyle.Colors.Accent,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: true);
 
         States.HighlightedFocusedOff.Apply = () => Apply(
-            fill: BubblegumColors.Surface1, border: BubblegumColors.Accent,
-            text: BubblegumColors.Text, innerVisible: false, ring: true);
+            fill: BubblegumStyling.ActiveStyle.Colors.Surface1, border: BubblegumStyling.ActiveStyle.Colors.Accent,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: true);
 
         States.PushedOff.Apply = () => Apply(
-            fill: BubblegumColors.Surface1, border: BubblegumColors.AccentDark,
-            text: BubblegumColors.Text, innerVisible: false, ring: false);
+            fill: BubblegumStyling.ActiveStyle.Colors.Surface1, border: BubblegumStyling.ActiveStyle.Colors.AccentDark,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: false);
 
         States.DisabledOff.Apply = () => Apply(
-            fill: BubblegumColors.DisabledFill, border: BubblegumColors.Disabled,
-            text: BubblegumColors.Disabled, innerVisible: false, ring: false);
+            fill: BubblegumStyling.ActiveStyle.Colors.DisabledFill, border: BubblegumStyling.ActiveStyle.Colors.Disabled,
+            text: BubblegumStyling.ActiveStyle.Colors.Disabled, innerVisible: false, ring: false);
 
         States.DisabledFocusedOff.Apply = () => Apply(
-            fill: BubblegumColors.DisabledFill, border: BubblegumColors.Disabled,
-            text: BubblegumColors.Disabled, innerVisible: false, ring: true);
+            fill: BubblegumStyling.ActiveStyle.Colors.DisabledFill, border: BubblegumStyling.ActiveStyle.Colors.Disabled,
+            text: BubblegumStyling.ActiveStyle.Colors.Disabled, innerVisible: false, ring: true);
 
         // -------- On --------
         States.EnabledOn.Apply = () => Apply(
-            fill: BubblegumColors.Surface1, border: BubblegumColors.Accent,
-            text: BubblegumColors.Text, innerVisible: true, innerColor: BubblegumColors.Accent,
+            fill: BubblegumStyling.ActiveStyle.Colors.Surface1, border: BubblegumStyling.ActiveStyle.Colors.Accent,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, innerVisible: true, innerColor: BubblegumStyling.ActiveStyle.Colors.Accent,
             ring: false);
 
         States.HighlightedOn.Apply = () => Apply(
-            fill: BubblegumColors.Surface1, border: BubblegumColors.Accent,
-            text: BubblegumColors.Text, innerVisible: true, innerColor: BubblegumColors.Accent,
+            fill: BubblegumStyling.ActiveStyle.Colors.Surface1, border: BubblegumStyling.ActiveStyle.Colors.Accent,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, innerVisible: true, innerColor: BubblegumStyling.ActiveStyle.Colors.Accent,
             ring: false);
 
         States.FocusedOn.Apply = () => Apply(
-            fill: BubblegumColors.Surface1, border: BubblegumColors.Accent,
-            text: BubblegumColors.Text, innerVisible: true, innerColor: BubblegumColors.Accent,
+            fill: BubblegumStyling.ActiveStyle.Colors.Surface1, border: BubblegumStyling.ActiveStyle.Colors.Accent,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, innerVisible: true, innerColor: BubblegumStyling.ActiveStyle.Colors.Accent,
             ring: true);
 
         States.HighlightedFocusedOn.Apply = () => Apply(
-            fill: BubblegumColors.Surface1, border: BubblegumColors.Accent,
-            text: BubblegumColors.Text, innerVisible: true, innerColor: BubblegumColors.Accent,
+            fill: BubblegumStyling.ActiveStyle.Colors.Surface1, border: BubblegumStyling.ActiveStyle.Colors.Accent,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, innerVisible: true, innerColor: BubblegumStyling.ActiveStyle.Colors.Accent,
             ring: true);
 
         States.PushedOn.Apply = () => Apply(
-            fill: BubblegumColors.Surface1, border: BubblegumColors.AccentDark,
-            text: BubblegumColors.Text, innerVisible: true, innerColor: BubblegumColors.AccentDark,
+            fill: BubblegumStyling.ActiveStyle.Colors.Surface1, border: BubblegumStyling.ActiveStyle.Colors.AccentDark,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, innerVisible: true, innerColor: BubblegumStyling.ActiveStyle.Colors.AccentDark,
             ring: false);
 
         States.DisabledOn.Apply = () => Apply(
-            fill: BubblegumColors.DisabledFill, border: BubblegumColors.Disabled,
-            text: BubblegumColors.Disabled, innerVisible: false, ring: false);
+            fill: BubblegumStyling.ActiveStyle.Colors.DisabledFill, border: BubblegumStyling.ActiveStyle.Colors.Disabled,
+            text: BubblegumStyling.ActiveStyle.Colors.Disabled, innerVisible: false, ring: false);
 
         States.DisabledFocusedOn.Apply = () => Apply(
-            fill: BubblegumColors.DisabledFill, border: BubblegumColors.Disabled,
-            text: BubblegumColors.Disabled, innerVisible: false, ring: true);
+            fill: BubblegumStyling.ActiveStyle.Colors.DisabledFill, border: BubblegumStyling.ActiveStyle.Colors.Disabled,
+            text: BubblegumStyling.ActiveStyle.Colors.Disabled, innerVisible: false, ring: true);
     }
 
     private void Apply(Color fill, Color border, Color text, bool innerVisible, bool ring,

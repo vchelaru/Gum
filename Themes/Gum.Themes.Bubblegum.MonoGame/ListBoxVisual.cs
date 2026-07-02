@@ -34,7 +34,7 @@ public class ListBoxVisual : BaseListBoxVisual
         ClipAndScrollContainer.Parent = null;
 
         _focusRing = BubblegumShapes.FocusRing(
-            color: BubblegumPalette.FocusRing,
+            color: BubblegumStyling.ActiveStyle.Colors.FocusRing,
             cornerRadius: CornerRadius,
             inset: FocusRingInset,
             thickness: FocusRingThickness,
@@ -42,7 +42,7 @@ public class ListBoxVisual : BaseListBoxVisual
         AddChild(_focusRing);
 
         _fill = BubblegumShapes.Fill(
-            color: BubblegumColors.Surface1,
+            color: BubblegumStyling.ActiveStyle.Colors.Surface1,
             cornerRadius: CornerRadius,
             name: "BubblegumListBoxFill");
         AddChild(_fill);
@@ -54,7 +54,7 @@ public class ListBoxVisual : BaseListBoxVisual
         AddChild(ClipAndScrollContainer);
 
         _border = BubblegumShapes.Border(
-            color: BubblegumColors.Border,
+            color: BubblegumStyling.ActiveStyle.Colors.Border,
             cornerRadius: CornerRadius,
             thickness: BorderThickness,
             name: "BubblegumListBoxBorder");
@@ -71,30 +71,30 @@ public class ListBoxVisual : BaseListBoxVisual
     private void WireStates()
     {
         States.Enabled.Apply = () => ApplyPalette(
-            border: BubblegumColors.Border, showFocusRing: false);
+            border: BubblegumStyling.ActiveStyle.Colors.Border, showFocusRing: false);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            border: BubblegumColors.Accent, showFocusRing: false);
+            border: BubblegumStyling.ActiveStyle.Colors.Accent, showFocusRing: false);
 
         States.Focused.Apply = () => ApplyPalette(
-            border: BubblegumColors.Accent, showFocusRing: true);
+            border: BubblegumStyling.ActiveStyle.Colors.Accent, showFocusRing: true);
 
         States.HighlightedFocused.Apply = () => ApplyPalette(
-            border: BubblegumColors.Accent, showFocusRing: true);
+            border: BubblegumStyling.ActiveStyle.Colors.Accent, showFocusRing: true);
 
         States.Pushed.Apply = () => ApplyPalette(
-            border: BubblegumColors.AccentDark, showFocusRing: false);
+            border: BubblegumStyling.ActiveStyle.Colors.AccentDark, showFocusRing: false);
 
         States.Disabled.Apply = () => ApplyPalette(
-            border: BubblegumColors.Disabled, showFocusRing: false, fillDisabled: true);
+            border: BubblegumStyling.ActiveStyle.Colors.Disabled, showFocusRing: false, fillDisabled: true);
 
         States.DisabledFocused.Apply = () => ApplyPalette(
-            border: BubblegumColors.Disabled, showFocusRing: true, fillDisabled: true);
+            border: BubblegumStyling.ActiveStyle.Colors.Disabled, showFocusRing: true, fillDisabled: true);
     }
 
     private void ApplyPalette(Color border, bool showFocusRing, bool fillDisabled = false)
     {
-        _fill.FillColor = fillDisabled ? BubblegumColors.DisabledFill : BubblegumColors.Surface1;
+        _fill.FillColor = fillDisabled ? BubblegumStyling.ActiveStyle.Colors.DisabledFill : BubblegumStyling.ActiveStyle.Colors.Surface1;
         _border.StrokeColor = border;
         _focusRing.Visible = showFocusRing;
     }

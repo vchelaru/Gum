@@ -62,7 +62,7 @@ public class WindowVisual : BaseWindowVisual
         BorderRightInstance.Visual.Parent = null;
 
         _fill = BubblegumShapes.FillWithDropshadow(
-            color: BubblegumColors.Surface1,
+            color: BubblegumStyling.ActiveStyle.Colors.Surface1,
             cornerRadius: CornerRadius,
             shadowColor: ShadowColor,
             offsetX: 0f,
@@ -72,7 +72,7 @@ public class WindowVisual : BaseWindowVisual
         AddChild(_fill);
 
         _border = BubblegumShapes.Border(
-            color: BubblegumColors.Border,
+            color: BubblegumStyling.ActiveStyle.Colors.Border,
             cornerRadius: CornerRadius,
             thickness: BorderThickness,
             name: "BubblegumWindowBorder");
@@ -94,7 +94,7 @@ public class WindowVisual : BaseWindowVisual
         // approximate with a flat Accent fill. A real gradient would need a
         // gradient-capable renderable that doesn't exist in the runtime yet.
         _titleBarFill = BubblegumShapes.Fill(
-            color: BubblegumColors.Accent,
+            color: BubblegumStyling.ActiveStyle.Colors.Accent,
             name: "BubblegumWindowTitleBarFill");
         _titleBarFill.Parent = TitleBarInstance.Visual;
 
@@ -117,7 +117,7 @@ public class WindowVisual : BaseWindowVisual
         separator.WidthUnits = DimensionUnitType.RelativeToParent;
         separator.HeightUnits = DimensionUnitType.Absolute;
         separator.IsFilled = true;
-        separator.FillColor = BubblegumColors.Border;
+        separator.FillColor = BubblegumStyling.ActiveStyle.Colors.Border;
         separator.StrokeWidth = 0;
         return separator;
     }

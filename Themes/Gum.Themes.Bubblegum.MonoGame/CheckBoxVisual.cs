@@ -64,7 +64,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         // "Nunito Icons" family. Nunito itself (humanist sans-serif) doesn't
         // cover the Dingbats block. BubblegumTheme.Apply pre-registers the
         // glyph via BmfcSave.AddCharacters so KernSmith bakes it into the atlas.
-        _checkGlyph.Font = BubblegumTheme.IconFontFamily;
+        _checkGlyph.Font = BubblegumStyling.ActiveStyle.Text.IconFontFamily;
         _checkGlyph.FontSize = 18;
         _checkGlyph.Text = "✓";
         _checkGlyph.Color = Color.White;
@@ -93,7 +93,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         fill.HeightUnits = DimensionUnitType.Absolute;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = BubblegumColors.Surface1;
+        fill.FillColor = BubblegumStyling.ActiveStyle.Colors.Surface1;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -116,7 +116,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = BubblegumColors.Border;
+        border.StrokeColor = BubblegumStyling.ActiveStyle.Colors.Border;
         return border;
     }
 
@@ -138,7 +138,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = BubblegumPalette.FocusRing;
+        ring.StrokeColor = BubblegumStyling.ActiveStyle.Colors.FocusRing;
         ring.Visible = false;
         return ring;
     }
@@ -180,7 +180,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         dash.HeightUnits = DimensionUnitType.Absolute;
         dash.CornerRadius = 1f;
         dash.IsFilled = true;
-        dash.FillColor = BubblegumColors.Accent;
+        dash.FillColor = BubblegumStyling.ActiveStyle.Colors.Accent;
         dash.StrokeWidth = 0;
         return dash;
     }
@@ -189,99 +189,99 @@ public class CheckBoxVisual : BaseCheckBoxVisual
     {
         // -------- Unchecked (Off) --------
         States.EnabledOff.Apply = () => Apply(
-            fill: BubblegumColors.Surface1, border: BubblegumColors.Border,
-            text: BubblegumColors.Text, glyph: GlyphKind.None, ring: false);
+            fill: BubblegumStyling.ActiveStyle.Colors.Surface1, border: BubblegumStyling.ActiveStyle.Colors.Border,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: false);
 
         States.HighlightedOff.Apply = () => Apply(
-            fill: BubblegumColors.Surface1, border: BubblegumColors.Accent,
-            text: BubblegumColors.Text, glyph: GlyphKind.None, ring: false);
+            fill: BubblegumStyling.ActiveStyle.Colors.Surface1, border: BubblegumStyling.ActiveStyle.Colors.Accent,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: false);
 
         States.FocusedOff.Apply = () => Apply(
-            fill: BubblegumColors.Surface1, border: BubblegumColors.Accent,
-            text: BubblegumColors.Text, glyph: GlyphKind.None, ring: true);
+            fill: BubblegumStyling.ActiveStyle.Colors.Surface1, border: BubblegumStyling.ActiveStyle.Colors.Accent,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: true);
 
         States.HighlightedFocusedOff.Apply = () => Apply(
-            fill: BubblegumColors.Surface1, border: BubblegumColors.Accent,
-            text: BubblegumColors.Text, glyph: GlyphKind.None, ring: true);
+            fill: BubblegumStyling.ActiveStyle.Colors.Surface1, border: BubblegumStyling.ActiveStyle.Colors.Accent,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: true);
 
         States.PushedOff.Apply = () => Apply(
-            fill: BubblegumColors.Surface1, border: BubblegumColors.Accent,
-            text: BubblegumColors.Text, glyph: GlyphKind.None, ring: false);
+            fill: BubblegumStyling.ActiveStyle.Colors.Surface1, border: BubblegumStyling.ActiveStyle.Colors.Accent,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.None, ring: false);
 
         States.DisabledOff.Apply = () => Apply(
-            fill: BubblegumColors.DisabledFill, border: BubblegumColors.Disabled,
-            text: BubblegumColors.Disabled, glyph: GlyphKind.None, ring: false);
+            fill: BubblegumStyling.ActiveStyle.Colors.DisabledFill, border: BubblegumStyling.ActiveStyle.Colors.Disabled,
+            text: BubblegumStyling.ActiveStyle.Colors.Disabled, glyph: GlyphKind.None, ring: false);
 
         States.DisabledFocusedOff.Apply = () => Apply(
-            fill: BubblegumColors.DisabledFill, border: BubblegumColors.Disabled,
-            text: BubblegumColors.Disabled, glyph: GlyphKind.None, ring: true);
+            fill: BubblegumStyling.ActiveStyle.Colors.DisabledFill, border: BubblegumStyling.ActiveStyle.Colors.Disabled,
+            text: BubblegumStyling.ActiveStyle.Colors.Disabled, glyph: GlyphKind.None, ring: true);
 
         // -------- Checked (On) --------
         // Accent-filled box, white check glyph (matches .bb-chk.chk).
         States.EnabledOn.Apply = () => Apply(
-            fill: BubblegumColors.Accent, border: BubblegumColors.Accent,
-            text: BubblegumColors.Text, glyph: GlyphKind.Check, glyphColor: Color.White,
+            fill: BubblegumStyling.ActiveStyle.Colors.Accent, border: BubblegumStyling.ActiveStyle.Colors.Accent,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: Color.White,
             ring: false);
 
         States.HighlightedOn.Apply = () => Apply(
-            fill: BubblegumColors.Accent, border: BubblegumColors.Accent,
-            text: BubblegumColors.Text, glyph: GlyphKind.Check, glyphColor: Color.White,
+            fill: BubblegumStyling.ActiveStyle.Colors.Accent, border: BubblegumStyling.ActiveStyle.Colors.Accent,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: Color.White,
             ring: false);
 
         States.FocusedOn.Apply = () => Apply(
-            fill: BubblegumColors.Accent, border: BubblegumColors.Accent,
-            text: BubblegumColors.Text, glyph: GlyphKind.Check, glyphColor: Color.White,
+            fill: BubblegumStyling.ActiveStyle.Colors.Accent, border: BubblegumStyling.ActiveStyle.Colors.Accent,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: Color.White,
             ring: true);
 
         States.HighlightedFocusedOn.Apply = () => Apply(
-            fill: BubblegumColors.Accent, border: BubblegumColors.Accent,
-            text: BubblegumColors.Text, glyph: GlyphKind.Check, glyphColor: Color.White,
+            fill: BubblegumStyling.ActiveStyle.Colors.Accent, border: BubblegumStyling.ActiveStyle.Colors.Accent,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: Color.White,
             ring: true);
 
         States.PushedOn.Apply = () => Apply(
-            fill: BubblegumColors.AccentDark, border: BubblegumColors.AccentDark,
-            text: BubblegumColors.Text, glyph: GlyphKind.Check, glyphColor: Color.White,
+            fill: BubblegumStyling.ActiveStyle.Colors.AccentDark, border: BubblegumStyling.ActiveStyle.Colors.AccentDark,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: Color.White,
             ring: false);
 
         States.DisabledOn.Apply = () => Apply(
-            fill: BubblegumColors.DisabledFill, border: BubblegumColors.Disabled,
-            text: BubblegumColors.Disabled, glyph: GlyphKind.Check,
-            glyphColor: BubblegumColors.Disabled, ring: false);
+            fill: BubblegumStyling.ActiveStyle.Colors.DisabledFill, border: BubblegumStyling.ActiveStyle.Colors.Disabled,
+            text: BubblegumStyling.ActiveStyle.Colors.Disabled, glyph: GlyphKind.Check,
+            glyphColor: BubblegumStyling.ActiveStyle.Colors.Disabled, ring: false);
 
         States.DisabledFocusedOn.Apply = () => Apply(
-            fill: BubblegumColors.DisabledFill, border: BubblegumColors.Disabled,
-            text: BubblegumColors.Disabled, glyph: GlyphKind.Check,
-            glyphColor: BubblegumColors.Disabled, ring: true);
+            fill: BubblegumStyling.ActiveStyle.Colors.DisabledFill, border: BubblegumStyling.ActiveStyle.Colors.Disabled,
+            text: BubblegumStyling.ActiveStyle.Colors.Disabled, glyph: GlyphKind.Check,
+            glyphColor: BubblegumStyling.ActiveStyle.Colors.Disabled, ring: true);
 
         // -------- Indeterminate --------
         // .bb-chk.ind keeps the white fill and just shows the dash, with accent border.
         States.EnabledIndeterminate.Apply = () => Apply(
-            fill: BubblegumColors.Surface1, border: BubblegumColors.Accent,
-            text: BubblegumColors.Text, glyph: GlyphKind.Dash, ring: false);
+            fill: BubblegumStyling.ActiveStyle.Colors.Surface1, border: BubblegumStyling.ActiveStyle.Colors.Accent,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: false);
 
         States.HighlightedIndeterminate.Apply = () => Apply(
-            fill: BubblegumColors.Surface1, border: BubblegumColors.Accent,
-            text: BubblegumColors.Text, glyph: GlyphKind.Dash, ring: false);
+            fill: BubblegumStyling.ActiveStyle.Colors.Surface1, border: BubblegumStyling.ActiveStyle.Colors.Accent,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: false);
 
         States.FocusedIndeterminate.Apply = () => Apply(
-            fill: BubblegumColors.Surface1, border: BubblegumColors.Accent,
-            text: BubblegumColors.Text, glyph: GlyphKind.Dash, ring: true);
+            fill: BubblegumStyling.ActiveStyle.Colors.Surface1, border: BubblegumStyling.ActiveStyle.Colors.Accent,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: true);
 
         States.HighlightedFocusedIndeterminate.Apply = () => Apply(
-            fill: BubblegumColors.Surface1, border: BubblegumColors.Accent,
-            text: BubblegumColors.Text, glyph: GlyphKind.Dash, ring: true);
+            fill: BubblegumStyling.ActiveStyle.Colors.Surface1, border: BubblegumStyling.ActiveStyle.Colors.Accent,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: true);
 
         States.PushedIndeterminate.Apply = () => Apply(
-            fill: BubblegumColors.Surface1, border: BubblegumColors.AccentDark,
-            text: BubblegumColors.Text, glyph: GlyphKind.Dash, ring: false);
+            fill: BubblegumStyling.ActiveStyle.Colors.Surface1, border: BubblegumStyling.ActiveStyle.Colors.AccentDark,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Dash, ring: false);
 
         States.DisabledIndeterminate.Apply = () => Apply(
-            fill: BubblegumColors.DisabledFill, border: BubblegumColors.Disabled,
-            text: BubblegumColors.Disabled, glyph: GlyphKind.Dash, ring: false);
+            fill: BubblegumStyling.ActiveStyle.Colors.DisabledFill, border: BubblegumStyling.ActiveStyle.Colors.Disabled,
+            text: BubblegumStyling.ActiveStyle.Colors.Disabled, glyph: GlyphKind.Dash, ring: false);
 
         States.DisabledFocusedIndeterminate.Apply = () => Apply(
-            fill: BubblegumColors.DisabledFill, border: BubblegumColors.Disabled,
-            text: BubblegumColors.Disabled, glyph: GlyphKind.Dash, ring: true);
+            fill: BubblegumStyling.ActiveStyle.Colors.DisabledFill, border: BubblegumStyling.ActiveStyle.Colors.Disabled,
+            text: BubblegumStyling.ActiveStyle.Colors.Disabled, glyph: GlyphKind.Dash, ring: true);
     }
 
     private enum GlyphKind { None, Check, Dash }

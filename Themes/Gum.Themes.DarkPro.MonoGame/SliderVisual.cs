@@ -148,7 +148,7 @@ public class SliderVisual : BaseSliderVisual
         track.HeightUnits = DimensionUnitType.Absolute;
         track.CornerRadius = TrackCornerRadius;
         track.IsFilled = true;
-        track.FillColor = DarkProColors.Surface2;
+        track.FillColor = DarkProStyling.ActiveStyle.Colors.Surface2;
         track.StrokeWidth = 0;
         return track;
     }
@@ -170,7 +170,7 @@ public class SliderVisual : BaseSliderVisual
         fill.HeightUnits = DimensionUnitType.Absolute;
         fill.CornerRadius = TrackCornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = DarkProColors.Accent;
+        fill.FillColor = DarkProStyling.ActiveStyle.Colors.Accent;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -193,7 +193,7 @@ public class SliderVisual : BaseSliderVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = DarkProColors.Border;
+        border.StrokeColor = DarkProStyling.ActiveStyle.Colors.Border;
         return border;
     }
 
@@ -203,13 +203,13 @@ public class SliderVisual : BaseSliderVisual
         // ThumbInstance now points at the detached V3 button (no longer in the
         // tree). Override the state callbacks to color the track and let the
         // thumb manage its own appearance via the Button wrapping it.
-        States.Enabled.Apply = () => ApplyTrack(DarkProColors.Surface2, DarkProColors.Border, DarkProColors.Accent);
-        States.Highlighted.Apply = () => ApplyTrack(DarkProColors.Surface2, DarkProColors.Border, DarkProColors.Accent);
-        States.HighlightedFocused.Apply = () => ApplyTrack(DarkProColors.Surface2, DarkProColors.Border, DarkProColors.Accent);
-        States.Focused.Apply = () => ApplyTrack(DarkProColors.Surface2, DarkProColors.Border, DarkProColors.Accent);
-        States.Pushed.Apply = () => ApplyTrack(DarkProColors.Surface2, DarkProColors.Border, DarkProColors.Accent);
-        States.Disabled.Apply = () => ApplyTrack(DarkProColors.DisabledFill, DarkProColors.DisabledBorder, DarkProColors.DisabledThumb);
-        States.DisabledFocused.Apply = () => ApplyTrack(DarkProColors.DisabledFill, DarkProColors.DisabledBorder, DarkProColors.DisabledThumb);
+        States.Enabled.Apply = () => ApplyTrack(DarkProStyling.ActiveStyle.Colors.Surface2, DarkProStyling.ActiveStyle.Colors.Border, DarkProStyling.ActiveStyle.Colors.Accent);
+        States.Highlighted.Apply = () => ApplyTrack(DarkProStyling.ActiveStyle.Colors.Surface2, DarkProStyling.ActiveStyle.Colors.Border, DarkProStyling.ActiveStyle.Colors.Accent);
+        States.HighlightedFocused.Apply = () => ApplyTrack(DarkProStyling.ActiveStyle.Colors.Surface2, DarkProStyling.ActiveStyle.Colors.Border, DarkProStyling.ActiveStyle.Colors.Accent);
+        States.Focused.Apply = () => ApplyTrack(DarkProStyling.ActiveStyle.Colors.Surface2, DarkProStyling.ActiveStyle.Colors.Border, DarkProStyling.ActiveStyle.Colors.Accent);
+        States.Pushed.Apply = () => ApplyTrack(DarkProStyling.ActiveStyle.Colors.Surface2, DarkProStyling.ActiveStyle.Colors.Border, DarkProStyling.ActiveStyle.Colors.Accent);
+        States.Disabled.Apply = () => ApplyTrack(DarkProStyling.ActiveStyle.Colors.DisabledFill, DarkProStyling.ActiveStyle.Colors.DisabledBorder, DarkProStyling.ActiveStyle.Colors.DisabledThumb);
+        States.DisabledFocused.Apply = () => ApplyTrack(DarkProStyling.ActiveStyle.Colors.DisabledFill, DarkProStyling.ActiveStyle.Colors.DisabledBorder, DarkProStyling.ActiveStyle.Colors.DisabledThumb);
     }
 
     private void ApplyTrack(Color trackFill, Color border, Color fillBar)

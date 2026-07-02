@@ -72,7 +72,7 @@ internal sealed class DarkProTextInputDecoration
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = DarkProColors.Surface1;
+        fill.FillColor = DarkProStyling.ActiveStyle.Colors.Surface1;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -95,7 +95,7 @@ internal sealed class DarkProTextInputDecoration
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = DarkProColors.Border;
+        border.StrokeColor = DarkProStyling.ActiveStyle.Colors.Border;
         return border;
     }
 
@@ -119,7 +119,7 @@ internal sealed class DarkProTextInputDecoration
         ring.IsFilled = false;
         ring.StrokeWidth = BorderThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = DarkProColors.Accent;
+        ring.StrokeColor = DarkProStyling.ActiveStyle.Colors.Accent;
         ring.Visible = false;
         return ring;
     }
@@ -131,9 +131,9 @@ internal sealed class DarkProTextInputDecoration
         // border transitions Border (rest) → Accent (hover hint) → Accent +
         // focus ring (focused).
         host.States.Enabled.Apply = () => Apply(host,
-            fill: DarkProColors.Surface1, border: DarkProColors.Border,
-            text: DarkProColors.Text, placeholder: DarkProColors.Placeholder,
-            caret: DarkProColors.Text, selection: DarkProColors.AccentDark, ring: false);
+            fill: DarkProStyling.ActiveStyle.Colors.Surface1, border: DarkProStyling.ActiveStyle.Colors.Border,
+            text: DarkProStyling.ActiveStyle.Colors.Text, placeholder: DarkProStyling.ActiveStyle.Colors.Placeholder,
+            caret: DarkProStyling.ActiveStyle.Colors.Text, selection: DarkProStyling.ActiveStyle.Colors.AccentDark, ring: false);
 
         // Hover uses BorderHover (gray) per the CSS spec. Unlike Button - which
         // jumps to Accent on hover so a hover->press doesn't flicker the color
@@ -141,19 +141,19 @@ internal sealed class DarkProTextInputDecoration
         // is transient gray hover -> sustained blue focus. Keeping that contrast
         // helps the user see they've moved from "could click" to "now editing".
         host.States.Highlighted.Apply = () => Apply(host,
-            fill: DarkProColors.Surface1, border: DarkProColors.BorderHover,
-            text: DarkProColors.Text, placeholder: DarkProColors.Placeholder,
-            caret: DarkProColors.Text, selection: DarkProColors.AccentDark, ring: false);
+            fill: DarkProStyling.ActiveStyle.Colors.Surface1, border: DarkProStyling.ActiveStyle.Colors.BorderHover,
+            text: DarkProStyling.ActiveStyle.Colors.Text, placeholder: DarkProStyling.ActiveStyle.Colors.Placeholder,
+            caret: DarkProStyling.ActiveStyle.Colors.Text, selection: DarkProStyling.ActiveStyle.Colors.AccentDark, ring: false);
 
         host.States.Focused.Apply = () => Apply(host,
-            fill: DarkProColors.Surface1, border: DarkProColors.Accent,
-            text: DarkProColors.Text, placeholder: DarkProColors.Placeholder,
-            caret: DarkProColors.Text, selection: DarkProColors.AccentDark, ring: true);
+            fill: DarkProStyling.ActiveStyle.Colors.Surface1, border: DarkProStyling.ActiveStyle.Colors.Accent,
+            text: DarkProStyling.ActiveStyle.Colors.Text, placeholder: DarkProStyling.ActiveStyle.Colors.Placeholder,
+            caret: DarkProStyling.ActiveStyle.Colors.Text, selection: DarkProStyling.ActiveStyle.Colors.AccentDark, ring: true);
 
         host.States.Disabled.Apply = () => Apply(host,
-            fill: DarkProColors.DisabledFill, border: DarkProColors.DisabledBorder,
-            text: DarkProColors.DisabledText, placeholder: DarkProColors.DisabledText,
-            caret: DarkProColors.DisabledText, selection: DarkProColors.AccentDark, ring: false);
+            fill: DarkProStyling.ActiveStyle.Colors.DisabledFill, border: DarkProStyling.ActiveStyle.Colors.DisabledBorder,
+            text: DarkProStyling.ActiveStyle.Colors.DisabledText, placeholder: DarkProStyling.ActiveStyle.Colors.DisabledText,
+            caret: DarkProStyling.ActiveStyle.Colors.DisabledText, selection: DarkProStyling.ActiveStyle.Colors.AccentDark, ring: false);
     }
 
     private void Apply(TextBoxBaseVisual host, Color fill, Color border, Color text,

@@ -45,19 +45,19 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
     private void WireStates()
     {
         States.Enabled.Apply = () => ApplyPalette(
-            fill: new Color(0, 0, 0, 0), text: BubblegumColors.Text);
+            fill: new Color(0, 0, 0, 0), text: BubblegumStyling.ActiveStyle.Colors.Text);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            fill: BubblegumPalette.HoverRow, text: BubblegumColors.Text);
+            fill: BubblegumStyling.ActiveStyle.Colors.HoverRow, text: BubblegumStyling.ActiveStyle.Colors.Text);
 
         States.Selected.Apply = () => ApplyPalette(
-            fill: BubblegumPalette.SelectedRow, text: BubblegumPalette.SelectedRowText);
+            fill: BubblegumStyling.ActiveStyle.Colors.SelectedRow, text: BubblegumStyling.ActiveStyle.Colors.SelectedRowText);
 
         States.Focused.Apply = () => ApplyPalette(
-            fill: BubblegumPalette.SelectedRow, text: BubblegumPalette.SelectedRowText);
+            fill: BubblegumStyling.ActiveStyle.Colors.SelectedRow, text: BubblegumStyling.ActiveStyle.Colors.SelectedRowText);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fill: new Color(0, 0, 0, 0), text: BubblegumColors.Disabled);
+            fill: new Color(0, 0, 0, 0), text: BubblegumStyling.ActiveStyle.Colors.Disabled);
     }
 
     private void ApplyPalette(Color fill, Color text)

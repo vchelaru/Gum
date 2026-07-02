@@ -42,13 +42,13 @@ public class ScrollBarVisual : BaseScrollBarVisual
         // it renders behind the thumb.
         ThumbContainer.Parent = null;
         _frameFill = BubblegumShapes.Fill(
-            color: BubblegumColors.Surface1,
+            color: BubblegumStyling.ActiveStyle.Colors.Surface1,
             cornerRadius: FrameCornerRadius,
             name: "BubblegumScrollBarFrameFill");
         _frameFill.Visible = false;
         AddChild(_frameFill);
         _frameBorder = BubblegumShapes.Border(
-            color: BubblegumColors.Border,
+            color: BubblegumStyling.ActiveStyle.Colors.Border,
             cornerRadius: FrameCornerRadius,
             thickness: FrameBorderThickness,
             name: "BubblegumScrollBarFrameBorder");
