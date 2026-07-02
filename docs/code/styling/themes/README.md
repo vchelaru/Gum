@@ -134,7 +134,7 @@ EditorTheme.Apply(GraphicsDevice);
 ```
 
 {% hint style="warning" %}
-Screenshot placeholder — replace with an `EditorCustomized` screenshot showing the above customization applied, captured via the Customize checkbox in `MonoGameGumThemesShowcase`.
+Screenshot placeholder — replace with an `EditorCustomized` screenshot showing the above customization applied, captured via the "Show Customized" checkbox in `MonoGameGumThemesShowcase`.
 {% endhint %}
 
 ### DarkPro
@@ -196,7 +196,7 @@ DarkProTheme.Apply(GraphicsDevice);
 ```
 
 {% hint style="warning" %}
-Screenshot placeholder — replace with a `DarkProCustomized` screenshot showing the above customization applied, captured via the Customize checkbox in `MonoGameGumThemesShowcase`.
+Screenshot placeholder — replace with a `DarkProCustomized` screenshot showing the above customization applied, captured via the "Show Customized" checkbox in `MonoGameGumThemesShowcase`.
 {% endhint %}
 
 ### Bubblegum
@@ -258,7 +258,7 @@ BubblegumTheme.Apply(GraphicsDevice);
 ```
 
 {% hint style="warning" %}
-Screenshot placeholder — replace with a `BubblegumCustomized` screenshot showing the above customization applied, captured via the Customize checkbox in `MonoGameGumThemesShowcase`.
+Screenshot placeholder — replace with a `BubblegumCustomized` screenshot showing the above customization applied, captured via the "Show Customized" checkbox in `MonoGameGumThemesShowcase`.
 {% endhint %}
 
 ### Forest Glade
@@ -325,7 +325,7 @@ ForestGladeTheme.Apply(GraphicsDevice);
 ```
 
 {% hint style="warning" %}
-Screenshot placeholder — replace with a `ForestGladeCustomized` screenshot showing the above customization applied, captured via the Customize checkbox in `MonoGameGumThemesShowcase`.
+Screenshot placeholder — replace with a `ForestGladeCustomized` screenshot showing the above customization applied, captured via the "Show Customized" checkbox in `MonoGameGumThemesShowcase`.
 {% endhint %}
 
 ### Neon
@@ -391,7 +391,7 @@ NeonTheme.Apply(GraphicsDevice);
 ```
 
 {% hint style="warning" %}
-Screenshot placeholder — replace with a `NeonCustomized` screenshot showing the above customization applied, captured via the Customize checkbox in `MonoGameGumThemesShowcase`.
+Screenshot placeholder — replace with a `NeonCustomized` screenshot showing the above customization applied, captured via the "Show Customized" checkbox in `MonoGameGumThemesShowcase`.
 {% endhint %}
 
 ### Retro95
@@ -453,7 +453,7 @@ Retro95Theme.Apply(GraphicsDevice);
 ```
 
 {% hint style="warning" %}
-Screenshot placeholder — replace with a `Retro95Customized` screenshot showing the above customization applied, captured via the Customize checkbox in `MonoGameGumThemesShowcase`.
+Screenshot placeholder — replace with a `Retro95Customized` screenshot showing the above customization applied, captured via the "Show Customized" checkbox in `MonoGameGumThemesShowcase`.
 {% endhint %}
 
 ### Meadow
@@ -519,7 +519,7 @@ MeadowTheme.Apply(GraphicsDevice);
 ```
 
 {% hint style="warning" %}
-Screenshot placeholder — replace with a `MeadowCustomized` screenshot showing the above customization applied, captured via the Customize checkbox in `MonoGameGumThemesShowcase`.
+Screenshot placeholder — replace with a `MeadowCustomized` screenshot showing the above customization applied, captured via the "Show Customized" checkbox in `MonoGameGumThemesShowcase`.
 {% endhint %}
 
 ### Hazard
@@ -585,7 +585,7 @@ HazardTheme.Apply(GraphicsDevice);
 ```
 
 {% hint style="warning" %}
-Screenshot placeholder — replace with a `HazardCustomized` screenshot showing the above customization applied, captured via the Customize checkbox in `MonoGameGumThemesShowcase`.
+Screenshot placeholder — replace with a `HazardCustomized` screenshot showing the above customization applied, captured via the "Show Customized" checkbox in `MonoGameGumThemesShowcase`.
 {% endhint %}
 
 ## Fonts and licensing

@@ -85,14 +85,12 @@ public static class Program
             new ThemeOption("Template", TemplateTheme.Apply, TemplateStyling.ActiveStyle.Colors.Background, SetTemplateCustomized),
         };
 
-        _currentScreenFactory = () => new AllControlsScreen();
-        ApplyTheme(0);
-        RebuildScreen();
-
-        // Authoring-only "Customize" checkbox — survives F1/F2 screen swaps via its own
-        // AddToRoot call, separate from ShowcaseScreen's root-element bookkeeping.
+        // Authoring-only "Show Customized" checkbox — survives F1/F2 screen swaps via its own
+        // AddToRoot call, separate from ShowcaseScreen's root-element bookkeeping. Created
+        // before the first RebuildScreen call below so RebuildScreen can always rely on it
+        // existing (see the re-parent-to-top comment inside RebuildScreen).
         _customizeCheckBox = new CheckBox();
-        _customizeCheckBox.Text = "Customize";
+        _customizeCheckBox.Text = "Show Customized";
         _customizeCheckBox.Anchor(Anchor.TopRight);
         _customizeCheckBox.X = -20;
         _customizeCheckBox.Y = 10;
@@ -107,6 +105,10 @@ public static class Program
             RebuildScreen();
         };
         _customizeCheckBox.AddToRoot();
+
+        _currentScreenFactory = () => new AllControlsScreen();
+        ApplyTheme(0);
+        RebuildScreen();
 
         while (!WindowShouldClose())
         {
@@ -150,7 +152,7 @@ public static class Program
         }
     }
 
-    // If Customize is checked when the user swaps themes, revert the previous theme's
+    // If Show Customized is checked when the user swaps themes, revert the previous theme's
     // customization and uncheck the box first — don't let a customization silently persist
     // onto/across a theme switch, and don't auto-apply the new theme's customization.
     private static void RevertCustomizationIfChecked()
@@ -173,6 +175,13 @@ public static class Program
     private static void RebuildScreen()
     {
         SwitchScreen(_currentScreenFactory);
+
+        // Root.Children.Add appends, and later children paint on top in Gum, so every
+        // ShowcaseScreen rebuild re-adds fresh controls AFTER _customizeCheckBox in the
+        // root's child list — burying it behind the new screen unless it's re-parented to
+        // the end again here.
+        _customizeCheckBox.RemoveFromRoot();
+        _customizeCheckBox.AddToRoot();
     }
 
     private static void SwitchScreen(Func<ShowcaseScreen> factory)
@@ -183,8 +192,8 @@ public static class Program
         _currentScreen.Build();
     }
 
-    // --- Hardcoded per-theme "Customize" preview values --------------------
-    // Authoring tooling only, used by the Customize checkbox above. These values are not a
+    // --- Hardcoded per-theme "Show Customized" preview values --------------------
+    // Authoring tooling only, used by the Show Customized checkbox above. These values are not a
     // shared source of truth with any documentation example — they may drift over time.
 
     private static void SetEditorCustomized(bool customized)
