@@ -257,10 +257,16 @@ internal class RenderTargetScreen : FrameworkElement
         return holder;
     }
 
-    // A ClipsChildren descendant inside the render target. The clip container is the left half; its
-    // over-wide red child must be clipped to that half within the baked texture (#3440). The clip
-    // rect is rebased into RT-local space during the bake, so it lands correctly on both hardware GL
-    // and software GL (Mesa llvmpipe).
+    // A ClipsChildren descendant inside the render target (#3440). The clip rect is rebased into
+    // RT-local space during the bake, so it clips correctly on both hardware GL and software GL
+    // (Mesa llvmpipe). The clipped child is an OUTLINED circle far larger than the clip window: its
+    // right and bottom arcs are sliced dead flat at the clip boundary, so the clip is unmistakable —
+    // a curve cut to a straight edge. (Clipping a rectangle to a rectangle just yields a smaller
+    // rectangle and demonstrates nothing, which is why the child must be a circle.)
+    //
+    // Same outline-circle rules as BuildOverflow: leave IsFilled off and set the ring via Color (NOT
+    // StrokeColor) so it renders identically on MonoGame and raylib. Kept identical to the MonoGame
+    // sample's BuildClipsChildrenInside.
     static GraphicalUiElement BuildClipsChildrenInside()
     {
         ContainerRuntime holder = BuildFrame(150, 110);
@@ -276,9 +282,17 @@ internal class RenderTargetScreen : FrameworkElement
         clip.Width = 65;
         clip.Height = 90;
         clip.ClipsChildren = true;
-        clip.Children.Add(Rect(0, 0, 260, 90, new Color((byte)220, (byte)60, (byte)60, (byte)255)));
 
-        // A marker on the right proves the render target itself extends past the clip region.
+        CircleRuntime circle = new();
+        circle.X = 5;
+        circle.Y = 5;
+        circle.Width = 120;
+        circle.Height = 120;
+        circle.Color = new Color((byte)220, (byte)60, (byte)60, (byte)255);
+        clip.Children.Add(circle);
+
+        // A solid marker to the right of the clip window (still inside the render target) proves the
+        // RT itself extends past the clip: the circle is sliced by ClipsChildren, not by the RT bounds.
         ColoredRectangleRuntime marker =
             Rect(95, 10, 45, 90, new Color((byte)60, (byte)120, (byte)220, (byte)255));
 

@@ -248,8 +248,15 @@ internal class RenderTargetScreen : FrameworkElement
         return holder;
     }
 
-    // A ClipsChildren descendant inside the render target. The clip container is the left half; its
-    // over-wide red child must be clipped to that half within the baked texture (#3440).
+    // A ClipsChildren descendant inside the render target (#3440). The clipped child is an OUTLINED
+    // circle far larger than the clip window: its right and bottom arcs are sliced dead flat at the
+    // clip boundary, so the clip is unmistakable — a curve cut to a straight edge. (Clipping a
+    // rectangle to a rectangle just yields a smaller rectangle and demonstrates nothing, which is why
+    // the child must be a circle.)
+    //
+    // Same outline-circle rules as BuildOverflow: leave IsFilled off and set the ring via Color (NOT
+    // StrokeColor) so it renders identically on MonoGame and raylib. Kept identical to the raylib
+    // sample's BuildClipsChildrenInside.
     private static GraphicalUiElement BuildClipsChildrenInside()
     {
         var holder = BuildFrame(150, 110);
@@ -265,9 +272,17 @@ internal class RenderTargetScreen : FrameworkElement
         clip.Width = 65;
         clip.Height = 90;
         clip.ClipsChildren = true;
-        clip.AddChild(Rect(0, 0, 260, 90, new Color(220, 60, 60, 255)));
 
-        // A marker on the right proves the render target itself extends past the clip region.
+        var circle = new CircleRuntime();
+        circle.X = 5;
+        circle.Y = 5;
+        circle.Width = 120;
+        circle.Height = 120;
+        circle.Color = new Color(220, 60, 60, 255);
+        clip.AddChild(circle);
+
+        // A solid marker to the right of the clip window (still inside the render target) proves the
+        // RT itself extends past the clip: the circle is sliced by ClipsChildren, not by the RT bounds.
         var marker = Rect(95, 10, 45, 90, new Color(60, 120, 220, 255));
 
         group.AddChild(clip);
