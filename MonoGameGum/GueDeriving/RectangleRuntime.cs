@@ -947,8 +947,7 @@ public class RectangleRuntime : GraphicalUiElement
         set
         {
             _blend = value;
-            if (_fill is IBlendedRenderable fillBlend) fillBlend.Blend = value;
-            if (_stroke is IBlendedRenderable strokeBlend) strokeBlend.Blend = value;
+            ShapeStrokePreRenderMath.PushBlend(value, _fill as IBlendedRenderable, _stroke as IBlendedRenderable);
             NotifyPropertyChanged();
         }
     }
@@ -1414,48 +1413,17 @@ public class RectangleRuntime : GraphicalUiElement
         var camera = this.EffectiveManagers?.Renderer?.Camera;
         float cameraZoom = camera?.Zoom ?? 1f;
 
-        float strokeWidth = _strokeWidth;
-        float strokeDashLength = _strokeDashLength;
-        float strokeGapLength = _strokeGapLength;
-        if (_strokeWidthUnits == DimensionUnitType.ScreenPixel && camera != null)
-        {
-            // Mirror AposShapeRuntime.PreRender — dash and gap scale alongside stroke width.
-            strokeWidth /= cameraZoom;
-            strokeDashLength /= cameraZoom;
-            strokeGapLength /= cameraZoom;
-        }
-        // Mirror of CircleRuntime.PreRender — same two-case structure (user-set <= 0 vs
-        // positive thin stroke). See CircleRuntime.PreRender for the full rationale on why
-        // these two cases must stay separate. tl;dr:
-        //   - StrokeWidth <= 0 (user hide-stroke gate, #2950 follow-up) → push literal 0
-        //     so the renderable's HasVisibleOutput suppresses the draw.
-        //   - StrokeWidth > 0 with AA → subtract the 1 px Apos AA contribution and floor at
-        //     a tiny positive epsilon so thin strokes still render (#2818).
-        const float aposAaContribution = 1f;
-        const float aposMinThicknessEpsilon = 0.01f;
-        // #2936 — aposAaContribution is in SCREEN pixels; convert to world units. See
-        // CircleRuntime.PreRender for the full rationale.
-        float aposAaContributionWorld = aposAaContribution / cameraZoom;
-        float renderableStrokeWidth;
-        if (strokeWidth <= 0)
-        {
-            renderableStrokeWidth = 0f;
-        }
-        else if (_isAntialiased && _stroke is IAntialiasedRenderable)
-        {
-            renderableStrokeWidth = Math.Max(aposMinThicknessEpsilon, strokeWidth - aposAaContributionWorld);
-        }
-        else
-        {
-            renderableStrokeWidth = strokeWidth;
-        }
-        _stroke.StrokeWidth = renderableStrokeWidth;
+        var strokeMath = ShapeStrokePreRenderMath.Compute(
+            _strokeWidth, _strokeDashLength, _strokeGapLength, _strokeWidthUnits,
+            _isAntialiased, _stroke is IAntialiasedRenderable, cameraZoom, _stroke.Color.A);
+
+        _stroke.StrokeWidth = strokeMath.StrokeWidth;
 
         // Issue #2818: push dash/gap to the stroke slot when it supports dashing.
         if (_stroke is IDashedStrokeRenderable strokeDashed)
         {
-            strokeDashed.StrokeDashLength = strokeDashLength;
-            strokeDashed.StrokeGapLength = strokeGapLength;
+            strokeDashed.StrokeDashLength = strokeMath.DashLength;
+            strokeDashed.StrokeGapLength = strokeMath.GapLength;
         }
 
         // Issue #2818: push AA to both slots so a single setter flips fill + stroke together.
@@ -1512,22 +1480,11 @@ public class RectangleRuntime : GraphicalUiElement
         // otherwise a filled rectangle with a semi-transparent stroke shows the FILL through the
         // stroke instead of the background. Pushed via FillInset rather than mutating
         // fill.Width/Height (the fill IS the runtime's contained sizing object; mutating Width
-        // would feed back into layout and shrink the rectangle each frame). Inset per side =
-        // AA-compensated stroke width, floored at the AA contribution for hairline strokes.
-        // Gated on stroke visibility: alpha 0 OR StrokeWidth 0 means no stroke is drawn, and an
-        // inset would render a thin background gap where the stroke would have been.
+        // would feed back into layout and shrink the rectangle each frame). See
+        // ShapeStrokePreRenderMath.Compute for the inset calculation and rationale.
         if (_fill != null)
         {
-            float fillInset = 0f;
-            if (_stroke.Color.A > 0 && _strokeWidth > 0)
-            {
-                fillInset = renderableStrokeWidth;
-                if (_isAntialiased && _stroke is IAntialiasedRenderable)
-                {
-                    fillInset = Math.Max(fillInset, aposAaContributionWorld);
-                }
-            }
-            _fill.FillInset = fillInset;
+            _fill.FillInset = strokeMath.FillInset;
         }
     }
 
