@@ -88,119 +88,84 @@ public class CircleRuntime : GraphicalUiElement
     }
 #endif
 
+#if !SKIA
+    /// <summary>
+    /// Per-platform routing for the obsolete single-color surface (<see cref="Color"/>,
+    /// <see cref="Alpha"/>, <see cref="Red"/>, <see cref="Green"/>, <see cref="Blue"/>).
+    /// XNALIKE writes the color directly onto the stroke renderable slot; everything else
+    /// (Raylib/Sokol) writes through <see cref="ContainedLineCircle"/>.
+    /// </summary>
+    Color ObsoleteStrokeColor
+    {
+#if XNALIKE
+        get => _stroke.Color;
+        set
+        {
+            _stroke.Color = value;
+            NotifyPropertyChanged();
+        }
+#else
+        get => ContainedLineCircle.Color;
+        set
+        {
+            ContainedLineCircle.Color = value;
+            NotifyPropertyChanged();
+        }
+#endif
+    }
+
+    // Local (not the per-backend ColorExtensions.WithX aliases): under XNALIKE, ObsoleteStrokeColor
+    // is Microsoft.Xna.Framework.Color, which the ToolsUtilitiesStandard.Helpers.ColorExtensions
+    // alias (System.Drawing.Color-based) can't accept. XNA Color and Raylib_cs.Color both support
+    // the (r, g, b, a) constructor already used by the pre-collapse manual arithmetic below, so a
+    // single local helper covers both real compile targets for this file (SKIA is excluded above).
+    static Color WithAlpha(Color color, byte value) => new Color(color.R, color.G, color.B, value);
+    static Color WithRed(Color color, byte value) => new Color(value, color.G, color.B, color.A);
+    static Color WithGreen(Color color, byte value) => new Color(color.R, value, color.B, color.A);
+    static Color WithBlue(Color color, byte value) => new Color(color.R, color.G, value, color.A);
+
     /// <summary>
     /// Obsolete: use <see cref="FillColor"/> or <see cref="StrokeColor"/>. Legacy member that
     /// writes the alpha channel of the stroke renderable's color slot directly.
     /// </summary>
-#if XNALIKE
     [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
     public int Alpha
     {
-        get => _stroke.Color.A;
-        set
-        {
-            Color current = _stroke.Color;
-            _stroke.Color = new Color(current.R, current.G, current.B, (byte)value);
-            NotifyPropertyChanged();
-        }
+        get => ObsoleteStrokeColor.A;
+        set => ObsoleteStrokeColor = WithAlpha(ObsoleteStrokeColor, (byte)value);
     }
-#elif !SKIA
-    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
-    public int Alpha
-    {
-        get => ContainedLineCircle.Color.A;
-        set
-        {
-            ContainedLineCircle.Color = ColorExtensions.WithAlpha(ContainedLineCircle.Color, (byte)value);
-            NotifyPropertyChanged();
-        }
-    }
-#endif
 
     /// <summary>
     /// Obsolete: use <see cref="FillColor"/> or <see cref="StrokeColor"/>. Legacy member that
     /// writes the red channel of the stroke renderable's color slot directly.
     /// </summary>
-#if XNALIKE
     [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
     public int Red
     {
-        get => _stroke.Color.R;
-        set
-        {
-            Color current = _stroke.Color;
-            _stroke.Color = new Color((byte)value, current.G, current.B, current.A);
-            NotifyPropertyChanged();
-        }
+        get => ObsoleteStrokeColor.R;
+        set => ObsoleteStrokeColor = WithRed(ObsoleteStrokeColor, (byte)value);
     }
-#elif !SKIA
-    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
-    public int Red
-    {
-        get => ContainedLineCircle.Color.R;
-        set
-        {
-            ContainedLineCircle.Color = ColorExtensions.WithRed(ContainedLineCircle.Color, (byte)value);
-            NotifyPropertyChanged();
-        }
-    }
-#endif
 
     /// <summary>
     /// Obsolete: use <see cref="FillColor"/> or <see cref="StrokeColor"/>. Legacy member that
     /// writes the green channel of the stroke renderable's color slot directly.
     /// </summary>
-#if XNALIKE
     [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
     public int Green
     {
-        get => _stroke.Color.G;
-        set
-        {
-            Color current = _stroke.Color;
-            _stroke.Color = new Color(current.R, (byte)value, current.B, current.A);
-            NotifyPropertyChanged();
-        }
+        get => ObsoleteStrokeColor.G;
+        set => ObsoleteStrokeColor = WithGreen(ObsoleteStrokeColor, (byte)value);
     }
-#elif !SKIA
-    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
-    public int Green
-    {
-        get => ContainedLineCircle.Color.G;
-        set
-        {
-            ContainedLineCircle.Color = ColorExtensions.WithGreen(ContainedLineCircle.Color, (byte)value);
-            NotifyPropertyChanged();
-        }
-    }
-#endif
 
     /// <summary>
     /// Obsolete: use <see cref="FillColor"/> or <see cref="StrokeColor"/>. Legacy member that
     /// writes the blue channel of the stroke renderable's color slot directly.
     /// </summary>
-#if XNALIKE
     [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
     public int Blue
     {
-        get => _stroke.Color.B;
-        set
-        {
-            Color current = _stroke.Color;
-            _stroke.Color = new Color(current.R, current.G, (byte)value, current.A);
-            NotifyPropertyChanged();
-        }
-    }
-#elif !SKIA
-    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
-    public int Blue
-    {
-        get => ContainedLineCircle.Color.B;
-        set
-        {
-            ContainedLineCircle.Color = ColorExtensions.WithBlue(ContainedLineCircle.Color, (byte)value);
-            NotifyPropertyChanged();
-        }
+        get => ObsoleteStrokeColor.B;
+        set => ObsoleteStrokeColor = WithBlue(ObsoleteStrokeColor, (byte)value);
     }
 #endif
 
@@ -232,32 +197,17 @@ public class CircleRuntime : GraphicalUiElement
 #endif
     }
 
+#if !SKIA
     /// <summary>
     /// Obsolete: use <see cref="FillColor"/> or <see cref="StrokeColor"/>. Legacy member that
     /// writes the stroke renderable's color slot directly. Routes to stroke for back-compat —
     /// <see cref="CircleRuntime"/> was historically outline-only.
     /// </summary>
-#if XNALIKE
     [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
     public Color Color
     {
-        get => _stroke.Color;
-        set
-        {
-            _stroke.Color = value;
-            NotifyPropertyChanged();
-        }
-    }
-#elif !SKIA
-    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2761.")]
-    public Color Color
-    {
-        get => ContainedLineCircle.Color;
-        set
-        {
-            ContainedLineCircle.Color = value;
-            NotifyPropertyChanged();
-        }
+        get => ObsoleteStrokeColor;
+        set => ObsoleteStrokeColor = value;
     }
 #endif
 

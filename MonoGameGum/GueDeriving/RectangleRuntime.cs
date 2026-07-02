@@ -80,34 +80,61 @@ public class RectangleRuntime : GraphicalUiElement
     }
 #endif
 
+#if !SKIA
+    /// <summary>
+    /// Per-platform routing for the obsolete <see cref="LineWidth"/> surface: XNALIKE writes
+    /// through the stroke renderable's slot, everything else (Raylib/Sokol) writes through
+    /// <see cref="ContainedLineRectangle"/>.
+    /// </summary>
+    float ObsoleteStrokeWidth
+    {
+#if XNALIKE
+        get => _stroke.StrokeWidth;
+        set => _stroke.StrokeWidth = value;
+#else
+        get => ContainedLineRectangle.LinePixelWidth;
+        set => ContainedLineRectangle.LinePixelWidth = value;
+#endif
+    }
+
     /// <summary>
     /// Obsolete: use <see cref="StrokeWidth"/>. Legacy pre-collapse setter that writes the
     /// stroke renderable's stroke width directly, bypassing <see cref="StrokeWidthUnits"/>.
     /// </summary>
-#if XNALIKE
-    [Obsolete("Renamed to StrokeWidth in #2768 for cross-backend naming parity. Functional behavior is unchanged; switch to StrokeWidth to also pick up StrokeWidthUnits scaling.")]
-    public float LineWidth
-    {
-       get => _stroke.StrokeWidth;
-       set
-       {
-           _stroke.StrokeWidth = value;
-           NotifyPropertyChanged();
-       }
-    }
-#elif !SKIA
     // SKIA: SkiaShapeRuntime.StrokeWidth supersedes; #2814.
-    [Obsolete("Renamed to StrokeWidth in #2757 for cross-backend naming parity. Functional behavior is unchanged; switch to StrokeWidth to also pick up StrokeWidthUnits scaling.")]
+    [Obsolete("Renamed to StrokeWidth in #2757/#2768 for cross-backend naming parity. Functional behavior is unchanged; switch to StrokeWidth to also pick up StrokeWidthUnits scaling.")]
     public float LineWidth
     {
-       get => ContainedLineRectangle.LinePixelWidth;
-       set
-       {
-           ContainedLineRectangle.LinePixelWidth = value;
-           NotifyPropertyChanged();
-       }
+        get => ObsoleteStrokeWidth;
+        set
+        {
+            ObsoleteStrokeWidth = value;
+            NotifyPropertyChanged();
+        }
     }
+
+    /// <summary>
+    /// Per-platform routing for the obsolete <see cref="IsDotted"/> surface. XNALIKE keeps the
+    /// <c>_stroke is LineRectangle</c> check because the Apos.Shapes stroke slot doesn't always
+    /// resolve to the core <see cref="LineRectangle"/> type; everything else routes through
+    /// <see cref="ContainedLineRectangle"/>.
+    /// </summary>
+    bool ObsoleteIsDotted
+    {
+#if XNALIKE
+        get => _stroke is LineRectangle lr && lr.IsDotted;
+        set
+        {
+            if (_stroke is LineRectangle lr)
+            {
+                lr.IsDotted = value;
+            }
+        }
+#else
+        get => ContainedLineRectangle.IsDotted;
+        set => ContainedLineRectangle.IsDotted = value;
 #endif
+    }
 
     /// <summary>
     /// Obsolete: superseded by the <see cref="StrokeDashLength"/> / <see cref="StrokeGapLength"/>
@@ -116,28 +143,13 @@ public class RectangleRuntime : GraphicalUiElement
     /// through the stroke slot, on Skia <c>SKPathEffect.CreateDash</c> consumes the lengths
     /// verbatim.
     /// </summary>
-#if XNALIKE
-    [Obsolete("Renamed to StrokeDashLength + StrokeGapLength in #2768 for cross-backend parity. With the optional MonoGameGumShapes package the lengths drive true per-segment dashes; without it the core LineRectangle stroke shows the binary dotted texture.")]
+    [Obsolete("Renamed to StrokeDashLength + StrokeGapLength in #2757/#2768 for cross-backend parity. With the optional MonoGameGumShapes package the lengths drive true per-segment dashes; without it the core LineRectangle stroke shows the binary dotted texture.")]
     public bool IsDotted
     {
-        get => _stroke is LineRectangle lr && lr.IsDotted;
+        get => ObsoleteIsDotted;
         set
         {
-            if (_stroke is LineRectangle lr)
-            {
-                lr.IsDotted = value;
-            }
-            NotifyPropertyChanged();
-        }
-    }
-#elif !SKIA
-    [Obsolete("Renamed to StrokeDashLength + StrokeGapLength in #2757 for cross-backend parity. On MG/Raylib the visual is a fixed-pattern dotted texture (LineRectangle has no per-segment dash control); set both new properties to non-zero values to engage the same dotted pattern.")]
-    public bool IsDotted
-    {
-        get => ContainedLineRectangle.IsDotted;
-        set
-        {
-            ContainedLineRectangle.IsDotted = value;
+            ObsoleteIsDotted = value;
             NotifyPropertyChanged();
         }
     }
@@ -667,193 +679,95 @@ public class RectangleRuntime : GraphicalUiElement
     }
 #endif
 
-    /// <summary>
-    /// Obsolete: use <see cref="FillColor"/> or <see cref="StrokeColor"/>. Legacy member that
-    /// writes the alpha channel of the stroke renderable's color slot.
-    /// </summary>
-#if XNALIKE
-    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
-    public int Alpha
-    {
-        get => _stroke.Color.A;
-        set
-        {
-            Color current = _stroke.Color;
-            _stroke.Color = new Color(current.R, current.G, current.B, (byte)value);
-            NotifyPropertyChanged();
-        }
-    }
-#elif RAYLIB
-    // Alias the stroke alpha (see the Color property below for the full rationale).
-    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
-    public int Alpha
-    {
-        get => _strokeColor.A;
-        set => StrokeColor = new Color(_strokeColor.R, _strokeColor.G, _strokeColor.B, (byte)value);
-    }
-#elif !SKIA
-    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
-    public int Alpha
-    {
-        get => ContainedLineRectangle.Color.A;
-        set
-        {
-            ContainedLineRectangle.Color = ColorExtensions.WithAlpha(ContainedLineRectangle.Color, (byte)value);
-            NotifyPropertyChanged();
-        }
-    }
-#endif
-
-    /// <inheritdoc cref="Alpha"/>
-#if XNALIKE
-    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
-    public int Red
-    {
-        get => _stroke.Color.R;
-        set
-        {
-            Color current = _stroke.Color;
-            _stroke.Color = new Color((byte)value, current.G, current.B, current.A);
-            NotifyPropertyChanged();
-        }
-    }
-#elif RAYLIB
-    // Alias the stroke red channel (see the Color property below for the full rationale).
-    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
-    public int Red
-    {
-        get => _strokeColor.R;
-        set => StrokeColor = new Color((byte)value, _strokeColor.G, _strokeColor.B, _strokeColor.A);
-    }
-#elif !SKIA
-    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
-    public int Red
-    {
-        get => ContainedLineRectangle.Color.R;
-        set
-        {
-            ContainedLineRectangle.Color = ColorExtensions.WithRed(ContainedLineRectangle.Color, (byte)value);
-            NotifyPropertyChanged();
-        }
-    }
-#endif
-
-    /// <inheritdoc cref="Alpha"/>
-#if XNALIKE
-    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
-    public int Green
-    {
-        get => _stroke.Color.G;
-        set
-        {
-            Color current = _stroke.Color;
-            _stroke.Color = new Color(current.R, (byte)value, current.B, current.A);
-            NotifyPropertyChanged();
-        }
-    }
-#elif RAYLIB
-    // Alias the stroke green channel (see the Color property below for the full rationale).
-    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
-    public int Green
-    {
-        get => _strokeColor.G;
-        set => StrokeColor = new Color(_strokeColor.R, (byte)value, _strokeColor.B, _strokeColor.A);
-    }
-#elif !SKIA
-    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
-    public int Green
-    {
-        get => ContainedLineRectangle.Color.G;
-        set
-        {
-            ContainedLineRectangle.Color = ColorExtensions.WithGreen(ContainedLineRectangle.Color, (byte)value);
-            NotifyPropertyChanged();
-        }
-    }
-#endif
-
-    /// <inheritdoc cref="Alpha"/>
-#if XNALIKE
-    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
-    public int Blue
-    {
-        get => _stroke.Color.B;
-        set
-        {
-            Color current = _stroke.Color;
-            _stroke.Color = new Color(current.R, current.G, (byte)value, current.A);
-            NotifyPropertyChanged();
-        }
-    }
-#elif RAYLIB
-    // Alias the stroke blue channel (see the Color property below for the full rationale).
-    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
-    public int Blue
-    {
-        get => _strokeColor.B;
-        set => StrokeColor = new Color(_strokeColor.R, _strokeColor.G, (byte)value, _strokeColor.A);
-    }
-#elif !SKIA
-    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
-    public int Blue
-    {
-        get => ContainedLineRectangle.Color.B;
-        set
-        {
-            ContainedLineRectangle.Color = ColorExtensions.WithBlue(ContainedLineRectangle.Color, (byte)value);
-            NotifyPropertyChanged();
-        }
-    }
-#endif
-
-    /// <summary>
-    /// Obsolete: use <see cref="FillColor"/> or <see cref="StrokeColor"/>. Routes to the
-    /// stroke slot for back-compat — <see cref="RectangleRuntime"/> was historically
-    /// outline-only.
-    /// </summary>
 #if !SKIA
-    // SkiaShapeRuntime base supplies an obsolete Color pass-through under SKIA. #2814.
-    public Color Color
+    /// <summary>
+    /// Per-platform routing for the obsolete single-color surface (<see cref="Color"/>,
+    /// <see cref="Alpha"/>, <see cref="Red"/>, <see cref="Green"/>, <see cref="Blue"/>).
+    /// XNALIKE and Sokol write the color directly onto their respective renderable slots;
+    /// Raylib routes through <see cref="StrokeColor"/> since raylib's renderer draws
+    /// <c>StrokeColor ?? Color</c> and the ctor seeds StrokeColor opaque-white — writing the
+    /// renderable's de-prioritized Color slot directly (as this did before #2757) was silently
+    /// shadowed, so legacy `Color = x` outlines (every Editor-theme outline) rendered white.
+    /// </summary>
+    Color ObsoleteStrokeColor
     {
 #if XNALIKE
-        [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
         get => _stroke.Color;
-        [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
         set
         {
             _stroke.Color = value;
             NotifyPropertyChanged();
         }
 #elif RAYLIB
-        // The legacy single-color surface aliases the stroke color, matching XNALIKE where Color and
-        // StrokeColor are the same _stroke.Color field. raylib's renderer draws StrokeColor ?? Color
-        // and the ctor seeds StrokeColor opaque-white, so writing the renderable's de-prioritized
-        // Color slot here (as it did before) was silently shadowed — legacy `Color = x` outlines
-        // (every Editor-theme outline) rendered white. Route through StrokeColor so the legacy write
-        // reaches the rendered slot.
-        [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
         get => _strokeColor;
-        [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
+        // StrokeColor's own setter already calls NotifyPropertyChanged; don't double-call it.
         set => StrokeColor = value;
-#elif SOKOL
-        // SOKOL's renderable has no separate StrokeColor slot, so its legacy Color IS the rendered
-        // color — keep writing it directly.
-        [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
+#else
         get => ContainedLineRectangle.Color;
-        [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
         set
         {
             ContainedLineRectangle.Color = value;
             NotifyPropertyChanged();
         }
-#else
-        get => global::RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedLineRectangle.Color);
-        set
-        {
-            ContainedLineRectangle.Color = global::RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
-            NotifyPropertyChanged();
-        }
 #endif
+    }
+
+    // Local (not the per-backend ColorExtensions.WithX aliases): under XNALIKE, ObsoleteStrokeColor
+    // is Microsoft.Xna.Framework.Color, which the ToolsUtilitiesStandard.Helpers.ColorExtensions
+    // alias (System.Drawing.Color-based) can't accept. XNA Color and Raylib_cs.Color both support
+    // the (r, g, b, a) constructor already used by the pre-collapse manual arithmetic below, so a
+    // single local helper covers both real compile targets for this file (SKIA is excluded above).
+    static Color WithAlpha(Color color, byte value) => new Color(color.R, color.G, color.B, value);
+    static Color WithRed(Color color, byte value) => new Color(value, color.G, color.B, color.A);
+    static Color WithGreen(Color color, byte value) => new Color(color.R, value, color.B, color.A);
+    static Color WithBlue(Color color, byte value) => new Color(color.R, color.G, value, color.A);
+
+    /// <summary>
+    /// Obsolete: use <see cref="FillColor"/> or <see cref="StrokeColor"/>. Legacy member that
+    /// writes the alpha channel of the stroke renderable's color slot.
+    /// </summary>
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
+    public int Alpha
+    {
+        get => ObsoleteStrokeColor.A;
+        set => ObsoleteStrokeColor = WithAlpha(ObsoleteStrokeColor, (byte)value);
+    }
+
+    /// <inheritdoc cref="Alpha"/>
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
+    public int Red
+    {
+        get => ObsoleteStrokeColor.R;
+        set => ObsoleteStrokeColor = WithRed(ObsoleteStrokeColor, (byte)value);
+    }
+
+    /// <inheritdoc cref="Alpha"/>
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
+    public int Green
+    {
+        get => ObsoleteStrokeColor.G;
+        set => ObsoleteStrokeColor = WithGreen(ObsoleteStrokeColor, (byte)value);
+    }
+
+    /// <inheritdoc cref="Alpha"/>
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
+    public int Blue
+    {
+        get => ObsoleteStrokeColor.B;
+        set => ObsoleteStrokeColor = WithBlue(ObsoleteStrokeColor, (byte)value);
+    }
+
+    /// <summary>
+    /// Obsolete: use <see cref="FillColor"/> or <see cref="StrokeColor"/>. Routes to the
+    /// stroke slot for back-compat — <see cref="RectangleRuntime"/> was historically
+    /// outline-only.
+    /// </summary>
+    // SkiaShapeRuntime base supplies an obsolete Color pass-through under SKIA. #2814.
+    [Obsolete("Use FillColor or StrokeColor instead. See migration guide for issue #2768.")]
+    public Color Color
+    {
+        get => ObsoleteStrokeColor;
+        set => ObsoleteStrokeColor = value;
     }
 #endif
 

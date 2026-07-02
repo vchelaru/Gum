@@ -76,6 +76,23 @@ public class RectangleRuntimeTests : BaseTestClass
     }
 
     [Fact]
+    public void LegacyChannelSetters_ComposeColor()
+    {
+        RectangleRuntime sut = new();
+
+        sut.Red = 11;
+        sut.Green = 22;
+        sut.Blue = 33;
+        sut.Alpha = 44;
+
+        sut.Color.ShouldBe(new Color(11, 22, 33, 44));
+
+        DefaultFilledRectangleRenderable fill = (DefaultFilledRectangleRenderable)sut.RenderableComponent;
+        DefaultStrokedRectangleRenderable stroke = (DefaultStrokedRectangleRenderable)fill.Children[0];
+        ((IStrokedRectangleRenderable)stroke).Color.ShouldBe(new Color(11, 22, 33, 44));
+    }
+
+    [Fact]
     public void LegacyIsDotted_RoutesToLineRectangle()
     {
         RectangleRuntime sut = new();
