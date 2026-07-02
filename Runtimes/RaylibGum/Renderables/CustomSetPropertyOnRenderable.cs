@@ -699,6 +699,16 @@ public class CustomSetPropertyOnRenderable
                             Raylib_cs.Font? createdFont = InMemoryFontCreator.TryCreateFont(bmfcSave);
                             if (createdFont.HasValue && createdFont.Value.BaseSize != 0)
                             {
+                                // Heal a poisoned cache slot: the disk-fallback path below can legitimately
+                                // cache an empty (BaseSize 0) placeholder under this exact key when no
+                                // FontCache .fnt exists on disk (see the cache-hit guard above) -- e.g. when
+                                // a font is requested before InMemoryFontCreator gets wired up. AddDisposable's
+                                // default ExistingContentBehavior.ThrowException would throw on that occupied
+                                // slot; left unguarded, the caller's catch swallows it and the newly created
+                                // (working) font -- and its GPU texture -- is discarded, forever re-triggering
+                                // this (expensive) rasterization on every subsequent request. Dispose the old
+                                // entry first (a no-op if nothing is cached) so the slot is free.
+                                loaderManager.Dispose(fullFileName);
                                 loaderManager.AddDisposable(fullFileName, new ManagedFont(createdFont.Value));
                                 AssignFontIfChanged(asText, createdFont.Value);
                                 return;

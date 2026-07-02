@@ -2,8 +2,11 @@ using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
+using KernSmith.Gum;
 using Raylib_cs;
+using RaylibGum.Renderables;
 using RenderingLibrary.Content;
+using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -70,6 +73,69 @@ public class TextRuntimeFontCachingRegressionTests : BaseTestClass
             TextRuntime second = NewArial18Text("List item 2");
             second.GetAbsoluteHeight().ShouldBe(21);
         });
+    }
+
+    // Regression for the font-cache-poisoning bug (RaylibGumThemesShowcase spamming texture loads on
+    // every theme switch): a font requested BEFORE InMemoryFontCreator is wired (e.g. a control built
+    // before ApplyTheme runs) falls to the disk-fallback path, finds no FontCache .fnt, and caches an
+    // empty (BaseSize 0) placeholder under that font's cache key. The *rendered* text still looks fine
+    // (a separate system-font-by-family-name fallback kicks in), so the poisoning is invisible except
+    // through what happens once InMemoryFontCreator IS wired: a later request for the SAME font must
+    // heal that poisoned slot -- not throw inside AddDisposable (default
+    // ExistingContentBehavior.ThrowException), get silently swallowed by the surrounding catch, and
+    // re-run the (expensive) in-memory rasterization -- and leak its GPU texture -- on every request.
+    [Fact]
+    public void UpdateToFontValues_WhenCacheSlotPoisonedByEmptyPlaceholder_AndInMemoryFontCreatorLaterWired_HealsCacheInsteadOfLeaking()
+    {
+        WithCachingOnAndNoFontFiles(() =>
+        {
+            // Step 1: poison the cache slot for (Arial, 18). No InMemoryFontCreator wired yet, so the
+            // lookup falls to disk, finds nothing, and caches an empty (BaseSize 0) placeholder under
+            // this font's cache key.
+            NewArial18Text("Poisoning request");
+
+            CountingFontCreator creator = new CountingFontCreator();
+            IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+            try
+            {
+                CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+
+                // Step 2: a second text requesting the SAME font, now that a creator can produce one,
+                // must heal the poisoned cache slot instead of the newly created font being discarded.
+                NewArial18Text("Healed request");
+                int callCountAfterHeal = creator.CallCount;
+                callCountAfterHeal.ShouldBeGreaterThan(0,
+                    "the wired creator must have been consulted at least once for the poisoned font");
+
+                // Step 3: a third text requesting the same font must hit the now-healed cache rather
+                // than calling into the creator again -- proves the heal actually persisted, not just a
+                // one-off lucky assignment.
+                NewArial18Text("Cached request");
+                creator.CallCount.ShouldBe(callCountAfterHeal,
+                    "a healed cache entry must be reused by later requests for the same font, not " +
+                    "regenerated (re-rasterized) on every request");
+            }
+            finally
+            {
+                CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+            }
+        });
+    }
+
+    // Wraps the real KernSmithRaylibFontCreator (rather than a hand-built Raylib_cs.Font, whose
+    // unmanaged Recs/Glyphs pointers would need to be valid for UnloadFont to safely dispose it later)
+    // so it produces a genuinely usable, disposable font while recording how many times it was asked.
+    private sealed class CountingFontCreator : IRaylibFontCreator
+    {
+        private readonly KernSmithRaylibFontCreator _inner = new();
+
+        public int CallCount { get; private set; }
+
+        public Raylib_cs.Font? TryCreateFont(BmfcSave bmfcSave)
+        {
+            CallCount++;
+            return _inner.TryCreateFont(bmfcSave);
+        }
     }
 
     // Positive guard for the user-visible symptom: with valid fonts, a vertical stack must reflow to the

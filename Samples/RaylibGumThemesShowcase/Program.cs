@@ -88,6 +88,17 @@ public static class Program
             new ThemeOption("Template", TemplateTheme.Apply, () => TemplateStyling.ActiveStyle.Colors.Background, SetTemplateCustomized),
         };
 
+        _currentScreenFactory = () => new AllControlsScreen();
+
+        // ApplyTheme runs FIRST so its Apply() wires CustomSetPropertyOnRenderable.InMemoryFontCreator
+        // (KernSmith) before anything requests a font. Building the checkbox before this point (its
+        // Text setter requests a font) used to poison the (Arial, 18) FontCache cache slot with an
+        // empty placeholder — the disk-fallback path caches that empty entry when no InMemoryFontCreator
+        // is wired yet and no FontCache .fnt exists on disk. Once healing was fixed on the runtime side
+        // this reordering isn't strictly required to avoid a leak, but it still avoids the wasted first
+        // lookup and keeps font requests consistently flowing through the in-memory creator.
+        ApplyTheme(0);
+
         // Authoring-only "Show Customized" checkbox — survives F1/F2 screen swaps via its own
         // AddToRoot call, separate from ShowcaseScreen's root-element bookkeeping. Created
         // before the first RebuildScreen call below so RebuildScreen can always rely on it
@@ -101,8 +112,6 @@ public static class Program
         _customizeCheckBox.Unchecked += (_, _) => ApplyCustomizationToggle(false);
         _customizeCheckBox.AddToRoot();
 
-        _currentScreenFactory = () => new AllControlsScreen();
-        ApplyTheme(0);
         RebuildScreen();
 
         while (!WindowShouldClose())
