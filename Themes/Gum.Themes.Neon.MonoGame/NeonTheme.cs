@@ -22,34 +22,32 @@ namespace Gum.Themes.Neon;
 public static class NeonTheme
 {
     /// <summary>
-    /// Family name the bundled Share Tech Mono TTF is registered under. This
-    /// is the body typeface from the CSS spec (<c>--ff: 'Share Tech Mono'</c>).
-    /// Use as the <c>Font</c> property on any TextRuntime for the theme font.
+    /// Fixed family name the bundled Share Tech Mono TTF is registered under.
+    /// Font <em>registration</em> is intentionally decoupled from font
+    /// <em>selection</em> (<see cref="NeonText.FontFamily"/>, mutable) —
+    /// reassigning the selection before <see cref="Apply"/> can never corrupt
+    /// this registration.
     /// </summary>
-    public const string FontFamily = "Share Tech Mono";
+    internal const string BundledFontFamily = "Share Tech Mono";
 
     /// <summary>
-    /// Family name the bundled title typeface (Orbitron) is registered under.
-    /// CSS spec uses Orbitron on <c>.nc-win-title</c> and <c>.nc-hdr-title</c>
-    /// — only the Window title bar in this theme. Regular slot is registered
-    /// from Orbitron-Regular; Bold from Orbitron-Bold; Orbitron-Black is also
-    /// embedded for consumers that want the 900-weight directly via a Font
-    /// override (e.g. a custom hero label).
+    /// Fixed family name the bundled title typeface (Orbitron) is registered
+    /// under. CSS spec uses Orbitron on <c>.nc-win-title</c> and
+    /// <c>.nc-hdr-title</c>. See <see cref="BundledFontFamily"/> for why this
+    /// is a fixed constant rather than the mutable
+    /// <see cref="NeonText.TitleFontFamily"/> selection.
     /// </summary>
-    public const string TitleFontFamily = "Orbitron";
+    internal const string BundledTitleFontFamily = "Orbitron";
 
     /// <summary>
-    /// Family name the bundled icon font (DejaVu Sans Mono) is registered
-    /// under. Used for glyphs Share Tech Mono doesn't cover — check marks,
-    /// dropdown chevrons, scroll-bar arrows (Dingbats and Geometric Shapes).
+    /// Fixed family name the bundled icon font (DejaVu Sans Mono) is
+    /// registered under. Used for glyphs Share Tech Mono doesn't cover —
+    /// check marks, dropdown chevrons, scroll-bar arrows (Dingbats and
+    /// Geometric Shapes). See <see cref="BundledFontFamily"/> for why this is
+    /// a fixed constant rather than the mutable
+    /// <see cref="NeonText.IconFontFamily"/> selection.
     /// </summary>
-    public const string IconFontFamily = "Neon Icons";
-
-    /// <summary>
-    /// Default text size used by the theme. Matches the source mockup's
-    /// <c>--fs</c> token (13px).
-    /// </summary>
-    public const int FontSize = 13;
+    internal const string BundledIconFontFamily = "Neon Icons";
 
     /// <summary>
     /// Applies the Neon theme: wires KernSmith as the in-memory font creator,
@@ -100,18 +98,18 @@ public static class NeonTheme
         // falls back to Regular (a faux-bold via shader, if KernSmith does
         // that; otherwise indistinguishable from Regular). The CSS spec uses
         // a single weight for body text so this matches.
-        RegisterEmbeddedFont(FontFamily, "ShareTechMono-Regular.ttf", style: null);
+        RegisterEmbeddedFont(BundledFontFamily, "ShareTechMono-Regular.ttf", style: null);
 
         // Orbitron — title typeface. Regular + Bold so Gum's IsBold slot
         // resolves to the 700-weight cut used for window title bars. Black
         // (900) is embedded too, addressable by consumers via a Font override
         // if they want the heaviest weight.
-        RegisterEmbeddedFont(TitleFontFamily, "Orbitron-Regular.ttf", style: null);
-        RegisterEmbeddedFont(TitleFontFamily, "Orbitron-Bold.ttf", style: "Bold");
+        RegisterEmbeddedFont(BundledTitleFontFamily, "Orbitron-Regular.ttf", style: null);
+        RegisterEmbeddedFont(BundledTitleFontFamily, "Orbitron-Bold.ttf", style: "Bold");
 
         // Icon font registered under a distinct family name so visual code
-        // addresses it explicitly via NeonTheme.IconFontFamily.
-        RegisterEmbeddedFont(IconFontFamily, "DejaVuSansMono.ttf", style: null);
+        // addresses it explicitly via NeonStyling.ActiveStyle.Text.IconFontFamily.
+        RegisterEmbeddedFont(BundledIconFontFamily, "DejaVuSansMono.ttf", style: null);
     }
 
     private static void RegisterEmbeddedFont(string family, string fileName, string? style)
@@ -138,15 +136,20 @@ public static class NeonTheme
         ThemePlatform.RegisterFont(family, fontBytes, style);
     }
 
-    private static void ConfigureStyling()
+    // Internal (not private) so Tests/Gum.Themes.Tests can exercise the guardrail-token sync
+    // (TextPrimary/TextMuted/Primary/Accent → V3.Styling.ActiveStyle.Colors) without going
+    // through Apply(), which requires a real GraphicsDevice for font wiring and can't run
+    // headlessly in a unit test. See Gum.Themes.Neon.MonoGame.csproj's InternalsVisibleTo.
+    internal static void ConfigureStyling()
     {
         Styling styling = Styling.ActiveStyle;
+        NeonText text = NeonStyling.ActiveStyle.Text;
 
         styling.Text.Normal.Clear();
         styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = FontFamily });
+            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
         styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = FontSize });
+            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
         styling.Text.Normal.Variables.Add(
             new VariableSave { Name = "IsBold", Type = "bool", Value = false });
         styling.Text.Normal.Variables.Add(
@@ -158,18 +161,25 @@ public static class NeonTheme
         // to Regular. This matches the CSS spec (body text is one weight).
         styling.Text.Strong.Clear();
         styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = FontFamily });
+            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
         styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = FontSize });
+            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
         styling.Text.Strong.Variables.Add(
             new VariableSave { Name = "IsBold", Type = "bool", Value = true });
         styling.Text.Strong.Variables.Add(
             new VariableSave { Name = "IsItalic", Type = "bool", Value = false });
 
-        styling.Colors.TextPrimary = NeonColors.Text;
-        styling.Colors.TextMuted = NeonColors.Muted;
-        styling.Colors.Primary = NeonColors.Surface1;
-        styling.Colors.Accent = NeonColors.Accent;
+        // The four Styling.Colors slots that overlap with V3's vocabulary; they
+        // also color the controls left at their stock V3 visual (e.g. Label, which
+        // therefore renders pale cyan-white text in the default Share Tech Mono face).
+        // We push only the 4-token guardrail (TextPrimary, TextMuted, Primary, Accent)
+        // and the visuals read the rest of the palette from NeonStyling.ActiveStyle.Colors
+        // directly.
+        NeonColors colors = NeonStyling.ActiveStyle.Colors;
+        styling.Colors.TextPrimary = colors.TextPrimary;
+        styling.Colors.TextMuted = colors.TextMuted;
+        styling.Colors.Primary = colors.Primary;
+        styling.Colors.Accent = colors.Accent;
     }
 
     private static void RegisterVisuals()

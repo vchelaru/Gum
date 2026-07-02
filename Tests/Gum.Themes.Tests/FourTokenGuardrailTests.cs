@@ -4,6 +4,7 @@ using Gum.Themes.DarkPro;
 using Gum.Themes.Editor;
 using Gum.Themes.ForestGlade;
 using Gum.Themes.Meadow;
+using Gum.Themes.Neon;
 using Gum.Themes.Retro95;
 using Microsoft.Xna.Framework;
 using Shouldly;
@@ -28,6 +29,7 @@ public class FourTokenGuardrailTests
         yield return new object[] { typeof(Retro95Colors), "Retro95Colors" };
         yield return new object[] { typeof(ForestGladeColors), "ForestGladeColors" };
         yield return new object[] { typeof(MeadowColors), "MeadowColors" };
+        yield return new object[] { typeof(NeonColors), "NeonColors" };
     }
 
     [Theory]
@@ -165,6 +167,27 @@ public class FourTokenGuardrailTests
         MeadowStyling.ActiveStyle.Colors.Blue = accent;
 
         MeadowTheme.ConfigureStyling();
+
+        V3Styling.ActiveStyle.Colors.TextPrimary.ShouldBe(textPrimary);
+        V3Styling.ActiveStyle.Colors.TextMuted.ShouldBe(textMuted);
+        V3Styling.ActiveStyle.Colors.Primary.ShouldBe(primary);
+        V3Styling.ActiveStyle.Colors.Accent.ShouldBe(accent);
+    }
+
+    [Fact]
+    public void NeonTheme_ConfigureStyling_SyncsFourGuardrailTokensIntoV3Styling()
+    {
+        Color textPrimary = new Color(17, 28, 39);
+        Color textMuted = new Color(50, 61, 72);
+        Color primary = new Color(83, 94, 105);
+        Color accent = new Color(106, 116, 126);
+
+        NeonStyling.ActiveStyle.Colors.Text = textPrimary;
+        NeonStyling.ActiveStyle.Colors.Muted = textMuted;
+        NeonStyling.ActiveStyle.Colors.Surface1 = primary;
+        NeonStyling.ActiveStyle.Colors.Accent = accent;
+
+        NeonTheme.ConfigureStyling();
 
         V3Styling.ActiveStyle.Colors.TextPrimary.ShouldBe(textPrimary);
         V3Styling.ActiveStyle.Colors.TextMuted.ShouldBe(textMuted);

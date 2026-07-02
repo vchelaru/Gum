@@ -70,7 +70,7 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = NeonColors.Surface1;
+        fill.FillColor = NeonStyling.ActiveStyle.Colors.Surface1;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -93,7 +93,7 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = NeonColors.Border;
+        border.StrokeColor = NeonStyling.ActiveStyle.Colors.Border;
         return border;
     }
 
@@ -115,7 +115,7 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = NeonPalette.FocusRing;
+        ring.StrokeColor = NeonStyling.ActiveStyle.Colors.FocusRing;
         ring.Visible = false;
         return ring;
     }
@@ -124,13 +124,13 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
     {
         States.Enabled.Apply = () =>
         {
-            _border.StrokeColor = NeonColors.Border;
+            _border.StrokeColor = NeonStyling.ActiveStyle.Colors.Border;
             _focusRing.Visible = false;
         };
 
         States.Focused.Apply = () =>
         {
-            _border.StrokeColor = NeonColors.Accent;
+            _border.StrokeColor = NeonStyling.ActiveStyle.Colors.Accent;
             _focusRing.Visible = true;
         };
     }

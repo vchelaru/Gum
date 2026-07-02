@@ -33,7 +33,6 @@ public class SliderThumbVisual : InteractiveGue
     /// </summary>
     private const float ShadowOffsetY = 0f;
     private const float ShadowBlur = 32f;
-    private static readonly Color ShadowColor = new Color(0, 229, 255, 180);
 
     private readonly CircleRuntime _focusRing;
     private readonly CircleRuntime _body;
@@ -76,12 +75,12 @@ public class SliderThumbVisual : InteractiveGue
         body.WidthUnits = DimensionUnitType.RelativeToParent;
         body.HeightUnits = DimensionUnitType.RelativeToParent;
         body.IsFilled = true;
-        body.FillColor = NeonColors.Surface1;
+        body.FillColor = NeonStyling.ActiveStyle.Colors.Surface1;
         body.StrokeWidth = 0;
         // Native Gaussian drop shadow under the thumb — replaces the prior
         // single-circle approximation. Toggled per state via WireStates.
         body.HasDropshadow = true;
-        body.DropshadowColor = ShadowColor;
+        body.DropshadowColor = NeonStyling.ActiveStyle.Colors.SliderThumbShadow;
         body.DropshadowOffsetX = 0f;
         body.DropshadowOffsetY = ShadowOffsetY;
         body.DropshadowBlur = ShadowBlur;
@@ -105,7 +104,7 @@ public class SliderThumbVisual : InteractiveGue
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = NeonColors.Accent;
+        border.StrokeColor = NeonStyling.ActiveStyle.Colors.Accent;
         return border;
     }
 
@@ -126,7 +125,7 @@ public class SliderThumbVisual : InteractiveGue
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = NeonPalette.FocusRing;
+        ring.StrokeColor = NeonStyling.ActiveStyle.Colors.FocusRing;
         ring.Visible = false;
         return ring;
     }
@@ -138,28 +137,28 @@ public class SliderThumbVisual : InteractiveGue
         AddCategory(_buttonCategory);
 
         Add(_buttonCategory, FrameworkElement.EnabledStateName,
-            () => Apply(body: NeonColors.Surface1, border: NeonColors.Accent, ring: false, showShadow: true));
+            () => Apply(body: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent, ring: false, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.HighlightedStateName,
-            () => Apply(body: NeonColors.Surface1, border: NeonColors.Accent, ring: false, showShadow: true));
+            () => Apply(body: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent, ring: false, showShadow: true));
 
         // Pushed kept solid (Surface1, not translucent) — translucent let the
         // half-filled track show through the thumb, which read as a half-empty
         // bubble rather than a pressed control.
         Add(_buttonCategory, FrameworkElement.PushedStateName,
-            () => Apply(body: NeonColors.Surface2, border: NeonColors.Accent, ring: false, showShadow: true));
+            () => Apply(body: NeonStyling.ActiveStyle.Colors.Surface2, border: NeonStyling.ActiveStyle.Colors.Accent, ring: false, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.FocusedStateName,
-            () => Apply(body: NeonColors.Surface1, border: NeonColors.Accent, ring: true, showShadow: true));
+            () => Apply(body: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent, ring: true, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.HighlightedFocusedStateName,
-            () => Apply(body: NeonColors.Surface1, border: NeonColors.Accent, ring: true, showShadow: true));
+            () => Apply(body: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Accent, ring: true, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.DisabledStateName,
-            () => Apply(body: NeonColors.Disabled, border: NeonColors.Disabled, ring: false, showShadow: false));
+            () => Apply(body: NeonStyling.ActiveStyle.Colors.Disabled, border: NeonStyling.ActiveStyle.Colors.Disabled, ring: false, showShadow: false));
 
         Add(_buttonCategory, FrameworkElement.DisabledFocusedStateName,
-            () => Apply(body: NeonColors.Disabled, border: NeonColors.Disabled, ring: true, showShadow: false));
+            () => Apply(body: NeonStyling.ActiveStyle.Colors.Disabled, border: NeonStyling.ActiveStyle.Colors.Disabled, ring: true, showShadow: false));
     }
 
     private static void Add(StateSaveCategory category, string name, System.Action apply)

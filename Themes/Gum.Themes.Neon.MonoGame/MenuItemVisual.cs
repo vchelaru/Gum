@@ -77,19 +77,19 @@ public class MenuItemVisual : BaseMenuItemVisual
     private void WireStates()
     {
         States.Enabled.Apply = () => ApplyPalette(
-            fill: new Color(0, 0, 0, 0), text: NeonColors.Text);
+            fill: new Color(0, 0, 0, 0), text: NeonStyling.ActiveStyle.Colors.Text);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            fill: NeonPalette.HoverRow, text: NeonColors.Text);
+            fill: NeonStyling.ActiveStyle.Colors.HoverRow, text: NeonStyling.ActiveStyle.Colors.Text);
 
         States.Selected.Apply = () => ApplyPalette(
-            fill: NeonPalette.SelectedRow, text: NeonColors.Accent);
+            fill: NeonStyling.ActiveStyle.Colors.SelectedRow, text: NeonStyling.ActiveStyle.Colors.Accent);
 
         States.Focused.Apply = () => ApplyPalette(
-            fill: NeonPalette.HoverRow, text: NeonColors.Text);
+            fill: NeonStyling.ActiveStyle.Colors.HoverRow, text: NeonStyling.ActiveStyle.Colors.Text);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fill: new Color(0, 0, 0, 0), text: NeonColors.Disabled);
+            fill: new Color(0, 0, 0, 0), text: NeonStyling.ActiveStyle.Colors.Disabled);
     }
 
     private void ApplyPalette(Color fill, Color text)

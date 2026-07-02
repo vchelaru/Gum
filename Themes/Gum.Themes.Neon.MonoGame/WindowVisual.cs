@@ -38,7 +38,6 @@ public class WindowVisual : BaseWindowVisual
     /// </summary>
     private const float ShadowOffsetY = 0f;
     private const float ShadowBlur = 56f;
-    private static readonly Color ShadowColor = new Color(0, 229, 255, 130);
 
     private readonly RectangleRuntime _fill;
     private readonly RectangleRuntime _border;
@@ -101,11 +100,11 @@ public class WindowVisual : BaseWindowVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = NeonColors.Surface1;
+        fill.FillColor = NeonStyling.ActiveStyle.Colors.Surface1;
         fill.StrokeWidth = 0;
         // Native Gaussian drop shadow — replaces the prior three-layer stack.
         fill.HasDropshadow = true;
-        fill.DropshadowColor = ShadowColor;
+        fill.DropshadowColor = NeonStyling.ActiveStyle.Colors.WindowShadow;
         fill.DropshadowOffsetX = 0f;
         fill.DropshadowOffsetY = ShadowOffsetY;
         fill.DropshadowBlur = ShadowBlur;
@@ -130,7 +129,7 @@ public class WindowVisual : BaseWindowVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = NeonColors.Accent;
+        border.StrokeColor = NeonStyling.ActiveStyle.Colors.Accent;
         return border;
     }
 
@@ -156,7 +155,7 @@ public class WindowVisual : BaseWindowVisual
         // (AccentDim) gives the bar a recognizable header weight without
         // departing from the palette.
         fill.IsFilled = true;
-        fill.FillColor = NeonColors.AccentDim;
+        fill.FillColor = NeonStyling.ActiveStyle.Colors.AccentDim;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -176,7 +175,7 @@ public class WindowVisual : BaseWindowVisual
         separator.WidthUnits = DimensionUnitType.RelativeToParent;
         separator.HeightUnits = DimensionUnitType.Absolute;
         separator.IsFilled = true;
-        separator.FillColor = NeonColors.Accent;
+        separator.FillColor = NeonStyling.ActiveStyle.Colors.Accent;
         separator.StrokeWidth = 0;
         return separator;
     }

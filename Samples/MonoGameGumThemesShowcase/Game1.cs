@@ -83,7 +83,7 @@ public class Game1 : Game
         _themes = new[]
         {
             new ThemeOption("Forest Glade", ForestGladeTheme.Apply, ForestGladeStyling.ActiveStyle.Colors.CanopyDeep),
-            new ThemeOption("Neon", NeonTheme.Apply, NeonColors.Background),
+            new ThemeOption("Neon", NeonTheme.Apply, NeonStyling.ActiveStyle.Colors.Background),
             new ThemeOption("Dark Pro", DarkProTheme.Apply, DarkProStyling.ActiveStyle.Colors.Background),
             new ThemeOption("Bubblegum", BubblegumTheme.Apply, BubblegumStyling.ActiveStyle.Colors.Background),
             new ThemeOption("Editor", EditorTheme.Apply, new Color(40, 40, 40)),

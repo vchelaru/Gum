@@ -114,7 +114,7 @@ public class SliderVisual : BaseSliderVisual
         track.HeightUnits = DimensionUnitType.Absolute;
         track.CornerRadius = TrackCornerRadius;
         track.IsFilled = true;
-        track.FillColor = NeonColors.AccentDim;
+        track.FillColor = NeonStyling.ActiveStyle.Colors.AccentDim;
         track.StrokeWidth = 0;
         return track;
     }
@@ -135,20 +135,20 @@ public class SliderVisual : BaseSliderVisual
         fill.HeightUnits = DimensionUnitType.Absolute;
         fill.CornerRadius = TrackCornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = NeonColors.Accent;
+        fill.FillColor = NeonStyling.ActiveStyle.Colors.Accent;
         fill.StrokeWidth = 0;
         return fill;
     }
 
     private void WireStates()
     {
-        States.Enabled.Apply = () => ApplyTrack(NeonColors.AccentDim, NeonColors.Accent);
-        States.Highlighted.Apply = () => ApplyTrack(NeonColors.AccentDim, NeonColors.Accent);
-        States.HighlightedFocused.Apply = () => ApplyTrack(NeonColors.AccentDim, NeonColors.Accent);
-        States.Focused.Apply = () => ApplyTrack(NeonColors.AccentDim, NeonColors.Accent);
-        States.Pushed.Apply = () => ApplyTrack(NeonColors.AccentDim, NeonColors.Accent);
-        States.Disabled.Apply = () => ApplyTrack(NeonColors.Disabled, NeonColors.Disabled);
-        States.DisabledFocused.Apply = () => ApplyTrack(NeonColors.Disabled, NeonColors.Disabled);
+        States.Enabled.Apply = () => ApplyTrack(NeonStyling.ActiveStyle.Colors.AccentDim, NeonStyling.ActiveStyle.Colors.Accent);
+        States.Highlighted.Apply = () => ApplyTrack(NeonStyling.ActiveStyle.Colors.AccentDim, NeonStyling.ActiveStyle.Colors.Accent);
+        States.HighlightedFocused.Apply = () => ApplyTrack(NeonStyling.ActiveStyle.Colors.AccentDim, NeonStyling.ActiveStyle.Colors.Accent);
+        States.Focused.Apply = () => ApplyTrack(NeonStyling.ActiveStyle.Colors.AccentDim, NeonStyling.ActiveStyle.Colors.Accent);
+        States.Pushed.Apply = () => ApplyTrack(NeonStyling.ActiveStyle.Colors.AccentDim, NeonStyling.ActiveStyle.Colors.Accent);
+        States.Disabled.Apply = () => ApplyTrack(NeonStyling.ActiveStyle.Colors.Disabled, NeonStyling.ActiveStyle.Colors.Disabled);
+        States.DisabledFocused.Apply = () => ApplyTrack(NeonStyling.ActiveStyle.Colors.Disabled, NeonStyling.ActiveStyle.Colors.Disabled);
     }
 
     private void ApplyTrack(Color trackFill, Color fillBar)

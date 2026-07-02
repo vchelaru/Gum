@@ -31,7 +31,7 @@ public class TooltipVisual : BaseTooltipVisual
         AddChild(_border);
 
         AddChild(TextInstance);
-        TextInstance.Color = NeonColors.Text;
+        TextInstance.Color = NeonStyling.ActiveStyle.Colors.Text;
     }
 
     private static RectangleRuntime CreateFill()
@@ -50,7 +50,7 @@ public class TooltipVisual : BaseTooltipVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = NeonColors.Surface1;
+        fill.FillColor = NeonStyling.ActiveStyle.Colors.Surface1;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -73,7 +73,7 @@ public class TooltipVisual : BaseTooltipVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = NeonColors.Border;
+        border.StrokeColor = NeonStyling.ActiveStyle.Colors.Border;
         return border;
     }
 }

@@ -72,7 +72,7 @@ public class ButtonVisual : BaseButtonVisual
 
         AddChild(TextInstance);
         TextInstance.ApplyState(Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle.Text.Normal);
-        TextInstance.Color = NeonColors.Accent;
+        TextInstance.Color = NeonStyling.ActiveStyle.Colors.Accent;
 
         WireStates();
     }
@@ -91,10 +91,10 @@ public class ButtonVisual : BaseButtonVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = NeonColors.Surface1;
+        fill.FillColor = NeonStyling.ActiveStyle.Colors.Surface1;
         fill.StrokeWidth = 0;
         fill.HasDropshadow = true;
-        fill.DropshadowColor = NeonPalette.GlowMedium;
+        fill.DropshadowColor = NeonStyling.ActiveStyle.Colors.GlowMedium;
         fill.DropshadowOffsetX = 0f;
         fill.DropshadowOffsetY = 0f;
         fill.DropshadowBlur = RestGlowBlur;
@@ -117,7 +117,7 @@ public class ButtonVisual : BaseButtonVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = NeonColors.Accent;
+        border.StrokeColor = NeonStyling.ActiveStyle.Colors.Accent;
         return border;
     }
 
@@ -137,7 +137,7 @@ public class ButtonVisual : BaseButtonVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = NeonPalette.FocusRing;
+        ring.StrokeColor = NeonStyling.ActiveStyle.Colors.FocusRing;
         ring.Visible = false;
         return ring;
     }
@@ -147,32 +147,32 @@ public class ButtonVisual : BaseButtonVisual
         // Body fills are stored opaque (pre-blended) so the body fully blocks
         // the dropshadow halo behind it and the label stays readable.
         States.Enabled.Apply = () => Apply(
-            fill: NeonColors.Surface1, text: NeonColors.Accent,
-            glow: NeonPalette.GlowMedium, blur: RestGlowBlur, ring: false);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, text: NeonStyling.ActiveStyle.Colors.Accent,
+            glow: NeonStyling.ActiveStyle.Colors.GlowMedium, blur: RestGlowBlur, ring: false);
 
         States.Highlighted.Apply = () => Apply(
-            fill: NeonPalette.ButtonHoverFill, text: NeonColors.Accent,
-            glow: NeonPalette.GlowStrong, blur: HoverGlowBlur, ring: false);
+            fill: NeonStyling.ActiveStyle.Colors.ButtonHoverFill, text: NeonStyling.ActiveStyle.Colors.Accent,
+            glow: NeonStyling.ActiveStyle.Colors.GlowStrong, blur: HoverGlowBlur, ring: false);
 
         States.Focused.Apply = () => Apply(
-            fill: NeonColors.Surface1, text: NeonColors.Accent,
-            glow: NeonPalette.GlowStrong, blur: HoverGlowBlur, ring: true);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, text: NeonStyling.ActiveStyle.Colors.Accent,
+            glow: NeonStyling.ActiveStyle.Colors.GlowStrong, blur: HoverGlowBlur, ring: true);
 
         States.HighlightedFocused.Apply = () => Apply(
-            fill: NeonPalette.ButtonHoverFill, text: NeonColors.Accent,
-            glow: NeonPalette.GlowStrong, blur: HoverGlowBlur, ring: true);
+            fill: NeonStyling.ActiveStyle.Colors.ButtonHoverFill, text: NeonStyling.ActiveStyle.Colors.Accent,
+            glow: NeonStyling.ActiveStyle.Colors.GlowStrong, blur: HoverGlowBlur, ring: true);
 
         States.Pushed.Apply = () => Apply(
-            fill: NeonPalette.ButtonPushedFill, text: NeonColors.Accent,
-            glow: NeonPalette.GlowStrong, blur: PushedGlowBlur, ring: false);
+            fill: NeonStyling.ActiveStyle.Colors.ButtonPushedFill, text: NeonStyling.ActiveStyle.Colors.Accent,
+            glow: NeonStyling.ActiveStyle.Colors.GlowStrong, blur: PushedGlowBlur, ring: false);
 
         States.Disabled.Apply = () => Apply(
-            fill: NeonColors.Background, text: NeonColors.Muted,
-            glow: NeonPalette.GlowSubtle, blur: 0f, ring: false);
+            fill: NeonStyling.ActiveStyle.Colors.Background, text: NeonStyling.ActiveStyle.Colors.Muted,
+            glow: NeonStyling.ActiveStyle.Colors.GlowSubtle, blur: 0f, ring: false);
 
         States.DisabledFocused.Apply = () => Apply(
-            fill: NeonColors.Background, text: NeonColors.Muted,
-            glow: NeonPalette.GlowSubtle, blur: 0f, ring: true);
+            fill: NeonStyling.ActiveStyle.Colors.Background, text: NeonStyling.ActiveStyle.Colors.Muted,
+            glow: NeonStyling.ActiveStyle.Colors.GlowSubtle, blur: 0f, ring: true);
     }
 
     private void Apply(Color fill, Color text, Color glow, float blur, bool ring)
@@ -180,7 +180,7 @@ public class ButtonVisual : BaseButtonVisual
         _fill.FillColor = fill;
         // Border stays a constant 1 px cyan — focus emphasis is carried by
         // the separate white ring, not by border thickness.
-        _border.StrokeColor = NeonColors.Accent;
+        _border.StrokeColor = NeonStyling.ActiveStyle.Colors.Accent;
         _fill.DropshadowColor = glow;
         _fill.DropshadowBlur = blur;
         _fill.HasDropshadow = blur > 0f;

@@ -63,7 +63,7 @@ internal sealed class NeonTextInputDecoration
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = NeonColors.Surface1;
+        fill.FillColor = NeonStyling.ActiveStyle.Colors.Surface1;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -86,7 +86,7 @@ internal sealed class NeonTextInputDecoration
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = NeonColors.Border;
+        border.StrokeColor = NeonStyling.ActiveStyle.Colors.Border;
         return border;
     }
 
@@ -97,24 +97,24 @@ internal sealed class NeonTextInputDecoration
         // Hover/focus border colour changes and the offset focus ring were
         // visually noisy on a control that's rarely the centre of attention.
         host.States.Enabled.Apply = () => Apply(host,
-            fill: NeonColors.Surface1, border: NeonColors.Border,
-            text: NeonColors.Text, placeholder: NeonColors.Placeholder,
-            caret: NeonColors.Accent, selection: NeonColors.AccentDim);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Border,
+            text: NeonStyling.ActiveStyle.Colors.Text, placeholder: NeonStyling.ActiveStyle.Colors.Placeholder,
+            caret: NeonStyling.ActiveStyle.Colors.Accent, selection: NeonStyling.ActiveStyle.Colors.AccentDim);
 
         host.States.Highlighted.Apply = () => Apply(host,
-            fill: NeonColors.Surface1, border: NeonColors.Border,
-            text: NeonColors.Text, placeholder: NeonColors.Placeholder,
-            caret: NeonColors.Accent, selection: NeonColors.AccentDim);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Border,
+            text: NeonStyling.ActiveStyle.Colors.Text, placeholder: NeonStyling.ActiveStyle.Colors.Placeholder,
+            caret: NeonStyling.ActiveStyle.Colors.Accent, selection: NeonStyling.ActiveStyle.Colors.AccentDim);
 
         host.States.Focused.Apply = () => Apply(host,
-            fill: NeonColors.Surface1, border: NeonColors.Border,
-            text: NeonColors.Text, placeholder: NeonColors.Placeholder,
-            caret: NeonColors.Accent, selection: NeonColors.AccentDim);
+            fill: NeonStyling.ActiveStyle.Colors.Surface1, border: NeonStyling.ActiveStyle.Colors.Border,
+            text: NeonStyling.ActiveStyle.Colors.Text, placeholder: NeonStyling.ActiveStyle.Colors.Placeholder,
+            caret: NeonStyling.ActiveStyle.Colors.Accent, selection: NeonStyling.ActiveStyle.Colors.AccentDim);
 
         host.States.Disabled.Apply = () => Apply(host,
-            fill: NeonColors.Background, border: NeonColors.DisabledBorder,
-            text: NeonColors.Muted, placeholder: NeonColors.Placeholder,
-            caret: NeonColors.Muted, selection: NeonColors.AccentDim);
+            fill: NeonStyling.ActiveStyle.Colors.Background, border: NeonStyling.ActiveStyle.Colors.DisabledBorder,
+            text: NeonStyling.ActiveStyle.Colors.Muted, placeholder: NeonStyling.ActiveStyle.Colors.Placeholder,
+            caret: NeonStyling.ActiveStyle.Colors.Muted, selection: NeonStyling.ActiveStyle.Colors.AccentDim);
     }
 
     private void Apply(TextBoxBaseVisual host, Color fill, Color border, Color text,
