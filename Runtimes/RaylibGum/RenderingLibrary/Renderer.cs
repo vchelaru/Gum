@@ -46,21 +46,16 @@ public class Renderer : IRenderer
     // (exact-size recreation on resize + frame-boundary sweep) exactly like ShadowBlur.
     readonly Gum.Renderables.RenderTextureService _renderTargetService = new();
 
-    // True while baking a render-target container's subtree into its offscreen texture. Inside a
-    // bake, DrawGumRecursively rebases scissor rects into RT-local space (the clamped top-left is
-    // the RT origin) so a ClipsChildren descendant clips correctly within the RT.
+    // True while baking a render-target container's subtree into its offscreen texture. Used to
+    // suppress the screen-space scissor machinery in DrawGumRecursively, whose rects are wrong once
+    // drawing is redirected into an RT framebuffer (raylib flips scissor Y by the screen height, not
+    // the RT height, and that behavior diverges under software GL). Clipping descendants inside an RT
+    // container is therefore unsupported — deferred, see #3440.
     bool _isBakingRenderTarget;
 
-    // The active bake's clamped top-left (world coords) and RT pixel height, captured so
-    // DrawGumRecursively can convert a descendant's absolute bounds into RT-local scissor pixels.
-    // Only meaningful while _isBakingRenderTarget is true; bakes are never re-entrant (post-order
-    // means an inner RT is fully baked before its outer one begins), so single fields suffice.
-    float _bakeLeft;
-    float _bakeTop;
-    int _bakeRenderTargetHeight;
-
     // Reused across bakes so a bake doesn't allocate a fresh scissor stack each frame. Swapped in
-    // for the duration of a bake and restored afterward; balanced push/pop leaves it empty.
+    // for the duration of a bake and restored afterward; scissor is suppressed during a bake, so it
+    // simply guards the main-walk scissor stack from any leakage.
     readonly Stack<System.Drawing.Rectangle> _bakeScissorStack = new();
 
     // Set during the PreRender walk (which already traverses the whole visible tree) when any
@@ -300,12 +295,11 @@ public class Renderer : IRenderer
     {
         // #2998 off-screen cull: when a clip is active (the scissor stack is non-empty), skip this
         // element and its subtree if it falls entirely outside the active clip, expanded by a small
-        // margin. Mirrors the XNA orderer cull via the same shared predicate. Inside a bake both the
-        // element rect and the stacked clip are RT-local, so the same comparison holds.
+        // margin. Mirrors the XNA orderer cull via the same shared predicate.
         if (CameraScissorExtensions.CullOffscreenWhenClipped
             && _scissorStack.Count > 0
             && CameraScissorExtensions.IsFullyOutside(
-                GetScissorRectangleFor(layer, element),
+                _camera.GetScissorRectangleFor(layer, element),
                 _scissorStack.Peek(),
                 CameraScissorExtensions.OffscreenCullMarginInPixels))
         {
@@ -337,14 +331,21 @@ public class Renderer : IRenderer
 
         element.Render(null);
 
-        if (element.ClipsChildren)
+        // Inside an RT bake the screen-space scissor rects are invalid — raylib flips scissor Y by
+        // the screen height (not the RT height) while a render texture is bound, and that behavior
+        // diverges under software GL (Mesa llvmpipe on CI). So clipping is suppressed during a bake:
+        // a ClipsChildren descendant inside a render-target container does NOT clip. Deferred, see
+        // #3440.
+        bool suppressScissor = _isBakingRenderTarget;
+
+        if (element.ClipsChildren && !suppressScissor)
         {
-            System.Drawing.Rectangle rect = GetScissorRectangleFor(layer, element);
+            System.Drawing.Rectangle rect = _camera.GetScissorRectangleFor(layer, element);
             System.Drawing.Rectangle effective = _scissorStack.Count > 0
                 ? System.Drawing.Rectangle.Intersect(_scissorStack.Peek(), rect)
                 : rect;
             _scissorStack.Push(effective);
-            ApplyScissorRectangle(effective);
+            BatchDrawCallCounter.BeginScissorMode(effective.X, effective.Y, effective.Width, effective.Height);
         }
 
         if (element.Children != null)
@@ -358,56 +359,19 @@ public class Renderer : IRenderer
             }
         }
 
-        if (element.ClipsChildren)
+        if (element.ClipsChildren && !suppressScissor)
         {
             _scissorStack.Pop();
             if (_scissorStack.Count > 0)
             {
-                ApplyScissorRectangle(_scissorStack.Peek());
+                System.Drawing.Rectangle parent = _scissorStack.Peek();
+                BatchDrawCallCounter.BeginScissorMode(parent.X, parent.Y, parent.Width, parent.Height);
             }
             else
             {
                 BatchDrawCallCounter.EndScissorMode();
             }
         }
-    }
-
-    // Scissor rectangle for a clipping element, in whatever coordinate space the current pass uses:
-    // screen space normally, RT-local pixel space during a bake. Keeping the space consistent
-    // between this, the scissor stack, and the cull comparison is what lets ClipsChildren work
-    // inside a render target.
-    private System.Drawing.Rectangle GetScissorRectangleFor(Layer layer, IRenderableIpso element)
-    {
-        if (!_isBakingRenderTarget)
-        {
-            return _camera.GetScissorRectangleFor(layer, element);
-        }
-
-        float zoom = _camera.Zoom;
-        int left = global::RenderingLibrary.Math.MathFunctions.RoundToInt(
-            (element.GetAbsoluteLeft() - _bakeLeft) * zoom);
-        int top = global::RenderingLibrary.Math.MathFunctions.RoundToInt(
-            (element.GetAbsoluteTop() - _bakeTop) * zoom);
-        int right = global::RenderingLibrary.Math.MathFunctions.RoundToInt(
-            (element.GetAbsoluteRight() - _bakeLeft) * zoom);
-        int bottom = global::RenderingLibrary.Math.MathFunctions.RoundToInt(
-            (element.GetAbsoluteBottom() - _bakeTop) * zoom);
-        return new System.Drawing.Rectangle(left, top, right - left, bottom - top);
-    }
-
-    // Applies a scissor rect through the draw-call counter, compensating for raylib's Y flip during
-    // a bake. raylib's BeginScissorMode flips Y by the *screen* height even while a render texture
-    // is bound, so an RT-local top-left rect (y measured from the RT top) must be shifted by
-    // (screenHeight - rtHeight) to land on the correct RT rows. Outside a bake the rect is already
-    // screen-space and passes through unchanged.
-    private void ApplyScissorRectangle(System.Drawing.Rectangle rect)
-    {
-        int y = rect.Y;
-        if (_isBakingRenderTarget)
-        {
-            y += Raylib.GetScreenHeight() - _bakeRenderTargetHeight;
-        }
-        BatchDrawCallCounter.BeginScissorMode(rect.X, y, rect.Width, rect.Height);
     }
 
     // Post-order (innermost-first) walk that bakes every render-target container's subtree into an
@@ -465,19 +429,14 @@ public class Renderer : IRenderer
             Rotation = 0,
         };
 
-        // Swap in the reusable bake scissor stack (avoids a per-bake allocation) and capture the
-        // bake origin/height so DrawGumRecursively can rebase clip rects into RT-local space.
+        // Swap in the reusable bake scissor stack (avoids a per-bake allocation) so the main-walk
+        // scissor stack is isolated from the bake. Scissor is suppressed during a bake anyway
+        // (clipping inside an RT is deferred, see #3440), so this only guards against leakage.
         Stack<System.Drawing.Rectangle> savedScissorStack = _scissorStack;
         _bakeScissorStack.Clear();
         _scissorStack = _bakeScissorStack;
         bool wasBaking = _isBakingRenderTarget;
-        float savedBakeLeft = _bakeLeft;
-        float savedBakeTop = _bakeTop;
-        int savedBakeHeight = _bakeRenderTargetHeight;
         _isBakingRenderTarget = true;
-        _bakeLeft = left;
-        _bakeTop = top;
-        _bakeRenderTargetHeight = height;
 
         counter.BeginTextureMode(renderTexture.Value);
         Raylib.ClearBackground(new Color((byte)0, (byte)0, (byte)0, (byte)0));
@@ -503,9 +462,6 @@ public class Renderer : IRenderer
         counter.EndTextureMode();
 
         _isBakingRenderTarget = wasBaking;
-        _bakeLeft = savedBakeLeft;
-        _bakeTop = savedBakeTop;
-        _bakeRenderTargetHeight = savedBakeHeight;
         _scissorStack = savedScissorStack;
     }
 
