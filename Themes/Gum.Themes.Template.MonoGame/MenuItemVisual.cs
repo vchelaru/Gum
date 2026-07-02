@@ -48,7 +48,7 @@ public class MenuItemVisual : BaseMenuItemVisual
         AddChild(_fill);
 
         AddChild(ContainerInstance);
-        TextInstance.Font = TemplateTheme.BodyFontFamily; // menu item label uses the body face
+        TextInstance.Font = TemplateStyling.ActiveStyle.Text.BodyFontFamily; // menu item label uses the body face
 
         // Symmetric padding: shift ContainerInstance in by HorizontalPadding
         // and VerticalPadding, and grow the MenuItem visual by twice that on
@@ -100,19 +100,19 @@ public class MenuItemVisual : BaseMenuItemVisual
         // helper toggled Background.Visible directly; we replace the entire
         // state body so we don't need to keep V3's NineSlice attached.
         States.Enabled.Apply = () => ApplyPalette(
-            fill: new Color(0, 0, 0, 0), text: TemplatePalette.Text);
+            fill: new Color(0, 0, 0, 0), text: TemplateStyling.ActiveStyle.Colors.Text);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            fill: TemplatePalette.Surface2, text: TemplatePalette.Text);
+            fill: TemplateStyling.ActiveStyle.Colors.Surface2, text: TemplateStyling.ActiveStyle.Colors.Text);
 
         States.Selected.Apply = () => ApplyPalette(
-            fill: TemplatePalette.Selection, text: TemplatePalette.Text);
+            fill: TemplateStyling.ActiveStyle.Colors.Selection, text: TemplateStyling.ActiveStyle.Colors.Text);
 
         States.Focused.Apply = () => ApplyPalette(
-            fill: TemplatePalette.Surface2, text: TemplatePalette.Text);
+            fill: TemplateStyling.ActiveStyle.Colors.Surface2, text: TemplateStyling.ActiveStyle.Colors.Text);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fill: new Color(0, 0, 0, 0), text: TemplatePalette.DisabledText);
+            fill: new Color(0, 0, 0, 0), text: TemplateStyling.ActiveStyle.Colors.DisabledText);
     }
 
     private void ApplyPalette(Color fill, Color text)

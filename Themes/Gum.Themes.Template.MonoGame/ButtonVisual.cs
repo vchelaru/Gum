@@ -40,13 +40,13 @@ public class ButtonVisual : BaseButtonVisual
         WidthUnits = DimensionUnitType.Absolute;
         HeightUnits = DimensionUnitType.Absolute;
 
-        _focusRing = TemplateShapes.FocusRing(TemplatePalette.Accent, CornerRadius, FocusRingInset, BorderThickness);
+        _focusRing = TemplateShapes.FocusRing(TemplateStyling.ActiveStyle.Colors.Accent, CornerRadius, FocusRingInset, BorderThickness);
         AddChild(_focusRing);
 
-        _fill = TemplateShapes.Fill(TemplatePalette.Surface1, CornerRadius);
+        _fill = TemplateShapes.Fill(TemplateStyling.ActiveStyle.Colors.Surface1, CornerRadius);
         AddChild(_fill);
 
-        _border = TemplateShapes.Border(TemplatePalette.Border, CornerRadius, BorderThickness);
+        _border = TemplateShapes.Border(TemplateStyling.ActiveStyle.Colors.Border, CornerRadius, BorderThickness);
         AddChild(_border);
 
         // Re-attach the base TextInstance on top of the new shape stack.
@@ -62,25 +62,25 @@ public class ButtonVisual : BaseButtonVisual
         // the now-detached NineSlice background and underline indicator, neither of
         // which is in this visual's render tree any more.
         States.Enabled.Apply = () => ApplyPalette(
-            fill: TemplatePalette.Surface1, border: TemplatePalette.Border, text: TemplatePalette.Text, showFocusRing: false);
+            fill: TemplateStyling.ActiveStyle.Colors.Surface1, border: TemplateStyling.ActiveStyle.Colors.Border, text: TemplateStyling.ActiveStyle.Colors.Text, showFocusRing: false);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            fill: TemplatePalette.HoverFill, border: TemplatePalette.Accent, text: TemplatePalette.Text, showFocusRing: false);
+            fill: TemplateStyling.ActiveStyle.Colors.HoverFill, border: TemplateStyling.ActiveStyle.Colors.Accent, text: TemplateStyling.ActiveStyle.Colors.Text, showFocusRing: false);
 
         States.Focused.Apply = () => ApplyPalette(
-            fill: TemplatePalette.Surface1, border: TemplatePalette.Accent, text: TemplatePalette.Text, showFocusRing: true);
+            fill: TemplateStyling.ActiveStyle.Colors.Surface1, border: TemplateStyling.ActiveStyle.Colors.Accent, text: TemplateStyling.ActiveStyle.Colors.Text, showFocusRing: true);
 
         States.HighlightedFocused.Apply = () => ApplyPalette(
-            fill: TemplatePalette.HoverFill, border: TemplatePalette.Accent, text: TemplatePalette.Text, showFocusRing: true);
+            fill: TemplateStyling.ActiveStyle.Colors.HoverFill, border: TemplateStyling.ActiveStyle.Colors.Accent, text: TemplateStyling.ActiveStyle.Colors.Text, showFocusRing: true);
 
         States.Pushed.Apply = () => ApplyPalette(
-            fill: TemplatePalette.PressedFill, border: TemplatePalette.Accent, text: TemplatePalette.Text, showFocusRing: false);
+            fill: TemplateStyling.ActiveStyle.Colors.PressedFill, border: TemplateStyling.ActiveStyle.Colors.Accent, text: TemplateStyling.ActiveStyle.Colors.Text, showFocusRing: false);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fill: TemplatePalette.DisabledFill, border: TemplatePalette.DisabledBorder, text: TemplatePalette.DisabledText, showFocusRing: false);
+            fill: TemplateStyling.ActiveStyle.Colors.DisabledFill, border: TemplateStyling.ActiveStyle.Colors.DisabledBorder, text: TemplateStyling.ActiveStyle.Colors.DisabledText, showFocusRing: false);
 
         States.DisabledFocused.Apply = () => ApplyPalette(
-            fill: TemplatePalette.DisabledFill, border: TemplatePalette.DisabledBorder, text: TemplatePalette.DisabledText, showFocusRing: true);
+            fill: TemplateStyling.ActiveStyle.Colors.DisabledFill, border: TemplateStyling.ActiveStyle.Colors.DisabledBorder, text: TemplateStyling.ActiveStyle.Colors.DisabledText, showFocusRing: true);
     }
 
     private void ApplyPalette(Color fill, Color border, Color text, bool showFocusRing)

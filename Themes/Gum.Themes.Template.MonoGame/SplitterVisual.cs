@@ -23,7 +23,7 @@ public class SplitterVisual : BaseSplitterVisual
     {
         Background.Parent = null;
 
-        _fill = TemplateShapes.Fill(TemplatePalette.Border, cornerRadius: 0f, "SplitterFill");
+        _fill = TemplateShapes.Fill(TemplateStyling.ActiveStyle.Colors.Border, cornerRadius: 0f, "SplitterFill");
         AddChild(_fill);
     }
 }

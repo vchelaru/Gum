@@ -35,7 +35,7 @@ public class ScrollBarThumbVisual : InteractiveGue
         WidthUnits = DimensionUnitType.RelativeToParent;
         HeightUnits = DimensionUnitType.RelativeToParent;
 
-        _body = TemplateShapes.Fill(TemplatePalette.Border, CornerRadius, "ScrollThumbBody");
+        _body = TemplateShapes.Fill(TemplateStyling.ActiveStyle.Colors.Border, CornerRadius, "ScrollThumbBody");
         AddChild(_body);
 
         WireStates();
@@ -48,28 +48,28 @@ public class ScrollBarThumbVisual : InteractiveGue
         AddCategory(_buttonCategory);
 
         Add(_buttonCategory, FrameworkElement.EnabledStateName,
-            () => _body.FillColor = TemplatePalette.Border);
+            () => _body.FillColor = TemplateStyling.ActiveStyle.Colors.Border);
 
         Add(_buttonCategory, FrameworkElement.HighlightedStateName,
-            () => _body.FillColor = TemplatePalette.BorderHover);
+            () => _body.FillColor = TemplateStyling.ActiveStyle.Colors.BorderHover);
 
         Add(_buttonCategory, FrameworkElement.PushedStateName,
-            () => _body.FillColor = TemplatePalette.Muted);
+            () => _body.FillColor = TemplateStyling.ActiveStyle.Colors.Muted);
 
         // No focus ring on a scroll-bar thumb — keyboard scroll focus lives
         // on the scrollable container, not the thumb itself. Match the
         // Enabled / Highlighted look so a focused thumb still de-emphasizes.
         Add(_buttonCategory, FrameworkElement.FocusedStateName,
-            () => _body.FillColor = TemplatePalette.Border);
+            () => _body.FillColor = TemplateStyling.ActiveStyle.Colors.Border);
 
         Add(_buttonCategory, FrameworkElement.HighlightedFocusedStateName,
-            () => _body.FillColor = TemplatePalette.BorderHover);
+            () => _body.FillColor = TemplateStyling.ActiveStyle.Colors.BorderHover);
 
         Add(_buttonCategory, FrameworkElement.DisabledStateName,
-            () => _body.FillColor = TemplatePalette.DisabledBorder);
+            () => _body.FillColor = TemplateStyling.ActiveStyle.Colors.DisabledBorder);
 
         Add(_buttonCategory, FrameworkElement.DisabledFocusedStateName,
-            () => _body.FillColor = TemplatePalette.DisabledBorder);
+            () => _body.FillColor = TemplateStyling.ActiveStyle.Colors.DisabledBorder);
     }
 
     // Duplicated from SliderThumbVisual rather than shared — each thumb visual

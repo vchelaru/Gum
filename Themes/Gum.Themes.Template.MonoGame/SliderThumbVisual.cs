@@ -42,10 +42,10 @@ public class SliderThumbVisual : InteractiveGue
         WidthUnits = DimensionUnitType.Absolute;
         HeightUnits = DimensionUnitType.Absolute;
 
-        _focusRing = TemplateShapes.CircleFocusRing(TemplatePalette.Accent, FocusRingInset, BorderThickness);
+        _focusRing = TemplateShapes.CircleFocusRing(TemplateStyling.ActiveStyle.Colors.Accent, FocusRingInset, BorderThickness);
         AddChild(_focusRing);
 
-        _body = TemplateShapes.FilledCircle(TemplatePalette.Accent, "ThumbBody");
+        _body = TemplateShapes.FilledCircle(TemplateStyling.ActiveStyle.Colors.Accent, "ThumbBody");
         AddChild(_body);
 
         WireStates();
@@ -58,25 +58,25 @@ public class SliderThumbVisual : InteractiveGue
         AddCategory(_buttonCategory);
 
         Add(_buttonCategory, FrameworkElement.EnabledStateName,
-            () => Apply(body: TemplatePalette.Accent, ring: false));
+            () => Apply(body: TemplateStyling.ActiveStyle.Colors.Accent, ring: false));
 
         Add(_buttonCategory, FrameworkElement.HighlightedStateName,
-            () => Apply(body: TemplatePalette.AccentHover, ring: false));
+            () => Apply(body: TemplateStyling.ActiveStyle.Colors.AccentHover, ring: false));
 
         Add(_buttonCategory, FrameworkElement.PushedStateName,
-            () => Apply(body: TemplatePalette.AccentPressed, ring: false));
+            () => Apply(body: TemplateStyling.ActiveStyle.Colors.AccentPressed, ring: false));
 
         Add(_buttonCategory, FrameworkElement.FocusedStateName,
-            () => Apply(body: TemplatePalette.Accent, ring: true));
+            () => Apply(body: TemplateStyling.ActiveStyle.Colors.Accent, ring: true));
 
         Add(_buttonCategory, FrameworkElement.HighlightedFocusedStateName,
-            () => Apply(body: TemplatePalette.AccentHover, ring: true));
+            () => Apply(body: TemplateStyling.ActiveStyle.Colors.AccentHover, ring: true));
 
         Add(_buttonCategory, FrameworkElement.DisabledStateName,
-            () => Apply(body: TemplatePalette.DisabledAccent, ring: false));
+            () => Apply(body: TemplateStyling.ActiveStyle.Colors.DisabledAccent, ring: false));
 
         Add(_buttonCategory, FrameworkElement.DisabledFocusedStateName,
-            () => Apply(body: TemplatePalette.DisabledAccent, ring: true));
+            () => Apply(body: TemplateStyling.ActiveStyle.Colors.DisabledAccent, ring: true));
     }
 
     private static void Add(StateSaveCategory category, string name, System.Action apply)

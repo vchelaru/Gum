@@ -19,7 +19,8 @@ namespace Gum.Themes.Template;
 ///
 /// This is generic theme INFRASTRUCTURE, not the theme's identity: the methods
 /// take the color / radius / thickness as arguments, and the look comes from what
-/// each visual passes in (read from <see cref="TemplatePalette"/>). The file is
+/// each visual passes in (read from <see cref="TemplateStyling.ActiveStyle"/>'s
+/// <see cref="TemplateColors"/>). The file is
 /// part of the template and is copied into each cloned theme - it is deliberately
 /// NOT a shared library, so a theme stays a self-contained reference.
 ///

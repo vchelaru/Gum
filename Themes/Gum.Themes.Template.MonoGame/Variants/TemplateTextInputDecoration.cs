@@ -26,10 +26,6 @@ internal sealed class TemplateTextInputDecoration
     private const float FocusRingInset = 2f;
     private const float FocusRingThickness = 3f;
 
-    // Translucent accent for the soft focus glow.
-    private static readonly Color FocusGlow = new Color(
-        (int)TemplatePalette.Accent.R, (int)TemplatePalette.Accent.G, (int)TemplatePalette.Accent.B, 110);
-
     private readonly RectangleRuntime _focusRing;
     private readonly RectangleRuntime _fill;
     private readonly RectangleRuntime _border;
@@ -43,13 +39,13 @@ internal sealed class TemplateTextInputDecoration
         host.FocusedIndicator.Parent = null;
         host.ClipContainer.Parent = null;
 
-        _focusRing = TemplateShapes.FocusRing(FocusGlow, CornerRadius, FocusRingInset, FocusRingThickness, "TextInputFocusRing");
+        _focusRing = TemplateShapes.FocusRing(TemplateStyling.ActiveStyle.Colors.AccentGlow, CornerRadius, FocusRingInset, FocusRingThickness, "TextInputFocusRing");
         host.AddChild(_focusRing);
 
-        _fill = TemplateShapes.Fill(TemplatePalette.Surface1, CornerRadius, "TextInputFill");
+        _fill = TemplateShapes.Fill(TemplateStyling.ActiveStyle.Colors.Surface1, CornerRadius, "TextInputFill");
         host.AddChild(_fill);
 
-        _border = TemplateShapes.Border(TemplatePalette.Border, CornerRadius, BorderThickness, "TextInputBorder");
+        _border = TemplateShapes.Border(TemplateStyling.ActiveStyle.Colors.Border, CornerRadius, BorderThickness, "TextInputBorder");
         host.AddChild(_border);
 
         // Re-attach the ClipContainer last so text / placeholder / caret / selection
@@ -59,8 +55,8 @@ internal sealed class TemplateTextInputDecoration
         // Typed text uses the quieter BODY family rather than the display default -
         // the demonstration of multi-font support. Drop these two lines (and the
         // BodyFontFamily registration) if your theme uses a single family.
-        host.TextInstance.Font = TemplateTheme.BodyFontFamily;
-        host.PlaceholderTextInstance.Font = TemplateTheme.BodyFontFamily;
+        host.TextInstance.Font = TemplateStyling.ActiveStyle.Text.BodyFontFamily;
+        host.PlaceholderTextInstance.Font = TemplateStyling.ActiveStyle.Text.BodyFontFamily;
 
         WireStates(host);
     }
@@ -71,16 +67,16 @@ internal sealed class TemplateTextInputDecoration
         // The border transitions Border (rest) -> BorderHover (hover hint) -> Accent +
         // focus ring (focused).
         host.States.Enabled.Apply = () => Apply(host,
-            fill: TemplatePalette.Surface1, border: TemplatePalette.Border, text: TemplatePalette.Text, ring: false);
+            fill: TemplateStyling.ActiveStyle.Colors.Surface1, border: TemplateStyling.ActiveStyle.Colors.Border, text: TemplateStyling.ActiveStyle.Colors.Text, ring: false);
 
         host.States.Highlighted.Apply = () => Apply(host,
-            fill: TemplatePalette.Surface1, border: TemplatePalette.BorderHover, text: TemplatePalette.Text, ring: false);
+            fill: TemplateStyling.ActiveStyle.Colors.Surface1, border: TemplateStyling.ActiveStyle.Colors.BorderHover, text: TemplateStyling.ActiveStyle.Colors.Text, ring: false);
 
         host.States.Focused.Apply = () => Apply(host,
-            fill: TemplatePalette.Surface1, border: TemplatePalette.Accent, text: TemplatePalette.Text, ring: true);
+            fill: TemplateStyling.ActiveStyle.Colors.Surface1, border: TemplateStyling.ActiveStyle.Colors.Accent, text: TemplateStyling.ActiveStyle.Colors.Text, ring: true);
 
         host.States.Disabled.Apply = () => Apply(host,
-            fill: TemplatePalette.DisabledFill, border: TemplatePalette.DisabledBorder, text: TemplatePalette.DisabledText, ring: false);
+            fill: TemplateStyling.ActiveStyle.Colors.DisabledFill, border: TemplateStyling.ActiveStyle.Colors.DisabledBorder, text: TemplateStyling.ActiveStyle.Colors.DisabledText, ring: false);
     }
 
     private void Apply(TextBoxBaseVisual host, Color fill, Color border, Color text, bool ring)
@@ -88,9 +84,9 @@ internal sealed class TemplateTextInputDecoration
         _fill.FillColor = fill;
         _border.StrokeColor = border;
         host.TextInstance.Color = text;
-        host.PlaceholderTextInstance.Color = TemplatePalette.Placeholder;
+        host.PlaceholderTextInstance.Color = TemplateStyling.ActiveStyle.Colors.Placeholder;
         host.CaretInstance.Color = text;
-        host.SelectionInstance.Color = TemplatePalette.AccentPressed;
+        host.SelectionInstance.Color = TemplateStyling.ActiveStyle.Colors.AccentPressed;
         _focusRing.Visible = ring;
     }
 }

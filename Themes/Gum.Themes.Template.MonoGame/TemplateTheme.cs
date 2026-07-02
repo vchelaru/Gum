@@ -18,7 +18,8 @@ namespace Gum.Themes.Template;
 /// Entry point for the theme. Call <see cref="Apply"/> once after initializing Gum
 /// to register the bundled fonts, configure the shared
 /// <see cref="Styling.ActiveStyle"/> tokens, and install the theme's visuals as the
-/// default templates for Forms controls. Colors come from <see cref="TemplatePalette"/>.
+/// default templates for Forms controls. Colors come from
+/// <see cref="TemplateStyling.ActiveStyle"/>'s <see cref="TemplateColors"/>.
 /// <para>
 /// This is the clone-to-build theme template - see <c>README.md</c> for the recipe
 /// (rename, palette, fonts, restyle). The code docs here describe what each piece
@@ -27,34 +28,34 @@ namespace Gum.Themes.Template;
 /// </summary>
 public static class TemplateTheme
 {
-    /// <summary>Family name the bundled DISPLAY TTFs are registered under, and the
-    /// theme's default text family (it fills <see cref="Styling.ActiveStyle"/>'s
-    /// Text slots, so controls that don't opt out render in it). Use this as the
-    /// <c>Font</c> value on any TextRuntime to get the display font.
+    /// <summary>
+    /// Fixed family name the bundled DISPLAY TTFs are registered under. Font
+    /// <em>registration</em> is intentionally decoupled from font <em>selection</em>
+    /// (<see cref="TemplateText.FontFamily"/>, mutable) — reassigning the selection
+    /// before <see cref="Apply"/> can never corrupt this registration.
     /// <para>
     /// A theme can ship more than one family. This template demonstrates the common
     /// "display + body" split: a personality face for buttons / labels / titles
-    /// (this <see cref="FontFamily"/>) and a quieter face for typed / list content
-    /// (<see cref="BodyFontFamily"/>). Controls that render entered or tabular text
-    /// opt into the body face explicitly via <c>TextInstance.Font = BodyFontFamily</c>
+    /// (this <see cref="BundledFontFamily"/>) and a quieter face for typed / list
+    /// content (<see cref="BundledBodyFontFamily"/>). Controls that render entered or
+    /// tabular text opt into the body face explicitly via
+    /// <c>TextInstance.Font = TemplateStyling.ActiveStyle.Text.BodyFontFamily</c>
     /// (see TextBox, ComboBox, ListBoxItem, MenuItem, Tooltip in this theme).
     /// </para></summary>
-    public const string FontFamily = "DM Mono";
+    internal const string BundledFontFamily = "DM Mono";
 
-    /// <summary>Family name the bundled BODY TTFs are registered under - the quieter
-    /// face used for typed / list / menu content. Opt into it per visual via
-    /// <c>TextInstance.Font = TemplateTheme.BodyFontFamily</c>; the default is
-    /// <see cref="FontFamily"/>. Delete this (and its registration + the per-visual
-    /// opt-ins) if your design uses a single family.</summary>
-    public const string BodyFontFamily = "Nunito";
+    /// <summary>Fixed family name the bundled BODY TTFs are registered under - the
+    /// quieter face used for typed / list / menu content. Opt into it per visual via
+    /// <c>TextInstance.Font = TemplateStyling.ActiveStyle.Text.BodyFontFamily</c>; the
+    /// default selection is <see cref="BundledFontFamily"/>. Delete this (and its
+    /// registration + the per-visual opt-ins) if your design uses a single family.</summary>
+    internal const string BundledBodyFontFamily = "Nunito";
 
-    /// <summary>Family name the bundled icon font (DejaVu Sans Mono) is registered
-    /// under. Use this for glyphs the body font doesn't cover - check marks, close
-    /// buttons, combo/scrollbar arrows (Dingbats and Geometric Shapes blocks).</summary>
-    public const string IconFontFamily = "DM Mono Icons";
-
-    /// <summary>Default text size used by the theme.</summary>
-    public const int FontSize = 14;
+    /// <summary>Fixed family name the bundled icon font (DejaVu Sans Mono) is
+    /// registered under. See <see cref="BundledFontFamily"/> for why this is a fixed
+    /// constant rather than the mutable <see cref="TemplateText.IconFontFamily"/>
+    /// selection.</summary>
+    internal const string BundledIconFontFamily = "DM Mono Icons";
 
     /// <summary>
     /// Applies the theme: wires KernSmith as the in-memory font creator, registers
@@ -99,24 +100,25 @@ public static class TemplateTheme
     {
         // Display family. DM Mono ships no true 700-weight Bold, so Medium (500)
         // maps to Gum's IsBold slot. Swap these filenames + the family/style
-        // mapping for your font.
-        RegisterEmbeddedFont(FontFamily, "DMMono-Regular.ttf", style: null);
-        RegisterEmbeddedFont(FontFamily, "DMMono-Medium.ttf", style: "Bold");
-        RegisterEmbeddedFont(FontFamily, "DMMono-Italic.ttf", style: "Italic");
-        RegisterEmbeddedFont(FontFamily, "DMMono-MediumItalic.ttf", style: "BoldItalic");
+        // mapping for your font. Registered under the fixed Bundled* constant,
+        // never the mutable TemplateText.FontFamily selection - see BundledFontFamily.
+        RegisterEmbeddedFont(BundledFontFamily, "DMMono-Regular.ttf", style: null);
+        RegisterEmbeddedFont(BundledFontFamily, "DMMono-Medium.ttf", style: "Bold");
+        RegisterEmbeddedFont(BundledFontFamily, "DMMono-Italic.ttf", style: "Italic");
+        RegisterEmbeddedFont(BundledFontFamily, "DMMono-MediumItalic.ttf", style: "BoldItalic");
 
         // Body family (the second family - delete if your design uses one font).
         // Nunito has no italic cut, so the Italic / BoldItalic style slots point at
         // the upright Regular / Bold files: a stray italic request then resolves to
         // a real font (rendered upright) instead of risking a missing-style lookup.
-        RegisterEmbeddedFont(BodyFontFamily, "Nunito-Regular.ttf", style: null);
-        RegisterEmbeddedFont(BodyFontFamily, "Nunito-Bold.ttf", style: "Bold");
-        RegisterEmbeddedFont(BodyFontFamily, "Nunito-Regular.ttf", style: "Italic");
-        RegisterEmbeddedFont(BodyFontFamily, "Nunito-Bold.ttf", style: "BoldItalic");
+        RegisterEmbeddedFont(BundledBodyFontFamily, "Nunito-Regular.ttf", style: null);
+        RegisterEmbeddedFont(BundledBodyFontFamily, "Nunito-Bold.ttf", style: "Bold");
+        RegisterEmbeddedFont(BundledBodyFontFamily, "Nunito-Regular.ttf", style: "Italic");
+        RegisterEmbeddedFont(BundledBodyFontFamily, "Nunito-Bold.ttf", style: "BoldItalic");
 
         // Icon font registered under a distinct family name so visual code addresses
-        // it explicitly via TemplateTheme.IconFontFamily.
-        RegisterEmbeddedFont(IconFontFamily, "DejaVuSansMono.ttf", style: null);
+        // it explicitly via TemplateStyling.ActiveStyle.Text.IconFontFamily.
+        RegisterEmbeddedFont(BundledIconFontFamily, "DejaVuSansMono.ttf", style: null);
     }
 
     private static void RegisterEmbeddedFont(string family, string fileName, string? style)
@@ -150,15 +152,20 @@ public static class TemplateTheme
         ThemePlatform.RegisterFont(family, fontBytes, style);
     }
 
-    private static void ConfigureStyling()
+    // Internal (not private) so Tests/Gum.Themes.Tests can exercise the guardrail-token sync
+    // (TextPrimary/TextMuted/Primary/Accent → V3.Styling.ActiveStyle.Colors) without going
+    // through Apply(), which requires a real GraphicsDevice for font wiring and can't run
+    // headlessly in a unit test. See Gum.Themes.Template.MonoGame.csproj's InternalsVisibleTo.
+    internal static void ConfigureStyling()
     {
         Styling styling = Styling.ActiveStyle;
+        TemplateText text = TemplateStyling.ActiveStyle.Text;
 
         styling.Text.Normal.Clear();
         styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = FontFamily });
+            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
         styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = FontSize });
+            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
         styling.Text.Normal.Variables.Add(
             new VariableSave { Name = "IsBold", Type = "bool", Value = false });
         styling.Text.Normal.Variables.Add(
@@ -166,21 +173,23 @@ public static class TemplateTheme
 
         styling.Text.Strong.Clear();
         styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = FontFamily });
+            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
         styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = FontSize });
+            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
         styling.Text.Strong.Variables.Add(
             new VariableSave { Name = "IsBold", Type = "bool", Value = true });
         styling.Text.Strong.Variables.Add(
             new VariableSave { Name = "IsItalic", Type = "bool", Value = false });
 
-        // The four Styling.Colors slots that overlap with V3's vocabulary. The rest of
-        // the palette is read directly from TemplatePalette by the visuals. These four
-        // also color the controls left at their stock V3 visual (e.g. Label).
-        styling.Colors.TextPrimary = TemplatePalette.Text;
-        styling.Colors.TextMuted = TemplatePalette.Muted;
-        styling.Colors.Primary = TemplatePalette.Surface1;
-        styling.Colors.Accent = TemplatePalette.Accent;
+        // The four Styling.Colors slots that overlap with V3's vocabulary; they also color
+        // the controls left at their stock V3 visual (e.g. Label). We push only the 4-token
+        // guardrail (TextPrimary, TextMuted, Primary, Accent) and the visuals read the rest
+        // of the palette from TemplateStyling.ActiveStyle.Colors directly.
+        TemplateColors colors = TemplateStyling.ActiveStyle.Colors;
+        styling.Colors.TextPrimary = colors.TextPrimary;
+        styling.Colors.TextMuted = colors.TextMuted;
+        styling.Colors.Primary = colors.Primary;
+        styling.Colors.Accent = colors.Accent;
     }
 
     private static void RegisterVisuals()

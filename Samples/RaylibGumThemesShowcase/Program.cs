@@ -72,7 +72,7 @@ public static class Program
             new ThemeOption("Meadow", MeadowTheme.Apply, MeadowStyling.ActiveStyle.Colors.Cream),
             new ThemeOption("Neon", NeonTheme.Apply, NeonStyling.ActiveStyle.Colors.Background),
             new ThemeOption("Retro 95", Retro95Theme.Apply, Retro95Styling.ActiveStyle.Colors.Surface),
-            new ThemeOption("Template", TemplateTheme.Apply, TemplatePalette.Background),
+            new ThemeOption("Template", TemplateTheme.Apply, TemplateStyling.ActiveStyle.Colors.Background),
         };
 
         _currentScreenFactory = () => new AllControlsScreen();

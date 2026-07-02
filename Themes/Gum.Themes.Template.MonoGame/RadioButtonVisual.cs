@@ -79,7 +79,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         circle.WidthUnits = DimensionUnitType.Absolute;
         circle.HeightUnits = DimensionUnitType.Absolute;
         circle.IsFilled = true;
-        circle.FillColor = TemplatePalette.Surface1;
+        circle.FillColor = TemplateStyling.ActiveStyle.Colors.Surface1;
         circle.StrokeWidth = 0;
         return circle;
     }
@@ -101,7 +101,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         circle.IsFilled = false;
         circle.StrokeWidth = BorderThickness;
         circle.StrokeWidthUnits = DimensionUnitType.Absolute;
-        circle.StrokeColor = TemplatePalette.Border;
+        circle.StrokeColor = TemplateStyling.ActiveStyle.Colors.Border;
         return circle;
     }
 
@@ -125,7 +125,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         ring.IsFilled = false;
         ring.StrokeWidth = BorderThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = TemplatePalette.Accent;
+        ring.StrokeColor = TemplateStyling.ActiveStyle.Colors.Accent;
         ring.Visible = false;
         return ring;
     }
@@ -149,7 +149,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         dot.WidthUnits = DimensionUnitType.Absolute;
         dot.HeightUnits = DimensionUnitType.Absolute;
         dot.IsFilled = true;
-        dot.FillColor = TemplatePalette.Accent;
+        dot.FillColor = TemplateStyling.ActiveStyle.Colors.Accent;
         dot.StrokeWidth = 0;
         dot.Visible = false;
         return dot;
@@ -159,75 +159,75 @@ public class RadioButtonVisual : BaseRadioButtonVisual
     {
         // -------- Unselected (Off) --------
         States.EnabledOff.Apply = () => Apply(
-            fill: TemplatePalette.Surface1, border: TemplatePalette.Border,
-            text: TemplatePalette.Text, innerVisible: false, ring: false);
+            fill: TemplateStyling.ActiveStyle.Colors.Surface1, border: TemplateStyling.ActiveStyle.Colors.Border,
+            text: TemplateStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: false);
 
         // Border tracks interaction state only — the inner dot alone signals
         // value. Hover/Highlighted gets BorderHover (matching TextBox's softer
         // hover→focus progression), focus drives Accent + ring, and the same
         // pattern is mirrored on On below.
         States.HighlightedOff.Apply = () => Apply(
-            fill: TemplatePalette.Surface2, border: TemplatePalette.BorderHover,
-            text: TemplatePalette.Text, innerVisible: false, ring: false);
+            fill: TemplateStyling.ActiveStyle.Colors.Surface2, border: TemplateStyling.ActiveStyle.Colors.BorderHover,
+            text: TemplateStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: false);
 
         States.FocusedOff.Apply = () => Apply(
-            fill: TemplatePalette.Surface1, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, innerVisible: false, ring: true);
+            fill: TemplateStyling.ActiveStyle.Colors.Surface1, border: TemplateStyling.ActiveStyle.Colors.Accent,
+            text: TemplateStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: true);
 
         States.HighlightedFocusedOff.Apply = () => Apply(
-            fill: TemplatePalette.Surface2, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, innerVisible: false, ring: true);
+            fill: TemplateStyling.ActiveStyle.Colors.Surface2, border: TemplateStyling.ActiveStyle.Colors.Accent,
+            text: TemplateStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: true);
 
         States.PushedOff.Apply = () => Apply(
-            fill: TemplatePalette.PressedFill, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, innerVisible: false, ring: false);
+            fill: TemplateStyling.ActiveStyle.Colors.PressedFill, border: TemplateStyling.ActiveStyle.Colors.Accent,
+            text: TemplateStyling.ActiveStyle.Colors.Text, innerVisible: false, ring: false);
 
         States.DisabledOff.Apply = () => Apply(
-            fill: TemplatePalette.DisabledFill, border: TemplatePalette.DisabledBorder,
-            text: TemplatePalette.DisabledText, innerVisible: false, ring: false);
+            fill: TemplateStyling.ActiveStyle.Colors.DisabledFill, border: TemplateStyling.ActiveStyle.Colors.DisabledBorder,
+            text: TemplateStyling.ActiveStyle.Colors.DisabledText, innerVisible: false, ring: false);
 
         States.DisabledFocusedOff.Apply = () => Apply(
-            fill: TemplatePalette.DisabledFill, border: TemplatePalette.DisabledBorder,
-            text: TemplatePalette.DisabledText, innerVisible: false, ring: true);
+            fill: TemplateStyling.ActiveStyle.Colors.DisabledFill, border: TemplateStyling.ActiveStyle.Colors.DisabledBorder,
+            text: TemplateStyling.ActiveStyle.Colors.DisabledText, innerVisible: false, ring: true);
 
         // -------- Selected (On) --------
         // Border mirrors the Off variants exactly — the value is communicated solely
         // by the accent dot inside. Off and On look identical in chrome; the dot is
         // the only difference.
         States.EnabledOn.Apply = () => Apply(
-            fill: TemplatePalette.Surface1, border: TemplatePalette.Border,
-            text: TemplatePalette.Text, innerVisible: true, innerColor: TemplatePalette.Accent,
+            fill: TemplateStyling.ActiveStyle.Colors.Surface1, border: TemplateStyling.ActiveStyle.Colors.Border,
+            text: TemplateStyling.ActiveStyle.Colors.Text, innerVisible: true, innerColor: TemplateStyling.ActiveStyle.Colors.Accent,
             ring: false);
 
         States.HighlightedOn.Apply = () => Apply(
-            fill: TemplatePalette.Surface2, border: TemplatePalette.BorderHover,
-            text: TemplatePalette.Text, innerVisible: true, innerColor: TemplatePalette.Accent,
+            fill: TemplateStyling.ActiveStyle.Colors.Surface2, border: TemplateStyling.ActiveStyle.Colors.BorderHover,
+            text: TemplateStyling.ActiveStyle.Colors.Text, innerVisible: true, innerColor: TemplateStyling.ActiveStyle.Colors.Accent,
             ring: false);
 
         States.FocusedOn.Apply = () => Apply(
-            fill: TemplatePalette.Surface1, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, innerVisible: true, innerColor: TemplatePalette.Accent,
+            fill: TemplateStyling.ActiveStyle.Colors.Surface1, border: TemplateStyling.ActiveStyle.Colors.Accent,
+            text: TemplateStyling.ActiveStyle.Colors.Text, innerVisible: true, innerColor: TemplateStyling.ActiveStyle.Colors.Accent,
             ring: true);
 
         States.HighlightedFocusedOn.Apply = () => Apply(
-            fill: TemplatePalette.Surface2, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, innerVisible: true, innerColor: TemplatePalette.Accent,
+            fill: TemplateStyling.ActiveStyle.Colors.Surface2, border: TemplateStyling.ActiveStyle.Colors.Accent,
+            text: TemplateStyling.ActiveStyle.Colors.Text, innerVisible: true, innerColor: TemplateStyling.ActiveStyle.Colors.Accent,
             ring: true);
 
         States.PushedOn.Apply = () => Apply(
-            fill: TemplatePalette.PressedFill, border: TemplatePalette.Accent,
-            text: TemplatePalette.Text, innerVisible: true, innerColor: TemplatePalette.Accent,
+            fill: TemplateStyling.ActiveStyle.Colors.PressedFill, border: TemplateStyling.ActiveStyle.Colors.Accent,
+            text: TemplateStyling.ActiveStyle.Colors.Text, innerVisible: true, innerColor: TemplateStyling.ActiveStyle.Colors.Accent,
             ring: false);
 
         States.DisabledOn.Apply = () => Apply(
-            fill: TemplatePalette.DisabledFill, border: TemplatePalette.DisabledBorder,
-            text: TemplatePalette.DisabledText, innerVisible: true,
-            innerColor: TemplatePalette.DisabledText, ring: false);
+            fill: TemplateStyling.ActiveStyle.Colors.DisabledFill, border: TemplateStyling.ActiveStyle.Colors.DisabledBorder,
+            text: TemplateStyling.ActiveStyle.Colors.DisabledText, innerVisible: true,
+            innerColor: TemplateStyling.ActiveStyle.Colors.DisabledText, ring: false);
 
         States.DisabledFocusedOn.Apply = () => Apply(
-            fill: TemplatePalette.DisabledFill, border: TemplatePalette.DisabledBorder,
-            text: TemplatePalette.DisabledText, innerVisible: true,
-            innerColor: TemplatePalette.DisabledText, ring: true);
+            fill: TemplateStyling.ActiveStyle.Colors.DisabledFill, border: TemplateStyling.ActiveStyle.Colors.DisabledBorder,
+            text: TemplateStyling.ActiveStyle.Colors.DisabledText, innerVisible: true,
+            innerColor: TemplateStyling.ActiveStyle.Colors.DisabledText, ring: true);
     }
 
     private void Apply(Color fill, Color border, Color text, bool innerVisible, bool ring,

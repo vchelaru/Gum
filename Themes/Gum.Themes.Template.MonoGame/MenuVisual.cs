@@ -28,7 +28,7 @@ public class MenuVisual : BaseMenuVisual
         Background.Parent = null;
         InnerPanelInstance.Parent = null;
 
-        _fill = TemplateShapes.Fill(TemplatePalette.Surface1, cornerRadius: 0f, "MenuFill");
+        _fill = TemplateShapes.Fill(TemplateStyling.ActiveStyle.Colors.Surface1, cornerRadius: 0f, "MenuFill");
         AddChild(_fill);
 
         // Bottom hairline is an edge-anchored strip, not a full-parent shape, so
@@ -54,7 +54,7 @@ public class MenuVisual : BaseMenuVisual
         separator.WidthUnits = DimensionUnitType.RelativeToParent;
         separator.HeightUnits = DimensionUnitType.Absolute;
         separator.IsFilled = true;
-        separator.FillColor = TemplatePalette.Border;
+        separator.FillColor = TemplateStyling.ActiveStyle.Colors.Border;
         separator.StrokeWidth = 0;
         return separator;
     }

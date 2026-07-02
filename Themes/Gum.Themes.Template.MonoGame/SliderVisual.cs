@@ -45,7 +45,7 @@ public class SliderVisual : BaseSliderVisual
         // overridden; the fill bar is left-anchored percentage geometry, built inline.
         TrackBackground.Parent = null;
 
-        _track = TemplateShapes.Fill(TemplatePalette.Surface2, TrackCornerRadius, "SliderTrack");
+        _track = TemplateShapes.Fill(TemplateStyling.ActiveStyle.Colors.Surface2, TrackCornerRadius, "SliderTrack");
         _track.Height = TrackHeight;
         _track.HeightUnits = DimensionUnitType.Absolute;
         TrackInstance.AddChild(_track);
@@ -53,7 +53,7 @@ public class SliderVisual : BaseSliderVisual
         _fill = CreateFillBar();
         TrackInstance.AddChild(_fill);
 
-        _trackBorder = TemplateShapes.Border(TemplatePalette.Border, TrackCornerRadius, BorderThickness, "SliderTrackBorder");
+        _trackBorder = TemplateShapes.Border(TemplateStyling.ActiveStyle.Colors.Border, TrackCornerRadius, BorderThickness, "SliderTrackBorder");
         _trackBorder.Height = TrackHeight;
         _trackBorder.HeightUnits = DimensionUnitType.Absolute;
         TrackInstance.AddChild(_trackBorder);
@@ -141,20 +141,20 @@ public class SliderVisual : BaseSliderVisual
         fill.HeightUnits = DimensionUnitType.Absolute;
         fill.CornerRadius = TrackCornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = TemplatePalette.Accent;
+        fill.FillColor = TemplateStyling.ActiveStyle.Colors.Accent;
         fill.StrokeWidth = 0;
         return fill;
     }
 
     private void WireStates()
     {
-        States.Enabled.Apply = () => ApplyTrack(TemplatePalette.Surface2, TemplatePalette.Border, TemplatePalette.Accent);
-        States.Highlighted.Apply = () => ApplyTrack(TemplatePalette.Surface2, TemplatePalette.Border, TemplatePalette.Accent);
-        States.HighlightedFocused.Apply = () => ApplyTrack(TemplatePalette.Surface2, TemplatePalette.Border, TemplatePalette.Accent);
-        States.Focused.Apply = () => ApplyTrack(TemplatePalette.Surface2, TemplatePalette.Border, TemplatePalette.Accent);
-        States.Pushed.Apply = () => ApplyTrack(TemplatePalette.Surface2, TemplatePalette.Border, TemplatePalette.Accent);
-        States.Disabled.Apply = () => ApplyTrack(TemplatePalette.DisabledFill, TemplatePalette.DisabledBorder, TemplatePalette.DisabledAccent);
-        States.DisabledFocused.Apply = () => ApplyTrack(TemplatePalette.DisabledFill, TemplatePalette.DisabledBorder, TemplatePalette.DisabledAccent);
+        States.Enabled.Apply = () => ApplyTrack(TemplateStyling.ActiveStyle.Colors.Surface2, TemplateStyling.ActiveStyle.Colors.Border, TemplateStyling.ActiveStyle.Colors.Accent);
+        States.Highlighted.Apply = () => ApplyTrack(TemplateStyling.ActiveStyle.Colors.Surface2, TemplateStyling.ActiveStyle.Colors.Border, TemplateStyling.ActiveStyle.Colors.Accent);
+        States.HighlightedFocused.Apply = () => ApplyTrack(TemplateStyling.ActiveStyle.Colors.Surface2, TemplateStyling.ActiveStyle.Colors.Border, TemplateStyling.ActiveStyle.Colors.Accent);
+        States.Focused.Apply = () => ApplyTrack(TemplateStyling.ActiveStyle.Colors.Surface2, TemplateStyling.ActiveStyle.Colors.Border, TemplateStyling.ActiveStyle.Colors.Accent);
+        States.Pushed.Apply = () => ApplyTrack(TemplateStyling.ActiveStyle.Colors.Surface2, TemplateStyling.ActiveStyle.Colors.Border, TemplateStyling.ActiveStyle.Colors.Accent);
+        States.Disabled.Apply = () => ApplyTrack(TemplateStyling.ActiveStyle.Colors.DisabledFill, TemplateStyling.ActiveStyle.Colors.DisabledBorder, TemplateStyling.ActiveStyle.Colors.DisabledAccent);
+        States.DisabledFocused.Apply = () => ApplyTrack(TemplateStyling.ActiveStyle.Colors.DisabledFill, TemplateStyling.ActiveStyle.Colors.DisabledBorder, TemplateStyling.ActiveStyle.Colors.DisabledAccent);
     }
 
     private void ApplyTrack(Color trackFill, Color border, Color fillBar)

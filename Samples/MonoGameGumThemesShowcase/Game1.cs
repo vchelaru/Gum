@@ -90,7 +90,7 @@ public class Game1 : Game
             new ThemeOption("Retro 95", Retro95Theme.Apply, Retro95Styling.ActiveStyle.Colors.Surface),
             new ThemeOption("Hazard", HazardTheme.Apply, HazardStyling.ActiveStyle.Colors.Background),
             new ThemeOption("Meadow", MeadowTheme.Apply, MeadowStyling.ActiveStyle.Colors.Cream),
-            new ThemeOption("Template Theme", TemplateTheme.Apply, TemplatePalette.Background),
+            new ThemeOption("Template Theme", TemplateTheme.Apply, TemplateStyling.ActiveStyle.Colors.Background),
         };
 
         // F1: all controls. F2: screenshot panel.
