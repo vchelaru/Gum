@@ -227,7 +227,7 @@ ForestGladeTheme.Apply();
 {% endtabs %}
 
 {% hint style="info" %}
-For the intended look, clear the back buffer to `ForestGladeColors.CanopyDeep`.
+For the intended look, clear the back buffer to `ForestGladeStyling.ActiveStyle.Colors.CanopyDeep`.
 {% endhint %}
 
 ### Neon
@@ -273,7 +273,7 @@ NeonTheme.Apply();
 {% endtabs %}
 
 {% hint style="info" %}
-For the intended look, clear the back buffer to `NeonColors.Background` (`#060612`).
+For the intended look, clear the back buffer to `NeonStyling.ActiveStyle.Colors.Background` (`#060612`).
 {% endhint %}
 
 ### Retro95
@@ -361,7 +361,7 @@ MeadowTheme.Apply();
 {% endtabs %}
 
 {% hint style="info" %}
-For the intended look, clear the back buffer to `MeadowColors.Cream` (`#F7EDD6`).
+For the intended look, clear the back buffer to `MeadowStyling.ActiveStyle.Colors.Cream` (`#F7EDD6`).
 {% endhint %}
 
 ### Hazard
@@ -407,7 +407,7 @@ HazardTheme.Apply();
 {% endtabs %}
 
 {% hint style="info" %}
-For the intended look, clear the back buffer to `HazardPalette.Background` (`#0A0A08`).
+For the intended look, clear the back buffer to `HazardStyling.ActiveStyle.Colors.Background` (`#0A0A08`).
 {% endhint %}
 
 ## Fonts and licensing
