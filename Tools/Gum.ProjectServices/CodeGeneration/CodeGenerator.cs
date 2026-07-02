@@ -315,13 +315,13 @@ public class CodeGenerator
     /// <summary>
     /// Returns the namespace generated code should import for the runtime's setup/boot API
     /// (<c>GumService</c>, and — below version 3 — the <c>AddChild</c> extension crutch).
-    /// Version &lt; 3 emits the legacy back-compat shim namespace for the target platform
-    /// (<c>MonoGameGum</c>, or <c>RaylibGum</c> when <paramref name="isRaylib"/> is set —
-    /// see <c>GumServiceCompat.cs</c>'s <c>#if XNALIKE</c> / <c>#elif RAYLIB</c> split);
-    /// version &gt;= 3 emits <c>Gum</c>, where <c>GumService</c> lives as of issue #3119.
+    /// Version &lt; 3 emits the legacy <c>MonoGameGum</c> back-compat shim namespace; version
+    /// &gt;= 3 emits <c>Gum</c>, where <c>GumService</c> lives as of issue #3119. Raylib codegen
+    /// never resolves below version 3 (see <see cref="ResolveSyntaxVersion"/>), so it always
+    /// takes the unified branch and never needs the legacy <c>RaylibGum</c> shim namespace here.
     /// </summary>
-    public static string GetGumServiceNamespace(int syntaxVersion, bool isRaylib = false) =>
-        syntaxVersion >= 3 ? "Gum" : (isRaylib ? "RaylibGum" : "MonoGameGum");
+    public static string GetGumServiceNamespace(int syntaxVersion) =>
+        syntaxVersion >= 3 ? "Gum" : "MonoGameGum";
 
     /// <summary>
     /// True for the <see cref="OutputLibrary"/> values whose generated code targets Gum's
@@ -358,11 +358,14 @@ public class CodeGenerator
     /// parsing <see cref="CodeOutputProjectSettings.SyntaxVersion"/> directly (treating
     /// auto-detect <c>"*"</c> as version 0) when no detection service is wired in.
     /// <para>
-    /// Raylib codegen never had a legacy (pre-unification) namespace scheme to preserve — the
-    /// Raylib runtime only exists at the unified <c>Gum.GueDeriving</c> namespace — so this floors
-    /// the resolved version at 1 for <see cref="OutputLibrary.Raylib"/> regardless of what
-    /// auto-detection or an explicit (legacy) <see cref="CodeOutputProjectSettings.SyntaxVersion"/>
-    /// would otherwise report.
+    /// Raylib codegen never existed at any legacy (pre-unification) namespace scheme — the
+    /// Raylib runtime only ever exposed the fully unified <c>Gum.GueDeriving</c>/<c>GumService</c>
+    /// surface — so this floors the resolved version at 3 (the highest namespace-unification
+    /// threshold any generator check uses) for <see cref="OutputLibrary.Raylib"/> regardless of
+    /// what auto-detection or an explicit (legacy) <see cref="CodeOutputProjectSettings.SyntaxVersion"/>
+    /// would otherwise report. Flooring at the max threshold rather than the minimum needed (1)
+    /// means Raylib never takes any legacy branch anywhere in the generator, so those branches
+    /// never need Raylib-specific handling.
     /// </para>
     /// </summary>
     internal int ResolveSyntaxVersion(CodeOutputProjectSettings projectSettings)
@@ -384,9 +387,9 @@ public class CodeGenerator
             version = 0;
         }
 
-        if (projectSettings.OutputLibrary == OutputLibrary.Raylib && version < 1)
+        if (projectSettings.OutputLibrary == OutputLibrary.Raylib && version < 3)
         {
-            version = 1;
+            version = 3;
         }
 
         return version;
@@ -429,7 +432,7 @@ public class CodeGenerator
         if (UsesUnifiedGumRuntime(projectSettings.OutputLibrary) ||
             projectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
         {
-            neededUsings.Add(GetGumServiceNamespace(resolvedSyntaxVersion, isRaylib: projectSettings.OutputLibrary == OutputLibrary.Raylib));
+            neededUsings.Add(GetGumServiceNamespace(resolvedSyntaxVersion));
             neededUsings.Add(GetGueDerivingNamespace(resolvedSyntaxVersion, isSkia: false));
         }
 

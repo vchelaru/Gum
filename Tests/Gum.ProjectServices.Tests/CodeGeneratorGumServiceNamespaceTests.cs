@@ -74,25 +74,6 @@ public class CodeGeneratorGumServiceNamespaceTests : BaseTestClass
         result.ShouldBe("Gum");
     }
 
-    [Fact]
-    public void GetGumServiceNamespace_RaylibVersion1_ReturnsRaylibGum()
-    {
-        // Raylib's back-compat shim lives in the RaylibGum namespace (GumServiceCompat.cs's
-        // #elif RAYLIB branch), not MonoGameGum — using the MonoGame shim namespace would not
-        // compile against RaylibGum.
-        string result = CodeGenerator.GetGumServiceNamespace(syntaxVersion: 1, isRaylib: true);
-
-        result.ShouldBe("RaylibGum");
-    }
-
-    [Fact]
-    public void GetGumServiceNamespace_RaylibVersion3_ReturnsGum()
-    {
-        string result = CodeGenerator.GetGumServiceNamespace(syntaxVersion: 3, isRaylib: true);
-
-        result.ShouldBe("Gum");
-    }
-
     #endregion
 
     #region CollectUsingNamespaces
@@ -170,8 +151,10 @@ public class CodeGeneratorGumServiceNamespaceTests : BaseTestClass
     }
 
     [Fact]
-    public void CollectUsingNamespaces_RaylibVersion1_EmitsRaylibGumUsing()
+    public void CollectUsingNamespaces_RaylibVersion3_EmitsGumUsing()
     {
+        // Raylib codegen's resolved syntax version always floors to 3 (see
+        // ResolveSyntaxVersion), so this is the only reachable version for Raylib in practice.
         ComponentSave component = new ComponentSave { Name = "Widgets/Host" };
         Project.Components.Add(component);
         ObjectFinder.Self.GumProjectSave = Project;
@@ -187,10 +170,11 @@ public class CodeGeneratorGumServiceNamespaceTests : BaseTestClass
             component,
             elementSettings: null,
             settings,
-            resolvedSyntaxVersion: 1);
+            resolvedSyntaxVersion: 3);
 
-        usings.ShouldContain("RaylibGum");
+        usings.ShouldContain("Gum");
         usings.ShouldNotContain("MonoGameGum");
+        usings.ShouldNotContain("RaylibGum");
     }
 
     #endregion

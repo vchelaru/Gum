@@ -206,10 +206,12 @@ public class CodeGeneratorSyntaxVersionNamespaceTests
     }
 
     [Fact]
-    public void ResolveSyntaxVersion_Raylib_WithNoExplicitVersion_FloorsToVersion1()
+    public void ResolveSyntaxVersion_Raylib_WithNoExplicitVersion_FloorsToVersion3()
     {
-        // Raylib codegen only ever existed at the unified namespace scheme, so auto-detect's
-        // legacy version-0 fallback must be floored to 1 for Raylib specifically.
+        // Raylib codegen only ever existed at the fully unified namespace scheme, so it floors
+        // to version 3 (not just 1) — the highest threshold any generator check uses — so Raylib
+        // never takes a legacy branch anywhere, regardless of auto-detection or an explicit
+        // (legacy) SyntaxVersion setting.
         Mock<INameVerifier> mockNameVerifier = new Mock<INameVerifier>();
         CodeGenerationNameVerifier codeGenNameVerifier = new CodeGenerationNameVerifier(mockNameVerifier.Object);
         FixedProjectDirectoryProvider directoryProvider = new FixedProjectDirectoryProvider(projectDirectory: null);
@@ -230,7 +232,36 @@ public class CodeGeneratorSyntaxVersionNamespaceTests
 
         int result = generator.ResolveSyntaxVersion(settings);
 
-        result.ShouldBe(1);
+        result.ShouldBe(3);
+    }
+
+    [Fact]
+    public void ResolveSyntaxVersion_Raylib_WithExplicitLegacyVersion_FloorsToVersion3()
+    {
+        // An explicit legacy SyntaxVersion (e.g. "2", perhaps carried over from a project's
+        // MonoGame settings) is still overridden to 3 for Raylib — there is no legacy Raylib
+        // namespace scheme to honor by respecting the lower explicit value.
+        Mock<INameVerifier> mockNameVerifier = new Mock<INameVerifier>();
+        CodeGenerationNameVerifier codeGenNameVerifier = new CodeGenerationNameVerifier(mockNameVerifier.Object);
+        FixedProjectDirectoryProvider directoryProvider = new FixedProjectDirectoryProvider(projectDirectory: null);
+        CodeOutputElementSettingsManager elementSettingsManager = new CodeOutputElementSettingsManager(directoryProvider);
+        Gum.Localization.LocalizationService localizationService = new Gum.Localization.LocalizationService();
+
+        CodeGenerator generator = new CodeGenerator(
+            codeGenNameVerifier,
+            localizationService,
+            elementSettingsManager,
+            directoryProvider);
+
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            OutputLibrary = OutputLibrary.Raylib,
+            SyntaxVersion = "2"
+        };
+
+        int result = generator.ResolveSyntaxVersion(settings);
+
+        result.ShouldBe(3);
     }
 
     [Fact]
