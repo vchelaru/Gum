@@ -41,8 +41,7 @@ internal class RenderTargetScreen : FrameworkElement
         root.Children.Add(BuildCell("Additive group", BuildAdditiveGroup()));
         root.Children.Add(BuildCell("Nested RT + sibling", BuildNestedWithSibling()));
         root.Children.Add(BuildCell("Overflow clipped", BuildOverflow()));
-        // clip-inside-RT: deferred, see #3440 (fails under CI software GL) — cell removed so the
-        // sample doesn't show a ClipsChildren descendant rendering unclipped inside a render target.
+        root.Children.Add(BuildCell("ClipsChildren inside RT", BuildClipsChildrenInside()));
     }
 
     static ContainerRuntime BuildCell(string caption, GraphicalUiElement body)
@@ -258,7 +257,34 @@ internal class RenderTargetScreen : FrameworkElement
         return holder;
     }
 
-    // clip-inside-RT: deferred, see #3440. A "ClipsChildren descendant inside an RT" cell used to
-    // live here, but that case is unsupported (fails under CI software GL), so it was removed rather
-    // than show a descendant rendering unclipped.
+    // A ClipsChildren descendant inside the render target. The clip container is the left half; its
+    // over-wide red child must be clipped to that half within the baked texture (#3440). The clip
+    // rect is rebased into RT-local space during the bake, so it lands correctly on both hardware GL
+    // and software GL (Mesa llvmpipe).
+    static GraphicalUiElement BuildClipsChildrenInside()
+    {
+        ContainerRuntime holder = BuildFrame(150, 110);
+
+        ContainerRuntime group = new();
+        group.Width = 150;
+        group.Height = 110;
+        group.IsRenderTarget = true;
+
+        ContainerRuntime clip = new();
+        clip.X = 10;
+        clip.Y = 10;
+        clip.Width = 65;
+        clip.Height = 90;
+        clip.ClipsChildren = true;
+        clip.Children.Add(Rect(0, 0, 260, 90, new Color((byte)220, (byte)60, (byte)60, (byte)255)));
+
+        // A marker on the right proves the render target itself extends past the clip region.
+        ColoredRectangleRuntime marker =
+            Rect(95, 10, 45, 90, new Color((byte)60, (byte)120, (byte)220, (byte)255));
+
+        group.Children.Add(clip);
+        group.Children.Add(marker);
+        holder.Children.Add(group);
+        return holder;
+    }
 }

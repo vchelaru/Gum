@@ -38,8 +38,7 @@ internal class RenderTargetScreen : FrameworkElement
         root.AddChild(BuildCell("Additive group", BuildAdditiveGroup()));
         root.AddChild(BuildCell("Nested RT + sibling", BuildNestedWithSibling()));
         root.AddChild(BuildCell("Overflow clipped", BuildOverflow()));
-        // clip-inside-RT: deferred, see #3440 — cell kept out to stay parallel with the raylib
-        // sample, where a ClipsChildren descendant inside a render target renders unclipped.
+        root.AddChild(BuildCell("ClipsChildren inside RT", BuildClipsChildrenInside()));
     }
 
     private static ContainerRuntime BuildCell(string caption, GraphicalUiElement body)
@@ -249,6 +248,31 @@ internal class RenderTargetScreen : FrameworkElement
         return holder;
     }
 
-    // clip-inside-RT: deferred, see #3440. A "ClipsChildren descendant inside an RT" cell used to
-    // live here; kept out to stay parallel with the raylib sample, where that case is unsupported.
+    // A ClipsChildren descendant inside the render target. The clip container is the left half; its
+    // over-wide red child must be clipped to that half within the baked texture (#3440).
+    private static GraphicalUiElement BuildClipsChildrenInside()
+    {
+        var holder = BuildFrame(150, 110);
+
+        var group = new ContainerRuntime();
+        group.Width = 150;
+        group.Height = 110;
+        group.IsRenderTarget = true;
+
+        var clip = new ContainerRuntime();
+        clip.X = 10;
+        clip.Y = 10;
+        clip.Width = 65;
+        clip.Height = 90;
+        clip.ClipsChildren = true;
+        clip.AddChild(Rect(0, 0, 260, 90, new Color(220, 60, 60, 255)));
+
+        // A marker on the right proves the render target itself extends past the clip region.
+        var marker = Rect(95, 10, 45, 90, new Color(60, 120, 220, 255));
+
+        group.AddChild(clip);
+        group.AddChild(marker);
+        holder.AddChild(group);
+        return holder;
+    }
 }
