@@ -221,16 +221,20 @@ internal class RenderTargetScreen : FrameworkElement
     }
 
     // The render target is sized to the container's bounds, so a child larger than the container is
-    // truncated to it. A checkerboard larger than the 90x90 target, offset so its cells are cut
-    // mid-cell at the boundary, makes the truncation unmistakable: full cells inside, partial cells
-    // sliced at the target edge, and clean frame margin beyond (the pattern simply stops at the
-    // boundary). A solid rect would just look like a smaller rect. This is texture-size truncation,
-    // not the ClipsChildren scissor path (#3440).
+    // truncated to it. An OUTLINED circle bigger than the 90x90 target makes the truncation
+    // unmistakable: the top-left arc curves inside the target while the right/bottom of the ring is
+    // sliced dead flat at the container boundary, with no green beyond. A curve cut to a straight edge
+    // reads as "clipped" in a way a rectangle (which just looks like a smaller rectangle) never can.
+    // This is texture-size truncation, not the ClipsChildren scissor path (#3440).
     //
-    // NOTE: these comparison cells must use only primitives that render identically on both backends
-    // with no extra dependencies — i.e. solid ColoredRectangleRuntime. Do NOT use CircleRuntime /
-    // RoundedRectangleRuntime here: they route through Apos.Shapes, which the MonoGameGumInCode sample
-    // does not reference, so they'd render on raylib but not MonoGame — misleading in a comparison.
+    // NOTE: use an OUTLINE circle (leave IsFilled off, set Color for the ring). It must render the
+    // same on both backends: MonoGame's CircleRuntime is backed by the core SpriteBatch LineCircle,
+    // which draws an outline only (no Apos.Shapes needed), and raylib's CircleRuntime defaults to a
+    // stroke-only outline too. A FILLED circle would render filled on raylib but only as an outline on
+    // MonoGame — a mismatch that misleads in a comparison.
+    // Set the ring via Color, NOT StrokeColor: MonoGame's core LineCircle exposes only Color, so
+    // StrokeColor is raylib/Sokol-only and switching to it would break the MonoGame build. Ignore the
+    // CS0618 deprecation on Color here — it does not apply to this outline-only cross-backend case.
     static GraphicalUiElement BuildOverflow()
     {
         ContainerRuntime holder = BuildFrame(150, 110);
@@ -242,33 +246,16 @@ internal class RenderTargetScreen : FrameworkElement
         group.Height = 90;
         group.IsRenderTarget = true;
 
-        ContainerRuntime board =
-            BuildCheckerboard(8, 8, 22, new Color((byte)80, (byte)200, (byte)120, (byte)255),
-                new Color((byte)230, (byte)150, (byte)40, (byte)255));
-        board.X = -18;
-        board.Y = -18;
-        group.Children.Add(board);
+        CircleRuntime circle = new();
+        circle.X = 8;
+        circle.Y = 8;
+        circle.Width = 140;
+        circle.Height = 140;
+        circle.Color = new Color((byte)80, (byte)200, (byte)120, (byte)255);
+        group.Children.Add(circle);
 
         holder.Children.Add(group);
         return holder;
-    }
-
-    // A grid of alternating solid-color cells, larger than the render target it goes in so the
-    // pattern is visibly sliced at the target boundary.
-    static ContainerRuntime BuildCheckerboard(int columns, int rows, float cellSize, Color a, Color b)
-    {
-        ContainerRuntime board = new();
-        board.Width = columns * cellSize;
-        board.Height = rows * cellSize;
-        for (int row = 0; row < rows; row++)
-        {
-            for (int column = 0; column < columns; column++)
-            {
-                Color color = (row + column) % 2 == 0 ? a : b;
-                board.Children.Add(Rect(column * cellSize, row * cellSize, cellSize, cellSize, color));
-            }
-        }
-        return board;
     }
 
     // clip-inside-RT: deferred, see #3440. A "ClipsChildren descendant inside an RT" cell used to
