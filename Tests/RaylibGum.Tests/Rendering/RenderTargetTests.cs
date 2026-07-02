@@ -393,4 +393,75 @@ public class RenderTargetTests : BaseTestClass
 
         GumService.Default.Root.Children.Clear();
     }
+
+    // Item 2 invariant (#3434, #3436): a semi-transparent element must composite to the SAME pixel
+    // whether or not it lives inside a render target. This pins the premultiplied-alpha round-trip:
+    // a 50%-white rect over an opaque frame, drawn directly, must match the same rect drawn inside a
+    // nested render target (and composited back). Both scenarios are captured in their own readable
+    // outer render target so the comparison is a straight pixel diff with no screen readback.
+    [Fact]
+    public void Draw_SemiTransparentElement_InsideRenderTargetMatchesDirectDraw()
+    {
+        Color frameColor = new((byte)70, (byte)70, (byte)90, (byte)255);
+        Color semiTransparentWhite = new((byte)255, (byte)255, (byte)255, (byte)128);
+
+        // Direct draw: frame, then the semi-transparent rect straight on top — both inside the
+        // readable outer render target.
+        ContainerRuntime directOuter = new();
+        directOuter.X = 0;
+        directOuter.Y = 0;
+        directOuter.Width = 100;
+        directOuter.Height = 100;
+        directOuter.IsRenderTarget = true;
+        directOuter.Children.Add(FullRect(frameColor));
+        directOuter.Children.Add(FullRect(semiTransparentWhite));
+
+        // Inside a render target: the same semi-transparent rect lives in a nested RT that composites
+        // over the frame. This is the "Nested RT + sibling" sample path.
+        ContainerRuntime nestedOuter = new();
+        nestedOuter.X = 0;
+        nestedOuter.Y = 0;
+        nestedOuter.Width = 100;
+        nestedOuter.Height = 100;
+        nestedOuter.IsRenderTarget = true;
+        nestedOuter.Children.Add(FullRect(frameColor));
+
+        ContainerRuntime inner = new();
+        inner.Width = 100;
+        inner.Height = 100;
+        inner.IsRenderTarget = true;
+        inner.Children.Add(FullRect(semiTransparentWhite));
+        nestedOuter.Children.Add(inner);
+
+        GumService.Default.Root.Children.Add(directOuter);
+        GumService.Default.Root.Children.Add(nestedOuter);
+        GumService.Default.Root.UpdateLayout();
+
+        DrawOnce();
+
+        Color direct = ReadRenderTargetCenter(Renderer.Self.TryGetBakedRenderTargetFor(directOuter)!.Value);
+        Color nested = ReadRenderTargetCenter(Renderer.Self.TryGetBakedRenderTargetFor(nestedOuter)!.Value);
+
+        // Within a small tolerance (byte rounding across the extra composite step), the in-RT pixel
+        // must equal the direct-draw pixel. A premultiplied-alpha double-blend would darken the
+        // in-RT pixel and fail this.
+        const int tolerance = 4;
+        System.Math.Abs(nested.R - direct.R).ShouldBeLessThanOrEqualTo(tolerance);
+        System.Math.Abs(nested.G - direct.G).ShouldBeLessThanOrEqualTo(tolerance);
+        System.Math.Abs(nested.B - direct.B).ShouldBeLessThanOrEqualTo(tolerance);
+        System.Math.Abs(nested.A - direct.A).ShouldBeLessThanOrEqualTo(tolerance);
+
+        GumService.Default.Root.Children.Clear();
+    }
+
+    private static ColoredRectangleRuntime FullRect(Color color)
+    {
+        ColoredRectangleRuntime rect = new();
+        rect.X = 0;
+        rect.Y = 0;
+        rect.Width = 100;
+        rect.Height = 100;
+        rect.Color = color;
+        return rect;
+    }
 }

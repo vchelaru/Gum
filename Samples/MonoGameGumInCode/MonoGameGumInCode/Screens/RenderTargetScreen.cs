@@ -139,9 +139,44 @@ internal class RenderTargetScreen : FrameworkElement
     }
 
     // Outer render target containing a nested render-target group followed by a semi-transparent
-    // sibling. The nested composite toggles blend mid-bake; the sibling must still composite cleanly
-    // (no dark fringe).
+    // sibling, shown beside a direct-draw reference of the same semi-transparent rect over the same
+    // frame. The invariant: the in-RT sibling (right block of the "in RT" swatch) must look identical
+    // to the "direct ref" swatch. (raylib matches; MonoGame's RT path renders the sibling darker —
+    // a pre-existing #816 straight-alpha render-target quirk, tracked separately.)
     private static GraphicalUiElement BuildNestedWithSibling()
+    {
+        var row = new ContainerRuntime();
+        row.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        row.StackSpacing = 12;
+        row.WidthUnits = DimensionUnitType.RelativeToChildren;
+        row.HeightUnits = DimensionUnitType.RelativeToChildren;
+        row.Width = 0;
+        row.Height = 0;
+
+        row.AddChild(BuildSwatch("in RT", BuildNestedInRenderTarget()));
+        row.AddChild(BuildSwatch("direct ref", BuildDirectReference()));
+        return row;
+    }
+
+    private static ContainerRuntime BuildSwatch(string label, GraphicalUiElement body)
+    {
+        var swatch = new ContainerRuntime();
+        swatch.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+        swatch.StackSpacing = 3;
+        swatch.WidthUnits = DimensionUnitType.RelativeToChildren;
+        swatch.HeightUnits = DimensionUnitType.RelativeToChildren;
+        swatch.Width = 0;
+        swatch.Height = 0;
+
+        var caption = new TextRuntime();
+        caption.Text = label;
+        caption.Color = new Color(180, 180, 180, 255);
+        swatch.AddChild(caption);
+        swatch.AddChild(body);
+        return swatch;
+    }
+
+    private static GraphicalUiElement BuildNestedInRenderTarget()
     {
         var holder = BuildFrame(150, 110);
 
@@ -164,6 +199,15 @@ internal class RenderTargetScreen : FrameworkElement
         outer.AddChild(inner);
         outer.AddChild(sibling);
         holder.AddChild(outer);
+        return holder;
+    }
+
+    // The same semi-transparent white rect over the same frame color, drawn directly (no render
+    // target). This is the ground truth the in-RT sibling must match.
+    private static GraphicalUiElement BuildDirectReference()
+    {
+        var holder = BuildFrame(70, 110);
+        holder.AddChild(Rect(8, 8, 62, 94, new Color(255, 255, 255, 128)));
         return holder;
     }
 
