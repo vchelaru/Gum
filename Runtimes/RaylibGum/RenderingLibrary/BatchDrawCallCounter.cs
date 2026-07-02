@@ -44,6 +44,21 @@ public sealed unsafe class BatchDrawCallCounter
     private RenderStateChangeStatistics _statistics;
     private bool _active;
 
+    // GL blend factor / equation constants for the render-target premultiply pass. Kept here so
+    // the raw-GL dependency stays contained to the one place that owns blend state.
+    private const int GlOne = 1;
+    private const int GlSrcAlpha = 0x0302;
+    private const int GlOneMinusSrcAlpha = 0x0303;
+    private const int GlFuncAdd = 0x8006;
+
+    // While true, the ambient blend mode is the render-target premultiply pass (not straight
+    // BLEND_ALPHA). raylib's EndBlendMode always resets to BLEND_ALPHA and never restores the
+    // previous mode, so any child that toggles blend mid-bake (a Sprite with an explicit Blend, or
+    // a nested render-target composite) would otherwise leave every following sibling baking with
+    // straight alpha — reintroducing the double-blend dark fringe. With this flag set, EndBlendMode
+    // re-establishes the premultiply pass instead (issue #3434).
+    private bool _renderTargetBlendActive;
+
     /// <summary>
     /// Activates the owned batch for a render pass and routes subsequent <see cref="Bank"/> calls
     /// into <paramref name="statistics"/>. If the GL context isn't ready (so the batch can't be
@@ -105,25 +120,68 @@ public sealed unsafe class BatchDrawCallCounter
     }
 
     /// <summary>
-    /// Counted wrapper that configures separate RGB/alpha blend factors and enters
-    /// <see cref="BlendMode.CustomSeparate"/>. Used by the render-target bake to accumulate
-    /// premultiplied color while tracking straight coverage alpha, so the baked texture
-    /// composites back without the double-blend dark fringe (issue #3434). The GL factor/equation
-    /// constants are passed by the caller. Pair with <see cref="EndBlendMode"/>.
+    /// Enters the render-target premultiply blend pass and marks it as the ambient blend for the
+    /// duration of a bake: straight-alpha children accumulate premultiplied color (color blends
+    /// standard-over, alpha accumulates as coverage), so the baked texture composites back without
+    /// the double-blend dark fringe (issue #3434). Pair with <see cref="EndRenderTargetBlend"/>.
+    /// While active, <see cref="EndBlendMode"/> re-establishes this pass instead of resetting to
+    /// straight alpha, so a child toggling blend mid-bake cannot clobber it for later siblings.
     /// </summary>
-    public void BeginBlendModeSeparate(
-        int glSrcRGB, int glDstRGB, int glSrcAlpha, int glDstAlpha, int glEqRGB, int glEqAlpha)
+    public void BeginRenderTargetBlend()
     {
         Bank();
-        Rlgl.SetBlendFactorsSeparate(glSrcRGB, glDstRGB, glSrcAlpha, glDstAlpha, glEqRGB, glEqAlpha);
+        _renderTargetBlendActive = true;
+        ApplyRenderTargetBlend();
+    }
+
+    /// <summary>
+    /// Exits the render-target premultiply blend pass and restores straight alpha as the ambient
+    /// blend. Pair with <see cref="BeginRenderTargetBlend"/>.
+    /// </summary>
+    public void EndRenderTargetBlend()
+    {
+        Bank();
+        _renderTargetBlendActive = false;
+        Raylib.EndBlendMode();
+    }
+
+    /// <summary>
+    /// Enters an additive blend that is correct for an already-premultiplied source: it adds the
+    /// premultiplied color directly (factors ONE/ONE) rather than multiplying by source alpha a
+    /// second time the way <see cref="BlendMode.Additive"/> would. Used when compositing an
+    /// additive-blend render-target container back to its destination (issue #3434). Pair with
+    /// <see cref="EndBlendMode"/>.
+    /// </summary>
+    public void BeginBlendModeAdditivePremultiplied()
+    {
+        Bank();
+        Rlgl.SetBlendFactorsSeparate(GlOne, GlOne, GlOne, GlOne, GlFuncAdd, GlFuncAdd);
         Raylib.BeginBlendMode(BlendMode.CustomSeparate);
     }
 
-    /// <summary>Counted wrapper for <see cref="Raylib.EndBlendMode"/>.</summary>
+    /// <summary>
+    /// Counted wrapper for <see cref="Raylib.EndBlendMode"/>. While a render-target bake is active
+    /// (see <see cref="BeginRenderTargetBlend"/>) this re-establishes the premultiply pass rather
+    /// than resetting to straight alpha, so mid-bake blend toggles don't leak into later siblings.
+    /// </summary>
     public void EndBlendMode()
     {
         Bank();
-        Raylib.EndBlendMode();
+        if (_renderTargetBlendActive)
+        {
+            ApplyRenderTargetBlend();
+        }
+        else
+        {
+            Raylib.EndBlendMode();
+        }
+    }
+
+    private void ApplyRenderTargetBlend()
+    {
+        Rlgl.SetBlendFactorsSeparate(
+            GlSrcAlpha, GlOneMinusSrcAlpha, GlOne, GlOneMinusSrcAlpha, GlFuncAdd, GlFuncAdd);
+        Raylib.BeginBlendMode(BlendMode.CustomSeparate);
     }
 
     /// <summary>Counted wrapper for <see cref="Raylib.BeginTextureMode"/>.</summary>

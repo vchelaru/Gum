@@ -46,20 +46,27 @@ public class Renderer : IRenderer
     // (exact-size recreation on resize + frame-boundary sweep) exactly like ShadowBlur.
     readonly Gum.Renderables.RenderTextureService _renderTargetService = new();
 
-    // True while baking a render-target container's subtree into its offscreen texture. Used to
-    // suppress the screen-space scissor machinery inside DrawGumRecursively, whose rects are wrong
-    // once drawing is redirected into an RT framebuffer (raylib flips scissor Y by the *screen*
-    // height, not the RT height). Clipping descendants *inside* an RT container is therefore a
-    // documented v1 limitation — see #3434. This flag is the seam where RT-local scissor rebasing
-    // will hook in.
+    // True while baking a render-target container's subtree into its offscreen texture. Inside a
+    // bake, DrawGumRecursively rebases scissor rects into RT-local space (the clamped top-left is
+    // the RT origin) so a ClipsChildren descendant clips correctly within the RT.
     bool _isBakingRenderTarget;
 
-    // GL blend-factor / equation constants used by the render-target premultiply pass. Declared
-    // here to avoid a raw-GL dependency leaking into callers; only the bake uses them.
-    const int GlOne = 1;
-    const int GlSrcAlpha = 0x0302;
-    const int GlOneMinusSrcAlpha = 0x0303;
-    const int GlFuncAdd = 0x8006;
+    // The active bake's clamped top-left (world coords) and RT pixel height, captured so
+    // DrawGumRecursively can convert a descendant's absolute bounds into RT-local scissor pixels.
+    // Only meaningful while _isBakingRenderTarget is true; bakes are never re-entrant (post-order
+    // means an inner RT is fully baked before its outer one begins), so single fields suffice.
+    float _bakeLeft;
+    float _bakeTop;
+    int _bakeRenderTargetHeight;
+
+    // Reused across bakes so a bake doesn't allocate a fresh scissor stack each frame. Swapped in
+    // for the duration of a bake and restored afterward; balanced push/pop leaves it empty.
+    readonly Stack<System.Drawing.Rectangle> _bakeScissorStack = new();
+
+    // Set during the PreRender walk (which already traverses the whole visible tree) when any
+    // render-target container is present, so the bake pre-pass is skipped entirely for the common
+    // case of screens with no render targets — no extra full traversal.
+    bool _frameHasRenderTarget;
 
 #if XNALIKE
     SpriteRenderer spriteRenderer = new SpriteRenderer();
@@ -159,6 +166,10 @@ public class Renderer : IRenderer
         // DrawCallCount as it banks each flush below.
         RenderStateChangeStatistics.Reset();
 
+        // Reset per-frame; PreRender flips this true if it encounters any render-target container,
+        // which is the only thing that makes the bake pre-pass run (#3434 perf fast-out).
+        _frameHasRenderTarget = false;
+
         _camera.ClientWidth = Raylib.GetScreenWidth();
         _camera.ClientHeight = Raylib.GetScreenHeight();
 
@@ -192,7 +203,16 @@ public class Renderer : IRenderer
             // RectangleRuntime / PolygonRuntime — see #2757). Without it those runtimes had
             // to push StrokeWidth immediately in the setter as a workaround.
             PreRender(layer.Renderables);
-            BakeRenderTargetsInSubtree(layer.Renderables, layer);
+        }
+
+        // Only bake if PreRender saw at least one render-target container this frame — screens with
+        // none skip the whole extra tree traversal.
+        if (_frameHasRenderTarget)
+        {
+            for (int i = 0; i < layers.Count; i++)
+            {
+                BakeRenderTargetsInSubtree(layers[i].Renderables, layers[i]);
+            }
         }
 
         BatchDrawCallCounter.BeginMode2D(camera2D);
@@ -235,6 +255,10 @@ public class Renderer : IRenderer
             {
                 continue;
             }
+            if (renderable.IsRenderTarget)
+            {
+                _frameHasRenderTarget = true;
+            }
             renderable.PreRender();
             if (renderable.Children != null)
             {
@@ -276,11 +300,12 @@ public class Renderer : IRenderer
     {
         // #2998 off-screen cull: when a clip is active (the scissor stack is non-empty), skip this
         // element and its subtree if it falls entirely outside the active clip, expanded by a small
-        // margin. Mirrors the XNA orderer cull via the same shared predicate.
+        // margin. Mirrors the XNA orderer cull via the same shared predicate. Inside a bake both the
+        // element rect and the stacked clip are RT-local, so the same comparison holds.
         if (CameraScissorExtensions.CullOffscreenWhenClipped
             && _scissorStack.Count > 0
             && CameraScissorExtensions.IsFullyOutside(
-                _camera.GetScissorRectangleFor(layer, element),
+                GetScissorRectangleFor(layer, element),
                 _scissorStack.Peek(),
                 CameraScissorExtensions.OffscreenCullMarginInPixels))
         {
@@ -293,25 +318,33 @@ public class Renderer : IRenderer
         // (composite a nested inner RT into the outer texture), which is what makes nesting work.
         if (element.IsRenderTarget)
         {
-            CompositeRenderTarget(element);
-            return;
+            // A hidden RT container draws nothing (its bake was skipped too). Without this the
+            // composite path would blit last frame's stale cached texture for one frame after the
+            // container is hidden — a 1-frame ghost (#3434).
+            if (!element.Visible)
+            {
+                return;
+            }
+
+            // If a valid baked texture exists, composite it and stop. Otherwise (degenerate/zero
+            // clamped size — e.g. a 0-sized pre-layout container, or one whose children draw at
+            // offsets) fall through and render the children directly so the subtree doesn't vanish.
+            if (TryCompositeRenderTarget(element))
+            {
+                return;
+            }
         }
 
         element.Render(null);
 
-        // Inside an RT bake the screen-space scissor rects are invalid (raylib flips scissor Y by
-        // the screen height, not the RT height), so skip the clip machinery entirely. Descendant
-        // clipping inside an RT container is a documented v1 limitation (#3434).
-        bool suppressScissor = _isBakingRenderTarget;
-
-        if (element.ClipsChildren && !suppressScissor)
+        if (element.ClipsChildren)
         {
-            var rect = _camera.GetScissorRectangleFor(layer, element);
-            var effective = _scissorStack.Count > 0
+            System.Drawing.Rectangle rect = GetScissorRectangleFor(layer, element);
+            System.Drawing.Rectangle effective = _scissorStack.Count > 0
                 ? System.Drawing.Rectangle.Intersect(_scissorStack.Peek(), rect)
                 : rect;
             _scissorStack.Push(effective);
-            BatchDrawCallCounter.BeginScissorMode(effective.X, effective.Y, effective.Width, effective.Height);
+            ApplyScissorRectangle(effective);
         }
 
         if (element.Children != null)
@@ -325,19 +358,56 @@ public class Renderer : IRenderer
             }
         }
 
-        if (element.ClipsChildren && !suppressScissor)
+        if (element.ClipsChildren)
         {
             _scissorStack.Pop();
             if (_scissorStack.Count > 0)
             {
-                var parent = _scissorStack.Peek();
-                BatchDrawCallCounter.BeginScissorMode(parent.X, parent.Y, parent.Width, parent.Height);
+                ApplyScissorRectangle(_scissorStack.Peek());
             }
             else
             {
                 BatchDrawCallCounter.EndScissorMode();
             }
         }
+    }
+
+    // Scissor rectangle for a clipping element, in whatever coordinate space the current pass uses:
+    // screen space normally, RT-local pixel space during a bake. Keeping the space consistent
+    // between this, the scissor stack, and the cull comparison is what lets ClipsChildren work
+    // inside a render target.
+    private System.Drawing.Rectangle GetScissorRectangleFor(Layer layer, IRenderableIpso element)
+    {
+        if (!_isBakingRenderTarget)
+        {
+            return _camera.GetScissorRectangleFor(layer, element);
+        }
+
+        float zoom = _camera.Zoom;
+        int left = global::RenderingLibrary.Math.MathFunctions.RoundToInt(
+            (element.GetAbsoluteLeft() - _bakeLeft) * zoom);
+        int top = global::RenderingLibrary.Math.MathFunctions.RoundToInt(
+            (element.GetAbsoluteTop() - _bakeTop) * zoom);
+        int right = global::RenderingLibrary.Math.MathFunctions.RoundToInt(
+            (element.GetAbsoluteRight() - _bakeLeft) * zoom);
+        int bottom = global::RenderingLibrary.Math.MathFunctions.RoundToInt(
+            (element.GetAbsoluteBottom() - _bakeTop) * zoom);
+        return new System.Drawing.Rectangle(left, top, right - left, bottom - top);
+    }
+
+    // Applies a scissor rect through the draw-call counter, compensating for raylib's Y flip during
+    // a bake. raylib's BeginScissorMode flips Y by the *screen* height even while a render texture
+    // is bound, so an RT-local top-left rect (y measured from the RT top) must be shifted by
+    // (screenHeight - rtHeight) to land on the correct RT rows. Outside a bake the rect is already
+    // screen-space and passes through unchanged.
+    private void ApplyScissorRectangle(System.Drawing.Rectangle rect)
+    {
+        int y = rect.Y;
+        if (_isBakingRenderTarget)
+        {
+            y += Raylib.GetScreenHeight() - _bakeRenderTargetHeight;
+        }
+        BatchDrawCallCounter.BeginScissorMode(rect.X, y, rect.Width, rect.Height);
     }
 
     // Post-order (innermost-first) walk that bakes every render-target container's subtree into an
@@ -368,9 +438,11 @@ public class Renderer : IRenderer
 
     // Bakes a single render-target container's child subtree into its cached offscreen texture.
     // Children draw at their absolute world coordinates; an offset BeginMode2D targeting the
-    // container's clamped top-left maps those into RT-local pixel space. Children are rendered with
+    // container's clamped top-left maps those into RT-local pixel space. Children are rendered under
     // a premultiply blend (straight src -> premultiplied dst) so the texture composites back without
-    // the double-blend dark fringe — see CompositeRenderTarget for the matching AlphaPremultiply blit.
+    // the double-blend dark fringe — see TryCompositeRenderTarget for the matching premultiplied blit.
+    // A degenerate (zero-size) clamp bakes nothing; the composite path then renders the children
+    // directly so the subtree doesn't vanish.
     private void BakeRenderTarget(IRenderableIpso container, Layer layer)
     {
         ComputeRenderTargetBounds(container, out float left, out float top, out _, out _,
@@ -393,21 +465,27 @@ public class Renderer : IRenderer
             Rotation = 0,
         };
 
-        // Isolate the scissor stack for the bake; it is restored afterward. Scissor is suppressed
-        // inside the bake anyway (see _isBakingRenderTarget), so this only guards against leakage.
+        // Swap in the reusable bake scissor stack (avoids a per-bake allocation) and capture the
+        // bake origin/height so DrawGumRecursively can rebase clip rects into RT-local space.
         Stack<System.Drawing.Rectangle> savedScissorStack = _scissorStack;
-        _scissorStack = new Stack<System.Drawing.Rectangle>();
+        _bakeScissorStack.Clear();
+        _scissorStack = _bakeScissorStack;
         bool wasBaking = _isBakingRenderTarget;
+        float savedBakeLeft = _bakeLeft;
+        float savedBakeTop = _bakeTop;
+        int savedBakeHeight = _bakeRenderTargetHeight;
         _isBakingRenderTarget = true;
+        _bakeLeft = left;
+        _bakeTop = top;
+        _bakeRenderTargetHeight = height;
 
         counter.BeginTextureMode(renderTexture.Value);
         Raylib.ClearBackground(new Color((byte)0, (byte)0, (byte)0, (byte)0));
         counter.BeginMode2D(bakeCamera);
-        // Straight-alpha children -> premultiplied RT: color blends standard over, alpha accumulates
-        // as coverage (src.a + dst.a*(1-src.a)). The result is premultiplied, which the composite
-        // blit reads back with AlphaPremultiply for correct edges and group opacity.
-        counter.BeginBlendModeSeparate(
-            GlSrcAlpha, GlOneMinusSrcAlpha, GlOne, GlOneMinusSrcAlpha, GlFuncAdd, GlFuncAdd);
+        // Establish the premultiply pass as the ambient blend for the whole subtree. If a child
+        // toggles blend (a Sprite with an explicit Blend, or a nested render-target composite), the
+        // counter re-establishes this pass on EndBlendMode so later siblings still bake premultiplied.
+        counter.BeginRenderTargetBlend();
 
         if (container.Children != null)
         {
@@ -420,40 +498,51 @@ public class Renderer : IRenderer
             }
         }
 
-        counter.EndBlendMode();
+        counter.EndRenderTargetBlend();
         counter.EndMode2D();
         counter.EndTextureMode();
 
         _isBakingRenderTarget = wasBaking;
+        _bakeLeft = savedBakeLeft;
+        _bakeTop = savedBakeTop;
+        _bakeRenderTargetHeight = savedBakeHeight;
         _scissorStack = savedScissorStack;
     }
 
-    // Composites a render-target container's baked texture at the container's clamped on-screen
-    // rectangle, honoring the container's blend and group alpha (#3434, item 2). The baked texture
-    // is premultiplied, so the default (Normal) blend composites with AlphaPremultiply; group alpha
-    // is applied by tinting every channel (a premultiplied texture must scale rgb and alpha together).
-    private void CompositeRenderTarget(IRenderableIpso container)
+    // Composites a render-target container's baked texture at the container's clamped rectangle,
+    // honoring the container's blend and group alpha (#3434, item 2). Returns false when there is no
+    // valid baked texture (degenerate size) so the caller can render the children directly instead of
+    // dropping them. The baked texture is premultiplied, so Normal blend composites with
+    // AlphaPremultiply and Additive uses the premultiplied-additive pass; group alpha is applied by
+    // tinting every channel (a premultiplied texture must scale rgb and alpha together).
+    private bool TryCompositeRenderTarget(IRenderableIpso container)
     {
         IRenderableIpso cacheOwner = ResolveRenderTargetCacheOwner(container);
         RenderTexture2D? renderTexture = _renderTargetService.TryGetExisting(cacheOwner);
         if (renderTexture == null)
         {
-            return;
+            return false;
         }
 
         ComputeRenderTargetBounds(container, out float left, out float top, out float right,
             out float bottom, out int width, out int height);
         if (width <= 0 || height <= 0)
         {
-            return;
+            return false;
         }
 
-        BlendMode blendMode = ResolveCompositeBlendMode(cacheOwner);
         byte alpha = (byte)container.Alpha;
         Color tint = new Color(alpha, alpha, alpha, alpha);
 
         BatchDrawCallCounter counter = BatchDrawCallCounter;
-        counter.BeginBlendMode(blendMode);
+        if (IsAdditiveComposite(cacheOwner))
+        {
+            counter.BeginBlendModeAdditivePremultiplied();
+        }
+        else
+        {
+            counter.BeginBlendMode(BlendMode.AlphaPremultiply);
+        }
         // Negative source height flips the v range: an RT is stored bottom-up in GL coordinates, so
         // reading it with height -h yields the upright content (same idiom as ShadowBlurRenderer).
         Raylib.DrawTexturePro(
@@ -464,6 +553,7 @@ public class Renderer : IRenderer
             0,
             tint);
         counter.EndBlendMode();
+        return true;
     }
 
     // Clamps the container's absolute bounds to the on-screen visible intersection and returns the
@@ -494,19 +584,15 @@ public class Renderer : IRenderer
         return source;
     }
 
-    // The baked texture is premultiplied. Normal (NonPremultiplied) container blend therefore
-    // composites with AlphaPremultiply; Additive maps to raylib's additive mode. Other blends are
-    // approximated as premultiplied-over for v1.
-    private static BlendMode ResolveCompositeBlendMode(IRenderableIpso cacheOwner)
+    // Whether the container's blend is Additive. The baked texture is premultiplied, so an additive
+    // composite must add the premultiplied color directly (see BeginBlendModeAdditivePremultiplied)
+    // rather than raylib's BlendMode.Additive, which would multiply by source alpha a second time and
+    // render the glow too dim. Non-additive blends composite premultiplied-over for v1.
+    private static bool IsAdditiveComposite(IRenderableIpso cacheOwner)
     {
-        if (cacheOwner is RenderableBase renderable
+        return cacheOwner is RenderableBase renderable
             && Gum.RenderingLibrary.BlendExtensions.ToBlend(renderable.BlendState)
-                == Gum.RenderingLibrary.Blend.Additive)
-        {
-            return BlendMode.Additive;
-        }
-
-        return BlendMode.AlphaPremultiply;
+                == Gum.RenderingLibrary.Blend.Additive;
     }
 
     /// <summary>
