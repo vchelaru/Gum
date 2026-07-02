@@ -235,4 +235,37 @@ public class CodeGeneratorCollectUsingsTests
             ObjectFinder.Self.GumProjectSave = null;
         }
     }
+
+    [Fact]
+    public void Raylib_IncludesGumServiceAndGueDerivingUsings()
+    {
+        // Raylib should get the same GumService/GueDeriving usings as plain MonoGame, at the
+        // unified (>= 1) namespace scheme. GumService itself only moves to the "Gum" namespace
+        // at syntax version >= 3 (permanent back-compat shims cover versions 1-2 either way).
+        ComponentSave host = new ComponentSave { Name = "Widgets/Host" };
+
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(host);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        try
+        {
+            CodeGenerator generator = CreateCodeGenerator();
+            CodeOutputProjectSettings settings = CreateProjectSettings();
+            settings.OutputLibrary = OutputLibrary.Raylib;
+
+            IReadOnlyList<string> usings = generator.CollectUsingNamespaces(
+                host,
+                elementSettings: null,
+                settings,
+                resolvedSyntaxVersion: 3);
+
+            usings.ShouldContain("Gum");
+            usings.ShouldContain("Gum.GueDeriving");
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
 }

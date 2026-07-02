@@ -76,7 +76,9 @@ The headless service library GumCli depends on. All logic lives here; the CLI ju
 
 `ProjectLoader` runs `DetectSilentlyDroppedContent` after deserialization to catch incorrect XML element names (e.g., `<States>` instead of `<State>`, `<InstanceSave>` instead of `<Instance>`) that `XmlSerializer` silently ignores. Without this, AI-generated files with wrong structure load as empty elements with no error.
 
-`CodeGenerationAutoSetupService` detects MonoGame vs non-MonoGame projects by scanning for `<PackageReference Include="MonoGame.Framework.` or `nkast.Xna.Framework` in the `.csproj`, then sets `OutputLibrary` accordingly. Namespace falls back to the `.csproj` filename (dots/dashes/spaces replaced with underscores) when `<RootNamespace>` is absent.
+`CodeGenerationAutoSetupService` detects MonoGame vs non-MonoGame projects by scanning for `<PackageReference Include="MonoGame.Framework.` or `nkast.Xna.Framework` in the `.csproj`, then sets `OutputLibrary` accordingly (to `MonoGameForms`, not plain `MonoGame`). It also detects `<PackageReference Include="Raylib-cs"` and sets `OutputLibrary.Raylib` — there is no "RaylibForms" auto-detect target since Raylib codegen only supports `ObjectInstantiationType.FindByName` so far (see gum-tool-codegen). Namespace falls back to the `.csproj` filename (dots/dashes/spaces replaced with underscores) when `<RootNamespace>` is absent.
+
+`codegen` fails fast with exit code 1 if the resolved settings request an unsupported combination (currently: `OutputLibrary.Raylib` + `ObjectInstantiationType.FullyInCode`) — `CodeGenerator.AssertSupportedCombination` throws `NotSupportedException`, and `CodegenCommand` catches it before touching the file system.
 
 `CodeGenerationAutoSetupService` has two `Run` overloads: `Run(gumxFilePath)` for auto-detection, and `Run(gumxFilePath, explicitCsprojPath)` for when the caller already knows the `.csproj` path. The explicit overload validates the file exists and skips directory walking entirely; all namespace/OutputLibrary derivation logic is shared via the private `BuildResultFromCsprojDirectory` helper.
 

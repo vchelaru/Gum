@@ -37,7 +37,7 @@ Tool UI                              Shared Engine
 
 | Enum | Values | Notes |
 |------|--------|-------|
-| `OutputLibrary` | XamarinForms(0), WPF(1), Skia(2), Maui(3), MonoGame(4), MonoGameForms(5) | MonoGameForms is recommended default |
+| `OutputLibrary` | XamarinForms(0), WPF(1), Skia(2), Maui(3), MonoGame(4), MonoGameForms(5), Raylib(6) | MonoGameForms is recommended default. Raylib currently only supports `ObjectInstantiationType.FindByName` (see below) |
 | `ObjectInstantiationType` | FullyInCode, FindByName | FullyInCode generates all creation; FindByName wires references to externally-created instances |
 | `InheritanceLocation` | InGeneratedCode, InCustomCode | Controls which partial class file declares the base class |
 | `VisualApi` | Gum, XamarinForms | Internal enum; Gum for MonoGame/MonoGameForms/Skia/raylib, XamarinForms for Xamarin/MAUI |
@@ -81,6 +81,8 @@ Tool UI                              Shared Engine
 **C# name compliance** -- `CodeGenerationNameVerifier` prefixes C# keywords with `@`, leading digits with `_`, and replaces spaces with `_`.
 
 **RenameService** -- When elements are renamed in the tool, updates generated code file names and internal references.
+
+**Raylib codegen (issue #3430)** -- `OutputLibrary.Raylib` reuses the exact same generated-code shape as plain `OutputLibrary.MonoGame` (inheritance resolution, using statements, constructor signature, FindByName wiring) because the underlying runtime API is already unified between the two platforms (`Gum.GueDeriving` namespace, `GumService`, Forms controls, `SetGraphicalUiElement`). `CodeGenerator.UsesUnifiedGumRuntime(OutputLibrary)` is the shared predicate for these "MonoGame and Raylib behave identically" call sites -- named to avoid implying Raylib conforms to a "MonoGame API"; Gum owns the unified surface and MonoGame just leads its rollout. Only `ObjectInstantiationType.FindByName` is supported for Raylib so far -- `FullyInCode` is a deferred follow-up (Container/`InvisibleRenderable` wiring, the 2-arg `tryCreateFormsObject` ctor body, etc. were never extended to Raylib). `CodeGenerator.AssertSupportedCombination` throws `NotSupportedException` for Raylib+FullyInCode rather than silently emitting broken code; the CLI's `codegen` command catches it and exits 1 with a clear message. `CodeGenerator.ResolveSyntaxVersion` floors the resolved syntax version at 1 for Raylib specifically, since Raylib codegen never existed at the legacy (pre-unification) namespace scheme. `GetGumServiceNamespace` takes an `isRaylib` flag because the legacy (`syntaxVersion < 3`) back-compat shim namespace is `RaylibGum`, not `MonoGameGum` (see `GumServiceCompat.cs`'s `#elif RAYLIB` branch) -- getting this wrong produces generated code with an unresolvable `using MonoGameGum;` when built against RaylibGum.
 
 ## Key Files
 

@@ -113,9 +113,19 @@ public class CodeGenerationAutoSetupService : ICodeGenerationAutoSetupService
                 contents.Contains("<PackageReference Include=\"MonoGame.Framework.", StringComparison.Ordinal) ||
                 contents.Contains("<PackageReference Include=\"nkast.Xna.Framework", StringComparison.Ordinal);
 
+            bool isRaylibBased =
+                contents.Contains("<PackageReference Include=\"Raylib-cs\"", StringComparison.Ordinal);
+
             if (isMonoGameBased)
             {
                 settings.OutputLibrary = OutputLibrary.MonoGameForms;
+            }
+            else if (isRaylibBased)
+            {
+                // Raylib codegen only supports FindByName for now (see AssertSupportedCombination) —
+                // there is no "RaylibForms" OutputLibrary equivalent to MonoGameForms yet, so this is
+                // the only value auto-detection can offer.
+                settings.OutputLibrary = OutputLibrary.Raylib;
             }
 
             settings.RootNamespace = ExtractRootNamespace(contents, csprojPath);

@@ -315,35 +315,84 @@ public class CodeGenerator
     /// <summary>
     /// Returns the namespace generated code should import for the runtime's setup/boot API
     /// (<c>GumService</c>, and — below version 3 — the <c>AddChild</c> extension crutch).
-    /// Version &lt; 3 emits the legacy <c>MonoGameGum</c> namespace, resolved on current
-    /// runtimes via the permanent back-compat shims; version &gt;= 3 emits <c>Gum</c>,
-    /// where <c>GumService</c> lives as of issue #3119.
+    /// Version &lt; 3 emits the legacy <c>MonoGameGum</c> back-compat shim namespace; version
+    /// &gt;= 3 emits <c>Gum</c>, where <c>GumService</c> lives as of issue #3119. Raylib codegen
+    /// never resolves below version 3 (see <see cref="ResolveSyntaxVersion"/>), so it always
+    /// takes the unified branch and never needs the legacy <c>RaylibGum</c> shim namespace here.
     /// </summary>
     public static string GetGumServiceNamespace(int syntaxVersion) =>
         syntaxVersion >= 3 ? "Gum" : "MonoGameGum";
+
+    /// <summary>
+    /// True for the <see cref="OutputLibrary"/> values whose generated code targets Gum's
+    /// unified <c>Gum.GueDeriving</c>/<c>GumService</c> runtime surface the same way MonoGame
+    /// does (currently <see cref="OutputLibrary.MonoGame"/> and <see cref="OutputLibrary.Raylib"/>).
+    /// This is not "behaves like MonoGame" — Gum owns the unified API and MonoGame is simply the
+    /// platform that has led its rollout — so sites that need identical codegen behavior for both
+    /// should check this instead of duplicating <c>|| OutputLibrary.Raylib</c> at every call site.
+    /// </summary>
+    internal static bool UsesUnifiedGumRuntime(OutputLibrary outputLibrary) =>
+        outputLibrary == OutputLibrary.MonoGame || outputLibrary == OutputLibrary.Raylib;
+
+    /// <summary>
+    /// Throws if the project settings request a combination code generation does not support yet.
+    /// Currently: <see cref="OutputLibrary.Raylib"/> only supports
+    /// <see cref="ObjectInstantiationType.FindByName"/> — <see cref="ObjectInstantiationType.FullyInCode"/>
+    /// for Raylib is a deferred follow-up (see issue #3430), not implemented, and must fail loudly
+    /// rather than silently emit broken code.
+    /// </summary>
+    public static void AssertSupportedCombination(CodeOutputProjectSettings projectSettings)
+    {
+        if (projectSettings.OutputLibrary == OutputLibrary.Raylib &&
+            projectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
+        {
+            throw new NotSupportedException(
+                "Raylib code generation currently only supports ObjectInstantiationType.FindByName. " +
+                "Set ObjectInstantiationType to FindByName in ProjectCodeSettings.codsj (FullyInCode support for Raylib is not implemented yet).");
+        }
+    }
 
     /// <summary>
     /// Resolves the effective syntax version for the supplied project settings using the
     /// injected <see cref="ISyntaxVersionDetectionService"/> when available. Falls back to
     /// parsing <see cref="CodeOutputProjectSettings.SyntaxVersion"/> directly (treating
     /// auto-detect <c>"*"</c> as version 0) when no detection service is wired in.
+    /// <para>
+    /// Raylib codegen never existed at any legacy (pre-unification) namespace scheme — the
+    /// Raylib runtime only ever exposed the fully unified <c>Gum.GueDeriving</c>/<c>GumService</c>
+    /// surface — so this floors the resolved version at 3 (the highest namespace-unification
+    /// threshold any generator check uses) for <see cref="OutputLibrary.Raylib"/> regardless of
+    /// what auto-detection or an explicit (legacy) <see cref="CodeOutputProjectSettings.SyntaxVersion"/>
+    /// would otherwise report. Flooring at the max threshold rather than the minimum needed (1)
+    /// means Raylib never takes any legacy branch anywhere in the generator, so those branches
+    /// never need Raylib-specific handling.
+    /// </para>
     /// </summary>
     internal int ResolveSyntaxVersion(CodeOutputProjectSettings projectSettings)
     {
+        int version;
         if (_syntaxVersionDetectionService != null)
         {
             SyntaxVersionResult result = _syntaxVersionDetectionService.Detect(projectSettings, _projectDirectoryProvider.ProjectDirectory);
-            return result.Version;
+            version = result.Version;
         }
-
-        if (projectSettings.SyntaxVersion != null
+        else if (projectSettings.SyntaxVersion != null
             && projectSettings.SyntaxVersion != "*"
             && int.TryParse(projectSettings.SyntaxVersion, out int explicitVersion))
         {
-            return explicitVersion;
+            version = explicitVersion;
+        }
+        else
+        {
+            version = 0;
         }
 
-        return 0;
+        if (projectSettings.OutputLibrary == OutputLibrary.Raylib && version < 3)
+        {
+            version = 3;
+        }
+
+        return version;
     }
 
     #region Using Statements
@@ -380,7 +429,7 @@ public class CodeGenerator
         neededUsings.Add("GumRuntime");
         neededUsings.Add("System.Linq");
 
-        if (projectSettings.OutputLibrary == OutputLibrary.MonoGame ||
+        if (UsesUnifiedGumRuntime(projectSettings.OutputLibrary) ||
             projectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
         {
             neededUsings.Add(GetGumServiceNamespace(resolvedSyntaxVersion));
@@ -672,12 +721,9 @@ public class CodeGenerator
         {
             inheritance = "SkiaGum.SkiaGumCanvasView";
         }
-        else if (element.BaseType == "Container" && projectSettings.OutputLibrary == OutputLibrary.MonoGame)
+        else if (element.BaseType == "Container" && UsesUnifiedGumRuntime(projectSettings.OutputLibrary))
         {
-            if (projectSettings.OutputLibrary == OutputLibrary.MonoGame)
-            {
-                inheritance = "ContainerRuntime";
-            }
+            inheritance = "ContainerRuntime";
         }
 
         else if (element.BaseType == "Container" ||
@@ -709,7 +755,7 @@ public class CodeGenerator
                     inheritance = gumFormsType;
                 }
             }
-            else if(projectSettings.OutputLibrary == OutputLibrary.MonoGame)
+            else if(UsesUnifiedGumRuntime(projectSettings.OutputLibrary))
             {
                 var standardElement = ObjectFinder.Self.GetStandardElement(element.BaseType);
                 if(standardElement != null)
@@ -739,7 +785,7 @@ public class CodeGenerator
             {
                 inheritance = inheritance.Substring(inheritance.LastIndexOf('/') + 1);
             }
-            if (projectSettings.OutputLibrary == OutputLibrary.MonoGame)
+            if (UsesUnifiedGumRuntime(projectSettings.OutputLibrary))
             {
                 // for standards, append "Runtime"
                 // Update March 14, 2025
@@ -938,7 +984,7 @@ public class CodeGenerator
                 // see if the state is defined by a standard element. If so, we 
                 var rootVariable = ObjectFinder.Self.GetRootVariable(exposedVariable.Name, context.Element);
                 var isStateOnVisual = false;
-                if (isState && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+                if (isState && UsesUnifiedGumRuntime(context.CodeOutputProjectSettings.OutputLibrary))
                 {
                     isStateOnVisual = rootVariable != null && ObjectFinder.Self.GetContainerOf(rootVariable) is StandardElementSave;
                     if (isStateOnVisual)
@@ -1001,7 +1047,7 @@ public class CodeGenerator
                     var hasGetter = true;
                     if (isState)
                     {
-                        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+                        if (UsesUnifiedGumRuntime(context.CodeOutputProjectSettings.OutputLibrary))
                         {
                             hasGetter = false;
                         }
@@ -1350,7 +1396,7 @@ public class CodeGenerator
 
     private static void TryInstantiateForms(CodeGenerationContext context)
     {
-        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+        if (UsesUnifiedGumRuntime(context.CodeOutputProjectSettings.OutputLibrary))
         {
             GetGumFormsTypeFromBehaviors(context.Element, out string? gumFormsType, out _);
             if (gumFormsType != null)
@@ -1649,7 +1695,7 @@ public class CodeGenerator
             builder.AppendLine(context.Tabs + "}");
         }
 
-        else if (outputLibrary == OutputLibrary.MonoGame
+        else if (UsesUnifiedGumRuntime(outputLibrary)
             // Other objects could still be instantiating this object by component, so let's register the type no matter
             // how it's generated:
             // && context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FindByName
@@ -1735,7 +1781,7 @@ public class CodeGenerator
 
     static void AddGumFormsMembers(CodeGenerationContext context)
     {
-        if (context.CodeOutputProjectSettings.OutputLibrary != OutputLibrary.MonoGame) return;
+        if (!UsesUnifiedGumRuntime(context.CodeOutputProjectSettings.OutputLibrary)) return;
 
         GetGumFormsTypeFromBehaviors(context.Element, out string? gumFormsType, out _);
 
@@ -2954,7 +3000,7 @@ public class CodeGenerator
                     {
                         context.StringBuilder.AppendLine($"{context.Tabs}this.AddChild({_codeGenerationNameVerifier.ToCSharpName(instance.Name)});");
                     }
-                    else if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+                    else if (UsesUnifiedGumRuntime(context.CodeOutputProjectSettings.OutputLibrary))
                     {
                         // If it's a screen it may have children, or it may not. We just don't know, so we need to check
 
@@ -3080,7 +3126,7 @@ public class CodeGenerator
 
             #region Constructor Header
 
-            if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+            if (UsesUnifiedGumRuntime(context.CodeOutputProjectSettings.OutputLibrary))
             {
                 // MonoGame expects 0 or 2-arg constructors. We'll start with 0 for now, and eventually go to 2 if we need Forms support
                 // Update November 3, 2024 - there's code that is generated that expects fullInstantiation. Also the docs recommend a 2-arg
@@ -3111,7 +3157,7 @@ public class CodeGenerator
             #region Gum-required constructor code
 
             var shouldGenerateFullInstantiation =
-                context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame ||
+                UsesUnifiedGumRuntime(context.CodeOutputProjectSettings.OutputLibrary) ||
                 context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Skia;
 
             if (shouldGenerateFullInstantiation)
@@ -3131,7 +3177,7 @@ public class CodeGenerator
             }
             else
             {
-                if (projectSettings.OutputLibrary == OutputLibrary.MonoGame)
+                if (UsesUnifiedGumRuntime(projectSettings.OutputLibrary))
                 {
 
                     context.StringBuilder.AppendLine(context.Tabs +
@@ -3346,6 +3392,8 @@ public class CodeGenerator
 
     public string GetGeneratedCodeForElement(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
     {
+        AssertSupportedCombination(projectSettings);
+
         #region Initial Values
 
         AdjustPixelValuesForDensity = projectSettings.AdjustPixelValuesForDensity;
@@ -5225,8 +5273,8 @@ public class CodeGenerator
         }
         else if (rootName == "HasEvents")
         {
-            // if this is a MonoGame project, do not return " ";
-            if (context.CodeOutputProjectSettings.OutputLibrary != OutputLibrary.MonoGame)
+            // if this is a MonoGame/Raylib project, do not return " ";
+            if (!UsesUnifiedGumRuntime(context.CodeOutputProjectSettings.OutputLibrary))
             {
                 return " ";
             }
@@ -5290,7 +5338,7 @@ public class CodeGenerator
         }
         else if (variable.GetRootName() == "SourceFile")
         {
-            if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame ||
+            if (UsesUnifiedGumRuntime(context.CodeOutputProjectSettings.OutputLibrary) ||
                 context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
             {
                 return "SourceFileName";

@@ -150,6 +150,33 @@ public class CodeGeneratorGumServiceNamespaceTests : BaseTestClass
         usings.ShouldNotContain("MonoGameGum");
     }
 
+    [Fact]
+    public void CollectUsingNamespaces_RaylibVersion3_EmitsGumUsing()
+    {
+        // Raylib codegen's resolved syntax version always floors to 3 (see
+        // ResolveSyntaxVersion), so this is the only reachable version for Raylib in practice.
+        ComponentSave component = new ComponentSave { Name = "Widgets/Host" };
+        Project.Components.Add(component);
+        ObjectFinder.Self.GumProjectSave = Project;
+
+        CodeGenerator generator = CreateCodeGenerator();
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            OutputLibrary = OutputLibrary.Raylib,
+            RootNamespace = "MyGame",
+        };
+
+        IReadOnlyList<string> usings = generator.CollectUsingNamespaces(
+            component,
+            elementSettings: null,
+            settings,
+            resolvedSyntaxVersion: 3);
+
+        usings.ShouldContain("Gum");
+        usings.ShouldNotContain("MonoGameGum");
+        usings.ShouldNotContain("RaylibGum");
+    }
+
     #endregion
 
     #region Parent assignment AddChild

@@ -21,4 +21,7 @@ echo 60/100 generated CodeGen_MonoGameForms_ByReference
 echo 80/100 generated CodeGen_MonoGameForms_Localization_ByReference
 
 "%CLI%" codegen %~dp0CodeGen_MonoGameForms_FullCodegen/Content/CodeGenProject.gumx
-echo 100/100 generated CodeGen_MonoGameForms_FullCodegen
+echo 80/100 generated CodeGen_MonoGameForms_FullCodegen
+
+"%CLI%" codegen %~dp0CodeGen_Raylib_ByReference/Content/GumProject/CodeGenTestProject.gumx
+echo 100/100 generated CodeGen_Raylib_ByReference

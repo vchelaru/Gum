@@ -184,7 +184,8 @@ jobs:
             "Tests/CodeGen_MonoGame_ByReference/Content/GumProject/CodeGenTestProject.gumx",
             "Tests/CodeGen_MonoGameForms_ByReference/Content/GumProject/CodeGenTestProject.gumx",
             "Tests/CodeGen_MonoGameForms_Localization_ByReference/Content/GumProject/LocalizationCodeGenTestProject.gumx",
-            "Tests/CodeGen_MonoGameForms_FullCodegen/Content/CodeGenProject.gumx"
+            "Tests/CodeGen_MonoGameForms_FullCodegen/Content/CodeGenProject.gumx",
+            "Tests/CodeGen_Raylib_ByReference/Content/GumProject/CodeGenTestProject.gumx"
           )
           foreach ($gumxProject in $gumxProjects) {
             & $cli codegen $gumxProject
@@ -215,6 +216,9 @@ jobs:
 
           dotnet restore "Tests/CodeGen_MonoGameForms_FullCodegen/CodeGen_MonoGameForms_FullCodegen.sln" --verbosity quiet
           dotnet build "Tests/CodeGen_MonoGameForms_FullCodegen/CodeGen_MonoGameForms_FullCodegen.sln" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
+
+          dotnet restore "Tests/CodeGen_Raylib_ByReference/CodeGen_Raylib_ByReference.sln" --verbosity quiet
+          dotnet build "Tests/CodeGen_Raylib_ByReference/CodeGen_Raylib_ByReference.sln" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
 
       # ---------------------------------------------------------------------
       # Test allow-list policy

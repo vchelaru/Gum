@@ -56,3 +56,4 @@ Runtimes/GumShapes/XnbTest/
 /temp/*
 !/temp/.gitkeep
 /.claude/worktrees
+/.claude/tmp
