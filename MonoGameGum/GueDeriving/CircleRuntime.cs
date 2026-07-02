@@ -106,6 +106,20 @@ public class CircleRuntime : GraphicalUiElement
             _stroke.Color = value;
             NotifyPropertyChanged();
         }
+#elif RAYLIB
+        // Issue #3444 — route the obsolete single-color surface to the VISIBLE stroke slot.
+        // A fresh CircleRuntime seeds a non-null white StrokeColor, and LineCircle.Render
+        // resolves the outline as `StrokeColor ?? Color` — so writing the legacy Color slot was
+        // silently shadowed (white ring) while MonoGame (single Color slot) drew the assigned
+        // color. Writing StrokeColor here makes `circle.Color = X` produce the same outline color
+        // on both backends. Sokol keeps writing Color (its renderable has no StrokeColor slot, so
+        // nothing shadows it — see the ctor's "SOKOL renderable doesn't expose StrokeColor" note).
+        get => ContainedLineCircle.StrokeColor ?? ContainedLineCircle.Color;
+        set
+        {
+            ContainedLineCircle.StrokeColor = value;
+            NotifyPropertyChanged();
+        }
 #else
         get => ContainedLineCircle.Color;
         set
