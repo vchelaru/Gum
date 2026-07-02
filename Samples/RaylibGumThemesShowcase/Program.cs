@@ -67,11 +67,11 @@ public static class Program
             new ThemeOption("Editor", EditorTheme.Apply, new Color(40, 40, 40, 255)),
             new ThemeOption("Dark Pro", DarkProTheme.Apply, DarkProStyling.ActiveStyle.Colors.Background),
             new ThemeOption("Bubblegum", BubblegumTheme.Apply, BubblegumStyling.ActiveStyle.Colors.Background),
-            new ThemeOption("Forest Glade", ForestGladeTheme.Apply, ForestGladeColors.CanopyDeep),
+            new ThemeOption("Forest Glade", ForestGladeTheme.Apply, ForestGladeStyling.ActiveStyle.Colors.CanopyDeep),
             new ThemeOption("Hazard", HazardTheme.Apply, HazardPalette.Background),
-            new ThemeOption("Meadow", MeadowTheme.Apply, MeadowColors.Cream),
+            new ThemeOption("Meadow", MeadowTheme.Apply, MeadowStyling.ActiveStyle.Colors.Cream),
             new ThemeOption("Neon", NeonTheme.Apply, NeonColors.Background),
-            new ThemeOption("Retro 95", Retro95Theme.Apply, Retro95Colors.Surface),
+            new ThemeOption("Retro 95", Retro95Theme.Apply, Retro95Styling.ActiveStyle.Colors.Surface),
             new ThemeOption("Template", TemplateTheme.Apply, TemplatePalette.Background),
         };
 

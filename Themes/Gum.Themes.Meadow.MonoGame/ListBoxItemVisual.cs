@@ -38,7 +38,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         AddChild(_selectedInset);
 
         AddChild(TextInstance);
-        TextInstance.Font = MeadowTheme.BodyFontFamily;
+        TextInstance.Font = MeadowStyling.ActiveStyle.Text.BodyFontFamily;
         TextInstance.X = 12f;
         TextInstance.XUnits = GeneralUnitType.PixelsFromSmall;
         TextInstance.XOrigin = HorizontalAlignment.Left;
@@ -88,7 +88,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         inset.IsFilled = false;
         inset.StrokeWidth = 2f;
         inset.StrokeWidthUnits = DimensionUnitType.Absolute;
-        inset.StrokeColor = MeadowColors.SageDark;
+        inset.StrokeColor = MeadowStyling.ActiveStyle.Colors.SageDark;
         inset.Visible = false;
         return inset;
     }
@@ -96,19 +96,19 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
     private void WireStates()
     {
         States.Enabled.Apply = () => ApplyPalette(
-            fill: new Color(0, 0, 0, 0), text: MeadowColors.TealDark, selected: false);
+            fill: new Color(0, 0, 0, 0), text: MeadowStyling.ActiveStyle.Colors.TealDark, selected: false);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            fill: MeadowPalette.HoverRow, text: MeadowColors.TealDark, selected: false);
+            fill: MeadowStyling.ActiveStyle.Colors.HoverRow, text: MeadowStyling.ActiveStyle.Colors.TealDark, selected: false);
 
         States.Selected.Apply = () => ApplyPalette(
-            fill: MeadowPalette.SelectedRow, text: MeadowPalette.SelectedRowText, selected: true);
+            fill: MeadowStyling.ActiveStyle.Colors.SelectedRow, text: MeadowStyling.ActiveStyle.Colors.SelectedRowText, selected: true);
 
         States.Focused.Apply = () => ApplyPalette(
-            fill: MeadowPalette.SelectedRow, text: MeadowPalette.SelectedRowText, selected: true);
+            fill: MeadowStyling.ActiveStyle.Colors.SelectedRow, text: MeadowStyling.ActiveStyle.Colors.SelectedRowText, selected: true);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fill: new Color(0, 0, 0, 0), text: MeadowColors.DisabledInk, selected: false);
+            fill: new Color(0, 0, 0, 0), text: MeadowStyling.ActiveStyle.Colors.DisabledInk, selected: false);
     }
 
     private void ApplyPalette(Color fill, Color text, bool selected)

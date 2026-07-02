@@ -60,10 +60,10 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         // ✓ renders through the bundled DejaVu Sans Mono icon font under the
         // "Meadow Icons" family. MeadowTheme.Apply pre-registers the glyph via
         // BmfcSave.AddCharacters so KernSmith bakes it into the atlas.
-        _checkGlyph.Font = MeadowTheme.IconFontFamily;
+        _checkGlyph.Font = MeadowStyling.ActiveStyle.Text.IconFontFamily;
         _checkGlyph.FontSize = 19;
         _checkGlyph.Text = "✓";
-        _checkGlyph.Color = MeadowColors.White;
+        _checkGlyph.Color = MeadowStyling.ActiveStyle.Colors.White;
         _checkGlyph.Visible = false;
 
         _dashIndicator = CreateDashIndicator();
@@ -89,7 +89,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         fill.HeightUnits = DimensionUnitType.Absolute;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = MeadowColors.White;
+        fill.FillColor = MeadowStyling.ActiveStyle.Colors.White;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -112,7 +112,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = MeadowColors.PeachDark;
+        border.StrokeColor = MeadowStyling.ActiveStyle.Colors.PeachDark;
         return border;
     }
 
@@ -134,7 +134,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = MeadowPalette.SageFocusRing;
+        ring.StrokeColor = MeadowStyling.ActiveStyle.Colors.SageFocusRing;
         ring.Visible = false;
         return ring;
     }
@@ -176,7 +176,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         dash.HeightUnits = DimensionUnitType.Absolute;
         dash.CornerRadius = 1.5f;
         dash.IsFilled = true;
-        dash.FillColor = MeadowColors.SageDark;
+        dash.FillColor = MeadowStyling.ActiveStyle.Colors.SageDark;
         dash.StrokeWidth = 0;
         return dash;
     }
@@ -185,98 +185,98 @@ public class CheckBoxVisual : BaseCheckBoxVisual
     {
         // -------- Unchecked (Off) --------
         States.EnabledOff.Apply = () => Apply(
-            fill: MeadowColors.White, border: MeadowColors.PeachDark,
-            text: MeadowColors.TealDark, glyph: GlyphKind.None, ring: false);
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.PeachDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: GlyphKind.None, ring: false);
 
         States.HighlightedOff.Apply = () => Apply(
-            fill: MeadowColors.White, border: MeadowColors.SageDark,
-            text: MeadowColors.TealDark, glyph: GlyphKind.None, ring: false);
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.SageDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: GlyphKind.None, ring: false);
 
         States.FocusedOff.Apply = () => Apply(
-            fill: MeadowColors.White, border: MeadowColors.SageDark,
-            text: MeadowColors.TealDark, glyph: GlyphKind.None, ring: true);
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.SageDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: GlyphKind.None, ring: true);
 
         States.HighlightedFocusedOff.Apply = () => Apply(
-            fill: MeadowColors.White, border: MeadowColors.SageDark,
-            text: MeadowColors.TealDark, glyph: GlyphKind.None, ring: true);
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.SageDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: GlyphKind.None, ring: true);
 
         States.PushedOff.Apply = () => Apply(
-            fill: MeadowColors.White, border: MeadowColors.SageDark,
-            text: MeadowColors.TealDark, glyph: GlyphKind.None, ring: false);
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.SageDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: GlyphKind.None, ring: false);
 
         States.DisabledOff.Apply = () => Apply(
-            fill: MeadowColors.Cream2, border: MeadowColors.Disabled,
-            text: MeadowColors.DisabledInk, glyph: GlyphKind.None, ring: false);
+            fill: MeadowStyling.ActiveStyle.Colors.Cream2, border: MeadowStyling.ActiveStyle.Colors.Disabled,
+            text: MeadowStyling.ActiveStyle.Colors.DisabledInk, glyph: GlyphKind.None, ring: false);
 
         States.DisabledFocusedOff.Apply = () => Apply(
-            fill: MeadowColors.Cream2, border: MeadowColors.Disabled,
-            text: MeadowColors.DisabledInk, glyph: GlyphKind.None, ring: true);
+            fill: MeadowStyling.ActiveStyle.Colors.Cream2, border: MeadowStyling.ActiveStyle.Colors.Disabled,
+            text: MeadowStyling.ActiveStyle.Colors.DisabledInk, glyph: GlyphKind.None, ring: true);
 
         // -------- Checked (On) -------- sage-filled box, white check.
         States.EnabledOn.Apply = () => Apply(
-            fill: MeadowColors.SageDark, border: MeadowColors.SageDark,
-            text: MeadowColors.TealDark, glyph: GlyphKind.Check, glyphColor: MeadowColors.White,
+            fill: MeadowStyling.ActiveStyle.Colors.SageDark, border: MeadowStyling.ActiveStyle.Colors.SageDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: GlyphKind.Check, glyphColor: MeadowStyling.ActiveStyle.Colors.White,
             ring: false);
 
         States.HighlightedOn.Apply = () => Apply(
-            fill: MeadowColors.SageDark, border: MeadowColors.SageDark,
-            text: MeadowColors.TealDark, glyph: GlyphKind.Check, glyphColor: MeadowColors.White,
+            fill: MeadowStyling.ActiveStyle.Colors.SageDark, border: MeadowStyling.ActiveStyle.Colors.SageDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: GlyphKind.Check, glyphColor: MeadowStyling.ActiveStyle.Colors.White,
             ring: false);
 
         States.FocusedOn.Apply = () => Apply(
-            fill: MeadowColors.SageDark, border: MeadowColors.SageDark,
-            text: MeadowColors.TealDark, glyph: GlyphKind.Check, glyphColor: MeadowColors.White,
+            fill: MeadowStyling.ActiveStyle.Colors.SageDark, border: MeadowStyling.ActiveStyle.Colors.SageDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: GlyphKind.Check, glyphColor: MeadowStyling.ActiveStyle.Colors.White,
             ring: true);
 
         States.HighlightedFocusedOn.Apply = () => Apply(
-            fill: MeadowColors.SageDark, border: MeadowColors.SageDark,
-            text: MeadowColors.TealDark, glyph: GlyphKind.Check, glyphColor: MeadowColors.White,
+            fill: MeadowStyling.ActiveStyle.Colors.SageDark, border: MeadowStyling.ActiveStyle.Colors.SageDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: GlyphKind.Check, glyphColor: MeadowStyling.ActiveStyle.Colors.White,
             ring: true);
 
         // Pressed-checked deepens to teal (CSS .pp-chk.pre.chk).
         States.PushedOn.Apply = () => Apply(
-            fill: MeadowColors.Teal, border: MeadowColors.Teal,
-            text: MeadowColors.TealDark, glyph: GlyphKind.Check, glyphColor: MeadowColors.White,
+            fill: MeadowStyling.ActiveStyle.Colors.Teal, border: MeadowStyling.ActiveStyle.Colors.Teal,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: GlyphKind.Check, glyphColor: MeadowStyling.ActiveStyle.Colors.White,
             ring: false);
 
         States.DisabledOn.Apply = () => Apply(
-            fill: MeadowColors.Cream2, border: MeadowColors.Disabled,
-            text: MeadowColors.DisabledInk, glyph: GlyphKind.Check,
-            glyphColor: MeadowColors.DisabledInk, ring: false);
+            fill: MeadowStyling.ActiveStyle.Colors.Cream2, border: MeadowStyling.ActiveStyle.Colors.Disabled,
+            text: MeadowStyling.ActiveStyle.Colors.DisabledInk, glyph: GlyphKind.Check,
+            glyphColor: MeadowStyling.ActiveStyle.Colors.DisabledInk, ring: false);
 
         States.DisabledFocusedOn.Apply = () => Apply(
-            fill: MeadowColors.Cream2, border: MeadowColors.Disabled,
-            text: MeadowColors.DisabledInk, glyph: GlyphKind.Check,
-            glyphColor: MeadowColors.DisabledInk, ring: true);
+            fill: MeadowStyling.ActiveStyle.Colors.Cream2, border: MeadowStyling.ActiveStyle.Colors.Disabled,
+            text: MeadowStyling.ActiveStyle.Colors.DisabledInk, glyph: GlyphKind.Check,
+            glyphColor: MeadowStyling.ActiveStyle.Colors.DisabledInk, ring: true);
 
         // -------- Indeterminate -------- white box, sage dash + border.
         States.EnabledIndeterminate.Apply = () => Apply(
-            fill: MeadowColors.White, border: MeadowColors.SageDark,
-            text: MeadowColors.TealDark, glyph: GlyphKind.Dash, ring: false);
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.SageDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: GlyphKind.Dash, ring: false);
 
         States.HighlightedIndeterminate.Apply = () => Apply(
-            fill: MeadowColors.White, border: MeadowColors.SageDark,
-            text: MeadowColors.TealDark, glyph: GlyphKind.Dash, ring: false);
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.SageDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: GlyphKind.Dash, ring: false);
 
         States.FocusedIndeterminate.Apply = () => Apply(
-            fill: MeadowColors.White, border: MeadowColors.SageDark,
-            text: MeadowColors.TealDark, glyph: GlyphKind.Dash, ring: true);
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.SageDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: GlyphKind.Dash, ring: true);
 
         States.HighlightedFocusedIndeterminate.Apply = () => Apply(
-            fill: MeadowColors.White, border: MeadowColors.SageDark,
-            text: MeadowColors.TealDark, glyph: GlyphKind.Dash, ring: true);
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.SageDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: GlyphKind.Dash, ring: true);
 
         States.PushedIndeterminate.Apply = () => Apply(
-            fill: MeadowColors.White, border: MeadowColors.Teal,
-            text: MeadowColors.TealDark, glyph: GlyphKind.Dash, ring: false);
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.Teal,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, glyph: GlyphKind.Dash, ring: false);
 
         States.DisabledIndeterminate.Apply = () => Apply(
-            fill: MeadowColors.Cream2, border: MeadowColors.Disabled,
-            text: MeadowColors.DisabledInk, glyph: GlyphKind.Dash, ring: false);
+            fill: MeadowStyling.ActiveStyle.Colors.Cream2, border: MeadowStyling.ActiveStyle.Colors.Disabled,
+            text: MeadowStyling.ActiveStyle.Colors.DisabledInk, glyph: GlyphKind.Dash, ring: false);
 
         States.DisabledFocusedIndeterminate.Apply = () => Apply(
-            fill: MeadowColors.Cream2, border: MeadowColors.Disabled,
-            text: MeadowColors.DisabledInk, glyph: GlyphKind.Dash, ring: true);
+            fill: MeadowStyling.ActiveStyle.Colors.Cream2, border: MeadowStyling.ActiveStyle.Colors.Disabled,
+            text: MeadowStyling.ActiveStyle.Colors.DisabledInk, glyph: GlyphKind.Dash, ring: true);
     }
 
     private enum GlyphKind { None, Check, Dash }
@@ -294,12 +294,12 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         {
             // Channel-wise equality so it compiles on both XNA (Color has ==) and raylib (no == operator).
             bool borderIsDisabled =
-                border.R == MeadowColors.Disabled.R &&
-                border.G == MeadowColors.Disabled.G &&
-                border.B == MeadowColors.Disabled.B &&
-                border.A == MeadowColors.Disabled.A;
+                border.R == MeadowStyling.ActiveStyle.Colors.Disabled.R &&
+                border.G == MeadowStyling.ActiveStyle.Colors.Disabled.G &&
+                border.B == MeadowStyling.ActiveStyle.Colors.Disabled.B &&
+                border.A == MeadowStyling.ActiveStyle.Colors.Disabled.A;
             _dashIndicator.FillColor = borderIsDisabled
-                ? MeadowColors.Disabled : MeadowColors.SageDark;
+                ? MeadowStyling.ActiveStyle.Colors.Disabled : MeadowStyling.ActiveStyle.Colors.SageDark;
         }
         if (glyphColor.HasValue)
         {

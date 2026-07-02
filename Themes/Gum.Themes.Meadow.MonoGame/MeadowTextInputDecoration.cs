@@ -53,8 +53,8 @@ internal sealed class MeadowTextInputDecoration
         host.AddChild(_border);
 
         // Body face for the typed text + placeholder.
-        host.TextInstance.Font = MeadowTheme.BodyFontFamily;
-        host.PlaceholderTextInstance.Font = MeadowTheme.BodyFontFamily;
+        host.TextInstance.Font = MeadowStyling.ActiveStyle.Text.BodyFontFamily;
+        host.PlaceholderTextInstance.Font = MeadowStyling.ActiveStyle.Text.BodyFontFamily;
 
         WireStates(host);
     }
@@ -75,7 +75,7 @@ internal sealed class MeadowTextInputDecoration
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = MeadowColors.PeachLight;
+        fill.FillColor = MeadowStyling.ActiveStyle.Colors.PeachLight;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -120,7 +120,7 @@ internal sealed class MeadowTextInputDecoration
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = MeadowPalette.BlueFocusRing;
+        ring.StrokeColor = MeadowStyling.ActiveStyle.Colors.BlueFocusRing;
         ring.Visible = false;
         return ring;
     }
@@ -128,24 +128,24 @@ internal sealed class MeadowTextInputDecoration
     private void WireStates(TextBoxBaseVisual host)
     {
         host.States.Enabled.Apply = () => Apply(host,
-            fill: MeadowColors.PeachLight, border: new Color(0, 0, 0, 0),
-            text: MeadowColors.TealDark, placeholder: MeadowColors.Muted,
-            caret: MeadowColors.Teal, selection: MeadowColors.Sage, ring: false);
+            fill: MeadowStyling.ActiveStyle.Colors.PeachLight, border: new Color(0, 0, 0, 0),
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, placeholder: MeadowStyling.ActiveStyle.Colors.Muted,
+            caret: MeadowStyling.ActiveStyle.Colors.Teal, selection: MeadowStyling.ActiveStyle.Colors.Sage, ring: false);
 
         host.States.Highlighted.Apply = () => Apply(host,
-            fill: MeadowColors.PeachLight, border: MeadowColors.PeachDark,
-            text: MeadowColors.TealDark, placeholder: MeadowColors.Muted,
-            caret: MeadowColors.Teal, selection: MeadowColors.Sage, ring: false);
+            fill: MeadowStyling.ActiveStyle.Colors.PeachLight, border: MeadowStyling.ActiveStyle.Colors.PeachDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, placeholder: MeadowStyling.ActiveStyle.Colors.Muted,
+            caret: MeadowStyling.ActiveStyle.Colors.Teal, selection: MeadowStyling.ActiveStyle.Colors.Sage, ring: false);
 
         host.States.Focused.Apply = () => Apply(host,
-            fill: MeadowColors.White, border: MeadowColors.Blue,
-            text: MeadowColors.TealDark, placeholder: MeadowColors.Muted,
-            caret: MeadowColors.Teal, selection: MeadowColors.Sage, ring: true);
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.Blue,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, placeholder: MeadowStyling.ActiveStyle.Colors.Muted,
+            caret: MeadowStyling.ActiveStyle.Colors.Teal, selection: MeadowStyling.ActiveStyle.Colors.Sage, ring: true);
 
         host.States.Disabled.Apply = () => Apply(host,
-            fill: MeadowColors.Cream2, border: MeadowColors.Disabled,
-            text: MeadowColors.DisabledInk, placeholder: MeadowColors.DisabledInk,
-            caret: MeadowColors.DisabledInk, selection: MeadowColors.Sage, ring: false);
+            fill: MeadowStyling.ActiveStyle.Colors.Cream2, border: MeadowStyling.ActiveStyle.Colors.Disabled,
+            text: MeadowStyling.ActiveStyle.Colors.DisabledInk, placeholder: MeadowStyling.ActiveStyle.Colors.DisabledInk,
+            caret: MeadowStyling.ActiveStyle.Colors.DisabledInk, selection: MeadowStyling.ActiveStyle.Colors.Sage, ring: false);
     }
 
     private void Apply(TextBoxBaseVisual host, Color fill, Color border, Color text,

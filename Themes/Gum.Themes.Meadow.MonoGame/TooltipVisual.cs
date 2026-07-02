@@ -32,8 +32,8 @@ public class TooltipVisual : BaseTooltipVisual
         AddChild(_border);
 
         AddChild(TextInstance);
-        TextInstance.Font = MeadowTheme.BodyFontFamily;
-        TextInstance.Color = MeadowColors.TealDark;
+        TextInstance.Font = MeadowStyling.ActiveStyle.Text.BodyFontFamily;
+        TextInstance.Color = MeadowStyling.ActiveStyle.Colors.TealDark;
     }
 
     private static RectangleRuntime CreateFill()
@@ -52,7 +52,7 @@ public class TooltipVisual : BaseTooltipVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = MeadowColors.Cream2;
+        fill.FillColor = MeadowStyling.ActiveStyle.Colors.Cream2;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -75,7 +75,7 @@ public class TooltipVisual : BaseTooltipVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = MeadowColors.PeachDark;
+        border.StrokeColor = MeadowStyling.ActiveStyle.Colors.PeachDark;
         return border;
     }
 }

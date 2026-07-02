@@ -48,7 +48,7 @@ public class MenuVisual : BaseMenuVisual
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.IsFilled = true;
-        fill.FillColor = MeadowColors.Cream2;
+        fill.FillColor = MeadowStyling.ActiveStyle.Colors.Cream2;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -68,7 +68,7 @@ public class MenuVisual : BaseMenuVisual
         separator.WidthUnits = DimensionUnitType.RelativeToParent;
         separator.HeightUnits = DimensionUnitType.Absolute;
         separator.IsFilled = true;
-        separator.FillColor = MeadowColors.PeachDark;
+        separator.FillColor = MeadowStyling.ActiveStyle.Colors.PeachDark;
         separator.StrokeWidth = 0;
         return separator;
     }

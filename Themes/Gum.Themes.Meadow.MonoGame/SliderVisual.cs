@@ -113,7 +113,7 @@ public class SliderVisual : BaseSliderVisual
         track.HeightUnits = DimensionUnitType.Absolute;
         track.CornerRadius = TrackCornerRadius;
         track.IsFilled = true;
-        track.FillColor = MeadowColors.PeachDark;
+        track.FillColor = MeadowStyling.ActiveStyle.Colors.PeachDark;
         track.StrokeWidth = 0;
         return track;
     }
@@ -134,20 +134,20 @@ public class SliderVisual : BaseSliderVisual
         fill.HeightUnits = DimensionUnitType.Absolute;
         fill.CornerRadius = TrackCornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = MeadowColors.Coral;
+        fill.FillColor = MeadowStyling.ActiveStyle.Colors.Coral;
         fill.StrokeWidth = 0;
         return fill;
     }
 
     private void WireStates()
     {
-        States.Enabled.Apply = () => ApplyTrack(MeadowColors.PeachDark, MeadowColors.Coral);
-        States.Highlighted.Apply = () => ApplyTrack(MeadowColors.PeachDark, MeadowColors.Coral);
-        States.HighlightedFocused.Apply = () => ApplyTrack(MeadowColors.PeachDark, MeadowColors.Coral);
-        States.Focused.Apply = () => ApplyTrack(MeadowColors.PeachDark, MeadowColors.Coral);
-        States.Pushed.Apply = () => ApplyTrack(MeadowColors.PeachDark, MeadowColors.Coral);
-        States.Disabled.Apply = () => ApplyTrack(MeadowColors.Disabled, MeadowColors.DisabledSliderFill);
-        States.DisabledFocused.Apply = () => ApplyTrack(MeadowColors.Disabled, MeadowColors.DisabledSliderFill);
+        States.Enabled.Apply = () => ApplyTrack(MeadowStyling.ActiveStyle.Colors.PeachDark, MeadowStyling.ActiveStyle.Colors.Coral);
+        States.Highlighted.Apply = () => ApplyTrack(MeadowStyling.ActiveStyle.Colors.PeachDark, MeadowStyling.ActiveStyle.Colors.Coral);
+        States.HighlightedFocused.Apply = () => ApplyTrack(MeadowStyling.ActiveStyle.Colors.PeachDark, MeadowStyling.ActiveStyle.Colors.Coral);
+        States.Focused.Apply = () => ApplyTrack(MeadowStyling.ActiveStyle.Colors.PeachDark, MeadowStyling.ActiveStyle.Colors.Coral);
+        States.Pushed.Apply = () => ApplyTrack(MeadowStyling.ActiveStyle.Colors.PeachDark, MeadowStyling.ActiveStyle.Colors.Coral);
+        States.Disabled.Apply = () => ApplyTrack(MeadowStyling.ActiveStyle.Colors.Disabled, MeadowStyling.ActiveStyle.Colors.DisabledSliderFill);
+        States.DisabledFocused.Apply = () => ApplyTrack(MeadowStyling.ActiveStyle.Colors.Disabled, MeadowStyling.ActiveStyle.Colors.DisabledSliderFill);
     }
 
     private void ApplyTrack(Color trackFill, Color fillBar)

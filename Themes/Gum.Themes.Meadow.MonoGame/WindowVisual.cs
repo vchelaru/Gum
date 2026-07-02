@@ -35,11 +35,12 @@ public class WindowVisual : BaseWindowVisual
     /// <c>box-shadow: 0 14px 30px rgba(150,110,70,.22)</c>; per the gum-theming
     /// skill, sRGB-space compositing + Apos's blur-kernel semantics mean the
     /// CSS-literal alpha reads too faint, so the alpha is bumped in
-    /// <see cref="MeadowPalette.WindowShadow"/>.
+    /// <see cref="MeadowColors.WindowShadow"/>. Read live from
+    /// <see cref="MeadowStyling.ActiveStyle"/> at construction (not cached in a static field)
+    /// so a restyle before construction is picked up.
     /// </summary>
     private const float ShadowOffsetY = 14f;
     private const float ShadowBlur = 30f;
-    private static readonly Color ShadowColor = MeadowPalette.WindowShadow;
 
     private readonly RectangleRuntime _fill;
     private readonly RectangleRuntime _border;
@@ -102,11 +103,11 @@ public class WindowVisual : BaseWindowVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = MeadowColors.Cream2;
+        fill.FillColor = MeadowStyling.ActiveStyle.Colors.Cream2;
         fill.StrokeWidth = 0;
         // Native Gaussian drop shadow — replaces the prior three-layer stack.
         fill.HasDropshadow = true;
-        fill.DropshadowColor = ShadowColor;
+        fill.DropshadowColor = MeadowStyling.ActiveStyle.Colors.WindowShadow;
         fill.DropshadowOffsetX = 0f;
         fill.DropshadowOffsetY = ShadowOffsetY;
         fill.DropshadowBlur = ShadowBlur;
@@ -131,7 +132,7 @@ public class WindowVisual : BaseWindowVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = MeadowColors.PeachDark;
+        border.StrokeColor = MeadowStyling.ActiveStyle.Colors.PeachDark;
         return border;
     }
 
@@ -151,7 +152,7 @@ public class WindowVisual : BaseWindowVisual
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.IsFilled = true;
-        fill.FillColor = MeadowColors.Teal;
+        fill.FillColor = MeadowStyling.ActiveStyle.Colors.Teal;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -171,7 +172,7 @@ public class WindowVisual : BaseWindowVisual
         separator.WidthUnits = DimensionUnitType.RelativeToParent;
         separator.HeightUnits = DimensionUnitType.Absolute;
         separator.IsFilled = true;
-        separator.FillColor = MeadowColors.TealDark;
+        separator.FillColor = MeadowStyling.ActiveStyle.Colors.TealDark;
         separator.StrokeWidth = 0;
         return separator;
     }

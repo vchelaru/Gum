@@ -21,42 +21,41 @@ namespace Gum.Themes.Meadow;
 /// the default templates for Forms controls.
 /// <para>
 /// Meadow ships two user-facing typefaces: <b>Baloo 2</b> (rounded display face)
-/// for buttons, check / radio labels, and window titles — registered as the
-/// default <see cref="FontFamily"/> so it flows to controls that read
-/// <c>Styling.ActiveStyle.Text</c> — and <b>Quicksand</b> (<see cref="BodyFontFamily"/>)
-/// for text-entry / list / menu content, which the relevant visuals opt into
-/// explicitly via their <c>TextInstance.Font</c>.
+/// for buttons, check / radio labels, and window titles — the default
+/// <see cref="MeadowText.FontFamily"/> so it flows to controls that read
+/// <c>Styling.ActiveStyle.Text</c> — and <b>Quicksand</b>
+/// (<see cref="MeadowText.BodyFontFamily"/>) for text-entry / list / menu content,
+/// which the relevant visuals opt into explicitly via their <c>TextInstance.Font</c>.
 /// </para>
 /// </summary>
 public static class MeadowTheme
 {
     /// <summary>
-    /// Family name the bundled Baloo 2 TTFs are registered under, and the
-    /// theme's default text family (display / label face). Use this as the
-    /// <c>Font</c> property value on any TextRuntime to get the display font.
+    /// Fixed family name the bundled Baloo 2 TTFs are registered under. Font
+    /// <em>registration</em> is intentionally decoupled from font
+    /// <em>selection</em> (<see cref="MeadowText.FontFamily"/>, mutable) —
+    /// reassigning the selection before <see cref="Apply"/> can never corrupt
+    /// this registration.
     /// </summary>
-    public const string FontFamily = "Baloo 2";
+    internal const string BundledFontFamily = "Baloo 2";
 
     /// <summary>
-    /// Family name the bundled Quicksand TTFs are registered under — the body /
-    /// data face used by text inputs, list rows, combo fields, and menu items.
-    /// Set <c>TextInstance.Font = MeadowTheme.BodyFontFamily</c> in a visual to
-    /// opt into it (the default is <see cref="FontFamily"/>).
+    /// Fixed family name the bundled Quicksand TTFs are registered under — the
+    /// body / data face used by text inputs, list rows, combo fields, and menu
+    /// items. See <see cref="BundledFontFamily"/> for why this is a fixed
+    /// constant rather than the mutable <see cref="MeadowText.BodyFontFamily"/>
+    /// selection.
     /// </summary>
-    public const string BodyFontFamily = "Quicksand";
+    internal const string BundledBodyFontFamily = "Quicksand";
 
     /// <summary>
-    /// Family name the bundled icon font (DejaVu Sans Mono) is registered under.
-    /// Use this for glyphs the body fonts don't cover — check marks and dropdown
-    /// chevrons (Dingbats and Geometric Shapes blocks).
+    /// Fixed family name the bundled icon font (DejaVu Sans Mono) is registered
+    /// under. Used for glyphs the body fonts don't cover — check marks and
+    /// dropdown chevrons (Dingbats and Geometric Shapes blocks). See
+    /// <see cref="BundledFontFamily"/> for why this is a fixed constant rather
+    /// than the mutable <see cref="MeadowText.IconFontFamily"/> selection.
     /// </summary>
-    public const string IconFontFamily = "Meadow Icons";
-
-    /// <summary>
-    /// Default text size used by the theme. Matches the source mockup's
-    /// <c>--fs</c> token (15px).
-    /// </summary>
-    public const int FontSize = 15;
+    internal const string BundledIconFontFamily = "Meadow Icons";
 
     /// <summary>
     /// Applies the Meadow theme: wires KernSmith as the in-memory font
@@ -108,19 +107,19 @@ public static class MeadowTheme
         // resolves to a real font rather than risking a missing-style lookup;
         // the glyphs simply render upright. SemiBold (600) fills Gum's Normal
         // slot — Baloo's lighter cuts read too thin for this chunky, cozy look.
-        RegisterEmbeddedFont(FontFamily, "Baloo2-SemiBold.ttf", style: null);
-        RegisterEmbeddedFont(FontFamily, "Baloo2-Bold.ttf", style: "Bold");
-        RegisterEmbeddedFont(FontFamily, "Baloo2-SemiBold.ttf", style: "Italic");
-        RegisterEmbeddedFont(FontFamily, "Baloo2-Bold.ttf", style: "BoldItalic");
+        RegisterEmbeddedFont(BundledFontFamily, "Baloo2-SemiBold.ttf", style: null);
+        RegisterEmbeddedFont(BundledFontFamily, "Baloo2-Bold.ttf", style: "Bold");
+        RegisterEmbeddedFont(BundledFontFamily, "Baloo2-SemiBold.ttf", style: "Italic");
+        RegisterEmbeddedFont(BundledFontFamily, "Baloo2-Bold.ttf", style: "BoldItalic");
 
-        RegisterEmbeddedFont(BodyFontFamily, "Quicksand-Medium.ttf", style: null);
-        RegisterEmbeddedFont(BodyFontFamily, "Quicksand-Bold.ttf", style: "Bold");
-        RegisterEmbeddedFont(BodyFontFamily, "Quicksand-Medium.ttf", style: "Italic");
-        RegisterEmbeddedFont(BodyFontFamily, "Quicksand-Bold.ttf", style: "BoldItalic");
+        RegisterEmbeddedFont(BundledBodyFontFamily, "Quicksand-Medium.ttf", style: null);
+        RegisterEmbeddedFont(BundledBodyFontFamily, "Quicksand-Bold.ttf", style: "Bold");
+        RegisterEmbeddedFont(BundledBodyFontFamily, "Quicksand-Medium.ttf", style: "Italic");
+        RegisterEmbeddedFont(BundledBodyFontFamily, "Quicksand-Bold.ttf", style: "BoldItalic");
 
         // Icon font registered under a distinct family name so visual code
-        // addresses it explicitly via MeadowTheme.IconFontFamily.
-        RegisterEmbeddedFont(IconFontFamily, "DejaVuSansMono.ttf", style: null);
+        // addresses it explicitly via MeadowStyling.ActiveStyle.Text.IconFontFamily.
+        RegisterEmbeddedFont(BundledIconFontFamily, "DejaVuSansMono.ttf", style: null);
     }
 
     private static void RegisterEmbeddedFont(string family, string fileName, string? style)
@@ -147,15 +146,20 @@ public static class MeadowTheme
         ThemePlatform.RegisterFont(family, fontBytes, style);
     }
 
-    private static void ConfigureStyling()
+    // Internal (not private) so Tests/Gum.Themes.Tests can exercise the guardrail-token sync
+    // (TextPrimary/TextMuted/Primary/Accent → V3.Styling.ActiveStyle.Colors) without going
+    // through Apply(), which requires a real GraphicsDevice for font wiring and can't run
+    // headlessly in a unit test. See Gum.Themes.Meadow.MonoGame.csproj's InternalsVisibleTo.
+    internal static void ConfigureStyling()
     {
         Styling styling = Styling.ActiveStyle;
+        MeadowText text = MeadowStyling.ActiveStyle.Text;
 
         styling.Text.Normal.Clear();
         styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = FontFamily });
+            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
         styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = FontSize });
+            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
         styling.Text.Normal.Variables.Add(
             new VariableSave { Name = "IsBold", Type = "bool", Value = false });
         styling.Text.Normal.Variables.Add(
@@ -163,9 +167,9 @@ public static class MeadowTheme
 
         styling.Text.Strong.Clear();
         styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = FontFamily });
+            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
         styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = FontSize });
+            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
         styling.Text.Strong.Variables.Add(
             new VariableSave { Name = "IsBold", Type = "bool", Value = true });
         styling.Text.Strong.Variables.Add(
@@ -173,11 +177,14 @@ public static class MeadowTheme
 
         // The four Styling.Colors slots that overlap with V3's vocabulary; they
         // also color the controls left at their stock V3 visual (e.g. Label, which
-        // therefore renders teal-dark in the default Baloo 2 display face).
-        styling.Colors.TextPrimary = MeadowColors.TealDark;
-        styling.Colors.TextMuted = MeadowColors.Muted;
-        styling.Colors.Primary = MeadowColors.Cream2;
-        styling.Colors.Accent = MeadowColors.Blue;
+        // therefore renders teal-dark in the default Baloo 2 display face). We push
+        // only the 4-token guardrail (TextPrimary, TextMuted, Primary, Accent) and the
+        // visuals read the rest of the palette from MeadowStyling.ActiveStyle.Colors directly.
+        MeadowColors colors = MeadowStyling.ActiveStyle.Colors;
+        styling.Colors.TextPrimary = colors.TextPrimary;
+        styling.Colors.TextMuted = colors.TextMuted;
+        styling.Colors.Primary = colors.Primary;
+        styling.Colors.Accent = colors.Accent;
     }
 
     private static void RegisterVisuals()

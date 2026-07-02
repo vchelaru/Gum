@@ -155,7 +155,7 @@ public class ScrollBarVisual : BaseScrollBarVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = FrameCornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = MeadowColors.Cream2;
+        fill.FillColor = MeadowStyling.ActiveStyle.Colors.Cream2;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -178,7 +178,7 @@ public class ScrollBarVisual : BaseScrollBarVisual
         border.IsFilled = false;
         border.StrokeWidth = FrameBorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = MeadowColors.PeachDark;
+        border.StrokeColor = MeadowStyling.ActiveStyle.Colors.PeachDark;
         return border;
     }
 }

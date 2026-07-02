@@ -43,7 +43,7 @@ public class MenuItemVisual : BaseMenuItemVisual
         Height = VerticalPadding * 2f;
         HeightUnits = DimensionUnitType.RelativeToChildren;
 
-        TextInstance.Font = MeadowTheme.BodyFontFamily;
+        TextInstance.Font = MeadowStyling.ActiveStyle.Text.BodyFontFamily;
 
         WireStates();
 
@@ -78,19 +78,19 @@ public class MenuItemVisual : BaseMenuItemVisual
     private void WireStates()
     {
         States.Enabled.Apply = () => ApplyPalette(
-            fill: new Color(0, 0, 0, 0), text: MeadowColors.TealDark);
+            fill: new Color(0, 0, 0, 0), text: MeadowStyling.ActiveStyle.Colors.TealDark);
 
         States.Highlighted.Apply = () => ApplyPalette(
-            fill: MeadowPalette.HoverOption, text: MeadowColors.TealDark);
+            fill: MeadowStyling.ActiveStyle.Colors.HoverOption, text: MeadowStyling.ActiveStyle.Colors.TealDark);
 
         States.Selected.Apply = () => ApplyPalette(
-            fill: MeadowPalette.SelectedRow, text: MeadowPalette.SelectedRowText);
+            fill: MeadowStyling.ActiveStyle.Colors.SelectedRow, text: MeadowStyling.ActiveStyle.Colors.SelectedRowText);
 
         States.Focused.Apply = () => ApplyPalette(
-            fill: MeadowPalette.HoverOption, text: MeadowColors.TealDark);
+            fill: MeadowStyling.ActiveStyle.Colors.HoverOption, text: MeadowStyling.ActiveStyle.Colors.TealDark);
 
         States.Disabled.Apply = () => ApplyPalette(
-            fill: new Color(0, 0, 0, 0), text: MeadowColors.DisabledInk);
+            fill: new Color(0, 0, 0, 0), text: MeadowStyling.ActiveStyle.Colors.DisabledInk);
     }
 
     private void ApplyPalette(Color fill, Color text)

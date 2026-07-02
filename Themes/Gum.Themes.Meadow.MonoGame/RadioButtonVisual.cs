@@ -68,7 +68,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         c.WidthUnits = DimensionUnitType.Absolute;
         c.HeightUnits = DimensionUnitType.Absolute;
         c.IsFilled = true;
-        c.FillColor = MeadowColors.White;
+        c.FillColor = MeadowStyling.ActiveStyle.Colors.White;
         c.StrokeWidth = 0;
         return c;
     }
@@ -90,7 +90,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         c.IsFilled = false;
         c.StrokeWidth = BorderThickness;
         c.StrokeWidthUnits = DimensionUnitType.Absolute;
-        c.StrokeColor = MeadowColors.PeachDark;
+        c.StrokeColor = MeadowStyling.ActiveStyle.Colors.PeachDark;
         return c;
     }
 
@@ -111,7 +111,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         c.IsFilled = false;
         c.StrokeWidth = FocusRingThickness;
         c.StrokeWidthUnits = DimensionUnitType.Absolute;
-        c.StrokeColor = MeadowPalette.SageFocusRing;
+        c.StrokeColor = MeadowStyling.ActiveStyle.Colors.SageFocusRing;
         c.Visible = false;
         return c;
     }
@@ -132,7 +132,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         dot.WidthUnits = DimensionUnitType.Absolute;
         dot.HeightUnits = DimensionUnitType.Absolute;
         dot.IsFilled = true;
-        dot.FillColor = MeadowColors.SageDark;
+        dot.FillColor = MeadowStyling.ActiveStyle.Colors.SageDark;
         dot.StrokeWidth = 0;
         dot.Visible = false;
         return dot;
@@ -142,67 +142,67 @@ public class RadioButtonVisual : BaseRadioButtonVisual
     {
         // -------- Off --------
         States.EnabledOff.Apply = () => Apply(
-            fill: MeadowColors.White, border: MeadowColors.PeachDark,
-            text: MeadowColors.TealDark, innerVisible: false, ring: false);
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.PeachDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, innerVisible: false, ring: false);
 
         States.HighlightedOff.Apply = () => Apply(
-            fill: MeadowColors.White, border: MeadowColors.SageDark,
-            text: MeadowColors.TealDark, innerVisible: false, ring: false);
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.SageDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, innerVisible: false, ring: false);
 
         States.FocusedOff.Apply = () => Apply(
-            fill: MeadowColors.White, border: MeadowColors.SageDark,
-            text: MeadowColors.TealDark, innerVisible: false, ring: true);
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.SageDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, innerVisible: false, ring: true);
 
         States.HighlightedFocusedOff.Apply = () => Apply(
-            fill: MeadowColors.White, border: MeadowColors.SageDark,
-            text: MeadowColors.TealDark, innerVisible: false, ring: true);
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.SageDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, innerVisible: false, ring: true);
 
         States.PushedOff.Apply = () => Apply(
-            fill: MeadowColors.White, border: MeadowColors.Teal,
-            text: MeadowColors.TealDark, innerVisible: false, ring: false);
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.Teal,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, innerVisible: false, ring: false);
 
         States.DisabledOff.Apply = () => Apply(
-            fill: MeadowColors.Cream2, border: MeadowColors.Disabled,
-            text: MeadowColors.DisabledInk, innerVisible: false, ring: false);
+            fill: MeadowStyling.ActiveStyle.Colors.Cream2, border: MeadowStyling.ActiveStyle.Colors.Disabled,
+            text: MeadowStyling.ActiveStyle.Colors.DisabledInk, innerVisible: false, ring: false);
 
         States.DisabledFocusedOff.Apply = () => Apply(
-            fill: MeadowColors.Cream2, border: MeadowColors.Disabled,
-            text: MeadowColors.DisabledInk, innerVisible: false, ring: true);
+            fill: MeadowStyling.ActiveStyle.Colors.Cream2, border: MeadowStyling.ActiveStyle.Colors.Disabled,
+            text: MeadowStyling.ActiveStyle.Colors.DisabledInk, innerVisible: false, ring: true);
 
         // -------- On -------- sage inner dot.
         States.EnabledOn.Apply = () => Apply(
-            fill: MeadowColors.White, border: MeadowColors.SageDark,
-            text: MeadowColors.TealDark, innerVisible: true, innerColor: MeadowColors.SageDark,
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.SageDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, innerVisible: true, innerColor: MeadowStyling.ActiveStyle.Colors.SageDark,
             ring: false);
 
         States.HighlightedOn.Apply = () => Apply(
-            fill: MeadowColors.White, border: MeadowColors.SageDark,
-            text: MeadowColors.TealDark, innerVisible: true, innerColor: MeadowColors.SageDark,
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.SageDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, innerVisible: true, innerColor: MeadowStyling.ActiveStyle.Colors.SageDark,
             ring: false);
 
         States.FocusedOn.Apply = () => Apply(
-            fill: MeadowColors.White, border: MeadowColors.SageDark,
-            text: MeadowColors.TealDark, innerVisible: true, innerColor: MeadowColors.SageDark,
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.SageDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, innerVisible: true, innerColor: MeadowStyling.ActiveStyle.Colors.SageDark,
             ring: true);
 
         States.HighlightedFocusedOn.Apply = () => Apply(
-            fill: MeadowColors.White, border: MeadowColors.SageDark,
-            text: MeadowColors.TealDark, innerVisible: true, innerColor: MeadowColors.SageDark,
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.SageDark,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, innerVisible: true, innerColor: MeadowStyling.ActiveStyle.Colors.SageDark,
             ring: true);
 
         // Pressed-selected deepens the dot to teal (CSS .pp-rad.pre.sel).
         States.PushedOn.Apply = () => Apply(
-            fill: MeadowColors.White, border: MeadowColors.Teal,
-            text: MeadowColors.TealDark, innerVisible: true, innerColor: MeadowColors.Teal,
+            fill: MeadowStyling.ActiveStyle.Colors.White, border: MeadowStyling.ActiveStyle.Colors.Teal,
+            text: MeadowStyling.ActiveStyle.Colors.TealDark, innerVisible: true, innerColor: MeadowStyling.ActiveStyle.Colors.Teal,
             ring: false);
 
         States.DisabledOn.Apply = () => Apply(
-            fill: MeadowColors.Cream2, border: MeadowColors.Disabled,
-            text: MeadowColors.DisabledInk, innerVisible: false, ring: false);
+            fill: MeadowStyling.ActiveStyle.Colors.Cream2, border: MeadowStyling.ActiveStyle.Colors.Disabled,
+            text: MeadowStyling.ActiveStyle.Colors.DisabledInk, innerVisible: false, ring: false);
 
         States.DisabledFocusedOn.Apply = () => Apply(
-            fill: MeadowColors.Cream2, border: MeadowColors.Disabled,
-            text: MeadowColors.DisabledInk, innerVisible: false, ring: true);
+            fill: MeadowStyling.ActiveStyle.Colors.Cream2, border: MeadowStyling.ActiveStyle.Colors.Disabled,
+            text: MeadowStyling.ActiveStyle.Colors.DisabledInk, innerVisible: false, ring: true);
     }
 
     private void Apply(Color fill, Color border, Color text, bool innerVisible, bool ring,

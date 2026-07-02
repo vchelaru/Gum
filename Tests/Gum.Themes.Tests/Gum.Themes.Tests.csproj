@@ -24,6 +24,7 @@
     <ProjectReference Include="..\..\Themes\Gum.Themes.Editor.MonoGame\Gum.Themes.Editor.MonoGame.csproj" />
     <ProjectReference Include="..\..\Themes\Gum.Themes.Retro95.MonoGame\Gum.Themes.Retro95.MonoGame.csproj" />
     <ProjectReference Include="..\..\Themes\Gum.Themes.ForestGlade.MonoGame\Gum.Themes.ForestGlade.MonoGame.csproj" />
+    <ProjectReference Include="..\..\Themes\Gum.Themes.Meadow.MonoGame\Gum.Themes.Meadow.MonoGame.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -62,7 +62,7 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.CornerRadius = CornerRadius;
         fill.IsFilled = true;
-        fill.FillColor = MeadowColors.Cream2;
+        fill.FillColor = MeadowStyling.ActiveStyle.Colors.Cream2;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -85,7 +85,7 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = MeadowColors.PeachDark;
+        border.StrokeColor = MeadowStyling.ActiveStyle.Colors.PeachDark;
         border.StrokeDashLength = DashLength;
         border.StrokeGapLength = GapLength;
         return border;
@@ -93,7 +93,7 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
 
     private void WireStates()
     {
-        States.Enabled.Apply = () => _border.StrokeColor = MeadowColors.PeachDark;
-        States.Focused.Apply = () => _border.StrokeColor = MeadowColors.SageDark;
+        States.Enabled.Apply = () => _border.StrokeColor = MeadowStyling.ActiveStyle.Colors.PeachDark;
+        States.Focused.Apply = () => _border.StrokeColor = MeadowStyling.ActiveStyle.Colors.SageDark;
     }
 }

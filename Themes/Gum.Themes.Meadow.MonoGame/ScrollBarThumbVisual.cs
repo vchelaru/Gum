@@ -57,7 +57,7 @@ public class ScrollBarThumbVisual : InteractiveGue
         body.HeightUnits = DimensionUnitType.RelativeToParent;
         body.CornerRadius = CornerRadius;
         body.IsFilled = true;
-        body.FillColor = MeadowColors.Coral;
+        body.FillColor = MeadowStyling.ActiveStyle.Colors.Coral;
         body.StrokeWidth = 0;
         return body;
     }
@@ -69,25 +69,25 @@ public class ScrollBarThumbVisual : InteractiveGue
         AddCategory(_buttonCategory);
 
         Add(_buttonCategory, FrameworkElement.EnabledStateName,
-            () => _body.FillColor = MeadowColors.Coral);
+            () => _body.FillColor = MeadowStyling.ActiveStyle.Colors.Coral);
 
         Add(_buttonCategory, FrameworkElement.HighlightedStateName,
-            () => _body.FillColor = MeadowColors.CoralDark);
+            () => _body.FillColor = MeadowStyling.ActiveStyle.Colors.CoralDark);
 
         Add(_buttonCategory, FrameworkElement.PushedStateName,
-            () => _body.FillColor = MeadowColors.CoralDark);
+            () => _body.FillColor = MeadowStyling.ActiveStyle.Colors.CoralDark);
 
         Add(_buttonCategory, FrameworkElement.FocusedStateName,
-            () => _body.FillColor = MeadowColors.Coral);
+            () => _body.FillColor = MeadowStyling.ActiveStyle.Colors.Coral);
 
         Add(_buttonCategory, FrameworkElement.HighlightedFocusedStateName,
-            () => _body.FillColor = MeadowColors.CoralDark);
+            () => _body.FillColor = MeadowStyling.ActiveStyle.Colors.CoralDark);
 
         Add(_buttonCategory, FrameworkElement.DisabledStateName,
-            () => _body.FillColor = MeadowColors.Disabled);
+            () => _body.FillColor = MeadowStyling.ActiveStyle.Colors.Disabled);
 
         Add(_buttonCategory, FrameworkElement.DisabledFocusedStateName,
-            () => _body.FillColor = MeadowColors.Disabled);
+            () => _body.FillColor = MeadowStyling.ActiveStyle.Colors.Disabled);
     }
 
     private static void Add(StateSaveCategory category, string name, System.Action apply)
