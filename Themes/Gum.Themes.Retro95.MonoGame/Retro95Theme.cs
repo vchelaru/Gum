@@ -22,25 +22,20 @@ namespace Gum.Themes.Retro95;
 public static class Retro95Theme
 {
     /// <summary>
-    /// Family name the bundled body font (Nunito) is registered under. Used as a
-    /// stand-in for MS Sans Serif which is proprietary and not redistributable.
-    /// Use this constant as the <c>Font</c> property on any TextRuntime to get
-    /// the theme body font.
+    /// Fixed family name the bundled Nunito TTFs are registered under (a stand-in for
+    /// MS Sans Serif, which is proprietary and not redistributable). Font
+    /// <em>registration</em> is intentionally decoupled from font <em>selection</em>
+    /// (<see cref="Retro95Text.FontFamily"/>, mutable) — reassigning the selection
+    /// before <see cref="Apply"/> can never corrupt this registration.
     /// </summary>
-    public const string FontFamily = "Nunito";
+    internal const string BundledFontFamily = "Nunito";
 
     /// <summary>
-    /// Family name the bundled icon font (DejaVu Sans Mono) is registered under.
-    /// Used for glyphs Nunito doesn't cover — check marks, dropdown chevrons,
-    /// scroll-arrow indicators (Dingbats and Geometric Shapes blocks).
+    /// Fixed family name the bundled icon font (DejaVu Sans Mono) is registered under.
+    /// See <see cref="BundledFontFamily"/> for why this is a fixed constant rather than
+    /// the mutable <see cref="Retro95Text.IconFontFamily"/> selection.
     /// </summary>
-    public const string IconFontFamily = "Retro95 Icons";
-
-    /// <summary>
-    /// Default text size used by the theme. Matches the source mockup's
-    /// <c>--fs</c> token (13 px).
-    /// </summary>
-    public const int FontSize = 13;
+    internal const string BundledIconFontFamily = "Retro95 Icons";
 
     /// <summary>
     /// Applies the Retro95 theme: wires KernSmith as the in-memory font creator,
@@ -83,9 +78,9 @@ public static class Retro95Theme
 
     private static void RegisterBundledFonts()
     {
-        RegisterEmbeddedFont(FontFamily, "Nunito-Regular.ttf", style: null);
-        RegisterEmbeddedFont(FontFamily, "Nunito-Bold.ttf", style: "Bold");
-        RegisterEmbeddedFont(IconFontFamily, "DejaVuSansMono.ttf", style: null);
+        RegisterEmbeddedFont(BundledFontFamily, "Nunito-Regular.ttf", style: null);
+        RegisterEmbeddedFont(BundledFontFamily, "Nunito-Bold.ttf", style: "Bold");
+        RegisterEmbeddedFont(BundledIconFontFamily, "DejaVuSansMono.ttf", style: null);
     }
 
     private static void RegisterEmbeddedFont(string family, string fileName, string? style)
@@ -112,15 +107,20 @@ public static class Retro95Theme
         ThemePlatform.RegisterFont(family, fontBytes, style);
     }
 
-    private static void ConfigureStyling()
+    // Internal (not private) so Tests/Gum.Themes.Tests can exercise the guardrail-token sync
+    // (TextPrimary/TextMuted/Primary/Accent → V3.Styling.ActiveStyle.Colors) without going
+    // through Apply(), which requires a real GraphicsDevice for font wiring and can't run
+    // headlessly in a unit test. See Gum.Themes.Retro95.MonoGame.csproj's InternalsVisibleTo.
+    internal static void ConfigureStyling()
     {
         Styling styling = Styling.ActiveStyle;
+        Retro95Text text = Retro95Styling.ActiveStyle.Text;
 
         styling.Text.Normal.Clear();
         styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = FontFamily });
+            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
         styling.Text.Normal.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = FontSize });
+            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
         styling.Text.Normal.Variables.Add(
             new VariableSave { Name = "IsBold", Type = "bool", Value = false });
         styling.Text.Normal.Variables.Add(
@@ -128,18 +128,24 @@ public static class Retro95Theme
 
         styling.Text.Strong.Clear();
         styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "Font", Type = "string", Value = FontFamily });
+            new VariableSave { Name = "Font", Type = "string", Value = text.FontFamily });
         styling.Text.Strong.Variables.Add(
-            new VariableSave { Name = "FontSize", Type = "int", Value = FontSize });
+            new VariableSave { Name = "FontSize", Type = "int", Value = text.FontSize });
         styling.Text.Strong.Variables.Add(
             new VariableSave { Name = "IsBold", Type = "bool", Value = true });
         styling.Text.Strong.Variables.Add(
             new VariableSave { Name = "IsItalic", Type = "bool", Value = false });
 
-        styling.Colors.TextPrimary = Retro95Colors.Text;
-        styling.Colors.TextMuted = Retro95Colors.DisabledText;
-        styling.Colors.Primary = Retro95Colors.Surface;
-        styling.Colors.Accent = Retro95Colors.Selection;
+        // Retro95 tokens (see gum-styles.css :root for the source palette).
+        // The Styling.Colors slots don't map 1:1 with the Retro95 tokens, so
+        // we push only the 4-token guardrail (TextPrimary, TextMuted, Primary, Accent)
+        // and the visuals read the rest of the palette from Retro95Styling.ActiveStyle.Colors
+        // directly.
+        Retro95Colors colors = Retro95Styling.ActiveStyle.Colors;
+        styling.Colors.TextPrimary = colors.TextPrimary;
+        styling.Colors.TextMuted = colors.TextMuted;
+        styling.Colors.Primary = colors.Primary;
+        styling.Colors.Accent = colors.Accent;
     }
 
     private static void RegisterVisuals()

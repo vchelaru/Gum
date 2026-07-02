@@ -2,6 +2,7 @@ using System.Reflection;
 using Gum.Themes.Bubblegum;
 using Gum.Themes.DarkPro;
 using Gum.Themes.Editor;
+using Gum.Themes.Retro95;
 using Microsoft.Xna.Framework;
 using Shouldly;
 using V3Styling = Gum.Forms.DefaultVisuals.V3.Styling;
@@ -22,6 +23,7 @@ public class FourTokenGuardrailTests
         yield return new object[] { typeof(DarkProColors), "DarkProColors" };
         yield return new object[] { typeof(BubblegumColors), "BubblegumColors" };
         yield return new object[] { typeof(EditorColors), "EditorColors" };
+        yield return new object[] { typeof(Retro95Colors), "Retro95Colors" };
     }
 
     [Theory]
@@ -96,6 +98,27 @@ public class FourTokenGuardrailTests
         EditorStyling.ActiveStyle.Colors.Accent = accent;
 
         EditorTheme.ConfigureStyling();
+
+        V3Styling.ActiveStyle.Colors.TextPrimary.ShouldBe(textPrimary);
+        V3Styling.ActiveStyle.Colors.TextMuted.ShouldBe(textMuted);
+        V3Styling.ActiveStyle.Colors.Primary.ShouldBe(primary);
+        V3Styling.ActiveStyle.Colors.Accent.ShouldBe(accent);
+    }
+
+    [Fact]
+    public void Retro95Theme_ConfigureStyling_SyncsFourGuardrailTokensIntoV3Styling()
+    {
+        Color textPrimary = new Color(14, 25, 36);
+        Color textMuted = new Color(47, 58, 69);
+        Color primary = new Color(80, 91, 102);
+        Color accent = new Color(103, 113, 123);
+
+        Retro95Styling.ActiveStyle.Colors.Text = textPrimary;
+        Retro95Styling.ActiveStyle.Colors.DisabledText = textMuted;
+        Retro95Styling.ActiveStyle.Colors.Surface = primary;
+        Retro95Styling.ActiveStyle.Colors.Selection = accent;
+
+        Retro95Theme.ConfigureStyling();
 
         V3Styling.ActiveStyle.Colors.TextPrimary.ShouldBe(textPrimary);
         V3Styling.ActiveStyle.Colors.TextMuted.ShouldBe(textMuted);

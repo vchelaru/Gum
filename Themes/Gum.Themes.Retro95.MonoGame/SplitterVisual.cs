@@ -30,7 +30,7 @@ public class SplitterVisual : BaseSplitterVisual
         _fill.WidthUnits = DimensionUnitType.RelativeToParent;
         _fill.HeightUnits = DimensionUnitType.RelativeToParent;
         _fill.IsFilled = true;
-        _fill.FillColor = Retro95Colors.Surface;
+        _fill.FillColor = Retro95Styling.ActiveStyle.Colors.Surface;
         _fill.StrokeWidth = 0;
         AddChild(_fill);
     }

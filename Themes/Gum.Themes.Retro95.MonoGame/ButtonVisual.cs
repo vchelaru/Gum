@@ -43,7 +43,7 @@ public class ButtonVisual : BaseButtonVisual
 
         AddChild(TextInstance);
         TextInstance.ApplyState(Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle.Text.Normal);
-        TextInstance.Color = Retro95Colors.Text;
+        TextInstance.Color = Retro95Styling.ActiveStyle.Colors.Text;
 
         WireStates();
     }
@@ -51,32 +51,32 @@ public class ButtonVisual : BaseButtonVisual
     private void WireStates()
     {
         States.Enabled.Apply = () => Apply(
-            bevelMode: BevelMode.Raised, fill: Retro95Colors.Surface,
-            text: Retro95Colors.Text, focus: false);
+            bevelMode: BevelMode.Raised, fill: Retro95Styling.ActiveStyle.Colors.Surface,
+            text: Retro95Styling.ActiveStyle.Colors.Text, focus: false);
 
         States.Highlighted.Apply = () => Apply(
-            bevelMode: BevelMode.Raised, fill: Retro95Colors.SurfaceHover,
-            text: Retro95Colors.Text, focus: false);
+            bevelMode: BevelMode.Raised, fill: Retro95Styling.ActiveStyle.Colors.SurfaceHover,
+            text: Retro95Styling.ActiveStyle.Colors.Text, focus: false);
 
         States.Focused.Apply = () => Apply(
-            bevelMode: BevelMode.Raised, fill: Retro95Colors.Surface,
-            text: Retro95Colors.Text, focus: true);
+            bevelMode: BevelMode.Raised, fill: Retro95Styling.ActiveStyle.Colors.Surface,
+            text: Retro95Styling.ActiveStyle.Colors.Text, focus: true);
 
         States.HighlightedFocused.Apply = () => Apply(
-            bevelMode: BevelMode.Raised, fill: Retro95Colors.SurfaceHover,
-            text: Retro95Colors.Text, focus: true);
+            bevelMode: BevelMode.Raised, fill: Retro95Styling.ActiveStyle.Colors.SurfaceHover,
+            text: Retro95Styling.ActiveStyle.Colors.Text, focus: true);
 
         States.Pushed.Apply = () => Apply(
-            bevelMode: BevelMode.Sunken, fill: Retro95Colors.Surface,
-            text: Retro95Colors.Text, focus: false);
+            bevelMode: BevelMode.Sunken, fill: Retro95Styling.ActiveStyle.Colors.Surface,
+            text: Retro95Styling.ActiveStyle.Colors.Text, focus: false);
 
         States.Disabled.Apply = () => Apply(
-            bevelMode: BevelMode.Raised, fill: Retro95Colors.Surface,
-            text: Retro95Colors.DisabledText, focus: false);
+            bevelMode: BevelMode.Raised, fill: Retro95Styling.ActiveStyle.Colors.Surface,
+            text: Retro95Styling.ActiveStyle.Colors.DisabledText, focus: false);
 
         States.DisabledFocused.Apply = () => Apply(
-            bevelMode: BevelMode.Raised, fill: Retro95Colors.Surface,
-            text: Retro95Colors.DisabledText, focus: true);
+            bevelMode: BevelMode.Raised, fill: Retro95Styling.ActiveStyle.Colors.Surface,
+            text: Retro95Styling.ActiveStyle.Colors.DisabledText, focus: true);
     }
 
     private void Apply(BevelMode bevelMode, Color fill, Color text, bool focus)

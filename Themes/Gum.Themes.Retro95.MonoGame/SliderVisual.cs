@@ -49,7 +49,7 @@ public class SliderVisual : BaseSliderVisual
         _trackContainer.HeightUnits = DimensionUnitType.Absolute;
         TrackInstance.AddChild(_trackContainer);
 
-        _trackBevel = Retro95Bevel.AddTo(_trackContainer, BevelMode.Inset, Retro95Colors.WhiteFill);
+        _trackBevel = Retro95Bevel.AddTo(_trackContainer, BevelMode.Inset, Retro95Styling.ActiveStyle.Colors.WhiteFill);
 
         ThumbInstance!.Parent = null;
         _thumb = new SliderThumbVisual();
@@ -74,13 +74,13 @@ public class SliderVisual : BaseSliderVisual
         // (focus lives on the Slider control, not the inner Button RangeBase
         // wraps around our ThumbInstance) — so we drive the dotted focus rect
         // here, from the slider's own state callbacks.
-        States.Enabled.Apply = () => Apply(Retro95Colors.WhiteFill, focus: false);
-        States.Highlighted.Apply = () => Apply(Retro95Colors.WhiteFill, focus: false);
-        States.HighlightedFocused.Apply = () => Apply(Retro95Colors.WhiteFill, focus: true);
-        States.Focused.Apply = () => Apply(Retro95Colors.WhiteFill, focus: true);
-        States.Pushed.Apply = () => Apply(Retro95Colors.WhiteFill, focus: false);
-        States.Disabled.Apply = () => Apply(Retro95Colors.Surface, focus: false);
-        States.DisabledFocused.Apply = () => Apply(Retro95Colors.Surface, focus: true);
+        States.Enabled.Apply = () => Apply(Retro95Styling.ActiveStyle.Colors.WhiteFill, focus: false);
+        States.Highlighted.Apply = () => Apply(Retro95Styling.ActiveStyle.Colors.WhiteFill, focus: false);
+        States.HighlightedFocused.Apply = () => Apply(Retro95Styling.ActiveStyle.Colors.WhiteFill, focus: true);
+        States.Focused.Apply = () => Apply(Retro95Styling.ActiveStyle.Colors.WhiteFill, focus: true);
+        States.Pushed.Apply = () => Apply(Retro95Styling.ActiveStyle.Colors.WhiteFill, focus: false);
+        States.Disabled.Apply = () => Apply(Retro95Styling.ActiveStyle.Colors.Surface, focus: false);
+        States.DisabledFocused.Apply = () => Apply(Retro95Styling.ActiveStyle.Colors.Surface, focus: true);
     }
 
     private void Apply(Color trackFill, bool focus)

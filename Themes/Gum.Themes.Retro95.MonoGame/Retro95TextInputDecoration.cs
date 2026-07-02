@@ -24,7 +24,7 @@ internal sealed class Retro95TextInputDecoration
         host.FocusedIndicator.Parent = null;
         host.ClipContainer.Parent = null;
 
-        _bevel = Retro95Bevel.AddTo(host, BevelMode.Inset, Retro95Colors.WhiteFill);
+        _bevel = Retro95Bevel.AddTo(host, BevelMode.Inset, Retro95Styling.ActiveStyle.Colors.WhiteFill);
 
         // Re-attach ClipContainer above the bevel — text / placeholder / caret /
         // selection then render on top of the white inset body.
@@ -36,24 +36,24 @@ internal sealed class Retro95TextInputDecoration
     private void WireStates()
     {
         _host.States.Enabled.Apply = () => Apply(
-            fill: Retro95Colors.WhiteFill, text: Retro95Colors.Text,
-            placeholder: Retro95Colors.DisabledText,
-            caret: Retro95Colors.Text, selection: Retro95Colors.TextBoxSelection);
+            fill: Retro95Styling.ActiveStyle.Colors.WhiteFill, text: Retro95Styling.ActiveStyle.Colors.Text,
+            placeholder: Retro95Styling.ActiveStyle.Colors.DisabledText,
+            caret: Retro95Styling.ActiveStyle.Colors.Text, selection: Retro95Styling.ActiveStyle.Colors.TextBoxSelection);
 
         _host.States.Highlighted.Apply = () => Apply(
-            fill: Retro95Colors.WhiteHover, text: Retro95Colors.Text,
-            placeholder: Retro95Colors.DisabledText,
-            caret: Retro95Colors.Text, selection: Retro95Colors.TextBoxSelection);
+            fill: Retro95Styling.ActiveStyle.Colors.WhiteHover, text: Retro95Styling.ActiveStyle.Colors.Text,
+            placeholder: Retro95Styling.ActiveStyle.Colors.DisabledText,
+            caret: Retro95Styling.ActiveStyle.Colors.Text, selection: Retro95Styling.ActiveStyle.Colors.TextBoxSelection);
 
         _host.States.Focused.Apply = () => Apply(
-            fill: Retro95Colors.WhiteFill, text: Retro95Colors.Text,
-            placeholder: Retro95Colors.DisabledText,
-            caret: Retro95Colors.Text, selection: Retro95Colors.TextBoxSelection);
+            fill: Retro95Styling.ActiveStyle.Colors.WhiteFill, text: Retro95Styling.ActiveStyle.Colors.Text,
+            placeholder: Retro95Styling.ActiveStyle.Colors.DisabledText,
+            caret: Retro95Styling.ActiveStyle.Colors.Text, selection: Retro95Styling.ActiveStyle.Colors.TextBoxSelection);
 
         _host.States.Disabled.Apply = () => Apply(
-            fill: Retro95Colors.Surface, text: Retro95Colors.DisabledText,
-            placeholder: Retro95Colors.DisabledText,
-            caret: Retro95Colors.DisabledText, selection: Retro95Colors.TextBoxSelection);
+            fill: Retro95Styling.ActiveStyle.Colors.Surface, text: Retro95Styling.ActiveStyle.Colors.DisabledText,
+            placeholder: Retro95Styling.ActiveStyle.Colors.DisabledText,
+            caret: Retro95Styling.ActiveStyle.Colors.DisabledText, selection: Retro95Styling.ActiveStyle.Colors.TextBoxSelection);
     }
 
     private void Apply(Color fill, Color text, Color placeholder, Color caret, Color selection)

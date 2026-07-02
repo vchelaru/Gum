@@ -56,7 +56,7 @@ public class ScrollBarVisual : BaseScrollBarVisual
         if (downBtn != null) downBtn.Parent = null;
         existingThumbContainer.Parent = null;
 
-        RectangleRuntime trackFill = NewStretched("Retro95ScrollBarTrackFill", Retro95Colors.Surface);
+        RectangleRuntime trackFill = NewStretched("Retro95ScrollBarTrackFill", Retro95Styling.ActiveStyle.Colors.Surface);
         AddChild(trackFill);
 
         if (upBtn != null) AddChild(upBtn);
@@ -206,10 +206,10 @@ public class ScrollBarVisual : BaseScrollBarVisual
         t.HeightUnits = DimensionUnitType.Absolute;
         t.HorizontalAlignment = HorizontalAlignment.Center;
         t.VerticalAlignment = VerticalAlignment.Center;
-        t.Font = Retro95Theme.IconFontFamily;
+        t.Font = Retro95Styling.ActiveStyle.Text.IconFontFamily;
         t.FontSize = ArrowFontSize;
         t.Text = glyph;
-        t.Color = Retro95Colors.Text;
+        t.Color = Retro95Styling.ActiveStyle.Colors.Text;
         return t;
     }
 

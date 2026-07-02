@@ -54,7 +54,7 @@ public class ComboBoxVisual : BaseComboBoxVisual
         _fieldContainer.HeightUnits = DimensionUnitType.RelativeToParent;
         AddChild(_fieldContainer);
 
-        _fieldBevel = Retro95Bevel.AddTo(_fieldContainer, BevelMode.Inset, Retro95Colors.WhiteFill);
+        _fieldBevel = Retro95Bevel.AddTo(_fieldContainer, BevelMode.Inset, Retro95Styling.ActiveStyle.Colors.WhiteFill);
 
         _dropdownButtonContainer = new ContainerRuntime();
         _dropdownButtonContainer.Name = "Retro95ComboDropdownButton";
@@ -86,10 +86,10 @@ public class ComboBoxVisual : BaseComboBoxVisual
         _dropdownGlyph.HeightUnits = DimensionUnitType.Absolute;
         _dropdownGlyph.HorizontalAlignment = HorizontalAlignment.Center;
         _dropdownGlyph.VerticalAlignment = VerticalAlignment.Center;
-        _dropdownGlyph.Font = Retro95Theme.IconFontFamily;
+        _dropdownGlyph.Font = Retro95Styling.ActiveStyle.Text.IconFontFamily;
         _dropdownGlyph.FontSize = 8;
         _dropdownGlyph.Text = "▼";
-        _dropdownGlyph.Color = Retro95Colors.Text;
+        _dropdownGlyph.Color = Retro95Styling.ActiveStyle.Colors.Text;
         _dropdownButtonContainer.AddChild(_dropdownGlyph);
 
         AddChild(TextInstance);
@@ -117,32 +117,32 @@ public class ComboBoxVisual : BaseComboBoxVisual
     private void WireStates()
     {
         States.Enabled.Apply = () => Apply(
-            fieldFill: Retro95Colors.WhiteFill, text: Retro95Colors.Text,
-            glyph: Retro95Colors.Text, dropdownMode: BevelMode.Raised, focus: false);
+            fieldFill: Retro95Styling.ActiveStyle.Colors.WhiteFill, text: Retro95Styling.ActiveStyle.Colors.Text,
+            glyph: Retro95Styling.ActiveStyle.Colors.Text, dropdownMode: BevelMode.Raised, focus: false);
 
         States.Highlighted.Apply = () => Apply(
-            fieldFill: Retro95Colors.WhiteFill, text: Retro95Colors.Text,
-            glyph: Retro95Colors.Text, dropdownMode: BevelMode.Raised, focus: false);
+            fieldFill: Retro95Styling.ActiveStyle.Colors.WhiteFill, text: Retro95Styling.ActiveStyle.Colors.Text,
+            glyph: Retro95Styling.ActiveStyle.Colors.Text, dropdownMode: BevelMode.Raised, focus: false);
 
         States.Focused.Apply = () => Apply(
-            fieldFill: Retro95Colors.WhiteFill, text: Retro95Colors.Text,
-            glyph: Retro95Colors.Text, dropdownMode: BevelMode.Raised, focus: true);
+            fieldFill: Retro95Styling.ActiveStyle.Colors.WhiteFill, text: Retro95Styling.ActiveStyle.Colors.Text,
+            glyph: Retro95Styling.ActiveStyle.Colors.Text, dropdownMode: BevelMode.Raised, focus: true);
 
         States.HighlightedFocused.Apply = () => Apply(
-            fieldFill: Retro95Colors.WhiteFill, text: Retro95Colors.Text,
-            glyph: Retro95Colors.Text, dropdownMode: BevelMode.Raised, focus: true);
+            fieldFill: Retro95Styling.ActiveStyle.Colors.WhiteFill, text: Retro95Styling.ActiveStyle.Colors.Text,
+            glyph: Retro95Styling.ActiveStyle.Colors.Text, dropdownMode: BevelMode.Raised, focus: true);
 
         States.Pushed.Apply = () => Apply(
-            fieldFill: Retro95Colors.WhiteFill, text: Retro95Colors.Text,
-            glyph: Retro95Colors.Text, dropdownMode: BevelMode.Sunken, focus: false);
+            fieldFill: Retro95Styling.ActiveStyle.Colors.WhiteFill, text: Retro95Styling.ActiveStyle.Colors.Text,
+            glyph: Retro95Styling.ActiveStyle.Colors.Text, dropdownMode: BevelMode.Sunken, focus: false);
 
         States.Disabled.Apply = () => Apply(
-            fieldFill: Retro95Colors.Surface, text: Retro95Colors.DisabledText,
-            glyph: Retro95Colors.DisabledText, dropdownMode: BevelMode.Raised, focus: false);
+            fieldFill: Retro95Styling.ActiveStyle.Colors.Surface, text: Retro95Styling.ActiveStyle.Colors.DisabledText,
+            glyph: Retro95Styling.ActiveStyle.Colors.DisabledText, dropdownMode: BevelMode.Raised, focus: false);
 
         States.DisabledFocused.Apply = () => Apply(
-            fieldFill: Retro95Colors.Surface, text: Retro95Colors.DisabledText,
-            glyph: Retro95Colors.DisabledText, dropdownMode: BevelMode.Raised, focus: true);
+            fieldFill: Retro95Styling.ActiveStyle.Colors.Surface, text: Retro95Styling.ActiveStyle.Colors.DisabledText,
+            glyph: Retro95Styling.ActiveStyle.Colors.DisabledText, dropdownMode: BevelMode.Raised, focus: true);
     }
 
     private void Apply(Color fieldFill, Color text, Color glyph, BevelMode dropdownMode, bool focus)

@@ -24,7 +24,7 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         FocusedIndicator.Parent = null;
         ScrollAndClipContainer.Parent = null;
 
-        _bevel = Retro95Bevel.AddTo(this, BevelMode.Inset, Retro95Colors.WhiteFill);
+        _bevel = Retro95Bevel.AddTo(this, BevelMode.Inset, Retro95Styling.ActiveStyle.Colors.WhiteFill);
 
         AddChild(ScrollAndClipContainer);
 
@@ -42,7 +42,7 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
 
     private void WireStates()
     {
-        States.Enabled.Apply = () => _bevel.SetFill(Retro95Colors.WhiteFill);
-        States.Focused.Apply = () => _bevel.SetFill(Retro95Colors.WhiteFill);
+        States.Enabled.Apply = () => _bevel.SetFill(Retro95Styling.ActiveStyle.Colors.WhiteFill);
+        States.Focused.Apply = () => _bevel.SetFill(Retro95Styling.ActiveStyle.Colors.WhiteFill);
     }
 }

@@ -27,7 +27,7 @@ public class ListBoxVisual : BaseListBoxVisual
         FocusedIndicator.Parent = null;
         ClipAndScrollContainer.Parent = null;
 
-        _bevel = Retro95Bevel.AddTo(this, BevelMode.Inset, Retro95Colors.WhiteFill);
+        _bevel = Retro95Bevel.AddTo(this, BevelMode.Inset, Retro95Styling.ActiveStyle.Colors.WhiteFill);
 
         AddChild(ClipAndScrollContainer);
 
@@ -50,12 +50,12 @@ public class ListBoxVisual : BaseListBoxVisual
 
     private void WireStates()
     {
-        States.Enabled.Apply = () => _bevel.SetFill(Retro95Colors.WhiteFill);
-        States.Highlighted.Apply = () => _bevel.SetFill(Retro95Colors.WhiteFill);
-        States.Focused.Apply = () => _bevel.SetFill(Retro95Colors.WhiteFill);
-        States.HighlightedFocused.Apply = () => _bevel.SetFill(Retro95Colors.WhiteFill);
-        States.Pushed.Apply = () => _bevel.SetFill(Retro95Colors.WhiteFill);
-        States.Disabled.Apply = () => _bevel.SetFill(Retro95Colors.Surface);
-        States.DisabledFocused.Apply = () => _bevel.SetFill(Retro95Colors.Surface);
+        States.Enabled.Apply = () => _bevel.SetFill(Retro95Styling.ActiveStyle.Colors.WhiteFill);
+        States.Highlighted.Apply = () => _bevel.SetFill(Retro95Styling.ActiveStyle.Colors.WhiteFill);
+        States.Focused.Apply = () => _bevel.SetFill(Retro95Styling.ActiveStyle.Colors.WhiteFill);
+        States.HighlightedFocused.Apply = () => _bevel.SetFill(Retro95Styling.ActiveStyle.Colors.WhiteFill);
+        States.Pushed.Apply = () => _bevel.SetFill(Retro95Styling.ActiveStyle.Colors.WhiteFill);
+        States.Disabled.Apply = () => _bevel.SetFill(Retro95Styling.ActiveStyle.Colors.Surface);
+        States.DisabledFocused.Apply = () => _bevel.SetFill(Retro95Styling.ActiveStyle.Colors.Surface);
     }
 }
