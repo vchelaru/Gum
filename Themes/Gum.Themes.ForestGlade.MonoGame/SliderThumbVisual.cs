@@ -74,7 +74,7 @@ public class SliderThumbVisual : InteractiveGue
         // (PixelsFromMiddle with a small negative offset).
         body.UseGradient = true;
         body.GradientType = GradientType.Radial;
-        body.FillColor = ForestGladeColors.SunPale;
+        body.FillColor = ForestGladeStyling.ActiveStyle.Colors.SunPale;
         body.Color2 = new Color(0, 140, 46); // CSS #008c2e outer stop
         // 35% / 30% from top-left on an 18 px circle ≈ ~-2.7 / -3.6 from middle.
         body.GradientX1Units = GeneralUnitType.PixelsFromMiddle;
@@ -86,7 +86,7 @@ public class SliderThumbVisual : InteractiveGue
         body.GradientOuterRadius = 50f;
         body.GradientOuterRadiusUnits = DimensionUnitType.PercentageOfParent;
         body.HasDropshadow = true;
-        body.DropshadowColor = ForestGladePalette.GlowMedium;
+        body.DropshadowColor = ForestGladeStyling.ActiveStyle.Colors.GlowMedium;
         body.DropshadowOffsetX = 0f;
         body.DropshadowOffsetY = 0f;
         body.DropshadowBlur = ShadowBlur;
@@ -127,7 +127,7 @@ public class SliderThumbVisual : InteractiveGue
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = ForestGladeColors.AccentHalo;
+        ring.StrokeColor = ForestGladeStyling.ActiveStyle.Colors.AccentHalo;
         ring.Visible = false;
         return ring;
     }
@@ -138,30 +138,30 @@ public class SliderThumbVisual : InteractiveGue
         _buttonCategory.Name = Button.ButtonCategoryName;
         AddCategory(_buttonCategory);
 
-        Color restCentre = ForestGladeColors.SunPale;
+        Color restCentre = ForestGladeStyling.ActiveStyle.Colors.SunPale;
         Color restEdge = new Color(0, 140, 46);
-        Color pushedCentre = ForestGladeColors.LeafBright;
+        Color pushedCentre = ForestGladeStyling.ActiveStyle.Colors.LeafBright;
         Color pushedEdge = new Color(0, 112, 40);
-        Color disabledFlat = ForestGladePalette.SliderDisabled;
+        Color disabledFlat = ForestGladeStyling.ActiveStyle.Colors.SliderDisabled;
 
         Add(_buttonCategory, FrameworkElement.EnabledStateName,
             () => Apply(centre: restCentre, edge: restEdge, border: new Color(232, 255, 117, 128),
                 gradient: true, ring: false, showShadow: true, blur: ShadowBlur));
 
         Add(_buttonCategory, FrameworkElement.HighlightedStateName,
-            () => Apply(centre: restCentre, edge: restEdge, border: ForestGladeColors.SunPale,
+            () => Apply(centre: restCentre, edge: restEdge, border: ForestGladeStyling.ActiveStyle.Colors.SunPale,
                 gradient: true, ring: false, showShadow: true, blur: ShadowBlurHover));
 
         Add(_buttonCategory, FrameworkElement.PushedStateName,
-            () => Apply(centre: pushedCentre, edge: pushedEdge, border: ForestGladeColors.SunPale,
+            () => Apply(centre: pushedCentre, edge: pushedEdge, border: ForestGladeStyling.ActiveStyle.Colors.SunPale,
                 gradient: true, ring: false, showShadow: true, blur: ShadowBlurHover));
 
         Add(_buttonCategory, FrameworkElement.FocusedStateName,
-            () => Apply(centre: restCentre, edge: restEdge, border: ForestGladeColors.SunPale,
+            () => Apply(centre: restCentre, edge: restEdge, border: ForestGladeStyling.ActiveStyle.Colors.SunPale,
                 gradient: true, ring: true, showShadow: true, blur: ShadowBlur));
 
         Add(_buttonCategory, FrameworkElement.HighlightedFocusedStateName,
-            () => Apply(centre: restCentre, edge: restEdge, border: ForestGladeColors.SunPale,
+            () => Apply(centre: restCentre, edge: restEdge, border: ForestGladeStyling.ActiveStyle.Colors.SunPale,
                 gradient: true, ring: true, showShadow: true, blur: ShadowBlurHover));
 
         Add(_buttonCategory, FrameworkElement.DisabledStateName,

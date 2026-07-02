@@ -96,7 +96,7 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
         stripe.HeightUnits = DimensionUnitType.RelativeToParent;
         stripe.CornerRadius = 0f;
         stripe.IsFilled = true;
-        stripe.FillColor = ForestGladePalette.SelectionStripe;
+        stripe.FillColor = ForestGladeStyling.ActiveStyle.Colors.SelectionStripe;
         stripe.StrokeWidth = 0;
         stripe.Visible = false;
         return stripe;
@@ -110,23 +110,23 @@ public class ListBoxItemVisual : BaseListBoxItemVisual
 
         States.Enabled.Apply = () => ApplyPalette(
             fillLeft: new Color(0, 0, 0, 0), fillRight: new Color(0, 0, 0, 0),
-            text: ForestGladeColors.Text, stripe: false);
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, stripe: false);
 
         States.Highlighted.Apply = () => ApplyPalette(
             fillLeft: hoverFill, fillRight: hoverFill,
-            text: ForestGladeColors.Text, stripe: false);
+            text: ForestGladeStyling.ActiveStyle.Colors.Text, stripe: false);
 
         States.Selected.Apply = () => ApplyPalette(
             fillLeft: selLeft, fillRight: selRight,
-            text: ForestGladeColors.SunPale, stripe: true);
+            text: ForestGladeStyling.ActiveStyle.Colors.SunPale, stripe: true);
 
         States.Focused.Apply = () => ApplyPalette(
             fillLeft: selLeft, fillRight: selRight,
-            text: ForestGladeColors.SunPale, stripe: true);
+            text: ForestGladeStyling.ActiveStyle.Colors.SunPale, stripe: true);
 
         States.Disabled.Apply = () => ApplyPalette(
             fillLeft: new Color(0, 0, 0, 0), fillRight: new Color(0, 0, 0, 0),
-            text: ForestGladeColors.Disabled, stripe: false);
+            text: ForestGladeStyling.ActiveStyle.Colors.Disabled, stripe: false);
     }
 
     private void ApplyPalette(Color fillLeft, Color fillRight, Color text, bool stripe)

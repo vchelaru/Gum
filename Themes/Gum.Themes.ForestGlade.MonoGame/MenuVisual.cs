@@ -52,7 +52,7 @@ public class MenuVisual : BaseMenuVisual
         fill.WidthUnits = DimensionUnitType.RelativeToParent;
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         fill.IsFilled = true;
-        fill.FillColor = ForestGladeColors.CanopyDeep;
+        fill.FillColor = ForestGladeStyling.ActiveStyle.Colors.CanopyDeep;
         fill.StrokeWidth = 0;
         return fill;
     }

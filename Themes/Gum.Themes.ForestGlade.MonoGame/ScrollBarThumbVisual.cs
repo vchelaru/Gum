@@ -98,10 +98,10 @@ public class ScrollBarThumbVisual : InteractiveGue
             () => ApplyGradient(hoverTop, hoverBottom, gradient: true));
 
         Add(_buttonCategory, FrameworkElement.DisabledStateName,
-            () => ApplyGradient(ForestGladeColors.Disabled, ForestGladeColors.Disabled, gradient: false));
+            () => ApplyGradient(ForestGladeStyling.ActiveStyle.Colors.Disabled, ForestGladeStyling.ActiveStyle.Colors.Disabled, gradient: false));
 
         Add(_buttonCategory, FrameworkElement.DisabledFocusedStateName,
-            () => ApplyGradient(ForestGladeColors.Disabled, ForestGladeColors.Disabled, gradient: false));
+            () => ApplyGradient(ForestGladeStyling.ActiveStyle.Colors.Disabled, ForestGladeStyling.ActiveStyle.Colors.Disabled, gradient: false));
     }
 
     private void ApplyGradient(Color top, Color bottom, bool gradient)

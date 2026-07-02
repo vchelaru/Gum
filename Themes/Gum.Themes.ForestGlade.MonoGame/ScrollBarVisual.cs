@@ -151,7 +151,7 @@ public class ScrollBarVisual : BaseScrollBarVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         ForestGladeLeaf.ApplyMedium(fill);
         fill.IsFilled = true;
-        fill.FillColor = ForestGladePalette.ScrollTrack;
+        fill.FillColor = ForestGladeStyling.ActiveStyle.Colors.ScrollTrack;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -172,7 +172,7 @@ public class ScrollBarVisual : BaseScrollBarVisual
         border.IsFilled = false;
         border.StrokeWidth = FrameBorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = ForestGladeColors.Border;
+        border.StrokeColor = ForestGladeStyling.ActiveStyle.Colors.Border;
         return border;
     }
 }

@@ -2,6 +2,7 @@ using System.Reflection;
 using Gum.Themes.Bubblegum;
 using Gum.Themes.DarkPro;
 using Gum.Themes.Editor;
+using Gum.Themes.ForestGlade;
 using Gum.Themes.Retro95;
 using Microsoft.Xna.Framework;
 using Shouldly;
@@ -24,6 +25,7 @@ public class FourTokenGuardrailTests
         yield return new object[] { typeof(BubblegumColors), "BubblegumColors" };
         yield return new object[] { typeof(EditorColors), "EditorColors" };
         yield return new object[] { typeof(Retro95Colors), "Retro95Colors" };
+        yield return new object[] { typeof(ForestGladeColors), "ForestGladeColors" };
     }
 
     [Theory]
@@ -119,6 +121,27 @@ public class FourTokenGuardrailTests
         Retro95Styling.ActiveStyle.Colors.Selection = accent;
 
         Retro95Theme.ConfigureStyling();
+
+        V3Styling.ActiveStyle.Colors.TextPrimary.ShouldBe(textPrimary);
+        V3Styling.ActiveStyle.Colors.TextMuted.ShouldBe(textMuted);
+        V3Styling.ActiveStyle.Colors.Primary.ShouldBe(primary);
+        V3Styling.ActiveStyle.Colors.Accent.ShouldBe(accent);
+    }
+
+    [Fact]
+    public void ForestGladeTheme_ConfigureStyling_SyncsFourGuardrailTokensIntoV3Styling()
+    {
+        Color textPrimary = new Color(15, 26, 37);
+        Color textMuted = new Color(48, 59, 70);
+        Color primary = new Color(81, 92, 103);
+        Color accent = new Color(104, 114, 124);
+
+        ForestGladeStyling.ActiveStyle.Colors.Text = textPrimary;
+        ForestGladeStyling.ActiveStyle.Colors.Muted = textMuted;
+        ForestGladeStyling.ActiveStyle.Colors.CanopyDeep = primary;
+        ForestGladeStyling.ActiveStyle.Colors.LeafBright = accent;
+
+        ForestGladeTheme.ConfigureStyling();
 
         V3Styling.ActiveStyle.Colors.TextPrimary.ShouldBe(textPrimary);
         V3Styling.ActiveStyle.Colors.TextMuted.ShouldBe(textMuted);

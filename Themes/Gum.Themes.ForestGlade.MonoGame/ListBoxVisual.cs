@@ -101,7 +101,7 @@ public class ListBoxVisual : BaseListBoxVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         ApplyLeafShape(fill);
         fill.IsFilled = true;
-        fill.FillColor = ForestGladePalette.InputFill;
+        fill.FillColor = ForestGladeStyling.ActiveStyle.Colors.InputFill;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -147,14 +147,14 @@ public class ListBoxVisual : BaseListBoxVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = ForestGladeColors.AccentHalo;
+        ring.StrokeColor = ForestGladeStyling.ActiveStyle.Colors.AccentHalo;
         ring.Visible = false;
         return ring;
     }
 
     private void WireStates()
     {
-        Color focusBorder = ForestGladeColors.LeafBright;
+        Color focusBorder = ForestGladeStyling.ActiveStyle.Colors.LeafBright;
 
         States.Enabled.Apply = () => ApplyPalette(border: RestBorder, showFocusRing: false);
         States.Highlighted.Apply = () => ApplyPalette(border: HoverBorder, showFocusRing: false);
@@ -167,7 +167,7 @@ public class ListBoxVisual : BaseListBoxVisual
 
     private void ApplyPalette(Color border, bool showFocusRing, bool fillDisabled = false)
     {
-        _fill.FillColor = fillDisabled ? ForestGladePalette.InputFillDisabled : ForestGladePalette.InputFill;
+        _fill.FillColor = fillDisabled ? ForestGladeStyling.ActiveStyle.Colors.InputFillDisabled : ForestGladeStyling.ActiveStyle.Colors.InputFill;
         _border.StrokeColor = border;
         _focusRing.Visible = showFocusRing;
     }

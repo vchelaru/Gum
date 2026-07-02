@@ -33,14 +33,16 @@ protected override void Initialize()
 Every default Forms control now renders in the Forest Glade style. For best effect, clear your back buffer to the canopy background:
 
 ```csharp
-GraphicsDevice.Clear(ForestGladeColors.CanopyDeep); // #053239
+GraphicsDevice.Clear(ForestGladeStyling.ActiveStyle.Colors.CanopyDeep); // #053239
 ```
+
+Colors and fonts are mutable — set `ForestGladeStyling.ActiveStyle.Colors.*` / `.Text.*` before calling `Apply()` to restyle the theme without forking its source.
 
 ## Fonts
 
-- `ForestGladeTheme.FontFamily` — `"Nunito"` — body typeface, Regular and Bold.
-- `ForestGladeTheme.TitleFontFamily` — `"Fraunces"` — display face used on the Window title bar (italic only).
-- `ForestGladeTheme.IconFontFamily` — `"Forest Glade Icons"` (DejaVu Sans Mono) — for ✓ ✕ ▼ ▴ ▲ ◀ ▶ ✿ glyphs the body typeface doesn't cover.
+- `ForestGladeStyling.ActiveStyle.Text.FontFamily` — defaults to `"Nunito"` — body typeface, Regular and Bold.
+- `ForestGladeStyling.ActiveStyle.Text.TitleFontFamily` — defaults to `"Fraunces"` — display face used on the Window title bar (italic only).
+- `ForestGladeStyling.ActiveStyle.Text.IconFontFamily` — defaults to `"Forest Glade Icons"` (DejaVu Sans Mono) — for ✓ ✕ ▼ ▴ ▲ ◀ ▶ ✿ glyphs the body typeface doesn't cover.
 
 ## The leaf silhouette
 

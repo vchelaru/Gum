@@ -111,7 +111,7 @@ public class SliderVisual : BaseSliderVisual
         track.HeightUnits = DimensionUnitType.Absolute;
         track.CornerRadius = TrackCornerRadius;
         track.IsFilled = true;
-        track.FillColor = ForestGladePalette.SliderTrack;
+        track.FillColor = ForestGladeStyling.ActiveStyle.Colors.SliderTrack;
         track.StrokeWidth = 0;
         return track;
     }
@@ -150,20 +150,20 @@ public class SliderVisual : BaseSliderVisual
     {
         // 2-stop approximation of the CSS 3-stop horizontal gradient — left
         // canopy-lit, right sun-pale; leaf-bright shows around the midpoint.
-        States.Enabled.Apply = () => ApplyTrack(ForestGladePalette.SliderTrack,
-            fillLeft: ForestGladeColors.CanopyLit, fillRight: ForestGladeColors.SunPale);
-        States.Highlighted.Apply = () => ApplyTrack(ForestGladePalette.SliderTrack,
-            fillLeft: ForestGladeColors.CanopyLit, fillRight: ForestGladeColors.SunPale);
-        States.HighlightedFocused.Apply = () => ApplyTrack(ForestGladePalette.SliderTrack,
-            fillLeft: ForestGladeColors.CanopyLit, fillRight: ForestGladeColors.SunPale);
-        States.Focused.Apply = () => ApplyTrack(ForestGladePalette.SliderTrack,
-            fillLeft: ForestGladeColors.CanopyLit, fillRight: ForestGladeColors.SunPale);
-        States.Pushed.Apply = () => ApplyTrack(ForestGladePalette.SliderTrack,
-            fillLeft: ForestGladeColors.CanopyLit, fillRight: ForestGladeColors.SunPale);
-        States.Disabled.Apply = () => ApplyTrack(ForestGladePalette.SliderDisabled,
-            fillLeft: ForestGladePalette.SliderDisabled, fillRight: ForestGladePalette.SliderDisabled);
-        States.DisabledFocused.Apply = () => ApplyTrack(ForestGladePalette.SliderDisabled,
-            fillLeft: ForestGladePalette.SliderDisabled, fillRight: ForestGladePalette.SliderDisabled);
+        States.Enabled.Apply = () => ApplyTrack(ForestGladeStyling.ActiveStyle.Colors.SliderTrack,
+            fillLeft: ForestGladeStyling.ActiveStyle.Colors.CanopyLit, fillRight: ForestGladeStyling.ActiveStyle.Colors.SunPale);
+        States.Highlighted.Apply = () => ApplyTrack(ForestGladeStyling.ActiveStyle.Colors.SliderTrack,
+            fillLeft: ForestGladeStyling.ActiveStyle.Colors.CanopyLit, fillRight: ForestGladeStyling.ActiveStyle.Colors.SunPale);
+        States.HighlightedFocused.Apply = () => ApplyTrack(ForestGladeStyling.ActiveStyle.Colors.SliderTrack,
+            fillLeft: ForestGladeStyling.ActiveStyle.Colors.CanopyLit, fillRight: ForestGladeStyling.ActiveStyle.Colors.SunPale);
+        States.Focused.Apply = () => ApplyTrack(ForestGladeStyling.ActiveStyle.Colors.SliderTrack,
+            fillLeft: ForestGladeStyling.ActiveStyle.Colors.CanopyLit, fillRight: ForestGladeStyling.ActiveStyle.Colors.SunPale);
+        States.Pushed.Apply = () => ApplyTrack(ForestGladeStyling.ActiveStyle.Colors.SliderTrack,
+            fillLeft: ForestGladeStyling.ActiveStyle.Colors.CanopyLit, fillRight: ForestGladeStyling.ActiveStyle.Colors.SunPale);
+        States.Disabled.Apply = () => ApplyTrack(ForestGladeStyling.ActiveStyle.Colors.SliderDisabled,
+            fillLeft: ForestGladeStyling.ActiveStyle.Colors.SliderDisabled, fillRight: ForestGladeStyling.ActiveStyle.Colors.SliderDisabled);
+        States.DisabledFocused.Apply = () => ApplyTrack(ForestGladeStyling.ActiveStyle.Colors.SliderDisabled,
+            fillLeft: ForestGladeStyling.ActiveStyle.Colors.SliderDisabled, fillRight: ForestGladeStyling.ActiveStyle.Colors.SliderDisabled);
     }
 
     private void ApplyTrack(Color trackFill, Color fillLeft, Color fillRight)

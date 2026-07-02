@@ -43,7 +43,7 @@
     <!-- DejaVu Sans Mono — bundled icon font for glyphs the body typeface
          doesn't cover (Geometric Shapes ▲ ▼ ◀ ▶, Dingbats ✓ ✕, Flower ✿).
          Registered under the family name "Forest Glade Icons" so visual code
-         addresses it via ForestGladeTheme.IconFontFamily. -->
+         addresses it via ForestGladeStyling.ActiveStyle.Text.IconFontFamily. -->
     <EmbeddedResource Include="Content\Fonts\DejaVuSansMono.ttf" />
   </ItemGroup>
   <ItemGroup>
@@ -58,5 +58,11 @@
     <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
     <ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
     <ProjectReference Include="..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Lets Tests/Gum.Themes.Tests call the internal ConfigureStyling() directly to exercise
+         the 4-token guardrail sync without going through Apply(), which needs a real
+         GraphicsDevice for font wiring and can't run headlessly in a unit test. -->
+    <InternalsVisibleTo Include="Gum.Themes.Tests" />
   </ItemGroup>
 </Project>

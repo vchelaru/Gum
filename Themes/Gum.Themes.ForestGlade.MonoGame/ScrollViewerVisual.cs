@@ -95,7 +95,7 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         ApplyLeafShape(fill);
         fill.IsFilled = true;
-        fill.FillColor = ForestGladePalette.InputFill;
+        fill.FillColor = ForestGladeStyling.ActiveStyle.Colors.InputFill;
         fill.StrokeWidth = 0;
         return fill;
     }
@@ -141,7 +141,7 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        ring.StrokeColor = ForestGladeColors.AccentHalo;
+        ring.StrokeColor = ForestGladeStyling.ActiveStyle.Colors.AccentHalo;
         ring.Visible = false;
         return ring;
     }
@@ -156,7 +156,7 @@ public class ScrollViewerVisual : BaseScrollViewerVisual
 
         States.Focused.Apply = () =>
         {
-            _border.StrokeColor = ForestGladeColors.LeafBright;
+            _border.StrokeColor = ForestGladeStyling.ActiveStyle.Colors.LeafBright;
             _focusRing.Visible = true;
         };
     }

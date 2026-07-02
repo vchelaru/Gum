@@ -85,10 +85,10 @@ public class WindowVisual : BaseWindowVisual
         fill.HeightUnits = DimensionUnitType.RelativeToParent;
         ForestGladeLeaf.ApplyExtraLarge(fill);
         fill.IsFilled = true;
-        fill.FillColor = ForestGladePalette.WindowBody;
+        fill.FillColor = ForestGladeStyling.ActiveStyle.Colors.WindowBody;
         fill.StrokeWidth = 0;
         fill.HasDropshadow = true;
-        fill.DropshadowColor = ForestGladePalette.GlowMedium;
+        fill.DropshadowColor = ForestGladeStyling.ActiveStyle.Colors.GlowMedium;
         fill.DropshadowOffsetX = 0f;
         fill.DropshadowOffsetY = 0f;
         fill.DropshadowBlur = ShadowBlur;
@@ -111,7 +111,7 @@ public class WindowVisual : BaseWindowVisual
         border.IsFilled = false;
         border.StrokeWidth = BorderThickness;
         border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = ForestGladeColors.Bark;
+        border.StrokeColor = ForestGladeStyling.ActiveStyle.Colors.Bark;
         return border;
     }
 
@@ -144,7 +144,7 @@ public class WindowVisual : BaseWindowVisual
         fill.CustomRadiusBottomRight = 0f;
         fill.CustomRadiusBottomLeft = 0f;
         fill.IsFilled = true;
-        fill.FillColor = ForestGladePalette.WindowTitleBar;
+        fill.FillColor = ForestGladeStyling.ActiveStyle.Colors.WindowTitleBar;
         fill.StrokeWidth = 0;
         return fill;
     }
