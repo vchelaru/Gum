@@ -41,8 +41,9 @@ If a skill or code answers the "why" but **no doc does**, that's a docs-gap sign
 
 ## 4. Always Produce
 
-1. **A paste-able reply** — human voice, no AI padding. Lead with the answer, include the docs URL when one exists, keep it to a few sentences. Point to the [Discord](https://discord.gg/EvqwmSQuBz) or a GitHub issue only when genuinely useful.
-   - **Never use an em dash (—) in the reply.** They read as AI-generated. Rewrite with a comma, parentheses, a colon, or two sentences instead.
+1. **A paste-able reply** — write it like a quick message a busy human types in Discord, not a document. Lead with the answer, keep it to a few plain sentences, include the docs URL when one exists. Point to the [Discord](https://discord.gg/EvqwmSQuBz) or a GitHub issue only when genuinely useful.
+   - **Tone: terse and a little lazy, not polished.** The failure mode is sounding like AI. So: no bold, headings, or bullet lists in the reply — plain sentences only. No reassurance or warmth filler ("no worries", "you're doing fine", "great question", "so sorry"). No em dashes (they read as AI); use a comma, parentheses, or two sentences. Cut every word that isn't load-bearing — prefer the shortest phrasing that still says it. Always keep code formatting (inline `code` and fenced blocks).
+     - Calibration example. Too wordy: *"The `EnableWindowsTargeting` line you added is harmless, leave it if you want."* Right: *"You can keep the `EnableWindowsTargeting` line in still."*
    - **Deliver it as a file, not inline.** Pasting markdown straight from the terminal into Discord/GitHub mangles the formatting. Instead: `Write` the reply to a `.md` file (use a temp path like `C:\Users\vchel\AppData\Local\Temp\gum-reply-<slug>.md`), then open it with `Start-Process <path>` (Windows `start`) so the user can copy clean source from their editor/viewer. Keep your terminal response to the working notes + a short `## Summary` that links the file — don't duplicate the full reply inline.
 2. **Confidence + justification** for any doc/API fix you propose (rubric below).
 3. **An issue** — only for outcomes C/D, and only *after* the user agrees. Then `gh issue create` with a descriptive title (reference related issue numbers like `#3163` when relevant). No template or label is required; labels are freeform and often omitted.
