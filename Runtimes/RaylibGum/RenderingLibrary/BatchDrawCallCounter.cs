@@ -104,6 +104,21 @@ public sealed unsafe class BatchDrawCallCounter
         Raylib.BeginBlendMode(mode);
     }
 
+    /// <summary>
+    /// Counted wrapper that configures separate RGB/alpha blend factors and enters
+    /// <see cref="BlendMode.CustomSeparate"/>. Used by the render-target bake to accumulate
+    /// premultiplied color while tracking straight coverage alpha, so the baked texture
+    /// composites back without the double-blend dark fringe (issue #3434). The GL factor/equation
+    /// constants are passed by the caller. Pair with <see cref="EndBlendMode"/>.
+    /// </summary>
+    public void BeginBlendModeSeparate(
+        int glSrcRGB, int glDstRGB, int glSrcAlpha, int glDstAlpha, int glEqRGB, int glEqAlpha)
+    {
+        Bank();
+        Rlgl.SetBlendFactorsSeparate(glSrcRGB, glDstRGB, glSrcAlpha, glDstAlpha, glEqRGB, glEqAlpha);
+        Raylib.BeginBlendMode(BlendMode.CustomSeparate);
+    }
+
     /// <summary>Counted wrapper for <see cref="Raylib.EndBlendMode"/>.</summary>
     public void EndBlendMode()
     {

@@ -40,6 +40,27 @@ public class Renderer : IRenderer
     // so we must track ancestors and intersect manually for nested ClipsChildren.
     Stack<System.Drawing.Rectangle> _scissorStack = new();
 
+    // Per-render-target-container offscreen textures, keyed by the container's contained
+    // renderable (issue #3434). Baked in a pre-pass before the outer BeginMode2D and composited
+    // back in place during the main walk. Reuses the shared RenderTargetServiceBase lifecycle
+    // (exact-size recreation on resize + frame-boundary sweep) exactly like ShadowBlur.
+    readonly Gum.Renderables.RenderTextureService _renderTargetService = new();
+
+    // True while baking a render-target container's subtree into its offscreen texture. Used to
+    // suppress the screen-space scissor machinery inside DrawGumRecursively, whose rects are wrong
+    // once drawing is redirected into an RT framebuffer (raylib flips scissor Y by the *screen*
+    // height, not the RT height). Clipping descendants *inside* an RT container is therefore a
+    // documented v1 limitation — see #3434. This flag is the seam where RT-local scissor rebasing
+    // will hook in.
+    bool _isBakingRenderTarget;
+
+    // GL blend-factor / equation constants used by the render-target premultiply pass. Declared
+    // here to avoid a raw-GL dependency leaking into callers; only the bake uses them.
+    const int GlOne = 1;
+    const int GlSrcAlpha = 0x0302;
+    const int GlOneMinusSrcAlpha = 0x0303;
+    const int GlFuncAdd = 0x8006;
+
 #if XNALIKE
     SpriteRenderer spriteRenderer = new SpriteRenderer();
 #endif
@@ -130,6 +151,10 @@ public class Renderer : IRenderer
         // pattern in RenderingLibrary/Graphics/Renderer.cs.
         ShadowBlur.ClearUnusedRenderTargetsLastFrame();
 
+        // Same frame-boundary sweep for render-target-container textures (#3434). A container that
+        // stopped being an RT, was removed, hidden, or resized has its offscreen texture reclaimed.
+        _renderTargetService.ClearUnusedRenderTargetsLastFrame();
+
         // Clear last frame's counts before the pass; the owned-batch counter repopulates
         // DrawCallCount as it banks each flush below.
         RenderStateChangeStatistics.Reset();
@@ -151,6 +176,25 @@ public class Renderer : IRenderer
         // then route the mode/scissor state changes below through the counter so each batch flush
         // is banked into RenderStateChangeStatistics.DrawCallCount.
         BatchDrawCallCounter.BeginPass(RenderStateChangeStatistics);
+
+        // Pre-pass, BEFORE the outer BeginMode2D: resolve layout-time properties, then bake every
+        // render-target container's subtree into its offscreen texture. Baking must happen outside
+        // the outer camera's active Mode2D — the RT bake runs its own BeginTextureMode +
+        // BeginMode2D, and the outer camera matrix would otherwise leak into it. This mirrors how
+        // the MonoGame renderer runs its render-target PreRender before BeginSpriteBatch (#3434).
+        for (int i = 0; i < layers.Count; i++)
+        {
+            Layer layer = layers[i];
+            // Walk the visual tree calling PreRender on every visible IRenderable before
+            // drawing the layer. Mirrors SkiaGum's Renderer.PreRender pattern. This is the
+            // canonical hook for runtimes that need camera/zoom-aware resolution of
+            // properties (e.g. StrokeWidthUnits = ScreenPixel on CircleRuntime /
+            // RectangleRuntime / PolygonRuntime — see #2757). Without it those runtimes had
+            // to push StrokeWidth immediately in the setter as a workaround.
+            PreRender(layer.Renderables);
+            BakeRenderTargetsInSubtree(layer.Renderables, layer);
+        }
+
         BatchDrawCallCounter.BeginMode2D(camera2D);
 
         for (int i = 0; i < layers.Count; i++)
@@ -164,13 +208,6 @@ public class Renderer : IRenderer
             {
                 //mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
             }
-            // Walk the visual tree calling PreRender on every visible IRenderable before
-            // drawing the layer. Mirrors SkiaGum's Renderer.PreRender pattern. This is the
-            // canonical hook for runtimes that need camera/zoom-aware resolution of
-            // properties (e.g. StrokeWidthUnits = ScreenPixel on CircleRuntime /
-            // RectangleRuntime / PolygonRuntime — see #2757). Without it those runtimes had
-            // to push StrokeWidth immediately in the setter as a workaround.
-            PreRender(layer.Renderables);
             RenderLayer(managers, layer, prerender: false);
         }
 
@@ -250,9 +287,24 @@ public class Renderer : IRenderer
             return;
         }
 
+        // Render-target container (#3434): its subtree was already baked into an offscreen texture
+        // during the pre-pass, so composite that texture in place of walking the live children. This
+        // fires both in the main walk (composite to screen) and inside an outer container's bake
+        // (composite a nested inner RT into the outer texture), which is what makes nesting work.
+        if (element.IsRenderTarget)
+        {
+            CompositeRenderTarget(element);
+            return;
+        }
+
         element.Render(null);
 
-        if (element.ClipsChildren)
+        // Inside an RT bake the screen-space scissor rects are invalid (raylib flips scissor Y by
+        // the screen height, not the RT height), so skip the clip machinery entirely. Descendant
+        // clipping inside an RT container is a documented v1 limitation (#3434).
+        bool suppressScissor = _isBakingRenderTarget;
+
+        if (element.ClipsChildren && !suppressScissor)
         {
             var rect = _camera.GetScissorRectangleFor(layer, element);
             var effective = _scissorStack.Count > 0
@@ -273,7 +325,7 @@ public class Renderer : IRenderer
             }
         }
 
-        if (element.ClipsChildren)
+        if (element.ClipsChildren && !suppressScissor)
         {
             _scissorStack.Pop();
             if (_scissorStack.Count > 0)
@@ -287,5 +339,189 @@ public class Renderer : IRenderer
             }
         }
     }
+
+    // Post-order (innermost-first) walk that bakes every render-target container's subtree into an
+    // offscreen texture before the main compositing walk. Post-order so a nested inner RT is baked
+    // before its outer container, which then composites the inner's finished texture while baking.
+    private void BakeRenderTargetsInSubtree(
+        System.Collections.Generic.IList<IRenderableIpso> renderables, Layer layer)
+    {
+        for (int i = 0; i < renderables.Count; i++)
+        {
+            IRenderableIpso renderable = renderables[i];
+            if (!renderable.Visible)
+            {
+                continue;
+            }
+
+            if (renderable.Children != null)
+            {
+                BakeRenderTargetsInSubtree(renderable.Children, layer);
+            }
+
+            if (renderable.IsRenderTarget)
+            {
+                BakeRenderTarget(renderable, layer);
+            }
+        }
+    }
+
+    // Bakes a single render-target container's child subtree into its cached offscreen texture.
+    // Children draw at their absolute world coordinates; an offset BeginMode2D targeting the
+    // container's clamped top-left maps those into RT-local pixel space. Children are rendered with
+    // a premultiply blend (straight src -> premultiplied dst) so the texture composites back without
+    // the double-blend dark fringe — see CompositeRenderTarget for the matching AlphaPremultiply blit.
+    private void BakeRenderTarget(IRenderableIpso container, Layer layer)
+    {
+        ComputeRenderTargetBounds(container, out float left, out float top, out _, out _,
+            out int width, out int height);
+
+        IRenderableIpso cacheOwner = ResolveRenderTargetCacheOwner(container);
+        RenderTexture2D? renderTexture = _renderTargetService.GetFor(cacheOwner, width, height);
+        if (renderTexture == null)
+        {
+            return;
+        }
+
+        BatchDrawCallCounter counter = BatchDrawCallCounter;
+
+        Camera2D bakeCamera = new Camera2D
+        {
+            Target = new System.Numerics.Vector2(left, top),
+            Offset = System.Numerics.Vector2.Zero,
+            Zoom = _camera.Zoom,
+            Rotation = 0,
+        };
+
+        // Isolate the scissor stack for the bake; it is restored afterward. Scissor is suppressed
+        // inside the bake anyway (see _isBakingRenderTarget), so this only guards against leakage.
+        Stack<System.Drawing.Rectangle> savedScissorStack = _scissorStack;
+        _scissorStack = new Stack<System.Drawing.Rectangle>();
+        bool wasBaking = _isBakingRenderTarget;
+        _isBakingRenderTarget = true;
+
+        counter.BeginTextureMode(renderTexture.Value);
+        Raylib.ClearBackground(new Color((byte)0, (byte)0, (byte)0, (byte)0));
+        counter.BeginMode2D(bakeCamera);
+        // Straight-alpha children -> premultiplied RT: color blends standard over, alpha accumulates
+        // as coverage (src.a + dst.a*(1-src.a)). The result is premultiplied, which the composite
+        // blit reads back with AlphaPremultiply for correct edges and group opacity.
+        counter.BeginBlendModeSeparate(
+            GlSrcAlpha, GlOneMinusSrcAlpha, GlOne, GlOneMinusSrcAlpha, GlFuncAdd, GlFuncAdd);
+
+        if (container.Children != null)
+        {
+            foreach (IRenderableIpso child in container.Children)
+            {
+                if (child is GraphicalUiElement childGue && childGue.Visible)
+                {
+                    DrawGumRecursively(childGue, layer);
+                }
+            }
+        }
+
+        counter.EndBlendMode();
+        counter.EndMode2D();
+        counter.EndTextureMode();
+
+        _isBakingRenderTarget = wasBaking;
+        _scissorStack = savedScissorStack;
+    }
+
+    // Composites a render-target container's baked texture at the container's clamped on-screen
+    // rectangle, honoring the container's blend and group alpha (#3434, item 2). The baked texture
+    // is premultiplied, so the default (Normal) blend composites with AlphaPremultiply; group alpha
+    // is applied by tinting every channel (a premultiplied texture must scale rgb and alpha together).
+    private void CompositeRenderTarget(IRenderableIpso container)
+    {
+        IRenderableIpso cacheOwner = ResolveRenderTargetCacheOwner(container);
+        RenderTexture2D? renderTexture = _renderTargetService.TryGetExisting(cacheOwner);
+        if (renderTexture == null)
+        {
+            return;
+        }
+
+        ComputeRenderTargetBounds(container, out float left, out float top, out float right,
+            out float bottom, out int width, out int height);
+        if (width <= 0 || height <= 0)
+        {
+            return;
+        }
+
+        BlendMode blendMode = ResolveCompositeBlendMode(cacheOwner);
+        byte alpha = (byte)container.Alpha;
+        Color tint = new Color(alpha, alpha, alpha, alpha);
+
+        BatchDrawCallCounter counter = BatchDrawCallCounter;
+        counter.BeginBlendMode(blendMode);
+        // Negative source height flips the v range: an RT is stored bottom-up in GL coordinates, so
+        // reading it with height -h yields the upright content (same idiom as ShadowBlurRenderer).
+        Raylib.DrawTexturePro(
+            renderTexture.Value.Texture,
+            new Rectangle(0, 0, width, -height),
+            new Rectangle(left, top, right - left, bottom - top),
+            System.Numerics.Vector2.Zero,
+            0,
+            tint);
+        counter.EndBlendMode();
+    }
+
+    // Clamps the container's absolute bounds to the on-screen visible intersection and returns the
+    // RT pixel size at camera zoom (crisp when zoomed). Mirrors the MonoGame GetRenderTargetFor
+    // clamping so an off-screen container bakes only its visible portion.
+    private void ComputeRenderTargetBounds(IRenderableIpso container,
+        out float left, out float top, out float right, out float bottom, out int width, out int height)
+    {
+        left = System.Math.Max(_camera.AbsoluteLeft, container.GetAbsoluteLeft());
+        right = System.Math.Min(_camera.AbsoluteRight, container.GetAbsoluteRight());
+        top = System.Math.Max(_camera.AbsoluteTop, container.GetAbsoluteTop());
+        bottom = System.Math.Min(_camera.AbsoluteBottom, container.GetAbsoluteBottom());
+
+        width = global::RenderingLibrary.Math.MathFunctions.RoundToInt((right - left) * _camera.Zoom);
+        height = global::RenderingLibrary.Math.MathFunctions.RoundToInt((bottom - top) * _camera.Zoom);
+    }
+
+    // For a nested render-target container the walk hands us the GraphicalUiElement wrapper; for a
+    // top-level one it hands us the contained InvisibleRenderable directly. The RT cache key is
+    // always the contained renderable so both forms resolve to the same texture (#3434 gotcha #8).
+    private static IRenderableIpso ResolveRenderTargetCacheOwner(IRenderableIpso source)
+    {
+        if (source is GraphicalUiElement gue && gue.RenderableComponent is IRenderableIpso contained)
+        {
+            return contained;
+        }
+
+        return source;
+    }
+
+    // The baked texture is premultiplied. Normal (NonPremultiplied) container blend therefore
+    // composites with AlphaPremultiply; Additive maps to raylib's additive mode. Other blends are
+    // approximated as premultiplied-over for v1.
+    private static BlendMode ResolveCompositeBlendMode(IRenderableIpso cacheOwner)
+    {
+        if (cacheOwner is RenderableBase renderable
+            && Gum.RenderingLibrary.BlendExtensions.ToBlend(renderable.BlendState)
+                == Gum.RenderingLibrary.Blend.Additive)
+        {
+            return BlendMode.Additive;
+        }
+
+        return BlendMode.AlphaPremultiply;
+    }
+
+    /// <summary>
+    /// Whether a baked offscreen texture is currently cached for the given render-target container.
+    /// Resolves the container's cache owner internally. Intended for tests and diagnostics.
+    /// </summary>
+    public bool HasBakedRenderTargetFor(IRenderableIpso container) =>
+        _renderTargetService.HasCachedRenderTarget(ResolveRenderTargetCacheOwner(container));
+
+    /// <summary>
+    /// Returns the baked offscreen texture cached for the given render-target container, or
+    /// <c>null</c> if none exists. Resolves the container's cache owner internally. Intended for
+    /// tests and diagnostics that need to sample what was baked.
+    /// </summary>
+    public RenderTexture2D? TryGetBakedRenderTargetFor(IRenderableIpso container) =>
+        _renderTargetService.TryGetExisting(ResolveRenderTargetCacheOwner(container));
 
 }
