@@ -674,6 +674,42 @@ public class RectangleRuntimeTests
         sourceStroke.Color.ShouldBe(Color.Blue);
     }
 
+    // Boyscout fix (shape-gradient-dropshadow-dedup): neither Gradient nor Dropshadow state was
+    // fully re-fired onto the clone's freshly-rebuilt slots. Backing fields survived via
+    // MemberwiseClone, but the clone's own fill/stroke are brand-new renderable instances at
+    // their factory defaults — a clone with UseGradient / GradientType / Color2 set never
+    // reflected that on its own slots until some other property write happened to re-trigger it.
+    [Fact]
+    public void Clone_PushesGradientAndDropshadowState_ToClonesOwnRenderableSlots()
+    {
+        RectangleRuntime source = new();
+        source.IsFilled = true;
+        source.FillColor = Color.Red;
+        source.UseGradient = true;
+        source.GradientType = GradientType.Linear;
+        source.Color2 = Color.Blue;
+        source.GradientX2 = 56;
+        source.HasDropshadow = true;
+        source.DropshadowColor = new Color(10, 20, 30, 40);
+        source.DropshadowOffsetX = 5;
+
+        RectangleRuntime clone = (RectangleRuntime)source.Clone();
+
+        RoundedRectangle cloneFill = (RoundedRectangle)clone.RenderableComponent;
+        RoundedRectangle cloneStroke = (RoundedRectangle)cloneFill.Children[0];
+
+        cloneFill.UseGradient.ShouldBeTrue();
+        cloneStroke.UseGradient.ShouldBeFalse();
+        cloneFill.GradientType.ShouldBe(GradientType.Linear);
+        cloneFill.Blue2.ShouldBe(Color.Blue.B);
+        cloneStroke.Blue2.ShouldBe(Color.Blue.B);
+        cloneFill.GradientX2.ShouldBe(56);
+        cloneFill.HasDropshadow.ShouldBeTrue();
+        cloneFill.DropshadowColor.ShouldBe(new Color(10, 20, 30, 40));
+        cloneFill.DropshadowOffsetX.ShouldBe(5);
+        cloneStroke.HasDropshadow.ShouldBeFalse();
+    }
+
     // Issue #2925 — same bug as CircleRuntime: constructor sets the fill renderable as
     // mContainedObjectAsIpso, so the tool's variable-application path routes the legacy
     // "Color" / "Alpha" variables to the FILL renderable instead of stroke. Result: a

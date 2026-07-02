@@ -569,6 +569,42 @@ public class CircleRuntimeTests
         sourceStroke.Color.ShouldBe(Color.Blue);
     }
 
+    // Boyscout fix (shape-gradient-dropshadow-dedup): neither Gradient nor Dropshadow state was
+    // fully re-fired onto the clone's freshly-rebuilt slots. Backing fields survived via
+    // MemberwiseClone, but the clone's own fill/stroke are brand-new renderable instances at
+    // their factory defaults — a clone with UseGradient / GradientType / Color2 set never
+    // reflected that on its own slots until some other property write happened to re-trigger it.
+    [Fact]
+    public void Clone_PushesGradientAndDropshadowState_ToClonesOwnRenderableSlots()
+    {
+        CircleRuntime source = new();
+        source.IsFilled = true;
+        source.FillColor = Color.Red;
+        source.UseGradient = true;
+        source.GradientType = GradientType.Linear;
+        source.Color2 = Color.Blue;
+        source.GradientX2 = 56;
+        source.HasDropshadow = true;
+        source.DropshadowColor = new Color(10, 20, 30, 40);
+        source.DropshadowOffsetX = 5;
+
+        CircleRuntime clone = (CircleRuntime)source.Clone();
+
+        Circle cloneFill = (Circle)clone.RenderableComponent;
+        Circle cloneStroke = (Circle)cloneFill.Children[0];
+
+        cloneFill.UseGradient.ShouldBeTrue();
+        cloneStroke.UseGradient.ShouldBeFalse();
+        cloneFill.GradientType.ShouldBe(GradientType.Linear);
+        cloneFill.Blue2.ShouldBe(Color.Blue.B);
+        cloneStroke.Blue2.ShouldBe(Color.Blue.B);
+        cloneFill.GradientX2.ShouldBe(56);
+        cloneFill.HasDropshadow.ShouldBeTrue();
+        cloneFill.DropshadowColor.ShouldBe(new Color(10, 20, 30, 40));
+        cloneFill.DropshadowOffsetX.ShouldBe(5);
+        cloneStroke.HasDropshadow.ShouldBeFalse();
+    }
+
     // Issue #2790 — runtime no longer compensates dash/gap. The Apos renderable (Gum.Shapes
     // Circle.RenderDashed) inflates the effective gap by aaSize internally when AA is on, so
     // dashes stay visually distinct without the runtime needing to second-guess the user's

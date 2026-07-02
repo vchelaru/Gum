@@ -72,6 +72,8 @@ public class CircleRuntime : GraphicalUiElement
 #if XNALIKE
     IFilledCircleRenderable? _fill;
     IStrokedCircleRenderable _stroke = null!;
+    ShapeGradientState _gradientState;
+    ShapeDropshadowState _dropshadowState;
 #else
     ContainedCircleType containedLineCircle = null!;
 
@@ -562,7 +564,7 @@ public class CircleRuntime : GraphicalUiElement
                 _fill.Color = _isFilled ? _fillColor : new Color(0, 0, 0, 0);
             }
             // Issue #3009 — the fill slot's gradient start mirrors FillColor (no standalone Color1).
-            SyncGradientStart();
+            _gradientState.PushGradientStart(_fillColor, _strokeColor, _fill as IGradientedRenderable, _stroke as IGradientedRenderable);
             NotifyPropertyChanged();
         }
     }
@@ -618,10 +620,10 @@ public class CircleRuntime : GraphicalUiElement
             // Dropshadow routing depends on IsFilled — re-push so the active slot owns the
             // shadow flag and the inactive slot releases it. Otherwise toggling IsFilled
             // either ghosts the previous target or never wakes the new one up.
-            SyncDropshadowToTarget();
+            _dropshadowState.SyncTarget(_fill as IDropshadowRenderable, _stroke as IDropshadowRenderable, _isFilled);
             // Gradient routing also depends on IsFilled: the gradient paints the active body
             // (fill when filled, stroke when stroke-only), so re-route on toggle.
-            SyncGradientToTarget();
+            _gradientState.PushGradientGate(_fill as IGradientedRenderable, _stroke as IGradientedRenderable, _isFilled);
             NotifyPropertyChanged();
         }
     }
@@ -642,7 +644,7 @@ public class CircleRuntime : GraphicalUiElement
             _strokeColor = value;
             _stroke.Color = value;
             // Issue #3009 — the stroke slot's gradient start mirrors StrokeColor (no standalone Color1).
-            SyncGradientStart();
+            _gradientState.PushGradientStart(_fillColor, _strokeColor, _fill as IGradientedRenderable, _stroke as IGradientedRenderable);
             NotifyPropertyChanged();
         }
     }
@@ -758,53 +760,16 @@ public class CircleRuntime : GraphicalUiElement
 
     #region Gradient
 
-    // Issue #2791: gradient pass-through. Backing fields live on the runtime so values
-    // round-trip even when neither slot implements IGradientedRenderable (e.g. core-only stroke
-    // = DefaultStrokedCircleRenderable, no fill). The coordinate/color setters push to whichever
-    // slot(s) implement it so the values round-trip on either; the UseGradient GATE routes to the
-    // active body slot (see SyncGradientToTarget). The gradient is the active body's paint — a
-    // gradient on the other slot would share the single gradient and composite invisibly, so the
-    // inactive slot renders solid.
+    // Issue #2791 (extracted into ShapeGradientState — issue "shape-gradient-dropshadow-dedup"
+    // — shared with RectangleRuntime): gradient pass-through. Backing fields live in
+    // _gradientState so values round-trip even when neither slot implements
+    // IGradientedRenderable (e.g. core-only stroke = DefaultStrokedCircleRenderable, no fill).
+    // The coordinate/color setters push to whichever slot(s) implement it so the values
+    // round-trip on either; the UseGradient GATE routes to the active body slot (see
+    // ShapeGradientState.PushGradientGate). The gradient is the active body's paint — a
+    // gradient on the other slot would share the single gradient and composite invisibly, so
+    // the inactive slot renders solid.
 
-    // Routes the gradient gate to the ACTIVE body slot — the fill when IsFilled, the stroke when
-    // stroke-only — and forces the inactive slot's gate off. Mirrors SyncDropshadowToTarget. Re-run
-    // from both the UseGradient and IsFilled setters so toggling IsFilled re-routes the gate.
-    void SyncGradientToTarget()
-    {
-        var fillGrad = _fill as IGradientedRenderable;
-        var strokeGrad = _stroke as IGradientedRenderable;
-        var active = _isFilled ? fillGrad : strokeGrad;
-        var inactive = _isFilled ? strokeGrad : fillGrad;
-        if (active != null) active.UseGradient = _useGradient;
-        if (inactive != null) inactive.UseGradient = false;
-    }
-
-    // Issue #3009 — the gradient START stop is the slot's own solid body color; Circle/Rectangle
-    // no longer carry a standalone Color1. Each slot mirrors its solid color into its
-    // Red1/Green1/Blue1/Alpha1 so the gradient start equals the color the shape was already
-    // showing (no jump when UseGradient toggles), and the dropshadow alpha — which the Apos
-    // renderable scales by the slot's Color.A — converges onto the gradient start alpha. Called
-    // from the FillColor / StrokeColor setters and the constructor; the UseGradient gate routing
-    // stays in SyncGradientToTarget.
-    void SyncGradientStart()
-    {
-        if (_fill is IGradientedRenderable fillGrad)
-        {
-            fillGrad.Red1 = _fillColor.R;
-            fillGrad.Green1 = _fillColor.G;
-            fillGrad.Blue1 = _fillColor.B;
-            fillGrad.Alpha1 = _fillColor.A;
-        }
-        if (_stroke is IGradientedRenderable strokeGrad)
-        {
-            strokeGrad.Red1 = _strokeColor.R;
-            strokeGrad.Green1 = _strokeColor.G;
-            strokeGrad.Blue1 = _strokeColor.B;
-            strokeGrad.Alpha1 = _strokeColor.A;
-        }
-    }
-
-    bool _useGradient;
     /// <summary>
     /// When <c>true</c>, the gradient color/coordinate properties drive rendering instead of
     /// <see cref="FillColor"/> / <see cref="StrokeColor"/>. Visual effect requires the optional
@@ -813,88 +778,72 @@ public class CircleRuntime : GraphicalUiElement
     /// </summary>
     public bool UseGradient
     {
-        get => _useGradient;
+        get => _gradientState.UseGradient;
         set
         {
-            _useGradient = value;
-            SyncGradientToTarget();
+            _gradientState.SetUseGradient(value, _fill as IGradientedRenderable, _stroke as IGradientedRenderable, _isFilled);
             NotifyPropertyChanged();
         }
     }
 
-    GradientType _gradientType;
     public GradientType GradientType
     {
-        get => _gradientType;
+        get => _gradientState.GradientType;
         set
         {
-            _gradientType = value;
-            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientType = value;
-            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientType = value;
+            _gradientState.SetGradientType(value, _fill as IGradientedRenderable, _stroke as IGradientedRenderable);
             NotifyPropertyChanged();
         }
     }
 
     // Issue #3009 — the gradient start (Red1/Green1/Blue1/Alpha1 / Color1) is no longer stored on
-    // the runtime. It is driven from the active body color via SyncGradientStart(); the standalone
-    // Color1 surface was dropped for Circle/Rectangle (gradient support is unshipped, so no data to
-    // preserve). Color2 below remains the only standalone gradient color.
+    // the runtime. It is driven from the active body color via ShapeGradientState.PushGradientStart;
+    // the standalone Color1 surface was dropped for Circle/Rectangle (gradient support is
+    // unshipped, so no data to preserve). Color2 below remains the only standalone gradient color.
 
-    int _alpha2 = 255;
     public int Alpha2
     {
-        get => _alpha2;
+        get => _gradientState.Alpha2;
         set
         {
-            _alpha2 = value;
-            if (_fill is IGradientedRenderable fillGrad) fillGrad.Alpha2 = value;
-            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.Alpha2 = value;
+            _gradientState.SetAlpha2(value, _fill as IGradientedRenderable, _stroke as IGradientedRenderable);
             NotifyPropertyChanged();
         }
     }
 
-    int _red2;
     public int Red2
     {
-        get => _red2;
+        get => _gradientState.Red2;
         set
         {
-            _red2 = value;
-            if (_fill is IGradientedRenderable fillGrad) fillGrad.Red2 = value;
-            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.Red2 = value;
+            _gradientState.SetRed2(value, _fill as IGradientedRenderable, _stroke as IGradientedRenderable);
             NotifyPropertyChanged();
         }
     }
 
-    int _green2;
     public int Green2
     {
-        get => _green2;
+        get => _gradientState.Green2;
         set
         {
-            _green2 = value;
-            if (_fill is IGradientedRenderable fillGrad) fillGrad.Green2 = value;
-            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.Green2 = value;
+            _gradientState.SetGreen2(value, _fill as IGradientedRenderable, _stroke as IGradientedRenderable);
             NotifyPropertyChanged();
         }
     }
 
-    int _blue2;
     public int Blue2
     {
-        get => _blue2;
+        get => _gradientState.Blue2;
         set
         {
-            _blue2 = value;
-            if (_fill is IGradientedRenderable fillGrad) fillGrad.Blue2 = value;
-            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.Blue2 = value;
+            _gradientState.SetBlue2(value, _fill as IGradientedRenderable, _stroke as IGradientedRenderable);
             NotifyPropertyChanged();
         }
     }
 
     public Color Color2
     {
-        get => new Color(_red2, _green2, _blue2, _alpha2);
+        get => _gradientState.Color2;
         set
         {
             Red2 = value.R;
@@ -904,158 +853,122 @@ public class CircleRuntime : GraphicalUiElement
         }
     }
 
-    float _gradientX1;
     public float GradientX1
     {
-        get => _gradientX1;
+        get => _gradientState.GradientX1;
         set
         {
-            _gradientX1 = value;
-            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientX1 = value;
-            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientX1 = value;
+            _gradientState.SetGradientX1(value, _fill as IGradientedRenderable, _stroke as IGradientedRenderable);
             NotifyPropertyChanged();
         }
     }
 
-    GeneralUnitType _gradientX1Units;
     public GeneralUnitType GradientX1Units
     {
-        get => _gradientX1Units;
+        get => _gradientState.GradientX1Units;
         set
         {
-            _gradientX1Units = value;
-            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientX1Units = value;
-            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientX1Units = value;
+            _gradientState.SetGradientX1Units(value, _fill as IGradientedRenderable, _stroke as IGradientedRenderable);
             NotifyPropertyChanged();
         }
     }
 
-    float _gradientY1;
     public float GradientY1
     {
-        get => _gradientY1;
+        get => _gradientState.GradientY1;
         set
         {
-            _gradientY1 = value;
-            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientY1 = value;
-            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientY1 = value;
+            _gradientState.SetGradientY1(value, _fill as IGradientedRenderable, _stroke as IGradientedRenderable);
             NotifyPropertyChanged();
         }
     }
 
-    GeneralUnitType _gradientY1Units;
     public GeneralUnitType GradientY1Units
     {
-        get => _gradientY1Units;
+        get => _gradientState.GradientY1Units;
         set
         {
-            _gradientY1Units = value;
-            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientY1Units = value;
-            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientY1Units = value;
+            _gradientState.SetGradientY1Units(value, _fill as IGradientedRenderable, _stroke as IGradientedRenderable);
             NotifyPropertyChanged();
         }
     }
 
-    float _gradientX2;
     public float GradientX2
     {
-        get => _gradientX2;
+        get => _gradientState.GradientX2;
         set
         {
-            _gradientX2 = value;
-            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientX2 = value;
-            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientX2 = value;
+            _gradientState.SetGradientX2(value, _fill as IGradientedRenderable, _stroke as IGradientedRenderable);
             NotifyPropertyChanged();
         }
     }
 
-    GeneralUnitType _gradientX2Units;
     public GeneralUnitType GradientX2Units
     {
-        get => _gradientX2Units;
+        get => _gradientState.GradientX2Units;
         set
         {
-            _gradientX2Units = value;
-            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientX2Units = value;
-            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientX2Units = value;
+            _gradientState.SetGradientX2Units(value, _fill as IGradientedRenderable, _stroke as IGradientedRenderable);
             NotifyPropertyChanged();
         }
     }
 
-    float _gradientY2;
     public float GradientY2
     {
-        get => _gradientY2;
+        get => _gradientState.GradientY2;
         set
         {
-            _gradientY2 = value;
-            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientY2 = value;
-            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientY2 = value;
+            _gradientState.SetGradientY2(value, _fill as IGradientedRenderable, _stroke as IGradientedRenderable);
             NotifyPropertyChanged();
         }
     }
 
-    GeneralUnitType _gradientY2Units;
     public GeneralUnitType GradientY2Units
     {
-        get => _gradientY2Units;
+        get => _gradientState.GradientY2Units;
         set
         {
-            _gradientY2Units = value;
-            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientY2Units = value;
-            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientY2Units = value;
+            _gradientState.SetGradientY2Units(value, _fill as IGradientedRenderable, _stroke as IGradientedRenderable);
             NotifyPropertyChanged();
         }
     }
 
-    float _gradientInnerRadius;
     public float GradientInnerRadius
     {
-        get => _gradientInnerRadius;
+        get => _gradientState.GradientInnerRadius;
         set
         {
-            _gradientInnerRadius = value;
-            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientInnerRadius = value;
-            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientInnerRadius = value;
+            _gradientState.SetGradientInnerRadius(value, _fill as IGradientedRenderable, _stroke as IGradientedRenderable);
             NotifyPropertyChanged();
         }
     }
 
-    DimensionUnitType _gradientInnerRadiusUnits;
     public DimensionUnitType GradientInnerRadiusUnits
     {
-        get => _gradientInnerRadiusUnits;
+        get => _gradientState.GradientInnerRadiusUnits;
         set
         {
-            _gradientInnerRadiusUnits = value;
-            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientInnerRadiusUnits = value;
-            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientInnerRadiusUnits = value;
+            _gradientState.SetGradientInnerRadiusUnits(value, _fill as IGradientedRenderable, _stroke as IGradientedRenderable);
             NotifyPropertyChanged();
         }
     }
 
-    float _gradientOuterRadius;
     public float GradientOuterRadius
     {
-        get => _gradientOuterRadius;
+        get => _gradientState.GradientOuterRadius;
         set
         {
-            _gradientOuterRadius = value;
-            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientOuterRadius = value;
-            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientOuterRadius = value;
+            _gradientState.SetGradientOuterRadius(value, _fill as IGradientedRenderable, _stroke as IGradientedRenderable);
             NotifyPropertyChanged();
         }
     }
 
-    DimensionUnitType _gradientOuterRadiusUnits;
     public DimensionUnitType GradientOuterRadiusUnits
     {
-        get => _gradientOuterRadiusUnits;
+        get => _gradientState.GradientOuterRadiusUnits;
         set
         {
-            _gradientOuterRadiusUnits = value;
-            if (_fill is IGradientedRenderable fillGrad) fillGrad.GradientOuterRadiusUnits = value;
-            if (_stroke is IGradientedRenderable strokeGrad) strokeGrad.GradientOuterRadiusUnits = value;
+            _gradientState.SetGradientOuterRadiusUnits(value, _fill as IGradientedRenderable, _stroke as IGradientedRenderable);
             NotifyPropertyChanged();
         }
     }
@@ -1064,48 +977,16 @@ public class CircleRuntime : GraphicalUiElement
 
     #region Dropshadow
 
-    // Issue #2797: dropshadow pass-through. Backing fields live on the runtime so values
-    // round-trip even when neither slot implements IDropshadowRenderable (core-only stroke
-    // = DefaultStrokedCircleRenderable, no fill). Unlike gradient (#2791) and AA (#2798),
-    // which push to BOTH slots so a single setter covers fill and stroke, the shadow is
-    // drawn once per renderable — pushing to both would render the shadow twice and
-    // visibly double up. So the routing picks one slot: the fill when IsFilled = true (the
-    // disc casts the shadow), the stroke when IsFilled = false (the disc is gated to
-    // transparent and can't cast a visible shadow). The push-target helper is shared across
-    // every setter so the rule lives in one place. SyncDropshadowToTarget below re-routes
-    // shadow state when IsFilled toggles — without that the previous target keeps its
-    // HasDropshadow flag set and the new target never receives it.
+    // Issue #2797 (extracted into ShapeDropshadowState — shared with RectangleRuntime):
+    // dropshadow pass-through. Backing fields live in _dropshadowState so values round-trip
+    // even when neither slot implements IDropshadowRenderable (core-only stroke =
+    // DefaultStrokedCircleRenderable, no fill). Unlike gradient (#2791) and AA (#2798), which
+    // push to BOTH slots so a single setter covers fill and stroke, the shadow is drawn once
+    // per renderable — pushing to both would render the shadow twice and visibly double up. So
+    // the routing picks one slot: the fill when IsFilled = true (the disc casts the shadow),
+    // the stroke when IsFilled = false (the disc is gated to transparent and can't cast a
+    // visible shadow). See ShapeDropshadowState.GetTarget / SyncTarget for the shared rule.
 
-    IDropshadowRenderable? DropshadowTarget
-    {
-        get
-        {
-            var fillDs = _fill as IDropshadowRenderable;
-            var strokeDs = _stroke as IDropshadowRenderable;
-            return _isFilled ? (fillDs ?? strokeDs) : (strokeDs ?? fillDs);
-        }
-    }
-
-    void SyncDropshadowToTarget()
-    {
-        var fillDs = _fill as IDropshadowRenderable;
-        var strokeDs = _stroke as IDropshadowRenderable;
-        var target = DropshadowTarget;
-        var other = ReferenceEquals(target, fillDs) ? strokeDs : fillDs;
-
-        if (other != null) other.HasDropshadow = false;
-        if (target != null)
-        {
-            target.HasDropshadow = _hasDropshadow;
-            target.DropshadowColor = _dropshadowColor;
-            target.DropshadowOffsetX = _dropshadowOffsetX;
-            target.DropshadowOffsetY = _dropshadowOffsetY;
-            target.DropshadowBlurX = _dropshadowBlur;
-            target.DropshadowBlurY = _dropshadowBlur;
-        }
-    }
-
-    bool _hasDropshadow;
     /// <summary>
     /// When <c>true</c>, the dropshadow color/offset/blur properties drive an extra render
     /// pass behind the circle. Visual effect requires the optional MonoGameGumShapes
@@ -1113,88 +994,80 @@ public class CircleRuntime : GraphicalUiElement
     /// </summary>
     public bool HasDropshadow
     {
-        get => _hasDropshadow;
+        get => _dropshadowState.HasDropshadow;
         set
         {
-            _hasDropshadow = value;
-            if (DropshadowTarget is { } target) target.HasDropshadow = value;
+            _dropshadowState.SetHasDropshadow(value, _fill as IDropshadowRenderable, _stroke as IDropshadowRenderable, _isFilled);
             NotifyPropertyChanged();
         }
     }
 
-    Color _dropshadowColor;
     public Color DropshadowColor
     {
-        get => _dropshadowColor;
+        get => _dropshadowState.DropshadowColor;
         set
         {
-            _dropshadowColor = value;
-            if (DropshadowTarget is { } target) target.DropshadowColor = value;
+            _dropshadowState.SetDropshadowColor(value, _fill as IDropshadowRenderable, _stroke as IDropshadowRenderable, _isFilled);
             NotifyPropertyChanged();
         }
     }
 
     public int DropshadowAlpha
     {
-        get => _dropshadowColor.A;
+        get => _dropshadowState.DropshadowColor.A;
         set
         {
-            DropshadowColor = new Color(_dropshadowColor.R, _dropshadowColor.G, _dropshadowColor.B, (byte)value);
+            DropshadowColor = new Color(_dropshadowState.DropshadowColor.R, _dropshadowState.DropshadowColor.G, _dropshadowState.DropshadowColor.B, (byte)value);
         }
     }
 
     public int DropshadowRed
     {
-        get => _dropshadowColor.R;
+        get => _dropshadowState.DropshadowColor.R;
         set
         {
-            DropshadowColor = new Color((byte)value, _dropshadowColor.G, _dropshadowColor.B, _dropshadowColor.A);
+            DropshadowColor = new Color((byte)value, _dropshadowState.DropshadowColor.G, _dropshadowState.DropshadowColor.B, _dropshadowState.DropshadowColor.A);
         }
     }
 
     public int DropshadowGreen
     {
-        get => _dropshadowColor.G;
+        get => _dropshadowState.DropshadowColor.G;
         set
         {
-            DropshadowColor = new Color(_dropshadowColor.R, (byte)value, _dropshadowColor.B, _dropshadowColor.A);
+            DropshadowColor = new Color(_dropshadowState.DropshadowColor.R, (byte)value, _dropshadowState.DropshadowColor.B, _dropshadowState.DropshadowColor.A);
         }
     }
 
     public int DropshadowBlue
     {
-        get => _dropshadowColor.B;
+        get => _dropshadowState.DropshadowColor.B;
         set
         {
-            DropshadowColor = new Color(_dropshadowColor.R, _dropshadowColor.G, (byte)value, _dropshadowColor.A);
+            DropshadowColor = new Color(_dropshadowState.DropshadowColor.R, _dropshadowState.DropshadowColor.G, (byte)value, _dropshadowState.DropshadowColor.A);
         }
     }
 
-    float _dropshadowOffsetX;
     public float DropshadowOffsetX
     {
-        get => _dropshadowOffsetX;
+        get => _dropshadowState.DropshadowOffsetX;
         set
         {
-            _dropshadowOffsetX = value;
-            if (DropshadowTarget is { } target) target.DropshadowOffsetX = value;
+            _dropshadowState.SetDropshadowOffsetX(value, _fill as IDropshadowRenderable, _stroke as IDropshadowRenderable, _isFilled);
             NotifyPropertyChanged();
         }
     }
 
-    float _dropshadowOffsetY;
     public float DropshadowOffsetY
     {
-        get => _dropshadowOffsetY;
+        get => _dropshadowState.DropshadowOffsetY;
         set
         {
-            _dropshadowOffsetY = value;
-            if (DropshadowTarget is { } target) target.DropshadowOffsetY = value;
+            _dropshadowState.SetDropshadowOffsetY(value, _fill as IDropshadowRenderable, _stroke as IDropshadowRenderable, _isFilled);
             NotifyPropertyChanged();
         }
     }
 
-    float _dropshadowBlur;
     /// <summary>
     /// Isotropic blur radius in pixels for the dropshadow. Pushes a single value to both
     /// the underlying renderable's X and Y blur fields — Apos.Shapes approximates the
@@ -1204,15 +1077,10 @@ public class CircleRuntime : GraphicalUiElement
     /// </summary>
     public float DropshadowBlur
     {
-        get => _dropshadowBlur;
+        get => _dropshadowState.DropshadowBlur;
         set
         {
-            _dropshadowBlur = value;
-            if (DropshadowTarget is { } target)
-            {
-                target.DropshadowBlurX = value;
-                target.DropshadowBlurY = value;
-            }
+            _dropshadowState.SetDropshadowBlur(value, _fill as IDropshadowRenderable, _stroke as IDropshadowRenderable, _isFilled);
             NotifyPropertyChanged();
         }
     }
@@ -1460,6 +1328,13 @@ public class CircleRuntime : GraphicalUiElement
         toReturn.IsFilled = toReturn.IsFilled;
         // Issue #2937 — re-fire Blend onto the freshly-built slots for the same reason.
         toReturn.Blend = toReturn.Blend;
+        // Boyscout fix (shape-gradient-dropshadow-dedup) — push the Gradient/Dropshadow state
+        // onto the freshly-built slots too. Previously neither region re-fired here: the
+        // backing fields survived via MemberwiseClone but the clone's new slots never received
+        // them, so a clone with UseGradient/HasDropshadow = true silently rendered without its
+        // gradient/shadow until some other property write happened to re-trigger it.
+        toReturn._gradientState.PushAll(toReturn._fill as IGradientedRenderable, toReturn._stroke as IGradientedRenderable, toReturn._isFilled, toReturn._fillColor, toReturn._strokeColor);
+        toReturn._dropshadowState.PushAll(toReturn._fill as IDropshadowRenderable, toReturn._stroke as IDropshadowRenderable, toReturn._isFilled);
         if (toReturn._fill != null)
         {
             toReturn._stroke.Radius = toReturn._fill.Radius;
@@ -1912,7 +1787,7 @@ public class CircleRuntime : GraphicalUiElement
             // Issue #3009 — seed each slot's gradient start from its (white) body color so flipping
             // UseGradient on a freshly-constructed circle starts from white rather than a stale
             // default, matching the no-jump contract.
-            SyncGradientStart();
+            _gradientState.PushGradientStart(_fillColor, _strokeColor, _fill as IGradientedRenderable, _stroke as IGradientedRenderable);
 
             // Dropshadow defaults mirror SkiaShapeRuntime: opaque black, slight downward
             // offset, slight Y blur. HasDropshadow is false so the values are inert until
