@@ -234,7 +234,8 @@ public partial class CodeWindow : UserControl
         {
             {OutputLibrary.MonoGameForms, "MonoGame + Forms" },
             {OutputLibrary.Skia, "SkiaSharp" },
-            {OutputLibrary.MonoGame, "MonoGame (no forms, deprecated)" }
+            {OutputLibrary.MonoGame, "MonoGame (no forms, deprecated)" },
+            {OutputLibrary.Raylib, "Raylib (Find By Name only)" }
         };
         var StringToLibrary = LibraryToString.ToDictionary((i) => i.Value, (i) => i.Key);
 
@@ -276,6 +277,7 @@ public partial class CodeWindow : UserControl
         options.Add(LibraryToString[OutputLibrary.MonoGameForms]);
         options.Add(LibraryToString[OutputLibrary.Skia]);
         options.Add(LibraryToString[OutputLibrary.MonoGame]);
+        options.Add(LibraryToString[OutputLibrary.Raylib]);
 
         member.CustomOptions = options;
 
@@ -494,6 +496,13 @@ public partial class CodeWindow : UserControl
                 if (CodeOutputProjectSettings?.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
                 {
                     detailText = "Full code generation in MonoGame + Forms is considered experimental";
+                }
+            }
+            else if (CodeOutputProjectSettings?.OutputLibrary == OutputLibrary.Raylib)
+            {
+                if (CodeOutputProjectSettings?.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
+                {
+                    detailText = "Raylib code generation only supports \"Reference loaded Gum Project\" (Fully in Code is not yet supported)";
                 }
             }
 

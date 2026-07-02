@@ -1,7 +1,9 @@
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.ProjectServices.CodeGeneration;
+using Moq;
 using Shouldly;
+using ToolsUtilities;
 
 namespace Gum.ProjectServices.Tests;
 
@@ -171,5 +173,90 @@ public class CodeGeneratorSyntaxVersionNamespaceTests
         {
             ObjectFinder.Self.GumProjectSave = null;
         }
+    }
+
+    [Fact]
+    public void GetInheritance_Version1_Raylib_StandardElement_UsesUnifiedNamespace()
+    {
+        // Raylib never had a legacy per-platform namespace, so it should behave exactly like
+        // MonoGame at the unified (>= 1) syntax version.
+        StandardElementSave sprite = new StandardElementSave { Name = "Sprite" };
+        GumProjectSave project = new GumProjectSave();
+        project.StandardElements.Add(sprite);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        try
+        {
+            ComponentSave component = new ComponentSave();
+            component.BaseType = "Sprite";
+
+            CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+            {
+                OutputLibrary = OutputLibrary.Raylib
+            };
+
+            string? result = CodeGenerator.GetInheritance(component, settings, resolvedSyntaxVersion: 1);
+
+            result.ShouldBe("global::Gum.GueDeriving.SpriteRuntime");
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    [Fact]
+    public void ResolveSyntaxVersion_Raylib_WithNoExplicitVersion_FloorsToVersion1()
+    {
+        // Raylib codegen only ever existed at the unified namespace scheme, so auto-detect's
+        // legacy version-0 fallback must be floored to 1 for Raylib specifically.
+        Mock<INameVerifier> mockNameVerifier = new Mock<INameVerifier>();
+        CodeGenerationNameVerifier codeGenNameVerifier = new CodeGenerationNameVerifier(mockNameVerifier.Object);
+        FixedProjectDirectoryProvider directoryProvider = new FixedProjectDirectoryProvider(projectDirectory: null);
+        CodeOutputElementSettingsManager elementSettingsManager = new CodeOutputElementSettingsManager(directoryProvider);
+        Gum.Localization.LocalizationService localizationService = new Gum.Localization.LocalizationService();
+
+        CodeGenerator generator = new CodeGenerator(
+            codeGenNameVerifier,
+            localizationService,
+            elementSettingsManager,
+            directoryProvider);
+
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            OutputLibrary = OutputLibrary.Raylib,
+            SyntaxVersion = "*"
+        };
+
+        int result = generator.ResolveSyntaxVersion(settings);
+
+        result.ShouldBe(1);
+    }
+
+    [Fact]
+    public void ResolveSyntaxVersion_MonoGame_WithNoExplicitVersion_StaysAtVersion0()
+    {
+        // Pin existing MonoGame behavior: no detection service + auto-detect "*" still resolves to 0.
+        Mock<INameVerifier> mockNameVerifier = new Mock<INameVerifier>();
+        CodeGenerationNameVerifier codeGenNameVerifier = new CodeGenerationNameVerifier(mockNameVerifier.Object);
+        FixedProjectDirectoryProvider directoryProvider = new FixedProjectDirectoryProvider(projectDirectory: null);
+        CodeOutputElementSettingsManager elementSettingsManager = new CodeOutputElementSettingsManager(directoryProvider);
+        Gum.Localization.LocalizationService localizationService = new Gum.Localization.LocalizationService();
+
+        CodeGenerator generator = new CodeGenerator(
+            codeGenNameVerifier,
+            localizationService,
+            elementSettingsManager,
+            directoryProvider);
+
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            OutputLibrary = OutputLibrary.MonoGame,
+            SyntaxVersion = "*"
+        };
+
+        int result = generator.ResolveSyntaxVersion(settings);
+
+        result.ShouldBe(0);
     }
 }

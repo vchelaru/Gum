@@ -136,6 +136,35 @@ public class CodeGeneratorGetInheritanceTests
     }
 
     [Fact]
+    public void GetInheritance_Raylib_Screen_NoBaseType_NoDefaultScreenBase_ReturnsGraphicalUiElement()
+    {
+        // Raylib is not MonoGameForms, so it takes the same non-Forms fallback as plain MonoGame.
+        ScreenSave screen = new ScreenSave();
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings();
+        settings.OutputLibrary = OutputLibrary.Raylib;
+        settings.DefaultScreenBase = "";
+
+        string? result = CodeGenerator.GetInheritance(screen, settings);
+
+        result.ShouldBe("Gum.Wireframe.GraphicalUiElement");
+    }
+
+    [Fact]
+    public void GetInheritance_Raylib_Container_ReturnsContainerRuntime()
+    {
+        ComponentSave component = new ComponentSave();
+        component.BaseType = "Container";
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            OutputLibrary = OutputLibrary.Raylib
+        };
+
+        string? result = CodeGenerator.GetInheritance(component, settings);
+
+        result.ShouldBe("ContainerRuntime");
+    }
+
+    [Fact]
     public void GetInheritance_MonoGameForms_ComponentInheritingFromNonContainerStandard_ReturnsDescriptiveError()
     {
         StandardElementSave text = new StandardElementSave { Name = "Text" };
