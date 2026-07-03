@@ -163,6 +163,9 @@
 		<Compile Include="..\..\RenderingLibrary\Graphics\Fonts\ParsedFontFile.cs" Link="RenderingLibrary\Fonts\ParsedFontFile.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\RenderStateChangeStatistics.cs" Link="RenderingLibrary\RenderStateChangeStatistics.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\RenderTargetService.cs" Link="RenderingLibrary\RenderTargetService.cs" />
+		<!-- Shared markup model + run-splitter (InlineVariable, StyledSubstring, StyledSubstringSplitter)
+		     so Raylib's Text can render BBCode inline styling without reimplementing the split. #3471 -->
+		<Compile Include="..\..\RenderingLibrary\Graphics\StyledSubstringSplitter.cs" Link="RenderingLibrary\StyledSubstringSplitter.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\TextExtensions.cs" Link="Renderables\TextExtensions.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultFromFileVisuals\*.cs" Link="Forms\DefaultFromFileVisuals\%(Filename)%(Extension)" />
 	</ItemGroup>

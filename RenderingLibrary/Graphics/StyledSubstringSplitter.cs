@@ -4,6 +4,37 @@ using System.Linq;
 namespace RenderingLibrary.Graphics;
 
 /// <summary>
+/// A single styling directive parsed from a BBCode tag, covering a contiguous range of characters in the
+/// "stripped" (tags-removed) text. Produced when markup text is assigned to a Text renderable and consumed
+/// by <see cref="StyledSubstringSplitter"/> to break a line into styled runs. Lives here (rather than in a
+/// specific Text renderable) so every rendering backend can share both the model and the splitter.
+/// </summary>
+public class InlineVariable
+{
+    /// <summary>
+    /// Variable name, such as "Font". This translates to the left-side of the assignment in the tag. For example
+    /// [Font=Arial] would have a VariableName of "Font".
+    /// </summary>
+    public string VariableName;
+
+    /// <summary>
+    /// The start index of the tag in the "stripped" text (after all tags have been removed).
+    /// </summary>
+    public int StartIndex;
+
+    /// <summary>
+    /// The number of characters covered by this inline variable. This is the character count on the "stripped" text.
+    /// </summary>
+    public int CharacterCount;
+    public object Value;
+
+    public override string ToString()
+    {
+        return $"{VariableName} = {Value} at [{StartIndex}] for {CharacterCount} characters";
+    }
+}
+
+/// <summary>
 /// A single run of text within a line that shares the same set of active <see cref="InlineVariable"/>s,
 /// as produced by <see cref="StyledSubstringSplitter.GetStyledSubstrings"/>.
 /// </summary>
