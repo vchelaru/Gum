@@ -154,6 +154,53 @@ public class CodeGenerationAutoSetupServiceTests : IDisposable
     }
 
     [Fact]
+    public void Run_WhenOnlyShprojFound_SetsCodeProjectRootToDot()
+    {
+        string shprojPath = Path.Combine(_tempDirectory, "MyGame.shproj");
+        File.WriteAllText(shprojPath, "<Project></Project>");
+        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        File.WriteAllText(gumxPath, "");
+
+        AutoSetupResult result = _sut.Run(gumxPath);
+
+        result.Success.ShouldBeTrue();
+        result.Settings!.CodeProjectRoot.ShouldBe("./");
+    }
+
+    [Fact]
+    public void Run_WhenOnlyShprojFound_LeavesRootNamespaceAndOutputLibraryAsDefaults()
+    {
+        string shprojPath = Path.Combine(_tempDirectory, "MyGame.shproj");
+        File.WriteAllText(shprojPath,
+            "<Project><ItemGroup><PackageReference Include=\"MonoGame.Framework.DesktopGL\" Version=\"3.8.1.303\" /></ItemGroup></Project>");
+        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        File.WriteAllText(gumxPath, "");
+
+        AutoSetupResult result = _sut.Run(gumxPath);
+
+        result.Success.ShouldBeTrue();
+        result.Settings!.RootNamespace.ShouldBe(string.Empty);
+        result.Settings!.OutputLibrary.ShouldBe(OutputLibrary.MonoGame);
+    }
+
+    [Fact]
+    public void Run_WithExplicitShprojPath_TreatsAsSharedProjectAndLeavesDefaults()
+    {
+        string shprojPath = Path.Combine(_tempDirectory, "Shared.shproj");
+        File.WriteAllText(shprojPath,
+            "<Project><ItemGroup><PackageReference Include=\"MonoGame.Framework.DesktopGL\" Version=\"3.8.1.303\" /></ItemGroup></Project>");
+        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        File.WriteAllText(gumxPath, "");
+
+        AutoSetupResult result = _sut.Run(gumxPath, shprojPath);
+
+        result.Success.ShouldBeTrue();
+        result.Settings!.CodeProjectRoot.ShouldBe("./");
+        result.Settings!.RootNamespace.ShouldBe(string.Empty);
+        result.Settings!.OutputLibrary.ShouldBe(OutputLibrary.MonoGame);
+    }
+
+    [Fact]
     public void Run_WhenNoCsprojFound_ReturnsFailure()
     {
         // Use an isolated subdirectory of GetTempPath() which typically has no .csproj

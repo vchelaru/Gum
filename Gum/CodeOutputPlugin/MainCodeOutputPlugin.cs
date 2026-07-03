@@ -543,8 +543,8 @@ public class MainCodeOutputPlugin : PluginBase
             if(csprojAboveGumx == null)
             {
                 message += "\n\n" +
-                    "Note: Your Gum project (.gumx) is currently not saved relative to a folder that contains a .csproj file. " +
-                    "Saving your Gum project relative to your .csproj is the recommended approach";
+                    "Note: Specify a Code Project Root above (Project-Wide Code Generation section). " +
+                    "This can be any folder - it does not need to contain a .csproj.";
             }
 
             _dialogService.ShowMessage(message);

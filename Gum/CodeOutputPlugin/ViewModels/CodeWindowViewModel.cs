@@ -210,7 +210,7 @@ public class CodeWindowViewModel : ViewModel
         var files = _fileCommands.GetFiles(filePath.FullPath)
             .Select(item => new FilePath(item));
 
-        if (files.Any(item => item.Extension == "csproj"))
+        if (files.Any(item => CodeGenerationAutoSetupService.RecognizedProjectFileExtensions.Contains(item.Extension)))
         {
             return filePath;
         }
