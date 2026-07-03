@@ -13,9 +13,11 @@ Default visuals are `InteractiveGue` subclasses that procedurally build a comple
 
 ## Two Generations
 
-**V1 (legacy `Default*Runtime`)** — Solid-colored rectangles (`ColoredRectangleRuntime`, `RectangleRuntime`). No textures, no centralized styling. Still shipped but superseded.
+**V1 (legacy `Default*Runtime`)** — Solid-colored rectangles (`ColoredRectangleRuntime`, `RectangleRuntime`). No textures, no centralized styling. The `Default*Runtime` classes and `DefaultVisualsVersion.V1` are `[Obsolete]` (CS0618 warning) and slated for removal.
 
-**V2+ (`*Visual`)** — Nine-slice textured backgrounds via `Styling.ActiveStyle`. Uses a shared sprite sheet for backgrounds, icons, and focus indicators. V3 variants exist under `DefaultVisuals/V3/`.
+**V2 (top-level `*Visual`)** — Nine-slice textured backgrounds via `Styling.ActiveStyle`; shared sprite sheet for backgrounds, icons, and focus indicators. The top-level `*Visual` classes and `DefaultVisualsVersion.V2` are also `[Obsolete]` (CS0618 warning) and slated for removal.
+
+**V3 (`DefaultVisuals/V3/*Visual`)** — Current generation; `DefaultVisualsVersion.V3`/`.Newest`. Not obsolete.
 
 > The Forms sprite-sheet icons are one of three icon pipelines in Gum (this one for the runtime; `GumIcon`/`PathGeometry` for tool WPF chrome; PNG `ImageList` for the tool tree view). For the umbrella overview and routing, see [gum-icons](../gum-icons/SKILL.md).
 

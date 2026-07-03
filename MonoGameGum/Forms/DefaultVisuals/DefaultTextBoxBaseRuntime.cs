@@ -24,6 +24,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 namespace Gum.Forms.DefaultVisuals
 #endif
 {
+    [Obsolete("Legacy V1 default visual. Use the V3 visuals via DefaultVisualsVersion.V3/.Newest; the V1 default visuals are slated for removal in a future release.")]
     public abstract class DefaultTextBoxBaseRuntime : InteractiveGue
     {
         public TextRuntime TextInstance { get; private set; }

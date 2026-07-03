@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Gum.Forms.DefaultVisuals;
+[Obsolete("Legacy V2 default visual. Use the V3 visuals via DefaultVisualsVersion.V3/.Newest; the V2 default visuals are slated for removal in a future release.")]
 public class ItemsControlVisual : ScrollViewerVisual
 {
     public ItemsControlVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(
