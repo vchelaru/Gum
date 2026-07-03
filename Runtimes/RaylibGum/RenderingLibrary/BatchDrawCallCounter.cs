@@ -133,7 +133,7 @@ public sealed unsafe class BatchDrawCallCounter
     /// <see cref="Gum.Renderables.BlendModeExtensions"/>'s remarks for why: outside a bake there is
     /// no further compositing to keep premultiplied-consistent, so <c>Replace</c> etc. use the
     /// straightforward "ignore alpha" factors matching MonoGame; inside a bake they must leave a
-    /// validly premultiplied pixel or leftover color bleeds through <c>TryCompositeRenderTarget</c>'s
+    /// validly premultiplied pixel or leftover color bleeds through <c>CompositeRenderTarget</c>'s
     /// <c>AlphaPremultiply</c> composite (issue #3470 follow-up).</para>
     ///
     /// Pair with <see cref="EndBlendMode"/>.

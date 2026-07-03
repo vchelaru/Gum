@@ -1353,23 +1353,15 @@ class RenderTargetService : RenderTargetServiceBase<RenderTarget2D>
 
     public RenderTarget2D? GetRenderTargetFor(GraphicsDevice graphicsDevice, IRenderableIpso renderable, Camera camera)
     {
-        var left = renderable.GetAbsoluteLeft();
-        var right = renderable.GetAbsoluteRight();
-        var top = renderable.GetAbsoluteTop();
-        var bottom = renderable.GetAbsoluteBottom();
-
-        left = System.Math.Max(camera.AbsoluteLeft, left);
-        right = System.Math.Min(camera.AbsoluteRight, right);
-        top = System.Math.Max(camera.AbsoluteTop, top);
-        bottom = System.Math.Min(camera.AbsoluteBottom, bottom);
-
-        var width = Math.MathFunctions.RoundToInt((right - left) * camera.Zoom);
-        var height = Math.MathFunctions.RoundToInt((bottom - top) * camera.Zoom);
+        // Shared clamp+size helper (#3478) — the same one raylib's bake/composite path uses — so the
+        // camera-visible-bounds math can't drift between backends. GetFor returns null for a
+        // non-positive size (off-camera / degenerate), which the callers treat as "render nothing".
+        var bounds = camera.GetRenderTargetBounds(renderable);
 
         _graphicsDeviceForCreate = graphicsDevice;
         try
         {
-            return GetFor(renderable, width, height);
+            return GetFor(renderable, bounds.Width, bounds.Height);
         }
         finally
         {

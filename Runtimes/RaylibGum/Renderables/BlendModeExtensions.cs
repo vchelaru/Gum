@@ -19,7 +19,7 @@ namespace Gum.Renderables;
 /// changing alpha (the whole point of the "alpha-only" family) is safe there. raylib's render-target
 /// bake pipeline instead <b>stores an already-premultiplied result</b> and composites it back with
 /// <c>BlendMode.AlphaPremultiply</c> (see <c>Renderer.BakeRenderTarget</c> /
-/// <c>TryCompositeRenderTarget</c>, issue #3434) — so any draw inside a bake must leave a validly
+/// <c>CompositeRenderTarget</c>, issue #3434) — so any draw inside a bake must leave a validly
 /// premultiplied pixel (color proportional to its own alpha), or leftover full-intensity color bleeds
 /// through at composite time even where alpha reads near zero (issue #3470 follow-up: SubtractAlpha
 /// showed magenta instead of a transparent hole). The alpha factors are always reused as-is from

@@ -394,7 +394,9 @@ public class Renderer : IRenderer
         // Render-target container (#3434): its subtree was already baked into an offscreen texture
         // during the pre-pass, so composite that texture in place of walking the live children. This
         // fires both in the main walk (composite to screen) and inside an outer container's bake
-        // (composite a nested inner RT into the outer texture), which is what makes nesting work.
+        // (composite a nested inner RT into the outer texture), which is what makes nesting work. A
+        // render-target container ALWAYS renders as a single composited unit and never falls through
+        // to draw its children directly.
         if (element.IsRenderTarget)
         {
             // A hidden RT container draws nothing (its bake was skipped too). Without this the
@@ -405,13 +407,17 @@ public class Renderer : IRenderer
                 return;
             }
 
-            // If a valid baked texture exists, composite it and stop. Otherwise (degenerate/zero
-            // clamped size — e.g. a 0-sized pre-layout container, or one whose children draw at
-            // offsets) fall through and render the children directly so the subtree doesn't vanish.
-            if (TryCompositeRenderTarget(element))
-            {
-                return;
-            }
+            // Composite the baked texture if a valid one exists; otherwise (degenerate/zero clamped
+            // size, or entirely off-camera) render NOTHING and stop. We deliberately do NOT fall
+            // through to draw the children directly: doing so would draw them unclamped, so content
+            // that reaches back into the visible camera area (a negative offset, an oversized child,
+            // a dropshadow bleeding past the edge) would appear on raylib but be invisible on
+            // MonoGame for the same project. This converges raylib onto MonoGame, whose draw-list
+            // builder never recurses into render-target children (HierarchicalOrderer's
+            // !IsRenderTarget gate) and whose composite sites skip when GetRenderTargetFor is null
+            // (#3478).
+            CompositeRenderTarget(element);
+            return;
         }
 
         element.Render(null);
@@ -511,13 +517,14 @@ public class Renderer : IRenderer
     // Children draw at their absolute world coordinates; an offset BeginMode2D targeting the
     // container's clamped top-left maps those into RT-local pixel space. Children are rendered under
     // a premultiply blend (straight src -> premultiplied dst) so the texture composites back without
-    // the double-blend dark fringe — see TryCompositeRenderTarget for the matching premultiplied blit.
-    // A degenerate (zero-size) clamp bakes nothing; the composite path then renders the children
-    // directly so the subtree doesn't vanish.
+    // the double-blend dark fringe — see CompositeRenderTarget for the matching premultiplied blit.
+    // A degenerate (zero-size) clamp bakes nothing; the composite path then renders nothing either,
+    // so the subtree does not appear (matching MonoGame, #3478).
     private void BakeRenderTarget(IRenderableIpso container, Layer layer)
     {
-        ComputeRenderTargetBounds(container, out float left, out float top, out _, out _,
-            out int width, out int height);
+        // Shared clamp+size helper (#3478) — MonoGame's GetRenderTargetFor uses the same one — so the
+        // camera-visible-bounds math is identical across backends by construction.
+        RenderTargetBounds bounds = _camera.GetRenderTargetBounds(container);
 
         // Skip the bake when the container clamps to a non-positive size — a 0-sized pre-layout
         // container, or (the #3475 case) one positioned entirely off-camera. This size guard is what
@@ -528,14 +535,14 @@ public class Renderer : IRenderer
         // non-null nullable and the `== null` check can never fire here. Without this guard,
         // BeginTextureMode would bind the zeroed texture's FBO id 0 (the default framebuffer) and the
         // ClearBackground below would wipe the whole window to transparent black. Mirrors the matching
-        // guard in TryCompositeRenderTarget.
-        if (width <= 0 || height <= 0)
+        // guard in CompositeRenderTarget.
+        if (!bounds.HasVisibleArea)
         {
             return;
         }
 
         IRenderableIpso cacheOwner = ResolveRenderTargetCacheOwner(container);
-        RenderTexture2D? renderTexture = _renderTargetService.GetFor(cacheOwner, width, height);
+        RenderTexture2D? renderTexture = _renderTargetService.GetFor(cacheOwner, bounds.Width, bounds.Height);
         if (renderTexture == null)
         {
             return;
@@ -545,7 +552,7 @@ public class Renderer : IRenderer
 
         Camera2D bakeCamera = new Camera2D
         {
-            Target = new System.Numerics.Vector2(left, top),
+            Target = new System.Numerics.Vector2(bounds.Left, bounds.Top),
             Offset = System.Numerics.Vector2.Zero,
             Zoom = _camera.Zoom,
             Rotation = 0,
@@ -561,8 +568,8 @@ public class Renderer : IRenderer
         float savedBakeLeft = _bakeLeft;
         float savedBakeTop = _bakeTop;
         _isBakingRenderTarget = true;
-        _bakeLeft = left;
-        _bakeTop = top;
+        _bakeLeft = bounds.Left;
+        _bakeTop = bounds.Top;
 
         // Record the bake camera as the active one so a blurred dropshadow drawn inside this bake
         // re-establishes the bake transform (not the main-walk camera) after its offscreen passes
@@ -609,25 +616,28 @@ public class Renderer : IRenderer
     }
 
     // Composites a render-target container's baked texture at the container's clamped rectangle,
-    // honoring the container's blend and group alpha (#3434, item 2). Returns false when there is no
-    // valid baked texture (degenerate size) so the caller can render the children directly instead of
-    // dropping them. The baked texture is premultiplied, so Normal blend composites with
-    // AlphaPremultiply and Additive uses the premultiplied-additive pass; group alpha is applied by
-    // tinting every channel (a premultiplied texture must scale rgb and alpha together).
-    private bool TryCompositeRenderTarget(IRenderableIpso container)
+    // honoring the container's blend and group alpha (#3434, item 2). When there is no valid baked
+    // texture (degenerate/off-camera clamp) it renders nothing — the container's subtree simply does
+    // not appear, matching MonoGame (#3478). The baked texture is premultiplied, so Normal blend
+    // composites with AlphaPremultiply and Additive uses the premultiplied-additive pass; group alpha
+    // is applied by tinting every channel (a premultiplied texture must scale rgb and alpha together).
+    private void CompositeRenderTarget(IRenderableIpso container)
     {
         IRenderableIpso cacheOwner = ResolveRenderTargetCacheOwner(container);
         RenderTexture2D? renderTexture = _renderTargetService.TryGetExisting(cacheOwner);
-        if (renderTexture == null)
-        {
-            return false;
-        }
 
-        ComputeRenderTargetBounds(container, out float left, out float top, out float right,
-            out float bottom, out int width, out int height);
-        if (width <= 0 || height <= 0)
+        // Same shared clamp+size helper the bake used (#3478), so the composite rectangle matches the
+        // baked one exactly. HasVisibleArea is the real "no valid baked texture" guard, and it also
+        // gates the renderTexture.Value read below: a positive on-screen clamp means the bake pre-pass
+        // created and cached a texture this frame, so renderTexture is a genuine one here. A
+        // `renderTexture == null` check would be DEAD — TryGetExisting returns default(RenderTexture2D)
+        // for an uncached owner, and because RenderTexture2D is a value type that default lifts to a
+        // NON-null RenderTexture2D? (see RenderTargetServiceBase.GetFor's value-type footgun note and
+        // the matching guard in BakeRenderTarget, #3475).
+        RenderTargetBounds bounds = _camera.GetRenderTargetBounds(container);
+        if (!bounds.HasVisibleArea)
         {
-            return false;
+            return;
         }
 
         byte alpha = (byte)container.Alpha;
@@ -658,8 +668,8 @@ public class Renderer : IRenderer
         // reading it with height -h yields the upright content (same idiom as ShadowBlurRenderer).
         Raylib.DrawTexturePro(
             renderTexture.Value.Texture,
-            new Rectangle(0, 0, width, -height),
-            new Rectangle(left, top, right - left, bottom - top),
+            new Rectangle(0, 0, bounds.Width, -bounds.Height),
+            new Rectangle(bounds.Left, bounds.Top, bounds.Right - bounds.Left, bounds.Bottom - bounds.Top),
             System.Numerics.Vector2.Zero,
             0,
             tint);
@@ -669,22 +679,6 @@ public class Renderer : IRenderer
             counter.EndShaderMode();
         }
         counter.EndBlendMode();
-        return true;
-    }
-
-    // Clamps the container's absolute bounds to the on-screen visible intersection and returns the
-    // RT pixel size at camera zoom (crisp when zoomed). Mirrors the MonoGame GetRenderTargetFor
-    // clamping so an off-screen container bakes only its visible portion.
-    private void ComputeRenderTargetBounds(IRenderableIpso container,
-        out float left, out float top, out float right, out float bottom, out int width, out int height)
-    {
-        left = System.Math.Max(_camera.AbsoluteLeft, container.GetAbsoluteLeft());
-        right = System.Math.Min(_camera.AbsoluteRight, container.GetAbsoluteRight());
-        top = System.Math.Max(_camera.AbsoluteTop, container.GetAbsoluteTop());
-        bottom = System.Math.Min(_camera.AbsoluteBottom, container.GetAbsoluteBottom());
-
-        width = global::RenderingLibrary.Math.MathFunctions.RoundToInt((right - left) * _camera.Zoom);
-        height = global::RenderingLibrary.Math.MathFunctions.RoundToInt((bottom - top) * _camera.Zoom);
     }
 
     // For a nested render-target container the walk hands us the GraphicalUiElement wrapper; for a

@@ -400,4 +400,79 @@ namespace RenderingLibrary
             return new System.Drawing.Rectangle(left, top, width, height);
         }
     }
+
+    /// <summary>
+    /// The camera-visible rectangle of a render-target container: its world-space bounds clamped to
+    /// the camera's visible extent, plus the pixel size of that clamped region at the current zoom.
+    /// A render-target container bakes and composites only this visible portion. When it is degenerate
+    /// (zero natural size) or positioned entirely off-camera, the clamp collapses to a non-positive
+    /// pixel size and <see cref="HasVisibleArea"/> is false — there is nothing to bake or composite,
+    /// so the container's subtree renders nothing. Produced by
+    /// <see cref="CameraRenderTargetExtensions.GetRenderTargetBounds"/>.
+    /// </summary>
+    public readonly struct RenderTargetBounds
+    {
+        public RenderTargetBounds(float left, float top, float right, float bottom, int width, int height)
+        {
+            Left = left;
+            Top = top;
+            Right = right;
+            Bottom = bottom;
+            Width = width;
+            Height = height;
+        }
+
+        /// <summary>World-space left edge, clamped to the camera's visible left.</summary>
+        public float Left { get; }
+        /// <summary>World-space top edge, clamped to the camera's visible top.</summary>
+        public float Top { get; }
+        /// <summary>World-space right edge, clamped to the camera's visible right.</summary>
+        public float Right { get; }
+        /// <summary>World-space bottom edge, clamped to the camera's visible bottom.</summary>
+        public float Bottom { get; }
+        /// <summary>Pixel width of the clamped region at the current camera zoom.</summary>
+        public int Width { get; }
+        /// <summary>Pixel height of the clamped region at the current camera zoom.</summary>
+        public int Height { get; }
+
+        /// <summary>
+        /// True when the clamped region has a positive pixel size — i.e. there is something to bake
+        /// and composite. False for a degenerate (zero-size) or entirely off-camera container, whose
+        /// render-target subtree renders nothing. This is the single skip-decision both backends
+        /// share, replacing the copy-pasted <c>width &lt;= 0 || height &lt;= 0</c> guards.
+        /// </summary>
+        public bool HasVisibleArea => Width > 0 && Height > 0;
+    }
+
+    /// <summary>
+    /// Computes the camera-visible bounds of a render-target container (#3478). Kept here in Camera.cs
+    /// — alongside <see cref="CameraScissorExtensions"/> and for the same reason — so every backend
+    /// (MonoGame, raylib, Sokol, Skia) shares one clamp + pixel-size implementation via the GumCommon
+    /// source reference, instead of copy-pasting the Max/Min clamp math into each renderer. That
+    /// duplication is what let the MonoGame and raylib render-target paths diverge in #3478; a single
+    /// shared helper makes the consistency structural. Kept off the Camera class itself so Camera
+    /// stays a pure transform primitive.
+    /// </summary>
+    public static class CameraRenderTargetExtensions
+    {
+        /// <summary>
+        /// Clamps <paramref name="renderable"/>'s world-space bounds to <paramref name="camera"/>'s
+        /// visible extent and returns that rectangle plus its pixel size at the current zoom. A
+        /// render-target container bakes and composites only this visible portion; an off-camera or
+        /// degenerate container yields a non-positive size (<see cref="RenderTargetBounds.HasVisibleArea"/>
+        /// is false).
+        /// </summary>
+        public static RenderTargetBounds GetRenderTargetBounds(this Camera camera, IRenderableIpso renderable)
+        {
+            float left = System.Math.Max(camera.AbsoluteLeft, renderable.GetAbsoluteLeft());
+            float right = System.Math.Min(camera.AbsoluteRight, renderable.GetAbsoluteRight());
+            float top = System.Math.Max(camera.AbsoluteTop, renderable.GetAbsoluteTop());
+            float bottom = System.Math.Min(camera.AbsoluteBottom, renderable.GetAbsoluteBottom());
+
+            int width = global::RenderingLibrary.Math.MathFunctions.RoundToInt((right - left) * camera.Zoom);
+            int height = global::RenderingLibrary.Math.MathFunctions.RoundToInt((bottom - top) * camera.Zoom);
+
+            return new RenderTargetBounds(left, top, right, bottom, width, height);
+        }
+    }
 }

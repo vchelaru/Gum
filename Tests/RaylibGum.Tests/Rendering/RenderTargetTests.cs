@@ -170,10 +170,16 @@ public class RenderTargetTests : BaseTestClass
         GumService.Default.Root.Children.Clear();
     }
 
-    // Fix 1: a render-target container whose clamped bounds are degenerate (0-sized) must not drop
-    // its subtree. Here a 0x0 inner RT still renders its child directly into the outer RT.
+    // #3478: a render-target container whose clamped bounds are degenerate (0-sized) renders
+    // NOTHING — it must not fall through to draw its children directly. A render-target container
+    // exists to composite its subtree as one clipped unit; with no valid baked texture there is
+    // nothing to composite. This converges raylib onto MonoGame, whose draw-list builder never
+    // recurses into render-target children (HierarchicalOrderer's !IsRenderTarget gate) and whose
+    // composite sites skip when GetRenderTargetFor returns null. Pinned on the MonoGame side by
+    // OffCameraRenderTargetConvergenceTests. Here a 0x0 inner RT's green child must NOT appear in
+    // the outer RT. (This inverts the pre-#3478 "0-size subtree must not vanish" behavior.)
     [Fact]
-    public void Draw_DegenerateSizeRenderTarget_RendersChildrenDirectly()
+    public void Draw_DegenerateSizeRenderTarget_RendersNothing()
     {
         ContainerRuntime outer = new();
         outer.X = 0;
@@ -199,28 +205,33 @@ public class RenderTargetTests : BaseTestClass
 
         DrawOnce();
 
-        // The degenerate container bakes nothing, but its green child must still appear in the outer
-        // render target rather than vanishing.
+        // The degenerate container bakes nothing and composites nothing, so its green child does
+        // NOT appear in the outer render target — the outer target's center stays transparent.
         Renderer.Self.HasBakedRenderTargetFor(degenerate).ShouldBeFalse();
         Color center = ReadRenderTargetCenter(Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value);
-        center.G.ShouldBeGreaterThan((byte)200);
-        center.R.ShouldBeLessThan((byte)50);
+        center.G.ShouldBeLessThan((byte)50);
+        center.A.ShouldBeLessThan((byte)50);
 
         GumService.Default.Root.Children.Clear();
     }
 
-    // #3475: a render-target container positioned entirely off-camera clamps to a non-positive size.
-    // Its bake must be skipped, NOT run against the zeroed RenderTexture2D that GetFor returns for a
-    // non-positive size. That zeroed texture's FBO id is 0 — the default framebuffer — so
-    // BeginTextureMode would bind the screen and the bake's ClearBackground would wipe the whole
-    // window to transparent black (the reported symptom). This headless harness has no reliable
-    // screen readback, so the guarantee is pinned via draw-call count: an off-camera render-target
-    // container must cost exactly what the SAME off-camera container costs as a plain (non-RT)
-    // container — i.e. no extra bake work. Under the bug the errant bake re-drew the child a second
-    // time (offscreen), inflating the count above the plain-container baseline.
+    // #3475 / #3478: a render-target container positioned entirely off-camera clamps to a
+    // non-positive size. Its bake must be skipped, NOT run against the zeroed RenderTexture2D that
+    // GetFor returns for a non-positive size (that zeroed texture's FBO id is 0 — the default
+    // framebuffer — so BeginTextureMode would bind the screen and the bake's ClearBackground would
+    // wipe the whole window to transparent black, the #3475 symptom). Post-#3478 the render-target
+    // container also composites nothing when there is no valid baked texture — it no longer falls
+    // through to draw its children directly. So an off-camera render-target container adds NOTHING
+    // beyond the empty baseline: strictly fewer draw calls than the SAME off-camera container as a
+    // plain (non-RT) container, which still draws its off-screen child (an unclipped top-level draw
+    // is not culled). This headless harness has no reliable screen readback, so the guarantee is
+    // pinned via draw-call count.
     [Fact]
     public void Draw_OffCameraRenderTarget_DoesNotBakeAgainstDefaultFramebuffer()
     {
+        // Empty-frame baseline, measured before the container is in the managers.
+        int baseline = DrawAndCountDrawCalls();
+
         ContainerRuntime container = new();
         container.Width = 100;
         container.Height = 100;
@@ -243,9 +254,12 @@ public class RenderTargetTests : BaseTestClass
         container.IsRenderTarget = true;
         int renderTargetCalls = DrawAndCountDrawCalls();
 
-        // Off-camera: nothing bakes, so the render-target container costs the same as the plain one.
+        // Off-camera: nothing bakes and nothing composites, so the render-target container costs
+        // exactly the empty baseline — strictly fewer calls than the plain container, which still
+        // draws its off-screen child.
         Renderer.Self.HasBakedRenderTargetFor(container).ShouldBeFalse();
-        renderTargetCalls.ShouldBe(plainContainerCalls);
+        renderTargetCalls.ShouldBe(baseline);
+        plainContainerCalls.ShouldBeGreaterThan(baseline);
 
         container.RemoveFromManagers();
     }
