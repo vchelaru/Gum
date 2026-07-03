@@ -347,11 +347,14 @@ public class RenderTargetTests : BaseTestClass
         GumService.Default.Root.Children.Clear();
     }
 
-    // A ClipsChildren descendant inside a render-target container should clip within the RT. This
-    // works on hardware GL but fails under CI's Mesa llvmpipe software GL (scissor-inside-an-FBO
-    // behaves differently), so clip-inside-RT is deferred and this pins the target behavior for when
-    // it lands. See #3440.
-    [Fact(Skip = "Clip inside RT unsupported under software GL — see #3440")]
+    // A ClipsChildren descendant inside a render-target container clips within the RT (#3440). The
+    // clip rect (a 50x50 window at 0,25 inside the 100x100 RT) is deliberately NOT full-height and
+    // NOT full-width: an over-sized red child must be clipped on all four sides. This discriminates
+    // the correct RT-local scissor rebasing from the earlier #3436 attempt, which over-compensated
+    // the scissor Y by the screen height — that only survived a full-height clip (where the wrong
+    // formula happens to coincide with the right one) and broke outright under software GL. Verified
+    // headless on both hardware GL and CI's Mesa llvmpipe.
+    [Fact]
     public void Draw_ClipsChildrenInsideRenderTarget_ClipsWithinTheTarget()
     {
         ContainerRuntime outer = new();
@@ -363,16 +366,16 @@ public class RenderTargetTests : BaseTestClass
 
         ContainerRuntime clip = new();
         clip.X = 0;
-        clip.Y = 0;
+        clip.Y = 25;
         clip.Width = 50;
-        clip.Height = 100;
+        clip.Height = 50;
         clip.ClipsChildren = true;
 
         ColoredRectangleRuntime wide = new();
         wide.X = 0;
-        wide.Y = 0;
+        wide.Y = -25;
         wide.Width = 200;
-        wide.Height = 100;
+        wide.Height = 200;
         wide.Color = new Color((byte)255, (byte)0, (byte)0, (byte)255);
         clip.Children.Add(wide);
         outer.Children.Add(clip);
@@ -383,13 +386,17 @@ public class RenderTargetTests : BaseTestClass
         DrawOnce();
 
         RenderTexture2D outerRenderTexture = Renderer.Self.TryGetBakedRenderTargetFor(outer)!.Value;
+        // Center of the 50x50 clip window (x in [0,50), y in [25,75)).
         Color insideClip = ReadRenderTargetPixel(outerRenderTexture, 25, 50);
-        Color outsideClip = ReadRenderTargetPixel(outerRenderTexture, 75, 50);
+        Color rightOfClip = ReadRenderTargetPixel(outerRenderTexture, 75, 50);
+        Color aboveClip = ReadRenderTargetPixel(outerRenderTexture, 25, 10);
+        Color belowClip = ReadRenderTargetPixel(outerRenderTexture, 25, 90);
 
-        // Left half (inside the clip) shows the red child; right half (beyond the clip) is clipped
-        // away and stays transparent.
+        // Inside the clip window: the red child shows. Beyond it on every side: clipped to transparent.
         insideClip.R.ShouldBeGreaterThan((byte)200);
-        outsideClip.A.ShouldBeLessThan((byte)50);
+        rightOfClip.A.ShouldBeLessThan((byte)50);
+        aboveClip.A.ShouldBeLessThan((byte)50);
+        belowClip.A.ShouldBeLessThan((byte)50);
 
         GumService.Default.Root.Children.Clear();
     }

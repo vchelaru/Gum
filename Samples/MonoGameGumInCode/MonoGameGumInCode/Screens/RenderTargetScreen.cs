@@ -38,8 +38,7 @@ internal class RenderTargetScreen : FrameworkElement
         root.AddChild(BuildCell("Additive group", BuildAdditiveGroup()));
         root.AddChild(BuildCell("Nested RT + sibling", BuildNestedWithSibling()));
         root.AddChild(BuildCell("Overflow clipped", BuildOverflow()));
-        // clip-inside-RT: deferred, see #3440 — cell kept out to stay parallel with the raylib
-        // sample, where a ClipsChildren descendant inside a render target renders unclipped.
+        root.AddChild(BuildCell("ClipsChildren inside RT", BuildClipsChildrenInside()));
     }
 
     private static ContainerRuntime BuildCell(string caption, GraphicalUiElement body)
@@ -249,6 +248,42 @@ internal class RenderTargetScreen : FrameworkElement
         return holder;
     }
 
-    // clip-inside-RT: deferred, see #3440. A "ClipsChildren descendant inside an RT" cell used to
-    // live here; kept out to stay parallel with the raylib sample, where that case is unsupported.
+    // A ClipsChildren descendant inside the render target (#3440). The clipped child is an OUTLINED
+    // circle far larger than the clip window: its right and bottom arcs are sliced dead flat at the
+    // clip boundary, so the clip is unmistakable — a curve cut to a straight edge. (Clipping a
+    // rectangle to a rectangle just yields a smaller rectangle and demonstrates nothing, which is why
+    // the child must be a circle.)
+    //
+    // Same outline-circle rules as BuildOverflow: leave IsFilled off and set the ring via Color (NOT
+    // StrokeColor) so it renders identically on MonoGame and raylib. The clip window is a sub-region
+    // of the render target, so the empty area to its right is the RT extending past the clip. Kept
+    // identical to the raylib sample's BuildClipsChildrenInside.
+    private static GraphicalUiElement BuildClipsChildrenInside()
+    {
+        var holder = BuildFrame(150, 110);
+
+        var group = new ContainerRuntime();
+        group.Width = 150;
+        group.Height = 110;
+        group.IsRenderTarget = true;
+
+        var clip = new ContainerRuntime();
+        clip.X = 10;
+        clip.Y = 10;
+        clip.Width = 65;
+        clip.Height = 90;
+        clip.ClipsChildren = true;
+
+        var circle = new CircleRuntime();
+        circle.X = 5;
+        circle.Y = 5;
+        circle.Width = 120;
+        circle.Height = 120;
+        circle.Color = new Color(220, 60, 60, 255);
+        clip.AddChild(circle);
+
+        group.AddChild(clip);
+        holder.AddChild(group);
+        return holder;
+    }
 }

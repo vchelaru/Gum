@@ -41,8 +41,7 @@ internal class RenderTargetScreen : FrameworkElement
         root.Children.Add(BuildCell("Additive group", BuildAdditiveGroup()));
         root.Children.Add(BuildCell("Nested RT + sibling", BuildNestedWithSibling()));
         root.Children.Add(BuildCell("Overflow clipped", BuildOverflow()));
-        // clip-inside-RT: deferred, see #3440 (fails under CI software GL) — cell removed so the
-        // sample doesn't show a ClipsChildren descendant rendering unclipped inside a render target.
+        root.Children.Add(BuildCell("ClipsChildren inside RT", BuildClipsChildrenInside()));
     }
 
     static ContainerRuntime BuildCell(string caption, GraphicalUiElement body)
@@ -258,7 +257,43 @@ internal class RenderTargetScreen : FrameworkElement
         return holder;
     }
 
-    // clip-inside-RT: deferred, see #3440. A "ClipsChildren descendant inside an RT" cell used to
-    // live here, but that case is unsupported (fails under CI software GL), so it was removed rather
-    // than show a descendant rendering unclipped.
+    // A ClipsChildren descendant inside the render target (#3440). The clip rect is rebased into
+    // RT-local space during the bake, so it clips correctly on both hardware GL and software GL
+    // (Mesa llvmpipe). The clipped child is an OUTLINED circle far larger than the clip window: its
+    // right and bottom arcs are sliced dead flat at the clip boundary, so the clip is unmistakable —
+    // a curve cut to a straight edge. (Clipping a rectangle to a rectangle just yields a smaller
+    // rectangle and demonstrates nothing, which is why the child must be a circle.)
+    //
+    // Same outline-circle rules as BuildOverflow: leave IsFilled off and set the ring via Color (NOT
+    // StrokeColor) so it renders identically on MonoGame and raylib. The clip window is a sub-region
+    // of the render target, so the empty area to its right is the RT extending past the clip. Kept
+    // identical to the MonoGame sample's BuildClipsChildrenInside.
+    static GraphicalUiElement BuildClipsChildrenInside()
+    {
+        ContainerRuntime holder = BuildFrame(150, 110);
+
+        ContainerRuntime group = new();
+        group.Width = 150;
+        group.Height = 110;
+        group.IsRenderTarget = true;
+
+        ContainerRuntime clip = new();
+        clip.X = 10;
+        clip.Y = 10;
+        clip.Width = 65;
+        clip.Height = 90;
+        clip.ClipsChildren = true;
+
+        CircleRuntime circle = new();
+        circle.X = 5;
+        circle.Y = 5;
+        circle.Width = 120;
+        circle.Height = 120;
+        circle.Color = new Color((byte)220, (byte)60, (byte)60, (byte)255);
+        clip.Children.Add(circle);
+
+        group.Children.Add(clip);
+        holder.Children.Add(group);
+        return holder;
+    }
 }
