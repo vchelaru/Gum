@@ -115,7 +115,9 @@ Gum is a mature codebase. When you load context in an area (reading methods, und
 
 If you catch yourself writing "this is a pre-existing inconsistency, not in scope to fix here" or "I'll flag it as a follow-up," stop and ask: *do I have the context to fix it now?* If yes, fix it. Call out the boyscout fix in your final notes so the user can see what you bundled and push back if they disagree.
 
-**When to actually defer.** Reserve "out of scope" for things that genuinely require new context: refactors that span unrelated files, behavior changes that need their own design discussion, anything where the fix is non-obvious or risky. The test is whether you'd need to load *new* files to do it well — if the fix lives in the files you're already editing, it's in.
+**Adjacent and mechanical wins count too — don't require strict locality.** A mechanical or low-risk cleanup in a file *adjacent* to your work (same folder, same feature area) is in even if it isn't directly related to the fix, and even if you weren't already editing that exact file. We do feature-first development and rarely circle back to chase refactors, so an easy win skipped now is an inconsistency that lives indefinitely — passing over it *is* a boyscout violation, not a neutral scoping choice. Take it and note it; don't stop to ask permission for something trivial.
+
+**When to actually defer.** Reserve "out of scope" for things that genuinely require new context: refactors that span *unrelated* areas, behavior changes that need their own design discussion, or anything non-obvious or risky.
 
 Keep boyscout fixes non-invasive in the structural sense — don't restructure classes or rewrite APIs as drive-by work — but do fix warnings, plug missing calls, remove dead code, align asymmetric helpers, and tidy what's in your path.
 

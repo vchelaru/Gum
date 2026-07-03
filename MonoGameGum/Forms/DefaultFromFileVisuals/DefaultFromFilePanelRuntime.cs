@@ -5,11 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#if XNALIKE
 using Gum.GueDeriving;
-#else
-using Gum.GueDeriving;
-#endif
 
 namespace Gum.Forms.DefaultFromFileVisuals;
 internal class DefaultFromFilePanelRuntime : ContainerRuntime
