@@ -776,6 +776,13 @@ public class GumService : IGumService
         };
 
         DeferredQueue = new DeferredActionQueue();
+        // NativeTextInput is the OS-provided *modal* text-entry dialog (the iOS soft-keyboard
+        // popup / console prompt), wrapping XNA's KeyboardInput.Show. It is intentionally
+        // MonoGame/KNI only. raylib, FNA, and Sokol are desktop-only (or don't ship the API),
+        // so they deliberately leave this null and rely on inline typing via each Keyboard's
+        // GetStringTyped instead — this is not an unfinished raylib port (see issue #3432).
+        // The modal dialog only matters on true touch/console targets, which raylib-cs has no
+        // natives for. See INativeTextInput and TextBoxBase.TryShowNativeKeyboard.
 #if MONOGAME || KNI
         NativeTextInput = new MonoGameNativeTextInput();
 #endif
