@@ -158,6 +158,25 @@ namespace RenderingLibrary.Graphics
             StateChangeInfoListPool.MakeAllUnused();
         }
 
+        /// <summary>
+        /// Flushes the currently-open SpriteBatch — drawing its queued sprites with the effect's
+        /// <b>current</b> state — without touching the parameter stack or <see cref="currentParameters"/>.
+        /// Call this before mutating a shared <see cref="Effect"/>'s state (e.g. BasicEffect fog for
+        /// ColorTextureAlpha, or View/Projection) so a still-pending Deferred batch is drawn with the
+        /// state it was queued under, not the incoming one. Without it, the subsequent
+        /// <see cref="ReplaceRenderStates"/> flush would apply the just-mutated shared effect to the
+        /// previous batch's sprites (the ColorTextureAlpha whole-frame fog leak, #3486). A no-op when
+        /// no batch is open; the following <see cref="ReplaceRenderStates"/> then simply re-begins.
+        /// </summary>
+        public void FlushIfBegan()
+        {
+            if (beginEndState == SpriteBatchBeginEndState.Began)
+            {
+                SpriteBatch.End();
+                beginEndState = SpriteBatchBeginEndState.Ended;
+            }
+        }
+
         public void Begin(bool createNewParameters = true)
         {
             if(createNewParameters)

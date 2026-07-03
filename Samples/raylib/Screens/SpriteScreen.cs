@@ -100,6 +100,25 @@ internal class SpriteScreen : FrameworkElement
             tintRow.AddChild(s);
         }
 
+        // ColorOperation (issue #3486) — Modulate (default) multiplies the texture by the red tint,
+        // so the bear's detail shows through red; ColorTextureAlpha uses the texture only as an alpha
+        // mask and fills with the tint, so the bear reads as a flat red silhouette. ColorOperation is
+        // exposed on the renderable only (parity with MonoGame — no SpriteRuntime property), so it is
+        // set through RenderableComponent. Mirrors the MG SpriteScreen's identical row.
+        AddSectionLabel(page, "ColorOperation on a red-tinted bear (Modulate, ColorTextureAlpha):");
+        var colorOpRow = NewSection(ChildrenLayout.LeftToRightStack, spacing: 6);
+        page.AddChild(colorOpRow);
+        foreach (var colorOperation in new[] { ColorOperation.Modulate, ColorOperation.ColorTextureAlpha })
+        {
+            var s = new SpriteRuntime();
+            s.SourceFileName = "resources\\BearTexture.png";
+            s.Width = 64;
+            s.Height = 64;
+            s.Color = Color.Red;
+            ((Gum.Renderables.Sprite)s.RenderableComponent).ColorOperation = colorOperation;
+            colorOpRow.AddChild(s);
+        }
+
         // Alpha — same sprite at 64 / 128 / 192 / 255.
         AddSectionLabel(page, "Alpha (64, 128, 192, 255):");
         var alphaRow = NewSection(ChildrenLayout.LeftToRightStack, spacing: 6);

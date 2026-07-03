@@ -131,6 +131,14 @@ public class Renderer : IRenderer
     public ShadowBlurRenderer ShadowBlur { get; }
 
     /// <summary>
+    /// Owns the fragment shader that reproduces MonoGame's <see cref="ColorOperation.ColorTextureAlpha"/>
+    /// on raylib. A <see cref="Gum.Renderables.Sprite"/> whose <c>ColorOperation</c> is
+    /// <c>ColorTextureAlpha</c> binds <c>ColorTextureAlphaShader.Shader</c> around its draw calls so the
+    /// texture acts as an alpha mask filled with the sprite's tint color (issue #3486).
+    /// </summary>
+    public Gum.Renderables.ColorTextureAlphaShader ColorTextureAlphaShader { get; }
+
+    /// <summary>
     /// Per-frame render-state-change counters for this renderer, including the authoritative
     /// <see cref="RenderStateChangeStatistics.DrawCallCount"/> measured via the owned RenderBatch.
     /// Reset at the start of each <see cref="Draw(SystemManagers)"/> and readable afterward to
@@ -161,6 +169,7 @@ public class Renderer : IRenderer
         _layersReadOnly = new ReadOnlyCollection<Layer>(_layers);
         _layers.Add(new Layer());
         ShadowBlur = new ShadowBlurRenderer();
+        ColorTextureAlphaShader = new Gum.Renderables.ColorTextureAlphaShader();
         RenderStateChangeStatistics = new RenderStateChangeStatistics();
         BatchDrawCallCounter = new BatchDrawCallCounter();
     }
