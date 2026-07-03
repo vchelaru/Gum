@@ -39,6 +39,7 @@ internal class RenderTargetScreen : FrameworkElement
         root.AddChild(BuildCell("Nested RT + sibling", BuildNestedWithSibling()));
         root.AddChild(BuildCell("Overflow clipped", BuildOverflow()));
         root.AddChild(BuildCell("ClipsChildren inside RT", BuildClipsChildrenInside()));
+        root.AddChild(BuildCell("Sprite shows RT texture", BuildSpriteFromRenderTarget()));
     }
 
     private static ContainerRuntime BuildCell(string caption, GraphicalUiElement body)
@@ -285,5 +286,40 @@ internal class RenderTargetScreen : FrameworkElement
         group.AddChild(clip);
         holder.AddChild(group);
         return holder;
+    }
+
+    // A Sprite whose RenderTargetTextureSource points at a DIFFERENT (sibling) container's baked
+    // render target displays that texture like a regular one — scalable/rotatable/stackable. Kept
+    // identical to the raylib sample's BuildSpriteFromRenderTarget (#3449) so the two apps compare
+    // directly; the sprite is drawn larger and rotated, proving it's a live reference to the
+    // source's bake rather than a duplicated draw of the same content.
+    private static GraphicalUiElement BuildSpriteFromRenderTarget()
+    {
+        var row = new ContainerRuntime();
+        row.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        row.StackSpacing = 12;
+        row.WidthUnits = DimensionUnitType.RelativeToChildren;
+        row.HeightUnits = DimensionUnitType.RelativeToChildren;
+        row.Width = 0;
+        row.Height = 0;
+
+        var source = new ContainerRuntime();
+        source.Width = 70;
+        source.Height = 70;
+        source.IsRenderTarget = true;
+        source.AddChild(Rect(0, 0, 70, 35, new Color(220, 60, 60, 255)));
+        source.AddChild(Rect(0, 35, 70, 35, new Color(60, 120, 220, 255)));
+
+        var sprite = new SpriteRuntime();
+        sprite.WidthUnits = DimensionUnitType.Absolute;
+        sprite.HeightUnits = DimensionUnitType.Absolute;
+        sprite.Width = 100;
+        sprite.Height = 100;
+        sprite.RenderTargetTextureSource = source;
+        sprite.Rotation = 20;
+
+        row.AddChild(BuildSwatch("source", source));
+        row.AddChild(BuildSwatch("sprite (scaled + rotated)", sprite));
+        return row;
     }
 }
