@@ -62,4 +62,32 @@ public class BlendTests : BaseTestClass
         sut.Blend.ShouldBeNull();
         ((Sprite)sut.RenderableComponent).Blend.ShouldBeNull();
     }
+
+    [Fact]
+    public void TextRuntime_Blend_DefaultsToNull()
+    {
+        TextRuntime sut = new();
+        sut.Blend.ShouldBeNull();
+    }
+
+    [Fact]
+    public void TextRuntime_Blend_RoundTripsThroughContainedRenderable()
+    {
+        TextRuntime sut = new();
+        sut.Blend = Blend.Additive;
+
+        sut.Blend.ShouldBe(Blend.Additive);
+        ((Text)sut.RenderableComponent).Blend.ShouldBe(Blend.Additive);
+    }
+
+    [Fact]
+    public void TextRuntime_Blend_SetToNullClearsContainedRenderable()
+    {
+        TextRuntime sut = new();
+        sut.Blend = Blend.Additive;
+        sut.Blend = null;
+
+        sut.Blend.ShouldBeNull();
+        ((Text)sut.RenderableComponent).Blend.ShouldBeNull();
+    }
 }

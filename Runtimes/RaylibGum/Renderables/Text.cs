@@ -345,7 +345,22 @@ public class Text : IVisible, IRenderableIpso,
     public object Tag { get; set; }
 
 
-    public BlendState BlendState { get; set; } = BlendState.NonPremultiplied;
+    /// <summary>
+    /// The Gum blend mode applied when this text is drawn. Null means "use the renderer's current
+    /// blend mode" (typically alpha blending). Honored in <see cref="Render"/> via the shared
+    /// <see cref="RenderingLibrary.Graphics.BatchDrawCallCounter"/>, mirroring the raylib Sprite and
+    /// NineSlice renderables.
+    /// </summary>
+    public global::Gum.RenderingLibrary.Blend? Blend { get; set; }
+
+    // Satisfies the IRenderable contract by deriving from Blend, so there is a single source of
+    // truth for this Text's blend mode. Render consumes Blend directly; this getter exists only for
+    // the interface (e.g. render-target additive-composite detection on RenderableBase does not
+    // apply to Text, but any generic IRenderable consumer still gets the correct state).
+    global::Gum.BlendState IRenderable.BlendState =>
+        Blend.HasValue
+            ? global::Gum.RenderingLibrary.BlendExtensions.ToBlendState(Blend.Value)
+            : global::Gum.BlendState.NonPremultiplied;
 
     public int FontSize
     {
@@ -737,6 +752,13 @@ public class Text : IVisible, IRenderableIpso,
         // in the line string, so advancing by the (untruncated) line length keeps this in sync.
         int startOfLineIndex = 0;
 
+        // Honor an explicit Blend by wrapping every glyph draw in a begin/end pair, mirroring the
+        // raylib Sprite and NineSlice renderables. Null Blend leaves the renderer's ambient mode.
+        if (Blend.HasValue)
+        {
+            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend.Value);
+        }
+
         for(int i = 0; i < WrappedText.Count; i++)
         {
             var line = WrappedText[i];
@@ -772,6 +794,11 @@ public class Text : IVisible, IRenderableIpso,
             }
 
             startOfLineIndex += WrappedText[i].Length;
+        }
+
+        if (Blend.HasValue)
+        {
+            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.EndBlendMode();
         }
     }
 
