@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using Color = System.Drawing.Color;
 
 namespace RenderingLibrary.Graphics;
 
@@ -49,7 +48,7 @@ public class StyledSubstringSplitter
     /// <param name="startOfLineIndex">The index of the line's first character within the full (stripped) text, used to look up which inline variables are active.</param>
     /// <param name="lineOfText">The already-wrapped, BBCode-stripped line to split.</param>
     /// <param name="inlineVariables">The full set of inline variables for the text, keyed by absolute character index.</param>
-    public List<StyledSubstring> GetStyledSubstrings(int startOfLineIndex, string lineOfText, Color color, List<InlineVariable> inlineVariables)
+    public List<StyledSubstring> GetStyledSubstrings(int startOfLineIndex, string lineOfText, List<InlineVariable> inlineVariables)
     {
         List<StyledSubstring> substrings = new();
         int currentSubstringStart = 0;

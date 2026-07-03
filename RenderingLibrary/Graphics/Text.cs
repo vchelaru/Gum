@@ -1096,7 +1096,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
             var color = Color;
 
-            var substrings = GetStyledSubstrings(startOfLineIndex, lineOfText, color);
+            var substrings = GetStyledSubstrings(startOfLineIndex, lineOfText);
 
             if (substrings.Count == 0)
             {
@@ -1328,8 +1328,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     }
 
     // made public for auto tests:
-    public List<StyledSubstring> GetStyledSubstrings(int startOfLineIndex, string lineOfText, Color color) =>
-        styledSubstringSplitter.GetStyledSubstrings(startOfLineIndex, lineOfText, color, InlineVariables);
+    public List<StyledSubstring> GetStyledSubstrings(int startOfLineIndex, string lineOfText) =>
+        styledSubstringSplitter.GetStyledSubstrings(startOfLineIndex, lineOfText, InlineVariables);
 
     private void RenderUsingBitmapFont(SpriteRenderer spriteRenderer, SystemManagers managers)
     {

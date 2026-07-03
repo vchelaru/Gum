@@ -12,7 +12,7 @@ public class StyledSubstringSplitterTests
     {
         StyledSubstringSplitter sut = new StyledSubstringSplitter();
 
-        List<StyledSubstring> substrings = sut.GetStyledSubstrings(0, "", System.Drawing.Color.White, new List<InlineVariable>());
+        List<StyledSubstring> substrings = sut.GetStyledSubstrings(0, "", new List<InlineVariable>());
 
         substrings.Count.ShouldBe(0);
     }
@@ -22,7 +22,7 @@ public class StyledSubstringSplitterTests
     {
         StyledSubstringSplitter sut = new StyledSubstringSplitter();
 
-        List<StyledSubstring> substrings = sut.GetStyledSubstrings(0, "Hello", System.Drawing.Color.White, new List<InlineVariable>());
+        List<StyledSubstring> substrings = sut.GetStyledSubstrings(0, "Hello", new List<InlineVariable>());
 
         substrings.Count.ShouldBe(1);
         substrings[0].Substring.ShouldBe("Hello");
@@ -44,7 +44,7 @@ public class StyledSubstringSplitterTests
             }
         };
 
-        List<StyledSubstring> substrings = sut.GetStyledSubstrings(0, "Hello", System.Drawing.Color.White, inlineVariables);
+        List<StyledSubstring> substrings = sut.GetStyledSubstrings(0, "Hello", inlineVariables);
 
         substrings.Count.ShouldBe(2);
         substrings[0].Substring.ShouldBe("He");
