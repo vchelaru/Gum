@@ -17,8 +17,10 @@ namespace Examples.Shapes;
 //
 // What's intentionally NOT mirrored: the Antialiasing section. raylib has no per-shape AA —
 // framebuffer MSAA via SetConfigFlags(Msaa4xHint) in Program.Main is the only AA path, so
-// toggling the runtime IsAntialiased flag would render identically. Tracked as a #2757
-// follow-up.
+// toggling the runtime IsAntialiased flag would render identically. As of #3491 the flag DOES
+// exist on the raylib CircleRuntime (round-trip parity so cross-backend code compiles), but it
+// stays a no-op visually — hence still no Antialiasing row. The Blend section below IS new in
+// #3491: unlike AA, raylib blend is real (LineCircle wraps its fill/stroke draws in the blend).
 internal class CirclesScreen : FrameworkElement
 {
     public CirclesScreen() : base(new ContainerRuntime())
@@ -57,6 +59,7 @@ internal class CirclesScreen : FrameworkElement
         right.Children.Add(BuildSection("Hairline bleed (#2834)", BuildHairlineBleedRow()));
         right.Children.Add(BuildSection("Inscribed", BuildInscribedRow()));
         right.Children.Add(BuildSection("Non-square aspect", BuildNonSquareRow()));
+        right.Children.Add(BuildSection("Blend (additive #3491)", BuildBlendRow()));
     }
 
     static ContainerRuntime BuildColumn()
@@ -150,6 +153,45 @@ internal class CirclesScreen : FrameworkElement
         row.Children.Add(defaultCircle);
 
         return row;
+    }
+
+    // Issue #3491 — classic additive-blend demo: three filled RGB circles overlapping on a black
+    // frame, each with Blend = Additive. Additive keeps the destination and adds the source, so the
+    // pairwise overlaps read yellow (R+G) / cyan (G+B) / magenta (R+B) and the center reads white.
+    // With the pre-#3491 behavior (Blend ignored) the circles would just paint over each other in
+    // draw order — opaque, no color mixing — so this row makes the feature obvious at a glance.
+    static RectangleRuntime BuildBlendRow()
+    {
+        RectangleRuntime frame = new();
+        frame.Width = 130;
+        frame.Height = 110;
+        frame.FillColor = Color.Black;
+        frame.IsFilled = true;
+
+        (Color color, float x, float y)[] discs =
+        {
+            (new Color((byte)255, (byte)0, (byte)0, (byte)255), 0f, -14f),
+            (new Color((byte)0, (byte)255, (byte)0, (byte)255), -14f, 10f),
+            (new Color((byte)0, (byte)0, (byte)255, (byte)255), 14f, 10f),
+        };
+
+        foreach ((Color color, float x, float y) in discs)
+        {
+            CircleRuntime circle = new();
+            circle.Radius = 26;
+            circle.FillColor = color;
+            circle.IsFilled = true;
+            circle.Blend = Gum.RenderingLibrary.Blend.Additive;
+            circle.XOrigin = HorizontalAlignment.Center;
+            circle.XUnits = GeneralUnitType.PixelsFromMiddle;
+            circle.X = x;
+            circle.YOrigin = VerticalAlignment.Center;
+            circle.YUnits = GeneralUnitType.PixelsFromMiddle;
+            circle.Y = y;
+            frame.Children.Add(circle);
+        }
+
+        return frame;
     }
 
     static ContainerRuntime BuildStrokeWidthRow()

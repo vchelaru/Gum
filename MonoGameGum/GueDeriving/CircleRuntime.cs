@@ -495,6 +495,45 @@ public class CircleRuntime : GraphicalUiElement
         get => _gradientOuterRadiusUnits;
         set { _gradientOuterRadiusUnits = value; NotifyPropertyChanged(); }
     }
+
+    Gum.RenderingLibrary.Blend _blend = Gum.RenderingLibrary.Blend.Normal;
+    /// <summary>
+    /// Issue #3491 — blend mode for the circle, matching the XNALIKE <see cref="CircleRuntime"/>
+    /// surface (non-nullable, default <see cref="Gum.RenderingLibrary.Blend.Normal"/>) so cross-
+    /// backend code reads and writes it identically. Normal is the no-op default and maps to a
+    /// null renderable Blend so <see cref="Gum.Renderables.LineCircle"/>'s render skips the blend
+    /// wrap; any other value pushes through and wraps the fill/stroke passes (the #3470 mapping,
+    /// shared with Sprite / NineSlice).
+    /// </summary>
+    public Gum.RenderingLibrary.Blend Blend
+    {
+        get => _blend;
+        set
+        {
+            _blend = value;
+            ContainedLineCircle.Blend = value == Gum.RenderingLibrary.Blend.Normal ? null : value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    bool _isAntialiased = true;
+    /// <summary>
+    /// Issue #3491 — parity surface with XNALIKE <see cref="CircleRuntime"/>'s
+    /// <c>IsAntialiased</c>. raylib has no per-shape AA primitive (<c>DrawCircle</c>/<c>DrawRing</c>
+    /// are hard-edged; AA is a global window flag, not per-draw), so this value round-trips on the
+    /// runtime but is not rendered — mirroring the <see cref="GradientX1Units"/> family above, and
+    /// XNALIKE's own no-op when the Apos.Shapes package is absent. Kept so theme / user code that
+    /// toggles antialiasing compiles unchanged across backends.
+    /// </summary>
+    public bool IsAntialiased
+    {
+        get => _isAntialiased;
+        set
+        {
+            _isAntialiased = value;
+            NotifyPropertyChanged();
+        }
+    }
 #endif
 
 #if XNALIKE
