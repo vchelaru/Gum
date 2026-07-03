@@ -594,6 +594,87 @@ public class RenderTargetTests : BaseTestClass
         GumService.Default.Root.Children.Clear();
     }
 
+    // Issue #3452: a Sprite referencing an INVISIBLE IsRenderTarget container must still show the
+    // baked texture. An invisible source is skipped by the plain Visible-gated bake walk, so the
+    // referenced-owners collection must force it to bake anyway (mirrors MonoGame #1643). The source
+    // is hidden but referenced by a visible sprite inside a readable outer RT; the outer RT's center
+    // must show the source's baked red.
+    [Fact]
+    public void Draw_SpriteReferencingInvisibleRenderTarget_ShowsBakedTexture()
+    {
+        ContainerRuntime source = new();
+        source.Width = 64;
+        source.Height = 64;
+        source.IsRenderTarget = true;
+        source.Visible = false;
+
+        ColoredRectangleRuntime fill = new();
+        fill.Width = 64;
+        fill.Height = 64;
+        fill.Color = new Color((byte)255, (byte)0, (byte)0, (byte)255);
+        source.Children.Add(fill);
+
+        ContainerRuntime readableOuter = new();
+        readableOuter.X = 0;
+        readableOuter.Y = 0;
+        readableOuter.Width = 64;
+        readableOuter.Height = 64;
+        readableOuter.IsRenderTarget = true;
+
+        SpriteRuntime sprite = new();
+        sprite.X = 0;
+        sprite.Y = 0;
+        sprite.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        sprite.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        sprite.Width = 64;
+        sprite.Height = 64;
+        sprite.RenderTargetTextureSource = source;
+        readableOuter.Children.Add(sprite);
+
+        GumService.Default.Root.Children.Add(source);
+        GumService.Default.Root.Children.Add(readableOuter);
+        GumService.Default.Root.UpdateLayout();
+
+        DrawOnce();
+
+        // The invisible source still baked because a visible sprite references it.
+        Renderer.Self.HasBakedRenderTargetFor(source).ShouldBeTrue();
+
+        Color center = ReadRenderTargetCenter(Renderer.Self.TryGetBakedRenderTargetFor(readableOuter)!.Value);
+        center.R.ShouldBeGreaterThan((byte)200);
+        center.G.ShouldBeLessThan((byte)50);
+
+        GumService.Default.Root.Children.Clear();
+    }
+
+    // Issue #3452 perf guard: an invisible IsRenderTarget container that NOTHING references must not
+    // bake. This keeps the fast-path intact — screens with no visible/referenced render targets skip
+    // the bake pre-pass entirely rather than baking hidden content for nobody.
+    [Fact]
+    public void Draw_InvisibleUnreferencedRenderTarget_DoesNotBake()
+    {
+        ContainerRuntime container = new();
+        container.Width = 64;
+        container.Height = 64;
+        container.IsRenderTarget = true;
+        container.Visible = false;
+
+        ColoredRectangleRuntime fill = new();
+        fill.Width = 64;
+        fill.Height = 64;
+        fill.Color = new Color((byte)0, (byte)0, (byte)255, (byte)255);
+        container.Children.Add(fill);
+
+        GumService.Default.Root.Children.Add(container);
+        GumService.Default.Root.UpdateLayout();
+
+        DrawOnce();
+
+        Renderer.Self.HasBakedRenderTargetFor(container).ShouldBeFalse();
+
+        GumService.Default.Root.Children.Clear();
+    }
+
     // A Sprite referencing a container that never baked (not an IsRenderTarget) must draw nothing
     // rather than crash on a null lookup.
     [Fact]

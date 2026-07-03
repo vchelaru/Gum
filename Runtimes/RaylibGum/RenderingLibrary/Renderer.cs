@@ -67,6 +67,13 @@ public class Renderer : IRenderer
     // case of screens with no render targets — no extra full traversal.
     bool _frameHasRenderTarget;
 
+    // Cache owners of render-target containers referenced by a visible Sprite's
+    // RenderTargetTextureSource. Collected once per Draw (before PreRender) so an INVISIBLE but
+    // referenced container still bakes — mirrors MonoGame's #1643 fix (Renderer.cs). Unlike MonoGame
+    // this needs no per-host-frame caching: raylib bakes all layers in a single pass per Draw, so one
+    // collection per Draw suffices (#3452).
+    readonly HashSet<IRenderableIpso> _referencedRenderTargetOwners = new();
+
 #if XNALIKE
     SpriteRenderer spriteRenderer = new SpriteRenderer();
 #endif
@@ -179,6 +186,15 @@ public class Renderer : IRenderer
         // which is the only thing that makes the bake pre-pass run (#3434 perf fast-out).
         _frameHasRenderTarget = false;
 
+        // Collect the render-target containers referenced by visible Sprites before PreRender so an
+        // invisible-but-referenced container still bakes (#3452). Runs every Draw; raylib bakes all
+        // layers in one pass so no per-host-frame caching is needed (unlike MonoGame).
+        _referencedRenderTargetOwners.Clear();
+        for (int i = 0; i < layers.Count; i++)
+        {
+            CollectReferencedRenderTargets(layers[i].Renderables);
+        }
+
         _camera.ClientWidth = Raylib.GetScreenWidth();
         _camera.ClientHeight = Raylib.GetScreenHeight();
 
@@ -263,7 +279,11 @@ public class Renderer : IRenderer
         for (int i = 0; i < renderables.Count; i++)
         {
             IRenderableIpso renderable = renderables[i];
-            if (!renderable.Visible)
+            // An invisible render-target container still needs its subtree PreRendered (and must flip
+            // _frameHasRenderTarget) when a visible Sprite references it, so the bake pre-pass runs and
+            // resolves its children's layout-time properties (#3452).
+            bool isReferencedRenderTarget = renderable.IsRenderTarget && IsReferencedRenderTargetOwner(renderable);
+            if (!renderable.Visible && !isReferencedRenderTarget)
             {
                 continue;
             }
@@ -278,6 +298,43 @@ public class Renderer : IRenderer
             }
         }
     }
+
+    // Populates _referencedRenderTargetOwners with the cache owner of every render-target container
+    // referenced by a visible Sprite's RenderTargetTextureSource. Both a top-level Sprite (the walk
+    // hands the contained Sprite directly) and a nested one (a GraphicalUiElement wrapping the Sprite)
+    // are handled. Mirrors MonoGame's CollectReferencedRenderTargets, but resolves the raylib
+    // Gum.Renderables.Sprite concretely — raylib has no IRenderTargetTextureReferencer interface (its
+    // Texture member is XNA-typed). See #3452 / #1643.
+    private void CollectReferencedRenderTargets(System.Collections.Generic.IList<IRenderableIpso> renderables)
+    {
+        for (int i = 0; i < renderables.Count; i++)
+        {
+            IRenderableIpso renderable = renderables[i];
+            if (!renderable.Visible)
+            {
+                continue;
+            }
+
+            Sprite? sprite = renderable as Sprite
+                ?? (renderable as GraphicalUiElement)?.RenderableComponent as Sprite;
+            if (sprite?.RenderTargetTextureSource != null)
+            {
+                _referencedRenderTargetOwners.Add(
+                    ResolveRenderTargetCacheOwner(sprite.RenderTargetTextureSource));
+            }
+
+            if (renderable.Children != null)
+            {
+                CollectReferencedRenderTargets(renderable.Children);
+            }
+        }
+    }
+
+    // Whether the given render-target container is referenced by a visible Sprite this Draw. Resolves
+    // to the container's cache owner so both the GraphicalUiElement wrapper and the contained
+    // renderable form match the keys stored during collection (#3452).
+    private bool IsReferencedRenderTargetOwner(IRenderableIpso renderable) =>
+        _referencedRenderTargetOwners.Contains(ResolveRenderTargetCacheOwner(renderable));
 
     private void Render(ReadOnlyCollection<IRenderableIpso> renderables, ISystemManagers managers, Layer layer)
     {
@@ -419,7 +476,10 @@ public class Renderer : IRenderer
         for (int i = 0; i < renderables.Count; i++)
         {
             IRenderableIpso renderable = renderables[i];
-            if (!renderable.Visible)
+            // An invisible container is normally skipped (it draws nothing to screen), but a
+            // referenced one still bakes so a visible Sprite can sample its cached texture (#3452).
+            bool isReferencedRenderTarget = renderable.IsRenderTarget && IsReferencedRenderTargetOwner(renderable);
+            if (!renderable.Visible && !isReferencedRenderTarget)
             {
                 continue;
             }
