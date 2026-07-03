@@ -91,6 +91,11 @@ void main() {{
     /// <param name="shapeH">Shape height in pixels.</param>
     /// <param name="sigma">Gaussian sigma in pixels. Mirrors Skia's <c>SKImageFilter.CreateDropShadow</c> sigma.</param>
     /// <param name="tint">Shadow color including alpha. Multiplied into the blurred mask at composite time.</param>
+    /// <param name="activeCamera">The <see cref="Camera2D"/> currently established via <c>BeginMode2D</c>
+    /// for the pass this shadow draws in (see <see cref="Renderer.ActiveCamera2D"/>). raylib's
+    /// <c>EndTextureMode</c> resets the modelview to identity, so the offscreen blur passes below would
+    /// otherwise clobber this camera for the shadow's own composite and every later draw in the frame;
+    /// it is re-established after the passes (issue #3460).</param>
     /// <param name="drawSilhouetteAt">
     /// Callback invoked inside the offscreen render pass. Receives the RT-local top-left
     /// coordinates the caller should paint a SOLID-WHITE silhouette of the shape at. The
@@ -105,6 +110,7 @@ void main() {{
         float shapeH,
         float sigma,
         Color tint,
+        Camera2D activeCamera,
         Action<float, float> drawSilhouetteAt)
     {
         if (sigma <= 0f || shapeW <= 0f || shapeH <= 0f || tint.A == 0)
@@ -177,6 +183,12 @@ void main() {{
         counter.EndShaderMode();
         counter.EndBlendMode();
         counter.EndTextureMode();
+
+        // Re-establish the active camera clobbered by the offscreen passes. raylib's EndTextureMode
+        // resets the modelview to identity and does NOT restore the enclosing BeginMode2D transform,
+        // so without this the shadow composite below — and every later draw in the frame — would
+        // render at identity zoom/pan (issue #3460).
+        counter.BeginMode2D(activeCamera);
 
         // 4) Composite RT_A onto the screen, tinted. shadowMinX/Y are the shape's top-left;
         // the RT contains `radius` pixels of falloff padding around the shape, so the on-screen
