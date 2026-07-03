@@ -190,13 +190,18 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
         }
 
         // RenderTargetTextureSource is excluded: its source rect already encodes the bottom-up GL
-        // flip via a negative height, which the tiling loop's positive-range math does not expect.
-        bool shouldTile = ((ITextureCoordinate)this).Wrap && RenderTargetTextureSource == null
+        // flip via a negative height, which the tiling/clamping loops' positive-range math does
+        // not expect.
+        bool canSoftwareAddress = RenderTargetTextureSource == null
             && srcRect.Width > 0 && srcRect.Height > 0;
 
-        if (shouldTile)
+        if (canSoftwareAddress && ((ITextureCoordinate)this).Wrap)
         {
             RenderTiled(textureToDraw, srcRect, destinationRectangle, absoluteRotation);
+        }
+        else if (canSoftwareAddress && IsOutOfTextureBounds(srcRect, textureToDraw))
+        {
+            RenderClamped(textureToDraw, srcRect, destinationRectangle, absoluteRotation);
         }
         else
         {
@@ -287,6 +292,144 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
             offsetYFromTopLeft += destHeight;
             y += texHeight;
         }
+    }
+
+    private static bool IsOutOfTextureBounds(Rectangle sourceRectangle, Texture2D texture)
+    {
+        return sourceRectangle.X < 0 || sourceRectangle.Y < 0
+            || sourceRectangle.X + sourceRectangle.Width > texture.Width
+            || sourceRectangle.Y + sourceRectangle.Height > texture.Height;
+    }
+
+    // Stretches the nearest edge row/column/corner texel of an oversized source rectangle across
+    // its out-of-bounds portion instead of letting raylib's GL default TextureWrap.Repeat sample
+    // repeat it (#3459). Splits source and destination into up to a 3x3 grid at the texture's
+    // 0/width and 0/height bounds - in-bounds cells draw straight through, out-of-bounds cells draw
+    // a single clamped edge/corner texel stretched to fill, the same edge-stretching idea as
+    // nine-slice. Never calls SetTextureWrap: raylib's negative-source-dimension flip trick (below)
+    // samples a single clamped texel across the whole quad under hardware TextureWrap.Clamp, which
+    // is why the earlier hardware-wrap attempt for this issue was reverted.
+    //
+    // Unlike RenderTiled, cells are reordered (not just content-flipped) when flipping, because a
+    // clamped edge and its in-bounds neighbor are not interchangeable the way repeating tiles are -
+    // flipping must swap which side carries the stretched edge, not just mirror each cell in place.
+    private void RenderClamped(Texture2D texture, Rectangle sourceRectangle, Rectangle destinationRectangle,
+        float absoluteRotationDegrees)
+    {
+        int textureWidth = texture.Width;
+        int textureHeight = texture.Height;
+        if (textureWidth <= 0 || textureHeight <= 0) return;
+
+        float textureWidthScale = destinationRectangle.Width / sourceRectangle.Width;
+        float textureHeightScale = destinationRectangle.Height / sourceRectangle.Height;
+
+        var matrix = this.GetRotationMatrix();
+
+        var xSegments = GetClampSegments(sourceRectangle.X, sourceRectangle.Width, textureWidth);
+        var ySegments = GetClampSegments(sourceRectangle.Y, sourceRectangle.Height, textureHeight);
+
+        if (FlipHorizontal) xSegments.Reverse();
+        if (FlipVertical) ySegments.Reverse();
+
+        float offsetYFromTopLeft = 0;
+        foreach (var ySegment in ySegments)
+        {
+            float destHeight = ySegment.Length * textureHeightScale;
+
+            float offsetXFromTopLeft = 0;
+            foreach (var xSegment in xSegments)
+            {
+                float destWidth = xSegment.Length * textureWidthScale;
+
+                var tileSourceRect = new Rectangle(xSegment.TexCoordinate, ySegment.TexCoordinate,
+                    xSegment.TexLength, ySegment.TexLength);
+
+                // Mirroring a single-texel span is a visual no-op (only one column/row is ever
+                // sampled), so skip the negate-and-shift for it. This also sidesteps a raylib
+                // DrawTexturePro quirk: negating a 1-wide/tall source rect pushes its X/Y to sit
+                // exactly on the texture's far edge (X == textureWidth), which samples garbage
+                // (observed: solid wrong-color fill) instead of the intended edge texel.
+                if (FlipHorizontal && tileSourceRect.Width > 1)
+                {
+                    tileSourceRect.X += tileSourceRect.Width;
+                    tileSourceRect.Width = -tileSourceRect.Width;
+                }
+
+                if (FlipVertical && tileSourceRect.Height > 1)
+                {
+                    tileSourceRect.Y += tileSourceRect.Height;
+                    tileSourceRect.Height = -tileSourceRect.Height;
+                }
+
+                Vector3 tileOffset = matrix.Right() * offsetXFromTopLeft + matrix.Up() * offsetYFromTopLeft;
+                var tileDestinationRect = new Rectangle(
+                    destinationRectangle.X + tileOffset.X,
+                    destinationRectangle.Y + tileOffset.Y,
+                    destWidth,
+                    destHeight);
+
+                DrawTexturePro(texture, tileSourceRect, tileDestinationRect, Vector2.Zero, -absoluteRotationDegrees, Color);
+
+                offsetXFromTopLeft += destWidth;
+            }
+
+            offsetYFromTopLeft += destHeight;
+        }
+    }
+
+    private readonly struct ClampSegment
+    {
+        public ClampSegment(float length, int texCoordinate, int texLength)
+        {
+            Length = length;
+            TexCoordinate = texCoordinate;
+            TexLength = texLength;
+        }
+
+        // Destination-space (pre-scale) length of this segment, in source units.
+        public float Length { get; }
+        // Texture column/row this segment samples: the real in-bounds coordinate for an in-bounds
+        // segment, or the nearest edge texel's coordinate for an out-of-bounds segment.
+        public int TexCoordinate { get; }
+        // 1 for an out-of-bounds (clamped) segment; the real span for an in-bounds segment.
+        public int TexLength { get; }
+    }
+
+    // Splits [start, start + length) into up to 3 segments at the texture's 0 and textureExtent
+    // bounds, so each segment is either fully in-bounds (samples real texels 1:1) or fully
+    // out-of-bounds (samples the single nearest edge texel, to be stretched across the segment).
+    private static List<ClampSegment> GetClampSegments(float start, float length, int textureExtent)
+    {
+        float end = start + length;
+
+        var breaks = new List<float> { start, end };
+        if (start < 0 && end > 0) breaks.Add(0);
+        if (start < textureExtent && end > textureExtent) breaks.Add(textureExtent);
+        breaks.Sort();
+
+        var segments = new List<ClampSegment>();
+        for (int i = 0; i < breaks.Count - 1; i++)
+        {
+            float segmentStart = breaks[i];
+            float segmentEnd = breaks[i + 1];
+            float segmentLength = segmentEnd - segmentStart;
+            if (segmentLength <= 0) continue;
+
+            if (segmentEnd <= 0)
+            {
+                segments.Add(new ClampSegment(segmentLength, 0, 1));
+            }
+            else if (segmentStart >= textureExtent)
+            {
+                segments.Add(new ClampSegment(segmentLength, textureExtent - 1, 1));
+            }
+            else
+            {
+                segments.Add(new ClampSegment(segmentLength, (int)segmentStart, (int)segmentLength));
+            }
+        }
+
+        return segments;
     }
 
     public AnimationChainLogic AnimationLogic { get; } = new AnimationChainLogic();
