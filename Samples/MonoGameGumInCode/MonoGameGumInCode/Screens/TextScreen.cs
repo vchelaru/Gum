@@ -4,12 +4,20 @@ using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 
 namespace MonoGameGumInCode.Screens;
 
 // Reference screen for TextRuntime font behavior. Raylib and SilkNetGum mirror the KernSmith
 // baked-shadow rows where that backend supports them (#3414 / #2724).
+//
+// Section order in this file must match the raylib and SilkNetGum TextScreen.cs mirrors
+// (Samples/raylib/Screens/TextScreen.cs, Samples/SilkNetGum/SilkNetGum/Screens/TextScreen.cs)
+// exactly, top to bottom - before adding, removing, or reordering ANY section, check the sibling
+// files for the same change or the side-by-side comparison breaks silently. (Broke once when this
+// file carried extra AddCustomOutlineText rows raylib never had, pushing every later section down
+// three rows relative to raylib - #3496.)
 internal class TextScreen : FrameworkElement
 {
     public TextScreen() : base(new ContainerRuntime())
@@ -74,11 +82,53 @@ internal class TextScreen : FrameworkElement
         (withOutline.Component as Text).RenderBoundary = true;
         container.Children.Add(withOutline);
 
-        AddCustomOutlineText(container, Color.Red);
-        AddCustomOutlineText(container, Color.DarkGreen);
-        AddCustomOutlineText(container, Color.Blue);
-
         AddBlendOnTextSection(container);
+        AddTextureFilterSection(container);
+    }
+
+    // Texture filter on Text (#3496): a font baked SMALL then magnified via FontScale, so
+    // point-filtering's blocky glyph edges are visibly distinct from bilinear's smoothed ones. A
+    // large FontSize at 1x scale doesn't stress the sampler enough to show a difference - the atlas
+    // texel density roughly matches screen pixel density either way. Baking small and scaling up
+    // means each atlas texel covers several screen pixels, which is exactly when nearest-neighbor
+    // vs bilinear diverge. Renderer.TextureFilter is a single global sampler state for the whole
+    // SpriteBatch pass, so one Text can't be Point and another Linear on the same layer (see
+    // docs/code/rendering/texture-filtering.md) - each side gets its own Layer with
+    // Layer.IsLinearFilteringEnabled forcing the mode, while layout still comes from the shared
+    // filterRow container. Unlike raylib (where the filter is baked into the font-cache texture at
+    // creation time), the layer-based override here is a pure render-state switch, so both sides can
+    // share the same FontSize/FontScale.
+    private static void AddTextureFilterSection(ContainerRuntime container)
+    {
+        AddSectionLabel(container, "Texture filter (#3496): 12px font scaled 4x, Point (left) vs Linear (right)");
+        var filterRow = new ContainerRuntime();
+        filterRow.WidthUnits = DimensionUnitType.RelativeToChildren;
+        filterRow.HeightUnits = DimensionUnitType.RelativeToChildren;
+        filterRow.Width = 0;
+        filterRow.Height = 0;
+        filterRow.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        filterRow.StackSpacing = 16;
+        container.Children.Add(filterRow);
+
+        var pointLayer = SystemManagers.Default.Renderer.AddLayer();
+        pointLayer.Name = "Texture Filter - Point";
+        pointLayer.IsLinearFilteringEnabled = false;
+        var pointText = new TextRuntime();
+        pointText.FontSize = 12;
+        pointText.FontScale = 4;
+        pointText.Text = "Point";
+        filterRow.AddChild(pointText);
+        pointText.MoveToLayer(pointLayer);
+
+        var linearLayer = SystemManagers.Default.Renderer.AddLayer();
+        linearLayer.Name = "Texture Filter - Linear";
+        linearLayer.IsLinearFilteringEnabled = true;
+        var linearText = new TextRuntime();
+        linearText.FontSize = 12;
+        linearText.FontScale = 4;
+        linearText.Text = "Linear";
+        filterRow.AddChild(linearText);
+        linearText.MoveToLayer(linearLayer);
     }
 
     private static void AddSectionLabel(ContainerRuntime container, string text)
@@ -142,46 +192,5 @@ internal class TextScreen : FrameworkElement
         cell.Children.Add(text);
 
         return cell;
-    }
-
-    private static void AddCustomOutlineText(ContainerRuntime container, Color color)
-    {
-        var renderTargetContainer = new ContainerRuntime();
-        renderTargetContainer.IsRenderTarget = true;
-        renderTargetContainer.Dock(Gum.Wireframe.Dock.SizeToChildren);
-        container.AddChild(renderTargetContainer);
-
-        var blendText = new TextRuntime();
-        blendText.UseCustomFont = true;
-        blendText.FontScale = 1;
-        blendText.CustomFontFile =
-            "OutlinedFont/Font52Comic_Sans_MS_o4.fnt";
-        blendText.Text = "Hello";
-        blendText.BlendState = Gum.BlendState.NonPremultiplied.ToXNA();
-        renderTargetContainer.Children.Add(blendText);
-
-        var overlay = new ColoredRectangleRuntime();
-        overlay.Color = color;
-        var blend = Gum.BlendState.MinAlpha.Clone();
-        blend.ColorSourceBlend = Gum.Blend.One;
-        blend.ColorDestinationBlend = Gum.Blend.Zero;
-        blend.ColorBlendFunction = Gum.BlendFunction.Add;
-        overlay.BlendState = blend.ToXNA();
-
-        overlay.Dock(Gum.Wireframe.Dock.Fill);
-        renderTargetContainer.AddChild(overlay);
-
-        var whiteOverlayText = new TextRuntime();
-        whiteOverlayText.UseCustomFont = true;
-        whiteOverlayText.FontScale = 1;
-        whiteOverlayText.CustomFontFile =
-            "OutlinedFont/Font52Comic_Sans_MS_o4.fnt";
-        var topBlend = Gum.BlendState.NonPremultiplied.Clone();
-        topBlend.ColorSourceBlend = Gum.Blend.One;
-        topBlend.ColorDestinationBlend = Gum.Blend.InverseSourceColor;
-        topBlend.ColorBlendFunction = Gum.BlendFunction.Add;
-        whiteOverlayText.BlendState = topBlend.ToXNA();
-        whiteOverlayText.Text = "Hello";
-        renderTargetContainer.AddChild(whiteOverlayText);
     }
 }

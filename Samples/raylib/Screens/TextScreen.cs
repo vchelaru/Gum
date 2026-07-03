@@ -11,6 +11,14 @@ namespace Examples.Shapes;
 // Raylib mirror of Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/TextScreen.cs (#3414).
 // Section order matches the MG screen so baked-shadow regressions are easy to spot side by side.
 // Requires KernSmithRaylibFontCreator wired in Program.Main.
+//
+// Section order in this file must match the MonoGameGumInCode and SilkNetGum TextScreen.cs mirrors
+// (Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/TextScreen.cs,
+// Samples/SilkNetGum/SilkNetGum/Screens/TextScreen.cs) exactly, top to bottom - before adding,
+// removing, or reordering ANY section, check the sibling files for the same change or the
+// side-by-side comparison breaks silently. Raylib-only sections (TextRenderingPositionMode,
+// GetCharacterIndexAtPosition, #3432) are the sole expected exception, appended at the end.
+// (Broke once when MonoGameGumInCode carried extra AddCustomOutlineText rows raylib never had - #3496.)
 internal class TextScreen : FrameworkElement
 {
     public TextScreen() : base(new ContainerRuntime())
@@ -85,6 +93,7 @@ internal class TextScreen : FrameworkElement
     private static void BuildTextParitySection(ContainerRuntime container)
     {
         AddBlendOnTextSection(container);
+        AddTextureFilterSection(container);
 
         // --- Per-instance TextRenderingPositionMode override, at a fractional origin ---
         AddSectionLabel(container, "TextRenderingPositionMode (#3432): fractional origin; button toggles snap");
@@ -132,6 +141,48 @@ internal class TextScreen : FrameworkElement
             int index = hitText.GetCharacterIndexAtPosition(cursorX, cursorY);
             hitResult.Text = $"Character index at click: {index}";
         };
+    }
+
+    // Texture filter on Text (#3496): a font baked SMALL then magnified via FontScale, so
+    // point-filtering's blocky glyph edges are visibly distinct from bilinear's smoothed ones. A
+    // large FontSize at 1x scale doesn't stress the sampler enough to show a difference - the atlas
+    // texel density roughly matches screen pixel density either way. Baking small and scaling up
+    // means each atlas texel covers several screen pixels, which is exactly when nearest-neighbor
+    // vs bilinear diverge. ContentLoader.DefaultTextureFilter is applied once when a font atlas
+    // texture is built (not per-draw), so each side needs its own font-cache entry (a distinct
+    // FontSize) built while the filter is toggled, or both would share one already-filtered
+    // texture. Restores the original filter afterward so it doesn't leak into every other font this
+    // gallery loads for the rest of the run.
+    private static void AddTextureFilterSection(ContainerRuntime container)
+    {
+        AddSectionLabel(container, "Texture filter (#3496): 12px font scaled 4x, Point (left) vs Linear (right)");
+        var filterRow = new ContainerRuntime();
+        filterRow.WidthUnits = DimensionUnitType.RelativeToChildren;
+        filterRow.HeightUnits = DimensionUnitType.RelativeToChildren;
+        filterRow.Width = 0;
+        filterRow.Height = 0;
+        filterRow.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        filterRow.StackSpacing = 16;
+
+        var savedFilter = RenderingLibrary.Content.ContentLoader.DefaultTextureFilter;
+
+        RenderingLibrary.Content.ContentLoader.DefaultTextureFilter = Raylib_cs.TextureFilter.Point;
+        var pointText = new TextRuntime();
+        pointText.FontSize = 12;
+        pointText.FontScale = 4;
+        pointText.Text = "Point";
+        filterRow.AddChild(pointText);
+
+        RenderingLibrary.Content.ContentLoader.DefaultTextureFilter = Raylib_cs.TextureFilter.Bilinear;
+        var linearText = new TextRuntime();
+        linearText.FontSize = 13; // distinct size so this is a separate font-cache entry from "Point" above
+        linearText.FontScale = 4;
+        linearText.Text = "Linear";
+        filterRow.AddChild(linearText);
+
+        RenderingLibrary.Content.ContentLoader.DefaultTextureFilter = savedFilter;
+
+        container.Children.Add(filterRow);
     }
 
     // Blend on Text (#3432): additive (brightens) vs normal, over an identical blue box. Kept byte

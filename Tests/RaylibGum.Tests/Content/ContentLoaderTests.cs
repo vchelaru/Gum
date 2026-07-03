@@ -3,7 +3,9 @@ using RenderingLibrary;
 using RenderingLibrary.Content;
 using Shouldly;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using ToolsUtilities;
 using Xunit;
 
@@ -11,6 +13,94 @@ namespace RaylibGum.Tests.Content;
 
 public class ContentLoaderTests : BaseTestClass
 {
+    // #3496: a font's atlas texture must pick up the project's DefaultTextureFilter instead of a
+    // hardcoded point filter, mirroring how sprite textures are already handled (LoadTextureFromFile).
+    // Exercises the on-disk .fnt branch, which loads via raylib's native Raylib.LoadFont rather than
+    // BuildFont. Raylib exposes no getter for a texture's applied filter (SetTextureFilter is a
+    // write-only GPU call), so ContentLoader.TextureFilterApplier is a test seam that records what
+    // was applied instead of actually issuing the GPU call.
+    [Fact]
+    public void LoadContent_Font_FromDiskFnt_ShouldApplyDefaultTextureFilterToTexture()
+    {
+        Raylib_cs.TextureFilter savedDefaultFilter = ContentLoader.DefaultTextureFilter;
+        Action<Texture2D, Raylib_cs.TextureFilter> savedApplier = ContentLoader.TextureFilterApplier;
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        try
+        {
+            ContentLoader.DefaultTextureFilter = Raylib_cs.TextureFilter.Bilinear;
+            LoaderManager.Self.CacheTextures = false;
+
+            List<(uint TextureId, Raylib_cs.TextureFilter Filter)> appliedFilters = new();
+            ContentLoader.TextureFilterApplier = (texture, filter) => appliedFilters.Add((texture.Id, filter));
+
+            string fixtureDirectory = Path.Combine(AppContext.BaseDirectory, "Content", "FontCache");
+            string fntPath = Path.Combine(fixtureDirectory, "Font18Arial.fnt");
+
+            Font font = LoaderManager.Self.ContentLoader.LoadContent<Font>(fntPath);
+
+            appliedFilters.ShouldContain((font.Texture.Id, Raylib_cs.TextureFilter.Bilinear));
+        }
+        finally
+        {
+            ContentLoader.DefaultTextureFilter = savedDefaultFilter;
+            ContentLoader.TextureFilterApplier = savedApplier;
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+        }
+    }
+
+    // Companion to the disk-loaded case above: the stream-hook path funnels through BuildFont
+    // (shared with KernSmith's in-memory font creation), which is where the filter is applied for
+    // fonts that never touch raylib's native loader. #3496
+    [Fact]
+    public void LoadContent_Font_FromStreamHookFnt_ShouldApplyDefaultTextureFilterToTexture()
+    {
+        string fixtureDirectory = Path.Combine(AppContext.BaseDirectory, "Content", "FontCache");
+        byte[] fntBytes = File.ReadAllBytes(Path.Combine(fixtureDirectory, "Font18Arial.fnt"));
+        byte[] pageBytes = File.ReadAllBytes(Path.Combine(fixtureDirectory, "Font18Arial_0.png"));
+
+        Raylib_cs.TextureFilter savedDefaultFilter = ContentLoader.DefaultTextureFilter;
+        Action<Texture2D, Raylib_cs.TextureFilter> savedApplier = ContentLoader.TextureFilterApplier;
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
+        try
+        {
+            ContentLoader.DefaultTextureFilter = Raylib_cs.TextureFilter.Bilinear;
+            LoaderManager.Self.CacheTextures = false;
+
+            List<(uint TextureId, Raylib_cs.TextureFilter Filter)> appliedFilters = new();
+            ContentLoader.TextureFilterApplier = (texture, filter) => appliedFilters.Add((texture.Id, filter));
+
+            FileManager.CustomGetStreamFromFile = incomingPath =>
+            {
+                string fileNameOnly = Path.GetFileName(incomingPath);
+                if (string.Equals(fileNameOnly, "Font18Arial.fnt", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new MemoryStream(fntBytes);
+                }
+                if (string.Equals(fileNameOnly, "Font18Arial_0.png", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new MemoryStream(pageBytes);
+                }
+                // null is the hook's documented "I don't have this file" signal.
+                return null!;
+            };
+
+            string notOnDiskFntPath = Path.Combine(Path.GetTempPath(),
+                "GumRaylibFontFilterHookTest_" + Guid.NewGuid().ToString("N"), "Font18Arial.fnt");
+
+            Font font = LoaderManager.Self.ContentLoader.LoadContent<Font>(notOnDiskFntPath);
+
+            appliedFilters.ShouldContain((font.Texture.Id, Raylib_cs.TextureFilter.Bilinear));
+        }
+        finally
+        {
+            ContentLoader.DefaultTextureFilter = savedDefaultFilter;
+            ContentLoader.TextureFilterApplier = savedApplier;
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+            FileManager.CustomGetStreamFromFile = savedHook;
+        }
+    }
+
     // The stream-hook path must not let GetStreamForFile's FileNotFoundException escape when the
     // .fnt is on neither disk nor the hook: the load falls back to an empty Font. The hook here is
     // present but serves nothing, exercising the catch/fallback rather than the no-hook path. #3037
@@ -166,6 +256,92 @@ public class ContentLoaderTests : BaseTestClass
             glyph.OffsetX.ShouldBe(1);
             glyph.OffsetY.ShouldBe(4);
             glyph.AdvanceX.ShouldBe(6);
+        }
+        finally
+        {
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+            FileManager.CustomGetStreamFromFile = savedHook;
+        }
+    }
+
+    // #3496: a multi-page .fnt loaded through the stream hook must fail loudly instead of silently
+    // building a Font against only page 0 (glyphs on page 1+ would get real .fnt coordinates mapped
+    // onto the wrong atlas texture, mis-rendering with no error). Merging pages here isn't supported —
+    // that only happens natively when raylib loads the .fnt straight off disk.
+    [Fact]
+    public void LoadContent_Font_WithMultiPageFntServedThroughHook_ShouldThrowNotSupportedException()
+    {
+        const string multiPageFntText =
+            "info face=\"Arial\" size=-18 bold=0 italic=0 charset=\"\" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0\n" +
+            "common lineHeight=21 base=17 scaleW=256 scaleH=256 pages=2 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4\n" +
+            "page id=0 file=\"Page0.png\"\n" +
+            "page id=1 file=\"Page1.png\"\n" +
+            "chars count=1\n" +
+            "char id=65   x=0     y=0     width=4     height=13    xoffset=1     yoffset=4     xadvance=6     page=0  chnl=15\n";
+
+        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
+        try
+        {
+            FileManager.CustomGetStreamFromFile = incomingPath =>
+            {
+                string fileNameOnly = Path.GetFileName(incomingPath);
+                if (string.Equals(fileNameOnly, "MultiPage.fnt", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new MemoryStream(Encoding.UTF8.GetBytes(multiPageFntText));
+                }
+                // null is the hook's documented "I don't have this file" signal.
+                return null!;
+            };
+
+            string notOnDiskFntPath = Path.Combine(Path.GetTempPath(),
+                "GumRaylibMultiPageFontTest_" + Guid.NewGuid().ToString("N"), "MultiPage.fnt");
+
+            Should.Throw<NotSupportedException>(() =>
+                LoaderManager.Self.ContentLoader.LoadContent<Font>(notOnDiskFntPath));
+        }
+        finally
+        {
+            FileManager.CustomGetStreamFromFile = savedHook;
+        }
+    }
+
+    // Companion to the multi-page case above: a single-page .fnt served the same way must keep
+    // loading successfully — the new guard is scoped to pageFileNames.Length > 1. #3496
+    [Fact]
+    public void LoadContent_Font_WithSinglePageFntServedThroughHook_ShouldNotThrow()
+    {
+        string fixtureDirectory = Path.Combine(AppContext.BaseDirectory, "Content", "FontCache");
+        byte[] fntBytes = File.ReadAllBytes(Path.Combine(fixtureDirectory, "Font18Arial.fnt"));
+        byte[] pageBytes = File.ReadAllBytes(Path.Combine(fixtureDirectory, "Font18Arial_0.png"));
+
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
+        try
+        {
+            LoaderManager.Self.CacheTextures = false;
+            FileManager.CustomGetStreamFromFile = incomingPath =>
+            {
+                string fileNameOnly = Path.GetFileName(incomingPath);
+                if (string.Equals(fileNameOnly, "Font18Arial.fnt", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new MemoryStream(fntBytes);
+                }
+                if (string.Equals(fileNameOnly, "Font18Arial_0.png", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new MemoryStream(pageBytes);
+                }
+                // null is the hook's documented "I don't have this file" signal.
+                return null!;
+            };
+
+            string notOnDiskFntPath = Path.Combine(Path.GetTempPath(),
+                "GumRaylibSinglePageFontTest_" + Guid.NewGuid().ToString("N"), "Font18Arial.fnt");
+
+            Font font = default;
+            Should.NotThrow(() =>
+                font = LoaderManager.Self.ContentLoader.LoadContent<Font>(notOnDiskFntPath));
+
+            font.GlyphCount.ShouldBe(191);
         }
         finally
         {

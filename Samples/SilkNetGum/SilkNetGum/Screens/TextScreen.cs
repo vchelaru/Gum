@@ -9,6 +9,13 @@ namespace SilkNetGum.Screens;
 // Mirror of Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/TextScreen.cs where the backend
 // supports the same surface (#3414). SkiaGum dynamic fonts do not use KernSmith, so baked text
 // drop shadow (HasDropshadow) is not rendered here — the rows below document that gap explicitly.
+//
+// Section order in this file must match the MonoGameGumInCode and raylib TextScreen.cs mirrors
+// (Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/TextScreen.cs,
+// Samples/raylib/Screens/TextScreen.cs) exactly, top to bottom - before adding, removing, or
+// reordering ANY section, check the sibling files for the same change or the side-by-side
+// comparison breaks silently. (Broke once when MonoGameGumInCode carried extra
+// AddCustomOutlineText rows raylib never had - #3496.)
 internal class TextScreen : FrameworkElement
 {
     public TextScreen() : base(new ContainerRuntime())
@@ -54,6 +61,40 @@ internal class TextScreen : FrameworkElement
         withOutline.FontSize = 24;
         withOutline.OutlineThickness = 2;
         container.Children.Add(withOutline);
+
+        AddTextureFilterSection(container);
+    }
+
+    // Texture filter on Text (#3496): mirrored for structural parity with MonoGameGumInCode and
+    // raylib, but SkiaGum text has no Point/Linear knob to demonstrate. SkiaGum draws glyphs each
+    // frame via Topten.RichTextKit straight onto the canvas (SkiaSharp's own font rasterizer) rather
+    // than sampling a pre-baked font atlas texture with a bilinear/point sampler, so there is no
+    // texture-filter render state for text on this backend - both cells below render identically.
+    private static void AddTextureFilterSection(ContainerRuntime container)
+    {
+        AddSectionLabel(container,
+            "Texture filter (#3496): no Point/Linear distinction on Skia text - see comment above AddTextureFilterSection");
+        ContainerRuntime filterRow = new ContainerRuntime();
+        filterRow.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        filterRow.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        filterRow.Width = 0;
+        filterRow.Height = 0;
+        filterRow.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        filterRow.StackSpacing = 16;
+
+        TextRuntime pointText = new TextRuntime();
+        pointText.FontSize = 12;
+        pointText.FontScale = 4;
+        pointText.Text = "Point";
+        filterRow.AddChild(pointText);
+
+        TextRuntime linearText = new TextRuntime();
+        linearText.FontSize = 12;
+        linearText.FontScale = 4;
+        linearText.Text = "Linear";
+        filterRow.AddChild(linearText);
+
+        container.Children.Add(filterRow);
     }
 
     private static void AddSectionLabel(ContainerRuntime container, string text)
