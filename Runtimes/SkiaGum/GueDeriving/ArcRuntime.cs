@@ -5,6 +5,7 @@ using System;
 using Gum.DataTypes;
 using Gum.Renderables;
 using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using Color = Raylib_cs.Color;
 using ColorExtensions = RaylibGum.Helpers.ColorExtensions;
 #elif SKIA
@@ -34,9 +35,11 @@ namespace Gum.GueDeriving;
 /// any backend (sealed in PR #2891).
 /// </summary>
 /// <remarks>
-/// Gradients on arcs are intentionally not exposed in this pass (deferred follow-up to #2866)
-/// — see <see cref="LineArc"/> for the renderable-side rationale. <see cref="StrokeColor"/> is
-/// the single user-facing color slot, mirroring the post-PR-#2891 Skia <c>ArcRuntime</c>'s API.
+/// Issue #3454 — gradients are now exposed on raylib (<see cref="UseGradient"/>), matching the
+/// Skia/Apos branch. Per the #3009 model the gradient START is the arc's primary
+/// <see cref="Color"/> (synced into the renderable's <c>Color1</c> in <see cref="PreRender"/>);
+/// <see cref="Color2"/> is the standalone second stop. <see cref="StrokeColor"/> remains the
+/// explicit stroke-color slot for the solid (non-gradient) path.
 /// </remarks>
 public class ArcRuntime : GraphicalUiElement
 {
@@ -367,6 +370,157 @@ public class ArcRuntime : GraphicalUiElement
         }
     }
 
+    // Issue #3454 — gradient surface, forwarded to the contained LineArc. The gradient START color
+    // is not a standalone slot: per the #3009 model it mirrors the arc's primary Color, synced into
+    // the renderable's Color1 in PreRender. Color2 below is the standalone second stop. The obsolete
+    // Color1 / Red1 / Green1 / Blue1 / Alpha1 shims that the Skia/Apos branch carries are
+    // intentionally NOT widened to raylib — gradient support never shipped on raylib arcs, so there
+    // is no legacy data to preserve, and the cross-platform guidance is that the narrower footprint
+    // wins for deprecated members (see the gum-cross-platform-unification skill).
+
+    /// <inheritdoc cref="LineArc.UseGradient"/>
+    public bool UseGradient
+    {
+        get => ContainedLineArc.UseGradient;
+        set
+        {
+            ContainedLineArc.UseGradient = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="LineArc.GradientType"/>
+    public GradientType GradientType
+    {
+        get => ContainedLineArc.GradientType;
+        set
+        {
+            ContainedLineArc.GradientType = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="LineArc.Color2"/>
+    public Color Color2
+    {
+        get => ContainedLineArc.Color2;
+        set
+        {
+            ContainedLineArc.Color2 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>Red channel of the gradient's second stop, <see cref="Color2"/>.</summary>
+    public int Red2
+    {
+        get => ContainedLineArc.Color2.R;
+        set
+        {
+            ContainedLineArc.Color2 = ColorExtensions.WithRed(ContainedLineArc.Color2, (byte)value);
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>Green channel of the gradient's second stop, <see cref="Color2"/>.</summary>
+    public int Green2
+    {
+        get => ContainedLineArc.Color2.G;
+        set
+        {
+            ContainedLineArc.Color2 = ColorExtensions.WithGreen(ContainedLineArc.Color2, (byte)value);
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>Blue channel of the gradient's second stop, <see cref="Color2"/>.</summary>
+    public int Blue2
+    {
+        get => ContainedLineArc.Color2.B;
+        set
+        {
+            ContainedLineArc.Color2 = ColorExtensions.WithBlue(ContainedLineArc.Color2, (byte)value);
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>Alpha channel of the gradient's second stop, <see cref="Color2"/>.</summary>
+    public int Alpha2
+    {
+        get => ContainedLineArc.Color2.A;
+        set
+        {
+            ContainedLineArc.Color2 = ColorExtensions.WithAlpha(ContainedLineArc.Color2, (byte)value);
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="LineArc.GradientX1"/>
+    public float GradientX1
+    {
+        get => ContainedLineArc.GradientX1;
+        set
+        {
+            ContainedLineArc.GradientX1 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="LineArc.GradientY1"/>
+    public float GradientY1
+    {
+        get => ContainedLineArc.GradientY1;
+        set
+        {
+            ContainedLineArc.GradientY1 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="LineArc.GradientX2"/>
+    public float GradientX2
+    {
+        get => ContainedLineArc.GradientX2;
+        set
+        {
+            ContainedLineArc.GradientX2 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="LineArc.GradientY2"/>
+    public float GradientY2
+    {
+        get => ContainedLineArc.GradientY2;
+        set
+        {
+            ContainedLineArc.GradientY2 = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="LineArc.GradientInnerRadius"/>
+    public float GradientInnerRadius
+    {
+        get => ContainedLineArc.GradientInnerRadius;
+        set
+        {
+            ContainedLineArc.GradientInnerRadius = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <inheritdoc cref="LineArc.GradientOuterRadius"/>
+    public float GradientOuterRadius
+    {
+        get => ContainedLineArc.GradientOuterRadius;
+        set
+        {
+            ContainedLineArc.GradientOuterRadius = value;
+            NotifyPropertyChanged();
+        }
+    }
+
     /// <summary>
     /// Initializes a new raylib <c>ArcRuntime</c>. Constructor defaults mirror the Skia/Apos
     /// branch so cross-backend sample code starts from the same baseline (Width = Height = 100,
@@ -387,6 +541,16 @@ public class ArcRuntime : GraphicalUiElement
             Thickness = 10;
             StartAngle = 0;
             SweepAngle = 90;
+
+            // Issue #3454 — seed the gradient second stop + axis to match the Skia/Apos branch's
+            // ctor so cross-backend sample code starts from the same baseline (yellow second stop,
+            // axis running to the bottom-right corner of the default 100x100 bounds). The gradient
+            // start follows the primary Color (White) via PreRender; UseGradient defaults off.
+            Red2 = 255;
+            Green2 = 255;
+            Blue2 = 0;
+            GradientX2 = 100;
+            GradientY2 = 100;
 
             // Pre-seed dropshadow offset/blur so toggling HasDropshadow = true at runtime
             // produces a visible shadow without further setup — same default the Skia/Apos
@@ -424,6 +588,12 @@ public class ArcRuntime : GraphicalUiElement
         // nominal Thickness, so the band width is pushed straight through. See
         // RectangleRuntime.PreRender for the full rationale.
         ContainedLineArc.Thickness = thickness;
+
+        // Issue #3454 / #3009 — the gradient START is the arc's primary body Color, not a standalone
+        // slot. Mirror it into the renderable's Color1 each frame so the start stop follows the body
+        // regardless of how Color was set (state change, animation, .gumx load). Matches the Skia/Apos
+        // branch's PreRender, which syncs ContainedArc.Red1/Green1/Blue1/Alpha1 from the body color.
+        ContainedLineArc.Color1 = ContainedLineArc.Color;
     }
 
     /// <inheritdoc/>
