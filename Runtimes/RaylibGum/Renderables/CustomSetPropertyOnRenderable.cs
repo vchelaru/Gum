@@ -558,8 +558,17 @@ public class CustomSetPropertyOnRenderable
                 rawText = LocalizationService.Translate(rawText);
             }
 
-            textRenderable.RawText = rawText;
-            // todo - markup
+            textRenderable.InlineVariables.Clear();
+            if (rawText?.Contains("[") == true)
+            {
+                textRenderable.StoredMarkupText = rawText;
+                SetBbCodeText(textRenderable, graphicalUiElement, rawText);
+            }
+            else
+            {
+                textRenderable.StoredMarkupText = null;
+                textRenderable.RawText = rawText;
+            }
 
             // we want to update if the text's size is based on its "children" (the letters it contains)
             if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
@@ -674,6 +683,77 @@ public class CustomSetPropertyOnRenderable
             }
         }
         return handled;
+    }
+
+    /// <summary>
+    /// Parses BBCode markup, assigns the tag-stripped text to <see cref="Text.RawText"/>, and populates
+    /// <see cref="Text.InlineVariables"/> with the Color / FontScale runs the Raylib renderer applies per run.
+    /// Font-swap and Custom per-letter tags are recognized (so their tags are stripped from the visible text)
+    /// but are not yet applied on the Raylib runtime - see #3471.
+    /// </summary>
+    private static void SetBbCodeText(Text asText, GraphicalUiElement graphicalUiElement, string bbcode)
+    {
+        // The rendering/wrapping code ignores '\r', so normalize CRLF to LF before computing indexes.
+        // Parsing and stripping from the same normalized string keeps InlineVariable indexes aligned
+        // with the RawText the renderer sees.
+        var normalized = bbcode?.Replace("\r\n", "\n");
+
+        var results = BbCodeParser.Parse(normalized, Tags);
+        var strippedText = BbCodeParser.RemoveTags(normalized, results);
+
+        asText.RawText = strippedText;
+
+        foreach (var item in results)
+        {
+            object castedValue = item.Open.Argument;
+            var shouldApply = false;
+            switch (item.Name)
+            {
+                case "Red":
+                case "Green":
+                case "Blue":
+                    castedValue = byte.Parse(item.Open.Argument);
+                    shouldApply = true;
+                    break;
+                case "Color":
+                    {
+                        if (item.Open.Argument?.StartsWith("0x") == true && int.TryParse(item.Open.Argument.Substring(2),
+                                                                            NumberStyles.AllowHexSpecifier,
+                                                                            null,
+                                                                            out int result))
+                        {
+                            castedValue = System.Drawing.Color.FromArgb(result);
+                        }
+                        else
+                        {
+                            castedValue = System.Drawing.Color.FromName(item.Open.Argument);
+                        }
+                        shouldApply = true;
+                    }
+                    break;
+                case "FontScale":
+                    {
+                        if (float.TryParse(item.Open.Argument, NumberStyles.Float, CultureInfo.InvariantCulture, out float parsed))
+                        {
+                            castedValue = parsed;
+                            shouldApply = true;
+                        }
+                    }
+                    break;
+                    // Font / Custom / IsBold / etc. are intentionally not handled here on the first pass (#3471).
+            }
+
+            if (shouldApply)
+            {
+                asText.InlineVariables.Add(new InlineVariable
+                {
+                    CharacterCount = item.Close.StartStrippedIndex - item.Open.StartStrippedIndex,
+                    StartIndex = item.Open.StartStrippedIndex,
+                    VariableName = item.Name,
+                    Value = castedValue
+                });
+            }
+        }
     }
 
     // For some reason this crashes on web when uploading to itch:

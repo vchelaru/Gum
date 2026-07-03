@@ -75,6 +75,9 @@ public class Text : IVisible, IRenderableIpso,
         var newInstance = (Text)this.MemberwiseClone();
         newInstance.mParent = null;
         newInstance.mChildren = new();
+        // MemberwiseClone shares the list reference; give the clone its own copy so
+        // re-parsing markup on one instance doesn't mutate the other's runs.
+        newInstance.InlineVariables = new List<InlineVariable>(InlineVariables);
         return newInstance;
     }
 
@@ -141,6 +144,7 @@ public class Text : IVisible, IRenderableIpso,
     public static TextPositionRoundingMode TextPositionRoundingMode = TextPositionRoundingMode.RoundToInt;
 
     List<string> mWrappedText = new List<string>();
+    readonly StyledSubstringSplitter _styledSubstringSplitter = new StyledSubstringSplitter();
     float? mWidth = 200;
     float mHeight = 200;
 
@@ -574,7 +578,20 @@ public class Text : IVisible, IRenderableIpso,
         }
     }
 
-    public string? StoredMarkupText => null;
+    /// <summary>
+    /// The original BBCode / markup string assigned to this Text (before tags were stripped),
+    /// or null when the assigned text contained no markup. Set by the property pipeline
+    /// (<c>CustomSetPropertyOnRenderable</c>) so font/style changes can re-parse the markup.
+    /// </summary>
+    public string? StoredMarkupText { get; set; }
+
+    /// <summary>
+    /// The inline styling variables (Color / FontScale runs) parsed from BBCode markup assigned to
+    /// this Text. Populated by the property pipeline when the assigned text contains markup tags;
+    /// empty for plain text. Consumed by <see cref="Render"/> to draw per-run styling. Custom
+    /// per-letter callbacks and per-run Font swaps are not yet applied on the Raylib runtime (#3471).
+    /// </summary>
+    public List<InlineVariable> InlineVariables { get; private set; }
 
     public float LineHeightMultiplier { get; set; } = 1;
 
@@ -623,6 +640,7 @@ public class Text : IVisible, IRenderableIpso,
         // of raylib's tiny pixel default. BaseSize == 0 is the uninitialized-Font sentinel.
         Font = DefaultFont.BaseSize > 0 ? DefaultFont : GetFontDefault();
         mChildren = new();
+        InlineVariables = new List<InlineVariable>();
         Visible = true;
     }
 
@@ -656,6 +674,37 @@ public class Text : IVisible, IRenderableIpso,
 
     public virtual void PreRender() { }
 
+    /// <summary>
+    /// Splits a single wrapped line into styled runs according to which <see cref="InlineVariables"/>
+    /// are active over it. Backed by the shared <see cref="StyledSubstringSplitter"/>.
+    /// </summary>
+    public List<StyledSubstring> GetStyledSubstrings(int startOfLineIndex, string lineOfText) =>
+        _styledSubstringSplitter.GetStyledSubstrings(startOfLineIndex, lineOfText, InlineVariables);
+
+    /// <summary>
+    /// Rounds a position/origin to whole pixels using the configured <see cref="TextPositionRoundingMode"/>
+    /// when <see cref="TextRenderingPositionMode"/> is SnapToPixel; otherwise returns the value unchanged.
+    /// Rounding origin along with position avoids the baseline misalignment / "sizzle" seen on small pixel
+    /// fonts when vertical alignment produces fractional values.
+    /// </summary>
+    private static Vector2 SnapToPixelIfNeeded(Vector2 value)
+    {
+        if (TextRenderingPositionMode != TextRenderingPositionMode.SnapToPixel)
+        {
+            return value;
+        }
+
+        switch (TextPositionRoundingMode)
+        {
+            case TextPositionRoundingMode.Floor:
+                return new Vector2((int)Math.Floor(value.X), (int)Math.Floor(value.Y));
+            case TextPositionRoundingMode.Ceiling:
+                return new Vector2((int)Math.Ceiling(value.X), (int)Math.Ceiling(value.Y));
+            default:
+                return new Vector2(MathFunctions.RoundToInt(value.X), MathFunctions.RoundToInt(value.Y));
+        }
+    }
+
     public void Render(ISystemManagers managers)
     {
         if (!Visible) return;
@@ -683,6 +732,10 @@ public class Text : IVisible, IRenderableIpso,
         }
 
         int lettersShown = 0;
+        // Absolute index of the first character of the current line within the stripped RawText,
+        // used to look up which InlineVariables are active. UpdateLines keeps explicit '\n' chars
+        // in the line string, so advancing by the (untruncated) line length keeps this in sync.
+        int startOfLineIndex = 0;
 
         for(int i = 0; i < WrappedText.Count; i++)
         {
@@ -702,72 +755,137 @@ public class Text : IVisible, IRenderableIpso,
                 lettersShown += line.Length;
             }
 
-            origin.X = 0;
-            position.X = absoluteLeft;
-
-            if(HorizontalAlignment == HorizontalAlignment.Center)
-            {
-                position.X += (this.Width??32) / 2;
-                origin.X = MeasureTextEx(fontValue, line, fontValue.BaseSize * FontScale, 0).X/2;
-            }
-            else if (HorizontalAlignment == HorizontalAlignment.Right)
-            {
-                position.X += this.Width??32;
-                origin.X = MeasureTextEx(fontValue, line, fontValue.BaseSize * FontScale, 0).X;
-            }
             var linePosition = position;
             linePosition.Y += i * LineHeightInPixels * LineHeightMultiplier;
 
-            if (TextRenderingPositionMode == TextRenderingPositionMode.SnapToPixel)
+            var substrings = InlineVariables.Count > 0
+                ? GetStyledSubstrings(startOfLineIndex, line)
+                : null;
+
+            if (substrings == null || substrings.Count == 0)
             {
-                // 2025-12 JUSTIN: Changes to vertical alignment resulted fractional
-                // origin values which cause baseline misalignment and broken text.
-                // Applied the same rounding used for position to origin, which fixes
-                // the problem but may cause weird artifacts or "sizzle" for really
-                // small pixel fonts
-                
-                switch (TextPositionRoundingMode)
+                DrawPlainLine(fontValue, line, linePosition, absoluteLeft, origin.Y);
+            }
+            else
+            {
+                DrawStyledLine(fontValue, substrings, linePosition, absoluteLeft, origin.Y);
+            }
+
+            startOfLineIndex += WrappedText[i].Length;
+        }
+    }
+
+    /// <summary>
+    /// Draws a single line with no inline styling, honoring horizontal alignment and pixel snapping.
+    /// </summary>
+    private void DrawPlainLine(Font fontValue, string line, Vector2 linePosition, float absoluteLeft, float originY)
+    {
+        var origin = new Vector2(0, originY);
+        linePosition.X = absoluteLeft;
+
+        if (HorizontalAlignment == HorizontalAlignment.Center)
+        {
+            linePosition.X += (this.Width ?? 32) / 2;
+            origin.X = MeasureTextEx(fontValue, line, fontValue.BaseSize * FontScale, 0).X / 2;
+        }
+        else if (HorizontalAlignment == HorizontalAlignment.Right)
+        {
+            linePosition.X += this.Width ?? 32;
+            origin.X = MeasureTextEx(fontValue, line, fontValue.BaseSize * FontScale, 0).X;
+        }
+
+        linePosition = SnapToPixelIfNeeded(linePosition);
+        origin = SnapToPixelIfNeeded(origin);
+
+        Raylib.SetTextureFilter(fontValue.Texture, TextureFilter.Point);
+        DrawTextPro(fontValue, line, linePosition, origin, 0, fontValue.BaseSize * FontScale, 0, Color);
+    }
+
+    /// <summary>
+    /// Draws a single line as a sequence of styled runs (BBCode markup), applying per-run Color / FontScale.
+    /// Runs are laid out left-to-right and baseline-aligned so a larger FontScale run sits on the same
+    /// baseline as its neighbors. Custom per-letter callbacks and per-run Font swaps are not applied here
+    /// on the Raylib runtime yet (#3471).
+    /// </summary>
+    private void DrawStyledLine(Font fontValue, List<StyledSubstring> substrings, Vector2 linePosition, float absoluteLeft, float originY)
+    {
+        // First pass: resolve each run's effective color/scale and measured width, plus the line totals
+        // needed for horizontal alignment (total width) and baseline alignment (tallest run's baseline).
+        var runColors = new Color[substrings.Count];
+        var runScales = new float[substrings.Count];
+        var runWidths = new float[substrings.Count];
+        float totalWidth = 0;
+        float maxScale = FontScale;
+
+        for (int s = 0; s < substrings.Count; s++)
+        {
+            var run = substrings[s];
+            var runColor = Color;
+            var runScale = FontScale;
+
+            foreach (var variable in run.Variables)
+            {
+                switch (variable.VariableName)
                 {
-                    case TextPositionRoundingMode.Floor:
-                        linePosition = new Vector2(
-                            (int)Math.Floor(linePosition.X),
-                            (int)Math.Floor(linePosition.Y));
-                        origin = new Vector2(
-                            (int)Math.Floor(origin.X),
-                            (int)Math.Floor(origin.Y)
-                        );
+                    case nameof(Color):
+                        if (variable.Value is System.Drawing.Color drawingColor)
+                        {
+                            runColor = new Color(drawingColor.R, drawingColor.G, drawingColor.B, drawingColor.A);
+                        }
                         break;
-                    case TextPositionRoundingMode.Ceiling:
-                        linePosition = new Vector2(
-                            (int)Math.Ceiling(linePosition.X),
-                            (int)Math.Ceiling(linePosition.Y));
-                        origin = new Vector2(
-                            (int)Math.Ceiling(origin.X),
-                            (int)Math.Ceiling(origin.Y)
-                        );
+                    case nameof(Red):
+                        runColor = new Color((byte)variable.Value, runColor.G, runColor.B, runColor.A);
                         break;
-                    default:
-                        linePosition = new Vector2(
-                            MathFunctions.RoundToInt(linePosition.X),
-                            MathFunctions.RoundToInt(linePosition.Y));
-                        origin = new Vector2(
-                            MathFunctions.RoundToInt(origin.X),
-                            MathFunctions.RoundToInt(origin.Y)
-                        );
+                    case nameof(Green):
+                        runColor = new Color(runColor.R, (byte)variable.Value, runColor.B, runColor.A);
+                        break;
+                    case nameof(Blue):
+                        runColor = new Color(runColor.R, runColor.G, (byte)variable.Value, runColor.A);
+                        break;
+                    case nameof(FontScale):
+                        runScale = (float)variable.Value;
                         break;
                 }
             }
 
-            Raylib.SetTextureFilter(fontValue.Texture, TextureFilter.Point);
-            DrawTextPro(fontValue, line, linePosition, origin, 0, fontValue.BaseSize * FontScale, 0, Color);
+            runColors[s] = runColor;
+            runScales[s] = runScale;
+            runWidths[s] = MeasureTextEx(fontValue, run.Substring, fontValue.BaseSize * runScale, 0).X;
+            totalWidth += runWidths[s];
+            maxScale = System.Math.Max(maxScale, runScale);
         }
 
-        // todo - handle alignment
-        //DrawText(RawText, x, y, 20, Color.DarkGray);
-        //DrawTextEx(Font, RawText, position, FontSize, 0, Color);
-        //const float spacing = 1;
-        //DrawTextPro(fontValue, RawText, position, origin, 0, FontSize, spacing, Color);
+        float maxBaseline = (LineHeightInPixels - _descenderHeight) * maxScale;
 
+        float lineStartX = absoluteLeft;
+        if (HorizontalAlignment == HorizontalAlignment.Center)
+        {
+            lineStartX += ((this.Width ?? 32) - totalWidth) / 2;
+        }
+        else if (HorizontalAlignment == HorizontalAlignment.Right)
+        {
+            lineStartX += (this.Width ?? 32) - totalWidth;
+        }
+
+        Raylib.SetTextureFilter(fontValue.Texture, TextureFilter.Point);
+
+        float advance = 0;
+        for (int s = 0; s < substrings.Count; s++)
+        {
+            var runScale = runScales[s];
+            // Push shorter runs down so every run shares the tallest run's baseline.
+            float baselineDelta = maxBaseline - (LineHeightInPixels - _descenderHeight) * runScale;
+
+            var runPosition = new Vector2(lineStartX + advance, linePosition.Y + baselineDelta);
+            var runOrigin = new Vector2(0, originY);
+
+            runPosition = SnapToPixelIfNeeded(runPosition);
+            runOrigin = SnapToPixelIfNeeded(runOrigin);
+
+            DrawTextPro(fontValue, substrings[s].Substring, runPosition, runOrigin, 0, fontValue.BaseSize * runScale, 0, runColors[s]);
+
+            advance += runWidths[s];
+        }
     }
 
     public void SetNeedsRefreshToTrue()
