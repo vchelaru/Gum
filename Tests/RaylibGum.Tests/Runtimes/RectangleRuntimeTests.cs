@@ -1,6 +1,7 @@
 using Gum.GueDeriving;
 using Gum.Renderables;
 using Raylib_cs;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
 
@@ -358,6 +359,53 @@ public class RectangleRuntimeTests : BaseTestClass
 
         sut.CornerRadius.ShouldBe(8f);
         ((LineRectangle)sut.RenderableComponent!).CornerRadius.ShouldBe(8f);
+    }
+
+    // Issue #3494 — CornerRadiusUnits raylib parity. Absolute (default) pushes the raw radius;
+    // ScreenPixel divides it by the camera zoom in PreRender so the corner holds a constant on-
+    // screen size, mirroring StrokeWidthUnits and the XNALIKE/Skia behavior.
+
+    [Fact]
+    public void CornerRadiusUnits_DefaultsToAbsolute()
+    {
+        RectangleRuntime sut = new();
+        sut.CornerRadiusUnits.ShouldBe(Gum.DataTypes.DimensionUnitType.Absolute);
+    }
+
+    [Fact]
+    public void CornerRadiusUnits_RoundTrips()
+    {
+        RectangleRuntime sut = new();
+        sut.CornerRadiusUnits = Gum.DataTypes.DimensionUnitType.ScreenPixel;
+        sut.CornerRadiusUnits.ShouldBe(Gum.DataTypes.DimensionUnitType.ScreenPixel);
+    }
+
+    [Fact]
+    public void PreRender_ScreenPixelCornerRadius_ScaledByCameraZoom()
+    {
+        // Wire managers by parenting to Root so EffectiveManagers (hence the camera) resolves,
+        // then set a non-1 zoom. The runtime getter keeps the raw value; the renderable receives
+        // the zoom-divided value.
+        RectangleRuntime sut = new();
+        Gum.GumService.Default.Root.Children.Add(sut);
+
+        float originalZoom = SystemManagers.Default.Renderer.Camera.Zoom;
+        try
+        {
+            SystemManagers.Default.Renderer.Camera.Zoom = 2f;
+            sut.CornerRadius = 8f;
+            sut.CornerRadiusUnits = Gum.DataTypes.DimensionUnitType.ScreenPixel;
+
+            sut.PreRender();
+
+            sut.CornerRadius.ShouldBe(8f);
+            ((LineRectangle)sut.RenderableComponent!).CornerRadius.ShouldBe(4f);
+        }
+        finally
+        {
+            SystemManagers.Default.Renderer.Camera.Zoom = originalZoom;
+            Gum.GumService.Default.Root.Children.Remove(sut);
+        }
     }
 
     [Fact]

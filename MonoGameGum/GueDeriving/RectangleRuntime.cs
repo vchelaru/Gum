@@ -248,6 +248,20 @@ public class RectangleRuntime : GraphicalUiElement
         // a nominal 1px outline to ~0.01px — invisible. StrokeWidth <= 0 still pushes literal 0 so
         // LineRectangle's positive-width gate suppresses the stroke (the fill-only-shape fix above).
         ContainedLineRectangle.LinePixelWidth = strokeWidth <= 0 ? 0f : strokeWidth;
+
+#if RAYLIB
+        // Issue #3494 — resolve CornerRadiusUnits the same way as StrokeWidthUnits: a ScreenPixel
+        // corner radius is divided by the camera zoom so it holds a constant on-screen size.
+        // Reads the raw _cornerRadius backing field (not the renderable's possibly-already-scaled
+        // value) so re-running PreRender each frame doesn't compound the division. CornerRadius is
+        // RAYLIB-only (SOKOL's contained type has none), so this is gated tighter than the block.
+        float cornerRadius = _cornerRadius;
+        if (_cornerRadiusUnits == DimensionUnitType.ScreenPixel && camera != null)
+        {
+            cornerRadius /= cameraZoom;
+        }
+        ContainedLineRectangle.CornerRadius = cornerRadius;
+#endif
     }
 #endif
 
@@ -379,13 +393,37 @@ public class RectangleRuntime : GraphicalUiElement
         }
     }
 
+    float _cornerRadius;
     /// <inheritdoc cref="Gum.Renderables.LineRectangle.CornerRadius"/>
     public float CornerRadius
     {
-        get => ContainedLineRectangle.CornerRadius;
+        get => _cornerRadius;
         set
         {
+            _cornerRadius = value;
+            // Push the raw value immediately so an Absolute radius is correct before the first
+            // PreRender. PreRender re-resolves it against CornerRadiusUnits each frame (ScreenPixel
+            // ÷ zoom), reading the raw backing field — so this eager push never causes runaway
+            // scaling. Mirrors how the runtime holds the raw StrokeWidth alongside its units.
             ContainedLineRectangle.CornerRadius = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    DimensionUnitType _cornerRadiusUnits;
+    /// <summary>
+    /// Issue #3494 — unit of measurement for <see cref="CornerRadius"/>. <c>Absolute</c> renders the
+    /// raw pixel value; <c>ScreenPixel</c> divides it by the camera zoom each frame in
+    /// <see cref="PreRender"/> so the corner holds a constant on-screen size as the camera zooms,
+    /// matching <see cref="StrokeWidthUnits"/> and the XNALIKE/Skia behavior. (Per-corner overrides
+    /// are round-trip parity only on raylib — see the <c>CustomRadius*</c> members.)
+    /// </summary>
+    public DimensionUnitType CornerRadiusUnits
+    {
+        get => _cornerRadiusUnits;
+        set
+        {
+            _cornerRadiusUnits = value;
             NotifyPropertyChanged();
         }
     }
