@@ -519,6 +519,21 @@ public class Renderer : IRenderer
         ComputeRenderTargetBounds(container, out float left, out float top, out _, out _,
             out int width, out int height);
 
+        // Skip the bake when the container clamps to a non-positive size — a 0-sized pre-layout
+        // container, or (the #3475 case) one positioned entirely off-camera. This size guard is what
+        // actually stops the off-camera bake: GetFor returns default(RenderTexture2D) for a
+        // non-positive size, but because RenderTexture2D is a value type that default does NOT read as
+        // null through the RenderTexture2D? local below — RenderTargetServiceBase's TRenderTarget? is
+        // an unconstrained nullable, not a Nullable<>, so a plain (even zeroed) struct lifts to a
+        // non-null nullable and the `== null` check can never fire here. Without this guard,
+        // BeginTextureMode would bind the zeroed texture's FBO id 0 (the default framebuffer) and the
+        // ClearBackground below would wipe the whole window to transparent black. Mirrors the matching
+        // guard in TryCompositeRenderTarget.
+        if (width <= 0 || height <= 0)
+        {
+            return;
+        }
+
         IRenderableIpso cacheOwner = ResolveRenderTargetCacheOwner(container);
         RenderTexture2D? renderTexture = _renderTargetService.GetFor(cacheOwner, width, height);
         if (renderTexture == null)
