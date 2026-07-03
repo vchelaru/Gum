@@ -679,6 +679,26 @@ public class RectangleRuntime : GraphicalUiElement
         get => _gradientOuterRadiusUnits;
         set { _gradientOuterRadiusUnits = value; NotifyPropertyChanged(); }
     }
+
+    Gum.RenderingLibrary.Blend _blend = Gum.RenderingLibrary.Blend.Normal;
+    /// <inheritdoc cref="CircleRuntime.Blend"/>
+    /// <remarks>
+    /// Issue #3458 — raylib forwards the value straight to the contained <see cref="ContainedLineRectangle"/>'s
+    /// nullable blend member (no <c>ShapeStrokePreRenderMath.PushBlend</c> / <c>IBlendedRenderable</c>,
+    /// which are XNALIKE-only Apos.Shapes infrastructure). The renderable's <c>Render</c> wraps its
+    /// fill/stroke passes in the corresponding raylib blend mode. Only <c>Additive</c> maps to a
+    /// non-alpha raylib mode today.
+    /// </remarks>
+    public Gum.RenderingLibrary.Blend Blend
+    {
+        get => _blend;
+        set
+        {
+            _blend = value;
+            ContainedLineRectangle.Blend = value;
+            NotifyPropertyChanged();
+        }
+    }
 #endif
 
 #if !SKIA

@@ -69,6 +69,28 @@ public class RectangleRuntimeTests : BaseTestClass
         sut.Alpha.ShouldBe(128);
     }
 
+    // Issue #3458 — raylib Blend surface. The runtime exposes a non-nullable Blend (default Normal,
+    // matching the XNALIKE public signature) that forwards to the contained LineRectangle's nullable
+    // blend member, whose Render wraps the fill/stroke passes in BeginBlendMode when set.
+    [Fact]
+    public void Blend_DefaultsToNormal()
+    {
+        RectangleRuntime sut = new();
+        sut.Blend.ShouldBe(Gum.RenderingLibrary.Blend.Normal);
+    }
+
+    [Fact]
+    public void Blend_RoundTrips_AndPushesToContainedRenderable()
+    {
+        RectangleRuntime sut = new();
+
+        sut.Blend = Gum.RenderingLibrary.Blend.Additive;
+
+        sut.Blend.ShouldBe(Gum.RenderingLibrary.Blend.Additive);
+        LineRectangle inner = (LineRectangle)sut.RenderableComponent!;
+        inner.Blend.ShouldBe(Gum.RenderingLibrary.Blend.Additive);
+    }
+
     [Fact]
     public void Blue_ShouldRoundTrip()
     {

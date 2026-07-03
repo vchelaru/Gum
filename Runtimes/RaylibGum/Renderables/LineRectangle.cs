@@ -45,6 +45,16 @@ public class LineRectangle : InvisibleRenderable
     public Color Color { get; set; } = Color.White;
 
     /// <summary>
+    /// Blend mode applied to the fill and stroke passes. When set, <see cref="Render"/> wraps
+    /// those passes in <c>BeginBlendMode</c>/<c>EndBlendMode</c> (via the batch-counted wrappers)
+    /// using <see cref="BlendModeExtensions.ToRaylibBlendMode"/>. <c>null</c> (the default) leaves
+    /// raylib on its standard alpha blend. Mirrors the <c>Blend</c> member on the raylib
+    /// <c>Sprite</c> / <c>NineSlice</c> renderables (issue #3458). Only <see cref="global::Gum.RenderingLibrary.Blend.Additive"/>
+    /// maps to a non-alpha raylib mode today; other values fall through to alpha.
+    /// </summary>
+    public global::Gum.RenderingLibrary.Blend? Blend { get; set; }
+
+    /// <summary>
     /// When <c>true</c>, draws a filled rectangle using <see cref="Color"/> (or
     /// <see cref="FillColor"/> when set). Independent of the stroke pass — both fill and stroke
     /// may render in the same <see cref="Render"/> call.
@@ -360,6 +370,17 @@ public class LineRectangle : InvisibleRenderable
             }
         }
 
+        // Issue #3458 — wrap ONLY the fill + stroke passes in the blend mode. The dropshadow
+        // pre-pass above is deliberately left outside: on the blurred path it bakes into its own
+        // RenderTexture2D via Renderer.Self.ShadowBlur.Draw (which manages its own blend state),
+        // and the hard-offset path already composites the shadow with the correct alpha. Mirrors
+        // the raylib Sprite / NineSlice Blend wrap, using the batch-counted BeginBlendMode /
+        // EndBlendMode so the draw-call counter stays accurate.
+        if (Blend.HasValue)
+        {
+            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend.Value.ToRaylibBlendMode());
+        }
+
         // Fill pass — runs when FillColor is set, or when IsFilled is true with no explicit
         // FillColor (legacy Color slot supplies the fill color). Mirrors Skia's two-slot
         // composition (#2790) where setting FillColor alone, StrokeColor alone, or both lights
@@ -541,6 +562,11 @@ public class LineRectangle : InvisibleRenderable
                 DrawDashedSegment(sbr, sbl, dashLen, gapLen, strokeColor);
                 DrawDashedSegment(sbl, stl, dashLen, gapLen, strokeColor);
             }
+        }
+
+        if (Blend.HasValue)
+        {
+            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.EndBlendMode();
         }
     }
 
