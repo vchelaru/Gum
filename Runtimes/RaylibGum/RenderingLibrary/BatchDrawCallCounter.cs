@@ -1,3 +1,4 @@
+using Gum.Renderables;
 using Raylib_cs;
 using System;
 using System.Runtime.InteropServices;
@@ -117,6 +118,40 @@ public sealed unsafe class BatchDrawCallCounter
     {
         Bank();
         Raylib.BeginBlendMode(mode);
+    }
+
+    /// <summary>
+    /// Counted wrapper that reproduces a Gum <see cref="global::Gum.RenderingLibrary.Blend"/> value
+    /// on raylib. <c>Normal</c>/<c>Additive</c> use a canned raylib <see cref="BlendMode"/>; every
+    /// other value (<c>Replace</c>, <c>ReplaceAlpha</c>, <c>SubtractAlpha</c>, <c>MinAlpha</c> —
+    /// issue #3470) sets explicit per-channel GL blend factors/equations via
+    /// <c>Rlgl.SetBlendFactorsSeparate</c> and <see cref="BlendMode.CustomSeparate"/>, since raylib
+    /// has no canned mode for them.
+    ///
+    /// <para>Whether this is called while <see cref="_renderTargetBlendActive"/> determines which
+    /// color-factor derivation those four values use — see
+    /// <see cref="Gum.Renderables.BlendModeExtensions"/>'s remarks for why: outside a bake there is
+    /// no further compositing to keep premultiplied-consistent, so <c>Replace</c> etc. use the
+    /// straightforward "ignore alpha" factors matching MonoGame; inside a bake they must leave a
+    /// validly premultiplied pixel or leftover color bleeds through <c>TryCompositeRenderTarget</c>'s
+    /// <c>AlphaPremultiply</c> composite (issue #3470 follow-up).</para>
+    ///
+    /// Pair with <see cref="EndBlendMode"/>.
+    /// </summary>
+    public void BeginBlendMode(global::Gum.RenderingLibrary.Blend blend)
+    {
+        Bank();
+
+        if (blend.TryGetSimpleRaylibBlendMode(out BlendMode mode))
+        {
+            Raylib.BeginBlendMode(mode);
+            return;
+        }
+
+        (int srcRgb, int dstRgb, int srcAlpha, int dstAlpha, int eqRgb, int eqAlpha) =
+            blend.ToGlBlendFactorsSeparate(isPremultiplyingContext: _renderTargetBlendActive);
+        Rlgl.SetBlendFactorsSeparate(srcRgb, dstRgb, srcAlpha, dstAlpha, eqRgb, eqAlpha);
+        Raylib.BeginBlendMode(BlendMode.CustomSeparate);
     }
 
     /// <summary>

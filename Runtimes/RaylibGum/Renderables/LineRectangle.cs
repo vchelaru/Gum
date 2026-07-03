@@ -46,11 +46,11 @@ public class LineRectangle : InvisibleRenderable
 
     /// <summary>
     /// Blend mode applied to the fill and stroke passes. When set, <see cref="Render"/> wraps
-    /// those passes in <c>BeginBlendMode</c>/<c>EndBlendMode</c> (via the batch-counted wrappers)
-    /// using <see cref="BlendModeExtensions.ToRaylibBlendMode"/>. <c>null</c> (the default) leaves
-    /// raylib on its standard alpha blend. Mirrors the <c>Blend</c> member on the raylib
-    /// <c>Sprite</c> / <c>NineSlice</c> renderables (issue #3458). Only <see cref="global::Gum.RenderingLibrary.Blend.Additive"/>
-    /// maps to a non-alpha raylib mode today; other values fall through to alpha.
+    /// those passes in <c>BeginBlendMode</c>/<c>EndBlendMode</c> (via the batch-counted wrappers),
+    /// which reproduce every <see cref="global::Gum.RenderingLibrary.Blend"/> value exactly
+    /// (issue #3470). <c>null</c> (the default) leaves raylib on its standard alpha blend. Mirrors
+    /// the <c>Blend</c> member on the raylib <c>Sprite</c> / <c>NineSlice</c> renderables
+    /// (issue #3458).
     /// </summary>
     public global::Gum.RenderingLibrary.Blend? Blend { get; set; }
 
@@ -380,7 +380,7 @@ public class LineRectangle : InvisibleRenderable
         // EndBlendMode so the draw-call counter stays accurate.
         if (Blend.HasValue)
         {
-            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend.Value.ToRaylibBlendMode());
+            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend.Value);
         }
 
         // Fill pass — runs when FillColor is set, or when IsFilled is true with no explicit

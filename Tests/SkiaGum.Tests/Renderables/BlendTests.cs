@@ -78,9 +78,10 @@ public class BlendTests
         paint.BlendMode.ShouldBe(SKBlendMode.DstOut);
     }
 
-    // ReplaceAlpha and MinAlpha have no clean SkiaSharp equivalent. Mirror the Raylib precedent
-    // (see Runtimes/RaylibGum/Renderables/BlendModeExtensions.cs) and fall through to the default
-    // SrcOver rather than picking a Skia mode that would silently change visuals.
+    // ReplaceAlpha and MinAlpha have no clean SkiaSharp equivalent — SKBlendMode has no separate
+    // per-channel blend-factor/equation override the way raylib's rlgl does (see
+    // Runtimes/RaylibGum/Renderables/BlendModeExtensions.cs, issue #3470), so fall through to the
+    // default SrcOver rather than picking a Skia mode that would silently change visuals.
     [Fact]
     public void Sprite_GetPaint_ReplaceAlpha_FallsThroughToSrcOver()
     {

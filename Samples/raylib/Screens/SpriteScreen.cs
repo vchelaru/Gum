@@ -13,10 +13,6 @@ namespace Examples.Shapes;
 // Raylib mirror of Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/SpriteScreen.cs (issue #2912).
 // Section order and parameter sweeps match the MG version so visual regressions in one backend are
 // easy to spot against the other when both samples are run side-by-side.
-//
-// The alpha-only Blend row (SubtractAlpha/ReplaceAlpha/MinAlpha) from the MG screen is intentionally
-// skipped here: raylib's BlendMode enum has no alpha-stencil equivalents, so those values fall
-// through to BlendMode.Alpha and would render identically — no useful visual signal.
 internal class SpriteScreen : FrameworkElement
 {
     public SpriteScreen() : base(new ContainerRuntime())
@@ -149,9 +145,9 @@ internal class SpriteScreen : FrameworkElement
             rotRow.AddChild(s);
         }
 
-        // Blend modes — Normal/Additive/Replace from the MG screen. On raylib, Normal and Replace
-        // both map to BlendMode.Alpha (raylib has no opaque/replace variant), so they render
-        // identically; Additive is the visually distinct cell.
+        // Blend modes — Normal/Additive/Replace (issue #3470: Replace now overwrites the
+        // destination outright via raylib's separate-factors blend path, rather than falling
+        // through to the same result as Normal).
         AddSectionLabel(page, "Blend, normal rendering (Normal, Additive, Replace):");
         var blendRow = NewSection(ChildrenLayout.LeftToRightStack, spacing: 6);
         page.AddChild(blendRow);
@@ -168,6 +164,55 @@ internal class SpriteScreen : FrameworkElement
             s.Height = 64;
             s.Blend = blend;
             blendRow.AddChild(s);
+        }
+
+        // Alpha-only blends (issue #3470) — each cell is a render-target Container holding a red
+        // rectangle as the underlying layer, then a bear sprite on top with the alpha-only Blend
+        // modifying that rectangle's alpha per pixel. SubtractAlpha punches a hole; ReplaceAlpha
+        // overwrites alpha with the bear's alpha; MinAlpha keeps whichever alpha is lower. Mirrors
+        // the MG screen's identical row.
+        AddSectionLabel(page, "Blend, alpha-only on render-target Container (SubtractAlpha, ReplaceAlpha, MinAlpha):");
+        var alphaBlendRow = NewSection(ChildrenLayout.LeftToRightStack, spacing: 6);
+        page.AddChild(alphaBlendRow);
+        foreach (var blend in new[]
+        {
+            Gum.RenderingLibrary.Blend.SubtractAlpha,
+            Gum.RenderingLibrary.Blend.ReplaceAlpha,
+            Gum.RenderingLibrary.Blend.MinAlpha,
+        })
+        {
+            var cell = new ContainerRuntime();
+            cell.IsRenderTarget = true;
+            cell.Width = 32;
+            cell.Height = 32;
+
+            var redBackground = new ColoredRectangleRuntime();
+            redBackground.Width = 32;
+            redBackground.Height = 32;
+            redBackground.Color = Color.Red;
+            cell.AddChild(redBackground);
+
+            var alphaMasker = new SpriteRuntime();
+            alphaMasker.SourceFileName = "resources\\BearTexture.png";
+            alphaMasker.Width = 64;
+            alphaMasker.Height = 64;
+            alphaMasker.Blend = blend;
+            // MinAlpha cell only: drop the BEAR's own alpha to 128 (background stays fully opaque
+            // at 255). This makes min() actually pick a *different* side depending on region rather
+            // than always landing on the same one: inside the bear, min(255, 128) = 128 (the bear's
+            // reduced alpha wins over the opaque background); outside the bear (fully transparent
+            // PNG area), min(255, 0) = 0 (fully punched through); at the bear's anti-aliased edge,
+            // the texture's own partial alpha gives a third, in-between level. Three visibly
+            // distinct bands from one texture, no gradient asset needed. (Previously this dropped
+            // the *background*'s alpha to 128 instead, which only ever showed two flat levels —
+            // min(128, 255) always resolved to the same fixed 128 everywhere the bear covered.)
+            if (blend == Gum.RenderingLibrary.Blend.MinAlpha)
+            {
+                alphaMasker.Alpha = 128;
+            }
+            cell.AddChild(alphaMasker);
+
+            alphaBlendRow.AddChild(cell);
         }
 
         // AnimationChain-driven sprite — same .achx pipeline the MG sample uses. .achx +

@@ -238,7 +238,7 @@ public class NineSlice : RenderableBase, IAnimatable, ITextureCoordinate, IClone
 
         if (Blend.HasValue)
         {
-            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend.Value.ToRaylibBlendMode());
+            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend.Value);
         }
 
         // The default (non-tiling, BorderScale 1, no custom frame width) case is left on
