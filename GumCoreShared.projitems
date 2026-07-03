@@ -134,6 +134,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\SpriteBatchStack.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\SpriteManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\SpriteRenderer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\StyledSubstringSplitter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Text.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\TextManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\TextOverflowMode.cs" />

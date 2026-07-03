@@ -1072,23 +1072,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
     List<string> lineByLineList = new List<string>() { "" };
 
-    public class StyledSubstring
-    {
-        public List<InlineVariable> Variables = new List<InlineVariable>();
-        public string Substring;
-        public int StartIndex;
-
-        public override string ToString()
-        {
-            var toReturn = Substring ?? "<null>";
-
-            foreach (var variable in Variables)
-            {
-                toReturn += $" {variable.VariableName} = {variable.Value}";
-            }
-            return toReturn;
-        }
-    }
+    StyledSubstringSplitter styledSubstringSplitter = new();
 
     // When drawing line-by-line, we only pass a single 
     List<int> individualLineWidth = new List<int>() { 0 };
@@ -1112,7 +1096,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
             var color = Color;
 
-            var substrings = GetStyledSubstrings(startOfLineIndex, lineOfText, color);
+            var substrings = GetStyledSubstrings(startOfLineIndex, lineOfText);
 
             if (substrings.Count == 0)
             {
@@ -1344,102 +1328,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     }
 
     // made public for auto tests:
-    public List<StyledSubstring> GetStyledSubstrings(int startOfLineIndex, string lineOfText, Color color)
-    {
-        List<StyledSubstring> substrings = new ();
-        int currentSubstringStart = 0;
-
-        List<InlineVariable> currentlyActiveInlines = new ();
-        List<InlineVariable> inlinesForThisCharacter = new ();
-
-        int relativeLetterIndex = 0;
-        for (; relativeLetterIndex < lineOfText.Length; relativeLetterIndex++)
-        {
-            inlinesForThisCharacter.Clear();
-            var absoluteIndex = startOfLineIndex + relativeLetterIndex;
-
-            var startNewRun = relativeLetterIndex == 0;
-            var endLastRun = false;
-            foreach (var variable in InlineVariables)
-            {
-
-                if (absoluteIndex >= variable.StartIndex && absoluteIndex < variable.StartIndex + variable.CharacterCount)
-                {
-                    if (currentlyActiveInlines.Contains(variable) == false)
-                    {
-                        startNewRun = true;
-                        endLastRun = true;
-                    }
-                    inlinesForThisCharacter.Add(variable);
-                }
-            }
-
-            foreach (var variable in currentlyActiveInlines)
-            {
-                if (absoluteIndex >= variable.StartIndex + variable.CharacterCount)
-                {
-                    startNewRun = true;
-                    endLastRun = true;
-                }
-            }
-
-            if (endLastRun && substrings.Count > 0)
-            {
-                var lastSubstring = substrings.Last();
-                lastSubstring.Substring = lineOfText.Substring(currentSubstringStart, relativeLetterIndex - currentSubstringStart);
-            }
-
-            if (startNewRun)
-            {
-                currentSubstringStart = relativeLetterIndex;
-
-                var styledSubstring = new StyledSubstring();
-                foreach(var item in inlinesForThisCharacter)
-                {
-                    // Custom variables can stack (e.g. [Custom=A][Custom=B]),
-                    // so allow multiple with the same VariableName. Other variables
-                    // like Color should replace the previous value.
-                    if(item.VariableName != "Custom")
-                    {
-                        var existing = styledSubstring.Variables.FirstOrDefault(x => x.VariableName == item.VariableName);
-                        if(existing != null)
-                        {
-                            styledSubstring.Variables.Remove(existing);
-                        }
-                    }
-                    styledSubstring.Variables.Add(item);
-                }
-                styledSubstring.StartIndex = relativeLetterIndex;
-
-                if (relativeLetterIndex == lineOfText.Length - 1)
-                {
-                    styledSubstring.Substring = lineOfText.Substring(currentSubstringStart);
-                }
-
-                substrings.Add(styledSubstring);
-
-                currentlyActiveInlines.Clear();
-                currentlyActiveInlines.AddRange(inlinesForThisCharacter);
-            }
-        }
-
-        var endSubstring = substrings.LastOrDefault();
-        if (endSubstring != null)
-        {
-            endSubstring.Substring = lineOfText.Substring(currentSubstringStart, relativeLetterIndex - currentSubstringStart);
-        }
-
-        //if (lastSubstring == null && substrings.Count == 0 )
-        //{
-        //    var styledSubstring = new StyledSubstring();
-        //    // no styles
-        //    styledSubstring.Substring = lineOfText.Substring(0, letter);
-        //    styledSubstring.StartIndex = startOfLineIndex;
-        //    substrings.Add(styledSubstring);
-        //}
-
-        return substrings;
-    }
+    public List<StyledSubstring> GetStyledSubstrings(int startOfLineIndex, string lineOfText) =>
+        styledSubstringSplitter.GetStyledSubstrings(startOfLineIndex, lineOfText, InlineVariables);
 
     private void RenderUsingBitmapFont(SpriteRenderer spriteRenderer, SystemManagers managers)
     {

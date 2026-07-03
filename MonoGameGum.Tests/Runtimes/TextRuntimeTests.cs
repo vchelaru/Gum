@@ -98,7 +98,7 @@ $"chars count=223\r\n";
         });
 
         // Act
-        var substrings = text.GetStyledSubstrings(0, "Hello World", System.Drawing.Color.White);
+        var substrings = text.GetStyledSubstrings(0, "Hello World");
         // Assert
         substrings.Count.ShouldBe(2);
         substrings[0].Substring.ShouldBe("Hello ");
@@ -124,7 +124,7 @@ $"chars count=223\r\n";
         });
 
         // Act
-        var substrings = text.GetStyledSubstrings(0, "012", System.Drawing.Color.White);
+        var substrings = text.GetStyledSubstrings(0, "012");
         // Assert
         substrings.Count.ShouldBe(3);
         substrings[0].Substring.ShouldBe("0");
@@ -160,7 +160,7 @@ $"chars count=223\r\n";
         });
 
         // Act
-        var substrings = text.GetStyledSubstrings(0, "01234", System.Drawing.Color.White);
+        var substrings = text.GetStyledSubstrings(0, "01234");
         // Assert
         substrings.Count.ShouldBe(5);
 
@@ -209,7 +209,7 @@ $"chars count=223\r\n";
         });
 
         // Act
-        var substrings = text.GetStyledSubstrings(0, "01234", System.Drawing.Color.White);
+        var substrings = text.GetStyledSubstrings(0, "01234");
         // Assert
         substrings.Count.ShouldBe(5);
 
