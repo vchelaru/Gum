@@ -136,7 +136,23 @@ public class Text : IVisible, IRenderableIpso,
     /// small fonts.
     /// </summary>
     public static TextRenderingPositionMode TextRenderingPositionMode = TextRenderingPositionMode.SnapToPixel;
-    
+
+    /// <summary>
+    /// Per-instance override for <see cref="TextRenderingPositionMode"/>. When null (the default),
+    /// this Text uses the static <see cref="TextRenderingPositionMode"/>; when set, it overrides the
+    /// static default for this instance only. Mirrors the MonoGame Text renderable.
+    /// </summary>
+    public TextRenderingPositionMode? OverrideTextRenderingPositionMode;
+
+    /// <summary>
+    /// The position mode actually applied when drawing this Text: the per-instance
+    /// <see cref="OverrideTextRenderingPositionMode"/> when set, otherwise the static
+    /// <see cref="TextRenderingPositionMode"/>. Matches the MonoGame BitmapFont resolution.
+    /// </summary>
+    internal TextRenderingPositionMode EffectiveTextRenderingPositionMode =>
+        OverrideTextRenderingPositionMode ?? TextRenderingPositionMode;
+
+
     /// <summary>
     /// How the renderer should round text rendering to whole pixels. Only applies if
     /// TextRenderingPositionMode is SnapToPixel. Default is to use special integer rounding.
@@ -698,13 +714,13 @@ public class Text : IVisible, IRenderableIpso,
 
     /// <summary>
     /// Rounds a position/origin to whole pixels using the configured <see cref="TextPositionRoundingMode"/>
-    /// when <see cref="TextRenderingPositionMode"/> is SnapToPixel; otherwise returns the value unchanged.
+    /// when the <see cref="EffectiveTextRenderingPositionMode"/> is SnapToPixel; otherwise returns the value unchanged.
     /// Rounding origin along with position avoids the baseline misalignment / "sizzle" seen on small pixel
     /// fonts when vertical alignment produces fractional values.
     /// </summary>
-    private static Vector2 SnapToPixelIfNeeded(Vector2 value)
+    private Vector2 SnapToPixelIfNeeded(Vector2 value)
     {
-        if (TextRenderingPositionMode != TextRenderingPositionMode.SnapToPixel)
+        if (EffectiveTextRenderingPositionMode != TextRenderingPositionMode.SnapToPixel)
         {
             return value;
         }

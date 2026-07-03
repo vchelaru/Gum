@@ -650,6 +650,69 @@ public class TextRuntimeTests : BaseTestClass
 
     #endregion
 
+    #region TextRenderingPositionMode
+
+    // The renderable resolves its effective mode as (instance override ?? static default), mirroring
+    // the MonoGame BitmapFont path. With no override set, the static default wins.
+    [Fact]
+    public void EffectiveTextRenderingPositionMode_ShouldFallBackToStatic_WhenNoOverride()
+    {
+        Gum.Renderables.TextRenderingPositionMode saved = Gum.Renderables.Text.TextRenderingPositionMode;
+        try
+        {
+            Gum.Renderables.Text.TextRenderingPositionMode = Gum.Renderables.TextRenderingPositionMode.FreeFloating;
+            TextRuntime sut = new();
+            Gum.Renderables.Text renderable = (Gum.Renderables.Text)sut.RenderableComponent;
+            renderable.OverrideTextRenderingPositionMode = null;
+
+            renderable.EffectiveTextRenderingPositionMode.ShouldBe(Gum.Renderables.TextRenderingPositionMode.FreeFloating);
+        }
+        finally
+        {
+            Gum.Renderables.Text.TextRenderingPositionMode = saved;
+        }
+    }
+
+    // A per-instance override takes precedence over the static default.
+    [Fact]
+    public void EffectiveTextRenderingPositionMode_ShouldPreferInstanceOverride_OverStatic()
+    {
+        Gum.Renderables.TextRenderingPositionMode saved = Gum.Renderables.Text.TextRenderingPositionMode;
+        try
+        {
+            Gum.Renderables.Text.TextRenderingPositionMode = Gum.Renderables.TextRenderingPositionMode.SnapToPixel;
+            TextRuntime sut = new();
+            Gum.Renderables.Text renderable = (Gum.Renderables.Text)sut.RenderableComponent;
+            renderable.OverrideTextRenderingPositionMode = Gum.Renderables.TextRenderingPositionMode.FreeFloating;
+
+            renderable.EffectiveTextRenderingPositionMode.ShouldBe(Gum.Renderables.TextRenderingPositionMode.FreeFloating);
+        }
+        finally
+        {
+            Gum.Renderables.Text.TextRenderingPositionMode = saved;
+        }
+    }
+
+    [Fact]
+    public void TextRenderingPositionMode_ShouldDefaultToNull()
+    {
+        TextRuntime sut = new();
+        sut.TextRenderingPositionMode.ShouldBeNull();
+    }
+
+    [Fact]
+    public void TextRenderingPositionMode_ShouldRoundTripThroughRenderable()
+    {
+        TextRuntime sut = new();
+        sut.TextRenderingPositionMode = Gum.Renderables.TextRenderingPositionMode.FreeFloating;
+
+        sut.TextRenderingPositionMode.ShouldBe(Gum.Renderables.TextRenderingPositionMode.FreeFloating);
+        ((Gum.Renderables.Text)sut.RenderableComponent).OverrideTextRenderingPositionMode
+            .ShouldBe(Gum.Renderables.TextRenderingPositionMode.FreeFloating);
+    }
+
+    #endregion
+
     #region WidthUnits
 
     [Fact]

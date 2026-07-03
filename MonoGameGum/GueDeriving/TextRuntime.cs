@@ -563,7 +563,7 @@ public class TextRuntime : InteractiveGue
         }
     }
 
-#if !RAYLIB && !SKIA
+#if !SKIA
     /// <summary>
     /// Gets or sets the text rendering position mode to use for the contained text, overriding the default behavior if
     /// specified.
