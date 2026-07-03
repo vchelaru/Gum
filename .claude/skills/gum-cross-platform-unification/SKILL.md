@@ -74,7 +74,7 @@ The end state above (one source + `#if` + csproj link) is reached **incrementall
 
 For each difference inside the region you're converging, apply the same two-bucket classification (historical drift vs. platform-necessary), but at the line/block level:
 
-- **Historical drift** → delete the divergence; make the lines literally identical with **no** guard. (Example for #3039: the `if (GraphicalUiElement.IsAllLayoutSuspended) { graphicalUiElement.IsFontDirty = true; return; }` deferral guard is shared layout bookkeeping that Raylib simply never got — it should become identical, un-`#if`'d, in both copies.) The degenerate case is a `#if X / #else` whose branches are byte-identical: a no-op gate that's always safe to collapse to the unconditional form, including as a drive-by boyscout fix.
+- **Historical drift** → delete the divergence; make the lines literally identical with **no** guard. (Example for #3039: the `if (GraphicalUiElement.IsAllLayoutSuspended) { graphicalUiElement.IsFontDirty = true; return; }` deferral guard is shared layout bookkeeping that Raylib simply never got — it should become identical, un-`#if`'d, in both copies.)
 - **Platform-necessary** → wrap the same lines in mirrored `#if RAYLIB` / `#if !RAYLIB` **in both copies, at the same spot**, even though only one side's branch is live in each build. (Example: the font-*loader* body — `BitmapFont` vs `Raylib_cs.Font` — stays `#if`-gated.)
 
 Either way, the **cross-file diff for those lines goes to zero** while each platform keeps compiling its own behavior. The metric is literally `git diff --no-index <copyA> <copyB>` shrinking every PR. When it reaches empty, the two files *are* one file: delete one, add a `<Compile Include="…" Link="…">` to the orphaned csproj, done.
