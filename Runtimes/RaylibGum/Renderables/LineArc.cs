@@ -620,6 +620,7 @@ public class LineArc : InvisibleRenderable
             diameter,
             blur,
             effectiveDropshadowColor,
+            global::RenderingLibrary.Graphics.Renderer.Self.ActiveCamera2D,
             (px, py) =>
             {
                 DrawRing(

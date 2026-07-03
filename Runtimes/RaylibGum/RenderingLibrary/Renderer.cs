@@ -95,6 +95,16 @@ public class Renderer : IRenderer
     public Camera Camera => _camera;
 
     /// <summary>
+    /// The raylib <see cref="Camera2D"/> currently established via <c>BeginMode2D</c> for the pass in
+    /// progress — the main-walk camera during the main walk, or a render-target container's bake
+    /// camera while that container's subtree is baking. Exposed so a mid-walk offscreen consumer
+    /// (e.g. <see cref="ShadowBlurRenderer"/>) can re-establish it after its own
+    /// <c>BeginTextureMode</c>/<c>EndTextureMode</c> passes, which raylib's <c>EndTextureMode</c>
+    /// resets to identity (issue #3460). Primarily for internal renderer/renderable use.
+    /// </summary>
+    public Camera2D ActiveCamera2D { get; private set; }
+
+    /// <summary>
     /// Per-renderable shadow-blur service. Owns the Gaussian shader and the per-renderable
     /// render textures (issue #2865). Renderables call <c>Renderer.Self.ShadowBlur.Draw(this, ...)</c>
     /// from their <c>Render</c> method; the renderer sweeps unused entries at the top of every
@@ -214,6 +224,9 @@ public class Renderer : IRenderer
             }
         }
 
+        // Record the outer camera so a mid-walk offscreen consumer can re-establish it after its
+        // own EndTextureMode resets the modelview (issue #3460).
+        ActiveCamera2D = camera2D;
         BatchDrawCallCounter.BeginMode2D(camera2D);
 
         for (int i = 0; i < layers.Count; i++)
@@ -465,6 +478,12 @@ public class Renderer : IRenderer
         _bakeLeft = left;
         _bakeTop = top;
 
+        // Record the bake camera as the active one so a blurred dropshadow drawn inside this bake
+        // re-establishes the bake transform (not the main-walk camera) after its offscreen passes
+        // (issue #3460). Restored to the main-walk camera before the main BeginMode2D below.
+        Camera2D savedActiveCamera = ActiveCamera2D;
+        ActiveCamera2D = bakeCamera;
+
         counter.BeginTextureMode(renderTexture.Value);
         Raylib.ClearBackground(new Color((byte)0, (byte)0, (byte)0, (byte)0));
         counter.BeginMode2D(bakeCamera);
@@ -492,6 +511,7 @@ public class Renderer : IRenderer
         _bakeLeft = savedBakeLeft;
         _bakeTop = savedBakeTop;
         _scissorStack = savedScissorStack;
+        ActiveCamera2D = savedActiveCamera;
     }
 
     // Composites a render-target container's baked texture at the container's clamped rectangle,
