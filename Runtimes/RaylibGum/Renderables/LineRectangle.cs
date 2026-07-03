@@ -340,6 +340,7 @@ public class LineRectangle : InvisibleRenderable
                     blur,
                     effectiveDropshadowColor,
                     global::RenderingLibrary.Graphics.Renderer.Self.ActiveCamera2D,
+                    global::RenderingLibrary.Graphics.Renderer.Self.ActiveRenderTexture,
                     (px, py) =>
                     {
                         if (useRounded)

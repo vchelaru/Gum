@@ -19,6 +19,8 @@ The "**big three**" refers to the three backends below (Silk.NET/Skia, raylib, M
 
 Each has a `Screens/` folder with one `*Screen.cs` per feature (`SpriteScreen`, `NineSliceScreen`, …). **MonoGameGumInCode is the reference** — mirror its screen section-for-section in the other two so the same screen can be opened side by side and any per-backend rendering difference stands out as a backend bug. The existing screen headers say exactly this ("Raylib mirror of …", "Mirror of MonoGameGumInCode.Screens…").
 
+**Mirror even when the underlying bug is backend-specific.** A fix that only reproduces on one backend (e.g. a raylib-only render-target/framebuffer quirk) is still a reason to add the demo *cell* to every mirrored screen, not just the one you're fixing — the point of mirroring is a side-by-side visual comparison, and skipping the other backends breaks that even though their code has nothing to fix. This applies to adding a new cell to an existing gallery screen (e.g. one more case in `RenderTargetScreen`), not just to creating a brand-new screen file. (Missed on issue #3464: only the raylib cell was added at first, because the fix itself was raylib-only — caught in review.)
+
 ### Cross-backend gotchas when mirroring
 
 - **Texture paths differ.** MonoGame uses MGCB `Content/` names (`"Frame.png"`); raylib loads from disk (`"resources\\Frame.png"`, copied via the `resources\**\*.*` glob in `GumTest.csproj`); SilkNetGum loads from `Content/GumProject/`. Drop any new texture into each sample's content dir.

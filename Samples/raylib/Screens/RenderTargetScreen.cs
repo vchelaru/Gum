@@ -43,6 +43,7 @@ internal class RenderTargetScreen : FrameworkElement
         root.Children.Add(BuildCell("Overflow clipped", BuildOverflow()));
         root.Children.Add(BuildCell("ClipsChildren inside RT", BuildClipsChildrenInside()));
         root.Children.Add(BuildCell("Sprite shows RT texture", BuildSpriteFromRenderTarget()));
+        root.Children.Add(BuildCell("Blurred shadow in RT", BuildBlurredShadowInRenderTarget()));
     }
 
     static ContainerRuntime BuildCell(string caption, GraphicalUiElement body)
@@ -334,5 +335,42 @@ internal class RenderTargetScreen : FrameworkElement
         row.Children.Add(BuildSwatch("source", source));
         row.Children.Add(BuildSwatch("sprite (scaled + rotated)", sprite));
         return row;
+    }
+
+    // Issue #3464: a blurred dropshadow inside a render-target container. ShadowBlurRenderer's
+    // offscreen BeginTextureMode/EndTextureMode passes run while the container's own BeginTextureMode
+    // is still active; before the fix, raylib's EndTextureMode left the default framebuffer bound
+    // afterward, so the shadow's composite AND the red sibling drawn after it would render to the
+    // screen instead of into the container's texture — both would be missing from this cell (and
+    // could show up as a stray flash on top of the whole gallery instead).
+    static GraphicalUiElement BuildBlurredShadowInRenderTarget()
+    {
+        ContainerRuntime holder = BuildFrame(150, 110);
+
+        ContainerRuntime group = new();
+        group.Width = 150;
+        group.Height = 110;
+        group.IsRenderTarget = true;
+
+        RectangleRuntime shadowed = new();
+        shadowed.X = 15;
+        shadowed.Y = 10;
+        shadowed.Width = 50;
+        shadowed.Height = 40;
+        shadowed.IsFilled = true;
+        shadowed.FillColor = new Color((byte)60, (byte)120, (byte)220, (byte)255);
+        shadowed.HasDropshadow = true;
+        shadowed.DropshadowColor = new Color((byte)0, (byte)0, (byte)0, (byte)200);
+        shadowed.DropshadowOffsetX = 6;
+        shadowed.DropshadowOffsetY = 6;
+        shadowed.DropshadowBlur = 8;
+        group.Children.Add(shadowed);
+
+        // Sibling drawn AFTER the shadowed shape — proves the container's render target is still
+        // bound for draws following the shadow, not just the shadow's own composite.
+        group.Children.Add(Rect(80, 55, 55, 45, new Color((byte)220, (byte)60, (byte)60, (byte)255)));
+
+        holder.Children.Add(group);
+        return holder;
     }
 }

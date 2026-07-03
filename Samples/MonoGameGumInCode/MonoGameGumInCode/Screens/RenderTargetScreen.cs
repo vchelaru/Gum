@@ -40,6 +40,7 @@ internal class RenderTargetScreen : FrameworkElement
         root.AddChild(BuildCell("Overflow clipped", BuildOverflow()));
         root.AddChild(BuildCell("ClipsChildren inside RT", BuildClipsChildrenInside()));
         root.AddChild(BuildCell("Sprite shows RT texture", BuildSpriteFromRenderTarget()));
+        root.AddChild(BuildCell("Blurred shadow in RT", BuildBlurredShadowInRenderTarget()));
     }
 
     private static ContainerRuntime BuildCell(string caption, GraphicalUiElement body)
@@ -324,5 +325,39 @@ internal class RenderTargetScreen : FrameworkElement
         row.AddChild(BuildSwatch("source", source));
         row.AddChild(BuildSwatch("sprite (scaled + rotated)", sprite));
         return row;
+    }
+
+    // Issue #3464 (raylib-only bug, mirrored here for gallery parity/comparison — MonoGame's
+    // dropshadow is an Apos.Shapes shader pass, not an offscreen render-to-texture blur, so it never
+    // had the nested-render-target clobber raylib had). A blurred dropshadow inside a render-target
+    // container, plus a sibling drawn after it, should look identical to the raylib cell: a soft
+    // shadow offset down-right of the blue rectangle, and a red sibling rectangle below-right of it.
+    private static GraphicalUiElement BuildBlurredShadowInRenderTarget()
+    {
+        var holder = BuildFrame(150, 110);
+
+        var group = new ContainerRuntime();
+        group.Width = 150;
+        group.Height = 110;
+        group.IsRenderTarget = true;
+
+        var shadowed = new RectangleRuntime();
+        shadowed.X = 15;
+        shadowed.Y = 10;
+        shadowed.Width = 50;
+        shadowed.Height = 40;
+        shadowed.IsFilled = true;
+        shadowed.FillColor = new Color(60, 120, 220, 255);
+        shadowed.HasDropshadow = true;
+        shadowed.DropshadowColor = new Color(0, 0, 0, 200);
+        shadowed.DropshadowOffsetX = 6;
+        shadowed.DropshadowOffsetY = 6;
+        shadowed.DropshadowBlur = 8;
+        group.AddChild(shadowed);
+
+        group.AddChild(Rect(80, 55, 55, 45, new Color(220, 60, 60, 255)));
+
+        holder.AddChild(group);
+        return holder;
     }
 }
