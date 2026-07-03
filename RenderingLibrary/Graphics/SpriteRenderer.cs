@@ -183,6 +183,13 @@ public class SpriteRenderer
         int width = camera.ClientWidth;
         int height = camera.ClientHeight;
 
+        // Flush any still-open Deferred batch BEFORE mutating the shared BasicEffect below. In Deferred
+        // mode SpriteBatch applies the effect's state at End, so the ColorTextureAlpha fog toggle (and
+        // View/Projection) set below would otherwise be applied retroactively to the previous batch's
+        // already-queued sprites — the whole-frame fog leak (#3486). The following ReplaceRenderStates
+        // re-begins the batch; for state that isn't changing this is output-identical.
+        mSpriteBatch.FlushIfBegan();
+
         Effect effectiveEffect = null;
 
         // A render-target container can supply its own post-process shader. When present it
