@@ -754,6 +754,12 @@ public class CustomSetPropertyOnRenderable
                 });
             }
         }
+
+        // #3481: RawText was assigned above (which measured the text) before any InlineVariables
+        // existed, so that first measurement was blind to inline [FontScale=N] runs. Re-measure now
+        // that the runs are populated so the reported size accounts for per-line scale (otherwise a
+        // tall run overflows its slot and overlaps the next stacked sibling).
+        asText.UpdatePreRenderDimensions();
     }
 
     // For some reason this crashes on web when uploading to itch:
