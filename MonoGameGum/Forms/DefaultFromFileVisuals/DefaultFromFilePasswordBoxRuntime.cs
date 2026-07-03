@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Gum.Forms.DefaultFromFileVisuals;
 
-#if XNALIKE || FRB
+#if XNALIKE || FRB || RAYLIB
 public class DefaultFromFilePasswordBoxRuntime : InteractiveGue
 {
     public DefaultFromFilePasswordBoxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) :
