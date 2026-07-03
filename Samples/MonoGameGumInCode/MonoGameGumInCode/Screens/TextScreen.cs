@@ -29,6 +29,18 @@ internal class TextScreen : FrameworkElement
         textRuntime.Text = "Hi, I'm default text";
         container.Children.Add(textRuntime);
 
+        AddSectionLabel(container, "BBCode markup - inline color runs (#3471):");
+        var colorMarkup = new TextRuntime();
+        colorMarkup.FontSize = 24;
+        colorMarkup.Text = "[Color=Red]Red[/Color] plain [Color=Lime]green[/Color] [Color=Cyan]cyan[/Color]";
+        container.Children.Add(colorMarkup);
+
+        AddSectionLabel(container, "BBCode markup - inline FontScale runs (baseline aligned):");
+        var scaleMarkup = new TextRuntime();
+        scaleMarkup.FontSize = 24;
+        scaleMarkup.Text = "small [FontScale=2]BIG[/FontScale] then [Color=Orange][FontScale=1.5]orange[/FontScale][/Color]";
+        container.Children.Add(scaleMarkup);
+
         AddSectionLabel(container, "Baked drop shadow (HasDropshadow = true, first-enable defaults):");
         var shadowDefault = new TextRuntime();
         shadowDefault.Text = "Soft baked shadow";
