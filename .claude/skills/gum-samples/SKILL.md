@@ -30,7 +30,7 @@ Each has a `Screens/` folder with one `*Screen.cs` per feature (`SpriteScreen`, 
 
 ## Shape features → the shapes gallery instead
 
-If the feature touches **shapes** (Circle, Rectangle, RoundedRectangle, Arc, Polygon, Line — anything from [[gum-shapes-xnb-packaging]] / the shape runtimes), do **not** add it to the three samples above. Add it to `Samples/GumShapesGallery/MonoGameGumShapesGallery/` (and its KNI siblings under `Samples/GumShapesGallery/`).
+If the feature touches **shapes** (Circle, Rectangle, RoundedRectangle, Arc, Polygon, Line — anything from [[gum-shapes-xnb-packaging]] / the shape runtimes), only the XNA-like slot changes: still mirror to the raylib and SilkNet feature samples (they render shapes natively, so their shape screens live *in* the feature samples — `Samples/raylib/Screens/CirclesScreen.cs`, `Samples/SilkNetGum/…`), but for MonoGame/KNI add to `Samples/GumShapesGallery/MonoGameGumShapesGallery/` (and its KNI siblings) **instead of** `MonoGameGumInCode`. So a shape cell still lands in three galleries — raylib + SilkNet + GumShapesGallery — just not `MonoGameGumInCode`.
 
 **Why shapes get their own project:** raylib and Skia render shapes natively (built-in, full support), so shape demos for those backends live in the regular feature samples. XNA-likes (MonoGame, KNI) have **no built-in shape rendering** — they must be supplemented with the separate **Gum.Shapes** library, so their shape coverage lives in the dedicated `GumShapesGallery` project rather than `MonoGameGumInCode`. That's the split referenced above. This is expected to be unified eventually.
 
