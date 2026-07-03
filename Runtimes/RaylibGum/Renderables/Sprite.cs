@@ -200,14 +200,6 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
         }
         else
         {
-            // raylib's GL default texture wrap mode is Repeat, not Clamp — without setting it
-            // explicitly, a source rectangle extending past the texture bounds (Custom/DimensionsBased
-            // TextureAddress) would silently repeat instead of clamping to the edge pixel, the
-            // opposite of Wrap=false's intended behavior. Setting this immediately before the draw
-            // (rather than once at load time) keeps each sprite's own Wrap state correct even when
-            // multiple sprites share the same loaded Texture2D with differing Wrap values.
-            SetTextureWrap(textureToDraw, TextureWrap.Clamp);
-
             // Apply flipping by adjusting the source rectangle
             if (FlipHorizontal)
             {
