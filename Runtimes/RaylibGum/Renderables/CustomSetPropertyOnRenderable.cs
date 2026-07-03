@@ -123,9 +123,23 @@ public class CustomSetPropertyOnRenderable
 
     public static event Action<string>? PropertyAssignmentError;
 
+    /// <summary>
+    /// Optional resolver that turns a render-target shader file reference (e.g. a <c>.fs</c>/
+    /// <c>.glsl</c> path assigned via <c>ContainerRuntime.SourceShaderFile</c>) into a platform
+    /// effect object, which is stored in <see cref="RenderableBase.RenderTargetEffect"/>. Gum core
+    /// ships no shader loader; the consumer (or an opt-in library) registers this — typically doing
+    /// <c>Raylib.LoadShader</c> for a GLSL file. The returned object is boxed into the
+    /// backend-agnostic <see cref="RenderableBase.RenderTargetEffect"/> slot (on raylib, a
+    /// <see cref="Raylib_cs.Shader"/>). If null, assigning a shader file is a graceful no-op and the
+    /// container renders unshaded. Return null to signal a failed load (missing file / compile
+    /// error); resolution then honors <see cref="GraphicalUiElement.MissingFileBehavior"/>, mirroring
+    /// sprite source-file handling.
+    /// </summary>
+    public static Func<string, object?>? RenderTargetEffectResolver { get; set; }
+
 
     /// <summary>
-    /// Additional logic to perform before falling back to reflection. 
+    /// Additional logic to perform before falling back to reflection.
     /// This can be added by libraries adding additional runtime types
     /// </summary>
     public static Func<IRenderableIpso, GraphicalUiElement, string, object, bool>? AdditionalPropertyOnRenderable = null;
@@ -149,12 +163,116 @@ public class CustomSetPropertyOnRenderable
         {
             handled = TrySetPropertyOnNineSlice(renderableIpso, graphicalUiElement, propertyName, value, handled);
         }
+        else if (renderableIpso is InvisibleRenderable invisibleRenderable)
+        {
+            handled = TrySetPropertyOnContainer(invisibleRenderable, graphicalUiElement, propertyName, value);
+        }
 
         if (!handled)
         {
             GraphicalUiElement.SetPropertyThroughReflection(renderableIpso, graphicalUiElement, propertyName, value);
             //SetPropertyOnRenderable(mContainedObjectAsIpso, propertyName, value);
         }
+    }
+
+    private static bool TrySetPropertyOnContainer(InvisibleRenderable invisibleRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    {
+        switch (propertyName)
+        {
+            case "SourceShaderFile":
+                AssignSourceShaderFileOnContainer(invisibleRenderable, graphicalUiElement, value as string);
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Resolves a render-target shader file reference (a <c>.fs</c>/<c>.glsl</c> path) into a raylib
+    /// <see cref="Raylib_cs.Shader"/> via <see cref="RenderTargetEffectResolver"/> and stores it in
+    /// the container's <see cref="RenderableBase.RenderTargetEffect"/> slot. A failed resolve honors
+    /// <see cref="GraphicalUiElement.MissingFileBehavior"/>. With no resolver registered this is a
+    /// graceful no-op (the container renders unshaded), matching how a missing texture degrades.
+    /// Called internally by the string property path. Mirrors the XNA-side method of the same name.
+    /// </summary>
+    public static void AssignSourceShaderFileOnContainer(IRenderTargetRenderable effectOwner, GraphicalUiElement graphicalUiElement, string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            effectOwner.RenderTargetEffect = null;
+            return;
+        }
+
+        // No resolver registered: render unshaded rather than crash. A separate opt-in library or
+        // the consumer registers the resolver (typically doing Raylib.LoadShader).
+        if (RenderTargetEffectResolver == null)
+        {
+            return;
+        }
+
+        var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+
+        if (ToolsUtilities.FileManager.IsRelative(value) && ToolsUtilities.FileManager.IsUrl(value) == false)
+        {
+            value = ToolsUtilities.FileManager.RelativeDirectory + value;
+            value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
+        }
+
+        // LoaderManager caches disposables by normalized path so a shader shared by multiple
+        // containers loads once. A raylib Shader is a struct (not IDisposable), so it falls through
+        // the disposable cache below and simply re-resolves — acceptable for a first implementation.
+        if (loaderManager.CacheTextures)
+        {
+            var cachedEffect = loaderManager.GetDisposable(value);
+            if (cachedEffect != null)
+            {
+                effectOwner.RenderTargetEffect = cachedEffect;
+                return;
+            }
+        }
+
+        object? resolvedEffect = null;
+        Exception? resolveException = null;
+        try
+        {
+            resolvedEffect = RenderTargetEffectResolver(value);
+        }
+        catch (Exception ex)
+        {
+            resolveException = ex;
+        }
+
+        if (resolvedEffect == null)
+        {
+            // Resolver registered but couldn't produce an effect (missing file or load error).
+            // Mirror Sprite source-file handling: honor MissingFileBehavior, else report the error.
+            string message = $"Error setting SourceShaderFile on Container";
+            if (graphicalUiElement.Tag != null)
+            {
+                message += $" in {graphicalUiElement.Tag}";
+            }
+            message += $"\n{value}";
+            message += "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory";
+            message += "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
+            if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
+            {
+                if (ObjectFinder.Self.GumProjectSave == null)
+                {
+                    message += "\nNo Gum project has been loaded";
+                }
+                throw new System.IO.FileNotFoundException(message, resolveException);
+            }
+            effectOwner.RenderTargetEffect = null;
+            PropertyAssignmentError?.Invoke(resolveException != null ? message + "\n" + resolveException.ToString() : message);
+            return;
+        }
+
+        if (loaderManager.CacheTextures && resolvedEffect is IDisposable disposableEffect)
+        {
+            loaderManager.AddDisposable(value, disposableEffect);
+        }
+
+        effectOwner.RenderTargetEffect = resolvedEffect;
     }
 
 

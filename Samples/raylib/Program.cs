@@ -61,6 +61,12 @@ public class BasicShapes
 
         CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreator();
 
+        // Issue #3465: Gum core ships no shader loader, so the app registers a resolver that turns a
+        // ContainerRuntime.SourceShaderFile (.fs path) into a Raylib_cs.Shader. raylib loads GLSL
+        // directly, so this is a one-liner — no runtime compiler needed (unlike the MonoGame side's
+        // ShadowDusk). With no resolver registered, SourceShaderFile is a graceful no-op.
+        CustomSetPropertyOnRenderable.RenderTargetEffectResolver = path => LoadShader(null, path);
+
         // Enable gamepad + keyboard navigation for Forms controls (see
         // https://docs.flatredball.com/gum/code/events-and-interactivity/gamepad-support).
         // GumUI.Update reads the connected controller into these gamepads each frame; the
@@ -141,6 +147,7 @@ public class BasicShapes
         AddNavButton("NineSlice", () => new NineSliceScreen());
         AddNavButton("Text", () => new TextScreen());
         AddNavButton("Render Target", () => new RenderTargetScreen());
+        AddNavButton("RT Shader", () => new RenderTargetShaderScreen());
 
         AddFitModeRadio("Zoom", isChecked: true, () =>
         {

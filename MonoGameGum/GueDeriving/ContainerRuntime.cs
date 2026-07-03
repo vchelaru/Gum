@@ -70,12 +70,37 @@ public class ContainerRuntime : InteractiveGue
             }
         }
     }
-
+#elif RAYLIB
     /// <summary>
-    /// A file reference (e.g. a <c>.fx</c> path) to a post-process shader applied when this
-    /// container is drawn back to the screen as a render target. Mirrors how a Sprite references a
-    /// texture: setting this routes through the string property path, which resolves the reference
-    /// via <see cref="Gum.Wireframe.CustomSetPropertyOnRenderable.RenderTargetEffectResolver"/> and
+    /// An optional GLSL <see cref="global::Raylib_cs.Shader"/> applied when this container is drawn
+    /// back to the screen as a render target. Only has an effect when <see cref="IsRenderTarget"/>
+    /// is true. The shader is bound (<c>BeginShaderMode</c>) for the single texture draw that
+    /// composites the container's baked render target, so it acts as a post-process over the whole
+    /// container's contents. Load a shader with <c>Raylib.LoadShader</c> /
+    /// <c>Raylib.LoadShaderFromMemory</c> and assign it here (raylib loads GLSL directly, so no
+    /// shader-compiler dependency is needed).
+    /// </summary>
+    public global::Raylib_cs.Shader? RenderTargetEffect
+    {
+        get => (RenderableComponent as InvisibleRenderable)?.RenderTargetEffect
+            as global::Raylib_cs.Shader?;
+        set
+        {
+            if (RenderableComponent is InvisibleRenderable invisibleRenderable)
+            {
+                invisibleRenderable.RenderTargetEffect = value;
+            }
+        }
+    }
+#endif
+
+#if XNALIKE || RAYLIB
+    /// <summary>
+    /// A file reference (e.g. a <c>.fx</c> path on XNA-likes, a <c>.fs</c>/<c>.glsl</c> path on
+    /// raylib) to a post-process shader applied when this container is drawn back to the screen as a
+    /// render target. Mirrors how a Sprite references a texture: setting this routes through the
+    /// string property path, which resolves the reference via
+    /// <see cref="Gum.Wireframe.CustomSetPropertyOnRenderable.RenderTargetEffectResolver"/> and
     /// assigns the result to <see cref="RenderTargetEffect"/>. With no resolver registered the
     /// assignment is a graceful no-op (the container renders unshaded). Only has an effect when
     /// <see cref="IsRenderTarget"/> is true. Write-only: there is no backing field; the resolved
