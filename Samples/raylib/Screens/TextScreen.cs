@@ -84,18 +84,7 @@ internal class TextScreen : FrameworkElement
     // verification surface for the parity batch.
     private static void BuildTextParitySection(ContainerRuntime container)
     {
-        // --- Blend on Text: additive vs normal white text over an identical blue box ---
-        AddSectionLabel(container, "Blend on Text (#3432): additive (brightens) vs normal, over a blue box");
-        var blendRow = new ContainerRuntime();
-        blendRow.WidthUnits = DimensionUnitType.RelativeToChildren;
-        blendRow.HeightUnits = DimensionUnitType.RelativeToChildren;
-        blendRow.Width = 0;
-        blendRow.Height = 0;
-        blendRow.ChildrenLayout = ChildrenLayout.LeftToRightStack;
-        blendRow.StackSpacing = 16;
-        blendRow.AddChild(BuildBlendCell("Additive", Gum.RenderingLibrary.Blend.Additive));
-        blendRow.AddChild(BuildBlendCell("Normal", null));
-        container.Children.Add(blendRow);
+        AddBlendOnTextSection(container);
 
         // --- Per-instance TextRenderingPositionMode override, at a fractional origin ---
         AddSectionLabel(container, "TextRenderingPositionMode (#3432): fractional origin; button toggles snap");
@@ -145,6 +134,24 @@ internal class TextScreen : FrameworkElement
         };
     }
 
+    // Blend on Text (#3432): additive (brightens) vs normal, over an identical blue box. Kept byte
+    // identical with the other backend's TextScreen (this method and BuildBlendCell) so the two can
+    // be diffed directly.
+    private static void AddBlendOnTextSection(ContainerRuntime container)
+    {
+        AddSectionLabel(container, "Blend on Text (#3432): additive (brightens) vs normal, over a blue box");
+        var blendRow = new ContainerRuntime();
+        blendRow.WidthUnits = DimensionUnitType.RelativeToChildren;
+        blendRow.HeightUnits = DimensionUnitType.RelativeToChildren;
+        blendRow.Width = 0;
+        blendRow.Height = 0;
+        blendRow.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        blendRow.StackSpacing = 16;
+        blendRow.AddChild(BuildBlendCell("Additive", Gum.RenderingLibrary.Blend.Additive));
+        blendRow.AddChild(BuildBlendCell("Normal", null));
+        container.Children.Add(blendRow);
+    }
+
     private static ContainerRuntime BuildBlendCell(string label, Gum.RenderingLibrary.Blend? blend)
     {
         var cell = new ContainerRuntime();
@@ -167,9 +174,13 @@ internal class TextScreen : FrameworkElement
         text.Height = 0;
         text.FontSize = 24;
         text.Text = label;
-        text.Red = 255;
-        text.Green = 255;
-        text.Blue = 255;
+        // Amber, not white: additive can only brighten, and white is already maxed, so white text
+        // renders identically under Additive and Normal. A mid-intensity warm color visibly washes
+        // out toward bright peach when added to the blue box, making the Additive cell obviously
+        // different from the Normal one.
+        text.Red = 230;
+        text.Green = 150;
+        text.Blue = 40;
         text.HorizontalAlignment = HorizontalAlignment.Center;
         text.VerticalAlignment = VerticalAlignment.Center;
         text.Blend = blend;
