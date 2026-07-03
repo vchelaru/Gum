@@ -161,7 +161,7 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
 
             textureToDraw = renderTexture.Value.Texture;
             // An RT is stored bottom-up in GL; a negative source height flips it upright, matching
-            // the container-to-screen composite in Renderer.TryCompositeRenderTarget.
+            // the container-to-screen composite in Renderer.CompositeRenderTarget.
             defaultSrcRect = new Rectangle(0, 0, textureToDraw.Width, -textureToDraw.Height);
         }
         else if (Texture != null)

@@ -522,8 +522,9 @@ public class Renderer : IRenderer
     // so the subtree does not appear (matching MonoGame, #3478).
     private void BakeRenderTarget(IRenderableIpso container, Layer layer)
     {
-        ComputeRenderTargetBounds(container, out float left, out float top, out _, out _,
-            out int width, out int height);
+        // Shared clamp+size helper (#3478) — MonoGame's GetRenderTargetFor uses the same one — so the
+        // camera-visible-bounds math is identical across backends by construction.
+        RenderTargetBounds bounds = _camera.GetRenderTargetBounds(container);
 
         // Skip the bake when the container clamps to a non-positive size — a 0-sized pre-layout
         // container, or (the #3475 case) one positioned entirely off-camera. This size guard is what
@@ -534,14 +535,14 @@ public class Renderer : IRenderer
         // non-null nullable and the `== null` check can never fire here. Without this guard,
         // BeginTextureMode would bind the zeroed texture's FBO id 0 (the default framebuffer) and the
         // ClearBackground below would wipe the whole window to transparent black. Mirrors the matching
-        // guard in TryCompositeRenderTarget.
-        if (width <= 0 || height <= 0)
+        // guard in CompositeRenderTarget.
+        if (!bounds.HasVisibleArea)
         {
             return;
         }
 
         IRenderableIpso cacheOwner = ResolveRenderTargetCacheOwner(container);
-        RenderTexture2D? renderTexture = _renderTargetService.GetFor(cacheOwner, width, height);
+        RenderTexture2D? renderTexture = _renderTargetService.GetFor(cacheOwner, bounds.Width, bounds.Height);
         if (renderTexture == null)
         {
             return;
@@ -551,7 +552,7 @@ public class Renderer : IRenderer
 
         Camera2D bakeCamera = new Camera2D
         {
-            Target = new System.Numerics.Vector2(left, top),
+            Target = new System.Numerics.Vector2(bounds.Left, bounds.Top),
             Offset = System.Numerics.Vector2.Zero,
             Zoom = _camera.Zoom,
             Rotation = 0,
@@ -567,8 +568,8 @@ public class Renderer : IRenderer
         float savedBakeLeft = _bakeLeft;
         float savedBakeTop = _bakeTop;
         _isBakingRenderTarget = true;
-        _bakeLeft = left;
-        _bakeTop = top;
+        _bakeLeft = bounds.Left;
+        _bakeTop = bounds.Top;
 
         // Record the bake camera as the active one so a blurred dropshadow drawn inside this bake
         // re-establishes the bake transform (not the main-walk camera) after its offscreen passes
@@ -625,16 +626,16 @@ public class Renderer : IRenderer
         IRenderableIpso cacheOwner = ResolveRenderTargetCacheOwner(container);
         RenderTexture2D? renderTexture = _renderTargetService.TryGetExisting(cacheOwner);
 
-        ComputeRenderTargetBounds(container, out float left, out float top, out float right,
-            out float bottom, out int width, out int height);
-        // The width/height guard is the real "no valid baked texture" guard, and it also gates the
-        // renderTexture.Value read below: a positive on-screen clamp means the bake pre-pass created
-        // and cached a texture this frame, so renderTexture is a genuine one here. A `renderTexture
-        // == null` check would be DEAD — TryGetExisting returns default(RenderTexture2D) for an
-        // uncached owner, and because RenderTexture2D is a value type that default lifts to a NON-null
-        // RenderTexture2D? (see RenderTargetServiceBase.GetFor's value-type footgun note and the
-        // matching guard in BakeRenderTarget, #3475).
-        if (width <= 0 || height <= 0)
+        // Same shared clamp+size helper the bake used (#3478), so the composite rectangle matches the
+        // baked one exactly. HasVisibleArea is the real "no valid baked texture" guard, and it also
+        // gates the renderTexture.Value read below: a positive on-screen clamp means the bake pre-pass
+        // created and cached a texture this frame, so renderTexture is a genuine one here. A
+        // `renderTexture == null` check would be DEAD — TryGetExisting returns default(RenderTexture2D)
+        // for an uncached owner, and because RenderTexture2D is a value type that default lifts to a
+        // NON-null RenderTexture2D? (see RenderTargetServiceBase.GetFor's value-type footgun note and
+        // the matching guard in BakeRenderTarget, #3475).
+        RenderTargetBounds bounds = _camera.GetRenderTargetBounds(container);
+        if (!bounds.HasVisibleArea)
         {
             return;
         }
@@ -667,8 +668,8 @@ public class Renderer : IRenderer
         // reading it with height -h yields the upright content (same idiom as ShadowBlurRenderer).
         Raylib.DrawTexturePro(
             renderTexture.Value.Texture,
-            new Rectangle(0, 0, width, -height),
-            new Rectangle(left, top, right - left, bottom - top),
+            new Rectangle(0, 0, bounds.Width, -bounds.Height),
+            new Rectangle(bounds.Left, bounds.Top, bounds.Right - bounds.Left, bounds.Bottom - bounds.Top),
             System.Numerics.Vector2.Zero,
             0,
             tint);
@@ -678,21 +679,6 @@ public class Renderer : IRenderer
             counter.EndShaderMode();
         }
         counter.EndBlendMode();
-    }
-
-    // Clamps the container's absolute bounds to the on-screen visible intersection and returns the
-    // RT pixel size at camera zoom (crisp when zoomed). Mirrors the MonoGame GetRenderTargetFor
-    // clamping so an off-screen container bakes only its visible portion.
-    private void ComputeRenderTargetBounds(IRenderableIpso container,
-        out float left, out float top, out float right, out float bottom, out int width, out int height)
-    {
-        left = System.Math.Max(_camera.AbsoluteLeft, container.GetAbsoluteLeft());
-        right = System.Math.Min(_camera.AbsoluteRight, container.GetAbsoluteRight());
-        top = System.Math.Max(_camera.AbsoluteTop, container.GetAbsoluteTop());
-        bottom = System.Math.Min(_camera.AbsoluteBottom, container.GetAbsoluteBottom());
-
-        width = global::RenderingLibrary.Math.MathFunctions.RoundToInt((right - left) * _camera.Zoom);
-        height = global::RenderingLibrary.Math.MathFunctions.RoundToInt((bottom - top) * _camera.Zoom);
     }
 
     // For a nested render-target container the walk hands us the GraphicalUiElement wrapper; for a

@@ -52,6 +52,92 @@ public class CameraTests : BaseTestClass
         public void EndBatch(ISystemManagers managers) { }
     }
 
+    // Pins the shared render-target clamp helper (#3478) that both the MonoGame renderer
+    // (GetRenderTargetFor) and the raylib renderer (BakeRenderTarget / CompositeRenderTarget) call,
+    // so the camera-visible-bounds math can't drift between backends the way it did before the
+    // extraction. TopLeft mode makes the camera's absolute bounds trivially [0,800) x [0,600).
+    [Fact]
+    public void GetRenderTargetBounds_FullyOnCamera_ReturnsClampedRectAndUnscaledPixelSize()
+    {
+        Camera camera = new Camera();
+        camera.ClientWidth = 800;
+        camera.ClientHeight = 600;
+        camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
+        camera.X = 0;
+        camera.Y = 0;
+        camera.Zoom = 1;
+
+        // Wholly inside the camera: world [100,300) x [50,150).
+        StubRenderable ipso = new StubRenderable();
+        ipso.X = 100;
+        ipso.Y = 50;
+        ipso.Width = 200;
+        ipso.Height = 100;
+
+        RenderTargetBounds bounds = camera.GetRenderTargetBounds(ipso);
+
+        bounds.Left.ShouldBe(100);
+        bounds.Top.ShouldBe(50);
+        bounds.Right.ShouldBe(300);
+        bounds.Bottom.ShouldBe(150);
+        bounds.Width.ShouldBe(200);
+        bounds.Height.ShouldBe(100);
+        bounds.HasVisibleArea.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void GetRenderTargetBounds_EntirelyOffCamera_HasNoVisibleArea()
+    {
+        Camera camera = new Camera();
+        camera.ClientWidth = 800;
+        camera.ClientHeight = 600;
+        camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
+        camera.X = 0;
+        camera.Y = 0;
+        camera.Zoom = 1;
+
+        // Far past the camera's right edge: world [100000, 100100). Clamping collapses the width to
+        // a non-positive value, so the container has nothing to bake or composite.
+        StubRenderable ipso = new StubRenderable();
+        ipso.X = 100000;
+        ipso.Y = 0;
+        ipso.Width = 100;
+        ipso.Height = 100;
+
+        RenderTargetBounds bounds = camera.GetRenderTargetBounds(ipso);
+
+        bounds.HasVisibleArea.ShouldBeFalse();
+        bounds.Width.ShouldBeLessThanOrEqualTo(0);
+    }
+
+    [Fact]
+    public void GetRenderTargetBounds_WithZoom_ScalesPixelSizeByZoom()
+    {
+        Camera camera = new Camera();
+        camera.ClientWidth = 800;
+        camera.ClientHeight = 600;
+        camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
+        camera.X = 0;
+        camera.Y = 0;
+        camera.Zoom = 2;
+
+        // A 100x100 world-unit container at zoom 2 occupies 200x200 pixels; the world-space bounds
+        // themselves are unaffected by zoom.
+        StubRenderable ipso = new StubRenderable();
+        ipso.X = 0;
+        ipso.Y = 0;
+        ipso.Width = 100;
+        ipso.Height = 100;
+
+        RenderTargetBounds bounds = camera.GetRenderTargetBounds(ipso);
+
+        bounds.Left.ShouldBe(0);
+        bounds.Right.ShouldBe(100);
+        bounds.Width.ShouldBe(200);
+        bounds.Height.ShouldBe(200);
+        bounds.HasVisibleArea.ShouldBeTrue();
+    }
+
     [Fact]
     public void GetScissorRectangleFor_WithClientLeftTop_ShouldProduceBackbufferRelativeRectAndClampToViewportExtent()
     {
