@@ -1,5 +1,7 @@
+using Gum.DataTypes;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
+using Gum.Managers;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using RenderingLibrary.Graphics;
@@ -15,33 +17,19 @@ internal class TextScreen : FrameworkElement
         Dock(Gum.Wireframe.Dock.Fill);
 
         var container = new ContainerRuntime();
-        container.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        container.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        container.WidthUnits = DimensionUnitType.RelativeToParent;
+        container.HeightUnits = DimensionUnitType.RelativeToParent;
         container.X = 2;
         container.Y = 2;
         container.Width = -4;
         container.Height = -4;
-        container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        container.ChildrenLayout = ChildrenLayout.TopToBottomStack;
         container.StackSpacing = 4;
         this.AddChild(container);
 
         var textRuntime = new TextRuntime();
         textRuntime.Text = "Hi, I'm default text";
         container.Children.Add(textRuntime);
-
-        // Blend on Text (#3432): additive (brightens) vs normal, over an identical blue box. Mirrors
-        // the raylib TextScreen's row so the two backends can be compared side by side.
-        AddSectionLabel(container, "Blend on Text (#3432): additive (brightens) vs normal, over a blue box");
-        var blendRow = new ContainerRuntime();
-        blendRow.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        blendRow.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        blendRow.Width = 0;
-        blendRow.Height = 0;
-        blendRow.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
-        blendRow.StackSpacing = 16;
-        blendRow.AddChild(BuildBlendCell("Additive", Gum.RenderingLibrary.Blend.Additive));
-        blendRow.AddChild(BuildBlendCell("Normal", null));
-        container.Children.Add(blendRow);
 
         AddSectionLabel(container, "BBCode markup - inline color runs (#3471):");
         var colorMarkup = new TextRuntime();
@@ -89,6 +77,8 @@ internal class TextScreen : FrameworkElement
         AddCustomOutlineText(container, Color.Red);
         AddCustomOutlineText(container, Color.DarkGreen);
         AddCustomOutlineText(container, Color.Blue);
+
+        AddBlendOnTextSection(container);
     }
 
     private static void AddSectionLabel(ContainerRuntime container, string text)
@@ -99,9 +89,24 @@ internal class TextScreen : FrameworkElement
         container.Children.Add(label);
     }
 
-    // One Blend-on-Text cell: amber text over a blue box. Amber (not white) so the Additive cell
-    // visibly brightens - additive can only brighten, and white is already maxed, so white text would
-    // render identically under Additive and Normal. Mirrors BuildBlendCell in the raylib TextScreen.
+    // Blend on Text (#3432): additive (brightens) vs normal, over an identical blue box. Kept byte
+    // identical with the other backend's TextScreen (this method and BuildBlendCell) so the two can
+    // be diffed directly.
+    private static void AddBlendOnTextSection(ContainerRuntime container)
+    {
+        AddSectionLabel(container, "Blend on Text (#3432): additive (brightens) vs normal, over a blue box");
+        var blendRow = new ContainerRuntime();
+        blendRow.WidthUnits = DimensionUnitType.RelativeToChildren;
+        blendRow.HeightUnits = DimensionUnitType.RelativeToChildren;
+        blendRow.Width = 0;
+        blendRow.Height = 0;
+        blendRow.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        blendRow.StackSpacing = 16;
+        blendRow.AddChild(BuildBlendCell("Additive", Gum.RenderingLibrary.Blend.Additive));
+        blendRow.AddChild(BuildBlendCell("Normal", null));
+        container.Children.Add(blendRow);
+    }
+
     private static ContainerRuntime BuildBlendCell(string label, Gum.RenderingLibrary.Blend? blend)
     {
         var cell = new ContainerRuntime();
@@ -109,8 +114,8 @@ internal class TextScreen : FrameworkElement
         cell.Height = 48;
 
         var background = new RectangleRuntime();
-        background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        background.WidthUnits = DimensionUnitType.RelativeToParent;
+        background.HeightUnits = DimensionUnitType.RelativeToParent;
         background.Width = 0;
         background.Height = 0;
         background.IsFilled = true;
@@ -118,12 +123,16 @@ internal class TextScreen : FrameworkElement
         cell.Children.Add(background);
 
         var text = new TextRuntime();
-        text.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        text.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        text.WidthUnits = DimensionUnitType.RelativeToParent;
+        text.HeightUnits = DimensionUnitType.RelativeToParent;
         text.Width = 0;
         text.Height = 0;
         text.FontSize = 24;
         text.Text = label;
+        // Amber, not white: additive can only brighten, and white is already maxed, so white text
+        // renders identically under Additive and Normal. A mid-intensity warm color visibly washes
+        // out toward bright peach when added to the blue box, making the Additive cell obviously
+        // different from the Normal one.
         text.Red = 230;
         text.Green = 150;
         text.Blue = 40;

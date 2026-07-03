@@ -84,18 +84,7 @@ internal class TextScreen : FrameworkElement
     // verification surface for the parity batch.
     private static void BuildTextParitySection(ContainerRuntime container)
     {
-        // --- Blend on Text: additive vs normal white text over an identical blue box ---
-        AddSectionLabel(container, "Blend on Text (#3432): additive (brightens) vs normal, over a blue box");
-        var blendRow = new ContainerRuntime();
-        blendRow.WidthUnits = DimensionUnitType.RelativeToChildren;
-        blendRow.HeightUnits = DimensionUnitType.RelativeToChildren;
-        blendRow.Width = 0;
-        blendRow.Height = 0;
-        blendRow.ChildrenLayout = ChildrenLayout.LeftToRightStack;
-        blendRow.StackSpacing = 16;
-        blendRow.AddChild(BuildBlendCell("Additive", Gum.RenderingLibrary.Blend.Additive));
-        blendRow.AddChild(BuildBlendCell("Normal", null));
-        container.Children.Add(blendRow);
+        AddBlendOnTextSection(container);
 
         // --- Per-instance TextRenderingPositionMode override, at a fractional origin ---
         AddSectionLabel(container, "TextRenderingPositionMode (#3432): fractional origin; button toggles snap");
@@ -143,6 +132,24 @@ internal class TextScreen : FrameworkElement
             int index = hitText.GetCharacterIndexAtPosition(cursorX, cursorY);
             hitResult.Text = $"Character index at click: {index}";
         };
+    }
+
+    // Blend on Text (#3432): additive (brightens) vs normal, over an identical blue box. Kept byte
+    // identical with the other backend's TextScreen (this method and BuildBlendCell) so the two can
+    // be diffed directly.
+    private static void AddBlendOnTextSection(ContainerRuntime container)
+    {
+        AddSectionLabel(container, "Blend on Text (#3432): additive (brightens) vs normal, over a blue box");
+        var blendRow = new ContainerRuntime();
+        blendRow.WidthUnits = DimensionUnitType.RelativeToChildren;
+        blendRow.HeightUnits = DimensionUnitType.RelativeToChildren;
+        blendRow.Width = 0;
+        blendRow.Height = 0;
+        blendRow.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        blendRow.StackSpacing = 16;
+        blendRow.AddChild(BuildBlendCell("Additive", Gum.RenderingLibrary.Blend.Additive));
+        blendRow.AddChild(BuildBlendCell("Normal", null));
+        container.Children.Add(blendRow);
     }
 
     private static ContainerRuntime BuildBlendCell(string label, Gum.RenderingLibrary.Blend? blend)
