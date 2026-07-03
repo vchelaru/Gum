@@ -51,6 +51,17 @@ public abstract class RenderTargetServiceBase<TRenderTarget>
     /// fresh one if none exists or resizing if the existing one's dimensions differ. Marks
     /// the owner as "used this frame" so <see cref="ClearUnusedRenderTargetsLastFrame"/>
     /// won't sweep it. Returns <c>default</c> for non-positive sizes.
+    ///
+    /// <para><b>Value-type footgun:</b> <c>TRenderTarget</c> is unconstrained, so <c>TRenderTarget?</c>
+    /// is an unconstrained nullable — NOT <c>Nullable&lt;TRenderTarget&gt;</c>. When a backend
+    /// instantiates this with a <b>struct</b> render target (raylib's <c>RenderTexture2D</c>), the
+    /// <c>default</c> returned here is a <b>zeroed struct, not null</b>, and a caller's
+    /// <c>if (result == null)</c> can never catch it (the plain struct lifts to a non-null nullable).
+    /// A struct-backed consumer must therefore guard on the requested <c>width</c>/<c>height</c> being
+    /// positive itself rather than null-checking the result — see the raylib renderer's
+    /// <c>BakeRenderTarget</c> (a missing guard let a zeroed <c>RenderTexture2D</c> bind FBO id 0, the
+    /// default framebuffer, and clear the whole screen — issue #3475). Class-backed backends
+    /// (MonoGame's <c>RenderTarget2D</c>) get a real null and are unaffected.</para>
     /// </summary>
     public TRenderTarget? GetFor(IRenderableIpso owner, int width, int height)
     {

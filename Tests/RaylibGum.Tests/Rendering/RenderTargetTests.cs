@@ -209,6 +209,47 @@ public class RenderTargetTests : BaseTestClass
         GumService.Default.Root.Children.Clear();
     }
 
+    // #3475: a render-target container positioned entirely off-camera clamps to a non-positive size.
+    // Its bake must be skipped, NOT run against the zeroed RenderTexture2D that GetFor returns for a
+    // non-positive size. That zeroed texture's FBO id is 0 — the default framebuffer — so
+    // BeginTextureMode would bind the screen and the bake's ClearBackground would wipe the whole
+    // window to transparent black (the reported symptom). This headless harness has no reliable
+    // screen readback, so the guarantee is pinned via draw-call count: an off-camera render-target
+    // container must cost exactly what the SAME off-camera container costs as a plain (non-RT)
+    // container — i.e. no extra bake work. Under the bug the errant bake re-drew the child a second
+    // time (offscreen), inflating the count above the plain-container baseline.
+    [Fact]
+    public void Draw_OffCameraRenderTarget_DoesNotBakeAgainstDefaultFramebuffer()
+    {
+        ContainerRuntime container = new();
+        container.Width = 100;
+        container.Height = 100;
+        // Far past the 800px-wide test camera's right edge, so ComputeRenderTargetBounds clamps to a
+        // negative width — the container is entirely off-camera.
+        container.X = 100000;
+        container.Y = 0;
+
+        ColoredRectangleRuntime rectangle = new();
+        rectangle.Width = 100;
+        rectangle.Height = 100;
+        rectangle.Color = new Color((byte)0, (byte)255, (byte)0, (byte)255);
+        container.Children.Add(rectangle);
+        container.AddToManagers();
+        container.UpdateLayout();
+
+        container.IsRenderTarget = false;
+        int plainContainerCalls = DrawAndCountDrawCalls();
+
+        container.IsRenderTarget = true;
+        int renderTargetCalls = DrawAndCountDrawCalls();
+
+        // Off-camera: nothing bakes, so the render-target container costs the same as the plain one.
+        Renderer.Self.HasBakedRenderTargetFor(container).ShouldBeFalse();
+        renderTargetCalls.ShouldBe(plainContainerCalls);
+
+        container.RemoveFromManagers();
+    }
+
     // Fix 2: after a blend-toggling child (a nested inner RT composite), a following semi-transparent
     // sibling must still bake under the premultiply pass — not straight alpha, which would halve its
     // coverage (the double-blend fringe). The sibling occupies the right half at full alpha coverage.
