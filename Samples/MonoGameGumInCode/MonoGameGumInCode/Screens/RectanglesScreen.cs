@@ -36,6 +36,7 @@ internal class RectanglesScreen : FrameworkElement
         root.AddChild(BuildSection("StrokeWidth (1, 2, 4, 8 px on a filled card)", BuildStrokeWidthRow()));
         root.AddChild(BuildSection("Antialiasing (true vs false — visual no-op without MonoGameGumShapes)", BuildAntialiasingRow()));
         root.AddChild(BuildSection("Alignment inside a 220x100 container (Top / Center / Bottom)", BuildAlignmentRow()));
+        root.AddChild(BuildSection("Blend (Additive vs Normal) — overlaps brighten toward white with MonoGameGumShapes; visual no-op on the core SolidRectangle default (#3458)", BuildBlendRow()));
     }
 
     static ContainerRuntime BuildSection(string label, GraphicalUiElement body)
@@ -166,6 +167,64 @@ internal class RectanglesScreen : FrameworkElement
             row.AddChild(BuildAlignmentCell(alignment));
         }
         return row;
+    }
+
+    // Issue #3458 — mirror of the raylib RectanglesScreen "Blend (Additive)" section for
+    // side-by-side comparison. Same geometry/colors as the raylib cell: the left triad uses
+    // Blend.Additive so overlapping red/green/blue rectangles sum (R+G = yellow, R+G+B ≈ white);
+    // the right triad is the identical geometry left at Blend.Normal as an occlusion control.
+    //
+    // NOTE: on this Apos-less sample the effect is a VISUAL NO-OP. The core rectangle fill default
+    // (RenderingLibrary SolidRectangle) does not implement IBlendedRenderable, so
+    // ShapeStrokePreRenderMath.PushBlend has nothing to push to and both triads render identically
+    // with standard alpha — same graceful degradation this file documents for the Antialiasing row.
+    // Install MonoGameGumShapes (see the GumShapesGallery sample) to see the additive brightening;
+    // the raylib sample renders it natively. The section is kept here for API/round-trip parity and
+    // forward-compat, so the effect lights up automatically once the shapes package is present.
+    static ContainerRuntime BuildBlendRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        row.AddChild(BuildBlendTriadCell(Gum.RenderingLibrary.Blend.Additive));
+        row.AddChild(BuildBlendTriadCell(Gum.RenderingLibrary.Blend.Normal));
+        return row;
+    }
+
+    // A dark 150x120 frame with three 70x70 primary-color rectangles arranged so all three overlap
+    // in the middle. Under Additive (with MonoGameGumShapes) the overlaps sum toward white; under
+    // Normal the last rectangle drawn just covers the earlier ones.
+    static ContainerRuntime BuildBlendTriadCell(Gum.RenderingLibrary.Blend blend)
+    {
+        ContainerRuntime frame = new();
+        frame.Width = 150;
+        frame.Height = 120;
+
+        RectangleRuntime backdrop = new();
+        backdrop.Width = 0;
+        backdrop.Height = 0;
+        backdrop.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        backdrop.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        backdrop.FillColor = new Color(20, 20, 30);
+        backdrop.IsFilled = true;
+        frame.Children.Add(backdrop);
+
+        AddBlendRect(frame, blend, new Color(255, 0, 0), x: 10, y: 10);
+        AddBlendRect(frame, blend, new Color(0, 255, 0), x: 45, y: 10);
+        AddBlendRect(frame, blend, new Color(0, 0, 255), x: 27, y: 42);
+
+        return frame;
+    }
+
+    static void AddBlendRect(ContainerRuntime frame, Gum.RenderingLibrary.Blend blend, Color color, float x, float y)
+    {
+        RectangleRuntime rect = new();
+        rect.Width = 70;
+        rect.Height = 70;
+        rect.X = x;
+        rect.Y = y;
+        rect.FillColor = color;
+        rect.IsFilled = true;
+        rect.Blend = blend;
+        frame.Children.Add(rect);
     }
 
     static ContainerRuntime BuildHorizontalRow()
