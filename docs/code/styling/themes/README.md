@@ -2,11 +2,15 @@
 
 A single line of code restyles **every** Gum Forms control. Drop in a built-in theme — or author your own — and the same UI takes on a completely different look without changing any of your control code.
 
-<table><thead><tr><th align="center">DarkPro</th><th align="center">Bubblegum</th><th align="center">Neon</th></tr></thead><tbody><tr><td><img src="../../../.gitbook/assets/DarkProThemeScreenshot.png" alt="DarkPro theme" data-size="original"></td><td><img src="../../../.gitbook/assets/BubblegumThemeScreenshot.png" alt="Bubblegum theme" data-size="original"></td><td><img src="../../../.gitbook/assets/NeonThemeScreenshot.png" alt="Neon theme" data-size="original"></td></tr></tbody></table>
+|                                                  DarkPro                                                 |                                                   Bubblegum                                                  |                                                Neon                                                |
+| :------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------: |
+| <img src="../../../.gitbook/assets/DarkProThemeScreenshot.png" alt="DarkPro theme" data-size="original"> | <img src="../../../.gitbook/assets/BubblegumThemeScreenshot.png" alt="Bubblegum theme" data-size="original"> | <img src="../../../.gitbook/assets/NeonThemeScreenshot.png" alt="Neon theme" data-size="original"> |
 
-<table><thead><tr><th align="center">Retro 95</th><th align="center">Forest Glade</th><th align="center">Editor</th></tr></thead><tbody><tr><td><img src="../../../.gitbook/assets/Retro95ThemeScreenshot.png" alt="Retro95 theme" data-size="original"></td><td><img src="../../../.gitbook/assets/ForestGladeThemeScreenshot.png" alt="Forest Glade theme" data-size="original"></td><td><img src="../../../.gitbook/assets/EditorThemeScreenshot.png" alt="Editor theme" data-size="original"></td></tr></tbody></table>
+|                                                 Retro 95                                                 |                                                    Forest Glade                                                   |                                                 Editor                                                 |
+| :------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------: |
+| <img src="../../../.gitbook/assets/Retro95ThemeScreenshot.png" alt="Retro95 theme" data-size="original"> | <img src="../../../.gitbook/assets/ForestGladeThemeScreenshot.png" alt="Forest Glade theme" data-size="original"> | <img src="../../../.gitbook/assets/EditorThemeScreenshot.png" alt="Editor theme" data-size="original"> |
 
-The same sample settings panel, rendered by six different themes. The full catalog — with usage for each — is in [Available themes](#available-themes) below.
+The same sample settings panel, rendered by six different themes. The full catalog — with usage for each — is in [Available themes](./#available-themes) below.
 
 ## Introduction
 
@@ -15,7 +19,7 @@ A **theme** is a per-backend NuGet package that restyles every default Gum Forms
 Themes ship one NuGet per rendering backend (for example `Gum.Themes.DarkPro.MonoGame`, `Gum.Themes.DarkPro.Kni`, and `Gum.Themes.DarkPro.Raylib`) so each package only carries the assets and references it needs.
 
 {% hint style="warning" %}
-All themes install and initialize KernSmith for dynamic font generation. Also, all themes except `Editor` install and initialize Apos.Shapes for vector art rendering. For more information see the [KernSmith](../../files-and-fonts/font-strategies.md#dynamic-kernsmith-generation) and [Apos.Shapes](../../standard-visuals/shapes-apos.shapes.md) pages.
+All themes install and initialize KernSmith for dynamic font generation. Also, all themes except `Editor` install and initialize Apos.Shapes for vector art rendering on MonoGame/KNI. For more information see the [KernSmith](../../files-and-fonts/font-strategies.md#dynamic-kernsmith-generation) and [Apos.Shapes](../../standard-visuals/shapes-apos.shapes.md) pages.
 {% endhint %}
 
 ## Usage
@@ -29,7 +33,7 @@ protected override void Initialize()
 {
     GumService.Default.Initialize(this, DefaultVisualsVersion.Newest);
 
-    DarkProTheme.Apply(GraphicsDevice);
+    DarkProTheme.Apply();
 
     var button = new Button();
     button.Text = "Click Me";
@@ -37,18 +41,6 @@ protected override void Initialize()
 ```
 
 The pattern is the same for every theme — only the `using` namespace, NuGet package, and `Apply` call change. Pick a theme from the sections below, then copy the tab matching your rendering backend for a ready-to-paste install command and initialization snippet.
-
-<!-- MAINTAINER: The MonoGame/KNI tabs and examples show Apply(GraphicsDevice) because the
-     stable (May 2026 and earlier) theme packages only expose that overload. From the June 2026
-     release on, Apply() is parameterless on every backend. Once June-or-later packages are the
-     supported minimum, delete the dated "Apply signature" note in the hint below and simplify
-     every Apply(GraphicsDevice) on this page to Apply(). -->
-
-{% hint style="warning" %}
-**Raylib theme packages are in preview.** Install them with the `--prerelease` flag, as shown in each theme's **Raylib** tab. The **MonoGame** and **KNI** packages are stable.
-
-**`Apply` signature:** On **Raylib** — and on **MonoGame** / **KNI** packages from **June 2026 and later** — `Apply()` takes no arguments. On **MonoGame** / **KNI** packages from **May 2026 and earlier**, pass the `GraphicsDevice` as the MonoGame and KNI tabs below show: `Apply(GraphicsDevice)`.
-{% endhint %}
 
 A few things to keep in mind:
 
@@ -58,7 +50,7 @@ A few things to keep in mind:
 
 ### Customizing a theme's colors and fonts
 
-Every theme exposes a mutable `XyzStyling.ActiveStyle` object — its own analog of V3's [`Styling.ActiveStyle`](../code-only-styling/styling-using-activestyles.md), and mutated the same way: set properties on `Colors`/`Text` *before* calling the theme's `Apply()`, not after. Controls created after `Apply()` pick up the change; this is the same "mutate before construct" creation-order rule that page documents for V3's own styling.
+Every theme exposes a mutable `XyzStyling.ActiveStyle` object — its own analog of V3's [`Styling.ActiveStyle`](../code-only-styling/styling-using-activestyles.md), and mutated the same way: set properties on `Colors`/`Text` _before_ calling the theme's `Apply()`, not after. Controls created after `Apply()` pick up the change; this is the same "mutate before construct" creation-order rule that page documents for V3's own styling.
 
 ```csharp
 // Initialize
@@ -66,7 +58,7 @@ using Gum.Themes.DarkPro;
 
 DarkProStyling.ActiveStyle.Colors.Accent = Color.Purple;
 
-DarkProTheme.Apply(GraphicsDevice);
+DarkProTheme.Apply();
 ```
 
 Every theme's `Colors` exposes the same four guardrail properties — `TextPrimary`, `TextMuted`, `Primary`, and `Accent` — which also flow into V3's own `Styling.ActiveStyle.Colors` for any stock, un-restyled control the theme leaves in place. On some themes these are the theme's real, settable color names directly. On others — where the theme already had its own color vocabulary before the guardrail existed — they're get-only aliases onto a differently named real property; for example Forest Glade's `Colors.Accent` is a read-only alias for `Colors.LeafBright`. Assign the theme's real property in that case; the guardrail alias reflects the change automatically, the same "reactivity is free" behavior as any other derived color. The "How to customize" example under each theme below names the real, settable property to use.
@@ -86,28 +78,33 @@ Flat dark editor/tool chrome — intended for tool and editor interfaces rather 
 ```bash
 dotnet add package Gum.Themes.Editor.MonoGame
 ```
+
 ```csharp
 // Initialize
 using Gum.Themes.Editor;
 
-EditorTheme.Apply(GraphicsDevice);
+EditorTheme.Apply();
 ```
 {% endtab %}
+
 {% tab title="KNI" %}
 ```bash
 dotnet add package Gum.Themes.Editor.Kni
 ```
+
 ```csharp
 // Initialize
 using Gum.Themes.Editor;
 
-EditorTheme.Apply(GraphicsDevice);
+EditorTheme.Apply();
 ```
 {% endtab %}
+
 {% tab title="Raylib" %}
 ```bash
 dotnet add package Gum.Themes.Editor.Raylib --prerelease
 ```
+
 ```csharp
 // Initialize
 using Gum.Themes.Editor;
@@ -134,12 +131,10 @@ EditorStyling.ActiveStyle.Colors.PanelBackground = new Color(18, 20, 32);
 EditorStyling.ActiveStyle.Colors.RecessedBackground = new Color(8, 10, 20);
 EditorStyling.ActiveStyle.Text.FontFamily = "Consolas";
 
-EditorTheme.Apply(GraphicsDevice);
+EditorTheme.Apply();
 ```
 
-{% hint style="warning" %}
-Screenshot placeholder — replace with an `EditorCustomized` screenshot showing the above customization applied, captured via the "Show Customized" checkbox in `MonoGameGumThemesShowcase`.
-{% endhint %}
+<figure><img src="../../../.gitbook/assets/03_11 01 20.png" alt=""><figcaption></figcaption></figure>
 
 ### DarkPro
 
@@ -152,28 +147,33 @@ Modern code-editor dark theme with a VS Code / JetBrains feel. Bundled fonts: DM
 ```bash
 dotnet add package Gum.Themes.DarkPro.MonoGame
 ```
+
 ```csharp
 // Initialize
 using Gum.Themes.DarkPro;
 
-DarkProTheme.Apply(GraphicsDevice);
+DarkProTheme.Apply();
 ```
 {% endtab %}
+
 {% tab title="KNI" %}
 ```bash
 dotnet add package Gum.Themes.DarkPro.Kni
 ```
+
 ```csharp
 // Initialize
 using Gum.Themes.DarkPro;
 
-DarkProTheme.Apply(GraphicsDevice);
+DarkProTheme.Apply();
 ```
 {% endtab %}
+
 {% tab title="Raylib" %}
 ```bash
 dotnet add package Gum.Themes.DarkPro.Raylib --prerelease
 ```
+
 ```csharp
 // Initialize
 using Gum.Themes.DarkPro;
@@ -197,12 +197,10 @@ DarkProStyling.ActiveStyle.Colors.Muted = new Color(150, 140, 135);
 DarkProStyling.ActiveStyle.Text.FontFamily = "Georgia";
 DarkProStyling.ActiveStyle.Text.FontSize = 20;
 
-DarkProTheme.Apply(GraphicsDevice);
+DarkProTheme.Apply();
 ```
 
-{% hint style="warning" %}
-Screenshot placeholder — replace with a `DarkProCustomized` screenshot showing the above customization applied, captured via the "Show Customized" checkbox in `MonoGameGumThemesShowcase`.
-{% endhint %}
+<figure><img src="../../../.gitbook/assets/03_11 02 15.png" alt=""><figcaption></figcaption></figure>
 
 ### Bubblegum
 
@@ -215,28 +213,33 @@ Pastel pink casual-game look with rounded pill buttons and soft drop shadows. Bu
 ```bash
 dotnet add package Gum.Themes.Bubblegum.MonoGame
 ```
+
 ```csharp
 // Initialize
 using Gum.Themes.Bubblegum;
 
-BubblegumTheme.Apply(GraphicsDevice);
+BubblegumTheme.Apply();
 ```
 {% endtab %}
+
 {% tab title="KNI" %}
 ```bash
 dotnet add package Gum.Themes.Bubblegum.Kni
 ```
+
 ```csharp
 // Initialize
 using Gum.Themes.Bubblegum;
 
-BubblegumTheme.Apply(GraphicsDevice);
+BubblegumTheme.Apply();
 ```
 {% endtab %}
+
 {% tab title="Raylib" %}
 ```bash
 dotnet add package Gum.Themes.Bubblegum.Raylib --prerelease
 ```
+
 ```csharp
 // Initialize
 using Gum.Themes.Bubblegum;
@@ -264,12 +267,10 @@ BubblegumStyling.ActiveStyle.Colors.Placeholder = new Color(140, 170, 180);
 BubblegumStyling.ActiveStyle.Text.FontFamily = "Consolas";
 BubblegumStyling.ActiveStyle.Text.FontSize = 18;
 
-BubblegumTheme.Apply(GraphicsDevice);
+BubblegumTheme.Apply();
 ```
 
-{% hint style="warning" %}
-Screenshot placeholder — replace with a `BubblegumCustomized` screenshot showing the above customization applied, captured via the "Show Customized" checkbox in `MonoGameGumThemesShowcase`.
-{% endhint %}
+<figure><img src="../../../.gitbook/assets/03_11 02 42.png" alt=""><figcaption></figcaption></figure>
 
 ### Forest Glade
 
@@ -282,28 +283,33 @@ Lush green nature-themed look with gradient leaf-shaped buttons (sharp top-left 
 ```bash
 dotnet add package Gum.Themes.ForestGlade.MonoGame
 ```
+
 ```csharp
 // Initialize
 using Gum.Themes.ForestGlade;
 
-ForestGladeTheme.Apply(GraphicsDevice);
+ForestGladeTheme.Apply();
 ```
 {% endtab %}
+
 {% tab title="KNI" %}
 ```bash
 dotnet add package Gum.Themes.ForestGlade.Kni
 ```
+
 ```csharp
 // Initialize
 using Gum.Themes.ForestGlade;
 
-ForestGladeTheme.Apply(GraphicsDevice);
+ForestGladeTheme.Apply();
 ```
 {% endtab %}
+
 {% tab title="Raylib" %}
 ```bash
 dotnet add package Gum.Themes.ForestGlade.Raylib --prerelease
 ```
+
 ```csharp
 // Initialize
 using Gum.Themes.ForestGlade;
@@ -337,12 +343,10 @@ ForestGladeStyling.ActiveStyle.Colors.DarkShadow = new Color(60, 0, 40, 200);
 ForestGladeStyling.ActiveStyle.Colors.GlowStrong = new Color(255, 105, 180, 170);
 ForestGladeStyling.ActiveStyle.Colors.GlowMedium = new Color(255, 105, 180, 110);
 
-ForestGladeTheme.Apply(GraphicsDevice);
+ForestGladeTheme.Apply();
 ```
 
-{% hint style="warning" %}
-Screenshot placeholder — replace with a `ForestGladeCustomized` screenshot showing the above customization applied, captured via the "Show Customized" checkbox in `MonoGameGumThemesShowcase`.
-{% endhint %}
+<figure><img src="../../../.gitbook/assets/03_11 03 24.png" alt=""><figcaption></figcaption></figure>
 
 ### Neon
 
@@ -355,28 +359,33 @@ Cyberpunk / neon-glow dark theme with a saturated cyan accent and a Gaussian glo
 ```bash
 dotnet add package Gum.Themes.Neon.MonoGame
 ```
+
 ```csharp
 // Initialize
 using Gum.Themes.Neon;
 
-NeonTheme.Apply(GraphicsDevice);
+NeonTheme.Apply();
 ```
 {% endtab %}
+
 {% tab title="KNI" %}
 ```bash
 dotnet add package Gum.Themes.Neon.Kni
 ```
+
 ```csharp
 // Initialize
 using Gum.Themes.Neon;
 
-NeonTheme.Apply(GraphicsDevice);
+NeonTheme.Apply();
 ```
 {% endtab %}
+
 {% tab title="Raylib" %}
 ```bash
 dotnet add package Gum.Themes.Neon.Raylib --prerelease
 ```
+
 ```csharp
 // Initialize
 using Gum.Themes.Neon;
@@ -406,12 +415,10 @@ NeonStyling.ActiveStyle.Colors.Surface2 = new Color(55, 15, 55);
 NeonStyling.ActiveStyle.Text.FontFamily = "Consolas";
 NeonStyling.ActiveStyle.Text.FontSize = 17;
 
-NeonTheme.Apply(GraphicsDevice);
+NeonTheme.Apply();
 ```
 
-{% hint style="warning" %}
-Screenshot placeholder — replace with a `NeonCustomized` screenshot showing the above customization applied, captured via the "Show Customized" checkbox in `MonoGameGumThemesShowcase`.
-{% endhint %}
+<figure><img src="../../../.gitbook/assets/03_11 03 55.png" alt=""><figcaption></figcaption></figure>
 
 ### Retro95
 
@@ -424,28 +431,33 @@ Windows 95 "Classic" battleship-gray chrome with raised/sunken bevels and navy s
 ```bash
 dotnet add package Gum.Themes.Retro95.MonoGame
 ```
+
 ```csharp
 // Initialize
 using Gum.Themes.Retro95;
 
-Retro95Theme.Apply(GraphicsDevice);
+Retro95Theme.Apply();
 ```
 {% endtab %}
+
 {% tab title="KNI" %}
 ```bash
 dotnet add package Gum.Themes.Retro95.Kni
 ```
+
 ```csharp
 // Initialize
 using Gum.Themes.Retro95;
 
-Retro95Theme.Apply(GraphicsDevice);
+Retro95Theme.Apply();
 ```
 {% endtab %}
+
 {% tab title="Raylib" %}
 ```bash
 dotnet add package Gum.Themes.Retro95.Raylib --prerelease
 ```
+
 ```csharp
 // Initialize
 using Gum.Themes.Retro95;
@@ -475,12 +487,10 @@ Retro95Styling.ActiveStyle.Colors.DisabledText = new Color(110, 70, 70);
 Retro95Styling.ActiveStyle.Text.FontFamily = "Consolas";
 Retro95Styling.ActiveStyle.Text.FontSize = 15;
 
-Retro95Theme.Apply(GraphicsDevice);
+Retro95Theme.Apply();
 ```
 
-{% hint style="warning" %}
-Screenshot placeholder — replace with a `Retro95Customized` screenshot showing the above customization applied, captured via the "Show Customized" checkbox in `MonoGameGumThemesShowcase`.
-{% endhint %}
+<figure><img src="../../../.gitbook/assets/03_11 04 22.png" alt=""><figcaption></figcaption></figure>
 
 ### Meadow
 
@@ -493,28 +503,33 @@ Cozy cottagecore look with chunky sky-blue pill buttons (flat "stacked card" dro
 ```bash
 dotnet add package Gum.Themes.Meadow.MonoGame
 ```
+
 ```csharp
 // Initialize
 using Gum.Themes.Meadow;
 
-MeadowTheme.Apply(GraphicsDevice);
+MeadowTheme.Apply();
 ```
 {% endtab %}
+
 {% tab title="KNI" %}
 ```bash
 dotnet add package Gum.Themes.Meadow.Kni
 ```
+
 ```csharp
 // Initialize
 using Gum.Themes.Meadow;
 
-MeadowTheme.Apply(GraphicsDevice);
+MeadowTheme.Apply();
 ```
 {% endtab %}
+
 {% tab title="Raylib" %}
 ```bash
 dotnet add package Gum.Themes.Meadow.Raylib --prerelease
 ```
+
 ```csharp
 // Initialize
 using Gum.Themes.Meadow;
@@ -550,12 +565,10 @@ MeadowStyling.ActiveStyle.Colors.Cream2 = new Color(245, 232, 242);
 MeadowStyling.ActiveStyle.Text.FontFamily = "Consolas";
 MeadowStyling.ActiveStyle.Text.FontSize = 17;
 
-MeadowTheme.Apply(GraphicsDevice);
+MeadowTheme.Apply();
 ```
 
-{% hint style="warning" %}
-Screenshot placeholder — replace with a `MeadowCustomized` screenshot showing the above customization applied, captured via the "Show Customized" checkbox in `MonoGameGumThemesShowcase`.
-{% endhint %}
+<figure><img src="../../../.gitbook/assets/03_11 04 48.png" alt=""><figcaption></figcaption></figure>
 
 ### Hazard
 
@@ -568,28 +581,33 @@ Industrial space-salvage HUD inspired by Hardspace: Shipbreaker — signature ha
 ```bash
 dotnet add package Gum.Themes.Hazard.MonoGame
 ```
+
 ```csharp
 // Initialize
 using Gum.Themes.Hazard;
 
-HazardTheme.Apply(GraphicsDevice);
+HazardTheme.Apply();
 ```
 {% endtab %}
+
 {% tab title="KNI" %}
 ```bash
 dotnet add package Gum.Themes.Hazard.Kni
 ```
+
 ```csharp
 // Initialize
 using Gum.Themes.Hazard;
 
-HazardTheme.Apply(GraphicsDevice);
+HazardTheme.Apply();
 ```
 {% endtab %}
+
 {% tab title="Raylib" %}
 ```bash
 dotnet add package Gum.Themes.Hazard.Raylib --prerelease
 ```
+
 ```csharp
 // Initialize
 using Gum.Themes.Hazard;
@@ -626,12 +644,10 @@ HazardStyling.ActiveStyle.Colors.Placeholder = new Color(100, 120, 150);
 HazardStyling.ActiveStyle.Text.FontFamily = "Consolas";
 HazardStyling.ActiveStyle.Text.FontSize = 17;
 
-HazardTheme.Apply(GraphicsDevice);
+HazardTheme.Apply();
 ```
 
-{% hint style="warning" %}
-Screenshot placeholder — replace with a `HazardCustomized` screenshot showing the above customization applied, captured via the "Show Customized" checkbox in `MonoGameGumThemesShowcase`.
-{% endhint %}
+<figure><img src="../../../.gitbook/assets/03_11 05 17.png" alt=""><figcaption></figcaption></figure>
 
 ## Fonts and licensing
 
@@ -639,7 +655,7 @@ All bundled fonts are SIL Open Font License or the Bitstream Vera / DejaVu licen
 
 ## Supported backends
 
-Themes are published for **MonoGame**, **KNI**, and **Raylib** (Raylib in preview — see the note under [Usage](#usage)). If you'd like to see a theme published for **FNA** or **Skia**, please open an issue or start a discussion on the [Gum GitHub repo](https://github.com/vchelaru/Gum).
+Themes are published for **MonoGame**, **KNI**, and **Raylib** (Raylib in preview — see the note under [Usage](./#usage)). If you'd like to see a theme published for **FNA** or **Skia**, please open an issue or start a discussion on the [Gum GitHub repo](https://github.com/vchelaru/Gum).
 
 ## Requirements
 
