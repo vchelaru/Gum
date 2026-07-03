@@ -65,6 +65,30 @@ internal class SpriteScreen : FrameworkElement
         custom.Height = 96;
         page.AddChild(custom);
 
+        // Wrap / tiling (issue #3456) — TextureWidth/Height set to 2x the source file's pixel
+        // dimensions (BearTexture.png is 39x40) so the source rectangle extends past the texture
+        // bounds. With Wrap=true it repeats the bear 2x2 across the sprite, matching MonoGame.
+        // Wrap=false is a KNOWN GAP (#3459): it should clamp to the edge pixel like MonoGame but
+        // currently repeats too (raylib's GL default wrap mode is Repeat) — a hardware-wrap fix was
+        // tried and reverted because it breaks FlipHorizontal/FlipVertical elsewhere in this class.
+        AddSectionLabel(page, "Wrap (false = clamp [KNOWN GAP #3459, still repeats], true = tile, BearTexture.png 2x2):");
+        var wrapRow = NewSection(ChildrenLayout.LeftToRightStack, spacing: 6);
+        page.AddChild(wrapRow);
+        foreach (var wrap in new[] { false, true })
+        {
+            var s = new SpriteRuntime();
+            s.SourceFileName = "resources\\BearTexture.png";
+            s.TextureAddress = TextureAddress.Custom;
+            s.TextureLeft = 0;
+            s.TextureTop = 0;
+            s.TextureWidth = 78;
+            s.TextureHeight = 80;
+            s.Wrap = wrap;
+            s.Width = 78;
+            s.Height = 80;
+            wrapRow.AddChild(s);
+        }
+
         // Color tinting.
         AddSectionLabel(page, "Color tinting:");
         var tintRow = NewSection(ChildrenLayout.LeftToRightStack, spacing: 6);

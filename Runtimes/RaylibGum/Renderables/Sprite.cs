@@ -10,6 +10,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using ToolsUtilitiesStandard.Helpers;
 using static Raylib_cs.Raylib;
 
 namespace Gum.Renderables;
@@ -141,8 +142,7 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
     public float AspectRatio => TextureHeight > 0 && TextureWidth != null ?
         (float)TextureWidth.Value / TextureHeight.Value : 1;
 
-    bool ITextureCoordinate.Wrap{ get; set; }
-
+    bool ITextureCoordinate.Wrap { get; set; }
 
     public override void Render(ISystemManagers managers)
     {
@@ -184,29 +184,108 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
         // if we don't have a source rectangle, the source is the entire texture
         var srcRect = SourceRectangle ?? defaultSrcRect;
 
-        // Apply flipping by adjusting the source rectangle
-        if (FlipHorizontal)
-        {
-            srcRect.X += srcRect.Width;
-            srcRect.Width = -srcRect.Width;
-        }
-
-        if (FlipVertical)
-        {
-            srcRect.Y += srcRect.Height;
-            srcRect.Height = -srcRect.Height;
-        }
-
         if (Blend.HasValue)
         {
             global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend.Value.ToRaylibBlendMode());
         }
 
-        DrawTexturePro(textureToDraw, srcRect, destinationRectangle, Vector2.Zero, -absoluteRotation, Color);
+        // RenderTargetTextureSource is excluded: its source rect already encodes the bottom-up GL
+        // flip via a negative height, which the tiling loop's positive-range math does not expect.
+        bool shouldTile = ((ITextureCoordinate)this).Wrap && RenderTargetTextureSource == null
+            && srcRect.Width > 0 && srcRect.Height > 0;
+
+        if (shouldTile)
+        {
+            RenderTiled(textureToDraw, srcRect, destinationRectangle, absoluteRotation);
+        }
+        else
+        {
+            // Apply flipping by adjusting the source rectangle
+            if (FlipHorizontal)
+            {
+                srcRect.X += srcRect.Width;
+                srcRect.Width = -srcRect.Width;
+            }
+
+            if (FlipVertical)
+            {
+                srcRect.Y += srcRect.Height;
+                srcRect.Height = -srcRect.Height;
+            }
+
+            DrawTexturePro(textureToDraw, srcRect, destinationRectangle, Vector2.Zero, -absoluteRotation, Color);
+        }
 
         if (Blend.HasValue)
         {
             global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.EndBlendMode();
+        }
+    }
+
+    // Repeats sourceRectangle's texture area across destinationRectangle instead of stretching it,
+    // one DrawTexturePro call per texture-bounded tile. Mirrors RenderTiledSprite in the MonoGame
+    // Sprite renderable (RenderingLibrary/Graphics/Sprite.cs) but always tiles by software draw
+    // calls — raylib has no XNA-style hardware address-mode sampler to fall back to.
+    private void RenderTiled(Texture2D texture, Rectangle sourceRectangle, Rectangle destinationRectangle,
+        float absoluteRotationDegrees)
+    {
+        int textureWidth = texture.Width;
+        int textureHeight = texture.Height;
+        if (textureWidth <= 0 || textureHeight <= 0) return;
+
+        float textureWidthScale = destinationRectangle.Width / sourceRectangle.Width;
+        float textureHeightScale = destinationRectangle.Height / sourceRectangle.Height;
+
+        var matrix = this.GetRotationMatrix();
+
+        int startX = (int)sourceRectangle.X;
+        int startY = (int)sourceRectangle.Y;
+        int endX = startX + (int)sourceRectangle.Width;
+        int endY = startY + (int)sourceRectangle.Height;
+
+        float offsetYFromTopLeft = 0;
+        for (int y = startY; y < endY;)
+        {
+            int texTop = ((y % textureHeight) + textureHeight) % textureHeight;
+            int texHeight = System.Math.Min(textureHeight - texTop, endY - y);
+            float destHeight = texHeight * textureHeightScale;
+
+            float offsetXFromTopLeft = 0;
+            for (int x = startX; x < endX;)
+            {
+                int texLeft = ((x % textureWidth) + textureWidth) % textureWidth;
+                int texWidth = System.Math.Min(textureWidth - texLeft, endX - x);
+                float destWidth = texWidth * textureWidthScale;
+
+                var tileSourceRect = new Rectangle(texLeft, texTop, texWidth, texHeight);
+
+                if (FlipHorizontal)
+                {
+                    tileSourceRect.X += tileSourceRect.Width;
+                    tileSourceRect.Width = -tileSourceRect.Width;
+                }
+
+                if (FlipVertical)
+                {
+                    tileSourceRect.Y += tileSourceRect.Height;
+                    tileSourceRect.Height = -tileSourceRect.Height;
+                }
+
+                Vector3 tileOffset = matrix.Right() * offsetXFromTopLeft + matrix.Up() * offsetYFromTopLeft;
+                var tileDestinationRect = new Rectangle(
+                    destinationRectangle.X + tileOffset.X,
+                    destinationRectangle.Y + tileOffset.Y,
+                    destWidth,
+                    destHeight);
+
+                DrawTexturePro(texture, tileSourceRect, tileDestinationRect, Vector2.Zero, -absoluteRotationDegrees, Color);
+
+                offsetXFromTopLeft += destWidth;
+                x += texWidth;
+            }
+
+            offsetYFromTopLeft += destHeight;
+            y += texHeight;
         }
     }
 
