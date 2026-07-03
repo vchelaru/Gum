@@ -4,9 +4,20 @@ using Color = System.Drawing.Color;
 
 namespace RenderingLibrary.Graphics;
 
+/// <summary>
+/// A single run of text within a line that shares the same set of active <see cref="InlineVariable"/>s,
+/// as produced by <see cref="StyledSubstringSplitter.GetStyledSubstrings"/>.
+/// </summary>
 public class StyledSubstring
 {
+    /// <summary>
+    /// The inline variables (color, font scale, custom callbacks, etc.) active over this run.
+    /// </summary>
     public List<InlineVariable> Variables = new List<InlineVariable>();
+
+    /// <summary>
+    /// The text content of this run.
+    /// </summary>
     public string Substring;
 
     public override string ToString()
@@ -31,6 +42,13 @@ public class StyledSubstring
 /// </summary>
 public class StyledSubstringSplitter
 {
+    /// <summary>
+    /// Splits <paramref name="lineOfText"/> into runs according to which <paramref name="inlineVariables"/>
+    /// are active over each character.
+    /// </summary>
+    /// <param name="startOfLineIndex">The index of the line's first character within the full (stripped) text, used to look up which inline variables are active.</param>
+    /// <param name="lineOfText">The already-wrapped, BBCode-stripped line to split.</param>
+    /// <param name="inlineVariables">The full set of inline variables for the text, keyed by absolute character index.</param>
     public List<StyledSubstring> GetStyledSubstrings(int startOfLineIndex, string lineOfText, Color color, List<InlineVariable> inlineVariables)
     {
         List<StyledSubstring> substrings = new();
@@ -49,7 +67,6 @@ public class StyledSubstringSplitter
             var endLastRun = false;
             foreach (var variable in inlineVariables)
             {
-
                 if (absoluteIndex >= variable.StartIndex && absoluteIndex < variable.StartIndex + variable.CharacterCount)
                 {
                     if (currentlyActiveInlines.Contains(variable) == false)

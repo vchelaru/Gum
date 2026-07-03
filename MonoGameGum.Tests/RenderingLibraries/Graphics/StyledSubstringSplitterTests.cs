@@ -10,9 +10,9 @@ public class StyledSubstringSplitterTests
     [Fact]
     public void GetStyledSubstrings_ShouldReturnEmptyList_IfLineIsEmpty()
     {
-        var sut = new StyledSubstringSplitter();
+        StyledSubstringSplitter sut = new StyledSubstringSplitter();
 
-        var substrings = sut.GetStyledSubstrings(0, "", System.Drawing.Color.White, new List<InlineVariable>());
+        List<StyledSubstring> substrings = sut.GetStyledSubstrings(0, "", System.Drawing.Color.White, new List<InlineVariable>());
 
         substrings.Count.ShouldBe(0);
     }
@@ -20,9 +20,9 @@ public class StyledSubstringSplitterTests
     [Fact]
     public void GetStyledSubstrings_ShouldReturnSingleUnstyledEntry_IfNoInlineVariablesProvided()
     {
-        var sut = new StyledSubstringSplitter();
+        StyledSubstringSplitter sut = new StyledSubstringSplitter();
 
-        var substrings = sut.GetStyledSubstrings(0, "Hello", System.Drawing.Color.White, new List<InlineVariable>());
+        List<StyledSubstring> substrings = sut.GetStyledSubstrings(0, "Hello", System.Drawing.Color.White, new List<InlineVariable>());
 
         substrings.Count.ShouldBe(1);
         substrings[0].Substring.ShouldBe("Hello");
@@ -32,8 +32,8 @@ public class StyledSubstringSplitterTests
     [Fact]
     public void GetStyledSubstrings_ShouldSplitIntoTwoEntries_IfVariableCoversFirstCharacters()
     {
-        var sut = new StyledSubstringSplitter();
-        var inlineVariables = new List<InlineVariable>
+        StyledSubstringSplitter sut = new StyledSubstringSplitter();
+        List<InlineVariable> inlineVariables = new List<InlineVariable>
         {
             new InlineVariable
             {
@@ -44,7 +44,7 @@ public class StyledSubstringSplitterTests
             }
         };
 
-        var substrings = sut.GetStyledSubstrings(0, "Hello", System.Drawing.Color.White, inlineVariables);
+        List<StyledSubstring> substrings = sut.GetStyledSubstrings(0, "Hello", System.Drawing.Color.White, inlineVariables);
 
         substrings.Count.ShouldBe(2);
         substrings[0].Substring.ShouldBe("He");
