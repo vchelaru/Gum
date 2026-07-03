@@ -869,7 +869,13 @@ public class Renderer : IRenderer
         var oldCameraY = Camera.Y;
         var oldViewport = GraphicsDevice.Viewport;
 
-        var renderTarget = renderTargetService.GetRenderTargetFor(GraphicsDevice, renderable, Camera);
+        // Cache key must match what PreRenderWithSourceRenderTargets resolves for a
+        // RenderTargetTextureSource reference (#3451) — always the contained renderable, not the
+        // GraphicalUiElement wrapper a nested container is walked as (#816). Unresolved, a nested
+        // source bakes under the wrapper while the referencing Sprite looks up the raw renderable
+        // and misses.
+        var renderTarget = renderTargetService.GetRenderTargetFor(
+            GraphicsDevice, ResolveRenderTargetCacheOwner(renderable), Camera);
 
         if(renderTarget != null)
         {
@@ -993,7 +999,9 @@ public class Renderer : IRenderer
 
             if (renderable.IsRenderTarget && !forceRenderHierarchy)
             {
-                var renderTarget = renderTargetService.GetRenderTargetFor(GraphicsDevice, renderable, Camera);
+                // Resolved cache key — see the matching comment in RenderToRenderTarget (#3451).
+                var renderTarget = renderTargetService.GetRenderTargetFor(
+                    GraphicsDevice, ResolveRenderTargetCacheOwner(renderable), Camera);
 
                 if(renderTarget != null)
                 {
@@ -1114,7 +1122,9 @@ public class Renderer : IRenderer
         {
             // Main pass: draw the cached texture baked by the prerender phase. We never
             // call SetRenderTarget here — that only happens in PreRender / RenderToRenderTarget.
-            var renderTarget = renderTargetService.GetRenderTargetFor(GraphicsDevice, renderable, Camera);
+            // Resolved cache key — see the matching comment in RenderToRenderTarget (#3451).
+            var renderTarget = renderTargetService.GetRenderTargetFor(
+                GraphicsDevice, ResolveRenderTargetCacheOwner(renderable), Camera);
 
             if (renderTarget != null)
             {

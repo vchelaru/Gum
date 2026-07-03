@@ -16,6 +16,14 @@ namespace Gum.Renderables;
 public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAnimatable
 {
     public Texture2D? Texture { get; set; }
+
+    /// <summary>
+    /// The render-target container whose baked offscreen texture this sprite displays instead of
+    /// <see cref="Texture"/>. Resolved each <see cref="Render"/> via
+    /// <see cref="global::RenderingLibrary.Graphics.Renderer.TryGetBakedRenderTargetFor"/>, so it
+    /// always reflects the source's latest bake (including after a resize).
+    /// </summary>
+    public IRenderableIpso? RenderTargetTextureSource { get; set; }
     public Raylib_cs.Rectangle? SourceRectangle
     { 
         get; 
@@ -126,9 +134,9 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
 
     public global::Gum.RenderingLibrary.Blend? Blend { get; set; }
 
-    public float? TextureWidth => Texture?.Width;
+    public float? TextureWidth => RenderTargetTextureSource?.Width ?? Texture?.Width;
 
-    public float? TextureHeight => Texture?.Height;
+    public float? TextureHeight => RenderTargetTextureSource?.Height ?? Texture?.Height;
 
     public float AspectRatio => TextureHeight > 0 && TextureWidth != null ?
         (float)TextureWidth.Value / TextureHeight.Value : 1;
@@ -138,7 +146,33 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
 
     public override void Render(ISystemManagers managers)
     {
-        if (!Visible || Texture == null) return;
+        if (!Visible) return;
+
+        Texture2D textureToDraw;
+        Rectangle defaultSrcRect;
+
+        if (RenderTargetTextureSource != null)
+        {
+            RenderTexture2D? renderTexture =
+                global::RenderingLibrary.Graphics.Renderer.Self.TryGetBakedRenderTargetFor(RenderTargetTextureSource);
+            // Source container isn't a baked render target (never became one, or its bake was
+            // skipped this frame) — draw nothing rather than guess at stale content.
+            if (renderTexture == null) return;
+
+            textureToDraw = renderTexture.Value.Texture;
+            // An RT is stored bottom-up in GL; a negative source height flips it upright, matching
+            // the container-to-screen composite in Renderer.TryCompositeRenderTarget.
+            defaultSrcRect = new Rectangle(0, 0, textureToDraw.Width, -textureToDraw.Height);
+        }
+        else if (Texture != null)
+        {
+            textureToDraw = Texture.Value;
+            defaultSrcRect = new Rectangle(0, 0, TextureWidth.Value, TextureHeight.Value);
+        }
+        else
+        {
+            return;
+        }
 
         int x = (int)this.GetAbsoluteLeft();
         int y = (int)this.GetAbsoluteTop();
@@ -148,7 +182,7 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
             x, y, this.Width, this.Height);
 
         // if we don't have a source rectangle, the source is the entire texture
-        var srcRect = SourceRectangle ?? new Rectangle(0, 0, TextureWidth.Value, TextureHeight.Value);
+        var srcRect = SourceRectangle ?? defaultSrcRect;
 
         // Apply flipping by adjusting the source rectangle
         if (FlipHorizontal)
@@ -168,7 +202,7 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
             global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend.Value.ToRaylibBlendMode());
         }
 
-        DrawTexturePro(Texture.Value, srcRect, destinationRectangle, Vector2.Zero, -absoluteRotation, Color);
+        DrawTexturePro(textureToDraw, srcRect, destinationRectangle, Vector2.Zero, -absoluteRotation, Color);
 
         if (Blend.HasValue)
         {

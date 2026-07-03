@@ -531,4 +531,93 @@ public class RenderTargetTests : BaseTestClass
         rect.Color = color;
         return rect;
     }
+
+    // Issue #3449 (split off #3434 item 3): a Sprite whose RenderTargetTextureSource points at
+    // another container's baked RT must display that texture right-side-up. An RT is stored
+    // bottom-up in GL, so this specifically pins the Y-flip the Sprite must apply — a top/bottom
+    // split source is required because a uniform-color source can't distinguish "flipped" from
+    // "not flipped."
+    [Fact]
+    public void Draw_SpriteWithRenderTargetTextureSource_PreservesVerticalOrientation()
+    {
+        ContainerRuntime source = new();
+        source.Width = 64;
+        source.Height = 64;
+        source.IsRenderTarget = true;
+
+        ColoredRectangleRuntime top = new();
+        top.X = 0;
+        top.Y = 0;
+        top.Width = 64;
+        top.Height = 32;
+        top.Color = new Color((byte)255, (byte)0, (byte)0, (byte)255);
+        source.Children.Add(top);
+
+        ColoredRectangleRuntime bottom = new();
+        bottom.X = 0;
+        bottom.Y = 32;
+        bottom.Width = 64;
+        bottom.Height = 32;
+        bottom.Color = new Color((byte)0, (byte)255, (byte)0, (byte)255);
+        source.Children.Add(bottom);
+
+        ContainerRuntime readableOuter = new();
+        readableOuter.X = 0;
+        readableOuter.Y = 0;
+        readableOuter.Width = 64;
+        readableOuter.Height = 64;
+        readableOuter.IsRenderTarget = true;
+
+        SpriteRuntime sprite = new();
+        sprite.X = 0;
+        sprite.Y = 0;
+        sprite.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        sprite.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        sprite.Width = 64;
+        sprite.Height = 64;
+        sprite.RenderTargetTextureSource = source;
+        readableOuter.Children.Add(sprite);
+
+        GumService.Default.Root.Children.Add(source);
+        GumService.Default.Root.Children.Add(readableOuter);
+        GumService.Default.Root.UpdateLayout();
+
+        DrawOnce();
+
+        RenderTexture2D outerRenderTexture = Renderer.Self.TryGetBakedRenderTargetFor(readableOuter)!.Value;
+        Color topPixel = ReadRenderTargetPixel(outerRenderTexture, 32, 10);
+        Color bottomPixel = ReadRenderTargetPixel(outerRenderTexture, 32, 54);
+
+        topPixel.R.ShouldBeGreaterThan((byte)200);
+        bottomPixel.G.ShouldBeGreaterThan((byte)200);
+
+        GumService.Default.Root.Children.Clear();
+    }
+
+    // A Sprite referencing a container that never baked (not an IsRenderTarget) must draw nothing
+    // rather than crash on a null lookup.
+    [Fact]
+    public void Draw_SpriteWithUnbakedRenderTargetTextureSource_DrawsNothing()
+    {
+        int baseline = DrawAndCountDrawCalls();
+
+        ContainerRuntime notARenderTarget = new();
+        notARenderTarget.Width = 64;
+        notARenderTarget.Height = 64;
+
+        SpriteRuntime sprite = new();
+        sprite.X = 0;
+        sprite.Y = 0;
+        sprite.Width = 64;
+        sprite.Height = 64;
+        sprite.RenderTargetTextureSource = notARenderTarget;
+        sprite.AddToManagers();
+        sprite.UpdateLayout();
+
+        int callsWithUnbakedSource = DrawAndCountDrawCalls();
+
+        callsWithUnbakedSource.ShouldBe(baseline);
+
+        sprite.RemoveFromManagers();
+    }
 }

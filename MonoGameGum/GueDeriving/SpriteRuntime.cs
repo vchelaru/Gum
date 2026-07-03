@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 #if RAYLIB
 using Gum.Renderables;
+using RenderingLibrary.Graphics;
 using Color = Raylib_cs.Color;
 using Rectangle = Raylib_cs.Rectangle;
 using Texture2D = Raylib_cs.Texture2D;
@@ -423,9 +424,10 @@ public class SpriteRuntime : GraphicalUiElement
         }
     }
 
-#if XNALIKE
+#if XNALIKE || RAYLIB
     /// <summary>
-    /// The IRenderableIpso source used for RenderTarget rendering in XNA-based platforms.
+    /// The source render-target container whose baked texture this sprite displays, in place of
+    /// a directly-assigned <see cref="Texture"/>.
     /// </summary>
     public IRenderableIpso? RenderTargetTextureSource
     {
@@ -439,7 +441,13 @@ public class SpriteRuntime : GraphicalUiElement
             }
         }
     }
+#endif
 
+#if XNALIKE
+    // IRenderTargetTextureReferencer (RenderingLibrary/Graphics/Sprite.cs) is XNA-only — its
+    // Texture member is typed to XNA's Texture2D, which raylib doesn't have. Raylib resolves its
+    // render-target source directly in Gum.Renderables.Sprite.Render via
+    // Renderer.TryGetBakedRenderTargetFor instead of this interface.
     IRenderableIpso? IRenderTargetTextureReferencer.RenderTargetTextureSource =>
         ContainedSprite.RenderTargetTextureSource;
 #endif
