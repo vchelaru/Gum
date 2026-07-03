@@ -17,8 +17,6 @@ namespace Examples.Shapes;
 
 public class BasicShapes
 {
-    private const float NavStripHeight = 40;
-
     static GumService GumUI => GumService.Default;
 
     static StackPanel? navStrip;
@@ -135,6 +133,14 @@ public class BasicShapes
         navStrip.Spacing = 4;
         navStrip.Visual.X = 4;
         navStrip.Visual.Y = 4;
+        // Fill the window width and wrap the button row instead of letting buttons bleed off the
+        // right edge; height grows to fit however many rows the wrap produces. Mirrors
+        // MonoGameGumInCode/Game1.BuildNavStrip.
+        navStrip.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        navStrip.Width = 0;
+        navStrip.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        navStrip.Height = 0;
+        navStrip.Visual.WrapsChildren = true;
         navStrip.AddToRoot();
 
         AddNavButton("Raw visuals", () => new RawVisualsScreen());
@@ -227,11 +233,13 @@ public class BasicShapes
 
         activeScreen = factory();
         // Offset the screen so it doesn't sit underneath the nav strip — same trick as
-        // MonoGameGumShapesGallery/Game1.ShowScreen.
+        // MonoGameGumShapesGallery/Game1.ShowScreen. Use the nav strip's actual laid-out height so a
+        // wrapped (multi-row) button strip still clears the screen content below it.
+        float navStripHeight = navStrip!.Visual.GetAbsoluteHeight();
         activeScreen.Visual.YOrigin = VerticalAlignment.Top;
         activeScreen.Visual.YUnits = GeneralUnitType.PixelsFromSmall;
-        activeScreen.Visual.Y = NavStripHeight;
-        activeScreen.Visual.Height = -NavStripHeight;
+        activeScreen.Visual.Y = navStripHeight;
+        activeScreen.Visual.Height = -navStripHeight;
         activeScreen.AddToRoot();
 
         // Defer initial gamepad focus to just after the next GumUI.Update (see field comment).
