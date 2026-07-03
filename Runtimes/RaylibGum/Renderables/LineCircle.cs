@@ -369,6 +369,7 @@ public class LineCircle : InvisibleRenderable
                     blur,
                     effectiveDropshadowColor,
                     global::RenderingLibrary.Graphics.Renderer.Self.ActiveCamera2D,
+                    global::RenderingLibrary.Graphics.Renderer.Self.ActiveRenderTexture,
                     (px, py) =>
                     {
                         DrawCircleV(new Vector2(px + r, py + r), r, silhouetteColor);

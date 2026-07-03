@@ -105,6 +105,17 @@ public class Renderer : IRenderer
     public Camera2D ActiveCamera2D { get; private set; }
 
     /// <summary>
+    /// The render texture a render-target container's bake is currently drawing into via
+    /// <c>BeginTextureMode</c>, or <c>null</c> during the main walk (which draws to the screen).
+    /// Exposed so a mid-walk offscreen consumer (e.g. <see cref="ShadowBlurRenderer"/>) can
+    /// re-establish it after its own <c>BeginTextureMode</c>/<c>EndTextureMode</c> passes, which
+    /// raylib's <c>EndTextureMode</c> unconditionally unbinds and does not restore an enclosing
+    /// render texture (issue #3464 — the render-target analogue of #3460's camera clobber).
+    /// Primarily for internal renderer/renderable use.
+    /// </summary>
+    public RenderTexture2D? ActiveRenderTexture { get; private set; }
+
+    /// <summary>
     /// Per-renderable shadow-blur service. Owns the Gaussian shader and the per-renderable
     /// render textures (issue #2865). Renderables call <c>Renderer.Self.ShadowBlur.Draw(this, ...)</c>
     /// from their <c>Render</c> method; the renderer sweeps unused entries at the top of every
@@ -484,6 +495,13 @@ public class Renderer : IRenderer
         Camera2D savedActiveCamera = ActiveCamera2D;
         ActiveCamera2D = bakeCamera;
 
+        // Record this bake's render texture as the active one so a blurred dropshadow drawn inside
+        // this bake re-establishes it (not the screen) after its own offscreen BeginTextureMode/
+        // EndTextureMode passes, which unconditionally unbind whatever render texture was active
+        // (issue #3464). Restored to the enclosing bake's texture (or null) below.
+        RenderTexture2D? savedActiveRenderTexture = ActiveRenderTexture;
+        ActiveRenderTexture = renderTexture;
+
         counter.BeginTextureMode(renderTexture.Value);
         Raylib.ClearBackground(new Color((byte)0, (byte)0, (byte)0, (byte)0));
         counter.BeginMode2D(bakeCamera);
@@ -512,6 +530,7 @@ public class Renderer : IRenderer
         _bakeTop = savedBakeTop;
         _scissorStack = savedScissorStack;
         ActiveCamera2D = savedActiveCamera;
+        ActiveRenderTexture = savedActiveRenderTexture;
     }
 
     // Composites a render-target container's baked texture at the container's clamped rectangle,

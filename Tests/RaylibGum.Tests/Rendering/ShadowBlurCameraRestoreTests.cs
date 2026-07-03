@@ -47,6 +47,7 @@ public class ShadowBlurCameraRestoreTests : BaseTestClass
             4f,
             tint,
             camera,
+            null,
             (px, py) => DrawRectangleV(new Vector2(px, py), new Vector2(40f, 40f), silhouette));
 
         Matrix4x4 afterShadow = Rlgl.GetMatrixModelview();

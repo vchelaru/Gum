@@ -96,6 +96,13 @@ void main() {{
     /// <c>EndTextureMode</c> resets the modelview to identity, so the offscreen blur passes below would
     /// otherwise clobber this camera for the shadow's own composite and every later draw in the frame;
     /// it is re-established after the passes (issue #3460).</param>
+    /// <param name="activeRenderTexture">The render texture a render-target container's bake is
+    /// currently drawing into (see <see cref="Renderer.ActiveRenderTexture"/>), or <c>null</c> when
+    /// drawing directly to the screen. raylib's <c>EndTextureMode</c> unconditionally unbinds the
+    /// active render texture and does not restore an enclosing one, so the offscreen blur passes
+    /// below would otherwise leave the shadow's own composite — and every later draw in the bake —
+    /// landing on the screen instead of back in the container's texture; it is re-established after
+    /// the passes, alongside the camera (issue #3464).</param>
     /// <param name="drawSilhouetteAt">
     /// Callback invoked inside the offscreen render pass. Receives the RT-local top-left
     /// coordinates the caller should paint a SOLID-WHITE silhouette of the shape at. The
@@ -111,6 +118,7 @@ void main() {{
         float sigma,
         Color tint,
         Camera2D activeCamera,
+        RenderTexture2D? activeRenderTexture,
         Action<float, float> drawSilhouetteAt)
     {
         if (sigma <= 0f || shapeW <= 0f || shapeH <= 0f || tint.A == 0)
@@ -183,6 +191,17 @@ void main() {{
         counter.EndShaderMode();
         counter.EndBlendMode();
         counter.EndTextureMode();
+
+        // Re-establish the enclosing render target clobbered by the offscreen passes. raylib's
+        // EndTextureMode unconditionally unbinds the active render texture and does NOT restore a
+        // previously-active one, so without this the shadow composite below — and every later draw
+        // in the bake — would render to the screen instead of back into the container's texture
+        // (issue #3464). Must happen before re-establishing the camera below, mirroring the order
+        // BakeRenderTarget itself uses (BeginTextureMode then BeginMode2D).
+        if (activeRenderTexture.HasValue)
+        {
+            counter.BeginTextureMode(activeRenderTexture.Value);
+        }
 
         // Re-establish the active camera clobbered by the offscreen passes. raylib's EndTextureMode
         // resets the modelview to identity and does NOT restore the enclosing BeginMode2D transform,
