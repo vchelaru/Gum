@@ -608,6 +608,18 @@ public class Renderer : IRenderer
         {
             counter.BeginBlendMode(BlendMode.AlphaPremultiply);
         }
+
+        // Optional post-process shader (ContainerRuntime.RenderTargetEffect / SourceShaderFile,
+        // #3465): bind it around the single composite blit so it post-processes the whole baked
+        // container, mirroring MonoGame's DrawRenderTargetToScreen. The effect slot lives on the
+        // shared IRenderTargetRenderable — here the InvisibleRenderable resolved as the cache owner.
+        Raylib_cs.Shader? renderTargetShader =
+            (cacheOwner as IRenderTargetRenderable)?.RenderTargetEffect as Raylib_cs.Shader?;
+        if (renderTargetShader != null)
+        {
+            counter.BeginShaderMode(renderTargetShader.Value);
+        }
+
         // Negative source height flips the v range: an RT is stored bottom-up in GL coordinates, so
         // reading it with height -h yields the upright content (same idiom as ShadowBlurRenderer).
         Raylib.DrawTexturePro(
@@ -617,6 +629,11 @@ public class Renderer : IRenderer
             System.Numerics.Vector2.Zero,
             0,
             tint);
+
+        if (renderTargetShader != null)
+        {
+            counter.EndShaderMode();
+        }
         counter.EndBlendMode();
         return true;
     }
