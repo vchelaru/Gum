@@ -54,6 +54,7 @@ internal class RectanglesScreen : FrameworkElement
         right.Children.Add(BuildSection("Dropshadow (off / soft / hard offset / colored) — raylib approximates the blur via concentric rectangles (#2757)", BuildDropshadowRow()));
         right.Children.Add(BuildSection("Dashed strokes (solid / 6/4 / 2/2 dotted / long-dash) — raylib walks the perimeter, one DrawLineEx per dash (#2757)", BuildDashedStrokeRow()));
         right.Children.Add(BuildSection("FillColor + StrokeColor on the same instance — both layers render simultaneously (#2757)", BuildBothColorsRow()));
+        right.Children.Add(BuildSection("Blend (Additive) — overlapping R/G/B rectangles brighten toward white (#3458). Only Additive is a non-alpha mode on raylib today; the middle cell shows Normal for contrast.", BuildBlendRow()));
         right.Children.Add(BuildSection("Inscribed in a 64x64 frame — stroke must stay inside the gray rectangle's bounds at every StrokeWidth (#2757)", BuildInscribedRow()));
         right.Children.Add(BuildSection("Rotation (filled)", BuildRotationFilledRow()));
         right.Children.Add(BuildSection("Rotation (outline)", BuildRotationOutlineUnsupportedRow()));
@@ -316,6 +317,60 @@ internal class RectanglesScreen : FrameworkElement
         row.Children.Add(fillLast);
 
         return row;
+    }
+
+    // Issue #3458 — raylib RectangleRuntime.Blend. Two overlapping-triad cells sit side by side:
+    // the left cell uses Blend.Additive on all three rectangles so where red/green/blue overlap the
+    // channels sum and the intersection brightens (R+G = yellow, R+G+B ≈ white). The middle-right
+    // cell is the SAME geometry with Blend left at the default Normal, so the topmost rectangle
+    // simply occludes the others with no brightening — a side-by-side control that makes the
+    // additive effect obvious. raylib only maps Additive to a non-alpha blend today (Normal and the
+    // other Gum blend modes fall through to standard alpha in ToRaylibBlendMode), so those aren't
+    // demoed here.
+    static ContainerRuntime BuildBlendRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+        row.Children.Add(BuildBlendTriadCell(Gum.RenderingLibrary.Blend.Additive));
+        row.Children.Add(BuildBlendTriadCell(Gum.RenderingLibrary.Blend.Normal));
+        return row;
+    }
+
+    // A dark 150x120 frame with three 70x70 primary-color rectangles arranged so all three
+    // overlap in the middle. Under Additive the overlaps sum toward white; under Normal the last
+    // rectangle drawn just covers the earlier ones.
+    static ContainerRuntime BuildBlendTriadCell(Gum.RenderingLibrary.Blend blend)
+    {
+        ContainerRuntime frame = new();
+        frame.Width = 150;
+        frame.Height = 120;
+
+        RectangleRuntime backdrop = new();
+        backdrop.Width = 0;
+        backdrop.Height = 0;
+        backdrop.WidthUnits = DimensionUnitType.RelativeToParent;
+        backdrop.HeightUnits = DimensionUnitType.RelativeToParent;
+        backdrop.FillColor = new Color(20, 20, 30, 255);
+        backdrop.IsFilled = true;
+        frame.Children.Add(backdrop);
+
+        AddBlendRect(frame, blend, new Color(255, 0, 0, 255), x: 10, y: 10);
+        AddBlendRect(frame, blend, new Color(0, 255, 0, 255), x: 45, y: 10);
+        AddBlendRect(frame, blend, new Color(0, 0, 255, 255), x: 27, y: 42);
+
+        return frame;
+    }
+
+    static void AddBlendRect(ContainerRuntime frame, Gum.RenderingLibrary.Blend blend, Color color, float x, float y)
+    {
+        RectangleRuntime rect = new();
+        rect.Width = 70;
+        rect.Height = 70;
+        rect.X = x;
+        rect.Y = y;
+        rect.FillColor = color;
+        rect.IsFilled = true;
+        rect.Blend = blend;
+        frame.Children.Add(rect);
     }
 
     // Mirror of SilkNet's BuildInscribedRow. As of #2757, LineRectangle insets the rendered

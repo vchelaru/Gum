@@ -25,6 +25,18 @@ public class DataDrivenBlendPropertyTests : BaseTestClass
         ((NineSlice)sut.RenderableComponent).Blend.ShouldBe(Blend.Normal);
     }
 
+    // Issue #3458 — the .gumx "Blend" variable reaches the raylib RectangleRuntime the same way:
+    // reflection sets Blend on the contained LineRectangle (now that it exposes a nullable Blend).
+    [Fact]
+    public void SetProperty_Blend_OnRectangle_AppliesWithoutThrowing()
+    {
+        RectangleRuntime sut = new();
+
+        Should.NotThrow(() => sut.SetProperty("Blend", Blend.Additive));
+
+        ((LineRectangle)sut.RenderableComponent).Blend.ShouldBe(Blend.Additive);
+    }
+
     [Fact]
     public void SetProperty_Blend_OnSprite_AppliesWithoutThrowing()
     {
