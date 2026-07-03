@@ -173,25 +173,35 @@ public class RendererDrawCallMatrixTests : BaseTestClass
     }
 
     // ---- Blend mode: a blended sprite wraps its draw in BeginBlendMode/EndBlendMode (both flush);
-    //      the draw must still be banked (without routing those flushes it would be lost). ----
+    //      the draw must still be banked (without routing those flushes it would be lost). Every
+    //      Blend value is covered here (not just Additive) because Replace/ReplaceAlpha/
+    //      SubtractAlpha/MinAlpha (issue #3470) now route through the separate-factors
+    //      BeginBlendMode(Blend) overload instead of the simple BlendMode one, and a regression
+    //      that skipped the counted wrapper for that path would only show up on those values. ----
 
-    [Fact]
-    public void BlendedSprite_RendersAndIsCountedAcrossBlendFlushes()
+    [Theory]
+    [InlineData(global::Gum.RenderingLibrary.Blend.Normal)]
+    [InlineData(global::Gum.RenderingLibrary.Blend.Additive)]
+    [InlineData(global::Gum.RenderingLibrary.Blend.Replace)]
+    [InlineData(global::Gum.RenderingLibrary.Blend.ReplaceAlpha)]
+    [InlineData(global::Gum.RenderingLibrary.Blend.SubtractAlpha)]
+    [InlineData(global::Gum.RenderingLibrary.Blend.MinAlpha)]
+    public void BlendedSprite_RendersAndIsCountedAcrossBlendFlushes(global::Gum.RenderingLibrary.Blend blend)
     {
         Texture2D texture = CreateTexture();
 
         int baseline = CountWith();
-        int blended = CountWith(BlendedSprite(texture));
+        int blended = CountWith(BlendedSprite(texture, blend));
 
         blended.ShouldBeGreaterThan(baseline);
 
         UnloadTexture(texture);
     }
 
-    private static SpriteRuntime BlendedSprite(Texture2D texture)
+    private static SpriteRuntime BlendedSprite(Texture2D texture, global::Gum.RenderingLibrary.Blend blend)
     {
         SpriteRuntime sprite = Sprite(texture);
-        sprite.Blend = global::Gum.RenderingLibrary.Blend.Additive;
+        sprite.Blend = blend;
         return sprite;
     }
 
