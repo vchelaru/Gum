@@ -19,10 +19,10 @@ namespace Gum.Renderables;
 /// fill/stroke slots — matches the post-#2891 Skia <c>Arc</c> contract where arcs are stroked
 /// only and the wedge is reached via Thickness = W/2.
 /// <para>
-/// Gradients are not implemented in this pass (deferred follow-up to #2866). The per-segment
-/// triangle-fan approach that <c>LineCircle</c> uses for radial/linear gradients on a full disk
-/// applies cleanly to a stroked arc band, but lands separately so this PR stays scoped to
-/// achieving the gallery-parity baseline.
+/// Issue #3454 — the stroked band can also be painted with a linear or radial gradient
+/// (<see cref="UseGradient"/>), matching the Skia/Apos <c>Arc</c>. The band is tessellated into
+/// an annular-sector triangle strip whose vertices sample the gradient by world position — the
+/// arc-restricted version of the concentric-band approach <c>LineCircle</c> uses for a full disk.
 /// </para>
 /// </remarks>
 public class LineArc : InvisibleRenderable
@@ -96,6 +96,82 @@ public class LineArc : InvisibleRenderable
     /// <see cref="StrokeDashLength"/> is 0.
     /// </summary>
     public float StrokeGapLength { get; set; }
+
+    /// <summary>
+    /// When <c>true</c>, the stroked band is painted with a gradient from <see cref="Color1"/>
+    /// to <see cref="Color2"/> instead of a solid stroke color. Both <see cref="GradientType.Linear"/>
+    /// and <see cref="GradientType.Radial"/> are supported; rendering goes through an <c>rlgl</c>
+    /// annular-sector triangle strip with per-vertex colors computed from the gradient axis
+    /// (<see cref="GradientX1"/>/<see cref="GradientY1"/> → <see cref="GradientX2"/>/<see cref="GradientY2"/>)
+    /// and, for radial, <see cref="GradientInnerRadius"/>/<see cref="GradientOuterRadius"/>.
+    /// Mirrors <see cref="LineCircle.UseGradient"/>. Ignored on the dashed path (dashes stay solid).
+    /// </summary>
+    public bool UseGradient { get; set; }
+
+    /// <inheritdoc cref="LineCircle.GradientType"/>
+    public GradientType GradientType { get; set; }
+
+    /// <summary>
+    /// Gradient start color (linear: at the axis start; radial: at the inner radius). Per the
+    /// #3009 model the shared <c>ArcRuntime</c> mirrors the arc's primary <see cref="Color"/> into
+    /// this each frame, so the gradient start follows the body color.
+    /// </summary>
+    public Color Color1 { get; set; } = Color.White;
+
+    /// <summary>Gradient end color (linear: at the axis end; radial: at the outer radius).</summary>
+    public Color Color2 { get; set; } = Color.White;
+
+    /// <inheritdoc cref="LineCircle.GradientX1"/>
+    public float GradientX1 { get; set; }
+
+    /// <inheritdoc cref="LineCircle.GradientY1"/>
+    public float GradientY1 { get; set; }
+
+    /// <inheritdoc cref="LineCircle.GradientX2"/>
+    public float GradientX2 { get; set; }
+
+    /// <inheritdoc cref="LineCircle.GradientY2"/>
+    public float GradientY2 { get; set; }
+
+    /// <inheritdoc cref="LineCircle.GradientInnerRadius"/>
+    public float GradientInnerRadius { get; set; }
+
+    /// <inheritdoc cref="LineCircle.GradientOuterRadius"/>
+    public float GradientOuterRadius { get; set; }
+
+    /// <summary>
+    /// Issue #3454 — true when the gradient pass should paint. The arc is stroke-only (no fill
+    /// slot), so unlike <see cref="LineCircle.ShouldPaintFillGradient"/> this gates only on
+    /// <see cref="UseGradient"/> plus at least one visible gradient stop; there is no IsFilled /
+    /// FillColor slot to enable.
+    /// </summary>
+    public bool ShouldPaintGradient =>
+        UseGradient && (Color1.A > 0 || Color2.A > 0);
+
+    /// <inheritdoc cref="LineCircle.GetRotatedGradientEndpoints(float)"/>
+    /// <remarks>Pivots around the arc's bbox center (Width/2, Height/2) rather than
+    /// (Radius, Radius) so non-square bounds rotate correctly.</remarks>
+    public (float x1, float y1, float x2, float y2) GetRotatedGradientEndpoints(float rotationDegrees)
+    {
+        if (rotationDegrees == 0f)
+        {
+            return (GradientX1, GradientY1, GradientX2, GradientY2);
+        }
+        float rotRad = rotationDegrees * System.MathF.PI / 180f;
+        float cos = System.MathF.Cos(rotRad);
+        float sin = System.MathF.Sin(rotRad);
+        float pivotX = Width * 0.5f;
+        float pivotY = Height * 0.5f;
+        float dx1 = GradientX1 - pivotX;
+        float dy1 = GradientY1 - pivotY;
+        float dx2 = GradientX2 - pivotX;
+        float dy2 = GradientY2 - pivotY;
+        return (
+            pivotX + dx1 * cos + dy1 * sin,
+            pivotY - dx1 * sin + dy1 * cos,
+            pivotX + dx2 * cos + dy2 * sin,
+            pivotY - dx2 * sin + dy2 * cos);
+    }
 
     /// <summary>
     /// When <c>true</c>, a dropshadow pass renders behind the stroke using
@@ -236,6 +312,34 @@ public class LineArc : InvisibleRenderable
         {
             DrawDashed(new Vector2(cx, cy), innerRadius, outerRadius, strokeColor);
         }
+        else if (ShouldPaintGradient)
+        {
+            // Gradient axis lives in bbox-local coords (origin = bbox top-left); rotate it around
+            // the bbox center so it tracks the arc under self-rotation, then paint the annular
+            // sector as a per-vertex-colored triangle strip. bboxLeft/Top = (cx - halfW, cy - halfH)
+            // = the arc's absolute top-left.
+            float bboxLeft = cx - halfW;
+            float bboxTop = cy - halfH;
+            (float gx1, float gy1, float gx2, float gy2) =
+                GetRotatedGradientEndpoints(this.GetAbsoluteRotation());
+            DrawGradientBand(new Vector2(cx, cy), innerRadius, outerRadius,
+                startAngleDeg, endAngleDeg, segments, bboxLeft, bboxTop, gx1, gy1, gx2, gy2);
+            if (IsEndRounded && System.MathF.Abs(SweepAngle) < 360f && thickness > 0f)
+            {
+                // Sample the gradient at each cap's center so a rounded end blends with the band
+                // it caps instead of jumping to a single solid stroke color.
+                const float deg2rad = System.MathF.PI / 180f;
+                float midRadius = (innerRadius + outerRadius) * 0.5f;
+                float scx = cx + midRadius * System.MathF.Cos(startAngleDeg * deg2rad);
+                float scy = cy + midRadius * System.MathF.Sin(startAngleDeg * deg2rad);
+                float ecx = cx + midRadius * System.MathF.Cos(endAngleDeg * deg2rad);
+                float ecy = cy + midRadius * System.MathF.Sin(endAngleDeg * deg2rad);
+                Color startCap = ComputeGradientColor(scx, scy, bboxLeft, bboxTop, gx1, gy1, gx2, gy2, outerRadius);
+                Color endCap = ComputeGradientColor(ecx, ecy, bboxLeft, bboxTop, gx1, gy1, gx2, gy2, outerRadius);
+                DrawCaps(new Vector2(cx, cy), innerRadius, outerRadius,
+                    startAngleDeg, endAngleDeg, startCap, endCap);
+            }
+        }
         else
         {
             DrawRing(new Vector2(cx, cy), innerRadius, outerRadius,
@@ -243,7 +347,7 @@ public class LineArc : InvisibleRenderable
             if (IsEndRounded && System.MathF.Abs(SweepAngle) < 360f && thickness > 0f)
             {
                 DrawCaps(new Vector2(cx, cy), innerRadius, outerRadius,
-                    startAngleDeg, endAngleDeg, strokeColor);
+                    startAngleDeg, endAngleDeg, strokeColor, strokeColor);
             }
         }
     }
@@ -300,7 +404,7 @@ public class LineArc : InvisibleRenderable
             // as the solid path: skip when thickness collapses or the dash isn't actually a dash.
             if (IsEndRounded && outerRadius > innerRadius && dashEnd > currentAngle)
             {
-                DrawCaps(center, innerRadius, outerRadius, dashStartRl, dashEndRl, strokeColor);
+                DrawCaps(center, innerRadius, outerRadius, dashStartRl, dashEndRl, strokeColor, strokeColor);
             }
             currentAngle += patternAngleDeg;
         }
@@ -323,7 +427,7 @@ public class LineArc : InvisibleRenderable
     /// CW terms, which is identical to the radial axis at the endpoint.
     /// </remarks>
     private void DrawCaps(Vector2 center, float innerRadius, float outerRadius,
-        float startAngleRl, float endAngleRl, Color strokeColor)
+        float startAngleRl, float endAngleRl, Color startColor, Color endColor)
     {
         float thickness = outerRadius - innerRadius;
         if (thickness <= 0f)
@@ -343,12 +447,13 @@ public class LineArc : InvisibleRenderable
 
         const float deg2rad = System.MathF.PI / 180f;
 
-        // Start endpoint cap.
+        // Start endpoint cap. Under a gradient, startColor/endColor are the gradient samples at
+        // each endpoint; on the solid path they are the same stroke color.
         float startCx = center.X + midRadius * System.MathF.Cos(startAngleRl * deg2rad);
         float startCy = center.Y + midRadius * System.MathF.Sin(startAngleRl * deg2rad);
         float startBulge = startAngleRl + sweepSign * 90f;
         DrawCircleSector(new Vector2(startCx, startCy), capRadius,
-            startBulge - 90f, startBulge + 90f, capSegments, strokeColor);
+            startBulge - 90f, startBulge + 90f, capSegments, startColor);
 
         // End endpoint cap — bulge flips because the band tangent at the end points the other
         // way down the band relative to the start.
@@ -356,7 +461,121 @@ public class LineArc : InvisibleRenderable
         float endCy = center.Y + midRadius * System.MathF.Sin(endAngleRl * deg2rad);
         float endBulge = endAngleRl - sweepSign * 90f;
         DrawCircleSector(new Vector2(endCx, endCy), capRadius,
-            endBulge - 90f, endBulge + 90f, capSegments, strokeColor);
+            endBulge - 90f, endBulge + 90f, capSegments, endColor);
+    }
+
+    /// <summary>
+    /// Number of concentric annular sub-bands the gradient band is split into between
+    /// <c>innerRadius</c> and <c>outerRadius</c>. Radial subdivision keeps a radial gradient
+    /// smooth across a thick band (or a wedge, where innerRadius collapses to 0); a linear
+    /// gradient is unaffected by the count since every vertex samples by world position. Mirrors
+    /// <c>LineCircle.RadialLayers</c>.
+    /// </summary>
+    private const int GradientRadialLayers = 8;
+
+    /// <summary>
+    /// Issue #3454 — paints the arc's annular sector (<c>[innerRadius, outerRadius]</c> ×
+    /// <c>[startAngleRl, endAngleRl]</c>) as an <c>rlgl</c> triangle strip whose vertices sample
+    /// the gradient at their world position. The angular loop always steps from the smaller to the
+    /// larger raylib-space angle so the triangle winding stays front-facing under raylib's default
+    /// backface culling regardless of the sweep's sign — the sector covers the same region either
+    /// way and the gradient color is position-based, so iteration direction is free. This is the
+    /// arc-restricted analog of <see cref="LineCircle.DrawGradientFan"/> (a full disk); the arc
+    /// tessellates only the swept angular range and only the stroked band, not the whole disc.
+    /// </summary>
+    private void DrawGradientBand(Vector2 center, float innerRadius, float outerRadius,
+        float startAngleRl, float endAngleRl, int segments,
+        float bboxLeft, float bboxTop, float gx1, float gy1, float gx2, float gy2)
+    {
+        const float deg2rad = System.MathF.PI / 180f;
+        float aMin = System.MathF.Min(startAngleRl, endAngleRl);
+        float aMax = System.MathF.Max(startAngleRl, endAngleRl);
+        int safeSegments = System.Math.Max(1, segments);
+
+        Rlgl.Begin((int)DrawMode.Triangles);
+        for (int layer = 0; layer < GradientRadialLayers; layer++)
+        {
+            float rOuter = innerRadius + (outerRadius - innerRadius) * (GradientRadialLayers - layer) / GradientRadialLayers;
+            float rInner = innerRadius + (outerRadius - innerRadius) * (GradientRadialLayers - layer - 1) / GradientRadialLayers;
+            for (int i = 0; i < safeSegments; i++)
+            {
+                float a0 = (aMin + (aMax - aMin) * (i / (float)safeSegments)) * deg2rad;
+                float a1 = (aMin + (aMax - aMin) * ((i + 1) / (float)safeSegments)) * deg2rad;
+                float c0 = System.MathF.Cos(a0), s0 = System.MathF.Sin(a0);
+                float c1 = System.MathF.Cos(a1), s1 = System.MathF.Sin(a1);
+
+                float ox0 = center.X + c0 * rOuter, oy0 = center.Y + s0 * rOuter;
+                float ox1 = center.X + c1 * rOuter, oy1 = center.Y + s1 * rOuter;
+                float ix0 = center.X + c0 * rInner, iy0 = center.Y + s0 * rInner;
+                float ix1 = center.X + c1 * rInner, iy1 = center.Y + s1 * rInner;
+
+                // Winding matches LineCircle.DrawGradientFan (front-facing under default culling).
+                EmitGradientVertex(ix0, iy0, bboxLeft, bboxTop, gx1, gy1, gx2, gy2, outerRadius);
+                EmitGradientVertex(ox1, oy1, bboxLeft, bboxTop, gx1, gy1, gx2, gy2, outerRadius);
+                EmitGradientVertex(ox0, oy0, bboxLeft, bboxTop, gx1, gy1, gx2, gy2, outerRadius);
+
+                EmitGradientVertex(ix0, iy0, bboxLeft, bboxTop, gx1, gy1, gx2, gy2, outerRadius);
+                EmitGradientVertex(ix1, iy1, bboxLeft, bboxTop, gx1, gy1, gx2, gy2, outerRadius);
+                EmitGradientVertex(ox1, oy1, bboxLeft, bboxTop, gx1, gy1, gx2, gy2, outerRadius);
+            }
+        }
+        Rlgl.End();
+    }
+
+    private void EmitGradientVertex(float worldX, float worldY, float bboxLeft, float bboxTop,
+        float gx1, float gy1, float gx2, float gy2, float outerRadius)
+    {
+        Color color = ComputeGradientColor(worldX, worldY, bboxLeft, bboxTop, gx1, gy1, gx2, gy2, outerRadius);
+        Rlgl.Color4ub(color.R, color.G, color.B, color.A);
+        Rlgl.Vertex2f(worldX, worldY);
+    }
+
+    /// <summary>
+    /// Interpolates <see cref="Color1"/> → <see cref="Color2"/> for a world-space point. Linear
+    /// projects the point onto the (rotation-adjusted) axis; radial normalizes the distance from
+    /// the center against the <c>[InnerRadius, OuterRadius]</c> band. Matches
+    /// <see cref="LineCircle.EmitGradientVertex"/>'s math, but a default (0) radial outer radius
+    /// falls back to the arc's <paramref name="outerRadius"/> rather than a disc <c>Radius</c>.
+    /// </summary>
+    private Color ComputeGradientColor(float worldX, float worldY, float bboxLeft, float bboxTop,
+        float gx1, float gy1, float gx2, float gy2, float outerRadius)
+    {
+        float localX = worldX - bboxLeft;
+        float localY = worldY - bboxTop;
+
+        float t;
+        if (GradientType == GradientType.Linear)
+        {
+            float dx = gx2 - gx1;
+            float dy = gy2 - gy1;
+            float lenSq = dx * dx + dy * dy;
+            if (lenSq <= 0f)
+            {
+                return Color1;
+            }
+            t = ((localX - gx1) * dx + (localY - gy1) * dy) / lenSq;
+        }
+        else
+        {
+            float dx = localX - gx1;
+            float dy = localY - gy1;
+            float dist = System.MathF.Sqrt(dx * dx + dy * dy);
+            float outer = GradientOuterRadius > 0f ? GradientOuterRadius : outerRadius;
+            float span = outer - GradientInnerRadius;
+            if (span <= 0f)
+            {
+                return Color2;
+            }
+            t = (dist - GradientInnerRadius) / span;
+        }
+        if (t < 0f) t = 0f;
+        else if (t > 1f) t = 1f;
+
+        byte r = (byte)(Color1.R + (Color2.R - Color1.R) * t);
+        byte g = (byte)(Color1.G + (Color2.G - Color1.G) * t);
+        byte b = (byte)(Color1.B + (Color2.B - Color1.B) * t);
+        byte a = (byte)(Color1.A + (Color2.A - Color1.A) * t);
+        return new Color(r, g, b, a);
     }
 
     /// <summary>

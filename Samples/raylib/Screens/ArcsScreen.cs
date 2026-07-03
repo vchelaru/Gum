@@ -14,9 +14,12 @@ namespace Examples.Shapes;
 // run side by side.
 //
 // What's intentionally NOT mirrored:
-//   * "Gradients" - deferred to a follow-up; the issue comment lists it as a stretch goal.
 //   * "Antialiasing" - raylib has no per-shape AA. Framebuffer MSAA (Msaa4xHint in Program.cs)
 //     is the only AA path, so toggling IsAntialiased would render identically.
+// Gradients on arcs ARE mirrored now (issue #3454) - the "Gradients on arcs" row matches the
+// Apos/Skia galleries cell-for-cell. Note the gradient START color is the arc's primary Color
+// (the #3009 model), so these cells set arc.Color rather than the obsolete Color1 the Apos
+// gallery still uses; the two are visually identical.
 // End caps DO render on raylib post-#2895 (DrawCircleSector half-disks synthesized in LineArc),
 // so the "End caps" row IS mirrored.
 internal class ArcsScreen : FrameworkElement
@@ -40,6 +43,7 @@ internal class ArcsScreen : FrameworkElement
         left.Children.Add(BuildSection("Sweep angles (90, 180, 270, 360)", BuildSweepRow()));
         left.Children.Add(BuildSection("Thickness progression: thin -> fat -> wedge (W/2)", BuildThicknessProgressionRow()));
         left.Children.Add(BuildSection("End caps: butt / rounded", BuildEndCapRow()));
+        left.Children.Add(BuildSection("Gradients on arcs (including gradient wedge)", BuildStrokeGradientRow()));
 
         right.Children.Add(BuildSection("Dashed strokes", BuildDashedStrokeRow()));
         right.Children.Add(BuildSection("Dropshadow (off / soft / hard / colored / faded body / rounded faded body)", BuildDropshadowRow()));
@@ -145,6 +149,86 @@ internal class ArcsScreen : FrameworkElement
         rounded.StrokeColor = Color.White;
         rounded.IsEndRounded = true;
         row.Children.Add(rounded);
+
+        return row;
+    }
+
+    // Issue #3454 - gradients on stroked arcs, mirroring the Apos/Skia BuildStrokeGradientRow
+    // cell-for-cell. Cells: linear horizontal / vertical / diagonal, radial centered, and a
+    // gradient-filled pie wedge (Thickness = Width/2). Named-color RGB values match the XNA colors
+    // the Apos gallery uses so the two galleries read identically side by side. The gradient START
+    // is the arc's primary Color (the #3009 model), so each cell sets arc.Color for the start stop
+    // and arc.Color2 for the end stop - the raylib branch does not carry the obsolete Color1 slot.
+    static ContainerRuntime BuildStrokeGradientRow()
+    {
+        ContainerRuntime row = BuildHorizontalRow();
+
+        // Linear horizontal: white -> steel blue
+        ArcRuntime linearH = new();
+        linearH.Width = 60; linearH.Height = 60;
+        linearH.SweepAngle = 270;
+        linearH.Thickness = 8;
+        linearH.UseGradient = true;
+        linearH.GradientType = GradientType.Linear;
+        linearH.Color = Color.White;
+        linearH.Color2 = new Color(70, 130, 180, 255); // SteelBlue
+        linearH.GradientX1 = 0; linearH.GradientY1 = 0;
+        linearH.GradientX2 = 60; linearH.GradientY2 = 0;
+        row.Children.Add(linearH);
+
+        // Linear vertical: gold -> crimson
+        ArcRuntime linearV = new();
+        linearV.Width = 60; linearV.Height = 60;
+        linearV.SweepAngle = 270;
+        linearV.Thickness = 8;
+        linearV.UseGradient = true;
+        linearV.GradientType = GradientType.Linear;
+        linearV.Color = new Color(255, 215, 0, 255); // Gold
+        linearV.Color2 = new Color(220, 20, 60, 255); // Crimson
+        linearV.GradientX1 = 0; linearV.GradientY1 = 0;
+        linearV.GradientX2 = 0; linearV.GradientY2 = 60;
+        row.Children.Add(linearV);
+
+        // Linear diagonal: cyan -> magenta
+        ArcRuntime linearD = new();
+        linearD.Width = 60; linearD.Height = 60;
+        linearD.SweepAngle = 270;
+        linearD.Thickness = 8;
+        linearD.UseGradient = true;
+        linearD.GradientType = GradientType.Linear;
+        linearD.Color = new Color(0, 255, 255, 255); // Cyan
+        linearD.Color2 = new Color(255, 0, 255, 255); // Magenta
+        linearD.GradientX1 = 0; linearD.GradientY1 = 0;
+        linearD.GradientX2 = 60; linearD.GradientY2 = 60;
+        row.Children.Add(linearD);
+
+        // Radial centered: white -> dark green
+        ArcRuntime radial = new();
+        radial.Width = 60; radial.Height = 60;
+        radial.SweepAngle = 270;
+        radial.Thickness = 8;
+        radial.UseGradient = true;
+        radial.GradientType = GradientType.Radial;
+        radial.Color = Color.White;
+        radial.Color2 = new Color(0, 100, 0, 255); // DarkGreen
+        radial.GradientX1 = 30; radial.GradientY1 = 30;
+        radial.GradientInnerRadius = 0;
+        radial.GradientOuterRadius = 30;
+        row.Children.Add(radial);
+
+        // Gradient-filled wedge: Thickness = Width / 2 collapses the band to a pie wedge, and the
+        // gradient applies across it. Tighter sweep so the wedge shape is unmistakable.
+        ArcRuntime wedge = new();
+        wedge.Width = 60; wedge.Height = 60;
+        wedge.SweepAngle = 90;
+        wedge.Thickness = 30; // W / 2 -> wedge
+        wedge.UseGradient = true;
+        wedge.GradientType = GradientType.Linear;
+        wedge.Color = new Color(255, 165, 0, 255); // Orange
+        wedge.Color2 = new Color(255, 20, 147, 255); // DeepPink
+        wedge.GradientX1 = 0; wedge.GradientY1 = 0;
+        wedge.GradientX2 = 60; wedge.GradientY2 = 60;
+        row.Children.Add(wedge);
 
         return row;
     }
