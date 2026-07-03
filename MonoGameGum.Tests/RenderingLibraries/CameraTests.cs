@@ -110,6 +110,34 @@ public class CameraTests : BaseTestClass
         bounds.Width.ShouldBeLessThanOrEqualTo(0);
     }
 
+    // The exact-zero fencepost: a 0x0 container fully on-camera clamps to width == height == 0, which
+    // must read as "no visible area" (HasVisibleArea is Width > 0 && Height > 0). This is the degenerate
+    // case the whole issue is about, and it guards the > 0 boundary directly — the off-camera test above
+    // drives width negative, so it would not catch a >= 0 regression that lets a 0-size container render.
+    [Fact]
+    public void GetRenderTargetBounds_ZeroSizeOnCamera_HasNoVisibleArea()
+    {
+        Camera camera = new Camera();
+        camera.ClientWidth = 800;
+        camera.ClientHeight = 600;
+        camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
+        camera.X = 0;
+        camera.Y = 0;
+        camera.Zoom = 1;
+
+        StubRenderable ipso = new StubRenderable();
+        ipso.X = 100;
+        ipso.Y = 100;
+        ipso.Width = 0;
+        ipso.Height = 0;
+
+        RenderTargetBounds bounds = camera.GetRenderTargetBounds(ipso);
+
+        bounds.Width.ShouldBe(0);
+        bounds.Height.ShouldBe(0);
+        bounds.HasVisibleArea.ShouldBeFalse();
+    }
+
     [Fact]
     public void GetRenderTargetBounds_WithZoom_ScalesPixelSizeByZoom()
     {
