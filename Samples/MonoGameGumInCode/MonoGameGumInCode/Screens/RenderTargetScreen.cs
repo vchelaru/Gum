@@ -316,7 +316,10 @@ internal class RenderTargetScreen : FrameworkElement
         sprite.Width = 100;
         sprite.Height = 100;
         sprite.RenderTargetTextureSource = source;
-        sprite.Rotation = 20;
+        // Kept identical to the raylib sample's sign so the two backends match (see its comment:
+        // the pivot is the sprite's top-left corner, and a positive value swings the box up and
+        // out of its cell).
+        sprite.Rotation = -20;
 
         row.AddChild(BuildSwatch("source", source));
         row.AddChild(BuildSwatch("sprite (scaled + rotated)", sprite));

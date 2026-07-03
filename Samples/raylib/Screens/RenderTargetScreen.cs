@@ -326,7 +326,10 @@ internal class RenderTargetScreen : FrameworkElement
         sprite.Width = 100;
         sprite.Height = 100;
         sprite.RenderTargetTextureSource = source;
-        sprite.Rotation = 20;
+        // Negative: Sprite.Render negates rotation for raylib's native (clockwise) convention, so
+        // a positive value here swings the box up and out of its cell (pivot is the sprite's
+        // top-left corner, not its center).
+        sprite.Rotation = -20;
 
         row.Children.Add(BuildSwatch("source", source));
         row.Children.Add(BuildSwatch("sprite (scaled + rotated)", sprite));
