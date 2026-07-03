@@ -20,13 +20,21 @@ namespace RenderingLibrary.Content;
 public class ContentLoader : IContentLoader
 {
     /// <summary>
-    /// The texture filter applied to sprite textures as they are loaded. Set from the project's
-    /// <see cref="Gum.DataTypes.GumProjectSave.TextureFilter"/> during <c>GumService.Initialize</c>
-    /// (issue #3199). Unlike the XNA-family backends, raylib has no global sampler state — filtering
-    /// is a per-texture property applied at load time — so the loaded value is read here rather than
-    /// in the Renderer. Fonts intentionally keep point filtering (see <c>Text.cs</c>).
+    /// The texture filter applied to sprite and font textures as they are loaded. Set from the
+    /// project's <see cref="Gum.DataTypes.GumProjectSave.TextureFilter"/> during
+    /// <c>GumService.Initialize</c> (issue #3199 for sprites, #3496 for fonts). Unlike the XNA-family
+    /// backends, raylib has no global sampler state — filtering is a per-texture property applied at
+    /// load time — so the loaded value is read here rather than in the Renderer.
     /// </summary>
     public static Raylib_cs.TextureFilter DefaultTextureFilter { get; set; } = Raylib_cs.TextureFilter.Point;
+
+    /// <summary>
+    /// Applies a texture filter to a texture. Defaults to the real <see cref="Raylib.SetTextureFilter"/>
+    /// call. raylib exposes no getter for a texture's applied filter (it's a write-only GPU call), so
+    /// tests substitute this to record which filter was applied to which texture instead of asserting
+    /// on GPU state directly.
+    /// </summary>
+    internal static Action<Texture2D, Raylib_cs.TextureFilter> TextureFilterApplier { get; set; } = SetTextureFilter;
 
     /// <inheritdoc/>
     public T LoadContent<T>(string contentName)
@@ -69,6 +77,11 @@ public class ContentLoader : IContentLoader
             if (isFnt)
             {
                 Font loadedFont = Raylib.LoadFont(contentName);
+                // Apply the project's texture filter (#3496); raylib defaults new textures to point
+                // filtering. Bitmap font atlases pack glyphs edge-to-edge with little/no padding, so
+                // Linear filtering can bleed adjacent glyphs' pixels at the seams — an inherent
+                // tradeoff of the project's chosen filter, already present identically on MonoGame.
+                TextureFilterApplier(loadedFont.Texture, DefaultTextureFilter);
                 font = loadedFont;
                 // raylib's native loader discards the .fnt's lineHeight/base, so re-parse the on-disk
                 // file to record them (same registry the in-memory/KernSmith path populates via
@@ -78,6 +91,7 @@ public class ContentLoader : IContentLoader
             else
             {
                 font = LoadFontEx(contentName, 24, null, 0);
+                TextureFilterApplier(font.Value.Texture, DefaultTextureFilter);
             }
         }
         else if (isFnt)
@@ -102,6 +116,7 @@ public class ContentLoader : IContentLoader
         if (System.IO.File.Exists(contentName + ".ttf") && font == null)
         {
             font = LoadFontEx(contentName, 24, null, 0);
+            TextureFilterApplier(font.Value.Texture, DefaultTextureFilter);
         }
 
         if(font == null)
@@ -110,6 +125,7 @@ public class ContentLoader : IContentLoader
             if (File.Exists(systemFontPath))
             {
                 font = LoadFontEx(systemFontPath, 24, null, 0);
+                TextureFilterApplier(font.Value.Texture, DefaultTextureFilter);
             }
             else
             {
@@ -194,7 +210,7 @@ public class ContentLoader : IContentLoader
         var toReturn = LoadTextureFromImage(image);
         // Apply the project's texture filter (issue #3199). raylib defaults new textures to point
         // filtering, so this only changes behavior when the project requested linear/bilinear.
-        SetTextureFilter(toReturn, DefaultTextureFilter);
+        TextureFilterApplier(toReturn, DefaultTextureFilter);
         UnloadImage(image);
         return toReturn;
     }
@@ -222,6 +238,21 @@ public class ContentLoader : IContentLoader
         if (pageFileNames.Length == 0)
         {
             return null;
+        }
+
+        // Multi-page fonts loaded through this hand-rolled path are a rare edge case (bundled AND
+        // multi-page) that Gum has decided not to support — this is the intended terminal state, not
+        // a TODO. raylib's native LoadFont merges multi-page .fnt atlases into one stacked texture
+        // internally when loading straight off disk, but that native loader can't be used here (it
+        // does its own file I/O with no concept of Gum's stream hook), and silently using only page 0
+        // would mis-map every glyph on page 1+ against the wrong atlas texture with no error. #3496
+        if (pageFileNames.Length > 1)
+        {
+            throw new NotSupportedException(
+                $"Multi-page bitmap font '{fntPath}' has {pageFileNames.Length} pages, but multi-page " +
+                "fonts loaded through a custom stream (bundle/zip/in-memory asset) are not supported. " +
+                "Only single-page .fnt atlases work through this path; multi-page fonts work fine when " +
+                "loaded as plain on-disk files, where raylib merges pages natively.");
         }
 
         // Gum's FontCache fonts are single-page, and raylib's Font has a single atlas texture, so
@@ -286,6 +317,13 @@ public class ContentLoader : IContentLoader
         // texture id. The Text renderable uses these for line height and descender so raylib matches
         // the MonoGame BitmapFont; without it, line height collapses to BaseSize (no descender region).
         RaylibFontMetricsRegistry.Register(pageTexture.Id, parsedFontFile.Common.LineHeight, parsedFontFile.Common.Base);
+
+        // Apply the project's texture filter (#3496) once, here, since every bitmap-font
+        // construction path (TryLoadBitmapFontThroughStreamHook, KernSmith's BuildFontFromFntText)
+        // funnels through BuildFont. Bitmap font atlases pack glyphs edge-to-edge with little/no
+        // padding, so Linear filtering can bleed adjacent glyphs' pixels at the seams — an inherent
+        // tradeoff of the project's chosen filter, already present identically on MonoGame.
+        TextureFilterApplier(pageTexture, DefaultTextureFilter);
 
         return font;
     }

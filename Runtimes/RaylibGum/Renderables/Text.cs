@@ -840,7 +840,9 @@ public class Text : IVisible, IRenderableIpso,
         linePosition = SnapToPixelIfNeeded(linePosition);
         origin = SnapToPixelIfNeeded(origin);
 
-        Raylib.SetTextureFilter(fontValue.Texture, TextureFilter.Point);
+        // Texture filtering is applied once when the font's atlas texture is loaded/built (see
+        // ContentLoader.DefaultTextureFilter, #3496), not per-draw — a per-line GPU state reset here
+        // was both redundant and ignored the project's texture filter setting.
         DrawTextPro(fontValue, line, linePosition, origin, 0, fontValue.BaseSize * FontScale, 0, Color);
     }
 
@@ -910,8 +912,8 @@ public class Text : IVisible, IRenderableIpso,
             lineStartX += (this.Width ?? 32) - totalWidth;
         }
 
-        Raylib.SetTextureFilter(fontValue.Texture, TextureFilter.Point);
-
+        // Texture filtering is applied once when the font's atlas texture is loaded/built (see
+        // ContentLoader.DefaultTextureFilter, #3496), not per-draw.
         float advance = 0;
         for (int s = 0; s < substrings.Count; s++)
         {
