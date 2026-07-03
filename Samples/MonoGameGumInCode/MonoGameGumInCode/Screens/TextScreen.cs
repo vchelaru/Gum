@@ -11,6 +11,13 @@ namespace MonoGameGumInCode.Screens;
 
 // Reference screen for TextRuntime font behavior. Raylib and SilkNetGum mirror the KernSmith
 // baked-shadow rows where that backend supports them (#3414 / #2724).
+//
+// Section order in this file must match the raylib and SilkNetGum TextScreen.cs mirrors
+// (Samples/raylib/Screens/TextScreen.cs, Samples/SilkNetGum/SilkNetGum/Screens/TextScreen.cs)
+// exactly, top to bottom - before adding, removing, or reordering ANY section, check the sibling
+// files for the same change or the side-by-side comparison breaks silently. (Broke once when this
+// file carried extra AddCustomOutlineText rows raylib never had, pushing every later section down
+// three rows relative to raylib - #3496.)
 internal class TextScreen : FrameworkElement
 {
     public TextScreen() : base(new ContainerRuntime())
@@ -74,10 +81,6 @@ internal class TextScreen : FrameworkElement
         withOutline.Text = "I am text that has an outline.";
         (withOutline.Component as Text).RenderBoundary = true;
         container.Children.Add(withOutline);
-
-        AddCustomOutlineText(container, Color.Red);
-        AddCustomOutlineText(container, Color.DarkGreen);
-        AddCustomOutlineText(container, Color.Blue);
 
         AddBlendOnTextSection(container);
         AddTextureFilterSection(container);
@@ -189,46 +192,5 @@ internal class TextScreen : FrameworkElement
         cell.Children.Add(text);
 
         return cell;
-    }
-
-    private static void AddCustomOutlineText(ContainerRuntime container, Color color)
-    {
-        var renderTargetContainer = new ContainerRuntime();
-        renderTargetContainer.IsRenderTarget = true;
-        renderTargetContainer.Dock(Gum.Wireframe.Dock.SizeToChildren);
-        container.AddChild(renderTargetContainer);
-
-        var blendText = new TextRuntime();
-        blendText.UseCustomFont = true;
-        blendText.FontScale = 1;
-        blendText.CustomFontFile =
-            "OutlinedFont/Font52Comic_Sans_MS_o4.fnt";
-        blendText.Text = "Hello";
-        blendText.BlendState = Gum.BlendState.NonPremultiplied.ToXNA();
-        renderTargetContainer.Children.Add(blendText);
-
-        var overlay = new ColoredRectangleRuntime();
-        overlay.Color = color;
-        var blend = Gum.BlendState.MinAlpha.Clone();
-        blend.ColorSourceBlend = Gum.Blend.One;
-        blend.ColorDestinationBlend = Gum.Blend.Zero;
-        blend.ColorBlendFunction = Gum.BlendFunction.Add;
-        overlay.BlendState = blend.ToXNA();
-
-        overlay.Dock(Gum.Wireframe.Dock.Fill);
-        renderTargetContainer.AddChild(overlay);
-
-        var whiteOverlayText = new TextRuntime();
-        whiteOverlayText.UseCustomFont = true;
-        whiteOverlayText.FontScale = 1;
-        whiteOverlayText.CustomFontFile =
-            "OutlinedFont/Font52Comic_Sans_MS_o4.fnt";
-        var topBlend = Gum.BlendState.NonPremultiplied.Clone();
-        topBlend.ColorSourceBlend = Gum.Blend.One;
-        topBlend.ColorDestinationBlend = Gum.Blend.InverseSourceColor;
-        topBlend.ColorBlendFunction = Gum.BlendFunction.Add;
-        whiteOverlayText.BlendState = topBlend.ToXNA();
-        whiteOverlayText.Text = "Hello";
-        renderTargetContainer.AddChild(whiteOverlayText);
     }
 }

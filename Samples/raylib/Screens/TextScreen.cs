@@ -11,6 +11,14 @@ namespace Examples.Shapes;
 // Raylib mirror of Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/TextScreen.cs (#3414).
 // Section order matches the MG screen so baked-shadow regressions are easy to spot side by side.
 // Requires KernSmithRaylibFontCreator wired in Program.Main.
+//
+// Section order in this file must match the MonoGameGumInCode and SilkNetGum TextScreen.cs mirrors
+// (Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/TextScreen.cs,
+// Samples/SilkNetGum/SilkNetGum/Screens/TextScreen.cs) exactly, top to bottom - before adding,
+// removing, or reordering ANY section, check the sibling files for the same change or the
+// side-by-side comparison breaks silently. Raylib-only sections (TextRenderingPositionMode,
+// GetCharacterIndexAtPosition, #3432) are the sole expected exception, appended at the end.
+// (Broke once when MonoGameGumInCode carried extra AddCustomOutlineText rows raylib never had - #3496.)
 internal class TextScreen : FrameworkElement
 {
     public TextScreen() : base(new ContainerRuntime())
