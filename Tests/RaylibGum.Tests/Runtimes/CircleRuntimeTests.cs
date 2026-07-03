@@ -326,4 +326,57 @@ public class CircleRuntimeTests : BaseTestClass
         sut.GradientInnerRadiusUnits.ShouldBe(Gum.DataTypes.DimensionUnitType.ScreenPixel);
         sut.GradientOuterRadiusUnits.ShouldBe(Gum.DataTypes.DimensionUnitType.ScreenPixel);
     }
+
+    // Issue #3491 — Blend / IsAntialiased raylib parity with the XNALIKE CircleRuntime surface.
+    // Blend is real (LineCircle wraps its fill/stroke draws in the counted BeginBlendMode /
+    // EndBlendMode pair, mirroring the #3470 Sprite/NineSlice work); IsAntialiased is a round-trip
+    // parity surface only — raylib has no per-shape AA primitive, matching the GradientUnits
+    // "not yet rendered on raylib" props above and XNALIKE's own no-Apos.Shapes round-trip no-op.
+
+    [Fact]
+    public void Blend_DefaultsToNormal()
+    {
+        // Matches the non-nullable XNALIKE CircleRuntime.Blend (default Blend.Normal) so cross-
+        // backend code reading circle.Blend compiles and behaves identically on both backends.
+        CircleRuntime sut = new();
+        sut.Blend.ShouldBe(Gum.RenderingLibrary.Blend.Normal);
+    }
+
+    [Fact]
+    public void Blend_Normal_ClearsContainedRenderableBlend()
+    {
+        // Normal is the no-op default, so it maps to a null renderable Blend — LineCircle.Render
+        // then skips the BeginBlendMode/EndBlendMode wrap entirely (its `if (Blend.HasValue)` gate).
+        CircleRuntime sut = new();
+        sut.Blend = Gum.RenderingLibrary.Blend.Additive;
+        sut.Blend = Gum.RenderingLibrary.Blend.Normal;
+
+        ((LineCircle)sut.RenderableComponent!).Blend.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Blend_RoundTrips_AndPushesToContainedRenderable()
+    {
+        CircleRuntime sut = new();
+        sut.Blend = Gum.RenderingLibrary.Blend.Additive;
+
+        sut.Blend.ShouldBe(Gum.RenderingLibrary.Blend.Additive);
+        ((LineCircle)sut.RenderableComponent!).Blend.ShouldBe(Gum.RenderingLibrary.Blend.Additive);
+    }
+
+    [Fact]
+    public void IsAntialiased_DefaultsToTrue()
+    {
+        // Matches XNALIKE (and Apos.Shapes) — AA on by default.
+        CircleRuntime sut = new();
+        sut.IsAntialiased.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsAntialiased_RoundTrips()
+    {
+        CircleRuntime sut = new();
+        sut.IsAntialiased = false;
+        sut.IsAntialiased.ShouldBeFalse();
+    }
 }
