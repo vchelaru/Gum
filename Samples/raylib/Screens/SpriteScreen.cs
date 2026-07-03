@@ -190,15 +190,6 @@ internal class SpriteScreen : FrameworkElement
             redBackground.Width = 32;
             redBackground.Height = 32;
             redBackground.Color = Color.Red;
-            // MinAlpha cell only: drop the underlying alpha to 128 so the result is visibly
-            // distinct from ReplaceAlpha. ReplaceAlpha overwrites with the bear's alpha (opaque
-            // bear -> 255), while MinAlpha keeps the lower of the two (min(128, 255) = 128, so the
-            // bear silhouette renders at half opacity instead of fully opaque). With alpha=255
-            // underlying, the two cells look identical.
-            if (blend == Gum.RenderingLibrary.Blend.MinAlpha)
-            {
-                redBackground.Alpha = 128;
-            }
             cell.AddChild(redBackground);
 
             var alphaMasker = new SpriteRuntime();
@@ -206,6 +197,19 @@ internal class SpriteScreen : FrameworkElement
             alphaMasker.Width = 64;
             alphaMasker.Height = 64;
             alphaMasker.Blend = blend;
+            // MinAlpha cell only: drop the BEAR's own alpha to 128 (background stays fully opaque
+            // at 255). This makes min() actually pick a *different* side depending on region rather
+            // than always landing on the same one: inside the bear, min(255, 128) = 128 (the bear's
+            // reduced alpha wins over the opaque background); outside the bear (fully transparent
+            // PNG area), min(255, 0) = 0 (fully punched through); at the bear's anti-aliased edge,
+            // the texture's own partial alpha gives a third, in-between level. Three visibly
+            // distinct bands from one texture, no gradient asset needed. (Previously this dropped
+            // the *background*'s alpha to 128 instead, which only ever showed two flat levels —
+            // min(128, 255) always resolved to the same fixed 128 everywhere the bear covered.)
+            if (blend == Gum.RenderingLibrary.Blend.MinAlpha)
+            {
+                alphaMasker.Alpha = 128;
+            }
             cell.AddChild(alphaMasker);
 
             alphaBlendRow.AddChild(cell);
