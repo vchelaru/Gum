@@ -60,6 +60,47 @@ internal class CirclesScreen : FrameworkElement
         right.AddChild(BuildSection("Hairline bleed (#2834)", BuildHairlineBleedRow()));
         right.AddChild(BuildSection("Inscribed", BuildInscribedRow()));
         right.AddChild(BuildSection("Non-square aspect", BuildNonSquareRow()));
+        right.AddChild(BuildSection("Blend (additive #3491)", BuildBlendRow()));
+    }
+
+    // Issue #3491 — mirror of the raylib CirclesScreen "Blend (additive)" cell so the galleries
+    // stay comparable side-by-side. Three filled RGB circles overlapping on a black frame, each
+    // with Blend = Additive. On the shapes-package (Apos) side the blend folds into each circle's
+    // batch key, so the overlaps read yellow (R+G) / cyan (G+B) / magenta (R+B) and the center
+    // white. Blend is XNALIKE-only on CircleRuntime, so there's no Skia mirror (SkiaShapeRuntime
+    // has no Blend); this cell is the MonoGame/raylib counterpart pair.
+    static RectangleRuntime BuildBlendRow()
+    {
+        RectangleRuntime frame = new();
+        frame.Width = 130;
+        frame.Height = 110;
+        frame.FillColor = Color.Black;
+        frame.IsFilled = true;
+
+        (Color color, float x, float y)[] discs =
+        {
+            (Color.Red, 0f, -14f),
+            (Color.Lime, -14f, 10f),
+            (Color.Blue, 14f, 10f),
+        };
+
+        foreach ((Color color, float x, float y) in discs)
+        {
+            CircleRuntime circle = new();
+            circle.Radius = 26;
+            circle.FillColor = color;
+            circle.IsFilled = true;
+            circle.Blend = Gum.RenderingLibrary.Blend.Additive;
+            circle.XOrigin = HorizontalAlignment.Center;
+            circle.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+            circle.X = x;
+            circle.YOrigin = VerticalAlignment.Center;
+            circle.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+            circle.Y = y;
+            frame.Children.Add(circle);
+        }
+
+        return frame;
     }
 
     static ContainerRuntime BuildColumn()
