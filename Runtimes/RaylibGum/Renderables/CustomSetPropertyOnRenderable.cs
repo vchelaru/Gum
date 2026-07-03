@@ -3,6 +3,7 @@
 #endif
 using Gum.Content.AnimationChain;
 using Gum.DataTypes;
+using Gum.Graphics.Animation;
 using Gum.RenderingLibrary;
 using RenderingLibrary;
 using RenderingLibrary.Content;
@@ -233,20 +234,19 @@ public class CustomSetPropertyOnRenderable
         {
             nineSlice.SetSingleTexture(null);
         }
-        // not yet supported:
-        //else if (value.EndsWith(".achx"))
-        //{
-        //    AnimationChainList animationChainList = GetAnimationChainList(ref value, loaderManager);
+        else if (value.EndsWith(".achx"))
+        {
+            AnimationChainList animationChainList = GetAnimationChainList(ref value, loaderManager);
 
-        //    nineSlice.AnimationChains = animationChainList;
+            nineSlice.AnimationChains = animationChainList;
 
-        //    nineSlice.RefreshCurrentChainToDesiredName();
+            nineSlice.RefreshCurrentChainToDesiredName();
 
-        //    nineSlice.UpdateToCurrentAnimationFrame();
+            nineSlice.UpdateToCurrentAnimationFrame();
 
-        //    graphicalUiElement.UpdateTextureValuesFrom(nineSlice);
+            graphicalUiElement.UpdateTextureValuesFrom(nineSlice);
 
-        //}
+        }
         else
         {
             if (ToolsUtilities.FileManager.IsRelative(value))
@@ -760,19 +760,47 @@ public class CustomSetPropertyOnRenderable
 
             graphicalUiElement.UpdateLayout();
         }
-        //else if (value.EndsWith(".achx"))
-        //{
-        //    AnimationChainList animationChainList = GetAnimationChainList(ref value, loaderManager);
+        else if (value.EndsWith(".achx"))
+        {
+            AnimationChainList? animationChainList = null;
+            try
+            {
+                animationChainList = GetAnimationChainList(ref value, loaderManager);
+                sprite.AnimationChains = animationChainList;
+            }
+            catch(Exception ex)
+            {
+                string message = $"Error setting SourceFile to on Sprite";
 
-        //    sprite.AnimationChains = animationChainList;
+                if (graphicalUiElement.Tag != null)
+                {
+                    message += $" in {graphicalUiElement.Tag}";
+                }
+                message += $"\n{value}";
+                message += "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory";
+                message += "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
+                if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
+                {
+                    if (ObjectFinder.Self.GumProjectSave == null)
+                    {
+                        message += "\nNo Gum project has been loaded";
+                    }
 
-        //    sprite.RefreshCurrentChainToDesiredName();
+                    throw new System.IO.FileNotFoundException(message, ex);
+                }
+                sprite.AnimationChains = null;
 
-        //    sprite.UpdateToCurrentAnimationFrame();
+                PropertyAssignmentError?.Invoke(message + "\n" + ex.ToString());
+            }
 
-        //    graphicalUiElement.UpdateTextureValuesFrom(sprite);
-        //    handled = true;
-        //}
+
+            sprite.RefreshCurrentChainToDesiredName();
+
+            sprite.UpdateToCurrentAnimationFrame();
+
+            graphicalUiElement.UpdateTextureValuesFrom(sprite);
+            handled = true;
+        }
         else
         {
             if (ToolsUtilities.FileManager.IsRelative(value) && ToolsUtilities.FileManager.IsUrl(value) == false)
@@ -828,6 +856,37 @@ public class CustomSetPropertyOnRenderable
         }
         handled = true;
         return handled;
+    }
+
+    private static AnimationChainList? GetAnimationChainList(ref string value,
+        // fully qualify to avoid Android namign conflicts
+        global::RenderingLibrary.Content.LoaderManager loaderManager)
+    {
+        if (ToolsUtilities.FileManager.IsRelative(value))
+        {
+            value = ToolsUtilities.FileManager.RelativeDirectory + value;
+
+            value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
+        }
+
+        AnimationChainList? animationChainList = null;
+
+        if (loaderManager.CacheTextures)
+        {
+            animationChainList = loaderManager.GetDisposable(value) as AnimationChainList;
+        }
+
+        if (animationChainList == null)
+        {
+            var animationChainListSave = AnimationChainListSave.FromFile(value);
+            animationChainList = animationChainListSave.ToAnimationChainList();
+            if (loaderManager.CacheTextures)
+            {
+                loaderManager.AddDisposable(value, animationChainList);
+            }
+        }
+
+        return animationChainList;
     }
 
 
