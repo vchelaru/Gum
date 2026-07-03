@@ -62,8 +62,8 @@ internal class SpriteScreen : FrameworkElement
         // Wrap / tiling (issue #3456) — TextureWidth/Height set to 2x the source file's pixel
         // dimensions (BearTexture.png is 39x40) so the source rectangle extends past the texture
         // bounds. With Wrap=false the area beyond the bounds clamps/stretches; with Wrap=true it
-        // repeats the bear 2x2 across the sprite. Compare against the raylib mirror of this screen —
-        // raylib's Wrap=false cell is a known gap (#3459) and still repeats instead of clamping.
+        // repeats the bear 2x2 across the sprite. Compare against the raylib mirror of this screen,
+        // which now matches (issue #3459 — raylib's Wrap=false clamps via software edge-stretching).
         AddLabel(container, "Wrap (false = clamp/stretch, true = tile, BearTexture.png 2x2):");
         var wrapRow = AddRow(container);
         foreach (var wrap in new[] { false, true })
