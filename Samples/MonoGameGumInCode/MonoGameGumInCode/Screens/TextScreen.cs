@@ -29,6 +29,20 @@ internal class TextScreen : FrameworkElement
         textRuntime.Text = "Hi, I'm default text";
         container.Children.Add(textRuntime);
 
+        // Blend on Text (#3432): additive (brightens) vs normal, over an identical blue box. Mirrors
+        // the raylib TextScreen's row so the two backends can be compared side by side.
+        AddSectionLabel(container, "Blend on Text (#3432): additive (brightens) vs normal, over a blue box");
+        var blendRow = new ContainerRuntime();
+        blendRow.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        blendRow.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        blendRow.Width = 0;
+        blendRow.Height = 0;
+        blendRow.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+        blendRow.StackSpacing = 16;
+        blendRow.AddChild(BuildBlendCell("Additive", Gum.RenderingLibrary.Blend.Additive));
+        blendRow.AddChild(BuildBlendCell("Normal", null));
+        container.Children.Add(blendRow);
+
         AddSectionLabel(container, "BBCode markup - inline color runs (#3471):");
         var colorMarkup = new TextRuntime();
         colorMarkup.FontSize = 24;
@@ -83,6 +97,42 @@ internal class TextScreen : FrameworkElement
         label.Text = text;
         label.FontSize = 14;
         container.Children.Add(label);
+    }
+
+    // One Blend-on-Text cell: amber text over a blue box. Amber (not white) so the Additive cell
+    // visibly brightens - additive can only brighten, and white is already maxed, so white text would
+    // render identically under Additive and Normal. Mirrors BuildBlendCell in the raylib TextScreen.
+    private static ContainerRuntime BuildBlendCell(string label, Gum.RenderingLibrary.Blend? blend)
+    {
+        var cell = new ContainerRuntime();
+        cell.Width = 200;
+        cell.Height = 48;
+
+        var background = new RectangleRuntime();
+        background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        background.Width = 0;
+        background.Height = 0;
+        background.IsFilled = true;
+        background.FillColor = new Color(40, 60, 160, 255);
+        cell.Children.Add(background);
+
+        var text = new TextRuntime();
+        text.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        text.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        text.Width = 0;
+        text.Height = 0;
+        text.FontSize = 24;
+        text.Text = label;
+        text.Red = 230;
+        text.Green = 150;
+        text.Blue = 40;
+        text.HorizontalAlignment = HorizontalAlignment.Center;
+        text.VerticalAlignment = VerticalAlignment.Center;
+        text.Blend = blend;
+        cell.Children.Add(text);
+
+        return cell;
     }
 
     private static void AddCustomOutlineText(ContainerRuntime container, Color color)

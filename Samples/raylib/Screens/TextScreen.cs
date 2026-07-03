@@ -167,9 +167,13 @@ internal class TextScreen : FrameworkElement
         text.Height = 0;
         text.FontSize = 24;
         text.Text = label;
-        text.Red = 255;
-        text.Green = 255;
-        text.Blue = 255;
+        // Amber, not white: additive can only brighten, and white is already maxed, so white text
+        // renders identically under Additive and Normal. A mid-intensity warm color visibly washes
+        // out toward bright peach when added to the blue box, making the Additive cell obviously
+        // different from the Normal one.
+        text.Red = 230;
+        text.Green = 150;
+        text.Blue = 40;
         text.HorizontalAlignment = HorizontalAlignment.Center;
         text.VerticalAlignment = VerticalAlignment.Center;
         text.Blend = blend;
