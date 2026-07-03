@@ -52,7 +52,7 @@ public class TextRuntime : InteractiveGue
 
 #if !RAYLIB && !SKIA
     /// <summary>
-    /// The XNA blend state used when rendering the text. This controls how 
+    /// The XNA blend state used when rendering the text. This controls how
     /// color and alpha values blend with the background.
     /// </summary>
     public Microsoft.Xna.Framework.Graphics.BlendState BlendState
@@ -65,20 +65,35 @@ public class TextRuntime : InteractiveGue
             NotifyPropertyChanged(nameof(Blend));
         }
     }
+#endif
 
+#if !SKIA
+    /// <summary>
+    /// The Gum-specific Blend mode for the text. Null means "use the renderer's current
+    /// blend mode" (typically alpha blending).
+    /// </summary>
     public Gum.RenderingLibrary.Blend? Blend
     {
         get
         {
+#if RAYLIB
+            return ContainedText.Blend;
+#else
             return Gum.RenderingLibrary.BlendExtensions.ToBlend(ContainedText.BlendState);
+#endif
         }
         set
         {
+#if RAYLIB
+            ContainedText.Blend = value;
+            NotifyPropertyChanged();
+#else
             if (value.HasValue)
             {
                 BlendState = value.Value.ToBlendState().ToXNA();
             }
             // NotifyPropertyChanged handled by BlendState:
+#endif
         }
     }
 #endif
@@ -548,7 +563,7 @@ public class TextRuntime : InteractiveGue
         }
     }
 
-#if !RAYLIB && !SKIA
+#if !SKIA
     /// <summary>
     /// Gets or sets the text rendering position mode to use for the contained text, overriding the default behavior if
     /// specified.
@@ -774,7 +789,7 @@ public class TextRuntime : InteractiveGue
     public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 #endif
 
-#if !RAYLIB && !SKIA
+#if !SKIA
     /// <summary>
     /// Returns the index of the character at the specified screen position. This returns the index
     /// within the WrappedText, so to index in, you need to loop through each line.

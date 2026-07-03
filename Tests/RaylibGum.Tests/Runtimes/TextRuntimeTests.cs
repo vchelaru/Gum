@@ -398,6 +398,34 @@ public class TextRuntimeTests : BaseTestClass
 
     #endregion
 
+    #region GetCharacterIndexAtPosition
+
+    // The pass-through delegates to the shared TextExtensions.GetCharacterIndexAtPosition, whose
+    // RAYLIB branch measures per-character width with MeasureTextEx. A click at the very left edge of
+    // an unmanaged Text (absolute origin 0,0) must land on the first character.
+    [Fact]
+    public void GetCharacterIndexAtPosition_AtLeftEdge_ShouldReturnZero()
+    {
+        // An unmanaged Text sits at absolute origin (0,0), so screen (0,0) is its top-left.
+        TextRuntime sut = new();
+        sut.Text = "Hello";
+
+        sut.GetCharacterIndexAtPosition(0, 0).ShouldBe(0);
+    }
+
+    // A click far past the right edge of a single line clamps to the end of the text (index == length),
+    // matching the MonoGame renderable's behavior.
+    [Fact]
+    public void GetCharacterIndexAtPosition_FarRightOfSingleLine_ShouldReturnTextLength()
+    {
+        TextRuntime sut = new();
+        sut.Text = "Hello";
+
+        sut.GetCharacterIndexAtPosition(1000, 0).ShouldBe(5);
+    }
+
+    #endregion
+
     #region HeightUnits
 
     [Fact]
@@ -618,6 +646,69 @@ public class TextRuntimeTests : BaseTestClass
         sut.TextOverflowHorizontalMode = TextOverflowHorizontalMode.EllipsisLetter;
         sut.TextOverflowHorizontalMode = TextOverflowHorizontalMode.TruncateWord;
         sut.TextOverflowHorizontalMode.ShouldBe(TextOverflowHorizontalMode.TruncateWord);
+    }
+
+    #endregion
+
+    #region TextRenderingPositionMode
+
+    // The renderable resolves its effective mode as (instance override ?? static default), mirroring
+    // the MonoGame BitmapFont path. With no override set, the static default wins.
+    [Fact]
+    public void EffectiveTextRenderingPositionMode_ShouldFallBackToStatic_WhenNoOverride()
+    {
+        Gum.Renderables.TextRenderingPositionMode saved = Gum.Renderables.Text.TextRenderingPositionMode;
+        try
+        {
+            Gum.Renderables.Text.TextRenderingPositionMode = Gum.Renderables.TextRenderingPositionMode.FreeFloating;
+            TextRuntime sut = new();
+            Gum.Renderables.Text renderable = (Gum.Renderables.Text)sut.RenderableComponent;
+            renderable.OverrideTextRenderingPositionMode = null;
+
+            renderable.EffectiveTextRenderingPositionMode.ShouldBe(Gum.Renderables.TextRenderingPositionMode.FreeFloating);
+        }
+        finally
+        {
+            Gum.Renderables.Text.TextRenderingPositionMode = saved;
+        }
+    }
+
+    // A per-instance override takes precedence over the static default.
+    [Fact]
+    public void EffectiveTextRenderingPositionMode_ShouldPreferInstanceOverride_OverStatic()
+    {
+        Gum.Renderables.TextRenderingPositionMode saved = Gum.Renderables.Text.TextRenderingPositionMode;
+        try
+        {
+            Gum.Renderables.Text.TextRenderingPositionMode = Gum.Renderables.TextRenderingPositionMode.SnapToPixel;
+            TextRuntime sut = new();
+            Gum.Renderables.Text renderable = (Gum.Renderables.Text)sut.RenderableComponent;
+            renderable.OverrideTextRenderingPositionMode = Gum.Renderables.TextRenderingPositionMode.FreeFloating;
+
+            renderable.EffectiveTextRenderingPositionMode.ShouldBe(Gum.Renderables.TextRenderingPositionMode.FreeFloating);
+        }
+        finally
+        {
+            Gum.Renderables.Text.TextRenderingPositionMode = saved;
+        }
+    }
+
+    [Fact]
+    public void TextRenderingPositionMode_ShouldDefaultToNull()
+    {
+        TextRuntime sut = new();
+        sut.TextRenderingPositionMode.ShouldBeNull();
+    }
+
+    [Fact]
+    public void TextRenderingPositionMode_ShouldRoundTripThroughRenderable()
+    {
+        TextRuntime sut = new();
+        sut.TextRenderingPositionMode = Gum.Renderables.TextRenderingPositionMode.FreeFloating;
+
+        sut.TextRenderingPositionMode.ShouldBe(Gum.Renderables.TextRenderingPositionMode.FreeFloating);
+        ((Gum.Renderables.Text)sut.RenderableComponent).OverrideTextRenderingPositionMode
+            .ShouldBe(Gum.Renderables.TextRenderingPositionMode.FreeFloating);
     }
 
     #endregion

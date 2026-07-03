@@ -136,7 +136,23 @@ public class Text : IVisible, IRenderableIpso,
     /// small fonts.
     /// </summary>
     public static TextRenderingPositionMode TextRenderingPositionMode = TextRenderingPositionMode.SnapToPixel;
-    
+
+    /// <summary>
+    /// Per-instance override for <see cref="TextRenderingPositionMode"/>. When null (the default),
+    /// this Text uses the static <see cref="TextRenderingPositionMode"/>; when set, it overrides the
+    /// static default for this instance only. Mirrors the MonoGame Text renderable.
+    /// </summary>
+    public TextRenderingPositionMode? OverrideTextRenderingPositionMode;
+
+    /// <summary>
+    /// The position mode actually applied when drawing this Text: the per-instance
+    /// <see cref="OverrideTextRenderingPositionMode"/> when set, otherwise the static
+    /// <see cref="TextRenderingPositionMode"/>. Matches the MonoGame BitmapFont resolution.
+    /// </summary>
+    internal TextRenderingPositionMode EffectiveTextRenderingPositionMode =>
+        OverrideTextRenderingPositionMode ?? TextRenderingPositionMode;
+
+
     /// <summary>
     /// How the renderer should round text rendering to whole pixels. Only applies if
     /// TextRenderingPositionMode is SnapToPixel. Default is to use special integer rounding.
@@ -345,7 +361,22 @@ public class Text : IVisible, IRenderableIpso,
     public object Tag { get; set; }
 
 
-    public BlendState BlendState { get; set; } = BlendState.NonPremultiplied;
+    /// <summary>
+    /// The Gum blend mode applied when this text is drawn. Null means "use the renderer's current
+    /// blend mode" (typically alpha blending). Honored in <see cref="Render"/> via the shared
+    /// <see cref="RenderingLibrary.Graphics.BatchDrawCallCounter"/>, mirroring the raylib Sprite and
+    /// NineSlice renderables.
+    /// </summary>
+    public global::Gum.RenderingLibrary.Blend? Blend { get; set; }
+
+    // Satisfies the IRenderable contract by deriving from Blend, so there is a single source of
+    // truth for this Text's blend mode. Render consumes Blend directly; this getter exists only for
+    // the interface (e.g. render-target additive-composite detection on RenderableBase does not
+    // apply to Text, but any generic IRenderable consumer still gets the correct state).
+    global::Gum.BlendState IRenderable.BlendState =>
+        Blend.HasValue
+            ? global::Gum.RenderingLibrary.BlendExtensions.ToBlendState(Blend.Value)
+            : global::Gum.BlendState.NonPremultiplied;
 
     public int FontSize
     {
@@ -683,13 +714,13 @@ public class Text : IVisible, IRenderableIpso,
 
     /// <summary>
     /// Rounds a position/origin to whole pixels using the configured <see cref="TextPositionRoundingMode"/>
-    /// when <see cref="TextRenderingPositionMode"/> is SnapToPixel; otherwise returns the value unchanged.
+    /// when the <see cref="EffectiveTextRenderingPositionMode"/> is SnapToPixel; otherwise returns the value unchanged.
     /// Rounding origin along with position avoids the baseline misalignment / "sizzle" seen on small pixel
     /// fonts when vertical alignment produces fractional values.
     /// </summary>
-    private static Vector2 SnapToPixelIfNeeded(Vector2 value)
+    private Vector2 SnapToPixelIfNeeded(Vector2 value)
     {
-        if (TextRenderingPositionMode != TextRenderingPositionMode.SnapToPixel)
+        if (EffectiveTextRenderingPositionMode != TextRenderingPositionMode.SnapToPixel)
         {
             return value;
         }
@@ -737,6 +768,13 @@ public class Text : IVisible, IRenderableIpso,
         // in the line string, so advancing by the (untruncated) line length keeps this in sync.
         int startOfLineIndex = 0;
 
+        // Honor an explicit Blend by wrapping every glyph draw in a begin/end pair, mirroring the
+        // raylib Sprite and NineSlice renderables. Null Blend leaves the renderer's ambient mode.
+        if (Blend.HasValue)
+        {
+            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend.Value);
+        }
+
         for(int i = 0; i < WrappedText.Count; i++)
         {
             var line = WrappedText[i];
@@ -772,6 +810,11 @@ public class Text : IVisible, IRenderableIpso,
             }
 
             startOfLineIndex += WrappedText[i].Length;
+        }
+
+        if (Blend.HasValue)
+        {
+            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.EndBlendMode();
         }
     }
 
