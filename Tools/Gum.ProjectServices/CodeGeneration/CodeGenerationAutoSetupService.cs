@@ -21,11 +21,20 @@ public class AutoSetupResult
 
 /// <summary>
 /// Inspects the file system to automatically configure <see cref="CodeOutputProjectSettings"/> for a
-/// Gum project. Walks up from the .gumx directory to find the nearest .csproj, then derives
-/// <c>CodeProjectRoot</c>, <c>RootNamespace</c>, and <c>OutputLibrary</c> from it.
+/// Gum project. Walks up from the .gumx directory to find the nearest project file (see
+/// <see cref="RecognizedProjectFileExtensions"/>), then derives <c>CodeProjectRoot</c>,
+/// <c>RootNamespace</c>, and <c>OutputLibrary</c> from it.
 /// </summary>
 public class CodeGenerationAutoSetupService : ICodeGenerationAutoSetupService
 {
+    /// <summary>
+    /// File extensions (without the leading dot) recognized as marking a valid project root
+    /// directory above a .gumx file. Includes <c>.csproj</c>/<c>.vbproj</c>/<c>.fsproj</c> as well as
+    /// <c>.shproj</c> shared projects, which are a common container for Gum content in multi-head
+    /// (e.g. Desktop + Blazor) setups.
+    /// </summary>
+    public static readonly string[] RecognizedProjectFileExtensions = { "csproj", "shproj", "vbproj", "fsproj" };
+
     /// <inheritdoc/>
     public AutoSetupResult Run(string gumxFilePath)
     {
@@ -37,18 +46,19 @@ public class CodeGenerationAutoSetupService : ICodeGenerationAutoSetupService
             gumxDirectory += Path.DirectorySeparatorChar;
         }
 
-        string? csprojDirectory = FindCsprojDirectory(gumxDirectory);
+        string? projectDirectory = FindProjectDirectory(gumxDirectory);
 
-        if (csprojDirectory == null)
+        if (projectDirectory == null)
         {
+            string extensionList = string.Join(", ", RecognizedProjectFileExtensions.Select(extension => $".{extension}"));
             return new AutoSetupResult
             {
                 Success = false,
-                ErrorMessage = "No .csproj file found in any parent directory of the .gumx file. Cannot automatically configure code generation."
+                ErrorMessage = $"No {extensionList} file found in any parent directory of the .gumx file. Cannot automatically configure code generation."
             };
         }
 
-        return BuildResultFromCsprojDirectory(gumxDirectory, csprojDirectory, explicitCsprojPath: null);
+        return BuildResultFromCsprojDirectory(gumxDirectory, projectDirectory, explicitCsprojPath: null);
     }
 
     /// <inheritdoc/>
@@ -80,9 +90,9 @@ public class CodeGenerationAutoSetupService : ICodeGenerationAutoSetupService
     }
 
     private static AutoSetupResult BuildResultFromCsprojDirectory(
-        string gumxDirectory, string csprojDirectory, string? explicitCsprojPath)
+        string gumxDirectory, string projectDirectory, string? explicitCsprojPath)
     {
-        string codeProjectRoot = Path.GetRelativePath(gumxDirectory, csprojDirectory);
+        string codeProjectRoot = Path.GetRelativePath(gumxDirectory, projectDirectory);
         if (codeProjectRoot == ".")
         {
             codeProjectRoot = "./";
@@ -101,13 +111,19 @@ public class CodeGenerationAutoSetupService : ICodeGenerationAutoSetupService
 
         settings.SetDefaults();
 
-        string? csprojPath = explicitCsprojPath ?? Directory
-            .EnumerateFiles(csprojDirectory, "*.csproj", SearchOption.TopDirectoryOnly)
+        string? projectFilePath = explicitCsprojPath ?? RecognizedProjectFileExtensions
+            .SelectMany(extension => Directory.EnumerateFiles(projectDirectory, $"*.{extension}", SearchOption.TopDirectoryOnly))
             .FirstOrDefault();
 
-        if (csprojPath != null)
+        // Shared projects (.shproj) don't carry PackageReference/RootNamespace MSBuild metadata like a
+        // .csproj does, so leave OutputLibrary/RootNamespace at their defaults for the user to fill in
+        // manually — same as the no-project-found fallback does today.
+        bool isSharedProject = projectFilePath != null
+            && string.Equals(Path.GetExtension(projectFilePath), ".shproj", StringComparison.OrdinalIgnoreCase);
+
+        if (projectFilePath != null && !isSharedProject)
         {
-            string contents = File.ReadAllText(csprojPath);
+            string contents = File.ReadAllText(projectFilePath);
 
             bool isMonoGameBased =
                 contents.Contains("<PackageReference Include=\"MonoGame.Framework.", StringComparison.Ordinal) ||
@@ -128,7 +144,7 @@ public class CodeGenerationAutoSetupService : ICodeGenerationAutoSetupService
                 settings.OutputLibrary = OutputLibrary.Raylib;
             }
 
-            settings.RootNamespace = ExtractRootNamespace(contents, csprojPath);
+            settings.RootNamespace = ExtractRootNamespace(contents, projectFilePath);
         }
 
         return new AutoSetupResult
@@ -138,17 +154,16 @@ public class CodeGenerationAutoSetupService : ICodeGenerationAutoSetupService
         };
     }
 
-    private static string? FindCsprojDirectory(string startDirectory)
+    private static string? FindProjectDirectory(string startDirectory)
     {
         string? current = startDirectory;
 
         while (current != null)
         {
-            bool hasCsproj = Directory
-                .EnumerateFiles(current, "*.csproj", SearchOption.TopDirectoryOnly)
-                .Any();
+            bool hasProjectFile = RecognizedProjectFileExtensions
+                .Any(extension => Directory.EnumerateFiles(current, $"*.{extension}", SearchOption.TopDirectoryOnly).Any());
 
-            if (hasCsproj)
+            if (hasProjectFile)
             {
                 return current;
             }

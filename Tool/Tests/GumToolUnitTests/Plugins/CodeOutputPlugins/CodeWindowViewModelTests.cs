@@ -91,6 +91,37 @@ public class CodeWindowViewModelTests
     }
 
     [Fact]
+    public void ShouldShowSetup_ReturnsTrue_WhenShprojAboveGumxAndCodeProjectRootEmpty()
+    {
+        string gumDirectory = @"C:\game\Content\GumProject\";
+        string shprojDirectory = @"C:\game\";
+
+        _mocker.GetMock<IProjectState>()
+            .Setup(p => p.ProjectDirectory)
+            .Returns(gumDirectory);
+
+        Mock<IFileCommands> fileCommandsMock = _mocker.GetMock<IFileCommands>();
+        FilePath shprojPath = new FilePath(shprojDirectory);
+        fileCommandsMock
+            .Setup(f => f.GetFiles(It.IsAny<string>()))
+            .Returns<string>(path =>
+            {
+                FilePath asFilePath = new FilePath(path);
+                if (asFilePath == shprojPath)
+                {
+                    return new[] { Path.Combine(shprojDirectory, "Shared.shproj") };
+                }
+                return Array.Empty<string>();
+            });
+
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings { CodeProjectRoot = string.Empty };
+
+        bool result = _viewModel.ShouldShowSetup(settings, hasClickedManualSetup: false);
+
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
     public void ShouldShowSetup_ReturnsFalse_WhenNoCsprojExistsAboveGumx()
     {
         string gumDirectory = @"C:\game\Content\GumProject\";
