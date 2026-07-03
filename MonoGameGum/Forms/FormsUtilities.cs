@@ -570,10 +570,21 @@ public class FormsUtilities
             gamepad.SetButtonState(GumGamepadButton.LeftStick, Raylib.IsGamepadButtonDown(i, RaylibGamepadButton.LeftThumb));
             gamepad.SetButtonState(GumGamepadButton.RightStick, Raylib.IsGamepadButtonDown(i, RaylibGamepadButton.RightThumb));
 
+            // Gum's GamePad models triggers as a digital button only (no analog trigger value), so
+            // read the digital trigger buttons LeftTrigger2/RightTrigger2 (LT/RT) directly — this is
+            // exact parity with the MonoGame driver's thresholded triggers and avoids raylib's
+            // trigger-axis rest-at-(-1) convention. (LeftTrigger1/RightTrigger1 are the shoulders above.)
+            gamepad.SetButtonState(GumGamepadButton.LeftTrigger, Raylib.IsGamepadButtonDown(i, RaylibGamepadButton.LeftTrigger2));
+            gamepad.SetButtonState(GumGamepadButton.RightTrigger, Raylib.IsGamepadButtonDown(i, RaylibGamepadButton.RightTrigger2));
+
             // Raylib reports stick Y as positive-down; flip it to the XNA/Gum convention (positive-up).
             float leftX = Raylib.GetGamepadAxisMovement(i, RaylibGamepadAxis.LeftX);
             float leftY = Raylib.GetGamepadAxisMovement(i, RaylibGamepadAxis.LeftY);
             gamepad.SetLeftStickPosition(leftX, -leftY);
+
+            float rightX = Raylib.GetGamepadAxisMovement(i, RaylibGamepadAxis.RightX);
+            float rightY = Raylib.GetGamepadAxisMovement(i, RaylibGamepadAxis.RightY);
+            gamepad.SetRightStickPosition(rightX, -rightY);
 
             gamepad.Activity(time);
         }
