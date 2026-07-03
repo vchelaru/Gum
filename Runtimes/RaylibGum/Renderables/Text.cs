@@ -899,11 +899,92 @@ public class Text : IVisible, IRenderableIpso,
 
         if (this.mRawText != null)
         {
-            GetRequiredWidthAndHeight(WrappedText, out requiredWidth, out requiredHeight, null);
+            // #3481: when the text carries inline [FontScale=N] runs, each line's reported size must
+            // grow by the largest scale covering it, or a tall run overflows its slot and overlaps
+            // the next stacked sibling. FontScale <= 0 falls through to the plain path (everything
+            // downstream multiplies by it, so the result is 0 either way, and it avoids a
+            // divide-by-zero in the per-run base-unit conversion). Kept in parity with the MonoGame
+            // Text.UpdatePreRenderDimensions (RenderingLibrary/Graphics/Text.cs).
+            if (InlineVariables.Count > 0 && FontScale > 0)
+            {
+                GetInlineVariableAwareWidthAndHeight(out requiredWidth, out requiredHeight);
+            }
+            else
+            {
+                GetRequiredWidthAndHeight(WrappedText, out requiredWidth, out requiredHeight, null);
+            }
         }
 
         mPreRenderWidth = (int)(requiredWidth + .5f);
         mPreRenderHeight = (int)(requiredHeight * LineHeightMultiplier + .5f);
+    }
+
+    /// <summary>
+    /// Mirrors <see cref="GetRequiredWidthAndHeight"/> but grows each line by the largest inline
+    /// <see cref="FontScale"/> run covering it (issue #3481).
+    /// </summary>
+    /// <remarks>
+    /// <see cref="mPreRenderWidth"/>/<see cref="mPreRenderHeight"/> are stored in BASE units (the
+    /// caller multiplies by <see cref="FontScale"/> downstream), while an inline [FontScale=N] is an
+    /// ABSOLUTE per-run scale (matching how <see cref="DrawStyledLine"/> draws it). So each run's
+    /// contribution is divided by <see cref="FontScale"/> to land back in base units. A line with no
+    /// runs, or only non-scale runs (e.g. Color), keeps a factor of 1. FontScale (the base Text
+    /// scale) is the floor, so an inline run smaller than the base does not shrink the line.
+    /// Line-wrapping is intentionally still base-scale-only (deferred per #3471); this only affects
+    /// size reporting.
+    /// </remarks>
+    private void GetInlineVariableAwareWidthAndHeight(out int requiredWidth, out int requiredHeight)
+    {
+        float baseScale = FontScale;
+
+        float maxWidth = 0;
+        float totalHeight = 0;
+
+        int startOfLineIndex = 0;
+        for (int lineIndex = 0; lineIndex < WrappedText.Count; lineIndex++)
+        {
+            var line = WrappedText[lineIndex];
+            var substrings = GetStyledSubstrings(startOfLineIndex, line);
+
+            float lineHeightFactor;
+            float lineWidthInBaseUnits;
+
+            if (substrings.Count == 0)
+            {
+                lineHeightFactor = 1;
+                lineWidthInBaseUnits = MeasureString(line);
+            }
+            else
+            {
+                float maxRunScale = baseScale;
+                float lineWidthAtScale = 0;
+                for (int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
+                {
+                    var substring = substrings[substringIndex];
+                    float runScale = baseScale;
+                    for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
+                    {
+                        if (substring.Variables[variableIndex].VariableName == nameof(FontScale))
+                        {
+                            runScale = (float)substring.Variables[variableIndex].Value;
+                        }
+                    }
+                    lineWidthAtScale += MeasureString(substring.Substring) * runScale;
+                    maxRunScale = System.Math.Max(maxRunScale, runScale);
+                }
+                lineHeightFactor = maxRunScale / baseScale;
+                lineWidthInBaseUnits = lineWidthAtScale / baseScale;
+            }
+
+            maxWidth = System.Math.Max(maxWidth, lineWidthInBaseUnits);
+            totalHeight += LineHeightInPixels * lineHeightFactor;
+
+            startOfLineIndex += line.Length;
+        }
+
+        const int MaxWidthAndHeight = 4096;
+        requiredWidth = System.Math.Min((int)(maxWidth + .5f), MaxWidthAndHeight);
+        requiredHeight = System.Math.Min((int)(totalHeight + .5f), MaxWidthAndHeight);
     }
 
     public void GetRequiredWidthAndHeight(IEnumerable<string> lines, out int requiredWidth, out int requiredHeight, List<float>? widths)

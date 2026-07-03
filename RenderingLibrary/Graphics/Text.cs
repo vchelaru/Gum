@@ -1483,12 +1483,93 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
             if (this.mRawText != null)
             {
-                mBitmapFont.GetRequiredWidthAndHeight(WrappedText, out requiredWidth, out requiredHeight);
+                // #3481: when the text carries inline [FontScale=N] runs, each line's reported size
+                // must grow by the largest scale covering it, or a tall run overflows its slot and
+                // overlaps the next stacked sibling. EffectiveFontScale <= 0 falls through to the
+                // plain path (everything downstream multiplies by it, so the result is 0 either way,
+                // and it avoids a divide-by-zero in the per-run base-unit conversion).
+                if (InlineVariables.Count > 0 && EffectiveFontScale > 0)
+                {
+                    GetInlineVariableAwareWidthAndHeight(out requiredWidth, out requiredHeight);
+                }
+                else
+                {
+                    mBitmapFont.GetRequiredWidthAndHeight(WrappedText, out requiredWidth, out requiredHeight);
+                }
             }
 
             mPreRenderWidth = requiredWidth;
             mPreRenderHeight = (int)(requiredHeight * LineHeightMultiplier + .5f);
         }
+    }
+
+    /// <summary>
+    /// Mirrors <see cref="BitmapFont.GetRequiredWidthAndHeight(List{string}, out int, out int, List{int}?)"/>
+    /// but grows each line by the largest inline <see cref="FontScale"/> run covering it (issue #3481).
+    /// </summary>
+    /// <remarks>
+    /// <see cref="mPreRenderWidth"/>/<see cref="mPreRenderHeight"/> are stored in BASE units (the caller
+    /// multiplies by <see cref="EffectiveFontScale"/> downstream), while an inline [FontScale=N] is an
+    /// ABSOLUTE per-run scale (matching how <see cref="DrawWithInlineVariables"/> draws it). So each
+    /// run's contribution is divided by <see cref="EffectiveFontScale"/> to land back in base units.
+    /// A line with no runs, or only non-scale runs (e.g. Color), keeps a factor of 1. FontScale (the
+    /// base Text scale) is the floor, so an inline run smaller than the base does not shrink the line.
+    /// Line-wrapping is intentionally still base-scale-only (deferred per #3471); this only affects
+    /// size reporting. The outline-thickness padding the BitmapFont path adds is skipped here because
+    /// that field is private to BitmapFont and outline + inline scale is a rare combination.
+    /// </remarks>
+    private void GetInlineVariableAwareWidthAndHeight(out int requiredWidth, out int requiredHeight)
+    {
+        var effectiveFontScale = EffectiveFontScale;
+
+        float maxWidth = 0;
+        float totalHeight = 0;
+
+        int startOfLineIndex = 0;
+        for (int lineIndex = 0; lineIndex < WrappedText.Count; lineIndex++)
+        {
+            var line = WrappedText[lineIndex];
+            var substrings = GetStyledSubstrings(startOfLineIndex, line);
+
+            float lineHeightFactor;
+            float lineWidthInBaseUnits;
+
+            if (substrings.Count == 0)
+            {
+                lineHeightFactor = 1;
+                lineWidthInBaseUnits = mBitmapFont.MeasureString(line);
+            }
+            else
+            {
+                float maxRunScale = effectiveFontScale;
+                float lineWidthAtScale = 0;
+                for (int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
+                {
+                    var substring = substrings[substringIndex];
+                    float runScale = effectiveFontScale;
+                    for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
+                    {
+                        if (substring.Variables[variableIndex].VariableName == nameof(FontScale))
+                        {
+                            runScale = (float)substring.Variables[variableIndex].Value * SystemManagers.GlobalFontScale;
+                        }
+                    }
+                    lineWidthAtScale += mBitmapFont.MeasureString(substring.Substring) * runScale;
+                    maxRunScale = System.Math.Max(maxRunScale, runScale);
+                }
+                lineHeightFactor = maxRunScale / effectiveFontScale;
+                lineWidthInBaseUnits = lineWidthAtScale / effectiveFontScale;
+            }
+
+            maxWidth = System.Math.Max(maxWidth, lineWidthInBaseUnits);
+            totalHeight += LineHeightInPixels * lineHeightFactor;
+
+            startOfLineIndex += line.Length;
+        }
+
+        const int MaxWidthAndHeight = 4096;
+        requiredWidth = System.Math.Min((int)(maxWidth + .5f), MaxWidthAndHeight);
+        requiredHeight = System.Math.Min((int)(totalHeight + .5f), MaxWidthAndHeight);
     }
     #endregion
 
