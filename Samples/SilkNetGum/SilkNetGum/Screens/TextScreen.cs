@@ -54,6 +54,40 @@ internal class TextScreen : FrameworkElement
         withOutline.FontSize = 24;
         withOutline.OutlineThickness = 2;
         container.Children.Add(withOutline);
+
+        AddTextureFilterSection(container);
+    }
+
+    // Texture filter on Text (#3496): mirrored for structural parity with MonoGameGumInCode and
+    // raylib, but SkiaGum text has no Point/Linear knob to demonstrate. SkiaGum draws glyphs each
+    // frame via Topten.RichTextKit straight onto the canvas (SkiaSharp's own font rasterizer) rather
+    // than sampling a pre-baked font atlas texture with a bilinear/point sampler, so there is no
+    // texture-filter render state for text on this backend - both cells below render identically.
+    private static void AddTextureFilterSection(ContainerRuntime container)
+    {
+        AddSectionLabel(container,
+            "Texture filter (#3496): no Point/Linear distinction on Skia text - see comment above AddTextureFilterSection");
+        ContainerRuntime filterRow = new ContainerRuntime();
+        filterRow.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        filterRow.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        filterRow.Width = 0;
+        filterRow.Height = 0;
+        filterRow.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        filterRow.StackSpacing = 16;
+
+        TextRuntime pointText = new TextRuntime();
+        pointText.FontSize = 12;
+        pointText.FontScale = 4;
+        pointText.Text = "Point";
+        filterRow.AddChild(pointText);
+
+        TextRuntime linearText = new TextRuntime();
+        linearText.FontSize = 12;
+        linearText.FontScale = 4;
+        linearText.Text = "Linear";
+        filterRow.AddChild(linearText);
+
+        container.Children.Add(filterRow);
     }
 
     private static void AddSectionLabel(ContainerRuntime container, string text)

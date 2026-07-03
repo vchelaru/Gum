@@ -4,6 +4,7 @@ using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 
 namespace MonoGameGumInCode.Screens;
@@ -79,6 +80,52 @@ internal class TextScreen : FrameworkElement
         AddCustomOutlineText(container, Color.Blue);
 
         AddBlendOnTextSection(container);
+        AddTextureFilterSection(container);
+    }
+
+    // Texture filter on Text (#3496): a font baked SMALL then magnified via FontScale, so
+    // point-filtering's blocky glyph edges are visibly distinct from bilinear's smoothed ones. A
+    // large FontSize at 1x scale doesn't stress the sampler enough to show a difference - the atlas
+    // texel density roughly matches screen pixel density either way. Baking small and scaling up
+    // means each atlas texel covers several screen pixels, which is exactly when nearest-neighbor
+    // vs bilinear diverge. Renderer.TextureFilter is a single global sampler state for the whole
+    // SpriteBatch pass, so one Text can't be Point and another Linear on the same layer (see
+    // docs/code/rendering/texture-filtering.md) - each side gets its own Layer with
+    // Layer.IsLinearFilteringEnabled forcing the mode, while layout still comes from the shared
+    // filterRow container. Unlike raylib (where the filter is baked into the font-cache texture at
+    // creation time), the layer-based override here is a pure render-state switch, so both sides can
+    // share the same FontSize/FontScale.
+    private static void AddTextureFilterSection(ContainerRuntime container)
+    {
+        AddSectionLabel(container, "Texture filter (#3496): 12px font scaled 4x, Point (left) vs Linear (right)");
+        var filterRow = new ContainerRuntime();
+        filterRow.WidthUnits = DimensionUnitType.RelativeToChildren;
+        filterRow.HeightUnits = DimensionUnitType.RelativeToChildren;
+        filterRow.Width = 0;
+        filterRow.Height = 0;
+        filterRow.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        filterRow.StackSpacing = 16;
+        container.Children.Add(filterRow);
+
+        var pointLayer = SystemManagers.Default.Renderer.AddLayer();
+        pointLayer.Name = "Texture Filter - Point";
+        pointLayer.IsLinearFilteringEnabled = false;
+        var pointText = new TextRuntime();
+        pointText.FontSize = 12;
+        pointText.FontScale = 4;
+        pointText.Text = "Point";
+        filterRow.AddChild(pointText);
+        pointText.MoveToLayer(pointLayer);
+
+        var linearLayer = SystemManagers.Default.Renderer.AddLayer();
+        linearLayer.Name = "Texture Filter - Linear";
+        linearLayer.IsLinearFilteringEnabled = true;
+        var linearText = new TextRuntime();
+        linearText.FontSize = 12;
+        linearText.FontScale = 4;
+        linearText.Text = "Linear";
+        filterRow.AddChild(linearText);
+        linearText.MoveToLayer(linearLayer);
     }
 
     private static void AddSectionLabel(ContainerRuntime container, string text)
