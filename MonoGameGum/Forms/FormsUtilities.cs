@@ -51,11 +51,13 @@ public enum DefaultVisualsVersion
     /// The first version introduced with the first version of Gum Forms.
     /// Most controls use solid colors and ColoredRectangles for their backgrounds.
     /// </summary>
+    [Obsolete("V1 default visuals are legacy. Use DefaultVisualsVersion.V3 (or .Newest). Slated for removal in a future release.")]
     V1,
     /// <summary>
     /// The second version introduced mid 2025. This version uses NineSlices for backgrounds,
     /// and respects a centralized styling.
     /// </summary>
+    [Obsolete("V2 default visuals are legacy. Use DefaultVisualsVersion.V3 (or .Newest). Slated for removal in a future release.")]
     V2,
     /// <summary>
     /// The third version introduced end of 2025. This version makes styling with colors easier.
@@ -93,6 +95,11 @@ public class FormsUtilities
     public static Gum.Input.GamePad[] Gamepads { get; private set; } = new Gum.Input.GamePad[4];
 
 
+    // The V1/V2 default-visual classes and the DefaultVisualsVersion.V1/V2 enum members are now
+    // [Obsolete]. InitializeDefaults still supports registering them as legacy defaults, so the
+    // default parameter values and the V1/V2 switch cases below intentionally reference the
+    // obsolete members. Suppress CS0618 for that legacy-support region.
+#pragma warning disable CS0618
 #if XNALIKE
     /// <summary>
     /// Initializes defaults to enable FlatRedBall Forms. This method should be called before using Forms.
@@ -215,6 +222,7 @@ public class FormsUtilities
             default:
                 throw new ArgumentOutOfRangeException(nameof(defaultVisualsVersion), defaultVisualsVersion, null);
         }
+#pragma warning restore CS0618
 
         // Tooltip is registered across all default visuals versions — it's a passive overlay with
         // no V1/V2 equivalent, so the V3 visual is used regardless.

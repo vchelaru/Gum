@@ -15,6 +15,7 @@ using RenderingLibrary.Graphics;
 
 namespace Gum.Forms.DefaultVisuals;
 
+[System.Obsolete("Legacy V2 default visual. Use the V3 visuals via DefaultVisualsVersion.V3/.Newest; the V2 default visuals are slated for removal in a future release.")]
 public abstract class TextBoxBaseVisual : InteractiveGue
 {
     public NineSliceRuntime Background { get; private set; }
