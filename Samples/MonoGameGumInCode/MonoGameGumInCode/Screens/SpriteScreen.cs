@@ -59,6 +59,27 @@ internal class SpriteScreen : FrameworkElement
         custom.Height = 84;
         container.AddChild(custom);
 
+        // Wrap / tiling (issue #3456) — TextureWidth/Height set to 2x the source file's pixel
+        // dimensions (BearTexture.png is 39x40) so the source rectangle extends past the texture
+        // bounds. With Wrap=false the area beyond the bounds clamps/stretches; with Wrap=true it
+        // repeats the bear 2x2 across the sprite. Compare against the raylib mirror of this screen.
+        AddLabel(container, "Wrap (false = clamp/stretch, true = tile, BearTexture.png 2x2):");
+        var wrapRow = AddRow(container);
+        foreach (var wrap in new[] { false, true })
+        {
+            var s = new SpriteRuntime();
+            s.SourceFileName = "BearTexture.png";
+            s.TextureAddress = Gum.Managers.TextureAddress.Custom;
+            s.TextureLeft = 0;
+            s.TextureTop = 0;
+            s.TextureWidth = 78;
+            s.TextureHeight = 80;
+            s.Wrap = wrap;
+            s.Width = 78;
+            s.Height = 80;
+            wrapRow.AddChild(s);
+        }
+
         // Color tinting.
         AddLabel(container, "Color tinting:");
         var tintRow = AddRow(container);
