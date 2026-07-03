@@ -1,4 +1,5 @@
-﻿using RenderingLibrary;
+﻿using Gum.Graphics.Animation;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Graphics.Animation;
 using RenderingLibrary.Math;
@@ -21,6 +22,19 @@ public class NineSlice : RenderableBase, IAnimatable, ITextureCoordinate, IClone
     /// texture and (UV-derived) source rectangle onto this NineSlice.
     /// </summary>
     public AnimationChainLogic AnimationLogic { get; } = new AnimationChainLogic();
+
+    // Convenience pass-throughs to AnimationLogic, mirroring the MonoGame NineSlice renderable
+    // (RenderingLibrary/Graphics/NineSlice.cs) so shared code such as
+    // CustomSetPropertyOnRenderable.AssignSourceFileOnNineSlice compiles identically on both.
+    public AnimationChainList? AnimationChains
+    {
+        get => AnimationLogic.AnimationChains;
+        set => AnimationLogic.AnimationChains = value;
+    }
+
+    public bool UpdateToCurrentAnimationFrame() => AnimationLogic.UpdateToCurrentAnimationFrame();
+
+    public void RefreshCurrentChainToDesiredName() => AnimationLogic.RefreshCurrentChainToDesiredName();
 
     public NineSlice()
     {

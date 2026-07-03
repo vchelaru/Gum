@@ -1,4 +1,5 @@
-﻿using RenderingLibrary;
+﻿using Gum.Graphics.Animation;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Graphics.Animation;
 using RenderingLibrary.Math;
@@ -176,6 +177,19 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
     }
 
     public AnimationChainLogic AnimationLogic { get; } = new AnimationChainLogic();
+
+    // Convenience pass-throughs to AnimationLogic, mirroring the MonoGame Sprite renderable
+    // (RenderingLibrary/Graphics/Sprite.cs) so shared code such as
+    // CustomSetPropertyOnRenderable.AssignSourceFileOnSprite compiles identically on both.
+    public AnimationChainList? AnimationChains
+    {
+        get => AnimationLogic.AnimationChains;
+        set => AnimationLogic.AnimationChains = value;
+    }
+
+    public bool UpdateToCurrentAnimationFrame() => AnimationLogic.UpdateToCurrentAnimationFrame();
+
+    public void RefreshCurrentChainToDesiredName() => AnimationLogic.RefreshCurrentChainToDesiredName();
 
     public Sprite(Texture2D? texture = null)
     {
