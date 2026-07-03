@@ -8,7 +8,6 @@ public class StyledSubstring
 {
     public List<InlineVariable> Variables = new List<InlineVariable>();
     public string Substring;
-    public int StartIndex;
 
     public override string ToString()
     {
@@ -97,7 +96,6 @@ public class StyledSubstringSplitter
                     }
                     styledSubstring.Variables.Add(item);
                 }
-                styledSubstring.StartIndex = relativeLetterIndex;
 
                 if (relativeLetterIndex == lineOfText.Length - 1)
                 {

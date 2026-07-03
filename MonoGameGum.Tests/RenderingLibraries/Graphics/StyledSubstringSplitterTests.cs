@@ -1,0 +1,57 @@
+using RenderingLibrary.Graphics;
+using Shouldly;
+using System.Collections.Generic;
+using Xunit;
+
+namespace MonoGameGum.Tests.RenderingLibraries.Graphics;
+
+public class StyledSubstringSplitterTests
+{
+    [Fact]
+    public void GetStyledSubstrings_ShouldReturnEmptyList_IfLineIsEmpty()
+    {
+        var sut = new StyledSubstringSplitter();
+
+        var substrings = sut.GetStyledSubstrings(0, "", System.Drawing.Color.White, new List<InlineVariable>());
+
+        substrings.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void GetStyledSubstrings_ShouldReturnSingleUnstyledEntry_IfNoInlineVariablesProvided()
+    {
+        var sut = new StyledSubstringSplitter();
+
+        var substrings = sut.GetStyledSubstrings(0, "Hello", System.Drawing.Color.White, new List<InlineVariable>());
+
+        substrings.Count.ShouldBe(1);
+        substrings[0].Substring.ShouldBe("Hello");
+        substrings[0].Variables.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void GetStyledSubstrings_ShouldSplitIntoTwoEntries_IfVariableCoversFirstCharacters()
+    {
+        var sut = new StyledSubstringSplitter();
+        var inlineVariables = new List<InlineVariable>
+        {
+            new InlineVariable
+            {
+                VariableName = "IsBold",
+                Value = true,
+                StartIndex = 0,
+                CharacterCount = 2
+            }
+        };
+
+        var substrings = sut.GetStyledSubstrings(0, "Hello", System.Drawing.Color.White, inlineVariables);
+
+        substrings.Count.ShouldBe(2);
+        substrings[0].Substring.ShouldBe("He");
+        substrings[0].Variables.Count.ShouldBe(1);
+        substrings[0].Variables[0].VariableName.ShouldBe("IsBold");
+
+        substrings[1].Substring.ShouldBe("llo");
+        substrings[1].Variables.Count.ShouldBe(0);
+    }
+}
