@@ -14,7 +14,7 @@ using ToolsUtilitiesStandard.Helpers;
 using static Raylib_cs.Raylib;
 
 namespace Gum.Renderables;
-public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAnimatable
+public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAnimatable, IRenderableIpso
 {
     public Texture2D? Texture { get; set; }
 
@@ -135,6 +135,20 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
 
     public global::Gum.RenderingLibrary.Blend? Blend { get; set; }
 
+    /// <summary>
+    /// How the sprite's tint <see cref="Color"/> combines with its texture, matching MonoGame's
+    /// <see cref="ColorOperation"/> (issue #3486). <see cref="ColorOperation.Modulate"/> (the default)
+    /// multiplies texture RGBA by the tint; <see cref="ColorOperation.ColorTextureAlpha"/> uses the
+    /// texture only as an alpha mask and fills with the tint color, via
+    /// <see cref="global::RenderingLibrary.Graphics.Renderer.ColorTextureAlphaShader"/>.
+    /// </summary>
+    public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
+
+    // Re-implement the interface getter so it reports this sprite's real ColorOperation. The base
+    // RenderableBase explicitly implements IRenderableIpso.ColorOperation as a hardcoded Modulate
+    // (correct for Text/NineSlice/shapes, which never vary it); a Sprite is the one renderable that does.
+    ColorOperation IRenderableIpso.ColorOperation => ColorOperation;
+
     public float? TextureWidth => RenderTargetTextureSource?.Width ?? Texture?.Width;
 
     public float? TextureHeight => RenderTargetTextureSource?.Height ?? Texture?.Height;
@@ -184,6 +198,17 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
         // if we don't have a source rectangle, the source is the entire texture
         var srcRect = SourceRectangle ?? defaultSrcRect;
 
+        // ColorTextureAlpha (issue #3486): bind the mask shader around every draw path below so the
+        // texture supplies only alpha and the sprite fills with its tint Color, matching MonoGame. The
+        // shader's non-premultiplied output composites identically to a normal Modulate draw, so it is
+        // correct both on screen and inside a render-target bake. Modulate (the default) draws unshaded.
+        bool useColorTextureAlpha = ColorOperation == ColorOperation.ColorTextureAlpha;
+        if (useColorTextureAlpha)
+        {
+            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginShaderMode(
+                global::RenderingLibrary.Graphics.Renderer.Self.ColorTextureAlphaShader.Shader);
+        }
+
         if (Blend.HasValue)
         {
             global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend.Value);
@@ -224,6 +249,11 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
         if (Blend.HasValue)
         {
             global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.EndBlendMode();
+        }
+
+        if (useColorTextureAlpha)
+        {
+            global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.EndShaderMode();
         }
     }
 

@@ -94,6 +94,28 @@ internal class SpriteScreen : FrameworkElement
             tintRow.AddChild(s);
         }
 
+        // ColorOperation (issue #3486) — Modulate (default) multiplies the texture by the red tint,
+        // so the bear's detail shows through red; ColorTextureAlpha uses the texture only as an alpha
+        // mask and fills with the tint, so the bear reads as a flat red silhouette. ColorOperation is
+        // exposed on the renderable only (no SpriteRuntime property), so it is set through
+        // RenderableComponent. Mirrors the raylib SpriteScreen's identical row.
+        AddLabel(container, "ColorOperation on a red-tinted bear (Modulate, ColorTextureAlpha):");
+        var colorOpRow = AddRow(container);
+        foreach (var colorOperation in new[]
+        {
+            RenderingLibrary.Graphics.ColorOperation.Modulate,
+            RenderingLibrary.Graphics.ColorOperation.ColorTextureAlpha,
+        })
+        {
+            var s = new SpriteRuntime();
+            s.SourceFileName = "BearTexture.png";
+            s.Width = 64;
+            s.Height = 64;
+            s.Color = Color.Red;
+            ((RenderingLibrary.Graphics.Sprite)s.RenderableComponent).ColorOperation = colorOperation;
+            colorOpRow.AddChild(s);
+        }
+
         // Alpha — same sprite at 64 / 128 / 192 / 255.
         AddLabel(container, "Alpha (64, 128, 192, 255):");
         var alphaRow = AddRow(container);
