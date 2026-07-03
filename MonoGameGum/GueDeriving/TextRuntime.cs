@@ -774,7 +774,7 @@ public class TextRuntime : InteractiveGue
     public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 #endif
 
-#if !RAYLIB && !SKIA
+#if !SKIA
     /// <summary>
     /// Returns the index of the character at the specified screen position. This returns the index
     /// within the WrappedText, so to index in, you need to loop through each line.

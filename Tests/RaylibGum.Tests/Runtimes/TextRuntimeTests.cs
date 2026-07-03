@@ -398,6 +398,34 @@ public class TextRuntimeTests : BaseTestClass
 
     #endregion
 
+    #region GetCharacterIndexAtPosition
+
+    // The pass-through delegates to the shared TextExtensions.GetCharacterIndexAtPosition, whose
+    // RAYLIB branch measures per-character width with MeasureTextEx. A click at the very left edge of
+    // an unmanaged Text (absolute origin 0,0) must land on the first character.
+    [Fact]
+    public void GetCharacterIndexAtPosition_AtLeftEdge_ShouldReturnZero()
+    {
+        // An unmanaged Text sits at absolute origin (0,0), so screen (0,0) is its top-left.
+        TextRuntime sut = new();
+        sut.Text = "Hello";
+
+        sut.GetCharacterIndexAtPosition(0, 0).ShouldBe(0);
+    }
+
+    // A click far past the right edge of a single line clamps to the end of the text (index == length),
+    // matching the MonoGame renderable's behavior.
+    [Fact]
+    public void GetCharacterIndexAtPosition_FarRightOfSingleLine_ShouldReturnTextLength()
+    {
+        TextRuntime sut = new();
+        sut.Text = "Hello";
+
+        sut.GetCharacterIndexAtPosition(1000, 0).ShouldBe(5);
+    }
+
+    #endregion
+
     #region HeightUnits
 
     [Fact]
