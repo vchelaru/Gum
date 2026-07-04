@@ -3168,9 +3168,21 @@ public class CodeGenerator
             }
             if (projectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
             {
-                if (element.BaseType == "Container" &&
+                bool isContainerNeedingOwnRenderable = element.BaseType == "Container" &&
                     // In MonoGame the Container is a ContainerRuntime which handles this already
-                    (projectSettings.OutputLibrary != OutputLibrary.MonoGame && projectSettings.OutputLibrary != OutputLibrary.MonoGameForms))
+                    (projectSettings.OutputLibrary != OutputLibrary.MonoGame && projectSettings.OutputLibrary != OutputLibrary.MonoGameForms);
+
+                // A Screen with no BaseType and no custom DefaultScreenBase falls back to bare
+                // Gum.Wireframe.GraphicalUiElement for the unified runtime (see GetInheritance),
+                // which - unlike ContainerRuntime - never assigns itself a contained renderable.
+                // Without this, AssignParents() below calls AddChild() while Children is still
+                // the read-only GraphicalUiElementCollection.Empty singleton.
+                bool isUnifiedRuntimeScreenWithNoBase = element is ScreenSave &&
+                    string.IsNullOrEmpty(element.BaseType) &&
+                    string.IsNullOrEmpty(projectSettings.DefaultScreenBase) &&
+                    UsesUnifiedGumRuntime(projectSettings.OutputLibrary);
+
+                if (isContainerNeedingOwnRenderable || isUnifiedRuntimeScreenWithNoBase)
                 {
                     stringBuilder.AppendLine(context.Tabs + "this.SetContainedObject(new InvisibleRenderable());");
                 }
