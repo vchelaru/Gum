@@ -149,26 +149,34 @@ jobs:
           "prerelease=$prerelease" >> $env:GITHUB_OUTPUT
           "draft=$draft"           >> $env:GITHUB_OUTPUT
 
-      # 2b) Capture the previous release tag BEFORE this run creates its own tag, so the
+      # 2b) Capture the previous tag BEFORE this run creates its own tag, so the
       # auto-generated release notes diff against the actual prior release. Without this,
-      # GitHub picks the comparison base itself, and the Release_<Month>_DD_YYYY tag scheme
+      # GitHub picks the comparison base itself, and the <Prefix>_<Month>_DD_YYYY tag scheme
       # uses month *names* (which don't sort chronologically), so its guess can reach far
-      # back (e.g. a March prerelease) and dump months of unrelated PRs into the notes.
+      # back (e.g. a months-old prerelease turning up as the base for a new prerelease)
+      # and dump unrelated PRs into the notes.
       # checkout used fetch-depth: 0, so all tags are present; the new tag does not exist
-      # yet at this step, making the newest Release_* tag by tagger date the prior release.
-      # Only meaningful for full releases; prerelease/test keep GitHub's auto-selection.
+      # yet at this step.
+      #
+      # - Full releases summarize everything since the last full release (including work
+      #   already shipped in an intermediate prerelease), so the base is restricted to
+      #   Release_* tags only.
+      # - Prerelease/test builds want the diff since whatever was published most recently,
+      #   full release or prerelease, so the base is the newest tag across all of
+      #   Release_*/PreRelease_*/Hotfix_* by tagger date.
       - name: Capture previous release tag
         id: prevtag
-        if: github.event.inputs.release_kind == 'release'
         shell: pwsh
         run: |
-          $prev = git for-each-ref --sort=-creatordate --format='%(refname:short)' 'refs/tags/Release_*' |
+          $kind = "${{ github.event.inputs.release_kind }}"
+          $pattern = if ($kind -eq 'release') { 'refs/tags/Release_*' } else { 'refs/tags/Release_*','refs/tags/PreRelease_*','refs/tags/Hotfix_*' }
+          $prev = git for-each-ref --sort=-creatordate --format='%(refname:short)' $pattern |
                   Where-Object { $_ -ne "${{ steps.meta.outputs.tag }}" } |
                   Select-Object -First 1
           if ([string]::IsNullOrWhiteSpace($prev)) {
-            Write-Host "No previous Release_* tag found; GitHub will auto-select the comparison base."
+            Write-Host "No previous tag found; GitHub will auto-select the comparison base."
           } else {
-            Write-Host "Previous release tag for notes comparison: $prev"
+            Write-Host "Previous tag for notes comparison: $prev"
           }
           "prev_tag=$prev" >> $env:GITHUB_OUTPUT
 
@@ -222,9 +230,9 @@ jobs:
           tag_name: ${{ steps.meta.outputs.tag }}
           name:     ${{ steps.meta.outputs.title }}
           generate_release_notes: true
-          # Pin the comparison base for release builds so the auto-notes diff against the
-          # prior release (see "Capture previous release tag"). Empty for prerelease/test,
-          # which softprops treats as omitted, leaving GitHub's auto-selection in place.
+          # Pin the comparison base so the auto-notes diff against the actual prior tag
+          # (see "Capture previous release tag") instead of GitHub's own guess. Empty only
+          # if no prior tag was found, which softprops treats as omitted.
           previous_tag: ${{ steps.prevtag.outputs.prev_tag }}
           prerelease: ${{ steps.meta.outputs.prerelease }}
           draft:      ${{ steps.meta.outputs.draft }}
