@@ -74,6 +74,20 @@ public class StandardElementBackfillVersionGateTests : BaseTestClass
         return project.StandardElements.Single(e => e.Name == standardName).DefaultState;
     }
 
+    // Arc/ColoredCircle/RoundedRectangle/Line are plugin-contributed legacy shapes never placed in
+    // StandardElementsManager.DefaultStates (mDefaults) -- they're reached through
+    // CustomGetDefaultState instead, so tests must go through RegisterExtendedDefaultStates() and
+    // the individual Get*State() accessors rather than the DefaultStates indexer used for
+    // Circle/Rectangle above.
+    private static StateSave GetLegacyShapeDefaultState(string standardName) => standardName switch
+    {
+        "Arc" => StandardElementsManager.GetArcState(),
+        "ColoredCircle" => StandardElementsManager.GetColoredCircleState(),
+        "RoundedRectangle" => StandardElementsManager.GetRoundedRectangleState(),
+        "Line" => StandardElementsManager.GetLineState(),
+        _ => throw new System.ArgumentException($"Unknown legacy shape standard '{standardName}'", nameof(standardName)),
+    };
+
     [Fact]
     public void Initialize_DoesNotInjectV3ShapeVariables_IntoPreV3CircleStandard()
     {
@@ -194,6 +208,58 @@ public class StandardElementBackfillVersionGateTests : BaseTestClass
 
         VariableSave variable = defaultState.Variables.First(v => v.Name == variableName);
         variable.MinimumGumxVersion.ShouldBe(0);
+    }
+
+    [Theory]
+    // #2950 unified the legacy per-axis DropshadowBlurX/DropshadowBlurY into a single scalar
+    // DropshadowBlur across every AddDropshadowVariables caller, including these four legacy
+    // shapes. Their FRB1-generated runtime (frozen outside this repo -- see
+    // SkiaGum.Renderables.RenderableArc and friends) predates that rename and never gained the
+    // scalar name, so back-filling "DropshadowBlur" into an old FRB1 project broke the regenerated
+    // runtime with CS0246 ('RenderableArc' does not contain a definition for 'DropshadowBlur').
+    // These call sites were missed when Circle/Rectangle got the same gate for FRB #1881.
+    [InlineData("Arc")]
+    [InlineData("ColoredCircle")]
+    [InlineData("RoundedRectangle")]
+    [InlineData("Line")]
+    public void DefaultState_TagsDropshadowVariables_WithV3MinimumGumxVersion_OnLegacyShapes(string standardName)
+    {
+        StateSave defaultState = GetLegacyShapeDefaultState(standardName);
+
+        VariableSave variable = defaultState.Variables.First(v => v.Name == "DropshadowBlur");
+        variable.MinimumGumxVersion.ShouldBe(V3);
+    }
+
+    [Theory]
+    [InlineData("Arc")]
+    [InlineData("ColoredCircle")]
+    [InlineData("RoundedRectangle")]
+    [InlineData("Line")]
+    public void Initialize_DoesNotInjectDropshadowBlur_IntoPreV3LegacyShapeStandard(string standardName)
+    {
+        StandardElementsManager.Self.RegisterExtendedDefaultStates();
+        GumProjectSave project = MakeProjectWithBareStandard(standardName, PreV3, "Visible", "Width", "Height");
+
+        StateSave legacyShapeDefault = DefaultStateAfterInitialize(project, standardName);
+
+        legacyShapeDefault.Variables.Any(v => v.Name == "DropshadowBlur").ShouldBeFalse(
+            $"A pre-v3 project must not have DropshadowBlur back-filled into its {standardName} standard.");
+    }
+
+    [Theory]
+    [InlineData("Arc")]
+    [InlineData("ColoredCircle")]
+    [InlineData("RoundedRectangle")]
+    [InlineData("Line")]
+    public void Initialize_InjectsDropshadowBlur_IntoV3LegacyShapeStandard(string standardName)
+    {
+        StandardElementsManager.Self.RegisterExtendedDefaultStates();
+        GumProjectSave project = MakeProjectWithBareStandard(standardName, V3, "Visible", "Width", "Height");
+
+        StateSave legacyShapeDefault = DefaultStateAfterInitialize(project, standardName);
+
+        legacyShapeDefault.Variables.Any(v => v.Name == "DropshadowBlur").ShouldBeTrue(
+            $"A v3 project should still get DropshadowBlur back-filled into its {standardName} standard.");
     }
 
     [Theory]
