@@ -79,6 +79,10 @@ partial class ExampleScreenRuntime : Gum.Wireframe.GraphicalUiElement
     }
     private void ApplyDefaultVariables()
     {
+        this.Width = 0f;
+        this.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        this.Height = 0f;
+        this.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         this.ContainerInstance.ChildrenLayout = global::Gum.Managers.ChildrenLayout.TopToBottomStack;
         this.ContainerInstance.Height = 358f;
         this.ContainerInstance.Width = 256f;

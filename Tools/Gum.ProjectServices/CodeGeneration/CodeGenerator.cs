@@ -3002,10 +3002,13 @@ public class CodeGenerator
                     }
                     else if (UsesUnifiedGumRuntime(context.CodeOutputProjectSettings.OutputLibrary))
                     {
-                        // If it's a screen it may have children, or it may not. We just don't know, so we need to check
-
-                        context.StringBuilder.AppendLine($"{context.Tabs}if(this.Children != null) this.Children.Add({_codeGenerationNameVerifier.ToCSharpName(instance.Name)});");
-                        context.StringBuilder.AppendLine($"{context.Tabs}else this.WhatThisContains.Add({_codeGenerationNameVerifier.ToCSharpName(instance.Name)});");
+                        // Children is never null - it's always at least the read-only
+                        // GraphicalUiElementCollection.Empty singleton - so the previous
+                        // "if(this.Children != null) ... else this.WhatThisContains.Add(...)" guard
+                        // could never take its else branch. The constructor now always assigns a
+                        // contained object before this runs (see GenerateConstructors), so Children
+                        // is guaranteed to be a real, writable collection here.
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({_codeGenerationNameVerifier.ToCSharpName(instance.Name)});");
                     }
                     else
                     {
@@ -3168,9 +3171,21 @@ public class CodeGenerator
             }
             if (projectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
             {
-                if (element.BaseType == "Container" &&
+                bool isContainerNeedingOwnRenderable = element.BaseType == "Container" &&
                     // In MonoGame the Container is a ContainerRuntime which handles this already
-                    (projectSettings.OutputLibrary != OutputLibrary.MonoGame && projectSettings.OutputLibrary != OutputLibrary.MonoGameForms))
+                    (projectSettings.OutputLibrary != OutputLibrary.MonoGame && projectSettings.OutputLibrary != OutputLibrary.MonoGameForms);
+
+                // A Screen with no BaseType and no custom DefaultScreenBase falls back to bare
+                // Gum.Wireframe.GraphicalUiElement for the unified runtime (see GetInheritance),
+                // which - unlike ContainerRuntime - never assigns itself a contained renderable.
+                // Without this, AssignParents() below calls AddChild() while Children is still
+                // the read-only GraphicalUiElementCollection.Empty singleton.
+                bool isUnifiedRuntimeScreenWithNoBase = element is ScreenSave &&
+                    string.IsNullOrEmpty(element.BaseType) &&
+                    string.IsNullOrEmpty(projectSettings.DefaultScreenBase) &&
+                    UsesUnifiedGumRuntime(projectSettings.OutputLibrary);
+
+                if (isContainerNeedingOwnRenderable || isUnifiedRuntimeScreenWithNoBase)
                 {
                     stringBuilder.AppendLine(context.Tabs + "this.SetContainedObject(new InvisibleRenderable());");
                 }
@@ -5007,9 +5022,17 @@ public class CodeGenerator
                 context.StringBuilder.AppendLine(context.Tabs + "this.Visual.Height = 0f;");
                 context.StringBuilder.AppendLine(context.Tabs + "this.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;");
             }
-            else
+            else if (context.VisualApi == VisualApi.Gum)
             {
-
+                // Same as above, but for Screens whose generated class inherits GraphicalUiElement
+                // directly instead of wrapping a Visual (plain MonoGame - which KNI/FNA projects
+                // also select, Raylib, Skia). Without this, such a Screen kept
+                // Gum.Wireframe.GraphicalUiElement's hardcoded 32x32 constructor default instead of
+                // filling its parent.
+                context.StringBuilder.AppendLine(context.Tabs + "this.Width = 0f;");
+                context.StringBuilder.AppendLine(context.Tabs + "this.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;");
+                context.StringBuilder.AppendLine(context.Tabs + "this.Height = 0f;");
+                context.StringBuilder.AppendLine(context.Tabs + "this.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;");
             }
         }
 
