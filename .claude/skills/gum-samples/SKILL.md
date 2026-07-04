@@ -36,6 +36,8 @@ Shapes (Circle, Rectangle, RoundedRectangle, Arc, Polygon, Line — the shape ru
 
 raylib and Skia render shapes natively. MonoGame's shape rendering comes from the separate **Gum.Shapes** package (`MonoGameGumShapes`), which `MonoGameGumInCode` references via `ProjectReference` so its shape screens light up (packaging details in [[gum-shapes-xnb-packaging]]). There is **no KNI feature sample** — KNI shares the XNALIKE render path the MonoGame screens exercise, so it needs no separate shape demo.
 
+**MonoGame/KNI host init (landmine).** Referencing the package is not enough — the game host must call `ShapeRenderer.Self.Initialize()` (namespace `MonoGameAndGum.Renderables`) **after** `GumService.Default.Initialize(...)`, **and** set `GraphicsProfile.HiDef` (Apos.Shapes uses an SM4 effect that Reach can't load). Miss either and shape fills/effects silently do not draw — no error. See `docs/code/standard-visuals/shapes-apos.shapes.md`.
+
 ## Verification is human-driven
 
 These samples exist for visual confirmation; they have no automated assertions. After adding a screen, build the sample and tell the user to run it and eyeball the new screen. Behavioral correctness still gets a unit test in the matching `Tests/*` project (see [[tdd]]) — the sample is the visual complement, not a replacement.

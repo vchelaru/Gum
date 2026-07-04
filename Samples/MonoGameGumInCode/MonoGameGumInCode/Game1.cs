@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Gum;
 using KernSmith.Gum;
+using MonoGameAndGum.Renderables;
 using MonoGameGumInCode.Screens;
 using RenderingLibrary;
 
@@ -21,6 +22,10 @@ namespace MonoGameGumInCode
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
+            // Apos.Shapes (the shape fill/effect renderer behind CircleRuntime/RectangleRuntime/
+            // ArcRuntime) uses a Shader Model 4 effect, which requires the HiDef profile — Reach
+            // cannot load it and shapes silently fail to draw.
+            _graphics.GraphicsProfile = GraphicsProfile.HiDef;
             _graphics.PreferredBackBufferWidth = 1024;
             _graphics.PreferredBackBufferHeight = 768;
             // ContainerRuntime.IsRenderTarget=true cells (see SpriteScreen's
@@ -44,6 +49,11 @@ namespace MonoGameGumInCode
         protected override void Initialize()
         {
             GumService.Default.Initialize(this);
+
+            // Required for Apos.Shapes-backed shape fill/effects (see the shapes doc). Must come
+            // after GumService.Default.Initialize — ShapeRenderer.Initialize reads the initialized
+            // GumService/GraphicsDevice.
+            ShapeRenderer.Self.Initialize();
 
             CustomSetPropertyOnRenderable.InMemoryFontCreator =
                 new KernSmithFontCreator(GraphicsDevice);
