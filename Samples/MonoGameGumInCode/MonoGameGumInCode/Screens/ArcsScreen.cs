@@ -5,7 +5,7 @@ using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using RenderingLibrary.Graphics;
 
-namespace GumShapesGallery.Screens;
+namespace MonoGameGumInCode.Screens;
 
 // Apos.Shapes gallery for ArcRuntime. Mirrors the post-#2891 layout of
 // Samples/SilkNetGum/SilkNetGum/Screens/ArcsScreen.cs cell-for-cell so visual regressions in

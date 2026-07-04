@@ -4,7 +4,7 @@ using Gum.GueDeriving;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 
-namespace GumShapesGallery.Screens;
+namespace MonoGameGumInCode.Screens;
 
 // Visual regression coverage for clip + Apos.Shapes interaction. Shapes go through
 // ShapeBatch (Apos.Shapes), sprites through SpriteBatch — when a ClipsChildren scope

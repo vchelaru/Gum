@@ -7,7 +7,7 @@ using SkiaSharp;
 
 namespace SilkNetGum.Screens;
 
-// Skia mirror of MonoGameGumShapesGallery/Screens/RectanglesScreen.cs (issue #2814). The two
+// Skia mirror of MonoGameGumInCode/Screens/RectanglesScreen.cs (issue #2814). The two
 // files should stay in lock-step structurally — same sections, same parameter sweeps — so
 // visual regressions in one backend are easy to spot against the other.
 //
@@ -30,7 +30,7 @@ internal class RectanglesScreen : FrameworkElement
 
         // Two-column root so the screen grows wide rather than tall as rows accumulate. No
         // ScrollViewer in SkiaGum yet, so this is the cheapest layout that works on both
-        // backends (mirrored in MonoGameGumShapesGallery/Screens/RectanglesScreen).
+        // backends (mirrored in MonoGameGumInCode/Screens/RectanglesScreen).
         ContainerRuntime root = new();
         root.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
         root.StackSpacing = 24;
@@ -419,7 +419,7 @@ internal class RectanglesScreen : FrameworkElement
         return row;
     }
 
-    // Issue #2797 visual acceptance: mirror of the MonoGameGumShapesGallery dropshadow row.
+    // Issue #2797 visual acceptance: mirror of the MonoGameGumInCode dropshadow row.
     // Same four cells — baseline, soft, hard offset, colored — so visual regressions in one
     // backend are easy to spot against the other.
     static ContainerRuntime BuildDropshadowRow()

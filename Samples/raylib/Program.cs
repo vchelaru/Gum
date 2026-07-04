@@ -41,10 +41,11 @@ public class BasicShapes
 
     public static void Main()
     {
-        const int screenWidth = 1280;
-        // Bumped from 720 to 820 so the Polygons screen's bottom row (open polylines) is
-        // visible without scrolling.
-        const int screenHeight = 820;
+        // Width matches the MonoGameGumInCode feature sample; height is tall enough to show each
+        // shape screen's full content without scrolling (the Polygons bottom row in particular).
+        // The window is resizable if a screen needs more room.
+        const int screenWidth = 1024;
+        const int screenHeight = 900;
 
         GumUI.CanvasWidth = screenWidth;
         GumUI.CanvasHeight = screenHeight;
@@ -102,7 +103,7 @@ public class BasicShapes
             }
 
             BeginDrawing();
-            // Matches MonoGameGumShapesGallery's clear color so visual diffs across galleries
+            // Matches SilkNetGum's clear color so visual diffs across galleries
             // stay attributable to the shape code, not the page background.
             ClearBackground(new Color(51, 76, 204, 255));
 
@@ -123,7 +124,7 @@ public class BasicShapes
         CloseWindow();
     }
 
-    // Mirrors MonoGameGumShapesGallery/Game1.BuildNavStrip — horizontal Forms Button strip
+    // Mirrors MonoGameGumInCode/Game1.BuildNavStrip — horizontal Forms Button strip
     // across the top swaps the active screen at runtime. Replaces the prior Space-key toggle
     // so adding a screen (e.g. CirclesScreen for #2757) is a one-line registration.
     private static void BuildNavStrip()
@@ -233,7 +234,7 @@ public class BasicShapes
 
         activeScreen = factory();
         // Offset the screen so it doesn't sit underneath the nav strip — same trick as
-        // MonoGameGumShapesGallery/Game1.ShowScreen. Use the nav strip's actual laid-out height so a
+        // MonoGameGumInCode/Game1.ShowScreen. Use the nav strip's actual laid-out height so a
         // wrapped (multi-row) button strip still clears the screen content below it.
         float navStripHeight = navStrip!.Visual.GetAbsoluteHeight();
         activeScreen.Visual.YOrigin = VerticalAlignment.Top;

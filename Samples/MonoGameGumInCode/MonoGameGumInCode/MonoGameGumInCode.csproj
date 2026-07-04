@@ -34,6 +34,10 @@
     <ProjectReference Include="..\..\..\GumCommon\GumCommon.csproj" />
     <ProjectReference Include="..\..\..\MonoGameGum\MonoGameGum.csproj" />
     <ProjectReference Include="..\..\..\Integrations\KernSmith\KernSmith.MonoGameGum\KernSmith.MonoGameGum.csproj" />
+    <!-- Apos.Shapes-backed shape rendering (filled/rounded/shadowed Circle, Rectangle, Arc,
+         Polygon, gradients) for the shape demo screens. This ProjectReference auto-copies the
+         DesktopGL apos-shapes.xnb shader to the output (MonoGameGumShapes.csproj Content item). -->
+    <ProjectReference Include="..\..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Content\**\*.png">

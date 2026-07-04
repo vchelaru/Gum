@@ -1,13 +1,13 @@
 ---
 name: gum-samples
-description: Where runtime-feature demo screens go. Triggers: adding a sample/demo page for a new runtime feature, NineSliceScreen/SpriteScreen, MonoGameGumInCode, Samples/raylib, SilkNetGum, MonoGameGumShapesGallery.
+description: Where runtime-feature demo screens go. Triggers: adding a sample/demo page for a new runtime feature, NineSliceScreen/SpriteScreen, shape demos, MonoGameGumInCode, Samples/raylib, SilkNetGum.
 ---
 
 # Gum Sample Projects
 
-When a runtime feature needs a visual demo (so a human can eyeball it across backends), add a screen to the **three cross-backend feature samples**, keeping them aligned. Shape features are the exception — they go to the shapes gallery instead.
+When a runtime feature needs a visual demo (so a human can eyeball it across backends), add a screen to the **three cross-backend feature samples**, keeping them aligned. Shape demos included — they live in the feature samples on every backend, same as any other feature (see "Shape features" below).
 
-The "**big three**" refers to the three backends below (Silk.NET/Skia, raylib, MonoGame). Note that the **XNA-likes (MonoGame, KNI) are split across two sample projects** — the feature sample *plus* the shapes gallery — for the reason explained under "Shape features" below. So "big three" counts backends, not project folders.
+The "**big three**" refers to the three backends below (Silk.NET/Skia, raylib, MonoGame) — one feature sample each.
 
 ## The three feature samples (add here by default)
 
@@ -30,11 +30,13 @@ Each has a `Screens/` folder with one `*Screen.cs` per feature (`SpriteScreen`, 
 - **Not every property exists on every backend.** A runtime property may be `#if`-gated away from a backend (see [[gum-cross-platform-unification]]). If the mirrored screen won't compile, the feature isn't wired on that backend yet — that's the actual work, not the screen.
 - **raylib and SilkNetGum screens need `using Gum.Forms.Controls;`** for `FrameworkElement`.
 
-## Shape features → the shapes gallery instead
+## Shape features
 
-If the feature touches **shapes** (Circle, Rectangle, RoundedRectangle, Arc, Polygon, Line — anything from [[gum-shapes-xnb-packaging]] / the shape runtimes), only the XNA-like slot changes: still mirror to the raylib and SilkNet feature samples (they render shapes natively, so their shape screens live *in* the feature samples — `Samples/raylib/Screens/CirclesScreen.cs`, `Samples/SilkNetGum/…`), but for MonoGame/KNI add to `Samples/GumShapesGallery/MonoGameGumShapesGallery/` (and its KNI siblings) **instead of** `MonoGameGumInCode`. So a shape cell still lands in three galleries — raylib + SilkNet + GumShapesGallery — just not `MonoGameGumInCode`.
+Shapes (Circle, Rectangle, RoundedRectangle, Arc, Polygon, Line — the shape runtimes) are demoed in the normal feature samples on **every** backend, same as any other feature: `CirclesScreen`, `RectanglesScreen`, `ArcsScreen`, `PolygonsScreen`, `GradientScreen`, `ClippingScreen`. Mirror a new shape cell across all three like any feature.
 
-**Why shapes get their own project:** raylib and Skia render shapes natively (built-in, full support), so shape demos for those backends live in the regular feature samples. XNA-likes (MonoGame, KNI) have **no built-in shape rendering** — they must be supplemented with the separate **Gum.Shapes** library, so their shape coverage lives in the dedicated `GumShapesGallery` project rather than `MonoGameGumInCode`. That's the split referenced above. This is expected to be unified eventually.
+raylib and Skia render shapes natively. MonoGame's shape rendering comes from the separate **Gum.Shapes** package (`MonoGameGumShapes`), which `MonoGameGumInCode` references via `ProjectReference` so its shape screens light up (packaging details in [[gum-shapes-xnb-packaging]]). There is **no KNI feature sample** — KNI shares the XNALIKE render path the MonoGame screens exercise, so it needs no separate shape demo.
+
+**MonoGame/KNI host init (landmine).** Referencing the package is not enough — the game host must call `ShapeRenderer.Self.Initialize()` (namespace `MonoGameAndGum.Renderables`) **after** `GumService.Default.Initialize(...)`, **and** set `GraphicsProfile.HiDef` (Apos.Shapes uses an SM4 effect that Reach can't load). Miss either and shape fills/effects silently do not draw — no error. See `docs/code/standard-visuals/shapes-apos.shapes.md`.
 
 ## Verification is human-driven
 

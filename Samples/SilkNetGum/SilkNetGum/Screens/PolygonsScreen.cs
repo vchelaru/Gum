@@ -10,7 +10,7 @@ using System.Numerics;
 
 namespace SilkNetGum.Screens;
 
-// Skia mirror of Samples/MonoGameGumShapesGallery/Screens/PolygonsScreen.cs (issue #2757).
+// Skia mirror of Samples/MonoGameGumInCode/Screens/PolygonsScreen.cs (issue #2757).
 // The two files should stay in lock-step structurally — same sections, same point lists,
 // same parameter sweeps — so visual regressions in one backend are easy to spot against the
 // other.
