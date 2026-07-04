@@ -5022,9 +5022,17 @@ public class CodeGenerator
                 context.StringBuilder.AppendLine(context.Tabs + "this.Visual.Height = 0f;");
                 context.StringBuilder.AppendLine(context.Tabs + "this.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;");
             }
-            else
+            else if (context.VisualApi == VisualApi.Gum)
             {
-
+                // Same as above, but for Screens whose generated class inherits GraphicalUiElement
+                // directly instead of wrapping a Visual (plain MonoGame - which KNI/FNA projects
+                // also select, Raylib, Skia). Without this, such a Screen kept
+                // Gum.Wireframe.GraphicalUiElement's hardcoded 32x32 constructor default instead of
+                // filling its parent.
+                context.StringBuilder.AppendLine(context.Tabs + "this.Width = 0f;");
+                context.StringBuilder.AppendLine(context.Tabs + "this.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;");
+                context.StringBuilder.AppendLine(context.Tabs + "this.Height = 0f;");
+                context.StringBuilder.AppendLine(context.Tabs + "this.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;");
             }
         }
 
