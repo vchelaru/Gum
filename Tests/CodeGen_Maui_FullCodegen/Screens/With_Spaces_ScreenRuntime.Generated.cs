@@ -62,6 +62,10 @@ partial class With_Spaces_ScreenRuntime : Gum.Wireframe.GraphicalUiElement
     }
     private void ApplyDefaultVariables()
     {
+        this.Width = 0f;
+        this.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        this.Height = 0f;
+        this.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
 
 
 
