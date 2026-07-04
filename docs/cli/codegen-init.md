@@ -20,7 +20,11 @@ Most projects do not need to run `codegen-init` explicitly. The `codegen` comman
 - Walks up from the `.gumx` directory to find the nearest `.csproj`
 - Derives `CodeProjectRoot` as a relative path from the `.gumx` directory to the `.csproj` directory
 - Extracts `RootNamespace` from the `.csproj`, falling back to the `.csproj` filename (with `.`, `-`, and spaces replaced by `_`)
-- Detects MonoGame or KNI package references and sets the output library accordingly
+- Detects MonoGame or KNI package references and sets the output library accordingly. A `Raylib-cs` package reference sets `OutputLibrary` to `Raylib`.
+
+{% hint style="info" %}
+`Raylib-cs` detection is available in the Gum July 2026 release and newer.
+{% endhint %}
 
 ## Examples
 
