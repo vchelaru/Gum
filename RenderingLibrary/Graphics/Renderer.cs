@@ -258,6 +258,22 @@ public class Renderer : IRenderer
         set;
     } = BlendState.NonPremultiplied;
 
+    // Used only while baking a render target's children over a transparent clear
+    // (RenderToRenderTarget). Color still premultiplies via (SourceAlpha, InverseSourceAlpha),
+    // same as NonPremultiplied — but Alpha uses (One, InverseSourceAlpha) instead of
+    // NonPremultiplied's (SourceAlpha, InverseSourceAlpha). The latter squares alpha when the
+    // destination starts fully transparent (result = srcAlpha*srcAlpha instead of srcAlpha),
+    // corrupting the baked texture's alpha channel — e.g. a 50%-alpha child bakes to 25% alpha
+    // instead of 50%. This is the standard "premultiply on bake" blend used industry-wide when
+    // rendering straight-alpha content onto a transparent render target (#1696).
+    private static readonly BlendState _bakeToRenderTargetBlendState = new BlendState
+    {
+        ColorSourceBlend = Gum.Blend.SourceAlpha,
+        ColorDestinationBlend = Gum.Blend.InverseSourceAlpha,
+        AlphaSourceBlend = Gum.Blend.One,
+        AlphaDestinationBlend = Gum.Blend.InverseSourceAlpha,
+    };
+
     public bool IsUsingPremultipliedAlpha
     {
         get; set;
@@ -849,6 +865,12 @@ public class Renderer : IRenderer
 
     bool hasSaved = false;
 
+    // True only while RenderToRenderTarget's nested Draw call is baking a subtree over a
+    // transparent clear. Tells AdjustRenderStates/AdjustNonClipRenderStates to substitute
+    // _bakeToRenderTargetBlendState wherever a renderable would otherwise resolve to
+    // NormalBlendState (#1696).
+    bool _isBakingRenderTarget = false;
+
     private void RenderToRenderTarget(IRenderableIpso renderable, SystemManagers systemManagers)
     {
 
@@ -927,7 +949,14 @@ public class Renderer : IRenderer
 
             //gumBatch.Draw(renderable);
             //systemManagers.Renderer.Draw(renderable);
+            // Children with the default (unconfigured) blend would otherwise resolve to
+            // NormalBlendState, whose alpha factors square alpha over the transparent clear
+            // above. _isBakingRenderTarget tells AdjustRenderStates/AdjustNonClipRenderStates to
+            // substitute the bake-safe blend for that case instead (#1696). A child with an
+            // explicitly custom BlendState is unaffected, same as the composite-back override.
+            _isBakingRenderTarget = true;
             Draw(systemManagers, _layers[0], renderable, forceRenderHierarchy:true, isPreRender:true);
+            _isBakingRenderTarget = false;
 
             gumBatch.End();
             GraphicsDevice.SetRenderTarget(oldRenderTarget as RenderTarget2D);
@@ -1075,7 +1104,12 @@ public class Renderer : IRenderer
         renderableAlpha = System.Math.Min(255, renderableAlpha);
         renderableAlpha = System.Math.Max(0, renderableAlpha);
 
-        var color = System.Drawing.Color.FromArgb(renderableAlpha, Color.White);
+        // RenderToRenderTarget always bakes children over a transparent clear, so the target's
+        // contents are premultiplied regardless of Renderer.NormalBlendState. A straight-white
+        // tint would re-lighten group alpha on top of that, so the tint must be premultiplied too
+        // (#1696) — otherwise group alpha renders too light relative to the same content drawn
+        // directly.
+        var color = System.Drawing.Color.FromArgb(renderableAlpha, renderableAlpha, renderableAlpha, renderableAlpha);
 
         renderTargetRenderableSprite.X = System.Math.Max(renderable.GetAbsoluteX(), Camera.AbsoluteLeft);
         renderTargetRenderableSprite.Y = System.Math.Max(renderable.GetAbsoluteY(), Camera.AbsoluteTop);
@@ -1091,22 +1125,41 @@ public class Renderer : IRenderer
             ?? ((renderable as Gum.Wireframe.GraphicalUiElement)?.RenderableComponent as IRenderTargetRenderable))
             ?.RenderTargetEffect as Effect;
 
-        if (renderTargetEffect == null)
+        // The blit must composite with a premultiplied blend since the target's contents are
+        // premultiplied by construction (see the `color` comment above). Only override the
+        // container's own default (unconfigured) blend — a container with an explicitly-configured
+        // custom BlendState (e.g. Additive) is left alone; making that combination correct against
+        // premultiplied content is that container's own concern, not this composite step's (#1696).
+        // A nested render target composites into its parent's bake while _isBakingRenderTarget is
+        // still true for that outer bake, so an unconfigured nested container's ambient blend has
+        // already been substituted to _bakeToRenderTargetBlendState by AdjustRenderStates — treat
+        // that the same as NormalBlendState here.
+        bool needsPremultipliedBlend = mRenderStateVariables.BlendState == Renderer.NormalBlendState
+            || mRenderStateVariables.BlendState == _bakeToRenderTargetBlendState;
+
+        if (renderTargetEffect == null && !needsPremultipliedBlend)
         {
             Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees: renderable.Rotation, objectCausingRendering: renderable);
         }
         else
         {
-            // Bind the container's post-process shader for just this blit. Flush whatever batch
-            // is open (sprites or a custom Apos.Shapes batch) so prior draws paint first, re-begin
-            // the SpriteBatch with the effect overridden, draw the target, then re-begin with the
-            // normal effect so following renderables are unaffected. Mirrors the mid-walk
-            // clip-change flush in Draw/AdjustRenderStates.
+            // Bind the container's post-process shader and/or force a premultiplied blend for just
+            // this blit. Flush whatever batch is open (sprites or a custom Apos.Shapes batch) so
+            // prior draws paint first, re-begin the SpriteBatch with the override(s), draw the
+            // target, then re-begin with the normal state so following renderables are unaffected.
+            // Mirrors the mid-walk clip-change flush in Draw/AdjustRenderStates.
             _batchOrchestrator.FlushAndReset(managers);
+
+            var previousBlendState = mRenderStateVariables.BlendState;
+            if (needsPremultipliedBlend)
+            {
+                mRenderStateVariables.BlendState = BlendState.AlphaBlend;
+            }
 
             spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, renderable, effectOverride: renderTargetEffect);
             Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees: renderable.Rotation, objectCausingRendering: renderable);
 
+            mRenderStateVariables.BlendState = previousBlendState;
             spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, renderable);
         }
     }
@@ -1178,6 +1231,10 @@ public class Renderer : IRenderer
     private void AdjustNonClipRenderStates(RenderStateVariables renderState, Layer layer, IRenderableIpso renderable, SystemManagers managers)
     {
         BlendState renderBlendState = renderable.BlendState ?? Renderer.NormalBlendState;
+        if (_isBakingRenderTarget && renderBlendState == Renderer.NormalBlendState)
+        {
+            renderBlendState = _bakeToRenderTargetBlendState;
+        }
         bool wrap = renderable.Wrap;
         bool shouldResetStates = false;
 
@@ -1215,6 +1272,10 @@ public class Renderer : IRenderer
         if (renderBlendState == null)
         {
             renderBlendState = Renderer.NormalBlendState;
+        }
+        if (_isBakingRenderTarget && renderBlendState == Renderer.NormalBlendState)
+        {
+            renderBlendState = _bakeToRenderTargetBlendState;
         }
         if (renderState.BlendState != renderBlendState)
         {
