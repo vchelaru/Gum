@@ -18,9 +18,16 @@ namespace Gum.DataTypes.Variables;
 public static class StateSaveExtensionMethods
 {
     /// <summary>
-    /// Fixes enumeration values and sorts all variables alphabetically
+    /// Fixes enumeration values and sorts all variables alphabetically.
     /// </summary>
     /// <param name="stateSave">The state to initialize.</param>
+    /// <remarks>
+    /// <see cref="VariableSaveExtensionMethods.FixEnumerations"/> only coerces the in-memory
+    /// representation (int -&gt; enum) so reflection/property-grid code sees the right CLR type;
+    /// the persisted value is unchanged either way. That coercion must NOT count toward "this
+    /// project was modified and needs a re-save" — doing so would force a re-save on every load
+    /// of any project containing enum variables for no real content change.
+    /// </remarks>
     public static void Initialize(this StateSave stateSave)
     {
         foreach (VariableSave variable in stateSave.Variables)

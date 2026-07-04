@@ -65,21 +65,24 @@ namespace Gum.DataTypes
             foreach (StateSave state in elementSave.AllStates)
             {
                 state.ParentContainer = elementSave;
+                // StateSave.Initialize only fixes enumeration in-memory representation and sorts
+                // variables - neither is a persisted-content change, so it doesn't feed wasModified.
                 state.Initialize();
 
-                FixStateVariableTypes(elementSave, state, ref wasModified);
+                FixStateVariableTypes(elementSave, state, ref wasModified, modifications);
             }
 
             foreach (InstanceSave instance in elementSave.Instances)
             {
                 instance.ParentContainer = elementSave;
-                instance.Initialize(elementSave, ref wasModified, throwExceptionOnMissing : !tolerateMissingDefaultStates);
+                instance.Initialize(elementSave, ref wasModified, throwExceptionOnMissing : !tolerateMissingDefaultStates, modifications: modifications);
             }
 
             return wasModified;
         }
 
-        private static void FixStateVariableTypes(ElementSave elementSave, StateSave state, ref bool wasModified)
+        private static void FixStateVariableTypes(ElementSave elementSave, StateSave state, ref bool wasModified,
+            ICollection<string>? modifications = null)
         {
             foreach(var variable in state.Variables.Where(item=>item.Type == "string" && item.Name.Contains("State")))
             {
@@ -91,11 +94,13 @@ namespace Gum.DataTypes
                 {
                     variable.Type = "State";
                     wasModified = true;
+                    modifications?.Add($"StateVariableTypeFix:{variable.Name}");
                 }
                 else if(elementSave.Categories.Any(item=>item.Name == withoutState))
                 {
                     variable.Type = withoutState;
                     wasModified = true;
+                    modifications?.Add($"StateVariableTypeFix:{variable.Name}");
                 }
             }
             // Feb 2, 2022
@@ -110,6 +115,7 @@ namespace Gum.DataTypes
                 {
                     variable.Type = withoutState;
                     wasModified = true;
+                    modifications?.Add($"StateVariableTypeFix:{variable.Name}");
                 }
             }
         }
@@ -185,7 +191,7 @@ namespace Gum.DataTypes
 
                             existingVariable.Value = asFloat;
                             wasModified = true;
-                            
+                            modifications?.Add($"FloatValueFix:{existingVariable.Name}");
                         }
                     }
                 }
@@ -215,6 +221,7 @@ namespace Gum.DataTypes
                         {
                             existingList.Type = variableList.Type;
                             wasModified = true;
+                            modifications?.Add($"VariableListTypeFix:{existingList.Name}");
                         }
                     }
                 }
@@ -232,6 +239,11 @@ namespace Gum.DataTypes
                             Value = null
 
                         });
+                        // This was previously not marking the element as modified even though a new
+                        // variable was added, so a category added without a re-save could silently
+                        // regenerate this placeholder every load instead of persisting it.
+                        wasModified = true;
+                        modifications?.Add($"(added {stateSaveCategory.Name}State variable)");
                     }
                 }
 
