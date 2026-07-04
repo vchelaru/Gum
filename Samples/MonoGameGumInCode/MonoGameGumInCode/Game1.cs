@@ -83,12 +83,15 @@ namespace MonoGameGumInCode
             AddNavButton("Standards", () => ShowScreen<StandardsScreen>());
             AddNavButton("Circles", () => ShowScreen<CirclesScreen>());
             AddNavButton("Rectangles", () => ShowScreen<RectanglesScreen>());
+            AddNavButton("Arcs", () => ShowScreen<ArcsScreen>());
+            AddNavButton("Polygons", () => ShowScreen<PolygonsScreen>());
+            AddNavButton("Gradients", () => ShowScreen<GradientScreen>());
             AddNavButton("Text", () => ShowScreen<TextScreen>());
             AddNavButton("Mixed", () => ShowScreen<MixedScreen>());
             AddNavButton("Invisible", () => ShowScreen<InvisibleScreen>());
             AddNavButton("NineSlice", () => ShowScreen<NineSliceScreen>());
             AddNavButton("Sprite", () => ShowScreen<SpriteScreen>());
-            AddNavButton("Clip", () => ShowScreen<ClipScreen>());
+            AddNavButton("Clip", () => ShowScreen<ClippingScreen>());
             AddNavButton("RT Effect", () => ShowScreen<RenderTargetEffectScreen>());
             AddNavButton("Render Target", () => ShowScreen<RenderTargetScreen>());
 

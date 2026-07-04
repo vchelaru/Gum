@@ -429,7 +429,7 @@ internal class CirclesScreen : FrameworkElement
 
     // Visual acceptance for non-square circles — wide, tall, and square cells. The gray frame
     // is the circle's bounding box; the circle inside must use min(W,H) for its diameter and
-    // sit centered. Mirrors the matching row in MonoGameGumShapesGallery and SilkNetGum.
+    // sit centered. Mirrors the matching row in MonoGameGumInCode and SilkNetGum.
     static ContainerRuntime BuildNonSquareRow()
     {
         ContainerRuntime row = BuildHorizontalRow();

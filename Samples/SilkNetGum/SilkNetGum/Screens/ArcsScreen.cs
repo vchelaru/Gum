@@ -9,7 +9,7 @@ namespace SilkNetGum.Screens;
 
 // Skia gallery for ArcRuntime. Mirrors the layout of CirclesScreen so the same backend can be
 // audited at a glance — every property/feature an Arc actually supports gets its own row. The
-// MonoGameGumShapesGallery ArcsScreen is the Apos-side counterpart and moves in lock-step with
+// MonoGameGumInCode ArcsScreen is the Apos-side counterpart and moves in lock-step with
 // this file (issue #2892 closed the cross-backend gap), so any row added or restructured here
 // should land on the Apos side in the same PR. This is also the reference surface for the
 // raylib Arc port (#2866); features demonstrated here are the parity bar (chord fill is

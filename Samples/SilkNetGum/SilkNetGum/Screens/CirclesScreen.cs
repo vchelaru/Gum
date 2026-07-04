@@ -7,7 +7,7 @@ using SkiaSharp;
 
 namespace SilkNetGum.Screens;
 
-// Skia mirror of MonoGameGumShapesGallery/Screens/CirclesScreen.cs (issue #2785). The two
+// Skia mirror of MonoGameGumInCode/Screens/CirclesScreen.cs (issue #2785). The two
 // files should stay in lock-step structurally — same sections, same parameter sweeps — so
 // visual regressions in one backend are easy to spot against the other.
 //
@@ -27,7 +27,7 @@ internal class CirclesScreen : FrameworkElement
 
         // Two-column root so the screen grows wide rather than tall as rows accumulate. No
         // ScrollViewer in SkiaGum yet, so this is the cheapest layout that works on both
-        // backends (mirrored in MonoGameGumShapesGallery/Screens/CirclesScreen).
+        // backends (mirrored in MonoGameGumInCode/Screens/CirclesScreen).
         ContainerRuntime root = new();
         root.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
         root.StackSpacing = 24;
@@ -283,7 +283,7 @@ internal class CirclesScreen : FrameworkElement
 
     // Visual acceptance for #2852 — wide, tall, and square cells sharing the same render code.
     // Skia already exhibited the canonical behavior (radius = min(W,H)/2, centered); this row
-    // pairs with the matching row in MonoGameGumShapesGallery so the two backends can be
+    // pairs with the matching row in MonoGameGumInCode so the two backends can be
     // compared side-by-side after the Apos.Shapes fix.
     static ContainerRuntime BuildNonSquareRow()
     {
@@ -362,7 +362,7 @@ internal class CirclesScreen : FrameworkElement
         return row;
     }
 
-    // Issue #2797 visual acceptance: mirror of the MonoGameGumShapesGallery dropshadow row.
+    // Issue #2797 visual acceptance: mirror of the MonoGameGumInCode dropshadow row.
     // Same four cells — baseline, soft, hard offset, colored — so visual regressions in one
     // backend are easy to spot against the other.
     static ContainerRuntime BuildDropshadowRow()

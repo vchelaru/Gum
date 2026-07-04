@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 using MonoGameAndGum.Renderables;
 using RenderingLibrary.Graphics;
 
-namespace GumShapesGallery.Screens;
+namespace MonoGameGumInCode.Screens;
 
 // Deep-dive on RoundedRectangleRuntime's gradient surface. Three rows of three cells -
 // every cell uses the same rectangle size so the configuration is what changes, not the

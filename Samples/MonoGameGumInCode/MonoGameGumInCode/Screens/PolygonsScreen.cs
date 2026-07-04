@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using Vector2 = System.Numerics.Vector2;
 
-namespace GumShapesGallery.Screens;
+namespace MonoGameGumInCode.Screens;
 
 // PolygonRuntime survey on the MonoGame side. Mirrors
 // Samples/SilkNetGum/SilkNetGum/Screens/PolygonsScreen.cs — same sections, same point lists,
