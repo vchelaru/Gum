@@ -992,7 +992,7 @@ public class StandardElementsManager
 
             AddGradientVariables(filledCircleState);
 
-            AddDropshadowVariables(filledCircleState);
+            AddDropshadowVariables(filledCircleState, minimumGumxVersion: V3StandardSurfaceVersion);
 
 
             AddStrokeAndFilledVariables(filledCircleState);
@@ -1029,7 +1029,7 @@ public class StandardElementsManager
 
             AddGradientVariables(roundedRectangleState);
 
-            AddDropshadowVariables(roundedRectangleState);
+            AddDropshadowVariables(roundedRectangleState, minimumGumxVersion: V3StandardSurfaceVersion);
 
             AddStrokeAndFilledVariables(roundedRectangleState);
 
@@ -1085,7 +1085,7 @@ public class StandardElementsManager
 
             AddGradientVariables(arcState);
 
-            AddDropshadowVariables(arcState);
+            AddDropshadowVariables(arcState, minimumGumxVersion: V3StandardSurfaceVersion);
 
             AddVariableReferenceList(arcState);
         }
@@ -1231,7 +1231,7 @@ public class StandardElementsManager
 
             AddGradientVariables(lineState);
 
-            AddDropshadowVariables(lineState);
+            AddDropshadowVariables(lineState, minimumGumxVersion: V3StandardSurfaceVersion);
 
             AddBlendVariable(lineState);
 
@@ -1362,6 +1362,25 @@ public class StandardElementsManager
     }
 
 
+    /// <summary>
+    /// Appends the dropshadow surface (HasDropshadow, offsets, blur, and color channels) to a
+    /// standard element's default state. Shared by the plain Circle/Rectangle and the legacy Skia
+    /// shapes (Arc/ColoredCircle/RoundedRectangle/Line).
+    /// </summary>
+    /// <param name="stateSave">The default state to append the dropshadow variables to.</param>
+    /// <param name="minimumGumxVersion">
+    /// When non-zero, stamps each appended variable's <see cref="VariableSave.MinimumGumxVersion"/>
+    /// so the load-time back-fill gates them for older projects. All six current callers pass
+    /// <see cref="V3StandardSurfaceVersion"/>: dropshadow itself predates v3 on the legacy shapes,
+    /// but #2950 renamed their per-axis DropshadowBlurX/DropshadowBlurY into this single scalar
+    /// DropshadowBlur for every caller of this helper, not just Circle/Rectangle. FRB1's generated
+    /// runtime for the legacy shapes (frozen outside this repo -- see
+    /// SkiaGum.Renderables.RenderableArc and friends) predates that rename and never gained the
+    /// scalar name, so back-filling "DropshadowBlur" into an old FRB1 project broke the regenerated
+    /// runtime with CS0246. If you add a new variable to this method (or any other shared default-
+    /// state helper used by these four legacy call sites), gate it explicitly -- there is no build
+    /// in this repo that exercises FRB1's frozen consumer to catch a regression here.
+    /// </param>
     public static void AddDropshadowVariables(StateSave stateSave, int minimumGumxVersion = 0)
     {
         int startIndex = stateSave.Variables.Count;
