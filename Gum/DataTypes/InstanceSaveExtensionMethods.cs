@@ -39,7 +39,8 @@ namespace Gum.DataTypes
             return found;
         }
 
-        public static void Initialize(this InstanceSave instanceSave, ElementSave parent, ref bool wasModified, bool throwExceptionOnMissing = true)
+        public static void Initialize(this InstanceSave instanceSave, ElementSave parent, ref bool wasModified, bool throwExceptionOnMissing = true,
+            ICollection<string>? modifications = null)
         {
             var baseElementType = ObjectFinder.Self.GetRootStandardElementSave(instanceSave);
 
@@ -78,6 +79,7 @@ namespace Gum.DataTypes
                                             {
                                                 variable.Value = parsedBool;
                                                 wasModified = true;
+                                                modifications?.Add($"InstanceValueCoerce:{variable.Name}");
                                             }
                                             break;
                                         case "int":
@@ -85,6 +87,7 @@ namespace Gum.DataTypes
                                             {
                                                 variable.Value = parsedInt;
                                                 wasModified = true;
+                                                modifications?.Add($"InstanceValueCoerce:{variable.Name}");
                                             }
                                             break;
                                         case "float":
@@ -92,6 +95,7 @@ namespace Gum.DataTypes
                                             {
                                                 variable.Value = parsedFloat;
                                                 wasModified = true;
+                                                modifications?.Add($"InstanceValueCoerce:{variable.Name}");
                                             }
                                             break;
                                         case "double":
@@ -99,6 +103,7 @@ namespace Gum.DataTypes
                                             {
                                                 variable.Value = parsedDouble;
                                                 wasModified = true;
+                                                modifications?.Add($"InstanceValueCoerce:{variable.Name}");
                                             }
                                             break;
                                             // add more types here if needed

@@ -48,10 +48,11 @@ namespace Gum.DataTypes
                     StateSave? effectiveDefaultState = FilterDefaultStateForProjectVersion(stateSave, gumProjectSave.Version);
                     // this will result in extra variables being
                     // added
-                    if (standardElementSave.Initialize(effectiveDefaultState))
+                    List<string>? standardElementAdded = modifications != null ? new List<string>() : null;
+                    if (standardElementSave.Initialize(effectiveDefaultState, modifications: standardElementAdded))
                     {
                         wasModified = true;
-                        modifications?.Add($"Standard:{standardElementSave.Name}");
+                        modifications?.Add($"Standard:{standardElementSave.Name}{FormatAddedVariables(standardElementAdded)}");
                     }
 
                     if(stateSave != null)
@@ -81,10 +82,11 @@ namespace Gum.DataTypes
             foreach (ScreenSave screenSave in gumProjectSave.Screens)
             {
                 var stateSave = StandardElementsManager.Self.GetDefaultStateFor("Screen");
-                if (screenSave.Initialize(stateSave, tolerateMissingDefaultStates))
+                List<string>? screenAdded = modifications != null ? new List<string>() : null;
+                if (screenSave.Initialize(stateSave, tolerateMissingDefaultStates, modifications: screenAdded))
                 {
                     wasModified = true;
-                    modifications?.Add($"Screen:{screenSave.Name}");
+                    modifications?.Add($"Screen:{screenSave.Name}{FormatAddedVariables(screenAdded)}");
                 }
             }
 

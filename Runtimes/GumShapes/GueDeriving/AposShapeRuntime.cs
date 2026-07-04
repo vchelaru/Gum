@@ -127,7 +127,8 @@ public abstract class AposShapeRuntime : GraphicalUiElement
             () => new global::MonoGameGum.GueDeriving.RoundedRectangleRuntime());
 #pragma warning restore CS0618
 
-        StandardElementsManager.Self.CustomGetDefaultState += HandleCustomGetDefaultState;
+        StandardElementsManager.Self.CustomGetDefaultState =
+            CombineGetDefaultState(StandardElementsManager.Self.CustomGetDefaultState);
 
         CustomSetPropertyOnRenderable.AdditionalPropertyOnRenderable +=
             MonoGameGumShapes.CustomSetPropertyOnRenderable.SetPropertyOnRenderableFunc;
@@ -157,7 +158,7 @@ public abstract class AposShapeRuntime : GraphicalUiElement
         }
     }
 
-    private static StateSave HandleCustomGetDefaultState(string arg)
+    private static StateSave? HandleCustomGetDefaultState(string arg)
     {
         switch (arg)
         {
@@ -170,11 +171,32 @@ public abstract class AposShapeRuntime : GraphicalUiElement
             case "RoundedRectangle":
                 return StandardElementsManager.GetRoundedRectangleState();
 
-            // temp?
+            // Not a shape this runtime knows about - null lets CombineGetDefaultState fall back
+            // to whatever resolver was already registered (e.g. the Skia plugin, for
+            // Svg/LottieAnimation/Canvas) instead of guessing Container's default state.
             default:
-                return StandardElementsManager.Self.DefaultStates["Container"];
+                return null;
         }
     }
+
+    /// <summary>
+    /// Combines this runtime's own default-state resolution with <paramref name="existing"/>, so
+    /// registering this runtime's types never discards another resolver's answer for a type this
+    /// runtime doesn't recognize.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="StandardElementsManager.CustomGetDefaultState"/> is invoked with a single
+    /// <c>Invoke()</c> call, and a multicast delegate's <c>Invoke()</c> only returns its LAST
+    /// subscriber's result - every earlier subscriber still runs, but its return value is thrown
+    /// away. Chaining onto it with <c>+=</c> (as this runtime used to) silently discarded whatever
+    /// an earlier-registered resolver had already answered for any type this runtime doesn't
+    /// recognize. In the Gum tool process, where both this runtime (KniGumShapes) and the Skia
+    /// plugin register a resolver, that meant Svg/LottieAnimation/Canvas silently fell back to
+    /// Container's default state - injecting Container-only variables (e.g. IsRenderTarget) into
+    /// those standards' .gutx files on every project load.
+    /// </remarks>
+    internal static Func<string, StateSave?> CombineGetDefaultState(Func<string, StateSave?>? existing) =>
+        type => HandleCustomGetDefaultState(type) ?? existing?.Invoke(type);
 
     /// <summary>
     /// The underlying Apos.Shapes renderable that draws this shape. Derived runtime classes return
