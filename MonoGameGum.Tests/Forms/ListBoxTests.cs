@@ -2035,4 +2035,252 @@ public class ListBoxTests : BaseTestClass
     }
 
     #endregion
+
+    #region Pinning: gaps the row-identity rework could plausibly break (issue #3509)
+
+    [Fact]
+    public void SelectedIndex_Getter_AfterSetterWithDecorationPresent_ReturnsCorrectItemsIndex()
+    {
+        // Pin: the existing decoration coverage only round-trips SelectedIndex through the
+        // SelectedObject-driven path. The SelectedIndex SETTER must resolve through the same
+        // panel-index helpers when a decoration occupies a non-Items panel slot (issue #3305).
+        ListBox listBox = new();
+        listBox.Items!.Add("A");
+        listBox.Items!.Add("B");
+        listBox.Items!.Add("C");
+
+        ColoredRectangleRuntime separator = new();
+        listBox.InsertDecorationAfter("A", separator);
+
+        listBox.SelectedIndex = 2;
+
+        listBox.SelectedIndex.ShouldBe(2);
+        listBox.ListBoxItems[2].IsSelected.ShouldBeTrue();
+    }
+
+    #endregion
+
+    #region Pre-existing bug found while investigating #3509 (not duplicate-reference-specific)
+
+    [Fact]
+    public void SelectedIndex_Getter_AfterReorder_ReturnsMovedItemsCorrectPosition()
+    {
+        // Discovered while investigating #3509, but reproducible with NO duplicate values:
+        // HandleCollectionItemMoved's SelectedIndex==oldIndex/newIndex comparison reads the (buggy)
+        // getter, so moving an unrelated pair of rows around the selected one silently reassigns
+        // selection to the wrong item even without any duplicate references involved. With
+        // row-identity tracking, the moved row's selection simply follows it to its new position -
+        // no index comparison needed at all.
+        ObservableCollection<string> values = new() { "A", "B", "C" };
+        ListBox listBox = new();
+        listBox.Items = values;
+
+        listBox.SelectedObject = "A";
+
+        values.Move(0, 2);
+
+        listBox.SelectedObject.ShouldBe("A");
+        listBox.SelectedIndex.ShouldBe(2);
+        listBox.ListBoxItems[2].IsSelected.ShouldBeTrue();
+    }
+
+    #endregion
+
+    #region Duplicate-reference items (issue #3509)
+
+    private class DuplicatableItem
+    {
+        public override string ToString() => "Shared";
+    }
+
+    [Fact]
+    public void SelectedIndex_Getter_WithDuplicateReferenceItems_ShouldReturnActualSelectedOccurrence()
+    {
+        // Issue #3509: Items[0] and Items[2] are the SAME reference (e.g. a shared inventory Item
+        // stacked twice). Selecting the row at index 2 must report SelectedIndex == 2, not 0 (the
+        // first occurrence) - the getter previously resolved via Items.IndexOf(value), which
+        // always finds the first match.
+        DuplicatableItem shared = new();
+        ListBox listBox = new();
+        listBox.Items!.Add(shared);
+        listBox.Items!.Add("B");
+        listBox.Items!.Add(shared);
+
+        listBox.SelectedIndex = 2;
+
+        listBox.SelectedIndex.ShouldBe(2);
+    }
+
+    [Fact]
+    public void SelectedIndex_Setter_WithDuplicateReferenceItems_ShouldSelectOnlyThatRow()
+    {
+        // Issue #3509 (the reported bug): setting SelectedIndex to one occurrence of a duplicated
+        // reference must highlight only that row, not every row sharing the reference.
+        DuplicatableItem shared = new();
+        ListBox listBox = new();
+        listBox.Items!.Add(shared);
+        listBox.Items!.Add("B");
+        listBox.Items!.Add(shared);
+
+        listBox.SelectedIndex = 2;
+
+        listBox.ListBoxItems[0].IsSelected.ShouldBeFalse();
+        listBox.ListBoxItems[1].IsSelected.ShouldBeFalse();
+        listBox.ListBoxItems[2].IsSelected.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void SelectedObject_set_WithDuplicateReferenceItems_ShouldNotSelectAllOccurrences()
+    {
+        // The exact AirPig-reported scenario: an inventory ObservableCollection<Item> containing
+        // the same shared Item reference more than once. SelectedObject can only disambiguate to a
+        // single (first-match) row since it carries no index, but it must never highlight every
+        // occurrence.
+        DuplicatableItem shared = new();
+        ListBox listBox = new();
+        listBox.Items!.Add(shared);
+        listBox.Items!.Add(shared);
+        listBox.Items!.Add(shared);
+
+        listBox.SelectedObject = shared;
+
+        int selectedCount = listBox.ListBoxItems.Count(li => li.IsSelected);
+        selectedCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void SingleMode_Click_WithDuplicateReferenceItems_ShouldSelectOnlyClickedRow()
+    {
+        DuplicatableItem shared = new();
+        ListBox listBox = new() { SelectionMode = SelectionMode.Single };
+        listBox.AddToRoot();
+        listBox.Items!.Add(shared);
+        listBox.Items!.Add("B");
+        listBox.Items!.Add(shared);
+
+        Mock<ICursor> cursor = SetupForPushOnItem(listBox, itemIndex: 2);
+        cursor.SetupProperty(x => x.VisualOver);
+        cursor.SetupProperty(x => x.WindowPushed);
+
+        GueInteractiveExtensionMethods.DoUiActivityRecursively(listBox.Visual, cursor.Object, null!, 0);
+
+        listBox.ListBoxItems[0].IsSelected.ShouldBeFalse();
+        listBox.ListBoxItems[2].IsSelected.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void MultipleMode_Click_WithDuplicateReferenceItems_ShouldToggleOnlyClickedRow()
+    {
+        // Issue #3509 bug: today, clicking a second row sharing an already-selected row's value
+        // takes the "remove" branch (Contains(value) is already true) and deselects the FIRST row
+        // instead of adding the second - two rows sharing a value could never both be selected.
+        DuplicatableItem shared = new();
+        ListBox listBox = new() { SelectionMode = SelectionMode.Multiple };
+        listBox.AddToRoot();
+        listBox.Items!.Add(shared);
+        listBox.Items!.Add("B");
+        listBox.Items!.Add(shared);
+
+        Mock<ICursor> firstClick = SetupForPushOnItem(listBox, itemIndex: 0);
+        firstClick.SetupProperty(x => x.VisualOver);
+        firstClick.SetupProperty(x => x.WindowPushed);
+        GueInteractiveExtensionMethods.DoUiActivityRecursively(listBox.Visual, firstClick.Object, null!, 0);
+
+        Mock<ICursor> secondClick = SetupForPushOnItem(listBox, itemIndex: 2);
+        secondClick.SetupProperty(x => x.VisualOver);
+        secondClick.SetupProperty(x => x.WindowPushed);
+        GueInteractiveExtensionMethods.DoUiActivityRecursively(listBox.Visual, secondClick.Object, null!, 0);
+
+        listBox.ListBoxItems[0].IsSelected.ShouldBeTrue();
+        listBox.ListBoxItems[2].IsSelected.ShouldBeTrue();
+
+        Mock<ICursor> toggleOffFirst = SetupForPushOnItem(listBox, itemIndex: 0);
+        toggleOffFirst.SetupProperty(x => x.VisualOver);
+        toggleOffFirst.SetupProperty(x => x.WindowPushed);
+        GueInteractiveExtensionMethods.DoUiActivityRecursively(listBox.Visual, toggleOffFirst.Object, null!, 0);
+
+        listBox.ListBoxItems[0].IsSelected.ShouldBeFalse();
+        listBox.ListBoxItems[2].IsSelected.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ExtendedMode_CtrlClick_WithDuplicateReferenceItems_ShouldAllowBothRowsSelected()
+    {
+        // Issue #3509 bug #3: today, Contains(value) is already true for the second row (it shares
+        // the first row's value), so Ctrl+Click takes the REMOVE branch and deselects the first row
+        // instead of adding the second - two rows sharing a value could never both be selected.
+        // SelectedItems is a dedup-by-value projection of the selected rows (documented design
+        // decision), so with two duplicate-valued rows selected, SelectedItems holds one entry even
+        // though both rows are independently highlighted.
+        DuplicatableItem shared = new();
+        ListBox listBox = new() { SelectionMode = SelectionMode.Extended };
+        listBox.AddToRoot();
+        listBox.Items!.Add(shared);
+        listBox.Items!.Add("B");
+        listBox.Items!.Add(shared);
+
+        Mock<ICursor> firstClick = SetupForPushOnItem(listBox, itemIndex: 0);
+        firstClick.SetupProperty(x => x.VisualOver);
+        firstClick.SetupProperty(x => x.WindowPushed);
+        GueInteractiveExtensionMethods.DoUiActivityRecursively(listBox.Visual, firstClick.Object, null!, 0);
+
+        Mock<ICursor> ctrlClick = SetupForPushWithCtrlOnItem(listBox, itemIndex: 2);
+        ctrlClick.SetupProperty(x => x.VisualOver);
+        ctrlClick.SetupProperty(x => x.WindowPushed);
+        GueInteractiveExtensionMethods.DoUiActivityRecursively(listBox.Visual, ctrlClick.Object, null!, 0);
+
+        listBox.ListBoxItems[0].IsSelected.ShouldBeTrue();
+        listBox.ListBoxItems[2].IsSelected.ShouldBeTrue();
+        listBox.SelectedItems.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void DownArrow_WithDuplicateReferenceItems_ShouldAdvanceToNextRowNotJumpToFirstOccurrence()
+    {
+        // Issue #3509: navigating down from row 0 (value shared) to row 1 (also value shared) must
+        // land on SelectedIndex == 1, not snap back to 0 via Items.IndexOf(value)'s first-match.
+        DuplicatableItem shared = new();
+        ListBox listBox = new();
+        listBox.AddToRoot();
+        listBox.Items!.Add(shared);
+        listBox.Items!.Add(shared);
+        listBox.Items!.Add("C");
+
+        listBox.SelectedIndex = 0;
+        listBox.DoListItemsHaveFocus = true;
+
+        Mock<IInputReceiverKeyboardMonoGame> keyboard = new();
+        keyboard.As<IInputReceiverKeyboard>()
+            .Setup(k => k.KeyTyped(Gum.Forms.Input.Keys.Down)).Returns(true);
+        keyboard.As<IInputReceiverKeyboard>()
+            .Setup(k => k.KeysTyped).Returns(new List<Gum.Forms.Input.Keys>());
+        FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
+
+        listBox.OnFocusUpdate();
+
+        listBox.SelectedIndex.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Decoration_WithDuplicateReferenceItemsAroundIt_SelectedIndexResolvesCorrectRow()
+    {
+        // Issue #3509 x #3305: a decoration sits between the two duplicate-valued rows. SelectedIndex
+        // (Items-space) must still resolve to the correct physical row via the panel-index helpers.
+        DuplicatableItem shared = new();
+        ListBox listBox = new();
+        listBox.Items!.Add(shared);
+        listBox.Items!.Add("B");
+        listBox.Items!.Add(shared);
+
+        ColoredRectangleRuntime separator = new();
+        listBox.InsertDecorationAfter("B", separator);
+
+        listBox.SelectedIndex = 2;
+
+        listBox.ListBoxItems[0].IsSelected.ShouldBeFalse();
+        listBox.ListBoxItems[2].IsSelected.ShouldBeTrue();
+        listBox.SelectedIndex.ShouldBe(2);
+    }
+
+    #endregion
 }

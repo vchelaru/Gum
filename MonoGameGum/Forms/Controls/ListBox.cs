@@ -156,6 +156,14 @@ public class ListBox : ItemsControl, IInputReceiver
     protected List<ListBoxItem> ListBoxItemsInternal = new List<ListBoxItem>();
 
     ObservableCollection<object> selectedItemsCollection = new ObservableCollection<object>();
+
+    // Source of truth for per-row IsSelected. Rows (ListBoxItem instances) are always unique even
+    // when two rows are bound to the same DataObject reference, so tracking selection by row
+    // reference - rather than by value equality on selectedItemsCollection - lets duplicate-valued
+    // rows be selected independently. selectedItemsCollection is kept as a dedup-by-value
+    // projection of this list for the public API. See issue #3509.
+    private List<ListBoxItem> _selectedRowsInternal;
+
     bool _suppressSelectionSync = false;
     SelectionMode selectionMode = SelectionMode.Single;
 
@@ -199,12 +207,12 @@ public class ListBox : ItemsControl, IInputReceiver
 
             doListBoxItemsHaveFocus = value;
 
-            // SelectedIndex is an Items-space index; resolve the focused row by reference so a
-            // non-ListBoxItem visual in Items can't push the index out of range (issue #556).
-            var selectedRowIndex = GetRowIndexForData(SelectedObject);
-            if (selectedRowIndex > -1 && selectedRowIndex < ListBoxItemsInternal.Count)
+            // Resolve the focused row directly from the row-identity selection set, not by
+            // re-deriving it from SelectedObject's value (issue #3509: a value can't disambiguate
+            // which of several duplicate-valued rows is actually selected).
+            if (_selectedRowsInternal.Count > 0)
             {
-                ListBoxItemsInternal[selectedRowIndex].IsFocused = doListBoxItemsHaveFocus;
+                _selectedRowsInternal[0].IsFocused = doListBoxItemsHaveFocus;
             }
         }
     }
@@ -227,8 +235,6 @@ public class ListBox : ItemsControl, IInputReceiver
             }
         }
     }
-
-    int selectedIndex = -1;
 
     public override bool IsFocused
     {
@@ -297,15 +303,21 @@ public class ListBox : ItemsControl, IInputReceiver
         }
         set
         {
-            // Clear SelectedItems and select the single item
-            _suppressSelectionSync = true;
-            selectedItemsCollection.Clear();
-
+            // SelectedObject carries no positional information, so with a duplicated reference the
+            // specific occurrence can't be disambiguated - resolve to a single (first-match) row,
+            // same as GetListBoxItemForData's other callers. This still guarantees only ONE row
+            // ends up selected, never every row sharing the value (issue #3509).
+            List<ListBoxItem> rows = new List<ListBoxItem>();
             if (value != null)
             {
-                selectedItemsCollection.Add(value);
+                var row = GetListBoxItemForData(value);
+                if (row != null)
+                {
+                    rows.Add(row);
+                }
             }
-            _suppressSelectionSync = false;
+
+            ReplaceSelectedRows(rows);
 
             // Sync the IsSelected state of all ListBoxItems
             SyncIsSelectedFromSelectedItems();
@@ -318,11 +330,12 @@ public class ListBox : ItemsControl, IInputReceiver
     {
         get
         {
-            // Return the index of the first item in SelectedItems, or -1 if empty
-            if (selectedItemsCollection.Count > 0)
+            // Return the Items-space index of the first selected ROW, resolved by position (not by
+            // searching Items for a matching value, which always finds the first occurrence even
+            // when a later occurrence is the one actually selected - issue #3509).
+            if (_selectedRowsInternal.Count > 0)
             {
-                var firstSelectedItem = selectedItemsCollection[0];
-                return Items?.IndexOf(firstSelectedItem) ?? -1;
+                return GetItemsIndexForRow(_selectedRowsInternal[0]);
             }
 
             return -1;
@@ -331,13 +344,15 @@ public class ListBox : ItemsControl, IInputReceiver
         {
             if (value > -1 && value < (Items?.Count ?? 0))
             {
-                var itemToSelect = Items![value];
+                var row = GetRowForItemsIndex(value);
 
-                // Clear SelectedItems and select the single item
-                _suppressSelectionSync = true;
-                selectedItemsCollection.Clear();
-                selectedItemsCollection.Add(itemToSelect);
-                _suppressSelectionSync = false;
+                List<ListBoxItem> rows = new List<ListBoxItem>();
+                if (row != null)
+                {
+                    rows.Add(row);
+                }
+
+                ReplaceSelectedRows(rows);
 
                 // Sync the IsSelected state of all ListBoxItems
                 SyncIsSelectedFromSelectedItems();
@@ -347,9 +362,7 @@ public class ListBox : ItemsControl, IInputReceiver
             else if (value == -1)
             {
                 // Clear all selections
-                _suppressSelectionSync = true;
-                selectedItemsCollection.Clear();
-                _suppressSelectionSync = false;
+                ReplaceSelectedRows(new List<ListBoxItem>());
 
                 // Sync the IsSelected state of all ListBoxItems
                 SyncIsSelectedFromSelectedItems();
@@ -395,14 +408,14 @@ public class ListBox : ItemsControl, IInputReceiver
             {
                 selectionMode = value;
 
-                // If switching to Single mode with multiple selections, keep only the first one
-                if (selectionMode == SelectionMode.Single && selectedItemsCollection.Count > 1)
+                // If switching to Single mode with multiple selections, keep only the first row
+                if (selectionMode == SelectionMode.Single && _selectedRowsInternal.Count > 1)
                 {
-                    _suppressSelectionSync = true;
-                    var firstItem = selectedItemsCollection[0];
-                    selectedItemsCollection.Clear();
-                    selectedItemsCollection.Add(firstItem);
-                    _suppressSelectionSync = false;
+                    var firstRow = _selectedRowsInternal[0];
+                    _selectedRowsInternal.Clear();
+                    _selectedRowsInternal.Add(firstRow);
+                    RebuildSelectedItemsCollectionFromRows();
+                    SyncIsSelectedFromSelectedItems();
                 }
             }
         }
@@ -524,11 +537,13 @@ public class ListBox : ItemsControl, IInputReceiver
 
     public ListBox() : base()
     {
+        _selectedRowsInternal = new List<ListBoxItem>();
         selectedItemsCollection.CollectionChanged += HandleSelectedItemsCollectionChanged;
     }
 
     public ListBox(InteractiveGue visual) : base(visual)
     {
+        _selectedRowsInternal = new List<ListBoxItem>();
         selectedItemsCollection.CollectionChanged += HandleSelectedItemsCollectionChanged;
     }
 
@@ -728,39 +743,38 @@ public class ListBox : ItemsControl, IInputReceiver
 
         var args = new SelectionChangedEventArgs();
 
-        _suppressSelectionSync = true;
-
+        // Mutate the row-identity selection set directly - _selectedRowsInternal is a plain List
+        // with no change notification, so no suppression is needed around it (unlike
+        // selectedItemsCollection below). Operating on the clicked ROW rather than its DataObject
+        // value means two rows sharing a value can be selected/toggled independently (issue #3509).
         switch (SelectionMode)
         {
             case SelectionMode.Single:
-                // Deselect all other items
-                foreach (var item in selectedItemsCollection.ToList())
+                // Deselect all other rows
+                foreach (var row in _selectedRowsInternal.ToList())
                 {
-                    if (item != clickedItem)
+                    if (row != listBoxItem)
                     {
-                        args.RemovedItems.Add(item);
+                        args.RemovedItems.Add(row.DataObject);
                     }
                 }
-                selectedItemsCollection.Clear();
+                _selectedRowsInternal.Clear();
 
-                // Select the clicked item
-                if (!selectedItemsCollection.Contains(clickedItem))
-                {
-                    selectedItemsCollection.Add(clickedItem);
-                    args.AddedItems.Add(clickedItem);
-                }
+                // Select the clicked row
+                _selectedRowsInternal.Add(listBoxItem);
+                args.AddedItems.Add(clickedItem);
                 break;
 
             case SelectionMode.Multiple:
-                // Toggle the clicked item
-                if (selectedItemsCollection.Contains(clickedItem))
+                // Toggle the clicked row
+                if (_selectedRowsInternal.Contains(listBoxItem))
                 {
-                    selectedItemsCollection.Remove(clickedItem);
+                    _selectedRowsInternal.Remove(listBoxItem);
                     args.RemovedItems.Add(clickedItem);
                 }
                 else
                 {
-                    selectedItemsCollection.Add(clickedItem);
+                    _selectedRowsInternal.Add(listBoxItem);
                     args.AddedItems.Add(clickedItem);
                 }
                 break;
@@ -768,27 +782,29 @@ public class ListBox : ItemsControl, IInputReceiver
             case SelectionMode.Extended:
                 if (isCtrlDown)
                 {
-                    // Ctrl+Click: Toggle the clicked item
-                    if (selectedItemsCollection.Contains(clickedItem))
+                    // Ctrl+Click: Toggle the clicked row
+                    if (_selectedRowsInternal.Contains(listBoxItem))
                     {
-                        selectedItemsCollection.Remove(clickedItem);
+                        _selectedRowsInternal.Remove(listBoxItem);
                         args.RemovedItems.Add(clickedItem);
                     }
                     else
                     {
-                        selectedItemsCollection.Add(clickedItem);
+                        _selectedRowsInternal.Add(listBoxItem);
                         args.AddedItems.Add(clickedItem);
                     }
                 }
                 else if (isShiftDown)
                 {
-                    // Shift+Click: Select range from anchor to clicked item
-                    if (selectedItemsCollection.Count > 0)
+                    // Shift+Click: Select range from anchor to clicked row
+                    if (_selectedRowsInternal.Count > 0)
                     {
-                        var anchorItem = selectedItemsCollection[0];
+                        var anchorRow = _selectedRowsInternal[0];
                         // Range is computed in ListBoxItem-row space so non-ListBoxItem visuals
-                        // don't shift or corrupt it (issue #556).
-                        var anchorRowIndex = GetRowIndexForData(anchorItem);
+                        // don't shift or corrupt it (issue #556). Resolving the anchor's row index
+                        // by row reference (not by its data value) keeps this correct even when the
+                        // anchor's value is duplicated elsewhere in Items (issue #3509).
+                        var anchorRowIndex = ListBoxItemsInternal.IndexOf(anchorRow);
 
                         if (anchorRowIndex >= 0)
                         {
@@ -800,11 +816,11 @@ public class ListBox : ItemsControl, IInputReceiver
                             {
                                 if (i < ListBoxItemsInternal.Count && ListBoxItemsInternal[i].IsEnabled)
                                 {
-                                    var itemInRange = ListBoxItemsInternal[i].DataObject;
-                                    if (!selectedItemsCollection.Contains(itemInRange))
+                                    var rowInRange = ListBoxItemsInternal[i];
+                                    if (!_selectedRowsInternal.Contains(rowInRange))
                                     {
-                                        selectedItemsCollection.Add(itemInRange);
-                                        args.AddedItems.Add(itemInRange);
+                                        _selectedRowsInternal.Add(rowInRange);
+                                        args.AddedItems.Add(rowInRange.DataObject);
                                     }
                                 }
                             }
@@ -812,30 +828,30 @@ public class ListBox : ItemsControl, IInputReceiver
                     }
                     else
                     {
-                        // No anchor, just select the clicked item
-                        selectedItemsCollection.Add(clickedItem);
+                        // No anchor, just select the clicked row
+                        _selectedRowsInternal.Add(listBoxItem);
                         args.AddedItems.Add(clickedItem);
                     }
                 }
                 else
                 {
-                    // Click alone: Select only the clicked item, deselect all others
-                    foreach (var item in selectedItemsCollection.ToList())
+                    // Click alone: Select only the clicked row, deselect all others
+                    foreach (var row in _selectedRowsInternal.ToList())
                     {
-                        if (item != clickedItem)
+                        if (row != listBoxItem)
                         {
-                            args.RemovedItems.Add(item);
+                            args.RemovedItems.Add(row.DataObject);
                         }
                     }
-                    selectedItemsCollection.Clear();
+                    _selectedRowsInternal.Clear();
 
-                    selectedItemsCollection.Add(clickedItem);
+                    _selectedRowsInternal.Add(listBoxItem);
                     args.AddedItems.Add(clickedItem);
                 }
                 break;
         }
 
-        _suppressSelectionSync = false;
+        RebuildSelectedItemsCollectionFromRows();
 
         // Sync IsSelected state for all ListBoxItems. Skip raising SelectionChanged
         // from inside the sync — this handler already raises it below with the same
@@ -1047,6 +1063,87 @@ public class ListBox : ItemsControl, IInputReceiver
 
     #endregion
 
+    #region Row-identity selection helpers (issue #3509)
+
+    // GetRowIndexForData/GetListBoxItemForData (above) resolve a row by data-object equality, which
+    // collapses every row sharing a value into one match. These helpers instead resolve by pure
+    // position - counting panel slots via GetPanelIndexForItemIndex/GetItemIndexForPanelIndex - so a
+    // specific row/index round-trips exactly even when its data value is duplicated elsewhere in
+    // Items.
+
+    /// <summary>
+    /// Returns the ListBoxItem row at the given Items-space index, or null if there is no row there
+    /// (for example the index refers to a non-ListBoxItem visual, issue #556).
+    /// </summary>
+    private ListBoxItem? GetRowForItemsIndex(int itemsIndex)
+    {
+        if (itemsIndex < 0 || InnerPanel == null)
+        {
+            return null;
+        }
+        int panelIndex = GetPanelIndexForItemIndex(itemsIndex);
+        var children = InnerPanel.Children;
+        if (panelIndex < 0 || panelIndex >= children.Count)
+        {
+            return null;
+        }
+        return (children[panelIndex] as InteractiveGue)?.FormsControlAsObject as ListBoxItem;
+    }
+
+    /// <summary>
+    /// Returns the Items-space index of the given row, resolved by the row's own Visual position
+    /// rather than by searching Items for a matching data value.
+    /// </summary>
+    private int GetItemsIndexForRow(ListBoxItem row)
+    {
+        if (InnerPanel == null)
+        {
+            return -1;
+        }
+        int panelIndex = InnerPanel.Children.IndexOf(row.Visual);
+        if (panelIndex < 0)
+        {
+            return -1;
+        }
+        return GetItemIndexForPanelIndex(panelIndex);
+    }
+
+    /// <summary>
+    /// Replaces the row-identity selection set and re-projects selectedItemsCollection from it.
+    /// </summary>
+    private void ReplaceSelectedRows(List<ListBoxItem> rows)
+    {
+        _selectedRowsInternal.Clear();
+        _selectedRowsInternal.AddRange(rows);
+        RebuildSelectedItemsCollectionFromRows();
+    }
+
+    /// <summary>
+    /// Rebuilds selectedItemsCollection as a dedup-by-value projection of the current row-identity
+    /// selection set (_selectedRowsInternal), preserving first-appearance order. Two rows sharing a
+    /// value contribute a single entry - selectedItemsCollection is a set of data objects, so a true
+    /// duplicate entry would just reintroduce the same by-value ambiguity one layer up (issue
+    /// #3509). Call this after mutating _selectedRowsInternal directly.
+    /// </summary>
+    private void RebuildSelectedItemsCollectionFromRows()
+    {
+        _suppressSelectionSync = true;
+        selectedItemsCollection.Clear();
+        List<object> seenValues = new List<object>();
+        foreach (var row in _selectedRowsInternal)
+        {
+            var value = row.DataObject;
+            if (!seenValues.Contains(value))
+            {
+                seenValues.Add(value);
+                selectedItemsCollection.Add(value);
+            }
+        }
+        _suppressSelectionSync = false;
+    }
+
+    #endregion
+
     #region Selection Synchronization
 
     /// <summary>
@@ -1066,10 +1163,11 @@ public class ListBox : ItemsControl, IInputReceiver
         for (int i = 0; i < ListBoxItemsInternal.Count; i++)
         {
             var listBoxItem = ListBoxItemsInternal[i];
-            // Resolve each row's data object by reference, not by Items[i] (issue #556).
             var item = listBoxItem.DataObject;
 
-            bool shouldBeSelected = selectedItemsCollection.Contains(item);
+            // Resolve selected-ness by row identity, not by data-object equality (issue #3509) -
+            // two rows can share a value without both showing as selected together.
+            bool shouldBeSelected = _selectedRowsInternal.Contains(listBoxItem);
 
             if (listBoxItem.IsSelected != shouldBeSelected)
             {
@@ -1087,9 +1185,6 @@ public class ListBox : ItemsControl, IInputReceiver
         }
 
         _suppressSelectionSync = false;
-
-        // Update selectedIndex for backward compatibility
-        selectedIndex = SelectedIndex;
 
         // Fire SelectionChanged event if there were changes
         if (raiseSelectionChanged &&
@@ -1120,10 +1215,13 @@ public class ListBox : ItemsControl, IInputReceiver
                 {
                     foreach (var item in e.NewItems)
                     {
-                        // Find the row by reference, not by Items.IndexOf -> ListBoxItemsInternal[i] (issue #556).
+                        // A bare value can't disambiguate which of several duplicate-valued rows to
+                        // affect - resolve to a single (first-match) row, same inherent limitation as
+                        // SelectedObject (issue #3509).
                         var listBoxItem = GetListBoxItemForData(item);
-                        if (listBoxItem != null && !listBoxItem.IsSelected)
+                        if (listBoxItem != null && !_selectedRowsInternal.Contains(listBoxItem))
                         {
+                            _selectedRowsInternal.Add(listBoxItem);
                             listBoxItem.IsSelected = true;
                             selectionChangedArgs.AddedItems.Add(item);
                         }
@@ -1137,8 +1235,9 @@ public class ListBox : ItemsControl, IInputReceiver
                     foreach (var item in e.OldItems)
                     {
                         var listBoxItem = GetListBoxItemForData(item);
-                        if (listBoxItem != null && listBoxItem.IsSelected)
+                        if (listBoxItem != null && _selectedRowsInternal.Contains(listBoxItem))
                         {
+                            _selectedRowsInternal.Remove(listBoxItem);
                             listBoxItem.IsSelected = false;
                             selectionChangedArgs.RemovedItems.Add(item);
                         }
@@ -1148,6 +1247,7 @@ public class ListBox : ItemsControl, IInputReceiver
 
             case NotifyCollectionChangedAction.Reset:
                 // Deselect all items
+                _selectedRowsInternal.Clear();
                 for (int i = 0; i < ListBoxItemsInternal.Count; i++)
                 {
                     var listBoxItem = ListBoxItemsInternal[i];
@@ -1165,8 +1265,9 @@ public class ListBox : ItemsControl, IInputReceiver
                     foreach (var item in e.OldItems)
                     {
                         var listBoxItem = GetListBoxItemForData(item);
-                        if (listBoxItem != null && listBoxItem.IsSelected)
+                        if (listBoxItem != null && _selectedRowsInternal.Contains(listBoxItem))
                         {
+                            _selectedRowsInternal.Remove(listBoxItem);
                             listBoxItem.IsSelected = false;
                             selectionChangedArgs.RemovedItems.Add(item);
                         }
@@ -1177,8 +1278,9 @@ public class ListBox : ItemsControl, IInputReceiver
                     foreach (var item in e.NewItems)
                     {
                         var listBoxItem = GetListBoxItemForData(item);
-                        if (listBoxItem != null && !listBoxItem.IsSelected)
+                        if (listBoxItem != null && !_selectedRowsInternal.Contains(listBoxItem))
                         {
+                            _selectedRowsInternal.Add(listBoxItem);
                             listBoxItem.IsSelected = true;
                             selectionChangedArgs.AddedItems.Add(item);
                         }
@@ -1188,9 +1290,6 @@ public class ListBox : ItemsControl, IInputReceiver
         }
 
         _suppressSelectionSync = false;
-
-        // Update selectedIndex for backward compatibility
-        selectedIndex = SelectedIndex;
 
         // Fire SelectionChanged event if there were changes
         if (selectionChangedArgs.AddedItems.Count > 0 || selectionChangedArgs.RemovedItems.Count > 0)
@@ -1222,20 +1321,15 @@ public class ListBox : ItemsControl, IInputReceiver
             }
         }
 
-        // Handle removal of selected items from the Items collection
+        // Handle removal of selected items from the Items collection. HandleCollectionItemRemoved
+        // (row-exact, no value ambiguity) already dropped the removed row from _selectedRowsInternal
+        // during base.HandleItemsCollectionChanged above if it was selected - re-project
+        // selectedItemsCollection from the now-correct row set rather than removing by the removed
+        // VALUE, which could drop the wrong occurrence's entry when a value is duplicated (issue
+        // #3509).
         if (e.Action == NotifyCollectionChangedAction.Remove && e.OldItems != null)
         {
-            _suppressSelectionSync = true;
-
-            foreach (var removedItem in e.OldItems)
-            {
-                if (selectedItemsCollection.Contains(removedItem))
-                {
-                    selectedItemsCollection.Remove(removedItem);
-                }
-            }
-
-            _suppressSelectionSync = false;
+            RebuildSelectedItemsCollectionFromRows();
 
             PushValueToViewModel(nameof(SelectedObject));
             PushValueToViewModel(nameof(SelectedIndex));
@@ -1243,6 +1337,7 @@ public class ListBox : ItemsControl, IInputReceiver
         else if (e.Action == NotifyCollectionChangedAction.Reset)
         {
             // Clear all selections when Items is reset
+            _selectedRowsInternal.Clear();
             _suppressSelectionSync = true;
             selectedItemsCollection.Clear();
             _suppressSelectionSync = false;
@@ -1258,14 +1353,11 @@ public class ListBox : ItemsControl, IInputReceiver
 
         ListBoxItemsInternal.RemoveAt(oldIndex);
         ListBoxItemsInternal.Insert(newIndex, itemToMove);
-        if (SelectedIndex == oldIndex)
-        {
-            SelectedIndex = newIndex;
-        }
-        else if (SelectedIndex == newIndex)
-        {
-            SelectedIndex = oldIndex;
-        }
+
+        // Selection is tracked by row reference (_selectedRowsInternal), not by index, so a row
+        // being moved never needs its selected-ness reassigned here - it's still the same row
+        // object regardless of where it now sits (issue #3509; this used to compare against the
+        // SelectedIndex getter, which itself resolved the wrong occurrence when values repeated).
     }
 
     protected override void HandleCollectionNewItemCreated(FrameworkElement newItem, int newItemIndex)
@@ -1313,6 +1405,10 @@ public class ListBox : ItemsControl, IInputReceiver
         if (removedItem is ListBoxItem listBoxItem)
         {
             ListBoxItemsInternal.Remove(listBoxItem);
+
+            // Row-exact - always the correct occurrence even when the row's value is duplicated
+            // elsewhere in Items (issue #3509).
+            _selectedRowsInternal.Remove(listBoxItem);
         }
     }
 
@@ -1370,11 +1466,10 @@ public class ListBox : ItemsControl, IInputReceiver
     {
         if (itemIndex != -1)
         {
-            // itemIndex is an Items-space index; map it to the matching row by reference, since
-            // ListBoxItemsInternal may not align with Items when non-ListBoxItem visuals are
-            // present (issue #556).
-            var data = itemIndex >= 0 && itemIndex < (Items?.Count ?? 0) ? Items![itemIndex] : null;
-            var visual = data != null ? GetListBoxItemForData(data) : null;
+            // itemIndex is a genuine Items-space index, so it can be resolved directly by position
+            // (GetRowForItemsIndex) - no need to round-trip through the item's data value, which
+            // would be ambiguous when that value is duplicated elsewhere in Items (issue #3509).
+            var visual = GetRowForItemsIndex(itemIndex);
             if (visual == null)
             {
                 return;
@@ -1805,7 +1900,10 @@ public class ListBox : ItemsControl, IInputReceiver
 
             // Navigate in ListBoxItem-row space (issue #556): SelectedIndex is an Items-space index
             // and GetListBoxIndexAt returns a row index, so the two must not be cross-assigned.
-            var currentRow = GetRowIndexForData(SelectedObject);
+            // The current row is the one carrying keyboard/gamepad focus - resolved by that flag
+            // directly (unambiguous, at most one row is ever focused) rather than by re-deriving it
+            // from SelectedObject's value, which can't disambiguate a duplicated value (issue #3509).
+            var currentRow = ListBoxItemsInternal.FindIndex(r => r.IsFocused);
             if (currentRow > -1 && currentRow < ListBoxItemsInternal.Count)
             {
                 var currentSelection = this.ListBoxItemsInternal[currentRow].Visual;
@@ -1840,15 +1938,16 @@ public class ListBox : ItemsControl, IInputReceiver
 
                 if (index != null)
                 {
-                    // index is a row index; select that row's data via its Items index so selection
-                    // and scroll-into-view stay correct without cross-indexing (issue #556).
-                    SelectedIndex = Items!.IndexOf(ListBoxItemsInternal[index.Value].DataObject);
+                    // index is a row index; resolve its Items index by position (not by searching
+                    // Items for a matching value, which always finds the first occurrence - issue
+                    // #3509) so selection and scroll-into-view stay correct without cross-indexing.
+                    SelectedIndex = GetItemsIndexForRow(ListBoxItemsInternal[index.Value]);
                     this.ListBoxItemsInternal[index.Value].IsFocused = true;
                 }
             }
             else if (ListBoxItemsInternal.Count > 0)
             {
-                SelectedIndex = Items!.IndexOf(ListBoxItemsInternal[0].DataObject);
+                SelectedIndex = GetItemsIndexForRow(ListBoxItemsInternal[0]);
                 this.ListBoxItemsInternal[0].IsFocused = true;
             }
 
@@ -1866,8 +1965,9 @@ public class ListBox : ItemsControl, IInputReceiver
                 if (ListBoxItemsInternal.Count > 0)
                 {
                     // Move through rows (ListBoxItem space) so non-ListBoxItem visuals are skipped and
-                    // ListBoxItemsInternal is never indexed by an Items-space index (issue #556).
-                    var currentRow = GetRowIndexForData(SelectedObject);
+                    // ListBoxItemsInternal is never indexed by an Items-space index (issue #556). The
+                    // current row is resolved by focus, not by SelectedObject's value (issue #3509).
+                    var currentRow = ListBoxItemsInternal.FindIndex(r => r.IsFocused);
                     if (currentRow < 0)
                     {
                         currentRow = 0;
@@ -1876,7 +1976,7 @@ public class ListBox : ItemsControl, IInputReceiver
                     {
                         currentRow++;
                     }
-                    SelectedIndex = Items!.IndexOf(ListBoxItemsInternal[currentRow].DataObject);
+                    SelectedIndex = GetItemsIndexForRow(ListBoxItemsInternal[currentRow]);
                     this.ListBoxItemsInternal[currentRow].IsFocused = true;
                 }
             }
@@ -1884,7 +1984,7 @@ public class ListBox : ItemsControl, IInputReceiver
             {
                 if (ListBoxItemsInternal.Count > 0)
                 {
-                    var currentRow = GetRowIndexForData(SelectedObject);
+                    var currentRow = ListBoxItemsInternal.FindIndex(r => r.IsFocused);
                     if (currentRow < 0)
                     {
                         currentRow = 0;
@@ -1893,7 +1993,7 @@ public class ListBox : ItemsControl, IInputReceiver
                     {
                         currentRow--;
                     }
-                    SelectedIndex = Items!.IndexOf(ListBoxItemsInternal[currentRow].DataObject);
+                    SelectedIndex = GetItemsIndexForRow(ListBoxItemsInternal[currentRow]);
                     this.ListBoxItemsInternal[currentRow].IsFocused = true;
                 }
             }
@@ -1901,7 +2001,7 @@ public class ListBox : ItemsControl, IInputReceiver
 
         if (pressedButton)
         {
-            var selectedRow = GetRowIndexForData(SelectedObject);
+            var selectedRow = ListBoxItemsInternal.FindIndex(r => r.IsFocused);
             if(selectedRow != -1)
             {
                 HandleListBoxItemPushed(this.ListBoxItemsInternal[selectedRow], EventArgs.Empty);

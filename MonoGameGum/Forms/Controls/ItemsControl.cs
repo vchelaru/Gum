@@ -485,7 +485,7 @@ public class ItemsControl : ScrollViewer
     /// (skipping decorations), or InnerPanel.Children.Count if there is no such item visual (for
     /// example when appending). See issue #3305.
     /// </summary>
-    private int GetPanelIndexForItemIndex(int itemIndex)
+    protected int GetPanelIndexForItemIndex(int itemIndex)
     {
         if (InnerPanel == null)
         {
@@ -506,6 +506,36 @@ public class ItemsControl : ScrollViewer
             seen++;
         }
         return children.Count;
+    }
+
+    /// <summary>
+    /// Returns the Items-space index of the item visual at the given InnerPanel.Children index
+    /// (skipping decorations), or -1 if the panel index is out of range or refers to a decoration.
+    /// Inverse of <see cref="GetPanelIndexForItemIndex"/>. Resolving an item's position this way -
+    /// by counting panel positions rather than searching Items for a matching value - lets callers
+    /// (e.g. ListBox's selection tracking) recover the exact Items-space index of a specific row
+    /// even when the same data value appears at more than one index (issue #3509).
+    /// </summary>
+    protected int GetItemIndexForPanelIndex(int panelIndex)
+    {
+        if (InnerPanel == null || panelIndex < 0 || panelIndex >= InnerPanel.Children.Count)
+        {
+            return -1;
+        }
+        var children = InnerPanel.Children;
+        if (IsDecoration(children[panelIndex]))
+        {
+            return -1;
+        }
+        int itemIndex = 0;
+        for (int p = 0; p < panelIndex; p++)
+        {
+            if (!IsDecoration(children[p]))
+            {
+                itemIndex++;
+            }
+        }
+        return itemIndex;
     }
 
     /// <summary>
