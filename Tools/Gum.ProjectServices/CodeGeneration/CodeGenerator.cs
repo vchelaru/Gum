@@ -1375,7 +1375,7 @@ public class CodeGenerator
             context.Instance = null;
         }
 
-        if(isFullyInstantiatingInCode && !isDerived && context.CodeOutputProjectSettings.OutputLibrary != OutputLibrary.Skia)
+        if(isFullyInstantiatingInCode && !isDerived && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
         {
             //RefreshInternalVisualReferences
             context.StringBuilder.AppendLine(context.Tabs + "base.RefreshInternalVisualReferences();");
