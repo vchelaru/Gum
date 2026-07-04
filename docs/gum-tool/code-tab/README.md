@@ -79,6 +79,11 @@ Select the desired Output Library, such as **MonoGame + Forms**. This should mat
 * **MonoGame + Forms** is the recommended code generation if your project is using MonoGame. This code generation generates code with classes containing properties which inherit from FrameworkElement such as Button and Textbox wherever possible. If a non-forms instance (such as a Sprite or Text instance) is added to a screen or component, then code will _fall back_ to generating non-forms properties (such as SpriteRuntime or TextRuntime).
 * **MonoGame (no forms, deprecated)** generates code without creating forms controls. Use this if your game does not use Forms, or if your game predates Forms support in MonoGame.
 * **SkiaSharp** generates code for runtimes which use SkiaSharp for graphics, such as WPF, .NET Maui, and Silk.NET
+* **Raylib** generates code for projects using the Raylib runtime. Raylib code generation currently supports only the **Reference Loaded Gum Project** instantiation type (see below); the **Fully in Code** type is not yet supported and Gum displays a warning if you select it.
+
+{% hint style="info" %}
+The **Raylib** Output Library is available in the Gum July 2026 release and newer.
+{% endhint %}
 
 Additional libraries may be added in the future. If your project needs support for code generation and you are using a library that is not supported, please contact the Gum team on Discord or GitHub.
 
