@@ -27,7 +27,7 @@ namespace MonoGameGumInCode
             // cannot load it and shapes silently fail to draw.
             _graphics.GraphicsProfile = GraphicsProfile.HiDef;
             _graphics.PreferredBackBufferWidth = 1024;
-            _graphics.PreferredBackBufferHeight = 768;
+            _graphics.PreferredBackBufferHeight = 1030;
             // ContainerRuntime.IsRenderTarget=true cells (see SpriteScreen's
             // alpha-blend row) switch the active render target mid-frame. With
             // the default RenderTargetUsage.DiscardContents, everything drawn

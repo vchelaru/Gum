@@ -41,11 +41,11 @@ public class BasicShapes
 
     public static void Main()
     {
-        // Sized to match the MonoGameGumInCode feature sample (1024x768) so the two galleries
-        // render at the same scale side by side. The window is resizable, so screens whose
-        // content exceeds 768 (e.g. Polygons' bottom row) can still be seen by dragging it larger.
+        // Width matches the MonoGameGumInCode feature sample; height is tall enough to show each
+        // shape screen's full content without scrolling (the Polygons bottom row in particular).
+        // The window is resizable if a screen needs more room.
         const int screenWidth = 1024;
-        const int screenHeight = 768;
+        const int screenHeight = 900;
 
         GumUI.CanvasWidth = screenWidth;
         GumUI.CanvasHeight = screenHeight;
