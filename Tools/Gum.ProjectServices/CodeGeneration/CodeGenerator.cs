@@ -3002,10 +3002,13 @@ public class CodeGenerator
                     }
                     else if (UsesUnifiedGumRuntime(context.CodeOutputProjectSettings.OutputLibrary))
                     {
-                        // If it's a screen it may have children, or it may not. We just don't know, so we need to check
-
-                        context.StringBuilder.AppendLine($"{context.Tabs}if(this.Children != null) this.Children.Add({_codeGenerationNameVerifier.ToCSharpName(instance.Name)});");
-                        context.StringBuilder.AppendLine($"{context.Tabs}else this.WhatThisContains.Add({_codeGenerationNameVerifier.ToCSharpName(instance.Name)});");
+                        // Children is never null - it's always at least the read-only
+                        // GraphicalUiElementCollection.Empty singleton - so the previous
+                        // "if(this.Children != null) ... else this.WhatThisContains.Add(...)" guard
+                        // could never take its else branch. The constructor now always assigns a
+                        // contained object before this runs (see GenerateConstructors), so Children
+                        // is guaranteed to be a real, writable collection here.
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({_codeGenerationNameVerifier.ToCSharpName(instance.Name)});");
                     }
                     else
                     {

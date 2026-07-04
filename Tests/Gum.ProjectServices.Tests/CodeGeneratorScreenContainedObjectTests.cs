@@ -84,4 +84,44 @@ public class CodeGeneratorScreenContainedObjectTests : BaseTestClass
             ObjectFinder.Self.GumProjectSave = null;
         }
     }
+
+    [Fact]
+    public void FullyInCode_MonoGame_ScreenWithChildInstance_AddsDirectlyToChildrenWithoutDeadNullCheck()
+    {
+        // The generated "if(this.Children != null) ... else this.WhatThisContains.Add(...)" guard
+        // was dead: Children is a property that always returns a collection (real or the read-only
+        // Empty singleton) and is never itself null, so the else branch could never run - it was a
+        // (non-functional) attempt to guard against exactly the Empty-collection crash fixed above.
+        // Now that a contained object is always assigned first, this can be a plain, unconditional
+        // Children.Add(...) - matching what non-Screen elements already emit (see the "else" branch
+        // a few lines below this one in CodeGenerator.FillWithParentAssignments).
+        GumProjectSave project = Project;
+
+        ScreenSave mainMenu = new ScreenSave { Name = "MainMenuUI" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = mainMenu };
+        mainMenu.States.Add(defaultState);
+        InstanceSave textInstance = new InstanceSave
+        {
+            Name = "TextInstance",
+            BaseType = "Text",
+            ParentContainer = mainMenu,
+        };
+        mainMenu.Instances.Add(textInstance);
+        project.Screens.Add(mainMenu);
+
+        ObjectFinder.Self.GumProjectSave = project;
+        try
+        {
+            string code = CreateCodeGenerator().GetGeneratedCodeForElement(
+                mainMenu, elementSettings: null!, CreateMonoGame());
+
+            code.ShouldContain("this.Children.Add(TextInstance);");
+            code.ShouldNotContain("this.Children != null");
+            code.ShouldNotContain("this.WhatThisContains.Add(TextInstance);");
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
 }
