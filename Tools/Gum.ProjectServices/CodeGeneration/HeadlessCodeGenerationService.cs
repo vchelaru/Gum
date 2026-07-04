@@ -134,6 +134,8 @@ public class HeadlessCodeGenerationService : IHeadlessCodeGenerationService
                     }
                 }
             }
+
+            GenerateStandardElementsFallbackFile(project, projectSettings);
         }
         finally
         {
@@ -141,6 +143,33 @@ public class HeadlessCodeGenerationService : IHeadlessCodeGenerationService
         }
 
         return count;
+    }
+
+    /// <inheritdoc/>
+    public bool GenerateStandardElementsFallbackFile(GumProjectSave project, CodeOutputProjectSettings projectSettings)
+    {
+        string? contents = _codeGenerator.GenerateStandardElementsFallbackCode(project, projectSettings);
+        if (contents == null)
+        {
+            return false;
+        }
+
+        var generatedFileName = _fileLocationsService.GetStandardElementsFallbackFileName(projectSettings);
+        if (generatedFileName == null)
+        {
+            return false;
+        }
+
+        var codeDirectory = generatedFileName.GetDirectoryContainingThis();
+        if (codeDirectory != null && !System.IO.Directory.Exists(codeDirectory.FullPath))
+        {
+            System.IO.Directory.CreateDirectory(codeDirectory.FullPath);
+        }
+
+        System.IO.File.WriteAllText(generatedFileName.FullPath, contents);
+        _logger.PrintOutput($"Generated code to {FileManager.RemovePath(generatedFileName.FullPath)}");
+
+        return true;
     }
 
     private void GenerateMissingReferencedElements(ElementSave element,

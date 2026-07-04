@@ -195,6 +195,12 @@ public static class CodegenCommand
             ObjectFinder.Self.DisableCache();
         }
 
+        // codegen iterates elements individually rather than calling
+        // HeadlessCodeGenerationService.GenerateCodeForAllElements (so it can run per-element error
+        // checks first), so the per-project Standard Elements fallback file (issue #3505) is written
+        // directly here rather than picked up automatically.
+        codeGenService.GenerateStandardElementsFallbackFile(project, projectSettings);
+
         Console.WriteLine($"Generated code for {generatedCount} element(s).");
 
         if (blockedCount > 0)

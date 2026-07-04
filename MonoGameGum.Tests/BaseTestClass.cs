@@ -1,6 +1,7 @@
 ﻿using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
+using Gum.Managers;
 using Gum.Wireframe;
 using MonoGameGum.Input;
 using Moq;
@@ -99,5 +100,10 @@ public class BaseTestClass : IDisposable
         // optional packages (e.g. MonoGameGumShapes) re-run at assembly load only —
         // not after Reset — so this Reset is intended for test-introduced state.
         RenderableRegistry.Reset();
+
+        // ObjectFinder.Self is a cross-test singleton (see ObjectFinderTests). Any Standard Element
+        // registered as a fallback via RegisterFallbackStandardElements must be cleared the same way,
+        // or it leaks into unrelated tests.
+        ObjectFinder.Self.ClearFallbackStandardElements();
     }
 }
