@@ -875,7 +875,7 @@ public class StandardElementsManager
         stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IgnoredByParentSize", Category = "Parent" });
     }
 
-    public Func<string, StateSave> CustomGetDefaultState;
+    public Func<string, StateSave?>? CustomGetDefaultState;
 
     public StateSave? TryGetDefaultStateFor(string type, bool throwExceptionOnMissing = true)
     {
