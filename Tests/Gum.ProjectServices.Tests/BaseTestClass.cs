@@ -27,5 +27,6 @@ public class BaseTestClass : IDisposable
     public virtual void Dispose()
     {
         ObjectFinder.Self.GumProjectSave = null;
+        ObjectFinder.Self.ClearFallbackStandardElements();
     }
 }

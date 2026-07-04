@@ -84,6 +84,12 @@ public class ObjectFinder : IObjectFinder
     /// </summary>
     Dictionary<string, ElementSave>? cachedDictionary;
 
+    /// <summary>
+    /// Standard Elements registered via <see cref="RegisterFallbackStandardElements"/>, consulted by
+    /// <see cref="GetStandardElement"/> only when no match is found in <see cref="GumProjectSave"/>.
+    /// </summary>
+    Dictionary<string, StandardElementSave>? _fallbackStandardElements;
+
     public static ObjectFinder Self { get; private set; } = new ObjectFinder();
 
     /// <summary>
@@ -173,6 +179,39 @@ public class ObjectFinder : IObjectFinder
         {
             cachedDictionary = null;
         }
+    }
+
+    #endregion
+
+    #region Fallback Standard Elements
+
+    /// <summary>
+    /// Registers Standard Element definitions to fall back to when <see cref="GetStandardElement"/>
+    /// can't find a match in the currently-loaded <see cref="GumProjectSave"/> (typically because no
+    /// project is loaded at all, as happens in a code-only game). An entry with the same
+    /// <see cref="ElementSave.Name"/> as an existing registration overwrites it (last write wins),
+    /// matching the idempotent-registration convention used by
+    /// <c>GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType</c>. A loaded project's own
+    /// Standard Elements always take priority over these fallbacks.
+    /// </summary>
+    public void RegisterFallbackStandardElements(IEnumerable<StandardElementSave> standards)
+    {
+        _fallbackStandardElements ??= new Dictionary<string, StandardElementSave>();
+
+        foreach (StandardElementSave standard in standards)
+        {
+            _fallbackStandardElements[standard.Name] = standard;
+        }
+    }
+
+    /// <summary>
+    /// Clears all Standard Elements registered via <see cref="RegisterFallbackStandardElements"/>.
+    /// Since <see cref="Self"/> is a cross-test singleton, unit tests must call this between runs so
+    /// a fallback registered by one test doesn't leak into an unrelated one.
+    /// </summary>
+    public void ClearFallbackStandardElements()
+    {
+        _fallbackStandardElements = null;
     }
 
     #endregion
@@ -277,6 +316,11 @@ public class ObjectFinder : IObjectFinder
                 }
 
             }
+        }
+
+        if (_fallbackStandardElements != null && _fallbackStandardElements.TryGetValue(elementName, out StandardElementSave? fallback))
+        {
+            return fallback;
         }
 
         return null;

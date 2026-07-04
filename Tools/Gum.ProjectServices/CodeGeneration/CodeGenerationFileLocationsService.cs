@@ -92,6 +92,29 @@ public class CodeGenerationFileLocationsService
     }
 
     /// <summary>
+    /// Gets the file path for the per-project Standard Elements fallback-registration file
+    /// (<c>StandardElements.Generated.cs</c>). Written directly under
+    /// <see cref="CodeOutputProjectSettings.CodeProjectRoot"/> with no Screens/Components
+    /// subfolder, since it isn't owned by any single element. Returns null when
+    /// <see cref="CodeOutputProjectSettings.CodeProjectRoot"/> isn't configured.
+    /// </summary>
+    public FilePath? GetStandardElementsFallbackFileName(CodeOutputProjectSettings codeOutputProjectSettings)
+    {
+        if (string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot))
+        {
+            return null;
+        }
+
+        string folder = codeOutputProjectSettings.CodeProjectRoot;
+        if (FileManager.IsRelative(folder))
+        {
+            folder = _projectDirectoryProvider.ProjectDirectory + folder;
+        }
+
+        return folder + "StandardElements.Generated.cs";
+    }
+
+    /// <summary>
     /// Gets the custom code (.cs) file path for an element.
     /// </summary>
     public FilePath? GetCustomCodeFileName(ElementSave selectedElement, CodeOutputElementSettings elementSettings,

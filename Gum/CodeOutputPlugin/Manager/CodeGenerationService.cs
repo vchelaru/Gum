@@ -39,6 +39,38 @@ internal class CodeGenerationService
     }
 
 
+    /// <summary>
+    /// Writes the per-project Standard Elements fallback-registration file
+    /// (<c>StandardElements.Generated.cs</c>) so Standard-Element-owned category/state assignments
+    /// still work in code-only games (issue #3505). Thin pass-through to
+    /// <see cref="CodeGenerator.GenerateStandardElementsFallbackCode"/> and
+    /// <see cref="CodeGenerationFileLocationsService.GetStandardElementsFallbackFileName"/> — no-op
+    /// when generation is skipped for <paramref name="codeOutputProjectSettings"/>'s OutputLibrary or
+    /// no CodeProjectRoot is configured.
+    /// </summary>
+    public void GenerateStandardElementsFallbackFile(GumProjectSave project, CodeOutputProjectSettings codeOutputProjectSettings)
+    {
+        string? contents = _codeGenerator.GenerateStandardElementsFallbackCode(project, codeOutputProjectSettings);
+        if (contents == null)
+        {
+            return;
+        }
+
+        var generatedFileName = _codeGenerationFileLocationsService.GetStandardElementsFallbackFileName(codeOutputProjectSettings);
+        if (generatedFileName == null)
+        {
+            return;
+        }
+
+        var codeDirectory = generatedFileName.GetDirectoryContainingThis();
+        if (codeDirectory != null && !System.IO.Directory.Exists(codeDirectory.FullPath))
+        {
+            _retryService.TryMultipleTimes(() => System.IO.Directory.CreateDirectory(codeDirectory.FullPath));
+        }
+
+        _retryService.TryMultipleTimes(() => System.IO.File.WriteAllText(generatedFileName.FullPath, contents));
+    }
+
     public void GenerateCodeForElement(ElementSave selectedElement, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings codeOutputProjectSettings, bool showPopups,
         bool checkForMissing = true)
     {

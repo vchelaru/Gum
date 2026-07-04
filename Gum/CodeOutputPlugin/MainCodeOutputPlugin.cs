@@ -602,6 +602,8 @@ public class MainCodeOutputPlugin : PluginBase
                 component, componentOutputSettings, codeOutputProjectSettings, showPopups: false);
         }
 
+        _codeGenerationService.GenerateStandardElementsFallbackFile(gumProject, codeOutputProjectSettings);
+
         if(showPopups)
         {
             _dialogService.ShowMessage($"Generated code\nScreens: {gumProject.Screens.Count}\nComponents: {gumProject.Components.Count}");
