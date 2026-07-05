@@ -426,6 +426,23 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        /// <summary>
+        /// Removes the entry added by the most recent <see cref="PushRenderStates"/> without applying
+        /// it — no <see cref="ReplaceRenderStates"/> / <see cref="End"/> side-effects. On NET8+ the
+        /// outer per-layer push in <c>Renderer.RenderLayer</c> is not balanced by the full
+        /// <see cref="PopRenderStates"/> (that pop's <see cref="End"/> is handled by the frame-level
+        /// ForceEnd instead), so this keeps <see cref="StackCount"/> from growing one entry per layer
+        /// per frame — the leak on the per-layer Draw paths that never run the per-frame reset (#3515).
+        /// A no-op when the stack is empty.
+        /// </summary>
+        public void RemoveLastStateStackEntry()
+        {
+            if (mStateStack.Count > 0)
+            {
+                mStateStack.RemoveAt(mStateStack.Count - 1);
+            }
+        }
+
         private void RecordCurrentParameters()
         {
             if (currentParameters != null)

@@ -144,6 +144,16 @@ public class SpriteRenderer
 
     }
 
+    /// <summary>
+    /// Balances <see cref="BeginSpriteBatch"/>'s <see cref="BeginType.Push"/> on NET8+ by discarding
+    /// the pushed render-state stack entry without the side-effects of <see cref="EndSpriteBatch"/>.
+    /// Called from <c>Renderer.RenderLayer</c>, where the full pop is compiled out on NET8+ (#3515).
+    /// </summary>
+    public void RemoveLastStateStackEntry()
+    {
+        mSpriteBatch.RemoveLastStateStackEntry();
+    }
+
     public void BeginSpriteBatch(RenderStateVariables renderStates, Layer layer, BeginType beginType, Camera camera, object objectStartingSpriteBatch, Effect? effectOverride = null)
     {
         // Use the full camera transform for both UsingEffect and non-UsingEffect paths.
