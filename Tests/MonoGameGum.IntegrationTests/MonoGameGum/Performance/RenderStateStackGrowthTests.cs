@@ -6,6 +6,7 @@ using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using RenderingLibrary;
 using RenderingLibrary.Content;
+using RenderingLibrary.Graphics;
 using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
@@ -13,13 +14,16 @@ using Xunit.Abstractions;
 namespace MonoGameGum.IntegrationTests.MonoGameGum.Performance;
 
 /// <summary>
-/// Direct leak guard for the <see cref="global::RenderingLibrary.Graphics.SpriteBatchStack"/>
-/// render-state stack (issue #1934). On NET8+ the per-layer <c>EndSpriteBatch</c> pop that would
-/// balance <c>RenderLayer</c>'s <c>BeginSpriteBatch(Push)</c> is compiled out, so without the
-/// per-frame reset in <c>ClearPerformanceRecordingVariables</c> the stack grows one entry per
-/// layer per frame — an unbounded <see cref="List{T}"/> rooted by the long-lived Renderer. This
-/// test pins the collection depth itself (rather than a bytes/frame proxy): the depth after a
-/// late frame must equal the depth after an early frame, i.e. it does not scale with frame count.
+/// Direct leak guards for the <see cref="global::RenderingLibrary.Graphics.SpriteBatchStack"/>
+/// render-state stack (issues #1934, #3515). On NET8+ the per-layer <c>EndSpriteBatch</c> pop that
+/// would balance <c>RenderLayer</c>'s <c>BeginSpriteBatch(Push)</c> is compiled out, so the pushed
+/// entry accumulates one per layer per frame — an unbounded <see cref="List{T}"/> rooted by the
+/// long-lived Renderer. These tests pin the collection depth itself (rather than a bytes/frame
+/// proxy): the depth after a late frame must equal the depth after an early frame, i.e. it does not
+/// scale with frame count. Two entry paths are covered: the full-frame <c>GumService.Draw()</c> path
+/// (kept bounded by the per-frame reset in <c>ClearPerformanceRecordingVariables</c>, #1934) and the
+/// per-layer <c>Renderer.Draw(SystemManagers, Layer)</c> path used by FRB, which never runs that
+/// reset and is instead balanced by the NET8+ pop in <c>RenderLayer</c> (#3515).
 /// </summary>
 public class RenderStateStackGrowthTests : BaseTestClass
 {
@@ -31,7 +35,7 @@ public class RenderStateStackGrowthTests : BaseTestClass
     }
 
     [Fact]
-    public void SpriteBatchStack_StateStackDoesNotGrowAcrossFrames()
+    public void SpriteBatchStack_StateStackDoesNotGrowAcrossFrames_OnFullFrameDrawPath()
     {
         using MinimalGame game = new();
         game.RunOneFrame();
@@ -73,6 +77,65 @@ public class RenderStateStackGrowthTests : BaseTestClass
         // grow by one (per rendered layer) every frame, so lateDepth would be ~measuredFrames higher.
         maxDepth.ShouldBe(minDepth);
         lateDepth.ShouldBe(earlyDepth);
+    }
+
+    [Fact]
+    public void SpriteBatchStack_StateStackDoesNotGrowAcrossFrames_OnPerLayerDrawPath()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        BuildScene();
+
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+        Layer mainLayer = renderer.MainLayer;
+
+        // One layout pass for the idle scene, then measure the per-layer Draw path only
+        // (Renderer.Draw(SystemManagers, Layer) — the FRB / GumIdb entry point). That path never
+        // runs the full-frame ClearPerformanceRecordingVariables reset, so on NET8+ it relies on
+        // RenderLayer's own push balance to stay bounded (#3515).
+        GameTime gameTime = new GameTime(TimeSpan.Zero, TimeSpan.FromSeconds(1.0 / 60.0));
+        global::Gum.GumService.Default.Update(gameTime);
+
+        double hostTime = 0;
+
+        // Warm up: the first Draws do one-time work (font loads, render-target setup) that can vary
+        // the per-frame push count. Discard them so the measured run reflects only steady state.
+        for (int i = 0; i < 5; i++)
+        {
+            AdvanceHostFrame(managers, ref hostTime);
+            renderer.Draw(managers, mainLayer);
+        }
+
+        const int measuredFrames = 200;
+        List<int> depths = new List<int>(measuredFrames);
+        for (int i = 0; i < measuredFrames; i++)
+        {
+            AdvanceHostFrame(managers, ref hostTime);
+            renderer.Draw(managers, mainLayer);
+            depths.Add(renderer.SpriteRenderer.RenderStateStackDepth);
+        }
+
+        int earlyDepth = depths.First();
+        int lateDepth = depths.Last();
+        int maxDepth = depths.Max();
+        int minDepth = depths.Min();
+
+        _output.WriteLine($"RenderStateStackDepth over {measuredFrames} per-layer draws: " +
+            $"first={earlyDepth}, last={lateDepth}, min={minDepth}, max={maxDepth}");
+
+        // The stack must stay bounded across per-layer draws: without the NET8+ balance in
+        // RenderLayer, each Draw(Layer) pushes an entry that is never popped, so lateDepth would be
+        // ~measuredFrames higher than earlyDepth. The fix keeps the depth constant.
+        maxDepth.ShouldBe(minDepth);
+        lateDepth.ShouldBe(earlyDepth);
+    }
+
+    private static void AdvanceHostFrame(SystemManagers managers, ref double hostTime)
+    {
+        hostTime += 1.0 / 60.0;
+        managers.Activity(hostTime);
     }
 
     private static void BuildScene()

@@ -661,6 +661,15 @@ public class Renderer : IRenderer
 
 #if !NET8_0_OR_GREATER
         spriteRenderer.EndSpriteBatch();
+#else
+        // The full EndSpriteBatch pop (with its End()/currentParameters reset) is intentionally
+        // skipped on NET8+ — the frame-level ForceEnd flushes instead. But the matching
+        // BeginSpriteBatch(Push) above still adds a state-stack entry, so without balancing it here
+        // mStateStack grows one entry per layer per frame on the Draw(Layer)/Draw(List<Layer>) paths
+        // that never run the per-frame ClearPerformanceRecordingVariables reset — an unbounded leak
+        // rooted by the long-lived Renderer (#3515). Remove just the pushed entry, preserving the
+        // NET8+ currentParameters carry-over that the frame-level flush relies on.
+        spriteRenderer.RemoveLastStateStackEntry();
 #endif
     }
 
