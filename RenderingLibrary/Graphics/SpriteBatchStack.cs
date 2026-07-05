@@ -438,6 +438,15 @@ namespace RenderingLibrary.Graphics
         {
             currentParameters = null;
             beginParametersUsedThisFrame.Clear();
+            // The state stack is per-frame scratch: a balanced frame pushes in RenderLayer's outer
+            // BeginSpriteBatch(Push) and pops in the matching EndSpriteBatch. On NET8+ that end-of-layer
+            // pop is skipped (RenderLayer relies on the frame-level ForceEnd instead), so without this
+            // reset the pushed states accumulate every frame — an unbounded List<BeginParameters?> growth
+            // whose amortized backing-array reallocation was the dominant idle Draw allocation (#1934).
+            // Clearing here (the per-frame reset, alongside the two lines above) keeps within-frame
+            // push/pop behavior intact while discarding the never-popped residue. On NET6 the stack is
+            // already empty at frame start, so this is a no-op there.
+            mStateStack.Clear();
         }
     }
 

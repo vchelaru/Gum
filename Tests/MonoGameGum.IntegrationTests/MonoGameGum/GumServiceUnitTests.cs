@@ -48,6 +48,24 @@ public class GumServiceUnitTests : BaseTestClass
     }
 
     [Fact]
+    public void Initialize_ThenDispose_UninitializesGumServiceDefault()
+    {
+        using (Game1 game = new Game1())
+        {
+            game.RunOneFrame();
+            GumService.Default.IsInitialized.ShouldBeTrue();
+        }
+
+        // The integration suite runs sequentially in a single process with non-deterministic
+        // test ordering (xUnit re-orders test cases between runs). If Game1 leaves
+        // GumService.Default initialized, whatever Game-based test xUnit schedules next throws
+        // "Initialize has already been called once" from its own GumService.Default.Initialize
+        // — an order-dependent flake that surfaced in the allocation/perf tests. Game1's
+        // teardown must uninitialize so every test starts from a clean, deterministic state.
+        GumService.Default.IsInitialized.ShouldBeFalse();
+    }
+
+    [Fact]
     public void SystemManagers_ThrowsException_WhenNotInitialized()
     {
         var gumService = new GumService();
@@ -114,6 +132,21 @@ public class GumServiceUnitTests : BaseTestClass
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            // Game1 initializes GumService.Default, so it must uninitialize it on teardown
+            // (before base.Dispose disposes the GraphicsDevice that Uninitialize releases
+            // GPU resources through). Without this, GumService.Default stays initialized and
+            // leaks into the next test in this sequential single-process suite, whose own
+            // GumService.Default.Initialize would then throw "already been called once".
+            if (GumUI.IsInitialized)
+            {
+                GumUI.Uninitialize();
+            }
+            LoaderManager.Self?.DisposeAndClear();
+            base.Dispose(disposing);
         }
     }
 
