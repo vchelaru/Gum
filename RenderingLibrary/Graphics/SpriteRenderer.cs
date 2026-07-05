@@ -107,6 +107,15 @@ public class SpriteRenderer
         }
     }
 
+    /// <summary>
+    /// The current depth of the underlying <see cref="SpriteBatchStack"/>'s render-state stack.
+    /// Exposed for tests that guard against the state stack growing unbounded across frames
+    /// (issue #1934): on NET8+ the per-layer <c>EndSpriteBatch</c> pop is compiled out, so the
+    /// per-frame reset in <see cref="SpriteBatchStack.ClearPerformanceRecordingVariables"/> is
+    /// what keeps this bounded. Returns 0 before <see cref="Initialize(GraphicsDevice)"/> has run.
+    /// </summary>
+    public int RenderStateStackDepth => mSpriteBatch?.StackCount ?? 0;
+
     #endregion
 
     #region Properties
