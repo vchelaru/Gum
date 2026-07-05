@@ -61,13 +61,14 @@ public class DrawAllocationTests : BaseTestClass
         // no-op would make a low/zero allocation result meaningless.
         drawStateCount.ShouldBeGreaterThan(0);
 
-        // Baseline ratchet (#1934): the idle Update/Draw walk over an unchanging Forms scene still
-        // allocates today — measured at a deterministic 831 bytes/frame locally. The likely sources
-        // are the per-frame input/cursor pass in GumService.Update (FormsUtilities.Update) and
-        // per-frame collections in the Draw walk; driving it toward zero is deferred to follow-up
-        // optimization PRs. This guard pins the current cost so a regression that grows it fails the
-        // build; tighten the bound as sources are removed. Headroom is for JIT/runner variance.
-        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(1200);
+        // Baseline ratchet (#1934): the idle Update/Draw walk over an unchanging Forms scene.
+        // The Draw walk's ~752 bytes/frame were eliminated by fixing an unbounded SpriteBatchStack
+        // state-stack leak and a per-frame clip-exit string interpolation (see SpriteBatchStack /
+        // Renderer). The remaining cost is the per-frame input/cursor pass in GumService.Update
+        // (FormsUtilities.Update). This guard pins the current cost so a regression that grows it
+        // fails the build; tighten the bound further as sources are removed. Headroom is for
+        // JIT/runner variance.
+        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(200);
     }
 
     private static void BuildScene()

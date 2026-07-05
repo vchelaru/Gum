@@ -1215,6 +1215,13 @@ public class Renderer : IRenderer
         }
     }
 
+    // Diagnostic label for the clip-exit BeginSpriteBatch. A shared constant instead of a per-frame
+    // interpolation ($"Un-set {renderable} Clip") — the latter allocated a fresh string every clip
+    // exit, one of the idle Draw allocation sources (#1934). DrawStateSummary.FromDrawStates only
+    // checks that ObjectChangingState is a string (not its content) to bucket a begin as a clip exit,
+    // so a constant preserves that categorization exactly.
+    private const string ClipExitStateLabel = "Un-set Clip";
+
     private void EndClipScope(Layer layer, IRenderableIpso renderable, SystemManagers managers)
     {
         var previousClip = _clipScopeStack.Pop();
@@ -1224,7 +1231,7 @@ public class Renderer : IRenderer
 
             _batchOrchestrator.FlushAndReset(managers);
 
-            spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, $"Un-set {renderable} Clip");
+            spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, ClipExitStateLabel);
         }
     }
 
