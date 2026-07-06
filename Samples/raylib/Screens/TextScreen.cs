@@ -52,7 +52,7 @@ internal class TextScreen : FrameworkElement
         scaleMarkup.Text = "small [FontScale=2]BIG[/FontScale] then [Color=Orange][FontScale=1.5]orange[/FontScale][/Color]";
         container.Children.Add(scaleMarkup);
 
-        AddSectionLabel(container, "BBCode markup - inline FontSize font-swap; blue box = measured width, must contain the run (#3524):");
+        AddSectionLabel(container, "BBCode markup - [FontSize=40] crisp swap (left) vs [FontScale=1.9] scale-up (right); blue box = measured width (#3524):");
         container.Children.Add(BuildFontSizeContainmentRow());
 
         AddSectionLabel(container, "Baked drop shadow (HasDropshadow = true, first-enable defaults):");
@@ -243,11 +243,13 @@ internal class TextScreen : FrameworkElement
         return cell;
     }
 
-    // Inline FontSize font-swap (#3524): a [FontSize=N] run must be MEASURED at its swapped size, not
-    // the base, or a RelativeToChildren Text is sized too narrow and the enlarged run spills past its
-    // background - the RelativeToChildren-too-narrow bug fixed for MonoGame in #3520 / #3523. The left
-    // cell is the fix ([FontSize=40] over a 21px base); the right cell is a [FontScale=1.9] control that
-    // already contained correctly. Pass = "big" is enlarged AND the blue box fully contains each line.
+    // Inline FontSize font-swap (#3524): [FontSize=N] re-rasterizes a crisp font at N (when a font creator
+    // like KernSmith is wired) and swaps it in for the run, matching MonoGame; it must also be MEASURED at
+    // that size, or a RelativeToChildren Text is sized too narrow and the run spills past its background
+    // (the RelativeToChildren-too-narrow bug fixed for MonoGame in #3520 / #3523). Left cell = [FontSize=40]
+    // over a 21px base (crisp swap); right cell = a [FontScale=1.9] control (a scale-up of the 21px atlas,
+    // so visibly blurrier). Pass = "big" is enlarged, crisper on the left than the right, AND the blue box
+    // fully contains each line in both.
     private static ContainerRuntime BuildFontSizeContainmentRow()
     {
         var row = new ContainerRuntime();

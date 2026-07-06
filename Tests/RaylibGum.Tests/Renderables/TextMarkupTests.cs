@@ -1,5 +1,7 @@
 using Gum.DataTypes;
 using Gum.GueDeriving;
+using KernSmith.Gum;
+using RaylibGum.Renderables;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using Xunit;
@@ -46,6 +48,9 @@ public class TextMarkupTests
         internalText.InlineVariables[0].CharacterCount.ShouldBe(4);
     }
 
+    // No font creator is wired in the test harness, so [FontSize=N] can't re-rasterize a crisp font and
+    // falls back to storing the raw size as a float (Text then scales the base atlas to it). The crisp
+    // swap path is covered by Text_WithFontSizeMarkup_SwapsToCrispFont_WhenFontCreatorWired.
     [Fact]
     public void Text_WithFontSizeMarkup_PopulatesInlineVariable()
     {
@@ -60,6 +65,35 @@ public class TextMarkupTests
         internalText.InlineVariables[0].Value.ShouldBe(40f);
         internalText.InlineVariables[0].StartIndex.ShouldBe(4);
         internalText.InlineVariables[0].CharacterCount.ShouldBe(4);
+    }
+
+    // With a font creator wired, [FontSize=N] re-rasterizes a crisp Raylib_cs.Font AT size N (BaseSize == N)
+    // and stores it as the run value - the actual font-swap, not an atlas scale-up. Mirrors the MonoGame
+    // BitmapFont swap. Restores the creator in finally so the no-creator fallback tests stay unaffected.
+    [Fact]
+    public void Text_WithFontSizeMarkup_SwapsToCrispFont_WhenFontCreatorWired()
+    {
+        IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreator();
+
+            TextRuntime textRuntime = new();
+            textRuntime.Font = "Arial";
+            textRuntime.FontSize = 21;
+            textRuntime.Text = "Big [FontSize=40]text[/FontSize]";
+
+            Text internalText = (Text)textRuntime.RenderableComponent;
+
+            internalText.InlineVariables.Count.ShouldBe(1);
+            internalText.InlineVariables[0].VariableName.ShouldBe("FontSize");
+            Raylib_cs.Font swapFont = internalText.InlineVariables[0].Value.ShouldBeOfType<Raylib_cs.Font>();
+            swapFont.BaseSize.ShouldBe(40);
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
     }
 
     [Fact]
