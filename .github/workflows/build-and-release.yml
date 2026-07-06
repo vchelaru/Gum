@@ -180,32 +180,13 @@ jobs:
           }
           "prev_tag=$prev" >> $env:GITHUB_OUTPUT
 
-      # 3) Commit version bump on a new branch and create tag
-      - name: Commit version bump, create tag, push branch+tag
-        if: github.event.inputs.release_kind == 'release'
-        shell: pwsh
-        run: |
-          git config user.name  "github-actions"
-          git config user.email "actions@github.com"
-
-          $branchName = "version-bump/${{ steps.meta.outputs.tag }}"
-          Write-Host "Creating branch $branchName"
-          git checkout -b "$branchName"
-
-          Write-Host "Committing version bump..."
-          git add Gum/Properties/AssemblyInfo.cs
-          git commit -m "Bump version to ${{ steps.meta.outputs.tag }}" || echo "No changes to commit"
-
-          Write-Host "Creating annotated tag..."
-          git tag -a "${{ steps.meta.outputs.tag }}" -m "${{ steps.meta.outputs.title }}"
-
-          Write-Host "Pushing branch and tag..."
-          git push origin "$branchName"
-          git push origin "${{ steps.meta.outputs.tag }}"
-
-      # 3b) Create PR for version bump
+      # 3) Create PR for version bump. This is peter-evans/create-pull-request's normal,
+      # well-supported usage: it discovers the uncommitted AssemblyInfo.cs edit from the
+      # "Update AssemblyInfo.cs version" step (which ran earlier, unconditionally), commits
+      # it itself, pushes a fresh branch, and opens the PR.
       - name: Create pull request for version bump
         if: github.event.inputs.release_kind == 'release'
+        id: version_bump_pr
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -221,7 +202,25 @@ jobs:
             automated
             version-bump
 
+      # 3b) Tag the version-bump commit the PR step just created and pushed.
+      # Tagging the PR branch's resulting commit (instead of committing to that exact branch
+      # name ourselves beforehand) avoids create-pull-request's "branch already matches base"
+      # reset: that action expects to be the one doing the committing, and force-resets any
+      # branch it's handed that already has a pushed commit identical to what it would have
+      # made itself. See the PR description for the full root-cause writeup.
+      - name: Create and push release tag
+        if: github.event.inputs.release_kind == 'release'
+        shell: pwsh
+        run: |
+          git config user.name  "github-actions"
+          git config user.email "actions@github.com"
 
+          $headSha = "${{ steps.version_bump_pr.outputs.pull-request-head-sha }}"
+          Write-Host "Tagging version-bump commit $headSha"
+          git tag -a "${{ steps.meta.outputs.tag }}" -m "${{ steps.meta.outputs.title }}" $headSha
+
+          Write-Host "Pushing tag..."
+          git push origin "${{ steps.meta.outputs.tag }}"
 
       # 4) Create GitHub Release and attach the zip
       - name: Create GitHub Release
