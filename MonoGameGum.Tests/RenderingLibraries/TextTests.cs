@@ -99,6 +99,185 @@ char id=37   x=161   y=0     width=22    height=20    xoffset=1     yoffset=6   
             "Because a content-derived Height must not be used to truncate the very lines it was derived from");
     }
 
+    // Two-char ("ab") BMFont with every glyph at a caller-chosen xadvance, so a test can build a
+    // "base" font and a deliberately-wider "swapped" font and assert measurement honors each run's font.
+    private static string TwoCharFontData(int xadvance, int lineHeight) =>
+$@"info face=""Arial"" size=-18 bold=0 italic=0 charset="""" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0
+common lineHeight={lineHeight} base={lineHeight} scaleW=256 scaleH=256 pages=1 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4
+page id=0 file=""x.png""
+chars count=2
+char id=97 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadvance} page=0 chnl=15
+char id=98 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadvance} page=0 chnl=15
+";
+
+    // #3520: a [FontSize=N] run becomes a "BitmapFont" inline variable pointing at a font generated at
+    // that size (CustomSetPropertyOnRenderable). The reported width must measure that run with ITS font,
+    // not the base font — otherwise a RelativeToChildren Text is sized too narrow and the larger run
+    // overflows / mis-wraps. Mirrors how DrawWithInlineVariables draws the run with the swapped font.
+    [Fact]
+    public void WrappedTextWidth_ShouldMeasureFontSwapRun_WithItsOwnFont()
+    {
+        const int baseAdvance = 10;
+        const int swappedAdvance = 20;
+
+        BitmapFont baseFont = new BitmapFont((Texture2D)null!, TwoCharFontData(baseAdvance, lineHeight: 20));
+        baseFont.SetFontPattern(256, 256);
+        BitmapFont swappedFont = new BitmapFont((Texture2D)null!, TwoCharFontData(swappedAdvance, lineHeight: 20));
+        swappedFont.SetFontPattern(256, 256);
+
+        Text plain = new Text();
+        plain.BitmapFont = baseFont;
+        plain.RawText = "ab";
+        float plainWidth = plain.WrappedTextWidth; // baseAdvance + baseAdvance
+
+        Text swapped = new Text();
+        swapped.BitmapFont = baseFont;
+        // 'b' (index 1) is rendered with the larger font, like [FontSize] swaps a run's font.
+        swapped.InlineVariables.Add(new InlineVariable
+        {
+            VariableName = "BitmapFont",
+            Value = swappedFont,
+            StartIndex = 1,
+            CharacterCount = 1
+        });
+        swapped.RawText = "ab";
+        float swappedWidth = swapped.WrappedTextWidth; // want: baseAdvance + swappedAdvance
+
+        // Ratio, not absolute, so the assert is independent of GlobalFontScale (both widths scale by it).
+        double expectedRatio = (baseAdvance + swappedAdvance) / (2.0 * baseAdvance);
+        ((double)swappedWidth).ShouldBe(plainWidth * expectedRatio, plainWidth * 0.02,
+            "because the font-swap run must be measured with its own (larger) font, not the base font");
+    }
+
+    // BMFont with space + A/B/C, every glyph at a caller-chosen xadvance.
+    private static string AbcFontData(int xadvance, int lineHeight) =>
+$@"info face=""Arial"" size=-18 bold=0 italic=0 charset="""" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0
+common lineHeight={lineHeight} base={lineHeight} scaleW=256 scaleH=256 pages=1 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4
+page id=0 file=""x.png""
+chars count=4
+char id=32 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadvance} page=0 chnl=15
+char id=65 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadvance} page=0 chnl=15
+char id=66 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadvance} page=0 chnl=15
+char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadvance} page=0 chnl=15
+";
+
+    // #3520: a base run that FOLLOWS a font-swap run (like " text." after [FontSize=40]big[/FontSize])
+    // must be measured at the base size. Reproduces the residual under-measurement the manual test
+    // showed: the mid-line swap grows the box, but the trailing run was still being dropped/mismeasured.
+    [Fact]
+    public void WrappedTextWidth_ShouldMeasureTrailingBaseRun_AfterFontSwapRun()
+    {
+        const int baseAdvance = 10;
+        const int swappedAdvance = 20;
+
+        BitmapFont baseFont = new BitmapFont((Texture2D)null!, AbcFontData(baseAdvance, lineHeight: 20));
+        baseFont.SetFontPattern(256, 256);
+        BitmapFont swappedFont = new BitmapFont((Texture2D)null!, AbcFontData(swappedAdvance, lineHeight: 20));
+        swappedFont.SetFontPattern(256, 256);
+
+        Text plain = new Text();
+        plain.BitmapFont = baseFont;
+        plain.RawText = "AA BB CC";
+        float plainWidth = plain.WrappedTextWidth; // 8 chars * baseAdvance
+
+        Text swapped = new Text();
+        swapped.BitmapFont = baseFont;
+        // Swap the MIDDLE run "BB" (indices 3-4); "AA " before and " CC" after stay base.
+        swapped.InlineVariables.Add(new InlineVariable
+        {
+            VariableName = "BitmapFont",
+            Value = swappedFont,
+            StartIndex = 3,
+            CharacterCount = 2
+        });
+        swapped.RawText = "AA BB CC";
+        float swappedWidth = swapped.WrappedTextWidth; // want: 6 base chars + 2 swapped chars
+
+        double expectedRatio = (6 * baseAdvance + 2 * swappedAdvance) / (8.0 * baseAdvance);
+        ((double)swappedWidth).ShouldBe(plainWidth * expectedRatio, plainWidth * 0.02,
+            "because a base run after a font-swap run must still be fully measured at the base size");
+    }
+
+    // Font where the space advances 10px but is only 1px wide, and letters A/B/C are 10px wide with a
+    // 10px advance. The narrow space is what exposes per-run TrimRight trimming: an interior run ending
+    // in a space loses 9px if measured with TrimRight instead of Full.
+    private static string NarrowSpaceFontData(int lineHeight) =>
+$@"info face=""Arial"" size=-18 bold=0 italic=0 charset="""" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0
+common lineHeight={lineHeight} base={lineHeight} scaleW=256 scaleH=256 pages=1 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4
+page id=0 file=""x.png""
+chars count=4
+char id=32 x=0 y=0 width=1 height=13 xoffset=0 yoffset=4 xadvance=10 page=0 chnl=15
+char id=65 x=0 y=0 width=10 height=13 xoffset=0 yoffset=4 xadvance=10 page=0 chnl=15
+char id=66 x=0 y=0 width=10 height=13 xoffset=0 yoffset=4 xadvance=10 page=0 chnl=15
+char id=67 x=0 y=0 width=10 height=13 xoffset=0 yoffset=4 xadvance=10 page=0 chnl=15
+";
+
+    private static BitmapFont CreateNarrowSpaceFontWithTexture()
+    {
+        BitmapFont font = new BitmapFont((Texture2D)null!, NarrowSpaceFontData(lineHeight: 20));
+        font.SetFontPattern(256, 256);
+
+        // BitmapFont.MeasureString only honors TrimRight when Texture != null (see the guard in
+        // MeasureString). Real fonts always have a texture, so plant a placeholder to match the runtime;
+        // MeasureString only reads the reference, never dereferences it, so this is safe.
+        Texture2D placeholderTexture = (Texture2D)RuntimeHelpers.GetUninitializedObject(typeof(Texture2D));
+        FieldInfo mTexturesField = typeof(BitmapFont).GetField("mTextures", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        Texture2D[] textures = (Texture2D[])mTexturesField.GetValue(font)!;
+        textures[0] = placeholderTexture;
+        return font;
+    }
+
+    // #3520 (the real-font manifestation the uniform-font tests missed): splitting a line into runs at
+    // inline-variable boundaries must NOT change its measured width when the runs carry no size change.
+    // BitmapFont.MeasureString defaults to TrimRight, which trims the last glyph of each measured string
+    // to its pixel extent. Measuring per-run trims at EVERY run boundary instead of once per line, so an
+    // interior run ending in a space (e.g. "This is " before a styled word) loses that space's advance
+    // and the line is under-measured — leaving a RelativeToChildren container too narrow and the tail
+    // spilling past it. A uniform font (width == xadvance) hides this, which is why it went unnoticed.
+    [Fact]
+    public void WrappedTextWidth_WithInteriorRunBeforeSpace_ShouldMatchPlainLineWidth()
+    {
+        BitmapFont font = CreateNarrowSpaceFontWithTexture();
+
+        Text plain = new Text();
+        plain.BitmapFont = font;
+        plain.RawText = "AA BB CC";
+        float plainWidth = plain.WrappedTextWidth;
+
+        Text styled = new Text();
+        styled.BitmapFont = font;
+        // A Color run over "BB" (indices 3-4) splits the line into "AA ", "BB", " CC" without changing
+        // any glyph size, so the measured width MUST equal the plain (single-run) line's width.
+        styled.InlineVariables.Add(new InlineVariable
+        {
+            VariableName = "Color",
+            Value = System.Drawing.Color.Red,
+            StartIndex = 3,
+            CharacterCount = 2
+        });
+        styled.RawText = "AA BB CC";
+        float styledWidth = styled.WrappedTextWidth;
+
+        styledWidth.ShouldBe(plainWidth,
+            "because inline runs that carry no size change must not alter the measured line width");
+    }
+
+    // Full must use XAdvance for the last glyph even when it is a trailing space (its documented
+    // contract). TrimRight instead trims a trailing space to its pixel extent, so end-of-line spaces add
+    // no width. This divergence is what lets a line be measured run-by-run for inline styling without
+    // losing interior spaces at the run boundaries (#3520).
+    [Fact]
+    public void MeasureString_Full_IncludesTrailingSpaceAdvance_UnlikeTrimRight()
+    {
+        BitmapFont font = CreateNarrowSpaceFontWithTexture(); // space: 1px wide, 10px advance
+
+        int full = font.MeasureString("AA ", HorizontalMeasurementStyle.Full);
+        int trimRight = font.MeasureString("AA ", HorizontalMeasurementStyle.TrimRight);
+
+        full.ShouldBe(30, "because Full counts the trailing space's full 10px XAdvance (10 + 10 + 10)");
+        trimRight.ShouldBe(21, "because TrimRight trims the trailing space to its 1px pixel width (10 + 10 + 1)");
+    }
+
     [Fact]
     public void MeasureString_WithStyleAndNoBitmapFont_DoesNotThrow()
     {

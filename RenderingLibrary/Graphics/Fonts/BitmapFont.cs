@@ -1352,11 +1352,20 @@ public class BitmapFont : IDisposable
                 // rather than the XAdvance. This
                 // might be so that icons sit snug
                 // against the end of their line of
-                // of text. 
-                if ((isLast && horizontalMeasurementStyle == HorizontalMeasurementStyle.TrimRight && 
-                    // Texture being null should never happen in real development, but we want to check for this with unit tests:
-                    Texture != null) 
-                    || (isLast && char.IsWhiteSpace(character)))
+                // of text.
+                // The last glyph is trimmed to its pixel extent (instead of its full XAdvance) only in
+                // TrimRight mode. Full always uses XAdvance for the last glyph — including a trailing
+                // space — matching its documented contract, so a run measured with Full advances exactly
+                // as it renders. That is required when a line is measured run-by-run for inline styling:
+                // an interior run ending in a space must keep that space's advance or the line is
+                // under-measured, leaving a RelativeToChildren container too narrow (#3520).
+                bool trimLastGlyph = isLast &&
+                    horizontalMeasurementStyle == HorizontalMeasurementStyle.TrimRight &&
+                    // Texture null shouldn't happen in real dev (it is checked for in unit tests);
+                    // whitespace has no glyph pixels, so it is trimmed whether or not a texture is present.
+                    (Texture != null || char.IsWhiteSpace(character));
+
+                if (trimLastGlyph)
                 {
                     if (character == '\n')
                     {
