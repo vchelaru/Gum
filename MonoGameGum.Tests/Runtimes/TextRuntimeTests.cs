@@ -280,6 +280,47 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
         }
     }
 
+    // #3524 (the height half of #3520): a [FontSize=N] font-swap run must also drive the reported line
+    // HEIGHT, not just the width. #3523 fixed width (measure each run with its swapped font) but left
+    // height on the FontScale-only path, so the tallest run's taller generated font was ignored and a
+    // RelativeToChildren box stayed base-height while the enlarged run spilled above/below it. The stub
+    // font's lineHeight == FontSize, so the size-40 swap font is exactly 2x the size-20 base.
+    [Fact]
+    public void WrappedTextHeight_ShouldGrow_WhenLineHasBbCodeFontSizeRun()
+    {
+        var previousCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        CustomSetPropertyOnRenderable.InMemoryFontCreator = new SizeProportionalFontCreator();
+        try
+        {
+            TextRuntime plain = new();
+            plain.WidthUnits = DimensionUnitType.RelativeToChildren;
+            plain.Width = 0;
+            plain.Font = "StubFont3520";
+            plain.FontSize = 20;
+            plain.Text = "AA BB CC";
+            Text plainText = (Text)plain.RenderableComponent;
+            float plainHeight = plainText.WrappedTextHeight;
+            plainHeight.ShouldBeGreaterThan(0);
+
+            TextRuntime swapped = new();
+            swapped.WidthUnits = DimensionUnitType.RelativeToChildren;
+            swapped.Width = 0;
+            swapped.Font = "StubFont3520";
+            swapped.FontSize = 20;
+            // Same visible text; only "BB" is enlarged via a generated size-40 font (lineHeight 40).
+            swapped.Text = "AA [FontSize=40]BB[/FontSize] CC";
+            Text swappedText = (Text)swapped.RenderableComponent;
+            float swappedHeight = swappedText.WrappedTextHeight;
+
+            swappedHeight.ShouldBe(plainHeight * 2, plainHeight * 0.02,
+                "because the [FontSize=40] run's taller size-40 font (lineHeight 40 vs the base's 20) must drive the measured line height");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = previousCreator;
+        }
+    }
+
     // Repro attempt for the manual-test structure the earlier tests missed: the box also holds a
     // RelativeToParent background sibling (added BEFORE the text). FontScale needs no font generation, so
     // this isolates whether the RelativeToParent sibling breaks the box's RelativeToChildren sizing.

@@ -253,4 +253,33 @@ public class TextMarkupTests
         sizedWidth.ShouldBe(plainWidth * 2, 1.5,
             "Because [FontSize=2xBase] renders the run at twice the base pixel size, so the measured width doubles");
     }
+
+    // Issue #3524: the HEIGHT half - a [FontSize=N] run must grow the reported line HEIGHT too, or a
+    // RelativeToChildren box is too short and the enlarged run spills above/below it (the vertical spill
+    // MonoGame had). Raylib gets this right by construction (one layout scale drives both width and
+    // height), but pin it so a future refactor can't silently regress it - the exact gap that let the
+    // MonoGame height bug ship uncaught.
+    [Fact]
+    public void WrappedTextHeight_ShouldGrow_WhenLineHasFontSizeLargerThanBase()
+    {
+        TextRuntime plain = new();
+        plain.WidthUnits = DimensionUnitType.RelativeToChildren;
+        plain.Width = 0;
+        plain.Text = "BIG";
+        Text plainText = (Text)plain.RenderableComponent;
+        float plainHeight = plainText.WrappedTextHeight;
+        plainHeight.ShouldBeGreaterThan(0);
+
+        int baseSize = plainText.Font.BaseSize;
+        int targetFontSize = baseSize * 2;
+
+        TextRuntime sized = new();
+        sized.WidthUnits = DimensionUnitType.RelativeToChildren;
+        sized.Width = 0;
+        sized.Text = $"[FontSize={targetFontSize}]BIG[/FontSize]";
+        float sizedHeight = ((Text)sized.RenderableComponent).WrappedTextHeight;
+
+        sizedHeight.ShouldBe(plainHeight * 2, plainHeight * 0.05,
+            "Because a [FontSize=2xBase] run is twice the base pixel size, so the measured line height doubles");
+    }
 }

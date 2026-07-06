@@ -1552,16 +1552,27 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                     // font so the reported width matches what is drawn — otherwise a run in a larger font
                     // is measured at the base size and a RelativeToChildren Text is sized too narrow (#3520).
                     BitmapFont runFont = mBitmapFont;
+                    // Height factor for this run relative to the base line height. A [FontScale] run scales
+                    // it directly; a [FontSize=N] swap run's taller generated font scales it by the ratio of
+                    // line heights, so the reported line grows to the swapped font's height. Without this the
+                    // height stays on the base font and a RelativeToChildren box is too short, letting the
+                    // enlarged run spill vertically — the height half of the #3520/#3523 width fix (#3524).
+                    float runHeightScale = effectiveFontScale;
                     for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
                     {
                         var variable = substring.Variables[variableIndex];
                         if (variable.VariableName == nameof(FontScale))
                         {
                             runScale = (float)variable.Value * SystemManagers.GlobalFontScale;
+                            runHeightScale = runScale;
                         }
                         else if (variable.VariableName == nameof(BitmapFont))
                         {
                             runFont = (BitmapFont)variable.Value;
+                            if (mBitmapFont != null && mBitmapFont.LineHeightInPixels > 0)
+                            {
+                                runHeightScale = effectiveFontScale * runFont.LineHeightInPixels / mBitmapFont.LineHeightInPixels;
+                            }
                         }
                     }
                     // Only the final run of the line is measured with TrimRight (matching the whole-line
@@ -1572,7 +1583,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                         ? HorizontalMeasurementStyle.TrimRight
                         : HorizontalMeasurementStyle.Full;
                     lineWidthAtScale += runFont.MeasureString(substring.Substring, measurementStyle) * runScale;
-                    maxRunScale = System.Math.Max(maxRunScale, runScale);
+                    maxRunScale = System.Math.Max(maxRunScale, runHeightScale);
                 }
                 lineHeightFactor = maxRunScale / effectiveFontScale;
                 lineWidthInBaseUnits = lineWidthAtScale / effectiveFontScale;
