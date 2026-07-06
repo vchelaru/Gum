@@ -9,15 +9,16 @@ using RenderingLibrary.Graphics;
 
 namespace MonoGameGumInCode.Screens;
 
-// Reference screen for TextRuntime font behavior. Raylib and SilkNetGum mirror the KernSmith
-// baked-shadow rows where that backend supports them (#3414 / #2724).
-//
-// Section order in this file must match the raylib and SilkNetGum TextScreen.cs mirrors
-// (Samples/raylib/Screens/TextScreen.cs, Samples/SilkNetGum/SilkNetGum/Screens/TextScreen.cs)
-// exactly, top to bottom - before adding, removing, or reordering ANY section, check the sibling
-// files for the same change or the side-by-side comparison breaks silently. (Broke once when this
-// file carried extra AddCustomOutlineText rows raylib never had, pushing every later section down
-// three rows relative to raylib - #3496.)
+// Reference screen for TextRuntime font behavior. The raylib and SilkNetGum TextScreen.cs mirrors
+// (Samples/raylib/Screens/TextScreen.cs, Samples/SilkNetGum/SilkNetGum/Screens/TextScreen.cs) match
+// this file section-for-section where the backend supports the same surface, so a per-backend
+// rendering difference stands out as a backend bug. Before adding, removing, or reordering ANY
+// section, make the same change in the siblings or the side-by-side comparison breaks silently
+// (#3414 / #3496). Only genuinely backend-specific things may differ: the color type
+// (Microsoft.Xna.Framework.Color vs Raylib_cs.Color), the TextRenderingPositionMode enum namespace,
+// and AddTextureFilterSection's mechanism (a per-layer sampler state here vs a baked font-cache
+// texture on raylib). SilkNetGum legitimately omits the BBCode / Blend / TextureFilter sections
+// because SkiaGum renders via RichTextKit rather than a font atlas.
 internal class TextScreen : FrameworkElement
 {
     public TextScreen() : base(new ContainerRuntime())
@@ -81,12 +82,68 @@ internal class TextScreen : FrameworkElement
         container.Children.Add(shadowOutline);
 
         var withOutline = new TextRuntime();
-        withOutline.Text = "I am text that has an outline.";
-        (withOutline.Component as Text).RenderBoundary = true;
+        withOutline.Text = "I am text with OutlineThickness = 2";
+        withOutline.FontSize = 24;
+        withOutline.OutlineThickness = 2;
         container.Children.Add(withOutline);
 
+        BuildTextParitySection(container);
+    }
+
+    // Text parity features (#3432): Blend, per-instance TextRenderingPositionMode override, and
+    // GetCharacterIndexAtPosition. All three are runtime-observable, so this section is the manual
+    // verification surface for the parity batch. Kept in step with the raylib mirror.
+    private static void BuildTextParitySection(ContainerRuntime container)
+    {
         AddBlendOnTextSection(container);
         AddTextureFilterSection(container);
+
+        // --- Per-instance TextRenderingPositionMode override, at a fractional origin ---
+        AddSectionLabel(container, "TextRenderingPositionMode (#3432): fractional origin; button toggles snap");
+        var snapText = new TextRuntime();
+        snapText.FontSize = 20;
+        snapText.X = 120.5f;
+        snapText.Text = "Fractional X=120.5 - SnapToPixel";
+        snapText.TextRenderingPositionMode = RenderingLibrary.Graphics.TextRenderingPositionMode.SnapToPixel;
+        container.Children.Add(snapText);
+
+        var toggleButton = new Button();
+        toggleButton.Text = "Toggle snap mode";
+        toggleButton.Click += (_, _) =>
+        {
+            if (snapText.TextRenderingPositionMode == RenderingLibrary.Graphics.TextRenderingPositionMode.SnapToPixel)
+            {
+                snapText.TextRenderingPositionMode = RenderingLibrary.Graphics.TextRenderingPositionMode.FreeFloating;
+                snapText.Text = "Fractional X=120.5 - FreeFloating";
+            }
+            else
+            {
+                snapText.TextRenderingPositionMode = RenderingLibrary.Graphics.TextRenderingPositionMode.SnapToPixel;
+                snapText.Text = "Fractional X=120.5 - SnapToPixel";
+            }
+        };
+        container.Children.Add(toggleButton.Visual);
+
+        // --- GetCharacterIndexAtPosition: click the text, report the hit index ---
+        AddSectionLabel(container, "GetCharacterIndexAtPosition (#3432): click the text below");
+        var hitText = new TextRuntime();
+        hitText.FontSize = 24;
+        hitText.Text = "Click me to report the character index";
+        hitText.HasEvents = true;
+        container.Children.Add(hitText);
+
+        var hitResult = new TextRuntime();
+        hitResult.FontSize = 16;
+        hitResult.Text = "(no click yet)";
+        container.Children.Add(hitResult);
+
+        hitText.Click += (_, _) =>
+        {
+            float cursorX = FrameworkElement.MainCursor.XRespectingGumZoomAndBounds();
+            float cursorY = FrameworkElement.MainCursor.YRespectingGumZoomAndBounds();
+            int index = hitText.GetCharacterIndexAtPosition(cursorX, cursorY);
+            hitResult.Text = $"Character index at click: {index}";
+        };
     }
 
     // Texture filter on Text (#3496): a font baked SMALL then magnified via FontScale, so
@@ -132,67 +189,6 @@ internal class TextScreen : FrameworkElement
         linearText.Text = "Linear";
         filterRow.AddChild(linearText);
         linearText.MoveToLayer(linearLayer);
-    }
-
-    // Inline FontSize font-swap (#3524): [FontSize=N] swaps in a BitmapFont rasterized at N (crisp), and
-    // must also be MEASURED at that size, or a RelativeToChildren Text is sized too narrow and the run
-    // spills past its background (the RelativeToChildren-too-narrow bug fixed in #3520 / #3523). Left cell
-    // = [FontSize=40] over a 21px base (crisp swap); right cell = a [FontScale=1.9] control (a scale-up of
-    // the 21px atlas, so visibly blurrier). Pass = "big" is enlarged, crisper on the left than the right,
-    // AND the blue box fully contains each line in both. This is the reference side for the raylib mirror
-    // (Samples/raylib/Screens/TextScreen.cs BuildFontSizeContainmentRow), which now matches it via KernSmith.
-    private static ContainerRuntime BuildFontSizeContainmentRow()
-    {
-        var row = new ContainerRuntime();
-        row.WidthUnits = DimensionUnitType.RelativeToChildren;
-        row.HeightUnits = DimensionUnitType.RelativeToChildren;
-        row.Width = 0;
-        row.Height = 0;
-        row.ChildrenLayout = ChildrenLayout.LeftToRightStack;
-        row.StackSpacing = 24;
-        row.AddChild(BuildContainedMarkupCell("This is [FontSize=40]big[/FontSize] text."));
-        row.AddChild(BuildContainedMarkupCell("This is [FontScale=1.9]big[/FontScale] text."));
-        return row;
-    }
-
-    // A RelativeToChildren cell sized to its TextRuntime, with a RelativeToParent background filling it.
-    // The background's edges mark where measurement thinks the text ends, so any measure-vs-render drift
-    // shows up as the run spilling outside the blue box.
-    private static ContainerRuntime BuildContainedMarkupCell(string markup)
-    {
-        var cell = new ContainerRuntime();
-        cell.WidthUnits = DimensionUnitType.RelativeToChildren;
-        cell.HeightUnits = DimensionUnitType.RelativeToChildren;
-        cell.Width = 0;
-        cell.Height = 0;
-
-        var background = new RectangleRuntime();
-        background.WidthUnits = DimensionUnitType.RelativeToParent;
-        background.HeightUnits = DimensionUnitType.RelativeToParent;
-        background.Width = 0;
-        background.Height = 0;
-        background.IsFilled = true;
-        background.FillColor = new Color(40, 60, 160);
-        cell.Children.Add(background);
-
-        var text = new TextRuntime();
-        text.WidthUnits = DimensionUnitType.RelativeToChildren;
-        text.HeightUnits = DimensionUnitType.RelativeToChildren;
-        text.Width = 0;
-        text.Height = 0;
-        text.FontSize = 21;
-        text.Text = markup;
-        cell.Children.Add(text);
-
-        return cell;
-    }
-
-    private static void AddSectionLabel(ContainerRuntime container, string text)
-    {
-        var label = new TextRuntime();
-        label.Text = text;
-        label.FontSize = 14;
-        container.Children.Add(label);
     }
 
     // Blend on Text (#3432): additive (brightens) vs normal, over an identical blue box. Kept byte
@@ -248,5 +244,66 @@ internal class TextScreen : FrameworkElement
         cell.Children.Add(text);
 
         return cell;
+    }
+
+    // Inline FontSize font-swap (#3524): [FontSize=N] swaps in a font rasterized at N (crisp) and must
+    // also be MEASURED at that size, or a RelativeToChildren Text is sized too narrow and the run spills
+    // past its background (the RelativeToChildren-too-narrow bug fixed in #3520 / #3523). Left cell =
+    // [FontSize=40] over a 21px base (crisp swap); right cell = a [FontScale=1.9] control (a scale-up of
+    // the 21px atlas, so visibly blurrier). Pass = "big" is enlarged, crisper on the left than the right,
+    // AND the blue box fully contains each line in both. Kept identical with the raylib mirror (which
+    // gets its crisp swap from KernSmith; this backend from the BitmapFont path).
+    private static ContainerRuntime BuildFontSizeContainmentRow()
+    {
+        var row = new ContainerRuntime();
+        row.WidthUnits = DimensionUnitType.RelativeToChildren;
+        row.HeightUnits = DimensionUnitType.RelativeToChildren;
+        row.Width = 0;
+        row.Height = 0;
+        row.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        row.StackSpacing = 24;
+        row.AddChild(BuildContainedMarkupCell("This is [FontSize=40]big[/FontSize] text."));
+        row.AddChild(BuildContainedMarkupCell("This is [FontScale=1.9]big[/FontScale] text."));
+        return row;
+    }
+
+    // A RelativeToChildren cell sized to its TextRuntime, with a RelativeToParent background filling it.
+    // The background's edges mark where measurement thinks the text ends, so any measure-vs-render drift
+    // shows up as the run spilling outside the blue box.
+    private static ContainerRuntime BuildContainedMarkupCell(string markup)
+    {
+        var cell = new ContainerRuntime();
+        cell.WidthUnits = DimensionUnitType.RelativeToChildren;
+        cell.HeightUnits = DimensionUnitType.RelativeToChildren;
+        cell.Width = 0;
+        cell.Height = 0;
+
+        var background = new RectangleRuntime();
+        background.WidthUnits = DimensionUnitType.RelativeToParent;
+        background.HeightUnits = DimensionUnitType.RelativeToParent;
+        background.Width = 0;
+        background.Height = 0;
+        background.IsFilled = true;
+        background.FillColor = new Color(40, 60, 160, 255);
+        cell.Children.Add(background);
+
+        var text = new TextRuntime();
+        text.WidthUnits = DimensionUnitType.RelativeToChildren;
+        text.HeightUnits = DimensionUnitType.RelativeToChildren;
+        text.Width = 0;
+        text.Height = 0;
+        text.FontSize = 21;
+        text.Text = markup;
+        cell.Children.Add(text);
+
+        return cell;
+    }
+
+    private static void AddSectionLabel(ContainerRuntime container, string text)
+    {
+        var label = new TextRuntime();
+        label.Text = text;
+        label.FontSize = 14;
+        container.Children.Add(label);
     }
 }
