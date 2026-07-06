@@ -355,6 +355,31 @@ public class CodeGenerator
     }
 
     /// <summary>
+    /// Adjusts <paramref name="projectSettings"/> in place to the nearest combination code generation
+    /// supports, so callers never reach the <see cref="AssertSupportedCombination"/> throw. Currently
+    /// forces <see cref="OutputLibrary.Raylib"/> to <see cref="ObjectInstantiationType.FindByName"/>
+    /// (FullyInCode for Raylib is not implemented yet — see issue #3430).
+    /// </summary>
+    /// <remarks>
+    /// This is the smooth-UX counterpart to <see cref="AssertSupportedCombination"/>: the interactive
+    /// tool coerces silently so switching OutputLibrary can never crash mid-edit, whereas the headless
+    /// CLI deliberately keeps the loud throw rather than silently generating something other than what
+    /// the resolved settings asked for.
+    /// </remarks>
+    /// <returns><c>true</c> if a setting was changed, otherwise <c>false</c>.</returns>
+    public static bool CoerceToSupportedCombination(CodeOutputProjectSettings projectSettings)
+    {
+        if (projectSettings.OutputLibrary == OutputLibrary.Raylib &&
+            projectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
+        {
+            projectSettings.ObjectInstantiationType = ObjectInstantiationType.FindByName;
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Resolves the effective syntax version for the supplied project settings using the
     /// injected <see cref="ISyntaxVersionDetectionService"/> when available. Falls back to
     /// parsing <see cref="CodeOutputProjectSettings.SyntaxVersion"/> directly (treating

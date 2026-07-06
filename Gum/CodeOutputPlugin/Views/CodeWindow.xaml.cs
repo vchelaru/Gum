@@ -235,7 +235,7 @@ public partial class CodeWindow : UserControl
             {OutputLibrary.MonoGameForms, "MonoGame + Forms" },
             {OutputLibrary.Skia, "SkiaSharp" },
             {OutputLibrary.MonoGame, "MonoGame (no forms, deprecated)" },
-            {OutputLibrary.Raylib, "Raylib (Find By Name only)" }
+            {OutputLibrary.Raylib, "Raylib" }
         };
         var StringToLibrary = LibraryToString.ToDictionary((i) => i.Value, (i) => i.Key);
 

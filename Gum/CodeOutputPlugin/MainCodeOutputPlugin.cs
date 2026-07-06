@@ -419,6 +419,11 @@ public class MainCodeOutputPlugin : PluginBase
 
         /////////////////////end early out/////////////////
 
+        // Defensive: never feed the generator an unsupported combination (e.g. a Raylib project whose
+        // .codsj still carries FullyInCode). CoerceToSupportedCombination keeps the display path safe
+        // regardless of how the settings reached this state.
+        CodeGenerator.CoerceToSupportedCombination(codeOutputProjectSettings);
+
         control.CodeOutputProjectSettings = codeOutputProjectSettings;
         if(control.CodeOutputElementSettings == null)
         {
@@ -523,6 +528,11 @@ public class MainCodeOutputPlugin : PluginBase
 
     private void HandleCodeOutputPropertyChanged()
     {
+        // Switching OutputLibrary to Raylib while ObjectInstantiationType is still FullyInCode is an
+        // unsupported combination that would throw during generation. Normalize before saving/regenerating
+        // so the user can switch libraries in any order without ever hitting that crash.
+        CodeGenerator.CoerceToSupportedCombination(codeOutputProjectSettings);
+
         var element = _selectedState.SelectedElement;
         if(element != null && control?.CodeOutputElementSettings != null)
         {
