@@ -71,4 +71,50 @@ public class CodeGeneratorRaylibSupportTests
 
         Should.NotThrow(() => CodeGenerator.AssertSupportedCombination(settings));
     }
+
+    [Fact]
+    public void CoerceToSupportedCombination_RaylibWithFullyInCode_ChangesToFindByName()
+    {
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            OutputLibrary = OutputLibrary.Raylib,
+            ObjectInstantiationType = ObjectInstantiationType.FullyInCode
+        };
+
+        bool changed = CodeGenerator.CoerceToSupportedCombination(settings);
+
+        changed.ShouldBeTrue();
+        settings.ObjectInstantiationType.ShouldBe(ObjectInstantiationType.FindByName);
+    }
+
+    [Fact]
+    public void CoerceToSupportedCombination_RaylibWithFindByName_LeavesUnchanged()
+    {
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            OutputLibrary = OutputLibrary.Raylib,
+            ObjectInstantiationType = ObjectInstantiationType.FindByName
+        };
+
+        bool changed = CodeGenerator.CoerceToSupportedCombination(settings);
+
+        changed.ShouldBeFalse();
+        settings.ObjectInstantiationType.ShouldBe(ObjectInstantiationType.FindByName);
+    }
+
+    [Fact]
+    public void CoerceToSupportedCombination_MonoGameWithFullyInCode_LeavesUnchanged()
+    {
+        // MonoGame fully supports FullyInCode, so coercion must leave it alone.
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            OutputLibrary = OutputLibrary.MonoGame,
+            ObjectInstantiationType = ObjectInstantiationType.FullyInCode
+        };
+
+        bool changed = CodeGenerator.CoerceToSupportedCombination(settings);
+
+        changed.ShouldBeFalse();
+        settings.ObjectInstantiationType.ShouldBe(ObjectInstantiationType.FullyInCode);
+    }
 }
