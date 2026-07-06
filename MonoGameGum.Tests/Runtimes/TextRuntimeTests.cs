@@ -5,6 +5,7 @@ using Gum.GueDeriving;
 using Gum.Localization;
 using Moq;
 using RenderingLibrary.Graphics;
+using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -194,6 +195,181 @@ $"chars count=223\r\n";
 
         scaledWidth.ShouldBe(plainWidth * 2, 1.5,
             "Because a scaled run is measured at its own scale, so the reported width grows with it");
+    }
+
+    #endregion
+
+    #region BbCode FontSize Inline Measurement (issue #3520)
+
+    // BMFont with space + A/B/C, every glyph at a caller-chosen xadvance. Used by the stub font
+    // creator so a generated [FontSize=N] font has predictable, uniform metrics.
+    private static string AbcFontData(int xadvance, int lineHeight) =>
+$@"info face=""Arial"" size=-18 bold=0 italic=0 charset="""" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0
+common lineHeight={lineHeight} base={lineHeight} scaleW=256 scaleH=256 pages=1 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4
+page id=0 file=""x.png""
+chars count=4
+char id=32 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadvance} page=0 chnl=15
+char id=65 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadvance} page=0 chnl=15
+char id=66 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadvance} page=0 chnl=15
+char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadvance} page=0 chnl=15
+";
+
+    // Stubs in-memory font generation so a [FontSize=N] run produces a font whose glyph advance is
+    // N/2 — i.e. the generated size-40 font is exactly 2x the base size-20 font. This is what lets the
+    // integration test exercise the real markup path (parse -> GetAndCreateFontIfNecessary ->
+    // InMemoryFontCreator -> "BitmapFont" inline var -> measure) with no .fnt files on disk.
+    private class SizeProportionalFontCreator : IInMemoryFontCreator
+    {
+        public BitmapFont? TryCreateFont(BmfcSave bmfcSave)
+        {
+            int advance = bmfcSave.FontSize / 2;
+            BitmapFont font = new BitmapFont((Texture2D)null!, AbcFontData(advance, lineHeight: bmfcSave.FontSize));
+            font.SetFontPattern(256, 256);
+            return font;
+        }
+    }
+
+    // End-to-end repro for #3520: a [FontSize=40] run under WidthUnits=RelativeToChildren must be
+    // measured with the generated size-40 font, not the base font. The isolated Text-level tests pin the
+    // measurement math; this one drives the FULL runtime path a game uses — real BBCode parsing, real
+    // font generation (via the stub) — so it proves the fix holds where the manual test showed it failing.
+    // Assumption-free: it reads the actual base and swapped glyph advances off the live objects, so it
+    // pins the exact width delta from swapping "BB" to the larger font regardless of font resolution.
+    [Fact]
+    public void WrappedTextWidth_ShouldMeasureBbCodeFontSizeRun_WithGeneratedFont()
+    {
+        var previousCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        CustomSetPropertyOnRenderable.InMemoryFontCreator = new SizeProportionalFontCreator();
+        try
+        {
+            TextRuntime plain = new();
+            plain.WidthUnits = DimensionUnitType.RelativeToChildren;
+            plain.Width = 0;
+            plain.Font = "StubFont3520";
+            plain.FontSize = 20;
+            plain.Text = "AA BB CC";
+            Text plainText = (Text)plain.RenderableComponent;
+            float plainWidth = plainText.WrappedTextWidth;
+            float baseBAdvance = plainText.BitmapFont.Characters['B'].XAdvance;
+
+            TextRuntime swapped = new();
+            swapped.WidthUnits = DimensionUnitType.RelativeToChildren;
+            swapped.Width = 0;
+            swapped.Font = "StubFont3520";
+            swapped.FontSize = 20;
+            // Same visible text "AA BB CC"; only "BB" is enlarged via a generated size-40 font.
+            swapped.Text = "AA [FontSize=40]BB[/FontSize] CC";
+            Text swappedText = (Text)swapped.RenderableComponent;
+            float swappedWidth = swappedText.WrappedTextWidth;
+
+            InlineVariable fontSwapVariable =
+                swappedText.InlineVariables.First(v => v.VariableName == "BitmapFont");
+            float swappedBAdvance = ((BitmapFont)fontSwapVariable.Value).Characters['B'].XAdvance;
+            swappedBAdvance.ShouldBeGreaterThan(baseBAdvance,
+                "Because the [FontSize=40] run must generate a larger font than the size-20 base");
+
+            // Swapping the two 'B' glyphs from the base font to the larger font widens the line by
+            // exactly 2 * (swapped - base). Everything else ("AA ", " CC") is identical base text.
+            double expectedWidth = plainWidth + 2 * (swappedBAdvance - baseBAdvance);
+            ((double)swappedWidth).ShouldBe(expectedWidth, expectedWidth * 0.02,
+                "because the [FontSize=40] run must be measured end-to-end with the generated size-40 font");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = previousCreator;
+        }
+    }
+
+    // Repro attempt for the manual-test structure the earlier tests missed: the box also holds a
+    // RelativeToParent background sibling (added BEFORE the text). FontScale needs no font generation, so
+    // this isolates whether the RelativeToParent sibling breaks the box's RelativeToChildren sizing.
+    [Fact]
+    public void RelativeToChildrenContainer_WithRelativeToParentBackground_ShouldContainFontScaleRun()
+    {
+        ContainerRuntime box = new();
+        box.WidthUnits = DimensionUnitType.RelativeToChildren;
+        box.Width = 0;
+        box.Height = 100;
+        box.HeightUnits = DimensionUnitType.Absolute;
+
+        ContainerRuntime background = new();
+        background.WidthUnits = DimensionUnitType.RelativeToParent;
+        background.Width = 0;
+        background.HeightUnits = DimensionUnitType.RelativeToParent;
+        background.Height = 0;
+        box.Children.Add(background);
+
+        TextRuntime text = new();
+        text.WidthUnits = DimensionUnitType.RelativeToChildren;
+        text.Width = 0;
+        text.Text = "This is [FontScale=2]big[/FontScale] text.";
+        box.Children.Add(text);
+
+        box.AddToRoot();
+
+        float textContentWidth = ((Text)text.RenderableComponent).WrappedTextWidth;
+        textContentWidth.ShouldBeGreaterThan(0);
+        box.GetAbsoluteWidth().ShouldBeGreaterThanOrEqualTo(textContentWidth,
+            "because the RelativeToChildren box must be at least as wide as its text, even with a RelativeToParent background sibling");
+    }
+
+    // The #3520 bug as the user reported it: a RelativeToChildren-width container wrapping a
+    // RelativeToChildren-width Text must grow to the FULL measured width of a [FontSize=40] run, so a
+    // background filling the container also contains the text (no tail spill). The Text-level test above
+    // pins WrappedTextWidth; this one pins that the parent container actually picks that width up through
+    // layout propagation — the container-containment invariant the manual test showed failing.
+    [Fact]
+    public void RelativeToChildrenContainer_ShouldContainBbCodeFontSizeRun()
+    {
+        var previousCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        CustomSetPropertyOnRenderable.InMemoryFontCreator = new SizeProportionalFontCreator();
+        try
+        {
+            ContainerRuntime plainContainer = new();
+            plainContainer.WidthUnits = DimensionUnitType.RelativeToChildren;
+            plainContainer.Width = 0;
+            TextRuntime plainText = new();
+            plainText.WidthUnits = DimensionUnitType.RelativeToChildren;
+            plainText.Width = 0;
+            plainText.Font = "StubFont3520";
+            plainText.FontSize = 20;
+            plainText.Text = "AA BB CC";
+            plainContainer.Children.Add(plainText);
+            plainContainer.AddToRoot();
+            float plainContainerWidth = plainContainer.GetAbsoluteWidth();
+            float baseBAdvance = plainText.BitmapFont.Characters['B'].XAdvance;
+
+            ContainerRuntime swappedContainer = new();
+            swappedContainer.WidthUnits = DimensionUnitType.RelativeToChildren;
+            swappedContainer.Width = 0;
+            TextRuntime swappedText = new();
+            swappedText.WidthUnits = DimensionUnitType.RelativeToChildren;
+            swappedText.Width = 0;
+            swappedText.Font = "StubFont3520";
+            swappedText.FontSize = 20;
+            swappedText.Text = "AA [FontSize=40]BB[/FontSize] CC";
+            swappedContainer.Children.Add(swappedText);
+            swappedContainer.AddToRoot();
+            float swappedContainerWidth = swappedContainer.GetAbsoluteWidth();
+
+            InlineVariable fontSwapVariable = ((Text)swappedText.RenderableComponent)
+                .InlineVariables.First(v => v.VariableName == "BitmapFont");
+            float swappedBAdvance = ((BitmapFont)fontSwapVariable.Value).Characters['B'].XAdvance;
+
+            // The container must wrap its child exactly — this is the "background contains the text" case.
+            swappedContainerWidth.ShouldBe(swappedText.GetAbsoluteWidth(),
+                "because a RelativeToChildren container must size to its child's full measured width");
+
+            // And that width must include the enlarged run: swapping the two 'B' glyphs to the size-40
+            // font widens the container by 2 * (swapped - base) versus the all-base plain container.
+            double expectedWidth = plainContainerWidth + 2 * (swappedBAdvance - baseBAdvance);
+            ((double)swappedContainerWidth).ShouldBe(expectedWidth, expectedWidth * 0.02,
+                "because the container must grow to contain the [FontSize=40] run, not just the base-size text");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = previousCreator;
+        }
     }
 
     #endregion

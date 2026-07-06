@@ -1547,14 +1547,31 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                 {
                     var substring = substrings[substringIndex];
                     float runScale = effectiveFontScale;
+                    // A [FontSize=N] run swaps in a font generated at that size (a "BitmapFont" run),
+                    // which DrawWithInlineVariables draws the glyphs with. Measure the run with that same
+                    // font so the reported width matches what is drawn — otherwise a run in a larger font
+                    // is measured at the base size and a RelativeToChildren Text is sized too narrow (#3520).
+                    BitmapFont runFont = mBitmapFont;
                     for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
                     {
-                        if (substring.Variables[variableIndex].VariableName == nameof(FontScale))
+                        var variable = substring.Variables[variableIndex];
+                        if (variable.VariableName == nameof(FontScale))
                         {
-                            runScale = (float)substring.Variables[variableIndex].Value * SystemManagers.GlobalFontScale;
+                            runScale = (float)variable.Value * SystemManagers.GlobalFontScale;
+                        }
+                        else if (variable.VariableName == nameof(BitmapFont))
+                        {
+                            runFont = (BitmapFont)variable.Value;
                         }
                     }
-                    lineWidthAtScale += mBitmapFont.MeasureString(substring.Substring) * runScale;
+                    // Only the final run of the line is measured with TrimRight (matching the whole-line
+                    // MeasureString the plain path uses); interior runs must use Full, or each run
+                    // boundary trims its last glyph (often a space before the next run) and the line is
+                    // under-measured — leaving a RelativeToChildren container too narrow (#3520).
+                    var measurementStyle = substringIndex == substrings.Count - 1
+                        ? HorizontalMeasurementStyle.TrimRight
+                        : HorizontalMeasurementStyle.Full;
+                    lineWidthAtScale += runFont.MeasureString(substring.Substring, measurementStyle) * runScale;
                     maxRunScale = System.Math.Max(maxRunScale, runScale);
                 }
                 lineHeightFactor = maxRunScale / effectiveFontScale;
