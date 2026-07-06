@@ -52,6 +52,9 @@ internal class TextScreen : FrameworkElement
         scaleMarkup.Text = "small [FontScale=2]BIG[/FontScale] then [Color=Orange][FontScale=1.5]orange[/FontScale][/Color]";
         container.Children.Add(scaleMarkup);
 
+        AddSectionLabel(container, "BBCode markup - inline FontSize font-swap; blue box = measured width, must contain the run (#3524):");
+        container.Children.Add(BuildFontSizeContainmentRow());
+
         AddSectionLabel(container, "Baked drop shadow (HasDropshadow = true, first-enable defaults):");
         var shadowDefault = new TextRuntime();
         shadowDefault.Text = "Soft baked shadow";
@@ -235,6 +238,57 @@ internal class TextScreen : FrameworkElement
         text.HorizontalAlignment = HorizontalAlignment.Center;
         text.VerticalAlignment = VerticalAlignment.Center;
         text.Blend = blend;
+        cell.Children.Add(text);
+
+        return cell;
+    }
+
+    // Inline FontSize font-swap (#3524): a [FontSize=N] run must be MEASURED at its swapped size, not
+    // the base, or a RelativeToChildren Text is sized too narrow and the enlarged run spills past its
+    // background - the RelativeToChildren-too-narrow bug fixed for MonoGame in #3520 / #3523. The left
+    // cell is the fix ([FontSize=40] over a 21px base); the right cell is a [FontScale=1.9] control that
+    // already contained correctly. Pass = "big" is enlarged AND the blue box fully contains each line.
+    private static ContainerRuntime BuildFontSizeContainmentRow()
+    {
+        var row = new ContainerRuntime();
+        row.WidthUnits = DimensionUnitType.RelativeToChildren;
+        row.HeightUnits = DimensionUnitType.RelativeToChildren;
+        row.Width = 0;
+        row.Height = 0;
+        row.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        row.StackSpacing = 24;
+        row.AddChild(BuildContainedMarkupCell("This is [FontSize=40]big[/FontSize] text."));
+        row.AddChild(BuildContainedMarkupCell("This is [FontScale=1.9]big[/FontScale] text."));
+        return row;
+    }
+
+    // A RelativeToChildren cell sized to its TextRuntime, with a RelativeToParent background filling it.
+    // The background's edges mark where measurement thinks the text ends, so any measure-vs-render drift
+    // shows up as the run spilling outside the blue box.
+    private static ContainerRuntime BuildContainedMarkupCell(string markup)
+    {
+        var cell = new ContainerRuntime();
+        cell.WidthUnits = DimensionUnitType.RelativeToChildren;
+        cell.HeightUnits = DimensionUnitType.RelativeToChildren;
+        cell.Width = 0;
+        cell.Height = 0;
+
+        var background = new RectangleRuntime();
+        background.WidthUnits = DimensionUnitType.RelativeToParent;
+        background.HeightUnits = DimensionUnitType.RelativeToParent;
+        background.Width = 0;
+        background.Height = 0;
+        background.IsFilled = true;
+        background.FillColor = new Color(40, 60, 160, 255);
+        cell.Children.Add(background);
+
+        var text = new TextRuntime();
+        text.WidthUnits = DimensionUnitType.RelativeToChildren;
+        text.HeightUnits = DimensionUnitType.RelativeToChildren;
+        text.Width = 0;
+        text.Height = 0;
+        text.FontSize = 21;
+        text.Text = markup;
         cell.Children.Add(text);
 
         return cell;

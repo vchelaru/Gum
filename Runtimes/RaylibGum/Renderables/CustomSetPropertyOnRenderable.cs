@@ -687,9 +687,9 @@ public class CustomSetPropertyOnRenderable
 
     /// <summary>
     /// Parses BBCode markup, assigns the tag-stripped text to <see cref="Text.RawText"/>, and populates
-    /// <see cref="Text.InlineVariables"/> with the Color / FontScale runs the Raylib renderer applies per run.
-    /// Font-swap and Custom per-letter tags are recognized (so their tags are stripped from the visible text)
-    /// but are not yet applied on the Raylib runtime - see #3471.
+    /// <see cref="Text.InlineVariables"/> with the Color / FontScale / FontSize runs the Raylib renderer
+    /// applies per run. [Font=Name] family swaps and Custom per-letter tags are recognized (so their tags
+    /// are stripped from the visible text) but are not yet applied on the Raylib runtime - see #3471 / #3524.
     /// </summary>
     private static void SetBbCodeText(Text asText, GraphicalUiElement graphicalUiElement, string bbcode)
     {
@@ -740,7 +740,22 @@ public class CustomSetPropertyOnRenderable
                         }
                     }
                     break;
-                    // Font / Custom / IsBold / etc. are intentionally not handled here on the first pass (#3471).
+                case "FontSize":
+                    {
+                        // #3524: [FontSize=N] is an ABSOLUTE per-run pixel size (unlike [FontScale], which
+                        // is a multiplier). Store the raw size; Text.DrawStyledLine and
+                        // Text.GetInlineVariableAwareWidthAndHeight convert it to the equivalent atlas scale
+                        // (N / BaseSize) at draw/measure time so both use the same per-run size. Parsed as an
+                        // int to match the MonoGame font-swap path, then stored as float so the shared per-run
+                        // scale resolver can read it with a single (float) cast alongside FontScale.
+                        if (int.TryParse(item.Open.Argument, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsedSize))
+                        {
+                            castedValue = (float)parsedSize;
+                            shouldApply = true;
+                        }
+                    }
+                    break;
+                    // Font / Custom / IsBold family swaps are still not handled here (deferred per #3471).
             }
 
             if (shouldApply)

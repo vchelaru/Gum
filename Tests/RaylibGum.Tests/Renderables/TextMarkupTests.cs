@@ -47,6 +47,22 @@ public class TextMarkupTests
     }
 
     [Fact]
+    public void Text_WithFontSizeMarkup_PopulatesInlineVariable()
+    {
+        TextRuntime textRuntime = new();
+        textRuntime.Text = "Big [FontSize=40]text[/FontSize]";
+
+        Text internalText = (Text)textRuntime.RenderableComponent;
+
+        internalText.RawText.ShouldBe("Big text");
+        internalText.InlineVariables.Count.ShouldBe(1);
+        internalText.InlineVariables[0].VariableName.ShouldBe("FontSize");
+        internalText.InlineVariables[0].Value.ShouldBe(40f);
+        internalText.InlineVariables[0].StartIndex.ShouldBe(4);
+        internalText.InlineVariables[0].CharacterCount.ShouldBe(4);
+    }
+
+    [Fact]
     public void Text_ChangingFromMarkupToPlain_ClearsInlineVariablesAndStoredMarkup()
     {
         TextRuntime textRuntime = new();
@@ -172,5 +188,35 @@ public class TextMarkupTests
 
         scaledWidth.ShouldBe(plainWidth * 2, 1.5,
             "Because a scaled run is measured at its own scale, so the reported width grows with it");
+    }
+
+    // Issue #3524: a [FontSize=N] run is an ABSOLUTE per-run pixel size (unlike [FontScale], which
+    // is a multiplier). Raylib draws by scaling the base font atlas to N px, so a run requested at
+    // twice the base size must ALSO be measured at twice the width — otherwise a RelativeToChildren
+    // Text is sized too narrow and the enlarged run spills past its background (the exact bug fixed
+    // for MonoGame in #3520 / #3523). baseSize is read from the actual font so the expectation stays
+    // self-contained regardless of which default font the test harness loads.
+    [Fact]
+    public void WrappedTextWidth_ShouldGrow_WhenLineHasFontSizeLargerThanBase()
+    {
+        TextRuntime plain = new();
+        plain.WidthUnits = DimensionUnitType.RelativeToChildren;
+        plain.Width = 0;
+        plain.Text = "BIG";
+        Text plainText = (Text)plain.RenderableComponent;
+        float plainWidth = plainText.WrappedTextWidth;
+        plainWidth.ShouldBeGreaterThan(0);
+
+        int baseSize = plainText.Font.BaseSize;
+        int targetFontSize = baseSize * 2;
+
+        TextRuntime sized = new();
+        sized.WidthUnits = DimensionUnitType.RelativeToChildren;
+        sized.Width = 0;
+        sized.Text = $"[FontSize={targetFontSize}]BIG[/FontSize]";
+        float sizedWidth = ((Text)sized.RenderableComponent).WrappedTextWidth;
+
+        sizedWidth.ShouldBe(plainWidth * 2, 1.5,
+            "Because [FontSize=2xBase] renders the run at twice the base pixel size, so the measured width doubles");
     }
 }
