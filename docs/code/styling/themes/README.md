@@ -10,7 +10,7 @@ A single line of code restyles **every** Gum Forms control. Drop in a built-in t
 | :------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------: |
 | <img src="../../../.gitbook/assets/Retro95ThemeScreenshot.png" alt="Retro95 theme" data-size="original"> | <img src="../../../.gitbook/assets/ForestGladeThemeScreenshot.png" alt="Forest Glade theme" data-size="original"> | <img src="../../../.gitbook/assets/EditorThemeScreenshot.png" alt="Editor theme" data-size="original"> |
 
-The same sample settings panel, rendered by six of Gum's eight built-in themes. See [Available themes](./#available-themes) below for the full catalog, with usage for each.
+Here are six of Gum's built-in themes, each rendering the same sample settings panel. See [Available themes](./#available-themes) below for the full catalog, with usage for each.
 
 ## Introduction
 
