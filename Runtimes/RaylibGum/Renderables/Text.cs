@@ -781,6 +781,11 @@ public class Text : IVisible, IRenderableIpso,
             global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend.Value);
         }
 
+        // Per-line vertical offsets. Plain text (no inline runs) keeps the allocation-free uniform
+        // advance; when inline [FontSize]/[FontScale] runs can enlarge a line, each line advances by its
+        // own height so a line after an enlarged run is not drawn on top of it (#3532).
+        IReadOnlyList<float>? lineTopOffsets = InlineVariables.Count > 0 ? GetLineTopOffsets() : null;
+
         for(int i = 0; i < WrappedText.Count; i++)
         {
             var line = WrappedText[i];
@@ -800,7 +805,9 @@ public class Text : IVisible, IRenderableIpso,
             }
 
             var linePosition = position;
-            linePosition.Y += i * LineHeightInPixels * LineHeightMultiplier;
+            linePosition.Y += lineTopOffsets != null
+                ? lineTopOffsets[i]
+                : i * LineHeightInPixels * LineHeightMultiplier;
 
             var substrings = InlineVariables.Count > 0
                 ? GetStyledSubstrings(startOfLineIndex, line)
@@ -822,6 +829,53 @@ public class Text : IVisible, IRenderableIpso,
         {
             global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.EndBlendMode();
         }
+    }
+
+    /// <summary>
+    /// The Y offset (in pixels from this Text's top) at which each wrapped line is drawn, growing a
+    /// line's advance by the tallest inline [FontSize]/[FontScale] run on it so a line following an
+    /// enlarged run is placed below that run's full height rather than one base line-height down — which
+    /// overlapped it (issue #3532). Matches the per-line height the size pass reports
+    /// (<see cref="GetInlineVariableAwareWidthAndHeight"/>). Consumed by <see cref="Render"/>; public so
+    /// the vertical stacking can be unit-tested without rendering.
+    /// </summary>
+    public IReadOnlyList<float> GetLineTopOffsets()
+    {
+        var offsets = new float[WrappedText.Count];
+        float runningY = 0;
+        int startOfLineIndex = 0;
+        for (int i = 0; i < WrappedText.Count; i++)
+        {
+            offsets[i] = runningY;
+            var line = WrappedText[i];
+            float lineScale = GetLineLayoutScale(startOfLineIndex, line);
+            float lineHeightFactor = FontScale > 0 ? lineScale / FontScale : 1;
+            runningY += LineHeightInPixels * lineHeightFactor * LineHeightMultiplier;
+            startOfLineIndex += line.Length;
+        }
+        return offsets;
+    }
+
+    /// <summary>
+    /// The layout scale of the wrapped line beginning at <paramref name="startOfLineIndex"/> in the
+    /// stripped text: <see cref="FontScale"/> for a plain line, or the tallest inline
+    /// [FontSize]/[FontScale] run's scale for a styled line (the same per-run resolution
+    /// <see cref="DrawStyledLine"/> lays out with, so drawn and vertically-advanced sizes cannot drift).
+    /// </summary>
+    private float GetLineLayoutScale(int startOfLineIndex, string line)
+    {
+        if (InlineVariables.Count == 0)
+        {
+            return FontScale;
+        }
+
+        var substrings = GetStyledSubstrings(startOfLineIndex, line);
+        float maxScale = FontScale;
+        for (int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
+        {
+            maxScale = System.Math.Max(maxScale, ResolveRunFont(substrings[substringIndex].Variables).LayoutScale);
+        }
+        return maxScale;
     }
 
     /// <summary>

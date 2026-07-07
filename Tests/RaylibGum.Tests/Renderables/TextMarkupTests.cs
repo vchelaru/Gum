@@ -302,6 +302,34 @@ public class TextMarkupTests
             "Because a [FontSize=2xBase] run is twice the base pixel size, so the measured line height doubles");
     }
 
+    // Issue #3532 (vertical stacking): a wrapped line that follows an enlarged inline run must be drawn
+    // below that run's full height, not one base line-height down (which overlapped it). raylib advanced
+    // every line by a uniform base line height; XNA already grows the advance per line. An explicit
+    // newline makes the two-line split deterministic (independent of wrap width / font metrics). The
+    // plain control derives the base per-line advance; the scaled version's second line must sit twice
+    // as far down because its first line carries a [FontScale=2] run.
+    [Fact]
+    public void GetLineTopOffsets_ShouldPushLineBelowEnlargedRun_NotOverlapIt()
+    {
+        TextRuntime plain = new();
+        plain.Text = "BIG\nsmall";
+        Text plainText = (Text)plain.RenderableComponent;
+        IReadOnlyList<float> plainOffsets = plainText.GetLineTopOffsets();
+        plainOffsets.Count.ShouldBe(2);
+        plainOffsets[0].ShouldBe(0);
+        float baseLineAdvance = plainOffsets[1];
+        baseLineAdvance.ShouldBeGreaterThan(0);
+
+        TextRuntime scaled = new();
+        scaled.Text = "[FontScale=2]BIG[/FontScale]\nsmall";
+        Text scaledText = (Text)scaled.RenderableComponent;
+        IReadOnlyList<float> scaledOffsets = scaledText.GetLineTopOffsets();
+        scaledOffsets.Count.ShouldBe(2);
+        scaledOffsets[0].ShouldBe(0);
+        scaledOffsets[1].ShouldBe(baseLineAdvance * 2, 0.01,
+            "because the first line's [FontScale=2] run doubles its height, so the second line sits twice as far down");
+    }
+
     // Issue #3532 (the wrapping half, end-to-end): a fixed-width Text that fits "AA BB CC" at the base
     // size must re-wrap once the inline [FontScale=2] run enlarges "BB" past the wrap width. The BBCode
     // path assigns RawText (which wraps) BEFORE the InlineVariables populate, so the first wrap is blind
