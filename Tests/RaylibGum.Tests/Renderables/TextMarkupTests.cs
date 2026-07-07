@@ -1,5 +1,7 @@
 using Gum.DataTypes;
 using Gum.GueDeriving;
+using KernSmith.Gum;
+using RaylibGum.Renderables;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using Xunit;
@@ -44,6 +46,54 @@ public class TextMarkupTests
         internalText.InlineVariables[0].Value.ShouldBe(2f);
         internalText.InlineVariables[0].StartIndex.ShouldBe(4);
         internalText.InlineVariables[0].CharacterCount.ShouldBe(4);
+    }
+
+    // No font creator is wired in the test harness, so [FontSize=N] can't re-rasterize a crisp font and
+    // falls back to storing the raw size as a float (Text then scales the base atlas to it). The crisp
+    // swap path is covered by Text_WithFontSizeMarkup_SwapsToCrispFont_WhenFontCreatorWired.
+    [Fact]
+    public void Text_WithFontSizeMarkup_PopulatesInlineVariable()
+    {
+        TextRuntime textRuntime = new();
+        textRuntime.Text = "Big [FontSize=40]text[/FontSize]";
+
+        Text internalText = (Text)textRuntime.RenderableComponent;
+
+        internalText.RawText.ShouldBe("Big text");
+        internalText.InlineVariables.Count.ShouldBe(1);
+        internalText.InlineVariables[0].VariableName.ShouldBe("FontSize");
+        internalText.InlineVariables[0].Value.ShouldBe(40f);
+        internalText.InlineVariables[0].StartIndex.ShouldBe(4);
+        internalText.InlineVariables[0].CharacterCount.ShouldBe(4);
+    }
+
+    // With a font creator wired, [FontSize=N] re-rasterizes a crisp Raylib_cs.Font AT size N (BaseSize == N)
+    // and stores it as the run value - the actual font-swap, not an atlas scale-up. Mirrors the MonoGame
+    // BitmapFont swap. Restores the creator in finally so the no-creator fallback tests stay unaffected.
+    [Fact]
+    public void Text_WithFontSizeMarkup_SwapsToCrispFont_WhenFontCreatorWired()
+    {
+        IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreator();
+
+            TextRuntime textRuntime = new();
+            textRuntime.Font = "Arial";
+            textRuntime.FontSize = 21;
+            textRuntime.Text = "Big [FontSize=40]text[/FontSize]";
+
+            Text internalText = (Text)textRuntime.RenderableComponent;
+
+            internalText.InlineVariables.Count.ShouldBe(1);
+            internalText.InlineVariables[0].VariableName.ShouldBe("FontSize");
+            Raylib_cs.Font swapFont = internalText.InlineVariables[0].Value.ShouldBeOfType<Raylib_cs.Font>();
+            swapFont.BaseSize.ShouldBe(40);
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
     }
 
     [Fact]
@@ -172,5 +222,64 @@ public class TextMarkupTests
 
         scaledWidth.ShouldBe(plainWidth * 2, 1.5,
             "Because a scaled run is measured at its own scale, so the reported width grows with it");
+    }
+
+    // Issue #3524: a [FontSize=N] run is an ABSOLUTE per-run pixel size (unlike [FontScale], which
+    // is a multiplier). Raylib draws by scaling the base font atlas to N px, so a run requested at
+    // twice the base size must ALSO be measured at twice the width — otherwise a RelativeToChildren
+    // Text is sized too narrow and the enlarged run spills past its background (the exact bug fixed
+    // for MonoGame in #3520 / #3523). baseSize is read from the actual font so the expectation stays
+    // self-contained regardless of which default font the test harness loads.
+    [Fact]
+    public void WrappedTextWidth_ShouldGrow_WhenLineHasFontSizeLargerThanBase()
+    {
+        TextRuntime plain = new();
+        plain.WidthUnits = DimensionUnitType.RelativeToChildren;
+        plain.Width = 0;
+        plain.Text = "BIG";
+        Text plainText = (Text)plain.RenderableComponent;
+        float plainWidth = plainText.WrappedTextWidth;
+        plainWidth.ShouldBeGreaterThan(0);
+
+        int baseSize = plainText.Font.BaseSize;
+        int targetFontSize = baseSize * 2;
+
+        TextRuntime sized = new();
+        sized.WidthUnits = DimensionUnitType.RelativeToChildren;
+        sized.Width = 0;
+        sized.Text = $"[FontSize={targetFontSize}]BIG[/FontSize]";
+        float sizedWidth = ((Text)sized.RenderableComponent).WrappedTextWidth;
+
+        sizedWidth.ShouldBe(plainWidth * 2, 1.5,
+            "Because [FontSize=2xBase] renders the run at twice the base pixel size, so the measured width doubles");
+    }
+
+    // Issue #3524: the HEIGHT half - a [FontSize=N] run must grow the reported line HEIGHT too, or a
+    // RelativeToChildren box is too short and the enlarged run spills above/below it (the vertical spill
+    // MonoGame had). Raylib gets this right by construction (one layout scale drives both width and
+    // height), but pin it so a future refactor can't silently regress it - the exact gap that let the
+    // MonoGame height bug ship uncaught.
+    [Fact]
+    public void WrappedTextHeight_ShouldGrow_WhenLineHasFontSizeLargerThanBase()
+    {
+        TextRuntime plain = new();
+        plain.WidthUnits = DimensionUnitType.RelativeToChildren;
+        plain.Width = 0;
+        plain.Text = "BIG";
+        Text plainText = (Text)plain.RenderableComponent;
+        float plainHeight = plainText.WrappedTextHeight;
+        plainHeight.ShouldBeGreaterThan(0);
+
+        int baseSize = plainText.Font.BaseSize;
+        int targetFontSize = baseSize * 2;
+
+        TextRuntime sized = new();
+        sized.WidthUnits = DimensionUnitType.RelativeToChildren;
+        sized.Width = 0;
+        sized.Text = $"[FontSize={targetFontSize}]BIG[/FontSize]";
+        float sizedHeight = ((Text)sized.RenderableComponent).WrappedTextHeight;
+
+        sizedHeight.ShouldBe(plainHeight * 2, plainHeight * 0.05,
+            "Because a [FontSize=2xBase] run is twice the base pixel size, so the measured line height doubles");
     }
 }

@@ -687,9 +687,9 @@ public class CustomSetPropertyOnRenderable
 
     /// <summary>
     /// Parses BBCode markup, assigns the tag-stripped text to <see cref="Text.RawText"/>, and populates
-    /// <see cref="Text.InlineVariables"/> with the Color / FontScale runs the Raylib renderer applies per run.
-    /// Font-swap and Custom per-letter tags are recognized (so their tags are stripped from the visible text)
-    /// but are not yet applied on the Raylib runtime - see #3471.
+    /// <see cref="Text.InlineVariables"/> with the Color / FontScale / FontSize runs the Raylib renderer
+    /// applies per run. [Font=Name] family swaps and Custom per-letter tags are recognized (so their tags
+    /// are stripped from the visible text) but are not yet applied on the Raylib runtime - see #3471 / #3524.
     /// </summary>
     private static void SetBbCodeText(Text asText, GraphicalUiElement graphicalUiElement, string bbcode)
     {
@@ -740,7 +740,26 @@ public class CustomSetPropertyOnRenderable
                         }
                     }
                     break;
-                    // Font / Custom / IsBold / etc. are intentionally not handled here on the first pass (#3471).
+                case "FontSize":
+                    {
+                        // #3524: [FontSize=N] swaps the font for the run to one rasterized at N (matching
+                        // the MonoGame BitmapFont swap). When a font creator is wired we re-rasterize a
+                        // crisp Raylib_cs.Font at N and store it as the run value; the run then draws with
+                        // that font at its native size. When no creator is available, store the raw size as
+                        // a float and let Text scale the base atlas to N (a blurry-but-correct fallback).
+                        // Either way Text measures the run at exactly the size it draws.
+                        if (int.TryParse(item.Open.Argument, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsedSize))
+                        {
+                            var textRuntime = graphicalUiElement as TextRuntime;
+                            Raylib_cs.Font? swapFont = textRuntime != null
+                                ? TryGetOrCreateFontAtSize(textRuntime, parsedSize)
+                                : null;
+                            castedValue = swapFont.HasValue ? (object)swapFont.Value : (float)parsedSize;
+                            shouldApply = true;
+                        }
+                    }
+                    break;
+                    // Font / Custom / IsBold family swaps are still not handled here (deferred per #3471).
             }
 
             if (shouldApply)
@@ -760,6 +779,72 @@ public class CustomSetPropertyOnRenderable
         // that the runs are populated so the reported size accounts for per-line scale (otherwise a
         // tall run overflows its slot and overlaps the next stacked sibling).
         asText.UpdatePreRenderDimensions();
+    }
+
+    /// <summary>
+    /// Re-rasterizes (or returns a cached) <see cref="Raylib_cs.Font"/> for <paramref name="textRuntime"/>'s
+    /// font family/style but at <paramref name="fontSize"/>, used for inline [FontSize=N] BBCode runs (#3524).
+    /// This is the per-run mirror of the base-font creation in <see cref="UpdateToFontValues"/>: it copies the
+    /// runtime's font-generation fields, overrides only the size, and creates the font via
+    /// <see cref="InMemoryFontCreator"/>, caching it in the shared LoaderManager under the same FontCache key
+    /// the base path uses (so a base text and a run at the same size share one atlas). Returns null when no
+    /// creator is wired or creation fails; the caller then falls back to scaling the base atlas.
+    /// </summary>
+    private static Raylib_cs.Font? TryGetOrCreateFontAtSize(TextRuntime textRuntime, int fontSize)
+    {
+        if (InMemoryFontCreator == null || fontSize <= 0)
+        {
+            return null;
+        }
+
+        var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+
+        try
+        {
+            string? bbCodeFontFilePath = BmfcSave.IsFontFilePath(textRuntime.Font) ? textRuntime.Font : null;
+            string fontCacheName = BmfcSave.GetFontCacheFileNameFor(
+                fontSize,
+                textRuntime.Font,
+                textRuntime.OutlineThickness,
+                textRuntime.UseFontSmoothing,
+                textRuntime.IsItalic,
+                textRuntime.IsBold,
+                bbCodeFontFilePath);
+            string fullFileName = ToolsUtilities.FileManager.Standardize(fontCacheName, preserveCase: true, makeAbsolute: true);
+
+            // Reuse an already-generated font (its Raylib_cs.Font wraps an unmanaged GPU texture, so
+            // regenerating every layout would leak VRAM). Mirrors the base-font cache check.
+            if (loaderManager.GetDisposable(fullFileName) is ManagedFont cachedManagedFont
+                && cachedManagedFont.Font.BaseSize != 0)
+            {
+                return cachedManagedFont.Font;
+            }
+
+            BmfcSave bmfcSave = new BmfcSave();
+            textRuntime.CopyFontGenerationFieldsTo(bmfcSave, resolvedFontFilePath: null);
+            // The swap: keep the family/style, change only the size to the tag's value.
+            bmfcSave.FontSize = fontSize;
+
+            var gumProject = ObjectFinder.Self.GumProjectSave;
+            bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
+            bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
+            bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
+
+            Raylib_cs.Font? createdFont = InMemoryFontCreator.TryCreateFont(bmfcSave);
+            if (createdFont.HasValue && createdFont.Value.BaseSize != 0)
+            {
+                // Dispose first so a poisoned empty slot (see the base path) can't make AddDisposable throw.
+                loaderManager.Dispose(fullFileName);
+                loaderManager.AddDisposable(fullFileName, new ManagedFont(createdFont.Value));
+                return createdFont.Value;
+            }
+        }
+        catch
+        {
+            // Fall through to null - the caller uses the base-atlas scale fallback.
+        }
+
+        return null;
     }
 
     // For some reason this crashes on web when uploading to itch:

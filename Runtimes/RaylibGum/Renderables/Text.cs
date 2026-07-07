@@ -617,10 +617,10 @@ public class Text : IVisible, IRenderableIpso,
     public string? StoredMarkupText { get; set; }
 
     /// <summary>
-    /// The inline styling variables (Color / FontScale runs) parsed from BBCode markup assigned to
-    /// this Text. Populated by the property pipeline when the assigned text contains markup tags;
-    /// empty for plain text. Consumed by <see cref="Render"/> to draw per-run styling. Custom
-    /// per-letter callbacks and per-run Font swaps are not yet applied on the Raylib runtime (#3471).
+    /// The inline styling variables (Color / FontScale / FontSize runs) parsed from BBCode markup assigned
+    /// to this Text. Populated by the property pipeline when the assigned text contains markup tags; empty
+    /// for plain text. Consumed by <see cref="Render"/> to draw per-run styling. Custom per-letter callbacks
+    /// and [Font=Name] family swaps are not yet applied on the Raylib runtime (#3471).
     /// </summary>
     public List<InlineVariable> InlineVariables { get; private set; }
 
@@ -847,16 +847,99 @@ public class Text : IVisible, IRenderableIpso,
     }
 
     /// <summary>
-    /// Draws a single line as a sequence of styled runs (BBCode markup), applying per-run Color / FontScale.
-    /// Runs are laid out left-to-right and baseline-aligned so a larger FontScale run sits on the same
-    /// baseline as its neighbors. Custom per-letter callbacks and per-run Font swaps are not applied here
-    /// on the Raylib runtime yet (#3471).
+    /// The font, draw size, and layout scale a styled run resolves to. <see cref="Font"/> is the actual
+    /// Raylib font used to draw and measure the run (the base font, or a per-run [FontSize] swap font);
+    /// <see cref="DrawSize"/> is the pixel size passed to DrawTextPro/MeasureTextEx; <see cref="LayoutScale"/>
+    /// is the run's size relative to the base font's metrics, used for baseline/height layout.
+    /// </summary>
+    private readonly struct ResolvedRunFont
+    {
+        public readonly Font Font;
+        public readonly float DrawSize;
+        public readonly float LayoutScale;
+
+        public ResolvedRunFont(Font font, float drawSize, float layoutScale)
+        {
+            Font = font;
+            DrawSize = drawSize;
+            LayoutScale = layoutScale;
+        }
+    }
+
+    /// <summary>
+    /// Resolves the font/size a styled run draws and is measured with. A [FontScale=v] run keeps the base
+    /// font at v times the base size. A [FontSize=N] run either swaps in a font re-rasterized at N (crisp;
+    /// its inline value is a <see cref="Font"/>) drawn at its native size, or - when no font creator was
+    /// wired so no swap font could be built - falls back to scaling the base atlas to N px (its inline value
+    /// is a float). Shared by <see cref="DrawStyledLine"/> (draw) and
+    /// <see cref="GetInlineVariableAwareWidthAndHeight"/> (measure) so the drawn and measured size of a run
+    /// cannot diverge - that drift is what reproduced the RelativeToChildren spill (#3524).
+    /// </summary>
+    private ResolvedRunFont ResolveRunFont(List<InlineVariable> variables)
+    {
+        Font drawFont = _font;
+        bool hasSwapFont = false;
+        float scale = FontScale;
+        float? absolutePixelSize = null;
+
+        foreach (var variable in variables)
+        {
+            switch (variable.VariableName)
+            {
+                case nameof(FontScale):
+                    scale = (float)variable.Value;
+                    break;
+                case nameof(FontSize):
+                    if (variable.Value is Font swapFont && swapFont.BaseSize > 0)
+                    {
+                        drawFont = swapFont;
+                        hasSwapFont = true;
+                    }
+                    else if (variable.Value is float pixelSize)
+                    {
+                        absolutePixelSize = pixelSize;
+                    }
+                    break;
+            }
+        }
+
+        float baseSize = _font.BaseSize;
+        float drawSize;
+        if (hasSwapFont)
+        {
+            // A crisp font rasterized at the requested size: draw it at its native size times the base
+            // render scale, exactly as MonoGame renders a swapped BitmapFont.
+            drawSize = drawFont.BaseSize * FontScale;
+        }
+        else if (absolutePixelSize.HasValue)
+        {
+            // No font creator wired: approximate the swap by scaling the base atlas to the absolute size.
+            drawSize = absolutePixelSize.Value * FontScale;
+        }
+        else
+        {
+            drawSize = baseSize * scale;
+        }
+
+        float layoutScale = baseSize > 0 ? drawSize / baseSize : scale;
+        return new ResolvedRunFont(drawFont, drawSize, layoutScale);
+    }
+
+    /// <summary>
+    /// Draws a single line as a sequence of styled runs (BBCode markup), applying per-run Color and per-run
+    /// size (FontScale multiplier or FontSize absolute-px swap). Runs are laid out left-to-right and
+    /// baseline-aligned so a larger run sits on the same baseline as its neighbors. Custom per-letter
+    /// callbacks and [Font=Name] family swaps are not applied here on the Raylib runtime yet (#3471).
     /// </summary>
     private void DrawStyledLine(Font fontValue, List<StyledSubstring> substrings, Vector2 linePosition, float absoluteLeft, float originY)
     {
-        // First pass: resolve each run's effective color/scale and measured width, plus the line totals
-        // needed for horizontal alignment (total width) and baseline alignment (tallest run's baseline).
+        // First pass: resolve each run's effective color, font/size and measured width, plus the line
+        // totals needed for horizontal alignment (total width) and baseline alignment (tallest run's
+        // baseline). The font, draw size and layout scale come from the shared resolver, so draw and
+        // measure use the same per-run font and cannot diverge (issue #3524).
         var runColors = new Color[substrings.Count];
+        var runFonts = new Font[substrings.Count];
+        var runDrawSizes = new float[substrings.Count];
         var runScales = new float[substrings.Count];
         var runWidths = new float[substrings.Count];
         float totalWidth = 0;
@@ -866,7 +949,7 @@ public class Text : IVisible, IRenderableIpso,
         {
             var run = substrings[s];
             var runColor = Color;
-            var runScale = FontScale;
+            var resolvedFont = ResolveRunFont(run.Variables);
 
             foreach (var variable in run.Variables)
             {
@@ -887,17 +970,16 @@ public class Text : IVisible, IRenderableIpso,
                     case nameof(Blue):
                         runColor = new Color(runColor.R, runColor.G, (byte)variable.Value, runColor.A);
                         break;
-                    case nameof(FontScale):
-                        runScale = (float)variable.Value;
-                        break;
                 }
             }
 
             runColors[s] = runColor;
-            runScales[s] = runScale;
-            runWidths[s] = MeasureTextEx(fontValue, run.Substring, fontValue.BaseSize * runScale, 0).X;
+            runFonts[s] = resolvedFont.Font;
+            runDrawSizes[s] = resolvedFont.DrawSize;
+            runScales[s] = resolvedFont.LayoutScale;
+            runWidths[s] = MeasureTextEx(resolvedFont.Font, run.Substring, resolvedFont.DrawSize, 0).X;
             totalWidth += runWidths[s];
-            maxScale = System.Math.Max(maxScale, runScale);
+            maxScale = System.Math.Max(maxScale, resolvedFont.LayoutScale);
         }
 
         float maxBaseline = (LineHeightInPixels - _descenderHeight) * maxScale;
@@ -927,7 +1009,7 @@ public class Text : IVisible, IRenderableIpso,
             runPosition = SnapToPixelIfNeeded(runPosition);
             runOrigin = SnapToPixelIfNeeded(runOrigin);
 
-            DrawTextPro(fontValue, substrings[s].Substring, runPosition, runOrigin, 0, fontValue.BaseSize * runScale, 0, runColors[s]);
+            DrawTextPro(runFonts[s], substrings[s].Substring, runPosition, runOrigin, 0, runDrawSizes[s], 0, runColors[s]);
 
             advance += runWidths[s];
         }
@@ -1006,16 +1088,12 @@ public class Text : IVisible, IRenderableIpso,
                 for (int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
                 {
                     var substring = substrings[substringIndex];
-                    float runScale = baseScale;
-                    for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
-                    {
-                        if (substring.Variables[variableIndex].VariableName == nameof(FontScale))
-                        {
-                            runScale = (float)substring.Variables[variableIndex].Value;
-                        }
-                    }
-                    lineWidthAtScale += MeasureString(substring.Substring) * runScale;
-                    maxRunScale = System.Math.Max(maxRunScale, runScale);
+                    // Same resolver the draw loop uses, measured with the same per-run font at the same
+                    // size, so a run is measured at exactly the size it is drawn - draw/measure drift is
+                    // what reproduced the RelativeToChildren spill (#3524).
+                    var resolvedFont = ResolveRunFont(substring.Variables);
+                    lineWidthAtScale += MeasureTextEx(resolvedFont.Font, substring.Substring, resolvedFont.DrawSize, 0).X;
+                    maxRunScale = System.Math.Max(maxRunScale, resolvedFont.LayoutScale);
                 }
                 lineHeightFactor = maxRunScale / baseScale;
                 lineWidthInBaseUnits = lineWidthAtScale / baseScale;

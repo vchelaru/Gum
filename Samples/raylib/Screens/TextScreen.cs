@@ -8,17 +8,18 @@ using RenderingLibrary.Graphics;
 
 namespace Examples.Shapes;
 
-// Raylib mirror of Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/TextScreen.cs (#3414).
-// Section order matches the MG screen so baked-shadow regressions are easy to spot side by side.
-// Requires KernSmithRaylibFontCreator wired in Program.Main.
+// Raylib mirror of Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/TextScreen.cs (#3414), which
+// is the reference. This file matches it section-for-section so a per-backend rendering difference
+// stands out as a backend bug. Requires KernSmithRaylibFontCreator wired in Program.Main.
 //
-// Section order in this file must match the MonoGameGumInCode and SilkNetGum TextScreen.cs mirrors
+// Before adding, removing, or reordering ANY section, make the same change in the sibling mirrors
 // (Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/TextScreen.cs,
-// Samples/SilkNetGum/SilkNetGum/Screens/TextScreen.cs) exactly, top to bottom - before adding,
-// removing, or reordering ANY section, check the sibling files for the same change or the
-// side-by-side comparison breaks silently. Raylib-only sections (TextRenderingPositionMode,
-// GetCharacterIndexAtPosition, #3432) are the sole expected exception, appended at the end.
-// (Broke once when MonoGameGumInCode carried extra AddCustomOutlineText rows raylib never had - #3496.)
+// Samples/SilkNetGum/SilkNetGum/Screens/TextScreen.cs) or the side-by-side comparison breaks
+// silently (#3496). Only genuinely backend-specific things may differ: the color type
+// (Raylib_cs.Color vs Microsoft.Xna.Framework.Color), the TextRenderingPositionMode enum namespace,
+// and AddTextureFilterSection's mechanism (a baked font-cache texture here vs a per-layer sampler
+// state on MonoGame). SilkNetGum legitimately omits the BBCode / Blend / TextureFilter sections
+// because SkiaGum renders via RichTextKit rather than a font atlas.
 internal class TextScreen : FrameworkElement
 {
     public TextScreen() : base(new ContainerRuntime())
@@ -51,6 +52,9 @@ internal class TextScreen : FrameworkElement
         scaleMarkup.FontSize = 24;
         scaleMarkup.Text = "small [FontScale=2]BIG[/FontScale] then [Color=Orange][FontScale=1.5]orange[/FontScale][/Color]";
         container.Children.Add(scaleMarkup);
+
+        AddSectionLabel(container, "BBCode markup - [FontSize=40] crisp swap (left) vs [FontScale=1.9] scale-up (right); blue box = measured width (#3524):");
+        container.Children.Add(BuildFontSizeContainmentRow());
 
         AddSectionLabel(container, "Baked drop shadow (HasDropshadow = true, first-enable defaults):");
         var shadowDefault = new TextRuntime();
@@ -87,9 +91,9 @@ internal class TextScreen : FrameworkElement
         BuildTextParitySection(container);
     }
 
-    // #3432 raylib Text parity: Blend, per-instance TextRenderingPositionMode override, and
+    // Text parity features (#3432): Blend, per-instance TextRenderingPositionMode override, and
     // GetCharacterIndexAtPosition. All three are runtime-observable, so this section is the manual
-    // verification surface for the parity batch.
+    // verification surface for the parity batch. Kept in step with the MonoGame mirror.
     private static void BuildTextParitySection(ContainerRuntime container)
     {
         AddBlendOnTextSection(container);
@@ -235,6 +239,59 @@ internal class TextScreen : FrameworkElement
         text.HorizontalAlignment = HorizontalAlignment.Center;
         text.VerticalAlignment = VerticalAlignment.Center;
         text.Blend = blend;
+        cell.Children.Add(text);
+
+        return cell;
+    }
+
+    // Inline FontSize font-swap (#3524): [FontSize=N] re-rasterizes a crisp font at N (when a font creator
+    // like KernSmith is wired) and swaps it in for the run, matching MonoGame; it must also be MEASURED at
+    // that size, or a RelativeToChildren Text is sized too narrow and the run spills past its background
+    // (the RelativeToChildren-too-narrow bug fixed for MonoGame in #3520 / #3523). Left cell = [FontSize=40]
+    // over a 21px base (crisp swap); right cell = a [FontScale=1.9] control (a scale-up of the 21px atlas,
+    // so visibly blurrier). Pass = "big" is enlarged, crisper on the left than the right, AND the blue box
+    // fully contains each line in both.
+    private static ContainerRuntime BuildFontSizeContainmentRow()
+    {
+        var row = new ContainerRuntime();
+        row.WidthUnits = DimensionUnitType.RelativeToChildren;
+        row.HeightUnits = DimensionUnitType.RelativeToChildren;
+        row.Width = 0;
+        row.Height = 0;
+        row.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        row.StackSpacing = 24;
+        row.AddChild(BuildContainedMarkupCell("This is [FontSize=40]big[/FontSize] text."));
+        row.AddChild(BuildContainedMarkupCell("This is [FontScale=1.9]big[/FontScale] text."));
+        return row;
+    }
+
+    // A RelativeToChildren cell sized to its TextRuntime, with a RelativeToParent background filling it.
+    // The background's edges mark where measurement thinks the text ends, so any measure-vs-render drift
+    // shows up as the run spilling outside the blue box.
+    private static ContainerRuntime BuildContainedMarkupCell(string markup)
+    {
+        var cell = new ContainerRuntime();
+        cell.WidthUnits = DimensionUnitType.RelativeToChildren;
+        cell.HeightUnits = DimensionUnitType.RelativeToChildren;
+        cell.Width = 0;
+        cell.Height = 0;
+
+        var background = new RectangleRuntime();
+        background.WidthUnits = DimensionUnitType.RelativeToParent;
+        background.HeightUnits = DimensionUnitType.RelativeToParent;
+        background.Width = 0;
+        background.Height = 0;
+        background.IsFilled = true;
+        background.FillColor = new Color(40, 60, 160, 255);
+        cell.Children.Add(background);
+
+        var text = new TextRuntime();
+        text.WidthUnits = DimensionUnitType.RelativeToChildren;
+        text.HeightUnits = DimensionUnitType.RelativeToChildren;
+        text.Width = 0;
+        text.Height = 0;
+        text.FontSize = 21;
+        text.Text = markup;
         cell.Children.Add(text);
 
         return cell;
