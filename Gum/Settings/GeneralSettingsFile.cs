@@ -54,15 +54,26 @@ namespace Gum.Settings
         }
 
         /// <summary>
-        /// When true, the experimental "Standards palette" UI is used: the Standard folder is
-        /// removed from the element tree and the standard types are shown as a draggable chip
-        /// palette at the bottom of the Project panel instead. Opt-in while experimental.
+        /// The user's explicit choice for the "Standards palette" UI, or null when they have never
+        /// chosen. When on, the Standard folder is removed from the element tree and the standard
+        /// types are shown as a draggable chip palette at the bottom of the Project panel instead.
+        /// Null (absent from GeneralSettings.xml) resolves to on via <see cref="EffectiveUseStandardsPalette"/>;
+        /// an explicit false written by the View-menu toggle keeps a user opted out. Read
+        /// <see cref="EffectiveUseStandardsPalette"/> for the resolved value rather than this raw setting.
         /// </summary>
-        public bool UseStandardsPalette
+        public bool? UseStandardsPalette
         {
             get;
             set;
         }
+
+        /// <summary>
+        /// The resolved Standards-palette mode. Defaults to on when the user has never made an
+        /// explicit choice (<see cref="UseStandardsPalette"/> is null); otherwise honors their choice.
+        /// </summary>
+        [XmlIgnore]
+        [JsonIgnore]
+        public bool EffectiveUseStandardsPalette => UseStandardsPalette ?? true;
 
         public int FrameRate
         {
@@ -142,7 +153,8 @@ namespace Gum.Settings
         {
             ShowTextOutlines = false;
             AutoSave = true;
-            UseStandardsPalette = false;
+            // UseStandardsPalette is intentionally left null (unset) so a user who has never chosen
+            // resolves to on via EffectiveUseStandardsPalette. See #3408.
             FrameRate = 30;
             LeftAndEverythingSplitterDistance = 196;
             PreviewSplitterDistance = 558;
