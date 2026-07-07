@@ -1093,36 +1093,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             else
             {
                 individualLineWidth[0] = widths[i];
-                var lineHeight = fontToUse.EffectiveLineHeight(EffectiveFontScale, LineHeightMultiplier);
-                var defaultBaseline = fontToUse.BaselineY;
-
-                float currentFontScale = EffectiveFontScale;
-                float maxFontScale = EffectiveFontScale;
-                BitmapFont currentFont = fontToUse;
-
-                float maxBaseline = currentFontScale * currentFont.BaselineY;
-
-                foreach (var substring in substrings)
-                {
-                    for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
-                    {
-                        var variable = substring.Variables[variableIndex];
-                        if (variable.VariableName == nameof(FontScale))
-                        {
-                            currentFontScale = (float)variable.Value * SystemManagers.GlobalFontScale;
-                            lineHeight = System.Math.Max(lineHeight, currentFont.EffectiveLineHeight(currentFontScale, 1));
-                            maxFontScale = System.Math.Max(maxFontScale, currentFontScale);
-                            maxBaseline = System.Math.Max(maxBaseline, currentFontScale * currentFont.BaselineY);
-                        }
-                        else if (variable.VariableName == nameof(BitmapFont))
-                        {
-                            currentFont = (BitmapFont)variable.Value;
-                            lineHeight = System.Math.Max(lineHeight, currentFont.EffectiveLineHeight(currentFontScale, 1));
-                            maxBaseline = System.Math.Max(maxBaseline, currentFontScale * currentFont.BaselineY);
-
-                        }
-                    }
-                }
+                float lineHeight = ComputeStyledLineHeight(fontToUse, substrings, out float maxBaseline);
 
                 for(int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
                 {
@@ -1302,6 +1273,44 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             }
             startOfLineIndex += lineOfText.Length;
         }
+    }
+
+    /// <summary>
+    /// Computes a styled (inline-variable) line's rendered height in pixels, growing the base line height
+    /// by the tallest inline [FontScale]/[FontSize] run on the line, and returns that tallest run's baseline
+    /// via <paramref name="maxBaseline"/>. Primarily called by <see cref="DrawWithInlineVariables"/> — to
+    /// advance past an enlarged run (so a following line is not drawn on top of it) and to baseline-align
+    /// shorter runs — and exposed so the per-line height can be unit-pinned without rendering.
+    /// </summary>
+    public float ComputeStyledLineHeight(BitmapFont fontToUse, List<StyledSubstring> substrings, out float maxBaseline)
+    {
+        var lineHeight = fontToUse.EffectiveLineHeight(EffectiveFontScale, LineHeightMultiplier);
+
+        float currentFontScale = EffectiveFontScale;
+        BitmapFont currentFont = fontToUse;
+        maxBaseline = currentFontScale * currentFont.BaselineY;
+
+        foreach (var substring in substrings)
+        {
+            for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
+            {
+                var variable = substring.Variables[variableIndex];
+                if (variable.VariableName == nameof(FontScale))
+                {
+                    currentFontScale = (float)variable.Value * SystemManagers.GlobalFontScale;
+                    lineHeight = System.Math.Max(lineHeight, currentFont.EffectiveLineHeight(currentFontScale, 1));
+                    maxBaseline = System.Math.Max(maxBaseline, currentFontScale * currentFont.BaselineY);
+                }
+                else if (variable.VariableName == nameof(BitmapFont))
+                {
+                    currentFont = (BitmapFont)variable.Value;
+                    lineHeight = System.Math.Max(lineHeight, currentFont.EffectiveLineHeight(currentFontScale, 1));
+                    maxBaseline = System.Math.Max(maxBaseline, currentFontScale * currentFont.BaselineY);
+                }
+            }
+        }
+
+        return lineHeight;
     }
 
     // made public for auto tests:

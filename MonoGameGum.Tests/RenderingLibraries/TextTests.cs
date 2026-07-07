@@ -51,6 +51,50 @@ char id=37   x=161   y=0     width=22    height=20    xoffset=1     yoffset=6   
         return font;
     }
 
+    // Pins the per-line vertical growth the inline-text draw relies on: a styled line's rendered height
+    // must grow to the tallest run's scale, so a following wrapped line is advanced BELOW an enlarged run
+    // instead of drawn on top of it. This is the DRAW-side computation (ComputeStyledLineHeight, consumed
+    // by DrawWithInlineVariables to advance topOfLine) — distinct from the measurement path
+    // (WrappedTextHeight), which the raylib #3532 bug proved can be correct while the draw advance is
+    // wrong. A [FontScale=2] run must double the line height; the ratio keeps the assert independent of
+    // GlobalFontScale.
+    [Fact]
+    public void ComputeStyledLineHeight_ShouldGrowToTallestRunScale()
+    {
+        BitmapFont font = new BitmapFont((Texture2D)null!, AbcFontData(xadvance: 10, lineHeight: 20));
+        font.SetFontPattern(256, 256);
+
+        Text baseLine = new Text();
+        baseLine.BitmapFont = font;
+        baseLine.InlineVariables.Add(new InlineVariable
+        {
+            VariableName = "FontScale",
+            Value = 1f,
+            StartIndex = 0,
+            CharacterCount = 2
+        });
+        baseLine.RawText = "AA";
+        List<StyledSubstring> baseSubstrings = baseLine.GetStyledSubstrings(0, baseLine.WrappedText[0]);
+        float baseHeight = baseLine.ComputeStyledLineHeight(baseLine.BitmapFont, baseSubstrings, out float _);
+        baseHeight.ShouldBeGreaterThan(0);
+
+        Text scaledLine = new Text();
+        scaledLine.BitmapFont = font;
+        scaledLine.InlineVariables.Add(new InlineVariable
+        {
+            VariableName = "FontScale",
+            Value = 2f,
+            StartIndex = 0,
+            CharacterCount = 2
+        });
+        scaledLine.RawText = "AA";
+        List<StyledSubstring> scaledSubstrings = scaledLine.GetStyledSubstrings(0, scaledLine.WrappedText[0]);
+        float scaledHeight = scaledLine.ComputeStyledLineHeight(scaledLine.BitmapFont, scaledSubstrings, out float _);
+
+        scaledHeight.ShouldBe(baseHeight * 2,
+            "because the tallest run's [FontScale=2] doubles the line's rendered height, which is what advances the next line past it");
+    }
+
     // Regression guard for the #3372 fix: when the height is a real, independent constraint,
     // TextOverflowVerticalMode.TruncateLine MUST still clip to the number of fully-fitting
     // lines. The fix only removes the content-derived (RelativeToChildren) height->lines
