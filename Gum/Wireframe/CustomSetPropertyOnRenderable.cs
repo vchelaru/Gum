@@ -1316,7 +1316,9 @@ public class CustomSetPropertyOnRenderable
                         font = InMemoryFontCreator.TryCreateFont(bmfcSave);
                         if (font != null)
                         {
-                            global::RenderingLibrary.Content.LoaderManager.Self.AddDisposable(fontFileName, font);
+                            // #3530: Replace so re-adding an already-occupied key heals it instead of throwing.
+                            global::RenderingLibrary.Content.LoaderManager.Self.AddDisposable(fontFileName, font,
+                                global::RenderingLibrary.Content.LoaderManager.ExistingContentBehavior.Replace);
                         }
                     }
                     catch
@@ -1393,7 +1395,9 @@ public class CustomSetPropertyOnRenderable
                         // This can happen when closing tags are encountered at the end of a font. If no font exists, we can just go to the default
                         font = Text.DefaultBitmapFont;
                     }
-                    global::RenderingLibrary.Content.LoaderManager.Self.AddDisposable(fontFileName, font);
+                    // #3530: Replace so re-adding an already-occupied key heals it instead of throwing.
+                    global::RenderingLibrary.Content.LoaderManager.Self.AddDisposable(fontFileName, font,
+                        global::RenderingLibrary.Content.LoaderManager.ExistingContentBehavior.Replace);
                 }
             }
 
