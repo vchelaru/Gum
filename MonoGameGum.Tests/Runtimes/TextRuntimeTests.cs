@@ -321,6 +321,37 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
         }
     }
 
+    // #3520 (the wrapping half, end-to-end): a fixed-width Text that fits "AA BB CC" at the base size must
+    // re-wrap once the inline [FontSize=40] run enlarges "BB". The real BBCode path sets RawText (which
+    // wraps) BEFORE the InlineVariables are populated, so the first wrap is blind to the runs; the fix must
+    // re-wrap after the runs exist. Without that re-wrap this stays one line and the enlarged run spills
+    // past the width. Widths use the stub creator's advance = FontSize/2 (base 20 -> 10, run 40 -> 20).
+    [Fact]
+    public void WrappedText_ShouldRewrapFontAware_WhenBbCodeFontSizeRunWidensLine()
+    {
+        var previousCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        CustomSetPropertyOnRenderable.InMemoryFontCreator = new SizeProportionalFontCreator();
+        try
+        {
+            TextRuntime rt = new();
+            rt.Font = "StubFont3520";
+            rt.FontSize = 20;
+            rt.WidthUnits = DimensionUnitType.Absolute;
+            // Fits "AA BB CC" at the base size (8 chars * 10 = 80) but not with "BB" at size 40
+            // (6*10 + 2*20 = 100). 85 sits between the two, so only a font-aware re-wrap breaks the line.
+            rt.Width = 85;
+            rt.Text = "AA [FontSize=40]BB[/FontSize] CC";
+
+            var wrapped = ((Text)rt.RenderableComponent).WrappedText;
+            wrapped.Count.ShouldBe(2,
+                "because after the inline [FontSize] runs populate, the text must re-wrap measuring the enlarged run at its own size");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = previousCreator;
+        }
+    }
+
     // Repro attempt for the manual-test structure the earlier tests missed: the box also holds a
     // RelativeToParent background sibling (added BEFORE the text). FontScale needs no font generation, so
     // this isolates whether the RelativeToParent sibling breaks the box's RelativeToChildren sizing.

@@ -778,7 +778,14 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     static char[] preservedNewlinableCharacters = new char[] { ',', '-', ':', '.', '?', '!', '&', 
         // 
         ')' };
-    private void UpdateWrappedText()
+    /// <summary>
+    /// Re-runs line wrapping and rebuilds <see cref="WrappedText"/>. Normally invoked by the property
+    /// setters that affect wrapping (RawText, Width, FontScale, ...), but also callable after the inline
+    /// BBCode <see cref="InlineVariables"/> are populated: the BBCode assignment path sets RawText (which
+    /// wraps) before the runs exist, so a re-wrap is needed for wrapping to account for an inline
+    /// [FontSize]/[FontScale] run's real size (issue #3520).
+    /// </summary>
+    public void UpdateWrappedText()
     {
         ///////////EARLY OUT/////////////
         if (this.BitmapFont == null && DefaultBitmapFont == null)
@@ -1520,8 +1527,6 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     /// </remarks>
     private void GetInlineVariableAwareWidthAndHeight(out int requiredWidth, out int requiredHeight)
     {
-        var effectiveFontScale = EffectiveFontScale;
-
         float maxWidth = 0;
         float totalHeight = 0;
 
@@ -1541,52 +1546,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             }
             else
             {
-                float maxRunScale = effectiveFontScale;
-                float lineWidthAtScale = 0;
-                for (int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
-                {
-                    var substring = substrings[substringIndex];
-                    float runScale = effectiveFontScale;
-                    // A [FontSize=N] run swaps in a font generated at that size (a "BitmapFont" run),
-                    // which DrawWithInlineVariables draws the glyphs with. Measure the run with that same
-                    // font so the reported width matches what is drawn — otherwise a run in a larger font
-                    // is measured at the base size and a RelativeToChildren Text is sized too narrow (#3520).
-                    BitmapFont runFont = mBitmapFont;
-                    // Height factor for this run relative to the base line height. A [FontScale] run scales
-                    // it directly; a [FontSize=N] swap run's taller generated font scales it by the ratio of
-                    // line heights, so the reported line grows to the swapped font's height. Without this the
-                    // height stays on the base font and a RelativeToChildren box is too short, letting the
-                    // enlarged run spill vertically — the height half of the #3520/#3523 width fix (#3524).
-                    float runHeightScale = effectiveFontScale;
-                    for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
-                    {
-                        var variable = substring.Variables[variableIndex];
-                        if (variable.VariableName == nameof(FontScale))
-                        {
-                            runScale = (float)variable.Value * SystemManagers.GlobalFontScale;
-                            runHeightScale = runScale;
-                        }
-                        else if (variable.VariableName == nameof(BitmapFont))
-                        {
-                            runFont = (BitmapFont)variable.Value;
-                            if (mBitmapFont != null && mBitmapFont.LineHeightInPixels > 0)
-                            {
-                                runHeightScale = effectiveFontScale * runFont.LineHeightInPixels / mBitmapFont.LineHeightInPixels;
-                            }
-                        }
-                    }
-                    // Only the final run of the line is measured with TrimRight (matching the whole-line
-                    // MeasureString the plain path uses); interior runs must use Full, or each run
-                    // boundary trims its last glyph (often a space before the next run) and the line is
-                    // under-measured — leaving a RelativeToChildren container too narrow (#3520).
-                    var measurementStyle = substringIndex == substrings.Count - 1
-                        ? HorizontalMeasurementStyle.TrimRight
-                        : HorizontalMeasurementStyle.Full;
-                    lineWidthAtScale += runFont.MeasureString(substring.Substring, measurementStyle) * runScale;
-                    maxRunScale = System.Math.Max(maxRunScale, runHeightScale);
-                }
-                lineHeightFactor = maxRunScale / effectiveFontScale;
-                lineWidthInBaseUnits = lineWidthAtScale / effectiveFontScale;
+                lineWidthInBaseUnits = MeasureStyledLineInBaseUnits(substrings, out lineHeightFactor);
             }
 
             maxWidth = System.Math.Max(maxWidth, lineWidthInBaseUnits);
@@ -1598,6 +1558,84 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         const int MaxWidthAndHeight = 4096;
         requiredWidth = System.Math.Min((int)(maxWidth + .5f), MaxWidthAndHeight);
         requiredHeight = System.Math.Min((int)(totalHeight + .5f), MaxWidthAndHeight);
+    }
+
+    /// <summary>
+    /// Sums the base-unit width of a single line already split into styled runs, measuring each run with its
+    /// own inline font (a [FontSize] "BitmapFont" swap run) and scale (a [FontScale] run) — the same per-run
+    /// resolution <see cref="DrawWithInlineVariables"/> draws with — and reports the tallest run's height
+    /// factor relative to the base line height.
+    /// </summary>
+    /// <remarks>
+    /// Shared by the size pass (<see cref="GetInlineVariableAwareWidthAndHeight"/>, #3481/#3523/#3524) and
+    /// the font-aware wrap seam (<see cref="MeasureString(string, int)"/>, #3520) so the measured, drawn, and
+    /// wrapped size of a run cannot drift. A [FontSize=N] run swaps in a font generated at that size which the
+    /// run is drawn with, so measuring it with the base font sizes a RelativeToChildren Text too narrow and
+    /// wraps it at the base size. Only the final run uses TrimRight (matching the whole-line MeasureString the
+    /// plain path uses); interior runs use Full, or each run boundary trims its last glyph (often a space
+    /// before the next run) and the line is under-measured. Widths are returned in BASE units (font scale
+    /// factored out), matching <see cref="MeasureString(string)"/>.
+    /// </remarks>
+    private float MeasureStyledLineInBaseUnits(List<StyledSubstring> substrings, out float lineHeightFactor)
+    {
+        var effectiveFontScale = EffectiveFontScale;
+
+        float maxRunScale = effectiveFontScale;
+        float lineWidthAtScale = 0;
+        for (int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
+        {
+            var substring = substrings[substringIndex];
+            float runScale = effectiveFontScale;
+            BitmapFont runFont = mBitmapFont;
+            float runHeightScale = effectiveFontScale;
+            for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
+            {
+                var variable = substring.Variables[variableIndex];
+                if (variable.VariableName == nameof(FontScale))
+                {
+                    runScale = (float)variable.Value * SystemManagers.GlobalFontScale;
+                    runHeightScale = runScale;
+                }
+                else if (variable.VariableName == nameof(BitmapFont))
+                {
+                    runFont = (BitmapFont)variable.Value;
+                    if (mBitmapFont != null && mBitmapFont.LineHeightInPixels > 0)
+                    {
+                        runHeightScale = effectiveFontScale * runFont.LineHeightInPixels / mBitmapFont.LineHeightInPixels;
+                    }
+                }
+            }
+            var measurementStyle = substringIndex == substrings.Count - 1
+                ? HorizontalMeasurementStyle.TrimRight
+                : HorizontalMeasurementStyle.Full;
+            lineWidthAtScale += runFont.MeasureString(substring.Substring, measurementStyle) * runScale;
+            maxRunScale = System.Math.Max(maxRunScale, runHeightScale);
+        }
+        lineHeightFactor = effectiveFontScale > 0 ? maxRunScale / effectiveFontScale : 1;
+        return effectiveFontScale > 0 ? lineWidthAtScale / effectiveFontScale : 0;
+    }
+
+    /// <summary>
+    /// Font-aware measurement used by line wrapping (issue #3520): measures <paramref name="whatToMeasure"/>
+    /// (which begins at <paramref name="absoluteStartIndexInStrippedText"/> in the stripped text) honoring the
+    /// inline [FontSize]/[FontScale] runs active over that range, so a line containing an enlarged run wraps at
+    /// the run's real size instead of the base size. Falls back to the base <see cref="MeasureString(string)"/>
+    /// when no inline runs cover the range, keeping plain-text wrapping byte-identical.
+    /// </summary>
+    public float MeasureString(string whatToMeasure, int absoluteStartIndexInStrippedText)
+    {
+        if (InlineVariables.Count == 0)
+        {
+            return MeasureString(whatToMeasure);
+        }
+
+        var substrings = GetStyledSubstrings(absoluteStartIndexInStrippedText, whatToMeasure);
+        if (substrings.Count == 0)
+        {
+            return MeasureString(whatToMeasure);
+        }
+
+        return MeasureStyledLineInBaseUnits(substrings, out _);
     }
     #endregion
 
