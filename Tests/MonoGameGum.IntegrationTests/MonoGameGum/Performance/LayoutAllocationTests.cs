@@ -95,11 +95,14 @@ public class RealisticLayoutAllocationTests : BaseTestClass
             $"{result.BytesPerIteration:N0} bytes/frame " +
             $"({result.TotalBytes:N0} bytes over {result.Iterations} frames)");
 
-        // Baseline ratchet (#1934): a full relayout of a real Forms tree with Text allocates a
-        // deterministic 1,584 bytes/frame locally. This pins that cost plus headroom for JIT/runner
-        // variance so a regression that grows it fails the build; tighten as sources are removed.
-        // No fix here.
-        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(2200);
+        // Ratchet (#1934): a full relayout of a real Forms tree with Text allocates a deterministic
+        // 240 bytes/frame locally — down from 1,584 after the single-line-wrap fast path in
+        // IWrappedTextExtensions.UpdateLines (pinned by
+        // TextTests.UpdateWrappedText_WhenTextFitsOnOneLine_DoesNotAllocate). The residual is the one
+        // genuinely-wrapping Text — the TextBox content re-wrapping at its constrained width each frame,
+        // which still tokenizes/Splits/concatenates; tighten further as that word-by-word path is made
+        // allocation-free. Pins the current cost plus headroom for runtime/runner variance.
+        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(400);
     }
 
     /// <summary>

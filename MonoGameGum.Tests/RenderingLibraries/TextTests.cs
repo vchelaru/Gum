@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework.Graphics;
+using MonoGameGum.TestsCommon;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using System.Reflection;
@@ -204,6 +205,32 @@ char id=65 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
 char id=66 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadvance} page=0 chnl=15
 char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadvance} page=0 chnl=15
 ";
+
+    // #1934 allocation pass: the RelativeToChildren natural-size measurement re-wraps a Text every
+    // layout frame by toggling its Width (unconstrained to read natural size, then back). For a Text
+    // that fits on a single line, the word-by-word wrapping algorithm reproduces the raw text verbatim,
+    // so re-wrapping must short-circuit to zero managed allocation rather than churning a List/Split/
+    // per-word string concatenation on every frame. This is the dominant full-relayout allocation source.
+    [Fact]
+    public void UpdateWrappedText_WhenTextFitsOnOneLine_DoesNotAllocate()
+    {
+        const int advance = 10;
+        BitmapFont font = new BitmapFont((Texture2D)null!, AbcFontData(advance, lineHeight: 20));
+        font.SetFontPattern(256, 256);
+
+        Text text = new Text();
+        text.BitmapFont = font;
+        text.Width = 1000;            // "AB AB" is 5 chars * 10 = 50 wide, far under 1000 -> one line
+        text.RawText = "AB AB";
+        text.WrappedText.Count.ShouldBe(1); // guard: the scenario really is single-line
+
+        AllocationResult result = AllocationMeasurer.Measure(
+            () => text.UpdateWrappedText(),
+            warmupIterations: 50,
+            measuredIterations: 500);
+
+        result.TotalBytes.ShouldBe(0);
+    }
 
     // #3520: a base run that FOLLOWS a font-swap run (like " text." after [FontSize=40]big[/FontSize])
     // must be measured at the base size. Reproduces the residual under-measurement the manual test
