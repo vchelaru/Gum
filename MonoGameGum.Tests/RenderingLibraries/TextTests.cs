@@ -198,6 +198,47 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
             "because a base run after a font-swap run must still be fully measured at the base size");
     }
 
+    // #3520 (the wrapping half): line wrapping must measure each inline run at its own size, not the
+    // base size. A fixed-width line that fits "AA BB CC" at the base size must wrap once "BB" is
+    // enlarged via a font-swap run (like [FontSize=40]) — otherwise the wrap packs all three words at
+    // the base size and the enlarged run spills past the width. This is the renderable-level (UpdateLines)
+    // contract; InlineVariables are populated before RawText here, so it isolates the wrap seam from the
+    // re-wrap sequencing exercised end-to-end in TextRuntimeTests.
+    [Fact]
+    public void UpdateLines_WithFontSwapRun_WrapsWhereTheEnlargedRunNoLongerFits()
+    {
+        const int baseAdvance = 10;
+        const int swappedAdvance = 20;
+
+        BitmapFont baseFont = new BitmapFont((Texture2D)null!, AbcFontData(baseAdvance, lineHeight: 20));
+        baseFont.SetFontPattern(256, 256);
+        BitmapFont swappedFont = new BitmapFont((Texture2D)null!, AbcFontData(swappedAdvance, lineHeight: 20));
+        swappedFont.SetFontPattern(256, 256);
+
+        Text text = new Text();
+        text.BitmapFont = baseFont;
+        // "BB" (indices 3-4) is drawn with the larger font, like [FontSize] swaps a run's font.
+        text.InlineVariables.Add(new InlineVariable
+        {
+            VariableName = "BitmapFont",
+            Value = swappedFont,
+            StartIndex = 3,
+            CharacterCount = 2
+        });
+
+        // A wrap width (base units) that fits all three words at the base size (8 chars * 10 = 80) but not
+        // once "BB" is measured at the swapped size (6*10 + 2*20 = 100). 85 sits between the two. Width is
+        // in the Text's own space (UpdateLines divides by FontScale), so scale the base-unit target back up
+        // to stay correct regardless of GlobalFontScale.
+        float fontScale = ((IText)text).FontScale;
+        text.Width = 85 * fontScale;
+
+        text.RawText = "AA BB CC";
+
+        text.WrappedText.Count.ShouldBe(2,
+            "because the enlarged font-swap run must be measured at its own size when wrapping, forcing an earlier break");
+    }
+
     // Font where the space advances 10px but is only 1px wide, and letters A/B/C are 10px wide with a
     // 10px advance. The narrow space is what exposes per-run TrimRight trimming: an interior run ending
     // in a space loses 9px if measured with TrimRight instead of Full.

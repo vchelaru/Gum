@@ -31,6 +31,17 @@ public interface IWrappedText : IText
 
     float MeasureString(string text);
 
+    /// <summary>
+    /// Measures <paramref name="text"/>, which begins at <paramref name="absoluteStartIndexInStrippedText"/>
+    /// within the full stripped (tags-removed) text, honoring any inline BBCode runs (a [FontSize] font swap
+    /// or a [FontScale] multiplier) active over that character range so line wrapping breaks where the text
+    /// actually renders rather than where the base font would. The returned width is in the same base units
+    /// as <see cref="MeasureString(string)"/> (font scale factored out), so it compares directly against the
+    /// wrap width. The default implementation ignores inline runs (measures at the base font); a backend
+    /// opts in to font-aware wrapping by overriding it.
+    /// </summary>
+    float MeasureString(string text, int absoluteStartIndexInStrippedText) => MeasureString(text);
+
     bool IsMidWordLineBreakEnabled { get; }
 }
 
@@ -88,6 +99,14 @@ public static class IWrappedTextExtensions
         String currentLine = String.Empty;
         String returnString = String.Empty;
 
+        // The absolute character index (in the stripped text) where the current line begins. It equals the
+        // total length of the lines already committed, so it stays in sync with the inline-variable indexing
+        // the styled measurement uses (the same accounting DrawWithInlineVariables/size passes do with
+        // `startOfLineIndex += line.Length`). We advance it whenever a line is committed below, and pass it
+        // to the styled MeasureString overload so a line containing an inline [FontSize]/[FontScale] run is
+        // measured at the run's real size while wrapping.
+        int absoluteLineStartIndex = 0;
+
         // The words to process, including the current word
         List<string> remainingWordsToProcess = new();
 
@@ -130,7 +149,7 @@ public static class IWrappedTextExtensions
             // If it's not the last word, we show ellipsis, and the last word plus ellipsis won't fit, then we need
             // to include part of the word:
 
-            float linePlusWordWidth = textInstance.MeasureString(currentLine + currentWord);
+            float linePlusWordWidth = textInstance.MeasureString(currentLine + currentWord, absoluteLineStartIndex);
 
             var shouldAddEllipsis =
                 textInstance.IsTruncatingWithEllipsisOnLastLine &&
@@ -146,7 +165,7 @@ public static class IWrappedTextExtensions
                 {
                     var substringEnd = currentWord.SubstringEnd(i);
 
-                    float linePlusWordSub = textInstance.MeasureString(currentLine + substringEnd);
+                    float linePlusWordSub = textInstance.MeasureString(currentLine + substringEnd, absoluteLineStartIndex);
 
                     if (linePlusWordSub + ellipsisWidth <= wrappingWidth)
                     {
@@ -174,6 +193,7 @@ public static class IWrappedTextExtensions
                     // We already have a line started, so let's add it
                     // and start the next line
                     lines.Add(currentLine);
+                    absoluteLineStartIndex += currentLine.Length;
                     if (lines.Count == effectiveMaxNumberOfLines)
                     {
                         break;
@@ -190,6 +210,7 @@ public static class IWrappedTextExtensions
                     if (currentWord.Length == 1)
                     {
                         lines.Add(currentWord);
+                        absoluteLineStartIndex += currentWord.Length;
                         remainingWordsToProcess.RemoveAt(0);
                     }
                     else
@@ -203,7 +224,9 @@ public static class IWrappedTextExtensions
                         for (int i = 1; i < currentWord.Length; i++)
                         {
                             var substring = currentWord.Substring(0, i + 1);
-                            float substringLength = textInstance.MeasureString(substring);
+                            // currentLine is empty in this mid-word-break branch, so the substring begins at
+                            // the current line's absolute start.
+                            float substringLength = textInstance.MeasureString(substring, absoluteLineStartIndex);
 
                             // Check if there's a zero-width space at this position that could be a preferred break point
                             if (i < currentWord.Length && currentWord[i] == '\u200B' && substringLength < wrappingWidth)
@@ -222,6 +245,9 @@ public static class IWrappedTextExtensions
                                     // Break at the zero-width space position
                                     stringToAdd = currentWord.Substring(0, preferredBreakIndex.Value);
                                     lines.Add(stringToAdd);
+                                    // The zero-width space at preferredBreakIndex is skipped (the next line
+                                    // starts one past it), so advance past it too to stay in sync.
+                                    absoluteLineStartIndex += stringToAdd.Length + 1;
 
                                     // Skip the zero-width space character when continuing
                                     currentWord = remainingWordsToProcess[0].Substring(preferredBreakIndex.Value + 1);
@@ -236,6 +262,7 @@ public static class IWrappedTextExtensions
                                     // from the current word:
                                     stringToAdd = currentWord.Substring(0, i + 1);
                                     lines.Add(stringToAdd);
+                                    absoluteLineStartIndex += stringToAdd.Length;
 
                                     // Be sure to use remainingWordsToProcess[0] so we get everything
                                     // before it was broken up by newlines
@@ -247,6 +274,7 @@ public static class IWrappedTextExtensions
                                 {
                                     stringToAdd = currentWord.Substring(0, i);
                                     lines.Add(stringToAdd);
+                                    absoluteLineStartIndex += stringToAdd.Length;
 
                                     // Be sure to use remainingWordsToProcess[0] so we get everything
                                     // before it was broken up by newlines
@@ -292,6 +320,7 @@ public static class IWrappedTextExtensions
                 if (containsNewline)
                 {
                     lines.Add(currentLine);
+                    absoluteLineStartIndex += currentLine.Length;
 
 
                     if (lines.Count == effectiveMaxNumberOfLines)
