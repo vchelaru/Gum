@@ -839,7 +839,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     /// </summary>
     public void ApplyStandardsPaletteMode()
     {
-        bool usePalette = _projectState.GeneralSettings?.UseStandardsPalette == true;
+        bool usePalette = _projectState.GeneralSettings?.EffectiveUseStandardsPalette == true;
 
         if (mStandardElementsTreeNode != null)
         {
@@ -1460,7 +1460,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             // When the experimental Standards palette is on, the Standard folder is replaced by the
             // chip palette, so it is not shown in the tree. The node object is still kept (and still
             // populated) so toggling the setting at runtime can restore it without a full rebuild.
-            if (_projectState.GeneralSettings?.UseStandardsPalette != true)
+            if (_projectState.GeneralSettings?.EffectiveUseStandardsPalette != true)
             {
                 ObjectTreeView.Nodes.Add(mStandardElementsTreeNode);
             }
@@ -1807,7 +1807,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         // signal that standard elements may have changed (e.g. "Add Skia Standard Elements", which
         // only calls RefreshElementTreeView and raises no ElementAdd event). RefreshChips is
         // idempotent, so this is a no-op when the standard set is unchanged.
-        if (_projectState.GeneralSettings?.UseStandardsPalette == true)
+        if (_projectState.GeneralSettings?.EffectiveUseStandardsPalette == true)
         {
             RefreshStandardsPaletteChips();
         }
