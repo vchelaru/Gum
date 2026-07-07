@@ -1,6 +1,8 @@
 using Gum.GueDeriving;
 using Gum.Wireframe;
+using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Content;
+using RenderingLibrary.Graphics;
 using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
 using System;
@@ -23,6 +25,16 @@ namespace MonoGameGum.Tests.Runtimes;
 // AddDisposable(...) call — which defaulted to ExistingContentBehavior.ThrowException — collides with
 // the still-occupied key and throws. The fix passes ExistingContentBehavior.Replace so the poisoned
 // slot heals instead of crashing.
+//
+// The resolver has TWO AddDisposable calls that were changed to Replace, reached by different font
+// sources, so each has its own test:
+//   * disk / DefaultBitmapFont fallback (no InMemoryFontCreator) -> the crash's exact line.
+//   * in-memory font creation (InMemoryFontCreator set)          -> the sibling line, covered so a
+//     regression that heals only one of the two lines still turns a test red.
+// Each test also asserts the poisoned slot was actually REPLACED with a BitmapFont afterward. Without
+// that, the test could pass vacuously if the key the resolver computes ever drifted away from the key
+// this test poisons: the resolver would then add under a fresh (empty) key, never collide, and
+// Should.NotThrow would be satisfied without the fix under test running at all.
 public class TextRuntimeBbCodeFontCachingRegressionTests : BaseTestClass
 {
     // Uses a font NOT in the test harness's stubbed embedded resources (which only cover Arial-18)
@@ -41,8 +53,7 @@ public class TextRuntimeBbCodeFontCachingRegressionTests : BaseTestClass
             LoaderManager.Self.CacheTextures = true;
             // A unique relative directory makes the (absolute) font-cache key unique to this run so no
             // prior test can mask the collision and this test cannot poison a shared slot.
-            FileManager.RelativeDirectory = Path.Combine(Path.GetTempPath(),
-                "GumBbCodeBoldFont_" + Guid.NewGuid().ToString("N")).Replace('\\', '/') + "/";
+            FileManager.RelativeDirectory = MakeUniqueRelativeDirectory();
 
             // Reproduce the poisoned slot the real first resolution left behind: a cached value the
             // "as BitmapFont" cast cannot recover (so the dedup guard sees an empty slot and falls
@@ -56,9 +67,15 @@ public class TextRuntimeBbCodeFontCachingRegressionTests : BaseTestClass
             textRuntime.FontSize = UnstubbedFontSize;
 
             // Assigning BBCode with a bold run re-resolves the (already poisoned) bold key. Before the
-            // fix this threw ArgumentException from AddDisposable's default ThrowException behavior.
+            // fix this threw ArgumentException from AddDisposable's default ThrowException behavior. With
+            // no InMemoryFontCreator set, resolution falls to the disk / DefaultBitmapFont path (the
+            // exact line in the #3530 crash stack).
             Should.NotThrow(() =>
                 textRuntime.Text = "normal [IsBold=true]bold[/IsBold] normal");
+
+            // The resolver reached the poisoned key and replaced the non-font placeholder with the
+            // resolved font, proving the fixed AddDisposable actually ran (not skipped via key drift).
+            LoaderManager.Self.GetDisposable(boldKey).ShouldBeAssignableTo<BitmapFont>();
         }
         finally
         {
@@ -66,6 +83,51 @@ public class TextRuntimeBbCodeFontCachingRegressionTests : BaseTestClass
             FileManager.RelativeDirectory = savedRelativeDirectory;
         }
     }
+
+    [Fact]
+    public void Text_WithBbCodeBoldRun_WhenBoldSlotPoisonedAndResolvedByInMemoryCreator_ShouldNotThrowDuplicateKey()
+    {
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        string savedRelativeDirectory = FileManager.RelativeDirectory;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            LoaderManager.Self.CacheTextures = true;
+            FileManager.RelativeDirectory = MakeUniqueRelativeDirectory();
+            // With an in-memory creator, the bold run resolves to a freshly created font and caches it
+            // via the resolver's OTHER AddDisposable call (the in-memory branch), which the fix also
+            // changed to Replace. The disk-fallback test above never reaches this branch because the
+            // harness leaves InMemoryFontCreator null.
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new AbcInMemoryFontCreator();
+
+            string boldKey = GetBoldFontCacheKey();
+            LoaderManager.Self.AddDisposable(boldKey, new NonFontDisposable(),
+                LoaderManager.ExistingContentBehavior.Replace);
+
+            TextRuntime textRuntime = new();
+            textRuntime.Font = UnstubbedFontName;
+            textRuntime.FontSize = UnstubbedFontSize;
+
+            // Only glyphs the stub font defines (space + A/B/C) so measurement stays valid; only "BB" is
+            // bold, so it re-resolves the poisoned bold key.
+            Should.NotThrow(() =>
+                textRuntime.Text = "AA [IsBold=true]BB[/IsBold] CC");
+
+            LoaderManager.Self.GetDisposable(boldKey).ShouldBeAssignableTo<BitmapFont>();
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+            FileManager.RelativeDirectory = savedRelativeDirectory;
+        }
+    }
+
+    // A unique relative directory makes the (absolute) font-cache key unique to this run so no prior
+    // test can mask the collision and this test cannot poison a shared slot.
+    private static string MakeUniqueRelativeDirectory() =>
+        Path.Combine(Path.GetTempPath(), "GumBbCodeBoldFont_" + Guid.NewGuid().ToString("N"))
+            .Replace('\\', '/') + "/";
 
     // Mirrors CustomSetPropertyOnRenderable.GetFontFileName: the same GetFontCacheFileNameFor call
     // followed by the same RemoveDotDotSlash(Standardize(name, false, true)) normalization.
@@ -86,5 +148,29 @@ public class TextRuntimeBbCodeFontCachingRegressionTests : BaseTestClass
         public void Dispose()
         {
         }
+    }
+
+    // Minimal in-memory font creator: returns a valid BitmapFont (space + A/B/C glyphs, no disk I/O)
+    // for any request, so the resolver takes the in-memory AddDisposable branch instead of the disk /
+    // DefaultBitmapFont fallback.
+    private sealed class AbcInMemoryFontCreator : IInMemoryFontCreator
+    {
+        public BitmapFont? TryCreateFont(BmfcSave bmfcSave)
+        {
+            BitmapFont font = new BitmapFont((Texture2D)null!, AbcFontData);
+            font.SetFontPattern(256, 256);
+            return font;
+        }
+
+        private const string AbcFontData =
+@"info face=""Arial"" size=-18 bold=0 italic=0 charset="""" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0
+common lineHeight=18 base=18 scaleW=256 scaleH=256 pages=1 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4
+page id=0 file=""x.png""
+chars count=4
+char id=32 x=0 y=0 width=9 height=13 xoffset=0 yoffset=4 xadvance=9 page=0 chnl=15
+char id=65 x=0 y=0 width=9 height=13 xoffset=0 yoffset=4 xadvance=9 page=0 chnl=15
+char id=66 x=0 y=0 width=9 height=13 xoffset=0 yoffset=4 xadvance=9 page=0 chnl=15
+char id=67 x=0 y=0 width=9 height=13 xoffset=0 yoffset=4 xadvance=9 page=0 chnl=15
+";
     }
 }
