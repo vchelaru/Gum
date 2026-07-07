@@ -10,7 +10,7 @@ A single line of code restyles **every** Gum Forms control. Drop in a built-in t
 | :------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------: |
 | <img src="../../../.gitbook/assets/Retro95ThemeScreenshot.png" alt="Retro95 theme" data-size="original"> | <img src="../../../.gitbook/assets/ForestGladeThemeScreenshot.png" alt="Forest Glade theme" data-size="original"> | <img src="../../../.gitbook/assets/EditorThemeScreenshot.png" alt="Editor theme" data-size="original"> |
 
-The same sample settings panel, rendered by six different themes. The full catalog — with usage for each — is in [Available themes](./#available-themes) below.
+The same sample settings panel, rendered by six of Gum's eight built-in themes. See [Available themes](./#available-themes) below for the full catalog, with usage for each.
 
 ## Introduction
 
@@ -66,141 +66,6 @@ Every theme's `Colors` exposes the same four guardrail properties — `TextPrima
 `Text.FontFamily` selects among **already-registered** font families — it doesn't register a new one. Each theme registers its bundled TTFs once, inside `Apply()` / `RegisterBundledFonts()`, under a fixed family name exposed as a `BundledFontFamily` constant (e.g. `DarkProTheme.BundledFontFamily`). Reassigning `Text.FontFamily` only works if the family you name is already registered this way — either one of the theme's own bundled constants, or a font already installed on the host system, such as `"Consolas"` on Windows. KernSmith can resolve an installed system font by name without any explicit registration step, the same as the `Consolas` example on the [Styling Using ActiveStyles](../code-only-styling/styling-using-activestyles.md) page.
 
 ## Available themes
-
-### Editor
-
-<figure><img src="../../../.gitbook/assets/EditorThemeScreenshot.png" alt="Editor theme preview"><figcaption><p>The Editor theme applied to a sample settings panel.</p></figcaption></figure>
-
-Flat dark editor/tool chrome — intended for tool and editor interfaces rather than in-game UI. Ships with two extra controls beyond the standard Forms set: `PropertyGridVisual` and `Expander`. See the [Editor Theme](editor-theme.md) page for details on those controls.
-
-{% tabs %}
-{% tab title="MonoGame" %}
-```bash
-dotnet add package Gum.Themes.Editor.MonoGame
-```
-
-```csharp
-// Initialize
-using Gum.Themes.Editor;
-
-EditorTheme.Apply();
-```
-{% endtab %}
-
-{% tab title="KNI" %}
-```bash
-dotnet add package Gum.Themes.Editor.Kni
-```
-
-```csharp
-// Initialize
-using Gum.Themes.Editor;
-
-EditorTheme.Apply();
-```
-{% endtab %}
-
-{% tab title="Raylib" %}
-```bash
-dotnet add package Gum.Themes.Editor.Raylib --prerelease
-```
-
-```csharp
-// Initialize
-using Gum.Themes.Editor;
-
-EditorTheme.Apply();
-```
-{% endtab %}
-{% endtabs %}
-
-#### How to customize
-
-```csharp
-// Initialize
-using Gum.Themes.Editor;
-
-EditorStyling.ActiveStyle.Colors.Accent = new Color(140, 190, 255);
-EditorStyling.ActiveStyle.Colors.TextPrimary = new Color(210, 220, 255);
-EditorStyling.ActiveStyle.Colors.TextMuted = new Color(100, 110, 140);
-EditorStyling.ActiveStyle.Colors.Primary = new Color(50, 60, 90);
-EditorStyling.ActiveStyle.Colors.BorderHover = new Color(120, 150, 210);
-EditorStyling.ActiveStyle.Colors.BorderPushed = new Color(220, 230, 255);
-EditorStyling.ActiveStyle.Colors.Selection = new Color(30, 80, 200);
-EditorStyling.ActiveStyle.Colors.PanelBackground = new Color(18, 20, 32);
-EditorStyling.ActiveStyle.Colors.RecessedBackground = new Color(8, 10, 20);
-EditorStyling.ActiveStyle.Text.FontFamily = "Consolas";
-
-EditorTheme.Apply();
-```
-
-<figure><img src="../../../.gitbook/assets/03_11 01 20.png" alt=""><figcaption></figcaption></figure>
-
-### DarkPro
-
-<figure><img src="../../../.gitbook/assets/DarkProThemeScreenshot.png" alt="DarkPro theme preview"><figcaption><p>The DarkPro theme applied to a sample settings panel.</p></figcaption></figure>
-
-Modern code-editor dark theme with a VS Code / JetBrains feel. Bundled fonts: DM Mono (body) and DejaVu Sans Mono (icons).
-
-{% tabs %}
-{% tab title="MonoGame" %}
-```bash
-dotnet add package Gum.Themes.DarkPro.MonoGame
-```
-
-```csharp
-// Initialize
-using Gum.Themes.DarkPro;
-
-DarkProTheme.Apply();
-```
-{% endtab %}
-
-{% tab title="KNI" %}
-```bash
-dotnet add package Gum.Themes.DarkPro.Kni
-```
-
-```csharp
-// Initialize
-using Gum.Themes.DarkPro;
-
-DarkProTheme.Apply();
-```
-{% endtab %}
-
-{% tab title="Raylib" %}
-```bash
-dotnet add package Gum.Themes.DarkPro.Raylib --prerelease
-```
-
-```csharp
-// Initialize
-using Gum.Themes.DarkPro;
-
-DarkProTheme.Apply();
-```
-{% endtab %}
-{% endtabs %}
-
-#### How to customize
-
-```csharp
-// Initialize
-using Gum.Themes.DarkPro;
-
-DarkProStyling.ActiveStyle.Colors.Accent = new Color(214, 64, 214);
-DarkProStyling.ActiveStyle.Colors.Text = new Color(245, 240, 235);
-DarkProStyling.ActiveStyle.Colors.Muted = new Color(150, 140, 135);
-// A serif reads as an obviously different font from the bundled DM Mono —
-// a different monospace font would look "basically the same" at a glance.
-DarkProStyling.ActiveStyle.Text.FontFamily = "Georgia";
-DarkProStyling.ActiveStyle.Text.FontSize = 20;
-
-DarkProTheme.Apply();
-```
-
-<figure><img src="../../../.gitbook/assets/03_11 02 15.png" alt=""><figcaption></figcaption></figure>
 
 ### Bubblegum
 
@@ -271,6 +136,141 @@ BubblegumTheme.Apply();
 ```
 
 <figure><img src="../../../.gitbook/assets/03_11 02 42.png" alt=""><figcaption></figcaption></figure>
+
+### DarkPro
+
+<figure><img src="../../../.gitbook/assets/DarkProThemeScreenshot.png" alt="DarkPro theme preview"><figcaption><p>The DarkPro theme applied to a sample settings panel.</p></figcaption></figure>
+
+Modern code-editor dark theme with a VS Code / JetBrains feel. Bundled fonts: DM Mono (body) and DejaVu Sans Mono (icons).
+
+{% tabs %}
+{% tab title="MonoGame" %}
+```bash
+dotnet add package Gum.Themes.DarkPro.MonoGame
+```
+
+```csharp
+// Initialize
+using Gum.Themes.DarkPro;
+
+DarkProTheme.Apply();
+```
+{% endtab %}
+
+{% tab title="KNI" %}
+```bash
+dotnet add package Gum.Themes.DarkPro.Kni
+```
+
+```csharp
+// Initialize
+using Gum.Themes.DarkPro;
+
+DarkProTheme.Apply();
+```
+{% endtab %}
+
+{% tab title="Raylib" %}
+```bash
+dotnet add package Gum.Themes.DarkPro.Raylib --prerelease
+```
+
+```csharp
+// Initialize
+using Gum.Themes.DarkPro;
+
+DarkProTheme.Apply();
+```
+{% endtab %}
+{% endtabs %}
+
+#### How to customize
+
+```csharp
+// Initialize
+using Gum.Themes.DarkPro;
+
+DarkProStyling.ActiveStyle.Colors.Accent = new Color(214, 64, 214);
+DarkProStyling.ActiveStyle.Colors.Text = new Color(245, 240, 235);
+DarkProStyling.ActiveStyle.Colors.Muted = new Color(150, 140, 135);
+// A serif reads as an obviously different font from the bundled DM Mono —
+// a different monospace font would look "basically the same" at a glance.
+DarkProStyling.ActiveStyle.Text.FontFamily = "Georgia";
+DarkProStyling.ActiveStyle.Text.FontSize = 20;
+
+DarkProTheme.Apply();
+```
+
+<figure><img src="../../../.gitbook/assets/03_11 02 15.png" alt=""><figcaption></figcaption></figure>
+
+### Editor
+
+<figure><img src="../../../.gitbook/assets/EditorThemeScreenshot.png" alt="Editor theme preview"><figcaption><p>The Editor theme applied to a sample settings panel.</p></figcaption></figure>
+
+Flat dark editor/tool chrome — intended for tool and editor interfaces rather than in-game UI. Ships with two extra controls beyond the standard Forms set: `PropertyGridVisual` and `Expander`. See the [Editor Theme](editor-theme.md) page for details on those controls.
+
+{% tabs %}
+{% tab title="MonoGame" %}
+```bash
+dotnet add package Gum.Themes.Editor.MonoGame
+```
+
+```csharp
+// Initialize
+using Gum.Themes.Editor;
+
+EditorTheme.Apply();
+```
+{% endtab %}
+
+{% tab title="KNI" %}
+```bash
+dotnet add package Gum.Themes.Editor.Kni
+```
+
+```csharp
+// Initialize
+using Gum.Themes.Editor;
+
+EditorTheme.Apply();
+```
+{% endtab %}
+
+{% tab title="Raylib" %}
+```bash
+dotnet add package Gum.Themes.Editor.Raylib --prerelease
+```
+
+```csharp
+// Initialize
+using Gum.Themes.Editor;
+
+EditorTheme.Apply();
+```
+{% endtab %}
+{% endtabs %}
+
+#### How to customize
+
+```csharp
+// Initialize
+using Gum.Themes.Editor;
+
+EditorStyling.ActiveStyle.Colors.Accent = new Color(140, 190, 255);
+EditorStyling.ActiveStyle.Colors.TextPrimary = new Color(210, 220, 255);
+EditorStyling.ActiveStyle.Colors.TextMuted = new Color(100, 110, 140);
+EditorStyling.ActiveStyle.Colors.Primary = new Color(50, 60, 90);
+EditorStyling.ActiveStyle.Colors.BorderHover = new Color(120, 150, 210);
+EditorStyling.ActiveStyle.Colors.BorderPushed = new Color(220, 230, 255);
+EditorStyling.ActiveStyle.Colors.Selection = new Color(30, 80, 200);
+EditorStyling.ActiveStyle.Colors.PanelBackground = new Color(18, 20, 32);
+EditorStyling.ActiveStyle.Colors.RecessedBackground = new Color(8, 10, 20);
+EditorStyling.ActiveStyle.Text.FontFamily = "Consolas";
+
+EditorTheme.Apply();
+```
+
+<figure><img src="../../../.gitbook/assets/03_11 01 20.png" alt=""><figcaption></figcaption></figure>
 
 ### Forest Glade
 
@@ -347,6 +347,163 @@ ForestGladeTheme.Apply();
 ```
 
 <figure><img src="../../../.gitbook/assets/03_11 03 24.png" alt=""><figcaption></figcaption></figure>
+
+### Hazard
+
+<figure><img src="../../../.gitbook/assets/31_19 13 36.png" alt=""><figcaption><p>The Hazard theme applied to a sample settings panel.</p></figcaption></figure>
+
+Industrial space-salvage HUD inspired by Hardspace: Shipbreaker — signature hazard-yellow on warm near-black, muted-gold borders, and square-cornered chrome. Pressing a button flashes the full hazard-yellow accent with black text. Bundled fonts: Saira Condensed (body and labels) and DejaVu Sans Mono (icons).
+
+{% tabs %}
+{% tab title="MonoGame" %}
+```bash
+dotnet add package Gum.Themes.Hazard.MonoGame
+```
+
+```csharp
+// Initialize
+using Gum.Themes.Hazard;
+
+HazardTheme.Apply();
+```
+{% endtab %}
+
+{% tab title="KNI" %}
+```bash
+dotnet add package Gum.Themes.Hazard.Kni
+```
+
+```csharp
+// Initialize
+using Gum.Themes.Hazard;
+
+HazardTheme.Apply();
+```
+{% endtab %}
+
+{% tab title="Raylib" %}
+```bash
+dotnet add package Gum.Themes.Hazard.Raylib --prerelease
+```
+
+```csharp
+// Initialize
+using Gum.Themes.Hazard;
+
+HazardTheme.Apply();
+```
+{% endtab %}
+{% endtabs %}
+
+{% hint style="info" %}
+For the intended look, clear the back buffer to `HazardStyling.ActiveStyle.Colors.Background` (`#0A0A08`).
+{% endhint %}
+
+#### How to customize
+
+```csharp
+// Initialize
+using Gum.Themes.Hazard;
+
+// Selection (ListBox/MenuItem selected-row fill) and TextBright (its hover-row text)
+// default to the same hazard-yellow as Accent, and AccentPressed (Slider thumb press)
+// is a separate explicit token not derived from Accent — all three need to move with
+// it. Border/BorderHover is the shared outline every restyled control uses (ListBox
+// panel, Slider track, TextBox), so it has to move too or those three still read gold.
+HazardStyling.ActiveStyle.Colors.Accent = new Color(40, 140, 255);
+HazardStyling.ActiveStyle.Colors.Text = new Color(200, 230, 255);
+HazardStyling.ActiveStyle.Colors.Muted = new Color(90, 110, 140);
+HazardStyling.ActiveStyle.Colors.Selection = new Color(40, 140, 255);
+HazardStyling.ActiveStyle.Colors.TextBright = new Color(150, 200, 255);
+HazardStyling.ActiveStyle.Colors.AccentPressed = new Color(20, 100, 200);
+HazardStyling.ActiveStyle.Colors.Border = new Color(30, 70, 130);
+HazardStyling.ActiveStyle.Colors.BorderHover = new Color(70, 130, 200);
+HazardStyling.ActiveStyle.Colors.Placeholder = new Color(100, 120, 150);
+HazardStyling.ActiveStyle.Text.FontFamily = "Consolas";
+HazardStyling.ActiveStyle.Text.FontSize = 17;
+
+HazardTheme.Apply();
+```
+
+<figure><img src="../../../.gitbook/assets/03_11 05 17.png" alt=""><figcaption></figcaption></figure>
+
+### Meadow
+
+<figure><img src="../../../.gitbook/assets/31_19 14 05.png" alt=""><figcaption><p>The Meadow theme applied to a sample settings panel.</p></figcaption></figure>
+
+Cozy cottagecore look with chunky sky-blue pill buttons (flat "stacked card" drop shadow), dashed-outline cream panels, sage selection accents, and coral sliders. Bundled fonts: Baloo 2 (display), Quicksand (body), and DejaVu Sans Mono (icons).
+
+{% tabs %}
+{% tab title="MonoGame" %}
+```bash
+dotnet add package Gum.Themes.Meadow.MonoGame
+```
+
+```csharp
+// Initialize
+using Gum.Themes.Meadow;
+
+MeadowTheme.Apply();
+```
+{% endtab %}
+
+{% tab title="KNI" %}
+```bash
+dotnet add package Gum.Themes.Meadow.Kni
+```
+
+```csharp
+// Initialize
+using Gum.Themes.Meadow;
+
+MeadowTheme.Apply();
+```
+{% endtab %}
+
+{% tab title="Raylib" %}
+```bash
+dotnet add package Gum.Themes.Meadow.Raylib --prerelease
+```
+
+```csharp
+// Initialize
+using Gum.Themes.Meadow;
+
+MeadowTheme.Apply();
+```
+{% endtab %}
+{% endtabs %}
+
+{% hint style="info" %}
+For the intended look, clear the back buffer to `MeadowStyling.ActiveStyle.Colors.Cream` (`#F7EDD6`).
+{% endhint %}
+
+#### How to customize
+
+```csharp
+// Initialize
+using Gum.Themes.Meadow;
+
+// Blue/BlueDark/BlueHover are the button's rest/pressed/hover fills — changing only
+// Blue leaves the shadow and hover states on the old sky-blue gradient. SageDark is
+// the checkbox/radio checked color; PeachDark is the shared border/outline token
+// (ListBox, input fields, dashed panels, splitter).
+MeadowStyling.ActiveStyle.Colors.Blue = new Color(230, 90, 70);
+MeadowStyling.ActiveStyle.Colors.BlueDark = new Color(150, 45, 35);
+MeadowStyling.ActiveStyle.Colors.BlueHover = new Color(245, 130, 105);
+MeadowStyling.ActiveStyle.Colors.TealDark = new Color(90, 40, 80);
+MeadowStyling.ActiveStyle.Colors.Muted = new Color(170, 130, 150);
+MeadowStyling.ActiveStyle.Colors.SageDark = new Color(170, 90, 140);
+MeadowStyling.ActiveStyle.Colors.PeachDark = new Color(200, 150, 175);
+MeadowStyling.ActiveStyle.Colors.Cream = new Color(238, 222, 235);
+MeadowStyling.ActiveStyle.Colors.Cream2 = new Color(245, 232, 242);
+MeadowStyling.ActiveStyle.Text.FontFamily = "Consolas";
+MeadowStyling.ActiveStyle.Text.FontSize = 17;
+
+MeadowTheme.Apply();
+```
+
+<figure><img src="../../../.gitbook/assets/03_11 04 48.png" alt=""><figcaption></figcaption></figure>
 
 ### Neon
 
@@ -491,163 +648,6 @@ Retro95Theme.Apply();
 ```
 
 <figure><img src="../../../.gitbook/assets/03_11 04 22.png" alt=""><figcaption></figcaption></figure>
-
-### Meadow
-
-<figure><img src="../../../.gitbook/assets/31_19 14 05.png" alt=""><figcaption><p>The Meadow theme applied to a sample settings panel.</p></figcaption></figure>
-
-Cozy cottagecore look with chunky sky-blue pill buttons (flat "stacked card" drop shadow), dashed-outline cream panels, sage selection accents, and coral sliders. Bundled fonts: Baloo 2 (display), Quicksand (body), and DejaVu Sans Mono (icons).
-
-{% tabs %}
-{% tab title="MonoGame" %}
-```bash
-dotnet add package Gum.Themes.Meadow.MonoGame
-```
-
-```csharp
-// Initialize
-using Gum.Themes.Meadow;
-
-MeadowTheme.Apply();
-```
-{% endtab %}
-
-{% tab title="KNI" %}
-```bash
-dotnet add package Gum.Themes.Meadow.Kni
-```
-
-```csharp
-// Initialize
-using Gum.Themes.Meadow;
-
-MeadowTheme.Apply();
-```
-{% endtab %}
-
-{% tab title="Raylib" %}
-```bash
-dotnet add package Gum.Themes.Meadow.Raylib --prerelease
-```
-
-```csharp
-// Initialize
-using Gum.Themes.Meadow;
-
-MeadowTheme.Apply();
-```
-{% endtab %}
-{% endtabs %}
-
-{% hint style="info" %}
-For the intended look, clear the back buffer to `MeadowStyling.ActiveStyle.Colors.Cream` (`#F7EDD6`).
-{% endhint %}
-
-#### How to customize
-
-```csharp
-// Initialize
-using Gum.Themes.Meadow;
-
-// Blue/BlueDark/BlueHover are the button's rest/pressed/hover fills — changing only
-// Blue leaves the shadow and hover states on the old sky-blue gradient. SageDark is
-// the checkbox/radio checked color; PeachDark is the shared border/outline token
-// (ListBox, input fields, dashed panels, splitter).
-MeadowStyling.ActiveStyle.Colors.Blue = new Color(230, 90, 70);
-MeadowStyling.ActiveStyle.Colors.BlueDark = new Color(150, 45, 35);
-MeadowStyling.ActiveStyle.Colors.BlueHover = new Color(245, 130, 105);
-MeadowStyling.ActiveStyle.Colors.TealDark = new Color(90, 40, 80);
-MeadowStyling.ActiveStyle.Colors.Muted = new Color(170, 130, 150);
-MeadowStyling.ActiveStyle.Colors.SageDark = new Color(170, 90, 140);
-MeadowStyling.ActiveStyle.Colors.PeachDark = new Color(200, 150, 175);
-MeadowStyling.ActiveStyle.Colors.Cream = new Color(238, 222, 235);
-MeadowStyling.ActiveStyle.Colors.Cream2 = new Color(245, 232, 242);
-MeadowStyling.ActiveStyle.Text.FontFamily = "Consolas";
-MeadowStyling.ActiveStyle.Text.FontSize = 17;
-
-MeadowTheme.Apply();
-```
-
-<figure><img src="../../../.gitbook/assets/03_11 04 48.png" alt=""><figcaption></figcaption></figure>
-
-### Hazard
-
-<figure><img src="../../../.gitbook/assets/31_19 13 36.png" alt=""><figcaption><p>The Hazard theme applied to a sample settings panel.</p></figcaption></figure>
-
-Industrial space-salvage HUD inspired by Hardspace: Shipbreaker — signature hazard-yellow on warm near-black, muted-gold borders, and square-cornered chrome. Pressing a button flashes the full hazard-yellow accent with black text. Bundled fonts: Saira Condensed (body and labels) and DejaVu Sans Mono (icons).
-
-{% tabs %}
-{% tab title="MonoGame" %}
-```bash
-dotnet add package Gum.Themes.Hazard.MonoGame
-```
-
-```csharp
-// Initialize
-using Gum.Themes.Hazard;
-
-HazardTheme.Apply();
-```
-{% endtab %}
-
-{% tab title="KNI" %}
-```bash
-dotnet add package Gum.Themes.Hazard.Kni
-```
-
-```csharp
-// Initialize
-using Gum.Themes.Hazard;
-
-HazardTheme.Apply();
-```
-{% endtab %}
-
-{% tab title="Raylib" %}
-```bash
-dotnet add package Gum.Themes.Hazard.Raylib --prerelease
-```
-
-```csharp
-// Initialize
-using Gum.Themes.Hazard;
-
-HazardTheme.Apply();
-```
-{% endtab %}
-{% endtabs %}
-
-{% hint style="info" %}
-For the intended look, clear the back buffer to `HazardStyling.ActiveStyle.Colors.Background` (`#0A0A08`).
-{% endhint %}
-
-#### How to customize
-
-```csharp
-// Initialize
-using Gum.Themes.Hazard;
-
-// Selection (ListBox/MenuItem selected-row fill) and TextBright (its hover-row text)
-// default to the same hazard-yellow as Accent, and AccentPressed (Slider thumb press)
-// is a separate explicit token not derived from Accent — all three need to move with
-// it. Border/BorderHover is the shared outline every restyled control uses (ListBox
-// panel, Slider track, TextBox), so it has to move too or those three still read gold.
-HazardStyling.ActiveStyle.Colors.Accent = new Color(40, 140, 255);
-HazardStyling.ActiveStyle.Colors.Text = new Color(200, 230, 255);
-HazardStyling.ActiveStyle.Colors.Muted = new Color(90, 110, 140);
-HazardStyling.ActiveStyle.Colors.Selection = new Color(40, 140, 255);
-HazardStyling.ActiveStyle.Colors.TextBright = new Color(150, 200, 255);
-HazardStyling.ActiveStyle.Colors.AccentPressed = new Color(20, 100, 200);
-HazardStyling.ActiveStyle.Colors.Border = new Color(30, 70, 130);
-HazardStyling.ActiveStyle.Colors.BorderHover = new Color(70, 130, 200);
-HazardStyling.ActiveStyle.Colors.Placeholder = new Color(100, 120, 150);
-HazardStyling.ActiveStyle.Text.FontFamily = "Consolas";
-HazardStyling.ActiveStyle.Text.FontSize = 17;
-
-HazardTheme.Apply();
-```
-
-<figure><img src="../../../.gitbook/assets/03_11 05 17.png" alt=""><figcaption></figcaption></figure>
 
 ## Fonts and licensing
 
