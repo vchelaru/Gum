@@ -16,6 +16,25 @@ namespace RaylibGum.Tests.Renderables;
 /// </summary>
 public class TextMarkupTests
 {
+    // Issue #3532: the font-aware wrap seam MeasureString(string, int) must fall back to the base
+    // MeasureString when the line carries no inline runs, so plain-text wrapping stays byte-identical.
+    // Pins the fallback directly (independent of any font metrics) so the override can't regress plain
+    // wrapping.
+    [Fact]
+    public void MeasureString_WithStartIndex_ShouldMatchBaseMeasure_WhenNoInlineVariables()
+    {
+        TextRuntime textRuntime = new();
+        textRuntime.Text = "Hello World";
+
+        Text internalText = (Text)textRuntime.RenderableComponent;
+        internalText.InlineVariables.ShouldBeEmpty();
+
+        float baseMeasure = internalText.MeasureString("Hello World");
+        float indexedMeasure = internalText.MeasureString("Hello World", 0);
+
+        indexedMeasure.ShouldBe(baseMeasure);
+    }
+
     [Fact]
     public void Text_WithColorMarkup_PopulatesInlineVariablesAndStripsTags()
     {
@@ -281,5 +300,123 @@ public class TextMarkupTests
 
         sizedHeight.ShouldBe(plainHeight * 2, plainHeight * 0.05,
             "Because a [FontSize=2xBase] run is twice the base pixel size, so the measured line height doubles");
+    }
+
+    // Issue #3532 (the wrapping half, end-to-end): a fixed-width Text that fits "AA BB CC" at the base
+    // size must re-wrap once the inline [FontScale=2] run enlarges "BB" past the wrap width. The BBCode
+    // path assigns RawText (which wraps) BEFORE the InlineVariables populate, so the first wrap is blind
+    // to the runs; the fix re-wraps font-aware afterward. raylib measures with a real font atlas, so the
+    // wrap width can't be hardcoded — it's derived to sit strictly between the plain and enlarged
+    // single-line widths (fits the plain line, forces the enlarged line to break). Without the fix the
+    // enlarged text stays one line and spills past the width.
+    [Fact]
+    public void WrappedText_ShouldRewrapFontAware_WhenBbCodeFontScaleRunWidensLine()
+    {
+        // Plain single-line width (huge Absolute width -> no wrap).
+        TextRuntime plainUnwrapped = new();
+        plainUnwrapped.WidthUnits = DimensionUnitType.Absolute;
+        plainUnwrapped.Width = 100000;
+        plainUnwrapped.Text = "AA BB CC";
+        Text plainUnwrappedText = (Text)plainUnwrapped.RenderableComponent;
+        plainUnwrappedText.WrappedText.Count.ShouldBe(1);
+        float plainWidth = plainUnwrappedText.WrappedTextWidth;
+
+        // Enlarged single-line width: the [FontScale=2] run widens the line (#3524 size reporting).
+        TextRuntime scaledUnwrapped = new();
+        scaledUnwrapped.WidthUnits = DimensionUnitType.Absolute;
+        scaledUnwrapped.Width = 100000;
+        scaledUnwrapped.Text = "AA [FontScale=2]BB[/FontScale] CC";
+        Text scaledUnwrappedText = (Text)scaledUnwrapped.RenderableComponent;
+        scaledUnwrappedText.WrappedText.Count.ShouldBe(1);
+        float scaledWidth = scaledUnwrappedText.WrappedTextWidth;
+
+        scaledWidth.ShouldBeGreaterThan(plainWidth);
+
+        // A width that fits the plain line but not the enlarged line.
+        float wrapWidth = (plainWidth + scaledWidth) / 2f;
+
+        // Control: plain text at this width still fits on one line, proving the width is not itself the
+        // cause of the extra break.
+        TextRuntime plainWrapped = new();
+        plainWrapped.WidthUnits = DimensionUnitType.Absolute;
+        plainWrapped.Width = wrapWidth;
+        plainWrapped.Text = "AA BB CC";
+        ((Text)plainWrapped.RenderableComponent).WrappedText.Count.ShouldBe(1);
+
+        // Subject: width set BEFORE text so RawText wraps blind, then the inline run populates. The
+        // font-aware re-wrap must break the enlarged line.
+        TextRuntime scaled = new();
+        scaled.WidthUnits = DimensionUnitType.Absolute;
+        scaled.Width = wrapWidth;
+        scaled.Text = "AA [FontScale=2]BB[/FontScale] CC";
+        ((Text)scaled.RenderableComponent).WrappedText.Count.ShouldBeGreaterThan(1,
+            "because after the inline [FontScale] run populates, the text must re-wrap measuring the enlarged run at its own size");
+    }
+
+    // Issue #3532: the FontSize-swap half of the wrap fix. With a font creator wired, [FontSize=N] swaps
+    // in a crisp font rasterized at N px whose glyphs are wider than the base, so a fixed-width Text must
+    // re-wrap around it. Mirrors WrappedText_ShouldRewrapFontAware_WhenBbCodeFontScaleRunWidensLine but
+    // exercises the absolute-swap-font run path (ResolveRunFont's swap-font branch) instead of the
+    // [FontScale] multiplier path.
+    [Fact]
+    public void WrappedText_ShouldRewrapFontAware_WhenBbCodeFontSizeRunWidensLine()
+    {
+        IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreator();
+
+            // Plain single-line width (huge Absolute width -> no wrap).
+            TextRuntime plainUnwrapped = new();
+            plainUnwrapped.Font = "Arial";
+            plainUnwrapped.FontSize = 20;
+            plainUnwrapped.WidthUnits = DimensionUnitType.Absolute;
+            plainUnwrapped.Width = 100000;
+            plainUnwrapped.Text = "AA BB CC";
+            Text plainUnwrappedText = (Text)plainUnwrapped.RenderableComponent;
+            plainUnwrappedText.WrappedText.Count.ShouldBe(1);
+            float plainWidth = plainUnwrappedText.WrappedTextWidth;
+            int targetFontSize = plainUnwrappedText.Font.BaseSize * 2;
+
+            // Enlarged single-line width via a size-2xBase crisp swap font (#3524 size reporting).
+            TextRuntime swappedUnwrapped = new();
+            swappedUnwrapped.Font = "Arial";
+            swappedUnwrapped.FontSize = 20;
+            swappedUnwrapped.WidthUnits = DimensionUnitType.Absolute;
+            swappedUnwrapped.Width = 100000;
+            swappedUnwrapped.Text = $"AA [FontSize={targetFontSize}]BB[/FontSize] CC";
+            Text swappedUnwrappedText = (Text)swappedUnwrapped.RenderableComponent;
+            swappedUnwrappedText.WrappedText.Count.ShouldBe(1);
+            float swappedWidth = swappedUnwrappedText.WrappedTextWidth;
+
+            swappedWidth.ShouldBeGreaterThan(plainWidth);
+
+            // A width that fits the plain line but not the enlarged line.
+            float wrapWidth = (plainWidth + swappedWidth) / 2f;
+
+            // Control: plain text at this width still fits on one line.
+            TextRuntime plainWrapped = new();
+            plainWrapped.Font = "Arial";
+            plainWrapped.FontSize = 20;
+            plainWrapped.WidthUnits = DimensionUnitType.Absolute;
+            plainWrapped.Width = wrapWidth;
+            plainWrapped.Text = "AA BB CC";
+            ((Text)plainWrapped.RenderableComponent).WrappedText.Count.ShouldBe(1);
+
+            // Subject: width set BEFORE text so RawText wraps blind, then the swap run populates. The
+            // font-aware re-wrap must break the enlarged line.
+            TextRuntime swapped = new();
+            swapped.Font = "Arial";
+            swapped.FontSize = 20;
+            swapped.WidthUnits = DimensionUnitType.Absolute;
+            swapped.Width = wrapWidth;
+            swapped.Text = $"AA [FontSize={targetFontSize}]BB[/FontSize] CC";
+            ((Text)swapped.RenderableComponent).WrappedText.Count.ShouldBeGreaterThan(1,
+                "because after the inline [FontSize] swap run populates, the text must re-wrap measuring the enlarged run at its own size");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
     }
 }
