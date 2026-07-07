@@ -675,7 +675,13 @@ public class Text : IVisible, IRenderableIpso,
         Visible = true;
     }
 
-    private void UpdateWrappedText()
+    /// <summary>
+    /// Re-runs the shared wrap loop (<see cref="IWrappedTextExtensions.UpdateLines"/>) to rebuild
+    /// <see cref="WrappedText"/>. Public so the BBCode dispatch (CustomSetPropertyOnRenderable) can
+    /// re-wrap once <see cref="InlineVariables"/> populate — the first wrap runs when RawText is set,
+    /// before the runs exist, so it is blind to any enlarged [FontSize]/[FontScale] run (#3532).
+    /// </summary>
+    public void UpdateWrappedText()
     {
         mWrappedText.Clear();
         this.UpdateLines(mWrappedText);
@@ -775,6 +781,11 @@ public class Text : IVisible, IRenderableIpso,
             global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.BeginBlendMode(Blend.Value);
         }
 
+        // Per-line vertical offsets. Plain text (no inline runs) keeps the allocation-free uniform
+        // advance; when inline [FontSize]/[FontScale] runs can enlarge a line, each line advances by its
+        // own height so a line after an enlarged run is not drawn on top of it (#3532).
+        IReadOnlyList<float>? lineTopOffsets = InlineVariables.Count > 0 ? GetLineTopOffsets() : null;
+
         for(int i = 0; i < WrappedText.Count; i++)
         {
             var line = WrappedText[i];
@@ -794,7 +805,9 @@ public class Text : IVisible, IRenderableIpso,
             }
 
             var linePosition = position;
-            linePosition.Y += i * LineHeightInPixels * LineHeightMultiplier;
+            linePosition.Y += lineTopOffsets != null
+                ? lineTopOffsets[i]
+                : i * LineHeightInPixels * LineHeightMultiplier;
 
             var substrings = InlineVariables.Count > 0
                 ? GetStyledSubstrings(startOfLineIndex, line)
@@ -816,6 +829,53 @@ public class Text : IVisible, IRenderableIpso,
         {
             global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.EndBlendMode();
         }
+    }
+
+    /// <summary>
+    /// The Y offset (in pixels from this Text's top) at which each wrapped line is drawn, growing a
+    /// line's advance by the tallest inline [FontSize]/[FontScale] run on it so a line following an
+    /// enlarged run is placed below that run's full height rather than one base line-height down — which
+    /// overlapped it (issue #3532). Matches the per-line height the size pass reports
+    /// (<see cref="GetInlineVariableAwareWidthAndHeight"/>). Consumed by <see cref="Render"/>; public so
+    /// the vertical stacking can be unit-tested without rendering.
+    /// </summary>
+    public IReadOnlyList<float> GetLineTopOffsets()
+    {
+        var offsets = new float[WrappedText.Count];
+        float runningY = 0;
+        int startOfLineIndex = 0;
+        for (int i = 0; i < WrappedText.Count; i++)
+        {
+            offsets[i] = runningY;
+            var line = WrappedText[i];
+            float lineScale = GetLineLayoutScale(startOfLineIndex, line);
+            float lineHeightFactor = FontScale > 0 ? lineScale / FontScale : 1;
+            runningY += LineHeightInPixels * lineHeightFactor * LineHeightMultiplier;
+            startOfLineIndex += line.Length;
+        }
+        return offsets;
+    }
+
+    /// <summary>
+    /// The layout scale of the wrapped line beginning at <paramref name="startOfLineIndex"/> in the
+    /// stripped text: <see cref="FontScale"/> for a plain line, or the tallest inline
+    /// [FontSize]/[FontScale] run's scale for a styled line (the same per-run resolution
+    /// <see cref="DrawStyledLine"/> lays out with, so drawn and vertically-advanced sizes cannot drift).
+    /// </summary>
+    private float GetLineLayoutScale(int startOfLineIndex, string line)
+    {
+        if (InlineVariables.Count == 0)
+        {
+            return FontScale;
+        }
+
+        var substrings = GetStyledSubstrings(startOfLineIndex, line);
+        float maxScale = FontScale;
+        for (int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
+        {
+            maxScale = System.Math.Max(maxScale, ResolveRunFont(substrings[substringIndex].Variables).LayoutScale);
+        }
+        return maxScale;
     }
 
     /// <summary>
@@ -1062,8 +1122,6 @@ public class Text : IVisible, IRenderableIpso,
     /// </remarks>
     private void GetInlineVariableAwareWidthAndHeight(out int requiredWidth, out int requiredHeight)
     {
-        float baseScale = FontScale;
-
         float maxWidth = 0;
         float totalHeight = 0;
 
@@ -1083,20 +1141,7 @@ public class Text : IVisible, IRenderableIpso,
             }
             else
             {
-                float maxRunScale = baseScale;
-                float lineWidthAtScale = 0;
-                for (int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
-                {
-                    var substring = substrings[substringIndex];
-                    // Same resolver the draw loop uses, measured with the same per-run font at the same
-                    // size, so a run is measured at exactly the size it is drawn - draw/measure drift is
-                    // what reproduced the RelativeToChildren spill (#3524).
-                    var resolvedFont = ResolveRunFont(substring.Variables);
-                    lineWidthAtScale += MeasureTextEx(resolvedFont.Font, substring.Substring, resolvedFont.DrawSize, 0).X;
-                    maxRunScale = System.Math.Max(maxRunScale, resolvedFont.LayoutScale);
-                }
-                lineHeightFactor = maxRunScale / baseScale;
-                lineWidthInBaseUnits = lineWidthAtScale / baseScale;
+                lineWidthInBaseUnits = MeasureStyledLineInBaseUnits(substrings, out lineHeightFactor);
             }
 
             maxWidth = System.Math.Max(maxWidth, lineWidthInBaseUnits);
@@ -1108,6 +1153,63 @@ public class Text : IVisible, IRenderableIpso,
         const int MaxWidthAndHeight = 4096;
         requiredWidth = System.Math.Min((int)(maxWidth + .5f), MaxWidthAndHeight);
         requiredHeight = System.Math.Min((int)(totalHeight + .5f), MaxWidthAndHeight);
+    }
+
+    /// <summary>
+    /// Sums the base-unit width of a single line already split into styled runs, measuring each run with
+    /// the same per-run font/size <see cref="DrawStyledLine"/> draws it with (a [FontSize] crisp-swap or
+    /// scaled-atlas run, or a [FontScale] multiplier run), and reports the tallest run's height factor
+    /// relative to the base line height.
+    /// </summary>
+    /// <remarks>
+    /// Shared by the size pass (<see cref="GetInlineVariableAwareWidthAndHeight"/>, #3481/#3524) and the
+    /// font-aware wrap seam (<see cref="MeasureString(string, int)"/>, #3532) so the measured, drawn, and
+    /// wrapped size of a run cannot drift. Widths are returned in BASE units (<see cref="FontScale"/>
+    /// factored out), matching <see cref="MeasureString(string)"/>; <see cref="FontScale"/> is the floor,
+    /// so an inline run smaller than the base does not shrink the line. Guards <see cref="FontScale"/> == 0
+    /// because the wrap seam calls this regardless of scale (the size pass is already gated on scale &gt; 0).
+    /// </remarks>
+    private float MeasureStyledLineInBaseUnits(List<StyledSubstring> substrings, out float lineHeightFactor)
+    {
+        float baseScale = FontScale;
+        float maxRunScale = baseScale;
+        float lineWidthAtScale = 0;
+        for (int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
+        {
+            var substring = substrings[substringIndex];
+            // Same resolver the draw loop uses, measured with the same per-run font at the same
+            // size, so a run is measured at exactly the size it is drawn - draw/measure drift is
+            // what reproduced the RelativeToChildren spill (#3524).
+            var resolvedFont = ResolveRunFont(substring.Variables);
+            lineWidthAtScale += MeasureTextEx(resolvedFont.Font, substring.Substring, resolvedFont.DrawSize, 0).X;
+            maxRunScale = System.Math.Max(maxRunScale, resolvedFont.LayoutScale);
+        }
+        lineHeightFactor = baseScale > 0 ? maxRunScale / baseScale : 1;
+        return baseScale > 0 ? lineWidthAtScale / baseScale : 0;
+    }
+
+    /// <summary>
+    /// Font-aware measurement used by line wrapping (issue #3532): measures <paramref name="whatToMeasure"/>
+    /// (which begins at <paramref name="absoluteStartIndexInStrippedText"/> in the stripped text) honoring
+    /// the inline [FontSize]/[FontScale] runs active over that range, so a line containing an enlarged run
+    /// wraps at the run's real size instead of the base size. Falls back to the base
+    /// <see cref="MeasureString(string)"/> when no inline runs cover the range, keeping plain-text wrapping
+    /// byte-identical.
+    /// </summary>
+    public float MeasureString(string whatToMeasure, int absoluteStartIndexInStrippedText)
+    {
+        if (InlineVariables.Count == 0)
+        {
+            return MeasureString(whatToMeasure);
+        }
+
+        var substrings = GetStyledSubstrings(absoluteStartIndexInStrippedText, whatToMeasure);
+        if (substrings.Count == 0)
+        {
+            return MeasureString(whatToMeasure);
+        }
+
+        return MeasureStyledLineInBaseUnits(substrings, out _);
     }
 
     public void GetRequiredWidthAndHeight(IEnumerable<string> lines, out int requiredWidth, out int requiredHeight, List<float>? widths)

@@ -774,10 +774,13 @@ public class CustomSetPropertyOnRenderable
             }
         }
 
-        // #3481: RawText was assigned above (which measured the text) before any InlineVariables
-        // existed, so that first measurement was blind to inline [FontScale=N] runs. Re-measure now
-        // that the runs are populated so the reported size accounts for per-line scale (otherwise a
-        // tall run overflows its slot and overlaps the next stacked sibling).
+        // #3481/#3532: RawText was assigned above (which wrapped + measured the text) before any
+        // InlineVariables existed, so that first pass was blind to inline [FontScale=N]/[FontSize=N]
+        // runs. Re-wrap first so line breaks account for an enlarged run's real size (#3532), then
+        // re-measure so the reported size accounts for per-line scale (#3481) — otherwise a tall run
+        // overflows its slot and overlaps the next stacked sibling, or a wide run spills past a fixed
+        // wrap width. Mirrors the MonoGame Gum/Wireframe/CustomSetPropertyOnRenderable.cs.
+        asText.UpdateWrappedText();
         asText.UpdatePreRenderDimensions();
     }
 
