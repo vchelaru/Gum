@@ -79,9 +79,9 @@ public static class IWrappedTextExtensions
             ? ellipsisWidth = textInstance.MeasureString(ellipsis)
             : 0;
 
-        string? stringToUse = string.IsNullOrEmpty(textInstance.RawText)
-            ? null
-            : stringToUse = textInstance.RawText.Replace("\r\n", "\n");
+        // Past the early-out above, RawText is non-empty. Multiline text editing in Gum can add \r's,
+        // so normalize CRLF once here; both the fast path and the wrapping loop consume this form.
+        string stringToUse = textInstance.RawText!.Replace("\r\n", "\n");
 
 
         int wrappingWidth = int.MaxValue;
@@ -92,12 +92,28 @@ public static class IWrappedTextExtensions
 
         wrappingWidth = System.Math.Max(0, wrappingWidth);
 
+        // FAST PATH (issue #1934): a string with no explicit newline that already fits within the wrap
+        // width wraps to exactly one line equal to itself, so short-circuit the word-by-word algorithm
+        // below and add it directly with zero managed allocation. The general algorithm reproduces
+        // stringToUse verbatim in this case — interior/leading/trailing spaces included (see #2617) — so
+        // this is behavior-preserving. This is the common case, and specifically the natural-size
+        // (unconstrained-width) measurement pass a RelativeToChildren Text runs every layout frame, which
+        // was the dominant full-relayout allocation source (it re-tokenized/Split/concatenated an
+        // unchanged, unwrapped string ~60x/second). MeasureString is allocation-free when the text has no
+        // inline runs (it sums glyph advances); inline-BBCode text still measures correctly, just not for
+        // free. Ellipsis/truncation only engages on a word that overflows, so it never applies when the
+        // whole string fits — safe to skip.
+        if (!ToolsUtilities.StringFunctions.ContainsNoAlloc(stringToUse, '\n')
+            && textInstance.MeasureString(stringToUse, 0) <= wrappingWidth)
+        {
+            lines.Add(stringToUse);
+            return;
+        }
 
         // This allocates like crazy but we're
         // on the PC and prob won't be calling this
-        // very frequently so let's 
+        // very frequently so let's
         String currentLine = String.Empty;
-        String returnString = String.Empty;
 
         // The absolute character index (in the stripped text) where the current line begins. It equals the
         // total length of the lines already committed, so it stays in sync with the inline-variable indexing
@@ -109,15 +125,7 @@ public static class IWrappedTextExtensions
 
         // The words to process, including the current word
         List<string> remainingWordsToProcess = new();
-
-        // The user may have entered "\n" in the string, which would 
-        // be written as "\\n".  Let's replace that, shall we?
-        if (!string.IsNullOrEmpty(textInstance.RawText))
-        {
-            // multiline text editing in Gum can add \r's, so get rid of those:
-            stringToUse = textInstance.RawText.Replace("\r\n", "\n");
-            remainingWordsToProcess.AddRange(stringToUse.Split(whatToSplitOn));
-        }
+        remainingWordsToProcess.AddRange(stringToUse.Split(whatToSplitOn));
 
 
         bool isLastLine = false;
@@ -287,7 +295,6 @@ public static class IWrappedTextExtensions
                         }
                     }
 
-                    //returnString = returnString + line + '\n';
                     currentLine = String.Empty;
                 }
             }
