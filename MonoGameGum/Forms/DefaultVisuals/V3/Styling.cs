@@ -13,10 +13,24 @@ namespace Gum.Forms.DefaultVisuals.V3;
 
 public class Styling
 {
+    private static Styling _activeStyle;
+
     /// <summary>
     /// This allows someone to get the active style from any instance they create, or from the class self like Styling.ActiveStyle.
     /// </summary>
-    public static Styling ActiveStyle { get; set; }
+    /// <remarks>
+    /// Lazily creates a default-styled instance (loading the embedded UISpriteSheet) if nothing has
+    /// explicitly set this yet. This covers constructing a V3 default-visual class (directly, or via
+    /// a <see cref="Gum.Forms.FrameworkElement.DefaultFormsTemplates"/> override) in an app that never
+    /// called <c>InitializeDefaults</c> with V3/Newest - e.g. a test host initialized with V1/V2, or a
+    /// composite control (like Slider's thumb) that internally builds a V3 visual regardless of which
+    /// version the app registered.
+    /// </remarks>
+    public static Styling ActiveStyle
+    {
+        get => _activeStyle ??= new Styling(spriteSheet: null);
+        set => _activeStyle = value;
+    }
 
     private Texture2D _spriteSheet;
     public Texture2D SpriteSheet 
@@ -55,14 +69,17 @@ public class Styling
             this.SpriteSheet = spriteSheet;
         }
 #elif RAYLIB
-        this.SpriteSheet = spriteSheet.Value;
+        this.SpriteSheet = spriteSheet ?? SystemManagers.Default.LoadEmbeddedTexture2d("UISpriteSheet.png")!.Value;
 #elif SOKOL
-        this.SpriteSheet = spriteSheet!;
+        this.SpriteSheet = spriteSheet ?? SystemManagers.Default.LoadEmbeddedTexture2d("UISpriteSheet.png")!;
 #endif
 
-        if (ActiveStyle == null)
+        // Set the backing field directly rather than going through the ActiveStyle property:
+        // ActiveStyle's getter lazily constructs a Styling(null) when unset, and re-entering that
+        // getter here (before this constructor call returns) would recurse infinitely.
+        if (_activeStyle == null)
         {
-            ActiveStyle = this;
+            _activeStyle = this;
         }
 
         if (useDefaults)

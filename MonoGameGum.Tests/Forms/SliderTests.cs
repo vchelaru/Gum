@@ -1,4 +1,6 @@
-﻿using Gum.Forms.Controls;
+﻿using Gum.Forms;
+using Gum.Forms.Controls;
+using Gum.Forms.DefaultVisuals.V3;
 using Gum.Wireframe;
 using Gum.GueDeriving;
 using MonoGameGum.Input;
@@ -15,6 +17,42 @@ using Xunit;
 namespace MonoGameGum.Tests.Forms;
 public class SliderTests : BaseTestClass
 {
+    [Fact]
+    public void UpdateState_ShouldNotThrow_WhenButtonTemplateIsNotButtonVisual()
+    {
+        // Mirrors a real crash: if an app overrides FrameworkElement.DefaultFormsTemplates[typeof(Button)]
+        // with a visual that isn't a V3 ButtonVisual (e.g. a fully custom InteractiveGue - a documented
+        // pattern for customizing button appearance), any composite control that builds an internal
+        // Button sub-part - like Slider's thumb - ends up with a null ThumbInstance (the "as ButtonVisual"
+        // cast in SliderVisual's constructor fails), and SetValuesForState used to NRE dereferencing it
+        // unguarded whenever the slider's enabled/focused state changed.
+        var previousSliderTemplate = FrameworkElement.DefaultFormsTemplates[typeof(Slider)];
+        var previousButtonTemplate = FrameworkElement.DefaultFormsTemplates[typeof(Button)];
+        try
+        {
+            FrameworkElement.DefaultFormsTemplates[typeof(Slider)] =
+                new VisualTemplate((_, createForms) => new SliderVisual(tryCreateFormsObject: createForms));
+            FrameworkElement.DefaultFormsTemplates[typeof(Button)] = new VisualTemplate((_, createForms) =>
+            {
+                var customButtonVisual = new InteractiveGue(new RenderingLibrary.Graphics.InvisibleRenderable());
+                var textInstance = new TextRuntime { Name = "TextInstance" };
+                customButtonVisual.Children.Add(textInstance);
+                return customButtonVisual;
+            });
+
+            Slider slider = new();
+            var visual = (SliderVisual)slider.Visual;
+            visual.ThumbInstance.ShouldBeNull("because the overridden Button template isn't a ButtonVisual");
+
+            Should.NotThrow(() => slider.IsEnabled = false);
+        }
+        finally
+        {
+            FrameworkElement.DefaultFormsTemplates[typeof(Slider)] = previousSliderTemplate;
+            FrameworkElement.DefaultFormsTemplates[typeof(Button)] = previousButtonTemplate;
+        }
+    }
+
     [Fact]
     public void Children_Containers_ShouldNotHaveEvents()
     {
