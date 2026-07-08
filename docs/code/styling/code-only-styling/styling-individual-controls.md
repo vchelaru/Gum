@@ -153,7 +153,7 @@ You can load this texture however you load other textures in your project, or yo
 
 ```csharp
 // Initialize
-var texture = GumService.Default.ContentLoader.LoadContent<Texture2D>(
+var texture = GumUI.ContentLoader.LoadContent<Texture2D>(
     "input_outline_square.png");
 ```
 
@@ -161,7 +161,7 @@ Once you have the texture loaded, you can use this on any control's background, 
 
 ```csharp
 // Initialize
-var texture = GumService.Default.ContentLoader.LoadContent<Texture2D>(
+var texture = GumUI.ContentLoader.LoadContent<Texture2D>(
     "input_outline_square.png");
 
 var button = new Button();

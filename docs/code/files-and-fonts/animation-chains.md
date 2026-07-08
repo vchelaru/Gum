@@ -69,6 +69,53 @@ sprite.Animate = true;
 
 Both loading paths go through `LoaderManager`, so an `.achx` loaded from the same path more than once is only read from disk once when `LoaderManager.Self.CacheTextures` is `true` (the default). See [File Loading](file-loading.md#file-caching) for the general caching rules, which apply here the same way they do to textures and fonts.
 
+## Building an `AnimationChainList` in Code
+
+No `.achx` file is required to play back an animation chain. `AnimationChainList`, `AnimationChain`, and `AnimationFrame` are plain classes with public constructors — you can build a chain entirely in code, with no XML file and no `AnimationChainListSave` involved. This is useful for procedurally generated animations, for splitting a single loaded texture into frames without authoring an `.achx`, or for generating chains from data at runtime.
+
+The most common reason to build a chain by hand is splitting one sprite sheet texture into a grid of equal-sized frames. The following example builds a 4-frame walk cycle from a single row of a sprite sheet:
+
+```csharp
+// Initialize
+using Gum.Graphics.Animation;
+
+var texture = GumUI.ContentLoader.LoadContent<Texture2D>("WalkSpriteSheet.png");
+
+const int frameCount = 4;
+float frameWidth = texture.Width / (float)frameCount;
+
+var chain = new AnimationChain();
+chain.Name = "Walk";
+
+for (int i = 0; i < frameCount; i++)
+{
+    var frame = new AnimationFrame();
+    frame.Texture = texture;
+    frame.LeftCoordinate = i * frameWidth / texture.Width;
+    frame.RightCoordinate = (i + 1) * frameWidth / texture.Width;
+    // TopCoordinate/BottomCoordinate default to 0/1, which is correct for a single-row sheet.
+
+    chain.Add(frame);
+}
+
+// Setting FrameTime after all frames are added stamps FrameLength onto every
+// frame currently in the chain. Frames added afterward won't get it.
+chain.FrameTime = 0.1f;
+
+var chains = new AnimationChainList();
+chains.Add(chain);
+
+sprite.AnimationChains = chains;
+sprite.CurrentChainName = "Walk";
+sprite.Animate = true;
+```
+
+* `AnimationFrame.LeftCoordinate`/`RightCoordinate`/`TopCoordinate`/`BottomCoordinate` are UV coordinates, the same representation described above under [TextureCoordinateType: Pixel vs. UV](#texturecoordinatetype-pixel-vs-uv). If you're working from a pixel-space rectangle instead — for example a grid cell from a sprite sheet — divide by the texture's width/height to convert, as the loop above does.
+* `AnimationChainList` indexes by chain name (`chains["Walk"]`), which is why `AnimationChain.Name` must be set if you rely on that lookup.
+* `AnimationFrame` also supports `FlipHorizontal`/`FlipVertical`, and the same optional `RelativeX`/`RelativeY` offsets described under [Per-Frame Position Offsets (Sprite Only)](#per-frame-position-offsets-sprite-only).
+
+Texture loading works the same as anywhere else in Gum — see [File Loading](file-loading.md) for `LoaderManager`, caching, and the `RelativeDirectory` rules that apply here too.
+
 ## Playback
 
 Once `AnimationChains` is populated, set `CurrentChainName` to the chain you want to play and set `Animate` to `true`. From there, the chain advances on its own — every call to `GumService.Default.Update` drives the animation for the entire visual tree, so you don't need to advance frames yourself.
