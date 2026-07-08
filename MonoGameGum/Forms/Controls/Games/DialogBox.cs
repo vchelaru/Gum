@@ -25,24 +25,12 @@ namespace Gum.Forms.Controls.Games;
 #endif
 using global::RenderingLibrary.Graphics;
 
-#if RAYLIB
-using RaylibGum;
-using RaylibGum.Renderables;
-#endif
-
-#if SOKOL
-using SokolGum;
-#endif
-
-#if !FRB && !XNALIKE
 using GamepadButton = Gum.Input.GamepadButton;
-#endif
 
 #if XNALIKE
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum;
 using System.Security.Cryptography;
-using GamepadButton = Gum.Input.GamepadButton;
 #else
 using Keys = Gum.Forms.Input.Keys;
 #endif
