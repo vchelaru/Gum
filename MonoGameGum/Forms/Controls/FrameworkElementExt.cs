@@ -20,12 +20,6 @@ using Gum.Forms.Data;
 namespace Gum.Forms.Controls;
 #endif
 
-#if MONOGAME
-
-using Microsoft.Xna.Framework;
-
-#endif
-
 
 public static class FrameworkElementExt
 {
