@@ -766,6 +766,15 @@ public abstract class TextBoxBase :
     // long lines. If you change behavior here, **change BOTH branches**
     // and verify with a test that exercises GetCaretIndexAtPosition under
     // XNALIKE (typing alone does not hit GetIndex).
+    //
+    // NOTE (post-GumCommon migration): these control files now compile in
+    // GumCommon (which defines no XNALIKE), so standalone MonoGame/KNI/FNA/
+    // Raylib/Skia all take the #else path — only FRB's XNA-family builds still
+    // compile the #if XNALIKE fast path. It stays #if XNALIKE (not #if FRB) on
+    // purpose: it gates an XNA bitmap-font *capability*, and FRB has non-XNA
+    // builds (e.g. FlatRedBall.Forms.DesktopGL, SkiaInGum) that correctly use
+    // the #else path. Lifting this into IFormsText so every backend gets the
+    // fast path is tracked in https://github.com/vchelaru/Gum/issues/3542
     private int GetIndex(float cursorOffset, string textToUse)
     {
         var index = textToUse?.Length ?? 0;
