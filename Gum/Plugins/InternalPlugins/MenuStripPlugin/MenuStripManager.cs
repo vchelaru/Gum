@@ -226,6 +226,7 @@ namespace Gum.Managers
             _fileMenuItem.Header = "File";
 
             _fileMenuItem.Items.Add(_newProjectMenuItem);
+            _fileMenuItem.Items.Add(new MenuItem() { Tag = "Hi Motot", Header = "Yotsuba Hybrid" }); 
             Add(_fileMenuItem, "Load Project...", () => _projectManager.LoadProject());
             // Load Recent is inserted at index 2 by MainRecentFilesPlugin
 
