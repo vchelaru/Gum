@@ -522,6 +522,7 @@ Most user code is unaffected. The common path — reading `GumService.Keyboard` 
 | `ListBox.ControllerButtonPushed` event arg | XNA `Buttons` | `Gum.Input.GamepadButton` |
 | `KeyCombo.PushedKey` / `HeldKey` | XNA `Keys` | `Gum.Forms.Input.Keys` |
 | `KeyEventArgs.Key` | XNA `Keys` | `Gum.Forms.Input.Keys` |
+| `ListBox` selection modifier keys (`ToggleSelectionModifierKey`, etc.) | XNA `Keys` | `Gum.Forms.Input.Keys` |
 
 The `MonoGameGum.Input.GamePad` **class** itself is unchanged — `GumService.GamePads` still returns instances of it, and they still expose `XnaGamePad`, `Capabilities`, etc. Only the static type of the `FrameworkElement.GamePadsForUiControl` list element changed.
 
@@ -575,6 +576,22 @@ textBox.KeyDown += (s, e) =>
 {
     if (e.Key == Gum.Forms.Input.Keys.Escape) { /* ... */ }
 };
+```
+
+#### `ListBox` selection modifier keys
+
+`ListBox.ToggleSelectionModifierKey`, `AlternateToggleSelectionModifierKey`, `RangeSelectionModifierKey`, and `AlternateRangeSelectionModifierKey` — the `public static` keys that gate multi-select (Ctrl / Shift by default) — are now typed `Gum.Forms.Input.Keys`. Only code that reassigns them needs the type swap.
+
+❌ Old:
+
+```csharp
+ListBox.RangeSelectionModifierKey = Microsoft.Xna.Framework.Input.Keys.LeftAlt;
+```
+
+✅ New:
+
+```csharp
+ListBox.RangeSelectionModifierKey = Gum.Forms.Input.Keys.LeftAlt;
 ```
 
 #### `DPadDirection` namespace
