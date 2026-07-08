@@ -60,5 +60,16 @@ namespace RenderingLibrary.Graphics
         /// render in screen space must multiply by <see cref="IText.FontScale"/>.
         /// </summary>
         float MeasureString(string value, HorizontalMeasurementStyle style);
+
+        /// <summary>
+        /// The horizontal advance of a single character in this Text's active font, in raw
+        /// glyph pixels (before <see cref="IText.FontScale"/>) — used by caret hit-testing
+        /// (<c>TextBoxBase.GetIndex</c>) to walk a string one character at a time without
+        /// repeated substring measurement. The default implementation measures the character
+        /// via <see cref="IWrappedText.MeasureString(string)"/>; backends with cheap per-glyph
+        /// metrics (e.g. a bitmap font's XAdvance table) override this for an allocation-free
+        /// lookup.
+        /// </summary>
+        float GetCharacterAdvance(char character) => MeasureString(character.ToString());
     }
 }

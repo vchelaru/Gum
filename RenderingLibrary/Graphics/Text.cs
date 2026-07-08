@@ -859,6 +859,22 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         }
     }
 
+    /// <summary>
+    /// Fast override of <see cref="IFormsText.GetCharacterAdvance(char)"/>: reads the character's
+    /// XAdvance directly off the active BitmapFont instead of measuring a one-character string,
+    /// avoiding both the allocation and the BitmapFont.MeasureString call overhead. Falls back to
+    /// <see cref="MeasureString(string)"/> when no BitmapFont is set.
+    /// </summary>
+    public float GetCharacterAdvance(char character)
+    {
+        var bitmapFontToUse = BitmapFont ?? DefaultBitmapFont;
+        if (bitmapFontToUse == null)
+        {
+            return MeasureString(character.ToString());
+        }
+        return bitmapFontToUse.GetCharacterInfo(character)?.XAdvance ?? 0;
+    }
+
     // made public so that objects that need to position based off of the texture can force call this
     public void TryUpdateTextureToRender()
     {
