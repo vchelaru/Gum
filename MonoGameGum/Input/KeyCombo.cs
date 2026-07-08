@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#if !XNALIKE && !FRB
-using Keys = Gum.Forms.Input.Keys;
-#else
+#if FRB
 using Microsoft.Xna.Framework.Input;
+#else
+using Keys = Gum.Forms.Input.Keys;
 #endif
 
 // Needs to be in this namespace since it was originally
@@ -25,7 +25,7 @@ public struct KeyCombo
 
 public static class KeyComboExtensions
 {
-    // Converts the platform-local Keys alias (XNA Keys on MonoGame, Gum Keys on Raylib/Sokol)
+    // Converts the platform-local Keys alias (XNA Keys under FRB, Gum Keys everywhere else)
     // to the shared Gum.Forms.Input.Keys that IInputReceiverKeyboard's interface methods accept.
     // Values align across both enums, so an int round-trip is safe.
     private static Gum.Forms.Input.Keys ToGumKey(Keys key) => (Gum.Forms.Input.Keys)(int)key;

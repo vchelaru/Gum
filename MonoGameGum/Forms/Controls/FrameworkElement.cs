@@ -32,24 +32,13 @@ using BindableGue = global::Gum.Wireframe.GraphicalUiElement;
 using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
 using GamepadButton = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
-#elif XNALIKE
-using Keys = Microsoft.Xna.Framework.Input.Keys;
-using Microsoft.Xna.Framework.Input;
-using MonoGameGum.Input;
-using Gum.Input;
-using GamepadButton = Gum.Input.GamepadButton;
-using Gum.Converters;
-#elif RAYLIB
-using RaylibGum;
-using Gum.Input;
-using Keys = Gum.Forms.Input.Keys;
-#elif SOKOL
-using Gum.Input;
-using Keys = Gum.Forms.Input.Keys;
 #else
-// Default branch — used when this file is compiled into GumCommon, which defines
-// none of FRB/XNALIKE/RAYLIB/SOKOL. The Forms abstraction lives in Gum.Input /
-// Gum.Forms.Input, so the headless build picks up the same shared types Raylib/Sokol use.
+// Non-FRB branch. These Forms control files compile exactly once — into GumCommon
+// (net8.0), which defines none of XNALIKE/RAYLIB/SOKOL/SKIA. Every runtime
+// (MonoGame/KNI/FNA/Raylib/Sokol) compile-Removes them and consumes them from that
+// GumCommon reference, so the former per-platform #elif branches were dead code and
+// were removed; only FRB compiles these files separately and keeps its own branch above.
+// The Forms abstraction lives in Gum.Input / Gum.Forms.Input.
 using Gum.Input;
 using Keys = Gum.Forms.Input.Keys;
 #endif
