@@ -16,5 +16,6 @@ This section covers file loading and font setup for Gum projects. The font pages
 ## Files
 
 * [File Loading](file-loading.md) — `RelativeDirectory`, file caching, and general file loading.
+* [Animation Chains](animation-chains.md) — loading and playing back `.achx` frame animations on Sprite and NineSlice.
 * [Content Using Embedded Resources](content-using-embedded-resources.md) — mobile and cross-platform file loading.
 * [Troubleshooting](troubleshooting.md) — file loading issues.

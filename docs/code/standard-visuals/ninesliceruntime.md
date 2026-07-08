@@ -58,6 +58,20 @@ firstNineSlice.SourceFileName = "Frame.png";
 secondNineSlice.Texture = firstNineSlice.Texture;
 ```
 
+### Animating a NineSlice
+
+A NineSliceRuntime can also play back a frame-by-frame animation from an `.achx` file. Setting `SourceFileName` to a path ending in `.achx` is auto-detected the same way as a texture file:
+
+```csharp
+// Initialize
+var nineSlice = new NineSliceRuntime();
+nineSlice.SourceFileName = "MyAnimation.achx";
+nineSlice.CurrentChainName = "Animation1";
+nineSlice.Animate = true;
+```
+
+Unlike SpriteRuntime, NineSliceRuntime does not apply a frame's `RelativeX`/`RelativeY` offset. For the full explanation of animation chains, see [Animation Chains](../files-and-fonts/animation-chains.md).
+
 ### TextureAddressMode and Texture Coordinates
 
 By default a NineSlice uses it entire texture. This can be customized using texture coordinate and TextureAddress properties.
