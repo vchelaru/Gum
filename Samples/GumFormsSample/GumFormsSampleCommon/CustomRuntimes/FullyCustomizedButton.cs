@@ -17,6 +17,7 @@ namespace GumFormsSample
         public TextRuntime TextInstance { get; private set; }
         public FullyCustomizedButton(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
         {
+            this.HasEvents = true;
             if (fullInstantiation)
             {
                 this.Width = 128;
