@@ -13,10 +13,23 @@ namespace Gum.Forms.DefaultVisuals;
 
 public class Styling
 {
+    private static Styling _activeStyle;
+
     /// <summary>
     /// This allows someone to get the active style from any instance they create, or from the class self like Styling.ActiveStyle.
     /// </summary>
-    public static Styling ActiveStyle { get; set; }
+    /// <remarks>
+    /// Lazily creates a default-styled instance (loading the embedded UISpriteSheet) if nothing has
+    /// explicitly set this yet. This covers directly constructing a V1/V2 default-visual class (e.g.
+    /// <c>new DefaultButtonRuntime()</c> - the "create a control through its visual type" pattern)
+    /// in an app that only ever called <c>InitializeDefaults</c> with V3/Newest, which populates the
+    /// separate <c>DefaultVisuals.V3.Styling.ActiveStyle</c> and never touches this legacy one.
+    /// </remarks>
+    public static Styling ActiveStyle
+    {
+        get => _activeStyle ??= new Styling(spriteSheet: null);
+        set => _activeStyle = value;
+    }
 
     private Texture2D _spriteSheet;
     public Texture2D SpriteSheet 
@@ -55,14 +68,17 @@ public class Styling
             this.SpriteSheet = spriteSheet;
         }
 #elif RAYLIB
-        this.SpriteSheet = spriteSheet.Value;
+        this.SpriteSheet = spriteSheet ?? SystemManagers.Default.LoadEmbeddedTexture2d("UISpriteSheet.png")!.Value;
 #elif SOKOL
-        this.SpriteSheet = spriteSheet!;
+        this.SpriteSheet = spriteSheet ?? SystemManagers.Default.LoadEmbeddedTexture2d("UISpriteSheet.png")!;
 #endif
 
-        if (ActiveStyle == null)
+        // Set the backing field directly rather than going through the ActiveStyle property:
+        // ActiveStyle's getter lazily constructs a Styling(null) when unset, and re-entering that
+        // getter here (before this constructor call returns) would recurse infinitely.
+        if (_activeStyle == null)
         {
-            ActiveStyle = this;
+            _activeStyle = this;
         }
 
         if (useDefaults)

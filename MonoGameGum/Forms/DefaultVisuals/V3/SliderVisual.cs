@@ -243,7 +243,12 @@ public class SliderVisual : InteractiveGue
     {
         TrackBackground.Color = _trackBackgroundColor;
         FocusedIndicator.Visible = isFocused;
-        ThumbInstance.IsEnabled = isEnabled;
+        // ThumbInstance is null when the Button template registered in DefaultFormsTemplates
+        // isn't a ButtonVisual - the "as ButtonVisual" cast in the constructor fails silently.
+        if (ThumbInstance != null)
+        {
+            ThumbInstance.IsEnabled = isEnabled;
+        }
         FocusedIndicator.Color = _focusedIndicatorColor;
     }
 

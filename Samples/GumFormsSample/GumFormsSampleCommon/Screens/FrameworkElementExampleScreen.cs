@@ -89,10 +89,10 @@ namespace GumFormsSample.Screens
             CustomMenuItem.Header = "Custom Dropdown";
             var customScrollViewerVisualTemplate = new VisualTemplate(() =>
             {
-                var toReturn = new Gum.Forms.DefaultVisuals.DefaultScrollViewerRuntime();
+                var toReturn = new Gum.Forms.DefaultVisuals.V3.ScrollViewerVisual();
                 toReturn.MakeSizedToChildren();
                 var background = toReturn.GetGraphicalUiElementByName("Background")
-                    as ColoredRectangleRuntime;
+                    as NineSliceRuntime;
 
                 background.Color = Color.Orange;
 
@@ -173,7 +173,7 @@ namespace GumFormsSample.Screens
             stackPanel.AddChild(comboBox);
 
             // We can also create buttons through their visual type:
-            var buttonRuntime = new Gum.Forms.DefaultVisuals.DefaultButtonRuntime();
+            var buttonRuntime = new Gum.Forms.DefaultVisuals.V3.ButtonVisual();
             buttonRuntime.Width = 100;
             buttonRuntime.Height = 50;
             buttonRuntime.TextInstance.Text = "Other Button!";

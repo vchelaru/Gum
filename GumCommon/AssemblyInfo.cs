@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("MonoGameGum.Tests")]
 [assembly: InternalsVisibleTo("MonoGameGum.Tests.V2")]
+[assembly: InternalsVisibleTo("RaylibGum.Tests")]
 
 // MonoGameGum, KniGum, and FnaGum each link in CustomSetPropertyOnRenderable.cs,
 // which writes to internal members on GraphicalUiElement (e.g., IsFontDirty.set).

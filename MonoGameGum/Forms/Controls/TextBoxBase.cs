@@ -747,61 +747,25 @@ public abstract class TextBoxBase :
         return index;
     }
 
-    // Two implementations of the same logical operation: walk characters
-    // accumulating their X-advance until we pass cursorOffset, then return
-    // the character index nearest the cursor.
-    //
-    // The split exists because the XNALIKE backends (MonoGame/KNI/FNA)
-    // expose `coreTextObject.BitmapFont` and per-character `XAdvance`,
-    // giving an allocation-free O(n) walk. Raylib's Text has no BitmapFont
-    // property — it uses raylib's own font system — so the #else branch
-    // falls back to repeated MeasureString(substring), which is O(n^2) and
-    // allocates a substring per character.
-    //
-    // We considered unifying onto the substring path (it would eliminate
-    // the dual-maintenance footgun that bit issue #2687 — the FontScale
-    // fix originally only landed in the #else branch). For now we are
-    // keeping the optimization: GetIndex runs only on click and Up/Down
-    // arrow, but it's still nicer to avoid the per-char allocations on
-    // long lines. If you change behavior here, **change BOTH branches**
-    // and verify with a test that exercises GetCaretIndexAtPosition under
-    // XNALIKE (typing alone does not hit GetIndex).
-    //
-    // NOTE (post-GumCommon migration): these control files now compile in
-    // GumCommon (which defines no XNALIKE), so standalone MonoGame/KNI/FNA/
-    // Raylib/Skia all take the #else path — only FRB's XNA-family builds still
-    // compile the #if XNALIKE fast path. It stays #if XNALIKE (not #if FRB) on
-    // purpose: it gates an XNA bitmap-font *capability*, and FRB has non-XNA
-    // builds (e.g. FlatRedBall.Forms.DesktopGL, SkiaInGum) that correctly use
-    // the #else path. Lifting this into IFormsText so every backend gets the
-    // fast path is tracked in https://github.com/vchelaru/Gum/issues/3542
+    // Walks characters accumulating their X-advance until we pass cursorOffset, then returns
+    // the character index nearest the cursor. Per-character advance comes from
+    // IFormsText.GetCharacterAdvance, which each backend's concrete Text implements — the
+    // XNA-family Text (RenderingLibrary/Graphics/Text.cs) overrides it with an allocation-free
+    // BitmapFont.XAdvance lookup; other backends fall back to measuring a one-character string.
+    // Either way this method itself needs no #if: virtual dispatch on coreTextObject picks the
+    // right implementation at runtime. See https://github.com/vchelaru/Gum/issues/3542.
     private int GetIndex(float cursorOffset, string textToUse)
     {
         var index = textToUse?.Length ?? 0;
         float distanceMeasuredSoFar = 0;
-
-#if XNALIKE
-
-        // Cast to concrete Text inside this XNALIKE-only block to reach BitmapFont,
-        // which is a MonoGame-specific concrete-class member (not on IFormsText).
-        var concreteText = (global::RenderingLibrary.Graphics.Text)this.coreTextObject;
-        var bitmapFont = concreteText.BitmapFont ?? global::RenderingLibrary.Graphics.Text.DefaultBitmapFont;
         var fontScale = coreTextObject.FontScale;
 
         for (int i = 0; i < (textToUse?.Length ?? 0); i++)
         {
-            char character = textToUse[i];
-            global::RenderingLibrary.Graphics.BitmapCharacterInfo characterInfo = bitmapFont?.GetCharacterInfo(character);
-
-            float advance = 0;
-
-            if (characterInfo != null)
-            {
-                // XAdvance is raw glyph-pixel width; the rendered glyph is
-                // FontScale-wider, so the hit-test must scale to match the
-                // screen-space cursor offset coming in.
-                advance = characterInfo.XAdvance * fontScale;
-            }
+            // GetCharacterAdvance returns raw glyph-pixel width; the rendered glyph is
+            // FontScale-wider, so the hit-test must scale to match the screen-space
+            // cursor offset coming in.
+            float advance = coreTextObject.GetCharacterAdvance(textToUse[i]) * fontScale;
 
             distanceMeasuredSoFar += advance;
 
@@ -820,30 +784,6 @@ public abstract class TextBoxBase :
                 break;
             }
         }
-#else
-        for (int i = 0; i < (textToUse?.Length ?? 0); i++)
-        {
-            // Is there a faster way to do this?
-            distanceMeasuredSoFar = MeasureStringScaled(textToUse.Substring(0, i + 1));
-
-            // This should find which side of the character you're closest to, but for now it's good enough...
-            if (distanceMeasuredSoFar > cursorOffset)
-            {
-                var distanceBefore = MeasureStringScaled(textToUse.Substring(0, i));
-                var advance = distanceMeasuredSoFar - distanceBefore;
-                var halfwayPoint = distanceMeasuredSoFar - (advance / 2.0f);
-                if (halfwayPoint > cursorOffset)
-                {
-                    index = i;
-                }
-                else
-                {
-                    index = i + 1;
-                }
-                break;
-            }
-        }
-#endif
         return index;
     }
 
@@ -2102,9 +2042,7 @@ public abstract class TextBoxBase :
     // IText is fully qualified here (and below) because this file compiles
     // under multiple backends: under XNALIKE the using directives include
     // RenderingLibrary.Graphics, but under the #else branch (Raylib/Sokol)
-    // they do not — so the unqualified IText would not resolve. The
-    // XNALIKE-guarded cast inside GetIndex can stay unqualified because
-    // that block only compiles when the using is in scope.
+    // they do not — so the unqualified IText would not resolve.
     private float EffectiveLineHeightInPixels =>
         coreTextObject.LineHeightInPixels
         * ((global::RenderingLibrary.Graphics.IText)coreTextObject).FontScale

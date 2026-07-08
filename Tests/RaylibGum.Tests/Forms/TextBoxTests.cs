@@ -1,6 +1,8 @@
 using Gum.Forms;
 using Gum.Forms.Controls;
+using Gum.Forms.DefaultVisuals.V3;
 using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using Shouldly;
 
 namespace RaylibGum.Tests.Forms;
@@ -53,5 +55,35 @@ public class TextBoxTests : BaseTestClass
         textBox.Text = "some text that may wrap depending on width";
 
         Should.NotThrow(() => textBox.SelectAll());
+    }
+
+    [Fact]
+    public void GetCaretIndexAtPosition_MapsFurtherRightClicksToLaterIndices()
+    {
+        // Issue #3542: TextBoxBase.GetIndex's per-character advance now comes from
+        // IFormsText.GetCharacterAdvance. Raylib's Text has no fast override (no bitmap-font
+        // XAdvance table), so it falls back to the default interface implementation
+        // (single-character MeasureString). Pin that this fallback still produces a sane,
+        // monotonically-increasing caret hit-test — this path previously used a different,
+        // O(n^2) growing-substring measurement, so a wrong or reversed result here would be new.
+        var textBox = new TextBox();
+        textBox.IsFocused = true;
+        textBox.Text = "aaaa";
+
+        var visual = (TextBoxVisual)textBox.Visual;
+        var coreTextObject = (IFormsText)visual.TextInstance.RenderableComponent;
+
+        float widthOfTwo = coreTextObject.MeasureString("aa");
+
+        float textLeft = visual.TextInstance.AbsoluteLeft;
+        float textTop = visual.TextInstance.AbsoluteTop + 2f;
+
+        int indexNearStart = textBox.GetCaretIndexAtPosition(textLeft + 1f, textTop);
+        int indexPastTwoChars = textBox.GetCaretIndexAtPosition(textLeft + widthOfTwo + 1f, textTop);
+
+        indexNearStart.ShouldBeLessThan(indexPastTwoChars,
+            "clicking further right in the text should map to a later character index");
+        indexPastTwoChars.ShouldBeGreaterThanOrEqualTo(2,
+            "clicking past the measured width of the first two characters should land at or past index 2");
     }
 }

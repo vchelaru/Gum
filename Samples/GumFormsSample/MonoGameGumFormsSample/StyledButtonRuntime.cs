@@ -4,35 +4,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
-using Gum.Forms.DefaultVisuals;
+using Gum.Forms.DefaultVisuals.V3;
 
 namespace GumFormsSample
 {
-    class StyledButtonRuntime : DefaultButtonRuntime
+    class StyledButtonRuntime : ButtonVisual
     {
-        public StyledButtonRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : 
+        public StyledButtonRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) :
             base(fullInstantiation, tryCreateFormsObject)
         {
             if(fullInstantiation)
             {
-                var category = this.Categories["ButtonCategory"];
-
-                var highlightedState = category.States.Find(item => item.Name == "Highlighted");
-                highlightedState.Variables.Clear();
-                highlightedState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
-                {
-                    Name = "ButtonBackground.Color",
-                    Value = new Color(255,0,191)
-                });
-
-                var enabledState = category.States.Find(item => item.Name == "Enabled");
-                enabledState.Variables.Clear();
-                enabledState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
-                {
-                    Name = "ButtonBackground.Color",
-                    Value = new Color(255, 100, 194),
-                });
-
+                // V3's states are computed from BackgroundColor/ForegroundColor rather than
+                // per-state variables, so a custom look only needs the base color set.
+                BackgroundColor = new Color(255, 100, 194);
             }
         }
     }

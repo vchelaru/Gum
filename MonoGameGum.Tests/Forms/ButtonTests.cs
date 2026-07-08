@@ -36,6 +36,27 @@ public class ButtonTests : BaseTestClass
     }
 
     [Fact]
+    public void DefaultButtonRuntimeConstructor_ShouldNotThrow_WhenActiveStyleNeverInitialized()
+    {
+        // Constructing a legacy default-visual class directly ("create a button through its
+        // visual type", a documented pattern - see GumFormsSample's FrameworkElementExampleScreen)
+        // used to NRE in Styling.ActiveStyle.Colors.Primary whenever the app only ever called
+        // InitializeDefaults with V3 (or never called the V1/V2 overload) - nothing else sets the
+        // V1/V2-shared Styling.ActiveStyle, so it stayed null.
+        var previousActiveStyle = Gum.Forms.DefaultVisuals.Styling.ActiveStyle;
+        try
+        {
+            Gum.Forms.DefaultVisuals.Styling.ActiveStyle = null;
+
+            Should.NotThrow(() => new DefaultButtonRuntime());
+        }
+        finally
+        {
+            Gum.Forms.DefaultVisuals.Styling.ActiveStyle = previousActiveStyle;
+        }
+    }
+
+    [Fact]
     public void UpdateState_ShouldSetPushed_IfPushedWithKeyboard()
     {
         bool wasApplied = false;
