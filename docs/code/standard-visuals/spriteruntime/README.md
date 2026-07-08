@@ -51,3 +51,17 @@ sprite.Texture = MyTexture;
 ```
 
 Note that assigning the SourceFileName property results in the Texture property referencing a texture if a valid texture is found.
+
+### Animating a Sprite
+
+A SpriteRuntime can also play back a frame-by-frame animation from an `.achx` file. Setting `SourceFileName` to a path ending in `.achx` is auto-detected the same way as a texture file:
+
+```csharp
+// Initialize
+var sprite = new SpriteRuntime();
+sprite.SourceFileName = "MyAnimation.achx";
+sprite.CurrentChainName = "Animation1";
+sprite.Animate = true;
+```
+
+For the full explanation of animation chains, including manual construction and the `.achx` format, see [Animation Chains](../../files-and-fonts/animation-chains.md).

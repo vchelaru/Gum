@@ -329,6 +329,7 @@
     * [Font Cache](code/files-and-fonts/font-cache.md)
     * [Advanced Font Effects](code/files-and-fonts/advanced-font-effects.md)
   * [File Loading](code/files-and-fonts/file-loading.md)
+  * [Animation Chains](code/files-and-fonts/animation-chains.md)
   * [BitmapFont](code/files-and-fonts/bitmapfont.md)
   * [Content Using Embedded Resources](code/files-and-fonts/content-using-embedded-resources.md)
   * [Troubleshooting](code/files-and-fonts/troubleshooting.md)
