@@ -342,6 +342,12 @@ public class Sprite : SpriteBatchRenderableBase,
 
     #endregion
 
+    /// <summary>
+    /// Constructs a <see cref="Sprite"/> for the current (MonoGame/KNI/FNA) platform, with no
+    /// initial texture assigned. Mirrors the Raylib platform's <c>Sprite.CreateForCurrentPlatform()</c>.
+    /// </summary>
+    internal static Sprite CreateForCurrentPlatform() => new Sprite(texture: null);
+
     public Sprite(Texture2D? texture)
     {
         this.Visible = true;

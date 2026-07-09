@@ -31,6 +31,7 @@ using Microsoft.Xna.Framework.Graphics;
 #elif RAYLIB
 using Gum.GueDeriving;
 using Gum.Input;
+using Gum.Renderables;
 using GameTime = double;
 using Raylib_cs;
 using RaylibGum.Renderables;
@@ -156,14 +157,7 @@ public class GumService : IGumService
     public IGumClipboard? Clipboard { get; private set; }
 
     /// <inheritdoc/>
-    IRenderable IGumService.CreateSpriteRenderable() =>
-#if XNALIKE
-        new global::RenderingLibrary.Graphics.Sprite(texture: null);
-#elif RAYLIB
-        new global::Gum.Renderables.Sprite();
-#else
-        throw new NotSupportedException("This runtime does not have a sprite renderable implementation.");
-#endif
+    IRenderable IGumService.CreateSpriteRenderable() => Sprite.CreateForCurrentPlatform();
 
 #if !IOS && !ANDROID
     private IGumHotReloadManager? _hotReloadManager;

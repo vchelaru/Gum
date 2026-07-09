@@ -477,6 +477,12 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
 
     public void RefreshCurrentChainToDesiredName() => AnimationLogic.RefreshCurrentChainToDesiredName();
 
+    /// <summary>
+    /// Constructs a <see cref="Sprite"/> for the current (Raylib) platform, with no initial
+    /// texture assigned. Mirrors the MonoGame/KNI/FNA platforms' <c>Sprite.CreateForCurrentPlatform()</c>.
+    /// </summary>
+    internal static Sprite CreateForCurrentPlatform() => new Sprite();
+
     public Sprite(Texture2D? texture = null)
     {
         this.Texture = texture;
