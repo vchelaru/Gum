@@ -18,7 +18,15 @@ namespace MonoGameGum.Input;
 /// </summary>
 public partial class Cursor
 {
-    
+    /// <summary>
+    /// Constructs a <see cref="Cursor"/> for the current (MonoGame/KNI/FNA) platform, passing
+    /// the game's <see cref="GameWindow"/> so mobile touch positions can be offset by the
+    /// window's client bounds. Mirrors the Raylib platform's <c>Cursor.CreateForCurrentPlatform()</c>.
+    /// </summary>
+    /// <param name="game">The optional <see cref="Game"/> instance, used only to source the
+    /// <see cref="GameWindow"/> for mobile touch-offset math.</param>
+    internal static Cursor CreateForCurrentPlatform(Game? game) => new Cursor(game?.Window);
+
     private MouseState GetMouseState()
     {
         return Microsoft.Xna.Framework.Input.Mouse.GetState();
