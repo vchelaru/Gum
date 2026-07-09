@@ -26,7 +26,9 @@ Pick by what you changed. Build from the primary Gum checkout (first row) / the 
 | `GumCommon/` (anything in `GumCoreShared.projitems`) | `GumCore/GumCoreXnaPc/GumCore.DesktopGlNet6/GumCore.DesktopGlNet6.csproj` | GumCommon shared into FRB |
 | `MonoGameGum/Forms/` (in `FlatRedBall.Forms.Shared.projitems`) | `<FlatRedBall>/Engines/Forms/FlatRedBall.Forms/FlatRedBall.Forms.DesktopGlNet6/FlatRedBall.Forms.DesktopGlNet6.csproj` | Forms shared into FRB |
 
-`GueDeriving/*Runtime`, `MonoGameGum/Renderables/`, `MonoGameGum/ExtensionMethods/`, and the `Forms/DefaultVisuals/` runtimes are **not** compiled by FRB1 (it generates its own) — changing only those needs no FRB build.
+`GueDeriving/*Runtime`, `MonoGameGum/Renderables/`, `MonoGameGum/ExtensionMethods/`, `MonoGameGum/Input/` (Cursor, Keyboard, gamepad drivers), and the `Forms/DefaultVisuals/` runtimes are **not** compiled by FRB1 (it generates its own) — changing only those needs no FRB build.
+
+**Don't infer this from the directory path.** `FormsUtilities.cs` lives under `MonoGameGum/Forms/` but is not `Include`d in `FlatRedBall.Forms.Shared.projitems`, so it needs no canary despite the directory match — even though it has its own live `#if FRB` branches (those serve other consumers of the file, not FRB). `grep` the exact filename against the projitems file in the table above before requiring a canary; if it's not `Include`d there, FRB doesn't compile it.
 
 ## Interpreting results — baseline first
 
