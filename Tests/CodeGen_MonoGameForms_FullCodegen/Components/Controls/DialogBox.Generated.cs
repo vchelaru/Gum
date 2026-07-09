@@ -18,10 +18,7 @@ partial class DialogBox : global::Gum.Forms.Controls.FrameworkElement
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("Controls/DialogBox");
-#if DEBUG
-if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/DialogBox - did you forget to load a Gum project?");
-#endif
+            var element = ObjectFinder.Self.GetElementSave("Controls/DialogBox") ?? throw new System.InvalidOperationException("Could not find an element named Controls/DialogBox - did you forget to load a Gum project?");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new DialogBox(visual);
             return visual;

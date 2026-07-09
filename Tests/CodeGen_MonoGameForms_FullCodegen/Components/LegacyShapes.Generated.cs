@@ -17,10 +17,7 @@ partial class LegacyShapes : global::Gum.Forms.Controls.FrameworkElement
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("LegacyShapes");
-#if DEBUG
-if(element == null) throw new System.InvalidOperationException("Could not find an element named LegacyShapes - did you forget to load a Gum project?");
-#endif
+            var element = ObjectFinder.Self.GetElementSave("LegacyShapes") ?? throw new System.InvalidOperationException("Could not find an element named LegacyShapes - did you forget to load a Gum project?");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new LegacyShapes(visual);
             return visual;

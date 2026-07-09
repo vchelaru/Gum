@@ -18,10 +18,7 @@ partial class ButtonStandardIcon : global::Gum.Forms.Controls.Button
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("Controls/ButtonStandardIcon");
-#if DEBUG
-if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/ButtonStandardIcon - did you forget to load a Gum project?");
-#endif
+            var element = ObjectFinder.Self.GetElementSave("Controls/ButtonStandardIcon") ?? throw new System.InvalidOperationException("Could not find an element named Controls/ButtonStandardIcon - did you forget to load a Gum project?");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new ButtonStandardIcon(visual);
             return visual;

@@ -17,10 +17,7 @@ partial class ButtonDeny : global::Gum.Forms.Controls.Button
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("Controls/ButtonDeny");
-#if DEBUG
-if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/ButtonDeny - did you forget to load a Gum project?");
-#endif
+            var element = ObjectFinder.Self.GetElementSave("Controls/ButtonDeny") ?? throw new System.InvalidOperationException("Could not find an element named Controls/ButtonDeny - did you forget to load a Gum project?");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new ButtonDeny(visual);
             return visual;

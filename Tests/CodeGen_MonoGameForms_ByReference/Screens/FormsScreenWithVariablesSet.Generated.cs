@@ -18,10 +18,7 @@ partial class FormsScreenWithVariablesSet : global::Gum.Forms.Controls.Framework
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("FormsScreenWithVariablesSet");
-#if DEBUG
-if(element == null) throw new System.InvalidOperationException("Could not find an element named FormsScreenWithVariablesSet - did you forget to load a Gum project?");
-#endif
+            var element = ObjectFinder.Self.GetElementSave("FormsScreenWithVariablesSet") ?? throw new System.InvalidOperationException("Could not find an element named FormsScreenWithVariablesSet - did you forget to load a Gum project?");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new FormsScreenWithVariablesSet(visual);
             visual.Width = 0;
