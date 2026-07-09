@@ -76,6 +76,18 @@ namespace Gum.Wireframe
     /// Sokol) plus the tool's <c>EditorTabPlugin_XNA</c> via <c>&lt;Compile Include&gt;</c>
     /// links, with platform-specific switch cases gated by preprocessor symbols.
     /// </para>
+    /// <para>
+    /// <b>No backend allow-list on the switch itself.</b> The switch body is not gated by a
+    /// closed list of backend defines (e.g. <c>#if MONOGAME || RAYLIB || ...</c>) — it relies
+    /// on the file's own using-directive block above (<c>#if RAYLIB / #elif SOKOL / #else</c>)
+    /// to resolve <c>Sprite</c>, <c>Texture2D</c>, <c>LineRectangle</c>, etc. to the right
+    /// per-platform types. A backend that reuses one of those three shapes (raylib's or
+    /// sokol's <c>Gum.Renderables</c>, or the MonoGame-family <c>RenderingLibrary.Graphics</c> +
+    /// XNA types) just compiles. A backend that fits none of them fails to <i>compile</i> this
+    /// file — naming the exact missing type at the exact case — rather than silently linking
+    /// and returning <c>null</c> for every standard base type at runtime. See
+    /// <see href="https://github.com/vchelaru/Gum/issues/3565">issue #3565</see>.
+    /// </para>
     /// </remarks>
     public static class FallbackRenderableFactory
     {
@@ -95,8 +107,6 @@ namespace Gum.Wireframe
             IRenderable? containedObject = null;
             switch (baseType)
             {
-#if MONOGAME || KNI || FNA || RAYLIB || SOKOL
-
                 case "Container":
                 case "Component": // this should never be set in Gum, but there could be XML errors or someone could have used an old Gum...
 #if RAYLIB || SOKOL
@@ -192,7 +202,6 @@ namespace Gum.Wireframe
                         containedObject = text;
                     }
                     break;
-#endif
 
 #if SKIA
                 case "Arc":
