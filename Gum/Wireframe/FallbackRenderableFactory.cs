@@ -24,71 +24,37 @@ using RenderingLibrary.Math.Geometry;
 
 namespace Gum.Wireframe
 {
+    // Two-registry model: Gum tries a strongly-typed GraphicalUiElement wrapper first
+    // (ContainerRuntime, SpriteRuntime, CircleRuntime, etc.), registered per backend via
+    // RegisterGueInstantiation; that's the primary path and source of truth. This class is
+    // the fallback, used only when the primary path leaves RenderableComponent null after
+    // construction (see ElementSaveExtensions.SetGraphicalUiElement) — generic
+    // GraphicalUiElement instances with no registered runtime, BaseType-chain recursion
+    // gaps, the tool's wireframe rendering path (WireframeObjectManager /
+    // EditorTabPlugin_XNA), and test harnesses.
+    //
+    // Do not extend this switch when a base type is missing a case — register a runtime
+    // wrapper via RegisterGueInstantiation in the backend that needs it instead. The
+    // primary path's wrappers can produce a different renderable than this fallback's
+    // hardcoded pick for the same base-type name (e.g. MonoGame's CircleRuntime prefers an
+    // Apos.Shapes-backed filled circle when available; this fallback always returns an
+    // outline-only LineCircle) — adding cases here means hand-keeping this switch in sync
+    // with every runtime wrapper across every backend forever. Issue #2915 tracks retiring
+    // this class once the primary path is the single source of truth everywhere.
+    //
+    // Shared into every runtime backend (MonoGame, KNI, FNA, Raylib, Sokol) plus the tool's
+    // EditorTabPlugin_XNA via <Compile Include> links. The switch below has no backend
+    // allow-list of its own — it relies on the using-directive block above (#if RAYLIB /
+    // #elif SOKOL / #else) to resolve Sprite/Texture2D/LineRectangle/etc. to the right
+    // per-platform types. A backend reusing one of those three shapes just compiles; one
+    // that fits none of them fails to compile here (naming the missing type) instead of
+    // silently linking and returning null for every base type at runtime.
     /// <summary>
     /// Fallback factory that maps a base-type name (e.g. "Container", "Sprite", "Text") to a
     /// raw <see cref="IRenderable"/>. This is the secondary of two registries Gum uses to
     /// build the visual tree; the primary registry — and the source of truth — is
     /// <see cref="GumRuntime.ElementSaveExtensions.RegisterGueInstantiation{T}(string, Func{T})"/>.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// <b>The two-registry model.</b> When Gum loads an <c>ElementSave</c>, it tries to build
-    /// a strongly-typed <see cref="GraphicalUiElement"/> wrapper first (e.g. <c>ContainerRuntime</c>,
-    /// <c>SpriteRuntime</c>, <c>CircleRuntime</c>). Those wrappers are registered by each backend's
-    /// <c>SystemManagers.Initialize</c> via <c>RegisterGueInstantiation</c>, and their constructors
-    /// install their own inner renderable via <c>SetContainedObject</c>. That is the primary path,
-    /// and it is what backends are expected to produce in real-world use.
-    /// </para>
-    /// <para>
-    /// <b>When this fallback fires.</b> Only when the primary path produces a wrapper whose
-    /// <c>RenderableComponent</c> is still null after construction (see
-    /// <c>ElementSaveExtensions.SetGraphicalUiElement</c>). In practice that is rare: it covers
-    /// (a) generic <see cref="GraphicalUiElement"/> instances created as a fallback when no
-    /// runtime is registered for a name, (b) the recursion through a custom component's
-    /// <c>BaseType</c> chain when an intermediate link has no registration, (c) the tool's
-    /// wireframe rendering path (see <c>WireframeObjectManager</c> and
-    /// <c>EditorTabPlugin_XNA</c>), which still depends on this factory directly, and (d) test
-    /// harnesses that wire it as the only renderable source.
-    /// </para>
-    /// <para>
-    /// <b>Why you should not extend this class.</b> The factory's switch is a parallel
-    /// declaration of what each base-type renderable is supposed to be. The primary path's
-    /// runtime wrappers can — and do — produce different renderables for the same base-type
-    /// name. The classic example is MonoGame's <c>CircleRuntime</c>, which uses
-    /// <c>RenderableRegistry.Create&lt;IFilledCircleRenderable&gt;</c> to pick up an
-    /// Apos.Shapes-backed filled circle when that optional package is registered; this
-    /// fallback unconditionally returns an outline-only <c>LineCircle</c>. A consumer hitting
-    /// the fallback path silently gets a different visual than one going through the primary
-    /// path. The architectural cleanup tracked in
-    /// <see href="https://github.com/vchelaru/Gum/issues/2915">issue #2915</see> is to make
-    /// the primary path the single source of truth in both runtime and tool, after which this
-    /// class can be retired.
-    /// </para>
-    /// <para>
-    /// <b>Adding a new base type.</b> Register a runtime wrapper via
-    /// <c>RegisterGueInstantiation</c> in each backend that needs it. Do not add a case here.
-    /// Adding a case here means committing to keep that case in sync with every runtime
-    /// wrapper's contained renderable across every backend, forever, by hand — exactly the
-    /// drift problem this class causes.
-    /// </para>
-    /// <para>
-    /// This source file is shared into every runtime backend (MonoGame, KNI, FNA, Raylib,
-    /// Sokol) plus the tool's <c>EditorTabPlugin_XNA</c> via <c>&lt;Compile Include&gt;</c>
-    /// links, with platform-specific switch cases gated by preprocessor symbols.
-    /// </para>
-    /// <para>
-    /// <b>No backend allow-list on the switch itself.</b> The switch body is not gated by a
-    /// closed list of backend defines (e.g. <c>#if MONOGAME || RAYLIB || ...</c>) — it relies
-    /// on the file's own using-directive block above (<c>#if RAYLIB / #elif SOKOL / #else</c>)
-    /// to resolve <c>Sprite</c>, <c>Texture2D</c>, <c>LineRectangle</c>, etc. to the right
-    /// per-platform types. A backend that reuses one of those three shapes (raylib's or
-    /// sokol's <c>Gum.Renderables</c>, or the MonoGame-family <c>RenderingLibrary.Graphics</c> +
-    /// XNA types) just compiles. A backend that fits none of them fails to <i>compile</i> this
-    /// file — naming the exact missing type at the exact case — rather than silently linking
-    /// and returning <c>null</c> for every standard base type at runtime. See
-    /// <see href="https://github.com/vchelaru/Gum/issues/3565">issue #3565</see>.
-    /// </para>
-    /// </remarks>
     public static class FallbackRenderableFactory
     {
         /// <summary>
@@ -96,7 +62,7 @@ namespace Gum.Wireframe
         /// or <c>null</c> if the name is not a recognized standard base type. Called by
         /// <c>ElementSaveExtensions.CustomCreateGraphicalComponentFunc</c> only when the
         /// primary registration path (see <c>RegisterGueInstantiation</c>) has not already
-        /// supplied a renderable; see the class-level remarks for the full decision flow.
+        /// supplied a renderable; see the class-level comment for the full decision flow.
         /// </summary>
         /// <param name="baseType">Gum base-type name (e.g. <c>"Container"</c>, <c>"Sprite"</c>, <c>"Text"</c>).</param>
         /// <param name="managers">The platform's <c>SystemManagers</c>; cast internally as needed.</param>
