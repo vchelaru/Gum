@@ -228,13 +228,13 @@ public class SystemManagers : ISystemManagers
             "NineSlice",
             () => new NineSliceRuntime());
 
-        //ElementSaveExtensions.RegisterGueInstantiation(
-        //    "Polygon",
-        //    () => new PolygonRuntime(systemManagers: this));
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "Polygon",
+            () => new PolygonRuntime(systemManagers: this));
 
-        //ElementSaveExtensions.RegisterGueInstantiation(
-        //    "Rectangle",
-        //    () => new RectangleRuntime(systemManagers: this));
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "Rectangle",
+            () => new RectangleRuntime(systemManagers: this));
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "Sprite",
