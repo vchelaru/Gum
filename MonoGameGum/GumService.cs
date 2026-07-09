@@ -13,6 +13,7 @@ using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -326,7 +327,41 @@ public class GumService : IGumService
 
     public ContentLoader? ContentLoader => LoaderManager.Self.ContentLoader as ContentLoader;
 
-    public InteractiveGue Root { get; private set; } = new ContainerRuntime();
+    InteractiveGue _root = null!;
+    /// <summary>
+    /// The root container that owns top-level elements added via <c>AddToRoot</c>. Can be
+    /// reassigned to a custom container (for example, one an embedding host already draws
+    /// through its own render pass) so that <c>AddToRoot</c> and the host's own root become
+    /// the same object. Reassigning moves the focus-cleanup subscription (see
+    /// <see cref="Gum.Forms.FormsUtilities.HandleRootCollectionChanged"/>) from the old root
+    /// onto the new one. Like <see cref="Gum.Forms.Controls.FrameworkElement.PopupRoot"/> and
+    /// <see cref="Gum.Forms.Controls.FrameworkElement.ModalRoot"/>, a reassigned Root is still
+    /// cleared and detached from its SystemManagers by <see cref="Uninitialize"/> — a host that
+    /// reassigns this should not call Uninitialize while still using its own container.
+    /// </summary>
+    public InteractiveGue Root
+    {
+        get => _root;
+        set
+        {
+            if (_root == value)
+            {
+                return;
+            }
+
+            if (_root != null)
+            {
+                _root.Children.CollectionChanged -= HandleRootChildrenCollectionChanged;
+            }
+
+            _root = value;
+            _root.Children.CollectionChanged += HandleRootChildrenCollectionChanged;
+        }
+    }
+
+    void HandleRootChildrenCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) =>
+        Gum.Forms.FormsUtilities.HandleRootCollectionChanged(Root, e);
+
     /// <inheritdoc/>
     public InteractiveGue PopupRoot => FrameworkElement.PopupRoot;
     /// <inheritdoc/>
@@ -747,14 +782,13 @@ public class GumService : IGumService
     /// </summary>
     public GumService()
     {
+        Root = new ContainerRuntime();
         Root.Width = 0;
         Root.WidthUnits = DimensionUnitType.RelativeToParent;
         Root.Height = 0;
         Root.HeightUnits = DimensionUnitType.RelativeToParent;
         Root.Name = "Main Root";
         Root.HasEvents = false;
-
-        Root.Children.CollectionChanged += (o, e) => Gum.Forms.FormsUtilities.HandleRootCollectionChanged(Root, e);
 
         CustomSetPropertyOnRenderable.LocalizationServiceChanged += HandleLocalizationServiceChanged;
         // Pick up any LocalizationService that was assigned before this GumService was constructed.

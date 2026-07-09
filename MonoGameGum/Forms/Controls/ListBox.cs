@@ -1628,13 +1628,16 @@ public class ListBox : ItemsControl, IInputReceiver
 #else
         popup.RepositionToKeepInScreen();
 
-        if (listBoxParent.GetTopParent() == FrameworkElement.ModalRoot)
+        var (popupRoot, modalRoot) = GraphicalUiElement.ResolvePopupRoots?.Invoke(listBoxParent)
+            ?? (FrameworkElement.PopupRoot, FrameworkElement.ModalRoot);
+
+        if (listBoxParent.GetTopParent() == modalRoot)
         {
-            FrameworkElement.ModalRoot.Children.Add(popup.Visual);
+            modalRoot.Children.Add(popup.Visual);
         }
         else
         {
-            FrameworkElement.PopupRoot.Children.Add(popup.Visual);
+            popupRoot.Children.Add(popup.Visual);
         }
 
 #endif
