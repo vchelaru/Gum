@@ -85,6 +85,7 @@ public class BaseTestClass : IDisposable
         InteractiveGue.ClearNextClickActions();
 
         GumService.Default.Root.Children!.Clear();
+        FrameworkElement.AdditionalPopupRootPairs.Clear();
 
         // #3066: sweep any renderables a test added straight to the renderer layers via
         // AddToManagers without a matching RemoveFromManagers. Clearing Root.Children above does not

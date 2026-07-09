@@ -412,37 +412,61 @@ public class FormsUtilities
         innerList.Clear();
 
         var didModalsProcessInput = false;
-        if (FrameworkElement.ModalRoot.Children.Count > 0)
+
+        RefreshPopupModalRootPairs();
+
+        // The global pair is checked first so it keeps priority (matching prior behavior) if a
+        // custom pair registered via FrameworkElement.AdditionalPopupRootPairs also has an open modal.
+        // A pair is only a candidate winner if it has a visible top child — otherwise (e.g. every
+        // child mid fade-out) it wouldn't have received input under the old single-root behavior
+        // either, so the search continues to the next pair rather than starving one that does.
+        GraphicalUiElement exclusiveModalItem = null;
+        for (int i = 0; i < popupModalRootPairs.Count && exclusiveModalItem == null; i++)
         {
-#if FULL_DIAGNOSTICS
-            if (FrameworkElement.ModalRoot.Managers == null)
+            var modalRoot = popupModalRootPairs[i].modalRoot;
+            for (int j = modalRoot.Children.Count - 1; j > -1; j--)
             {
-                throw new InvalidOperationException("The ModalRoot has a Managers property of null. Did you accidentally call RemoveFromManagers?");
-            }
-#endif
-            SetDimensionsToCanvas(FrameworkElement.ModalRoot);
-
-            // make sure this is the last:
-            foreach (var layer in SystemManagers.Default.Renderer.Layers)
-            {
-                if (layer.Renderables.Contains(FrameworkElement.ModalRoot.RenderableComponent) && layer.Renderables.Last() != FrameworkElement.ModalRoot.RenderableComponent)
+                if (modalRoot.Children[j].Visible)
                 {
-                    layer.Remove(FrameworkElement.ModalRoot.RenderableComponent as IRenderableIpso);
-                    layer.Add(FrameworkElement.ModalRoot.RenderableComponent as IRenderableIpso);
-                }
-            }
-
-            for (int i = FrameworkElement.ModalRoot.Children.Count - 1; i > -1; i--)
-            {
-                var item = FrameworkElement.ModalRoot.Children[i];
-                if (item.Visible)
-                {
-                    didModalsProcessInput = true;
-                    innerList.Add(item);
-                    // only the top-most element receives input
+                    exclusiveModalItem = modalRoot.Children[j];
                     break;
                 }
             }
+        }
+
+        // Raised in reverse priority order so the highest-priority populated modal root (the one
+        // that will actually receive input, i.e. exclusiveModalItem's root) is raised last and ends
+        // up visually on top — otherwise a lower-priority pair raised after it would cover it up.
+        for (int i = popupModalRootPairs.Count - 1; i > -1; i--)
+        {
+            var modalRoot = popupModalRootPairs[i].modalRoot;
+            if (modalRoot.Children.Count > 0)
+            {
+#if FULL_DIAGNOSTICS
+                if (modalRoot.Managers == null)
+                {
+                    throw new InvalidOperationException("The ModalRoot has a Managers property of null. Did you accidentally call RemoveFromManagers?");
+                }
+#endif
+                SetDimensionsToCanvas(modalRoot);
+
+                // make sure this is the last:
+                foreach (var layer in SystemManagers.Default.Renderer.Layers)
+                {
+                    if (layer.Renderables.Contains(modalRoot.RenderableComponent) && layer.Renderables.Last() != modalRoot.RenderableComponent)
+                    {
+                        layer.Remove(modalRoot.RenderableComponent as IRenderableIpso);
+                        layer.Add(modalRoot.RenderableComponent as IRenderableIpso);
+                    }
+                }
+            }
+        }
+
+        if (exclusiveModalItem != null)
+        {
+            didModalsProcessInput = true;
+            // only the top-most element receives input
+            innerList.Add(exclusiveModalItem);
         }
 
         if (!didModalsProcessInput)
@@ -452,32 +476,38 @@ public class FormsUtilities
                 innerList.AddRange(roots);
             }
 
-            var isRootInRoots = roots?.Contains(FrameworkElement.PopupRoot) == true;
-
-            if (!isRootInRoots && FrameworkElement.PopupRoot.Children.Count > 0)
+            // Note: like the modal loop above, a later pair's popup root ends up raised on top of
+            // an earlier one's when both have children in the same frame — there's no exclusivity
+            // concept for popups (unlike modals), so this ordering is unenforced but benign.
+            foreach (var (popupRoot, _) in popupModalRootPairs)
             {
-#if FULL_DIAGNOSTICS
-                if (FrameworkElement.PopupRoot.Managers == null)
+                var isRootInRoots = roots?.Contains(popupRoot) == true;
+
+                if (!isRootInRoots && popupRoot.Children.Count > 0)
                 {
-                    throw new InvalidOperationException("The PopupRoot has a Managers property of null. Did you accidentally call RemoveFromManagers?");
-                }
+#if FULL_DIAGNOSTICS
+                    if (popupRoot.Managers == null)
+                    {
+                        throw new InvalidOperationException("The PopupRoot has a Managers property of null. Did you accidentally call RemoveFromManagers?");
+                    }
 #endif
 
-                SetDimensionsToCanvas(FrameworkElement.PopupRoot);
-                // make sure this is the last:
-                foreach (var layer in SystemManagers.Default.Renderer.Layers)
-                {
-                    if (layer.Renderables.Contains(FrameworkElement.PopupRoot.RenderableComponent) &&
-                        layer.Renderables.Last() != FrameworkElement.PopupRoot.RenderableComponent)
+                    SetDimensionsToCanvas(popupRoot);
+                    // make sure this is the last:
+                    foreach (var layer in SystemManagers.Default.Renderer.Layers)
                     {
-                        layer.Remove(FrameworkElement.PopupRoot.RenderableComponent as IRenderableIpso);
-                        layer.Add(FrameworkElement.PopupRoot.RenderableComponent as IRenderableIpso);
+                        if (layer.Renderables.Contains(popupRoot.RenderableComponent) &&
+                            layer.Renderables.Last() != popupRoot.RenderableComponent)
+                        {
+                            layer.Remove(popupRoot.RenderableComponent as IRenderableIpso);
+                            layer.Add(popupRoot.RenderableComponent as IRenderableIpso);
+                        }
                     }
-                }
 
-                foreach (var item in FrameworkElement.PopupRoot.Children)
-                {
-                    innerList.Add(item);
+                    foreach (var item in popupRoot.Children)
+                    {
+                        innerList.Add(item);
+                    }
                 }
             }
         }
@@ -557,6 +587,15 @@ public class FormsUtilities
                 "This should not be done");
         }
 #endif
+    }
+
+    static readonly List<(InteractiveGue popupRoot, InteractiveGue modalRoot)> popupModalRootPairs = new();
+
+    static void RefreshPopupModalRootPairs()
+    {
+        popupModalRootPairs.Clear();
+        popupModalRootPairs.Add((FrameworkElement.PopupRoot, FrameworkElement.ModalRoot));
+        popupModalRootPairs.AddRange(FrameworkElement.AdditionalPopupRootPairs);
     }
 
     internal static void SetDimensionsToCanvas(InteractiveGue container)

@@ -133,6 +133,19 @@ public class FrameworkElement : INotifyPropertyChanged
     /// </summary>
     public static InteractiveGue ModalRoot { get; set; }
 
+    /// <summary>
+    /// Additional popup/modal root pairs, beyond the global <see cref="PopupRoot"/>/<see cref="ModalRoot"/>,
+    /// that should receive the same automatic z-order raising, canvas sizing, and modal-exclusivity
+    /// handling that FormsUtilities.Update gives the global roots. A host that resolves custom roots via
+    /// <see cref="GraphicalUiElement.ResolvePopupRoots"/> (for example, one root pair per camera/viewport)
+    /// should register that pair here to opt into this behavior.
+    /// Registering a pair here forces its size to the full canvas every frame (matching the global roots),
+    /// which is undesirable for a root that should instead track a specific camera/viewport. A host with
+    /// that requirement should not register the pair here, and should instead manage its root's z-order
+    /// and sizing itself while still adding its content to the list of roots passed into Update.
+    /// </summary>
+    public static List<(InteractiveGue popupRoot, InteractiveGue modalRoot)> AdditionalPopupRootPairs { get; } = new();
+
 #endif
 
     protected bool isFocused;
