@@ -1,6 +1,14 @@
 name: "Build Samples"
 
-on: workflow_dispatch
+# Push/PR triggers make this the regression test for Samples/SilkNetGum, the
+# proof-of-concept that SkiaGum is drop-in for a Silk.NET host (#2738). Without
+# them it only ran on manual dispatch and could silently bitrot (#3570).
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
 
 jobs:
     Build-Samples:
