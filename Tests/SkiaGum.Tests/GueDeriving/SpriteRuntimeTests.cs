@@ -12,15 +12,24 @@ namespace SkiaGum.Tests.GueDeriving;
 
 public class MockContentLoader : IContentLoader
 {
+    private readonly int _bitmapWidth;
+    private readonly int _bitmapHeight;
+
     public object LastLoadedContent { get; private set; }
     public string LastLoadedName { get; private set; }
+
+    public MockContentLoader(int bitmapWidth = 10, int bitmapHeight = 10)
+    {
+        _bitmapWidth = bitmapWidth;
+        _bitmapHeight = bitmapHeight;
+    }
 
     public T LoadContent<T>(string contentName)
     {
         LastLoadedName = contentName;
         if (typeof(T) == typeof(SKBitmap))
         {
-            var bitmap = new SKBitmap(10, 10);
+            var bitmap = new SKBitmap(_bitmapWidth, _bitmapHeight);
             LastLoadedContent = bitmap;
             return (T)(object)bitmap;
         }
@@ -136,6 +145,45 @@ public class SpriteRuntimeTests
 
             frame.Texture.ShouldNotBeNull();
             mockLoader.LastLoadedName.ShouldEndWith("fake_texture.png");
+        }
+        finally
+        {
+            LoaderManager.Self.ContentLoader = originalLoader;
+        }
+    }
+
+    // Regression for #3549: the Pixel-coordinate conversion block in
+    // AnimationFrame.ToAnimationFrame was gated behind
+    // `#if MONOGAME || KNI || XNA4 || SOKOL`, missing RAYLIB and SKIA. On Skia a
+    // .achx with <CoordinateType>Pixel</CoordinateType> never had its
+    // LeftCoordinate/RightCoordinate/TopCoordinate/BottomCoordinate divided by
+    // the texture's Width/Height, so the frame silently fell back to the 0/0/1/1
+    // UV default (the entire texture) instead of the authored pixel sub-rect.
+    [Fact]
+    public void ToAnimationFrame_OnSkia_ConvertsPixelCoordinatesToUv()
+    {
+        MockContentLoader mockLoader = new MockContentLoader(bitmapWidth: 10, bitmapHeight: 10);
+        IContentLoader originalLoader = LoaderManager.Self.ContentLoader;
+        LoaderManager.Self.ContentLoader = mockLoader;
+
+        try
+        {
+            Gum.Content.AnimationChain.AnimationFrameSave save = new Gum.Content.AnimationChain.AnimationFrameSave
+            {
+                TextureName = "fake_texture.png",
+                FrameLength = 0.1f,
+                LeftCoordinate = 2f,
+                RightCoordinate = 8f,
+                TopCoordinate = 2f,
+                BottomCoordinate = 8f,
+            };
+
+            AnimationFrame frame = save.ToAnimationFrame(loadTexture: true, coordinateType: Gum.Content.AnimationChain.TextureCoordinateType.Pixel);
+
+            frame.LeftCoordinate.ShouldBe(0.2f);
+            frame.RightCoordinate.ShouldBe(0.8f);
+            frame.TopCoordinate.ShouldBe(0.2f);
+            frame.BottomCoordinate.ShouldBe(0.8f);
         }
         finally
         {

@@ -38,13 +38,14 @@ namespace Gum.Graphics.Animation
         #endregion
         public static AnimationFrame Empty;
 
-#if MONOGAME || KNI || XNA4 || RAYLIB || SKIA || SOKOL
+        // No #if guard needed: this file only ever compiles into MonoGameGum, KniGum,
+        // FnaGum, RaylibGum, SkiaGum, or SokolGum, each of which defines exactly one of
+        // MONOGAME/KNI/XNA4/RAYLIB/SKIA/SOKOL, so the Texture2D alias above always resolves.
         /// <summary>
         /// The texture that the AnimationFrame will show.
         /// </summary>
         [XmlIgnore]
         public Texture2D? Texture;
-#endif
 
         /// <summary>
         /// Whether the texture should be flipped horizontally.
@@ -240,13 +241,13 @@ namespace Gum.Graphics.Animation
             frame.TextureName = animationFrameSave.TextureName;
             frame.FrameLength = animationFrameSave.FrameLength;
 
-#if MONOGAME || KNI || XNA4 || RAYLIB || SKIA || SOKOL
             // Texture2D is a per-backend using alias (MG -> XNA Texture2D, Raylib ->
             // Raylib_cs.Texture2D, Skia -> SkiaSharp.SKBitmap, Sokol -> SokolGum.Texture2D),
             // declared at the top of this file. The load logic itself is identical across
             // backends, so one branch driven by the alias replaces the per-backend #if/#elif
             // ladder this used to be (which had no SKIA branch and silently dropped texture
-            // loads on Skia).
+            // loads on Skia). No #if guard needed here: see the comment on the Texture field
+            // above for why this file always has one of the backend symbols defined.
             if (loadTexture && !string.IsNullOrEmpty(animationFrameSave.TextureName))
             {
                 try
@@ -264,7 +265,6 @@ namespace Gum.Graphics.Animation
                     frame.Texture = null;
                 }
             }
-#endif
             frame.FlipHorizontal = animationFrameSave.FlipHorizontal;
             frame.FlipVertical = animationFrameSave.FlipVertical;
 
@@ -287,16 +287,26 @@ namespace Gum.Graphics.Animation
                 //    throw new Exception("The frame must have its texture loaded to use the Pixel coordinate type");
                 //}
 
-#if MONOGAME || KNI || XNA4 || SOKOL
                 if (frame.Texture != null)
                 {
-                    frame.LeftCoordinate = animationFrameSave.LeftCoordinate / frame.Texture.Width;
-                    frame.RightCoordinate = animationFrameSave.RightCoordinate / frame.Texture.Width;
-
-                    frame.TopCoordinate = animationFrameSave.TopCoordinate / frame.Texture.Height;
-                    frame.BottomCoordinate = animationFrameSave.BottomCoordinate / frame.Texture.Height;
-                }
+                    // Raylib_cs.Texture2D is a struct, so the Texture2D? alias is a boxed
+                    // Nullable<T> requiring .Value before member access. The other backends'
+                    // Texture2D aliases are reference types, where the null check above is
+                    // enough to access members directly. Same split as
+                    // MonoGameGum/GueDeriving/SpriteRuntime.cs's Texture setter.
+#if RAYLIB
+                    int textureWidth = frame.Texture.Value.Width;
+                    int textureHeight = frame.Texture.Value.Height;
+#else
+                    int textureWidth = frame.Texture.Width;
+                    int textureHeight = frame.Texture.Height;
 #endif
+                    frame.LeftCoordinate = animationFrameSave.LeftCoordinate / textureWidth;
+                    frame.RightCoordinate = animationFrameSave.RightCoordinate / textureWidth;
+
+                    frame.TopCoordinate = animationFrameSave.TopCoordinate / textureHeight;
+                    frame.BottomCoordinate = animationFrameSave.BottomCoordinate / textureHeight;
+                }
             }
 
 
