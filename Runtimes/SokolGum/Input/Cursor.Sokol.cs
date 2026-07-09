@@ -4,6 +4,14 @@ namespace Gum.Input;
 
 public partial class Cursor
 {
+    /// <summary>
+    /// Constructs a <see cref="Cursor"/> for the current (Sokol) platform. Sokol's parameterless
+    /// <see cref="Cursor()"/> ctor needs no game/window reference. Mirrors the MonoGame platform's
+    /// <c>Cursor.CreateForCurrentPlatform(Game?)</c> and the Raylib platform's
+    /// <c>Cursor.CreateForCurrentPlatform()</c>.
+    /// </summary>
+    internal static Cursor CreateForCurrentPlatform() => new Cursor();
+
     // Thread-safety: _pendingState is not synchronized. Matches MonoGame/Raylib —
     // event intake and per-frame reads are assumed to run on the same thread
     // (the main/game thread). sokol_app delivers events synchronously on the
