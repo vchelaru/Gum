@@ -73,6 +73,7 @@ public class BaseTestClass : IDisposable
         GumService.Default.Root.Children.Clear();
         GumService.Default.ModalRoot.Children.Clear();
         GumService.Default.PopupRoot.Children.Clear();
+        FrameworkElement.AdditionalPopupRootPairs.Clear();
 
         // Clear any per-capability factories a test registered into the static
         // RenderableRegistry so they don't leak into the next test.

@@ -1695,11 +1695,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// multiple popup/modal root pairs, for example one pair per camera/viewport in a host
     /// that embeds several independent Gum viewports.
     /// A resolved root only receives content — it is the caller's responsibility to also add
-    /// it to whatever list drives input dispatch (the same mechanism used for any other root),
-    /// to keep it sized (e.g. to its camera/viewport), and to keep it on top of its Layer.
-    /// Gum's own input loop only does this automatically for the global default popup/modal
-    /// roots, and its modal-exclusivity behavior (blocking input to everything else while a
-    /// modal is open) currently only applies to the global default modal root.
+    /// it to whatever list drives input dispatch (the same mechanism used for any other root).
+    /// To also opt into Gum's automatic z-order raising, canvas sizing, and modal-exclusivity
+    /// handling for a resolved pair (the behavior Gum's input loop otherwise only applies to the
+    /// global default popup/modal roots), register the pair in
+    /// FrameworkElement.AdditionalPopupRootPairs — see that property's docs for the canvas-sizing
+    /// tradeoff a per-camera root should consider before opting in.
     /// </summary>
     public static Func<GraphicalUiElement, (InteractiveGue popup, InteractiveGue modal)>? ResolvePopupRoots;
 

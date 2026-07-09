@@ -83,6 +83,7 @@ public class BaseTestClass : IDisposable
         GumService.Default.Root.Children!.Clear();
         GumService.Default.ModalRoot.Children!.Clear();
         GumService.Default.PopupRoot.Children!.Clear();
+        FrameworkElement.AdditionalPopupRootPairs.Clear();
 
         CustomSetPropertyOnRenderable.LocalizationService = null;
 
