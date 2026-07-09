@@ -298,34 +298,6 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
             }
         }
 
-        #region Add Text if the user presses CTRL+V
-        if (
-            isCtrlPressed
-            && KeyPushed(Keys.V)
-            )
-        {
-
-#if !MONOGAME && !KNI && !FNA
-            bool isSTAThreadUsed =
-                System.Threading.Thread.CurrentThread.GetApartmentState() == System.Threading.ApartmentState.STA;
-
-#if FULL_DIAGNOSTICS
-            if (!isSTAThreadUsed)
-            {
-                throw new InvalidOperationException("Need to set [STAThread] on Main to support copy/paste");
-            }
-#endif
-
-            if (isSTAThreadUsed && System.Windows.Forms.Clipboard.ContainsText())
-            {
-                returnString += System.Windows.Forms.Clipboard.GetText();
-
-            }
-#endif
-
-        }
-        #endregion
-
         return returnString;
 #endif
     }
@@ -519,13 +491,6 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
     private string KeyToStringAtCurrentState(int key)
     {
         bool isShiftDown = KeyDown(Keys.LeftShift) || KeyDown(Keys.RightShift);
-
-#if !MONOGAME && !KNI && !FNA
-        if (System.Windows.Forms.Control.IsKeyLocked(System.Windows.Forms.Keys.CapsLock))
-        {
-            isShiftDown = !isShiftDown;
-        }
-#endif
 
         #region If Shift is down, return a different key
         if (isShiftDown && IsKeyLetter((Keys)key))
