@@ -256,9 +256,13 @@ public class FormsUtilities
 #endif
 
 #if XNALIKE
-        keyboard = new Keyboard(game);
+        // The MonoGame-vs-Raylib/Sokol split lives entirely in Keyboard's own platform-specific
+        // implementations (MonoGameGum/Input/Keyboard.cs vs Runtimes/RaylibGum|SokolGum/Input/Keyboard.cs);
+        // this #if only forwards the `game` parameter, which exists on this overload of
+        // InitializeDefaults but not the other.
+        keyboard = Keyboard.CreateForCurrentPlatform(game);
 #else
-        keyboard = new Keyboard();
+        keyboard = Keyboard.CreateForCurrentPlatform();
 #endif
 
         for (int i = 0; i < Gamepads.Length; i++)

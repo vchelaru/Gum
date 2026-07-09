@@ -129,6 +129,15 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
     #endregion
 
     /// <summary>
+    /// Constructs a <see cref="Keyboard"/> for the current (MonoGame/KNI/FNA) platform, passing
+    /// the <see cref="Game"/> so it can subscribe to the Game's Window TextInput event. Mirrors
+    /// the Raylib/Sokol platforms' <c>Keyboard.CreateForCurrentPlatform()</c>.
+    /// </summary>
+    /// <param name="game">The optional <see cref="Game"/> instance, used to subscribe to the
+    /// Game's Window TextInput event if it is available on the current platform.</param>
+    internal static Keyboard CreateForCurrentPlatform(Game? game) => new Keyboard(game);
+
+    /// <summary>
     /// Instantiates a new Keyboard instance, optionally subscribing to the provided Game's Window TextInput event.
     /// </summary>
     /// <param name="game">The optional Game. If passed, the keyboard attempts to subscribe to the Game's Window TextInput event
