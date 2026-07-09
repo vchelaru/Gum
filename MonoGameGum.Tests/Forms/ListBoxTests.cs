@@ -2283,4 +2283,49 @@ public class ListBoxTests : BaseTestClass
     }
 
     #endregion
+
+    #region ShowPopupListBox
+
+    [Fact]
+    public void ShowPopupListBox_UsesResolvePopupRootsOverride_WhenSet()
+    {
+        ContainerRuntime customPopupRoot = new();
+        customPopupRoot.AddToManagers(RenderingLibrary.SystemManagers.Default);
+        ContainerRuntime customModalRoot = new();
+        customModalRoot.AddToManagers(RenderingLibrary.SystemManagers.Default);
+
+        Gum.Wireframe.GraphicalUiElement.ResolvePopupRoots = _ => (customPopupRoot, customModalRoot);
+
+        try
+        {
+            ComboBox comboBox = new();
+            comboBox.AddToRoot();
+
+            comboBox.IsDropDownOpen = true;
+
+            customPopupRoot.Children.ShouldContain(comboBox.ListBox!.Visual);
+            Gum.GumService.Default.PopupRoot.Children.ShouldNotContain(comboBox.ListBox!.Visual);
+        }
+        finally
+        {
+            Gum.Wireframe.GraphicalUiElement.ResolvePopupRoots = null;
+            customPopupRoot.Children.Clear();
+            customPopupRoot.RemoveFromManagers();
+            customModalRoot.Children.Clear();
+            customModalRoot.RemoveFromManagers();
+        }
+    }
+
+    [Fact]
+    public void ShowPopupListBox_FallsBackToGlobalPopupRoot_WhenResolvePopupRootsIsNotSet()
+    {
+        ComboBox comboBox = new();
+        comboBox.AddToRoot();
+
+        comboBox.IsDropDownOpen = true;
+
+        Gum.GumService.Default.PopupRoot.Children.ShouldContain(comboBox.ListBox!.Visual);
+    }
+
+    #endregion
 }

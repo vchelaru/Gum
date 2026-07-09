@@ -1688,6 +1688,21 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public static Func<IRenderable, IRenderable>? CloneRenderableFunction;
 
+    /// <summary>
+    /// Resolves the popup and modal root containers used when showing a popup (for example a
+    /// ComboBox or MenuItem dropdown), keyed off the element being shown. When null, callers
+    /// fall back to their own default global popup/modal roots. Override this to support
+    /// multiple popup/modal root pairs, for example one pair per camera/viewport in a host
+    /// that embeds several independent Gum viewports.
+    /// A resolved root only receives content — it is the caller's responsibility to also add
+    /// it to whatever list drives input dispatch (the same mechanism used for any other root),
+    /// to keep it sized (e.g. to its camera/viewport), and to keep it on top of its Layer.
+    /// Gum's own input loop only does this automatically for the global default popup/modal
+    /// roots, and its modal-exclusivity behavior (blocking input to everything else while a
+    /// modal is open) currently only applies to the global default modal root.
+    /// </summary>
+    public static Func<GraphicalUiElement, (InteractiveGue popup, InteractiveGue modal)>? ResolvePopupRoots;
+
 
     #endregion
 
@@ -5753,6 +5768,24 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 CustomAddChildren();
             }
         }
+    }
+
+    /// <summary>
+    /// Sets this instance's <see cref="Managers"/> so that <see cref="EffectiveManagers"/>
+    /// resolves for this element and its children, without registering any renderable with a
+    /// Layer — unlike <see cref="AddToManagers(ISystemManagers, Layer)"/>. Use this for
+    /// containers that are drawn through some other, external render pass rather than Gum's
+    /// own Renderer.Draw pipeline, but which still need EffectiveManagers-dependent behavior
+    /// (such as closing a ComboBox/MenuItem popup on an outside click) to work correctly.
+    /// Do not also call <see cref="AddToManagers(ISystemManagers, Layer)"/> on the same
+    /// instance afterward expecting it to now register for real Gum-driven drawing — its
+    /// "already added" guard treats <see cref="Managers"/> being non-null as sufficient, so
+    /// it will silently no-op.
+    /// </summary>
+    /// <param name="managers">The SystemManagers instance to resolve as this element's EffectiveManagers.</param>
+    public void AttachManagersOnly(ISystemManagers managers)
+    {
+        mManagers = managers;
     }
 
     private static void RecursivelyAddIManagedChildren(GraphicalUiElement gue)
