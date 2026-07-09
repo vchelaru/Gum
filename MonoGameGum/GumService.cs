@@ -55,6 +55,11 @@ public class GumService : IGumService
             "GumService.Default.Initialize(Game) on the concrete GumService instead.");
 #elif RAYLIB
         Initialize(DefaultVisualsVersion.Newest);
+#else
+        throw new NotSupportedException(
+            $"{nameof(GumService)}.Initialize() has no implementation for this backend. " +
+            "A new backend must add an explicit XNALIKE/RAYLIB-style arm here rather than " +
+            "relying on this fallback.");
 #endif
     }
 
@@ -66,6 +71,11 @@ public class GumService : IGumService
             "GumService.Default.Initialize(Game, gumProjectFile) on the concrete GumService instead.");
 #elif RAYLIB
         Initialize(gumProjectFile);
+#else
+        throw new NotSupportedException(
+            $"{nameof(GumService)}.Initialize(string) has no implementation for this backend. " +
+            "A new backend must add an explicit XNALIKE/RAYLIB-style arm here rather than " +
+            "relying on this fallback.");
 #endif
     }
 
@@ -76,6 +86,9 @@ public class GumService : IGumService
     // legacy-named subclass shim so existing code typed against it keeps compiling (soft migration,
     // issue #3119). Because static members are inherited, Gum.GumService.Default and the legacy
     // namespace's GumService.Default are the same single declaration and the same singleton.
+    // This switch is intentionally left closed (no #else): a third backend must add its own
+    // #elif arm here, with its own back-compat shim subclass, rather than assume a missing
+    // #else is an oversight — there is no sensible default subclass to fall back to.
 #if XNALIKE
     /// <summary>
     /// Gets the default instance of the GumService class.
