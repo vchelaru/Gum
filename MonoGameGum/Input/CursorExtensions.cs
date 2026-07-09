@@ -13,14 +13,15 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-#if XNALIKE || RAYLIB
-// GumService lives in the Gum namespace (issue #3119). The alias dodges the
-// [Obsolete] legacy shim that unqualified lookup would otherwise find through
-// this file's enclosing MonoGameGum namespace in the XNALIKE build.
-using GumServiceType = Gum.GumService;
-#else
+#if SOKOL
 // Sokol keeps its own GumService (no Gum-namespace move there).
 using GumServiceType = SokolGum.GumService;
+#else
+// GumService lives in the Gum namespace (issue #3119). Any backend other than the
+// un-migrated Sokol uses it — including future backends by default. The alias also
+// dodges the [Obsolete] legacy shim that unqualified lookup would otherwise find
+// through this file's enclosing MonoGameGum namespace in the XNALIKE build.
+using GumServiceType = Gum.GumService;
 #endif
 
 #if XNALIKE

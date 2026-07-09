@@ -1,4 +1,7 @@
-﻿using Gum.Wireframe;
+﻿#if MONOGAME || KNI || FNA
+#define XNALIKE
+#endif
+using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using RenderingLibrary;
 using System;
@@ -7,10 +10,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#if RAYLIB || SOKOL
-namespace Gum.Renderables;
-#else
+#if XNALIKE
 namespace MonoGameGum.Renderables;
+#else
+namespace Gum.Renderables;
 #endif
 public static class RenderableCreator
 {

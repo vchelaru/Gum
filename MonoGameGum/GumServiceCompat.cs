@@ -16,6 +16,12 @@ using System;
 // NOTE for FRB1 maintainers: this file is intentionally NOT in GumCoreShared.projitems.
 // It shims Gum.GumService, which is also not FRB-shared.
 
+// This entire shim only makes sense for the two legacy namespaces below. A new backend
+// (e.g. a future Silk.NET backend) has no legacy MonoGameGum/RaylibGum namespace to shim,
+// so none of this file should compile for it — hence the wrapper rather than an #else
+// that would just relocate the "pick a default namespace" landmine here instead.
+#if XNALIKE || RAYLIB
+
 #if XNALIKE
 namespace MonoGameGum;
 #elif RAYLIB
@@ -69,3 +75,4 @@ public static class ElementSaveExtensionMethods
     public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, SystemManagers? systemManagers = null) =>
         global::Gum.ElementSaveExtensionMethods.ToGraphicalUiElement(elementSave, systemManagers);
 }
+#endif
