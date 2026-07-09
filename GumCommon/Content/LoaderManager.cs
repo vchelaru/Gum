@@ -5,11 +5,18 @@ using System.Linq;
 namespace RenderingLibrary.Content;
 
 /// <summary>
-/// SkiaGum implementation that owns the texture/content cache and the active
-/// <see cref="IContentLoader"/>. All SkiaGum asset loading flows through here: callers use
-/// <see cref="LoadContent{T}"/> / <see cref="TryLoadContent{T}"/>, which delegate to
+/// Owns the texture/content cache and the active <see cref="IContentLoader"/> shared by every
+/// GumCommon-based runtime (MonoGameGum, RaylibGum, SkiaGum, KniGum, FnaGum) and the Gum tool.
+/// Callers use <see cref="LoadContent{T}"/> / <see cref="TryLoadContent{T}"/>, which delegate to
 /// <see cref="ContentLoader"/>.
 /// </summary>
+/// <remarks>
+/// <c>RenderingLibrary/Content/LoaderManager.cs</c> is a deliberate duplicate of this file (same
+/// namespace/type name, never compiled together): it's compiled only via
+/// <c>GumCoreShared.projitems</c>, whose sole consumer is FRB1 (FlatRedBall). See that file's
+/// remarks and https://github.com/vchelaru/Gum/issues/3566 for why <see cref="CacheTextures"/>
+/// defaults differently there.
+/// </remarks>
 public class LoaderManager
 {
     #region Enums
@@ -67,11 +74,9 @@ public class LoaderManager
         set;
     }
 
-    // February 6, 2024
-    // Why is this false?
-    // Caching should be turned
-    // on by default...
-    //bool mCacheTextures = false;
+    // Defaults to true here (unlike the RenderingLibrary/Content/LoaderManager.cs duplicate, which
+    // defaults false): this class's consumers mostly ride the built-in ContentLoader, which checks
+    // this flag before consulting the cache. See issue #3566 for the full explanation.
     bool mCacheTextures = true;
     Dictionary<string, IDisposable> mCachedDisposables = new Dictionary<string, IDisposable>(StringComparer.OrdinalIgnoreCase);
 
