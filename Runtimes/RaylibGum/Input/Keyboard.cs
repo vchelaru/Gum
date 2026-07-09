@@ -10,6 +10,14 @@ namespace Gum.Input;
 /// </summary>
 public class Keyboard : IInputReceiverKeyboard
 {
+    /// <summary>
+    /// Constructs a <see cref="Keyboard"/> for the current (Raylib) platform. Raylib's parameterless
+    /// <see cref="Keyboard()"/> ctor needs no game reference. Mirrors the MonoGame platform's
+    /// <c>Keyboard.CreateForCurrentPlatform(Game?)</c> and the Sokol platform's
+    /// <c>Keyboard.CreateForCurrentPlatform()</c>.
+    /// </summary>
+    internal static Keyboard CreateForCurrentPlatform() => new Keyboard();
+
     double _lastGameTime;
     double _lastGetStringTypedCall = -999;
     string _lastStringTyped = "";

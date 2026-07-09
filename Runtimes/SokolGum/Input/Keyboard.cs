@@ -26,6 +26,14 @@ namespace Gum.Input;
 /// </remarks>
 public class Keyboard : IInputReceiverKeyboard
 {
+    /// <summary>
+    /// Constructs a <see cref="Keyboard"/> for the current (Sokol) platform. Sokol's parameterless
+    /// <see cref="Keyboard()"/> ctor needs no game reference. Mirrors the MonoGame platform's
+    /// <c>Keyboard.CreateForCurrentPlatform(Game?)</c> and the Raylib platform's
+    /// <c>Keyboard.CreateForCurrentPlatform()</c>.
+    /// </summary>
+    internal static Keyboard CreateForCurrentPlatform() => new Keyboard();
+
     #region Key translation tables
 
     /// <summary>
