@@ -78,12 +78,49 @@ public class AnimationChainTextureLoadingTests : BaseTestClass
         }, count: 2);
     }
 
-    private static AnimationChainListSave BuildSave(string tempRoot, string achxName, (string TextureName, float FrameLength)[] frames)
+    // Regression for #3549: the Pixel-coordinate conversion block in
+    // AnimationFrame.ToAnimationFrame was gated behind
+    // `#if MONOGAME || KNI || XNA4 || SOKOL`, missing RAYLIB and SKIA. On those
+    // two backends a .achx with <CoordinateType>Pixel</CoordinateType> never had
+    // its LeftCoordinate/RightCoordinate/TopCoordinate/BottomCoordinate divided by
+    // the texture's Width/Height, so the frame silently fell back to the 0/0/1/1
+    // UV default (the entire texture) instead of the authored pixel sub-rect.
+    [Fact]
+    public void ToAnimationChainList_OnRaylib_ConvertsPixelCoordinatesToUv()
+    {
+        WithTempTextures((tempRoot, fileNames) =>
+        {
+            AnimationChainListSave save = BuildSave(
+                tempRoot,
+                "pixel.achx",
+                new[] { (fileNames[0], 0.1f) },
+                coordinateType: TextureCoordinateType.Pixel,
+                coordinates: (Left: 1f, Right: 3f, Top: 1f, Bottom: 3f));
+
+            AnimationChainList list = save.ToAnimationChainList();
+
+            AnimationFrame frame = list[0][0];
+            frame.LeftCoordinate.ShouldBe(0.25f);
+            frame.RightCoordinate.ShouldBe(0.75f);
+            frame.TopCoordinate.ShouldBe(0.25f);
+            frame.BottomCoordinate.ShouldBe(0.75f);
+        }, count: 1);
+    }
+
+    private static AnimationChainListSave BuildSave(
+        string tempRoot,
+        string achxName,
+        (string TextureName, float FrameLength)[] frames,
+        TextureCoordinateType coordinateType = TextureCoordinateType.UV,
+        (float Left, float Right, float Top, float Bottom)? coordinates = null)
     {
         AnimationChainListSave save = new AnimationChainListSave();
         save.FileName = Path.Combine(tempRoot, achxName).Replace('\\', '/');
         save.FileRelativeTextures = true;
+        save.CoordinateType = coordinateType;
         save.AnimationChains = new List<AnimationChainSave>();
+
+        (float Left, float Right, float Top, float Bottom) coords = coordinates ?? (0f, 1f, 0f, 1f);
 
         AnimationChainSave chainSave = new AnimationChainSave();
         chainSave.Name = "TestChain";
@@ -94,10 +131,10 @@ public class AnimationChainTextureLoadingTests : BaseTestClass
             {
                 TextureName = name,
                 FrameLength = length,
-                LeftCoordinate = 0f,
-                RightCoordinate = 1f,
-                TopCoordinate = 0f,
-                BottomCoordinate = 1f,
+                LeftCoordinate = coords.Left,
+                RightCoordinate = coords.Right,
+                TopCoordinate = coords.Top,
+                BottomCoordinate = coords.Bottom,
             });
         }
         save.AnimationChains.Add(chainSave);

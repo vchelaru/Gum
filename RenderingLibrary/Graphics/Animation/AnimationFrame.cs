@@ -287,14 +287,26 @@ namespace Gum.Graphics.Animation
                 //    throw new Exception("The frame must have its texture loaded to use the Pixel coordinate type");
                 //}
 
-#if MONOGAME || KNI || XNA4 || SOKOL
+#if MONOGAME || KNI || XNA4 || RAYLIB || SKIA || SOKOL
                 if (frame.Texture != null)
                 {
-                    frame.LeftCoordinate = animationFrameSave.LeftCoordinate / frame.Texture.Width;
-                    frame.RightCoordinate = animationFrameSave.RightCoordinate / frame.Texture.Width;
+                    // Raylib_cs.Texture2D is a struct, so the Texture2D? alias is a boxed
+                    // Nullable<T> requiring .Value before member access. The other backends'
+                    // Texture2D aliases are reference types, where the null check above is
+                    // enough to access members directly. Same split as
+                    // MonoGameGum/GueDeriving/SpriteRuntime.cs's Texture setter.
+#if RAYLIB
+                    int textureWidth = frame.Texture.Value.Width;
+                    int textureHeight = frame.Texture.Value.Height;
+#else
+                    int textureWidth = frame.Texture.Width;
+                    int textureHeight = frame.Texture.Height;
+#endif
+                    frame.LeftCoordinate = animationFrameSave.LeftCoordinate / textureWidth;
+                    frame.RightCoordinate = animationFrameSave.RightCoordinate / textureWidth;
 
-                    frame.TopCoordinate = animationFrameSave.TopCoordinate / frame.Texture.Height;
-                    frame.BottomCoordinate = animationFrameSave.BottomCoordinate / frame.Texture.Height;
+                    frame.TopCoordinate = animationFrameSave.TopCoordinate / textureHeight;
+                    frame.BottomCoordinate = animationFrameSave.BottomCoordinate / textureHeight;
                 }
 #endif
             }
