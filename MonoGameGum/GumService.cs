@@ -328,16 +328,17 @@ public class GumService : IGumService
     public ContentLoader? ContentLoader => LoaderManager.Self.ContentLoader as ContentLoader;
 
     InteractiveGue _root = null!;
+    bool _rootOwnedByGumService;
     /// <summary>
     /// The root container that owns top-level elements added via <c>AddToRoot</c>. Can be
     /// reassigned to a custom container (for example, one an embedding host already draws
     /// through its own render pass) so that <c>AddToRoot</c> and the host's own root become
     /// the same object. Reassigning moves the focus-cleanup subscription (see
     /// <see cref="Gum.Forms.FormsUtilities.HandleRootCollectionChanged"/>) from the old root
-    /// onto the new one. Like <see cref="Gum.Forms.Controls.FrameworkElement.PopupRoot"/> and
-    /// <see cref="Gum.Forms.Controls.FrameworkElement.ModalRoot"/>, a reassigned Root is still
-    /// cleared and detached from its SystemManagers by <see cref="Uninitialize"/> — a host that
-    /// reassigns this should not call Uninitialize while still using its own container.
+    /// onto the new one. Unlike <see cref="Gum.Forms.Controls.FrameworkElement.PopupRoot"/> and
+    /// <see cref="Gum.Forms.Controls.FrameworkElement.ModalRoot"/>, <see cref="Uninitialize"/>
+    /// does not clear or detach a reassigned Root — it only tears down the default Root that
+    /// GumService itself created, since a host-supplied Root is the host's own object.
     /// </summary>
     public InteractiveGue Root
     {
@@ -355,6 +356,7 @@ public class GumService : IGumService
             }
 
             _root = value;
+            _rootOwnedByGumService = false;
             _root.Children.CollectionChanged += HandleRootChildrenCollectionChanged;
         }
     }
@@ -783,6 +785,7 @@ public class GumService : IGumService
     public GumService()
     {
         Root = new ContainerRuntime();
+        _rootOwnedByGumService = true;
         Root.Width = 0;
         Root.WidthUnits = DimensionUnitType.RelativeToParent;
         Root.Height = 0;
@@ -1344,8 +1347,15 @@ public class GumService : IGumService
 
         InteractiveGue.CurrentInputReceiver = null;
 
-        Root.Children.Clear();
-        Root.RemoveFromManagers();
+        // Only tear down Root if GumService itself created it. A reassigned Root
+        // (see the Root property doc) is the host's own object — clearing its
+        // children or detaching its Managers would silently corrupt state the host
+        // still owns and expects to keep using.
+        if (_rootOwnedByGumService)
+        {
+            Root.Children.Clear();
+            Root.RemoveFromManagers();
+        }
 
         if (FrameworkElement.PopupRoot != null)
         {

@@ -97,6 +97,30 @@ public class UninitializeTests : BaseTestClass
     }
 
     [Fact]
+    public void Uninitialize_DoesNotClearOrDetachAReassignedHostRoot()
+    {
+        using var game = new GameForUninitializeTest();
+        game.RunOneFrame();
+
+        // Mirrors how an embedding host (e.g. FlatRedBall2) reassigns Root to its own
+        // container, attached via AttachManagersOnly rather than AddToManagers since the
+        // host draws it through its own render pass.
+        var hostRoot = new ContainerRuntime();
+        hostRoot.AttachManagersOnly(game.GumService.SystemManagers);
+        var hostChild = new ContainerRuntime();
+        hostRoot.Children.Add(hostChild);
+
+        game.GumService.Root = hostRoot;
+
+        game.GumService.Uninitialize();
+
+        hostRoot.Children.ShouldContain(hostChild,
+            "because Uninitialize must not clear a host-reassigned Root's own children");
+        hostRoot.Managers.ShouldNotBeNull(
+            "because Uninitialize must not detach a host-reassigned Root's EffectiveManagers resolution");
+    }
+
+    [Fact]
     public void Uninitialize_ClearsRenderableRegistry()
     {
         using GameForUninitializeTest game = new GameForUninitializeTest();
