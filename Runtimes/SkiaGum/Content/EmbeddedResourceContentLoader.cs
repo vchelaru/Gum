@@ -1,17 +1,11 @@
 ﻿using RenderingLibrary.Content;
 using SkiaSharp;
-using System;
 using SKSvg = Svg.Skia.SKSvg;
 
 namespace SkiaGum.Content
 {
     public class EmbeddedResourceContentLoader : IContentLoader
     {
-        public void AddDisposable(string contentName, IDisposable disposable)
-        {
-            throw new NotImplementedException();
-        }
-
         public T LoadContent<T>(string contentName)
         {
             if (typeof(T) == typeof(SKTypeface))
@@ -54,14 +48,17 @@ namespace SkiaGum.Content
             return SkiaResourceManager.GetTypeface(modifiedContentName);
         }
 
-        public T TryGetCachedDisposable<T>(string contentName)
-        {
-            throw new NotImplementedException();
-        }
-
+        /// <inheritdoc/>
         public T TryLoadContent<T>(string contentName)
         {
-            throw new NotImplementedException();
+            try
+            {
+                return LoadContent<T>(contentName);
+            }
+            catch
+            {
+                return default(T);
+            }
         }
     }
 }
