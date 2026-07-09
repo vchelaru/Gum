@@ -17,10 +17,7 @@ partial class @interface : global::Gum.Forms.Controls.FrameworkElement
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("interface");
-#if DEBUG
-if(element == null) throw new System.InvalidOperationException("Could not find an element named interface - did you forget to load a Gum project?");
-#endif
+            var element = ObjectFinder.Self.GetElementSave("interface") ?? throw new System.InvalidOperationException("Could not find an element named interface - did you forget to load a Gum project?");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new @interface(visual);
             return visual;

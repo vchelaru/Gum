@@ -170,4 +170,30 @@ public class CodeGeneratorRegisterRuntimeTypeTests : BaseTestClass
             ObjectFinder.Self.GumProjectSave = null;
         }
     }
+
+    [Fact]
+    public void MissingElementNullCheck_IsEmittedUnconditionally()
+    {
+        // #3576: the null check on ObjectFinder.Self.GetElementSave(...) used to be wrapped in
+        // #if DEBUG, so a Release build hit an opaque NullReferenceException instead of the
+        // descriptive message. It must be emitted unconditionally.
+        GumProjectSave project = Project;
+        ComponentSave panel = CreateComponent("Panel", "Container");
+        project.Components.Add(panel);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        try
+        {
+            string code = CreateCodeGenerator().GetGeneratedCodeForElement(
+                panel, elementSettings: null!, CreateForms());
+
+            code.ShouldNotContain("#if DEBUG");
+            code.ShouldContain(
+                "ObjectFinder.Self.GetElementSave(\"Panel\") ?? throw new System.InvalidOperationException(\"Could not find an element named Panel - did you forget to load a Gum project?\");");
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
 }

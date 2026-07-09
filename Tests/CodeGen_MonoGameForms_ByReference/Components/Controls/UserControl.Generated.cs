@@ -17,10 +17,7 @@ partial class UserControl : global::Gum.Forms.Controls.FrameworkElement
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("Controls/UserControl");
-#if DEBUG
-if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/UserControl - did you forget to load a Gum project?");
-#endif
+            var element = ObjectFinder.Self.GetElementSave("Controls/UserControl") ?? throw new System.InvalidOperationException("Could not find an element named Controls/UserControl - did you forget to load a Gum project?");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new UserControl(visual);
             return visual;

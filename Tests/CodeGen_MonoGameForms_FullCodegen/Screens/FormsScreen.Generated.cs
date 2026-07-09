@@ -18,10 +18,7 @@ partial class FormsScreen : global::Gum.Forms.Controls.FrameworkElement
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("FormsScreen");
-#if DEBUG
-if(element == null) throw new System.InvalidOperationException("Could not find an element named FormsScreen - did you forget to load a Gum project?");
-#endif
+            var element = ObjectFinder.Self.GetElementSave("FormsScreen") ?? throw new System.InvalidOperationException("Could not find an element named FormsScreen - did you forget to load a Gum project?");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new FormsScreen(visual);
             visual.Width = 0;

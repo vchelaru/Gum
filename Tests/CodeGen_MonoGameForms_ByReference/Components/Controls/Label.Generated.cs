@@ -17,10 +17,7 @@ partial class Label : global::Gum.Forms.Controls.Label
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.TextRuntime();
-            var element = ObjectFinder.Self.GetElementSave("Controls/Label");
-#if DEBUG
-if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/Label - did you forget to load a Gum project?");
-#endif
+            var element = ObjectFinder.Self.GetElementSave("Controls/Label") ?? throw new System.InvalidOperationException("Could not find an element named Controls/Label - did you forget to load a Gum project?");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new Label(visual);
             return visual;

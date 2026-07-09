@@ -1662,11 +1662,7 @@ public class CodeGenerator
 
 
             builder.AppendLine(context.Tabs +
-                $"var element = ObjectFinder.Self.GetElementSave(\"{context.Element.Name}\");");
-
-            builder.AppendLine("#if DEBUG");
-            builder.AppendLine($"if(element == null) throw new System.InvalidOperationException(\"Could not find an element named {context.Element.Name} - did you forget to load a Gum project?\");");
-            builder.AppendLine("#endif");
+                $"var element = ObjectFinder.Self.GetElementSave(\"{context.Element.Name}\") ?? throw new System.InvalidOperationException(\"Could not find an element named {context.Element.Name} - did you forget to load a Gum project?\");");
 
 
             builder.AppendLine(context.Tabs +

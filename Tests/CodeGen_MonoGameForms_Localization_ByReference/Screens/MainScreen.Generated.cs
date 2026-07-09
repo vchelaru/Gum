@@ -18,10 +18,7 @@ partial class MainScreen : global::Gum.Forms.Controls.FrameworkElement
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("MainScreen");
-#if DEBUG
-if(element == null) throw new System.InvalidOperationException("Could not find an element named MainScreen - did you forget to load a Gum project?");
-#endif
+            var element = ObjectFinder.Self.GetElementSave("MainScreen") ?? throw new System.InvalidOperationException("Could not find an element named MainScreen - did you forget to load a Gum project?");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new MainScreen(visual);
             visual.Width = 0;

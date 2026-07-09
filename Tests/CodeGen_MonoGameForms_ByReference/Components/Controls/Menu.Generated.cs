@@ -17,10 +17,7 @@ partial class Menu : global::Gum.Forms.Controls.Menu
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("Controls/Menu");
-#if DEBUG
-if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/Menu - did you forget to load a Gum project?");
-#endif
+            var element = ObjectFinder.Self.GetElementSave("Controls/Menu") ?? throw new System.InvalidOperationException("Could not find an element named Controls/Menu - did you forget to load a Gum project?");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new Menu(visual);
             return visual;

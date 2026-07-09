@@ -18,10 +18,7 @@ partial class TreeViewItem : global::Gum.Forms.Controls.FrameworkElement
         var template = new global::Gum.Forms.VisualTemplate((vm, createForms) =>
         {
             var visual = new global::Gum.GueDeriving.ContainerRuntime();
-            var element = ObjectFinder.Self.GetElementSave("Controls/TreeViewItem");
-#if DEBUG
-if(element == null) throw new System.InvalidOperationException("Could not find an element named Controls/TreeViewItem - did you forget to load a Gum project?");
-#endif
+            var element = ObjectFinder.Self.GetElementSave("Controls/TreeViewItem") ?? throw new System.InvalidOperationException("Could not find an element named Controls/TreeViewItem - did you forget to load a Gum project?");
             element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);
             if(createForms) visual.FormsControlAsObject = new TreeViewItem(visual);
             return visual;
