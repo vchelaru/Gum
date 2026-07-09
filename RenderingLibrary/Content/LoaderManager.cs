@@ -20,6 +20,15 @@ namespace RenderingLibrary.Content
     /// that is already in memory), assign your own loader to <see cref="ContentLoader"/>.
     /// The cache itself is a dictionary of <see cref="IDisposable"/> keyed by standardized file path;
     /// see <see cref="LoadContent{T}"/> for why the cache is populated by the loader rather than here.
+    /// <para>
+    /// This file is a deliberate duplicate of <c>GumCommon/Content/LoaderManager.cs</c> (same
+    /// namespace/type name, never compiled together). This copy is compiled only via
+    /// <c>GumCoreShared.projitems</c>, whose sole consumer is FRB1 (FlatRedBall) — several of its
+    /// solutions (FlatRedBall.Forms per-platform, GlueView, samples, tests) reference the legacy
+    /// <c>GumCore*</c> project family directly. It looks orphaned from a Gum-repo-only grep, but it
+    /// is not; do not delete without checking the FRB1 repo. See
+    /// https://github.com/vchelaru/Gum/issues/3566 for the full investigation.
+    /// </para>
     /// </remarks>
     public class LoaderManager
     {
@@ -41,6 +50,11 @@ namespace RenderingLibrary.Content
 
         #region Fields
 
+        // Intentionally false, unlike GumCommon's copy (true): FRB1 always replaces ContentLoader
+        // with its own ContentManagerWrapper (see FRBDK/Glue/GumPlugin/GumPlugin/Embedded/ContentManagerWrapper.cs
+        // in the FRB1 repo), which delegates to FlatRedBall's own ContentManager and never consults
+        // this class's cache. So this flag is moot in practice for FRB1 games; false is just the
+        // safer default for the brief window before that swap happens. See issue #3566.
         bool mCacheTextures = false;
 
         static LoaderManager mSelf;
