@@ -2327,5 +2327,55 @@ public class ListBoxTests : BaseTestClass
         Gum.GumService.Default.PopupRoot.Children.ShouldContain(comboBox.ListBox!.Visual);
     }
 
+    [Fact]
+    public void ShowPopupListBox_ClampsAgainstResolvedPopupRootBounds_NotGlobalCanvas()
+    {
+        // Issue #3591: reposition-to-keep-in-screen ran before the popup root was resolved
+        // and clamped against the global canvas, so a popup routed to a smaller per-camera
+        // root (via ResolvePopupRoots) could still overflow that root's bounds.
+        GraphicalUiElement.CanvasWidth = 800;
+        GraphicalUiElement.CanvasHeight = 600;
+
+        ContainerRuntime customPopupRoot = new();
+        customPopupRoot.X = 100;
+        customPopupRoot.Y = 50;
+        customPopupRoot.Width = 200;
+        customPopupRoot.Height = 150;
+        customPopupRoot.AddToManagers(RenderingLibrary.SystemManagers.Default);
+        ContainerRuntime customModalRoot = new();
+        customModalRoot.AddToManagers(RenderingLibrary.SystemManagers.Default);
+
+        Gum.Wireframe.GraphicalUiElement.ResolvePopupRoots = _ => (customPopupRoot, customModalRoot);
+
+        try
+        {
+            ContainerRuntime listBoxParent = new();
+            listBoxParent.AddToRoot();
+
+            ScrollViewer popup = new();
+            popup.Width = 100;
+            popup.Height = 50;
+            // Fits within the 800x600 global canvas, but overflows customPopupRoot's
+            // right/bottom edges (300, 200) once parented under it:
+            popup.X = 250;
+            popup.Y = 180;
+
+            ListBox.ShowPopupListBox(popup, listBoxParent);
+
+            (popup.Visual.AbsoluteX + popup.Visual.GetAbsoluteWidth())
+                .ShouldBeLessThanOrEqualTo(customPopupRoot.X + customPopupRoot.GetAbsoluteWidth());
+            (popup.Visual.AbsoluteY + popup.Visual.GetAbsoluteHeight())
+                .ShouldBeLessThanOrEqualTo(customPopupRoot.Y + customPopupRoot.GetAbsoluteHeight());
+        }
+        finally
+        {
+            Gum.Wireframe.GraphicalUiElement.ResolvePopupRoots = null;
+            customPopupRoot.Children.Clear();
+            customPopupRoot.RemoveFromManagers();
+            customModalRoot.Children.Clear();
+            customModalRoot.RemoveFromManagers();
+        }
+    }
+
     #endregion
 }

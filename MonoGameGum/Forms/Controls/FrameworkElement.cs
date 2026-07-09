@@ -936,21 +936,41 @@ public class FrameworkElement : INotifyPropertyChanged
 #endif
 
     /// <summary>
-    /// Repositions this element so it stays inside the logical Gum canvas
-    /// (<see cref="GraphicalUiElement.CanvasWidth"/> / <see cref="GraphicalUiElement.CanvasHeight"/>),
-    /// which is the space PopupRoot/ModalRoot are sized to. Clamps all four edges.
-    /// Used by popups (ListBox dropdown, Tooltip, MenuItem submenu) so they don't
-    /// render past the canvas edge regardless of how the camera/screen is sized.
+    /// Repositions this element so it stays inside <paramref name="boundsRoot"/>'s absolute bounds,
+    /// or the logical Gum canvas (<see cref="GraphicalUiElement.CanvasWidth"/> / <see cref="GraphicalUiElement.CanvasHeight"/>),
+    /// which is the space PopupRoot/ModalRoot are sized to, when <paramref name="boundsRoot"/> is null.
+    /// Clamps all four edges. Used by popups (ListBox dropdown, Tooltip, MenuItem submenu) so they
+    /// don't render past their root's edge regardless of how the camera/screen is sized.
     /// </summary>
-    public void RepositionToKeepInScreen()
+    /// <param name="boundsRoot">
+    /// The root the popup was (or will be) parented under, used as the clamp bounds instead of the
+    /// global canvas. Pass the root resolved from <see cref="GraphicalUiElement.ResolvePopupRoots"/>
+    /// so a popup routed to a per-camera/viewport root clamps against that root, not the whole window.
+    /// </param>
+    public void RepositionToKeepInScreen(GraphicalUiElement? boundsRoot = null)
     {
         if (Visual == null)
         {
             return;
         }
 
-        var canvasWidth = GraphicalUiElement.CanvasWidth;
-        var canvasHeight = GraphicalUiElement.CanvasHeight;
+        float originX, originY, canvasWidth, canvasHeight;
+        if (boundsRoot != null)
+        {
+            // AbsoluteLeft/Top/Right/Bottom (unlike AbsoluteX/Y) are origin-independent, so this
+            // stays correct even if boundsRoot has a non-default XOrigin/YOrigin.
+            originX = boundsRoot.AbsoluteLeft;
+            originY = boundsRoot.AbsoluteTop;
+            canvasWidth = boundsRoot.AbsoluteRight;
+            canvasHeight = boundsRoot.AbsoluteBottom;
+        }
+        else
+        {
+            originX = 0;
+            originY = 0;
+            canvasWidth = GraphicalUiElement.CanvasWidth;
+            canvasHeight = GraphicalUiElement.CanvasHeight;
+        }
 
         var width = Visual.GetAbsoluteWidth();
         var height = Visual.GetAbsoluteHeight();
@@ -963,9 +983,9 @@ public class FrameworkElement : INotifyPropertyChanged
         {
             this.X -= (right - canvasWidth);
         }
-        if (Visual.AbsoluteX < 0)
+        if (Visual.AbsoluteX < originX)
         {
-            this.X -= Visual.AbsoluteX;
+            this.X -= (Visual.AbsoluteX - originX);
         }
 
         var bottom = Visual.AbsoluteY + height;
@@ -973,9 +993,9 @@ public class FrameworkElement : INotifyPropertyChanged
         {
             this.Y -= (bottom - canvasHeight);
         }
-        if (Visual.AbsoluteY < 0)
+        if (Visual.AbsoluteY < originY)
         {
-            this.Y -= Visual.AbsoluteY;
+            this.Y -= (Visual.AbsoluteY - originY);
         }
     }
 
