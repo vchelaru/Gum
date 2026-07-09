@@ -21,9 +21,15 @@ namespace MonoGameGum.Input;
 /// This class includes properties necessary for interacting with Gum UI elements, such 
 /// as push, click, and position tracking.
 /// </summary>
-public partial class Cursor 
+public partial class Cursor
 {
-    
+    /// <summary>
+    /// Constructs a <see cref="Cursor"/> for the current (Raylib) platform. Raylib's parameterless
+    /// <see cref="Cursor()"/> ctor needs no game/window reference. Mirrors the MonoGame platform's
+    /// <c>Cursor.CreateForCurrentPlatform(Game?)</c>.
+    /// </summary>
+    internal static Cursor CreateForCurrentPlatform() => new Cursor();
+
     private MouseState GetMouseState()
     {
         var state = new MouseState();
