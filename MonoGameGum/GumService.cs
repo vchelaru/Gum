@@ -331,10 +331,13 @@ public class GumService : IGumService
     private (int width, int height) GetWindowSize()
     {
 #if XNALIKE
+        // BackBufferWidth/Height is always physical pixels - XNA has no separate logical/DPI-scaled size.
         var pp = Game.GraphicsDevice.PresentationParameters;
         return (pp.BackBufferWidth, pp.BackBufferHeight);
 #elif RAYLIB
-        return (Raylib.GetScreenWidth(), Raylib.GetScreenHeight());
+        // GetRenderWidth/Height (physical framebuffer pixels) rather than GetScreenWidth/Height
+        // (logical/DPI-unaware size) to match XNALIKE's physical-pixel convention above (#3572).
+        return (Raylib.GetRenderWidth(), Raylib.GetRenderHeight());
 #endif
     }
 

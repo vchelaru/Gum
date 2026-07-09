@@ -215,8 +215,10 @@ public class Renderer : IRenderer
             CollectReferencedRenderTargets(layers[i].Renderables);
         }
 
-        _camera.ClientWidth = Raylib.GetScreenWidth();
-        _camera.ClientHeight = Raylib.GetScreenHeight();
+        // GetRenderWidth/Height (physical framebuffer pixels) rather than GetScreenWidth/Height
+        // (logical/DPI-unaware size) to match XNALIKE's BackBufferWidth/Height convention (#3572).
+        _camera.ClientWidth = Raylib.GetRenderWidth();
+        _camera.ClientHeight = Raylib.GetRenderHeight();
 
         var camera2D = new Camera2D
         {
