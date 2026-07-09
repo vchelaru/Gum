@@ -748,6 +748,67 @@ public class FrameworkElementTests : BaseTestClass
         GumService.Default.Root.Children.ShouldNotContain(child.Visual);
     }
 
+    #region RepositionToKeepInScreen
+
+    [Fact]
+    public void RepositionToKeepInScreen_WithBoundsRoot_ClampsAgainstRootBounds_NotGlobalCanvas()
+    {
+        // Issue #3591: a popup routed to a per-camera/viewport root must clamp against
+        // that root's bounds, not the global canvas, or it can overflow the smaller root.
+        GraphicalUiElement.CanvasWidth = 800;
+        GraphicalUiElement.CanvasHeight = 600;
+
+        ContainerRuntime boundsRoot = new();
+        boundsRoot.X = 100;
+        boundsRoot.Y = 50;
+        boundsRoot.Width = 200;
+        boundsRoot.Height = 150;
+
+        FrameworkElement frameworkElement = new(new ContainerRuntime());
+        frameworkElement.Width = 100;
+        frameworkElement.Height = 50;
+        // Fits within the 800x600 global canvas, but overflows boundsRoot's right/bottom edges (300, 200):
+        frameworkElement.X = 250;
+        frameworkElement.Y = 180;
+
+        frameworkElement.RepositionToKeepInScreen(boundsRoot);
+
+        (frameworkElement.Visual.AbsoluteX + frameworkElement.Visual.GetAbsoluteWidth())
+            .ShouldBeLessThanOrEqualTo(boundsRoot.X + boundsRoot.GetAbsoluteWidth());
+        (frameworkElement.Visual.AbsoluteY + frameworkElement.Visual.GetAbsoluteHeight())
+            .ShouldBeLessThanOrEqualTo(boundsRoot.Y + boundsRoot.GetAbsoluteHeight());
+    }
+
+    [Fact]
+    public void RepositionToKeepInScreen_WithBoundsRoot_ClampsUnderflowAgainstRootOrigin_NotZero()
+    {
+        // Companion to the overflow test above: boundsRoot has a non-zero origin (100, 50), so the
+        // left/top clamp must compare against boundsRoot's origin, not the literal 0 the global-canvas
+        // path uses.
+        GraphicalUiElement.CanvasWidth = 800;
+        GraphicalUiElement.CanvasHeight = 600;
+
+        ContainerRuntime boundsRoot = new();
+        boundsRoot.X = 100;
+        boundsRoot.Y = 50;
+        boundsRoot.Width = 200;
+        boundsRoot.Height = 150;
+
+        FrameworkElement frameworkElement = new(new ContainerRuntime());
+        frameworkElement.Width = 20;
+        frameworkElement.Height = 10;
+        // Positive (so it would pass a "< 0" underflow check), but still left/above boundsRoot's origin:
+        frameworkElement.X = 10;
+        frameworkElement.Y = 5;
+
+        frameworkElement.RepositionToKeepInScreen(boundsRoot);
+
+        frameworkElement.Visual.AbsoluteX.ShouldBeGreaterThanOrEqualTo(boundsRoot.X);
+        frameworkElement.Visual.AbsoluteY.ShouldBeGreaterThanOrEqualTo(boundsRoot.Y);
+    }
+
+    #endregion
+
     [Fact]
     public void SizeValues_ShouldApplyToVisual()
     {

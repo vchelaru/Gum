@@ -1626,19 +1626,24 @@ public class ListBox : ItemsControl, IInputReceiver
         }
 
 #else
-        popup.RepositionToKeepInScreen();
-
         var (popupRoot, modalRoot) = GraphicalUiElement.ResolvePopupRoots?.Invoke(listBoxParent)
             ?? (FrameworkElement.PopupRoot, FrameworkElement.ModalRoot);
 
+        GraphicalUiElement targetRoot;
         if (listBoxParent.GetTopParent() == modalRoot)
         {
+            targetRoot = modalRoot;
             modalRoot.Children.Add(popup.Visual);
         }
         else
         {
+            targetRoot = popupRoot;
             popupRoot.Children.Add(popup.Visual);
         }
+
+        // Reposition after resolving and parenting to the target root, so the clamp reflects
+        // that root's bounds (e.g. a per-camera viewport) rather than the global canvas.
+        popup.RepositionToKeepInScreen(targetRoot);
 
 #endif
 
