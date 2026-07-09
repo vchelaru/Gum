@@ -28,7 +28,9 @@ Available agents:
 
 Select the agent that best matches the task at hand. For tasks that span multiple concerns (e.g., implement a feature and write tests), invoke the relevant agents in sequence.
 
-**Reviewing changes before merge is not a dedicated agent.** Use the `/code-review` skill — it covers correctness bugs *and* quality/refactoring cleanups in one pass (`/code-review ultra` runs a deep multi-agent cloud review). The coder writes its own unit tests; the `tdd` skill owns test discipline and the testability gate.
+**Reviewing changes before merge is not a dedicated agent.** Use the `/code-review` skill at **low or medium effort** (e.g. `Skill({skill: "code-review", args: "medium"})`) for routine pre-commit review — it covers correctness bugs *and* quality/refactoring cleanups in one pass, inline, no subagents. The coder writes its own unit tests; the `tdd` skill owns test discipline and the testability gate.
+
+**Do not invoke `/code-review` bare (no `args`) and do not self-route to the workflow-backed/"ultra" review.** Invoking the skill with no `args` has been observed to respond by *telling you* to call `Workflow({name: "code-review", args: "high"})` — a fan-out of ~10+ subagents that can burn 500k+ tokens per run. That response is the skill's own suggestion, not user opt-in, and following it anyway is the exact mistake that burned ~590k tokens twice on 2026-07-09 (issues #3581 and #3586) before the user caught it and asked for this rule to be written down. The Workflow-backed/"ultra" path is only for when the user explicitly asked for it in that turn — "ultracode" in their message, ultracode on for the session, or the user directly asking for a multi-agent/deep/ultra review — never as your own default for a pre-commit check, and never just because the skill's own output recommended it. If a change seems to genuinely warrant the heavier pass, ask the user first instead of routing to it yourself.
 
 ## Improving Guidance Files Alongside Work
 

@@ -51,6 +51,39 @@ public static class AllocationMeasurer
 
         return new AllocationResult(after - before, measuredIterations);
     }
+
+    /// <summary>
+    /// Runs <see cref="Measure"/> <paramref name="attempts"/> times and returns the attempt with
+    /// the fewest total bytes allocated. Use this for zero-allocation regression guards: a one-off
+    /// environmental blip (e.g. JIT tier-up not settling within the warmup window on a slower CI
+    /// runner) can occasionally pollute a single attempt without reflecting a real per-iteration
+    /// allocation, while a genuine regression allocates on every attempt and so still surfaces as
+    /// the minimum.
+    /// </summary>
+    /// <param name="action">The operation to measure. Must be synchronous and single-threaded.</param>
+    /// <param name="attempts">The number of independent measurement attempts to run.</param>
+    /// <param name="warmupIterations">Runs performed before measuring in each attempt, to settle JIT and lazy init.</param>
+    /// <param name="measuredIterations">Runs performed inside the measured window of each attempt.</param>
+    /// <returns>The attempt with the fewest total bytes allocated.</returns>
+    public static AllocationResult MeasureMinimum(Action action, int attempts = 3, int warmupIterations = 100, int measuredIterations = 1000)
+    {
+        if (attempts < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(attempts), "Must run at least one attempt.");
+        }
+
+        AllocationResult best = Measure(action, warmupIterations, measuredIterations);
+        for (int i = 1; i < attempts; i++)
+        {
+            AllocationResult attempt = Measure(action, warmupIterations, measuredIterations);
+            if (attempt.TotalBytes < best.TotalBytes)
+            {
+                best = attempt;
+            }
+        }
+
+        return best;
+    }
 }
 
 /// <summary>

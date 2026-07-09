@@ -35,4 +35,45 @@ public class AllocationMeasurerTests
 
         result.TotalBytes.ShouldBe(0);
     }
+
+    [Fact]
+    public void MeasureMinimum_AllAttemptsAllocate_ReportsNonZero()
+    {
+        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+            () => GC.KeepAlive(new byte[64]),
+            attempts: 3,
+            warmupIterations: 2,
+            measuredIterations: 5);
+
+        result.TotalBytes.ShouldBeGreaterThan(0,
+            "because a genuine per-iteration allocation must still be caught even after taking the minimum across attempts");
+    }
+
+    [Fact]
+    public void MeasureMinimum_OnlyFirstAttemptAllocates_ReportsZero()
+    {
+        const int warmupIterations = 2;
+        const int measuredIterations = 5;
+        const int firstAttemptInvocations = warmupIterations + measuredIterations;
+
+        int invocationCount = 0;
+
+        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+            () =>
+            {
+                invocationCount++;
+                if (invocationCount <= firstAttemptInvocations)
+                {
+                    // Simulate a one-off environmental blip (e.g. JIT tier-up not settling within
+                    // the warmup window) that only shows up on the first of several attempts.
+                    GC.KeepAlive(new byte[64]);
+                }
+            },
+            attempts: 3,
+            warmupIterations: warmupIterations,
+            measuredIterations: measuredIterations);
+
+        result.TotalBytes.ShouldBe(0,
+            "because MeasureMinimum should return the cleanest of several attempts, not one polluted by a one-off blip");
+    }
 }

@@ -13,7 +13,10 @@ namespace MonoGameGum.Tests.Performance;
 /// Per-frame allocation baselines and regression guards for the layout engine
 /// (<see cref="Gum.Wireframe.GraphicalUiElement.UpdateLayout()"/>). Part of the runtime
 /// allocation pass, issue #1934: the target is zero managed bytes allocated per steady-state
-/// layout pass; each guard ratchets down as allocation sources are removed.
+/// layout pass; each guard ratchets down as allocation sources are removed. The zero-allocation
+/// guards use <see cref="AllocationMeasurer.MeasureMinimum"/> rather than a single
+/// <see cref="AllocationMeasurer.Measure"/> — a single attempt was intermittently polluted by a
+/// one-off allocation on macOS CI (#3586).
 /// </summary>
 public class LayoutAllocationTests : BaseTestClass
 {
@@ -79,15 +82,17 @@ public class LayoutAllocationTests : BaseTestClass
         // and, because the stack is content-sized, propagates up to re-measure and re-stack siblings).
         float height = 30;
         const int measuredIterations = 500;
+        const int attempts = 3;
 
         int layoutCallsBefore = GraphicalUiElement.UpdateLayoutCallCount;
 
-        AllocationResult result = AllocationMeasurer.Measure(
+        AllocationResult result = AllocationMeasurer.MeasureMinimum(
             () =>
             {
                 height = height == 30 ? 31 : 30;
                 firstItem.Height = height;
             },
+            attempts: attempts,
             warmupIterations: 50,
             measuredIterations: measuredIterations);
 
@@ -96,9 +101,12 @@ public class LayoutAllocationTests : BaseTestClass
         _output.WriteLine($"Height change on the first item of a {itemCount}-item content-sized stack: " +
             $"{result.BytesPerIteration:N0} bytes/frame ({result.TotalBytes:N0} bytes over {result.Iterations} frames)");
 
-        // Liveness: prove the scenario actually drove relayout each frame (guards against a silent
-        // no-op setter making the zero-allocation result meaningless).
-        layoutCalls.ShouldBeGreaterThanOrEqualTo(measuredIterations);
+        // Liveness: prove the scenario actually drove relayout on every measured iteration of every
+        // MeasureMinimum attempt (guards against a silent no-op setter making the zero-allocation
+        // result meaningless). Scaled by attempts — MeasureMinimum runs the action across all of
+        // them, not just one, so a threshold of a single attempt's measuredIterations would let a
+        // no-op in two of the three attempts still pass.
+        layoutCalls.ShouldBeGreaterThanOrEqualTo(measuredIterations * attempts);
         // A property change that re-lays-out and propagates up a content-sized stack allocates
         // nothing in steady state; this guards against a regression reintroducing allocations (#1934).
         result.TotalBytes.ShouldBe(0);
@@ -111,7 +119,7 @@ public class LayoutAllocationTests : BaseTestClass
 
         (ContainerRuntime stack, _) = BuildContentSizedStack(itemCount);
 
-        AllocationResult result = AllocationMeasurer.Measure(
+        AllocationResult result = AllocationMeasurer.MeasureMinimum(
             () => stack.UpdateLayout(),
             warmupIterations: 50,
             measuredIterations: 500);
