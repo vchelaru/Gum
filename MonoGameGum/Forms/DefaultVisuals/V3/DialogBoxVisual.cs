@@ -20,6 +20,10 @@ using Gum.GueDeriving;
 #endif
 #endif
 
+#if SKIA
+using Color = SkiaSharp.SKColor;
+#endif
+
 namespace Gum.Forms.DefaultVisuals.V3;
 
 /// <summary>

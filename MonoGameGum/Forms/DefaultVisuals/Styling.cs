@@ -9,6 +9,11 @@ using System.ComponentModel;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 #endif
+#if SKIA
+using Color = SkiaSharp.SKColor;
+using Texture2D = SkiaSharp.SKBitmap;
+#endif
+
 namespace Gum.Forms.DefaultVisuals;
 
 public class Styling

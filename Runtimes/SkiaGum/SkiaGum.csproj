@@ -63,6 +63,53 @@
 
 	</ItemGroup>
 
+	<!--
+		Forms code-only default visuals (V2 top-level + V3), mirroring RaylibGum.csproj's block so
+		the *Visual classes compile for Skia. This is piece 2 of the Skia-Forms chain (#3562); the
+		FormsUtilities glue that registers them is a separate follow-up (#3561). Exclusions:
+		  - The legacy V1 Default*Runtime classes — XNALIKE-only, reference unguarded
+		    Microsoft.Xna.Framework types (matches RaylibGum, which also omits them).
+		  - WindowVisual (V2 + V3) — depends on the Forms Window control (MonoGameGum/Forms/Window.cs),
+		    which is not yet linked into SkiaGum; it lands with #3563 (Window.cs/ScreenBase.cs).
+		Part of #3562 / #3543.
+	-->
+	<ItemGroup>
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ButtonVisual.cs" Link="Forms\DefaultVisuals\ButtonVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\CheckBoxVisual.cs" Link="Forms\DefaultVisuals\CheckBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ComboBoxVisual.cs" Link="Forms\DefaultVisuals\ComboBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\LabelVisual.cs" Link="Forms\DefaultVisuals\LabelVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ListBoxItemVisual.cs" Link="Forms\DefaultVisuals\ListBoxItemVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ListBoxVisual.cs" Link="Forms\DefaultVisuals\ListBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\RadioButtonVisual.cs" Link="Forms\DefaultVisuals\RadioButtonVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ScrollBarVisual.cs" Link="Forms\DefaultVisuals\ScrollBarVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ScrollViewerVisual.cs" Link="Forms\DefaultVisuals\ScrollViewerVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\SliderVisual.cs" Link="Forms\DefaultVisuals\SliderVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\SplitterVisual.cs" Link="Forms\DefaultVisuals\SplitterVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\Styling.cs" Link="Forms\DefaultVisuals\Styling.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ButtonVisual.cs" Link="Forms\DefaultVisuals\V3\ButtonVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\CheckBoxVisual.cs" Link="Forms\DefaultVisuals\V3\CheckBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ComboBoxVisual.cs" Link="Forms\DefaultVisuals\V3\ComboBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\DialogBoxVisual.cs" Link="Forms\DefaultVisuals\V3\DialogBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ItemsControlVisual.cs" Link="Forms\DefaultVisuals\V3\ItemsControlVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\LabelVisual.cs" Link="Forms\DefaultVisuals\V3\LabelVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ListBoxItemVisual.cs" Link="Forms\DefaultVisuals\V3\ListBoxItemVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ListBoxVisual.cs" Link="Forms\DefaultVisuals\V3\ListBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\MenuItemVisual.cs" Link="Forms\DefaultVisuals\V3\MenuItemVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\MenuVisual.cs" Link="Forms\DefaultVisuals\V3\MenuVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\PasswordBoxVisual.cs" Link="Forms\DefaultVisuals\V3\PasswordBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\RadioButtonVisual.cs" Link="Forms\DefaultVisuals\V3\RadioButtonVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ScrollBarVisual.cs" Link="Forms\DefaultVisuals\V3\ScrollBarVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ScrollViewerVisual.cs" Link="Forms\DefaultVisuals\V3\ScrollViewerVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ScrollViewerVisualSizedToChildren.cs" Link="Forms\DefaultVisuals\V3\ScrollViewerVisualSizedToChildren.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\SliderVisual.cs" Link="Forms\DefaultVisuals\V3\SliderVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\SplitterVisual.cs" Link="Forms\DefaultVisuals\V3\SplitterVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\Styling.cs" Link="Forms\DefaultVisuals\V3\Styling.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ToggleButtonVisual.cs" Link="Forms\DefaultVisuals\V3\ToggleButtonVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TextBoxBaseVisual.cs" Link="Forms\DefaultVisuals\V3\TextBoxBaseVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TextBoxVisual.cs" Link="Forms\DefaultVisuals\V3\TextBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TooltipVisual.cs" Link="Forms\DefaultVisuals\V3\TooltipVisual.cs" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<PackageReference Include="SkiaSharp" Version="3.119.1" />
 		<PackageReference Include="SkiaSharp.Extended" Version="3.0.0" />
