@@ -25,3 +25,4 @@ re-litigating it.
 | [0003](0003-decouple-tool-ui-from-logic.md) | Decouple the Gum tool's UI from its application logic | Accepted | 2026-06-20 |
 | [0004](0004-viewmodels-expose-neutral-presentation-state.md) | ViewModels expose resolved display state in neutral types | Accepted | 2026-06-20 |
 | [0005](0005-headless-presentation-assembly.md) | Home for the headless presentation layer: a dedicated `Gum.Presentation` assembly | Accepted | 2026-06-24 |
+| [0006](0006-runtimes-declare-capabilities-through-igumservice.md) | Runtimes declare platform capabilities through `IGumService` | Accepted | 2026-07-10 |
