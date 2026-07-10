@@ -1434,6 +1434,11 @@ public class GumService : IGumService
 
         Gum.Forms.DefaultVisuals.Styling.ActiveStyle = null;
         Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null;
+#elif RAYLIB
+        // Raylib's Text has no Customizations/ContextCustomizations/DefaultBitmapFont
+        // equivalents to the XNALIKE Text above - only DefaultFont. default(Font) has
+        // BaseSize == 0, the constructor's documented uninitialized-Font sentinel (#3557).
+        Text.DefaultFont = default;
 #endif
 
         GraphicalUiElement.SetPropertyOnRenderable = null!;
