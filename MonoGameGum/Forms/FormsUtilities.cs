@@ -19,6 +19,9 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Gum.Forms.DefaultVisuals;
 using Gum.GueDeriving;
+#elif SKIA
+using Gum.GueDeriving;
+using Texture2D = SkiaSharp.SKBitmap;
 #else
 using Gum.GueDeriving;
 #endif
@@ -104,6 +107,18 @@ public class FormsUtilities
     /// do not need to provide one.</param>
     /// <param name="defaultVisualsVersion">The version of visuals. Changing between visuals can change the apperance, as well as the structure of the Visual objects.</param>
     public static void InitializeDefaults(Game? game = null, SystemManagers? systemManagers = null, DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V1)
+#elif SKIA
+    /// <summary>
+    /// Initializes defaults to enable FlatRedBall Forms. This method should be called before using Forms.
+    /// </summary>
+    /// <remarks>
+    /// Projects can make further customization to Forms such as by modifying the FrameworkElement.Root or the DefaultFormsComponents.
+    /// </remarks>
+    /// <param name="systemManagers">The optional system managers. If not specified, the default system managers are used. Games with a single SystemsManager
+    /// do not need to provide one.</param>
+    /// <param name="defaultVisualsVersion">The version of visuals. Changing between visuals can change the apperance, as well as the structure of the Visual objects.
+    /// Defaults to V3 on Skia -- the legacy V1/V2 default visuals were never ported to this backend (issue #3561).</param>
+    public static void InitializeDefaults(SystemManagers? systemManagers = null, DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V3)
 #else
     /// <summary>
     /// Initializes defaults to enable FlatRedBall Forms. This method should be called before using Forms.
@@ -131,6 +146,8 @@ public class FormsUtilities
         Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png").Value;
 #elif SOKOL
         Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png")!;
+#elif SKIA
+        Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png")!;
 #endif
 
         switch (defaultVisualsVersion)
@@ -156,6 +173,11 @@ public class FormsUtilities
                 Gum.Forms.DefaultVisuals.Styling.ActiveStyle = new(uiSpriteSheet);
                 break;
 #endif
+            // V2 default visuals ([Obsolete]) were never ported to Skia -- this is a new
+            // backend with no back-compat need, so only V3/Newest is supported. The V2 case
+            // below references Gum.Forms.DefaultVisuals.*Visual types, which are not linked
+            // into SkiaGum.csproj (mirrors how V1 is XNALIKE-only above). See #3561.
+#if !SKIA
             case DefaultVisualsVersion.V2:
                 TryAdd(typeof(Button), (_, c) => new DefaultVisuals.ButtonVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(CheckBox), (_, c) => new DefaultVisuals.CheckBoxVisual(tryCreateFormsObject: c));
@@ -183,6 +205,7 @@ public class FormsUtilities
                 Gum.Forms.DefaultVisuals.Styling.ActiveStyle = new(uiSpriteSheet);
 
                 break;
+#endif
 
             case DefaultVisualsVersion.V3:
                 TryAdd(typeof(Button), (_, c) => new DefaultVisuals.V3.ButtonVisual(tryCreateFormsObject: c));

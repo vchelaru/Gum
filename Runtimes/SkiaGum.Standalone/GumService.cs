@@ -4,6 +4,7 @@
 #nullable enable
 
 using Gum.DataTypes;
+using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Managers;
 using Gum.Threading;
@@ -144,7 +145,7 @@ public class GumService : IGumService
             gumProject = GumProjectSave.Load(gumProjectFile);
             ObjectFinder.Self.GumProjectSave = gumProject;
             gumProject.Initialize();
-            //    FormsUtilities.RegisterFromFileFormRuntimeDefaults();
+            FormsUtilities.RegisterFromFileFormRuntimeDefaults();
 
             var absolutePath = FileManager.IsRelative(gumProjectFile)
                 ? FileManager.MakeAbsolute(gumProjectFile)

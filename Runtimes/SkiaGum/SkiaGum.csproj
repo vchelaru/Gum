@@ -125,6 +125,32 @@
 				 Link="Forms\DefaultFromFileVisuals\%(Filename)%(Extension)" />
 	</ItemGroup>
 
+	<!--
+		FormsUtilities.cs, the glue that registers the V3 default visuals above and calls
+		RegisterFromFileFormRuntimeDefaults(). This is piece 4 (final) of the Skia-Forms chain
+		(#3561). The legacy V1 (XNALIKE-only) case was already excluded; V2 ([Obsolete], not
+		linked into this project) is now excluded for Skia too via #if !SKIA, per the plan noted
+		in the ItemGroup above. FormsUtilities.Cursor / .Keyboard are NOT gated: they moved to
+		the platform-neutral ICursor / IInputReceiverKeyboard interfaces (IGumService.CreateCursor
+		/ CreateKeyboard) before this PR, so they already compile and behave correctly on Skia
+		(the Skia standalone GumService returns null, which is fine since FormsUtilities.Update
+		is never called on the render-only Skia path).
+		Part of #3543.
+	-->
+	<ItemGroup>
+		<Compile Include="..\..\MonoGameGum\Forms\FormsUtilities.cs" Link="Forms\FormsUtilities.cs" />
+	</ItemGroup>
+
+	<!--
+		The shared UISpriteSheet.png backing the V3 default visuals (icons, nine-slice
+		backgrounds, focus indicators), embedded the same way MonoGameGum / RaylibGum embed
+		their copy, via AssemblyPrefix "SkiaGum.Content" (see SystemManagers.AssemblyPrefix),
+		loaded by SystemManagers.LoadEmbeddedTexture2d. Part of #3561.
+	-->
+	<ItemGroup>
+		<EmbeddedResource Include="Content\UISpriteSheet.png" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<PackageReference Include="SkiaSharp" Version="3.119.1" />
 		<PackageReference Include="SkiaSharp.Extended" Version="3.0.0" />
