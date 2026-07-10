@@ -25,10 +25,6 @@ using Gum.GueDeriving;
 #endif
 #endif
 using Gum.Forms.Controls;
-#if SKIA
-using Color = SkiaSharp.SKColor;
-#endif
-
 namespace Gum.Forms.DefaultVisuals;
 
 [Obsolete("Legacy V2 default visual. Use the V3 visuals via DefaultVisualsVersion.V3/.Newest; the V2 default visuals are slated for removal in a future release.")]
