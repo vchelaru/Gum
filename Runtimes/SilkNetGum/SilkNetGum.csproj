@@ -1,0 +1,180 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+		Gum.SilkNet: a first-class window/input host runtime that renders through SkiaGum and adds
+		real Forms input via Silk.NET.Input. The caller still owns the window; GumService takes an
+		SKCanvas + an IInputContext (view.CreateInput()), so this project references
+		Silk.NET.Input only (never Silk.NET.Windowing) and makes no SDL-vs-GLFW commitment.
+
+		It is SELF-CONTAINED like RaylibGum / SokolGum: it references GumCommon only and file-links
+		the shared render + Forms + input source, rather than ProjectReferencing SkiaGum. Splitting
+		the input stack (Cursor / CursorExtensions) from FormsUtilities across an assembly boundary
+		fails to compile — CursorExtensions reaches FormsUtilities' internal LastEventRoots and the
+		concrete GumService — so everything must live in one assembly, the pattern every other
+		runtime already uses. The link set is SkiaGum's render half (its local Renderables /
+		GueDeriving / RenderingLibrary / Helpers / Content source, globbed, plus the same shared
+		GueDeriving / Animation / V3-DefaultVisuals / FormsUtilities links SkiaGum.csproj carries)
+		PLUS the input stack SkiaGum omits because it is render-only.
+	-->
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<PackageId>Gum.SilkNet</PackageId>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Version>2026.4.5.1</Version>
+
+		<NoWarn>1591</NoWarn>
+
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<Configurations>Debug;Release;Release_No_Diagnostics</Configurations>
+	</PropertyGroup>
+
+	<!--
+		SKIA selects the Skia render aliases (Texture2D=SKBitmap, Color=SKColor) in the shared
+		source; SILK selects this project's input host. Both are required.
+	-->
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DefineConstants>TRACE;SKIA;SILK;FULL_DIAGNOSTICS</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<DefineConstants>TRACE;SKIA;SILK;FULL_DIAGNOSTICS</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Diagnostics|AnyCPU'">
+		<DefineConstants>TRACE;SKIA;SILK</DefineConstants>
+	</PropertyGroup>
+
+	<!-- ===== SkiaGum's local render source (globbed by directory; AssemblyAttributes.cs at the
+	     SkiaGum root is intentionally NOT globbed — this project ships its own). ===== -->
+	<ItemGroup>
+		<Compile Include="..\SkiaGum\Renderables\**\*.cs" Link="Renderables\%(RecursiveDir)%(Filename)%(Extension)" />
+		<Compile Include="..\SkiaGum\GueDeriving\**\*.cs" Link="GueDeriving\%(RecursiveDir)%(Filename)%(Extension)" />
+		<Compile Include="..\SkiaGum\Helpers\**\*.cs" Link="Helpers\%(RecursiveDir)%(Filename)%(Extension)" />
+		<Compile Include="..\SkiaGum\Content\**\*.cs" Link="Content\%(RecursiveDir)%(Filename)%(Extension)" />
+		<Compile Include="..\SkiaGum\RenderingLibrary\**\*.cs" Link="RenderingLibrary\%(RecursiveDir)%(Filename)%(Extension)" />
+		<Compile Include="..\SkiaGum\CustomSetPropertyOnRenderable.cs" Link="CustomSetPropertyOnRenderable.cs" />
+	</ItemGroup>
+
+	<!-- ===== Shared render source (mirrors SkiaGum.csproj's file-link list) ===== -->
+	<ItemGroup>
+		<Compile Include="..\..\Gum\RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs" Link="RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs" />
+		<Compile Include="..\..\Gum\SvgPlugin\Managers\DefaultStateManager.cs" Link="DefaultStateManager.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChain.cs" Link="Animation\AnimationChain.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChainList.cs" Link="Animation\AnimationChainList.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationFrame.cs" Link="Animation\AnimationFrame.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChainLogic.cs" Link="Animation\AnimationChainLogic.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\SpriteAnimationLogic.cs" Link="Animation\SpriteAnimationLogic.cs" />
+		<!-- IAnimatable intentionally NOT linked (arrives via GumCommon); a local copy would create
+		     two distinct same-FQN types and silently break AnimateSelf — see SkiaGum.csproj. -->
+		<Compile Include="..\..\MonoGameGum\GueDeriving\CircleRuntime.cs" Link="GueDeriving\CircleRuntime.cs" />
+		<Compile Include="..\..\MonoGameGum\GueDeriving\ColoredRectangleRuntime.cs" Link="GueDeriving\ColoredRectangleRuntime.cs" />
+		<Compile Include="..\..\MonoGameGum\GueDeriving\ContainerRuntime.cs" Link="GueDeriving\ContainerRuntime.cs" />
+		<Compile Include="..\..\MonoGameGum\GueDeriving\NineSliceRuntime.cs" Link="GueDeriving\NineSliceRuntime.cs" />
+		<Compile Include="..\..\MonoGameGum\GueDeriving\PolygonRuntime.cs" Link="GueDeriving\PolygonRuntime.cs" />
+		<Compile Include="..\..\MonoGameGum\GueDeriving\RectangleRuntime.cs" Link="GueDeriving\RectangleRuntime.cs" />
+		<Compile Include="..\..\MonoGameGum\GueDeriving\TextRuntime.cs" Link="GueDeriving\TextRuntime.cs" />
+		<Compile Include="..\..\MonoGameGum\GueDeriving\SpriteRuntime.cs" Link="GueDeriving\SpriteRuntime.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- ScreenBase stays per-backend (news up ContainerRuntime); Window.cs arrives via GumCommon. -->
+		<Compile Include="..\..\MonoGameGum\Forms\ScreenBase.cs" Link="Forms\ScreenBase.cs" />
+	</ItemGroup>
+
+	<!-- Forms code-only V3 default visuals (the only generation ported to Skia). -->
+	<ItemGroup>
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ButtonVisual.cs" Link="Forms\DefaultVisuals\V3\ButtonVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\CheckBoxVisual.cs" Link="Forms\DefaultVisuals\V3\CheckBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ComboBoxVisual.cs" Link="Forms\DefaultVisuals\V3\ComboBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\DialogBoxVisual.cs" Link="Forms\DefaultVisuals\V3\DialogBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ItemsControlVisual.cs" Link="Forms\DefaultVisuals\V3\ItemsControlVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\LabelVisual.cs" Link="Forms\DefaultVisuals\V3\LabelVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ListBoxItemVisual.cs" Link="Forms\DefaultVisuals\V3\ListBoxItemVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ListBoxVisual.cs" Link="Forms\DefaultVisuals\V3\ListBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\MenuItemVisual.cs" Link="Forms\DefaultVisuals\V3\MenuItemVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\MenuVisual.cs" Link="Forms\DefaultVisuals\V3\MenuVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\PasswordBoxVisual.cs" Link="Forms\DefaultVisuals\V3\PasswordBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\RadioButtonVisual.cs" Link="Forms\DefaultVisuals\V3\RadioButtonVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ScrollBarVisual.cs" Link="Forms\DefaultVisuals\V3\ScrollBarVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ScrollViewerVisual.cs" Link="Forms\DefaultVisuals\V3\ScrollViewerVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ScrollViewerVisualSizedToChildren.cs" Link="Forms\DefaultVisuals\V3\ScrollViewerVisualSizedToChildren.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\SliderVisual.cs" Link="Forms\DefaultVisuals\V3\SliderVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\SplitterVisual.cs" Link="Forms\DefaultVisuals\V3\SplitterVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\Styling.cs" Link="Forms\DefaultVisuals\V3\Styling.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ToggleButtonVisual.cs" Link="Forms\DefaultVisuals\V3\ToggleButtonVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TextBoxBaseVisual.cs" Link="Forms\DefaultVisuals\V3\TextBoxBaseVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TextBoxVisual.cs" Link="Forms\DefaultVisuals\V3\TextBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TooltipVisual.cs" Link="Forms\DefaultVisuals\V3\TooltipVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\WindowVisual.cs" Link="Forms\DefaultVisuals\V3\WindowVisual.cs" />
+	</ItemGroup>
+
+	<!-- Forms from-file default visuals + behavior->Forms property bridge (mirrors SkiaGum.csproj). -->
+	<ItemGroup>
+		<Compile Include="..\..\MonoGameGum\Forms\BehaviorFormsPropertyApplier.cs" Link="Forms\BehaviorFormsPropertyApplier.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultFromFileVisuals\*.cs"
+				 Link="Forms\DefaultFromFileVisuals\%(Filename)%(Extension)" />
+	</ItemGroup>
+
+	<!-- FormsUtilities: registers V3 defaults and pumps input each frame. -->
+	<ItemGroup>
+		<Compile Include="..\..\MonoGameGum\Forms\FormsUtilities.cs" Link="Forms\FormsUtilities.cs" />
+	</ItemGroup>
+
+	<!-- ===== Input host half (the stack SkiaGum omits because it is render-only) ===== -->
+	<ItemGroup>
+		<Compile Include="..\..\GumRuntime\Input\ButtonState.cs" Link="Input\ButtonState.cs" />
+		<Compile Include="..\..\GumRuntime\Input\MouseState.cs" Link="Input\MouseState.cs" />
+		<Compile Include="..\..\GumRuntime\Input\TouchCollection.cs" Link="Input\TouchCollection.cs" />
+		<Compile Include="..\..\GumRuntime\Input\TouchLocation.cs" Link="Input\TouchLocation.cs" />
+		<Compile Include="..\..\MonoGameGum\Input\Cursor.cs" Link="Input\Cursor.cs" />
+		<Compile Include="..\..\MonoGameGum\Input\Cursor.Forms.cs" Link="Input\Cursor.Forms.cs" />
+		<Compile Include="..\..\MonoGameGum\Input\CursorExtensions.cs" Link="Input\CursorExtensions.cs" />
+	</ItemGroup>
+
+	<!--
+		The shared UISpriteSheet.png backing the V3 default visuals. SkiaGum's SystemManagers
+		(compiled in here) hardcodes AssemblyPrefix = "SkiaGum.Content" and resolves the resource
+		against typeof(SystemManagers).Assembly (= this assembly), so the LogicalName must be the
+		"SkiaGum.Content.*" name it looks up rather than the default "SilkNetGum.Content.*".
+	-->
+	<ItemGroup>
+		<None Remove="Content\UISpriteSheet.png" />
+		<EmbeddedResource Include="Content\UISpriteSheet.png">
+			<LogicalName>SkiaGum.Content.UISpriteSheet.png</LogicalName>
+		</EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="SkiaSharp" Version="3.119.1" />
+		<PackageReference Include="SkiaSharp.Extended" Version="3.0.0" />
+		<PackageReference Include="SkiaSharp.Skottie" Version="3.119.1" />
+		<PackageReference Include="Svg.Skia" Version="1.0.0.19" />
+		<PackageReference Include="Topten.RichTextKit" Version="0.4.167" />
+		<!-- Input only: the backend-agnostic IInputContext lives here. Silk.NET.Windowing (which
+		     picks GLFW vs SDL and owns the window) is intentionally NOT referenced. -->
+		<PackageReference Include="Silk.NET.Input" Version="2.21.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+	</ItemGroup>
+
+	<!--
+		Bundle the Gum.Analyzers Roslyn analyzer DLL into this package so NuGet consumers get
+		GUM001 namespace-migration warnings + code fixes. Mirrors SkiaGum/RaylibGum: not a
+		ProjectReference (source-linkers must not require Tools/Gum.Analyzers/ to build), and the
+		Exists() guard makes it a no-op when the DLL is absent.
+	-->
+	<ItemGroup Condition="'$(IncludeAnalyzers)' != 'false' AND Exists('..\..\Tools\Gum.Analyzers\bin\$(Configuration)\netstandard2.0\Gum.Analyzers.dll')">
+		<None Include="..\..\Tools\Gum.Analyzers\bin\$(Configuration)\netstandard2.0\Gum.Analyzers.dll"
+			  Pack="true"
+			  PackagePath="analyzers/dotnet/cs/"
+			  Visible="false" />
+	</ItemGroup>
+
+</Project>

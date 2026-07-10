@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- net10.0 to match SkiaGum.Tests: the Skia Forms render path (SKImage.FromBitmap on the V3
+         sprite sheet) hits a native AccessViolation under the net8.0 SkiaSharp runtime but is clean
+         on net10.0. -->
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="Shouldly" Version="4.3.0" />
+    <PackageReference Include="xunit" Version="2.5.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
+    <!-- SKSurface for the in-memory raster canvas; Silk.NET.Input types (IInputContext / IMouse /
+         IKeyboard / Key) for mocking input in the Cursor/Keyboard tests. -->
+    <PackageReference Include="SkiaSharp" Version="3.119.1" />
+    <PackageReference Include="Silk.NET.Input" Version="2.21.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Runtimes\SilkNetGum\SilkNetGum.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

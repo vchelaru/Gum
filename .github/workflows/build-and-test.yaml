@@ -258,6 +258,9 @@ jobs:
       #                                     SKSurface — no GPU / window / GL. It
       #                                     was wrongly excluded as "needs a
       #                                     window"; it is fully headless. #3233)
+      #   - SilkNetGum.Tests               (Gum.SilkNet runtime: SkiaGum renderer +
+      #                                     Silk.NET.Input host. CPU raster SKSurface
+      #                                     + mocked input, fully headless. #3605)
       #   - RaylibGum.Tests                (raylib runtime; Windows-only. Needs an
       #                                     OpenGL 3.3 context the GPU-less runners
       #                                     lack, supplied by Mesa llvmpipe software
@@ -324,6 +327,13 @@ jobs:
       - name: SkiaGum.Tests
         if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
         run: dotnet test "Tests/SkiaGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      # SilkNetGum.Tests is the Gum.SilkNet runtime (SkiaGum renderer + Silk.NET.Input host).
+      # Like SkiaGum.Tests it renders into an in-memory CPU raster SKSurface and mocks input —
+      # no GPU / window / GL — so it runs headless and blocks on failure. #3605
+      - name: SilkNetGum.Tests
+        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        run: dotnet test "Tests/SilkNetGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       # SkiaGum-backed SVG export service (gumcli svg / tool File ▸ Export). Drives
       # SkiaGumSvgExportService end-to-end via SKSvgCanvas — CPU-only, fully headless
