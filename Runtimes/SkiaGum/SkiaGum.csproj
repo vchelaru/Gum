@@ -63,6 +63,15 @@
 
 	</ItemGroup>
 
+	<ItemGroup>
+		<!--
+			ScreenBase stays per-backend (not migrated to GumCommon like Window.cs) because its
+			default ctor news up ContainerRuntime, a per-backend GueDeriving type GumCommon can't
+			reference. Window.cs itself arrives via the GumCommon ProjectReference.
+		-->
+		<Compile Include="..\..\MonoGameGum\Forms\ScreenBase.cs" Link="Forms\ScreenBase.cs" />
+	</ItemGroup>
+
 	<!--
 		Forms code-only V3 default visuals, linked so the *Visual classes compile for Skia. This is
 		piece 2 of the Skia-Forms chain (#3562); the FormsUtilities glue that registers them is a
@@ -70,8 +79,6 @@
 		  - The legacy V1/V2 default visuals ([Obsolete], slated for removal) — Skia is a new backend
 		    with no back-compat need, so only the current V3 generation is ported. (#3561 will then
 		    need to #if-exclude the V1/V2 registration cases in FormsUtilities for Skia.)
-		  - V3 WindowVisual — depends on the Forms Window control (MonoGameGum/Forms/Window.cs), which
-		    is not yet linked into SkiaGum; it lands with #3563 (Window.cs/ScreenBase.cs).
 		Part of #3562 / #3543.
 	-->
 	<ItemGroup>
@@ -97,6 +104,7 @@
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TextBoxBaseVisual.cs" Link="Forms\DefaultVisuals\V3\TextBoxBaseVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TextBoxVisual.cs" Link="Forms\DefaultVisuals\V3\TextBoxVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TooltipVisual.cs" Link="Forms\DefaultVisuals\V3\TooltipVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\WindowVisual.cs" Link="Forms\DefaultVisuals\V3\WindowVisual.cs" />
 	</ItemGroup>
 
 	<!--
@@ -106,10 +114,6 @@
 		#3561 follow-up. Mirrors RaylibGum.csproj's glob + BehaviorFormsPropertyApplier link.
 		These are thin control-attach wrappers (no bare Color/Texture2D), so no #if SKIA aliases are
 		needed unlike the V3 *Visual files above.
-		Exclusion:
-		  - DefaultFromFileWindowRuntime.cs — attaches the Forms Window control
-		    (MonoGameGum/Forms/Window.cs), which is not yet linked into SkiaGum; it lands with #3563
-		    (same reason V3 WindowVisual is excluded above).
 		Note: DefaultFromFile{Menu,MenuItem,PasswordBox}Runtime are globbed in but self-exclude on
 		Skia via their own #if XNALIKE || FRB || RAYLIB guard (those controls aren't on Skia yet),
 		compiling to empty units — harmless, and they light up automatically if that guard widens.
@@ -118,7 +122,6 @@
 	<ItemGroup>
 		<Compile Include="..\..\MonoGameGum\Forms\BehaviorFormsPropertyApplier.cs" Link="Forms\BehaviorFormsPropertyApplier.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultFromFileVisuals\*.cs"
-				 Exclude="..\..\MonoGameGum\Forms\DefaultFromFileVisuals\DefaultFromFileWindowRuntime.cs"
 				 Link="Forms\DefaultFromFileVisuals\%(Filename)%(Extension)" />
 	</ItemGroup>
 

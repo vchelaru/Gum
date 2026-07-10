@@ -200,6 +200,7 @@
 		<Compile Remove="..\Forms\Controls\Tooltip.cs" />
 		<Compile Remove="..\Forms\Controls\ToolTipService.cs" />
 		<Compile Remove="..\Forms\GraphicalUiElementFormsExtensions.cs" />
+		<Compile Remove="..\Forms\Window.cs" />
 		<Compile Remove="..\Threading\DeferredActionQueue.cs" />
 	</ItemGroup>
 
