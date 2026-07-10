@@ -19,14 +19,13 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Gum.Forms.DefaultVisuals;
 using Gum.GueDeriving;
-using MonoGameGum.Input;
-// Keyboard, GamePad and the rest of the input group now live in Gum.Input (issue #3137);
-// MonoGameGum.Input is still imported for the Cursor types that have not moved.
-using Gum.Input;
 #else
 using Gum.GueDeriving;
-using Gum.Input;
 #endif
+// Concrete per-platform input types (Cursor / Keyboard / GamePadDriver) are no longer referenced
+// here: input creation is delegated to IGumService (CreateCursor / CreateKeyboard / ApplyGamePadState)
+// so this shared file compiles on backends without those types (e.g. Skia). GamePad is used only as
+// the fully-qualified platform-neutral Gum.Input.GamePad holder.
 
 #if FRB
 namespace MonoGameGum.Forms;
@@ -68,7 +67,7 @@ public class FormsUtilities
 {
     static ICursor cursor;
 
-    public static Cursor? Cursor => cursor as Cursor;
+    public static ICursor Cursor => cursor;
 
     public static void SetCursor(ICursor cursor)
     {
@@ -76,9 +75,9 @@ public class FormsUtilities
         FrameworkElement.MainCursor = cursor;
     }
 
-    static Keyboard keyboard;
+    static IInputReceiverKeyboard keyboard;
 
-    public static Keyboard Keyboard => keyboard;
+    public static IInputReceiverKeyboard Keyboard => keyboard;
 
     // Typed explicitly as Gum.Input.GamePad (the platform-neutral holder in GumCommon) rather
     // than relying on the per-platform `using` so MonoGame, Raylib, and Sokol resolve to the
@@ -241,14 +240,14 @@ public class FormsUtilities
 #endif
         }
 
-#if XNALIKE
-        // The GameWindow-vs-nothing split lives entirely in Cursor's own platform-specific
-        // factories (Cursor.MonoGame.cs / Cursor.Raylib.cs); this #if only forwards the `game`
-        // parameter, which exists on this overload of InitializeDefaults but not the other.
-        cursor = Cursor.CreateForCurrentPlatform(game);
-#else
-        cursor = Cursor.CreateForCurrentPlatform();
-#endif
+        // Input creation is delegated to the active runtime's IGumService so this shared file no
+        // longer references any concrete per-platform input type (which lets it compile on backends
+        // that have no such types, e.g. Skia). The runtime's override bakes in whatever platform
+        // context it needs (e.g. MonoGame's Game/GameWindow for touch-offset math). Default is set
+        // before this method runs -- see each runtime's Initialize (ordering is asserted there) --
+        // and its input-capable runtimes return a non-null cursor/keyboard, hence the null-forgiveness.
+        IGumService service = IGumService.Default!;
+        cursor = service.CreateCursor()!;
 
 #if !FRB
         // This was added to MonoGame/raylib on 1/22/2026 to support
@@ -256,15 +255,7 @@ public class FormsUtilities
         ICursor.VisualOverBehavior = VisualOverBehavior.IfHasEventsIsTrue;
 #endif
 
-#if XNALIKE
-        // The MonoGame-vs-Raylib/Sokol split lives entirely in Keyboard's own platform-specific
-        // implementations (MonoGameGum/Input/Keyboard.cs vs Runtimes/RaylibGum|SokolGum/Input/Keyboard.cs);
-        // this #if only forwards the `game` parameter, which exists on this overload of
-        // InitializeDefaults but not the other.
-        keyboard = Keyboard.CreateForCurrentPlatform(game);
-#else
-        keyboard = Keyboard.CreateForCurrentPlatform();
-#endif
+        keyboard = service.CreateKeyboard()!;
 
         for (int i = 0; i < Gamepads.Length; i++)
         {
@@ -560,9 +551,9 @@ public class FormsUtilities
     {
         for (int i = 0; i < Gamepads.Length; i++)
         {
-            // GamePadDriver resolves per-platform via this file's top-of-file conditional
-            // `using` blocks (MonoGameGum.Input / Gum.Input) -- no #if needed here (issue #3559).
-            GamePadDriver.Apply(Gamepads[i], i, time);
+            // The per-frame gamepad driver is delegated to the active runtime's IGumService so this
+            // shared file references no concrete per-platform driver type (issue #3559 / Skia support).
+            IGumService.Default!.ApplyGamePadState(Gamepads[i], i, time);
         }
 
 #if FULL_DIAGNOSTICS

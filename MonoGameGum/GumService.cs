@@ -135,12 +135,16 @@ public class GumService : IGumService
     /// <summary>
     /// Gets the default cursor, which represents either mouse or touch screen depending on hardware capabilities.
     /// </summary>
-    public Cursor Cursor => FormsUtilities.Cursor;
+    // 'as' (not a hard cast) preserves the prior null-on-mismatch behavior: tests may install a mock
+    // ICursor/IInputReceiverKeyboard via FormsUtilities.SetCursor, and this forwarder returned null for
+    // a non-Cursor before FormsUtilities.Cursor changed from 'Cursor?' to 'ICursor'. The '!' only
+    // suppresses the nullable-return warning (runtime no-op) and does not reintroduce a throw.
+    public Cursor Cursor => (FormsUtilities.Cursor as Cursor)!;
 
     /// <summary>
     /// Gets the default keyboard.
     /// </summary>
-    public Keyboard Keyboard => FormsUtilities.Keyboard;
+    public Keyboard Keyboard => (FormsUtilities.Keyboard as Keyboard)!;
 
     /// <summary>
     /// Gets the service used to provide localized strings and resources for the application.
@@ -172,6 +176,31 @@ public class GumService : IGumService
 
     /// <inheritdoc/>
     IRenderable IGumService.CreateSpriteRenderable() => Sprite.CreateForCurrentPlatform();
+
+    /// <inheritdoc/>
+    ICursor? IGumService.CreateCursor()
+    {
+#if XNALIKE
+        // MonoGame/KNI/FNA bake the Game (for its GameWindow) into the cursor for mobile touch-offset.
+        return Cursor.CreateForCurrentPlatform(_game);
+#elif RAYLIB
+        return Cursor.CreateForCurrentPlatform();
+#endif
+    }
+
+    /// <inheritdoc/>
+    IInputReceiverKeyboard? IGumService.CreateKeyboard()
+    {
+#if XNALIKE
+        return Keyboard.CreateForCurrentPlatform(_game);
+#elif RAYLIB
+        return Keyboard.CreateForCurrentPlatform();
+#endif
+    }
+
+    /// <inheritdoc/>
+    void IGumService.ApplyGamePadState(Gum.Input.GamePad gamepad, int index, double time) =>
+        GamePadDriver.Apply(gamepad, index, time);
 
 #if !IOS && !ANDROID
     private IGumHotReloadManager? _hotReloadManager;

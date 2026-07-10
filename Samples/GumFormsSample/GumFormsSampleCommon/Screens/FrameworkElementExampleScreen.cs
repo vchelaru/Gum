@@ -414,7 +414,9 @@ namespace GumFormsSample.Screens
 
         public void Update(GameTime gameTime)
         {
-            var keyboard = FormsUtilities.Keyboard;
+            // FormsUtilities.Keyboard is typed as the platform-neutral IInputReceiverKeyboard now;
+            // cast to the concrete MonoGame Keyboard to use its XNA-Keys KeyPushed(Keys) overload.
+            var keyboard = (Gum.Input.Keyboard)FormsUtilities.Keyboard;
 
             if(keyboard.IsAltDown)
             {

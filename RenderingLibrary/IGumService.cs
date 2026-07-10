@@ -126,6 +126,32 @@ namespace RenderingLibrary
         /// </summary>
         IRenderable CreateSpriteRenderable();
 
+        /// <summary>
+        /// Creates the cursor (mouse or touch, depending on the platform's input capabilities) for the
+        /// active runtime. Called by <c>FormsUtilities.InitializeDefaults</c> so cursor creation no
+        /// longer references a concrete per-platform input type. Render-only hosts (e.g. the Skia
+        /// standalone service) inherit this default and return <c>null</c> — they have no input pump.
+        /// </summary>
+        ICursor? CreateCursor() => null;
+
+        /// <summary>
+        /// Creates the keyboard for the active runtime. Called by <c>FormsUtilities.InitializeDefaults</c>
+        /// so keyboard creation no longer references a concrete per-platform input type. Render-only hosts
+        /// inherit this default and return <c>null</c> — they have no input pump.
+        /// </summary>
+        IInputReceiverKeyboard? CreateKeyboard() => null;
+
+        /// <summary>
+        /// Applies the current OS gamepad state at <paramref name="index"/> to <paramref name="gamepad"/>
+        /// for the active runtime. This is a per-frame driver (not a create-once factory), called each
+        /// frame by <c>FormsUtilities.UpdateGamepads</c>. Render-only hosts inherit this default no-op —
+        /// they have no gamepad input source.
+        /// </summary>
+        /// <param name="gamepad">The platform-neutral gamepad holder to update.</param>
+        /// <param name="index">The zero-based gamepad index to sample.</param>
+        /// <param name="time">The total elapsed game time, in seconds.</param>
+        void ApplyGamePadState(Gum.Input.GamePad gamepad, int index, double time) { }
+
 #if NET6_0_OR_GREATER
         /// <summary>
         /// The current default <see cref="IGumService"/>. Assigned by the
