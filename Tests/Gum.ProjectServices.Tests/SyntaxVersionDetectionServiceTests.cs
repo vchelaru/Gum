@@ -164,6 +164,39 @@ public class SyntaxVersionDetectionServiceTests : IDisposable
     }
 
     [Fact]
+    public void Detect_ProjectReference_SilkNetGum_ReadsVersion()
+    {
+        string referencedProjectDir = Path.Combine(_tempDirectory, "libs", "SilkNetGum");
+        Directory.CreateDirectory(referencedProjectDir);
+
+        string assemblyAttributesPath = Path.Combine(referencedProjectDir, "AssemblyAttributes.cs");
+        File.WriteAllText(assemblyAttributesPath,
+            "using Gum.DataTypes;\n\n[assembly: GumSyntaxVersion(Version = 3)]\n");
+
+        string gameDir = Path.Combine(_tempDirectory, "game");
+        Directory.CreateDirectory(gameDir);
+
+        string csprojPath = Path.Combine(gameDir, "MyGame.csproj");
+        File.WriteAllText(csprojPath,
+@"<Project Sdk=""Microsoft.NET.Sdk"">
+  <ItemGroup>
+    <ProjectReference Include=""..\libs\SilkNetGum\SilkNetGum.csproj"" />
+  </ItemGroup>
+</Project>");
+
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            SyntaxVersion = "*",
+            CodeProjectRoot = "./"
+        };
+
+        SyntaxVersionResult result = _sut.Detect(settings, gameDir);
+
+        result.Version.ShouldBe(3);
+        result.Source.ShouldBe(SyntaxVersionSource.ProjectReference);
+    }
+
+    [Fact]
     public void Detect_ProjectReference_NoAssemblyAttributes_ReturnsFallback()
     {
         string referencedProjectDir = Path.Combine(_tempDirectory, "libs", "MonoGameGum");

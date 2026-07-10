@@ -136,8 +136,8 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
 
     private SyntaxVersionResult? TryDetectFromProjectReference(string csprojContents, string csprojPath)
     {
-        // Look for ProjectReference to MonoGameGum, RaylibGum, or SkiaGum
-        string[] gumProjectNames = { "MonoGameGum", "RaylibGum", "SkiaGum", "KniGum", "FnaGum" };
+        // Look for a ProjectReference to a Gum runtime that stamps a GumSyntaxVersion.
+        string[] gumProjectNames = { "MonoGameGum", "RaylibGum", "SkiaGum", "KniGum", "FnaGum", "SilkNetGum" };
 
         foreach (string projectName in gumProjectNames)
         {
