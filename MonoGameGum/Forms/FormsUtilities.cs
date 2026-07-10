@@ -81,9 +81,10 @@ public class FormsUtilities
     public static Keyboard Keyboard => keyboard;
 
     // Typed explicitly as Gum.Input.GamePad (the platform-neutral holder in GumCommon) rather
-    // than relying on the per-platform `using` so MonoGame and Raylib resolve to the same type.
-    // The MonoGame side is fed by MonoGameGamePadDriver; the Raylib side by the #if RAYLIB branch
-    // of UpdateGamepads below.
+    // than relying on the per-platform `using` so MonoGame, Raylib, and Sokol resolve to the
+    // same type. Each platform is fed by its own same-named GamePadDriver.Apply(GamePad, int,
+    // double), resolved unqualified via the per-platform `using` block at the top of this file
+    // -- see UpdateGamepads below (issue #3559).
     public static Gum.Input.GamePad[] Gamepads { get; private set; } = new Gum.Input.GamePad[4];
 
 
@@ -557,26 +558,12 @@ public class FormsUtilities
 
     private static void UpdateGamepads(double time)
     {
-#if XNALIKE
         for (int i = 0; i < Gamepads.Length; i++)
         {
-#if FNA
-            var gamepadState = Microsoft.Xna.Framework.Input.GamePad.GetState((PlayerIndex)i);
-#else
-            var gamepadState = Microsoft.Xna.Framework.Input.GamePad.GetState((int)i);
-#endif
-            // Read the XNA state into the platform-neutral GamePad holder (GumCommon),
-            // mirroring the Raylib driver branch below.
-            MonoGameGum.Input.MonoGameGamePadDriver.Apply(Gamepads[i], gamepadState, time);
+            // GamePadDriver resolves per-platform via this file's top-of-file conditional
+            // `using` blocks (MonoGameGum.Input / Gum.Input) -- no #if needed here (issue #3559).
+            GamePadDriver.Apply(Gamepads[i], i, time);
         }
-#elif RAYLIB
-        for (int i = 0; i < Gamepads.Length; i++)
-        {
-            // Read the Raylib state into the platform-neutral GamePad holder (GumCommon),
-            // mirroring the MonoGame driver branch above.
-            Gum.Input.RaylibGamePadDriver.Apply(Gamepads[i], i, time);
-        }
-#endif
 
 #if FULL_DIAGNOSTICS
         var hashSet = FrameworkElement.GamePadsForUiControl.ToHashSet();

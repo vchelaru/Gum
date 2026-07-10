@@ -7,13 +7,15 @@ namespace Gum.Input;
 
 /// <summary>
 /// Reads native Raylib controller input and pushes it into the platform-neutral
-/// <see cref="GamePad"/> holder (defined in GumCommon), mirroring the MonoGame input
-/// driver (<c>MonoGameGamePadDriver</c>) used by <c>FormsUtilities.UpdateGamepads</c>.
-/// Raylib exposes gamepad state through static query functions rather than a pre-fetched
-/// state struct, so <see cref="Apply(GamePad, int, double)"/> reads by gamepad index
-/// directly instead of taking a snapshot type like XNA's <c>GamePadState</c>.
+/// <see cref="GamePad"/> holder (defined in GumCommon). Every platform (MonoGame, Raylib,
+/// Sokol) exposes a same-named <c>GamePadDriver</c> class in its own namespace, so
+/// <c>FormsUtilities.UpdateGamepads</c> can dispatch through one unqualified call resolved by
+/// the file's per-platform <c>using</c> block, with no <c>#if</c> in the method body (issue
+/// #3559). Raylib exposes gamepad state through static query functions rather than a
+/// pre-fetched state struct, so <see cref="Apply(GamePad, int, double)"/> reads by gamepad
+/// index directly instead of taking a snapshot type like XNA's <c>GamePadState</c>.
 /// </summary>
-internal static class RaylibGamePadDriver
+internal static class GamePadDriver
 {
     /// <summary>
     /// Pushes the current Raylib input for gamepad <paramref name="index"/> into
