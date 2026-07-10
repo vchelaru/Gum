@@ -19,6 +19,10 @@ using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 #endif
 
+#if SKIA
+using Color = SkiaSharp.SKColor;
+#endif
+
 namespace Gum.Forms.DefaultVisuals.V3;
 
 /// <summary>

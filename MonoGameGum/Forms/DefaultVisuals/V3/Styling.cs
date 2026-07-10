@@ -9,6 +9,11 @@ using System.ComponentModel;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 #endif
+#if SKIA
+using Color = SkiaSharp.SKColor;
+using Texture2D = SkiaSharp.SKBitmap;
+#endif
+
 namespace Gum.Forms.DefaultVisuals.V3;
 
 public class Styling
@@ -480,9 +485,19 @@ public static class ColorExtensions
         // Clamp amount / 100 to [-1, 1]
         amount = System.Math.Clamp(amount / 100, -1f, 1f);
 
+        // SkiaSharp's SKColor exposes components as Red/Green/Blue/Alpha; the XNA/Raylib
+        // Color types use R/G/B/A. Read them per-platform, then share the math below.
+#if SKIA
+        float r = color.Red;
+        float g = color.Green;
+        float b = color.Blue;
+        byte a = color.Alpha;
+#else
         float r = color.R;
         float g = color.G;
         float b = color.B;
+        byte a = color.A;
+#endif
 
         if (amount >= 0)
         {
@@ -500,20 +515,26 @@ public static class ColorExtensions
             b *= mul;
         }
 
-        return new Color((byte)r, (byte)g, (byte)b, color.A);
+        return new Color((byte)r, (byte)g, (byte)b, a);
     }
 
     public static Color ToGrayscale(this Color color)
     {
+#if SKIA
+        byte cr = color.Red, cg = color.Green, cb = color.Blue, a = color.Alpha;
+#else
+        byte cr = color.R, cg = color.G, cb = color.B, a = color.A;
+#endif
+
         // Standard luminance calculation
         float gray =
-            color.R * 0.299f +
-            color.G * 0.587f +
-            color.B * 0.114f;
+            cr * 0.299f +
+            cg * 0.587f +
+            cb * 0.114f;
 
         byte g = (byte)gray;
 
-        return new Color(g, g, g, color.A);
+        return new Color(g, g, g, a);
     }
 }
 
