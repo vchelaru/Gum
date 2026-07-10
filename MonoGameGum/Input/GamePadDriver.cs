@@ -1,3 +1,4 @@
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using GamepadButton = Gum.Input.GamepadButton;
 
