@@ -5,12 +5,13 @@ namespace RaylibGum.Tests.Inputs;
 
 /// <summary>
 /// Tests for the platform-neutral <see cref="GamePad"/> data holder in GumCommon.
-/// The holder stores state pushed in by a platform driver (on Raylib, the
-/// <c>#if RAYLIB</c> branch of <c>FormsUtilities.UpdateGamepads</c>) via
-/// <see cref="GamePad.SetButtonState"/> / <see cref="GamePad.SetLeftStickPosition"/>
-/// and exposes it through the <see cref="IGamePad"/> query API that Forms navigation
-/// consumes. Before this holder was implemented every query returned false, so
-/// controller tabbing did nothing on Raylib (issue #3046).
+/// The holder stores state pushed in by a platform driver (on Raylib,
+/// <c>GamePadDriver.Apply(GamePad, int, double)</c>, dispatched from
+/// <c>FormsUtilities.UpdateGamepads</c>) via <see cref="GamePad.SetButtonState"/> /
+/// <see cref="GamePad.SetLeftStickPosition"/> and exposes it through the
+/// <see cref="IGamePad"/> query API that Forms navigation consumes. Before this holder
+/// was implemented every query returned false, so controller tabbing did nothing on
+/// Raylib (issue #3046).
 /// </summary>
 public class GamePadTests : BaseTestClass
 {
