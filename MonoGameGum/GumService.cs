@@ -1238,6 +1238,17 @@ public class GumService : IGumService
             }
 
             ObjectFinder.Self.GumProjectSave = gumProject;
+
+            // A loaded project may declare Skia-only standards (Canvas/Svg/LottieAnimation) or the
+            // shape standards (Arc/ColoredCircle/RoundedRectangle/Line). This runtime has no Skia
+            // plugin to resolve those, so register their default states here; otherwise
+            // gumProject.Initialize() throws "Could not get the default state for type ..." for a
+            // declared-but-unrendered standard. #3507 removed the shape runtime's Container fallback
+            // that used to mask this. Headless Gum.ProjectServices / gumcli register the same states
+            // for the same reason (no Skia plugin). Idempotent, and composes with the shape runtime's
+            // own resolver, so it is safe to call unconditionally on every load.
+            StandardElementsManager.Self.RegisterExtendedDefaultStates();
+
             gumProject.Initialize();
             ApplyProjectTextureFilter(gumProject);
             Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
