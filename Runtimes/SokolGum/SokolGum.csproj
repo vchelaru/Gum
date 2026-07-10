@@ -139,7 +139,6 @@
 		<Compile Include="..\..\MonoGameGum\Forms\BehaviorFormsPropertyApplier.cs" Link="Forms\BehaviorFormsPropertyApplier.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\FormsUtilities.cs" Link="Forms\FormsUtilities.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\ScreenBase.cs" Link="Forms\ScreenBase.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\Window.cs" Link="Forms\Window.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultFromFileVisuals\*.cs" Link="Forms\DefaultFromFileVisuals\%(Filename)%(Extension)" />
 	</ItemGroup>
 

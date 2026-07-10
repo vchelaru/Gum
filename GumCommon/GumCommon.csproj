@@ -294,6 +294,7 @@
 		<Compile Include="..\MonoGameGum\Forms\Controls\Tooltip.cs" Link="Forms\Controls\Tooltip.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\ToolTipService.cs" Link="Forms\Controls\ToolTipService.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\UserControl.cs" Link="Forms\Controls\UserControl.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Window.cs" Link="Forms\Window.cs" />
 		<Compile Include="..\MonoGameGum\Forms\GraphicalUiElementFormsExtensions.cs" Link="Forms\GraphicalUiElementFormsExtensions.cs" />
 		<Compile Include="..\MonoGameGum\Threading\DeferredActionQueue.cs" Link="Threading\DeferredActionQueue.cs" />
 	</ItemGroup>

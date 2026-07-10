@@ -129,7 +129,6 @@
 		<Compile Include="..\..\MonoGameGum\Forms\BehaviorFormsPropertyApplier.cs" Link="Forms\BehaviorFormsPropertyApplier.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\FormsUtilities.cs" Link="Forms\FormsUtilities.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\ScreenBase.cs" Link="Forms\ScreenBase.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\Window.cs" Link="Forms\Window.cs" />
 		<Compile Include="..\..\MonoGameGum\GueDeriving\ColoredRectangleRuntime.cs" Link="GueDeriving\ColoredRectangleRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\GueDeriving\ContainerRuntime.cs" Link="GueDeriving\ContainerRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\GueDeriving\SpriteRuntime.cs" Link="GueDeriving\SpriteRuntime.cs" />
