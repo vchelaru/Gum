@@ -77,6 +77,8 @@ public class Styling
         this.SpriteSheet = spriteSheet ?? SystemManagers.Default.LoadEmbeddedTexture2d("UISpriteSheet.png")!.Value;
 #elif SOKOL
         this.SpriteSheet = spriteSheet ?? SystemManagers.Default.LoadEmbeddedTexture2d("UISpriteSheet.png")!;
+#elif SKIA
+        this.SpriteSheet = spriteSheet ?? SystemManagers.Default.LoadEmbeddedTexture2d("UISpriteSheet.png")!;
 #endif
 
         // Set the backing field directly rather than going through the ActiveStyle property:

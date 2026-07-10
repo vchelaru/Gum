@@ -10,6 +10,7 @@ using Gum.GueDeriving;
 using SkiaGum.Renderables;
 using SkiaPlugin.Managers;
 using System;
+using Texture2D = SkiaSharp.SKBitmap;
 
 namespace RenderingLibrary
 {
@@ -18,10 +19,15 @@ namespace RenderingLibrary
         #region Fields/Properties
 
         /// <summary>
-        /// The font scale value. This can be used to scale all fonts globally, 
+        /// The font scale value. This can be used to scale all fonts globally,
         /// generally in response to a font scaling value like the Android font scale setting.
         /// </summary>
         public static float GlobalFontScale { get; set; } = 1.0f;
+
+        // Mirrors the MonoGame/Raylib AssemblyPrefix pattern (issue #3561) so
+        // LoadEmbeddedTexture2d below and Gum.Forms.DefaultVisuals.V3.Styling's embedded
+        // sprite-sheet lookup resolve to this assembly's embedded resources.
+        public static string AssemblyPrefix => "SkiaGum.Content";
 
         static SystemManagers _default;
         public static SystemManagers Default
@@ -225,6 +231,27 @@ namespace RenderingLibrary
         public void Draw()
         {
             Renderer.Draw(this);
+        }
+
+        /// <summary>
+        /// Loads a texture into the Disposable cache from the Embedded Resource within the application.
+        /// Mirrors MonoGame's/Raylib's LoadEmbeddedTexture2d (issue #3561) so
+        /// Gum.Forms.FormsUtilities.InitializeDefaults can load the shared UISpriteSheet.png on Skia.
+        /// </summary>
+        /// <param name="embeddedTexture2dName"></param>
+        /// <returns></returns>
+        public Texture2D? LoadEmbeddedTexture2d(string embeddedTexture2dName)
+        {
+            var assembly = typeof(SystemManagers).Assembly;
+            using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(assembly,
+                $"{AssemblyPrefix}.{embeddedTexture2dName}");
+
+            Texture2D texture = Texture2D.Decode(stream);
+
+            var resourceName = $"{AssemblyPrefix}.{embeddedTexture2dName}";
+            Content.LoaderManager.Self.AddDisposable($"EmbeddedResource.{resourceName}", texture);
+
+            return texture;
         }
     }
 }
