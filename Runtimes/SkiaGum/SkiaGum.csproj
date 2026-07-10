@@ -99,6 +99,29 @@
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TooltipVisual.cs" Link="Forms\DefaultVisuals\V3\TooltipVisual.cs" />
 	</ItemGroup>
 
+	<!--
+		Forms from-file default visuals + the behavior->Forms property bridge, linked so the types
+		FormsUtilities.RegisterFromFileFormRuntimeDefaults() references compile for Skia. This is
+		piece 3 of the Skia-Forms chain (#3598); the FormsUtilities glue that calls them is the
+		#3561 follow-up. Mirrors RaylibGum.csproj's glob + BehaviorFormsPropertyApplier link.
+		These are thin control-attach wrappers (no bare Color/Texture2D), so no #if SKIA aliases are
+		needed unlike the V3 *Visual files above.
+		Exclusion:
+		  - DefaultFromFileWindowRuntime.cs — attaches the Forms Window control
+		    (MonoGameGum/Forms/Window.cs), which is not yet linked into SkiaGum; it lands with #3563
+		    (same reason V3 WindowVisual is excluded above).
+		Note: DefaultFromFile{Menu,MenuItem,PasswordBox}Runtime are globbed in but self-exclude on
+		Skia via their own #if XNALIKE || FRB || RAYLIB guard (those controls aren't on Skia yet),
+		compiling to empty units — harmless, and they light up automatically if that guard widens.
+		Part of #3543 / #2738.
+	-->
+	<ItemGroup>
+		<Compile Include="..\..\MonoGameGum\Forms\BehaviorFormsPropertyApplier.cs" Link="Forms\BehaviorFormsPropertyApplier.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultFromFileVisuals\*.cs"
+				 Exclude="..\..\MonoGameGum\Forms\DefaultFromFileVisuals\DefaultFromFileWindowRuntime.cs"
+				 Link="Forms\DefaultFromFileVisuals\%(Filename)%(Extension)" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<PackageReference Include="SkiaSharp" Version="3.119.1" />
 		<PackageReference Include="SkiaSharp.Extended" Version="3.0.0" />
