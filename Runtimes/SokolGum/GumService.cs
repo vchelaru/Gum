@@ -75,19 +75,29 @@ public sealed class GumService : IGumService
     /// <inheritdoc/>
     IRenderable IGumService.CreateSpriteRenderable() => new Gum.Renderables.Sprite();
 
+    /// <inheritdoc/>
+    ICursor? IGumService.CreateCursor() => Cursor.CreateForCurrentPlatform();
+
+    /// <inheritdoc/>
+    IInputReceiverKeyboard? IGumService.CreateKeyboard() => Keyboard.CreateForCurrentPlatform();
+
+    /// <inheritdoc/>
+    void IGumService.ApplyGamePadState(GamePad gamepad, int index, double time) =>
+        GamePadDriver.Apply(gamepad, index, time);
+
     #endregion
 
     /// <summary>
     /// Gets the default cursor, fed by Sokol mouse events forwarded via
     /// <see cref="HandleSokolEvent"/>.
     /// </summary>
-    public Cursor Cursor => FormsUtilities.Cursor!;
+    public Cursor Cursor => (FormsUtilities.Cursor as Cursor)!;
 
     /// <summary>
     /// Gets the default keyboard, fed by Sokol key / char events forwarded via
     /// <see cref="HandleSokolEvent"/>.
     /// </summary>
-    public Keyboard Keyboard => FormsUtilities.Keyboard;
+    public Keyboard Keyboard => (FormsUtilities.Keyboard as Keyboard)!;
 
     /// <summary>
     /// The popup root, which mirrors <c>FrameworkElement.PopupRoot</c> so callers

@@ -55,6 +55,11 @@ public class TestAssemblyInitializeBase : XunitTestFramework
         
         ElementSaveExtensions.CustomCreateGraphicalComponentFunc = RenderableCreator.HandleCreateGraphicalComponent;
 
+        // FormsUtilities.InitializeDefaults now creates the cursor/keyboard/gamepad driver through
+        // IGumService.Default, so the service must be the active default before that call -- exactly as
+        // the real runtime's Initialize orders it (IGumService.Default = this; before InitializeDefaults).
+        // Qualified as Gum.GumService (the modern, non-obsolete class) to stay warning-free.
+        IGumService.Default = Gum.GumService.Default;
 
         FormsUtilities.InitializeDefaults(defaultVisualsVersion: visualVersion);
         CreateStubbedFonts();

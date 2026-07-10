@@ -69,6 +69,19 @@ public class GumServiceInterfaceTests
     }
 
     [Fact]
+    public void IGumService_CreateCursor_OnXnaLikeRuntime_ReturnsNonNullCursor()
+    {
+        // The MonoGame GumService overrides the IGumService.CreateCursor default (which returns
+        // null on render-only hosts). FormsUtilities.InitializeDefaults creates the cursor through
+        // this service path, so this pins that the XNALIKE override is wired and non-null.
+        IGumService service = GumService.Default;
+
+        ICursor? cursor = service.CreateCursor();
+
+        cursor.ShouldNotBeNull();
+    }
+
+    [Fact]
     public void IGumService_Cursor_ReturnsServiceCursor()
     {
         IGumService service = GumService.Default;

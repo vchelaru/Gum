@@ -66,6 +66,12 @@ public class TestAssemblyInitialize : XunitTestFramework
             ISystemManagers.Default = SystemManagers.Default;
         }
 
+        // FormsUtilities.InitializeDefaults now creates the cursor/keyboard/gamepad driver through
+        // IGumService.Default, so the service must be the active default before that call -- exactly as
+        // the real runtime's Initialize orders it (IGumService.Default = this; before InitializeDefaults).
+        // Qualified as Gum.GumService (the modern, non-obsolete class) to stay warning-free.
+        IGumService.Default = Gum.GumService.Default;
+
         // Registers V2 DefaultFormsTemplates (Button, ListBox, Slider, ComboBox, ...) so
         // parameterless Forms constructors produce a control with Visual != null on Raylib.
         FormsUtilities.InitializeDefaults(SystemManagers.Default, DefaultVisualsVersion.V2);

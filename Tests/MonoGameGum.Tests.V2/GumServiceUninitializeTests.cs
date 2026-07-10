@@ -200,7 +200,7 @@ public class GumServiceUninitializeTests
     public void FormsUtilities_Uninitialize_SetsCursorToNull()
     {
         // Save state so we can restore it in teardown.
-        Cursor? savedCursor = FormsUtilities.Cursor;
+        ICursor? savedCursor = FormsUtilities.Cursor;
         InteractiveGue? savedPopupRoot = FrameworkElement.PopupRoot;
         InteractiveGue? savedModalRoot = FrameworkElement.ModalRoot;
 
@@ -222,7 +222,7 @@ public class GumServiceUninitializeTests
     [Fact]
     public void FormsUtilities_Uninitialize_SetsKeyboardToNull()
     {
-        Cursor? savedCursor = FormsUtilities.Cursor;
+        ICursor? savedCursor = FormsUtilities.Cursor;
         InteractiveGue? savedPopupRoot = FrameworkElement.PopupRoot;
         InteractiveGue? savedModalRoot = FrameworkElement.ModalRoot;
 
@@ -244,7 +244,7 @@ public class GumServiceUninitializeTests
     [Fact]
     public void FormsUtilities_Uninitialize_ResetsGamepadsToNewArray()
     {
-        Cursor? savedCursor = FormsUtilities.Cursor;
+        ICursor? savedCursor = FormsUtilities.Cursor;
         InteractiveGue? savedPopupRoot = FrameworkElement.PopupRoot;
         InteractiveGue? savedModalRoot = FrameworkElement.ModalRoot;
 
@@ -278,7 +278,7 @@ public class GumServiceUninitializeTests
     /// <c>InitializeDefaults</c> is the only public way to reinstate them.
     /// </remarks>
     private static void RestoreFormsUtilitiesState(
-        Cursor? cursor,
+        ICursor? cursor,
         InteractiveGue? popupRoot,
         InteractiveGue? modalRoot)
     {
