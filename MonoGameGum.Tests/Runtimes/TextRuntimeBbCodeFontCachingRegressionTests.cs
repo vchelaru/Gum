@@ -123,6 +123,27 @@ public class TextRuntimeBbCodeFontCachingRegressionTests : BaseTestClass
         }
     }
 
+    // #3624 regression: a Text owned by a GraphicalUiElement that is NOT a TextRuntime has unseeded font
+    // resolution stacks (SetBbCodeText seeds them only for a TextRuntime). Assigning font-family BBCode
+    // markup then drove ApplyFontVariables to peek/pop those unseeded stacks - an InvalidOperationException
+    // ("Stack empty"), or a wrong font from stale static state. The single guard must skip per-run font
+    // resolution in that case while still stripping the tags and wrapping the text.
+    [Fact]
+    public void SetBbCodeText_WithNonTextRuntimeOwner_DoesNotThrowOrResolveFonts()
+    {
+        // A real Text renderable, but driven through a base GraphicalUiElement (not a TextRuntime).
+        TextRuntime source = new();
+        Text text = (Text)source.RenderableComponent;
+        GraphicalUiElement nonTextRuntimeOwner = new();
+
+        Should.NotThrow(() => CustomSetPropertyOnRenderable.SetPropertyOnRenderable(
+            text, nonTextRuntimeOwner, "Text", "[IsBold=true]Hello[/IsBold] World"));
+
+        text.RawText.ShouldBe("Hello World");
+        // No TextRuntime to seed the stacks, so no resolved-font ("BitmapFont") runs are produced.
+        text.InlineVariables.ShouldNotContain(v => v.VariableName == "BitmapFont");
+    }
+
     // A unique relative directory makes the (absolute) font-cache key unique to this run so no prior
     // test can mask the collision and this test cannot poison a shared slot.
     private static string MakeUniqueRelativeDirectory() =>

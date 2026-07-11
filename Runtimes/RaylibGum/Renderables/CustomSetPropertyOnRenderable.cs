@@ -723,50 +723,8 @@ public class CustomSetPropertyOnRenderable
 
         asText.RawText = strippedText;
 
-#if FRB
-        var textRuntime = graphicalUiElement;
-#else
-        var textRuntime = graphicalUiElement as Gum.GueDeriving.TextRuntime;
-#endif
-
-        // Seed the font-resolution stacks with the element's base font values so ApplyFontVariables can
-        // push/pop inline overrides on top of them.
-        if (textRuntime != null)
-        {
-            fontNameStack.Clear();
-            if (textRuntime.UseCustomFont)
-            {
-                var customFont = textRuntime.CustomFontFile;
-                if (customFont?.EndsWith(".fnt") == true)
-                {
-                    customFont = customFont.Substring(0, customFont.Length - ".fnt".Length);
-                }
-                fontNameStack.Push(customFont);
-            }
-            else
-            {
-                fontNameStack.Push(textRuntime.Font);
-            }
-
-            fontSizeStack.Clear();
-            fontSizeStack.Push(textRuntime.FontSize);
-
-            outlineThicknessStack.Clear();
-            outlineThicknessStack.Push(textRuntime.OutlineThickness);
-
-            useFontSmoothingStack.Clear();
-            useFontSmoothingStack.Push(textRuntime.UseFontSmoothing);
-
-            isItalicStack.Clear();
-            isItalicStack.Push(textRuntime.IsItalic);
-
-            isBoldStack.Clear();
-            isBoldStack.Push(textRuntime.IsBold);
-
-            useCustomFontStack.Clear();
-            useCustomFontStack.Push(textRuntime.UseCustomFont);
-        }
-
+        // Color / Red / Green / Blue / FontScale runs don't use the font-resolution stacks, so they are
+        // emitted regardless of whether the owning element is a TextRuntime.
         foreach (var item in results)
         {
             object castedValue = item.Open.Argument;
@@ -821,7 +779,63 @@ public class CustomSetPropertyOnRenderable
             }
         }
 
-        ApplyFontVariables(asText, results);
+#if FRB
+        var textRuntime = graphicalUiElement;
+#else
+        var textRuntime = graphicalUiElement as Gum.GueDeriving.TextRuntime;
+#endif
+
+        // Per-run font resolution requires the seven stacks to be seeded from a TextRuntime's base font
+        // values. A Text owned by a non-TextRuntime GraphicalUiElement has no such values, so we neither seed
+        // nor resolve here - otherwise ApplyFontVariables would peek/pop unseeded (stale or empty) stacks,
+        // giving a wrong font or an InvalidOperationException. One guard covers seeding and resolution; the
+        // text is still wrapped/measured below regardless.
+        if (textRuntime != null)
+        {
+            fontNameStack.Clear();
+            if (textRuntime.UseCustomFont)
+            {
+                var customFont = textRuntime.CustomFontFile;
+                if (customFont?.EndsWith(".fnt") == true)
+                {
+                    customFont = customFont.Substring(0, customFont.Length - ".fnt".Length);
+                }
+                fontNameStack.Push(customFont);
+            }
+            else
+            {
+                fontNameStack.Push(textRuntime.Font);
+            }
+
+            fontSizeStack.Clear();
+            fontSizeStack.Push(textRuntime.FontSize);
+
+            outlineThicknessStack.Clear();
+            outlineThicknessStack.Push(textRuntime.OutlineThickness);
+
+            useFontSmoothingStack.Clear();
+            useFontSmoothingStack.Push(textRuntime.UseFontSmoothing);
+
+            isItalicStack.Clear();
+            isItalicStack.Push(textRuntime.IsItalic);
+
+            isBoldStack.Clear();
+            isBoldStack.Push(textRuntime.IsBold);
+
+            useCustomFontStack.Clear();
+            useCustomFontStack.Push(textRuntime.UseCustomFont);
+
+            ApplyFontVariables(asText, results);
+        }
+
+        // #3481/#3532: RawText was assigned above (which wrapped + measured the text) before any
+        // InlineVariables existed, so that first pass was blind to inline [FontScale=N]/[FontSize=N] runs.
+        // Re-wrap first so line breaks account for an enlarged run's real size (#3532), then re-measure so the
+        // reported size accounts for per-line scale (#3481) - otherwise a tall run overflows its slot and
+        // overlaps the next stacked sibling, or a wide run spills past a fixed wrap width. Runs unconditionally
+        // (the text must wrap whether or not per-run fonts were resolved). Mirrors the MonoGame path.
+        asText.UpdateWrappedText();
+        asText.UpdatePreRenderDimensions();
     }
 
     /// <summary>
@@ -955,15 +969,6 @@ public class CustomSetPropertyOnRenderable
         {
             lastFontInlineVariable.CharacterCount = asText.RawText.Length - lastFontInlineVariable.StartIndex;
         }
-
-        // #3481/#3532: RawText was assigned above (which wrapped + measured the text) before any
-        // InlineVariables existed, so that first pass was blind to inline [FontScale=N]/[FontSize=N]
-        // runs. Re-wrap first so line breaks account for an enlarged run's real size (#3532), then
-        // re-measure so the reported size accounts for per-line scale (#3481) — otherwise a tall run
-        // overflows its slot and overlaps the next stacked sibling, or a wide run spills past a fixed
-        // wrap width. Mirrors the MonoGame Gum/Wireframe/CustomSetPropertyOnRenderable.cs.
-        asText.UpdateWrappedText();
-        asText.UpdatePreRenderDimensions();
 
         // Creates (or returns a cached) resolved font for the current stack state. Only the font-CREATION
         // body is platform-specific; everything above is shared with the MonoGame path. Returns null when no

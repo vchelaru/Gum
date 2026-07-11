@@ -1,5 +1,6 @@
 using Gum.DataTypes;
 using Gum.GueDeriving;
+using Gum.Wireframe;
 using KernSmith.Gum;
 using RaylibGum.Renderables;
 using RenderingLibrary.Graphics;
@@ -229,6 +230,37 @@ public class TextMarkupTests
             InlineVariable helloRun = internalText.InlineVariables.Single(v => v.CharacterCount == 5);
             helloRun.VariableName.ShouldBe("BitmapFont");
             helloRun.Value.ShouldBeOfType<Raylib_cs.Font>();
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    // #3624 regression: a Text owned by a GraphicalUiElement that is NOT a TextRuntime has unseeded font
+    // stacks (SetBbCodeText seeds them only for a TextRuntime). With a font creator wired and font-family
+    // markup, the resolution loop would otherwise peek/pop those unseeded stacks - a wrong font, or an
+    // uncaught InvalidOperationException. The single guard must skip per-run font resolution in that case
+    // while still stripping the tags and wrapping the text. Restores the creator in finally.
+    [Fact]
+    public void SetBbCodeText_WithNonTextRuntimeOwner_DoesNotThrowOrResolveFonts_WhenFontCreatorWired()
+    {
+        IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreator();
+
+            // A real Text renderable, but driven through a base GraphicalUiElement (not a TextRuntime).
+            TextRuntime source = new();
+            Text text = (Text)source.RenderableComponent;
+            GraphicalUiElement nonTextRuntimeOwner = new();
+
+            Should.NotThrow(() => CustomSetPropertyOnRenderable.SetPropertyOnRenderable(
+                text, nonTextRuntimeOwner, "Text", "[IsBold=true]Hello[/IsBold] World"));
+
+            text.RawText.ShouldBe("Hello World");
+            // No TextRuntime to seed the stacks, so no resolved-font ("BitmapFont") runs are produced.
+            text.InlineVariables.Any(v => v.VariableName == "BitmapFont").ShouldBeFalse();
         }
         finally
         {
