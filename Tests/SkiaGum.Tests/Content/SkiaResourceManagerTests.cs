@@ -3,6 +3,7 @@ using SkiaSharp;
 using Shouldly;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using ToolsUtilities;
 using Xunit;
 
@@ -10,6 +11,61 @@ namespace SkiaGum.Tests.Content;
 
 public class SkiaResourceManagerTests
 {
+    // Regression for #3609: the SKBitmap cache used to be a plain, non-concurrent
+    // Dictionary. xUnit runs test classes in parallel, so concurrent GetSKBitmap
+    // calls raced on the Dictionary's internal state during a resize, and a
+    // just-inserted key could read back as missing → KeyNotFoundException. Hammer
+    // the shared static cache from many threads with distinct keys (which forces
+    // adds + resizes) to expose the race; a thread-safe cache loads every bitmap
+    // without throwing.
+    [Fact]
+    public void GetSKBitmap_ConcurrentAccessWithDistinctKeys_ShouldNotCorruptCache()
+    {
+        string tempRoot = Path.Combine(Path.GetTempPath(), "GumSkiaResMgrConcTest_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+
+        string savedRelativeDirectory = FileManager.RelativeDirectory;
+
+        try
+        {
+            const int fileCount = 500;
+            string[] absolutePaths = new string[fileCount];
+            for (int i = 0; i < fileCount; i++)
+            {
+                string absolutePath = Path.Combine(tempRoot, "conc_" + i + ".png");
+                using (SKBitmap source = new SKBitmap(2, 2))
+                using (SKImage image = SKImage.FromBitmap(source))
+                using (SKData encoded = image.Encode(SKEncodedImageFormat.Png, 100))
+                using (FileStream fileStream = File.OpenWrite(absolutePath))
+                {
+                    encoded.SaveTo(fileStream);
+                }
+                absolutePaths[i] = absolutePath;
+            }
+
+            FileManager.RelativeDirectory = tempRoot + Path.DirectorySeparatorChar;
+
+            ParallelOptions options = new ParallelOptions
+            {
+                MaxDegreeOfParallelism = Math.Max(4, Environment.ProcessorCount * 2)
+            };
+
+            Parallel.For(0, fileCount, options, i =>
+            {
+                SKBitmap loaded = SkiaResourceManager.GetSKBitmap(absolutePaths[i]);
+                loaded.ShouldNotBeNull();
+            });
+        }
+        finally
+        {
+            FileManager.RelativeDirectory = savedRelativeDirectory;
+            if (Directory.Exists(tempRoot))
+            {
+                Directory.Delete(tempRoot, recursive: true);
+            }
+        }
+    }
+
     // Regression: CacheSKImage used to do `RelativeDirectory + resourceName`
     // unconditionally, so any caller passing an already-absolute path (e.g.
     // AnimationFrame.ToAnimationFrame, which pre-prefixes RelativeDirectory
