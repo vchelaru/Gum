@@ -51,10 +51,23 @@ public enum SyntaxVersionSource
 public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
 {
     private readonly ICodeGenLogger _logger;
+    private readonly string _nuGetCacheRoot;
 
     public SyntaxVersionDetectionService(ICodeGenLogger logger)
+        : this(logger, nuGetCacheRoot: null)
+    {
+    }
+
+    /// <summary>
+    /// Test seam allowing the NuGet global-packages cache root to be overridden, so the
+    /// NuGet PackageReference detection path is testable without a populated ~/.nuget/packages.
+    /// </summary>
+    internal SyntaxVersionDetectionService(ICodeGenLogger logger, string? nuGetCacheRoot)
     {
         _logger = logger;
+        _nuGetCacheRoot = nuGetCacheRoot ?? Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            ".nuget", "packages");
     }
 
     /// <inheritdoc/>
@@ -187,16 +200,16 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
 
     private SyntaxVersionResult? TryDetectFromNuGetPackage(string csprojContents)
     {
-        // Look for PackageReference to Gum runtime packages
+        // Look for PackageReference to Gum runtime packages (published NuGet package IDs)
         string[] gumPackageNames =
         {
-            "FlatRedBall.MonoGameGum",
-            "FlatRedBall.SkiaGum",
-            "FlatRedBall.RaylibGum",
-            // Also check non-FRB package names in case they're used
-            "MonoGameGum",
-            "SkiaGum",
-            "RaylibGum"
+            "Gum.MonoGame",
+            "Gum.KNI",
+            "Gum.FNA",
+            "Gum.SkiaSharp",
+            "Gum.raylib",
+            "Gum.sokol",
+            "Gum.SilkNet"
         };
 
         foreach (string packageName in gumPackageNames)
@@ -247,13 +260,9 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
         return match.Success ? match.Groups[1].Value : null;
     }
 
-    private static string? FindDllInNuGetCache(string packageName, string version)
+    internal string? FindDllInNuGetCache(string packageName, string version)
     {
-        string nugetCache = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            ".nuget", "packages");
-
-        string packageDir = Path.Combine(nugetCache, packageName.ToLowerInvariant(), version, "lib");
+        string packageDir = Path.Combine(_nuGetCacheRoot, packageName.ToLowerInvariant(), version, "lib");
 
         if (!Directory.Exists(packageDir))
         {

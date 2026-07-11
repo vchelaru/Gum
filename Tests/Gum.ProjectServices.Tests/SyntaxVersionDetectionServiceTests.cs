@@ -1,6 +1,7 @@
 using Gum.ProjectServices.CodeGeneration;
 using Shouldly;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Gum.ProjectServices.Tests;
@@ -421,6 +422,109 @@ public class SyntaxVersionDetectionServiceTests : IDisposable
 
     #endregion
 
+    #region NuGet PackageReference detection tests
+
+    [Theory]
+    [InlineData("Gum.MonoGame")]
+    [InlineData("Gum.KNI")]
+    [InlineData("Gum.FNA")]
+    [InlineData("Gum.SkiaSharp")]
+    [InlineData("Gum.raylib")]
+    [InlineData("Gum.sokol")]
+    [InlineData("Gum.SilkNet")]
+    public void ExtractPackageReferenceVersion_RealPublishedPackageId_ReturnsVersion(string packageId)
+    {
+        string csproj = $@"<Project Sdk=""Microsoft.NET.Sdk"">
+  <ItemGroup>
+    <PackageReference Include=""{packageId}"" Version=""2026.4.1"" />
+  </ItemGroup>
+</Project>";
+
+        string? result = SyntaxVersionDetectionService.ExtractPackageReferenceVersion(csproj, packageId);
+
+        result.ShouldNotBeNull();
+        result.ShouldBe("2026.4.1");
+    }
+
+    [Fact]
+    public void Detect_NuGetPackage_RealPackageId_MatchesAndLogsCacheMiss()
+    {
+        string nuGetCacheRoot = Path.Combine(_tempDirectory, "nuget-cache");
+        SyntaxVersionDetectionService sut = new SyntaxVersionDetectionService(_logger, nuGetCacheRoot);
+
+        string gameDir = Path.Combine(_tempDirectory, "game");
+        Directory.CreateDirectory(gameDir);
+
+        string csprojPath = Path.Combine(gameDir, "MyGame.csproj");
+        File.WriteAllText(csprojPath,
+@"<Project Sdk=""Microsoft.NET.Sdk"">
+  <ItemGroup>
+    <PackageReference Include=""Gum.MonoGame"" Version=""2026.4.1"" />
+  </ItemGroup>
+</Project>");
+
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            SyntaxVersion = "*",
+            CodeProjectRoot = "./"
+        };
+
+        SyntaxVersionResult result = sut.Detect(settings, gameDir);
+
+        result.Source.ShouldBe(SyntaxVersionSource.Fallback);
+        _logger.OutputMessages.ShouldContain(message => message.Contains("Gum.MonoGame") && message.Contains("NuGet cache"));
+    }
+
+    [Fact]
+    public void FindDllInNuGetCache_DllNameDiffersFromPackageId_ReturnsDllPath()
+    {
+        string nuGetCacheRoot = Path.Combine(_tempDirectory, "nuget-cache");
+        string tfmDir = Path.Combine(nuGetCacheRoot, "gum.monogame", "2026.4.1", "lib", "net8.0");
+        Directory.CreateDirectory(tfmDir);
+        string dllPath = Path.Combine(tfmDir, "MonoGameGum.dll");
+        File.WriteAllText(dllPath, "");
+
+        SyntaxVersionDetectionService sut = new SyntaxVersionDetectionService(_logger, nuGetCacheRoot);
+
+        string? result = sut.FindDllInNuGetCache("Gum.MonoGame", "2026.4.1");
+
+        result.ShouldBe(dllPath);
+    }
+
+    [Fact]
+    public void FindDllInNuGetCache_PrefersHigherPriorityTfm()
+    {
+        string nuGetCacheRoot = Path.Combine(_tempDirectory, "nuget-cache");
+        string net6Dir = Path.Combine(nuGetCacheRoot, "gum.skiasharp", "1.0.0", "lib", "net6.0");
+        string net8Dir = Path.Combine(nuGetCacheRoot, "gum.skiasharp", "1.0.0", "lib", "net8.0");
+        Directory.CreateDirectory(net6Dir);
+        Directory.CreateDirectory(net8Dir);
+        File.WriteAllText(Path.Combine(net6Dir, "SkiaGum.dll"), "");
+        string net8DllPath = Path.Combine(net8Dir, "SkiaGum.dll");
+        File.WriteAllText(net8DllPath, "");
+
+        SyntaxVersionDetectionService sut = new SyntaxVersionDetectionService(_logger, nuGetCacheRoot);
+
+        string? result = sut.FindDllInNuGetCache("Gum.SkiaSharp", "1.0.0");
+
+        result.ShouldBe(net8DllPath);
+    }
+
+    [Fact]
+    public void FindDllInNuGetCache_PackageNotInCache_ReturnsNull()
+    {
+        string nuGetCacheRoot = Path.Combine(_tempDirectory, "nuget-cache");
+        Directory.CreateDirectory(nuGetCacheRoot);
+
+        SyntaxVersionDetectionService sut = new SyntaxVersionDetectionService(_logger, nuGetCacheRoot);
+
+        string? result = sut.FindDllInNuGetCache("Gum.raylib", "1.0.0");
+
+        result.ShouldBeNull();
+    }
+
+    #endregion
+
     public void Dispose()
     {
         try
@@ -435,7 +539,17 @@ public class SyntaxVersionDetectionServiceTests : IDisposable
 
     private class TestLogger : ICodeGenLogger
     {
-        public void PrintOutput(string message) { }
-        public void PrintError(string message) { }
+        public List<string> OutputMessages { get; } = new List<string>();
+        public List<string> ErrorMessages { get; } = new List<string>();
+
+        public void PrintOutput(string message)
+        {
+            OutputMessages.Add(message);
+        }
+
+        public void PrintError(string message)
+        {
+            ErrorMessages.Add(message);
+        }
     }
 }
