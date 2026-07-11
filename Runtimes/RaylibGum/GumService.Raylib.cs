@@ -69,6 +69,11 @@ public partial class GumService
     void IGumService.ApplyGamePadState(Gum.Input.GamePad gamepad, int index, double time) =>
         GamePadDriver.Apply(gamepad, index, time);
 
+    /// <inheritdoc/>
+    IRenderable IGumService.CreateSpriteRenderable() => Sprite.CreateForCurrentPlatform();
+
+    public ContentLoader? ContentLoader => LoaderManager.Self.ContentLoader as ContentLoader;
+
     /// <summary>
     /// Initializes Gum, optionally loading a Gum project.
     /// </summary>
@@ -146,6 +151,11 @@ public partial class GumService
         // equivalents to the XNALIKE Text - only DefaultFont. default(Font) has
         // BaseSize == 0, the constructor's documented uninitialized-Font sentinel (#3557).
         Text.DefaultFont = default;
+    }
+
+    partial void AssignClipboard()
+    {
+        Clipboard = new global::Gum.Clipboard.MonoGameGumClipboard();
     }
 
     #region Update

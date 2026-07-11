@@ -83,6 +83,11 @@ public partial class GumService
     void IGumService.ApplyGamePadState(Gum.Input.GamePad gamepad, int index, double time) =>
         GamePadDriver.Apply(gamepad, index, time);
 
+    /// <inheritdoc/>
+    IRenderable IGumService.CreateSpriteRenderable() => Sprite.CreateForCurrentPlatform();
+
+    public ContentLoader? ContentLoader => LoaderManager.Self.ContentLoader as ContentLoader;
+
     private Game? _game;
     public Game Game
     {
@@ -264,6 +269,11 @@ public partial class GumService
         NativeTextInput = new MonoGameNativeTextInput();
     }
 #endif
+
+    partial void AssignClipboard()
+    {
+        Clipboard = new global::Gum.Clipboard.MonoGameGumClipboard();
+    }
 
     static partial void ApplyTextureFilterPlatform(bool useLinearFiltering)
     {

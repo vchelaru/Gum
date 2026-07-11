@@ -23,15 +23,19 @@ using Gum.GueDeriving;
 using Gum.Input;
 
 // A few types this shared file references live in different namespaces per backend — Cursor
-// (MonoGameGum.Input on XNALIKE vs Gum.Input on Raylib), and Sprite / CustomSetPropertyOnRenderable
-// (Gum.Renderables / RaylibGum.Renderables on Raylib). Only the using set switches per platform; the
-// method bodies stay backend-agnostic. This mirrors the per-platform using aliasing used across the
-// unified GueDeriving runtimes (issue #3608).
+// (MonoGameGum.Input on XNALIKE vs Gum.Input on Raylib/Silk) and CustomSetPropertyOnRenderable
+// (Gum.Wireframe on XNALIKE, RaylibGum.Renderables on Raylib, SkiaGum on Silk). Only the using set
+// switches per platform; the method bodies stay backend-agnostic. This mirrors the per-platform using
+// aliasing used across the unified GueDeriving runtimes (issue #3608). The renderable Sprite type also
+// diverges, but its only use (CreateSpriteRenderable) lives in the per-platform partials, so no Sprite
+// using is needed here.
 #if MONOGAME || KNI || FNA
 using MonoGameGum.Input;
 #elif RAYLIB
 using Gum.Renderables;
 using RaylibGum.Renderables;
+#elif SILK
+using SkiaGum;
 #endif
 
 // The platform-agnostic home for GumService (issue #3119). The legacy
@@ -95,12 +99,11 @@ public partial class GumService : IGumService
     /// <inheritdoc/>
     public IGumClipboard? Clipboard { get; private set; }
 
-    /// <inheritdoc/>
-    IRenderable IGumService.CreateSpriteRenderable() => Sprite.CreateForCurrentPlatform();
-
-    // CreateCursor / CreateKeyboard / ApplyGamePadState are platform-specific input factories
-    // (XNALIKE bakes the Game into the cursor/keyboard; GamePadDriver is a per-family type). They
-    // live in the per-platform partials (issue #3608).
+    // CreateSpriteRenderable / CreateCursor / CreateKeyboard / ApplyGamePadState are platform-specific
+    // factories and live in the per-platform partials (issue #3608): the renderable Sprite type differs
+    // per backend and only XNALIKE/Raylib expose the Sprite.CreateForCurrentPlatform factory (Skia news
+    // one up directly), XNALIKE bakes the Game into the cursor/keyboard, and GamePadDriver is a
+    // per-family type.
 
 #if !IOS && !ANDROID
     private IGumHotReloadManager? _hotReloadManager;
@@ -260,7 +263,9 @@ public partial class GumService : IGumService
     // GetWindowSize() is platform-specific (XNA back-buffer vs raylib render size) and lives in the
     // per-platform partials (issue #3608).
 
-    public ContentLoader? ContentLoader => LoaderManager.Self.ContentLoader as ContentLoader;
+    // The ContentLoader convenience property casts LoaderManager.Self.ContentLoader to the concrete
+    // ContentLoader type, which exists on XNALIKE/Raylib but not on Skia (Silk), so it lives in the
+    // per-platform partials (issue #3608).
 
     InteractiveGue _root = null!;
     bool _rootOwnedByGumService;
@@ -709,7 +714,11 @@ public partial class GumService : IGumService
         // it null and type inline via each Keyboard's GetStringTyped (issue #3432). The seam is
         // implemented in GumService.XnaLike.cs and elided elsewhere (issue #3608).
         AssignNativeTextInput();
-        Clipboard = new global::Gum.Clipboard.MonoGameGumClipboard();
+        // Clipboard is the MonoGameGumClipboard on XNALIKE/Raylib; the Skia host (Silk) has no
+        // clipboard implementation and leaves it null. The concrete type isn't even linked into
+        // SilkNetGum, so the assignment lives in the AssignClipboard seam (implemented on XNALIKE/Raylib,
+        // elided on Silk) rather than a shared #if (issue #3608).
+        AssignClipboard();
 
         GraphicalUiElement.SaveFormsRuntimePropertiesAction = formsObject =>
         {
@@ -1185,10 +1194,13 @@ public partial class GumService : IGumService
 
     // Draw(Camera2D) is raylib-only and lives in GumService.Raylib.cs (issue #3608).
 
-    // ---- Platform seams (implemented in GumService.XnaLike.cs / GumService.Raylib.cs) ----
+    // ---- Platform seams (implemented in GumService.XnaLike.cs / GumService.Raylib.cs / GumService.Silk.cs) ----
 
-    // Assigns NativeTextInput on MonoGame/KNI (elided on FNA/Raylib), called from the constructor.
+    // Assigns NativeTextInput on MonoGame/KNI (elided on FNA/Raylib/Silk), called from the constructor.
     partial void AssignNativeTextInput();
+
+    // Assigns Clipboard to the MonoGameGumClipboard on XNALIKE/Raylib (elided on Silk), from the ctor.
+    partial void AssignClipboard();
 
     // Per-platform teardown inside Uninitialize().
     partial void UninitializePlatform();
