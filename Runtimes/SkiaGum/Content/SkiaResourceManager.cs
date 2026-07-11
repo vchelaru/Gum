@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Reflection;
 using SkiaSharp;
@@ -23,7 +23,7 @@ public static class SkiaResourceManager
 
     #region SVG caching
 
-    private static Dictionary<string, SKSvg> svgCache;
+    private static ConcurrentDictionary<string, SKSvg> svgCache;
 
     public static bool ContainsSvg(string name) => svgCache.ContainsKey(name);
 
@@ -47,7 +47,7 @@ public static class SkiaResourceManager
             using var fileStream = System.IO.File.OpenRead(absoluteFile);
             SKSvg svg = new SKSvg();
             svg.Load(fileStream);
-            svgCache.Add(resourceName, svg);
+            svgCache[resourceName] = svg;
         }
         else
         {
@@ -64,7 +64,7 @@ public static class SkiaResourceManager
                 {
                     throw new Exception($"Error loading SVG {resourceName}\n{e}");
                 }
-                svgCache.Add(resourceName, svg);
+                svgCache[resourceName] = svg;
             }
         }
     }
@@ -78,7 +78,7 @@ public static class SkiaResourceManager
 
     #region Lottie Animation Caching
 
-    private static Dictionary<string, Animation> animationCache;
+    private static ConcurrentDictionary<string, Animation> animationCache;
 
     public static Animation GetLottieAnimation(string resourceName)
     {
@@ -103,7 +103,7 @@ public static class SkiaResourceManager
             {
                 throw new Exception($"Error loading Animation {resourceName}\n{e}");
             }
-            animationCache.Add(resourceName, animation);
+            animationCache[resourceName] = animation;
         }
     }
 
@@ -111,7 +111,7 @@ public static class SkiaResourceManager
 
     #region SKBitmap caching
 
-    private static Dictionary<string, SKBitmap> skBitmapCache = new Dictionary<string, SKBitmap>();
+    private static ConcurrentDictionary<string, SKBitmap> skBitmapCache = new ConcurrentDictionary<string, SKBitmap>();
 
     public static bool IsCached(string resourceName) => skBitmapCache.ContainsKey(resourceName);
 
@@ -151,7 +151,7 @@ public static class SkiaResourceManager
     }
 
 
-    public static SKBitmap GetSKBitmap(string resourceName, Stream stream = null)
+    public static SKBitmap GetSKBitmap(string resourceName, Stream? stream = null)
     {
         if (!skBitmapCache.ContainsKey(resourceName))
             CacheSKImage(resourceName);
@@ -174,7 +174,7 @@ public static class SkiaResourceManager
         {
             using var fileStream = System.IO.File.OpenRead(absoluteFile);
             var decoded = SKBitmap.Decode(fileStream);
-            skBitmapCache.Add(resourceName, decoded);
+            skBitmapCache[resourceName] = decoded;
         }
         else
         {
@@ -183,7 +183,7 @@ public static class SkiaResourceManager
             resourceName, ResourceAssembly))
             {
                 var decoded = SKBitmap.Decode(stream);
-                skBitmapCache.Add(resourceName, decoded);
+                skBitmapCache[resourceName] = decoded;
             }
         }
     }
@@ -194,7 +194,7 @@ public static class SkiaResourceManager
 
     #region Font caching
 
-    private static Dictionary<int, SKTypeface> typefaceCache;
+    private static ConcurrentDictionary<int, SKTypeface> typefaceCache;
 
     public enum TypefaceType
     {
@@ -264,9 +264,9 @@ public static class SkiaResourceManager
         if(IsInitialized == false)
         {
             IsInitialized = true;
-            svgCache = new Dictionary<string, SKSvg>();
-            animationCache = new Dictionary<string, Animation>();
-            typefaceCache = new Dictionary<int, SKTypeface>();
+            svgCache = new ConcurrentDictionary<string, SKSvg>();
+            animationCache = new ConcurrentDictionary<string, Animation>();
+            typefaceCache = new ConcurrentDictionary<int, SKTypeface>();
 
             foreach (int i in Enum.GetValues(typeof(TypefaceType)))
             {
