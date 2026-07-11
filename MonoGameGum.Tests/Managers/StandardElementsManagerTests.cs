@@ -109,6 +109,33 @@ public class StandardElementsManagerTests
     }
 
     [Fact]
+    public void DefaultStates_Rectangle_ShouldIncludeCustomRadiusOverrides()
+    {
+        // Issue #3617 — per-corner overrides for CornerRadius, mirroring RectangleRuntime's
+        // CustomRadius* runtime properties so the tool's variable grid can expose them.
+        StandardElementsManager self = StandardElementsManager.Self;
+        self.RefreshDefaults();
+
+        List<VariableSave> variables = self.DefaultStates["Rectangle"].Variables;
+
+        variables.ShouldContain(v => v.Name == "CustomRadiusTopLeft" && v.Type == "float?" && v.Value == null);
+        variables.ShouldContain(v => v.Name == "CustomRadiusTopRight" && v.Type == "float?" && v.Value == null);
+        variables.ShouldContain(v => v.Name == "CustomRadiusBottomLeft" && v.Type == "float?" && v.Value == null);
+        variables.ShouldContain(v => v.Name == "CustomRadiusBottomRight" && v.Type == "float?" && v.Value == null);
+    }
+
+    [Fact]
+    public void DefaultStates_Circle_ShouldNotIncludeCustomRadiusOverrides()
+    {
+        // A circle has no corners; the per-corner overrides belong only on Rectangle.
+        StandardElementsManager self = StandardElementsManager.Self;
+        self.RefreshDefaults();
+
+        self.DefaultStates["Circle"].Variables
+            .ShouldNotContain(v => v.Name == "CustomRadiusTopLeft");
+    }
+
+    [Fact]
     public void DefaultStates_ShouldStillIncludeColoredRectangle_ForLegacyLoad()
     {
         // ColoredRectangle is no longer seeded into new projects, but it must remain in the

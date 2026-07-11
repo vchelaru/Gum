@@ -1,0 +1,129 @@
+<UserControl
+    x:Class="Gum.Controls.DataUi.CornerRadiusDisplay"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Gum.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <StackPanel>
+        <Grid x:Name="MainGrid">
+            <Grid.ContextMenu>
+                <ContextMenu />
+            </Grid.ContextMenu>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Label x:Name="Label" MinWidth="100">Property Label:</Label>
+
+            <!--  Linked state: a single uniform-radius field, matching the plain CornerRadius row.  -->
+            <TextBox
+                x:Name="UniformTextBox"
+                Grid.Column="1"
+                VerticalAlignment="Center"
+                KeyDown="UniformTextBox_KeyDown"
+                LostFocus="UniformTextBox_LostFocus" />
+
+            <!--  Unlinked state: four independent per-corner fields.  -->
+            <Grid
+                x:Name="CornersGrid"
+                Grid.Column="1"
+                Margin="0,2,0,2"
+                Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="1*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="1*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    Margin="0,0,2,0"
+                    VerticalAlignment="Center"
+                    FontSize="10"
+                    Text="TL"
+                    ToolTip="Top-left corner radius" />
+                <TextBox
+                    x:Name="TopLeftTextBox"
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Margin="0,0,6,2"
+                    KeyDown="CornerTextBox_KeyDown"
+                    LostFocus="CornerTextBox_LostFocus" />
+
+                <TextBlock
+                    Grid.Row="0"
+                    Grid.Column="2"
+                    Margin="0,0,2,0"
+                    VerticalAlignment="Center"
+                    FontSize="10"
+                    Text="TR"
+                    ToolTip="Top-right corner radius" />
+                <TextBox
+                    x:Name="TopRightTextBox"
+                    Grid.Row="0"
+                    Grid.Column="3"
+                    Margin="0,0,0,2"
+                    KeyDown="CornerTextBox_KeyDown"
+                    LostFocus="CornerTextBox_LostFocus" />
+
+                <TextBlock
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Margin="0,0,2,0"
+                    VerticalAlignment="Center"
+                    FontSize="10"
+                    Text="BL"
+                    ToolTip="Bottom-left corner radius" />
+                <TextBox
+                    x:Name="BottomLeftTextBox"
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Margin="0,0,6,0"
+                    KeyDown="CornerTextBox_KeyDown"
+                    LostFocus="CornerTextBox_LostFocus" />
+
+                <TextBlock
+                    Grid.Row="1"
+                    Grid.Column="2"
+                    Margin="0,0,2,0"
+                    VerticalAlignment="Center"
+                    FontSize="10"
+                    Text="BR"
+                    ToolTip="Bottom-right corner radius" />
+                <TextBox
+                    x:Name="BottomRightTextBox"
+                    Grid.Row="1"
+                    Grid.Column="3"
+                    KeyDown="CornerTextBox_KeyDown"
+                    LostFocus="CornerTextBox_LostFocus" />
+            </Grid>
+
+            <Button
+                x:Name="LinkToggleButton"
+                Grid.Column="2"
+                Margin="4,0,0,0"
+                Click="LinkToggleButton_Click">
+                <controls:GumIcon x:Name="LinkIcon" Icon="ChainLinked" />
+            </Button>
+        </Grid>
+
+        <!--  Subtext (e.g. "Exposed as ...") mirrored from InstanceMember.DetailText, like the other displayers.  -->
+        <TextBlock
+            x:Name="HintTextBlock"
+            Margin="0,0,4,4"
+            HorizontalAlignment="Left"
+            FontSize="10"
+            TextWrapping="Wrap"
+            Visibility="Collapsed" />
+    </StackPanel>
+</UserControl>

@@ -129,7 +129,14 @@ public class CompositeInstanceMember : InstanceMember
                 }
                 for (int i = 0; i < ChannelMembers.Count; i++)
                 {
-                    ChannelMembers[i].SetValue(decomposed[i], args.CommitType);
+                    // Skip channels whose decomposed value already matches the channel's current
+                    // value. Some composites (e.g. corner radius) have channels that carry an
+                    // inherit-vs-explicit distinction via nullability; force-writing an unchanged
+                    // channel on every commit would silently flip it from inherited to explicit.
+                    if (!Equals(ChannelMembers[i].Value, decomposed[i]))
+                    {
+                        ChannelMembers[i].SetValue(decomposed[i], args.CommitType);
+                    }
                 }
             }
         }

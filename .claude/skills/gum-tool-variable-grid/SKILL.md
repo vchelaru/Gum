@@ -44,6 +44,8 @@ The **Variables tab** displays and edits properties of the selected element, ins
 | Category factory | `Gum/Plugins/InternalPlugins/VariableGrid/ElementSaveDisplayer.cs` |
 | Behavior categories | `Gum/Plugins/InternalPlugins/VariableGrid/BehaviorShowingLogic.cs` |
 | Host UserControl | `Gum/Plugins/InternalPlugins/VariableGrid/MainPropertyGrid.xaml(.cs)` |
+| Composite member model | `WpfDataUi/DataTypes/CompositeInstanceMember.cs` |
+| Composite descriptor registry | `Gum/Plugins/InternalPlugins/VariableGrid/CompositeMemberRegistry.cs`, `CompositeMemberDescriptor.cs`, `CompositeMemberLogic.cs` |
 
 ---
 
@@ -84,6 +86,18 @@ Gum's built-in variables are wired in `StandardElementsManager.GumTool.cs` (slid
 > Naming trap: `MinWidth`/`MaxWidth`/`MinHeight`/`MaxHeight` in `StandardElementsManager.cs` are real runtime layout clamps — unrelated to a displayer's slider `MinValue`/`MaxValue`.
 
 The icon-based displayers (origin/alignment/dock toggles) get their glyphs from the `GumIcon` pipeline — see [gum-icons](../gum-icons/SKILL.md).
+
+**Landmine: a new custom `IDataUi` displayer must wire its own right-click menu and default-value highlighting — nothing does either for you.** `SingleDataUiContainer`/`DataUiGrid` never touch `ContextMenu` or background color. Every existing displayer (`ColorDisplay`, `SliderDisplay`, `TextBoxDisplay`, ...) attaches a WPF `ContextMenu` to its root element in XAML and calls `this.RefreshContextMenu(yourRoot.ContextMenu)` from `Refresh()` — skip it and `InstanceMember.ContextMenuEvents` (Make Default, Copy Qualified Variable Name, expose/un-expose) silently never reach an actual menu; right-click does nothing. Default-value background tinting (the green `TextBoxDisplayLogic.DefaultValueBackground` / gray `IndeterminateValueBackground`, driven by `InstanceMember.IsDefault`/`.IsIndeterminate`) is likewise opt-in per displayer — copy the pattern from `TextBoxDisplayLogic.RefreshBackgroundColor`, don't assume a new control gets it for free. Both gaps compile fine and only show up as "this row behaves differently from every other row" in manual testing.
+
+---
+
+## Composite Members (several variables, one row)
+
+A separate mechanism from `PreferredDisplayer` above: `CompositeMemberLogic.Apply` runs after categories are built and collapses a fixed set of sibling "channel" `InstanceMember`s into a single `CompositeInstanceMember` row, driven by an `IDataUi` control bound to one composed value (not a raw variable). Today's only registered descriptor is color (`Red`/`Green`/`Blue` → one swatch row via `Gum/Controls/DataUi/ColorDisplay.xaml.cs`, registered in `CompositeMemberRegistry`); use that descriptor + displayer as the template for a new one.
+
+Landmine: `CompositeMemberLogic.GroupTriples` matches channels by finding the **first channel's root name as a literal substring** inside a candidate member's root name, splitting off the prefix/suffix, then requiring every other `ChannelRootNames` entry to exist verbatim at that same prefix/suffix. **All channels must be present as real, non-excluded `VariableSave`s in the same category** (mind `MinimumGumxVersion` gating in `ShapeVariableVersionGate.cs`) — if even one is missing, no composite forms and the rest render as ordinary individual rows, silently, with no error.
+
+Landmine: `CompositeInstanceMember.HandleCustomSet` writes **every** channel on every commit, but skips a channel whose decomposed value already equals its current value — this guard matters. It's harmless to omit for Color (an edit there is always "set all of R/G/B explicitly"), but a composite whose channels carry inherit-vs-explicit semantics via nullability (e.g. corner radius's per-corner overrides, where `null` means "inherit the uniform value") would otherwise force-write `null` onto every hidden/untouched channel on every commit, silently flipping it from inherited to explicitly-set and corrupting `IsDefault` bookkeeping for a value nobody touched. "Linked vs. unlinked" for such a composite isn't a stored flag either — it's derived purely from whether the override channels currently resolve to null, recomputed from `ChannelMembers` on every `Compose`.
 
 ---
 

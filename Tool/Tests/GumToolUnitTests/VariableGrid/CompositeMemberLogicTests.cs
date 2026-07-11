@@ -176,4 +176,44 @@ public class CompositeMemberLogicTests : BaseTestClass
         triples[0].Prefix.ShouldBe("");
         triples[0].Suffix.ShouldBe("");
     }
+
+    private static CompositeMemberDescriptor CornerRadiusDescriptor() =>
+        new CompositeMemberRegistry().Descriptors.Single(d => d.ChannelRootNames.SequenceEqual(new[]
+        {
+            "CornerRadius", "CustomRadiusTopLeft", "CustomRadiusTopRight",
+            "CustomRadiusBottomLeft", "CustomRadiusBottomRight"
+        }));
+
+    [Fact]
+    public void GroupTriples_ShouldProduceSingleTriple_ForAllFiveCornerRadiusChannels()
+    {
+        Dictionary<string, InstanceMember> members = MembersFor(
+            "CornerRadius", "CustomRadiusTopLeft", "CustomRadiusTopRight",
+            "CustomRadiusBottomLeft", "CustomRadiusBottomRight");
+
+        List<CompositeMemberLogic.CompositeTriple> triples = _logic.GroupTriples(CornerRadiusDescriptor(), members);
+
+        triples.Count.ShouldBe(1);
+        triples[0].Prefix.ShouldBe("");
+        triples[0].Suffix.ShouldBe("");
+        triples[0].ChannelRootNames.ShouldBe(new List<string>
+        {
+            "CornerRadius", "CustomRadiusTopLeft", "CustomRadiusTopRight",
+            "CustomRadiusBottomLeft", "CustomRadiusBottomRight"
+        });
+    }
+
+    [Fact]
+    public void GroupTriples_ShouldDropCornerRadius_WhenACustomRadiusChannelIsMissing()
+    {
+        // Mirrors the version-gate landmine: a project below the gate never gets the
+        // CustomRadius* variables at all, so the composite must not form - CornerRadius stays a
+        // plain individual row.
+        Dictionary<string, InstanceMember> members = MembersFor(
+            "CornerRadius", "CustomRadiusTopLeft", "CustomRadiusTopRight", "CustomRadiusBottomLeft");
+
+        List<CompositeMemberLogic.CompositeTriple> triples = _logic.GroupTriples(CornerRadiusDescriptor(), members);
+
+        triples.ShouldBeEmpty();
+    }
 }
