@@ -1,0 +1,15 @@
+{
+  "CommonUsingStatements": "using Gum.Converters;\r\nusing Gum.DataTypes;\r\nusing Gum.Managers;\r\nusing Gum.Wireframe;\r\n\r\nusing RenderingLibrary.Graphics;\r\n\r\nusing System.Linq;\r\n",
+  "CodeProjectRoot": "..\\..\\",
+  "RootNamespace": "CodeGen_Skia_ByReference",
+  "AppendFolderToNamespace": true,
+  "InheritanceLocation": 1,
+  "ObjectInstantiationType": 1,
+  "DefaultScreenBase": "",
+  "OutputLibrary": 2,
+  "AdjustPixelValuesForDensity": false,
+  "BaseTypesNotCodeGenerated": null,
+  "GenerateGumDataTypes": false,
+  "SyntaxVersion": "*",
+  "Version": 1
+}
