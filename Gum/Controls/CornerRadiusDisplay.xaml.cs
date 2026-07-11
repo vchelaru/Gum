@@ -3,9 +3,11 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Themes;
 using WpfDataUi;
+using WpfDataUi.Controls;
 using WpfDataUi.DataTypes;
 
 namespace Gum.Controls.DataUi
@@ -67,7 +69,62 @@ namespace Gum.Controls.DataUi
             Label.Content = InstanceMember.DisplayName;
             IsEnabled = !InstanceMember.IsReadOnly;
             RefreshHintText();
+            RefreshBackgrounds();
             this.RefreshContextMenu(MainGrid.ContextMenu);
+        }
+
+        /// <summary>
+        /// Tints each visible field by whether its own channel is at its default (inherited) value,
+        /// matching the green/gray convention TextBoxDisplayLogic uses elsewhere in the grid. Linked
+        /// mode only shows the uniform field, so only the CornerRadius channel's own default state
+        /// is relevant there - the hidden per-corner overrides aren't represented by any visible
+        /// field and would only confuse a single shared color. When InstanceMember isn't a plain
+        /// CompositeInstanceMember (e.g. a multi-select wrapper), fall back to its own aggregate
+        /// IsDefault/IsIndeterminate for every field - less precise, but still a signal.
+        /// </summary>
+        private void RefreshBackgrounds()
+        {
+            if (InstanceMember == null)
+            {
+                return;
+            }
+
+            if (InstanceMember is CompositeInstanceMember composite && composite.ChannelMembers.Count == 5)
+            {
+                ApplyBackground(UniformTextBox, composite.ChannelMembers[0]);
+                ApplyBackground(TopLeftTextBox, composite.ChannelMembers[1]);
+                ApplyBackground(TopRightTextBox, composite.ChannelMembers[2]);
+                ApplyBackground(BottomLeftTextBox, composite.ChannelMembers[3]);
+                ApplyBackground(BottomRightTextBox, composite.ChannelMembers[4]);
+            }
+            else
+            {
+                ApplyBackground(UniformTextBox, InstanceMember);
+                ApplyBackground(TopLeftTextBox, InstanceMember);
+                ApplyBackground(TopRightTextBox, InstanceMember);
+                ApplyBackground(BottomLeftTextBox, InstanceMember);
+                ApplyBackground(BottomRightTextBox, InstanceMember);
+            }
+        }
+
+        private static void ApplyBackground(TextBox textBox, InstanceMember member)
+        {
+            if (member.IsDefault)
+            {
+                textBox.Background = TextBoxDisplayLogic.DefaultValueBackground;
+            }
+            else if (member.IsIndeterminate)
+            {
+                textBox.Background = TextBoxDisplayLogic.IndeterminateValueBackground;
+            }
+            else if (textBox.TryFindResource("Frb.Brushes.Field.Background") is Brush themed)
+            {
+                textBox.Background = themed;
+            }
+            else
+            {
+                textBox.ClearValue(TextBox.BackgroundProperty);
+            }
         }
 
         public ApplyValueResult TrySetValueOnUi(object valueOnInstance)

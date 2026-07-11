@@ -84,6 +84,28 @@ public class CompositeInstanceMemberTests
     }
 
     [Fact]
+    public void SetValue_ShouldSkipChannelWrite_WhenDecomposedValueAlreadyMatchesChannel()
+    {
+        // Issue #3617 corner-radius follow-up: a composite whose channels carry inherit/explicit
+        // (nullable) semantics must not force-write a channel whose value isn't actually changing,
+        // or an edit to one channel silently converts every other unchanged channel from inherited
+        // to explicit (e.g. writing an explicit null onto per-corner overrides just because the
+        // uniform CornerRadius field was edited).
+        FakeChannelMember red = new() { BackingValue = 1 };
+        FakeChannelMember green = new() { BackingValue = 9 };
+        FakeChannelMember blue = new() { BackingValue = 3 };
+
+        CompositeInstanceMember composite = MakeComposite(red, green, blue);
+
+        // Decomposes to (1, 2, 3) - only green's target (2) differs from its current value (9).
+        composite.SetValue((1 << 16) | (2 << 8) | 3, SetPropertyCommitType.Full);
+
+        red.SetCallCount.ShouldBe(0);
+        green.SetCallCount.ShouldBe(1);
+        blue.SetCallCount.ShouldBe(0);
+    }
+
+    [Fact]
     public void SetValue_ShouldRaiseAfterComposite_EvenWhenAChannelThrows()
     {
         // AfterComposite is where the consumer disposes the undo lock taken in BeforeComposite. If a
@@ -163,6 +185,8 @@ public class CompositeInstanceMemberTests
 
         public bool ThrowOnSet { get; set; }
 
+        public int SetCallCount { get; private set; }
+
         public override bool IsDefault
         {
             get => _isDefault;
@@ -181,6 +205,7 @@ public class CompositeInstanceMemberTests
             CustomGetTypeEvent += _ => typeof(int);
             CustomSetPropertyEvent += (_, args) =>
             {
+                SetCallCount++;
                 if (ThrowOnSet)
                 {
                     throw new InvalidOperationException("Simulated channel write failure.");
