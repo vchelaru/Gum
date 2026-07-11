@@ -46,7 +46,7 @@
 			ProjectReference path: see the Content item below). 'compile' and 'runtime' are
 			deliberately NOT in the list, so the Apos.Shapes DLL still flows to consumers.
 		-->
-		<PackageReference Include="Apos.Shapes" Version="0.6.9-alpha"
+		<PackageReference Include="Apos.Shapes" Version="0.6.10-alpha"
 		                  PrivateAssets="contentfiles;analyzers;build;buildTransitive" />
 		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" PrivateAssets="All" />
 	</ItemGroup>

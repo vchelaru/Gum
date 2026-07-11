@@ -46,7 +46,7 @@
 			ProjectReference path: see the Content item below). 'compile' and 'runtime' are
 			deliberately NOT in the list, so the Apos.Shapes.KNI DLL still flows to consumers.
 		-->
-		<PackageReference Include="Apos.Shapes.KNI" Version="0.6.9-alpha"
+		<PackageReference Include="Apos.Shapes.KNI" Version="0.6.10-alpha"
 		                  PrivateAssets="contentfiles;analyzers;build;buildTransitive" />
 		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" PrivateAssets="All" />
 		<PackageReference Include="nkast.Xna.Framework.Content" Version="4.2.9001" PrivateAssets="All" />
