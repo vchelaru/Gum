@@ -21,12 +21,13 @@ public class CompositeMemberRegistry : ICompositeMemberRegistry
     /// <inheritdoc/>
     public IReadOnlyList<CompositeMemberDescriptor> Descriptors { get; }
 
-    /// <summary>Creates the registry pre-populated with the built-in descriptors (currently color).</summary>
+    /// <summary>Creates the registry pre-populated with the built-in descriptors (color, corner radius).</summary>
     public CompositeMemberRegistry()
     {
         Descriptors = new List<CompositeMemberDescriptor>
         {
             CreateColorDescriptor(),
+            CreateCornerRadiusDescriptor(),
         };
     }
 
@@ -62,4 +63,42 @@ public class CompositeMemberRegistry : ICompositeMemberRegistry
         int raw = value is int asInt ? asInt : 0;
         return Math.Max(0, Math.Min(255, raw));
     }
+
+    private CompositeMemberDescriptor CreateCornerRadiusDescriptor()
+    {
+        // Rectangle only - no affixed variants (no StrokeCornerRadius / CornerRadius2), so the
+        // composite name format has no prefix/suffix content beyond the token itself.
+        return new CompositeMemberDescriptor(
+            ChannelRootNames: new[]
+            {
+                "CornerRadius", "CustomRadiusTopLeft", "CustomRadiusTopRight",
+                "CustomRadiusBottomLeft", "CustomRadiusBottomRight"
+            },
+            CompositeNameFormat: "{prefix}CornerRadius{suffix}",
+            Displayer: typeof(Gum.Controls.DataUi.CornerRadiusDisplay),
+            CompositeType: typeof(CornerRadiusComposite),
+            Compose: ComposeCornerRadius,
+            Decompose: DecomposeCornerRadius);
+    }
+
+    private object ComposeCornerRadius(IReadOnlyList<object?> channels)
+    {
+        float uniform = ToFloat(channels[0]);
+        return new CornerRadiusComposite(
+            uniform,
+            ToNullableFloat(channels[1]),
+            ToNullableFloat(channels[2]),
+            ToNullableFloat(channels[3]),
+            ToNullableFloat(channels[4]));
+    }
+
+    private object?[] DecomposeCornerRadius(object value)
+    {
+        CornerRadiusComposite composite = (CornerRadiusComposite)value;
+        return new object?[] { composite.Uniform, composite.TopLeft, composite.TopRight, composite.BottomLeft, composite.BottomRight };
+    }
+
+    private float ToFloat(object? value) => value is float asFloat ? asFloat : 0f;
+
+    private float? ToNullableFloat(object? value) => value as float?;
 }

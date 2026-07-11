@@ -44,6 +44,8 @@ The **Variables tab** displays and edits properties of the selected element, ins
 | Category factory | `Gum/Plugins/InternalPlugins/VariableGrid/ElementSaveDisplayer.cs` |
 | Behavior categories | `Gum/Plugins/InternalPlugins/VariableGrid/BehaviorShowingLogic.cs` |
 | Host UserControl | `Gum/Plugins/InternalPlugins/VariableGrid/MainPropertyGrid.xaml(.cs)` |
+| Composite member model | `WpfDataUi/DataTypes/CompositeInstanceMember.cs` |
+| Composite descriptor registry | `Gum/Plugins/InternalPlugins/VariableGrid/CompositeMemberRegistry.cs`, `CompositeMemberDescriptor.cs`, `CompositeMemberLogic.cs` |
 
 ---
 
@@ -84,6 +86,14 @@ Gum's built-in variables are wired in `StandardElementsManager.GumTool.cs` (slid
 > Naming trap: `MinWidth`/`MaxWidth`/`MinHeight`/`MaxHeight` in `StandardElementsManager.cs` are real runtime layout clamps — unrelated to a displayer's slider `MinValue`/`MaxValue`.
 
 The icon-based displayers (origin/alignment/dock toggles) get their glyphs from the `GumIcon` pipeline — see [gum-icons](../gum-icons/SKILL.md).
+
+---
+
+## Composite Members (several variables, one row)
+
+A separate mechanism from `PreferredDisplayer` above: `CompositeMemberLogic.Apply` runs after categories are built and collapses a fixed set of sibling "channel" `InstanceMember`s into a single `CompositeInstanceMember` row, driven by an `IDataUi` control bound to one composed value (not a raw variable). Today's only registered descriptor is color (`Red`/`Green`/`Blue` → one swatch row via `Gum/Controls/DataUi/ColorDisplay.xaml.cs`, registered in `CompositeMemberRegistry`); use that descriptor + displayer as the template for a new one.
+
+Landmine: `CompositeMemberLogic.GroupTriples` matches channels by finding the **first channel's root name as a literal substring** inside a candidate member's root name, splitting off the prefix/suffix, then requiring every other `ChannelRootNames` entry to exist verbatim at that same prefix/suffix. **All channels must be present as real, non-excluded `VariableSave`s in the same category** (mind `MinimumGumxVersion` gating in `ShapeVariableVersionGate.cs`) — if even one is missing, no composite forms and the rest render as ordinary individual rows, silently, with no error.
 
 ---
 

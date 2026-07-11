@@ -457,6 +457,13 @@ public class StandardElementsManager
             // standard can be retired; default 0 keeps the historical hard-cornered visual. Only
             // Rectangle gets this (a Circle has no corners). Gated to v3 in ShapeVariableVersionGate.
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0.0f, Name = "CornerRadius", Category = "Rendering", MinimumGumxVersion = V3StandardSurfaceVersion });
+            // Issue #3617 — per-corner overrides for CornerRadius, mirroring RectangleRuntime's
+            // CustomRadius* runtime properties (null falls back to CornerRadius). The variable grid
+            // collapses these 5 into one composite row; see CompositeMemberRegistry.
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomRadiusTopLeft", Category = "Rendering", MinimumGumxVersion = V3StandardSurfaceVersion, DetailText = "Overrides the top-left corner's radius. Leave blank to use Corner Radius." });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomRadiusTopRight", Category = "Rendering", MinimumGumxVersion = V3StandardSurfaceVersion, DetailText = "Overrides the top-right corner's radius. Leave blank to use Corner Radius." });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomRadiusBottomLeft", Category = "Rendering", MinimumGumxVersion = V3StandardSurfaceVersion, DetailText = "Overrides the bottom-left corner's radius. Leave blank to use Corner Radius." });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "CustomRadiusBottomRight", Category = "Rendering", MinimumGumxVersion = V3StandardSurfaceVersion, DetailText = "Overrides the bottom-right corner's radius. Leave blank to use Corner Radius." });
             // Issue #3009 — Rectangle drives the gradient start from the active body color, so no
             // standalone Color1 (Red1/Green1/Blue1/Alpha1).
             AddGradientVariables(stateSave, includeStartColor: false, minimumGumxVersion: V3StandardSurfaceVersion);

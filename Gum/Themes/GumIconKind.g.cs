@@ -21,6 +21,8 @@ public enum GumIconKind
     AnchorTopCenter, // AnchorTopCenter
     AnchorTopLeft, // AnchorTopLeft
     AnchorTopRight, // AnchorTopRight
+    ChainLinked, // ChainLinked
+    ChainUnlinked, // ChainUnlinked
     ChildrenLayoutAutoGridHorizontal, // ChildrenLayoutAutoGridHorizontal
     ChildrenLayoutAutoGridVertical, // ChildrenLayoutAutoGridVertical
     ChildrenLayoutLeftToRightStack, // ChildrenLayoutLeftToRightStack
@@ -90,6 +92,8 @@ public static class GumIconKindMap
         "AnchorTopCenter",
         "AnchorTopLeft",
         "AnchorTopRight",
+        "ChainLinked",
+        "ChainUnlinked",
         "ChildrenLayoutAutoGridHorizontal",
         "ChildrenLayoutAutoGridVertical",
         "ChildrenLayoutLeftToRightStack",

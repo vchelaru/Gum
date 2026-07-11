@@ -58,4 +58,58 @@ public class CompositeMemberRegistryTests
         ColorDescriptor.CompositeType.ShouldBe(typeof(Color));
         ColorDescriptor.CompositeNameFormat.ShouldBe("{prefix}Color{suffix}");
     }
+
+    private CompositeMemberDescriptor CornerRadiusDescriptor =>
+        _registry.Descriptors.Single(d => d.ChannelRootNames.SequenceEqual(new[]
+        {
+            "CornerRadius", "CustomRadiusTopLeft", "CustomRadiusTopRight",
+            "CustomRadiusBottomLeft", "CustomRadiusBottomRight"
+        }));
+
+    [Fact]
+    public void CornerRadiusDescriptor_Compose_ShouldBuildCompositeFromChannelsInOrder()
+    {
+        CornerRadiusComposite composite = (CornerRadiusComposite)CornerRadiusDescriptor.Compose(
+            new object?[] { 8f, 1f, null, 3f, null });
+
+        composite.Uniform.ShouldBe(8f);
+        composite.TopLeft.ShouldBe(1f);
+        composite.TopRight.ShouldBeNull();
+        composite.BottomLeft.ShouldBe(3f);
+        composite.BottomRight.ShouldBeNull();
+    }
+
+    [Fact]
+    public void CornerRadiusDescriptor_Decompose_ShouldReturnFiveChannelsInOrder()
+    {
+        CornerRadiusComposite composite = new(8f, 1f, null, 3f, null);
+
+        object?[] channels = CornerRadiusDescriptor.Decompose(composite);
+
+        channels.ShouldBe(new object?[] { 8f, 1f, null, 3f, null });
+    }
+
+    [Fact]
+    public void CornerRadiusDescriptor_ShouldUseCornerRadiusDisplayAndCompositeType()
+    {
+        CornerRadiusDescriptor.Displayer.ShouldBe(typeof(Gum.Controls.DataUi.CornerRadiusDisplay));
+        CornerRadiusDescriptor.CompositeType.ShouldBe(typeof(CornerRadiusComposite));
+        CornerRadiusDescriptor.CompositeNameFormat.ShouldBe("{prefix}CornerRadius{suffix}");
+    }
+
+    [Fact]
+    public void CornerRadiusComposite_IsLinked_ShouldBeTrue_WhenAllOverridesAreNull()
+    {
+        CornerRadiusComposite composite = new(8f, null, null, null, null);
+
+        composite.IsLinked.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void CornerRadiusComposite_IsLinked_ShouldBeFalse_WhenAnyOverrideIsSet()
+    {
+        CornerRadiusComposite composite = new(8f, null, 4f, null, null);
+
+        composite.IsLinked.ShouldBeFalse();
+    }
 }
