@@ -617,10 +617,11 @@ public class Text : IVisible, IRenderableIpso,
     public string? StoredMarkupText { get; set; }
 
     /// <summary>
-    /// The inline styling variables (Color / FontScale / FontSize runs) parsed from BBCode markup assigned
+    /// The inline styling variables (Color / FontScale runs, plus resolved-font "BitmapFont" runs for the
+    /// Font / FontSize / IsBold / IsItalic / OutlineThickness family tags) parsed from BBCode markup assigned
     /// to this Text. Populated by the property pipeline when the assigned text contains markup tags; empty
     /// for plain text. Consumed by <see cref="Render"/> to draw per-run styling. Custom per-letter callbacks
-    /// and [Font=Name] family swaps are not yet applied on the Raylib runtime (#3471).
+    /// are not yet applied on the Raylib runtime (#3471).
     /// </summary>
     public List<InlineVariable> InlineVariables { get; private set; }
 
@@ -949,7 +950,11 @@ public class Text : IVisible, IRenderableIpso,
                 case nameof(FontScale):
                     scale = (float)variable.Value;
                     break;
-                case nameof(FontSize):
+                // "BitmapFont" is the shared historical marker name the font-resolution stack model emits for
+                // every font-family tag (Font / FontSize / IsBold / IsItalic / OutlineThickness). On Raylib
+                // the value is a Raylib_cs.Font (a crisp per-run swap font) or a float (an absolute pixel size
+                // to scale the base atlas to when no font creator produced a crisp font) - not a BitmapFont.
+                case "BitmapFont":
                     if (variable.Value is Font swapFont && swapFont.BaseSize > 0)
                     {
                         drawFont = swapFont;
@@ -987,9 +992,10 @@ public class Text : IVisible, IRenderableIpso,
 
     /// <summary>
     /// Draws a single line as a sequence of styled runs (BBCode markup), applying per-run Color and per-run
-    /// size (FontScale multiplier or FontSize absolute-px swap). Runs are laid out left-to-right and
+    /// font (a resolved swap font from the Font / FontSize / IsBold / IsItalic / OutlineThickness family, or
+    /// a FontScale multiplier / FontSize absolute-px atlas scale). Runs are laid out left-to-right and
     /// baseline-aligned so a larger run sits on the same baseline as its neighbors. Custom per-letter
-    /// callbacks and [Font=Name] family swaps are not applied here on the Raylib runtime yet (#3471).
+    /// callbacks are not applied here on the Raylib runtime yet (#3471).
     /// </summary>
     private void DrawStyledLine(Font fontValue, List<StyledSubstring> substrings, Vector2 linePosition, float absoluteLeft, float originY)
     {

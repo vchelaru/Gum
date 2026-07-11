@@ -4,6 +4,7 @@ using KernSmith.Gum;
 using RaylibGum.Renderables;
 using RenderingLibrary.Graphics;
 using Shouldly;
+using System.Linq;
 using Xunit;
 using Text = Gum.Renderables.Text;
 
@@ -33,6 +34,58 @@ public class TextMarkupTests
         float indexedMeasure = internalText.MeasureString("Hello World", 0);
 
         indexedMeasure.ShouldBe(baseMeasure);
+    }
+
+    // #3624: nested [IsBold][FontSize] WITHOUT a font creator. [IsBold] needs a rasterized bold atlas, which
+    // only a wired creator can produce, so with no creator the bold wrapper stays unapplied (produces no run)
+    // and only the inner [FontSize] survives - now under the shared "BitmapFont" font-run marker (the same
+    // name the MonoGame stack model emits), with the raw size as a float because no crisp font could be built.
+    // The crisp-nesting behavior is covered by Text_WithBoldWrappingFontSize_AppliesNestedResolvedRuns_WhenFontCreatorWired.
+    [Fact]
+    public void Text_WithBoldWrappingFontSize_StripsBothTagsButOnlyFontSizeBecomesInlineVariable()
+    {
+        TextRuntime textRuntime = new();
+        textRuntime.Text = "[IsBold=true][FontSize=20]inner[/FontSize][/IsBold]";
+
+        Text internalText = (Text)textRuntime.RenderableComponent;
+
+        internalText.RawText.ShouldBe("inner");
+        internalText.InlineVariables.Count.ShouldBe(1);
+        internalText.InlineVariables[0].VariableName.ShouldBe("BitmapFont");
+        internalText.InlineVariables[0].Value.ShouldBe(20f);
+        internalText.InlineVariables[0].StartIndex.ShouldBe(0);
+        internalText.InlineVariables[0].CharacterCount.ShouldBe(5);
+    }
+
+    // #3624 (the feature): with a font creator wired, nested [IsBold][FontSize=20] resolves the inner run to a
+    // crisp font rasterized at 20 within the bold context - the whole reason the stack model exists. The run
+    // covering all of "inner" is a resolved-font ("BitmapFont") run whose font is BaseSize 20 (the inner size
+    // applied on top of the outer bold). Restores the creator in finally so the no-creator tests stay unaffected.
+    [Fact]
+    public void Text_WithBoldWrappingFontSize_AppliesNestedResolvedRuns_WhenFontCreatorWired()
+    {
+        IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreator();
+
+            TextRuntime textRuntime = new();
+            textRuntime.Font = "Arial";
+            textRuntime.FontSize = 21;
+            textRuntime.Text = "[IsBold=true][FontSize=20]inner[/FontSize][/IsBold]";
+
+            Text internalText = (Text)textRuntime.RenderableComponent;
+
+            internalText.RawText.ShouldBe("inner");
+            InlineVariable innerRun = internalText.InlineVariables.Single(v => v.CharacterCount == 5);
+            innerRun.VariableName.ShouldBe("BitmapFont");
+            Raylib_cs.Font innerFont = innerRun.Value.ShouldBeOfType<Raylib_cs.Font>();
+            innerFont.BaseSize.ShouldBe(20);
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
     }
 
     [Fact]
@@ -68,7 +121,9 @@ public class TextMarkupTests
     }
 
     // No font creator is wired in the test harness, so [FontSize=N] can't re-rasterize a crisp font and
-    // falls back to storing the raw size as a float (Text then scales the base atlas to it). The crisp
+    // falls back to storing the raw size as a float (Text then scales the base atlas to it). The run is
+    // emitted under the shared "BitmapFont" font-run marker (the same name the MonoGame stack model uses;
+    // a misnomer on Raylib, where the value is a Raylib_cs.Font or a float, not a BitmapFont). The crisp
     // swap path is covered by Text_WithFontSizeMarkup_SwapsToCrispFont_WhenFontCreatorWired.
     [Fact]
     public void Text_WithFontSizeMarkup_PopulatesInlineVariable()
@@ -80,15 +135,17 @@ public class TextMarkupTests
 
         internalText.RawText.ShouldBe("Big text");
         internalText.InlineVariables.Count.ShouldBe(1);
-        internalText.InlineVariables[0].VariableName.ShouldBe("FontSize");
+        internalText.InlineVariables[0].VariableName.ShouldBe("BitmapFont");
         internalText.InlineVariables[0].Value.ShouldBe(40f);
         internalText.InlineVariables[0].StartIndex.ShouldBe(4);
         internalText.InlineVariables[0].CharacterCount.ShouldBe(4);
     }
 
     // With a font creator wired, [FontSize=N] re-rasterizes a crisp Raylib_cs.Font AT size N (BaseSize == N)
-    // and stores it as the run value - the actual font-swap, not an atlas scale-up. Mirrors the MonoGame
-    // BitmapFont swap. Restores the creator in finally so the no-creator fallback tests stay unaffected.
+    // emitted under the shared "BitmapFont" font-run marker - the actual font-swap, not an atlas scale-up.
+    // Mirrors the MonoGame BitmapFont swap: the stack model also emits a second (empty) run when the tag
+    // closes and the font pops back to the base size (21 here). Restores the creator in finally so the
+    // no-creator fallback tests stay unaffected.
     [Fact]
     public void Text_WithFontSizeMarkup_SwapsToCrispFont_WhenFontCreatorWired()
     {
@@ -104,10 +161,74 @@ public class TextMarkupTests
 
             Text internalText = (Text)textRuntime.RenderableComponent;
 
-            internalText.InlineVariables.Count.ShouldBe(1);
-            internalText.InlineVariables[0].VariableName.ShouldBe("FontSize");
+            internalText.InlineVariables.Count.ShouldBe(2);
+            internalText.InlineVariables[0].VariableName.ShouldBe("BitmapFont");
+            internalText.InlineVariables[0].StartIndex.ShouldBe(4);
+            internalText.InlineVariables[0].CharacterCount.ShouldBe(4);
             Raylib_cs.Font swapFont = internalText.InlineVariables[0].Value.ShouldBeOfType<Raylib_cs.Font>();
             swapFont.BaseSize.ShouldBe(40);
+
+            // The close tag pops the font size back to the base (21); that pop-back run covers no
+            // characters (it sits at the end of "Big text") but mirrors the MonoGame stack output.
+            internalText.InlineVariables[1].VariableName.ShouldBe("BitmapFont");
+            internalText.InlineVariables[1].CharacterCount.ShouldBe(0);
+            Raylib_cs.Font baseRun = internalText.InlineVariables[1].Value.ShouldBeOfType<Raylib_cs.Font>();
+            baseRun.BaseSize.ShouldBe(21);
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    // #3624 (no-creator characterization): [IsBold], [IsItalic], [OutlineThickness], and [Font=Name] are
+    // recognized tags, so their markup IS stripped from the visible RawText, but applying them requires a
+    // rasterized atlas that only a wired font creator can produce - so with no creator they remain unapplied
+    // (produce no run), exactly as before. This preserves the pre-#3624 no-creator behavior; the applied
+    // behavior is covered by Text_WithStyleMarkup_AppliesResolvedFontRuns_WhenFontCreatorWired.
+    [Theory]
+    [InlineData("[IsBold=true]Hello[/IsBold] World")]
+    [InlineData("[IsItalic=true]Hello[/IsItalic] World")]
+    [InlineData("[OutlineThickness=2]Hello[/OutlineThickness] World")]
+    [InlineData("[Font=SomeName]Hello[/Font] World")]
+    public void Text_WithUnappliedStyleMarkup_StripsTagsButAddsNoInlineVariable_WhenNoFontCreator(string markup)
+    {
+        TextRuntime textRuntime = new();
+        textRuntime.Text = markup;
+
+        Text internalText = (Text)textRuntime.RenderableComponent;
+
+        internalText.RawText.ShouldBe("Hello World");
+        internalText.InlineVariables.ShouldBeEmpty();
+    }
+
+    // #3624 (the feature): with a font creator wired, [IsBold], [IsItalic], [OutlineThickness], and
+    // [Font=Name] are now APPLIED - each produces a resolved-font ("BitmapFont") run over its wrapped text,
+    // instead of being stripped-but-ignored. The run covering "Hello" (5 chars) is the resolved font for that
+    // styled range. Restores the creator in finally so the no-creator tests stay unaffected.
+    [Theory]
+    [InlineData("[IsBold=true]Hello[/IsBold] World")]
+    [InlineData("[IsItalic=true]Hello[/IsItalic] World")]
+    [InlineData("[OutlineThickness=2]Hello[/OutlineThickness] World")]
+    [InlineData("[Font=Arial]Hello[/Font] World")]
+    public void Text_WithStyleMarkup_AppliesResolvedFontRuns_WhenFontCreatorWired(string markup)
+    {
+        IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreator();
+
+            TextRuntime textRuntime = new();
+            textRuntime.Font = "Arial";
+            textRuntime.FontSize = 20;
+            textRuntime.Text = markup;
+
+            Text internalText = (Text)textRuntime.RenderableComponent;
+
+            internalText.RawText.ShouldBe("Hello World");
+            InlineVariable helloRun = internalText.InlineVariables.Single(v => v.CharacterCount == 5);
+            helloRun.VariableName.ShouldBe("BitmapFont");
+            helloRun.Value.ShouldBeOfType<Raylib_cs.Font>();
         }
         finally
         {
