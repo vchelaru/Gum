@@ -79,6 +79,10 @@ on:
         description: 'Gum.sokol'
         type: boolean
         default: true
+      pkg_SilkNet:
+        description: 'Gum.SilkNet'
+        type: boolean
+        default: true
       pkg_GumCli:
         description: 'GumCli'
         type: boolean
@@ -188,6 +192,7 @@ jobs:
         if ('${{ github.event.inputs.pkg_ShapesKNI }}' -eq 'true') { $selected += 'Gum.Shapes.KNI' }
         if ('${{ github.event.inputs.pkg_Expressions }}' -eq 'true') { $selected += 'Gum.Expressions' }
         if ('${{ github.event.inputs.pkg_Sokol }}' -eq 'true') { $selected += 'Gum.sokol' }
+        if ('${{ github.event.inputs.pkg_SilkNet }}' -eq 'true') { $selected += 'Gum.SilkNet' }
         if ('${{ github.event.inputs.pkg_GumCli }}' -eq 'true') { $selected += 'GumCli' }
         if ('${{ github.event.inputs.pkg_KernSmith }}' -eq 'true') { $selected += 'KernSmith.GumCommon', 'KernSmith.MonoGameGum', 'KernSmith.KniGum', 'KernSmith.RaylibGum' }
         $themesSelected = ('${{ github.event.inputs.pkg_Themes }}' -eq 'true')
@@ -226,6 +231,7 @@ jobs:
         if ('${{ github.event.inputs.pkg_ShapesKNI }}' -eq 'true') { $selected += 'Gum.Shapes.KNI' }
         if ('${{ github.event.inputs.pkg_Expressions }}' -eq 'true') { $selected += 'Gum.Expressions' }
         if ('${{ github.event.inputs.pkg_Sokol }}' -eq 'true') { $selected += 'Gum.sokol' }
+        if ('${{ github.event.inputs.pkg_SilkNet }}' -eq 'true') { $selected += 'Gum.SilkNet' }
         if ('${{ github.event.inputs.pkg_GumCli }}' -eq 'true') { $selected += 'GumCli' }
         if ('${{ github.event.inputs.pkg_KernSmith }}' -eq 'true') { $selected += 'KernSmith.GumCommon', 'KernSmith.MonoGameGum', 'KernSmith.KniGum', 'KernSmith.RaylibGum' }
         $themesSelected = ('${{ github.event.inputs.pkg_Themes }}' -eq 'true')
