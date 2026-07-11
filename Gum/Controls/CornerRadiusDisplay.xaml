@@ -8,6 +8,9 @@
     mc:Ignorable="d">
     <StackPanel>
         <Grid x:Name="MainGrid">
+            <Grid.ContextMenu>
+                <ContextMenu />
+            </Grid.ContextMenu>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="1*" />

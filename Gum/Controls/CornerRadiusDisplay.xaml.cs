@@ -67,6 +67,7 @@ namespace Gum.Controls.DataUi
             Label.Content = InstanceMember.DisplayName;
             IsEnabled = !InstanceMember.IsReadOnly;
             RefreshHintText();
+            this.RefreshContextMenu(MainGrid.ContextMenu);
         }
 
         public ApplyValueResult TrySetValueOnUi(object valueOnInstance)
