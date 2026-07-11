@@ -125,6 +125,18 @@
 		<Compile Include="..\..\MonoGameGum\Forms\FormsUtilities.cs" Link="Forms\FormsUtilities.cs" />
 	</ItemGroup>
 
+	<!-- ===== Shared game-host GumService: the partial base + its companions. The SILK-divergent
+	     GumService.Silk.cs and the SilkNet-local CustomSetPropertyOnRenderable.Localization.cs are
+	     auto-globbed from this project dir (no explicit include needed). GumServiceCompat.cs is
+	     intentionally NOT linked — SilkNet has no [Obsolete] back-compat subclass. Issue #3608. ===== -->
+	<ItemGroup>
+		<Compile Include="..\..\MonoGameGum\GumService.cs" Link="GumService.cs" />
+		<Compile Include="..\..\MonoGameGum\WindowFitMath.cs" Link="WindowFitMath.cs" />
+		<Compile Include="..\..\MonoGameGum\WindowZoomMode.cs" Link="WindowZoomMode.cs" />
+		<Compile Include="..\..\MonoGameGum\GumHotReloadManager.cs" Link="GumHotReloadManager.cs" />
+		<Compile Include="..\..\MonoGameGum\Async\SingleThreadSynchronizationContext.cs" Link="Async\SingleThreadSynchronizationContext.cs" />
+	</ItemGroup>
+
 	<!-- ===== Input host half (the stack SkiaGum omits because it is render-only) ===== -->
 	<ItemGroup>
 		<Compile Include="..\..\GumRuntime\Input\ButtonState.cs" Link="Input\ButtonState.cs" />

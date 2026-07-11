@@ -28,7 +28,10 @@ namespace MonoGameGumShapes;
 #endif
 
 
-public class CustomSetPropertyOnRenderable
+// partial so the Gum.SilkNet host can supply the localization holder its shared GumService needs
+// (Runtimes/SilkNetGum/CustomSetPropertyOnRenderable.Localization.cs) without that state landing in
+// the render-only SkiaGum / SkiaGum.Wpf / SkiaGum.Maui / SkiaGum.Standalone consumers (issue #3608).
+public partial class CustomSetPropertyOnRenderable
 {
     // Issue #2956 follow-up — two-slot CircleRuntime / RectangleRuntime own a fill renderable
     // AND a stroke renderable. The runtime's typed setters (UseGradient, IsFilled,
