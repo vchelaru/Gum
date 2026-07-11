@@ -1,5 +1,6 @@
 ﻿using Gum.Converters;
 using Gum.DataTypes;
+using Gum.Localization;
 using Gum.Managers;
 using Gum.RenderingLibrary;
 using Gum.Wireframe;
@@ -33,6 +34,58 @@ namespace MonoGameGumShapes;
 // the render-only SkiaGum / SkiaGum.Wpf / SkiaGum.Maui / SkiaGum.Standalone consumers (issue #3608).
 public partial class CustomSetPropertyOnRenderable
 {
+    #region Localization
+
+    // Localization holder mirroring the MonoGame/Raylib copies (Gum/Wireframe/CustomSetPropertyOnRenderable.cs
+    // and Runtimes/RaylibGum/Renderables/CustomSetPropertyOnRenderable.cs). SkiaGum's copy never grew these,
+    // so runtime localization was a no-op in SkiaGum-rendered hosts (SkiaGum.Standalone / WPF / MAUI,
+    // Gum.SilkNet) until #3621. Supersedes the inert SilkNet-local holder that #3619 added to satisfy the
+    // shared GumService's compile. Nullable-oblivious to match those siblings' un-annotated static fields and
+    // to stay valid in consumers with no <Nullable> setting (SkiaGum.Wpf); the shared GumService consumes
+    // these through its own nullable-enable context with the appropriate '!' / 'string?' handling.
+#nullable disable
+    private static ILocalizationService _localizationService;
+
+    /// <summary>
+    /// The active localization service used by the runtime. Assigning a new instance fires
+    /// <see cref="LocalizationServiceChanged"/> so consumers (e.g. <c>GumService</c>) can re-wire
+    /// <see cref="ILocalizationService.CurrentLanguageChanged"/> subscriptions for language switching.
+    /// </summary>
+    public static ILocalizationService LocalizationService
+    {
+        get => _localizationService;
+        set
+        {
+            if (ReferenceEquals(_localizationService, value))
+            {
+                return;
+            }
+            ILocalizationService previous = _localizationService;
+            _localizationService = value;
+            LocalizationServiceChanged?.Invoke(previous, value);
+        }
+    }
+
+    /// <summary>
+    /// Raised when <see cref="LocalizationService"/> is replaced. Arguments are
+    /// (previousService, newService) — either may be null.
+    /// </summary>
+    public static event Action<ILocalizationService, ILocalizationService> LocalizationServiceChanged;
+
+    private static readonly ConditionalWeakTable<GraphicalUiElement, string> _localizationKeys = new();
+
+    /// <summary>
+    /// Returns the original (pre-translation) string assigned via the localization path on the given
+    /// element, or null if no localizable text has been assigned (or it was overwritten via TextNoTranslate).
+    /// </summary>
+    public static string TryGetLocalizationKey(GraphicalUiElement element)
+    {
+        return _localizationKeys.TryGetValue(element, out string key) ? key : null;
+    }
+#nullable restore
+
+    #endregion
+
     // Issue #2956 follow-up — two-slot CircleRuntime / RectangleRuntime own a fill renderable
     // AND a stroke renderable. The runtime's typed setters (UseGradient, IsFilled,
     // gradient color channels, gradient endpoints, etc.) forward to BOTH slots; reflection
@@ -1123,7 +1176,35 @@ public partial class CustomSetPropertyOnRenderable
                 text.Width = 0;
             }
 
-            text.RawText = value as string;
+            var valueAsString = value as string;
+
+            // Track the original (untranslated) value so a language switch can re-translate this
+            // element via TryGetLocalizationKey; "TextNoTranslate" always clears the tracked key so
+            // user input / explicit literals aren't re-translated later. Mirrors the MonoGame/Raylib
+            // copies (Gum/Wireframe/CustomSetPropertyOnRenderable.cs).
+            if (propertyName == "TextNoTranslate")
+            {
+                _localizationKeys.Remove(gue);
+            }
+            else if (LocalizationService != null && valueAsString != null)
+            {
+                _localizationKeys.AddOrUpdate(gue, valueAsString);
+            }
+            else
+            {
+                _localizationKeys.Remove(gue);
+            }
+
+            var rawText = valueAsString;
+            if (LocalizationService != null && propertyName == "Text")
+            {
+                rawText = LocalizationService.Translate(rawText);
+            }
+
+            // Unlike the MonoGame copy (StoredMarkupText / SetBbCodeText), SkiaGum's Text renders
+            // RawText literally through RichTextKit — there is no separate markup path — so a
+            // translated value containing [...] flows through here exactly as any other string.
+            text.RawText = rawText;
             // we want to update if the text's size is based on its "children" (the letters it contains)
             if (gue.WidthUnits == DimensionUnitType.RelativeToChildren ||
                 // If height is relative to children, it could be in a stack
