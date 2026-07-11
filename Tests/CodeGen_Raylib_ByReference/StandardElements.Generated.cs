@@ -521,6 +521,10 @@ internal static class StandardElementsCodeGenRegistration
       <Variable Type=""float"" Name=""CornerRadius"" Category=""Rendering"" SetsValue=""true"">
         <Value xsi:type=""xsd:float"">0</Value>
       </Variable>
+      <Variable Type=""float?"" Name=""CustomRadiusBottomLeft"" Category=""Rendering"" SetsValue=""true"" />
+      <Variable Type=""float?"" Name=""CustomRadiusBottomRight"" Category=""Rendering"" SetsValue=""true"" />
+      <Variable Type=""float?"" Name=""CustomRadiusTopLeft"" Category=""Rendering"" SetsValue=""true"" />
+      <Variable Type=""float?"" Name=""CustomRadiusTopRight"" Category=""Rendering"" SetsValue=""true"" />
       <Variable Type=""int"" Name=""DropshadowAlpha"" Category=""Dropshadow"" SetsValue=""true"">
         <Value xsi:type=""xsd:int"">255</Value>
       </Variable>
