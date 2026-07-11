@@ -185,7 +185,8 @@ jobs:
             "Tests/CodeGen_MonoGameForms_ByReference/Content/GumProject/CodeGenTestProject.gumx",
             "Tests/CodeGen_MonoGameForms_Localization_ByReference/Content/GumProject/LocalizationCodeGenTestProject.gumx",
             "Tests/CodeGen_MonoGameForms_FullCodegen/Content/CodeGenProject.gumx",
-            "Tests/CodeGen_Raylib_ByReference/Content/GumProject/CodeGenTestProject.gumx"
+            "Tests/CodeGen_Raylib_ByReference/Content/GumProject/CodeGenTestProject.gumx",
+            "Tests/CodeGen_Skia_ByReference/Content/GumProject/CodeGenTestProject.gumx"
           )
           foreach ($gumxProject in $gumxProjects) {
             & $cli codegen $gumxProject
@@ -237,6 +238,11 @@ jobs:
           dotnet restore "Tests/CodeGen_Raylib_ByReference/CodeGen_Raylib_ByReference.sln" --verbosity quiet
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           dotnet build "Tests/CodeGen_Raylib_ByReference/CodeGen_Raylib_ByReference.sln" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          dotnet restore "Tests/CodeGen_Skia_ByReference/CodeGen_Skia_ByReference.sln" --verbosity quiet
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet build "Tests/CodeGen_Skia_ByReference/CodeGen_Skia_ByReference.sln" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       # ---------------------------------------------------------------------

@@ -9,19 +9,22 @@ set CLI=%~dp0..\Tools\Gum.Cli\bin\Release\net8.0\GumCli.exe
 
 echo 0/100 Starting to generate...
 "%CLI%" codegen %~dp0CodeGen_Maui_FullCodegen/Content/GumProject/CodeGenTestProject.gumx
-echo 20/100 generated CodeGen_Maui_FullCodegen
+echo 15/100 generated CodeGen_Maui_FullCodegen
 
 "%CLI%" codegen %~dp0CodeGen_MonoGame_ByReference/Content/GumProject/CodeGenTestProject.gumx
-echo 40/100 generated CodeGen_MonoGame_ByReference
+echo 30/100 generated CodeGen_MonoGame_ByReference
 
 "%CLI%" codegen %~dp0CodeGen_MonoGameForms_ByReference/Content/GumProject/CodeGenTestProject.gumx
-echo 60/100 generated CodeGen_MonoGameForms_ByReference
+echo 45/100 generated CodeGen_MonoGameForms_ByReference
 
 "%CLI%" codegen %~dp0CodeGen_MonoGameForms_Localization_ByReference/Content/GumProject/LocalizationCodeGenTestProject.gumx
-echo 80/100 generated CodeGen_MonoGameForms_Localization_ByReference
+echo 60/100 generated CodeGen_MonoGameForms_Localization_ByReference
 
 "%CLI%" codegen %~dp0CodeGen_MonoGameForms_FullCodegen/Content/CodeGenProject.gumx
-echo 80/100 generated CodeGen_MonoGameForms_FullCodegen
+echo 70/100 generated CodeGen_MonoGameForms_FullCodegen
 
 "%CLI%" codegen %~dp0CodeGen_Raylib_ByReference/Content/GumProject/CodeGenTestProject.gumx
-echo 100/100 generated CodeGen_Raylib_ByReference
+echo 85/100 generated CodeGen_Raylib_ByReference
+
+"%CLI%" codegen %~dp0CodeGen_Skia_ByReference/Content/GumProject/CodeGenTestProject.gumx
+echo 100/100 generated CodeGen_Skia_ByReference
