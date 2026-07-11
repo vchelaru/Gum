@@ -20,7 +20,7 @@ public class ShapeRenderer
     // buildTransitive/MonoGame/Content/{DesktopGL,WindowsDX}/ are regenerated
     // against a new Apos.Shapes version. The XnbBuilderMonoGame* projects must
     // be rebuilt and their output XNBs copied in alongside this constant change.
-    const string CompiledAgainstAposShapesVersion = "0.6.9-alpha";
+    const string CompiledAgainstAposShapesVersion = "0.6.10-alpha";
 
     static ShapeRenderer _self = default!;
     ShapeBatch _sb = default!;
