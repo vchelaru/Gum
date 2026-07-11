@@ -146,8 +146,6 @@
 		<Compile Include="..\..\MonoGameGum\GueDeriving\RectangleRuntime.cs" Link="GueDeriving\RectangleRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\GueDeriving\PolygonRuntime.cs" Link="GueDeriving\PolygonRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\GumService.cs" Link="GumService.cs" />
-		<Compile Include="..\..\MonoGameGum\GumService.XnaLike.cs" Link="GumService.XnaLike.cs" />
-		<Compile Include="..\..\MonoGameGum\GumService.Raylib.cs" Link="GumService.Raylib.cs" />
 		<Compile Include="..\..\MonoGameGum\GumServiceCompat.cs" Link="GumServiceCompat.cs" />
 		<Compile Include="..\..\MonoGameGum\WindowFitMath.cs" Link="WindowFitMath.cs" />
 		<Compile Include="..\..\MonoGameGum\WindowZoomMode.cs" Link="WindowZoomMode.cs" />

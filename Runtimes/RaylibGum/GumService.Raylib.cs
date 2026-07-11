@@ -1,8 +1,9 @@
-// Raylib arm of the partial GumService (issue #3608). The shared ~90% lives in GumService.cs;
-// this file holds only the RAYLIB-divergent members (Initialize signature, renderer/forms
-// bootstrap, GameTime-typed Update family, texture-filter/teardown seams) plus Draw(Camera2D).
-// The whole file is wrapped in #if RAYLIB as a safety belt: KniGum/FnaGum glob ..\**\*.cs from
-// MonoGameGum, so a stray glob of this partial stays inert where RAYLIB is not defined.
+// Raylib arm of the partial GumService (issue #3608). The shared ~90% lives in MonoGameGum's
+// GumService.cs (file-linked into RaylibGum.csproj); this file holds only the RAYLIB-divergent
+// members (Initialize signature, renderer/forms bootstrap, GameTime-typed Update family,
+// texture-filter/teardown seams) plus Draw(Camera2D). It lives in the RaylibGum project so
+// raylib-only code sits with the raylib runtime rather than under MonoGameGum. The #if RAYLIB
+// wrap is belt-and-suspenders: only RaylibGum compiles this file, and RAYLIB is always defined there.
 #if RAYLIB
 using Gum.DataTypes;
 using Gum.Forms;
