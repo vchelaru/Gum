@@ -1,7 +1,4 @@
-﻿#if MONOGAME || KNI || FNA
-#define XNALIKE
-#endif
-using Gum.Bundle;
+﻿using Gum.Bundle;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.StateAnimation.SaveClasses;
@@ -16,121 +13,45 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using ToolsUtilities;
 using Gum.Forms;
 using Gum.Threading;
 using Gum.Localization;
 
-#if XNALIKE
 using Gum.GueDeriving;
+using Gum.Input;
+
+// A few types this shared file references live in different namespaces per backend — Cursor
+// (MonoGameGum.Input on XNALIKE vs Gum.Input on Raylib), and Sprite / CustomSetPropertyOnRenderable
+// (Gum.Renderables / RaylibGum.Renderables on Raylib). Only the using set switches per platform; the
+// method bodies stay backend-agnostic. This mirrors the per-platform using aliasing used across the
+// unified GueDeriving runtimes (issue #3608).
+#if MONOGAME || KNI || FNA
 using MonoGameGum.Input;
-using Gum.Input;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 #elif RAYLIB
-using Gum.GueDeriving;
-using Gum.Input;
 using Gum.Renderables;
-using GameTime = double;
-using Raylib_cs;
 using RaylibGum.Renderables;
 #endif
 
 // The platform-agnostic home for GumService (issue #3119). The legacy
 // MonoGameGum.GumService / RaylibGum.GumService names live on as permanent
-// [Obsolete] subclass shims in GumServiceCompat.cs.
+// [Obsolete] subclass shims in GumServiceCompat.cs. Platform-divergent members live in the
+// GumService.XnaLike.cs / GumService.Raylib.cs partials (issue #3608).
 namespace Gum;
 
-public class GumService : IGumService
+public partial class GumService : IGumService
 {
     IRenderer IGumService.Renderer => this.SystemManagers.Renderer;
     ICursor IGumService.Cursor => this.Cursor;
 
-    void IGumService.Initialize()
-    {
-#if XNALIKE
-        throw new NotSupportedException(
-            "This runtime requires a Game instance. Call " +
-            "GumService.Default.Initialize(Game) on the concrete GumService instead.");
-#elif RAYLIB
-        Initialize(DefaultVisualsVersion.Newest);
-#else
-        throw new NotSupportedException(
-            $"{nameof(GumService)}.Initialize() has no implementation for this backend. " +
-            "A new backend must add an explicit XNALIKE/RAYLIB-style arm here rather than " +
-            "relying on this fallback.");
-#endif
-    }
-
-    void IGumService.Initialize(string gumProjectFile)
-    {
-#if XNALIKE
-        throw new NotSupportedException(
-            "This runtime requires a Game instance. Call " +
-            "GumService.Default.Initialize(Game, gumProjectFile) on the concrete GumService instead.");
-#elif RAYLIB
-        Initialize(gumProjectFile);
-#else
-        throw new NotSupportedException(
-            $"{nameof(GumService)}.Initialize(string) has no implementation for this backend. " +
-            "A new backend must add an explicit XNALIKE/RAYLIB-style arm here rather than " +
-            "relying on this fallback.");
-#endif
-    }
-
     #region Default
+    // The lazily-initialized singleton backing field. The Default property returns the
+    // platform-specific back-compat subclass shim (MonoGameGum.GumService / RaylibGum.GumService)
+    // and lives in the per-platform partials, as do the GameTime property and the explicit
+    // IGumService.Initialize / IGumService.GameTime members (issue #3608).
     static GumService _default = default!;
-
-#pragma warning disable CS0618 // Type or member is obsolete — Default intentionally returns the
-    // legacy-named subclass shim so existing code typed against it keeps compiling (soft migration,
-    // issue #3119). Because static members are inherited, Gum.GumService.Default and the legacy
-    // namespace's GumService.Default are the same single declaration and the same singleton.
-    // This switch is intentionally left closed (no #else): a third backend must add its own
-    // #elif arm here, with its own back-compat shim subclass, rather than assume a missing
-    // #else is an oversight — there is no sensible default subclass to fall back to.
-#if XNALIKE
-    /// <summary>
-    /// Gets the default instance of the GumService class.
-    /// </summary>
-    /// <remarks>This property provides a lazily initialized, shared GumService instance for general use. Use
-    /// this instance when a custom configuration is not required. The declared and runtime type is the
-    /// <see cref="MonoGameGum.GumService"/> back-compat subclass so legacy declarations keep compiling.</remarks>
-    public static MonoGameGum.GumService Default =>
-        (MonoGameGum.GumService)(_default ??= new MonoGameGum.GumService());
-#elif RAYLIB
-    /// <summary>
-    /// Gets the default instance of the GumService class.
-    /// </summary>
-    /// <remarks>This property provides a lazily initialized, shared GumService instance for general use. Use
-    /// this instance when a custom configuration is not required. The declared and runtime type is the
-    /// <see cref="RaylibGum.GumService"/> back-compat subclass so legacy declarations keep compiling.</remarks>
-    public static RaylibGum.GumService Default =>
-        (RaylibGum.GumService)(_default ??= new RaylibGum.GumService());
-#endif
-#pragma warning restore CS0618
-
     #endregion
-
-    /// <summary>
-    /// The GameTime of the most recent Update call.
-    /// </summary>
-    public GameTime GameTime { get; private set; }
-
-    /// <inheritdoc/>
-    float? IGumService.GameTime =>
-#if XNALIKE
-        GameTime != null ? (float?)GameTime.TotalGameTime.TotalSeconds : null;
-#else
-        // On Raylib, GameTime is aliased to double and starts at 0; treat the pre-Update
-        // state as null by also returning null when nothing has run Update yet.
-        _hasReceivedUpdate ? (float?)GameTime : null;
-#endif
-
-#if !XNALIKE
-    private bool _hasReceivedUpdate;
-#endif
 
     /// <summary>
     /// Gets the default cursor, which represents either mouse or touch screen depending on hardware capabilities.
@@ -177,30 +98,9 @@ public class GumService : IGumService
     /// <inheritdoc/>
     IRenderable IGumService.CreateSpriteRenderable() => Sprite.CreateForCurrentPlatform();
 
-    /// <inheritdoc/>
-    ICursor? IGumService.CreateCursor()
-    {
-#if XNALIKE
-        // MonoGame/KNI/FNA bake the Game (for its GameWindow) into the cursor for mobile touch-offset.
-        return Cursor.CreateForCurrentPlatform(_game);
-#elif RAYLIB
-        return Cursor.CreateForCurrentPlatform();
-#endif
-    }
-
-    /// <inheritdoc/>
-    IInputReceiverKeyboard? IGumService.CreateKeyboard()
-    {
-#if XNALIKE
-        return Keyboard.CreateForCurrentPlatform(_game);
-#elif RAYLIB
-        return Keyboard.CreateForCurrentPlatform();
-#endif
-    }
-
-    /// <inheritdoc/>
-    void IGumService.ApplyGamePadState(Gum.Input.GamePad gamepad, int index, double time) =>
-        GamePadDriver.Apply(gamepad, index, time);
+    // CreateCursor / CreateKeyboard / ApplyGamePadState are platform-specific input factories
+    // (XNALIKE bakes the Game into the cursor/keyboard; GamePadDriver is a per-family type). They
+    // live in the per-platform partials (issue #3608).
 
 #if !IOS && !ANDROID
     private IGumHotReloadManager? _hotReloadManager;
@@ -248,7 +148,7 @@ public class GumService : IGumService
     /// Enables a zoom-based fit policy: the camera scales so the Gum canvas tracks the
     /// current window size, using the window dimensions at the first call as the 1:1
     /// reference. The fit is applied immediately and then re-applied automatically inside
-    /// <see cref="Update(GameTime)"/> whenever the window size changes. Call once at
+    /// <c>Update</c> whenever the window size changes. Call once at
     /// startup — no resize-handler boilerplate required.
     /// </summary>
     /// <param name="mode">
@@ -279,7 +179,7 @@ public class GumService : IGumService
     /// Enables an expand-based fit policy: the Gum canvas is resized to match the current
     /// window so authored UI gets more (or less) space rather than scaling. The fit is
     /// applied immediately and then re-applied automatically inside
-    /// <see cref="Update(GameTime)"/> whenever the window size changes. Call once at
+    /// <c>Update</c> whenever the window size changes. Call once at
     /// startup — no resize-handler boilerplate required.
     /// </summary>
     /// <param name="defaultZoom">
@@ -357,18 +257,8 @@ public class GumService : IGumService
         }
     }
 
-    private (int width, int height) GetWindowSize()
-    {
-#if XNALIKE
-        // BackBufferWidth/Height is always physical pixels - XNA has no separate logical/DPI-scaled size.
-        var pp = Game.GraphicsDevice.PresentationParameters;
-        return (pp.BackBufferWidth, pp.BackBufferHeight);
-#elif RAYLIB
-        // GetRenderWidth/Height (physical framebuffer pixels) rather than GetScreenWidth/Height
-        // (logical/DPI-unaware size) to match XNALIKE's physical-pixel convention above (#3572).
-        return (Raylib.GetRenderWidth(), Raylib.GetRenderHeight());
-#endif
-    }
+    // GetWindowSize() is platform-specific (XNA back-buffer vs raylib render size) and lives in the
+    // per-platform partials (issue #3608).
 
     public ContentLoader? ContentLoader => LoaderManager.Self.ContentLoader as ContentLoader;
 
@@ -601,42 +491,11 @@ public class GumService : IGumService
         }
     }
 
-    // Extracts textures the serializer captured but could not resolve to a file path -- embedded or
-    // runtime-generated Texture2Ds (notably the Forms default visuals' shared UISpriteSheet) whose Name is
-    // unset, so the snapshot has valid texture coordinates but no file to slice. Saves each unique texture
-    // to a PNG next to the project and writes the relative path into its placeholder SourceFile variable so
-    // the slices render in the tool. The actual Texture2D.SaveAsPng is XNALIKE-only; on other backends the
-    // textures stay unresolved (no regression -- they were blank before this existed).
-    private static void ExtractUnresolvedTextures(IRuntimeSnapshotSerializer serializer, string snapshotDirectory)
-    {
-#if XNALIKE
-        if (serializer.UnresolvedTextureReferences.Count == 0)
-        {
-            return;
-        }
-
-        Directory.CreateDirectory(snapshotDirectory);
-
-        FillUnresolvedTextureSourceFiles(serializer.UnresolvedTextureReferences, (texture, relativePath) =>
-        {
-            if (texture is not Texture2D texture2D)
-            {
-                return false;
-            }
-            try
-            {
-                using FileStream stream = File.Create(Path.Combine(snapshotDirectory, relativePath));
-                texture2D.SaveAsPng(stream, texture2D.Width, texture2D.Height);
-                return true;
-            }
-            catch (Exception e)
-            {
-                System.Diagnostics.Debug.WriteLine($"Snapshot: failed to save embedded texture: {e.Message}");
-                return false;
-            }
-        });
-#endif
-    }
+    // Extracts embedded/generated textures the serializer could not resolve to a file path, saving
+    // each next to the project so the tool can slice it. XNALIKE-only (needs Texture2D.SaveAsPng);
+    // the seam is elided on other backends -- they were blank before this existed. Implemented in
+    // GumService.XnaLike.cs (issue #3608).
+    static partial void ExtractUnresolvedTextures(IRuntimeSnapshotSerializer serializer, string snapshotDirectory);
 
     // Pure orchestration over the serializer's unresolved textures: dedupe by texture instance, give each a
     // relative file name, persist it via the supplied saver, and write the resulting path into the placeholder
@@ -760,7 +619,9 @@ public class GumService : IGumService
         Gum.Forms.Controls.FrameworkElement.GamePadsForUiControl.AddRange(GumService.Default.Gamepads);
     }
 
-#if !FRB
+    // Off by default; opt in via UseSingleThreadedAsync. Formerly #if !FRB-guarded, but GumService
+    // is not compiled into FRB (it is absent from GumCoreShared.projitems), so the guard was
+    // always-true dead code and was removed for clarity (issue #3608).
     private Gum.Async.SingleThreadSynchronizationContext? _syncContext;
 
     /// <summary>
@@ -785,7 +646,6 @@ public class GumService : IGumService
         if (_syncContext != null) return;
         _syncContext = new Gum.Async.SingleThreadSynchronizationContext();
     }
-#endif
 
 
     /// <summary>
@@ -794,7 +654,7 @@ public class GumService : IGumService
     public bool IsInitialized { get; private set; }
 
     /// <summary>
-    /// Result of the most recent project load performed by <see cref="Initialize(Game,string,SystemManagers,DefaultVisualsVersion)"/>
+    /// Result of the most recent project load performed by <c>Initialize</c>
     /// (or platform-equivalent overloads). Null if no project file has been loaded.
     /// Inspect <see cref="GumLoadResult.Warnings"/> for non-fatal issues such as
     /// localization string-ID collisions across multi-file RESX projects or
@@ -811,15 +671,7 @@ public class GumService : IGumService
     /// </summary>
     public ProjectResolution? CurrentProjectResolution { get; private set; }
 
-#if XNALIKE
-    private Game? _game;
-    public Game Game
-    {
-        get => _game ?? throw new InvalidOperationException(
-            "GumService has not been initialized. Call GumService.Initialize() first.");
-        private set => _game = value;
-    }
-#endif
+    // The XNA Game host (_game / Game) is XNALIKE-only and lives in GumService.XnaLike.cs (issue #3608).
 
     #region Initialize
 
@@ -852,16 +704,11 @@ public class GumService : IGumService
         };
 
         DeferredQueue = new DeferredActionQueue();
-        // NativeTextInput is the OS-provided *modal* text-entry dialog (the iOS soft-keyboard
-        // popup / console prompt), wrapping XNA's KeyboardInput.Show. It is intentionally
-        // MonoGame/KNI only. raylib, FNA, and Sokol are desktop-only (or don't ship the API),
-        // so they deliberately leave this null and rely on inline typing via each Keyboard's
-        // GetStringTyped instead — this is not an unfinished raylib port (see issue #3432).
-        // The modal dialog only matters on true touch/console targets, which raylib-cs has no
-        // natives for. See INativeTextInput and TextBoxBase.TryShowNativeKeyboard.
-#if MONOGAME || KNI
-        NativeTextInput = new MonoGameNativeTextInput();
-#endif
+        // NativeTextInput (the OS modal text-entry dialog, wrapping XNA's KeyboardInput.Show) is
+        // MonoGame/KNI only; raylib/FNA/Sokol are desktop-only or don't ship the API, so they leave
+        // it null and type inline via each Keyboard's GetStringTyped (issue #3432). The seam is
+        // implemented in GumService.XnaLike.cs and elided elsewhere (issue #3608).
+        AssignNativeTextInput();
         Clipboard = new global::Gum.Clipboard.MonoGameGumClipboard();
 
         GraphicalUiElement.SaveFormsRuntimePropertiesAction = formsObject =>
@@ -897,67 +744,10 @@ public class GumService : IGumService
         IGumService.Default = this;
     }
 
-#if XNALIKE
-    /// <summary>
-    /// Initializes Gum, optionally loading a Gum project.
-    /// </summary>
-    /// <param name="game">The game instance.</param>
-    /// <param name="gumProjectFile">An optional project to load. If not specified, no project is loaded and Gum can be used "code only".</param>
-    /// <returns>The loaded project, or null if no project is loaded</returns>
-    public GumProjectSave? Initialize(Game game, string? gumProjectFile = null)
-    {
-        if (game.GraphicsDevice == null)
-        {
-            throw new InvalidOperationException(
-                "game.GraphicsDevice cannot be null. " +
-                "Be sure to call Initialize in the Game's Initialize method or later " +
-                "so that the Game has a valid GrahicsDevice");
-        }
-        return InitializeInternal(
-            game, game.GraphicsDevice,
-            gumProjectFile,
-            defaultVisualsVersion: Gum.Forms.DefaultVisualsVersion.Newest);
-    }
-#else
-    /// <summary>
-    /// Initializes Gum, optionally loading a Gum project.
-    /// </summary>
-    /// <param name="gumProjectFile">An optional project to load. If not specified, no project is loaded and Gum can be used "code only".</param>
-    /// <returns>The loaded project, or null if no project is loaded</returns>
-    public GumProjectSave Initialize(string gumProjectFile)
-    {
-        return InitializeInternal(
-            gumProjectFile,
-            defaultVisualsVersion: DefaultVisualsVersion.Newest)!;
-    }
-#endif
-
-#if XNALIKE
-    public void Initialize(Game game, Gum.Forms.DefaultVisualsVersion defaultVisualsVersion)
-    {
-        if (game.GraphicsDevice == null)
-        {
-            throw new InvalidOperationException(
-                "game.GraphicsDevice cannot be null. " +
-                "Be sure to call Initialize in the Game's Initialize method or later " +
-                "so that the Game has a valid GrahicsDevice");
-        }
-
-        InitializeInternal(game, game.GraphicsDevice, defaultVisualsVersion: defaultVisualsVersion);
-    }
-    public void Initialize(Game game, SystemManagers systemManagers)
-    {
-        InitializeInternal(game, game.GraphicsDevice, systemManagers: systemManagers);
-    }
-#else
-    public void Initialize(DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.Newest)
-    {
-        InitializeInternal(
-            gumProjectFile: null,
-            systemManagers: SystemManagers.Default,
-            defaultVisualsVersion: defaultVisualsVersion);
-    }
-#endif
+    // The public Initialize(...) overloads are platform-specific (Game-based on XNALIKE, canvas/no-arg
+    // on Raylib). Each stores its platform init args, runs the platform SystemManagers/renderer/forms
+    // bootstrap in its own InitializeInternal, and hands off to the shared FinishInitialize tail. They
+    // live in the per-platform partials (issue #3608).
 
     /// <summary>
     /// Loads animations for all elements in the project by enumerating the project's
@@ -1066,85 +856,13 @@ public class GumService : IGumService
     private static readonly string[] AnimationCategoryFolders =
         { "Screens/", "Components/", "StandardElements/" };
 
-#if XNALIKE
-    /// <summary>
-    /// Initializes Gum without a <see cref="Microsoft.Xna.Framework.Game"/> instance.
-    /// <para>
-    /// This overload is intended for non-interactive scenarios such as CLI tools, screenshot
-    /// generation, and headless rendering pipelines where a <c>Game</c> object is not available.
-    /// </para>
-    /// <para>
-    /// Input handling is NOT supported in this mode. This includes keyboard input, cursor/mouse
-    /// input, gamepad input, non-EN-US keyboard layouts, and ALT+numeric key codes for accented
-    /// characters in <c>TextBox</c> controls.
-    /// </para>
-    /// <para>
-    /// Interactive games should use <see cref="Initialize(Microsoft.Xna.Framework.Game, string?)"/>
-    /// instead, which wires up full input support.
-    /// </para>
-    /// </summary>
-    /// <param name="graphicsDevice">The <see cref="GraphicsDevice"/> to use for rendering.</param>
-    /// <param name="gumProjectFile">
-    /// Optional path to a <c>.gumx</c> project file to load. Pass <c>null</c> to skip project loading.
-    /// </param>
-    /// <returns>The loaded <see cref="GumProjectSave"/>, or <c>null</c> if no project file was specified.</returns>
-    public GumProjectSave? Initialize(GraphicsDevice graphicsDevice, string? gumProjectFile = null)
+    // Shared tail of every platform's InitializeInternal: adds Root to managers, reinserts it at the
+    // bottom of the main layer, and (when a project path is given) loads the project, its
+    // localization, extended standard states, texture filter, and standard-element defaults. The
+    // per-platform guard + SystemManagers/renderer/forms bootstrap lives in the per-platform
+    // InitializeInternal in GumService.XnaLike.cs / GumService.Raylib.cs (issue #3608).
+    private GumProjectSave? FinishInitialize(string? gumProjectFile)
     {
-        return InitializeInternal(null, graphicsDevice, gumProjectFile);
-    }
-#endif
-
-
-    GumProjectSave? InitializeInternal(
-#if XNALIKE
-        Game game, GraphicsDevice graphicsDevice,
-#endif
-        string? gumProjectFile = null,
-        SystemManagers? systemManagers = null,
-        DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.Newest)
-    {
-        if (IsInitialized)
-        {
-            throw new InvalidOperationException("Initialize has already been called once. It cannot be called again");
-        }
-        IsInitialized = true;
-
-#if XNALIKE
-        Game = game;
-        RegisterRuntimeTypesThroughReflection();
-#endif
-
-        this.SystemManagers = systemManagers ?? new SystemManagers();
-        if (systemManagers == null)
-        {
-            SystemManagers.Default = this.SystemManagers;
-            ISystemManagers.Default = this.SystemManagers;
-        }
-
-        IGumService.Default = this;
-
-#if XNALIKE
-        this.SystemManagers.Initialize(graphicsDevice, fullInstantiation: true);
-
-        if (game != null && ContentLoader != null && ContentLoader.XnaContentManager == null)
-        {
-            ContentLoader.XnaContentManager = game.Content;
-        }
-
-        FormsUtilities.InitializeDefaults(game:game, systemManagers: this.SystemManagers,
-            defaultVisualsVersion: defaultVisualsVersion);
-#elif RAYLIB
-        // SystemManagers.Initialize must come first because it assigns the
-        // GraphicalUiElement.AddRenderableToManagers delegate. InitializeDefaults
-        // creates PopupRoot/ModalRoot and calls AddToManagers on them — that call
-        // silently no-ops if the delegate is still null, so the roots would never
-        // be added to MainLayer.Renderables and would not draw.
-        this.SystemManagers.Initialize();
-        FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers,
-            defaultVisualsVersion: defaultVisualsVersion);
-#endif
-
-
         Root.AddToManagers(SystemManagers);
         Root.UpdateLayout();
 
@@ -1314,15 +1032,7 @@ public class GumService : IGumService
     {
         bool useLinearFiltering = string.Equals(gumProject?.TextureFilter, "Linear", StringComparison.Ordinal);
 
-#if XNALIKE
-        Renderer.TextureFilter = useLinearFiltering ? TextureFilter.Linear : TextureFilter.Point;
-#elif RAYLIB
-        // raylib has no global sampler state; the filter is a per-texture property applied at load
-        // time, so ContentLoader reads this when creating sprite textures (see ContentLoader.cs).
-        ContentLoader.DefaultTextureFilter = useLinearFiltering
-            ? Raylib_cs.TextureFilter.Bilinear
-            : Raylib_cs.TextureFilter.Point;
-#endif
+        ApplyTextureFilterPlatform(useLinearFiltering);
     }
 
     private void ApplyStandardElementDefaults(GumProjectSave gumProject)
@@ -1336,53 +1046,8 @@ public class GumService : IGumService
         float GetFloat(string variableName) => current?.DefaultState.GetValueOrDefault<float>(variableName) ?? 0;
     }
 
-#if XNALIKE
-    // Originally added so codegen-emitted user types could self-register. Module initializers
-    // replaced that path for newer Gum (https://github.com/vchelaru/Gum/issues/275), but we
-    // still need a reflection-based hook for two reasons:
-    //   1. Older projects emit a static "RegisterRuntimeType" (singular) in the entry assembly.
-    //   2. Mono/WASM (Blazor) does not fire [ModuleInitializer] until a type in the module is
-    //      touched. Extension packages like Gum.Shapes.KNI expose a public static
-    //      "RegisterRuntimeTypes" (plural) we can call directly to force registration before
-    //      .gumx load. RegisterRuntimeTypes is idempotent (guarded), so calling it on top of an
-    //      already-fired ModuleInitializer is a no-op.
-    private void RegisterRuntimeTypesThroughReflection()
-    {
-        // (1) Legacy entry-assembly hook (singular method name).
-        Assembly? executingAssembly = Assembly.GetEntryAssembly();
-        var types = executingAssembly?.GetTypes();
-        if (types != null)
-        {
-            foreach (Type type in types)
-            {
-                var method = type.GetMethod("RegisterRuntimeType", BindingFlags.Static | BindingFlags.Public);
-                method?.Invoke(null, null);
-            }
-        }
-
-        // (2) Extension-package hook (plural method name) across all loaded assemblies. This is
-        // what unblocks Apos shapes on Blazor/WASM.
-        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-        {
-            if (assembly.IsDynamic) continue;
-            Type[] assemblyTypes;
-            try { assemblyTypes = assembly.GetTypes(); }
-            catch (ReflectionTypeLoadException ex) { assemblyTypes = ex.Types.Where(t => t != null).ToArray()!; }
-            catch { continue; }
-
-            foreach (var type in assemblyTypes)
-            {
-                if (type == null) continue;
-                var method = type.GetMethod("RegisterRuntimeTypes", BindingFlags.Static | BindingFlags.Public);
-                if (method != null && method.GetParameters().Length == 0)
-                {
-                    try { method.Invoke(null, null); }
-                    catch { /* a misbehaving extension shouldn't break Gum init */ }
-                }
-            }
-        }
-    }
-#endif
+    // RegisterRuntimeTypesThroughReflection (the codegen/module-initializer fallback registration)
+    // is XNALIKE-only and lives in GumService.XnaLike.cs (issue #3608).
     #endregion
 
     #region Uninitialize
@@ -1444,42 +1109,10 @@ public class GumService : IGumService
 
         LoaderManager.Self.DisposeAndClear();
 
-#if XNALIKE
-        // RenderableRegistry holds static per-capability factories. Clearing here
-        // mirrors how Uninitialize treats the other extension points
-        // (ElementSaveExtensions.ClearRegistrations, Text.Customizations.Clear,
-        // FrameworkElement.DefaultFormsTemplates.Clear, etc.) so a subsequent
-        // Initialize starts from a known empty state. Optional packages are
-        // expected to expose a static RegisterRuntimeTypes method — Initialize's
-        // reflection scan re-invokes it each cycle, so their registrations come
-        // back. Packages that register only via [ModuleInitializer] won't, by
-        // design — that's a known load-order contract gap tracked in issue #2761.
-        RenderableRegistry.Reset();
-
-        Text.Customizations.Clear();
-        Text.ContextCustomizations.Clear();
-        Text.DefaultBitmapFont = null;
-        Text.DefaultFont = null;
-
-        if (Sprite.InvalidTexture != null)
-        {
-            Sprite.InvalidTexture.Dispose();
-            Sprite.InvalidTexture = null;
-        }
-
-        if (_systemManagers != null)
-        {
-            _systemManagers.Renderer.Uninitialize();
-        }
-
-        Gum.Forms.DefaultVisuals.Styling.ActiveStyle = null;
-        Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null;
-#elif RAYLIB
-        // Raylib's Text has no Customizations/ContextCustomizations/DefaultBitmapFont
-        // equivalents to the XNALIKE Text above - only DefaultFont. default(Font) has
-        // BaseSize == 0, the constructor's documented uninitialized-Font sentinel (#3557).
-        Text.DefaultFont = default;
-#endif
+        // Platform-specific teardown: XNALIKE clears RenderableRegistry/Text/Sprite state, uninits
+        // the Renderer, and nulls the Game; raylib resets Text.DefaultFont. Implemented in the
+        // per-platform partials (issue #3608).
+        UninitializePlatform();
 
         GraphicalUiElement.SetPropertyOnRenderable = null!;
         GraphicalUiElement.UpdateFontFromProperties = null;
@@ -1508,9 +1141,6 @@ public class GumService : IGumService
         IsInitialized = false;
 
         _systemManagers = null;
-#if XNALIKE
-        _game = null;
-#endif
 
         _default = null;
     }
@@ -1519,81 +1149,27 @@ public class GumService : IGumService
 
     #region Update
 
-#if XNALIKE
-    [Obsolete("Use the version that does not take a Game")]
-    public void Update(Game game, GameTime gameTime, FrameworkElement root) => Update(gameTime, root.Visual);
-    [Obsolete("Use the version that does not take a Game")]
-    public void Update(Game game, GameTime gameTime) => Update(gameTime);
-    [Obsolete("Use the version which does not take a Game")]
-    public void Update(Game game, GameTime gameTime, GraphicalUiElement root) => Update(gameTime, root);
-    [Obsolete("Use the version of this method which does not take a Game")]
-    public void Update(Game game, GameTime gameTime, IEnumerable<GraphicalUiElement> roots) => Update(gameTime, roots);
-#endif
-
-
-#if XNALIKE
-    /// <summary>
-    /// Performs every-frame updates including updating root sizes to fill the entire screen, 
-    /// cursor update, keyboard update, gamepad updates, and raising events on all controls.
-    /// </summary>
-    /// <param name="gameTime">The GameTime obtained from the Game class in the Update call.</param>
-#else
-    /// <summary>
-    /// Performs every-frame updates including updating root sizes to fill the entire screen, 
-    /// cursor update, keyboard update, gamepad updates, and raising events on all controls.
-    /// </summary>
-    /// <param name="gameTime">The total number of seconds passed since the game has started.</param>
-#endif
-    public void Update(GameTime gameTime)
-    {
-        PollWindowSizeAndApplyFit();
-
-        Gum.Forms.FormsUtilities.SetDimensionsToCanvas(this.Root);
-
-        Update(gameTime, this.Root);
-    }
+    // Scratch list reused by the platform Update(GameTime, GraphicalUiElement) overloads so a single
+    // root can be forwarded to the IEnumerable overload without allocating each frame.
     List<GraphicalUiElement> roots = new List<GraphicalUiElement>();
-    public void Update(GameTime totalGameTime, GraphicalUiElement root)
+
+    // Platform-agnostic front of every frame's Update, run before the platform pumps Forms input:
+    // drain the sync context, process deferred actions, and tick hot reload. The public
+    // Update(GameTime ...) family is platform-typed (XNA GameTime object vs double seconds) and lives
+    // in the per-platform partials, which call this and AnimateRoots around their own
+    // FormsUtilities.Update (issue #3608).
+    private void UpdatePreamble(IEnumerable<GraphicalUiElement> roots)
     {
-        roots.Clear();
-        roots.Add(root);
-
-        Update(totalGameTime, roots);
-    }
-
-
-    public void Update(GameTime gameTime, IEnumerable<GraphicalUiElement> roots)
-    { 
-#if XNALIKE
-        var difference = gameTime.ElapsedGameTime.TotalSeconds;
-#else
-        var difference = gameTime - GameTime;
-#endif
-
-#if !FRB
         _syncContext?.Update();
-#endif
         DeferredQueue.ProcessPending();
 #if !IOS && !ANDROID
         _hotReloadManager?.Update(roots);
 #endif
-        GameTime = gameTime;
-#if !XNALIKE
-        _hasReceivedUpdate = true;
-#endif
-#if XNALIKE
-        FormsUtilities.Update(_game, gameTime, roots);
-#else
-        FormsUtilities.Update(gameTime, roots);
-#endif
-        // SystemManagers.Activity (as of Sept 13, 2025) only
-        // performs Sprite animation internally. This is not a
-        // critical system, but unit tests cannot initialize a SystemManagers
-        // because these require a graphics device. Therefore, we can tolerate
-        // a null SystemManagers to simplify unit tests.
-#if XNALIKE
-        _systemManagers?.Activity(gameTime.TotalGameTime.TotalSeconds);
-#endif
+    }
+
+    // Platform-agnostic tail of every frame's Update: advance AnimationChain playback on each root.
+    private void AnimateRoots(double difference, IEnumerable<GraphicalUiElement> roots)
+    {
         foreach (var item in roots)
         {
             item.AnimateSelf(difference);
@@ -1607,32 +1183,19 @@ public class GumService : IGumService
         SystemManagers.Default.Draw();
     }
 
-#if RAYLIB
-    /// <summary>
-    /// Draws Gum's UI under the supplied raylib <see cref="Camera2D"/>. Copies the
-    /// camera's <c>Target</c> and <c>Zoom</c> onto Gum's internal camera before drawing,
-    /// so the UI renders with the same transform other content drawn under that
-    /// <c>Camera2D</c> uses. This overwrites any previously-configured
-    /// <c>SystemManagers.Default.Renderer.Camera.X/Y/Zoom</c> for the frame.
-    ///
-    /// Note: <c>Camera2D.Offset</c> and <c>Camera2D.Rotation</c> are intentionally NOT
-    /// copied. Gum's render path derives offset from <see cref="CameraCenterOnScreen"/>
-    /// on the camera; set that separately if you need non-center placement. Rotation is
-    /// not modeled by Gum's camera and is ignored.
-    ///
-    /// A MonoGame/XNA <c>Draw(Matrix)</c> equivalent is not yet exposed — that path
-    /// needs cross-platform validation work (see issue #2846 discussion). The underlying
-    /// <c>Camera.SetFromMatrix</c> primitive exists and is unit-tested for when we add it.
-    /// </summary>
-    public void Draw(Camera2D camera)
-    {
-        Camera renderCamera = SystemManagers.Default.Renderer.Camera;
-        renderCamera.X = camera.Target.X;
-        renderCamera.Y = camera.Target.Y;
-        renderCamera.Zoom = camera.Zoom;
-        Draw();
-    }
-#endif
+    // Draw(Camera2D) is raylib-only and lives in GumService.Raylib.cs (issue #3608).
+
+    // ---- Platform seams (implemented in GumService.XnaLike.cs / GumService.Raylib.cs) ----
+
+    // Assigns NativeTextInput on MonoGame/KNI (elided on FNA/Raylib), called from the constructor.
+    partial void AssignNativeTextInput();
+
+    // Per-platform teardown inside Uninitialize().
+    partial void UninitializePlatform();
+
+    // Applies the resolved point/linear filtering choice to the platform's renderer, from
+    // ApplyProjectTextureFilter.
+    static partial void ApplyTextureFilterPlatform(bool useLinearFiltering);
 }
 
 // AddToRoot/RemoveFromRoot and AddChild/RemoveChild are all instance methods on
