@@ -145,7 +145,7 @@ public class CustomSetPropertyOnRenderable
         {
             handled = TrySetPropertyOnText(renderableText, graphicalUiElement, propertyName, value);
         }
-#if XNALIKE
+#if !RAYLIB
 
 
 #if !FRB
@@ -231,13 +231,14 @@ public class CustomSetPropertyOnRenderable
         }
     }
 
+#if !RAYLIB
     private static bool TrySetPropertyOnSolidRectangle(IRenderableIpso renderableIpso, string propertyName, object value, bool handled)
     {
         var solidRect = renderableIpso as SolidRectangle;
 
         if (propertyName == "Blend")
         {
-            var valueAsGumBlend = (RenderingLibrary.Blend)value;
+            var valueAsGumBlend = (Gum.RenderingLibrary.Blend)value;
 
             var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
 
@@ -287,6 +288,7 @@ public class CustomSetPropertyOnRenderable
 
         return handled;
     }
+#endif
 
     private static bool TrySetPropertyOnContainer(InvisibleRenderable invisibleRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
@@ -1795,6 +1797,7 @@ public class CustomSetPropertyOnRenderable
 
 #endregion
 
+#if !RAYLIB
     private static bool TrySetPropertyOnLineRectangle(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
         bool handled = false;
@@ -1880,7 +1883,9 @@ public class CustomSetPropertyOnRenderable
 
         return handled;
     }
+#endif
 
+#if !RAYLIB
     private static bool TrySetPropertyOnLineCircle(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
         bool handled = false;
@@ -1958,7 +1963,9 @@ public class CustomSetPropertyOnRenderable
 
         return handled;
     }
+#endif
 
+#if !RAYLIB
     private static bool TrySetPropertyOnLinePolygon(IRenderableIpso mContainedObjectAsIpso, string propertyName, object value)
     {
         bool handled = false;
@@ -2030,6 +2037,7 @@ public class CustomSetPropertyOnRenderable
 
         return handled;
     }
+#endif
 
     public static bool AssignSourceFileOnSprite(Sprite sprite, GraphicalUiElement graphicalUiElement, string value)
     {
@@ -2411,7 +2419,7 @@ public class CustomSetPropertyOnRenderable
         return fontFilePath;
     }
 
-#if XNALIKE && !FRB
+#if !RAYLIB && !FRB
     // Issue #2925 — legacy variable routing for the two-slot CircleRuntime. The legacy
     // properties (Color/Alpha/Red/Green/Blue) on the runtime are intentionally obsolete and
     // already route to the stroke slot internally, preserving pre-two-slot behavior. Going

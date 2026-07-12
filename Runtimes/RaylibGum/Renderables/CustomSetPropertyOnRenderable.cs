@@ -160,6 +160,42 @@ public class CustomSetPropertyOnRenderable
         {
             handled = TrySetPropertyOnText(renderableText, graphicalUiElement, propertyName, value);
         }
+#if !RAYLIB
+
+
+#if !FRB
+        // Issue #2925 — dispatch by RUNTIME type for CircleRuntime / RectangleRuntime before
+        // falling through to the renderable-type tree. Both runtimes now own two renderable
+        // slots (fill + stroke) and their mContainedObjectAsIpso may be the fill slot, so a
+        // renderable-type-only dispatch lands legacy "Color" / "Alpha" / "Red" / etc. on the
+        // wrong slot. Routing through the runtime's typed property setters keeps each variable
+        // landing where its pre-two-slot equivalent did, independent of which slot is contained.
+        else if (graphicalUiElement is Gum.GueDeriving.CircleRuntime circleRuntime)
+        {
+            handled = TrySetPropertyOnCircleRuntime(circleRuntime, propertyName, value);
+        }
+        else if (graphicalUiElement is Gum.GueDeriving.RectangleRuntime rectangleRuntime)
+        {
+            handled = TrySetPropertyOnRectangleRuntime(rectangleRuntime, propertyName, value);
+        }
+#endif
+        else if (renderableIpso is LineCircle)
+        {
+            handled = TrySetPropertyOnLineCircle(renderableIpso, graphicalUiElement, propertyName, value);
+        }
+        else if (renderableIpso is LineRectangle)
+        {
+            handled = TrySetPropertyOnLineRectangle(renderableIpso, graphicalUiElement, propertyName, value);
+        }
+        else if (renderableIpso is LinePolygon)
+        {
+            handled = TrySetPropertyOnLinePolygon(renderableIpso, propertyName, value);
+        }
+        else if (renderableIpso is SolidRectangle)
+        {
+            handled = TrySetPropertyOnSolidRectangle(renderableIpso, propertyName, value, handled);
+        }
+#endif
 
         else if (renderableIpso is Sprite renderableSprite)
         {
@@ -180,6 +216,65 @@ public class CustomSetPropertyOnRenderable
             //SetPropertyOnRenderable(mContainedObjectAsIpso, propertyName, value);
         }
     }
+
+#if !RAYLIB
+    private static bool TrySetPropertyOnSolidRectangle(IRenderableIpso renderableIpso, string propertyName, object value, bool handled)
+    {
+        var solidRect = renderableIpso as SolidRectangle;
+
+        if (propertyName == "Blend")
+        {
+            var valueAsGumBlend = (Gum.RenderingLibrary.Blend)value;
+
+            var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
+
+            solidRect.BlendState = valueAsXnaBlend;
+
+            handled = true;
+        }
+        else if (propertyName == "Alpha")
+        {
+            int valueAsInt = (int)value;
+            solidRect.Alpha = valueAsInt;
+            handled = true;
+        }
+        else if (propertyName == "Red")
+        {
+            int valueAsInt = (int)value;
+            solidRect.Red = valueAsInt;
+            handled = true;
+        }
+        else if (propertyName == "Green")
+        {
+            int valueAsInt = (int)value;
+            solidRect.Green = valueAsInt;
+            handled = true;
+        }
+        else if (propertyName == "Blue")
+        {
+            int valueAsInt = (int)value;
+            solidRect.Blue = valueAsInt;
+            handled = true;
+        }
+        else if (propertyName == "Color")
+        {
+            //var valueAsColor = (Color)value;
+            if (value is System.Drawing.Color drawingColor)
+            {
+                solidRect.Color = drawingColor;
+            }
+            else if (value is Microsoft.Xna.Framework.Color xnaColor)
+            {
+                solidRect.Color = xnaColor.ToSystemDrawing();
+
+            }
+
+            handled = true;
+        }
+
+        return handled;
+    }
+#endif
 
     private static bool TrySetPropertyOnContainer(InvisibleRenderable invisibleRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
@@ -1479,6 +1574,248 @@ public class CustomSetPropertyOnRenderable
 
     #endregion
 
+#if !RAYLIB
+    private static bool TrySetPropertyOnLineRectangle(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    {
+        bool handled = false;
+
+        if (propertyName == "Alpha")
+        {
+            int valueAsInt = (int)value;
+
+            var color =
+                ((LineRectangle)mContainedObjectAsIpso).Color;
+            color = color.WithAlpha((byte)valueAsInt);
+
+            ((LineRectangle)mContainedObjectAsIpso).Color = color;
+            handled = true;
+        }
+
+        else if (propertyName == "Red")
+        {
+            int valueAsInt = (int)value;
+
+            var color =
+                ((LineRectangle)mContainedObjectAsIpso).Color;
+            color = color.WithRed((byte)valueAsInt);
+
+            ((LineRectangle)mContainedObjectAsIpso).Color = color;
+            handled = true;
+        }
+
+        else if (propertyName == "Green")
+        {
+            int valueAsInt = (int)value;
+
+            var color =
+                ((LineRectangle)mContainedObjectAsIpso).Color;
+            color = color.WithGreen((byte)valueAsInt);
+
+            ((LineRectangle)mContainedObjectAsIpso).Color = color;
+            handled = true;
+        }
+
+        else if (propertyName == "Blue")
+        {
+            int valueAsInt = (int)value;
+
+            var color =
+                ((LineRectangle)mContainedObjectAsIpso).Color;
+            color = color.WithBlue((byte)valueAsInt);
+
+            ((LineRectangle)mContainedObjectAsIpso).Color = color;
+            handled = true;
+        }
+        else if (propertyName == "Color")
+        {
+            //var valueAsColor = (Color)value;
+            //((LineRectangle)mContainedObjectAsIpso).Color = valueAsColor;
+            var lineRectangle = (LineRectangle) mContainedObjectAsIpso;
+            //var valueAsColor = (Color)value;
+            if (value is System.Drawing.Color drawingColor)
+            {
+                lineRectangle.Color = drawingColor;
+            }
+            else if (value is Microsoft.Xna.Framework.Color xnaColor)
+            {
+                lineRectangle.Color = xnaColor.ToSystemDrawing();
+
+            }
+
+            handled = true;
+        }
+        else if(propertyName == "IsRenderTarget")
+        {
+            ((LineRectangle)mContainedObjectAsIpso).IsRenderTarget = value as bool? ?? false;
+            handled = true;
+        }
+        else if (propertyName == "SourceShaderFile")
+        {
+            // The Gum editor backs Containers with a LineRectangle, so the render-target
+            // post-process shader resolves onto the LineRectangle's IRenderTargetRenderable slot
+            // (the runtime's InvisibleRenderable path does the same in TrySetPropertyOnContainer).
+            AssignSourceShaderFileOnContainer((LineRectangle)mContainedObjectAsIpso, graphicalUiElement, value as string);
+            handled = true;
+        }
+
+        return handled;
+    }
+#endif
+
+#if !RAYLIB
+    private static bool TrySetPropertyOnLineCircle(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    {
+        bool handled = false;
+
+        if (propertyName == "Alpha")
+        {
+            int valueAsInt = (int)value;
+
+            var color =
+                ((LineCircle)mContainedObjectAsIpso).Color;
+            color = color.WithAlpha((byte)valueAsInt);
+
+            ((LineCircle)mContainedObjectAsIpso).Color = color;
+            handled = true;
+        }
+
+        else if (propertyName == "Red")
+        {
+            int valueAsInt = (int)value;
+
+            var color =
+                ((LineCircle)mContainedObjectAsIpso).Color;
+            color = color.WithRed((byte)valueAsInt);
+
+            ((LineCircle)mContainedObjectAsIpso).Color = color;
+            handled = true;
+        }
+
+        else if (propertyName == "Green")
+        {
+            int valueAsInt = (int)value;
+
+            var color =
+                ((LineCircle)mContainedObjectAsIpso).Color;
+            color = color.WithGreen((byte)valueAsInt);
+
+            ((LineCircle)mContainedObjectAsIpso).Color = color;
+            handled = true;
+        }
+
+        else if (propertyName == "Blue")
+        {
+            int valueAsInt = (int)value;
+
+            var color =
+                ((LineCircle)mContainedObjectAsIpso).Color;
+            color = color.WithBlue((byte)valueAsInt);
+
+            ((LineCircle)mContainedObjectAsIpso).Color = color;
+            handled = true;
+        }
+
+        else if (propertyName == "Color")
+        {
+            if(value is System.Drawing.Color drawingColor)
+            {
+                ((LineCircle)mContainedObjectAsIpso).Color = drawingColor;
+            }
+            else if(value is Microsoft.Xna.Framework.Color xnaColor)
+            {
+                ((LineCircle)mContainedObjectAsIpso).Color = xnaColor.ToSystemDrawing();
+            }
+            handled = true;
+        }
+
+        else if (propertyName == "Radius")
+        {
+            var valueAsFloat = (float)value;
+            ((LineCircle)mContainedObjectAsIpso).Width = 2 * valueAsFloat;
+            ((LineCircle)mContainedObjectAsIpso).Height = 2 * valueAsFloat;
+            ((LineCircle)mContainedObjectAsIpso).Radius = valueAsFloat;
+            graphicalUiElement.Width = 2 * valueAsFloat;
+            graphicalUiElement.Height = 2 * valueAsFloat;
+        }
+
+        return handled;
+    }
+#endif
+
+#if !RAYLIB
+    private static bool TrySetPropertyOnLinePolygon(IRenderableIpso mContainedObjectAsIpso, string propertyName, object value)
+    {
+        bool handled = false;
+
+
+        if (propertyName == "Alpha")
+        {
+            int valueAsInt = (int)value;
+
+            var color =
+                ((LinePolygon)mContainedObjectAsIpso).Color;
+            color = color.WithAlpha((byte)valueAsInt);
+
+            ((LinePolygon)mContainedObjectAsIpso).Color = color;
+            handled = true;
+        }
+
+        else if (propertyName == "Red")
+        {
+            int valueAsInt = (int)value;
+
+            var color =
+                ((LinePolygon)mContainedObjectAsIpso).Color;
+            color = color.WithRed((byte)valueAsInt);
+
+            ((LinePolygon)mContainedObjectAsIpso).Color = color;
+            handled = true;
+        }
+
+        else if (propertyName == "Green")
+        {
+            int valueAsInt = (int)value;
+
+            var color =
+                ((LinePolygon)mContainedObjectAsIpso).Color;
+            color = color.WithGreen((byte)valueAsInt);
+
+            ((LinePolygon)mContainedObjectAsIpso).Color = color;
+            handled = true;
+        }
+
+        else if (propertyName == "Blue")
+        {
+            int valueAsInt = (int)value;
+
+            var color =
+                ((LinePolygon)mContainedObjectAsIpso).Color;
+            color = color.WithBlue((byte)valueAsInt);
+
+            ((LinePolygon)mContainedObjectAsIpso).Color = color;
+            handled = true;
+        }
+
+        else if (propertyName == "Color")
+        {
+            var valueAsColor = (Color)value;
+            ((LinePolygon)mContainedObjectAsIpso).Color = valueAsColor;
+            handled = true;
+        }
+
+
+        else if (propertyName == "Points")
+        {
+            var points = (List<Vector2>)value;
+
+            ((LinePolygon)mContainedObjectAsIpso).SetPoints(points);
+            handled = true;
+        }
+
+        return handled;
+    }
+#endif
+
     public static bool AssignSourceFileOnSprite(Sprite sprite, GraphicalUiElement graphicalUiElement, string value)
     {
         bool handled;
@@ -1762,4 +2099,102 @@ public class CustomSetPropertyOnRenderable
         }
 #endif
     }
+
+#if !RAYLIB && !FRB
+    // Issue #2925 — legacy variable routing for the two-slot CircleRuntime. The legacy
+    // properties (Color/Alpha/Red/Green/Blue) on the runtime are intentionally obsolete and
+    // already route to the stroke slot internally, preserving pre-two-slot behavior. Going
+    // through them here means the helper does not need to know which slot is the contained
+    // object or which backend produced the renderable.
+    private static bool TrySetPropertyOnCircleRuntime(Gum.GueDeriving.CircleRuntime circleRuntime, string propertyName, object value)
+    {
+#pragma warning disable CS0618 // legacy obsolete properties are the public surface this dispatch was written against
+        switch (propertyName)
+        {
+            case "Color":
+                if (value is System.Drawing.Color drawingColor)
+                {
+                    circleRuntime.Color = new Microsoft.Xna.Framework.Color(drawingColor.R, drawingColor.G, drawingColor.B, drawingColor.A);
+                }
+                else if (value is Microsoft.Xna.Framework.Color xnaColor)
+                {
+                    circleRuntime.Color = xnaColor;
+                }
+                else
+                {
+                    return false;
+                }
+                return true;
+            case "Alpha":
+                circleRuntime.Alpha = (int)value;
+                return true;
+            case "Red":
+                circleRuntime.Red = (int)value;
+                return true;
+            case "Green":
+                circleRuntime.Green = (int)value;
+                return true;
+            case "Blue":
+                circleRuntime.Blue = (int)value;
+                return true;
+            case "Radius":
+                circleRuntime.Radius = (float)value;
+                return true;
+        }
+        return false;
+#pragma warning restore CS0618
+    }
+
+    // Issue #2925 — same pattern for RectangleRuntime.
+    private static bool TrySetPropertyOnRectangleRuntime(Gum.GueDeriving.RectangleRuntime rectangleRuntime, string propertyName, object value)
+    {
+#pragma warning disable CS0618
+        switch (propertyName)
+        {
+            case "Color":
+                if (value is System.Drawing.Color drawingColor)
+                {
+                    rectangleRuntime.Color = new Microsoft.Xna.Framework.Color(drawingColor.R, drawingColor.G, drawingColor.B, drawingColor.A);
+                }
+                else if (value is Microsoft.Xna.Framework.Color xnaColor)
+                {
+                    rectangleRuntime.Color = xnaColor;
+                }
+                else
+                {
+                    return false;
+                }
+                return true;
+            case "Alpha":
+                rectangleRuntime.Alpha = (int)value;
+                return true;
+            case "Red":
+                rectangleRuntime.Red = (int)value;
+                return true;
+            case "Green":
+                rectangleRuntime.Green = (int)value;
+                return true;
+            case "Blue":
+                rectangleRuntime.Blue = (int)value;
+                return true;
+            case "CornerRadius":
+                rectangleRuntime.CornerRadius = (float)value;
+                return true;
+            case "CustomRadiusTopLeft":
+                rectangleRuntime.CustomRadiusTopLeft = (float?)value;
+                return true;
+            case "CustomRadiusTopRight":
+                rectangleRuntime.CustomRadiusTopRight = (float?)value;
+                return true;
+            case "CustomRadiusBottomLeft":
+                rectangleRuntime.CustomRadiusBottomLeft = (float?)value;
+                return true;
+            case "CustomRadiusBottomRight":
+                rectangleRuntime.CustomRadiusBottomRight = (float?)value;
+                return true;
+        }
+        return false;
+#pragma warning restore CS0618
+    }
+#endif
 }
