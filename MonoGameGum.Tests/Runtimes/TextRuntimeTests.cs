@@ -197,6 +197,39 @@ $"chars count=223\r\n";
             "Because a scaled run is measured at its own scale, so the reported width grows with it");
     }
 
+    [Fact]
+    public void WrappedTextHeight_ShouldScaleBy1Point5_WhenFontScaleHasDecimalPoint_RegardlessOfCurrentCulture()
+    {
+        // FontScale parsing used to rely on the current thread culture. Under a culture where '.' is the
+        // thousands separator (e.g. de-DE), float.TryParse("1.5") does not fail - it silently parses as
+        // 15 (the '.' is consumed as a group separator), applying a 10x-too-large scale. BBCode markup is
+        // always written with '.' as the decimal point, so parsing must be culture-invariant.
+        var originalCulture = System.Threading.Thread.CurrentThread.CurrentCulture;
+        System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
+        try
+        {
+            TextRuntime plain = new();
+            plain.WidthUnits = DimensionUnitType.RelativeToChildren;
+            plain.Width = 0;
+            plain.Text = "BIG";
+            float plainHeight = ((Text)plain.RenderableComponent).WrappedTextHeight;
+            plainHeight.ShouldBeGreaterThan(0);
+
+            TextRuntime scaled = new();
+            scaled.WidthUnits = DimensionUnitType.RelativeToChildren;
+            scaled.Width = 0;
+            scaled.Text = "[FontScale=1.5]BIG[/FontScale]";
+            float scaledHeight = ((Text)scaled.RenderableComponent).WrappedTextHeight;
+
+            scaledHeight.ShouldBe(plainHeight * 1.5f, 1.5,
+                "Because FontScale must parse '.' as a decimal point (scale of 1.5x) regardless of the thread's current culture, not as a thousands separator (scale of 15x)");
+        }
+        finally
+        {
+            System.Threading.Thread.CurrentThread.CurrentCulture = originalCulture;
+        }
+    }
+
     #endregion
 
     #region BbCode FontSize Inline Measurement (issue #3520)
