@@ -2136,6 +2136,7 @@ public class CustomSetPropertyOnRenderable
     {
         var managers = iSystemManagers as SystemManagers;
 
+#if !RAYLIB
         if (renderable is Sprite)
         {
             managers.SpriteManager.Add(renderable as Sprite, layer);
@@ -2169,6 +2170,7 @@ public class CustomSetPropertyOnRenderable
             managers.SpriteManager.Add(renderable as InvisibleRenderable, layer);
         }
         else
+#endif
         {
             if (layer == null)
             {
@@ -2181,8 +2183,32 @@ public class CustomSetPropertyOnRenderable
         }
     }
 
+    /// <summary>
+    /// Detaches <paramref name="renderable"/> from the renderer so it stops drawing. On raylib,
+    /// where the add path (<see cref="AddRenderableToManagers"/>) is purely layer-based (no
+    /// Sprite/Shape/TextManager), removal just searches the renderer's layers for the renderable
+    /// and removes it (issue #3048). On XNA-like backends, removal dispatches by renderable type
+    /// to the matching manager, mirroring the type-dispatch add path.
+    /// </summary>
     public static void RemoveRenderableFromManagers(IRenderableIpso renderable, ISystemManagers iSystemManagers)
     {
+#if RAYLIB
+        if (renderable == null)
+        {
+            return;
+        }
+
+        var managers = (SystemManagers)iSystemManagers;
+
+        foreach (var layer in managers.Renderer.Layers)
+        {
+            if (layer.Renderables.Contains(renderable))
+            {
+                layer.Remove(renderable);
+                return;
+            }
+        }
+#else
         var managers = (SystemManagers)iSystemManagers;
 
         if (renderable is Sprite asSprite)
@@ -2227,6 +2253,7 @@ public class CustomSetPropertyOnRenderable
         {
             asManagedObject.RemoveFromManagers();
         }
+#endif
     }
 
     public static void ThrowExceptionsForMissingFiles(GraphicalUiElement graphicalUiElement)

@@ -90,11 +90,12 @@ public class CustomSetPropertyOnRenderable
 
     /// <summary>
     /// Returns the original (pre-translation) string assigned via the localization
-    /// path on the given element, or null if no localizable text has been assigned.
+    /// path on the given element, or null if no localizable text has been assigned
+    /// (or it was overwritten via <c>SetTextNoTranslate</c>).
     /// </summary>
-    public static string TryGetLocalizationKey(GraphicalUiElement element)
+    public static string? TryGetLocalizationKey(GraphicalUiElement element)
     {
-        return _localizationKeys.TryGetValue(element, out string key) ? key : null;
+        return _localizationKeys.TryGetValue(element, out string? key) ? key : null;
     }
 
 #if !FRB
@@ -1443,39 +1444,41 @@ public class CustomSetPropertyOnRenderable
     {
         var managers = iSystemManagers as SystemManagers;
 
-        //if (renderable is Sprite)
-        //{
-        //    managers.SpriteManager.Add(renderable as Sprite, layer);
-        //}
-        //else if (renderable is NineSlice)
-        //{
-        //    managers.SpriteManager.Add(renderable as NineSlice, layer);
-        //}
-        //else if (renderable is LineRectangle)
-        //{
-        //    managers.ShapeManager.Add(renderable as LineRectangle, layer);
-        //}
-        //else if (renderable is SolidRectangle)
-        //{
-        //    managers.ShapeManager.Add(renderable as SolidRectangle, layer);
-        //}
-        //else if (renderable is Text)
-        //{
-        //    managers.TextManager.Add(renderable as Text, layer);
-        //}
-        //else if (renderable is LineCircle)
-        //{
-        //    managers.ShapeManager.Add(renderable as LineCircle, layer);
-        //}
-        //else if (renderable is LinePolygon)
-        //{
-        //    managers.ShapeManager.Add(renderable as LinePolygon, layer);
-        //}
-        //else if (renderable is InvisibleRenderable)
-        //{
-        //    managers.SpriteManager.Add(renderable as InvisibleRenderable, layer);
-        //}
-        //else
+#if !RAYLIB
+        if (renderable is Sprite)
+        {
+            managers.SpriteManager.Add(renderable as Sprite, layer);
+        }
+        else if (renderable is NineSlice)
+        {
+            managers.SpriteManager.Add(renderable as NineSlice, layer);
+        }
+        else if (renderable is LineRectangle)
+        {
+            managers.ShapeManager.Add(renderable as LineRectangle, layer);
+        }
+        else if (renderable is SolidRectangle)
+        {
+            managers.ShapeManager.Add(renderable as SolidRectangle, layer);
+        }
+        else if (renderable is Text)
+        {
+            managers.TextManager.Add(renderable as Text, layer);
+        }
+        else if (renderable is LineCircle)
+        {
+            managers.ShapeManager.Add(renderable as LineCircle, layer);
+        }
+        else if (renderable is LinePolygon)
+        {
+            managers.ShapeManager.Add(renderable as LinePolygon, layer);
+        }
+        else if (renderable is InvisibleRenderable)
+        {
+            managers.SpriteManager.Add(renderable as InvisibleRenderable, layer);
+        }
+        else
+#endif
         {
             if (layer == null)
             {
@@ -1489,14 +1492,15 @@ public class CustomSetPropertyOnRenderable
     }
 
     /// <summary>
-    /// Detaches <paramref name="renderable"/> from the renderer so it stops drawing. This is the
-    /// remove counterpart to <see cref="AddRenderableToManagers"/> and is wired into
-    /// <see cref="GraphicalUiElement.RemoveRenderableFromManagers"/> by <c>SystemManagers.Initialize</c>
-    /// (issue #3048). Because the Raylib add path is purely layer-based (no Sprite/Shape/TextManager),
-    /// removal just searches the renderer's layers for the renderable and removes it.
+    /// Detaches <paramref name="renderable"/> from the renderer so it stops drawing. On raylib,
+    /// where the add path (<see cref="AddRenderableToManagers"/>) is purely layer-based (no
+    /// Sprite/Shape/TextManager), removal just searches the renderer's layers for the renderable
+    /// and removes it (issue #3048). On XNA-like backends, removal dispatches by renderable type
+    /// to the matching manager, mirroring the type-dispatch add path.
     /// </summary>
     public static void RemoveRenderableFromManagers(IRenderableIpso renderable, ISystemManagers iSystemManagers)
     {
+#if RAYLIB
         if (renderable == null)
         {
             return;
@@ -1512,5 +1516,51 @@ public class CustomSetPropertyOnRenderable
                 return;
             }
         }
+#else
+        var managers = (SystemManagers)iSystemManagers;
+
+        if (renderable is Sprite asSprite)
+        {
+            managers.SpriteManager.Remove(asSprite);
+        }
+        else if (renderable is NineSlice asNineSlice)
+        {
+            managers.SpriteManager.Remove(asNineSlice);
+        }
+        else if (renderable is global::RenderingLibrary.Math.Geometry.LineRectangle asLineRectangle)
+        {
+            managers.ShapeManager.Remove(asLineRectangle);
+        }
+        else if (renderable is global::RenderingLibrary.Math.Geometry.LinePolygon asLinePolygon)
+        {
+            managers.ShapeManager.Remove(asLinePolygon);
+        }
+        else if (renderable is global::RenderingLibrary.Graphics.SolidRectangle solidRectangle)
+        {
+            managers.ShapeManager.Remove(solidRectangle);
+        }
+        else if (renderable is Text asText)
+        {
+            managers.TextManager.Remove(asText);
+        }
+        else if (renderable is LineCircle asLineCircle)
+        {
+            managers.ShapeManager.Remove(asLineCircle);
+        }
+        else if (renderable is InvisibleRenderable asInvisibleRenderable)
+        {
+            managers.SpriteManager.Remove(asInvisibleRenderable);
+        }
+        else if (renderable != null)
+        {
+            // This could be a custom visual object, so don't do anything:
+            //throw new NotImplementedException();
+            managers.Renderer.RemoveRenderable(renderable);
+        }
+        if (renderable is IManagedObject asManagedObject)
+        {
+            asManagedObject.RemoveFromManagers();
+        }
+#endif
     }
 }
