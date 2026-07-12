@@ -417,6 +417,16 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
         textContentWidth.ShouldBeGreaterThan(0);
         box.GetAbsoluteWidth().ShouldBeGreaterThanOrEqualTo(textContentWidth,
             "because the RelativeToChildren box must be at least as wide as its text, even with a RelativeToParent background sibling");
+        // #3645: containment alone isn't enough - a container that "correctly" grows to fit a wrapped
+        // 2-line block still passes the containment assertion above even though the wrap itself is the
+        // bug. (This assertion is a forward-looking regression guard, not a pin: the bug this issue fixed
+        // - a [FontScale] run's rounded self-measured width coming out narrower than its own unrounded
+        // content, forcing a self-inflicted wrap - reproduces on Raylib (real MeasureTextEx sub-pixel
+        // widths; see RaylibGum.Tests TextRuntimeTests) but not through this MonoGame harness even with a
+        // real generated font, matching the caveat in #3645 that the MonoGame path may not exercise the
+        // same fractional-width case.)
+        ((Text)text.RenderableComponent).WrappedText.Count.ShouldBe(1,
+            "because RelativeToChildren on both the Text and its container means the content should size to fit on one line, not wrap");
     }
 
     // The #3520 bug as the user reported it: a RelativeToChildren-width container wrapping a
