@@ -771,6 +771,35 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
     }
 
     [Fact]
+    public void Text_WithCustomAfterSlashRSlashN_ShouldUseNormalizedIndexes()
+    {
+        Func<int, string, LetterCustomization> method = (int index, string block) =>
+        {
+            return new LetterCustomization();
+        };
+        Text.Customizations["CustomAfterCRLF"] = method;
+
+        string text = $"AB\r\n[Custom=CustomAfterCRLF]CD[/Custom]";
+
+        TextRuntime textRuntime = new();
+        textRuntime.Text = text;
+
+        var internalText = (RenderingLibrary.Graphics.Text)textRuntime.RenderableComponent;
+        var inlineVariables = internalText.InlineVariables;
+
+        inlineVariables.Count.ShouldBe(2);
+        foreach (InlineVariable variable in inlineVariables)
+        {
+            var asCall = (ParameterizedLetterCustomizationCall)variable.Value;
+            asCall.TextBlock.ShouldBe("CD", "Because \\r should be stripped before indexes are computed, so the substring must not include it");
+        }
+
+        ((ParameterizedLetterCustomizationCall)inlineVariables[0].Value).CharacterIndex.ShouldBe(3,
+            "Because \\r character should not be included, so the C character starts at index 3");
+        ((ParameterizedLetterCustomizationCall)inlineVariables[1].Value).CharacterIndex.ShouldBe(4);
+    }
+
+    [Fact]
     public void Text_WithCustom_ShouldAssignMethodCall()
     {
         Func<int, string, LetterCustomization> method = (int index, string block) =>

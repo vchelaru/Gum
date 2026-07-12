@@ -38,12 +38,17 @@ using Gum.GueDeriving;
 using Gum.Renderables;
 using Gum.GueDeriving;
 using Raylib_cs;
+// The font a BBCode font-run resolves to. On Raylib that is a Raylib_cs.Font; on the XNA-family
+// backends it is a BitmapFont. Mirrored #if so the shared BBCode stack-resolution loop below stays
+// type-neutral (see ApplyFontVariables) - only the font-CREATION body is platform-gated.
+using ResolvedFont = Raylib_cs.Font;
 namespace RaylibGum.Renderables;
 #else
 using Gum.Graphics.Animation;
 using RenderingLibrary.Math.Geometry;
 using Microsoft.Xna.Framework.Graphics;
 using ToolsUtilities;
+using ResolvedFont = RenderingLibrary.Graphics.BitmapFont;
 namespace Gum.Wireframe;
 #endif
 
@@ -958,36 +963,19 @@ public class CustomSetPropertyOnRenderable
 
     private static void SetBbCodeText(global::RenderingLibrary.Graphics.Text asText, GraphicalUiElement graphicalUiElement, string bbcode)
     {
-        // Text can be rendered on multiple lines. This can happen due to explicit newline characters, or by automatic line wrapping.
-        // When line indexes are counted, newlines are not included. Therefore, we need to remove newlines here so that indexes match up.
-        var bbCodeNoNewlines =
-        // update November 18, 2024
-        // We now do include newline
-        // characters becuase those can
-        // be explicitly added for textboxes
-        // with multiple lines:
-        //bbcode?.Replace("\n", "");
-        // Update November 15, 2025
-        // The rendering code ignores
-        // the \r character so we need
-        // to remove that:
-        bbcode?.Replace("\r\n", "\n");
+        // The rendering/wrapping code ignores '\r', so normalize CRLF to LF before computing indexes.
+        // Parsing and stripping from the same normalized string keeps InlineVariable indexes aligned
+        // with the RawText the renderer sees.
+        var normalized = bbcode?.Replace("\r\n", "\n");
 
-        var resultsNoNewlines = BbCodeParser.Parse(bbCodeNoNewlines, Tags);
-        var resultsWithNewlines = BbCodeParser.Parse(bbcode, Tags);
+        var results = BbCodeParser.Parse(normalized, Tags);
+        var strippedText = BbCodeParser.RemoveTags(normalized, results);
 
-        var strippedText = BbCodeParser.RemoveTags(bbcode, resultsWithNewlines);
         asText.RawText = strippedText;
-
-#if FRB
-        var textRuntime = graphicalUiElement;
-#else
-        var textRuntime = graphicalUiElement as Gum.GueDeriving.TextRuntime;
-#endif
 
         // Color / Red / Green / Blue / FontScale / Custom runs don't use the font-resolution stacks, so they
         // are emitted regardless of whether the owning element is a TextRuntime.
-        foreach (var item in resultsNoNewlines)
+        foreach (var item in results)
         {
             object castedValue = item.Open.Argument;
             var shouldApply = false;
@@ -1077,6 +1065,12 @@ public class CustomSetPropertyOnRenderable
             }
         }
 
+#if FRB
+        var textRuntime = graphicalUiElement;
+#else
+        var textRuntime = graphicalUiElement as Gum.GueDeriving.TextRuntime;
+#endif
+
         // Per-run font resolution requires the seven stacks to be seeded from a TextRuntime's base font
         // values. A Text owned by a non-TextRuntime GraphicalUiElement has no such values, so we neither seed
         // nor resolve here - otherwise ApplyFontVariables would peek/pop unseeded (stale or empty) stacks,
@@ -1118,7 +1112,7 @@ public class CustomSetPropertyOnRenderable
             useCustomFontStack.Clear();
             useCustomFontStack.Push(textRuntime.UseCustomFont);
 
-            ApplyFontVariables(asText, resultsNoNewlines);
+            ApplyFontVariables(asText, results);
         }
 
         // #3481: RawText was assigned above (which wrapped + measured the text) before any InlineVariables
@@ -1149,7 +1143,7 @@ public class CustomSetPropertyOnRenderable
         foreach (var tag in allTags)
         {
 
-            BitmapFont castedValue = null;
+            object castedValue = null;
             string convertedName = "BitmapFont";
             var hasArg = !string.IsNullOrEmpty(tag.Argument);
             switch (tag.Name)
@@ -1180,6 +1174,13 @@ public class CustomSetPropertyOnRenderable
                         {
                             fontSizeStack.Push(parsedValue);
                             castedValue = GetAndCreateFontIfNecessary();
+#if RAYLIB
+                            // Platform-necessary Raylib fallback: with no font creator wired, no crisp font can be
+                            // rasterized at the requested size, so store the raw pixel size as a float and let the
+                            // renderer scale the base atlas to it (a blurry-but-correct approximation). The XNA
+                            // path never needs this - it can new BitmapFont(...) at any size.
+                            castedValue ??= (float)parsedValue;
+#endif
                         }
                         else
                         {
@@ -1275,7 +1276,7 @@ public class CustomSetPropertyOnRenderable
             lastFontInlineVariable.CharacterCount = asText.RawText.Length - lastFontInlineVariable.StartIndex;
         }
 
-        BitmapFont GetAndCreateFontIfNecessary()
+        ResolvedFont? GetAndCreateFontIfNecessary()
         {
             var fontFileName = GetFontFileName();
 
