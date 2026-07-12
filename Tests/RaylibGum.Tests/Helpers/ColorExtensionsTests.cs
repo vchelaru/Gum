@@ -55,4 +55,17 @@ public class ColorExtensionsTests : BaseTestClass
         result.B.ShouldBe((byte)30);
         result.A.ShouldBe((byte)40);
     }
+
+    [Fact]
+    public void ToRaylib_ShouldConvertChannelsFromSystemDrawingColor()
+    {
+        System.Drawing.Color drawingColor = System.Drawing.Color.FromArgb(40, 10, 20, 30);
+
+        Color result = drawingColor.ToRaylib();
+
+        result.R.ShouldBe((byte)10);
+        result.G.ShouldBe((byte)20);
+        result.B.ShouldBe((byte)30);
+        result.A.ShouldBe((byte)40);
+    }
 }

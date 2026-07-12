@@ -2,6 +2,7 @@ using Gum.Graphics.Animation;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using Raylib_cs;
+using RaylibGum.Helpers;
 using RaylibGum.Renderables;
 using RenderingLibrary.Graphics;
 using Shouldly;
@@ -27,6 +28,17 @@ public class SpriteSetPropertyTests : BaseTestClass
         sut.SetProperty("Blend", Gum.RenderingLibrary.Blend.Additive);
 
         sut.Blend.ShouldBe(Gum.RenderingLibrary.Blend.Additive);
+    }
+
+    [Fact]
+    public void SetProperty_Color_ShouldForwardToContainedSprite()
+    {
+        SpriteRuntime sut = new();
+        var drawingColor = System.Drawing.Color.FromArgb(40, 10, 20, 30);
+
+        sut.SetProperty(nameof(SpriteRuntime.Color), drawingColor);
+
+        ((Gum.Renderables.Sprite)sut.RenderableComponent).Color.ShouldBe(drawingColor.ToRaylib());
     }
 
     [Fact]

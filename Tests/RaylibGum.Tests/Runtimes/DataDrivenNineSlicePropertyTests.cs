@@ -1,5 +1,6 @@
 using Gum.GueDeriving;
 using Gum.Renderables;
+using RaylibGum.Helpers;
 using Shouldly;
 
 namespace RaylibGum.Tests.Runtimes;
@@ -43,13 +44,14 @@ public class DataDrivenNineSlicePropertyTests : BaseTestClass
         ((NineSlice)sut.RenderableComponent).IsTilingMiddleSections.ShouldBeTrue();
     }
 
-    // Color -> Raylib_cs.Color has no converter yet (#3629), so this data-driven path is a
-    // tracked no-op. This pins that it stays a silent no-op rather than throwing.
     [Fact]
-    public void SetProperty_Color_OnNineSlice_DoesNotThrow()
+    public void SetProperty_Color_OnNineSlice_AppliesValue()
     {
         NineSliceRuntime sut = new();
 
-        Should.NotThrow(() => sut.SetProperty("Color", System.Drawing.Color.Red));
+        Should.NotThrow(() => sut.SetProperty("Color", System.Drawing.Color.FromArgb(40, 10, 20, 30)));
+
+        ((NineSlice)sut.RenderableComponent).Color.ShouldBe(
+            System.Drawing.Color.FromArgb(40, 10, 20, 30).ToRaylib());
     }
 }

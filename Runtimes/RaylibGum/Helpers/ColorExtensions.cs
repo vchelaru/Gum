@@ -46,6 +46,15 @@ public static class ColorExtensions
         return new Color(color.R, color.G, value, color.A);
     }
 
+    /// <summary>
+    /// Converts a <see cref="System.Drawing.Color"/> to its Raylib equivalent. Mirror of
+    /// <c>ToolsUtilitiesStandard.Helpers.ColorExtensions.ToXNA</c> for the Raylib backend.
+    /// </summary>
+    public static Color ToRaylib(this System.Drawing.Color value)
+    {
+        return new Color(value.R, value.G, value.B, value.A);
+    }
+
     // Identity overloads of the container/user color round-trip helpers added in #2757 for
     // shared runtime files (e.g. PolygonRuntime). On Raylib the contained renderable's color
     // type matches the user-facing Color, so no conversion is needed — but exposing the same
