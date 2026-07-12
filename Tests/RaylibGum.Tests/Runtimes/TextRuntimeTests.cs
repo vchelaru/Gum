@@ -814,5 +814,97 @@ public class TextRuntimeTests : BaseTestClass
         sut.WrappedText.ShouldNotBeEmpty();
     }
 
+    // Establishes scope for #3645 (see WrappedText_ShouldNotWrap_WhenRelativeToChildrenTextHasInlineFontScaleRun...
+    // below): same RelativeToChildren + RelativeToParent-background-sibling shape, but with a [FontSize]
+    // font-swap run instead of [FontScale] - a different inline run kind, still no per-run scale involved.
+    // This does NOT reproduce the bug (it passes with or without the fix), confirming the bug is
+    // FontScale-specific (fractional scale multiplication), not "any inline BBCode run."
+    [Fact]
+    public void WrappedText_ShouldNotWrap_ForFontSizeSwapRun_WhenParentHasRelativeToParentBackgroundSibling()
+    {
+        ContainerRuntime cell = new();
+        cell.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        cell.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+
+        ContainerRuntime background = new();
+        background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        cell.Children.Add(background);
+
+        TextRuntime text = new();
+        text.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        text.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        text.Text = "This is [FontSize=40]big[/FontSize] text.";
+        cell.Children.Add(text);
+
+        cell.AddToRoot();
+
+        var wrappedText = ((Gum.Renderables.Text)text.RenderableComponent).WrappedText;
+        wrappedText.Count.ShouldBe(1, $"got {wrappedText.Count} lines: {string.Join(" | ", wrappedText)}");
+    }
+
+    // Establishes scope for #3645 (see WrappedText_ShouldNotWrap_WhenRelativeToChildrenTextHasInlineFontScaleRun...
+    // below): same RelativeToChildren + RelativeToParent-background-sibling shape, but with plain text (no
+    // BBCode at all). This does NOT reproduce the bug (it passes with or without the fix), establishing that
+    // the bug is specific to fractional-pixel measurement from an inline run's scale, not a general
+    // RelativeToChildren + RelativeToParent-sibling layout defect. The non-inline-variable measurement path
+    // sums whole bitmap-font glyph advances, which are already integers, so it never produces the fractional
+    // width the bug depends on.
+    [Fact]
+    public void WrappedText_ShouldNotWrap_ForPlainTextWithNoFontScale_WhenParentHasRelativeToParentBackgroundSibling()
+    {
+        ContainerRuntime cell = new();
+        cell.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        cell.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+
+        ContainerRuntime background = new();
+        background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        cell.Children.Add(background);
+
+        TextRuntime text = new();
+        text.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        text.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        text.Text = "This is plain text with no font scale at all here.";
+        cell.Children.Add(text);
+
+        cell.AddToRoot();
+
+        var wrappedText = ((Gum.Renderables.Text)text.RenderableComponent).WrappedText;
+        wrappedText.Count.ShouldBe(1, $"got {wrappedText.Count} lines: {string.Join(" | ", wrappedText)}");
+    }
+
+    // #3645: a RelativeToChildren Text with an inline [FontScale] run, inside a RelativeToChildren
+    // container that also has a RelativeToParent background sibling, wrapped onto an extra line it
+    // shouldn't. Root cause: the run's measured width was rounded to the NEAREST int, then fed back as
+    // the Text's own self-imposed wrap-width constraint (RelativeToChildren -> Text.Width). When the true
+    // width has a fractional part under 0.5, rounding-to-nearest rounds DOWN, so the constraint ends up
+    // narrower than the very content that produced it, and the Text force-wraps against its own
+    // measurement. Fixed by rounding that width UP (Ceiling) instead. See the two tests above for the
+    // negative controls that scope this to FontScale specifically.
+    [Fact]
+    public void WrappedText_ShouldNotWrap_WhenRelativeToChildrenTextHasInlineFontScaleRun_AndParentHasRelativeToParentBackgroundSibling()
+    {
+        ContainerRuntime cell = new();
+        cell.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        cell.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+
+        ContainerRuntime background = new();
+        background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        cell.Children.Add(background);
+
+        TextRuntime text = new();
+        text.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        text.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        text.Text = "This is [FontScale=1.9]big[/FontScale] text.";
+        cell.Children.Add(text);
+
+        cell.AddToRoot();
+
+        var wrappedText = ((Gum.Renderables.Text)text.RenderableComponent).WrappedText;
+        wrappedText.Count.ShouldBe(1, $"got {wrappedText.Count} lines: {string.Join(" | ", wrappedText)}");
+    }
+
     #endregion
 }

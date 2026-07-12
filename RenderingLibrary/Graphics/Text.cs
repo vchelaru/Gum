@@ -1581,7 +1581,15 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         }
 
         const int MaxWidthAndHeight = 4096;
-        requiredWidth = System.Math.Min((int)(maxWidth + .5f), MaxWidthAndHeight);
+        // Width must round UP (not to-nearest): this value becomes the Text's own self-imposed wrap
+        // width (RelativeToChildren sets Text.Width to it), which is then compared against the same
+        // line's raw, unrounded measurement in IWrappedTextExtensions.UpdateLines. Rounding to-nearest
+        // can round DOWN when the fractional part is < 0.5 (e.g. maxWidth=116.4 -> 116), making that
+        // self-imposed width narrower than the content that produced it, so the very run that determined
+        // the width no longer "fits" and gets force-wrapped (#3645). Only affects fractional widths, which
+        // only occur via inline-run scaling (e.g. [FontScale]) - the non-inline-variable path measures
+        // whole bitmap-font glyph advances, which are already integers.
+        requiredWidth = System.Math.Min((int)System.Math.Ceiling(maxWidth), MaxWidthAndHeight);
         requiredHeight = System.Math.Min((int)(totalHeight + .5f), MaxWidthAndHeight);
     }
 
