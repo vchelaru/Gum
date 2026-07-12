@@ -641,6 +641,9 @@ public class CustomSetPropertyOnRenderable
 
             // Track the original (untranslated) value so RefreshLocalization can
             // re-translate this element if CurrentLanguage changes later.
+            // - "Text" with an active LocalizationService stores the raw input.
+            // - "TextNoTranslate" always clears any previously-stored key so user
+            //   input or explicitly-untranslated values aren't re-translated later.
             if (propertyName == "TextNoTranslate")
             {
                 _localizationKeys.Remove(graphicalUiElement);
@@ -654,26 +657,31 @@ public class CustomSetPropertyOnRenderable
                 _localizationKeys.Remove(graphicalUiElement);
             }
 
-            var rawText = valueAsString;
-
-
-            if (LocalizationService != null && propertyName == "Text")
-            {
-                rawText = LocalizationService.Translate(rawText);
-            }
-
             textRenderable.InlineVariables.Clear();
-            if (rawText?.Contains("[") == true)
+            if (valueAsString?.Contains("[") == true)
             {
-                textRenderable.StoredMarkupText = rawText;
-                SetBbCodeText(textRenderable, graphicalUiElement, rawText);
+                textRenderable.StoredMarkupText = valueAsString;
+                SetBbCodeText(textRenderable, graphicalUiElement, textRenderable.StoredMarkupText);
             }
             else
             {
                 textRenderable.StoredMarkupText = null;
-                textRenderable.RawText = rawText;
-            }
+                var rawText = valueAsString;
+                if(LocalizationService != null && propertyName == "Text")
+                {
+                    rawText = LocalizationService.Translate(rawText);
+                }
 
+                if(rawText?.Contains("[") == true)
+                {
+                    textRenderable.StoredMarkupText = rawText;
+                    SetBbCodeText(textRenderable, graphicalUiElement, textRenderable.StoredMarkupText);
+                }
+                else
+                {
+                    textRenderable.RawText = rawText;
+                }
+            }
             // we want to update if the text's size is based on its "children" (the letters it contains)
             if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
                 // If height is relative to children, it could be in a stack
@@ -698,6 +706,7 @@ public class CustomSetPropertyOnRenderable
         }
         else if (propertyName == "Font")
         {
+#if RAYLIB
             if (value is Font font)
             {
                 textRenderable.Font = font;
@@ -711,21 +720,24 @@ public class CustomSetPropertyOnRenderable
                 }
 
                 ReactToFontValueChange();
-                handled = true;
             }
-        }
+#else
+            if(textRuntime != null)
+            {
+                textRuntime.Font = value as string;
+            }
 
+            ReactToFontValueChange();
+#endif
+        }
+#if XNALIKE || RAYLIB
         else if (propertyName == nameof(textRuntime.UseCustomFont))
         {
             if (textRuntime != null)
             {
                 textRuntime.UseCustomFont = (bool)value;
             }
-            //var asText = ((Text)mContainedObjectAsIpso);
-            //if (!string.IsNullOrEmpty(asText.StoredMarkupText))
-            //{
-            //    SetBbCodeText(asText, graphicalUiElement, asText.StoredMarkupText);
-            //}
+
             ReactToFontValueChange();
         }
 
@@ -734,58 +746,168 @@ public class CustomSetPropertyOnRenderable
             if (textRuntime != null)
             {
                 textRuntime.CustomFontFile = (string)value;
-                ReactToFontValueChange();
             }
+            ReactToFontValueChange();
 
         }
-
+#if USE_GUMCOMMON
+        else if(propertyName == nameof(Gum.GueDeriving.TextRuntime.BitmapFont))
+        {
+            if(textRuntime != null)
+            {
+                textRuntime.BitmapFont = (BitmapFont)value;
+            }
+            handled = true;
+        }
+#endif
+#endif
         else if (propertyName == nameof(textRuntime.FontSize))
         {
             if (textRuntime != null)
             {
                 textRuntime.FontSize = (int)value;
-                ReactToFontValueChange();
             }
+            ReactToFontValueChange();
         }
         else if (propertyName == nameof(textRuntime.OutlineThickness))
         {
             if (textRuntime != null)
             {
                 textRuntime.OutlineThickness = (int)value;
-                ReactToFontValueChange();
             }
+            ReactToFontValueChange();
         }
         else if (propertyName == nameof(textRuntime.IsItalic))
         {
             if (textRuntime != null)
             {
                 textRuntime.IsItalic = (bool)value;
-                ReactToFontValueChange();
             }
+            ReactToFontValueChange();
         }
         else if (propertyName == nameof(textRuntime.IsBold))
         {
             if (textRuntime != null)
             {
                 textRuntime.IsBold = (bool)value;
-                ReactToFontValueChange();
             }
+            ReactToFontValueChange();
         }
         else if (propertyName == nameof(textRuntime.LineHeightMultiplier))
         {
+#if RAYLIB
             if (textRuntime != null)
             {
                 textRuntime.LineHeightMultiplier = (float)value;
             }
+#else
+            textRenderable.LineHeightMultiplier = (float)value;
+#endif
         }
         else if (propertyName == nameof(textRuntime.UseFontSmoothing))
         {
             if (textRuntime != null)
             {
                 textRuntime.UseFontSmoothing = (bool)value;
-                ReactToFontValueChange();
+            }
+            ReactToFontValueChange();
+        }
+        else if (propertyName == nameof(Blend))
+        {
+#if XNALIKE
+            var valueAsGumBlend = (RenderingLibrary.Blend)value;
+
+            var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
+
+            textRenderable.BlendState = valueAsXnaBlend;
+            handled = true;
+#endif
+        }
+        else if (propertyName == "Alpha")
+        {
+#if XNALIKE
+            int valueAsInt = (int)value;
+            textRenderable.Alpha = valueAsInt;
+            handled = true;
+#endif
+        }
+        else if (propertyName == "Red")
+        {
+            int valueAsInt = (int)value;
+            textRenderable.Red = valueAsInt;
+            handled = true;
+        }
+        else if (propertyName == "Green")
+        {
+            int valueAsInt = (int)value;
+            textRenderable.Green = valueAsInt;
+            handled = true;
+        }
+        else if (propertyName == "Blue")
+        {
+            int valueAsInt = (int)value;
+            textRenderable.Blue = valueAsInt;
+            handled = true;
+        }
+        else if (propertyName == "Color")
+        {
+#if XNALIKE
+            if (value is System.Drawing.Color drawingColor)
+            {
+                textRenderable.Color = drawingColor;
+                handled = true;
+            }
+            else if (value is Microsoft.Xna.Framework.Color xnaColor)
+            {
+                textRenderable.Color = xnaColor.ToSystemDrawing();
+                handled = true;
+            }
+#endif
+        }
+
+        else if (propertyName == "HorizontalAlignment")
+        {
+            textRenderable.HorizontalAlignment = (HorizontalAlignment)value;
+            handled = true;
+        }
+        else if (propertyName == "VerticalAlignment")
+        {
+            textRenderable.VerticalAlignment = (VerticalAlignment)value;
+            handled = true;
+        }
+        else if (propertyName == "MaxLettersToShow")
+        {
+#if XNALIKE
+            textRenderable.MaxLettersToShow = (int?)value;
+            handled = true;
+#endif
+        }
+        else if (propertyName == "MaxNumberOfLines")
+        {
+            textRenderable.MaxNumberOfLines = (int?)value;
+            handled = true;
+        }
+
+        else if (propertyName == nameof(TextOverflowHorizontalMode))
+        {
+            var textOverflowMode = (TextOverflowHorizontalMode)value;
+
+            if (textOverflowMode == TextOverflowHorizontalMode.EllipsisLetter)
+            {
+                textRenderable.IsTruncatingWithEllipsisOnLastLine = true;
+            }
+            else
+            {
+                textRenderable.IsTruncatingWithEllipsisOnLastLine = false;
             }
         }
+        else if (propertyName == nameof(TextOverflowVerticalMode))
+        {
+            graphicalUiElement.TextOverflowVerticalMode = (TextOverflowVerticalMode)value;
+            graphicalUiElement.RefreshTextOverflowVerticalMode();
+
+        }
+
         return handled;
     }
 

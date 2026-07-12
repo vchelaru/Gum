@@ -716,7 +716,7 @@ public class CustomSetPropertyOnRenderable
 
     #region Text
 
-    public static bool TrySetPropertyOnText(Text textRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    private static bool TrySetPropertyOnText(Text textRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
         bool handled = false;
 
@@ -767,7 +767,6 @@ public class CustomSetPropertyOnRenderable
             textRenderable.InlineVariables.Clear();
             if (valueAsString?.Contains("[") == true)
             {
-
                 textRenderable.StoredMarkupText = valueAsString;
                 SetBbCodeText(textRenderable, graphicalUiElement, textRenderable.StoredMarkupText);
             }
@@ -814,14 +813,31 @@ public class CustomSetPropertyOnRenderable
         }
         else if (propertyName == "Font")
         {
+#if RAYLIB
+            if (value is Font font)
+            {
+                textRenderable.Font = font;
+                handled = true;
+            }
+            else if (value is string fontString)
+            {
+                if (textRuntime != null)
+                {
+                    textRuntime.Font = fontString;
+                }
+
+                ReactToFontValueChange();
+            }
+#else
             if(textRuntime != null)
             {
                 textRuntime.Font = value as string;
             }
 
             ReactToFontValueChange();
+#endif
         }
-#if XNALIKE
+#if XNALIKE || RAYLIB
         else if (propertyName == nameof(textRuntime.UseCustomFont))
         {
             if (textRuntime != null)
@@ -884,9 +900,16 @@ public class CustomSetPropertyOnRenderable
             }
             ReactToFontValueChange();
         }
-        else if (propertyName == "LineHeightMultiplier")
+        else if (propertyName == nameof(textRuntime.LineHeightMultiplier))
         {
+#if RAYLIB
+            if (textRuntime != null)
+            {
+                textRuntime.LineHeightMultiplier = (float)value;
+            }
+#else
             textRenderable.LineHeightMultiplier = (float)value;
+#endif
         }
         else if (propertyName == nameof(textRuntime.UseFontSmoothing))
         {
@@ -936,9 +959,6 @@ public class CustomSetPropertyOnRenderable
         else if (propertyName == "Color")
         {
 #if XNALIKE
-            //var valueAsColor = (Color)value;
-            //((Text)mContainedObjectAsIpso).Color = valueAsColor;
-            //handled = true;
             if (value is System.Drawing.Color drawingColor)
             {
                 textRenderable.Color = drawingColor;
