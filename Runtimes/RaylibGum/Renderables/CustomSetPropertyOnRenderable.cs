@@ -1021,11 +1021,12 @@ public class CustomSetPropertyOnRenderable
 
     /// <summary>
     /// Parses BBCode markup, assigns the tag-stripped text to <see cref="Text.RawText"/>, and populates
-    /// <see cref="Text.InlineVariables"/> with the per-run styling the Raylib renderer applies: Color / Red /
+    /// <see cref="Text.InlineVariables"/> with the per-run styling the renderer applies: Color / Red /
     /// Green / Blue and FontScale runs in the loop below, plus the resolved-font runs for the font family
     /// tags (Font / FontSize / OutlineThickness / IsBold / IsItalic) produced by
-    /// <see cref="ApplyFontVariables"/> using the same stack model as the MonoGame path. Custom per-letter
-    /// callbacks are recognized (stripped) but not yet applied on the Raylib runtime (#3471).
+    /// <see cref="ApplyFontVariables"/> using the same stack model on every platform. A <c>[Custom]</c> tag's
+    /// per-letter callback is applied on the XNA-family backends (<c>#if !RAYLIB</c> below); on Raylib the tag
+    /// is recognized by the parser but has no effect yet (#3471).
     /// </summary>
     private static void SetBbCodeText(Text asText, GraphicalUiElement graphicalUiElement, string bbcode)
     {
@@ -1078,9 +1079,43 @@ public class CustomSetPropertyOnRenderable
                         }
                     }
                     break;
+#if !RAYLIB
+                case "Custom":
+                    if(castedValue is string functionName)
+                    {
+                        var startStripped = item.Open.StartStrippedIndex;
+
+                        var substring = strippedText.Substring(startStripped, item.Close.StartStrippedIndex - startStripped);
+
+
+                        // this function needs to be called on every letter:
+                        for (int i = 0; i < substring.Length; i++)
+                        {
+                            var call = new ParameterizedLetterCustomizationCall
+                            {
+                                FunctionName = functionName,
+                                CharacterIndex = startStripped + i,
+                                TextBlock = substring
+                            };
+                            // we probably need to check and add variables only as needed
+                            var inlineVariable = new InlineVariable
+                            {
+                                CharacterCount = 1,
+                                StartIndex = startStripped + i,
+                                VariableName = "Custom",
+                                Value = call
+                            };
+
+                            asText.InlineVariables.Add(inlineVariable);
+                        }
+                    }
+
+                    // we apply the inline ourselves
+                    shouldApply = false;
+                    break;
+#endif
                     // Font / FontSize / OutlineThickness / IsBold / IsItalic family swaps are handled below in
-                    // ApplyFontVariables (stack model), not here. Custom per-letter callbacks are stripped but
-                    // not applied on the Raylib runtime yet (#3471).
+                    // ApplyFontVariables (stack model), not here.
             }
 
             if (shouldApply)
@@ -1105,7 +1140,8 @@ public class CustomSetPropertyOnRenderable
         // values. A Text owned by a non-TextRuntime GraphicalUiElement has no such values, so we neither seed
         // nor resolve here - otherwise ApplyFontVariables would peek/pop unseeded (stale or empty) stacks,
         // giving a wrong font or an InvalidOperationException. One guard covers seeding and resolution; the
-        // text is still wrapped/measured below regardless.
+        // text is still wrapped/measured below regardless. (Under #if FRB, textRuntime == graphicalUiElement,
+        // never null, so this guard is always-true and FRB behavior is unchanged - a pure structural move.)
         if (textRuntime != null)
         {
             fontNameStack.Clear();
@@ -1144,12 +1180,12 @@ public class CustomSetPropertyOnRenderable
             ApplyFontVariables(asText, results);
         }
 
-        // #3481/#3532: RawText was assigned above (which wrapped + measured the text) before any
-        // InlineVariables existed, so that first pass was blind to inline [FontScale=N]/[FontSize=N] runs.
-        // Re-wrap first so line breaks account for an enlarged run's real size (#3532), then re-measure so the
-        // reported size accounts for per-line scale (#3481) - otherwise a tall run overflows its slot and
-        // overlaps the next stacked sibling, or a wide run spills past a fixed wrap width. Runs unconditionally
-        // (the text must wrap whether or not per-run fonts were resolved). Mirrors the MonoGame path.
+        // #3481: RawText was assigned above (which wrapped + measured the text) before any InlineVariables
+        // existed, so that first pass was blind to inline [FontScale=N]/[FontSize=N] runs. Re-wrap first so
+        // line breaks account for an enlarged run's real size (#3520 MonoGame / #3532 Raylib), then re-measure
+        // so the reported size accounts for per-line scale (#3481) — otherwise a tall run overflows its slot
+        // and overlaps the next stacked sibling, or a wide run spills past a fixed wrap width. Runs
+        // unconditionally (the text must wrap whether or not per-run fonts were resolved).
         asText.UpdateWrappedText();
         asText.UpdatePreRenderDimensions();
     }
@@ -1158,9 +1194,10 @@ public class CustomSetPropertyOnRenderable
     /// Resolves the Font / FontSize / OutlineThickness / IsBold / IsItalic BBCode tags into per-run
     /// resolved-font (<c>"BitmapFont"</c>) inline variables using a stack model: each open tag pushes its
     /// value and each close tag pops it, so a run resolves to the font implied by every tag open over it.
-    /// The push/pop/sort/character-count loop is kept identical to the MonoGame path; only the font-CREATION
-    /// body (<see cref="GetAndCreateFontIfNecessary"/>) is platform-specific, since Raylib produces a
-    /// <see cref="Raylib_cs.Font"/> (or, with no creator, falls back to scaling the base atlas).
+    /// The push/pop/sort/character-count loop is identical on every platform; only the font-CREATION body
+    /// (<see cref="GetAndCreateFontIfNecessary"/>) is platform-specific, since Raylib produces a
+    /// <see cref="Raylib_cs.Font"/> (or, with no creator, falls back to scaling the base atlas) while the
+    /// XNA-family backends produce a <see cref="BitmapFont"/>.
     /// </summary>
     private static void ApplyFontVariables(Text asText, List<FoundTag> results)
     {
@@ -1170,6 +1207,13 @@ public class CustomSetPropertyOnRenderable
         allTags.Sort((a, b) => a.StartIndex - b.StartIndex);
 
         InlineVariable lastFontInlineVariable = null;
+        // Every BBCode push (open tag) and pop (close tag) below calls
+        // GetAndCreateFontIfNecessary. The pop case re-asks for a font that was
+        // already resolved on the matching push — caching is intentionally NOT
+        // this method's job. LoaderManager handles cache hits on the second
+        // lookup, so the cost of asking twice is the cache check, not a full
+        // font generation. Do not add caching here; if a generation path is
+        // slow on cache hits, fix it in the underlying loader.
         foreach (var tag in allTags)
         {
             // The run's value: a resolved Raylib_cs.Font (crisp), or - for a [FontSize] tag with no font
@@ -1200,11 +1244,13 @@ public class CustomSetPropertyOnRenderable
                     {
                         fontSizeStack.Push(parsedSize);
                         castedValue = GetAndCreateFontIfNecessary();
+#if RAYLIB
                         // Platform-necessary Raylib fallback: with no font creator wired, no crisp font can be
                         // rasterized at the requested size, so store the raw pixel size as a float and let the
                         // renderer scale the base atlas to it (a blurry-but-correct approximation). The XNA
                         // path never needs this - it can new BitmapFont(...) at any size.
                         castedValue ??= (float)parsedSize;
+#endif
                     }
                     else
                     {
@@ -1287,12 +1333,144 @@ public class CustomSetPropertyOnRenderable
         }
 
         // Creates (or returns a cached) resolved font for the current stack state. Only the font-CREATION
-        // body is platform-specific; everything above is shared with the MonoGame path. Returns null when no
-        // creator is wired or creation fails - the caller then leaves the range at the base font (no run) or,
-        // for a [FontSize] tag, falls back to scaling the base atlas. Preserves the Dispose-then-AddDisposable
-        // cache-heal from the former TryGetOrCreateFontAtSize.
+        // body is platform-specific; everything above is shared on every platform. Returns null when no
+        // creator is available or creation fails - the caller then leaves the range at the base font (no
+        // run) or, for a [FontSize] tag, falls back to scaling the base atlas (Raylib only). The Raylib body
+        // preserves the Dispose-then-AddDisposable cache-heal from the former TryGetOrCreateFontAtSize.
         ResolvedFont? GetAndCreateFontIfNecessary()
         {
+#if !RAYLIB
+            var fontFileName = GetFontFileName();
+
+            var font = global::RenderingLibrary.Content.LoaderManager.Self.GetDisposable(fontFileName) as BitmapFont;
+
+            if (font == null)
+            {
+                font = GetFontDisposable(fontFileName);
+            }
+
+            // no cache, does it need to be created?
+            if (font == null)
+            {
+                // Try in-memory font creation first (no disk I/O)
+                if (InMemoryFontCreator != null)
+                {
+                    try
+                    {
+                        string? bbFontFile = BmfcSave.IsFontFilePath(fontNameStack.Peek()) ? fontNameStack.Peek() : null;
+
+                        BmfcSave bmfcSave = new BmfcSave();
+                        bmfcSave.FontSize = fontSizeStack.Peek();
+                        bmfcSave.OutlineThickness = outlineThicknessStack.Peek();
+                        bmfcSave.UseSmoothing = useFontSmoothingStack.Peek();
+                        bmfcSave.IsItalic = isItalicStack.Peek();
+                        bmfcSave.IsBold = isBoldStack.Peek();
+
+                        if (bbFontFile != null)
+                        {
+                            bmfcSave.FontFile = ResolveFontFilePath(bbFontFile);
+                            bmfcSave.FontName = System.IO.Path.GetFileNameWithoutExtension(bbFontFile);
+                        }
+                        else
+                        {
+                            bmfcSave.FontName = fontNameStack.Peek();
+                        }
+
+                        var gumProject = ObjectFinder.Self.GumProjectSave;
+                        bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
+                        bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
+                        bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
+
+                        font = InMemoryFontCreator.TryCreateFont(bmfcSave);
+                        if (font != null)
+                        {
+                            // #3530: Replace so re-adding an already-occupied key heals it instead of throwing.
+                            global::RenderingLibrary.Content.LoaderManager.Self.AddDisposable(fontFileName, font,
+                                global::RenderingLibrary.Content.LoaderManager.ExistingContentBehavior.Replace);
+                        }
+                    }
+                    catch
+                    {
+                        // Fall through to disk-based path
+                    }
+                }
+
+                // Fall back to disk-based font creation
+                if (font == null)
+                {
+                    // this could be a custom font, so let's see if it exists:
+
+                    string fileName = String.Empty;
+                    if (ToolsUtilities.FileManager.FileExists(fontFileName))
+                    {
+                        fileName = fontFileName;
+                    }
+#if !FRB
+                    else if (FontService != null)
+                    {
+                        fileName = FontService.AbsoluteFontCacheFolder +
+                            ToolsUtilities.FileManager.RemovePath(fontFileName);
+                    }
+
+                    if (FontService != null && !ToolsUtilities.FileManager.FileExists(fileName))
+                    {
+                        // user could have typed anything in there, so who knows if this will succeed. Therefore, try/catch:
+                        try
+                        {
+                            string? bbFontFileForDisk = BmfcSave.IsFontFilePath(fontNameStack.Peek()) ? fontNameStack.Peek() : null;
+
+                            BmfcSave bmfcSave = new BmfcSave();
+                            bmfcSave.FontSize = fontSizeStack.Peek();
+                            bmfcSave.OutlineThickness = outlineThicknessStack.Peek();
+                            bmfcSave.UseSmoothing = useFontSmoothingStack.Peek();
+                            bmfcSave.IsItalic = isItalicStack.Peek();
+                            bmfcSave.IsBold = isBoldStack.Peek();
+
+                            if (bbFontFileForDisk != null)
+                            {
+                                bmfcSave.FontFile = ResolveFontFilePath(bbFontFileForDisk);
+                                bmfcSave.FontName = System.IO.Path.GetFileNameWithoutExtension(bbFontFileForDisk);
+                            }
+                            else
+                            {
+                                bmfcSave.FontName = fontNameStack.Peek();
+                            }
+#if !FRB
+                            // BBCode inline font creation: when BBCode tags like [FontSize=24] reference a font
+                            // that doesn't exist, create it on demand. This parallels the font creation in
+                            // UpdateToFontValues — both use FontService.CreateFontIfNecessary with the same pattern.
+                            var gumProject = ObjectFinder.Self.GumProjectSave;
+                            bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
+                            bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
+                            bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
+#endif
+
+                            FontService.CreateFontIfNecessary(bmfcSave);
+                        }
+                        catch
+                        {
+                            // do nothing?
+                        }
+                    }
+#endif
+
+                    if (ToolsUtilities.FileManager.FileExists(fileName))
+                    {
+                        font = new BitmapFont(fileName);
+                    }
+                    else
+                    {
+                        // This can happen when closing tags are encountered at the end of a font. If no font exists, we can just go to the default
+                        font = Text.DefaultBitmapFont;
+                    }
+                    // #3530: Replace so re-adding an already-occupied key heals it instead of throwing.
+                    global::RenderingLibrary.Content.LoaderManager.Self.AddDisposable(fontFileName, font,
+                        global::RenderingLibrary.Content.LoaderManager.ExistingContentBehavior.Replace);
+                }
+            }
+
+            return font;
+#else
             // Raylib can only produce a crisp font for the current stack state via a wired IRaylibFontCreator
             // (it cannot `new BitmapFont(file)` the way the XNA path does). The Raylib path always uses the
             // FontCache key/creator - it does not branch on useCustomFontStack (matching the pre-#3624
@@ -1366,7 +1544,39 @@ public class CustomSetPropertyOnRenderable
             }
 
             return null;
+#endif
         }
+
+#if !RAYLIB
+        string GetFontFileName()
+        {
+            string fontFileNameName;
+            if (useCustomFontStack.Peek())
+            {
+                fontFileNameName = fontNameStack.Peek() + ".fnt";
+            }
+            else
+            {
+                string? bbCodeFontFilePath = BmfcSave.IsFontFilePath(fontNameStack.Peek()) ? fontNameStack.Peek() : null;
+
+                fontFileNameName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
+                    fontSizeStack.Peek(),
+                    fontNameStack.Peek(),
+                    outlineThicknessStack.Peek(),
+                    useFontSmoothingStack.Peek(),
+                    isItalicStack.Peek(),
+                    isBoldStack.Peek(),
+                    bbCodeFontFilePath);
+
+            }
+
+            var fullFileName = ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.Standardize(fontFileNameName, false, true));
+#if ANDROID || IOS
+            fullFileName = fullFileName.ToLowerInvariant();
+#endif
+            return fullFileName;
+        }
+#endif
     }
 
     /// <summary>
@@ -1437,6 +1647,223 @@ public class CustomSetPropertyOnRenderable
         }
 
         var asText = (Text)text;
+
+#if !RAYLIB
+        // Residual properties could exist on a Text instance, so we need to
+        // tolerate a missing item and not crash.
+
+#if FRB
+        // FRB doesn't yet have a TextRuntime, so we have to do this:
+        var textRuntime = graphicalUiElement;
+#else
+        var textRuntime = graphicalUiElement as Gum.GueDeriving.TextRuntime;
+
+#endif
+        if (text == null || textRuntime == null)
+        {
+            return;
+        }
+
+        BitmapFont font = null;
+
+        var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+        var contentLoader = loaderManager.ContentLoader;
+
+        if (textRuntime.UseCustomFont)
+        {
+
+            if (!string.IsNullOrEmpty(textRuntime.CustomFontFile))
+            {
+                font = loaderManager.GetDisposable(textRuntime.CustomFontFile) as BitmapFont;
+                if (font == null)
+                {
+#if KNI
+                        try
+                        {
+                            // this could be running in browser where we don't have File.Exists, so JUST DO IT
+                            font = new BitmapFont(textRuntime.CustomFontFile);
+                            loaderManager.AddDisposable(textRuntime.CustomFontFile, font);
+                        }
+                        catch
+                        {
+                            // font doesn't exist, carry on...
+                        }
+#else
+                    // so normally we would just let the content loader check if the file exists but since we're not going to
+                    // use the content loader for BitmapFont, we're going to protect this with a file.exists.
+                    if (ToolsUtilities.FileManager.FileExists(textRuntime.CustomFontFile))
+                    {
+                        try
+                        {
+                            font = new BitmapFont(textRuntime.CustomFontFile);
+                            loaderManager.AddDisposable(textRuntime.CustomFontFile, font);
+
+                        }
+                        catch(System.Text.DecoderFallbackException exception)
+                        {
+                            throw new Exception($"Error trying to load font from file {textRuntime.CustomFontFile}:\n" + exception, exception);
+                        }
+                    }
+#endif
+                }
+                else if (font.Textures.Any(item => item?.IsDisposed == true))
+                {
+                    // The BitmapFont is cached by Gum, but the underlying Texture2D might be managed by something else (like FRB).
+                    // This means that the Texture can be disposed without the BitmapFont being disposed. If this is the case we should
+                    // ask the underlying system for a new .png, but we can keep the same BitmapFont since that should stay the same and
+                    // .fnt parsing can be the slow part for large fonts.
+                    font.ReAssignTextures();
+                }
+            }
+
+
+        }
+        else
+        {
+            if (textRuntime.FontSize > 0 && !string.IsNullOrEmpty(textRuntime.Font))
+            {
+
+                string? fontFilePath = BmfcSave.IsFontFilePath(textRuntime.Font) ? textRuntime.Font : null;
+
+                string fontName = textRuntime.GetFontCacheFileName(fontFilePath);
+
+                string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
+
+                font = loaderManager.GetDisposable(fullFileName) as BitmapFont;
+
+                // Attempt to load from Embedded Resource
+
+                if (fontName != null && font == null)
+                {
+                    font = GetFontDisposable(fontName);
+                }
+
+                // Try in-memory font creation first (no disk I/O)
+                if (font == null && InMemoryFontCreator != null)
+                {
+                    try
+                    {
+                        BmfcSave bmfcSave = new BmfcSave();
+                        textRuntime.CopyFontGenerationFieldsTo(
+                            bmfcSave,
+                            fontFilePath != null ? ResolveFontFilePath(fontFilePath) : null);
+
+                        var gumProject = ObjectFinder.Self.GumProjectSave;
+                        bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
+                        bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
+                        bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
+
+                        font = InMemoryFontCreator.TryCreateFont(bmfcSave);
+                        if (font != null)
+                        {
+                            loaderManager.AddDisposable(fullFileName, font);
+                        }
+                    }
+                    catch
+                    {
+                        // Fall through to disk-based path
+                    }
+                }
+
+#if !FRB
+                // Disk-based font creation: ask FontService to generate .fnt/.png files,
+                // then load from disk. This is the fallback when no InMemoryFontCreator
+                // is available or when in-memory creation fails.
+                if (font == null && FontService != null)
+                {
+                    try
+                    {
+                        BmfcSave bmfcSave = new BmfcSave();
+                        textRuntime.CopyFontGenerationFieldsTo(
+                            bmfcSave,
+                            fontFilePath != null ? ResolveFontFilePath(fontFilePath) : null);
+
+                        var gumProject = ObjectFinder.Self.GumProjectSave;
+                        bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
+                        bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
+                        bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
+
+                        FontService.CreateFontIfNecessary(bmfcSave);
+                    }
+                    catch
+                    {
+                        // Font creation can fail for many reasons (invalid font name, missing bmfont.exe, etc.)
+                        // Silently fall through to the disk load attempt or default font fallback.
+                    }
+                }
+#endif
+
+                if (font == null || font.Texture?.IsDisposed == true)
+                {
+#if KNI
+                        try
+                        {
+                            // this could be running in browser where we don't have File.Exists, so JUST DO IT
+                            font = new BitmapFont(fullFileName);
+
+                            loaderManager.AddDisposable(fullFileName, font);
+                        }
+                        catch
+                        {
+                            // font doesn't exist, carry on...
+                        }
+#else
+                    // so normally we would just let the content loader check if the file exists but since we're not going to
+                    // use the content loader for BitmapFont, we're going to protect this with a file.exists.
+                    if (ToolsUtilities.FileManager.FileExists(fullFileName))
+                    {
+                        // kill the old font:
+                        if(font?.Texture?.IsDisposed == true)
+                        {
+                            loaderManager.Dispose(fullFileName);
+                        }
+
+                        try
+                        {
+                            font = new BitmapFont(fullFileName);
+                            loaderManager.AddDisposable(fullFileName, font);
+                        }
+                        catch (System.Text.DecoderFallbackException exception)
+                        {
+                            throw new Exception($"Error trying to load font from file {fullFileName}:\n" + exception, exception);
+                        }
+                    }
+#endif
+                }
+
+                // FRB may dispose fonts, so let's check:
+
+#if FULL_DIAGNOSTICS
+                if (font?.Textures.Any(item => item?.IsDisposed == true) == true)
+                {
+                    throw new InvalidOperationException("The returned font has a disposed texture");
+                }
+#endif
+            }
+        }
+
+        var fontToSet = font ?? Text.DefaultBitmapFont;
+
+        if (asText.BitmapFont != fontToSet)
+        {
+            asText.BitmapFont = fontToSet;
+
+            // we want to update if the text's size is based on its "children" (the letters it contains)
+            if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                // If height is relative to children, it could be in a stack
+                graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
+            {
+                // When this font load is the #2999 deferred-font flush performed from inside
+                // UpdateLayout, the enclosing layout pass already sizes this element, so this
+                // extra UpdateLayout would be redundant and re-entrant (no-arg UpdateLayout also
+                // requests a parent update). Skip it in that case.
+                if (!GraphicalUiElement.SuppressLayoutFromFontChange)
+                {
+                    graphicalUiElement.UpdateLayout();
+                }
+            }
+        }
+#else
         var textRuntime = graphicalUiElement as TextRuntime;
 
         var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
@@ -1547,11 +1974,11 @@ public class CustomSetPropertyOnRenderable
                 }
             }
         }
+#endif
 
         // Re-parse BBCode segments so they pick up the new base font values. Without this, only the
-        // non-tagged text updates; runs after BBCode font tags retain the previous font because their
-        // InlineVariables still reference the old resolved font. (Boyscout #3624 - the MonoGame
-        // Gum/Wireframe/CustomSetPropertyOnRenderable.cs already does this; the Raylib copy had drifted.)
+        // non-tagged text updates; segments after BBCode tags retain old font properties because their
+        // InlineVariables still reference the previous resolved font.
         if (!string.IsNullOrEmpty(asText.StoredMarkupText))
         {
             asText.InlineVariables.Clear();
@@ -1559,6 +1986,7 @@ public class CustomSetPropertyOnRenderable
         }
     }
 
+#if RAYLIB
     // Mirrors the MonoGame loader's `if (BitmapFont != fontToSet)` guard. A single SetProperty can
     // reach this loader twice — once via the TextRuntime setter (UpdateFontFromProperties) and once
     // via the explicit ReactToFontValueChange call — and with font caching on the second load is a
@@ -1571,6 +1999,24 @@ public class CustomSetPropertyOnRenderable
             asText.Font = font;
         }
     }
+#endif
+
+#if !RAYLIB
+    private static BitmapFont? GetFontDisposable(string fontName)
+    {
+#if KNI
+        string prefix = "KniGum";
+#elif FNA
+        string prefix = "FnaGum";
+#else
+        string prefix = "MonoGameGum.Content";
+#endif
+
+        string fontFilenameOnly = Path.GetFileName(fontName);
+        string embeddedFontName = $"EmbeddedResource.{prefix}.{fontFilenameOnly}";
+        return global::RenderingLibrary.Content.LoaderManager.Self.GetDisposable(embeddedFontName) as BitmapFont;
+    }
+#endif
 
     #endregion
 
