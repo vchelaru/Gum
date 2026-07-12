@@ -900,7 +900,7 @@ public class CustomSetPropertyOnRenderable
             }
             ReactToFontValueChange();
         }
-        else if (propertyName == nameof(textRuntime.LineHeightMultiplier))
+        else if (propertyName == "LineHeightMultiplier")
         {
 #if RAYLIB
             if (textRuntime != null)
