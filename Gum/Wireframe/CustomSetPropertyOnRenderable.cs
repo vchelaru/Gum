@@ -190,9 +190,9 @@ public class CustomSetPropertyOnRenderable
         {
             handled = TrySetPropertyOnNineSlice(nineSlice, graphicalUiElement, propertyName, value, handled);
         }
-        else if (renderableIpso is InvisibleRenderable)
+        else if (renderableIpso is InvisibleRenderable invisibleRenderable)
         {
-            handled = TrySetPropertyOnInvisbileRenderable(renderableIpso, graphicalUiElement, propertyName, value, handled);
+            handled = TrySetPropertyOnContainer(invisibleRenderable, graphicalUiElement, propertyName, value);
         }
 
         if(!handled && AdditionalPropertyOnRenderable != null)
@@ -288,37 +288,33 @@ public class CustomSetPropertyOnRenderable
         return handled;
     }
 
-    private static bool TrySetPropertyOnInvisbileRenderable(IRenderableIpso renderableIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value, bool handled)
+    private static bool TrySetPropertyOnContainer(InvisibleRenderable invisibleRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
-        bool didSet = false;
         switch (propertyName)
         {
             case "IsRenderTarget":
-                (renderableIpso as InvisibleRenderable).IsRenderTarget = value as bool? ?? false;
-                didSet = true;
-                break;
+                invisibleRenderable.IsRenderTarget = value as bool? ?? false;
+                return true;
             case "SourceShaderFile":
-                AssignSourceShaderFileOnContainer(renderableIpso as InvisibleRenderable, graphicalUiElement, value as string);
-                didSet = true;
-                break;
+                AssignSourceShaderFileOnContainer(invisibleRenderable, graphicalUiElement, value as string);
+                return true;
             case "Alpha":
-                if(value is int asInt)
+                if (value is int asInt)
                 {
-                    (renderableIpso as InvisibleRenderable).Alpha = asInt;
+                    invisibleRenderable.Alpha = asInt;
                 }
-                else if(value is float asFloat)
+                else if (value is float asFloat)
                 {
-                    (renderableIpso as InvisibleRenderable).Alpha = (int)asFloat;
+                    invisibleRenderable.Alpha = (int)asFloat;
                 }
                 else
                 {
-                    (renderableIpso as InvisibleRenderable).Alpha = 255;
+                    invisibleRenderable.Alpha = 255;
                 }
-                didSet = true;
-                break;
+                return true;
         }
 
-        return didSet;
+        return false;
     }
 
     /// <summary>
@@ -1857,7 +1853,7 @@ public class CustomSetPropertyOnRenderable
         {
             // The Gum editor backs Containers with a LineRectangle, so the render-target
             // post-process shader resolves onto the LineRectangle's IRenderTargetRenderable slot
-            // (the runtime's InvisibleRenderable path does the same in TrySetPropertyOnInvisbileRenderable).
+            // (the runtime's InvisibleRenderable path does the same in TrySetPropertyOnContainer).
             AssignSourceShaderFileOnContainer((LineRectangle)mContainedObjectAsIpso, graphicalUiElement, value as string);
             handled = true;
         }

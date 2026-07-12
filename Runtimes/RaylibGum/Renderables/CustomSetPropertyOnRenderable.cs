@@ -185,8 +185,25 @@ public class CustomSetPropertyOnRenderable
     {
         switch (propertyName)
         {
+            case "IsRenderTarget":
+                invisibleRenderable.IsRenderTarget = value as bool? ?? false;
+                return true;
             case "SourceShaderFile":
                 AssignSourceShaderFileOnContainer(invisibleRenderable, graphicalUiElement, value as string);
+                return true;
+            case "Alpha":
+                if (value is int asInt)
+                {
+                    invisibleRenderable.Alpha = asInt;
+                }
+                else if (value is float asFloat)
+                {
+                    invisibleRenderable.Alpha = (int)asFloat;
+                }
+                else
+                {
+                    invisibleRenderable.Alpha = 255;
+                }
                 return true;
         }
 
