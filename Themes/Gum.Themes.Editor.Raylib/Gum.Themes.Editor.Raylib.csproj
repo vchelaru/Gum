@@ -35,7 +35,7 @@
   <ItemGroup>
     <!-- Color (Raylib_cs.Color) resolves through this package on the RAYLIB branch of the theme
          sources; the theme imports it explicitly (no global using). -->
-    <PackageReference Include="Raylib-cs" Version="7.0.1" />
+    <PackageReference Include="Raylib-cs" Version="8.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
