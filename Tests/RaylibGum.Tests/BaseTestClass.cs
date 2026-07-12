@@ -1,4 +1,5 @@
 ﻿using Gum.Forms.Controls;
+using Gum.Renderables;
 using Gum.Wireframe;
 using Raylib_cs;
 using Gum.Input;
@@ -111,7 +112,8 @@ public class BaseTestClass : IDisposable
 
         FileManager.CustomGetStreamFromFile = null;
 
-        //Text.Customizations.Clear();
+        Text.Customizations.Clear();
+        Text.ContextCustomizations.Clear();
 
         // The hidden Raylib window opened in TestAssemblyInitialize is intentionally
         // kept alive for the duration of the test run — closing and reopening it across

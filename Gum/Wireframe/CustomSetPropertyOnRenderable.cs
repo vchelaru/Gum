@@ -1042,8 +1042,9 @@ public class CustomSetPropertyOnRenderable
     /// Green / Blue and FontScale runs in the loop below, plus the resolved-font runs for the font family
     /// tags (Font / FontSize / OutlineThickness / IsBold / IsItalic) produced by
     /// <see cref="ApplyFontVariables"/> using the same stack model on every platform. A <c>[Custom]</c> tag's
-    /// per-letter callback is applied on the XNA-family backends (<c>#if !RAYLIB</c> below); on Raylib the tag
-    /// is recognized by the parser but has no effect yet (#3471).
+    /// per-letter callback is applied identically on every platform: it produces one
+    /// <see cref="ParameterizedLetterCustomizationCall"/> InlineVariable per character, which each
+    /// platform's Text renderer resolves and applies at draw time (#3640).
     /// </summary>
     private static void SetBbCodeText(Text asText, GraphicalUiElement graphicalUiElement, string bbcode)
     {
@@ -1096,7 +1097,6 @@ public class CustomSetPropertyOnRenderable
                         }
                     }
                     break;
-#if !RAYLIB
                 case "Custom":
                     if(castedValue is string functionName)
                     {
@@ -1130,7 +1130,6 @@ public class CustomSetPropertyOnRenderable
                     // we apply the inline ourselves
                     shouldApply = false;
                     break;
-#endif
                     // Font / FontSize / OutlineThickness / IsBold / IsItalic family swaps are handled below in
                     // ApplyFontVariables (stack model), not here.
             }

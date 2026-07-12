@@ -1,10 +1,13 @@
 using Gum.DataTypes;
 using Gum.GueDeriving;
+using Gum.Renderables;
 using Gum.Wireframe;
 using KernSmith.Gum;
 using RaylibGum.Renderables;
 using RenderingLibrary.Graphics;
 using Shouldly;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 using Text = Gum.Renderables.Text;
@@ -532,6 +535,75 @@ public class TextMarkupTests
         scaled.Text = "AA [FontScale=2]BB[/FontScale] CC";
         ((Text)scaled.RenderableComponent).WrappedText.Count.ShouldBeGreaterThan(1,
             "because after the inline [FontScale] run populates, the text must re-wrap measuring the enlarged run at its own size");
+    }
+
+    // Issue #3640: [Custom=Name] was parsed and stripped from RawText but never turned into an
+    // InlineVariable on Raylib (the case was gated #if !RAYLIB in CustomSetPropertyOnRenderable.cs), so
+    // the tag had no effect. Mirrors MonoGame's Text_WithCustom_ShouldAssignMethodCall: one
+    // ParameterizedLetterCustomizationCall InlineVariable per character in the tagged run.
+    [Fact]
+    public void Text_WithCustom_ShouldAssignMethodCall()
+    {
+        Func<int, string, LetterCustomization> method = (int index, string block) => new LetterCustomization();
+        Text.Customizations["CustomMethod"] = method;
+
+        TextRuntime textRuntime = new();
+        textRuntime.Text = "Hello [Custom=CustomMethod]custom[/Custom]";
+
+        Text internalText = (Text)textRuntime.RenderableComponent;
+        List<InlineVariable> inlineVariables = internalText.InlineVariables;
+
+        inlineVariables.Count.ShouldBe(6);
+        foreach (InlineVariable variable in inlineVariables)
+        {
+            ParameterizedLetterCustomizationCall asCall = (ParameterizedLetterCustomizationCall)variable.Value;
+            asCall.Function.ShouldBe(method);
+        }
+    }
+
+    // Issue #3640: the resolved LetterCustomization must actually reach the draw call - XOffset here is
+    // the simplest observable effect (it shifts where DrawStyledLine positions the run).
+    [Fact]
+    public void Text_WithCustomOffset_ShouldApplyXOffsetAtDrawTime()
+    {
+        Func<int, string, LetterCustomization> method = (int index, string block) => new LetterCustomization
+        {
+            XOffset = index * 10,
+        };
+        Text.Customizations["OffsetMethod"] = method;
+
+        TextRuntime textRuntime = new();
+        textRuntime.Text = "[Custom=OffsetMethod]ab[/Custom]";
+
+        Text internalText = (Text)textRuntime.RenderableComponent;
+        List<InlineVariable> inlineVariables = internalText.InlineVariables;
+
+        ParameterizedLetterCustomizationCall firstCall = (ParameterizedLetterCustomizationCall)inlineVariables[0].Value;
+        LetterCustomization firstResult = firstCall.Function!(firstCall.CharacterIndex, firstCall.TextBlock);
+        firstResult.XOffset.ShouldBe(0f);
+
+        ParameterizedLetterCustomizationCall secondCall = (ParameterizedLetterCustomizationCall)inlineVariables[1].Value;
+        LetterCustomization secondResult = secondCall.Function!(secondCall.CharacterIndex, secondCall.TextBlock);
+        secondResult.XOffset.ShouldBe(10f);
+    }
+
+    // Issue #3640 smoke test: draws through the real Raylib path (DrawStyledLine) with a [Custom] tag
+    // active, proving the callback invocation at draw time doesn't throw - the InlineVariable-only tests
+    // above can't reach this, since they never call Render().
+    [Fact]
+    public void Render_WithCustomMarkup_ShouldNotThrow()
+    {
+        Text.Customizations["RenderSmokeMethod"] = (int index, string block) => new LetterCustomization
+        {
+            XOffset = 2,
+            Color = System.Drawing.Color.Blue,
+        };
+
+        TextRuntime textRuntime = new();
+        textRuntime.Text = "[Custom=RenderSmokeMethod]ab[/Custom]";
+        Text internalText = (Text)textRuntime.RenderableComponent;
+
+        Should.NotThrow(() => internalText.Render(RenderingLibrary.SystemManagers.Default));
     }
 
     // Issue #3532: the FontSize-swap half of the wrap fix. With a font creator wired, [FontSize=N] swaps
