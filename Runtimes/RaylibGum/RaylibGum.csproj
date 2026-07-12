@@ -243,7 +243,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Raylib-cs" Version="7.0.1" />
+		<PackageReference Include="Raylib-cs" Version="8.0.0" />
 		<PackageReference Include="TextCopy" Version="6.2.1" Condition="!$(TargetFramework.Contains('ios'))" />
 
 	</ItemGroup>
