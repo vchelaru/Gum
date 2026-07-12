@@ -38,6 +38,7 @@ using Gum.GueDeriving;
 #if RAYLIB
 using Gum.Renderables;
 using Gum.GueDeriving;
+using RaylibGum.Helpers;
 // The font a BBCode font-run resolves to. On Raylib that is a Raylib_cs.Font; on the XNA-family
 // backends it is a BitmapFont. Mirrored #if so the shared BBCode stack-resolution loop below stays
 // type-neutral (see ApplyFontVariables) - only the font-CREATION body is platform-gated.
@@ -446,10 +447,11 @@ public class CustomSetPropertyOnRenderable
             }
             handled = true;
 #else
-            // TODO #3629 - no System.Drawing.Color -> Raylib_cs.Color converter exists yet, so this
-            // is a tracked no-op. SetPropertyOnRenderable falls back to reflection afterward, which
-            // also can't bridge the type mismatch, so a data-driven "Color" value is silently
-            // dropped on Raylib until #3629 lands.
+            if (value is System.Drawing.Color drawingColor)
+            {
+                nineSlice.Color = drawingColor.ToRaylib();
+                handled = true;
+            }
 #endif
         }
         else if(propertyName == "Red")
@@ -636,21 +638,25 @@ public class CustomSetPropertyOnRenderable
                     handled = true;
                     break;
                 }
-#if !RAYLIB
             case nameof(Sprite.Color):
                 {
                     if (value is System.Drawing.Color drawingColor)
                     {
+#if RAYLIB
+                        sprite.Color = drawingColor.ToRaylib();
+#else
                         sprite.Color = drawingColor;
+#endif
                     }
+#if !RAYLIB
                     else if (value is Microsoft.Xna.Framework.Color xnaColor)
                     {
                         sprite.Color = xnaColor.ToSystemDrawing();
                     }
+#endif
                     handled = true;
                     break;
                 }
-#endif
             case "Blend":
                 {
                     var valueAsGumBlend = (Gum.RenderingLibrary.Blend)value;
