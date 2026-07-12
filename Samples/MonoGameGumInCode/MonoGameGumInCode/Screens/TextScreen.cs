@@ -3,22 +3,38 @@ using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
-using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using System;
+#if RAYLIB
+using Color = Raylib_cs.Color;
+using Text = Gum.Renderables.Text;
+using LetterCustomization = Gum.Renderables.LetterCustomization;
+using TextRenderingPositionMode = Gum.Renderables.TextRenderingPositionMode;
+#else
+using Color = Microsoft.Xna.Framework.Color;
+using Text = RenderingLibrary.Graphics.Text;
+using LetterCustomization = RenderingLibrary.Graphics.LetterCustomization;
+using TextRenderingPositionMode = RenderingLibrary.Graphics.TextRenderingPositionMode;
+#endif
 
+#if RAYLIB
+namespace Examples.Shapes;
+#else
 namespace MonoGameGumInCode.Screens;
+#endif
 
-// Reference screen for TextRuntime font behavior. The raylib and SilkNetGum TextScreen.cs mirrors
-// (Samples/raylib/Screens/TextScreen.cs, Samples/SilkNetGum/SilkNetGum/Screens/TextScreen.cs) match
-// this file section-for-section where the backend supports the same surface, so a per-backend
-// rendering difference stands out as a backend bug. Before adding, removing, or reordering ANY
-// section, make the same change in the siblings or the side-by-side comparison breaks silently
-// (#3414 / #3496). Only genuinely backend-specific things may differ: the color type
-// (Microsoft.Xna.Framework.Color vs Raylib_cs.Color), the TextRenderingPositionMode enum namespace,
-// and AddTextureFilterSection's mechanism (a per-layer sampler state here vs a baked font-cache
-// texture on raylib). SilkNetGum legitimately omits the BBCode / Blend / TextureFilter sections
-// because SkiaGum renders via RichTextKit rather than a font atlas.
+// #3640: converged into a single shared file (was two byte-for-byte-mirrored copies at
+// Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/TextScreen.cs and
+// Samples/raylib/Screens/TextScreen.cs) after repeatedly drifting when only one mirror got updated.
+// Linked into Samples/raylib/GumTest.csproj via <Compile Include ... Link>; this file is the only
+// copy. The SilkNetGum TextScreen.cs mirror (Samples/SilkNetGum/SilkNetGum/Screens/TextScreen.cs)
+// stays a separate, non-linked file - it legitimately omits the BBCode / Blend / TextureFilter
+// sections because SkiaGum renders via RichTextKit rather than a font atlas, so there's much less
+// left to share. Only genuinely backend-specific things differ here, gated `#if RAYLIB`: the
+// namespace, the Color/Text/LetterCustomization/TextRenderingPositionMode aliases above, and
+// AddTextureFilterSection's mechanism (a per-layer sampler state on MonoGame vs a baked
+// font-cache texture on raylib).
 internal class TextScreen : FrameworkElement
 {
     public TextScreen() : base(new ContainerRuntime())
@@ -54,6 +70,21 @@ internal class TextScreen : FrameworkElement
 
         AddSectionLabel(container, "BBCode markup - [FontSize=40] crisp swap (left) vs [FontScale=1.9] scale-up (right); blue box = measured width (#3524):");
         container.Children.Add(BuildFontSizeContainmentRow());
+
+        AddSectionLabel(container, "BBCode markup - [Custom] per-letter callback (#3640): static wavy offset + per-letter hue");
+        Text.Customizations["Wave"] = (int index, string block) => new LetterCustomization
+        {
+            YOffset = MathF.Sin(index * 0.9f) * 10f,
+            Color = System.Drawing.Color.FromArgb(
+                255,
+                (int)(128 + 127 * MathF.Sin(index * 0.7f)),
+                (int)(128 + 127 * MathF.Sin(index * 0.7f + 2f)),
+                (int)(128 + 127 * MathF.Sin(index * 0.7f + 4f))),
+        };
+        var customMarkup = new TextRuntime();
+        customMarkup.FontSize = 24;
+        customMarkup.Text = "[Custom=Wave]Wavy rainbow text[/Custom]";
+        container.Children.Add(customMarkup);
 
         AddSectionLabel(container, "Baked drop shadow (HasDropshadow = true, first-enable defaults):");
         var shadowDefault = new TextRuntime();
@@ -92,7 +123,7 @@ internal class TextScreen : FrameworkElement
 
     // Text parity features (#3432): Blend, per-instance TextRenderingPositionMode override, and
     // GetCharacterIndexAtPosition. All three are runtime-observable, so this section is the manual
-    // verification surface for the parity batch. Kept in step with the raylib mirror.
+    // verification surface for the parity batch.
     private static void BuildTextParitySection(ContainerRuntime container)
     {
         AddBlendOnTextSection(container);
@@ -104,21 +135,21 @@ internal class TextScreen : FrameworkElement
         snapText.FontSize = 20;
         snapText.X = 120.5f;
         snapText.Text = "Fractional X=120.5 - SnapToPixel";
-        snapText.TextRenderingPositionMode = RenderingLibrary.Graphics.TextRenderingPositionMode.SnapToPixel;
+        snapText.TextRenderingPositionMode = TextRenderingPositionMode.SnapToPixel;
         container.Children.Add(snapText);
 
         var toggleButton = new Button();
         toggleButton.Text = "Toggle snap mode";
         toggleButton.Click += (_, _) =>
         {
-            if (snapText.TextRenderingPositionMode == RenderingLibrary.Graphics.TextRenderingPositionMode.SnapToPixel)
+            if (snapText.TextRenderingPositionMode == TextRenderingPositionMode.SnapToPixel)
             {
-                snapText.TextRenderingPositionMode = RenderingLibrary.Graphics.TextRenderingPositionMode.FreeFloating;
+                snapText.TextRenderingPositionMode = TextRenderingPositionMode.FreeFloating;
                 snapText.Text = "Fractional X=120.5 - FreeFloating";
             }
             else
             {
-                snapText.TextRenderingPositionMode = RenderingLibrary.Graphics.TextRenderingPositionMode.SnapToPixel;
+                snapText.TextRenderingPositionMode = TextRenderingPositionMode.SnapToPixel;
                 snapText.Text = "Fractional X=120.5 - SnapToPixel";
             }
         };
@@ -168,6 +199,27 @@ internal class TextScreen : FrameworkElement
         filterRow.Height = 0;
         filterRow.ChildrenLayout = ChildrenLayout.LeftToRightStack;
         filterRow.StackSpacing = 16;
+#if RAYLIB
+        var savedFilter = RenderingLibrary.Content.ContentLoader.DefaultTextureFilter;
+
+        RenderingLibrary.Content.ContentLoader.DefaultTextureFilter = Raylib_cs.TextureFilter.Point;
+        var pointText = new TextRuntime();
+        pointText.FontSize = 12;
+        pointText.FontScale = 4;
+        pointText.Text = "Point";
+        filterRow.AddChild(pointText);
+
+        RenderingLibrary.Content.ContentLoader.DefaultTextureFilter = Raylib_cs.TextureFilter.Bilinear;
+        var linearText = new TextRuntime();
+        linearText.FontSize = 13; // distinct size so this is a separate font-cache entry from "Point" above
+        linearText.FontScale = 4;
+        linearText.Text = "Linear";
+        filterRow.AddChild(linearText);
+
+        RenderingLibrary.Content.ContentLoader.DefaultTextureFilter = savedFilter;
+
+        container.Children.Add(filterRow);
+#else
         container.Children.Add(filterRow);
 
         var pointLayer = SystemManagers.Default.Renderer.AddLayer();
@@ -189,11 +241,10 @@ internal class TextScreen : FrameworkElement
         linearText.Text = "Linear";
         filterRow.AddChild(linearText);
         linearText.MoveToLayer(linearLayer);
+#endif
     }
 
-    // Blend on Text (#3432): additive (brightens) vs normal, over an identical blue box. Kept byte
-    // identical with the other backend's TextScreen (this method and BuildBlendCell) so the two can
-    // be diffed directly.
+    // Blend on Text (#3432): additive (brightens) vs normal, over an identical blue box.
     private static void AddBlendOnTextSection(ContainerRuntime container)
     {
         AddSectionLabel(container, "Blend on Text (#3432): additive (brightens) vs normal, over a blue box");
@@ -251,8 +302,8 @@ internal class TextScreen : FrameworkElement
     // past its background (the RelativeToChildren-too-narrow bug fixed in #3520 / #3523). Left cell =
     // [FontSize=40] over a 21px base (crisp swap); right cell = a [FontScale=1.9] control (a scale-up of
     // the 21px atlas, so visibly blurrier). Pass = "big" is enlarged, crisper on the left than the right,
-    // AND the blue box fully contains each line in both. Kept identical with the raylib mirror (which
-    // gets its crisp swap from KernSmith; this backend from the BitmapFont path).
+    // AND the blue box fully contains each line in both (raylib gets its crisp swap from KernSmith;
+    // MonoGame from the BitmapFont path - same visual contract either way).
     private static ContainerRuntime BuildFontSizeContainmentRow()
     {
         var row = new ContainerRuntime();
