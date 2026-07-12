@@ -1,5 +1,6 @@
 ﻿using Gum.GueDeriving;
 using Gum.Wireframe;
+using RaylibGum.Renderables;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using Raylib_cs;
@@ -741,6 +742,45 @@ public class TextRuntimeTests : BaseTestClass
         sut.Text = "Some text";
         sut.SetTextNoTranslate(null);
         sut.Text.ShouldBeNull();
+    }
+
+    #endregion
+
+    #region Localization + BBCode
+
+    // #3615: TrySetPropertyOnText must check the RAW (untranslated) value for literal BBCode before
+    // attempting translation - only a raw value with no BBCode is treated as a translation key. Raylib's
+    // copy previously translated unconditionally first, so literal markup assigned directly to Text (not
+    // through a translation key) got passed through LocalizationService.Translate, corrupting the raw text
+    // for any translation service that mutates unrecognized keys (as the real LocalizationService does by
+    // appending "(loc)"). Mirrors the MonoGame path's tested behavior (see TextRuntimeTests.Text_ShouldUseLocalization
+    // in MonoGameGum.Tests, added for #1795).
+    [Fact]
+    public void Text_WithLiteralBbCode_ShouldNotBeTranslated_WhenLocalizationServiceIsActive()
+    {
+        Gum.Localization.LocalizationService localizationService = new();
+        Dictionary<string, string[]> entries = new()
+        {
+            { "Greeting", new[] { "Hello" } }
+        };
+        localizationService.AddDatabase(entries, new List<string> { "English" });
+        localizationService.CurrentLanguage = 0;
+        CustomSetPropertyOnRenderable.LocalizationService = localizationService;
+
+        try
+        {
+            TextRuntime sut = new();
+            // Not a key in the database, so if this were passed to Translate it would come back with
+            // "(loc)" appended, which would corrupt the stripped RawText below.
+            sut.Text = "[Color=Red]Literal[/Color]";
+
+            Gum.Renderables.Text internalText = (Gum.Renderables.Text)sut.RenderableComponent;
+            internalText.RawText.ShouldBe("Literal");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.LocalizationService = null;
+        }
     }
 
     #endregion
