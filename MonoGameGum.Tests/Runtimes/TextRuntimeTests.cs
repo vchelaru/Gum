@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using ToolsUtilities;
@@ -778,6 +779,26 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
         textRuntime.Text = "Hello 1234";
 
         wasChanged.ShouldBeTrue();
+    }
+
+    #endregion
+
+    #region TrySetPropertyOnText public API (FRB Glue compat)
+
+    // #3641 regression: FlatRedBall's Glue tool generates FRB game projects' TextRuntime.Generated.cs
+    // with a hardcoded direct call to
+    // global::Gum.Wireframe.CustomSetPropertyOnRenderable.TrySetPropertyOnText(...). Since FRB1
+    // compiles Gum/Wireframe/CustomSetPropertyOnRenderable.cs as source (via GumCoreShared.projitems,
+    // not a compiled DLL), narrowing this method to private breaks every FRB game's build with
+    // CS0117, even though nothing inside this repo calls it directly. Pin its accessibility so a
+    // future refactor of CustomSetPropertyOnRenderable doesn't silently re-narrow it.
+    [Fact]
+    public void TrySetPropertyOnText_ShouldStayPublic_ForFrbGlueGeneratedCallers()
+    {
+        MethodInfo? method = typeof(CustomSetPropertyOnRenderable).GetMethod(
+            "TrySetPropertyOnText", BindingFlags.Public | BindingFlags.Static);
+
+        method.ShouldNotBeNull();
     }
 
     #endregion

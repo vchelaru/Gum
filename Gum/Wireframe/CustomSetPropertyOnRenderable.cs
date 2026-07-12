@@ -709,7 +709,13 @@ public class CustomSetPropertyOnRenderable
 
     #region Text
 
-    private static bool TrySetPropertyOnText(Text textRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    // Public (not private) is deliberate: FlatRedBall's Glue tool generates FRB game projects'
+    // TextRuntime.Generated.cs with a hardcoded direct call to
+    // global::Gum.Wireframe.CustomSetPropertyOnRenderable.TrySetPropertyOnText(...) (and the same for
+    // TextNoTranslate). Since FRB1 compiles this file as source (not a compiled DLL, via
+    // GumCoreShared.projitems), narrowing this method breaks every FRB game's build with CS0117 even
+    // though nothing in this repo calls it directly. See issue #3641.
+    public static bool TrySetPropertyOnText(Text textRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
         bool handled = false;
 
