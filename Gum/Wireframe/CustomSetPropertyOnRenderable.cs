@@ -3,6 +3,7 @@
 #endif
 using Gum.Content.AnimationChain;
 using Gum.DataTypes;
+using Gum.Graphics.Animation;
 using Gum.RenderingLibrary;
 using RenderingLibrary;
 using RenderingLibrary.Content;
@@ -37,17 +38,14 @@ using Gum.GueDeriving;
 #if RAYLIB
 using Gum.Renderables;
 using Gum.GueDeriving;
-using Raylib_cs;
 // The font a BBCode font-run resolves to. On Raylib that is a Raylib_cs.Font; on the XNA-family
 // backends it is a BitmapFont. Mirrored #if so the shared BBCode stack-resolution loop below stays
 // type-neutral (see ApplyFontVariables) - only the font-CREATION body is platform-gated.
 using ResolvedFont = Raylib_cs.Font;
 namespace RaylibGum.Renderables;
 #else
-using Gum.Graphics.Animation;
 using RenderingLibrary.Math.Geometry;
 using Microsoft.Xna.Framework.Graphics;
-using ToolsUtilities;
 using ResolvedFont = RenderingLibrary.Graphics.BitmapFont;
 namespace Gum.Wireframe;
 #endif
@@ -113,24 +111,38 @@ public class CustomSetPropertyOnRenderable
     public static IInMemoryFontCreator? InMemoryFontCreator { get; set; }
 #endif
 
+#if RAYLIB
     /// <summary>
-    /// Optional resolver that turns a render-target shader file reference (e.g. a <c>.fx</c> path
-    /// assigned via <c>ContainerRuntime.SourceShaderFile</c>) into a platform effect object, which
-    /// is stored in <see cref="RenderableBase.RenderTargetEffect"/>. Gum core ships no shader
-    /// loader; a separate opt-in library (the shader equivalent of Gum.Shapes) or the consumer
-    /// registers this — typically capturing its own graphics device in the closure. The returned
-    /// object is boxed into the backend-agnostic <see cref="RenderableBase.RenderTargetEffect"/>
-    /// slot (on xnalike, a <c>Microsoft.Xna.Framework.Graphics.Effect</c>). If null, assigning a
-    /// shader file is a graceful no-op and the container renders unshaded. Return null to signal a
-    /// failed load (missing file / compile error); resolution then honors
-    /// <see cref="GraphicalUiElement.MissingFileBehavior"/>, mirroring sprite source-file handling.
+    /// Optional in-memory font creator. When set, font generation bypasses disk entirely — the
+    /// creator produces a <see cref="Raylib_cs.Font"/> directly from a <see cref="BmfcSave"/>
+    /// descriptor (for example, by rasterizing an atlas with KernSmith). If null or if creation
+    /// returns null, falls back to the existing disk / system-font path. Raylib parallel to the
+    /// <c>#if !RAYLIB</c> <see cref="IInMemoryFontCreator"/> property above.
     /// </summary>
-    public static Func<string, object?>? RenderTargetEffectResolver { get; set; }
+    public static IRaylibFontCreator? InMemoryFontCreator { get; set; }
+#endif
 
     public static event Action<string>? PropertyAssignmentError;
 
     /// <summary>
-    /// Additional logic to perform before falling back to reflection. 
+    /// Optional resolver that turns a render-target shader file reference (e.g. an <c>.fx</c> path on
+    /// the XNA-family backends, or a <c>.fs</c>/<c>.glsl</c> path on raylib, assigned via
+    /// <c>ContainerRuntime.SourceShaderFile</c>) into a platform effect object, which is stored in
+    /// <see cref="RenderableBase.RenderTargetEffect"/>. Gum core ships no shader loader; the consumer
+    /// (or an opt-in library, the shader equivalent of Gum.Shapes) registers this — typically
+    /// capturing its own graphics device in the closure on xnalike, or calling
+    /// <c>Raylib.LoadShader</c> on raylib. The returned object is boxed into the backend-agnostic
+    /// <see cref="RenderableBase.RenderTargetEffect"/> slot (a
+    /// <c>Microsoft.Xna.Framework.Graphics.Effect</c> on xnalike, a <c>Raylib_cs.Shader</c> on
+    /// raylib). If null, assigning a shader file is a graceful no-op and the container renders
+    /// unshaded. Return null to signal a failed load (missing file / compile error); resolution then
+    /// honors <see cref="GraphicalUiElement.MissingFileBehavior"/>, mirroring sprite source-file
+    /// handling.
+    /// </summary>
+    public static Func<string, object?>? RenderTargetEffectResolver { get; set; }
+
+    /// <summary>
+    /// Additional logic to perform before falling back to reflection.
     /// This can be added by libraries adding additional runtime types
     /// </summary>
     public static Func<IRenderableIpso, GraphicalUiElement, string, object, bool>? AdditionalPropertyOnRenderable = null;
@@ -195,39 +207,14 @@ public class CustomSetPropertyOnRenderable
             handled = TrySetPropertyOnContainer(invisibleRenderable, graphicalUiElement, propertyName, value);
         }
 
-        if(!handled && AdditionalPropertyOnRenderable != null)
+        if (!handled && AdditionalPropertyOnRenderable != null)
         {
             handled = AdditionalPropertyOnRenderable(renderableIpso, graphicalUiElement, propertyName, value);
         }
 
-        // If special case didn't work, let's try reflection
         if (!handled)
         {
-            if (propertyName == "Parent")
-            {
-                // do something
-            }
-            else
-            {
-                System.Reflection.PropertyInfo propertyInfo = renderableIpso.GetType().GetProperty(propertyName);
-
-                if (propertyInfo != null && propertyInfo.CanWrite)
-                {
-                    var valueType = value.GetType();
-                    if (valueType != propertyInfo.PropertyType)
-                    {
-                        if(valueType == typeof(PositionUnitType) && propertyInfo.PropertyType == typeof(GeneralUnitType))
-                        {
-                            value = UnitConverter.ConvertToGeneralUnit((PositionUnitType)value);
-                        }
-                        else
-                        {
-                            value = System.Convert.ChangeType(value, propertyInfo.PropertyType);
-                        }
-                    }
-                    propertyInfo.SetValue(renderableIpso, value, null);
-                }
-            }
+            GraphicalUiElement.SetPropertyThroughReflection(renderableIpso, graphicalUiElement, propertyName, value);
         }
     }
 
@@ -320,11 +307,12 @@ public class CustomSetPropertyOnRenderable
     }
 
     /// <summary>
-    /// Resolves a render-target shader file reference (e.g. a <c>.fx</c> path) into a platform
-    /// effect via <see cref="RenderTargetEffectResolver"/> and stores it in the container's
+    /// Resolves a render-target shader file reference (e.g. an <c>.fx</c> path on the XNA-family
+    /// backends, or a <c>.fs</c>/<c>.glsl</c> path on raylib) into a platform effect via
+    /// <see cref="RenderTargetEffectResolver"/> and stores it in the container's
     /// <see cref="RenderableBase.RenderTargetEffect"/> slot. Mirrors
     /// <see cref="AssignSourceFileOnSprite"/>: the resolved effect is cached in
-    /// <see cref="LoaderManager"/> by normalized path so a .fx referenced by multiple containers
+    /// <see cref="LoaderManager"/> by normalized path so a shader referenced by multiple containers
     /// loads once, and a failed resolve honors <see cref="GraphicalUiElement.MissingFileBehavior"/>.
     /// With no resolver registered this is a graceful no-op (the container renders unshaded),
     /// matching how a missing texture degrades. Called internally by the string property path.
@@ -338,7 +326,8 @@ public class CustomSetPropertyOnRenderable
         }
 
         // No resolver registered: render unshaded rather than crash. A separate opt-in library
-        // (the shader equivalent of Gum.Shapes) or the consumer registers the resolver.
+        // (the shader equivalent of Gum.Shapes) or the consumer registers the resolver — e.g. doing
+        // Raylib.LoadShader on raylib.
         if (RenderTargetEffectResolver == null)
         {
             return;
@@ -352,8 +341,10 @@ public class CustomSetPropertyOnRenderable
             value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
         }
 
-        // LoaderManager caches by normalized path (same convention as the texture cache) so a .fx
-        // shared by multiple containers compiles/loads once. The resolver only does path -> effect.
+        // LoaderManager caches disposables by normalized path (same convention as the texture
+        // cache) so a shader referenced by multiple containers loads once. A raylib Shader is a
+        // struct (not IDisposable), so it falls through the disposable cache below and simply
+        // re-resolves each time — acceptable for a first implementation.
         if (loaderManager.CacheTextures)
         {
             var cachedEffect = loaderManager.GetDisposable(value);
@@ -377,7 +368,7 @@ public class CustomSetPropertyOnRenderable
 
         if (resolvedEffect == null)
         {
-            // Resolver registered but couldn't produce an effect (missing .fx or compile error).
+            // Resolver registered but couldn't produce an effect (missing file or compile/load error).
             // Mirror Sprite source-file handling: honor MissingFileBehavior, else report the error.
             string message = $"Error setting SourceShaderFile on Container";
             if (graphicalUiElement.Tag != null)
@@ -1020,13 +1011,9 @@ public class CustomSetPropertyOnRenderable
         return handled;
     }
 
-    /// <summary>
-    /// The canonical set of recognized BbCode tag names. Forwarder to the GumCommon-side
-    /// <see cref="BbCodeParser.KnownTags"/> — kept here so existing callers that reference
-    /// <c>CustomSetPropertyOnRenderable.Tags</c> continue to compile.
-    /// </summary>
-    public static HashSet<string> Tags => BbCodeParser.KnownTags;
-
+    // The seven font-resolution stacks (mirroring the MonoGame path). Inline [FontSize]/[IsBold]/etc. tags
+    // push their value on open and pop on close, so a run resolves to the font implied by every tag currently
+    // open over it - the whole reason nested markup needs a stack rather than a flat lookup.
     static Stack<int> fontSizeStack = new Stack<int>();
     static Stack<string> fontNameStack = new Stack<string>();
     static Stack<int> outlineThicknessStack = new Stack<int>();
@@ -1597,6 +1584,36 @@ public class CustomSetPropertyOnRenderable
 #endif
     }
 
+    /// <summary>
+    /// Resolves a font file path (from a <c>[Font=path]</c> tag) to an absolute path using the Gum project
+    /// directory. Font generators resolve paths relative to their own working directory, not the project
+    /// directory, so relative paths must be made absolute. Mirrors the XNA-side method of the same name.
+    /// </summary>
+    private static string ResolveFontFilePath(string fontFilePath)
+    {
+        if (System.IO.Path.IsPathRooted(fontFilePath))
+        {
+            return fontFilePath;
+        }
+
+        var gumProject = ObjectFinder.Self.GumProjectSave;
+        if (gumProject != null)
+        {
+            string projectDir = ToolsUtilities.FileManager.GetDirectory(gumProject.FullFileName);
+            return System.IO.Path.GetFullPath(System.IO.Path.Combine(projectDir, fontFilePath));
+        }
+
+        return fontFilePath;
+    }
+
+    /// <summary>
+    /// The canonical set of recognized BbCode tag names. Forwarder to the GumCommon-side
+    /// <see cref="BbCodeParser.KnownTags"/> so the Raylib and MonoGame paths recognize an identical tag set
+    /// (and a tag added to <see cref="BbCodeParser.KnownTags"/> is picked up here automatically). Kept as a
+    /// public member so existing callers referencing <c>CustomSetPropertyOnRenderable.Tags</c> still compile.
+    /// </summary>
+    public static HashSet<string> Tags => BbCodeParser.KnownTags;
+
     public static void UpdateToFontValues(IText text, GraphicalUiElement graphicalUiElement)
     {
         // Font deferred-loading system
@@ -2006,7 +2023,7 @@ public class CustomSetPropertyOnRenderable
     }
 #endif
 
-#endregion
+    #endregion
 
 #if !RAYLIB
     private static bool TrySetPropertyOnLineRectangle(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
@@ -2604,30 +2621,6 @@ public class CustomSetPropertyOnRenderable
         {
             ThrowExceptionsForMissingFiles(element);
         }
-    }
-
-    /// <summary>
-    /// Resolves a font file path to an absolute path using the Gum project directory.
-    /// Font generators (KernSmith and bmfont.exe) resolve paths relative to their own
-    /// working directory, not the project directory, so relative paths must be made absolute.
-    /// </summary>
-    /// <param name="fontFilePath">The font file path, which may be relative to the project directory.</param>
-    /// <returns>The absolute font file path, or the original value if already absolute or if no project is loaded.</returns>
-    private static string ResolveFontFilePath(string fontFilePath)
-    {
-        if (System.IO.Path.IsPathRooted(fontFilePath))
-        {
-            return fontFilePath;
-        }
-
-        var gumProject = ObjectFinder.Self.GumProjectSave;
-        if (gumProject != null)
-        {
-            string projectDir = ToolsUtilities.FileManager.GetDirectory(gumProject.FullFileName);
-            return System.IO.Path.GetFullPath(System.IO.Path.Combine(projectDir, fontFilePath));
-        }
-
-        return fontFilePath;
     }
 
 #if !RAYLIB && !FRB

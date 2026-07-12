@@ -53,6 +53,7 @@
 		-->
 		<!-- <Compile Include="..\..\RenderingLibrary\Graphics\IAnimatable.cs" Link="Renderables\IAnimatable.cs" /> -->
 		<Compile Include="..\..\Gum\Wireframe\FallbackRenderableFactory.cs" Link="GueDeriving\FallbackRenderableFactory.cs" />
+		<Compile Include="..\..\Gum\Wireframe\CustomSetPropertyOnRenderable.cs" Link="Renderables\CustomSetPropertyOnRenderable.cs" />
 
 		<Compile Include="..\..\MonoGameGum\Forms\Controls\**\*.cs" Link="Forms\Controls\%(RecursiveDir)%(Filename)%(Extension)" />
 
