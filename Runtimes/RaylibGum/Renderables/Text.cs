@@ -67,6 +67,73 @@ public enum TextPositionRoundingMode
 }
 
 
+#region LetterCustomization
+
+/// <summary>
+/// Mirrors <see cref="RenderingLibrary.Graphics.LetterCustomization"/> on the MonoGame-family runtime -
+/// the per-letter styling a <c>[Custom]</c> callback can apply. Not every field is representable on
+/// Raylib: <see cref="DrawStyledLine"/> draws a run via a single <c>DrawTextPro</c> call, which only
+/// supports a uniform font size, so <see cref="ScaleX"/>/<see cref="ScaleY"/> are approximated by their
+/// average when both are set rather than applied independently per axis.
+/// </summary>
+public struct LetterCustomization
+{
+    public float? XOffset;
+    public float? YOffset;
+    public System.Drawing.Color? Color;
+    public float? ScaleX;
+    public HorizontalAlignment? ScaleXOrigin;
+    public float? ScaleY;
+    public VerticalAlignment? ScaleYOrigin;
+    public float? RotationDegrees;
+    public char? ReplacementCharacter;
+}
+
+#endregion
+
+#region ParameterizedLetterCustomizationCall
+
+/// <summary>
+/// Mirrors <see cref="RenderingLibrary.Graphics.ParameterizedLetterCustomizationCall"/> on the
+/// MonoGame-family runtime. Resolves <see cref="FunctionName"/> against <see cref="Text.Customizations"/>
+/// / <see cref="Text.ContextCustomizations"/> lazily (rather than capturing the delegate at parse time)
+/// so registering the callback after the markup is assigned still takes effect at draw time.
+/// </summary>
+public class ParameterizedLetterCustomizationCall
+{
+    public string FunctionName { get; set; } = string.Empty;
+
+    public Func<int, string, LetterCustomization>? Function
+    {
+        get
+        {
+            if (!string.IsNullOrEmpty(FunctionName) && Text.Customizations.TryGetValue(FunctionName, out var func))
+            {
+                return func;
+            }
+            return null;
+        }
+    }
+
+    public Func<int, string, LetterCustomization, LetterCustomization>? ContextFunction
+    {
+        get
+        {
+            if (!string.IsNullOrEmpty(FunctionName) && Text.ContextCustomizations.TryGetValue(FunctionName, out var func))
+            {
+                return func;
+            }
+            return null;
+        }
+    }
+
+    public int CharacterIndex { get; set; }
+
+    public string TextBlock { get; set; } = string.Empty;
+}
+
+#endregion
+
 public class Text : IVisible, IRenderableIpso,
     IWrappedText, IFormsText, ICloneable
 {
@@ -127,6 +194,24 @@ public class Text : IVisible, IRenderableIpso,
     /// Issue #2757.
     /// </summary>
     public static Font DefaultFont { get; set; }
+
+    /// <summary>
+    /// Registry of simple per-letter callbacks for the <c>[Custom=Name]</c> BBCode tag, keyed by name.
+    /// Mirrors <see cref="RenderingLibrary.Graphics.Text.Customizations"/> on the MonoGame-family
+    /// runtime so a callback registered by name behaves the same on every platform.
+    /// </summary>
+    public static Dictionary<string, Func<int, string, LetterCustomization>> Customizations { get; private set; }
+        = new();
+
+    /// <summary>
+    /// Registry of context-aware per-letter callbacks for the <c>[Custom=Name]</c> BBCode tag - the
+    /// callback receives the <see cref="LetterCustomization"/> produced by any enclosing <c>[Custom]</c>
+    /// tag so nested tags can chain (e.g. an outer tag sets Color, an inner tag darkens it). Checked
+    /// before <see cref="Customizations"/> when both are registered under the same name. Mirrors
+    /// <see cref="RenderingLibrary.Graphics.Text.ContextCustomizations"/> on the MonoGame-family runtime.
+    /// </summary>
+    public static Dictionary<string, Func<int, string, LetterCustomization, LetterCustomization>> ContextCustomizations { get; private set; }
+        = new();
 
     public Vector2 Position;
     
@@ -618,10 +703,10 @@ public class Text : IVisible, IRenderableIpso,
 
     /// <summary>
     /// The inline styling variables (Color / FontScale runs, plus resolved-font "BitmapFont" runs for the
-    /// Font / FontSize / IsBold / IsItalic / OutlineThickness family tags) parsed from BBCode markup assigned
-    /// to this Text. Populated by the property pipeline when the assigned text contains markup tags; empty
-    /// for plain text. Consumed by <see cref="Render"/> to draw per-run styling. Custom per-letter callbacks
-    /// are not yet applied on the Raylib runtime (#3471).
+    /// Font / FontSize / IsBold / IsItalic / OutlineThickness family tags, and "Custom" per-letter callback
+    /// runs) parsed from BBCode markup assigned to this Text. Populated by the property pipeline when the
+    /// assigned text contains markup tags; empty for plain text. Consumed by <see cref="Render"/> to draw
+    /// per-run styling.
     /// </summary>
     public List<InlineVariable> InlineVariables { get; private set; }
 
@@ -994,20 +1079,26 @@ public class Text : IVisible, IRenderableIpso,
     /// Draws a single line as a sequence of styled runs (BBCode markup), applying per-run Color and per-run
     /// font (a resolved swap font from the Font / FontSize / IsBold / IsItalic / OutlineThickness family, or
     /// a FontScale multiplier / FontSize absolute-px atlas scale). Runs are laid out left-to-right and
-    /// baseline-aligned so a larger run sits on the same baseline as its neighbors. Custom per-letter
-    /// callbacks are not applied here on the Raylib runtime yet (#3471).
+    /// baseline-aligned so a larger run sits on the same baseline as its neighbors. <c>[Custom]</c> per-letter
+    /// callbacks (#3640) run per-run below, applying XOffset/YOffset/RotationDegrees/Color/
+    /// ReplacementCharacter directly; ScaleX/ScaleY are approximated by their average since a run draws via
+    /// one uniform-fontSize <c>DrawTextPro</c> call, and ScaleXOrigin/ScaleYOrigin are not honored.
     /// </summary>
     private void DrawStyledLine(Font fontValue, List<StyledSubstring> substrings, Vector2 linePosition, float absoluteLeft, float originY)
     {
-        // First pass: resolve each run's effective color, font/size and measured width, plus the line
-        // totals needed for horizontal alignment (total width) and baseline alignment (tallest run's
-        // baseline). The font, draw size and layout scale come from the shared resolver, so draw and
-        // measure use the same per-run font and cannot diverge (issue #3524).
+        // First pass: resolve each run's effective color, font/size, custom-callback offsets and measured
+        // width, plus the line totals needed for horizontal alignment (total width) and baseline alignment
+        // (tallest run's baseline). The font, draw size and layout scale come from the shared resolver, so
+        // draw and measure use the same per-run font and cannot diverge (issue #3524).
         var runColors = new Color[substrings.Count];
         var runFonts = new Font[substrings.Count];
         var runDrawSizes = new float[substrings.Count];
         var runScales = new float[substrings.Count];
         var runWidths = new float[substrings.Count];
+        var runTexts = new string[substrings.Count];
+        var runXOffsets = new float[substrings.Count];
+        var runYOffsets = new float[substrings.Count];
+        var runRotations = new float[substrings.Count];
         float totalWidth = 0;
         float maxScale = FontScale;
 
@@ -1016,6 +1107,11 @@ public class Text : IVisible, IRenderableIpso,
             var run = substrings[s];
             var runColor = Color;
             var resolvedFont = ResolveRunFont(run.Variables);
+            var runText = run.Substring;
+            float xOffset = 0;
+            float yOffset = 0;
+            float rotationDegrees = 0;
+            float customScale = 1;
 
             foreach (var variable in run.Variables)
             {
@@ -1036,16 +1132,82 @@ public class Text : IVisible, IRenderableIpso,
                     case nameof(Blue):
                         runColor = new Color(runColor.R, runColor.G, (byte)variable.Value, runColor.A);
                         break;
+                    case "Custom":
+                        if (variable.Value is ParameterizedLetterCustomizationCall call)
+                        {
+                            var contextFunction = call.ContextFunction;
+                            var function = call.Function;
+                            if (contextFunction != null || function != null)
+                            {
+                                LetterCustomization response;
+                                if (contextFunction != null)
+                                {
+                                    var context = new LetterCustomization
+                                    {
+                                        XOffset = xOffset,
+                                        YOffset = yOffset,
+                                        Color = System.Drawing.Color.FromArgb(runColor.A, runColor.R, runColor.G, runColor.B),
+                                        ScaleX = customScale,
+                                        ScaleY = customScale,
+                                        RotationDegrees = rotationDegrees,
+                                    };
+                                    response = contextFunction(call.CharacterIndex, call.TextBlock, context);
+                                }
+                                else
+                                {
+                                    response = function!(call.CharacterIndex, call.TextBlock);
+                                }
+
+                                if (response.XOffset != null)
+                                {
+                                    xOffset = response.XOffset.Value;
+                                }
+                                if (response.YOffset != null)
+                                {
+                                    yOffset = response.YOffset.Value;
+                                }
+                                if (response.RotationDegrees != null)
+                                {
+                                    rotationDegrees = response.RotationDegrees.Value;
+                                }
+                                if (response.Color != null)
+                                {
+                                    var c = response.Color.Value;
+                                    runColor = new Color(c.R, c.G, c.B, c.A);
+                                }
+                                if (response.ReplacementCharacter != null)
+                                {
+                                    runText = response.ReplacementCharacter.Value.ToString();
+                                }
+                                if (response.ScaleX != null && response.ScaleY != null)
+                                {
+                                    customScale = (response.ScaleX.Value + response.ScaleY.Value) / 2f;
+                                }
+                                else if (response.ScaleX != null)
+                                {
+                                    customScale = response.ScaleX.Value;
+                                }
+                                else if (response.ScaleY != null)
+                                {
+                                    customScale = response.ScaleY.Value;
+                                }
+                            }
+                        }
+                        break;
                 }
             }
 
             runColors[s] = runColor;
             runFonts[s] = resolvedFont.Font;
-            runDrawSizes[s] = resolvedFont.DrawSize;
-            runScales[s] = resolvedFont.LayoutScale;
-            runWidths[s] = MeasureTextEx(resolvedFont.Font, run.Substring, resolvedFont.DrawSize, 0).X;
+            runDrawSizes[s] = resolvedFont.DrawSize * customScale;
+            runScales[s] = resolvedFont.LayoutScale * customScale;
+            runTexts[s] = runText;
+            runXOffsets[s] = xOffset;
+            runYOffsets[s] = yOffset;
+            runRotations[s] = rotationDegrees;
+            runWidths[s] = MeasureTextEx(resolvedFont.Font, runText, runDrawSizes[s], 0).X;
             totalWidth += runWidths[s];
-            maxScale = System.Math.Max(maxScale, resolvedFont.LayoutScale);
+            maxScale = System.Math.Max(maxScale, runScales[s]);
         }
 
         float maxBaseline = (LineHeightInPixels - _descenderHeight) * maxScale;
@@ -1069,13 +1231,13 @@ public class Text : IVisible, IRenderableIpso,
             // Push shorter runs down so every run shares the tallest run's baseline.
             float baselineDelta = maxBaseline - (LineHeightInPixels - _descenderHeight) * runScale;
 
-            var runPosition = new Vector2(lineStartX + advance, linePosition.Y + baselineDelta);
+            var runPosition = new Vector2(lineStartX + advance + runXOffsets[s], linePosition.Y + baselineDelta + runYOffsets[s]);
             var runOrigin = new Vector2(0, originY);
 
             runPosition = SnapToPixelIfNeeded(runPosition);
             runOrigin = SnapToPixelIfNeeded(runOrigin);
 
-            DrawTextPro(runFonts[s], substrings[s].Substring, runPosition, runOrigin, 0, runDrawSizes[s], 0, runColors[s]);
+            DrawTextPro(runFonts[s], runTexts[s], runPosition, runOrigin, runRotations[s], runDrawSizes[s], 0, runColors[s]);
 
             advance += runWidths[s];
         }

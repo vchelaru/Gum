@@ -10,12 +10,11 @@ namespace SilkNetGum.Screens;
 // supports the same surface (#3414). SkiaGum dynamic fonts do not use KernSmith, so baked text
 // drop shadow (HasDropshadow) is not rendered here — the rows below document that gap explicitly.
 //
-// Section order in this file must match the MonoGameGumInCode and raylib TextScreen.cs mirrors
-// (Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/TextScreen.cs,
-// Samples/raylib/Screens/TextScreen.cs) exactly, top to bottom - before adding, removing, or
-// reordering ANY section, check the sibling files for the same change or the side-by-side
-// comparison breaks silently. (Broke once when MonoGameGumInCode carried extra
-// AddCustomOutlineText rows raylib never had - #3496.)
+// Section order in this file must match Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/TextScreen.cs
+// exactly, top to bottom - before adding, removing, or reordering ANY section, check that file for
+// the same change or the side-by-side comparison breaks silently. (Broke once when MonoGameGumInCode
+// carried extra AddCustomOutlineText rows raylib never had - #3496.) That file is itself shared with
+// (linked into) Samples/raylib/GumTest.csproj as of #3640, so it covers both those backends at once.
 internal class TextScreen : FrameworkElement
 {
     public TextScreen() : base(new ContainerRuntime())
