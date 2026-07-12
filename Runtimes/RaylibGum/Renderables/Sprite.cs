@@ -473,6 +473,18 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
         set => AnimationLogic.AnimationChains = value;
     }
 
+    public bool Animate
+    {
+        get => AnimationLogic.Animate;
+        set => AnimationLogic.Animate = value;
+    }
+
+    public string? CurrentChainName
+    {
+        get => AnimationLogic.CurrentChainName;
+        set => AnimationLogic.CurrentChainName = value;
+    }
+
     public bool UpdateToCurrentAnimationFrame() => AnimationLogic.UpdateToCurrentAnimationFrame();
 
     public void RefreshCurrentChainToDesiredName() => AnimationLogic.RefreshCurrentChainToDesiredName();
