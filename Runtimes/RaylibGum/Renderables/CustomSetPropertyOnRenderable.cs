@@ -165,9 +165,9 @@ public class CustomSetPropertyOnRenderable
         {
             handled = TrySetPropertyOnSprite(renderableSprite, graphicalUiElement, propertyName, value);
         }
-        else if (renderableIpso is NineSlice)
+        else if (renderableIpso is NineSlice nineSlice)
         {
-            handled = TrySetPropertyOnNineSlice(renderableIpso, graphicalUiElement, propertyName, value, handled);
+            handled = TrySetPropertyOnNineSlice(nineSlice, graphicalUiElement, propertyName, value, handled);
         }
         else if (renderableIpso is InvisibleRenderable invisibleRenderable)
         {
@@ -282,48 +282,60 @@ public class CustomSetPropertyOnRenderable
     }
 
 
-    private static bool TrySetPropertyOnNineSlice(IRenderableIpso renderableIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value, bool handled)
+    private static bool TrySetPropertyOnNineSlice(NineSlice nineSlice, GraphicalUiElement graphicalUiElement, string propertyName, object value, bool handled)
     {
-        var nineSlice = renderableIpso as NineSlice;
 
         if (propertyName == "SourceFile")
         {
             AssignSourceFileOnNineSlice(value as string, graphicalUiElement, nineSlice);
             handled = true;
         }
-        //else if (propertyName == "Blend")
-        //{
-        //    var valueAsGumBlend = (RenderingLibrary.Blend)value;
+        else if (propertyName == "Blend")
+        {
+            var valueAsGumBlend = (Gum.RenderingLibrary.Blend)value;
 
-        //    var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
+#if !RAYLIB
+            var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
 
-        //    nineSlice.BlendState = valueAsXnaBlend;
+            nineSlice.BlendState = valueAsXnaBlend;
+#else
+            // Gum.Renderables.NineSlice (Raylib) stores the Gum-level Blend enum directly (see its
+            // Blend property) rather than an XNA BlendState object, so no ToBlendState() bridge is
+            // needed here, unlike the XNA-family branch above.
+            nineSlice.Blend = valueAsGumBlend;
+#endif
 
-        //    handled = true;
-        //}
-        //else if (propertyName == nameof(NineSlice.CustomFrameTextureCoordinateWidth))
-        //{
-        //    var asFloat = value as float?;
+            handled = true;
+        }
+        else if (propertyName == nameof(NineSlice.CustomFrameTextureCoordinateWidth))
+        {
+            var asFloat = value as float?;
 
-        //    nineSlice.CustomFrameTextureCoordinateWidth = asFloat;
+            nineSlice.CustomFrameTextureCoordinateWidth = asFloat;
 
-        //    handled = true;
-        //}
+            handled = true;
+        }
         else if (propertyName == "Color")
         {
-            // todo - need to convert
-            //if (value is System.Drawing.Color drawingColor)
-            //{
-            //    nineSlice.Color = drawingColor;
-            //}
-            //else if (value is Microsoft.Xna.Framework.Color xnaColor)
-            //{
-            //    nineSlice.Color = xnaColor.ToSystemDrawing();
+#if !RAYLIB
+            if (value is System.Drawing.Color drawingColor)
+            {
+                nineSlice.Color = drawingColor;
+            }
+            else if (value is Microsoft.Xna.Framework.Color xnaColor)
+            {
+                nineSlice.Color = xnaColor.ToSystemDrawing();
 
-            //}
-            //handled = true;
+            }
+            handled = true;
+#else
+            // TODO #3629 - no System.Drawing.Color -> Raylib_cs.Color converter exists yet, so this
+            // is a tracked no-op. SetPropertyOnRenderable falls back to reflection afterward, which
+            // also can't bridge the type mismatch, so a data-driven "Color" value is silently
+            // dropped on Raylib until #3629 lands.
+#endif
         }
-        else if (propertyName == "Red")
+        else if(propertyName == "Red")
         {
             nineSlice.Red = (int)value;
             handled = true;
@@ -343,11 +355,21 @@ public class CustomSetPropertyOnRenderable
             nineSlice.SetSingleTexture((Texture2D)value);
             handled = true;
         }
+        else if(propertyName == nameof(NineSlice.BorderScale))
+        {
+            nineSlice.BorderScale = (float)value;
+            handled = true;
+        }
+        else if(propertyName == nameof(NineSlice.IsTilingMiddleSections))
+        {
+            nineSlice.IsTilingMiddleSections = (bool)value;
+            handled = true;
+        }
 
-        // Texture coordiantes like TextureLeft, TextureRight, TextureWidth, and TextureHeight
-        // are handled by GraphicalUiElement so we don't have to handle it here
+            // Texture coordiantes like TextureLeft, TextureRight, TextureWidth, and TextureHeight
+            // are handled by GraphicalUiElement so we don't have to handle it here
 
-        return handled;
+            return handled;
     }
 
     private static void AssignSourceFileOnNineSlice(string value, GraphicalUiElement graphicalUiElement, NineSlice nineSlice)
@@ -381,21 +403,58 @@ public class CustomSetPropertyOnRenderable
 
             //check if part of atlas
             //Note: assumes that if this filename is in an atlas that all 9 are in an atlas
-            //var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(value);
-            //if (atlasedTexture != null)
-            //{
-            //    nineSlice.LoadAtlasedTexture(value, atlasedTexture);
-            //}
-            //else
+#if !RAYLIB
+            var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(value);
+            if (atlasedTexture != null)
             {
-                //if (NineSliceExtensions.GetIfShouldUsePattern(value))
-                //{
-                //    nineSlice.SetTexturesUsingPattern(value, SystemManagers.Default, false);
-                //}
-                //else
+                nineSlice.LoadAtlasedTexture(value, atlasedTexture);
+            }
+            else
+#endif
+            {
+#if !RAYLIB
+                if (NineSliceExtensions.GetIfShouldUsePattern(value))
+                {
+                    nineSlice.SetTexturesUsingPattern(value, SystemManagers.Default, false);
+                }
+                else
+#endif
                 {
 
-                    //Texture2D? texture = Sprite.InvalidTexture;
+#if !RAYLIB
+                    Microsoft.Xna.Framework.Graphics.Texture2D? texture =
+                        Sprite.InvalidTexture;
+
+                    try
+                    {
+                        texture =
+                            loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(value);
+                    }
+                    catch (Exception)
+                    {
+                        // Treated the same as a missing file below.
+                        texture = null;
+                    }
+
+                    if (texture == null)
+                    {
+                        // On desktop the loader returns null for a missing file instead of throwing, and a
+                        // genuine load error is funneled here too. Honor MissingFileBehavior; otherwise fall
+                        // back to the invalid-texture placeholder, matching the prior catch behavior.
+                        if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
+                        {
+                            string message = $"Error setting SourceFile on NineSlice named {nineSlice.Name}:\n{value}";
+                            throw new System.IO.FileNotFoundException(message);
+                        }
+                        texture = Sprite.InvalidTexture;
+                    }
+                    nineSlice.SetSingleTexture(texture);
+#else
+                    // Raylib has neither atlas (AtlasedTexture) nor tiled-pattern
+                    // (SetTexturesUsingPattern) NineSlice support, and no InvalidTexture placeholder
+                    // (Sprite.InvalidTexture lives on the XNA-only RenderingLibrary.Graphics.Sprite) -
+                    // so a load failure here can only honor MissingFileBehavior.ThrowException or
+                    // leave the texture unset.
                     Texture2D? texture = null;
 
                     try
@@ -403,7 +462,7 @@ public class CustomSetPropertyOnRenderable
                         texture =
                             loaderManager.LoadContent<Texture2D>(value);
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
                         {
@@ -413,6 +472,7 @@ public class CustomSetPropertyOnRenderable
                         // do nothing?
                     }
                     nineSlice.SetSingleTexture(texture);
+#endif
 
                 }
             }
