@@ -89,7 +89,7 @@ text.AddToRoot();
 2. Assign the `InMemoryFontCreator` after initializing Gum:
 
 ```csharp
-RaylibGum.Renderables
+using RaylibGum.Renderables;
 
 // Initialize
 GumService.Default.Initialize();
