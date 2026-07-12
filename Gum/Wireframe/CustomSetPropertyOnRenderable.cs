@@ -568,95 +568,110 @@ public class CustomSetPropertyOnRenderable
     {
         bool handled = false;
 
-        if (propertyName == "SourceFile")
+        switch (propertyName)
         {
-            var asString = value as String;
-            handled = AssignSourceFileOnSprite(sprite, graphicalUiElement, asString);
-
-        }
-        else if (propertyName == nameof(Sprite.Alpha))
-        {
-            int valueAsInt = (int)value;
-            sprite.Alpha = valueAsInt;
-            handled = true;
-        }
-        else if (propertyName == nameof(Sprite.Red))
-        {
-            int valueAsInt = (int)value;
-            sprite.Red = valueAsInt;
-            handled = true;
-        }
-        else if (propertyName == nameof(Sprite.Green))
-        {
-            int valueAsInt = (int)value;
-            sprite.Green = valueAsInt;
-            handled = true;
-        }
-        else if (propertyName == nameof(Sprite.Blue))
-        {
-            int valueAsInt = (int)value;
-            sprite.Blue = valueAsInt;
-            handled = true;
-        }
-        else if (propertyName == nameof(Sprite.Color))
-        {
-            if (value is System.Drawing.Color drawingColor)
-            {
-                sprite.Color = drawingColor;
-            }
-            else if (value is Microsoft.Xna.Framework.Color xnaColor)
-            {
-                sprite.Color = xnaColor.ToSystemDrawing();
-
-            }
-            handled = true;
-        }
-
-        else if (propertyName == "Blend")
-        {
-            var valueAsGumBlend = (RenderingLibrary.Blend)value;
-
-            var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
-
-            sprite.BlendState = valueAsXnaBlend;
-
-            handled = true;
-        }
-        else if (propertyName == nameof(Sprite.Animate))
-        {
-            sprite.Animate = (bool)value;
-            handled = true;
-        }
-        else if (propertyName == nameof(Sprite.CurrentChainName))
-        {
-            sprite.CurrentChainName = (string)value;
-            graphicalUiElement.UpdateTextureValuesFrom(sprite);
-            graphicalUiElement.UpdateLayout();
-            handled = true;
-        }
-#if !FRB
-        else if(propertyName == nameof(SpriteRuntime.RenderTargetTextureSource))
-        {
-            var runtime = graphicalUiElement as SpriteRuntime;
-            if(runtime != null)
-            {
-                if(value == null)
+            case "SourceFile":
                 {
-                    runtime.RenderTargetTextureSource = null;
+                    var asString = value as String;
+                    handled = AssignSourceFileOnSprite(sprite, graphicalUiElement, asString);
+                    break;
                 }
-                else if(value is IRenderableIpso renderableIpso)
+            case nameof(Sprite.Alpha):
                 {
-                    runtime.RenderTargetTextureSource = renderableIpso;
+                    int valueAsInt = (int)value;
+                    sprite.Alpha = valueAsInt;
+                    handled = true;
+                    break;
                 }
-                else if(value is string asString)
+            case nameof(Sprite.Red):
                 {
-                    runtime.RenderTargetTextureSource =
-                        (graphicalUiElement.GetTopParent() as GraphicalUiElement)?.FindByName(asString);
+                    int valueAsInt = (int)value;
+                    sprite.Red = valueAsInt;
+                    handled = true;
+                    break;
                 }
-                handled = true;
-            }
-        }
+            case nameof(Sprite.Green):
+                {
+                    int valueAsInt = (int)value;
+                    sprite.Green = valueAsInt;
+                    handled = true;
+                    break;
+                }
+            case nameof(Sprite.Blue):
+                {
+                    int valueAsInt = (int)value;
+                    sprite.Blue = valueAsInt;
+                    handled = true;
+                    break;
+                }
+#if !RAYLIB
+            case nameof(Sprite.Color):
+                {
+                    if (value is System.Drawing.Color drawingColor)
+                    {
+                        sprite.Color = drawingColor;
+                    }
+                    else if (value is Microsoft.Xna.Framework.Color xnaColor)
+                    {
+                        sprite.Color = xnaColor.ToSystemDrawing();
+                    }
+                    handled = true;
+                    break;
+                }
 #endif
+            case "Blend":
+                {
+                    var valueAsGumBlend = (Gum.RenderingLibrary.Blend)value;
+#if RAYLIB
+                    sprite.Blend = valueAsGumBlend;
+#else
+                    var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
+
+                    sprite.BlendState = valueAsXnaBlend;
+#endif
+                    handled = true;
+                    break;
+                }
+            case nameof(Sprite.Animate):
+                {
+                    sprite.Animate = (bool)value;
+                    handled = true;
+                    break;
+                }
+            case nameof(Sprite.CurrentChainName):
+                {
+                    sprite.CurrentChainName = (string)value;
+                    graphicalUiElement.UpdateTextureValuesFrom(sprite);
+                    graphicalUiElement.UpdateLayout();
+                    handled = true;
+                    break;
+                }
+#if !FRB
+            case nameof(SpriteRuntime.RenderTargetTextureSource):
+                {
+                    var runtime = graphicalUiElement as SpriteRuntime;
+                    if (runtime != null)
+                    {
+                        if (value == null)
+                        {
+                            runtime.RenderTargetTextureSource = null;
+                        }
+                        else if (value is IRenderableIpso renderableIpso)
+                        {
+                            runtime.RenderTargetTextureSource = renderableIpso;
+                        }
+                        else if (value is string asStringValue)
+                        {
+                            runtime.RenderTargetTextureSource =
+                                (graphicalUiElement.GetTopParent() as GraphicalUiElement)?.FindByName(asStringValue);
+                        }
+                        handled = true;
+                    }
+                    break;
+                }
+#endif
+        }
+
         return handled;
     }
 
@@ -2020,6 +2035,7 @@ public class CustomSetPropertyOnRenderable
                 value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
             }
 
+#if !RAYLIB
             // see if an atlas exists:
             var atlasedTexture = loaderManager.TryLoadContent<AtlasedTexture>(value);
 
@@ -2028,15 +2044,16 @@ public class CustomSetPropertyOnRenderable
                 graphicalUiElement.UpdateLayout();
             }
             else
+#endif
             {
                 // We used to check if the file exists. But internally something may
                 // alias a file. Ultimately the content loader should make that decision,
                 // not the GUE
-                Microsoft.Xna.Framework.Graphics.Texture2D? texture = null;
+                Texture2D? texture = null;
                 Exception? loadException = null;
                 try
                 {
-                    texture = loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(value);
+                    texture = loaderManager.LoadContent<Texture2D>(value);
                 }
                 catch (Exception ex)
                 // Jan 1, 2025 - we used to only catch certain types of exceptions, but this list keeps growing as there
