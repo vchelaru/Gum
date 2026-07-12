@@ -6,22 +6,22 @@ This page covers each font loading strategy in detail with code samples and trad
 
 The strategies are:
 
-* [Dynamic KernSmith Generation](#dynamic-kernsmith-generation) — recommended for MonoGame, KNI, and Raylib.
-* [Dynamic Generation on SkiaGum](#dynamic-generation-on-skiagum) — SkiaGum rasterizes glyphs itself, separate from KernSmith.
-* [Custom Font File](#custom-font-file) — load a specific `.fnt` file you ship with the game.
-* [Direct BitmapFont Assignment](#direct-bitmapfont-assignment) — fully manual.
-* [Build-Time Font Cache](#build-time-font-cache) — pre-baked atlases from the Gum tool.
+* [Dynamic KernSmith Generation](font-strategies.md#dynamic-kernsmith-generation) — recommended for MonoGame, KNI, and Raylib.
+* [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum) — SkiaGum rasterizes glyphs itself, separate from KernSmith.
+* [Custom Font File](font-strategies.md#custom-font-file) — load a specific `.fnt` file you ship with the game.
+* [Direct BitmapFont Assignment](font-strategies.md#direct-bitmapfont-assignment) — fully manual.
+* [Build-Time Font Cache](font-strategies.md#build-time-font-cache) — pre-baked atlases from the Gum tool.
 
 ### Per-Runtime Availability
 
-| Runtime | Dynamic generation today |
-|---|---|
-| MonoGame | Yes — via KernSmith. |
-| KNI | Yes — via KernSmith. |
-| Raylib | Yes — via KernSmith (`KernSmith.RaylibGum`). |
-| FNA | Not yet. If you need it, let us know on Discord or [open an issue](https://github.com/vchelaru/Gum/issues). |
-| Sokol | Not yet. Use the [Build-Time Font Cache](#build-time-font-cache) for now. |
-| SkiaGum | Yes — uses SkiaSharp's own glyph rasterization. See [Dynamic Generation on SkiaGum](#dynamic-generation-on-skiagum). |
+| Runtime  | Dynamic generation today                                                                                                               |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| MonoGame | Yes — via KernSmith.                                                                                                                   |
+| KNI      | Yes — via KernSmith.                                                                                                                   |
+| Raylib   | Yes — via KernSmith (`KernSmith.RaylibGum`).                                                                                           |
+| FNA      | Not yet. If you need it, let us know on Discord or [open an issue](https://github.com/vchelaru/Gum/issues).                            |
+| Sokol    | Not yet. Use the [Build-Time Font Cache](font-strategies.md#build-time-font-cache) for now.                                            |
+| SkiaGum  | Yes — uses SkiaSharp's own glyph rasterization. See [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum). |
 
 ## Dynamic KernSmith Generation
 
@@ -33,6 +33,8 @@ KernSmith is an in-memory font generator for MonoGame, KNI, and Raylib. Install 
 2. Assign the `InMemoryFontCreator` after initializing Gum:
 
 ```csharp
+using Gum.Wireframe;
+
 // Initialize
 GumService.Default.Initialize(this);
 
@@ -60,6 +62,8 @@ Any combination of font properties can be used and the font is created on demand
 2. Assign the `InMemoryFontCreator` after initializing Gum:
 
 ```csharp
+using Gum.Wireframe;
+
 // Initialize
 GumService.Default.Initialize(this);
 
@@ -85,6 +89,8 @@ text.AddToRoot();
 2. Assign the `InMemoryFontCreator` after initializing Gum:
 
 ```csharp
+RaylibGum.Renderables
+
 // Initialize
 GumService.Default.Initialize();
 
@@ -108,11 +114,11 @@ text.AddToRoot();
 {% tab title="FNA" %}
 KernSmith is not currently published for FNA. If you need dynamic font generation on FNA, let us know on Discord or [open an issue](https://github.com/vchelaru/Gum/issues) — the request helps us prioritize.
 
-In the meantime, use the [Build-Time Font Cache](#build-time-font-cache) strategy.
+In the meantime, use the [Build-Time Font Cache](font-strategies.md#build-time-font-cache) strategy.
 {% endtab %}
 
 {% tab title="Sokol" %}
-Dynamic font generation is not yet available on Sokol. Use the [Build-Time Font Cache](#build-time-font-cache) strategy.
+Dynamic font generation is not yet available on Sokol. Use the [Build-Time Font Cache](font-strategies.md#build-time-font-cache) strategy.
 {% endtab %}
 {% endtabs %}
 
@@ -238,8 +244,8 @@ The easiest way to mark all content as "Copy to Output Directory" is to use wild
 
 You can construct a `BitmapFont` yourself and assign it directly, bypassing the font property system entirely. Two sources for the `BitmapFont` are common:
 
-* [From a .fnt file on disk](#from-a-fnt-file-on-disk) — when you already have a baked atlas.
-* [From KernSmith with custom options](#from-kernsmith-with-custom-options) — when you want visual effects (outline color, gradient fills, SDF, color fonts, custom glyph subsets) or backend control beyond what `TextRuntime` exposes. Baked drop shadow is on the property path — see [TextRuntime Fonts](../standard-visuals/textruntime/fonts.md#baked-drop-shadow).
+* [From a .fnt file on disk](font-strategies.md#from-a-fnt-file-on-disk) — when you already have a baked atlas.
+* [From KernSmith with custom options](font-strategies.md#from-kernsmith-with-custom-options) — when you want visual effects (outline color, gradient fills, SDF, color fonts, custom glyph subsets) or backend control beyond what `TextRuntime` exposes. Baked drop shadow is on the property path — see [TextRuntime Fonts](../standard-visuals/textruntime/fonts.md#baked-drop-shadow).
 
 {% hint style="warning" %}
 Once a `BitmapFont` is assigned directly, do not set font component properties (`Font`, `FontSize`, etc.) or `UseCustomFont` on the same `TextRuntime`. Those properties trigger the font loading system, which overwrites the directly assigned `BitmapFont`.
@@ -375,7 +381,7 @@ foreach (var label in titleLabels)
 ## Build-Time Font Cache
 
 {% hint style="info" %}
-This approach is primarily useful when your project already has pre-generated font files from the Gum tool, or when dynamic font generation is not yet available for your runtime (Sokol and FNA today). For MonoGame, KNI, and Raylib, [Dynamic KernSmith Generation](#dynamic-kernsmith-generation) is the recommended approach; for SkiaGum see [Dynamic Generation on SkiaGum](#dynamic-generation-on-skiagum).
+This approach is primarily useful when your project already has pre-generated font files from the Gum tool, or when dynamic font generation is not yet available for your runtime (Sokol and FNA today). For MonoGame, KNI, and Raylib, [Dynamic KernSmith Generation](font-strategies.md#dynamic-kernsmith-generation) is the recommended approach; for SkiaGum see [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum).
 {% endhint %}
 
 If `UseCustomFont` is `false` (the default) and no `InMemoryFontCreator` is registered, a `TextRuntime`'s font is determined by its font component values. These values combine to produce a file name, and the corresponding `.fnt` file must already exist in a `FontCache` folder.
