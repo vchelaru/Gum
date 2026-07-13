@@ -368,7 +368,7 @@ unsafe class Program
                 // `canvas` above does not update it, so without this line, GumUI.Draw() keeps rendering
                 // into the just-disposed SKCanvas from the previous surface on every resize -- a
                 // use-after-free that crashed with AccessViolationException (#3657).
-                if (GumUI.SystemManagers != null)
+                if (GumUI.IsInitialized)
                 {
                     GumUI.SystemManagers.Canvas = canvas;
                 }
