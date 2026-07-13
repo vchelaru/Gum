@@ -1034,6 +1034,32 @@ public class CustomSetPropertyOnRenderable
     static Stack<bool> isBoldStack = new Stack<bool>();
     static Stack<bool> useCustomFontStack = new Stack<bool>();
 
+    // The base text's dropshadow, snapshotted once per SetBbCodeText call (no BBCode tag toggles
+    // dropshadow mid-text, so unlike the seven stacks above this needs no push/pop) and applied to
+    // every per-run font resolved by GetAndCreateFontIfNecessary, matching the base-font path
+    // (TextRuntime.CopyFontGenerationFieldsTo / GetFontCacheFileName). See #3625.
+    static bool currentHasDropshadow;
+    static float currentDropshadowOffsetX;
+    static float currentDropshadowOffsetY;
+    static float currentDropshadowBlur;
+    static byte currentDropshadowRed;
+    static byte currentDropshadowGreen;
+    static byte currentDropshadowBlue;
+    static byte currentDropshadowAlpha;
+
+    // Copies the snapshotted base-text dropshadow (see the fields above) onto a per-run BmfcSave.
+    static void ApplyCurrentDropshadowTo(BmfcSave bmfcSave)
+    {
+        bmfcSave.HasDropshadow = currentHasDropshadow;
+        bmfcSave.DropshadowOffsetX = currentDropshadowOffsetX;
+        bmfcSave.DropshadowOffsetY = currentDropshadowOffsetY;
+        bmfcSave.DropshadowBlur = currentDropshadowBlur;
+        bmfcSave.DropshadowRed = currentDropshadowRed;
+        bmfcSave.DropshadowGreen = currentDropshadowGreen;
+        bmfcSave.DropshadowBlue = currentDropshadowBlue;
+        bmfcSave.DropshadowAlpha = currentDropshadowAlpha;
+    }
+
     static List<TagInfo> allTags = new List<TagInfo>();
 
     /// <summary>
@@ -1192,6 +1218,28 @@ public class CustomSetPropertyOnRenderable
 
             useCustomFontStack.Clear();
             useCustomFontStack.Push(textRuntime.UseCustomFont);
+
+#if FRB
+            // FRB's GraphicalUiElement has no dropshadow font properties (see the FRB extension
+            // methods below), so per-run resolution never applies a dropshadow there either.
+            currentHasDropshadow = false;
+            currentDropshadowOffsetX = 0f;
+            currentDropshadowOffsetY = 0f;
+            currentDropshadowBlur = 0f;
+            currentDropshadowRed = 0;
+            currentDropshadowGreen = 0;
+            currentDropshadowBlue = 0;
+            currentDropshadowAlpha = 0;
+#else
+            currentHasDropshadow = textRuntime.HasDropshadow;
+            currentDropshadowOffsetX = textRuntime.DropshadowOffsetX;
+            currentDropshadowOffsetY = textRuntime.DropshadowOffsetY;
+            currentDropshadowBlur = textRuntime.DropshadowBlur;
+            currentDropshadowRed = (byte)textRuntime.DropshadowRed;
+            currentDropshadowGreen = (byte)textRuntime.DropshadowGreen;
+            currentDropshadowBlue = (byte)textRuntime.DropshadowBlue;
+            currentDropshadowAlpha = (byte)textRuntime.DropshadowAlpha;
+#endif
 
             ApplyFontVariables(asText, results);
         }
@@ -1381,6 +1429,7 @@ public class CustomSetPropertyOnRenderable
                         bmfcSave.UseSmoothing = useFontSmoothingStack.Peek();
                         bmfcSave.IsItalic = isItalicStack.Peek();
                         bmfcSave.IsBold = isBoldStack.Peek();
+                        ApplyCurrentDropshadowTo(bmfcSave);
 
                         if (bbFontFile != null)
                         {
@@ -1441,6 +1490,7 @@ public class CustomSetPropertyOnRenderable
                             bmfcSave.UseSmoothing = useFontSmoothingStack.Peek();
                             bmfcSave.IsItalic = isItalicStack.Peek();
                             bmfcSave.IsBold = isBoldStack.Peek();
+                            ApplyCurrentDropshadowTo(bmfcSave);
 
                             if (bbFontFileForDisk != null)
                             {
@@ -1510,7 +1560,15 @@ public class CustomSetPropertyOnRenderable
                     useFontSmoothingStack.Peek(),
                     isItalicStack.Peek(),
                     isBoldStack.Peek(),
-                    bbCodeFontFilePath);
+                    bbCodeFontFilePath,
+                    currentHasDropshadow,
+                    currentDropshadowOffsetX,
+                    currentDropshadowOffsetY,
+                    currentDropshadowBlur,
+                    currentDropshadowRed,
+                    currentDropshadowGreen,
+                    currentDropshadowBlue,
+                    currentDropshadowAlpha);
                 string fullFileName = ToolsUtilities.FileManager.Standardize(fontCacheName, preserveCase: true, makeAbsolute: true);
 
                 // Reuse an already-generated font (its Raylib_cs.Font wraps an unmanaged GPU texture, so
@@ -1527,6 +1585,7 @@ public class CustomSetPropertyOnRenderable
                 bmfcSave.UseSmoothing = useFontSmoothingStack.Peek();
                 bmfcSave.IsItalic = isItalicStack.Peek();
                 bmfcSave.IsBold = isBoldStack.Peek();
+                ApplyCurrentDropshadowTo(bmfcSave);
 
                 if (bbCodeFontFilePath != null)
                 {
@@ -1582,7 +1641,15 @@ public class CustomSetPropertyOnRenderable
                     useFontSmoothingStack.Peek(),
                     isItalicStack.Peek(),
                     isBoldStack.Peek(),
-                    bbCodeFontFilePath);
+                    bbCodeFontFilePath,
+                    currentHasDropshadow,
+                    currentDropshadowOffsetX,
+                    currentDropshadowOffsetY,
+                    currentDropshadowBlur,
+                    currentDropshadowRed,
+                    currentDropshadowGreen,
+                    currentDropshadowBlue,
+                    currentDropshadowAlpha);
 
             }
 
