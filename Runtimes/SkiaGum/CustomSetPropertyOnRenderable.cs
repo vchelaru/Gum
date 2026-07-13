@@ -373,6 +373,33 @@ public partial class CustomSetPropertyOnRenderable
     // If it's not filled out, then properties will be set by reflection
     // It would be nice to share this with MonoGame at some point too so 
     // we don't have to keep everything in duplicate
+    // RoundedRectangleRuntime is obsolete and slated for removal (superseded by RectangleRuntime).
+    // Its property dispatch is isolated here so the removal is a clean delete of this method and its
+    // single call site in the RoundedRectangle branch, rather than unpicking arms interleaved with
+    // RectangleRuntime inside that branch's switch.
+    private static bool TrySetPropertyOnRoundedRectangleRuntime(GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    {
+        if (graphicalUiElement is not RoundedRectangleRuntime asRoundedRectangleRuntime)
+        {
+            return false;
+        }
+
+        switch (propertyName)
+        {
+            case nameof(RoundedRectangleRuntime.StrokeWidth):
+                asRoundedRectangleRuntime.StrokeWidth = (float)value;
+                return true;
+            case nameof(RoundedRectangleRuntime.StrokeDashLength):
+                asRoundedRectangleRuntime.StrokeDashLength = (float)value;
+                return true;
+            case nameof(RoundedRectangleRuntime.StrokeGapLength):
+                asRoundedRectangleRuntime.StrokeGapLength = (float)value;
+                return true;
+        }
+
+        return false;
+    }
+
     public static void SetPropertyOnRenderable(IRenderableIpso containedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value) =>
         SetPropertyOnRenderableFunc(containedObjectAsIpso, graphicalUiElement, propertyName, value);
 
@@ -471,6 +498,10 @@ public partial class CustomSetPropertyOnRenderable
         }
         else if(containedObjectAsIpso is RoundedRectangle asRoundedRectangle)
         {
+            // RoundedRectangleRuntime is obsolete; its dispatch is isolated in a dedicated method,
+            // checked first, so its eventual removal is a clean delete of that method + this call.
+            handled = TrySetPropertyOnRoundedRectangleRuntime(graphicalUiElement, propertyName, value);
+
             // some properties have priority on the base shape itself:
             switch (propertyName)
             {
@@ -599,56 +630,47 @@ public partial class CustomSetPropertyOnRenderable
                         handled = true;
                     }
                     break;
-                case nameof(RoundedRectangleRuntime.StrokeWidth):
-                    if(graphicalUiElement is RoundedRectangleRuntime asRoundedRectangleRuntime)
-                    {
-                        asRoundedRectangleRuntime.StrokeWidth = (float)value;
-                    }
-                    else if (graphicalUiElement is RectangleRuntime rectStrokeWidth)
+                case nameof(RectangleRuntime.StrokeWidth):
+                    if (graphicalUiElement is RectangleRuntime rectStrokeWidth)
                     {
                         // #2931: plain RectangleRuntime now owns StrokeWidth; route through the
                         // runtime so PreRender's ScreenPixel-zoom scaling resolves against the
-                        // latest user value (matching the RoundedRectangleRuntime arm above).
+                        // latest user value.
                         rectStrokeWidth.StrokeWidth = (float)value;
+                        handled = true;
                     }
-                    else
+                    else if (!handled)
                     {
                         asRoundedRectangle.StrokeWidth = (float)value;
+                        handled = true;
                     }
-                    handled = true;
                     break;
                 // Mirror StrokeWidth routing: dashed-stroke values live on the runtime so the Apos
                 // ScreenPixel-scaling pass in PreRender stays consistent with StrokeWidth. Skia's
                 // runtime is a passthrough setter so this path produces the same end state there.
-                case nameof(RoundedRectangleRuntime.StrokeDashLength):
-                    if (graphicalUiElement is RoundedRectangleRuntime rrDashRuntime)
-                    {
-                        rrDashRuntime.StrokeDashLength = (float)value;
-                    }
-                    else if (graphicalUiElement is RectangleRuntime rectDash)
+                case nameof(RectangleRuntime.StrokeDashLength):
+                    if (graphicalUiElement is RectangleRuntime rectDash)
                     {
                         rectDash.StrokeDashLength = (float)value;
+                        handled = true;
                     }
-                    else
+                    else if (!handled)
                     {
                         asRoundedRectangle.StrokeDashLength = (float)value;
+                        handled = true;
                     }
-                    handled = true;
                     break;
-                case nameof(RoundedRectangleRuntime.StrokeGapLength):
-                    if (graphicalUiElement is RoundedRectangleRuntime rrGapRuntime)
-                    {
-                        rrGapRuntime.StrokeGapLength = (float)value;
-                    }
-                    else if (graphicalUiElement is RectangleRuntime rectGap)
+                case nameof(RectangleRuntime.StrokeGapLength):
+                    if (graphicalUiElement is RectangleRuntime rectGap)
                     {
                         rectGap.StrokeGapLength = (float)value;
+                        handled = true;
                     }
-                    else
+                    else if (!handled)
                     {
                         asRoundedRectangle.StrokeGapLength = (float)value;
+                        handled = true;
                     }
-                    handled = true;
                     break;
                 // Issue #2720: route CornerRadius and per-corner radii to RectangleRuntime when
                 // that's the GUE. RectangleRuntime stores these on the runtime and mirrors to
