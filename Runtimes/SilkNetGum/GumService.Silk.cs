@@ -152,6 +152,12 @@ public partial class GumService
         // build Silk-backed input from this context.
         _inputContext = inputContext;
 
+        // The ctor-time AssignClipboard() call (GumService.cs) runs before this Initialize -- Default's
+        // lazy new GumService() constructs the instance on first access, which normally happens before
+        // Initialize assigns _inputContext above -- so its null-guard always failed and Clipboard stayed
+        // null. Re-run it now that _inputContext is guaranteed non-null (#3651).
+        AssignClipboard();
+
         var managers = new SystemManagers();
         this.SystemManagers = managers;
         SystemManagers.Default = managers;
