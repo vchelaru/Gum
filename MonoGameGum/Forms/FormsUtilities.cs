@@ -218,7 +218,7 @@ public class FormsUtilities
                 TryAdd(typeof(Label), (_, c) => new DefaultVisuals.V3.LabelVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(ListBox), (_, c) => new DefaultVisuals.V3.ListBoxVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(ListBoxItem), (_, c) => new DefaultVisuals.V3.ListBoxItemVisual(tryCreateFormsObject: c));
-#if XNALIKE || FRB || RAYLIB
+#if !SOKOL
                 TryAdd(typeof(Menu), (_, c) => new DefaultVisuals.V3.MenuVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(MenuItem), (_, c) => new DefaultVisuals.V3.MenuItemVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(PasswordBox), (_, c) => new DefaultVisuals.V3.PasswordBoxVisual(tryCreateFormsObject: c));
@@ -702,7 +702,7 @@ public class FormsUtilities
             }
             else if (behaviorNames.Contains(StandardFormsBehaviorNames.MenuBehaviorName))
             {
-#if XNALIKE || FRB || RAYLIB
+#if !SOKOL
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileMenuRuntime), overwriteIfAlreadyExists: false);
@@ -710,7 +710,7 @@ public class FormsUtilities
             }
             else if (behaviorNames.Contains(StandardFormsBehaviorNames.MenuItemBehaviorName))
             {
-#if XNALIKE || FRB || RAYLIB
+#if !SOKOL
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileMenuItemRuntime), overwriteIfAlreadyExists: false);
@@ -724,7 +724,7 @@ public class FormsUtilities
             }
             else if (behaviorNames.Contains(StandardFormsBehaviorNames.PasswordBoxBehaviorName))
             {
-#if XNALIKE || FRB || RAYLIB
+#if !SOKOL
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFilePasswordBoxRuntime), overwriteIfAlreadyExists: false);
