@@ -170,6 +170,25 @@ public class Keyboard : IInputReceiverKeyboard
     private readonly HashSet<GumKeys> _currentDown = new();
     private readonly HashSet<GumKeys> _previousDown = new();
 
+    // Manual OS-independent key-repeat: Silk.NET.Input has no repeat-rate poll (unlike Raylib's
+    // IsKeyPressedRepeat), so discrete key actions (e.g. holding an arrow key to move a caret or
+    // navigate a ListBox) are timed here instead. Mirrors MonoGame's Keyboard.RepeatDelay/RepeatRate
+    // semantics (Runtimes/MonoGameGum/Input/Keyboard.cs).
+    private readonly Dictionary<GumKeys, double> _keyDownSince = new();
+    private readonly Dictionary<GumKeys, double> _lastRepeatTime = new();
+    private double _currentGameTime;
+
+    /// <summary>
+    /// Delay after the initial key press before repeat typing begins.
+    /// </summary>
+    public System.TimeSpan RepeatDelay { get; set; } = System.TimeSpan.FromMilliseconds(500);
+
+    /// <summary>
+    /// Interval between repeated key-typed events while a key is held down, once
+    /// <see cref="RepeatDelay"/> has elapsed.
+    /// </summary>
+    public System.TimeSpan RepeatRate { get; set; } = System.TimeSpan.FromMilliseconds(70);
+
     // Typed chars accrue from KeyChar events as they arrive (before Update). Activity snapshots
     // and clears them so the frame's DoKeyboardAction reads exactly this frame's input.
     private readonly StringBuilder _charsTyped = new();
@@ -208,11 +227,38 @@ public class Keyboard : IInputReceiverKeyboard
 
     /// <inheritdoc/>
     /// <remarks>
-    /// Silk provides no OS-driven key-repeat poll, so KeyTyped reports the initial press only.
-    /// Character-producing input (including repeat) still flows through <see cref="GetStringTyped"/>
-    /// via the KeyChar event, which is what TextBox text entry consumes.
+    /// Returns true on the initial press and again at <see cref="RepeatDelay"/>/<see cref="RepeatRate"/>
+    /// intervals while the key is held, manually timed since Silk provides no OS-driven repeat poll.
+    /// Character-producing input (including repeat) also flows through <see cref="GetStringTyped"/>
+    /// via the KeyChar event (which the OS already repeats), which is what TextBox text entry consumes.
     /// </remarks>
-    public bool KeyTyped(GumKeys key) => KeyPushed(key);
+    public bool KeyTyped(GumKeys key)
+    {
+        if (KeyPushed(key))
+        {
+            return true;
+        }
+
+        if (!KeyDown(key) || !_keyDownSince.TryGetValue(key, out double downSince))
+        {
+            return false;
+        }
+
+        double elapsedSincePush = _currentGameTime - downSince;
+        if (elapsedSincePush < RepeatDelay.TotalSeconds)
+        {
+            return false;
+        }
+
+        if (_lastRepeatTime.TryGetValue(key, out double lastRepeat) &&
+            _currentGameTime - lastRepeat < RepeatRate.TotalSeconds)
+        {
+            return false;
+        }
+
+        _lastRepeatTime[key] = _currentGameTime;
+        return true;
+    }
 
     /// <summary>
     /// Performs every-frame activity: rolls the down-state snapshot forward (for push/release edge
@@ -222,6 +268,8 @@ public class Keyboard : IInputReceiverKeyboard
     /// <param name="gameTime">The number of seconds since the start of the game.</param>
     public void Activity(double gameTime)
     {
+        _currentGameTime = gameTime;
+
         _previousDown.Clear();
         foreach (GumKeys key in _currentDown)
         {
@@ -234,6 +282,24 @@ public class Keyboard : IInputReceiverKeyboard
             if (IsKeyPressed(pair.Value))
             {
                 _currentDown.Add(pair.Key);
+            }
+        }
+
+        foreach (GumKeys key in _currentDown)
+        {
+            if (!_previousDown.Contains(key))
+            {
+                _keyDownSince[key] = gameTime;
+                _lastRepeatTime.Remove(key);
+            }
+        }
+
+        foreach (GumKeys key in _previousDown)
+        {
+            if (!_currentDown.Contains(key))
+            {
+                _keyDownSince.Remove(key);
+                _lastRepeatTime.Remove(key);
             }
         }
 
