@@ -258,13 +258,15 @@ unsafe class Program
                 Console.WriteLine($"Version: {Marshal.PtrToStringUTF8((IntPtr)version)}");
             }
 
-            // TryGetProcAddress (not GetProcAddress) is required here: GRGlInterface.Create probes
-            // many optional GL/EGL extension entry points, and the plain GetProcAddress throws
-            // SymbolLoadingException for any that don't exist, which made Create() return null and
-            // the next line NRE (#3652). TryGetProcAddress returns a null pointer for missing
-            // symbols instead, matching how the old raw sdl.GLGetProcAddress call behaved.
-            using var grGlInterface = GRGlInterface.Create(name =>
-                window.GLContext!.TryGetProcAddress(name, out var addr) ? addr : 0);
+            // Deliberately NOT window.GLContext.GetProcAddress/TryGetProcAddress here: both funnel
+            // through SdlContext's SDL_ClearError/SDL_GetError check, which treats ANY SDL error
+            // string set during the lookup as failure -- even a stale/benign one unrelated to the
+            // proc actually being missing -- so real, resolvable functions were coming back null
+            // and GRGlInterface.Create() failed outright, NREing on the next line's Validate()
+            // (#3652). Call the raw SDL proc-address lookup directly instead, exactly like the
+            // original (working) sdl.GLGetProcAddress-based loadFunction did -- it only treats a
+            // null pointer as "missing", which is all GRGlInterface.Create actually needs.
+            using var grGlInterface = GRGlInterface.Create(name => (nint)sdl.GLGetProcAddress(name));
             grGlInterface.Validate();
             using var grContext = GRContext.CreateGl(grGlInterface);
             var renderTarget = new GRBackendRenderTarget(windowWidth, windowHeight, 0, 8, new GRGlFramebufferInfo(0, 0x8058)); // 0x8058 = GL_RGBA8`
