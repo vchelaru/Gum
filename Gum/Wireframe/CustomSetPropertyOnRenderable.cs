@@ -51,7 +51,7 @@ using ResolvedFont = RenderingLibrary.Graphics.BitmapFont;
 namespace Gum.Wireframe;
 #endif
 
-public class CustomSetPropertyOnRenderable
+public partial class CustomSetPropertyOnRenderable
 {
     private static ILocalizationService? _localizationService;
 

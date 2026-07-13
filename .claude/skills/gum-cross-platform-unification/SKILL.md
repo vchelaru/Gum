@@ -113,4 +113,15 @@ Also not the pattern for duplication *between two different runtime classes on t
 
 The **convergence technique** above, however, applies to any source that *already exists as per-platform duplicate copies* heading for a single linked home — not only `GueDeriving` wrappers. The canonical non-wrapper example, now fully converged, is the string-path dispatch/bridge file `Gum/Wireframe/CustomSetPropertyOnRenderable.cs`, linked into `RaylibGum.csproj` in place of a separate Raylib copy. The "don't apply this to tool code" exclusion is about not *inventing* the source-sharing pattern for things that are genuinely single-home; it does not forbid converging files that are already duplicated per platform.
 
+### Two `CustomSetPropertyOnRenderable` dispatchers, split by shape capability
+
+The dispatcher exists as **two** separate source files — the split is by shape-renderable capability, not platform:
+
+| File | Compiled into | Shape renderables it dispatches |
+|---|---|---|
+| `Gum/Wireframe/CustomSetPropertyOnRenderable.cs` | MonoGame · KNI · FNA · Raylib · tool | core geometry — `LineRectangle`/`SolidRectangle`/`LineCircle`/`LinePolygon` |
+| `Runtimes/SkiaGum/CustomSetPropertyOnRenderable.cs` | SkiaGum · `MonoGameGumShapes`+`KniGumShapes` (Apos.Shapes) · SilkNet | rich `RenderableShapeBase` family — Arc/RoundedRectangle/etc. |
+
+The Skia file is `#if SKIA`/`#else`-split so one source serves **both** the Skia dispatcher and the Apos.Shapes dispatcher — the rich shape path is already shared between Skia and MonoGame-with-Apos. Both files are delegate-wired through `GraphicalUiElement.SetPropertyOnRenderable` (each backend's `SystemManagers` assigns it), so callers never name the class. **Landmine:** `AposShapeRuntime` and external FRB Glue reference these classes *by namespace* directly, so the namespace is not free to move. Convergence direction (runtime-type-first dispatch) and why the two files stay separate: `Direction/decisions/0007-converge-skia-property-dispatch.md`.
+
 This skill is also **not** the source of truth for *which* runtimes are unified. Roadmap and per-runtime status live in the (gitignored) design docs at `.claude/designs/runtime-unification/` — `RuntimeNorthStar.md` for the workstream-level roadmap, `RuntimeUnificationAndRefactor.md` for per-runtime details. Update those when a unification lands; do not duplicate status here.
