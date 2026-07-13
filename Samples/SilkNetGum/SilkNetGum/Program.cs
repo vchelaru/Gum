@@ -374,14 +374,15 @@ unsafe class Program
 
             gl.Viewport(0, 0, 600, 600);
 
+            // Dragging a window border on Windows enters a nested "live resize" modal message loop,
+            // and SDL's event pump can invoke this callback from inside that nested loop -- where the
+            // GL context is not guaranteed to be current/consistent. Recreating GPU resources
+            // (RecreateSurface) synchronously here crashed with AccessViolationException. Instead just
+            // record the new size and apply it once per frame from the main loop below, where the
+            // context state is well-defined (#3657).
+            Vector2D<int>? pendingResize = null;
             window.Closing += () => running = false;
-            window.Resize += newSize =>
-            {
-                gl.Viewport(0, 0, (uint)newSize.X, (uint)newSize.Y);
-                RecreateSurface(newSize.X, newSize.Y);
-                GumUI.HandleResize(newSize.X, newSize.Y);
-                ResizeCurrentGumxScreen();
-            };
+            window.Resize += newSize => pendingResize = newSize;
 
             if (inputContext.Keyboards.Count > 0)
             {
@@ -438,6 +439,17 @@ unsafe class Program
                 // drives the input context -- mouse/keyboard state), then clears the list. This
                 // is what makes clicks/typing actually reach the Forms controls (#3652).
                 window.DoEvents();
+
+                if (pendingResize.HasValue)
+                {
+                    var newSize = pendingResize.Value;
+                    pendingResize = null;
+
+                    gl.Viewport(0, 0, (uint)newSize.X, (uint)newSize.Y);
+                    RecreateSurface(newSize.X, newSize.Y);
+                    GumUI.HandleResize(newSize.X, newSize.Y);
+                    ResizeCurrentGumxScreen();
+                }
 
                 // Per-frame Update drives AnimateSelf (and any other Forms
                 // input/activity pumps). Without this the .achx animation row
