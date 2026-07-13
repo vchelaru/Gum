@@ -3,6 +3,7 @@ using RenderingLibrary.Graphics;
 using Gum.GueDeriving;
 using SkiaSharp;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Topten.RichTextKit;
 using Vector2 = System.Numerics.Vector2;
@@ -13,7 +14,7 @@ using Gum.Wireframe;
 
 namespace SkiaGum;
 
-public class Text : IRenderableIpso, IVisible, IText, ICloneable
+public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 {
     #region Fields/Properties
 
@@ -139,6 +140,92 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
 
     /// <inheritdoc/>
     public bool IsHeightDependentOnLines { get; set; }
+
+    /// <summary>
+    /// The maximum number of characters to display visually. Characters beyond this count
+    /// are hidden but remain in <see cref="RawText"/>. Intended for typewriter-style reveal
+    /// effects (e.g. <c>DialogBox</c>).
+    /// </summary>
+    /// <remarks>
+    /// Unlike the MonoGame/Raylib Text renderables, SkiaGum's <see cref="Render"/> does not yet
+    /// honor this value to truncate the rendered glyphs -- it is provided so SkiaGum.Text
+    /// satisfies <see cref="IFormsText"/> (issue #3653) and so callers can set it without an
+    /// InvalidCastException. Letter-reveal rendering support can be added later.
+    /// </remarks>
+    public int? MaxLettersToShow { get; set; }
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// SkiaGum's own wrapping is performed by Topten.RichTextKit's <see cref="TextBlock"/>
+    /// (see <see cref="GetTextBlock"/>), not by the shared <see cref="IWrappedTextExtensions.UpdateLines"/>
+    /// word-wrap algorithm the MonoGame/Raylib backends use, so this value has no effect on
+    /// SkiaGum's own layout. RichTextKit performs Unicode (UAX#14) line breaking, which does
+    /// break within an overlong word when no earlier break opportunity fits the wrap width, so
+    /// <c>true</c> matches its actual behavior (as well as MonoGame/Raylib's default).
+    /// </remarks>
+    bool IWrappedText.IsMidWordLineBreakEnabled => true;
+
+    /// <summary>
+    /// The current wrapped lines after layout, reconstructed from the cached
+    /// <see cref="TextBlock"/>'s line ranges so each entry (including any trailing
+    /// spaces RichTextKit's layout preserves) lines up with <see cref="RawText"/>
+    /// the same way <c>WrappedText[i].Length</c> summed across lines does for the
+    /// MonoGame/Raylib backends -- <c>TextBoxBase</c> relies on that for caret-index math.
+    /// </summary>
+    public List<string> WrappedText
+    {
+        get
+        {
+            var textBlock = GetCachedTextBlock();
+            if (!ReferenceEquals(textBlock, _wrappedTextSourceBlock))
+            {
+                _wrappedTextSourceBlock = textBlock;
+                _cachedWrappedTextList = BuildWrappedTextList(textBlock);
+            }
+            return _cachedWrappedTextList;
+        }
+    }
+
+    private List<string> BuildWrappedTextList(TextBlock textBlock)
+    {
+        var lines = new List<string>();
+        if (string.IsNullOrEmpty(mRawText))
+        {
+            return lines;
+        }
+
+        // RichTextKit's TextLine.Start/Length are code-point indices into the text that was
+        // added to the TextBlock. GetTextBlock adds mRawText verbatim (no CRLF normalization),
+        // so index directly into mRawText rather than a normalized copy.
+        foreach (var line in textBlock.Lines)
+        {
+            if (line.Start + line.Length <= mRawText.Length)
+            {
+                lines.Add(mRawText.Substring(line.Start, line.Length));
+            }
+        }
+
+        return lines;
+    }
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Measured at the base font size (<see cref="FontSize"/> scaled only by
+    /// <see cref="GlobalTextScale"/>), with <see cref="FontScale"/> factored out -- matching
+    /// callers such as <c>TextBoxBase.GetIndex</c> which multiply the result by
+    /// <see cref="FontScale"/> themselves.
+    /// </remarks>
+    public int LineHeightInPixels
+    {
+        get
+        {
+            var textBlock = new TextBlock();
+            textBlock.AddText("My", GetRawMeasurementStyle());
+            return textBlock.Lines.Count > 0
+                ? (int)MathF.Ceiling(textBlock.Lines[0].Height)
+                : FontSize;
+        }
+    }
 
     public bool IsItalic
     {
@@ -437,6 +524,8 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
     private float _lineHeightMultiplier = 1;
     private HorizontalAlignment _horizontalAlignment;
     private int? _maximumNumberOfLines;
+    private TextBlock? _wrappedTextSourceBlock;
+    private List<string> _cachedWrappedTextList = new();
 
     public TextBlock GetCachedTextBlock(float? forcedWidth = null)
     {
@@ -512,6 +601,47 @@ public class Text : IRenderableIpso, IVisible, IText, ICloneable
 
         return style;
     }
+
+    /// <summary>
+    /// Same font/weight/italics as <see cref="GetStyle"/>, but sized at the base
+    /// <see cref="FontSize"/> * <see cref="GlobalTextScale"/> only -- <see cref="FontScale"/>
+    /// and <see cref="LineHeightMultiplier"/> are left out because <see cref="MeasureString(string)"/>
+    /// and <see cref="LineHeightInPixels"/> return raw glyph-pixel values that callers (e.g.
+    /// <c>TextBoxBase</c>) scale by those factors themselves.
+    /// </summary>
+    private Style GetRawMeasurementStyle()
+    {
+        return new Style()
+        {
+            FontFamily = FontName,
+            FontSize = FontSize * (float)GlobalTextScale,
+            TextColor = this.Color,
+            FontItalic = this.IsItalic,
+            FontWeight = (int)(400 * BoldWeight),
+        };
+    }
+
+    /// <inheritdoc/>
+    public float MeasureString(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return 0;
+        }
+
+        var textBlock = new TextBlock();
+        textBlock.AddText(text, GetRawMeasurementStyle());
+        return textBlock.MeasuredWidth;
+    }
+
+    /// <summary>
+    /// Measures <paramref name="text"/> using this Text's active font. The
+    /// <paramref name="style"/> parameter is advisory on the SkiaGum runtime and is
+    /// ignored -- RichTextKit's own measurement is used regardless of the requested
+    /// style. This overload exists so callers can write platform-agnostic code that
+    /// also works on runtimes (such as the MonoGame runtime) where the style is honored.
+    /// </summary>
+    public float MeasureString(string text, HorizontalMeasurementStyle style) => MeasureString(text);
 
     void IRenderableIpso.SetParentDirect(IRenderableIpso? parent)
     {
