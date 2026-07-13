@@ -1,5 +1,7 @@
 ﻿using Silk.NET.OpenGLES;
 using Silk.NET.SDL;
+using Silk.NET.Input;
+using Silk.NET.Windowing.Sdl;
 using Avalonia.Skia;
 using SkiaSharp;
 using System.Diagnostics;
@@ -63,11 +65,15 @@ unsafe class Program
         () => new SilkNetGum.Screens.RectanglesScreen(),
         () => new SilkNetGum.Screens.ArcsScreen(),
         () => new SilkNetGum.Screens.PolygonsScreen(),
+        () => new SilkNetGum.Screens.FormsScreen(),
     };
 
-    private static void InitializeGum(SKCanvas canvas)
+    private static void InitializeGum(SKCanvas canvas, IInputContext inputContext)
     {
-        GumUI.Initialize(canvas, "Content/GumProject/GumProject.gumx");
+        GumUI.Initialize(canvas, inputContext, "Content/GumProject/GumProject.gumx");
+
+        // Registers GumUI.Keyboard for Tab / Shift+Tab focus traversal between Forms controls.
+        GumUI.UseKeyboardDefaults();
 
         LoadScreen(0);
 
@@ -304,7 +310,15 @@ unsafe class Program
             using var surface = SKSurface.Create(grContext, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
             canvas = surface.Canvas;
 
-            InitializeGum(canvas);
+            // Wrap the raw SDL window handle (created above via Silk.NET.SDL P/Invoke) in an IView so
+            // Silk.NET.Input.Sdl can build a real IInputContext from it. This does NOT hand window or
+            // GL-context ownership to Silk.NET.Windowing -- CreateFrom only wraps the existing handle
+            // for input purposes; the ANGLE/GLES/D3D11 setup above is untouched (#3652).
+            SdlWindowing.RegisterPlatform();
+            var view = SdlWindowing.CreateFrom(window);
+            var inputContext = view.CreateInput();
+
+            InitializeGum(canvas, inputContext);
 
             gl.Viewport(0, 0, 600, 600);
 

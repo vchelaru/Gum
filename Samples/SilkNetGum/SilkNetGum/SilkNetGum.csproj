@@ -21,16 +21,19 @@
 		<PackageReference Include="Silk.NET.EGL.Extensions.EXT" Version="1.9.0" />
 		<PackageReference Include="Silk.NET.OpenGLES" Version="2.22.0" />
 		<PackageReference Include="Silk.NET.SDL" Version="2.21.0" />
+		<!-- Wraps the raw SDL window handle (created below via Silk.NET.SDL P/Invoke) in an IView
+		     so Silk.NET.Input.Sdl can build a real IInputContext from it via SdlWindowing.CreateFrom
+		     plus view.CreateInput(). This project intentionally does not let Silk.NET.Windowing own
+		     window creation or the GL context; SdlWindowing.CreateFrom wraps the existing handle for
+		     input purposes only (#3652). -->
+		<PackageReference Include="Silk.NET.Windowing.Sdl" Version="2.21.0" />
 	</ItemGroup>
 
+	<!-- Gum.SilkNet: the real game-host runtime (GumService.Silk.cs, Silk-backed Cursor/Keyboard,
+	     Forms V3 default visuals). Replaces the old SkiaGum + render-only standalone GumService
+	     wiring, which had no input context at all (#3652). -->
 	<ItemGroup>
-	  <ProjectReference Include="..\..\..\Runtimes\SkiaGum\SkiaGum.csproj" />
-	</ItemGroup>
-
-	<!-- Render-only GumService (evicted from Gum.SkiaSharp core, #3218). Shared source,
-	     file-linked here until this sample becomes the Gum.SilkNet game-host runtime (#2738). -->
-	<ItemGroup>
-	  <Compile Include="..\..\..\Runtimes\SkiaGum.Standalone\GumService.cs" Link="GumService.cs" />
+	  <ProjectReference Include="..\..\..\Runtimes\SilkNetGum\SilkNetGum.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
