@@ -400,6 +400,33 @@ public partial class CustomSetPropertyOnRenderable
         return false;
     }
 
+    // ColoredCircleRuntime is obsolete and slated for removal (superseded by CircleRuntime).
+    // Its property dispatch is isolated here so the removal is a clean delete of this method and its
+    // single call site in the Circle branch, rather than unpicking arms interleaved with
+    // CircleRuntime inside that branch's switch.
+    private static bool TrySetPropertyOnColoredCircleRuntime(GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    {
+        if (graphicalUiElement is not ColoredCircleRuntime asColoredCircleRuntime)
+        {
+            return false;
+        }
+
+        switch (propertyName)
+        {
+            case nameof(ColoredCircleRuntime.StrokeWidth):
+                asColoredCircleRuntime.StrokeWidth = (float)value;
+                return true;
+            case nameof(ColoredCircleRuntime.StrokeDashLength):
+                asColoredCircleRuntime.StrokeDashLength = (float)value;
+                return true;
+            case nameof(ColoredCircleRuntime.StrokeGapLength):
+                asColoredCircleRuntime.StrokeGapLength = (float)value;
+                return true;
+        }
+
+        return false;
+    }
+
     public static void SetPropertyOnRenderable(IRenderableIpso containedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value) =>
         SetPropertyOnRenderableFunc(containedObjectAsIpso, graphicalUiElement, propertyName, value);
 
@@ -778,6 +805,8 @@ public partial class CustomSetPropertyOnRenderable
         }
         else if (containedObjectAsIpso is Circle asCircle)
         {
+            handled = TrySetPropertyOnColoredCircleRuntime(graphicalUiElement, propertyName, value);
+
             if(graphicalUiElement is CircleRuntime circleRuntime)
             {
                 switch (propertyName)
@@ -931,50 +960,41 @@ public partial class CustomSetPropertyOnRenderable
                         handled = true;
                     }
                     break;
-                case nameof(ColoredCircleRuntime.StrokeWidth):
-                    if (graphicalUiElement is ColoredCircleRuntime ccStrokeWidth)
-                    {
-                        ccStrokeWidth.StrokeWidth = (float)value;
-                    }
-                    else if (graphicalUiElement is CircleRuntime cStrokeWidth)
+                case nameof(CircleRuntime.StrokeWidth):
+                    if (graphicalUiElement is CircleRuntime cStrokeWidth)
                     {
                         cStrokeWidth.StrokeWidth = (float)value;
+                        handled = true;
                     }
-                    else
+                    else if (!handled)
                     {
                         asCircle.StrokeWidth = (float)value;
+                        handled = true;
                     }
-                    handled = true;
                     break;
-                case nameof(ColoredCircleRuntime.StrokeDashLength):
-                    if (graphicalUiElement is ColoredCircleRuntime ccDash)
-                    {
-                        ccDash.StrokeDashLength = (float)value;
-                    }
-                    else if (graphicalUiElement is CircleRuntime cDash)
+                case nameof(CircleRuntime.StrokeDashLength):
+                    if (graphicalUiElement is CircleRuntime cDash)
                     {
                         cDash.StrokeDashLength = (float)value;
+                        handled = true;
                     }
-                    else
+                    else if (!handled)
                     {
                         asCircle.StrokeDashLength = (float)value;
+                        handled = true;
                     }
-                    handled = true;
                     break;
-                case nameof(ColoredCircleRuntime.StrokeGapLength):
-                    if (graphicalUiElement is ColoredCircleRuntime ccGap)
-                    {
-                        ccGap.StrokeGapLength = (float)value;
-                    }
-                    else if (graphicalUiElement is CircleRuntime cGap)
+                case nameof(CircleRuntime.StrokeGapLength):
+                    if (graphicalUiElement is CircleRuntime cGap)
                     {
                         cGap.StrokeGapLength = (float)value;
+                        handled = true;
                     }
-                    else
+                    else if (!handled)
                     {
                         asCircle.StrokeGapLength = (float)value;
+                        handled = true;
                     }
-                    handled = true;
                     break;
             }
 
