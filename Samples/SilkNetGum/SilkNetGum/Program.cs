@@ -20,24 +20,6 @@ using GumRuntime;
 
 unsafe class Program
 {
-    // Temporary diagnostic delegate for #3652 -- calls raw glGetString directly, bypassing
-    // Silk.NET.OpenGLES's `gl` wrapper, to isolate whether the proc address itself is bad or
-    // whether something about the managed binding is the problem.
-    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-    private delegate nint GetStringDelegate(uint name);
-
-    // Temporary diagnostic log for #3652 -- <OutputType>WinExe</OutputType> has no console
-    // attached, so Console.WriteLine output is invisible. Log() writes to both, so the log file
-    // (next to the exe) has the full record regardless of how the app is launched.
-    private static readonly string LogFilePath =
-        System.IO.Path.Combine(AppContext.BaseDirectory, "silknet_diagnostic.log");
-
-    private static void Log(string message)
-    {
-        Console.WriteLine(message);
-        System.IO.File.AppendAllText(LogFilePath, message + Environment.NewLine);
-    }
-
     #region Enums
     enum RenderBackend
     {
@@ -156,10 +138,6 @@ unsafe class Program
     static unsafe void Main(string[] args)
     {
 
-        // Reset the diagnostic log for #3652 at the start of each run so it reflects only the
-        // most recent attempt.
-        System.IO.File.WriteAllText(LogFilePath, string.Empty);
-
         //vulkan by default uses dedicated gpu, thus why the default on windows
         RenderBackend renderBackend = RenderBackend.Dx11;
 
@@ -260,18 +238,21 @@ unsafe class Program
             // (attributes are global SDL state, applied before Window.Create below) restores parity.
             sdl.GLSetAttribute(GLattr.Doublebuffer, 1);
 
-            Log("Creating window...");
+            // SdlView.CoreInitialize creates the SDL window (Sdl.CreateWindow) BEFORE setting
+            // ContextMajorVersion/MinorVersion/ContextProfileMask -- those are only set later,
+            // immediately before Sdl.GLCreateContext. For ANGLE, that's too late: its EGL surface
+            // binds its format at window-creation time, so the context ends up non-functional
+            // (glGetString and friends silently return null/empty, and GRGlInterface.Create fails)
+            // unless these are also set here, before Window.Create (#3652).
+            sdl.GLSetAttribute(GLattr.ContextMajorVersion, api.Version.MajorVersion);
+            sdl.GLSetAttribute(GLattr.ContextMinorVersion, api.Version.MinorVersion);
+            sdl.GLSetAttribute(GLattr.ContextProfileMask, (int)(api.API == ContextAPI.OpenGLES ? GLprofile.ES : GLprofile.Core));
+
+            Console.WriteLine("Creating window...");
             window = Silk.NET.Windowing.Window.Create(options);
             window.Initialize();
 
-            // Temporary diagnostics for #3652 -- remove once the GRGlInterface.Create failure is
-            // root-caused. Confirms whether the GL context itself is functional before blaming
-            // proc-address resolution.
-            Log($"window.API: {window.API.API} {window.API.Version.MajorVersion}.{window.API.Version.MinorVersion} {window.API.Profile}");
-            Log($"window.GLContext is null: {window.GLContext is null}");
-            Log($"window.GLContext.IsCurrent: {window.GLContext?.IsCurrent}");
-
-            Log("Getting GL API...");
+            Console.WriteLine("Getting GL API...");
             gl = GL.GetApi(window);
 
             gl.Enable(EnableCap.DebugOutput);
@@ -289,53 +270,11 @@ unsafe class Program
             {
                 byte* renderer = (byte*)gl.GetString(GLEnum.Renderer);
                 byte* version = (byte*)gl.GetString(GLEnum.Version);
-                Log($"Renderer: {Marshal.PtrToStringUTF8((IntPtr)renderer)}");
-                Log($"Version: {Marshal.PtrToStringUTF8((IntPtr)version)}");
-                // Temporary diagnostic for #3652: confirms whether basic GL calls made through
-                // `gl` (loaded via GL.GetApi(window)) actually reach the driver without error.
-                Log($"glGetError after GetString calls: {gl.GetError()}");
+                Console.WriteLine($"Renderer: {Marshal.PtrToStringUTF8((IntPtr)renderer)}");
+                Console.WriteLine($"Version: {Marshal.PtrToStringUTF8((IntPtr)version)}");
             }
 
-            // Temporary diagnostics for #3652 -- log every failed proc-address lookup (up to a cap)
-            // instead of silently letting GRGlInterface.Create return null. Deliberately NOT
-            // window.GLContext.GetProcAddress/TryGetProcAddress: both funnel through SdlContext's
-            // SDL_ClearError/SDL_GetError check, which treats ANY SDL error string as failure, even
-            // a stale/benign one, so this calls the raw SDL lookup directly (matching the original,
-            // working loadFunction) and only treats a null pointer as "missing".
-            int lookupCount = 0, failCount = 0;
-            var firstFailures = new System.Collections.Generic.List<string>();
-            var allProbed = new System.Collections.Generic.List<string>();
-            nint ProbeGetProcAddress(string name)
-            {
-                lookupCount++;
-                allProbed.Add(name);
-                nint addr = (nint)sdl.GLGetProcAddress(name);
-                if (addr == 0)
-                {
-                    failCount++;
-                    if (firstFailures.Count < 20) firstFailures.Add(name);
-                }
-                return addr;
-            }
-            using var grGlInterface = GRGlInterface.Create(ProbeGetProcAddress);
-            Log($"GRGlInterface.Create probed {lookupCount} procs, {failCount} failed (null pointer). All probed: {string.Join(", ", allProbed)}");
-            Log($"grGlInterface is null: {grGlInterface is null}");
-            if (grGlInterface is null)
-            {
-                // Sanity check that the raw SDL proc-address path (same call GRGlInterface.Create
-                // just used) actually resolves glGetString/glGetError and that invoking them
-                // directly, bypassing Silk.NET.OpenGLES's `gl` wrapper entirely, produces real data.
-                nint rawGetString = (nint)sdl.GLGetProcAddress("glGetString");
-                Log($"raw glGetString proc address: 0x{rawGetString:X}");
-                if (rawGetString != 0)
-                {
-                    var getStringDelegate = Marshal.GetDelegateForFunctionPointer<GetStringDelegate>(rawGetString);
-                    nint versionPtr = getStringDelegate(0x1F02); // GL_VERSION
-                    Log($"raw glGetString(GL_VERSION) pointer: 0x{versionPtr:X}, value: {Marshal.PtrToStringUTF8(versionPtr)}");
-                }
-                Log("GRGlInterface.Create returned null -- cannot continue. See probed-proc list above.");
-                return;
-            }
+            using var grGlInterface = GRGlInterface.Create(name => (nint)sdl.GLGetProcAddress(name));
             grGlInterface.Validate();
             using var grContext = GRContext.CreateGl(grGlInterface);
             var renderTarget = new GRBackendRenderTarget(windowWidth, windowHeight, 0, 8, new GRGlFramebufferInfo(0, 0x8058)); // 0x8058 = GL_RGBA8`
@@ -439,14 +378,6 @@ unsafe class Program
                 // Swap buffers
                 window.GLContext!.SwapBuffers();
             }
-        }
-        catch (Exception ex)
-        {
-            // Temporary diagnostic for #3652: <OutputType>WinExe</OutputType> means Console output
-            // is invisible, so log any exception to the file before it propagates (VS's own
-            // exception dialog/debugger break still happens as normal after this).
-            Log($"UNHANDLED EXCEPTION: {ex}");
-            throw;
         }
         finally
         {
