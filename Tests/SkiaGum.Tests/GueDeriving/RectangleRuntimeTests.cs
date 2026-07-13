@@ -19,6 +19,127 @@ public class RectangleRuntimeTests
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
     }
 
+    // ---- Dispatcher routing pins (issue #3650) ---------------------------------------------
+    // These lock the CURRENT behavior of the Skia CustomSetPropertyOnRenderable dispatcher for the
+    // RectangleRuntime-intercepted property paths (the `graphicalUiElement is RectangleRuntime` arms
+    // in the RoundedRectangle branch of SetPropertyOnRenderableFunc). They drive the STRING property
+    // name through the production dispatcher (via SetProperty) and assert the value lands on the
+    // runtime — the safety net for the planned runtime-type-first restructure of the dispatcher.
+    // CornerRadius / per-corner radii are already pinned this way below (issue #2720).
+
+    [Fact]
+    public void Dispatch_DropshadowBlur_RoutesToRuntime()
+    {
+        RectangleRuntime sut = new();
+
+        sut.SetProperty("DropshadowBlur", 7f);
+
+        sut.DropshadowBlur.ShouldBe(7f);
+    }
+
+    [Fact]
+    public void Dispatch_DropshadowChannels_ComposeDropshadowColor()
+    {
+        RectangleRuntime sut = new();
+
+        sut.SetProperty("DropshadowRed", 10);
+        sut.SetProperty("DropshadowGreen", 20);
+        sut.SetProperty("DropshadowBlue", 30);
+        sut.SetProperty("DropshadowAlpha", 40);
+
+        sut.DropshadowColor.ShouldBe(new SKColor(10, 20, 30, 40));
+    }
+
+    [Fact]
+    public void Dispatch_DropshadowOffset_RoutesToRuntime()
+    {
+        RectangleRuntime sut = new();
+
+        sut.SetProperty("DropshadowOffsetX", 4f);
+        sut.SetProperty("DropshadowOffsetY", 6f);
+
+        sut.DropshadowOffsetX.ShouldBe(4f);
+        sut.DropshadowOffsetY.ShouldBe(6f);
+    }
+
+    [Fact]
+    public void Dispatch_FillChannels_ComposeFillColor()
+    {
+        RectangleRuntime sut = new();
+
+        sut.SetProperty("FillRed", 10);
+        sut.SetProperty("FillGreen", 20);
+        sut.SetProperty("FillBlue", 30);
+        sut.SetProperty("FillAlpha", 40);
+
+        sut.FillColor.ShouldBe(new SKColor(10, 20, 30, 40));
+    }
+
+    [Fact]
+    public void Dispatch_HasDropshadow_RoutesToRuntime()
+    {
+        RectangleRuntime sut = new();
+
+        sut.SetProperty("HasDropshadow", true);
+
+        sut.HasDropshadow.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Dispatch_IsFilled_RoutesToRuntime()
+    {
+        RectangleRuntime sut = new();
+
+        sut.SetProperty("IsFilled", true);
+
+        sut.IsFilled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Dispatch_StrokeChannels_ComposeStrokeColor()
+    {
+        RectangleRuntime sut = new();
+
+        sut.SetProperty("StrokeRed", 11);
+        sut.SetProperty("StrokeGreen", 22);
+        sut.SetProperty("StrokeBlue", 33);
+        sut.SetProperty("StrokeAlpha", 44);
+
+        sut.StrokeColor.ShouldBe(new SKColor(11, 22, 33, 44));
+    }
+
+    [Fact]
+    public void Dispatch_StrokeDashLength_RoutesToRuntime()
+    {
+        RectangleRuntime sut = new();
+
+        sut.SetProperty("StrokeDashLength", 9f);
+
+        sut.StrokeDashLength.ShouldBe(9f);
+    }
+
+    [Fact]
+    public void Dispatch_StrokeGapLength_RoutesToRuntime()
+    {
+        RectangleRuntime sut = new();
+
+        sut.SetProperty("StrokeGapLength", 5f);
+
+        sut.StrokeGapLength.ShouldBe(5f);
+    }
+
+    [Fact]
+    public void Dispatch_StrokeWidth_RoutesToRuntime()
+    {
+        RectangleRuntime sut = new();
+
+        sut.SetProperty("StrokeWidth", 3f);
+
+        sut.StrokeWidth.ShouldBe(3f);
+    }
+
+    // ---- End dispatcher routing pins -------------------------------------------------------
+
     [Fact]
     public void Clone_MutatingClone_DoesNotMutateSource()
     {
