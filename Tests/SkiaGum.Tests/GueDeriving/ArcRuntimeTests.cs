@@ -18,6 +18,58 @@ public class ArcRuntimeTests
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
     }
 
+    // ---- Dispatcher routing pins (issue #3650) ---------------------------------------------
+    // These lock the CURRENT behavior of the Skia CustomSetPropertyOnRenderable dispatcher for the
+    // ArcRuntime-intercepted property paths (the `graphicalUiElement is ArcRuntime` arms in the Arc
+    // branch of SetPropertyOnRenderableFunc). They drive the STRING property name through the
+    // production dispatcher (via SetProperty) and assert the value lands on the runtime — the safety
+    // net for the planned runtime-type-first restructure of the dispatcher. The legacy gradient-start
+    // channels (Red1/Green1/Blue1/Alpha1 -> primary Color) are already pinned below (issue #3009).
+
+    [Fact]
+    public void Dispatch_DropshadowBlur_RoutesToRuntime()
+    {
+        ArcRuntime sut = new();
+
+        sut.SetProperty("DropshadowBlur", 7f);
+
+        sut.DropshadowBlur.ShouldBe(7f);
+    }
+
+    [Fact]
+    public void Dispatch_StrokeDashLength_RoutesToRuntime()
+    {
+        ArcRuntime sut = new();
+
+        sut.SetProperty("StrokeDashLength", 9f);
+
+        sut.StrokeDashLength.ShouldBe(9f);
+    }
+
+    [Fact]
+    public void Dispatch_StrokeGapLength_RoutesToRuntime()
+    {
+        ArcRuntime sut = new();
+
+        sut.SetProperty("StrokeGapLength", 5f);
+
+        sut.StrokeGapLength.ShouldBe(5f);
+    }
+
+    // StrokeWidth is an obsolete alias for Thickness on ArcRuntime (both route to the same base
+    // StrokeWidth backing field). Assert via Thickness so the pin stays warning-free.
+    [Fact]
+    public void Dispatch_StrokeWidth_RoutesToRuntimeThickness()
+    {
+        ArcRuntime sut = new();
+
+        sut.SetProperty("StrokeWidth", 3f);
+
+        sut.Thickness.ShouldBe(3f);
+    }
+
+    // ---- End dispatcher routing pins -------------------------------------------------------
+
     // #2949: ArcRuntime exposes a single isotropic DropshadowBlur (mirroring CSS box-shadow /
     // Figma / Photoshop). Setting the scalar fans the value out to both axes; asserted on the
     // renderable's per-axis blur (which stays a real API at the renderable layer), not the

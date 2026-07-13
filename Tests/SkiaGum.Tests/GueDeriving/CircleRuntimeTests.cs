@@ -1,6 +1,6 @@
+using Gum.GueDeriving;
 using Gum.Wireframe;
 using Shouldly;
-using SkiaGum.GueDeriving;
 using SkiaGum.Renderables;
 using SkiaSharp;
 using System.Linq;
@@ -19,6 +19,139 @@ public class CircleRuntimeTests
     {
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
     }
+
+    // ---- Dispatcher routing pins (issue #3650) ---------------------------------------------
+    // These lock the CURRENT behavior of the Skia CustomSetPropertyOnRenderable dispatcher for the
+    // CircleRuntime-intercepted property paths (the `graphicalUiElement is CircleRuntime` arms in
+    // the Circle branch of SetPropertyOnRenderableFunc). Unlike the tests below — which set the
+    // runtime's typed properties directly — these drive the STRING property name through the
+    // production dispatcher (via SetProperty) and assert the value lands on the runtime. They are
+    // the safety net for the planned runtime-type-first restructure of the dispatcher: that refactor
+    // must keep routing each name to the same runtime setter.
+
+    [Fact]
+    public void Dispatch_DropshadowBlur_RoutesToRuntime()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("DropshadowBlur", 7f);
+
+        sut.DropshadowBlur.ShouldBe(7f);
+    }
+
+    [Fact]
+    public void Dispatch_DropshadowChannels_ComposeDropshadowColor()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("DropshadowRed", 10);
+        sut.SetProperty("DropshadowGreen", 20);
+        sut.SetProperty("DropshadowBlue", 30);
+        sut.SetProperty("DropshadowAlpha", 40);
+
+        sut.DropshadowColor.ShouldBe(new SKColor(10, 20, 30, 40));
+    }
+
+    [Fact]
+    public void Dispatch_DropshadowOffset_RoutesToRuntime()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("DropshadowOffsetX", 4f);
+        sut.SetProperty("DropshadowOffsetY", 6f);
+
+        sut.DropshadowOffsetX.ShouldBe(4f);
+        sut.DropshadowOffsetY.ShouldBe(6f);
+    }
+
+    [Fact]
+    public void Dispatch_FillChannels_ComposeFillColor()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("FillRed", 10);
+        sut.SetProperty("FillGreen", 20);
+        sut.SetProperty("FillBlue", 30);
+        sut.SetProperty("FillAlpha", 40);
+
+        sut.FillColor.ShouldBe(new SKColor(10, 20, 30, 40));
+    }
+
+    [Fact]
+    public void Dispatch_HasDropshadow_RoutesToRuntime()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("HasDropshadow", true);
+
+        sut.HasDropshadow.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Dispatch_IsFilled_RoutesToRuntime()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("IsFilled", true);
+
+        sut.IsFilled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Dispatch_Radius_SetsWidthAndHeight()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("Radius", 20f);
+
+        sut.Width.ShouldBe(40f);
+        sut.Height.ShouldBe(40f);
+    }
+
+    [Fact]
+    public void Dispatch_StrokeChannels_ComposeStrokeColor()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("StrokeRed", 11);
+        sut.SetProperty("StrokeGreen", 22);
+        sut.SetProperty("StrokeBlue", 33);
+        sut.SetProperty("StrokeAlpha", 44);
+
+        sut.StrokeColor.ShouldBe(new SKColor(11, 22, 33, 44));
+    }
+
+    [Fact]
+    public void Dispatch_StrokeDashLength_RoutesToRuntime()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("StrokeDashLength", 9f);
+
+        sut.StrokeDashLength.ShouldBe(9f);
+    }
+
+    [Fact]
+    public void Dispatch_StrokeGapLength_RoutesToRuntime()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("StrokeGapLength", 5f);
+
+        sut.StrokeGapLength.ShouldBe(5f);
+    }
+
+    [Fact]
+    public void Dispatch_StrokeWidth_RoutesToRuntime()
+    {
+        CircleRuntime sut = new();
+
+        sut.SetProperty("StrokeWidth", 3f);
+
+        sut.StrokeWidth.ShouldBe(3f);
+    }
+
+    // ---- End dispatcher routing pins -------------------------------------------------------
 
     [Fact]
     public void ContainedRenderable_ShouldBeCircle()

@@ -19,6 +19,46 @@ public class RoundedRectangleRuntimeTests
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
     }
 
+    // ---- Dispatcher routing pins (issue #3650) ---------------------------------------------
+    // These lock the CURRENT behavior of the Skia CustomSetPropertyOnRenderable dispatcher for the
+    // RoundedRectangleRuntime-intercepted stroke paths (the `graphicalUiElement is
+    // RoundedRectangleRuntime` arms — checked BEFORE the RectangleRuntime arms — in the
+    // RoundedRectangle branch of SetPropertyOnRenderableFunc). They drive the STRING property name
+    // through the production dispatcher (via SetProperty) and assert the value lands on the runtime,
+    // the safety net for the planned runtime-type-first restructure of the dispatcher.
+
+    [Fact]
+    public void Dispatch_StrokeDashLength_RoutesToRuntime()
+    {
+        RoundedRectangleRuntime sut = new();
+
+        sut.SetProperty("StrokeDashLength", 9f);
+
+        sut.StrokeDashLength.ShouldBe(9f);
+    }
+
+    [Fact]
+    public void Dispatch_StrokeGapLength_RoutesToRuntime()
+    {
+        RoundedRectangleRuntime sut = new();
+
+        sut.SetProperty("StrokeGapLength", 5f);
+
+        sut.StrokeGapLength.ShouldBe(5f);
+    }
+
+    [Fact]
+    public void Dispatch_StrokeWidth_RoutesToRuntime()
+    {
+        RoundedRectangleRuntime sut = new();
+
+        sut.SetProperty("StrokeWidth", 3f);
+
+        sut.StrokeWidth.ShouldBe(3f);
+    }
+
+    // ---- End dispatcher routing pins -------------------------------------------------------
+
     [Fact]
     public void Clone_MutatingClone_DoesNotMutateSource()
     {
