@@ -336,7 +336,9 @@ public partial class SystemManagers : ISystemManagers
         Texture2D texture = Texture2D.FromStream(Renderer.GraphicsDevice, stream);
 
         var resourceName = $"{AssemblyPrefix}.{embeddedTexture2dName}";
-        Content.LoaderManager.Self.AddDisposable($"EmbeddedResource.{resourceName}", texture);
+        Content.LoaderManager.Self.AddDisposable($"EmbeddedResource.{resourceName}", texture,
+            // Mirrors LoadEmbeddedFont above: allows unit tests, and can avoid confusing errors
+            Content.LoaderManager.ExistingContentBehavior.Replace);
 
         return texture;
     }

@@ -249,7 +249,9 @@ namespace RenderingLibrary
             Texture2D texture = Texture2D.Decode(stream);
 
             var resourceName = $"{AssemblyPrefix}.{embeddedTexture2dName}";
-            Content.LoaderManager.Self.AddDisposable($"EmbeddedResource.{resourceName}", texture);
+            Content.LoaderManager.Self.AddDisposable($"EmbeddedResource.{resourceName}", texture,
+                // Mirrors MonoGame's LoadEmbeddedTexture2d: allows unit tests, and can avoid confusing errors
+                Content.LoaderManager.ExistingContentBehavior.Replace);
 
             return texture;
         }
