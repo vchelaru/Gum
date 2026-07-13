@@ -8,19 +8,21 @@ This page assumes you have an existing Silk.NET project. This can be an empty pr
 
 The easiest way to add Gum to your project is to use the NuGet package. Open your project in your preferred IDE, or add Gum through the command line.
 
-Add the Gum.SkiaSharp NuGet package ([https://www.nuget.org/packages/Gum.SkiaSharp](https://www.nuget.org/packages/Gum.SkiaSharp))
+Add the Gum.SilkNet NuGet package ([https://www.nuget.org/packages/Gum.SilkNet](https://www.nuget.org/packages/Gum.SilkNet))
 
 Modify csproj:
 
 ```xml
-<PackageReference Include="Gum.SkiaSharp" />
+<PackageReference Include="Gum.SilkNet" />
 ```
 
 Or add through command line:
 
 ```bash
-dotnet add package Gum.SkiaSharp
+dotnet add package Gum.SilkNet
 ```
+
+`Gum.SilkNet` renders through SkiaSharp and adds real Forms input (mouse, keyboard, focus) via `Silk.NET.Input`. Your project still owns window creation and the render loop; Gum takes an `SKCanvas` and an `IInputContext` you hand it.
 
 ## Adding Source (Optional)
 
@@ -30,119 +32,62 @@ To add source, first clone the Gum repository: [https://github.com/vchelaru/Gum]
 
 If you have already added the Gum NuGet package to your project, remove it.
 
-Add the following projects to your solution:
+Add the following project to your solution:
 
-* \<Gum Root>/Runtimes/SkiaGum/SkiaGum.csproj
-* \<GumRoot>/GumCommon/GumCommon.csproj
+* \<Gum Root>/Runtimes/SilkNetGum/SilkNetGum.csproj
 
-Next, add SkiaGum as a project reference in your game project. Your project might look like this depending on the location of the Gum repository relative to your game project:
+`SilkNetGum.csproj` already references `GumCommon` itself, so you do not need to add `GumCommon` separately.
+
+Next, add SilkNetGum as a project reference in your game project. Your project might look like this depending on the location of the Gum repository relative to your game project:
 
 ```xml
-<ProjectReference Include="..\Gum\Runtimes\SkiaGum\SkiaGum.csproj" />
+<ProjectReference Include="..\Gum\Runtimes\SilkNetGum\SilkNetGum.csproj" />
 ```
 
 ## Initializing Gum
 
-Gum requires SkiaSharp to render in Silk.NET. A full Silk.NET project requires a few hundred lines of code, so an entire Program file is not included here. The relevant code is included in the following block of code:
+Gum requires SkiaSharp to render in Silk.NET, and `Silk.NET.Windowing` to create the window and OpenGL/ANGLE context that SkiaSharp draws into. A full Silk.NET project requires a few hundred lines of code (window creation, ANGLE backend selection, the GL debug callback, and so on), so an entire Program file is not included here — the relevant setup and initialization code is shown below.
+
+Create the window and input context using `Silk.NET.Windowing.Window.Create`, then hand Gum the resulting `SKCanvas` and `IInputContext`:
 
 ```csharp
+// Initialize
+using Silk.NET.Windowing;
+using Silk.NET.Windowing.Sdl;
+using Silk.NET.Input;
 using SkiaSharp;
-using RenderingLibrary;
-using Gum.Wireframe;
-using Gum.GueDeriving;
-using RenderingLibrary.Graphics;
 using Gum;
-using SilkNetGum.Screens;
-using Gum.Managers;
-using GumRuntime;
 
-unsafe class Program
-{
-    #region Fields/Properties
+// Silk.NET.Windowing.Sdl must create and own the window (via window.Initialize()) for
+// Silk.NET.Input to ever receive events. Set the render backend, GraphicsAPI, and window
+// options, then create and initialize the window before anything else.
+SdlWindowing.Use();
 
-    private static Sdl sdl;
-    private static GL gl;
-    private static Window* window;
-    private static void* glContext;
-    private static bool running = true;
+Silk.NET.Windowing.IWindow window = Silk.NET.Windowing.Window.Create(options);
+window.Initialize();
 
-    static SKCanvas canvas;
+// Create the SkiaSharp GL surface/canvas from the window's GL context (grContext, grGlInterface,
+// and renderTarget setup omitted here -- see the sample for the full ANGLE/backend setup).
+SKCanvas canvas = surface.Canvas;
 
-    #endregion
+// Only after window.Initialize() has run does CreateInput() build an IInputContext that
+// actually receives events.
+IInputContext inputContext = window.CreateInput();
 
-
-
-    #region General Setup/Functions
-
-    private static string GetSdlError()
-    {
-        byte* error = sdl.GetError();
-        return Marshal.PtrToStringUTF8((IntPtr)error) ?? "Unknown error";
-    }
-    static unsafe void Main(string[] args)
-    {
-        try
-        {
-            //...
-            using var grGlInterface = GRGlInterface.Create(loadFunction);
-            grGlInterface.Validate();
-            using var grContext = GRContext.CreateGl(grGlInterface);
-            var renderTarget = new GRBackendRenderTarget(800, 600, 0, 8, new GRGlFramebufferInfo(0, 0x8058)); // 0x8058 = GL_RGBA8`
-            using var surface = SKSurface.Create(grContext, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
-            canvas = surface.Canvas;
-
-            GumUI.Initialize(canvas);
-
-            gl.Viewport(0, 0, 600, 600);
-
-            Event ev = new Event();
-            // Main loop
-
-            int frames = 0;
-
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-            while (running)
-            {
-
-                if (sw.ElapsedMilliseconds > 1000)
-                {
-                    Console.WriteLine(frames);
-                    sw.Restart();
-
-                    frames = 0;
-                }
-                frames++;
-                // Render
-                gl.ClearColor(0.2f, 0.3f, 0.8f, 1.0f);
-                gl.Clear((uint)GLEnum.ColorBufferBit);
-
-                grContext.ResetContext();
-                // canvas.Clear(SKColors.Cyan);
-                //_renderer.Render(canvas);
-
-                GumUI.Default.Draw();
-                canvas.Flush();
-
-                // Swap buffers
-                sdl.GLSwapWindow(window);
-            }
-        }
-        finally
-        {
-            canvas.Dispose();
-            ///
-        }
-    }
-
-    private static nint loadFunction(string name)
-    {
-        return (nint)sdl.GLGetProcAddress(name);
-    }
-
-    #endregion
-}
+GumService.Default.Initialize(canvas, inputContext, "Content/GumProject/GumProject.gumx");
 ```
+
+Each frame, pump window events before updating and drawing Gum:
+
+```csharp
+// Update
+window.DoEvents();
+GumService.Default.Update(totalSeconds);
+```
+
+{% hint style="warning" %}
+The `IInputContext` you pass to `Initialize` must come from a window that `Silk.NET.Windowing` created and initialized itself — `Window.Create(options)` followed by `window.Initialize()`, then `window.CreateInput()`. Building an `IInputContext` by wrapping a window you created another way (for example via `SdlWindowing.CreateFrom(existingHandle)`) skips the normal event-subscription path. The resulting `IInputContext` looks valid, but it silently never receives events — no exception is thrown, and clicks, key presses, and typed text simply do nothing.
+{% endhint %}
 
 For a working project, see the Gum Silk.NET sample:
 

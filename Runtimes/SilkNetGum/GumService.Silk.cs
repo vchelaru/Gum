@@ -110,7 +110,14 @@ public partial class GumService
     /// does not match the window.
     /// </summary>
     /// <param name="canvas">The SkiaSharp canvas Gum should render to.</param>
-    /// <param name="inputContext">The Silk input context, from <c>view.CreateInput()</c>.</param>
+    /// <param name="inputContext">
+    /// The Silk input context, from <c>window.CreateInput()</c> on a window created via
+    /// <see cref="Silk.NET.Windowing.Window.Create"/>. Do NOT build this from
+    /// <c>SdlWindowing.CreateFrom(existingHandle)</c> wrapping a window you created yourself —
+    /// that path skips the view's normal initialization, so it never subscribes to receive input
+    /// events; the resulting context looks valid but silently never delivers clicks, key presses,
+    /// or typed text (see #3652).
+    /// </param>
     /// <param name="gumProjectFile">An optional .gumx project file to load.</param>
     public void Initialize(SKCanvas canvas, IInputContext inputContext, string? gumProjectFile = null)
     {
@@ -123,7 +130,10 @@ public partial class GumService
     /// Gum project.
     /// </summary>
     /// <param name="canvas">The SkiaSharp canvas Gum should render to.</param>
-    /// <param name="inputContext">The Silk input context, from <c>view.CreateInput()</c>.</param>
+    /// <param name="inputContext">
+    /// The Silk input context. See the remarks on the <see cref="Initialize(SKCanvas, IInputContext, string?)"/>
+    /// overload for a gotcha around how this must be constructed.
+    /// </param>
     /// <param name="width">The width to use for the root container and canvas coordinate space.</param>
     /// <param name="height">The height to use for the root container and canvas coordinate space.</param>
     /// <param name="gumProjectFile">An optional .gumx project file to load.</param>
