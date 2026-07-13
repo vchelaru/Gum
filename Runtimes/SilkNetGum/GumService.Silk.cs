@@ -90,11 +90,20 @@ public partial class GumService
     // ApplyGamePadState is intentionally NOT overridden -- gamepad support is out of scope (#3564),
     // so the IGumService default no-op is inherited.
 
-    // The AssignNativeTextInput / AssignClipboard / UninitializePlatform / ApplyTextureFilterPlatform
-    // / ExtractUnresolvedTextures partial seams are all intentionally left unimplemented (elided) on
-    // SILK: SilkNet keeps NativeTextInput and Clipboard null (no Skia host implementation), has no
-    // Skia-specific Uninitialize teardown, applies no global texture filter (Skia has none), and
-    // cannot save embedded snapshot textures to PNG. This matches the prior standalone service.
+    // AssignClipboard is implemented below via Silk.NET.Input's IKeyboard.ClipboardText (#3651).
+    // The AssignNativeTextInput / UninitializePlatform / ApplyTextureFilterPlatform /
+    // ExtractUnresolvedTextures partial seams remain intentionally unimplemented (elided) on SILK:
+    // Silk.NET.Input exposes no IME/composition API to back NativeTextInput (KeyChar only reports
+    // committed characters), so TextBox/PasswordBox type through GetStringTyped same as Raylib; Skia
+    // has no Skia-specific Uninitialize teardown or global texture filter; and there is no embedded
+    // snapshot texture PNG export. This matches the prior standalone service.
+    partial void AssignClipboard()
+    {
+        if (_inputContext != null)
+        {
+            Clipboard = new global::Gum.Input.SilkGumClipboard(_inputContext);
+        }
+    }
 
     // GetWindowSize backs the shared window-fit helpers. SilkNet has no OS window (the caller owns it
     // and hands us an SKCanvas), so report the current canvas size. SilkNet's own resize path is
