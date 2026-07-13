@@ -86,6 +86,14 @@ public partial class CustomSetPropertyOnRenderable
 
     #endregion
 
+    /// <summary>
+    /// Additional logic to perform before falling back to reflection.
+    /// This can be added by libraries adding additional runtime types.
+    /// Mirrors the unified MonoGame/Raylib copy so SkiaGum consumers assigning this hook
+    /// (e.g. the Apos.Shapes runtimes) are honored before the reflection fallback.
+    /// </summary>
+    public static Func<IRenderableIpso, GraphicalUiElement, string, object, bool>? AdditionalPropertyOnRenderable = null;
+
     // Issue #2956 follow-up — two-slot CircleRuntime / RectangleRuntime own a fill renderable
     // AND a stroke renderable. The runtime's typed setters (UseGradient, IsFilled,
     // gradient color channels, gradient endpoints, etc.) forward to BOTH slots; reflection
@@ -1022,6 +1030,11 @@ public partial class CustomSetPropertyOnRenderable
         // SetPropertyThroughReflection now converts enum -> Nullable<enum> (issue #2924), so the
         // #2923 catch-all that routed them through TrySetPropertiesOnRenderableBase purely to
         // handle Blend? is no longer needed.
+        if (!handled && AdditionalPropertyOnRenderable != null)
+        {
+            handled = AdditionalPropertyOnRenderable(containedObjectAsIpso, graphicalUiElement, propertyName, value);
+        }
+
         if (!handled)
         {
             GraphicalUiElement.SetPropertyThroughReflection(containedObjectAsIpso, graphicalUiElement, propertyName, value);
