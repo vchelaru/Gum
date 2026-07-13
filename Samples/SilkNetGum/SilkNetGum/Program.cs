@@ -1,5 +1,9 @@
 ﻿using Silk.NET.OpenGLES;
 using Silk.NET.SDL;
+using Silk.NET.Input;
+using Silk.NET.Maths;
+using Silk.NET.Windowing;
+using Silk.NET.Windowing.Sdl;
 using Avalonia.Skia;
 using SkiaSharp;
 using System.Diagnostics;
@@ -11,6 +15,7 @@ using Gum.GueDeriving;
 using RenderingLibrary.Graphics;
 using Gum;
 using SilkNetGum.Screens;
+using GumSamples.Screens;
 using Gum.Managers;
 using GumRuntime;
 
@@ -32,14 +37,13 @@ unsafe class Program
 
     private static Sdl sdl;
     private static GL gl;
-    private static Window* window;
-    private static void* glContext;
+    private static IWindow window = null!;
     private static bool running = true;
 
     static GraphicalUiElement? currentGumxScreen;
     static FrameworkElement? currentCodeScreen;
     static int currentScreenIndex;
-    static TextRuntime instructionsText;
+    static StackPanel navStrip = null!;
     static SKPaint sKPaint;
     static SKCanvas canvas;
     static SKPaint paintFromFile;
@@ -63,26 +67,75 @@ unsafe class Program
         () => new SilkNetGum.Screens.RectanglesScreen(),
         () => new SilkNetGum.Screens.ArcsScreen(),
         () => new SilkNetGum.Screens.PolygonsScreen(),
+        () => new GumSamples.Screens.FormsScreen(),
     };
 
-    private static void InitializeGum(SKCanvas canvas)
+    // Parallel to codeScreenFactories, used as nav-strip button labels.
+    private static readonly string[] codeScreenNames =
     {
-        GumUI.Initialize(canvas, "Content/GumProject/GumProject.gumx");
+        "NineSlice",
+        "Sprite",
+        "Text",
+        "Circles",
+        "Rectangles",
+        "Arcs",
+        "Polygons",
+        "Forms",
+    };
 
-        LoadScreen(0);
+    private static void InitializeGum(SKCanvas canvas, IInputContext inputContext)
+    {
+        GumUI.Initialize(canvas, inputContext, "Content/GumProject/GumProject.gumx");
 
-        instructionsText = new TextRuntime();
-        instructionsText.Text = "Press the left or right arrows to toggle between the screens";
-        instructionsText.X = 0;
-        instructionsText.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-        instructionsText.XOrigin = HorizontalAlignment.Center;
-        instructionsText.Y = -10;
-        instructionsText.YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
-        instructionsText.YOrigin = VerticalAlignment.Bottom;
-        instructionsText.AddToRoot();
+        // Registers GumUI.Keyboard for Tab / Shift+Tab focus traversal between Forms controls.
+        GumUI.UseKeyboardDefaults();
 
         GraphicalUiElement.CanvasWidth = windowWidth;
         GraphicalUiElement.CanvasHeight = windowHeight;
+
+        BuildNavStrip();
+
+        LoadScreen(0);
+    }
+
+    // Mirrors MonoGameGumInCode's Game1.BuildNavStrip -- a horizontal strip of buttons, one per
+    // screen, pinned to the top-left. Unlike MonoGameGumInCode's generic ShowScreen<T>, this sample
+    // mixes two screen kinds (.gumx-authored GraphicalUiElement screens and code-only
+    // FrameworkElement screens), so each button just calls LoadScreen(index) with its own captured
+    // index instead of a generic factory.
+    private static void BuildNavStrip()
+    {
+        navStrip = new StackPanel();
+        navStrip.Orientation = Orientation.Horizontal;
+        navStrip.Spacing = 4;
+        navStrip.Visual.X = 4;
+        navStrip.Visual.Y = 4;
+        navStrip.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        navStrip.Width = 0;
+        navStrip.Visual.WrapsChildren = true;
+        navStrip.AddToRoot();
+
+        var gumxScreens = ObjectFinder.Self.GumProjectSave!.Screens;
+
+        for (int i = 0; i < gumxScreens.Count; i++)
+        {
+            int capturedIndex = i;
+            AddNavButton(gumxScreens[i].Name, () => LoadScreen(capturedIndex));
+        }
+
+        for (int i = 0; i < codeScreenFactories.Length; i++)
+        {
+            int capturedIndex = gumxScreens.Count + i;
+            AddNavButton(codeScreenNames[i], () => LoadScreen(capturedIndex));
+        }
+    }
+
+    private static void AddNavButton(string text, Action onClick)
+    {
+        var button = new Gum.Forms.Controls.Button();
+        button.Text = text;
+        button.Click += (_, _) => onClick();
+        navStrip.AddChild(button);
     }
 
     private static void LoadScreen(int index)
@@ -102,18 +155,31 @@ unsafe class Program
         currentCodeScreen?.RemoveFromRoot();
         currentCodeScreen = null;
 
+        // Offset below the nav strip so neither screen kind renders underneath it (mirrors
+        // MonoGameGumInCode's Game1.ShowScreen<T>).
+        float navStripHeight = navStrip.Visual.GetAbsoluteHeight();
+
         if (currentScreenIndex < gumxScreens.Count)
         {
             currentGumxScreen = gumxScreens[currentScreenIndex].ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
             currentGumxScreen.AddToRoot();
             currentGumxScreen.Width = GraphicalUiElement.CanvasWidth;
             currentGumxScreen.Height = GraphicalUiElement.CanvasHeight;
+            currentGumxScreen.YOrigin = VerticalAlignment.Top;
+            currentGumxScreen.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
+            currentGumxScreen.Y = navStripHeight;
+            currentGumxScreen.Height -= navStripHeight;
         }
         else
         {
             // Code screens are FrameworkElement and Dock(Fill) themselves, so their visual
-            // fills the canvas without an explicit size assignment here.
+            // fills the canvas without an explicit size assignment here -- only the top-offset
+            // and height-shrink need to be applied on top of that.
             currentCodeScreen = codeScreenFactories[currentScreenIndex - gumxScreens.Count]();
+            currentCodeScreen.Visual.YOrigin = VerticalAlignment.Top;
+            currentCodeScreen.Visual.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
+            currentCodeScreen.Visual.Y = navStripHeight;
+            currentCodeScreen.Visual.Height = -navStripHeight;
             currentCodeScreen.AddToRoot();
         }
     }
@@ -128,11 +194,6 @@ unsafe class Program
 
     #region General Setup/Functions
 
-    private static string GetSdlError()
-    {
-        byte* error = sdl.GetError();
-        return Marshal.PtrToStringUTF8((IntPtr)error) ?? "Unknown error";
-    }
     static unsafe void Main(string[] args)
     {
 
@@ -182,98 +243,76 @@ unsafe class Program
 
 
 
-        // Initialize SDL
-        sdl = Sdl.GetApi();
-        if (sdl.Init(Sdl.InitVideo | Sdl.InitEvents) < 0)
-        {
-            Console.WriteLine($"SDL initialization failed: {GetSdlError()}");
-            return;
-        }
+        // sdl is grabbed via SdlProvider so that the SDL_SetHint calls below apply to the same
+        // Sdl instance that Silk.NET.Windowing.Sdl will reuse internally when it creates the
+        // window (SdlView pulls Sdl from SdlProvider.SDL too). Accessing SdlProvider.SDL.Value
+        // triggers SDL_Init.
+        sdl = Silk.NET.SDL.SdlProvider.SDL.Value;
 
         try
         {
-            // Set OpenGL ES attributes BEFORE loading libraries
-            sdl.GLSetAttribute(GLattr.RedSize, 8);
-            sdl.GLSetAttribute(GLattr.GreenSize, 8);
-            sdl.GLSetAttribute(GLattr.BlueSize, 8);
-            sdl.GLSetAttribute(GLattr.AlphaSize, 8);
-            sdl.GLSetAttribute(GLattr.DepthSize, 24);
-            sdl.GLSetAttribute(GLattr.StencilSize, 8);
-            sdl.GLSetAttribute(GLattr.Doublebuffer, 1);
-
-
-
-            if (renderBackend == RenderBackend.DesktopGl)
-            {
-                sdl.GLSetAttribute(GLattr.ContextMajorVersion, 3);
-                sdl.GLSetAttribute(GLattr.ContextMinorVersion, 3); // to support dx11 as well
-                sdl.GLSetAttribute(GLattr.ContextProfileMask, (int)GLprofile.Core);
-            }
-            else if (renderBackend == RenderBackend.Dx11)
-            {
-                sdl.GLSetAttribute(GLattr.ContextMajorVersion, 3);
-                sdl.GLSetAttribute(GLattr.ContextMinorVersion, 0); // to support dx11 as well
-                sdl.GLSetAttribute(GLattr.ContextProfileMask, (int)GLprofile.ES);
-            }
-            else // vulkan and opengl es 3.2
-            {
-                sdl.GLSetAttribute(GLattr.ContextMajorVersion, 3);
-                sdl.GLSetAttribute(GLattr.ContextMinorVersion, 2); // to support dx11 as well
-                sdl.GLSetAttribute(GLattr.ContextProfileMask, (int)GLprofile.ES);
-            }
-
-
-
-
+            // ANGLE requires these hints to be set before the GL context is created (below, via
+            // window.Initialize()). Hints are global SDL state, so setting them here -- ahead of
+            // handing window/context creation to Silk.NET.Windowing -- still works.
             if (renderBackend != RenderBackend.Gles)
             {
                 sdl.SetHint("SDL_OPENGL_ES_DRIVER", "1");
                 sdl.SetHint("SDL_HINT_OPENGL_ES_DRIVER", "angle");
             }
 
+            // Context API/version/profile per backend, mirroring the GLattr calls this used to
+            // make by hand before window creation.
+            GraphicsAPI api = renderBackend switch
+            {
+                RenderBackend.DesktopGl => new GraphicsAPI(
+                    ContextAPI.OpenGL, ContextProfile.Core, ContextFlags.Default, new APIVersion(3, 3)),
+                RenderBackend.Dx11 => new GraphicsAPI(
+                    ContextAPI.OpenGLES, ContextProfile.Compatability, ContextFlags.Default, new APIVersion(3, 0)),
+                // vulkan and opengl es 3.2
+                _ => new GraphicsAPI(
+                    ContextAPI.OpenGLES, ContextProfile.Compatability, ContextFlags.Default, new APIVersion(3, 2)),
+            };
 
-            // Create window with appropriate flags
-            uint windowFlags = (uint)(WindowFlags.Opengl | WindowFlags.Shown | WindowFlags.Resizable);
+            // Silk.NET.Windowing.Sdl must create and own the window (going through the normal
+            // Initialize() path) for Silk.NET.Input.Sdl to ever receive SDL events -- wrapping an
+            // externally-created window via SdlWindowing.CreateFrom skips RegisterCallbacks(),
+            // which is what subscribes the view to the platform's event pump, so input (clicks,
+            // typing) never arrives no matter what's polled afterward (#3652).
+            SdlWindowing.Use();
 
+            var options = WindowOptions.Default;
+            options.API = api;
+            options.Size = new Vector2D<int>(windowWidth, windowHeight);
+            options.Title = "SDL ANGLE Example";
+            options.WindowState = WindowState.Normal;
+            options.WindowBorder = WindowBorder.Resizable;
+            options.PreferredBitDepth = new Vector4D<int>(8, 8, 8, 8);
+            options.PreferredDepthBufferBits = 24;
+            options.PreferredStencilBufferBits = 8;
+            options.VSync = false;
 
+            // SdlView.CoreInitialize applies PreferredBitDepth/DepthBufferBits/StencilBufferBits as
+            // GLattr calls automatically, but never touches Doublebuffer -- the original manual
+            // sdl.GLCreateContext setup explicitly set this before context creation. Setting it here
+            // (attributes are global SDL state, applied before Window.Create below) restores parity.
+            sdl.GLSetAttribute(GLattr.Doublebuffer, 1);
+
+            // SdlView.CoreInitialize creates the SDL window (Sdl.CreateWindow) BEFORE setting
+            // ContextMajorVersion/MinorVersion/ContextProfileMask -- those are only set later,
+            // immediately before Sdl.GLCreateContext. For ANGLE, that's too late: its EGL surface
+            // binds its format at window-creation time, so the context ends up non-functional
+            // (glGetString and friends silently return null/empty, and GRGlInterface.Create fails)
+            // unless these are also set here, before Window.Create (#3652).
+            sdl.GLSetAttribute(GLattr.ContextMajorVersion, api.Version.MajorVersion);
+            sdl.GLSetAttribute(GLattr.ContextMinorVersion, api.Version.MinorVersion);
+            sdl.GLSetAttribute(GLattr.ContextProfileMask, (int)(api.API == ContextAPI.OpenGLES ? GLprofile.ES : GLprofile.Core));
 
             Console.WriteLine("Creating window...");
-            window = sdl.CreateWindow(
-                "SDL ANGLE Example",
-                Sdl.WindowposCentered,
-                Sdl.WindowposCentered,
-                windowWidth, windowHeight,
-                windowFlags
-            );
-
-            if (window == null)
-            {
-                Console.WriteLine($"Window creation failed: {GetSdlError()}");
-                throw new Exception("Window creation failed");
-            }
-
-
-            Console.WriteLine("Creating GL context...");
-            glContext = sdl.GLCreateContext(window);
-            if (glContext == null)
-            {
-                throw new Exception($"OpenGL context creation failed: {GetSdlError()}");
-            }
-
-            Console.WriteLine("Making context current...");
-            if (sdl.GLMakeCurrent(window, glContext) < 0)
-            {
-                throw new Exception($"Failed to make context current: {GetSdlError()}");
-            }
-
-            // Enable vsync
-            sdl.GLSetSwapInterval(0);
+            window = Silk.NET.Windowing.Window.Create(options);
+            window.Initialize();
 
             Console.WriteLine("Getting GL API...");
-            gl = GL.GetApi(loadFunction);
-
-
-
+            gl = GL.GetApi(window);
 
             gl.Enable(EnableCap.DebugOutput);
             gl.Enable(EnableCap.DebugOutputSynchronous);
@@ -294,21 +333,38 @@ unsafe class Program
                 Console.WriteLine($"Version: {Marshal.PtrToStringUTF8((IntPtr)version)}");
             }
 
-
-
-
-            using var grGlInterface = GRGlInterface.Create(loadFunction);
+            using var grGlInterface = GRGlInterface.Create(name => (nint)sdl.GLGetProcAddress(name));
             grGlInterface.Validate();
             using var grContext = GRContext.CreateGl(grGlInterface);
             var renderTarget = new GRBackendRenderTarget(windowWidth, windowHeight, 0, 8, new GRGlFramebufferInfo(0, 0x8058)); // 0x8058 = GL_RGBA8`
             using var surface = SKSurface.Create(grContext, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
             canvas = surface.Canvas;
 
-            InitializeGum(canvas);
+            // Now that Silk.NET.Windowing.Sdl created and initialized the window itself,
+            // CreateInput builds a real IInputContext whose events are actually pumped (#3652).
+            var inputContext = window.CreateInput();
+
+            InitializeGum(canvas, inputContext);
 
             gl.Viewport(0, 0, 600, 600);
 
-            Event ev = new Event();
+            window.Closing += () => running = false;
+            window.Resize += newSize =>
+            {
+                gl.Viewport(0, 0, (uint)newSize.X, (uint)newSize.Y);
+                GumUI.HandleResize(newSize.X, newSize.Y);
+            };
+
+            if (inputContext.Keyboards.Count > 0)
+            {
+                var keyboard = inputContext.Keyboards[0];
+                keyboard.KeyDown += (_, key, _) =>
+                {
+                    if (key == Key.Escape)
+                        running = false;
+                };
+            }
+
             // Main loop
 
             sKPaint = new SKPaint()
@@ -338,7 +394,7 @@ unsafe class Program
             // for FPS reporting, so we keep a separate monotonic clock here.
             Stopwatch totalTime = new Stopwatch();
             totalTime.Start();
-            while (running)
+            while (running && !window.IsClosing)
             {
 
                 if (sw.ElapsedMilliseconds > 1000)
@@ -349,39 +405,11 @@ unsafe class Program
                     frames = 0;
                 }
                 frames++;
-                while (sdl.PollEvent(&ev) != 0)
-                {
 
-                    switch (ev.Type)
-                    {
-
-                        case (uint)EventType.Dropfile:
-                            Console.WriteLine(Marshal.PtrToStringUTF8((IntPtr)ev.Drop.File));
-                            break;
-                        case (uint)EventType.Fingermotion:
-                            ev.Tfinger.X = 0;
-                            break;
-                        case (uint)EventType.Quit:
-                            running = false;
-                            break;
-                        case (uint)EventType.Keydown:
-                            if (ev.Key.Keysym.Sym == (int)KeyCode.KEscape)
-                                running = false;
-                            else if (ev.Key.Keysym.Sym == (int)KeyCode.KLeft)
-                                LoadScreen(currentScreenIndex - 1);
-                            else if (ev.Key.Keysym.Sym == (int)KeyCode.KRight)
-                                LoadScreen(currentScreenIndex + 1);
-                            break;
-                        case (uint)EventType.Windowevent:
-                            if (ev.Window.Event == (byte)WindowEventID.Resized)
-                            {
-                                gl.Viewport(0, 0, (uint)ev.Window.Data1, (uint)ev.Window.Data2);
-                                GumUI.HandleResize(ev.Window.Data1, ev.Window.Data2);
-                            }
-                            break;
-                    }
-                }
-
+                // Pumps SDL events into the window's event list, invokes ProcessEvents (which
+                // drives the input context -- mouse/keyboard state), then clears the list. This
+                // is what makes clicks/typing actually reach the Forms controls (#3652).
+                window.DoEvents();
 
                 // Per-frame Update drives AnimateSelf (and any other Forms
                 // input/activity pumps). Without this the .achx animation row
@@ -390,8 +418,9 @@ unsafe class Program
 
 
 
-                // Render
-                gl.ClearColor(0.2f, 0.3f, 0.8f, 1.0f);
+                // Render. Matches MonoGameGumInCode's GraphicsDevice.Clear(Color.CornflowerBlue)
+                // (RGB 100, 149, 237) so the two samples are visually comparable.
+                gl.ClearColor(100f / 255f, 149f / 255f, 237f / 255f, 1.0f);
                 gl.Clear((uint)GLEnum.ColorBufferBit);
 
 
@@ -403,25 +432,16 @@ unsafe class Program
                 Draw();
 
                 // Swap buffers
-                sdl.GLSwapWindow(window);
+                window.GLContext!.SwapBuffers();
             }
         }
         finally
         {
-            paintFromFile.Dispose();
-            canvas.Dispose();
-            // Cleanup
-            if (glContext != null)
-                sdl.GLDeleteContext(glContext);
-            if (window != null)
-                sdl.DestroyWindow(window);
-            sdl.Quit();
+            paintFromFile?.Dispose();
+            canvas?.Dispose();
+            window?.Dispose();
+            sdl?.Quit();
         }
-    }
-
-    private static nint loadFunction(string name)
-    {
-        return (nint)sdl.GLGetProcAddress(name);
     }
 
     #endregion

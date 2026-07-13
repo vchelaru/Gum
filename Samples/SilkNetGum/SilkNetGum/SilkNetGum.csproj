@@ -2,6 +2,12 @@
 
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
+		<!-- Must differ from the referenced Runtimes/SilkNetGum/SilkNetGum.csproj's assembly name
+		     ("SilkNetGum", the Gum.SilkNet runtime package). Both projects share the "SilkNetGum"
+		     csproj filename, so without this override their same-named output DLLs collide in this
+		     project's bin folder and the runtime's copy gets clobbered by this project's own thin
+		     exe DLL, producing a TypeLoadException for Gum.GumService at runtime (#3652). -->
+		<AssemblyName>SilkNetGumSample</AssemblyName>
 		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
@@ -21,16 +27,26 @@
 		<PackageReference Include="Silk.NET.EGL.Extensions.EXT" Version="1.9.0" />
 		<PackageReference Include="Silk.NET.OpenGLES" Version="2.22.0" />
 		<PackageReference Include="Silk.NET.SDL" Version="2.21.0" />
+		<!-- Silk.NET.Windowing.Sdl owns window and GL-context creation (Window.Create +
+		     window.Initialize()). This is required for Silk.NET.Input.Sdl to ever receive SDL
+		     events: SdlWindowing.CreateFrom wraps an externally-created native handle without
+		     running the normal Initialize() path, so RegisterCallbacks() (which subscribes the
+		     view to SDL's event pump) never runs and input silently never arrives, no matter what
+		     is polled afterward (#3652). -->
+		<PackageReference Include="Silk.NET.Windowing.Sdl" Version="2.21.0" />
 	</ItemGroup>
 
+	<!-- Gum.SilkNet: the real game-host runtime (GumService.Silk.cs, Silk-backed Cursor/Keyboard,
+	     Forms V3 default visuals). Replaces the old SkiaGum + render-only standalone GumService
+	     wiring, which had no input context at all (#3652). -->
 	<ItemGroup>
-	  <ProjectReference Include="..\..\..\Runtimes\SkiaGum\SkiaGum.csproj" />
+	  <ProjectReference Include="..\..\..\Runtimes\SilkNetGum\SilkNetGum.csproj" />
 	</ItemGroup>
 
-	<!-- Render-only GumService (evicted from Gum.SkiaSharp core, #3218). Shared source,
-	     file-linked here until this sample becomes the Gum.SilkNet game-host runtime (#2738). -->
+	<!-- Shared with MonoGameGumInCode (the reference feature sample) so Forms control rendering
+	     can be compared side by side between backends. See #3652. -->
 	<ItemGroup>
-	  <Compile Include="..\..\..\Runtimes\SkiaGum.Standalone\GumService.cs" Link="GumService.cs" />
+	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\FormsScreen.cs" Link="Screens\FormsScreen.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

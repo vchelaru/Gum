@@ -13,7 +13,7 @@ High-level direction for Gum — vision, roadmap, open strategic questions, and 
 
 ## Agent Workflow
 
-For every task, invoke the appropriate agent from `.claude/agents/` before proceeding. The agent's instructions provide guidelines for how the task should be performed. Before doing any work, announce which agent you are using such as "Invoking coder agent for this task..."
+For every task, read the guidelines in the matching agent file under `.claude/agents/` and follow them yourself, in your own context, before proceeding — do not dispatch an actual subagent for this by default. Spinning up a subagent costs real tokens: a fresh agent has none of the context already built up in this conversation and has to independently re-read files, re-run builds, and re-explore the codebase to reconstruct it, on top of whatever the task itself costs. Reserve `Agent`-tool dispatch for two cases only: **(1)** the work is genuinely parallelizable (independent pieces that can run concurrently), or **(2)** the user explicitly asks for delegation/a subagent.
 
 **Re-read the agent file at the start of each new task — not once per session.** Long sessions drift; reloading the discipline keeps it active. Inline coding without re-reading the agent file first is not an option, even for "small" follow-ups in the same conversation.
 

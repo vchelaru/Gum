@@ -1,4 +1,5 @@
 using Gum;
+using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Input;
 using Gum.Wireframe;
@@ -67,8 +68,11 @@ public class BaseTestClass : IDisposable
             IsTriggeredOnRepeat = true
         });
 
-        // Remove any mock cursor a test installed.
-        FrameworkElement.MainCursor = new Cursor();
+        // Remove any mock cursor a test installed. FormsUtilities.SetCursor (unlike a plain
+        // FrameworkElement.MainCursor assignment) also backs GumService.Default.Cursor, which casts
+        // FormsUtilities.Cursor to the concrete Cursor type -- leaving a Mock<ICursor> installed via
+        // SetCursor would make that cast return null for every later test (#3652).
+        FormsUtilities.SetCursor(new Cursor());
 
         InteractiveGue.CurrentInputReceiver = null;
         InteractiveGue.ClearNextClickActions();
