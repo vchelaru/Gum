@@ -47,6 +47,8 @@ unsafe class Program
     static SKPaint sKPaint;
     static SKCanvas canvas;
     static SKPaint paintFromFile;
+    static SKSurface? surface;
+    static GRBackendRenderTarget? renderTarget;
 
     static int windowWidth = 1400;
     static int windowHeight = 900;
@@ -345,9 +347,24 @@ unsafe class Program
             using var grGlInterface = GRGlInterface.Create(name => (nint)sdl.GLGetProcAddress(name));
             grGlInterface.Validate();
             using var grContext = GRContext.CreateGl(grGlInterface);
-            var renderTarget = new GRBackendRenderTarget(windowWidth, windowHeight, 0, 8, new GRGlFramebufferInfo(0, 0x8058)); // 0x8058 = GL_RGBA8`
-            using var surface = SKSurface.Create(grContext, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
-            canvas = surface.Canvas;
+
+            // The GRBackendRenderTarget/SKSurface declare their own fixed logical size, separate from
+            // the GL viewport. With GRSurfaceOrigin.BottomLeft (GL framebuffers are bottom-up), Skia
+            // uses that declared height to flip rows -- if the viewport grows past a stale surface
+            // size, everything Gum draws (including elements pinned to the canvas top, like the nav
+            // strip) renders shifted down by the size delta. Must be recreated on every resize, not
+            // just at startup (#3657).
+            void RecreateSurface(int width, int height)
+            {
+                surface?.Dispose();
+                renderTarget?.Dispose();
+
+                renderTarget = new GRBackendRenderTarget(width, height, 0, 8, new GRGlFramebufferInfo(0, 0x8058)); // 0x8058 = GL_RGBA8
+                surface = SKSurface.Create(grContext, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+                canvas = surface.Canvas;
+            }
+
+            RecreateSurface(windowWidth, windowHeight);
 
             // Now that Silk.NET.Windowing.Sdl created and initialized the window itself,
             // CreateInput builds a real IInputContext whose events are actually pumped (#3652).
@@ -361,6 +378,7 @@ unsafe class Program
             window.Resize += newSize =>
             {
                 gl.Viewport(0, 0, (uint)newSize.X, (uint)newSize.Y);
+                RecreateSurface(newSize.X, newSize.Y);
                 GumUI.HandleResize(newSize.X, newSize.Y);
                 ResizeCurrentGumxScreen();
             };
@@ -449,6 +467,8 @@ unsafe class Program
         {
             paintFromFile?.Dispose();
             canvas?.Dispose();
+            surface?.Dispose();
+            renderTarget?.Dispose();
             window?.Dispose();
             sdl?.Quit();
         }
