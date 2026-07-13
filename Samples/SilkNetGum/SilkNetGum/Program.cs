@@ -47,6 +47,8 @@ unsafe class Program
     static SKPaint sKPaint;
     static SKCanvas canvas;
     static SKPaint paintFromFile;
+    static SKSurface? surface;
+    static GRBackendRenderTarget? renderTarget;
 
     static int windowWidth = 1400;
     static int windowHeight = 900;
@@ -155,20 +157,13 @@ unsafe class Program
         currentCodeScreen?.RemoveFromRoot();
         currentCodeScreen = null;
 
-        // Offset below the nav strip so neither screen kind renders underneath it (mirrors
-        // MonoGameGumInCode's Game1.ShowScreen<T>).
-        float navStripHeight = navStrip.Visual.GetAbsoluteHeight();
-
         if (currentScreenIndex < gumxScreens.Count)
         {
             currentGumxScreen = gumxScreens[currentScreenIndex].ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
             currentGumxScreen.AddToRoot();
-            currentGumxScreen.Width = GraphicalUiElement.CanvasWidth;
-            currentGumxScreen.Height = GraphicalUiElement.CanvasHeight;
             currentGumxScreen.YOrigin = VerticalAlignment.Top;
             currentGumxScreen.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
-            currentGumxScreen.Y = navStripHeight;
-            currentGumxScreen.Height -= navStripHeight;
+            ResizeCurrentGumxScreen();
         }
         else
         {
@@ -178,10 +173,26 @@ unsafe class Program
             currentCodeScreen = codeScreenFactories[currentScreenIndex - gumxScreens.Count]();
             currentCodeScreen.Visual.YOrigin = VerticalAlignment.Top;
             currentCodeScreen.Visual.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
-            currentCodeScreen.Visual.Y = navStripHeight;
-            currentCodeScreen.Visual.Height = -navStripHeight;
+            currentCodeScreen.Visual.Y = navStrip.Visual.GetAbsoluteHeight();
+            currentCodeScreen.Visual.Height = -navStrip.Visual.GetAbsoluteHeight();
             currentCodeScreen.AddToRoot();
         }
+    }
+
+    // The loaded .gumx screen's Width/Height are plain pixel values (not RelativeToParent), so they
+    // don't track GraphicalUiElement.CanvasWidth/Height automatically -- unlike code screens, which
+    // Dock(Fill) themselves via relative units. Without re-applying this on every resize (not just
+    // the initial LoadScreen), the screen keeps its original size while the root re-lays-out against
+    // the new canvas size, shifting canvas-edge-anchored elements (e.g. bottom-docked) out of place
+    // (#3657).
+    private static void ResizeCurrentGumxScreen()
+    {
+        if (currentGumxScreen == null) return;
+
+        float navStripHeight = navStrip.Visual.GetAbsoluteHeight();
+        currentGumxScreen.Width = GraphicalUiElement.CanvasWidth;
+        currentGumxScreen.Height = GraphicalUiElement.CanvasHeight - navStripHeight;
+        currentGumxScreen.Y = navStripHeight;
     }
 
     private static void Draw()
@@ -336,9 +347,34 @@ unsafe class Program
             using var grGlInterface = GRGlInterface.Create(name => (nint)sdl.GLGetProcAddress(name));
             grGlInterface.Validate();
             using var grContext = GRContext.CreateGl(grGlInterface);
-            var renderTarget = new GRBackendRenderTarget(windowWidth, windowHeight, 0, 8, new GRGlFramebufferInfo(0, 0x8058)); // 0x8058 = GL_RGBA8`
-            using var surface = SKSurface.Create(grContext, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
-            canvas = surface.Canvas;
+
+            // The GRBackendRenderTarget/SKSurface declare their own fixed logical size, separate from
+            // the GL viewport. With GRSurfaceOrigin.BottomLeft (GL framebuffers are bottom-up), Skia
+            // uses that declared height to flip rows -- if the viewport grows past a stale surface
+            // size, everything Gum draws (including elements pinned to the canvas top, like the nav
+            // strip) renders shifted down by the size delta. Must be recreated on every resize, not
+            // just at startup (#3657).
+            void RecreateSurface(int width, int height)
+            {
+                surface?.Dispose();
+                renderTarget?.Dispose();
+
+                renderTarget = new GRBackendRenderTarget(width, height, 0, 8, new GRGlFramebufferInfo(0, 0x8058)); // 0x8058 = GL_RGBA8
+                surface = SKSurface.Create(grContext, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+                canvas = surface.Canvas;
+
+                // GumService.Initialize stashes the canvas it's given in SystemManagers.Canvas, but
+                // that's a one-time assignment -- it's never re-read afterward. Reassigning the local
+                // `canvas` above does not update it, so without this line, GumUI.Draw() keeps rendering
+                // into the just-disposed SKCanvas from the previous surface on every resize -- a
+                // use-after-free that crashed with AccessViolationException (#3657).
+                if (GumUI.IsInitialized)
+                {
+                    GumUI.SystemManagers.Canvas = canvas;
+                }
+            }
+
+            RecreateSurface(windowWidth, windowHeight);
 
             // Now that Silk.NET.Windowing.Sdl created and initialized the window itself,
             // CreateInput builds a real IInputContext whose events are actually pumped (#3652).
@@ -348,12 +384,15 @@ unsafe class Program
 
             gl.Viewport(0, 0, 600, 600);
 
+            // Dragging a window border on Windows enters a nested "live resize" modal message loop,
+            // and SDL's event pump can invoke this callback from inside that nested loop -- where the
+            // GL context is not guaranteed to be current/consistent. Recreating GPU resources
+            // (RecreateSurface) synchronously here crashed with AccessViolationException. Instead just
+            // record the new size and apply it once per frame from the main loop below, where the
+            // context state is well-defined (#3657).
+            Vector2D<int>? pendingResize = null;
             window.Closing += () => running = false;
-            window.Resize += newSize =>
-            {
-                gl.Viewport(0, 0, (uint)newSize.X, (uint)newSize.Y);
-                GumUI.HandleResize(newSize.X, newSize.Y);
-            };
+            window.Resize += newSize => pendingResize = newSize;
 
             if (inputContext.Keyboards.Count > 0)
             {
@@ -411,6 +450,17 @@ unsafe class Program
                 // is what makes clicks/typing actually reach the Forms controls (#3652).
                 window.DoEvents();
 
+                if (pendingResize.HasValue)
+                {
+                    var newSize = pendingResize.Value;
+                    pendingResize = null;
+
+                    gl.Viewport(0, 0, (uint)newSize.X, (uint)newSize.Y);
+                    RecreateSurface(newSize.X, newSize.Y);
+                    GumUI.HandleResize(newSize.X, newSize.Y);
+                    ResizeCurrentGumxScreen();
+                }
+
                 // Per-frame Update drives AnimateSelf (and any other Forms
                 // input/activity pumps). Without this the .achx animation row
                 // on SpriteScreen shows the first frame and never advances.
@@ -439,6 +489,8 @@ unsafe class Program
         {
             paintFromFile?.Dispose();
             canvas?.Dispose();
+            surface?.Dispose();
+            renderTarget?.Dispose();
             window?.Dispose();
             sdl?.Quit();
         }

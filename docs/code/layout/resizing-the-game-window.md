@@ -189,6 +189,31 @@ As with the expand example, `Root.UpdateLayout()` is only needed if your game lo
 `Renderer.Camera.Zoom` also affects immediate-mode drawing with GumBatch, since GumBatch renders through the same camera. See [Relationship with the Camera](../rendering/gumbatch.md#relationship-with-the-camera).
 {% endhint %}
 
+### Silk.NET
+
+Silk.NET has no `Game`/`GraphicsDeviceManager` host, so there's no `Window.ClientSizeChanged` event to subscribe to. Instead, call `GumService.Default.HandleResize(width, height)` directly from your windowing library's resize callback:
+
+```csharp
+window.Resize += newSize =>
+{
+    GumUI.HandleResize(newSize.X, newSize.Y);
+};
+```
+
+`HandleResize` updates `GraphicalUiElement.CanvasWidth`/`CanvasHeight` and calls `Root.UpdateLayout()` for you, so elements using relative units (`RelativeToParent`, `Dock(Fill)`, etc.) reposition automatically.
+
+If your app manages a screen's `Width`/`Height` in pixels rather than relative units — for example a loaded `.gumx` screen sized once at startup to match the initial canvas — those pixel values do **not** track canvas size changes on their own. Re-apply them from the same resize callback, or the screen will keep its original size while descendants anchored to its edges drift out of place as the canvas grows or shrinks:
+
+```csharp
+window.Resize += newSize =>
+{
+    GumUI.HandleResize(newSize.X, newSize.Y);
+
+    currentGumxScreen.Width = GraphicalUiElement.CanvasWidth;
+    currentGumxScreen.Height = GraphicalUiElement.CanvasHeight;
+};
+```
+
 ## RenderTargets, Scaling, and Offsets
 
 Gum can be drawn to a RenderTarget2D which can then be drawn with a SpriteBatch. By using a RenderTarget2D, the entire contents of Gum can be scaled, offset, and even rotated. This type of offset can break interaction unless the Cursor is adjusted in response to these changes by setting its `TransformMatrix`. For more information see the [Cursor TransformMatrix page](../gum-code-reference/cursor/transformmatrix.md).
