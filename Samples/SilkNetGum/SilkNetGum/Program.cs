@@ -155,20 +155,13 @@ unsafe class Program
         currentCodeScreen?.RemoveFromRoot();
         currentCodeScreen = null;
 
-        // Offset below the nav strip so neither screen kind renders underneath it (mirrors
-        // MonoGameGumInCode's Game1.ShowScreen<T>).
-        float navStripHeight = navStrip.Visual.GetAbsoluteHeight();
-
         if (currentScreenIndex < gumxScreens.Count)
         {
             currentGumxScreen = gumxScreens[currentScreenIndex].ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
             currentGumxScreen.AddToRoot();
-            currentGumxScreen.Width = GraphicalUiElement.CanvasWidth;
-            currentGumxScreen.Height = GraphicalUiElement.CanvasHeight;
             currentGumxScreen.YOrigin = VerticalAlignment.Top;
             currentGumxScreen.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
-            currentGumxScreen.Y = navStripHeight;
-            currentGumxScreen.Height -= navStripHeight;
+            ResizeCurrentGumxScreen();
         }
         else
         {
@@ -178,10 +171,26 @@ unsafe class Program
             currentCodeScreen = codeScreenFactories[currentScreenIndex - gumxScreens.Count]();
             currentCodeScreen.Visual.YOrigin = VerticalAlignment.Top;
             currentCodeScreen.Visual.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
-            currentCodeScreen.Visual.Y = navStripHeight;
-            currentCodeScreen.Visual.Height = -navStripHeight;
+            currentCodeScreen.Visual.Y = navStrip.Visual.GetAbsoluteHeight();
+            currentCodeScreen.Visual.Height = -navStrip.Visual.GetAbsoluteHeight();
             currentCodeScreen.AddToRoot();
         }
+    }
+
+    // The loaded .gumx screen's Width/Height are plain pixel values (not RelativeToParent), so they
+    // don't track GraphicalUiElement.CanvasWidth/Height automatically -- unlike code screens, which
+    // Dock(Fill) themselves via relative units. Without re-applying this on every resize (not just
+    // the initial LoadScreen), the screen keeps its original size while the root re-lays-out against
+    // the new canvas size, shifting canvas-edge-anchored elements (e.g. bottom-docked) out of place
+    // (#3657).
+    private static void ResizeCurrentGumxScreen()
+    {
+        if (currentGumxScreen == null) return;
+
+        float navStripHeight = navStrip.Visual.GetAbsoluteHeight();
+        currentGumxScreen.Width = GraphicalUiElement.CanvasWidth;
+        currentGumxScreen.Height = GraphicalUiElement.CanvasHeight - navStripHeight;
+        currentGumxScreen.Y = navStripHeight;
     }
 
     private static void Draw()
@@ -353,6 +362,7 @@ unsafe class Program
             {
                 gl.Viewport(0, 0, (uint)newSize.X, (uint)newSize.Y);
                 GumUI.HandleResize(newSize.X, newSize.Y);
+                ResizeCurrentGumxScreen();
             };
 
             if (inputContext.Keyboards.Count > 0)
