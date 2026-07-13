@@ -20,10 +20,13 @@ namespace SkiaGum.Tests.Forms;
 /// calls it, unlike the game-loop Gum.GumService used by SilkNetGum.
 ///
 /// Menu/MenuItem construct their Visual and are asserted end-to-end. PasswordBox is asserted via
-/// the DefaultFormsTemplates registration only, not by constructing it -- Skia's Text renderable
-/// doesn't implement IFormsText yet, so constructing any text-input control (TextBox too, not just
-/// PasswordBox) throws in TextBoxBase.RefreshInternalVisualReferences regardless of this
-/// registration fix. See #3653.
+/// the DefaultFormsTemplates registration only, not by constructing it here -- this render-only
+/// SkiaGum.Standalone GumService never assigns FrameworkElement.MainCursor, which
+/// TextBoxBase.UpdateState (invoked during construction) dereferences unconditionally,
+/// independent of the IFormsText cast this class's remarks used to describe. The IFormsText cast
+/// itself no longer throws (#3653) -- see
+/// <see cref="SilkNetGum.Tests.Forms.TextBoxPasswordBoxTests"/> for the full end-to-end
+/// construction regression test, since SilkNetGum's bootstrap does provide a MainCursor.
 /// </summary>
 public class MenuPasswordBoxTests
 {
@@ -51,7 +54,7 @@ public class MenuPasswordBoxTests
     [Fact]
     public void PasswordBox_IsRegistered_OnV3()
     {
-        // Not constructing a PasswordBox here -- see the class remarks and #3653.
+        // Not constructing a PasswordBox here -- see the class remarks.
         FrameworkElement.DefaultFormsTemplates.ShouldContainKey(typeof(PasswordBox));
     }
 }
