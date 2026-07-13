@@ -27,11 +27,12 @@
 		<PackageReference Include="Silk.NET.EGL.Extensions.EXT" Version="1.9.0" />
 		<PackageReference Include="Silk.NET.OpenGLES" Version="2.22.0" />
 		<PackageReference Include="Silk.NET.SDL" Version="2.21.0" />
-		<!-- Wraps the raw SDL window handle (created below via Silk.NET.SDL P/Invoke) in an IView
-		     so Silk.NET.Input.Sdl can build a real IInputContext from it via SdlWindowing.CreateFrom
-		     plus view.CreateInput(). This project intentionally does not let Silk.NET.Windowing own
-		     window creation or the GL context; SdlWindowing.CreateFrom wraps the existing handle for
-		     input purposes only (#3652). -->
+		<!-- Silk.NET.Windowing.Sdl owns window and GL-context creation (Window.Create +
+		     window.Initialize()). This is required for Silk.NET.Input.Sdl to ever receive SDL
+		     events: SdlWindowing.CreateFrom wraps an externally-created native handle without
+		     running the normal Initialize() path, so RegisterCallbacks() (which subscribes the
+		     view to SDL's event pump) never runs and input silently never arrives, no matter what
+		     is polled afterward (#3652). -->
 		<PackageReference Include="Silk.NET.Windowing.Sdl" Version="2.21.0" />
 	</ItemGroup>
 
