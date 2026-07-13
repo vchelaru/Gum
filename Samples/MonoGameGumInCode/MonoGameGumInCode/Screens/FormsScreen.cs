@@ -6,7 +6,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonoGameGumInCode.Screens;
+namespace GumSamples.Screens;
+
+/// <summary>
+/// Shared across the MonoGameGumInCode and SilkNetGum samples (file-linked into
+/// SilkNetGum.csproj) so Forms control rendering can be compared side by side between
+/// the MonoGame and Skia/Silk.NET backends -- see #3652.
+/// </summary>
 internal class FormsScreen : FrameworkElement
 {
     public FormsScreen() : base(new ContainerRuntime())
@@ -14,7 +20,7 @@ internal class FormsScreen : FrameworkElement
         const int gap = 8;
 
         Dock(Gum.Wireframe.Dock.Fill);
-        
+
 
         var stackPanel = new StackPanel();
         stackPanel.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
@@ -30,6 +36,19 @@ internal class FormsScreen : FrameworkElement
 
         this.AddChild(stackPanel);
 
+        var menu = new Menu();
+        stackPanel.AddChild(menu.Visual);
+        // Items is IList? on ItemsControl (nullable annotation is stale -- it defaults to a
+        // non-null ObservableCollection and is only ever null if explicitly set that way), so the
+        // null-forgiving operator here matches the actual runtime guarantee.
+        var fileMenuItem = new MenuItem { Header = "File" };
+        fileMenuItem.Items!.Add(new MenuItem { Header = "New" });
+        fileMenuItem.Items!.Add(new MenuItem { Header = "Open" });
+        menu.Items!.Add(fileMenuItem);
+        var editMenuItem = new MenuItem { Header = "Edit" };
+        editMenuItem.Items!.Add(new MenuItem { Header = "Copy" });
+        editMenuItem.Items!.Add(new MenuItem { Header = "Paste" });
+        menu.Items!.Add(editMenuItem);
 
         var button = new Button();
         button.Text = "Normal Button";
@@ -85,7 +104,7 @@ internal class FormsScreen : FrameworkElement
         listBox.Y = gap;
         for (int i = 0; i < 10; i++)
         {
-            listBox.Items.Add("Item " + i);
+            listBox.Items!.Add("Item " + i);
         }
         stackPanel.AddChild(listBox);
 

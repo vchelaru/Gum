@@ -15,6 +15,7 @@ using Gum.GueDeriving;
 using RenderingLibrary.Graphics;
 using Gum;
 using SilkNetGum.Screens;
+using GumSamples.Screens;
 using Gum.Managers;
 using GumRuntime;
 
@@ -42,7 +43,7 @@ unsafe class Program
     static GraphicalUiElement? currentGumxScreen;
     static FrameworkElement? currentCodeScreen;
     static int currentScreenIndex;
-    static TextRuntime instructionsText;
+    static StackPanel navStrip = null!;
     static SKPaint sKPaint;
     static SKCanvas canvas;
     static SKPaint paintFromFile;
@@ -66,7 +67,20 @@ unsafe class Program
         () => new SilkNetGum.Screens.RectanglesScreen(),
         () => new SilkNetGum.Screens.ArcsScreen(),
         () => new SilkNetGum.Screens.PolygonsScreen(),
-        () => new SilkNetGum.Screens.FormsScreen(),
+        () => new GumSamples.Screens.FormsScreen(),
+    };
+
+    // Parallel to codeScreenFactories, used as nav-strip button labels.
+    private static readonly string[] codeScreenNames =
+    {
+        "NineSlice",
+        "Sprite",
+        "Text",
+        "Circles",
+        "Rectangles",
+        "Arcs",
+        "Polygons",
+        "Forms",
     };
 
     private static void InitializeGum(SKCanvas canvas, IInputContext inputContext)
@@ -76,20 +90,52 @@ unsafe class Program
         // Registers GumUI.Keyboard for Tab / Shift+Tab focus traversal between Forms controls.
         GumUI.UseKeyboardDefaults();
 
-        LoadScreen(0);
-
-        instructionsText = new TextRuntime();
-        instructionsText.Text = "Press the left or right arrows to toggle between the screens";
-        instructionsText.X = 0;
-        instructionsText.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-        instructionsText.XOrigin = HorizontalAlignment.Center;
-        instructionsText.Y = -10;
-        instructionsText.YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
-        instructionsText.YOrigin = VerticalAlignment.Bottom;
-        instructionsText.AddToRoot();
-
         GraphicalUiElement.CanvasWidth = windowWidth;
         GraphicalUiElement.CanvasHeight = windowHeight;
+
+        BuildNavStrip();
+
+        LoadScreen(0);
+    }
+
+    // Mirrors MonoGameGumInCode's Game1.BuildNavStrip -- a horizontal strip of buttons, one per
+    // screen, pinned to the top-left. Unlike MonoGameGumInCode's generic ShowScreen<T>, this sample
+    // mixes two screen kinds (.gumx-authored GraphicalUiElement screens and code-only
+    // FrameworkElement screens), so each button just calls LoadScreen(index) with its own captured
+    // index instead of a generic factory.
+    private static void BuildNavStrip()
+    {
+        navStrip = new StackPanel();
+        navStrip.Orientation = Orientation.Horizontal;
+        navStrip.Spacing = 4;
+        navStrip.Visual.X = 4;
+        navStrip.Visual.Y = 4;
+        navStrip.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        navStrip.Width = 0;
+        navStrip.Visual.WrapsChildren = true;
+        navStrip.AddToRoot();
+
+        var gumxScreens = ObjectFinder.Self.GumProjectSave!.Screens;
+
+        for (int i = 0; i < gumxScreens.Count; i++)
+        {
+            int capturedIndex = i;
+            AddNavButton(gumxScreens[i].Name, () => LoadScreen(capturedIndex));
+        }
+
+        for (int i = 0; i < codeScreenFactories.Length; i++)
+        {
+            int capturedIndex = gumxScreens.Count + i;
+            AddNavButton(codeScreenNames[i], () => LoadScreen(capturedIndex));
+        }
+    }
+
+    private static void AddNavButton(string text, Action onClick)
+    {
+        var button = new Gum.Forms.Controls.Button();
+        button.Text = text;
+        button.Click += (_, _) => onClick();
+        navStrip.AddChild(button);
     }
 
     private static void LoadScreen(int index)
@@ -109,18 +155,31 @@ unsafe class Program
         currentCodeScreen?.RemoveFromRoot();
         currentCodeScreen = null;
 
+        // Offset below the nav strip so neither screen kind renders underneath it (mirrors
+        // MonoGameGumInCode's Game1.ShowScreen<T>).
+        float navStripHeight = navStrip.Visual.GetAbsoluteHeight();
+
         if (currentScreenIndex < gumxScreens.Count)
         {
             currentGumxScreen = gumxScreens[currentScreenIndex].ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
             currentGumxScreen.AddToRoot();
             currentGumxScreen.Width = GraphicalUiElement.CanvasWidth;
             currentGumxScreen.Height = GraphicalUiElement.CanvasHeight;
+            currentGumxScreen.YOrigin = VerticalAlignment.Top;
+            currentGumxScreen.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
+            currentGumxScreen.Y = navStripHeight;
+            currentGumxScreen.Height -= navStripHeight;
         }
         else
         {
             // Code screens are FrameworkElement and Dock(Fill) themselves, so their visual
-            // fills the canvas without an explicit size assignment here.
+            // fills the canvas without an explicit size assignment here -- only the top-offset
+            // and height-shrink need to be applied on top of that.
             currentCodeScreen = codeScreenFactories[currentScreenIndex - gumxScreens.Count]();
+            currentCodeScreen.Visual.YOrigin = VerticalAlignment.Top;
+            currentCodeScreen.Visual.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
+            currentCodeScreen.Visual.Y = navStripHeight;
+            currentCodeScreen.Visual.Height = -navStripHeight;
             currentCodeScreen.AddToRoot();
         }
     }
@@ -303,10 +362,6 @@ unsafe class Program
                 {
                     if (key == Key.Escape)
                         running = false;
-                    else if (key == Key.Left)
-                        LoadScreen(currentScreenIndex - 1);
-                    else if (key == Key.Right)
-                        LoadScreen(currentScreenIndex + 1);
                 };
             }
 
@@ -363,8 +418,9 @@ unsafe class Program
 
 
 
-                // Render
-                gl.ClearColor(0.2f, 0.3f, 0.8f, 1.0f);
+                // Render. Matches MonoGameGumInCode's GraphicsDevice.Clear(Color.CornflowerBlue)
+                // (RGB 100, 149, 237) so the two samples are visually comparable.
+                gl.ClearColor(100f / 255f, 149f / 255f, 237f / 255f, 1.0f);
                 gl.Clear((uint)GLEnum.ColorBufferBit);
 
 

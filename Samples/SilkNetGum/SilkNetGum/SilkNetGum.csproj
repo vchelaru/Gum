@@ -43,6 +43,12 @@
 	  <ProjectReference Include="..\..\..\Runtimes\SilkNetGum\SilkNetGum.csproj" />
 	</ItemGroup>
 
+	<!-- Shared with MonoGameGumInCode (the reference feature sample) so Forms control rendering
+	     can be compared side by side between backends. See #3652. -->
+	<ItemGroup>
+	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\FormsScreen.cs" Link="Screens\FormsScreen.cs" />
+	</ItemGroup>
+
 	<ItemGroup>
 	  <None Update="Content\GumProject\**\*.*">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

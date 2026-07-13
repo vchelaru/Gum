@@ -7,6 +7,7 @@ using Gum;
 using KernSmith.Gum;
 using MonoGameAndGum.Renderables;
 using MonoGameGumInCode.Screens;
+using GumSamples.Screens;
 using RenderingLibrary;
 
 namespace MonoGameGumInCode
