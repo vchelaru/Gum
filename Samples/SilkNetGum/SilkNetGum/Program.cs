@@ -362,6 +362,16 @@ unsafe class Program
                 renderTarget = new GRBackendRenderTarget(width, height, 0, 8, new GRGlFramebufferInfo(0, 0x8058)); // 0x8058 = GL_RGBA8
                 surface = SKSurface.Create(grContext, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
                 canvas = surface.Canvas;
+
+                // GumService.Initialize stashes the canvas it's given in SystemManagers.Canvas, but
+                // that's a one-time assignment -- it's never re-read afterward. Reassigning the local
+                // `canvas` above does not update it, so without this line, GumUI.Draw() keeps rendering
+                // into the just-disposed SKCanvas from the previous surface on every resize -- a
+                // use-after-free that crashed with AccessViolationException (#3657).
+                if (GumUI.SystemManagers != null)
+                {
+                    GumUI.SystemManagers.Canvas = canvas;
+                }
             }
 
             RecreateSurface(windowWidth, windowHeight);
