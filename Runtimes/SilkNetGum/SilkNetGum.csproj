@@ -69,6 +69,9 @@
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationFrame.cs" Link="Animation\AnimationFrame.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChainLogic.cs" Link="Animation\AnimationChainLogic.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\SpriteAnimationLogic.cs" Link="Animation\SpriteAnimationLogic.cs" />
+		<!-- Shared markup model + run-splitter (InlineVariable, StyledSubstring, StyledSubstringSplitter)
+		     so Skia's Text can render BBCode inline styling (#3679); mirrors SkiaGum.csproj's link. -->
+		<Compile Include="..\..\RenderingLibrary\Graphics\StyledSubstringSplitter.cs" Link="RenderingLibrary\StyledSubstringSplitter.cs" />
 		<!-- IAnimatable intentionally NOT linked (arrives via GumCommon); a local copy would create
 		     two distinct same-FQN types and silently break AnimateSelf — see SkiaGum.csproj. -->
 		<Compile Include="..\..\MonoGameGum\GueDeriving\CircleRuntime.cs" Link="GueDeriving\CircleRuntime.cs" />

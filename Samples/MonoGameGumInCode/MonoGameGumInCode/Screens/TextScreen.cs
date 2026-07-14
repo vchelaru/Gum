@@ -25,16 +25,19 @@ namespace MonoGameGumInCode.Screens;
 #endif
 
 // #3640: converged into a single shared file (was two byte-for-byte-mirrored copies at
-// Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/TextScreen.cs and
-// Samples/raylib/Screens/TextScreen.cs) after repeatedly drifting when only one mirror got updated.
-// Linked into Samples/raylib/GumTest.csproj via <Compile Include ... Link>; this file is the only
-// copy. The SilkNetGum TextScreen.cs mirror (Samples/SilkNetGum/SilkNetGum/Screens/TextScreen.cs)
-// stays a separate, non-linked file - it legitimately omits the BBCode / Blend / TextureFilter
-// sections because SkiaGum renders via RichTextKit rather than a font atlas, so there's much less
-// left to share. Only genuinely backend-specific things differ here, gated `#if RAYLIB`: the
-// namespace, the Color/Text/LetterCustomization/TextRenderingPositionMode aliases above, and
-// AddTextureFilterSection's mechanism (a per-layer sampler state on MonoGame vs a baked
-// font-cache texture on raylib).
+// Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/TextScreen.cs and Samples/raylib/Screens/
+// TextScreen.cs) after repeatedly drifting when only one mirror got updated. Linked into
+// Samples/raylib/GumTest.csproj via <Compile Include ... Link>; this file is the only copy for
+// MonoGame + raylib.
+//
+// Policy: the MonoGame/raylib and SilkNetGum text samples are kept feature-, content-, AND
+// section-order-identical (a new section goes in the SAME position in both files, not just present),
+// and carry NO descriptive section labels — each demo's own text shows AND names what it is. The
+// SilkNetGum mirror (Samples/SilkNetGum/SilkNetGumSample/Screens/TextScreen.cs) is still a separate,
+// non-linked file for now. Only genuinely backend-specific things differ here, gated `#if RAYLIB`:
+// the namespace, the Color/Text/LetterCustomization/TextRenderingPositionMode aliases above, and
+// AddTextureFilterSection's mechanism (a per-layer sampler state on MonoGame vs a baked font-cache
+// texture on raylib).
 internal class TextScreen : FrameworkElement
 {
     public TextScreen() : base(new ContainerRuntime())
@@ -56,22 +59,20 @@ internal class TextScreen : FrameworkElement
         textRuntime.Text = "Hi, I'm default text";
         container.Children.Add(textRuntime);
 
-        AddSectionLabel(container, "BBCode markup - inline color runs (#3471):");
-        var colorMarkup = new TextRuntime();
-        colorMarkup.FontSize = 24;
-        colorMarkup.Text = "[Color=Red]Red[/Color] plain [Color=Lime]green[/Color] [Color=Cyan]cyan[/Color]";
-        container.Children.Add(colorMarkup);
+        // One self-describing BBCode line: each styled word shows AND names its own effect, so no
+        // separate label is needed. Kept byte-identical to the same line in the SilkNetGumSample text
+        // screen — the three text samples are feature- and content-identical by policy.
+        var bbcode = new TextRuntime();
+        bbcode.Font = "Arial";
+        bbcode.FontSize = 24;
+        bbcode.WidthUnits = DimensionUnitType.Absolute;
+        bbcode.Width = 520;
+        bbcode.Text =
+            "[Color=Red]red[/Color], [Color=Blue]blue[/Color], " +
+            "[FontSize=40]big[/FontSize], [FontScale=1.5]scaled[/FontScale], " +
+            "[IsBold=true]bold[/IsBold], and [IsItalic=true]italic[/IsItalic] runs, all styled inline in one Text.";
+        container.Children.Add(bbcode);
 
-        AddSectionLabel(container, "BBCode markup - inline FontScale runs (baseline aligned):");
-        var scaleMarkup = new TextRuntime();
-        scaleMarkup.FontSize = 24;
-        scaleMarkup.Text = "small [FontScale=2]BIG[/FontScale] then [Color=Orange][FontScale=1.5]orange[/FontScale][/Color]";
-        container.Children.Add(scaleMarkup);
-
-        AddSectionLabel(container, "BBCode markup - [FontSize=40] crisp swap (left) vs [FontScale=1.9] scale-up (right); blue box = measured width (#3524):");
-        container.Children.Add(BuildFontSizeContainmentRow());
-
-        AddSectionLabel(container, "BBCode markup - [Custom] per-letter callback (#3640): static wavy offset + per-letter hue");
         Text.Customizations["Wave"] = (int index, string block) => new LetterCustomization
         {
             YOffset = MathF.Sin(index * 0.9f) * 10f,
@@ -86,16 +87,14 @@ internal class TextScreen : FrameworkElement
         customMarkup.Text = "[Custom=Wave]Wavy rainbow text[/Custom]";
         container.Children.Add(customMarkup);
 
-        AddSectionLabel(container, "Baked drop shadow (HasDropshadow = true, first-enable defaults):");
         var shadowDefault = new TextRuntime();
-        shadowDefault.Text = "Soft baked shadow";
+        shadowDefault.Text = "Soft shadow";
         shadowDefault.FontSize = 24;
         shadowDefault.HasDropshadow = true;
         container.Children.Add(shadowDefault);
 
-        AddSectionLabel(container, "Baked drop shadow (colored, offset, blur):");
         var shadowColored = new TextRuntime();
-        shadowColored.Text = "Pink shadow";
+        shadowColored.Text = "Pink shadow, offset, and blurred";
         shadowColored.FontSize = 24;
         shadowColored.HasDropshadow = true;
         shadowColored.DropshadowColor = new Color(220, 40, 160, 220);
@@ -104,7 +103,6 @@ internal class TextScreen : FrameworkElement
         shadowColored.DropshadowBlur = 4;
         container.Children.Add(shadowColored);
 
-        AddSectionLabel(container, "Baked drop shadow + outline:");
         var shadowOutline = new TextRuntime();
         shadowOutline.Text = "Shadow and outline";
         shadowOutline.FontSize = 24;
@@ -127,10 +125,12 @@ internal class TextScreen : FrameworkElement
     private static void BuildTextParitySection(ContainerRuntime container)
     {
         AddBlendOnTextSection(container);
+        // Placed right after the blend block to match the SilkNetGumSample's section ORDER — the text
+        // samples must stay identical in order, not just content.
+        AddOverflowSection(container);
         AddTextureFilterSection(container);
 
         // --- Per-instance TextRenderingPositionMode override, at a fractional origin ---
-        AddSectionLabel(container, "TextRenderingPositionMode (#3432): fractional origin; button toggles snap");
         var snapText = new TextRuntime();
         snapText.FontSize = 20;
         snapText.X = 120.5f;
@@ -156,7 +156,6 @@ internal class TextScreen : FrameworkElement
         container.Children.Add(toggleButton.Visual);
 
         // --- GetCharacterIndexAtPosition: click the text, report the hit index ---
-        AddSectionLabel(container, "GetCharacterIndexAtPosition (#3432): click the text below");
         var hitText = new TextRuntime();
         hitText.FontSize = 24;
         hitText.Text = "Click me to report the character index";
@@ -188,10 +187,9 @@ internal class TextScreen : FrameworkElement
     // Layer.IsLinearFilteringEnabled forcing the mode, while layout still comes from the shared
     // filterRow container. Unlike raylib (where the filter is baked into the font-cache texture at
     // creation time), the layer-based override here is a pure render-state switch, so both sides can
-    // share the same FontSize/FontScale.
+    // share the same FontSize/FontScale. Each cell's own text ("Point" / "Linear") names its filter.
     private static void AddTextureFilterSection(ContainerRuntime container)
     {
-        AddSectionLabel(container, "Texture filter (#3496): 12px font scaled 4x, Point (left) vs Linear (right)");
         var filterRow = new ContainerRuntime();
         filterRow.WidthUnits = DimensionUnitType.RelativeToChildren;
         filterRow.HeightUnits = DimensionUnitType.RelativeToChildren;
@@ -206,14 +204,14 @@ internal class TextScreen : FrameworkElement
         var pointText = new TextRuntime();
         pointText.FontSize = 12;
         pointText.FontScale = 4;
-        pointText.Text = "Point";
+        pointText.Text = "Point filter (blocky)";
         filterRow.AddChild(pointText);
 
         RenderingLibrary.Content.ContentLoader.DefaultTextureFilter = Raylib_cs.TextureFilter.Bilinear;
         var linearText = new TextRuntime();
         linearText.FontSize = 13; // distinct size so this is a separate font-cache entry from "Point" above
         linearText.FontScale = 4;
-        linearText.Text = "Linear";
+        linearText.Text = "Linear filter (smoothed)";
         filterRow.AddChild(linearText);
 
         RenderingLibrary.Content.ContentLoader.DefaultTextureFilter = savedFilter;
@@ -228,7 +226,7 @@ internal class TextScreen : FrameworkElement
         var pointText = new TextRuntime();
         pointText.FontSize = 12;
         pointText.FontScale = 4;
-        pointText.Text = "Point";
+        pointText.Text = "Point filter (blocky)";
         filterRow.AddChild(pointText);
         pointText.MoveToLayer(pointLayer);
 
@@ -238,16 +236,16 @@ internal class TextScreen : FrameworkElement
         var linearText = new TextRuntime();
         linearText.FontSize = 12;
         linearText.FontScale = 4;
-        linearText.Text = "Linear";
+        linearText.Text = "Linear filter (smoothed)";
         filterRow.AddChild(linearText);
         linearText.MoveToLayer(linearLayer);
 #endif
     }
 
-    // Blend on Text (#3432): additive (brightens) vs normal, over an identical blue box.
+    // Blend on Text (#3432): additive (brightens) vs normal, over an identical blue box. Each cell's
+    // own text ("Additive" / "Normal") names its blend mode.
     private static void AddBlendOnTextSection(ContainerRuntime container)
     {
-        AddSectionLabel(container, "Blend on Text (#3432): additive (brightens) vs normal, over a blue box");
         var blendRow = new ContainerRuntime();
         blendRow.WidthUnits = DimensionUnitType.RelativeToChildren;
         blendRow.HeightUnits = DimensionUnitType.RelativeToChildren;
@@ -297,64 +295,82 @@ internal class TextScreen : FrameworkElement
         return cell;
     }
 
-    // Inline FontSize font-swap (#3524): [FontSize=N] swaps in a font rasterized at N (crisp) and must
-    // also be MEASURED at that size, or a RelativeToChildren Text is sized too narrow and the run spills
-    // past its background (the RelativeToChildren-too-narrow bug fixed in #3520 / #3523). Left cell =
-    // [FontSize=40] over a 21px base (crisp swap); right cell = a [FontScale=1.9] control (a scale-up of
-    // the 21px atlas, so visibly blurrier). Pass = "big" is enlarged, crisper on the left than the right,
-    // AND the blue box fully contains each line in both (raylib gets its crisp swap from KernSmith;
-    // MonoGame from the BitmapFont path - same visual contract either way).
-    private static ContainerRuntime BuildFontSizeContainmentRow()
+    // Overflow modes (#3677): horizontal ellipsis, then vertical TruncateLine vs SpillOver for the
+    // same-size box. Each box's text names its own mode. The overflow properties live on TextRuntime
+    // (MaxNumberOfLines / IsTruncatingWithEllipsisOnLastLine / TextOverflowVerticalMode), so no cast to
+    // the renderable is needed. Kept content-identical to the SilkNetGumSample text screen.
+    private static void AddOverflowSection(ContainerRuntime container)
     {
-        var row = new ContainerRuntime();
-        row.WidthUnits = DimensionUnitType.RelativeToChildren;
-        row.HeightUnits = DimensionUnitType.RelativeToChildren;
-        row.Width = 0;
-        row.Height = 0;
-        row.ChildrenLayout = ChildrenLayout.LeftToRightStack;
-        row.StackSpacing = 24;
-        row.AddChild(BuildContainedMarkupCell("This is [FontSize=40]big[/FontSize] text."));
-        row.AddChild(BuildContainedMarkupCell("This is [FontScale=1.9]big[/FontScale] text."));
-        return row;
+        const string longLine =
+            "This single long line overflows its box horizontally and is cut off with an ellipsis";
+        const string truncateParagraph =
+            "TruncateLine clips this wrapping paragraph to the lines that fit the box height and " +
+            "ellipsizes the last visible line, dropping everything past it.";
+        const string spillParagraph =
+            "SpillOver renders every line of this wrapping paragraph, overflowing past the bottom " +
+            "edge of its box instead of clipping.";
+
+        // (a) Horizontal overflow -> ellipsis. MaxNumberOfLines = 1 caps the block to one line;
+        // IsTruncatingWithEllipsisOnLastLine appends the trailing "...".
+        var ellipsisBox = MakeOverflowBox(width: 300, height: 30);
+        var ellipsisText = MakeBoxFillingText(longLine);
+        ellipsisText.MaxNumberOfLines = 1;
+        ellipsisText.IsTruncatingWithEllipsisOnLastLine = true;
+        ellipsisBox.Children.Add(ellipsisText);
+        container.Children.Add(ellipsisBox);
+
+        // (b) Vertical TruncateLine: the paragraph is clipped to the lines that fit the box Height,
+        // with an ellipsis on the last visible line.
+        var truncateBox = MakeOverflowBox(width: 300, height: 60);
+        var truncateText = MakeBoxFillingText(truncateParagraph);
+        truncateText.TextOverflowVerticalMode = TextOverflowVerticalMode.TruncateLine;
+        truncateText.IsTruncatingWithEllipsisOnLastLine = true;
+        truncateBox.Children.Add(truncateText);
+        container.Children.Add(truncateBox);
+
+        // (c) Vertical SpillOver: the same-size box renders every line, overflowing past the box's
+        // bottom edge.
+        var spillBox = MakeOverflowBox(width: 300, height: 60);
+        var spillText = MakeBoxFillingText(spillParagraph);
+        spillText.TextOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
+        spillBox.Children.Add(spillText);
+        container.Children.Add(spillBox);
+
+        // The SpillOver box renders past its own bottom edge by design; reserve room below it so the
+        // overflowing lines don't land on top of the next section in the top-to-bottom stack.
+        var spillSpacer = new ContainerRuntime();
+        spillSpacer.WidthUnits = DimensionUnitType.Absolute;
+        spillSpacer.HeightUnits = DimensionUnitType.Absolute;
+        spillSpacer.Width = 0;
+        spillSpacer.Height = 40;
+        container.Children.Add(spillSpacer);
     }
 
-    // A RelativeToChildren cell sized to its TextRuntime, with a RelativeToParent background filling it.
-    // The background's edges mark where measurement thinks the text ends, so any measure-vs-render drift
-    // shows up as the run spilling outside the blue box.
-    private static ContainerRuntime BuildContainedMarkupCell(string markup)
+    // A fixed-size, dark box so the text's overflow bounds are visible.
+    private static RectangleRuntime MakeOverflowBox(float width, float height)
     {
-        var cell = new ContainerRuntime();
-        cell.WidthUnits = DimensionUnitType.RelativeToChildren;
-        cell.HeightUnits = DimensionUnitType.RelativeToChildren;
-        cell.Width = 0;
-        cell.Height = 0;
-
-        var background = new RectangleRuntime();
-        background.WidthUnits = DimensionUnitType.RelativeToParent;
-        background.HeightUnits = DimensionUnitType.RelativeToParent;
-        background.Width = 0;
-        background.Height = 0;
-        background.IsFilled = true;
-        background.FillColor = new Color(40, 60, 160, 255);
-        cell.Children.Add(background);
-
-        var text = new TextRuntime();
-        text.WidthUnits = DimensionUnitType.RelativeToChildren;
-        text.HeightUnits = DimensionUnitType.RelativeToChildren;
-        text.Width = 0;
-        text.Height = 0;
-        text.FontSize = 21;
-        text.Text = markup;
-        cell.Children.Add(text);
-
-        return cell;
+        var box = new RectangleRuntime();
+        box.WidthUnits = DimensionUnitType.Absolute;
+        box.HeightUnits = DimensionUnitType.Absolute;
+        box.Width = width;
+        box.Height = height;
+        box.FillColor = new Color(40, 40, 40, 255);
+        box.IsFilled = true;
+        return box;
     }
 
-    private static void AddSectionLabel(ContainerRuntime container, string text)
+    // A Text that fills its parent box, so its overflow is exactly the box's bounds.
+    private static TextRuntime MakeBoxFillingText(string text)
     {
-        var label = new TextRuntime();
-        label.Text = text;
-        label.FontSize = 14;
-        container.Children.Add(label);
+        var textRuntime = new TextRuntime();
+        textRuntime.Text = text;
+        textRuntime.Font = "Arial";
+        textRuntime.FontSize = 18;
+        textRuntime.WidthUnits = DimensionUnitType.RelativeToParent;
+        textRuntime.HeightUnits = DimensionUnitType.RelativeToParent;
+        textRuntime.Width = 0;
+        textRuntime.Height = 0;
+        return textRuntime;
     }
+
 }

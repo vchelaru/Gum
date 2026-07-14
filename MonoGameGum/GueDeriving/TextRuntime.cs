@@ -67,7 +67,6 @@ public class TextRuntime : InteractiveGue
     }
 #endif
 
-#if !SKIA
     /// <summary>
     /// The Gum-specific Blend mode for the text. Null means "use the renderer's current
     /// blend mode" (typically alpha blending).
@@ -76,27 +75,27 @@ public class TextRuntime : InteractiveGue
     {
         get
         {
-#if RAYLIB
-            return ContainedText.Blend;
-#else
+#if XNALIKE
             return Gum.RenderingLibrary.BlendExtensions.ToBlend(ContainedText.BlendState);
+#else
+            // RAYLIB and SKIA renderables expose Blend directly (no XNA BlendState to translate).
+            return ContainedText.Blend;
 #endif
         }
         set
         {
-#if RAYLIB
-            ContainedText.Blend = value;
-            NotifyPropertyChanged();
-#else
+#if XNALIKE
             if (value.HasValue)
             {
                 BlendState = value.Value.ToBlendState().ToXNA();
             }
             // NotifyPropertyChanged handled by BlendState:
+#else
+            ContainedText.Blend = value;
+            NotifyPropertyChanged();
 #endif
         }
     }
-#endif
 
     /// <summary>
     /// The red component of the text color. Ranges from 0 to 255.
@@ -562,6 +561,30 @@ public class TextRuntime : InteractiveGue
             UpdateLayout();
         }
     }
+
+    /// <summary>
+    /// Whether the last visible line is truncated with a trailing ellipsis ("...") when the text
+    /// overflows -- either a single line wider than the box, or (with
+    /// <see cref="TextOverflowVerticalMode"/> set to <see cref="TextOverflowVerticalMode.TruncateLine"/>)
+    /// the lines that fall past the box height.
+    /// </summary>
+    public bool IsTruncatingWithEllipsisOnLastLine
+    {
+        get => ContainedText.IsTruncatingWithEllipsisOnLastLine;
+        set
+        {
+            ContainedText.IsTruncatingWithEllipsisOnLastLine = value;
+            NotifyPropertyChanged();
+            UpdateLayout();
+        }
+    }
+
+    // NOTE: TextOverflowVerticalMode is intentionally NOT declared here. GraphicalUiElement (our base)
+    // already exposes it with a backing field that its layout/pagination coordination reads (e.g.
+    // DialogBox pagination, RefreshTextOverflowVerticalMode). Redeclaring it here hides that property
+    // with a forward-to-renderable-only version, leaving the base field stuck at its default so
+    // truncation silently stops working (broke DialogBox multi-page splitting). The inherited property
+    // already forwards to the contained renderable, so no cast is needed to set it from a TextRuntime.
 
 #if !SKIA
     /// <summary>

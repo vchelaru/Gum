@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KernSmith.MonoGameGum", "..
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KernSmith.GumCommon", "..\..\Integrations\KernSmith\KernSmith.GumCommon\KernSmith.GumCommon.csproj", "{3A990D8F-58B6-4D60-938D-2944E7366FF5}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonoGameGumShapes", "..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj", "{E7F419A2-6D3B-4C81-9F5E-2A8C7B0D63E1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,6 +87,18 @@ Global
 		{3A990D8F-58B6-4D60-938D-2944E7366FF5}.Release|x86.Build.0 = Release|Any CPU
 		{3A990D8F-58B6-4D60-938D-2944E7366FF5}.Release|x64.ActiveCfg = Release|Any CPU
 		{3A990D8F-58B6-4D60-938D-2944E7366FF5}.Release|x64.Build.0 = Release|Any CPU
+		{E7F419A2-6D3B-4C81-9F5E-2A8C7B0D63E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E7F419A2-6D3B-4C81-9F5E-2A8C7B0D63E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E7F419A2-6D3B-4C81-9F5E-2A8C7B0D63E1}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E7F419A2-6D3B-4C81-9F5E-2A8C7B0D63E1}.Debug|x86.Build.0 = Debug|Any CPU
+		{E7F419A2-6D3B-4C81-9F5E-2A8C7B0D63E1}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E7F419A2-6D3B-4C81-9F5E-2A8C7B0D63E1}.Debug|x64.Build.0 = Debug|Any CPU
+		{E7F419A2-6D3B-4C81-9F5E-2A8C7B0D63E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E7F419A2-6D3B-4C81-9F5E-2A8C7B0D63E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E7F419A2-6D3B-4C81-9F5E-2A8C7B0D63E1}.Release|x86.ActiveCfg = Release|Any CPU
+		{E7F419A2-6D3B-4C81-9F5E-2A8C7B0D63E1}.Release|x86.Build.0 = Release|Any CPU
+		{E7F419A2-6D3B-4C81-9F5E-2A8C7B0D63E1}.Release|x64.ActiveCfg = Release|Any CPU
+		{E7F419A2-6D3B-4C81-9F5E-2A8C7B0D63E1}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -94,6 +108,7 @@ Global
 		{B2814A65-9CF4-4D6F-8CE4-9F57DBB7A581} = {BA47214B-70E2-4BCE-A498-4AF4A57B8AEF}
 		{A3BB043D-370A-4A2E-A548-C325CE556A16} = {BA47214B-70E2-4BCE-A498-4AF4A57B8AEF}
 		{3A990D8F-58B6-4D60-938D-2944E7366FF5} = {BA47214B-70E2-4BCE-A498-4AF4A57B8AEF}
+		{E7F419A2-6D3B-4C81-9F5E-2A8C7B0D63E1} = {BA47214B-70E2-4BCE-A498-4AF4A57B8AEF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5A536017-6AF7-41AE-BAE8-47820035ACBD}

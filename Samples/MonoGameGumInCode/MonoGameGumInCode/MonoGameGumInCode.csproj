@@ -28,7 +28,7 @@
     <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.4.1" />
     <!-- Runtime HLSL .fx compiler used by RenderTargetEffectScreen to build a post-process
          shader at runtime without the content pipeline (issue #816). -->
-    <PackageReference Include="ShadowDusk.Compiler" Version="0.8.0" />
+    <PackageReference Include="ShadowDusk.Compiler" Version="0.11.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\GumCommon\GumCommon.csproj" />

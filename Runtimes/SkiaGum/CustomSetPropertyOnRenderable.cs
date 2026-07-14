@@ -1263,9 +1263,11 @@ public partial class CustomSetPropertyOnRenderable
                 rawText = LocalizationService.Translate(rawText);
             }
 
-            // Unlike the MonoGame copy (StoredMarkupText / SetBbCodeText), SkiaGum's Text renders
-            // RawText literally through RichTextKit — there is no separate markup path — so a
-            // translated value containing [...] flows through here exactly as any other string.
+            // SkiaGum honors BBCode inline styling too (issue #3679), but unlike the MonoGame copy
+            // (which strips tags here via SetBbCodeText and stores the markup in StoredMarkupText),
+            // the Skia Text renderable parses the markup lazily when it builds its RichTextKit
+            // TextBlock. So the raw (possibly translated) value flows straight through; a value
+            // containing [Color=..]/[FontSize=..]/bold/italic tags renders as mixed per-run styling.
             text.RawText = rawText;
             // we want to update if the text's size is based on its "children" (the letters it contains)
             if (gue.WidthUnits == DimensionUnitType.RelativeToChildren ||

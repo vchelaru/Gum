@@ -3,6 +3,7 @@ using RenderingLibrary.Graphics;
 using Shouldly;
 using SkiaGum;
 using SkiaGum.GueDeriving;
+using SkiaSharp;
 
 namespace SkiaGum.Tests.GueDeriving;
 
@@ -15,6 +16,24 @@ public class TextRuntimeTests
         // rendering pipeline for these unit tests.
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
     }
+
+    #region Blend
+
+    [Fact]
+    public void Blend_SetInCode_ShouldPushToContainedText()
+    {
+        // TextRuntime.Blend was #if !SKIA — it silently didn't exist on Skia, so callers had to reach
+        // through to the renderable. Unified interface: the property now forwards to SkiaGum.Text.Blend
+        // (the XNA BlendState translation stays #if XNALIKE). No SystemManagers wiring needed — the
+        // setter forwards straight to the contained renderable, not through the font-update delegate.
+        TextRuntime sut = new();
+        sut.Blend = Gum.RenderingLibrary.Blend.Additive;
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.Blend.ShouldBe(Gum.RenderingLibrary.Blend.Additive);
+    }
+
+    #endregion
 
     #region BoldWeight
 
@@ -53,6 +72,51 @@ public class TextRuntimeTests
         TextRuntime clone = (TextRuntime)sut.Clone();
         clone.ShouldNotBeNull();
         clone.RenderableComponent.ShouldNotBeSameAs(sut.RenderableComponent);
+    }
+
+    #endregion
+
+    #region Color
+
+    [Fact]
+    public void Color_ShouldDefaultToWhite_MatchingMonoGameAndRaylib()
+    {
+        // MonoGame (RenderingLibrary.Graphics.Text: mRed/mGreen/mBlue/mAlpha = 255) and raylib
+        // (Renderables.Text: Color = Color.White) both default text to white; the SkiaGum renderable
+        // drifted to black. Parity: the outlier is corrected to white.
+        TextRuntime sut = new();
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.Color.ShouldBe(SKColors.White);
+    }
+
+    #endregion
+
+    #region Dropshadow
+
+    [Fact]
+    public void HasDropshadow_SetInCode_ShouldDriveRenderableImageFilterShadow()
+    {
+        // Cross-backend baked-shadow API (TextRuntime.HasDropshadow + params) maps onto the SkiaGum.Text
+        // renderable's standalone ImageFilter shadow via the code-property path (SystemManagers.UpdateFonts).
+        // Without it, HasDropshadow silently no-ops on Skia (renders plain text, no shadow).
+        new RenderingLibrary.SystemManagers().Initialize();
+
+        TextRuntime sut = new();
+        sut.HasDropshadow = true;
+        sut.DropshadowColor = new SKColor(220, 40, 160, 220);
+        sut.DropshadowOffsetX = 2;
+        sut.DropshadowOffsetY = 4;
+        sut.DropshadowBlur = 6;
+
+        Text contained = (Text)sut.RenderableComponent;
+        contained.HasDropshadow.ShouldBeTrue();
+        contained.DropshadowColor.ShouldBe(new SKColor(220, 40, 160, 220));
+        contained.DropshadowOffsetX.ShouldBe(2);
+        contained.DropshadowOffsetY.ShouldBe(4);
+        contained.DropshadowBlurX.ShouldBe(6);
+        contained.DropshadowBlurY.ShouldBe(6);
+        contained.GetRenderPaint().ShouldNotBeNull();
     }
 
     #endregion
@@ -155,6 +219,22 @@ public class TextRuntimeTests
 
     #endregion
 
+    #region IsTruncatingWithEllipsisOnLastLine
+
+    [Fact]
+    public void IsTruncatingWithEllipsisOnLastLine_SetInCode_ShouldPushToContainedText()
+    {
+        // Unified onto TextRuntime (#3677 overflow demo): was renderable-only, so both samples had to
+        // cast to the renderable to reach it. Now forwards straight to the contained renderable.
+        TextRuntime sut = new();
+        sut.IsTruncatingWithEllipsisOnLastLine = true;
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.IsTruncatingWithEllipsisOnLastLine.ShouldBeTrue();
+    }
+
+    #endregion
+
     #region HasEvents
 
     [Fact]
@@ -210,6 +290,25 @@ public class TextRuntimeTests
 
         Text containedText = (Text)sut.RenderableComponent;
         containedText.MaxLettersToShow.ShouldBe(4);
+    }
+
+    #endregion
+
+    #region OutlineThickness
+
+    [Fact]
+    public void OutlineThickness_SetInCode_ShouldPushToContainedText()
+    {
+        // The code-property path (TextRuntime.OutlineThickness setter -> UpdateToFontValues ->
+        // UpdateFontFromProperties delegate) is wired by SystemManagers.Initialize. #3675 only wired
+        // the string/SetProperty path, so setting OutlineThickness in code drew no halo until #3684.
+        new RenderingLibrary.SystemManagers().Initialize();
+
+        TextRuntime sut = new();
+        sut.OutlineThickness = 7;
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.OutlineThickness.ShouldBe(7);
     }
 
     #endregion
@@ -275,6 +374,22 @@ public class TextRuntimeTests
         sut.TextOverflowHorizontalMode = TextOverflowHorizontalMode.EllipsisLetter;
         sut.TextOverflowHorizontalMode = TextOverflowHorizontalMode.TruncateWord;
         sut.TextOverflowHorizontalMode.ShouldBe(TextOverflowHorizontalMode.TruncateWord);
+    }
+
+    #endregion
+
+    #region TextOverflowVerticalMode
+
+    [Fact]
+    public void TextOverflowVerticalMode_SetInCode_ShouldPushToContainedText()
+    {
+        // Unified onto TextRuntime (#3677 overflow demo): was renderable-only. Now forwards straight
+        // to the contained renderable so the overflow sample doesn't have to cast.
+        TextRuntime sut = new();
+        sut.TextOverflowVerticalMode = TextOverflowVerticalMode.TruncateLine;
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.TextOverflowVerticalMode.ShouldBe(TextOverflowVerticalMode.TruncateLine);
     }
 
     #endregion

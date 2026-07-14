@@ -40,6 +40,11 @@ unsafe class Program
     private static IWindow window = null!;
     private static bool running = true;
 
+    // Diagnostic toggle: when true, InitializeGum skips the nav strip and all screens and shows a
+    // single bare default-color TextRuntime on the root (no UI, no container, no clip) for isolating
+    // renderable-level rendering questions. Flip to true when you need the minimal repro back.
+    const bool ShowMinimalTextRepro = false;
+
     static GraphicalUiElement? currentGumxScreen;
     static FrameworkElement? currentCodeScreen;
     static int currentScreenIndex;
@@ -95,9 +100,27 @@ unsafe class Program
         GraphicalUiElement.CanvasWidth = windowWidth;
         GraphicalUiElement.CanvasHeight = windowHeight;
 
+        if (ShowMinimalTextRepro)
+        {
+            ShowMinimalTextReproScreen();
+            return;
+        }
+
         BuildNavStrip();
 
         LoadScreen(0);
+    }
+
+    // Bare single-text diagnostic page (gated by ShowMinimalTextRepro). No nav / screens / container /
+    // clip — just one default-color TextRuntime on the root, for isolating renderable-level rendering.
+    private static void ShowMinimalTextReproScreen()
+    {
+        var repro = new TextRuntime();
+        repro.Text = "Default color text (should be WHITE)";
+        repro.FontSize = 40;
+        repro.X = 20;
+        repro.Y = 20;
+        repro.AddToRoot();
     }
 
     // Mirrors MonoGameGumInCode's Game1.BuildNavStrip -- a horizontal strip of buttons, one per

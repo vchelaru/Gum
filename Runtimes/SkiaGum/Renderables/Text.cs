@@ -6,6 +6,7 @@ using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using Topten.RichTextKit;
 using Vector2 = System.Numerics.Vector2;
 using Matrix = System.Numerics.Matrix4x4;
@@ -247,19 +248,21 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     private List<string> BuildWrappedTextList(TextBlock textBlock)
     {
         var lines = new List<string>();
-        if (string.IsNullOrEmpty(mRawText))
+        // The TextBlock is built from the tag-stripped, CRLF-normalized layout text when the RawText
+        // carries BBCode markup (issue #3679); for plain text _layoutText is mRawText verbatim. Either
+        // way RichTextKit's TextLine.Start/Length are code-point indices into that exact string, so
+        // index into it rather than mRawText (which still holds the markup).
+        var source = _layoutText;
+        if (string.IsNullOrEmpty(source))
         {
             return lines;
         }
 
-        // RichTextKit's TextLine.Start/Length are code-point indices into the text that was
-        // added to the TextBlock. GetTextBlock adds mRawText verbatim (no CRLF normalization),
-        // so index directly into mRawText rather than a normalized copy.
         foreach (var line in textBlock.Lines)
         {
-            if (line.Start + line.Length <= mRawText.Length)
+            if (line.Start + line.Length <= source.Length)
             {
-                lines.Add(mRawText.Substring(line.Start, line.Length));
+                lines.Add(source.Substring(line.Start, line.Length));
             }
         }
 
@@ -434,7 +437,15 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
     Vector2 Position;
     IRenderableIpso? mParent;
-    public string? StoredMarkupText => null;
+
+    /// <summary>
+    /// The original BBCode / markup string assigned to <see cref="RawText"/> when it contained inline
+    /// styling tags, or null when the assigned text was plain. Mirrors the MonoGame/Raylib Text's
+    /// property so shared code can re-parse markup after a font change. Unlike those backends (which
+    /// strip the tags out of <see cref="RawText"/>), SkiaGum keeps the markup in <see cref="RawText"/>
+    /// and strips it lazily when building the RichTextKit <c>TextBlock</c> (issue #3679).
+    /// </summary>
+    public string? StoredMarkupText => _hasMarkup ? mRawText : null;
 
     public IRenderableIpso? Parent
     {
@@ -564,6 +575,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             if (mRawText != value)
             {
                 mRawText = value;
+                ParseMarkup();
                 _cachedTextBlock = null;
 
                 //UpdateWrappedText();
@@ -648,7 +660,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         Height = 32;
 
         this.Visible = true;
-        Color = SKColors.Black;
+        // White matches the MonoGame (RenderingLibrary.Graphics.Text) and raylib (Renderables.Text)
+        // renderable defaults; SkiaGum previously drifted to black, so a code-only `new TextRuntime()`
+        // rendered black text on Skia but white everywhere else.
+        Color = SKColors.White;
         OutlineColor = SKColors.Black;
         mChildren = new ();
     }
@@ -727,16 +742,43 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             if (renderPaint != null)
             {
                 canvas.SaveLayer(renderPaint);
-                paintBlock.Paint(canvas, new SKPoint(0, 0));
+                DrawTextWithOutline(canvas, paintBlock);
                 canvas.Restore();
                 renderPaint.Dispose();
             }
             else
             {
-                paintBlock.Paint(canvas, new SKPoint(0, 0));
+                DrawTextWithOutline(canvas, paintBlock);
             }
             canvas.Restore();
         }
+    }
+
+    /// <summary>
+    /// Paints the outline (when <see cref="OutlineThickness"/> &gt; 0) followed by the text fill.
+    /// The outline is a single recolor+dilate pass: the text is painted into a layer whose paint
+    /// recolors every glyph to <see cref="OutlineColor"/> (SrcIn) and dilates it by
+    /// <see cref="OutlineThickness"/> pixels, producing a uniform outline of that width on every
+    /// side. Unlike RichTextKit's centered halo stroke this can neither spike at acute vertices
+    /// (no miter join) nor emboss (no half-hidden 1px edge), and it reuses RichTextKit's exact
+    /// layout so the outline always registers with the fill.
+    /// </summary>
+    private void DrawTextWithOutline(SKCanvas canvas, TextBlock paintBlock)
+    {
+        if (OutlineThickness > 0)
+        {
+            using var outlinePaint = new SKPaint
+            {
+                IsAntialias = true,
+                ColorFilter = SKColorFilter.CreateBlendMode(OutlineColor, SKBlendMode.SrcIn),
+                ImageFilter = SKImageFilter.CreateDilate(OutlineThickness, OutlineThickness),
+            };
+            canvas.SaveLayer(outlinePaint);
+            paintBlock.Paint(canvas, new SKPoint(0, 0));
+            canvas.Restore();
+        }
+
+        paintBlock.Paint(canvas, new SKPoint(0, 0));
     }
     public BlendState BlendState => BlendState.AlphaBlend;
 
@@ -762,6 +804,31 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     private int? _maximumNumberOfLines;
     private TextBlock? _wrappedTextSourceBlock;
     private List<string> _cachedWrappedTextList = new();
+
+    // BBCode inline-styling state (issue #3679). Parsed from mRawText whenever it changes:
+    // _hasMarkup is true when the text contains at least one recognized tag, _layoutText is the
+    // tag-stripped (and CRLF-normalized) text the RichTextKit TextBlock is built from, and
+    // _inlineVariables are the per-character styling directives fed to the shared splitter. For
+    // plain text _hasMarkup is false and _layoutText == mRawText, keeping the render path unchanged.
+    private bool _hasMarkup;
+    private string? _layoutText;
+    private List<InlineVariable> _inlineVariables = new();
+    private readonly StyledSubstringSplitter _styledSubstringSplitter = new();
+
+    // The subset of BbCodeParser.KnownTags SkiaGum honors as RichTextKit Style overrides. Font family
+    // ("font"), outline, and custom per-letter callbacks are intentionally excluded (see the PR's
+    // deferred scope); unrecognized tags are left as literal characters, matching the parser.
+    private static readonly HashSet<string> SupportedTags = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "color",
+        "red",
+        "green",
+        "blue",
+        "fontsize",
+        "fontscale",
+        "isbold",
+        "isitalic",
+    };
 
     public TextBlock GetCachedTextBlock(float? forcedWidth = null)
     {
@@ -798,19 +865,35 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             ? Height
             : (float?)null;
 
-    public TextBlock GetTextBlock(float? forcedWidth = null) => GetTextBlock(mRawText, forcedWidth);
+    public TextBlock GetTextBlock(float? forcedWidth = null) => GetTextBlock(mRawText, forcedWidth, allowMarkup: true);
 
     /// <summary>
     /// Builds a RichTextKit <c>TextBlock</c> for the given text (normally <see cref="RawText"/>, but
     /// <see cref="GetPaintTextBlock"/> passes the reveal-truncated text for <see cref="MaxLettersToShow"/>).
     /// </summary>
-    private TextBlock GetTextBlock(string textToRender, float? forcedWidth)
+    /// <param name="textToRender">The text to lay out. Ignored when <paramref name="allowMarkup"/> is
+    /// true and the RawText carries BBCode -- the parsed <see cref="_layoutText"/> / styled runs are
+    /// used instead.</param>
+    /// <param name="allowMarkup">When true, BBCode inline styling (issue #3679) is honored by adding
+    /// one styled run per <see cref="StyledSubstring"/>. When false (the <see cref="MaxLettersToShow"/>
+    /// reveal path), the text is added as a single unstyled run.</param>
+    private TextBlock GetTextBlock(string textToRender, float? forcedWidth, bool allowMarkup)
     {
         var textBlock = new TextBlock();
         try
         {
             textBlock.MaxWidth = forcedWidth ?? this.Width;
-            textBlock.AddText(textToRender, GetStyle());
+            if (allowMarkup && _hasMarkup)
+            {
+                foreach (var run in GetStyledRuns())
+                {
+                    textBlock.AddText(run.Text, run.Style);
+                }
+            }
+            else
+            {
+                textBlock.AddText(textToRender, GetStyle());
+            }
             switch (HorizontalAlignment)
             {
                 case HorizontalAlignment.Left:
@@ -884,29 +967,259 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             return fullBlock;
         }
 
-        return GetTextBlock(string.Join("\n", GetVisibleWrappedText()), this.Width);
+        // The reveal text is already tag-stripped (it comes from WrappedText), so no markup path:
+        // per-run styling in the typewriter reveal is a documented deferral (issue #3679).
+        return GetTextBlock(string.Join("\n", GetVisibleWrappedText()), this.Width, allowMarkup: false);
     }
 
 
-    internal Style GetStyle()
+    internal Style GetStyle() => BuildRunStyle(null);
+
+    /// <summary>
+    /// A single run of text plus the RichTextKit <see cref="Style"/> it is drawn with. Produced by
+    /// <see cref="GetStyledRuns"/> from BBCode markup (issue #3679) and fed to the TextBlock one
+    /// <c>AddText</c> call per run so a line can carry mixed per-run color / size / weight / italic.
+    /// </summary>
+    internal readonly struct StyledTextRun
     {
+        public readonly string Text;
+        public readonly Style Style;
+
+        public StyledTextRun(string text, Style style)
+        {
+            Text = text;
+            Style = style;
+        }
+    }
+
+    /// <summary>
+    /// Splits the text into styled runs according to the inline BBCode variables parsed from the markup
+    /// (issue #3679). Plain text (or text with no recognized tags) yields a single run carrying the base
+    /// <see cref="GetStyle"/>, so the non-markup path is unchanged. Exposed internally for unit testing.
+    /// </summary>
+    internal List<StyledTextRun> GetStyledRuns()
+    {
+        var runs = new List<StyledTextRun>();
+
+        if (!_hasMarkup || string.IsNullOrEmpty(_layoutText))
+        {
+            runs.Add(new StyledTextRun(_hasMarkup ? _layoutText : mRawText, GetStyle()));
+            return runs;
+        }
+
+        var substrings = _styledSubstringSplitter.GetStyledSubstrings(0, _layoutText, _inlineVariables);
+        if (substrings.Count == 0)
+        {
+            runs.Add(new StyledTextRun(_layoutText, GetStyle()));
+            return runs;
+        }
+
+        foreach (var substring in substrings)
+        {
+            runs.Add(new StyledTextRun(substring.Substring, BuildRunStyle(substring.Variables)));
+        }
+
+        return runs;
+    }
+
+    /// <summary>
+    /// Builds the RichTextKit <see cref="Style"/> for one run: the base font/color/weight/italic from
+    /// this Text's properties, overridden by the run's inline BBCode <paramref name="variables"/>
+    /// (Color / Red / Green / Blue, FontSize, FontScale, IsBold, IsItalic). A null or empty
+    /// <paramref name="variables"/> reproduces <see cref="GetStyle"/> exactly.
+    /// </summary>
+    private Style BuildRunStyle(List<InlineVariable>? variables)
+    {
+        var color = this.Color;
+        int fontSizePixels = FontSize;
+        float fontScale = FontScale;
+        bool italic = this.IsItalic;
+        int weight = (int)(400 * BoldWeight);
+
+        if (variables != null)
+        {
+            foreach (var variable in variables)
+            {
+                switch (variable.VariableName)
+                {
+                    case "Color":
+                        if (variable.Value is System.Drawing.Color drawingColor)
+                        {
+                            color = new SKColor(drawingColor.R, drawingColor.G, drawingColor.B, drawingColor.A);
+                        }
+                        break;
+                    case "Red":
+                        color = new SKColor((byte)variable.Value, color.Green, color.Blue, color.Alpha);
+                        break;
+                    case "Green":
+                        color = new SKColor(color.Red, (byte)variable.Value, color.Blue, color.Alpha);
+                        break;
+                    case "Blue":
+                        color = new SKColor(color.Red, color.Green, (byte)variable.Value, color.Alpha);
+                        break;
+                    case "FontSize":
+                        fontSizePixels = (int)variable.Value;
+                        break;
+                    case "FontScale":
+                        fontScale = (float)variable.Value;
+                        break;
+                    case "IsBold":
+                        weight = (bool)variable.Value ? 700 : (int)(400 * BoldWeight);
+                        break;
+                    case "IsItalic":
+                        italic = (bool)variable.Value;
+                        break;
+                }
+            }
+        }
+
         var style = new Style()
         {
             FontFamily = FontName,
-            FontSize = FontSize * (float)GlobalTextScale * FontScale,
-            TextColor = this.Color,
-            FontItalic = this.IsItalic,
-            FontWeight = (int)(400 * BoldWeight),
+            FontSize = fontSizePixels * (float)GlobalTextScale * fontScale,
+            TextColor = color,
+            FontItalic = italic,
+            FontWeight = weight,
             LineHeight = LineHeightMultiplier
         };
 
-        if (OutlineThickness > 0)
-        {
-            style.HaloColor = OutlineColor;
-            style.HaloWidth = OutlineThickness;
-        }
+        // OutlineThickness is intentionally NOT mapped to RichTextKit's Style.HaloColor/HaloWidth here.
+        // That halo is a stroke centered on the glyph edge, so at width N the fill covers the inner
+        // half and only ~N/2 shows (thin, uneven at small sizes); widening to 2N to compensate hits
+        // RichTextKit's hardcoded miter join (no join knob) and spikes at acute vertices. Instead the
+        // outline is a uniform recolor+dilate pass in Render (DrawTextWithOutline), which can't spike
+        // or emboss and reuses RichTextKit's exact layout.
 
         return style;
+    }
+
+    /// <summary>
+    /// Re-parses <see cref="mRawText"/> into BBCode inline-styling state (issue #3679): sets
+    /// <see cref="_hasMarkup"/>, the tag-stripped <see cref="_layoutText"/> the TextBlock is built from,
+    /// and <see cref="_inlineVariables"/>. Plain text (no recognized tags) leaves _layoutText equal to
+    /// mRawText so the render/measure path is byte-for-byte unchanged. Called whenever RawText changes.
+    /// </summary>
+    private void ParseMarkup()
+    {
+        _inlineVariables.Clear();
+
+        if (string.IsNullOrEmpty(mRawText) || mRawText.IndexOf('[') < 0)
+        {
+            _hasMarkup = false;
+            _layoutText = mRawText;
+            return;
+        }
+
+        // The rendering/wrapping code ignores '\r', so normalize CRLF to LF before computing indexes,
+        // mirroring the MonoGame/Raylib SetBbCodeText path. Parsing and stripping from the same
+        // normalized string keeps InlineVariable indexes aligned with the layout text.
+        var normalized = mRawText.Replace("\r\n", "\n");
+        var tags = BbCodeParser.Parse(normalized, SupportedTags);
+        if (tags.Count == 0)
+        {
+            _hasMarkup = false;
+            _layoutText = mRawText;
+            return;
+        }
+
+        _hasMarkup = true;
+        _layoutText = BbCodeParser.RemoveTags(normalized, tags);
+        BuildInlineVariables(tags);
+    }
+
+    /// <summary>
+    /// Converts the parsed BBCode <paramref name="tags"/> into <see cref="_inlineVariables"/> keyed by
+    /// their character range in the stripped <see cref="_layoutText"/>. Each supported tag maps to a
+    /// value the shared <see cref="StyledSubstringSplitter"/> and <see cref="BuildRunStyle"/> understand:
+    /// Color -> System.Drawing.Color, Red/Green/Blue -> byte, FontSize -> int, FontScale -> float,
+    /// IsBold/IsItalic -> bool. Tags whose argument fails to parse are skipped (rendered with base style).
+    /// </summary>
+    private void BuildInlineVariables(List<FoundTag> tags)
+    {
+        foreach (var tag in tags)
+        {
+            var argument = tag.Open.Argument;
+            string variableName;
+            object? value;
+
+            switch (tag.Name.ToLowerInvariant())
+            {
+                case "color":
+                    variableName = "Color";
+                    value = ParseColor(argument);
+                    break;
+                case "red":
+                    variableName = "Red";
+                    value = byte.TryParse(argument, out var red) ? red : (byte?)null;
+                    break;
+                case "green":
+                    variableName = "Green";
+                    value = byte.TryParse(argument, out var green) ? green : (byte?)null;
+                    break;
+                case "blue":
+                    variableName = "Blue";
+                    value = byte.TryParse(argument, out var blue) ? blue : (byte?)null;
+                    break;
+                case "fontsize":
+                    variableName = "FontSize";
+                    value = int.TryParse(argument, NumberStyles.Integer, CultureInfo.InvariantCulture, out var size)
+                        ? size
+                        : (int?)null;
+                    break;
+                case "fontscale":
+                    variableName = "FontScale";
+                    value = float.TryParse(argument, NumberStyles.Float, CultureInfo.InvariantCulture, out var scale)
+                        ? scale
+                        : (float?)null;
+                    break;
+                case "isbold":
+                    variableName = "IsBold";
+                    value = bool.TryParse(argument, out var bold) ? bold : (bool?)null;
+                    break;
+                case "isitalic":
+                    variableName = "IsItalic";
+                    value = bool.TryParse(argument, out var italic) ? italic : (bool?)null;
+                    break;
+                default:
+                    continue;
+            }
+
+            if (value == null)
+            {
+                continue;
+            }
+
+            _inlineVariables.Add(new InlineVariable
+            {
+                VariableName = variableName,
+                StartIndex = tag.Open.StartStrippedIndex,
+                CharacterCount = tag.Close.StartStrippedIndex - tag.Open.StartStrippedIndex,
+                Value = value,
+            });
+        }
+    }
+
+    /// <summary>
+    /// Parses a <c>[Color=..]</c> argument, honoring both a hex form (<c>0xAARRGGBB</c>) and a named
+    /// color (<c>Red</c>, <c>CornflowerBlue</c>, ...), matching the MonoGame/Raylib SetBbCodeText parsing.
+    /// Returns null (run keeps the base color) when the argument is empty or unrecognized.
+    /// </summary>
+    private static System.Drawing.Color? ParseColor(string? argument)
+    {
+        if (string.IsNullOrEmpty(argument))
+        {
+            return null;
+        }
+
+        if (argument.StartsWith("0x") &&
+            int.TryParse(argument.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out int hex))
+        {
+            return System.Drawing.Color.FromArgb(hex);
+        }
+
+        var named = System.Drawing.Color.FromName(argument);
+        // FromName returns a non-known color with ARGB 0 for an unrecognized name; treat that as "no color".
+        return named.IsKnownColor ? named : (System.Drawing.Color?)null;
     }
 
     /// <summary>
@@ -1025,6 +1338,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         newInstance.mParent = null;
         newInstance.mChildren = new();
         newInstance._cachedTextBlock = null;
+        // MemberwiseClone shares the list reference; give the clone its own copy so re-parsing markup
+        // on one instance (via RawText) doesn't mutate the other's inline-styling runs (issue #3679).
+        newInstance._inlineVariables = new List<InlineVariable>(_inlineVariables);
 
         return newInstance;
     }

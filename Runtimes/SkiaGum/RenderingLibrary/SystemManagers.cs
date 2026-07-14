@@ -97,8 +97,27 @@ namespace RenderingLibrary
                 asText.FontName = textRuntime.Font ?? "Arial";
                 asText.IsItalic = textRuntime.IsItalic;
                 // BoldWeight is an embolden multiplier (1.0 = normal). Do NOT set CSS weights (400/700) here.
-                asText.BoldWeight = textRuntime.IsBold ? 1.5f : 1.0f; 
+                asText.BoldWeight = textRuntime.IsBold ? 1.5f : 1.0f;
                 asText.FontSize = textRuntime.FontSize;
+                // Push OutlineThickness here too: this delegate is the code-property path
+                // (GraphicalUiElement.OutlineThickness setter -> UpdateToFontValues -> this). #3675
+                // only wired the string/SetProperty path (CustomSetPropertyOnRenderable.UpdateToFontValues),
+                // so setting OutlineThickness in code silently rendered no halo (bug #3684).
+                asText.OutlineThickness = textRuntime.OutlineThickness;
+
+                // SkiaGum can't bake a KernSmith shadow atlas, so map the cross-backend baked-shadow API
+                // (TextRuntime.HasDropshadow + params) onto the SkiaGum.Text renderable's standalone
+                // ImageFilter drop shadow (#3674): the same user-facing API renders on Skia via a live
+                // canvas effect instead of a baked atlas. DropshadowBlur is a single scalar on the
+                // runtime; the renderable takes separate X/Y blur, so drive both from it. (The blur
+                // magnitudes won't match the baked backends exactly — different blur conventions — but
+                // the shadow renders and honors color/offset/blur.)
+                asText.HasDropshadow = textRuntime.HasDropshadow;
+                asText.DropshadowColor = textRuntime.DropshadowColor;
+                asText.DropshadowOffsetX = textRuntime.DropshadowOffsetX;
+                asText.DropshadowOffsetY = textRuntime.DropshadowOffsetY;
+                asText.DropshadowBlurX = textRuntime.DropshadowBlur;
+                asText.DropshadowBlurY = textRuntime.DropshadowBlur;
             }
         }
 
