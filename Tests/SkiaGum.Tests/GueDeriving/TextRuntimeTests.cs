@@ -214,6 +214,25 @@ public class TextRuntimeTests
 
     #endregion
 
+    #region OutlineThickness
+
+    [Fact]
+    public void OutlineThickness_SetInCode_ShouldPushToContainedText()
+    {
+        // The code-property path (TextRuntime.OutlineThickness setter -> UpdateToFontValues ->
+        // UpdateFontFromProperties delegate) is wired by SystemManagers.Initialize. #3675 only wired
+        // the string/SetProperty path, so setting OutlineThickness in code drew no halo until #3684.
+        new RenderingLibrary.SystemManagers().Initialize();
+
+        TextRuntime sut = new();
+        sut.OutlineThickness = 7;
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.OutlineThickness.ShouldBe(7);
+    }
+
+    #endregion
+
     #region PropertyChanged
 
     [Fact]

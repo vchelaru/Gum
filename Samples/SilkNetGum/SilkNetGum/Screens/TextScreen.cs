@@ -85,28 +85,31 @@ internal class TextScreen : FrameworkElement
     private static void AddMaxLettersToShowSection(ContainerRuntime container)
     {
         AddSectionLabel(container,
-            "MaxLettersToShow (#3678): full text, then the same text revealed to the first 12 letters (typewriter):");
+            "MaxLettersToShow (#3678): identical text, three fixed reveal counts (no timing) - full, 10, 30:");
 
         const string paragraph =
             "This paragraph reveals only its first letters while the rest stays hidden.";
 
-        TextRuntime full = new TextRuntime();
-        full.Font = "Arial";
-        full.FontSize = 20;
-        full.Width = 300;
-        full.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        full.Text = paragraph;
-        container.Children.Add(full);
+        // Explicit RelativeToChildren height so each Text takes its own content height in the stack
+        // (leaving Height at its default let the rows overlap in the earlier demo). null MaxLettersToShow
+        // = full text; 10 and 30 are fixed counts so the difference is visible without any animation.
+        AddRevealRow(container, paragraph, null);
+        AddRevealRow(container, paragraph, 10);
+        AddRevealRow(container, paragraph, 30);
+    }
 
-        TextRuntime revealed = new TextRuntime();
-        revealed.Font = "Arial";
-        revealed.FontSize = 20;
-        revealed.Width = 300;
-        revealed.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        revealed.Text = paragraph;
-        SkiaGum.Text revealedRenderable = (SkiaGum.Text)revealed.RenderableComponent;
-        revealedRenderable.MaxLettersToShow = 12;
-        container.Children.Add(revealed);
+    private static void AddRevealRow(ContainerRuntime container, string paragraph, int? maxLetters)
+    {
+        TextRuntime row = new TextRuntime();
+        row.Font = "Arial";
+        row.FontSize = 20;
+        row.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        row.Width = 300;
+        row.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        row.Height = 0;
+        row.Text = paragraph;
+        ((SkiaGum.Text)row.RenderableComponent).MaxLettersToShow = maxLetters;
+        container.Children.Add(row);
     }
 
     // Overflow modes on the SkiaGum.Text renderable (#3677): ellipsis on horizontal overflow, then
@@ -214,18 +217,22 @@ internal class TextScreen : FrameworkElement
         // from TextRuntime.HasDropshadow (the baked-atlas path above), which no-ops on Skia.
         TextRuntime shadowed = new TextRuntime();
         shadowed.Text = "Drop shadow";
+        shadowed.Font = "Arial";
         shadowed.FontSize = 48;
         shadowed.Red = 255;
         shadowed.Green = 255;
         shadowed.Blue = 255;
 
+        // Deliberately bold/high-contrast so the effect is unmistakable while verifying it renders at
+        // all: magenta shadow, large offset. (A subtle 3px black shadow was hard to see against the
+        // cornflower-blue background behind white text.)
         SkiaGum.Text shadowedRenderable = (SkiaGum.Text)shadowed.RenderableComponent;
         shadowedRenderable.HasDropshadow = true;
-        shadowedRenderable.DropshadowOffsetX = 3;
-        shadowedRenderable.DropshadowOffsetY = 3;
-        shadowedRenderable.DropshadowBlurX = 6;
-        shadowedRenderable.DropshadowBlurY = 6;
-        shadowedRenderable.DropshadowColor = new SKColor(0, 0, 0, 255);
+        shadowedRenderable.DropshadowOffsetX = 8;
+        shadowedRenderable.DropshadowOffsetY = 8;
+        shadowedRenderable.DropshadowBlurX = 4;
+        shadowedRenderable.DropshadowBlurY = 4;
+        shadowedRenderable.DropshadowColor = new SKColor(255, 0, 255, 255);
         container.Children.Add(shadowed);
 
         // Blend on the renderable (#3676): the same warm text over a blue background renders far
