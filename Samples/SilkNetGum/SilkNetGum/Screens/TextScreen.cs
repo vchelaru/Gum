@@ -75,7 +75,7 @@ internal class TextScreen : FrameworkElement
     private static void AddStandaloneSkiaEffectsSection(ContainerRuntime container)
     {
         AddSectionLabel(container,
-            "Standalone Skia text effects set on the renderable (#3674 drop shadow, #3675 outline):");
+            "Standalone Skia text effects set on the renderable (#3674 drop shadow, #3675 outline, #3676 blend):");
 
         // Yellow text with a black outline via RichTextKit's halo (#3675), next to plain yellow text.
         // Font must be set: OutlineThickness only propagates to the renderable via UpdateToFontValues
@@ -117,6 +117,44 @@ internal class TextScreen : FrameworkElement
         shadowedRenderable.DropshadowBlurY = 6;
         shadowedRenderable.DropshadowColor = new SKColor(0, 0, 0, 255);
         container.Children.Add(shadowed);
+
+        // Blend on the renderable (#3676): the same warm text over a blue background renders far
+        // brighter with Additive blend (left) than with the default alpha blend (right), because
+        // Additive adds the text color to the background instead of covering it. Blend is applied as
+        // an SKPaint.BlendMode in Text.Render (see Text.GetRenderPaint). Font must be set or the text
+        // can silently no-op.
+        RectangleRuntime blendBackground = new RectangleRuntime();
+        blendBackground.Width = 520;
+        blendBackground.Height = 60;
+        blendBackground.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        blendBackground.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        blendBackground.FillColor = new SKColor(40, 40, 120);
+        blendBackground.IsFilled = true;
+
+        TextRuntime additiveBlend = new TextRuntime();
+        additiveBlend.Text = "Additive";
+        additiveBlend.Font = "Arial";
+        additiveBlend.FontSize = 36;
+        additiveBlend.Red = 210;
+        additiveBlend.Green = 150;
+        additiveBlend.Blue = 40;
+        additiveBlend.X = 8;
+        additiveBlend.Y = 8;
+        ((SkiaGum.Text)additiveBlend.RenderableComponent).Blend = Gum.RenderingLibrary.Blend.Additive;
+        blendBackground.Children.Add(additiveBlend);
+
+        TextRuntime normalBlend = new TextRuntime();
+        normalBlend.Text = "Normal";
+        normalBlend.Font = "Arial";
+        normalBlend.FontSize = 36;
+        normalBlend.Red = 210;
+        normalBlend.Green = 150;
+        normalBlend.Blue = 40;
+        normalBlend.X = 300;
+        normalBlend.Y = 8;
+        blendBackground.Children.Add(normalBlend);
+
+        container.Children.Add(blendBackground);
     }
 
     // Texture filter on Text (#3496): mirrored for structural parity with MonoGameGumInCode and
