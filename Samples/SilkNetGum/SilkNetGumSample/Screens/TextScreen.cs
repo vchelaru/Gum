@@ -259,11 +259,7 @@ internal class TextScreen : FrameworkElement
         text.Blue = 40;
         text.HorizontalAlignment = HorizontalAlignment.Center;
         text.VerticalAlignment = VerticalAlignment.Center;
-        // TextRuntime.Blend is #if !SKIA (BlendState-backed on XNA); on Skia set it on the renderable.
-        if (blend.HasValue)
-        {
-            ((SkiaGum.Text)text.RenderableComponent).Blend = blend.Value;
-        }
+        text.Blend = blend;
         cell.Children.Add(text);
 
         return cell;

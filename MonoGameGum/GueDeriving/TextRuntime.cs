@@ -67,7 +67,6 @@ public class TextRuntime : InteractiveGue
     }
 #endif
 
-#if !SKIA
     /// <summary>
     /// The Gum-specific Blend mode for the text. Null means "use the renderer's current
     /// blend mode" (typically alpha blending).
@@ -76,27 +75,27 @@ public class TextRuntime : InteractiveGue
     {
         get
         {
-#if RAYLIB
-            return ContainedText.Blend;
-#else
+#if XNALIKE
             return Gum.RenderingLibrary.BlendExtensions.ToBlend(ContainedText.BlendState);
+#else
+            // RAYLIB and SKIA renderables expose Blend directly (no XNA BlendState to translate).
+            return ContainedText.Blend;
 #endif
         }
         set
         {
-#if RAYLIB
-            ContainedText.Blend = value;
-            NotifyPropertyChanged();
-#else
+#if XNALIKE
             if (value.HasValue)
             {
                 BlendState = value.Value.ToBlendState().ToXNA();
             }
             // NotifyPropertyChanged handled by BlendState:
+#else
+            ContainedText.Blend = value;
+            NotifyPropertyChanged();
 #endif
         }
     }
-#endif
 
     /// <summary>
     /// The red component of the text color. Ranges from 0 to 255.

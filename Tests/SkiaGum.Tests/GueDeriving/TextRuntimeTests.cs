@@ -17,6 +17,24 @@ public class TextRuntimeTests
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
     }
 
+    #region Blend
+
+    [Fact]
+    public void Blend_SetInCode_ShouldPushToContainedText()
+    {
+        // TextRuntime.Blend was #if !SKIA — it silently didn't exist on Skia, so callers had to reach
+        // through to the renderable. Unified interface: the property now forwards to SkiaGum.Text.Blend
+        // (the XNA BlendState translation stays #if XNALIKE). No SystemManagers wiring needed — the
+        // setter forwards straight to the contained renderable, not through the font-update delegate.
+        TextRuntime sut = new();
+        sut.Blend = Gum.RenderingLibrary.Blend.Additive;
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.Blend.ShouldBe(Gum.RenderingLibrary.Blend.Additive);
+    }
+
+    #endregion
+
     #region BoldWeight
 
     [Fact]
