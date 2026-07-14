@@ -77,6 +77,20 @@ public class FileCommands : IFileCommands
 
     public void MoveDirectory(string source, string destination)
     {
+        // A rename that only changes casing (e.g. "GameMenuScreens" -> "gamemenuscreens") points
+        // source and destination at the same physical directory on a case-insensitive filesystem
+        // (Windows/macOS). The general merge-into-destination logic below no-ops the "create" and
+        // "move each file into itself" steps, then throws on the final Directory.Delete(source)
+        // because the directory is still non-empty. Directory.Move handles this case correctly.
+        bool isSameDirectoryDifferentCase =
+            string.Equals(NormalizeDirectoryPath(source), NormalizeDirectoryPath(destination), StringComparison.OrdinalIgnoreCase);
+
+        if (isSameDirectoryDifferentCase)
+        {
+            Directory.Move(source, destination);
+            return;
+        }
+
         Directory.CreateDirectory(destination);
 
         // Move files
@@ -96,6 +110,9 @@ public class FileCommands : IFileCommands
         // Clean up empty source directory
         Directory.Delete(source);
     }
+
+    private static string NormalizeDirectoryPath(string path) =>
+        Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
     public void SaveEmbeddedResource(Assembly assembly, string resourceName, string targetFileName) =>
                 FileManager.SaveEmbeddedResource(assembly, resourceName, targetFileName);

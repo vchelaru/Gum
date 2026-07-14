@@ -59,14 +59,20 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
             return;
         }
         
-        // see if it already exists:
-        FilePath newFullPath = FileManager.GetDirectory(FolderNode.GetFullFilePath().FullPath) + Value + "\\";
-        if (Directory.Exists(newFullPath.FullPath))
+        var oldFullPath = FolderNode.GetFullFilePath();
+
+        // see if it already exists. Directory.Exists is case-insensitive on Windows/macOS, so a
+        // rename that only changes casing (e.g. "GameMenuScreens" -> "gamemenuscreens") would
+        // otherwise be misdiagnosed as colliding with itself and get blocked entirely.
+        FilePath newFullPath = FileManager.GetDirectory(oldFullPath.FullPath) + Value + "\\";
+        bool isSameFolderDifferentCase =
+            string.Equals(oldFullPath.FullPath, newFullPath.FullPath, StringComparison.OrdinalIgnoreCase);
+        if (!isSameFolderDifferentCase && Directory.Exists(newFullPath.FullPath))
         {
             Error = $"Folder {Value} already exists.";
             return;
         }
-        
+
         string rootForElement;
         if (FolderNode.IsScreensFolderTreeNode())
         {
@@ -82,9 +88,7 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
             return;
         }
 
-        var oldFullPath = FolderNode.GetFullFilePath();
-
-        string oldPathRelativeToElementsRoot = FileManager.MakeRelative(FolderNode.GetFullFilePath().FullPath, rootForElement, preserveCase: true);
+        string oldPathRelativeToElementsRoot = FileManager.MakeRelative(oldFullPath.FullPath, rootForElement, preserveCase: true);
         var folderNodeAsTreeNode = FolderNode as TreeNodeWrapper;
         if(folderNodeAsTreeNode?.Node != null)
         {
