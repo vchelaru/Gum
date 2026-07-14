@@ -56,16 +56,19 @@ internal class TextScreen : FrameworkElement
         textRuntime.Text = "Hi, I'm default text";
         container.Children.Add(textRuntime);
 
-        var colorMarkup = new TextRuntime();
-        colorMarkup.FontSize = 24;
-        colorMarkup.Text = "[Color=Red]Red[/Color] plain [Color=Lime]green[/Color] [Color=Cyan]cyan[/Color]";
-        container.Children.Add(colorMarkup);
-
-        AddSectionLabel(container, "BBCode markup - inline FontScale runs (baseline aligned):");
-        var scaleMarkup = new TextRuntime();
-        scaleMarkup.FontSize = 24;
-        scaleMarkup.Text = "small [FontScale=2]BIG[/FontScale] then [Color=Orange][FontScale=1.5]orange[/FontScale][/Color]";
-        container.Children.Add(scaleMarkup);
+        // One self-describing BBCode line: each styled word shows AND names its own effect, so no
+        // separate label is needed. Kept byte-identical to the same line in the SilkNetGumSample text
+        // screen — the three text samples are feature- and content-identical by policy.
+        var bbcode = new TextRuntime();
+        bbcode.Font = "Arial";
+        bbcode.FontSize = 24;
+        bbcode.WidthUnits = DimensionUnitType.Absolute;
+        bbcode.Width = 520;
+        bbcode.Text =
+            "[Color=Red]red[/Color], [Color=CornflowerBlue]blue[/Color], " +
+            "[FontSize=40]big[/FontSize], [FontScale=1.5]scaled[/FontScale], " +
+            "[IsBold=true]bold[/IsBold], and [IsItalic=true]italic[/IsItalic] runs, all styled inline in one Text.";
+        container.Children.Add(bbcode);
 
         AddSectionLabel(container, "BBCode markup - [FontSize=40] crisp swap (left) vs [FontScale=1.9] scale-up (right); blue box = measured width (#3524):");
         container.Children.Add(BuildFontSizeContainmentRow());

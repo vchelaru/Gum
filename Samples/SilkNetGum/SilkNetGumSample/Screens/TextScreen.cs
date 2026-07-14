@@ -71,19 +71,19 @@ internal class TextScreen : FrameworkElement
     // this exercises the SkiaGum inline-styling path directly.
     private static void AddBbCodeSection(ContainerRuntime container)
     {
-        AddSectionLabel(container,
-            "BBCode inline styling (#3679): per-run color / font size / font scale / bold / italic in one Text:");
-
-        TextRuntime markup = new TextRuntime();
-        markup.Font = "Arial";
-        markup.FontSize = 24;
-        markup.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        markup.Width = 520;
-        markup.Text =
-            "Plain, [Color=Red]red[/Color], [Color=CornflowerBlue]blue[/Color], " +
+        // One self-describing BBCode line: each styled word shows AND names its own effect, so no
+        // separate label is needed. Kept byte-identical to the same line in the MonoGameGumInCode text
+        // screen — the three text samples are feature- and content-identical by policy.
+        TextRuntime bbcode = new TextRuntime();
+        bbcode.Font = "Arial";
+        bbcode.FontSize = 24;
+        bbcode.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        bbcode.Width = 520;
+        bbcode.Text =
+            "[Color=Red]red[/Color], [Color=CornflowerBlue]blue[/Color], " +
             "[FontSize=40]big[/FontSize], [FontScale=1.5]scaled[/FontScale], " +
-            "[IsBold=true]bold[/IsBold], and [IsItalic=true]italic[/IsItalic] runs.";
-        container.Children.Add(markup);
+            "[IsBold=true]bold[/IsBold], and [IsItalic=true]italic[/IsItalic] runs, all styled inline in one Text.";
+        container.Children.Add(bbcode);
     }
 
     // MaxLettersToShow typewriter reveal on the SkiaGum.Text renderable (#3678). The same wrapping
