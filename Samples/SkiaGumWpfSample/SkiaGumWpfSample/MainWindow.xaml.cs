@@ -42,46 +42,6 @@ namespace SkiaGumWpfSample
             rectangle2.IsFilled = true;
 
             container.Children.Add(rectangle2);
-
-            // Demonstrates Skia OutlineThickness (issue #3675): yellow text with a black outline
-            // rendered via RichTextKit's halo. Compare against the no-outline text below it.
-            var outlinedText = new TextRuntime();
-            outlinedText.Text = "Outlined";
-            outlinedText.Font = "Arial";
-            outlinedText.FontSize = 48;
-            outlinedText.Red = 255;
-            outlinedText.Green = 255;
-            outlinedText.Blue = 0;
-            outlinedText.OutlineThickness = 3;
-            container.Children.Add(outlinedText);
-
-            var plainText = new TextRuntime();
-            plainText.Text = "No outline";
-            plainText.Font = "Arial";
-            plainText.FontSize = 48;
-            plainText.Red = 255;
-            plainText.Green = 255;
-            plainText.Blue = 0;
-            container.Children.Add(plainText);
-
-            // Demonstrates standalone Skia drop shadow (issue #3674): white text with a soft black
-            // shadow offset down-right, rendered via SKImageFilter.CreateDropShadow in Text.Render.
-            var shadowedText = new TextRuntime();
-            shadowedText.Text = "Drop shadow";
-            shadowedText.Font = "Arial";
-            shadowedText.FontSize = 48;
-            shadowedText.Red = 255;
-            shadowedText.Green = 255;
-            shadowedText.Blue = 255;
-
-            var shadowedRenderable = (SkiaGum.Text)shadowedText.RenderableComponent;
-            shadowedRenderable.HasDropshadow = true;
-            shadowedRenderable.DropshadowOffsetX = 3;
-            shadowedRenderable.DropshadowOffsetY = 3;
-            shadowedRenderable.DropshadowBlurX = 6;
-            shadowedRenderable.DropshadowBlurY = 6;
-            shadowedRenderable.DropshadowColor = new SkiaSharp.SKColor(0, 0, 0, 255);
-            container.Children.Add(shadowedText);
         }
     }
 }

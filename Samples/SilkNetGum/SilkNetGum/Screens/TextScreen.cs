@@ -8,7 +8,9 @@ namespace SilkNetGum.Screens;
 
 // Mirror of Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/TextScreen.cs where the backend
 // supports the same surface (#3414). SkiaGum dynamic fonts do not use KernSmith, so baked text
-// drop shadow (HasDropshadow) is not rendered here — the rows below document that gap explicitly.
+// drop shadow (TextRuntime.HasDropshadow) is not rendered here — the rows below document that gap
+// explicitly. The standalone renderable drop shadow added in #3674 is a separate, working path on
+// SkiaGum; the appended AddStandaloneSkiaEffectsSection (no MonoGame mirror) exercises it.
 //
 // Section order in this file must match Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/TextScreen.cs
 // exactly, top to bottom - before adding, removing, or reordering ANY section, check that file for
@@ -62,6 +64,55 @@ internal class TextScreen : FrameworkElement
         container.Children.Add(withOutline);
 
         AddTextureFilterSection(container);
+
+        // Skia-only standalone text effects set directly on the renderable (issue #3674 drop shadow,
+        // issue #3675 outline). Unlike the baked-shadow rows above (TextRuntime.HasDropshadow, the
+        // MonoGame/KNI/Raylib font-atlas path that no-ops on Skia), these render on SkiaGum. This
+        // section has no MonoGameGumInCode mirror — it exercises the SkiaGum.Text renderable directly.
+        AddStandaloneSkiaEffectsSection(container);
+    }
+
+    private static void AddStandaloneSkiaEffectsSection(ContainerRuntime container)
+    {
+        AddSectionLabel(container,
+            "Standalone Skia text effects set on the renderable (#3674 drop shadow, #3675 outline):");
+
+        // Yellow text with a black outline via RichTextKit's halo (#3675), next to plain yellow text.
+        TextRuntime outlined = new TextRuntime();
+        outlined.Text = "Outlined";
+        outlined.FontSize = 48;
+        outlined.Red = 255;
+        outlined.Green = 255;
+        outlined.Blue = 0;
+        outlined.OutlineThickness = 3;
+        container.Children.Add(outlined);
+
+        TextRuntime noOutline = new TextRuntime();
+        noOutline.Text = "No outline";
+        noOutline.FontSize = 48;
+        noOutline.Red = 255;
+        noOutline.Green = 255;
+        noOutline.Blue = 0;
+        container.Children.Add(noOutline);
+
+        // White text with a soft black drop shadow offset down-right (#3674). The standalone shadow
+        // is a canvas/ImageFilter effect on SkiaGum.Text reached via RenderableComponent — distinct
+        // from TextRuntime.HasDropshadow (the baked-atlas path above), which no-ops on Skia.
+        TextRuntime shadowed = new TextRuntime();
+        shadowed.Text = "Drop shadow";
+        shadowed.FontSize = 48;
+        shadowed.Red = 255;
+        shadowed.Green = 255;
+        shadowed.Blue = 255;
+
+        SkiaGum.Text shadowedRenderable = (SkiaGum.Text)shadowed.RenderableComponent;
+        shadowedRenderable.HasDropshadow = true;
+        shadowedRenderable.DropshadowOffsetX = 3;
+        shadowedRenderable.DropshadowOffsetY = 3;
+        shadowedRenderable.DropshadowBlurX = 6;
+        shadowedRenderable.DropshadowBlurY = 6;
+        shadowedRenderable.DropshadowColor = new SKColor(0, 0, 0, 255);
+        container.Children.Add(shadowed);
     }
 
     // Texture filter on Text (#3496): mirrored for structural parity with MonoGameGumInCode and
