@@ -137,7 +137,22 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         }
     }
 
-    public bool IsTruncatingWithEllipsisOnLastLine { get; set; }
+    /// <summary>
+    /// When <c>true</c>, an overflowing last line ends with an ellipsis ("...") once the text is
+    /// truncated (by <see cref="MaxNumberOfLines"/> or by <see cref="TextOverflowVerticalMode"/>
+    /// clipping to <see cref="Height"/>). Honored through RichTextKit's
+    /// <c>TextBlock.EllipsisEnabled</c> in <see cref="GetTextBlock"/> (issue #3677). Set on the
+    /// MonoGame/Raylib backends via <c>TextOverflowHorizontalMode.EllipsisLetter</c>.
+    /// </summary>
+    public bool IsTruncatingWithEllipsisOnLastLine
+    {
+        get => _isTruncatingWithEllipsisOnLastLine;
+        set
+        {
+            _isTruncatingWithEllipsisOnLastLine = value;
+            _cachedTextBlock = null;
+        }
+    }
 
     /// <inheritdoc/>
     public bool IsHeightDependentOnLines { get; set; }
@@ -565,8 +580,22 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     // This could cache the prerendered for speed, but we currently don't do that...
     public void UpdatePreRenderDimensions() { }
 
-    // todo - need to make this actually functional:
-    public TextOverflowVerticalMode TextOverflowVerticalMode { get; set; } 
+    /// <summary>
+    /// Controls what happens when the text is taller than <see cref="Height"/>.
+    /// <see cref="TextOverflowVerticalMode.TruncateLine"/> caps the RichTextKit
+    /// <c>TextBlock</c> to <see cref="Height"/> (dropping lines that would spill past the
+    /// bottom); <see cref="TextOverflowVerticalMode.SpillOver"/> (the default) renders
+    /// unbounded. Honored in <see cref="GetTextBlock"/> via <c>TextBlock.MaxHeight</c> (issue #3677).
+    /// </summary>
+    public TextOverflowVerticalMode TextOverflowVerticalMode
+    {
+        get => _textOverflowVerticalMode;
+        set
+        {
+            _textOverflowVerticalMode = value;
+            _cachedTextBlock = null;
+        }
+    }
 
     #endregion
 
@@ -669,7 +698,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
     TextBlock? _cachedTextBlock;
     float? _lastEffectiveWidth;
+    float? _lastEffectiveMaxHeight;
     decimal _lastScreenDensity;
+    private bool _isTruncatingWithEllipsisOnLastLine;
+    private TextOverflowVerticalMode _textOverflowVerticalMode;
     private string _fontName = "Arial";
     private int _fontSize = 18;
     private float _fontScale;
@@ -687,12 +719,19 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     public TextBlock GetCachedTextBlock(float? forcedWidth = null)
     {
         var effectiveWidth = forcedWidth ?? this.Width;
+        // Height only feeds layout when TruncateLine is active, so keying the cache on the
+        // effective max height (null under SpillOver) avoids rebuilding every layout frame just
+        // because Height changed while overflow is unbounded (issue #3677).
+        var effectiveMaxHeight = GetEffectiveMaxHeight();
 
-        if(effectiveWidth != _lastEffectiveWidth || _lastScreenDensity != ScreenDensity)
+        if(effectiveWidth != _lastEffectiveWidth
+            || _lastScreenDensity != ScreenDensity
+            || effectiveMaxHeight != _lastEffectiveMaxHeight)
         {
             _cachedTextBlock = null;
             _lastEffectiveWidth = effectiveWidth;
             _lastScreenDensity = ScreenDensity;
+            _lastEffectiveMaxHeight = effectiveMaxHeight;
         }
 
         if(_cachedTextBlock == null)
@@ -701,6 +740,16 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         }
         return _cachedTextBlock;
     }
+
+    /// <summary>
+    /// The max height passed to the RichTextKit <c>TextBlock</c>: <see cref="Height"/> when
+    /// <see cref="TextOverflowVerticalMode.TruncateLine"/> is active and Height is positive,
+    /// otherwise <c>null</c> (unbounded, the SpillOver default).
+    /// </summary>
+    private float? GetEffectiveMaxHeight() =>
+        TextOverflowVerticalMode == TextOverflowVerticalMode.TruncateLine && Height > 0
+            ? Height
+            : (float?)null;
 
     public TextBlock GetTextBlock(float? forcedWidth = null)
     {
@@ -723,6 +772,17 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             }
 
             textBlock.MaxLines = MaximumNumberOfLines;
+
+            // Vertical overflow (issue #3677): TruncateLine caps the block to this Text's Height so
+            // RichTextKit drops lines that would spill past the bottom; SpillOver leaves MaxHeight
+            // null and renders unbounded (the historical Skia behavior).
+            textBlock.MaxHeight = GetEffectiveMaxHeight();
+
+            // Ellipsis (issue #3677): RichTextKit appends "..." to the final line whenever it
+            // truncates the block (via MaxLines/MaxHeight) and EllipsisEnabled is true. Its default
+            // is true, so set it explicitly to honor IsTruncatingWithEllipsisOnLastLine and suppress
+            // the ellipsis when the caller wants a hard cut instead.
+            textBlock.EllipsisEnabled = IsTruncatingWithEllipsisOnLastLine;
         }
         catch(Exception e)
         {

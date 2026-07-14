@@ -2,6 +2,7 @@ using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
+using RenderingLibrary.Graphics;
 using SkiaSharp;
 
 namespace SilkNetGum.Screens;
@@ -70,6 +71,81 @@ internal class TextScreen : FrameworkElement
         // MonoGame/KNI/Raylib font-atlas path that no-ops on Skia), these render on SkiaGum. This
         // section has no MonoGameGumInCode mirror — it exercises the SkiaGum.Text renderable directly.
         AddStandaloneSkiaEffectsSection(container);
+
+        AddOverflowSection(container);
+    }
+
+    // Overflow modes on the SkiaGum.Text renderable (#3677): ellipsis on horizontal overflow, then
+    // vertical TruncateLine vs SpillOver for the same text in the same fixed-size box. Each Text sets
+    // Font = "Arial" (text can silently no-op without a font). Both properties live on the renderable
+    // (SkiaGum.Text) and are honored by RichTextKit's TextBlock (MaxHeight / EllipsisEnabled) in
+    // Text.GetTextBlock. No MonoGameGumInCode mirror — this exercises the SkiaGum.Text renderable directly.
+    private static void AddOverflowSection(ContainerRuntime container)
+    {
+        AddSectionLabel(container,
+            "Overflow (#3677): ellipsis on horizontal overflow, then vertical TruncateLine vs SpillOver (same text + box):");
+
+        const string longLine =
+            "This is a single long line of text that will not fit within the fixed width of its box";
+        const string longParagraph =
+            "This is a longer block of text with enough words to wrap across several lines so it overflows " +
+            "the fixed height of its box and demonstrates the difference between truncation and spillover.";
+
+        // (a) Horizontal overflow -> ellipsis. MaxNumberOfLines = 1 caps the block to one line;
+        // IsTruncatingWithEllipsisOnLastLine appends the trailing "...".
+        RectangleRuntime ellipsisBox = MakeOverflowBox(width: 300, height: 30);
+        TextRuntime ellipsisText = MakeBoxFillingText(longLine);
+        SkiaGum.Text ellipsisRenderable = (SkiaGum.Text)ellipsisText.RenderableComponent;
+        ellipsisRenderable.MaxNumberOfLines = 1;
+        ellipsisRenderable.IsTruncatingWithEllipsisOnLastLine = true;
+        ellipsisBox.Children.Add(ellipsisText);
+        container.Children.Add(ellipsisBox);
+
+        // (b) Vertical TruncateLine: the paragraph is clipped to the lines that fit the box Height,
+        // with an ellipsis on the last visible line.
+        RectangleRuntime truncateBox = MakeOverflowBox(width: 300, height: 60);
+        TextRuntime truncateText = MakeBoxFillingText(longParagraph);
+        SkiaGum.Text truncateRenderable = (SkiaGum.Text)truncateText.RenderableComponent;
+        truncateRenderable.TextOverflowVerticalMode = TextOverflowVerticalMode.TruncateLine;
+        truncateRenderable.IsTruncatingWithEllipsisOnLastLine = true;
+        truncateBox.Children.Add(truncateText);
+        container.Children.Add(truncateBox);
+
+        // (c) Vertical SpillOver (today's default): the same paragraph in the same box renders every
+        // line, overflowing past the box's bottom edge.
+        RectangleRuntime spillBox = MakeOverflowBox(width: 300, height: 60);
+        TextRuntime spillText = MakeBoxFillingText(longParagraph);
+        SkiaGum.Text spillRenderable = (SkiaGum.Text)spillText.RenderableComponent;
+        spillRenderable.TextOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
+        spillBox.Children.Add(spillText);
+        container.Children.Add(spillBox);
+    }
+
+    // A fixed-size, translucent-bordered box so the text's overflow bounds are visible.
+    private static RectangleRuntime MakeOverflowBox(float width, float height)
+    {
+        RectangleRuntime box = new RectangleRuntime();
+        box.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        box.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        box.Width = width;
+        box.Height = height;
+        box.FillColor = new SKColor(40, 40, 40);
+        box.IsFilled = true;
+        return box;
+    }
+
+    // A Text that fills its parent box, so its overflow is exactly the box's bounds.
+    private static TextRuntime MakeBoxFillingText(string text)
+    {
+        TextRuntime textRuntime = new TextRuntime();
+        textRuntime.Text = text;
+        textRuntime.Font = "Arial";
+        textRuntime.FontSize = 18;
+        textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        textRuntime.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        textRuntime.Width = 0;
+        textRuntime.Height = 0;
+        return textRuntime;
     }
 
     private static void AddStandaloneSkiaEffectsSection(ContainerRuntime container)
