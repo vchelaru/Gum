@@ -61,6 +61,21 @@ public class TextCustomizationGoldenImageTests : IDisposable
         _testTypeface.Dispose();
     }
 
+    // Fixed integer YOffsets and byte colors -- NOT MathF.Sin-derived. Math.Sin/MathF.Sin call into the
+    // OS math library (ucrt on Windows, libSystem on macOS, glibc on Linux), which are not guaranteed to
+    // produce bit-identical results cross-platform; a last-bit difference shifts a glyph by a fraction of
+    // a pixel, which flips an antialiased edge pixel and fails the pixel-exact comparison (this is what
+    // broke the first version of this test in CI on macOS after it passed locally on Windows). The real
+    // Sin-based "wavy rainbow" callback lives in the MonoGame/raylib/SilkNet samples, which only need to
+    // look right, not byte-match a baseline; this table exercises the same offset/color mechanism with
+    // values that land on the same pixel everywhere.
+    private static readonly int[] WaveYOffsets = { 0, -6, -10, -6, 0, 6, 10, 6 };
+    private static readonly (byte R, byte G, byte B)[] WaveColors =
+    {
+        (255, 0, 0), (255, 128, 0), (255, 255, 0), (128, 255, 0),
+        (0, 255, 0), (0, 255, 255), (0, 128, 255), (128, 0, 255),
+    };
+
     [Fact]
     public void CustomTag_WavyRainbowText_MatchesGoldenBaseline()
     {
@@ -69,14 +84,14 @@ public class TextCustomizationGoldenImageTests : IDisposable
         using SKSurface surface = SKSurface.Create(new SKImageInfo(320, 60));
         GumService.Default.Initialize(surface.Canvas, 320, 60);
 
-        Text.Customizations["Wave"] = (int index, string block) => new LetterCustomization
+        Text.Customizations["Wave"] = (int index, string block) =>
         {
-            YOffset = MathF.Sin(index * 0.9f) * 10f,
-            Color = System.Drawing.Color.FromArgb(
-                255,
-                (int)(128 + 127 * MathF.Sin(index * 0.7f)),
-                (int)(128 + 127 * MathF.Sin(index * 0.7f + 2f)),
-                (int)(128 + 127 * MathF.Sin(index * 0.7f + 4f))),
+            var (r, g, b) = WaveColors[index % WaveColors.Length];
+            return new LetterCustomization
+            {
+                YOffset = WaveYOffsets[index % WaveYOffsets.Length],
+                Color = System.Drawing.Color.FromArgb(255, r, g, b),
+            };
         };
 
         TextRuntime text = new()
