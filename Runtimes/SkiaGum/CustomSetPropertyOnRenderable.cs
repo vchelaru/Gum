@@ -1429,6 +1429,54 @@ public partial class CustomSetPropertyOnRenderable
 #endif
 
         }
+        // Standalone drop shadow (issue #3674). Set directly on the renderable -- NOT routed through
+        // UpdateToFontValues, which is font-gated and would no-op when no Font is set. Mirrors the
+        // shape drop-shadow arms in TrySetPropertiesOnRenderableBase.
+        else if (propertyName == nameof(text.HasDropshadow))
+        {
+            text.HasDropshadow = (bool)value;
+            handled = true;
+        }
+        else if (propertyName == nameof(text.DropshadowOffsetX))
+        {
+            text.DropshadowOffsetX = (float)value;
+            handled = true;
+        }
+        else if (propertyName == nameof(text.DropshadowOffsetY))
+        {
+            text.DropshadowOffsetY = (float)value;
+            handled = true;
+        }
+        else if (propertyName == nameof(text.DropshadowBlurX))
+        {
+            text.DropshadowBlurX = (float)value;
+            handled = true;
+        }
+        else if (propertyName == nameof(text.DropshadowBlurY))
+        {
+            text.DropshadowBlurY = (float)value;
+            handled = true;
+        }
+        else if (propertyName == nameof(text.DropshadowRed))
+        {
+            text.DropshadowRed = (int)value;
+            handled = true;
+        }
+        else if (propertyName == nameof(text.DropshadowGreen))
+        {
+            text.DropshadowGreen = (int)value;
+            handled = true;
+        }
+        else if (propertyName == nameof(text.DropshadowBlue))
+        {
+            text.DropshadowBlue = (int)value;
+            handled = true;
+        }
+        else if (propertyName == nameof(text.DropshadowAlpha))
+        {
+            text.DropshadowAlpha = (int)value;
+            handled = true;
+        }
 
         return handled;
     }

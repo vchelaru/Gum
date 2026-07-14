@@ -63,6 +63,25 @@ namespace SkiaGumWpfSample
             plainText.Green = 255;
             plainText.Blue = 0;
             container.Children.Add(plainText);
+
+            // Demonstrates standalone Skia drop shadow (issue #3674): white text with a soft black
+            // shadow offset down-right, rendered via SKImageFilter.CreateDropShadow in Text.Render.
+            var shadowedText = new TextRuntime();
+            shadowedText.Text = "Drop shadow";
+            shadowedText.Font = "Arial";
+            shadowedText.FontSize = 48;
+            shadowedText.Red = 255;
+            shadowedText.Green = 255;
+            shadowedText.Blue = 255;
+
+            var shadowedRenderable = (SkiaGum.Text)shadowedText.RenderableComponent;
+            shadowedRenderable.HasDropshadow = true;
+            shadowedRenderable.DropshadowOffsetX = 3;
+            shadowedRenderable.DropshadowOffsetY = 3;
+            shadowedRenderable.DropshadowBlurX = 6;
+            shadowedRenderable.DropshadowBlurY = 6;
+            shadowedRenderable.DropshadowColor = new SkiaSharp.SKColor(0, 0, 0, 255);
+            container.Children.Add(shadowedText);
         }
     }
 }
