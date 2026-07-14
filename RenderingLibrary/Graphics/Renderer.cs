@@ -1858,6 +1858,14 @@ public class CustomEffectManager
 
     static ContentManager mContentManager;
 
+    // The optional custom shader is probed for existence to avoid a noisy load exception when
+    // no shader ships. The path must be anchored to baseDirectory (the app base directory, where
+    // ContentManager loads title-relative content from) and NOT the process working directory:
+    // launching via a Windows file association sets the working directory to the opened file's
+    // folder, which made a working-directory-relative probe miss a shipped Content/Shader.xnb (#3694).
+    internal static bool CustomShaderFileExists(string baseDirectory) =>
+        System.IO.File.Exists(System.IO.Path.Combine(baseDirectory, "Content", "Shader.xnb"));
+
     public void Initialize(GraphicsDevice graphicsDevice)
     {
         if (mContentManager == null)
@@ -1877,7 +1885,7 @@ public class CustomEffectManager
             || OperatingSystem.IsLinux()
             || OperatingSystem.IsMacOS();
 
-        if (_canCheckFileExists && !System.IO.File.Exists("Content/Shader.xnb"))
+        if (_canCheckFileExists && !CustomShaderFileExists(AppContext.BaseDirectory))
         {
             Debug.WriteLine("'Content/Shader.xnb' not found. Custom rendering is not available.");
         }
