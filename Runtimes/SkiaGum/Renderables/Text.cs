@@ -1059,10 +1059,13 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         if (OutlineThickness > 0)
         {
             style.HaloColor = OutlineColor;
-            // RichTextKit's halo is a stroke centered on the glyph edge — half of it hides under the
-            // fill — so a width of N reads as only ~N/2 of visible outline vs the baked backends' full
-            // N-pixel outward OutlineThickness. Double it to approximate their outward thickness.
-            style.HaloWidth = OutlineThickness * 2;
+            // RichTextKit paints the halo as a miter-joined stroke around the glyph (FontRun.cs never
+            // sets StrokeJoin, so SkiaSharp defaults to Miter) and exposes no join/miter-limit knob.
+            // At acute glyph vertices (e.g. the bottom of a 'W') that miter spikes outward, and the
+            // spike length scales with stroke width — so do NOT widen past OutlineThickness to chase
+            // the baked backends' thickness; it only lengthens the spikes. A spike-free outline that
+            // matches MonoGame needs a custom round-joined outline pass (see issue).
+            style.HaloWidth = OutlineThickness;
             // Crisp hard outline, not RichTextKit's default soft-glow halo.
             style.HaloBlur = 0;
         }
