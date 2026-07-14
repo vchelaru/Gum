@@ -34,9 +34,15 @@ unsafe class Program
 
     private const int Width = 1200;
     private const int Height = 800;
-    private const float OutlineWidth = 4f;   // exaggerated so the spikes are unmistakable
-    private const float FontSize = 110f;
-    private const string SampleText = "Wiggly WWW";
+    // Match REAL on-screen Gum usage: the spikes only appear at small size, where a 2px outline is a
+    // large fraction of the glyph. Screenshot #7 was ~20px text magnified. We render small, then blit
+    // with nearest-neighbor zoom so the pixel-level spike is visible without the user zooming.
+    private const float OutlineWidth = 2f;
+    private const float FontSize = 22f;
+    private const string SampleText = "WWW";
+    private const int Zoom = 7;
+    private const int PanelW = 90;
+    private const int PanelH = 34;
 
     private static readonly SKTypeface Arial = SKTypeface.FromFamilyName("Arial");
     private static readonly SKFont LabelFont = new SKFont(SKTypeface.FromFamilyName("Arial"), 18);
@@ -111,28 +117,45 @@ unsafe class Program
         canvas.Clear(SKColors.White);
 
         float x = 30;
-        float y = 20;
+        float y = 16;
+
+        y = DrawLabel($"Rendered at {FontSize}px / outline {OutlineWidth}px (real Gum size), then zoomed {Zoom}x nearest-neighbor.", x, y) + 6;
 
         y = DrawLabel("1) RichTextKit halo (Style.HaloWidth) -- StrokeJoin defaults to Miter: SPIKES under the W", x, y);
-        y = DrawRichTextKitHalo(SampleText, x, y);
-        y += 40;
+        y = DrawZoomed(x, y, RenderRichTextKitHaloSmall) + 24;
 
         y = DrawLabel("2) Manual SKFont stroke, StrokeJoin.Miter -- same spikes (it's the join, not RichTextKit)", x, y);
-        y = DrawManualStroke(SampleText, x, y, SKStrokeJoin.Miter);
-        y += 40;
+        y = DrawZoomed(x, y, c => RenderManualStrokeSmall(c, SKStrokeJoin.Miter)) + 24;
 
         y = DrawLabel("3) Manual SKFont stroke, StrokeJoin.Round -- clean, NO spikes (the proposed fix)", x, y);
-        DrawManualStroke(SampleText, x, y, SKStrokeJoin.Round);
+        DrawZoomed(x, y, c => RenderManualStrokeSmall(c, SKStrokeJoin.Round));
     }
 
     private static float DrawLabel(string text, float x, float y)
     {
         canvas.DrawText(text, x, y + 16, SKTextAlign.Left, LabelFont, LabelPaint);
-        return y + 28;
+        return y + 26;
     }
 
-    // Draws white text with a black halo via RichTextKit exactly as SkiaGum does.
-    private static float DrawRichTextKitHalo(string text, float x, float y)
+    // Renders `renderSmall` into a small offscreen bitmap, then blits it Zoom-times larger with
+    // nearest-neighbor sampling -- reproducing the user's magnified screenshot so pixel-level miter
+    // spikes are visible.
+    private static float DrawZoomed(float destX, float destY, Action<SKCanvas> renderSmall)
+    {
+        using var bmp = new SKBitmap(PanelW, PanelH, SKColorType.Rgba8888, SKAlphaType.Premul);
+        using (var small = new SKCanvas(bmp))
+        {
+            small.Clear(SKColors.White);
+            renderSmall(small);
+        }
+        using var img = SKImage.FromBitmap(bmp);
+        var dest = SKRect.Create(destX, destY, PanelW * Zoom, PanelH * Zoom);
+        canvas.DrawImage(img, dest, new SKSamplingOptions(SKFilterMode.Nearest));
+        return destY + PanelH * Zoom;
+    }
+
+    // White text with a black halo via RichTextKit, exactly as SkiaGum does it.
+    private static void RenderRichTextKitHaloSmall(SKCanvas c)
     {
         var style = new Style
         {
@@ -144,18 +167,17 @@ unsafe class Program
             HaloBlur = 0,
         };
         var block = new TextBlock();
-        block.AddText(text, style);
-        block.Paint(canvas, new SKPoint(x, y));
-        return y + block.MeasuredHeight;
+        block.AddText(SampleText, style);
+        block.Paint(c, new SKPoint(4, 2));
     }
 
-    // Draws the same white text with a black outline by stroking the glyph blob ourselves, so we can
-    // pick the StrokeJoin. Outline first (behind), fill on top.
-    private static float DrawManualStroke(string text, float x, float y, SKStrokeJoin join)
+    // Same white text + black outline, but we stroke the glyph blob ourselves so we can choose the
+    // StrokeJoin. Outline behind, fill on top.
+    private static void RenderManualStrokeSmall(SKCanvas c, SKStrokeJoin join)
     {
         using var font = new SKFont(Arial, FontSize);
-        using var blob = SKTextBlob.Create(text, font);
-        float baseline = y + FontSize * 0.8f;
+        using var blob = SKTextBlob.Create(SampleText, font);
+        float baseline = 2 + FontSize * 0.9f;
 
         using var outline = new SKPaint
         {
@@ -165,7 +187,7 @@ unsafe class Program
             Color = SKColors.Black,
             StrokeJoin = join,
         };
-        canvas.DrawText(blob, x, baseline, outline);
+        c.DrawText(blob, 4, baseline, outline);
 
         using var fill = new SKPaint
         {
@@ -173,8 +195,6 @@ unsafe class Program
             Style = SKPaintStyle.Fill,
             Color = SKColors.White,
         };
-        canvas.DrawText(blob, x, baseline, fill);
-
-        return y + FontSize * 1.2f;
+        c.DrawText(blob, 4, baseline, fill);
     }
 }
