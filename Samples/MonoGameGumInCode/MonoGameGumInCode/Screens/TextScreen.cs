@@ -25,16 +25,18 @@ namespace MonoGameGumInCode.Screens;
 #endif
 
 // #3640: converged into a single shared file (was two byte-for-byte-mirrored copies at
-// Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/TextScreen.cs and
-// Samples/raylib/Screens/TextScreen.cs) after repeatedly drifting when only one mirror got updated.
-// Linked into Samples/raylib/GumTest.csproj via <Compile Include ... Link>; this file is the only
-// copy. The SilkNetGum TextScreen.cs mirror (Samples/SilkNetGum/SilkNetGum/Screens/TextScreen.cs)
-// stays a separate, non-linked file - it legitimately omits the BBCode / Blend / TextureFilter
-// sections because SkiaGum renders via RichTextKit rather than a font atlas, so there's much less
-// left to share. Only genuinely backend-specific things differ here, gated `#if RAYLIB`: the
-// namespace, the Color/Text/LetterCustomization/TextRenderingPositionMode aliases above, and
-// AddTextureFilterSection's mechanism (a per-layer sampler state on MonoGame vs a baked
-// font-cache texture on raylib).
+// Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/TextScreen.cs and Samples/raylib/Screens/
+// TextScreen.cs) after repeatedly drifting when only one mirror got updated. Linked into
+// Samples/raylib/GumTest.csproj via <Compile Include ... Link>; this file is the only copy for
+// MonoGame + raylib.
+//
+// Policy: the MonoGame/raylib and SilkNetGum text samples are kept feature- and content-identical,
+// and carry NO descriptive section labels — each demo's own text shows AND names what it is. The
+// SilkNetGum mirror (Samples/SilkNetGum/SilkNetGumSample/Screens/TextScreen.cs) is still a separate,
+// non-linked file for now. Only genuinely backend-specific things differ here, gated `#if RAYLIB`:
+// the namespace, the Color/Text/LetterCustomization/TextRenderingPositionMode aliases above, and
+// AddTextureFilterSection's mechanism (a per-layer sampler state on MonoGame vs a baked font-cache
+// texture on raylib).
 internal class TextScreen : FrameworkElement
 {
     public TextScreen() : base(new ContainerRuntime())
@@ -70,10 +72,8 @@ internal class TextScreen : FrameworkElement
             "[IsBold=true]bold[/IsBold], and [IsItalic=true]italic[/IsItalic] runs, all styled inline in one Text.";
         container.Children.Add(bbcode);
 
-        AddSectionLabel(container, "BBCode markup - [FontSize=40] crisp swap (left) vs [FontScale=1.9] scale-up (right); blue box = measured width (#3524):");
         container.Children.Add(BuildFontSizeContainmentRow());
 
-        AddSectionLabel(container, "BBCode markup - [Custom] per-letter callback (#3640): static wavy offset + per-letter hue");
         Text.Customizations["Wave"] = (int index, string block) => new LetterCustomization
         {
             YOffset = MathF.Sin(index * 0.9f) * 10f,
@@ -88,16 +88,14 @@ internal class TextScreen : FrameworkElement
         customMarkup.Text = "[Custom=Wave]Wavy rainbow text[/Custom]";
         container.Children.Add(customMarkup);
 
-        AddSectionLabel(container, "Baked drop shadow (HasDropshadow = true, first-enable defaults):");
         var shadowDefault = new TextRuntime();
         shadowDefault.Text = "Soft baked shadow";
         shadowDefault.FontSize = 24;
         shadowDefault.HasDropshadow = true;
         container.Children.Add(shadowDefault);
 
-        AddSectionLabel(container, "Baked drop shadow (colored, offset, blur):");
         var shadowColored = new TextRuntime();
-        shadowColored.Text = "Pink shadow";
+        shadowColored.Text = "Pink baked shadow, offset and blurred";
         shadowColored.FontSize = 24;
         shadowColored.HasDropshadow = true;
         shadowColored.DropshadowColor = new Color(220, 40, 160, 220);
@@ -106,9 +104,8 @@ internal class TextScreen : FrameworkElement
         shadowColored.DropshadowBlur = 4;
         container.Children.Add(shadowColored);
 
-        AddSectionLabel(container, "Baked drop shadow + outline:");
         var shadowOutline = new TextRuntime();
-        shadowOutline.Text = "Shadow and outline";
+        shadowOutline.Text = "Baked shadow and outline";
         shadowOutline.FontSize = 24;
         shadowOutline.OutlineThickness = 2;
         shadowOutline.HasDropshadow = true;
@@ -132,7 +129,6 @@ internal class TextScreen : FrameworkElement
         AddTextureFilterSection(container);
 
         // --- Per-instance TextRenderingPositionMode override, at a fractional origin ---
-        AddSectionLabel(container, "TextRenderingPositionMode (#3432): fractional origin; button toggles snap");
         var snapText = new TextRuntime();
         snapText.FontSize = 20;
         snapText.X = 120.5f;
@@ -158,7 +154,6 @@ internal class TextScreen : FrameworkElement
         container.Children.Add(toggleButton.Visual);
 
         // --- GetCharacterIndexAtPosition: click the text, report the hit index ---
-        AddSectionLabel(container, "GetCharacterIndexAtPosition (#3432): click the text below");
         var hitText = new TextRuntime();
         hitText.FontSize = 24;
         hitText.Text = "Click me to report the character index";
@@ -190,10 +185,9 @@ internal class TextScreen : FrameworkElement
     // Layer.IsLinearFilteringEnabled forcing the mode, while layout still comes from the shared
     // filterRow container. Unlike raylib (where the filter is baked into the font-cache texture at
     // creation time), the layer-based override here is a pure render-state switch, so both sides can
-    // share the same FontSize/FontScale.
+    // share the same FontSize/FontScale. Each cell's own text ("Point" / "Linear") names its filter.
     private static void AddTextureFilterSection(ContainerRuntime container)
     {
-        AddSectionLabel(container, "Texture filter (#3496): 12px font scaled 4x, Point (left) vs Linear (right)");
         var filterRow = new ContainerRuntime();
         filterRow.WidthUnits = DimensionUnitType.RelativeToChildren;
         filterRow.HeightUnits = DimensionUnitType.RelativeToChildren;
@@ -208,14 +202,14 @@ internal class TextScreen : FrameworkElement
         var pointText = new TextRuntime();
         pointText.FontSize = 12;
         pointText.FontScale = 4;
-        pointText.Text = "Point";
+        pointText.Text = "Point filter (blocky)";
         filterRow.AddChild(pointText);
 
         RenderingLibrary.Content.ContentLoader.DefaultTextureFilter = Raylib_cs.TextureFilter.Bilinear;
         var linearText = new TextRuntime();
         linearText.FontSize = 13; // distinct size so this is a separate font-cache entry from "Point" above
         linearText.FontScale = 4;
-        linearText.Text = "Linear";
+        linearText.Text = "Linear filter (smoothed)";
         filterRow.AddChild(linearText);
 
         RenderingLibrary.Content.ContentLoader.DefaultTextureFilter = savedFilter;
@@ -230,7 +224,7 @@ internal class TextScreen : FrameworkElement
         var pointText = new TextRuntime();
         pointText.FontSize = 12;
         pointText.FontScale = 4;
-        pointText.Text = "Point";
+        pointText.Text = "Point filter (blocky)";
         filterRow.AddChild(pointText);
         pointText.MoveToLayer(pointLayer);
 
@@ -240,16 +234,16 @@ internal class TextScreen : FrameworkElement
         var linearText = new TextRuntime();
         linearText.FontSize = 12;
         linearText.FontScale = 4;
-        linearText.Text = "Linear";
+        linearText.Text = "Linear filter (smoothed)";
         filterRow.AddChild(linearText);
         linearText.MoveToLayer(linearLayer);
 #endif
     }
 
-    // Blend on Text (#3432): additive (brightens) vs normal, over an identical blue box.
+    // Blend on Text (#3432): additive (brightens) vs normal, over an identical blue box. Each cell's
+    // own text ("Additive" / "Normal") names its blend mode.
     private static void AddBlendOnTextSection(ContainerRuntime container)
     {
-        AddSectionLabel(container, "Blend on Text (#3432): additive (brightens) vs normal, over a blue box");
         var blendRow = new ContainerRuntime();
         blendRow.WidthUnits = DimensionUnitType.RelativeToChildren;
         blendRow.HeightUnits = DimensionUnitType.RelativeToChildren;
@@ -303,9 +297,9 @@ internal class TextScreen : FrameworkElement
     // also be MEASURED at that size, or a RelativeToChildren Text is sized too narrow and the run spills
     // past its background (the RelativeToChildren-too-narrow bug fixed in #3520 / #3523). Left cell =
     // [FontSize=40] over a 21px base (crisp swap); right cell = a [FontScale=1.9] control (a scale-up of
-    // the 21px atlas, so visibly blurrier). Pass = "big" is enlarged, crisper on the left than the right,
-    // AND the blue box fully contains each line in both (raylib gets its crisp swap from KernSmith;
-    // MonoGame from the BitmapFont path - same visual contract either way).
+    // the 21px atlas, so visibly blurrier). Each cell's own text names which it is; pass = the big run is
+    // crisper on the left than the right, AND the blue box fully contains each line in both (raylib gets
+    // its crisp swap from KernSmith; MonoGame from the BitmapFont path - same visual contract either way).
     private static ContainerRuntime BuildFontSizeContainmentRow()
     {
         var row = new ContainerRuntime();
@@ -315,8 +309,8 @@ internal class TextScreen : FrameworkElement
         row.Height = 0;
         row.ChildrenLayout = ChildrenLayout.LeftToRightStack;
         row.StackSpacing = 24;
-        row.AddChild(BuildContainedMarkupCell("This is [FontSize=40]big[/FontSize] text."));
-        row.AddChild(BuildContainedMarkupCell("This is [FontScale=1.9]big[/FontScale] text."));
+        row.AddChild(BuildContainedMarkupCell("[FontSize=40]FontSize 40[/FontSize] crisp swap"));
+        row.AddChild(BuildContainedMarkupCell("[FontScale=1.9]FontScale 1.9[/FontScale] blurry scale-up"));
         return row;
     }
 
@@ -350,13 +344,5 @@ internal class TextScreen : FrameworkElement
         cell.Children.Add(text);
 
         return cell;
-    }
-
-    private static void AddSectionLabel(ContainerRuntime container, string text)
-    {
-        var label = new TextRuntime();
-        label.Text = text;
-        label.FontSize = 14;
-        container.Children.Add(label);
     }
 }
