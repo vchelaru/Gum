@@ -163,6 +163,10 @@
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<InternalsVisibleTo Include="SkiaGum.Tests" />
+	</ItemGroup>
+
 	<!--
 		Bundle the Gum.Analyzers Roslyn analyzer DLL into this package so NuGet consumers
 		get GUM001 namespace-migration warnings + code fixes. This is NOT a ProjectReference
