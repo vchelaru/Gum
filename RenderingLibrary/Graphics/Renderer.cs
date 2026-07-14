@@ -319,6 +319,16 @@ public class Renderer : IRenderer
 
     public static TextureFilter TextureFilter { get; set; } = TextureFilter.Point;
 
+    /// <summary>
+    /// When true (the default), textures loaded from file bleed their edge color into
+    /// fully-transparent texels on load (see <see cref="Content.TextureEdgeBleed"/>). This stops the
+    /// non-premultiplied pipeline from darkening anti-aliased edges toward black when sampled with
+    /// <see cref="Microsoft.Xna.Framework.Graphics.TextureFilter.Linear"/> — most visibly on font
+    /// atlases (issue #3691). Only affects the RGB of texels whose alpha is 0, so it is visually a
+    /// no-op under Point filtering. Set false to skip the per-load pass.
+    /// </summary>
+    public static bool BleedTransparentTextureEdgesOnLoad { get; set; } = true;
+
 #endregion
 
     public Renderer()

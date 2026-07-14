@@ -121,12 +121,37 @@ public class ContentLoader : IContentLoader
         {
             toReturn = LoadTextureFromFile(fileName, managers);
         }
+
+        ApplyEdgeBleed(toReturn);
+
         if (LoaderManager.Self.CacheTextures && toReturn != null)
         {
             LoaderManager.Self.AddDisposable(fileNameStandardized, toReturn);
         }
         return toReturn;
 
+    }
+
+    /// <summary>
+    /// Bleeds edge color into fully-transparent texels so a non-premultiplied Linear pipeline does
+    /// not darken anti-aliased edges toward black (issue #3691). No-op unless
+    /// <see cref="Graphics.Renderer.BleedTransparentTextureEdgesOnLoad"/> is set, and only applies to
+    /// uncompressed <see cref="SurfaceFormat.Color"/> textures (what <c>Texture2D.FromStream</c>
+    /// produces) — compressed / content-pipeline formats are left untouched.
+    /// </summary>
+    private static void ApplyEdgeBleed(Texture2D? texture)
+    {
+        if (texture == null
+            || !Graphics.Renderer.BleedTransparentTextureEdgesOnLoad
+            || texture.Format != SurfaceFormat.Color)
+        {
+            return;
+        }
+
+        var pixels = new Microsoft.Xna.Framework.Color[texture.Width * texture.Height];
+        texture.GetData(pixels);
+        TextureEdgeBleed.Bleed(pixels, texture.Width, texture.Height);
+        texture.SetData(pixels);
     }
 
     public static string StandardizeCaseSensitive(string fileName)
