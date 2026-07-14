@@ -4,6 +4,7 @@ using Gum.Managers;
 using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using SkiaSharp;
+using System;
 
 namespace SilkNetGum.Screens;
 
@@ -39,13 +40,23 @@ internal class TextScreen : FrameworkElement
 
         AddBbCodeSection(container);
 
-        // Wavy rainbow text: the [Custom] per-letter callback the MonoGame screen uses for this is
-        // intentionally not implemented on SkiaGum yet (deferred scope, see Text.SupportedTags), so this
-        // is a plain-text placeholder for parity until it lands.
+        // Wavy rainbow text: the same [Custom=Wave] per-letter callback the MonoGame/raylib screen uses
+        // (issue #3692) -- SkiaGum resolves it through its own Text.Customizations registry (SkiaGum
+        // cannot share MonoGame's, since that lives in the MonoGame-coupled RenderingLibrary.Graphics.Text
+        // source file), applying YOffset as a post-layout glyph nudge and Color as a normal per-run style.
+        SkiaGum.Text.Customizations["Wave"] = (int index, string block) => new SkiaGum.LetterCustomization
+        {
+            YOffset = MathF.Sin(index * 0.9f) * 10f,
+            Color = System.Drawing.Color.FromArgb(
+                255,
+                (int)(128 + 127 * MathF.Sin(index * 0.7f)),
+                (int)(128 + 127 * MathF.Sin(index * 0.7f + 2f)),
+                (int)(128 + 127 * MathF.Sin(index * 0.7f + 4f))),
+        };
         TextRuntime wavy = new TextRuntime();
         wavy.Font = "Arial";
         wavy.FontSize = 24;
-        wavy.Text = "Wavy rainbow text";
+        wavy.Text = "[Custom=Wave]Wavy rainbow text[/Custom]";
         container.Children.Add(wavy);
 
         // Drop shadow (TextRuntime.HasDropshadow) — the cross-backend shadow API. MonoGame/KNI/Raylib
