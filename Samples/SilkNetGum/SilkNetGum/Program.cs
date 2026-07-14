@@ -388,8 +388,16 @@ unsafe class Program
             // and SDL's event pump can invoke this callback from inside that nested loop -- where the
             // GL context is not guaranteed to be current/consistent. Recreating GPU resources
             // (RecreateSurface) synchronously here crashed with AccessViolationException. Instead just
-            // record the new size and apply it once per frame from the main loop below, where the
-            // context state is well-defined (#3657).
+            // record the new size and apply the full resize (surface recreation + layout) once per
+            // frame from the main loop below, where the context state is well-defined (#3657).
+            //
+            // The main loop is blocked for the entire duration of the drag (window.DoEvents() doesn't
+            // return until the drag ends), so nothing repaints while resizing -- producing a black
+            // flash/pop on release (#3660). This is an upstream SDL bug (SDL fires
+            // SDL_EVENT_WINDOW_EXPOSED from a Win32 timer during the live-resize modal loop, decoupled
+            // from real WM_PAINT timing -- see libsdl-org/SDL#15773) reproduced by a minimal SDL+ANGLE
+            // window with no Skia/Gum involved at all, so it is not fixable from this sample's code.
+            // See #3667 for the write-up and upstream links; tracked there, not worked around here.
             Vector2D<int>? pendingResize = null;
             window.Closing += () => running = false;
             window.Resize += newSize => pendingResize = newSize;
