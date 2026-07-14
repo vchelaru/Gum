@@ -1059,7 +1059,12 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         if (OutlineThickness > 0)
         {
             style.HaloColor = OutlineColor;
-            style.HaloWidth = OutlineThickness;
+            // RichTextKit's halo is a stroke centered on the glyph edge — half of it hides under the
+            // fill — so a width of N reads as only ~N/2 of visible outline vs the baked backends' full
+            // N-pixel outward OutlineThickness. Double it to approximate their outward thickness.
+            style.HaloWidth = OutlineThickness * 2;
+            // Crisp hard outline, not RichTextKit's default soft-glow halo.
+            style.HaloBlur = 0;
         }
 
         return style;
