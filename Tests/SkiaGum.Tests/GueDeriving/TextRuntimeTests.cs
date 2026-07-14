@@ -74,6 +74,35 @@ public class TextRuntimeTests
 
     #endregion
 
+    #region Dropshadow
+
+    [Fact]
+    public void HasDropshadow_SetInCode_ShouldDriveRenderableImageFilterShadow()
+    {
+        // Cross-backend baked-shadow API (TextRuntime.HasDropshadow + params) maps onto the SkiaGum.Text
+        // renderable's standalone ImageFilter shadow via the code-property path (SystemManagers.UpdateFonts).
+        // Without it, HasDropshadow silently no-ops on Skia (renders plain text, no shadow).
+        new RenderingLibrary.SystemManagers().Initialize();
+
+        TextRuntime sut = new();
+        sut.HasDropshadow = true;
+        sut.DropshadowColor = new SKColor(220, 40, 160, 220);
+        sut.DropshadowOffsetX = 2;
+        sut.DropshadowOffsetY = 4;
+        sut.DropshadowBlur = 6;
+
+        Text contained = (Text)sut.RenderableComponent;
+        contained.HasDropshadow.ShouldBeTrue();
+        contained.DropshadowColor.ShouldBe(new SKColor(220, 40, 160, 220));
+        contained.DropshadowOffsetX.ShouldBe(2);
+        contained.DropshadowOffsetY.ShouldBe(4);
+        contained.DropshadowBlurX.ShouldBe(6);
+        contained.DropshadowBlurY.ShouldBe(6);
+        contained.GetRenderPaint().ShouldNotBeNull();
+    }
+
+    #endregion
+
     #region FontFamily
 
     [Fact]

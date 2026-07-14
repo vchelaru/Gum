@@ -104,6 +104,20 @@ namespace RenderingLibrary
                 // only wired the string/SetProperty path (CustomSetPropertyOnRenderable.UpdateToFontValues),
                 // so setting OutlineThickness in code silently rendered no halo (bug #3684).
                 asText.OutlineThickness = textRuntime.OutlineThickness;
+
+                // SkiaGum can't bake a KernSmith shadow atlas, so map the cross-backend baked-shadow API
+                // (TextRuntime.HasDropshadow + params) onto the SkiaGum.Text renderable's standalone
+                // ImageFilter drop shadow (#3674): the same user-facing API renders on Skia via a live
+                // canvas effect instead of a baked atlas. DropshadowBlur is a single scalar on the
+                // runtime; the renderable takes separate X/Y blur, so drive both from it. (The blur
+                // magnitudes won't match the baked backends exactly — different blur conventions — but
+                // the shadow renders and honors color/offset/blur.)
+                asText.HasDropshadow = textRuntime.HasDropshadow;
+                asText.DropshadowColor = textRuntime.DropshadowColor;
+                asText.DropshadowOffsetX = textRuntime.DropshadowOffsetX;
+                asText.DropshadowOffsetY = textRuntime.DropshadowOffsetY;
+                asText.DropshadowBlurX = textRuntime.DropshadowBlur;
+                asText.DropshadowBlurY = textRuntime.DropshadowBlur;
             }
         }
 
