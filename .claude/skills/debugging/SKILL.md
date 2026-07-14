@@ -1,6 +1,6 @@
 ---
 name: debugging
-description: How to investigate a hard bug without tunnel-visioning on one method. Triggers: a hypothesis just failed, considering another automated repro attempt, "I'm stuck", a long-running investigation.
+description: How to investigate a hard bug without tunnel-visioning on one method. Triggers: a hypothesis just failed, a second same-category fix attempt is about to be proposed, "I'm stuck", a long-running investigation.
 ---
 
 # Debugging Without Tunnel Vision
@@ -18,6 +18,9 @@ window.)
 - **Structural isolation** — minimal repro outside the app/framework
 - **External verification** — read the actual upstream source, its issue tracker
 - **Specialized tooling** — GPU frame capture, other domain debuggers
+
+Self-invoke on the 2nd same-category miss — don't wait for the user to point this out (happened
+on #3660: 4 rounds of GL/Skia-semantics patches before switching to live-observation logging).
 
 ## Stop immediately if
 

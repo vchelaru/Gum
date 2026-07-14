@@ -38,6 +38,10 @@ raylib and Skia render shapes natively. MonoGame's shape rendering comes from th
 
 **MonoGame/KNI host init (landmine).** Referencing the package is not enough — the game host must call `ShapeRenderer.Self.Initialize()` (namespace `MonoGameAndGum.Renderables`) **after** `GumService.Default.Initialize(...)`, **and** set `GraphicsProfile.HiDef` (Apos.Shapes uses an SM4 effect that Reach can't load). Miss either and shape fills/effects silently do not draw — no error. See `docs/code/standard-visuals/shapes-apos.shapes.md`.
 
+## Docs coverage lags SilkNetGum
+
+`docs/code/layout/resizing-the-game-window.md` documents window-resize handling with `{% tabs %}` per backend but has no Silk.NET tab yet (only MonoGame/raylib-flavored guidance exists). When fixing or documenting Silk.NET resize behavior, add its tab there too instead of leaving the doc MonoGame/raylib-only.
+
 ## Verification is human-driven
 
 These samples exist for visual confirmation; they have no automated assertions. After adding a screen, build the sample and tell the user to run it and eyeball the new screen. Behavioral correctness still gets a unit test in the matching `Tests/*` project (see [[tdd]]) — the sample is the visual complement, not a replacement.
