@@ -140,10 +140,10 @@ internal class TextScreen : FrameworkElement
         container.Children.Add(row);
     }
 
-    // Overflow modes on the SkiaGum.Text renderable (#3677): ellipsis on horizontal overflow, then
-    // vertical TruncateLine vs SpillOver for the same-size box. Each box's text names its own mode.
-    // Both properties live on the renderable (SkiaGum.Text) and are honored by RichTextKit's TextBlock
-    // (MaxHeight / EllipsisEnabled) in Text.GetTextBlock.
+    // Overflow modes (#3677): horizontal ellipsis, then vertical TruncateLine vs SpillOver for the
+    // same-size box. Each box's text names its own mode. The overflow properties live on TextRuntime
+    // (MaxNumberOfLines / IsTruncatingWithEllipsisOnLastLine / TextOverflowVerticalMode), so no cast to
+    // the renderable is needed. Kept content-identical to the MonoGameGumInCode text screen.
     private static void AddOverflowSection(ContainerRuntime container)
     {
         const string longLine =
@@ -157,32 +157,38 @@ internal class TextScreen : FrameworkElement
 
         // (a) Horizontal overflow -> ellipsis. MaxNumberOfLines = 1 caps the block to one line;
         // IsTruncatingWithEllipsisOnLastLine appends the trailing "...".
-        RectangleRuntime ellipsisBox = MakeOverflowBox(width: 300, height: 30);
-        TextRuntime ellipsisText = MakeBoxFillingText(longLine);
-        SkiaGum.Text ellipsisRenderable = (SkiaGum.Text)ellipsisText.RenderableComponent;
-        ellipsisRenderable.MaxNumberOfLines = 1;
-        ellipsisRenderable.IsTruncatingWithEllipsisOnLastLine = true;
+        var ellipsisBox = MakeOverflowBox(width: 300, height: 30);
+        var ellipsisText = MakeBoxFillingText(longLine);
+        ellipsisText.MaxNumberOfLines = 1;
+        ellipsisText.IsTruncatingWithEllipsisOnLastLine = true;
         ellipsisBox.Children.Add(ellipsisText);
         container.Children.Add(ellipsisBox);
 
         // (b) Vertical TruncateLine: the paragraph is clipped to the lines that fit the box Height,
         // with an ellipsis on the last visible line.
-        RectangleRuntime truncateBox = MakeOverflowBox(width: 300, height: 60);
-        TextRuntime truncateText = MakeBoxFillingText(truncateParagraph);
-        SkiaGum.Text truncateRenderable = (SkiaGum.Text)truncateText.RenderableComponent;
-        truncateRenderable.TextOverflowVerticalMode = TextOverflowVerticalMode.TruncateLine;
-        truncateRenderable.IsTruncatingWithEllipsisOnLastLine = true;
+        var truncateBox = MakeOverflowBox(width: 300, height: 60);
+        var truncateText = MakeBoxFillingText(truncateParagraph);
+        truncateText.TextOverflowVerticalMode = TextOverflowVerticalMode.TruncateLine;
+        truncateText.IsTruncatingWithEllipsisOnLastLine = true;
         truncateBox.Children.Add(truncateText);
         container.Children.Add(truncateBox);
 
-        // (c) Vertical SpillOver (today's default): the same-size box renders every line, overflowing
-        // past the box's bottom edge.
-        RectangleRuntime spillBox = MakeOverflowBox(width: 300, height: 60);
-        TextRuntime spillText = MakeBoxFillingText(spillParagraph);
-        SkiaGum.Text spillRenderable = (SkiaGum.Text)spillText.RenderableComponent;
-        spillRenderable.TextOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
+        // (c) Vertical SpillOver: the same-size box renders every line, overflowing past the box's
+        // bottom edge.
+        var spillBox = MakeOverflowBox(width: 300, height: 60);
+        var spillText = MakeBoxFillingText(spillParagraph);
+        spillText.TextOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
         spillBox.Children.Add(spillText);
         container.Children.Add(spillBox);
+
+        // The SpillOver box renders past its own bottom edge by design; reserve room below it so the
+        // overflowing lines don't land on top of the next section in the top-to-bottom stack.
+        var spillSpacer = new ContainerRuntime();
+        spillSpacer.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        spillSpacer.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        spillSpacer.Width = 0;
+        spillSpacer.Height = 40;
+        container.Children.Add(spillSpacer);
     }
 
     // A fixed-size, translucent-bordered box so the text's overflow bounds are visible.

@@ -116,6 +116,8 @@ internal class TextScreen : FrameworkElement
         container.Children.Add(withOutline);
 
         BuildTextParitySection(container);
+
+        AddOverflowSection(container);
     }
 
     // Text parity features (#3432): Blend, per-instance TextRenderingPositionMode override, and
@@ -289,6 +291,84 @@ internal class TextScreen : FrameworkElement
         cell.Children.Add(text);
 
         return cell;
+    }
+
+    // Overflow modes (#3677): horizontal ellipsis, then vertical TruncateLine vs SpillOver for the
+    // same-size box. Each box's text names its own mode. The overflow properties live on TextRuntime
+    // (MaxNumberOfLines / IsTruncatingWithEllipsisOnLastLine / TextOverflowVerticalMode), so no cast to
+    // the renderable is needed. Kept content-identical to the SilkNetGumSample text screen.
+    private static void AddOverflowSection(ContainerRuntime container)
+    {
+        const string longLine =
+            "This single long line overflows its box horizontally and is cut off with an ellipsis";
+        const string truncateParagraph =
+            "TruncateLine clips this wrapping paragraph to the lines that fit the box height and " +
+            "ellipsizes the last visible line, dropping everything past it.";
+        const string spillParagraph =
+            "SpillOver renders every line of this wrapping paragraph, overflowing past the bottom " +
+            "edge of its box instead of clipping.";
+
+        // (a) Horizontal overflow -> ellipsis. MaxNumberOfLines = 1 caps the block to one line;
+        // IsTruncatingWithEllipsisOnLastLine appends the trailing "...".
+        var ellipsisBox = MakeOverflowBox(width: 300, height: 30);
+        var ellipsisText = MakeBoxFillingText(longLine);
+        ellipsisText.MaxNumberOfLines = 1;
+        ellipsisText.IsTruncatingWithEllipsisOnLastLine = true;
+        ellipsisBox.Children.Add(ellipsisText);
+        container.Children.Add(ellipsisBox);
+
+        // (b) Vertical TruncateLine: the paragraph is clipped to the lines that fit the box Height,
+        // with an ellipsis on the last visible line.
+        var truncateBox = MakeOverflowBox(width: 300, height: 60);
+        var truncateText = MakeBoxFillingText(truncateParagraph);
+        truncateText.TextOverflowVerticalMode = TextOverflowVerticalMode.TruncateLine;
+        truncateText.IsTruncatingWithEllipsisOnLastLine = true;
+        truncateBox.Children.Add(truncateText);
+        container.Children.Add(truncateBox);
+
+        // (c) Vertical SpillOver: the same-size box renders every line, overflowing past the box's
+        // bottom edge.
+        var spillBox = MakeOverflowBox(width: 300, height: 60);
+        var spillText = MakeBoxFillingText(spillParagraph);
+        spillText.TextOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
+        spillBox.Children.Add(spillText);
+        container.Children.Add(spillBox);
+
+        // The SpillOver box renders past its own bottom edge by design; reserve room below it so the
+        // overflowing lines don't land on top of the next section in the top-to-bottom stack.
+        var spillSpacer = new ContainerRuntime();
+        spillSpacer.WidthUnits = DimensionUnitType.Absolute;
+        spillSpacer.HeightUnits = DimensionUnitType.Absolute;
+        spillSpacer.Width = 0;
+        spillSpacer.Height = 40;
+        container.Children.Add(spillSpacer);
+    }
+
+    // A fixed-size, dark box so the text's overflow bounds are visible.
+    private static RectangleRuntime MakeOverflowBox(float width, float height)
+    {
+        var box = new RectangleRuntime();
+        box.WidthUnits = DimensionUnitType.Absolute;
+        box.HeightUnits = DimensionUnitType.Absolute;
+        box.Width = width;
+        box.Height = height;
+        box.FillColor = new Color(40, 40, 40, 255);
+        box.IsFilled = true;
+        return box;
+    }
+
+    // A Text that fills its parent box, so its overflow is exactly the box's bounds.
+    private static TextRuntime MakeBoxFillingText(string text)
+    {
+        var textRuntime = new TextRuntime();
+        textRuntime.Text = text;
+        textRuntime.Font = "Arial";
+        textRuntime.FontSize = 18;
+        textRuntime.WidthUnits = DimensionUnitType.RelativeToParent;
+        textRuntime.HeightUnits = DimensionUnitType.RelativeToParent;
+        textRuntime.Width = 0;
+        textRuntime.Height = 0;
+        return textRuntime;
     }
 
 }
