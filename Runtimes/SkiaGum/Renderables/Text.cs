@@ -1,6 +1,7 @@
 ﻿using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Gum.GueDeriving;
+using SkiaGum.Renderables;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -272,7 +273,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
     // Standalone (non-BBCode) drop shadow for Skia text (issue #3674). Mirrors the drop-shadow
     // vocabulary RenderableShapeBase exposes for Skia shapes so text and shapes share one API.
-    // The shadow is a canvas/ImageFilter effect applied in Render (see GetDropshadowPaint) rather
+    // The shadow is a canvas/ImageFilter effect applied in Render (see GetRenderPaint) rather
     // than a RichTextKit Style property, so the setters intentionally do NOT invalidate
     // _cachedTextBlock -- the cached TextBlock carries no shadow state and Render reads these
     // values live each frame.
@@ -362,6 +363,17 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     }
 
     #endregion
+
+    /// <summary>
+    /// The Gum blend mode applied when compositing this text. When null, the SkiaSharp default
+    /// (SrcOver / standard alpha blending) is used. Mirrors <see cref="RenderableShapeBase.Blend"/>
+    /// and the MonoGame/Raylib Text's Blend surface. Applied as an <see cref="SKPaint.BlendMode"/>
+    /// in <see cref="Render"/> (see <see cref="GetRenderPaint"/>); values without a clean SkiaSharp
+    /// equivalent fall through to SrcOver (see <see cref="BlendToSkBlendModeExtensions"/>). Like the
+    /// drop-shadow setters, this is a live render-time effect and intentionally does not invalidate
+    /// the cached <see cref="TextBlock"/>.
+    /// </summary>
+    public Gum.RenderingLibrary.Blend? Blend { get; set; }
 
     Vector2 Position;
     IRenderableIpso? mParent;
@@ -631,16 +643,17 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
             canvas.SetMatrix(result);
 
-            // A drop shadow is a canvas effect (not a RichTextKit Style property): paint the text
-            // into an offscreen layer whose ImageFilter renders the shadow when the layer is
-            // composited back on Restore. Same primitive/blur convention as the Skia shapes.
-            var shadowPaint = GetDropshadowPaint();
-            if (shadowPaint != null)
+            // Drop shadow and Blend are canvas effects (not RichTextKit Style properties): paint the
+            // text into an offscreen layer whose paint carries the ImageFilter (shadow) and/or
+            // BlendMode (blend) so both compose when the layer is composited back on Restore. Same
+            // primitive/blur convention as the Skia shapes.
+            var renderPaint = GetRenderPaint();
+            if (renderPaint != null)
             {
-                canvas.SaveLayer(shadowPaint);
+                canvas.SaveLayer(renderPaint);
                 textBlock.Paint(canvas, new SKPoint(0, 0));
                 canvas.Restore();
-                shadowPaint.Dispose();
+                renderPaint.Dispose();
             }
             else
             {
@@ -753,28 +766,39 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     }
 
     /// <summary>
-    /// Builds the <see cref="SKPaint"/> whose <see cref="SKPaint.ImageFilter"/> renders the drop
-    /// shadow, or <c>null</c> when <see cref="HasDropshadow"/> is <c>false</c>. Used by
-    /// <see cref="Render"/> as the paint passed to <c>canvas.SaveLayer</c>. The caller owns the
-    /// returned paint and must dispose it. The blur values are divided by 3 to match the
-    /// sigma convention <see cref="RenderableShapeBase"/> uses for Skia shapes.
+    /// Builds the <see cref="SKPaint"/> used to composite the text when a render-time effect is
+    /// active, carrying the drop-shadow <see cref="SKPaint.ImageFilter"/> (when
+    /// <see cref="HasDropshadow"/>) and/or the <see cref="SKPaint.BlendMode"/> (when
+    /// <see cref="Blend"/> is set) so the two compose in one <c>canvas.SaveLayer</c>. Returns
+    /// <c>null</c> when neither effect is active, leaving <see cref="Render"/>'s fast path
+    /// unchanged. The caller owns the returned paint and must dispose it. The blur values are
+    /// divided by 3 to match the sigma convention <see cref="RenderableShapeBase"/> uses for Skia shapes.
     /// </summary>
-    internal SKPaint? GetDropshadowPaint()
+    internal SKPaint? GetRenderPaint()
     {
-        if (!HasDropshadow)
+        if (!HasDropshadow && !Blend.HasValue)
         {
             return null;
         }
 
-        return new SKPaint
+        var paint = new SKPaint();
+
+        if (HasDropshadow)
         {
-            ImageFilter = SKImageFilter.CreateDropShadow(
+            paint.ImageFilter = SKImageFilter.CreateDropShadow(
                 DropshadowOffsetX,
                 DropshadowOffsetY,
                 DropshadowBlurX / 3.0f,
                 DropshadowBlurY / 3.0f,
-                DropshadowColor)
-        };
+                DropshadowColor);
+        }
+
+        if (Blend.HasValue)
+        {
+            paint.BlendMode = Blend.Value.ToSKBlendMode();
+        }
+
+        return paint;
     }
 
     /// <summary>

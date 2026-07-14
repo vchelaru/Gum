@@ -24,16 +24,16 @@ public class TextDropshadowTests
     }
 
     [Fact]
-    public void GetDropshadowPaint_ReturnsNull_WhenHasDropshadowFalse()
+    public void GetRenderPaint_ReturnsNull_WhenHasDropshadowFalse()
     {
         Text sut = new();
         sut.HasDropshadow = false;
 
-        sut.GetDropshadowPaint().ShouldBeNull();
+        sut.GetRenderPaint().ShouldBeNull();
     }
 
     [Fact]
-    public void GetDropshadowPaint_ReturnsPaintWithImageFilter_WhenHasDropshadowTrue()
+    public void GetRenderPaint_ReturnsPaintWithImageFilter_WhenHasDropshadowTrue()
     {
         Text sut = new();
         sut.HasDropshadow = true;
@@ -43,7 +43,7 @@ public class TextDropshadowTests
         sut.DropshadowBlurY = 6;
         sut.DropshadowColor = SKColors.Black;
 
-        using SKPaint? paint = sut.GetDropshadowPaint();
+        using SKPaint? paint = sut.GetRenderPaint();
 
         paint.ShouldNotBeNull();
         paint.ImageFilter.ShouldNotBeNull();

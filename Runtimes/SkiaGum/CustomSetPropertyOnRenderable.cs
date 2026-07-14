@@ -1344,13 +1344,12 @@ public partial class CustomSetPropertyOnRenderable
 #endif
         else if (propertyName == nameof(Blend))
         {
-#if MONOGAME || XNA4
-            var valueAsGumBlend = (RenderingLibrary.Blend)value;
-
-            var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
-
-            var text = mContainedObjectAsIpso as Text;
-            text.BlendState = valueAsXnaBlend;
+#if SKIA
+            // Mirror of the XNALIKE Blend arm in Gum/Wireframe/CustomSetPropertyOnRenderable.cs,
+            // which sets textRenderable.BlendState. Skia has no BlendState; it applies the Gum
+            // Blend as an SKPaint.BlendMode at render time (see Text.GetRenderPaint), so the same
+            // dispatch just assigns the nullable Blend property. (issue #3676)
+            text.Blend = (Gum.RenderingLibrary.Blend)value;
             handled = true;
 #endif
         }
