@@ -236,6 +236,38 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         }
     }
 
+    /// <summary>
+    /// The thickness, in pixels, of the outline drawn around the text. Zero (the default) draws no
+    /// outline. Rendered through RichTextKit's halo (<see cref="Style.HaloWidth"/>). Mirrors the
+    /// OutlineThickness font property on the MonoGame/Raylib backends, which instead bake the outline
+    /// into the generated bitmap font since they have no runtime font-drawing outline mechanism.
+    /// </summary>
+    public int OutlineThickness
+    {
+        get => _outlineThickness;
+        set
+        {
+            _outlineThickness = value;
+            _cachedTextBlock = null;
+        }
+    }
+
+    /// <summary>
+    /// The color of the outline drawn when <see cref="OutlineThickness"/> is greater than zero.
+    /// Defaults to black. This is SkiaGum-specific: the MonoGame/Raylib backends bake the outline
+    /// into the font atlas and expose no runtime outline-color property, so there is no shared
+    /// cross-backend concept to mirror.
+    /// </summary>
+    public SKColor OutlineColor
+    {
+        get => _outlineColor;
+        set
+        {
+            _outlineColor = value;
+            _cachedTextBlock = null;
+        }
+    }
+
     Vector2 Position;
     IRenderableIpso? mParent;
     public string? StoredMarkupText => null;
@@ -439,6 +471,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         this.Visible = true;
         Color = SKColors.Black;
+        OutlineColor = SKColors.Black;
         mChildren = new ();
     }
 
@@ -520,6 +553,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     private float _fontScale;
     private float _boldWeight = 1;
     private SKColor _color;
+    private int _outlineThickness;
+    private SKColor _outlineColor;
     private bool _isItalic;
     private float _lineHeightMultiplier = 1;
     private HorizontalAlignment _horizontalAlignment;
@@ -587,7 +622,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     }
 
 
-    private Style GetStyle()
+    internal Style GetStyle()
     {
         var style = new Style()
         {
@@ -598,6 +633,12 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             FontWeight = (int)(400 * BoldWeight),
             LineHeight = LineHeightMultiplier
         };
+
+        if (OutlineThickness > 0)
+        {
+            style.HaloColor = OutlineColor;
+            style.HaloWidth = OutlineThickness;
+        }
 
         return style;
     }

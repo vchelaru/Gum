@@ -1195,6 +1195,13 @@ public partial class CustomSetPropertyOnRenderable
                 {
                     text.FontName = asTextRuntime.Font;
                     text.FontSize = asTextRuntime.FontSize;
+#if SKIA
+                    // Skia draws the outline at render time via RichTextKit's halo (there is no
+                    // font-generation step to bake it into, unlike MonoGame/Raylib), so push the
+                    // runtime's OutlineThickness onto the renderable here. #if SKIA-gated because the
+                    // #else (Apos.Shapes) build's Text renderable has no OutlineThickness property.
+                    text.OutlineThickness = asTextRuntime.OutlineThickness;
+#endif
                 }
             }
         }
