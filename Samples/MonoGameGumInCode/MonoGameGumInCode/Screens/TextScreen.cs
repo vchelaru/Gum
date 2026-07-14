@@ -93,7 +93,7 @@ internal class TextScreen : FrameworkElement
         container.Children.Add(shadowDefault);
 
         var shadowColored = new TextRuntime();
-        shadowColored.Text = "Pink baked shadow, offset and blurred";
+        shadowColored.Text = "Pink baked shadow, offset, and blurred";
         shadowColored.FontSize = 24;
         shadowColored.HasDropshadow = true;
         shadowColored.DropshadowColor = new Color(220, 40, 160, 220);

@@ -38,7 +38,35 @@ internal class TextScreen : FrameworkElement
 
         AddBbCodeSection(container);
 
-        AddStandaloneSkiaEffectsSection(container);
+        // Wavy rainbow text: the [Custom] per-letter callback the MonoGame screen uses for this is
+        // intentionally not implemented on SkiaGum yet (deferred scope, see Text.SupportedTags), so this
+        // is a plain-text placeholder for parity until it lands.
+        TextRuntime wavy = new TextRuntime();
+        wavy.Font = "Arial";
+        wavy.FontSize = 24;
+        wavy.Text = "Wavy rainbow text";
+        container.Children.Add(wavy);
+
+        // Baked drop shadow (TextRuntime.HasDropshadow) — the MonoGame/KNI/Raylib font-atlas path.
+        // SkiaGum doesn't use KernSmith, so these render as plain text here; present for content parity
+        // with the MonoGame screen (the standalone SkiaGum drop shadow is a separate renderable path).
+        TextRuntime shadowDefault = new TextRuntime();
+        shadowDefault.Text = "Soft baked shadow";
+        shadowDefault.FontSize = 24;
+        shadowDefault.HasDropshadow = true;
+        container.Children.Add(shadowDefault);
+
+        TextRuntime shadowColored = new TextRuntime();
+        shadowColored.Text = "Pink baked shadow, offset, and blurred";
+        shadowColored.FontSize = 24;
+        shadowColored.HasDropshadow = true;
+        shadowColored.DropshadowColor = new SKColor(220, 40, 160, 220);
+        shadowColored.DropshadowOffsetX = 2;
+        shadowColored.DropshadowOffsetY = 4;
+        shadowColored.DropshadowBlur = 4;
+        container.Children.Add(shadowColored);
+
+        AddBlendOnTextSection(container);
 
         AddOverflowSection(container);
 
@@ -170,52 +198,8 @@ internal class TextScreen : FrameworkElement
         return textRuntime;
     }
 
-    private static void AddStandaloneSkiaEffectsSection(ContainerRuntime container)
+    private static void AddBlendOnTextSection(ContainerRuntime container)
     {
-        // Yellow text with a black outline via RichTextKit's halo (#3675), next to plain yellow text.
-        // Font must be set: OutlineThickness only propagates to the renderable via UpdateToFontValues
-        // when the runtime's Font is non-empty (#3675), so without this the halo would silently no-op.
-        TextRuntime outlined = new TextRuntime();
-        outlined.Text = "Outlined";
-        outlined.Font = "Arial";
-        outlined.FontSize = 48;
-        outlined.Red = 255;
-        outlined.Green = 255;
-        outlined.Blue = 0;
-        outlined.OutlineThickness = 3;
-        container.Children.Add(outlined);
-
-        TextRuntime noOutline = new TextRuntime();
-        noOutline.Text = "No outline";
-        noOutline.Font = "Arial";
-        noOutline.FontSize = 48;
-        noOutline.Red = 255;
-        noOutline.Green = 255;
-        noOutline.Blue = 0;
-        container.Children.Add(noOutline);
-
-        // White text with a drop shadow offset down-right (#3674). The standalone shadow is a
-        // canvas/ImageFilter effect on SkiaGum.Text reached via RenderableComponent — distinct from
-        // TextRuntime.HasDropshadow (the baked-atlas path), which no-ops on Skia. Deliberately
-        // high-contrast (magenta, large offset) so it's unmistakable against the cornflower-blue
-        // background behind the white text.
-        TextRuntime shadowed = new TextRuntime();
-        shadowed.Text = "Drop shadow";
-        shadowed.Font = "Arial";
-        shadowed.FontSize = 48;
-        shadowed.Red = 255;
-        shadowed.Green = 255;
-        shadowed.Blue = 255;
-
-        SkiaGum.Text shadowedRenderable = (SkiaGum.Text)shadowed.RenderableComponent;
-        shadowedRenderable.HasDropshadow = true;
-        shadowedRenderable.DropshadowOffsetX = 8;
-        shadowedRenderable.DropshadowOffsetY = 8;
-        shadowedRenderable.DropshadowBlurX = 4;
-        shadowedRenderable.DropshadowBlurY = 4;
-        shadowedRenderable.DropshadowColor = new SKColor(255, 0, 255, 255);
-        container.Children.Add(shadowed);
-
         // Blend on the renderable (#3676): the same warm text over a blue background renders far
         // brighter with Additive blend (left) than with the default alpha blend (right), because
         // Additive adds the text color to the background instead of covering it. Blend is applied as
