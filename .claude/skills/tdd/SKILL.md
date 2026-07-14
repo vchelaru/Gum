@@ -30,7 +30,8 @@ Before implementing, decide how the change will be proven — in this order:
 
 1. **Can it be tested as-is?** Then test it: cover the happy path, the **negative cases** (invalid input is rejected / the expected error is raised), and the **edge/boundary cases** (null, empty, `0`, `-1`, first/last index, single-element collection, max).
 2. **If it's not testable as written, restructure until it is — even code you weren't otherwise here to change.** "Can't be tested" is a reason to introduce a seam, not to skip the test. Extract the logic into a class/service that takes its dependencies via the constructor; if a static `.Self` singleton blocks the seam, drain it on the spot (see CLAUDE.md "Static Singletons" + [refactoring-direction](../refactoring-direction/SKILL.md) for breaking the resulting DI cycle with `Lazy<T>`). Plugin classes that call `Locator` directly are the canonical case: pull the logic into a ctor-injected service, test that, and leave only a thin untested plugin wrapper.
-3. **Only if it genuinely can't be unit-tested**, fall back to a manual visual/runtime check — and say so explicitly, with why. (The issue-driven workflow defines that manual step.)
+3. **If it's a SkiaGum rendering change with no `Style`/paint-parameter to assert on** (geometric per-glyph transforms, pixel-level draw output), reach for the golden-image pixel-diff harness in `Tests/SkiaGum.Tests/GoldenImages/` before falling back to manual — see `gum-unit-tests`.
+4. **Only if it genuinely can't be unit-tested**, fall back to a manual visual/runtime check — and say so explicitly, with why. (The issue-driven workflow defines that manual step.)
 
 Testability is a **gate on the change**, not a property you accept as given. Restructuring a blocker into a testable seam is in-scope work, not a separate task.
 
