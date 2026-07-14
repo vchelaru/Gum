@@ -1,15 +1,20 @@
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins;
+using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Moq.AutoMock;
 using Shouldly;
+using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace GumToolUnitTests.Logic;
 
@@ -148,6 +153,75 @@ public class RenameLogicTests : BaseTestClass
         _renameLogic.ApplyElementReferences(changes, button, oldName: "Button");
 
         varRefList.Value[0].ShouldBe("SomeVar = Components/ButtonNew.SomeProperty");
+    }
+
+    // Pins whether HandleRename correctly survives a rename that changes ONLY the casing of the
+    // element's folder segment (the cascading rename RenameFolderDialogViewModel triggers per
+    // element when a Screens/Components folder is case-renamed - see the folder-rename fix in
+    // FileCommands/RenameFolderDialogViewModel). RenameXml saves the element under its NEW path
+    // (elementSave.Name already reflects the new casing) and then deletes the OLD path if it
+    // Exists(). Since the physical folder hasn't been renamed yet at this point, old and new paths
+    // are the SAME physical file on a case-insensitive filesystem (Windows/macOS) - so the
+    // delete-old step risks deleting the file that was just saved.
+    [Fact]
+    public void HandleRename_WhenElementNameChangesOnlyByFolderCase_ShouldNotDeleteTheJustSavedFile()
+    {
+        string tempRoot = Path.Combine(Path.GetTempPath(), "GumRenameLogicCaseTest_" + Guid.NewGuid());
+        string screensFolder = Path.Combine(tempRoot, "Screens");
+        string oldElementDir = Path.Combine(screensFolder, "GameMenuScreens");
+        Directory.CreateDirectory(oldElementDir);
+        string oldFilePath = Path.Combine(oldElementDir, "DialogueScreen.gusx");
+        File.WriteAllText(oldFilePath, "<ScreenSave />");
+
+        try
+        {
+            _project.FullFileName = Path.Combine(tempRoot, "Project.gumx");
+
+            // RenameLogic is constructed by AutoMocker with its own IProjectManager mock; the
+            // static Locator-based GetFullPathXmlFile lookups need to see the same GumProjectSave,
+            // so set up that same mock and register it with Locator too.
+            _mocker.GetMock<IProjectManager>()
+                .Setup(x => x.GumProjectSave).Returns(_project);
+            var services = new ServiceCollection();
+            services.AddSingleton(_mocker.GetMock<IProjectManager>().Object);
+            Locator.Register(services.BuildServiceProvider());
+
+            ScreenSave screen = new ScreenSave { Name = "GameMenuScreens/DialogueScreen" };
+            _project.Screens.Add(screen);
+
+            string? whyNotValid = null;
+            _mocker.GetMock<INameVerifier>()
+                .Setup(x => x.IsElementNameValid(It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<ElementSave?>(), out whyNotValid))
+                .Returns(true);
+
+            // Simulate a real save: write the element's content to its current (new) path,
+            // exactly like FileCommands.TryAutoSaveElement would via ElementSave.Save.
+            _mocker.GetMock<IFileCommands>()
+                .Setup(x => x.TryAutoSaveObject(It.IsAny<object>()))
+                .Callback<object>(obj =>
+                {
+                    var element = (ElementSave)obj;
+                    var path = element.GetFullPathXmlFile()!.FullPath;
+                    Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                    File.WriteAllText(path, "<ScreenSave />");
+                });
+
+            // RenameFolderDialogViewModel sets the element's new (case-updated) Name BEFORE
+            // calling HandleRename - replicate that here.
+            string oldName = screen.Name;
+            screen.Name = "gamemenuscreens/DialogueScreen";
+
+            string newFilePath = Path.Combine(screensFolder, "gamemenuscreens", "DialogueScreen.gusx");
+
+            var result = _renameLogic.HandleRename(screen, (InstanceSave?)null, oldName, NameChangeAction.Move, askAboutRename: false);
+
+            result.Succeeded.ShouldBeTrue();
+            File.Exists(newFilePath).ShouldBeTrue("the renamed screen's file should still exist on disk after the rename");
+        }
+        finally
+        {
+            Directory.Delete(tempRoot, recursive: true);
+        }
     }
 
     #region State rename

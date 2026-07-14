@@ -9,6 +9,7 @@ using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace GumToolUnitTests.Commands;
@@ -227,6 +228,30 @@ public class FileCommandsTests : BaseTestClass
         _localizationService.HasDatabase.ShouldBeTrue();
         _localizationService.CurrentLanguage = 1;
         _localizationService.Translate("T_OK").ShouldBe("OK");
+    }
+
+    // Pins a second half of the case-only-rename bug (see RenameFolderDialogViewModelTests):
+    // even once the "already exists" guard is fixed, MoveDirectory's manual recursive
+    // copy-then-delete-source approach fails for a rename that only changes casing, because
+    // source and destination are the same physical directory on a case-insensitive filesystem
+    // (Windows) - CreateDirectory(destination) is a no-op, the files "move" to themselves, and
+    // Directory.Delete(source) then throws because the directory is (still) not empty.
+    [Fact]
+    public void MoveDirectory_WhenSourceAndDestinationDifferOnlyByCase_ShouldRenameDirectoryOnDisk()
+    {
+        _tempDirectory = CreateTempDirectory();
+        string oldDir = Path.Combine(_tempDirectory, "GameMenuScreens");
+        Directory.CreateDirectory(oldDir);
+        File.WriteAllText(Path.Combine(oldDir, "DialogueScreen.gusx"), "content");
+
+        string newDir = Path.Combine(_tempDirectory, "gamemenuscreens");
+
+        _fileCommands.MoveDirectory(oldDir, newDir);
+
+        Directory.GetDirectories(_tempDirectory)
+            .Select(Path.GetFileName)
+            .ShouldBe(new[] { "gamemenuscreens" });
+        File.Exists(Path.Combine(newDir, "DialogueScreen.gusx")).ShouldBeTrue();
     }
 
     #region Helpers
