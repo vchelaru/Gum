@@ -58,6 +58,12 @@ xUnit's runner is **MTA**, but WPF `FrameworkElement`s (`MenuItem`, `Menu`, `Com
 
 Keep the MEF batch an **explicit** mirror of `LoadPlugins` (not a catch-all export provider) so a plugin gaining an unbridged `[ImportingConstructor]` dependency turns the test red — that regression signal is the whole point. See the `gum-tool-plugins` skill for keeping `PluginBridgedServiceTypes.All` in sync during drains.
 
+## Golden-image pixel-diff tests (SkiaGum.Tests)
+
+`Tests/SkiaGum.Tests/GoldenImages/` covers rendering behavior that has no `Style`/paint-parameter to assert on (e.g. geometric per-glyph transforms) — the rest of `SkiaGum.Tests`' visual tests assert on paint/style objects instead of pixels. `PixelComparer` is a pure per-pixel/per-channel diff with tolerance (unit-tested in-memory, no files); `GoldenImageAssert.Matches(surface, name)` loads a checked-in baseline PNG from `GoldenImages/Baselines/<name>.png` and diffs it against a rendered `SKSurface`.
+
+Baselines are **approved snapshots, not derived from spec** — same convention as Jest's `--updateSnapshot`. If the baseline is missing or the render regresses, the assertion fails and writes the actual render to `GoldenImages/Actual/<name>.actual.png`; review that PNG, then copy it into the source `GoldenImages/Baselines/` folder to approve it. Add the new `<None Include="GoldenImages\Baselines\**\*.png">` csproj entry's `CopyToOutputDirectory` pattern for any new baseline subfolder.
+
 ## Integration Tests (MonoGameGum.IntegrationTests)
 
 Use this project for anything requiring a real `GraphicsDevice`. Each test creates a minimal nested `Game` subclass, calls `game.RunOneFrame()` to trigger `Initialize`, then asserts. See `Tests/MonoGameGum.IntegrationTests/MonoGameGum/GumServiceUnitTests.cs` for the established pattern. Always call `LoaderManager.Self?.DisposeAndClear()` in the `Game.Dispose` override to prevent state leaking across tests via the singleton.
