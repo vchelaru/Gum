@@ -47,6 +47,14 @@ Before writing a single line of the unified file, diff these across all three pl
 
 For other disagreements: pick a default, but state the disagreement and the chosen resolution in your message before writing the code — not after in a summary. If the user disagrees, you've lost two minutes, not a release.
 
+## Don't Redeclare a Property the Base Already Exposes
+
+Before adding a "forward to the contained renderable" property to a runtime, check whether `GraphicalUiElement` (the base of every runtime) already exposes it. Several text properties — notably `TextOverflowVerticalMode` and `MaxNumberOfLines` — live on `GraphicalUiElement` with a **backing field** its layout coordination reads (e.g. `RefreshTextOverflowVerticalMode`, DialogBox page-splitting). Redeclaring such a property on the runtime **hides** the base one (CS0108) with a version that only writes the renderable and never touches the base field. Callers holding a `GraphicalUiElement`-typed reference still hit the base property, so the runtime's renderable and the base's field silently diverge and layout that depends on the field breaks — with no compile error. The inherited property already forwards to the renderable, so a redeclaration is redundant as well as harmful; a `TextRuntime` can set it with no cast. Only declare a forwarder for a property the base genuinely lacks (e.g. `IsTruncatingWithEllipsisOnLastLine`).
+
+## Changing a Renderable's Mechanism Strands Its Old Tests
+
+When you swap *how* a renderable achieves an effect (e.g. Skia text outline moving off RichTextKit's halo onto a render-time recolor+dilate pass), grep the test projects for assertions against the old mechanism (`Halo`, the old `GetStyle` shape) — they compile fine and fail only at run time, and a per-OS CI job that fail-fasts hides which one broke. Run the whole affected test project locally, not a name-filtered subset.
+
 ## Never Widen an Obsolete API
 
 When a member gated under `#if` carries `[Obsolete]` (or is otherwise a deprecated back-compat shim) and a *sibling* runtime exposes it on more platforms, **do not "fix the inconsistency" by widening the obsolete member to the missing platforms.** Obsolete APIs are deprecated paths we want consumers off of — adding them to a backend that never had them plants a fresh dead surface in new code. Leave the gate at its current footprint and add a code comment explaining it is intentionally not widened. Two sibling runtimes disagreeing on which platforms carry an obsolete member (e.g. one gated `#if !SKIA`, another only `#if XNALIKE`) is not itself the bug — comment both as intentional rather than widening the narrower one to match. This is the one asymmetry the boyscout/"two platforms agree, the outlier is wrong" heuristics do **not** apply to — for obsolete members, the narrower footprint wins.
