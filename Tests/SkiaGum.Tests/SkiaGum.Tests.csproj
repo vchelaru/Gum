@@ -34,4 +34,18 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
+
+	<!-- Bundled, permissively-licensed font (already vendored under Themes/) for golden-image tests that
+	     render text. Text renders through whatever font family is actually installed on the machine, so a
+	     test that requests a system font like "Arial" is not reproducible across CI runners: the macOS
+	     Actions image has no Arial, so it silently falls back to a different typeface with different glyph
+	     outlines, blowing past the pixel tolerance (issue #3692's TextCustomizationGoldenImageTests). Tests
+	     that render text must instead install this font's SKTypeface directly via a custom
+	     Topten.RichTextKit.FontMapper (see TextCustomizationGoldenImageTests) rather than relying on
+	     FontName/system font resolution. -->
+	<ItemGroup>
+		<None Include="GoldenImages\Fonts\**\*.ttf">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 </Project>
