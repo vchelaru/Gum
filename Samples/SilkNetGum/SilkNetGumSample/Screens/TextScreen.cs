@@ -8,8 +8,9 @@ using SkiaSharp;
 namespace SilkNetGum.Screens;
 
 // Companion to Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/TextScreen.cs (#3414). By policy
-// the three text samples are kept feature- and content-identical and carry NO descriptive section
-// labels — each demo's own text shows AND names what it is. This SilkNetGum screen is still a
+// the three text samples are kept feature-, content-, AND section-order-identical (a new section goes
+// in the SAME position in both files, not just present) and carry NO descriptive section labels —
+// each demo's own text shows AND names what it is. This SilkNetGum screen is still a
 // separate, non-linked file for now (a later step folds all three into one shared source). Sections
 // that are genuinely Skia-specific — standalone renderable outline / drop shadow / blend
 // (#3674/#3675/#3676), RichTextKit overflow (#3677), and MaxLettersToShow (#3678) — exercise the

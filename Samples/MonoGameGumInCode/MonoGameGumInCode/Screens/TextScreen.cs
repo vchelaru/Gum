@@ -30,7 +30,8 @@ namespace MonoGameGumInCode.Screens;
 // Samples/raylib/GumTest.csproj via <Compile Include ... Link>; this file is the only copy for
 // MonoGame + raylib.
 //
-// Policy: the MonoGame/raylib and SilkNetGum text samples are kept feature- and content-identical,
+// Policy: the MonoGame/raylib and SilkNetGum text samples are kept feature-, content-, AND
+// section-order-identical (a new section goes in the SAME position in both files, not just present),
 // and carry NO descriptive section labels — each demo's own text shows AND names what it is. The
 // SilkNetGum mirror (Samples/SilkNetGum/SilkNetGumSample/Screens/TextScreen.cs) is still a separate,
 // non-linked file for now. Only genuinely backend-specific things differ here, gated `#if RAYLIB`:
@@ -116,8 +117,6 @@ internal class TextScreen : FrameworkElement
         container.Children.Add(withOutline);
 
         BuildTextParitySection(container);
-
-        AddOverflowSection(container);
     }
 
     // Text parity features (#3432): Blend, per-instance TextRenderingPositionMode override, and
@@ -126,6 +125,9 @@ internal class TextScreen : FrameworkElement
     private static void BuildTextParitySection(ContainerRuntime container)
     {
         AddBlendOnTextSection(container);
+        // Placed right after the blend block to match the SilkNetGumSample's section ORDER — the text
+        // samples must stay identical in order, not just content.
+        AddOverflowSection(container);
         AddTextureFilterSection(container);
 
         // --- Per-instance TextRenderingPositionMode override, at a fractional origin ---
