@@ -352,4 +352,86 @@ public class CameraTests : BaseTestClass
         screenX.ShouldBe(100);
         screenY.ShouldBe(150);
     }
+
+    // The tests above only prove GetTransformationMatrix round-trips through its own inverse
+    // (SetFromMatrix) or through ScreenToWorld/WorldToScreen. A self-consistent-but-wrong formula
+    // (e.g. a sign flip or a scale error that cancels itself out under inversion) would pass all of
+    // them. These pin the actual matrix values against independently hand-computed numbers instead.
+
+    [Fact]
+    public void GetTransformationMatrix_TopLeftMode_ScalesByZoom()
+    {
+        // TopLeft, X=Y=0 isolates the scale terms from the translation math below.
+        Camera _sut = new Camera();
+        _sut.ClientWidth = 800;
+        _sut.ClientHeight = 600;
+        _sut.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
+        _sut.X = 0;
+        _sut.Y = 0;
+        _sut.Zoom = 4; // mirrors the MonoGame tutorial's "zoom in 4x on a quarter-size canvas" setup
+
+        Matrix4x4 matrix = _sut.GetTransformationMatrix();
+
+        matrix.M11.ShouldBe(4);
+        matrix.M22.ShouldBe(4);
+    }
+
+    [Fact]
+    public void GetTransformationMatrix_TopLeftMode_TranslationIsCameraPositionScaledByZoom()
+    {
+        // TopLeft mode composes as Translate(-X,-Y) * Scale(Zoom), so the translation stored in the
+        // resulting matrix is -X*Zoom / -Y*Zoom, not just -X/-Y. Values chosen to divide evenly so
+        // the ((int)(x*zoom))/zoom truncation inside GetTransformationMatrix is a no-op.
+        Camera _sut = new Camera();
+        _sut.ClientWidth = 800;
+        _sut.ClientHeight = 600;
+        _sut.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
+        _sut.X = 10;
+        _sut.Y = 20;
+        _sut.Zoom = 4;
+
+        Matrix4x4 matrix = _sut.GetTransformationMatrix();
+
+        matrix.M11.ShouldBe(4);
+        matrix.M22.ShouldBe(4);
+        matrix.M41.ShouldBe(-40); // -X * Zoom
+        matrix.M42.ShouldBe(-80); // -Y * Zoom
+    }
+
+    [Fact]
+    public void GetTransformationMatrix_CenterMode_TranslationIncludesClientCenterOffset()
+    {
+        // Center mode additionally bakes in a translation by (ClientWidth/2, ClientHeight/2) — but
+        // only when !RendererSettings.UsingEffect (see Camera.GetTransformationMatrix's UsingEffect
+        // branch). UseBasicEffectRendering defaults to true, which makes UsingEffect true and skips
+        // the center-translation branch entirely, so it must be forced false here (restored after)
+        // for this test to actually exercise the center-offset math instead of silently degrading to
+        // the same formula as TopLeft mode.
+        bool _previousUseBasicEffect = RenderingLibrary.Graphics.RendererSettings.UseBasicEffectRendering;
+        try
+        {
+            RenderingLibrary.Graphics.RendererSettings.UseBasicEffectRendering = false;
+
+            // Even ClientWidth/Height avoids the odd-dimension half-pixel adjustment branch so this
+            // pins the core formula in isolation.
+            Camera _sut = new Camera();
+            _sut.ClientWidth = 800;
+            _sut.ClientHeight = 600;
+            _sut.CameraCenterOnScreen = CameraCenterOnScreen.Center;
+            _sut.X = 100;
+            _sut.Y = 50;
+            _sut.Zoom = 2;
+
+            Matrix4x4 matrix = _sut.GetTransformationMatrix();
+
+            matrix.M11.ShouldBe(2);
+            matrix.M22.ShouldBe(2);
+            matrix.M41.ShouldBe(200); // ClientWidth/2 (400) - X*Zoom (200)
+            matrix.M42.ShouldBe(200); // ClientHeight/2 (300) - Y*Zoom (100)
+        }
+        finally
+        {
+            RenderingLibrary.Graphics.RendererSettings.UseBasicEffectRendering = _previousUseBasicEffect;
+        }
+    }
 }
