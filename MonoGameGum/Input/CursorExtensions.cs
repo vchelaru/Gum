@@ -289,7 +289,7 @@ public static class CursorExtensions
 
             var context = $"Cursor Gum coordinates: ({helperX:0.#},{helperY:0.#}).";
 
-            var camera = RenderingLibrary.SystemManagers.Default?.Renderer?.Camera;
+            var camera = global::RenderingLibrary.SystemManagers.Default?.Renderer?.Camera;
             if (camera != null)
             {
                 context += $" Gum camera zoom: {camera.Zoom:0.###}.";
