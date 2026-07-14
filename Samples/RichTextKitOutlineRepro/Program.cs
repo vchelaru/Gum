@@ -33,7 +33,7 @@ unsafe class Program
     private static GRBackendRenderTarget? renderTarget;
 
     private const int Width = 1100;
-    private const int Height = 420;
+    private const int Height = 560;
     // EXACT values from the Gum line that showed the artifact -- Samples/.../Screens/TextScreen.cs:
     //   withOutline.FontSize = 24;  withOutline.OutlineThickness = 2;  (font defaults to Arial)
     // GetStyle emits FontSize = 24 * GlobalTextScale(1) * FontScale(1) = 24 and HaloWidth = 2 verbatim.
@@ -133,6 +133,33 @@ unsafe class Program
 
         y = DrawLabel("3) Manual glyph stroke, StrokeJoin.Round:", x, y) + 4;
         ManualStroke(x, y, SKStrokeJoin.Round);
+        y += FontSize * 2.2f;
+
+        y = DrawLabel("4) 8-way dilate (black text at 8 offsets + white fill) -- guaranteed-uniform reference:", x, y) + 4;
+        DilateOutline(x, y);
+    }
+
+    // Draws a uniform outline WITHOUT a centered stroke: paint the glyphs in black at 8 offsets around
+    // a ring of radius OutlineWidth, then the white fill on top. No stroke, no join, no fill-eats-stroke
+    // asymmetry -- the outline width is identical on every side. This is the candidate SkiaGum fix if
+    // the halo/stroke panels emboss.
+    private static void DilateOutline(float x, float y)
+    {
+        using var font = new SKFont(Arial, FontSize);
+        using var blob = SKTextBlob.Create(SampleText, font);
+        float baseline = y + FontSize * 0.9f;
+
+        using var black = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill, Color = SKColors.Black };
+        for (int i = 0; i < 8; i++)
+        {
+            double angle = i * Math.PI / 4.0;
+            float dx = (float)(Math.Cos(angle) * OutlineWidth);
+            float dy = (float)(Math.Sin(angle) * OutlineWidth);
+            canvas.DrawText(blob, x + dx, baseline + dy, black);
+        }
+
+        using var white = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill, Color = SKColors.White };
+        canvas.DrawText(blob, x, baseline, white);
     }
 
     private static float DrawLabel(string text, float x, float y)
