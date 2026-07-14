@@ -39,24 +39,11 @@ internal class TextScreen : FrameworkElement
         textRuntime.Text = "Hi, I'm default text";
         container.Children.Add(textRuntime);
 
-        AddSectionLabel(container,
-            "Baked drop shadow requires KernSmith (MonoGame / KNI / Raylib). SkiaGum stores HasDropshadow but does not bake a shadow atlas — rows below show plain text for layout parity only:");
-
-        TextRuntime shadowDefault = new TextRuntime();
-        shadowDefault.Text = "Soft baked shadow (not on Skia)";
-        shadowDefault.FontSize = 24;
-        shadowDefault.HasDropshadow = true;
-        container.Children.Add(shadowDefault);
-
-        TextRuntime shadowColored = new TextRuntime();
-        shadowColored.Text = "Pink shadow (not on Skia)";
-        shadowColored.FontSize = 24;
-        shadowColored.HasDropshadow = true;
-        shadowColored.DropshadowColor = new SKColor(220, 40, 160, 220);
-        shadowColored.DropshadowOffsetX = 2;
-        shadowColored.DropshadowOffsetY = 4;
-        shadowColored.DropshadowBlur = 4;
-        container.Children.Add(shadowColored);
+        // Skia can't bake a KernSmith shadow atlas, so the baked-drop-shadow rows the MonoGame screen
+        // shows here have no Skia equivalent and are omitted rather than shown as "(not on Skia)"
+        // filler. BBCode inline styling (#3679) is the Skia-supported feature that takes this
+        // near-the-top slot instead, matching where the MonoGame screen shows its BBCode rows.
+        AddBbCodeSection(container);
 
         TextRuntime withOutline = new TextRuntime();
         withOutline.Text = "OutlineThickness = 2 (Skia path)";
@@ -75,8 +62,6 @@ internal class TextScreen : FrameworkElement
         AddOverflowSection(container);
 
         AddMaxLettersToShowSection(container);
-
-        AddBbCodeSection(container);
     }
 
     // BBCode inline styling on the SkiaGum.Text renderable (#3679): a single Text whose markup mixes
