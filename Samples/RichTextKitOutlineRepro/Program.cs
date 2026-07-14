@@ -33,7 +33,7 @@ unsafe class Program
     private static GRBackendRenderTarget? renderTarget;
 
     private const int Width = 1100;
-    private const int Height = 560;
+    private const int Height = 380;
     // EXACT values from the Gum line that showed the artifact -- Samples/.../Screens/TextScreen.cs:
     //   withOutline.FontSize = 24;  withOutline.OutlineThickness = 2;  (font defaults to Arial)
     // GetStyle emits FontSize = 24 * GlobalTextScale(1) * FontScale(1) = 24 and HaloWidth = 2 verbatim.
@@ -125,15 +125,15 @@ unsafe class Program
 
         y = DrawLabel("1) RichTextKit halo -- identical to SkiaGum.Text.GetStyle:", x, y) + 4;
         RtkHalo(x, y);
-        y += FontSize * 2.2f;
+        y += FontSize * 1.4f;
 
         y = DrawLabel("2) Manual glyph stroke, StrokeJoin.Miter:", x, y) + 4;
         ManualStroke(x, y, SKStrokeJoin.Miter);
-        y += FontSize * 2.2f;
+        y += FontSize * 1.4f;
 
         y = DrawLabel("3) Manual glyph stroke, StrokeJoin.Round:", x, y) + 4;
         ManualStroke(x, y, SKStrokeJoin.Round);
-        y += FontSize * 2.2f;
+        y += FontSize * 1.4f;
 
         y = DrawLabel("4) 8-way dilate (black text at 8 offsets + white fill) -- guaranteed-uniform reference:", x, y) + 4;
         DilateOutline(x, y);
