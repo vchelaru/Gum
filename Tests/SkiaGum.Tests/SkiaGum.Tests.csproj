@@ -27,4 +27,11 @@
 	<ItemGroup>
 		<Using Include="Xunit" />
 	</ItemGroup>
+
+	<!-- Golden-image baselines for GoldenImages/*Tests.cs (pixel-diff regression tests). -->
+	<ItemGroup>
+		<None Include="GoldenImages\Baselines\**\*.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 </Project>
