@@ -47,17 +47,18 @@ internal class TextScreen : FrameworkElement
         wavy.Text = "Wavy rainbow text";
         container.Children.Add(wavy);
 
-        // Baked drop shadow (TextRuntime.HasDropshadow) — the MonoGame/KNI/Raylib font-atlas path.
-        // SkiaGum doesn't use KernSmith, so these render as plain text here; present for content parity
-        // with the MonoGame screen (the standalone SkiaGum drop shadow is a separate renderable path).
+        // Drop shadow (TextRuntime.HasDropshadow) — the cross-backend shadow API. MonoGame/KNI/Raylib
+        // bake it into the font atlas via KernSmith; on SkiaGum (no atlas) SystemManagers.UpdateFonts
+        // maps it onto the renderable's standalone ImageFilter shadow, so the same API renders here too.
+        // OutlineThickness (#3675) renders via RichTextKit's halo. Both work without an explicit Font.
         TextRuntime shadowDefault = new TextRuntime();
-        shadowDefault.Text = "Soft baked shadow";
+        shadowDefault.Text = "Soft shadow";
         shadowDefault.FontSize = 24;
         shadowDefault.HasDropshadow = true;
         container.Children.Add(shadowDefault);
 
         TextRuntime shadowColored = new TextRuntime();
-        shadowColored.Text = "Pink baked shadow, offset, and blurred";
+        shadowColored.Text = "Pink shadow, offset, and blurred";
         shadowColored.FontSize = 24;
         shadowColored.HasDropshadow = true;
         shadowColored.DropshadowColor = new SKColor(220, 40, 160, 220);
@@ -65,6 +66,19 @@ internal class TextScreen : FrameworkElement
         shadowColored.DropshadowOffsetY = 4;
         shadowColored.DropshadowBlur = 4;
         container.Children.Add(shadowColored);
+
+        TextRuntime shadowOutline = new TextRuntime();
+        shadowOutline.Text = "Shadow and outline";
+        shadowOutline.FontSize = 24;
+        shadowOutline.OutlineThickness = 2;
+        shadowOutline.HasDropshadow = true;
+        container.Children.Add(shadowOutline);
+
+        TextRuntime withOutline = new TextRuntime();
+        withOutline.Text = "I am text with OutlineThickness = 2";
+        withOutline.FontSize = 24;
+        withOutline.OutlineThickness = 2;
+        container.Children.Add(withOutline);
 
         AddBlendOnTextSection(container);
 

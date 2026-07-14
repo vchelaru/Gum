@@ -87,13 +87,13 @@ internal class TextScreen : FrameworkElement
         container.Children.Add(customMarkup);
 
         var shadowDefault = new TextRuntime();
-        shadowDefault.Text = "Soft baked shadow";
+        shadowDefault.Text = "Soft shadow";
         shadowDefault.FontSize = 24;
         shadowDefault.HasDropshadow = true;
         container.Children.Add(shadowDefault);
 
         var shadowColored = new TextRuntime();
-        shadowColored.Text = "Pink baked shadow, offset, and blurred";
+        shadowColored.Text = "Pink shadow, offset, and blurred";
         shadowColored.FontSize = 24;
         shadowColored.HasDropshadow = true;
         shadowColored.DropshadowColor = new Color(220, 40, 160, 220);
@@ -103,7 +103,7 @@ internal class TextScreen : FrameworkElement
         container.Children.Add(shadowColored);
 
         var shadowOutline = new TextRuntime();
-        shadowOutline.Text = "Baked shadow and outline";
+        shadowOutline.Text = "Shadow and outline";
         shadowOutline.FontSize = 24;
         shadowOutline.OutlineThickness = 2;
         shadowOutline.HasDropshadow = true;
