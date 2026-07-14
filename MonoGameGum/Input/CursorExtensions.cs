@@ -2,8 +2,22 @@
 #define XNALIKE
 #endif
 
+#if FRB
+// FRB1 links this file and compiles it with the FRB constant defined. Its cursor is the
+// concrete FlatRedBall.Gui.Cursor (which does not implement Gum's ICursor), and its Forms
+// controls live in FlatRedBall.Forms.Controls.
+using FlatRedBall.Forms.Controls;
+using CursorType = FlatRedBall.Gui.Cursor;
+// FRB does not compile Gum's InteractiveGue; its event members (HasEvents, ExposeChildrenEvents,
+// FormsControlAsObject, IsEnabled) live on GraphicalUiElement instead. This alias — the same one
+// the shared Forms control files use — lets the diagnostic body compile unchanged. In the
+// MonoGameGum build InteractiveGue stays the real subclass (resolved via using Gum.Wireframe).
+using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+#else
 using Gum.Forms;
 using Gum.Forms.Controls;
+using CursorType = Gum.Wireframe.ICursor;
+#endif
 using Gum.Wireframe;
 using RenderingLibrary;
 using System;
@@ -16,15 +30,18 @@ using System.Threading.Tasks;
 #if SOKOL
 // Sokol keeps its own GumService (no Gum-namespace move there).
 using GumServiceType = SokolGum.GumService;
-#else
+#elif !FRB
 // GumService lives in the Gum namespace (issue #3119). Any backend other than the
 // un-migrated Sokol uses it — including future backends by default. The alias also
 // dodges the [Obsolete] legacy shim that unqualified lookup would otherwise find
 // through this file's enclosing MonoGameGum namespace in the XNALIKE build.
 using GumServiceType = Gum.GumService;
+// FRB has no GumService; it roots its UI in the GuiManager (see the #if FRB branches below).
 #endif
 
-#if XNALIKE
+#if FRB
+namespace FlatRedBall.Gui;
+#elif XNALIKE
 namespace MonoGameGum.Input;
 #elif RAYLIB
 namespace Gum.Input;
@@ -32,7 +49,15 @@ namespace Gum.Input;
 namespace Gum.Input;
 #endif
 
-public static class CursorExtensions 
+// The diagnostic logic below is shared verbatim between MonoGameGum and FRB1 (which links this
+// file). The cursor type differs by backend — ICursor vs FlatRedBall.Gui.Cursor — via the
+// CursorType alias; only root enumeration and event-root tracking are #if FRB-gated. The FRB
+// class name differs to avoid colliding with FlatRedBall.Gui.CursorExtensions.
+#if FRB
+public static class CursorEventFailureExtensions
+#else
+public static class CursorExtensions
+#endif
 {
     /// <summary>
     /// Returns information about why events may not be happening for the argument FrameworkElement.
@@ -40,7 +65,7 @@ public static class CursorExtensions
     /// <param name="cursor">A reference to the cursor, such as GumService.Default.Cursor</param>
     /// <param name="frameworkElement">The FrameworkElement such as a Button.</param>
     /// <returns>A string explaining why events are not being raised, or null if events should be happening.</returns>
-    public static string? GetEventFailureReason(this ICursor cursor, FrameworkElement frameworkElement)
+    public static string? GetEventFailureReason(this CursorType cursor, FrameworkElement frameworkElement)
     {
         if(frameworkElement == null)
         {
@@ -62,7 +87,7 @@ public static class CursorExtensions
     /// <param name="cursor">A reference to the cursor, such as GumService.Default.Cursor</param>
     /// <param name="interactiveGue">The InteractiveGue, which is usually a Visual for a Forms control.</param>
     /// <returns>A string explaining why events are not being raised, or null if events should be happening.</returns>
-    public static string? GetEventFailureReason(this ICursor cursor, InteractiveGue interactiveGue)
+    public static string? GetEventFailureReason(this CursorType cursor, InteractiveGue interactiveGue)
     {
         if(interactiveGue == null)
         {
@@ -118,9 +143,14 @@ public static class CursorExtensions
         {
             if(!IsInLastEventRoots(interactiveGue))
             {
+#if FRB
+                return $"The {NameOrType(interactiveGue)} does not have EffectiveManagers, meaning it has not been " +
+                    $"added to the GuiManager. Call Show (or add it to a shown parent) so it is registered for Cursor interaction.";
+#else
                 return $"The {NameOrType(interactiveGue)} does not have EffectiveManagers and was not included " +
                     $"in the roots passed to GumService.Update(). Either add it to managers or include it (or a parent) " +
                     $"in the roots passed to Update.";
+#endif
             }
             // If it is in the last event roots, it's a GumBatch scenario — skip the managers
             // check and continue with the remaining diagnostics.
@@ -143,16 +173,22 @@ public static class CursorExtensions
 
             if(item is InteractiveGue itemAsInteractiveGue)
             {
+#if FRB
+                // FlatRedBall.Gui.Cursor is not an ICursor, so the ICursor-typed HasCursorOver
+                // overload is unavailable; use the geometric (x, y) overload instead.
+                if(!itemAsInteractiveGue.HasCursorOver(cursor.XRespectingGumZoomAndBounds(), cursor.YRespectingGumZoomAndBounds()))
+#else
                 if(!itemAsInteractiveGue.HasCursorOver(cursor))
+#endif
                 {
-                    return $"Item {item} does not have the cursor over it. " + GetNotOverBoundsInformation(itemAsInteractiveGue) + "\n" + GetStack(itemAsInteractiveGue);
+                    return $"Item {item} does not have the cursor over it. " + GetNotOverBoundsInformation(itemAsInteractiveGue) + "\n" + GetCursorContext() + GetStack(itemAsInteractiveGue);
                 }
             }
             else
             {
                 if(!item.HasCursorOver(cursor.XRespectingGumZoomAndBounds(), cursor.YRespectingGumZoomAndBounds()))
                 {
-                    return $"Item {item} does not have the cursor over it. " + GetNotOverBoundsInformation(item) + "\n" + GetStack(item);
+                    return $"Item {item} does not have the cursor over it. " + GetNotOverBoundsInformation(item) + "\n" + GetCursorContext() + GetStack(item);
                 }
             }
 
@@ -183,17 +219,21 @@ public static class CursorExtensions
 
         }
 
-        if(cursor.VisualOver != null && cursor.VisualOver != interactiveGue)
+        // Normalize the cursor's "over" visual to a GraphicalUiElement. On MonoGameGum this is an
+        // InteractiveGue (upcast); under FRB the cursor exposes it as an IWindow, which is a
+        // GraphicalUiElement at runtime (GraphicalUiElement implements IWindow in the FRB build).
+        var visualOver = cursor.VisualOver as GraphicalUiElement;
+        if(visualOver != null && visualOver != interactiveGue)
         {
-            if(IsDescendantOf(cursor.VisualOver, interactiveGue))
+            if(IsDescendantOf(visualOver, interactiveGue))
             {
                 return $"The cursor is not directly over {NameOrType(interactiveGue)}, " +
-                    $"but is over its child {NameOrType(cursor.VisualOver)}. " +
+                    $"but is over its child {NameOrType(visualOver)}. " +
                     $"A child is receiving events instead of the parent.\n" +
                     GetStack(interactiveGue);
             }
-            return $"The cursor is over {NameOrType(cursor.VisualOver)} instead of {NameOrType(interactiveGue)}. " +
-                DescribeRelationship(cursor.VisualOver as GraphicalUiElement, interactiveGue);
+            return $"The cursor is over {NameOrType(visualOver)} instead of {NameOrType(interactiveGue)}. " +
+                DescribeRelationship(visualOver, interactiveGue);
         }
 
         var rootParent = interactiveGue.GetTopParent();
@@ -201,6 +241,23 @@ public static class CursorExtensions
 
         if(!isInEventRoots)
         {
+#if FRB
+            // FRB roots its UI in the GuiManager rather than in GumService's Root/PopupRoot/ModalRoot.
+            var rootAsWindow = rootParent as IWindow;
+            if(rootAsWindow == null ||
+                (!GuiManager.Windows.Contains(rootAsWindow) && !GuiManager.DominantWindows.Contains(rootAsWindow)))
+            {
+                return $"The object must ultimately be added to the GuiManager, but it is not. The top parent {rootParent} is an orphan object";
+            }
+
+            // A DominantWindow behaves like a modal: while one exists, the cursor cannot interact
+            // with anything that is not the dominant window (or under it).
+            var dominant = GuiManager.DominantWindows.FirstOrDefault();
+            if(dominant != null && dominant != rootAsWindow)
+            {
+                return $"There is a dominant (modal) window that is blocking clicks to {interactiveGue}: {dominant}";
+            }
+#else
             var gumUI = GumServiceType.Default;
             if(rootParent != gumUI.Root && rootParent != gumUI.PopupRoot && rootParent != gumUI.ModalRoot)
             {
@@ -213,11 +270,55 @@ public static class CursorExtensions
 
                 return $"There is a modal that is blocking clicks to {interactiveGue}: {firstVisible}";
             }
+#endif
         }
 
         return null;
 
         string GetStack(GraphicalUiElement itemInStack) => GetAncestorTree(interactiveGue, itemInStack);
+
+        // Reports the coordinate space the hit-test ran in. When a control looks like it is under the
+        // cursor but still fails the over-test, the culprit is almost always a mismatch between where
+        // the UI is drawn and the coordinates Gum hit-tests in — a non-1 camera zoom, a canvas that
+        // does not match the window, or the UI being drawn through a transformed/perspective camera or
+        // render target. Surfacing zoom + canvas here makes those cases self-evident.
+        string GetCursorContext()
+        {
+            var helperX = cursor.XRespectingGumZoomAndBounds();
+            var helperY = cursor.YRespectingGumZoomAndBounds();
+
+            var context = $"Cursor Gum coordinates: ({helperX:0.#},{helperY:0.#}).";
+
+            var camera = global::RenderingLibrary.SystemManagers.Default?.Renderer?.Camera;
+            if (camera != null)
+            {
+                context += $" Gum camera zoom: {camera.Zoom:0.###}.";
+            }
+
+            context += $" Canvas: {GraphicalUiElement.CanvasWidth:0.#}x{GraphicalUiElement.CanvasHeight:0.#}.\n";
+
+            // The failure above compared the zoom-adjusted cursor against the element's bounds. If the RAW
+            // (screen-scale) cursor would have been over the element but the zoom-adjusted one is not, the UI
+            // is drawn at screen scale while hit-testing runs through the camera zoom — the precise signature
+            // of the zoom/camera decoupling — so we say so instead of leaving the reader to reason it out.
+#if FRB
+            float rawX = cursor.ScreenX;
+            float rawY = cursor.ScreenY;
+#else
+            float rawX = cursor.X;
+            float rawY = cursor.Y;
+#endif
+            var zoom = camera?.Zoom ?? 1f;
+            bool rawScreenIsOver = interactiveGue.IsPointInside(rawX, rawY);
+            bool adjustedIsOver = interactiveGue.IsPointInside(helperX, helperY);
+            var decoupling = DescribeCoordinateDecoupling(rawScreenIsOver, adjustedIsOver, rawX, rawY, helperX, helperY, zoom);
+
+            context += decoupling ?? "If the control visually appears under the cursor but these coordinates place it " +
+                "elsewhere, the UI is likely drawn through a transformed camera (zoom / perspective / render target) that " +
+                "Gum's hit-testing does not see. Put the UI on a screen-space (2D) layer, or set Cursor.TransformMatrix.";
+            context += "\n";
+            return context;
+        }
     }
 
     /// <summary>
@@ -242,6 +343,8 @@ public static class CursorExtensions
             sb.Append(new string(' ', i * 2));
             sb.Append("└-");
             sb.Append(NameOrType(item));
+            sb.Append(' ');
+            sb.Append(GetAbsoluteBoundsInformation(item));
             if (item == highlighted)
             {
                 sb.Append(" <---- THIS");
@@ -263,6 +366,51 @@ public static class CursorExtensions
         return string.IsNullOrEmpty(gue.Name)
             ? $"[{typeName}]"
             : $"[{typeName} named {gue.Name}]";
+    }
+
+    /// <summary>
+    /// Formats an element's absolute (world-space) bounds for the ancestor tree, and appends the
+    /// layer of its top parent when one is present. These bounds are world-space; if the element
+    /// is on a layer with an offset camera, its rendered (and clicked) position can differ from
+    /// these values — which is the usual reason a control that looks correctly placed still fails
+    /// the cursor-over test.
+    /// </summary>
+    static string GetAbsoluteBoundsInformation(GraphicalUiElement gue)
+    {
+        var x = gue.GetAbsoluteX();
+        var y = gue.GetAbsoluteY();
+        var width = gue.GetAbsoluteWidth();
+        var height = gue.GetAbsoluteHeight();
+
+        var info = $"abs=({x:0.#},{y:0.#} {width:0.#}x{height:0.#})";
+
+        var layer = (gue.GetTopParent() as GraphicalUiElement)?.Layer;
+        if (layer != null)
+        {
+            info += $" layer={layer}";
+        }
+
+        return info;
+    }
+
+    /// <summary>
+    /// Detects when the UI is drawn at raw screen scale but hit-tested through a camera zoom/transform.
+    /// If the <em>raw</em> screen cursor lands inside the element but the <em>zoom-adjusted</em> cursor
+    /// (what hit-testing actually uses) does not, the two paths disagree — the UI is drawn in one space
+    /// and hit-tested in another — and the returned string names it. Returns <c>null</c> otherwise.
+    /// </summary>
+    public static string? DescribeCoordinateDecoupling(
+        bool rawScreenIsOver, bool adjustedIsOver,
+        float rawX, float rawY, float adjustedX, float adjustedY, float cameraZoom)
+    {
+        if (rawScreenIsOver && !adjustedIsOver)
+        {
+            return "WARNING: hit-testing is decoupled from where the UI is drawn. The raw cursor " +
+                $"({rawX:0.#},{rawY:0.#}) is over the element, but the zoom-adjusted cursor ({adjustedX:0.#},{adjustedY:0.#}) " +
+                $"is not — the UI is drawn at screen scale while hit-testing runs through a camera zoom of {cameraZoom:0.###}. " +
+                "Put the UI on a screen-space (2D) layer, or set Cursor.TransformMatrix.";
+        }
+        return null;
     }
 
     private static string DescribeRelationship(GraphicalUiElement? a, GraphicalUiElement b)
@@ -326,18 +474,20 @@ public static class CursorExtensions
 
     private static GraphicalUiElement? GetInvisibleParent(GraphicalUiElement visual)
     {
-        if(visual.Parent as GraphicalUiElement == null)
+        // Walk every ancestor, including the topmost (whose Parent is null). The topmost element is
+        // often a window registered directly with the manager, and managers skip invisible windows —
+        // so its own Visible must be tested. Checking Parent-is-null before Visible would return at
+        // the root without ever testing it, letting an invisible top-level element slip through.
+        var current = visual.Parent as GraphicalUiElement;
+        while (current != null)
         {
-            return null;
+            if (current.Visible == false)
+            {
+                return current;
+            }
+            current = current.Parent as GraphicalUiElement;
         }
-        else if(visual.Visible == false)
-        {
-            return visual;
-        }
-        else
-        {
-            return GetInvisibleParent(visual.Parent as GraphicalUiElement);
-        }
+        return null;
     }
 
     private static GraphicalUiElement? GetDisabledParent(GraphicalUiElement visual)
@@ -393,7 +543,7 @@ public static class CursorExtensions
     /// <c>null</c> if exactly one match was found and its events should be working;
     /// otherwise a string describing the match(es) and any event failures.
     /// </returns>
-    public static string? GetEventFailureReason<T>(this ICursor cursor) where T : FrameworkElement
+    public static string? GetEventFailureReason<T>(this CursorType cursor) where T : FrameworkElement
         => GetEventFailureReasonForMatches(cursor, typeof(T), name: null);
 
     /// <summary>
@@ -401,7 +551,7 @@ public static class CursorExtensions
     /// whose name matches <paramref name="name"/> and returns the event-failure reason for it.
     /// If multiple elements match, diagnostics for each are returned in a single string.
     /// </summary>
-    public static string? GetEventFailureReason(this ICursor cursor, string name)
+    public static string? GetEventFailureReason(this CursorType cursor, string name)
         => GetEventFailureReasonForMatches(cursor, type: null, name: name);
 
     /// <summary>
@@ -410,10 +560,10 @@ public static class CursorExtensions
     /// the event-failure reason for it. If multiple elements match, diagnostics for each are
     /// returned in a single string.
     /// </summary>
-    public static string? GetEventFailureReason<T>(this ICursor cursor, string name) where T : FrameworkElement
+    public static string? GetEventFailureReason<T>(this CursorType cursor, string name) where T : FrameworkElement
         => GetEventFailureReasonForMatches(cursor, typeof(T), name);
 
-    private static string? GetEventFailureReasonForMatches(ICursor cursor, Type? type, string? name)
+    private static string? GetEventFailureReasonForMatches(CursorType cursor, Type? type, string? name)
     {
         var matches = FindFrameworkElements(type, name);
 
@@ -473,11 +623,30 @@ public static class CursorExtensions
     private static List<FrameworkElement> FindFrameworkElements(Type? type, string? name)
     {
         var results = new List<FrameworkElement>();
+
+#if FRB
+        // FRB registers shown UI with the GuiManager rather than GumService roots.
+        foreach (var window in GuiManager.Windows)
+        {
+            if (window is GraphicalUiElement gue)
+            {
+                Collect(gue, results, type, name);
+            }
+        }
+        foreach (var window in GuiManager.DominantWindows)
+        {
+            if (window is GraphicalUiElement gue)
+            {
+                Collect(gue, results, type, name);
+            }
+        }
+#else
         var gumUI = GumServiceType.Default;
 
         Collect(gumUI.Root, results, type, name);
         if (gumUI.PopupRoot != null) Collect(gumUI.PopupRoot, results, type, name);
         if (gumUI.ModalRoot != null) Collect(gumUI.ModalRoot, results, type, name);
+#endif
 
         return results;
 
@@ -510,6 +679,11 @@ public static class CursorExtensions
 
     private static bool IsInLastEventRoots(GraphicalUiElement element)
     {
+#if FRB
+        // FRB does not track per-frame event roots the way MonoGameGum's FormsUtilities does;
+        // shown elements are registered with the GuiManager, which the orphan check above uses.
+        return false;
+#else
         var lastRoots = FormsUtilities.LastEventRoots;
         if(lastRoots.Count == 0)
         {
@@ -525,5 +699,6 @@ public static class CursorExtensions
             }
         }
         return false;
+#endif
     }
 }

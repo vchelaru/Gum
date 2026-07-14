@@ -26,6 +26,46 @@ public class CursorExtensionsTests : BaseTestClass
     }
 
     [Fact]
+    public void GetAncestorTree_ShouldIncludeAbsoluteBoundsForEachNode()
+    {
+        InteractiveGue parent = CreateVisibleElement("ParentContainer");
+        InteractiveGue child = CreateVisibleElement("ChildButton");
+        child.Parent = parent;
+
+        string tree = CursorExtensions.GetAncestorTree(child);
+
+        tree.ShouldContain("ParentContainer");
+        tree.ShouldContain("ChildButton");
+        // Each node reports its absolute rectangle so layout mismatches (a child rendering
+        // outside its parent's bounds) are visible directly in the tree.
+        tree.ShouldContain("abs=(");
+    }
+
+    [Fact]
+    public void DescribeCoordinateDecoupling_ShouldReturnNull_WhenAdjustedCursorIsAlsoOver()
+    {
+        // Raw and zoom-adjusted cursor agree the cursor is over the element — no decoupling.
+        string? result = CursorExtensions.DescribeCoordinateDecoupling(
+            rawScreenIsOver: true, adjustedIsOver: true,
+            rawX: 100, rawY: 100, adjustedX: 100, adjustedY: 100, cameraZoom: 1);
+
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public void DescribeCoordinateDecoupling_ShouldWarn_WhenRawScreenOverButZoomAdjustedNot()
+    {
+        // The raw screen cursor is over the element (UI drawn at screen scale), but the zoom-adjusted
+        // cursor used by hit-testing is not — the signature of a camera zoom only the hit-test honors.
+        string? result = CursorExtensions.DescribeCoordinateDecoupling(
+            rawScreenIsOver: true, adjustedIsOver: false,
+            rawX: 36, rawY: 272, adjustedX: 9, adjustedY: 68, cameraZoom: 4);
+
+        result.ShouldNotBeNull();
+        result.ShouldContain("decoupled");
+    }
+
+    [Fact]
     public void GetEventFailureReason_ShouldContinuePastManagers_WhenInLastEventRoots()
     {
         // Simulate a GumBatch scenario: element has no managers but was
@@ -97,6 +137,84 @@ public class CursorExtensionsTests : BaseTestClass
         // Should give cursor-position info, not "EffectiveManagers"
         reason.ShouldNotContain("EffectiveManagers");
         reason.ShouldContain("cursor");
+    }
+
+    [Fact]
+    public void GetEventFailureReason_ShouldIncludeCoordinateContext_WhenCursorNotOverElement()
+    {
+        InteractiveGue element = CreateVisibleElement("OffscreenTarget");
+
+        Mock<ICursor> cursor = new();
+        cursor.Setup(x => x.XRespectingGumZoomAndBounds()).Returns(500);
+        cursor.Setup(x => x.YRespectingGumZoomAndBounds()).Returns(500);
+        cursor.Setup(x => x.X).Returns(500);
+        cursor.Setup(x => x.Y).Returns(500);
+
+        GumService.Default.Update(
+            new Microsoft.Xna.Framework.GameTime(),
+            new GraphicalUiElement[] { element });
+
+        string? reason = cursor.Object.GetEventFailureReason(element);
+
+        reason.ShouldNotBeNull();
+        // The failure surfaces the coordinate space the hit-test ran in, so a zoomed or otherwise
+        // transformed render (where the UI is not where Gum hit-tests) is diagnosable from the message.
+        reason.ShouldContain("Cursor Gum coordinates");
+        reason.ShouldContain("Canvas");
+    }
+
+    [Fact]
+    public void GetEventFailureReason_ShouldNotReportInvisible_WhenAllAncestorsVisible()
+    {
+        // Guard the invisible-ancestor walk against a false positive: a fully visible chain,
+        // including the parentless root, must never be reported as invisible.
+        InteractiveGue root = CreateVisibleElement("VisibleRootWindow");
+        InteractiveGue child = CreateVisibleElement("ClickableChild");
+        root.AddChild(child);
+
+        Mock<ICursor> cursor = new();
+        cursor.Setup(x => x.XRespectingGumZoomAndBounds()).Returns(50);
+        cursor.Setup(x => x.YRespectingGumZoomAndBounds()).Returns(50);
+        cursor.Setup(x => x.X).Returns(50);
+        cursor.Setup(x => x.Y).Returns(50);
+
+        GumService.Default.Update(
+            new Microsoft.Xna.Framework.GameTime(),
+            new GraphicalUiElement[] { root });
+
+        string? reason = cursor.Object.GetEventFailureReason(child);
+
+        if (reason != null)
+        {
+            reason.ShouldNotContain("invisible");
+        }
+    }
+
+    [Fact]
+    public void GetEventFailureReason_ShouldReportInvisibleRoot_WhenTopParentIsInvisible()
+    {
+        // The target and its chain are visible, but the ROOT ancestor (a top-level element whose
+        // Parent is null — as a window registered directly with a manager) is invisible. Managers
+        // skip invisible windows, so the target cannot raise events. The invisible-parent walk must
+        // report the invisible root; the earlier version reached the root and returned without ever
+        // checking the root's own Visible, so an invisible top-level element slipped through silently.
+        InteractiveGue root = CreateVisibleElement("InvisibleRootWindow");
+        InteractiveGue child = CreateVisibleElement("ClickableChild");
+        root.AddChild(child);
+
+        root.Visible = false;
+
+        Mock<ICursor> cursor = new();
+        cursor.Setup(x => x.XRespectingGumZoomAndBounds()).Returns(50);
+        cursor.Setup(x => x.YRespectingGumZoomAndBounds()).Returns(50);
+        cursor.Setup(x => x.X).Returns(50);
+        cursor.Setup(x => x.Y).Returns(50);
+
+        string? reason = cursor.Object.GetEventFailureReason(child);
+
+        reason.ShouldNotBeNull();
+        reason.ShouldContain("invisible");
+        reason.ShouldContain("InvisibleRootWindow");
     }
 
     [Fact]
