@@ -3,6 +3,7 @@ using RenderingLibrary.Graphics;
 using Shouldly;
 using SkiaGum;
 using SkiaGum.GueDeriving;
+using SkiaSharp;
 
 namespace SkiaGum.Tests.GueDeriving;
 
@@ -53,6 +54,22 @@ public class TextRuntimeTests
         TextRuntime clone = (TextRuntime)sut.Clone();
         clone.ShouldNotBeNull();
         clone.RenderableComponent.ShouldNotBeSameAs(sut.RenderableComponent);
+    }
+
+    #endregion
+
+    #region Color
+
+    [Fact]
+    public void Color_ShouldDefaultToWhite_MatchingMonoGameAndRaylib()
+    {
+        // MonoGame (RenderingLibrary.Graphics.Text: mRed/mGreen/mBlue/mAlpha = 255) and raylib
+        // (Renderables.Text: Color = Color.White) both default text to white; the SkiaGum renderable
+        // drifted to black. Parity: the outlier is corrected to white.
+        TextRuntime sut = new();
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.Color.ShouldBe(SKColors.White);
     }
 
     #endregion

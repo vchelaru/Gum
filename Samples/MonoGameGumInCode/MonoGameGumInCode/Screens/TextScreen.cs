@@ -56,7 +56,6 @@ internal class TextScreen : FrameworkElement
         textRuntime.Text = "Hi, I'm default text";
         container.Children.Add(textRuntime);
 
-        AddSectionLabel(container, "BBCode markup - inline color runs (#3471):");
         var colorMarkup = new TextRuntime();
         colorMarkup.FontSize = 24;
         colorMarkup.Text = "[Color=Red]Red[/Color] plain [Color=Lime]green[/Color] [Color=Cyan]cyan[/Color]";

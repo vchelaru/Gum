@@ -648,7 +648,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         Height = 32;
 
         this.Visible = true;
-        Color = SKColors.Black;
+        // White matches the MonoGame (RenderingLibrary.Graphics.Text) and raylib (Renderables.Text)
+        // renderable defaults; SkiaGum previously drifted to black, so a code-only `new TextRuntime()`
+        // rendered black text on Skia but white everywhere else.
+        Color = SKColors.White;
         OutlineColor = SKColors.Black;
         mChildren = new ();
     }
