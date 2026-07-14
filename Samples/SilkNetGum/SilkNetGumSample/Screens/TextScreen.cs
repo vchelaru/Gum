@@ -80,7 +80,7 @@ internal class TextScreen : FrameworkElement
         bbcode.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
         bbcode.Width = 520;
         bbcode.Text =
-            "[Color=Red]red[/Color], [Color=CornflowerBlue]blue[/Color], " +
+            "[Color=Red]red[/Color], [Color=Blue]blue[/Color], " +
             "[FontSize=40]big[/FontSize], [FontScale=1.5]scaled[/FontScale], " +
             "[IsBold=true]bold[/IsBold], and [IsItalic=true]italic[/IsItalic] runs, all styled inline in one Text.";
         container.Children.Add(bbcode);
