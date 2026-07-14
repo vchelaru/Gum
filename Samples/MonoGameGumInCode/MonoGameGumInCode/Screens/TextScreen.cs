@@ -72,8 +72,6 @@ internal class TextScreen : FrameworkElement
             "[IsBold=true]bold[/IsBold], and [IsItalic=true]italic[/IsItalic] runs, all styled inline in one Text.";
         container.Children.Add(bbcode);
 
-        container.Children.Add(BuildFontSizeContainmentRow());
-
         Text.Customizations["Wave"] = (int index, string block) => new LetterCustomization
         {
             YOffset = MathF.Sin(index * 0.9f) * 10f,
@@ -293,56 +291,4 @@ internal class TextScreen : FrameworkElement
         return cell;
     }
 
-    // Inline FontSize font-swap (#3524): [FontSize=N] swaps in a font rasterized at N (crisp) and must
-    // also be MEASURED at that size, or a RelativeToChildren Text is sized too narrow and the run spills
-    // past its background (the RelativeToChildren-too-narrow bug fixed in #3520 / #3523). Left cell =
-    // [FontSize=40] over a 21px base (crisp swap); right cell = a [FontScale=1.9] control (a scale-up of
-    // the 21px atlas, so visibly blurrier). Each cell's own text names which it is; pass = the big run is
-    // crisper on the left than the right, AND the blue box fully contains each line in both (raylib gets
-    // its crisp swap from KernSmith; MonoGame from the BitmapFont path - same visual contract either way).
-    private static ContainerRuntime BuildFontSizeContainmentRow()
-    {
-        var row = new ContainerRuntime();
-        row.WidthUnits = DimensionUnitType.RelativeToChildren;
-        row.HeightUnits = DimensionUnitType.RelativeToChildren;
-        row.Width = 0;
-        row.Height = 0;
-        row.ChildrenLayout = ChildrenLayout.LeftToRightStack;
-        row.StackSpacing = 24;
-        row.AddChild(BuildContainedMarkupCell("[FontSize=40]FontSize 40[/FontSize] crisp swap"));
-        row.AddChild(BuildContainedMarkupCell("[FontScale=1.9]FontScale 1.9[/FontScale] blurry scale-up"));
-        return row;
-    }
-
-    // A RelativeToChildren cell sized to its TextRuntime, with a RelativeToParent background filling it.
-    // The background's edges mark where measurement thinks the text ends, so any measure-vs-render drift
-    // shows up as the run spilling outside the blue box.
-    private static ContainerRuntime BuildContainedMarkupCell(string markup)
-    {
-        var cell = new ContainerRuntime();
-        cell.WidthUnits = DimensionUnitType.RelativeToChildren;
-        cell.HeightUnits = DimensionUnitType.RelativeToChildren;
-        cell.Width = 0;
-        cell.Height = 0;
-
-        var background = new RectangleRuntime();
-        background.WidthUnits = DimensionUnitType.RelativeToParent;
-        background.HeightUnits = DimensionUnitType.RelativeToParent;
-        background.Width = 0;
-        background.Height = 0;
-        background.IsFilled = true;
-        background.FillColor = new Color(40, 60, 160, 255);
-        cell.Children.Add(background);
-
-        var text = new TextRuntime();
-        text.WidthUnits = DimensionUnitType.RelativeToChildren;
-        text.HeightUnits = DimensionUnitType.RelativeToChildren;
-        text.Width = 0;
-        text.Height = 0;
-        text.FontSize = 21;
-        text.Text = markup;
-        cell.Children.Add(text);
-
-        return cell;
-    }
 }
