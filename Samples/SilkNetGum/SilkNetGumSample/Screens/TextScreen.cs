@@ -212,44 +212,60 @@ internal class TextScreen : FrameworkElement
         return textRuntime;
     }
 
+    // Blend on Text (#3432): additive (brightens) vs normal, over an identical blue box. Each cell's
+    // own text ("Additive" / "Normal") names its blend mode.
     private static void AddBlendOnTextSection(ContainerRuntime container)
     {
-        // Blend on the renderable (#3676): the same warm text over a blue background renders far
-        // brighter with Additive blend (left) than with the default alpha blend (right), because
-        // Additive adds the text color to the background instead of covering it. Blend is applied as
-        // an SKPaint.BlendMode in Text.Render (see Text.GetRenderPaint). Font must be set or the text
-        // can silently no-op.
-        RectangleRuntime blendBackground = new RectangleRuntime();
-        blendBackground.Width = 520;
-        blendBackground.Height = 60;
-        blendBackground.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        blendBackground.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        blendBackground.FillColor = new SKColor(40, 40, 120);
-        blendBackground.IsFilled = true;
+        var blendRow = new ContainerRuntime();
+        blendRow.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        blendRow.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        blendRow.Width = 0;
+        blendRow.Height = 0;
+        blendRow.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        blendRow.StackSpacing = 16;
+        blendRow.AddChild(BuildBlendCell("Additive", Gum.RenderingLibrary.Blend.Additive));
+        blendRow.AddChild(BuildBlendCell("Normal", null));
+        container.Children.Add(blendRow);
+    }
 
-        TextRuntime additiveBlend = new TextRuntime();
-        additiveBlend.Text = "Additive";
-        additiveBlend.Font = "Arial";
-        additiveBlend.FontSize = 36;
-        additiveBlend.Red = 210;
-        additiveBlend.Green = 150;
-        additiveBlend.Blue = 40;
-        additiveBlend.X = 8;
-        additiveBlend.Y = 8;
-        ((SkiaGum.Text)additiveBlend.RenderableComponent).Blend = Gum.RenderingLibrary.Blend.Additive;
-        blendBackground.Children.Add(additiveBlend);
+    private static ContainerRuntime BuildBlendCell(string label, Gum.RenderingLibrary.Blend? blend)
+    {
+        var cell = new ContainerRuntime();
+        cell.Width = 200;
+        cell.Height = 48;
 
-        TextRuntime normalBlend = new TextRuntime();
-        normalBlend.Text = "Normal";
-        normalBlend.Font = "Arial";
-        normalBlend.FontSize = 36;
-        normalBlend.Red = 210;
-        normalBlend.Green = 150;
-        normalBlend.Blue = 40;
-        normalBlend.X = 300;
-        normalBlend.Y = 8;
-        blendBackground.Children.Add(normalBlend);
+        var background = new RectangleRuntime();
+        background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        background.Width = 0;
+        background.Height = 0;
+        background.IsFilled = true;
+        background.FillColor = new SKColor(40, 60, 160, 255);
+        cell.Children.Add(background);
 
-        container.Children.Add(blendBackground);
+        var text = new TextRuntime();
+        text.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        text.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        text.Width = 0;
+        text.Height = 0;
+        text.FontSize = 24;
+        text.Text = label;
+        // Amber, not white: additive can only brighten, and white is already maxed, so white text
+        // renders identically under Additive and Normal. A mid-intensity warm color visibly washes
+        // out toward bright peach when added to the blue box, making the Additive cell obviously
+        // different from the Normal one.
+        text.Red = 230;
+        text.Green = 150;
+        text.Blue = 40;
+        text.HorizontalAlignment = HorizontalAlignment.Center;
+        text.VerticalAlignment = VerticalAlignment.Center;
+        // TextRuntime.Blend is #if !SKIA (BlendState-backed on XNA); on Skia set it on the renderable.
+        if (blend.HasValue)
+        {
+            ((SkiaGum.Text)text.RenderableComponent).Blend = blend.Value;
+        }
+        cell.Children.Add(text);
+
+        return cell;
     }
 }
