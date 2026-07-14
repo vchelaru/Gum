@@ -42,27 +42,6 @@ namespace SkiaGumWpfSample
             rectangle2.IsFilled = true;
 
             container.Children.Add(rectangle2);
-
-            // Demonstrates Skia OutlineThickness (issue #3675): yellow text with a black outline
-            // rendered via RichTextKit's halo. Compare against the no-outline text below it.
-            var outlinedText = new TextRuntime();
-            outlinedText.Text = "Outlined";
-            outlinedText.Font = "Arial";
-            outlinedText.FontSize = 48;
-            outlinedText.Red = 255;
-            outlinedText.Green = 255;
-            outlinedText.Blue = 0;
-            outlinedText.OutlineThickness = 3;
-            container.Children.Add(outlinedText);
-
-            var plainText = new TextRuntime();
-            plainText.Text = "No outline";
-            plainText.Font = "Arial";
-            plainText.FontSize = 48;
-            plainText.Red = 255;
-            plainText.Green = 255;
-            plainText.Blue = 0;
-            container.Children.Add(plainText);
         }
     }
 }

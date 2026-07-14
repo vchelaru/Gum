@@ -132,6 +132,8 @@ Keep boyscout fixes non-invasive in the structural sense — don't restructure c
 
 By the time you reach this stage, the new tests should already exist and be green (see "Test-Driven Development (Required)" above). Build via Bash and run the related test suite to check for regressions in adjacent areas. Output: changed files + brief why. Focus on correctness and brevity over cleverness.
 
+**Never launch Visual Studio, a sample `.exe`, `dotnet run`, or any GUI app.** Build and verify with `dotnet build` / `dotnet test` only. Running the app and any manual/visual testing belong to the user — leave the sample built and hand off the test steps; do not open an IDE or start a windowed process yourself.
+
 **raylib now runs in CI** as a blocking Windows suite (`RaylibGum.Tests`), using Mesa's `llvmpipe` software GL to supply the OpenGL 3.3 context the GPU-less runners lack (#3250). A green CI run therefore *does* cover raylib — including the `#if RAYLIB` branches of a source-shared `GueDeriving/*Runtime.cs` — so the old mandatory local raylib run before finishing is **no longer required**. Treat it like any other suite: if you change raylib-covered behavior, update any assertion pinning the old value (a local run is still the fastest way to iterate, but it is no longer a merge floor). (`SkiaGum.Tests` also blocks in CI — headless CPU raster.)
 
 **Zero new warnings policy** — after every change, verify that no new compiler warnings were introduced. If a warning cannot be fixed (e.g., an unused event on a test fake that satisfies an interface contract), suppress it with `#pragma warning disable`/`restore` and a comment explaining why the suppression is justified.

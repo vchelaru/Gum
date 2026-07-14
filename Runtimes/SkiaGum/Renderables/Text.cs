@@ -268,6 +268,101 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         }
     }
 
+    #region Dropshadow
+
+    // Standalone (non-BBCode) drop shadow for Skia text (issue #3674). Mirrors the drop-shadow
+    // vocabulary RenderableShapeBase exposes for Skia shapes so text and shapes share one API.
+    // The shadow is a canvas/ImageFilter effect applied in Render (see GetDropshadowPaint) rather
+    // than a RichTextKit Style property, so the setters intentionally do NOT invalidate
+    // _cachedTextBlock -- the cached TextBlock carries no shadow state and Render reads these
+    // values live each frame.
+
+    private bool _hasDropshadow;
+
+    /// <summary>
+    /// When <c>true</c>, a drop shadow is rendered behind the text using
+    /// <see cref="SKImageFilter.CreateDropShadow"/>. Mirrors the Skia shape drop-shadow property set.
+    /// </summary>
+    public bool HasDropshadow
+    {
+        get => _hasDropshadow;
+        set => _hasDropshadow = value;
+    }
+
+    private float _dropshadowOffsetX;
+
+    /// <summary>Horizontal offset, in pixels, of the drop shadow from the text.</summary>
+    public float DropshadowOffsetX
+    {
+        get => _dropshadowOffsetX;
+        set => _dropshadowOffsetX = value;
+    }
+
+    private float _dropshadowOffsetY;
+
+    /// <summary>Vertical offset, in pixels, of the drop shadow from the text.</summary>
+    public float DropshadowOffsetY
+    {
+        get => _dropshadowOffsetY;
+        set => _dropshadowOffsetY = value;
+    }
+
+    private float _dropshadowBlurX;
+
+    /// <summary>
+    /// Horizontal blur amount of the drop shadow. Divided by 3 before being passed to Skia's
+    /// sigma-based blur, matching the convention <see cref="RenderableShapeBase"/> uses for shapes.
+    /// </summary>
+    public float DropshadowBlurX
+    {
+        get => _dropshadowBlurX;
+        set => _dropshadowBlurX = value;
+    }
+
+    private float _dropshadowBlurY;
+
+    /// <inheritdoc cref="DropshadowBlurX"/>
+    public float DropshadowBlurY
+    {
+        get => _dropshadowBlurY;
+        set => _dropshadowBlurY = value;
+    }
+
+    private SKColor _dropshadowColor;
+
+    /// <summary>The color of the drop shadow.</summary>
+    public SKColor DropshadowColor
+    {
+        get => _dropshadowColor;
+        set => _dropshadowColor = value;
+    }
+
+    public int DropshadowAlpha
+    {
+        get => DropshadowColor.Alpha;
+        set => DropshadowColor = new SKColor(DropshadowColor.Red, DropshadowColor.Green, DropshadowColor.Blue, (byte)value);
+    }
+
+    public int DropshadowBlue
+    {
+        get => DropshadowColor.Blue;
+        set => DropshadowColor = new SKColor(DropshadowColor.Red, DropshadowColor.Green, (byte)value, DropshadowColor.Alpha);
+    }
+
+    public int DropshadowGreen
+    {
+        get => DropshadowColor.Green;
+        set => DropshadowColor = new SKColor(DropshadowColor.Red, (byte)value, DropshadowColor.Blue, DropshadowColor.Alpha);
+    }
+
+    public int DropshadowRed
+    {
+        get => DropshadowColor.Red;
+        set => DropshadowColor = new SKColor((byte)value, DropshadowColor.Green, DropshadowColor.Blue, DropshadowColor.Alpha);
+    }
+
+    #endregion
+
     Vector2 Position;
     IRenderableIpso? mParent;
     public string? StoredMarkupText => null;
@@ -536,7 +631,21 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
             canvas.SetMatrix(result);
 
-            textBlock.Paint(canvas, new SKPoint(0, 0));
+            // A drop shadow is a canvas effect (not a RichTextKit Style property): paint the text
+            // into an offscreen layer whose ImageFilter renders the shadow when the layer is
+            // composited back on Restore. Same primitive/blur convention as the Skia shapes.
+            var shadowPaint = GetDropshadowPaint();
+            if (shadowPaint != null)
+            {
+                canvas.SaveLayer(shadowPaint);
+                textBlock.Paint(canvas, new SKPoint(0, 0));
+                canvas.Restore();
+                shadowPaint.Dispose();
+            }
+            else
+            {
+                textBlock.Paint(canvas, new SKPoint(0, 0));
+            }
             canvas.Restore();
         }
     }
@@ -641,6 +750,31 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         }
 
         return style;
+    }
+
+    /// <summary>
+    /// Builds the <see cref="SKPaint"/> whose <see cref="SKPaint.ImageFilter"/> renders the drop
+    /// shadow, or <c>null</c> when <see cref="HasDropshadow"/> is <c>false</c>. Used by
+    /// <see cref="Render"/> as the paint passed to <c>canvas.SaveLayer</c>. The caller owns the
+    /// returned paint and must dispose it. The blur values are divided by 3 to match the
+    /// sigma convention <see cref="RenderableShapeBase"/> uses for Skia shapes.
+    /// </summary>
+    internal SKPaint? GetDropshadowPaint()
+    {
+        if (!HasDropshadow)
+        {
+            return null;
+        }
+
+        return new SKPaint
+        {
+            ImageFilter = SKImageFilter.CreateDropShadow(
+                DropshadowOffsetX,
+                DropshadowOffsetY,
+                DropshadowBlurX / 3.0f,
+                DropshadowBlurY / 3.0f,
+                DropshadowColor)
+        };
     }
 
     /// <summary>
