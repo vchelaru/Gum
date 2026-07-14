@@ -163,12 +163,54 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// effects (e.g. <c>DialogBox</c>).
     /// </summary>
     /// <remarks>
-    /// Unlike the MonoGame/Raylib Text renderables, SkiaGum's <see cref="Render"/> does not yet
-    /// honor this value to truncate the rendered glyphs -- it is provided so SkiaGum.Text
-    /// satisfies <see cref="IFormsText"/> (issue #3653) and so callers can set it without an
-    /// InvalidCastException. Letter-reveal rendering support can be added later.
+    /// This is a paint-only effect (issue #3678): <see cref="Render"/> paints a throwaway
+    /// <c>TextBlock</c> built from <see cref="GetVisibleWrappedText"/> (the wrapped lines truncated
+    /// to this budget), while the cached block that drives <see cref="WrappedText"/>, measurement and
+    /// caret math stays built from the full <see cref="RawText"/>. It therefore intentionally does
+    /// NOT invalidate <c>_cachedTextBlock</c> -- mirroring how the other render-time effects
+    /// (drop shadow, blend) keep out of the layout cache. Matches the per-line reveal the
+    /// MonoGame/Raylib/Sokol backends perform.
     /// </remarks>
     public int? MaxLettersToShow { get; set; }
+
+    /// <summary>
+    /// The wrapped lines actually revealed given <see cref="MaxLettersToShow"/>: <see cref="WrappedText"/>
+    /// with each line truncated to the remaining letter budget so a typewriter reveal pauses mid-line
+    /// rather than popping line-by-line (matching the MonoGame/Raylib/Sokol backends). Returns
+    /// <see cref="WrappedText"/> unchanged when <see cref="MaxLettersToShow"/> is null, and an empty
+    /// list when it is zero. Used by <see cref="Render"/> to build the painted block.
+    /// </summary>
+    public List<string> GetVisibleWrappedText()
+    {
+        List<string> fullWrapped = WrappedText;
+        if (MaxLettersToShow == null)
+        {
+            return fullWrapped;
+        }
+
+        var revealed = new List<string>();
+        int remaining = MaxLettersToShow.Value;
+        foreach (var line in fullWrapped)
+        {
+            if (remaining <= 0)
+            {
+                break;
+            }
+
+            if (line.Length <= remaining)
+            {
+                revealed.Add(line);
+                remaining -= line.Length;
+            }
+            else
+            {
+                revealed.Add(line.Substring(0, remaining));
+                remaining = 0;
+            }
+        }
+
+        return revealed;
+    }
 
     /// <inheritdoc/>
     /// <remarks>
@@ -672,6 +714,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
             canvas.SetMatrix(result);
 
+            // MaxLettersToShow (issue #3678): the paint block reveals only the first N letters, but
+            // vertical alignment above was computed from the full block so the revealed letters stay in
+            // their final positions (typewriter reveal). Null MaxLettersToShow returns the full block.
+            var paintBlock = GetPaintTextBlock(textBlock);
+
             // Drop shadow and Blend are canvas effects (not RichTextKit Style properties): paint the
             // text into an offscreen layer whose paint carries the ImageFilter (shadow) and/or
             // BlendMode (blend) so both compose when the layer is composited back on Restore. Same
@@ -680,13 +727,13 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             if (renderPaint != null)
             {
                 canvas.SaveLayer(renderPaint);
-                textBlock.Paint(canvas, new SKPoint(0, 0));
+                paintBlock.Paint(canvas, new SKPoint(0, 0));
                 canvas.Restore();
                 renderPaint.Dispose();
             }
             else
             {
-                textBlock.Paint(canvas, new SKPoint(0, 0));
+                paintBlock.Paint(canvas, new SKPoint(0, 0));
             }
             canvas.Restore();
         }
@@ -751,13 +798,19 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             ? Height
             : (float?)null;
 
-    public TextBlock GetTextBlock(float? forcedWidth = null)
+    public TextBlock GetTextBlock(float? forcedWidth = null) => GetTextBlock(mRawText, forcedWidth);
+
+    /// <summary>
+    /// Builds a RichTextKit <c>TextBlock</c> for the given text (normally <see cref="RawText"/>, but
+    /// <see cref="GetPaintTextBlock"/> passes the reveal-truncated text for <see cref="MaxLettersToShow"/>).
+    /// </summary>
+    private TextBlock GetTextBlock(string textToRender, float? forcedWidth)
     {
         var textBlock = new TextBlock();
         try
         {
             textBlock.MaxWidth = forcedWidth ?? this.Width;
-            textBlock.AddText(mRawText, GetStyle());
+            textBlock.AddText(textToRender, GetStyle());
             switch (HorizontalAlignment)
             {
                 case HorizontalAlignment.Left:
@@ -801,6 +854,37 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
 
         return textBlock;
+    }
+
+    /// <summary>
+    /// The <c>TextBlock</c> that <see cref="Render"/> actually paints. When <see cref="MaxLettersToShow"/>
+    /// is null (or already covers the whole text) this is the full cached block, leaving the render
+    /// fast path unchanged. Otherwise a throwaway block is built from <see cref="GetVisibleWrappedText"/>
+    /// so only the first N letters are drawn; because each revealed line is a prefix of a full wrapped
+    /// line and the breaks are re-inserted as hard newlines, the revealed lines land in the same
+    /// positions as in the full layout. The cached block (used for measurement / caret math) is
+    /// untouched.
+    /// </summary>
+    private TextBlock GetPaintTextBlock(TextBlock fullBlock)
+    {
+        if (MaxLettersToShow == null)
+        {
+            return fullBlock;
+        }
+
+        List<string> fullWrapped = WrappedText;
+        int fullLength = 0;
+        foreach (var line in fullWrapped)
+        {
+            fullLength += line.Length;
+        }
+
+        if (MaxLettersToShow.Value >= fullLength)
+        {
+            return fullBlock;
+        }
+
+        return GetTextBlock(string.Join("\n", GetVisibleWrappedText()), this.Width);
     }
 
 

@@ -197,6 +197,23 @@ public class TextRuntimeTests
 
     #endregion
 
+    #region MaxLettersToShow
+
+    [Fact]
+    public void MaxLettersToShow_SetProperty_ShouldPushToContainedText()
+    {
+        TextRuntime sut = new();
+
+        // Routes through the newly-wired SKIA dispatch arm (issue #3678), which was previously
+        // gated #if MONOGAME || XNA4 and dead on Skia.
+        sut.SetProperty("MaxLettersToShow", (int?)4);
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.MaxLettersToShow.ShouldBe(4);
+    }
+
+    #endregion
+
     #region PropertyChanged
 
     [Fact]
