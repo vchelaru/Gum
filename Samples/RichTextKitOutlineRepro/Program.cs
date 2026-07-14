@@ -32,17 +32,17 @@ unsafe class Program
     private static SKSurface? surface;
     private static GRBackendRenderTarget? renderTarget;
 
-    private const int Width = 1200;
-    private const int Height = 800;
-    // Match REAL on-screen Gum usage: the spikes only appear at small size, where a 2px outline is a
-    // large fraction of the glyph. Screenshot #7 was ~20px text magnified. We render small, then blit
-    // with nearest-neighbor zoom so the pixel-level spike is visible without the user zooming.
+    private const int Width = 1100;
+    private const int Height = 420;
+    // EXACT values from the Gum line that showed the artifact -- Samples/.../Screens/TextScreen.cs:
+    //   withOutline.FontSize = 24;  withOutline.OutlineThickness = 2;  (font defaults to Arial)
+    // GetStyle emits FontSize = 24 * GlobalTextScale(1) * FontScale(1) = 24 and HaloWidth = 2 verbatim.
+    // The 'w' in "with" is the lowercase w whose bottom vertices your screenshot zoomed into.
     private const float OutlineWidth = 2f;
-    private const float FontSize = 22f;
-    private const string SampleText = "WWW";
-    private const int Zoom = 7;
-    private const int PanelW = 90;
-    private const int PanelH = 34;
+    private const float FontSize = 24f;
+    private const string SampleText = "I am text with OutlineThickness = 2";
+    // The SilkNet sample clears to CornflowerBlue (100,149,237); match it so the render is identical.
+    private static readonly SKColor Background = new SKColor(100, 149, 237);
 
     private static readonly SKTypeface Arial = SKTypeface.FromFamilyName("Arial");
     private static readonly SKFont LabelFont = new SKFont(SKTypeface.FromFamilyName("Arial"), 18);
@@ -114,21 +114,25 @@ unsafe class Program
 
     private static void DrawRepro()
     {
-        canvas.Clear(SKColors.White);
+        // Match the SilkNet sample exactly: cornflower background, rendered directly on the GPU
+        // (ANGLE) surface at 1:1 -- no CPU offscreen, no artificial zoom. Screenshot + zoom the 'w'.
+        canvas.Clear(Background);
 
-        float x = 30;
-        float y = 16;
+        float x = 24;
+        float y = 20;
 
-        y = DrawLabel($"Rendered at {FontSize}px / outline {OutlineWidth}px (real Gum size), then zoomed {Zoom}x nearest-neighbor.", x, y) + 6;
+        y = DrawLabel("Exact Gum setup: Arial, FontSize 24, OutlineThickness 2, white text + black halo, CornflowerBlue bg.", x, y) + 12;
 
-        y = DrawLabel("1) RichTextKit halo (Style.HaloWidth) -- StrokeJoin defaults to Miter: SPIKES under the W", x, y);
-        y = DrawZoomed(x, y, RenderRichTextKitHaloSmall) + 24;
+        y = DrawLabel("1) RichTextKit halo -- identical to SkiaGum.Text.GetStyle:", x, y) + 4;
+        RtkHalo(x, y);
+        y += FontSize * 2.2f;
 
-        y = DrawLabel("2) Manual SKFont stroke, StrokeJoin.Miter -- same spikes (it's the join, not RichTextKit)", x, y);
-        y = DrawZoomed(x, y, c => RenderManualStrokeSmall(c, SKStrokeJoin.Miter)) + 24;
+        y = DrawLabel("2) Manual glyph stroke, StrokeJoin.Miter:", x, y) + 4;
+        ManualStroke(x, y, SKStrokeJoin.Miter);
+        y += FontSize * 2.2f;
 
-        y = DrawLabel("3) Manual SKFont stroke, StrokeJoin.Round -- clean, NO spikes (the proposed fix)", x, y);
-        DrawZoomed(x, y, c => RenderManualStrokeSmall(c, SKStrokeJoin.Round));
+        y = DrawLabel("3) Manual glyph stroke, StrokeJoin.Round:", x, y) + 4;
+        ManualStroke(x, y, SKStrokeJoin.Round);
     }
 
     private static float DrawLabel(string text, float x, float y)
@@ -137,25 +141,9 @@ unsafe class Program
         return y + 26;
     }
 
-    // Renders `renderSmall` into a small offscreen bitmap, then blits it Zoom-times larger with
-    // nearest-neighbor sampling -- reproducing the user's magnified screenshot so pixel-level miter
-    // spikes are visible.
-    private static float DrawZoomed(float destX, float destY, Action<SKCanvas> renderSmall)
-    {
-        using var bmp = new SKBitmap(PanelW, PanelH, SKColorType.Rgba8888, SKAlphaType.Premul);
-        using (var small = new SKCanvas(bmp))
-        {
-            small.Clear(SKColors.White);
-            renderSmall(small);
-        }
-        using var img = SKImage.FromBitmap(bmp);
-        var dest = SKRect.Create(destX, destY, PanelW * Zoom, PanelH * Zoom);
-        canvas.DrawImage(img, dest, new SKSamplingOptions(SKFilterMode.Nearest));
-        return destY + PanelH * Zoom;
-    }
-
-    // White text with a black halo via RichTextKit, exactly as SkiaGum does it.
-    private static void RenderRichTextKitHaloSmall(SKCanvas c)
+    // White text with a black halo via RichTextKit -- byte-for-byte the Style SkiaGum.Text.GetStyle
+    // builds for the sample line (FontFamily Arial, FontSize 24, HaloColor black, HaloWidth 2, blur 0).
+    private static void RtkHalo(float x, float y)
     {
         var style = new Style
         {
@@ -168,16 +156,16 @@ unsafe class Program
         };
         var block = new TextBlock();
         block.AddText(SampleText, style);
-        block.Paint(c, new SKPoint(4, 2));
+        block.Paint(canvas, new SKPoint(x, y));
     }
 
     // Same white text + black outline, but we stroke the glyph blob ourselves so we can choose the
     // StrokeJoin. Outline behind, fill on top.
-    private static void RenderManualStrokeSmall(SKCanvas c, SKStrokeJoin join)
+    private static void ManualStroke(float x, float y, SKStrokeJoin join)
     {
         using var font = new SKFont(Arial, FontSize);
         using var blob = SKTextBlob.Create(SampleText, font);
-        float baseline = 2 + FontSize * 0.9f;
+        float baseline = y + FontSize * 0.9f;
 
         using var outline = new SKPaint
         {
@@ -187,7 +175,7 @@ unsafe class Program
             Color = SKColors.Black,
             StrokeJoin = join,
         };
-        c.DrawText(blob, 4, baseline, outline);
+        canvas.DrawText(blob, x, baseline, outline);
 
         using var fill = new SKPaint
         {
@@ -195,6 +183,6 @@ unsafe class Program
             Style = SKPaintStyle.Fill,
             Color = SKColors.White,
         };
-        c.DrawText(blob, 4, baseline, fill);
+        canvas.DrawText(blob, x, baseline, fill);
     }
 }
