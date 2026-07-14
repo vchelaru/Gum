@@ -33,7 +33,7 @@ unsafe class Program
     private static GRBackendRenderTarget? renderTarget;
 
     private const int Width = 1100;
-    private const int Height = 380;
+    private const int Height = 300;
     // EXACT values from the Gum line that showed the artifact -- Samples/.../Screens/TextScreen.cs:
     //   withOutline.FontSize = 24;  withOutline.OutlineThickness = 2;  (font defaults to Arial)
     // GetStyle emits FontSize = 24 * GlobalTextScale(1) * FontScale(1) = 24 and HaloWidth = 2 verbatim.
@@ -114,52 +114,23 @@ unsafe class Program
 
     private static void DrawRepro()
     {
-        // Match the SilkNet sample exactly: cornflower background, rendered directly on the GPU
-        // (ANGLE) surface at 1:1 -- no CPU offscreen, no artificial zoom. Screenshot + zoom the 'w'.
         canvas.Clear(Background);
 
         float x = 24;
         float y = 20;
 
-        y = DrawLabel("Exact Gum setup: Arial, FontSize 24, OutlineThickness 2, white text + black halo, CornflowerBlue bg.", x, y) + 12;
+        y = DrawLabel("Goal: clean 2px outline on 24px Arial. Canonical Skia recipe = stroke at 2x width, then fill on top.", x, y) + 12;
 
-        y = DrawLabel("1) RichTextKit halo -- identical to SkiaGum.Text.GetStyle:", x, y) + 4;
-        RtkHalo(x, y);
+        y = DrawLabel("1) RichTextKit halo, HaloWidth = 2 (what SkiaGum ships) -- ~1px visible, thin & uneven:", x, y) + 4;
+        RtkHalo(x, y, OutlineWidth);
         y += FontSize * 1.4f;
 
-        y = DrawLabel("2) Manual glyph stroke, StrokeJoin.Miter:", x, y) + 4;
-        ManualStroke(x, y, SKStrokeJoin.Miter);
+        y = DrawLabel("2) RichTextKit halo, HaloWidth = 4 (= OutlineThickness x 2) -- clean, true 2px:", x, y) + 4;
+        RtkHalo(x, y, OutlineWidth * 2);
         y += FontSize * 1.4f;
 
-        y = DrawLabel("3) Manual glyph stroke, StrokeJoin.Round:", x, y) + 4;
-        ManualStroke(x, y, SKStrokeJoin.Round);
-        y += FontSize * 1.4f;
-
-        y = DrawLabel("4) 8-way dilate (black text at 8 offsets + white fill) -- guaranteed-uniform reference:", x, y) + 4;
-        DilateOutline(x, y);
-    }
-
-    // Draws a uniform outline WITHOUT a centered stroke: paint the glyphs in black at 8 offsets around
-    // a ring of radius OutlineWidth, then the white fill on top. No stroke, no join, no fill-eats-stroke
-    // asymmetry -- the outline width is identical on every side. This is the candidate SkiaGum fix if
-    // the halo/stroke panels emboss.
-    private static void DilateOutline(float x, float y)
-    {
-        using var font = new SKFont(Arial, FontSize);
-        using var blob = SKTextBlob.Create(SampleText, font);
-        float baseline = y + FontSize * 0.9f;
-
-        using var black = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill, Color = SKColors.Black };
-        for (int i = 0; i < 8; i++)
-        {
-            double angle = i * Math.PI / 4.0;
-            float dx = (float)(Math.Cos(angle) * OutlineWidth);
-            float dy = (float)(Math.Sin(angle) * OutlineWidth);
-            canvas.DrawText(blob, x + dx, baseline + dy, black);
-        }
-
-        using var white = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill, Color = SKColors.White };
-        canvas.DrawText(blob, x, baseline, white);
+        y = DrawLabel("3) Canonical: stroke glyphs at 4px (2x), round join, then white fill -- clean, true 2px:", x, y) + 4;
+        CanonicalOutline(x, y, OutlineWidth * 2);
     }
 
     private static float DrawLabel(string text, float x, float y)
@@ -168,9 +139,10 @@ unsafe class Program
         return y + 26;
     }
 
-    // White text with a black halo via RichTextKit -- byte-for-byte the Style SkiaGum.Text.GetStyle
-    // builds for the sample line (FontFamily Arial, FontSize 24, HaloColor black, HaloWidth 2, blur 0).
-    private static void RtkHalo(float x, float y)
+    // RichTextKit halo. HaloWidth is a CENTERED stroke on the glyph outline, and RichTextKit draws the
+    // white fill over it afterward -- so the inner half is covered and only haloWidth/2 shows outside.
+    // Pass 2 x desired to get a `desired`-px visible outline (the shipped 1x is why it looks ~1px/thin).
+    private static void RtkHalo(float x, float y, float haloWidth)
     {
         var style = new Style
         {
@@ -178,7 +150,7 @@ unsafe class Program
             FontSize = FontSize,
             TextColor = SKColors.White,
             HaloColor = SKColors.Black,
-            HaloWidth = OutlineWidth,
+            HaloWidth = haloWidth,
             HaloBlur = 0,
         };
         var block = new TextBlock();
@@ -186,9 +158,10 @@ unsafe class Program
         block.Paint(canvas, new SKPoint(x, y));
     }
 
-    // Same white text + black outline, but we stroke the glyph blob ourselves so we can choose the
-    // StrokeJoin. Outline behind, fill on top.
-    private static void ManualStroke(float x, float y, SKStrokeJoin join)
+    // The canonical SkiaSharp outlined-text recipe (SkiaSharp text guide's "hollow text" is the stroke
+    // half of this): stroke the glyphs, then fill on top. The stroke is centered, so pass 2 x desired
+    // width to get a `desired`-px visible outline. Round join/cap keeps corners clean.
+    private static void CanonicalOutline(float x, float y, float strokeWidth)
     {
         using var font = new SKFont(Arial, FontSize);
         using var blob = SKTextBlob.Create(SampleText, font);
@@ -198,9 +171,10 @@ unsafe class Program
         {
             IsAntialias = true,
             Style = SKPaintStyle.Stroke,
-            StrokeWidth = OutlineWidth,
+            StrokeWidth = strokeWidth,
             Color = SKColors.Black,
-            StrokeJoin = join,
+            StrokeJoin = SKStrokeJoin.Round,
+            StrokeCap = SKStrokeCap.Round,
         };
         canvas.DrawText(blob, x, baseline, outline);
 
