@@ -742,16 +742,43 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             if (renderPaint != null)
             {
                 canvas.SaveLayer(renderPaint);
-                paintBlock.Paint(canvas, new SKPoint(0, 0));
+                DrawTextWithOutline(canvas, paintBlock);
                 canvas.Restore();
                 renderPaint.Dispose();
             }
             else
             {
-                paintBlock.Paint(canvas, new SKPoint(0, 0));
+                DrawTextWithOutline(canvas, paintBlock);
             }
             canvas.Restore();
         }
+    }
+
+    /// <summary>
+    /// Paints the outline (when <see cref="OutlineThickness"/> &gt; 0) followed by the text fill.
+    /// The outline is a single recolor+dilate pass: the text is painted into a layer whose paint
+    /// recolors every glyph to <see cref="OutlineColor"/> (SrcIn) and dilates it by
+    /// <see cref="OutlineThickness"/> pixels, producing a uniform outline of that width on every
+    /// side. Unlike RichTextKit's centered halo stroke this can neither spike at acute vertices
+    /// (no miter join) nor emboss (no half-hidden 1px edge), and it reuses RichTextKit's exact
+    /// layout so the outline always registers with the fill.
+    /// </summary>
+    private void DrawTextWithOutline(SKCanvas canvas, TextBlock paintBlock)
+    {
+        if (OutlineThickness > 0)
+        {
+            using var outlinePaint = new SKPaint
+            {
+                IsAntialias = true,
+                ColorFilter = SKColorFilter.CreateBlendMode(OutlineColor, SKBlendMode.SrcIn),
+                ImageFilter = SKImageFilter.CreateDilate(OutlineThickness, OutlineThickness),
+            };
+            canvas.SaveLayer(outlinePaint);
+            paintBlock.Paint(canvas, new SKPoint(0, 0));
+            canvas.Restore();
+        }
+
+        paintBlock.Paint(canvas, new SKPoint(0, 0));
     }
     public BlendState BlendState => BlendState.AlphaBlend;
 
@@ -1056,19 +1083,12 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             LineHeight = LineHeightMultiplier
         };
 
-        if (OutlineThickness > 0)
-        {
-            style.HaloColor = OutlineColor;
-            // RichTextKit paints the halo as a miter-joined stroke around the glyph (FontRun.cs never
-            // sets StrokeJoin, so SkiaSharp defaults to Miter) and exposes no join/miter-limit knob.
-            // At acute glyph vertices (e.g. the bottom of a 'W') that miter spikes outward, and the
-            // spike length scales with stroke width — so do NOT widen past OutlineThickness to chase
-            // the baked backends' thickness; it only lengthens the spikes. A spike-free outline that
-            // matches MonoGame needs a custom round-joined outline pass (see issue).
-            style.HaloWidth = OutlineThickness;
-            // Crisp hard outline, not RichTextKit's default soft-glow halo.
-            style.HaloBlur = 0;
-        }
+        // OutlineThickness is intentionally NOT mapped to RichTextKit's Style.HaloColor/HaloWidth here.
+        // That halo is a stroke centered on the glyph edge, so at width N the fill covers the inner
+        // half and only ~N/2 shows (thin, uneven at small sizes); widening to 2N to compensate hits
+        // RichTextKit's hardcoded miter join (no join knob) and spikes at acute vertices. Instead the
+        // outline is a uniform recolor+dilate pass in Render (DrawTextWithOutline), which can't spike
+        // or emboss and reuses RichTextKit's exact layout.
 
         return style;
     }
