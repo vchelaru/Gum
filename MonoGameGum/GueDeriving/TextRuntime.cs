@@ -562,6 +562,40 @@ public class TextRuntime : InteractiveGue
         }
     }
 
+    /// <summary>
+    /// Whether the last visible line is truncated with a trailing ellipsis ("...") when the text
+    /// overflows -- either a single line wider than the box, or (with
+    /// <see cref="TextOverflowVerticalMode"/> set to <see cref="TextOverflowVerticalMode.TruncateLine"/>)
+    /// the lines that fall past the box height.
+    /// </summary>
+    public bool IsTruncatingWithEllipsisOnLastLine
+    {
+        get => ContainedText.IsTruncatingWithEllipsisOnLastLine;
+        set
+        {
+            ContainedText.IsTruncatingWithEllipsisOnLastLine = value;
+            NotifyPropertyChanged();
+            UpdateLayout();
+        }
+    }
+
+    /// <summary>
+    /// How text that has more lines than fit the box height behaves:
+    /// <see cref="TextOverflowVerticalMode.SpillOver"/> renders every line past the bottom edge, while
+    /// <see cref="TextOverflowVerticalMode.TruncateLine"/> clips to the lines that fit (pair with
+    /// <see cref="IsTruncatingWithEllipsisOnLastLine"/> for a trailing ellipsis on the last visible line).
+    /// </summary>
+    public TextOverflowVerticalMode TextOverflowVerticalMode
+    {
+        get => ContainedText.TextOverflowVerticalMode;
+        set
+        {
+            ContainedText.TextOverflowVerticalMode = value;
+            NotifyPropertyChanged();
+            UpdateLayout();
+        }
+    }
+
 #if !SKIA
     /// <summary>
     /// Gets or sets the text rendering position mode to use for the contained text, overriding the default behavior if

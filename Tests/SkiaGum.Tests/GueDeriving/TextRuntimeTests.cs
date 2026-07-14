@@ -219,6 +219,22 @@ public class TextRuntimeTests
 
     #endregion
 
+    #region IsTruncatingWithEllipsisOnLastLine
+
+    [Fact]
+    public void IsTruncatingWithEllipsisOnLastLine_SetInCode_ShouldPushToContainedText()
+    {
+        // Unified onto TextRuntime (#3677 overflow demo): was renderable-only, so both samples had to
+        // cast to the renderable to reach it. Now forwards straight to the contained renderable.
+        TextRuntime sut = new();
+        sut.IsTruncatingWithEllipsisOnLastLine = true;
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.IsTruncatingWithEllipsisOnLastLine.ShouldBeTrue();
+    }
+
+    #endregion
+
     #region HasEvents
 
     [Fact]
@@ -358,6 +374,22 @@ public class TextRuntimeTests
         sut.TextOverflowHorizontalMode = TextOverflowHorizontalMode.EllipsisLetter;
         sut.TextOverflowHorizontalMode = TextOverflowHorizontalMode.TruncateWord;
         sut.TextOverflowHorizontalMode.ShouldBe(TextOverflowHorizontalMode.TruncateWord);
+    }
+
+    #endregion
+
+    #region TextOverflowVerticalMode
+
+    [Fact]
+    public void TextOverflowVerticalMode_SetInCode_ShouldPushToContainedText()
+    {
+        // Unified onto TextRuntime (#3677 overflow demo): was renderable-only. Now forwards straight
+        // to the contained renderable so the overflow sample doesn't have to cast.
+        TextRuntime sut = new();
+        sut.TextOverflowVerticalMode = TextOverflowVerticalMode.TruncateLine;
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.TextOverflowVerticalMode.ShouldBe(TextOverflowVerticalMode.TruncateLine);
     }
 
     #endregion
