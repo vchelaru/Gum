@@ -78,8 +78,11 @@ internal class TextScreen : FrameworkElement
             "Standalone Skia text effects set on the renderable (#3674 drop shadow, #3675 outline):");
 
         // Yellow text with a black outline via RichTextKit's halo (#3675), next to plain yellow text.
+        // Font must be set: OutlineThickness only propagates to the renderable via UpdateToFontValues
+        // when the runtime's Font is non-empty (#3675), so without this the halo would silently no-op.
         TextRuntime outlined = new TextRuntime();
         outlined.Text = "Outlined";
+        outlined.Font = "Arial";
         outlined.FontSize = 48;
         outlined.Red = 255;
         outlined.Green = 255;
@@ -89,6 +92,7 @@ internal class TextScreen : FrameworkElement
 
         TextRuntime noOutline = new TextRuntime();
         noOutline.Text = "No outline";
+        noOutline.Font = "Arial";
         noOutline.FontSize = 48;
         noOutline.Red = 255;
         noOutline.Green = 255;
