@@ -75,6 +75,30 @@ internal class TextScreen : FrameworkElement
         AddOverflowSection(container);
 
         AddMaxLettersToShowSection(container);
+
+        AddBbCodeSection(container);
+    }
+
+    // BBCode inline styling on the SkiaGum.Text renderable (#3679): a single Text whose markup mixes
+    // per-run color, font size, font scale, bold, and italic. SkiaGum parses the tags and feeds
+    // RichTextKit one Style per run (Text.GetStyledRuns), matching the MonoGame / Raylib inline-styling
+    // path. Font = "Arial" because text can silently no-op without a font. No MonoGameGumInCode mirror —
+    // this exercises the SkiaGum inline-styling path directly.
+    private static void AddBbCodeSection(ContainerRuntime container)
+    {
+        AddSectionLabel(container,
+            "BBCode inline styling (#3679): per-run color / font size / font scale / bold / italic in one Text:");
+
+        TextRuntime markup = new TextRuntime();
+        markup.Font = "Arial";
+        markup.FontSize = 24;
+        markup.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        markup.Width = 520;
+        markup.Text =
+            "Plain, [Color=Red]red[/Color], [Color=CornflowerBlue]blue[/Color], " +
+            "[FontSize=40]big[/FontSize], [FontScale=1.5]scaled[/FontScale], " +
+            "[IsBold=true]bold[/IsBold], and [IsItalic=true]italic[/IsItalic] runs.";
+        container.Children.Add(markup);
     }
 
     // MaxLettersToShow typewriter reveal on the SkiaGum.Text renderable (#3678). The same wrapping
