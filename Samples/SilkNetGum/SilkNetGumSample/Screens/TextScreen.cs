@@ -7,17 +7,14 @@ using SkiaSharp;
 
 namespace SilkNetGum.Screens;
 
-// Mirror of Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/TextScreen.cs where the backend
-// supports the same surface (#3414). SkiaGum dynamic fonts do not use KernSmith, so baked text
-// drop shadow (TextRuntime.HasDropshadow) is not rendered here — the rows below document that gap
-// explicitly. The standalone renderable drop shadow added in #3674 is a separate, working path on
-// SkiaGum; the appended AddStandaloneSkiaEffectsSection (no MonoGame mirror) exercises it.
-//
-// Section order in this file must match Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/TextScreen.cs
-// exactly, top to bottom - before adding, removing, or reordering ANY section, check that file for
-// the same change or the side-by-side comparison breaks silently. (Broke once when MonoGameGumInCode
-// carried extra AddCustomOutlineText rows raylib never had - #3496.) That file is itself shared with
-// (linked into) Samples/raylib/GumTest.csproj as of #3640, so it covers both those backends at once.
+// Companion to Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/TextScreen.cs (#3414). By policy
+// the three text samples are kept feature- and content-identical and carry NO descriptive section
+// labels — each demo's own text shows AND names what it is. This SilkNetGum screen is still a
+// separate, non-linked file for now (a later step folds all three into one shared source). Sections
+// that are genuinely Skia-specific — standalone renderable outline / drop shadow / blend
+// (#3674/#3675/#3676), RichTextKit overflow (#3677), and MaxLettersToShow (#3678) — exercise the
+// SkiaGum.Text renderable directly; the baked-atlas drop shadow and texture-filter demos the MonoGame
+// screen shows have no Skia equivalent and are intentionally absent.
 internal class TextScreen : FrameworkElement
 {
     public TextScreen() : base(new ContainerRuntime())
@@ -39,16 +36,8 @@ internal class TextScreen : FrameworkElement
         textRuntime.Text = "Hi, I'm default text";
         container.Children.Add(textRuntime);
 
-        // Skia can't bake a KernSmith shadow atlas, so the baked-drop-shadow rows the MonoGame screen
-        // shows here have no Skia equivalent and are omitted rather than shown as "(not on Skia)"
-        // filler. BBCode inline styling (#3679) is the Skia-supported feature that takes this
-        // near-the-top slot instead, matching where the MonoGame screen shows its BBCode rows.
         AddBbCodeSection(container);
 
-        // Skia-only standalone text effects set directly on the renderable (issue #3674 drop shadow,
-        // issue #3675 outline). Unlike the baked-shadow rows above (TextRuntime.HasDropshadow, the
-        // MonoGame/KNI/Raylib font-atlas path that no-ops on Skia), these render on SkiaGum. This
-        // section has no MonoGameGumInCode mirror — it exercises the SkiaGum.Text renderable directly.
         AddStandaloneSkiaEffectsSection(container);
 
         AddOverflowSection(container);
@@ -59,8 +48,7 @@ internal class TextScreen : FrameworkElement
     // BBCode inline styling on the SkiaGum.Text renderable (#3679): a single Text whose markup mixes
     // per-run color, font size, font scale, bold, and italic. SkiaGum parses the tags and feeds
     // RichTextKit one Style per run (Text.GetStyledRuns), matching the MonoGame / Raylib inline-styling
-    // path. Font = "Arial" because text can silently no-op without a font. No MonoGameGumInCode mirror —
-    // this exercises the SkiaGum inline-styling path directly.
+    // path. Font = "Arial" because text can silently no-op without a font.
     private static void AddBbCodeSection(ContainerRuntime container)
     {
         // One self-describing BBCode line: each styled word shows AND names its own effect, so no
@@ -82,12 +70,9 @@ internal class TextScreen : FrameworkElement
     // paragraph is shown fully, then with MaxLettersToShow set to a partial count so only the first N
     // letters are visible while the hidden tail still occupies its final layout (reveal is paint-only:
     // WrappedText / measurement stay built from the full RawText). Font = "Arial" because text can
-    // silently no-op without a font. No MonoGameGumInCode mirror — exercises the renderable directly.
+    // silently no-op without a font.
     private static void AddMaxLettersToShowSection(ContainerRuntime container)
     {
-        AddSectionLabel(container,
-            "MaxLettersToShow (#3678): identical text, three fixed reveal counts (no timing) - full, 10, 30:");
-
         const string paragraph =
             "This paragraph reveals only its first letters while the rest stays hidden.";
 
@@ -114,20 +99,19 @@ internal class TextScreen : FrameworkElement
     }
 
     // Overflow modes on the SkiaGum.Text renderable (#3677): ellipsis on horizontal overflow, then
-    // vertical TruncateLine vs SpillOver for the same text in the same fixed-size box. Each Text sets
-    // Font = "Arial" (text can silently no-op without a font). Both properties live on the renderable
-    // (SkiaGum.Text) and are honored by RichTextKit's TextBlock (MaxHeight / EllipsisEnabled) in
-    // Text.GetTextBlock. No MonoGameGumInCode mirror — this exercises the SkiaGum.Text renderable directly.
+    // vertical TruncateLine vs SpillOver for the same-size box. Each box's text names its own mode.
+    // Both properties live on the renderable (SkiaGum.Text) and are honored by RichTextKit's TextBlock
+    // (MaxHeight / EllipsisEnabled) in Text.GetTextBlock.
     private static void AddOverflowSection(ContainerRuntime container)
     {
-        AddSectionLabel(container,
-            "Overflow (#3677): ellipsis on horizontal overflow, then vertical TruncateLine vs SpillOver (same text + box):");
-
         const string longLine =
-            "This is a single long line of text that will not fit within the fixed width of its box";
-        const string longParagraph =
-            "This is a longer block of text with enough words to wrap across several lines so it overflows " +
-            "the fixed height of its box and demonstrates the difference between truncation and spillover.";
+            "This single long line overflows its box horizontally and is cut off with an ellipsis";
+        const string truncateParagraph =
+            "TruncateLine clips this wrapping paragraph to the lines that fit the box height and " +
+            "ellipsizes the last visible line, dropping everything past it.";
+        const string spillParagraph =
+            "SpillOver renders every line of this wrapping paragraph, overflowing past the bottom " +
+            "edge of its box instead of clipping.";
 
         // (a) Horizontal overflow -> ellipsis. MaxNumberOfLines = 1 caps the block to one line;
         // IsTruncatingWithEllipsisOnLastLine appends the trailing "...".
@@ -142,17 +126,17 @@ internal class TextScreen : FrameworkElement
         // (b) Vertical TruncateLine: the paragraph is clipped to the lines that fit the box Height,
         // with an ellipsis on the last visible line.
         RectangleRuntime truncateBox = MakeOverflowBox(width: 300, height: 60);
-        TextRuntime truncateText = MakeBoxFillingText(longParagraph);
+        TextRuntime truncateText = MakeBoxFillingText(truncateParagraph);
         SkiaGum.Text truncateRenderable = (SkiaGum.Text)truncateText.RenderableComponent;
         truncateRenderable.TextOverflowVerticalMode = TextOverflowVerticalMode.TruncateLine;
         truncateRenderable.IsTruncatingWithEllipsisOnLastLine = true;
         truncateBox.Children.Add(truncateText);
         container.Children.Add(truncateBox);
 
-        // (c) Vertical SpillOver (today's default): the same paragraph in the same box renders every
-        // line, overflowing past the box's bottom edge.
+        // (c) Vertical SpillOver (today's default): the same-size box renders every line, overflowing
+        // past the box's bottom edge.
         RectangleRuntime spillBox = MakeOverflowBox(width: 300, height: 60);
-        TextRuntime spillText = MakeBoxFillingText(longParagraph);
+        TextRuntime spillText = MakeBoxFillingText(spillParagraph);
         SkiaGum.Text spillRenderable = (SkiaGum.Text)spillText.RenderableComponent;
         spillRenderable.TextOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
         spillBox.Children.Add(spillText);
@@ -188,9 +172,6 @@ internal class TextScreen : FrameworkElement
 
     private static void AddStandaloneSkiaEffectsSection(ContainerRuntime container)
     {
-        AddSectionLabel(container,
-            "Standalone Skia text effects set on the renderable (#3674 drop shadow, #3675 outline, #3676 blend):");
-
         // Yellow text with a black outline via RichTextKit's halo (#3675), next to plain yellow text.
         // Font must be set: OutlineThickness only propagates to the renderable via UpdateToFontValues
         // when the runtime's Font is non-empty (#3675), so without this the halo would silently no-op.
@@ -213,9 +194,11 @@ internal class TextScreen : FrameworkElement
         noOutline.Blue = 0;
         container.Children.Add(noOutline);
 
-        // White text with a soft black drop shadow offset down-right (#3674). The standalone shadow
-        // is a canvas/ImageFilter effect on SkiaGum.Text reached via RenderableComponent — distinct
-        // from TextRuntime.HasDropshadow (the baked-atlas path above), which no-ops on Skia.
+        // White text with a drop shadow offset down-right (#3674). The standalone shadow is a
+        // canvas/ImageFilter effect on SkiaGum.Text reached via RenderableComponent — distinct from
+        // TextRuntime.HasDropshadow (the baked-atlas path), which no-ops on Skia. Deliberately
+        // high-contrast (magenta, large offset) so it's unmistakable against the cornflower-blue
+        // background behind the white text.
         TextRuntime shadowed = new TextRuntime();
         shadowed.Text = "Drop shadow";
         shadowed.Font = "Arial";
@@ -224,9 +207,6 @@ internal class TextScreen : FrameworkElement
         shadowed.Green = 255;
         shadowed.Blue = 255;
 
-        // Deliberately bold/high-contrast so the effect is unmistakable while verifying it renders at
-        // all: magenta shadow, large offset. (A subtle 3px black shadow was hard to see against the
-        // cornflower-blue background behind white text.)
         SkiaGum.Text shadowedRenderable = (SkiaGum.Text)shadowed.RenderableComponent;
         shadowedRenderable.HasDropshadow = true;
         shadowedRenderable.DropshadowOffsetX = 8;
@@ -273,13 +253,5 @@ internal class TextScreen : FrameworkElement
         blendBackground.Children.Add(normalBlend);
 
         container.Children.Add(blendBackground);
-    }
-
-    private static void AddSectionLabel(ContainerRuntime container, string text)
-    {
-        TextRuntime label = new TextRuntime();
-        label.Text = text;
-        label.FontSize = 14;
-        container.Children.Add(label);
     }
 }
