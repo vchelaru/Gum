@@ -1400,8 +1400,11 @@ public partial class CustomSetPropertyOnRenderable
         }
         else if (propertyName == "MaxLettersToShow")
         {
-#if MONOGAME || XNA4
-            ((Text)mContainedObjectAsIpso).MaxLettersToShow = (int?)value;
+#if SKIA
+            // Mirror of the XNALIKE MaxLettersToShow arm in Gum/Wireframe/CustomSetPropertyOnRenderable.cs.
+            // Skia honors this as a paint-only typewriter reveal on the renderable (see Text.Render /
+            // Text.GetVisibleWrappedText); the assignment is otherwise identical. (issue #3678)
+            text.MaxLettersToShow = (int?)value;
             handled = true;
 #endif
         }

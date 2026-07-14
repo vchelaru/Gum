@@ -73,6 +73,40 @@ internal class TextScreen : FrameworkElement
         AddStandaloneSkiaEffectsSection(container);
 
         AddOverflowSection(container);
+
+        AddMaxLettersToShowSection(container);
+    }
+
+    // MaxLettersToShow typewriter reveal on the SkiaGum.Text renderable (#3678). The same wrapping
+    // paragraph is shown fully, then with MaxLettersToShow set to a partial count so only the first N
+    // letters are visible while the hidden tail still occupies its final layout (reveal is paint-only:
+    // WrappedText / measurement stay built from the full RawText). Font = "Arial" because text can
+    // silently no-op without a font. No MonoGameGumInCode mirror — exercises the renderable directly.
+    private static void AddMaxLettersToShowSection(ContainerRuntime container)
+    {
+        AddSectionLabel(container,
+            "MaxLettersToShow (#3678): full text, then the same text revealed to the first 12 letters (typewriter):");
+
+        const string paragraph =
+            "This paragraph reveals only its first letters while the rest stays hidden.";
+
+        TextRuntime full = new TextRuntime();
+        full.Font = "Arial";
+        full.FontSize = 20;
+        full.Width = 300;
+        full.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        full.Text = paragraph;
+        container.Children.Add(full);
+
+        TextRuntime revealed = new TextRuntime();
+        revealed.Font = "Arial";
+        revealed.FontSize = 20;
+        revealed.Width = 300;
+        revealed.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        revealed.Text = paragraph;
+        SkiaGum.Text revealedRenderable = (SkiaGum.Text)revealed.RenderableComponent;
+        revealedRenderable.MaxLettersToShow = 12;
+        container.Children.Add(revealed);
     }
 
     // Overflow modes on the SkiaGum.Text renderable (#3677): ellipsis on horizontal overflow, then
