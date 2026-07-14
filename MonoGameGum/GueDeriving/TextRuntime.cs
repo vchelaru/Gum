@@ -579,22 +579,12 @@ public class TextRuntime : InteractiveGue
         }
     }
 
-    /// <summary>
-    /// How text that has more lines than fit the box height behaves:
-    /// <see cref="TextOverflowVerticalMode.SpillOver"/> renders every line past the bottom edge, while
-    /// <see cref="TextOverflowVerticalMode.TruncateLine"/> clips to the lines that fit (pair with
-    /// <see cref="IsTruncatingWithEllipsisOnLastLine"/> for a trailing ellipsis on the last visible line).
-    /// </summary>
-    public TextOverflowVerticalMode TextOverflowVerticalMode
-    {
-        get => ContainedText.TextOverflowVerticalMode;
-        set
-        {
-            ContainedText.TextOverflowVerticalMode = value;
-            NotifyPropertyChanged();
-            UpdateLayout();
-        }
-    }
+    // NOTE: TextOverflowVerticalMode is intentionally NOT declared here. GraphicalUiElement (our base)
+    // already exposes it with a backing field that its layout/pagination coordination reads (e.g.
+    // DialogBox pagination, RefreshTextOverflowVerticalMode). Redeclaring it here hides that property
+    // with a forward-to-renderable-only version, leaving the base field stuck at its default so
+    // truncation silently stops working (broke DialogBox multi-page splitting). The inherited property
+    // already forwards to the contained renderable, so no cast is needed to set it from a TextRuntime.
 
 #if !SKIA
     /// <summary>
