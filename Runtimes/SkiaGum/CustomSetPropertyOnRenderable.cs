@@ -1422,9 +1422,13 @@ public partial class CustomSetPropertyOnRenderable
         else if (propertyName == nameof(TextOverflowVerticalMode))
         {
             var textOverflowMode = (TextOverflowVerticalMode)value;
-#if MONOGAME || XNA4
-
-            ((Text)mContainedObjectAsIpso).TextOverflowVerticalMode = textOverflowMode;
+#if SKIA
+            // Skia honors vertical overflow directly on the renderable: TruncateLine caps the
+            // RichTextKit TextBlock to the Text's Height (see Text.GetTextBlock), SpillOver renders
+            // unbounded. The XNALIKE copy (Gum/Wireframe/CustomSetPropertyOnRenderable.cs) instead
+            // routes through GraphicalUiElement.RefreshTextOverflowVerticalMode. (issue #3677)
+            text.TextOverflowVerticalMode = textOverflowMode;
+            handled = true;
 #endif
 
         }
