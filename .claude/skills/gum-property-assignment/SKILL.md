@@ -64,6 +64,10 @@ All `CustomSetPropertyOnRenderable` statics (including `FontService`) are wired 
 `EditorTabPlugin_XNA.StartUp()` in the Gum tool. The class itself must not reference DI
 containers or service locators. Game runtimes assign `FontService` directly.
 
+`CustomSetPropertyOnRenderable`'s dispatch tree actually mixes renderable-type and Runtime-type
+branches, and which one a property takes isn't obvious from this pipeline alone — see
+**gum-architecture-layers** for why both exist and which one new branches should prefer.
+
 ---
 
 ## Font Deferred-Loading System

@@ -26,3 +26,5 @@ re-litigating it.
 | [0004](0004-viewmodels-expose-neutral-presentation-state.md) | ViewModels expose resolved display state in neutral types | Accepted | 2026-06-20 |
 | [0005](0005-headless-presentation-assembly.md) | Home for the headless presentation layer: a dedicated `Gum.Presentation` assembly | Accepted | 2026-06-24 |
 | [0006](0006-runtimes-declare-capabilities-through-igumservice.md) | Runtimes declare platform capabilities through `IGumService` | Accepted | 2026-07-10 |
+| [0007](0007-converge-skia-property-dispatch.md) | Converge the Skia property dispatcher via runtime-type-first dispatch | Accepted | 2026-07-13 |
+| [0008](0008-sequence-runtime-dispatch-convergence.md) | Sequence the runtime-type-first dispatch convergence: parity, then redispatch, then converge | Accepted | 2026-07-13 |
