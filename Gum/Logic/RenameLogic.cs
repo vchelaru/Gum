@@ -498,12 +498,28 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
         var oldXml = elementSave.GetFullPathXmlFile(oldName);
         var newXml = elementSave.GetFullPathXmlFile();
 
+        // A rename that only changes casing (e.g. "GameMenuScreens/Foo" -> "gamemenuscreens/Foo")
+        // points oldXml and newXml at the SAME physical file on a case-insensitive filesystem
+        // (Windows/macOS). TryAutoSaveObject already wrote the current content there under the new
+        // name, so deleting "the old file" (below) would delete that just-saved content outright.
+        // File.Move corrects the on-disk casing instead.
+        bool isSameFileDifferentCase = oldXml != null && newXml != null &&
+            oldXml.FullPath != newXml.FullPath &&
+            string.Equals(oldXml.FullPath, newXml.FullPath, StringComparison.OrdinalIgnoreCase);
+
+        if (isSameFileDifferentCase)
+        {
+            if (oldXml.Exists())
+            {
+                System.IO.File.Move(oldXml.FullPath, newXml.FullPath, overwrite: true);
+            }
+        }
         // Delete the XML.
         // If the file doesn't
         // exist, no biggie - we
         // were going to delete it
         // anyway.
-        if (oldXml.Exists())
+        else if (oldXml.Exists())
         {
             System.IO.File.Delete(oldXml.FullPath);
         }
