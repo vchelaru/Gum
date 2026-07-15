@@ -16,8 +16,99 @@ using Gum.Wireframe;
 
 namespace SkiaGum;
 
+#region LetterCustomization
+
+/// <summary>
+/// Mirrors <see cref="RenderingLibrary.Graphics.LetterCustomization"/> on the MonoGame-family runtime -
+/// the per-letter styling a <c>[Custom]</c> callback can apply. SkiaGum cannot reference that type
+/// directly (it lives in the MonoGame-coupled <c>RenderingLibrary.Graphics.Text</c> source file), so this
+/// is a local copy, matching the approach <see cref="Gum.Renderables.LetterCustomization"/> takes on
+/// Raylib. Only <see cref="XOffset"/>, <see cref="YOffset"/>, <see cref="Color"/> and
+/// <see cref="ReplacementCharacter"/> are honored on SkiaGum (issue #3692): they map directly onto a
+/// RichTextKit <c>Style</c> override (Color) plus a post-layout glyph nudge (<c>FontRun.MoveGlyphs</c>)
+/// for XOffset/YOffset. <see cref="ScaleX"/>/<see cref="ScaleY"/>/<see cref="RotationDegrees"/> would need
+/// a per-glyph transform RichTextKit does not expose and are not yet applied, matching the deferred scope
+/// documented on <see cref="Text.SupportedTags"/>.
+/// </summary>
+public struct LetterCustomization
+{
+    public float? XOffset;
+    public float? YOffset;
+    public System.Drawing.Color? Color;
+    public float? ScaleX;
+    public HorizontalAlignment? ScaleXOrigin;
+    public float? ScaleY;
+    public VerticalAlignment? ScaleYOrigin;
+    public float? RotationDegrees;
+    public char? ReplacementCharacter;
+}
+
+#endregion
+
+#region ParameterizedLetterCustomizationCall
+
+/// <summary>
+/// Mirrors <see cref="RenderingLibrary.Graphics.ParameterizedLetterCustomizationCall"/> on the
+/// MonoGame-family runtime. Resolves <see cref="FunctionName"/> against <see cref="Text.Customizations"/>
+/// / <see cref="Text.ContextCustomizations"/> lazily (rather than capturing the delegate at parse time)
+/// so registering the callback after the markup is assigned still takes effect at the next layout.
+/// </summary>
+public class ParameterizedLetterCustomizationCall
+{
+    public string FunctionName { get; set; } = string.Empty;
+
+    public Func<int, string, LetterCustomization>? Function
+    {
+        get
+        {
+            if (!string.IsNullOrEmpty(FunctionName) && Text.Customizations.TryGetValue(FunctionName, out var func))
+            {
+                return func;
+            }
+            return null;
+        }
+    }
+
+    public Func<int, string, LetterCustomization, LetterCustomization>? ContextFunction
+    {
+        get
+        {
+            if (!string.IsNullOrEmpty(FunctionName) && Text.ContextCustomizations.TryGetValue(FunctionName, out var func))
+            {
+                return func;
+            }
+            return null;
+        }
+    }
+
+    public int CharacterIndex { get; set; }
+
+    public string TextBlock { get; set; } = string.Empty;
+}
+
+#endregion
+
 public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 {
+    /// <summary>
+    /// Registry of simple per-letter callbacks for the <c>[Custom=Name]</c> BBCode tag, keyed by name.
+    /// Mirrors <see cref="RenderingLibrary.Graphics.Text.Customizations"/> on the MonoGame-family
+    /// runtime, and <see cref="Gum.Renderables.Text.Customizations"/> on Raylib -- each backend keeps its
+    /// own registry (issue #3692), so a callback must be registered per platform the app targets.
+    /// </summary>
+    public static Dictionary<string, Func<int, string, LetterCustomization>> Customizations { get; private set; }
+        = new();
+
+    /// <summary>
+    /// Registry of context-aware per-letter callbacks for the <c>[Custom=Name]</c> BBCode tag - the
+    /// callback receives the <see cref="LetterCustomization"/> produced by any enclosing <c>[Custom]</c>
+    /// tag so nested tags can chain (e.g. an outer tag sets Color, an inner tag darkens it). Checked
+    /// before <see cref="Customizations"/> when both are registered under the same name. Mirrors
+    /// <see cref="RenderingLibrary.Graphics.Text.ContextCustomizations"/> on the MonoGame-family runtime.
+    /// </summary>
+    public static Dictionary<string, Func<int, string, LetterCustomization, LetterCustomization>> ContextCustomizations { get; private set; }
+        = new();
+
     #region Fields/Properties
 
     [Obsolete("Use GlobalTextScale instead")]
@@ -815,9 +906,12 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     private List<InlineVariable> _inlineVariables = new();
     private readonly StyledSubstringSplitter _styledSubstringSplitter = new();
 
-    // The subset of BbCodeParser.KnownTags SkiaGum honors as RichTextKit Style overrides. Font family
-    // ("font"), outline, and custom per-letter callbacks are intentionally excluded (see the PR's
-    // deferred scope); unrecognized tags are left as literal characters, matching the parser.
+    // The subset of BbCodeParser.KnownTags SkiaGum honors. Most map onto a RichTextKit Style override;
+    // "custom" (issue #3692) instead produces one single-character InlineVariable per letter, resolved
+    // against Customizations/ContextCustomizations in BuildRunStyle and applied as a Style color override
+    // plus a post-layout glyph nudge (see GetTextBlock). Font family ("font") and outline are still
+    // intentionally excluded (see the PR's deferred scope); unrecognized tags are left as literal
+    // characters, matching the parser.
     private static readonly HashSet<string> SupportedTags = new(StringComparer.OrdinalIgnoreCase)
     {
         "color",
@@ -828,6 +922,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         "fontscale",
         "isbold",
         "isitalic",
+        "custom",
     };
 
     public TextBlock GetCachedTextBlock(float? forcedWidth = null)
@@ -880,14 +975,26 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     private TextBlock GetTextBlock(string textToRender, float? forcedWidth, bool allowMarkup)
     {
         var textBlock = new TextBlock();
+        // Code-point start index (in the added-text stream, which lines up with _layoutText since
+        // ReplacementCharacter substitution keeps a run's length at 1) -> the glyph offset a [Custom]
+        // callback produced for that run (issue #3692). Applied once, after Alignment/MaxLines/MaxHeight
+        // are set and the block has laid out, via FontRun.MoveGlyphs -- see the loop after the try below.
+        Dictionary<int, (float XOffset, float YOffset)>? glyphOffsetsByStart = null;
         try
         {
             textBlock.MaxWidth = forcedWidth ?? this.Width;
             if (allowMarkup && _hasMarkup)
             {
+                int codePointIndex = 0;
                 foreach (var run in GetStyledRuns())
                 {
                     textBlock.AddText(run.Text, run.Style);
+                    if (run.XOffset != 0 || run.YOffset != 0)
+                    {
+                        glyphOffsetsByStart ??= new();
+                        glyphOffsetsByStart[codePointIndex] = (run.XOffset, run.YOffset);
+                    }
+                    codePointIndex += run.Text.Length;
                 }
             }
             else
@@ -919,6 +1026,20 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             // is true, so set it explicitly to honor IsTruncatingWithEllipsisOnLastLine and suppress
             // the ellipsis when the caller wants a hard cut instead.
             textBlock.EllipsisEnabled = IsTruncatingWithEllipsisOnLastLine;
+
+            if (glyphOffsetsByStart != null)
+            {
+                // Accessing FontRuns forces layout. Each [Custom] run is a single character
+                // (StyledSubstringSplitter never merges "Custom" variables across letters), so it cannot
+                // be split by line wrapping -- FontRun.Start reliably identifies the matching run.
+                foreach (var fontRun in textBlock.FontRuns)
+                {
+                    if (glyphOffsetsByStart.TryGetValue(fontRun.Start, out var offset))
+                    {
+                        fontRun.MoveGlyphs(offset.XOffset, offset.YOffset);
+                    }
+                }
+            }
         }
         catch(Exception e)
         {
@@ -929,7 +1050,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 $"FontName {FontName}\n" +
                 $"FontSize {FontSize * (float)GlobalTextScale * FontScale}\n" +
                 $"FontWeight {400*BoldWeight}");
-            
+
 #else
             // I guess do nothing?
 #endif
@@ -973,22 +1094,29 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     }
 
 
-    internal Style GetStyle() => BuildRunStyle(null);
+    internal Style GetStyle() => BuildRunStyle(string.Empty, null).Style;
 
     /// <summary>
     /// A single run of text plus the RichTextKit <see cref="Style"/> it is drawn with. Produced by
     /// <see cref="GetStyledRuns"/> from BBCode markup (issue #3679) and fed to the TextBlock one
     /// <c>AddText</c> call per run so a line can carry mixed per-run color / size / weight / italic.
+    /// <see cref="XOffset"/>/<see cref="YOffset"/> come from a <c>[Custom]</c> callback (issue #3692) and
+    /// are applied as a post-layout glyph nudge in <see cref="GetTextBlock(string, float?, bool)"/>, since
+    /// RichTextKit's <see cref="Style"/> has no offset concept.
     /// </summary>
     internal readonly struct StyledTextRun
     {
         public readonly string Text;
         public readonly Style Style;
+        public readonly float XOffset;
+        public readonly float YOffset;
 
-        public StyledTextRun(string text, Style style)
+        public StyledTextRun(string text, Style style, float xOffset = 0, float yOffset = 0)
         {
             Text = text;
             Style = style;
+            XOffset = xOffset;
+            YOffset = yOffset;
         }
     }
 
@@ -1016,7 +1144,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         foreach (var substring in substrings)
         {
-            runs.Add(new StyledTextRun(substring.Substring, BuildRunStyle(substring.Variables)));
+            var (style, text, xOffset, yOffset) = BuildRunStyle(substring.Substring, substring.Variables);
+            runs.Add(new StyledTextRun(text, style, xOffset, yOffset));
         }
 
         return runs;
@@ -1025,16 +1154,23 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// <summary>
     /// Builds the RichTextKit <see cref="Style"/> for one run: the base font/color/weight/italic from
     /// this Text's properties, overridden by the run's inline BBCode <paramref name="variables"/>
-    /// (Color / Red / Green / Blue, FontSize, FontScale, IsBold, IsItalic). A null or empty
-    /// <paramref name="variables"/> reproduces <see cref="GetStyle"/> exactly.
+    /// (Color / Red / Green / Blue, FontSize, FontScale, IsBold, IsItalic). A <c>[Custom]</c> variable
+    /// (issue #3692) additionally resolves its callback against <see cref="Customizations"/> /
+    /// <see cref="ContextCustomizations"/> and can override the color, substitute the run's text (via
+    /// <see cref="LetterCustomization.ReplacementCharacter"/>), and produce a glyph offset the caller
+    /// applies after layout. A null or empty <paramref name="variables"/> reproduces <see cref="GetStyle"/>
+    /// exactly.
     /// </summary>
-    private Style BuildRunStyle(List<InlineVariable>? variables)
+    private (Style Style, string Text, float XOffset, float YOffset) BuildRunStyle(string runText, List<InlineVariable>? variables)
     {
         var color = this.Color;
         int fontSizePixels = FontSize;
         float fontScale = FontScale;
         bool italic = this.IsItalic;
         int weight = (int)(400 * BoldWeight);
+        float xOffset = 0;
+        float yOffset = 0;
+        string text = runText;
 
         if (variables != null)
         {
@@ -1069,6 +1205,51 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     case "IsItalic":
                         italic = (bool)variable.Value;
                         break;
+                    case "Custom":
+                        if (variable.Value is ParameterizedLetterCustomizationCall call)
+                        {
+                            var contextFunction = call.ContextFunction;
+                            var function = call.Function;
+                            if (contextFunction != null || function != null)
+                            {
+                                LetterCustomization response;
+                                if (contextFunction != null)
+                                {
+                                    var context = new LetterCustomization
+                                    {
+                                        XOffset = xOffset,
+                                        YOffset = yOffset,
+                                        Color = System.Drawing.Color.FromArgb(color.Alpha, color.Red, color.Green, color.Blue),
+                                    };
+                                    response = contextFunction(call.CharacterIndex, call.TextBlock, context);
+                                }
+                                else
+                                {
+                                    response = function!(call.CharacterIndex, call.TextBlock);
+                                }
+
+                                if (response.XOffset != null)
+                                {
+                                    xOffset = response.XOffset.Value;
+                                }
+                                if (response.YOffset != null)
+                                {
+                                    yOffset = response.YOffset.Value;
+                                }
+                                if (response.Color != null)
+                                {
+                                    var c = response.Color.Value;
+                                    color = new SKColor(c.R, c.G, c.B, c.A);
+                                }
+                                if (response.ReplacementCharacter != null)
+                                {
+                                    text = response.ReplacementCharacter.Value.ToString();
+                                }
+                                // ScaleX/ScaleY/RotationDegrees are not applied on SkiaGum yet -- see
+                                // LetterCustomization's remarks.
+                            }
+                        }
+                        break;
                 }
             }
         }
@@ -1090,7 +1271,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         // outline is a uniform recolor+dilate pass in Render (DrawTextWithOutline), which can't spike
         // or emboss and reuses RichTextKit's exact layout.
 
-        return style;
+        return (style, text, xOffset, yOffset);
     }
 
     /// <summary>
@@ -1180,6 +1361,37 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     variableName = "IsItalic";
                     value = bool.TryParse(argument, out var italic) ? italic : (bool?)null;
                     break;
+                case "custom":
+                    // A [Custom=Name] callback applies per letter (issue #3692), so -- unlike every other
+                    // tag above, which adds a single InlineVariable spanning the whole tagged range --
+                    // this adds one InlineVariable per character, each with its own CharacterIndex/
+                    // TextBlock context. Mirrors the shared MonoGame/Raylib SetBbCodeText per-letter loop
+                    // (Gum/Wireframe/CustomSetPropertyOnRenderable.cs).
+                    if (!string.IsNullOrEmpty(argument) && !string.IsNullOrEmpty(_layoutText))
+                    {
+                        var startStripped = tag.Open.StartStrippedIndex;
+                        var length = tag.Close.StartStrippedIndex - startStripped;
+                        if (length > 0 && startStripped + length <= _layoutText.Length)
+                        {
+                            var taggedSubstring = _layoutText.Substring(startStripped, length);
+                            for (int i = 0; i < taggedSubstring.Length; i++)
+                            {
+                                _inlineVariables.Add(new InlineVariable
+                                {
+                                    VariableName = "Custom",
+                                    StartIndex = startStripped + i,
+                                    CharacterCount = 1,
+                                    Value = new ParameterizedLetterCustomizationCall
+                                    {
+                                        FunctionName = argument,
+                                        CharacterIndex = startStripped + i,
+                                        TextBlock = taggedSubstring,
+                                    },
+                                });
+                            }
+                        }
+                    }
+                    continue;
                 default:
                     continue;
             }
