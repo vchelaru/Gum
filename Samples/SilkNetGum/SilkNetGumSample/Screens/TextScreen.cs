@@ -121,6 +121,29 @@ internal class TextScreen : FrameworkElement
 
         AddOverflowSection(container);
 
+        // GetCharacterIndexAtPosition (#3708): click the text, report the hit index. Newly implemented
+        // on SkiaGum.Text via RichTextKit's TextBlock.HitTest -- same position in this section as the
+        // MonoGame/raylib screen's BuildTextParitySection, minus the TextRenderingPositionMode toggle
+        // right before it there, which is still a Skia gap (#3708) and has no equivalent here.
+        TextRuntime hitText = new TextRuntime();
+        hitText.FontSize = 24;
+        hitText.Text = "Click me to report the character index";
+        hitText.HasEvents = true;
+        container.Children.Add(hitText);
+
+        TextRuntime hitResult = new TextRuntime();
+        hitResult.FontSize = 16;
+        hitResult.Text = "(no click yet)";
+        container.Children.Add(hitResult);
+
+        hitText.Click += (_, _) =>
+        {
+            float cursorX = FrameworkElement.MainCursor.XRespectingGumZoomAndBounds();
+            float cursorY = FrameworkElement.MainCursor.YRespectingGumZoomAndBounds();
+            int index = hitText.GetCharacterIndexAtPosition(cursorX, cursorY);
+            hitResult.Text = $"Character index at click: {index}";
+        };
+
         AddMaxLettersToShowSection(container);
     }
 
