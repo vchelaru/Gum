@@ -29,6 +29,7 @@ Each has a `Screens/` folder with one `*Screen.cs` per feature (`SpriteScreen`, 
 - **Color types differ.** MonoGame `Microsoft.Xna.Framework.Color`, raylib `Raylib_cs.Color`, Skia `SKColor`. Pick the nearest named color per backend.
 - **Not every property exists on every backend.** A runtime property may be `#if`-gated away from a backend (see [[gum-cross-platform-unification]]). If the mirrored screen won't compile, the feature isn't wired on that backend yet — that's the actual work, not the screen.
 - **raylib and SilkNetGum screens need `using Gum.Forms.Controls;`** for `FrameworkElement`.
+- **A backend can share a screen file via `<Compile Include Link=` instead of owning a physical copy** (raylib's `GumTest.csproj` links `TextScreen.cs` from `MonoGameGumInCode/.../Screens/` — no such file sits under `Samples/raylib/`). Don't grep/`find` a backend's directory to conclude a screen is missing; check its `.csproj` for a `Link=` entry first.
 
 ## Shape features
 

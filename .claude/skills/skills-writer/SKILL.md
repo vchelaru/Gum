@@ -13,15 +13,23 @@ A good skill answers three things and stops: **where** the relevant code/docs li
 
 ## Growing a Skill — Damped Response
 
-A skill is rarely written whole; it grows as questions pull on it. **Don't answer a question 100% inside the skill.** Treat demand as an elastic pull and the skill as an object resting in sand: a question pulls toward a fuller answer, the skill responds **damped** (moves part-way, not all the way), and **retains** its new position — the sand means it doesn't snap back. Over many questions this settles the skill at the best *average* of real demand without overfitting to any one question. It's a leaky integrator of demand, not a transcript of the last conversation.
+A skill is rarely written whole; it grows as questions pull on it. Two **independent axes** govern what a pull adds — conflating them is the most common way this section gets misapplied.
 
-**Default: a 100% pull moves ~20%.** When a question *could* be answered in full inside the skill, add only its broad orienting fifth — a concrete signpost plus a one-sentence shape of the answer — not the whole walkthrough. Because the position is retained, a genuinely recurring question reaches full coverage in a few pulls, while a one-off never bloats the skill past its signpost. This is also why creating a thin, broad skill is cheap and reversible: easy to add, easy to delete if demand never returns.
+**Axis 1 — coverage: how much of the answer's territory you write down.** This is what "damped" governs. Picture the skill as an object resting in sand: a question pulls it toward a fuller answer, it moves **damped** (covers part of the conceptual ground, not all) and **retains** that position — the sand doesn't snap back. Repeated pulls settle the skill at the *average* of real demand instead of overfitting to one question. **Default: a 100% pull moves ~20%** — add only the one signpost that would have shortest-circuited the problem (the file/class/relationship to check first, plus a one-sentence shape of the answer), not the walkthrough or the second-order cases. A genuinely recurring question reaches full coverage over a few pulls; a one-off never bloats the skill past its signpost.
 
-Why damped: chasing every specific detail down into the skill bloats it, scatters its focus, rots, and front-loads context future agents won't need. Most questions are one-offs. Let the skill grow only where demand actually, repeatedly pulls.
+Why damped: chasing every specific detail into the skill bloats it, scatters its focus, and front-loads context future agents won't need — most questions are one-offs.
 
-**Two exceptions — place these by hand, at full strength, not through the elastic:**
+**Axis 2 — prose density: always terse, at every coverage level.** Independent of axis 1; never relaxes, not even for a full-coverage landmine. State each fact once — no restating the same point from a second angle. Skip examples unless the pattern truly can't be conveyed by naming the file/symbol. Omit narrated history (see "War stories" under Exclude) and anything a reader can derive from the code you're pointing at. A landmine written at full axis-1 coverage should still read as tight rule-plus-consequence, not a paragraph.
 
-1. **Landmines.** A non-obvious, expensive-to-rediscover gotcha that *isn't* evident from the source you point at is a sharp fact, not a sample to be averaged. Damping it smears a precise truth into a vague gesture — the worst outcome. State it fully and firmly. (This is the "list of landmines" half of the mental model above.)
+**Example — same gotcha, axis 1 held constant, axis 2 fixed:**
+
+Bad (states the same thing twice): *"A screen's file doesn't have to live under the backend's own folder — some are linked from another project's directory. Grepping a backend's folder for a screen name can therefore give a false 'doesn't exist,' since the file lives elsewhere and is only referenced via a link."*
+
+Good (one pass, no restatement): *"A backend can share a screen via a project-file link instead of a physical copy — check for that before concluding a screen is missing."*
+
+**Two exceptions to axis 1's damping — place these by hand, at full coverage, not through the elastic:**
+
+1. **Landmines.** A non-obvious, expensive-to-rediscover gotcha that *isn't* evident from the source you point at is a sharp fact, not a sample to be averaged. Write the whole gotcha: what triggers it, what breaks, what to check. (This is the "list of landmines" half of the mental model above.)
 2. **Bimodal pull.** When a skill is dragged toward a low-density middle between two genuinely distinct sub-topics, don't settle in the valley — it serves neither. Split into two skills, each with its own focus. A pull toward the empty middle *is* the signal to fission.
 
 **Signpost quality bar.** A nudge must name *where to look* — a file, class, or relationship — not merely assert that something exists. "Animation events interact with children" raises a question without reducing search cost; "see event dispatch in `X.cs` — children suppress Y because Z" reduces it. A vague signpost is worse than none: it costs context and resolves nothing.
@@ -31,7 +39,7 @@ Why damped: chasing every specific detail down into the skill bloats it, scatter
 Before writing anything, identify where the ground truth already lives:
 
 - **Source code** — class outlines, property lists, method signatures, call sites.
-- **`docs/` GitBook tree** — user-facing behavior, layout rules, control APIs, tutorials. If a topic has a docs page, link to it.
+- **`docs/` GitBook tree** — user-facing behavior, layout rules, control APIs, tutorials (imperative to link rather than restate is under Exclude).
 - **Other skills** — cross-reference instead of copying. (`gum-layout` and `gum-layout-engine`, for example, deliberately split shallow vs. deep.)
 
 ## Process
@@ -40,6 +48,7 @@ Before writing anything, identify where the ground truth already lives:
 2. Check `docs/SUMMARY.md` for existing user-facing pages on the topic.
 3. Skim a few existing skills in `.claude/skills/` to match style and depth.
 4. Write only the non-obvious distillation.
+5. Before saving, re-read every sentence you just added — against each other **and** against existing sections you didn't touch: does it restate a nearby sentence from a different angle, include an example that a file/symbol pointer would replace, or narrate history instead of stating a timeless rule? Cut what fails.
 
 ## Skill File Rules
 
