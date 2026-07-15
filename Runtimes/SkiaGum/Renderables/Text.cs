@@ -1,5 +1,6 @@
 ﻿using RenderingLibrary;
 using RenderingLibrary.Graphics;
+using RenderingLibrary.Math;
 using Gum.GueDeriving;
 using SkiaGum.Renderables;
 using SkiaSharp;
@@ -84,6 +85,29 @@ public class ParameterizedLetterCustomizationCall
     public int CharacterIndex { get; set; }
 
     public string TextBlock { get; set; } = string.Empty;
+}
+
+#endregion
+
+#region TextRenderingPositionMode
+
+/// <summary>
+/// Controls whether <see cref="Text.Render"/> snaps this Text's draw origin to a whole pixel
+/// (issue #3708). Skia rasterizes glyphs live via RichTextKit with anti-aliasing rather than
+/// blitting a pre-baked glyph-atlas texture (the XNALIKE/Raylib approach), so a sub-pixel origin
+/// doesn't cause texture-sampling shimmer -- but it does give each glyph a slightly different
+/// anti-aliasing pattern per frame, or between sibling items in a list, which reads as
+/// jitter/inconsistency at small pixel-art font sizes. Mirrors the XNALIKE
+/// (<see cref="RenderingLibrary.Graphics.TextRenderingPositionMode"/>) and Raylib
+/// (<see cref="Gum.Renderables.TextRenderingPositionMode"/>) enum values and default.
+/// </summary>
+public enum TextRenderingPositionMode
+{
+    /// <summary>The draw origin is rounded to the nearest whole pixel before painting.</summary>
+    SnapToPixel,
+
+    /// <summary>The draw origin is used exactly as computed, including any fractional offset.</summary>
+    FreeFloating,
 }
 
 #endregion
@@ -451,6 +475,45 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         }
     }
 
+    /// <summary>
+    /// The default pixel-snap behavior applied to every <see cref="Text"/> instance that doesn't
+    /// set <see cref="OverrideTextRenderingPositionMode"/>. Mirrors the XNALIKE/Raylib static
+    /// default (<see cref="TextRenderingPositionMode.SnapToPixel"/>).
+    /// </summary>
+    public static TextRenderingPositionMode TextRenderingPositionMode = TextRenderingPositionMode.SnapToPixel;
+
+    /// <summary>
+    /// Per-instance override for <see cref="TextRenderingPositionMode"/>. When null (the default),
+    /// this Text uses the static <see cref="TextRenderingPositionMode"/>; when set, it overrides the
+    /// static default for this instance only. Mirrors the XNALIKE/Raylib Text renderables.
+    /// </summary>
+    public TextRenderingPositionMode? OverrideTextRenderingPositionMode;
+
+    /// <summary>
+    /// The position mode actually applied when drawing this Text: the per-instance
+    /// <see cref="OverrideTextRenderingPositionMode"/> when set, otherwise the static
+    /// <see cref="TextRenderingPositionMode"/>.
+    /// </summary>
+    internal TextRenderingPositionMode EffectiveTextRenderingPositionMode =>
+        OverrideTextRenderingPositionMode ?? TextRenderingPositionMode;
+
+    /// <summary>
+    /// Rounds <paramref name="x"/>/<paramref name="y"/> to the nearest whole pixel (matching the
+    /// away-from-zero rounding <see cref="MathFunctions.RoundToInt(float)"/> uses on XNALIKE/Raylib)
+    /// when <see cref="EffectiveTextRenderingPositionMode"/> is <see cref="TextRenderingPositionMode.SnapToPixel"/>;
+    /// otherwise returns them unchanged. Used by <see cref="Render"/> to snap the draw origin.
+    /// Exposed internally for unit testing.
+    /// </summary>
+    internal (float X, float Y) GetSnappedOrigin(float x, float y)
+    {
+        if (EffectiveTextRenderingPositionMode != TextRenderingPositionMode.SnapToPixel)
+        {
+            return (x, y);
+        }
+
+        return (MathFunctions.RoundToInt(x), MathFunctions.RoundToInt(y));
+    }
+
     #region Dropshadow
 
     // Standalone (non-BBCode) drop shadow for Skia text (issue #3674). Mirrors the drop-shadow
@@ -811,6 +874,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             SKMatrix rotationMatrix = SKMatrix.CreateRotationDegrees(-Rotation);
             var absoluteX = this.GetAbsoluteX();
             var absoluteY = this.GetAbsoluteY() + GetVerticalAlignmentOffset(textBlock);
+            (absoluteX, absoluteY) = GetSnappedOrigin(absoluteX, absoluteY);
 
             SKMatrix translateMatrix = SKMatrix.CreateTranslation(absoluteX, absoluteY);
             // Continue to apply the previou matrix in case there is scaling
