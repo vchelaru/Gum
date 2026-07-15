@@ -1707,8 +1707,14 @@ public partial class CustomSetPropertyOnRenderable
     /// and the CustomFontFile-as-.ttf/.otf path (#3703) so both bake through the same
     /// cache/embedded-resource/InMemoryFontCreator/FontService/disk cascade.
     /// </summary>
+#if FRB
+    // FRB doesn't yet have a TextRuntime, so we have to do this:
+    private static BitmapFont GetOrCreateBakedFont(GraphicalUiElement textRuntime,
+        global::RenderingLibrary.Content.LoaderManager loaderManager, string? fontFilePath)
+#else
     private static BitmapFont GetOrCreateBakedFont(Gum.GueDeriving.TextRuntime textRuntime,
         global::RenderingLibrary.Content.LoaderManager loaderManager, string? fontFilePath)
+#endif
     {
         BitmapFont font = null;
 
