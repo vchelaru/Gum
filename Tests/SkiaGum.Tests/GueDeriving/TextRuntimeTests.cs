@@ -119,6 +119,25 @@ public class TextRuntimeTests
         contained.GetRenderPaint().ShouldNotBeNull();
     }
 
+    [Fact]
+    public void DropshadowBlurXY_SetInCode_ShouldOverrideIndependentlyOfDropshadowBlur()
+    {
+        // Skia-only independent axes (#3709): DropshadowBlur still seeds both axes equally for
+        // callers that only set the cross-backend scalar (see the test above), but setting
+        // DropshadowBlurX/Y explicitly lets a Skia caller diverge the two -- something the
+        // XNALIKE/Raylib baked shadow can't do.
+        new RenderingLibrary.SystemManagers().Initialize();
+
+        TextRuntime sut = new();
+        sut.DropshadowBlur = 6;
+        sut.DropshadowBlurX = 3;
+        sut.DropshadowBlurY = 9;
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.DropshadowBlurX.ShouldBe(3);
+        containedText.DropshadowBlurY.ShouldBe(9);
+    }
+
     #endregion
 
     #region FontFamily
@@ -292,6 +311,39 @@ public class TextRuntimeTests
         containedText.MaxLettersToShow.ShouldBe(4);
     }
 
+    [Fact]
+    public void MaxLettersToShow_SetInCode_ShouldPushToContainedText()
+    {
+        // The direct code-property setter was #if !SKIA -- the SetProperty dispatch arm above
+        // (#3678) already worked on Skia, but callers setting this straight from C# had no property
+        // to call. SkiaGum.Text.MaxLettersToShow already implements the capability. (#3709)
+        TextRuntime sut = new();
+
+        sut.MaxLettersToShow = 4;
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.MaxLettersToShow.ShouldBe(4);
+    }
+
+    #endregion
+
+    #region OutlineColor
+
+    [Fact]
+    public void OutlineColor_SetInCode_ShouldPushToContainedText()
+    {
+        // Skia-only: MonoGame/Raylib bake the outline into the font atlas and have no runtime
+        // outline-color concept. Code-property path -> UpdateToFontValues -> UpdateFonts bridge,
+        // mirroring the OutlineThickness fix from bug #3684. (#3709)
+        new RenderingLibrary.SystemManagers().Initialize();
+
+        TextRuntime sut = new();
+        sut.OutlineColor = new SKColor(10, 20, 30, 255);
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.OutlineColor.ShouldBe(new SKColor(10, 20, 30, 255));
+    }
+
     #endregion
 
     #region OutlineThickness
@@ -409,6 +461,22 @@ public class TextRuntimeTests
         TextRuntime sut = new();
         sut.UseFontSmoothing = false;
         sut.UseFontSmoothing.ShouldBeFalse();
+    }
+
+    #endregion
+
+    #region WrappedText
+
+    [Fact]
+    public void WrappedText_ShouldForwardToContainedText()
+    {
+        // TextRuntime.WrappedText was #if !SKIA -- SkiaGum.Text.WrappedText already implements this,
+        // TextRuntime just never forwarded it. (#3709)
+        TextRuntime sut = new();
+        sut.Text = "Hello World";
+
+        Text containedText = (Text)sut.RenderableComponent;
+        sut.WrappedText.ShouldBe(containedText.WrappedText);
     }
 
     #endregion
