@@ -5,6 +5,7 @@ using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.Wireframe;
 using RenderingLibrary.Graphics;
+using SkiaGum;
 using SkiaSharp;
 using System;
 using System.Linq;
@@ -121,10 +122,38 @@ internal class TextScreen : FrameworkElement
 
         AddOverflowSection(container);
 
+        // --- Per-instance TextRenderingPositionMode override, at a fractional origin (#3708) ---
+        // Same position/content as the MonoGame/raylib screen's BuildTextParitySection. Skia rounds the
+        // RichTextKit draw origin to a whole pixel under SnapToPixel (default) instead of blitting a
+        // glyph-atlas texture, so this keeps anti-aliasing consistent rather than avoiding sampling
+        // shimmer -- but the visible effect on this toggle is the same either way.
+        TextRuntime snapText = new TextRuntime();
+        snapText.FontSize = 20;
+        snapText.X = 120.5f;
+        snapText.Text = "Fractional X=120.5 - SnapToPixel";
+        snapText.TextRenderingPositionMode = TextRenderingPositionMode.SnapToPixel;
+        container.Children.Add(snapText);
+
+        Button toggleButton = new Button();
+        toggleButton.Text = "Toggle snap mode";
+        toggleButton.Click += (_, _) =>
+        {
+            if (snapText.TextRenderingPositionMode == TextRenderingPositionMode.SnapToPixel)
+            {
+                snapText.TextRenderingPositionMode = TextRenderingPositionMode.FreeFloating;
+                snapText.Text = "Fractional X=120.5 - FreeFloating";
+            }
+            else
+            {
+                snapText.TextRenderingPositionMode = TextRenderingPositionMode.SnapToPixel;
+                snapText.Text = "Fractional X=120.5 - SnapToPixel";
+            }
+        };
+        container.Children.Add(toggleButton.Visual);
+
         // GetCharacterIndexAtPosition (#3708): click the text, report the hit index. Newly implemented
         // on SkiaGum.Text via RichTextKit's TextBlock.HitTest -- same position in this section as the
-        // MonoGame/raylib screen's BuildTextParitySection, minus the TextRenderingPositionMode toggle
-        // right before it there, which is still a Skia gap (#3708) and has no equivalent here.
+        // MonoGame/raylib screen's BuildTextParitySection.
         TextRuntime hitText = new TextRuntime();
         hitText.FontSize = 24;
         hitText.Text = "Click me to report the character index";

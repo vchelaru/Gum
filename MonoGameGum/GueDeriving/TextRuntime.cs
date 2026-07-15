@@ -639,7 +639,6 @@ public class TextRuntime : InteractiveGue
     // truncation silently stops working (broke DialogBox multi-page splitting). The inherited property
     // already forwards to the contained renderable, so no cast is needed to set it from a TextRuntime.
 
-#if !SKIA
     /// <summary>
     /// Gets or sets the text rendering position mode to use for the contained text, overriding the default behavior if
     /// specified.
@@ -652,7 +651,6 @@ public class TextRuntime : InteractiveGue
         get => ContainedText.OverrideTextRenderingPositionMode;
         set => ContainedText.OverrideTextRenderingPositionMode = value;
     }
-#endif
 
     /// <summary>
     /// Gets or sets the raw text content displayed by the control. This is the value before line wrapping and bbcode parsing has been applied.

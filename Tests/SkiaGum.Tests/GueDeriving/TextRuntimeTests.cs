@@ -497,6 +497,32 @@ public class TextRuntimeTests
 
     #endregion
 
+    #region TextRenderingPositionMode
+
+    // TextRuntime.TextRenderingPositionMode was #if !SKIA -- Skia's Text renderable had no
+    // pixel-snap concept at all (issue #3708). Now forwards straight to the contained renderable,
+    // matching the MonoGame/Raylib TextRuntime surface.
+
+    [Fact]
+    public void TextRenderingPositionMode_ShouldDefaultToNull()
+    {
+        TextRuntime sut = new();
+        sut.TextRenderingPositionMode.ShouldBeNull();
+    }
+
+    [Fact]
+    public void TextRenderingPositionMode_ShouldRoundTripThroughRenderable()
+    {
+        TextRuntime sut = new();
+        sut.TextRenderingPositionMode = TextRenderingPositionMode.FreeFloating;
+
+        sut.TextRenderingPositionMode.ShouldBe(TextRenderingPositionMode.FreeFloating);
+        ((Text)sut.RenderableComponent).OverrideTextRenderingPositionMode
+            .ShouldBe(TextRenderingPositionMode.FreeFloating);
+    }
+
+    #endregion
+
     #region UseFontSmoothing
 
     [Fact]
