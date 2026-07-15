@@ -67,6 +67,50 @@ public class GumFontMapperTests
     }
 
     [Fact]
+    public void RegisterFontFile_WithRelativePath_ResolvesAgainstCurrentFileManagerRelativeDirectory()
+    {
+        // Pins the exact bug that shipped in the SilkNetGumSample manual-test demo: a relative
+        // CustomFontFile path resolves against FileManager.RelativeDirectory AT THE TIME OF THE
+        // CALL, not the exe's own directory. RelativeDirectory changes when a .gumx project loads
+        // (MonoGameGum/GumService.cs sets it to the project's folder) -- a relative path bundled
+        // next to the exe silently fails to resolve once that happens (falls back to the default
+        // font with no error), unless the file actually lives under the new RelativeDirectory.
+        string previousRelativeDirectory = ToolsUtilities.FileManager.RelativeDirectory;
+        try
+        {
+            ToolsUtilities.FileManager.RelativeDirectory =
+                Path.Combine(AppContext.BaseDirectory, "Assets") + Path.DirectorySeparatorChar;
+
+            string? familyKey = GumFontMapper.RegisterFontFile("Fonts/TestFont.ttf");
+
+            familyKey.ShouldNotBeNullOrEmpty();
+        }
+        finally
+        {
+            ToolsUtilities.FileManager.RelativeDirectory = previousRelativeDirectory;
+        }
+    }
+
+    [Fact]
+    public void RegisterFontFile_WithRelativePath_WhenRelativeDirectoryDoesNotContainFile_ReturnsNull()
+    {
+        string previousRelativeDirectory = ToolsUtilities.FileManager.RelativeDirectory;
+        try
+        {
+            ToolsUtilities.FileManager.RelativeDirectory = AppContext.BaseDirectory;
+
+            // No "Fonts" subfolder directly under AppContext.BaseDirectory -- only under Assets/Fonts.
+            string? familyKey = GumFontMapper.RegisterFontFile("Fonts/TestFont.ttf");
+
+            familyKey.ShouldBeNull();
+        }
+        finally
+        {
+            ToolsUtilities.FileManager.RelativeDirectory = previousRelativeDirectory;
+        }
+    }
+
+    [Fact]
     public void ResolveFontFamily_UseCustomFontWithNonTtfPath_ReturnsNull()
     {
         // Skia has no bitmap-font atlas renderer, so a .fnt CustomFontFile (the XNA-like/raylib

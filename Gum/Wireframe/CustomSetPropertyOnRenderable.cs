@@ -1663,9 +1663,10 @@ public partial class CustomSetPropertyOnRenderable
     }
 
     /// <summary>
-    /// Resolves a font file path (from a <c>[Font=path]</c> tag) to an absolute path using the Gum project
-    /// directory. Font generators resolve paths relative to their own working directory, not the project
-    /// directory, so relative paths must be made absolute. Mirrors the XNA-side method of the same name.
+    /// Resolves a font file path (from a <c>[Font=path]</c> tag, or a code-set CustomFontFile/Font
+    /// path) to an absolute path. Font generators (bmfont.exe/KernSmith) resolve relative paths
+    /// against their own working directory, not the project directory, so relative paths must be
+    /// made absolute here. Mirrors the XNA-side method of the same name.
     /// </summary>
     private static string ResolveFontFilePath(string fontFilePath)
     {
@@ -1681,7 +1682,13 @@ public partial class CustomSetPropertyOnRenderable
             return System.IO.Path.GetFullPath(System.IO.Path.Combine(projectDir, fontFilePath));
         }
 
-        return fontFilePath;
+        // #3703: no .gumx project loaded (code-only games) -- fall back to FileManager.RelativeDirectory,
+        // matching the documented CustomFontFile contract ("relative to FileManager.RelativeDirectory,
+        // which is the Content folder for code-only projects, or the folder containing the .gumx
+        // project"). Previously this branch returned the path unresolved, so KernSmith/bmfont.exe
+        // received a relative path that resolved against the process's working directory instead --
+        // which may not be the exe's own directory.
+        return ToolsUtilities.FileManager.Standardize(fontFilePath, preserveCase: true, makeAbsolute: true);
     }
 
     /// <summary>
@@ -1994,9 +2001,12 @@ public partial class CustomSetPropertyOnRenderable
                 asText.FontSize = textRuntime.FontSize;
             }
 
-            if (textRuntime.UseCustomFont == true)
+            // #3703: guard against a null/empty CustomFontFile -- UseCustomFont can be (and, per
+            // the sample demo, commonly is) set to true before CustomFontFile is assigned, and
+            // FileManager.Standardize(null, ...) throws ArgumentException rather than returning
+            // gracefully. Mirrors the XNA-like branch's !string.IsNullOrEmpty(CustomFontFile) guard.
+            if (textRuntime.UseCustomFont == true && !string.IsNullOrEmpty(textRuntime.CustomFontFile))
             {
-                // todo here:
                 string fontName = textRuntime.CustomFontFile;
 
                 string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);

@@ -107,6 +107,18 @@ public class TextRuntimeTests : BaseTestClass
         sut.CustomFontFile.ShouldBeNull();
     }
 
+    [Fact]
+    public void UseCustomFont_SetTrue_WithCustomFontFileStillNull_ShouldNotThrow()
+    {
+        // #3703: setting UseCustomFont = true before CustomFontFile is assigned (the natural
+        // property-set order, and what the MonoGameGumInCode/raylib Text sample demo does) used
+        // to throw ArgumentException from FileManager.Standardize(null, ...) -- CustomFontFile
+        // being null/empty must be a graceful no-op here, matching the XNA-like branch's guard.
+        TextRuntime sut = new();
+
+        Should.NotThrow(() => sut.UseCustomFont = true);
+    }
+
     #endregion
 
     #region Defaults
