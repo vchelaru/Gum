@@ -751,9 +751,10 @@ public class TextRuntime : InteractiveGue
     /// for details. Defaults to <see cref="OverlapDirection.RightOnTop"/>.
     /// </summary>
     /// <remarks>
-    /// Not supported on Raylib — the underlying Raylib text-rendering calls draw
-    /// a full string as a single unit and do not expose per-glyph ordering.
-    /// Not supported on SkiaGum — Skia's text renderable uses a different path.
+    /// Not supported on Raylib or SkiaGum. Both draw a whole line/run in a single call into their
+    /// respective text-rendering library (raylib's <c>DrawTextPro</c>, RichTextKit's
+    /// <c>TextBlock.Paint</c>) rather than looping per-glyph the way this XNALIKE path does, so
+    /// there's no per-glyph draw-order hook to expose. Intentionally XNALIKE-only.
     /// </remarks>
     public OverlapDirection OverlapDirection
     {

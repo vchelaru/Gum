@@ -964,6 +964,11 @@ public class Text : IVisible, IRenderableIpso,
         return maxScale;
     }
 
+    // No OverlapDirection over here (or in DrawStyledLine below) -- both hand the whole line/run to
+    // one DrawTextPro call, there's no per-glyph draw-order knob to hook into. Getting it would mean
+    // hand-rolling the glyph loop ourselves instead of letting raylib draw the string, and nothing in
+    // Gum actually uses overlap direction. XNALIKE-only is fine, not adding it here.
+
     /// <summary>
     /// Draws a single line with no inline styling, honoring horizontal alignment and pixel snapping.
     /// </summary>
