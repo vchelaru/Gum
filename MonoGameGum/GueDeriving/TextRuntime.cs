@@ -374,6 +374,12 @@ public class TextRuntime : InteractiveGue
     /// A value of 1.0 represents regular weight, while higher values
     /// increase the thickness of strokes (e.g., 1.5 for bold).
     /// </summary>
+    /// <remarks>
+    /// Skia-only: MonoGame/Raylib bake <see cref="IsBold"/> into the font atlas at generation time
+    /// (no runtime scalar exists). KernSmith's underlying generator does have a variable-font weight
+    /// axis (<c>VariationAxes["wght"]</c>) that could unlock a continuous weight there too, but Gum's
+    /// generator mapping doesn't wire it up -- not currently planned; no user demand for it (issue #3708).
+    /// </remarks>
     public float BoldWeight
     {
         get => _boldWeight;
@@ -419,7 +425,8 @@ public class TextRuntime : InteractiveGue
     /// <summary>
     /// The color of the outline drawn when <see cref="OutlineThickness"/> is greater than zero.
     /// Skia-only: MonoGame/Raylib bake the outline into the font atlas at generation time and expose
-    /// no runtime outline-color concept, so there is no cross-backend property to mirror.
+    /// no runtime outline-color concept, so there is no cross-backend property to mirror. Not
+    /// currently planned for XNALIKE/Raylib; no user demand for it (issue #3708).
     /// </summary>
     public Color OutlineColor
     {
@@ -541,7 +548,8 @@ public class TextRuntime : InteractiveGue
     /// <summary>
     /// Skia-only independent horizontal blur axis for the drop shadow. Setting <see cref="DropshadowBlur"/>
     /// seeds this and <see cref="DropshadowBlurY"/> equally; set this explicitly to diverge the two,
-    /// which the XNALIKE/Raylib baked shadow can't do.
+    /// which the XNALIKE/Raylib baked shadow can't do. Not currently planned for XNALIKE/Raylib; no
+    /// user demand for it (issue #3708).
     /// </summary>
     public float DropshadowBlurX
     {
