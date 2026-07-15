@@ -974,6 +974,20 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// reveal path), the text is added as a single unstyled run.</param>
     private TextBlock GetTextBlock(string textToRender, float? forcedWidth, bool allowMarkup)
     {
+        List<StyledTextRun> runs = allowMarkup && _hasMarkup
+            ? GetStyledRuns()
+            : new List<StyledTextRun> { new StyledTextRun(textToRender ?? string.Empty, GetStyle()) };
+        return BuildTextBlockFromRuns(runs, forcedWidth);
+    }
+
+    /// <summary>
+    /// Lays out the given styled runs into a RichTextKit <c>TextBlock</c>, applying this Text's
+    /// alignment/wrap/overflow properties. Shared by the full-layout path (<see cref="GetTextBlock(string, float?, bool)"/>)
+    /// and the <see cref="MaxLettersToShow"/> reveal path (<see cref="GetPaintTextBlock"/>) so both honor
+    /// per-run BBCode styling (issue #3679) and the <c>[Custom]</c> glyph-offset callback (issue #3692).
+    /// </summary>
+    private TextBlock BuildTextBlockFromRuns(List<StyledTextRun> runs, float? forcedWidth)
+    {
         var textBlock = new TextBlock();
         // Code-point start index (in the added-text stream, which lines up with _layoutText since
         // ReplacementCharacter substitution keeps a run's length at 1) -> the glyph offset a [Custom]
@@ -983,23 +997,16 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         try
         {
             textBlock.MaxWidth = forcedWidth ?? this.Width;
-            if (allowMarkup && _hasMarkup)
+            int codePointIndex = 0;
+            foreach (var run in runs)
             {
-                int codePointIndex = 0;
-                foreach (var run in GetStyledRuns())
+                textBlock.AddText(run.Text, run.Style);
+                if (run.XOffset != 0 || run.YOffset != 0)
                 {
-                    textBlock.AddText(run.Text, run.Style);
-                    if (run.XOffset != 0 || run.YOffset != 0)
-                    {
-                        glyphOffsetsByStart ??= new();
-                        glyphOffsetsByStart[codePointIndex] = (run.XOffset, run.YOffset);
-                    }
-                    codePointIndex += run.Text.Length;
+                    glyphOffsetsByStart ??= new();
+                    glyphOffsetsByStart[codePointIndex] = (run.XOffset, run.YOffset);
                 }
-            }
-            else
-            {
-                textBlock.AddText(textToRender, GetStyle());
+                codePointIndex += run.Text.Length;
             }
             switch (HorizontalAlignment)
             {
@@ -1063,13 +1070,14 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// <summary>
     /// The <c>TextBlock</c> that <see cref="Render"/> actually paints. When <see cref="MaxLettersToShow"/>
     /// is null (or already covers the whole text) this is the full cached block, leaving the render
-    /// fast path unchanged. Otherwise a throwaway block is built from <see cref="GetVisibleWrappedText"/>
-    /// so only the first N letters are drawn; because each revealed line is a prefix of a full wrapped
-    /// line and the breaks are re-inserted as hard newlines, the revealed lines land in the same
-    /// positions as in the full layout. The cached block (used for measurement / caret math) is
-    /// untouched.
+    /// fast path unchanged. Otherwise a throwaway block is built from the revealed prefix -- styled runs
+    /// (<see cref="GetVisibleStyledRuns"/>) when the text carries BBCode markup (issue #3701), or plain
+    /// <see cref="GetVisibleWrappedText"/> text otherwise -- so only the first N letters are drawn; because
+    /// each revealed line is a prefix of a full wrapped line and the breaks are re-inserted as hard
+    /// newlines, the revealed lines land in the same positions as in the full layout. The cached block
+    /// (used for measurement / caret math) is untouched. Exposed internally for unit testing.
     /// </summary>
-    private TextBlock GetPaintTextBlock(TextBlock fullBlock)
+    internal TextBlock GetPaintTextBlock(TextBlock fullBlock)
     {
         if (MaxLettersToShow == null)
         {
@@ -1088,9 +1096,13 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             return fullBlock;
         }
 
-        // The reveal text is already tag-stripped (it comes from WrappedText), so no markup path:
-        // per-run styling in the typewriter reveal is a documented deferral (issue #3679).
-        return GetTextBlock(string.Join("\n", GetVisibleWrappedText()), this.Width, allowMarkup: false);
+        // Reveal keeps per-run BBCode styling (issue #3701): GetVisibleStyledRuns slices the same
+        // styled runs GetTextBlock uses for the full layout down to the revealed prefix, rather than
+        // falling back to the tag-stripped plain text GetVisibleWrappedText returns.
+        List<StyledTextRun> runs = _hasMarkup
+            ? GetVisibleStyledRuns()
+            : new List<StyledTextRun> { new StyledTextRun(string.Join("\n", GetVisibleWrappedText()), GetStyle()) };
+        return BuildTextBlockFromRuns(runs, this.Width);
     }
 
 
@@ -1149,6 +1161,61 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         }
 
         return runs;
+    }
+
+    /// <summary>
+    /// <see cref="GetStyledRuns"/>, sliced to the prefix revealed by <see cref="MaxLettersToShow"/>
+    /// (issue #3701) with the same hard line breaks <see cref="GetVisibleWrappedText"/> inserts, so the
+    /// typewriter reveal keeps per-run BBCode styling instead of falling back to plain text. Both sources
+    /// index into <see cref="_layoutText"/> code-point-for-code-point (a run's text is only ever replaced
+    /// character-for-character by a <c>[Custom]</c> callback, never lengthened/shortened), so slicing runs
+    /// by the visible lines' lengths lines up with the correct styled content. Exposed internally for unit
+    /// testing.
+    /// </summary>
+    internal List<StyledTextRun> GetVisibleStyledRuns()
+    {
+        List<string> visibleLines = GetVisibleWrappedText();
+        List<StyledTextRun> fullRuns = GetStyledRuns();
+        var result = new List<StyledTextRun>();
+
+        int runIndex = 0;
+        int runOffset = 0;
+
+        for (int lineIndex = 0; lineIndex < visibleLines.Count; lineIndex++)
+        {
+            int remaining = visibleLines[lineIndex].Length;
+            while (remaining > 0 && runIndex < fullRuns.Count)
+            {
+                StyledTextRun run = fullRuns[runIndex];
+                int available = run.Text.Length - runOffset;
+                if (available <= 0)
+                {
+                    runIndex++;
+                    runOffset = 0;
+                    continue;
+                }
+
+                int take = System.Math.Min(available, remaining);
+                string text = run.Text.Substring(runOffset, take);
+                result.Add(new StyledTextRun(text, run.Style, run.XOffset, run.YOffset));
+
+                runOffset += take;
+                remaining -= take;
+                if (runOffset >= run.Text.Length)
+                {
+                    runIndex++;
+                    runOffset = 0;
+                }
+            }
+
+            if (lineIndex < visibleLines.Count - 1)
+            {
+                Style breakStyle = runIndex < fullRuns.Count ? fullRuns[runIndex].Style : GetStyle();
+                result.Add(new StyledTextRun("\n", breakStyle));
+            }
+        }
+
+        return result;
     }
 
     /// <summary>
