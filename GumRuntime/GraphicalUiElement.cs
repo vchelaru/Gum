@@ -750,6 +750,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     TextOverflowVerticalMode textOverflowVerticalMode;
     // we have to store this locally because we are going to effectively assign the overflow mode based on the height units and this value
+    //
+    // Intentionally NOT #if FRB-gated like the other FRB1-only font properties (Font, FontSize, IsBold,
+    // etc.) further down this class -- this one isn't FRB1-specific plumbing, it's read directly by this
+    // class's own layout coordination on every backend (RefreshTextOverflowVerticalMode's
+    // RelativeToChildren-forces-SpillOver override, DialogBox page-splitting, RelativeToChildren sizing).
+    // GraphicalUiElement genuinely owns this value; it isn't leaking a FRB1-only concern (#3708).
     public TextOverflowVerticalMode TextOverflowVerticalMode
     {
         get => textOverflowVerticalMode;
