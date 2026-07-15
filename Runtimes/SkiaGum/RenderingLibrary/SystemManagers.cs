@@ -108,25 +108,28 @@ namespace RenderingLibrary
                 // BoldWeight is an embolden multiplier (1.0 = normal). Do NOT set CSS weights (400/700) here.
                 asText.BoldWeight = textRuntime.IsBold ? 1.5f : 1.0f;
                 asText.FontSize = textRuntime.FontSize;
-                // Push OutlineThickness here too: this delegate is the code-property path
+                // Push OutlineThickness/OutlineColor here too: this delegate is the code-property path
                 // (GraphicalUiElement.OutlineThickness setter -> UpdateToFontValues -> this). #3675
                 // only wired the string/SetProperty path (CustomSetPropertyOnRenderable.UpdateToFontValues),
-                // so setting OutlineThickness in code silently rendered no halo (bug #3684).
+                // so setting OutlineThickness in code silently rendered no halo (bug #3684). OutlineColor
+                // (#3709) is Skia-only and follows the same code-property path for the same reason.
                 asText.OutlineThickness = textRuntime.OutlineThickness;
+                asText.OutlineColor = textRuntime.OutlineColor;
 
                 // SkiaGum can't bake a KernSmith shadow atlas, so map the cross-backend baked-shadow API
                 // (TextRuntime.HasDropshadow + params) onto the SkiaGum.Text renderable's standalone
                 // ImageFilter drop shadow (#3674): the same user-facing API renders on Skia via a live
-                // canvas effect instead of a baked atlas. DropshadowBlur is a single scalar on the
-                // runtime; the renderable takes separate X/Y blur, so drive both from it. (The blur
+                // canvas effect instead of a baked atlas. DropshadowBlurX/Y (#3709) are independent axes
+                // on TextRuntime itself now (seeded from DropshadowBlur, overridable per-axis), so read
+                // them directly rather than duplicating the single DropshadowBlur scalar here. (The blur
                 // magnitudes won't match the baked backends exactly — different blur conventions — but
                 // the shadow renders and honors color/offset/blur.)
                 asText.HasDropshadow = textRuntime.HasDropshadow;
                 asText.DropshadowColor = textRuntime.DropshadowColor;
                 asText.DropshadowOffsetX = textRuntime.DropshadowOffsetX;
                 asText.DropshadowOffsetY = textRuntime.DropshadowOffsetY;
-                asText.DropshadowBlurX = textRuntime.DropshadowBlur;
-                asText.DropshadowBlurY = textRuntime.DropshadowBlur;
+                asText.DropshadowBlurX = textRuntime.DropshadowBlurX;
+                asText.DropshadowBlurY = textRuntime.DropshadowBlurY;
             }
         }
 

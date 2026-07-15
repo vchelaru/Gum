@@ -177,7 +177,6 @@ public class TextRuntime : InteractiveGue
         set => ContainedText.VerticalAlignment = value;
     }
 
-#if !SKIA
     /// <summary>
     /// The maximum number of characters to display visually. Characters beyond this count
     /// are hidden but remain in the text string. This is a display-only
@@ -191,7 +190,6 @@ public class TextRuntime : InteractiveGue
             ContainedText.MaxLettersToShow = value;
         }
     }
-#endif
 
 
     /// <summary>
@@ -387,6 +385,20 @@ public class TextRuntime : InteractiveGue
         set { outlineThickness = value; UpdateToFontValues(); }
     }
 
+#if SKIA
+    Color _outlineColor;
+    /// <summary>
+    /// The color of the outline drawn when <see cref="OutlineThickness"/> is greater than zero.
+    /// Skia-only: MonoGame/Raylib bake the outline into the font atlas at generation time and expose
+    /// no runtime outline-color concept, so there is no cross-backend property to mirror.
+    /// </summary>
+    public Color OutlineColor
+    {
+        get => _outlineColor;
+        set { _outlineColor = value; UpdateToFontValues(); }
+    }
+#endif
+
     bool hasDropshadow;
     /// <summary>
     /// When true, KernSmith bakes a drop shadow into the font atlas using the dropshadow fields below.
@@ -476,11 +488,46 @@ public class TextRuntime : InteractiveGue
     /// <summary>
     /// Blur radius for the baked drop shadow, passed to KernSmith as a single scalar.
     /// </summary>
+    /// <remarks>
+    /// On Skia this also seeds <see cref="DropshadowBlurX"/>/<see cref="DropshadowBlurY"/> equally,
+    /// so callers that only ever set this scalar keep behaving the same as before those per-axis
+    /// properties existed. Set the per-axis properties explicitly to diverge the two.
+    /// </remarks>
     public float DropshadowBlur
     {
         get => dropshadowBlur;
-        set { dropshadowBlur = Math.Max(0f, value); UpdateToFontValues(); }
+        set
+        {
+            dropshadowBlur = Math.Max(0f, value);
+#if SKIA
+            _dropshadowBlurX = dropshadowBlur;
+            _dropshadowBlurY = dropshadowBlur;
+#endif
+            UpdateToFontValues();
+        }
     }
+
+#if SKIA
+    float _dropshadowBlurX;
+    /// <summary>
+    /// Skia-only independent horizontal blur axis for the drop shadow. Setting <see cref="DropshadowBlur"/>
+    /// seeds this and <see cref="DropshadowBlurY"/> equally; set this explicitly to diverge the two,
+    /// which the XNALIKE/Raylib baked shadow can't do.
+    /// </summary>
+    public float DropshadowBlurX
+    {
+        get => _dropshadowBlurX;
+        set { _dropshadowBlurX = value; UpdateToFontValues(); }
+    }
+
+    float _dropshadowBlurY;
+    /// <inheritdoc cref="DropshadowBlurX"/>
+    public float DropshadowBlurY
+    {
+        get => _dropshadowBlurY;
+        set { _dropshadowBlurY = value; UpdateToFontValues(); }
+    }
+#endif
 
     /// <summary>
     /// Applies the first-enable defaults for baked shadow so toggling <see cref="HasDropshadow"/>
@@ -492,6 +539,10 @@ public class TextRuntime : InteractiveGue
         {
             dropshadowOffsetY = 3f;
             dropshadowBlur = 2f;
+#if SKIA
+            _dropshadowBlurX = dropshadowBlur;
+            _dropshadowBlurY = dropshadowBlur;
+#endif
         }
     }
 
@@ -690,12 +741,10 @@ public class TextRuntime : InteractiveGue
         }
     }
 
-#if !SKIA
     /// <summary>
     /// The lines of text after wrapping and bbcode parsing have been applied.
     /// </summary>
     public IReadOnlyList<string> WrappedText => ContainedText.WrappedText;
-#endif
 
 #if !RAYLIB && !SKIA
     /// <summary>
@@ -810,6 +859,11 @@ public class TextRuntime : InteractiveGue
 
 #if !RAYLIB && !SKIA
     /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
+    // Intentionally NOT widened to RAYLIB/SKIA even though sibling runtimes (SpriteRuntime,
+    // ColoredRectangleRuntime, ContainerRuntime, etc.) already expose this wrapper on those
+    // platforms and the base method it calls works everywhere -- this member is [Obsolete], and
+    // gum-cross-platform-unification's rule is to never widen an obsolete member's footprint even
+    // when the "outlier" reasoning would otherwise apply. Narrower footprint wins. (#3709)
     [Obsolete("Use the AddToRoot extension method instead (e.g. myText.AddToRoot()).")]
     public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 #endif
