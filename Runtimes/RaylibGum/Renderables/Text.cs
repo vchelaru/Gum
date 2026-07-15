@@ -41,6 +41,13 @@ public enum TextRenderingPositionMode
 /// rendering to the nearest pixel. This only applies if
 /// TextRenderingPositionMode is set to SnapToPixel
 /// </summary>
+/// <remarks>
+/// Raylib-only (#3708): XNALIKE and Skia both hardcode away-from-zero rounding (matching
+/// <c>MathFunctions.RoundToInt</c>) with no Floor/Ceiling knob and no reported jitter. Raylib scales a live
+/// TTF via <c>DrawTextPro</c>/<c>MeasureTextEx</c> rather than blitting pre-baked, integer-advance
+/// bitmap glyphs, so fractional advances are far more common here, and always-round-to-nearest could
+/// visibly jitter inter-character spacing for some fonts. No platform has asked for Floor/Ceiling.
+/// </remarks>
 public enum TextPositionRoundingMode
 {
     /// <summary>

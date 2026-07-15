@@ -529,6 +529,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// otherwise returns them unchanged. Used by <see cref="Render"/> to snap the draw origin.
     /// Exposed internally for unit testing.
     /// </summary>
+    /// <remarks>
+    /// No Raylib-style TextPositionRoundingMode (Floor/Ceiling) knob here -- away-from-zero is
+    /// hardcoded and no one has reported spacing jitter needing it. Raylib-only is fine (#3708).
+    /// </remarks>
     internal (float X, float Y) GetSnappedOrigin(float x, float y)
     {
         if (EffectiveTextRenderingPositionMode != TextRenderingPositionMode.SnapToPixel)
