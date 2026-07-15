@@ -37,4 +37,18 @@ public class CustomSetPropertyOnRenderableTests : BaseTestClass
 
         wasCalled.ShouldBeTrue();
     }
+
+    // Issue #3706/#3708/#3710 — TrySetPropertyOnText's "MaxLettersToShow" branch was gated
+    // #if XNALIKE only, despite TextRuntime.MaxLettersToShow being a platform-neutral property
+    // that has worked on every backend via direct C# calls since #3708/#3710. Pins the explicit
+    // redispatch now that the needless gate is removed.
+    [Fact]
+    public void SetProperty_MaxLettersToShow_ShouldForwardToTextRuntime()
+    {
+        TextRuntime sut = new();
+
+        sut.SetProperty("MaxLettersToShow", (int?)5);
+
+        sut.MaxLettersToShow.ShouldBe(5);
+    }
 }

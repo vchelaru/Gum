@@ -811,6 +811,23 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
         method.ShouldNotBeNull();
     }
 
+    // Issue #3706 (ADR 0009): TrySetPropertyOnText's "TextOverflowHorizontalMode" branch
+    // never set handled = true, so every string-path assignment (a saved Gum-project state using
+    // this variable) fell through to AdditionalPropertyOnRenderable/reflection after already being
+    // applied -- redundant at best, and would let a registered AdditionalPropertyOnRenderable hook
+    // reprocess a property that was already handled.
+    [Fact]
+    public void TrySetPropertyOnText_TextOverflowHorizontalMode_ShouldReturnHandledTrue()
+    {
+        TextRuntime sut = new();
+        Text textRenderable = (Text)sut.RenderableComponent;
+
+        bool handled = CustomSetPropertyOnRenderable.TrySetPropertyOnText(
+            textRenderable, sut, nameof(TextOverflowHorizontalMode), TextOverflowHorizontalMode.EllipsisLetter);
+
+        handled.ShouldBeTrue();
+    }
+
     #endregion
 
     #region Text (including bbcode and localization)
