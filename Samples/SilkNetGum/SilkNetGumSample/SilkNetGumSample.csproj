@@ -65,6 +65,10 @@
 	  <None Update="Winter Selfie.ttf">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	  <!-- #3670/#3703 CustomFontFile=.ttf demo -->
+	  <None Update="Fonts\**\*.ttf">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 
 	<ItemGroup>

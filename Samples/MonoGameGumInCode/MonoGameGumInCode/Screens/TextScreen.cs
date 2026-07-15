@@ -128,6 +128,16 @@ internal class TextScreen : FrameworkElement
         withOutline.OutlineThickness = 2;
         container.Children.Add(withOutline);
 
+        // #3670/#3703: CustomFontFile pointing at a bundled .ttf (Content/Fonts/CustomFont.ttf on
+        // MonoGame, resources/Fonts/CustomFont.ttf on raylib) -- previously silently fell back to
+        // the default font on both backends.
+        var customFontFileText = new TextRuntime();
+        customFontFileText.Text = "I use a bundled .ttf via UseCustomFont + CustomFontFile";
+        customFontFileText.FontSize = 24;
+        customFontFileText.UseCustomFont = true;
+        customFontFileText.CustomFontFile = "Fonts/CustomFont.ttf";
+        container.Children.Add(customFontFileText);
+
         BuildTextParitySection(container);
 
         AddMaxLettersToShowSection(container);

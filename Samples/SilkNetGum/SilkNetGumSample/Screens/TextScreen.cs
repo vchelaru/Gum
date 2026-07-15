@@ -105,6 +105,16 @@ internal class TextScreen : FrameworkElement
         withOutline.OutlineThickness = 2;
         container.Children.Add(withOutline);
 
+        // #3670/#3703: CustomFontFile pointing at a bundled .ttf (Fonts/CustomFont.ttf) -- Skia
+        // previously had no custom-font-file loading path at all, so this silently fell back to
+        // the default font.
+        TextRuntime customFontFileText = new TextRuntime();
+        customFontFileText.Text = "I use a bundled .ttf via UseCustomFont + CustomFontFile";
+        customFontFileText.FontSize = 24;
+        customFontFileText.UseCustomFont = true;
+        customFontFileText.CustomFontFile = "Fonts/CustomFont.ttf";
+        container.Children.Add(customFontFileText);
+
         AddBlendOnTextSection(container);
 
         AddOverflowSection(container);
