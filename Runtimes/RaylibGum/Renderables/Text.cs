@@ -969,6 +969,10 @@ public class Text : IVisible, IRenderableIpso,
     // hand-rolling the glyph loop ourselves instead of letting raylib draw the string, and nothing in
     // Gum actually uses overlap direction. XNALIKE-only is fine, not adding it here.
 
+    // No RenderBoundary either -- it's a debug outline used by the Gum tool's XNA-based editor views
+    // (rulers, distance arrows), not a feature any game project needs. XNALIKE-only is fine, not
+    // adding it here (#3708).
+
     /// <summary>
     /// Draws a single line with no inline styling, honoring horizontal alignment and pixel snapping.
     /// </summary>

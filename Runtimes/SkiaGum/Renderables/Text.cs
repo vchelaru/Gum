@@ -973,6 +973,10 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     // this would mean hand-rolling glyph painting ourselves, and nothing in Gum uses overlap
     // direction anyway. XNALIKE-only is fine, not adding it here.
 
+    // No RenderBoundary either -- it's a debug outline used by the Gum tool's XNA-based editor views
+    // (rulers, distance arrows), not a feature any game project needs. XNALIKE-only is fine, not
+    // adding it here (#3708).
+
     /// <summary>
     /// Paints the outline (when <see cref="OutlineThickness"/> &gt; 0) followed by the text fill.
     /// The outline is a single recolor+dilate pass: the text is painted into a layer whose paint
