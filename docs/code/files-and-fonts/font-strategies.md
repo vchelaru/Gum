@@ -220,6 +220,10 @@ text.Text = "Hello, I am using a custom font";
 text.AddToRoot();
 ```
 
+{% hint style="warning" %}
+This path loads the `.fnt` file as-is and bypasses KernSmith entirely, so `HasDropshadow` and the other KernSmith-driven properties (`OutlineThickness`, `IsBold`, `IsItalic`, `UseFontSmoothing`) have no effect here. If you need baked drop shadow with a font you own, register it as a `.ttf` and drive it through `Font`/`FontSize` instead — see [Registering Custom .ttf Fonts](font-strategies.md#registering-custom-ttf-fonts).
+{% endhint %}
+
 For information on creating your own `.fnt` file with Angelcode Bitmap Font Generator, see the [Use Custom Font](../../gum-tool/gum-elements/text/use-custom-font.md) page.
 
 This code assumes a font file named `WhitePeaberryOutline.fnt` is located in the `Content/WhitePeaberryOutline` folder. By default all Gum content loading is performed relative to the **Content** folder. See the [File Loading](file-loading.md) page for more information.
