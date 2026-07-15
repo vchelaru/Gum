@@ -28,3 +28,4 @@ re-litigating it.
 | [0006](0006-runtimes-declare-capabilities-through-igumservice.md) | Runtimes declare platform capabilities through `IGumService` | Accepted | 2026-07-10 |
 | [0007](0007-converge-skia-property-dispatch.md) | Converge the Skia property dispatcher via runtime-type-first dispatch | Accepted | 2026-07-13 |
 | [0008](0008-sequence-runtime-dispatch-convergence.md) | Sequence the runtime-type-first dispatch convergence: parity, then redispatch, then converge | Accepted | 2026-07-13 |
+| [0009](0009-converge-text-dispatch-onto-textruntime.md) | Converge Text's SetProperty dispatch onto TextRuntime, phased by risk | Accepted | 2026-07-15 |
