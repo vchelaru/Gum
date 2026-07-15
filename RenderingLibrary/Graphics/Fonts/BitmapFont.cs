@@ -734,6 +734,8 @@ public class BitmapFont : IDisposable
         int lineNumber = 0;
 
         // int is used if pixel perfect
+        // No TextPositionRoundingMode (Floor/Ceiling) knob here -- away-from-zero rounding is hardcoded
+        // and no one has reported spacing jitter needing it. Raylib-only is fine (#3708).
         int xOffsetAsInt = MathFunctions.RoundToInt(xOffset);
         int yOffsetAsInt = MathFunctions.RoundToInt(yOffset);
 
