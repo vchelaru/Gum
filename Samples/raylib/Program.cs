@@ -89,6 +89,10 @@ public class BasicShapes
         {
             GumUI.Update(GetTime());
 
+            // FrameworkElement.Activity() is FRB-only and unavailable here, so screens that animate
+            // (e.g. TextScreen's typewriter reveal, #3701) get a host-driven per-frame Tick instead.
+            (activeScreen as TextScreen)?.Tick(GetFrameTime());
+
             // Apply a freshly-shown screen's initial gamepad focus now that this frame's
             // input (including the nav-button click that swapped screens) has been processed.
             if (_applyInitialFocusAfterUpdate)

@@ -464,6 +464,9 @@ unsafe class Program
             // for FPS reporting, so we keep a separate monotonic clock here.
             Stopwatch totalTime = new Stopwatch();
             totalTime.Start();
+            // Per-frame delta for TextScreen's Tick (#3701) -- FrameworkElement.Activity() is FRB-only
+            // and unavailable here, and GumUI.Update below only wants the running total, not a delta.
+            double previousTotalSeconds = 0;
             while (running && !window.IsClosing)
             {
 
@@ -495,7 +498,11 @@ unsafe class Program
                 // Per-frame Update drives AnimateSelf (and any other Forms
                 // input/activity pumps). Without this the .achx animation row
                 // on SpriteScreen shows the first frame and never advances.
-                GumUI.Update(totalTime.Elapsed.TotalSeconds);
+                double currentTotalSeconds = totalTime.Elapsed.TotalSeconds;
+                GumUI.Update(currentTotalSeconds);
+
+                (currentCodeScreen as TextScreen)?.Tick(currentTotalSeconds - previousTotalSeconds);
+                previousTotalSeconds = currentTotalSeconds;
 
 
 

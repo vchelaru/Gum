@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Managers;
@@ -6,6 +7,7 @@ using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
+using System.Linq;
 #if RAYLIB
 using Color = Raylib_cs.Color;
 using Text = Gum.Renderables.Text;
@@ -38,6 +40,11 @@ namespace MonoGameGumInCode.Screens;
 // the namespace, the Color/Text/LetterCustomization/TextRenderingPositionMode aliases above, and
 // AddTextureFilterSection's mechanism (a per-layer sampler state on MonoGame vs a baked font-cache
 // texture on raylib).
+//
+// Tick(elapsedSeconds) (#3701) drives the animated typewriter section and must be called once per
+// frame by the host while this screen is active — see Game1.Update / Program.cs's main loop
+// (`(currentScreen as TextScreen)?.Tick(...)`). FrameworkElement.Activity() is FRB-only (`#if FRB`)
+// and not available in these plain samples, hence the host-driven Tick instead.
 internal class TextScreen : FrameworkElement
 {
     public TextScreen() : base(new ContainerRuntime())
@@ -58,6 +65,11 @@ internal class TextScreen : FrameworkElement
         var textRuntime = new TextRuntime();
         textRuntime.Text = "Hi, I'm default text";
         container.Children.Add(textRuntime);
+
+        // Placed right after the default text -- this screen has no ScrollViewer, and the rest of the
+        // stack (BBCode/shadows/BuildTextParitySection/static reveal rows) comfortably exceeds a
+        // typical window height, so anything appended after it is invisible without resizing.
+        AddTypewriterSection(container);
 
         // One self-describing BBCode line: each styled word shows AND names its own effect, so no
         // separate label is needed. Kept byte-identical to the same line in the SilkNetGumSample text
@@ -117,6 +129,51 @@ internal class TextScreen : FrameworkElement
         container.Children.Add(withOutline);
 
         BuildTextParitySection(container);
+
+        AddMaxLettersToShowSection(container);
+    }
+
+    // Typewriter reveal (#3701): MaxLettersToShow (the same property AddRevealRow sets to a
+    // fixed count) driven by elapsed time instead, via Tick. Pressing any key restarts the reveal
+    // from the beginning. FormsUtilities.Keyboard.KeysTyped is the platform-neutral "keys typed this
+    // frame" feed every backend's UseKeyboardDefaults() populates, so this needs no #if branching.
+    private const string TypewriterParagraph =
+        "This paragraph types itself out one letter at a time. Press any key to start the reveal over from the beginning.";
+    private const double TypewriterLettersPerSecond = 18;
+    private TextRuntime _typewriterText;
+    private double _typewriterElapsedSeconds;
+
+    /// <summary>
+    /// Advances the typewriter reveal by <paramref name="elapsedSeconds"/>. Call once per frame from
+    /// the host's game loop while this screen is active.
+    /// </summary>
+    public void Tick(double elapsedSeconds)
+    {
+        if (FormsUtilities.Keyboard.KeysTyped.Any())
+        {
+            _typewriterElapsedSeconds = 0;
+        }
+        else
+        {
+            _typewriterElapsedSeconds += elapsedSeconds;
+        }
+
+        int lettersToShow = (int)(_typewriterElapsedSeconds * TypewriterLettersPerSecond);
+        _typewriterText.MaxLettersToShow = Math.Min(lettersToShow, TypewriterParagraph.Length);
+    }
+
+    private void AddTypewriterSection(ContainerRuntime container)
+    {
+        _typewriterText = new TextRuntime();
+        _typewriterText.Font = "Arial";
+        _typewriterText.FontSize = 20;
+        _typewriterText.WidthUnits = DimensionUnitType.Absolute;
+        _typewriterText.Width = 300;
+        _typewriterText.HeightUnits = DimensionUnitType.RelativeToChildren;
+        _typewriterText.Height = 0;
+        _typewriterText.Text = TypewriterParagraph;
+        _typewriterText.MaxLettersToShow = 0;
+        container.Children.Add(_typewriterText);
     }
 
     // Text parity features (#3432): Blend, per-instance TextRenderingPositionMode override, and
@@ -240,6 +297,38 @@ internal class TextScreen : FrameworkElement
         filterRow.AddChild(linearText);
         linearText.MoveToLayer(linearLayer);
 #endif
+    }
+
+    // MaxLettersToShow typewriter reveal (#3678). The same wrapping paragraph is shown fully, then
+    // with MaxLettersToShow set to a partial count so only the first N letters are visible while the
+    // hidden tail still occupies its final layout (reveal is paint-only: WrappedText / measurement
+    // stay built from the full RawText). Font = "Arial" because text can silently no-op without a
+    // font. Kept content-identical to the SilkNetGumSample text screen.
+    private static void AddMaxLettersToShowSection(ContainerRuntime container)
+    {
+        const string paragraph =
+            "This paragraph reveals only its first letters while the rest stays hidden.";
+
+        // Explicit RelativeToChildren height so each Text takes its own content height in the stack
+        // (leaving Height at its default let the rows overlap in the earlier demo). null MaxLettersToShow
+        // = full text; 10 and 30 are fixed counts so the difference is visible without any animation.
+        AddRevealRow(container, paragraph, null);
+        AddRevealRow(container, paragraph, 10);
+        AddRevealRow(container, paragraph, 30);
+    }
+
+    private static void AddRevealRow(ContainerRuntime container, string paragraph, int? maxLetters)
+    {
+        var row = new TextRuntime();
+        row.Font = "Arial";
+        row.FontSize = 20;
+        row.WidthUnits = DimensionUnitType.Absolute;
+        row.Width = 300;
+        row.HeightUnits = DimensionUnitType.RelativeToChildren;
+        row.Height = 0;
+        row.Text = paragraph;
+        row.MaxLettersToShow = maxLetters;
+        container.Children.Add(row);
     }
 
     // Blend on Text (#3432): additive (brightens) vs normal, over an identical blue box. Each cell's
