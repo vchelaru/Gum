@@ -199,6 +199,57 @@ public class TextRuntimeTests
 
     #endregion
 
+    #region GetCharacterIndexAtPosition
+
+    // #3708: TextRuntime.GetCharacterIndexAtPosition was #if !SKIA -- SkiaGum's Text renderable had no
+    // equivalent at all. Implemented via RichTextKit's own TextBlock.HitTest rather than the per-character
+    // measurement loop TextExtensions.GetCharacterIndexAtPosition uses on MonoGame/Raylib, since Skia's
+    // renderable has no bitmap-font character-advance table to loop over.
+    // An unmanaged Text sits at absolute origin (0,0), so screen (0,0) is its top-left -- mirrors the
+    // Raylib parity test (RaylibGum.Tests.Runtimes.TextRuntimeTests).
+    [Fact]
+    public void GetCharacterIndexAtPosition_AtLeftEdge_ShouldReturnZero()
+    {
+        TextRuntime sut = new();
+        sut.Width = 200;
+        sut.Text = "Hello";
+
+        sut.GetCharacterIndexAtPosition(0, 0).ShouldBe(0);
+    }
+
+    // A click far past the right edge of a single line clamps to the end of the text (index == length),
+    // matching the MonoGame/Raylib renderables' behavior.
+    [Fact]
+    public void GetCharacterIndexAtPosition_FarRightOfSingleLine_ShouldReturnTextLength()
+    {
+        TextRuntime sut = new();
+        sut.Width = 200;
+        sut.Text = "Hello";
+
+        sut.GetCharacterIndexAtPosition(1000, 0).ShouldBe(5);
+    }
+
+    // The returned index is defined as an offset into the concatenation of WrappedText (issue body,
+    // "index within the WrappedText, so to index in, you need to loop through each line"), not an index
+    // local to whichever line was clicked. A click on the second line must therefore account for the
+    // first line's length -- clamping to the full text length here proves the cross-line accumulation
+    // works, since a line-local implementation would instead clamp to "Line2".Length.
+    [Fact]
+    public void GetCharacterIndexAtPosition_FarRightOfSecondLine_ShouldReturnFullTextLength()
+    {
+        TextRuntime sut = new();
+        sut.Width = 200;
+        string text = "Line1\nLine2";
+        sut.Text = text;
+
+        Text containedText = (Text)sut.RenderableComponent;
+        var lineHeight = containedText.LineHeightInPixels * containedText.LineHeightMultiplier;
+
+        sut.GetCharacterIndexAtPosition(1000, lineHeight + 1).ShouldBe(text.Length);
+    }
+
+    #endregion
+
     #region IsBold
 
     [Fact]
