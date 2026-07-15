@@ -154,7 +154,32 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
     public bool IsRenderTarget => false;
 
-    //public SKTypeface Font { get; set; }
+    /// <summary>
+    /// The concrete font object currently active on this text -- whatever <see cref="FontName"/>/
+    /// <see cref="FontSize"/> resolved to, or an explicitly assigned override. Same concept as
+    /// XNALIKE's <c>BitmapFont</c> and Raylib's <c>Typeface</c>, typed to Skia's own font
+    /// representation. When set, <see cref="EffectiveFontFamily"/> resolves to a
+    /// <see cref="Content.Fonts.GumFontMapper"/>-registered key for this instance instead of
+    /// <see cref="FontName"/>, bypassing family-name-based lookup entirely.
+    /// </summary>
+    public SKTypeface? Typeface
+    {
+        get => _typeface;
+        set
+        {
+            _typeface = value;
+            _cachedTextBlock = null;
+        }
+    }
+
+    /// <summary>
+    /// The family-name key actually fed to RichTextKit's <see cref="Style.FontFamily"/>: a
+    /// <see cref="Content.Fonts.GumFontMapper"/>-registered key for <see cref="Typeface"/> when
+    /// set, otherwise <see cref="FontName"/> unchanged.
+    /// </summary>
+    private string? EffectiveFontFamily =>
+        _typeface != null ? Content.Fonts.GumFontMapper.RegisterTypeface(_typeface) : FontName;
+
     public string FontName
     {
         get => _fontName; 
@@ -987,6 +1012,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     private TextOverflowVerticalMode _textOverflowVerticalMode;
     private string _fontName = "Arial";
     private int _fontSize = 18;
+    private SKTypeface? _typeface;
     private float _fontScale;
     private float _boldWeight = 1;
     private SKColor _color;
@@ -1426,7 +1452,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         var style = new Style()
         {
-            FontFamily = FontName,
+            FontFamily = EffectiveFontFamily,
             FontSize = fontSizePixels * (float)GlobalTextScale * fontScale,
             TextColor = color,
             FontItalic = italic,
@@ -1651,7 +1677,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     {
         return new Style()
         {
-            FontFamily = FontName,
+            FontFamily = EffectiveFontFamily,
             FontSize = FontSize * (float)GlobalTextScale,
             TextColor = this.Color,
             FontItalic = this.IsItalic,

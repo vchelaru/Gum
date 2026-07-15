@@ -3,6 +3,7 @@ using RenderingLibrary.Graphics;
 using Shouldly;
 using SkiaGum;
 using SkiaGum.GueDeriving;
+using SkiaSharp;
 
 namespace SkiaGum.Tests.Runtimes;
 
@@ -41,5 +42,20 @@ public class CustomSetPropertyOnRenderableTests
         }
 
         wasCalled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void SetPropertyOnRenderable_Typeface_ShouldForwardToRenderable()
+    {
+        // Typeface (#3708): SkiaGum's SetProperty dispatch had no arm for this at all -- it never
+        // existed on Skia before, so the string-based path (codegen/state application) had nothing
+        // to route to. Mirrors the MonoGame/Raylib Font/BitmapFont dispatch coverage.
+        Gum.GueDeriving.TextRuntime textRuntime = new();
+        IRenderableIpso renderable = (IRenderableIpso)textRuntime.RenderableComponent;
+        SKTypeface typeface = SKTypeface.FromFamilyName("Arial");
+
+        CustomSetPropertyOnRenderable.SetPropertyOnRenderable(renderable, textRuntime, "Typeface", typeface);
+
+        ((Text)renderable).Typeface.ShouldBe(typeface);
     }
 }

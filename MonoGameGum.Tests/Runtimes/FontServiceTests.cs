@@ -612,7 +612,7 @@ public class FontServiceTests : BaseTestClass
 
         // The distinct font was actually assigned, proving the assignment branch (and thus the
         // suppression site) was reached — this test genuinely exercises the suppression.
-        textRuntime.BitmapFont.ShouldBe(distinctFont);
+        textRuntime.Typeface.ShouldBe(distinctFont);
         textRuntime.IsFontDirty.ShouldBeFalse();
         delta.ShouldBe(1);
     }

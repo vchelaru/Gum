@@ -2,6 +2,8 @@ using RenderingLibrary.Graphics.Fonts;
 using SkiaSharp;
 using System;
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using Topten.RichTextKit;
 
 namespace SkiaGum.Content.Fonts;
@@ -23,6 +25,30 @@ public class GumFontMapper : FontMapper
 {
     private static readonly ConcurrentDictionary<string, SKTypeface> registry =
         new ConcurrentDictionary<string, SKTypeface>(StringComparer.OrdinalIgnoreCase);
+
+    private static readonly ConditionalWeakTable<SKTypeface, string> typefaceKeys = new();
+    private static int nextTypefaceId;
+
+    /// <summary>
+    /// Registers an already-loaded <see cref="SKTypeface"/> directly (as opposed to
+    /// <see cref="RegisterFontFile"/>, which loads one from a path) and returns the family-name
+    /// key to assign as <c>Style.FontFamily</c> to reference it -- used by <c>Text.Typeface</c>.
+    /// Calling this again with the SAME instance returns the same key; a different instance --
+    /// even one loaded from the same file -- gets its own key, since callers may swap in a
+    /// distinct object at runtime and expect it to resolve independently.
+    /// </summary>
+    public static string RegisterTypeface(SKTypeface typeface)
+    {
+        if (typefaceKeys.TryGetValue(typeface, out string? existingKey))
+        {
+            return existingKey;
+        }
+
+        string key = $"__typeface_{Interlocked.Increment(ref nextTypefaceId)}";
+        registry[key] = typeface;
+        typefaceKeys.Add(typeface, key);
+        return key;
+    }
 
     /// <summary>
     /// Loads (or reuses an already-loaded) <see cref="SKTypeface"/> for <paramref name="fontFilePath"/>

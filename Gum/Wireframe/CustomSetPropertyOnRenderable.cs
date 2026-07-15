@@ -863,11 +863,23 @@ public partial class CustomSetPropertyOnRenderable
 
         }
 #if USE_GUMCOMMON
-        else if(propertyName == nameof(Gum.GueDeriving.TextRuntime.BitmapFont))
+        // "BitmapFont" is the pre-rename string kept for back-compat with any persisted/generated
+        // code still calling SetProperty("BitmapFont", ...); the property itself is now Typeface.
+        else if(propertyName == nameof(Gum.GueDeriving.TextRuntime.Typeface) || propertyName == "BitmapFont")
         {
             if(textRuntime != null)
             {
-                textRuntime.BitmapFont = (BitmapFont)value;
+                textRuntime.Typeface = (BitmapFont)value;
+            }
+            handled = true;
+        }
+#elif RAYLIB
+        // "CustomFont" is the pre-rename string kept for back-compat, mirroring the XNALIKE arm above.
+        else if (propertyName == nameof(Gum.GueDeriving.TextRuntime.Typeface) || propertyName == "CustomFont")
+        {
+            if (textRuntime != null)
+            {
+                textRuntime.Typeface = (Font)value;
             }
             handled = true;
         }

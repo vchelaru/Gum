@@ -523,6 +523,52 @@ public class TextRuntimeTests
 
     #endregion
 
+    #region Typeface
+
+    // Typeface (issue #3708): the explicit-font-object escape hatch Skia lacked entirely, unified
+    // under the same name as XNALIKE's BitmapFont / Raylib's Typeface. Forwards straight to the
+    // contained renderable.
+
+    [Fact]
+    public void Typeface_ShouldDefaultToNull()
+    {
+        TextRuntime sut = new();
+        sut.Typeface.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Typeface_ShouldRoundTripThroughRenderable()
+    {
+        TextRuntime sut = new();
+        SKTypeface typeface = SKTypeface.FromFamilyName("Arial");
+
+        sut.Typeface = typeface;
+
+        sut.Typeface.ShouldBe(typeface);
+        ((Text)sut.RenderableComponent).Typeface.ShouldBe(typeface);
+    }
+
+    [Fact]
+    public void DefaultTypeface_AppliedInConstructor()
+    {
+        SKTypeface? saved = TextRuntime.DefaultTypeface;
+        try
+        {
+            SKTypeface typeface = SKTypeface.FromFamilyName("Arial");
+            TextRuntime.DefaultTypeface = typeface;
+
+            TextRuntime sut = new();
+
+            sut.Typeface.ShouldBe(typeface);
+        }
+        finally
+        {
+            TextRuntime.DefaultTypeface = saved;
+        }
+    }
+
+    #endregion
+
     #region UseFontSmoothing
 
     [Fact]

@@ -203,26 +203,55 @@ public class TextRuntime : InteractiveGue
     }
 
 #if RAYLIB
-    public Font CustomFont
+    /// <summary>
+    /// The concrete font object currently active on this text -- whatever <see cref="Font"/>/
+    /// <see cref="FontSize"/> resolved to, or an explicitly assigned override. Same concept as
+    /// XNALIKE's and Skia's <c>Typeface</c>, typed to this backend's own font representation.
+    /// </summary>
+    public Font Typeface
     {
         get => ContainedText.Font;
         set => ContainedText.Font = value;
     }
-#endif
 
-#if !RAYLIB && !SKIA
-    public BitmapFont BitmapFont
+    [Obsolete("Use Typeface instead.")]
+    public Font CustomFont
+    {
+        get => Typeface;
+        set => Typeface = value;
+    }
+#elif SKIA
+    /// <inheritdoc cref="Typeface"/>
+    public SKTypeface? Typeface
+    {
+        get => ContainedText.Typeface;
+        set => ContainedText.Typeface = value;
+    }
+#else
+    /// <summary>
+    /// The concrete font object currently active on this text -- whatever <see cref="Font"/>/
+    /// <see cref="FontSize"/> resolved to, or an explicitly assigned override. Same concept as
+    /// Raylib's and Skia's <c>Typeface</c>, typed to this backend's own font representation.
+    /// </summary>
+    public BitmapFont Typeface
     {
         get => ContainedText.BitmapFont;
         set
         {
-            if (value != BitmapFont)
+            if (value != Typeface)
             {
                 ContainedText.BitmapFont = value;
                 NotifyPropertyChanged();
                 UpdateLayout();
             }
         }
+    }
+
+    [Obsolete("Use Typeface instead.")]
+    public BitmapFont BitmapFont
+    {
+        get => Typeface;
+        set => Typeface = value;
     }
 #endif
 
@@ -787,14 +816,30 @@ public class TextRuntime : InteractiveGue
     public static bool AssignFontInConstructor = true;
 
     /// <summary>
-    /// A default BitmapFont to assign to all new TextRuntime instances during construction.
+    /// A default Typeface to assign to all new TextRuntime instances during construction.
     /// When set, this takes priority over <see cref="DefaultFont"/> and <see cref="DefaultFontSize"/>.
     /// When null, the default font is constructed from <see cref="DefaultFont"/> and <see cref="DefaultFontSize"/>.
     /// </summary>
-#if !RAYLIB && !SKIA
-    public static BitmapFont? DefaultCustomFont;
-#elif RAYLIB
-    public static Font? DefaultCustomFont;
+#if RAYLIB
+    public static Font? DefaultTypeface;
+
+    [Obsolete("Use DefaultTypeface instead.")]
+    public static Font? DefaultCustomFont
+    {
+        get => DefaultTypeface;
+        set => DefaultTypeface = value;
+    }
+#elif SKIA
+    public static SKTypeface? DefaultTypeface;
+#else
+    public static BitmapFont? DefaultTypeface;
+
+    [Obsolete("Use DefaultTypeface instead.")]
+    public static BitmapFont? DefaultCustomFont
+    {
+        get => DefaultTypeface;
+        set => DefaultTypeface = value;
+    }
 #endif
 
     public float DefaultWidth = 0;
@@ -824,17 +869,15 @@ public class TextRuntime : InteractiveGue
             HeightUnits = DefaultHeightUnits;
             if (AssignFontInConstructor)
             {
-#if !SKIA
-                if (DefaultCustomFont != null)
+                if (DefaultTypeface != null)
                 {
-#if !RAYLIB
-                    this.BitmapFont = DefaultCustomFont;
+#if RAYLIB
+                    this.Typeface = DefaultTypeface.Value;
 #else
-                    this.CustomFont = DefaultCustomFont.Value;
+                    this.Typeface = DefaultTypeface;
 #endif
                 }
                 else
-#endif
                 {
                     // The surrounding SuspendLayout/ResumeLayout pair coalesces these two
                     // assignments into a single font load at construction time. For default
