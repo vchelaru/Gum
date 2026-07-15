@@ -4,6 +4,18 @@
 
 Gum supports reading from the mouse and touch screen for events. Both the mouse and touch screen report their actions through the `Cursor` class. Controls which respond to click events (such as `Button` and `CheckBox`) automatically read from the `Cursor`.
 
+## Runtime Compatibility
+
+Touch support varies by runtime. Where a runtime has no real touch API, touch is mouse-emulated instead.
+
+| Runtime | Touch Support | Notes |
+|---|---|---|
+| raylib | Partial | Single tap may not register as a click; a longer tap or a second tap works. Selection-style interactions (e.g. list items) work fine. |
+| Silk.NET | Full | ✅ |
+| MonoGame (DesktopGL) | Full | ✅ |
+
+raylib's default desktop backend (GLFW) has no real touch input — see raylib's own [source comment acknowledging this](https://github.com/raysan5/raylib/blob/4640c849208079d758d8f0dbb4b5b7816db5ed0c/src/platforms/rcore_desktop_glfw.c#L1305-L1310). raylib's SDL backend does support real touch, but isn't what Gum's raylib runtime currently uses.
+
 ## Code Example: Accessing the Cursor
 
 GumService contains an instance of the `Cursor` class. The following code shows how to access the Cursor class and create rectangles when the `Cursor` detects a click.
