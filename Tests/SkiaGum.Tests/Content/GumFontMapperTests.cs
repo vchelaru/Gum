@@ -1,6 +1,8 @@
 using Shouldly;
 using SkiaGum.Content.Fonts;
+using SkiaSharp;
 using System.IO;
+using Topten.RichTextKit;
 
 namespace SkiaGum.Tests.Content;
 
@@ -119,5 +121,55 @@ public class GumFontMapperTests
             useCustomFont: true, customFontFile: "Fonts/Prebaked.fnt", font: "Arial");
 
         resolved.ShouldBeNull();
+    }
+
+    // Typeface (issue #3708): registers an already-loaded SKTypeface directly (as opposed to
+    // RegisterFontFile, which loads one from a path), for Text.Typeface -- the explicit-font-object
+    // escape hatch Skia lacked entirely, mirroring XNALIKE's BitmapFont / Raylib's Typeface.
+
+    [Fact]
+    public void RegisterTypeface_ReturnsNonNullFamilyKey()
+    {
+        SKTypeface typeface = SKTypeface.FromFile(FixtureTtfPath);
+
+        string familyKey = GumFontMapper.RegisterTypeface(typeface);
+
+        familyKey.ShouldNotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public void RegisterTypeface_CalledTwiceWithSameInstance_ReturnsSameFamilyKey()
+    {
+        SKTypeface typeface = SKTypeface.FromFile(FixtureTtfPath);
+
+        string first = GumFontMapper.RegisterTypeface(typeface);
+        string second = GumFontMapper.RegisterTypeface(typeface);
+
+        second.ShouldBe(first);
+    }
+
+    [Fact]
+    public void RegisterTypeface_CalledWithDifferentInstances_ReturnsDifferentFamilyKeys()
+    {
+        SKTypeface first = SKTypeface.FromFile(FixtureTtfPath);
+        SKTypeface second = SKTypeface.FromFile(FixtureTtfPath);
+
+        string firstKey = GumFontMapper.RegisterTypeface(first);
+        string secondKey = GumFontMapper.RegisterTypeface(second);
+
+        secondKey.ShouldNotBe(firstKey);
+    }
+
+    [Fact]
+    public void TypefaceFromStyle_ResolvesRegisteredTypefaceKey_ReturnsSameInstance()
+    {
+        SKTypeface typeface = SKTypeface.FromFile(FixtureTtfPath);
+        string familyKey = GumFontMapper.RegisterTypeface(typeface);
+        GumFontMapper mapper = new();
+        Style style = new() { FontFamily = familyKey };
+
+        SKTypeface resolved = mapper.TypefaceFromStyle(style, ignoreFontVariants: false);
+
+        resolved.ShouldBeSameAs(typeface);
     }
 }

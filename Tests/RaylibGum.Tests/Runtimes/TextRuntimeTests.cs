@@ -372,6 +372,107 @@ public class TextRuntimeTests : BaseTestClass
 
     #endregion
 
+    #region Typeface
+
+    // Typeface (issue #3708): unifies Raylib's CustomFont / XNALIKE's BitmapFont / Skia's new
+    // Typeface under one name. CustomFont is kept as an [Obsolete] forwarder.
+
+    [Fact]
+    public void Typeface_ShouldRoundTrip()
+    {
+        TextRuntime sut = new();
+        Font font = default;
+        font.BaseSize = 42;
+
+        sut.Typeface = font;
+
+        sut.Typeface.BaseSize.ShouldBe(42);
+    }
+
+    [Fact]
+    public void CustomFont_ObsoleteAlias_ShouldForwardToTypeface()
+    {
+        TextRuntime sut = new();
+        Font font = default;
+        font.BaseSize = 42;
+
+#pragma warning disable CS0618 // intentionally exercising the obsolete forwarder
+        sut.CustomFont = font;
+
+        sut.Typeface.BaseSize.ShouldBe(42);
+        sut.CustomFont.BaseSize.ShouldBe(42);
+#pragma warning restore CS0618
+    }
+
+    [Fact]
+    public void Typeface_SetProperty_ShouldForwardToTypeface()
+    {
+        TextRuntime sut = new();
+        Font font = default;
+        font.BaseSize = 42;
+
+        sut.SetProperty("Typeface", font);
+
+        sut.Typeface.BaseSize.ShouldBe(42);
+    }
+
+    [Fact]
+    public void CustomFont_LegacyStringName_SetProperty_ShouldForwardToTypeface()
+    {
+        // "CustomFont" is kept as a legacy string alias in the dispatch bridge for any
+        // persisted/generated code still calling SetProperty("CustomFont", ...).
+        TextRuntime sut = new();
+        Font font = default;
+        font.BaseSize = 42;
+
+        sut.SetProperty("CustomFont", font);
+
+        sut.Typeface.BaseSize.ShouldBe(42);
+    }
+
+    [Fact]
+    public void DefaultTypeface_AppliedInConstructor()
+    {
+        Font? saved = TextRuntime.DefaultTypeface;
+        try
+        {
+            Font font = default;
+            font.BaseSize = 42;
+            TextRuntime.DefaultTypeface = font;
+
+            TextRuntime sut = new();
+
+            sut.Typeface.BaseSize.ShouldBe(42);
+        }
+        finally
+        {
+            TextRuntime.DefaultTypeface = saved;
+        }
+    }
+
+    [Fact]
+    public void DefaultCustomFont_ObsoleteAlias_ShouldForwardToDefaultTypeface()
+    {
+        Font? saved = TextRuntime.DefaultTypeface;
+        try
+        {
+            Font font = default;
+            font.BaseSize = 42;
+#pragma warning disable CS0618 // intentionally exercising the obsolete forwarder
+            TextRuntime.DefaultCustomFont = font;
+
+            TextRuntime.DefaultTypeface.Value.BaseSize.ShouldBe(42);
+            TextRuntime.DefaultCustomFont.Value.BaseSize.ShouldBe(42);
+#pragma warning restore CS0618
+        }
+        finally
+        {
+            TextRuntime.DefaultTypeface = saved;
+        }
+    }
+
+    #endregion
+
     #region FontFamily
 
     [Fact]

@@ -1316,6 +1316,24 @@ public partial class CustomSetPropertyOnRenderable
             }
             ReactToFontValueChange();
         }
+        // Typeface (#3708): an explicit SKTypeface override. Unlike UseCustomFont/CustomFontFile
+        // above, this does NOT call ReactToFontValueChange() -- that re-resolves via
+        // UpdateToFontValues() (the normal FontName/FontSize path), which would immediately stomp
+        // an explicit override. The property setter itself invalidates the cached RichTextKit
+        // block; only a pending relative-to-children layout still needs an explicit nudge here.
+        else if (propertyName == nameof(gueAsTextRuntime.Typeface))
+        {
+            if (gueAsTextRuntime != null)
+            {
+                gueAsTextRuntime.Typeface = value as SkiaSharp.SKTypeface;
+            }
+            if (gue.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                gue.HeightUnits == DimensionUnitType.RelativeToChildren)
+            {
+                gue.UpdateLayout();
+            }
+            handled = true;
+        }
 
 
         else if (propertyName == nameof(gueAsTextRuntime.FontSize))

@@ -57,7 +57,7 @@ $"chars count=223\r\n";
     {
         TextRuntime textRuntime = new();
 
-        var character = textRuntime.BitmapFont.Characters['\n'];
+        var character = textRuntime.Typeface.Characters['\n'];
         character.XAdvance = 10;
 
         textRuntime.Text = "Hello";
@@ -747,7 +747,7 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
 
         sut.IsBold = true;
 
-        sut.BitmapFont.ShouldBe(italicBoldFont);
+        sut.Typeface.ShouldBe(italicBoldFont);
     }
 
     #endregion
@@ -769,7 +769,7 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
         var lineCount = innerText.WrappedText.Count;
 
         var absoluteHeight = textRuntime.GetAbsoluteHeight();
-        absoluteHeight.ShouldBe(lineCount * textRuntime.BitmapFont.LineHeightInPixels);
+        absoluteHeight.ShouldBe(lineCount * textRuntime.Typeface.LineHeightInPixels);
     }
 
     #endregion
@@ -1392,7 +1392,102 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
 
         sut.UseCustomFont = false;
 
-        sut.BitmapFont.ShouldBe(italicBoldFont);
+        sut.Typeface.ShouldBe(italicBoldFont);
+    }
+
+    #endregion
+
+    #region Typeface
+
+    // Typeface (issue #3708): unifies XNALIKE's BitmapFont / Raylib's CustomFont / Skia's new
+    // Typeface under one name. BitmapFont/DefaultCustomFont are kept as [Obsolete] forwarders.
+
+    [Fact]
+    public void Typeface_ShouldRoundTrip()
+    {
+        TextRuntime sut = new();
+        BitmapFont font = new BitmapFont((Texture2D)null!, fontPattern);
+
+        sut.Typeface = font;
+
+        sut.Typeface.ShouldBe(font);
+    }
+
+    [Fact]
+    public void BitmapFont_ObsoleteAlias_ShouldForwardToTypeface()
+    {
+        TextRuntime sut = new();
+        BitmapFont font = new BitmapFont((Texture2D)null!, fontPattern);
+
+#pragma warning disable CS0618 // intentionally exercising the obsolete forwarder
+        sut.BitmapFont = font;
+
+        sut.Typeface.ShouldBe(font);
+        sut.BitmapFont.ShouldBe(font);
+#pragma warning restore CS0618
+    }
+
+    [Fact]
+    public void Typeface_SetProperty_ShouldForwardToTypeface()
+    {
+        TextRuntime sut = new();
+        BitmapFont font = new BitmapFont((Texture2D)null!, fontPattern);
+
+        sut.SetProperty("Typeface", font);
+
+        sut.Typeface.ShouldBe(font);
+    }
+
+    [Fact]
+    public void BitmapFont_LegacyStringName_SetProperty_ShouldForwardToTypeface()
+    {
+        // "BitmapFont" is kept as a legacy string alias in the dispatch bridge for any
+        // persisted/generated code still calling SetProperty("BitmapFont", ...).
+        TextRuntime sut = new();
+        BitmapFont font = new BitmapFont((Texture2D)null!, fontPattern);
+
+        sut.SetProperty("BitmapFont", font);
+
+        sut.Typeface.ShouldBe(font);
+    }
+
+    [Fact]
+    public void DefaultTypeface_AppliedInConstructor()
+    {
+        BitmapFont? saved = TextRuntime.DefaultTypeface;
+        try
+        {
+            BitmapFont font = new BitmapFont((Texture2D)null!, fontPattern);
+            TextRuntime.DefaultTypeface = font;
+
+            TextRuntime sut = new();
+
+            sut.Typeface.ShouldBe(font);
+        }
+        finally
+        {
+            TextRuntime.DefaultTypeface = saved;
+        }
+    }
+
+    [Fact]
+    public void DefaultCustomFont_ObsoleteAlias_ShouldForwardToDefaultTypeface()
+    {
+        BitmapFont? saved = TextRuntime.DefaultTypeface;
+        try
+        {
+            BitmapFont font = new BitmapFont((Texture2D)null!, fontPattern);
+#pragma warning disable CS0618 // intentionally exercising the obsolete forwarder
+            TextRuntime.DefaultCustomFont = font;
+
+            TextRuntime.DefaultTypeface.ShouldBe(font);
+            TextRuntime.DefaultCustomFont.ShouldBe(font);
+#pragma warning restore CS0618
+        }
+        finally
+        {
+            TextRuntime.DefaultTypeface = saved;
+        }
     }
 
     #endregion
