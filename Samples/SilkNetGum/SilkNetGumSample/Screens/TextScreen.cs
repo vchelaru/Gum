@@ -1,3 +1,5 @@
+using Gum.DataTypes;
+using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Managers;
@@ -5,6 +7,7 @@ using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using SkiaSharp;
 using System;
+using System.Linq;
 
 namespace SilkNetGum.Screens;
 
@@ -17,6 +20,11 @@ namespace SilkNetGum.Screens;
 // (#3674/#3675/#3676), RichTextKit overflow (#3677), and MaxLettersToShow (#3678) — exercise the
 // SkiaGum.Text renderable directly; the baked-atlas drop shadow and texture-filter demos the MonoGame
 // screen shows have no Skia equivalent and are intentionally absent.
+//
+// Tick(elapsedSeconds) (#3701) drives the animated typewriter section and must be called once per
+// frame by Program.cs's main loop while this screen is active (`(currentCodeScreen as
+// TextScreen)?.Tick(...)`). FrameworkElement.Activity() is FRB-only (`#if FRB`) and not available in
+// these plain samples, hence the host-driven Tick instead.
 internal class TextScreen : FrameworkElement
 {
     public TextScreen() : base(new ContainerRuntime())
@@ -24,8 +32,8 @@ internal class TextScreen : FrameworkElement
         Dock(Gum.Wireframe.Dock.Fill);
 
         ContainerRuntime container = new ContainerRuntime();
-        container.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        container.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        container.WidthUnits = DimensionUnitType.RelativeToParent;
+        container.HeightUnits = DimensionUnitType.RelativeToParent;
         container.X = 2;
         container.Y = 2;
         container.Width = -4;
@@ -37,6 +45,11 @@ internal class TextScreen : FrameworkElement
         TextRuntime textRuntime = new TextRuntime();
         textRuntime.Text = "Hi, I'm default text";
         container.Children.Add(textRuntime);
+
+        // Placed right after the default text -- this screen has no ScrollViewer, and the rest of the
+        // stack (BBCode/shadows/blend/overflow/static reveal rows) comfortably exceeds a typical window
+        // height, so anything appended after it is invisible without resizing.
+        AddTypewriterSection(container);
 
         AddBbCodeSection(container);
 
@@ -99,6 +112,52 @@ internal class TextScreen : FrameworkElement
         AddMaxLettersToShowSection(container);
     }
 
+    // Typewriter reveal (#3701): MaxLettersToShow (the same property AddRevealRow sets to a
+    // fixed count) driven by elapsed time instead, via Tick. Pressing any key restarts the reveal
+    // from the beginning. FormsUtilities.Keyboard.KeysTyped is the platform-neutral "keys typed this
+    // frame" feed every backend's UseKeyboardDefaults() populates, so this needs no #if branching.
+    private const string TypewriterParagraph =
+        "This paragraph types itself out one letter at a time. Press any key to start the reveal over from the beginning.";
+    private const double TypewriterLettersPerSecond = 18;
+    private TextRuntime _typewriterText;
+    private double _typewriterElapsedSeconds;
+
+    /// <summary>
+    /// Advances the typewriter reveal by <paramref name="elapsedSeconds"/>. Call once per frame from
+    /// the host's game loop while this screen is active.
+    /// </summary>
+    public void Tick(double elapsedSeconds)
+    {
+        if (FormsUtilities.Keyboard.KeysTyped.Any())
+        {
+            _typewriterElapsedSeconds = 0;
+        }
+        else
+        {
+            _typewriterElapsedSeconds += elapsedSeconds;
+        }
+
+        int lettersToShow = (int)(_typewriterElapsedSeconds * TypewriterLettersPerSecond);
+        // TextRuntime.MaxLettersToShow is #if !SKIA-gated (see AddRevealRow above), so this goes
+        // through the renderable directly like the other MaxLettersToShow rows do.
+        ((SkiaGum.Text)_typewriterText.RenderableComponent).MaxLettersToShow =
+            Math.Min(lettersToShow, TypewriterParagraph.Length);
+    }
+
+    private void AddTypewriterSection(ContainerRuntime container)
+    {
+        _typewriterText = new TextRuntime();
+        _typewriterText.Font = "Arial";
+        _typewriterText.FontSize = 20;
+        _typewriterText.WidthUnits = DimensionUnitType.Absolute;
+        _typewriterText.Width = 300;
+        _typewriterText.HeightUnits = DimensionUnitType.RelativeToChildren;
+        _typewriterText.Height = 0;
+        _typewriterText.Text = TypewriterParagraph;
+        ((SkiaGum.Text)_typewriterText.RenderableComponent).MaxLettersToShow = 0;
+        container.Children.Add(_typewriterText);
+    }
+
     // BBCode inline styling on the SkiaGum.Text renderable (#3679): a single Text whose markup mixes
     // per-run color, font size, font scale, bold, and italic. SkiaGum parses the tags and feeds
     // RichTextKit one Style per run (Text.GetStyledRuns), matching the MonoGame / Raylib inline-styling
@@ -111,7 +170,7 @@ internal class TextScreen : FrameworkElement
         TextRuntime bbcode = new TextRuntime();
         bbcode.Font = "Arial";
         bbcode.FontSize = 24;
-        bbcode.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        bbcode.WidthUnits = DimensionUnitType.Absolute;
         bbcode.Width = 520;
         bbcode.Text =
             "[Color=Red]red[/Color], [Color=Blue]blue[/Color], " +
@@ -143,11 +202,14 @@ internal class TextScreen : FrameworkElement
         TextRuntime row = new TextRuntime();
         row.Font = "Arial";
         row.FontSize = 20;
-        row.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        row.WidthUnits = DimensionUnitType.Absolute;
         row.Width = 300;
-        row.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        row.HeightUnits = DimensionUnitType.RelativeToChildren;
         row.Height = 0;
         row.Text = paragraph;
+        // TextRuntime.MaxLettersToShow is #if !SKIA-gated in MonoGameGum/GueDeriving/TextRuntime.cs --
+        // SkiaGum.Text supports the property, the shared runtime forwarder just hasn't caught up -- so
+        // this goes through the renderable directly instead of the (MonoGame/raylib-only) runtime property.
         ((SkiaGum.Text)row.RenderableComponent).MaxLettersToShow = maxLetters;
         container.Children.Add(row);
     }
@@ -196,8 +258,8 @@ internal class TextScreen : FrameworkElement
         // The SpillOver box renders past its own bottom edge by design; reserve room below it so the
         // overflowing lines don't land on top of the next section in the top-to-bottom stack.
         var spillSpacer = new ContainerRuntime();
-        spillSpacer.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        spillSpacer.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        spillSpacer.WidthUnits = DimensionUnitType.Absolute;
+        spillSpacer.HeightUnits = DimensionUnitType.Absolute;
         spillSpacer.Width = 0;
         spillSpacer.Height = 40;
         container.Children.Add(spillSpacer);
@@ -207,8 +269,8 @@ internal class TextScreen : FrameworkElement
     private static RectangleRuntime MakeOverflowBox(float width, float height)
     {
         RectangleRuntime box = new RectangleRuntime();
-        box.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        box.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        box.WidthUnits = DimensionUnitType.Absolute;
+        box.HeightUnits = DimensionUnitType.Absolute;
         box.Width = width;
         box.Height = height;
         box.FillColor = new SKColor(40, 40, 40);
@@ -223,8 +285,8 @@ internal class TextScreen : FrameworkElement
         textRuntime.Text = text;
         textRuntime.Font = "Arial";
         textRuntime.FontSize = 18;
-        textRuntime.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        textRuntime.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        textRuntime.WidthUnits = DimensionUnitType.RelativeToParent;
+        textRuntime.HeightUnits = DimensionUnitType.RelativeToParent;
         textRuntime.Width = 0;
         textRuntime.Height = 0;
         return textRuntime;
@@ -235,8 +297,8 @@ internal class TextScreen : FrameworkElement
     private static void AddBlendOnTextSection(ContainerRuntime container)
     {
         var blendRow = new ContainerRuntime();
-        blendRow.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        blendRow.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        blendRow.WidthUnits = DimensionUnitType.RelativeToChildren;
+        blendRow.HeightUnits = DimensionUnitType.RelativeToChildren;
         blendRow.Width = 0;
         blendRow.Height = 0;
         blendRow.ChildrenLayout = ChildrenLayout.LeftToRightStack;
@@ -253,8 +315,8 @@ internal class TextScreen : FrameworkElement
         cell.Height = 48;
 
         var background = new RectangleRuntime();
-        background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        background.WidthUnits = DimensionUnitType.RelativeToParent;
+        background.HeightUnits = DimensionUnitType.RelativeToParent;
         background.Width = 0;
         background.Height = 0;
         background.IsFilled = true;
@@ -262,8 +324,8 @@ internal class TextScreen : FrameworkElement
         cell.Children.Add(background);
 
         var text = new TextRuntime();
-        text.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        text.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        text.WidthUnits = DimensionUnitType.RelativeToParent;
+        text.HeightUnits = DimensionUnitType.RelativeToParent;
         text.Width = 0;
         text.Height = 0;
         text.FontSize = 24;
