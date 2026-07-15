@@ -54,21 +54,32 @@ namespace SkiaGumWpfSample
             string[] labels = { "Item One", "Item Two", "Item Three", "Item Four", "Item Five" };
             float[] fractionalOffsets = { 0.1f, 0.3f, 0.5f, 0.7f, 0.9f };
 
+            var textBackground = new RectangleRuntime();
+            textBackground.FillColor = new SkiaSharp.SKColor(230, 230, 230);
+            textBackground.IsFilled = true;
+            textBackground.X = 10;
+            textBackground.Y = 140;
+            textBackground.Width = 400;
+            textBackground.Height = 120;
+            SkiaElement.Children.Add(textBackground);
+
             for (int i = 0; i < labels.Length; i++)
             {
                 var snapped = new TextRuntime();
                 snapped.Text = labels[i];
                 snapped.FontSize = 11;
+                snapped.Color = new SkiaSharp.SKColor(0, 0, 0);
                 snapped.X = 20 + fractionalOffsets[i];
-                snapped.Y = 80 + i * 20;
+                snapped.Y = 150 + i * 20;
                 // TextRenderingPositionMode left at its default (SnapToPixel).
                 SkiaElement.Children.Add(snapped);
 
                 var freeFloating = new TextRuntime();
                 freeFloating.Text = labels[i];
                 freeFloating.FontSize = 11;
+                freeFloating.Color = new SkiaSharp.SKColor(0, 0, 0);
                 freeFloating.X = 220 + fractionalOffsets[i];
-                freeFloating.Y = 80 + i * 20;
+                freeFloating.Y = 150 + i * 20;
                 freeFloating.TextRenderingPositionMode = TextRenderingPositionMode.FreeFloating;
                 SkiaElement.Children.Add(freeFloating);
             }
