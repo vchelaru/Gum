@@ -296,8 +296,10 @@ public class TextRuntime : InteractiveGue
     /// <summary>
     /// Specifies the name of the custom font. This can be specified relative to
     /// FileManager.RelativeDirectory, which is the Content folder for code-only projects,
-    /// or the folder containing the .gumx project if loading a Gum project. This should
-    /// include the .fnt extension.
+    /// or the folder containing the .gumx project if loading a Gum project. Accepts either
+    /// a pre-baked <c>.fnt</c> atlas (loaded directly) or a <c>.ttf</c>/<c>.otf</c> source
+    /// (baked via the same bmfont.exe/KernSmith cascade <see cref="Font"/>-as-path uses, on
+    /// XNA-like backends; raylib resolves TTF natively regardless of extension).
     /// </summary>
     public string? CustomFontFile
     {

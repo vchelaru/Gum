@@ -217,6 +217,28 @@ public class BmfcSave
         return fontValue.EndsWith(".ttf", StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <summary>
+    /// Resolves the effective .ttf source path a text renderer should load/bake from, given a
+    /// TextRuntime's UseCustomFont/CustomFontFile/Font values -- or null if none applies (a plain
+    /// system family name, or CustomFontFile is a non-.ttf format like the XNA-like/raylib .fnt
+    /// baked atlas, which not every backend can produce/load).
+    /// <para>
+    /// This is the single, backend-agnostic "which of these two properties is a font file" decision
+    /// (#3670/#3703) -- every backend's font-loading path (XNA-like/raylib bake, Skia SKTypeface
+    /// load) should call this instead of reimplementing the extension check, so they can't drift
+    /// out of sync on what counts as a font-file path.
+    /// </para>
+    /// </summary>
+    public static string? ResolveTtfSourcePath(bool useCustomFont, string? customFontFile, string? font)
+    {
+        if (useCustomFont)
+        {
+            return IsFontFilePath(customFontFile) ? customFontFile : null;
+        }
+
+        return IsFontFilePath(font) ? font : null;
+    }
+
     /// <inheritdoc/>
     public override string ToString()
     {

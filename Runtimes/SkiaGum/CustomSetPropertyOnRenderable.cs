@@ -1177,33 +1177,30 @@ public partial class CustomSetPropertyOnRenderable
 
     public static void UpdateToFontValues(IText itext, GraphicalUiElement graphicalUiElement)
     {
-        // BitmapFont font = null;
-
-        var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-        var contentLoader = loaderManager.ContentLoader;
-
-        //if(UseCustomFont)
-        //{
-
-        //}
-        //else
+        if (graphicalUiElement is TextRuntime asTextRuntime && itext is Text text)
         {
-            if(graphicalUiElement is TextRuntime asTextRuntime && !string.IsNullOrEmpty(asTextRuntime.Font))
-            {
-                //SKTypeface font = contentLoader.LoadContent<SKTypeface>(Font);
-                if (asTextRuntime.Font != null && itext is Text text)
-                {
-                    text.FontName = asTextRuntime.Font;
-                    text.FontSize = asTextRuntime.FontSize;
 #if SKIA
-                    // Skia draws the outline at render time via RichTextKit's halo (there is no
-                    // font-generation step to bake it into, unlike MonoGame/Raylib), so push the
-                    // runtime's OutlineThickness onto the renderable here. #if SKIA-gated because the
-                    // #else (Apos.Shapes) build's Text renderable has no OutlineThickness property.
-                    text.OutlineThickness = asTextRuntime.OutlineThickness;
-#endif
-                }
+            // #3670/#3703: resolve CustomFontFile/Font-as-path .ttf/.otf sources through
+            // GumFontMapper instead of passing Font straight through as a system family name.
+            string? resolvedFamily = SkiaGum.Content.Fonts.GumFontMapper.ResolveFontFamily(
+                asTextRuntime.UseCustomFont, asTextRuntime.CustomFontFile, asTextRuntime.Font);
+
+            if (resolvedFamily != null || !string.IsNullOrEmpty(asTextRuntime.Font))
+            {
+                text.FontName = resolvedFamily ?? asTextRuntime.Font;
+                text.FontSize = asTextRuntime.FontSize;
+                // Skia draws the outline at render time via RichTextKit's halo (there is no
+                // font-generation step to bake it into, unlike MonoGame/Raylib), so push the
+                // runtime's OutlineThickness onto the renderable here.
+                text.OutlineThickness = asTextRuntime.OutlineThickness;
             }
+#else
+            if (!string.IsNullOrEmpty(asTextRuntime.Font))
+            {
+                text.FontName = asTextRuntime.Font;
+                text.FontSize = asTextRuntime.FontSize;
+            }
+#endif
         }
     }
 
@@ -1298,6 +1295,25 @@ public partial class CustomSetPropertyOnRenderable
                 gueAsTextRuntime.Font = value as string;
             }
 
+            ReactToFontValueChange();
+        }
+        // #3670/#3703: these had no dispatch arm at all, so setting either by the SetProperty/string
+        // path (state application, codegen, BBCode) was a silent no-op on Skia -- unlike XNA-like/raylib,
+        // which have had this arm since CustomFontFile existed.
+        else if (propertyName == nameof(gueAsTextRuntime.UseCustomFont))
+        {
+            if (gueAsTextRuntime != null)
+            {
+                gueAsTextRuntime.UseCustomFont = (bool)value;
+            }
+            ReactToFontValueChange();
+        }
+        else if (propertyName == nameof(gueAsTextRuntime.CustomFontFile))
+        {
+            if (gueAsTextRuntime != null)
+            {
+                gueAsTextRuntime.CustomFontFile = value as string;
+            }
             ReactToFontValueChange();
         }
 
