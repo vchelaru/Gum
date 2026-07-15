@@ -360,6 +360,37 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         return lines;
     }
 
+    /// <summary>
+    /// Returns the index of the character at the specified screen position -- the code-point offset
+    /// into the same text stream <see cref="WrappedText"/> concatenates over, matching the "index within
+    /// the WrappedText" contract of the MonoGame/Raylib backends'
+    /// <c>TextExtensions.GetCharacterIndexAtPosition</c> (issue #3708). Unlike those backends, which
+    /// measure each character's advance in a loop (MonoGame via <c>BitmapFont</c>, Raylib via
+    /// <c>MeasureString</c>) because they have no other way to hit-test, this uses RichTextKit's own
+    /// <see cref="TextBlock.HitTest(float, float)"/> against the cached layout block -- it already
+    /// accounts for alignment, per-run BBCode styling, and Unicode line breaking, so there is no reason
+    /// to duplicate that math here.
+    /// </summary>
+    /// <param name="screenX">The screen x position, usually obtained by Cursor.XRespectingGumZoomAndBounds()</param>
+    /// <param name="screenY">The screen y position, usually obtained by Cursor.YRespectingGumZoomAndBounds()</param>
+    /// <returns>The index in the WrappedText</returns>
+    public int GetCharacterIndexAtPosition(float screenX, float screenY)
+    {
+        var textBlock = GetCachedTextBlock();
+
+        if (textBlock.Lines.Count == 0)
+        {
+            return 0;
+        }
+
+        var absoluteX = this.GetAbsoluteX();
+        var absoluteY = this.GetAbsoluteY() + GetVerticalAlignmentOffset(textBlock);
+
+        var hitTestResult = textBlock.HitTest(screenX - absoluteX, screenY - absoluteY);
+
+        return hitTestResult.ClosestCodePointIndex;
+    }
+
     /// <inheritdoc/>
     /// <remarks>
     /// Measured at the base font size (<see cref="FontSize"/> scaled only by
@@ -779,25 +810,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             //// Gum uses counter clockwise rotation, Skia uses clockwise, so invert:
             SKMatrix rotationMatrix = SKMatrix.CreateRotationDegrees(-Rotation);
             var absoluteX = this.GetAbsoluteX();
-            var absoluteY = this.GetAbsoluteY();
-
-            if(this.VerticalAlignment == VerticalAlignment.Center)
-            {
-                // compare the bound height with the actual height, and adjust the offset
-                var textBlockHeight = textBlock.MeasuredHeight;
-                var boundsHeight = this.Height;
-
-                absoluteY += (boundsHeight - textBlockHeight)/2.0f;
-            }
-
-            if(this.VerticalAlignment == VerticalAlignment.Bottom)
-            {
-                // compare the bound height with the actual height, and adjust the offset
-                var textBlockHeight = textBlock.MeasuredHeight;
-                var boundsHeight = this.Height;
-
-                absoluteY += boundsHeight - textBlockHeight;
-            }
+            var absoluteY = this.GetAbsoluteY() + GetVerticalAlignmentOffset(textBlock);
 
             SKMatrix translateMatrix = SKMatrix.CreateTranslation(absoluteX, absoluteY);
             // Continue to apply the previou matrix in case there is scaling
@@ -843,6 +856,27 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             }
             canvas.Restore();
         }
+    }
+
+    /// <summary>
+    /// The vertical shift applied to <see cref="GetAbsoluteY"/> before positioning <paramref name="textBlock"/>
+    /// -- Center/Bottom shift the block within <see cref="Height"/> so it isn't pinned to the top. Shared by
+    /// <see cref="Render"/> (positioning the painted block) and <see cref="GetCharacterIndexAtPosition(float, float)"/>
+    /// (converting a screen click into the same block-local coordinate space), so the two never drift apart.
+    /// </summary>
+    private float GetVerticalAlignmentOffset(TextBlock textBlock)
+    {
+        if (VerticalAlignment == VerticalAlignment.Center)
+        {
+            return (Height - textBlock.MeasuredHeight) / 2.0f;
+        }
+
+        if (VerticalAlignment == VerticalAlignment.Bottom)
+        {
+            return Height - textBlock.MeasuredHeight;
+        }
+
+        return 0;
     }
 
     /// <summary>

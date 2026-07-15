@@ -868,7 +868,6 @@ public class TextRuntime : InteractiveGue
     public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 #endif
 
-#if !SKIA
     /// <summary>
     /// Returns the index of the character at the specified screen position. This returns the index
     /// within the WrappedText, so to index in, you need to loop through each line.
@@ -877,5 +876,4 @@ public class TextRuntime : InteractiveGue
     /// <param name="screenY">The screen y position, usually obtained by Cursor.YRespectingGumZoomAndBounds()</param>
     /// <returns>The index in the WrappedText</returns>
     public int GetCharacterIndexAtPosition(float screenX, float screenY) => ContainedText.GetCharacterIndexAtPosition(screenX, screenY);
-#endif
 }
