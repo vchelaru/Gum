@@ -624,6 +624,11 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         }
     }
 
+    /// <summary>
+    /// Draws a debug outline around the text's bounds. XNALIKE-only debug aid (used by the Gum tool's
+    /// rulers/distance arrows and the editor's "show text outlines" setting) — not planned for
+    /// Raylib/Skia (#3708).
+    /// </summary>
     public bool RenderBoundary
     {
         get;
