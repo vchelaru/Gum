@@ -879,6 +879,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         return 0;
     }
 
+    // No OverlapDirection over here either -- paintBlock.Paint below hands the whole shaped run to
+    // RichTextKit in one call, no per-glyph z-order hook to plug into. Same story as raylib: getting
+    // this would mean hand-rolling glyph painting ourselves, and nothing in Gum uses overlap
+    // direction anyway. XNALIKE-only is fine, not adding it here.
+
     /// <summary>
     /// Paints the outline (when <see cref="OutlineThickness"/> &gt; 0) followed by the text fill.
     /// The outline is a single recolor+dilate pass: the text is painted into a layer whose paint
