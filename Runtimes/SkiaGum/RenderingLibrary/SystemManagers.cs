@@ -85,6 +85,11 @@ namespace RenderingLibrary
                 SkiaResourceManager.Initialize(null);
                 LoaderManager.Self.ContentLoader = LoaderManager.Self.ContentLoader ?? new EmbeddedResourceContentLoader();
                 RegisterComponentRuntimeInstantiations();
+
+                // #3670/#3703: route RichTextKit's family-name resolution through GumFontMapper so a
+                // custom .ttf/.otf (loaded via Font/CustomFontFile) resolves to its loaded SKTypeface
+                // instead of only ever matching an installed system font by name.
+                Topten.RichTextKit.FontMapper.Default = new SkiaGum.Content.Fonts.GumFontMapper();
             }
 
 
@@ -94,7 +99,11 @@ namespace RenderingLibrary
         {
             if(text is Text asText && element is TextRuntime textRuntime)
             {
-                asText.FontName = textRuntime.Font ?? "Arial";
+                // #3670/#3703: resolve CustomFontFile/Font-as-path .ttf/.otf sources through
+                // GumFontMapper instead of passing Font straight through as a system family name.
+                asText.FontName = SkiaGum.Content.Fonts.GumFontMapper.ResolveFontFamily(
+                    textRuntime.UseCustomFont, textRuntime.CustomFontFile, textRuntime.Font)
+                    ?? textRuntime.Font ?? "Arial";
                 asText.IsItalic = textRuntime.IsItalic;
                 // BoldWeight is an embolden multiplier (1.0 = normal). Do NOT set CSS weights (400/700) here.
                 asText.BoldWeight = textRuntime.IsBold ? 1.5f : 1.0f;

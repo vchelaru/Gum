@@ -34,4 +34,12 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
+
+	<!-- Fixture TTF for CustomFontFile/#3703-3670 tests (copy of the Neon theme's Orbitron-Regular.ttf,
+	     already repo-licensed for redistribution). -->
+	<ItemGroup>
+		<None Include="Assets\Fonts\TestFont.ttf">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 </Project>

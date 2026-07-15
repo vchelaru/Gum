@@ -105,6 +105,18 @@ internal class TextScreen : FrameworkElement
         withOutline.OutlineThickness = 2;
         container.Children.Add(withOutline);
 
+        // #3670/#3703: CustomFontFile pointing at a bundled .ttf -- Skia previously had no
+        // custom-font-file loading path at all, so this silently fell back to the default font.
+        // Path is relative to FileManager.RelativeDirectory, which this sample's GumUI.Initialize
+        // (loading Content/GumProject/GumProject.gumx) points at the project folder, not the exe
+        // root -- so the file lives at Content/GumProject/Fonts/CustomFont.ttf on disk.
+        TextRuntime customFontFileText = new TextRuntime();
+        customFontFileText.Text = "I use a bundled .ttf via UseCustomFont + CustomFontFile";
+        customFontFileText.FontSize = 24;
+        customFontFileText.UseCustomFont = true;
+        customFontFileText.CustomFontFile = "Fonts/CustomFont.ttf";
+        container.Children.Add(customFontFileText);
+
         AddBlendOnTextSection(container);
 
         AddOverflowSection(container);

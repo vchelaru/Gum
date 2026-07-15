@@ -1663,9 +1663,10 @@ public partial class CustomSetPropertyOnRenderable
     }
 
     /// <summary>
-    /// Resolves a font file path (from a <c>[Font=path]</c> tag) to an absolute path using the Gum project
-    /// directory. Font generators resolve paths relative to their own working directory, not the project
-    /// directory, so relative paths must be made absolute. Mirrors the XNA-side method of the same name.
+    /// Resolves a font file path (from a <c>[Font=path]</c> tag, or a code-set CustomFontFile/Font
+    /// path) to an absolute path. Font generators (bmfont.exe/KernSmith) resolve relative paths
+    /// against their own working directory, not the project directory, so relative paths must be
+    /// made absolute here. Mirrors the XNA-side method of the same name.
     /// </summary>
     private static string ResolveFontFilePath(string fontFilePath)
     {
@@ -1681,7 +1682,13 @@ public partial class CustomSetPropertyOnRenderable
             return System.IO.Path.GetFullPath(System.IO.Path.Combine(projectDir, fontFilePath));
         }
 
-        return fontFilePath;
+        // #3703: no .gumx project loaded (code-only games) -- fall back to FileManager.RelativeDirectory,
+        // matching the documented CustomFontFile contract ("relative to FileManager.RelativeDirectory,
+        // which is the Content folder for code-only projects, or the folder containing the .gumx
+        // project"). Previously this branch returned the path unresolved, so KernSmith/bmfont.exe
+        // received a relative path that resolved against the process's working directory instead --
+        // which may not be the exe's own directory.
+        return ToolsUtilities.FileManager.Standardize(fontFilePath, preserveCase: true, makeAbsolute: true);
     }
 
     /// <summary>
@@ -1691,6 +1698,138 @@ public partial class CustomSetPropertyOnRenderable
     /// public member so existing callers referencing <c>CustomSetPropertyOnRenderable.Tags</c> still compile.
     /// </summary>
     public static HashSet<string> Tags => BbCodeParser.KnownTags;
+
+#if !RAYLIB
+    /// <summary>
+    /// Resolves (loading/generating as needed) a <see cref="BitmapFont"/> for <paramref name="fontFilePath"/>
+    /// (a .ttf/.otf source, or null to resolve by family name) combined with <paramref name="textRuntime"/>'s
+    /// other font properties (size, outline, bold, italic, dropshadow). Shared by the family-name/Font path
+    /// and the CustomFontFile-as-.ttf/.otf path (#3703) so both bake through the same
+    /// cache/embedded-resource/InMemoryFontCreator/FontService/disk cascade.
+    /// </summary>
+    private static BitmapFont GetOrCreateBakedFont(Gum.GueDeriving.TextRuntime textRuntime,
+        global::RenderingLibrary.Content.LoaderManager loaderManager, string? fontFilePath)
+    {
+        BitmapFont font = null;
+
+        string fontName = textRuntime.GetFontCacheFileName(fontFilePath);
+
+        string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
+
+        font = loaderManager.GetDisposable(fullFileName) as BitmapFont;
+
+        // Attempt to load from Embedded Resource
+
+        if (fontName != null && font == null)
+        {
+            font = GetFontDisposable(fontName);
+        }
+
+        // Try in-memory font creation first (no disk I/O)
+        if (font == null && InMemoryFontCreator != null)
+        {
+            try
+            {
+                BmfcSave bmfcSave = new BmfcSave();
+                textRuntime.CopyFontGenerationFieldsTo(
+                    bmfcSave,
+                    fontFilePath != null ? ResolveFontFilePath(fontFilePath) : null);
+
+                var gumProject = ObjectFinder.Self.GumProjectSave;
+                bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
+                bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
+                bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
+
+                font = InMemoryFontCreator.TryCreateFont(bmfcSave);
+                if (font != null)
+                {
+                    loaderManager.AddDisposable(fullFileName, font);
+                }
+            }
+            catch
+            {
+                // Fall through to disk-based path
+            }
+        }
+
+#if !FRB
+        // Disk-based font creation: ask FontService to generate .fnt/.png files,
+        // then load from disk. This is the fallback when no InMemoryFontCreator
+        // is available or when in-memory creation fails.
+        if (font == null && FontService != null)
+        {
+            try
+            {
+                BmfcSave bmfcSave = new BmfcSave();
+                textRuntime.CopyFontGenerationFieldsTo(
+                    bmfcSave,
+                    fontFilePath != null ? ResolveFontFilePath(fontFilePath) : null);
+
+                var gumProject = ObjectFinder.Self.GumProjectSave;
+                bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
+                bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
+                bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
+
+                FontService.CreateFontIfNecessary(bmfcSave);
+            }
+            catch
+            {
+                // Font creation can fail for many reasons (invalid font name, missing bmfont.exe, etc.)
+                // Silently fall through to the disk load attempt or default font fallback.
+            }
+        }
+#endif
+
+        if (font == null || font.Texture?.IsDisposed == true)
+        {
+#if KNI
+                try
+                {
+                    // this could be running in browser where we don't have File.Exists, so JUST DO IT
+                    font = new BitmapFont(fullFileName);
+
+                    loaderManager.AddDisposable(fullFileName, font);
+                }
+                catch
+                {
+                    // font doesn't exist, carry on...
+                }
+#else
+            // so normally we would just let the content loader check if the file exists but since we're not going to
+            // use the content loader for BitmapFont, we're going to protect this with a file.exists.
+            if (ToolsUtilities.FileManager.FileExists(fullFileName))
+            {
+                // kill the old font:
+                if(font?.Texture?.IsDisposed == true)
+                {
+                    loaderManager.Dispose(fullFileName);
+                }
+
+                try
+                {
+                    font = new BitmapFont(fullFileName);
+                    loaderManager.AddDisposable(fullFileName, font);
+                }
+                catch (System.Text.DecoderFallbackException exception)
+                {
+                    throw new Exception($"Error trying to load font from file {fullFileName}:\n" + exception, exception);
+                }
+            }
+#endif
+        }
+
+        // FRB may dispose fonts, so let's check:
+
+#if FULL_DIAGNOSTICS
+        if (font?.Textures.Any(item => item?.IsDisposed == true) == true)
+        {
+            throw new InvalidOperationException("The returned font has a disposed texture");
+        }
+#endif
+
+        return font;
+    }
+#endif
 
     public static void UpdateToFontValues(IText text, GraphicalUiElement graphicalUiElement)
     {
@@ -1754,8 +1893,19 @@ public partial class CustomSetPropertyOnRenderable
 
         if (textRuntime.UseCustomFont)
         {
+            // #3670/#3703: a .ttf CustomFontFile routes through the same bake cascade as
+            // Font-as-path (below) rather than the .fnt-only BitmapFont load — CustomFontFile
+            // previously silently no-op'd on TTF paths since BitmapFont only parses .fnt.
+            // BmfcSave.ResolveTtfSourcePath is the single shared "is this a font file" decision
+            // every backend's font-loading path uses (also called from Skia's GumFontMapper).
+            string? customTtfPath = BmfcSave.ResolveTtfSourcePath(
+                useCustomFont: true, textRuntime.CustomFontFile, textRuntime.Font);
 
-            if (!string.IsNullOrEmpty(textRuntime.CustomFontFile))
+            if (customTtfPath != null)
+            {
+                font = GetOrCreateBakedFont(textRuntime, loaderManager, customTtfPath);
+            }
+            else if (!string.IsNullOrEmpty(textRuntime.CustomFontFile))
             {
                 font = loaderManager.GetDisposable(textRuntime.CustomFontFile) as BitmapFont;
                 if (font == null)
@@ -1805,123 +1955,9 @@ public partial class CustomSetPropertyOnRenderable
         {
             if (textRuntime.FontSize > 0 && !string.IsNullOrEmpty(textRuntime.Font))
             {
-
-                string? fontFilePath = BmfcSave.IsFontFilePath(textRuntime.Font) ? textRuntime.Font : null;
-
-                string fontName = textRuntime.GetFontCacheFileName(fontFilePath);
-
-                string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
-
-                font = loaderManager.GetDisposable(fullFileName) as BitmapFont;
-
-                // Attempt to load from Embedded Resource
-
-                if (fontName != null && font == null)
-                {
-                    font = GetFontDisposable(fontName);
-                }
-
-                // Try in-memory font creation first (no disk I/O)
-                if (font == null && InMemoryFontCreator != null)
-                {
-                    try
-                    {
-                        BmfcSave bmfcSave = new BmfcSave();
-                        textRuntime.CopyFontGenerationFieldsTo(
-                            bmfcSave,
-                            fontFilePath != null ? ResolveFontFilePath(fontFilePath) : null);
-
-                        var gumProject = ObjectFinder.Self.GumProjectSave;
-                        bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
-                        bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
-                        bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
-
-                        font = InMemoryFontCreator.TryCreateFont(bmfcSave);
-                        if (font != null)
-                        {
-                            loaderManager.AddDisposable(fullFileName, font);
-                        }
-                    }
-                    catch
-                    {
-                        // Fall through to disk-based path
-                    }
-                }
-
-#if !FRB
-                // Disk-based font creation: ask FontService to generate .fnt/.png files,
-                // then load from disk. This is the fallback when no InMemoryFontCreator
-                // is available or when in-memory creation fails.
-                if (font == null && FontService != null)
-                {
-                    try
-                    {
-                        BmfcSave bmfcSave = new BmfcSave();
-                        textRuntime.CopyFontGenerationFieldsTo(
-                            bmfcSave,
-                            fontFilePath != null ? ResolveFontFilePath(fontFilePath) : null);
-
-                        var gumProject = ObjectFinder.Self.GumProjectSave;
-                        bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
-                        bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
-                        bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
-
-                        FontService.CreateFontIfNecessary(bmfcSave);
-                    }
-                    catch
-                    {
-                        // Font creation can fail for many reasons (invalid font name, missing bmfont.exe, etc.)
-                        // Silently fall through to the disk load attempt or default font fallback.
-                    }
-                }
-#endif
-
-                if (font == null || font.Texture?.IsDisposed == true)
-                {
-#if KNI
-                        try
-                        {
-                            // this could be running in browser where we don't have File.Exists, so JUST DO IT
-                            font = new BitmapFont(fullFileName);
-
-                            loaderManager.AddDisposable(fullFileName, font);
-                        }
-                        catch
-                        {
-                            // font doesn't exist, carry on...
-                        }
-#else
-                    // so normally we would just let the content loader check if the file exists but since we're not going to
-                    // use the content loader for BitmapFont, we're going to protect this with a file.exists.
-                    if (ToolsUtilities.FileManager.FileExists(fullFileName))
-                    {
-                        // kill the old font:
-                        if(font?.Texture?.IsDisposed == true)
-                        {
-                            loaderManager.Dispose(fullFileName);
-                        }
-
-                        try
-                        {
-                            font = new BitmapFont(fullFileName);
-                            loaderManager.AddDisposable(fullFileName, font);
-                        }
-                        catch (System.Text.DecoderFallbackException exception)
-                        {
-                            throw new Exception($"Error trying to load font from file {fullFileName}:\n" + exception, exception);
-                        }
-                    }
-#endif
-                }
-
-                // FRB may dispose fonts, so let's check:
-
-#if FULL_DIAGNOSTICS
-                if (font?.Textures.Any(item => item?.IsDisposed == true) == true)
-                {
-                    throw new InvalidOperationException("The returned font has a disposed texture");
-                }
-#endif
+                string? fontFilePath = BmfcSave.ResolveTtfSourcePath(
+                    useCustomFont: false, customFontFile: null, textRuntime.Font);
+                font = GetOrCreateBakedFont(textRuntime, loaderManager, fontFilePath);
             }
         }
 
@@ -1965,9 +2001,12 @@ public partial class CustomSetPropertyOnRenderable
                 asText.FontSize = textRuntime.FontSize;
             }
 
-            if (textRuntime.UseCustomFont == true)
+            // #3703: guard against a null/empty CustomFontFile -- UseCustomFont can be (and, per
+            // the sample demo, commonly is) set to true before CustomFontFile is assigned, and
+            // FileManager.Standardize(null, ...) throws ArgumentException rather than returning
+            // gracefully. Mirrors the XNA-like branch's !string.IsNullOrEmpty(CustomFontFile) guard.
+            if (textRuntime.UseCustomFont == true && !string.IsNullOrEmpty(textRuntime.CustomFontFile))
             {
-                // todo here:
                 string fontName = textRuntime.CustomFontFile;
 
                 string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);

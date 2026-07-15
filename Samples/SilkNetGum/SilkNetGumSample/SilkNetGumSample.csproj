@@ -65,6 +65,9 @@
 	  <None Update="Winter Selfie.ttf">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	  <!-- Content\GumProject\Fonts\CustomFont.ttf (#3670/#3703 demo) is already covered by the
+	       Content\GumProject\**\*.* rule above; RelativeDirectory points at the loaded .gumx's
+	       folder here, not the exe root, once GumUI.Initialize(..., gumProjectFile) runs. -->
 	</ItemGroup>
 
 	<ItemGroup>
