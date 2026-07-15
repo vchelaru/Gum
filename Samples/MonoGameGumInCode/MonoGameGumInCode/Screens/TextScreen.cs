@@ -128,14 +128,22 @@ internal class TextScreen : FrameworkElement
         withOutline.OutlineThickness = 2;
         container.Children.Add(withOutline);
 
-        // #3670/#3703: CustomFontFile pointing at a bundled .ttf (Content/Fonts/CustomFont.ttf on
-        // MonoGame, resources/Fonts/CustomFont.ttf on raylib) -- previously silently fell back to
-        // the default font on both backends.
+        // #3670/#3703: CustomFontFile pointing at a bundled .ttf -- previously silently fell back
+        // to the default font on both backends. Path differs by backend: MonoGame's
+        // FileManager.RelativeDirectory is "Content/" (bare filenames resolve under it, see
+        // BearTexture.png elsewhere in this file), while raylib's stays at the exe root and every
+        // asset path here includes the "resources/" prefix explicitly (see ShaderFileName in
+        // RenderTargetShaderScreen.cs / the 04B_30_.TTF load in Program.cs) -- so the literal string
+        // must be gated, not shared, unlike every other path in this file.
         var customFontFileText = new TextRuntime();
         customFontFileText.Text = "I use a bundled .ttf via UseCustomFont + CustomFontFile";
         customFontFileText.FontSize = 24;
         customFontFileText.UseCustomFont = true;
+#if RAYLIB
+        customFontFileText.CustomFontFile = "resources/Fonts/CustomFont.ttf";
+#else
         customFontFileText.CustomFontFile = "Fonts/CustomFont.ttf";
+#endif
         container.Children.Add(customFontFileText);
 
         BuildTextParitySection(container);
