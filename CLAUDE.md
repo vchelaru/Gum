@@ -19,6 +19,8 @@ For every task, read the guidelines in the matching agent file under `.claude/ag
 
 Also load any skill whose trigger matches the area you're working in — before reading code, designing a fix, or making changes. "I'm only investigating, not editing yet" is not a reason to skip; the skill exists to inform the investigation, not just the keystrokes. The only time it's acceptable to skip is for a trivial single-file lookup that won't influence any recommendation or change.
 
+**This check re-runs per new file path, not once per task.** Matching skills against the files identified at task start (e.g. the source file a bug lives in) does not cover a different file touched later in the same task — a sample or test project pulled in only for manual verification, a config file edited in passing, a doc updated alongside. Each new file gets its own trigger-match against the skill list before it's edited, even when the task's "main" skill is already loaded.
+
 Available agents:
 - **coder** — Writing or modifying code and unit tests for new features or bugs
 - **refactoring-specialist** — Refactoring and improving code structure
