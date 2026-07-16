@@ -602,6 +602,13 @@ public partial class CustomSetPropertyOnRenderable
     {
         bool handled = false;
 
+#if FRB
+        // FRB doesn't have a SpriteRuntime, so we have to do this:
+        var spriteRuntime = graphicalUiElement;
+#else
+        var spriteRuntime = graphicalUiElement as Gum.GueDeriving.SpriteRuntime;
+#endif
+
         switch (propertyName)
         {
             case "SourceFile":
@@ -613,45 +620,90 @@ public partial class CustomSetPropertyOnRenderable
             case nameof(Sprite.Alpha):
                 {
                     int valueAsInt = (int)value;
+#if FRB
                     sprite.Alpha = valueAsInt;
+#else
+                    if (spriteRuntime != null)
+                    {
+                        spriteRuntime.Alpha = valueAsInt;
+                    }
+#endif
                     handled = true;
                     break;
                 }
             case nameof(Sprite.Red):
                 {
                     int valueAsInt = (int)value;
+#if FRB
                     sprite.Red = valueAsInt;
+#else
+                    if (spriteRuntime != null)
+                    {
+                        spriteRuntime.Red = valueAsInt;
+                    }
+#endif
                     handled = true;
                     break;
                 }
             case nameof(Sprite.Green):
                 {
                     int valueAsInt = (int)value;
+#if FRB
                     sprite.Green = valueAsInt;
+#else
+                    if (spriteRuntime != null)
+                    {
+                        spriteRuntime.Green = valueAsInt;
+                    }
+#endif
                     handled = true;
                     break;
                 }
             case nameof(Sprite.Blue):
                 {
                     int valueAsInt = (int)value;
+#if FRB
                     sprite.Blue = valueAsInt;
+#else
+                    if (spriteRuntime != null)
+                    {
+                        spriteRuntime.Blue = valueAsInt;
+                    }
+#endif
                     handled = true;
                     break;
                 }
             case nameof(Sprite.Color):
                 {
+#if FRB
                     if (value is System.Drawing.Color drawingColor)
                     {
-#if RAYLIB
-                        sprite.Color = drawingColor.ToRaylib();
-#else
                         sprite.Color = drawingColor;
-#endif
                     }
-#if !RAYLIB
                     else if (value is Microsoft.Xna.Framework.Color xnaColor)
                     {
                         sprite.Color = xnaColor.ToSystemDrawing();
+                    }
+#else
+                    if (spriteRuntime != null)
+                    {
+                        if (value is System.Drawing.Color drawingColor)
+                        {
+#if RAYLIB
+                            spriteRuntime.Color = drawingColor.ToRaylib();
+#else
+                            // SpriteRuntime.Color is XNA-typed on this backend (unlike the renderable's
+                            // System.Drawing-typed Color), so the incoming System.Drawing value needs the
+                            // same ToXNA conversion the runtime's own getter uses in reverse.
+                            spriteRuntime.Color = global::RenderingLibrary.Graphics.XNAExtensions.ToXNA(drawingColor);
+#endif
+                        }
+#if !RAYLIB
+                        else if (value is Microsoft.Xna.Framework.Color xnaColor)
+                        {
+                            spriteRuntime.Color = xnaColor;
+                        }
+#endif
                     }
 #endif
                     handled = true;
@@ -660,6 +712,7 @@ public partial class CustomSetPropertyOnRenderable
             case "Blend":
                 {
                     var valueAsGumBlend = (Gum.RenderingLibrary.Blend)value;
+#if FRB
 #if RAYLIB
                     sprite.Blend = valueAsGumBlend;
 #else
@@ -667,18 +720,38 @@ public partial class CustomSetPropertyOnRenderable
 
                     sprite.BlendState = valueAsXnaBlend;
 #endif
+#else
+                    if (spriteRuntime != null)
+                    {
+                        spriteRuntime.Blend = valueAsGumBlend;
+                    }
+#endif
                     handled = true;
                     break;
                 }
             case nameof(Sprite.Animate):
                 {
+#if FRB
                     sprite.Animate = (bool)value;
+#else
+                    if (spriteRuntime != null)
+                    {
+                        spriteRuntime.Animate = (bool)value;
+                    }
+#endif
                     handled = true;
                     break;
                 }
             case nameof(Sprite.CurrentChainName):
                 {
+#if FRB
                     sprite.CurrentChainName = (string)value;
+#else
+                    if (spriteRuntime != null)
+                    {
+                        spriteRuntime.CurrentChainName = (string)value;
+                    }
+#endif
                     graphicalUiElement.UpdateTextureValuesFrom(sprite);
                     graphicalUiElement.UpdateLayout();
                     handled = true;
