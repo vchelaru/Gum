@@ -2,6 +2,8 @@ using BaseCheckBoxVisual = Gum.Forms.DefaultVisuals.V3.CheckBoxVisual;
 using Gum.GueDeriving;
 #if RAYLIB
 using Raylib_cs;
+#elif SKIA
+using Color = SkiaSharp.SKColor;
 #else
 using Microsoft.Xna.Framework;
 #endif

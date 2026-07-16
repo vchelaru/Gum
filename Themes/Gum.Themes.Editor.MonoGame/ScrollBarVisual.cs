@@ -1,6 +1,8 @@
 using BaseScrollBarVisual = Gum.Forms.DefaultVisuals.V3.ScrollBarVisual;
 #if RAYLIB
 using Raylib_cs;
+#elif SKIA
+using Color = SkiaSharp.SKColor;
 #else
 using Microsoft.Xna.Framework;
 #endif
