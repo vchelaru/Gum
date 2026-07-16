@@ -1037,9 +1037,6 @@ public partial class CustomSetPropertyOnRenderable
                 handled = true;
             }
 #elif XNALIKE
-            // Scoped to XNALIKE (matching the prior gate) rather than extended to RAYLIB: unlike
-            // Blend, TextRuntime.Color is typed per-backend (XNA Color here), so redispatching it
-            // to RAYLIB would need its own verified conversion, not covered by this change.
             if (value is System.Drawing.Color drawingColor)
             {
                 if (textRuntime != null)
@@ -1053,6 +1050,18 @@ public partial class CustomSetPropertyOnRenderable
                 if (textRuntime != null)
                 {
                     textRuntime.Color = xnaColor;
+                }
+                handled = true;
+            }
+#elif RAYLIB
+            // TextRuntime.Color on raylib is an unconverted passthrough to the renderable's
+            // Raylib_cs.Color (see TextRuntime.cs), so - unlike XNALIKE above - there's no
+            // raylib-native color type coming through the string path that also needs handling.
+            if (value is System.Drawing.Color drawingColor)
+            {
+                if (textRuntime != null)
+                {
+                    textRuntime.Color = drawingColor.ToRaylib();
                 }
                 handled = true;
             }

@@ -51,4 +51,24 @@ public class CustomSetPropertyOnRenderableTests : BaseTestClass
 
         sut.MaxLettersToShow.ShouldBe(5);
     }
+
+    // Issue #3706/#3724 follow-up — TrySetPropertyOnText's "Color" branch was #if FRB / #elif
+    // XNALIKE with no RAYLIB arm at all, so the branch body didn't compile in on raylib and the
+    // string-path assignment silently did nothing (not even a reflection fallback, since
+    // "handled" only gates whether SetPropertyOnRenderable falls through to reflection for the
+    // property it was given — reflection can't find "Color" on TextRuntime either, since the
+    // combined Color property is FRB/XNALIKE-only there too).
+    [Fact]
+    public void SetProperty_Color_ShouldForwardToTextRuntime()
+    {
+        TextRuntime sut = new();
+        System.Drawing.Color drawingColor = System.Drawing.Color.FromArgb(10, 20, 30, 40);
+
+        sut.SetProperty("Color", drawingColor);
+
+        sut.Color.R.ShouldBe((byte)20);
+        sut.Color.G.ShouldBe((byte)30);
+        sut.Color.B.ShouldBe((byte)40);
+        sut.Color.A.ShouldBe((byte)10);
+    }
 }
