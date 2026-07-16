@@ -6,19 +6,19 @@ Gum ships a set of **consumer-facing skills** you can drop into your own project
 
 ## Getting the skills
 
-The skills live in the [`gum-skills/`](https://github.com/vchelaru/Gum/tree/main/gum-skills) folder of the Gum repository. To use them, copy the skills you want into your project's `.claude/skills/` folder (or your machine-wide `~/.claude/skills/` folder so they apply everywhere).
+The skills live in the [`gum-skills/`](../../gum-skills) folder of the Gum repository. To use them, copy the skills you want into your project's `.claude/skills/` folder (or your machine-wide `~/.claude/skills/` folder so they apply everywhere).
 
 A good starting set is the overview skill plus whichever topical skills match your work — for example layout, Forms controls, and the file format. Each skill is a folder containing a `SKILL.md` file with the standard frontmatter your assistant uses to decide when the skill is relevant.
 
 {% hint style="info" %}
-The `gum-skills/` folder is being populated incrementally. If a skill you expect is not there yet, check the folder for the current set. These consumer skills are distinct from the engine-internal skills under Gum's own `.claude/skills/`, which describe how to work *on* Gum rather than *with* it.
+The `gum-skills/` folder is being populated incrementally. If a skill you expect is not there yet, check the folder for the current set. These consumer skills are distinct from the engine-internal skills under Gum's own `.claude/skills/`, which describe how to work _on_ Gum rather than _with_ it.
 {% endhint %}
 
 ## Skills, the MCP server, and GumCli
 
 The three AI pieces reinforce each other:
 
-* **Skills** give your assistant durable context that loads automatically and shapes *what* it writes.
+* **Skills** give your assistant durable context that loads automatically and shapes _what_ it writes.
 * The [MCP Documentation Server](mcp-server.md) lets it look up authoritative, current details on demand.
 * [GumCli](gumcli-for-agents.md) lets it generate code, validate the project, and verify the result.
 
