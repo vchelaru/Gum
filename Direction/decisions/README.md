@@ -29,4 +29,5 @@ re-litigating it.
 | [0007](0007-converge-skia-property-dispatch.md) | Converge the Skia property dispatcher via runtime-type-first dispatch | Accepted | 2026-07-13 |
 | [0008](0008-sequence-runtime-dispatch-convergence.md) | Sequence the runtime-type-first dispatch convergence: parity, then redispatch, then converge | Accepted | 2026-07-13 |
 | [0009](0009-converge-text-dispatch-onto-textruntime.md) | Converge Text's SetProperty dispatch onto TextRuntime, phased by risk | Accepted | 2026-07-15 |
+| [0010](0010-converge-sprite-nineslice-container-polygon-dispatch.md) | Converge Sprite/NineSlice/Container/Polygon dispatch onto their Runtimes, smallest-first | Accepted | 2026-07-16 |
 | [0010](0010-converge-skia-text-dispatch-onto-textruntime.md) | Converge Skia's Text dispatch onto TextRuntime, without merging the two dispatcher files | Accepted | 2026-07-16 |
