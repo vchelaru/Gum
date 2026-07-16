@@ -15,6 +15,11 @@ using Color = Raylib_cs.Color;
 using Text = Gum.Renderables.Text;
 using LetterCustomization = Gum.Renderables.LetterCustomization;
 using TextRenderingPositionMode = Gum.Renderables.TextRenderingPositionMode;
+#elif SKIA
+using Color = SkiaSharp.SKColor;
+using Text = SkiaGum.Text;
+using LetterCustomization = SkiaGum.LetterCustomization;
+using TextRenderingPositionMode = SkiaGum.TextRenderingPositionMode;
 #else
 using Color = Microsoft.Xna.Framework.Color;
 using Text = RenderingLibrary.Graphics.Text;
@@ -24,6 +29,8 @@ using TextRenderingPositionMode = RenderingLibrary.Graphics.TextRenderingPositio
 
 #if RAYLIB
 namespace Examples.Shapes;
+#elif SKIA
+namespace SilkNetGum.Screens;
 #else
 namespace MonoGameGumInCode.Screens;
 #endif
@@ -31,17 +38,20 @@ namespace MonoGameGumInCode.Screens;
 // #3640: converged into a single shared file (was two byte-for-byte-mirrored copies at
 // Samples/MonoGameGumInCode/MonoGameGumInCode/Screens/TextScreen.cs and Samples/raylib/Screens/
 // TextScreen.cs) after repeatedly drifting when only one mirror got updated. Linked into
-// Samples/raylib/GumTest.csproj via <Compile Include ... Link>; this file is the only copy for
-// MonoGame + raylib.
+// Samples/raylib/GumTest.csproj via <Compile Include ... Link>. #3705 folded in the third mirror,
+// Samples/SilkNetGum/SilkNetGumSample/Screens/TextScreen.cs, the same way (SKIA define +
+// <Compile Include ... Link> in SilkNetGumSample.csproj) — this file is now the only copy for
+// MonoGame, raylib, and SilkNetGum/Skia.
 //
-// Policy: the MonoGame/raylib and SilkNetGum text samples are kept feature-, content-, AND
-// section-order-identical (a new section goes in the SAME position in both files, not just present),
-// and carry NO descriptive section labels — each demo's own text shows AND names what it is. The
-// SilkNetGum mirror (Samples/SilkNetGum/SilkNetGumSample/Screens/TextScreen.cs) is still a separate,
-// non-linked file for now. Only genuinely backend-specific things differ here, gated `#if RAYLIB`:
-// the namespace, the Color/Text/LetterCustomization/TextRenderingPositionMode aliases above, and
-// AddTextureFilterSection's mechanism (a per-layer sampler state on MonoGame vs a baked font-cache
-// texture on raylib).
+// Policy: the three text samples are kept feature-, content-, AND section-order-identical (a new
+// section goes in the SAME position for every backend, not just present), and carry NO descriptive
+// section labels — each demo's own text shows AND names what it is. Only genuinely backend-specific
+// things differ here, gated `#if RAYLIB` / `#elif SKIA` / `#else`: the namespace, the
+// Color/Text/LetterCustomization/TextRenderingPositionMode aliases above, the [State=Name] BBCode
+// tag (MonoGame/raylib only — SkiaGum owns a separate CustomSetPropertyOnRenderable.cs that doesn't
+// implement it yet, excluded on Skia), and AddTextureFilterSection's mechanism (a per-layer sampler
+// state on MonoGame vs a baked font-cache texture on raylib; excluded entirely on Skia, which has no
+// equivalent render-state layer switch).
 //
 // Tick(elapsedSeconds) (#3701) drives the animated typewriter section and must be called once per
 // frame by the host while this screen is active — see Game1.Update / Program.cs's main loop
@@ -61,6 +71,7 @@ internal class TextScreen : FrameworkElement
         container.Width = -4;
         container.Height = -4;
         container.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+        container.WrapsChildren = true;
         container.StackSpacing = 4;
         this.AddChild(container);
 
@@ -79,8 +90,9 @@ internal class TextScreen : FrameworkElement
         var bbcode = new TextRuntime();
         bbcode.Font = "Arial";
         bbcode.FontSize = 24;
-        bbcode.WidthUnits = DimensionUnitType.Absolute;
-        bbcode.Width = 520;
+        bbcode.WidthUnits = DimensionUnitType.PercentageOfParent;
+        bbcode.Width = 33;
+
         bbcode.Text =
             "[Color=Red]red[/Color], [Color=Blue]blue[/Color], " +
             "[FontSize=40]big[/FontSize], [FontScale=1.5]scaled[/FontScale], " +
@@ -88,11 +100,12 @@ internal class TextScreen : FrameworkElement
         container.Children.Add(bbcode);
 
         // [State=Name] BBCode tag (MonoGame/raylib only -- SkiaGum has its own separate
-        // CustomSetPropertyOnRenderable.cs without this feature yet, so there's no SilkNetGum mirror
-        // for this section). The state is defined in code via AddStates (no Gum project needed) with
-        // a Color + IsBold pair; only variables already wired for per-run application (like these two)
-        // apply to the wrapped substring -- a state can hold anything, including layout properties like
+        // CustomSetPropertyOnRenderable.cs without this feature yet, so this section is excluded on
+        // Skia). The state is defined in code via AddStates (no Gum project needed) with a Color +
+        // IsBold pair; only variables already wired for per-run application (like these two) apply to
+        // the wrapped substring -- a state can hold anything, including layout properties like
         // X/Width, but those are silently skipped rather than applied to the whole element.
+#if !SKIA
         var stateBbcode = new TextRuntime();
         stateBbcode.Font = "Arial";
         stateBbcode.FontSize = 24;
@@ -102,6 +115,7 @@ internal class TextScreen : FrameworkElement
         stateBbcode.AddStates(new List<StateSave> { highlightedState });
         stateBbcode.Text = "Plain text with a [State=Highlighted]bold gold run[/State] applied from a code-defined state.";
         container.Children.Add(stateBbcode);
+#endif
 
         Text.Customizations["Wave"] = (int index, string block) => new LetterCustomization
         {
@@ -113,6 +127,7 @@ internal class TextScreen : FrameworkElement
                 (int)(128 + 127 * MathF.Sin(index * 0.7f + 4f))),
         };
         var customMarkup = new TextRuntime();
+        customMarkup.Font = "Arial";
         customMarkup.FontSize = 24;
         customMarkup.Text = "[Custom=Wave]Wavy rainbow text[/Custom]";
         container.Children.Add(customMarkup);
@@ -155,6 +170,8 @@ internal class TextScreen : FrameworkElement
         // must be gated, not shared, unlike every other path in this file.
         var customFontFileText = new TextRuntime();
         customFontFileText.Text = "I use a bundled .ttf via UseCustomFont + CustomFontFile";
+        customFontFileText.Width = 33;
+        customFontFileText.WidthUnits = DimensionUnitType.PercentageOfParent;
         customFontFileText.FontSize = 24;
         customFontFileText.UseCustomFont = true;
 #if RAYLIB
@@ -218,10 +235,12 @@ internal class TextScreen : FrameworkElement
     private static void BuildTextParitySection(ContainerRuntime container)
     {
         AddBlendOnTextSection(container);
-        // Placed right after the blend block to match the SilkNetGumSample's section ORDER — the text
-        // samples must stay identical in order, not just content.
+        // Placed right after the blend block to keep section ORDER identical across all three
+        // backends — the text samples must stay identical in order, not just content.
         AddOverflowSection(container);
+#if !SKIA
         AddTextureFilterSection(container);
+#endif
 
         // --- Per-instance TextRenderingPositionMode override, at a fractional origin ---
         var snapText = new TextRuntime();
@@ -281,6 +300,9 @@ internal class TextScreen : FrameworkElement
     // filterRow container. Unlike raylib (where the filter is baked into the font-cache texture at
     // creation time), the layer-based override here is a pure render-state switch, so both sides can
     // share the same FontSize/FontScale. Each cell's own text ("Point" / "Linear") names its filter.
+    // No Skia equivalent -- SkiaGum's Renderer has no per-layer sampler-state switch (see the
+    // file-level comment above), so the whole method is excluded there rather than just its call site.
+#if !SKIA
     private static void AddTextureFilterSection(ContainerRuntime container)
     {
         var filterRow = new ContainerRuntime();
@@ -334,6 +356,7 @@ internal class TextScreen : FrameworkElement
         linearText.MoveToLayer(linearLayer);
 #endif
     }
+#endif
 
     // MaxLettersToShow typewriter reveal (#3678). The same wrapping paragraph is shown fully, then
     // with MaxLettersToShow set to a partial count so only the first N letters are visible while the

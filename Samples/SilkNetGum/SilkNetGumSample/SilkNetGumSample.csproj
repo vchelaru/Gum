@@ -13,6 +13,10 @@
 		<Nullable>enable</Nullable>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 		<PublishAot>true</PublishAot>
+		<!-- SKIA gates the #elif SKIA branch in Screens/TextScreen.cs (shared with MonoGameGumInCode
+		     via <Compile Include Link> below), mirroring how Samples/raylib/GumTest.csproj defines
+		     RAYLIB for the same file (#3705). -->
+		<DefineConstants>$(DefineConstants);SKIA</DefineConstants>
 		<DefineConstants Condition="$([MSBuild]::IsOSPlatform('Windows'))">$(DefineConstants);WINDOWS</DefineConstants>
 		<DefineConstants Condition="$([MSBuild]::IsOSPlatform('OSX'))">$(DefineConstants);MACOS</DefineConstants>
 		<DefineConstants Condition="'$(TargetFramework)' == 'net7.0-ios'">$(DefineConstants);IOS</DefineConstants>
@@ -47,6 +51,7 @@
 	     can be compared side by side between backends. See #3652. -->
 	<ItemGroup>
 	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\FormsScreen.cs" Link="Screens\FormsScreen.cs" />
+	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\TextScreen.cs" Link="Screens\TextScreen.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
