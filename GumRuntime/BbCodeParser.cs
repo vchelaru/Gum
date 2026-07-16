@@ -79,6 +79,7 @@ public static class BbCodeParser
         "fontscale",
         "lineheightmultiplier",
         "custom",
+        "state",
     };
 
     private struct Tag

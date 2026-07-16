@@ -1,10 +1,12 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.GueDeriving;
 using Gum.Renderables;
 using Gum.Wireframe;
 using KernSmith.Gum;
 using RaylibGum.Renderables;
 using RenderingLibrary.Graphics;
+using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -670,6 +672,128 @@ public class TextMarkupTests
         finally
         {
             CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    // [State=Name] BBCode tag: decomposes a GraphicalUiElement's named state (States/AddStates, the
+    // same runtime concept ApplyState(string) already uses) into the substring the tag wraps, but only
+    // for variables already wired for per-run application - Color/Red/Green/Blue/FontScale (direct
+    // InlineVariable) and Font/FontSize/OutlineThickness/IsItalic/IsBold/UseCustomFont (the font-stack
+    // path in ApplyFontVariables). Anything else in the state (X, Y, Width, etc.) is silently skipped,
+    // and an unknown state name is a no-op - neither is an error. Mirrors
+    // MonoGameGum.Tests.Runtimes.TextRuntimeBbCodeStateTests, since the decomposition itself
+    // (CustomSetPropertyOnRenderable.ExpandStateTags) is shared source between the two platforms.
+    [Fact]
+    public void Text_WithStateBbCodeTag_AppliesAllowlistedColorAndSkipsDisallowedVariable()
+    {
+        TextRuntime textRuntime = new();
+
+        StateSave state = new() { Name = "Highlighted" };
+        state.Variables.Add(new VariableSave { Name = "Color", Value = System.Drawing.Color.FromArgb(255, 10, 20, 30) });
+        // Disallowed: X has no per-run meaning and must never be applied to the whole element from
+        // inside a text span.
+        state.Variables.Add(new VariableSave { Name = "X", Value = 999f });
+        textRuntime.AddStates(new List<StateSave> { state });
+
+        textRuntime.Text = "before [State=Highlighted]middle[/State] after";
+
+        Text internalText = (Text)textRuntime.RenderableComponent;
+        internalText.RawText.ShouldBe("before middle after");
+
+        InlineVariable colorVariable = internalText.InlineVariables.Single(v => v.VariableName == "Color");
+        colorVariable.Value.ShouldBe(System.Drawing.Color.FromArgb(255, 10, 20, 30));
+        colorVariable.StartIndex.ShouldBe(7);
+        colorVariable.CharacterCount.ShouldBe(6);
+
+        internalText.InlineVariables.ShouldNotContain(v => v.VariableName == "X");
+        textRuntime.X.ShouldBe(0);
+    }
+
+    // Regression: a state defined inside a StateSaveCategory (e.g. the Gum tool's States tab,
+    // categorized states) - not just an uncategorized AddStates entry - must still resolve by bare
+    // name, mirroring GraphicalUiElement.ApplyState(string)'s own lookup (States, then every
+    // Category's States). Found via a real project where H1/H2/H3 lived under a "StyleCategory"
+    // category and [State=H3] silently no-opped because the lookup only checked the flat dictionary.
+    [Fact]
+    public void Text_WithStateBbCodeTag_ResolvesStateDefinedInsideCategory()
+    {
+        TextRuntime textRuntime = new();
+
+        StateSaveCategory styleCategory = new() { Name = "StyleCategory" };
+        StateSave h3 = new() { Name = "H3" };
+        h3.Variables.Add(new VariableSave { Name = "Color", Value = System.Drawing.Color.FromArgb(255, 10, 20, 30) });
+        styleCategory.States.Add(h3);
+        textRuntime.AddCategory(styleCategory);
+
+        textRuntime.Text = "before [State=H3]middle[/State] after";
+
+        Text internalText = (Text)textRuntime.RenderableComponent;
+        internalText.RawText.ShouldBe("before middle after");
+
+        InlineVariable colorVariable = internalText.InlineVariables.Single(v => v.VariableName == "Color");
+        colorVariable.Value.ShouldBe(System.Drawing.Color.FromArgb(255, 10, 20, 30));
+    }
+
+    [Fact]
+    public void Text_WithStateBbCodeTag_AppliesFontStackVariableLikeIndividualTag()
+    {
+        IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            RecordingRaylibFontCreator recordingCreator = new();
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = recordingCreator;
+
+            TextRuntime textRuntime = new();
+            textRuntime.Font = "Arial";
+            // A size not requested bold by any other test in this file/process - LoaderManager caches by
+            // (font, size, bold, ...) key and TextMarkupTests doesn't reset CacheTextures between tests
+            // (unlike BaseTestClass-derived classes), so reusing e.g. size 20 would hit another test's
+            // already-cached bold font instead of calling this test's own recording creator.
+            textRuntime.FontSize = 77;
+
+            StateSave state = new() { Name = "Bold" };
+            state.Variables.Add(new VariableSave { Name = "IsBold", Value = true });
+            textRuntime.AddStates(new List<StateSave> { state });
+
+            textRuntime.Text = "normal [State=Bold]bold[/State] normal";
+
+            // The base-font resolution requests IsBold=false; only a state-decomposed [IsBold=true]
+            // run produces a bold request.
+            recordingCreator.Requests.ShouldContain(r => r.IsBold);
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    [Fact]
+    public void Text_WithUnknownStateBbCodeTag_StripsTagAndDoesNotThrow()
+    {
+        TextRuntime textRuntime = new();
+
+        Should.NotThrow(() =>
+            textRuntime.Text = "before [State=DoesNotExist]middle[/State] after");
+
+        Text internalText = (Text)textRuntime.RenderableComponent;
+        internalText.RawText.ShouldBe("before middle after");
+        internalText.InlineVariables.ShouldBeEmpty();
+    }
+
+    // Wraps the real KernSmithRaylibFontCreator (rather than a hand-built Raylib_cs.Font, whose unmanaged
+    // Recs/Glyphs pointers would need to be valid for UnloadFont to safely dispose it later) so it
+    // produces a genuinely usable font while recording every BmfcSave requested - mirrors
+    // TextRuntimeFontCachingRegressionTests.CountingFontCreator.
+    private sealed class RecordingRaylibFontCreator : IRaylibFontCreator
+    {
+        private readonly KernSmithRaylibFontCreator _inner = new();
+
+        public List<BmfcSave> Requests { get; } = new();
+
+        public Raylib_cs.Font? TryCreateFont(BmfcSave bmfcSave)
+        {
+            Requests.Add(bmfcSave);
+            return _inner.TryCreateFont(bmfcSave);
         }
     }
 }

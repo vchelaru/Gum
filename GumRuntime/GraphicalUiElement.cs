@@ -7392,6 +7392,39 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 #region GraphicalUiElementExtensions
 public static class GraphicalUiElementExtensions
 {
+    #region State Lookup Extensions
+
+    /// <summary>
+    /// Attempts to resolve a state by its bare name, mirroring the lookup
+    /// <see cref="GraphicalUiElement.ApplyState(string)"/> uses: first the element's uncategorized
+    /// <see cref="GraphicalUiElement.States"/>, then every <see cref="GraphicalUiElement.Categories"/>
+    /// category's own states. Unlike <c>ApplyState(string)</c> (which applies every same-named match
+    /// it finds across categories), this returns only the first match - the right semantics for a
+    /// single lookup rather than an apply-everything call.
+    /// </summary>
+    public static bool TryGetStateByName(this GraphicalUiElement graphicalUiElement, string name,
+        out Gum.DataTypes.Variables.StateSave? state)
+    {
+        if (graphicalUiElement.States.TryGetValue(name, out state))
+        {
+            return true;
+        }
+
+        foreach (var category in graphicalUiElement.Categories.Values)
+        {
+            state = category.States.FirstOrDefault(item => item.Name == name);
+            if (state != null)
+            {
+                return true;
+            }
+        }
+
+        state = null;
+        return false;
+    }
+
+    #endregion
+
     #region Animation Extensions
 #if !FRB
 

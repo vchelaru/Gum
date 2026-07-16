@@ -123,14 +123,14 @@ namespace Gum.DataTypes
                 //}
 
                 List<string>? defaultStateAdded = modifications != null ? new List<string>() : null;
-                if (componentSave.Initialize(new StateSave { Name = "Default" }, modifications: defaultStateAdded))
+                if (componentSave.Initialize(new StateSave { Name = "Default" }, tolerateMissingDefaultStates, modifications: defaultStateAdded))
                 {
                     wasModified = true;
                     modifications?.Add($"Component:{componentSave.Name} (default-state init{FormatAddedVariables(defaultStateAdded)})");
                 }
 
                 List<string>? componentBaseAdded = modifications != null ? new List<string>() : null;
-                if (componentSave.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Component"), modifications: componentBaseAdded))
+                if (componentSave.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Component"), tolerateMissingDefaultStates, modifications: componentBaseAdded))
                 {
                     wasModified = true;
                     modifications?.Add($"Component:{componentSave.Name} (Component-base init{FormatAddedVariables(componentBaseAdded)})");
