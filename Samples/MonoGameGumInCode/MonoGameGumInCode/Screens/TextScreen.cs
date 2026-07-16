@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
@@ -7,6 +8,7 @@ using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 #if RAYLIB
 using Color = Raylib_cs.Color;
@@ -84,6 +86,22 @@ internal class TextScreen : FrameworkElement
             "[FontSize=40]big[/FontSize], [FontScale=1.5]scaled[/FontScale], " +
             "[IsBold=true]bold[/IsBold], and [IsItalic=true]italic[/IsItalic] runs, all styled inline in one Text.";
         container.Children.Add(bbcode);
+
+        // [State=Name] BBCode tag (MonoGame/raylib only -- SkiaGum has its own separate
+        // CustomSetPropertyOnRenderable.cs without this feature yet, so there's no SilkNetGum mirror
+        // for this section). The state is defined in code via AddStates (no Gum project needed) with
+        // a Color + IsBold pair; only variables already wired for per-run application (like these two)
+        // apply to the wrapped substring -- a state can hold anything, including layout properties like
+        // X/Width, but those are silently skipped rather than applied to the whole element.
+        var stateBbcode = new TextRuntime();
+        stateBbcode.Font = "Arial";
+        stateBbcode.FontSize = 24;
+        var highlightedState = new StateSave { Name = "Highlighted" };
+        highlightedState.Variables.Add(new VariableSave { Name = "Color", Value = System.Drawing.Color.Gold });
+        highlightedState.Variables.Add(new VariableSave { Name = "IsBold", Value = true });
+        stateBbcode.AddStates(new List<StateSave> { highlightedState });
+        stateBbcode.Text = "Plain text with a [State=Highlighted]bold gold run[/State] applied from a code-defined state.";
+        container.Children.Add(stateBbcode);
 
         Text.Customizations["Wave"] = (int index, string block) => new LetterCustomization
         {

@@ -226,6 +226,11 @@ internal class TextScreen : FrameworkElement
     // per-run color, font size, font scale, bold, and italic. SkiaGum parses the tags and feeds
     // RichTextKit one Style per run (Text.GetStyledRuns), matching the MonoGame / Raylib inline-styling
     // path. Font = "Arial" because text can silently no-op without a font.
+    //
+    // No [State=Name] mirror here: that tag is decomposed by Gum/Wireframe/CustomSetPropertyOnRenderable.cs
+    // (shared MonoGame + raylib source), but SkiaGum owns a separate CustomSetPropertyOnRenderable.cs
+    // under Runtimes/SkiaGum/ that doesn't implement it yet -- adding the demo here would just show the
+    // tag being stripped with no styling applied, which isn't a useful visual.
     private static void AddBbCodeSection(ContainerRuntime container)
     {
         // One self-describing BBCode line: each styled word shows AND names its own effect, so no
