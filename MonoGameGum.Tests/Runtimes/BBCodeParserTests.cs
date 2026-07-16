@@ -12,6 +12,12 @@ namespace MonoGameGum.Tests.Runtimes;
 public class BBCodeParserTests : BaseTestClass
 {
     [Fact]
+    public void KnownTags_ShouldIncludeState()
+    {
+        BbCodeParser.KnownTags.Contains("state").ShouldBeTrue();
+    }
+
+    [Fact]
     public void Parse_ShouldParseOverlappingColors()
     {
         HashSet<string> tags = new() { "Color" };

@@ -1195,6 +1195,104 @@ public partial class CustomSetPropertyOnRenderable
     static List<TagInfo> allTags = new List<TagInfo>();
 
     /// <summary>
+    /// Variable names a <c>[state=Name]</c> BBCode tag is allowed to apply to the substring it wraps -
+    /// exactly the set already wired for per-run application elsewhere in this file (the direct-value
+    /// cases in <see cref="SetBbCodeText"/> plus the font-stack cases in <see cref="ApplyFontVariables"/>).
+    /// A state can hold arbitrary variables (X, Y, Width, etc.), but only these have per-run meaning, so
+    /// anything else on the state is silently skipped rather than applied to the whole element.
+    /// </summary>
+    private static readonly HashSet<string> StateBbCodeAllowlist = new HashSet<string>
+    {
+        "Color", "Red", "Green", "Blue", "FontScale",
+        "Font", "FontSize", "OutlineThickness", "IsItalic", "IsBold", "UseCustomFont",
+    };
+
+    /// <summary>
+    /// Formats an already-typed <see cref="Gum.DataTypes.Variables.VariableSave.Value"/> back into the
+    /// string <see cref="TagInfo.Argument"/> form the existing per-tag parsing (in
+    /// <see cref="SetBbCodeText"/> and <see cref="ApplyFontVariables"/>) expects, so a decomposed state
+    /// variable can be re-dispatched through that unchanged parsing without a bespoke typed-value path.
+    /// Lossless for every allowlisted type: bool/int/float format invariantly, and Color round-trips
+    /// through 8-digit ARGB hex (not <see cref="System.Drawing.Color.Name"/>, which is lossy for
+    /// non-named colors).
+    /// </summary>
+    private static string? FormatStateVariableArgument(object? value)
+    {
+        if (value == null)
+        {
+            return null;
+        }
+
+        if (value is System.Drawing.Color color)
+        {
+            return "0x" + color.ToArgb().ToString("X8", CultureInfo.InvariantCulture);
+        }
+
+        return Convert.ToString(value, CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
+    /// Expands every <c>[state=Name]</c> <see cref="FoundTag"/> in <paramref name="results"/> into one
+    /// synthetic <see cref="FoundTag"/> per allowlisted variable on the named state (looked up on
+    /// <paramref name="graphicalUiElement"/>'s <see cref="GraphicalUiElement.States"/> - the same runtime
+    /// dictionary <see cref="GraphicalUiElement.ApplyState(string)"/> uses, populated identically whether
+    /// the state came from the Gum tool or was added in code), each spanning the state tag's own
+    /// open/close range. An unknown state name, or a state with no allowlisted variables, contributes
+    /// nothing - a no-op, not an error. Must run AFTER <see cref="BbCodeParser.RemoveTags"/> has already
+    /// stripped the source text using the original (unexpanded) <paramref name="results"/>: the synthetic
+    /// entries share character ranges with each other (and with the original state tag), so stripping
+    /// with them in play would remove the same range more than once.
+    /// </summary>
+    private static List<FoundTag> ExpandStateTags(List<FoundTag> results, GraphicalUiElement graphicalUiElement)
+    {
+        List<FoundTag>? expanded = null;
+
+        foreach (FoundTag tag in results)
+        {
+            if (tag.Name == "State")
+            {
+                expanded ??= new List<FoundTag>(results.Where(item => item.Name != "State"));
+
+                if (graphicalUiElement.States.TryGetValue(tag.Open.Argument ?? string.Empty,
+                        out Gum.DataTypes.Variables.StateSave? state))
+                {
+                    foreach (Gum.DataTypes.Variables.VariableSave variable in state.Variables)
+                    {
+                        if (variable.SetsValue && StateBbCodeAllowlist.Contains(variable.Name))
+                        {
+                            string? argument = FormatStateVariableArgument(variable.Value);
+                            if (argument != null)
+                            {
+                                expanded.Add(new FoundTag
+                                {
+                                    Name = variable.Name,
+                                    Open = new TagInfo
+                                    {
+                                        StartIndex = tag.Open.StartIndex,
+                                        Count = tag.Open.Count,
+                                        StartStrippedIndex = tag.Open.StartStrippedIndex,
+                                        Argument = argument,
+                                        Name = variable.Name,
+                                    },
+                                    Close = new TagInfo
+                                    {
+                                        StartIndex = tag.Close.StartIndex,
+                                        Count = tag.Close.Count,
+                                        StartStrippedIndex = tag.Close.StartStrippedIndex,
+                                        Name = variable.Name,
+                                    },
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return expanded ?? results;
+    }
+
+    /// <summary>
     /// Parses BBCode markup, assigns the tag-stripped text to <see cref="Text.RawText"/>, and populates
     /// <see cref="Text.InlineVariables"/> with the per-run styling the renderer applies: Color / Red /
     /// Green / Blue and FontScale runs in the loop below, plus the resolved-font runs for the font family
@@ -1202,7 +1300,10 @@ public partial class CustomSetPropertyOnRenderable
     /// <see cref="ApplyFontVariables"/> using the same stack model on every platform. A <c>[Custom]</c> tag's
     /// per-letter callback is applied identically on every platform: it produces one
     /// <see cref="ParameterizedLetterCustomizationCall"/> InlineVariable per character, which each
-    /// platform's Text renderer resolves and applies at draw time (#3640).
+    /// platform's Text renderer resolves and applies at draw time (#3640). A <c>[state=Name]</c> tag is
+    /// expanded by <see cref="ExpandStateTags"/> into the allowlisted subset of that state's variables
+    /// BEFORE either loop below runs, so it needs no dedicated handling here - the expanded entries just
+    /// look like any other literal nested tag.
     /// </summary>
     private static void SetBbCodeText(Text asText, GraphicalUiElement graphicalUiElement, string bbcode)
     {
@@ -1216,9 +1317,13 @@ public partial class CustomSetPropertyOnRenderable
 
         asText.RawText = strippedText;
 
+        // Must happen after RemoveTags (see ExpandStateTags) - expanded entries are for value
+        // application only, not text stripping.
+        var expandedResults = ExpandStateTags(results, graphicalUiElement);
+
         // Color / Red / Green / Blue / FontScale runs don't use the font-resolution stacks, so they are
         // emitted regardless of whether the owning element is a TextRuntime.
-        foreach (var item in results)
+        foreach (var item in expandedResults)
         {
             object castedValue = item.Open.Argument;
             var shouldApply = false;
@@ -1373,7 +1478,7 @@ public partial class CustomSetPropertyOnRenderable
             currentDropshadowAlpha = (byte)textRuntime.DropshadowAlpha;
 #endif
 
-            ApplyFontVariables(asText, results);
+            ApplyFontVariables(asText, expandedResults);
         }
 
         // #3481: RawText was assigned above (which wrapped + measured the text) before any InlineVariables
