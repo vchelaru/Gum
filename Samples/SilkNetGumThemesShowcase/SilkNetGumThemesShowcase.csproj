@@ -35,4 +35,16 @@
 		<ProjectReference Include="..\..\Themes\Gum.Themes.Editor.SilkNet\Gum.Themes.Editor.SilkNet.csproj" />
 	</ItemGroup>
 
+	<!-- ANGLE's GLES/EGL implementation, loaded by the "SDL_HINT_OPENGL_ES_DRIVER=angle" hint in
+	     Program.cs. Without these next to the exe, window.Initialize() throws SdlException("Could not
+	     initialize OpenGL / GLES library"). Mirrors SilkNetGumSample, which ships the same two DLLs. -->
+	<ItemGroup>
+		<None Update="libEGL.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="libGLESv2.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
 </Project>
