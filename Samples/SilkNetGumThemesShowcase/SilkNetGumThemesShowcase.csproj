@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Avalonia.Skia" Version="11.2.3" />
+		<PackageReference Include="Silk.NET.EGL" Version="1.9.0" />
+		<PackageReference Include="Silk.NET.EGL.Extensions.ANGLE" Version="1.9.0" />
+		<PackageReference Include="Silk.NET.EGL.Extensions.EXT" Version="1.9.0" />
+		<PackageReference Include="Silk.NET.OpenGLES" Version="2.22.0" />
+		<PackageReference Include="Silk.NET.SDL" Version="2.21.0" />
+		<!-- Silk.NET.Windowing.Sdl owns window and GL-context creation, which is required for
+		     Silk.NET.Input.Sdl to ever receive SDL events. See SilkNetGumSample's Program.cs (#3652). -->
+		<PackageReference Include="Silk.NET.Windowing.Sdl" Version="2.21.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Source-share the exact showcase screens from the MonoGame host so all three hosts stay
+		     identical for side-by-side comparison. They are platform-neutral Gum.Forms code. -->
+		<Compile Include="..\MonoGameGumThemesShowcase\Screens\*.cs" Link="Screens\%(Filename)%(Extension)" />
+	</ItemGroup>
+
+	<!-- Gum.SilkNet: the real game-host runtime (window/input + Skia rendering). Deliberately not
+	     SkiaGum.csproj: see Gum.Themes.Editor.SilkNet.csproj for why those are incompatible assemblies (#3671). -->
+	<ItemGroup>
+		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+		<ProjectReference Include="..\..\Runtimes\SilkNetGum\SilkNetGum.csproj" />
+		<!-- Add a theme reference here as each gains a .SilkNet variant, see _themes in Program.cs. -->
+		<ProjectReference Include="..\..\Themes\Gum.Themes.Editor.SilkNet\Gum.Themes.Editor.SilkNet.csproj" />
+	</ItemGroup>
+
+</Project>
