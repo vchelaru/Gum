@@ -1175,38 +1175,6 @@ public partial class CustomSetPropertyOnRenderable
         return false;
     }
 
-
-    public static void UpdateToFontValues(IText itext, GraphicalUiElement graphicalUiElement)
-    {
-        if (graphicalUiElement is TextRuntime asTextRuntime && itext is Text text)
-        {
-#if SKIA
-            // #3670/#3703: resolve CustomFontFile/Font-as-path .ttf/.otf sources through
-            // GumFontMapper instead of passing Font straight through as a system family name.
-            string? resolvedFamily = SkiaGum.Content.Fonts.GumFontMapper.ResolveFontFamily(
-                asTextRuntime.UseCustomFont, asTextRuntime.CustomFontFile, asTextRuntime.Font);
-
-            if (resolvedFamily != null || !string.IsNullOrEmpty(asTextRuntime.Font))
-            {
-                text.FontName = resolvedFamily ?? asTextRuntime.Font;
-                text.FontSize = asTextRuntime.FontSize;
-                // Skia draws the outline at render time via RichTextKit's halo (there is no
-                // font-generation step to bake it into, unlike MonoGame/Raylib), so push the
-                // runtime's OutlineThickness onto the renderable here.
-                text.OutlineThickness = asTextRuntime.OutlineThickness;
-            }
-#else
-            if (!string.IsNullOrEmpty(asTextRuntime.Font))
-            {
-                text.FontName = asTextRuntime.Font;
-                text.FontSize = asTextRuntime.FontSize;
-            }
-#endif
-        }
-    }
-
-
-
     private static bool TrySetPropertyOnText(Text text, GraphicalUiElement gue, string propertyName, object value)
     {
         bool handled = false;
@@ -1533,9 +1501,9 @@ public partial class CustomSetPropertyOnRenderable
 #endif
 
         }
-        // Standalone drop shadow (issue #3674). Set directly on the renderable -- NOT routed through
-        // UpdateToFontValues, which is font-gated and would no-op when no Font is set. Mirrors the
-        // shape drop-shadow arms in TrySetPropertiesOnRenderableBase.
+        // Standalone drop shadow (issue #3674). Set directly on the renderable rather than through
+        // ReactToFontValueChange, since these aren't font-cascade inputs. Mirrors the shape
+        // drop-shadow arms in TrySetPropertiesOnRenderableBase.
         else if (propertyName == nameof(text.HasDropshadow))
         {
             text.HasDropshadow = (bool)value;

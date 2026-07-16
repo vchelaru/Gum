@@ -541,6 +541,27 @@ public class TextRuntimeTests
         containedText.OutlineThickness.ShouldBe(7);
     }
 
+    [Fact]
+    public void OutlineThickness_SetProperty_WithNoFontSet_ShouldStillPushToContainedText()
+    {
+        // #3684 as filed pointed at CustomSetPropertyOnRenderable.UpdateToFontValues(IText,
+        // GraphicalUiElement), which gates its whole body (including OutlineThickness) behind
+        // Font being non-empty. That method turned out to have zero callers: both the code-property
+        // path and this SetProperty path route through GraphicalUiElement.UpdateToFontValues()'s
+        // UpdateFontFromProperties delegate, which SystemManagers.Initialize wires to
+        // SystemManagers.UpdateFonts -- an unconditional push, not the gated method. Pinning that
+        // wiring here so a future rewire can't silently reintroduce the Font-gated bug.
+        new RenderingLibrary.SystemManagers().Initialize();
+
+        TextRuntime sut = new();
+        sut.Font = "";
+
+        sut.SetProperty("OutlineThickness", 7);
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.OutlineThickness.ShouldBe(7);
+    }
+
     #endregion
 
     #region PropertyChanged
