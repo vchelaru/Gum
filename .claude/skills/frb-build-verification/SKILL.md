@@ -13,18 +13,20 @@ The projitems-sync rules (which files FRB1 pulls, and what to update when you ad
 
 This is only doable when a **FlatRedBall checkout exists as a sibling of the Gum repo** (i.e. `<gum-repo>/../FlatRedBall/`). The cross-repo csproj imports are sibling-relative (`..\..\..\..\FlatRedBall\…`), so without that layout the build can't resolve. If the sibling is absent, **skip FRB verification and say so** — it is not a failure; the maintainer/CI covers it. Do not hardcode an absolute path; check for the sibling.
 
+Check the sibling's checked-out branch before trusting the canary — `git status`/`git branch --show-current` there. A stale or already-merged local branch doesn't error, it just silently compiles against old FRB-side source, so a clean canary result proves nothing. The sibling's default branch is `origin/NetStandard`, not `main`/`master`.
+
 ## Must run from the PRIMARY checkout, never a worktree
 
 The sibling-relative imports are computed from the csproj location, and the FlatRedBall-side csprojs pull Gum source by relative path into the **primary** Gum checkout (`…\Gum\MonoGameGum\…`). A worktree under `.claude/worktrees/<branch>/` is both nested too deep (so `..\..\..\..\FlatRedBall` resolves to nothing — `MSB4019`) and not the path FRB compiles from. To FRB-verify a branch, **check that branch out in the primary Gum checkout** and build there. Worktrees cannot FRB-verify.
 
 ## Canaries
 
-Pick by what you changed. Build from the primary Gum checkout (first row) / the sibling FlatRedBall repo (second row).
+Pick by what you changed. **The "Lives in" column is the repo containing the `.csproj` file itself** — don't go hunting for it in the other repo. Both rows still need the FlatRedBall sibling present (row 1's target also pulls in some FlatRedBall-side `Embedded\*.cs` files), but only row 2's `.csproj` is physically located there.
 
-| Changed source | Build target | Covers |
-|---|---|---|
-| `GumCommon/` (anything in `GumCoreShared.projitems`) | `GumCore/GumCoreXnaPc/GumCore.DesktopGlNet6/GumCore.DesktopGlNet6.csproj` | GumCommon shared into FRB |
-| `MonoGameGum/Forms/` (in `FlatRedBall.Forms.Shared.projitems`) | `<FlatRedBall>/Engines/Forms/FlatRedBall.Forms/FlatRedBall.Forms.DesktopGlNet6/FlatRedBall.Forms.DesktopGlNet6.csproj` | Forms shared into FRB |
+| Changed source | Lives in | Build target (relative to that repo's root) | Covers |
+|---|---|---|---|
+| `GumCommon/` (anything in `GumCoreShared.projitems`) | **Gum repo** (this repo) | `GumCore/GumCoreXnaPc/GumCore.DesktopGlNet6/GumCore.DesktopGlNet6.csproj` | GumCommon shared into FRB |
+| `MonoGameGum/Forms/` (in `FlatRedBall.Forms.Shared.projitems`) | **FlatRedBall sibling repo** | `Engines/Forms/FlatRedBall.Forms/FlatRedBall.Forms.DesktopGlNet6/FlatRedBall.Forms.DesktopGlNet6.csproj` | Forms shared into FRB |
 
 `GueDeriving/*Runtime`, `MonoGameGum/Renderables/`, `MonoGameGum/ExtensionMethods/`, `MonoGameGum/Input/` (Cursor, Keyboard, gamepad drivers), and the `Forms/DefaultVisuals/` runtimes are **not** compiled by FRB1 (it generates its own) — changing only those needs no FRB build.
 
