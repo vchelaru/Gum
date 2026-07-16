@@ -709,6 +709,31 @@ public class TextMarkupTests
         textRuntime.X.ShouldBe(0);
     }
 
+    // Regression: a state defined inside a StateSaveCategory (e.g. the Gum tool's States tab,
+    // categorized states) - not just an uncategorized AddStates entry - must still resolve by bare
+    // name, mirroring GraphicalUiElement.ApplyState(string)'s own lookup (States, then every
+    // Category's States). Found via a real project where H1/H2/H3 lived under a "StyleCategory"
+    // category and [State=H3] silently no-opped because the lookup only checked the flat dictionary.
+    [Fact]
+    public void Text_WithStateBbCodeTag_ResolvesStateDefinedInsideCategory()
+    {
+        TextRuntime textRuntime = new();
+
+        StateSaveCategory styleCategory = new() { Name = "StyleCategory" };
+        StateSave h3 = new() { Name = "H3" };
+        h3.Variables.Add(new VariableSave { Name = "Color", Value = System.Drawing.Color.FromArgb(255, 10, 20, 30) });
+        styleCategory.States.Add(h3);
+        textRuntime.AddCategory(styleCategory);
+
+        textRuntime.Text = "before [State=H3]middle[/State] after";
+
+        Text internalText = (Text)textRuntime.RenderableComponent;
+        internalText.RawText.ShouldBe("before middle after");
+
+        InlineVariable colorVariable = internalText.InlineVariables.Single(v => v.VariableName == "Color");
+        colorVariable.Value.ShouldBe(System.Drawing.Color.FromArgb(255, 10, 20, 30));
+    }
+
     [Fact]
     public void Text_WithStateBbCodeTag_AppliesFontStackVariableLikeIndividualTag()
     {

@@ -1233,15 +1233,16 @@ public partial class CustomSetPropertyOnRenderable
 
     /// <summary>
     /// Expands every <c>[state=Name]</c> <see cref="FoundTag"/> in <paramref name="results"/> into one
-    /// synthetic <see cref="FoundTag"/> per allowlisted variable on the named state (looked up on
-    /// <paramref name="graphicalUiElement"/>'s <see cref="GraphicalUiElement.States"/> - the same runtime
-    /// dictionary <see cref="GraphicalUiElement.ApplyState(string)"/> uses, populated identically whether
-    /// the state came from the Gum tool or was added in code), each spanning the state tag's own
-    /// open/close range. An unknown state name, or a state with no allowlisted variables, contributes
-    /// nothing - a no-op, not an error. Must run AFTER <see cref="BbCodeParser.RemoveTags"/> has already
-    /// stripped the source text using the original (unexpanded) <paramref name="results"/>: the synthetic
-    /// entries share character ranges with each other (and with the original state tag), so stripping
-    /// with them in play would remove the same range more than once.
+    /// synthetic <see cref="FoundTag"/> per allowlisted variable on the named state (looked up via
+    /// <see cref="GraphicalUiElementExtensions.TryGetStateByName"/> - the same States-then-Categories
+    /// resolution <see cref="GraphicalUiElement.ApplyState(string)"/> uses, so a state defined in the
+    /// Gum tool's States tab, inside a categorized state, or added in code all resolve identically),
+    /// each spanning the state tag's own open/close range. An unknown state name, or a state with no
+    /// allowlisted variables, contributes nothing - a no-op, not an error. Must run AFTER
+    /// <see cref="BbCodeParser.RemoveTags"/> has already stripped the source text using the original
+    /// (unexpanded) <paramref name="results"/>: the synthetic entries share character ranges with each
+    /// other (and with the original state tag), so stripping with them in play would remove the same
+    /// range more than once.
     /// </summary>
     private static List<FoundTag> ExpandStateTags(List<FoundTag> results, GraphicalUiElement graphicalUiElement)
     {
@@ -1253,7 +1254,7 @@ public partial class CustomSetPropertyOnRenderable
             {
                 expanded ??= new List<FoundTag>(results.Where(item => item.Name != "State"));
 
-                if (graphicalUiElement.States.TryGetValue(tag.Open.Argument ?? string.Empty,
+                if (graphicalUiElement.TryGetStateByName(tag.Open.Argument ?? string.Empty,
                         out Gum.DataTypes.Variables.StateSave? state))
                 {
                     foreach (Gum.DataTypes.Variables.VariableSave variable in state.Variables)
