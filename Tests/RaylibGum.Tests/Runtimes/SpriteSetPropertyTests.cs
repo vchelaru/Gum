@@ -21,6 +21,22 @@ namespace RaylibGum.Tests.Runtimes;
 public class SpriteSetPropertyTests : BaseTestClass
 {
     [Fact]
+    public void SetProperty_AlphaRedGreenBlue_ShouldForwardToContainedSprite()
+    {
+        SpriteRuntime sut = new();
+
+        sut.SetProperty(nameof(SpriteRuntime.Alpha), 128);
+        sut.SetProperty(nameof(SpriteRuntime.Red), 10);
+        sut.SetProperty(nameof(SpriteRuntime.Green), 20);
+        sut.SetProperty(nameof(SpriteRuntime.Blue), 30);
+
+        sut.Alpha.ShouldBe(128);
+        sut.Red.ShouldBe(10);
+        sut.Green.ShouldBe(20);
+        sut.Blue.ShouldBe(30);
+    }
+
+    [Fact]
     public void SetProperty_Blend_ShouldForwardToContainedSprite()
     {
         SpriteRuntime sut = new();
