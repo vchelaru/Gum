@@ -805,6 +805,7 @@ public partial class CustomSetPropertyOnRenderable
         }
         else if (propertyName == "Font Scale" || propertyName == "FontScale")
         {
+#if FRB
             textRenderable.FontScale = (float)value;
             // we want to update if the text's size is based on its "children" (the letters it contains)
             if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
@@ -813,6 +814,12 @@ public partial class CustomSetPropertyOnRenderable
             {
                 graphicalUiElement.UpdateLayout();
             }
+#else
+            if (textRuntime != null)
+            {
+                textRuntime.FontScale = (float)value;
+            }
+#endif
             handled = true;
 
         }
@@ -919,14 +926,17 @@ public partial class CustomSetPropertyOnRenderable
         }
         else if (propertyName == "LineHeightMultiplier")
         {
-#if RAYLIB
+#if FRB
+            textRenderable.LineHeightMultiplier = (float)value;
+#else
+            // TextRuntime.LineHeightMultiplier is a single un-gated property shared by every
+            // backend (XNALIKE/RAYLIB/SKIA), so no platform split is needed here anymore.
             if (textRuntime != null)
             {
                 textRuntime.LineHeightMultiplier = (float)value;
             }
-#else
-            textRenderable.LineHeightMultiplier = (float)value;
 #endif
+            handled = true;
         }
         else if (propertyName == nameof(textRuntime.UseFontSmoothing))
         {
@@ -938,44 +948,84 @@ public partial class CustomSetPropertyOnRenderable
         }
         else if (propertyName == nameof(Blend))
         {
-#if XNALIKE
+#if FRB
             var valueAsGumBlend = (RenderingLibrary.Blend)value;
 
             var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
 
             textRenderable.BlendState = valueAsXnaBlend;
             handled = true;
+#else
+            // Fully-qualified (unlike the FRB branch above) because this now also compiles under
+            // RAYLIB, where the short "RenderingLibrary.Blend" form doesn't resolve (this file's
+            // namespace there is RaylibGum.Renderables, not nested under Gum). TextRuntime.Blend's
+            // own setter does the platform-specific BlendState conversion (see its implementation).
+            var valueAsGumBlend = (Gum.RenderingLibrary.Blend)value;
+            if (textRuntime != null)
+            {
+                textRuntime.Blend = valueAsGumBlend;
+            }
+            handled = true;
 #endif
         }
         else if (propertyName == "Alpha")
         {
-#if XNALIKE
+#if FRB
             int valueAsInt = (int)value;
             textRenderable.Alpha = valueAsInt;
-            handled = true;
+#else
+            // TextRuntime.Alpha is a plain, un-gated int on every backend (no platform-specific
+            // conversion), so - like MaxLettersToShow below - the old #if XNALIKE restriction was
+            // needless and silently no-op'd this property on RAYLIB via the string path.
+            if (textRuntime != null)
+            {
+                textRuntime.Alpha = (int)value;
+            }
 #endif
+            handled = true;
         }
         else if (propertyName == "Red")
         {
+#if FRB
             int valueAsInt = (int)value;
             textRenderable.Red = valueAsInt;
+#else
+            if (textRuntime != null)
+            {
+                textRuntime.Red = (int)value;
+            }
+#endif
             handled = true;
         }
         else if (propertyName == "Green")
         {
+#if FRB
             int valueAsInt = (int)value;
             textRenderable.Green = valueAsInt;
+#else
+            if (textRuntime != null)
+            {
+                textRuntime.Green = (int)value;
+            }
+#endif
             handled = true;
         }
         else if (propertyName == "Blue")
         {
+#if FRB
             int valueAsInt = (int)value;
             textRenderable.Blue = valueAsInt;
+#else
+            if (textRuntime != null)
+            {
+                textRuntime.Blue = (int)value;
+            }
+#endif
             handled = true;
         }
         else if (propertyName == "Color")
         {
-#if XNALIKE
+#if FRB
             if (value is System.Drawing.Color drawingColor)
             {
                 textRenderable.Color = drawingColor;
@@ -986,34 +1036,84 @@ public partial class CustomSetPropertyOnRenderable
                 textRenderable.Color = xnaColor.ToSystemDrawing();
                 handled = true;
             }
+#elif XNALIKE
+            // Scoped to XNALIKE (matching the prior gate) rather than extended to RAYLIB: unlike
+            // Blend, TextRuntime.Color is typed per-backend (XNA Color here), so redispatching it
+            // to RAYLIB would need its own verified conversion, not covered by this change.
+            if (value is System.Drawing.Color drawingColor)
+            {
+                if (textRuntime != null)
+                {
+                    textRuntime.Color = global::RenderingLibrary.Graphics.XNAExtensions.ToXNA(drawingColor);
+                }
+                handled = true;
+            }
+            else if (value is Microsoft.Xna.Framework.Color xnaColor)
+            {
+                if (textRuntime != null)
+                {
+                    textRuntime.Color = xnaColor;
+                }
+                handled = true;
+            }
 #endif
         }
 
         else if (propertyName == "HorizontalAlignment")
         {
+#if FRB
             textRenderable.HorizontalAlignment = (HorizontalAlignment)value;
+#else
+            if (textRuntime != null)
+            {
+                textRuntime.HorizontalAlignment = (HorizontalAlignment)value;
+            }
+#endif
             handled = true;
         }
         else if (propertyName == "VerticalAlignment")
         {
+#if FRB
             textRenderable.VerticalAlignment = (VerticalAlignment)value;
+#else
+            if (textRuntime != null)
+            {
+                textRuntime.VerticalAlignment = (VerticalAlignment)value;
+            }
+#endif
             handled = true;
         }
         else if (propertyName == "MaxLettersToShow")
         {
-#if XNALIKE
+#if FRB
             textRenderable.MaxLettersToShow = (int?)value;
-            handled = true;
+#else
+            // Issue #3706/#3710: previously gated #if XNALIKE only, silently no-op'ing this
+            // string-path assignment on RAYLIB even though TextRuntime.MaxLettersToShow has worked
+            // on every backend since #3708/#3710.
+            if (textRuntime != null)
+            {
+                textRuntime.MaxLettersToShow = (int?)value;
+            }
 #endif
+            handled = true;
         }
         else if (propertyName == "MaxNumberOfLines")
         {
+#if FRB
             textRenderable.MaxNumberOfLines = (int?)value;
+#else
+            if (textRuntime != null)
+            {
+                textRuntime.MaxNumberOfLines = (int?)value;
+            }
+#endif
             handled = true;
         }
 
         else if (propertyName == nameof(TextOverflowHorizontalMode))
         {
+#if FRB
             var textOverflowMode = (TextOverflowHorizontalMode)value;
 
             if (textOverflowMode == TextOverflowHorizontalMode.EllipsisLetter)
@@ -1024,6 +1124,17 @@ public partial class CustomSetPropertyOnRenderable
             {
                 textRenderable.IsTruncatingWithEllipsisOnLastLine = false;
             }
+#else
+            // Issue #3706: this used to hand-roll the exact same EllipsisLetter <->
+            // IsTruncatingWithEllipsisOnLastLine mapping that TextRuntime.TextOverflowHorizontalMode
+            // already implements, and never set handled = true (so the value still applied, but
+            // every assignment redundantly fell through to reflection afterward).
+            if (textRuntime != null)
+            {
+                textRuntime.TextOverflowHorizontalMode = (TextOverflowHorizontalMode)value;
+            }
+#endif
+            handled = true;
         }
         else if (propertyName == nameof(TextOverflowVerticalMode))
         {
