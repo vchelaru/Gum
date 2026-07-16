@@ -172,4 +172,65 @@ public class GumFontMapperTests
 
         resolved.ShouldBeSameAs(typeface);
     }
+
+    // Embedded font bytes (#3671): registers raw TTF bytes under a family name plus an optional style
+    // slot ("Bold"/"Italic"/"BoldItalic"/null), mirroring the KernSmith RegisterFont(familyName, fontData,
+    // style) surface XNA-like/raylib themes call through Gum.Themes.ThemePlatform.RegisterFont -- so a
+    // theme's embedded fonts resolve on Skia through the same family+style vocabulary, instead of the
+    // path/instance-only registries RegisterFontFile/RegisterTypeface offer.
+
+    [Fact]
+    public void RegisterFont_WithValidBytes_ReturnsNonNullTypeface()
+    {
+        byte[] fontBytes = File.ReadAllBytes(FixtureTtfPath);
+
+        SKTypeface? typeface = GumFontMapper.RegisterFont("RegisterFontValidFamily", fontBytes);
+
+        typeface.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void RegisterFont_WithInvalidBytes_ReturnsNull()
+    {
+        byte[] invalidBytes = new byte[] { 1, 2, 3, 4, 5 };
+
+        SKTypeface? typeface = GumFontMapper.RegisterFont("RegisterFontInvalidFamily", invalidBytes);
+
+        typeface.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(600)] // TextRuntime.IsBold on Skia sets BoldWeight=1.5 -> Style.FontWeight 400*1.5=600
+    [InlineData(700)] // The [IsBold] BBCode tag sets Style.FontWeight directly to 700
+    public void TypefaceFromStyle_WithBoldWeight_ResolvesRegisteredBoldCut(int boldFontWeight)
+    {
+        string family = $"TypefaceFromStyleBoldFamily{boldFontWeight}";
+        byte[] fontBytes = File.ReadAllBytes(FixtureTtfPath);
+        SKTypeface? regularTypeface = GumFontMapper.RegisterFont(family, fontBytes, style: null);
+        SKTypeface? boldTypeface = GumFontMapper.RegisterFont(family, fontBytes, style: "Bold");
+        GumFontMapper mapper = new();
+        Style regularStyle = new() { FontFamily = family, FontWeight = 400, FontItalic = false };
+        Style boldStyle = new() { FontFamily = family, FontWeight = boldFontWeight, FontItalic = false };
+
+        SKTypeface resolvedRegular = mapper.TypefaceFromStyle(regularStyle, ignoreFontVariants: false);
+        SKTypeface resolvedBold = mapper.TypefaceFromStyle(boldStyle, ignoreFontVariants: false);
+
+        resolvedRegular.ShouldBeSameAs(regularTypeface);
+        resolvedBold.ShouldBeSameAs(boldTypeface);
+        resolvedBold.ShouldNotBeSameAs(resolvedRegular);
+    }
+
+    [Fact]
+    public void TypefaceFromStyle_WithoutMatchingStyleSlotRegistered_FallsBackToDefaultCut()
+    {
+        string family = "TypefaceFromStyleFallbackFamily";
+        byte[] fontBytes = File.ReadAllBytes(FixtureTtfPath);
+        SKTypeface? regularTypeface = GumFontMapper.RegisterFont(family, fontBytes, style: null);
+        GumFontMapper mapper = new();
+        Style boldStyle = new() { FontFamily = family, FontWeight = 700, FontItalic = false };
+
+        SKTypeface resolved = mapper.TypefaceFromStyle(boldStyle, ignoreFontVariants: false);
+
+        resolved.ShouldBeSameAs(regularTypeface);
+    }
 }

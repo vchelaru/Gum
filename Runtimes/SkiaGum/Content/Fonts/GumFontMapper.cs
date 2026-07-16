@@ -2,6 +2,7 @@ using RenderingLibrary.Graphics.Fonts;
 using SkiaSharp;
 using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Topten.RichTextKit;
@@ -28,6 +29,23 @@ public class GumFontMapper : FontMapper
 
     private static readonly ConditionalWeakTable<SKTypeface, string> typefaceKeys = new();
     private static int nextTypefaceId;
+
+    /// <summary>
+    /// Embedded fonts registered via <see cref="RegisterFont"/>, keyed by family name + style slot
+    /// (as opposed to <see cref="registry"/>, which is keyed by file path or typeface instance).
+    /// </summary>
+    private static readonly ConcurrentDictionary<string, SKTypeface> embeddedFontRegistry =
+        new ConcurrentDictionary<string, SKTypeface>(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Font weight above which <see cref="TypefaceFromStyle"/> treats a run as bold when resolving
+    /// an <see cref="embeddedFontRegistry"/> style slot. 400 is <see cref="Style"/>'s regular-weight
+    /// default; anything above it is a bold request, whether that's <c>TextRuntime.IsBold</c> on Skia
+    /// (which maps to <c>Style.FontWeight</c> 600 via <c>BoldWeight</c> 1.5) or the <c>[IsBold]</c>
+    /// BBCode tag (which sets <c>Style.FontWeight</c> 700 directly) -- a plain <c>&gt;= 700</c> check
+    /// would miss the former.
+    /// </summary>
+    private const int RegularFontWeight = 400;
 
     /// <summary>
     /// Registers an already-loaded <see cref="SKTypeface"/> directly (as opposed to
@@ -80,6 +98,30 @@ public class GumFontMapper : FontMapper
     }
 
     /// <summary>
+    /// Registers an in-memory TTF/OTF (<paramref name="fontData"/>) under <paramref name="familyName"/>
+    /// plus an optional style slot ("Bold"/"Italic"/"BoldItalic", or null for the default cut) and
+    /// returns the loaded <see cref="SKTypeface"/>, or null if the data doesn't parse as a font. Mirrors
+    /// the KernSmith <c>RegisterFont(familyName, fontData, style)</c> surface XNA-like/raylib themes call
+    /// through <c>Gum.Themes.ThemePlatform.RegisterFont</c>, so a theme's embedded fonts (which never
+    /// touch disk) resolve on Skia through the same family+style vocabulary a theme already uses for
+    /// every other backend, instead of the file-path/instance-only <see cref="RegisterFontFile"/> /
+    /// <see cref="RegisterTypeface"/> (#3671). Unlike those two, callers keep addressing the font by
+    /// <paramref name="familyName"/> -- <see cref="TypefaceFromStyle"/> picks the matching style slot
+    /// from a run's bold/italic state.
+    /// </summary>
+    public static SKTypeface? RegisterFont(string familyName, byte[] fontData, string? style = null)
+    {
+        SKTypeface? typeface = SKTypeface.FromStream(new MemoryStream(fontData));
+        if (typeface == null)
+        {
+            return null;
+        }
+
+        embeddedFontRegistry[GetEmbeddedFontKey(familyName, style)] = typeface;
+        return typeface;
+    }
+
+    /// <summary>
     /// Resolves the family-name to assign as <c>Text.FontName</c> for the given TextRuntime font
     /// properties. <see cref="BmfcSave.ResolveTtfSourcePath"/> is the single backend-agnostic
     /// "which property is a font file" decision (also used by XNA-like/raylib's bake path), so
@@ -105,11 +147,40 @@ public class GumFontMapper : FontMapper
     /// <inheritdoc/>
     public override SKTypeface TypefaceFromStyle(IStyle style, bool ignoreFontVariants)
     {
-        if (style.FontFamily != null && registry.TryGetValue(style.FontFamily, out SKTypeface? typeface))
+        if (style.FontFamily != null)
         {
-            return typeface;
+            string styleSlot = GetStyleSlot(isBold: style.FontWeight > RegularFontWeight, isItalic: style.FontItalic);
+            if (embeddedFontRegistry.TryGetValue(GetEmbeddedFontKey(style.FontFamily, styleSlot), out SKTypeface? embeddedTypeface))
+            {
+                return embeddedTypeface;
+            }
+
+            // Requested style slot (e.g. Bold) has no registered cut -- fall back to the family's
+            // default cut rather than dropping straight to a system font, so a theme that only
+            // bundled one weight still renders with it instead of silently swapping typefaces.
+            if (styleSlot.Length > 0
+                && embeddedFontRegistry.TryGetValue(GetEmbeddedFontKey(style.FontFamily, null), out embeddedTypeface))
+            {
+                return embeddedTypeface;
+            }
+
+            if (registry.TryGetValue(style.FontFamily, out SKTypeface? typeface))
+            {
+                return typeface;
+            }
         }
 
         return base.TypefaceFromStyle(style, ignoreFontVariants);
     }
+
+    private static string GetEmbeddedFontKey(string familyName, string? style) =>
+        $"{familyName} {style}";
+
+    private static string GetStyleSlot(bool isBold, bool isItalic) => (isBold, isItalic) switch
+    {
+        (true, true) => "BoldItalic",
+        (true, false) => "Bold",
+        (false, true) => "Italic",
+        (false, false) => string.Empty,
+    };
 }
