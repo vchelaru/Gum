@@ -71,6 +71,7 @@ internal class TextScreen : FrameworkElement
         container.Width = -4;
         container.Height = -4;
         container.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+        container.WrapsChildren = true;
         container.StackSpacing = 4;
         this.AddChild(container);
 
@@ -89,8 +90,9 @@ internal class TextScreen : FrameworkElement
         var bbcode = new TextRuntime();
         bbcode.Font = "Arial";
         bbcode.FontSize = 24;
-        bbcode.WidthUnits = DimensionUnitType.Absolute;
-        bbcode.Width = 520;
+        bbcode.WidthUnits = DimensionUnitType.PercentageOfParent;
+        bbcode.Width = 33;
+
         bbcode.Text =
             "[Color=Red]red[/Color], [Color=Blue]blue[/Color], " +
             "[FontSize=40]big[/FontSize], [FontScale=1.5]scaled[/FontScale], " +
@@ -168,6 +170,8 @@ internal class TextScreen : FrameworkElement
         // must be gated, not shared, unlike every other path in this file.
         var customFontFileText = new TextRuntime();
         customFontFileText.Text = "I use a bundled .ttf via UseCustomFont + CustomFontFile";
+        customFontFileText.Width = 33;
+        customFontFileText.WidthUnits = DimensionUnitType.PercentageOfParent;
         customFontFileText.FontSize = 24;
         customFontFileText.UseCustomFont = true;
 #if RAYLIB
