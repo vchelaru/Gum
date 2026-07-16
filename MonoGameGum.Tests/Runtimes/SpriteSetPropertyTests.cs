@@ -63,6 +63,23 @@ public class SpriteSetPropertyTests : BaseTestClass
     }
 
     [Fact]
+    public void SetProperty_Color_WithXnaColorValue_ShouldForwardToContainedSprite()
+    {
+        // The dispatcher accepts both System.Drawing.Color and Microsoft.Xna.Framework.Color as
+        // the incoming value (state/variable values are stored as System.Drawing.Color, but direct
+        // callers can pass XNA's Color) — this pins the XNA-typed branch, which needs no conversion
+        // since SpriteRuntime.Color is itself XNA-typed on this backend.
+        SpriteRuntime sut = new();
+        var xnaColor = new Microsoft.Xna.Framework.Color(10, 20, 30, 255);
+
+        sut.SetProperty(nameof(SpriteRuntime.Color), xnaColor);
+
+        sut.Color.R.ShouldBe((byte)10);
+        sut.Color.G.ShouldBe((byte)20);
+        sut.Color.B.ShouldBe((byte)30);
+    }
+
+    [Fact]
     public void SetProperty_CurrentChainName_ShouldUpdateActiveChain()
     {
         SpriteRuntime sut = new();
