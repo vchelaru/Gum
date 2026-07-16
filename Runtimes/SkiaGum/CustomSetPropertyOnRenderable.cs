@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 #if SKIA
 using HarfBuzzSharp;
 using SkiaGum.Content;
+using SkiaGum.Helpers;
 using Gum.GueDeriving;
 using SkiaGum.Renderables;
 using SkiaSharp;
@@ -1277,16 +1278,14 @@ public partial class CustomSetPropertyOnRenderable
         }
         else if (propertyName == "Font Scale" || propertyName == "FontScale")
         {
-            text.FontScale = (float)value;
-            // we want to update if the text's size is based on its "children" (the letters it contains)
-            if (gue.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                // If height is relative to children, it could be in a stack
-                gue.HeightUnits == DimensionUnitType.RelativeToChildren)
+            // Redispatched onto TextRuntime (issue #3706/ADR 0010, mirroring the core dispatcher's
+            // FontScale arm). TextRuntime.FontScale's own setter already calls UpdateLayout() on
+            // change, so the manual RelativeToChildren check this used to duplicate is redundant.
+            if (gueAsTextRuntime != null)
             {
-                gue.UpdateLayout();
+                gueAsTextRuntime.FontScale = (float)value;
             }
             handled = true;
-
         }
         else if (propertyName == "Font")
         {
@@ -1373,7 +1372,7 @@ public partial class CustomSetPropertyOnRenderable
         {
             if (gueAsTextRuntime != null)
             {
-                gue.UseFontSmoothing = (bool)value;
+                gueAsTextRuntime.UseFontSmoothing = (bool)value;
             }
             ReactToFontValueChange();
         }
@@ -1385,7 +1384,12 @@ public partial class CustomSetPropertyOnRenderable
             // which sets textRenderable.BlendState. Skia has no BlendState; it applies the Gum
             // Blend as an SKPaint.BlendMode at render time (see Text.GetRenderPaint), so the same
             // dispatch just assigns the nullable Blend property. (issue #3676)
-            text.Blend = (Gum.RenderingLibrary.Blend)value;
+            // Redispatched onto TextRuntime (issue #3706/ADR 0010): TextRuntime.Blend already
+            // forwards to ContainedText.Blend, so this is a structural no-op, not a behavior change.
+            if (gueAsTextRuntime != null)
+            {
+                gueAsTextRuntime.Blend = (Gum.RenderingLibrary.Blend)value;
+            }
             handled = true;
 #endif
         }
@@ -1396,23 +1400,41 @@ public partial class CustomSetPropertyOnRenderable
             ((Text)mContainedObjectAsIpso).Alpha = valueAsInt;
             handled = true;
 #endif
+            // Issue #3706/ADR 0010: previously had no live dispatch arm at all (the block above is
+            // dead -- this method only compiles under SKIA). Worked by accident via the reflection
+            // fallback (SkiaGum.Renderables.Text.Alpha is `int`, an exact type match), so this is a
+            // consistency/perf fix, not a behavior change.
+            if (gueAsTextRuntime != null)
+            {
+                gueAsTextRuntime.Alpha = (int)value;
+            }
+            handled = true;
         }
         else if (propertyName == "Red")
         {
             int valueAsInt = (int)value;
-            text.Red = valueAsInt;
+            if (gueAsTextRuntime != null)
+            {
+                gueAsTextRuntime.Red = valueAsInt;
+            }
             handled = true;
         }
         else if (propertyName == "Green")
         {
             int valueAsInt = (int)value;
-            text.Green = valueAsInt;
+            if (gueAsTextRuntime != null)
+            {
+                gueAsTextRuntime.Green = valueAsInt;
+            }
             handled = true;
         }
         else if (propertyName == "Blue")
         {
             int valueAsInt = (int)value;
-            text.Blue = valueAsInt;
+            if (gueAsTextRuntime != null)
+            {
+                gueAsTextRuntime.Blue = valueAsInt;
+            }
             handled = true;
         }
         else if (propertyName == "Color")
@@ -1422,16 +1444,31 @@ public partial class CustomSetPropertyOnRenderable
             ((Text)mContainedObjectAsIpso).Color = valueAsColor;
             handled = true;
 #endif
+            // Issue #3706/ADR 0010: this dispatch arm was dead (see the Alpha comment above), and
+            // unlike Alpha, Color was a genuine bug -- SkiaGum.Renderables.Text.Color is SKColor, and
+            // SetProperty("Color", ...) passes a boxed System.Drawing.Color, so the reflection
+            // fallback's Convert.ChangeType threw internally and silently swallowed the assignment.
+            if (gueAsTextRuntime != null && value is System.Drawing.Color drawingColor)
+            {
+                gueAsTextRuntime.Color = drawingColor.ToSkia();
+            }
+            handled = true;
         }
 
         else if (propertyName == "HorizontalAlignment")
         {
-            text.HorizontalAlignment = (RenderingLibrary.Graphics.HorizontalAlignment)value;
+            if (gueAsTextRuntime != null)
+            {
+                gueAsTextRuntime.HorizontalAlignment = (RenderingLibrary.Graphics.HorizontalAlignment)value;
+            }
             handled = true;
         }
         else if (propertyName == "VerticalAlignment")
         {
-            text.VerticalAlignment = (VerticalAlignment)value;
+            if (gueAsTextRuntime != null)
+            {
+                gueAsTextRuntime.VerticalAlignment = (VerticalAlignment)value;
+            }
             handled = true;
         }
         else if (propertyName == "MaxLettersToShow")
@@ -1440,23 +1477,48 @@ public partial class CustomSetPropertyOnRenderable
             // Mirror of the XNALIKE MaxLettersToShow arm in Gum/Wireframe/CustomSetPropertyOnRenderable.cs.
             // Skia honors this as a paint-only typewriter reveal on the renderable (see Text.Render /
             // Text.GetVisibleWrappedText); the assignment is otherwise identical. (issue #3678)
-            text.MaxLettersToShow = (int?)value;
+            // Redispatched onto TextRuntime (issue #3706/ADR 0010) for consistency with core.
+            if (gueAsTextRuntime != null)
+            {
+                gueAsTextRuntime.MaxLettersToShow = (int?)value;
+            }
             handled = true;
 #endif
+        }
+        else if (propertyName == nameof(gueAsTextRuntime.LineHeightMultiplier))
+        {
+            // Issue #3706/ADR 0010: had no dispatch arm at all. Worked by accident via the
+            // reflection fallback (SkiaGum.Renderables.Text.LineHeightMultiplier is `float`, an
+            // exact type match), so this is a consistency/perf fix, not a behavior change.
+            if (gueAsTextRuntime != null)
+            {
+                gueAsTextRuntime.LineHeightMultiplier = (float)value;
+            }
+            handled = true;
+        }
+        else if (propertyName == nameof(gueAsTextRuntime.MaxNumberOfLines))
+        {
+            // Issue #3706/ADR 0010: same as LineHeightMultiplier above -- worked by accident via
+            // the reflection fallback (SkiaGum.Renderables.Text.MaxNumberOfLines is `int?`, an
+            // exact type match).
+            if (gueAsTextRuntime != null)
+            {
+                gueAsTextRuntime.MaxNumberOfLines = (int?)value;
+            }
+            handled = true;
         }
 
         else if (propertyName == nameof(TextOverflowHorizontalMode))
         {
-            var textOverflowMode = (TextOverflowHorizontalMode)value;
-
-            if (textOverflowMode == TextOverflowHorizontalMode.EllipsisLetter)
+            // Issue #3706/ADR 0010: this arm never set handled = true (the same incidental bug
+            // ADR 0009 fixed in the core dispatcher's copy of this property), so every assignment
+            // redundantly fell through to reflection afterward. Redispatched onto TextRuntime, which
+            // already implements the identical enum-to-bool mapping this used to duplicate.
+            if (gueAsTextRuntime != null)
             {
-                text.IsTruncatingWithEllipsisOnLastLine = true;
+                gueAsTextRuntime.TextOverflowHorizontalMode = (TextOverflowHorizontalMode)value;
             }
-            else
-            {
-                text.IsTruncatingWithEllipsisOnLastLine = false;
-            }
+            handled = true;
         }
         else if (propertyName == nameof(TextOverflowVerticalMode))
         {

@@ -17,6 +17,24 @@ public class TextRuntimeTests
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
     }
 
+    #region Alpha
+
+    [Fact]
+    public void Alpha_SetProperty_ShouldPushToContainedText()
+    {
+        // Issue #3706/ADR 0010: this dispatch arm was gated #if MONOGAME || XNA4, which is dead
+        // inside a method that only compiles under SKIA, so this previously worked only by
+        // accident via the reflection fallback. Now redispatched onto TextRuntime.
+        TextRuntime sut = new();
+
+        sut.SetProperty("Alpha", 128);
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.Alpha.ShouldBe(128);
+    }
+
+    #endregion
+
     #region Blend
 
     [Fact]
@@ -28,6 +46,19 @@ public class TextRuntimeTests
         // setter forwards straight to the contained renderable, not through the font-update delegate.
         TextRuntime sut = new();
         sut.Blend = Gum.RenderingLibrary.Blend.Additive;
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.Blend.ShouldBe(Gum.RenderingLibrary.Blend.Additive);
+    }
+
+    [Fact]
+    public void Blend_SetProperty_ShouldPushToContainedText()
+    {
+        // Issue #3706/ADR 0010: redispatched onto TextRuntime.Blend (previously wrote
+        // text.Blend directly) -- structurally different, same end result.
+        TextRuntime sut = new();
+
+        sut.SetProperty("Blend", Gum.RenderingLibrary.Blend.Additive);
 
         Text containedText = (Text)sut.RenderableComponent;
         containedText.Blend.ShouldBe(Gum.RenderingLibrary.Blend.Additive);
@@ -88,6 +119,21 @@ public class TextRuntimeTests
 
         Text containedText = (Text)sut.RenderableComponent;
         containedText.Color.ShouldBe(SKColors.White);
+    }
+
+    [Fact]
+    public void Color_SetProperty_ShouldPushToContainedText()
+    {
+        // Issue #3706/ADR 0010: this dispatch arm was gated #if MONOGAME || XNA4, which is dead
+        // inside a method that only compiles under SKIA, so SetProperty("Color", ...) silently
+        // fell through to the reflection fallback -- which throws internally converting
+        // System.Drawing.Color to SKColor (not IConvertible-compatible) and swallows the failure.
+        TextRuntime sut = new();
+
+        sut.SetProperty("Color", System.Drawing.Color.FromArgb(200, 10, 20, 30));
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.Color.ShouldBe(new SKColor(10, 20, 30, 200));
     }
 
     #endregion
@@ -195,6 +241,19 @@ public class TextRuntimeTests
         TextRuntime sut = new();
         sut.FontScale = 3.0f;
         sut.FontScale.ShouldBe(3.0f);
+    }
+
+    [Fact]
+    public void FontScale_SetProperty_ShouldPushToContainedText()
+    {
+        // Issue #3706/ADR 0010: redispatched onto TextRuntime.FontScale (previously wrote
+        // text.FontScale directly) -- structurally different, same end result.
+        TextRuntime sut = new();
+
+        sut.SetProperty("FontScale", 2.5f);
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.FontScale.ShouldBe(2.5f);
     }
 
     #endregion
@@ -316,6 +375,23 @@ public class TextRuntimeTests
 
     #endregion
 
+    #region HorizontalAlignment
+
+    [Fact]
+    public void HorizontalAlignment_SetProperty_ShouldPushToContainedText()
+    {
+        // Issue #3706/ADR 0010: redispatched onto TextRuntime.HorizontalAlignment (previously
+        // wrote text.HorizontalAlignment directly) -- structurally different, same end result.
+        TextRuntime sut = new();
+
+        sut.SetProperty("HorizontalAlignment", RenderingLibrary.Graphics.HorizontalAlignment.Right);
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.HorizontalAlignment.ShouldBe(RenderingLibrary.Graphics.HorizontalAlignment.Right);
+    }
+
+    #endregion
+
     #region HeightUnits
 
     [Fact]
@@ -343,6 +419,19 @@ public class TextRuntimeTests
         TextRuntime sut = new();
         sut.LineHeightMultiplier = 1.5f;
         sut.LineHeightMultiplier.ShouldBe(1.5f);
+    }
+
+    [Fact]
+    public void LineHeightMultiplier_SetProperty_ShouldPushToContainedText()
+    {
+        // Issue #3706/ADR 0010: had no dispatch arm at all, so this previously worked only by
+        // accident via the reflection fallback. Now redispatched onto TextRuntime.
+        TextRuntime sut = new();
+
+        sut.SetProperty("LineHeightMultiplier", 1.75f);
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.LineHeightMultiplier.ShouldBe(1.75f);
     }
 
     #endregion
@@ -374,6 +463,44 @@ public class TextRuntimeTests
 
         Text containedText = (Text)sut.RenderableComponent;
         containedText.MaxLettersToShow.ShouldBe(4);
+    }
+
+    #endregion
+
+    #region MaxNumberOfLines
+
+    [Fact]
+    public void MaxNumberOfLines_SetProperty_ShouldPushToContainedText()
+    {
+        // Issue #3706/ADR 0010: had no dispatch arm at all, so this previously worked only by
+        // accident via the reflection fallback. Now redispatched onto TextRuntime.
+        TextRuntime sut = new();
+
+        sut.SetProperty("MaxNumberOfLines", (int?)3);
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.MaxNumberOfLines.ShouldBe(3);
+    }
+
+    #endregion
+
+    #region Red, Green, Blue
+
+    [Fact]
+    public void RedGreenBlue_SetProperty_ShouldPushToContainedText()
+    {
+        // Issue #3706/ADR 0010: redispatched onto TextRuntime.Red/Green/Blue (previously wrote
+        // text.Red/Green/Blue directly) -- structurally different, same end result.
+        TextRuntime sut = new();
+
+        sut.SetProperty("Red", 10);
+        sut.SetProperty("Green", 20);
+        sut.SetProperty("Blue", 30);
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.Red.ShouldBe(10);
+        containedText.Green.ShouldBe(20);
+        containedText.Blue.ShouldBe(30);
     }
 
     #endregion
@@ -477,6 +604,20 @@ public class TextRuntimeTests
         sut.TextOverflowHorizontalMode = TextOverflowHorizontalMode.EllipsisLetter;
         sut.TextOverflowHorizontalMode = TextOverflowHorizontalMode.TruncateWord;
         sut.TextOverflowHorizontalMode.ShouldBe(TextOverflowHorizontalMode.TruncateWord);
+    }
+
+    [Fact]
+    public void TextOverflowHorizontalMode_SetProperty_ShouldPushToContainedText()
+    {
+        // Issue #3706/ADR 0010: this arm never set handled = true, so every assignment redundantly
+        // fell through to reflection afterward (the value still applied). Redispatched onto
+        // TextRuntime.TextOverflowHorizontalMode, which already implements this enum-to-bool mapping.
+        TextRuntime sut = new();
+
+        sut.SetProperty("TextOverflowHorizontalMode", TextOverflowHorizontalMode.EllipsisLetter);
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.IsTruncatingWithEllipsisOnLastLine.ShouldBeTrue();
     }
 
     #endregion
@@ -584,6 +725,23 @@ public class TextRuntimeTests
         TextRuntime sut = new();
         sut.UseFontSmoothing = false;
         sut.UseFontSmoothing.ShouldBeFalse();
+    }
+
+    #endregion
+
+    #region VerticalAlignment
+
+    [Fact]
+    public void VerticalAlignment_SetProperty_ShouldPushToContainedText()
+    {
+        // Issue #3706/ADR 0010: redispatched onto TextRuntime.VerticalAlignment (previously wrote
+        // text.VerticalAlignment directly) -- structurally different, same end result.
+        TextRuntime sut = new();
+
+        sut.SetProperty("VerticalAlignment", VerticalAlignment.Bottom);
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.VerticalAlignment.ShouldBe(VerticalAlignment.Bottom);
     }
 
     #endregion

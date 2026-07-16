@@ -44,4 +44,13 @@ public static class ColorExtensions
     {
         return new SKColor(color.Red, color.Green, value, color.Alpha);
     }
+
+    /// <summary>
+    /// Converts a <see cref="System.Drawing.Color"/> to its Skia equivalent. Mirror of
+    /// <c>RaylibGum.Helpers.ColorExtensions.ToRaylib</c> for the Skia backend.
+    /// </summary>
+    public static SKColor ToSkia(this System.Drawing.Color value)
+    {
+        return new SKColor(value.R, value.G, value.B, value.A);
+    }
 }
