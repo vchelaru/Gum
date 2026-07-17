@@ -1,17 +1,21 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.Dialogs;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
-using Gum.Services;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Moq;
 
-namespace GumToolUnitTests.ViewModels.Dialogs;
+namespace Gum.Presentation.Tests;
 
+/// <summary>
+/// Characterization (pinning) test for AddInstanceDialogViewModel, relocated out of Gum.csproj
+/// into the headless Gum.Presentation assembly (ADR-0005, #3754) as a clean leaf VM whose four
+/// injected interfaces are all already headless.
+/// </summary>
 public class AddInstanceDialogViewModelTests
 {
-    AddInstanceDialogViewModel _sut;
+    private readonly AddInstanceDialogViewModel _sut;
     private readonly Mock<ISelectedState> _selectedState;
     private readonly Mock<INameVerifier> _nameVerifier;
     private readonly Mock<IElementCommands> _elementCommands;
@@ -34,20 +38,16 @@ public class AddInstanceDialogViewModelTests
     [Fact]
     public void OnAffirmative_ShouldCreateInstance()
     {
-        // arrange
         _sut.Value = "NewInstance";
 
-        // act
         _sut.OnAffirmative();
 
-        // verify
         _elementCommands.Verify(x => x.AddInstance(
-            It.IsAny<ElementSave>(), 
-            "NewInstance", 
-            It.IsAny<string?>(), 
-            It.IsAny<string?>(), 
+            It.IsAny<ElementSave>(),
+            "NewInstance",
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
             It.IsAny<int?>()),
             Times.Once);
-            
     }
 }

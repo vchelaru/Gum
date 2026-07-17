@@ -8,7 +8,7 @@ description: Gum tool ViewModel conventions. Triggers: ViewModels, XAML views, d
 ## Base Classes
 
 - **`ViewModel`** (`Gum/Mvvm/ViewModel.cs`) — base for all view models. Provides `Get<T>()`/`Set()` property storage, `NotifyPropertyChanged`, and `[DependsOn]` propagation.
-- **`DialogViewModel`** (`Gum/Services/Dialogs/DialogViewModel.cs`) — extends `ViewModel` for dialogs. Adds `AffirmativeCommand`/`NegativeCommand`, `RequestClose` event, and `AffirmativeText`/`NegativeText`.
+- **`DialogViewModel`** (`Tools/Gum.Presentation/Dialogs/DialogViewModel.cs`) — extends `ViewModel` for dialogs. Adds `AffirmativeCommand`/`NegativeCommand`, `RequestClose` event, and `AffirmativeText`/`NegativeText`. Lives in the headless `Gum.Presentation` assembly (ADR-0005); dialog VMs deriving from it (the `GetUserStringDialogBaseViewModel` family) are safe to relocate there too without a `DialogViewResolver` fix, since the resolver hardcodes an assembly-agnostic fallback for that family.
 
 ## Property Patterns
 

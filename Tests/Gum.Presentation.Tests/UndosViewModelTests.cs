@@ -2,25 +2,26 @@ using Gum.Plugins.Undos;
 using Gum.ToolStates;
 using Gum.Undo;
 using Moq;
-using Moq.AutoMock;
 using Shouldly;
-using System.Collections.Generic;
 
-namespace GumToolUnitTests.Plugins.Undos;
+namespace Gum.Presentation.Tests;
 
+/// <summary>
+/// Characterization (pinning) tests for UndosViewModel, relocated out of Gum.csproj into the
+/// headless Gum.Presentation assembly (ADR-0005, #3754) as a clean leaf VM whose two injected
+/// interfaces (ISelectedState, IUndoManager) are both already headless.
+/// </summary>
 public class UndosViewModelTests : BaseTestClass
 {
-    private readonly AutoMocker _mocker;
     private readonly Mock<ISelectedState> _selectedState;
     private readonly Mock<IUndoManager> _undoManager;
     private readonly UndosViewModel _viewModel;
 
     public UndosViewModelTests()
     {
-        _mocker = new AutoMocker();
-        _selectedState = _mocker.GetMock<ISelectedState>();
-        _undoManager = _mocker.GetMock<IUndoManager>();
-        _viewModel = _mocker.CreateInstance<UndosViewModel>();
+        _selectedState = new Mock<ISelectedState>();
+        _undoManager = new Mock<IUndoManager>();
+        _viewModel = new UndosViewModel(_selectedState.Object, _undoManager.Object);
     }
 
     [Fact]

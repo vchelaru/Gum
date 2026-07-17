@@ -3,20 +3,22 @@ using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
-using Gum.PropertyGridHelpers;
 using Gum.Services;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.ViewModels;
 using Moq;
-using Moq.AutoMock;
 using Shouldly;
 
-namespace GumToolUnitTests.ViewModels;
+namespace Gum.Presentation.Tests;
 
+/// <summary>
+/// Characterization (pinning) tests for RightClickViewModel, relocated out of Gum.csproj into
+/// the headless Gum.Presentation assembly (ADR-0005, #3754) as a clean leaf VM whose eight
+/// injected dependencies are all already headless.
+/// </summary>
 public class RightClickViewModelTests
 {
-    private readonly AutoMocker _mocker;
     private readonly Mock<ISelectedState> _selectedState;
     private readonly Mock<IReorderLogic> _reorderLogic;
     private readonly Mock<ObjectFinder> _objectFinder;
@@ -29,7 +31,6 @@ public class RightClickViewModelTests
 
     public RightClickViewModelTests()
     {
-        _mocker = new AutoMocker();
         _reorderLogic = new Mock<IReorderLogic>();
         _selectedState = new Mock<ISelectedState>();
         _objectFinder = new Mock<ObjectFinder>();
