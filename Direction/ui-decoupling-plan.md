@@ -102,6 +102,29 @@ tool's `GeneralSettingsFile`; `CategoryViewModel` is one node type in the larger
 `StateTreeViewModel` cluster already flagged above as service-backed. None of these are simple
 git-mv candidates without further untangling first.
 
+**#3754 (2026-07-17) — untangled and moved the `StateTreeViewModel` cluster.** The blocker flagged
+above was exactly as diagnosed: `StateTreeViewModel` injected the concrete, WPF-coupled
+`StateTreeViewRightClickService` and called only one method on it, `PopulateContextMenu()`
+(previously `internal`). Extracted `IStateTreeViewRightClickService` (one method) into
+`Gum.Presentation`, made `PopulateContextMenu()` public and had the concrete service implement the
+interface, and narrowed `StateTreeViewModel`'s ctor param to the interface. The concrete service
+itself is **not** DI-registered anywhere (`MainStatePlugin` always `new`s it directly, plugin-local
+per the `Builder.cs`-registration rule), so no DI wiring changed. With the interface in place,
+`CategoryViewModel`/`StateItemViewModel` (which holds `StateViewModel`) and `StateTreeViewItem`
+(the abstract base, co-located in `CategoryViewModel.cs`) all checked out clean — no WPF types, no
+concrete-class coupling — so the whole cluster moved together into
+`Gum.Presentation/Plugins/InternalPlugins/StatePlugin/ViewModels/`, namespace preserved. Two of
+`HandleRename`'s overloads had to go from `internal` to `public` since `MainStatePlugin` (a real
+production consumer, not a test) calls them across the new assembly boundary.
+**Another instance of the `;assembly=` XAML wrinkle (see the #3754 2026-07-17 note above), but this
+time on a real (non-Ignorable) attribute:** `StateTreeView.xaml`'s `HierarchicalDataTemplate`/
+`DataTemplate` use `{x:Type viewmodels:CategoryViewModel}` / `{x:Type viewmodels:StateViewModel}`
+directly, so unlike the `d:DesignInstance` case this broke `dotnet build` outright — same
+`;assembly=Gum.Presentation` fix on the `xmlns:viewmodels` declaration. Added a pinning test suite
+(`StateTreeViewModelTests` in `Gum.Presentation.Tests`) covering `HandleRename` — previously
+untestable without a real WPF `ContextMenu`, since `PopulateContextMenu()` wasn't mockable behind
+an interface.
+
 > **Scouting finding (2026-06-24) that sets the bulk-migration order.** A full pass over the ~35
 > tool VMs found a hard split: every VM with a *clean* dependency closure injects **zero**
 > interfaces (e.g. `FileWatchViewModel`, `UndoItemViewModel`, `MainOutputViewModel`), while every
