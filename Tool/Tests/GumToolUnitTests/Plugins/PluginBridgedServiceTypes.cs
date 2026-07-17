@@ -22,6 +22,7 @@ using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Plugins.InternalPlugins.Hotkey.ViewModels;
 using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.PropertyGridHelpers;
+using Gum.ViewModels;
 
 namespace GumToolUnitTests.Plugins;
 
@@ -107,5 +108,8 @@ internal static class PluginBridgedServiceTypes
         // Animation undo (#3406): MainStateAnimationPlugin injects this to register itself as the live
         // IAnimationUndoProvider with UndoManager/ElementUndoStrategy.
         typeof(IAnimationUndoProviderRegistrar),
+
+        // MainWindowPlugin ctor drain (#3753): updates the main window title on project load/save.
+        typeof(MainWindowViewModel),
     };
 }

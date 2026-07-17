@@ -1,7 +1,6 @@
 ﻿using System;
 using Gum.Plugins.BaseClasses;
 using System.ComponentModel.Composition;
-using Gum.Services;
 using Gum.ViewModels;
 
 namespace Gum.Gui.Plugins
@@ -9,6 +8,8 @@ namespace Gum.Gui.Plugins
     [Export(typeof(Gum.Plugins.BaseClasses.PluginBase))]
     public class MainWindowPlugin : PluginBase
     {
+        private readonly MainWindowViewModel _mainWindowViewModel;
+
         public override string FriendlyName
         {
             get
@@ -25,6 +26,12 @@ namespace Gum.Gui.Plugins
             }
         }
 
+        [ImportingConstructor]
+        public MainWindowPlugin(MainWindowViewModel mainWindowViewModel)
+        {
+            _mainWindowViewModel = mainWindowViewModel;
+        }
+
         public override void StartUp()
         {
             ProjectLoad += new Action<DataTypes.GumProjectSave>(OnProjectLoad);
@@ -33,21 +40,17 @@ namespace Gum.Gui.Plugins
 
         void OnProjectLoad(DataTypes.GumProjectSave obj)
         {
-            MainWindowViewModel vm = Locator.GetRequiredService<MainWindowViewModel>();
-            
             if (obj != null && !string.IsNullOrEmpty(obj.FullFileName))
             {
                 string fileName = obj.FullFileName;
 
-                vm.Title = fileName;
+                _mainWindowViewModel.Title = fileName;
             }
             else
             {
-                vm.Title = "Gum";
+                _mainWindowViewModel.Title = "Gum";
             }
         }
-
-        
 
         public override bool ShutDown(Gum.Plugins.PluginShutDownReason shutDownReason)
         {

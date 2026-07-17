@@ -40,6 +40,7 @@ using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Plugins.InternalPlugins.Hotkey.ViewModels;
 using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.PropertyGridHelpers;
+using Gum.ViewModels;
 
 namespace Gum.Plugins;
 
@@ -949,6 +950,8 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
             // live IAnimationUndoProvider with the already-constructed UndoManager/ElementUndoStrategy.
             batch.AddExportedValue<IAnimationUndoProviderRegistrar>(Locator.GetRequiredService<IAnimationUndoProviderRegistrar>());
 
+            // MainWindowPlugin ctor drain (#3753): updates the main window title on project load/save.
+            batch.AddExportedValue<MainWindowViewModel>(Locator.GetRequiredService<MainWindowViewModel>());
 
             var container = new CompositionContainer(catalog);
 
