@@ -31,7 +31,7 @@ Used by: delete confirmation only (`DeleteLogic.ShowDeleteDialog`).
 
 **Why it exists separately**: The delete dialog needs runtime UI composition — plugins inject checkboxes and options into a `StackPanel` (e.g., "Delete associated files?", "Remove child instances?"). This cannot be done through the MVVM template system.
 
-**Flow**: `DeleteLogic` creates a `DeleteOptionsWindow` directly, sets `Message` and `Title` properties, calls `PluginManager.ShowDeleteDialog()` (which lets plugins add controls to `MainStackPanel`), then calls `ShowDialog()`.
+**Flow**: `DeleteLogic` (headless, `Tools/Gum.Presentation/Managers/DeleteLogic.cs`) calls the WPF-shell `IDeleteDialogService`, whose implementation `DeleteDialogService` creates the `DeleteOptionsWindow`, sets `Message`/`Title`, calls the concrete `PluginManager.ShowDeleteDialog()` (which lets plugins add controls to `MainStackPanel`), then calls `ShowDialog()`. `DeleteDialogService` depends on the concrete `PluginManager`, not `IPluginManager` — that interface dropped `ShowDeleteDialog`/`DeleteConfirmed` entirely when it moved into headless `Gum.Presentation` (#3754); those two WPF-typed calls live only on the concrete class now.
 
 **Not managed by DialogService** — no view model, no template selection, no attached property binding. Changes to `DialogWindow.xaml` or `Dialog.cs` have **zero effect** on this window.
 
@@ -42,11 +42,12 @@ Used by: delete confirmation only (`DeleteLogic.ShowDeleteDialog`).
 | `Gum/Services/Dialogs/DialogService.cs` | MVVM | Creates and shows DialogWindow instances |
 | `Gum/Services/Dialogs/DialogWindow.xaml` | MVVM | Window chrome, layout template with ScrollViewer + button footer |
 | `Gum/Services/Dialogs/Dialog.cs` | MVVM | ContentControl with attached properties and template selector |
-| `Gum/Services/Dialogs/DialogViewResolver.cs` | MVVM | Maps view model types to view types |
+| `Gum/Services/Dialogs/DialogViewResolver.cs` | MVVM | Maps view model types to view types; falls back to scanning its own (tool) assembly for a relocated VM's `[Dialog]`-attributed View |
 | `Gum/Services/Dialogs/DialogViewModel.cs` | MVVM | Base class with affirm/negative commands and RequestClose event |
 | `Gum/Gui/Windows/DeleteOptionsWindow.xaml` | Standalone | Delete confirmation window layout |
 | `Gum/Gui/Windows/DeleteOptionsWindow.xaml.cs` | Standalone | Code-behind with plugin-accessible StackPanel |
-| `Gum/Managers/DeleteLogic.cs` | Standalone | Creates and shows DeleteOptionsWindow (line ~227) |
+| `Gum/Services/Dialogs/DeleteDialogService.cs` | Standalone | Creates and shows DeleteOptionsWindow; calls the concrete `PluginManager` |
+| `Tools/Gum.Presentation/Managers/DeleteLogic.cs` | Standalone | Orchestrates the delete flow via `IDeleteDialogService` |
 
 ## Common Pitfalls
 

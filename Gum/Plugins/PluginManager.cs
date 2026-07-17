@@ -632,12 +632,16 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         return toReturn;
     }
 
-    public System.Numerics.Vector2? GetWorldCursorPosition(InputLibrary.Cursor cursor)
+    // IPluginManager.GetWorldCursorPosition takes object rather than InputLibrary.Cursor so the
+    // interface can live in the headless Gum.Presentation assembly (InputLibrary is WinForms/KNI-
+    // coupled). PluginManager itself stays in the Gum tool project, so it's fine to cast back here.
+    public System.Numerics.Vector2? GetWorldCursorPosition(object cursor)
     {
+        InputLibrary.Cursor typedCursor = (InputLibrary.Cursor)cursor;
         Vector2? toReturn = null;
         CallMethodOnPlugin(plugin =>
         {
-            var innerResult = plugin.CallGetWorldCursorPosition(cursor);
+            var innerResult = plugin.CallGetWorldCursorPosition(typedCursor);
 
             if(innerResult != null)
             {
@@ -648,11 +652,14 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         return toReturn;
     }
 
-    public void FillWithErrors(List<ErrorViewModel> errors, PluginBase? plugin = null)
+    // IPluginManager.FillWithErrors takes object rather than PluginBase so the interface can live
+    // in the headless Gum.Presentation assembly (PluginBase is tool-only). PluginManager itself
+    // stays in the Gum tool project, so it's fine to pattern-match back here.
+    public void FillWithErrors(List<ErrorViewModel> errors, object? plugin = null)
     {
-        if(plugin != null)
+        if(plugin is PluginBase pluginBase)
         {
-            var internalErrors = plugin.CallGetAllErrors();
+            var internalErrors = pluginBase.CallGetAllErrors();
             if(internalErrors != null)
             {
                 errors.AddRange(internalErrors);

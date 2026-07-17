@@ -56,7 +56,7 @@ Do not call `IDeleteLogic` methods directly from UI code — always go through `
 
 ## Testability
 
-`ShowDeleteDialog` creates a WPF `DeleteOptionsWindow` and calls `ShowDialog()` — it cannot be unit-tested directly. The `internal BuildDeleteDialogMessage(Array, List<InstanceSave>?)` method on `DeleteLogic` is the testable seam for asserting dialog message content (`InternalsVisibleTo("GumToolUnitTests")` is already configured).
+`DeleteLogic` (headless, `Tools/Gum.Presentation/Managers/DeleteLogic.cs`) delegates dialog display to the WPF-shell `IDeleteDialogService`, whose implementation `DeleteDialogService` (`Gum/Services/Dialogs/DeleteDialogService.cs`) creates the `DeleteOptionsWindow` and calls `ShowDialog()` — that class cannot be unit-tested directly. The `internal BuildDeleteDialogMessage(Array, List<InstanceSave>?)` method on `DeleteLogic` is the testable seam for asserting dialog message content (`InternalsVisibleTo("GumToolUnitTests")` is already configured).
 
 ## Key Files
 
@@ -64,8 +64,9 @@ Do not call `IDeleteLogic` methods directly from UI code — always go through `
 |------|---------|
 | `Gum/Commands/IEditCommands.cs` | Interface with architecture overview comment |
 | `Gum/Commands/EditCommands.cs` | Implementation; AskTo* dialog logic lives here |
-| `Gum/Managers/IDeleteLogic.cs` | Interface for pure data-mutation operations |
-| `Gum/Managers/DeleteLogic.cs` | Data mutation + DeleteOptionsWindow orchestration |
+| `Tools/Gum.Presentation/Managers/IDeleteLogic.cs` | Interface for pure data-mutation operations |
+| `Tools/Gum.Presentation/Managers/DeleteLogic.cs` | Data mutation + delete-dialog orchestration via `IDeleteDialogService` |
+| `Gum/Services/Dialogs/DeleteDialogService.cs` | WPF shell: creates/shows `DeleteOptionsWindow`, calls the concrete `PluginManager` |
 | `Gum/Logic/RenameLogic.cs` | `ElementReferences` class; `GetDeleteImpactDetails()` and `ExcludeContainersBeingDeleted()` used to build impact warnings in the delete dialog |
 | `Gum/Plugins/InternalPlugins/Delete/DeleteObjectPlugin.cs` | Contributes "Delete XML?" and "Delete children?" to DeleteOptionsWindow |
 | `Gum/Plugins/InternalPlugins/StatePlugin/StateTreeViewRightClickService.cs` | State/category right-click menu; calls AskTo* methods |

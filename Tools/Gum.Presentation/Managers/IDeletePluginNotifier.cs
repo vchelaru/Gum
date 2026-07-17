@@ -10,9 +10,10 @@ namespace Gum.Managers;
 /// <c>DeleteLogic</c> makes, so the delete logic no longer needs to depend on the concrete,
 /// MEF/WinForms-entangled <c>PluginManager</c> for those notifications (ADR-0005 Phase 3).
 /// The two WPF-coupled delete plugin calls — <c>ShowDeleteDialog</c> and <c>DeleteConfirmed</c>,
-/// which both take the WPF <c>DeleteOptionsWindow</c> — intentionally stay on
-/// <see cref="Gum.Plugins.IPluginManager"/> and cannot move here until that dialog flow is made
-/// headless. The live implementation is <c>PluginManager</c>, bridged via DI.
+/// which both take the WPF <c>DeleteOptionsWindow</c> — never belonged on a headless interface;
+/// they now live only on the concrete tool-side <c>PluginManager</c> (dropped from
+/// <see cref="Gum.Plugins.IPluginManager"/> entirely, #3754) and are called by
+/// <c>DeleteDialogService</c>, which depends on the concrete type for exactly this reason.
 /// </summary>
 public interface IDeletePluginNotifier
 {

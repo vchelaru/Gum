@@ -13,7 +13,7 @@ using Gum.Services.Dialogs;
 using Moq;
 using Shouldly;
 
-namespace GumToolUnitTests.ViewModels;
+namespace Gum.Presentation.Tests;
 
 public class AddVariableViewModelTests : BaseTestClass
 {
@@ -61,7 +61,7 @@ public class AddVariableViewModelTests : BaseTestClass
             _dialogService.Object,
             _pluginManager.Object);
 
-        var gumProject = new GumProjectSave();
+        GumProjectSave gumProject = new GumProjectSave();
         gumProject.Components.Add(_component);
         ObjectFinder.Self.GumProjectSave = gumProject;
     }
@@ -69,7 +69,7 @@ public class AddVariableViewModelTests : BaseTestClass
     [Fact]
     public void RenameCustomVariable_ShouldRequestUndoLock()
     {
-        var customVariable = new VariableSave
+        VariableSave customVariable = new VariableSave
         {
             Name = "OldVar",
             Type = "float",
@@ -92,7 +92,7 @@ public class AddVariableViewModelTests : BaseTestClass
     [Fact]
     public void RenameCustomVariable_ShouldUpdateInstanceVariableNames()
     {
-        var customVariable = new VariableSave
+        VariableSave customVariable = new VariableSave
         {
             Name = "OldVar",
             Type = "float",
@@ -101,11 +101,11 @@ public class AddVariableViewModelTests : BaseTestClass
         };
         _component.DefaultState.Variables.Add(customVariable);
 
-        var screen = new ScreenSave();
+        ScreenSave screen = new ScreenSave();
         screen.Name = "TestScreen";
         screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
 
-        var instance = new InstanceSave
+        InstanceSave instance = new InstanceSave
         {
             Name = "myComp",
             BaseType = "TestComponent",

@@ -87,11 +87,13 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   `typeof(GumBuilder).Assembly`.** A DI-resolved VM moved to `Gum.Presentation` needs a second scan
   anchored in that assembly too, or it silently stops resolving (caught by
   `ServiceProviderCompositionSpikeTests`, not by a compile error).
-- **`DialogViewResolver` only scans the VM's own assembly for its matching View.** A relocated
-  `DialogViewModel` needs its View discoverable there too, unless it falls under an existing
-  assembly-agnostic special case (e.g. `GetUserStringDialogBaseViewModel` subtypes resolve to
-  `GetUserStringDialogView` regardless of the VM's assembly). Otherwise the resolver needs teaching
-  to scan a second (tool) assembly before the VM can move.
+- **`DialogViewResolver` scans the VM's own assembly, then falls back to its own (tool) assembly.**
+  (Fixed alongside the `IPluginManager`/`AddVariableViewModel` move, #3754.) A relocated
+  `DialogViewModel`'s View can stay in the WPF tool assembly, matched via an explicit
+  `[Dialog(typeof(VM))]` attribute rather than the same-assembly name-convention scan — the
+  fallback scan finds it there. The `GetUserStringDialogBaseViewModel` family still resolves via
+  its own assembly-agnostic special case (hardcoded to `GetUserStringDialogView`), independent of
+  this fallback.
 
 **Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap).
 - *4a — Element tree:* decouple `ElementTreeViewManager` from `TreeNode`; the already-migrated

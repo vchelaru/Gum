@@ -2,17 +2,12 @@
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Responses;
-using Gum.Gui.Windows;
 using Gum.Managers;
-using Gum.Plugins.BaseClasses;
 using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ToolsUtilities;
 
 namespace Gum.Plugins;
@@ -41,10 +36,6 @@ public interface IPluginManager
     void ModifyDefaultStandardState(string type, StateSave stateSave);
 
     bool TryHandleDelete();
-
-    void ShowDeleteDialog(DeleteOptionsWindow window, Array objectsToDelete);
-
-    void DeleteConfirmed(DeleteOptionsWindow window, Array objectsToDelete);
 
     void ElementRename(ElementSave elementSave, string oldName);
 
@@ -103,13 +94,6 @@ public interface IPluginManager
 
 
 
-
-
-
-
-
-
-
     ITreeNode? GetTreeNodeOver();
     IEnumerable<ITreeNode> GetSelectedNodes();
     void BehaviorSelected(BehaviorSave? behaviorSave);
@@ -141,8 +125,22 @@ public interface IPluginManager
 
 
     IEnumerable<IPositionedSizedObject>? GetSelectedIpsos();
-    System.Numerics.Vector2? GetWorldCursorPosition(InputLibrary.Cursor cursor);
-    void FillWithErrors(List<ErrorViewModel> errors, PluginBase? plugin = null);
+
+    /// <summary>
+    /// Looks up the world position under the cursor via plugins that can answer it (the
+    /// wireframe/editor host). Typed <see cref="object"/> rather than the tool-only,
+    /// WinForms/KNI-coupled <c>InputLibrary.Cursor</c> so this interface can live in the headless
+    /// Gum.Presentation assembly; the implementation casts back to <c>InputLibrary.Cursor</c>.
+    /// </summary>
+    System.Numerics.Vector2? GetWorldCursorPosition(object cursor);
+
+    /// <summary>
+    /// Fills <paramref name="errors"/> with plugin-contributed errors. Typed <see cref="object"/>
+    /// rather than the tool-only <c>PluginBase</c> so this interface can live in the headless
+    /// Gum.Presentation assembly; pass a plugin instance to scope the check to that plugin, or
+    /// omit it to run every plugin's error check.
+    /// </summary>
+    void FillWithErrors(List<ErrorViewModel> errors, object? plugin = null);
     void FillTopLevelNames(ElementSave element, List<TopLevelName> names);
     bool GetIfShouldSuppressRemoveEditorHighlight();
     void FocusSearch();

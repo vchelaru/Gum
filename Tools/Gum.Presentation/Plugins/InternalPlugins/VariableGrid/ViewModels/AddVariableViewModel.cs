@@ -10,8 +10,6 @@ using Gum.Undo;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
