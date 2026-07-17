@@ -59,7 +59,8 @@ debt. *Risk:* low; wide but shallow.
 
 **Phase 2 — Drain the statics.** Migrate `.Self` call sites to constructor injection; retire the
 `Locator` fallback. *Payoff:* the biggest single lever on testability and the contribution
-barrier (bus-factor insurance). *Risk:* high volume, low per-change risk.
+barrier (bus-factor insurance). *Risk:* high volume, low per-change risk. **Status (2026-07-17):
+complete** — see the "Phase 2 progress gauge" section below for the closeout.
 
 **Phase 3 — Extract logic into the headless assembly.** Move WPF-free logic into a net8.0 assembly
 so the boundary is compiler-enforced. Convert the ViewModels that reach into `System.Windows.*` to
@@ -95,7 +96,13 @@ should later migrate from `Gum.ProjectServices` into `Gum.Presentation` so all V
 - *4b — Rendering host:* formalize a host contract around `SystemManagers.Initialize(GraphicsDevice)`
   plus pixel-buffer-out / input-in, and lift the cursor/keyboard off the WinForms control. The
   `3218-skiasharp-host-model` work is the prototype. *Payoff (even on WPF):* lets the
-  `WindowsFormsHost` airspace/focus hacks be deleted.
+  `WindowsFormsHost` airspace/focus hacks be deleted. **In scope (moved from Phase 2, 2026-07-17):**
+  `WireframeControl`, `PolygonPointInputHandler`, `ResizeInputHandler` — all three `using
+  System.Windows.Forms` directly and are `new`-constructed several layers deep by
+  `SelectionManager`/`MainEditorTabPlugin`, not DI/MEF-resolved. They were briefly considered Phase 2
+  Locator-drain debt, but they're WinForms-typed at the core, not just Locator-coupled — this phase's
+  host-contract rewrite replaces them wholesale, so threading DI through code destined to be rewritten
+  would be wasted work.
 
 **Phase 5 — The actual bet (deferred, and only now decidable).** Build *one* real Avalonia screen
 (the tree, or the canvas on the Skia host) against the now-unchanged logic. **Measure** the
@@ -382,10 +389,11 @@ takes its ctor-time deps via `[ImportingConstructor]`, and all turned out cycle-
 "cycle-prone tail" fear never materialized — even the largest, `MainEditorTabPlugin` (21 deps, the
 external Tool/EditorTabPlugin_XNA home), needed no `Lazy<T>`. What remains under "plugins" is only the
 deliberately-kept non-ctor lookups (the `Locator<PluginManager>()` self-injection cycle smells, and a
-few method-body/`StartUp` lookups noted above). **Phase 2 as a whole is still early-to-mid (~20–30%)**:
-the visible plugin entry points are now injected, but the ~224 `Locator` fallback sites behind them —
-inside the services those plugins consume — are largely untouched. Don't read "all plugins drained" as
-"Phase 2 nearly done"; the next front is the service-layer self-location, not more plugins.
+few method-body/`StartUp` lookups noted above). **Update (2026-07-17): Phase 2 as a whole is now
+complete**, not "early-to-mid" as this paragraph originally estimated — the ~224 `Locator` fallback
+figure was itself a grep-count mirage (see "Service-layer Locator sweep" below), and the service layer
+turned out to have only 6 genuine drain targets plus the `PluginManager` self-injection/concrete-field
+items, all landed. See the "Phase 2 is complete as of #3767" note further below for the full closeout.
 
 ### Next up (post-plugin Phase 2) — added 2026-06-24
 
@@ -471,13 +479,24 @@ reference post-construction), `MainBehaviorsPlugin` (1 method-body site, 5th cto
 `ServiceProviderCompositionSpikeTests` (the real `Builder.cs` container resolves both `PluginManager` and
 `IPluginManager` with no cycle exception — direct evidence the DI graph is acyclic here).
 
-**Left deferred — different reason than before, now a real constraint, not a smell:** `PolygonPointInputHandler`,
-`ResizeInputHandler`, and `WireframeControl` also call `IPluginManager`/`PluginManager` methods, but all
-three are constructed via explicit `new` with fixed args (not MEF/DI-resolved) by code several layers up
-the construction chain (`SelectionManager`/`MainEditorTabPlugin`), so threading the dependency through
-requires touching multiple intermediate constructors — a bigger, separate pass, not a same-shape drain.
-Phase 2's service-layer front is otherwise closed; this is the only remaining item, and it's gated on
-appetite for that multi-layer threading, not on any cycle risk.
+**Reclassified to Phase 4b, not Phase 2 (2026-07-17):** `PolygonPointInputHandler`, `ResizeInputHandler`,
+and `WireframeControl` also call `IPluginManager`/`PluginManager` methods, and are constructed via
+explicit `new` with fixed args (not MEF/DI-resolved) by code several layers up the construction chain
+(`SelectionManager`/`MainEditorTabPlugin`), so threading the dependency through would mean touching
+multiple intermediate constructors. Initially framed as Phase 2's one remaining item — but all three
+files `using System.Windows.Forms` directly, so they're squarely Phase 4b's "lift the cursor/keyboard
+off the WinForms control" rendering-host rewrite, not a Locator-drain. Threading DI through code that
+phase will replace wholesale would be wasted work; see the Phase 4b bullet above.
+
+**Phase 2 is complete as of #3767 (2026-07-17).** The concrete-`PluginManager`-field cleanup (widened
+`IPluginManager` with `RefreshVariableView`, `WireframePropertyChanged`, `CreateRenderableForType`,
+`WireframeRefreshed`, `TreeNodeSelected` — sealed to `object`, not `TreeNode`, per the WinForms-leak
+ratchet test — `IsInitialized`, `SetHighlightedIpso`; swapped `SelectedState`, `ElementCommands`,
+`EditCommands`, `GuiCommands`, `WireframeCommands`, `WireframeObjectManager`, `ElementTreeViewManager`
+off the concrete class) was the last Phase 2 item once the three classes above were moved to Phase 4b.
+The two remaining loose ends noted in the "Service-layer Locator sweep" section
+(`ExportEventFileManager`'s all-static design, the SvgPlugin/StateAnimationPlugin DI-container question)
+are separate, bigger efforts already scoped out of a simple ctor-injection pass — not Phase 2 debt.
 
 ## Definition of done — every change lands a *tested* unit
 
