@@ -1,6 +1,7 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Gum.Wireframe;
@@ -9,10 +10,8 @@ using Shouldly;
 using StateAnimationPlugin;
 using StateAnimationPlugin.Managers;
 using StateAnimationPlugin.ViewModels;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using Xunit;
 
 namespace GumToolUnitTests.Plugins.StateAnimationPlugin;
@@ -36,22 +35,19 @@ public class AnimationStateRenameErrorTests : BaseTestClass
     [Fact]
     public void HandleRename_OfCategorizedState_RewritesKeyframeAndClearsErrorOnRefresh()
     {
-        RunOnSta(() =>
-        {
-            ComponentSave element = ElementWithCategorizedState("Cat", "Idle");
-            StateSave idle = element.Categories[0].States[0];
-            ElementAnimationsViewModel viewModel = CreateViewModelWith(
-                CreateAnimationWithKeyframes(Keyframe(stateName: "Cat/Idle")));
+        ComponentSave element = ElementWithCategorizedState("Cat", "Idle");
+        StateSave idle = element.Categories[0].States[0];
+        ElementAnimationsViewModel viewModel = CreateViewModelWith(
+            CreateAnimationWithKeyframes(Keyframe(stateName: "Cat/Idle")));
 
-            // Mirror RenameLogic.RenameState: the model is renamed first, then plugins are notified.
-            idle.Name = "Walk";
-            RenameManagerFor(element).HandleRename(idle, "Idle", viewModel);
+        // Mirror RenameLogic.RenameState: the model is renamed first, then plugins are notified.
+        idle.Name = "Walk";
+        RenameManagerFor(element).HandleRename(idle, "Idle", viewModel);
 
-            viewModel.Animations[0].Keyframes[0].StateName.ShouldBe("Cat/Walk");
+        viewModel.Animations[0].Keyframes[0].StateName.ShouldBe("Cat/Walk");
 
-            viewModel.RefreshErrors(element);
-            viewModel.GetErrors().ShouldBeEmpty();
-        });
+        viewModel.RefreshErrors(element);
+        viewModel.GetErrors().ShouldBeEmpty();
     }
 
     [Fact]
@@ -63,49 +59,40 @@ public class AnimationStateRenameErrorTests : BaseTestClass
         // into an event (flag icon) instead of showing the red broken-reference icon (issue #3392).
         // GetAvailableStates must keep the referenced-but-missing state so the ComboBox holds its
         // selection; brokenness is still reported separately via RefreshErrors/HasValidState.
-        RunOnSta(() =>
-        {
-            ComponentSave element = ElementWithCategorizedState("Cat", "Idle");
-            ElementAnimationsViewModel viewModel = CreateViewModelWith(
-                CreateAnimationWithKeyframes(Keyframe(stateName: "Cat/Idle")));
+        ComponentSave element = ElementWithCategorizedState("Cat", "Idle");
+        ElementAnimationsViewModel viewModel = CreateViewModelWith(
+            CreateAnimationWithKeyframes(Keyframe(stateName: "Cat/Idle")));
 
-            element.Categories.Clear();  // delete the whole category, as DeleteLogic does
+        element.Categories.Clear();  // delete the whole category, as DeleteLogic does
 
-            List<string> availableStates = MainStateAnimationPlugin.GetAvailableStates(element, viewModel);
+        List<string> availableStates = MainStateAnimationPlugin.GetAvailableStates(element, viewModel);
 
-            availableStates.ShouldContain("Cat/Idle");
-        });
+        availableStates.ShouldContain("Cat/Idle");
     }
 
     [Fact]
     public void RefreshErrors_ReportsKeyframeReferencingMissingCategorizedState()
     {
-        RunOnSta(() =>
-        {
-            ComponentSave element = ElementWithCategorizedState("Cat", "Idle");
-            ElementAnimationsViewModel viewModel = CreateViewModelWith(
-                CreateAnimationWithKeyframes(Keyframe(stateName: "Cat/Missing")));
+        ComponentSave element = ElementWithCategorizedState("Cat", "Idle");
+        ElementAnimationsViewModel viewModel = CreateViewModelWith(
+            CreateAnimationWithKeyframes(Keyframe(stateName: "Cat/Missing")));
 
-            viewModel.RefreshErrors(element);
+        viewModel.RefreshErrors(element);
 
-            viewModel.GetErrors().Count().ShouldBe(1);
-            viewModel.GetErrors().Single().Message.ShouldContain("Cat/Missing");
-        });
+        viewModel.GetErrors().Count().ShouldBe(1);
+        viewModel.GetErrors().Single().Message.ShouldContain("Cat/Missing");
     }
 
     [Fact]
     public void RefreshErrors_ReportsNoError_ForKeyframeReferencingExistingCategorizedState()
     {
-        RunOnSta(() =>
-        {
-            ComponentSave element = ElementWithCategorizedState("Cat", "Idle");
-            ElementAnimationsViewModel viewModel = CreateViewModelWith(
-                CreateAnimationWithKeyframes(Keyframe(stateName: "Cat/Idle")));
+        ComponentSave element = ElementWithCategorizedState("Cat", "Idle");
+        ElementAnimationsViewModel viewModel = CreateViewModelWith(
+            CreateAnimationWithKeyframes(Keyframe(stateName: "Cat/Idle")));
 
-            viewModel.RefreshErrors(element);
+        viewModel.RefreshErrors(element);
 
-            viewModel.GetErrors().ShouldBeEmpty();
-        });
+        viewModel.GetErrors().ShouldBeEmpty();
     }
 
     [Fact]
@@ -116,20 +103,17 @@ public class AnimationStateRenameErrorTests : BaseTestClass
         // left a stale missing-state error: the keyframe showed the new name but kept the broken-
         // reference icon (#3383, made visible by the #3386 icon). RefreshAfterStateRename owns the
         // correct order; if its two steps are swapped this assertion fails.
-        RunOnSta(() =>
-        {
-            ComponentSave element = ElementWithCategorizedState("Cat", "Idle");
-            StateSave idle = element.Categories[0].States[0];
-            ElementAnimationsViewModel viewModel = CreateViewModelWith(
-                CreateAnimationWithKeyframes(Keyframe(stateName: "Cat/Idle")));
+        ComponentSave element = ElementWithCategorizedState("Cat", "Idle");
+        StateSave idle = element.Categories[0].States[0];
+        ElementAnimationsViewModel viewModel = CreateViewModelWith(
+            CreateAnimationWithKeyframes(Keyframe(stateName: "Cat/Idle")));
 
-            idle.Name = "Walk";  // state already renamed when the plugin event fires
-            MainStateAnimationPlugin.RefreshAfterStateRename(
-                RenameManagerFor(element), viewModel, element, idle, "Idle");
+        idle.Name = "Walk";  // state already renamed when the plugin event fires
+        MainStateAnimationPlugin.RefreshAfterStateRename(
+            RenameManagerFor(element), viewModel, element, idle, "Idle");
 
-            viewModel.Animations[0].Keyframes[0].StateName.ShouldBe("Cat/Walk");
-            viewModel.GetErrors().ShouldBeEmpty();
-        });
+        viewModel.Animations[0].Keyframes[0].StateName.ShouldBe("Cat/Walk");
+        viewModel.GetErrors().ShouldBeEmpty();
     }
 
     private static ComponentSave ElementWithCategorizedState(string categoryName, string stateName)
@@ -175,32 +159,13 @@ public class AnimationStateRenameErrorTests : BaseTestClass
             Mock.Of<IRenameManager>(),
             _selectedState,
             _wireframeObjectManager,
-            Mock.Of<IOutputManager>());
+            Mock.Of<IOutputManager>(),
+            Mock.Of<IAnimationFilePathService>(),
+            Mock.Of<IUiTimer>());
         foreach (AnimationViewModel animation in animations)
         {
             viewModel.Animations.Add(animation);
         }
         return viewModel;
-    }
-
-    /// <summary>
-    /// WPF controls (the right-click MenuItems built in ElementAnimationsViewModel's constructor)
-    /// require an STA thread; xUnit's default runner is MTA.
-    /// </summary>
-    private static void RunOnSta(Action action)
-    {
-        Exception? caught = null;
-        Thread thread = new Thread(() =>
-        {
-            try { action(); }
-            catch (Exception ex) { caught = ex; }
-        });
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
-        if (caught != null)
-        {
-            throw new Exception("Test body threw on the STA thread.", caught);
-        }
     }
 }

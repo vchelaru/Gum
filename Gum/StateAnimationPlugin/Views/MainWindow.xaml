@@ -198,7 +198,7 @@
                     PreviewKeyDown="HandleAnimationListKeyPressed"
                     SelectedItem="{Binding SelectedAnimation}">
                     <ListBox.ContextMenu>
-                        <ContextMenu x:Name="AnimationContextMenu" ItemsSource="{Binding AnimationRightClickItems}" />
+                        <ContextMenu x:Name="AnimationContextMenu" />
                     </ListBox.ContextMenu>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
@@ -314,7 +314,7 @@
                         KeyDown="HandleAnimationKeyframeListBoxKey"
                         SelectedItem="{Binding SelectedAnimation.SelectedKeyframe}">
                         <ListBox.ContextMenu>
-                            <ContextMenu x:Name="AnimationStateContextMenu" ItemsSource="{Binding AnimationStateRightClickItems}" />
+                            <ContextMenu x:Name="AnimationStateContextMenu" />
                         </ListBox.ContextMenu>
                         <ListBox.ItemTemplate>
                             <DataTemplate>

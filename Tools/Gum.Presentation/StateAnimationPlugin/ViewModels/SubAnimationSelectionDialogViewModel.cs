@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Services.Dialogs;
 using Gum.StateAnimation.SaveClasses;
@@ -59,12 +59,12 @@ public class SubAnimationSelectionDialogViewModel : DialogViewModel
 
     public SubAnimationSelectionDialogViewModel(IAnimationSaveRepository animationCollectionViewModelManager,
         IOutputManager outputManager, ISelectedState selectedState,
-        IWireframeObjectManager wireframeObjectManager)
+        IWireframeObjectManager wireframeObjectManager, IAnimationFilePathService animationFilePathService)
     {
         _outputManager = outputManager;
         _selectedState = selectedState;
         _wireframeObjectManager = wireframeObjectManager;
-        _animationFilePathService = new AnimationFilePathService(selectedState);
+        _animationFilePathService = animationFilePathService;
         _animationCollectionViewModelManager = animationCollectionViewModelManager;
     }
 

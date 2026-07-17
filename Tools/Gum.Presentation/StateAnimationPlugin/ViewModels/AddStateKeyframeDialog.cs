@@ -1,11 +1,11 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.Services.Dialogs;
 using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace StateAnimationPlugin.ViewModels;
 
-internal class AddStateKeyframeDialog : DialogViewModel
+public class AddStateKeyframeDialog : DialogViewModel
 {
     public AnimatedKeyframeViewModel? Result { get; private set; }
 

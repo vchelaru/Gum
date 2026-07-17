@@ -44,7 +44,11 @@ public class UiDecouplingRatchetTests
     [Fact]
     public void SelfStaticReferenceCount_DoesNotExceedBaseline()
     {
-        const int Baseline = 339;
+        // Dropped from 339 to 327: ElementAnimationsViewModel, SubAnimationSelectionDialogViewModel,
+        // and their newly-relocated dependency interfaces (IAnimationCollectionViewModelManager,
+        // IRenameManager, IAnimationFilePathService, NameValidator) moved to Gum.Presentation,
+        // taking their .Self call sites out of the Gum/ scan (issue #3754).
+        const int Baseline = 327;
 
         var pattern = new Regex(@"\.Self\b");
         int count = SourceFiles().Sum(f => pattern.Matches(File.ReadAllText(f)).Count);
@@ -58,8 +62,12 @@ public class UiDecouplingRatchetTests
         // Dropped from 46: AnimationViewModel/AnimatedKeyframeViewModel moved to headless
         // Gum.Presentation (their dead WPF BitmapFrame plumbing removed, and their remaining
         // Visibility/SolidColorBrush properties converted to bool per ADR-0004); ElementAnimationsViewModel
-        // (stays tool-side) lost its own dead BitmapFrame/Visibility properties too (issue #3754).
-        const int Baseline = 34;
+        // lost its own dead BitmapFrame/Visibility properties too. Dropped further, from 34 to 24:
+        // ElementAnimationsViewModel itself (plus SubAnimationSelectionDialogViewModel,
+        // AddStateKeyframeDialog, AddAnimationDialogViewModel) moved to Gum.Presentation once its
+        // WPF MenuItem/DispatcherTimer coupling was replaced with framework-neutral
+        // ContextMenuItemViewModel/IUiTimer seams (issue #3754).
+        const int Baseline = 24;
 
         var pattern = new Regex(@"System\.Windows");
         int count = SourceFiles()

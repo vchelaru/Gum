@@ -3,7 +3,7 @@ using System;
 
 namespace StateAnimationPlugin.ViewModels;
 
-internal class AddAnimationDialogViewModel : DialogViewModel
+public class AddAnimationDialogViewModel : DialogViewModel
 {
     public Func<string, string?>? Validator { get; set; }
 
