@@ -73,6 +73,32 @@ no WPF) assembly, stood up and proven with its first real slice (`FileWatchViewM
 of `Gum.csproj`, namespace preserved, with a headless pinning test). `ImportTreeNodeViewModel`
 should later migrate from `Gum.ProjectServices` into `Gum.Presentation` so all VMs share one home.
 
+**#3754 (2026-07-17) — closed the two named leaf-VM moves and the ledger's audit ask.**
+`ImportTreeNodeViewModel` (+ its `StandardDiffRowViewModel`/`ElementItemType`/`InclusionState`
+siblings) relocated from `Gum.ProjectServices` into `Gum.Presentation`, namespace preserved
+(`ImportFromGumxPlugin.ViewModels`) — completes the "all VMs share one home" item above. Also
+executed the two other clean leaf VMs the 2026-06-24 scouting note named but hadn't yet moved:
+`UndoItemViewModel` and `MainOutputViewModel` (+ its co-located `IOutputManager` interface),
+both `new`-constructed/DI-singleton with zero injected interfaces. Each got a headless pinning
+test in `Gum.Presentation.Tests` (none existed before).
+**New wrinkle found (add to the cross-assembly list below): XAML `clr-namespace` declarations
+without an `;assembly=` clause resolve only within the *declaring* assembly.** `UndoDisplay.xaml`'s
+`<DataTrigger Value="{x:Static undos:UndoOrRedo.Redo}">` broke at build (`MC3050: Cannot find the
+type 'UndoOrRedo'`) once the enum moved out of `Gum.csproj` — fixed by adding
+`;assembly=Gum.Presentation` to that `xmlns:undos` declaration. A sibling `d:DesignInstance` in
+`MainOutputPluginView.xaml` referencing `managers:MainOutputViewModel` did **not** break, because
+`d:`-namespaced attributes are `mc:Ignorable` and skipped by the real build — but VS's XAML
+designer still resolves them at edit-time, so prefer adding `;assembly=` on any `xmlns` a moved
+type is reachable through, not just the ones that fail `dotnet build`.
+**Audit for more candidates (the ledger's remaining ask):** a pass over the ~20 tool-owned
+`ViewModel` subclasses found one more clean, zero-dependency leaf — `CheckListBehaviorItem`
+(`Gum/Plugins/InternalPlugins/Behaviors/`) — deferred to its own PR rather than bundled here.
+Several others looked leaf-shaped but aren't yet: `ErrorViewModel`/`AllErrorsViewModel` hold a
+`PluginBase?` reference (tool-assembly-coupled); `ProjectPropertiesViewModel` depends on the
+tool's `GeneralSettingsFile`; `CategoryViewModel` is one node type in the larger
+`StateTreeViewModel` cluster already flagged above as service-backed. None of these are simple
+git-mv candidates without further untangling first.
+
 > **Scouting finding (2026-06-24) that sets the bulk-migration order.** A full pass over the ~35
 > tool VMs found a hard split: every VM with a *clean* dependency closure injects **zero**
 > interfaces (e.g. `FileWatchViewModel`, `UndoItemViewModel`, `MainOutputViewModel`), while every

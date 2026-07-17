@@ -5,7 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Gum.Plugins.Undos"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:undos="clr-namespace:Gum.Plugins.InternalPlugins.Undos"
+    xmlns:undos="clr-namespace:Gum.Plugins.InternalPlugins.Undos;assembly=Gum.Presentation"
     d:DesignHeight="300"
     d:DesignSource="{d:DesignInstance Type=local:UndosViewModel,
                                       IsDesignTimeCreatable=False}"

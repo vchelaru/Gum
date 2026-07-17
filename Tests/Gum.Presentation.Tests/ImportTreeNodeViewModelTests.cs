@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using ImportFromGumxPlugin.ViewModels;
 using Shouldly;
 
-namespace Gum.ProjectServices.Tests;
+namespace Gum.Presentation.Tests;
 
 public class ImportTreeNodeViewModelTests
 {
