@@ -1,4 +1,3 @@
-using Gum.Services;
 using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
@@ -21,6 +20,13 @@ public class FormsFileService
     public const string DefaultThemeName = "Standard";
 
     private const string FormsGumxName = "GumProject.gumx";
+
+    private readonly IProjectState _projectState;
+
+    public FormsFileService(IProjectState projectState)
+    {
+        _projectState = projectState;
+    }
 
     /// <summary>
     /// Returns the names of themes shipped with the tool (folders present under
@@ -62,8 +68,7 @@ public class FormsFileService
     /// </summary>
     public Dictionary<string, FilePath> GetSourceDestinations(string themeName, bool isIncludeDemoScreenGum)
     {
-        var projectState = Locator.GetRequiredService<IProjectState>();
-        var destinationFolder = projectState.ProjectDirectory;
+        var destinationFolder = _projectState.ProjectDirectory;
 
         var sourceDestinations = new Dictionary<string, FilePath>();
 
