@@ -81,6 +81,7 @@
 		<Compile Include="..\Gum\Managers\CommonValidationError.cs" Link="Managers\CommonValidationError.cs" />
 		<Compile Include="..\Gum\Managers\INameVerifier.cs" Link="Managers\INameVerifier.cs" />
 		<Compile Include="..\Gum\Managers\ObjectFinder.cs" Link="Managers\ObjectFinder.cs" />
+		<Compile Include="..\Gum\Mvvm\ObservableCollectionExtensions.cs" Link="Mvvm\ObservableCollectionExtensions.cs" />
 		<Compile Include="..\Gum\Mvvm\ViewModel.cs" Link="Mvvm\ViewModel.cs" />
 		<Compile Include="..\RenderingLibrary\Content\IContentLoader.cs" Link="Content\IContentLoader.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\Fonts\BmfcSave.cs" Link="Content\BmfcSave.cs" />

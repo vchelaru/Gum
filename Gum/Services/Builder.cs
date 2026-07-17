@@ -257,6 +257,10 @@ file static class ServiceCollectionExtensions
 
     private static IServiceCollection AddDialogs(this IServiceCollection services)
     {
+        // IDialogViewAssemblyProvider: lets DialogViewResolver pair a Gum.Presentation-hosted
+        // DialogViewModel with its View when the View lives in a different assembly (the Gum tool
+        // itself, or a dynamically-loaded plugin like ImportFromGumxPlugin). See DialogViewResolver.cs.
+        services.AddSingleton<IDialogViewAssemblyProvider, AppDomainDialogViewAssemblyProvider>();
         services.AddSingleton<IDialogViewResolver, DialogViewResolver>();
         services.AddSingleton<IDialogService, DialogService>();
         // IDeleteDialogService: headless seam (ADR-0005 Phase 3) over the standalone

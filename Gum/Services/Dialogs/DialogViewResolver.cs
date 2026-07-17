@@ -12,6 +12,30 @@ internal interface IDialogViewResolver
     Type? GetDialogViewType(Type viewModelType);
 }
 
+/// <summary>
+/// Supplies additional assemblies for <see cref="DialogViewResolver"/> to search when a view
+/// model's own assembly doesn't contain its paired View. A relocated <see cref="DialogViewModel"/>
+/// living in the headless Gum.Presentation assembly is the common case: it has no WPF types at
+/// all, so its View necessarily lives in a different, WPF-capable assembly (the Gum tool itself,
+/// or a dynamically-loaded plugin).
+/// </summary>
+internal interface IDialogViewAssemblyProvider
+{
+    IEnumerable<Assembly> GetCandidateAssemblies();
+}
+
+/// <summary>
+/// Default <see cref="IDialogViewAssemblyProvider"/> backed by every assembly currently loaded in
+/// the process. This is deliberately dynamic rather than a fixed list handed to
+/// <see cref="DialogViewResolver"/> at DI-registration time: a plugin assembly (e.g.
+/// ImportFromGumxPlugin) is loaded via reflection well after the DI container is built, so only a
+/// live query of the app domain sees it.
+/// </summary>
+internal class AppDomainDialogViewAssemblyProvider : IDialogViewAssemblyProvider
+{
+    public IEnumerable<Assembly> GetCandidateAssemblies() => AppDomain.CurrentDomain.GetAssemblies();
+}
+
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
 public class DialogAttribute : Attribute
 {
@@ -25,15 +49,17 @@ public class DialogAttribute : Attribute
 internal class DialogViewResolver : IDialogViewResolver
 {
     private readonly ILogger _logger;
-    
+    private readonly IDialogViewAssemblyProvider _assemblyProvider;
+
     private readonly HashSet<Assembly> _checkedAssemblies = [];
     private readonly Dictionary<Type, Type> _vmViewPaires = [];
 
-    public DialogViewResolver(ILogger<DialogViewResolver> logger)
+    public DialogViewResolver(ILogger<DialogViewResolver> logger, IDialogViewAssemblyProvider assemblyProvider)
     {
         _logger = logger;
+        _assemblyProvider = assemblyProvider;
     }
-    
+
     public Type? GetDialogViewType(Type viewModelType)
     {
         if (_vmViewPaires.TryGetValue(viewModelType, out Type viewType))
@@ -41,26 +67,27 @@ internal class DialogViewResolver : IDialogViewResolver
             return viewType;
         }
 
-        if (!_checkedAssemblies.Contains(viewModelType.Assembly))
+        Scan(viewModelType.Assembly);
+        if (_vmViewPaires.TryGetValue(viewModelType, out Type ownAssemblyViewType))
         {
-            Scan(viewModelType.Assembly);
-            if (_vmViewPaires.TryGetValue(viewModelType, out Type addedViewType))
-            {
-                return addedViewType;
-            }
+            return ownAssemblyViewType;
         }
 
-        // A ViewModel relocated into the headless Gum.Presentation assembly (ADR-0005) can have a
-        // View that stays in the WPF tool assembly, matched via an explicit [Dialog(typeof(VM))]
-        // attribute rather than the name-convention scan above (which requires VM/View
-        // co-location). Fall back to scanning this resolver's own assembly, where every View lives.
-        Assembly toolAssembly = typeof(DialogViewResolver).Assembly;
-        if (!_checkedAssemblies.Contains(toolAssembly))
+        // The view model's own assembly doesn't host its View. This is expected for view models
+        // that live in the headless Gum.Presentation assembly (no WPF types at all) - their View
+        // stays behind in a WPF-capable assembly (the Gum tool itself, or a dynamically-loaded
+        // plugin), paired via [Dialog(typeof(...))] rather than same-assembly naming convention.
+        foreach (Assembly candidate in _assemblyProvider.GetCandidateAssemblies())
         {
-            Scan(toolAssembly);
-            if (_vmViewPaires.TryGetValue(viewModelType, out Type toolAssemblyViewType))
+            if (_checkedAssemblies.Contains(candidate))
             {
-                return toolAssemblyViewType;
+                continue;
+            }
+
+            Scan(candidate);
+            if (_vmViewPaires.TryGetValue(viewModelType, out Type fallbackViewType))
+            {
+                return fallbackViewType;
             }
         }
 
