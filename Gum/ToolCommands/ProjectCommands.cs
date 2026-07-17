@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using Gum.Logic;
 using Gum.Managers;
 using Gum.ToolStates;
 using Gum.Commands;
@@ -8,7 +9,7 @@ using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.ToolCommands;
 
-public class ProjectCommands
+public class ProjectCommands : ICopyPasteProjectCommands
 {
     #region Fields
 

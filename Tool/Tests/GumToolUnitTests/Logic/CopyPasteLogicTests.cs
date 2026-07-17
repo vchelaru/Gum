@@ -4,8 +4,6 @@ using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.Messages;
-using Gum.Plugins;
-using Gum.Plugins.BaseClasses;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
@@ -13,15 +11,12 @@ using Gum.Undo;
 using Gum.Wireframe;
 using Moq;
 using Moq.AutoMock;
-using SharpVectors.Dom;
 using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Windows.Markup;
 
 namespace GumToolUnitTests.Logic;
 public class CopyPasteLogicTests : BaseTestClass
@@ -43,6 +38,14 @@ public class CopyPasteLogicTests : BaseTestClass
         // Replace the mocked IMessenger with a real instance
         _messenger = new WeakReferenceMessenger();
         _mocker.Use<IMessenger>(_messenger);
+
+        // ICopyPasteProjectCommands is an interface (ADR-0005 Phase 3 narrow port), so AutoMocker's
+        // default resolution would give CopyPasteLogic a no-op mock. Several CreateComponentFromInstance
+        // tests rely on ProjectCommands' real PrepareNewComponentSave/AddComponent behavior (it seeds
+        // the new component's Name/BaseType/DefaultState), so construct a real ProjectCommands (with its
+        // own dependencies auto-mocked) and register it as the resolution target for the interface.
+        var projectCommands = _mocker.CreateInstance<ProjectCommands>();
+        _mocker.Use<ICopyPasteProjectCommands>(projectCommands);
 
         _copyPasteLogic = _mocker.CreateInstance<CopyPasteLogic>();
 
@@ -69,14 +72,13 @@ public class CopyPasteLogicTests : BaseTestClass
             ParentContainer = selectedComponent
         });
 
-        Mock<PluginManager> pluginManager = _mocker.GetMock<PluginManager>();
-        pluginManager
+        Mock<ICopyPastePluginNotifier> copyPastePluginNotifier = _mocker.GetMock<ICopyPastePluginNotifier>();
+        copyPastePluginNotifier
             .Setup(x => x.InstanceAdd(It.IsAny<ElementSave>(), It.IsAny<InstanceSave>()))
             .Callback(() =>
             {
 
             });
-        pluginManager.Object.Plugins = new List<PluginBase>();
 
         Mock<ISelectedState> selectedState = _mocker.GetMock<ISelectedState>();
 
@@ -99,9 +101,14 @@ public class CopyPasteLogicTests : BaseTestClass
         var gumProject = new GumProjectSave();
         ObjectFinder.Self.GumProjectSave = gumProject;
 
-        // ProjectCommands (created by AutoMocker and exercised by CreateComponentFromInstance via
-        // AddComponent) reads the project through IProjectState, so point it at the same instance.
+        // The real ProjectCommands (see above) reads the project through IProjectState, so point it at
+        // the same instance.
         _mocker.GetMock<IProjectState>().Setup(x => x.GumProjectSave).Returns(gumProject);
+
+        // CopyPasteLogic's own element-name-uniqueness check (PasteCopiedElement) reads the project
+        // through ICopyPasteProjectProvider - a separate mock from IProjectState above - so point it at
+        // the same instance too.
+        _mocker.GetMock<ICopyPasteProjectProvider>().Setup(x => x.GumProjectSave).Returns(gumProject);
 
         StandardElementSave spriteElement = new StandardElementSave();
         spriteElement.Name = "Sprite";
