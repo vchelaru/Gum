@@ -97,6 +97,10 @@ file static class ServiceCollectionExtensions
         // calls fire as before. The two WPF-coupled delete calls (ShowDeleteDialog/DeleteConfirmed) now live behind
         // IDeleteDialogService (see AddDialogs), removing DeleteLogic's last dependency on IPluginManager.
         services.AddSingleton<IDeletePluginNotifier>(provider => provider.GetRequiredService<PluginManager>());
+        // ICopyPastePluginNotifier: same narrow-port pattern as IDeletePluginNotifier/IUndoPluginNotifier, for
+        // CopyPasteLogic's InstanceAdd/ElementDuplicate plugin notifications. Resolves to the same PluginManager
+        // singleton.
+        services.AddSingleton<ICopyPastePluginNotifier>(provider => provider.GetRequiredService<PluginManager>());
         services.AddSingleton<TypeManager>();
         services.AddSingleton<ITypeManager>(provider => provider.GetRequiredService<TypeManager>());
         services.AddSingleton<ProjectManager>();
@@ -107,6 +111,9 @@ file static class ServiceCollectionExtensions
         // project through a single-property port instead of the wider IProjectManager. Resolves to the same
         // ProjectManager singleton, so it returns the live GumProjectSave exactly as before.
         services.AddSingleton<IDeleteProjectProvider>(provider => provider.GetRequiredService<ProjectManager>());
+        // ICopyPasteProjectProvider: same narrow-port pattern as IDeleteProjectProvider, for CopyPasteLogic's
+        // element-name-uniqueness check. Resolves to the same ProjectManager singleton.
+        services.AddSingleton<ICopyPasteProjectProvider>(provider => provider.GetRequiredService<ProjectManager>());
         services.AddSingleton<ICommandLineManager, CommandLineManager>();
         services.AddSingleton<IProjectState, ProjectState>();
         // ElementTreeViewManager: drained from a static Self singleton (#3286). Concrete is needed for the
@@ -207,6 +214,10 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IFileCommands, FileCommands>();
         services.AddSingleton<FileChangeReactionLogic>();
         services.AddSingleton<ProjectCommands>();
+        // ICopyPasteProjectCommands: narrow headless port (ADR-0005 Phase 3) so CopyPasteLogic depends on only
+        // the three project-mutation calls it needs instead of the wider ProjectCommands. Resolves to the same
+        // ProjectCommands singleton.
+        services.AddSingleton<ICopyPasteProjectCommands>(provider => provider.GetRequiredService<ProjectCommands>());
 
         services.AddSingleton<IMessenger>(_ => WeakReferenceMessenger.Default);
 

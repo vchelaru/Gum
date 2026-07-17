@@ -5,7 +5,6 @@ using Gum.DataTypes.Variables;
 using GumRuntime;
 using Gum.Managers;
 using Gum.Messages;
-using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
 using Gum.Services.Dialogs;
@@ -16,7 +15,6 @@ using Gum.Wireframe;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows;
 using ToolsUtilities;
 
 namespace Gum.Logic;
@@ -80,14 +78,14 @@ public class CopyPasteLogic : ICopyPasteLogic
     private readonly IDialogService _dialogService;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
-    private readonly ProjectCommands _projectCommands;
+    private readonly ICopyPasteProjectCommands _projectCommands;
     private readonly IUndoManager _undoManager;
     private readonly IDeleteLogic _deleteLogic;
-    private readonly PluginManager _pluginManager;
+    private readonly ICopyPastePluginNotifier _copyPastePluginNotifier;
     private readonly IMessenger _messenger;
     private readonly IWireframeObjectManager _wireframeObjectManager;
-    private readonly IProjectState _projectState;
-    private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
+    private readonly ICopyPasteProjectProvider _copyPasteProjectProvider;
+    private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
 
     public CopiedData CopiedData { get; private set; } = new CopiedData();
 
@@ -110,14 +108,14 @@ public class CopyPasteLogic : ICopyPasteLogic
         IDialogService dialogService,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        ProjectCommands projectCommands,
+        ICopyPasteProjectCommands projectCommands,
         IUndoManager undoManager,
         IDeleteLogic deleteLogic,
-        PluginManager pluginManager,
+        ICopyPastePluginNotifier copyPastePluginNotifier,
         IWireframeObjectManager wireframeObjectManager,
         IMessenger messenger,
-        IProjectState projectState,
-        StandardElementsManagerGumTool standardElementsManagerGumTool
+        ICopyPasteProjectProvider copyPasteProjectProvider,
+        IStandardElementsManagerGumTool standardElementsManagerGumTool
         )
     {
         _wireframeObjectManager = wireframeObjectManager;
@@ -129,9 +127,9 @@ public class CopyPasteLogic : ICopyPasteLogic
         _projectCommands = projectCommands;
         _undoManager = undoManager;
         _deleteLogic = deleteLogic;
-        _pluginManager = pluginManager;
+        _copyPastePluginNotifier = copyPastePluginNotifier;
         _messenger = messenger;
-        _projectState = projectState;
+        _copyPasteProjectProvider = copyPasteProjectProvider;
         _standardElementsManagerGumTool = standardElementsManagerGumTool;
 
 
@@ -1031,7 +1029,7 @@ public class CopyPasteLogic : ICopyPasteLogic
                 newInstance.ParentContainer = targetElement;
                 // We need to call InstanceAdd before we select the new object - the Undo manager expects it
                 // This includes before other managers refresh
-                _pluginManager.InstanceAdd(targetElement, newInstance);
+                _copyPastePluginNotifier.InstanceAdd(targetElement, newInstance);
             }
         }
 
@@ -1166,9 +1164,9 @@ public class CopyPasteLogic : ICopyPasteLogic
         }
 
         List<string> allElementNames = new List<string>();
-        allElementNames.AddRange(_projectState.GumProjectSave.Screens.Select(item => item.Name.ToLowerInvariant()));
-        allElementNames.AddRange(_projectState.GumProjectSave.Components.Select(item => item.Name.ToLowerInvariant()));
-        allElementNames.AddRange(_projectState.GumProjectSave.StandardElements.Select(item => item.Name.ToLowerInvariant()));
+        allElementNames.AddRange(_copyPasteProjectProvider.GumProjectSave.Screens.Select(item => item.Name.ToLowerInvariant()));
+        allElementNames.AddRange(_copyPasteProjectProvider.GumProjectSave.Components.Select(item => item.Name.ToLowerInvariant()));
+        allElementNames.AddRange(_copyPasteProjectProvider.GumProjectSave.StandardElements.Select(item => item.Name.ToLowerInvariant()));
 
         while (allElementNames.Contains(toAdd.Name.ToLowerInvariant()))
         {
@@ -1186,7 +1184,7 @@ public class CopyPasteLogic : ICopyPasteLogic
 
         _selectedState.SelectedElement = toAdd;
 
-        _pluginManager.ElementDuplicate(CopiedData.CopiedElement, toAdd);
+        _copyPastePluginNotifier.ElementDuplicate(CopiedData.CopiedElement, toAdd);
 
         _fileCommands.TryAutoSaveElement(toAdd);
         _fileCommands.TryAutoSaveProject();
@@ -1198,7 +1196,7 @@ public class CopyPasteLogic : ICopyPasteLogic
     /// Variable root names that describe an instance's placement relative to its parent. When an
     /// instance is promoted into a component, these stay on the replacement instance rather than
     /// moving to the component root — a component's root has no meaningful parent-relative position
-    /// (see <see cref="ToolCommands.ProjectCommands.PrepareNewComponentSave"/>, which likewise nulls
+    /// (see <see cref="ICopyPasteProjectCommands.PrepareNewComponentSave"/>, which likewise nulls
     /// X/Y on new component roots). There is no data-driven "is positional" flag on authored
     /// variables (the Category is only populated on the standard-element definitions), so this set
     /// is maintained explicitly. It mirrors the "Position" category in
@@ -1386,7 +1384,7 @@ public class CopyPasteLogic : ICopyPasteLogic
             sourceDefault.Variables.Add(positionalVariable);
         }
 
-        _pluginManager.InstanceAdd(sourceElement, replacement);
+        _copyPastePluginNotifier.InstanceAdd(sourceElement, replacement);
         _fileCommands.TryAutoSaveElement(sourceElement);
 
         // Rebuild the wireframe + tree so the replacement renders with its component's children

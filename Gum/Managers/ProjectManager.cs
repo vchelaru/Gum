@@ -4,6 +4,7 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Extensions;
+using Gum.Logic;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Messages;
@@ -29,7 +30,7 @@ using ToolsUtilities;
 
 namespace Gum;
 
-public class ProjectManager : IProjectManager, IDeleteProjectProvider
+public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPasteProjectProvider
 {
     #region Fields
 
