@@ -109,7 +109,7 @@ class MainPropertiesWindowPlugin : PriorityPlugin
     {
         if (control != null && viewModel != null)
         {
-            viewModel.SetFrom(_projectManager.GeneralSettingsFile.AutoSave, _projectState.GumProjectSave);
+            viewModel.SetFrom(_projectManager.AutoSave, _projectState.GumProjectSave);
             control.ViewModel = null;
             control.ViewModel = viewModel;
             RefreshFontRangeEditability();
@@ -138,7 +138,7 @@ class MainPropertiesWindowPlugin : PriorityPlugin
     {
         try
         {
-            viewModel.SetFrom(_projectManager.GeneralSettingsFile.AutoSave, _projectState.GumProjectSave);
+            viewModel.SetFrom(_projectManager.AutoSave, _projectState.GumProjectSave);
             control.ViewModel = viewModel;
             if(_pluginTab != null)
             {
@@ -163,7 +163,7 @@ class MainPropertiesWindowPlugin : PriorityPlugin
         }
         ///////////////////End early Out////////////////
         viewModel.ApplyToModelObjects();
-        _projectManager.GeneralSettingsFile.AutoSave = viewModel.AutoSave;
+        _projectManager.AutoSave = viewModel.AutoSave;
 
         var shouldSaveAndRefresh = true;
         var shouldReloadContent = false;

@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Windows;
 
 namespace Gum.Plugins.Behaviors
 {
@@ -36,25 +35,16 @@ namespace Gum.Plugins.Behaviors
             }
         }
 
+        /// <summary>
+        /// Whether the behaviors list is in edit (checklist) mode rather than the read-only added-list
+        /// view. The view converts this to Visibility for the two complementary panels (bool for
+        /// headless-VM neutrality, ADR-0005 Phase 3 - see code-style.md).
+        /// </summary>
         public bool IsEditing
         {
             get { return Get<bool>(); }
             set { Set(value); }
         }
-
-        [DependsOn(nameof(IsEditing))]
-        public Visibility AddedListVisibility
-        {
-            get
-            {
-                if (IsEditing) return Visibility.Collapsed;
-                else return Visibility.Visible;
-            }
-        }
-
-
-        [DependsOn(nameof(IsEditing))]
-        public Visibility EditListVisibility => IsEditing.ToVisibility();
 
         public BehaviorsViewModel(ISelectedState selectedState, IProjectManager projectManager)
         {
@@ -62,7 +52,7 @@ namespace Gum.Plugins.Behaviors
             _projectManager = projectManager;
         }
 
-        internal void HandleOkEditClick()
+        public void HandleOkEditClick()
         {
             ApplyChangedValues?.Invoke(this, null);
         }

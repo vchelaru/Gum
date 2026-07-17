@@ -48,9 +48,6 @@ public class SelectionManagerRectangleTests : BaseTestClass
         _selectedInstances = new List<InstanceSave>();
 
         _projectManager = new Mock<IProjectManager>();
-        _projectManager
-            .Setup(x => x.GeneralSettingsFile)
-            .Returns(new Gum.Settings.GeneralSettingsFile ());
 
         // Setup SelectedInstances to return our test list
         _mockSelectedState.Setup(x => x.SelectedInstances).Returns(() => _selectedInstances);

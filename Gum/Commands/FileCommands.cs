@@ -137,7 +137,7 @@ public class FileCommands : IFileCommands
 
     public void TryAutoSaveElement(ElementSave? elementSave)
     {
-        if (_projectManager.GeneralSettingsFile.AutoSave && elementSave != null)
+        if (_projectManager.AutoSave && elementSave != null)
         {
             SaveElement(elementSave);
         }
@@ -145,7 +145,7 @@ public class FileCommands : IFileCommands
 
     public void TryAutoSaveBehavior(BehaviorSave behavior)
     {
-        if(_projectManager.GeneralSettingsFile.AutoSave && behavior != null)
+        if(_projectManager.AutoSave && behavior != null)
         {
             ForceSaveBehavior(behavior);
         }
@@ -189,7 +189,7 @@ public class FileCommands : IFileCommands
     /// <returns>Whether a save occurred.</returns>
     public bool TryAutoSaveProject(bool forceSaveContainedElements = false)
     {
-        if (_projectManager.GeneralSettingsFile.AutoSave && !_projectManager.HaveErrorsOccurredLoadingProject)
+        if (_projectManager.AutoSave && !_projectManager.HaveErrorsOccurredLoadingProject)
         {
             ForceSaveProject(forceSaveContainedElements);
             return true;
@@ -582,8 +582,7 @@ public class FileCommands : IFileCommands
 
     public void SaveGeneralSettings()
     {
-        var settings = _projectManager.GeneralSettingsFile;
-        settings.Save();
+        _projectManager.SaveGeneralSettings();
     }
 
     public void SaveIfDiffers(FilePath filePath, string contents)

@@ -32,15 +32,9 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
 
         private void RefreshMenuItems()
         {
-            var recentFiles = Locator.GetRequiredService<IProjectManager>().GeneralSettingsFile?.RecentProjects;
-
+            var recentFiles = Locator.GetRequiredService<IProjectManager>().RecentProjects;
 
             recentFilesMenuItem.Items.Clear();
-
-            if(recentFiles == null)
-            {
-                return;
-            }
 
             foreach (var item in recentFiles.Where(item => item.IsFavorite))
             {
@@ -120,20 +114,16 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
         private async void HandleLoadRecentClicked(object? sender, System.Windows.RoutedEventArgs e)
         {
             var viewModel = new LoadRecentViewModel();
-            var recentFiles = Locator.GetRequiredService<IProjectManager>().GeneralSettingsFile.RecentProjects;
+            var recentFiles = Locator.GetRequiredService<IProjectManager>().RecentProjects;
             viewModel.AllItems.Clear();
-            if (recentFiles != null)
+            foreach (var recentFile in recentFiles)
             {
-                foreach (var recentFile in recentFiles)
+                var vm = new RecentItemViewModel()
                 {
-                    var vm = new RecentItemViewModel()
-                    {
-                        FullPath = recentFile.FilePath.FullPath,
-                        IsFavorite = recentFile.IsFavorite
-                    };
-                    viewModel.AllItems.Add(vm);
-
-                }
+                    FullPath = recentFile.FilePath.FullPath,
+                    IsFavorite = recentFile.IsFavorite
+                };
+                viewModel.AllItems.Add(vm);
             }
 
             viewModel.RefreshFilteredItems();
@@ -146,21 +136,17 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
 
             }
 
-            if (recentFiles != null)
+            foreach (var item in viewModel.FilteredItems)
             {
-                foreach (var item in viewModel.FilteredItems)
+                var matching = recentFiles.FirstOrDefault(candidate => candidate.FilePath == item.FullPath);
+
+                if (matching != null)
                 {
-                    var matching = recentFiles.FirstOrDefault(candidate => candidate.FilePath == item.FullPath);
-
-                    if (matching != null)
-                    {
-                        matching.IsFavorite = item.IsFavorite;
-                    }
+                    matching.IsFavorite = item.IsFavorite;
                 }
-                _fileCommands.SaveGeneralSettings();
-                RefreshMenuItems();
             }
-
+            _fileCommands.SaveGeneralSettings();
+            RefreshMenuItems();
         }
     }
 }

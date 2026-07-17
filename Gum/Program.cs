@@ -105,7 +105,10 @@ namespace Gum
             // This has to happen before plugins are loaded since they may depend on settings...
             projectManager.LoadSettings();
 
-            MigrateAppSettings(services, projectManager.GeneralSettingsFile);
+            // Migration needs the whole (WinForms-entangled) settings object, so it resolves the
+            // concrete ProjectManager directly rather than going through the narrowed IProjectManager
+            // (same singleton - LoadSettings() above already ran against it).
+            MigrateAppSettings(services, services.GetRequiredService<ProjectManager>().GeneralSettingsFile);
             services.GetRequiredService<IThemingService>().ApplyInitialTheme();
             services.GetRequiredService<ITypeManager>().Initialize();
 
