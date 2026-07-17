@@ -23,6 +23,7 @@ using Gum.Plugins.InternalPlugins.Hotkey.ViewModels;
 using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.PropertyGridHelpers;
 using Gum.ViewModels;
+using Gum.Plugins;
 
 namespace GumToolUnitTests.Plugins;
 
@@ -111,5 +112,11 @@ internal static class PluginBridgedServiceTypes
 
         // MainWindowPlugin ctor drain (#3753): updates the main window title on project load/save.
         typeof(MainWindowViewModel),
+
+        // PluginManager self-injection drain (#3753): re-investigated the "cycle smell" assumption and
+        // found no real construction cycle (see LoadPlugins for the reasoning). Concrete PluginManager
+        // feeds MainEditorTabPlugin/MainBehaviorsPlugin; IPluginManager feeds MainPropertiesWindowPlugin.
+        typeof(PluginManager),
+        typeof(IPluginManager),
     };
 }

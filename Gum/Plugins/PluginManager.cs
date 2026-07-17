@@ -953,6 +953,22 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
             // MainWindowPlugin ctor drain (#3753): updates the main window title on project load/save.
             batch.AddExportedValue<MainWindowViewModel>(Locator.GetRequiredService<MainWindowViewModel>());
 
+            // PluginManager self-injection (#3753): re-investigated the long-standing "host-into-its-own-
+            // plugin cycle smell" assumption and found no real construction cycle. PluginManager is
+            // DI-constructed with an empty ctor (see Builder.cs) and is fully built *before* LoadPlugins
+            // ever runs — `instance` here already IS that singleton, so bridging it is identical in effect
+            // to a plugin fetching it via Locator, just relocated to the composition root like every other
+            // bridge. The consuming ctors (MainEditorTabPlugin, MainBehaviorsPlugin) only store the
+            // reference and call methods on it later (StartUp/event handlers), long after this composition
+            // finishes, so there is nothing time-sensitive about when the reference becomes available.
+            // Concrete PluginManager is bridged (not just IPluginManager) because those consumers call
+            // methods the interface doesn't yet expose (HighlightTreeNode, HandleWireframeResized,
+            // CameraChanged, BeforeRender, AfterRender, BehaviorReferencesChanged). IPluginManager is also
+            // bridged for MainPropertiesWindowPlugin, which only needs the interface-exposed
+            // ProjectPropertySet.
+            batch.AddExportedValue<PluginManager>(instance);
+            batch.AddExportedValue<IPluginManager>(instance);
+
             var container = new CompositionContainer(catalog);
 
             container.Compose(batch);

@@ -369,7 +369,8 @@ drains. Grep counts name *text*, not *drain targets*; classify each hit by where
 - **`UnitConverter` (7) — leave; `ObjectFinder`-class.** A stateless pure-math singleton in
   `GumDataTypes`; nothing to mock, and injecting it would mean extracting an interface for a math
   helper or injecting a concrete (both wrong per `refactoring-direction`).
-- **`PluginManager` (5) — deferred** (self-injection cycle smell), unchanged.
+- **`PluginManager` (5) — was deferred as a self-injection cycle smell; re-investigated and mostly
+  drained (#3753)**, see the "PluginManager self-injection" entry further below — it wasn't a real cycle.
 
   **Net:** the genuinely-drainable tool-DI `.Self` surface is now ~empty. Phase 2's remaining bulk is
   **entirely the ~224 `Locator.GetRequiredService` self-locating services** inside the consumed
@@ -450,9 +451,33 @@ now essentially exhausted. What's left in the 140-site count is either already-c
 code or structurally can't be drained without a bigger, separate refactor (e.g. converting
 `ExportEventFileManager`'s all-static-member design to an instance service — a design change, not a
 drain — or pulling the SvgPlugin/StateAnimationPlugin managers into the main DI container, an
-assembly-boundary question outside a simple ctor-injection pass). Phase 2's remaining substantive item is
-`PluginManager.Self` (5 sites, deferred self-injection-cycle smell per the "Next up" bullet above) —
-tackle that next, or consider the service-layer front closed and move toward Phase 3 prep.
+assembly-boundary question outside a simple ctor-injection pass).
+
+### PluginManager self-injection — re-investigated and partly drained (#3753) — added 2026-07-17
+
+The "cycle smell" framing this doc (and the `refactoring-direction` skill) previously gave the ~5
+`PluginManager`/`IPluginManager` self-injection sites turned out to conflate PluginManager's *role*
+(orchestrating plugin loading) with an actual DI construction cycle — there isn't one. `PluginManager` is
+DI-constructed with an empty ctor and fully exists before `LoadPlugins` composes a single plugin, so
+bridging it (`batch.AddExportedValue<PluginManager>(instance)`/`<IPluginManager>`) is exactly as safe as
+the already-bridged `ElementTreeViewManager`. The corrected rule now lives in the `refactoring-direction`
+skill (rule 4): safe as long as the consuming ctor only stores the reference and doesn't call a
+plugin-list-dependent method on it synchronously during construction.
+
+Drained: `MainEditorTabPlugin` (ctor + 3 method-body/lambda call sites, all just storing/using the
+reference post-construction), `MainBehaviorsPlugin` (1 method-body site, 5th ctor param added),
+`MainPropertiesWindowPlugin` (1 method-body site via `IPluginManager`, 8th ctor param added). Verified via
+`AllPluginsCompositionTests` (MEF composes all 3 with the new bridge) and
+`ServiceProviderCompositionSpikeTests` (the real `Builder.cs` container resolves both `PluginManager` and
+`IPluginManager` with no cycle exception — direct evidence the DI graph is acyclic here).
+
+**Left deferred — different reason than before, now a real constraint, not a smell:** `PolygonPointInputHandler`,
+`ResizeInputHandler`, and `WireframeControl` also call `IPluginManager`/`PluginManager` methods, but all
+three are constructed via explicit `new` with fixed args (not MEF/DI-resolved) by code several layers up
+the construction chain (`SelectionManager`/`MainEditorTabPlugin`), so threading the dependency through
+requires touching multiple intermediate constructors — a bigger, separate pass, not a same-shape drain.
+Phase 2's service-layer front is otherwise closed; this is the only remaining item, and it's gated on
+appetite for that multi-layer threading, not on any cycle risk.
 
 ## Definition of done — every change lands a *tested* unit
 

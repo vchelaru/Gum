@@ -145,6 +145,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
     private readonly IFavoriteComponentManager _favoriteComponentManager;
     private readonly IToolFontService _toolFontService;
     private readonly IToolLayerService _toolLayerService;
+    private readonly PluginManager _pluginManager;
 
     // Suppresses the redundant second wireframe rebuild when selecting an element forces its
     // default state (state event rebuilds) and then fires the element event for the same element.
@@ -181,7 +182,8 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         IThemingService themingService,
         IDragDropManager dragDropManager,
         ICircularReferenceManager circularReferenceManager,
-        IFavoriteComponentManager favoriteComponentManager)
+        IFavoriteComponentManager favoriteComponentManager,
+        PluginManager pluginManager)
     {
         _selectedState = selectedState;
         _projectManager = projectManager;
@@ -202,6 +204,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         _dragDropManager = dragDropManager;
         _circularReferenceManager = circularReferenceManager;
         _favoriteComponentManager = favoriteComponentManager;
+        _pluginManager = pluginManager;
 
         _scrollbarService = new ScrollbarService(_selectedState, _wireframeObjectManager, _projectManager);
         _editingManager = new EditingManager(
@@ -242,12 +245,8 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         _singlePixelTextureService = new SinglePixelTextureService();
         _backgroundManager = new BackgroundManager(_wireframeCommands, messenger, _themingService);
 
-        // Host-into-its-own-plugin self-injection: PluginManager can't be a ctor param (it owns this
-        // plugin's construction), so it stays a body Locator call — a cycle smell, not a drain target.
-        PluginManager pluginManager = Locator.GetRequiredService<PluginManager>();
-
         _editorViewModel = new EditorViewModel(
-            pluginManager,
+            _pluginManager,
             _fileCommands,
             _wireframeObjectManager);
 
@@ -472,7 +471,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
     private void HandleHighlightedIpsoChanged(IPositionedSizedObject? ipso)
     {
-        Locator.GetRequiredService<PluginManager>().HighlightTreeNode(ipso);
+        _pluginManager.HighlightTreeNode(ipso);
     }
 
     private void HandleStateDelete(StateSave save)
@@ -838,7 +837,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         this._wireframeControl.Parent.Resize += (_, _) =>
         {
             UpdateWireframeControlSizes();
-            Locator.GetRequiredService<PluginManager>().HandleWireframeResized();
+            _pluginManager.HandleWireframeResized();
         };
 
         //this._wireframeControl.MouseClick += wireframeControl1_MouseClick;
@@ -870,7 +869,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         };
         _wireframeControl.CameraChanged += () =>
         {
-            Locator.GetRequiredService<PluginManager>().CameraChanged();
+            _pluginManager.CameraChanged();
         };
 
         this._wireframeControl.KeyDown += (o, args) =>
