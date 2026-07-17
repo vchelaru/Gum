@@ -198,8 +198,6 @@ namespace RenderingLibrary.Graphics
                     }
                 }
             }
-
-            managers.Canvas.Restore();
         }
 
         private void PreRender(IList<IRenderableIpso> renderables)
