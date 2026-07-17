@@ -4,12 +4,11 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
-using System.Windows;
 using Gum.Services.Dialogs;
 
 namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.ViewModels
 {
-    internal class LoadRecentViewModel : DialogViewModel //, ISearchBarViewModel
+    public class LoadRecentViewModel : DialogViewModel //, ISearchBarViewModel
     {
         public List<RecentItemViewModel> AllItems
         {
@@ -42,14 +41,14 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.ViewModels
         public override bool CanExecuteAffirmative() => SelectedItem is not null;
 
         [DependsOn(nameof(SearchBoxText))]
-        public Visibility SearchButtonVisibility => (!string.IsNullOrEmpty(SearchBoxText)).ToVisibility();
+        public bool IsSearchButtonVisible => !string.IsNullOrEmpty(SearchBoxText);
 
-        public Visibility TipsVisibility => Visibility.Collapsed;
+        public bool IsTipsVisible => false;
 
         [DependsOn(nameof(IsSearchBoxFocused))]
         [DependsOn(nameof(SearchBoxText))]
-        public Visibility SearchPlaceholderVisibility =>
-            (IsSearchBoxFocused == false && string.IsNullOrWhiteSpace(SearchBoxText)).ToVisibility();
+        public bool IsSearchPlaceholderVisible =>
+            IsSearchBoxFocused == false && string.IsNullOrWhiteSpace(SearchBoxText);
 
 
         public string FilterResultsInfo => String.Empty;

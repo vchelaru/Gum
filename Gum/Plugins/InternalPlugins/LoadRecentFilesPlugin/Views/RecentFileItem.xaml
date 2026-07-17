@@ -13,7 +13,7 @@
             Height="16"
             MouseLeftButtonDown="Image_MouseLeftButtonDown"
             PreviewMouseLeftButtonDown="Image_PreviewMouseLeftButtonDown"
-            Source="{Binding FavoriteImage}" />
+            Source="{Binding IsFavorite, Converter={StaticResource FavoriteToImageSourceConverter}}" />
         <TextBlock FontWeight="Bold" Text="{Binding StrippedName, FallbackValue=ProjectName}" />
         <TextBlock
             Margin="10,0,0,0"
