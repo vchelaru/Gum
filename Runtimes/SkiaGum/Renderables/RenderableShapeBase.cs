@@ -672,9 +672,17 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
 #if SKIA
         var canvas = ((SystemManagers)managers).Canvas;
 
+        // Issue #3671 (Dark Pro / Forest Glade ListBoxItem regression) -- a stroke-only renderable
+        // (IsFilled == false, the two-slot fill+stroke composition's dedicated stroke object) with
+        // StrokeWidth <= 0 must not draw at all. SkiaSharp's SKPaint.StrokeWidth = 0 means "hairline"
+        // (always a visible 1-device-pixel line), not "no stroke" -- unlike Apos.Shapes/raylib, which
+        // treat 0 as invisible. Skipping the draw here is what SkiaShapeRuntime.IsFilled's own doc
+        // comment already claims ("Stroke visibility is gated separately by StrokeWidth (0 hides
+        // stroke)"), so this makes the code match the documented contract.
         var canRender =
             AbsoluteVisible &&
-                ((Width > 0 && Height > 0) || CanRenderAt0Dimension);
+                ((Width > 0 && Height > 0) || CanRenderAt0Dimension) &&
+                (IsFilled || StrokeWidth > 0);
         if (canRender)
         {
             var absoluteX = this.GetAbsoluteX();
