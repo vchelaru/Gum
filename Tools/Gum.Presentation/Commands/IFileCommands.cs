@@ -59,6 +59,12 @@ public interface IFileCommands
 
     FilePath GetFullFileName(ElementSave element);
 
+    /// <summary>
+    /// Gets the full path to an element's XML file as though it were still named
+    /// <paramref name="elementName"/> — used by rename to locate the file at its old name.
+    /// </summary>
+    FilePath? GetFullPathXmlFile(ElementSave element, string elementName);
+
     event Action? LocalizationLoaded;
     void LoadLocalizationFile();
 

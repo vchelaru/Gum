@@ -483,6 +483,7 @@ public class ImportFromGumxViewModelTests
         public FilePath GetFullFileName(ElementSave element) => new FilePath(string.Empty);
         public void LoadLocalizationFile() { }
         public FilePath GetFullPathXmlFile(BehaviorSave behaviorSave) => new FilePath(string.Empty);
+        public FilePath? GetFullPathXmlFile(ElementSave element, string elementName) => new FilePath(string.Empty);
         public void SaveGeneralSettings() { }
         public void SaveIfDiffers(FilePath filePath, string contents) { }
     }

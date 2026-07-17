@@ -30,7 +30,7 @@ using ToolsUtilities;
 
 namespace Gum;
 
-public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPasteProjectProvider, IReferenceFinderProjectProvider
+public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPasteProjectProvider, IReferenceFinderProjectProvider, IRenameProjectProvider
 {
     #region Fields
 

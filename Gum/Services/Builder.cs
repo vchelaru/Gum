@@ -101,6 +101,9 @@ file static class ServiceCollectionExtensions
         // CopyPasteLogic's InstanceAdd/ElementDuplicate plugin notifications. Resolves to the same PluginManager
         // singleton.
         services.AddSingleton<ICopyPastePluginNotifier>(provider => provider.GetRequiredService<PluginManager>());
+        // IRenamePluginNotifier: same narrow-port pattern, for RenameLogic's StateRename/CategoryRename/
+        // ElementRename/InstanceRename plugin notifications. Resolves to the same PluginManager singleton.
+        services.AddSingleton<IRenamePluginNotifier>(provider => provider.GetRequiredService<PluginManager>());
         services.AddSingleton<TypeManager>();
         services.AddSingleton<ITypeManager>(provider => provider.GetRequiredService<TypeManager>());
         services.AddSingleton<ProjectManager>();
@@ -117,6 +120,9 @@ file static class ServiceCollectionExtensions
         // IReferenceFinderProjectProvider: same narrow-port pattern, for ReferenceFinder's project reads.
         // Resolves to the same ProjectManager singleton.
         services.AddSingleton<IReferenceFinderProjectProvider>(provider => provider.GetRequiredService<ProjectManager>());
+        // IRenameProjectProvider: same narrow-port pattern, for RenameLogic's project reads in
+        // RenameAllReferencesTo. Resolves to the same ProjectManager singleton.
+        services.AddSingleton<IRenameProjectProvider>(provider => provider.GetRequiredService<ProjectManager>());
         services.AddSingleton<ICommandLineManager, CommandLineManager>();
         services.AddSingleton<IProjectState, ProjectState>();
         // ElementTreeViewManager: drained from a static Self singleton (#3286). Concrete is needed for the
