@@ -51,6 +51,29 @@ public class RenameManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleRename_Element_NotCurrentlySelected_ReadsProjectManagerGumProjectSave()
+    {
+        RunOnSta(() =>
+        {
+            ComponentSave elementSave = new ComponentSave { Name = "RenamedElement" };
+            ElementAnimationsViewModel viewModel = CreateViewModelWith();
+
+            GumProjectSave gumProjectSave = new GumProjectSave
+            {
+                FullFileName = "C:/NonExistentGumRenameManagerTest/Project.gumx"
+            };
+            Mock<IProjectManager> projectManagerMock = new Mock<IProjectManager>();
+            projectManagerMock.Setup(x => x.GumProjectSave).Returns(gumProjectSave);
+
+            RenameManager renameManager = CreateRenameManager(projectManagerMock.Object);
+
+            renameManager.HandleRename(elementSave, "OldElementName", viewModel);
+
+            projectManagerMock.VerifyGet(x => x.GumProjectSave, Times.AtLeastOnce);
+        });
+    }
+
+    [Fact]
     public void HandleRename_Instance_RenamesQualifiedAnimationNamePrefix()
     {
         RunOnSta(() =>
@@ -144,13 +167,14 @@ public class RenameManagerTests : BaseTestClass
         return viewModel;
     }
 
-    private static RenameManager CreateRenameManager()
+    private static RenameManager CreateRenameManager(IProjectManager? projectManager = null)
     {
         return new RenameManager(
             Mock.Of<ISelectedState>(),
             Mock.Of<IOutputManager>(),
             Mock.Of<IAnimationFilePathService>(),
-            Mock.Of<IAnimationCollectionViewModelManager>());
+            Mock.Of<IAnimationCollectionViewModelManager>(),
+            projectManager ?? Mock.Of<IProjectManager>());
     }
 
     /// <summary>
