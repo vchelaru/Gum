@@ -37,6 +37,7 @@ public class WireframeControl : GraphicsDeviceControl
 
     private readonly IDialogService _dialogService;
     private readonly IOutputManager _outputManager;
+    private readonly IPluginManager _pluginManager;
 
     private IHotkeyManager _hotkeyManager;
     private IProjectManager _projectManager;
@@ -78,10 +79,11 @@ public class WireframeControl : GraphicsDeviceControl
 
     #endregion
 
-    public WireframeControl()
+    public WireframeControl(IPluginManager pluginManager)
     {
         _dialogService = Locator.GetRequiredService<IDialogService>();
         _outputManager = Locator.GetRequiredService<IOutputManager>();
+        _pluginManager = pluginManager;
     }
 
     #region Properties
@@ -357,7 +359,7 @@ public class WireframeControl : GraphicsDeviceControl
                 if (TopRuler.IsCursorOver == false && LeftRuler.IsCursorOver == false)
                 {
                     var shouldForceNoHighlight = mouseHasEntered == false &&
-                        Locator.GetRequiredService<IPluginManager>().GetIfShouldSuppressRemoveEditorHighlight() == false;
+                        _pluginManager.GetIfShouldSuppressRemoveEditorHighlight() == false;
 
 
                     _selectionManager.Activity(shouldForceNoHighlight);
@@ -413,11 +415,11 @@ public class WireframeControl : GraphicsDeviceControl
         {
             GraphicsDevice.Clear(BackgroundColor);
 
-            Locator.GetRequiredService<IPluginManager>().BeforeRender();
+            _pluginManager.BeforeRender();
 
             Renderer.Self.Draw((SystemManagers)null);
 
-            Locator.GetRequiredService<IPluginManager>().AfterRender();
+            _pluginManager.AfterRender();
 
         }
     }
