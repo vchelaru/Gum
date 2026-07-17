@@ -376,8 +376,8 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     public virtual void ElementSelected(ElementSave? elementSave) =>
         CallMethodOnPlugin(plugin => plugin.CallElementSelected(elementSave));
 
-    internal void TreeNodeSelected(TreeNode? treeNode) =>
-        CallMethodOnPlugin(plugin => plugin.CallTreeNodeSelected(treeNode));
+    public void TreeNodeSelected(object? treeNode) =>
+        CallMethodOnPlugin(plugin => plugin.CallTreeNodeSelected(treeNode as TreeNode));
 
     internal void StateWindowTreeNodeSelected(TreeNode treeNode) =>
         CallMethodOnPlugin(plugin => plugin.CallStateWindowTreeNodeSelected(treeNode));
@@ -478,7 +478,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     public void RefreshBehaviorView(ElementSave elementSave) =>
         CallMethodOnPlugin(plugin => plugin.CallRefreshBehaviorUi());
 
-    internal void RefreshVariableView(bool force) =>
+    public void RefreshVariableView(bool force) =>
         CallMethodOnPlugin(plugin => plugin.CallRefreshVariableView(force));
 
     public void BehaviorReferencesChanged(ElementSave elementSave) =>
@@ -488,10 +488,10 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         CallMethodOnPlugin(
             plugin => plugin.CallWireframeRefreshed());
 
-    internal void WireframePropertyChanged(string propertyName) =>
+    public void WireframePropertyChanged(string propertyName) =>
         CallMethodOnPlugin(plugin => plugin.CallWireframePropertyChanged(propertyName));
 
-    internal IRenderableIpso CreateRenderableForType(string type)
+    public IRenderableIpso CreateRenderableForType(string type)
     {
         IRenderableIpso toReturn = null;
 

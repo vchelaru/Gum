@@ -375,7 +375,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private readonly IProjectState _projectState;
     private readonly ICollapseToggleService _collapseToggleService;
     private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
-    private readonly PluginManager _pluginManager;
+    private readonly IPluginManager _pluginManager;
     private readonly IDispatcher _dispatcher;
 
     public bool HasMouseOver
@@ -412,7 +412,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         IProjectState projectState,
         StandardElementsManagerGumTool standardElementsManagerGumTool,
         IDragDropManager dragDropManager,
-        PluginManager pluginManager,
+        IPluginManager pluginManager,
         IDispatcher dispatcher)
     {
         _selectedState = selectedState;

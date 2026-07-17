@@ -52,7 +52,7 @@ public class WireframeObjectManagerStateApplicationTests : BaseTestClass
             Mock.Of<IDialogService>(),
             Mock.Of<IGuiCommands>(),
             new LocalizationService(),
-            new Mock<PluginManager> { CallBase = false }.Object,
+            Mock.Of<IPluginManager>(),
             Mock.Of<IProjectState>());
     }
 

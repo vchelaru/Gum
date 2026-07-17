@@ -14,14 +14,14 @@ namespace GumToolUnitTests.ToolStates;
 public class SelectedStateTests : BaseTestClass
 {
     private readonly Mock<IGuiCommands> _guiCommands;
-    private readonly Mock<PluginManager> _pluginManager;
+    private readonly Mock<IPluginManager> _pluginManager;
     private readonly Mock<IMessenger> _messenger;
     private readonly SelectedState _selectedState;
 
     public SelectedStateTests()
     {
         _guiCommands = new Mock<IGuiCommands>();
-        _pluginManager = new Mock<PluginManager> { CallBase = false };
+        _pluginManager = new Mock<IPluginManager>();
         _messenger = new Mock<IMessenger>();
         _selectedState = new SelectedState(
             _guiCommands.Object,
@@ -88,17 +88,17 @@ public class SelectedStateTests : BaseTestClass
         var invocationOrder = new List<string>();
         _pluginManager
             .Setup(p => p.ReactToStateSaveSelected(It.IsAny<StateSave>()))
-            .Callback(() => invocationOrder.Add(nameof(PluginManager.ReactToStateSaveSelected)));
+            .Callback(() => invocationOrder.Add(nameof(IPluginManager.ReactToStateSaveSelected)));
         _pluginManager
             .Setup(p => p.ElementSelected(It.IsAny<ElementSave>()))
-            .Callback(() => invocationOrder.Add(nameof(PluginManager.ElementSelected)));
+            .Callback(() => invocationOrder.Add(nameof(IPluginManager.ElementSelected)));
 
         _selectedState.SelectedElement = screen;
 
-        invocationOrder.ShouldContain(nameof(PluginManager.ReactToStateSaveSelected));
-        invocationOrder.ShouldContain(nameof(PluginManager.ElementSelected));
-        invocationOrder.IndexOf(nameof(PluginManager.ReactToStateSaveSelected))
-            .ShouldBeLessThan(invocationOrder.IndexOf(nameof(PluginManager.ElementSelected)));
+        invocationOrder.ShouldContain(nameof(IPluginManager.ReactToStateSaveSelected));
+        invocationOrder.ShouldContain(nameof(IPluginManager.ElementSelected));
+        invocationOrder.IndexOf(nameof(IPluginManager.ReactToStateSaveSelected))
+            .ShouldBeLessThan(invocationOrder.IndexOf(nameof(IPluginManager.ElementSelected)));
     }
 
     [Fact]

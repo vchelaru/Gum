@@ -26,7 +26,7 @@ public class ElementCommandsTests
     Mock<IFileCommands> _fileCommands;
     Mock<IVariableInCategoryPropagationLogic> _variableInCategoryPropagationLogic;
     Mock<IWireframeObjectManager> _wireframeObjectManager;
-    Mock<PluginManager> _pluginManager;
+    Mock<IPluginManager> _pluginManager;
     Mock<IProjectManager> _projectManager;
     Mock<IProjectState> _projectState;
 
@@ -39,7 +39,7 @@ public class ElementCommandsTests
         _fileCommands = new Mock<IFileCommands>();
         _variableInCategoryPropagationLogic = new Mock<IVariableInCategoryPropagationLogic>();
         _wireframeObjectManager = new Mock<IWireframeObjectManager>();
-        _pluginManager = new Mock<PluginManager>();
+        _pluginManager = new Mock<IPluginManager>();
         _projectManager = new Mock<IProjectManager>();
         _projectState = new Mock<IProjectState>();
 

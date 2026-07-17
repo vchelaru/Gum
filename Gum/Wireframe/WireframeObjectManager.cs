@@ -52,7 +52,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     private readonly IGuiCommands _guiCommands;
     GraphicalUiElementManager gueManager;
     private LocalizationService _localizationService;
-    private readonly PluginManager _pluginManager;
+    private readonly IPluginManager _pluginManager;
     private readonly IProjectState _projectState;
 
     public WireframeObjectManager(IFontManager fontManager,
@@ -60,7 +60,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
         IDialogService dialogService,
         IGuiCommands guiCommands,
         LocalizationService localizationService,
-        PluginManager pluginManager,
+        IPluginManager pluginManager,
         IProjectState projectState)
     {
         _fontManager = fontManager;

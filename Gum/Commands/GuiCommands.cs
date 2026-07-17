@@ -42,7 +42,7 @@ public class GuiCommands : IGuiCommands
     private readonly IOutputManager _outputManager;
     // Lazy because PropertyGridManager depends on IGuiCommands; this breaks the DI construction cycle.
     private readonly Lazy<PropertyGridManager> _lazyPropertyGridManager;
-    private readonly PluginManager _pluginManager;
+    private readonly IPluginManager _pluginManager;
 
     private ISelectedState _selectedState => _lazySelectedState.Value;
 
@@ -53,7 +53,7 @@ public class GuiCommands : IGuiCommands
         IDispatcher dispatcher,
         IOutputManager outputManager,
         Lazy<PropertyGridManager> lazyPropertyGridManager,
-        PluginManager pluginManager)
+        IPluginManager pluginManager)
     {
         _lazySelectedState = lazySelectedState;
         _dispatcher = dispatcher;
