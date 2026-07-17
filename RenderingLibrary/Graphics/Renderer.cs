@@ -1254,13 +1254,28 @@ public class Renderer : IRenderer
         }
     }
 
+    // While baking a render target's children over a transparent clear, an unconfigured child
+    // (whose blend resolves to NormalBlendState) needs _bakeToRenderTargetBlendState so its
+    // straight-alpha color premultiplies onto the transparent target (#1696). But when the pipeline
+    // is already premultiplied (NormalBlendState == AlphaBlend, e.g. FRB's GumIdb), Sprite.Render
+    // has already premultiplied the color, so premultiplying again during the bake would double-
+    // darken it (a 50%-alpha child would bake to 25% color). In that case the ambient AlphaBlend
+    // already accumulates correctly over the transparent clear, so leave the blend unchanged.
+    internal static BlendState AdjustBlendStateForRenderTargetBake(BlendState renderBlendState, bool isBakingRenderTarget)
+    {
+        if (isBakingRenderTarget
+            && renderBlendState == Renderer.NormalBlendState
+            && Renderer.NormalBlendState != BlendState.AlphaBlend)
+        {
+            return _bakeToRenderTargetBlendState;
+        }
+        return renderBlendState;
+    }
+
     private void AdjustNonClipRenderStates(RenderStateVariables renderState, Layer layer, IRenderableIpso renderable, SystemManagers managers)
     {
         BlendState renderBlendState = renderable.BlendState ?? Renderer.NormalBlendState;
-        if (_isBakingRenderTarget && renderBlendState == Renderer.NormalBlendState)
-        {
-            renderBlendState = _bakeToRenderTargetBlendState;
-        }
+        renderBlendState = AdjustBlendStateForRenderTargetBake(renderBlendState, _isBakingRenderTarget);
         bool wrap = renderable.Wrap;
         bool shouldResetStates = false;
 
@@ -1299,10 +1314,7 @@ public class Renderer : IRenderer
         {
             renderBlendState = Renderer.NormalBlendState;
         }
-        if (_isBakingRenderTarget && renderBlendState == Renderer.NormalBlendState)
-        {
-            renderBlendState = _bakeToRenderTargetBlendState;
-        }
+        renderBlendState = AdjustBlendStateForRenderTargetBake(renderBlendState, _isBakingRenderTarget);
         if (renderState.BlendState != renderBlendState)
         {
             // This used to set this, but not sure why...I think it should set the renderBlendState:
