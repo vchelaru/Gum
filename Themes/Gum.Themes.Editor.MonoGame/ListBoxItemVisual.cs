@@ -3,6 +3,8 @@ using BaseListBoxItemVisual = Gum.Forms.DefaultVisuals.V3.ListBoxItemVisual;
 using Gum.GueDeriving;
 #if RAYLIB
 using Raylib_cs;
+#elif SKIA
+using Color = SkiaSharp.SKColor;
 #else
 using Microsoft.Xna.Framework;
 #endif

@@ -47,6 +47,12 @@
 	  <ProjectReference Include="..\..\..\Runtimes\SilkNetGum\SilkNetGum.csproj" />
 	</ItemGroup>
 
+	<!-- Editor theme, ported to Skia/SilkNet as the #3671 proof of concept: exercised via the
+	     Forms screen's Button/CheckBox/ComboBox/ListBox/RadioButton/Slider/TextBox controls. -->
+	<ItemGroup>
+	  <ProjectReference Include="..\..\..\Themes\Gum.Themes.Editor.SilkNet\Gum.Themes.Editor.SilkNet.csproj" />
+	</ItemGroup>
+
 	<!-- Shared with MonoGameGumInCode (the reference feature sample) so Forms control rendering
 	     can be compared side by side between backends. See #3652. -->
 	<ItemGroup>

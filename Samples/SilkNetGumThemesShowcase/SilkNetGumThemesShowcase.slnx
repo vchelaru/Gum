@@ -1,0 +1,10 @@
+<Solution>
+  <Project Path="SilkNetGumThemesShowcase.csproj" />
+  <Folder Name="/Libraries/">
+    <Project Path="../../GumCommon/GumCommon.csproj" />
+    <Project Path="../../Runtimes/SilkNetGum/SilkNetGum.csproj" />
+  </Folder>
+  <Folder Name="/Themes/">
+    <Project Path="../../Themes/Gum.Themes.Editor.SilkNet/Gum.Themes.Editor.SilkNet.csproj" />
+  </Folder>
+</Solution>

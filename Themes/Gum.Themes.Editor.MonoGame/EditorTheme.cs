@@ -5,6 +5,8 @@ using Gum.Forms.DefaultVisuals.V3;
 using Gum.Wireframe;
 #if RAYLIB
 using Raylib_cs;
+#elif SKIA
+// No GraphicsDevice-typed API on Skia -- see the #if !RAYLIB && !SKIA overload below.
 #else
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -33,7 +35,7 @@ public static class EditorTheme
         RegisterVisuals();
     }
 
-#if !RAYLIB
+#if !RAYLIB && !SKIA
     /// <summary>
     /// Backwards-compatible overload retained for existing MonoGame/KNI callers. The graphics
     /// device is now resolved internally from the active Gum renderer, so the argument is ignored;
