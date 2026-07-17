@@ -4,6 +4,8 @@ using Gum.GueDeriving;
 using Gum.Wireframe;
 #if RAYLIB
 using Raylib_cs;
+#elif SKIA
+using Color = SkiaSharp.SKColor;
 #else
 using Microsoft.Xna.Framework;
 #endif
@@ -154,13 +156,22 @@ internal sealed class ForestGladeButtonChrome
         ring.IsFilled = false;
         ring.StrokeWidth = FocusRingThickness;
         ring.StrokeWidthUnits = DimensionUnitType.Absolute;
-        // 0.45 scalar dim of SunPale, written channel-wise so it compiles on both XNA (which has a
-        // Color * float operator) and raylib (which does not).
+        // 0.45 scalar dim of SunPale, written channel-wise so it compiles on XNA and raylib (which
+        // have no Color * float operator) and Skia (whose SKColor exposes Red/Green/Blue/Alpha
+        // instead of R/G/B/A).
+#if SKIA
+        ring.StrokeColor = new Color(
+            (byte)(ForestGladeStyling.ActiveStyle.Colors.SunPale.Red * 0.45f),
+            (byte)(ForestGladeStyling.ActiveStyle.Colors.SunPale.Green * 0.45f),
+            (byte)(ForestGladeStyling.ActiveStyle.Colors.SunPale.Blue * 0.45f),
+            (byte)(ForestGladeStyling.ActiveStyle.Colors.SunPale.Alpha * 0.45f));
+#else
         ring.StrokeColor = new Color(
             (int)(ForestGladeStyling.ActiveStyle.Colors.SunPale.R * 0.45f),
             (int)(ForestGladeStyling.ActiveStyle.Colors.SunPale.G * 0.45f),
             (int)(ForestGladeStyling.ActiveStyle.Colors.SunPale.B * 0.45f),
             (int)(ForestGladeStyling.ActiveStyle.Colors.SunPale.A * 0.45f));
+#endif
         ring.Visible = false;
         return ring;
     }

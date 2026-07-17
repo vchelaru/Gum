@@ -1,4 +1,4 @@
-#if !RAYLIB
+#if !RAYLIB && !SKIA
 using MonoGameAndGum.Renderables;
 #endif
 
@@ -15,13 +15,16 @@ internal static class ThemeShapePlatform
 {
     /// <summary>
     /// Initializes the Apos.Shapes <c>ShapeRenderer</c> on the XNA-like backends (MonoGame/KNI),
-    /// where the shape runtimes require it. No-op on raylib, which renders <c>RectangleRuntime</c> /
-    /// <c>CircleRuntime</c> natively (no <c>ShapeRenderer</c>). Guards against double-initialization
-    /// so a host that already set shapes up (or another theme) stays safe.
+    /// where the shape runtimes require it. No-op on raylib and Skia/SilkNet, which both render
+    /// <c>RectangleRuntime</c> / <c>CircleRuntime</c> natively (no Apos.Shapes <c>ShapeRenderer</c>
+    /// involved -- #3671). Guards against double-initialization so a host that already set shapes
+    /// up (or another theme) stays safe.
     /// </summary>
     public static void InitializeShapeRenderer()
     {
-#if !RAYLIB
+#if RAYLIB || SKIA
+        // No-op -- see summary above.
+#else
         if (!ShapeRenderer.Self.IsInitialized)
         {
             ShapeRenderer.Self.Initialize();

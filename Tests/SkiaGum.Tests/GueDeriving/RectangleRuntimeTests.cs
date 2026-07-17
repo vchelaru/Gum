@@ -616,4 +616,54 @@ public class RectangleRuntimeTests
         RectangleRuntime sut = new();
         sut.Width.ShouldBe(50);
     }
+
+    // Issue #3671 — StrokeWidth = 0 must render as no stroke at all, matching Apos.Shapes/raylib
+    // semantics. SkiaSharp's SKPaint.StrokeWidth = 0 means "hairline" (always a visible
+    // 1-device-pixel line), so a theme that leaves the ctor's default white StrokeColor in place
+    // and only zeroes StrokeWidth (a common pattern for a fill-only shape) got a stray white
+    // outline on Skia despite MonoGame/raylib showing nothing, because Render() drew the stroke
+    // slot unconditionally instead of skipping it when the width is non-positive.
+    [Fact]
+    public void Render_StrokeWidthZero_DrawsNoVisibleStroke()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        Gum.GumService.Default.Initialize(surface.Canvas, 64, 64);
+        surface.Canvas.Clear(SKColors.Black);
+
+        RectangleRuntime sut = new()
+        {
+            X = 8,
+            Y = 8,
+            Width = 48,
+            Height = 48,
+            IsFilled = true,
+            FillColor = SKColors.Blue,
+            StrokeWidth = 0,
+            // Disable anti-aliasing so a stray hairline draws as a crisp, deterministic pixel
+            // instead of blending into a hard-to-assert gray at the edge.
+            IsAntialiased = false,
+        };
+        Gum.GumService.Default.Root.Children.Add(sut);
+        sut.PreRender();
+
+        Gum.GumService.Default.Draw();
+
+        using SKImage image = surface.Snapshot();
+        using SKBitmap bitmap = SKBitmap.FromImage(image);
+
+        // Sample every pixel along the rectangle's outer edge (where a hairline stroke, centered
+        // on the path, would land) plus a 1px margin on each side. A stray hairline shows up as a
+        // white (or white-blended) pixel; the fill's blue or the black background should not have
+        // any green/red contribution from a white stroke.
+        for (int x = 7; x <= 56; x++)
+        {
+            bitmap.GetPixel(x, 7).Red.ShouldBe((byte)0);
+            bitmap.GetPixel(x, 56).Red.ShouldBe((byte)0);
+        }
+        for (int y = 7; y <= 56; y++)
+        {
+            bitmap.GetPixel(7, y).Red.ShouldBe((byte)0);
+            bitmap.GetPixel(56, y).Red.ShouldBe((byte)0);
+        }
+    }
 }

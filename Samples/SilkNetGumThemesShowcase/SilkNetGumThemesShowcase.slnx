@@ -6,5 +6,7 @@
   </Folder>
   <Folder Name="/Themes/">
     <Project Path="../../Themes/Gum.Themes.Editor.SilkNet/Gum.Themes.Editor.SilkNet.csproj" />
+    <Project Path="../../Themes/Gum.Themes.DarkPro.SilkNet/Gum.Themes.DarkPro.SilkNet.csproj" />
+    <Project Path="../../Themes/Gum.Themes.ForestGlade.SilkNet/Gum.Themes.ForestGlade.SilkNet.csproj" />
   </Folder>
 </Solution>
