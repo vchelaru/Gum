@@ -1,4 +1,5 @@
 using Gum.Input;
+using Gum.Wireframe;
 using Moq;
 using Shouldly;
 using Silk.NET.Input;
@@ -62,5 +63,32 @@ public class CursorSilkTests
         cursor.Activity(0);
 
         cursor.ScrollWheelChange.ShouldBe(2);
+    }
+
+    [Fact]
+    public void CustomCursor_SizeWE_SetsHResizeStandardCursor()
+    {
+        (Cursor cursor, Mock<IMouse> mouse) = CreateAttachedCursor();
+        var silkCursor = new Mock<Silk.NET.Input.ICursor>();
+        silkCursor.SetupAllProperties();
+        mouse.SetupGet(m => m.Cursor).Returns(silkCursor.Object);
+
+        cursor.CustomCursor = Cursors.SizeWE;
+
+        silkCursor.Object.StandardCursor.ShouldBe(StandardCursor.HResize);
+        silkCursor.Object.Type.ShouldBe(CursorType.Standard);
+    }
+
+    [Fact]
+    public void CustomCursor_Null_SetsArrowStandardCursor()
+    {
+        (Cursor cursor, Mock<IMouse> mouse) = CreateAttachedCursor();
+        var silkCursor = new Mock<Silk.NET.Input.ICursor>();
+        silkCursor.SetupAllProperties();
+        mouse.SetupGet(m => m.Cursor).Returns(silkCursor.Object);
+
+        cursor.CustomCursor = null;
+
+        silkCursor.Object.StandardCursor.ShouldBe(StandardCursor.Arrow);
     }
 }
