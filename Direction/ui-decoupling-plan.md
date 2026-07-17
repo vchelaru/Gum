@@ -93,6 +93,9 @@ type is reachable through, not just the ones that fail `dotnet build`.
 **Audit for more candidates (the ledger's remaining ask):** a pass over the ~20 tool-owned
 `ViewModel` subclasses found one more clean, zero-dependency leaf — `CheckListBehaviorItem`
 (`Gum/Plugins/InternalPlugins/Behaviors/`) — deferred to its own PR rather than bundled here.
+**Done (2026-07-17):** `CheckListBehaviorItem` relocated to
+`Tools/Gum.Presentation/Plugins/InternalPlugins/Behaviors/`, namespace preserved
+(`Gum.Plugins.Behaviors`), with a headless pinning test in `Gum.Presentation.Tests`.
 Several others looked leaf-shaped but aren't yet: `ErrorViewModel`/`AllErrorsViewModel` hold a
 `PluginBase?` reference (tool-assembly-coupled); `ProjectPropertiesViewModel` depends on the
 tool's `GeneralSettingsFile`; `CategoryViewModel` is one node type in the larger
