@@ -49,7 +49,21 @@ internal class DialogViewResolver : IDialogViewResolver
                 return addedViewType;
             }
         }
-        
+
+        // A ViewModel relocated into the headless Gum.Presentation assembly (ADR-0005) can have a
+        // View that stays in the WPF tool assembly, matched via an explicit [Dialog(typeof(VM))]
+        // attribute rather than the name-convention scan above (which requires VM/View
+        // co-location). Fall back to scanning this resolver's own assembly, where every View lives.
+        Assembly toolAssembly = typeof(DialogViewResolver).Assembly;
+        if (!_checkedAssemblies.Contains(toolAssembly))
+        {
+            Scan(toolAssembly);
+            if (_vmViewPaires.TryGetValue(viewModelType, out Type toolAssemblyViewType))
+            {
+                return toolAssemblyViewType;
+            }
+        }
+
         _logger.LogError($"Unable to resolve view associated with viewmodel type {viewModelType.FullName}");
         return null;
     }

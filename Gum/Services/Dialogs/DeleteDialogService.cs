@@ -8,14 +8,15 @@ namespace Gum.Services.Dialogs;
 /// WPF implementation of <see cref="IDeleteDialogService"/>. Owns the standalone
 /// <see cref="DeleteOptionsWindow"/> and the plugin-host calls that compose and confirm it,
 /// keeping <see cref="Managers.DeleteLogic"/> free of any WPF reference (ADR-0005). This is
-/// shell/view code, so depending on the concrete plugin host (<see cref="IPluginManager"/>)
-/// here is legitimate.
+/// shell/view code, so depending on the concrete <see cref="PluginManager"/> here is legitimate:
+/// <see cref="IPluginManager"/> moved to the headless Gum.Presentation assembly, so it no longer
+/// carries the two WPF-typed <c>ShowDeleteDialog</c>/<c>DeleteConfirmed</c> calls this service needs.
 /// </summary>
 internal class DeleteDialogService : IDeleteDialogService
 {
-    private readonly IPluginManager _pluginManager;
+    private readonly PluginManager _pluginManager;
 
-    public DeleteDialogService(IPluginManager pluginManager)
+    public DeleteDialogService(PluginManager pluginManager)
     {
         _pluginManager = pluginManager;
     }
