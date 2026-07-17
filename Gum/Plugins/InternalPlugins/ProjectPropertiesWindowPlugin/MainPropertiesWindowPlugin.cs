@@ -50,6 +50,7 @@ class MainPropertiesWindowPlugin : PriorityPlugin
     private readonly FileWatchLogic _fileWatchLogic;
     private readonly IProjectState _projectState;
     private readonly IPluginManager _pluginManager;
+    private readonly IProjectManager _projectManager;
     private FilePath? _fontCharacterFileAbsolute;
 
     private PluginTab? _pluginTab;
@@ -63,7 +64,8 @@ class MainPropertiesWindowPlugin : PriorityPlugin
         IWireframeObjectManager wireframeObjectManager,
         FileWatchLogic fileWatchLogic,
         IProjectState projectState,
-        IPluginManager pluginManager)
+        IPluginManager pluginManager,
+        IProjectManager projectManager)
     {
         _fontManager = fontManager;
         _wireframeCommands = wireframeCommands;
@@ -73,6 +75,7 @@ class MainPropertiesWindowPlugin : PriorityPlugin
         _fileWatchLogic = fileWatchLogic;
         _projectState = projectState;
         _pluginManager = pluginManager;
+        _projectManager = projectManager;
     }
 
     public override void StartUp()
@@ -106,7 +109,7 @@ class MainPropertiesWindowPlugin : PriorityPlugin
     {
         if (control != null && viewModel != null)
         {
-            viewModel.SetFrom(Locator.GetRequiredService<IProjectManager>().GeneralSettingsFile, _projectState.GumProjectSave);
+            viewModel.SetFrom(_projectManager.GeneralSettingsFile.AutoSave, _projectState.GumProjectSave);
             control.ViewModel = null;
             control.ViewModel = viewModel;
             RefreshFontRangeEditability();
@@ -135,7 +138,7 @@ class MainPropertiesWindowPlugin : PriorityPlugin
     {
         try
         {
-            viewModel.SetFrom(Locator.GetRequiredService<IProjectManager>().GeneralSettingsFile, _projectState.GumProjectSave);
+            viewModel.SetFrom(_projectManager.GeneralSettingsFile.AutoSave, _projectState.GumProjectSave);
             control.ViewModel = viewModel;
             if(_pluginTab != null)
             {
@@ -160,6 +163,7 @@ class MainPropertiesWindowPlugin : PriorityPlugin
         }
         ///////////////////End early Out////////////////
         viewModel.ApplyToModelObjects();
+        _projectManager.GeneralSettingsFile.AutoSave = viewModel.AutoSave;
 
         var shouldSaveAndRefresh = true;
         var shouldReloadContent = false;

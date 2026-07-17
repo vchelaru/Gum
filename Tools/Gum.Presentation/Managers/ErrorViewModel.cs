@@ -1,11 +1,16 @@
 using Gum.Mvvm;
-using Gum.Plugins.BaseClasses;
 
 namespace Gum.Managers;
 
 public class ErrorViewModel : ViewModel
 {
-    public PluginBase? OwnerPlugin { get; set; }
+    /// <summary>
+    /// Opaque identity token for the plugin that produced this error — set to <c>this</c> by a
+    /// plugin's error check, and compared by reference elsewhere to filter/replace that plugin's
+    /// errors. Typed <see cref="object"/> rather than the concrete plugin base type so this VM can
+    /// live in the headless Gum.Presentation assembly; no member is ever called on it.
+    /// </summary>
+    public object? OwnerPlugin { get; set; }
 
     public string Message
     {
