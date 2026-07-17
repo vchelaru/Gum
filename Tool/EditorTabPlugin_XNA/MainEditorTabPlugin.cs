@@ -1427,7 +1427,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
     private void CreateWireframeControl()
     {
-        this._wireframeControl = new WireframeControl(_pluginManager);
+        this._wireframeControl = new WireframeControl(_dialogService, _outputManager, _pluginManager);
         this._wireframeControl.AllowDrop = true;
         this._wireframeControl.Dock = DockStyle.Fill;
         this._wireframeControl.Cursor = System.Windows.Forms.Cursors.Default;

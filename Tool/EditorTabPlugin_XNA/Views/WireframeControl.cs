@@ -5,7 +5,6 @@ using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
-using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.Wireframe;
@@ -79,10 +78,10 @@ public class WireframeControl : GraphicsDeviceControl
 
     #endregion
 
-    public WireframeControl(IPluginManager pluginManager)
+    public WireframeControl(IDialogService dialogService, IOutputManager outputManager, IPluginManager pluginManager)
     {
-        _dialogService = Locator.GetRequiredService<IDialogService>();
-        _outputManager = Locator.GetRequiredService<IOutputManager>();
+        _dialogService = dialogService;
+        _outputManager = outputManager;
         _pluginManager = pluginManager;
     }
 
