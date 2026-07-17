@@ -377,3 +377,32 @@ The types of the objects that contain the **Variable References** or which are b
 Once Variable References are set, the referenced instances (instances in Styles) can be changed and the changes will immediately propagate throughout the entire project.
 
 <figure><img src="../../../.gitbook/assets/StyleUpdate.gif" alt=""><figcaption><p>Changing the source color values updates all objects referencing the Style.PrimaryColor values</p></figcaption></figure>
+
+## Example: Semantic Color Categories on Standard Elements
+
+The example above references a Styles component from one object at a time. You can go further and build a reusable, semantic color palette (for example: **White**, **Gray**, **Black**, **Primary**, **Success**, **Warning**, **Danger**) that any instance in your project can select by name, without hardcoding a color anywhere outside of the Styles component.
+
+This combines two features already covered elsewhere:
+
+1. **A category per Standard Element** - Select the `NineSlice`, `Sprite`, or `Text` Standard Element and add a category (for example `ColorCategory`) with one state per palette name. See [Categories](../states/categories.md) for how to create categories and states.
+2. **A Variable Reference per state** - Select each state in the category and use the Color Expansion shorthand to point it at the matching instance in your Styles component:
+
+```
+Components/Styles.PrimaryColor.Color
+```
+
+Repeat this for every state in the category (`White`, `Gray`, `Primary`, `Success`, and so on), pointing each one at its matching Styles instance. Because the reference lives on the Standard Element itself, every instance of that Standard Element across your entire project shares the same palette.
+
+{% hint style="warning" %}
+Add a screenshot showing the `ColorCategory` states on the `NineSlice` Standard Element, each with a Color Expansion reference into the Styles component.
+{% endhint %}
+
+Repeat the category on each Standard Element that needs coloring (`NineSlice`, `Sprite`, `Text`). Once this is set up, any instance anywhere in the project can select a palette color with a single [category-state assignment](#category-state-assignment) instead of a color reference:
+
+```
+ColorCategoryState = "Primary"
+```
+
+{% hint style="info" %}
+This pattern is also what makes the palette recolorable from game code at runtime - for example, letting a game read player-customizable colors from settings and apply them on startup. See [Runtime Variable References](../../../code/styling/runtime-variable-references.md).
+{% endhint %}

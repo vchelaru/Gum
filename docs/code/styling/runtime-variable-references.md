@@ -8,7 +8,7 @@ Variable references defined in the Gum tool can be re-evaluated at runtime, allo
 Runtime variable references require Gum NuGet packages version 2026.4 or newer. The optional `Gum.Expressions` NuGet is also available starting from this version.
 {% endhint %}
 
-For information on setting up variable references in the Gum tool, see the [Variable References](../../gum-tool/gum-elements/general-properties/variable-references.md) page.
+For information on setting up variable references in the Gum tool, see the [Variable References](../../gum-tool/gum-elements/general-properties/variable-references.md) page. For a semantic color palette (`Primary`, `Success`, `Danger`, and so on) that every instance in your project can share and that this API can recolor at runtime, see [Semantic Color Categories on Standard Elements](../../gum-tool/gum-elements/general-properties/variable-references.md#example-semantic-color-categories-on-standard-elements).
 
 ## Propagating Variable References
 
