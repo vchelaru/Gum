@@ -78,8 +78,12 @@ public class CodeWindowViewModelTests
     [Fact]
     public void ShouldShowSetup_ReturnsFalse_WhenCodeProjectRootIsPopulated()
     {
-        string gumDirectory = @"C:\game\Content\GumProject\";
-        string csprojDirectory = @"C:\game\";
+        // A leading-slash path (not a Windows drive letter) is rooted per Path.IsPathRooted on
+        // both Windows and Unix; a "C:\..." literal is only rooted on Windows, so on macOS/Linux
+        // CI it's treated as relative and gets the CI runner's actual working directory prepended,
+        // which corrupts the recursive directory walk in GetCsprojDirectoryAboveGumx.
+        string gumDirectory = "/game/Content/GumProject/";
+        string csprojDirectory = "/game/";
         SetupCsprojDiscovery(gumDirectory, csprojDirectory);
         CodeOutputProjectSettings settings = new CodeOutputProjectSettings { CodeProjectRoot = @"..\..\" };
 
@@ -91,8 +95,8 @@ public class CodeWindowViewModelTests
     [Fact]
     public void ShouldShowSetup_ReturnsFalse_WhenManualSetupHasBeenClicked()
     {
-        string gumDirectory = @"C:\game\Content\GumProject\";
-        string csprojDirectory = @"C:\game\";
+        string gumDirectory = "/game/Content/GumProject/";
+        string csprojDirectory = "/game/";
         SetupCsprojDiscovery(gumDirectory, csprojDirectory);
         CodeOutputProjectSettings settings = new CodeOutputProjectSettings { CodeProjectRoot = string.Empty };
 
@@ -104,7 +108,7 @@ public class CodeWindowViewModelTests
     [Fact]
     public void ShouldShowSetup_ReturnsFalse_WhenNoCsprojExistsAboveGumx()
     {
-        string gumDirectory = @"C:\game\Content\GumProject\";
+        string gumDirectory = "/game/Content/GumProject/";
         _projectState.Setup(p => p.ProjectDirectory).Returns(gumDirectory);
         _fileCommands.Setup(f => f.GetFiles(It.IsAny<string>())).Returns(Array.Empty<string>());
         CodeOutputProjectSettings settings = new CodeOutputProjectSettings { CodeProjectRoot = string.Empty };
@@ -117,8 +121,8 @@ public class CodeWindowViewModelTests
     [Fact]
     public void ShouldShowSetup_ReturnsTrue_WhenCsprojAboveGumxAndCodeProjectRootEmpty()
     {
-        string gumDirectory = @"C:\game\Content\GumProject\";
-        string csprojDirectory = @"C:\game\";
+        string gumDirectory = "/game/Content/GumProject/";
+        string csprojDirectory = "/game/";
         SetupCsprojDiscovery(gumDirectory, csprojDirectory);
         CodeOutputProjectSettings settings = new CodeOutputProjectSettings { CodeProjectRoot = string.Empty };
 
@@ -130,8 +134,8 @@ public class CodeWindowViewModelTests
     [Fact]
     public void ShouldShowSetup_ReturnsTrue_WhenSettingsIsNullButCsprojExists()
     {
-        string gumDirectory = @"C:\game\Content\GumProject\";
-        string csprojDirectory = @"C:\game\";
+        string gumDirectory = "/game/Content/GumProject/";
+        string csprojDirectory = "/game/";
         SetupCsprojDiscovery(gumDirectory, csprojDirectory);
 
         bool result = _viewModel.ShouldShowSetup(settings: null, hasClickedManualSetup: false);
@@ -142,8 +146,8 @@ public class CodeWindowViewModelTests
     [Fact]
     public void ShouldShowSetup_ReturnsTrue_WhenShprojAboveGumxAndCodeProjectRootEmpty()
     {
-        string gumDirectory = @"C:\game\Content\GumProject\";
-        string shprojDirectory = @"C:\game\";
+        string gumDirectory = "/game/Content/GumProject/";
+        string shprojDirectory = "/game/";
         _projectState.Setup(p => p.ProjectDirectory).Returns(gumDirectory);
         FilePath shprojPath = new FilePath(shprojDirectory);
         _fileCommands

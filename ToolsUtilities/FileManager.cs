@@ -283,9 +283,15 @@ namespace ToolsUtilities
                 // If this happens then fileName is actually a directory.
                 // So we should return the parent directory of the argument.
 
-                lastIndex = System.Math.Max(
-                    fileName.LastIndexOf('/', fileName.Length - 2),
-                    fileName.LastIndexOf('\\', fileName.Length - 2));
+                // A single-character root (e.g. "/" on Unix) has no character before its trailing
+                // separator to search from - LastIndexOf(char, negative startIndex) throws rather
+                // than reporting "not found", so treat that case as no-parent-found directly.
+                int searchStartIndex = fileName.Length - 2;
+                lastIndex = searchStartIndex < 0
+                    ? -1
+                    : System.Math.Max(
+                        fileName.LastIndexOf('/', searchStartIndex),
+                        fileName.LastIndexOf('\\', searchStartIndex));
             }
 
             if (lastIndex != -1)
