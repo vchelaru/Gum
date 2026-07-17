@@ -8,5 +8,7 @@
     <Project Path="../../Themes/Gum.Themes.Editor.SilkNet/Gum.Themes.Editor.SilkNet.csproj" />
     <Project Path="../../Themes/Gum.Themes.DarkPro.SilkNet/Gum.Themes.DarkPro.SilkNet.csproj" />
     <Project Path="../../Themes/Gum.Themes.ForestGlade.SilkNet/Gum.Themes.ForestGlade.SilkNet.csproj" />
+    <Project Path="../../Themes/Gum.Themes.Bubblegum.SilkNet/Gum.Themes.Bubblegum.SilkNet.csproj" />
+    <Project Path="../../Themes/Gum.Themes.Hazard.SilkNet/Gum.Themes.Hazard.SilkNet.csproj" />
   </Folder>
 </Solution>

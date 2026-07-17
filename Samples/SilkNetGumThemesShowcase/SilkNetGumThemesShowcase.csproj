@@ -35,6 +35,8 @@
 		<ProjectReference Include="..\..\Themes\Gum.Themes.Editor.SilkNet\Gum.Themes.Editor.SilkNet.csproj" />
 		<ProjectReference Include="..\..\Themes\Gum.Themes.DarkPro.SilkNet\Gum.Themes.DarkPro.SilkNet.csproj" />
 		<ProjectReference Include="..\..\Themes\Gum.Themes.ForestGlade.SilkNet\Gum.Themes.ForestGlade.SilkNet.csproj" />
+		<ProjectReference Include="..\..\Themes\Gum.Themes.Bubblegum.SilkNet\Gum.Themes.Bubblegum.SilkNet.csproj" />
+		<ProjectReference Include="..\..\Themes\Gum.Themes.Hazard.SilkNet\Gum.Themes.Hazard.SilkNet.csproj" />
 	</ItemGroup>
 
 	<!-- ANGLE's GLES/EGL implementation, loaded by the "SDL_HINT_OPENGL_ES_DRIVER=angle" hint in

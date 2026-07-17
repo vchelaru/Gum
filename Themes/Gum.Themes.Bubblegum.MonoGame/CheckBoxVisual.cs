@@ -4,6 +4,8 @@ using Gum.GueDeriving;
 using Gum.Wireframe;
 #if RAYLIB
 using Raylib_cs;
+#elif SKIA
+using Color = SkiaSharp.SKColor;
 #else
 using Microsoft.Xna.Framework;
 #endif
@@ -67,7 +69,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         _checkGlyph.Font = BubblegumStyling.ActiveStyle.Text.IconFontFamily;
         _checkGlyph.FontSize = 18;
         _checkGlyph.Text = "✓";
-        _checkGlyph.Color = Color.White;
+        _checkGlyph.Color = BubblegumStyling.ActiveStyle.Colors.White;
         _checkGlyph.Visible = false;
 
         _dashIndicator = CreateDashIndicator();
@@ -220,27 +222,27 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         // Accent-filled box, white check glyph (matches .bb-chk.chk).
         States.EnabledOn.Apply = () => Apply(
             fill: BubblegumStyling.ActiveStyle.Colors.Accent, border: BubblegumStyling.ActiveStyle.Colors.Accent,
-            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: Color.White,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: BubblegumStyling.ActiveStyle.Colors.White,
             ring: false);
 
         States.HighlightedOn.Apply = () => Apply(
             fill: BubblegumStyling.ActiveStyle.Colors.Accent, border: BubblegumStyling.ActiveStyle.Colors.Accent,
-            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: Color.White,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: BubblegumStyling.ActiveStyle.Colors.White,
             ring: false);
 
         States.FocusedOn.Apply = () => Apply(
             fill: BubblegumStyling.ActiveStyle.Colors.Accent, border: BubblegumStyling.ActiveStyle.Colors.Accent,
-            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: Color.White,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: BubblegumStyling.ActiveStyle.Colors.White,
             ring: true);
 
         States.HighlightedFocusedOn.Apply = () => Apply(
             fill: BubblegumStyling.ActiveStyle.Colors.Accent, border: BubblegumStyling.ActiveStyle.Colors.Accent,
-            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: Color.White,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: BubblegumStyling.ActiveStyle.Colors.White,
             ring: true);
 
         States.PushedOn.Apply = () => Apply(
             fill: BubblegumStyling.ActiveStyle.Colors.AccentDark, border: BubblegumStyling.ActiveStyle.Colors.AccentDark,
-            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: Color.White,
+            text: BubblegumStyling.ActiveStyle.Colors.Text, glyph: GlyphKind.Check, glyphColor: BubblegumStyling.ActiveStyle.Colors.White,
             ring: false);
 
         States.DisabledOn.Apply = () => Apply(
