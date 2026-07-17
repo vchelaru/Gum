@@ -410,6 +410,50 @@ ordering (cheapest, highest-confidence first):
 
 Definition of done below still applies to each of these: every drain lands a *tested* unit.
 
+### Service-layer Locator sweep (#3753) — added 2026-07-17
+
+A full classification pass over all 140 `Locator.GetRequiredService<T>()` call sites (48 files, `grep -rn
+"Locator.GetRequiredService" Gum/ Tool/`) found the "~224 fallback sites" estimate above was another
+grep-count mirage, same lesson as the `.Self` figures in the Correction note. Breakdown:
+
+- **53 + 3 are the composition roots** (`PluginManager.LoadPlugins`'s `AddExportedValue` bridge block,
+  `Program.cs`) — these calls ARE the drain destination, correct as-is, not a target.
+- **The rest split into:** deliberate keeps (plugin self-injection cycle smells, `StartUp`/event-handler
+  lookups in already-drained plugins — matches the precedents in the plugin-ctor-pass notes above), and
+  structurally out-of-scope classes that can't take ctor injection at all — WPF/WinForms Views and
+  `UserControl`/`Control` code-behind instantiated by XAML/markup (not DI), `TypeConverter`s
+  reflection-activated by `[TypeConverter(typeof(...))]` (parameterless-ctor contract), static
+  extension-method classes, and the separate non-DI plugin assemblies (SvgPlugin, EventOutputPlugin)
+  whose managers are either genuinely static or constructed outside the host container.
+- **Genuine drain targets: 6**, landed as 6 separate PRs (all part of #3753, all behavior-preserving,
+  each with a `GumFull.sln` build + a pinning test where the seam was cleanly mockable):
+  - #3757 — `MainWindow.xaml.cs`: stored an already-injected `IMessenger` ctor param as a field instead
+    of re-resolving it in a click handler.
+  - #3758 — `UndosViewModel` + `Undos/MainPlugin.cs`: real ctor on the VM, threaded `ISelectedState`/
+    `IUndoManager` through a new plugin `[ImportingConstructor]` (both already MEF-bridged).
+  - #3759 — `MainWindowPlugin.cs`: new MEF bridge for `MainWindowViewModel`, `[ImportingConstructor]`
+    replacing a method-body Locator call in a `ProjectLoad` handler.
+  - #3760 — `FormsFileService` + `MainGumFormsPlugin.cs`: real ctor on the service, threaded
+    `IProjectState` through the plugin's existing `[ImportingConstructor]`, plus a drive-by dedupe of a
+    second method-body Locator call that became redundant once the field existed.
+  - #3761 — `RenameManager` (StateAnimationPlugin): 5th ctor param for the one remaining method-body
+    lookup; `MainStateAnimationPlugin` already held the dependency.
+  - #3762 — `CommonControlLogic` + `AlignmentViewModel` + `AlignmentPluginControl.xaml.cs`: real ctors on
+    both, `CommonControlLogic` newly registered in `Builder.cs`, the View resolves the VM via
+    `Locator.GetRequiredService<AlignmentViewModel>()` at construction — the View-boundary relocation
+    pattern, same role the MEF bridge plays for plugins.
+
+**Net effect on the standing "next up" list above:** the `.Self`/`Locator` service-layer front reads as
+*much thinner* than the 2026-06-24 estimates once non-DI/non-instantiable classes are excluded. There is
+no large remaining "drain the biggest self-locating services first" backlog — the easy/medium tier is
+now essentially exhausted. What's left in the 140-site count is either already-correct composition-root
+code or structurally can't be drained without a bigger, separate refactor (e.g. converting
+`ExportEventFileManager`'s all-static-member design to an instance service — a design change, not a
+drain — or pulling the SvgPlugin/StateAnimationPlugin managers into the main DI container, an
+assembly-boundary question outside a simple ctor-injection pass). Phase 2's remaining substantive item is
+`PluginManager.Self` (5 sites, deferred self-injection-cycle smell per the "Next up" bullet above) —
+tackle that next, or consider the service-layer front closed and move toward Phase 3 prep.
+
 ## Definition of done — every change lands a *tested* unit
 
 This effort's payoff *is* testability, so the bar for every change is not just "logic moved out of
