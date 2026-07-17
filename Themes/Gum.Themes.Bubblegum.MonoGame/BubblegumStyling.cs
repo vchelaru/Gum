@@ -78,6 +78,9 @@ public class BubblegumColors
     /// <summary>Disabled checkbox / radio fill (<c>#F5EAF8</c>).</summary>
     public Color DisabledFill { get; set; } = new Color(245, 234, 248);
 
+    /// <summary>Pure white — used for text/glyphs painted over Accent-filled bodies (buttons, checked checkbox, pressed toggle, slider thumb). Settable rather than a platform `Color.White` reference since SKColor has no such static.</summary>
+    public Color White { get; set; } = new Color(255, 255, 255);
+
     /// <summary>Soft pink-tinted shadow used under floating chrome (<c>rgba(255,107,157,.4)</c> ≈ <c>#FFB8D2</c>). Alpha is baked into the layered stack rather than the color itself.</summary>
     public Color Shadow { get; set; } = new Color(255, 107, 157, 100);
 

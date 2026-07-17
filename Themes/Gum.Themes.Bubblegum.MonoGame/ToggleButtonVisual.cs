@@ -117,31 +117,31 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
         // On variants: accent-filled body, white text.
         States.EnabledOn.Apply = () => ApplyPalette(
             fill: BubblegumStyling.ActiveStyle.Colors.Accent, border: BubblegumStyling.ActiveStyle.Colors.Accent,
-            text: new Color(255, 255, 255), showShadow: true, showFocusRing: false);
+            text: BubblegumStyling.ActiveStyle.Colors.White, showShadow: true, showFocusRing: false);
 
         States.HighlightedOn.Apply = () => ApplyPalette(
             fill: BubblegumStyling.ActiveStyle.Colors.AccentHover, border: BubblegumStyling.ActiveStyle.Colors.AccentHover,
-            text: new Color(255, 255, 255), showShadow: true, showFocusRing: false);
+            text: BubblegumStyling.ActiveStyle.Colors.White, showShadow: true, showFocusRing: false);
 
         States.PushedOn.Apply = () => ApplyPalette(
             fill: BubblegumStyling.ActiveStyle.Colors.AccentDark, border: BubblegumStyling.ActiveStyle.Colors.AccentDark,
-            text: new Color(255, 255, 255), showShadow: false, showFocusRing: false);
+            text: BubblegumStyling.ActiveStyle.Colors.White, showShadow: false, showFocusRing: false);
 
         States.FocusedOn.Apply = () => ApplyPalette(
             fill: BubblegumStyling.ActiveStyle.Colors.Accent, border: BubblegumStyling.ActiveStyle.Colors.Accent,
-            text: new Color(255, 255, 255), showShadow: true, showFocusRing: true);
+            text: BubblegumStyling.ActiveStyle.Colors.White, showShadow: true, showFocusRing: true);
 
         States.HighlightedFocusedOn.Apply = () => ApplyPalette(
             fill: BubblegumStyling.ActiveStyle.Colors.AccentHover, border: BubblegumStyling.ActiveStyle.Colors.AccentHover,
-            text: new Color(255, 255, 255), showShadow: true, showFocusRing: true);
+            text: BubblegumStyling.ActiveStyle.Colors.White, showShadow: true, showFocusRing: true);
 
         States.DisabledOn.Apply = () => ApplyPalette(
             fill: BubblegumStyling.ActiveStyle.Colors.Disabled, border: BubblegumStyling.ActiveStyle.Colors.Disabled,
-            text: new Color(255, 255, 255), showShadow: false, showFocusRing: false);
+            text: BubblegumStyling.ActiveStyle.Colors.White, showShadow: false, showFocusRing: false);
 
         States.DisabledFocusedOn.Apply = () => ApplyPalette(
             fill: BubblegumStyling.ActiveStyle.Colors.Disabled, border: BubblegumStyling.ActiveStyle.Colors.Disabled,
-            text: new Color(255, 255, 255), showShadow: false, showFocusRing: true);
+            text: BubblegumStyling.ActiveStyle.Colors.White, showShadow: false, showFocusRing: true);
     }
 
     private void ApplyPalette(Color fill, Color border, Color text, bool showShadow, bool showFocusRing)
