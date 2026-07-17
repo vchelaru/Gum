@@ -20,8 +20,14 @@
 	<ItemGroup>
 		<!-- UndoManagerTests reach UndoManager's internal UndoLocks. They now live in the dedicated
 		     headless Gum.Presentation.Tests project (migrated out of GumToolUnitTests, ADR-0005
-		     Phase 3), which is the only assembly that needs to see internals here. -->
+		     Phase 3). -->
 		<InternalsVisibleTo Include="Gum.Presentation.Tests" />
+		<!-- DeleteLogicTests still lives in GumToolUnitTests and reaches DeleteLogic's internal
+		     PerformConfirmedSingleInstanceDelete/PerformConfirmedMixedTypeDelete/BuildDeleteDialogMessage.
+		     DeleteLogic moved here from Gum.csproj (ADR-0005 Phase 3); Gum.csproj already granted
+		     this via Gum/Properties/AssemblyInfo.cs, so the grant moves with the class. Drop this
+		     once the tests migrate into Gum.Presentation.Tests, mirroring UndoManagerTests. -->
+		<InternalsVisibleTo Include="GumToolUnitTests" />
 	</ItemGroup>
 
 	<ItemGroup>

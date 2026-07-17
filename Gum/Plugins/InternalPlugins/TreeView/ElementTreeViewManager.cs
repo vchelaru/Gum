@@ -2683,15 +2683,6 @@ public static class TreeNodeExtensionMethods
     /// </summary>
     /// <param name="treeNode">The tree node to check.</param>
     /// <returns>True if this is the top-level Screens folder (root "Screens" node); otherwise, false.</returns>
-    /// <remarks>
-    /// This returns true ONLY for the top-level "Screens" folder itself, NOT for subfolders within the Screens hierarchy.
-    /// Use IsScreensFolderTreeNode to check for subfolders within the Screens structure.
-    /// </remarks>
-    public static bool IsTopScreenContainerTreeNode(this ITreeNode treeNode) =>
-        treeNode is TreeNodeWrapper wrapper
-        ? wrapper.Node.IsTopScreenContainerTreeNode()
-        : false;
-
     /// <summary>
     /// Determines whether the tree node is the top-level "Screens" container folder.
     /// </summary>
@@ -2738,15 +2729,6 @@ public static class TreeNodeExtensionMethods
     /// </summary>
     /// <param name="treeNode">The tree node to check.</param>
     /// <returns>True if this is the top-level Components folder (root "Components" node); otherwise, false.</returns>
-    /// <remarks>
-    /// This returns true ONLY for the top-level "Components" folder itself, NOT for subfolders within the Components hierarchy.
-    /// Use IsComponentsFolderTreeNode to check for subfolders within the Components structure.
-    /// </remarks>
-    public static bool IsTopComponentContainerTreeNode(this ITreeNode treeNode) =>
-        treeNode is TreeNodeWrapper wrapper
-        ? wrapper.Node.IsTopComponentContainerTreeNode()
-        : false;
-
     /// <summary>
     /// Determines whether the tree node is the top-level "Components" container folder.
     /// </summary>
@@ -2862,22 +2844,8 @@ public static class TreeNodeExtensionMethods
     /// </summary>
     /// <param name="treeNode">The tree node to check.</param>
     /// <returns>True if this is a folder anywhere under the top-level "Screens" folder; otherwise, false.</returns>
-    /// <remarks>
-    /// This returns true for ANY folder under the Screens hierarchy, including:
-    /// - Direct child folders of the top-level "Screens" folder (e.g., "Screens/Menus")
-    /// - Nested subfolders at any depth (e.g., "Screens/Menus/MainMenu")
-    /// - The top-level "Screens" folder itself (use IsTopScreenContainerTreeNode for that)
-    /// Returns false for:
-    /// - Screen element nodes (which have a Tag)
-    /// </remarks>
-    public static bool IsScreensFolderTreeNode(this ITreeNode? treeNode) =>
-        treeNode is TreeNodeWrapper wrapper
-        ? wrapper.Node.IsScreensFolderTreeNode()
-        : false;
-
-
     /// <summary>
-    /// Determines whether the tree node is a top level or contained folder within the Screens hierarchy 
+    /// Determines whether the tree node is a top level or contained folder within the Screens hierarchy
     /// (includes the top-level "Screens" folder itself).
     /// </summary>
     /// <param name="treeNode">The tree node to check.</param>
@@ -2997,23 +2965,8 @@ public static class TreeNodeExtensionMethods
     /// </summary>
     /// <param name="treeNode">The tree node to check.</param>
     /// <returns>True if this is a folder anywhere under the top-level "Components" folder; otherwise, false.</returns>
-    /// <remarks>
-    /// This returns true for ANY folder under the Components hierarchy, including:
-    /// - Direct child folders of the top-level "Components" folder (e.g., "Components/UI")
-    /// - Nested subfolders at any depth (e.g., "Components/UI/Buttons")
-    /// Returns false for:
-    /// - The top-level "Components" folder itself (use IsTopComponentContainerTreeNode for that)
-    /// - Component element nodes (which have a Tag)
-    /// A node is considered a Components folder if it has no Tag, has a parent, and that parent is either
-    /// the top-level Components container or another Components folder.
-    /// </remarks>
-    public static bool IsComponentsFolderTreeNode(this ITreeNode? treeNode) =>
-        treeNode is TreeNodeWrapper wrapper
-        ? wrapper.Node.IsComponentsFolderTreeNode()
-        : false;
-
     /// <summary>
-    /// Determines whether the tree node is a folder within the Components hierarchy 
+    /// Determines whether the tree node is a folder within the Components hierarchy
     /// (including the top-level "Components" folder itself).
     /// </summary>
     /// <param name="treeNode">The tree node to check.</param>
