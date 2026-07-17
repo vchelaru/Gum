@@ -89,9 +89,9 @@ namespace Gum.Wireframe
                         var projectState = Locator.GetRequiredService<IProjectState>();
                         lineRectangle.Color = System.Drawing.Color.FromArgb(
                             255,
-                            projectState.GeneralSettings.OutlineColorR,
-                            projectState.GeneralSettings.OutlineColorG,
-                            projectState.GeneralSettings.OutlineColorB
+                            projectState.OutlineColorR,
+                            projectState.OutlineColorG,
+                            projectState.OutlineColorB
                             );
 #endif
                         containedObject = lineRectangle;

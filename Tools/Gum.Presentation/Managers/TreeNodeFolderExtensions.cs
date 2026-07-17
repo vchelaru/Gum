@@ -30,4 +30,24 @@ public static class TreeNodeFolderExtensions
         treeNode.Tag == null &&
         treeNode.Parent != null &&
         (treeNode.Parent.IsComponentsFolderTreeNode() || treeNode.Parent.IsTopComponentContainerTreeNode());
+
+    /// <summary>
+    /// Determines whether the tree node is part of the Screens folder structure (either the root
+    /// Screens folder, a subfolder, or a Screen element within the hierarchy). Unlike
+    /// <see cref="IsScreensFolderTreeNode"/>, this returns true for Screen elements themselves, not
+    /// just folders.
+    /// </summary>
+    public static bool IsPartOfScreensFolderStructure(this ITreeNode? treeNode) =>
+        treeNode != null &&
+        (treeNode.IsTopScreenContainerTreeNode() || treeNode.Parent.IsPartOfScreensFolderStructure());
+
+    /// <summary>
+    /// Determines whether the tree node is part of the Components folder structure (either the root
+    /// Components folder, a subfolder, or a Component element within the hierarchy). Unlike
+    /// <see cref="IsComponentsFolderTreeNode"/>, this returns true for Component elements themselves,
+    /// not just folders.
+    /// </summary>
+    public static bool IsPartOfComponentsFolderStructure(this ITreeNode? treeNode) =>
+        treeNode != null &&
+        (treeNode.IsTopComponentContainerTreeNode() || treeNode.Parent.IsPartOfComponentsFolderStructure());
 }

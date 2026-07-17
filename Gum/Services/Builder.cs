@@ -149,6 +149,9 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IDeleteLogic, DeleteLogic>();
         services.AddSingleton<ISkiaShapeStandardsLogic, SkiaShapeStandardsLogic>();
         services.AddSingleton<FileLocations>();
+        // IFileLocations: narrow headless port (ADR-0005 Phase 3) so dialog VMs that only need
+        // folder paths can move into Gum.Presentation. Resolves to the same FileLocations singleton.
+        services.AddSingleton<IFileLocations>(provider => provider.GetRequiredService<FileLocations>());
         services.AddSingleton<FileWatchLogic>();
         services.AddSingleton<IFontGenerationCallbacks, ToolFontGenerationCallbacks>();
         services.AddSingleton<IFontFileGenerator>(provider =>

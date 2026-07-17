@@ -1,7 +1,6 @@
 ﻿using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Services;
-using Gum.Settings;
 using ToolsUtilities;
 
 namespace Gum.ToolStates;
@@ -16,7 +15,10 @@ public class ProjectState : IProjectState
     }
 
     public GumProjectSave GumProjectSave => _projectManager.GumProjectSave;
-    public GeneralSettingsFile GeneralSettings => _projectManager.GeneralSettingsFile;
+    public bool EffectiveUseStandardsPalette => _projectManager.GeneralSettingsFile.EffectiveUseStandardsPalette;
+    public byte OutlineColorR => _projectManager.GeneralSettingsFile.OutlineColorR;
+    public byte OutlineColorG => _projectManager.GeneralSettingsFile.OutlineColorG;
+    public byte OutlineColorB => _projectManager.GeneralSettingsFile.OutlineColorB;
 
     public string? ProjectDirectory
     {
