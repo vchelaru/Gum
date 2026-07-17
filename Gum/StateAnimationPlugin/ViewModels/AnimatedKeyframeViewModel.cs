@@ -292,9 +292,9 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
     public AnimatedKeyframeViewModel(IBitmapLoader bitmapLoader)
     {
         _bitmapLoader = bitmapLoader;
-        mStateBitmap = bitmapLoader.LoadImage("StateAnimationIcon.png");
-        mAnimationBitmap = bitmapLoader.LoadImage("ReferencedAnimationIcon.png");
-        mEventBitmap = bitmapLoader.LoadImage("NamedEventIcon.png");
+        mStateBitmap = BitmapFrameFactory.Create(bitmapLoader.LoadImage("StateAnimationIcon.png"))!;
+        mAnimationBitmap = BitmapFrameFactory.Create(bitmapLoader.LoadImage("ReferencedAnimationIcon.png"))!;
+        mEventBitmap = BitmapFrameFactory.Create(bitmapLoader.LoadImage("NamedEventIcon.png"))!;
     }
 
     public AnimatedKeyframeViewModel Clone()

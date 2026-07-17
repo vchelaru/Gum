@@ -231,9 +231,9 @@ public partial class ElementAnimationsViewModel : ViewModel
         mPlayTimer.Interval = new TimeSpan(0, 0, 0, 0, mTimerFrequencyInMs);
         mPlayTimer.Tick += HandlePlayTimerTick;
 
-        mPlayBitmap = bitmapLoader.LoadImage("PlayIcon.png");
+        mPlayBitmap = BitmapFrameFactory.Create(bitmapLoader.LoadImage("PlayIcon.png"))!;
 
-        mStopBitmap = bitmapLoader.LoadImage("StopIcon.png");
+        mStopBitmap = BitmapFrameFactory.Create(bitmapLoader.LoadImage("StopIcon.png"))!;
 
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
