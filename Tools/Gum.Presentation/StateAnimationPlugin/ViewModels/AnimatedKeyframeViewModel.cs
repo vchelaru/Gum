@@ -1,4 +1,4 @@
-﻿using FlatRedBall.Glue.StateInterpolation;
+using FlatRedBall.Glue.StateInterpolation;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Mvvm;
@@ -11,9 +11,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using Gum.StateAnimation.Runtime;
 
 namespace StateAnimationPlugin.ViewModels;
@@ -23,25 +20,22 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
     #region Fields
 
     AnimationViewModel? mSubAnimationViewModel;
+    bool isUncategorized;
 
-    private readonly IBitmapLoader _bitmapLoader;
-    readonly BitmapFrame mStateBitmap;
-    readonly BitmapFrame mAnimationBitmap;
-    readonly BitmapFrame mEventBitmap;
     #endregion
 
     #region Properties
 
-    public string StateName 
+    public string StateName
     {
-        get => Get<string>(); 
-        set => Set(value); 
+        get => Get<string>();
+        set => Set(value);
     }
 
     public string AnimationName
     {
         get => Get<string>();
-        set => Set(value); 
+        set => Set(value);
     }
 
     public ObservableCollection<string> AvailableStates
@@ -52,8 +46,8 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
 
     public string? EventName
     {
-        get => Get<string?>(); 
-        set => Set(value); 
+        get => Get<string?>();
+        set => Set(value);
     }
 
     public bool IsTimelineVisualHovered
@@ -69,7 +63,7 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
     }
 
 
-    public float Time 
+    public float Time
     {
         get { return Get<float>(); }
         set { Set(value); }
@@ -90,26 +84,29 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
         }
     }
 
-    public InterpolationType InterpolationType 
+    public InterpolationType InterpolationType
     {
         get => Get<InterpolationType>();
         set => Set(value);
     }
-    
-    public Easing Easing 
+
+    public Easing Easing
     {
         get => Get<Easing>();
-        set => Set(value); 
+        set => Set(value);
     }
 
-    public Visibility StateComboBoxVisibility =>
-        !string.IsNullOrEmpty(StateName) ? Visibility.Visible : Visibility.Collapsed;
+    /// <summary>
+    /// True while the editable state ComboBox should be shown (this keyframe references a state).
+    /// The view turns this into <c>Visibility</c> via a stock bool-to-visibility converter (ADR-0004).
+    /// </summary>
+    public bool IsStateComboBoxVisible => !string.IsNullOrEmpty(StateName);
 
-    public Visibility DisplayNameLabelVisibility =>
-        string.IsNullOrEmpty(StateName) ? Visibility.Visible : Visibility.Collapsed;
-
-    bool isUncategorized;
-    public Visibility UncategorizedIconVisibility => isUncategorized.ToVisibility();
+    /// <summary>
+    /// True while this keyframe is uncategorized (its referenced state has no parent category).
+    /// The view turns this into <c>Visibility</c> via a stock bool-to-visibility converter (ADR-0004).
+    /// </summary>
+    public bool IsUncategorized => isUncategorized;
 
     [DependsOn(nameof(StateName))]
     [DependsOn(nameof(AnimationName))]
@@ -141,7 +138,7 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
     [DependsOn(nameof(StateName))]
     [DependsOn(nameof(AnimationName))]
     [DependsOn(nameof(EventName))]
-    public string DisplayString 
+    public string DisplayString
     {
         get
         {
@@ -183,7 +180,7 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
     /// <summary>
     /// The message shown when this keyframe's referenced state or animation is missing. Names the
     /// specific reference (and its category, for a categorized state) so the user can find the broken
-    /// keyframe without hunting. Shown via <see cref="HasInvalidStateVisibility"/> (issue #3400).
+    /// keyframe without hunting. Shown via <see cref="ShowInvalidStateWarning"/> (issue #3400).
     /// </summary>
     [DependsOn(nameof(StateName))]
     [DependsOn(nameof(AnimationName))]
@@ -210,96 +207,28 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
         }
     }
 
+    /// <summary>
+    /// True while a missing-state/animation warning should be shown (this keyframe's reference is
+    /// invalid and it isn't a named event, which is never considered broken). The view turns this
+    /// into <c>Visibility</c> via a stock bool-to-visibility converter (ADR-0004).
+    /// </summary>
     [DependsOn(nameof(HasValidState))]
-    public System.Windows.Visibility HasInvalidStateVisibility
-    {
-        get
-        {
-            if(HasValidState || !string.IsNullOrEmpty(EventName))
-            {
-                return System.Windows.Visibility.Collapsed;
-            }
-            else
-            {
-                return System.Windows.Visibility.Visible;
-            }
-        }
-    }
+    public bool ShowInvalidStateWarning => !HasValidState && string.IsNullOrEmpty(EventName);
 
-    [DependsOn(nameof(HasValidState))]
-    [DependsOn(nameof(EventName))]
-    public SolidColorBrush LabelBrush
-    {
-        get
-        {
-            if (!string.IsNullOrEmpty(EventName))
-            {
-                return Brushes.DarkBlue;
-            }
-            if (HasValidState)
-            {
-                return Brushes.Black;
-            }
-            else
-            {
-                return Brushes.Red;
-            }
-        }
-    }
-
-
-    public System.Windows.Visibility InterpolationElementVisibility
-    {
-        get
-        {
-            if(!string.IsNullOrEmpty(StateName))
-            {
-                return System.Windows.Visibility.Visible;
-            }
-            else
-            {
-                return System.Windows.Visibility.Collapsed;
-            }
-        }
-    }
-
-
-    [DependsOn(nameof(StateName))]
-    [DependsOn(nameof(AnimationName))]
-    public BitmapFrame IconBitmapFrame
-    {
-        get
-        {
-            if(!string.IsNullOrEmpty(StateName))
-            {
-                return mStateBitmap;
-            }
-            else if(!string.IsNullOrEmpty(AnimationName))
-            {
-                return mAnimationBitmap;
-            }
-            else
-            {
-                return mEventBitmap;
-            }
-        }
-    }
+    /// <summary>
+    /// True while the interpolation type/easing editors should be shown (this keyframe references a
+    /// state). The view turns this into <c>Visibility</c> via a stock bool-to-visibility converter
+    /// (ADR-0004).
+    /// </summary>
+    public bool IsInterpolationElementVisible => !string.IsNullOrEmpty(StateName);
 
     #endregion
 
     #region Methods
 
-    public AnimatedKeyframeViewModel(IBitmapLoader bitmapLoader)
-    {
-        _bitmapLoader = bitmapLoader;
-        mStateBitmap = BitmapFrameFactory.Create(bitmapLoader.LoadImage("StateAnimationIcon.png"))!;
-        mAnimationBitmap = BitmapFrameFactory.Create(bitmapLoader.LoadImage("ReferencedAnimationIcon.png"))!;
-        mEventBitmap = BitmapFrameFactory.Create(bitmapLoader.LoadImage("NamedEventIcon.png"))!;
-    }
-
     public AnimatedKeyframeViewModel Clone()
     {
-        var newInstance = new AnimatedKeyframeViewModel(_bitmapLoader);
+        var newInstance = new AnimatedKeyframeViewModel();
 
         newInstance.StateName = StateName;
         newInstance.AnimationName = AnimationName;
@@ -308,19 +237,18 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
         newInstance.InterpolationType = InterpolationType;
         newInstance.Easing = Easing;
 
-        newInstance.AvailableStates = new ObservableCollection<string>();
-        newInstance.AvailableStates.AddRange(AvailableStates);
+        newInstance.AvailableStates = new ObservableCollection<string>(AvailableStates);
 
         newInstance.SubAnimationViewModel = SubAnimationViewModel;
 
         newInstance.HasValidState = HasValidState;
-            
+
         return newInstance;
     }
 
-    public static AnimatedKeyframeViewModel FromSave(AnimatedStateSave save, ElementSave elementSave, IBitmapLoader bitmapLoader)
+    public static AnimatedKeyframeViewModel FromSave(AnimatedStateSave save, ElementSave elementSave)
     {
-        AnimatedKeyframeViewModel toReturn = new AnimatedKeyframeViewModel(bitmapLoader);
+        AnimatedKeyframeViewModel toReturn = new AnimatedKeyframeViewModel();
 
         toReturn.StateName = save.StateName;
         toReturn.Time = save.Time;
@@ -332,9 +260,9 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
         return toReturn;
     }
 
-    public static AnimatedKeyframeViewModel FromSave(AnimationReferenceSave save, ElementSave elementSave, IBitmapLoader bitmapLoader)
+    public static AnimatedKeyframeViewModel FromSave(AnimationReferenceSave save, ElementSave elementSave)
     {
-        AnimatedKeyframeViewModel toReturn = new AnimatedKeyframeViewModel(bitmapLoader);
+        AnimatedKeyframeViewModel toReturn = new AnimatedKeyframeViewModel();
 
         toReturn.AnimationName = save.Name;
         toReturn.Time = save.Time;
@@ -343,9 +271,9 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
         return toReturn;
     }
 
-    public static AnimatedKeyframeViewModel FromSave(NamedEventSave save, ElementSave elementSave, IBitmapLoader bitmapLoader)
+    public static AnimatedKeyframeViewModel FromSave(NamedEventSave save, ElementSave elementSave)
     {
-        AnimatedKeyframeViewModel toReturn = new AnimatedKeyframeViewModel(bitmapLoader);
+        AnimatedKeyframeViewModel toReturn = new AnimatedKeyframeViewModel();
         toReturn.EventName = save.Name;
         toReturn.Time = save.Time;
 

@@ -34,6 +34,11 @@
 		<!-- DialogViewModel uses RelayCommand. CommunityToolkit.Mvvm is framework-neutral
 		     (no WPF/WinForms), so it does not violate the headless boundary above. -->
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+		<!-- AnimationViewModel/AnimatedKeyframeViewModel use InterpolationType/Easing. This is an
+		     easing/tweening library under the FlatRedBall brand (not the FRB engine) and has no
+		     WPF/WinForms dependency, so it does not violate the headless boundary above. Pin matches
+		     StateAnimationPlugin.csproj so a single bump propagates predictably. -->
+		<PackageReference Include="FlatRedBall.InterpolationCore" Version="2025.4.22.1" />
 	</ItemGroup>
 
 	<ItemGroup>

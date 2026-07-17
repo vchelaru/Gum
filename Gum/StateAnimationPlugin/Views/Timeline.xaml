@@ -6,7 +6,7 @@
   xmlns:converters="clr-namespace:Gum.Converters;assembly=Gum"
   xmlns:local="clr-namespace:StateAnimationPlugin.Controls"
   xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-  xmlns:viewModels="clr-namespace:StateAnimationPlugin.ViewModels"
+  xmlns:viewModels="clr-namespace:StateAnimationPlugin.ViewModels;assembly=Gum.Presentation"
   xmlns:views="clr-namespace:StateAnimationPlugin.Views"
   x:Name="Root">
   <UserControl.Resources>

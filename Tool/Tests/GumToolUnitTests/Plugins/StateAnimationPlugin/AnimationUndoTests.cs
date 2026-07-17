@@ -24,7 +24,6 @@ namespace GumToolUnitTests.Plugins.StateAnimationPlugin;
 /// </summary>
 public class AnimationUndoTests : BaseTestClass
 {
-    private readonly IBitmapLoader _bitmapLoader = Mock.Of<IBitmapLoader>();
     private readonly ISelectedState _selectedState = Mock.Of<ISelectedState>();
     private readonly IWireframeObjectManager _wireframeObjectManager = Mock.Of<IWireframeObjectManager>();
 
@@ -252,12 +251,12 @@ public class AnimationUndoTests : BaseTestClass
     }
 
     private AnimatedKeyframeViewModel Keyframe(string stateName, float time)
-        => new(_bitmapLoader) { StateName = stateName, Time = time };
+        => new() { StateName = stateName, Time = time };
 
     private ElementAnimationsViewModel ViewModelWithAnimation(string animationName, out AnimationViewModel animation,
         params AnimatedKeyframeViewModel[] keyframes)
     {
-        animation = new AnimationViewModel(_bitmapLoader, _selectedState, _wireframeObjectManager) { Name = animationName };
+        animation = new AnimationViewModel(_selectedState, _wireframeObjectManager) { Name = animationName };
         foreach (AnimatedKeyframeViewModel keyframe in keyframes)
         {
             animation.Keyframes.Add(keyframe);
@@ -268,7 +267,6 @@ public class AnimationUndoTests : BaseTestClass
             Mock.Of<IDialogService>(),
             Mock.Of<IAnimationCollectionViewModelManager>(),
             Mock.Of<IRenameManager>(),
-            _bitmapLoader,
             _selectedState,
             _wireframeObjectManager,
             Mock.Of<IOutputManager>());
@@ -278,8 +276,8 @@ public class AnimationUndoTests : BaseTestClass
 
     private ElementAnimationsViewModel CreateViewModel(IDialogService dialogService, out AnimationViewModel animation)
     {
-        animation = new AnimationViewModel(_bitmapLoader, _selectedState, _wireframeObjectManager) { Name = "Anim" };
-        AnimatedKeyframeViewModel keyframe = new(_bitmapLoader) { StateName = "Default" };
+        animation = new AnimationViewModel(_selectedState, _wireframeObjectManager) { Name = "Anim" };
+        AnimatedKeyframeViewModel keyframe = new() { StateName = "Default" };
         animation.Keyframes.Add(keyframe);
         animation.SelectedKeyframe = keyframe;
 
@@ -288,7 +286,6 @@ public class AnimationUndoTests : BaseTestClass
             dialogService,
             Mock.Of<IAnimationCollectionViewModelManager>(),
             Mock.Of<IRenameManager>(),
-            _bitmapLoader,
             _selectedState,
             _wireframeObjectManager,
             Mock.Of<IOutputManager>());

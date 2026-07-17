@@ -24,20 +24,12 @@
     <ProjectReference Include="..\..\InputLibrary\InputLibrary.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <!-- PlayIcon/StopIcon/LoopIcon/PlayOnceIcon/ReferencedAnimationIcon/StateAnimationIcon/NamedEventIcon
+         were the only IBitmapLoader.LoadImage callers; that whole BitmapFrame decode chain (IBitmapLoader,
+         BitmapLoader, BitmapFrameFactory) was dead code, feeding VM properties with zero XAML/code-behind
+         consumers, and was removed as part of unblocking the ViewModel cluster's move to Gum.Presentation
+         (issue #3754). The .png files themselves are left on disk; only the embedding is dropped here. -->
     <EmbeddedResource Include="Resources\Bear.png" />
-    <EmbeddedResource Include="Resources\PlayIcon.png" />
-    <EmbeddedResource Include="Resources\StopIcon.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\LoopIcon.png" />
-    <EmbeddedResource Include="Resources\PlayOnceIcon.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\ReferencedAnimationIcon.png" />
-    <EmbeddedResource Include="Resources\StateAnimationIcon.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\NamedEventIcon.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\icon_minus.png" />

@@ -47,7 +47,7 @@
                 Foreground="{DynamicResource Frb.Brushes.Error}"
                 Text="{Binding MissingReferenceMessage, FallbackValue='Could not find state or animation'}"
                 TextWrapping="Wrap"
-                Visibility="{Binding HasInvalidStateVisibility, TargetNullValue=Collapsed, FallbackValue=Collapsed}" />
+                Visibility="{Binding ShowInvalidStateWarning, Converter={StaticResource BoolToVisibilityConverter}, FallbackValue=Collapsed}" />
 
             <!--<Label Grid.Row="0" x:Name="NameLabel" Grid.ColumnSpan="2" Content="{Binding DisplayName, FallbackValue=StateName}"></Label>-->
             <!--  Editable so a renamed/deleted referenced state can't be coerced to null by the
@@ -63,7 +63,7 @@
                 IsEditable="True"
                 ItemsSource="{Binding AvailableStates}"
                 Text="{Binding StateName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                Visibility="{Binding StateComboBoxVisibility}" />
+                Visibility="{Binding IsStateComboBoxVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
 
             <TextBlock
                 Grid.Row="2"
@@ -78,14 +78,14 @@
                 Margin="0,0,4,0"
                 VerticalAlignment="Center"
                 Text="Interpolation Type"
-                Visibility="{Binding InterpolationElementVisibility}" />
+                Visibility="{Binding IsInterpolationElementVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
             <TextBlock
                 Grid.Row="4"
                 Grid.Column="0"
                 Margin="0,0,4,0"
                 VerticalAlignment="Center"
                 Text="In/Out"
-                Visibility="{Binding InterpolationElementVisibility}" />
+                Visibility="{Binding IsInterpolationElementVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
 
             <TextBlock
                 Grid.Row="5"
@@ -112,7 +112,7 @@
                 Margin="0,1"
                 VerticalContentAlignment="Center"
                 SelectedItem="{Binding InterpolationType}"
-                Visibility="{Binding InterpolationElementVisibility}" />
+                Visibility="{Binding IsInterpolationElementVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
             <ComboBox
                 x:Name="EasingTypeComboBox"
                 Grid.Row="4"
@@ -121,7 +121,7 @@
                 VerticalAlignment="Center"
                 VerticalContentAlignment="Center"
                 SelectedItem="{Binding Easing}"
-                Visibility="{Binding InterpolationElementVisibility}" />
+                Visibility="{Binding IsInterpolationElementVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
 
 
         </Grid>

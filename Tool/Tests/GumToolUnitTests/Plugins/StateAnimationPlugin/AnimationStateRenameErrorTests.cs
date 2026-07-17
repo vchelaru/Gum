@@ -30,7 +30,6 @@ namespace GumToolUnitTests.Plugins.StateAnimationPlugin;
 /// </summary>
 public class AnimationStateRenameErrorTests : BaseTestClass
 {
-    private readonly IBitmapLoader _bitmapLoader = Mock.Of<IBitmapLoader>();
     private readonly ISelectedState _selectedState = Mock.Of<ISelectedState>();
     private readonly IWireframeObjectManager _wireframeObjectManager = Mock.Of<IWireframeObjectManager>();
 
@@ -154,12 +153,12 @@ public class AnimationStateRenameErrorTests : BaseTestClass
 
     private AnimatedKeyframeViewModel Keyframe(string stateName)
     {
-        return new AnimatedKeyframeViewModel(_bitmapLoader) { StateName = stateName };
+        return new AnimatedKeyframeViewModel() { StateName = stateName };
     }
 
     private AnimationViewModel CreateAnimationWithKeyframes(params AnimatedKeyframeViewModel[] keyframes)
     {
-        AnimationViewModel animation = new AnimationViewModel(_bitmapLoader, _selectedState, _wireframeObjectManager) { Name = "Anim" };
+        AnimationViewModel animation = new AnimationViewModel(_selectedState, _wireframeObjectManager) { Name = "Anim" };
         foreach (AnimatedKeyframeViewModel keyframe in keyframes)
         {
             animation.Keyframes.Add(keyframe);
@@ -174,7 +173,6 @@ public class AnimationStateRenameErrorTests : BaseTestClass
             Mock.Of<IDialogService>(),
             Mock.Of<IAnimationCollectionViewModelManager>(),
             Mock.Of<IRenameManager>(),
-            _bitmapLoader,
             _selectedState,
             _wireframeObjectManager,
             Mock.Of<IOutputManager>());

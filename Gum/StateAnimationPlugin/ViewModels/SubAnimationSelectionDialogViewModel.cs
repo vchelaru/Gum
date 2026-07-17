@@ -21,8 +21,7 @@ public class SubAnimationSelectionDialogViewModel : DialogViewModel
     private readonly IOutputManager _outputManager;
     private readonly ISelectedState _selectedState;
     private readonly IWireframeObjectManager _wireframeObjectManager;
-    private readonly IAnimationCollectionViewModelManager _animationCollectionViewModelManager;
-    private readonly IBitmapLoader _bitmapLoader;
+    private readonly IAnimationSaveRepository _animationCollectionViewModelManager;
 
     public List<AnimationContainerViewModel>? AnimationContainers { get; set; }
     public AnimationContainerViewModel? SelectedContainer
@@ -58,8 +57,8 @@ public class SubAnimationSelectionDialogViewModel : DialogViewModel
 
     public override bool CanExecuteAffirmative() => SelectedAnimation is not null;
 
-    public SubAnimationSelectionDialogViewModel(IAnimationCollectionViewModelManager animationCollectionViewModelManager,
-        IBitmapLoader bitmapLoader, IOutputManager outputManager, ISelectedState selectedState,
+    public SubAnimationSelectionDialogViewModel(IAnimationSaveRepository animationCollectionViewModelManager,
+        IOutputManager outputManager, ISelectedState selectedState,
         IWireframeObjectManager wireframeObjectManager)
     {
         _outputManager = outputManager;
@@ -67,7 +66,6 @@ public class SubAnimationSelectionDialogViewModel : DialogViewModel
         _wireframeObjectManager = wireframeObjectManager;
         _animationFilePathService = new AnimationFilePathService(selectedState);
         _animationCollectionViewModelManager = animationCollectionViewModelManager;
-        _bitmapLoader = bitmapLoader;
     }
 
 
@@ -95,7 +93,7 @@ public class SubAnimationSelectionDialogViewModel : DialogViewModel
                 foreach (var item in save.Animations)
                 {
                     AnimationViewModel toReturn = AnimationViewModel.FromSave(
-                        item, elementSave!, _animationCollectionViewModelManager, _bitmapLoader, _selectedState, _wireframeObjectManager);
+                        item, elementSave!, _animationCollectionViewModelManager, _selectedState, _wireframeObjectManager);
 
                     toReturn.Name = item.Name;
                     toReturn.ContainingInstance = container.InstanceSave;

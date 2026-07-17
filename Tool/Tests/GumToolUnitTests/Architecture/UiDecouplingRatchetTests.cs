@@ -55,7 +55,11 @@ public class UiDecouplingRatchetTests
     [Fact]
     public void SystemWindowsUsageInViewModels_DoesNotExceedBaseline()
     {
-        const int Baseline = 46;
+        // Dropped from 46: AnimationViewModel/AnimatedKeyframeViewModel moved to headless
+        // Gum.Presentation (their dead WPF BitmapFrame plumbing removed, and their remaining
+        // Visibility/SolidColorBrush properties converted to bool per ADR-0004); ElementAnimationsViewModel
+        // (stays tool-side) lost its own dead BitmapFrame/Visibility properties too (issue #3754).
+        const int Baseline = 34;
 
         var pattern = new Regex(@"System\.Windows");
         int count = SourceFiles()
