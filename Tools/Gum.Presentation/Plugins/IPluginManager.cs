@@ -167,4 +167,27 @@ public interface IPluginManager
     void TreeNodeSelected(object? treeNode);
     bool IsInitialized { get; }
     void SetHighlightedIpso(GraphicalUiElement? positionedSizedObject);
+
+    // Widened for #3754: PluginsDialogViewModel (the "Manage Plugins" dialog) previously called
+    // the concrete PluginManager's static AllPluginContainers/ShutDownPlugin/ReenablePlugin members
+    // directly. IPlugin/PluginContainer live in the tool-only Gum.csproj (which this headless
+    // Gum.Presentation assembly cannot reference), so plugin identity crosses this interface as the
+    // opaque PluginSummary.PluginHandle token instead - see PluginSummary.
+
+    /// <summary>
+    /// Returns a snapshot of every loaded plugin, for the "Manage Plugins" dialog.
+    /// </summary>
+    IReadOnlyList<PluginSummary> GetAllPluginSummaries();
+
+    /// <summary>
+    /// Disables the plugin identified by <paramref name="pluginHandle"/> as user-initiated
+    /// (persisting the disabled state) and returns its updated summary.
+    /// </summary>
+    PluginSummary DisableUserPlugin(object pluginHandle);
+
+    /// <summary>
+    /// Re-enables a previously-disabled plugin identified by <paramref name="pluginHandle"/>,
+    /// retrying its <c>StartUp()</c>, and returns its updated summary.
+    /// </summary>
+    PluginSummary TryEnablePlugin(object pluginHandle);
 }

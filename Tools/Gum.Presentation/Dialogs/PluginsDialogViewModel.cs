@@ -1,52 +1,56 @@
-using System;
 using System.Collections.ObjectModel;
 using Gum.Plugins;
 
 namespace Gum.Services.Dialogs;
 
+/// <summary>
+/// View model backing the "Manage Plugins" dialog. Lists every loaded plugin and lets the user
+/// enable/disable them via <see cref="IPluginManager"/>.
+/// </summary>
 public class PluginsDialogViewModel : DialogViewModel
 {
     public string Title { get => Get<string>(); set => Set(value); }
 
     public ObservableCollection<PluginItemViewModel> Plugins { get; } = [];
 
-    private readonly IDialogService dialogService;
-
-    public PluginsDialogViewModel(IDialogService dialogService)
+    public PluginsDialogViewModel(IDialogService dialogService, IPluginManager pluginManager)
     {
-        this.dialogService = dialogService;
-
         Title = "Manage Plugins";
         AffirmativeText = "Close";
         NegativeText = null;
 
-        foreach (var container in PluginManager.AllPluginContainers)
+        foreach (PluginSummary summary in pluginManager.GetAllPluginSummaries())
         {
-            Plugins.Add(new PluginItemViewModel(container, dialogService));
+            Plugins.Add(new PluginItemViewModel(summary, pluginManager, dialogService));
         }
     }
 }
 
+/// <summary>
+/// A single row in the "Manage Plugins" dialog. Wraps a <see cref="PluginSummary"/> snapshot and
+/// re-fetches it from <see cref="IPluginManager"/> whenever the user toggles the plugin.
+/// </summary>
 public class PluginItemViewModel : Mvvm.ViewModel
 {
-    private readonly PluginContainer container;
+    private readonly IPluginManager pluginManager;
     private readonly IDialogService dialogService;
+    private PluginSummary summary;
 
-    public string DisplayText => container.ToString();
+    public string DisplayText => summary.DisplayText;
 
     public bool IsEnabled
     {
-        get => container.IsEnabled;
+        get => summary.IsEnabled;
         set
         {
-            if (value == container.IsEnabled)
+            if (value == summary.IsEnabled)
             {
                 return;
             }
 
             if (!value)
             {
-                PluginManager.ShutDownPlugin(container.Plugin, PluginShutDownReason.UserDisabled);
+                summary = pluginManager.DisableUserPlugin(summary.PluginHandle);
                 NotifyPropertyChanged();
                 NotifyPropertyChanged(nameof(DisplayText));
             }
@@ -57,9 +61,10 @@ public class PluginItemViewModel : Mvvm.ViewModel
         }
     }
 
-    public PluginItemViewModel(PluginContainer container, IDialogService dialogService)
+    public PluginItemViewModel(PluginSummary summary, IPluginManager pluginManager, IDialogService dialogService)
     {
-        this.container = container;
+        this.summary = summary;
+        this.pluginManager = pluginManager;
         this.dialogService = dialogService;
     }
 
@@ -67,26 +72,17 @@ public class PluginItemViewModel : Mvvm.ViewModel
     {
         bool shouldEnable = true;
 
-        if (!string.IsNullOrEmpty(container.FailureDetails))
+        if (summary.HasFailureDetails)
         {
             shouldEnable = dialogService.ShowYesNoMessage(
-                "The plugin " + container.Name + " has crashed so" +
+                "The plugin " + summary.Name + " has crashed so" +
                 " it was disabled.  Are you sure you want to re-enable it?",
                 "Re-enable crashed plugin?");
         }
 
         if (shouldEnable)
         {
-            container.IsEnabled = true;
-            try
-            {
-                container.Plugin.StartUp();
-                PluginManager.ReenablePlugin(container.Plugin);
-            }
-            catch (Exception exception)
-            {
-                container.Fail(exception, "Failed in StartUp");
-            }
+            summary = pluginManager.TryEnablePlugin(summary.PluginHandle);
         }
 
         NotifyPropertyChanged(nameof(IsEnabled));

@@ -112,6 +112,13 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   Fixed the same way as `ViewModel.cs`: link the file into `GumCommon.csproj` (mirroring its
   existing `ViewModel.cs` entry) and `<Compile Remove>` it from `Gum.csproj` so it isn't compiled
   twice. Watch for other extension methods declared in a BCL namespace the same way.
+- **A VM's dependency on `IPluginManager` can still block the move even when the interface itself
+  is already in `Gum.Presentation`, if the *operation* it needs naturally returns a tool-only
+  concrete type** (e.g. `PluginContainer`/`IPlugin`, which live in `Gum.csproj` and can't be
+  referenced from the headless assembly). Widen the interface using the same opaque-`object`
+  pattern as `FillWithErrors`/`TreeNodeSelected`: return a small headless DTO (a `record`, e.g.
+  `PluginSummary`) carrying an opaque handle `object`, and have the concrete implementation cast
+  the handle back to its real type internally (#3754).
 
 **Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap).
 - *4a — Element tree:* decouple `ElementTreeViewManager` from `TreeNode`; the already-migrated
