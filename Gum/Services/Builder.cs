@@ -81,6 +81,13 @@ file static class ServiceCollectionExtensions
             typeof(GumBuilder).Assembly,
             static (isp, type) => isp.AddTransient(type)
         );
+        // ADR-0005: VMs relocated into the headless Gum.Presentation assembly (e.g. HotkeyViewModel,
+        // the GetUserStringDialogBaseViewModel dialog family) live outside typeof(GumBuilder).Assembly,
+        // so they need their own scan or they're silently unregistered.
+        services.ForEachConcreteTypeAssignableTo<ViewModel>(
+            typeof(DialogViewModel).Assembly,
+            static (isp, type) => isp.AddTransient(type)
+        );
         services.AddTransient(typeof(Lazy<>), typeof(Lazier<>));
         services.AddTransient<PeriodicUiTimer>();
 

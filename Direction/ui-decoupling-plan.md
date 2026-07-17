@@ -141,6 +141,61 @@ an interface.
 > taught to also scan the tool assembly. The first slice sidestepped both by picking a leaf VM that
 > is `new`-constructed and code-behind-bound.
 
+**#3754 (2026-07-17) — bulk VM migration re-audit: most 2026-06-24 blockers no longer held.**
+Re-checked the scouting finding above against current interfaces instead of assuming it still
+applied. `IHotkeyManager` and `IDialogService` had already been cleaned of WPF types by earlier
+#3754 work (`Gum.Input.GumKey`/`GumKeyEventArgs` instead of `System.Windows.Forms.Keys`;
+`DialogViewModel` itself already headless) — the scouting note's premise was stale. Moved 11 more
+VMs plus 4 previously-tool-only interfaces (`ISetVariableLogic`, `IReorderLogic`,
+`ICircularReferenceManager`, `IFavoriteComponentManager` — all pure, no WPF) into
+`Gum.Presentation`: `HotkeyViewModel` (+`HotkeyItemViewModel`), `GetUserStringDialogViewModel`
+(+`GetUserStringDialogBaseViewModel`), `UndosViewModel`, `CreateComponentDialogViewModel`,
+`AddInstanceDialogViewModel`, `AddFolderDialogViewModel`, `AddCategoryDialogViewModel`,
+`AddStateDialogViewModel`, `RenameElementDialogViewModel`, `RightClickViewModel`
+(+`ContextMenuItemViewModel`), and `AnimationContainerViewModel` (one clean leaf pulled out of the
+otherwise still-blocked animation cluster, see below). `INameVerifier` looked tool-only too but
+was already GumCommon-shared (same `Compile Include`/`Link` trick as `ViewModel.cs`/
+`StandardElementsManager.cs`/`ObjectFinder.cs`) — reverted that move once the build caught the
+break; no relocation was needed.
+
+**Confirmed and fixed cross-assembly wrinkle #1 (`Builder.cs` VM scan).**
+`ForEachConcreteTypeAssignableTo<ViewModel>` only scanned `typeof(GumBuilder).Assembly`, so
+`HotkeyViewModel` (MEF-bridged) and the `GetUserStringDialogBaseViewModel` dialog family
+(DI-resolved via `IDialogService.Show<T>`) silently stopped resolving once moved — caught by
+`ServiceProviderCompositionSpikeTests`, fixed by adding a second scan over
+`typeof(DialogViewModel).Assembly`.
+
+**Cross-assembly wrinkle #2 (`DialogViewResolver`) confirmed real, still unfixed.**
+`DialogViewResolver.Scan(Type)` only looks for a View in the *VM's own assembly*, so any
+`DialogViewModel` shown via `IDialogService.Show<T>`/`ShowChoices` whose View lives in `Gum.csproj`
+breaks once the VM moves out — **except** the `GetUserStringDialogBaseViewModel` family, which the
+resolver already hardcodes an assembly-agnostic fallback for (`typeof(GetUserStringDialogView)`
+regardless of where the VM type lives), which is why that whole family (and the code-behind-bound
+`HotkeyViewModel`) was safe to move without touching the resolver. Left blocked, still needing the
+resolver taught to scan a second (tool) assembly: `ExposeColorDialogViewModel`,
+`MessageDialogViewModel`, `ChoiceDialogViewModel`, `StandardDiffDetailsViewModel`,
+`PluginsDialogViewModel` (also separately blocked below).
+
+**Two more genuine (non-stale) blockers, both narrower than "the whole cluster":**
+- `IPluginManager` leaks a concrete WPF `Window` (`Gum.Gui.Windows.DeleteOptionsWindow`, on
+  `ShowDeleteDialog`/`DeleteConfirmed`) — blocks `AddVariableViewModel` and `PluginsDialogViewModel`
+  (which also calls static `PluginManager.AllPluginContainers`/`ShutDownPlugin` directly, a second,
+  independent blocker).
+- `IProjectState.GeneralSettings` returns the WinForms-tainted `GeneralSettingsFile` — blocks
+  `ProjectCommands` (so `AddScreenDialogViewModel`/`AddComponentDialogViewModel`, which inject it,
+  stay blocked too) and `AddFormsViewModel`. Same shape as the `ProjectPropertiesViewModel` fix in
+  #3776/#3777 (narrow to the one field actually used) — a good next-round candidate.
+- The `StateAnimationPlugin.ViewModels` cluster (`SubAnimationSelectionDialogViewModel`,
+  `AnimationViewModel`, `ElementAnimationsViewModel`, `AnimatedKeyframeViewModel`) stays blocked by
+  direct `System.Windows.Media.Imaging.BitmapImage` usage and by
+  `IAnimationCollectionViewModelManager`'s `ElementAnimationsViewModel`-typed signature.
+- `RenameFolderDialogViewModel` calls `System.Windows.Forms` directly, unlike its dialog siblings —
+  a real, inline WinForms usage, not a stale note.
+
+Each moved VM got a headless pinning test in `Gum.Presentation.Tests` (6 migrated from
+`GumToolUnitTests`, rewriting `Moq.AutoMock` — not referenced in the headless test project — to
+explicit `Mock<T>`; 6 newly written, none existed before).
+
 **Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap).
 - *4a — Element tree:* decouple `ElementTreeViewManager` from `TreeNode`; the already-migrated
   state tree is the proven template.
