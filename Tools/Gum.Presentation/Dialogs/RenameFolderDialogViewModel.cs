@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Windows.Forms;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Logic;
@@ -19,7 +18,7 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
     private readonly INameVerifier _nameVerifier;
     private readonly IRenameLogic _renameLogic;
     private readonly IGuiCommands _guiCommands;
-    private readonly FileLocations _fileLocations;
+    private readonly IFileLocations _fileLocations;
     private readonly IFileCommands _fileCommands;
     private readonly IProjectState _projectState;
 
@@ -29,7 +28,7 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
         INameVerifier nameVerifier,
         IRenameLogic renameLogic,
         IGuiCommands guiCommands,
-        FileLocations fileLocations,
+        IFileLocations fileLocations,
         IFileCommands fileCommands,
         IProjectState projectState)
     {
@@ -89,11 +88,7 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
         }
 
         string oldPathRelativeToElementsRoot = FileManager.MakeRelative(oldFullPath.FullPath, rootForElement, preserveCase: true);
-        var folderNodeAsTreeNode = FolderNode as TreeNodeWrapper;
-        if(folderNodeAsTreeNode?.Node != null)
-        {
-            folderNodeAsTreeNode.Node.Text = Value;
-        }
+        FolderNode.Text = Value;
         string newPathRelativeToElementsRoot = FileManager.MakeRelative(FolderNode.GetFullFilePath().FullPath, rootForElement, preserveCase: true);
 
         if (FolderNode.IsScreensFolderTreeNode())

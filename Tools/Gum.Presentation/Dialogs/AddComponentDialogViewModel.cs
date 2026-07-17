@@ -1,7 +1,7 @@
 ﻿using Gum.DataTypes;
+using Gum.Logic;
 using Gum.Managers;
 using Gum.Services.Dialogs;
-using Gum.ToolCommands;
 using Gum.ToolStates;
 using ToolsUtilities;
 
@@ -14,14 +14,14 @@ public class AddComponentDialogViewModel : GetUserStringDialogBaseViewModel
 
     private readonly INameVerifier _nameVerifier;
     private readonly ISelectedState _selectedState;
-    private readonly ProjectCommands _projectCommands;
-    private readonly FileLocations _fileLocations;
+    private readonly ICopyPasteProjectCommands _projectCommands;
+    private readonly IFileLocations _fileLocations;
     private readonly IProjectState _projectState;
 
     public AddComponentDialogViewModel(INameVerifier nameVerifier,
         ISelectedState selectedState,
-        ProjectCommands projectCommands,
-        FileLocations fileLocations,
+        ICopyPasteProjectCommands projectCommands,
+        IFileLocations fileLocations,
         IProjectState projectState)
     {
         _nameVerifier = nameVerifier;

@@ -2,7 +2,7 @@
 
 namespace Gum.Managers;
 
-public class FileLocations
+public class FileLocations : IFileLocations
 {
     public string ScreensFolder => ProjectFolder + "Screens/";
 

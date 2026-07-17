@@ -94,6 +94,12 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   fallback scan finds it there. The `GetUserStringDialogBaseViewModel` family still resolves via
   its own assembly-agnostic special case (hardcoded to `GetUserStringDialogView`), independent of
   this fallback.
+- **Porting a WinForms-cast extension method (`(node as ConcreteWrapper)?.Method() ?? false`)
+  to a headless one on the same interface must *replace*, not add alongside, the old overload.**
+  Both live in the same namespace with the identical `(this ITreeNode)` signature, so leaving both
+  is an ambiguous-call compile error at every existing call site, not just the moved VM's. Reuse an
+  existing headless identity check on the interface (e.g. a root node's `Parent == null && Text ==
+  "..."`) instead of the WinForms instance-equality the cast-based version relied on.
 
 **Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap).
 - *4a — Element tree:* decouple `ElementTreeViewManager` from `TreeNode`; the already-migrated

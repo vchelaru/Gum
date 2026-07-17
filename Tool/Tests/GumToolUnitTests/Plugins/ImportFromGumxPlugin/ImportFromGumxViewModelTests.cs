@@ -5,7 +5,6 @@ using Gum.DataTypes.Variables;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Plugins.ImportPlugin.Services;
 using Gum.Services.Dialogs;
-using Gum.Settings;
 using Gum.ToolStates;
 using ImportFromGumxPlugin.Services;
 using ImportFromGumxPlugin.ViewModels;
@@ -449,7 +448,10 @@ public class ImportFromGumxViewModelTests
         }
 
         public GumProjectSave GumProjectSave { get; }
-        public GeneralSettingsFile GeneralSettings => new GeneralSettingsFile();
+        public bool EffectiveUseStandardsPalette => true;
+        public byte OutlineColorR => 255;
+        public byte OutlineColorG => 255;
+        public byte OutlineColorB => 255;
         public string? ProjectDirectory => null;
         public FilePath ComponentFilePath => new FilePath(string.Empty);
         public FilePath ScreenFilePath => new FilePath(string.Empty);

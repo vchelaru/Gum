@@ -104,7 +104,7 @@ class TreeNodeWrapper : ITreeNode
 {
     public TreeNode Node { get;  }
     public object Tag => Node.Tag;
-    public string Text => Node.Text;
+    public string Text { get => Node.Text; set => Node.Text = value; }
 
     public ITreeNode? Parent => Node.Parent != null
         ? new TreeNodeWrapper(Node.Parent)
@@ -368,7 +368,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private readonly IDeleteLogic _deleteLogic;
     private readonly IUndoManager _undoManager;
     private readonly IWireframeObjectManager _wireframeObjectManager;
-    private readonly FileLocations _fileLocations;
+    private readonly IFileLocations _fileLocations;
     private readonly IElementCommands _elementCommands;
     private readonly INameVerifier _nameVerifier;
     private readonly ISetVariableLogic _setVariableLogic;
@@ -403,7 +403,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         IDeleteLogic deleteLogic,
         IUndoManager undoManager,
         IWireframeObjectManager wireframeObjectManager,
-        FileLocations fileLocations,
+        IFileLocations fileLocations,
         IElementCommands elementCommands,
         INameVerifier nameVerifier,
         ISetVariableLogic setVariableLogic,
@@ -840,7 +840,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     /// </summary>
     public void ApplyStandardsPaletteMode()
     {
-        bool usePalette = _projectState.GeneralSettings?.EffectiveUseStandardsPalette == true;
+        bool usePalette = _projectState.EffectiveUseStandardsPalette;
 
         if (mStandardElementsTreeNode != null)
         {
@@ -1461,7 +1461,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             // When the experimental Standards palette is on, the Standard folder is replaced by the
             // chip palette, so it is not shown in the tree. The node object is still kept (and still
             // populated) so toggling the setting at runtime can restore it without a full rebuild.
-            if (_projectState.GeneralSettings?.EffectiveUseStandardsPalette != true)
+            if (!_projectState.EffectiveUseStandardsPalette)
             {
                 ObjectTreeView.Nodes.Add(mStandardElementsTreeNode);
             }
@@ -1808,7 +1808,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         // signal that standard elements may have changed (e.g. "Add Skia Standard Elements", which
         // only calls RefreshElementTreeView and raises no ElementAdd event). RefreshChips is
         // idempotent, so this is a no-op when the standard set is unchanged.
-        if (_projectState.GeneralSettings?.EffectiveUseStandardsPalette == true)
+        if (_projectState.EffectiveUseStandardsPalette)
         {
             RefreshStandardsPaletteChips();
         }
@@ -2879,19 +2879,11 @@ public static class TreeNodeExtensionMethods
     /// Unlike IsScreensFolderTreeNode and IsTopScreenContainerTreeNode, this returns true for
     /// Screen elements themselves, not just folders.
     /// </remarks>
-    public static bool IsPartOfScreensFolderStructure(this ITreeNode treeNode) =>
-        (treeNode as TreeNodeWrapper)?.Node.IsPartOfScreensFolderStructure() ?? false;
-
-    /// <summary>
-    /// Determines whether the tree node is part of the Screens folder structure
-    /// (either the root Screens folder, a subfolder, or a Screen element within the hierarchy).
-    /// </summary>
-    /// <param name="treeNode">The tree node to check.</param>
-    /// <returns>True if this node is anywhere within the Screens folder structure; otherwise, false.</returns>
     /// <remarks>
-    /// This recursively checks if the node or any of its parents is the root Screens node.
-    /// Unlike IsScreensFolderTreeNode and IsTopScreenContainerTreeNode, this returns true for
-    /// Screen elements themselves, not just folders.
+    /// The <see cref="ITreeNode"/>-typed overload now lives in Gum.Presentation's
+    /// TreeNodeFolderExtensions (headless, ADR-0005 Phase 3) instead of this WinForms-cast-based
+    /// one, so AddScreenDialogViewModel/DragDropManager and any other <see cref="ITreeNode"/> caller
+    /// resolve there without an ambiguous-call conflict.
     /// </remarks>
     public static bool IsPartOfScreensFolderStructure(this TreeNode treeNode)
     {
@@ -2915,19 +2907,11 @@ public static class TreeNodeExtensionMethods
     /// Unlike IsComponentsFolderTreeNode and IsTopComponentContainerTreeNode, this returns true for
     /// Component elements themselves, not just folders.
     /// </remarks>
-    public static bool IsPartOfComponentsFolderStructure(this ITreeNode treeNode) =>
-        (treeNode as TreeNodeWrapper)?.Node.IsPartOfComponentsFolderStructure() ?? false;
-
-    /// <summary>
-    /// Determines whether the tree node is part of the Components folder structure
-    /// (either the root Components folder, a subfolder, or a Component element within the hierarchy).
-    /// </summary>
-    /// <param name="treeNode">The tree node to check.</param>
-    /// <returns>True if this node is anywhere within the Components folder structure; otherwise, false.</returns>
     /// <remarks>
-    /// This recursively checks if the node or any of its parents is the root Components node.
-    /// Unlike IsComponentsFolderTreeNode and IsTopComponentContainerTreeNode, this returns true for
-    /// Component elements themselves, not just folders.
+    /// The <see cref="ITreeNode"/>-typed overload now lives in Gum.Presentation's
+    /// TreeNodeFolderExtensions (headless, ADR-0005 Phase 3) instead of this WinForms-cast-based
+    /// one, so AddComponentDialogViewModel/DragDropManager and any other <see cref="ITreeNode"/>
+    /// caller resolve there without an ambiguous-call conflict.
     /// </remarks>
     public static bool IsPartOfComponentsFolderStructure(this TreeNode treeNode)
     {

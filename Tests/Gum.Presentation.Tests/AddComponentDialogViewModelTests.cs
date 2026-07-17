@@ -1,11 +1,10 @@
 using Gum.DataTypes;
 using Gum.Dialogs;
 using Gum.Managers;
-using Gum.ToolCommands;
 using Gum.ToolStates;
 using Moq;
 
-namespace GumToolUnitTests.ViewModels.Dialogs;
+namespace Gum.Presentation.Tests;
 
 public class AddComponentDialogViewModelTests : BaseTestClass
 {
@@ -29,13 +28,14 @@ public class AddComponentDialogViewModelTests : BaseTestClass
 
         // With no component-folder tree node selected, OnAffirmative falls back to
         // IProjectState.ComponentFilePath; the mock returns a null FilePath, so the method
-        // short-circuits before touching ProjectCommands/FileLocations. Those collaborators are
-        // therefore never invoked on this path - ProjectCommands is supplied as null deliberately.
+        // short-circuits before touching ICopyPasteProjectCommands/IFileLocations. Those
+        // collaborators are therefore never invoked on this path - both are supplied as null
+        // deliberately.
         _sut = new AddComponentDialogViewModel(
             _nameVerifier.Object,
             _selectedState.Object,
             projectCommands: null!,
-            new FileLocations(),
+            fileLocations: null!,
             _projectState.Object);
     }
 

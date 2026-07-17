@@ -1,8 +1,8 @@
 ﻿using Gum.Commands;
 using Gum.DataTypes;
+using Gum.Logic;
 using Gum.Managers;
 using Gum.Services.Dialogs;
-using Gum.ToolCommands;
 using Gum.ToolStates;
 using ToolsUtilities;
 
@@ -12,21 +12,21 @@ public class AddScreenDialogViewModel : GetUserStringDialogBaseViewModel
 {
     public override string Title => "Add Screen";
     public override string Message => "Enter new Screen name";
-    
+
     private readonly INameVerifier _nameVerifier;
     private readonly ISelectedState _selectedState;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
-    private readonly ProjectCommands _projectCommands;
-    private readonly FileLocations _fileLocations;
+    private readonly ICopyPasteProjectCommands _projectCommands;
+    private readonly IFileLocations _fileLocations;
     private readonly IProjectState _projectState;
 
     public AddScreenDialogViewModel(INameVerifier nameVerifier,
         ISelectedState selectedState,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
-        ProjectCommands projectCommands,
-        FileLocations fileLocations,
+        ICopyPasteProjectCommands projectCommands,
+        IFileLocations fileLocations,
         IProjectState projectState)
     {
         _nameVerifier = nameVerifier;
@@ -61,8 +61,9 @@ public class AddScreenDialogViewModel : GetUserStringDialogBaseViewModel
         // Prevent issues with any code that's looking for a '/' instead of a '\' slash
         relativeToScreens = relativeToScreens.Replace('\\', '/');
 
-        ScreenSave screenSave = _projectCommands.AddScreen(relativeToScreens + Value);
-        
+        ScreenSave screenSave = new ScreenSave { Name = relativeToScreens + Value };
+        _projectCommands.AddScreen(screenSave);
+
         _guiCommands.RefreshElementTreeView();
 
         _selectedState.SelectedScreen = screenSave;
