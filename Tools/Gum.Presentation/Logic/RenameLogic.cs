@@ -5,30 +5,14 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.ToolStates;
 using Gum.DataTypes.Variables;
-using System.Windows.Forms;
-using Gum.Plugins;
 using Gum.Managers;
 using Gum.Undo;
-using CommonFormsAndControls;
-using Gum.Controls;
-using System.Drawing;
-using System.Windows.Documents.DocumentStructures;
 using Gum.Commands;
-using Gum.Services;
 using Gum.Services.Dialogs;
-using ToolsUtilities;
-using DialogResult = System.Windows.Forms.DialogResult;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using ToolsUtilities;
 
 namespace Gum.Logic;
-
-// The rename-change types (NameChangeAction, SideOfEquals, VariableChange, VariableReferenceChange,
-// VariableChangeResponse) and the reference-result types (ElementReferences, InstanceReferences,
-// StateReferences, BehaviorReferences, CategoryReferences) were relocated to the headless
-// Gum.Presentation assembly (Tools/Gum.Presentation/Logic/RenameChangeTypes.cs and ReferenceTypes.cs),
-// along with the IReferenceFinder port, so the undo subsystem and the headless presentation layer can
-// reference them without depending on the tool (ADR-0005 Phase 3). They keep the Gum.Logic namespace,
-// so consumers here compile unchanged.
 
 public class RenameLogic : IRenameLogic, IUndoRenameLogic
 {
@@ -40,8 +24,8 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly IDeleteLogic _deleteLogic;
-    private readonly IProjectManager _projectManager;
-    private readonly IPluginManager _pluginManager;
+    private readonly IRenameProjectProvider _renameProjectProvider;
+    private readonly IRenamePluginNotifier _renamePluginNotifier;
     private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
     private readonly IReferenceFinder _referenceFinder;
 
@@ -51,8 +35,8 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
         IDeleteLogic deleteLogic,
-        IProjectManager projectManager,
-        IPluginManager pluginManager,
+        IRenameProjectProvider renameProjectProvider,
+        IRenamePluginNotifier renamePluginNotifier,
         IStandardElementsManagerGumTool standardElementsManagerGumTool,
         IReferenceFinder referenceFinder)
     {
@@ -62,8 +46,8 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _deleteLogic = deleteLogic;
-        _projectManager = projectManager;
-        _pluginManager = pluginManager;
+        _renameProjectProvider = renameProjectProvider;
+        _renamePluginNotifier = renamePluginNotifier;
         _standardElementsManagerGumTool = standardElementsManagerGumTool;
         _referenceFinder = referenceFinder;
     }
@@ -94,7 +78,7 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
             // because it displays the state name at the top
             _guiCommands.RefreshVariables(force: true);
 
-            _pluginManager.StateRename(stateSave, oldName);
+            _renamePluginNotifier.StateRename(stateSave, oldName);
 
             ApplyStateReferences(stateChanges, stateSave);
 
@@ -223,10 +207,8 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
                 variable.Name = category.Name + "State";
                 variable.Type = category.Name + "State";
 
-#if GUM
                 variable.CustomTypeConverter =
                     new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(category.Name, _selectedState);
-#endif
             }
 
             foreach (var state in ownerAsElement!.AllStates)
@@ -239,7 +221,7 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
         // I don't think we need to save the project when renaming a state:
         //_fileCommands.TryAutoSaveProject();
 
-        _pluginManager.CategoryRename(category, oldName);
+        _renamePluginNotifier.CategoryRename(category, oldName);
 
         _fileCommands.TryAutoSaveCurrentObject();
 
@@ -495,8 +477,8 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
     private void RenameXml(ElementSave elementSave, string oldName)
     {
         // If we got here that means all went okay, so we should delete the old files
-        var oldXml = elementSave.GetFullPathXmlFile(oldName);
-        var newXml = elementSave.GetFullPathXmlFile();
+        var oldXml = _fileCommands.GetFullPathXmlFile(elementSave, oldName);
+        var newXml = _fileCommands.GetFullFileName(elementSave);
 
         // A rename that only changes casing (e.g. "GameMenuScreens/Foo" -> "gamemenuscreens/Foo")
         // points oldXml and newXml at the SAME physical file on a case-insensitive filesystem
@@ -524,7 +506,7 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
             System.IO.File.Delete(oldXml.FullPath);
         }
 
-        _pluginManager.ElementRename(elementSave, oldName);
+        _renamePluginNotifier.ElementRename(elementSave, oldName);
 
         _fileCommands.TryAutoSaveProject();
 
@@ -546,7 +528,7 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
 
     private void RenameAllReferencesTo(ElementSave elementSave, InstanceSave instance, string oldName)
     {
-        var project = _projectManager.GumProjectSave;
+        var project = _renameProjectProvider.GumProjectSave;
         // Tell the GumProjectSave to react to the rename.
         // This changes the names of the ElementSave references.
         project.ReactToRenamed(elementSave, instance, oldName);
@@ -568,7 +550,7 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
             {
                 foreach (StateSave stateSave in _selectedState.SelectedElement.AllStates)
                 {
-                    stateSave.ReactToInstanceNameChange(instance, oldName, newName, _pluginManager);
+                    stateSave.ReactToInstanceNameChange(instance, oldName, newName, _renamePluginNotifier);
                 }
 
                 foreach (var eventSave in _selectedState.SelectedElement.Events)

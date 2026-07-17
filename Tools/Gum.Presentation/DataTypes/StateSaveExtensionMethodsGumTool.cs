@@ -1,4 +1,4 @@
-﻿using Gum.Plugins;
+﻿using Gum.Logic;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +10,7 @@ namespace Gum.DataTypes.Variables
 {
     internal static class StateSaveExtensionMethodsGumTool
     {
-        public static void ReactToInstanceNameChange(this StateSave stateSave, InstanceSave instanceSave, string oldName, string newName, IPluginManager pluginManager)
+        public static void ReactToInstanceNameChange(this StateSave stateSave, InstanceSave instanceSave, string oldName, string newName, IRenamePluginNotifier pluginManager)
         {
             foreach (VariableSave variable in stateSave.Variables)
             {

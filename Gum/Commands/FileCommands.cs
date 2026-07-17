@@ -355,6 +355,11 @@ public class FileCommands : IFileCommands
         return element.GetFullPathXmlFile();
     }
 
+    public FilePath? GetFullPathXmlFile(ElementSave element, string elementName)
+    {
+        return element.GetFullPathXmlFile(elementName);
+    }
+
 
     public void LoadLocalizationFile()
     {

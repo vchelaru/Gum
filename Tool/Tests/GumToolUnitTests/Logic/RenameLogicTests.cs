@@ -4,7 +4,6 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
-using Gum.Plugins;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
@@ -118,8 +117,8 @@ public class RenameLogicTests : BaseTestClass
             Type = "string",
         });
 
-        // ReactToInstanceNameChange notifies plugins at the end; a stub plugin manager makes that a no-op.
-        IPluginManager pluginManager = new Mock<IPluginManager>().Object;
+        // ReactToInstanceNameChange notifies plugins at the end; a stub plugin notifier makes that a no-op.
+        IRenamePluginNotifier pluginManager = new Mock<IRenamePluginNotifier>().Object;
         renderTargetContainer.Name = "RenamedContainer";
         defaultState.ReactToInstanceNameChange(renderTargetContainer, "RenderTargetContainer", "RenamedContainer", pluginManager);
 
@@ -177,14 +176,27 @@ public class RenameLogicTests : BaseTestClass
         {
             _project.FullFileName = Path.Combine(tempRoot, "Project.gumx");
 
-            // RenameLogic is constructed by AutoMocker with its own IProjectManager mock; the
-            // static Locator-based GetFullPathXmlFile lookups need to see the same GumProjectSave,
-            // so set up that same mock and register it with Locator too.
+            // RenameLogic reads the project through its own IRenameProjectProvider mock; the
+            // static Locator-based GetFullPathXmlFile lookups go through IProjectManager instead,
+            // so both need to see the same GumProjectSave.
+            _mocker.GetMock<IRenameProjectProvider>()
+                .Setup(x => x.GumProjectSave).Returns(_project);
             _mocker.GetMock<IProjectManager>()
                 .Setup(x => x.GumProjectSave).Returns(_project);
             var services = new ServiceCollection();
             services.AddSingleton(_mocker.GetMock<IProjectManager>().Object);
             Locator.Register(services.BuildServiceProvider());
+
+            // RenameXml now resolves file paths through IFileCommands rather than calling the
+            // GetFullPathXmlFile extension method directly; forward to that same extension method
+            // (which reads the IProjectManager mock registered with Locator above) so this test still
+            // exercises real path/file-move behavior.
+            _mocker.GetMock<IFileCommands>()
+                .Setup(x => x.GetFullPathXmlFile(It.IsAny<ElementSave>(), It.IsAny<string>()))
+                .Returns<ElementSave, string>((element, name) => element.GetFullPathXmlFile(name));
+            _mocker.GetMock<IFileCommands>()
+                .Setup(x => x.GetFullFileName(It.IsAny<ElementSave>()))
+                .Returns<ElementSave>(element => element.GetFullPathXmlFile()!);
 
             ScreenSave screen = new ScreenSave { Name = "GameMenuScreens/DialogueScreen" };
             _project.Screens.Add(screen);
