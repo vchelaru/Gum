@@ -21,7 +21,7 @@ Used by: message popups, yes/no confirmations, text input, choice selection, plu
 - `Dialog.AuxiliaryActions` — extra buttons on the left side (e.g. Browse)
 - `Dialog.ScrollContent` — `true` (default) enables outer ScrollViewer; `false` disables it so the view can manage its own scrolling (used by ImportFromGumxView)
 
-**View resolution**: `DialogViewResolver` maps view model types to views by naming convention (`FooViewModel` -> `FooView`) or by `[Dialog(typeof(VM))]` attribute. Scans assemblies lazily and caches results.
+**View resolution**: `DialogViewResolver` maps view model types to views by naming convention (`FooViewModel` -> `FooView`) or by `[Dialog(typeof(VM))]` attribute. Scans assemblies lazily and caches results. It always scans the VM's own assembly first, then - if unresolved - falls back to `IDialogViewAssemblyProvider` (default: every assembly currently loaded in the process) to find a VM whose View lives elsewhere (e.g. a `DialogViewModel` relocated into the headless `Gum.Presentation` assembly, paired with a View that stays in the Gum tool assembly or a dynamically-loaded plugin). **The fallback only works via `[Dialog(typeof(VM))]`** - naming-convention matching pairs a VM+View found within the *same* scanned assembly, so it can never bridge a cross-assembly pairing. Attribute the View before moving its VM out of the tool assembly.
 
 **Window sizing**: `DialogWindow` starts with `SizeToContent="WidthAndHeight"`. After content loads, `Dialog.OnContentChanged` switches to `SizeToContent.Manual` and clears the view's fixed Width/Height (sets to NaN), allowing the window to be resizable. `DialogService.CreateDialogWindow` sets `MaxHeight` to the owner window's `ActualHeight`.
 

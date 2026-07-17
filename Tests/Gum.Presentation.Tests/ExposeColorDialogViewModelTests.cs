@@ -2,10 +2,14 @@ using System;
 using System.Collections.Generic;
 using Gum.Dialogs;
 using Shouldly;
-using Xunit;
 
-namespace GumToolUnitTests.Dialogs;
+namespace Gum.Presentation.Tests;
 
+/// <summary>
+/// Characterization (pinning) tests for ExposeColorDialogViewModel, relocated out of Gum.csproj
+/// into the headless Gum.Presentation assembly (ADR-0005, #3754) - migrated verbatim from
+/// GumToolUnitTests alongside the view model move.
+/// </summary>
 public class ExposeColorDialogViewModelTests
 {
     private static readonly string[] RgbRoots = { "Red", "Green", "Blue" };

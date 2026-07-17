@@ -87,11 +87,15 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   `typeof(GumBuilder).Assembly`.** A DI-resolved VM moved to `Gum.Presentation` needs a second scan
   anchored in that assembly too, or it silently stops resolving (caught by
   `ServiceProviderCompositionSpikeTests`, not by a compile error).
-- **`DialogViewResolver` scans the VM's own assembly, then falls back to its own (tool) assembly.**
-  (Fixed alongside the `IPluginManager`/`AddVariableViewModel` move, #3754.) A relocated
-  `DialogViewModel`'s View can stay in the WPF tool assembly, matched via an explicit
-  `[Dialog(typeof(VM))]` attribute rather than the same-assembly name-convention scan — the
-  fallback scan finds it there. The `GetUserStringDialogBaseViewModel` family still resolves via
+- **`DialogViewResolver` scans the VM's own assembly, then falls back to an injected
+  `IDialogViewAssemblyProvider`** (default impl scans every assembly currently loaded in the
+  process) when the VM's own assembly has no View. This lets a relocated `DialogViewModel` resolve
+  regardless of which assembly its View lives in — the Gum tool assembly, or a dynamically-loaded
+  plugin (e.g. `StandardDiffDetailsViewModel` -> `ImportFromGumxPlugin.dll`). One caveat: the
+  fallback only works for `[Dialog(typeof(...))]`-attributed Views, not naming-convention matching
+  - that convention pairs a VM+View found within the *same* scanned assembly, so a View's naming
+  convention alone can never resolve a VM that lives elsewhere. Attribute the View explicitly before
+  moving its VM out of the tool assembly. The `GetUserStringDialogBaseViewModel` family resolves via
   its own assembly-agnostic special case (hardcoded to `GetUserStringDialogView`), independent of
   this fallback.
 - **Porting a WinForms-cast extension method (`(node as ConcreteWrapper)?.Method() ?? false`)
@@ -100,6 +104,14 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   is an ambiguous-call compile error at every existing call site, not just the moved VM's. Reuse an
   existing headless identity check on the interface (e.g. a root node's `Parent == null && Text ==
   "..."`) instead of the WinForms instance-equality the cast-based version relied on.
+- **A VM can depend on an "ambient" extension method that isn't linked into `Gum.Presentation`.**
+  `ChoiceDialogViewModel` called `ObservableCollection<T>.AddRange` via an extension method
+  declared *inside* `System.Collections.ObjectModel` (`Gum/Mvvm/ObservableCollectionExtensions.cs`)
+  so no explicit `using` was needed - invisible until the VM moved and the compiler silently
+  resolved to a different-signature BCL overload instead, producing a real (if confusing) CS0411.
+  Fixed the same way as `ViewModel.cs`: link the file into `GumCommon.csproj` (mirroring its
+  existing `ViewModel.cs` entry) and `<Compile Remove>` it from `Gum.csproj` so it isn't compiled
+  twice. Watch for other extension methods declared in a BCL namespace the same way.
 
 **Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap).
 - *4a — Element tree:* decouple `ElementTreeViewManager` from `TreeNode`; the already-migrated
