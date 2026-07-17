@@ -9,7 +9,9 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Gum;
 using Gum.Wireframe;
+using Gum.Themes.DarkPro;
 using Gum.Themes.Editor;
+using Gum.Themes.ForestGlade;
 using MonoGameGumThemesShowcase.Screens;
 
 namespace SilkNetGumThemesShowcase;
@@ -65,10 +67,13 @@ unsafe class Program
 
         // Each theme's parameterless Apply() installs its visuals as the defaults. Editor has no
         // named background color, so a sensible dark surround is used, matching the MonoGame/raylib
-        // showcases' own Editor clear color.
+        // showcases' own Editor clear color. Dark Pro / Forest Glade read their own background token
+        // directly -- already an SKColor via each Styling class's SKIA Color alias.
         themes = new[]
         {
             new ThemeOption("Editor", EditorTheme.Apply, new SKColor(40, 40, 40, 255)),
+            new ThemeOption("Dark Pro", DarkProTheme.Apply, DarkProStyling.ActiveStyle.Colors.Background),
+            new ThemeOption("Forest Glade", ForestGladeTheme.Apply, ForestGladeStyling.ActiveStyle.Colors.CanopyDeep),
         };
 
         ApplyTheme(0);

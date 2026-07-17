@@ -3,6 +3,8 @@ using Gum.DataTypes;
 using Gum.GueDeriving;
 #if RAYLIB
 using Raylib_cs;
+#elif SKIA
+using Color = SkiaSharp.SKColor;
 #else
 using Microsoft.Xna.Framework;
 #endif
@@ -215,6 +217,10 @@ public class ComboBoxVisual : BaseComboBoxVisual
 
     private static Color Darken(Color c, float factor)
     {
+#if SKIA
+        return new Color((byte)(c.Red * factor), (byte)(c.Green * factor), (byte)(c.Blue * factor), c.Alpha);
+#else
         return new Color((byte)(c.R * factor), (byte)(c.G * factor), (byte)(c.B * factor), c.A);
+#endif
     }
 }

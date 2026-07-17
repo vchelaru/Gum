@@ -6,7 +6,7 @@ using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.Wireframe;
 using GumRuntime;
-#if !RAYLIB
+#if !RAYLIB && !SKIA
 using Microsoft.Xna.Framework.Graphics;
 #endif
 using RenderingLibrary.Graphics.Fonts;
@@ -68,7 +68,7 @@ public static class DarkProTheme
         RegisterVisuals();
     }
 
-#if !RAYLIB
+#if !RAYLIB && !SKIA
     /// <summary>
     /// Backwards-compatible overload retained for existing MonoGame/KNI callers. The graphics
     /// device is now resolved internally from the active Gum renderer, so the argument is ignored;

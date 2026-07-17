@@ -1,5 +1,7 @@
 #if RAYLIB
 using Raylib_cs;
+#elif SKIA
+using Color = SkiaSharp.SKColor;
 #else
 using Microsoft.Xna.Framework;
 #endif
@@ -89,7 +91,7 @@ public class ForestGladeColors
     public Color AccentHalo { get; set; } = new Color(71, 246, 65, 76);
 
     /// <summary>Pure white — used for pressed-state text on a few controls.</summary>
-    public Color White { get; set; } = Color.White;
+    public Color White { get; set; } = new Color(255, 255, 255);
 
     // --- Promoted from the former internal ForestGladePalette ---------------
     // Button gradient stops (CSS .fg-btn uses three-stop linear gradients).
