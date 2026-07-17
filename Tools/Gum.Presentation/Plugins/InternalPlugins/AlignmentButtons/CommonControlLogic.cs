@@ -1,5 +1,4 @@
 ﻿using Gum.Managers;
-using Gum.PropertyGridHelpers;
 using Gum.ToolStates;
 using Gum.Commands;
 using Gum.Plugins.InternalPlugins.VariableGrid;
@@ -9,12 +8,12 @@ namespace Gum.Plugins.AlignmentButtons;
 public class CommonControlLogic
 {
     private readonly ISelectedState _selectedState;
-    private readonly WireframeCommands _wireframeCommands;
+    private readonly IWireframeCommands _wireframeCommands;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
     private readonly ISetVariableLogic _setVariableLogic;
-    
-    public CommonControlLogic(ISelectedState selectedState, WireframeCommands wireframeCommands,
+
+    public CommonControlLogic(ISelectedState selectedState, IWireframeCommands wireframeCommands,
         IGuiCommands guiCommands, IFileCommands fileCommands, ISetVariableLogic setVariableLogic)
     {
         _selectedState = selectedState;

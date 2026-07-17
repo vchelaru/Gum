@@ -5,7 +5,6 @@ using Gum.Plugins.AlignmentButtons;
 using Gum.ToolStates;
 using Gum.Undo;
 using System.Globalization;
-using System.Windows;
 
 namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels;
 
@@ -39,7 +38,7 @@ public class AlignmentViewModel : ViewModel
     public string MarginText => $"Applies {DockMargin}px margin";
 
     [DependsOn(nameof(DockMargin))]
-    public Visibility MarginTextVisibility => DockMargin != 0 ? Visibility.Visible : Visibility.Collapsed;
+    public bool IsMarginTextVisible => DockMargin != 0;
 
     public AlignmentViewModel(CommonControlLogic commonControlLogic, ISelectedState selectedState,
         IUndoManager undoManager)
