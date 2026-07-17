@@ -1,10 +1,8 @@
 ﻿using Gum.DataTypes;
 using Gum.Mvvm;
-using Gum.Settings;
 using Gum.Wireframe;
 using System;
 using System.Collections.Generic;
-using Gum.ToolStates;
 using ToolsUtilities;
 using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
@@ -19,7 +17,6 @@ public enum TextureFilter
 public class ProjectPropertiesViewModel : ViewModel
 {
 
-    GeneralSettingsFile generalSettings;
     GumProjectSave gumProject;
 
     public bool AutoSave
@@ -199,16 +196,15 @@ public class ProjectPropertiesViewModel : ViewModel
 
     public bool IsUpdatingFromModel { get; private set; }
 
-    public void SetFrom(GeneralSettingsFile generalSettings, GumProjectSave gumProject)
+    public void SetFrom(bool autoSave, GumProjectSave gumProject)
     {
         IsUpdatingFromModel = true;
 
         {
-            this.generalSettings = generalSettings;
             this.gumProject = gumProject;
 
 
-            AutoSave = this.generalSettings.AutoSave;
+            AutoSave = autoSave;
             ShowOutlines = this.gumProject.ShowOutlines;
             try
             {
@@ -249,7 +245,6 @@ public class ProjectPropertiesViewModel : ViewModel
 
     public void ApplyToModelObjects()
     {
-        this.generalSettings.AutoSave = AutoSave;
         this.gumProject.ShowOutlines = ShowOutlines;
         this.gumProject.ShowCanvasOutline = ShowCanvasOutline;
         this.gumProject.ShowCheckerBackground = ShowCheckerBackground;
