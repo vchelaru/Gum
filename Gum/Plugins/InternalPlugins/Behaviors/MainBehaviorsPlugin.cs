@@ -12,7 +12,6 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using System.Collections.Generic;
 using Gum.ToolCommands;
-using Gum.Services;
 
 namespace Gum.Plugins.Behaviors;
 
@@ -24,6 +23,7 @@ public class MainBehaviorsPlugin : PriorityPlugin
     private readonly IElementCommands _elementCommands;
     private readonly IUndoManager _undoManager;
     private readonly IProjectManager _projectManager;
+    private readonly IPluginManager _pluginManager;
 
     BehaviorsViewModel viewModel;
     DataUiGrid stateDataUiGrid;
@@ -34,12 +34,14 @@ public class MainBehaviorsPlugin : PriorityPlugin
         ISelectedState selectedState,
         IElementCommands elementCommands,
         IUndoManager undoManager,
-        IProjectManager projectManager)
+        IProjectManager projectManager,
+        IPluginManager pluginManager)
     {
         _selectedState = selectedState;
         _elementCommands = elementCommands;
         _undoManager = undoManager;
         _projectManager = projectManager;
+        _pluginManager = pluginManager;
     }
 
     public override void StartUp()
@@ -184,7 +186,7 @@ public class MainBehaviorsPlugin : PriorityPlugin
                 // _elementCommands.AddBehaviorTo only raises BehaviorReferencesChanged
                 // when a real (project-existing) behavior is added. Pure removals — e.g.
                 // unchecking only a stale orphan — would otherwise leave error state stale.
-                Locator.GetRequiredService<PluginManager>().BehaviorReferencesChanged(component);
+                _pluginManager.BehaviorReferencesChanged(component);
             }
             viewModel.UpdateTo(component);
 

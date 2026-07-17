@@ -49,6 +49,7 @@ class MainPropertiesWindowPlugin : PriorityPlugin
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly FileWatchLogic _fileWatchLogic;
     private readonly IProjectState _projectState;
+    private readonly IPluginManager _pluginManager;
     private FilePath? _fontCharacterFileAbsolute;
 
     private PluginTab? _pluginTab;
@@ -61,7 +62,8 @@ class MainPropertiesWindowPlugin : PriorityPlugin
         IDispatcher dispatcher,
         IWireframeObjectManager wireframeObjectManager,
         FileWatchLogic fileWatchLogic,
-        IProjectState projectState)
+        IProjectState projectState,
+        IPluginManager pluginManager)
     {
         _fontManager = fontManager;
         _wireframeCommands = wireframeCommands;
@@ -70,6 +72,7 @@ class MainPropertiesWindowPlugin : PriorityPlugin
         _wireframeObjectManager = wireframeObjectManager;
         _fileWatchLogic = fileWatchLogic;
         _projectState = projectState;
+        _pluginManager = pluginManager;
     }
 
     public override void StartUp()
@@ -326,7 +329,7 @@ class MainPropertiesWindowPlugin : PriorityPlugin
                 break;
         }
 
-        Locator.GetRequiredService<IPluginManager>().ProjectPropertySet(e.PropertyName);
+        _pluginManager.ProjectPropertySet(e.PropertyName);
 
         if (shouldSaveAndRefresh)
         {
