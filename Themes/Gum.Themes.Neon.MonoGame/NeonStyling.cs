@@ -1,5 +1,7 @@
 #if RAYLIB
 using Raylib_cs;
+#elif SKIA
+using Color = SkiaSharp.SKColor;
 #else
 using Microsoft.Xna.Framework;
 #endif
@@ -82,7 +84,7 @@ public class NeonColors
     public Color Danger { get; set; } = new Color(255, 0, 153);
 
     /// <summary>Pure white — used for pressed-state body text on Button/Slider thumb (CSS <c>color:#fff</c>).</summary>
-    public Color White { get; set; } = Color.White;
+    public Color White { get; set; } = new Color(255, 255, 255);
 
     /// <summary>
     /// Cyan glow color used by the native Apos.Shapes dropshadow. The CSS
@@ -132,7 +134,7 @@ public class NeonColors
     /// outside the body. Distinct shape from the body glow (which carries
     /// hover) and unmistakable against the cyan-on-dark palette.
     /// </summary>
-    public Color FocusRing { get; set; } = Color.White;
+    public Color FocusRing { get; set; } = new Color(255, 255, 255);
 
     /// <summary>
     /// ScrollBar thumb fill at rest. Intentionally muted (steel-blue

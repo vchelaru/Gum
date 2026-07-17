@@ -3,6 +3,8 @@ using Gum.DataTypes;
 using Gum.GueDeriving;
 #if RAYLIB
 using Raylib_cs;
+#elif SKIA
+using Color = SkiaSharp.SKColor;
 #else
 using Microsoft.Xna.Framework;
 #endif
@@ -197,11 +199,11 @@ public class ToggleButtonVisual : BaseToggleButtonVisual
 
         States.DisabledOn.Apply = () => ApplyPalette(
             fill: NeonStyling.ActiveStyle.Colors.Disabled, border: NeonStyling.ActiveStyle.Colors.Disabled,
-            text: Color.White, showShadow: false, showFocusRing: false);
+            text: new Color(255, 255, 255), showShadow: false, showFocusRing: false);
 
         States.DisabledFocusedOn.Apply = () => ApplyPalette(
             fill: NeonStyling.ActiveStyle.Colors.Disabled, border: NeonStyling.ActiveStyle.Colors.Disabled,
-            text: Color.White, showShadow: false, showFocusRing: true);
+            text: new Color(255, 255, 255), showShadow: false, showFocusRing: true);
     }
 
     private void ApplyPalette(Color fill, Color border, Color text, bool showShadow, bool showFocusRing)

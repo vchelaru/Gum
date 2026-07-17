@@ -10,5 +10,8 @@
     <Project Path="../../Themes/Gum.Themes.ForestGlade.SilkNet/Gum.Themes.ForestGlade.SilkNet.csproj" />
     <Project Path="../../Themes/Gum.Themes.Bubblegum.SilkNet/Gum.Themes.Bubblegum.SilkNet.csproj" />
     <Project Path="../../Themes/Gum.Themes.Hazard.SilkNet/Gum.Themes.Hazard.SilkNet.csproj" />
+    <Project Path="../../Themes/Gum.Themes.Meadow.SilkNet/Gum.Themes.Meadow.SilkNet.csproj" />
+    <Project Path="../../Themes/Gum.Themes.Neon.SilkNet/Gum.Themes.Neon.SilkNet.csproj" />
+    <Project Path="../../Themes/Gum.Themes.Retro95.SilkNet/Gum.Themes.Retro95.SilkNet.csproj" />
   </Folder>
 </Solution>

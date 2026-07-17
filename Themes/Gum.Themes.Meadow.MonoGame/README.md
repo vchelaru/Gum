@@ -9,6 +9,7 @@ Pick the package matching your runtime:
 - MonoGame: `dotnet add package Gum.Themes.Meadow.MonoGame`
 - KNI: `dotnet add package Gum.Themes.Meadow.Kni`
 - raylib: `dotnet add package Gum.Themes.Meadow.Raylib`
+- Skia/SilkNet: `dotnet add package Gum.Themes.Meadow.SilkNet`
 
 ## Usage
 

@@ -4,6 +4,8 @@ using Gum.GueDeriving;
 using Gum.Wireframe;
 #if RAYLIB
 using Raylib_cs;
+#elif SKIA
+using Color = SkiaSharp.SKColor;
 #else
 using Microsoft.Xna.Framework;
 #endif
@@ -292,12 +294,21 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         _dashIndicator.Visible = glyph == GlyphKind.Dash;
         if (glyph == GlyphKind.Dash)
         {
-            // Channel-wise equality so it compiles on both XNA (Color has ==) and raylib (no == operator).
+            // Channel-wise equality so it compiles on XNA/raylib (no == operator on raylib's Color)
+            // and Skia (whose SKColor exposes Red/Green/Blue/Alpha instead of R/G/B/A).
+#if SKIA
+            bool borderIsDisabled =
+                border.Red == MeadowStyling.ActiveStyle.Colors.Disabled.Red &&
+                border.Green == MeadowStyling.ActiveStyle.Colors.Disabled.Green &&
+                border.Blue == MeadowStyling.ActiveStyle.Colors.Disabled.Blue &&
+                border.Alpha == MeadowStyling.ActiveStyle.Colors.Disabled.Alpha;
+#else
             bool borderIsDisabled =
                 border.R == MeadowStyling.ActiveStyle.Colors.Disabled.R &&
                 border.G == MeadowStyling.ActiveStyle.Colors.Disabled.G &&
                 border.B == MeadowStyling.ActiveStyle.Colors.Disabled.B &&
                 border.A == MeadowStyling.ActiveStyle.Colors.Disabled.A;
+#endif
             _dashIndicator.FillColor = borderIsDisabled
                 ? MeadowStyling.ActiveStyle.Colors.Disabled : MeadowStyling.ActiveStyle.Colors.SageDark;
         }

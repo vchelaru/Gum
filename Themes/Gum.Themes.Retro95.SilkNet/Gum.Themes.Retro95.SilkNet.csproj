@@ -1,0 +1,72 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12</LangVersion>
+    <!-- Selects the Skia branch of the shared theme sources (Color via SkiaSharp.SKColor, the
+         no-op font-creator wiring in ThemePlatform, no-op shape init in ThemeShapePlatform). The
+         .MonoGame / .Kni / .Raylib variants leave this undefined. -->
+    <DefineConstants>$(DefineConstants);SKIA</DefineConstants>
+
+    <PackageId>Gum.Themes.Retro95.SilkNet</PackageId>
+    <Version>2026.5.11.1</Version>
+    <Authors>Gum Contributors</Authors>
+    <RepositoryUrl>https://github.com/vchelaru/Gum</RepositoryUrl>
+    <Description>A retro Windows 95 / "Classic" theme for Gum UI. Provides styled visuals for Gum Forms controls with raised/sunken beveled chrome, navy selection bands, and the canonical battleship-gray (#C0C0C0) palette, for Skia/SilkNet and Gum.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\Gum.Themes.Retro95.MonoGame\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.Retro95.MonoGame\Content\Fonts\OFL.txt" Pack="true" PackagePath="\" />
+    <None Include="..\Gum.Themes.Retro95.MonoGame\Content\Fonts\DejaVuSansMono-LICENSE.txt" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Source-share every theme .cs from the MonoGame variant; the SKIA symbol above swaps the
+         per-backend branches. The shims live outside that folder, so they are linked explicitly. -->
+    <Compile Include="..\Gum.Themes.Retro95.MonoGame\**\*.cs" />
+    <Compile Remove="..\Gum.Themes.Retro95.MonoGame\obj\**" />
+    <Compile Remove="..\Gum.Themes.Retro95.MonoGame\bin\**" />
+    <Compile Include="..\Shared\ThemePlatform.cs" Link="ThemePlatform.cs" />
+    <Compile Include="..\Shared\ThemeShapePlatform.cs" Link="ThemeShapePlatform.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Re-embed the TTFs from the MonoGame project's Content\Fonts folder, mapped under this
+         assembly's Content\Fonts via <Link> so the resource name resolves to
+         "Gum.Themes.Retro95.SilkNet.Content.Fonts.<file>" — matching what
+         Retro95Theme.RegisterEmbeddedFont derives from the assembly name. -->
+    <EmbeddedResource Include="..\Gum.Themes.Retro95.MonoGame\Content\Fonts\Nunito-Regular.ttf">
+      <Link>Content\Fonts\Nunito-Regular.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.Retro95.MonoGame\Content\Fonts\Nunito-Bold.ttf">
+      <Link>Content\Fonts\Nunito-Bold.ttf</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Gum.Themes.Retro95.MonoGame\Content\Fonts\DejaVuSansMono.ttf">
+      <Link>Content\Fonts\DejaVuSansMono.ttf</Link>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Color (SkiaSharp.SKColor) resolves through this package on the SKIA branch of the theme
+         sources; the theme imports it explicitly (no global using). Skia needs no KernSmith
+         atlas-baking dependency: it rasterizes TTFs natively via GumFontMapper, and no Apos.Shapes
+         package: SkiaGum renders RectangleRuntime / CircleRuntime (gradients, dropshadows,
+         per-corner radii) natively. -->
+    <PackageReference Include="SkiaSharp" Version="3.119.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Gum.SilkNet: the real game-host runtime (window/input + Skia rendering). Deliberately NOT
+         SkiaGum.csproj: SilkNetGum.csproj is a self-contained assembly that file-links SkiaGum's
+         source rather than referencing it, so it has its own independently-compiled copies of the
+         GueDeriving/Forms visual types. A theme built against SkiaGum.csproj directly would produce
+         incompatible types for a SilkNet-hosted app (#3671). -->
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\Runtimes\SilkNetGum\SilkNetGum.csproj" />
+  </ItemGroup>
+</Project>
