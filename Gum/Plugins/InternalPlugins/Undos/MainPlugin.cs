@@ -1,5 +1,7 @@
 ﻿using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.Undos;
+using Gum.ToolStates;
+using Gum.Undo;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Windows.Controls;
@@ -12,11 +14,21 @@ namespace Gum.Plugins.Undos
     [Export(typeof(PluginBase))]
     public class MainPlugin : PriorityPlugin
     {
+        private readonly ISelectedState _selectedState;
+        private readonly IUndoManager _undoManager;
+
+        [ImportingConstructor]
+        public MainPlugin(ISelectedState selectedState, IUndoManager undoManager)
+        {
+            _selectedState = selectedState;
+            _undoManager = undoManager;
+        }
+
         public override void StartUp()
         {
             var control = new UndoDisplay();
 
-            UndosViewModel viewModel = new ();
+            UndosViewModel viewModel = new (_selectedState, _undoManager);
             control.DataContext = viewModel;
 
             PluginTab tab = AddControl(control, "History", TabLocation.RightBottom);
