@@ -6,6 +6,8 @@ using Gum.GueDeriving;
 using Gum.Wireframe;
 #if RAYLIB
 using Raylib_cs;
+#elif SKIA
+using Color = SkiaSharp.SKColor;
 #else
 using Microsoft.Xna.Framework;
 #endif
@@ -59,7 +61,7 @@ public class SliderThumbVisual : InteractiveGue
         AddChild(_focusRing);
 
         _body = BubblegumShapes.FilledCircleWithDropshadow(
-            color: Color.White,
+            color: new Color(255, 255, 255),
             shadowColor: ShadowColor,
             offsetX: 0f,
             offsetY: ShadowOffsetY,
@@ -83,19 +85,19 @@ public class SliderThumbVisual : InteractiveGue
         AddCategory(_buttonCategory);
 
         Add(_buttonCategory, FrameworkElement.EnabledStateName,
-            () => Apply(body: Color.White, border: BubblegumStyling.ActiveStyle.Colors.Accent, ring: false, showShadow: true));
+            () => Apply(body: new Color(255, 255, 255), border: BubblegumStyling.ActiveStyle.Colors.Accent, ring: false, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.HighlightedStateName,
-            () => Apply(body: Color.White, border: BubblegumStyling.ActiveStyle.Colors.Accent, ring: false, showShadow: true));
+            () => Apply(body: new Color(255, 255, 255), border: BubblegumStyling.ActiveStyle.Colors.Accent, ring: false, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.PushedStateName,
             () => Apply(body: BubblegumStyling.ActiveStyle.Colors.AccentLight, border: BubblegumStyling.ActiveStyle.Colors.AccentDark, ring: false, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.FocusedStateName,
-            () => Apply(body: Color.White, border: BubblegumStyling.ActiveStyle.Colors.Accent, ring: true, showShadow: true));
+            () => Apply(body: new Color(255, 255, 255), border: BubblegumStyling.ActiveStyle.Colors.Accent, ring: true, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.HighlightedFocusedStateName,
-            () => Apply(body: Color.White, border: BubblegumStyling.ActiveStyle.Colors.Accent, ring: true, showShadow: true));
+            () => Apply(body: new Color(255, 255, 255), border: BubblegumStyling.ActiveStyle.Colors.Accent, ring: true, showShadow: true));
 
         Add(_buttonCategory, FrameworkElement.DisabledStateName,
             () => Apply(body: BubblegumStyling.ActiveStyle.Colors.DisabledFill, border: BubblegumStyling.ActiveStyle.Colors.Disabled, ring: false, showShadow: false));
