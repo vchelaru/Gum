@@ -8,4 +8,5 @@
     <converters:BoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" Invert="True" />
     <converters:NullToBoolConverter x:Key="NullToBoolConverter" />
     <converters:NullToBoolConverter x:Key="InverseNullToBoolConverter" Invert="True" />
+    <converters:FavoriteToImageSourceConverter x:Key="FavoriteToImageSourceConverter" />
 </ResourceDictionary>
