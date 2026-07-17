@@ -7,17 +7,15 @@ using ToolsUtilities;
 
 namespace GumFormsPlugin.Services;
 
-public class FormsFileService
+public class FormsFileService : IFormsFileService
 {
     // The themes folder layout on disk is populated by GumFormsPlugin's post-build step.
     // Each immediate subdirectory is a theme (e.g. "Standard", "Bubblegum"); the
     // contents mirror what would live at the root of a Gum project.
     private const string FormsThemesSubfolder = "Content/FormsThemes";
 
-    /// <summary>
-    /// The theme that is preselected in the Add Forms dialog when present on disk.
-    /// </summary>
-    public const string DefaultThemeName = "Standard";
+    /// <inheritdoc/>
+    public string DefaultThemeName => "Standard";
 
     private const string FormsGumxName = "GumProject.gumx";
 
@@ -28,10 +26,7 @@ public class FormsFileService
         _projectState = projectState;
     }
 
-    /// <summary>
-    /// Returns the names of themes shipped with the tool (folders present under
-    /// <c>Content/FormsThemes</c>), with the default theme listed first when found.
-    /// </summary>
+    /// <inheritdoc/>
     public IReadOnlyList<string> GetAvailableThemes()
     {
         var root = GetThemesRoot();
@@ -54,18 +49,13 @@ public class FormsFileService
         Path.Combine(GetThemeDirectory(themeName), FormsGumxName)
             .Replace('\\', '/');
 
-    /// <summary>
-    /// Returns the base directory of the given theme's files (trailing slash, forward slashes).
-    /// </summary>
+    /// <inheritdoc/>
     public string GetThemeDirectory(string themeName) =>
         Path.Combine(GetThemesRoot(), themeName)
             .Replace('\\', '/') + "/";
 
-    /// <summary>
-    /// Returns a mapping of source file paths (in the selected theme's folder) to destination
-    /// file paths (in the user's Gum project directory).
-    /// Extensions skipped: .gumx, .gumfcs, .ganx (animation files, deferred), .codsj
-    /// </summary>
+    /// <inheritdoc/>
+    /// <remarks>Extensions skipped: .gumx, .gumfcs, .ganx (animation files, deferred), .codsj</remarks>
     public Dictionary<string, FilePath> GetSourceDestinations(string themeName, bool isIncludeDemoScreenGum)
     {
         var destinationFolder = _projectState.ProjectDirectory;

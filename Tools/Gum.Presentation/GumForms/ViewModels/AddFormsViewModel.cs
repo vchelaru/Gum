@@ -1,4 +1,4 @@
-﻿using Gum.ToolStates;
+using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,7 +8,6 @@ using ToolsUtilities;
 using GumFormsPlugin.Services;
 using Gum.Managers;
 using Gum.Commands;
-using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.Logic;
 using Gum.Logic.FileWatch;
@@ -19,7 +18,7 @@ public class AddFormsViewModel : DialogViewModel
 {
     #region Fields/Properties
 
-    private readonly FormsFileService _formsFileService;
+    private readonly IFormsFileService _formsFileService;
     private readonly IDialogService _dialogService;
     private readonly IFileCommands _fileCommands;
     private readonly IImportLogic _importLogic;
@@ -71,7 +70,7 @@ public class AddFormsViewModel : DialogViewModel
 
     #endregion
 
-    public AddFormsViewModel(FormsFileService formsFileService,
+    public AddFormsViewModel(IFormsFileService formsFileService,
         IDialogService dialogService,
         IFileCommands fileCommands,
         IImportLogic importLogic,
@@ -89,7 +88,7 @@ public class AddFormsViewModel : DialogViewModel
 
         AvailableThemes = _formsFileService.GetAvailableThemes();
         SelectedTheme = AvailableThemes.FirstOrDefault(t =>
-                            string.Equals(t, FormsFileService.DefaultThemeName, System.StringComparison.OrdinalIgnoreCase))
+                            string.Equals(t, _formsFileService.DefaultThemeName, System.StringComparison.OrdinalIgnoreCase))
                         ?? AvailableThemes.FirstOrDefault();
 
         RefreshRequirementsDescription();
@@ -113,7 +112,7 @@ public class AddFormsViewModel : DialogViewModel
 
     public override void OnAffirmative()
     {
-        var theme = SelectedTheme ?? FormsFileService.DefaultThemeName;
+        var theme = SelectedTheme ?? _formsFileService.DefaultThemeName;
 
         // Prerequisites have already been surfaced inline in the dialog
         // (RequirementsDescription). The user clicking OK is their consent

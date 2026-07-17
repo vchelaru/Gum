@@ -15,7 +15,7 @@ public class FormsFileServiceTests : BaseTestClass
         var formsFileService = new FormsFileService(projectState.Object);
 
         var sourceDestinations = formsFileService.GetSourceDestinations(
-            FormsFileService.DefaultThemeName, isIncludeDemoScreenGum: false);
+            formsFileService.DefaultThemeName, isIncludeDemoScreenGum: false);
 
         sourceDestinations.ShouldBeEmpty();
         projectState.VerifyGet(p => p.ProjectDirectory, Times.AtLeastOnce);

@@ -6,7 +6,7 @@ using GumFormsPlugin.Services;
 using Moq;
 using Shouldly;
 
-namespace GumToolUnitTests.FormsPlugin;
+namespace Gum.Presentation.Tests;
 
 public class ThemeRequirementsTests
 {

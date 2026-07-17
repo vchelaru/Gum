@@ -119,6 +119,18 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   pattern as `FillWithErrors`/`TreeNodeSelected`: return a small headless DTO (a `record`, e.g.
   `PluginSummary`) carrying an opaque handle `object`, and have the concrete implementation cast
   the handle back to its real type internally (#3754).
+- **A VM in a separate plugin assembly (its own `.csproj`, not `Gum.csproj`) can reference sibling
+  concrete classes directly, not just interfaces — those must physically move too.**
+  `AddFormsViewModel` (`GumFormsPlugin.csproj`) called `ThemeRequirements`/`ThemeRequirementsDiff`
+  (plain data/logic classes, no interface) directly; since a plugin assembly only ever depends
+  *toward* `Gum.Presentation` (never the reverse), the VM's own assembly becomes unreachable from
+  Gum.Presentation once the VM moves out, so the concrete helper had to move alongside it. Relatedly,
+  a **static member on a concrete class the VM is being decoupled from** (`FormsFileService
+  .DefaultThemeName` was a `public const`) has to become an **instance member on the new interface**
+  — the VM can no longer name the concrete type to reach a static. And when the interface being
+  extracted is declared *inside* its own implementer's file (`FileWatchManager.cs` held both
+  `IFileWatchManager` and `FileWatchManager`) rather than its own file, extract it into a standalone
+  file first — namespace stays the same either way, so no consumer needs a `using` change.
 
 **Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap).
 - *4a — Element tree:* decouple `ElementTreeViewManager` from `TreeNode`; the already-migrated
