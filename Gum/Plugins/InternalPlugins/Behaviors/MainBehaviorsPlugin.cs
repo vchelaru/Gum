@@ -23,7 +23,7 @@ public class MainBehaviorsPlugin : PriorityPlugin
     private readonly IElementCommands _elementCommands;
     private readonly IUndoManager _undoManager;
     private readonly IProjectManager _projectManager;
-    private readonly PluginManager _pluginManager;
+    private readonly IPluginManager _pluginManager;
 
     BehaviorsViewModel viewModel;
     DataUiGrid stateDataUiGrid;
@@ -35,7 +35,7 @@ public class MainBehaviorsPlugin : PriorityPlugin
         IElementCommands elementCommands,
         IUndoManager undoManager,
         IProjectManager projectManager,
-        PluginManager pluginManager)
+        IPluginManager pluginManager)
     {
         _selectedState = selectedState;
         _elementCommands = elementCommands;

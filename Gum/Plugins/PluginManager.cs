@@ -481,7 +481,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     internal void RefreshVariableView(bool force) =>
         CallMethodOnPlugin(plugin => plugin.CallRefreshVariableView(force));
 
-    internal void BehaviorReferencesChanged(ElementSave elementSave) => 
+    public void BehaviorReferencesChanged(ElementSave elementSave) =>
         CallMethodOnPlugin(plugin => plugin.CallBehaviorReferencesChanged(elementSave));
 
     public void WireframeRefreshed() =>
@@ -958,15 +958,13 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
             // DI-constructed with an empty ctor (see Builder.cs) and is fully built *before* LoadPlugins
             // ever runs — `instance` here already IS that singleton, so bridging it is identical in effect
             // to a plugin fetching it via Locator, just relocated to the composition root like every other
-            // bridge. The consuming ctors (MainEditorTabPlugin, MainBehaviorsPlugin) only store the
-            // reference and call methods on it later (StartUp/event handlers), long after this composition
-            // finishes, so there is nothing time-sensitive about when the reference becomes available.
-            // Concrete PluginManager is bridged (not just IPluginManager) because those consumers call
-            // methods the interface doesn't yet expose (HighlightTreeNode, HandleWireframeResized,
-            // CameraChanged, BeforeRender, AfterRender, BehaviorReferencesChanged). IPluginManager is also
-            // bridged for MainPropertiesWindowPlugin, which only needs the interface-exposed
-            // ProjectPropertySet.
-            batch.AddExportedValue<PluginManager>(instance);
+            // bridge. The consuming ctors (MainEditorTabPlugin, MainBehaviorsPlugin, MainPropertiesWindowPlugin)
+            // only store the reference and call methods on it later (StartUp/event handlers), long after this
+            // composition finishes, so there is nothing time-sensitive about when the reference becomes
+            // available. All three now take IPluginManager — the six methods that were concrete-only
+            // (HighlightTreeNode, HandleWireframeResized, CameraChanged, BeforeRender, AfterRender,
+            // BehaviorReferencesChanged) were widened onto the interface, so the concrete PluginManager bridge
+            // is no longer needed here.
             batch.AddExportedValue<IPluginManager>(instance);
 
             var container = new CompositionContainer(catalog);

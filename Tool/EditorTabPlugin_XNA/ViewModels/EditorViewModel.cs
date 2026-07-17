@@ -19,7 +19,7 @@ namespace EditorTabPlugin_XNA.ViewModels;
 
 public partial class EditorViewModel : ViewModel
 {
-    private readonly PluginManager _pluginManager;
+    private readonly IPluginManager _pluginManager;
     private readonly IFileCommands _fileCommands;
     private readonly IWireframeObjectManager _wireframeObjectManager;
 
@@ -217,7 +217,7 @@ public partial class EditorViewModel : ViewModel
         }
     }
 
-    public EditorViewModel(PluginManager pluginManager, 
+    public EditorViewModel(IPluginManager pluginManager,
         IFileCommands fileCommands,
         IWireframeObjectManager wireframeObjectManager)
     {

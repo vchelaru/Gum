@@ -146,4 +146,13 @@ public interface IPluginManager
     bool GetIfShouldSuppressRemoveEditorHighlight();
     void FocusSearch();
     bool ShouldExclude(VariableSave defaultVariable, RecursiveVariableFinder rvf);
+
+    // Widened for #3753: MainBehaviorsPlugin/MainEditorTabPlugin previously took the concrete
+    // PluginManager as a ctor param because these six weren't on the interface yet.
+    void HighlightTreeNode(IPositionedSizedObject? positionedSizedObject);
+    void HandleWireframeResized();
+    void CameraChanged();
+    void BeforeRender();
+    void AfterRender();
+    void BehaviorReferencesChanged(ElementSave elementSave);
 }

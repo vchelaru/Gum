@@ -114,9 +114,9 @@ internal static class PluginBridgedServiceTypes
         typeof(MainWindowViewModel),
 
         // PluginManager self-injection drain (#3753): re-investigated the "cycle smell" assumption and
-        // found no real construction cycle (see LoadPlugins for the reasoning). Concrete PluginManager
-        // feeds MainEditorTabPlugin/MainBehaviorsPlugin; IPluginManager feeds MainPropertiesWindowPlugin.
-        typeof(PluginManager),
+        // found no real construction cycle (see LoadPlugins for the reasoning). IPluginManager feeds
+        // MainEditorTabPlugin/MainBehaviorsPlugin/MainPropertiesWindowPlugin — all three now take the
+        // interface after widening it with the six methods that used to be concrete-only.
         typeof(IPluginManager),
     };
 }

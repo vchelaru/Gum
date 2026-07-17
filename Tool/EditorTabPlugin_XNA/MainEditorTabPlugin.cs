@@ -145,7 +145,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
     private readonly IFavoriteComponentManager _favoriteComponentManager;
     private readonly IToolFontService _toolFontService;
     private readonly IToolLayerService _toolLayerService;
-    private readonly PluginManager _pluginManager;
+    private readonly IPluginManager _pluginManager;
 
     // Suppresses the redundant second wireframe rebuild when selecting an element forces its
     // default state (state event rebuilds) and then fires the element event for the same element.
@@ -183,7 +183,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         IDragDropManager dragDropManager,
         ICircularReferenceManager circularReferenceManager,
         IFavoriteComponentManager favoriteComponentManager,
-        PluginManager pluginManager)
+        IPluginManager pluginManager)
     {
         _selectedState = selectedState;
         _projectManager = projectManager;
