@@ -64,137 +64,34 @@ barrier (bus-factor insurance). *Risk:* high volume, low per-change risk.
 **Phase 3 — Extract logic into the headless assembly.** Move WPF-free logic into a net8.0 assembly
 so the boundary is compiler-enforced. Convert the ViewModels that reach into `System.Windows.*` to
 neutral types per **ADR-0004**. *Payoff:* the testability ceiling jumps; the boundary becomes a
-guarantee. *Risk:* medium; the VM conversion is the bulk. *Status:* the boundary was already proven
-end-to-end by the #3229 spike (PR #3231) — `ImportTreeNodeViewModel` now lives in headless
-`Gum.ProjectServices` with its `Visibility` converted to `bool`, unit-tested with no WPF. That was a
-forward de-risk only; **bulk** VM migration remains gated on Phase 2's static drain.
-The permanent-home question is now **decided — ADR-0005**: a dedicated `Gum.Presentation` (net8.0,
-no WPF) assembly, stood up and proven with its first real slice (`FileWatchViewModel` relocated out
-of `Gum.csproj`, namespace preserved, with a headless pinning test). `ImportTreeNodeViewModel`
-should later migrate from `Gum.ProjectServices` into `Gum.Presentation` so all VMs share one home.
+guarantee. *Risk:* medium; the VM conversion is the bulk. The permanent home is **ADR-0005**: a
+dedicated `Gum.Presentation` (net8.0, no WPF) assembly.
 
-**#3754 (2026-07-17) — closed the two named leaf-VM moves and the ledger's audit ask.**
-`ImportTreeNodeViewModel` (+ its `StandardDiffRowViewModel`/`ElementItemType`/`InclusionState`
-siblings) relocated from `Gum.ProjectServices` into `Gum.Presentation`, namespace preserved
-(`ImportFromGumxPlugin.ViewModels`) — completes the "all VMs share one home" item above. Also
-executed the two other clean leaf VMs the 2026-06-24 scouting note named but hadn't yet moved:
-`UndoItemViewModel` and `MainOutputViewModel` (+ its co-located `IOutputManager` interface),
-both `new`-constructed/DI-singleton with zero injected interfaces. Each got a headless pinning
-test in `Gum.Presentation.Tests` (none existed before).
-**New wrinkle found (add to the cross-assembly list below): XAML `clr-namespace` declarations
-without an `;assembly=` clause resolve only within the *declaring* assembly.** `UndoDisplay.xaml`'s
-`<DataTrigger Value="{x:Static undos:UndoOrRedo.Redo}">` broke at build (`MC3050: Cannot find the
-type 'UndoOrRedo'`) once the enum moved out of `Gum.csproj` — fixed by adding
-`;assembly=Gum.Presentation` to that `xmlns:undos` declaration. A sibling `d:DesignInstance` in
-`MainOutputPluginView.xaml` referencing `managers:MainOutputViewModel` did **not** break, because
-`d:`-namespaced attributes are `mc:Ignorable` and skipped by the real build — but VS's XAML
-designer still resolves them at edit-time, so prefer adding `;assembly=` on any `xmlns` a moved
-type is reachable through, not just the ones that fail `dotnet build`.
-**Audit for more candidates (the ledger's remaining ask):** a pass over the ~20 tool-owned
-`ViewModel` subclasses found one more clean, zero-dependency leaf — `CheckListBehaviorItem`
-(`Gum/Plugins/InternalPlugins/Behaviors/`) — deferred to its own PR rather than bundled here.
-**Done (2026-07-17):** `CheckListBehaviorItem` relocated to
-`Tools/Gum.Presentation/Plugins/InternalPlugins/Behaviors/`, namespace preserved
-(`Gum.Plugins.Behaviors`), with a headless pinning test in `Gum.Presentation.Tests`.
-Several others looked leaf-shaped but aren't yet: `ErrorViewModel`/`AllErrorsViewModel` hold a
-`PluginBase?` reference (tool-assembly-coupled); `ProjectPropertiesViewModel` depends on the
-tool's `GeneralSettingsFile`; `CategoryViewModel` is one node type in the larger
-`StateTreeViewModel` cluster already flagged above as service-backed. None of these are simple
-git-mv candidates without further untangling first.
+> **Current status and remaining work live in GitHub issues, not here.** See the Phase 3 tracking
+> issue and its linked follow-ups for what has moved, what's blocked, and why. This doc intentionally
+> does not keep a running log of per-PR progress — that duplicated the issues and let the two drift
+> out of sync (#3754 was nearly closed while real Phase 3 work remained open).
 
-**#3754 (2026-07-17) — untangled and moved the `StateTreeViewModel` cluster.** The blocker flagged
-above was exactly as diagnosed: `StateTreeViewModel` injected the concrete, WPF-coupled
-`StateTreeViewRightClickService` and called only one method on it, `PopulateContextMenu()`
-(previously `internal`). Extracted `IStateTreeViewRightClickService` (one method) into
-`Gum.Presentation`, made `PopulateContextMenu()` public and had the concrete service implement the
-interface, and narrowed `StateTreeViewModel`'s ctor param to the interface. The concrete service
-itself is **not** DI-registered anywhere (`MainStatePlugin` always `new`s it directly, plugin-local
-per the `Builder.cs`-registration rule), so no DI wiring changed. With the interface in place,
-`CategoryViewModel`/`StateItemViewModel` (which holds `StateViewModel`) and `StateTreeViewItem`
-(the abstract base, co-located in `CategoryViewModel.cs`) all checked out clean — no WPF types, no
-concrete-class coupling — so the whole cluster moved together into
-`Gum.Presentation/Plugins/InternalPlugins/StatePlugin/ViewModels/`, namespace preserved. Two of
-`HandleRename`'s overloads had to go from `internal` to `public` since `MainStatePlugin` (a real
-production consumer, not a test) calls them across the new assembly boundary.
-**Another instance of the `;assembly=` XAML wrinkle (see the #3754 2026-07-17 note above), but this
-time on a real (non-Ignorable) attribute:** `StateTreeView.xaml`'s `HierarchicalDataTemplate`/
-`DataTemplate` use `{x:Type viewmodels:CategoryViewModel}` / `{x:Type viewmodels:StateViewModel}`
-directly, so unlike the `d:DesignInstance` case this broke `dotnet build` outright — same
-`;assembly=Gum.Presentation` fix on the `xmlns:viewmodels` declaration. Added a pinning test suite
-(`StateTreeViewModelTests` in `Gum.Presentation.Tests`) covering `HandleRename` — previously
-untestable without a real WPF `ContextMenu`, since `PopulateContextMenu()` wasn't mockable behind
-an interface.
-
-> **Scouting finding (2026-06-24) that sets the bulk-migration order.** A full pass over the ~35
-> tool VMs found a hard split: every VM with a *clean* dependency closure injects **zero**
-> interfaces (e.g. `FileWatchViewModel`, `UndoItemViewModel`, `MainOutputViewModel`), while every
-> VM that *does* inject a service pulls a WPF/WinForms-coupled contract into its closure —
-> `IHotkeyManager` exposes `System.Windows.Forms.Keys`/`KeyEventArgs`; `IDialogService` is generic
-> over the tool-bound `DialogViewModel`; `StateTreeViewModel` injects a concrete service with no
-> interface seam. So **interface relocation is the real gate, not the VM move**: the cheap leaf VMs
-> move for free, but the interesting (service-backed) VMs can't follow until the WPF types are first
-> lifted out of those shared interfaces (Phase 1's "stop interfaces returning view types" work).
-> Two more cross-assembly wrinkles to budget for: (1) `Builder.cs`'s VM auto-registration scans
-> only `typeof(GumBuilder).Assembly`, so a DI-resolved VM moved to `Gum.Presentation` needs that
-> scan (and `AddViewModelFuncFactories`) extended to the new assembly; (2) `DialogViewResolver`
-> scans the *VM's own assembly* for its view, so a relocated `DialogViewModel` needs the resolver
-> taught to also scan the tool assembly. The first slice sidestepped both by picking a leaf VM that
-> is `new`-constructed and code-behind-bound.
-
-**#3754 (2026-07-17) — bulk VM migration re-audit: most 2026-06-24 blockers no longer held.**
-Re-checked the scouting finding above against current interfaces instead of assuming it still
-applied. `IHotkeyManager` and `IDialogService` had already been cleaned of WPF types by earlier
-#3754 work (`Gum.Input.GumKey`/`GumKeyEventArgs` instead of `System.Windows.Forms.Keys`;
-`DialogViewModel` itself already headless) — the scouting note's premise was stale. Moved 11 more
-VMs plus 4 previously-tool-only interfaces (`ISetVariableLogic`, `IReorderLogic`,
-`ICircularReferenceManager`, `IFavoriteComponentManager` — all pure, no WPF) into
-`Gum.Presentation`: `HotkeyViewModel` (+`HotkeyItemViewModel`), `GetUserStringDialogViewModel`
-(+`GetUserStringDialogBaseViewModel`), `UndosViewModel`, `CreateComponentDialogViewModel`,
-`AddInstanceDialogViewModel`, `AddFolderDialogViewModel`, `AddCategoryDialogViewModel`,
-`AddStateDialogViewModel`, `RenameElementDialogViewModel`, `RightClickViewModel`
-(+`ContextMenuItemViewModel`), and `AnimationContainerViewModel` (one clean leaf pulled out of the
-otherwise still-blocked animation cluster, see below). `INameVerifier` looked tool-only too but
-was already GumCommon-shared (same `Compile Include`/`Link` trick as `ViewModel.cs`/
-`StandardElementsManager.cs`/`ObjectFinder.cs`) — reverted that move once the build caught the
-break; no relocation was needed.
-
-**Confirmed and fixed cross-assembly wrinkle #1 (`Builder.cs` VM scan).**
-`ForEachConcreteTypeAssignableTo<ViewModel>` only scanned `typeof(GumBuilder).Assembly`, so
-`HotkeyViewModel` (MEF-bridged) and the `GetUserStringDialogBaseViewModel` dialog family
-(DI-resolved via `IDialogService.Show<T>`) silently stopped resolving once moved — caught by
-`ServiceProviderCompositionSpikeTests`, fixed by adding a second scan over
-`typeof(DialogViewModel).Assembly`.
-
-**Cross-assembly wrinkle #2 (`DialogViewResolver`) confirmed real, still unfixed.**
-`DialogViewResolver.Scan(Type)` only looks for a View in the *VM's own assembly*, so any
-`DialogViewModel` shown via `IDialogService.Show<T>`/`ShowChoices` whose View lives in `Gum.csproj`
-breaks once the VM moves out — **except** the `GetUserStringDialogBaseViewModel` family, which the
-resolver already hardcodes an assembly-agnostic fallback for (`typeof(GetUserStringDialogView)`
-regardless of where the VM type lives), which is why that whole family (and the code-behind-bound
-`HotkeyViewModel`) was safe to move without touching the resolver. Left blocked, still needing the
-resolver taught to scan a second (tool) assembly: `ExposeColorDialogViewModel`,
-`MessageDialogViewModel`, `ChoiceDialogViewModel`, `StandardDiffDetailsViewModel`,
-`PluginsDialogViewModel` (also separately blocked below).
-
-**Two more genuine (non-stale) blockers, both narrower than "the whole cluster":**
-- `IPluginManager` leaks a concrete WPF `Window` (`Gum.Gui.Windows.DeleteOptionsWindow`, on
-  `ShowDeleteDialog`/`DeleteConfirmed`) — blocks `AddVariableViewModel` and `PluginsDialogViewModel`
-  (which also calls static `PluginManager.AllPluginContainers`/`ShutDownPlugin` directly, a second,
-  independent blocker).
-- `IProjectState.GeneralSettings` returns the WinForms-tainted `GeneralSettingsFile` — blocks
-  `ProjectCommands` (so `AddScreenDialogViewModel`/`AddComponentDialogViewModel`, which inject it,
-  stay blocked too) and `AddFormsViewModel`. Same shape as the `ProjectPropertiesViewModel` fix in
-  #3776/#3777 (narrow to the one field actually used) — a good next-round candidate.
-- The `StateAnimationPlugin.ViewModels` cluster (`SubAnimationSelectionDialogViewModel`,
-  `AnimationViewModel`, `ElementAnimationsViewModel`, `AnimatedKeyframeViewModel`) stays blocked by
-  direct `System.Windows.Media.Imaging.BitmapImage` usage and by
-  `IAnimationCollectionViewModelManager`'s `ElementAnimationsViewModel`-typed signature.
-- `RenameFolderDialogViewModel` calls `System.Windows.Forms` directly, unlike its dialog siblings —
-  a real, inline WinForms usage, not a stale note.
-
-Each moved VM got a headless pinning test in `Gum.Presentation.Tests` (6 migrated from
-`GumToolUnitTests`, rewriting `Moq.AutoMock` — not referenced in the headless test project — to
-explicit `Mock<T>`; 6 newly written, none existed before).
+**Known gotchas when moving a VM into `Gum.Presentation`** (durable architectural facts, not a
+changelog — update this list when a *new kind* of gotcha is discovered, not for every move):
+- **Interface relocation is the real gate, not the VM move.** A VM with a clean dependency closure
+  (zero injected interfaces, or only interfaces that already live in `Gum.Presentation`) moves for
+  free; one injecting a still-WPF/WinForms-coupled interface can't move until that interface is
+  cleaned or relocated too. Re-check the current state of each dependency — a past note's "this
+  interface is blocked" claim can go stale as unrelated PRs clean things up.
+- **XAML `clr-namespace` declarations need `;assembly=Gum.Presentation`** once a bound type moves
+  out of `Gum.csproj`, or the XAML fails to resolve it. `d:DesignInstance`/`d:`-namespaced
+  attributes are silently skipped by `dotnet build` (only the VS designer breaks); real
+  `DataTemplate`/`x:Type` bindings break the build outright.
+- **`Builder.cs`'s VM auto-registration (`ForEachConcreteTypeAssignableTo<ViewModel>`) only scans
+  `typeof(GumBuilder).Assembly`.** A DI-resolved VM moved to `Gum.Presentation` needs a second scan
+  anchored in that assembly too, or it silently stops resolving (caught by
+  `ServiceProviderCompositionSpikeTests`, not by a compile error).
+- **`DialogViewResolver` only scans the VM's own assembly for its matching View.** A relocated
+  `DialogViewModel` needs its View discoverable there too, unless it falls under an existing
+  assembly-agnostic special case (e.g. `GetUserStringDialogBaseViewModel` subtypes resolve to
+  `GetUserStringDialogView` regardless of the VM's assembly). Otherwise the resolver needs teaching
+  to scan a second (tool) assembly before the VM can move.
 
 **Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap).
 - *4a — Element tree:* decouple `ElementTreeViewManager` from `TreeNode`; the already-migrated
