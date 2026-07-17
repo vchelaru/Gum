@@ -30,7 +30,7 @@ internal class MainGumFormsPlugin : PluginBase
     public override bool ShutDown(PluginShutDownReason shutDownReason) => true;
 
     System.Windows.Controls.MenuItem _addFormsMenuItem;
-    private readonly FormsFileService _formsFileService;
+    private readonly IFormsFileService _formsFileService;
     private readonly IImportLogic _importLogic;
     private readonly IFileWatchManager _fileWatchManager;
     private readonly IProjectState _projectState;
@@ -97,7 +97,7 @@ internal class MainGumFormsPlugin : PluginBase
         // Whether the project already has forms imported is independent of the theme picker,
         // so use the default theme's destination set. The same destination paths get written
         // regardless of which theme produced them.
-        var files = _formsFileService.GetSourceDestinations(FormsFileService.DefaultThemeName, isIncludeDemoScreenGum: false);
+        var files = _formsFileService.GetSourceDestinations(_formsFileService.DefaultThemeName, isIncludeDemoScreenGum: false);
 
         var firstMatch = files.Values
             .FirstOrDefault(item => 
