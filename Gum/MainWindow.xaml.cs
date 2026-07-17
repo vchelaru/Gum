@@ -3,7 +3,6 @@ using Gum.Commands;
 using Gum.Input;
 using Gum.Dialogs;
 using Gum.Managers;
-using Gum.Services;
 using Gum.Settings;
 using Gum.ViewModels;
 using System;
@@ -32,7 +31,8 @@ public enum TabLocation
 
 public partial class MainWindow : WindowChromeWindow, IRecipient<CloseMainWindowMessage>
 {
-    
+    private readonly IMessenger _messenger;
+
     public MainWindow(
         MainWindowViewModel mainWindowViewModel,
         MenuStripManager menuStripManager,
@@ -42,9 +42,10 @@ public partial class MainWindow : WindowChromeWindow, IRecipient<CloseMainWindow
         )
     {
         DataContext = mainWindowViewModel;
-        
+
+        _messenger = messenger;
         messenger.RegisterAll(this);
-        
+
         InitializeComponent();
         menuStripManager.PopulateMenu(this.MainMenu);
 
@@ -112,7 +113,7 @@ public partial class MainWindow : WindowChromeWindow, IRecipient<CloseMainWindow
 
     private void OnCloseButtonClick(object? sender, System.Windows.RoutedEventArgs e)
     {
-        Locator.GetRequiredService<IMessenger>().Send(new CloseMainWindowMessage());
+        _messenger.Send(new CloseMainWindowMessage());
     }
 }
 
