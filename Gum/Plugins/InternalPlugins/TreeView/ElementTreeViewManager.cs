@@ -804,6 +804,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         ObjectTreeView.MouseUp += (_, _) => _lastMouseDownButton = MouseButtons.None;
         ObjectTreeView.AfterExpand += (_, _) => _collapseToggleService.OnNodeManuallyChanged();
         ObjectTreeView.AfterCollapse += (_, _) => _collapseToggleService.OnNodeManuallyChanged();
+        ObjectTreeView.UnhandledException += ex => _dialogService.ShowMessage(ex.Message);
 
         ConfigureStandardsPalette();
 
