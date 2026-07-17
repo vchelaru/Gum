@@ -66,8 +66,13 @@ public class UiDecouplingRatchetTests
         // ElementAnimationsViewModel itself (plus SubAnimationSelectionDialogViewModel,
         // AddStateKeyframeDialog, AddAnimationDialogViewModel) moved to Gum.Presentation once its
         // WPF MenuItem/DispatcherTimer coupling was replaced with framework-neutral
-        // ContextMenuItemViewModel/IUiTimer seams (issue #3754).
-        const int Baseline = 24;
+        // ContextMenuItemViewModel/IUiTimer seams (issue #3754). Dropped further, from 24 to 21:
+        // CodeWindowViewModel moved to Gum.Presentation (its Visibility properties converted to
+        // bool per ADR-0004) and SearchItemViewModel moved to Gum.Presentation (dropped a dead
+        // System.Windows.Media.Imaging using); PerformanceViewModel stayed in Gum.csproj (it reads
+        // the XNALIKE-only RenderingLibrary.Graphics.Renderer, not movable to the headless assembly)
+        // but lost its own DispatcherTimer coupling via the same IUiTimer seam (issue #3754).
+        const int Baseline = 21;
 
         var pattern = new Regex(@"System\.Windows");
         int count = SourceFiles()

@@ -1,5 +1,6 @@
 ﻿using Gum;
 using Gum.Plugins.BaseClasses;
+using Gum.Services;
 using PerformanceMeasurementPlugin.ViewModels;
 using PerformanceMeasurementPlugin.Views;
 using System;
@@ -29,7 +30,7 @@ namespace PerformanceMeasurementPlugin
         public override void StartUp()
         {
             view = new PerformanceView();
-            view.DataContext = new PerformanceViewModel();
+            view.DataContext = new PerformanceViewModel(new DispatcherUiTimer());
 
             AddControl(view, "Performance", Gum.TabLocation.RightBottom);
         }
