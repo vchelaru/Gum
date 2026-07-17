@@ -24,7 +24,6 @@ namespace GumToolUnitTests.Plugins.StateAnimationPlugin;
 /// </summary>
 public class RenameManagerTests : BaseTestClass
 {
-    private readonly IBitmapLoader _bitmapLoader = Mock.Of<IBitmapLoader>();
     private readonly ISelectedState _selectedState = Mock.Of<ISelectedState>();
     private readonly IWireframeObjectManager _wireframeObjectManager = Mock.Of<IWireframeObjectManager>();
 
@@ -39,7 +38,7 @@ public class RenameManagerTests : BaseTestClass
 
             AnimationViewModel animation = CreateAnimationWithKeyframes(
                 Keyframe(animationName: "OldAnim"));
-            AnimationViewModel renamed = new AnimationViewModel(_bitmapLoader, _selectedState, _wireframeObjectManager) { Name = "NewAnim" };
+            AnimationViewModel renamed = new AnimationViewModel(_selectedState, _wireframeObjectManager) { Name = "NewAnim" };
 
             RenameManager renameManager = CreateRenameManager();
 
@@ -127,7 +126,7 @@ public class RenameManagerTests : BaseTestClass
 
     private AnimatedKeyframeViewModel Keyframe(string? stateName = null, string? animationName = null)
     {
-        AnimatedKeyframeViewModel keyframe = new AnimatedKeyframeViewModel(_bitmapLoader);
+        AnimatedKeyframeViewModel keyframe = new AnimatedKeyframeViewModel();
         if (stateName != null)
         {
             keyframe.StateName = stateName;
@@ -141,7 +140,7 @@ public class RenameManagerTests : BaseTestClass
 
     private AnimationViewModel CreateAnimationWithKeyframes(params AnimatedKeyframeViewModel[] keyframes)
     {
-        AnimationViewModel animation = new AnimationViewModel(_bitmapLoader, _selectedState, _wireframeObjectManager);
+        AnimationViewModel animation = new AnimationViewModel(_selectedState, _wireframeObjectManager);
         foreach (AnimatedKeyframeViewModel keyframe in keyframes)
         {
             animation.Keyframes.Add(keyframe);
@@ -156,7 +155,6 @@ public class RenameManagerTests : BaseTestClass
             Mock.Of<IDialogService>(),
             Mock.Of<IAnimationCollectionViewModelManager>(),
             Mock.Of<IRenameManager>(),
-            _bitmapLoader,
             _selectedState,
             _wireframeObjectManager,
             Mock.Of<IOutputManager>());

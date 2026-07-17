@@ -59,7 +59,6 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
     private readonly IProjectManager _projectManager;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IAnimationCollectionViewModelManager _animationCollectionViewModelManager;
-    private readonly IBitmapLoader _bitmapLoader;
     ElementAnimationsViewModel? _viewModel;
 
     StateAnimationPlugin.Views.MainWindow? _mainWindow;
@@ -127,13 +126,12 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
         _duplicateService = new DuplicateService(_dialogService, _projectManager);
         _elementDeleteService = new ElementDeleteService(_animationFilePathService, _dialogService);
         _settingsManager = new SettingsManager();
-        _bitmapLoader = new BitmapLoader();
 
         // The factory closure reads _animationCollectionViewModelManager and _renameManager lazily
         // (when invoked, after both are assigned just below), which breaks the
         // ACVMM -> ElementAnimationsViewModel -> RenameManager construction cycle without a Lazy<T>.
         _animationVmFactory = () => new ElementAnimationsViewModel(
-            _nameVerifier, _dialogService, _animationCollectionViewModelManager, _renameManager, _bitmapLoader,
+            _nameVerifier, _dialogService, _animationCollectionViewModelManager, _renameManager,
             _selectedState, _wireframeObjectManager, _outputManager);
         _animationCollectionViewModelManager = new AnimationCollectionViewModelManager(
             _selectedState, _outputManager, _fileWatchManager, _animationFilePathService, _animationVmFactory);
@@ -638,7 +636,7 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
             return;
         }
 
-        AddStateKeyframeDialog dialog = new(_bitmapLoader)
+        AddStateKeyframeDialog dialog = new()
         {
             ElementSave = _selectedState.SelectedElement
         };

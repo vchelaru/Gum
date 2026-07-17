@@ -1,4 +1,4 @@
-﻿using FlatRedBall.Glue.StateInterpolation;
+using FlatRedBall.Glue.StateInterpolation;
 using Gum;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
@@ -16,7 +16,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.Input;
 using Gum.StateAnimation.Runtime;
 
@@ -28,9 +27,6 @@ public partial class AnimationViewModel : ViewModel
 
     bool mIsInMiddleOfSort = false;
 
-    BitmapFrame mLoopBitmap;
-    BitmapFrame mPlayOnceBitmap;
-    
     private readonly ISelectedState _selectedState;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     AnimationRuntime? _cachedAnimationRuntime;
@@ -39,14 +35,14 @@ public partial class AnimationViewModel : ViewModel
 
     #region Properties
 
-    public string Name 
-    { 
-        get => Get<string>(); 
-        set => Set(value); 
+    public string Name
+    {
+        get => Get<string>();
+        set => Set(value);
     }
 
-    public float Length 
-    { 
+    public float Length
+    {
         get
         {
             if(Keyframes.Count == 0)
@@ -77,10 +73,10 @@ public partial class AnimationViewModel : ViewModel
 
     public event PropertyChangedEventHandler? FramePropertyChanged;
 
-    public AnimatedKeyframeViewModel? SelectedKeyframe 
+    public AnimatedKeyframeViewModel? SelectedKeyframe
     {
         get => Get<AnimatedKeyframeViewModel?>();
-        set 
+        set
         {
             if (Set(value))
             {
@@ -125,14 +121,11 @@ public partial class AnimationViewModel : ViewModel
 
     #region Methods
 
-    public AnimationViewModel(IBitmapLoader bitmapLoader, ISelectedState selectedState, IWireframeObjectManager wireframeObjectManager)
+    public AnimationViewModel(ISelectedState selectedState, IWireframeObjectManager wireframeObjectManager)
     {
         Keyframes = new ObservableCollection<AnimatedKeyframeViewModel>();
         Keyframes.CollectionChanged += HandleKeyframeCollectionChanged;
 
-        mLoopBitmap = BitmapFrameFactory.Create(bitmapLoader.LoadImage("LoopIcon.png"))!;
-
-        mPlayOnceBitmap = BitmapFrameFactory.Create(bitmapLoader.LoadImage("PlayOnceIcon.png"))!;
         _selectedState = selectedState;
         _wireframeObjectManager = wireframeObjectManager;
     }
@@ -145,7 +138,7 @@ public partial class AnimationViewModel : ViewModel
 
         clone.FramePropertyChanged = null;
         clone.ContainingInstance = this.ContainingInstance;
-        
+
         foreach(var item in this.Keyframes)
         {
             clone.Keyframes.Add(item.Clone());
@@ -154,15 +147,15 @@ public partial class AnimationViewModel : ViewModel
         return clone;
     }
 
-    public static AnimationViewModel FromSave(AnimationSave save, ElementSave element, IAnimationCollectionViewModelManager animationCollectionViewModelManager, IBitmapLoader bitmapLoader, ISelectedState selectedState, IWireframeObjectManager wireframeObjectManager, ElementAnimationsSave? allAnimationSaves = null)
+    public static AnimationViewModel FromSave(AnimationSave save, ElementSave element, IAnimationSaveRepository animationCollectionViewModelManager, ISelectedState selectedState, IWireframeObjectManager wireframeObjectManager, ElementAnimationsSave? allAnimationSaves = null)
     {
-        AnimationViewModel toReturn = new AnimationViewModel(bitmapLoader, selectedState, wireframeObjectManager);
+        AnimationViewModel toReturn = new AnimationViewModel(selectedState, wireframeObjectManager);
         toReturn.Name = save.Name;
         toReturn.Loops = save.Loops;
 
         foreach(var eventSave in save.Events)
         {
-            var newViewModel = AnimatedKeyframeViewModel.FromSave(eventSave, element, bitmapLoader);
+            var newViewModel = AnimatedKeyframeViewModel.FromSave(eventSave, element);
 
             toReturn.Keyframes.Add(newViewModel);
         }
@@ -171,7 +164,7 @@ public partial class AnimationViewModel : ViewModel
         {
             var foundState = GetStateFromCategorizedName(stateSave.StateName, element);
 
-            var newAnimatedStateViewModel = AnimatedKeyframeViewModel.FromSave(stateSave, element, bitmapLoader);
+            var newAnimatedStateViewModel = AnimatedKeyframeViewModel.FromSave(stateSave, element);
 
             newAnimatedStateViewModel.HasValidState = foundState != null;
 
@@ -214,11 +207,11 @@ public partial class AnimationViewModel : ViewModel
                     }
                 }
             }
-            var newVm = AnimatedKeyframeViewModel.FromSave(animationReference, element, bitmapLoader);
+            var newVm = AnimatedKeyframeViewModel.FromSave(animationReference, element);
 
             if(animationSave != null && subAnimationElement != null)
             {
-                newVm.SubAnimationViewModel = AnimationViewModel.FromSave(animationSave, subAnimationElement, animationCollectionViewModelManager, bitmapLoader, selectedState, wireframeObjectManager, subAnimationSiblings);
+                newVm.SubAnimationViewModel = AnimationViewModel.FromSave(animationSave, subAnimationElement, animationCollectionViewModelManager, selectedState, wireframeObjectManager, subAnimationSiblings);
             }
 
 
@@ -371,7 +364,7 @@ public partial class AnimationViewModel : ViewModel
     /// to create a combined state.  As the animation continues, these combined states
     /// accumulate the changes of all states before them.  Therefore, we need to pre-combine
     /// the keyframes so that when animations are played they can properly interpolate.
-    /// 
+    ///
     /// </summary>
     public void RefreshCumulativeStates(ElementSave element, bool useDefaultAsStarting = true)
     {
@@ -412,7 +405,7 @@ public partial class AnimationViewModel : ViewModel
         }
     }
 
-    internal IEnumerable<ErrorViewModel> GetErrors()
+    public IEnumerable<ErrorViewModel> GetErrors()
     {
         foreach(var keyframe in this.Keyframes)
         {
@@ -436,7 +429,7 @@ public partial class AnimationViewModel : ViewModel
         }
     }
 
-    internal void RefreshErrors(ElementSave elementSave)
+    public void RefreshErrors(ElementSave elementSave)
     {
         foreach (var keyframe in this.Keyframes)
         {
@@ -484,7 +477,7 @@ public static class ListExtension
 
 public static class AnimationSaveExtensions
 {
-    public static float GetLength(this AnimationSave animation, ElementSave elementSave, ElementAnimationsSave allAnimationSaves, IAnimationCollectionViewModelManager animationCollectionViewModelManager)
+    public static float GetLength(this AnimationSave animation, ElementSave elementSave, ElementAnimationsSave allAnimationSaves, IAnimationSaveRepository animationCollectionViewModelManager)
     {
         float lastState = animation.States.Max(item => item.Time);
 
@@ -523,7 +516,7 @@ public static class AnimationSaveExtensions
 
                 if (subAnimationSave != null && subAnimationElement != null && subAnimationSiblings != null)
                 {
-                    endOfLastSubAnimation = 
+                    endOfLastSubAnimation =
                         System.Math.Max( endOfLastSubAnimation,
                         subAnimation.Time + subAnimationSave.GetLength(subAnimationElement, subAnimationSiblings, animationCollectionViewModelManager));
                 }

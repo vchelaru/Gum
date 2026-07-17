@@ -350,7 +350,7 @@
                                         Grid.Column="1"
                                         Icon="Warning"
                                         Style="{StaticResource FluentIcon.ButtonSize}"
-                                        Visibility="{Binding UncategorizedIconVisibility}">
+                                        Visibility="{Binding IsUncategorized, Converter={StaticResource BoolToVisibilityConverter}}">
                                         <wpf:FluentIcon.ToolTip>
                                             <TextBlock>This state is uncategorized which can cause unexpected results due to only some variables being assigned. Consider using only categorized states.</TextBlock>
                                         </wpf:FluentIcon.ToolTip>
