@@ -169,11 +169,6 @@ internal class DialogService : IDialogService
 
 public static class IDialogServiceExt
 {
-    public static bool ShowYesNoMessage(this IDialogService dialogService, string message, string? title = null)
-    {
-        return dialogService.ShowMessage(message, title, MessageDialogStyle.YesNo) is MessageDialogResult.Affirmative;
-    }
-
     public static bool Show<T>(this IDialogService dialogService) where T : DialogViewModel
     {
         return dialogService.Show<T>(null, out _);
