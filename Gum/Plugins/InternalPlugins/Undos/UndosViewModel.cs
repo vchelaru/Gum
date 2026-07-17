@@ -2,7 +2,6 @@
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Plugins.InternalPlugins.Undos;
-using Gum.Services;
 using Gum.StateAnimation.SaveClasses;
 using Gum.ToolStates;
 using Gum.Undo;
@@ -262,10 +261,10 @@ namespace Gum.Plugins.Undos
             return null;
         }
 
-        public UndosViewModel()
+        public UndosViewModel(ISelectedState selectedState, IUndoManager undoManager)
         {
-            _selectedState = Locator.GetRequiredService<ISelectedState>();
-            _undoManager = Locator.GetRequiredService<IUndoManager>();
+            _selectedState = selectedState;
+            _undoManager = undoManager;
             _undoManager.UndosChanged += HandleUndosChanged;
         }
 
