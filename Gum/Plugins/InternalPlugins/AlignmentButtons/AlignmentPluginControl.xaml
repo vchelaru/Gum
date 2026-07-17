@@ -42,7 +42,7 @@
             Foreground="Gray"
             FontStyle="Italic"
             Text="{Binding MarginText}"
-            Visibility="{Binding MarginTextVisibility}" />
+            Visibility="{Binding IsMarginTextVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
         <Label
             Grid.Row="3"
             VerticalAlignment="Center"
@@ -60,7 +60,7 @@
             Foreground="Gray"
             FontStyle="Italic"
             Text="{Binding MarginText}"
-            Visibility="{Binding MarginTextVisibility}" />
+            Visibility="{Binding IsMarginTextVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
 
     </Grid>
 </UserControl>
