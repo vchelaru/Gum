@@ -805,13 +805,13 @@ public class SelectionManager : ISelectionManager
                         WireframeEditor.Destroy();
                     }
 
-                    var lineColor = Color.FromArgb(255, _projectManager.GeneralSettingsFile.GuideLineColorR,
-                        _projectManager.GeneralSettingsFile.GuideLineColorG,
-                        _projectManager.GeneralSettingsFile.GuideLineColorB);
+                    var lineColor = Color.FromArgb(255, _projectManager.GuideLineColorR,
+                        _projectManager.GuideLineColorG,
+                        _projectManager.GuideLineColorB);
 
-                    var textColor = Color.FromArgb(255, _projectManager.GeneralSettingsFile.GuideTextColorR,
-                        _projectManager.GeneralSettingsFile.GuideTextColorG,
-                        _projectManager.GeneralSettingsFile.GuideTextColorB);
+                    var textColor = Color.FromArgb(255, _projectManager.GuideTextColorR,
+                        _projectManager.GuideTextColorG,
+                        _projectManager.GuideTextColorB);
 
                     WireframeEditor = new StandardWireframeEditor(
                         _layerService.OverlayLayer,

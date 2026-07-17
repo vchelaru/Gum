@@ -15,10 +15,10 @@ public class ProjectState : IProjectState
     }
 
     public GumProjectSave GumProjectSave => _projectManager.GumProjectSave;
-    public bool EffectiveUseStandardsPalette => _projectManager.GeneralSettingsFile.EffectiveUseStandardsPalette;
-    public byte OutlineColorR => _projectManager.GeneralSettingsFile.OutlineColorR;
-    public byte OutlineColorG => _projectManager.GeneralSettingsFile.OutlineColorG;
-    public byte OutlineColorB => _projectManager.GeneralSettingsFile.OutlineColorB;
+    public bool EffectiveUseStandardsPalette => _projectManager.EffectiveUseStandardsPalette;
+    public byte OutlineColorR => _projectManager.OutlineColorR;
+    public byte OutlineColorG => _projectManager.OutlineColorG;
+    public byte OutlineColorB => _projectManager.OutlineColorB;
 
     public string? ProjectDirectory
     {

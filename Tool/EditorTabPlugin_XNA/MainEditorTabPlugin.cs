@@ -411,7 +411,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
     {
         if (rootGue.Component is Text text)
         {
-            text.RenderBoundary = _projectManager.GeneralSettingsFile.ShowTextOutlines;
+            text.RenderBoundary = _projectManager.ShowTextOutlines;
         }
         if (rootGue.Children != null)
         {
@@ -882,7 +882,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         };
 
         // Apply FrameRate, but keep it within sane limits
-        float frameRate = Math.Max(Math.Min(_projectManager.GeneralSettingsFile.FrameRate, 60), 10);
+        float frameRate = Math.Max(Math.Min(_projectManager.FrameRate, 60), 10);
         _wireframeControl.DesiredFramesPerSecond = frameRate;
 
         UpdateWireframeControlSizes();

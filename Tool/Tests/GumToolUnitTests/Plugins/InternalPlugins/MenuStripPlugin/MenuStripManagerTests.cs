@@ -1,14 +1,12 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.Managers;
-using Gum.Settings;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Gum.Undo;
 using Moq;
-using Moq.AutoMock;
 using Shouldly;
 using System.Windows.Controls;
 
@@ -33,7 +31,6 @@ public class MenuStripManagerTests : BaseTestClass
         _dialogService = new Mock<IDialogService>();
         _fileCommands = new Mock<IFileCommands>();
         _projectManager = new Mock<IProjectManager>();
-        _projectManager.Setup(x => x.GeneralSettingsFile).Returns(new GeneralSettingsFile());
         _messenger = new Mock<IMessenger>();
 
         _menuStripManager = new MenuStripManager(

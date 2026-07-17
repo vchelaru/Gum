@@ -40,9 +40,6 @@ public class SelectionManagerHighlightTests : BaseTestClass
         mockSelectedState.Setup(x => x.SelectedInstances).Returns(() => new List<InstanceSave>());
 
         var projectManager = new Mock<IProjectManager>();
-        projectManager
-            .Setup(x => x.GeneralSettingsFile)
-            .Returns(new Gum.Settings.GeneralSettingsFile());
 
         _selectionManager = new SelectionManager(
             mockSelectedState.Object,

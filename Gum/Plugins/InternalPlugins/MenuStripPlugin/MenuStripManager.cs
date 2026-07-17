@@ -280,19 +280,14 @@ namespace Gum.Managers
             {
                 Header = "Standards palette (experimental)",
                 IsCheckable = true,
-                IsChecked = _projectManager.GeneralSettingsFile?.EffectiveUseStandardsPalette ?? false
+                IsChecked = _projectManager.EffectiveUseStandardsPalette
             };
             // WPF toggles IsChecked before Click fires for a checkable item.
             _standardsPaletteMenuItem.Click += (_, _) =>
             {
-                var settings = _projectManager.GeneralSettingsFile;
-                if (settings == null)
-                {
-                    return;
-                }
-                settings.UseStandardsPalette = _standardsPaletteMenuItem.IsChecked;
-                settings.Save();
-                _messenger.Send(new StandardsPaletteSettingChangedMessage(settings.EffectiveUseStandardsPalette));
+                _projectManager.UseStandardsPalette = _standardsPaletteMenuItem.IsChecked;
+                _projectManager.SaveGeneralSettings();
+                _messenger.Send(new StandardsPaletteSettingChangedMessage(_projectManager.EffectiveUseStandardsPalette));
             };
             _viewMenuItem.Items.Add(_standardsPaletteMenuItem);
 
@@ -347,9 +342,9 @@ namespace Gum.Managers
         public void RefreshUI()
         {
             // The settings file loads after PopulateMenu, so keep the checkmark in sync here.
-            if (_standardsPaletteMenuItem != null && _projectManager.GeneralSettingsFile is { } generalSettings)
+            if (_standardsPaletteMenuItem != null)
             {
-                _standardsPaletteMenuItem.IsChecked = generalSettings.EffectiveUseStandardsPalette;
+                _standardsPaletteMenuItem.IsChecked = _projectManager.EffectiveUseStandardsPalette;
             }
 
             if (_selectedState.SelectedStateSave != null && _selectedState.SelectedStateSave.Name != "Default")

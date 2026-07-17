@@ -15,18 +15,6 @@ using ToolsUtilities;
 
 namespace Gum.Settings
 {
-    public class RecentProjectReference
-    {
-        public DateTime LastTimeOpened;
-        public string AbsoluteFileName;
-
-        [XmlIgnore]
-        [JsonIgnore]
-        public FilePath FilePath => AbsoluteFileName;
-
-        public bool IsFavorite;
-    }
-
     /// <summary>
     /// Global settings for Glue, not project specific
     /// </summary>

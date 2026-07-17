@@ -58,11 +58,48 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
 
     public GumProjectSave? GumProjectSave => _gumProjectSave;
 
+    /// <summary>
+    /// The full settings object, including the WinForms-typed members (<c>MainWindowBounds</c>,
+    /// <c>MainWindowState</c>) that keep it out of <see cref="IProjectManager"/>'s headless surface.
+    /// Concrete-only; interface consumers use the narrowed members below instead.
+    /// </summary>
     public GeneralSettingsFile GeneralSettingsFile
     {
         get;
         private set;
     }
+
+    public bool AutoSave
+    {
+        get => GeneralSettingsFile.AutoSave;
+        set => GeneralSettingsFile.AutoSave = value;
+    }
+
+    public bool? UseStandardsPalette
+    {
+        get => GeneralSettingsFile.UseStandardsPalette;
+        set => GeneralSettingsFile.UseStandardsPalette = value;
+    }
+
+    public bool EffectiveUseStandardsPalette => GeneralSettingsFile.EffectiveUseStandardsPalette;
+    public bool ShowTextOutlines => GeneralSettingsFile.ShowTextOutlines;
+    public int FrameRate => GeneralSettingsFile.FrameRate;
+
+    public byte OutlineColorR => GeneralSettingsFile.OutlineColorR;
+    public byte OutlineColorG => GeneralSettingsFile.OutlineColorG;
+    public byte OutlineColorB => GeneralSettingsFile.OutlineColorB;
+
+    public byte GuideLineColorR => GeneralSettingsFile.GuideLineColorR;
+    public byte GuideLineColorG => GeneralSettingsFile.GuideLineColorG;
+    public byte GuideLineColorB => GeneralSettingsFile.GuideLineColorB;
+
+    public byte GuideTextColorR => GeneralSettingsFile.GuideTextColorR;
+    public byte GuideTextColorG => GeneralSettingsFile.GuideTextColorG;
+    public byte GuideTextColorB => GeneralSettingsFile.GuideTextColorB;
+
+    public IReadOnlyList<RecentProjectReference> RecentProjects => GeneralSettingsFile.RecentProjects;
+
+    public void SaveGeneralSettings() => GeneralSettingsFile.Save();
 
     public bool HaveErrorsOccurredLoadingProject
     {
@@ -100,6 +137,11 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         _retryService = retryService;
         _commandLineManager = commandLineManager;
         _pluginManager = pluginManager;
+        // Default settings until LoadSettings() replaces this with the loaded (or newly-created)
+        // file. Avoids a null-before-load window that every narrowed IProjectManager member above
+        // would otherwise need to guard against (some plugins read these before LoadSettings runs -
+        // see MenuStripManager.PopulateMenu).
+        GeneralSettingsFile = new GeneralSettingsFile();
     }
 
     public void LoadSettings()
