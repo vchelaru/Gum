@@ -2,15 +2,9 @@
 using Gum.Managers;
 using Gum.Mvvm;
 using Gum.Plugins.AlignmentButtons;
-using Gum.Services;
 using Gum.ToolStates;
 using Gum.Undo;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels;
@@ -47,11 +41,12 @@ public class AlignmentViewModel : ViewModel
     [DependsOn(nameof(DockMargin))]
     public Visibility MarginTextVisibility => DockMargin != 0 ? Visibility.Visible : Visibility.Collapsed;
 
-    public AlignmentViewModel(CommonControlLogic commonControlLogic)
+    public AlignmentViewModel(CommonControlLogic commonControlLogic, ISelectedState selectedState,
+        IUndoManager undoManager)
     {
         _commonControlLogic = commonControlLogic;
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _undoManager = Locator.GetRequiredService<IUndoManager>();
+        _selectedState = selectedState;
+        _undoManager = undoManager;
         DockMarginText = "0";
     }
 
