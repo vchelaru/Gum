@@ -41,8 +41,11 @@ public class AddScreenDialogViewModelTests : BaseTestClass
             .Setup(x => x.IsElementNameValid(It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<ElementSave?>(), out whyNotValid))
             .Returns(true);
 
-        _projectState.Setup(x => x.ScreenFilePath).Returns(new ToolsUtilities.FilePath("C:/project/Screens/"));
-        _fileLocations.Setup(x => x.ScreensFolder).Returns("C:/project/Screens/");
+        // A leading-slash path (not a Windows drive letter) is rooted per Path.IsPathRooted on
+        // both Windows and Unix; a "C:/..." literal is only rooted on Windows, so on macOS/Linux
+        // CI it's treated as relative and gets the CI runner's actual working directory prepended.
+        _projectState.Setup(x => x.ScreenFilePath).Returns(new ToolsUtilities.FilePath("/project/Screens/"));
+        _fileLocations.Setup(x => x.ScreensFolder).Returns("/project/Screens/");
 
         _sut = new AddScreenDialogViewModel(
             _nameVerifier.Object,
