@@ -43,7 +43,7 @@ public class EditCommands : IEditCommands
     private readonly IDialogService _dialogService;
     private readonly ProjectCommands _projectCommands;
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
-    private readonly PluginManager _pluginManager;
+    private readonly IPluginManager _pluginManager;
     private readonly IProjectManager _projectManager;
     private readonly IDeleteLogic _deleteLogic;
     private readonly IProjectState _projectState;
@@ -59,7 +59,7 @@ public class EditCommands : IEditCommands
         ProjectCommands projectCommands,
         IGuiCommands guiCommands,
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
-        PluginManager pluginManager,
+        IPluginManager pluginManager,
         IDeleteLogic deleteLogic,
         IProjectManager projectManager,
         IProjectState projectState,

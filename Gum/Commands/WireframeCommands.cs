@@ -6,9 +6,9 @@ namespace Gum.Commands;
 public class WireframeCommands : IWireframeCommands
 {
     private readonly IWireframeObjectManager _wireframeObjectManager;
-    private readonly PluginManager _pluginManager;
+    private readonly IPluginManager _pluginManager;
     public WireframeCommands(IWireframeObjectManager wireframeObjectManager,
-        PluginManager pluginManager)
+        IPluginManager pluginManager)
     {
         _wireframeObjectManager = wireframeObjectManager;
         _pluginManager = pluginManager;

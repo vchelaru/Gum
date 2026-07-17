@@ -7,6 +7,7 @@ using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.Wireframe;
 using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -155,4 +156,17 @@ public interface IPluginManager
     void BeforeRender();
     void AfterRender();
     void BehaviorReferencesChanged(ElementSave elementSave);
+
+    // Widened for #3753 (concrete-field cleanup pass): SelectedState, ElementCommands, EditCommands,
+    // GuiCommands, WireframeCommands, WireframeObjectManager, and ElementTreeViewManager previously took
+    // the concrete PluginManager as a ctor/field type because these weren't on the interface yet.
+    void RefreshVariableView(bool force);
+    void WireframePropertyChanged(string propertyName);
+    IRenderableIpso CreateRenderableForType(string type);
+    void WireframeRefreshed();
+    // Sealed to object (not System.Windows.Forms.TreeNode) per the WinForms/WPF interface-leak ratchet
+    // (UiDecouplingRatchetTests) -- same pattern as ITabManager.AddControl.
+    void TreeNodeSelected(object? treeNode);
+    bool IsInitialized { get; }
+    void SetHighlightedIpso(GraphicalUiElement? positionedSizedObject);
 }

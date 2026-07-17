@@ -29,7 +29,7 @@ public class ElementCommands : IElementCommands
     private readonly IFileCommands _fileCommands;
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly IWireframeObjectManager _wireframeObjectManager;
-    private readonly PluginManager _pluginManager;
+    private readonly IPluginManager _pluginManager;
     private readonly IProjectManager _projectManager;
     private readonly IProjectState _projectState;
 
@@ -40,7 +40,7 @@ public class ElementCommands : IElementCommands
         IFileCommands fileCommands,
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         IWireframeObjectManager wireframeObjectManager,
-        PluginManager pluginManager,
+        IPluginManager pluginManager,
         IProjectManager projectManager,
         IProjectState projectState)
     {

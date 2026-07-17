@@ -25,7 +25,7 @@ public class SelectedState : ISelectedState
     #region Fields
     
     private readonly IGuiCommands _guiCommands;
-    private readonly PluginManager _pluginManager;
+    private readonly IPluginManager _pluginManager;
     private readonly IMessenger _messenger;
     // Lazy because PropertyGridManager depends on ISelectedState; this breaks the DI construction cycle.
     private readonly Lazy<PropertyGridManager> _lazyPropertyGridManager;
@@ -342,7 +342,7 @@ public class SelectedState : ISelectedState
 
 
     public SelectedState(IGuiCommands guiCommands,
-        PluginManager pluginManager,
+        IPluginManager pluginManager,
         IMessenger messenger,
         Lazy<PropertyGridManager> lazyPropertyGridManager)
     {
