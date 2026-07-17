@@ -556,6 +556,43 @@ public class CopyPasteLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void OnPaste_Instance_Circle_ShouldPreserveNonUniformWidthAndHeight()
+    {
+        // Issue #3765: a Circle instance with Width != Height rendered correctly, but the pasted
+        // copy collapsed Width and Height to the smaller of the two. Root cause was a since-removed
+        // plugin (MainCirclePlugin) that stashed an obsolete "Radius" variable (derived from Height
+        // alone) alongside Width/Height whenever Height changed - a stray value later fed back into
+        // Width/Height wherever anything applied it. This pins the paste itself as innocent: it must
+        // carry over Width and Height unchanged and never introduce a "Radius" variable of its own.
+
+        ComponentSave component = new() { Name = "Component", BaseType = "Container" };
+        StateSave defaultState = new() { Name = "Default", ParentContainer = component };
+        component.States.Add(defaultState);
+
+        InstanceSave instance = new() { Name = "CircleInstance", BaseType = "Circle", ParentContainer = component };
+        component.Instances.Add(instance);
+
+        defaultState.SetValue("CircleInstance.Width", 100f, "float");
+        defaultState.SetValue("CircleInstance.Height", 50f, "float");
+
+        ObjectFinder.Self.GumProjectSave!.Components.Add(component);
+
+        _selectedState.Setup(x => x.SelectedElement).Returns(component);
+        _selectedState.Setup(x => x.SelectedElements).Returns(new List<ElementSave> { component });
+        _selectedState.Setup(x => x.SelectedStateSave).Returns(defaultState);
+
+        SelectInstances(instance);
+
+        _copyPasteLogic.OnCopy(CopyType.InstanceOrElement);
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+
+        var pasted = component.Instances[1];
+        defaultState.GetValue($"{pasted.Name}.Width").ShouldBe(100f);
+        defaultState.GetValue($"{pasted.Name}.Height").ShouldBe(50f);
+        defaultState.GetVariableSave($"{pasted.Name}.Radius").ShouldBeNull();
+    }
+
+    [Fact]
     public void OnPaste_Instance_ShouldCopyDirectlySetVariableReferencesOnInstance()
     {
         // Direct VariableReferences on the source instance must be carried
