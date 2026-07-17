@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Gum.Dialogs;
 using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
 using Gum.Plugins.VariableGrid;
 using Gum.Services.Dialogs;
@@ -24,13 +25,13 @@ public class DialogViewResolverTests
     [Fact]
     public void GetDialogViewType_ResolvesFromOwnAssembly_WhenViewModelAndViewAreCoLocated()
     {
-        // PluginsDialogViewModel/PluginsDialogView still live together in Gum.dll and pair via the
+        // ThemingDialogViewModel/ThemingDialogView still live together in Gum.dll and pair via the
         // original naming-convention path (no [Dialog] attribute, no fallback assembly needed).
         DialogViewResolver resolver = new(NullLogger<DialogViewResolver>.Instance, new StubAssemblyProvider());
 
-        Type? viewType = resolver.GetDialogViewType(typeof(PluginsDialogViewModel));
+        Type? viewType = resolver.GetDialogViewType(typeof(ThemingDialogViewModel));
 
-        viewType.ShouldBe(typeof(PluginsDialogView));
+        viewType.ShouldBe(typeof(ThemingDialogView));
     }
 
     [Fact]
@@ -44,6 +45,19 @@ public class DialogViewResolverTests
         Type? viewType = resolver.GetDialogViewType(typeof(MessageDialogViewModel));
 
         viewType.ShouldBe(typeof(MessageDialogView));
+    }
+
+    [Fact]
+    public void GetDialogViewType_FallsBackToCandidateAssemblies_WhenViewModelMovedButViewStayedInToolAssembly()
+    {
+        // PluginsDialogViewModel moved into the headless Gum.Presentation assembly (#3754);
+        // PluginsDialogView (its [Dialog]-attributed View) stayed behind in the Gum tool assembly.
+        StubAssemblyProvider assemblyProvider = new(typeof(PluginsDialogView).Assembly);
+        DialogViewResolver resolver = new(NullLogger<DialogViewResolver>.Instance, assemblyProvider);
+
+        Type? viewType = resolver.GetDialogViewType(typeof(PluginsDialogViewModel));
+
+        viewType.ShouldBe(typeof(PluginsDialogView));
     }
 
     [Fact]

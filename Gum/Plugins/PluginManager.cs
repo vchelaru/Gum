@@ -1298,6 +1298,38 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
             mPluginSettingsSave.Save(PluginSettingsSaveFileName);
     }
 
+    /// <inheritdoc/>
+    public IReadOnlyList<PluginSummary> GetAllPluginSummaries() =>
+        AllPluginContainers.Select(ToPluginSummary).ToList();
+
+    /// <inheritdoc/>
+    public PluginSummary DisableUserPlugin(object pluginHandle)
+    {
+        PluginContainer container = (PluginContainer)pluginHandle;
+        ShutDownPlugin(container.Plugin, PluginShutDownReason.UserDisabled);
+        return ToPluginSummary(container);
+    }
+
+    /// <inheritdoc/>
+    public PluginSummary TryEnablePlugin(object pluginHandle)
+    {
+        PluginContainer container = (PluginContainer)pluginHandle;
+        container.IsEnabled = true;
+        try
+        {
+            container.Plugin.StartUp();
+            ReenablePlugin(container.Plugin);
+        }
+        catch (Exception exception)
+        {
+            container.Fail(exception, "Failed in StartUp");
+        }
+        return ToPluginSummary(container);
+    }
+
+    private static PluginSummary ToPluginSummary(PluginContainer container) =>
+        new(container.Name, container.ToString(), container.IsEnabled, !string.IsNullOrEmpty(container.FailureDetails), container);
+
     internal static void AddInternalPlugins()
     {
     }
