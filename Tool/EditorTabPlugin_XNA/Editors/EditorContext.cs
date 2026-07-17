@@ -1,6 +1,7 @@
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
+using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers;
 using Gum.Services;
@@ -35,6 +36,7 @@ public class EditorContext
     public Layer OverlayLayer { get; }
     public IUiSettingsService UiSettingsService { get; }
     public IToolFontService ToolFontService { get; }
+    public IPluginManager PluginManager { get; }
 
     #endregion
 
@@ -97,10 +99,12 @@ public class EditorContext
         Layer overlayLayer,
         Color lineColor,
         Color textColor,
-        IToolFontService toolFontService)
+        IToolFontService toolFontService,
+        IPluginManager pluginManager)
     {
         UiSettingsService = uiSettingsService;
         ToolFontService = toolFontService;
+        PluginManager = pluginManager;
         SelectedState = selectedState;
         SelectionManager = selectionManager;
         ElementCommands = elementCommands;
@@ -191,7 +195,7 @@ public class EditorContext
             if (DoValuesDiffer(stateSave, possiblyChangedVariableList.Name, oldValue))
             {
                 var instance = element.GetInstance(possiblyChangedVariableList.SourceObject);
-                Locator.GetRequiredService<Gum.Plugins.IPluginManager>().VariableSet(element, instance, possiblyChangedVariableList.GetRootName(), oldValue);
+                PluginManager.VariableSet(element, instance, possiblyChangedVariableList.GetRootName(), oldValue);
             }
         }
 

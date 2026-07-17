@@ -2,6 +2,7 @@
 using Gum.DataTypes;
 using Gum.Input;
 using Gum.Managers;
+using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers;
@@ -87,6 +88,7 @@ public class SelectionManager : ISelectionManager
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly IUiSettingsService _uiSettingsService;
     private readonly IToolFontService _toolFontService;
+    private readonly IPluginManager _pluginManager;
 
     public virtual bool IsOverBody
     {
@@ -215,7 +217,8 @@ public class SelectionManager : ISelectionManager
         IFileCommands fileCommands,
         ISetVariableLogic setVariableLogic,
         IUiSettingsService uiSettingsService,
-        IToolFontService toolFontService)
+        IToolFontService toolFontService,
+        IPluginManager pluginManager)
     {
         _selectedState = selectedState;
         _toolFontService = toolFontService;
@@ -231,6 +234,7 @@ public class SelectionManager : ISelectionManager
         _fileCommands = fileCommands;
         _setVariableLogic = setVariableLogic;
         _uiSettingsService = uiSettingsService;
+        _pluginManager = pluginManager;
     }
 
     public void Initialize(LayerService layerService)
@@ -824,7 +828,8 @@ public class SelectionManager : ISelectionManager
                         _variableInCategoryPropagationLogic,
                         _wireframeObjectManager,
                         _uiSettingsService,
-                        _toolFontService);
+                        _toolFontService,
+                        _pluginManager);
                 }
             }
         }
@@ -863,7 +868,8 @@ public class SelectionManager : ISelectionManager
             _variableInCategoryPropagationLogic,
             _wireframeObjectManager,
             _uiSettingsService,
-            _toolFontService);
+            _toolFontService,
+            _pluginManager);
     }
 
     #region New Explicit Input Processing System

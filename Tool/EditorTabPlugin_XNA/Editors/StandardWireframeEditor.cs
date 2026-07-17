@@ -23,6 +23,7 @@ using Gum.Services;
 using Gum.Commands;
 using Gum.Undo;
 using Gum.Wireframe.Editors.Handlers;
+using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Wireframe.Editors.Visuals;
 
@@ -96,7 +97,8 @@ public class StandardWireframeEditor : WireframeEditor
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         IWireframeObjectManager wireframeObjectManager,
         IUiSettingsService uiSettingsService,
-        IToolFontService toolFontService)
+        IToolFontService toolFontService,
+        IPluginManager pluginManager)
         : base(
               hotkeyManager,
               selectionManager,
@@ -112,7 +114,8 @@ public class StandardWireframeEditor : WireframeEditor
               layer,
               lineColor,
               textColor,
-              toolFontService)
+              toolFontService,
+              pluginManager)
     {
         _elementCommands = elementCommands;
         _wireframeObjectManager = wireframeObjectManager;

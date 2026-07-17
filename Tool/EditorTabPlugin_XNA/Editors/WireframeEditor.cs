@@ -63,7 +63,8 @@ public abstract class WireframeEditor
         Layer layer,
         Color lineColor,
         Color textColor,
-        IToolFontService toolFontService)
+        IToolFontService toolFontService,
+        IPluginManager pluginManager)
     {
         // Create shared EditorContext and MoveInputHandler
         _context = new EditorContext(
@@ -81,7 +82,8 @@ public abstract class WireframeEditor
             layer,
             lineColor,
             textColor,
-            toolFontService);
+            toolFontService,
+            pluginManager);
 
         _moveInputHandler = new MoveInputHandler(_context);
     }

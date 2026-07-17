@@ -2,6 +2,7 @@ using Gum;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
+using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers;
@@ -77,7 +78,8 @@ public class SelectionManagerRectangleTests : BaseTestClass
             Mock.Of<IFileCommands>(),
             Mock.Of<ISetVariableLogic>(),
             Mock.Of<IUiSettingsService>(),
-            Mock.Of<IToolFontService>());
+            Mock.Of<IToolFontService>(),
+            Mock.Of<IPluginManager>());
 
         _layerService = new Mock<LayerService>();
 

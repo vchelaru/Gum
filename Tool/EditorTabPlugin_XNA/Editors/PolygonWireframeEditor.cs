@@ -1,6 +1,7 @@
 ﻿using Gum.Commands;
 using Gum.Input;
 using Gum.Managers;
+using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers;
 using Gum.Services;
@@ -72,7 +73,8 @@ public class PolygonWireframeEditor : WireframeEditor
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         IWireframeObjectManager wireframeObjectManager,
         IUiSettingsService uiSettingsService,
-        IToolFontService toolFontService)
+        IToolFontService toolFontService,
+        IPluginManager pluginManager)
         : base(
               hotkeyManager,
               selectionManager,
@@ -88,7 +90,8 @@ public class PolygonWireframeEditor : WireframeEditor
               layer,
               System.Drawing.Color.White,
               System.Drawing.Color.White,
-              toolFontService)
+              toolFontService,
+              pluginManager)
     {
         this.layer = layer;
 
