@@ -107,10 +107,18 @@ namespace CommonFormsAndControls
 
         #endregion
 
-        #region Events  
+        #region Events
 
 
         public event TreeViewEventHandler? AfterClickSelect;
+
+        /// <summary>
+        /// Raised when an exception is caught internally while crawling or reacting to tree
+        /// node changes. This control has no dependency on the host application's dialog
+        /// service, so it hands the exception off here instead of showing UI directly;
+        /// the host (e.g. ElementTreeViewManager) is expected to subscribe and surface it.
+        /// </summary>
+        public event Action<Exception>? UnhandledException;
 
         #endregion
 
@@ -769,9 +777,11 @@ namespace CommonFormsAndControls
 
         private void HandleException(Exception ex)
         {
-            // Perform some error handling here.   
-            // We don't want to bubble errors to the CLR.    
-            MessageBox.Show(ex.Message);
+            // Perform some error handling here.
+            // We don't want to bubble errors to the CLR.
+            // No fallback UI here on purpose: ElementTreeViewManager always owns and wires up
+            // this control, so UnhandledException is guaranteed to have a subscriber.
+            UnhandledException?.Invoke(ex);
         }
 
         private void ReactToClickedNode(TreeNode? node)
