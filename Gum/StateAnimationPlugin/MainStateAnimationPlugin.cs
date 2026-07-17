@@ -16,6 +16,7 @@ using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
 using StateAnimationPlugin.Managers;
+using StateAnimationPlugin.Services;
 using StateAnimationPlugin.ViewModels;
 using StateAnimationPlugin.Views;
 using System;
@@ -130,9 +131,13 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
         // The factory closure reads _animationCollectionViewModelManager and _renameManager lazily
         // (when invoked, after both are assigned just below), which breaks the
         // ACVMM -> ElementAnimationsViewModel -> RenameManager construction cycle without a Lazy<T>.
+        // Each call gets a fresh DispatcherUiTimer: ElementAnimationsViewModel is recreated per
+        // selected-element switch (see AnimationCollectionViewModelManager.GetAnimationCollectionViewModel),
+        // and a shared timer would let two live view models fight over the same Tick subscription.
         _animationVmFactory = () => new ElementAnimationsViewModel(
             _nameVerifier, _dialogService, _animationCollectionViewModelManager, _renameManager,
-            _selectedState, _wireframeObjectManager, _outputManager);
+            _selectedState, _wireframeObjectManager, _outputManager, _animationFilePathService,
+            new DispatcherUiTimer());
         _animationCollectionViewModelManager = new AnimationCollectionViewModelManager(
             _selectedState, _outputManager, _fileWatchManager, _animationFilePathService, _animationVmFactory);
         _renameManager = new RenameManager(

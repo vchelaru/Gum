@@ -9,9 +9,9 @@ namespace StateAnimationPlugin.Managers;
 /// and the editable <see cref="ElementAnimationsViewModel"/>. The pure-data members
 /// (<see cref="IAnimationSaveRepository.GetElementAnimationsSave"/>/
 /// <see cref="IAnimationSaveRepository.SaveElementAnimations"/>) live on the base
-/// <see cref="IAnimationSaveRepository"/> so headless ViewModels in <c>Gum.Presentation</c> can
-/// depend on that narrower slice without pulling in the WPF-coupled <see cref="ElementAnimationsViewModel"/>
-/// type (ADR-0005, issue #3754).
+/// <see cref="IAnimationSaveRepository"/> so callers that only need persistence can depend on that
+/// narrower slice. Implemented by the tool-side <c>AnimationCollectionViewModelManager</c>
+/// (ADR-0005, issue #3754).
 /// </summary>
 public interface IAnimationCollectionViewModelManager : IAnimationSaveRepository
 {

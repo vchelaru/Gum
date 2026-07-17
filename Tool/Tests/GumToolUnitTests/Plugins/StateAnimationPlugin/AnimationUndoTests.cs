@@ -1,6 +1,7 @@
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins.Undos;
+using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.StateAnimation.SaveClasses;
 using Gum.ToolStates;
@@ -10,8 +11,6 @@ using Shouldly;
 using StateAnimationPlugin;
 using StateAnimationPlugin.Managers;
 using StateAnimationPlugin.ViewModels;
-using System;
-using System.Threading;
 using Xunit;
 
 namespace GumToolUnitTests.Plugins.StateAnimationPlugin;
@@ -30,37 +29,31 @@ public class AnimationUndoTests : BaseTestClass
     [Fact]
     public void DeleteSelectedKeyframe_DoesNotRemoveKeyframe_WhenPromptDeclined()
     {
-        RunOnSta(() =>
-        {
-            Mock<IDialogService> dialogService = new();
-            // ShowYesNoMessage is an extension over ShowMessage(...); a non-affirmative result is "No".
-            dialogService
-                .Setup(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()))
-                .Returns(MessageDialogResult.Negative);
-            ElementAnimationsViewModel viewModel = CreateViewModel(dialogService.Object, out AnimationViewModel animation);
+        Mock<IDialogService> dialogService = new();
+        // ShowYesNoMessage is an extension over ShowMessage(...); a non-affirmative result is "No".
+        dialogService
+            .Setup(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()))
+            .Returns(MessageDialogResult.Negative);
+        ElementAnimationsViewModel viewModel = CreateViewModel(dialogService.Object, out AnimationViewModel animation);
 
-            viewModel.DeleteSelectedKeyframe();
+        viewModel.DeleteSelectedKeyframe();
 
-            animation.Keyframes.Count.ShouldBe(1);
-        });
+        animation.Keyframes.Count.ShouldBe(1);
     }
 
     [Fact]
     public void DeleteSelectedKeyframe_RemovesKeyframe_WhenPromptConfirmed()
     {
-        RunOnSta(() =>
-        {
-            Mock<IDialogService> dialogService = new();
-            // ShowYesNoMessage is an extension over ShowMessage(...); an affirmative result is "Yes".
-            dialogService
-                .Setup(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()))
-                .Returns(MessageDialogResult.Affirmative);
-            ElementAnimationsViewModel viewModel = CreateViewModel(dialogService.Object, out AnimationViewModel animation);
+        Mock<IDialogService> dialogService = new();
+        // ShowYesNoMessage is an extension over ShowMessage(...); an affirmative result is "Yes".
+        dialogService
+            .Setup(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()))
+            .Returns(MessageDialogResult.Affirmative);
+        ElementAnimationsViewModel viewModel = CreateViewModel(dialogService.Object, out AnimationViewModel animation);
 
-            viewModel.DeleteSelectedKeyframe();
+        viewModel.DeleteSelectedKeyframe();
 
-            animation.Keyframes.Count.ShouldBe(0);
-        });
+        animation.Keyframes.Count.ShouldBe(0);
     }
 
     [Fact]
@@ -139,23 +132,20 @@ public class AnimationUndoTests : BaseTestClass
         // reselected and the keyframe matching by content (state/sub-animation/event name + time) is
         // selected on it. This is what keeps the user's selection — and the right-side property panel —
         // across the reload when the selected keyframe itself was unchanged by the undo.
-        RunOnSta(() =>
-        {
-            ElementAnimationsViewModel rebuilt = ViewModelWithAnimation("Anim", out AnimationViewModel animation,
-                Keyframe("Default", 0f), Keyframe("Highlighted", 1f));
-            var selection = new MainStateAnimationPlugin.AnimationSelectionState(
-                "Anim", Keyframe("Highlighted", 1f), KeyframeIndex: 1, KeyframeCount: 2);
+        ElementAnimationsViewModel rebuilt = ViewModelWithAnimation("Anim", out AnimationViewModel animation,
+            Keyframe("Default", 0f), Keyframe("Highlighted", 1f));
+        var selection = new MainStateAnimationPlugin.AnimationSelectionState(
+            "Anim", Keyframe("Highlighted", 1f), KeyframeIndex: 1, KeyframeCount: 2);
 
-            AnimatedKeyframeViewModel? matched =
-                MainStateAnimationPlugin.RestoreAnimationSelection(rebuilt, selection);
+        AnimatedKeyframeViewModel? matched =
+            MainStateAnimationPlugin.RestoreAnimationSelection(rebuilt, selection);
 
-            rebuilt.SelectedAnimation.ShouldBe(animation);
-            matched.ShouldNotBeNull();
-            matched!.StateName.ShouldBe("Highlighted");
-            matched.Time.ShouldBe(1f);
-            // Selected on the animation, and pre-set before it became the active animation.
-            animation.SelectedKeyframe.ShouldBe(matched);
-        });
+        rebuilt.SelectedAnimation.ShouldBe(animation);
+        matched.ShouldNotBeNull();
+        matched!.StateName.ShouldBe("Highlighted");
+        matched.Time.ShouldBe(1f);
+        // Selected on the animation, and pre-set before it became the active animation.
+        animation.SelectedKeyframe.ShouldBe(matched);
     }
 
     [Fact]
@@ -165,20 +155,17 @@ public class AnimationUndoTests : BaseTestClass
         // back at time 5, so the captured keyframe (time 4) matches nothing by content; since the count
         // is unchanged, fall back to the captured index so the keyframe the user was editing stays
         // selected (with its time showing 5 again).
-        RunOnSta(() =>
-        {
-            ElementAnimationsViewModel rebuilt = ViewModelWithAnimation("Anim", out AnimationViewModel animation,
-                Keyframe("Default", 0f), Keyframe("Highlighted", 5f));
-            var selection = new MainStateAnimationPlugin.AnimationSelectionState(
-                "Anim", Keyframe("Highlighted", 4f), KeyframeIndex: 1, KeyframeCount: 2);
+        ElementAnimationsViewModel rebuilt = ViewModelWithAnimation("Anim", out AnimationViewModel animation,
+            Keyframe("Default", 0f), Keyframe("Highlighted", 5f));
+        var selection = new MainStateAnimationPlugin.AnimationSelectionState(
+            "Anim", Keyframe("Highlighted", 4f), KeyframeIndex: 1, KeyframeCount: 2);
 
-            AnimatedKeyframeViewModel? matched =
-                MainStateAnimationPlugin.RestoreAnimationSelection(rebuilt, selection);
+        AnimatedKeyframeViewModel? matched =
+            MainStateAnimationPlugin.RestoreAnimationSelection(rebuilt, selection);
 
-            matched.ShouldNotBeNull();
-            matched!.Time.ShouldBe(5f);
-            animation.SelectedKeyframe.ShouldBe(matched);
-        });
+        matched.ShouldNotBeNull();
+        matched!.Time.ShouldBe(5f);
+        animation.SelectedKeyframe.ShouldBe(matched);
     }
 
     [Fact]
@@ -187,20 +174,17 @@ public class AnimationUndoTests : BaseTestClass
         // Undo of an add removes the selected keyframe and changes the count. Content match fails and
         // the index fallback is suppressed (count differs), so the keyframe selection drops cleanly
         // rather than grabbing a neighbor. The animation is still reselected.
-        RunOnSta(() =>
-        {
-            ElementAnimationsViewModel rebuilt = ViewModelWithAnimation("Anim", out AnimationViewModel animation,
-                Keyframe("Default", 0f));
-            var selection = new MainStateAnimationPlugin.AnimationSelectionState(
-                "Anim", Keyframe("Highlighted", 1f), KeyframeIndex: 1, KeyframeCount: 2);
+        ElementAnimationsViewModel rebuilt = ViewModelWithAnimation("Anim", out AnimationViewModel animation,
+            Keyframe("Default", 0f));
+        var selection = new MainStateAnimationPlugin.AnimationSelectionState(
+            "Anim", Keyframe("Highlighted", 1f), KeyframeIndex: 1, KeyframeCount: 2);
 
-            AnimatedKeyframeViewModel? matched =
-                MainStateAnimationPlugin.RestoreAnimationSelection(rebuilt, selection);
+        AnimatedKeyframeViewModel? matched =
+            MainStateAnimationPlugin.RestoreAnimationSelection(rebuilt, selection);
 
-            rebuilt.SelectedAnimation.ShouldBe(animation);
-            matched.ShouldBeNull();
-            animation.SelectedKeyframe.ShouldBeNull();
-        });
+        rebuilt.SelectedAnimation.ShouldBe(animation);
+        matched.ShouldBeNull();
+        animation.SelectedKeyframe.ShouldBeNull();
     }
 
     [Fact]
@@ -210,22 +194,19 @@ public class AnimationUndoTests : BaseTestClass
         // matches nothing in the rebuilt view model. Because the animation count is unchanged, fall
         // back to the captured slot so the same row stays selected through the rename (#3410), and the
         // keyframe is re-matched on it by content.
-        RunOnSta(() =>
-        {
-            ElementAnimationsViewModel rebuilt = ViewModelWithAnimation("NewName", out AnimationViewModel animation,
-                Keyframe("Default", 0f), Keyframe("Highlighted", 1f));
-            var selection = new MainStateAnimationPlugin.AnimationSelectionState(
-                "OldName", Keyframe("Highlighted", 1f), KeyframeIndex: 1, KeyframeCount: 2,
-                AnimationIndex: 0, AnimationCount: 1);
+        ElementAnimationsViewModel rebuilt = ViewModelWithAnimation("NewName", out AnimationViewModel animation,
+            Keyframe("Default", 0f), Keyframe("Highlighted", 1f));
+        var selection = new MainStateAnimationPlugin.AnimationSelectionState(
+            "OldName", Keyframe("Highlighted", 1f), KeyframeIndex: 1, KeyframeCount: 2,
+            AnimationIndex: 0, AnimationCount: 1);
 
-            AnimatedKeyframeViewModel? matched =
-                MainStateAnimationPlugin.RestoreAnimationSelection(rebuilt, selection);
+        AnimatedKeyframeViewModel? matched =
+            MainStateAnimationPlugin.RestoreAnimationSelection(rebuilt, selection);
 
-            rebuilt.SelectedAnimation.ShouldBe(animation);
-            matched.ShouldNotBeNull();
-            matched!.StateName.ShouldBe("Highlighted");
-            animation.SelectedKeyframe.ShouldBe(matched);
-        });
+        rebuilt.SelectedAnimation.ShouldBe(animation);
+        matched.ShouldNotBeNull();
+        matched!.StateName.ShouldBe("Highlighted");
+        animation.SelectedKeyframe.ShouldBe(matched);
     }
 
     [Fact]
@@ -234,20 +215,17 @@ public class AnimationUndoTests : BaseTestClass
         // The selected animation's name doesn't match AND the animation count changed (an animation was
         // added/deleted in the external edit), so reselecting by index would grab an unrelated row.
         // Drop the selection cleanly instead.
-        RunOnSta(() =>
-        {
-            ElementAnimationsViewModel rebuilt = ViewModelWithAnimation("NewName", out AnimationViewModel _,
-                Keyframe("Default", 0f));
-            var selection = new MainStateAnimationPlugin.AnimationSelectionState(
-                "OldName", Keyframe("Default", 0f), KeyframeIndex: 0, KeyframeCount: 1,
-                AnimationIndex: 1, AnimationCount: 2);
+        ElementAnimationsViewModel rebuilt = ViewModelWithAnimation("NewName", out AnimationViewModel _,
+            Keyframe("Default", 0f));
+        var selection = new MainStateAnimationPlugin.AnimationSelectionState(
+            "OldName", Keyframe("Default", 0f), KeyframeIndex: 0, KeyframeCount: 1,
+            AnimationIndex: 1, AnimationCount: 2);
 
-            AnimatedKeyframeViewModel? matched =
-                MainStateAnimationPlugin.RestoreAnimationSelection(rebuilt, selection);
+        AnimatedKeyframeViewModel? matched =
+            MainStateAnimationPlugin.RestoreAnimationSelection(rebuilt, selection);
 
-            rebuilt.SelectedAnimation.ShouldBeNull();
-            matched.ShouldBeNull();
-        });
+        rebuilt.SelectedAnimation.ShouldBeNull();
+        matched.ShouldBeNull();
     }
 
     private AnimatedKeyframeViewModel Keyframe(string stateName, float time)
@@ -269,7 +247,9 @@ public class AnimationUndoTests : BaseTestClass
             Mock.Of<IRenameManager>(),
             _selectedState,
             _wireframeObjectManager,
-            Mock.Of<IOutputManager>());
+            Mock.Of<IOutputManager>(),
+            Mock.Of<IAnimationFilePathService>(),
+            Mock.Of<IUiTimer>());
         viewModel.Animations.Add(animation);
         return viewModel;
     }
@@ -288,30 +268,11 @@ public class AnimationUndoTests : BaseTestClass
             Mock.Of<IRenameManager>(),
             _selectedState,
             _wireframeObjectManager,
-            Mock.Of<IOutputManager>());
+            Mock.Of<IOutputManager>(),
+            Mock.Of<IAnimationFilePathService>(),
+            Mock.Of<IUiTimer>());
         viewModel.Animations.Add(animation);
         viewModel.SelectedAnimation = animation;
         return viewModel;
-    }
-
-    /// <summary>
-    /// WPF controls (the right-click MenuItems built in ElementAnimationsViewModel's constructor)
-    /// require an STA thread; xUnit's default runner is MTA.
-    /// </summary>
-    private static void RunOnSta(Action action)
-    {
-        Exception? caught = null;
-        Thread thread = new(() =>
-        {
-            try { action(); }
-            catch (Exception ex) { caught = ex; }
-        });
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
-        if (caught != null)
-        {
-            throw new Exception("Test body threw on the STA thread.", caught);
-        }
     }
 }

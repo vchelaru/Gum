@@ -131,6 +131,15 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   extracted is declared *inside* its own implementer's file (`FileWatchManager.cs` held both
   `IFileWatchManager` and `FileWatchManager`) rather than its own file, extract it into a standalone
   file first — namespace stays the same either way, so no consumer needs a `using` change.
+- **An interface-typed field doesn't save you if the VM constructs the concrete type itself.**
+  `SubAnimationSelectionDialogViewModel` held `IAnimationFilePathService` but assigned it via
+  `new AnimationFilePathService(selectedState)` inside its own constructor; the concrete class was
+  still tool-side (its own dependency chain reached `Locator` transitively), so the field's
+  interface type didn't unblock the move. Fixed by making the concrete type a constructor
+  parameter instead of a `new` — the same "inject, don't construct" fix as the `Locator`/`.Self`
+  drain, just triggered by a field whose *declared* type already looked headless-safe. Grep for
+  `new ConcreteType(` inside a VM's own constructor, not just its field types, when auditing a
+  move.
 
 **Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap).
 - *4a — Element tree:* decouple `ElementTreeViewManager` from `TreeNode`; the already-migrated

@@ -1,10 +1,8 @@
-﻿using Gum.Managers;
+using Gum.Managers;
 using StateAnimationPlugin.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace StateAnimationPlugin.Validation;
 
@@ -45,7 +43,7 @@ public class NameValidator
         {
             _nameVerifier.IsNameValidTopLevel(animationName, element, objectToIgnore, out whyNotValid);
         }
-        
+
         return string.IsNullOrEmpty(whyNotValid);
     }
 }

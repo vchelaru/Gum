@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.ToolStates;
 using StateAnimationPlugin.Managers;
 using Gum.StateAnimation.SaveClasses;
@@ -6,22 +6,18 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Controls;
-using System.Windows.Threading;
-using System.Windows;
-using CommonFormsAndControls;
 using StateAnimationPlugin.Validation;
 using Gum.Managers;
 using ToolsUtilities;
 using System.Globalization;
 using CommunityToolkit.Mvvm.Input;
 using Gum.Mvvm;
+using Gum.Services;
 using Gum.Wireframe;
 using Gum.Services.Dialogs;
+using Gum.ViewModels;
 
 namespace StateAnimationPlugin.ViewModels;
 
@@ -33,7 +29,8 @@ public partial class ElementAnimationsViewModel : ViewModel
     //const int mTimerFrequencyInMs = 50;
     const int mTimerFrequencyInMs = 20;
 
-    System.Windows.Threading.DispatcherTimer mPlayTimer;
+    private readonly IUiTimer _playTimer;
+    private readonly Stopwatch _playbackStopwatch;
 
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
@@ -43,6 +40,7 @@ public partial class ElementAnimationsViewModel : ViewModel
     private readonly IRenameManager _renameManager;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IOutputManager _outputManager;
+    private readonly IAnimationFilePathService _animationFilePathService;
     private AnimatedKeyframeViewModel? _copiedKeyframe;
 
     #endregion
@@ -57,17 +55,17 @@ public partial class ElementAnimationsViewModel : ViewModel
 
     public ObservableCollection<AnimationViewModel> Animations { get; private set; }
 
-    public ObservableCollection<MenuItem> AnimationRightClickItems
+    public ObservableCollection<ContextMenuItemViewModel> AnimationRightClickItems
     {
         get;
         private set;
-    } = new ObservableCollection<MenuItem>();
+    } = new ObservableCollection<ContextMenuItemViewModel>();
 
-    public ObservableCollection<MenuItem> AnimationStateRightClickItems
+    public ObservableCollection<ContextMenuItemViewModel> AnimationStateRightClickItems
     {
         get;
         private set;
-    } = new ObservableCollection<MenuItem>();
+    } = new ObservableCollection<ContextMenuItemViewModel>();
 
     public AnimationViewModel? SelectedAnimation
     {
@@ -167,7 +165,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         {
             if (Set(value))
             {
-                AnimationSpeedMultiplier = 
+                AnimationSpeedMultiplier =
                     int.Parse(CurrentGameSpeed.Substring(0, CurrentGameSpeed.Length - 1)) / 100.0;
 
             }
@@ -193,7 +191,7 @@ public partial class ElementAnimationsViewModel : ViewModel
     public ElementAnimationsViewModel(INameVerifier nameVerifier, IDialogService dialogService,
         IAnimationCollectionViewModelManager animationCollectionViewModelManager, IRenameManager renameManager,
         ISelectedState selectedState, IWireframeObjectManager wireframeObjectManager,
-        IOutputManager outputManager)
+        IOutputManager outputManager, IAnimationFilePathService animationFilePathService, IUiTimer playTimer)
     {
         ClampInterpolationVisuals = true;
         CurrentGameSpeed = "100%";
@@ -203,9 +201,9 @@ public partial class ElementAnimationsViewModel : ViewModel
 
         this.PropertyChanged += (sender, args) => OnPropertyChanged(args.PropertyName);
 
-        mPlayTimer = new DispatcherTimer();
-        mPlayTimer.Interval = new TimeSpan(0, 0, 0, 0, mTimerFrequencyInMs);
-        mPlayTimer.Tick += HandlePlayTimerTick;
+        _playbackStopwatch = Stopwatch.StartNew();
+        _playTimer = playTimer;
+        _playTimer.Tick += HandlePlayTimerTick;
 
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
@@ -215,6 +213,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         _renameManager = renameManager;
         _wireframeObjectManager = wireframeObjectManager;
         _outputManager = outputManager;
+        _animationFilePathService = animationFilePathService;
 
         RefreshAnimationsRightClickMenuItems();
     }
@@ -239,7 +238,7 @@ public partial class ElementAnimationsViewModel : ViewModel
             toReturn.Animations.Add(animation.ToSave());
         }
 
-        
+
         return toReturn;
     }
 
@@ -252,41 +251,47 @@ public partial class ElementAnimationsViewModel : ViewModel
     {
         AnimationRightClickItems.Clear();
 
-        var addAnimation = new MenuItem();
-        addAnimation.Header = "Add Animation";
-        addAnimation.Click += (_, _) => AddAnimation();
-        AnimationRightClickItems.Add(addAnimation);
+        AnimationRightClickItems.Add(new ContextMenuItemViewModel
+        {
+            Text = "Add Animation",
+            Action = AddAnimation
+        });
 
         if(SelectedAnimation != null)
         {
-            var menuItem = new MenuItem();
-            menuItem.Header = "Rename Animation";
-            menuItem.Click += HandleRenameAnimation;
-            AnimationRightClickItems.Add(menuItem);
-
-            var squashStretch = new MenuItem();
-            squashStretch.Header = "Squash/Stretch Frame Times";
-            squashStretch.Click += HandleSquashStretchTimes;
-            AnimationRightClickItems.Add(squashStretch);
-
-            var deleteAnimation = new MenuItem();
-            deleteAnimation.Header = "Delete Animation";
-            deleteAnimation.Click += HandleDeleteAnimation;
-            AnimationRightClickItems.Add(deleteAnimation);
-
-            var duplicateAnimation = new MenuItem();
-            duplicateAnimation.Header = "Duplicate Animation";
-            duplicateAnimation.Click += HandleDuplicateAnimation;
-            AnimationRightClickItems.Add(duplicateAnimation);
-
-            var toggleLoop = new MenuItem();
-            toggleLoop.Header = SelectedAnimation.Loops ? "Set to Single Play" : "Set to Looping";
-            toggleLoop.Click += (_, _) =>
+            AnimationRightClickItems.Add(new ContextMenuItemViewModel
             {
-                SelectedAnimation.ToggleLoop();
-                RefreshAnimationsRightClickMenuItems();
-            };
-            AnimationRightClickItems.Add(toggleLoop);
+                Text = "Rename Animation",
+                Action = HandleRenameAnimation
+            });
+
+            AnimationRightClickItems.Add(new ContextMenuItemViewModel
+            {
+                Text = "Squash/Stretch Frame Times",
+                Action = HandleSquashStretchTimes
+            });
+
+            AnimationRightClickItems.Add(new ContextMenuItemViewModel
+            {
+                Text = "Delete Animation",
+                Action = HandleDeleteAnimation
+            });
+
+            AnimationRightClickItems.Add(new ContextMenuItemViewModel
+            {
+                Text = "Duplicate Animation",
+                Action = HandleDuplicateAnimation
+            });
+
+            AnimationRightClickItems.Add(new ContextMenuItemViewModel
+            {
+                Text = SelectedAnimation.Loops ? "Set to Single Play" : "Set to Looping",
+                Action = () =>
+                {
+                    SelectedAnimation.ToggleLoop();
+                    RefreshAnimationsRightClickMenuItems();
+                }
+            });
         }
     }
 
@@ -296,45 +301,42 @@ public partial class ElementAnimationsViewModel : ViewModel
 
         if (SelectedAnimation != null)
         {
-            var addKeyframe = new MenuItem();
-            addKeyframe.Header = "Add Keyframe";
+            var addKeyframe = new ContextMenuItemViewModel { Text = "Add Keyframe" };
 
-            var addState = new MenuItem();
-            addState.Header = "State";
-            addState.Click += (_, _) => AddStateKeyframeRequested?.Invoke(this, EventArgs.Empty);
+            addKeyframe.Children.Add(new ContextMenuItemViewModel
+            {
+                Text = "State",
+                Action = () => AddStateKeyframeRequested?.Invoke(this, EventArgs.Empty)
+            });
 
-            var addSubAnimation = new MenuItem();
-            addSubAnimation.Header = "Sub-Animation";
-            addSubAnimation.Click += (_, _) => AddSubAnimation();
+            addKeyframe.Children.Add(new ContextMenuItemViewModel
+            {
+                Text = "Sub-Animation",
+                Action = AddSubAnimation
+            });
 
-            var addNamedEvent = new MenuItem();
-            addNamedEvent.Header = "Named Event";
-            addNamedEvent.Click += (_, _) => AddNamedEvent();
-
-            addKeyframe.Items.Add(addState);
-            addKeyframe.Items.Add(addSubAnimation);
-            addKeyframe.Items.Add(addNamedEvent);
+            addKeyframe.Children.Add(new ContextMenuItemViewModel
+            {
+                Text = "Named Event",
+                Action = AddNamedEvent
+            });
 
             AnimationStateRightClickItems.Add(addKeyframe);
         }
 
         if(this.SelectedAnimation?.SelectedKeyframe != null)
         {
-            var deleteState = new MenuItem();
-            deleteState.Header = "Delete Keyframe";
-            deleteState.Click += HandleDeleteKeyframe;
-            AnimationStateRightClickItems.Add(deleteState);
+            AnimationStateRightClickItems.Add(new ContextMenuItemViewModel
+            {
+                Text = "Delete Keyframe",
+                // Routes through the same method as the Delete hotkey so both get the confirmation
+                // prompt and clear the selection identically.
+                Action = DeleteSelectedKeyframe
+            });
         }
     }
 
-    private void HandleDeleteKeyframe(object? sender, System.Windows.RoutedEventArgs e)
-    {
-        // Route the right-click "Delete Keyframe" through the same method as the Delete hotkey so both
-        // get the confirmation prompt and clear the selection identically.
-        DeleteSelectedKeyframe();
-    }
-
-    private void HandleRenameAnimation(object? sender, System.Windows.RoutedEventArgs e)
+    private void HandleRenameAnimation()
     {
         /////////////////Early Out/////////////////
         if(SelectedAnimation == null)
@@ -357,12 +359,12 @@ public partial class ElementAnimationsViewModel : ViewModel
             SelectedAnimation.Name = result;
 
             _renameManager.HandleRename(
-                SelectedAnimation, 
+                SelectedAnimation,
                 oldAnimationName, Animations, Element);
         }
     }
 
-    private void HandleSquashStretchTimes(object? sender, System.Windows.RoutedEventArgs e)
+    private void HandleSquashStretchTimes()
     {
         if(SelectedAnimation == null)
         {
@@ -402,7 +404,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         }
     }
 
-    private void HandleDeleteAnimation(object? sender, System.Windows.RoutedEventArgs e)
+    private void HandleDeleteAnimation()
     {
         if(SelectedAnimation == null)
         {
@@ -414,7 +416,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         }
     }
 
-    private void HandleDuplicateAnimation(object? sender, System.Windows.RoutedEventArgs e)
+    private void HandleDuplicateAnimation()
     {
         if(SelectedAnimation == null)
         {
@@ -481,9 +483,9 @@ public partial class ElementAnimationsViewModel : ViewModel
     }
 
     double? lastPlayTimerTickTime;
-    private void HandlePlayTimerTick(object? sender, EventArgs e)
+    private void HandlePlayTimerTick()
     {
-        var currentTime = Gum.Wireframe.TimeManager.Self.CurrentTime;
+        var currentTime = _playbackStopwatch.Elapsed.TotalSeconds;
 
 
         var increaseInValue = AnimationSpeedMultiplier * (mTimerFrequencyInMs /1000.0);
@@ -524,16 +526,20 @@ public partial class ElementAnimationsViewModel : ViewModel
             if (Set(value))
             {
                 lastPlayTimerTickTime = null;
-                mPlayTimer.IsEnabled = value;
                 if (value)
                 {
+                    _playTimer.Start(TimeSpan.FromMilliseconds(mTimerFrequencyInMs));
                     DisplayedAnimationTime = 0;
+                }
+                else
+                {
+                    _playTimer.Stop();
                 }
             }
         }
     }
 
-    internal void DecreaseGameSpeed()
+    public void DecreaseGameSpeed()
     {
         var index = GameSpeedList.IndexOf(CurrentGameSpeed);
         if (index < GameSpeedList.Count - 1)
@@ -542,7 +548,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         }
     }
 
-    internal void IncreaseGameSpeed()
+    public void IncreaseGameSpeed()
     {
         var index = GameSpeedList.IndexOf(CurrentGameSpeed);
         if (index > 0)
@@ -629,7 +635,9 @@ public partial class ElementAnimationsViewModel : ViewModel
             return;
         }
 
-        SubAnimationSelectionDialogViewModel window = new(_animationCollectionViewModelManager, _outputManager, _selectedState, _wireframeObjectManager);
+        SubAnimationSelectionDialogViewModel window = new(
+            _animationCollectionViewModelManager, _outputManager, _selectedState, _wireframeObjectManager,
+            _animationFilePathService);
         window.AnimationToExclude = SelectedAnimation;
         window.AnimationContainers = CreateAnimationContainers();
 
@@ -781,7 +789,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         ClampInterpolationVisuals = !ClampInterpolationVisuals;
     }
 
-    internal void RefreshErrors(ElementSave element)
+    public void RefreshErrors(ElementSave element)
     {
         foreach(var animation in Animations)
         {

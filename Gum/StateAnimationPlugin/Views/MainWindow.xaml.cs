@@ -1,8 +1,10 @@
 using Gum;
 using Gum.Managers;
+using Gum.ViewModels;
 using StateAnimationPlugin.Managers;
 using StateAnimationPlugin.ViewModels;
 using System;
+using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -38,6 +40,7 @@ namespace StateAnimationPlugin.Views
         #endregion
 
         private readonly IHotkeyManager _hotkeyManager;
+        private ElementAnimationsViewModel? _subscribedViewModel;
 
         public event EventHandler? AddStateKeyframeClicked;
         public event Action<AnimatedKeyframeViewModel>? AnimationKeyframeAdded;
@@ -50,10 +53,92 @@ namespace StateAnimationPlugin.Views
             InitializeTimer();
 
             _hotkeyManager = Locator.GetRequiredService<IHotkeyManager>();
+
+            DataContextChanged += HandleDataContextChanged;
         }
 
         private void InitializeTimer()
         {
+        }
+
+        /// <summary>
+        /// ElementAnimationsViewModel exposes its right-click menus as framework-neutral
+        /// <see cref="ContextMenuItemViewModel"/> collections (ADR-0005, issue #3754) rather than WPF
+        /// MenuItems, so the View is responsible for turning them into real MenuItems here -- mirroring
+        /// EditingManager.RightClick.cs's ToMenuItem. A new ElementAnimationsViewModel is assigned to
+        /// DataContext whenever the selected element changes, so the menus are rebuilt on every switch
+        /// and whenever the current view model refreshes its menu contents.
+        /// </summary>
+        private void HandleDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (_subscribedViewModel != null)
+            {
+                _subscribedViewModel.AnimationRightClickItems.CollectionChanged -= HandleAnimationRightClickItemsChanged;
+                _subscribedViewModel.AnimationStateRightClickItems.CollectionChanged -= HandleAnimationStateRightClickItemsChanged;
+            }
+
+            _subscribedViewModel = e.NewValue as ElementAnimationsViewModel;
+
+            if (_subscribedViewModel != null)
+            {
+                _subscribedViewModel.AnimationRightClickItems.CollectionChanged += HandleAnimationRightClickItemsChanged;
+                _subscribedViewModel.AnimationStateRightClickItems.CollectionChanged += HandleAnimationStateRightClickItemsChanged;
+            }
+
+            RebuildAnimationContextMenu();
+            RebuildAnimationStateContextMenu();
+        }
+
+        private void HandleAnimationRightClickItemsChanged(object? sender, NotifyCollectionChangedEventArgs e) =>
+            RebuildAnimationContextMenu();
+
+        private void HandleAnimationStateRightClickItemsChanged(object? sender, NotifyCollectionChangedEventArgs e) =>
+            RebuildAnimationStateContextMenu();
+
+        private void RebuildAnimationContextMenu()
+        {
+            AnimationContextMenu.Items.Clear();
+            if (_subscribedViewModel != null)
+            {
+                foreach (var item in _subscribedViewModel.AnimationRightClickItems)
+                {
+                    AnimationContextMenu.Items.Add(ToMenuItem(item));
+                }
+            }
+        }
+
+        private void RebuildAnimationStateContextMenu()
+        {
+            AnimationStateContextMenu.Items.Clear();
+            if (_subscribedViewModel != null)
+            {
+                foreach (var item in _subscribedViewModel.AnimationStateRightClickItems)
+                {
+                    AnimationStateContextMenu.Items.Add(ToMenuItem(item));
+                }
+            }
+        }
+
+        private Control ToMenuItem(ContextMenuItemViewModel item)
+        {
+            if (item.IsSeparator)
+            {
+                return new Separator();
+            }
+
+            var menuItem = new MenuItem { Header = item.Text };
+
+            if (item.Action != null)
+            {
+                menuItem.Click += (_, _) => item.Action();
+            }
+
+            foreach (var child in item.Children)
+            {
+                menuItem.Items.Add(ToMenuItem(child));
+            }
+
+            return menuItem;
         }
 
         private void AddAnimationButton_Click(object? sender, RoutedEventArgs e)

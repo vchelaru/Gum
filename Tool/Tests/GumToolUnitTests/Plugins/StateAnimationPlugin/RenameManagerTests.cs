@@ -1,6 +1,7 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Gum.Wireframe;
@@ -8,8 +9,6 @@ using Moq;
 using Shouldly;
 using StateAnimationPlugin.Managers;
 using StateAnimationPlugin.ViewModels;
-using System;
-using System.Threading;
 using Xunit;
 
 namespace GumToolUnitTests.Plugins.StateAnimationPlugin;
@@ -18,9 +17,7 @@ namespace GumToolUnitTests.Plugins.StateAnimationPlugin;
 /// Characterization tests pinning the keyframe-mutating <see cref="RenameManager"/> overloads.
 /// These were deferred when ACVMM/RenameManager were drained (#3281) because the animation view
 /// models could not be constructed in isolation. They can now: the animation view models take all
-/// of their dependencies via the constructor (stubbed here with Moq), and
-/// <see cref="ElementAnimationsViewModel"/>'s WPF right-click <c>MenuItem</c> creation is handled
-/// by building it on an STA thread.
+/// of their dependencies via the constructor (stubbed here with Moq).
 /// </summary>
 public class RenameManagerTests : BaseTestClass
 {
@@ -30,98 +27,83 @@ public class RenameManagerTests : BaseTestClass
     [Fact]
     public void HandleRename_Animation_RenamesMatchingKeyframeAnimationNames()
     {
-        RunOnSta(() =>
-        {
-            // GetElementsReferencing walks the project; an empty project keeps the test on the
-            // pure view-model mutation path (no file IO).
-            ObjectFinder.Self.GumProjectSave = new GumProjectSave();
+        // GetElementsReferencing walks the project; an empty project keeps the test on the
+        // pure view-model mutation path (no file IO).
+        ObjectFinder.Self.GumProjectSave = new GumProjectSave();
 
-            AnimationViewModel animation = CreateAnimationWithKeyframes(
-                Keyframe(animationName: "OldAnim"));
-            AnimationViewModel renamed = new AnimationViewModel(_selectedState, _wireframeObjectManager) { Name = "NewAnim" };
+        AnimationViewModel animation = CreateAnimationWithKeyframes(
+            Keyframe(animationName: "OldAnim"));
+        AnimationViewModel renamed = new AnimationViewModel(_selectedState, _wireframeObjectManager) { Name = "NewAnim" };
 
-            RenameManager renameManager = CreateRenameManager();
+        RenameManager renameManager = CreateRenameManager();
 
-            renameManager.HandleRename(
-                renamed, "OldAnim", new[] { animation }, new ComponentSave { Name = "Foo" });
+        renameManager.HandleRename(
+            renamed, "OldAnim", new[] { animation }, new ComponentSave { Name = "Foo" });
 
-            animation.Keyframes[0].AnimationName.ShouldBe("NewAnim");
-        });
+        animation.Keyframes[0].AnimationName.ShouldBe("NewAnim");
     }
 
     [Fact]
     public void HandleRename_Element_NotCurrentlySelected_ReadsProjectManagerGumProjectSave()
     {
-        RunOnSta(() =>
+        ComponentSave elementSave = new ComponentSave { Name = "RenamedElement" };
+        ElementAnimationsViewModel viewModel = CreateViewModelWith();
+
+        GumProjectSave gumProjectSave = new GumProjectSave
         {
-            ComponentSave elementSave = new ComponentSave { Name = "RenamedElement" };
-            ElementAnimationsViewModel viewModel = CreateViewModelWith();
+            FullFileName = "C:/NonExistentGumRenameManagerTest/Project.gumx"
+        };
+        Mock<IProjectManager> projectManagerMock = new Mock<IProjectManager>();
+        projectManagerMock.Setup(x => x.GumProjectSave).Returns(gumProjectSave);
 
-            GumProjectSave gumProjectSave = new GumProjectSave
-            {
-                FullFileName = "C:/NonExistentGumRenameManagerTest/Project.gumx"
-            };
-            Mock<IProjectManager> projectManagerMock = new Mock<IProjectManager>();
-            projectManagerMock.Setup(x => x.GumProjectSave).Returns(gumProjectSave);
+        RenameManager renameManager = CreateRenameManager(projectManagerMock.Object);
 
-            RenameManager renameManager = CreateRenameManager(projectManagerMock.Object);
+        renameManager.HandleRename(elementSave, "OldElementName", viewModel);
 
-            renameManager.HandleRename(elementSave, "OldElementName", viewModel);
-
-            projectManagerMock.VerifyGet(x => x.GumProjectSave, Times.AtLeastOnce);
-        });
+        projectManagerMock.VerifyGet(x => x.GumProjectSave, Times.AtLeastOnce);
     }
 
     [Fact]
     public void HandleRename_Instance_RenamesQualifiedAnimationNamePrefix()
     {
-        RunOnSta(() =>
-        {
-            ElementAnimationsViewModel viewModel = CreateViewModelWith(
-                CreateAnimationWithKeyframes(Keyframe(animationName: "OldInstance.Walk")));
+        ElementAnimationsViewModel viewModel = CreateViewModelWith(
+            CreateAnimationWithKeyframes(Keyframe(animationName: "OldInstance.Walk")));
 
-            RenameManager renameManager = CreateRenameManager();
+        RenameManager renameManager = CreateRenameManager();
 
-            renameManager.HandleRename(
-                new InstanceSave { Name = "NewInstance" }, "OldInstance", viewModel);
+        renameManager.HandleRename(
+            new InstanceSave { Name = "NewInstance" }, "OldInstance", viewModel);
 
-            viewModel.Animations[0].Keyframes[0].AnimationName.ShouldBe("NewInstance.Walk");
-        });
+        viewModel.Animations[0].Keyframes[0].AnimationName.ShouldBe("NewInstance.Walk");
     }
 
     [Fact]
     public void HandleRename_State_RenamesMatchingKeyframeStateName()
     {
-        RunOnSta(() =>
-        {
-            ElementAnimationsViewModel viewModel = CreateViewModelWith(
-                CreateAnimationWithKeyframes(Keyframe(stateName: "OldState")));
+        ElementAnimationsViewModel viewModel = CreateViewModelWith(
+            CreateAnimationWithKeyframes(Keyframe(stateName: "OldState")));
 
-            // No selected element -> uncategorized rename (no category prefix).
-            RenameManager renameManager = CreateRenameManager();
+        // No selected element -> uncategorized rename (no category prefix).
+        RenameManager renameManager = CreateRenameManager();
 
-            renameManager.HandleRename(
-                new StateSave { Name = "NewState" }, "OldState", viewModel);
+        renameManager.HandleRename(
+            new StateSave { Name = "NewState" }, "OldState", viewModel);
 
-            viewModel.Animations[0].Keyframes[0].StateName.ShouldBe("NewState");
-        });
+        viewModel.Animations[0].Keyframes[0].StateName.ShouldBe("NewState");
     }
 
     [Fact]
     public void HandleRename_StateCategory_RenamesCategoryPrefixOnKeyframeStateNames()
     {
-        RunOnSta(() =>
-        {
-            ElementAnimationsViewModel viewModel = CreateViewModelWith(
-                CreateAnimationWithKeyframes(Keyframe(stateName: "OldCategory/Idle")));
+        ElementAnimationsViewModel viewModel = CreateViewModelWith(
+            CreateAnimationWithKeyframes(Keyframe(stateName: "OldCategory/Idle")));
 
-            RenameManager renameManager = CreateRenameManager();
+        RenameManager renameManager = CreateRenameManager();
 
-            renameManager.HandleRename(
-                new StateSaveCategory { Name = "NewCategory" }, "OldCategory", viewModel);
+        renameManager.HandleRename(
+            new StateSaveCategory { Name = "NewCategory" }, "OldCategory", viewModel);
 
-            viewModel.Animations[0].Keyframes[0].StateName.ShouldBe("NewCategory/Idle");
-        });
+        viewModel.Animations[0].Keyframes[0].StateName.ShouldBe("NewCategory/Idle");
     }
 
     private AnimatedKeyframeViewModel Keyframe(string? stateName = null, string? animationName = null)
@@ -157,7 +139,9 @@ public class RenameManagerTests : BaseTestClass
             Mock.Of<IRenameManager>(),
             _selectedState,
             _wireframeObjectManager,
-            Mock.Of<IOutputManager>());
+            Mock.Of<IOutputManager>(),
+            Mock.Of<IAnimationFilePathService>(),
+            Mock.Of<IUiTimer>());
         foreach (AnimationViewModel animation in animations)
         {
             viewModel.Animations.Add(animation);
@@ -173,26 +157,5 @@ public class RenameManagerTests : BaseTestClass
             Mock.Of<IAnimationFilePathService>(),
             Mock.Of<IAnimationCollectionViewModelManager>(),
             projectManager ?? Mock.Of<IProjectManager>());
-    }
-
-    /// <summary>
-    /// WPF controls (the right-click MenuItems built in ElementAnimationsViewModel's constructor)
-    /// require an STA thread; xUnit's default runner is MTA.
-    /// </summary>
-    private static void RunOnSta(Action action)
-    {
-        Exception? caught = null;
-        Thread thread = new Thread(() =>
-        {
-            try { action(); }
-            catch (Exception ex) { caught = ex; }
-        });
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
-        if (caught != null)
-        {
-            throw new Exception("Test body threw on the STA thread.", caught);
-        }
     }
 }
