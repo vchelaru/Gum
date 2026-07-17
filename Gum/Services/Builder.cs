@@ -3,6 +3,7 @@ using Gum.Commands;
 using Gum.Controls;
 using Gum.Logic;
 using Gum.Managers;
+using Gum.Plugins.AlignmentButtons;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers;
 using Gum.ToolCommands;
@@ -212,6 +213,7 @@ file static class ServiceCollectionExtensions
         // full IRenameLogic. Resolves to the same RenameLogic singleton, so rename calls fire as before.
         services.AddSingleton<IUndoRenameLogic>(provider => provider.GetRequiredService<RenameLogic>());
         services.AddSingleton<ISetVariableLogic, SetVariableLogic>();
+        services.AddSingleton<CommonControlLogic>();
 
         services.AddSingleton<WireframeCommands>();
         services.AddSingleton<IWireframeCommands>(provider => provider.GetRequiredService<WireframeCommands>());
