@@ -81,7 +81,10 @@ public class UiDecouplingRatchetTests
         // (audited 2026-07 -- both interfaces there only reference Gum/System.Drawing types). Known
         // blind spot: a leak added to an interface living in a combined interface+class file won't be
         // caught by this heuristic.
-        const int Baseline = 2;
+        //
+        // ITabManager.AddControl and IBitmapLoader.LoadImage (the 2 sites baseline=2 was tracking)
+        // were sealed to object/byte[] respectively -- see issue #3225.
+        const int Baseline = 0;
 
         var interfacePattern = new Regex(@"\binterface\s+\w+");
         var classPattern = new Regex(@"\bclass\s+\w+");

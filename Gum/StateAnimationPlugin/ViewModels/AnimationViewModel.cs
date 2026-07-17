@@ -130,9 +130,9 @@ public partial class AnimationViewModel : ViewModel
         Keyframes = new ObservableCollection<AnimatedKeyframeViewModel>();
         Keyframes.CollectionChanged += HandleKeyframeCollectionChanged;
 
-        mLoopBitmap = bitmapLoader.LoadImage("LoopIcon.png");
+        mLoopBitmap = BitmapFrameFactory.Create(bitmapLoader.LoadImage("LoopIcon.png"))!;
 
-        mPlayOnceBitmap = bitmapLoader.LoadImage("PlayOnceIcon.png");
+        mPlayOnceBitmap = BitmapFrameFactory.Create(bitmapLoader.LoadImage("PlayOnceIcon.png"))!;
         _selectedState = selectedState;
         _wireframeObjectManager = wireframeObjectManager;
     }
