@@ -3,6 +3,8 @@ using Gum.DataTypes;
 using Gum.GueDeriving;
 #if RAYLIB
 using Raylib_cs;
+#elif SKIA
+using Color = SkiaSharp.SKColor;
 #else
 using Microsoft.Xna.Framework;
 #endif
@@ -85,7 +87,7 @@ public class WindowVisual : BaseWindowVisual
         RectangleRuntime r = new RectangleRuntime();
         r.Name = "Retro95WindowOutline";
         r.IsFilled = true;
-        r.FillColor = Color.Black;
+        r.FillColor = new Color(0, 0, 0);
         r.StrokeWidth = 0;
         if (!vertical)
         {

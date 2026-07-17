@@ -14,6 +14,9 @@ using Gum.Themes.DarkPro;
 using Gum.Themes.Editor;
 using Gum.Themes.ForestGlade;
 using Gum.Themes.Hazard;
+using Gum.Themes.Meadow;
+using Gum.Themes.Neon;
+using Gum.Themes.Retro95;
 using MonoGameGumThemesShowcase.Screens;
 
 namespace SilkNetGumThemesShowcase;
@@ -78,6 +81,9 @@ unsafe class Program
             new ThemeOption("Forest Glade", ForestGladeTheme.Apply, ForestGladeStyling.ActiveStyle.Colors.CanopyDeep),
             new ThemeOption("Bubblegum", BubblegumTheme.Apply, BubblegumStyling.ActiveStyle.Colors.Background),
             new ThemeOption("Hazard", HazardTheme.Apply, HazardStyling.ActiveStyle.Colors.Background),
+            new ThemeOption("Meadow", MeadowTheme.Apply, MeadowStyling.ActiveStyle.Colors.Cream),
+            new ThemeOption("Neon", NeonTheme.Apply, NeonStyling.ActiveStyle.Colors.Background),
+            new ThemeOption("Retro 95", Retro95Theme.Apply, Retro95Styling.ActiveStyle.Colors.Surface),
         };
 
         ApplyTheme(0);

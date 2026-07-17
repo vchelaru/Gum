@@ -4,6 +4,8 @@ using Gum.GueDeriving;
 using Gum.Wireframe;
 #if RAYLIB
 using Raylib_cs;
+#elif SKIA
+using Color = SkiaSharp.SKColor;
 #else
 using Microsoft.Xna.Framework;
 #endif
@@ -67,7 +69,7 @@ public class CheckBoxVisual : BaseCheckBoxVisual
         _checkGlyph.Font = NeonStyling.ActiveStyle.Text.IconFontFamily;
         _checkGlyph.FontSize = 18;
         _checkGlyph.Text = "✓";
-        _checkGlyph.Color = Color.White;
+        _checkGlyph.Color = new Color(255, 255, 255);
         _checkGlyph.Visible = false;
 
         _dashIndicator = CreateDashIndicator();
