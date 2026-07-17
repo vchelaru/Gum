@@ -148,7 +148,8 @@ public class AnimationStateRenameErrorTests : BaseTestClass
             Mock.Of<ISelectedState>(s => s.SelectedElement == selectedElement),
             Mock.Of<IOutputManager>(),
             Mock.Of<IAnimationFilePathService>(),
-            Mock.Of<IAnimationCollectionViewModelManager>());
+            Mock.Of<IAnimationCollectionViewModelManager>(),
+            Mock.Of<IProjectManager>());
     }
 
     private AnimatedKeyframeViewModel Keyframe(string stateName)

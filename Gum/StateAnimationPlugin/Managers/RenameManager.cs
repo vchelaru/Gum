@@ -11,7 +11,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ToolsUtilities;
-using Gum.Services;
 
 namespace StateAnimationPlugin.Managers
 {
@@ -21,17 +20,20 @@ namespace StateAnimationPlugin.Managers
         private readonly ISelectedState _selectedState;
         private readonly IOutputManager _outputManager;
         private readonly IAnimationCollectionViewModelManager _animationCollectionViewModelManager;
+        private readonly IProjectManager _projectManager;
 
         public RenameManager(
             ISelectedState selectedState,
             IOutputManager outputManager,
             IAnimationFilePathService animationFilePathService,
-            IAnimationCollectionViewModelManager animationCollectionViewModelManager)
+            IAnimationCollectionViewModelManager animationCollectionViewModelManager,
+            IProjectManager projectManager)
         {
             _selectedState = selectedState;
             _outputManager = outputManager;
             _animationFilePathService = animationFilePathService;
             _animationCollectionViewModelManager = animationCollectionViewModelManager;
+            _projectManager = projectManager;
         }
 
         public void HandleRename(ElementSave elementSave, string oldName, ElementAnimationsViewModel viewModel)
@@ -71,7 +73,7 @@ namespace StateAnimationPlugin.Managers
             }
             else // renaming an element that is not currently selected. See if it has an animation, and if so move it
             {
-                var gumProject = Locator.GetRequiredService<IProjectManager>().GumProjectSave;
+                var gumProject = _projectManager.GumProjectSave;
                 if(gumProject == null)
                 {
                     throw new InvalidOperationException("Renaming elements is not supported when a Gum project is null...how did this happen anyway?");

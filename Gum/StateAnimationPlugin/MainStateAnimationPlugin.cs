@@ -138,7 +138,7 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
         _animationCollectionViewModelManager = new AnimationCollectionViewModelManager(
             _selectedState, _outputManager, _fileWatchManager, _animationFilePathService, _animationVmFactory);
         _renameManager = new RenameManager(
-            _selectedState, _outputManager, _animationFilePathService, _animationCollectionViewModelManager);
+            _selectedState, _outputManager, _animationFilePathService, _animationCollectionViewModelManager, _projectManager);
     }
 
     public override void StartUp()
