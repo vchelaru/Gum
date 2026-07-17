@@ -4,24 +4,23 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
-using Gum.ToolStates;
 using GumRuntime;
 
 namespace Gum.Logic;
 
 public class ReferenceFinder : IReferenceFinder
 {
-    private readonly IProjectState _projectState;
+    private readonly IReferenceFinderProjectProvider _projectProvider;
 
-    public ReferenceFinder(IProjectState projectState)
+    public ReferenceFinder(IReferenceFinderProjectProvider projectProvider)
     {
-        _projectState = projectState;
+        _projectProvider = projectProvider;
     }
 
     public ElementReferences GetReferencesToElement(ElementSave element, string elementName)
     {
         var changes = new ElementReferences();
-        var project = _projectState.GumProjectSave;
+        var project = _projectProvider.GumProjectSave;
 
         string qualifiedOldName = element switch
         {
@@ -231,7 +230,7 @@ public class ReferenceFinder : IReferenceFinder
 
         // Search all other elements for cross-component qualified references
         // e.g. "Width = Components/ComponentA.Sprite.Width" in ComponentB
-        var project = _projectState.GumProjectSave;
+        var project = _projectProvider.GumProjectSave;
         string? qualifiedElementPrefix = containerElement switch
         {
             ComponentSave => $"Components/{containerElement.Name}",
@@ -290,7 +289,7 @@ public class ReferenceFinder : IReferenceFinder
     public BehaviorReferences GetReferencesToBehavior(BehaviorSave behavior, string oldName)
     {
         var changes = new BehaviorReferences();
-        var project = _projectState.GumProjectSave;
+        var project = _projectProvider.GumProjectSave;
 
         foreach (var element in project.AllElements)
         {
@@ -344,7 +343,7 @@ public class ReferenceFinder : IReferenceFinder
     {
         var changes = new CategoryReferences();
 
-        var project = _projectState.GumProjectSave;
+        var project = _projectProvider.GumProjectSave;
 
         var ownerAsElement = owner as ElementSave;
 
@@ -424,7 +423,7 @@ public class ReferenceFinder : IReferenceFinder
         List<VariableChange> variableChanges = new List<VariableChange>();
         List<VariableReferenceChange> variableReferenceChanges = new List<VariableReferenceChange>();
 
-        var project = _projectState.GumProjectSave;
+        var project = _projectProvider.GumProjectSave;
 
         var changedVariableOwnerElement = owner as ElementSave;
 

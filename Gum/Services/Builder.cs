@@ -114,6 +114,9 @@ file static class ServiceCollectionExtensions
         // ICopyPasteProjectProvider: same narrow-port pattern as IDeleteProjectProvider, for CopyPasteLogic's
         // element-name-uniqueness check. Resolves to the same ProjectManager singleton.
         services.AddSingleton<ICopyPasteProjectProvider>(provider => provider.GetRequiredService<ProjectManager>());
+        // IReferenceFinderProjectProvider: same narrow-port pattern, for ReferenceFinder's project reads.
+        // Resolves to the same ProjectManager singleton.
+        services.AddSingleton<IReferenceFinderProjectProvider>(provider => provider.GetRequiredService<ProjectManager>());
         services.AddSingleton<ICommandLineManager, CommandLineManager>();
         services.AddSingleton<IProjectState, ProjectState>();
         // ElementTreeViewManager: drained from a static Self singleton (#3286). Concrete is needed for the

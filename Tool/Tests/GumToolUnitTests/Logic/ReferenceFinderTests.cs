@@ -3,7 +3,6 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
-using Gum.ToolStates;
 using Moq;
 using Moq.AutoMock;
 using Shouldly;
@@ -24,7 +23,7 @@ public class ReferenceFinderTests : BaseTestClass
         _project = new GumProjectSave();
         ObjectFinder.Self.GumProjectSave = _project;
 
-        _mocker.GetMock<IProjectState>()
+        _mocker.GetMock<IReferenceFinderProjectProvider>()
             .Setup(x => x.GumProjectSave)
             .Returns(_project);
 
