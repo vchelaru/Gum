@@ -2,7 +2,6 @@
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Mvvm;
-using Gum.Services;
 using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
@@ -24,7 +23,7 @@ public class StateTreeViewModel : ViewModel
     [DependsOn(nameof(States))]
     public IEnumerable<StateTreeViewItem> Items => Categories.Concat<StateTreeViewItem>(States);
 
-    private readonly StateTreeViewRightClickService _stateTreeViewRightClickService;
+    private readonly IStateTreeViewRightClickService _stateTreeViewRightClickService;
 
     public ObservableCollection<CategoryViewModel> Categories
     {
@@ -43,7 +42,7 @@ public class StateTreeViewModel : ViewModel
     #region Initialize
 
     public StateTreeViewModel(
-        StateTreeViewRightClickService stateTreeViewRightClickService, 
+        IStateTreeViewRightClickService stateTreeViewRightClickService,
         ISelectedState selectedState)
     {
         _selectedState = selectedState;
@@ -380,7 +379,11 @@ public class StateTreeViewModel : ViewModel
 
     #region Rename
 
-    internal void HandleRename(StateSave state)
+    /// <summary>
+    /// Refreshes the title of the tree item for <paramref name="state"/> and rebuilds the
+    /// right-click context menu so any renamed-state labels reflect the new name.
+    /// </summary>
+    public void HandleRename(StateSave state)
     {
         var stateVm = Categories.SelectMany(item => item.States).FirstOrDefault(item => item.Data == state);
 
@@ -388,7 +391,11 @@ public class StateTreeViewModel : ViewModel
         _stateTreeViewRightClickService.PopulateContextMenu();
     }
 
-    internal void HandleRename(StateSaveCategory category)
+    /// <summary>
+    /// Refreshes the title of the tree item for <paramref name="category"/> and rebuilds the
+    /// right-click context menu so any renamed-category labels reflect the new name.
+    /// </summary>
+    public void HandleRename(StateSaveCategory category)
     {
         var categoryVm = Categories.FirstOrDefault(item => item.Data == category);
         categoryVm?.ForceRefreshTitle();

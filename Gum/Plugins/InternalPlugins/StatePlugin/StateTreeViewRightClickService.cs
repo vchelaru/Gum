@@ -20,7 +20,7 @@ using Gum.Services.Dialogs;
 namespace Gum.Managers;
 
 
-public class StateTreeViewRightClickService
+public class StateTreeViewRightClickService : IStateTreeViewRightClickService
 {
     const string mNoCategory = "<no category>";
     private readonly ISelectedState _selectedState;
@@ -72,7 +72,8 @@ public class StateTreeViewRightClickService
 
     #region Add to menu
 
-    internal void PopulateContextMenu()
+    /// <inheritdoc/>
+    public void PopulateContextMenu()
     {
         ClearContextMenu();
 
