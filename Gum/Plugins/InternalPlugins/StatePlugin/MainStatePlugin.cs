@@ -13,7 +13,6 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.ComponentModel.Composition;
 using System.Linq;
-using System.Windows.Forms;
 using Gum.Commands;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
@@ -78,7 +77,7 @@ public class MainStatePlugin : PriorityPlugin
 
     private void AssignEvents()
     {
-        this.TreeNodeSelected += HandleTreeNodeSelected;
+        this.TreeNodeSelected += _ => HandleTreeNodeSelected();
         
         this.RefreshStateTreeView += HandleRefreshStateTreeView;
         
@@ -204,7 +203,7 @@ public class MainStatePlugin : PriorityPlugin
         RefreshUI(_selectedState.SelectedStateContainer);
     }
 
-    private void HandleTreeNodeSelected(TreeNode? node)
+    private void HandleTreeNodeSelected()
     {
         RefreshTabHeaders();
         
