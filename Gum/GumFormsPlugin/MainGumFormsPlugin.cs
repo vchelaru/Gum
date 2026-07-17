@@ -33,15 +33,18 @@ internal class MainGumFormsPlugin : PluginBase
     private readonly FormsFileService _formsFileService;
     private readonly IImportLogic _importLogic;
     private readonly IFileWatchManager _fileWatchManager;
+    private readonly IProjectState _projectState;
 
     #endregion
 
     [ImportingConstructor]
     public MainGumFormsPlugin(
         IImportLogic importLogic,
-        IFileWatchManager fileWatchManager)
+        IFileWatchManager fileWatchManager,
+        IProjectState projectState)
     {
-        _formsFileService = new FormsFileService();
+        _projectState = projectState;
+        _formsFileService = new FormsFileService(_projectState);
         _importLogic = importLogic;
         _fileWatchManager = fileWatchManager;
     }
@@ -111,11 +114,9 @@ internal class MainGumFormsPlugin : PluginBase
 
     private void HandleAddFormsComponents(object? sender, System.Windows.RoutedEventArgs e)
     {
-        var projectState = Locator.GetRequiredService<IProjectState>();
-
         #region Early Out
 
-        if (projectState.NeedsToSaveProject)
+        if (_projectState.NeedsToSaveProject)
         {
             _dialogService.ShowMessage("You must first save the project before importing forms");
             return;
@@ -127,7 +128,7 @@ internal class MainGumFormsPlugin : PluginBase
             _dialogService,
             _fileCommands,
             _importLogic,
-            projectState,
+            _projectState,
             _fileWatchManager,
             Locator.GetRequiredService<ISkiaShapeStandardsLogic>());
         _dialogService.Show(viewModel);

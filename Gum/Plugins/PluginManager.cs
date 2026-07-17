@@ -850,7 +850,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
             // Per-plugin services needed at construction time (via [ImportingConstructor]):
             // MainSkiaPlugin (IWireframeCommands), MainFontPlugin (IFontManager, IProjectState),
-            // MainGumFormsPlugin (IImportLogic, IFileWatchManager). IProjectState and
+            // MainGumFormsPlugin (IImportLogic, IFileWatchManager, IProjectState). IProjectState and
             // IFileWatchManager are also stepping stones for later, heavier plugin drains.
             batch.AddExportedValue<IWireframeCommands>(Locator.GetRequiredService<IWireframeCommands>());
             batch.AddExportedValue<IFontManager>(Locator.GetRequiredService<IFontManager>());
