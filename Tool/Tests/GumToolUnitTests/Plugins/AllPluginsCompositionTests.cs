@@ -6,7 +6,6 @@ using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition.Primitives;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using Gum.Plugins.BaseClasses;
 using Gum.Services;
 using Moq;
@@ -72,31 +71,28 @@ public class AllPluginsCompositionTests : BaseTestClass
         Locator.Register(_locatorStubs);
     }
 
-    [Fact]
+    // Plugin constructors (e.g. MainHotkeyPlugin building its HotkeyView) touch WPF, which requires STA;
+    // xUnit's runner is MTA.
+    [StaFact]
     public void AllPlugins_ComposeWithoutError()
     {
-        // Plugin constructors (e.g. MainHotkeyPlugin building its HotkeyView) touch WPF, which requires STA;
-        // xUnit's runner is MTA.
-        RunOnSta(() =>
+        List<Type> expectedPluginTypes = DiscoverPluginExportTypes();
+        // Sanity check that the catalog is actually populated — guards against a future refactor that
+        // silently drops every plugin and leaves an all-green "0 == 0" assertion.
+        expectedPluginTypes.Count.ShouldBeGreaterThan(20);
+
+        using CompositionContainer container = BuildPluginContainer();
+
+        // Forcing the values composes every plugin; an unsatisfiable import or a throwing constructor
+        // raises a CompositionException here, which is exactly the failure this test exists to catch.
+        PluginBase[] composedPlugins = container.GetExportedValues<PluginBase>().ToArray();
+
+        HashSet<Type> composedTypes = composedPlugins.Select(plugin => plugin.GetType()).ToHashSet();
+        foreach (Type expected in expectedPluginTypes)
         {
-            List<Type> expectedPluginTypes = DiscoverPluginExportTypes();
-            // Sanity check that the catalog is actually populated — guards against a future refactor that
-            // silently drops every plugin and leaves an all-green "0 == 0" assertion.
-            expectedPluginTypes.Count.ShouldBeGreaterThan(20);
-
-            using CompositionContainer container = BuildPluginContainer();
-
-            // Forcing the values composes every plugin; an unsatisfiable import or a throwing constructor
-            // raises a CompositionException here, which is exactly the failure this test exists to catch.
-            PluginBase[] composedPlugins = container.GetExportedValues<PluginBase>().ToArray();
-
-            HashSet<Type> composedTypes = composedPlugins.Select(plugin => plugin.GetType()).ToHashSet();
-            foreach (Type expected in expectedPluginTypes)
-            {
-                composedTypes.ShouldContain(expected);
-            }
-            composedPlugins.Length.ShouldBe(expectedPluginTypes.Count);
-        });
+            composedTypes.ShouldContain(expected);
+        }
+        composedPlugins.Length.ShouldBe(expectedPluginTypes.Count);
     }
 
     private CompositionContainer BuildPluginContainer()
@@ -193,27 +189,6 @@ public class AllPluginsCompositionTests : BaseTestClass
             }
 
             return RuntimeHelpers.GetUninitializedObject(serviceType);
-        }
-    }
-
-    /// <summary>
-    /// WPF controls created in some plugin constructors require an STA thread; xUnit's default runner is MTA.
-    /// Copied from RenameManagerTests/MenuStripManagerTests — there is no shared base for this helper.
-    /// </summary>
-    private static void RunOnSta(Action action)
-    {
-        Exception? caught = null;
-        Thread thread = new Thread(() =>
-        {
-            try { action(); }
-            catch (Exception ex) { caught = ex; }
-        });
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
-        if (caught != null)
-        {
-            throw new Exception("Test body threw on the STA thread.", caught);
         }
     }
 
