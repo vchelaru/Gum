@@ -10,19 +10,20 @@
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="coverlet.collector" Version="6.0.4" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
-    <PackageReference Include="Moq" Version="4.20.72" />
-    <PackageReference Include="Shouldly" Version="4.3.0" />
-    <PackageReference Include="xunit" Version="2.5.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Moq" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
     <!-- SKSurface for the in-memory raster canvas; Silk.NET.Input types (IInputContext / IMouse /
          IKeyboard / Key) for mocking input in the Cursor/Keyboard tests. -->
-    <PackageReference Include="SkiaSharp" Version="3.119.1" />
-    <PackageReference Include="Silk.NET.Input" Version="2.21.0" />
+    <PackageReference Include="SkiaSharp" VersionOverride="3.119.1" />
+    <PackageReference Include="Silk.NET.Input" VersionOverride="2.21.0" />
   </ItemGroup>
 
   <ItemGroup>
