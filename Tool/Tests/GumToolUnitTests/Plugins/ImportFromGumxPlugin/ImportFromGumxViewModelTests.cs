@@ -4,6 +4,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Plugins.ImportPlugin.Services;
+using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using ImportFromGumxPlugin.Services;
@@ -40,7 +41,8 @@ public class ImportFromGumxViewModelTests
             new FakeImportLogic(), _projectState, new FakeFileCommands(), sourceService);
 
         _dialogService = new FakeDialogService();
-        _sut = new ImportFromGumxViewModel(sourceService, resolver, importService, _projectState, _dialogService);
+        _sut = new ImportFromGumxViewModel(
+            sourceService, resolver, importService, _projectState, _dialogService, new SynchronousDispatcher());
     }
 
     [Fact]
@@ -381,6 +383,18 @@ public class ImportFromGumxViewModelTests
     }
 
     // ── fakes ─────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Runs posted/invoked work immediately instead of marshalling to a real UI thread. The
+    /// dependency-recompute pass this drives is idempotent and pull-based, so running it eagerly
+    /// on every checkbox toggle (rather than the real dispatcher's deferred/coalesced timing)
+    /// still converges to the same final state the tests assert on.
+    /// </summary>
+    private class SynchronousDispatcher : IDispatcher
+    {
+        public void Invoke(Action action) => action();
+        public void Post(Action action) => action();
+    }
 
     /// <summary>
     /// Records the last <see cref="Show{T}(Action{T}?, out T)"/> invocation. The IDialogService

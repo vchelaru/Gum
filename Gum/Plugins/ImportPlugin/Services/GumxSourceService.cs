@@ -11,15 +11,11 @@ using ToolsUtilities;
 
 namespace Gum.Plugins.ImportPlugin.Services;
 
-public class GumxSourceService
+public class GumxSourceService : IGumxSourceService
 {
     private static readonly HttpClient _httpClient = new HttpClient();
 
-    /// <summary>
-    /// Loads a GumProjectSave from a local file path or a URL.
-    /// For local paths, uses GumProjectSave.Load directly.
-    /// For URLs, fetches the .gumx and all referenced element files over HTTP.
-    /// </summary>
+    /// <inheritdoc/>
     public async Task<GumProjectSave?> LoadProjectAsync(string pathOrUrl, IProgress<(int loaded, int total)>? progress = null)
     {
         GumProjectSave? gps;
@@ -61,10 +57,7 @@ public class GumxSourceService
         }
     }
 
-    /// <summary>
-    /// Fetches the text of a single element file (.gucx, .gusx, .behx, .gutx)
-    /// relative to the source base (which may be a local directory path or a base URL).
-    /// </summary>
+    /// <inheritdoc/>
     public async Task<string?> FetchElementTextAsync(string relativeElementPath, string sourceBase)
     {
         if (IsUrl(sourceBase))
@@ -86,11 +79,7 @@ public class GumxSourceService
         }
     }
 
-    /// <summary>
-    /// Converts a GitHub blob URL to its raw.githubusercontent.com equivalent.
-    /// e.g. https://github.com/user/repo/blob/branch/path/file.gumx
-    ///   -> https://raw.githubusercontent.com/user/repo/branch/path/file.gumx
-    /// </summary>
+    /// <inheritdoc/>
     public string NormalizeGitHubUrl(string url)
     {
         // Only transform github.com blob URLs
@@ -102,11 +91,7 @@ public class GumxSourceService
         return url;
     }
 
-    /// <summary>
-    /// Returns the base path or URL for resolving element files relative to the .gumx source.
-    /// For local paths, returns the directory containing the .gumx file.
-    /// For URLs, returns the directory portion of the URL.
-    /// </summary>
+    /// <inheritdoc/>
     public string GetSourceBase(string pathOrUrl)
     {
         if (IsUrl(pathOrUrl))
@@ -120,10 +105,7 @@ public class GumxSourceService
         }
     }
 
-    /// <summary>
-    /// Fetches the raw bytes of an asset file (e.g., .png) relative to the source base.
-    /// Returns null if the file cannot be found or downloaded.
-    /// </summary>
+    /// <inheritdoc/>
     public async Task<byte[]?> FetchBinaryAsync(string relativePath, string sourceBase)
     {
         if (IsUrl(sourceBase))
