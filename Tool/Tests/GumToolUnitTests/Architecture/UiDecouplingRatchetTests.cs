@@ -47,8 +47,11 @@ public class UiDecouplingRatchetTests
         // Dropped from 339 to 327: ElementAnimationsViewModel, SubAnimationSelectionDialogViewModel,
         // and their newly-relocated dependency interfaces (IAnimationCollectionViewModelManager,
         // IRenameManager, IAnimationFilePathService, NameValidator) moved to Gum.Presentation,
-        // taking their .Self call sites out of the Gum/ scan (issue #3754).
-        const int Baseline = 327;
+        // taking their .Self call sites out of the Gum/ scan (issue #3754). Dropped further, from
+        // 327 to 323: BehaviorsViewModel, AlignmentViewModel, CodeWindowViewModel,
+        // MainControlViewModel (VariableGrid and TextureCoordinateSelectionPlugin), and their
+        // relocated dependency interfaces moved to Gum.Presentation.
+        const int Baseline = 323;
 
         var pattern = new Regex(@"\.Self\b");
         int count = SourceFiles().Sum(f => pattern.Matches(File.ReadAllText(f)).Count);
@@ -71,8 +74,14 @@ public class UiDecouplingRatchetTests
         // bool per ADR-0004) and SearchItemViewModel moved to Gum.Presentation (dropped a dead
         // System.Windows.Media.Imaging using); PerformanceViewModel stayed in Gum.csproj (it reads
         // the XNALIKE-only RenderingLibrary.Graphics.Renderer, not movable to the headless assembly)
-        // but lost its own DispatcherTimer coupling via the same IUiTimer seam (issue #3754).
-        const int Baseline = 21;
+        // but lost its own DispatcherTimer coupling via the same IUiTimer seam (issue #3754). Dropped
+        // further, from 21 to 8: ThemingDialogViewModel, ImportFromGumxViewModel, ImportBaseDialogViewModel
+        // (+ its 3 subclasses), MainControlViewModel (VariableGrid and TextureCoordinateSelectionPlugin)
+        // moved to Gum.Presentation, each converting its Visibility/Color/Brush properties to neutral
+        // types. The remaining 8 are ContextMenuItemViewModelExtensions.cs (a WPF-only MenuItem builder,
+        // correctly still tool-side) plus MainWindowViewModel/MainPanelViewModel, which model WPF
+        // window/panel chrome directly and are Phase 4b territory, not Phase 3 candidates.
+        const int Baseline = 8;
 
         var pattern = new Regex(@"System\.Windows");
         int count = SourceFiles()
