@@ -4,6 +4,8 @@ using Gum;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Extensions;
+using Gum.Gui.Windows;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Messages;
@@ -65,6 +67,11 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
     StateAnimationPlugin.Views.MainWindow? _mainWindow;
     private PluginTab? pluginTab;
     private MenuItem? menuItem;
+
+    // Owned here (not by ElementDeleteService) because materializing a WPF CheckBox from the
+    // framework-neutral DeleteOptionCheckboxViewModel is a view concern (ADR-0005). Set by
+    // HandleDeleteOptionsWindowShow, read back by HandleDeleteConfirmed, then cleared.
+    private CheckBox? _deleteAnimationFileCheckBox;
 
     #endregion
 
@@ -224,8 +231,8 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
         this.GetDeleteStateResponse = HandleGetDeleteStateResponse;
         this.GetDeleteStateCategoryResponse = HandleGetDeleteStateCategoryResponse;
 
-        this.DeleteOptionsWindowShow += _elementDeleteService.HandleDeleteOptionsWindowShow;
-        this.DeleteConfirmed += _elementDeleteService.HandleConfirmDelete;
+        this.DeleteOptionsWindowShow += HandleDeleteOptionsWindowShow;
+        this.DeleteConfirmed += HandleDeleteConfirmed;
 
         // Undo/redo restore element state without firing the granular StateAdd/StateDelete events, so
         // recompute the view model (and its keyframe error state) afterward — otherwise a broken
@@ -237,6 +244,43 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
         // works on project open and on edits regardless of selection. Contributing them here too
         // (from this plugin's per-selection view model) would duplicate those errors for the
         // selected element, so this plugin no longer subscribes to GetAllErrors.
+    }
+
+    /// <summary>
+    /// Materializes <see cref="ElementDeleteService.HandleDeleteOptionsWindowShow"/>'s
+    /// framework-neutral checkbox request into a real WPF control and adds it to the
+    /// DeleteOptionsWindow, if one is requested.
+    /// </summary>
+    private void HandleDeleteOptionsWindowShow(DeleteOptionsWindow deleteWindow, Array objectsToDelete)
+    {
+        var checkboxViewModel = _elementDeleteService.HandleDeleteOptionsWindowShow(objectsToDelete);
+
+        if (checkboxViewModel != null)
+        {
+            _deleteAnimationFileCheckBox = checkboxViewModel.ToCheckBox();
+            deleteWindow.MainStackPanel.Children.Add(_deleteAnimationFileCheckBox);
+        }
+    }
+
+    /// <summary>
+    /// Reads back the checkbox added by <see cref="HandleDeleteOptionsWindowShow"/> (if any) and
+    /// hands its final checked state to <see cref="ElementDeleteService.HandleConfirmDelete"/>,
+    /// then removes the checkbox from the window.
+    /// </summary>
+    private void HandleDeleteConfirmed(DeleteOptionsWindow deleteOptionsWindow, Array deletedObjects)
+    {
+        bool isChecked = _deleteAnimationFileCheckBox?.IsChecked == true;
+
+        _elementDeleteService.HandleConfirmDelete(deletedObjects, isChecked);
+
+        if (_deleteAnimationFileCheckBox != null)
+        {
+            if (deleteOptionsWindow.MainStackPanel.Children.Contains(_deleteAnimationFileCheckBox))
+            {
+                deleteOptionsWindow.MainStackPanel.Children.Remove(_deleteAnimationFileCheckBox);
+            }
+            _deleteAnimationFileCheckBox = null;
+        }
     }
 
     private void HandleFileChanged(FilePath filePath)
