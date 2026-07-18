@@ -40,7 +40,7 @@ public class StateReferencingInstanceMember : InstanceMember
     private readonly IDeleteVariableService _deleteVariableLogic;
     private readonly IGuiCommands _guiCommands;
     private readonly IFileCommands _fileCommands;
-    private readonly IEditVariableService _editVariablesService;
+    private readonly IEditVariableMenuService _editVariablesService;
     private readonly IExposeVariableService _exposeVariableService;
     private readonly ISelectedState _selectedState;
     private readonly ISetVariableLogic _setVariableLogic;
@@ -256,7 +256,7 @@ public class StateReferencingInstanceMember : InstanceMember
         InstanceSave? instanceSave,
         IStateContainer stateListCategoryContainer,
         IUndoManager undoManager,
-        IEditVariableService editVariableService,
+        IEditVariableMenuService editVariableService,
         IExposeVariableService exposeVariableService,
         IHotkeyManager hotkeyManager,
         IDeleteVariableService deleteVariableService,

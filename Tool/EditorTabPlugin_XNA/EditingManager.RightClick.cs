@@ -1,5 +1,6 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
+using Gum.Extensions;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.ToolCommands;
@@ -56,30 +57,8 @@ public partial class EditingManager
 
             foreach(var item in menuItems)
             {
-                _contextMenu.Items.Add(ToMenuItem(item));
+                _contextMenu.Items.Add(item.ToMenuItem());
             }
         }
-    }
-
-    private static Control ToMenuItem(ContextMenuItemViewModel item)
-    {
-        if (item.IsSeparator)
-        {
-            return new Separator();
-        }
-
-        var menuItem = new MenuItem { Header = item.Text };
-
-        if (item.Action != null)
-        {
-            menuItem.Click += (_, _) => item.Action();
-        }
-
-        foreach (var child in item.Children)
-        {
-            menuItem.Items.Add(ToMenuItem(child));
-        }
-
-        return menuItem;
     }
 }

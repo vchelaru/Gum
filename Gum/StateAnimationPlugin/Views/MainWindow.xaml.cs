@@ -1,4 +1,5 @@
 using Gum;
+using Gum.Extensions;
 using Gum.Managers;
 using Gum.ViewModels;
 using StateAnimationPlugin.Managers;
@@ -64,10 +65,11 @@ namespace StateAnimationPlugin.Views
         /// <summary>
         /// ElementAnimationsViewModel exposes its right-click menus as framework-neutral
         /// <see cref="ContextMenuItemViewModel"/> collections (ADR-0005, issue #3754) rather than WPF
-        /// MenuItems, so the View is responsible for turning them into real MenuItems here -- mirroring
-        /// EditingManager.RightClick.cs's ToMenuItem. A new ElementAnimationsViewModel is assigned to
-        /// DataContext whenever the selected element changes, so the menus are rebuilt on every switch
-        /// and whenever the current view model refreshes its menu contents.
+        /// MenuItems, so the View is responsible for turning them into real MenuItems here -- via the
+        /// shared <see cref="ContextMenuItemViewModelExtensions.ToMenuItem"/> helper. A new
+        /// ElementAnimationsViewModel is assigned to DataContext whenever the selected element
+        /// changes, so the menus are rebuilt on every switch and whenever the current view model
+        /// refreshes its menu contents.
         /// </summary>
         private void HandleDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
@@ -102,7 +104,7 @@ namespace StateAnimationPlugin.Views
             {
                 foreach (var item in _subscribedViewModel.AnimationRightClickItems)
                 {
-                    AnimationContextMenu.Items.Add(ToMenuItem(item));
+                    AnimationContextMenu.Items.Add(item.ToMenuItem());
                 }
             }
         }
@@ -114,31 +116,9 @@ namespace StateAnimationPlugin.Views
             {
                 foreach (var item in _subscribedViewModel.AnimationStateRightClickItems)
                 {
-                    AnimationStateContextMenu.Items.Add(ToMenuItem(item));
+                    AnimationStateContextMenu.Items.Add(item.ToMenuItem());
                 }
             }
-        }
-
-        private Control ToMenuItem(ContextMenuItemViewModel item)
-        {
-            if (item.IsSeparator)
-            {
-                return new Separator();
-            }
-
-            var menuItem = new MenuItem { Header = item.Text };
-
-            if (item.Action != null)
-            {
-                menuItem.Click += (_, _) => item.Action();
-            }
-
-            foreach (var child in item.Children)
-            {
-                menuItem.Items.Add(ToMenuItem(child));
-            }
-
-            return menuItem;
         }
 
         private void AddAnimationButton_Click(object? sender, RoutedEventArgs e)

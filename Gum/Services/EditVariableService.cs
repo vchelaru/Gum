@@ -24,30 +24,19 @@ namespace Gum.Services;
 
 #region Interface
 
-public interface IEditVariableService
+/// <summary>
+/// Wires edit-variable options onto an <see cref="InstanceMember"/>'s context menu (WpfDataUi row
+/// model). Split out of <see cref="IEditVariableService"/> because <see cref="InstanceMember"/>
+/// lives in the WPF-coupled WpfDataUi assembly, so this piece must stay in the tool project while
+/// the rest of the interface moved to the headless Gum.Presentation assembly (ADR-0005, #3754).
+/// </summary>
+public interface IEditVariableMenuService
 {
-    VariableEditMode GetAvailableEditModeFor(VariableSave variableSave, IStateContainer stateCategoryListContainer);
-
-    string? GetEditVariableMenuLabel(VariableSave variableSave, IStateContainer stateListCategoryContainer);
-
-    void ShowEditVariableWindow(VariableSave variable, IStateContainer container);
-
     void TryAddEditVariableOptions(InstanceMember instanceMember, VariableSave variableSave, IStateContainer stateListCategoryContainer);
 }
 #endregion
 
-#region Enums
-
-public enum VariableEditMode
-{
-    None,
-    ExposedName,
-    FullEdit
-}
-
-#endregion
-
-public class EditVariableService : IEditVariableService
+public class EditVariableService : IEditVariableService, IEditVariableMenuService
 {
     private readonly IRenameLogic _renameLogic;
     private readonly IDialogService _dialogService;

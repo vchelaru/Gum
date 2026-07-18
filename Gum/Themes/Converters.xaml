@@ -9,4 +9,5 @@
     <converters:NullToBoolConverter x:Key="NullToBoolConverter" />
     <converters:NullToBoolConverter x:Key="InverseNullToBoolConverter" Invert="True" />
     <converters:FavoriteToImageSourceConverter x:Key="FavoriteToImageSourceConverter" />
+    <converters:ColorToBrushConverter x:Key="ColorToBrushConverter" />
 </ResourceDictionary>

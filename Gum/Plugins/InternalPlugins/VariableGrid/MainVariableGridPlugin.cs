@@ -4,7 +4,6 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
-using Gum.Mvvm;
 
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
@@ -152,8 +151,7 @@ public class MainVariableGridPlugin : PriorityPlugin
         {
             shouldShowButton = _selectedState.SelectedInstance == null;
         }
-        _propertyGridManager.VariableViewModel.AddVariableButtonVisibility =
-            shouldShowButton.ToVisibility();
+        _propertyGridManager.VariableViewModel.IsAddVariableButtonVisible = shouldShowButton;
 
         if(selectedState.SelectedBehavior == null && selectedState.SelectedInstance == null && selectedState.SelectedElement == null)
         {

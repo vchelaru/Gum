@@ -10,7 +10,7 @@ using System.Collections.ObjectModel;
 using Gum.Plugins.VariableGrid;
 using Gum.DataTypes.Behaviors;
 using Gum.Controls;
-using System.Windows.Media;
+using System.Drawing;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Graphics.Fonts;
@@ -49,6 +49,7 @@ public partial class PropertyGridManager
     private readonly INameVerifier _nameVerifier;
     private readonly IDeleteVariableService _deleteVariableService;
     private readonly IEditVariableService _editVariableService;
+    private readonly IEditVariableMenuService _editVariableMenuService;
     private readonly IHotkeyManager _hotkeyManager;
     private readonly IVariableSaveLogic _variableSaveLogic;
     WpfDataUi.DataUiGrid mVariablesDataGrid;
@@ -120,6 +121,7 @@ public partial class PropertyGridManager
         INameVerifier nameVerifier,
         IDeleteVariableService deleteVariableService,
         IEditVariableService editVariableService,
+        IEditVariableMenuService editVariableMenuService,
         IHotkeyManager hotkeyManager,
         IVariableSaveLogic variableSaveLogic)
     {
@@ -141,6 +143,7 @@ public partial class PropertyGridManager
         _nameVerifier = nameVerifier;
         _deleteVariableService = deleteVariableService;
         _editVariableService = editVariableService;
+        _editVariableMenuService = editVariableMenuService;
         _hotkeyManager = hotkeyManager;
         _variableSaveLogic = variableSaveLogic;
         _stateSaveCategoryDisplayer = new StateSaveCategoryDisplayer(variableInCategoryPropagationLogic);
@@ -166,7 +169,7 @@ public partial class PropertyGridManager
             _undoManager,
             _pluginManager,
             _variableSaveLogic,
-            _editVariableService,
+            _editVariableMenuService,
             _exposeVariableService,
             _hotkeyManager,
             _deleteVariableService,
@@ -182,7 +185,7 @@ public partial class PropertyGridManager
         mVariablesDataGrid = mainControl.DataGrid;
 
         VariableViewModel = new Plugins.VariableGrid.MainControlViewModel(_deleteVariableService, _editVariableService);
-        VariableViewModel.AddVariableButtonVisibility = System.Windows.Visibility.Collapsed;
+        VariableViewModel.IsAddVariableButtonVisible = false;
         mainControl.DataContext = VariableViewModel;
         mainControl.SelectedBehaviorVariableChanged += HandleBehaviorVariableSelected;
         mainControl.AddVariableClicked += HandleAddVariable;
@@ -227,8 +230,7 @@ public partial class PropertyGridManager
             (_selectedState.SelectedElement != null ||
             _selectedState.SelectedInstance != null) && 
             _selectedState.CustomCurrentStateSave == null;
-        VariableViewModel.ShowVariableGrid = showVariableGrid ?
-            System.Windows.Visibility.Visible : System.Windows.Visibility.Hidden;
+        VariableViewModel.ShowVariableGrid = showVariableGrid;
 
         //if (_selectedState.SelectedInstances.GetCount() > 1)
         //{
@@ -533,22 +535,22 @@ public partial class PropertyGridManager
     {
         if(element == null)
         {
-            VariableViewModel.HasStateInformation = System.Windows.Visibility.Collapsed;
+            VariableViewModel.HasStateInformation = false;
         }
         else if(state == null || state == element.DefaultState)
         {
-            VariableViewModel.HasStateInformation = System.Windows.Visibility.Collapsed;
+            VariableViewModel.HasStateInformation = false;
         }
         else if(_selectedState.CustomCurrentStateSave != null)
         {
-            VariableViewModel.HasStateInformation = System.Windows.Visibility.Visible;
+            VariableViewModel.HasStateInformation = true;
             VariableViewModel.StateInformation = $"Displaying custom (animated) state";
-            VariableViewModel.StateBackground = Brushes.Pink;
+            VariableViewModel.StateBackground = Color.Pink;
         }
         else
         {
-            VariableViewModel.StateBackground = Brushes.Yellow;
-            VariableViewModel.HasStateInformation = System.Windows.Visibility.Visible;
+            VariableViewModel.StateBackground = Color.Yellow;
+            VariableViewModel.HasStateInformation = true;
             string stateName = state.Name;
             if(category != null)
             {
@@ -562,14 +564,14 @@ public partial class PropertyGridManager
     {
         if (stateCategory == null || state != null)
         {
-            VariableViewModel.HasCategoryNotification = System.Windows.Visibility.Collapsed;
+            VariableViewModel.HasCategoryNotification = false;
             return;
         }
 
         if (stateCategory.States.Count == 0)
         {
             VariableViewModel.CategoryNotification = "This category has no states.";
-            VariableViewModel.HasCategoryNotification = System.Windows.Visibility.Visible;
+            VariableViewModel.HasCategoryNotification = true;
         }
         else
         {
@@ -580,11 +582,11 @@ public partial class PropertyGridManager
             {
                 VariableViewModel.CategoryNotification =
                     "This category does not set any variables. To set a variable, select a state and change the desired variable.";
-                VariableViewModel.HasCategoryNotification = System.Windows.Visibility.Visible;
+                VariableViewModel.HasCategoryNotification = true;
             }
             else
             {
-                VariableViewModel.HasCategoryNotification = System.Windows.Visibility.Collapsed;
+                VariableViewModel.HasCategoryNotification = false;
             }
         }
     }
@@ -615,8 +617,7 @@ public partial class PropertyGridManager
         }
 
         this.VariableViewModel.BehaviorSave = behaviorSave;
-        this.VariableViewModel.ShowBehaviorUi = isShown ?
-            System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+        this.VariableViewModel.ShowBehaviorUi = isShown;
 
         if(isShown)
         {
@@ -677,8 +678,7 @@ public partial class PropertyGridManager
             }
 
             bool showError = !string.IsNullOrEmpty(message);
-            this.VariableViewModel.HasErrors = showError ?
-                System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+            this.VariableViewModel.HasErrors = showError;
 
 
 
