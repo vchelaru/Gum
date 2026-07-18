@@ -11,5 +11,6 @@
     <converters1:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     <converters1:BoolToVisibilityConverter x:Key="BoolToVisibilityHiddenConverter" Collapse="False" />
     <converters1:InverseBoolConverter x:Key="InverseBoolConverter" />
+    <converters1:DrawingColorToMediaColorConverter x:Key="DrawingColorToMediaColorConverter" />
     <controls:MultiplyConverter x:Key="MultiplyConverter" />
 </ResourceDictionary>
