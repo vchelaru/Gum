@@ -10,7 +10,6 @@ using Gum.Undo;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
 using ToolsUtilities;
 using WpfDataUi.DataTypes;
 
@@ -22,6 +21,15 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid;
 /// registered descriptor. Invoked from <c>PropertyGridManager.CustomizeVariables</c> after the categories
 /// have been built (and after exclusion has already removed irrelevant channels).
 /// </summary>
+/// <remarks>
+/// This class stays tool-side (ADR-0005): <see cref="Apply"/> and its helpers are typed on
+/// <c>WpfDataUi.DataTypes.MemberCategory</c>/<c>InstanceMember</c>/<c>CompositeInstanceMember</c>, which
+/// are owned by <c>WpfDataUi.csproj</c> (a <c>net8.0-windows</c>, WPF-only library) - not something the
+/// usual "swap a WinForms call for an interface" split can fix, since the WPF-typed method is the
+/// primary API, not an auxiliary one. Its own constructor dependencies (<see cref="ICompositeMemberRegistry"/>,
+/// <see cref="IClipboardService"/>, etc.) are kept headless-clean anyway so a future redesign of the grid's
+/// data model doesn't also need to redo this class's DI surface.
+/// </remarks>
 public class CompositeMemberLogic
 {
     private readonly ISelectedState _selectedState;
@@ -32,6 +40,7 @@ public class CompositeMemberLogic
     private readonly ICompositeMemberRegistry _registry;
     private readonly IDialogService _dialogService;
     private readonly INameVerifier _nameVerifier;
+    private readonly IClipboardService _clipboardService;
 
     public CompositeMemberLogic(
         ISelectedState selectedState,
@@ -41,7 +50,8 @@ public class CompositeMemberLogic
         ObjectFinder objectFinder,
         ICompositeMemberRegistry registry,
         IDialogService dialogService,
-        INameVerifier nameVerifier)
+        INameVerifier nameVerifier,
+        IClipboardService clipboardService)
     {
         _selectedState = selectedState;
         _exposeVariableService = exposeVariableService;
@@ -51,6 +61,7 @@ public class CompositeMemberLogic
         _registry = registry;
         _dialogService = dialogService;
         _nameVerifier = nameVerifier;
+        _clipboardService = clipboardService;
     }
 
     /// <summary>
@@ -232,7 +243,7 @@ public class CompositeMemberLogic
         // into its channels via the same registry that built this swatch, so every composite color - plain,
         // affixed (StrokeColor/FillColor), or gradient (Color2) - is a valid copy target (issue #3061).
         composite.ContextMenuEvents.Add("Copy Qualified Variable Name",
-            (_, _) => Clipboard.SetText(GetCompositeQualifiedName(element, instance, compositeName)));
+            (_, _) => _clipboardService.SetText(GetCompositeQualifiedName(element, instance, compositeName)));
 
         TryAddExposeMenu(composite, descriptor, triple, element, instance, exposedChannelVariables);
 

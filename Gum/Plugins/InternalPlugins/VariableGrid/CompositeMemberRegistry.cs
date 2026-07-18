@@ -4,18 +4,7 @@ using System.Drawing;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 
-/// <summary>
-/// Supplies the set of <see cref="CompositeMemberDescriptor"/>s that the variable grid uses to collapse
-/// sibling channel variables into single composite rows. Registered as an app-wide singleton; consumed by
-/// the composite build pass in the variable grid.
-/// </summary>
-public interface ICompositeMemberRegistry
-{
-    /// <summary>The registered composite descriptors, evaluated in order against each category.</summary>
-    IReadOnlyList<CompositeMemberDescriptor> Descriptors { get; }
-}
-
-/// <inheritdoc/>
+/// <inheritdoc cref="ICompositeMemberRegistry"/>
 public class CompositeMemberRegistry : ICompositeMemberRegistry
 {
     /// <inheritdoc/>
