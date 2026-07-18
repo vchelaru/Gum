@@ -1,23 +1,16 @@
-﻿using Gum.Dialogs;
-using System;
-using System.Collections.Generic;
+using Gum.Dialogs;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Gum.Settings;
 
-public class ThemeSettings
+/// <summary>
+/// One-time migration of legacy per-channel theme colors (<see cref="GeneralSettingsFile"/>) into
+/// the newer <see cref="ThemeSettings"/> shape. Kept in the Gum tool project rather than moved
+/// alongside <see cref="ThemeSettings"/> into the headless Gum.Presentation assembly (ADR-0005),
+/// since <see cref="GeneralSettingsFile"/> is WinForms-entangled and can't move with it.
+/// </summary>
+internal static class ThemeSettingsMigration
 {
-    public ThemeMode? Mode { get; set; }
-    public Color? Accent { get; set; }
-    public Color? CheckerA { get; set; }
-    public Color? CheckerB { get; set; }
-    public Color? OutlineColor { get; set; }
-    public Color? GuideLine { get; set; }
-    public Color? GuideText { get; set; }
-
     internal static void MigrateExplicitLegacyColors(GeneralSettingsFile settings, ThemeSettings themeSettings)
     {
         ThemeDefaultsProvider defaults = new();
@@ -52,22 +45,4 @@ public class ThemeSettings
             themeSettings.GuideText = guideTextColorOld;
         }
     }
-}
-
-public sealed class ThemeDefaultsProvider
-{
-    public ThemeMode Mode => ThemeMode.System;
-    public Color Accent => Color.FromArgb(85, 161, 121);
-
-    public Color CheckerA(ThemeMode mode) => mode == ThemeMode.Dark
-        ? Color.FromArgb(255, 30, 30, 30)
-        : Color.FromArgb(255, 150, 150, 150);
-
-    public Color CheckerB(ThemeMode mode) => mode == ThemeMode.Dark
-        ? Color.FromArgb(255, 40, 40, 40)
-        : Color.FromArgb(255, 170, 170, 170);
-
-    public Color OutlineColor => Color.FromArgb(255, 255, 255, 255);
-    public Color GuideLine => Color.FromArgb(255, 255, 255, 255);
-    public Color GuideText => Color.FromArgb(255, 255, 255, 255);
 }

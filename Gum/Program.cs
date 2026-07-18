@@ -165,7 +165,7 @@ namespace Gum
         {
             IConfiguration config = services.GetRequiredService<IConfiguration>();
 
-            ApplyIfNotExists<ThemeSettings>(x => ThemeSettings.MigrateExplicitLegacyColors(legacySettings, x));
+            ApplyIfNotExists<ThemeSettings>(x => ThemeSettingsMigration.MigrateExplicitLegacyColors(legacySettings, x));
             ApplyIfNotExists<LayoutSettings>(x => LayoutSettings.MigrateLegacyLayout(legacySettings, x));
 
             void ApplyIfNotExists<T>(Action<T> applyAction) where T : class, new()

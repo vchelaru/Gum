@@ -44,6 +44,10 @@
 		     transitively via Gum.ProjectServices; pin matches that project's version explicitly since
 		     this assembly's own source now references it directly. -->
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+		<!-- ThemingDialogViewModel takes IOptionsMonitor&lt;ThemeSettings&gt;. Microsoft.Extensions.Options
+		     has no WPF/WinForms dependency; pin matches Gum.csproj's Microsoft.Extensions.Hosting version
+		     (which pulls Options in transitively there) so a single bump propagates predictably. -->
+		<PackageReference Include="Microsoft.Extensions.Options" Version="9.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>

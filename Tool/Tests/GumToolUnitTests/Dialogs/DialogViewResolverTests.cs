@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Windows.Controls;
 using Gum.Dialogs;
 using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
 using Gum.Plugins.VariableGrid;
@@ -18,20 +19,23 @@ namespace GumToolUnitTests.Dialogs;
 /// of these view models were relocated into the headless Gum.Presentation assembly (ADR-0005,
 /// #3754); their Views necessarily stayed behind in a WPF-capable assembly (the Gum tool itself,
 /// or a dynamically-loaded plugin like ImportFromGumxPlugin). These tests pin that cross-assembly
-/// resolution alongside the original same-assembly naming-convention path.
+/// resolution alongside the original same-assembly naming-convention path. ThemingDialogViewModel
+/// was the last production example of the same-assembly, no-[Dialog]-attribute naming-convention
+/// pairing before it too relocated (#3754), so that path is now pinned with a synthetic VM/View
+/// pair local to this test assembly instead.
 /// </summary>
 public class DialogViewResolverTests
 {
     [Fact]
     public void GetDialogViewType_ResolvesFromOwnAssembly_WhenViewModelAndViewAreCoLocated()
     {
-        // ThemingDialogViewModel/ThemingDialogView still live together in Gum.dll and pair via the
-        // original naming-convention path (no [Dialog] attribute, no fallback assembly needed).
+        // SampleDialogViewModel/SampleDialogView are co-located in this test assembly and pair via
+        // the naming-convention path (no [Dialog] attribute, no fallback assembly needed).
         DialogViewResolver resolver = new(NullLogger<DialogViewResolver>.Instance, new StubAssemblyProvider());
 
-        Type? viewType = resolver.GetDialogViewType(typeof(ThemingDialogViewModel));
+        Type? viewType = resolver.GetDialogViewType(typeof(SampleDialogViewModel));
 
-        viewType.ShouldBe(typeof(ThemingDialogView));
+        viewType.ShouldBe(typeof(SampleDialogView));
     }
 
     [Fact]
@@ -107,6 +111,14 @@ public class DialogViewResolverTests
         }
 
         public IEnumerable<Assembly> GetCandidateAssemblies() => _assemblies;
+    }
+
+    private sealed class SampleDialogViewModel : DialogViewModel
+    {
+    }
+
+    private sealed class SampleDialogView : UserControl
+    {
     }
 }
 

@@ -73,7 +73,7 @@
       Height="16"
       HorizontalAlignment="Stretch"
       VerticalAlignment="Center"
-      SelectedColor="{Binding AccentColor, Mode=TwoWay}" />
+      SelectedColor="{Binding AccentColor, Mode=TwoWay, Converter={StaticResource DrawingColorToMediaColorConverter}}" />
 
     <Button
       Grid.Row="1"
@@ -98,7 +98,7 @@
       Height="16"
       HorizontalAlignment="Stretch"
       VerticalAlignment="Center"
-      SelectedColor="{Binding CheckerAColor, Mode=TwoWay}" />
+      SelectedColor="{Binding CheckerAColor, Mode=TwoWay, Converter={StaticResource DrawingColorToMediaColorConverter}}" />
 
     <Button
       Grid.Row="2"
@@ -123,7 +123,7 @@
       Height="16"
       HorizontalAlignment="Stretch"
       VerticalAlignment="Center"
-      SelectedColor="{Binding CheckerBColor, Mode=TwoWay}" />
+      SelectedColor="{Binding CheckerBColor, Mode=TwoWay, Converter={StaticResource DrawingColorToMediaColorConverter}}" />
 
     <Button
       Grid.Row="3"
@@ -148,7 +148,7 @@
       Height="16"
       HorizontalAlignment="Stretch"
       VerticalAlignment="Center"
-      SelectedColor="{Binding OutlineColor, Mode=TwoWay}" />
+      SelectedColor="{Binding OutlineColor, Mode=TwoWay, Converter={StaticResource DrawingColorToMediaColorConverter}}" />
 
     <Button
       Grid.Row="4"
@@ -173,7 +173,7 @@
       Height="16"
       HorizontalAlignment="Stretch"
       VerticalAlignment="Center"
-      SelectedColor="{Binding GuideLineColor, Mode=TwoWay}" />
+      SelectedColor="{Binding GuideLineColor, Mode=TwoWay, Converter={StaticResource DrawingColorToMediaColorConverter}}" />
 
     <Button
       Grid.Row="5"
@@ -198,7 +198,7 @@
       Height="16"
       HorizontalAlignment="Stretch"
       VerticalAlignment="Center"
-      SelectedColor="{Binding GuideTextColor, Mode=TwoWay}" />
+      SelectedColor="{Binding GuideTextColor, Mode=TwoWay, Converter={StaticResource DrawingColorToMediaColorConverter}}" />
 
     <Button
       Grid.Row="6"
