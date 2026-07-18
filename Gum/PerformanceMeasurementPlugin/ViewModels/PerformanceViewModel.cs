@@ -1,9 +1,9 @@
+using Gum.Services;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
 using System.ComponentModel;
 using System.Linq;
-using System.Windows.Threading;
 
 namespace PerformanceMeasurementPlugin.ViewModels;
 
@@ -15,7 +15,7 @@ namespace PerformanceMeasurementPlugin.ViewModels;
 /// </summary>
 public class PerformanceViewModel : INotifyPropertyChanged
 {
-    DispatcherTimer mTimer;
+    private readonly IUiTimer _uiTimer;
 
     /// <summary>
     /// SpriteBatch begins in the last frame — one per render-state change (texture/clip/blend/
@@ -98,16 +98,14 @@ public class PerformanceViewModel : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public PerformanceViewModel()
+    public PerformanceViewModel(IUiTimer uiTimer)
     {
-        mTimer = new DispatcherTimer();
-        mTimer.Tick += HandleTick;
-        mTimer.Interval = TimeSpan.FromMilliseconds(500);
-
-        mTimer.Start();
+        _uiTimer = uiTimer;
+        _uiTimer.Tick += HandleTick;
+        _uiTimer.Start(TimeSpan.FromMilliseconds(500));
     }
 
-    private void HandleTick(object? sender, EventArgs e)
+    private void HandleTick()
     {
         RaiseAllChanged();
     }

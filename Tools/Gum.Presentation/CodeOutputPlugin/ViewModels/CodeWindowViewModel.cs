@@ -1,17 +1,9 @@
-﻿using Gum.ProjectServices.CodeGeneration;
-using Gum;
-using Gum.Managers;
+﻿using Gum.Commands;
 using Gum.Mvvm;
-using Gum.ToolStates;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using Gum.Commands;
-using Gum.Services;
+using Gum.ProjectServices.CodeGeneration;
 using Gum.Services.Dialogs;
+using Gum.ToolStates;
+using System.Linq;
 using ToolsUtilities;
 
 namespace CodeOutputPlugin.ViewModels;
@@ -129,10 +121,10 @@ public class CodeWindowViewModel : ViewModel
     }
 
     [DependsOn(nameof(IsViewingStandardElement))]
-    public Visibility GenerateCodeUiVisibility => (IsViewingStandardElement == false).ToVisibility();
+    public bool IsGenerateCodeUiVisible => IsViewingStandardElement == false;
 
     [DependsOn(nameof(IsViewingStandardElement))]
-    public Visibility ShowNoGenerationAvailableUiVisibility => IsViewingStandardElement.ToVisibility();
+    public bool IsNoGenerationAvailableUiVisible => IsViewingStandardElement;
 
     public WhichElementsToGenerate WhichElementsToGenerate
     {

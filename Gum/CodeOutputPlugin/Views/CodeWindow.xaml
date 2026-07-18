@@ -61,7 +61,7 @@
     </ResourceDictionary>
   </UserControl.Resources>
   <Grid>
-    <Grid IsSharedSizeScope="True" Visibility="{Binding GenerateCodeUiVisibility}">
+    <Grid IsSharedSizeScope="True" Visibility="{Binding IsGenerateCodeUiVisible, Converter={StaticResource BoolToVisibilityConverter}}">
 
       <Grid>
         <Grid.ColumnDefinitions>
@@ -216,7 +216,7 @@
 
       </Grid>
     </Grid>
-    <StackPanel Visibility="{Binding ShowNoGenerationAvailableUiVisibility}">
+    <StackPanel Visibility="{Binding IsNoGenerationAvailableUiVisible, Converter={StaticResource BoolToVisibilityConverter}}">
       <TextBlock TextWrapping="Wrap">
         Standard Elements cannot be generated because the Gum NuGet packages linked by your project already include Standard Element runtime classes
       </TextBlock>
