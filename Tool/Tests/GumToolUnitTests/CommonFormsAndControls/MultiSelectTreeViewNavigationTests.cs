@@ -1,6 +1,8 @@
 using CommonFormsAndControls;
 using Shouldly;
+using System;
 using System.Reflection;
+using System.Threading;
 using System.Windows.Forms;
 using Xunit;
 
@@ -30,6 +32,29 @@ public class MultiSelectTreeViewNavigationTests : BaseTestClass
     private static void RaiseMouseDown(MultiSelectTreeView treeView, MouseButtons button)
     {
         InvokeProtected(treeView, "OnMouseDown", new MouseEventArgs(button, 1, 1, 0, 0));
+    }
+
+    /// <summary>
+    /// OnMouseDown calls base.OnMouseDown(e), which can force the native window handle to be
+    /// created (WinForms mouse-capture handling touches .Handle), requiring an STA thread the
+    /// same way TreeNode.Expand()/Collapse() do (see TreeViewStateServiceTests). xUnit's default
+    /// runner is MTA.
+    /// </summary>
+    private static void RunOnSta(Action action)
+    {
+        Exception? caught = null;
+        Thread thread = new Thread(() =>
+        {
+            try { action(); }
+            catch (Exception ex) { caught = ex; }
+        });
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        thread.Join();
+        if (caught != null)
+        {
+            throw new TargetInvocationException(caught);
+        }
     }
 
     // Does not go through OnMouseUp's GetNodeAt hit-test, which requires a real native window
@@ -89,7 +114,7 @@ public class MultiSelectTreeViewNavigationTests : BaseTestClass
     }
 
     [Fact]
-    public void OnMouseDown_XButton1_RaisesNavigateBackRequested()
+    public void OnMouseDown_XButton1_RaisesNavigateBackRequested() => RunOnSta(() =>
     {
         var raised = false;
         _treeView.NavigateBackRequested += (_, _) => raised = true;
@@ -97,10 +122,10 @@ public class MultiSelectTreeViewNavigationTests : BaseTestClass
         RaiseMouseDown(_treeView, MouseButtons.XButton1);
 
         raised.ShouldBeTrue();
-    }
+    });
 
     [Fact]
-    public void OnMouseDown_XButton2_RaisesNavigateForwardRequested()
+    public void OnMouseDown_XButton2_RaisesNavigateForwardRequested() => RunOnSta(() =>
     {
         var raised = false;
         _treeView.NavigateForwardRequested += (_, _) => raised = true;
@@ -108,10 +133,10 @@ public class MultiSelectTreeViewNavigationTests : BaseTestClass
         RaiseMouseDown(_treeView, MouseButtons.XButton2);
 
         raised.ShouldBeTrue();
-    }
+    });
 
     [Fact]
-    public void OnMouseDown_LeftButton_DoesNotRaiseNavigationEvents()
+    public void OnMouseDown_LeftButton_DoesNotRaiseNavigationEvents() => RunOnSta(() =>
     {
         var raised = false;
         _treeView.NavigateBackRequested += (_, _) => raised = true;
@@ -120,5 +145,5 @@ public class MultiSelectTreeViewNavigationTests : BaseTestClass
         RaiseMouseDown(_treeView, MouseButtons.Left);
 
         raised.ShouldBeFalse();
-    }
+    });
 }
