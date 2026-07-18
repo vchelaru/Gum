@@ -39,6 +39,8 @@ public interface IHotkeyManager
     KeyCombination ZoomCameraOut { get; }
     KeyCombination ZoomCameraOutAlternative { get; }
     KeyCombination Rename { get; }
+    KeyCombination NavigateBack { get; }
+    KeyCombination NavigateForward { get; }
 
     /// <summary>
     /// Handles application-wide hotkeys (search, undo/redo, zoom). Callers at the WinForms/WPF boundary

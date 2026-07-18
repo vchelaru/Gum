@@ -16,6 +16,7 @@ using System;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
+using Gum.SelectionHistory;
 using Gum.Undo;
 using KeyEventArgs = System.Windows.Forms.KeyEventArgs;
 using Gum.Plugins.InternalPlugins.VariableGrid;
@@ -70,6 +71,9 @@ public class HotkeyManager : IHotkeyManager
 
     public KeyCombination Rename { get; private set; } = KeyCombination.Pressed(GumKey.F2);
 
+    public KeyCombination NavigateBack { get; private set; } = KeyCombination.Alt(GumKey.Left);
+    public KeyCombination NavigateForward { get; private set; } = KeyCombination.Alt(GumKey.Right);
+
     // If adding any new keys here, modify HotkeyViewModel
 
 
@@ -85,6 +89,7 @@ public class HotkeyManager : IHotkeyManager
     private readonly IEditCommands _editCommands;
     private readonly IReorderLogic _reorderLogic;
     private readonly IPluginManager _pluginManager;
+    private readonly ISelectionHistory _selectionHistory;
 
 
     public HotkeyManager(IGuiCommands guiCommands,
@@ -98,7 +103,8 @@ public class HotkeyManager : IHotkeyManager
         IUndoManager undoManager,
         IEditCommands editCommands,
         IReorderLogic reorderLogic,
-        IPluginManager pluginManager)
+        IPluginManager pluginManager,
+        ISelectionHistory selectionHistory)
     {
         _copyPasteLogic = copyPasteLogic;
         _guiCommands = guiCommands;
@@ -112,6 +118,7 @@ public class HotkeyManager : IHotkeyManager
         _editCommands = editCommands;
         _reorderLogic = reorderLogic;
         _pluginManager = pluginManager;
+        _selectionHistory = selectionHistory;
     }
 
     public bool IsPressedInControl(KeyCombination combo)
@@ -145,6 +152,8 @@ public class HotkeyManager : IHotkeyManager
             _ when Search.IsPressed(e)  => _guiCommands.FocusSearch,
             _ when RedoAlt.IsPressed(e) || Redo.IsPressed(e) => _undoManager.PerformRedo,
             _ when Undo.IsPressed(e) => _undoManager.PerformUndo,
+            _ when NavigateBack.IsPressed(e) => _selectionHistory.NavigateBack,
+            _ when NavigateForward.IsPressed(e) => _selectionHistory.NavigateForward,
             _ when ZoomDirection() is { } dir && enableEntireAppZoom => () => _uiSettingsService.BaseFontSize += dir,
             _ => null
         };

@@ -11,6 +11,7 @@ using Gum.Commands;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Services.Dialogs;
 using Gum.Dialogs;
+using Gum.SelectionHistory;
 using Gum.Undo;
 using Gum.Localization;
 using Gum.Services.Fonts;
@@ -45,6 +46,7 @@ internal static class PluginBridgedServiceTypes
         typeof(ISelectedState),
         typeof(IElementCommands),
         typeof(IUndoManager),
+        typeof(ISelectionHistory),
         typeof(IProjectManager),
 
         typeof(IGuiCommands),

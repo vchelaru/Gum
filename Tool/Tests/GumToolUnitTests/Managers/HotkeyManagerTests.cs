@@ -6,6 +6,7 @@ using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.SelectionHistory;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
@@ -30,6 +31,7 @@ public class HotkeyManagerTests : BaseTestClass
     private readonly Mock<IEditCommands> _editCommands;
     private readonly Mock<IReorderLogic> _reorderLogic;
     private readonly Mock<IPluginManager> _pluginManager;
+    private readonly Mock<ISelectionHistory> _selectionHistory;
     private readonly HotkeyManager _hotkeyManager;
 
     public HotkeyManagerTests()
@@ -46,6 +48,7 @@ public class HotkeyManagerTests : BaseTestClass
         _editCommands = new Mock<IEditCommands>();
         _reorderLogic = new Mock<IReorderLogic>();
         _pluginManager = new Mock<IPluginManager>();
+        _selectionHistory = new Mock<ISelectionHistory>();
 
         _hotkeyManager = new HotkeyManager(
             _guiCommands.Object,
@@ -59,7 +62,8 @@ public class HotkeyManagerTests : BaseTestClass
             _undoManager.Object,
             _editCommands.Object,
             _reorderLogic.Object,
-            _pluginManager.Object
+            _pluginManager.Object,
+            _selectionHistory.Object
         );
     }
 
@@ -161,6 +165,25 @@ public class HotkeyManagerTests : BaseTestClass
 
         handled.ShouldBeTrue();
         _elementCommands.Verify(e => e.MoveSelectedObjectsBy(0f, -5f), Times.Once);
+    }
+
+    [Fact]
+    public void IsPressed_KeyData_NavigateBack_MatchesAltPlusLeft()
+    {
+        // NavigateBack is Alt+Left: matches only when both the Alt flag and the Left key code are present.
+        // (PreviewKeyDownAppWide's actual dispatch isn't unit-testable here - it constructs a real WPF
+        // KeyEventArgs via Keyboard.PrimaryDevice, which requires an STA thread this test host doesn't
+        // guarantee. Same pre-existing gap applies to Undo/Redo/Search; verified manually instead.)
+        _hotkeyManager.NavigateBack.IsPressed(System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.Left).ShouldBeTrue();
+        _hotkeyManager.NavigateBack.IsPressed(System.Windows.Forms.Keys.Left).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsPressed_KeyData_NavigateForward_MatchesAltPlusRight()
+    {
+        // NavigateForward is Alt+Right: matches only when both the Alt flag and the Right key code are present.
+        _hotkeyManager.NavigateForward.IsPressed(System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.Right).ShouldBeTrue();
+        _hotkeyManager.NavigateForward.IsPressed(System.Windows.Forms.Keys.Right).ShouldBeFalse();
     }
 
     [Fact]

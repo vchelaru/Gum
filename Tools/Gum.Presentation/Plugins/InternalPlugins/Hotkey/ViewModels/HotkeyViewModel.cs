@@ -57,6 +57,9 @@ namespace Gum.Plugins.InternalPlugins.Hotkey.ViewModels
 
             Add(_hotkeyManager.Rename, "Rename State");
 
+            Add(_hotkeyManager.NavigateBack, "Navigate Back");
+            Add(_hotkeyManager.NavigateForward, "Navigate Forward");
+
         }
 
         private void Add(KeyCombination keyCombination, string action)

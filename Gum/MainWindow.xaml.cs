@@ -3,6 +3,7 @@ using Gum.Commands;
 using Gum.Input;
 using Gum.Dialogs;
 using Gum.Managers;
+using Gum.SelectionHistory;
 using Gum.Settings;
 using Gum.ViewModels;
 using System;
@@ -32,18 +33,21 @@ public enum TabLocation
 public partial class MainWindow : WindowChromeWindow, IRecipient<CloseMainWindowMessage>
 {
     private readonly IMessenger _messenger;
+    private readonly ISelectionHistory _selectionHistory;
 
     public MainWindow(
         MainWindowViewModel mainWindowViewModel,
         MenuStripManager menuStripManager,
         IMessenger messenger,
         IHotkeyManager hotkeyManager,
+        ISelectionHistory selectionHistory,
         IWritableOptions<LayoutSettings> layoutSettings
         )
     {
         DataContext = mainWindowViewModel;
 
         _messenger = messenger;
+        _selectionHistory = selectionHistory;
         messenger.RegisterAll(this);
 
         InitializeComponent();
@@ -64,6 +68,23 @@ public partial class MainWindow : WindowChromeWindow, IRecipient<CloseMainWindow
 
     private void OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
     {
+        // Mouse "back"/"forward" side buttons, over any plain-WPF surface (menus, variable
+        // grid, dialogs, etc.). WinForms-hosted surfaces (tree view, wireframe canvas) never
+        // reach here - raw XButton messages go straight to whichever native window is under
+        // the cursor and don't bubble - so those wire up independently.
+        if (e.ChangedButton == MouseButton.XButton1)
+        {
+            _selectionHistory.NavigateBack();
+            e.Handled = true;
+            return;
+        }
+        if (e.ChangedButton == MouseButton.XButton2)
+        {
+            _selectionHistory.NavigateForward();
+            e.Handled = true;
+            return;
+        }
+
         // When a WinForms control (e.g. the editor) has focus, WPF reports
         // Keyboard.FocusedElement as null. If the user clicks on a WPF element
         // that is not inside a WindowsFormsHost, pull focus back to WPF so that

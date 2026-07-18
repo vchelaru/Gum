@@ -29,6 +29,7 @@ using Gum.Commands;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Dialogs;
 using Gum.Services.Dialogs;
+using Gum.SelectionHistory;
 using Gum.Undo;
 using Gum.Localization;
 using Gum.Services.Fonts;
@@ -846,6 +847,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
             batch.AddExportedValue<ISelectedState>(Locator.GetRequiredService<ISelectedState>());
             batch.AddExportedValue<IElementCommands>(Locator.GetRequiredService<IElementCommands>());
             batch.AddExportedValue<IUndoManager>(Locator.GetRequiredService<IUndoManager>());
+            batch.AddExportedValue<ISelectionHistory>(Locator.GetRequiredService<ISelectionHistory>());
             batch.AddExportedValue<IProjectManager>(Locator.GetRequiredService<IProjectManager>());
 
             // Shared services consumed by PluginBase (via property imports) and by individual
