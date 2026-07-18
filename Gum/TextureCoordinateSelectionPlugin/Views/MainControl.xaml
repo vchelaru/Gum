@@ -52,7 +52,7 @@
             <ComboBox
                 Margin="16,0,0,0"
                 MinWidth="80"
-                Visibility="{Binding ExposedSourceDropdownVisibility}"
+                Visibility="{Binding IsExposedSourceDropdownVisible, Converter={StaticResource BoolToVisibilityConverter}}"
                 ItemsSource="{Binding AvailableExposedSources}"
                 SelectedItem="{Binding SelectedExposedSource}"
                 DisplayMemberPath="SourceObjectName" />

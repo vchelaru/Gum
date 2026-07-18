@@ -1,4 +1,3 @@
-﻿using Gum;
 using Gum.Commands;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
@@ -8,13 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using TextureCoordinateSelectionPlugin.Logic;
 using TextureCoordinateSelectionPlugin.Models;
 using ToolsUtilities;
-using System.Windows;
 
 namespace TextureCoordinateSelectionPlugin.ViewModels;
 
@@ -55,7 +50,7 @@ public class MainControlViewModel : ViewModel
     private readonly IFileCommands _fileCommands;
     private readonly IFileWatchManager _fileWatchManager;
     private readonly IGuiCommands _guiCommands;
-    TextureCoordinateDisplayController? _displayController;
+    ITextureCoordinateDisplayController? _displayController;
 
     [DependsOn(nameof(IsSnapToGridChecked))]
     public bool IsSnapToGridComboBoxEnabled => IsSnapToGridChecked;
@@ -73,8 +68,7 @@ public class MainControlViewModel : ViewModel
     }
 
     [DependsOn(nameof(AvailableExposedSources))]
-    public Visibility ExposedSourceDropdownVisibility =>
-        (AvailableExposedSources?.Count ?? 0) > 1 ? Visibility.Visible : Visibility.Collapsed;
+    public bool IsExposedSourceDropdownVisible => (AvailableExposedSources?.Count ?? 0) > 1;
 
     public void UpdateExposedSources(List<ExposedTextureCoordinateSet> sources, bool preserveSelection)
     {
@@ -92,7 +86,7 @@ public class MainControlViewModel : ViewModel
         IFileCommands fileCommands,
         IFileWatchManager fileWatchManager,
         IGuiCommands guiCommands,
-        TextureCoordinateDisplayController displayController)
+        ITextureCoordinateDisplayController displayController)
     {
         SelectedSnapToGridValue = 16;
         SelectedZoomLevel = 100;
@@ -131,7 +125,10 @@ public class MainControlViewModel : ViewModel
         }
     }
 
-    internal void ZoomIn()
+    /// <summary>
+    /// Selects the next-larger available zoom level. Called by the view's zoom-in (+) button.
+    /// </summary>
+    public void ZoomIn()
     {
         var index = AvailableZoomLevels.IndexOf(SelectedZoomLevel);
         if(index > 0)
@@ -140,7 +137,10 @@ public class MainControlViewModel : ViewModel
         }
     }
 
-    internal void ZoomOut()
+    /// <summary>
+    /// Selects the next-smaller available zoom level. Called by the view's zoom-out (-) button.
+    /// </summary>
+    public void ZoomOut()
     {
         var index = AvailableZoomLevels.IndexOf(SelectedZoomLevel);
         if(index < AvailableZoomLevels.Count - 1)
