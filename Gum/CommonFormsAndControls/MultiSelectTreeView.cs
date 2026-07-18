@@ -120,6 +120,13 @@ namespace CommonFormsAndControls
         /// </summary>
         public event Action<Exception>? UnhandledException;
 
+        /// <summary>
+        /// Raised on a mouse "back"/"forward" side-button press over the tree, independent of
+        /// node selection (unlike Left/Right, these buttons never select the hovered node).
+        /// </summary>
+        public event EventHandler? NavigateBackRequested;
+        public event EventHandler? NavigateForwardRequested;
+
         #endregion
 
         #region Event Methods  
@@ -153,18 +160,45 @@ namespace CommonFormsAndControls
 
         private TreeNode? GetNodeAtRowY(int y)
         {
-            // pick a safe X inside the client & left of label area  
-            // (1 px from client-left is usually fine)  
+            // pick a safe X inside the client & left of label area
+            // (1 px from client-left is usually fine)
             return GetNodeAt(1, y);
+        }
+
+        /// <summary>
+        /// Whether releasing <paramref name="button"/> over <paramref name="node"/> should select it.
+        /// Only the left button selects - a mouse "back"/"forward" (or middle) release over a node
+        /// must not be treated as a click on that node.
+        /// </summary>
+        private bool ShouldSelectOnMouseUp(TreeNode node, MouseButtons button)
+        {
+            return (EffectiveModifiers() == Keys.None && MultiSelectBehavior != MultiSelectBehavior.RegularClick) &&
+                   ((mSelectedNodes.Count > 1 && mSelectedNodes.Contains(node)) || IsSelectingOnPush == false) &&
+                   button == MouseButtons.Left;
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
-            // If the user clicks on a node that was not  
-            // previously selected, select it now.  
-            //			BeginUpdate();  
+            // Mouse "back"/"forward" side buttons are navigation, not selection - handle them
+            // independent of the node-selection logic below and don't let them touch it.
+            if (e.Button == MouseButtons.XButton1)
+            {
+                NavigateBackRequested?.Invoke(this, EventArgs.Empty);
+                base.OnMouseDown(e);
+                return;
+            }
+            if (e.Button == MouseButtons.XButton2)
+            {
+                NavigateForwardRequested?.Invoke(this, EventArgs.Empty);
+                base.OnMouseDown(e);
+                return;
+            }
+
+            // If the user clicks on a node that was not
+            // previously selected, select it now.
+            //			BeginUpdate();
 #if !DEBUG
-            try  
+            try
 #endif
             {
                 base.SelectedNode = null;
@@ -240,14 +274,11 @@ namespace CommonFormsAndControls
                     return;
                 }
 
-                // Check to see if a node was clicked on 
+                // Check to see if a node was clicked on
                 var node = this.GetNodeAtRowY(e.Location.Y);
                 if (node != null)
                 {
-                    var shouldSelect =
-                        (EffectiveModifiers() == Keys.None && MultiSelectBehavior != MultiSelectBehavior.RegularClick) &&
-                        ((mSelectedNodes.Count > 1 && mSelectedNodes.Contains(node)) || IsSelectingOnPush == false) &&
-                        e.Button != MouseButtons.Right;
+                    var shouldSelect = ShouldSelectOnMouseUp(node, e.Button);
 
                     if (shouldSelect)
                     {

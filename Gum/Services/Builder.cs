@@ -8,6 +8,7 @@ using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers;
 using Gum.ToolCommands;
 using Gum.ToolStates;
+using Gum.SelectionHistory;
 using Gum.Undo;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -175,6 +176,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<ISelectedState, SelectedState>();
         services.AddSingleton<INameVerifier, NameVerifier>();
         services.AddSingleton<IUndoManager, UndoManager>();
+        services.AddSingleton<ISelectionHistory, SelectionHistoryService>();
         // Late-bound seam for folding animation edits into the element undo snapshot (#3406). The relay
         // is what UndoManager/ElementUndoStrategy receive at construction; the animation plugin registers
         // itself as the real provider in its StartUp (via IAnimationUndoProviderRegistrar, bridged into

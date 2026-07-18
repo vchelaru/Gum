@@ -13,6 +13,7 @@ using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers;
+using Gum.SelectionHistory;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
@@ -143,6 +144,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private readonly ITabManager _tabManager;
     private readonly ICircularReferenceManager _circularReferenceManager;
     private readonly IFavoriteComponentManager _favoriteComponentManager;
+    private readonly ISelectionHistory _selectionHistory;
     private readonly ElementTreeViewCreator _viewCreator;
 
     public const int TransparentImageIndex = 0;
@@ -409,6 +411,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         ISetVariableLogic setVariableLogic,
         ICircularReferenceManager circularReferenceManager,
         IFavoriteComponentManager favoriteComponentManager,
+        ISelectionHistory selectionHistory,
         IProjectState projectState,
         StandardElementsManagerGumTool standardElementsManagerGumTool,
         IDragDropManager dragDropManager,
@@ -434,6 +437,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _setVariableLogic = setVariableLogic;
         _circularReferenceManager = circularReferenceManager;
         _favoriteComponentManager = favoriteComponentManager;
+        _selectionHistory = selectionHistory;
         _projectState = projectState;
         _standardElementsManagerGumTool = standardElementsManagerGumTool;
         _pluginManager = pluginManager;
@@ -805,6 +809,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         ObjectTreeView.AfterExpand += (_, _) => _collapseToggleService.OnNodeManuallyChanged();
         ObjectTreeView.AfterCollapse += (_, _) => _collapseToggleService.OnNodeManuallyChanged();
         ObjectTreeView.UnhandledException += ex => _dialogService.ShowMessage(ex.Message);
+        ObjectTreeView.NavigateBackRequested += (_, _) => _selectionHistory.NavigateBack();
+        ObjectTreeView.NavigateForwardRequested += (_, _) => _selectionHistory.NavigateForward();
 
         ConfigureStandardsPalette();
 
