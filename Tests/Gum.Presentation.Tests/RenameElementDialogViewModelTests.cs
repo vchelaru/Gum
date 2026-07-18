@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Dialogs;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
@@ -24,6 +25,28 @@ public class RenameElementDialogViewModelTests : BaseTestClass
         _nameVerifier = new Mock<INameVerifier>();
 
         _viewModel = new RenameElementDialogViewModel(_setVariableLogic.Object, _nameVerifier.Object);
+    }
+
+    [Fact]
+    public void OnAffirmative_ShouldNotChangeName_WhenNewNameMatchesOldName()
+    {
+        _viewModel.ElementSave = new ComponentSave
+        {
+            Name = "Folder/SameName"
+        };
+        _viewModel.Value = "SameName";
+
+        _viewModel.OnAffirmative();
+
+        _setVariableLogic.Verify(x => x.PropertyValueChanged(
+            It.IsAny<string>(),
+            It.IsAny<object>(),
+            It.IsAny<InstanceSave>(),
+            It.IsAny<StateSave>(),
+            It.IsAny<bool>(),
+            It.IsAny<bool>(),
+            It.IsAny<bool>(),
+            It.IsAny<bool>()), Times.Never);
     }
 
     [Fact]
