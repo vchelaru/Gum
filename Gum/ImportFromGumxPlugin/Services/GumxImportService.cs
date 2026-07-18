@@ -15,58 +15,21 @@ using ToolsUtilities;
 namespace ImportFromGumxPlugin.Services;
 
 /// <summary>
-/// Outcome of an import operation, including which asset files were copied or could not be found.
-/// </summary>
-public class ImportResult
-{
-    public List<string> CopiedAssets { get; } = new();
-    /// <summary>Elements that were not imported because one or more of their required asset files could not be found.</summary>
-    public List<string> SkippedElements { get; } = new();
-    /// <summary>Elements whose destination files already exist. When non-empty the import was cancelled.</summary>
-    public List<string> ConflictingElements { get; } = new();
-}
-
-/// <summary>
-/// How the import service should treat selected elements whose destination file already exists.
-/// </summary>
-public enum ConflictResolution
-{
-    /// <summary>Default: abort the entire import and surface the conflict list.</summary>
-    Cancel,
-    /// <summary>Leave each conflicting destination file untouched; import only non-conflicting elements.</summary>
-    Skip,
-    /// <summary>Replace conflicting destination files with the source content.</summary>
-    Overwrite,
-}
-
-/// <summary>
-/// The user's explicit selections from the import preview dialog.
-/// </summary>
-public class ImportSelections
-{
-    public List<ComponentSave> DirectComponents { get; init; } = new();
-    public List<ScreenSave> DirectScreens { get; init; } = new();
-    public List<ComponentSave> TransitiveComponents { get; init; } = new();
-    public List<BehaviorSave> Behaviors { get; init; } = new();
-    public List<StandardElementSave> Standards { get; init; } = new();
-}
-
-/// <summary>
 /// Orchestrates the actual import of elements from a source GumProjectSave into the destination
 /// project. Writes files to disk in import order, then registers each via IImportLogic.
 /// </summary>
-public class GumxImportService
+public class GumxImportService : IGumxImportService
 {
     private readonly IImportLogic _importLogic;
     private readonly IProjectState _projectState;
     private readonly IFileCommands _fileCommands;
-    private readonly GumxSourceService _sourceService;
+    private readonly IGumxSourceService _sourceService;
 
     public GumxImportService(
         IImportLogic importLogic,
         IProjectState projectState,
         IFileCommands fileCommands,
-        GumxSourceService sourceService)
+        IGumxSourceService sourceService)
     {
         _importLogic = importLogic;
         _projectState = projectState;
@@ -77,10 +40,7 @@ public class GumxImportService
     private static readonly HashSet<string> _assetExtensions =
         new(StringComparer.OrdinalIgnoreCase) { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tga", ".achx", ".ttf", ".otf", ".fnt" };
 
-    /// <summary>
-    /// Imports all selections from the source project into the destination.
-    /// Import order: standards → transitive components (topological) → behaviors → direct components → screens → assets → save/reload.
-    /// </summary>
+    /// <inheritdoc/>
     public async Task<ImportResult> ImportAsync(
         ImportSelections selections,
         GumProjectSave source,

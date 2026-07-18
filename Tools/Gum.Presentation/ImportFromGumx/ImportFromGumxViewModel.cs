@@ -4,6 +4,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.Mvvm;
 using Gum.Plugins.ImportPlugin.Services;
 using Gum.ProjectServices;
+using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using ImportFromGumxPlugin.Services;
@@ -13,7 +14,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
 
 namespace ImportFromGumxPlugin.ViewModels;
 
@@ -25,11 +25,12 @@ public enum SourceType
 
 public class ImportFromGumxViewModel : DialogViewModel
 {
-    private readonly GumxSourceService _sourceService;
-    private readonly GumxDependencyResolver _dependencyResolver;
-    private readonly GumxImportService _importService;
+    private readonly IGumxSourceService _sourceService;
+    private readonly IGumxDependencyResolver _dependencyResolver;
+    private readonly IGumxImportService _importService;
     private readonly IProjectState _projectState;
     private readonly IDialogService _dialogService;
+    private readonly IDispatcher _dispatcher;
 
     private GumProjectSave? _sourceProject;
     private string _sourceBase = string.Empty;
@@ -83,8 +84,7 @@ public class ImportFromGumxViewModel : DialogViewModel
     }
 
     [DependsOn(nameof(IsLocalFile))]
-    public Visibility BrowseButtonVisibility =>
-        IsLocalFile ? Visibility.Visible : Visibility.Collapsed;
+    public bool IsBrowseButtonVisible => IsLocalFile;
 
     public string DestinationSubfolder
     {
@@ -103,8 +103,7 @@ public class ImportFromGumxViewModel : DialogViewModel
     }
 
     [DependsOn(nameof(IsPreviewLoaded))]
-    public Visibility PreviewVisibility =>
-        IsPreviewLoaded ? Visibility.Visible : Visibility.Collapsed;
+    public bool IsPreviewVisible => IsPreviewLoaded;
 
     public bool IsLoading
     {
@@ -124,8 +123,7 @@ public class ImportFromGumxViewModel : DialogViewModel
     }
 
     [DependsOn(nameof(LoadingStatus))]
-    public Visibility LoadingStatusVisibility =>
-        string.IsNullOrEmpty(LoadingStatus) ? Visibility.Collapsed : Visibility.Visible;
+    public bool IsLoadingStatusVisible => !string.IsNullOrEmpty(LoadingStatus);
 
     public string? ErrorMessage
     {
@@ -134,8 +132,7 @@ public class ImportFromGumxViewModel : DialogViewModel
     }
 
     [DependsOn(nameof(ErrorMessage))]
-    public Visibility ErrorMessageVisibility =>
-        string.IsNullOrEmpty(ErrorMessage) ? Visibility.Collapsed : Visibility.Visible;
+    public bool IsErrorMessageVisible => !string.IsNullOrEmpty(ErrorMessage);
 
     public string? WarningMessage
     {
@@ -144,8 +141,7 @@ public class ImportFromGumxViewModel : DialogViewModel
     }
 
     [DependsOn(nameof(WarningMessage))]
-    public Visibility WarningMessageVisibility =>
-        string.IsNullOrEmpty(WarningMessage) ? Visibility.Collapsed : Visibility.Visible;
+    public bool IsWarningMessageVisible => !string.IsNullOrEmpty(WarningMessage);
 
     public ObservableCollection<ImportTreeNodeViewModel> RootNodes { get; } = new ObservableCollection<ImportTreeNodeViewModel>();
 
@@ -166,17 +162,19 @@ public class ImportFromGumxViewModel : DialogViewModel
     public AsyncRelayCommand BrowseCommand { get; }
 
     public ImportFromGumxViewModel(
-        GumxSourceService sourceService,
-        GumxDependencyResolver dependencyResolver,
-        GumxImportService importService,
+        IGumxSourceService sourceService,
+        IGumxDependencyResolver dependencyResolver,
+        IGumxImportService importService,
         IProjectState projectState,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        IDispatcher dispatcher)
     {
         _sourceService = sourceService;
         _dependencyResolver = dependencyResolver;
         _importService = importService;
         _projectState = projectState;
         _dialogService = dialogService;
+        _dispatcher = dispatcher;
 
         AffirmativeText = "Import";
         SourceType = SourceType.LocalFile;
@@ -518,20 +516,11 @@ public class ImportFromGumxViewModel : DialogViewModel
                 }
             }
             _recomputeQueued = true;
-            // Application.Current is null in unit tests; the test drives recompute directly.
-            var dispatcher = System.Windows.Application.Current?.Dispatcher;
-            if (dispatcher != null)
-            {
-                dispatcher.BeginInvoke(() =>
-                {
-                    _recomputeQueued = false;
-                    RecomputeTransitiveDependencies();
-                });
-            }
-            else
+            _dispatcher.Post(() =>
             {
                 _recomputeQueued = false;
-            }
+                RecomputeTransitiveDependencies();
+            });
         }
     }
 

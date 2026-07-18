@@ -31,6 +31,7 @@ internal class MainImportFromGumxPlugin : PluginBase
         var projectState = Locator.GetRequiredService<IProjectState>();
         var importLogic = Locator.GetRequiredService<IImportLogic>();
         var fileCommands = Locator.GetRequiredService<IFileCommands>();
+        var dispatcher = Locator.GetRequiredService<IDispatcher>();
 
         if (projectState.NeedsToSaveProject)
         {
@@ -47,7 +48,8 @@ internal class MainImportFromGumxPlugin : PluginBase
             dependencyResolver,
             importService,
             projectState,
-            _dialogService);
+            _dialogService,
+            dispatcher);
 
         var window = new Gum.Services.Dialogs.DialogWindow
         {
