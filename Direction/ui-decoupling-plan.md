@@ -140,6 +140,34 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   drain, just triggered by a field whose *declared* type already looked headless-safe. Grep for
   `new ConcreteType(` inside a VM's own constructor, not just its field types, when auditing a
   move.
+- **A VM's only obvious blocker (e.g. a `DispatcherTimer`) can mask a second, easy-to-miss one: a
+  direct reference to a runtime-backend-only type** (`RenderingLibrary.Graphics.Renderer`,
+  `SystemManagers`, or similar `Microsoft.Xna.Framework.*` symbols), which is XNALIKE-only and
+  unreachable from the headless net8.0 assembly the same way a WPF type is. Grep the whole VM for
+  `RenderingLibrary`/`Renderer`/`SystemManagers`/XNA symbols before assuming the fix is mechanical
+  — this needs a render-diagnostics port designed, not a relocation. Conversely, an XNA-namespace
+  `using` isn't always load-bearing; verify it's actually referenced before assuming it's a blocker.
+- **Searching for a leaked interface's consumers must not be scoped to `Gum/`.** Top-level folders
+  like `Tool/EditorTabPlugin_XNA/` have their own consumers of tool-wide interfaces
+  (`IProjectManager`, etc.) that a `Gum/`-only grep silently misses, understating the narrowing
+  work and risking a missed call site.
+- **A controller's methods can be `internal` because caller and callee used to share an assembly.**
+  Once the caller (a VM) moves to `Gum.Presentation`, those members need bumping to `public` even
+  though the controller itself doesn't move — the same accessibility-bump cost as injecting an
+  `internal` dependency, just triggered by the *VM* leaving rather than a *dependency* arriving.
+- **Moving a `DialogViewModel` that resolves via naming-convention (no `[Dialog]` attribute) can
+  silently drop `DialogViewResolverTests`' coverage of that resolution path** if it was the last
+  production example still using it. Before swapping such a VM's pin to the cross-assembly fallback
+  pattern, check whether another same-assembly VM/View pair still exercises the naming-convention
+  branch; if not, add a synthetic pair to the test so that path stays covered.
+- **A VM going headless doesn't automatically catch extension methods that operate on it and still
+  live WPF-side.** When narrowing a dependency closure, check for extension methods keyed off the
+  moved type (e.g. an `IDialogServiceExt`-style `Show<T>` helper), not just the type's own members.
+- **An interface can be "mostly" headless-clean with one bad method mixed in.** `IEditVariableService`
+  had 3 clean members plus one (`TryAddEditVariableOptions`) typed against `WpfDataUi.DataTypes
+  .InstanceMember` (a `net8.0-windows`/WPF-only library). Split the interface rather than block the
+  whole move: the clean members go to `Gum.Presentation`, the WPF-typed one moves to a new
+  tool-only sibling interface implemented by the same concrete class.
 
 **Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap).
 - *4a — Element tree:* decouple `ElementTreeViewManager` from `TreeNode`; the already-migrated
