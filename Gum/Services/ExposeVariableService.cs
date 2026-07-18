@@ -1,4 +1,3 @@
-using CommonFormsAndControls;
 using Gum.DataTypes.Variables;
 using Gum.DataTypes;
 using Gum.Logic;
@@ -6,40 +5,12 @@ using Gum.Managers;
 using Gum.Plugins;
 using Gum.ToolStates;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using Gum.Commands;
 using Gum.Services.Dialogs;
 using Gum.Undo;
 using ToolsUtilities;
-using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace Gum.Services;
-
-#region IExposeVariableService Interface
-
-public interface IExposeVariableService
-{
-    /// <summary>
-    /// Exposes a single instance variable, prompting the user for the exposed name via a dialog. Used by the
-    /// standalone "Expose Variable" row context menu.
-    /// </summary>
-    OptionallyAttemptedGeneralResponse<VariableSave> HandleExposeVariableClick(InstanceSave instanceSave, string rootVariableName);
-
-    /// <summary>
-    /// Exposes a single instance variable under a caller-supplied name, without prompting. Used by callers that
-    /// already determined the exposed name (e.g. the composite color swatch's single-prompt expose, which derives
-    /// every channel's name from one shared base name).
-    /// </summary>
-    OptionallyAttemptedGeneralResponse<VariableSave> ExposeVariable(InstanceSave instanceSave, string rootVariableName, string exposedName);
-
-    void HandleUnexposeVariableClick(VariableSave variableSave, ElementSave elementSave);
-}
-
-#endregion
 
 internal class ExposeVariableService : IExposeVariableService
 {
