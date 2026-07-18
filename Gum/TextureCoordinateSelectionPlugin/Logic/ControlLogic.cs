@@ -41,7 +41,7 @@ public enum RefreshType
 
 #endregion
 
-public class TextureCoordinateDisplayController : IDisposable
+public class TextureCoordinateDisplayController : ITextureCoordinateDisplayController, IDisposable
 {
     private readonly ISelectedState _selectedState;
     private readonly IUndoManager _undoManager;
@@ -59,7 +59,7 @@ public class TextureCoordinateDisplayController : IDisposable
     bool _isSnapToGridEnabled;
     int _snapToGridSize;
 
-    internal event Action<int>? ZoomLevelChanged;
+    public event Action<int>? ZoomLevelChanged;
 
     ExposedTextureCoordinateSet? _currentExposedSource;
 
@@ -220,18 +220,18 @@ public class TextureCoordinateDisplayController : IDisposable
         _scrollBarLogic.UpdateScrollBarsToCamera(width, height);
     }
 
-    internal void SetCurrentExposedSource(ExposedTextureCoordinateSet? source)
+    public void SetCurrentExposedSource(ExposedTextureCoordinateSet? source)
     {
         _currentExposedSource = source;
     }
 
-    internal void UpdateZoom(int zoomLevel)
+    public void UpdateZoom(int zoomLevel)
     {
         mainControl.InnerControl.ZoomValue = zoomLevel;
         UpdateScrollBarsToTexture();
     }
 
-    internal void UpdateSnapGrid(bool isEnabled, int gridSize)
+    public void UpdateSnapGrid(bool isEnabled, int gridSize)
     {
         _isSnapToGridEnabled = isEnabled;
         _snapToGridSize = gridSize;
@@ -254,7 +254,7 @@ public class TextureCoordinateDisplayController : IDisposable
             .FirstOrDefault(c => c.Name == _currentExposedSource.SourceObjectName) as GraphicalUiElement;
     }
 
-    internal void Refresh()
+    public void Refresh()
     {
         var textureToAssign = GetTextureToAssign(out bool showNineSliceGuides, out float? customFrameTextureCoordinateWidth);
 
