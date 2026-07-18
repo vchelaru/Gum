@@ -55,17 +55,20 @@ public class RenameElementDialogViewModel : GetUserStringDialogBaseViewModel
         
         string? oldName = ElementSave?.Name;
         string newName = Prefix + Value;
-        
-        ElementSave.Name = newName;
-        
-        _setVariableLogic.PropertyValueChanged("Name",
-            oldName,
-            null,
-            ElementSave.DefaultState,
-            refresh: true,
-            recordUndo: true,
-            trySave: true);
-        
+
+        if (newName != oldName)
+        {
+            ElementSave.Name = newName;
+
+            _setVariableLogic.PropertyValueChanged("Name",
+                oldName,
+                null,
+                ElementSave.DefaultState,
+                refresh: true,
+                recordUndo: true,
+                trySave: true);
+        }
+
         base.OnAffirmative();
     }
 
