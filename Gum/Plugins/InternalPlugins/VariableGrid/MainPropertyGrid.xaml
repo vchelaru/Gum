@@ -27,20 +27,20 @@
     </Grid.RowDefinitions>
 
     <Label
-      Background="{DynamicResource Frb.Brushes.Primary.Transparent}"
+      Background="{Binding StateBackground, Converter={StaticResource ColorToBrushConverter}}"
       Content="{Binding StateInformation}"
-      Visibility="{Binding HasStateInformation}" />
+      Visibility="{Binding HasStateInformation, Converter={StaticResource BoolToVisibilityConverter}}" />
     <Label
       Grid.Row="1"
       Content="{Binding ErrorInformation}"
       Foreground="{DynamicResource Frb.Brushes.Error}"
-      Visibility="{Binding HasErrors}" />
+      Visibility="{Binding HasErrors, Converter={StaticResource BoolToVisibilityConverter}}" />
     <TextBlock
       Grid.Row="2"
       Margin="5"
       Text="{Binding CategoryNotification}"
       TextWrapping="Wrap"
-      Visibility="{Binding HasCategoryNotification}" />
+      Visibility="{Binding HasCategoryNotification, Converter={StaticResource BoolToVisibilityConverter}}" />
     <Grid Grid.Row="3">
       <Grid.RowDefinitions>
         <RowDefinition />
@@ -49,8 +49,8 @@
       <WpfDataUi:DataUiGrid
         Name="DataGrid"
         Style="{StaticResource DataUiGrid.VariableGrid}"
-        Visibility="{Binding ShowVariableGrid}" />
-      <Grid Visibility="{Binding ShowBehaviorUi}">
+        Visibility="{Binding ShowVariableGrid, Converter={StaticResource BoolToVisibilityHiddenConverter}}" />
+      <Grid Visibility="{Binding ShowBehaviorUi, Converter={StaticResource BoolToVisibilityConverter}}">
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto" />
           <RowDefinition />
@@ -63,7 +63,7 @@
           SelectedItem="{Binding SelectedBehaviorVariable}"
           SelectionChanged="ListBox_SelectionChanged">
           <ListBox.ContextMenu>
-            <ContextMenu x:Name="ListBoxContextMenu" ItemsSource="{Binding BehaviorVariablesContextMenuItems}" />
+            <ContextMenu x:Name="ListBoxContextMenu" />
           </ListBox.ContextMenu>
           <ListBox.ItemTemplate>
             <DataTemplate>
@@ -79,7 +79,7 @@
         Click="HandleAddVariableClicked"
         Style="{StaticResource IconButton}"
         ToolTip="Add Variable"
-        Visibility="{Binding AddVariableButtonVisibility}">
+        Visibility="{Binding IsAddVariableButtonVisible, Converter={StaticResource BoolToVisibilityConverter}}">
         <Button.Content>
           <StackPanel Orientation="Horizontal">
             <ContentPresenter Content="{wpf:FluentIcon Icon=Add}" />

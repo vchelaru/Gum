@@ -15,11 +15,6 @@ using ToolsUtilities;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 
-public interface IDeleteVariableService
-{
-    bool CanDeleteVariable(VariableSave variable);
-    void DeleteVariable(VariableSave variable, IStateContainer stateContainer);
-}
 public class DeleteVariableService : IDeleteVariableService
 {
     private readonly IUndoManager _undoManager;

@@ -45,7 +45,7 @@ public class ElementSaveDisplayer
     private readonly CategorySortAndColorLogic _categorySortAndColorLogic;
     private readonly IPluginManager _pluginManager;
     private readonly StandardElementsManager _standardElementsManager;
-    private readonly IEditVariableService _editVariableService;
+    private readonly IEditVariableMenuService _editVariableService;
     private readonly IExposeVariableService _exposeVariableService;
     private readonly IHotkeyManager _hotkeyManager;
     private readonly IDeleteVariableService _deleteVariableService;
@@ -80,7 +80,7 @@ public class ElementSaveDisplayer
         IUndoManager undoManager,
         IPluginManager pluginManager,
         IVariableSaveLogic variableSaveLogic,
-        IEditVariableService editVariableService,
+        IEditVariableMenuService editVariableService,
         IExposeVariableService exposeVariableService,
         IHotkeyManager hotkeyManager,
         IDeleteVariableService deleteVariableService,
