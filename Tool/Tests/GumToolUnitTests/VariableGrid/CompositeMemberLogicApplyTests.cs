@@ -27,6 +27,7 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
     private readonly Mock<IUndoManager> _undoManager;
     private readonly Mock<IDialogService> _dialogService;
     private readonly Mock<INameVerifier> _nameVerifier;
+    private readonly Mock<IClipboardService> _clipboardService;
     private readonly UndoManager _realUndoManager;
     private readonly CompositeMemberLogic _logic;
 
@@ -40,6 +41,7 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
         _guiCommands = new Mock<IGuiCommands>();
         _dialogService = new Mock<IDialogService>();
         _nameVerifier = new Mock<INameVerifier>();
+        _clipboardService = new Mock<IClipboardService>();
 
         _realUndoManager = new UndoManager(null!, null!, null!, null!, null!, null!, null!);
         _undoManager = new Mock<IUndoManager>();
@@ -53,7 +55,8 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
             ObjectFinder.Self,
             new CompositeMemberRegistry(),
             _dialogService.Object,
-            _nameVerifier.Object);
+            _nameVerifier.Object,
+            _clipboardService.Object);
     }
 
     private ComponentSave MakeColorComponent(string prefix = "")
@@ -176,6 +179,25 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
     private static InstanceMember DisabledChannel(string name, string detailText)
     {
         return new InstanceMember(name, null!) { IsReadOnly = true, DetailText = detailText };
+    }
+
+    [Fact]
+    public void CopyQualifiedVariableName_ShouldSetClipboardText_ToTheCompositeQualifiedName()
+    {
+        ComponentSave component = MakeColorComponent();
+        MemberCategory category = CategoryWith(
+            new InstanceMember("Red", null!),
+            new InstanceMember("Green", null!),
+            new InstanceMember("Blue", null!));
+        List<MemberCategory> categories = new() { category };
+
+        _logic.Apply(categories, component, instance: null);
+        CompositeInstanceMember composite = (CompositeInstanceMember)category.Members.Single();
+
+        string copyKey = composite.ContextMenuEvents.Keys.Single(k => k == "Copy Qualified Variable Name");
+        composite.ContextMenuEvents[copyKey].Invoke(composite, null!);
+
+        _clipboardService.Verify(x => x.SetText("Components/Colored.Color"), Times.Once);
     }
 
     [Fact]

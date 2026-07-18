@@ -19,7 +19,7 @@ public class CompositeMemberLogicTests : BaseTestClass
     {
         CompositeMemberRegistry registry = new();
         _colorDescriptor = registry.Descriptors[0];
-        _logic = new CompositeMemberLogic(null!, null!, null!, null!, ObjectFinder.Self, registry, null!, null!);
+        _logic = new CompositeMemberLogic(null!, null!, null!, null!, ObjectFinder.Self, registry, null!, null!, null!);
     }
 
     private static Dictionary<string, InstanceMember> MembersFor(params string[] rootNames)

@@ -52,6 +52,7 @@ public partial class PropertyGridManager
     private readonly IEditVariableMenuService _editVariableMenuService;
     private readonly IHotkeyManager _hotkeyManager;
     private readonly IVariableSaveLogic _variableSaveLogic;
+    private readonly IClipboardService _clipboardService;
     WpfDataUi.DataUiGrid mVariablesDataGrid;
     MainPropertyGrid mainControl;
 
@@ -123,7 +124,8 @@ public partial class PropertyGridManager
         IEditVariableService editVariableService,
         IEditVariableMenuService editVariableMenuService,
         IHotkeyManager hotkeyManager,
-        IVariableSaveLogic variableSaveLogic)
+        IVariableSaveLogic variableSaveLogic,
+        IClipboardService clipboardService)
     {
         _selectedState = selectedState;
         _exposeVariableService = exposeVariableService;
@@ -146,6 +148,7 @@ public partial class PropertyGridManager
         _editVariableMenuService = editVariableMenuService;
         _hotkeyManager = hotkeyManager;
         _variableSaveLogic = variableSaveLogic;
+        _clipboardService = clipboardService;
         _stateSaveCategoryDisplayer = new StateSaveCategoryDisplayer(variableInCategoryPropagationLogic);
     }
 
@@ -160,7 +163,8 @@ public partial class PropertyGridManager
             _objectFinder,
             _compositeMemberRegistry,
             _dialogService,
-            _nameVerifier);
+            _nameVerifier,
+            _clipboardService);
 
         mPropertyGridDisplayer = new ElementSaveDisplayer(
             new SubtextLogic(),
