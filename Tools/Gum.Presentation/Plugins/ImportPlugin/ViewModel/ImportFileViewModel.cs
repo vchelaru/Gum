@@ -1,33 +1,40 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using Gum.Services.Dialogs;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Linq;
-using System.Windows.Data;
 
 namespace Gum.Plugins.ImportPlugin.ViewModel;
 
 public abstract partial class ImportBaseDialogViewModel : DialogViewModel
 {
     private readonly IDialogService _dialogService;
+    private readonly ObservableCollection<string> _filteredFiles = [];
 
     public abstract string Title { get; }
     public abstract string BrowseFileFilter { get; }
 
-    public string? SearchText 
-    { 
-        get => Get<string?>(); 
+    public string? SearchText
+    {
+        get => Get<string?>();
         set
         {
             if (Set(value))
             {
-                FilteredFiles.Refresh();
+                RefreshFilteredFiles();
             }
         }
     }
 
     public ObservableCollection<string> UnfilteredFiles { get; } = [];
-    public ICollectionView FilteredFiles { get; }
+
+    /// <summary>
+    /// A live, search-filtered view of <see cref="UnfilteredFiles"/>, rebuilt whenever
+    /// <see cref="SearchText"/> or <see cref="UnfilteredFiles"/> changes. Backed by a plain
+    /// ObservableCollection rather than WPF's ICollectionView/CollectionViewSource so this VM can
+    /// live in the headless Gum.Presentation assembly, which never references WPF.
+    /// </summary>
+    public ReadOnlyObservableCollection<string> FilteredFiles { get; }
+
     public ObservableCollection<string> SelectedFiles { get; } = [];
 
     public override bool CanExecuteAffirmative() => SelectedFiles.Any();
@@ -37,15 +44,20 @@ public abstract partial class ImportBaseDialogViewModel : DialogViewModel
         _dialogService = dialogService;
         AffirmativeText = "Import";
         NegativeText = "Cancel";
-        FilteredFiles = CollectionViewSource.GetDefaultView(UnfilteredFiles);
-        FilteredFiles.Filter = Filter;
+        FilteredFiles = new ReadOnlyObservableCollection<string>(_filteredFiles);
+        UnfilteredFiles.CollectionChanged += (_, _) => RefreshFilteredFiles();
         SelectedFiles.CollectionChanged += (_, _) => AffirmativeCommand.NotifyCanExecuteChanged();
     }
 
-    private bool Filter(object item) =>
-        item is string val &&
-        (string.IsNullOrWhiteSpace(SearchText) ||
-        val.ToLowerInvariant().Contains(SearchText!.ToLowerInvariant()));
+    private void RefreshFilteredFiles()
+    {
+        _filteredFiles.Clear();
+        _filteredFiles.AddRange(UnfilteredFiles.Where(Matches));
+    }
+
+    private bool Matches(string value) =>
+        string.IsNullOrWhiteSpace(SearchText) ||
+        value.ToLowerInvariant().Contains(SearchText!.ToLowerInvariant());
 
     [RelayCommand]
     private void Browse()
