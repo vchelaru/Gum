@@ -6,7 +6,6 @@ using Moq;
 using Shouldly;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Windows.Forms;
 
 namespace GumToolUnitTests.Plugins.InternalPlugins.TreeView;
@@ -32,31 +31,12 @@ public class TreeViewStateServiceTests : BaseTestClass
         _treeView?.Dispose();
     }
 
-    /// <summary>
-    /// TreeNode.Expand()/Collapse() can force the underlying native window handle to be
-    /// created, which requires an STA thread (WinForms drag/drop registration in
-    /// OnHandleCreated throws otherwise); xUnit's default runner is MTA. Same pattern as
-    /// SliderDisplayRangeTests/NullableEnumComboBoxDisplayTests.
-    /// </summary>
-    private static void RunOnSta(Action action)
-    {
-        Exception? caught = null;
-        Thread thread = new Thread(() =>
-        {
-            try { action(); }
-            catch (Exception ex) { caught = ex; }
-        });
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
-        if (caught != null)
-        {
-            throw new System.Reflection.TargetInvocationException(caught);
-        }
-    }
+    // TreeNode.Expand()/Collapse() can force the underlying native window handle to be
+    // created, which requires an STA thread (WinForms drag/drop registration in
+    // OnHandleCreated throws otherwise); xUnit's default runner is MTA.
 
-    [Fact]
-    public void CaptureAndSaveState_ShouldCaptureExpandedNodes() => RunOnSta(() =>
+    [StaFact]
+    public void CaptureAndSaveState_ShouldCaptureExpandedNodes()
     {
         // Arrange
         var settings = new UserProjectSettings { TreeViewState = new TreeViewState() };
@@ -76,10 +56,10 @@ public class TreeViewStateServiceTests : BaseTestClass
         settings.TreeViewState.ExpandedNodes.ShouldNotBeNull();
         settings.TreeViewState.ExpandedNodes.Count.ShouldBe(1);
         settings.TreeViewState.ExpandedNodes.ShouldContain(rootNodeName);
-    });
+    }
 
-    [Fact]
-    public void CaptureAndSaveState_ShouldCaptureNestedExpandedNodes() => RunOnSta(() =>
+    [StaFact]
+    public void CaptureAndSaveState_ShouldCaptureNestedExpandedNodes()
     {
         // Arrange
         var settings = new UserProjectSettings { TreeViewState = new TreeViewState() };
@@ -105,10 +85,10 @@ public class TreeViewStateServiceTests : BaseTestClass
         settings.TreeViewState.ExpandedNodes.Count.ShouldBe(2);
         settings.TreeViewState.ExpandedNodes.ShouldContain(expectedComponentsPath);
         settings.TreeViewState.ExpandedNodes.ShouldContain(expectedButtonsFolderPath);
-    });
+    }
 
-    [Fact]
-    public void CaptureAndSaveState_ShouldCreateTreeViewState_WhenNull() => RunOnSta(() =>
+    [StaFact]
+    public void CaptureAndSaveState_ShouldCreateTreeViewState_WhenNull()
     {
         // Arrange
         var settings = new UserProjectSettings { TreeViewState = null };
@@ -124,10 +104,10 @@ public class TreeViewStateServiceTests : BaseTestClass
         // Assert
         settings.TreeViewState.ShouldNotBeNull();
         settings.TreeViewState.ExpandedNodes.ShouldContain(rootNodeName);
-    });
+    }
 
-    [Fact]
-    public void CaptureAndSaveState_ShouldDoNothing_WhenCurrentSettingsIsNull() => RunOnSta(() =>
+    [StaFact]
+    public void CaptureAndSaveState_ShouldDoNothing_WhenCurrentSettingsIsNull()
     {
         // Arrange
         _mockSettingsManager.Setup(x => x.CurrentSettings).Returns((UserProjectSettings?)null);
@@ -137,10 +117,10 @@ public class TreeViewStateServiceTests : BaseTestClass
 
         // Assert - should not throw
         _mockOutputManager.Verify(x => x.AddError(It.IsAny<string>()), Times.Never);
-    });
+    }
 
-    [Fact]
-    public void CaptureAndSaveState_ShouldDoNothing_WhenTreeViewIsNull() => RunOnSta(() =>
+    [StaFact]
+    public void CaptureAndSaveState_ShouldDoNothing_WhenTreeViewIsNull()
     {
         // Arrange
         var settings = new UserProjectSettings();
@@ -151,10 +131,10 @@ public class TreeViewStateServiceTests : BaseTestClass
 
         // Assert - should not throw
         _mockOutputManager.Verify(x => x.AddError(It.IsAny<string>()), Times.Never);
-    });
+    }
 
-    [Fact]
-    public void CaptureAndSaveState_ShouldHandleError_Gracefully() => RunOnSta(() =>
+    [StaFact]
+    public void CaptureAndSaveState_ShouldHandleError_Gracefully()
     {
         // Arrange
         _mockSettingsManager.Setup(x => x.CurrentSettings).Throws<System.Exception>();
@@ -167,10 +147,10 @@ public class TreeViewStateServiceTests : BaseTestClass
 
         // Assert
         _mockOutputManager.Verify(x => x.AddError(It.Is<string>(msg => msg.Contains("Error capturing tree view state"))), Times.Once);
-    });
+    }
 
-    [Fact]
-    public void CaptureAndSaveState_WithCollapsedTree_ShouldReturnEmptyList() => RunOnSta(() =>
+    [StaFact]
+    public void CaptureAndSaveState_WithCollapsedTree_ShouldReturnEmptyList()
     {
         // Arrange
         var settings = new UserProjectSettings { TreeViewState = new TreeViewState() };
@@ -185,10 +165,10 @@ public class TreeViewStateServiceTests : BaseTestClass
 
         // Assert
         settings.TreeViewState.ExpandedNodes.ShouldBeEmpty();
-    });
+    }
 
-    [Fact]
-    public void CaptureAndSaveState_WithMultipleRootNodes_ShouldCaptureAll() => RunOnSta(() =>
+    [StaFact]
+    public void CaptureAndSaveState_WithMultipleRootNodes_ShouldCaptureAll()
     {
         // Arrange
         var settings = new UserProjectSettings { TreeViewState = new TreeViewState() };
@@ -214,10 +194,10 @@ public class TreeViewStateServiceTests : BaseTestClass
         settings.TreeViewState.ExpandedNodes.ShouldContain(componentsNodeName);
         settings.TreeViewState.ExpandedNodes.ShouldContain(screensNodeName);
         settings.TreeViewState.ExpandedNodes.ShouldNotContain(standardsNodeName);
-    });
+    }
 
-    [Fact]
-    public void LoadAndApplyState_ShouldDoNothing_WhenCurrentSettingsIsNull() => RunOnSta(() =>
+    [StaFact]
+    public void LoadAndApplyState_ShouldDoNothing_WhenCurrentSettingsIsNull()
     {
         // Arrange
         _mockSettingsManager.Setup(x => x.CurrentSettings).Returns((UserProjectSettings?)null);
@@ -228,10 +208,10 @@ public class TreeViewStateServiceTests : BaseTestClass
 
         // Assert - should not throw or expand nodes
         _treeView.Nodes[0].IsExpanded.ShouldBeFalse();
-    });
+    }
 
-    [Fact]
-    public void LoadAndApplyState_ShouldDoNothing_WhenTreeViewIsNull() => RunOnSta(() =>
+    [StaFact]
+    public void LoadAndApplyState_ShouldDoNothing_WhenTreeViewIsNull()
     {
         // Arrange
         var settings = new UserProjectSettings();
@@ -242,10 +222,10 @@ public class TreeViewStateServiceTests : BaseTestClass
 
         // Assert - should not throw
         _mockOutputManager.Verify(x => x.AddError(It.IsAny<string>()), Times.Never);
-    });
+    }
 
-    [Fact]
-    public void LoadAndApplyState_ShouldDoNothing_WhenTreeViewStateIsNull() => RunOnSta(() =>
+    [StaFact]
+    public void LoadAndApplyState_ShouldDoNothing_WhenTreeViewStateIsNull()
     {
         // Arrange
         var settings = new UserProjectSettings { TreeViewState = null };
@@ -257,10 +237,10 @@ public class TreeViewStateServiceTests : BaseTestClass
 
         // Assert
         _treeView.Nodes[0].IsExpanded.ShouldBeFalse();
-    });
+    }
 
-    [Fact]
-    public void LoadAndApplyState_ShouldExpandCorrectNodes() => RunOnSta(() =>
+    [StaFact]
+    public void LoadAndApplyState_ShouldExpandCorrectNodes()
     {
         // Arrange
         var componentsNodeName = "Components";
@@ -288,10 +268,10 @@ public class TreeViewStateServiceTests : BaseTestClass
         _treeView.Nodes[0].IsExpanded.ShouldBeTrue();  // Components
         _treeView.Nodes[1].IsExpanded.ShouldBeTrue();  // Screens
         _treeView.Nodes[2].IsExpanded.ShouldBeFalse(); // Standards
-    });
+    }
 
-    [Fact]
-    public void LoadAndApplyState_ShouldExpandNestedNodes() => RunOnSta(() =>
+    [StaFact]
+    public void LoadAndApplyState_ShouldExpandNestedNodes()
     {
         // Arrange
         var componentsNodeName = "Components";
@@ -323,10 +303,10 @@ public class TreeViewStateServiceTests : BaseTestClass
         componentsNode.IsExpanded.ShouldBeTrue();
         buttonsFolder.IsExpanded.ShouldBeTrue();
         primaryButton.IsExpanded.ShouldBeFalse();
-    });
+    }
 
-    [Fact]
-    public void LoadAndApplyState_ShouldHandleError_Gracefully() => RunOnSta(() =>
+    [StaFact]
+    public void LoadAndApplyState_ShouldHandleError_Gracefully()
     {
         // Arrange
         _mockSettingsManager.Setup(x => x.CurrentSettings).Throws<System.Exception>();
@@ -336,10 +316,10 @@ public class TreeViewStateServiceTests : BaseTestClass
 
         // Assert
         _mockOutputManager.Verify(x => x.AddError(It.Is<string>(msg => msg.Contains("Error applying tree view state"))), Times.Once);
-    });
+    }
 
-    [Fact]
-    public void LoadAndApplyState_ShouldIgnoreNonExistentPaths() => RunOnSta(() =>
+    [StaFact]
+    public void LoadAndApplyState_ShouldIgnoreNonExistentPaths()
     {
         // Arrange
         var componentsNodeName = "Components";
@@ -367,10 +347,10 @@ public class TreeViewStateServiceTests : BaseTestClass
         // Assert - should not throw
         _treeView.Nodes[0].IsExpanded.ShouldBeTrue();
         _mockOutputManager.Verify(x => x.AddError(It.IsAny<string>()), Times.Never);
-    });
+    }
 
-    [Fact]
-    public void LoadAndApplyState_WithEmptyPathsList_ShouldDoNothing() => RunOnSta(() =>
+    [StaFact]
+    public void LoadAndApplyState_WithEmptyPathsList_ShouldDoNothing()
     {
         // Arrange
         var settings = new UserProjectSettings
@@ -389,10 +369,10 @@ public class TreeViewStateServiceTests : BaseTestClass
 
         // Assert
         _treeView.Nodes[0].IsExpanded.ShouldBeFalse();
-    });
+    }
 
-    [Fact]
-    public void RoundTrip_ShouldPreserveExpandedState() => RunOnSta(() =>
+    [StaFact]
+    public void RoundTrip_ShouldPreserveExpandedState()
     {
         // Arrange - Create first tree with some nodes expanded
         var settings = new UserProjectSettings { TreeViewState = new TreeViewState() };
@@ -439,5 +419,5 @@ public class TreeViewStateServiceTests : BaseTestClass
         freshComponentsNode.IsExpanded.ShouldBeTrue();
         freshButtonsFolder.IsExpanded.ShouldBeTrue();
         freshScreensNode.IsExpanded.ShouldBeFalse();
-    });
+    }
 }

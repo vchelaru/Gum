@@ -1,8 +1,6 @@
 using CommonFormsAndControls;
 using Gum.Plugins.InternalPlugins.TreeView;
 using Shouldly;
-using System;
-using System.Threading;
 using System.Windows.Forms;
 using Xunit;
 
@@ -23,29 +21,6 @@ public class CollapseToggleServiceTests : BaseTestClass
     {
         base.Dispose();
         _treeView?.Dispose();
-    }
-
-    /// <summary>
-    /// TreeNode.Expand()/Collapse() can force the underlying native window handle to be
-    /// created, which requires an STA thread (WinForms drag/drop registration in
-    /// OnHandleCreated throws otherwise); xUnit's default runner is MTA. Same pattern as
-    /// SliderDisplayRangeTests/NullableEnumComboBoxDisplayTests.
-    /// </summary>
-    private static void RunOnSta(Action action)
-    {
-        Exception? caught = null;
-        Thread thread = new Thread(() =>
-        {
-            try { action(); }
-            catch (Exception ex) { caught = ex; }
-        });
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
-        if (caught != null)
-        {
-            throw new System.Reflection.TargetInvocationException(caught);
-        }
     }
 
     private void SetupTreeWithExpandedNodes()
@@ -75,8 +50,12 @@ public class CollapseToggleServiceTests : BaseTestClass
         }
     }
 
-    [Fact]
-    public void Clear_ShouldDiscardSavedState() => RunOnSta(() =>
+    // TreeNode.Expand()/Collapse() can force the underlying native window handle to be
+    // created, which requires an STA thread (WinForms drag/drop registration in
+    // OnHandleCreated throws otherwise); xUnit's default runner is MTA.
+
+    [StaFact]
+    public void Clear_ShouldDiscardSavedState()
     {
         // Arrange
         SetupTreeWithExpandedNodes();
@@ -91,10 +70,10 @@ public class CollapseToggleServiceTests : BaseTestClass
 
         // Assert - all collapsed because it re-captured, not restored
         _treeView.Nodes[0].IsExpanded.ShouldBeFalse();
-    });
+    }
 
-    [Fact]
-    public void HandleCollapseAll_ShouldCaptureAndCollapse_OnFirstClick() => RunOnSta(() =>
+    [StaFact]
+    public void HandleCollapseAll_ShouldCaptureAndCollapse_OnFirstClick()
     {
         // Arrange
         SetupTreeWithExpandedNodes();
@@ -105,10 +84,10 @@ public class CollapseToggleServiceTests : BaseTestClass
 
         // Assert
         _treeView.Nodes[0].IsExpanded.ShouldBeFalse();
-    });
+    }
 
-    [Fact]
-    public void HandleCollapseAll_ShouldRecapture_WhenManualChangeOccurred() => RunOnSta(() =>
+    [StaFact]
+    public void HandleCollapseAll_ShouldRecapture_WhenManualChangeOccurred()
     {
         // Arrange
         SetupTreeWithExpandedNodes();
@@ -125,10 +104,10 @@ public class CollapseToggleServiceTests : BaseTestClass
 
         // Assert - collapsed again (re-captured, not restored)
         _treeView.Nodes[0].IsExpanded.ShouldBeFalse();
-    });
+    }
 
-    [Fact]
-    public void HandleCollapseAll_ShouldRestore_OnSecondClickWithoutManualChange() => RunOnSta(() =>
+    [StaFact]
+    public void HandleCollapseAll_ShouldRestore_OnSecondClickWithoutManualChange()
     {
         // Arrange
         SetupTreeWithExpandedNodes();
@@ -147,10 +126,10 @@ public class CollapseToggleServiceTests : BaseTestClass
         // Assert - restored to original state
         _treeView.Nodes[0].IsExpanded.ShouldBeTrue();
         _treeView.Nodes[0].Nodes[0].IsExpanded.ShouldBeTrue();
-    });
+    }
 
-    [Fact]
-    public void HandleCollapseToElementLevel_ShouldRestore_OnSecondClick() => RunOnSta(() =>
+    [StaFact]
+    public void HandleCollapseToElementLevel_ShouldRestore_OnSecondClick()
     {
         // Arrange
         SetupTreeWithExpandedNodes();
@@ -179,10 +158,10 @@ public class CollapseToggleServiceTests : BaseTestClass
 
         // Assert - Button node restored to expanded
         _treeView.Nodes[0].Nodes[0].IsExpanded.ShouldBeTrue();
-    });
+    }
 
-    [Fact]
-    public void HandleDifferentButton_ShouldInvalidatePreviousSnapshot() => RunOnSta(() =>
+    [StaFact]
+    public void HandleDifferentButton_ShouldInvalidatePreviousSnapshot()
     {
         // Arrange
         SetupTreeWithExpandedNodes();
@@ -220,10 +199,10 @@ public class CollapseToggleServiceTests : BaseTestClass
         // Assert - restored to state before element-level collapse
         _treeView.Nodes[0].IsExpanded.ShouldBeTrue();
         _treeView.Nodes[0].Nodes[0].IsExpanded.ShouldBeTrue();
-    });
+    }
 
-    [Fact]
-    public void OnNodeManuallyChanged_ShouldInvalidateSnapshot() => RunOnSta(() =>
+    [StaFact]
+    public void OnNodeManuallyChanged_ShouldInvalidateSnapshot()
     {
         // Arrange
         SetupTreeWithExpandedNodes();
@@ -240,5 +219,5 @@ public class CollapseToggleServiceTests : BaseTestClass
 
         // Assert - collapsed because it re-captured instead of restoring
         _treeView.Nodes[0].IsExpanded.ShouldBeFalse();
-    });
+    }
 }
