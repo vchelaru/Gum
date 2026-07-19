@@ -141,7 +141,7 @@ class TreeNodeWrapper : ITreeNode
 
 #endregion
 
-public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, IRecipient<ApplicationStartupMessage>
+public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, IRecipient<ApplicationStartupMessage>, IElementTreeRoots
 {
     #region Fields
 
@@ -330,6 +330,13 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     public TreeNode RootStandardElementsTreeNode => mStandardElementsTreeNode;
 
     public TreeNode RootBehaviorsTreeNode => mBehaviorsTreeNode;
+
+    // Headless ITreeNode-typed mirrors of the four WinForms root fields above, enabling the
+    // root-selecting searches in TreeNodeRootSearchExtensions.
+    ITreeNode? IElementTreeRoots.Screens => mScreensTreeNode != null ? new TreeNodeWrapper(mScreensTreeNode) : null;
+    ITreeNode? IElementTreeRoots.Components => mComponentsTreeNode != null ? new TreeNodeWrapper(mComponentsTreeNode) : null;
+    ITreeNode? IElementTreeRoots.StandardElements => mStandardElementsTreeNode != null ? new TreeNodeWrapper(mStandardElementsTreeNode) : null;
+    ITreeNode? IElementTreeRoots.Behaviors => mBehaviorsTreeNode != null ? new TreeNodeWrapper(mBehaviorsTreeNode) : null;
 
     private IDragDropManager _dragDropManager;
     private readonly ICopyPasteLogic _copyPasteLogic;

@@ -34,6 +34,14 @@ public class TreeNodePredicateExtensionsTests
         }
     }
 
+    private sealed class FakeElementTreeRoots : IElementTreeRoots
+    {
+        public ITreeNode? Screens { get; set; }
+        public ITreeNode? Components { get; set; }
+        public ITreeNode? StandardElements { get; set; }
+        public ITreeNode? Behaviors { get; set; }
+    }
+
     [Fact]
     public void Equals_DifferentUnderlyingNode_ReturnsFalse()
     {
@@ -103,6 +111,49 @@ public class TreeNodePredicateExtensionsTests
     }
 
     [Fact]
+    public void GetTreeNodeFor_BehaviorSave_SelectsBehaviorsRoot()
+    {
+        BehaviorSave tag = new BehaviorSave { Name = "Behavior" };
+        FakeTreeNode behaviorsRoot = new FakeTreeNode { Text = "Behaviors" };
+        FakeTreeNode behaviorNode = behaviorsRoot.AddChild(new FakeTreeNode { Tag = tag });
+        FakeElementTreeRoots roots = new FakeElementTreeRoots { Behaviors = behaviorsRoot };
+
+        roots.GetTreeNodeFor(tag).ShouldBe(behaviorNode);
+    }
+
+    [Fact]
+    public void GetTreeNodeFor_ComponentSave_SelectsComponentsRoot()
+    {
+        ComponentSave tag = new ComponentSave { Name = "Comp" };
+        FakeTreeNode componentsRoot = new FakeTreeNode { Text = "Components" };
+        FakeTreeNode componentNode = componentsRoot.AddChild(new FakeTreeNode { Tag = tag });
+        FakeElementTreeRoots roots = new FakeElementTreeRoots { Components = componentsRoot };
+
+        roots.GetTreeNodeFor(tag).ShouldBe(componentNode);
+    }
+
+    [Fact]
+    public void GetTreeNodeFor_ElementSaveComponentSave_SelectsComponentsRootNotScreens()
+    {
+        ComponentSave tag = new ComponentSave { Name = "Comp" };
+        FakeTreeNode screensRoot = new FakeTreeNode { Text = "Screens" };
+        FakeTreeNode componentsRoot = new FakeTreeNode { Text = "Components" };
+        FakeTreeNode componentNode = componentsRoot.AddChild(new FakeTreeNode { Tag = tag });
+        FakeElementTreeRoots roots = new FakeElementTreeRoots { Screens = screensRoot, Components = componentsRoot };
+        ElementSave elementSave = tag;
+
+        roots.GetTreeNodeFor(elementSave).ShouldBe(componentNode);
+    }
+
+    [Fact]
+    public void GetTreeNodeFor_ElementSaveNull_ReturnsNull()
+    {
+        FakeElementTreeRoots roots = new FakeElementTreeRoots();
+
+        roots.GetTreeNodeFor((ElementSave?)null).ShouldBeNull();
+    }
+
+    [Fact]
     public void GetTreeNodeFor_InstanceSaveByReference_ReturnsNodeNotSameNamedSibling()
     {
         InstanceSave target = new InstanceSave { Name = "Duplicate" };
@@ -112,6 +163,40 @@ public class TreeNodePredicateExtensionsTests
         FakeTreeNode targetNode = container.AddChild(new FakeTreeNode { Tag = target });
 
         container.GetTreeNodeFor(target).ShouldBe(targetNode);
+    }
+
+    [Fact]
+    public void GetTreeNodeFor_ScreenSave_SelectsScreensRoot()
+    {
+        ScreenSave tag = new ScreenSave { Name = "Screen" };
+        FakeTreeNode screensRoot = new FakeTreeNode { Text = "Screens" };
+        FakeTreeNode screenNode = screensRoot.AddChild(new FakeTreeNode { Tag = tag });
+        FakeElementTreeRoots roots = new FakeElementTreeRoots { Screens = screensRoot };
+
+        roots.GetTreeNodeFor(tag).ShouldBe(screenNode);
+    }
+
+    [Fact]
+    public void GetTreeNodeFor_StandardElementSave_SelectsStandardElementsRoot()
+    {
+        StandardElementSave tag = new StandardElementSave { Name = "Sprite" };
+        FakeTreeNode standardRoot = new FakeTreeNode { Text = "Standard" };
+        FakeTreeNode standardNode = standardRoot.AddChild(new FakeTreeNode { Tag = tag });
+        FakeElementTreeRoots roots = new FakeElementTreeRoots { StandardElements = standardRoot };
+
+        roots.GetTreeNodeFor(tag).ShouldBe(standardNode);
+    }
+
+    [Fact]
+    public void GetTreeNodeForTag_ExplicitContainer_OverridesTagTypeRootInference()
+    {
+        ComponentSave tag = new ComponentSave { Name = "Comp" };
+        FakeTreeNode componentsRoot = new FakeTreeNode { Text = "Components" };
+        FakeTreeNode explicitContainer = new FakeTreeNode { Text = "Sub" };
+        FakeTreeNode explicitNode = explicitContainer.AddChild(new FakeTreeNode { Tag = tag });
+        FakeElementTreeRoots roots = new FakeElementTreeRoots { Components = componentsRoot };
+
+        roots.GetTreeNodeForTag(tag, explicitContainer).ShouldBe(explicitNode);
     }
 
     [Fact]
@@ -132,6 +217,34 @@ public class TreeNodePredicateExtensionsTests
         root.AddChild(new FakeTreeNode { Tag = new ComponentSave { Name = "Other" } });
 
         root.GetTreeNodeForTag(new ComponentSave { Name = "Missing" }).ShouldBeNull();
+    }
+
+    [Fact]
+    public void GetTreeNodeForTag_NullContainerAndRootNotYetCreated_ReturnsNull()
+    {
+        FakeElementTreeRoots roots = new FakeElementTreeRoots();
+
+        roots.GetTreeNodeForTag(new BehaviorSave { Name = "Behavior" }).ShouldBeNull();
+    }
+
+    [Fact]
+    public void GetTreeNodeForTag_NullContainerUnrecognizedTagType_ReturnsNull()
+    {
+        FakeTreeNode behaviorsRoot = new FakeTreeNode { Text = "Behaviors" };
+        FakeElementTreeRoots roots = new FakeElementTreeRoots { Behaviors = behaviorsRoot };
+
+        roots.GetTreeNodeForTag(new InstanceSave { Name = "Instance" }).ShouldBeNull();
+    }
+
+    [Fact]
+    public void GetTreeNodeForTag_NullContainerWithBehaviorTag_SelectsBehaviorsRoot()
+    {
+        BehaviorSave tag = new BehaviorSave { Name = "Behavior" };
+        FakeTreeNode behaviorsRoot = new FakeTreeNode { Text = "Behaviors" };
+        FakeTreeNode behaviorNode = behaviorsRoot.AddChild(new FakeTreeNode { Tag = tag });
+        FakeElementTreeRoots roots = new FakeElementTreeRoots { Behaviors = behaviorsRoot };
+
+        roots.GetTreeNodeForTag(tag).ShouldBe(behaviorNode);
     }
 
     [Fact]
