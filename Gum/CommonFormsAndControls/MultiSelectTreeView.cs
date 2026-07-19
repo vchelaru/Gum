@@ -26,6 +26,7 @@ namespace CommonFormsAndControls
         private ImageList _elementTreeImages = default!;
         private System.ComponentModel.IContainer _components;
         private TreeNode? nodeOnDragStart;
+        private readonly TreeNodeRangeSelectionLogic _rangeSelectionLogic;
         public ImageList ElementTreeImageList => _elementTreeImages;
 
         #endregion
@@ -641,6 +642,7 @@ namespace CommonFormsAndControls
         public MultiSelectTreeView()
         {
             this._components = new System.ComponentModel.Container();
+            _rangeSelectionLogic = new TreeNodeRangeSelectionLogic();
             InitializeComponent();
             mSelectedNodes = new List<TreeNode>();
             mOriginalColors = new Dictionary<TreeNode, Color>();
@@ -849,114 +851,8 @@ namespace CommonFormsAndControls
                 }
                 else if (EffectiveModifiers() == Keys.Shift)
                 {
-                    // Shift+Click selects nodes between the selected node and here.  
-                    TreeNode ndStart = mSelectedNode;
-                    TreeNode ndEnd = node;
-
-                    if (ndStart.Parent == ndEnd.Parent)
-                    {
-                        // Selected node and clicked node have same parent, easy case.  
-                        if (ndStart.Index < ndEnd.Index)
-                        {
-                            // If the selected node is beneath the clicked node walk down  
-                            // selecting each Visible node until we reach the end.  
-                            while (ndStart != ndEnd)
-                            {
-                                ndStart = ndStart.NextVisibleNode;
-                                if (ndStart == null) break;
-                                SetNodeSelected(ndStart, true);
-                            }
-                        }
-                        else if (ndStart.Index == ndEnd.Index)
-                        {
-                            // Clicked same node, do nothing  
-                        }
-                        else
-                        {
-                            // If the selected node is above the clicked node walk up  
-                            // selecting each Visible node until we reach the end.  
-                            while (ndStart != ndEnd)
-                            {
-                                ndStart = ndStart.PrevVisibleNode;
-                                if (ndStart == null) break;
-                                SetNodeSelected(ndStart, true);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // Selected node and clicked node have different parent, hard case.  
-                        // We need to find a common parent to determine if we need  
-                        // to walk down selecting, or walk up selecting.  
-
-                        TreeNode ndStartP = ndStart;
-                        TreeNode ndEndP = ndEnd;
-                        int startDepth = Math.Min(ndStartP.Level, ndEndP.Level);
-
-                        // Bring lower node up to common depth  
-                        while (ndStartP.Level > startDepth)
-                        {
-                            ndStartP = ndStartP.Parent;
-                        }
-
-                        // Bring lower node up to common depth  
-                        while (ndEndP.Level > startDepth)
-                        {
-                            ndEndP = ndEndP.Parent;
-                        }
-
-                        // Walk up the tree until we find the common parent  
-                        while (ndStartP.Parent != ndEndP.Parent)
-                        {
-                            ndStartP = ndStartP.Parent;
-                            ndEndP = ndEndP.Parent;
-                        }
-
-                        // Select the node  
-                        if (ndStartP.Index < ndEndP.Index)
-                        {
-                            // If the selected node is beneath the clicked node walk down  
-                            // selecting each Visible node until we reach the end.  
-                            while (ndStart != ndEnd)
-                            {
-                                ndStart = ndStart.NextVisibleNode;
-                                if (ndStart == null) break;
-                                SetNodeSelected(ndStart, true);
-                            }
-                        }
-                        else if (ndStartP.Index == ndEndP.Index)
-                        {
-                            if (ndStart.Level < ndEnd.Level)
-                            {
-                                while (ndStart != ndEnd)
-                                {
-                                    ndStart = ndStart.NextVisibleNode;
-                                    if (ndStart == null) break;
-                                    SetNodeSelected(ndStart, true);
-                                }
-                            }
-                            else
-                            {
-                                while (ndStart != ndEnd)
-                                {
-                                    ndStart = ndStart.PrevVisibleNode;
-                                    if (ndStart == null) break;
-                                    SetNodeSelected(ndStart, true);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // If the selected node is above the clicked node walk up  
-                            // selecting each Visible node until we reach the end.  
-                            while (ndStart != ndEnd)
-                            {
-                                ndStart = ndStart.PrevVisibleNode;
-                                if (ndStart == null) break;
-                                SetNodeSelected(ndStart, true);
-                            }
-                        }
-                    }
+                    // Shift+Click selects nodes between the selected node and here.
+                    _rangeSelectionLogic.SelectRange(mSelectedNode, node, n => SetNodeSelected(n, true));
                 }
                 else
                 {
