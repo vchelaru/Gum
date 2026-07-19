@@ -50,4 +50,25 @@ public static class TreeNodeFolderExtensions
     public static bool IsPartOfComponentsFolderStructure(this ITreeNode? treeNode) =>
         treeNode != null &&
         (treeNode.IsTopComponentContainerTreeNode() || treeNode.Parent.IsPartOfComponentsFolderStructure());
+
+    public static bool IsTopStandardElementTreeNode(this ITreeNode treeNode) =>
+        treeNode.Parent == null && treeNode.Text == "Standard";
+
+    public static bool IsTopBehaviorTreeNode(this ITreeNode treeNode) =>
+        treeNode.Parent == null && treeNode.Text == "Behaviors";
+
+    /// <summary>
+    /// Determines whether the tree node is one of the top-level element container folders
+    /// (Screens, Components, Standard, or Behaviors) — i.e. has no tag and no parent.
+    /// </summary>
+    public static bool IsTopElementContainerTreeNode(this ITreeNode treeNode) =>
+        treeNode.Tag == null && treeNode.Parent == null;
+
+    /// <summary>
+    /// Determines whether the tree node is part of the Standard elements folder structure (the root
+    /// Standard folder or a Standard element within it). Mirrors <see cref="IsPartOfScreensFolderStructure"/>.
+    /// </summary>
+    public static bool IsPartOfStandardElementsFolderStructure(this ITreeNode? treeNode) =>
+        treeNode != null &&
+        (treeNode.IsTopStandardElementTreeNode() || treeNode.Parent.IsPartOfStandardElementsFolderStructure());
 }

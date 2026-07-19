@@ -2646,19 +2646,6 @@ public static class TreeNodeExtensionMethods
     /// Determines whether the tree node is the top-level "Behaviors" container folder.
     /// </summary>
     /// <param name="treeNode">The tree node to check.</param>
-    /// <returns>True if this is the top-level Behaviors folder (root "Behaviors" node); otherwise, false.</returns>
-    /// <remarks>
-    /// This returns true ONLY for the top-level "Behaviors" folder itself, NOT for any subfolders.
-    /// </remarks>
-    public static bool IsTopBehaviorTreeNode(this ITreeNode treeNode) =>
-        treeNode is TreeNodeWrapper wrapper
-        ? wrapper.Node.IsTopBehaviorTreeNode()
-        : false;
-
-    /// <summary>
-    /// Determines whether the tree node is the top-level "Behaviors" container folder.
-    /// </summary>
-    /// <param name="treeNode">The tree node to check.</param>
     /// <returns>True if this is the top-level Behaviors folder (root "Behaviors" node with no parent); otherwise, false.</returns>
     /// <remarks>
     /// This returns true ONLY for the top-level "Behaviors" folder itself (has no parent and Text is "Behaviors"),
@@ -2687,19 +2674,6 @@ public static class TreeNodeExtensionMethods
     {
         return treeNode.Parent == null && treeNode.Text == "Components";
     }
-
-    /// <summary>
-    /// Determines whether the tree node is the top-level "Standard" container folder.
-    /// </summary>
-    /// <param name="treeNode">The tree node to check.</param>
-    /// <returns>True if this is the top-level Standard folder (root "Standard" node); otherwise, false.</returns>
-    /// <remarks>
-    /// This returns true ONLY for the top-level "Standard" folder itself, NOT for any subfolders.
-    /// The Standard folder contains built-in element types like Sprite, Text, and Container.
-    /// </remarks>
-    public static bool IsTopStandardElementTreeNode(this ITreeNode treeNode) => treeNode is TreeNodeWrapper wrapper
-        ? wrapper.Node.IsTopStandardElementTreeNode()
-        : false;
 
     /// <summary>
     /// Determines whether the tree node is the top-level "Standard" container folder.
