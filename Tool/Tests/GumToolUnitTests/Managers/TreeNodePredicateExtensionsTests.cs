@@ -84,6 +84,57 @@ public class TreeNodePredicateExtensionsTests
     }
 
     [Fact]
+    public void GetInstanceTreeNodeByName_MatchingInstanceNameNested_ReturnsNode()
+    {
+        FakeTreeNode container = new FakeTreeNode { Text = "Element" };
+        FakeTreeNode parentInstance = container.AddChild(new FakeTreeNode { Tag = new InstanceSave { Name = "Parent" } });
+        FakeTreeNode childInstance = parentInstance.AddChild(new FakeTreeNode { Tag = new InstanceSave { Name = "Child" } });
+
+        container.GetInstanceTreeNodeByName("Child").ShouldBe(childInstance);
+    }
+
+    [Fact]
+    public void GetInstanceTreeNodeByName_NonInstanceTagWithMatchingName_ReturnsNull()
+    {
+        FakeTreeNode container = new FakeTreeNode { Text = "Element" };
+        container.AddChild(new FakeTreeNode { Tag = new ScreenSave { Name = "Target" } });
+
+        container.GetInstanceTreeNodeByName("Target").ShouldBeNull();
+    }
+
+    [Fact]
+    public void GetTreeNodeFor_InstanceSaveByReference_ReturnsNodeNotSameNamedSibling()
+    {
+        InstanceSave target = new InstanceSave { Name = "Duplicate" };
+        InstanceSave sameNameOther = new InstanceSave { Name = "Duplicate" };
+        FakeTreeNode container = new FakeTreeNode { Text = "Element" };
+        container.AddChild(new FakeTreeNode { Tag = sameNameOther });
+        FakeTreeNode targetNode = container.AddChild(new FakeTreeNode { Tag = target });
+
+        container.GetTreeNodeFor(target).ShouldBe(targetNode);
+    }
+
+    [Fact]
+    public void GetTreeNodeForTag_MatchNestedInTree_ReturnsNode()
+    {
+        ComponentSave tag = new ComponentSave { Name = "Comp" };
+        FakeTreeNode root = new FakeTreeNode { Text = "Components" };
+        FakeTreeNode folder = root.AddChild(new FakeTreeNode { Text = "Sub" });
+        FakeTreeNode elementNode = folder.AddChild(new FakeTreeNode { Tag = tag });
+
+        root.GetTreeNodeForTag(tag).ShouldBe(elementNode);
+    }
+
+    [Fact]
+    public void GetTreeNodeForTag_NoMatch_ReturnsNull()
+    {
+        FakeTreeNode root = new FakeTreeNode { Text = "Components" };
+        root.AddChild(new FakeTreeNode { Tag = new ComponentSave { Name = "Other" } });
+
+        root.GetTreeNodeForTag(new ComponentSave { Name = "Missing" }).ShouldBeNull();
+    }
+
+    [Fact]
     public void IsPartOfStandardElementsFolderStructure_ElementUnderStandardRoot_ReturnsTrue()
     {
         FakeTreeNode standardRoot = new FakeTreeNode { Text = "Standard" };
