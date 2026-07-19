@@ -196,51 +196,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     public const int LottieAnimationInstanceImageIndex = 39;
     public const int SvgInstanceImageIndex = 40;
 
-    /// <summary>
-    /// Returns the per-type (blue-tinted) icon for an instance whose BaseType
-    /// is a standard element. Falls back to the generic
-    /// <see cref="InstanceImageIndex"/> for component-typed instances or
-    /// unrecognized types.
-    /// </summary>
-    public static int GetImageIndexForInstance(string? baseType) => baseType switch
-    {
-        "Container" => ContainerInstanceImageIndex,
-        "Sprite" => SpriteInstanceImageIndex,
-        "NineSlice" => NineSliceInstanceImageIndex,
-        "Text" => TextInstanceImageIndex,
-        "Rectangle" => RectangleInstanceImageIndex,
-        "ColoredRectangle" => ColoredRectangleInstanceImageIndex,
-        "Circle" => CircleInstanceImageIndex,
-        "ColoredCircle" => ColoredCircleInstanceImageIndex,
-        "RoundedRectangle" => RoundedRectangleInstanceImageIndex,
-        "Polygon" => PolygonInstanceImageIndex,
-        "Arc" => ArcInstanceImageIndex,
-        "Line" => LineInstanceImageIndex,
-        "Canvas" => CanvasInstanceImageIndex,
-        "LottieAnimation" => LottieAnimationInstanceImageIndex,
-        "Svg" => SvgInstanceImageIndex,
-        _ => InstanceImageIndex,
-    };
-
-    public static int GetImageIndexForStandardElement(string? name) => name switch
-    {
-        "Container" => ContainerImageIndex,
-        "Sprite" => SpriteImageIndex,
-        "NineSlice" => NineSliceImageIndex,
-        "Text" => TextImageIndex,
-        "Rectangle" => RectangleImageIndex,
-        "ColoredRectangle" => ColoredRectangleImageIndex,
-        "Circle" => CircleImageIndex,
-        "ColoredCircle" => ColoredCircleImageIndex,
-        "RoundedRectangle" => RoundedRectangleImageIndex,
-        "Polygon" => PolygonImageIndex,
-        "Arc" => ArcImageIndex,
-        "Line" => LineImageIndex,
-        "Canvas" => CanvasImageIndex,
-        "LottieAnimation" => LottieAnimationImageIndex,
-        "Svg" => SvgImageIndex,
-        _ => StandardElementImageIndex,
-    };
+    // The per-type icon maps and the node icon-decision logic now live on TreeNodeImageLogic
+    // (accessed via _treeNodeImageLogic) so they can be unit-tested without the WinForms tree.
 
     // Part of the phantom right-click workaround. Subscribed in Initialize(),
     // checked in ObjectTreeView_MouseClick(). See comments at both sites.
@@ -376,6 +333,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly IProjectState _projectState;
     private readonly ICollapseToggleService _collapseToggleService;
+    private readonly TreeNodeImageLogic _treeNodeImageLogic;
     private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
     private readonly IPluginManager _pluginManager;
     private readonly IDispatcher _dispatcher;
@@ -443,6 +401,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _pluginManager = pluginManager;
         _dispatcher = dispatcher;
         _collapseToggleService = new CollapseToggleService();
+        _treeNodeImageLogic = new TreeNodeImageLogic();
         _recordedSelectedInstances = new List<InstanceSave>();
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
         AddCursor = GetAddCursor();
@@ -552,11 +511,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         var treeNode = GetTreeNodeFor(element);
         if (treeNode == null) return;
 
-        bool showExclamation = element.IsSourceFileMissing || hasErrors;
-        int normalIndex = element is ScreenSave ? ScreenImageIndex
-                        : element is ComponentSave ? ComponentImageIndex
-                        : GetImageIndexForStandardElement(element.Name);
-        int desiredIndex = showExclamation ? ExclamationIndex : normalIndex;
+        int desiredIndex = _treeNodeImageLogic.GetElementRefreshImageIndex(element, hasErrors);
 
         if (treeNode.ImageIndex != desiredIndex)
             treeNode.ImageIndex = desiredIndex;
@@ -1242,7 +1197,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             {
                 if (GetTreeNodeFor(standardSave) == null &&  ShouldShow(standardSave))
                 {
-                    AddTreeNodeForElement(standardSave, mStandardElementsTreeNode, GetImageIndexForStandardElement(standardSave.Name));
+                    AddTreeNodeForElement(standardSave, mStandardElementsTreeNode, _treeNodeImageLogic.GetImageIndexForStandardElement(standardSave.Name));
                 }
             }
         }
@@ -1416,7 +1371,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         #endregion
     }
 
-    private static TreeNode AddTreeNodeForElement(ElementSave element, TreeNode parentNode, int defaultImageIndex)
+    private TreeNode AddTreeNodeForElement(ElementSave element, TreeNode parentNode, int defaultImageIndex)
     {
         if (parentNode == null)
         {
@@ -1424,10 +1379,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
         TreeNode treeNode = new TreeNode();
 
-        if (element.IsSourceFileMissing)
-            treeNode.ImageIndex = ExclamationIndex;
-        else
-            treeNode.ImageIndex = defaultImageIndex;
+        treeNode.ImageIndex = _treeNodeImageLogic.GetCreateImageIndex(element.IsSourceFileMissing, defaultImageIndex);
 
         treeNode.Tag = element;
         
@@ -1436,14 +1388,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         return treeNode;
     }
 
-    private static void AddTreeNodeForBehavior(BehaviorSave behavior, TreeNode parentNode, int defaultImageIndex)
+    private void AddTreeNodeForBehavior(BehaviorSave behavior, TreeNode parentNode, int defaultImageIndex)
     {
         TreeNode treeNode = new TreeNode();
 
-        if (behavior.IsSourceFileMissing)
-            treeNode.ImageIndex = ExclamationIndex;
-        else
-            treeNode.ImageIndex = defaultImageIndex;
+        treeNode.ImageIndex = _treeNodeImageLogic.GetCreateImageIndex(behavior.IsSourceFileMissing, defaultImageIndex);
 
         treeNode.Tag = behavior;
 
@@ -2063,15 +2012,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
             var element = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
-            int desiredImageIndex = GetImageIndexForInstance(instance.BaseType);
-            if (element == null || element.IsSourceFileMissing)
-            {
-                desiredImageIndex = ExclamationIndex;
-            }
-            else if (instance.Locked)
-            {
-                desiredImageIndex = LockedInstanceImageIndex;
-            }
+            int desiredImageIndex = _treeNodeImageLogic.GetInstanceRefreshImageIndex(instance, element);
 
             if(nodeForInstance.ImageIndex != desiredImageIndex)
             {
@@ -2132,10 +2073,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         bool validBaseType = ObjectFinder.Self.GetElementSave(instance.BaseType) != null;
 
-        if (validBaseType || tolerateMissingTypes)
-            treeNode.ImageIndex = instance.Locked ? LockedInstanceImageIndex : GetImageIndexForInstance(instance.BaseType);
-        else
-            treeNode.ImageIndex = ExclamationIndex;
+        treeNode.ImageIndex = _treeNodeImageLogic.GetInstanceCreateImageIndex(instance, validBaseType, tolerateMissingTypes);
 
         treeNode.Tag = instance;
 
