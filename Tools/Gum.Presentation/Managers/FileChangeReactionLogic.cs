@@ -10,7 +10,6 @@ using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Controls;
 using ToolsUtilities;
 
 namespace Gum.Managers
@@ -18,24 +17,24 @@ namespace Gum.Managers
     public class FileChangeReactionLogic
     {
         private readonly ISelectedState _selectedState;
-        private readonly WireframeCommands _wireframeCommands;
+        private readonly IWireframeCommands _wireframeCommands;
         private readonly IGuiCommands _guiCommands;
         private readonly IFileCommands _fileCommands;
         private readonly IOutputManager _outputManager;
         private readonly IWireframeObjectManager _wireframeObjectManager;
         private readonly IProjectState _projectState;
-        private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
+        private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
         private readonly IPluginManager _pluginManager;
 
         public FileChangeReactionLogic(
             ISelectedState selectedState,
-            WireframeCommands wireframeCommands,
+            IWireframeCommands wireframeCommands,
             IGuiCommands guiCommands,
             IFileCommands fileCommands,
             IOutputManager outputManager,
             IWireframeObjectManager wireframeObjectManager,
             IProjectState projectState,
-            StandardElementsManagerGumTool standardElementsManagerGumTool,
+            IStandardElementsManagerGumTool standardElementsManagerGumTool,
             IPluginManager pluginManager)
         {
             _selectedState = selectedState;
@@ -426,7 +425,7 @@ namespace Gum.Managers
 
             if(currentElement != null)
             {
-                var currentElementFile = currentElement.GetFullPathXmlFile();
+                var currentElementFile = _fileCommands.GetFullPathXmlFile(currentElement, currentElement.Name);
                 shouldReloadWireframe = currentElementFile == file;
             }
 

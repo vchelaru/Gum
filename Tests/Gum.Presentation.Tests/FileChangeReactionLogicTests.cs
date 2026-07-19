@@ -2,20 +2,42 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins;
+using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.ToolStates;
+using Gum.Wireframe;
 using Moq;
-using Moq.AutoMock;
 using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using ToolsUtilities;
 using Xunit;
 
-namespace GumToolUnitTests.Managers;
+namespace Gum.Presentation.Tests;
 
 public class FileChangeReactionLogicTests
 {
+    private static FileChangeReactionLogic BuildSut(
+        out Mock<IGuiCommands> guiCommandsMock,
+        out Mock<IFileCommands> fileCommandsMock,
+        out Mock<IPluginManager> pluginManagerMock)
+    {
+        guiCommandsMock = new Mock<IGuiCommands>();
+        fileCommandsMock = new Mock<IFileCommands>();
+        pluginManagerMock = new Mock<IPluginManager>();
+
+        return new FileChangeReactionLogic(
+            new Mock<ISelectedState>().Object,
+            new Mock<IWireframeCommands>().Object,
+            guiCommandsMock.Object,
+            fileCommandsMock.Object,
+            new Mock<IOutputManager>().Object,
+            new Mock<IWireframeObjectManager>().Object,
+            new Mock<IProjectState>().Object,
+            new Mock<IStandardElementsManagerGumTool>().Object,
+            pluginManagerMock.Object);
+    }
+
     [Fact]
     public void ReactToFileDeleted_ShouldFlagElementAndRefresh_WhenElementFileWasDeleted()
     {
@@ -27,9 +49,11 @@ public class FileChangeReactionLogicTests
         FilePath projectDirectory = new FilePath(tempDir);
         FilePath deletedFile = new FilePath(Path.Combine(tempDir, "Components", "MyButton.gucx")); // never created -> "deleted"
 
-        AutoMocker mocker = new AutoMocker();
-        mocker.GetMock<IFileCommands>().Setup(f => f.ProjectDirectory).Returns(projectDirectory);
-        FileChangeReactionLogic sut = mocker.CreateInstance<FileChangeReactionLogic>();
+        FileChangeReactionLogic sut = BuildSut(
+            out Mock<IGuiCommands> guiCommandsMock,
+            out Mock<IFileCommands> fileCommandsMock,
+            out Mock<IPluginManager> pluginManagerMock);
+        fileCommandsMock.Setup(f => f.ProjectDirectory).Returns(projectDirectory);
 
         GumProjectSave project = new GumProjectSave();
         ComponentSave component = new ComponentSave { Name = "MyButton" };
@@ -40,8 +64,8 @@ public class FileChangeReactionLogicTests
             sut.ReactToFileDeleted(deletedFile);
 
             component.IsSourceFileMissing.ShouldBeTrue();
-            mocker.GetMock<IGuiCommands>().Verify(g => g.RefreshElementTreeView(), Times.Once);
-            mocker.GetMock<IPluginManager>().Verify(p => p.ElementReloaded(component), Times.Once);
+            guiCommandsMock.Verify(g => g.RefreshElementTreeView(), Times.Once);
+            pluginManagerMock.Verify(p => p.ElementReloaded(component), Times.Once);
         }
         finally
         {

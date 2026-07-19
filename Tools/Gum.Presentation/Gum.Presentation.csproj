@@ -52,6 +52,10 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Gum.ProjectServices\Gum.ProjectServices.csproj" />
+		<!-- VariableReferenceLogic parses VariableReferences lines with Roslyn (GetAssignmentSyntax)
+		     and evaluates them via EvaluatedSyntax. GumExpressions has no WPF/WinForms dependency
+		     and already pulls in Microsoft.CodeAnalysis.CSharp transitively. -->
+		<ProjectReference Include="..\..\Runtimes\GumExpressions\GumExpressions.csproj" />
 	</ItemGroup>
 
 </Project>

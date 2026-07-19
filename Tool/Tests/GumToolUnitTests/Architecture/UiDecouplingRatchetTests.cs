@@ -50,8 +50,10 @@ public class UiDecouplingRatchetTests
         // taking their .Self call sites out of the Gum/ scan (issue #3754). Dropped further, from
         // 327 to 323: BehaviorsViewModel, AlignmentViewModel, CodeWindowViewModel,
         // MainControlViewModel (VariableGrid and TextureCoordinateSelectionPlugin), and their
-        // relocated dependency interfaces moved to Gum.Presentation.
-        const int Baseline = 323;
+        // relocated dependency interfaces moved to Gum.Presentation. Dropped further, from 323 to
+        // 293: VariableReferenceLogic, VariableInCategoryPropagationLogic, FileChangeReactionLogic,
+        // and BehaviorToolOnlyReferencesApplier moved to Gum.Presentation (issue #3754 Round 5).
+        const int Baseline = 293;
 
         var pattern = new Regex(@"\.Self\b");
         int count = SourceFiles().Sum(f => pattern.Matches(File.ReadAllText(f)).Count);
