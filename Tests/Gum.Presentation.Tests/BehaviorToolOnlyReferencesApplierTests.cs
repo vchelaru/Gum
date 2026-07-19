@@ -7,7 +7,7 @@ using Gum.Plugins.InternalPlugins.VariableGrid;
 using GumRuntime;
 using Shouldly;
 
-namespace GumToolUnitTests.VariableGrid;
+namespace Gum.Presentation.Tests;
 
 public class BehaviorToolOnlyReferencesApplierTests : BaseTestClass
 {

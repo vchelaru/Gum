@@ -1,28 +1,31 @@
-﻿using Gum.DataTypes;
+﻿using Gum.Commands;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.Plugins;
 using Gum.PropertyGridHelpers;
-using Moq.AutoMock;
+using Gum.Services.Dialogs;
+using Gum.Undo;
+using Moq;
 using Shouldly;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace GumToolUnitTests.PropertyGridHelpers;
+namespace Gum.Presentation.Tests;
 public class VariableInCategoryPropagationLogicTests : BaseTestClass
 {
-    private readonly AutoMocker mocker;
+    private readonly Mock<IGuiCommands> _guiCommandsMock;
     private readonly VariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
 
     public VariableInCategoryPropagationLogicTests()
     {
-        mocker = new();
-        _variableInCategoryPropagationLogic = mocker.CreateInstance<VariableInCategoryPropagationLogic>();
-
-        StandardElementsManager.Self.Initialize();
+        _guiCommandsMock = new Mock<IGuiCommands>();
+        _variableInCategoryPropagationLogic = new VariableInCategoryPropagationLogic(
+            new Mock<IUndoManager>().Object,
+            _guiCommandsMock.Object,
+            new Mock<IFileCommands>().Object,
+            new Mock<IDialogService>().Object,
+            new Mock<IPluginManager>().Object);
 
         ObjectFinder.Self.GumProjectSave = new GumProjectSave();
         ObjectFinder.Self.GumProjectSave.StandardElements.Add(new StandardElementSave()

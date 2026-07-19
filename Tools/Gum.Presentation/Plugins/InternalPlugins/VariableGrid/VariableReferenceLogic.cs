@@ -9,15 +9,11 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using RenderingLibrary.Graphics;
-using SkiaSharp;
 using System;
 using System.Collections.Generic;
-using System.Drawing.Drawing2D;
 using System.Linq;
-using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Media.Media3D;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
@@ -551,7 +547,9 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         }
         if (instanceElement != null)
         {
-            var variableOnInstance = instanceElement.GetVariableFromThisOrBase(unqualifiedVariableName, forceDefault: true);
+            // Equivalent to the tool-only ElementSaveExtensionMethodsGumTool.GetVariableFromThisOrBase(element,
+            // variable, forceDefault: true) expansion, without depending on that Locator-touching, Gum-only file.
+            var variableOnInstance = instanceElement.DefaultState.GetVariableRecursive(unqualifiedVariableName);
 
             List<TypedElementReference> references = null;
 
