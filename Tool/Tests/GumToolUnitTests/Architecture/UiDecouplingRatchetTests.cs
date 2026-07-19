@@ -74,15 +74,18 @@ public class UiDecouplingRatchetTests
         // ContextMenuItemViewModel/IUiTimer seams (issue #3754). Dropped further, from 24 to 21:
         // CodeWindowViewModel moved to Gum.Presentation (its Visibility properties converted to
         // bool per ADR-0004) and SearchItemViewModel moved to Gum.Presentation (dropped a dead
-        // System.Windows.Media.Imaging using); PerformanceViewModel stayed in Gum.csproj (it reads
-        // the XNALIKE-only RenderingLibrary.Graphics.Renderer, not movable to the headless assembly)
-        // but lost its own DispatcherTimer coupling via the same IUiTimer seam (issue #3754). Dropped
-        // further, from 21 to 8: ThemingDialogViewModel, ImportFromGumxViewModel, ImportBaseDialogViewModel
-        // (+ its 3 subclasses), MainControlViewModel (VariableGrid and TextureCoordinateSelectionPlugin)
+        // System.Windows.Media.Imaging using); PerformanceViewModel lost its own DispatcherTimer
+        // coupling via the same IUiTimer seam (issue #3754). Dropped further, from 21 to 8:
+        // ThemingDialogViewModel, ImportFromGumxViewModel, ImportBaseDialogViewModel (+ its 3
+        // subclasses), MainControlViewModel (VariableGrid and TextureCoordinateSelectionPlugin)
         // moved to Gum.Presentation, each converting its Visibility/Color/Brush properties to neutral
-        // types. The remaining 8 are ContextMenuItemViewModelExtensions.cs (a WPF-only MenuItem builder,
-        // correctly still tool-side) plus MainWindowViewModel/MainPanelViewModel, which model WPF
-        // window/panel chrome directly and are Phase 4b territory, not Phase 3 candidates.
+        // types. PerformanceViewModel itself later moved too (its direct RenderingLibrary.Graphics.
+        // Renderer/SystemManagers reads replaced with an injected IRenderDiagnosticsService seam,
+        // implemented in PerformanceMeasurementPlugin.Services where the KniGum reference lives) —
+        // no baseline change, it had zero System.Windows usings. The remaining 8 are
+        // ContextMenuItemViewModelExtensions.cs (a WPF-only MenuItem builder, correctly still
+        // tool-side) plus MainWindowViewModel/MainPanelViewModel, which model WPF window/panel
+        // chrome directly and are Phase 4b territory, not Phase 3 candidates.
         const int Baseline = 8;
 
         var pattern = new Regex(@"System\.Windows");
