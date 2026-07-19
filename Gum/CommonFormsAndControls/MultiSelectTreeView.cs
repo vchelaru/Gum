@@ -28,6 +28,7 @@ namespace CommonFormsAndControls
         private TreeNode? nodeOnDragStart;
         private readonly TreeNodeRangeSelectionLogic _rangeSelectionLogic;
         private readonly TreeNodeMouseUpSelectionLogic _mouseUpSelectionLogic;
+        private readonly TreeNodeKeyNavigationLogic _keyNavigationLogic;
         public ImageList ElementTreeImageList => _elementTreeImages;
 
         #endregion
@@ -531,90 +532,45 @@ namespace CommonFormsAndControls
                 }
                 else if (e.KeyCode == Keys.Home)
                 {
-                    if (bShift)
+                    TreeNode? homeTarget = _keyNavigationLogic.GetHomeTarget(
+                        mSelectedNode, this.Nodes, bShift, out bool selectHomeRange);
+                    if (homeTarget != null)
                     {
-                        if (mSelectedNode.Parent == null)
+                        if (selectHomeRange)
                         {
-                            // Select all of the root nodes up to this point   
-                            if (this.Nodes.Count > 0)
-                            {
-                                ReactToClickedNode(this.Nodes[0]);
-                            }
+                            ReactToClickedNode(homeTarget);
                         }
                         else
                         {
-                            // Select all of the nodes up to this point under this nodes parent  
-                            ReactToClickedNode(mSelectedNode.Parent.FirstNode);
-                        }
-                    }
-                    else
-                    {
-                        // Select this first node in the tree  
-                        if (this.Nodes.Count > 0)
-                        {
-                            SelectSingleNode(this.Nodes[0]);
+                            SelectSingleNode(homeTarget);
                         }
                     }
                 }
                 else if (e.KeyCode == Keys.End)
                 {
-                    if (bShift)
+                    TreeNode? endTarget = _keyNavigationLogic.GetEndTarget(
+                        mSelectedNode, this.Nodes, bShift, out bool selectEndRange);
+                    if (endTarget != null)
                     {
-                        if (mSelectedNode.Parent == null)
+                        if (selectEndRange)
                         {
-                            // Select the last ROOT node in the tree  
-                            if (this.Nodes.Count > 0)
-                            {
-                                ReactToClickedNode(this.Nodes[this.Nodes.Count - 1]);
-                            }
+                            ReactToClickedNode(endTarget);
                         }
                         else
                         {
-                            // Select the last node in this branch  
-                            ReactToClickedNode(mSelectedNode.Parent.LastNode);
-                        }
-                    }
-                    else
-                    {
-                        if (this.Nodes.Count > 0)
-                        {
-                            // Select the last node visible node in the tree.  
-                            // Don't expand branches incase the tree is virtual  
-                            TreeNode ndLast = this.Nodes[0].LastNode;
-                            while (ndLast.IsExpanded && (ndLast.LastNode != null))
-                            {
-                                ndLast = ndLast.LastNode;
-                            }
-
-                            SelectSingleNode(ndLast);
+                            SelectSingleNode(endTarget);
                         }
                     }
                 }
                 else if (e.KeyCode == Keys.PageUp)
                 {
-                    // Select the highest node in the display  
-                    int nCount = this.VisibleCount;
-                    TreeNode ndCurrent = mSelectedNode;
-                    while ((nCount) > 0 && (ndCurrent.PrevVisibleNode != null))
-                    {
-                        ndCurrent = ndCurrent.PrevVisibleNode;
-                        nCount--;
-                    }
-
-                    SelectSingleNode(ndCurrent);
+                    // Select the highest node in the display
+                    SelectSingleNode(_keyNavigationLogic.GetPageUpTarget(mSelectedNode, this.VisibleCount));
                 }
                 else if (e.KeyCode == Keys.PageDown)
                 {
-                    // Select the lowest node in the display  
-                    int nCount = this.VisibleCount;
-                    TreeNode ndCurrent = mSelectedNode;
-                    while ((nCount) > 0 && (ndCurrent.NextVisibleNode != null))
-                    {
-                        ndCurrent = ndCurrent.NextVisibleNode;
-                        nCount--;
-                    }
-
-                    SelectSingleNode(ndCurrent);
+                    // Select the lowest node in the display
+                    SelectSingleNode(_keyNavigationLogic.GetPageDownTarget(mSelectedNode, this.VisibleCount));
                 }
                 else
                 {
@@ -646,6 +602,7 @@ namespace CommonFormsAndControls
             this._components = new System.ComponentModel.Container();
             _rangeSelectionLogic = new TreeNodeRangeSelectionLogic();
             _mouseUpSelectionLogic = new TreeNodeMouseUpSelectionLogic();
+            _keyNavigationLogic = new TreeNodeKeyNavigationLogic();
             InitializeComponent();
             mSelectedNodes = new List<TreeNode>();
             mOriginalColors = new Dictionary<TreeNode, Color>();
