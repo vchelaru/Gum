@@ -481,11 +481,13 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
 
             CreateNewSelector();
 
+            var inputHostControl = new ControlInputHostAdapter(this);
+
             mCursor = new InputLibrary.Cursor();
-            mCursor.Initialize(this);
+            mCursor.Initialize(inputHostControl);
 
             mKeyboard = new InputLibrary.Keyboard();
-            mKeyboard.Initialize(this);
+            mKeyboard.Initialize(inputHostControl);
 
             mCameraPanningLogic = new CameraPanningLogic(this, mManagers, mCursor, mKeyboard);
             var camera = mManagers.Renderer.Camera;

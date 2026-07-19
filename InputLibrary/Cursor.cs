@@ -14,7 +14,7 @@ namespace InputLibrary
 
         MouseState mMouseState = new MouseState();
         MouseState mLastFrameMouseState = new MouseState();
-        Control mControl;
+        IInputHostControl mControl;
 
         public const float MaximumSecondsBetweenClickForDoubleClick = .25f;
         double mLastClickTime;
@@ -235,7 +235,7 @@ namespace InputLibrary
             }
         }
 
-        public void Initialize( Control control)
+        public void Initialize(IInputHostControl control)
         {
             mControl = control;
 
