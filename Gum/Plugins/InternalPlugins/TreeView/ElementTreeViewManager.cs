@@ -111,6 +111,9 @@ class TreeNodeWrapper : ITreeNode
         ? new TreeNodeWrapper(Node.Parent)
         : null;
 
+    public IEnumerable<ITreeNode> Children =>
+        Node.Nodes.Cast<TreeNode>().Select(child => new TreeNodeWrapper(child));
+
     public FilePath GetFullFilePath() => Node.GetFullFilePath();
 
     public string FullPath => Node.FullPath;
@@ -125,6 +128,13 @@ class TreeNodeWrapper : ITreeNode
     }
 
     public void Expand() => Node.Expand();
+
+    // Value equality keyed on the wrapped node, so wrappers minted afresh by Parent/Children
+    // (a new TreeNodeWrapper each access) compare equal when they wrap the same underlying node.
+    public override bool Equals(object? obj) =>
+        obj is TreeNodeWrapper other && ReferenceEquals(Node, other.Node);
+
+    public override int GetHashCode() => Node.GetHashCode();
 
     public override string ToString() => Node.Text;
 }

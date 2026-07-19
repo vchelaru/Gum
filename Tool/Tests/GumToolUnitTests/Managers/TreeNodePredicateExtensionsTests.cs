@@ -2,6 +2,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Managers;
 using Shouldly;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using ToolsUtilities;
 using Xunit;
@@ -16,18 +17,70 @@ public class TreeNodePredicateExtensionsTests
 {
     private sealed class FakeTreeNode : ITreeNode
     {
+        private readonly List<ITreeNode> _children = new();
         public object? Tag { get; set; }
         public string Text { get; set; } = "";
         public string FullPath { get; set; } = "";
         public ITreeNode? Parent { get; set; }
+        public IEnumerable<ITreeNode> Children => _children;
         public FilePath GetFullFilePath() => new FilePath(FullPath);
         public void Expand() { }
 
         public FakeTreeNode AddChild(FakeTreeNode child)
         {
             child.Parent = this;
+            _children.Add(child);
             return child;
         }
+    }
+
+    [Fact]
+    public void Equals_DifferentUnderlyingNode_ReturnsFalse()
+    {
+        TreeNodeWrapper first = new TreeNodeWrapper(new TreeNode("A"));
+        TreeNodeWrapper second = new TreeNodeWrapper(new TreeNode("A"));
+
+        first.Equals(second).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Equals_Null_ReturnsFalse()
+    {
+        TreeNodeWrapper wrapper = new TreeNodeWrapper(new TreeNode("A"));
+
+        wrapper.Equals(null).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Equals_SameUnderlyingNode_ReturnsTrueAndSharesHashCode()
+    {
+        TreeNode node = new TreeNode("A");
+        TreeNodeWrapper first = new TreeNodeWrapper(node);
+        TreeNodeWrapper second = new TreeNodeWrapper(node);
+
+        first.Equals(second).ShouldBeTrue();
+        first.GetHashCode().ShouldBe(second.GetHashCode());
+    }
+
+    [Fact]
+    public void GetAllChildrenNodesRecursively_LeafNode_ReturnsEmpty()
+    {
+        FakeTreeNode leaf = new FakeTreeNode { Text = "Leaf" };
+
+        leaf.GetAllChildrenNodesRecursively().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetAllChildrenNodesRecursively_MultiLevelTree_ReturnsDescendantsDepthFirst()
+    {
+        FakeTreeNode root = new FakeTreeNode { Text = "Root" };
+        FakeTreeNode a = root.AddChild(new FakeTreeNode { Text = "A" });
+        FakeTreeNode a1 = a.AddChild(new FakeTreeNode { Text = "A1" });
+        FakeTreeNode b = root.AddChild(new FakeTreeNode { Text = "B" });
+
+        List<ITreeNode> descendants = root.GetAllChildrenNodesRecursively();
+
+        descendants.ShouldBe(new ITreeNode[] { a, a1, b });
     }
 
     [Fact]
