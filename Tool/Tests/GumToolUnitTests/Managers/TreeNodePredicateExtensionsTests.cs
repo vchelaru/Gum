@@ -111,6 +111,26 @@ public class TreeNodePredicateExtensionsTests
     }
 
     [Fact]
+    public void GetTreeNodeFor_AbsoluteDirectoryOutsideKnownCategories_ReturnsNull()
+    {
+        FakeTreeNode screensRoot = new FakeTreeNode { Text = "Screens" };
+        FakeElementTreeRoots roots = new FakeElementTreeRoots { Screens = screensRoot };
+
+        roots.GetTreeNodeFor("C:/Project/Other/Sub", "C:/Project/").ShouldBeNull();
+    }
+
+    [Fact]
+    public void GetTreeNodeFor_AbsoluteDirectoryUnderNestedScreensSubfolder_ReturnsNestedNode()
+    {
+        FakeTreeNode screensRoot = new FakeTreeNode { Text = "Screens" };
+        FakeTreeNode a = screensRoot.AddChild(new FakeTreeNode { Text = "A" });
+        FakeTreeNode b = a.AddChild(new FakeTreeNode { Text = "B" });
+        FakeElementTreeRoots roots = new FakeElementTreeRoots { Screens = screensRoot };
+
+        roots.GetTreeNodeFor("C:/Project/Screens/A/B", "C:/Project/").ShouldBe(b);
+    }
+
+    [Fact]
     public void GetTreeNodeFor_BehaviorSave_SelectsBehaviorsRoot()
     {
         BehaviorSave tag = new BehaviorSave { Name = "Behavior" };
@@ -119,6 +139,14 @@ public class TreeNodePredicateExtensionsTests
         FakeElementTreeRoots roots = new FakeElementTreeRoots { Behaviors = behaviorsRoot };
 
         roots.GetTreeNodeFor(tag).ShouldBe(behaviorNode);
+    }
+
+    [Fact]
+    public void GetTreeNodeFor_BehaviorsRootNotYetCreated_ReturnsNull()
+    {
+        FakeElementTreeRoots roots = new FakeElementTreeRoots();
+
+        roots.GetTreeNodeFor("C:/Project/Behaviors/A", "C:/Project/").ShouldBeNull();
     }
 
     [Fact]
@@ -154,6 +182,14 @@ public class TreeNodePredicateExtensionsTests
     }
 
     [Fact]
+    public void GetTreeNodeFor_EmptyRelativeDirectory_ReturnsContainerItself()
+    {
+        FakeTreeNode container = new FakeTreeNode { Text = "Screens" };
+
+        container.GetTreeNodeFor("").ShouldBe(container);
+    }
+
+    [Fact]
     public void GetTreeNodeFor_InstanceSaveByReference_ReturnsNodeNotSameNamedSibling()
     {
         InstanceSave target = new InstanceSave { Name = "Duplicate" };
@@ -166,6 +202,15 @@ public class TreeNodePredicateExtensionsTests
     }
 
     [Fact]
+    public void GetTreeNodeFor_NoMatchingSegment_ReturnsNull()
+    {
+        FakeTreeNode container = new FakeTreeNode { Text = "Screens" };
+        container.AddChild(new FakeTreeNode { Text = "A" });
+
+        container.GetTreeNodeFor("missing").ShouldBeNull();
+    }
+
+    [Fact]
     public void GetTreeNodeFor_ScreenSave_SelectsScreensRoot()
     {
         ScreenSave tag = new ScreenSave { Name = "Screen" };
@@ -174,6 +219,15 @@ public class TreeNodePredicateExtensionsTests
         FakeElementTreeRoots roots = new FakeElementTreeRoots { Screens = screensRoot };
 
         roots.GetTreeNodeFor(tag).ShouldBe(screenNode);
+    }
+
+    [Fact]
+    public void GetTreeNodeFor_SegmentCaseInsensitive_ReturnsMatch()
+    {
+        FakeTreeNode container = new FakeTreeNode { Text = "Screens" };
+        FakeTreeNode child = container.AddChild(new FakeTreeNode { Text = "SubFolder" });
+
+        container.GetTreeNodeFor("subfolder").ShouldBe(child);
     }
 
     [Fact]
