@@ -459,11 +459,14 @@ public class GraphicsDeviceControl : Control
 
         var rect = new System.Drawing.Rectangle(0, 0, w, h);
         BitmapData bmpData = bitmap.LockBits(rect, ImageLockMode.WriteOnly, bitmap.PixelFormat);
-        if (renderTarget.Format == SurfaceFormat.Color && (bitmap.PixelFormat == PixelFormat.Format32bppArgb || bitmap.PixelFormat == PixelFormat.Format32bppPArgb))
+        PixelBufferConversionStrategy? strategy =
+            RenderTargetPixelBufferConverter.GetStrategy(renderTarget.Format, bitmap.PixelFormat);
+
+        if (strategy == PixelBufferConversionStrategy.ByteSwapRgbaToBgra)
         {
             CopyAndConvertRGBATOBGRA(w, h, rawImage, bmpData.Scan0, bmpData.Stride);
         }
-        else if (renderTarget.Format == SurfaceFormat.Bgra32 && (bitmap.PixelFormat == PixelFormat.Format32bppArgb || bitmap.PixelFormat == PixelFormat.Format32bppPArgb))
+        else if (strategy == PixelBufferConversionStrategy.DirectCopy)
         {
             int rowSize = w * 4;
             int rowStride = bmpData.Stride;
