@@ -113,6 +113,7 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
         IMessenger messenger,
         IOutputManager outputManager,
         IFileWatchManager fileWatchManager,
+        IFileCommands fileCommands,
         IProjectState projectState,
         IProjectManager projectManager,
         IWireframeObjectManager wireframeObjectManager,
@@ -130,7 +131,7 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
         _undoManager = undoManager;
         _animationUndoProviderRegistrar = animationUndoProviderRegistrar;
 
-        _animationFilePathService = new AnimationFilePathService(_selectedState);
+        _animationFilePathService = new AnimationFilePathService(_selectedState, fileCommands);
         _duplicateService = new DuplicateService(_dialogService, _projectManager);
         _elementDeleteService = new ElementDeleteService(_animationFilePathService, _dialogService);
         _settingsManager = new SettingsManager();
