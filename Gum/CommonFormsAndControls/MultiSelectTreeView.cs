@@ -27,6 +27,7 @@ namespace CommonFormsAndControls
         private System.ComponentModel.IContainer _components;
         private TreeNode? nodeOnDragStart;
         private readonly TreeNodeRangeSelectionLogic _rangeSelectionLogic;
+        private readonly TreeNodeMouseUpSelectionLogic _mouseUpSelectionLogic;
         public ImageList ElementTreeImageList => _elementTreeImages;
 
         #endregion
@@ -173,9 +174,10 @@ namespace CommonFormsAndControls
         /// </summary>
         private bool ShouldSelectOnMouseUp(TreeNode node, MouseButtons button)
         {
-            return (EffectiveModifiers() == Keys.None && MultiSelectBehavior != MultiSelectBehavior.RegularClick) &&
-                   ((mSelectedNodes.Count > 1 && mSelectedNodes.Contains(node)) || IsSelectingOnPush == false) &&
-                   button == MouseButtons.Left;
+            bool isNodeInMultiSelection = mSelectedNodes.Count > 1 && mSelectedNodes.Contains(node);
+
+            return _mouseUpSelectionLogic.ShouldSelect(
+                EffectiveModifiers(), MultiSelectBehavior, isNodeInMultiSelection, IsSelectingOnPush, button);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -643,6 +645,7 @@ namespace CommonFormsAndControls
         {
             this._components = new System.ComponentModel.Container();
             _rangeSelectionLogic = new TreeNodeRangeSelectionLogic();
+            _mouseUpSelectionLogic = new TreeNodeMouseUpSelectionLogic();
             InitializeComponent();
             mSelectedNodes = new List<TreeNode>();
             mOriginalColors = new Dictionary<TreeNode, Color>();
