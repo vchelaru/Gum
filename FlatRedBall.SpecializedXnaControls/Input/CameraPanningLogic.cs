@@ -31,7 +31,7 @@ namespace FlatRedBall.SpecializedXnaControls.Input
             mKeyboard = keyboard;
 
             mCursor = cursor;
-            mCursor.Initialize(graphicsControl);
+            mCursor.Initialize(new ControlInputHostAdapter(graphicsControl));
             mCamera = managers.Renderer.Camera;
             mControl = graphicsControl;
             graphicsControl.XnaUpdate += new Action(Activity);

@@ -1,6 +1,5 @@
 ﻿using System;
 using Microsoft.Xna.Framework.Input;
-using System.Windows.Forms;
 
 namespace InputLibrary
 {
@@ -11,7 +10,7 @@ namespace InputLibrary
         KeyboardState mKeyboardState;
         KeyboardState mLastKeyboardState = new KeyboardState();
 
-        Control mControl;
+        IInputHostControl mControl;
 
         public static Keyboard Self
         {
@@ -36,7 +35,7 @@ namespace InputLibrary
 
 
         
-        public void Initialize(Control control)
+        public void Initialize(IInputHostControl control)
         {
             if (control == null)
             {

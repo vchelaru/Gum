@@ -207,7 +207,7 @@ public class WireframeControl : GraphicsDeviceControl
             _cameraController.Initialize(Camera, editorViewModel, Width, Height, hotkeyManager);
             _cameraController.CameraChanged += () => CameraChanged?.Invoke();
 
-            InputLibrary.Cursor.Self.Initialize(this);
+            InputLibrary.Cursor.Self.Initialize(new InputLibrary.ControlInputHostAdapter(this));
 
             mCanvasBounds = new LineRectangle();
             mCanvasBounds.IsDotted = true;
