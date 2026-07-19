@@ -1,0 +1,28 @@
+<Project>
+
+  <!--
+    Scoped to test projects only: this file does NOT set ManagePackageVersionsCentrally here,
+    so it has no effect on production/runtime projects even though it auto-imports for every
+    project in the repo (same directory-walk-up discovery as Directory.Build.props). Each test
+    project opts in individually via `<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>`
+    in its own PropertyGroup. See #3803.
+  -->
+
+  <PropertyGroup>
+    <!-- Local/CI machines may have more than one configured NuGet source (e.g. a private feed);
+         source mapping is a machine-level NuGet.Config concern, not something this repo-checked-in
+         file can resolve, so suppress the resulting NU1507 nag for the projects that opt into CPM. -->
+    <NoWarn>$(NoWarn);NU1507</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageVersion Include="AutoFixture.AutoMoq" Version="4.18.1" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageVersion Include="Moq" Version="4.20.72" />
+    <PackageVersion Include="Shouldly" Version="4.3.0" />
+    <PackageVersion Include="xunit" Version="2.5.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.3" />
+  </ItemGroup>
+
+</Project>
