@@ -20,6 +20,10 @@ Not the same thing as `.gumx` file format versioning (see `gum-project-versionin
   `docs/gum-tool/upgrading/syntax-versions.md` — published at
   https://docs.flatredball.com/gum/gum-tool/upgrading/syntax-versions
 
+## This repo's CodeGenerator.cs is not the only reader
+
+FlatRedBall's Glue tool generates its own `GumRuntimes/*.Generated.cs` files (e.g. `ArcRuntime.Generated.cs`) via a codegen implementation in the FlatRedBall repo, independent of `Tools/Gum.ProjectServices/CodeGeneration/CodeGenerator.cs` — `GumSyntaxVersionAttribute` exists precisely so external codegens like Glue's can read runtime capability independently. A bug in one of those generated files is not automatically a bug in this repo's codegen; check which codegen actually produced the file before assuming the fix belongs here.
+
 ## How detection works
 
 Reads the consumer's `.csproj`:
