@@ -256,6 +256,7 @@ file static class ServiceCollectionExtensions
         services.AddDialogs();
         services.AddViewModelFuncFactories(typeof(ServiceCollectionExtensions).Assembly);
         services.AddSingleton<IDispatcher>(_ => new AppDispatcher(() => Application.Current.Dispatcher));
+        services.AddSingleton<IAppScaleProvider, AppScaleProvider>();
         services.AddSingleton<IUiSettingsService, UiSettingsService>();
         services.AddSingleton<IThemingService, ThemingService>();
     }

@@ -168,6 +168,12 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   .InstanceMember` (a `net8.0-windows`/WPF-only library). Split the interface rather than block the
   whole move: the clean members go to `Gum.Presentation`, the WPF-typed one moves to a new
   tool-only sibling interface implemented by the same concrete class.
+- **A dependency's live value can come from a WPF resource dictionary
+  (`Application.Current.Resources[...]`), not just a `.Self`/`Locator`-typed service.** The resource's
+  own type is often a `DependencyObject`, unconstructable and unmockable outside WPF, so the fix isn't
+  a DI registration for that type — it's a narrow interface exposing only the property(ies) actually
+  read/written, with a WPF-side implementation that resolves the resource lazily
+  (`IAppScaleProvider`/`AppScale`, #3754).
 
 **Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap).
 - *4a — Element tree:* decouple `ElementTreeViewManager` from `TreeNode`; the already-migrated
