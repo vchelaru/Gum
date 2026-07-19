@@ -2586,26 +2586,6 @@ public static class TreeNodeExtensionMethods
     }
 
     /// <summary>
-    /// Determines whether the tree node represents an instance of an element.
-    /// </summary>
-    /// <param name="treeNode">The tree node to check.</param>
-    /// <returns>True if the node's Tag is an InstanceSave instance; otherwise, false.</returns>
-    public static bool IsInstanceTreeNode(this TreeNode treeNode)
-    {
-        return treeNode.Tag is InstanceSave;
-    }
-
-    /// <summary>
-    /// Determines whether the tree node represents a State.
-    /// </summary>
-    /// <param name="treeNode">The tree node to check.</param>
-    /// <returns>True if the node's Tag is a StateSave instance; otherwise, false.</returns>
-    public static bool IsStateSaveTreeNode(this TreeNode treeNode)
-    {
-        return treeNode.Tag is StateSave;
-    }
-
-    /// <summary>
     /// Determines whether the tree node is one of the top-level element container folders
     /// (Screens, Components, Standard, or Behaviors).
     /// </summary>

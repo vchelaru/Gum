@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.Managers;
 using Shouldly;
 using System.Windows.Forms;
@@ -97,5 +98,35 @@ public class TreeNodePredicateExtensionsTests
     public void IsTopStandardElementTreeNode_WrongText_ReturnsFalse()
     {
         new FakeTreeNode { Text = "Screens" }.IsTopStandardElementTreeNode().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsBehaviorTreeNode_BehaviorTag_ReturnsTrue()
+    {
+        new FakeTreeNode { Tag = new BehaviorSave() }.IsBehaviorTreeNode().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsComponentTreeNode_ComponentTag_ReturnsTrue()
+    {
+        new FakeTreeNode { Tag = new ComponentSave() }.IsComponentTreeNode().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsScreenTreeNode_ComponentTag_ReturnsFalse()
+    {
+        new FakeTreeNode { Tag = new ComponentSave() }.IsScreenTreeNode().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsScreenTreeNode_ScreenTag_ReturnsTrue()
+    {
+        new FakeTreeNode { Tag = new ScreenSave() }.IsScreenTreeNode().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsStandardElementTreeNode_StandardTag_ReturnsTrue()
+    {
+        new FakeTreeNode { Tag = new StandardElementSave() }.IsStandardElementTreeNode().ShouldBeTrue();
     }
 }
