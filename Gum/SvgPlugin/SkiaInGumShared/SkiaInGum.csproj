@@ -32,6 +32,18 @@
 		<Folder Include="Rendering\" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<!-- RenderableShapeAdapter.cs (below, via SkiaInGumShared.projitems) needs the real
+		     RenderableShapeBase from Runtimes/SkiaGum — mirrors the Link include SkiaPlugin.csproj
+		     already has for the same file. -->
+		<Compile Include="..\..\..\Runtimes\SkiaGum\Renderables\RenderableShapeBase.cs">
+			<Link>Renderables\RenderableShapeBase.cs</Link>
+		</Compile>
+		<Compile Include="..\..\..\Runtimes\SkiaGum\Renderables\BlendToSkBlendModeExtensions.cs">
+			<Link>Renderables\BlendToSkBlendModeExtensions.cs</Link>
+		</Compile>
+	</ItemGroup>
+
 	<Import Project="SkiaInGumShared.projitems" Label="Shared" />
 
 </Project>

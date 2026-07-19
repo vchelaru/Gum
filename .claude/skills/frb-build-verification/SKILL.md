@@ -27,6 +27,7 @@ Pick by what you changed. **The "Lives in" column is the repo containing the `.c
 |---|---|---|---|
 | `GumCommon/` (anything in `GumCoreShared.projitems`) | **Gum repo** (this repo) | `GumCore/GumCoreXnaPc/GumCore.DesktopGlNet6/GumCore.DesktopGlNet6.csproj` | GumCommon shared into FRB |
 | `MonoGameGum/Forms/` (in `FlatRedBall.Forms.Shared.projitems`) | **FlatRedBall sibling repo** | `Engines/Forms/FlatRedBall.Forms/FlatRedBall.Forms.DesktopGlNet6/FlatRedBall.Forms.DesktopGlNet6.csproj` | Forms shared into FRB |
+| Types referenced by `Gum/SvgPlugin/SkiaInGumShared/` (e.g. renames/moves in `Runtimes/GumShapes/`, `Runtimes/SkiaGum/`) | **Gum repo** (this repo) | `Gum/SvgPlugin/SkiaInGumShared/SkiaInGum.csproj` | Legacy FRB Skia-adapter layer — references `GumCore.DesktopGlNet6.csproj` directly, so it also needs the FlatRedBall sibling even though its own `.csproj` lives here |
 
 `GueDeriving/*Runtime`, `MonoGameGum/Renderables/`, `MonoGameGum/ExtensionMethods/`, `MonoGameGum/Input/` (Cursor, Keyboard, gamepad drivers), and the `Forms/DefaultVisuals/` runtimes are **not** compiled by FRB1 (it generates its own) — changing only those needs no FRB build.
 
