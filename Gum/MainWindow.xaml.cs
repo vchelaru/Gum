@@ -17,18 +17,6 @@ using System.Windows.Threading;
 using ControlzEx;
 
 namespace Gum;
-#region TabLocation Enum
-public enum TabLocation
-{
-    [Obsolete("Use either CenterTop or CenterBottom")]
-    Center,
-    RightBottom,
-    RightTop,
-    CenterTop, 
-    CenterBottom,
-    Left
-}
-#endregion
 
 public partial class MainWindow : WindowChromeWindow, IRecipient<CloseMainWindowMessage>
 {

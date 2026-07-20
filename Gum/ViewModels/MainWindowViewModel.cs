@@ -98,11 +98,7 @@ public class MainWindowViewModel : ViewModel, IRecipient<ThemeChangedMessage>, I
     void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
     {
         // todo: we should trigger this in the view instead
-        IconSource = message.settings.Mode switch
-        {
-            ThemeMode.Light => "pack://application:,,,/GumLogo64Light.png",
-            _ => "pack://application:,,,/GumLogo64.png"
-        };
+        IconSource = MainWindowIconLogic.GetIconSource(message.settings.Mode);
     }
 
     private void SaveWindowSettings()
