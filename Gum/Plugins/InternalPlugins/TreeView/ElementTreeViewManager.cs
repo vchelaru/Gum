@@ -1190,7 +1190,9 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 string fullPath = _fileLocations.ScreensFolder + FileManager.GetDirectory(screenSave.Name);
                 TreeNode parentNode = GetTreeNodeFor(fullPath);
 
-                treeNode = AddTreeNodeForElement(screenSave, parentNode, ScreenImageIndex);
+                // Every node ETVM constructs is a GumTreeNode, which implements ITreeNodeMutable
+                // directly, so this is a free reference cast (not a wrap).
+                treeNode = AddTreeNodeForElement(screenSave, (ITreeNodeMutable)parentNode, ScreenImageIndex);
             }
         }
 
@@ -1206,7 +1208,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                     throw new Exception($"Error trying to get parent node for component {fullPath}");
                 }
 
-                AddTreeNodeForElement(componentSave, parentNode, ComponentImageIndex);
+                AddTreeNodeForElement(componentSave, (ITreeNodeMutable)parentNode, ComponentImageIndex);
             }
         }
 
@@ -1216,7 +1218,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             {
                 if (GetTreeNodeFor(standardSave) == null &&  ShouldShow(standardSave))
                 {
-                    AddTreeNodeForElement(standardSave, mStandardElementsTreeNode, _treeNodeImageLogic.GetImageIndexForStandardElement(standardSave.Name));
+                    AddTreeNodeForElement(standardSave, (ITreeNodeMutable)mStandardElementsTreeNode, _treeNodeImageLogic.GetImageIndexForStandardElement(standardSave.Name));
                 }
             }
         }
@@ -1233,7 +1235,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 }
                 TreeNode parentNode = GetTreeNodeFor(fullPath);
 
-                AddTreeNodeForBehavior(behaviorSave, parentNode, BehaviorImageIndex);
+                AddTreeNodeForBehavior(behaviorSave, (ITreeNodeMutable)parentNode, BehaviorImageIndex);
             }
         }
 
@@ -1390,32 +1392,36 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         #endregion
     }
 
-    private TreeNode AddTreeNodeForElement(ElementSave element, TreeNode parentNode, int defaultImageIndex)
+    // parentNode is ITreeNodeMutable rather than TreeNode: every node ETVM constructs is a
+    // GumTreeNode, so callers pass their TreeNode-typed locals through a free reference cast. The
+    // cast stays at each call site rather than widening this method back to TreeNode so the actual
+    // node-construction work (Tag/ImageIndex/child-add) is expressed through the mutation interface.
+    private TreeNode AddTreeNodeForElement(ElementSave element, ITreeNodeMutable parentNode, int defaultImageIndex)
     {
         if (parentNode == null)
         {
             throw new NullReferenceException($"{nameof(parentNode)} cannot be null");
         }
-        TreeNode treeNode = new GumTreeNode();
+        ITreeNodeMutable treeNode = new GumTreeNode();
 
         treeNode.ImageIndex = _treeNodeImageLogic.GetCreateImageIndex(element.IsSourceFileMissing, defaultImageIndex);
 
-        treeNode.Tag = element;
-        
-        parentNode.Nodes.Add(treeNode);
+        treeNode.SetTag(element);
 
-        return treeNode;
+        parentNode.AddChild(treeNode);
+
+        return (TreeNode)treeNode;
     }
 
-    private void AddTreeNodeForBehavior(BehaviorSave behavior, TreeNode parentNode, int defaultImageIndex)
+    private void AddTreeNodeForBehavior(BehaviorSave behavior, ITreeNodeMutable parentNode, int defaultImageIndex)
     {
-        TreeNode treeNode = new GumTreeNode();
+        ITreeNodeMutable treeNode = new GumTreeNode();
 
         treeNode.ImageIndex = _treeNodeImageLogic.GetCreateImageIndex(behavior.IsSourceFileMissing, defaultImageIndex);
 
-        treeNode.Tag = behavior;
+        treeNode.SetTag(behavior);
 
-        parentNode.Nodes.Add(treeNode);
+        parentNode.AddChild(treeNode);
     }
 
     private void CreateRootTreeNodesIfNecessary()
@@ -1969,7 +1975,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
             if (nodeForInstance == null)
             {
-                nodeForInstance = AddTreeNodeForInstance(instance, node, tolerateMissingTypes:false);
+                nodeForInstance = AddTreeNodeForInstance(instance, (ITreeNodeMutable)node, tolerateMissingTypes:false);
             }
 
             if(instance.DefinedByBase)
@@ -2069,7 +2075,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
             if (nodeForInstance == null)
             {
-                nodeForInstance = AddTreeNodeForInstance(instance, node, tolerateMissingTypes: true);
+                nodeForInstance = AddTreeNodeForInstance(instance, (ITreeNodeMutable)node, tolerateMissingTypes: true);
             }
 
             if (instance.DefinedByBase)
@@ -2085,23 +2091,27 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
     }
 
-    private TreeNode AddTreeNodeForInstance(InstanceSave instance, TreeNode parentContainerNode, 
+    // parentContainerNode is ITreeNodeMutable for the same reason as AddTreeNodeForElement above:
+    // it is always a GumTreeNode in practice, so passing it as the mutation interface is a free
+    // cast at each call site. GetTreeNodeFor(InstanceSave, TreeNode) below stays WinForms-typed -
+    // it is the same hot search helper RefreshElementTreeNode/RefreshBehaviorTreeNode call directly.
+    private TreeNode AddTreeNodeForInstance(InstanceSave instance, ITreeNodeMutable parentContainerNode,
         bool tolerateMissingTypes, HashSet<InstanceSave>? pendingAdditions = null)
     {
-        TreeNode treeNode = new GumTreeNode();
+        ITreeNodeMutable treeNode = new GumTreeNode();
 
         bool validBaseType = ObjectFinder.Self.GetElementSave(instance.BaseType) != null;
 
         treeNode.ImageIndex = _treeNodeImageLogic.GetInstanceCreateImageIndex(instance, validBaseType, tolerateMissingTypes);
 
-        treeNode.Tag = instance;
+        treeNode.SetTag(instance);
 
-        TreeNode parentNode = parentContainerNode;
+        ITreeNodeMutable parentNode = parentContainerNode;
         InstanceSave parentInstance = FindParentInstance(instance);
 
         if (parentInstance != null)
         {
-            TreeNode parentInstanceNode = GetTreeNodeFor(parentInstance, parentContainerNode);
+            TreeNode parentInstanceNode = GetTreeNodeFor(parentInstance, (TreeNode)parentContainerNode);
 
             // Make sure we are not already trying to add the parent (protects against stack overflow with invalid data)
             if (parentInstanceNode == null && (pendingAdditions == null || !pendingAdditions.Contains(parentInstance)))
@@ -2117,13 +2127,13 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
             if (parentInstanceNode != null)
             {
-                parentNode = parentInstanceNode;
+                parentNode = (ITreeNodeMutable)parentInstanceNode;
             }
         }
 
-        parentNode.Nodes.Add(treeNode);
+        parentNode.AddChild(treeNode);
 
-        return treeNode;
+        return (TreeNode)treeNode;
     }
 
     private InstanceSave? FindParentInstance(InstanceSave instance)
