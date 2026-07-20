@@ -433,8 +433,14 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
             mTimeManager = new TimeManager();
 
 
+            // Route the GPU device/content-service lookup through IRenderDeviceHost rather than
+            // reading GraphicsDevice/Services directly off this control, so the initialization
+            // sequence below only depends on the render-host contract, not on GraphicsDeviceControl.
+            var graphicsDeviceService = (IGraphicsDeviceService)Services.GetService(typeof(IGraphicsDeviceService));
+            IRenderDeviceHost renderHost = new GraphicsDeviceServiceRenderHostAdapter(graphicsDeviceService, Services);
+
             mManagers = new SystemManagers();
-            mManagers.Initialize(GraphicsDevice);
+            mManagers.Initialize(renderHost.GraphicsDevice);
             mManagers.Name = "Image Region Selection";
             Assembly assembly = Assembly.GetAssembly(typeof(GraphicsDeviceControl));// Assembly.GetCallingAssembly();
 
@@ -477,7 +483,7 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
             contentLoader.SystemManagers = mManagers;
 
             LoaderManager.Self.ContentLoader = contentLoader;
-            LoaderManager.Self.Initialize("Content/InvalidTexture.png", targetFntFileName.FullPath, Services, mManagers);
+            LoaderManager.Self.Initialize("Content/InvalidTexture.png", targetFntFileName.FullPath, renderHost.Services, mManagers);
 
             CreateNewSelector();
 
