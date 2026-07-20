@@ -1248,12 +1248,32 @@ public partial class MultiSelectTreeView
 
     #endregion
 
-    private static TreeNode[] ExtractDraggedNodes(IDataObject? data)
+    // Deliberately does not use GetDataPresent(typeof(TreeNode))/GetData(typeof(TreeNode)): WinForms'
+    // default DataObject stores an untyped payload under a format keyed by the payload's *runtime*
+    // type full name (Control.DoDragDrop wraps a single dragged item in `new DataObject(item)` with
+    // no explicit format), not its static/base type. A TreeNode subclass (e.g. GumTreeNode) is then
+    // stored under its own type name and an exact `typeof(TreeNode)` format lookup misses it entirely.
+    // Scanning the actual formats present and pattern-matching on TreeNode/TreeNode[] is robust to any
+    // subclass, present or future, regardless of how the sender packed it.
+    internal static TreeNode[] ExtractDraggedNodes(IDataObject? data)
     {
-        if (data?.GetDataPresent(typeof(TreeNode[])) == true)
-            return (TreeNode[])data.GetData(typeof(TreeNode[]))!;
-        if (data?.GetDataPresent(typeof(TreeNode)) == true)
-            return new[] { (TreeNode)data.GetData(typeof(TreeNode))! };
+        if (data == null)
+        {
+            return Array.Empty<TreeNode>();
+        }
+
+        foreach (string format in data.GetFormats())
+        {
+            if (data.GetData(format) is TreeNode[] nodes)
+            {
+                return nodes;
+            }
+            if (data.GetData(format) is TreeNode node)
+            {
+                return new[] { node };
+            }
+        }
+
         return Array.Empty<TreeNode>();
     }
 
