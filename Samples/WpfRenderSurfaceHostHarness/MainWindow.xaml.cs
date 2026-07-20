@@ -18,8 +18,8 @@ namespace WpfRenderSurfaceHostHarness;
 /// </summary>
 public partial class MainWindow : Window
 {
-    private const int SurfaceWidth = 800;
-    private const int SurfaceHeight = 600;
+    private const int InitialSurfaceWidth = 800;
+    private const int InitialSurfaceHeight = 600;
 
     private readonly Stopwatch _clock = new Stopwatch();
     private readonly WpfRenderSurfaceHost _host = new WpfRenderSurfaceHost();
@@ -28,6 +28,13 @@ public partial class MainWindow : Window
     private RenderTarget2D? _renderTarget;
     private SpriteBatch? _spriteBatch;
     private Texture2D? _whitePixel;
+
+    // Current render-target size in pixels - starts at the initial values above, but changes on
+    // every live resize (see Window_SizeChanged). This is the actual buffer size being copied
+    // GPU->CPU->WriteableBitmap each frame, so resizing the window is the real stress test for
+    // whether that copy cost scales badly with larger canvases.
+    private int _surfaceWidth = InitialSurfaceWidth;
+    private int _surfaceHeight = InitialSurfaceHeight;
 
     // Actual measured throughput, not a guess - counts real DrawFrame calls against wall-clock
     // time, updated roughly twice a second so the number is legible.
@@ -44,11 +51,37 @@ public partial class MainWindow : Window
         // Insert below the XAML-declared FpsText so the overlay stays on top.
         RootGrid.Children.Insert(0, _host.ImageElement);
         _host.RenderFrame += DrawFrame;
-        _host.Initialize(SurfaceWidth, SurfaceHeight, desiredFramesPerSecond: 30);
+        _host.Initialize(_surfaceWidth, _surfaceHeight, desiredFramesPerSecond: 30);
 
         _clock.Start();
         _fpsWindow.Start();
         Closed += (_, _) => DisposeResources();
+        SizeChanged += Window_SizeChanged;
+    }
+
+    private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        int newWidth = Math.Max(1, (int)e.NewSize.Width);
+        int newHeight = Math.Max(1, (int)e.NewSize.Height);
+
+        if (newWidth == _surfaceWidth && newHeight == _surfaceHeight)
+        {
+            return;
+        }
+
+        _surfaceWidth = newWidth;
+        _surfaceHeight = newHeight;
+
+        // The render target is the only thing that needs recreating at the new pixel size -
+        // GraphicsDevice.SetRenderTarget adjusts the viewport to match automatically, and this
+        // harness never presents to a swap chain (it only reads the target back to the CPU), so
+        // the device's own PresentationParameters backbuffer size is irrelevant here.
+        _renderTarget?.Dispose();
+        _renderTarget = new RenderTarget2D(
+            _graphicsDevice!, _surfaceWidth, _surfaceHeight, mipMap: false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8,
+            preferredMultiSampleCount: 1, RenderTargetUsage.PreserveContents);
+
+        _host.Resize(_surfaceWidth, _surfaceHeight);
     }
 
     private void DisposeResources()
@@ -64,8 +97,8 @@ public partial class MainWindow : Window
     {
         PresentationParameters presentationParameters = new PresentationParameters
         {
-            BackBufferWidth = SurfaceWidth,
-            BackBufferHeight = SurfaceHeight,
+            BackBufferWidth = _surfaceWidth,
+            BackBufferHeight = _surfaceHeight,
             BackBufferFormat = SurfaceFormat.Color,
             DepthStencilFormat = DepthFormat.Depth24Stencil8,
             DeviceWindowHandle = windowHandle,
@@ -76,7 +109,7 @@ public partial class MainWindow : Window
 
         _graphicsDevice = new GraphicsDevice(GraphicsAdapter.DefaultAdapter, GraphicsProfile.FL10_0, presentationParameters);
         _renderTarget = new RenderTarget2D(
-            _graphicsDevice, SurfaceWidth, SurfaceHeight, mipMap: false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8,
+            _graphicsDevice, _surfaceWidth, _surfaceHeight, mipMap: false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8,
             preferredMultiSampleCount: 1, RenderTargetUsage.PreserveContents);
         _spriteBatch = new SpriteBatch(_graphicsDevice);
 
@@ -99,8 +132,8 @@ public partial class MainWindow : Window
 
         // A square orbiting the center, to prove sprite content (not just the clear color) updates.
         float radius = 200f;
-        float x = SurfaceWidth / 2f + radius * (float)Math.Cos(seconds) - 25f;
-        float y = SurfaceHeight / 2f + radius * (float)Math.Sin(seconds) - 25f;
+        float x = _surfaceWidth / 2f + radius * (float)Math.Cos(seconds) - 25f;
+        float y = _surfaceHeight / 2f + radius * (float)Math.Sin(seconds) - 25f;
 
         _spriteBatch.Begin();
         _spriteBatch.Draw(_whitePixel, new Microsoft.Xna.Framework.Rectangle((int)x, (int)y, 50, 50), Color.White);
