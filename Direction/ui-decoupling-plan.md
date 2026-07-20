@@ -174,6 +174,13 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   a DI registration for that type — it's a narrow interface exposing only the property(ies) actually
   read/written, with a WPF-side implementation that resolves the resource lazily
   (`IAppScaleProvider`/`AppScale`, #3754).
+- **A class can look already-neutralized while still being blocked by two subtler things:** a
+  runtime-backend-only singleton read (`Renderer.Self`/`SystemManagers.Default`) where an
+  already-injected equivalent (e.g. a `Camera` field) sits unused right next to it, and a
+  framework-agnostic extension method physically declared alongside its framework-specific siblings
+  in a WPF/WinForms-side partner file rather than co-located with the type it extends. Converting
+  the class's own event-arg types doesn't surface either — check the full dependency chain, not just
+  the class body.
 
 **Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap).
 - *4a — Element tree:* decouple `ElementTreeViewManager` from `TreeNode`; the already-migrated
