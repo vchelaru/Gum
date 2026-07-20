@@ -74,6 +74,17 @@ public partial class MainWindow : Window
         _fpsWindow.Start();
         Closed += (_, _) => DisposeResources();
         SizeChanged += Window_SizeChanged;
+        MouseLeftButtonDown += (_, _) => CopyStatsToClipboardAndDebugOutput();
+    }
+
+    // Click-to-report: the stats overlay is a screenshot otherwise, which is slower to read back
+    // and paste than plain text. Prints to the VS Output window (via Debug.WriteLine, visible
+    // whenever running under the debugger) and the clipboard, so either works.
+    private void CopyStatsToClipboardAndDebugOutput()
+    {
+        string stats = FpsText.Text.Replace('\n', ' ');
+        Debug.WriteLine($"[WpfRenderSurfaceHostHarness] {stats}");
+        Clipboard.SetText(stats);
     }
 
     private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
