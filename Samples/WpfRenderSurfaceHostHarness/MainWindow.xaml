@@ -1,0 +1,8 @@
+<Window x:Class="WpfRenderSurfaceHostHarness.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="WpfRenderSurfaceHost harness - #3833"
+        Width="820" Height="640"
+        ResizeMode="NoResize">
+    <Grid x:Name="RootGrid" Background="DarkSlateGray" />
+</Window>
