@@ -6,7 +6,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Data;
-using System.Windows.Forms.Integration;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Controls;
 using Gum.Managers;
@@ -109,12 +108,6 @@ public class MainPanelViewModel : ViewModel, ITabManager, IRecipient<Application
         PluginTab newPluginTab = _pluginTabFactory(frameworkElement);
         newPluginTab.Title = tabTitle;
         newPluginTab.Location = tabLocation;
-
-        if (frameworkElement is WindowsFormsHost host && tabTitle == "Editor")
-        {   // this is kind of a hack to deal with the the airspace issue
-            // blocking mouse interaction with the grid splitter and window resize handle
-            host.Margin = new Thickness(4, 0, 4, 0);
-        }
 
         PluginTabs.Add(newPluginTab);
         return newPluginTab;
