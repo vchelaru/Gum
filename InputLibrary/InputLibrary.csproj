@@ -6,6 +6,12 @@
 		<OutputType>Library</OutputType>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<UseWindowsForms>true</UseWindowsForms>
+		<!--
+			Added for WpfInputHostAdapter, the WPF-facing counterpart to ControlInputHostAdapter's
+			WinForms path (part of the WPF-native render surface work for #3833). Does not change how
+			any existing host adapter behaves.
+		-->
+		<UseWPF>true</UseWPF>
 		<ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
 		<LangVersion>12.0</LangVersion>
 
