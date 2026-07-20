@@ -224,6 +224,39 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   (undesigned as of this writing), not a quick wrapper interface, so it's a legitimate scope cut
   to leave that one handler (and any wireframe-editor subclass that only exists to host it) tool
   side while relocating the rest of an otherwise-clean family.
+- **A coordinator class that directly `new`s a family it hands off to a headless consumer can be
+  the real blocker, even after every dependency it reads is fixed.** `SelectionManager` injected
+  `Camera`/`IGumCursorState` cleanly, but still directly constructed
+  `StandardWireframeEditor`/`PolygonWireframeEditor` (tool-only concrete types, needing a tool-only
+  font service and project-settings colors) and the XNALIKE rendering-primitive visuals
+  (`GraphicalOutline`, `HighlightManager`, `SelectionRectangleVisual`). The fix is a factory
+  interface (`IWireframeEditorFactory`) the tool side implements and the headless coordinator calls
+  — the same "push construction behind a seam" shape as the visual interfaces, just one level up
+  the object graph. A side effect worth naming: once construction moves behind the factory, a
+  `WireframeEditor is ConcreteToolType` check the coordinator used to decide "do I already have the
+  right kind" can no longer name that type either — track the decision explicitly (a small enum
+  field set alongside each construction call) instead of re-deriving it via a type check. This is a
+  *new* branch the compiler won't catch a regression in — it needs its own pinning test, not just a
+  build-passes check.
+- **A dependency injected as a full interface can be blocked by returning one non-portable type on
+  a member the consumer never even reads.** `SelectionManager` took `IEditingManager` only to read
+  `.ContextMenu?.IsOpen` — `ContextMenu` itself is `System.Windows.Controls.ContextMenu` (WPF),
+  so the whole interface was unreachable regardless of which member was actually used. Splitting
+  a same-shaped-problem interface (see the `IEditVariableService`/`WpfDataUi` bullet above) isn't
+  always right when the *interface itself* is what's blocked, not one member on an otherwise-clean
+  interface: here the fix was a second, narrower interface (`IContextMenuState`, just
+  `IsContextMenuOpen`) implemented by the same concrete class alongside the original, unmodified
+  `IEditingManager` — cheaper than splitting when nothing else consumes the interface being
+  narrowed (confirm via grep before choosing this over a split).
+- **Two type-check branches that look identical can differ in whether they're dead code — check
+  reachability, don't assume.** `SelectionManager`'s `IsIpsoVisible` had an `is IVisible` branch
+  followed by `is Sprite`/`is Text` branches for the same `.AbsoluteVisible` read; since both
+  `Sprite` and `Text` already implement `IVisible`, the later branches were unreachable and safe to
+  delete outright (removing the blocker, not just relocating it) — a `LinePolygon` branch doing a
+  *different* check (`IsPointInside` vs. the generic bounding-box `HasCursorOver`) right next to it
+  in the same class was live and needed the narrow-interface treatment instead. Don't pattern-match
+  "type-check on a renderable" to one fix; check what each branch actually does before choosing
+  delete vs. seam.
 
 **Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap).
 - *4a — Element tree:* decouple `ElementTreeViewManager` from `TreeNode`; the already-migrated
