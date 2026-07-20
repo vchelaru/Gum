@@ -15,6 +15,25 @@ contributor-friendliness alone** — independent of whether Gum ever ships an Av
 actual Avalonia swap (the Mac/Linux editor bet) is a *separate* reach decision, deferred to a
 measured prototype at the end, never a prerequisite. See ADR-0003.
 
+## The north star — how "done" is actually measured (added 2026-07-20)
+
+"Done" is not a closed issue, a completed phase, or a checked box in this doc. The only test that
+counts: **could an Avalonia UI be built today, reusing the same libraries/services/ViewModels as-is
+— only new Views, no business-logic rewrite?** Phase and issue completion are proxies for this, and
+proxies can be wrong: a phase can close honestly against its own stated scope while the tool's
+highest-value, most-interacted-with logic sits untouched, because that scope was drawn too narrowly
+relative to the real question. (Concretely: Phase 3 closing "done" was true to its own defined
+ViewModel list, but `ElementTreeViewManager` and the entire wireframe-canvas editing subsystem —
+selection, camera, move/resize/rotate/polygon-point handling — were never in that list, and remain
+fully WinForms/WPF-coupled today.)
+
+Apply the test by evaluating, not by trusting a closure comment: pick a core interaction surface and
+check concretely whether its code lives in `Gum.Presentation` (or another WPF/WinForms-free
+assembly), or references `System.Windows.*`/`System.Windows.Forms.*` directly, or lives in a project
+declaring `UseWPF`/`UseWindowsForms`. This is a loop, not a one-time check — evaluate against the
+test, implement the gap it surfaces, evaluate again — repeated until an Avalonia app genuinely could
+be built on the shared libraries as they exist, not until the phases run out.
+
 ## Where the tool actually is today (grounding)
 
 The premise "swap WPF for Avalonia" mis-locates the cost. The mapping found:
