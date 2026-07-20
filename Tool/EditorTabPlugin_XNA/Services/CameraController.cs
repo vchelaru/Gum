@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Windows.Forms;
+using Gum.Input;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Gum.Managers;
@@ -17,7 +17,8 @@ public class CameraController
 
     EditorViewModel _editorViewModel;
 
-    System.Drawing.Point mLastMouseLocation;
+    int _lastMouseX;
+    int _lastMouseY;
 
     public event Action? CameraChanged;
     IHotkeyManager _hotkeyManager;
@@ -33,7 +34,7 @@ public class CameraController
         Renderer.Self.Camera.Y = - 30;
     }
 
-    internal void HandleMouseWheel(object? sender, MouseEventArgs e)
+    internal void HandleMouseWheel(GumMouseEventArgs e)
     {
         float worldX, worldY;
         Camera.ScreenToWorld(e.X, e.Y, out worldX, out worldY);
@@ -59,27 +60,24 @@ public class CameraController
 
         CameraChanged?.Invoke();
 
-        var asHandleable = e as HandledMouseEventArgs;
-        if (asHandleable != null)
+        e.Handled = true;
+    }
+
+    internal void HandleMouseDown(GumMouseEventArgs e)
+    {
+        if (e.Button == GumMouseButton.Middle)
         {
-            asHandleable.Handled = true;
+            _lastMouseX = e.X;
+            _lastMouseY = e.Y;
         }
     }
 
-    internal void HandleMouseDown(object? sender, MouseEventArgs e)
+    internal void HandleMouseMove(GumMouseEventArgs e)
     {
-        if (e.Button == MouseButtons.Middle)
+        if (e.Button == GumMouseButton.Middle)
         {
-            mLastMouseLocation = e.Location;
-        }
-    }
-
-    internal void HandleMouseMove(object? sender, MouseEventArgs e)
-    {
-        if (e.Button == MouseButtons.Middle)
-        {
-            int xChange = e.X - mLastMouseLocation.X;
-            int yChange = e.Y - mLastMouseLocation.Y;
+            int xChange = e.X - _lastMouseX;
+            int yChange = e.Y - _lastMouseY;
 
             Renderer.Self.Camera.Position.X -= xChange / Renderer.Self.Camera.Zoom;
             Renderer.Self.Camera.Position.Y -= yChange / Renderer.Self.Camera.Zoom;
@@ -89,11 +87,12 @@ public class CameraController
                 CameraChanged?.Invoke();
             }
 
-            mLastMouseLocation = e.Location;
+            _lastMouseX = e.X;
+            _lastMouseY = e.Y;
         }
     }
 
-    internal void HandleKeyPress(KeyEventArgs e)
+    internal void HandleKeyPress(GumKeyEventArgs e)
     {
         if (_hotkeyManager.MoveCameraLeft.IsPressed(e))
         {
