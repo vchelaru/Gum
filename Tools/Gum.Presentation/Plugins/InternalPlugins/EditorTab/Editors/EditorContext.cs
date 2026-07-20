@@ -1,5 +1,8 @@
+using System.Collections.Generic;
+using System.Linq;
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.Input;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
@@ -10,8 +13,6 @@ using Gum.ToolStates;
 using Gum.Undo;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
-using System.Collections.Generic;
-using System.Linq;
 using Color = System.Drawing.Color;
 
 namespace Gum.Wireframe.Editors;
@@ -24,7 +25,7 @@ public class EditorContext
     #region Dependencies (Injected)
 
     public ISelectedState SelectedState { get; }
-    public SelectionManager SelectionManager { get; }
+    public ISelectionManager SelectionManager { get; }
     public IElementCommands ElementCommands { get; }
     public IGuiCommands GuiCommands { get; }
     public IFileCommands FileCommands { get; }
@@ -35,8 +36,23 @@ public class EditorContext
     public IWireframeObjectManager WireframeObjectManager { get; }
     public Layer OverlayLayer { get; }
     public IUiSettingsService UiSettingsService { get; }
-    public IToolFontService ToolFontService { get; }
     public IPluginManager PluginManager { get; }
+
+    /// <summary>
+    /// The live editor camera. Injected directly (rather than read through the XNALIKE-only
+    /// <c>Renderer.Self</c>/<c>SystemManagers.Default</c> singletons, which aren't reachable from
+    /// this headless assembly) so zoom/world-coordinate math here works the same as before the
+    /// move — same object at runtime, just obtained explicitly.
+    /// </summary>
+    public Camera Camera { get; }
+
+    /// <summary>
+    /// Live cursor state, injected the same way as <see cref="Camera"/> — the concrete
+    /// <c>InputLibrary.Cursor</c> singleton can't be referenced from this headless assembly (its
+    /// project targets <c>net8.0-windows7.0</c>, which fails a <c>Gum.Presentation</c> project
+    /// reference at restore). Same object at runtime, just obtained explicitly.
+    /// </summary>
+    public IGumCursorState Cursor { get; }
 
     #endregion
 
@@ -86,7 +102,7 @@ public class EditorContext
 
     public EditorContext(
         ISelectedState selectedState,
-        SelectionManager selectionManager,
+        ISelectionManager selectionManager,
         IElementCommands elementCommands,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
@@ -99,11 +115,13 @@ public class EditorContext
         Layer overlayLayer,
         Color lineColor,
         Color textColor,
-        IToolFontService toolFontService,
+        Camera camera,
+        IGumCursorState cursor,
         IPluginManager pluginManager)
     {
         UiSettingsService = uiSettingsService;
-        ToolFontService = toolFontService;
+        Camera = camera;
+        Cursor = cursor;
         PluginManager = pluginManager;
         SelectedState = selectedState;
         SelectionManager = selectionManager;
@@ -116,7 +134,7 @@ public class EditorContext
         HotkeyManager = hotkeyManager;
         WireframeObjectManager = wireframeObjectManager;
         OverlayLayer = overlayLayer;
-        GrabbedState = new GrabbedState(selectedState, wireframeObjectManager);
+        GrabbedState = new GrabbedState(selectedState, wireframeObjectManager, cursor);
         LineColor = lineColor;
         TextColor = textColor;
     }

@@ -1,4 +1,4 @@
-using System.Windows.Forms;
+using Gum.Input;
 
 namespace Gum.Wireframe.Editors.Handlers;
 
@@ -12,7 +12,7 @@ public interface IInputHandler
     /// Priority for handling input. Higher priority handlers are checked first.
     /// Typical values:
     /// - Rotation: 100
-    /// - Resize: 90  
+    /// - Resize: 90
     /// - Move: 80
     /// </summary>
     int Priority { get; }
@@ -34,7 +34,7 @@ public interface IInputHandler
     /// Returns the cursor to display when over this handler's interactive area,
     /// or null if the default cursor should be used.
     /// </summary>
-    Cursor? GetCursorToShow(float worldX, float worldY);
+    GumCursorKind? GetCursorToShow(float worldX, float worldY);
 
     /// <summary>
     /// Called when the primary mouse button is first pressed.

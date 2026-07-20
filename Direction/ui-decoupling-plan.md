@@ -200,6 +200,30 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   in a WPF/WinForms-side partner file rather than co-located with the type it extends. Converting
   the class's own event-arg types doesn't surface either — check the full dependency chain, not just
   the class body.
+- **A continuous-state singleton is the same class of blocker as a discrete-event one, and is
+  easy to miss because it doesn't look like "an event."** `GumMouseEventArgs`/`GumKeyEventArgs`
+  neutralize WinForms *events* passed into a method; `InputLibrary.Cursor.Self` (screen X/Y, frame
+  deltas, primary-button state) is state code *polls* every frame (`cursor.XChange`,
+  `cursor.PrimaryDown`), with no event-arg parameter to convert — so a class can pass every other
+  check and still fail at compile time on this alone. `InputLibrary.csproj` itself is the actual
+  blocker (`net8.0-windows7.0`, `UseWindowsForms`/`UseWPF`), not `Cursor`'s own member surface, so
+  the fix is the same shape as `CameraController`'s `Camera` injection: a neutral interface
+  (`IGumCursorState`, matching `GumCursorKind`'s naming) exposing only the members polled, with
+  `InputLibrary.Cursor` implementing it and the concrete singleton's value (`Cursor.Self`) passed
+  in from the tool side at construction — never referenced by name from the headless code.
+- **A visual-overlay dependency (handle/highlight decoration) and a selected-object-geometry
+  dependency are two different blockers that look identical at first grep.** Both routes through
+  `RenderingLibrary.Math.Geometry` (`Line`/`LineRectangle`/`LineCircle`/`LinePolygon`,
+  XNALIKE-only — draws via `SpriteBatch`), so both fail the same way. But an overlay visual
+  (`ResizeHandlesVisual`, `RotationHandleVisual`) is legitimate "platform glue" per the north-star
+  test's own carve-out and unblocks with a narrow per-visual interface (`IResizeHandlesVisual`,
+  exposing e.g. `GetSideOver`/`Width`/`Height`, implemented by the concrete visual that stays
+  tool-side). A handler that reads/writes the *selected object's own* renderable geometry directly
+  (`PolygonPointInputHandler` calling `LinePolygon.PointAt`/`SetPointAt`/`InsertPointAt`/
+  `RemovePointAtIndex`) is not decoration — narrowing it needs its own `ILinePolygon`-style seam
+  (undesigned as of this writing), not a quick wrapper interface, so it's a legitimate scope cut
+  to leave that one handler (and any wireframe-editor subclass that only exists to host it) tool
+  side while relocating the rest of an otherwise-clean family.
 
 **Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap).
 - *4a — Element tree:* decouple `ElementTreeViewManager` from `TreeNode`; the already-migrated

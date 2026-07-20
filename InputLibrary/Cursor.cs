@@ -1,11 +1,12 @@
 ﻿using System;
+using Gum.Input;
 using Microsoft.Xna.Framework.Input;
 using System.Windows.Forms;
 using WinCursor = System.Windows.Forms.Cursor;
 
 namespace InputLibrary
 {
-    public class Cursor
+    public class Cursor : IGumCursorState
     {
         #region Fields
 

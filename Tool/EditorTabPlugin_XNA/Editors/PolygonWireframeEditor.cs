@@ -15,7 +15,6 @@ using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
 using Vector2 = System.Numerics.Vector2;
 
 namespace Gum.Wireframe.Editors;
@@ -73,7 +72,8 @@ public class PolygonWireframeEditor : WireframeEditor
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         IWireframeObjectManager wireframeObjectManager,
         IUiSettingsService uiSettingsService,
-        IToolFontService toolFontService,
+        Camera camera,
+        IGumCursorState cursor,
         IPluginManager pluginManager)
         : base(
               hotkeyManager,
@@ -90,7 +90,8 @@ public class PolygonWireframeEditor : WireframeEditor
               layer,
               System.Drawing.Color.White,
               System.Drawing.Color.White,
-              toolFontService,
+              camera,
+              cursor,
               pluginManager)
     {
         this.layer = layer;

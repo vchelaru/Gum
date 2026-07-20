@@ -13,23 +13,9 @@ using EditorTabPlugin_XNA.Utilities;
 
 namespace Gum.Wireframe
 {
-    #region Enums
-
-    public enum ResizeSide
-    {
-        None = -1,
-        TopLeft,
-        Top,
-        TopRight,
-        Right,
-        BottomRight,
-        Bottom,
-        BottomLeft,
-        Left
-    }
-
-    #endregion
-
+    // ResizeSide moved to Gum.Presentation (Tools/Gum.Presentation/Wireframe/ResizeSide.cs) —
+    // it's pure data with no XNALIKE dependency, unlike ResizeHandles itself (draws LineRectangles),
+    // and ResizeInputHandler (also moved) needs it. Same namespace, so no using changes needed here.
 
     public class ResizeHandles
     {

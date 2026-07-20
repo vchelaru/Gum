@@ -1,14 +1,12 @@
-﻿using Gum.Converters;
-using Gum.DataTypes;
-using Gum.DataTypes.Variables;
-using Gum.ToolStates;
-using InputLibrary;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Gum.Converters;
+using Gum.DataTypes;
+using Gum.DataTypes.Variables;
+using Gum.Input;
+using Gum.ToolStates;
 using Vector2 = System.Numerics.Vector2;
-using Matrix = System.Numerics.Matrix4x4;
-using Gum.Services;
 
 namespace Gum.Wireframe;
 
@@ -25,6 +23,7 @@ public class GrabbedState
 
     private readonly ISelectedState _selectedState;
     private readonly IWireframeObjectManager _wireframeObjectManager;
+    private readonly IGumCursorState _cursor;
 
     public StateSave StateSave { get; private set; }
 
@@ -32,13 +31,13 @@ public class GrabbedState
     {
         get
         {
-            Cursor cursor = InputLibrary.Cursor.Self;
+            var cursor = _cursor;
 
             if (cursor.X == CursorPushScreenX && cursor.Y == CursorPushScreenY)
             {
                 return null;
             }
-            else if (System.Math.Abs( cursor.X - CursorPushScreenX) > 
+            else if (System.Math.Abs( cursor.X - CursorPushScreenX) >
                 System.Math.Abs( cursor.Y - CursorPushScreenY))
             {
                 return XOrY.X;
@@ -100,7 +99,7 @@ public class GrabbedState
         get
         {
             float pixelsToMoveBeforeApplying = 6;
-            Cursor cursor = InputLibrary.Cursor.Self;
+            var cursor = _cursor;
 
             bool toReturn = false;
 
@@ -118,15 +117,17 @@ public class GrabbedState
     }
 
     public GrabbedState(ISelectedState selectedState,
-        IWireframeObjectManager wireframeObjectManager)
+        IWireframeObjectManager wireframeObjectManager,
+        IGumCursorState cursor)
     {
         _selectedState = selectedState;
         _wireframeObjectManager = wireframeObjectManager;
+        _cursor = cursor;
     }
 
     public void HandlePush()
     {
-        Cursor cursor = InputLibrary.Cursor.Self;
+        var cursor = _cursor;
 
         CursorPushScreenX = cursor.X;
         CursorPushScreenY = cursor.Y;

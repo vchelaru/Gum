@@ -25,4 +25,13 @@
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
 	</ItemGroup>
+	<ItemGroup>
+		<!--
+			Cursor implements IGumCursorState so the headless wireframe-editing family (Gum.Presentation,
+			part of #3846) can poll live cursor state without referencing this project directly — a
+			net8.0 project can't reference this net8.0-windows7.0 one (NU1201), but the reverse (this
+			net8.0-windows7.0 project referencing a plain net8.0 one) is the normal, allowed direction.
+		-->
+		<ProjectReference Include="..\Tools\Gum.Presentation\Gum.Presentation.csproj" />
+	</ItemGroup>
 </Project>

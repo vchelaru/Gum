@@ -1,19 +1,11 @@
 using System;
 using System.Linq;
-using System.Numerics;
-using System.Windows.Forms;
-using Gum.DataTypes;
 using Gum.DataTypes.Variables;
-using RenderingLibrary;
-using RenderingLibrary.Graphics;
-using RenderingLibrary.Math;
-using RenderingLibrary.Math.Geometry;
-using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
-using Color = System.Drawing.Color;
-using HorizontalAlignment = RenderingLibrary.Graphics.HorizontalAlignment;
 using Gum.Input;
 using Gum.Wireframe.Editors.Visuals;
-
+using RenderingLibrary;
+using RenderingLibrary.Math;
+using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 
 namespace Gum.Wireframe.Editors.Handlers;
 
@@ -23,11 +15,11 @@ namespace Gum.Wireframe.Editors.Handlers;
 public class RotationInputHandler : InputHandlerBase
 {
     private bool _isHighlighted = false;
-    private readonly RotationHandleVisual _rotationHandleVisual;
+    private readonly IRotationHandleVisual _rotationHandleVisual;
 
     public override int Priority => 100; // Highest priority
 
-    public RotationInputHandler(EditorContext context, RotationHandleVisual rotationHandleVisual)
+    public RotationInputHandler(EditorContext context, IRotationHandleVisual rotationHandleVisual)
         : base(context)
     {
         _rotationHandleVisual = rotationHandleVisual;
@@ -35,17 +27,17 @@ public class RotationInputHandler : InputHandlerBase
 
     public override bool HasCursorOver(float worldX, float worldY)
     {
-        return Context.IsRotationEnabled && _rotationHandleVisual.Handle.Visible && _rotationHandleVisual.Handle.HasCursorOver(worldX, worldY);
+        return Context.IsRotationEnabled && _rotationHandleVisual.HandleVisible && _rotationHandleVisual.HandleHasCursorOver(worldX, worldY);
     }
 
-    public override Cursor? GetCursorToShow(float worldX, float worldY)
+    public override GumCursorKind? GetCursorToShow(float worldX, float worldY)
     {
-        return _isHighlighted ? System.Windows.Forms.Cursors.Hand : null;
+        return _isHighlighted ? GumCursorKind.Hand : null;
     }
 
     public override void UpdateHover(float worldX, float worldY)
     {
-        _isHighlighted = Context.IsRotationEnabled && _rotationHandleVisual.Handle.Visible && _rotationHandleVisual.Handle.HasCursorOver(worldX, worldY);
+        _isHighlighted = Context.IsRotationEnabled && _rotationHandleVisual.HandleVisible && _rotationHandleVisual.HandleHasCursorOver(worldX, worldY);
     }
 
     protected override void OnPush(float worldX, float worldY)
@@ -63,8 +55,8 @@ public class RotationInputHandler : InputHandlerBase
         var originX = gue.AbsoluteX;
         var originY = gue.AbsoluteY;
 
-        var cursorX = InputLibrary.Cursor.Self.GetWorldX();
-        var cursorY = InputLibrary.Cursor.Self.GetWorldY();
+        var cursor = Context.Cursor;
+        Context.Camera.ScreenToWorld(cursor.X, cursor.Y, out float cursorX, out float cursorY);
 
         var angleInRadians = (float)Math.Atan2(cursorY - originY, cursorX - originX);
         var rotationValueDegrees = -MathHelper.ToDegrees(angleInRadians);

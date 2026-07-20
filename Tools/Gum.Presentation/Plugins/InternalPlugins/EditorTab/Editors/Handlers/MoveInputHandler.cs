@@ -1,14 +1,10 @@
-using System.Collections;
 using System.Linq;
 using System.Numerics;
-using System.Windows.Forms;
-using EditorTabPlugin_XNA.ExtensionMethods;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
-using Gum.Plugins;
+using Gum.Input;
 using RenderingLibrary;
-using RenderingLibrary.Graphics;
 using RenderingLibrary.Math;
 using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 
@@ -30,16 +26,16 @@ public class MoveInputHandler : InputHandlerBase
         return Context.SelectionManager.IsOverBody;
     }
 
-    public override Cursor? GetCursorToShow(float worldX, float worldY)
+    public override GumCursorKind? GetCursorToShow(float worldX, float worldY)
     {
         if (Context.SelectionManager.IsOverBody)
         {
             bool canX = Context.IsXMovementEnabled;
             bool canY = Context.IsYMovementEnabled;
 
-            if (canX && canY) return System.Windows.Forms.Cursors.SizeAll;
-            if (canX) return System.Windows.Forms.Cursors.SizeWE;
-            if (canY) return System.Windows.Forms.Cursors.SizeNS;
+            if (canX && canY) return GumCursorKind.SizeAll;
+            if (canX) return GumCursorKind.SizeWE;
+            if (canY) return GumCursorKind.SizeNS;
             return null;
         }
         return null;
@@ -99,13 +95,13 @@ public class MoveInputHandler : InputHandlerBase
 
     private void ApplyCursorMovement()
     {
-        var cursor = InputLibrary.Cursor.Self;
+        var cursor = Context.Cursor;
 
         float xToMoveBy = Context.IsXMovementEnabled
-            ? cursor.XChange / Renderer.Self.Camera.Zoom
+            ? cursor.XChange / Context.Camera.Zoom
             : 0;
         float yToMoveBy = Context.IsYMovementEnabled
-            ? cursor.YChange / Renderer.Self.Camera.Zoom
+            ? cursor.YChange / Context.Camera.Zoom
             : 0;
 
         var vector2 = new Vector2(xToMoveBy, yToMoveBy);
