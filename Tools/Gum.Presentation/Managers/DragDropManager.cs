@@ -1,4 +1,3 @@
-using CommonFormsAndControls;
 using Gum.Commands;
 using Gum.Converters;
 using Gum.DataTypes;
@@ -7,7 +6,6 @@ using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Plugins;
 using Gum.Plugins.ImportPlugin.Manager;
-using Gum.PropertyGridHelpers;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
@@ -15,8 +13,6 @@ using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
 using RenderingLibrary;
-using RenderingLibrary.Content;
-using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -55,16 +51,6 @@ public class DragDropManager : IDragDropManager
     private readonly IReorderLogic _reorderLogic;
     private readonly IProjectManager _projectManager;
     private readonly IProjectState _projectState;
-
-    #endregion
-
-    #region Properties
-
-    public InputLibrary.Cursor Cursor
-    {
-        get { return InputLibrary.Cursor.Self; }
-    }
-
 
     #endregion
 
@@ -236,7 +222,7 @@ public class DragDropManager : IDragDropManager
         {
             var fullFolderPath = treeNodeDroppedOn.GetFullFilePath();
 
-            var fullElementFilePath = draggedAsElementSave.GetFullPathXmlFile().GetDirectoryContainingThis();
+            var fullElementFilePath = GetFullPathXmlFile(draggedAsElementSave).GetDirectoryContainingThis();
 
             if(fullFolderPath != fullElementFilePath)
             {
@@ -406,6 +392,40 @@ public class DragDropManager : IDragDropManager
         }
 
         return errorMessage;
+    }
+
+    /// <summary>
+    /// Computes the full path to <paramref name="elementSave"/>'s XML file. Inlined from the
+    /// (Locator-based) <c>ElementSave.GetFullPathXmlFile()</c> extension method — that method
+    /// resolves <see cref="IProjectManager"/> via <c>Locator</c>, which is a WinForms-tool-only
+    /// static and can't be referenced from this headless assembly, so this uses the already-injected
+    /// <see cref="_projectManager"/> instead. Behavior is identical, including the reference-Link
+    /// override the newer headless <c>ElementFilePathHelper</c> helper does not implement.
+    /// </summary>
+    private FilePath? GetFullPathXmlFile(ElementSave elementSave)
+    {
+        var gumProject = _projectManager.GumProjectSave;
+        if (string.IsNullOrEmpty(gumProject?.FullFileName))
+        {
+            return null;
+        }
+
+        var extension = elementSave.FileExtension;
+
+        var reference =
+            gumProject.ScreenReferences.FirstOrDefault(item => item.Name == elementSave.Name) ??
+            gumProject.ComponentReferences.FirstOrDefault(item => item.Name == elementSave.Name) ??
+            gumProject.StandardElementReferences.FirstOrDefault(item => item.Name == elementSave.Name);
+
+        FilePath gumDirectory = FileManager.GetDirectory(gumProject.FullFileName);
+        if (!string.IsNullOrWhiteSpace(reference?.Link))
+        {
+            return gumDirectory.Original + reference.Link;
+        }
+        else
+        {
+            return gumDirectory.Original + elementSave.Subfolder + "\\" + elementSave.Name + "." + extension;
+        }
     }
 
 
@@ -800,7 +820,7 @@ public class DragDropManager : IDragDropManager
             {
                 var fullFolderPath = targetTreeNode.GetFullFilePath();
 
-                var fullElementFilePath = draggedElement.GetFullPathXmlFile().GetDirectoryContainingThis();
+                var fullElementFilePath = GetFullPathXmlFile(draggedElement).GetDirectoryContainingThis();
 
                 // If not equal, it was moved to a different folder, which is allowed:
                 return fullFolderPath != fullElementFilePath;
@@ -1066,7 +1086,7 @@ public class DragDropManager : IDragDropManager
 
             float worldX, worldY;
 
-            var position = _pluginManager.GetWorldCursorPosition(Cursor);
+            var position = _pluginManager.GetWorldCursorPosition();
 
             worldX = position?.X ?? 0;
             worldY = position?.Y ?? 0;

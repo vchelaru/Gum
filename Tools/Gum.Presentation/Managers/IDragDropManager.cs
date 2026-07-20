@@ -6,7 +6,6 @@ namespace Gum.Managers;
 
 public interface IDragDropManager
 {
-    InputLibrary.Cursor Cursor { get; }
     IEnumerable<string> ValidTextureExtensions { get; }
 
     /// <summary>
