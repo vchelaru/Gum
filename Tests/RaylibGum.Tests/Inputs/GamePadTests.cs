@@ -86,6 +86,25 @@ public class GamePadTests : BaseTestClass
         ((IAnalogStick)sut.LeftStick).AsDPadPushed(DPadDirection.Down).ShouldBeFalse();
     }
 
+    [Fact]
+    public void IGamePad_RightStick_ReturnsSameInstance_AsConcreteRightStick()
+    {
+        GamePad sut = new GamePad();
+
+        ((IGamePad)sut).RightStick.ShouldBeSameAs(sut.RightStick);
+    }
+
+    [Fact]
+    public void RightStick_XY_ReflectsSetRightStickPosition()
+    {
+        GamePad sut = new GamePad();
+        sut.SetRightStickPosition(0.4f, -0.8f);
+        sut.Activity(1);
+
+        sut.RightStick.X.ShouldBe(0.4f);
+        sut.RightStick.Y.ShouldBe(-0.8f);
+    }
+
     // ---- Phase 1 member-parity additions (issue #3137) ----
 
     [Fact]

@@ -198,6 +198,15 @@ public class ScrollViewer :
     /// </remarks>
     public double MouseWheelScrollSpeed { get; set; } = 30;
 
+#if !FRB
+    /// <summary>
+    /// Units per second that <see cref="VerticalScrollBarValue"/> changes when the gamepad's
+    /// right stick is fully deflected vertically (scaled linearly for partial deflection).
+    /// Defaults to 600.
+    /// </summary>
+    public double GamepadStickScrollSpeed { get; set; } = 600;
+#endif
+
     /// <summary>
     /// The vertical scroll bar value. Assigning this automatically scrolls
     /// the ScrollViewer to the desired location. Percentage-based scrolling
@@ -1079,6 +1088,10 @@ public class ScrollViewer :
 
             HandleGamepadNavigation(gamepad);
 
+#if !FRB
+            ApplyGamepadStickScroll(gamepad);
+#endif
+
             if (gamepad.ButtonPushed(GamepadButton.A))
             {
                 DoItemsHaveFocus = true;
@@ -1124,6 +1137,36 @@ public class ScrollViewer :
         }
 #endif
     }
+
+#if !FRB
+    // Elapsed-time source for ApplyGamepadStickScroll, so scroll speed is frame-rate independent.
+    // Null until the first call so the initial frame only records a baseline instead of jumping
+    // by a spurious large delta.
+    double? _lastGamepadStickScrollTime;
+
+    /// <summary>
+    /// Applies continuous vertical scrolling from the gamepad's right analog stick, scaled by
+    /// elapsed time. Shared by <see cref="ScrollViewer"/> and <see cref="ListBox"/> so the two
+    /// separate <c>DoTopLevelFocusUpdate</c> copies don't each need their own stick-scroll code.
+    /// Horizontal (X) scrolling is not wired up yet.
+    /// </summary>
+    protected void ApplyGamepadStickScroll(IGamePad gamepad)
+    {
+        var currentTime = InteractiveGue.CurrentGameTime;
+        var y = gamepad.RightStick.Y;
+
+        if (y != 0 && _lastGamepadStickScrollTime.HasValue)
+        {
+            var elapsedSeconds = currentTime - _lastGamepadStickScrollTime.Value;
+            if (elapsedSeconds > 0)
+            {
+                VerticalScrollBarValue -= y * GamepadStickScrollSpeed * elapsedSeconds;
+            }
+        }
+
+        _lastGamepadStickScrollTime = currentTime;
+    }
+#endif
 
     private void DoItemFocusUpdate()
     {

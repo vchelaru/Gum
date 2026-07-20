@@ -106,6 +106,32 @@ for (int i = 0; i < gamepads.Count; i++)
 
 <figure><img src="../../.gitbook/assets/09_10 56 13.png" alt=""><figcaption></figcaption></figure>
 
+## ScrollViewer Right-Stick Scrolling
+
+When a `ScrollViewer` (or a control built on it, such as `ItemsControl`, `ListBox`, or `Menu`) has top-level focus, tilting the right stick up or down scrolls the content vertically. The scroll speed is proportional to how far the stick is tilted and scales with elapsed time, so it feels the same regardless of frame rate. Horizontal scrolling from the stick is not yet supported.
+
+The following example creates a `ScrollViewer` with tall content and enables gamepad input:
+
+```csharp
+// Initialize
+var scrollViewer = new ScrollViewer();
+scrollViewer.Width = 200;
+scrollViewer.Height = 200;
+
+var tallContent = new ContainerRuntime();
+tallContent.Width = 0;
+tallContent.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+tallContent.Height = 1000;
+scrollViewer.AddChild(tallContent);
+scrollViewer.AddToRoot();
+
+FrameworkElement.GamePadsForUiControl.Clear();
+FrameworkElement.GamePadsForUiControl.AddRange(GumUI.Gamepads);
+scrollViewer.IsFocused = true;
+```
+
+Tilting the right stick up scrolls toward the top of the content; tilting it down scrolls toward the bottom. The default speed can be adjusted with `GamepadStickScrollSpeed`, which is measured in the same units as `VerticalScrollBarValue` per second at full stick deflection.
+
 ## ListBox Navigation
 
 When a `ListBox` is focused, press the A button to move focus into the items. Once the items have focus, pressing up or down on the D-pad (or tilting the left stick up or down) moves the highlighted selection through the list, and the `SelectionChanged` event fires each time the selected item changes. Pressing A again selects the highlighted item and returns focus to the top level; pressing B returns focus to the top level without selecting.
