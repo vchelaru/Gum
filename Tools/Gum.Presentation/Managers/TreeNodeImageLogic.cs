@@ -1,15 +1,16 @@
 using Gum.DataTypes;
-using static Gum.Managers.ElementTreeViewManager;
+using static Gum.Managers.TreeNodeImageIndices;
 
 namespace Gum.Managers;
 
 /// <summary>
 /// Resolves the tree-view ImageList index for element, behavior, and instance nodes.
-/// Extracted from <see cref="ElementTreeViewManager"/> so the (pure, WinForms-free) icon-decision
-/// logic can be unit-tested directly. The ImageIndex constants themselves still live on
-/// <see cref="ElementTreeViewManager"/> because non-tree code (e.g. ElementTreeViewCreator) references them.
+/// Extracted from ElementTreeViewManager (Gum.csproj, WinForms-coupled) so the (pure,
+/// WinForms-free) icon-decision logic can be unit-tested directly and referenced from headless
+/// code (ADR-0005 Phase 3). The ImageIndex constants live alongside it on
+/// <see cref="TreeNodeImageIndices"/>, relocated off ElementTreeViewManager for the same reason.
 /// </summary>
-class TreeNodeImageLogic
+public class TreeNodeImageLogic
 {
     /// <summary>
     /// Returns the per-type (blue-tinted) icon for an instance whose BaseType is a standard element.

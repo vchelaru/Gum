@@ -11,7 +11,7 @@ The element tree view is the left-hand panel listing Screens, Components, Standa
 
 - `MultiSelectTreeView` (`Gum/CommonFormsAndControls/MultiSelectTreeView.cs`) — derived from `System.Windows.Forms.TreeView`. Owns the underlying `ImageList` field `_elementTreeImages` (initialized empty in `InitializeComponent`). Exposed as `ElementTreeImageList`.
 - `ElementTreeViewCreator` (`Gum/Plugins/InternalPlugins/TreeView/ElementTreeViewCreator.cs`) — builds the WPF `Grid` containing the tree view, search box, collapse buttons, and flat search list. Owns icon loading/tinting.
-- `ElementTreeViewManager` (`Gum/Plugins/InternalPlugins/TreeView/ElementTreeViewManager.cs`) — singleton (`Self`). Builds, refreshes, and selects nodes. Holds the `ImageIndex` constants. This is the bloated central class — most icon assignments happen here.
+- `ElementTreeViewManager` (`Gum/Plugins/InternalPlugins/TreeView/ElementTreeViewManager.cs`) — singleton (`Self`). Builds, refreshes, and selects nodes. This is the bloated central class — most icon assignments happen here, via `TreeNodeImageIndices`/`TreeNodeImageLogic` (`Tools/Gum.Presentation/Managers/`, headless — no `System.Windows.Forms`).
 - `MainTreeViewPlugin` — wires plugin events (`InstanceAdd`, `ElementSelected`, `VariableSet`, `AfterUndo`, etc.) to `ElementTreeViewManager.RefreshUi(...)` and to `UpdateErrorIndicatorsForElement(...)`.
 - `TreeViewStateService` — captures/restores expanded-node state across sessions via user project settings.
 
@@ -35,7 +35,7 @@ The icons are intentionally white/grayscale source PNGs so they can be re-tinted
 
 ### ImageIndex constants
 
-Defined as `public const int` on `ElementTreeViewManager`. They map to insertion order in `InjectDynamicIcons()` — **the order of the `TryInjectIcon` calls must match these indices**:
+Defined as `public const int` on `TreeNodeImageIndices` (`Tools/Gum.Presentation/Managers/TreeNodeImageIndices.cs`); `ElementTreeViewManager` consumes them via `using static`. They map to insertion order in `InjectDynamicIcons()` — **the order of the `TryInjectIcon` calls must match these indices**:
 
 | Index | Constant | File key |
 |---|---|---|
@@ -61,13 +61,13 @@ Defined as `public const int` on `ElementTreeViewManager`. They map to insertion
 
 1. Drop the PNG into `Gum/Content/Icons/UpdatedTreeViewIcons/`. Set the build action so it ships in the WPF resource pack.
 2. Add a `TryInjectIcon("YourKey.png", "pack://...")` call to `InjectDynamicIcons` **at the position matching the next image index**.
-3. Add a `public const int YourImageIndex = N;` to `ElementTreeViewManager`.
+3. Add a `public const int YourImageIndex = N;` to `TreeNodeImageIndices`.
 4. If the icon should be theme-colored, add an entry to `GetCurrentColorMap()` keyed by the same filename. Otherwise it falls back to `Frb.Colors.Primary`.
 5. Assign `treeNode.ImageIndex = YourImageIndex;` from wherever the node is created/refreshed.
 
 ### Icon decision logic (state → ImageIndex)
 
-The same node may swap between several icons over its lifetime. Decisions are scattered, not centralized. Hot spots:
+The same node may swap between several icons over its lifetime. Call sites are scattered across `ElementTreeViewManager`; the per-type mapping tables and decision rules they call into are centralized in `TreeNodeImageLogic` (`Tools/Gum.Presentation/Managers/TreeNodeImageLogic.cs`). Hot spots:
 
 - **Element nodes** (`UpdateErrorIndicatorsForElement`, `ElementTreeViewManager.cs` ~L447): picks `Screen / Component / StandardElement` by type, then overrides to `Exclamation` if `IsSourceFileMissing` or has errors.
 - **Instance nodes** (`AddTreeNodeForInstance` ~L1790, instance refresh ~L1720): default `Instance`; `LockedInstance` if `instance.Locked`; `Exclamation` if `BaseType` element is missing/missing source; `DerivedInstance` if `instance.DefinedByBase` (instance contributed by a base element).
