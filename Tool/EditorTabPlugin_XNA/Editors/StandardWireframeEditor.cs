@@ -84,7 +84,7 @@ public class StandardWireframeEditor : WireframeEditor
         Color lineColor,
         Color textColor,
         global::Gum.Managers.IHotkeyManager hotkeyManager,
-        SelectionManager selectionManager,
+        ISelectionManager selectionManager,
         ISelectedState selectedState,
         IElementCommands elementCommands,
         IGuiCommands guiCommands,

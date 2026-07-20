@@ -10,7 +10,7 @@ using EditorTabPlugin_XNA.Utilities;
 
 namespace Gum.Wireframe;
 
-public class HighlightManager
+public class HighlightManager : Editors.Visuals.IHighlightOverlayVisual
 {
     SolidRectangle mOverlaySolidRectangle;
     Sprite mOverlaySprite;

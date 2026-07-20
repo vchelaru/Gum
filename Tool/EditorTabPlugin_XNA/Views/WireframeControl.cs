@@ -388,7 +388,7 @@ public class WireframeControl : GraphicsDeviceControl
 
                     _selectionManager.Activity(shouldForceNoHighlight);
 
-                    _selectionManager.LateActivity(this.SystemManagers);
+                    _selectionManager.LateActivity();
                 }
 
                 InputLibrary.Cursor.Self.EndCursorSettingFrameStart();

@@ -62,7 +62,7 @@ public class PolygonWireframeEditor : WireframeEditor
     public PolygonWireframeEditor(
         Layer layer,
         IHotkeyManager hotkeyManager,
-        SelectionManager selectionManager,
+        ISelectionManager selectionManager,
         ISelectedState selectedState,
         IElementCommands elementCommands,
         IGuiCommands guiCommands,

@@ -1,17 +1,12 @@
 using Gum;
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.Input;
 using Gum.Managers;
-using Gum.Plugins;
-using Gum.Plugins.InternalPlugins.EditorTab.Services;
-using Gum.Plugins.InternalPlugins.VariableGrid;
-using Gum.PropertyGridHelpers;
-using Gum.Services;
-using Gum.Services.Dialogs;
-using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
+using Gum.Wireframe.Editors.Visuals;
 using Moq;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -19,7 +14,7 @@ using Shouldly;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace GumToolUnitTests.Wireframe;
+namespace Gum.Presentation.Tests;
 
 /// <summary>
 /// Tests for SelectionManager methods related to rectangle selection:
@@ -30,24 +25,13 @@ public class SelectionManagerRectangleTests : BaseTestClass
     private readonly Mock<ISelectedState> _mockSelectedState;
     private readonly Mock<IWireframeObjectManager> _mockWireframeManager;
     private readonly SelectionManager _selectionManager;
-    private readonly Mock<LayerService> _layerService;
     private readonly List<InstanceSave> _selectedInstances;
-    private readonly Mock<IProjectManager> _projectManager;
 
     public SelectionManagerRectangleTests()
     {
-        SystemManagers.Default = new SystemManagers();
-        SystemManagers.Default.Renderer = new Renderer();
-        SystemManagers.Default.Renderer.AddLayer();
-        SystemManagers.Default.ShapeManager = new RenderingLibrary.Math.Geometry.ShapeManager();
-
-        SystemManagers.Default.TextManager = new TextManager();
-
         _mockSelectedState = new Mock<ISelectedState>();
         _mockWireframeManager = new Mock<IWireframeObjectManager>();
         _selectedInstances = new List<InstanceSave>();
-
-        _projectManager = new Mock<IProjectManager>();
 
         // Setup SelectedInstances to return our test list
         _mockSelectedState.Setup(x => x.SelectedInstances).Returns(() => _selectedInstances);
@@ -64,23 +48,22 @@ public class SelectionManagerRectangleTests : BaseTestClass
         _selectionManager = new SelectionManager(
             _mockSelectedState.Object,
             Mock.Of<IUndoManager>(),
-            Mock.Of<IEditingManager>(),
-            Mock.Of<IDialogService>(),
+            Mock.Of<IContextMenuState>(),
+            Mock.Of<Gum.Services.Dialogs.IDialogService>(),
             Mock.Of<IHotkeyManager>(),
-            Mock.Of<IVariableInCategoryPropagationLogic>(),
             _mockWireframeManager.Object,
-            _projectManager.Object,
             Mock.Of<IGuiCommands>(),
-            Mock.Of<IElementCommands>(),
-            Mock.Of<IFileCommands>(),
-            Mock.Of<ISetVariableLogic>(),
-            Mock.Of<IUiSettingsService>(),
-            Mock.Of<IToolFontService>(),
-            Mock.Of<IPluginManager>());
+            Mock.Of<IWireframeEditorFactory>(),
+            Mock.Of<INineSliceCoordinateRefresher>(),
+            Mock.Of<IPreciseHitTester>());
 
-        _layerService = new Mock<LayerService>();
-
-        _selectionManager.Initialize(_layerService.Object);
+        _selectionManager.Initialize(
+            new Layer(),
+            new Camera(),
+            Mock.Of<IGumCursorState>(),
+            Mock.Of<ISelectionRectangleVisual>(),
+            Mock.Of<IHighlightOutlineVisual>(),
+            Mock.Of<IHighlightOverlayVisual>());
     }
 
     #region DeselectAll Tests
