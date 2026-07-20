@@ -2,7 +2,6 @@ using InputLibrary;
 using Shouldly;
 using System.Drawing;
 using System.Windows.Forms;
-using WinCursor = System.Windows.Forms.Cursor;
 
 namespace GumToolUnitTests.Input;
 
@@ -14,7 +13,35 @@ public class ControlInputHostAdapterTests : BaseTestClass
         using Control control = new Control { Cursor = Cursors.Hand };
         ControlInputHostAdapter adapter = new ControlInputHostAdapter(control);
 
-        adapter.Cursor.ShouldBe(Cursors.Hand);
+        adapter.Cursor.ShouldBe(CursorKind.Hand);
+    }
+
+    [StaFact]
+    public void Cursor_Get_UnmappedWinFormsCursorFallsBackToArrow()
+    {
+        using Control control = new Control { Cursor = Cursors.Default };
+        ControlInputHostAdapter adapter = new ControlInputHostAdapter(control);
+
+        adapter.Cursor.ShouldBe(CursorKind.Arrow);
+    }
+
+    [StaTheory]
+    [InlineData(CursorKind.Arrow)]
+    [InlineData(CursorKind.Cross)]
+    [InlineData(CursorKind.Hand)]
+    [InlineData(CursorKind.SizeAll)]
+    [InlineData(CursorKind.SizeNS)]
+    [InlineData(CursorKind.SizeWE)]
+    [InlineData(CursorKind.SizeNESW)]
+    [InlineData(CursorKind.SizeNWSE)]
+    public void Cursor_RoundTripsThroughWrappedControl(CursorKind cursorKind)
+    {
+        using Control control = new Control();
+        ControlInputHostAdapter adapter = new ControlInputHostAdapter(control);
+
+        adapter.Cursor = cursorKind;
+
+        adapter.Cursor.ShouldBe(cursorKind);
     }
 
     [StaFact]
@@ -23,7 +50,7 @@ public class ControlInputHostAdapterTests : BaseTestClass
         using Control control = new Control();
         ControlInputHostAdapter adapter = new ControlInputHostAdapter(control);
 
-        adapter.Cursor = Cursors.Cross;
+        adapter.Cursor = CursorKind.Cross;
 
         control.Cursor.ShouldBe(Cursors.Cross);
     }

@@ -22,7 +22,6 @@ namespace InputLibrary
         bool mHasBeenSet = false;
 
         WinCursor mSetCursor = Cursors.Arrow;
-        WinCursor mLastSet = Cursors.Arrow;
 
         #endregion
 
@@ -267,12 +266,12 @@ namespace InputLibrary
         {
             if (mHasBeenSet)
             {
-                mControl.Cursor = mSetCursor;
+                mControl.Cursor = CursorKindConverter.ToCursorKind(mSetCursor);
                 WinCursor.Current = mSetCursor;
             }
-            else if (mControl.Cursor != Cursors.Arrow)
+            else if (mControl.Cursor != CursorKind.Arrow)
             {
-                mControl.Cursor = Cursors.Arrow;
+                mControl.Cursor = CursorKind.Arrow;
                 WinCursor.Current = Cursors.Arrow;
             }
         }

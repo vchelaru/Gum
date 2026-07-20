@@ -1,7 +1,6 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
-using WinCursor = System.Windows.Forms.Cursor;
 
 namespace InputLibrary
 {
@@ -29,10 +28,10 @@ namespace InputLibrary
 
         public int Height => _control.Height;
 
-        public WinCursor Cursor
+        public CursorKind Cursor
         {
-            get => _control.Cursor;
-            set => _control.Cursor = value;
+            get => CursorKindConverter.ToCursorKind(_control.Cursor);
+            set => _control.Cursor = CursorKindConverter.ToWinCursor(value);
         }
 
         public Point PointToClient(Point point) => _control.PointToClient(point);
