@@ -34,6 +34,11 @@ public interface IGamePad
     /// The left analog stick. Always non-null even if the gamepad has no physical analog stick.
     /// </summary>
     IAnalogStick LeftStick { get; }
+
+    /// <summary>
+    /// The right analog stick. Always non-null even if the gamepad has no physical analog stick.
+    /// </summary>
+    IAnalogStick RightStick { get; }
 }
 
 /// <summary>
@@ -54,4 +59,14 @@ public interface IAnalogStick
     /// or has held it long enough to trigger key-repeat semantics.
     /// </summary>
     bool AsDPadPushedRepeatRate(DPadDirection direction);
+
+    /// <summary>
+    /// The stick's horizontal position after deadzone processing, from -1 (left) to +1 (right).
+    /// </summary>
+    float X { get; }
+
+    /// <summary>
+    /// The stick's vertical position after deadzone processing, from -1 (down) to +1 (up).
+    /// </summary>
+    float Y { get; }
 }

@@ -2,8 +2,11 @@
 using Gum.Forms.DefaultVisuals;
 using Gum.Wireframe;
 using Gum.GueDeriving;
+using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
+using MonoGameGum.Tests.Input;
 using Gum.Input;
+using GamePad = Gum.Input.GamePad;
 using Moq;
 using RenderingLibrary;
 using Shouldly;
@@ -1650,6 +1653,48 @@ public class ListBoxTests : BaseTestClass
         listBox.OnFocusUpdate();
 
         listBox.SelectedIndex.ShouldBe(1);
+    }
+
+    [Fact]
+    public void ListBox_RightStickDeflection_ScrollsAtTopLevelFocus()
+    {
+        // Pins that ListBox.DoTopLevelFocusUpdate calls the same ApplyGamepadStickScroll
+        // that ScrollViewer.DoTopLevelFocusUpdate uses, rather than duplicating the
+        // stick-scroll code (issue #3839).
+        ListBox listBox = new ListBox();
+        listBox.Visual.Height = 200;
+        listBox.AddToRoot();
+
+        for (int i = 0; i < 50; i++)
+        {
+            listBox.Items!.Add($"Item {i}");
+        }
+
+        listBox.VerticalScrollBarMaximum.ShouldBeGreaterThan(0,
+            "the test needs scrollable content to observe the scroll");
+
+        listBox.GamepadStickScrollSpeed = 100;
+        listBox.VerticalScrollBarValue = 500;
+        listBox.DoListItemsHaveFocus = false;
+
+        GamePad gamepad = new();
+        // Right stick pushed fully up (XNA/Gum convention: +1 is up).
+        gamepad.Activity(
+            new GamePadState(
+                new GamePadThumbSticks(new Microsoft.Xna.Framework.Vector2(0, 0), new Microsoft.Xna.Framework.Vector2(0, 1f)),
+                new GamePadTriggers(0, 0),
+                new GamePadButtons(0),
+                new GamePadDPad()),
+            0);
+        FrameworkElement.GamePadsForUiControl.Add(gamepad);
+
+        InteractiveGue.CurrentGameTime = 0;
+        listBox.OnFocusUpdate();
+
+        InteractiveGue.CurrentGameTime = 1;
+        listBox.OnFocusUpdate();
+
+        listBox.VerticalScrollBarValue.ShouldBe(400, tolerance: 0.01);
     }
 
     [Fact]

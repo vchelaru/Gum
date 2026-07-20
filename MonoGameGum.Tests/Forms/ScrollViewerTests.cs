@@ -3,7 +3,9 @@ using Gum.Wireframe;
 using Microsoft.Xna.Framework.Input;
 using Gum.GueDeriving;
 using MonoGameGum.Input;
+using MonoGameGum.Tests.Input;
 using Gum.Input;
+using GamePad = Gum.Input.GamePad;
 using Moq;
 using Shouldly;
 using System;
@@ -196,6 +198,45 @@ public class ScrollViewerTests : BaseTestClass
         scrollViewer.AddChild(button1);
         scrollViewer.RemoveChild(button1);
         scrollViewer.Visual.Children.ShouldNotContain(button1.Visual);
+    }
+
+    [Fact]
+    public void OnFocusUpdate_ShouldScrollByRightStickDeflection_WhenTopLevelFocused()
+    {
+        ScrollViewer scrollViewer = new();
+        scrollViewer.Visual.Width = 200;
+        scrollViewer.Visual.Height = 200;
+
+        ContainerRuntime tallContent = new();
+        tallContent.Width = 0;
+        tallContent.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        tallContent.Height = 1000;
+        tallContent.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+        scrollViewer.AddChild(tallContent);
+
+        scrollViewer.GamepadStickScrollSpeed = 100;
+        scrollViewer.VerticalScrollBarValue = 500;
+        scrollViewer.IsFocused = true;
+
+        GamePad gamepad = new();
+        // Right stick pushed fully up (XNA/Gum convention: +1 is up).
+        gamepad.Activity(
+            new GamePadState(
+                new GamePadThumbSticks(new Microsoft.Xna.Framework.Vector2(0, 0), new Microsoft.Xna.Framework.Vector2(0, 1f)),
+                new GamePadTriggers(0, 0),
+                new GamePadButtons(0),
+                new GamePadDPad()),
+            0);
+        FrameworkElement.GamePadsForUiControl.Add(gamepad);
+
+        InteractiveGue.CurrentGameTime = 0;
+        scrollViewer.OnFocusUpdate();
+
+        InteractiveGue.CurrentGameTime = 1;
+        scrollViewer.OnFocusUpdate();
+
+        // Up on the stick scrolls toward the top of the content, so the value decreases.
+        scrollViewer.VerticalScrollBarValue.ShouldBe(400, tolerance: 0.01);
     }
 
     [Fact]

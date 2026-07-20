@@ -58,6 +58,9 @@ public class GamePad : IGamePad
     /// <inheritdoc/>
     IAnalogStick IGamePad.LeftStick => _leftStick;
 
+    /// <inheritdoc/>
+    IAnalogStick IGamePad.RightStick => _rightStick;
+
     /// <summary>
     /// Whether the controller was connected as of the last committed frame.
     /// </summary>
@@ -311,6 +314,12 @@ public class AnalogStick : IAnalogStick
     /// Recommended for top-down games.
     /// </summary>
     public bool IsMaxPositionNormalized { get; set; } = false;
+
+    /// <inheritdoc/>
+    public float X => _x;
+
+    /// <inheritdoc/>
+    public float Y => _y;
 
     float _x;
     float _y;

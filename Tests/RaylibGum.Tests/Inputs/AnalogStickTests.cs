@@ -6,12 +6,33 @@ namespace RaylibGum.Tests.Inputs;
 /// <summary>
 /// Parity tests for the deadzone/interpolation configuration ported onto the
 /// platform-neutral <see cref="AnalogStick"/> in GumCommon (issue #3137, Phase 1).
-/// The stick exposes no public Position, so the deadzone math is observable only
-/// through whether the (post-deadzone) position crosses the DPad on/off thresholds
-/// (0.55 / 0.45) surfaced by <see cref="AnalogStick.AsDPadDown"/>.
+/// Most of the deadzone math predates <see cref="AnalogStick.X"/>/<see cref="AnalogStick.Y"/>
+/// (issue #3839) and is still exercised indirectly, through whether the (post-deadzone)
+/// position crosses the DPad on/off thresholds (0.55 / 0.45) surfaced by
+/// <see cref="AnalogStick.AsDPadDown"/>.
 /// </summary>
 public class AnalogStickTests : BaseTestClass
 {
+    [Fact]
+    public void XY_ShouldReturnZero_WhenStickWithinDeadzone()
+    {
+        AnalogStick sut = new AnalogStick { Deadzone = 0.2f };
+        sut.Update(0.1f, -0.1f, 1);
+
+        sut.X.ShouldBe(0f);
+        sut.Y.ShouldBe(0f);
+    }
+
+    [Fact]
+    public void XY_ShouldReturnPostDeadzonePosition_WhenStickBeyondDeadzone()
+    {
+        AnalogStick sut = new AnalogStick { Deadzone = 0f };
+        sut.Update(0.3f, -0.6f, 1);
+
+        sut.X.ShouldBe(0.3f);
+        sut.Y.ShouldBe(-0.6f);
+    }
+
     [Fact]
     public void AsDPadDown_Right_False_WhenStickWithinRadialDeadzone()
     {
