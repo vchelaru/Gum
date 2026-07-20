@@ -4,6 +4,7 @@ using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Mvvm;
 using Gum.Plugins;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Plugins.InternalPlugins.EditorTab.Views;
 using Gum.Wireframe;
 using RenderingLibrary;
@@ -17,7 +18,11 @@ using System.Threading.Tasks;
 
 namespace EditorTabPlugin_XNA.ViewModels;
 
-public partial class EditorViewModel : ViewModel
+/// <summary>
+/// Implements <see cref="IZoomController"/> so <c>CameraController</c> (headless, Gum.Presentation)
+/// can drive zoom without depending on this concrete, still-WPF/WinForms-side ViewModel.
+/// </summary>
+public partial class EditorViewModel : ViewModel, IZoomController
 {
     private readonly IPluginManager _pluginManager;
     private readonly IFileCommands _fileCommands;
