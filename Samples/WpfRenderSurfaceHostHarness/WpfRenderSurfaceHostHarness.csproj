@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<Nullable>enable</Nullable>
+		<UseWPF>true</UseWPF>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\XnaAndWinforms\XnaAndWinforms.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- XnaAndWinforms only references the platform-agnostic nkast.Xna.Framework(.Graphics)
+		     packages. The actual GraphicsFactory registration comes from the platform-backend
+		     package (see Tool/EditorTabPlugin_XNA.csproj, the real working call path) - without
+		     it, GraphicsAdapter/GraphicsDevice construction throws a NullReferenceException on
+		     "graphicsFactory" at runtime, with no compile-time signal. -->
+		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.2.9001" />
+	</ItemGroup>
+
+</Project>
