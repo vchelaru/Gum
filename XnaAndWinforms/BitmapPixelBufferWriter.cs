@@ -1,8 +1,6 @@
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace XnaAndWinforms;
@@ -15,6 +13,7 @@ namespace XnaAndWinforms;
 /// </summary>
 public class BitmapPixelBufferWriter : IRenderTargetPixelBufferWriter
 {
+    /// <inheritdoc/>
     public void WriteToBitmap(byte[] rawImage, SurfaceFormat sourceFormat, Bitmap bitmap)
     {
         int width = bitmap.Width;
@@ -36,50 +35,16 @@ public class BitmapPixelBufferWriter : IRenderTargetPixelBufferWriter
         {
             if (strategy == PixelBufferConversionStrategy.ByteSwapRgbaToBgra)
             {
-                CopyAndConvertRgbaToBgra(width, height, rawImage, bmpData.Scan0, bmpData.Stride);
+                RawPixelBufferCopy.CopyAndConvertRgbaToBgra(rawImage, bmpData.Scan0, bmpData.Stride, width, height);
             }
             else
             {
-                int rowSize = width * 4;
-                int rowStride = bmpData.Stride;
-
-                Parallel.For(0, height, (y) =>
-                {
-                    int srcOffset = y * rowSize;
-                    int dstOffset = y * rowStride;
-                    Marshal.Copy(rawImage, srcOffset, bmpData.Scan0 + dstOffset, rowSize);
-                });
+                RawPixelBufferCopy.CopyDirect(rawImage, bmpData.Scan0, bmpData.Stride, width, height);
             }
         }
         finally
         {
             bitmap.UnlockBits(bmpData);
-        }
-    }
-
-    private static unsafe void CopyAndConvertRgbaToBgra(int width, int height, byte[] data, IntPtr buffer, int rowStride)
-    {
-        int rowSize = width * 4;
-
-        fixed (void* pData = &data[0])
-        {
-            byte* src = (byte*)pData;
-            byte* dst = (byte*)buffer;
-
-            Parallel.For(0, height, (y) =>
-            {
-                int srcOffset = y * rowSize;
-                int dstOffset = y * rowStride;
-
-                for (int x = 0; x < width; x++)
-                {
-                    int i = x * 4;
-                    dst[dstOffset + i + 0] = src[srcOffset + i + 2];
-                    dst[dstOffset + i + 1] = src[srcOffset + i + 1];
-                    dst[dstOffset + i + 2] = src[srcOffset + i + 0];
-                    dst[dstOffset + i + 3] = src[srcOffset + i + 3];
-                }
-            });
         }
     }
 }

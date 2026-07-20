@@ -45,6 +45,19 @@ public static class RenderTargetPixelBufferConverter
             return null;
         }
 
+        return GetStrategyForBgraDestination(sourceFormat);
+    }
+
+    /// <summary>
+    /// Returns the conversion strategy for a destination whose byte order is already known to be
+    /// BGRA-ordered 32bpp (e.g. a GDI+ <see cref="PixelFormat.Format32bppPArgb"/>
+    /// <see cref="System.Drawing.Bitmap"/>, or a WPF <c>WriteableBitmap</c> using
+    /// <c>PixelFormats.Pbgra32</c>/<c>PixelFormats.Bgra32</c> - both share the same in-memory byte
+    /// layout as their GDI+ counterparts), or <see langword="null"/> if <paramref name="sourceFormat"/>
+    /// isn't supported.
+    /// </summary>
+    public static PixelBufferConversionStrategy? GetStrategyForBgraDestination(SurfaceFormat sourceFormat)
+    {
         if (sourceFormat == SurfaceFormat.Color)
         {
             return PixelBufferConversionStrategy.ByteSwapRgbaToBgra;
