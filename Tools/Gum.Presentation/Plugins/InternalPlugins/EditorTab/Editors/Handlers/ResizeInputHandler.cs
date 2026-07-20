@@ -3,17 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Windows.Forms;
-using EditorTabPlugin_XNA.ExtensionMethods;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Input;
+using Gum.Wireframe.Editors.Visuals;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math;
 using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 using HorizontalAlignment = RenderingLibrary.Graphics.HorizontalAlignment;
-using Gum.Input;
-using Gum.Wireframe.Editors.Visuals;
 
 namespace Gum.Wireframe.Editors.Handlers;
 
@@ -25,7 +23,7 @@ public class ResizeInputHandler : InputHandlerBase
     private ResizeSide _sideGrabbed = ResizeSide.None;
     private ResizeSide _sideOver = ResizeSide.None;
 
-    private readonly ResizeHandlesVisual _resizeHandlesVisual;
+    private readonly IResizeHandlesVisual _resizeHandlesVisual;
 
     public override int Priority => 90; // Higher than move, lower than rotation
 
@@ -35,7 +33,7 @@ public class ResizeInputHandler : InputHandlerBase
     /// </summary>
     public ResizeSide SideOver => _sideOver;
 
-    public ResizeInputHandler(EditorContext context, ResizeHandlesVisual resizeHandlesVisual)
+    public ResizeInputHandler(EditorContext context, IResizeHandlesVisual resizeHandlesVisual)
         : base(context)
     {
         _resizeHandlesVisual = resizeHandlesVisual;
@@ -48,19 +46,19 @@ public class ResizeInputHandler : InputHandlerBase
             return false;
         }
 
-        return _resizeHandlesVisual.Handles.GetSideOver(worldX, worldY) != ResizeSide.None;
+        return _resizeHandlesVisual.GetSideOver(worldX, worldY) != ResizeSide.None;
     }
 
-    public override Cursor? GetCursorToShow(float worldX, float worldY)
+    public override GumCursorKind? GetCursorToShow(float worldX, float worldY)
     {
         if (IsSideEffectivelyDisabled(_sideOver)) return null;
 
         return _sideOver switch
         {
-            ResizeSide.TopLeft or ResizeSide.BottomRight => System.Windows.Forms.Cursors.SizeNWSE,
-            ResizeSide.TopRight or ResizeSide.BottomLeft => System.Windows.Forms.Cursors.SizeNESW,
-            ResizeSide.Top or ResizeSide.Bottom => System.Windows.Forms.Cursors.SizeNS,
-            ResizeSide.Left or ResizeSide.Right => System.Windows.Forms.Cursors.SizeWE,
+            ResizeSide.TopLeft or ResizeSide.BottomRight => GumCursorKind.SizeNWSE,
+            ResizeSide.TopRight or ResizeSide.BottomLeft => GumCursorKind.SizeNESW,
+            ResizeSide.Top or ResizeSide.Bottom => GumCursorKind.SizeNS,
+            ResizeSide.Left or ResizeSide.Right => GumCursorKind.SizeWE,
             _ => null
         };
     }
@@ -104,12 +102,12 @@ public class ResizeInputHandler : InputHandlerBase
             return;
         }
 
-        var cursor = InputLibrary.Cursor.Self;
+        var cursor = Context.Cursor;
 
         // If dragging, don't change the side over
         if (cursor.PrimaryPush || (!cursor.PrimaryDown && !cursor.PrimaryClick))
         {
-            _sideOver = _resizeHandlesVisual.Handles.GetSideOver(worldX, worldY);
+            _sideOver = _resizeHandlesVisual.GetSideOver(worldX, worldY);
         }
     }
 
@@ -390,14 +388,14 @@ public class ResizeInputHandler : InputHandlerBase
                 break;
         }
 
-        if (_resizeHandlesVisual.Handles.Width != 0)
+        if (_resizeHandlesVisual.HandlesWidth != 0)
         {
-            widthMultiplier *= (((IPositionedSizedObject)ipso).Width / _resizeHandlesVisual.Handles.Width);
+            widthMultiplier *= (((IPositionedSizedObject)ipso).Width / _resizeHandlesVisual.HandlesWidth);
         }
 
-        if (_resizeHandlesVisual.Handles.Height != 0)
+        if (_resizeHandlesVisual.HandlesHeight != 0)
         {
-            heightMultiplier *= (((IPositionedSizedObject)ipso).Height / _resizeHandlesVisual.Handles.Height);
+            heightMultiplier *= (((IPositionedSizedObject)ipso).Height / _resizeHandlesVisual.HandlesHeight);
         }
 
         if (Context.HotkeyManager.IsPressedInControl(Context.HotkeyManager.ResizeFromCenter))
@@ -490,7 +488,9 @@ public class ResizeInputHandler : InputHandlerBase
         }
         else if (verticalAlignment == VerticalAlignment.TextBaseline)
         {
-            if (gue.RenderableComponent is Text text && text.Height > 0)
+            // IWrappedText, not the concrete Text (XNALIKE-only, unreachable from this headless
+            // assembly): every Text implements IWrappedText, so the runtime match is identical.
+            if (gue.RenderableComponent is IWrappedText text && text.Height > 0)
             {
                 return 1 - (text.DescenderHeight * text.FontScale / text.Height);
             }
@@ -527,9 +527,8 @@ public class ResizeInputHandler : InputHandlerBase
             IRenderableIpso? ipso = Context.WireframeObjectManager.GetRepresentation(instanceSave, elementStack);
             if (ipso == null) return;
 
-            var cursor = InputLibrary.Cursor.Self;
-            float cursorX = cursor.GetWorldX();
-            float cursorY = cursor.GetWorldY();
+            var cursor = Context.Cursor;
+            Context.Camera.ScreenToWorld(cursor.X, cursor.Y, out float cursorX, out float cursorY);
 
             float top = ipso.GetAbsoluteTop();
             float bottom = ipso.GetAbsoluteBottom();

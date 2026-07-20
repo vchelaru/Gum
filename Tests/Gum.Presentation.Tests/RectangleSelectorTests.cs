@@ -1,26 +1,26 @@
 using Gum;
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.Input;
 using Gum.Managers;
-using Gum.PropertyGridHelpers;
-using Gum.Services.Dialogs;
-using Gum.ToolStates;
-using Gum.Undo;
 using Gum.Wireframe;
+using Gum.Wireframe.Editors.Visuals;
 using Moq;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
 
-namespace GumToolUnitTests.Wireframe;
+namespace Gum.Presentation.Tests;
 
-public class RectangleSelectorTests : BaseTestClass
+public class RectangleSelectorTests
 {
     private readonly Mock<IHotkeyManager> _mockHotkeyManager;
     private readonly Mock<IWireframeObjectManager> _mockWireframeManager;
     private readonly Mock<ISelectionManager> _mockSelectionManager;
     private readonly Mock<IGuiCommands> _mockGuiCommands;
-    private readonly Mock<Layer> _mockLayer;
+    private readonly Mock<ISelectionRectangleVisual> _mockSelectionRectangleVisual;
+    private readonly Mock<IGumCursorState> _mockCursor;
+    private readonly Camera _camera;
     private readonly RectangleSelector _rectangleSelector;
     private bool _isShiftPressed;
 
@@ -30,7 +30,9 @@ public class RectangleSelectorTests : BaseTestClass
         _mockWireframeManager = new Mock<IWireframeObjectManager>();
         _mockSelectionManager = new Mock<ISelectionManager>();
         _mockGuiCommands = new Mock<IGuiCommands>();
-        _mockLayer = new Mock<Layer>();
+        _mockSelectionRectangleVisual = new Mock<ISelectionRectangleVisual>();
+        _mockCursor = new Mock<IGumCursorState>();
+        _camera = new Camera { Zoom = 1f };
 
         // Setup the hotkey manager to use our test flag
         _mockHotkeyManager.Setup(x => x.IsPressedInControl(It.IsAny<KeyCombination>()))
@@ -41,12 +43,20 @@ public class RectangleSelectorTests : BaseTestClass
             _mockWireframeManager.Object,
             _mockSelectionManager.Object,
             _mockGuiCommands.Object,
-            _mockLayer.Object);
+            _camera,
+            _mockCursor.Object,
+            _mockSelectionRectangleVisual.Object);
     }
 
     private void SetShiftPressed(bool pressed)
     {
         _isShiftPressed = pressed;
+    }
+
+    private void SetCursorPosition(float x, float y)
+    {
+        _mockCursor.SetupGet(c => c.X).Returns(x);
+        _mockCursor.SetupGet(c => c.Y).Returns(y);
     }
 
     #region HandlePush Tests
@@ -99,16 +109,23 @@ public class RectangleSelectorTests : BaseTestClass
         _rectangleSelector.Bounds.ShouldBe(initialBounds);
     }
 
-    [Fact (Skip ="Cannot be tested currently")]
+    [Fact]
     public void HandleDrag_ShouldUpdateBounds_WhenActive()
     {
-        // Note: This test requires InputLibrary.Cursor to be set up, which is challenging in unit tests
-        // Consider testing the UpdateBounds logic separately or making it testable through dependency injection
-        // For now, we document that HandleDrag is tested through integration tests
+        // Arrange - push at (10,10), then drag past the minimum drag distance (3px at zoom 1).
+        SetShiftPressed(false);
+        _mockSelectionManager.Setup(x => x.IsOverBody).Returns(false);
+        SetCursorPosition(10f, 10f);
+        _rectangleSelector.HandlePush(10f, 10f);
 
-        // This is a placeholder to document that HandleDrag should be tested
-        // The actual implementation would require mocking the InputLibrary.Cursor.Self singleton
-        true.ShouldBeTrue(); // Placeholder assertion
+        // Act
+        SetCursorPosition(20f, 25f);
+        _rectangleSelector.HandleDrag();
+
+        // Assert
+        _rectangleSelector.IsActive.ShouldBeTrue();
+        _rectangleSelector.HasMovedEnough.ShouldBeTrue();
+        _rectangleSelector.Bounds.ShouldBe((10f, 10f, 20f, 25f));
     }
 
     #endregion
@@ -165,7 +182,7 @@ public class RectangleSelectorTests : BaseTestClass
 
         // Assert
         cursor.ShouldNotBeNull();
-        cursor.ShouldBe(System.Windows.Forms.Cursors.Cross);
+        cursor.ShouldBe(GumCursorKind.Cross);
     }
 
     [Fact]

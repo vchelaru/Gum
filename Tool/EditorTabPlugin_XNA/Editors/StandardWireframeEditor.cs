@@ -15,10 +15,8 @@ using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 using Vector2 = System.Numerics.Vector2;
 using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
-using System.Windows.Input;
 using System;
 using Gum.ToolCommands;
-using EditorTabPlugin_XNA.ExtensionMethods;
 using Gum.Services;
 using Gum.Commands;
 using Gum.Undo;
@@ -50,7 +48,6 @@ public class StandardWireframeEditor : WireframeEditor
 
     private readonly IElementCommands _elementCommands;
     private readonly IWireframeObjectManager _wireframeObjectManager;
-    private readonly SelectionManager _selectionManager;
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
 
     public InputLibrary.Cursor Cursor
@@ -97,6 +94,8 @@ public class StandardWireframeEditor : WireframeEditor
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         IWireframeObjectManager wireframeObjectManager,
         IUiSettingsService uiSettingsService,
+        Camera camera,
+        IGumCursorState cursor,
         IToolFontService toolFontService,
         IPluginManager pluginManager)
         : base(
@@ -114,12 +113,12 @@ public class StandardWireframeEditor : WireframeEditor
               layer,
               lineColor,
               textColor,
-              toolFontService,
+              camera,
+              cursor,
               pluginManager)
     {
         _elementCommands = elementCommands;
         _wireframeObjectManager = wireframeObjectManager;
-        _selectionManager = selectionManager;
         _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
 
         _resizeHandlesVisual = new ResizeHandlesVisual(_context, lineColor);
@@ -132,8 +131,8 @@ public class StandardWireframeEditor : WireframeEditor
         _rotationHandleVisual = new RotationHandleVisual(_context, Color.Yellow);
         _rotationInputHandler = new RotationInputHandler(_context, _rotationHandleVisual);
 
-        widthDimensionDisplay = new DimensionDisplayVisual(_context, WidthOrHeight.Width, _resizeInputHandler);
-        heightDimensionDisplay = new DimensionDisplayVisual(_context, WidthOrHeight.Height, _resizeInputHandler);
+        widthDimensionDisplay = new DimensionDisplayVisual(_context, WidthOrHeight.Width, _resizeInputHandler, toolFontService);
+        heightDimensionDisplay = new DimensionDisplayVisual(_context, WidthOrHeight.Height, _resizeInputHandler, toolFontService);
 
         // Register handlers and visuals with base class
         // Handlers will be checked in priority order (Rotation=100, Resize=90, Move=80)

@@ -4,10 +4,8 @@ using Gum.Commands;
 using Gum.Input;
 using Gum.Managers;
 using Gum.Wireframe;
+using Gum.Wireframe.Editors.Visuals;
 using RenderingLibrary;
-using RenderingLibrary.Graphics;
-using RenderingLibrary.Math.Geometry;
-using Color = System.Drawing.Color;
 
 namespace Gum;
 
@@ -23,9 +21,9 @@ public class RectangleSelector
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly ISelectionManager _selectionManager;
     private readonly IGuiCommands _guiCommands;
-    private readonly Layer _overlayLayer;
-
-    private readonly LineRectangle _selectionRectangle;
+    private readonly Camera _camera;
+    private readonly IGumCursorState _cursor;
+    private readonly ISelectionRectangleVisual _selectionRectangleVisual;
 
     private bool _isActive;
     private bool _hasMovedEnough;
@@ -55,22 +53,17 @@ public class RectangleSelector
         IWireframeObjectManager wireframeObjectManager,
         ISelectionManager selectionManager,
         IGuiCommands guiCommands,
-        Layer overlayLayer)
+        Camera camera,
+        IGumCursorState cursor,
+        ISelectionRectangleVisual selectionRectangleVisual)
     {
         _hotkeyManager = hotkeyManager;
         _wireframeObjectManager = wireframeObjectManager;
         _selectionManager = selectionManager;
         _guiCommands = guiCommands;
-        _overlayLayer = overlayLayer;
-
-        // Create visual rectangle
-        _selectionRectangle = new LineRectangle();
-        _selectionRectangle.Color = Color.DodgerBlue;
-        _selectionRectangle.IsDotted = true;
-        _selectionRectangle.LinePixelWidth = 1;
-        _selectionRectangle.Visible = false;
-
-        ShapeManager.Self.Add(_selectionRectangle, _overlayLayer);
+        _camera = camera;
+        _cursor = cursor;
+        _selectionRectangleVisual = selectionRectangleVisual;
     }
 
     public void HandlePush(float worldX, float worldY)
@@ -100,18 +93,12 @@ public class RectangleSelector
 
         if (!shouldActivate) return;
 
-        var cursor = InputLibrary.Cursor.Self;
-        _currentX = cursor.GetWorldX();
-        _currentY = cursor.GetWorldY();
+        _camera.ScreenToWorld(_cursor.X, _cursor.Y, out _currentX, out _currentY);
 
         // Check if moved enough to consider it a drag
         if (!_hasMovedEnough)
         {
-            var zoom = 1f;
-            if(SystemManagers.Default?.Renderer != null)
-            {
-                zoom = SystemManagers.Default.Renderer.Camera.Zoom;
-            }
+            var zoom = _camera.Zoom;
             var screenDragDistance = System.Math.Sqrt(
                 System.Math.Pow((_currentX - _startX) * zoom, 2) +
                 System.Math.Pow((_currentY - _startY) * zoom, 2));
@@ -165,31 +152,31 @@ public class RectangleSelector
     {
         // Update visual visibility
         // Don't show if a handler is active (even if rectangle selector thinks it's active)
-        _selectionRectangle.Visible = _isActive && _hasMovedEnough && !isHandlerActive;
+        _selectionRectangleVisual.Visible = _isActive && _hasMovedEnough && !isHandlerActive;
 
-        if (_selectionRectangle.Visible)
+        if (_selectionRectangleVisual.Visible)
         {
             var (left, top, right, bottom) = Bounds;
-            _selectionRectangle.X = left;
-            _selectionRectangle.Y = top;
-            _selectionRectangle.Width = right - left;
-            _selectionRectangle.Height = bottom - top;
+            _selectionRectangleVisual.X = left;
+            _selectionRectangleVisual.Y = top;
+            _selectionRectangleVisual.Width = right - left;
+            _selectionRectangleVisual.Height = bottom - top;
         }
     }
 
-    public System.Windows.Forms.Cursor? GetCursorToShow()
+    public GumCursorKind? GetCursorToShow()
     {
         // Show crosshair when shift is held to indicate rectangle select mode
         if (_hotkeyManager.IsPressedInControl(_hotkeyManager.MultiSelect))
         {
-            return System.Windows.Forms.Cursors.Cross;
+            return GumCursorKind.Cross;
         }
         return null;
     }
 
     public void Destroy()
     {
-        ShapeManager.Self.Remove(_selectionRectangle);
+        _selectionRectangleVisual.Destroy();
     }
 
     #region Private Methods

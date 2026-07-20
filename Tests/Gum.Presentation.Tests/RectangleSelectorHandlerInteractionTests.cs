@@ -1,26 +1,29 @@
 using Gum;
 using Gum.Commands;
+using Gum.Input;
 using Gum.Managers;
-using Gum.Services.Dialogs;
 using Gum.Wireframe;
+using Gum.Wireframe.Editors.Visuals;
 using Moq;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
 
-namespace GumToolUnitTests.Wireframe;
+namespace Gum.Presentation.Tests;
 
 /// <summary>
 /// Tests for RectangleSelector interaction with input handlers (resize, rotate, polygon points, etc.).
 /// These tests verify the fix for the bug where dragging handles triggered rectangle selection.
 /// </summary>
-public class RectangleSelectorHandlerInteractionTests : BaseTestClass
+public class RectangleSelectorHandlerInteractionTests
 {
     private readonly Mock<IHotkeyManager> _mockHotkeyManager;
     private readonly Mock<IWireframeObjectManager> _mockWireframeManager;
     private readonly Mock<ISelectionManager> _mockSelectionManager;
     private readonly Mock<IGuiCommands> _mockGuiCommands;
-    private readonly Mock<Layer> _mockLayer;
+    private readonly Mock<ISelectionRectangleVisual> _mockSelectionRectangleVisual;
+    private readonly Mock<IGumCursorState> _mockCursor;
+    private readonly Camera _camera;
     private readonly RectangleSelector _rectangleSelector;
     private bool _isShiftPressed;
 
@@ -30,7 +33,9 @@ public class RectangleSelectorHandlerInteractionTests : BaseTestClass
         _mockWireframeManager = new Mock<IWireframeObjectManager>();
         _mockSelectionManager = new Mock<ISelectionManager>();
         _mockGuiCommands = new Mock<IGuiCommands>();
-        _mockLayer = new Mock<Layer>();
+        _mockSelectionRectangleVisual = new Mock<ISelectionRectangleVisual>();
+        _mockCursor = new Mock<IGumCursorState>();
+        _camera = new Camera { Zoom = 1f };
 
         // Setup the hotkey manager to use our test flag
         _mockHotkeyManager.Setup(x => x.IsPressedInControl(It.IsAny<KeyCombination>()))
@@ -41,12 +46,20 @@ public class RectangleSelectorHandlerInteractionTests : BaseTestClass
             _mockWireframeManager.Object,
             _mockSelectionManager.Object,
             _mockGuiCommands.Object,
-            _mockLayer.Object);
+            _camera,
+            _mockCursor.Object,
+            _mockSelectionRectangleVisual.Object);
     }
 
     private void SetShiftPressed(bool pressed)
     {
         _isShiftPressed = pressed;
+    }
+
+    private void SetCursorPosition(float x, float y)
+    {
+        _mockCursor.SetupGet(c => c.X).Returns(x);
+        _mockCursor.SetupGet(c => c.Y).Returns(y);
     }
 
     #region Handler Interaction Tests
@@ -102,29 +115,24 @@ public class RectangleSelectorHandlerInteractionTests : BaseTestClass
         _rectangleSelector.IsActive.ShouldBeFalse();
     }
 
-    [Fact (Skip = "Cannot be tested without mocking InputLibrary.Cursor")]
+    [Fact]
     public void HandleDrag_ShouldActivate_WhenHandlerNotActiveAndConditionsMet()
     {
-        // This test documents that when isHandlerActive = false,
-        // normal activation logic should proceed.
-        // 
-        // Current limitation: This requires mocking InputLibrary.Cursor.Self
-        // to simulate drag movement exceeding the threshold.
-        //
-        // Integration test would be better suited for this scenario.
-        
-        // Arrange
+        // Now testable: RectangleSelector takes IGumCursorState via constructor injection
+        // instead of reading the InputLibrary.Cursor.Self singleton (previously untestable —
+        // see the removed [Fact(Skip = ...)] this replaces).
         SetShiftPressed(true);
         _mockSelectionManager.Setup(x => x.IsOverBody).Returns(false);
-        
+        SetCursorPosition(100f, 100f);
+
         _rectangleSelector.HandlePush(100f, 100f);
 
-        // Act
-        // Would need to mock cursor movement here
+        // Act - cursor moves past the minimum drag distance (3px at zoom 1)
+        SetCursorPosition(120f, 100f);
         _rectangleSelector.HandleDrag(isHandlerActive: false);
 
         // Assert
-        // _rectangleSelector.IsActive.ShouldBeTrue(); // After movement threshold
+        _rectangleSelector.IsActive.ShouldBeTrue();
     }
 
     [Fact]
@@ -149,7 +157,7 @@ public class RectangleSelectorHandlerInteractionTests : BaseTestClass
         // Arrange - Simulate shift+click (push then release without drag)
         SetShiftPressed(true);
         _mockSelectionManager.Setup(x => x.IsOverBody).Returns(false);
-        
+
         _rectangleSelector.HandlePush(100f, 100f);
         // No HandleDrag call = no activation
 
@@ -171,7 +179,7 @@ public class RectangleSelectorHandlerInteractionTests : BaseTestClass
         // Arrange - Simulate repeated drag calls while handler is active
         SetShiftPressed(false);
         _mockSelectionManager.Setup(x => x.IsOverBody).Returns(false);
-        
+
         _rectangleSelector.HandlePush(100f, 100f);
 
         // Act - Multiple drag calls with handler active
@@ -196,10 +204,13 @@ public class RectangleSelectorHandlerInteractionTests : BaseTestClass
         // Arrange
         SetShiftPressed(false);
         _mockSelectionManager.Setup(x => x.IsOverBody).Returns(false);
+        SetCursorPosition(100f, 100f);
 
         _rectangleSelector.HandlePush(100f, 100f);
 
-        // Act - Call with default parameter (isHandlerActive defaults to false)
+        // Act - Call with default parameter (isHandlerActive defaults to false), cursor moved past
+        // the minimum drag distance.
+        SetCursorPosition(110f, 100f);
         _rectangleSelector.HandleDrag();
 
         // Assert - Should activate because handler is not active and conditions are met

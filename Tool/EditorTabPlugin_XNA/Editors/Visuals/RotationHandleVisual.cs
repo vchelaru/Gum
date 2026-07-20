@@ -15,7 +15,7 @@ namespace Gum.Wireframe.Editors.Visuals;
 /// Visual component that displays the rotation handle as a yellow circle
 /// positioned to the right of the selected object.
 /// </summary>
-public class RotationHandleVisual : EditorVisualBase
+public class RotationHandleVisual : EditorVisualBase, IRotationHandleVisual
 {
     private readonly LineCircle _rotationHandle;
 
@@ -26,6 +26,11 @@ public class RotationHandleVisual : EditorVisualBase
     /// Gets the underlying rotation handle shape for input handling.
     /// </summary>
     public LineCircle Handle => _rotationHandle;
+
+    // IRotationHandleVisual — the narrow, headless-safe surface RotationInputHandler (now in
+    // Gum.Presentation) needs. LineCircle itself can't be exposed there: it's XNALIKE-only.
+    bool IRotationHandleVisual.HandleVisible => _rotationHandle.Visible;
+    bool IRotationHandleVisual.HandleHasCursorOver(float worldX, float worldY) => _rotationHandle.HasCursorOver(worldX, worldY);
 
     public RotationHandleVisual(EditorContext context, Color color) : base(context)
     {

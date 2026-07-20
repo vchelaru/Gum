@@ -1,6 +1,4 @@
-using System.Windows.Forms;
-using RenderingLibrary;
-using RenderingLibrary.Graphics;
+using Gum.Input;
 
 namespace Gum.Wireframe.Editors.Handlers;
 
@@ -22,7 +20,7 @@ public abstract class InputHandlerBase : IInputHandler
 
     public abstract bool HasCursorOver(float worldX, float worldY);
 
-    public virtual Cursor? GetCursorToShow(float worldX, float worldY) => null;
+    public virtual GumCursorKind? GetCursorToShow(float worldX, float worldY) => null;
 
     public virtual bool HandlePush(float worldX, float worldY)
     {
@@ -73,12 +71,12 @@ public abstract class InputHandlerBase : IInputHandler
 
     protected float GetCursorXChange()
     {
-        return InputLibrary.Cursor.Self.XChange / Renderer.Self.Camera.Zoom;
+        return Context.Cursor.XChange / Context.Camera.Zoom;
     }
 
     protected float GetCursorYChange()
     {
-        return InputLibrary.Cursor.Self.YChange / Renderer.Self.Camera.Zoom;
+        return Context.Cursor.YChange / Context.Camera.Zoom;
     }
 
     protected void MarkAsChanged()

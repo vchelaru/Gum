@@ -1,11 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Windows.Forms;
 using Gum.DataTypes.Variables;
+using Gum.Input;
 using Gum.Wireframe.Editors.Visuals;
 using RenderingLibrary;
-using RenderingLibrary.Graphics;
 using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
 using Matrix = System.Numerics.Matrix4x4;
@@ -14,6 +13,12 @@ namespace Gum.Wireframe.Editors.Handlers;
 
 /// <summary>
 /// Handles input for polygon point manipulation (selecting, dragging, adding, deleting points).
+/// Stays tool-side (unlike the rest of the input-handler family, relocated to headless
+/// Gum.Presentation, part of #3846): it directly reads/writes the selected object's
+/// <see cref="LinePolygon"/> geometry (PointAt/SetPointAt/InsertPointAt/RemovePointAtIndex),
+/// which is XNALIKE-only (draws via SpriteBatch) — a deeper blocker than the visual-overlay
+/// dependencies the other handlers had, and one a narrow interface can't paper over without
+/// its own dedicated seam (e.g. an ILinePolygon abstraction) design, which is follow-up work.
 /// </summary>
 public class PolygonPointInputHandler : InputHandlerBase
 {
@@ -63,17 +68,17 @@ public class PolygonPointInputHandler : InputHandlerBase
         return false;
     }
 
-    public override Cursor? GetCursorToShow(float worldX, float worldY)
+    public override GumCursorKind? GetCursorToShow(float worldX, float worldY)
     {
         var pointOver = _pointNodesVisual.GetIndexOver(worldX, worldY);
         if (pointOver != null)
         {
-            return System.Windows.Forms.Cursors.SizeAll;
+            return GumCursorKind.SizeAll;
         }
 
         if (_addPointSpriteVisual.IsPointOver(worldX, worldY))
         {
-            return System.Windows.Forms.Cursors.Cross;
+            return GumCursorKind.Cross;
         }
 
         return null;
@@ -126,7 +131,7 @@ public class PolygonPointInputHandler : InputHandlerBase
     {
         if (_grabbedIndex == null) return;
 
-        var cursor = InputLibrary.Cursor.Self;
+        var cursor = Context.Cursor;
         if (cursor.XChange == 0 && cursor.YChange == 0) return;
 
         MoveGrabbedPoint(cursor);
@@ -247,7 +252,7 @@ public class PolygonPointInputHandler : InputHandlerBase
         return newIndex;
     }
 
-    private void MoveGrabbedPoint(InputLibrary.Cursor cursor)
+    private void MoveGrabbedPoint(IGumCursorState cursor)
     {
         var linePolygon = SelectedLinePolygon;
         if (linePolygon == null || _grabbedIndex == null) return;
@@ -255,7 +260,7 @@ public class PolygonPointInputHandler : InputHandlerBase
         Context.HasChangedAnythingSinceLastPush = true;
 
         var pointAtIndex = linePolygon.PointAt(_grabbedIndex.Value);
-        var zoom = Renderer.Self.Camera.Zoom;
+        var zoom = Context.Camera.Zoom;
 
         Matrix.Invert(linePolygon.GetAbsoluteRotationMatrix(), out Matrix rotationMatrix);
 

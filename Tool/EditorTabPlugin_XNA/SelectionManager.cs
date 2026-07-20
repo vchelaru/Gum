@@ -12,6 +12,7 @@ using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe.Editors;
+using Gum.Wireframe.Editors.Visuals;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
@@ -26,13 +27,10 @@ using WinCursor = System.Windows.Forms.Cursor;
 
 namespace Gum.Wireframe;
 
-public interface ISelectionManager
-{
-    bool IsOverBody { get; set; }
-    void DeselectAll();
-    void ToggleSelection(GraphicalUiElement element);
-    void Select(IEnumerable<GraphicalUiElement> elements);
-}
+// ISelectionManager moved to Gum.Presentation (Tools/Gum.Presentation/Wireframe/ISelectionManager.cs)
+// so EditorContext/RectangleSelector/WireframeEditor and its input handlers (also moved) can depend
+// on it without the concrete SelectionManager, which stays here — it directly reads WinForms
+// Control.ModifierKeys and sets a WinForms Cursor. Same namespace, so no using changes needed.
 
 public class SelectionManager : ISelectionManager
 {
@@ -252,7 +250,9 @@ public class SelectionManager : ISelectionManager
             _wireframeObjectManager,
             this,
             _guiCommands,
-            overlayLayer);
+            Renderer.Self.Camera,
+            InputLibrary.Cursor.Self,
+            new SelectionRectangleVisual(overlayLayer));
     }
 
     /// <summary>
@@ -442,7 +442,7 @@ public class SelectionManager : ISelectionManager
                 {
                     var rectangleCursor = _rectangleSelector.GetCursorToShow();
                     if (rectangleCursor != null)
-                        cursorToSet = rectangleCursor;
+                        cursorToSet = ToWinFormsCursor(rectangleCursor.Value);
                 }
 
                 // Cursor and IsOverBody are determined by which of four mutually exclusive
@@ -452,20 +452,20 @@ public class SelectionManager : ISelectionManager
                 {
                     IsOverBody = false;
                     if (WireframeEditor != null)
-                        cursorToSet = WireframeEditor.GetWindowsCursorToShow(cursorToSet, worldXAt, worldYAt);
+                        cursorToSet = ApplyHandlerCursor(cursorToSet, worldXAt, worldYAt);
                 }
                 else if (WireframeEditor?.HasCursorOverHandles == true)
                 {
                     representationOver = _wireframeObjectManager.GetSelectedRepresentation();
                     IsOverBody = false;
-                    cursorToSet = WireframeEditor.GetWindowsCursorToShow(cursorToSet, worldXAt, worldYAt);
+                    cursorToSet = ApplyHandlerCursor(cursorToSet, worldXAt, worldYAt);
                 }
                 else if (IsOverBody && Cursor.PrimaryDown)
                 {
                     representationOver = _wireframeObjectManager.GetSelectedRepresentation();
                     var selectedIsLocked = _selectedState.SelectedInstance?.Locked == true;
                     if (!selectedIsLocked && WireframeEditor != null)
-                        cursorToSet = WireframeEditor.GetWindowsCursorToShow(cursorToSet, worldXAt, worldYAt);
+                        cursorToSet = ApplyHandlerCursor(cursorToSet, worldXAt, worldYAt);
                 }
                 else
                 {
@@ -477,7 +477,7 @@ public class SelectionManager : ISelectionManager
                         var isRepresentationLocked = representationOver?.Tag is InstanceSave lockedInst && lockedInst.Locked;
                         IsOverBody = !isRepresentationLocked;
                         if (!isRepresentationLocked && WireframeEditor != null)
-                            cursorToSet = WireframeEditor.GetWindowsCursorToShow(cursorToSet, worldXAt, worldYAt);
+                            cursorToSet = ApplyHandlerCursor(cursorToSet, worldXAt, worldYAt);
                     }
                     else
                     {
@@ -529,6 +529,32 @@ public class SelectionManager : ISelectionManager
 
         highlightManager.UpdateHighlightObjects();
     }
+
+    /// <summary>
+    /// Asks <see cref="WireframeEditor"/> (headless, in Gum.Presentation) which cursor its
+    /// handlers want to show and maps the neutral <see cref="GumCursorKind"/> answer to a real
+    /// WinForms <see cref="WinCursor"/>, or returns <paramref name="defaultCursor"/> unchanged if
+    /// no handler has an opinion. This is the one place that mapping happens — WireframeEditor and
+    /// its input handlers only ever deal in <see cref="GumCursorKind"/>.
+    /// </summary>
+    private WinCursor ApplyHandlerCursor(WinCursor defaultCursor, float worldXAt, float worldYAt)
+    {
+        var cursorKind = WireframeEditor.GetCursorToShow(worldXAt, worldYAt);
+        return cursorKind != null ? ToWinFormsCursor(cursorKind.Value) : defaultCursor;
+    }
+
+    private static WinCursor ToWinFormsCursor(GumCursorKind kind) => kind switch
+    {
+        GumCursorKind.Arrow => System.Windows.Forms.Cursors.Arrow,
+        GumCursorKind.Cross => System.Windows.Forms.Cursors.Cross,
+        GumCursorKind.Hand => System.Windows.Forms.Cursors.Hand,
+        GumCursorKind.SizeAll => System.Windows.Forms.Cursors.SizeAll,
+        GumCursorKind.SizeNS => System.Windows.Forms.Cursors.SizeNS,
+        GumCursorKind.SizeWE => System.Windows.Forms.Cursors.SizeWE,
+        GumCursorKind.SizeNESW => System.Windows.Forms.Cursors.SizeNESW,
+        GumCursorKind.SizeNWSE => System.Windows.Forms.Cursors.SizeNWSE,
+        _ => System.Windows.Forms.Cursors.Arrow
+    };
 
     public GraphicalUiElement GetRepresentationAt(float x, float y, bool trySkipSelected, List<ElementWithState> elementStack)
     {
@@ -828,6 +854,8 @@ public class SelectionManager : ISelectionManager
                         _variableInCategoryPropagationLogic,
                         _wireframeObjectManager,
                         _uiSettingsService,
+                        Renderer.Self.Camera,
+                        InputLibrary.Cursor.Self,
                         _toolFontService,
                         _pluginManager);
                 }
@@ -868,7 +896,8 @@ public class SelectionManager : ISelectionManager
             _variableInCategoryPropagationLogic,
             _wireframeObjectManager,
             _uiSettingsService,
-            _toolFontService,
+            Renderer.Self.Camera,
+            InputLibrary.Cursor.Self,
             _pluginManager);
     }
 

@@ -1,29 +1,19 @@
-using Gum.Converters;
-using Gum.DataTypes;
-using Gum.DataTypes.Variables;
-using Gum.Plugins;
-using Gum.ToolStates;
-using Gum.Undo;
-using RenderingLibrary;
-using RenderingLibrary.Graphics;
 using System.Collections.Generic;
 using System.Linq;
-using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
-using Vector2 = System.Numerics.Vector2;
-using Matrix = System.Numerics.Matrix4x4;
-using Gum.Managers;
-using System.Collections;
-using System;
-using Gum.PropertyGridHelpers;
-using EditorTabPlugin_XNA.ExtensionMethods;
 using Gum.Commands;
+using Gum.Input;
+using Gum.PropertyGridHelpers;
+using Gum.Plugins;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
 using Gum.ToolCommands;
-using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.ToolStates;
+using Gum.Undo;
 using Gum.Wireframe.Editors;
 using Gum.Wireframe.Editors.Handlers;
 using Gum.Wireframe.Editors.Visuals;
-using Gum.Input;
+using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using Color = System.Drawing.Color;
 
 namespace Gum.Wireframe;
@@ -50,7 +40,7 @@ public abstract class WireframeEditor
 
     public WireframeEditor(
         global::Gum.Managers.IHotkeyManager hotkeyManager,
-        SelectionManager selectionManager,
+        ISelectionManager selectionManager,
         ISelectedState selectedState,
         IElementCommands elementCommands,
         IGuiCommands guiCommands,
@@ -63,7 +53,8 @@ public abstract class WireframeEditor
         Layer layer,
         Color lineColor,
         Color textColor,
-        IToolFontService toolFontService,
+        Camera camera,
+        IGumCursorState cursor,
         IPluginManager pluginManager)
     {
         // Create shared EditorContext and MoveInputHandler
@@ -82,7 +73,8 @@ public abstract class WireframeEditor
             layer,
             lineColor,
             textColor,
-            toolFontService,
+            camera,
+            cursor,
             pluginManager);
 
         _moveInputHandler = new MoveInputHandler(_context);
@@ -142,7 +134,7 @@ public abstract class WireframeEditor
     /// This ensures input decisions are made in the same frame.
     /// NOTE: Hover updates are called separately in UpdateHover() every frame.
     /// </summary>
-    public void ProcessHandleInput(InputLibrary.Cursor cursor, float worldX, float worldY)
+    public void ProcessHandleInput(IGumCursorState cursor, float worldX, float worldY)
     {
         // NOTE: Hover state is updated separately in UpdateHover() which is called every frame
         // We don't update hover here to avoid duplicate updates
@@ -172,67 +164,6 @@ public abstract class WireframeEditor
             var activeHandler = _inputHandlers.FirstOrDefault(h => h.IsActive);
             activeHandler?.HandleRelease();
         }
-    }
-
-    /// <summary>
-    /// Main activity loop that processes input through registered handlers and updates visuals.
-    /// Derived classes can customize behavior by overriding ShouldProcessActivity and OnActivityComplete.
-    /// DEPRECATED: Use ProcessHandleInput() for input processing and UpdateVisuals() for visual updates.
-    /// </summary>
-    public virtual void Activity(ICollection<GraphicalUiElement> selectedObjects, SystemManagers systemManagers)
-    {
-        if (!ShouldProcessActivity(selectedObjects))
-        {
-            return;
-        }
-
-        var cursor = InputLibrary.Cursor.Self;
-        var worldX = cursor.GetWorldX();
-        var worldY = cursor.GetWorldY();
-
-        // Update hover state on all handlers
-        foreach (var handler in _inputHandlers)
-        {
-            handler.UpdateHover(worldX, worldY);
-        }
-
-        // Handle push - try handlers in priority order until one claims the input
-        if (cursor.PrimaryPush)
-        {
-            _context.HasChangedAnythingSinceLastPush = false;
-            _context.GrabbedState.HandlePush();
-
-            foreach (var handler in _inputHandlers.OrderByDescending(h => h.Priority))
-            {
-                if (handler.HandlePush(worldX, worldY))
-                {
-                    break; // Handler claimed the input
-                }
-            }
-        }
-
-        // Handle drag - only call on active handler
-        if (cursor.PrimaryDown && _context.GrabbedState.HasMovedEnough)
-        {
-            var activeHandler = _inputHandlers.FirstOrDefault(h => h.IsActive);
-            activeHandler?.HandleDrag();
-        }
-
-        // Handle release - call on active handler
-        if (cursor.PrimaryClick)
-        {
-            var activeHandler = _inputHandlers.FirstOrDefault(h => h.IsActive);
-            activeHandler?.HandleRelease();
-        }
-
-        // Update all visuals
-        foreach (var visual in _visuals)
-        {
-            visual.Update();
-        }
-
-        // Allow derived classes to do custom post-processing
-        OnActivityComplete(selectedObjects);
     }
 
     /// <summary>
@@ -272,19 +203,21 @@ public abstract class WireframeEditor
     }
 
     /// <summary>
-    /// Gets the Windows Forms cursor to display based on current handler states.
-    /// Iterates through handlers by priority to find the first one that wants to change the cursor.
+    /// Gets the cursor to display based on current handler states, or null if the default cursor
+    /// should be used. Iterates through handlers by priority to find the first one that wants to
+    /// change the cursor. Mapping this to a real <see cref="System.Windows.Forms.Cursor"/> is the
+    /// tool-side caller's job (<c>SelectionManager.HighlightActivity</c>) — that mapping stays
+    /// outside this headless assembly.
     /// </summary>
-    public virtual System.Windows.Forms.Cursor GetWindowsCursorToShow(
-        System.Windows.Forms.Cursor defaultCursor, float worldXAt, float worldYAt)
+    public virtual GumCursorKind? GetCursorToShow(float worldXAt, float worldYAt)
     {
-        if (_context.IsSelectionLocked()) return defaultCursor;
+        if (_context.IsSelectionLocked()) return null;
         foreach (var handler in _inputHandlers.OrderByDescending(h => h.Priority))
         {
             var cursor = handler.GetCursorToShow(worldXAt, worldYAt);
             if (cursor != null) return cursor;
         }
-        return defaultCursor;
+        return null;
     }
 
     /// <summary>

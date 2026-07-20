@@ -10,7 +10,7 @@ namespace Gum.Wireframe.Editors.Visuals;
 /// Visual component that wraps ResizeHandles and manages their update logic.
 /// Provides the 8 resize handles that appear on selected objects.
 /// </summary>
-public class ResizeHandlesVisual : EditorVisualBase
+public class ResizeHandlesVisual : EditorVisualBase, IResizeHandlesVisual
 {
     private readonly ResizeHandles _resizeHandles;
 
@@ -18,6 +18,13 @@ public class ResizeHandlesVisual : EditorVisualBase
     /// Gets the underlying resize handles for input handling.
     /// </summary>
     public ResizeHandles Handles => _resizeHandles;
+
+    // IResizeHandlesVisual — the narrow, headless-safe surface ResizeInputHandler (now in
+    // Gum.Presentation) needs. ResizeHandles itself can't be exposed there: it draws
+    // LineRectangles, which are XNALIKE-only.
+    float IResizeHandlesVisual.HandlesWidth => _resizeHandles.Width;
+    float IResizeHandlesVisual.HandlesHeight => _resizeHandles.Height;
+    ResizeSide IResizeHandlesVisual.GetSideOver(float worldX, float worldY) => _resizeHandles.GetSideOver(worldX, worldY);
 
     public bool ShowOrigin
     {
