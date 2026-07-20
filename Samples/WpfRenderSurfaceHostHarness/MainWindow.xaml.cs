@@ -50,6 +50,14 @@ public partial class MainWindow : Window
     private double _readbackMsAccum;
     private double _pushMsAccum;
 
+    // The three phases above only cover time actually spent inside our own code. If their sum is
+    // far below the measured frame period (1000/fps), the rest is happening between DrawFrame
+    // calls - either the DispatcherTimer isn't ticking as often as requested, or WPF's own
+    // (asynchronous, separate-thread) compositor work isn't visible to a stopwatch wrapped around
+    // the synchronous PushFrame call. This measures that gap directly instead of inferring it.
+    private double? _previousFrameStartMs;
+    private double _frameGapMsAccum;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -134,6 +142,13 @@ public partial class MainWindow : Window
         Debug.Assert(_graphicsDevice != null && _renderTarget != null && _spriteBatch != null && _whitePixel != null,
             "CreateGraphicsResources must run before DrawFrame.");
 
+        double frameStartMs = _clock.Elapsed.TotalMilliseconds;
+        if (_previousFrameStartMs is { } previousMs)
+        {
+            _frameGapMsAccum += frameStartMs - previousMs;
+        }
+        _previousFrameStartMs = frameStartMs;
+
         float seconds = (float)_clock.Elapsed.TotalSeconds;
 
         _graphicsDevice.SetRenderTarget(_renderTarget);
@@ -176,15 +191,20 @@ public partial class MainWindow : Window
         double avgDrawMs = _drawMsAccum / _framesSinceFpsUpdate;
         double avgReadbackMs = _readbackMsAccum / _framesSinceFpsUpdate;
         double avgPushMs = _pushMsAccum / _framesSinceFpsUpdate;
+        // One fewer gap sample than frames (no "previous" for the window's first frame) - close
+        // enough over a ~0.5s window to not bother correcting for.
+        double avgGapMs = _frameGapMsAccum / _framesSinceFpsUpdate;
 
         FpsText.Text =
             $"FPS: {measuredFps:0.0}  ({_surfaceWidth}x{_surfaceHeight})\n" +
-            $"draw: {avgDrawMs:0.00}ms  readback: {avgReadbackMs:0.00}ms  push: {avgPushMs:0.00}ms";
+            $"draw: {avgDrawMs:0.00}ms  readback: {avgReadbackMs:0.00}ms  push: {avgPushMs:0.00}ms\n" +
+            $"frame-to-frame gap: {avgGapMs:0.00}ms  (unaccounted-for: {avgGapMs - avgDrawMs - avgReadbackMs - avgPushMs:0.00}ms)";
 
         _framesSinceFpsUpdate = 0;
         _drawMsAccum = 0;
         _readbackMsAccum = 0;
         _pushMsAccum = 0;
+        _frameGapMsAccum = 0;
         _fpsWindow.Restart();
     }
 
