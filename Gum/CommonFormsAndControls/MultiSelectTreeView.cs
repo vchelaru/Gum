@@ -29,6 +29,7 @@ namespace CommonFormsAndControls
         private readonly TreeNodeRangeSelectionLogic _rangeSelectionLogic;
         private readonly TreeNodeMouseUpSelectionLogic _mouseUpSelectionLogic;
         private readonly TreeNodeKeyNavigationLogic _keyNavigationLogic;
+        private readonly TreeNodeClickDispatchLogic _clickDispatchLogic;
         public ImageList ElementTreeImageList => _elementTreeImages;
 
         #endregion
@@ -603,6 +604,7 @@ namespace CommonFormsAndControls
             _rangeSelectionLogic = new TreeNodeRangeSelectionLogic();
             _mouseUpSelectionLogic = new TreeNodeMouseUpSelectionLogic();
             _keyNavigationLogic = new TreeNodeKeyNavigationLogic();
+            _clickDispatchLogic = new TreeNodeClickDispatchLogic();
             InitializeComponent();
             mSelectedNodes = new List<TreeNode>();
             mOriginalColors = new Dictionary<TreeNode, Color>();
@@ -786,38 +788,39 @@ namespace CommonFormsAndControls
 
                 bool shouldRaiseEvents = true;
 
-                if (node == null)
+                var reaction = _clickDispatchLogic.GetReaction(
+                    hasClickedNode: node != null,
+                    hasExistingSelection: mSelectedNode != null,
+                    AlwaysHaveOneNodeSelected,
+                    EffectiveModifiers(),
+                    MultiSelectBehavior);
+
+                switch (reaction)
                 {
-                    if (AlwaysHaveOneNodeSelected == false)
-                    {
+                    case TreeNodeClickReaction.DeselectAll:
                         for (int i = SelectedNodes.Count - 1; i > -1; i--)
                         {
                             Deselect(SelectedNodes[i]);
                         }
 
                         mSelectedNode = null;
-                    }
-                    else
-                    {
+                        break;
+                    case TreeNodeClickReaction.None:
                         shouldRaiseEvents = false;
-                    }
-                }
-                else if (mSelectedNode == null || EffectiveModifiers() == Keys.Control ||
-                         MultiSelectBehavior == MultiSelectBehavior.RegularClick)
-                {
-                    // Ctrl+Click selects an unselected node, or unselects a selected node.  
-                    bool bIsSelected = mSelectedNodes.Contains(node);
-                    SetNodeSelected(node, !bIsSelected);
-                }
-                else if (EffectiveModifiers() == Keys.Shift)
-                {
-                    // Shift+Click selects nodes between the selected node and here.
-                    _rangeSelectionLogic.SelectRange(mSelectedNode, node, n => SetNodeSelected(n, true));
-                }
-                else
-                {
-                    // Just clicked a node, select it  
-                    SelectSingleNode(node);
+                        break;
+                    case TreeNodeClickReaction.ToggleSelection:
+                        // Ctrl+Click selects an unselected node, or unselects a selected node.
+                        bool bIsSelected = mSelectedNodes.Contains(node!);
+                        SetNodeSelected(node!, !bIsSelected);
+                        break;
+                    case TreeNodeClickReaction.RangeSelect:
+                        // Shift+Click selects nodes between the selected node and here.
+                        _rangeSelectionLogic.SelectRange(mSelectedNode!, node!, n => SetNodeSelected(n, true));
+                        break;
+                    case TreeNodeClickReaction.SingleSelect:
+                        // Just clicked a node, select it
+                        SelectSingleNode(node!);
+                        break;
                 }
 
                 // August 22, 2011  
