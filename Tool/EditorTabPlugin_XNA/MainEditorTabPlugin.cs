@@ -1409,6 +1409,13 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         WindowsFormsHost host = new WindowsFormsHost();
         host.Child = gumEditorPanel;
 
+        // This is kind of a hack to deal with the airspace issue blocking mouse
+        // interaction with the grid splitter and window resize handle: WindowsFormsHost
+        // hosts a real HWND, which always paints on top of WPF siblings regardless of
+        // z-order, so without this margin the grid splitter can't receive mouse input
+        // right at the edge of this tab.
+        host.Margin = new Thickness(4, 0, 4, 0);
+
         wpfGrid.Children.Add(host);
         Grid.SetRow(host, 1);
 
