@@ -11,8 +11,6 @@
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Xna.Framework.Graphics;
 #endregion
@@ -53,6 +51,8 @@ public class GraphicsDeviceControl : Control
     private RenderTarget2D renderTarget;
     byte[] rawImage;
     Bitmap bitmap;
+
+    private readonly IRenderTargetPixelBufferWriter _pixelBufferWriter = new BitmapPixelBufferWriter();
 
     #endregion
 
@@ -454,35 +454,11 @@ public class GraphicsDeviceControl : Control
 
     private void PaintRendertarget(Graphics graphics)
     {
-        int w = Math.Max(1, ClientSize.Width);
-        int h = Math.Max(1, ClientSize.Height);
+        // Produce the pixel buffer: convert rawImage (the GPU render target readback from EndDraw)
+        // into bitmap's backing memory. This step needs no live WinForms Graphics surface.
+        _pixelBufferWriter.WriteToBitmap(rawImage, renderTarget.Format, bitmap);
 
-        var rect = new System.Drawing.Rectangle(0, 0, w, h);
-        BitmapData bmpData = bitmap.LockBits(rect, ImageLockMode.WriteOnly, bitmap.PixelFormat);
-        PixelBufferConversionStrategy? strategy =
-            RenderTargetPixelBufferConverter.GetStrategy(renderTarget.Format, bitmap.PixelFormat);
-
-        if (strategy == PixelBufferConversionStrategy.ByteSwapRgbaToBgra)
-        {
-            CopyAndConvertRGBATOBGRA(w, h, rawImage, bmpData.Scan0, bmpData.Stride);
-        }
-        else if (strategy == PixelBufferConversionStrategy.DirectCopy)
-        {
-            int rowSize = w * 4;
-            int rowStride = bmpData.Stride;
-
-            Parallel.For(0, h, (y) =>
-            {
-                int srcOffset = y * rowSize;
-                int dstOffset = y * rowStride;
-                Marshal.Copy(rawImage, srcOffset, bmpData.Scan0 + dstOffset, rowSize);
-            });
-        }
-        else
-        {
-            throw new NotSupportedException();
-        }
-        bitmap.UnlockBits(bmpData);
+        // Blit the produced bitmap onto the WinForms Graphics surface.
         var cm = graphics.CompositingMode;
         var im = graphics.InterpolationMode;
         graphics.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
@@ -490,32 +466,6 @@ public class GraphicsDeviceControl : Control
         graphics.DrawImageUnscaled(bitmap, 0, 0);
         graphics.CompositingMode = cm;
         graphics.InterpolationMode = im;
-    }
-
-    private unsafe void CopyAndConvertRGBATOBGRA(int w, int h, byte[] data, IntPtr buffer, int rowStride)
-    {
-        int rowSize = w * 4;
-
-        fixed (void* pData = &data[0])
-        {
-            byte* src = (byte*)pData;
-            byte* dst = (byte*)buffer;
-
-            Parallel.For(0, h, (y) =>
-            {
-                int srcOffset = y * rowSize;
-                int dstOffset = y * rowStride;
-
-                for (int x = 0; x < w; x++)
-                {
-                    int i = x * 4;
-                    dst[dstOffset + i + 0] = src[srcOffset + i + 2];
-                    dst[dstOffset + i + 1] = src[srcOffset + i + 1];
-                    dst[dstOffset + i + 2] = src[srcOffset + i + 0];
-                    dst[dstOffset + i + 3] = src[srcOffset + i + 3];
-                }
-            });
-        }
     }
 
     /// <summary>
