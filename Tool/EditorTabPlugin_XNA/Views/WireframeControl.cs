@@ -172,8 +172,14 @@ public class WireframeControl : GraphicsDeviceControl
         {
             LoaderManager.Self.ContentLoader = new ContentLoader();
 
+            // Route the GPU device/content-service lookup through IRenderDeviceHost rather than
+            // reading GraphicsDevice/Services directly off this control, so the initialization
+            // sequence below only depends on the render-host contract, not on GraphicsDeviceControl.
+            var graphicsDeviceService = (IGraphicsDeviceService)Services.GetService(typeof(IGraphicsDeviceService));
+            IRenderDeviceHost renderHost = new GraphicsDeviceServiceRenderHostAdapter(graphicsDeviceService, Services);
+
             SystemManagers.Default = new SystemManagers();
-            SystemManagers.Default.Initialize(GraphicsDevice);
+            SystemManagers.Default.Initialize(renderHost.GraphicsDevice);
 
             // Touching a type from KniGumShapes here forces the assembly to load, which fires its
             // [ModuleInitializer] -> AposShapeRuntime.RegisterRuntimeTypes (registers Apos.Shapes-backed
@@ -185,8 +191,8 @@ public class WireframeControl : GraphicsDeviceControl
             // <tool-bin>\Content\apos-shapes.xnb (see EditorTabPlugin_XNA.csproj PostBuild).
             if (!ShapeRenderer.Self.IsInitialized)
             {
-                ContentManager shapesContentManager = new ContentManager(Services, "Content");
-                ShapeRenderer.Self.Initialize(GraphicsDevice, shapesContentManager);
+                ContentManager shapesContentManager = new ContentManager(renderHost.Services, "Content");
+                ShapeRenderer.Self.Initialize(renderHost.GraphicsDevice, shapesContentManager);
             }
 
             InitializeDefaultTypeInstantiation();
