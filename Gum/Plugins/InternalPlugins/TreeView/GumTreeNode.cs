@@ -39,11 +39,18 @@ public class GumTreeNode : TreeNode, ITreeNodeMutable
 
     object? ITreeNode.Tag => Tag;
 
-    ITreeNode? ITreeNode.Parent => Parent switch
+    ITreeNode? ITreeNode.Parent => base.Parent switch
     {
         null => null,
         ITreeNode alreadyImplementsInterface => alreadyImplementsInterface,
         TreeNode plainNode => new TreeNodeWrapper(plainNode)
+    };
+
+    /// <inheritdoc/>
+    public new ITreeNodeMutable? Parent => base.Parent switch
+    {
+        null => null,
+        TreeNode winFormsParent => RequireMutableNode(winFormsParent)
     };
 
     /// <inheritdoc/>
@@ -80,6 +87,18 @@ public class GumTreeNode : TreeNode, ITreeNodeMutable
     /// <inheritdoc/>
     public void ClearChildren() => Nodes.Clear();
 
+    /// <inheritdoc/>
+    public void RemoveSelf() => Remove();
+
+    /// <inheritdoc/>
+    public int IndexOfChild(ITreeNodeMutable child) => Nodes.IndexOf(RequireWinFormsNode(child));
+
+    /// <inheritdoc/>
+    public int ChildCount => Nodes.Count;
+
+    /// <inheritdoc/>
+    public ITreeNodeMutable GetChildAt(int index) => RequireMutableNode(Nodes[index]);
+
     private static TreeNode RequireWinFormsNode(ITreeNodeMutable node)
     {
         if (node is TreeNode treeNode)
@@ -90,5 +109,16 @@ public class GumTreeNode : TreeNode, ITreeNodeMutable
         throw new ArgumentException(
             $"{nameof(node)} must be a WinForms {nameof(TreeNode)} (e.g. {nameof(GumTreeNode)}) to be added under a WinForms tree.",
             nameof(node));
+    }
+
+    private static ITreeNodeMutable RequireMutableNode(TreeNode node)
+    {
+        if (node is ITreeNodeMutable mutableNode)
+        {
+            return mutableNode;
+        }
+
+        throw new InvalidOperationException(
+            $"{node} must implement {nameof(ITreeNodeMutable)} (e.g. be a {nameof(GumTreeNode)}) to be used as one.");
     }
 }

@@ -1360,13 +1360,13 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         #region Sort everything
 
-        mScreensTreeNode.Nodes.SortByName(recursive:true);
+        ((ITreeNodeMutable)mScreensTreeNode).SortByName(recursive:true);
 
-        mComponentsTreeNode.Nodes.SortByName(recursive: true);
+        ((ITreeNodeMutable)mComponentsTreeNode).SortByName(recursive: true);
 
-        mStandardElementsTreeNode.Nodes.SortByName(recursive: true);
+        ((ITreeNodeMutable)mStandardElementsTreeNode).SortByName(recursive: true);
 
-        mBehaviorsTreeNode.Nodes.SortByName(recursive: true);
+        ((ITreeNodeMutable)mBehaviorsTreeNode).SortByName(recursive: true);
 
         #endregion
 
@@ -1920,11 +1920,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             {
                 if (parentNode != null)
                 {
-                    parentNode.Nodes.Remove(node);
+                    ((ITreeNodeMutable)node).RemoveSelf();
                 }
                 if(desiredNode != null)
                 {
-                    desiredNode.Nodes.Add(node);
+                    ((ITreeNodeMutable)desiredNode).AddChild((ITreeNodeMutable)node);
                 }
             }
         }
@@ -1948,7 +1948,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
             if(hadTextBefore && node.Parent != null)
             {
-                node.Parent.Nodes.SortByName();
+                ((ITreeNodeMutable)node.Parent).SortByName();
             }
         }
 
@@ -1963,7 +1963,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
             if(instance == null || !allInstances.Contains(instance))
             {
-                instanceNode.Remove();
+                ((ITreeNodeMutable)instanceNode).RemoveSelf();
             }
         }
 
@@ -2018,22 +2018,17 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                     desiredParentNode = GetTreeNodeFor(instanceParent, node);
                 }
             }
-            if(desiredParentNode != nodeForInstance.Parent && desiredParentNode != null && 
+            if(desiredParentNode != nodeForInstance.Parent && desiredParentNode != null &&
                 // Just in case Gum gets into a weird circular reference situation.
                 // Gum should protect against this at a higher level, but in case it fails to we
                 // don't want to bring down the entire treeview so let's run a last minute check:
                 nodeForInstance != desiredParentNode)
             {
-                nodeForInstance.Remove();
-                desiredParentNode.Nodes.Add(nodeForInstance);
+                ((ITreeNodeMutable)nodeForInstance).RemoveSelf();
+                ((ITreeNodeMutable)desiredParentNode).AddChild((ITreeNodeMutable)nodeForInstance);
             }
 
-            var nodeParent = nodeForInstance.Parent;
-            if (desiredIndex != nodeParent.Nodes.IndexOf(nodeForInstance))
-            {
-                nodeParent.Nodes.Remove(nodeForInstance);
-                nodeParent.Nodes.Insert(desiredIndex, nodeForInstance);
-            }
+            ((ITreeNodeMutable)nodeForInstance).MoveToIndex(desiredIndex);
 
             var element = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
@@ -2062,7 +2057,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             var instance = instanceNode.Tag as InstanceSave;
             if (instance == null || !allInstances.Contains(instance))
             {
-                instanceNode.Remove();
+                ((ITreeNodeMutable)instanceNode).RemoveSelf();
             }
         }
 
@@ -2083,11 +2078,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 nodeForInstance.ImageIndex = DerivedInstanceImageIndex;
             }
 
-            if (node.Nodes.IndexOf(nodeForInstance) != i)
-            {
-                node.Nodes.Remove(nodeForInstance);
-                node.Nodes.Insert(i, nodeForInstance);
-            }
+            ((ITreeNodeMutable)nodeForInstance).MoveToIndex(i);
         }
     }
 
@@ -2901,9 +2892,30 @@ public static class TreeNodeExtensionMethods
     }
 
     /// <summary>
-    /// Sorts the tree node collection alphabetically by name, with folders appearing before files.
+    /// Moves <paramref name="node"/> to <paramref name="desiredIndex"/> among its current parent's
+    /// children. No-op if it is already there, or if it currently has no parent.
     /// </summary>
-    /// <param name="treeNodeCollection">The collection of tree nodes to sort.</param>
+    /// <remarks>
+    /// Shared by ElementTreeViewManager's element/instance and behavior-instance reorder paths
+    /// (<c>RefreshElementTreeNode</c>/<c>RefreshBehaviorTreeNode</c>), which both reorder a node
+    /// within its already-correct parent after any reparenting has already happened.
+    /// </remarks>
+    public static void MoveToIndex(this ITreeNodeMutable node, int desiredIndex)
+    {
+        ITreeNodeMutable? parent = node.Parent;
+        if (parent == null || parent.IndexOfChild(node) == desiredIndex)
+        {
+            return;
+        }
+
+        parent.RemoveChild(node);
+        parent.InsertChild(desiredIndex, node);
+    }
+
+    /// <summary>
+    /// Sorts a node's direct children alphabetically by name, with folders appearing before files.
+    /// </summary>
+    /// <param name="parentNode">The node whose children should be sorted.</param>
     /// <param name="recursive">
     /// If true, recursively sorts all child node collections (except within Screen, Component, Standard, or Behavior element nodes).
     /// Default is false.
@@ -2914,41 +2926,41 @@ public static class TreeNodeExtensionMethods
     /// When recursive is true, the method will not sort children of element nodes (Screen, Component, Standard, Behavior)
     /// as these typically contain instances and states that should maintain their specific order.
     /// </remarks>
-    public static void SortByName(this TreeNodeCollection treeNodeCollection, bool recursive = false)
+    public static void SortByName(this ITreeNodeMutable parentNode, bool recursive = false)
     {
-        int lastObjectExclusive = treeNodeCollection.Count;
+        int lastObjectExclusive = parentNode.ChildCount;
         int whereObjectBelongs;
         for (int i = 0 + 1; i < lastObjectExclusive; i++)
         {
-            TreeNode first = treeNodeCollection[i];
-            TreeNode second = treeNodeCollection[i - 1];
+            ITreeNodeMutable first = parentNode.GetChildAt(i);
+            ITreeNodeMutable second = parentNode.GetChildAt(i - 1);
             if (FirstComesBeforeSecond(first, second))
             {
                 if (i == 1)
                 {
-                    TreeNode treeNode = treeNodeCollection[i];
-                    treeNodeCollection.RemoveAt(i);
+                    ITreeNodeMutable movingNode = parentNode.GetChildAt(i);
+                    parentNode.RemoveChildAt(i);
 
-                    treeNodeCollection.Insert(0, treeNode);
+                    parentNode.InsertChild(0, movingNode);
                     continue;
                 }
 
                 for (whereObjectBelongs = i - 2; whereObjectBelongs > -1; whereObjectBelongs--)
                 {
-                    second = treeNodeCollection[whereObjectBelongs];
-                    if (!FirstComesBeforeSecond(treeNodeCollection[i], second))
+                    second = parentNode.GetChildAt(whereObjectBelongs);
+                    if (!FirstComesBeforeSecond(parentNode.GetChildAt(i), second))
                     {
-                        TreeNode treeNode = treeNodeCollection[i];
+                        ITreeNodeMutable movingNode = parentNode.GetChildAt(i);
 
-                        treeNodeCollection.RemoveAt(i);
-                        treeNodeCollection.Insert(whereObjectBelongs + 1, treeNode);
+                        parentNode.RemoveChildAt(i);
+                        parentNode.InsertChild(whereObjectBelongs + 1, movingNode);
                         break;
                     }
-                    else if (whereObjectBelongs == 0 && FirstComesBeforeSecond(treeNodeCollection[i], treeNodeCollection[0]))
+                    else if (whereObjectBelongs == 0 && FirstComesBeforeSecond(parentNode.GetChildAt(i), parentNode.GetChildAt(0)))
                     {
-                        TreeNode treeNode = treeNodeCollection[i];
-                        treeNodeCollection.RemoveAt(i);
-                        treeNodeCollection.Insert(0, treeNode);
+                        ITreeNodeMutable movingNode = parentNode.GetChildAt(i);
+                        parentNode.RemoveChildAt(i);
+                        parentNode.InsertChild(0, movingNode);
                         break;
                     }
                 }
@@ -2957,26 +2969,24 @@ public static class TreeNodeExtensionMethods
 
         if(recursive)
         {
-            foreach(var node in treeNodeCollection)
+            for (int i = 0; i < parentNode.ChildCount; i++)
             {
-                var asTreeNode = node as TreeNode;
-                if(asTreeNode != null)
-                {
-                    var sortInner = asTreeNode.IsScreenTreeNode() == false &&
-                        asTreeNode.IsComponentTreeNode() == false &&
-                        asTreeNode.IsStandardElementTreeNode() == false &&
-                        asTreeNode.IsBehaviorTreeNode() == false;
+                ITreeNodeMutable childNode = parentNode.GetChildAt(i);
 
-                    if(sortInner)
-                    {
-                        asTreeNode.Nodes.SortByName(recursive);
-                    }
+                var sortInner = childNode.IsScreenTreeNode() == false &&
+                    childNode.IsComponentTreeNode() == false &&
+                    childNode.IsStandardElementTreeNode() == false &&
+                    childNode.IsBehaviorTreeNode() == false;
+
+                if(sortInner)
+                {
+                    childNode.SortByName(recursive);
                 }
             }
         }
     }
 
-    private static bool FirstComesBeforeSecond(TreeNode first, TreeNode second)
+    private static bool FirstComesBeforeSecond(ITreeNodeMutable first, ITreeNodeMutable second)
     {
         bool isFirstDirectory = first.IsComponentsFolderTreeNode() || first.IsScreensFolderTreeNode();
         bool isSecondDirectory = second.IsComponentsFolderTreeNode() || second.IsScreensFolderTreeNode();

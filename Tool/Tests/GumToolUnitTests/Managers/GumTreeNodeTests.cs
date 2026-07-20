@@ -1,5 +1,6 @@
 using Gum.Managers;
 using Shouldly;
+using System;
 using System.Linq;
 using System.Windows.Forms;
 using Xunit;
@@ -153,5 +154,91 @@ public class GumTreeNodeTests
         children.ShouldHaveSingleItem();
         children[0].Text.ShouldBe("PlainChild");
         children[0].ShouldNotBeSameAs(plainChild);
+    }
+
+    [Fact]
+    public void ChildCount_ReturnsNumberOfDirectChildren()
+    {
+        GumTreeNode parent = new GumTreeNode("Parent");
+        parent.AddChild("First");
+        parent.AddChild("Second");
+
+        ((ITreeNodeMutable)parent).ChildCount.ShouldBe(2);
+    }
+
+    [Fact]
+    public void GetChildAt_ReturnsChildAtIndex()
+    {
+        GumTreeNode parent = new GumTreeNode("Parent");
+        ITreeNodeMutable first = parent.AddChild("First");
+        ITreeNodeMutable second = parent.AddChild("Second");
+
+        ((ITreeNodeMutable)parent).GetChildAt(0).ShouldBeSameAs(first);
+        ((ITreeNodeMutable)parent).GetChildAt(1).ShouldBeSameAs(second);
+    }
+
+    [Fact]
+    public void IndexOfChild_ReturnsPositionOfChild()
+    {
+        GumTreeNode parent = new GumTreeNode("Parent");
+        parent.AddChild("First");
+        ITreeNodeMutable second = parent.AddChild("Second");
+
+        ((ITreeNodeMutable)parent).IndexOfChild(second).ShouldBe(1);
+    }
+
+    [Fact]
+    public void IndexOfChild_ChildNotPresent_ReturnsNegativeOne()
+    {
+        GumTreeNode parent = new GumTreeNode("Parent");
+        GumTreeNode notAChild = new GumTreeNode("NotAChild");
+
+        ((ITreeNodeMutable)parent).IndexOfChild(notAChild).ShouldBe(-1);
+    }
+
+    [Fact]
+    public void Parent_AsMutableInterface_ChildOfGumTreeNode_ReturnsSameParentInstance()
+    {
+        GumTreeNode parent = new GumTreeNode("Parent");
+        ITreeNodeMutable child = parent.AddChild("Child");
+
+        child.Parent.ShouldBeSameAs(parent);
+    }
+
+    [Fact]
+    public void Parent_AsMutableInterface_RootNode_ReturnsNull()
+    {
+        GumTreeNode root = new GumTreeNode("Root");
+
+        ((ITreeNodeMutable)root).Parent.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Parent_AsMutableInterface_PlainWinFormsParent_Throws()
+    {
+        TreeNode plainParent = new TreeNode("Parent");
+        GumTreeNode child = new GumTreeNode("Child");
+        plainParent.Nodes.Add(child);
+
+        Should.Throw<InvalidOperationException>(() => _ = ((ITreeNodeMutable)child).Parent);
+    }
+
+    [Fact]
+    public void RemoveSelf_RemovesNodeFromParent()
+    {
+        GumTreeNode parent = new GumTreeNode("Parent");
+        ITreeNodeMutable child = parent.AddChild("Child");
+
+        child.RemoveSelf();
+
+        parent.Nodes.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void RemoveSelf_NodeWithNoParent_DoesNotThrow()
+    {
+        GumTreeNode node = new GumTreeNode("Node");
+
+        Should.NotThrow(() => ((ITreeNodeMutable)node).RemoveSelf());
     }
 }
