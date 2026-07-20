@@ -28,6 +28,7 @@ namespace CommonFormsAndControls
         private TreeNode? nodeOnDragStart;
         private readonly TreeNodeRangeSelectionLogic _rangeSelectionLogic;
         private readonly TreeNodeMouseUpSelectionLogic _mouseUpSelectionLogic;
+        private readonly TreeNodeMouseDownSelectionLogic _mouseDownSelectionLogic;
         private readonly TreeNodeKeyNavigationLogic _keyNavigationLogic;
         private readonly TreeNodeClickDispatchLogic _clickDispatchLogic;
         public ImageList ElementTreeImageList => _elementTreeImages;
@@ -209,28 +210,21 @@ namespace CommonFormsAndControls
                 base.SelectedNode = null;
 
                 TreeNode? previousSelectedNode = mSelectedNode;
-                var previousCount = SelectedNodes.Count;
 
                 var node = this.GetNodeAtRowY(e.Location.Y);
                 if (node != null)
                 {
-                    if (mSelectedNodes.Contains(node) && e.Button == MouseButtons.Right &&
-                        EffectiveModifiers() != Keys.None)
+                    bool shouldReact = _mouseDownSelectionLogic.ShouldReactToClick(
+                        mSelectedNodes.Contains(node), e.Button, EffectiveModifiers(), MultiSelectBehavior,
+                        IsSelectingOnPush);
+
+                    if (shouldReact)
                     {
-                    }
-                    else if ((EffectiveModifiers() == Keys.None &&
-                              MultiSelectBehavior != MultiSelectBehavior.RegularClick) &&
-                             (mSelectedNodes.Contains(node)))
-                    {
-                        // Potential Drag Operation  
-                        // Let Mouse Up do select  
-                    }
-                    else if (IsSelectingOnPush || EffectiveModifiers() == Keys.Shift || EffectiveModifiers() == Keys.Control ||
-                             e.Button == MouseButtons.Right)
-                    {
-                        // For gum we want to prevent selection on a push. Should be on a click  
+                        // For gum we want to prevent selection on a push. Should be on a click
                         ReactToClickedNode(node);
                     }
+                    // Otherwise either a context-menu right-click on an already-selected node, or a
+                    // potential drag operation - let Mouse Up do the (re)select.
                 }
                 else
                 {
@@ -603,6 +597,7 @@ namespace CommonFormsAndControls
             this._components = new System.ComponentModel.Container();
             _rangeSelectionLogic = new TreeNodeRangeSelectionLogic();
             _mouseUpSelectionLogic = new TreeNodeMouseUpSelectionLogic();
+            _mouseDownSelectionLogic = new TreeNodeMouseDownSelectionLogic();
             _keyNavigationLogic = new TreeNodeKeyNavigationLogic();
             _clickDispatchLogic = new TreeNodeClickDispatchLogic();
             InitializeComponent();
