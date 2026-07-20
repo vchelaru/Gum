@@ -6,6 +6,13 @@
 		<OutputType>Library</OutputType>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<UseWindowsForms>true</UseWindowsForms>
+		<!--
+			Added for WriteableBitmapPixelBufferWriter, part of the WPF-native render surface work for
+			#3833 - the WPF-facing counterpart to BitmapPixelBufferWriter's GDI+ path. This does not
+			change how WireframeControl/ImageRegionSelectionControl render today; both are still
+			WinForms controls embedded via WindowsFormsHost.
+		-->
+		<UseWPF>true</UseWPF>
 		<ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
 		<CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
 		<LangVersion>12.0</LangVersion>
