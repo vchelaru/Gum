@@ -4,5 +4,9 @@
         Title="WpfRenderSurfaceHost harness - #3833"
         Width="820" Height="640"
         ResizeMode="NoResize">
-    <Grid x:Name="RootGrid" Background="DarkSlateGray" />
+    <Grid x:Name="RootGrid" Background="DarkSlateGray">
+        <TextBlock x:Name="FpsText" Text="FPS: --"
+                   Foreground="White" Background="#80000000" FontSize="20"
+                   Padding="6,3" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8" />
+    </Grid>
 </Window>

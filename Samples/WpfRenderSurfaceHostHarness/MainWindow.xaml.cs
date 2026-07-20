@@ -29,6 +29,11 @@ public partial class MainWindow : Window
     private SpriteBatch? _spriteBatch;
     private Texture2D? _whitePixel;
 
+    // Actual measured throughput, not a guess - counts real DrawFrame calls against wall-clock
+    // time, updated roughly twice a second so the number is legible.
+    private readonly Stopwatch _fpsWindow = new Stopwatch();
+    private int _framesSinceFpsUpdate;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -36,11 +41,13 @@ public partial class MainWindow : Window
         IntPtr windowHandle = new WindowInteropHelper(this).EnsureHandle();
         CreateGraphicsResources(windowHandle);
 
-        RootGrid.Children.Add(_host.ImageElement);
+        // Insert below the XAML-declared FpsText so the overlay stays on top.
+        RootGrid.Children.Insert(0, _host.ImageElement);
         _host.RenderFrame += DrawFrame;
         _host.Initialize(SurfaceWidth, SurfaceHeight, desiredFramesPerSecond: 30);
 
         _clock.Start();
+        _fpsWindow.Start();
         Closed += (_, _) => DisposeResources();
     }
 
@@ -102,6 +109,25 @@ public partial class MainWindow : Window
         _graphicsDevice.SetRenderTarget(null);
         _renderTarget.GetData(_host.RawImageBuffer);
         _host.PushFrame(_renderTarget.Format);
+
+        UpdateFpsDisplay();
+    }
+
+    private void UpdateFpsDisplay()
+    {
+        _framesSinceFpsUpdate++;
+
+        double elapsedSeconds = _fpsWindow.Elapsed.TotalSeconds;
+        if (elapsedSeconds < 0.5)
+        {
+            return;
+        }
+
+        double measuredFps = _framesSinceFpsUpdate / elapsedSeconds;
+        FpsText.Text = $"FPS: {measuredFps:0.0}";
+
+        _framesSinceFpsUpdate = 0;
+        _fpsWindow.Restart();
     }
 
     // Cheap HSV(hue, 1, 1)->RGB conversion so the clear color visibly cycles frame to frame.
