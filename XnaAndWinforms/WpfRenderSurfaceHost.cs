@@ -11,13 +11,14 @@ namespace XnaAndWinforms;
 /// conversion to <see cref="IWriteableBitmapRenderSurface"/>.
 /// </summary>
 /// <remarks>
-/// Diagnostic swap (#3833): a <c>DispatcherTimer(DispatcherPriority.Render)</c>-driven loop measured
-/// a ~43ms/frame gap outside all known per-frame work (draw/readback/push), independent of buffer
-/// size - i.e. the timer itself, not the copy cost, was the ceiling. <see cref="CompositionTarget"/>.
-/// <c>Rendering</c> is WPF's actual per-render-pass hook (driven by the composition engine, not a
-/// dispatcher timer) and is used here instead, unthrottled, to isolate whether that closes the gap.
-/// <paramref name="desiredFramesPerSecond"/> on <see cref="Initialize"/> is currently unused while
-/// this experiment is in place.
+/// Uses <see cref="CompositionTarget"/>.<c>Rendering</c> (WPF's actual per-render-pass hook, driven
+/// by the composition engine) rather than a <c>DispatcherTimer</c> - a timer-driven loop measured a
+/// ~43ms/frame gap outside all known per-frame work (draw/readback/push), independent of buffer
+/// size, i.e. the timer itself was the ceiling, not the copy cost. Unthrottled on
+/// <see cref="CompositionTarget.Rendering"/>, measured throughput is vsync-bound: ~60fps at
+/// moderate sizes, ~45fps at a maximized 4K window - well within a smooth, usable range, so no
+/// throttle knob is exposed here. If a future caller needs to cap the rate (e.g. to save power when
+/// idle), add it at that call site rather than reintroducing it speculatively here.
 /// </remarks>
 public class WpfRenderSurfaceHost : IWpfRenderSurfaceHost
 {
@@ -46,7 +47,7 @@ public class WpfRenderSurfaceHost : IWpfRenderSurfaceHost
     }
 
     /// <inheritdoc/>
-    public void Initialize(int width, int height, double desiredFramesPerSecond = 30)
+    public void Initialize(int width, int height)
     {
         Resize(width, height);
 

@@ -68,7 +68,7 @@ public partial class MainWindow : Window
         // Insert below the XAML-declared FpsText so the overlay stays on top.
         RootGrid.Children.Insert(0, _host.ImageElement);
         _host.RenderFrame += DrawFrame;
-        _host.Initialize(_surfaceWidth, _surfaceHeight, desiredFramesPerSecond: 30);
+        _host.Initialize(_surfaceWidth, _surfaceHeight);
 
         _clock.Start();
         _fpsWindow.Start();
