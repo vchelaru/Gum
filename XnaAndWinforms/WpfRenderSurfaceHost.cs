@@ -2,19 +2,27 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Threading;
 
 namespace XnaAndWinforms;
 
 /// <summary>
 /// The real implementation of <see cref="IWpfRenderSurfaceHost"/>. Owns the WPF
-/// <see cref="Image"/> element and <see cref="DispatcherTimer"/>; delegates bitmap sizing/pixel
+/// <see cref="Image"/> element and the render-loop trigger; delegates bitmap sizing/pixel
 /// conversion to <see cref="IWriteableBitmapRenderSurface"/>.
 /// </summary>
+/// <remarks>
+/// Diagnostic swap (#3833): a <c>DispatcherTimer(DispatcherPriority.Render)</c>-driven loop measured
+/// a ~43ms/frame gap outside all known per-frame work (draw/readback/push), independent of buffer
+/// size - i.e. the timer itself, not the copy cost, was the ceiling. <see cref="CompositionTarget"/>.
+/// <c>Rendering</c> is WPF's actual per-render-pass hook (driven by the composition engine, not a
+/// dispatcher timer) and is used here instead, unthrottled, to isolate whether that closes the gap.
+/// <paramref name="desiredFramesPerSecond"/> on <see cref="Initialize"/> is currently unused while
+/// this experiment is in place.
+/// </remarks>
 public class WpfRenderSurfaceHost : IWpfRenderSurfaceHost
 {
     private readonly IWriteableBitmapRenderSurface _surface;
-    private DispatcherTimer? _timer;
+    private bool _isRunning;
 
     /// <inheritdoc/>
     public Image ImageElement { get; } = new Image { Stretch = Stretch.None };
@@ -23,7 +31,7 @@ public class WpfRenderSurfaceHost : IWpfRenderSurfaceHost
     public byte[] RawImageBuffer => _surface.RawImageBuffer;
 
     /// <inheritdoc/>
-    public bool IsRunning => _timer?.IsEnabled ?? false;
+    public bool IsRunning => _isRunning;
 
     /// <inheritdoc/>
     public event Action? RenderFrame;
@@ -42,13 +50,11 @@ public class WpfRenderSurfaceHost : IWpfRenderSurfaceHost
     {
         Resize(width, height);
 
-        _timer = new DispatcherTimer(DispatcherPriority.Render)
-        {
-            Interval = TimeSpan.FromSeconds(1.0 / desiredFramesPerSecond)
-        };
-        _timer.Tick += (_, _) => RenderFrame?.Invoke();
-        _timer.Start();
+        CompositionTarget.Rendering += OnRendering;
+        _isRunning = true;
     }
+
+    private void OnRendering(object? sender, EventArgs e) => RenderFrame?.Invoke();
 
     /// <inheritdoc/>
     public void Resize(int width, int height)
@@ -66,6 +72,10 @@ public class WpfRenderSurfaceHost : IWpfRenderSurfaceHost
     /// <inheritdoc/>
     public void Dispose()
     {
-        _timer?.Stop();
+        if (_isRunning)
+        {
+            CompositionTarget.Rendering -= OnRendering;
+            _isRunning = false;
+        }
     }
 }
