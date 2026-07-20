@@ -1,5 +1,4 @@
 using System.Drawing;
-using WinCursor = System.Windows.Forms.Cursor;
 
 namespace InputLibrary
 {
@@ -27,9 +26,9 @@ namespace InputLibrary
         int Height { get; }
 
         /// <summary>
-        /// The cursor currently displayed over the host control.
+        /// The cursor icon currently displayed over the host control.
         /// </summary>
-        WinCursor Cursor { get; set; }
+        CursorKind Cursor { get; set; }
 
         /// <summary>
         /// Converts a point in screen coordinates to client (window-relative) coordinates.
