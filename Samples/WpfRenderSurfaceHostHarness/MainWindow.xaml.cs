@@ -84,7 +84,32 @@ public partial class MainWindow : Window
     {
         string stats = FpsText.Text.Replace('\n', ' ');
         Debug.WriteLine($"[WpfRenderSurfaceHostHarness] {stats}");
-        Clipboard.SetText(stats);
+        SetClipboardTextWithRetry(stats);
+    }
+
+    // The clipboard is a single systemwide resource - OpenClipboard legitimately fails with
+    // CLIPBRD_E_CANT_OPEN when another process (a clipboard manager, an AV scanner, etc.) is
+    // holding it at that instant. Retrying briefly is the standard fix, not a one-shot try/catch.
+    // The text is already in the VS Output window regardless (see caller), so a clipboard failure
+    // after exhausting retries is logged, not thrown - it shouldn't crash the harness.
+    private static void SetClipboardTextWithRetry(string text, int maxAttempts = 5, int delayMs = 50)
+    {
+        for (int attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                Clipboard.SetText(text);
+                return;
+            }
+            catch (System.Runtime.InteropServices.COMException) when (attempt < maxAttempts)
+            {
+                System.Threading.Thread.Sleep(delayMs);
+            }
+            catch (System.Runtime.InteropServices.COMException ex)
+            {
+                Debug.WriteLine($"[WpfRenderSurfaceHostHarness] Clipboard.SetText failed after {maxAttempts} attempts: {ex.Message}");
+            }
+        }
     }
 
     private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
