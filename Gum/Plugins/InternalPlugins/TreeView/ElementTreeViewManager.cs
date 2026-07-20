@@ -1109,7 +1109,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 {
                     treeNodeText = treeNodeText.Substring(0, treeNodeText.Length - 1);
                 }
-                treeNode = parentNode.Nodes.Add(treeNodeText);
+                treeNode = new GumTreeNode(treeNodeText);
+                parentNode.Nodes.Add(treeNode);
                 treeNode.ImageIndex = ExclamationIndex;
             }
         }
@@ -1128,7 +1129,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
             if (existingTreeNode == null)
             {
-                existingTreeNode = nodesToAddTo.Add(FileManager.RemovePath(directory));
+                existingTreeNode = new GumTreeNode(FileManager.RemovePath(directory));
+                nodesToAddTo.Add(existingTreeNode);
                 existingTreeNode.ImageIndex = FolderImageIndex;
             }
             AddAndRemoveFolderNodesFromFileSystem(directory, existingTreeNode.Nodes);
@@ -1394,7 +1396,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         {
             throw new NullReferenceException($"{nameof(parentNode)} cannot be null");
         }
-        TreeNode treeNode = new TreeNode();
+        TreeNode treeNode = new GumTreeNode();
 
         treeNode.ImageIndex = _treeNodeImageLogic.GetCreateImageIndex(element.IsSourceFileMissing, defaultImageIndex);
 
@@ -1407,7 +1409,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     private void AddTreeNodeForBehavior(BehaviorSave behavior, TreeNode parentNode, int defaultImageIndex)
     {
-        TreeNode treeNode = new TreeNode();
+        TreeNode treeNode = new GumTreeNode();
 
         treeNode.ImageIndex = _treeNodeImageLogic.GetCreateImageIndex(behavior.IsSourceFileMissing, defaultImageIndex);
 
@@ -1420,15 +1422,15 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     {
         if (mScreensTreeNode == null)
         {
-            mScreensTreeNode = new TreeNode("Screens");
+            mScreensTreeNode = new GumTreeNode("Screens");
             mScreensTreeNode.ImageIndex = FolderImageIndex;
             ObjectTreeView.Nodes.Add(mScreensTreeNode);
 
-            mComponentsTreeNode = new TreeNode("Components");
+            mComponentsTreeNode = new GumTreeNode("Components");
             mComponentsTreeNode.ImageIndex = FolderImageIndex;
             ObjectTreeView.Nodes.Add(mComponentsTreeNode);
 
-            mStandardElementsTreeNode = new TreeNode("Standard");
+            mStandardElementsTreeNode = new GumTreeNode("Standard");
             mStandardElementsTreeNode.ImageIndex = FolderImageIndex;
             // When the experimental Standards palette is on, the Standard folder is replaced by the
             // chip palette, so it is not shown in the tree. The node object is still kept (and still
@@ -1438,7 +1440,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 ObjectTreeView.Nodes.Add(mStandardElementsTreeNode);
             }
 
-            mBehaviorsTreeNode = new TreeNode("Behaviors");
+            mBehaviorsTreeNode = new GumTreeNode("Behaviors");
             mBehaviorsTreeNode.ImageIndex = FolderImageIndex;
             ObjectTreeView.Nodes.Add(mBehaviorsTreeNode);
         }
@@ -2086,7 +2088,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private TreeNode AddTreeNodeForInstance(InstanceSave instance, TreeNode parentContainerNode, 
         bool tolerateMissingTypes, HashSet<InstanceSave>? pendingAdditions = null)
     {
-        TreeNode treeNode = new TreeNode();
+        TreeNode treeNode = new GumTreeNode();
 
         bool validBaseType = ObjectFinder.Self.GetElementSave(instance.BaseType) != null;
 
