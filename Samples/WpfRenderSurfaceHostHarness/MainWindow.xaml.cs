@@ -41,6 +41,15 @@ public partial class MainWindow : Window
     private readonly Stopwatch _fpsWindow = new Stopwatch();
     private int _framesSinceFpsUpdate;
 
+    // High-level phase breakdown - bisects the pipeline into GPU draw / GPU->CPU readback / WPF
+    // push, so a flat total fps number (or one that doesn't move with buffer size) can be traced to
+    // which stage actually dominates, instead of guessing. One reused Stopwatch, three accumulators;
+    // deliberately not more granular than this until a phase is shown to actually be the culprit.
+    private readonly Stopwatch _phaseTimer = new Stopwatch();
+    private double _drawMsAccum;
+    private double _readbackMsAccum;
+    private double _pushMsAccum;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -135,13 +144,20 @@ public partial class MainWindow : Window
         float x = _surfaceWidth / 2f + radius * (float)Math.Cos(seconds) - 25f;
         float y = _surfaceHeight / 2f + radius * (float)Math.Sin(seconds) - 25f;
 
+        _phaseTimer.Restart();
         _spriteBatch.Begin();
         _spriteBatch.Draw(_whitePixel, new Microsoft.Xna.Framework.Rectangle((int)x, (int)y, 50, 50), Color.White);
         _spriteBatch.End();
-
         _graphicsDevice.SetRenderTarget(null);
+        _drawMsAccum += _phaseTimer.Elapsed.TotalMilliseconds;
+
+        _phaseTimer.Restart();
         _renderTarget.GetData(_host.RawImageBuffer);
+        _readbackMsAccum += _phaseTimer.Elapsed.TotalMilliseconds;
+
+        _phaseTimer.Restart();
         _host.PushFrame(_renderTarget.Format);
+        _pushMsAccum += _phaseTimer.Elapsed.TotalMilliseconds;
 
         UpdateFpsDisplay();
     }
@@ -157,9 +173,18 @@ public partial class MainWindow : Window
         }
 
         double measuredFps = _framesSinceFpsUpdate / elapsedSeconds;
-        FpsText.Text = $"FPS: {measuredFps:0.0}";
+        double avgDrawMs = _drawMsAccum / _framesSinceFpsUpdate;
+        double avgReadbackMs = _readbackMsAccum / _framesSinceFpsUpdate;
+        double avgPushMs = _pushMsAccum / _framesSinceFpsUpdate;
+
+        FpsText.Text =
+            $"FPS: {measuredFps:0.0}  ({_surfaceWidth}x{_surfaceHeight})\n" +
+            $"draw: {avgDrawMs:0.00}ms  readback: {avgReadbackMs:0.00}ms  push: {avgPushMs:0.00}ms";
 
         _framesSinceFpsUpdate = 0;
+        _drawMsAccum = 0;
+        _readbackMsAccum = 0;
+        _pushMsAccum = 0;
         _fpsWindow.Restart();
     }
 
