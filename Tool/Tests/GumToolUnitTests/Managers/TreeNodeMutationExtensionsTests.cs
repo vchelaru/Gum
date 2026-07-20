@@ -5,11 +5,11 @@ using Xunit;
 
 namespace GumToolUnitTests.Managers;
 
-// Pins ElementTreeViewManager's ITreeNodeMutable-based reorder/sort helpers (MoveToIndex,
-// SortByName), which used to operate directly on WinForms TreeNodeCollection. These previously had
-// no test coverage at all - the algorithm itself is unchanged, only its indexing surface moved from
-// TreeNodeCollection to ITreeNodeMutable, so these tests pin the translated behavior via real
-// GumTreeNode trees (no ETVM construction required).
+// Pins ElementTreeViewManager's ITreeNodeMutable-based reorder/sort/removal helpers (MoveToIndex,
+// SortByName, RemoveRecursivelyIfStale), which used to operate directly on WinForms
+// TreeNodeCollection. These previously had no test coverage at all - the algorithms are unchanged,
+// only their indexing surface moved from TreeNodeCollection to ITreeNodeMutable, so these tests pin
+// the translated behavior via real GumTreeNode trees (no ETVM construction required).
 public class TreeNodeMutationExtensionsTests
 {
     [Fact]
@@ -46,6 +46,59 @@ public class TreeNodeMutationExtensionsTests
         parent.Nodes[0].ShouldBeSameAs(c);
         parent.Nodes[1].ShouldBeSameAs(a);
         parent.Nodes[2].ShouldBeSameAs(b);
+    }
+
+    [Fact]
+    public void RemoveRecursivelyIfStale_NestedFolders_RemovesDeeplyNestedStaleDescendant()
+    {
+        GumTreeNode root = new GumTreeNode("Root");
+        GumTreeNode outerFolder = (GumTreeNode)root.AddChild("Outer");
+        GumTreeNode innerFolder = (GumTreeNode)outerFolder.AddChild("Inner");
+        GumTreeNode staleScreen = (GumTreeNode)innerFolder.AddChild("StaleScreen");
+        staleScreen.Tag = new ScreenSave();
+
+        ((ITreeNodeMutable)root).RemoveRecursivelyIfStale<ScreenSave>(_ => false);
+
+        outerFolder.Nodes.Contains(innerFolder).ShouldBeTrue();
+        innerFolder.Nodes.Contains(staleScreen).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void RemoveRecursivelyIfStale_TaggedChildFailsShouldKeep_RemovesChild()
+    {
+        GumTreeNode parent = new GumTreeNode("Parent");
+        GumTreeNode staleScreen = (GumTreeNode)parent.AddChild("StaleScreen");
+        staleScreen.Tag = new ScreenSave();
+
+        ((ITreeNodeMutable)parent).RemoveRecursivelyIfStale<ScreenSave>(_ => false);
+
+        parent.Nodes.Contains(staleScreen).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void RemoveRecursivelyIfStale_TaggedChildPassesShouldKeep_KeepsChild()
+    {
+        GumTreeNode parent = new GumTreeNode("Parent");
+        GumTreeNode liveScreen = (GumTreeNode)parent.AddChild("LiveScreen");
+        liveScreen.Tag = new ScreenSave();
+
+        ((ITreeNodeMutable)parent).RemoveRecursivelyIfStale<ScreenSave>(_ => true);
+
+        parent.Nodes.Contains(liveScreen).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void RemoveRecursivelyIfStale_UntaggedFolderChild_IsNeverRemovedItself()
+    {
+        GumTreeNode parent = new GumTreeNode("Parent");
+        GumTreeNode folder = (GumTreeNode)parent.AddChild("Folder");
+        GumTreeNode staleScreen = (GumTreeNode)folder.AddChild("StaleScreen");
+        staleScreen.Tag = new ScreenSave();
+
+        ((ITreeNodeMutable)parent).RemoveRecursivelyIfStale<ScreenSave>(_ => false);
+
+        parent.Nodes.Contains(folder).ShouldBeTrue();
+        folder.Nodes.Contains(staleScreen).ShouldBeFalse();
     }
 
     [Fact]

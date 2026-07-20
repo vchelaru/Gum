@@ -1037,10 +1037,12 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
 
             // add folders to the screens, entities, and standard elements
-            AddAndRemoveFolderNodesFromFileSystem(mStandardElementsTreeNode.GetFullFilePath()!.FullPath, mStandardElementsTreeNode.Nodes);
-            AddAndRemoveFolderNodesFromFileSystem(mScreensTreeNode.GetFullFilePath()!.FullPath, mScreensTreeNode.Nodes);
-            AddAndRemoveFolderNodesFromFileSystem(mComponentsTreeNode.GetFullFilePath()!.FullPath, mComponentsTreeNode.Nodes);
-            AddAndRemoveFolderNodesFromFileSystem(mBehaviorsTreeNode.GetFullFilePath()!.FullPath, mBehaviorsTreeNode.Nodes);
+            // Every node ETVM constructs is a GumTreeNode, which implements ITreeNodeMutable
+            // directly, so these are free reference casts (not wraps).
+            AddAndRemoveFolderNodesFromFileSystem(mStandardElementsTreeNode.GetFullFilePath()!.FullPath, (ITreeNodeMutable)mStandardElementsTreeNode);
+            AddAndRemoveFolderNodesFromFileSystem(mScreensTreeNode.GetFullFilePath()!.FullPath, (ITreeNodeMutable)mScreensTreeNode);
+            AddAndRemoveFolderNodesFromFileSystem(mComponentsTreeNode.GetFullFilePath()!.FullPath, (ITreeNodeMutable)mComponentsTreeNode);
+            AddAndRemoveFolderNodesFromFileSystem(mBehaviorsTreeNode.GetFullFilePath()!.FullPath, (ITreeNodeMutable)mBehaviorsTreeNode);
 
 
             AddNeededButMissingFromFileSystemFolderNodes();
@@ -1110,7 +1112,9 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                     treeNodeText = treeNodeText.Substring(0, treeNodeText.Length - 1);
                 }
                 treeNode = new GumTreeNode(treeNodeText);
-                parentNode.Nodes.Add(treeNode);
+                // parentNode is always a GumTreeNode (implements ITreeNodeMutable directly), same
+                // as every other node ETVM constructs, so this is a free reference cast.
+                ((ITreeNodeMutable)parentNode).AddChild((ITreeNodeMutable)treeNode);
                 treeNode.ImageIndex = ExclamationIndex;
             }
         }
@@ -1118,27 +1122,31 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         return treeNode!;
     }
 
-    private void AddAndRemoveFolderNodesFromFileSystem(string currentDirectory, TreeNodeCollection nodesToAddTo)
+    // nodesToAddTo is ITreeNodeMutable rather than TreeNodeCollection so this method's own
+    // add/remove decisions are expressed through the mutation interface. GetTreeNodeFor (the
+    // directory-path search) stays TreeNode-typed by design (see gum-tool-tree-view skill) - its
+    // result is cast at the point of use, same pattern as the rest of ETVM's node construction.
+    private void AddAndRemoveFolderNodesFromFileSystem(string currentDirectory, ITreeNodeMutable nodesToAddTo)
     {
         // todo: removes
         var directories = Directory.EnumerateDirectories(currentDirectory).ToArray();
 
         foreach (string directory in directories)
         {
-            TreeNode existingTreeNode = GetTreeNodeFor(directory);
+            ITreeNodeMutable existingTreeNode = (ITreeNodeMutable)GetTreeNodeFor(directory);
 
             if (existingTreeNode == null)
             {
                 existingTreeNode = new GumTreeNode(FileManager.RemovePath(directory));
-                nodesToAddTo.Add(existingTreeNode);
+                nodesToAddTo.AddChild(existingTreeNode);
                 existingTreeNode.ImageIndex = FolderImageIndex;
             }
-            AddAndRemoveFolderNodesFromFileSystem(directory, existingTreeNode.Nodes);
+            AddAndRemoveFolderNodesFromFileSystem(directory, existingTreeNode);
         }
 
-        for(int i = nodesToAddTo.Count - 1; i > -1; i--)
+        for(int i = nodesToAddTo.ChildCount - 1; i > -1; i--)
         {
-            TreeNode node = nodesToAddTo[i];
+            ITreeNodeMutable node = nodesToAddTo.GetChildAt(i);
 
             bool found = false;
 
@@ -1156,8 +1164,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             // only remove nodes if they are directory nodes (aka they have a null tag)
             if (!found && node.Tag == null)
             {
-                nodesToAddTo.RemoveAt(i);
-            }               
+                nodesToAddTo.RemoveChildAt(i);
+            }
         }
     }
 
@@ -1243,81 +1251,39 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         #region Remove nodes that are no longer needed
 
-        void RemoveScreenRecursively(TreeNode treeNode, int i, TreeNode container)
-        {
-            ScreenSave? screen = treeNode.Tag as ScreenSave;
+        // Every node ETVM constructs is a GumTreeNode, which implements ITreeNodeMutable directly,
+        // so these are free reference casts (not wraps).
+        ((ITreeNodeMutable)mScreensTreeNode).RemoveRecursivelyIfStale<ScreenSave>(
+            screen => gumProject.Screens.Contains(screen) && ShouldShow(screen));
 
-            // If the screen is null, that means that it's a folder TreeNode, so we don't want to remove it
-            if (screen != null)
-            {
-                if (!gumProject.Screens.Contains(screen) || !ShouldShow(screen))
-                {
-                    container.Nodes.RemoveAt(i);
-                }
-            }
-            else if(treeNode.Nodes != null)
-            {
-                for(int subI = treeNode.Nodes.Count - 1; subI > -1; subI--)
-                {
-                    var subnode = treeNode.Nodes[subI];
-                    RemoveScreenRecursively(subnode, subI, treeNode);
-                }
-            }
-        }
+        ((ITreeNodeMutable)mComponentsTreeNode).RemoveRecursivelyIfStale<ComponentSave>(
+            component => gumProject.Components.Contains(component) && ShouldShow(component));
 
-        for (int i = mScreensTreeNode.Nodes.Count - 1; i > -1; i--)
-        {
-            RemoveScreenRecursively(mScreensTreeNode.Nodes[i] as TreeNode, i, mScreensTreeNode);
-        }
-
-        void RemoveComponentRecursively(TreeNode treeNode, int i, TreeNode container)
-        {
-            ComponentSave? component = treeNode.Tag as ComponentSave;
-
-            // If the component is null, that means that it's a folder TreeNode, so we don't want to remove it
-            if (component != null)
-            {
-                if (!gumProject.Components.Contains(component) || !ShouldShow(component))
-                {
-                    container.Nodes.RemoveAt(i);
-                }
-            }
-            else if (treeNode.Nodes != null)
-            {
-                for (int subI = treeNode.Nodes.Count - 1; subI > -1; subI--)
-                {
-                    var subnode = treeNode.Nodes[subI];
-                    RemoveComponentRecursively(subnode, subI, treeNode);
-                }
-            }
-        }
-
-        for (int i = mComponentsTreeNode.Nodes.Count - 1; i > -1; i--)
-        {
-            RemoveComponentRecursively(mComponentsTreeNode.Nodes[i], i, mComponentsTreeNode);
-        }
-
-        for (int i = mStandardElementsTreeNode.Nodes.Count - 1; i > -1; i-- )
+        // Standard elements don't support subfolders, so this pass is flat (non-recursive) and,
+        // unlike the screen/component pass above, removes any non-StandardElementSave-tagged node
+        // outright rather than recursing into it.
+        ITreeNodeMutable mutableStandardElementsNode = (ITreeNodeMutable)mStandardElementsTreeNode;
+        for (int i = mutableStandardElementsNode.ChildCount - 1; i > -1; i--)
         {
             // Do we want to support folders here?
-            StandardElementSave? standardElement = mStandardElementsTreeNode.Nodes[i].Tag as StandardElementSave;
+            StandardElementSave? standardElement = mutableStandardElementsNode.GetChildAt(i).Tag as StandardElementSave;
 
             if (standardElement == null || !gumProject.StandardElements.Contains(standardElement) || !ShouldShow(standardElement))
             {
-                mStandardElementsTreeNode.Nodes.RemoveAt(i);
+                mutableStandardElementsNode.RemoveChildAt(i);
             }
         }
 
-        for(int i = mBehaviorsTreeNode.Nodes.Count - 1; i > -1; i--)
+        // Also flat (non-recursive): unlike standard elements above, a non-BehaviorSave-tagged node
+        // (a behavior subfolder) is left alone rather than removed.
+        ITreeNodeMutable mutableBehaviorsNode = (ITreeNodeMutable)mBehaviorsTreeNode;
+        for (int i = mutableBehaviorsNode.ChildCount - 1; i > -1; i--)
         {
-            BehaviorSave? behavior = mBehaviorsTreeNode.Nodes[i].Tag as BehaviorSave;
+            BehaviorSave? behavior = mutableBehaviorsNode.GetChildAt(i).Tag as BehaviorSave;
 
-            if(behavior != null)
+            if (behavior != null && (!gumProject.Behaviors.Contains(behavior) || !ShouldShow(behavior)))
             {
-                if(behavior == null || !gumProject.Behaviors.Contains(behavior) || !ShouldShow(behavior))
-                {
-                    mBehaviorsTreeNode.Nodes.RemoveAt(i);
-                }
+                mutableBehaviorsNode.RemoveChildAt(i);
             }
         }
 

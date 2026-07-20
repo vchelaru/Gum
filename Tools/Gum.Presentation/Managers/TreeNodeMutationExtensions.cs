@@ -1,3 +1,5 @@
+using System;
+
 namespace Gum.Managers;
 
 /// <summary>
@@ -101,6 +103,38 @@ public static class TreeNodeMutationExtensions
                 {
                     childNode.SortByName(recursive);
                 }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Recursively removes children tagged with <typeparamref name="T"/> that fail
+    /// <paramref name="shouldKeep"/>. A child not tagged <typeparamref name="T"/> (e.g. a folder
+    /// node) is never removed itself, but is recursed into so stale descendants are still pruned.
+    /// </summary>
+    /// <remarks>
+    /// Relocated from ElementTreeViewManager's <c>AddAndRemoveScreensComponentsStandardsAndBehaviors</c>,
+    /// where it existed as two near-identical local functions (<c>RemoveScreenRecursively</c>,
+    /// <c>RemoveComponentRecursively</c>) differing only by save type - this generic version
+    /// replaces both call sites.
+    /// </remarks>
+    public static void RemoveRecursivelyIfStale<T>(this ITreeNodeMutable containerNode, Func<T, bool> shouldKeep)
+        where T : class
+    {
+        for (int i = containerNode.ChildCount - 1; i > -1; i--)
+        {
+            ITreeNodeMutable child = containerNode.GetChildAt(i);
+
+            if (child.Tag is T tag)
+            {
+                if (!shouldKeep(tag))
+                {
+                    containerNode.RemoveChildAt(i);
+                }
+            }
+            else
+            {
+                child.RemoveRecursivelyIfStale(shouldKeep);
             }
         }
     }
