@@ -633,12 +633,13 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         return toReturn;
     }
 
-    // IPluginManager.GetWorldCursorPosition takes object rather than InputLibrary.Cursor so the
-    // interface can live in the headless Gum.Presentation assembly (InputLibrary is WinForms/KNI-
-    // coupled). PluginManager itself stays in the Gum tool project, so it's fine to cast back here.
-    public System.Numerics.Vector2? GetWorldCursorPosition(object cursor)
+    // IPluginManager.GetWorldCursorPosition is parameterless rather than taking InputLibrary.Cursor
+    // so the interface can live in the headless Gum.Presentation assembly (InputLibrary is
+    // WinForms/KNI-coupled). PluginManager itself stays in the Gum tool project, so it's fine to
+    // resolve the singleton here.
+    public System.Numerics.Vector2? GetWorldCursorPosition()
     {
-        InputLibrary.Cursor typedCursor = (InputLibrary.Cursor)cursor;
+        InputLibrary.Cursor typedCursor = InputLibrary.Cursor.Self;
         Vector2? toReturn = null;
         CallMethodOnPlugin(plugin =>
         {

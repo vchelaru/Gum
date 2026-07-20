@@ -127,12 +127,12 @@ public interface IPluginManager
     IEnumerable<IPositionedSizedObject>? GetSelectedIpsos();
 
     /// <summary>
-    /// Looks up the world position under the cursor via plugins that can answer it (the
-    /// wireframe/editor host). Typed <see cref="object"/> rather than the tool-only,
-    /// WinForms/KNI-coupled <c>InputLibrary.Cursor</c> so this interface can live in the headless
-    /// Gum.Presentation assembly; the implementation casts back to <c>InputLibrary.Cursor</c>.
+    /// Looks up the world position under the current cursor via plugins that can answer it (the
+    /// wireframe/editor host). Parameterless rather than taking the tool-only, WinForms/KNI-coupled
+    /// <c>InputLibrary.Cursor</c> so this interface can live in the headless Gum.Presentation
+    /// assembly; the implementation resolves the singleton <c>InputLibrary.Cursor.Self</c> itself.
     /// </summary>
-    System.Numerics.Vector2? GetWorldCursorPosition(object cursor);
+    System.Numerics.Vector2? GetWorldCursorPosition();
 
     /// <summary>
     /// Fills <paramref name="errors"/> with plugin-contributed errors. Typed <see cref="object"/>
