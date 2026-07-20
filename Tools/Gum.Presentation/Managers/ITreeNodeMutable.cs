@@ -17,6 +17,13 @@ namespace Gum.Managers;
 public interface ITreeNodeMutable : ITreeNode
 {
     /// <summary>
+    /// Hides <see cref="ITreeNode.Parent"/> with a mutable-typed return. A concrete implementation's
+    /// parent (when it has one) is always itself an <see cref="ITreeNodeMutable"/>, so exposing it as
+    /// one here costs nothing beyond what <see cref="ITreeNode.Parent"/> already computes.
+    /// </summary>
+    new ITreeNodeMutable? Parent { get; }
+
+    /// <summary>
     /// The node's icon index in whatever image list the concrete implementation is bound to.
     /// </summary>
     int ImageIndex { get; set; }
@@ -56,4 +63,26 @@ public interface ITreeNodeMutable : ITreeNode
     /// Removes all child nodes.
     /// </summary>
     void ClearChildren();
+
+    /// <summary>
+    /// Removes this node from its parent's children (or its owning tree's root nodes), if any.
+    /// No-op if the node currently has neither.
+    /// </summary>
+    void RemoveSelf();
+
+    /// <summary>
+    /// The index of <paramref name="child"/> among this node's children, or -1 if it is not a child
+    /// of this node.
+    /// </summary>
+    int IndexOfChild(ITreeNodeMutable child);
+
+    /// <summary>
+    /// The number of direct children.
+    /// </summary>
+    int ChildCount { get; }
+
+    /// <summary>
+    /// The direct child at the given index.
+    /// </summary>
+    ITreeNodeMutable GetChildAt(int index);
 }
