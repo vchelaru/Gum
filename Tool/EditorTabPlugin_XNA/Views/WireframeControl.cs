@@ -120,7 +120,26 @@ public class WireframeControl : GraphicsDeviceControl
         _hotkeyManager.HandleEditorKeyDown(keyArgs);
         e.Handled = keyArgs.Handled;
         e.SuppressKeyPress = keyArgs.SuppressKeyPress;
-        _cameraController.HandleKeyPress(e);
+        _cameraController.HandleKeyPress(keyArgs);
+    }
+
+    void HandleMouseDown(object? sender, MouseEventArgs e) =>
+        _cameraController.HandleMouseDown(e.ToGumMouseEventArgs());
+
+    void HandleMouseMove(object? sender, MouseEventArgs e) =>
+        _cameraController.HandleMouseMove(e.ToGumMouseEventArgs());
+
+    void HandleMouseWheel(object? sender, MouseEventArgs e)
+    {
+        var gumMouseArgs = e.ToGumMouseEventArgs();
+        _cameraController.HandleMouseWheel(gumMouseArgs);
+
+        // WinForms reports MouseWheel via a HandledMouseEventArgs; read the neutral Handled
+        // back to suppress the container's default scroll behavior, mirroring HandleKeyDown above.
+        if (gumMouseArgs.Handled && e is HandledMouseEventArgs handledArgs)
+        {
+            handledArgs.Handled = true;
+        }
     }
 
     private void HandleKeyUp(object? sender, KeyEventArgs e)
@@ -228,9 +247,9 @@ public class WireframeControl : GraphicsDeviceControl
 
             KeyDown += HandleKeyDown;
             KeyUp += HandleKeyUp;
-            MouseDown += _cameraController.HandleMouseDown;
-            MouseMove += _cameraController.HandleMouseMove;
-            MouseWheel += _cameraController.HandleMouseWheel;
+            MouseDown += HandleMouseDown;
+            MouseMove += HandleMouseMove;
+            MouseWheel += HandleMouseWheel;
 
             MouseEnter += (_, _) =>
             {
