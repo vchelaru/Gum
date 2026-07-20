@@ -25,19 +25,9 @@ public static class KeyCombinationExtensions
         return kc.Key == null || args.KeyCode == ToWinFormsKey(kc.Key.Value);
     }
 
-    /// <summary>
-    /// Matches against Gum's framework-neutral <see cref="GumKeyEventArgs"/>, for callers that have
-    /// already translated the framework key event at the editor-host boundary (e.g.
-    /// <c>CameraController.HandleKeyPress</c>).
-    /// </summary>
-    public static bool IsPressed(this KeyCombination kc, GumKeyEventArgs args)
-    {
-        if (kc.IsCtrlDown && !args.IsCtrlDown) return false;
-        if (kc.IsShiftDown && !args.IsShiftDown) return false;
-        if (kc.IsAltDown && !args.IsAltDown) return false;
-
-        return kc.Key == null || args.Key == kc.Key;
-    }
+    // The GumKeyEventArgs overload of IsPressed is framework-neutral (ADR-0005) and lives in
+    // Gum.Presentation (Tools/Gum.Presentation/Managers/KeyCombinationGumEventArgsExtensions.cs)
+    // alongside KeyCombination itself, not here — see CameraController, its first consumer.
 
     public static bool IsPressed(this KeyCombination kc, System.Windows.Input.KeyEventArgs args)
     {
