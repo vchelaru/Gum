@@ -262,6 +262,27 @@ namespace InputLibrary
             }
         }
 
+        /// <summary>
+        /// <see cref="IGumCursorState.SetCursor"/> implementation. Maps the neutral
+        /// <see cref="GumCursorKind"/> to a real WinForms <see cref="WinCursor"/> and forwards to
+        /// <see cref="SetWinformsCursor"/> — the one place that mapping happens, so headless callers
+        /// (e.g. <c>SelectionManager</c>) never reference <see cref="WinCursor"/> directly.
+        /// </summary>
+        public void SetCursor(GumCursorKind kind) => SetWinformsCursor(ToWinFormsCursor(kind));
+
+        private static WinCursor ToWinFormsCursor(GumCursorKind kind) => kind switch
+        {
+            GumCursorKind.Arrow => Cursors.Arrow,
+            GumCursorKind.Cross => Cursors.Cross,
+            GumCursorKind.Hand => Cursors.Hand,
+            GumCursorKind.SizeAll => Cursors.SizeAll,
+            GumCursorKind.SizeNS => Cursors.SizeNS,
+            GumCursorKind.SizeWE => Cursors.SizeWE,
+            GumCursorKind.SizeNESW => Cursors.SizeNESW,
+            GumCursorKind.SizeNWSE => Cursors.SizeNWSE,
+            _ => Cursors.Arrow
+        };
+
 
         public void EndCursorSettingFrameStart()
         {

@@ -20,6 +20,8 @@ public partial class EditingManager
 
     public ContextMenu ContextMenu => _contextMenu;
 
+    public bool IsContextMenuOpen => _contextMenu?.IsOpen == true;
+
     private void RightClickInitialize(ContextMenu contextMenu)
     {
         _viewModel = new RightClickViewModel(

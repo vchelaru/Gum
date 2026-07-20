@@ -1,44 +1,33 @@
-﻿using Gum.Commands;
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Input;
 using Gum.Managers;
-using Gum.Plugins;
-using Gum.Plugins.InternalPlugins.EditorTab.Services;
-using Gum.Plugins.InternalPlugins.VariableGrid;
-using Gum.PropertyGridHelpers;
-using Gum.Services;
 using Gum.Services.Dialogs;
-using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
-using Gum.Wireframe.Editors;
 using Gum.Wireframe.Editors.Visuals;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
-using RenderingLibrary.Math.Geometry;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
-using System.Windows.Input;
-using Color = System.Drawing.Color;
-using Matrix = System.Numerics.Matrix4x4;
-using WinCursor = System.Windows.Forms.Cursor;
 
 namespace Gum.Wireframe;
-
-// ISelectionManager moved to Gum.Presentation (Tools/Gum.Presentation/Wireframe/ISelectionManager.cs)
-// so EditorContext/RectangleSelector/WireframeEditor and its input handlers (also moved) can depend
-// on it without the concrete SelectionManager, which stays here — it directly reads WinForms
-// Control.ModifierKeys and sets a WinForms Cursor. Same namespace, so no using changes needed.
 
 public class SelectionManager : ISelectionManager
 {
     #region Fields
 
-    LayerService _layerService;
-
     public WireframeEditor? WireframeEditor;
+
+    private enum WireframeEditorKind
+    {
+        None,
+        Standard,
+        Polygon
+    }
+
+    private WireframeEditorKind _currentEditorKind = WireframeEditorKind.None;
 
     /// <summary>
     /// Set on PrimaryPush when the push was on an already-selected locked instance body.
@@ -53,40 +42,28 @@ public class SelectionManager : ISelectionManager
 
     public event Action<IPositionedSizedObject?>? HighlightedIpsoChanged;
 
-    GraphicalOutline mGraphicalOutline;
+    IHighlightOutlineVisual mGraphicalOutline;
 
-
-    HighlightManager highlightManager;
+    IHighlightOverlayVisual highlightManager;
 
     #endregion
 
     #region Properties
 
-
-    public InputLibrary.Cursor Cursor
-    {
-        get
-        {
-            return InputLibrary.Cursor.Self;
-        }
-    }
-
-
     private readonly ISelectedState _selectedState;
-    private readonly IEditingManager _editingManager;
     private readonly IUndoManager _undoManager;
+    private readonly IContextMenuState _contextMenuState;
     private readonly IDialogService _dialogService;
     private readonly IHotkeyManager _hotkeyManager;
     private readonly IWireframeObjectManager _wireframeObjectManager;
-    private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
-    private readonly IProjectManager _projectManager;
     private readonly IGuiCommands _guiCommands;
-    private readonly IElementCommands _elementCommands;
-    private readonly IFileCommands _fileCommands;
-    private readonly ISetVariableLogic _setVariableLogic;
-    private readonly IUiSettingsService _uiSettingsService;
-    private readonly IToolFontService _toolFontService;
-    private readonly IPluginManager _pluginManager;
+    private readonly IWireframeEditorFactory _wireframeEditorFactory;
+    private readonly INineSliceCoordinateRefresher _nineSliceCoordinateRefresher;
+    private readonly IPreciseHitTester _preciseHitTester;
+
+    private Layer _overlayLayer;
+    private Camera _camera;
+    private IGumCursorState _cursor;
 
     public virtual bool IsOverBody
     {
@@ -166,13 +143,12 @@ public class SelectionManager : ISelectionManager
         }
     }
 
-    public bool IsShiftDown
-    {
-        get
-        {
-            return ((Control.ModifierKeys & Keys.Shift) != 0);
-        }
-    }
+    /// <summary>
+    /// Whether Shift is currently held, via the same live-modifier-state seam
+    /// (<see cref="IHotkeyManager.IsPressedInControl"/>) already used for the multi-select hotkey,
+    /// rather than reading a WinForms modifier state directly.
+    /// </summary>
+    public bool IsShiftDown => _hotkeyManager.IsPressedInControl(KeyCombination.Shift());
 
     bool restrictToUnitValues;
     public bool RestrictToUnitValues
@@ -204,45 +180,47 @@ public class SelectionManager : ISelectionManager
 
     public SelectionManager(ISelectedState selectedState,
         IUndoManager undoManager,
-        IEditingManager editingManager,
+        IContextMenuState contextMenuState,
         IDialogService dialogService,
         IHotkeyManager hotkeyManager,
-        IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         IWireframeObjectManager wireframeObjectManager,
-        IProjectManager projectManager,
         IGuiCommands guiCommands,
-        IElementCommands elementCommands,
-        IFileCommands fileCommands,
-        ISetVariableLogic setVariableLogic,
-        IUiSettingsService uiSettingsService,
-        IToolFontService toolFontService,
-        IPluginManager pluginManager)
+        IWireframeEditorFactory wireframeEditorFactory,
+        INineSliceCoordinateRefresher nineSliceCoordinateRefresher,
+        IPreciseHitTester preciseHitTester)
     {
         _selectedState = selectedState;
-        _toolFontService = toolFontService;
-        _editingManager = editingManager;
         _undoManager = undoManager;
+        _contextMenuState = contextMenuState;
         _dialogService = dialogService;
         _hotkeyManager = hotkeyManager;
         _wireframeObjectManager = wireframeObjectManager;
-        _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
-        _projectManager = projectManager;
         _guiCommands = guiCommands;
-        _elementCommands = elementCommands;
-        _fileCommands = fileCommands;
-        _setVariableLogic = setVariableLogic;
-        _uiSettingsService = uiSettingsService;
-        _pluginManager = pluginManager;
+        _wireframeEditorFactory = wireframeEditorFactory;
+        _nineSliceCoordinateRefresher = nineSliceCoordinateRefresher;
+        _preciseHitTester = preciseHitTester;
     }
 
-    public void Initialize(LayerService layerService)
+    /// <summary>
+    /// Finishes construction with the live rendering-side dependencies (overlay layer, camera,
+    /// cursor, and the tool-side visuals SelectionManager decorates but doesn't build itself) —
+    /// these aren't available until the XNA host has initialized, so they're supplied here rather
+    /// than the constructor (two-stage init).
+    /// </summary>
+    public void Initialize(
+        Layer overlayLayer,
+        Camera camera,
+        IGumCursorState cursor,
+        ISelectionRectangleVisual selectionRectangleVisual,
+        IHighlightOutlineVisual highlightOutline,
+        IHighlightOverlayVisual highlightOverlay)
     {
-        _layerService = layerService;
-        var overlayLayer = layerService.OverlayLayer;
+        _overlayLayer = overlayLayer;
+        _camera = camera;
+        _cursor = cursor;
 
-        mGraphicalOutline = new GraphicalOutline(overlayLayer);
-
-        highlightManager = new HighlightManager(overlayLayer);
+        mGraphicalOutline = highlightOutline;
+        highlightManager = highlightOverlay;
 
         // Initialize rectangle selector for drag-to-select functionality
         _rectangleSelector = new RectangleSelector(
@@ -250,9 +228,9 @@ public class SelectionManager : ISelectionManager
             _wireframeObjectManager,
             this,
             _guiCommands,
-            Renderer.Self.Camera,
-            InputLibrary.Cursor.Self,
-            new SelectionRectangleVisual(overlayLayer));
+            _camera,
+            _cursor,
+            selectionRectangleVisual);
     }
 
     /// <summary>
@@ -278,18 +256,12 @@ public class SelectionManager : ISelectionManager
             // Always check this even if the cursor isn't over the window because other windows (like
             // the texture coordinate seleciton plugin window) can change the texture coordinates and we
             // want the highlight to update:
-            //if (Cursor.IsInWindow && _selectedState.SelectedElement != null)
             if (_selectedState.SelectedElement != null)
             {
                 HighlightActivity(forceNoHighlight);
 
                 SelectionActivity();
             }
-            //else if (!Cursor.IsInWindow)
-            //{
-            // the element view window can also highlight, so we don't want to do this:
-            //HighlightedIpso = null;
-            //}
         }
         catch (Exception e)
         {
@@ -297,7 +269,7 @@ public class SelectionManager : ISelectionManager
         }
     }
 
-    public void LateActivity(SystemManagers systemManagers)
+    public void LateActivity()
     {
         // Only update visuals here - input processing happens in SelectionActivity via ProcessInputForSelection
         WireframeEditor?.UpdateVisuals(SelectedGues);
@@ -417,7 +389,7 @@ public class SelectionManager : ISelectionManager
     /// to un-highlight anything if the cursor is outside of the window</param>
     void HighlightActivity(bool forceNoHighlight)
     {
-        if (!InputLibrary.Cursor.Self.PrimaryDownIgnoringIsInWindow)
+        if (!_cursor.PrimaryDownIgnoringIsInWindow)
         {
             // There is currently a known
             // bug where the user can click+drag
@@ -425,14 +397,13 @@ public class SelectionManager : ISelectionManager
             // wireframe window and the cursor will
             // change.
 
-            var cursorToSet = System.Windows.Forms.Cursors.Arrow;
+            var cursorToSet = GumCursorKind.Arrow;
 
-            float worldXAt = Cursor.GetWorldX();
-            float worldYAt = Cursor.GetWorldY();
+            _camera.ScreenToWorld(_cursor.X, _cursor.Y, out float worldXAt, out float worldYAt);
 
             GraphicalUiElement? representationOver = null;
 
-            if (_editingManager.ContextMenu?.IsOpen == true)
+            if (_contextMenuState.IsContextMenuOpen)
             {
                 // do nothing!
             }
@@ -442,7 +413,7 @@ public class SelectionManager : ISelectionManager
                 {
                     var rectangleCursor = _rectangleSelector.GetCursorToShow();
                     if (rectangleCursor != null)
-                        cursorToSet = ToWinFormsCursor(rectangleCursor.Value);
+                        cursorToSet = rectangleCursor.Value;
                 }
 
                 // Cursor and IsOverBody are determined by which of four mutually exclusive
@@ -460,7 +431,7 @@ public class SelectionManager : ISelectionManager
                     IsOverBody = false;
                     cursorToSet = ApplyHandlerCursor(cursorToSet, worldXAt, worldYAt);
                 }
-                else if (IsOverBody && Cursor.PrimaryDown)
+                else if (IsOverBody && _cursor.PrimaryDown)
                 {
                     representationOver = _wireframeObjectManager.GetSelectedRepresentation();
                     var selectedIsLocked = _selectedState.SelectedInstance?.Locked == true;
@@ -486,25 +457,19 @@ public class SelectionManager : ISelectionManager
                 }
             }
 
+            // This updates the sizes and texture coordinates of the highlighted representation if
+            // it's a NineSlice. This is needed before we set the HighlightedIpso and before we
+            // update the highlight objects. No-op for any other component type.
+            _nineSliceCoordinateRefresher.RefreshIfNineSlice(representationOver?.RenderableComponent);
 
-            if (representationOver != null && representationOver.RenderableComponent is NineSlice nineslice)
+            // We used to not check this, but we have to now because the cursor might be
+            if (_cursor.IsInWindow)
             {
-                // This function updates the sizes and texture coordinates of the 
-                // highlighted representation if it's a NineSlice.  This is needed before
-                // we set the HighlightedIpso and before we update the highlight objects
-                nineslice.RefreshTextureCoordinatesAndSpriteSizes();
-            }
-
-
-
-            // We used to not check this, but we have to now because the cursor might be 
-            if (Cursor.IsInWindow)
-            {
-                Cursor.SetWinformsCursor(cursorToSet);
+                _cursor.SetCursor(cursorToSet);
 
                 // We don't want to show the highlight when the user is performing some kind of editing.
                 // Therefore make sure the cursor isn't down.
-                if (representationOver != null && Cursor.PrimaryDown == false)
+                if (representationOver != null && _cursor.PrimaryDown == false)
                 {
                     HighlightedIpso = representationOver;
 
@@ -516,7 +481,7 @@ public class SelectionManager : ISelectionManager
                 }
             }
         }
-        else if (InputLibrary.Cursor.Self.PrimaryDown && Cursor.IsInWindow)
+        else if (_cursor.PrimaryDown && _cursor.IsInWindow)
         {
             // We only want to hide it if the user is holding the cursor down over the wireframe window.
             HighlightedIpso = null;
@@ -532,29 +497,15 @@ public class SelectionManager : ISelectionManager
 
     /// <summary>
     /// Asks <see cref="WireframeEditor"/> (headless, in Gum.Presentation) which cursor its
-    /// handlers want to show and maps the neutral <see cref="GumCursorKind"/> answer to a real
-    /// WinForms <see cref="WinCursor"/>, or returns <paramref name="defaultCursor"/> unchanged if
-    /// no handler has an opinion. This is the one place that mapping happens — WireframeEditor and
-    /// its input handlers only ever deal in <see cref="GumCursorKind"/>.
+    /// handlers want to show, falling back to <paramref name="defaultCursor"/> if no handler has an
+    /// opinion. Mapping the resulting <see cref="GumCursorKind"/> to a real framework cursor is
+    /// <see cref="IGumCursorState.SetCursor"/>'s job, not this class's.
     /// </summary>
-    private WinCursor ApplyHandlerCursor(WinCursor defaultCursor, float worldXAt, float worldYAt)
+    private GumCursorKind ApplyHandlerCursor(GumCursorKind defaultCursor, float worldXAt, float worldYAt)
     {
         var cursorKind = WireframeEditor.GetCursorToShow(worldXAt, worldYAt);
-        return cursorKind != null ? ToWinFormsCursor(cursorKind.Value) : defaultCursor;
+        return cursorKind ?? defaultCursor;
     }
-
-    private static WinCursor ToWinFormsCursor(GumCursorKind kind) => kind switch
-    {
-        GumCursorKind.Arrow => System.Windows.Forms.Cursors.Arrow,
-        GumCursorKind.Cross => System.Windows.Forms.Cursors.Cross,
-        GumCursorKind.Hand => System.Windows.Forms.Cursors.Hand,
-        GumCursorKind.SizeAll => System.Windows.Forms.Cursors.SizeAll,
-        GumCursorKind.SizeNS => System.Windows.Forms.Cursors.SizeNS,
-        GumCursorKind.SizeWE => System.Windows.Forms.Cursors.SizeWE,
-        GumCursorKind.SizeNESW => System.Windows.Forms.Cursors.SizeNESW,
-        GumCursorKind.SizeNWSE => System.Windows.Forms.Cursors.SizeNWSE,
-        _ => System.Windows.Forms.Cursors.Arrow
-    };
 
     public GraphicalUiElement GetRepresentationAt(float x, float y, bool trySkipSelected, List<ElementWithState> elementStack)
     {
@@ -582,23 +533,11 @@ public class SelectionManager : ISelectionManager
                         // If this is a container, and dotted lines are not drawn, then this has no renderable component:
                         if (selectedRepresentation?.RenderableComponent != null)
                         {
-                            var hasCursorOver = false;
-
-                            if (selectedRepresentation.RenderableComponent is LinePolygon)
-                            {
-                                hasCursorOver = (selectedRepresentation.RenderableComponent as LinePolygon).IsPointInside(x, y);
-                            }
-                            else
-                            {
-                                hasCursorOver = selectedRepresentation.HasCursorOver(x, y);
-                            }
-
-                            if (hasCursorOver)
+                            if (_preciseHitTester.HasCursorOver(selectedRepresentation, x, y))
                             {
                                 ipsoOver = selectedRepresentation;
                                 break;
                             }
-
                         }
                     }
                 }
@@ -707,16 +646,7 @@ public class SelectionManager : ISelectionManager
 
                 if (visible == visibleToCheck)
                 {
-                    var hasCursorOver = false;
-
-                    if (graphicalUiElement.RenderableComponent is LinePolygon)
-                    {
-                        hasCursorOver = (graphicalUiElement.RenderableComponent as LinePolygon).IsPointInside(x, y);
-                    }
-                    else
-                    {
-                        hasCursorOver = graphicalUiElement.HasCursorOver(x, y);
-                    }
+                    bool hasCursorOver = _preciseHitTester.HasCursorOver(graphicalUiElement, x, y);
 
                     if (hasCursorOver && (_wireframeObjectManager.IsRepresentation(graphicalUiElement)))
                     {
@@ -763,14 +693,6 @@ public class SelectionManager : ISelectionManager
         {
             isVisible = (asIVisible).AbsoluteVisible;
         }
-        else if (ipso is Sprite asSprite)
-        {
-            isVisible = (asSprite).AbsoluteVisible;
-        }
-        else if (ipso is Text asText)
-        {
-            isVisible = (asText).AbsoluteVisible;
-        }
 
         return isVisible;
     }
@@ -796,14 +718,7 @@ public class SelectionManager : ISelectionManager
         if (isPolygon)
         {
             // use the Polygon wireframe editor
-            if (WireframeEditor is PolygonWireframeEditor == false)
-            {
-                if (WireframeEditor != null)
-                {
-                    WireframeEditor.Destroy();
-                }
-                CreatePolygonWireframeEditor();
-            }
+            SwitchToPolygonEditor();
         }
         else if (SelectedGues.Count > 0 && SelectedGue?.Tag is ScreenSave == false)
         {
@@ -816,55 +731,21 @@ public class SelectionManager : ISelectionManager
 
             if (isPolygon)
             {
-                if (WireframeEditor != null)
-                {
-                    WireframeEditor.Destroy();
-                }
-                CreatePolygonWireframeEditor();
+                SwitchToPolygonEditor();
             }
-            else
+            else if (_currentEditorKind != WireframeEditorKind.Standard)
             {
-                if (WireframeEditor is StandardWireframeEditor == false)
-                {
-                    if (WireframeEditor != null)
-                    {
-                        WireframeEditor.Destroy();
-                    }
+                WireframeEditor?.Destroy();
 
-                    var lineColor = Color.FromArgb(255, _projectManager.GuideLineColorR,
-                        _projectManager.GuideLineColorG,
-                        _projectManager.GuideLineColorB);
-
-                    var textColor = Color.FromArgb(255, _projectManager.GuideTextColorR,
-                        _projectManager.GuideTextColorG,
-                        _projectManager.GuideTextColorB);
-
-                    WireframeEditor = new StandardWireframeEditor(
-                        _layerService.OverlayLayer,
-                        lineColor,
-                        textColor,
-                        _hotkeyManager,
-                        this,
-                        _selectedState,
-                        _elementCommands,
-                        _guiCommands,
-                        _fileCommands,
-                        _setVariableLogic,
-                        _undoManager,
-                        _variableInCategoryPropagationLogic,
-                        _wireframeObjectManager,
-                        _uiSettingsService,
-                        Renderer.Self.Camera,
-                        InputLibrary.Cursor.Self,
-                        _toolFontService,
-                        _pluginManager);
-                }
+                WireframeEditor = _wireframeEditorFactory.CreateStandardEditor(this, _overlayLayer, _camera, _cursor);
+                _currentEditorKind = WireframeEditorKind.Standard;
             }
         }
         else if (WireframeEditor != null)
         {
             WireframeEditor.Destroy();
             WireframeEditor = null;
+            _currentEditorKind = WireframeEditorKind.None;
         }
 
         if (WireframeEditor != null)
@@ -881,24 +762,14 @@ public class SelectionManager : ISelectionManager
         }
     }
 
-    private void CreatePolygonWireframeEditor()
+    private void SwitchToPolygonEditor()
     {
-        WireframeEditor = new PolygonWireframeEditor(
-            _layerService.OverlayLayer,
-            _hotkeyManager,
-            this,
-            _selectedState,
-            _elementCommands,
-            _guiCommands,
-            _fileCommands,
-            _setVariableLogic,
-            _undoManager,
-            _variableInCategoryPropagationLogic,
-            _wireframeObjectManager,
-            _uiSettingsService,
-            Renderer.Self.Camera,
-            InputLibrary.Cursor.Self,
-            _pluginManager);
+        if (_currentEditorKind != WireframeEditorKind.Polygon)
+        {
+            WireframeEditor?.Destroy();
+            WireframeEditor = _wireframeEditorFactory.CreatePolygonEditor(this, _overlayLayer, _camera, _cursor);
+            _currentEditorKind = WireframeEditorKind.Polygon;
+        }
     }
 
     #region New Explicit Input Processing System
@@ -942,9 +813,8 @@ public class SelectionManager : ISelectionManager
     /// </summary>
     private void ProcessInputForSelection()
     {
-        var cursor = Cursor;
-        float worldX = cursor.GetWorldX();
-        float worldY = cursor.GetWorldY();
+        var cursor = _cursor;
+        _camera.ScreenToWorld(cursor.X, cursor.Y, out float worldX, out float worldY);
 
         // ═══════════════════════════════════════════════════════════════
         // DIFFERENT ORDERING FOR PUSH vs DOWN/CLICK
@@ -1051,7 +921,7 @@ public class SelectionManager : ISelectionManager
     /// Determines what's under the cursor without changing any state.
     /// This is a pure query - no side effects.
     /// </summary>
-    private InputContext DetermineInputContext(float worldX, float worldY, InputLibrary.Cursor cursor)
+    private InputContext DetermineInputContext(float worldX, float worldY, IGumCursorState cursor)
     {
         var context = new InputContext
         {
@@ -1103,7 +973,7 @@ public class SelectionManager : ISelectionManager
     /// - PrimaryPush: Called BEFORE handlers (selection updates first)
     /// - PrimaryDown/Click: Called AFTER handlers (handlers continue operation)
     /// </summary>
-    private InputDecision MakeInputDecision(InputContext context, InputLibrary.Cursor cursor)
+    private InputDecision MakeInputDecision(InputContext context, IGumCursorState cursor)
     {
         // ═══════════════════════════════════════════════════════════════
         // PRIORITY 1: If any handler is active (dragging),
@@ -1154,7 +1024,7 @@ public class SelectionManager : ISelectionManager
     private void ExecuteInputDecision(
         InputDecision decision,
         InputContext context,
-        InputLibrary.Cursor cursor,
+        IGumCursorState cursor,
         float worldX,
         float worldY)
     {
@@ -1184,7 +1054,7 @@ public class SelectionManager : ISelectionManager
     /// Separated into its own method for clarity.
     /// If rectangle selector doesn't activate (no drag), falls back to normal selection.
     /// </summary>
-    private void ProcessRectangleSelection(InputLibrary.Cursor cursor, float worldX, float worldY, InputContext context)
+    private void ProcessRectangleSelection(IGumCursorState cursor, float worldX, float worldY, InputContext context)
     {
         if (_rectangleSelector == null)
             return;
@@ -1240,13 +1110,12 @@ public class SelectionManager : ISelectionManager
     {
         // Update hover state EVERY frame (not just when there's input)
         // This ensures hover highlights (e.g., polygon point highlights) show correctly
-        var cursor = Cursor;
-        float worldX = cursor.GetWorldX();
-        float worldY = cursor.GetWorldY();
+        var cursor = _cursor;
+        _camera.ScreenToWorld(cursor.X, cursor.Y, out float worldX, out float worldY);
         WireframeEditor?.UpdateHover(worldX, worldY);
 
         // Process input only when no context menu is visible
-        if (_editingManager.ContextMenu?.IsOpen != true)
+        if (!_contextMenuState.IsContextMenuOpen)
         {
             ProcessInputForSelection();
         }
@@ -1261,15 +1130,14 @@ public class SelectionManager : ISelectionManager
             // is already selected
             if (WireframeEditor?.HasCursorOverHandles != true)
             {
-                float x = Cursor.GetWorldX();
-                float y = Cursor.GetWorldY();
+                _camera.ScreenToWorld(_cursor.X, _cursor.Y, out float x, out float y);
 
                 List<ElementWithState> elementStack = new List<ElementWithState>();
                 elementStack.Add(new ElementWithState(_selectedState.SelectedElement));
 
 
                 IRenderableIpso representation =
-                    GetRepresentationAt(x, y, Cursor.PrimaryDoubleClick || IsComponentNoInstanceSelected, elementStack);
+                    GetRepresentationAt(x, y, _cursor.PrimaryDoubleClick || IsComponentNoInstanceSelected, elementStack);
                 bool hasChanged = true;
 
                 if (representation != null)
@@ -1282,7 +1150,7 @@ public class SelectionManager : ISelectionManager
                     {
                         throw new Exception("Either the selected element or instance should not be null");
                     }
-                    // The representation 
+                    // The representation
                     // will become invalid
                     // in the following if/else
                     // because the Wireframe view

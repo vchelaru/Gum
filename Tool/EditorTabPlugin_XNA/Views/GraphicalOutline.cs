@@ -10,7 +10,7 @@ using Matrix = System.Numerics.Matrix4x4;
 
 namespace Gum.Wireframe
 {
-    public class GraphicalOutline
+    public class GraphicalOutline : Editors.Visuals.IHighlightOutlineVisual
     {
         #region Fields
 

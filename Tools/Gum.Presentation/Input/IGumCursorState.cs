@@ -24,4 +24,23 @@ public interface IGumCursorState
     bool PrimaryDown { get; }
     bool PrimaryPush { get; }
     bool PrimaryClick { get; }
+
+    /// <summary>Whether the cursor is currently positioned over the editor window.</summary>
+    bool IsInWindow { get; }
+
+    /// <summary>Whether the current <see cref="PrimaryClick"/> is the second click of a double-click.</summary>
+    bool PrimaryDoubleClick { get; }
+
+    /// <summary>Whether the secondary (right) mouse button was pushed this frame.</summary>
+    bool SecondaryPush { get; }
+
+    /// <summary>Same as <see cref="PrimaryDown"/> but does not require <see cref="IsInWindow"/> to be true.</summary>
+    bool PrimaryDownIgnoringIsInWindow { get; }
+
+    /// <summary>
+    /// Requests that the given cursor icon be shown. The mapping to a real framework cursor type
+    /// (e.g. WinForms <c>Cursor</c>) is the implementation's job, so headless callers never need to
+    /// reference a framework cursor type directly.
+    /// </summary>
+    void SetCursor(GumCursorKind kind);
 }

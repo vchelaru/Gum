@@ -1,24 +1,19 @@
 using Gum;
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.Input;
 using Gum.Managers;
-using Gum.Plugins;
-using Gum.Plugins.InternalPlugins.EditorTab.Services;
-using Gum.Plugins.InternalPlugins.VariableGrid;
-using Gum.PropertyGridHelpers;
-using Gum.Services;
-using Gum.Services.Dialogs;
-using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
+using Gum.Wireframe.Editors.Visuals;
 using Moq;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using System.Collections.Generic;
 
-namespace GumToolUnitTests.Wireframe;
+namespace Gum.Presentation.Tests;
 
 /// <summary>
 /// Tests for SelectionManager.HighlightedIpsoChanged callback behavior.
@@ -26,40 +21,31 @@ namespace GumToolUnitTests.Wireframe;
 public class SelectionManagerHighlightTests : BaseTestClass
 {
     private readonly SelectionManager _selectionManager;
-    private readonly Mock<LayerService> _layerService;
 
     public SelectionManagerHighlightTests()
     {
-        SystemManagers.Default = new SystemManagers();
-        SystemManagers.Default.Renderer = new Renderer();
-        SystemManagers.Default.Renderer.AddLayer();
-        SystemManagers.Default.ShapeManager = new RenderingLibrary.Math.Geometry.ShapeManager();
-        SystemManagers.Default.TextManager = new TextManager();
-
         var mockSelectedState = new Mock<ISelectedState>();
         mockSelectedState.Setup(x => x.SelectedInstances).Returns(() => new List<InstanceSave>());
-
-        var projectManager = new Mock<IProjectManager>();
 
         _selectionManager = new SelectionManager(
             mockSelectedState.Object,
             Mock.Of<IUndoManager>(),
-            Mock.Of<IEditingManager>(),
-            Mock.Of<IDialogService>(),
+            Mock.Of<IContextMenuState>(),
+            Mock.Of<Gum.Services.Dialogs.IDialogService>(),
             Mock.Of<IHotkeyManager>(),
-            Mock.Of<IVariableInCategoryPropagationLogic>(),
             Mock.Of<IWireframeObjectManager>(),
-            projectManager.Object,
             Mock.Of<IGuiCommands>(),
-            Mock.Of<IElementCommands>(),
-            Mock.Of<IFileCommands>(),
-            Mock.Of<ISetVariableLogic>(),
-            Mock.Of<IUiSettingsService>(),
-            Mock.Of<IToolFontService>(),
-            Mock.Of<IPluginManager>());
+            Mock.Of<IWireframeEditorFactory>(),
+            Mock.Of<INineSliceCoordinateRefresher>(),
+            Mock.Of<IPreciseHitTester>());
 
-        _layerService = new Mock<LayerService>();
-        _selectionManager.Initialize(_layerService.Object);
+        _selectionManager.Initialize(
+            new Layer(),
+            new Camera(),
+            Mock.Of<IGumCursorState>(),
+            Mock.Of<ISelectionRectangleVisual>(),
+            Mock.Of<IHighlightOutlineVisual>(),
+            Mock.Of<IHighlightOverlayVisual>());
     }
 
     [Fact]

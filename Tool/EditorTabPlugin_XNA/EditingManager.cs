@@ -18,7 +18,7 @@ using System.Linq;
 
 namespace Gum.Wireframe;
 
-public partial class EditingManager : IEditingManager
+public partial class EditingManager : IEditingManager, IContextMenuState
 {
     private readonly ISelectedState _selectedState;
     private readonly IReorderLogic _reorderLogic;

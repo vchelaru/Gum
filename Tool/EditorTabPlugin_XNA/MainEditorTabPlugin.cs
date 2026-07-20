@@ -146,6 +146,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
     private readonly IToolFontService _toolFontService;
     private readonly IToolLayerService _toolLayerService;
     private readonly IPluginManager _pluginManager;
+    private IWireframeEditorFactory _wireframeEditorFactory;
 
     // Suppresses the redundant second wireframe rebuild when selecting an element forces its
     // default state (state event rebuilds) and then fires the element event for the same element.
@@ -225,22 +226,32 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         _toolFontService = new ToolFontService();
         _toolLayerService = new ToolLayerService();
 
+        _wireframeEditorFactory = new WireframeEditorFactory(
+            _hotkeyManager,
+            _selectedState,
+            _elementCommands,
+            _guiCommands,
+            _fileCommands,
+            _setVariableLogic,
+            undoManager,
+            _variableInCategoryPropagationLogic,
+            _wireframeObjectManager,
+            _uiSettingsService,
+            _toolFontService,
+            _pluginManager,
+            _projectManager);
+
         _selectionManager = new SelectionManager(
             _selectedState,
             undoManager,
             _editingManager,
             _dialogService,
             _hotkeyManager,
-            _variableInCategoryPropagationLogic,
             _wireframeObjectManager,
-            _projectManager,
             _guiCommands,
-            _elementCommands,
-            _fileCommands,
-            _setVariableLogic,
-            _uiSettingsService,
-            _toolFontService,
-            _pluginManager);
+            _wireframeEditorFactory,
+            new NineSliceCoordinateRefresher(),
+            new PreciseHitTester());
 
         _screenshotService = new ScreenshotService(_selectionManager, _wireframeCommands, _guiCommands);
         _singlePixelTextureService = new SinglePixelTextureService();
@@ -818,7 +829,13 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
         // _layerService must be created after _wireframeControl so that the SystemManagers.Default are assigned
         _layerService.Initialize();
-        _selectionManager.Initialize(_layerService);
+        _selectionManager.Initialize(
+            _layerService.OverlayLayer,
+            Renderer.Self.Camera,
+            InputLibrary.Cursor.Self,
+            new Gum.Wireframe.Editors.Visuals.SelectionRectangleVisual(_layerService.OverlayLayer),
+            new GraphicalOutline(_layerService.OverlayLayer),
+            new HighlightManager(_layerService.OverlayLayer));
 
         _wireframeControl.ShareLayerReferences(_layerService);
 
