@@ -141,6 +141,19 @@ The following properties are available on the Binding class. Note that the term 
 * `ConverterParameter` - an optional parameter to pass to the Converter
 * `StringFormat` - a format string to apply to the value
 
+### Default Update Triggers
+
+By default, `UpdateSourceTrigger.Default` resolves to `UpdateSourceTrigger.PropertyChanged` for every control and property. A project can change this per control type and property using `Binding.DefaultUpdateTriggers`:
+
+```csharp
+// Initialize
+Binding.DefaultUpdateTriggers[(typeof(TextBox), nameof(TextBox.Text))] = UpdateSourceTrigger.LostFocus;
+```
+
+Once registered, any binding to that property that doesn't set `UpdateSourceTrigger` explicitly uses the registered trigger instead of `PropertyChanged`. An explicit `UpdateSourceTrigger` on an individual `Binding` always overrides the registered default.
+
+Registering against a base type applies to all its subclasses, unless a more derived type has its own registration. Remove a registration with `Remove`, or clear all of them with `Clear`.
+
 ### Converter Example
 
 The `Converter` property accepts an `IValueConverter` implementation that transforms values as they flow between the source and target. The following example converts a boolean to a display string:
