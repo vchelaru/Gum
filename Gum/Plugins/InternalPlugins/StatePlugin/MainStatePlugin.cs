@@ -1,19 +1,10 @@
-using Gum.Controls;
-using Gum.DataTypes;
-using Gum.DataTypes.Behaviors;
-using Gum.DataTypes.Variables;
+using Gum.Commands;
 using Gum.Managers;
-using Gum.Mvvm;
 using Gum.Plugins.BaseClasses;
-using Gum.Plugins.InternalPlugins.StatePlugin.ViewModels;
 using Gum.Plugins.InternalPlugins.StatePlugin.Views;
 using Gum.PropertyGridHelpers;
 using Gum.ToolStates;
-using Newtonsoft.Json.Linq;
-using System;
 using System.ComponentModel.Composition;
-using System.Linq;
-using Gum.Commands;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.Logic;
@@ -22,21 +13,24 @@ namespace Gum.Plugins.StatePlugin;
 
 // This is new as of Oct 30, 2020
 // I'd like to move all state logic to this plugin over time.
+//
+// As of issue #3926, the WPF-free reactions to state/element/instance selection, rename, delete,
+// and variable-set events live in StateTreeController (Gum.Presentation). This plugin owns only the
+// real platform glue that has no headless seam: constructing the WPF StateTreeView and registering
+// it with the tab manager, and pushing the controller's tab title onto the WPF-typed PluginTab.Title.
 [Export(typeof(Gum.Plugins.BaseClasses.PluginBase))]
 public class MainStatePlugin : PriorityPlugin
 {
     #region Fields/Properties
 
     StateTreeView stateTreeView;
-    StateTreeViewModel stateTreeViewModel;
 
     PluginTab newPluginTab;
     private readonly StateTreeViewRightClickService _stateTreeViewRightClickService;
     private readonly IHotkeyManager _hotkeyManager;
     private readonly ISelectedState _selectedState;
-    private readonly ObjectFinder _objectFinder;
-    private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly ICopyPasteLogic _copyPasteLogic;
+    private readonly StateTreeController _controller;
 
     #endregion
 
@@ -50,8 +44,6 @@ public class MainStatePlugin : PriorityPlugin
     {
         _selectedState = selectedState;
         _hotkeyManager = hotkeyManager;
-        _objectFinder = ObjectFinder.Self;
-        _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
         _copyPasteLogic = copyPasteLogic;
         _stateTreeViewRightClickService = new StateTreeViewRightClickService(
             _selectedState,
@@ -62,8 +54,11 @@ public class MainStatePlugin : PriorityPlugin
             fileCommands,
             _copyPasteLogic);
 
-        stateTreeViewModel = new StateTreeViewModel(_stateTreeViewRightClickService,
-            selectedState);
+        _controller = new StateTreeController(
+            _stateTreeViewRightClickService,
+            _selectedState,
+            ObjectFinder.Self,
+            variableInCategoryPropagationLogic);
     }
 
     public override void StartUp()
@@ -77,176 +72,40 @@ public class MainStatePlugin : PriorityPlugin
 
     private void AssignEvents()
     {
-        this.TreeNodeSelected += _ => HandleTreeNodeSelected();
-        
-        this.RefreshStateTreeView += HandleRefreshStateTreeView;
-        
-        this.ReactToStateSaveSelected += HandleStateSelected;
-        this.ReactToStateSaveCategorySelected += HandleStateSaveCategorySelected;
-        
-        this.StateRename += HandleStateRename;
-        this.StateDelete += HandleStateDelete;
-        this.StateMovedToCategory += HandleStateMovedToCategory;
+        this.TreeNodeSelected += _ => _controller.HandleTreeNodeSelected();
 
-        this.CategoryRename += HandleCategoryRename;
-        this.BehaviorSelected += HandleBehaviorSelected;
-        this.BehaviorReferenceSelected += HandleBehaviorReferenceSelected;
-        this.InstanceSelected += HandleInstanceSelected;
-        this.ElementSelected += HandleElementSelected;
-        this.ElementDelete += HandleElementDeleted;
-        this.VariableSet += HandleVariableSet;
-    }
+        this.RefreshStateTreeView += _controller.HandleRefreshStateTreeView;
 
+        this.ReactToStateSaveSelected += _controller.HandleStateSelected;
+        this.ReactToStateSaveCategorySelected += _controller.HandleStateSaveCategorySelected;
 
-    private void HandleElementDeleted(ElementSave save)
-    {
-        RefreshUI(_selectedState.SelectedStateContainer);
+        this.StateRename += _controller.HandleStateRename;
+        this.StateDelete += _controller.HandleStateDelete;
+        this.StateMovedToCategory += _controller.HandleStateMovedToCategory;
+
+        this.CategoryRename += _controller.HandleCategoryRename;
+        this.BehaviorSelected += _controller.HandleBehaviorSelected;
+        this.BehaviorReferenceSelected += _controller.HandleBehaviorReferenceSelected;
+        this.InstanceSelected += _controller.HandleInstanceSelected;
+        this.ElementSelected += _controller.HandleElementSelected;
+        this.ElementDelete += _controller.HandleElementDeleted;
+        this.VariableSet += _controller.HandleVariableSet;
+
+        _controller.TabTitleChanged += title => newPluginTab.Title = title;
     }
 
     private void CreateNewStateTab()
     {
         stateTreeView = new StateTreeView(
-            stateTreeViewModel, 
-            _stateTreeViewRightClickService, 
-            _hotkeyManager, 
+            _controller.ViewModel,
+            _stateTreeViewRightClickService,
+            _hotkeyManager,
             _selectedState,
             _copyPasteLogic);
         _stateTreeViewRightClickService.SetContextMenu(stateTreeView.TreeViewContextMenu, stateTreeView);
-        
+
         newPluginTab = _tabManager.AddControl(stateTreeView, "States", TabLocation.CenterTop);
     }
 
     #endregion
-
-    #region Event Handlers
-
-    private void HandleStateMovedToCategory(StateSave stateSave, StateSaveCategory newCategory, StateSaveCategory oldCategory)
-    {
-        _stateTreeViewRightClickService.PopulateContextMenu();
-        stateTreeViewModel.RefreshTo(_selectedState.SelectedStateContainer, _selectedState, _objectFinder);
-    }
-
-    private void HandleElementSelected(ElementSave? save)
-    {
-        _stateTreeViewRightClickService.PopulateContextMenu();
-        HandleRefreshStateTreeView();
-        RefreshTabHeaders();
-    }
-
-    private void HandleInstanceSelected(ElementSave save1, InstanceSave save2)
-    {
-        RefreshUI(_selectedState.SelectedStateContainer);
-
-        // A user could directly select an instance in
-        // a different container such as going from a component
-        // to a selected instance in a behavior. In that case we
-        // still want to refresh the menu items.
-        _stateTreeViewRightClickService.PopulateContextMenu();
-    }
-
-    private void HandleBehaviorSelected(BehaviorSave? behavior)
-    {
-        _stateTreeViewRightClickService.PopulateContextMenu();
-        HandleRefreshStateTreeView();
-    }
-
-    private void HandleBehaviorReferenceSelected(ElementBehaviorReference reference, ElementSave element)
-    {
-        HandleRefreshStateTreeView();
-    }
-
-    private void HandleCategoryRename(StateSaveCategory category, string arg2)
-    {
-        stateTreeViewModel.HandleRename(category);
-    }
-
-    private void HandleStateRename(StateSave save, string oldName)
-    {
-        stateTreeViewModel.HandleRename(save);
-    }
-
-
-    private void HandleStateDelete(StateSave save)
-    {
-        _stateTreeViewRightClickService.PopulateContextMenu();
-        stateTreeViewModel.RefreshTo(_selectedState.SelectedStateContainer, _selectedState, _objectFinder);
-    }
-
-    private void HandleStateSelected(StateSave? state)
-    {
-        _stateTreeViewRightClickService.PopulateContextMenu();
-        stateTreeViewModel.SetSelectedState(state);
-        var currentCategory = _selectedState.SelectedStateCategorySave;
-        var currentState = _selectedState.SelectedStateSave;
-
-        if (currentCategory != null && currentState != null)
-        {
-            PropagateVariableForCategorizedState(currentState);
-        }
-        else if (currentCategory != null)
-        {
-            foreach (var item in currentCategory.States)
-            {
-                PropagateVariableForCategorizedState(item);
-            }
-        }
-    }
-
-    private void HandleStateSaveCategorySelected(StateSaveCategory? stateSaveCategory)
-    {
-        _stateTreeViewRightClickService.PopulateContextMenu();
-        stateTreeViewModel.SetSelectedStateSaveCategory(stateSaveCategory);
-    }
-
-    private void HandleRefreshStateTreeView()
-    {
-        RefreshUI(_selectedState.SelectedStateContainer);
-    }
-
-    private void HandleTreeNodeSelected()
-    {
-        RefreshTabHeaders();
-        
-        if (_selectedState.SelectedBehavior == null &&
-            _selectedState.SelectedElement == null)
-        {
-
-            _stateTreeViewRightClickService.PopulateContextMenu();
-            HandleRefreshStateTreeView();
-        }
-    }
-
-    private void RefreshTabHeaders()
-    {
-        var element = _selectedState.SelectedElement;
-        string desiredTitle = "States";
-        if (element != null)
-        {
-            desiredTitle = $"{element.Name} States";
-        }
-
-        newPluginTab.Title = desiredTitle;
-    }
-
-    private void HandleVariableSet(ElementSave elementSave, InstanceSave? instance, string variableName, object? oldValue)
-    {
-        // Do this to refresh the yellow highlights - We may not need to do more than this:
-        stateTreeViewModel.RefreshTo(elementSave, _selectedState, _objectFinder);
-    }
-    #endregion
-
-    private void PropagateVariableForCategorizedState(StateSave currentState)
-    {
-        foreach (var variable in currentState.Variables)
-        {
-            _variableInCategoryPropagationLogic.PropagateVariablesInCategory(variable.Name,
-                _selectedState.SelectedElement, _selectedState.SelectedStateCategorySave);
-        }
-    }
-
-    void RefreshUI(IStateContainer stateContainer)
-    {
-        stateTreeViewModel.RefreshTo(stateContainer, _selectedState, _objectFinder);
-    }
-
 }
