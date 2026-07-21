@@ -9,4 +9,6 @@ public class ContextMenuItemViewModel
     public Action? Action { get; set; }
     public List<ContextMenuItemViewModel> Children { get; set; } = new();
     public bool IsSeparator { get; set; }
+    public bool IsEnabled { get; set; } = true;
+    public string? Shortcut { get; set; }
 }

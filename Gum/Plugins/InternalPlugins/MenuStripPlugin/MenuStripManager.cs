@@ -26,6 +26,7 @@ namespace Gum.Managers
         private readonly IFileCommands _fileCommands;
         private readonly IProjectManager _projectManager;
         private readonly IMessenger _messenger;
+        private readonly MenuStripStateLogic _menuStripStateLogic;
 
         private Menu _menu;
 
@@ -68,6 +69,7 @@ namespace Gum.Managers
             _fileCommands = fileCommands;
             _projectManager = projectManager;
             _messenger = messenger;
+            _menuStripStateLogic = new MenuStripStateLogic(selectedState, projectManager);
         }
 
         public void PopulateMenu(Menu menu)
@@ -341,50 +343,22 @@ namespace Gum.Managers
 
         public void RefreshUI()
         {
+            MenuStripRefreshState state = _menuStripStateLogic.GetRefreshState();
+
             // The settings file loads after PopulateMenu, so keep the checkmark in sync here.
             if (_standardsPaletteMenuItem != null)
             {
-                _standardsPaletteMenuItem.IsChecked = _projectManager.EffectiveUseStandardsPalette;
+                _standardsPaletteMenuItem.IsChecked = state.StandardsPaletteChecked;
             }
 
-            if (_selectedState.SelectedStateSave != null && _selectedState.SelectedStateSave.Name != "Default")
-            {
-                _removeStateMenuItem.Header = "State " + _selectedState.SelectedStateSave.Name;
-                _removeStateMenuItem.IsEnabled = true;
-            }
-            else if (_selectedState.SelectedStateCategorySave != null)
-            {
-                _removeStateMenuItem.Header = "Category " + _selectedState.SelectedStateCategorySave.Name;
-                _removeStateMenuItem.IsEnabled = true;
-            }
-            else
-            {
-                _removeStateMenuItem.Header = "<no state selected>";
-                _removeStateMenuItem.IsEnabled = false;
-            }
+            _removeStateMenuItem.Header = state.RemoveStateHeader;
+            _removeStateMenuItem.IsEnabled = state.RemoveStateEnabled;
 
-            if (_selectedState.SelectedElement != null && !(_selectedState.SelectedElement is StandardElementSave))
-            {
-                _removeElementMenuItem.Header = _selectedState.SelectedElement.Name;
-                _removeElementMenuItem.IsEnabled = true;
-            }
-            else
-            {
-                _removeElementMenuItem.Header = "<no element selected>";
-                _removeElementMenuItem.IsEnabled = false;
-            }
+            _removeElementMenuItem.Header = state.RemoveElementHeader;
+            _removeElementMenuItem.IsEnabled = state.RemoveElementEnabled;
 
-            if (_selectedState.SelectedBehaviorVariable != null)
-            {
-                _removeVariableMenuItem.Header = _selectedState.SelectedBehaviorVariable.ToString();
-                _removeVariableMenuItem.IsEnabled = true;
-            }
-            else
-            {
-                _removeVariableMenuItem.Header = "<no behavior variable selected>";
-                _removeVariableMenuItem.IsEnabled = false;
-            }
-
+            _removeVariableMenuItem.Header = state.RemoveVariableHeader;
+            _removeVariableMenuItem.IsEnabled = state.RemoveVariableEnabled;
         }
 
 
