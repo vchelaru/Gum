@@ -106,6 +106,10 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   free; one injecting a still-WPF/WinForms-coupled interface can't move until that interface is
   cleaned or relocated too. Re-check the current state of each dependency — a past note's "this
   interface is blocked" claim can go stale as unrelated PRs clean things up.
+- **A class can look fully relocatable by its injected fields while an extension-method call site
+  still resolves to a `Locator`-based static.** Grep the whole class for receiver-less-looking calls
+  (`x.SomeMethod()` with no visible owning type) in addition to its constructor dependencies — an
+  extension method can hide a `Locator`/`.Self` resolution that a field-only audit misses entirely.
 - **XAML `clr-namespace` declarations need `;assembly=Gum.Presentation`** once a bound type moves
   out of `Gum.csproj`, or the XAML fails to resolve it. `d:DesignInstance`/`d:`-namespaced
   attributes are silently skipped by `dotnet build` (only the VS designer breaks); real
@@ -190,6 +194,13 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
 - **A VM going headless doesn't automatically catch extension methods that operate on it and still
   live WPF-side.** When narrowing a dependency closure, check for extension methods keyed off the
   moved type (e.g. an `IDialogServiceExt`-style `Show<T>` helper), not just the type's own members.
+- **A class with its own assembly added to `LoadPlugins`'s MEF catalog and an `[Export(...)]` member
+  gets activated twice** — once as the ordinary DI-built singleton, once as an implicit second MEF
+  part. Adding a new required constructor dependency to such a class needs the same
+  `[ImportingConstructor]` + `batch.AddExportedValue<T>` bridge as a real plugin ctor drain, even
+  though the class isn't a `PluginBase`. Only `AllPluginsCompositionTests` (a real MEF catalog scan)
+  catches a miss — `ServiceProviderCompositionSpikeTests` passes regardless, since it never touches
+  MEF's catalog.
 - **An interface can be "mostly" headless-clean with one bad method mixed in.** `IEditVariableService`
   had 3 clean members plus one (`TryAddEditVariableOptions`) typed against `WpfDataUi.DataTypes
   .InstanceMember` (a `net8.0-windows`/WPF-only library). Split the interface rather than block the
