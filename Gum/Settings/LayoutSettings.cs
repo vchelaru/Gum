@@ -20,17 +20,3 @@ public class LayoutSettings
         }
     }
 }
-
-public record WindowSettings(
-    double Width = 1280,
-    double Height = 720,
-    double? Top = null,
-    double? Left = null,
-    bool IsMaximized = false
-);
-
-public record MainTabDimensions(
-    double LeftColumnWidth = 250,
-    double CenterColumnWidth = 320,
-    double BottomRightHeight = 200
-);
