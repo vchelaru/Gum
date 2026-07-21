@@ -2,9 +2,8 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Shouldly;
-using Xunit;
 
-namespace GumToolUnitTests.Plugins.InternalPlugins.VariableGrid;
+namespace Gum.Presentation.Tests;
 
 public class ShapeVariableExclusionLogicTests
 {
