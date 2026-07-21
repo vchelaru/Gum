@@ -31,6 +31,9 @@ using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 using BindableGue = global::Gum.Wireframe.GraphicalUiElement;
 using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
 using GamepadButton = FlatRedBall.Input.Xbox360GamePad.Button;
+// Duck-typed alias (same trick as GamepadButton/Buttons above) so gamepad-handling method
+// bodies can be written once instead of duplicated per platform under #if FRB.
+using GamePadForNavigation = FlatRedBall.Input.Xbox360GamePad;
 namespace FlatRedBall.Forms.Controls;
 #else
 // Non-FRB branch. These Forms control files compile exactly once — into GumCommon
@@ -41,6 +44,7 @@ namespace FlatRedBall.Forms.Controls;
 // The Forms abstraction lives in Gum.Input / Gum.Forms.Input.
 using Gum.Input;
 using Keys = Gum.Forms.Input.Keys;
+using GamePadForNavigation = Gum.Input.IGamePad;
 #endif
 
 
@@ -1124,11 +1128,7 @@ public class FrameworkElement : INotifyPropertyChanged
     /// </summary>
     public bool IsUsingLeftAndRightGamepadDirectionsForNavigation { get; set; } = true;
 
-#if FRB
-    protected void HandleGamepadNavigation(Xbox360GamePad gamepad)
-#else
-    protected void HandleGamepadNavigation(IGamePad gamepad)
-#endif
+    protected void HandleGamepadNavigation(GamePadForNavigation gamepad)
     {
         if (gamepad.ButtonRepeatRate(GamepadButton.DPadDown) ||
             (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonRepeatRate(GamepadButton.DPadRight)) ||
