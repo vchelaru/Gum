@@ -8,7 +8,6 @@ using RenderingLibrary.Graphics.Fonts;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.ComponentModel.Composition;
 using Gum.Commands;
 using Gum.Logic.FileWatch;
@@ -55,6 +54,8 @@ class MainPropertiesWindowPlugin : PriorityPlugin
 
     private PluginTab? _pluginTab;
 
+    private ProjectPropertiesChangeLogic? _changeLogic;
+
     [ImportingConstructor]
     public MainPropertiesWindowPlugin(
         IFontManager fontManager,
@@ -81,6 +82,18 @@ class MainPropertiesWindowPlugin : PriorityPlugin
     public override void StartUp()
     {
         this.AddMenuItem(new List<string> { "Edit", "Properties" }).Click += HandlePropertiesClicked;
+
+        _changeLogic = new ProjectPropertiesChangeLogic(
+            _projectManager,
+            _fontManager,
+            _dialogService,
+            _projectState,
+            _wireframeObjectManager,
+            _fileCommands,
+            _wireframeCommands,
+            _guiCommands,
+            _pluginManager,
+            LocalizationService);
 
         viewModel = new PropertiesWindowPlugin.ProjectPropertiesViewModel();
         viewModel.PropertyChanged += HandlePropertyChanged;
@@ -156,190 +169,12 @@ class MainPropertiesWindowPlugin : PriorityPlugin
 
     private async void HandlePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        ////////////////////Early Out//////////////////
-        if (viewModel.IsUpdatingFromModel)
+        var result = await _changeLogic!.HandlePropertyChanged(viewModel, e.PropertyName);
+
+        if (result.FontCharacterFileChanged)
         {
-            return;
-        }
-        ///////////////////End early Out////////////////
-        viewModel.ApplyToModelObjects();
-        _projectManager.AutoSave = viewModel.AutoSave;
-
-        var shouldSaveAndRefresh = true;
-        var shouldReloadContent = false;
-        switch (e.PropertyName)
-        {
-            case nameof(viewModel.LocalizationFiles):
-
-                // Normalize any absolute paths to project-relative so .gumx stays portable.
-                bool normalizedAny = false;
-                List<string> normalized = new List<string>(viewModel.LocalizationFiles.Count);
-                foreach (string file in viewModel.LocalizationFiles)
-                {
-                    if (!string.IsNullOrEmpty(file) && FileManager.IsRelative(file) == false)
-                    {
-                        normalized.Add(FileManager.MakeRelative(file, _projectState.ProjectDirectory, preserveCase: true));
-                        normalizedAny = true;
-                    }
-                    else
-                    {
-                        normalized.Add(file);
-                    }
-                }
-
-                if (normalizedAny)
-                {
-                    // This re-enters HandlePropertyChanged which will hit the else branch.
-                    viewModel.LocalizationFiles = normalized;
-                    shouldSaveAndRefresh = false;
-                }
-                else
-                {
-                    _fileCommands.LoadLocalizationFile();
-                    _wireframeObjectManager.RefreshAll(forceLayout: true, forceReloadTextures: false);
-                }
-                break;
-            case nameof(viewModel.LanguageName):
-                var languageIdx = LocalizationService.Languages.ToList().IndexOf(viewModel.LanguageName) + 1;
-                if (languageIdx > 0 && languageIdx != viewModel.LanguageIndex)
-                {
-                    viewModel.LanguageIndex = languageIdx;
-                    LocalizationService.CurrentLanguage = languageIdx;
-                }
-                else
-                {
-                    shouldSaveAndRefresh = false;
-                }
-                break;
-            case nameof(viewModel.LanguageIndex):
-                LocalizationService.CurrentLanguage = viewModel.LanguageIndex;
-                break;
-            case nameof(viewModel.ShowLocalization):
-                shouldSaveAndRefresh = true;
-                break;
-            case nameof(viewModel.FontRanges):
-                var isValid = BmfcSave.GetIfIsValidRange(viewModel.FontRanges);
-                var didFixChangeThings = false;
-                if (!isValid)
-                {
-                    var fixedRange = BmfcSave.TryFixRange(viewModel.FontRanges);
-                    if (fixedRange != viewModel.FontRanges)
-                    {
-                        // this will recursively call this property, so we'll use this bool to leave this method
-                        didFixChangeThings = true;
-                        viewModel.FontRanges = fixedRange;
-                    }
-                }
-
-                if (!didFixChangeThings)
-                {
-                    if (isValid == false)
-                    {
-                        _dialogService.ShowMessage("The entered Font Range is not valid.");
-                    }
-                    else
-                    {
-                        if (_projectState.GumProjectSave != null)
-                        {
-                            var wasAbleToDelete = false;
-                            try
-                            {
-                                _fontManager.DeleteFontCacheFolder();
-                                wasAbleToDelete = true;
-                            }
-                            catch(System.IO.IOException exception)
-                            {
-                                wasAbleToDelete = false;
-
-                                var message =
-                                    "Attempted to delete font cache folder to re-create it with the new font range values " +
-                                    $"but was unable to do so:\n\n{exception}";
-                                _dialogService.ShowMessage(message);
-                            }
-
-
-
-
-                            if(wasAbleToDelete)
-                            {
-                                await _fontManager.CreateAllMissingFontFiles(
-                                    _projectState.GumProjectSave);
-                            }
-
-                        }
-                        shouldSaveAndRefresh = true;
-                        shouldReloadContent = true;
-                    }
-                }
-                break;
-            case nameof(viewModel.UseFontCharacterFile):
-                if(viewModel.UseFontCharacterFile)
-                {
-                    var absolute = new FilePath(_projectState.ProjectDirectory + ".gumfcs");
-                    _fontCharacterFileAbsolute = absolute;
-
-                    if(System.IO.File.Exists(absolute.FullPath))
-                    {
-                        var ranges = BmfcSave.GenerateRangesFromFile(absolute.FullPath);
-                        viewModel.FontRanges = ranges;
-                    }
-                }
-                else
-                {
-                    _fontCharacterFileAbsolute = null;
-                    viewModel.FontRanges = BmfcSave.DefaultRanges;
-                }
-
-                RefreshFontRangeEditability();
-                break;
-            case nameof(viewModel.SinglePixelTextureFile):
-            case nameof(viewModel.SinglePixelTextureTop):
-            case nameof(viewModel.SinglePixelTextureLeft):
-            case nameof(viewModel.SinglePixelTextureRight):
-            case nameof(viewModel.SinglePixelTextureBottom):
-
-                if(!string.IsNullOrEmpty(viewModel.SinglePixelTextureFile) && FileManager.IsRelative(viewModel.SinglePixelTextureFile) == false)
-                {
-                    // This will loop:
-                    viewModel.SinglePixelTextureFile = FileManager.MakeRelative(viewModel.SinglePixelTextureFile,
-                        _projectState.ProjectDirectory, preserveCase:true);
-                    shouldSaveAndRefresh = false;
-                }
-
-                break;
-            case nameof(viewModel.FontGenerator):
-                try
-                {
-                    _fontManager.DeleteFontCacheFolder();
-                }
-                catch (System.IO.IOException exception)
-                {
-                    _dialogService.ShowMessage(
-                        "Attempted to delete font cache folder to re-create it with the new font generator " +
-                        $"but was unable to do so:\n\n{exception}");
-                    break;
-                }
-
-                await _fontManager.CreateAllMissingFontFiles(_projectState.GumProjectSave);
-                shouldReloadContent = true;
-                _guiCommands.RefreshVariables(force: true);
-                break;
-            case nameof(viewModel.ShowCheckerBackground):
-                // Checkerboard visibility is handled via WireframePropertyChanged,
-                // so skip the wireframe refresh to avoid resetting the texture
-                // coordinates tab camera position.
-                _fileCommands.TryAutoSaveProject();
-                shouldSaveAndRefresh = false;
-                break;
-        }
-
-        _pluginManager.ProjectPropertySet(e.PropertyName);
-
-        if (shouldSaveAndRefresh)
-        {
-            _wireframeCommands.Refresh(forceLayout: true, forceReloadContent: shouldReloadContent);
-
-            _fileCommands.TryAutoSaveProject();
+            _fontCharacterFileAbsolute = result.FontCharacterFileAbsolute;
+            RefreshFontRangeEditability();
         }
     }
     private async void HandleFileChanged(FilePath file)
