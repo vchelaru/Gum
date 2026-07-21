@@ -1,9 +1,7 @@
-﻿using CommonFormsAndControls;
-using Gum.DataTypes;
+﻿using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Dialogs;
-using Gum.Gui.Windows;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins;
@@ -17,12 +15,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Windows.Controls;
-using System.Windows.Forms;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
-using DialogResult = System.Windows.Forms.DialogResult;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.Commands;
@@ -47,7 +42,7 @@ public class EditCommands : IEditCommands
     private readonly IProjectManager _projectManager;
     private readonly IDeleteLogic _deleteLogic;
     private readonly IProjectState _projectState;
-    private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
+    private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
     private readonly IReferenceFinder _referenceFinder;
 
     public EditCommands(ISelectedState selectedState,
@@ -63,7 +58,7 @@ public class EditCommands : IEditCommands
         IDeleteLogic deleteLogic,
         IProjectManager projectManager,
         IProjectState projectState,
-        StandardElementsManagerGumTool standardElementsManagerGumTool,
+        IStandardElementsManagerGumTool standardElementsManagerGumTool,
         IReferenceFinder referenceFinder)
     {
         _selectedState = selectedState;

@@ -4,13 +4,12 @@ using Gum.DataTypes.Behaviors;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.Services.Dialogs;
-using Gum.ToolStates;
 using Moq;
 using Moq.AutoMock;
 using Shouldly;
 using ToolsUtilities;
 
-namespace GumToolUnitTests.Commands;
+namespace Gum.Presentation.Tests;
 
 public class EditCommandsTests : BaseTestClass
 {
@@ -34,9 +33,6 @@ public class EditCommandsTests : BaseTestClass
         _gumProject = new GumProjectSave();
         ObjectFinder.Self.GumProjectSave = _gumProject;
         _projectManager.Setup(m => m.GumProjectSave).Returns(_gumProject);
-
-        // Use the real NameVerifier to avoid mocking out parameters
-        _mocker.Use<INameVerifier>(new NameVerifier(new Mock<IVariableSaveLogic>().Object, new Mock<Gum.Plugins.IPluginManager>().Object));
 
         // Default: GetFullPathXmlFile returns a non-existent path so no file deletion occurs
         _fileCommands

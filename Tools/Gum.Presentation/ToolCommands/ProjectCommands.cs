@@ -18,7 +18,7 @@ public class ProjectCommands : ICopyPasteProjectCommands
     private readonly IFileCommands _fileCommands;
     private readonly IProjectManager _projectManager;
     private readonly IProjectState _projectState;
-    private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
+    private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
     private readonly IPluginManager _pluginManager;
 
     #endregion
@@ -28,7 +28,7 @@ public class ProjectCommands : ICopyPasteProjectCommands
         IFileCommands fileCommands,
         IProjectManager projectManager,
         IProjectState projectState,
-        StandardElementsManagerGumTool standardElementsManagerGumTool,
+        IStandardElementsManagerGumTool standardElementsManagerGumTool,
         IPluginManager pluginManager)
     {
         _selectedState = selectedState;
