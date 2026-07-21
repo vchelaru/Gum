@@ -81,7 +81,7 @@ public class MainPanelViewModel : ViewModel, ITabManager, IRecipient<Application
             view.LiveFilteringProperties.Add(nameof(PluginTab.IsVisible));
             view.LiveFilteringProperties.Add(nameof(PluginTab.Location));
 
-            view.Filter = o => o is PluginTab tab && tab.Location == location && tab.IsVisible;
+            view.Filter = o => o is PluginTab tab && TabDockingLogic.ShouldAppearInLocation(tab, location);
         
             return view;
         }
