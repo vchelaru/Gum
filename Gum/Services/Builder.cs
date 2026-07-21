@@ -133,6 +133,7 @@ file static class ServiceCollectionExtensions
         // RenameAllReferencesTo. Resolves to the same ProjectManager singleton.
         services.AddSingleton<IRenameProjectProvider>(provider => provider.GetRequiredService<ProjectManager>());
         services.AddSingleton<ICommandLineManager, CommandLineManager>();
+        services.AddSingleton<IFilePickingFolderProvider, FilePickingFolderProvider>();
         services.AddSingleton<IProjectState, ProjectState>();
         // ElementTreeViewManager: drained from a static Self singleton (#3286). Concrete is needed for the
         // Initialize() call in Program.cs (two-stage initialization); no interface is extracted because it is a

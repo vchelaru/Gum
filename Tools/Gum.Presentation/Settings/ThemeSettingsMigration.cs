@@ -5,13 +5,11 @@ namespace Gum.Settings;
 
 /// <summary>
 /// One-time migration of legacy per-channel theme colors (<see cref="GeneralSettingsFile"/>) into
-/// the newer <see cref="ThemeSettings"/> shape. Kept in the Gum tool project rather than moved
-/// alongside <see cref="ThemeSettings"/> into the headless Gum.Presentation assembly (ADR-0005),
-/// since <see cref="GeneralSettingsFile"/> is WinForms-entangled and can't move with it.
+/// the newer <see cref="ThemeSettings"/> shape (ADR-0005).
 /// </summary>
-internal static class ThemeSettingsMigration
+public static class ThemeSettingsMigration
 {
-    internal static void MigrateExplicitLegacyColors(GeneralSettingsFile settings, ThemeSettings themeSettings)
+    public static void MigrateExplicitLegacyColors(GeneralSettingsFile settings, ThemeSettings themeSettings)
     {
         ThemeDefaultsProvider defaults = new();
         Color checker1Old = Color.FromArgb(settings.CheckerColor1R, settings.CheckerColor1G, settings.CheckerColor1B);
