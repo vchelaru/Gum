@@ -356,6 +356,17 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   can silently break a subscriber whose handler still declares the old concrete parameter type —
   delegate contravariance only allows a *wider* handler parameter, never narrower, so check every
   subscriber's signature after a publisher-side retype, not just the publisher.
+- **A headless method that needs to trigger a WPF-only side effect on itself after its own
+  computed action** (e.g. re-opening/refreshing a live control after a state mutation, with no other
+  change-notification path back to the View) **is a delegate parameter on the headless method, not
+  a callback injected into its constructor.** An optional delegate arg (defaulting to a no-op) keeps
+  the class constructible and testable without a WPF dependency, while the WPF-side caller supplies
+  the real refresh action at the call site. Also: not every WPF-menu-building class fits the
+  `ContextMenuItemViewModel`/ephemeral-rebuild neutral-VM shape — a menu that's built once and
+  mutated in place (persistent named items, not rebuilt per right-click) is a structural mismatch
+  for that pattern; a plain state-DTO returned by a headless method (applied by the WPF side to the
+  live items) is the right shape there instead. Match the extraction shape to whether the menu is
+  rebuilt or mutated, don't force one pattern onto both.
 
 **Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap).
 - *4a — Element tree:* decouple `ElementTreeViewManager` from `TreeNode`; the already-migrated
