@@ -396,6 +396,15 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   what a method's body actually constructs, not just its declared return type, before assuming a
   class is headless-safe. Same "inject, don't construct" fix as other constructor-time gotchas here,
   just triggered by a return-type check instead of a field-type check.
+- **A plugin field's interface type can be upgraded independently of the seam-design PR that a
+  later extraction relies on.** A field originally typed to a narrower interface can get widened to
+  a broader one (e.g. a concrete `PluginTab` field retyped to `IPluginTab`) by an unrelated PR that
+  lands between a design pass and its follow-up implementation. If the broader interface doesn't
+  structurally extend the narrower one the design pass introduced (even though both declare the same
+  member), passing the same concrete instance as both requires an explicit interface-to-interface
+  cast at the construction call site — not a blocker, just easy to miss if you assume a field's
+  static type from an earlier read is still current. Re-check the field's actual current type before
+  wiring a new constructor dependency to it.
 
 A live progress instrument worth knowing about: `Tool/Tests/GumToolUnitTests/Architecture/UiDecouplingRatchetTests.cs`
 is a source-scan ratchet (baselines for `.Self` count, `System.Windows` usage in ViewModels,
