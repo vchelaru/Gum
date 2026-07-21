@@ -45,7 +45,7 @@ public class ElementSaveDisplayer
     private readonly CategorySortAndColorLogic _categorySortAndColorLogic;
     private readonly IPluginManager _pluginManager;
     private readonly StandardElementsManager _standardElementsManager;
-    private readonly IEditVariableMenuService _editVariableService;
+    private readonly IEditVariableService _editVariableService;
     private readonly IExposeVariableService _exposeVariableService;
     private readonly IHotkeyManager _hotkeyManager;
     private readonly IDeleteVariableService _deleteVariableService;
@@ -53,6 +53,7 @@ public class ElementSaveDisplayer
     private readonly IFileCommands _fileCommands;
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly IWireframeObjectManager _wireframeObjectManager;
+    private readonly IClipboardService _clipboardService;
     private readonly ShapeVariableVersionGate _shapeVariableVersionGate;
 
     #endregion
@@ -80,14 +81,15 @@ public class ElementSaveDisplayer
         IUndoManager undoManager,
         IPluginManager pluginManager,
         IVariableSaveLogic variableSaveLogic,
-        IEditVariableMenuService editVariableService,
+        IEditVariableService editVariableService,
         IExposeVariableService exposeVariableService,
         IHotkeyManager hotkeyManager,
         IDeleteVariableService deleteVariableService,
         IGuiCommands guiCommands,
         IFileCommands fileCommands,
         ISetVariableLogic setVariableLogic,
-        IWireframeObjectManager wireframeObjectManager)
+        IWireframeObjectManager wireframeObjectManager,
+        IClipboardService clipboardService)
     {
         _subtextLogic = subtextLogic;
         _selectedState = selectedState;
@@ -105,6 +107,7 @@ public class ElementSaveDisplayer
         _fileCommands = fileCommands;
         _setVariableLogic = setVariableLogic;
         _wireframeObjectManager = wireframeObjectManager;
+        _clipboardService = clipboardService;
         _shapeVariableVersionGate = new ShapeVariableVersionGate();
     }
 
@@ -524,18 +527,19 @@ public class ElementSaveDisplayer
                     variableName,
                     instance,
                     instanceOwner,
-                    _undoManager,
-                    _editVariableService,
-                    _exposeVariableService,
-                    _hotkeyManager,
-                    _deleteVariableService,
                     _selectedState,
+                    _undoManager,
                     _guiCommands,
                     _fileCommands,
                     _setVariableLogic,
                     _wireframeObjectManager,
+                    _pluginManager,
+                    _hotkeyManager,
+                    _deleteVariableService,
+                    _exposeVariableService,
+                    _editVariableService,
                     _typeManager,
-                    _pluginManager);
+                    _clipboardService);
 
                 // moved to internal
                 //srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
@@ -673,18 +677,19 @@ public class ElementSaveDisplayer
                     variableName,
                     instance,
                     instanceOwner,
-                    _undoManager,
-                    _editVariableService,
-                    _exposeVariableService,
-                    _hotkeyManager,
-                    _deleteVariableService,
                     _selectedState,
+                    _undoManager,
                     _guiCommands,
                     _fileCommands,
                     _setVariableLogic,
                     _wireframeObjectManager,
+                    _pluginManager,
+                    _hotkeyManager,
+                    _deleteVariableService,
+                    _exposeVariableService,
+                    _editVariableService,
                     _typeManager,
-                    _pluginManager);
+                    _clipboardService);
 
                 // Surface the behavior's declared default (FormsProperty.Value) so the grid
                 // reflects e.g. IsEnabled = true even before the user authors anything. The
@@ -735,18 +740,19 @@ public class ElementSaveDisplayer
             variableName,
             instance,
             instanceOwner,
-            _undoManager,
-            _editVariableService,
-            _exposeVariableService,
-            _hotkeyManager,
-            _deleteVariableService,
             _selectedState,
+            _undoManager,
             _guiCommands,
             _fileCommands,
             _setVariableLogic,
             _wireframeObjectManager,
+            _pluginManager,
+            _hotkeyManager,
+            _deleteVariableService,
+            _exposeVariableService,
+            _editVariableService,
             _typeManager,
-            _pluginManager
+            _clipboardService
             );
 
         // Override the display name if specified in PropertyData
