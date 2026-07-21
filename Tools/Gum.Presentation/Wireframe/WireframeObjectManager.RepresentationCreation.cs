@@ -1,18 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Gum.Commands;
 using RenderingLibrary;
 using Gum.DataTypes;
 using Gum.Managers;
 using RenderingLibrary.Graphics;
 using Gum.DataTypes.Variables;
-using Gum.ToolStates;
-using Gum.PropertyGridHelpers.Converters;
 using GumRuntime;
-using Gum.Plugins;
-using Gum.Services;
-using Gum.Services.Dialogs;
 
 namespace Gum.Wireframe;
 
