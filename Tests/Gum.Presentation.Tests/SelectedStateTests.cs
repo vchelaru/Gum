@@ -9,13 +9,14 @@ using Moq;
 using Shouldly;
 using System;
 
-namespace GumToolUnitTests.ToolStates;
+namespace Gum.Presentation.Tests;
 
 public class SelectedStateTests : BaseTestClass
 {
     private readonly Mock<IGuiCommands> _guiCommands;
     private readonly Mock<IPluginManager> _pluginManager;
     private readonly Mock<IMessenger> _messenger;
+    private readonly Mock<IBehaviorVariablePropertyGridSink> _propertyGridSink;
     private readonly SelectedState _selectedState;
 
     public SelectedStateTests()
@@ -23,13 +24,26 @@ public class SelectedStateTests : BaseTestClass
         _guiCommands = new Mock<IGuiCommands>();
         _pluginManager = new Mock<IPluginManager>();
         _messenger = new Mock<IMessenger>();
+        _propertyGridSink = new Mock<IBehaviorVariablePropertyGridSink>();
         _selectedState = new SelectedState(
             _guiCommands.Object,
             _pluginManager.Object,
             _messenger.Object,
-            // SelectedBehaviorVariable (the only PropertyGridManager use) is not exercised here,
-            // so the factory is never invoked.
-            new Lazy<PropertyGridManager>(() => null!));
+            new Lazy<IBehaviorVariablePropertyGridSink>(() => _propertyGridSink.Object));
+    }
+
+    [Fact]
+    public void SelectedBehaviorVariable_Set_PushesValueIntoPropertyGridSink()
+    {
+        // Pins the one seam that used to require a direct dependency on the concrete,
+        // WPF-coupled PropertyGridManager (issue #3875): setting SelectedBehaviorVariable
+        // must still forward the value into the property grid, now via the narrow
+        // IBehaviorVariablePropertyGridSink interface instead of the concrete class.
+        VariableSave variable = new VariableSave { Name = "X" };
+
+        _selectedState.SelectedBehaviorVariable = variable;
+
+        _propertyGridSink.VerifySet(s => s.SelectedBehaviorVariable = variable, Times.Once);
     }
 
     [Fact]
@@ -85,7 +99,7 @@ public class SelectedStateTests : BaseTestClass
         // element. If this cascade order is ever reversed, the element rebuild would no longer be
         // suppressed and the double-rebuild (and duplicate missing-file errors) would silently return.
         ScreenSave screen = CreateScreen("TestScreen");
-        var invocationOrder = new List<string>();
+        List<string> invocationOrder = new List<string>();
         _pluginManager
             .Setup(p => p.ReactToStateSaveSelected(It.IsAny<StateSave>()))
             .Callback(() => invocationOrder.Add(nameof(IPluginManager.ReactToStateSaveSelected)));

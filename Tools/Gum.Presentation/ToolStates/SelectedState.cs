@@ -1,34 +1,28 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
-using Gum.Controls;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Messages;
 using Gum.Plugins;
-using Gum.Services;
 using Gum.Wireframe;
-using Newtonsoft.Json.Linq;
 using RenderingLibrary;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using System.Linq;
-using System.Windows.Forms;
 
 namespace Gum.ToolStates;
 
-[Export(typeof(ISelectedState))]
 public class SelectedState : ISelectedState
 {
     #region Fields
-    
+
     private readonly IGuiCommands _guiCommands;
     private readonly IPluginManager _pluginManager;
     private readonly IMessenger _messenger;
     // Lazy because PropertyGridManager depends on ISelectedState; this breaks the DI construction cycle.
-    private readonly Lazy<PropertyGridManager> _lazyPropertyGridManager;
+    private readonly Lazy<IBehaviorVariablePropertyGridSink> _lazyPropertyGridManager;
     SelectedStateSnapshot snapshot = new SelectedStateSnapshot();
 
     #endregion
@@ -324,7 +318,7 @@ public class SelectedState : ISelectedState
     #endregion
 
     #region Properties
-    
+
 
 
     public ITreeNode? SelectedTreeNode => SelectedTreeNodes.FirstOrDefault();
@@ -344,7 +338,7 @@ public class SelectedState : ISelectedState
     public SelectedState(IGuiCommands guiCommands,
         IPluginManager pluginManager,
         IMessenger messenger,
-        Lazy<PropertyGridManager> lazyPropertyGridManager)
+        Lazy<IBehaviorVariablePropertyGridSink> lazyPropertyGridManager)
     {
         _guiCommands = guiCommands;
         _pluginManager = pluginManager;
@@ -509,7 +503,7 @@ public class SelectedState : ISelectedState
         if (SelectedElement != null && (SelectedStateSave == null || SelectedElement.AllStates.Contains(SelectedStateSave) == false))
         {
             var shouldSelectDefault = true;
-            // This can happen on a redo where the state gets re-created, so instances are not preserved. In this case, we should 
+            // This can happen on a redo where the state gets re-created, so instances are not preserved. In this case, we should
             // check if there are any matching states in matching categories.
             if(SelectedStateCategorySave != null)
             {
@@ -731,7 +725,7 @@ public class SelectedState : ISelectedState
 
     /// <summary>
     /// Returns the name of the selected entry in the property grid.
-    /// There may not be a VariableSave backing the selection as the 
+    /// There may not be a VariableSave backing the selection as the
     /// value may be null in the StateSave
     /// </summary>
     public string SelectedVariableName
@@ -758,8 +752,3 @@ public class SelectedState : ISelectedState
 
 
 }
-
-// SelectedStateSnapshot (stores a selected-state snapshot without looking at any UI states) moved
-// to Tools/Gum.Presentation/ToolStates/SelectedStateSnapshot.cs (same Gum.ToolStates namespace, so
-// no using changes needed here) as part of relocating DragDropManager, its only other consumer,
-// into the headless Gum.Presentation assembly.
