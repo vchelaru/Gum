@@ -38,7 +38,6 @@
 	<ItemGroup>
 		<Compile Include="MainImportFromGumxPlugin.cs" />
 		<Compile Include="Properties\AssemblyInfo.cs" />
-		<Compile Include="Services\GumxDependencyResolver.cs" />
 		<Compile Include="Views\ImportFromGumxView.xaml.cs" />
 		<Compile Include="Views\StandardDiffDetailsView.xaml.cs" />
 	</ItemGroup>
@@ -55,11 +54,10 @@
 	<ItemGroup>
 		<!-- ImportFromGumxViewModel / ImportTreeNodeViewModel / StandardDiffRowViewModel /
 		     StandardDiffDetailsViewModel / IGumxSourceService / IGumxDependencyResolver /
-		     IGumxImportService / the import enums / GumxImportService (the concrete class - its
-		     whole dependency closure was already headless) live in the headless net8.0
-		     Gum.Presentation assembly (no WPF, ADR-0005) so their logic is unit-testable without
-		     standing up WPF; GumxSourceService / GumxDependencyResolver stay concrete here since
-		     they're not shared with FRB1 or worth moving. Gum.Presentation itself references
+		     IGumxImportService / the import enums / GumxImportService / GumxDependencyResolver
+		     (both concrete classes - their whole dependency closures were already headless) live
+		     in the headless net8.0 Gum.Presentation assembly (no WPF, ADR-0005) so their logic is
+		     unit-testable without standing up WPF. Gum.Presentation itself references
 		     Gum.ProjectServices (kept here too since other plugin code uses it directly). -->
 		<ProjectReference Include="..\..\Tools\Gum.ProjectServices\Gum.ProjectServices.csproj" />
 		<ProjectReference Include="..\..\FlatRedBall.SpecializedXnaControls\FlatRedBall.SpecializedXnaControls.csproj">
