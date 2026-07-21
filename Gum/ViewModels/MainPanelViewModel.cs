@@ -11,13 +11,14 @@ using Gum.Controls;
 using Gum.Managers;
 using Gum.Mvvm;
 using Gum.Plugins;
+using Gum.Plugins.InternalPlugins.HideShowTools;
 using Gum.Services;
 using Gum.Settings;
 using Microsoft.Extensions.Options;
 
 namespace Gum.Controls;
 
-public class MainPanelViewModel : ViewModel, ITabManager, IRecipient<ApplicationTeardownMessage>
+public class MainPanelViewModel : ViewModel, ITabManager, IRecipient<ApplicationTeardownMessage>, IToolsVisibility
 {
     private readonly IWritableOptions<LayoutSettings> _layoutSettings;
 
@@ -128,7 +129,8 @@ public class MainPanelViewModel : ViewModel, ITabManager, IRecipient<Application
         message.OnTearDown(SaveLayoutSettings);
     }
 
-    internal void EnsureMinimumWidth()
+    /// <inheritdoc/>
+    public void EnsureMinimumWidth()
     {
         const int minWidth = 20;
         LeftColumnWidth = Math.Max(LeftColumnWidth, minWidth);

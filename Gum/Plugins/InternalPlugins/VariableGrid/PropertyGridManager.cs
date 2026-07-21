@@ -83,6 +83,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
     private CompositeMemberLogic _compositeMemberLogic;
     private StateSaveCategoryDisplayer _stateSaveCategoryDisplayer;
+    private BehaviorShowingLogic _behaviorShowingLogic;
 
     #endregion
 
@@ -147,6 +148,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         _variableSaveLogic = variableSaveLogic;
         _clipboardService = clipboardService;
         _stateSaveCategoryDisplayer = new StateSaveCategoryDisplayer(variableInCategoryPropagationLogic);
+        _behaviorShowingLogic = new BehaviorShowingLogic(fileCommands, projectState);
     }
 
     // Normally plugins will initialize through the PluginManager. This needs to happen earlier (see where it's called for info)
@@ -626,14 +628,15 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         {
             mainControl.BehaviorDataGrid.Instance = behaviorSave;
             mainControl.BehaviorDataGrid.Categories.Clear();
-            mainControl.BehaviorDataGrid.Categories.AddRange(BehaviorShowingLogic.GetCategoriesFor(behaviorSave));
+            mainControl.BehaviorDataGrid.Categories.AddRange(
+                ToWpfSynthetic(_behaviorShowingLogic.GetCategoriesFor(behaviorSave)));
 
-            if(category != null && 
+            if(category != null &&
                 // For now let's require explicitly selecting the catgory:
                 state == null)
             {
                 mainControl.BehaviorDataGrid.Categories.AddRange(
-                    StateSaveCategoryDisplayer.GetCategoriesFor(behaviorSave, category));
+                    ToWpfSynthetic(StateSaveCategoryDisplayer.GetCategoriesFor(behaviorSave, category)));
             }
 
 
@@ -746,7 +749,11 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         }
         else if(stateCategory != null)
         {
-            _stateSaveCategoryDisplayer.DisplayMembersForCategoryInElement(instance, categories, stateCategory);
+            var descriptor = _stateSaveCategoryDisplayer.BuildCommonMembersCategory(instance, stateCategory);
+            if (descriptor != null)
+            {
+                categories = ToWpfSynthetic(new List<SyntheticCategoryDescriptor> { descriptor });
+            }
         }
         return categories;
 
@@ -773,6 +780,52 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             foreach (var entry in descriptor.Members)
             {
                 category.Members.Add(new StateReferencingInstanceMember(entry));
+            }
+
+            categories.Add(category);
+        }
+        return categories;
+    }
+
+    /// <summary>
+    /// Materializes headless <see cref="SyntheticCategoryDescriptor"/>s (built by the relocated
+    /// <see cref="StateSaveCategoryDisplayer"/>/<see cref="BehaviorShowingLogic"/>) into real WPF
+    /// <see cref="MemberCategory"/>/<see cref="InstanceMember"/> rows. Unlike <see cref="ToWpf"/>,
+    /// these rows aren't backed by a real <see cref="StateReferencingInstanceMember"/> - they're
+    /// ad hoc synthetic rows (a category's "remove from category" button, a behavior's synthetic
+    /// property), so a plain <see cref="InstanceMember"/> wired to the descriptor's delegates is
+    /// enough.
+    /// </summary>
+    private List<MemberCategory> ToWpfSynthetic(List<SyntheticCategoryDescriptor> descriptors)
+    {
+        var categories = new List<MemberCategory>();
+        foreach (var descriptor in descriptors)
+        {
+            var category = new MemberCategory(descriptor.Name);
+
+            foreach (var row in descriptor.Members)
+            {
+                var instanceMember = new InstanceMember
+                {
+                    Name = row.Name,
+                    DetailText = row.DetailText
+                };
+                instanceMember.CustomGetTypeEvent += (_) => row.ValueType;
+                instanceMember.CustomGetEvent += (_) => row.Get();
+                if (row.Set != null)
+                {
+                    instanceMember.CustomSetEvent += (_, newValue) => row.Set(newValue);
+                }
+                if (row.CustomOptions != null)
+                {
+                    instanceMember.CustomOptions = row.CustomOptions;
+                }
+                if (row.PreferredDisplayerKindOverride == VariableDisplayerKind.RemoveButton)
+                {
+                    instanceMember.PreferredDisplayer = typeof(VariableRemoveButton);
+                }
+
+                category.Members.Add(instanceMember);
             }
 
             categories.Add(category);

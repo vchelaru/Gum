@@ -1,25 +1,37 @@
-using Gum;
 using Gum.Commands;
-using Gum.DataTypes;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.ImportPlugin.Manager;
-using Gum.Plugins.ImportPlugin.Services;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
-using ImportFromGumxPlugin.Services;
-using ImportFromGumxPlugin.ViewModels;
 using System.ComponentModel.Composition;
 using System.Windows;
 
 namespace ImportFromGumxPlugin;
 
+// As of ADR-0005 Phase 3, the "needs to save" guard + view-model wiring live in ImportFromGumxLogic
+// (Gum.Presentation) so they can be unit tested headlessly. This plugin keeps only the WPF dialog
+// window plumbing.
 [Export(typeof(PluginBase))]
 internal class MainImportFromGumxPlugin : WpfPluginBase
 {
     public override string FriendlyName => "Import from .gumx Plugin";
     public override bool ShutDown(PluginShutDownReason shutDownReason) => true;
+
+    private readonly ImportFromGumxLogic _importFromGumxLogic;
+
+    [ImportingConstructor]
+    public MainImportFromGumxPlugin(
+        IProjectState projectState,
+        IImportLogic importLogic,
+        IFileCommands fileCommands,
+        IDialogService dialogService,
+        IDispatcher dispatcher)
+    {
+        _importFromGumxLogic = new ImportFromGumxLogic(
+            projectState, importLogic, fileCommands, dialogService, dispatcher);
+    }
 
     public override void StartUp()
     {
@@ -28,28 +40,13 @@ internal class MainImportFromGumxPlugin : WpfPluginBase
 
     private void HandleImportFromGumx(object? sender, System.Windows.RoutedEventArgs e)
     {
-        var projectState = Locator.GetRequiredService<IProjectState>();
-        var importLogic = Locator.GetRequiredService<IImportLogic>();
-        var fileCommands = Locator.GetRequiredService<IFileCommands>();
-        var dispatcher = Locator.GetRequiredService<IDispatcher>();
-
-        if (projectState.NeedsToSaveProject)
+        if (!_importFromGumxLogic.CanImport)
         {
             _dialogService.ShowMessage("You must first save the project before importing.");
             return;
         }
 
-        var sourceService = new GumxSourceService();
-        var dependencyResolver = new GumxDependencyResolver();
-        var importService = new GumxImportService(importLogic, projectState, fileCommands, sourceService);
-
-        var viewModel = new ImportFromGumxViewModel(
-            sourceService,
-            dependencyResolver,
-            importService,
-            projectState,
-            _dialogService,
-            dispatcher);
+        var viewModel = _importFromGumxLogic.CreateImportViewModel();
 
         var window = new Gum.Services.Dialogs.DialogWindow
         {
