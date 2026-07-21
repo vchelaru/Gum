@@ -246,6 +246,9 @@ file static class ServiceCollectionExtensions
 
         services.AddSingleton<WireframeCommands>();
         services.AddSingleton<IWireframeCommands>(provider => provider.GetRequiredService<WireframeCommands>());
+        // ISpinnerFactory: narrow seam (#3956) so GuiCommands.ShowSpinner constructs its progress
+        // indicator without naming the concrete WPF Gum.Controls.Spinner directly.
+        services.AddSingleton<ISpinnerFactory, SpinnerFactory>();
         services.AddSingleton<IGuiCommands, GuiCommands>();
         services.AddSingleton<IEditCommands, EditCommands>();
         services.AddSingleton<IVariableInCategoryPropagationLogic, VariableInCategoryPropagationLogic>();

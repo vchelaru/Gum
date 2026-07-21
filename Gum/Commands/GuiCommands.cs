@@ -1,5 +1,4 @@
 using CommonFormsAndControls;
-using Gum.Controls;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
@@ -40,6 +39,7 @@ public class GuiCommands : IGuiCommands
     // Lazy because PropertyGridManager depends on IGuiCommands; this breaks the DI construction cycle.
     private readonly Lazy<PropertyGridManager> _lazyPropertyGridManager;
     private readonly IPluginManager _pluginManager;
+    private readonly ISpinnerFactory _spinnerFactory;
 
     private ISelectedState _selectedState => _lazySelectedState.Value;
 
@@ -50,13 +50,15 @@ public class GuiCommands : IGuiCommands
         IDispatcher dispatcher,
         IOutputManager outputManager,
         Lazy<PropertyGridManager> lazyPropertyGridManager,
-        IPluginManager pluginManager)
+        IPluginManager pluginManager,
+        ISpinnerFactory spinnerFactory)
     {
         _lazySelectedState = lazySelectedState;
         _dispatcher = dispatcher;
         _outputManager = outputManager;
         _lazyPropertyGridManager = lazyPropertyGridManager;
         _pluginManager = pluginManager;
+        _spinnerFactory = spinnerFactory;
     }
     
     public void BroadcastRefreshBehaviorView()
@@ -127,11 +129,5 @@ public class GuiCommands : IGuiCommands
     }
 
     /// <inheritdoc/>
-    public ISpinner ShowSpinner()
-    {
-        var spinner = new Gum.Controls.Spinner();
-        spinner.Show();
-
-        return spinner;
-    }
+    public ISpinner ShowSpinner() => _spinnerFactory.Create();
 }
