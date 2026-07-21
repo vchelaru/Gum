@@ -91,13 +91,7 @@ public class MainPanelViewModel : ViewModel, ITabManager, IRecipient<Application
     {
         if (e.NewItems?.OfType<PluginTab>() is { } newTabs)
         {
-            foreach (PluginTab newTab in newTabs)
-            {
-                if (!PluginTabs.Any(p => p.Location == newTab.Location && p.IsSelected))
-                {
-                    newTab.IsSelected = true;
-                }
-            }
+            TabAutoSelectLogic.SelectNewTabsWithNoExistingSelection(PluginTabs, newTabs);
         }
     }
 
