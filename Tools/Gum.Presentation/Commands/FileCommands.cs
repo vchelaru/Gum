@@ -4,15 +4,14 @@ using Gum.Localization;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Plugins;
-using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
 using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
-using System.Windows.Forms;
 using ToolsUtilities;
 
 namespace Gum.Commands;
@@ -29,6 +28,8 @@ public class FileCommands : IFileCommands
     private readonly IProjectManager _projectManager;
     private readonly IProjectState _projectState;
     private readonly IPluginManager _pluginManager;
+    private readonly IRecycleBinService _recycleBinService;
+    private readonly ICsvLocalizationLoader _csvLocalizationLoader;
 
     public FileCommands(ISelectedState selectedState,
         Lazy<IUndoManager> undoManager,
@@ -39,7 +40,9 @@ public class FileCommands : IFileCommands
         IFileWatchIgnoreList fileWatchIgnoreList,
         IProjectManager projectManager,
         IProjectState projectState,
-        IPluginManager pluginManager)
+        IPluginManager pluginManager,
+        IRecycleBinService recycleBinService,
+        ICsvLocalizationLoader csvLocalizationLoader)
     {
         _selectedState = selectedState;
         _undoManager = undoManager;
@@ -51,6 +54,8 @@ public class FileCommands : IFileCommands
         _projectManager = projectManager;
         _projectState = projectState;
         _pluginManager = pluginManager;
+        _recycleBinService = recycleBinService;
+        _csvLocalizationLoader = csvLocalizationLoader;
 
     }
 
@@ -64,9 +69,7 @@ public class FileCommands : IFileCommands
         FileManager.DeleteDirectory(directory.FullPath);
 
     public void MoveToRecycleBin(FilePath filePath) =>
-        Microsoft.VisualBasic.FileIO.FileSystem.DeleteFile(filePath.FullPath,
-            Microsoft.VisualBasic.FileIO.UIOption.OnlyErrorDialogs,
-            Microsoft.VisualBasic.FileIO.RecycleOption.SendToRecycleBin);
+        _recycleBinService.MoveToRecycleBin(filePath);
 
     public string[] GetFiles(string path) => System.IO.Directory.GetFiles(path);
 
@@ -290,10 +293,10 @@ public class FileCommands : IFileCommands
             {
                 _pluginManager.BeforeSavingElementSave(elementSave);
 
-                var fileName = elementSave.GetFullPathXmlFile();
+                var fileName = GetFullPathXmlFileForElement(elementSave, elementSave.Name);
 
                 // if it's readonly, let's warn the user
-                bool isReadOnly = ProjectManager.IsFileReadOnly(fileName.FullPath);
+                bool isReadOnly = IsFileReadOnly(fileName.FullPath);
 
                 if (isReadOnly)
                 {
@@ -352,13 +355,56 @@ public class FileCommands : IFileCommands
 
     public FilePath GetFullFileName(ElementSave element)
     {
-        return element.GetFullPathXmlFile();
+        return GetFullPathXmlFileForElement(element, element.Name);
     }
 
     public FilePath? GetFullPathXmlFile(ElementSave element, string elementName)
     {
-        return element.GetFullPathXmlFile(elementName);
+        return GetFullPathXmlFileForElement(element, elementName);
     }
+
+    /// <summary>
+    /// Computes the full path to <paramref name="elementSave"/>'s XML file, using
+    /// <paramref name="elementSaveName"/> for the file name and Subfolder path. Inlined from the
+    /// (Locator-based) <c>ElementSave.GetFullPathXmlFile(string)</c> extension method - that method
+    /// resolves <see cref="IProjectManager"/> via <c>Locator</c>, which is a WinForms-tool-only
+    /// static and can't be referenced from this headless assembly, so this uses the already-injected
+    /// <see cref="_projectManager"/> instead. Behavior is identical. Mirrors the private duplicate in
+    /// <c>DragDropManager</c>.
+    /// </summary>
+    private FilePath? GetFullPathXmlFileForElement(ElementSave elementSave, string elementSaveName)
+    {
+        var gumProject = _projectManager.GumProjectSave;
+        if (string.IsNullOrEmpty(gumProject?.FullFileName))
+        {
+            return null;
+        }
+
+        var extension = elementSave.FileExtension;
+
+        var reference =
+            gumProject.ScreenReferences.FirstOrDefault(item => item.Name == elementSave.Name) ??
+            gumProject.ComponentReferences.FirstOrDefault(item => item.Name == elementSave.Name) ??
+            gumProject.StandardElementReferences.FirstOrDefault(item => item.Name == elementSave.Name);
+
+        FilePath gumDirectory = FileManager.GetDirectory(gumProject.FullFileName);
+        if (!string.IsNullOrWhiteSpace(reference?.Link))
+        {
+            return gumDirectory.Original + reference.Link;
+        }
+        else
+        {
+            return gumDirectory.Original + elementSave.Subfolder + "\\" + elementSaveName + "." + extension;
+        }
+    }
+
+    /// <summary>
+    /// Inlined from the static <c>ProjectManager.IsFileReadOnly</c> helper - a pure, stateless
+    /// check that doesn't need DI, so it's duplicated here rather than referencing the concrete
+    /// (still tool-side) <c>ProjectManager</c> class from this headless assembly.
+    /// </summary>
+    private static bool IsFileReadOnly(string fileName) =>
+        File.Exists(fileName) && new FileInfo(fileName).IsReadOnly;
 
 
     public void LoadLocalizationFile()
@@ -417,7 +463,7 @@ public class FileCommands : IFileCommands
                 FilePath file = resolvedFiles[0];
                 if (file.Exists())
                 {
-                    _localizationService.AddDatabaseFromCsv(file.FullPath, ',');
+                    _csvLocalizationLoader.AddDatabaseFromCsv(_localizationService, file.FullPath, ',');
                 }
                 else
                 {
@@ -511,7 +557,7 @@ public class FileCommands : IFileCommands
                 string fileName = GetFullPathXmlFile( behavior).FullPath;
                 _fileWatchIgnoreList.IgnoreNextChangeUntil(fileName);
                 // if it's readonly, let's warn the user
-                bool isReadOnly = ProjectManager.IsFileReadOnly(fileName);
+                bool isReadOnly = IsFileReadOnly(fileName);
 
                 if (isReadOnly)
                 {
