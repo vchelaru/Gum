@@ -1,40 +1,39 @@
-using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Logic.FileWatch;
-using Gum.Managers;
 using Gum.Plugins.BaseClasses;
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
-using System.Linq;
-using System.Timers;
 using Gum.Services;
 using ToolsUtilities;
 
 namespace Gum.Plugins.FileWatchPlugin;
 
+/// <summary>
+/// WPF-hosted plugin entry point for the File Watch debug panel. All of the WPF-free business logic
+/// (project/variable-change reactions, the debug panel's display-refresh data) lives in
+/// <see cref="FileWatchPluginController"/> (issue #3931) - this class owns only the real platform
+/// glue: the WPF control/tab/menu-item wiring and the timer subscription.
+/// </summary>
 [Export(typeof(PluginBase))]
 public class MainFileWatchPlugin : PriorityPlugin
 {
     #region Fields/Properties
 
     private readonly PeriodicUiTimer refreshDisplayTimer;
+    private readonly FileWatchPluginController _controller;
 
     FileWatchViewModel viewModel;
 
     PluginTab pluginTab;
     System.Windows.Controls.MenuItem showFileWatchMenuItem;
-    private readonly IFileWatchManager _fileWatchManager;
-    private readonly FileWatchLogic _fileWatchLogic;
 
     #endregion
 
     [ImportingConstructor]
     public MainFileWatchPlugin(IFileWatchManager fileWatchManager, FileWatchLogic fileWatchLogic, PeriodicUiTimer periodicUiTimer)
     {
-        _fileWatchManager = fileWatchManager;
-        _fileWatchLogic = fileWatchLogic;
+        _controller = new FileWatchPluginController(fileWatchManager, fileWatchLogic);
         refreshDisplayTimer = periodicUiTimer;
     }
 
@@ -64,13 +63,8 @@ public class MainFileWatchPlugin : PriorityPlugin
         AssignEvents();
     }
 
-    private void HandleViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(FileWatchViewModel.PrintFileChangesToOutput))
-        {
-            _fileWatchManager.PrintFileChangesToOutput = viewModel.PrintFileChangesToOutput;
-        }
-    }
+    private void HandleViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e) =>
+        _controller.HandleViewModelPropertyChanged(viewModel, e);
 
     private void AssignEvents()
     {
@@ -79,44 +73,14 @@ public class MainFileWatchPlugin : PriorityPlugin
         this.VariableSet += HandleVariableSet;
     }
 
-    private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
-    {
-        if (element == null)
-        {
-            return;
-        }
+    private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue) =>
+        _controller.HandleVariableSet(element, instance, variableName, oldValue);
 
-        var fullVariableName = variableName;
-        if (instance != null)
-        {
-            fullVariableName = instance.Name + "." + variableName;
-        }
+    private void HandleProjectLocationSet(FilePath path) =>
+        _controller.HandleProjectLocationSet(path);
 
-        var rootVarible = ObjectFinder.Self.GetRootVariable(fullVariableName, element);
-
-        if (rootVarible?.IsFile == true)
-        {
-            // need to update the file paths
-            _fileWatchLogic.RefreshRootDirectory();
-        }
-    }
-
-    private void HandleProjectLocationSet(FilePath path)
-    {
-        _fileWatchLogic.HandleProjectLoaded();
-    }
-
-    private void HandleProjectLoad(GumProjectSave save)
-    {
-        if (save.FullFileName == null)
-        {
-            _fileWatchLogic.HandleProjectUnloaded();
-        }
-        else
-        {
-            _fileWatchLogic.HandleProjectLoaded();
-        }
-    }
+    private void HandleProjectLoad(GumProjectSave save) =>
+        _controller.HandleProjectLoad(save);
 
     private void HandleTabShown()
     {
@@ -137,87 +101,6 @@ public class MainFileWatchPlugin : PriorityPlugin
         }
     }
 
-    private void HandleRefreshDisplayTimerElapsed()
-    {
-        if (_fileWatchManager.CurrentFilePathsWatching.Count() == 0)
-        {
-            return;
-        }
-
-        string filePathsWatchingText = "";
-
-        if (_fileWatchManager.Enabled)
-        {
-            filePathsWatchingText = $"File path(s) watching:\n";
-            foreach (var item in _fileWatchManager.CurrentFilePathsWatching)
-            {
-                filePathsWatchingText += "  " + item + "\n";
-            }
-
-            viewModel.WatchFolderInformation = filePathsWatchingText;
-        }
-        else
-        {
-            viewModel.WatchFolderInformation = "File watching is disabled";
-        }
-
-        viewModel.NumberOfFilesToFlush = _fileWatchManager.ChangedFilesWaitingForFlush.Count().ToString();
-
-        if (_fileWatchManager.TimeToNextFlush.TotalSeconds <= 0)
-        {
-            viewModel.TimeToNextFlush = "Waiting for file change";
-        }
-        else
-        {
-            viewModel.TimeToNextFlush = "File flush in: " + ToTimeString(_fileWatchManager.TimeToNextFlush);
-        }
-
-        const int maxOfFilesToShow = 15;
-
-        try
-        {
-            var filesToDisplay = _fileWatchManager.ChangedFilesWaitingForFlush.Take(maxOfFilesToShow).ToArray();
-
-            string nextFilesInfo = string.Empty;
-
-            if (filesToDisplay.Length > 0)
-            {
-                nextFilesInfo += "Next files to flush:\n";
-            }
-
-            foreach (var item in filesToDisplay)
-            {
-                nextFilesInfo += item.FullPath + "\n";
-            }
-            viewModel.NextFilesToFlush = nextFilesInfo;
-
-
-            viewModel.IgnoredFilesInformation = string.Empty;
-            var now = DateTime.Now;
-            var activeIgnores = _fileWatchManager.TimedChangesToIgnore.Where(item => item.Value > now).ToArray();
-            if (activeIgnores.Length > 0)
-            {
-                viewModel.IgnoredFilesInformation += $"Ignoring {activeIgnores.Length} files:\n";
-
-                foreach (var kvp in activeIgnores)
-                {
-                    var timeSpan = kvp.Value - now;
-                    viewModel.IgnoredFilesInformation += $"{kvp.Key.FullPath} - Ignored for {ToTimeString(timeSpan)}\n";
-                }
-            }
-
-
-        }
-        catch
-        {
-            // This can happen if there's a file that changes right when this happens. no biggie, we'll get it next time....
-        }
-    }
-
-    string ToTimeString(TimeSpan timeSpan)
-    {
-        // it's never going to be minutes, so let's just shorten it to seconds:
-        //return timeSpan.ToString(@"m\:ss\:ff");
-        return timeSpan.ToString(@"ss\:ff");
-    }
+    private void HandleRefreshDisplayTimerElapsed() =>
+        _controller.RefreshDisplay(viewModel);
 }
