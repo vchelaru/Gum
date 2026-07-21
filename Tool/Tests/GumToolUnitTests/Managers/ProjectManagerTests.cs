@@ -2,11 +2,13 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum;
 using Gum.CommandLine;
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.Logic;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Plugins;
@@ -34,6 +36,8 @@ public class ProjectManagerTests : BaseTestClass
     private readonly Mock<IRetryService> _retryService;
     private readonly Mock<ICommandLineManager> _commandLineManager;
     private readonly Mock<IPluginManager> _pluginManager;
+    private readonly Mock<IHotkeyManager> _hotkeyManager;
+    private readonly Mock<IGumProjectRepairLogic> _gumProjectRepairLogic;
     private readonly ProjectManager _projectManager;
 
     public ProjectManagerTests()
@@ -49,6 +53,8 @@ public class ProjectManagerTests : BaseTestClass
         _retryService = new Mock<IRetryService>();
         _commandLineManager = new Mock<ICommandLineManager>();
         _pluginManager = new Mock<IPluginManager>();
+        _hotkeyManager = new Mock<IHotkeyManager>();
+        _gumProjectRepairLogic = new Mock<IGumProjectRepairLogic>();
 
         _projectManager = new ProjectManager(
             _selectedState.Object,
@@ -61,7 +67,46 @@ public class ProjectManagerTests : BaseTestClass
             _standardElementsManagerGumTool.Object,
             _retryService.Object,
             new Lazy<ICommandLineManager>(() => _commandLineManager.Object),
-            _pluginManager.Object);
+            _pluginManager.Object,
+            new Lazy<IHotkeyManager>(() => _hotkeyManager.Object),
+            _gumProjectRepairLogic.Object);
+    }
+
+    [Fact]
+    public async Task Initialize_CallsCreateNewProject_WhenShiftHeldAtStartup()
+    {
+        // Pins the relocation of the startup shift-check off WinForms' Control.ModifierKeys
+        // (#3863) onto IHotkeyManager.IsPressedInControl, the same live-modifier-state seam
+        // already used elsewhere (e.g. SelectionManager.IsShiftDown). Holding Shift at startup
+        // must still skip loading the command-line/last project and start a new one instead.
+        _commandLineManager.Setup(c => c.ReadCommandLine()).Returns(Task.CompletedTask);
+        _commandLineManager.SetupGet(c => c.ShouldExitImmediately).Returns(false);
+        _commandLineManager.SetupGet(c => c.GlueProjectToLoad).Returns("c:/projects/MyGame.gumx");
+        _hotkeyManager
+            .Setup(h => h.IsPressedInControl(It.Is<KeyCombination>(c => c.IsShiftDown && c.Key == null)))
+            .Returns(true);
+
+        await _projectManager.Initialize();
+
+        _fileCommands.Verify(f => f.LoadProject(It.IsAny<string>()), Times.Never);
+        _pluginManager.Verify(p => p.ProjectLoad(It.IsAny<GumProjectSave>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Initialize_LoadsCommandLineProject_WhenShiftNotHeldAtStartup()
+    {
+        string glueProject = "c:/projects/MyGame.gumx";
+        _commandLineManager.Setup(c => c.ReadCommandLine()).Returns(Task.CompletedTask);
+        _commandLineManager.SetupGet(c => c.ShouldExitImmediately).Returns(false);
+        _commandLineManager.SetupGet(c => c.GlueProjectToLoad).Returns(glueProject);
+        _hotkeyManager
+            .Setup(h => h.IsPressedInControl(It.Is<KeyCombination>(c => c.IsShiftDown && c.Key == null)))
+            .Returns(false);
+
+        await _projectManager.Initialize();
+
+        _fileCommands.Verify(f => f.LoadProject(glueProject), Times.Once);
+        _pluginManager.Verify(p => p.ProjectLoad(It.IsAny<GumProjectSave>()), Times.Never);
     }
 
     [Fact]
