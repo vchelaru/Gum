@@ -1,5 +1,4 @@
-﻿using Gum;
-using Gum.DataTypes;
+﻿using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.ToolStates;
@@ -8,8 +7,6 @@ using StateAnimationPlugin.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ToolsUtilities;
 
 namespace StateAnimationPlugin.Managers
