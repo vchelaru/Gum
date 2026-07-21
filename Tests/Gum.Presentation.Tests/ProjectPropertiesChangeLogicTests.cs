@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using Gum.Commands;
 using Gum.DataTypes;
@@ -95,12 +96,16 @@ public class ProjectPropertiesChangeLogicTests
     public async Task HandlePropertyChanged_LocalizationFiles_NormalizesAbsolutePathsToRelative()
     {
         ProjectPropertiesViewModel viewModel = MakeViewModel();
-        _projectState.Setup(p => p.ProjectDirectory).Returns(@"C:\MyProject\");
-        viewModel.LocalizationFiles = new List<string> { @"C:\MyProject\Localization\en.csv" };
+        // Leading-slash literal, not "C:\...": rooted on both Windows and Unix, unlike a
+        // Windows drive letter (see gum-unit-tests skill).
+        _projectState.Setup(p => p.ProjectDirectory).Returns("/MyProject/");
+        viewModel.LocalizationFiles = new List<string> { "/MyProject/Localization/en.csv" };
 
         await _logic.HandlePropertyChanged(viewModel, nameof(viewModel.LocalizationFiles));
 
-        viewModel.LocalizationFiles.ShouldContain(@"Localization\en.csv");
+        // FileManager.Standardize normalizes to the OS-native separator, so the expected
+        // relative path must too.
+        viewModel.LocalizationFiles.ShouldContain($"Localization{Path.DirectorySeparatorChar}en.csv");
         _fileCommands.Verify(f => f.LoadLocalizationFile(), Times.Never);
     }
 
