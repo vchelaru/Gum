@@ -34,6 +34,14 @@ declaring `UseWPF`/`UseWindowsForms`. This is a loop, not a one-time check — e
 test, implement the gap it surfaces, evaluate again — repeated until an Avalonia app genuinely could
 be built on the shared libraries as they exist, not until the phases run out.
 
+**Scope boundary: the test targets business logic, not a control's own interactive mechanics.**
+Multi-select tracking, drag-and-drop, and owner-draw rendering built directly against one framework's
+widget APIs (e.g. `MultiSelectTreeView`'s WinForms `TreeView` internals) don't get pre-extracted or
+"shrunk" toward a hypothetical future framework — that produces an abstraction shaped by guesswork,
+not by the framework actually chosen. Defer this class of work entirely until a framework decision is
+real (ADR-0003's measured prototype), then design and build it fresh against that framework's actual
+paradigms.
+
 ## Where the tool actually is today (grounding)
 
 The premise "swap WPF for Avalonia" mis-locates the cost. The mapping found:
