@@ -52,55 +52,6 @@ using WpfInput = System.Windows.Input;
 
 namespace Gum.Managers;
 
-#region ExpandedState class
-class ExpandedState
-{
-    public bool ScreensExpanded { get; set; }
-    public bool ComponentsExpanded { get; set; }
-    public bool StandardsExpanded { get; set; }
-    public bool BehaviorsExpanded { get; set; }
-
-    public Dictionary<TreeNode, bool> ExpandedStates { get; set; } = new Dictionary<TreeNode, bool>();
-
-    public void Record(TreeNode treeNode)
-    {
-        ExpandedStates[treeNode] = treeNode.IsExpanded;
-
-        foreach(TreeNode subNode in treeNode.Nodes)
-        {
-            // we only care about directory nodes, as only those are going to be recorded.
-            if (subNode.Nodes.Count > 0 && subNode.Tag == null)
-            {
-                // record this bad boy:
-                Record(subNode);
-            }
-        }
-    }
-    public void Apply()
-    {
-        foreach(var kvp in ExpandedStates)
-        {
-            if(kvp.Value)
-            {
-                kvp.Key.Expand();
-            }
-            else// if(nodesToKeepExpanded.Contains(kvp.Key) == false)
-            {
-                kvp.Key.Collapse();
-            }
-        }
-    }
-
-    public void ExpandAll()
-    {
-        foreach(var kvp in ExpandedStates)
-        {
-            kvp.Key.Expand();
-        }
-    }
-}
-#endregion
-
 #region TreeNodeWrapper Class
 class TreeNodeWrapper : ITreeNode
 {
@@ -178,10 +129,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     internal void UpdateCollapseButtonSizes(double baseFontSize) =>
         _viewCreator.UpdateCollapseButtonSizes(baseFontSize);
 
-    TreeNode mScreensTreeNode;
-    TreeNode mComponentsTreeNode;
-    TreeNode mStandardElementsTreeNode;
-    TreeNode mBehaviorsTreeNode;
+    ITreeNodeMutable mScreensTreeNode;
+    ITreeNodeMutable mComponentsTreeNode;
+    ITreeNodeMutable mStandardElementsTreeNode;
+    ITreeNodeMutable mBehaviorsTreeNode;
     TreeNode? mLastHoveredNode;
     private DateTime? hoverStartTime;
 
@@ -241,7 +192,6 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
     }
 
-    ExpandedState expandedStateBeforeFilter;
     string filterText;
     public string FilterText
     {
@@ -277,20 +227,20 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
     }
 
-    public TreeNode RootScreensTreeNode => mScreensTreeNode;
+    public ITreeNodeMutable RootScreensTreeNode => mScreensTreeNode;
 
-    public TreeNode RootComponentsTreeNode => mComponentsTreeNode;
+    public ITreeNodeMutable RootComponentsTreeNode => mComponentsTreeNode;
 
-    public TreeNode RootStandardElementsTreeNode => mStandardElementsTreeNode;
+    public ITreeNodeMutable RootStandardElementsTreeNode => mStandardElementsTreeNode;
 
-    public TreeNode RootBehaviorsTreeNode => mBehaviorsTreeNode;
+    public ITreeNodeMutable RootBehaviorsTreeNode => mBehaviorsTreeNode;
 
-    // Headless ITreeNode-typed mirrors of the four WinForms root fields above, enabling the
-    // root-selecting searches in TreeNodeRootSearchExtensions.
-    ITreeNode? IElementTreeRoots.Screens => mScreensTreeNode != null ? new TreeNodeWrapper(mScreensTreeNode) : null;
-    ITreeNode? IElementTreeRoots.Components => mComponentsTreeNode != null ? new TreeNodeWrapper(mComponentsTreeNode) : null;
-    ITreeNode? IElementTreeRoots.StandardElements => mStandardElementsTreeNode != null ? new TreeNodeWrapper(mStandardElementsTreeNode) : null;
-    ITreeNode? IElementTreeRoots.Behaviors => mBehaviorsTreeNode != null ? new TreeNodeWrapper(mBehaviorsTreeNode) : null;
+    // The four root fields already implement ITreeNode directly (they are always GumTreeNode),
+    // so IElementTreeRoots is satisfied for free - no TreeNodeWrapper needed here.
+    ITreeNode? IElementTreeRoots.Screens => mScreensTreeNode;
+    ITreeNode? IElementTreeRoots.Components => mComponentsTreeNode;
+    ITreeNode? IElementTreeRoots.StandardElements => mStandardElementsTreeNode;
+    ITreeNode? IElementTreeRoots.Behaviors => mBehaviorsTreeNode;
 
     private IDragDropManager _dragDropManager;
     private readonly ICopyPasteLogic _copyPasteLogic;
@@ -397,85 +347,34 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
 
     #region Find/Get
-    public TreeNode? GetTreeNodeFor(ElementSave? elementSave)
-    {
-        if (elementSave == null)
-        {
-            return null;
-        }
-        else if (elementSave is ScreenSave screenSave)
-        {
-            return GetTreeNodeFor(screenSave);
-        }
-        else if (elementSave is ComponentSave componentSave)
-        {
-            return GetTreeNodeFor(componentSave);
-        }
-        else if (elementSave is StandardElementSave standardElementSave)
-        {
-            return GetTreeNodeFor(standardElementSave);
-        }
 
-        return null;
-    }
+    // Every method in this region delegates to the headless ITreeNode/IElementTreeRoots-typed
+    // search extensions in Gum.Presentation (TreeNodeSearchExtensions/TreeNodeRootSearchExtensions/
+    // TreeNodeDirectoryExtensions), casting the result back to the concrete WinForms TreeNode.
+    // The cast is always safe: every node ETVM constructs is a GumTreeNode, which already
+    // implements ITreeNode/ITreeNodeMutable directly (no wrapping). The public signatures stay
+    // TreeNode-typed (rather than widening to ITreeNode) because out-of-scope WinForms call sites
+    // elsewhere in this class (e.g. HighlightTreeNodeForIpso) still consume them as TreeNode.
+    public TreeNode? GetTreeNodeFor(ElementSave? elementSave) =>
+        (TreeNode?)((IElementTreeRoots)this).GetTreeNodeFor(elementSave);
 
-    public TreeNode GetTreeNodeFor(ScreenSave screenSave)
-    {
-        return GetTreeNodeForTag(screenSave, RootScreensTreeNode);
-    }
+    public TreeNode GetTreeNodeFor(ScreenSave screenSave) =>
+        (TreeNode)((IElementTreeRoots)this).GetTreeNodeFor(screenSave);
 
-    public TreeNode GetTreeNodeFor(ComponentSave componentSave)
-    {
-        return GetTreeNodeForTag(componentSave, RootComponentsTreeNode);
-    }
+    public TreeNode GetTreeNodeFor(ComponentSave componentSave) =>
+        (TreeNode)((IElementTreeRoots)this).GetTreeNodeFor(componentSave);
 
-    public TreeNode GetTreeNodeFor(StandardElementSave standardElementSave)
-    {
-        return GetTreeNodeForTag(standardElementSave, RootStandardElementsTreeNode);
-    }
+    public TreeNode GetTreeNodeFor(StandardElementSave standardElementSave) =>
+        (TreeNode)((IElementTreeRoots)this).GetTreeNodeFor(standardElementSave);
 
-    public TreeNode? GetTreeNodeFor(InstanceSave instanceSave, TreeNode container)
-    {
-        foreach (TreeNode node in container.Nodes)
-        {
-            if (node.Tag == instanceSave)
-            {
-                return node;
-            }
+    public TreeNode? GetTreeNodeFor(InstanceSave instanceSave, TreeNode container) =>
+        (TreeNode?)((ITreeNode)container).GetTreeNodeFor(instanceSave);
 
-            TreeNode? childNode = GetTreeNodeFor(instanceSave, node);
-            if (childNode != null)
-            {
-                return childNode;
-            }
-        }
+    public TreeNode? GetInstanceTreeNodeByName(string name, TreeNode container) =>
+        (TreeNode?)((ITreeNode)container).GetInstanceTreeNodeByName(name);
 
-        return null;
-    }
-
-    public TreeNode? GetInstanceTreeNodeByName(string name, TreeNode container)
-    {
-        foreach (TreeNode node in container.Nodes)
-        {
-            if (node.Tag is InstanceSave instanceSave && instanceSave.Name == name)
-            {
-                return node;
-            }
-
-            TreeNode? childNode = GetInstanceTreeNodeByName(name, node);
-            if (childNode != null)
-            {
-                return childNode;
-            }
-        }
-
-        return null;
-    }
-
-    public TreeNode GetTreeNodeFor(BehaviorSave behavior)
-    {
-        return GetTreeNodeForTag(behavior, RootBehaviorsTreeNode);
-    }
+    public TreeNode GetTreeNodeFor(BehaviorSave behavior) =>
+        (TreeNode)((IElementTreeRoots)this).GetTreeNodeFor(behavior);
 
     public void UpdateErrorIndicatorsForElement(ElementSave element, bool hasErrors)
     {
@@ -488,112 +387,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             treeNode.ImageIndex = desiredIndex;
     }
 
-    public TreeNode GetTreeNodeFor(string absoluteDirectory)
-    {
-        string relative = FileManager.MakeRelative(absoluteDirectory,
+    public TreeNode? GetTreeNodeFor(string absoluteDirectory) =>
+        (TreeNode?)((IElementTreeRoots)this).GetTreeNodeFor(
+            absoluteDirectory,
             FileManager.GetDirectory(_projectState.GumProjectSave.FullFileName));
-
-
-        relative = FileManager.Standardize(relative);
-        // in the tool we use forward slashes:
-        relative = relative.Replace("\\", "/");
-
-        if (relative.StartsWith("screens/"))
-        {
-            string modifiedRelative = relative.Substring("screens/".Length);
-
-            return GetTreeNodeFor(modifiedRelative, mScreensTreeNode);
-        }
-        else if (relative.StartsWith("components/"))
-        {
-            string modifiedRelative = relative.Substring("components/".Length);
-
-            return GetTreeNodeFor(modifiedRelative, mComponentsTreeNode);
-        }
-        else if (relative.StartsWith("standards/"))
-        {
-            string modifiedRelative = relative.Substring("standards/".Length);
-
-            return GetTreeNodeFor(modifiedRelative, mStandardElementsTreeNode);
-        }
-        else if(relative.StartsWith("behaviors/"))
-        {
-            string modifiedRelative = relative.Substring("behaviors/".Length);
-
-            return GetTreeNodeFor(modifiedRelative, mBehaviorsTreeNode);
-        }
-
-        return null;
-
-    }
-
-    TreeNode GetTreeNodeFor(string relativeDirectory, TreeNode container)
-    {
-        if (string.IsNullOrEmpty(relativeDirectory))
-        {
-            return container;
-        }
-
-        int indexOfSlash = relativeDirectory.IndexOf('/');
-        string whatToLookFor = relativeDirectory;
-        string sub = "";
-
-        if (indexOfSlash != -1)
-        {
-            whatToLookFor = relativeDirectory.Substring(0, indexOfSlash);
-            sub = relativeDirectory.Substring(indexOfSlash + 1, relativeDirectory.Length - (indexOfSlash + 1));
-        }
-
-        foreach (TreeNode node in container.Nodes)
-        {
-            if (node.Text.Equals(whatToLookFor, StringComparison.OrdinalIgnoreCase))
-            {
-                return GetTreeNodeFor(sub, node);
-            }
-        }
-
-        return null;
-    }
-
-    TreeNode GetTreeNodeForTag(object tag, TreeNode container = null)
-    {
-        if (container == null)
-        {
-            if (tag is ScreenSave)
-            {
-                container = RootScreensTreeNode;
-            }
-            else if (tag is ComponentSave)
-            {
-                container = RootComponentsTreeNode;
-            }
-            else if (tag is StandardElementSave)
-            {
-                container = RootStandardElementsTreeNode;
-            }
-            else if(tag is BehaviorSave)
-            {
-                container = RootBehaviorsTreeNode;
-            }
-        }
-
-        foreach (TreeNode treeNode in container.Nodes)
-        {
-            if (treeNode.Tag == tag)
-            {
-                return treeNode;
-            }
-
-            var found = GetTreeNodeForTag(tag, treeNode);
-
-            if (found != null)
-            {
-                return found;
-            }
-        }
-
-        return null;
-    }
 
     public ITreeNode? GetTreeNodeOver()
     {
@@ -675,7 +472,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 {
                     _dispatcher.Post(() =>
                     {
-                        OnSelect(ObjectTreeView.SelectedNode);
+                        OnSelect((ITreeNode?)ObjectTreeView.SelectedNode);
                     });
                 }
             },
@@ -776,22 +573,26 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         if (mStandardElementsTreeNode != null)
         {
-            bool isInTree = ObjectTreeView.Nodes.Contains(mStandardElementsTreeNode);
+            // Real WinForms widget-collection ops: ObjectTreeView.Nodes is a TreeNodeCollection, so
+            // the ITreeNodeMutable root fields need a cast at the point of actual widget interaction.
+            // Every node ETVM constructs is a GumTreeNode (a TreeNode), so this is a free reference cast.
+            TreeNode standardElementsTreeNode = (TreeNode)mStandardElementsTreeNode;
+            bool isInTree = ObjectTreeView.Nodes.Contains(standardElementsTreeNode);
             if (usePalette && isInTree)
             {
-                ObjectTreeView.Nodes.Remove(mStandardElementsTreeNode);
+                ObjectTreeView.Nodes.Remove(standardElementsTreeNode);
             }
             else if (!usePalette && !isInTree)
             {
                 // Restore in canonical order: after Components, before Behaviors.
                 int insertIndex = mBehaviorsTreeNode != null
-                    ? ObjectTreeView.Nodes.IndexOf(mBehaviorsTreeNode)
+                    ? ObjectTreeView.Nodes.IndexOf((TreeNode)mBehaviorsTreeNode)
                     : ObjectTreeView.Nodes.Count;
                 if (insertIndex < 0)
                 {
                     insertIndex = ObjectTreeView.Nodes.Count;
                 }
-                ObjectTreeView.Nodes.Insert(insertIndex, mStandardElementsTreeNode);
+                ObjectTreeView.Nodes.Insert(insertIndex, standardElementsTreeNode);
             }
         }
 
@@ -991,12 +792,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
 
             // add folders to the screens, entities, and standard elements
-            // Every node ETVM constructs is a GumTreeNode, which implements ITreeNodeMutable
-            // directly, so these are free reference casts (not wraps).
-            AddAndRemoveFolderNodesFromFileSystem(mStandardElementsTreeNode.GetFullFilePath()!.FullPath, (ITreeNodeMutable)mStandardElementsTreeNode);
-            AddAndRemoveFolderNodesFromFileSystem(mScreensTreeNode.GetFullFilePath()!.FullPath, (ITreeNodeMutable)mScreensTreeNode);
-            AddAndRemoveFolderNodesFromFileSystem(mComponentsTreeNode.GetFullFilePath()!.FullPath, (ITreeNodeMutable)mComponentsTreeNode);
-            AddAndRemoveFolderNodesFromFileSystem(mBehaviorsTreeNode.GetFullFilePath()!.FullPath, (ITreeNodeMutable)mBehaviorsTreeNode);
+            AddAndRemoveFolderNodesFromFileSystem(mStandardElementsTreeNode.GetFullFilePath()!.FullPath, mStandardElementsTreeNode);
+            AddAndRemoveFolderNodesFromFileSystem(mScreensTreeNode.GetFullFilePath()!.FullPath, mScreensTreeNode);
+            AddAndRemoveFolderNodesFromFileSystem(mComponentsTreeNode.GetFullFilePath()!.FullPath, mComponentsTreeNode);
+            AddAndRemoveFolderNodesFromFileSystem(mBehaviorsTreeNode.GetFullFilePath()!.FullPath, mBehaviorsTreeNode);
 
 
             AddNeededButMissingFromFileSystemFolderNodes();
@@ -1004,10 +803,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
         else
         {
-            RootScreensTreeNode.Nodes.Clear();
-            RootComponentsTreeNode.Nodes.Clear();
+            RootScreensTreeNode.ClearChildren();
+            RootComponentsTreeNode.ClearChildren();
             // maybe we support behavior folders in the future? If so:
-            RootBehaviorsTreeNode.Nodes.Clear();
+            RootBehaviorsTreeNode.ClearChildren();
         }
     }
 
@@ -1153,8 +952,9 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 TreeNode parentNode = GetTreeNodeFor(fullPath);
 
                 // Every node ETVM constructs is a GumTreeNode, which implements ITreeNodeMutable
-                // directly, so this is a free reference cast (not a wrap).
-                treeNode = AddTreeNodeForElement(screenSave, (ITreeNodeMutable)parentNode, ScreenImageIndex);
+                // directly, so this is a free reference cast (not a wrap). The return value isn't
+                // read afterward (treeNode only guards whether the node already exists above).
+                AddTreeNodeForElement(screenSave, (ITreeNodeMutable)parentNode, ScreenImageIndex);
             }
         }
 
@@ -1180,7 +980,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             {
                 if (GetTreeNodeFor(standardSave) == null &&  ShouldShow(standardSave))
                 {
-                    AddTreeNodeForElement(standardSave, (ITreeNodeMutable)mStandardElementsTreeNode, _treeNodeImageLogic.GetImageIndexForStandardElement(standardSave.Name));
+                    AddTreeNodeForElement(standardSave, mStandardElementsTreeNode, _treeNodeImageLogic.GetImageIndexForStandardElement(standardSave.Name));
                 }
             }
         }
@@ -1205,39 +1005,35 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         #region Remove nodes that are no longer needed
 
-        // Every node ETVM constructs is a GumTreeNode, which implements ITreeNodeMutable directly,
-        // so these are free reference casts (not wraps).
-        ((ITreeNodeMutable)mScreensTreeNode).RemoveRecursivelyIfStale<ScreenSave>(
+        mScreensTreeNode.RemoveRecursivelyIfStale<ScreenSave>(
             screen => gumProject.Screens.Contains(screen) && ShouldShow(screen));
 
-        ((ITreeNodeMutable)mComponentsTreeNode).RemoveRecursivelyIfStale<ComponentSave>(
+        mComponentsTreeNode.RemoveRecursivelyIfStale<ComponentSave>(
             component => gumProject.Components.Contains(component) && ShouldShow(component));
 
         // Standard elements don't support subfolders, so this pass is flat (non-recursive) and,
         // unlike the screen/component pass above, removes any non-StandardElementSave-tagged node
         // outright rather than recursing into it.
-        ITreeNodeMutable mutableStandardElementsNode = (ITreeNodeMutable)mStandardElementsTreeNode;
-        for (int i = mutableStandardElementsNode.ChildCount - 1; i > -1; i--)
+        for (int i = mStandardElementsTreeNode.ChildCount - 1; i > -1; i--)
         {
             // Do we want to support folders here?
-            StandardElementSave? standardElement = mutableStandardElementsNode.GetChildAt(i).Tag as StandardElementSave;
+            StandardElementSave? standardElement = mStandardElementsTreeNode.GetChildAt(i).Tag as StandardElementSave;
 
             if (standardElement == null || !gumProject.StandardElements.Contains(standardElement) || !ShouldShow(standardElement))
             {
-                mutableStandardElementsNode.RemoveChildAt(i);
+                mStandardElementsTreeNode.RemoveChildAt(i);
             }
         }
 
         // Also flat (non-recursive): unlike standard elements above, a non-BehaviorSave-tagged node
         // (a behavior subfolder) is left alone rather than removed.
-        ITreeNodeMutable mutableBehaviorsNode = (ITreeNodeMutable)mBehaviorsTreeNode;
-        for (int i = mutableBehaviorsNode.ChildCount - 1; i > -1; i--)
+        for (int i = mBehaviorsTreeNode.ChildCount - 1; i > -1; i--)
         {
-            BehaviorSave? behavior = mutableBehaviorsNode.GetChildAt(i).Tag as BehaviorSave;
+            BehaviorSave? behavior = mBehaviorsTreeNode.GetChildAt(i).Tag as BehaviorSave;
 
             if (behavior != null && (!gumProject.Behaviors.Contains(behavior) || !ShouldShow(behavior)))
             {
-                mutableBehaviorsNode.RemoveChildAt(i);
+                mBehaviorsTreeNode.RemoveChildAt(i);
             }
         }
 
@@ -1251,42 +1047,44 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         // it can result in the enumerator
         // returning a null instance. This is
         // fixed by moving to a for-loop.
-        var screenList = mScreensTreeNode.Nodes;
-        for (int i = 0; i < screenList.Count; i++)
+        // Every node ETVM constructs is a GumTreeNode, so the ITreeNodeMutable child is always
+        // also a TreeNode - a free reference cast to call the still-TreeNode-typed RefreshUi.
+        // ChildCount is read fresh every iteration (not cached), matching the original's live
+        // TreeNodeCollection.Count read.
+        for (int i = 0; i < mScreensTreeNode.ChildCount; i++)
         {
-            var treeNode = (TreeNode)screenList[i];
+            var treeNode = (TreeNode)mScreensTreeNode.GetChildAt(i);
             RefreshUi(treeNode);
         }
 
         // see above on why we use a for instead foreach
-        var componentList = mComponentsTreeNode.Nodes;
-        for (int i = 0; i < componentList.Count; i++)
+        for (int i = 0; i < mComponentsTreeNode.ChildCount; i++)
         {
-            var treeNode = (TreeNode)componentList[i];
+            var treeNode = (TreeNode)mComponentsTreeNode.GetChildAt(i);
             RefreshUi(treeNode);
         }
 
-        foreach (TreeNode treeNode in mStandardElementsTreeNode.Nodes)
+        for (int i = 0; i < mStandardElementsTreeNode.ChildCount; i++)
         {
-            RefreshUi(treeNode);
+            RefreshUi((TreeNode)mStandardElementsTreeNode.GetChildAt(i));
         }
 
-        foreach(TreeNode treeNode in mBehaviorsTreeNode.Nodes)
+        for (int i = 0; i < mBehaviorsTreeNode.ChildCount; i++)
         {
-            RefreshUi(treeNode);
+            RefreshUi((TreeNode)mBehaviorsTreeNode.GetChildAt(i));
         }
 
         #endregion
 
         #region Sort everything
 
-        ((ITreeNodeMutable)mScreensTreeNode).SortByName(recursive:true);
+        mScreensTreeNode.SortByName(recursive:true);
 
-        ((ITreeNodeMutable)mComponentsTreeNode).SortByName(recursive: true);
+        mComponentsTreeNode.SortByName(recursive: true);
 
-        ((ITreeNodeMutable)mStandardElementsTreeNode).SortByName(recursive: true);
+        mStandardElementsTreeNode.SortByName(recursive: true);
 
-        ((ITreeNodeMutable)mBehaviorsTreeNode).SortByName(recursive: true);
+        mBehaviorsTreeNode.SortByName(recursive: true);
 
         #endregion
 
@@ -1316,7 +1114,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     // GumTreeNode, so callers pass their TreeNode-typed locals through a free reference cast. The
     // cast stays at each call site rather than widening this method back to TreeNode so the actual
     // node-construction work (Tag/ImageIndex/child-add) is expressed through the mutation interface.
-    private TreeNode AddTreeNodeForElement(ElementSave element, ITreeNodeMutable parentNode, int defaultImageIndex)
+    private ITreeNodeMutable AddTreeNodeForElement(ElementSave element, ITreeNodeMutable parentNode, int defaultImageIndex)
     {
         if (parentNode == null)
         {
@@ -1330,7 +1128,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         parentNode.AddChild(treeNode);
 
-        return (TreeNode)treeNode;
+        return treeNode;
     }
 
     private void AddTreeNodeForBehavior(BehaviorSave behavior, ITreeNodeMutable parentNode, int defaultImageIndex)
@@ -1348,27 +1146,34 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     {
         if (mScreensTreeNode == null)
         {
-            mScreensTreeNode = new GumTreeNode("Screens");
-            mScreensTreeNode.ImageIndex = FolderImageIndex;
-            ObjectTreeView.Nodes.Add(mScreensTreeNode);
+            // Real WinForms widget-collection ops: ObjectTreeView.Nodes.Add needs a concrete TreeNode,
+            // so these are constructed via the concrete GumTreeNode local (which the root fields, typed
+            // ITreeNodeMutable, are then assigned from - a free reference conversion).
+            GumTreeNode screensTreeNode = new GumTreeNode("Screens");
+            screensTreeNode.ImageIndex = FolderImageIndex;
+            ObjectTreeView.Nodes.Add(screensTreeNode);
+            mScreensTreeNode = screensTreeNode;
 
-            mComponentsTreeNode = new GumTreeNode("Components");
-            mComponentsTreeNode.ImageIndex = FolderImageIndex;
-            ObjectTreeView.Nodes.Add(mComponentsTreeNode);
+            GumTreeNode componentsTreeNode = new GumTreeNode("Components");
+            componentsTreeNode.ImageIndex = FolderImageIndex;
+            ObjectTreeView.Nodes.Add(componentsTreeNode);
+            mComponentsTreeNode = componentsTreeNode;
 
-            mStandardElementsTreeNode = new GumTreeNode("Standard");
-            mStandardElementsTreeNode.ImageIndex = FolderImageIndex;
+            GumTreeNode standardElementsTreeNode = new GumTreeNode("Standard");
+            standardElementsTreeNode.ImageIndex = FolderImageIndex;
             // When the experimental Standards palette is on, the Standard folder is replaced by the
             // chip palette, so it is not shown in the tree. The node object is still kept (and still
             // populated) so toggling the setting at runtime can restore it without a full rebuild.
             if (!_projectState.EffectiveUseStandardsPalette)
             {
-                ObjectTreeView.Nodes.Add(mStandardElementsTreeNode);
+                ObjectTreeView.Nodes.Add(standardElementsTreeNode);
             }
+            mStandardElementsTreeNode = standardElementsTreeNode;
 
-            mBehaviorsTreeNode = new GumTreeNode("Behaviors");
-            mBehaviorsTreeNode.ImageIndex = FolderImageIndex;
-            ObjectTreeView.Nodes.Add(mBehaviorsTreeNode);
+            GumTreeNode behaviorsTreeNode = new GumTreeNode("Behaviors");
+            behaviorsTreeNode.ImageIndex = FolderImageIndex;
+            ObjectTreeView.Nodes.Add(behaviorsTreeNode);
+            mBehaviorsTreeNode = behaviorsTreeNode;
         }
     }
 
@@ -1400,13 +1205,15 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             // primary instance after a tree refresh (issue #2954).
             if (_recordedSelectedInstances.Count > 1)
             {
-                List<TreeNode> nodes = GetReselectableNodes(
+                List<ITreeNode> nodes = GetReselectableNodes(
                     _recordedSelectedInstances,
                     instance => FindTreeNodeFor(instance, mRecordedSelectedContainer));
 
                 if (nodes.Count > 1)
                 {
-                    Select(nodes);
+                    // Select(List<TreeNode>) stays WinForms-typed (out of scope); every node ETVM
+                    // constructs is a GumTreeNode, so this cast is always safe.
+                    Select(nodes.Cast<TreeNode>().ToList());
                     return;
                 }
             }
@@ -1421,7 +1228,9 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                     // the equality check in the _selectedState setter short-circuits (i.e.
                     // the instance was never un-assigned, so assigning it again fires no events
                     // and the tree node is never updated to reflect the new node).
-                    Select(desiredNode);
+                    // Select(TreeNode?) stays WinForms-typed (out of scope); the cast is always
+                    // safe since every node ETVM constructs is a GumTreeNode.
+                    Select((TreeNode)desiredNode);
                 }
                 else
                 {
@@ -1447,14 +1256,14 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     /// dropping instances that no longer have a node (e.g. deleted before the refresh) while
     /// preserving order. Used to restore a multi-selection after a tree refresh.
     /// </summary>
-    internal static List<TreeNode> GetReselectableNodes(
+    internal static List<ITreeNode> GetReselectableNodes(
         IReadOnlyList<InstanceSave> recordedInstances,
-        Func<InstanceSave, TreeNode?> nodeFinder)
+        Func<InstanceSave, ITreeNode?> nodeFinder)
     {
-        List<TreeNode> nodes = new List<TreeNode>();
+        List<ITreeNode> nodes = new List<ITreeNode>();
         foreach (InstanceSave instance in recordedInstances)
         {
-            TreeNode? node = nodeFinder(instance);
+            ITreeNode? node = nodeFinder(instance);
             if (node != null)
             {
                 nodes.Add(node);
@@ -1463,10 +1272,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         return nodes;
     }
 
-    private TreeNode? FindTreeNodeForRecordedObject() =>
+    private ITreeNode? FindTreeNodeForRecordedObject() =>
         FindTreeNodeFor(mRecordedSelectedObject, mRecordedSelectedContainer);
 
-    private TreeNode? FindTreeNodeFor(object? recordedObject, object? recordedContainer)
+    private ITreeNode? FindTreeNodeFor(object? recordedObject, object? recordedContainer)
     {
         if (recordedObject is InstanceSave instanceSave)
         {
@@ -1475,16 +1284,16 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             {
                 var behaviorNode = GetTreeNodeFor(behavior);
                 if (behaviorNode != null)
-                    return GetTreeNodeFor(instanceSave, behaviorNode)
-                        ?? GetInstanceTreeNodeByName(instanceSave.Name, behaviorNode);
+                    return (ITreeNode?)GetTreeNodeFor(instanceSave, behaviorNode)
+                        ?? (ITreeNode?)GetInstanceTreeNodeByName(instanceSave.Name, behaviorNode);
             }
 
             if (instanceSave.ParentContainer != null)
             {
                 var elementNode = GetTreeNodeFor(instanceSave.ParentContainer);
                 if (elementNode != null)
-                    return GetTreeNodeFor(instanceSave, elementNode)
-                        ?? GetInstanceTreeNodeByName(instanceSave.Name, elementNode);
+                    return (ITreeNode?)GetTreeNodeFor(instanceSave, elementNode)
+                        ?? (ITreeNode?)GetInstanceTreeNodeByName(instanceSave.Name, elementNode);
             }
 
             // Behavior instances have no ParentContainer, and GetBehaviorContainerOf fails when
@@ -1495,18 +1304,18 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             {
                 var behaviorNode = GetTreeNodeFor(recordedBehavior);
                 if (behaviorNode != null)
-                    return GetInstanceTreeNodeByName(instanceSave.Name, behaviorNode);
+                    return (ITreeNode?)GetInstanceTreeNodeByName(instanceSave.Name, behaviorNode);
             }
 
             return null;
         }
         else if (recordedObject is ElementSave elementSave)
         {
-            return GetTreeNodeFor(elementSave);
+            return (ITreeNode?)GetTreeNodeFor(elementSave);
         }
         else if (recordedObject is BehaviorSave behaviorSave)
         {
-            return GetTreeNodeFor(behaviorSave);
+            return (ITreeNode?)GetTreeNodeFor(behaviorSave);
         }
 
         return null;
@@ -1717,7 +1526,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     public void RefreshUi(IInstanceContainer instanceContainer)
     {
-        var foundNode = GetTreeNodeForTag(instanceContainer);
+        var foundNode = (TreeNode?)((IElementTreeRoots)this).GetTreeNodeForTag(instanceContainer);
 
         if(foundNode != null)
         {
@@ -1734,7 +1543,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     /// <param name="stateContainer">The StateContainer to refresh.</param>
     public void RefreshUi(IStateContainer stateContainer)
     {
-        var foundNode = GetTreeNodeForTag(stateContainer);
+        var foundNode = (TreeNode?)((IElementTreeRoots)this).GetTreeNodeForTag(stateContainer);
 
         if(foundNode != null)
         {
@@ -1872,12 +1681,12 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             }
         }
 
-        var allTreeNodesRecursively = node.GetAllChildrenNodesRecursively();
-        
+        var allTreeNodesRecursively = ((ITreeNode)node).GetAllChildrenNodesRecursively();
+
         // why do we clear? wouldn't this require re-creation of all nodes? that seems like it might be slow...
         //node.Nodes.Clear();
         // Let's be smart about removal...
-        foreach(TreeNode instanceNode in allTreeNodesRecursively)
+        foreach(ITreeNode instanceNode in allTreeNodesRecursively)
         {
             var instance = instanceNode.Tag as InstanceSave;
 
@@ -1895,7 +1704,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
             if (nodeForInstance == null)
             {
-                nodeForInstance = AddTreeNodeForInstance(instance, (ITreeNodeMutable)node, tolerateMissingTypes:false);
+                nodeForInstance = (TreeNode)AddTreeNodeForInstance(instance, (ITreeNodeMutable)node, tolerateMissingTypes:false);
             }
 
             if(instance.DefinedByBase)
@@ -1990,7 +1799,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
             if (nodeForInstance == null)
             {
-                nodeForInstance = AddTreeNodeForInstance(instance, (ITreeNodeMutable)node, tolerateMissingTypes: true);
+                nodeForInstance = (TreeNode)AddTreeNodeForInstance(instance, (ITreeNodeMutable)node, tolerateMissingTypes: true);
             }
 
             if (instance.DefinedByBase)
@@ -2006,7 +1815,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     // it is always a GumTreeNode in practice, so passing it as the mutation interface is a free
     // cast at each call site. GetTreeNodeFor(InstanceSave, TreeNode) below stays WinForms-typed -
     // it is the same hot search helper RefreshElementTreeNode/RefreshBehaviorTreeNode call directly.
-    private TreeNode AddTreeNodeForInstance(InstanceSave instance, ITreeNodeMutable parentContainerNode,
+    private ITreeNodeMutable AddTreeNodeForInstance(InstanceSave instance, ITreeNodeMutable parentContainerNode,
         bool tolerateMissingTypes, HashSet<InstanceSave>? pendingAdditions = null)
     {
         ITreeNodeMutable treeNode = new GumTreeNode();
@@ -2033,7 +1842,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 }
 
                 pendingAdditions.Add(parentInstance);
-                parentInstanceNode = AddTreeNodeForInstance(parentInstance, parentContainerNode, tolerateMissingTypes, pendingAdditions);
+                parentInstanceNode = (TreeNode)AddTreeNodeForInstance(parentInstance, parentContainerNode, tolerateMissingTypes, pendingAdditions);
             }
 
             if (parentInstanceNode != null)
@@ -2044,7 +1853,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         parentNode.AddChild(treeNode);
 
-        return (TreeNode)treeNode;
+        return treeNode;
     }
 
     private InstanceSave? FindParentInstance(InstanceSave instance)
@@ -2088,7 +1897,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     /// triggered plugin events (e.g. InstanceSelected → tree sync).
     /// </summary>
     internal bool SuppressCallAfterClickSelect;
-    internal void OnSelect(TreeNode? selectedTreeNode)
+    internal void OnSelect(ITreeNode? selectedTreeNode)
     {
         TreeNode? treeNode = ObjectTreeView.SelectedNode;
 
@@ -2169,7 +1978,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             // queue, which executes after all synchronous WM_KEYDOWN handling (including
             // the AfterSelect notification) has completed.
             ObjectTreeView.BeginInvoke(() => ObjectTreeView.SelectedNode?.EnsureVisible());
-            OnSelect((SelectedNode as TreeNodeWrapper)?.Node);
+            OnSelect((ITreeNode?)(SelectedNode as TreeNodeWrapper)?.Node);
         }
 
         GumKeyEventArgs keyArgs = e.ToGumKeyEventArgs();
@@ -2194,13 +2003,13 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         // Otherwise we can't drag drop
         if (ObjectTreeView.SelectedNode == null)
         {
-            OnSelect(ObjectTreeView.SelectedNode);
+            OnSelect((ITreeNode?)ObjectTreeView.SelectedNode);
         }
     }
 
     private void ObjectTreeView_AfterClickSelect(object? sender, TreeViewEventArgs e)
     {
-        OnSelect(ObjectTreeView.SelectedNode);
+        OnSelect((ITreeNode?)ObjectTreeView.SelectedNode);
     }
 
     // Known issue: WinForms and WPF don't play nice with right-clicks. After
@@ -2215,7 +2024,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         // Use _lastMouseDownButton instead of e.Button — see field comment for details.
         if (_lastMouseDownButton == MouseButtons.Right)
         {
-            OnSelect(ObjectTreeView.SelectedNode);
+            OnSelect((ITreeNode?)ObjectTreeView.SelectedNode);
 
             PopulateContextMenu();
 
