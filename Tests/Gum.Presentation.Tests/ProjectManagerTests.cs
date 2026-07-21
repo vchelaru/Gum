@@ -21,7 +21,7 @@ using Moq;
 using Shouldly;
 using Xunit;
 
-namespace GumToolUnitTests.Managers;
+namespace Gum.Presentation.Tests;
 
 public class ProjectManagerTests : BaseTestClass
 {
