@@ -22,13 +22,10 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
-using System.Windows.Media;
 using System.Xml.Linq;
 using ToolsUtilities;
 using WpfDataUi.DataTypes;
 using static System.ComponentModel.Design.ObjectSelectorEditor;
-using DialogResult = System.Windows.Forms.DialogResult;
 
 namespace Gum.Commands;
 
