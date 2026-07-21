@@ -108,6 +108,11 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   free; one injecting a still-WPF/WinForms-coupled interface can't move until that interface is
   cleaned or relocated too. Re-check the current state of each dependency — a past note's "this
   interface is blocked" claim can go stale as unrelated PRs clean things up.
+- **A field typed against a concrete WPF-side class can already have a `Gum.Presentation`-registered
+  interface sitting unused.** Before extracting a new interface, check `Builder.cs` for an existing
+  `IFoo`/`Foo` dual-registration where `Foo` already implements `IFoo` — if the only members the
+  consumer calls are already on that interface, the fix is a one-line field-type swap, not a new
+  seam.
 - **An `#if GUM` (or similar tool-only compile constant) guard silently flips from always-true to
   always-false when its class moves into `Gum.Presentation`**, which never defines that constant —
   a real behavior regression the build won't catch. Make the guarded code unconditional instead of
