@@ -2,7 +2,6 @@ using CommunityToolkit.Mvvm.Messaging;
 using Gum.CommandLine;
 using Gum.Commands;
 using Gum.DataTypes;
-using Gum.DataTypes.Variables;
 using Gum.Extensions;
 using Gum.Logic;
 using Gum.Logic.FileWatch;
@@ -24,8 +23,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Forms;
 using ToolsUtilities;
 
 namespace Gum;
@@ -51,6 +48,8 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
     // rebuild-fonts path reads GumProjectSave) — deferring it breaks the construction cycle.
     private readonly Lazy<ICommandLineManager> _commandLineManager;
     private readonly IPluginManager _pluginManager;
+    private readonly IHotkeyManager _hotkeyManager;
+    private readonly IGumProjectRepairLogic _gumProjectRepairLogic;
 
     #endregion
 
@@ -124,7 +123,9 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         IStandardElementsManagerGumTool standardElementsManagerGumTool,
         IRetryService retryService,
         Lazy<ICommandLineManager> commandLineManager,
-        IPluginManager pluginManager)
+        IPluginManager pluginManager,
+        IHotkeyManager hotkeyManager,
+        IGumProjectRepairLogic gumProjectRepairLogic)
     {
         _selectedState = selectedState;
         _elementCommands = elementCommands;
@@ -137,6 +138,8 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         _retryService = retryService;
         _commandLineManager = commandLineManager;
         _pluginManager = pluginManager;
+        _hotkeyManager = hotkeyManager;
+        _gumProjectRepairLogic = gumProjectRepairLogic;
         // Default settings until LoadSettings() replaces this with the loaded (or newly-created)
         // file. Avoids a null-before-load window that every narrowed IProjectManager member above
         // would otherwise need to guard against (some plugins read these before LoadSettings runs -
@@ -155,7 +158,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
 
         if (!_commandLineManager.Value.ShouldExitImmediately)
         {
-            var isShift = (Control.ModifierKeys & Keys.Shift) != 0;
+            var isShift = _hotkeyManager.IsPressedInControl(KeyCombination.Shift());
 
             if (!isShift && !string.IsNullOrEmpty(_commandLineManager.Value.GlueProjectToLoad))
             {
@@ -320,13 +323,13 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
                 {
                     modifications.Add("AddNewStandardElementTypes");
                 }
-                if (FixSlashesInNames(_gumProjectSave))
+                if (_gumProjectRepairLogic.FixSlashesInNames(_gumProjectSave))
                 {
-                    modifications.Add(nameof(FixSlashesInNames));
+                    modifications.Add("FixSlashesInNames");
                 }
-                if (RemoveSpacesInVariables(_gumProjectSave))
+                if (_gumProjectRepairLogic.RemoveSpacesInVariables(_gumProjectSave))
                 {
-                    modifications.Add(nameof(RemoveSpacesInVariables));
+                    modifications.Add("RemoveSpacesInVariables");
                 }
                 if (_gumProjectSave.MigrateCircleRadiusToWidthHeight())
                 {
@@ -336,9 +339,9 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
                 {
                     modifications.Add("StripCircleRectangleGradientColor1");
                 }
-                if (RemoveDuplicateVariables(_gumProjectSave))
+                if (_gumProjectRepairLogic.RemoveDuplicateVariables(_gumProjectSave))
                 {
-                    modifications.Add(nameof(RemoveDuplicateVariables));
+                    modifications.Add("RemoveDuplicateVariables");
                 }
 
                 _gumProjectSave.FixStandardVariables();
@@ -353,9 +356,9 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
 
             CopyLinkedComponents();
 
-            if (FixRecursiveAssignments(_gumProjectSave))
+            if (_gumProjectRepairLogic.FixRecursiveAssignments(_gumProjectSave))
             {
-                modifications.Add(nameof(FixRecursiveAssignments));
+                modifications.Add("FixRecursiveAssignments");
             }
             _pluginManager.ProjectLoad(_gumProjectSave);
 
@@ -424,91 +427,6 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         }
     }
 
-    private bool RemoveSpacesInVariables(GumProjectSave gumProjectSave)
-    {
-        bool didChange = false;
-        foreach(var element in gumProjectSave.AllElements)
-        {
-            foreach(var state in element.AllStates)
-            {
-                foreach(var variable in state.Variables)
-                {
-                    Replace(variable, "Base Type");
-                    Replace(variable, "Children Layout");
-                    Replace(variable, "Clips Children");
-                    Replace(variable, "Contained Type");
-                    Replace(variable, "Font Scale");
-                    Replace(variable, "Height Units");
-                    Replace(variable, "Texture Address");
-                    Replace(variable, "Texture Height");
-                    Replace(variable, "Texture Height Scale");
-                    Replace(variable, "Texture Left");
-                    Replace(variable, "Texture Top");
-                    Replace(variable, "Texture Width");
-                    Replace(variable, "Texture Width Scale");
-                    Replace(variable, "Width Units");
-                    Replace(variable, "Wraps Children");
-                    Replace(variable, "X Origin");
-                    Replace(variable, "X Units");
-                    Replace(variable, "Y Origin");
-                    Replace(variable, "Y Units");
-
-                    void Replace(VariableSave variableSave, string oldName)
-                    {
-                        if(variable.Name.EndsWith(oldName))
-                        {
-                            var newName = variable.Name.Substring(0, variable.Name.Length - oldName.Length) +
-                                oldName.Replace(" ", "");
-                            variable.Name = newName;
-                            didChange = true;
-                        }
-                    }
-                }
-            }
-        }
-        return didChange;
-    }
-
-    private bool FixRecursiveAssignments(GumProjectSave gumProjectSave)
-    {
-        var toReturn = false;
-        // Instances can't be of type screen, so don't check this (unless someone messes with the XML but that's on them)
-        //foreach(var screen in mGumProjectSave.Screens)
-        //{
-        //    if(FixRecursiveAssignments(screen))
-        //    {
-        //        toReturn = true;
-        //    }
-        //}
-        foreach (var component in gumProjectSave.Components)
-        {
-            if (FixRecursiveAssignments(component))
-            {
-                toReturn = true;
-            }
-        }
-
-        return toReturn;
-    }
-
-    private bool FixRecursiveAssignments(ElementSave element)
-    {
-        var didModify = false;
-        // see if the child is either of this type, or a base type
-        foreach (var instance in element.Instances)
-        {
-            var isRecursive = ObjectFinder.Self.IsInstanceRecursivelyReferencingElement(instance, element);
-
-            if (isRecursive)
-            {
-                instance.BaseType = "Container";
-                didModify = true;
-            }
-        }
-
-        return didModify;
-    }
-
     private void CopyLinkedComponents()
     {
         var gumDirectory = new FilePath(_gumProjectSave.FullFileName).GetDirectoryContainingThis();
@@ -546,166 +464,6 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         {
             CopyReference(reference);
         }
-    }
-
-    /// <summary>
-    /// Fixes slashes in all references, component names, and instance references.
-    /// </summary>
-    /// <param name="gumProjectSave">The project for which to fix slashes.</param>
-    /// <returns>Whether any changes were made.</returns>
-    private bool FixSlashesInNames(GumProjectSave gumProjectSave)
-    {
-        var didAnythingChange = false;
-
-        foreach (var reference in gumProjectSave.ScreenReferences)
-        {
-            if (reference.Name?.Contains("\\") == true)
-            {
-                reference.Name = reference.Name.Replace("\\", "/");
-                didAnythingChange = true;
-            }
-        }
-
-        foreach (var reference in gumProjectSave.ComponentReferences)
-        {
-            if (reference?.Name.Contains("\\") == true)
-            {
-                reference.Name = reference.Name.Replace("\\", "/");
-                didAnythingChange = true;
-            }
-        }
-
-        foreach(var reference in gumProjectSave.BehaviorReferences)
-        {
-            if(reference.Name?.Contains("\\") == true)
-            {
-                reference.Name = reference.Name.Replace("\\", "/");
-                didAnythingChange = true;
-            }
-        }
-
-
-        foreach (var screen in gumProjectSave.Screens)
-        {
-            if (screen.Name?.Contains("\\") == true)
-            {
-                screen.Name = screen.Name.Replace("\\", "/");
-                didAnythingChange = true;
-            }
-            foreach (var instance in screen.Instances)
-            {
-                if (instance.BaseType?.Contains("\\") == true)
-                {
-                    instance.BaseType = instance.BaseType.Replace("\\", "/");
-                    didAnythingChange = true;
-                }
-            }
-
-            foreach (var behavior in screen.Behaviors)
-            {
-                if (behavior.BehaviorName?.Contains("\\") == true)
-                {
-                    behavior.BehaviorName = behavior.BehaviorName.Replace("\\", "/");
-                    didAnythingChange = true;
-                }
-            }
-        }
-
-        foreach (var component in gumProjectSave.Components)
-        {
-            if (component.Name?.Contains("\\") == true)
-            {
-                component.Name = component.Name.Replace("\\", "/");
-                didAnythingChange = true;
-            }
-
-            foreach (var instance in component.Instances)
-            {
-                if (instance.BaseType?.Contains("\\") == true)
-                {
-                    instance.BaseType = instance.BaseType.Replace("\\", "/");
-                    didAnythingChange = true;
-                }
-            }
-
-            foreach(var behavior in component.Behaviors)
-            {
-                if(behavior.BehaviorName?.Contains("\\") == true)
-                {
-                    behavior.BehaviorName = behavior.BehaviorName.Replace("\\", "/");
-                    didAnythingChange = true;
-                }
-            }
-        }
-
-        foreach (var behavior in gumProjectSave.Behaviors)
-        {
-            if(behavior.Name?.Contains("\\") == true)
-            {
-                behavior.Name = behavior.Name.Replace("\\", "/");
-                didAnythingChange = true;
-            }
-
-            foreach (var instance in behavior.RequiredInstances)
-            {
-                if (instance.BaseType?.Contains("\\") == true)
-                {
-                    instance.BaseType = instance.BaseType.Replace("\\", "/");
-                    didAnythingChange = true;
-                }
-            }
-        }
-
-        return didAnythingChange;
-    }
-
-    private bool RemoveDuplicateVariables(GumProjectSave gumProjectSave)
-    {
-        var didChange = false;
-        foreach (var screen in gumProjectSave.Screens)
-        {
-            didChange = RemoveDuplicateVariables(screen) || didChange;
-        }
-        foreach (var component in gumProjectSave.Components)
-        {
-            didChange = RemoveDuplicateVariables(component) || didChange;
-        }
-        foreach (var standard in gumProjectSave.StandardElements)
-        {
-            didChange = RemoveDuplicateVariables(standard) || didChange;
-        }
-        return didChange;
-    }
-
-    private bool RemoveDuplicateVariables(ElementSave element)
-    {
-        var didChange = false;
-        foreach (var state in element.AllStates)
-        {
-            didChange = RemoveDuplicateVariables(state) || didChange;
-        }
-        return didChange;
-    }
-
-    private bool RemoveDuplicateVariables(StateSave state)
-    {
-        var variableNames = state.Variables.Select(item => item.Name).ToHashSet();
-
-        var didChange = false;
-        if (variableNames.Count != state.Variables.Count)
-        {
-            var newVariables = new List<VariableSave>();
-            foreach (var variableName in variableNames)
-            {
-                var matchingVariable = state.Variables.FirstOrDefault(item => item.Name == variableName);
-                newVariables.Add(matchingVariable);
-            }
-
-            state.Variables.Clear();
-            state.Variables.AddRange(newVariables);
-            didChange = true;
-        }
-        return didChange;
     }
 
     internal void RecreateMissingStandardElements()

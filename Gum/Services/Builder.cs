@@ -148,6 +148,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IFavoriteComponentManager, FavoriteComponentManager>();
         services.AddSingleton<ICopyPasteLogic, CopyPasteLogic>();
         services.AddSingleton<IDeleteLogic, DeleteLogic>();
+        services.AddSingleton<IGumProjectRepairLogic, GumProjectRepairLogic>();
         services.AddSingleton<ISkiaShapeStandardsLogic, SkiaShapeStandardsLogic>();
         services.AddSingleton<FileLocations>();
         // IFileLocations: narrow headless port (ADR-0005 Phase 3) so dialog VMs that only need
