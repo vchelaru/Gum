@@ -16,11 +16,17 @@ using FlatRedBall.Gui;
 using FlatRedBall.Input;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
+// Duck-typed alias (same trick as GamepadButton/Buttons above) so gamepad-handling method
+// bodies can be written once instead of duplicated per platform under #if FRB.
+using GamePadForNavigation = FlatRedBall.Input.Xbox360GamePad;
+using AnalogStickForScroll = FlatRedBall.Input.AnalogStick;
 namespace FlatRedBall.Forms.Controls;
 #else
 using Gum.Input;
 using GamepadButton = Gum.Input.GamepadButton;
 using Keys = Gum.Forms.Input.Keys;
+using GamePadForNavigation = Gum.Input.IGamePad;
+using AnalogStickForScroll = Gum.Input.IAnalogStick;
 #endif
 
 #if !FRB
@@ -198,14 +204,12 @@ public class ScrollViewer :
     /// </remarks>
     public double MouseWheelScrollSpeed { get; set; } = 30;
 
-#if !FRB
     /// <summary>
     /// Units per second that <see cref="VerticalScrollBarValue"/> changes when the gamepad's
     /// right stick is fully deflected vertically (scaled linearly for partial deflection).
     /// Defaults to 600.
     /// </summary>
     public double GamepadStickScrollSpeed { get; set; } = 600;
-#endif
 
     /// <summary>
     /// The vertical scroll bar value. Assigning this automatically scrolls
@@ -1088,9 +1092,7 @@ public class ScrollViewer :
 
             HandleGamepadNavigation(gamepad);
 
-#if !FRB
             ApplyGamepadStickScroll(gamepad);
-#endif
 
             if (gamepad.ButtonPushed(GamepadButton.A))
             {
@@ -1138,7 +1140,6 @@ public class ScrollViewer :
 #endif
     }
 
-#if !FRB
     // Elapsed-time source for ApplyGamepadStickScroll, so scroll speed is frame-rate independent.
     // Null until the first call so the initial frame only records a baseline instead of jumping
     // by a spurious large delta.
@@ -1150,10 +1151,27 @@ public class ScrollViewer :
     /// separate <c>DoTopLevelFocusUpdate</c> copies don't each need their own stick-scroll code.
     /// Horizontal (X) scrolling is not wired up yet.
     /// </summary>
-    protected void ApplyGamepadStickScroll(IGamePad gamepad)
+    public void ApplyGamepadStickScroll(GamePadForNavigation gamepad) =>
+        ApplyGamepadStickScroll(gamepad.RightStick);
+
+    /// <summary>
+    /// Applies continuous vertical scrolling from <paramref name="stick"/>, scaled by elapsed
+    /// time. Call this directly — instead of relying on the automatic per-frame loop over
+    /// <see cref="FrameworkElement.GamePadsForUiControl"/> — when a specific gamepad's stick
+    /// should drive this specific control every frame regardless of focus, e.g. one gamepad
+    /// permanently paired with one <see cref="ListBox"/> in a split-input UI (Gum's Forms
+    /// system has a single global focus, not one focus per gamepad).
+    /// </summary>
+    public void ApplyGamepadStickScroll(AnalogStickForScroll stick)
     {
         var currentTime = InteractiveGue.CurrentGameTime;
-        var y = gamepad.RightStick.Y;
+        // FlatRedBall.Input.AnalogStick implements I2DInput.X/Y explicitly (not as public
+        // members), unlike Gum.Input.IAnalogStick where Y is a plain public property.
+#if FRB
+        var y = ((FlatRedBall.Input.I2DInput)stick).Y;
+#else
+        var y = stick.Y;
+#endif
 
         if (y != 0 && _lastGamepadStickScrollTime.HasValue)
         {
@@ -1166,7 +1184,6 @@ public class ScrollViewer :
 
         _lastGamepadStickScrollTime = currentTime;
     }
-#endif
 
     private void DoItemFocusUpdate()
     {

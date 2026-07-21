@@ -2035,11 +2035,9 @@ public class ListBox : ItemsControl, IInputReceiver
 
             HandleGamepadNavigation(gamepad);
 
-#if !FRB
             // Shared with ScrollViewer.DoTopLevelFocusUpdate so the right-stick scroll code
             // isn't duplicated between the two copies (issue #3839).
             ApplyGamepadStickScroll(gamepad);
-#endif
 
             if (gamepad.ButtonPushed(GamepadButton.A))
             {
