@@ -268,6 +268,11 @@ file static class ServiceCollectionExtensions
         // other
         services.AddDialogs();
         services.AddViewModelFuncFactories(typeof(ServiceCollectionExtensions).Assembly);
+        // ADR-0005: mirrors the ViewModel-registration double-scan above (line ~88) — a service that
+        // moved into the headless Gum.Presentation assembly (e.g. EditVariableService, which takes a
+        // Func<AddVariableViewModel>) needs its ctor scanned from that assembly too, or the factory the
+        // container needs to activate it never gets registered.
+        services.AddViewModelFuncFactories(typeof(DialogViewModel).Assembly);
         services.AddSingleton<IDispatcher>(_ => new AppDispatcher(() => Application.Current.Dispatcher));
         services.AddSingleton<IAppScaleProvider, AppScaleProvider>();
         services.AddSingleton<IUiSettingsService, UiSettingsService>();

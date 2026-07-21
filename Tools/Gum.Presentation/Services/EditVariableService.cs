@@ -1,23 +1,13 @@
-using CommonFormsAndControls;
-using ExCSS;
-using Gum.Controls;
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
-using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
-using Gum.Plugins.VariableGrid;
-using Gum.ToolCommands;
-using Gum.ToolStates;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Gum.Commands;
 using Gum.Services.Dialogs;
 using Gum.Undo;
+using System;
+using System.Collections.Generic;
 
 namespace Gum.Services;
 
