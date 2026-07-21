@@ -49,7 +49,6 @@ public partial class PropertyGridManager
     private readonly INameVerifier _nameVerifier;
     private readonly IDeleteVariableService _deleteVariableService;
     private readonly IEditVariableService _editVariableService;
-    private readonly IEditVariableMenuService _editVariableMenuService;
     private readonly IHotkeyManager _hotkeyManager;
     private readonly IVariableSaveLogic _variableSaveLogic;
     private readonly IClipboardService _clipboardService;
@@ -122,7 +121,6 @@ public partial class PropertyGridManager
         INameVerifier nameVerifier,
         IDeleteVariableService deleteVariableService,
         IEditVariableService editVariableService,
-        IEditVariableMenuService editVariableMenuService,
         IHotkeyManager hotkeyManager,
         IVariableSaveLogic variableSaveLogic,
         IClipboardService clipboardService)
@@ -145,7 +143,6 @@ public partial class PropertyGridManager
         _nameVerifier = nameVerifier;
         _deleteVariableService = deleteVariableService;
         _editVariableService = editVariableService;
-        _editVariableMenuService = editVariableMenuService;
         _hotkeyManager = hotkeyManager;
         _variableSaveLogic = variableSaveLogic;
         _clipboardService = clipboardService;
@@ -173,14 +170,15 @@ public partial class PropertyGridManager
             _undoManager,
             _pluginManager,
             _variableSaveLogic,
-            _editVariableMenuService,
+            _editVariableService,
             _exposeVariableService,
             _hotkeyManager,
             _deleteVariableService,
             _guiCommands,
             _fileCommands,
             _setVariableLogic,
-            _wireframeObjectManager);
+            _wireframeObjectManager,
+            _clipboardService);
 
         mainControl = new Gum.MainPropertyGrid();
 

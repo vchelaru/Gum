@@ -18,25 +18,10 @@ using System.Threading.Tasks;
 using Gum.Commands;
 using Gum.Services.Dialogs;
 using Gum.Undo;
-using WpfDataUi.DataTypes;
 
 namespace Gum.Services;
 
-#region Interface
-
-/// <summary>
-/// Wires edit-variable options onto an <see cref="InstanceMember"/>'s context menu (WpfDataUi row
-/// model). Split out of <see cref="IEditVariableService"/> because <see cref="InstanceMember"/>
-/// lives in the WPF-coupled WpfDataUi assembly, so this piece must stay in the tool project while
-/// the rest of the interface moved to the headless Gum.Presentation assembly (ADR-0005, #3754).
-/// </summary>
-public interface IEditVariableMenuService
-{
-    void TryAddEditVariableOptions(InstanceMember instanceMember, VariableSave variableSave, IStateContainer stateListCategoryContainer);
-}
-#endregion
-
-public class EditVariableService : IEditVariableService, IEditVariableMenuService
+public class EditVariableService : IEditVariableService
 {
     private readonly IRenameLogic _renameLogic;
     private readonly IDialogService _dialogService;
@@ -58,17 +43,6 @@ public class EditVariableService : IEditVariableService, IEditVariableMenuServic
         _fileCommands = fileCommands;
         _undoManager = undoManager;
         _addVariableViewModelFactory = addVariableViewModelFactory;
-    }
-
-    public void TryAddEditVariableOptions(InstanceMember instanceMember, VariableSave variableSave, IStateContainer stateListCategoryContainer)
-    {
-        if (GetEditVariableMenuLabel(variableSave, stateListCategoryContainer) is { } label)
-        {
-            instanceMember.ContextMenuEvents.Add(label, (sender, e) =>
-            {
-                ShowEditVariableWindow(variableSave, stateListCategoryContainer);
-            });
-        }
     }
 
     /// <summary>

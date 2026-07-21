@@ -5,9 +5,9 @@ namespace Gum.Services;
 
 /// <summary>
 /// Determines how a variable can be edited and opens the corresponding editing UI. See
-/// <see cref="Gum.Services.EditVariableService"/> for the concrete implementation (tool project)
-/// and <c>IEditVariableMenuService</c> for the WpfDataUi-coupled counterpart that wires this into a
-/// variable row's context menu.
+/// <see cref="Gum.Services.EditVariableService"/> for the concrete implementation (tool project).
+/// <see cref="Gum.Plugins.InternalPlugins.VariableGrid.VariableGridEntry"/> wires this into a
+/// variable row's context menu via <c>GetEditVariableMenuLabel</c>/<c>ShowEditVariableWindow</c>.
 /// </summary>
 public interface IEditVariableService
 {

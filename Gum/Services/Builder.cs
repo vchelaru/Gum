@@ -186,7 +186,6 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IAnimationUndoProviderRegistrar>(provider => provider.GetRequiredService<AnimationUndoProviderRelay>());
         services.AddSingleton<EditVariableService>();
         services.AddSingleton<IEditVariableService>(provider => provider.GetRequiredService<EditVariableService>());
-        services.AddSingleton<IEditVariableMenuService>(provider => provider.GetRequiredService<EditVariableService>());
         services.AddSingleton<IDeleteVariableService, DeleteVariableService>();
         services.AddSingleton<IExposeVariableService, ExposeVariableService>();
         services.AddSingleton<IDragDropManager, DragDropManager>();
