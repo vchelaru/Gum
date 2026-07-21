@@ -234,6 +234,11 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   .InstanceMember` (a `net8.0-windows`/WPF-only library). Split the interface rather than block the
   whole move: the clean members go to `Gum.Presentation`, the WPF-typed one moves to a new
   tool-only sibling interface implemented by the same concrete class.
+- **The same split applies to a whole WPF-typed class, not just interfaces on already-headless
+  types.** `PluginTab` is blocked by its `Content: FrameworkElement` field, but consumers that only
+  call `.Show()`/`.Hide()` don't need the rest — narrow with a single-purpose interface
+  (`ITabVisibility`) the WPF-typed class implements alongside its existing members, same shape as
+  `ITabDockingCandidate`/`ITabAutoSelectCandidate`.
 - **A plugin's handler method can be WPF-free by type yet still unmovable, because it reads the
   plugin's own private fields rather than taking its dependencies as parameters.** Unlike a
   WPF-typed member (fixed by splitting an interface or relocating a type), this is fixed by pushing
