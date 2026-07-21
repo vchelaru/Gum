@@ -31,7 +31,7 @@
   Top="{Binding Top, Mode=TwoWay}"
   UseLayoutRounding="True"
   WindowStartupLocation="CenterScreen"
-  WindowState="{Binding WindowState, Mode=TwoWay}"
+  WindowState="{Binding WindowState, Mode=TwoWay, Converter={StaticResource GumWindowStateConverter}}"
   mc:Ignorable="d">
   <Border
     Background="{DynamicResource Frb.Brushes.Background}"
@@ -42,7 +42,7 @@
         <Setter Property="CornerRadius" Value="8" />
         <Setter Property="BorderThickness" Value="1" />
         <Style.Triggers>
-          <DataTrigger Binding="{Binding WindowState}" Value="{x:Static WindowState.Maximized}">
+          <DataTrigger Binding="{Binding IsMaximized}" Value="True">
             <Setter Property="CornerRadius" Value="0" />
             <Setter Property="BorderThickness" Value="0" />
           </DataTrigger>
@@ -125,7 +125,7 @@
                         </Setter.Value>
                       </Setter>
                       <Style.Triggers>
-                        <DataTrigger Binding="{Binding WindowState}" Value="{x:Static WindowState.Maximized}">
+                        <DataTrigger Binding="{Binding IsMaximized}" Value="True">
                           <Setter Property="Content">
                             <Setter.Value>
                               <materialDesign:PackIcon Height="16" Kind="WindowRestore" />
@@ -157,7 +157,7 @@
                   <Style TargetType="Grid">
                     <Setter Property="Visibility" Value="Visible" />
                     <Style.Triggers>
-                      <DataTrigger Binding="{Binding WindowState}" Value="{x:Static WindowState.Maximized}">
+                      <DataTrigger Binding="{Binding IsMaximized}" Value="True">
                         <Setter Property="Visibility" Value="Collapsed" />
                       </DataTrigger>
                     </Style.Triggers>

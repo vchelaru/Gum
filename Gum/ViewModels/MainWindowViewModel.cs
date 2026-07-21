@@ -5,12 +5,10 @@ using Gum.Mvvm;
 using Gum.Properties;
 using Gum.Settings;
 using System;
-using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Media;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using Window = System.Windows.Window;
 
 namespace Gum.ViewModels;
@@ -56,11 +54,18 @@ public class MainWindowViewModel : ViewModel, IRecipient<ThemeChangedMessage>, I
         set => Set(value);
     }
 
-    public WindowState WindowState
+    public GumWindowState WindowState
     {
-        get => Get<WindowState>();
+        get => Get<GumWindowState>();
         set => Set(value);
     }
+
+    /// <summary>
+    /// Pure boolean projection of <see cref="WindowState"/> for XAML DataTriggers, so the view
+    /// doesn't need to reference <see cref="GumWindowState"/> directly (ADR-0004).
+    /// </summary>
+    [DependsOn(nameof(WindowState))]
+    public bool IsMaximized => WindowState == GumWindowState.Maximized;
 
     public MainWindowViewModel(MainPanelViewModel mainPanelViewModel, IMessenger messenger, IWritableOptions<LayoutSettings> layoutSettings)
     {
@@ -74,14 +79,11 @@ public class MainWindowViewModel : ViewModel, IRecipient<ThemeChangedMessage>, I
     // and, we need to ensure ProjectManager.GeneralSettings has been loaded and migrated first.
     public void LoadWindowSettings(WindowSettings settings)
     {
-        
-        if (settings is { Left: null, Top: null } or {Width: 0} or {Height: 0})
+        if (WindowSettingsLogic.IsFirstLaunch(settings))
         {
-            // nulls should imply this is the first launch -- let wpf center the window
-            // width or height 0 is invalid (how'd that happen?), so also just return
+            // let wpf center the window
             return;
         }
-
 
         Rectangle constrained = // monitor setup may have changed since last run
             WindowPlacementHelper.ConstrainIntoWorkingArea(new Rectangle((int)settings.Left!.Value, (int)settings.Top!.Value,
@@ -92,7 +94,7 @@ public class MainWindowViewModel : ViewModel, IRecipient<ThemeChangedMessage>, I
         Width = constrained.Width;
         Height = constrained.Height;
 
-        WindowState = settings.IsMaximized ? WindowState.Maximized : WindowState.Normal;
+        WindowState = settings.IsMaximized ? GumWindowState.Maximized : GumWindowState.Normal;
     }
 
     void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
@@ -111,7 +113,7 @@ public class MainWindowViewModel : ViewModel, IRecipient<ThemeChangedMessage>, I
                 Top = this.Top,
                 Width = this.Width ?? 0,
                 Height = this.Height ?? 0,
-                IsMaximized = this.WindowState == WindowState.Maximized
+                IsMaximized = this.WindowState == GumWindowState.Maximized
             };
         });
     }
