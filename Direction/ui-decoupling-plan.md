@@ -23,9 +23,11 @@ counts: **could an Avalonia UI be built today, reusing the same libraries/servic
 proxies can be wrong: a phase can close honestly against its own stated scope while the tool's
 highest-value, most-interacted-with logic sits untouched, because that scope was drawn too narrowly
 relative to the real question. (Concretely: Phase 3 closing "done" was true to its own defined
-ViewModel list, but `ElementTreeViewManager` and the entire wireframe-canvas editing subsystem —
-selection, camera, move/resize/rotate/polygon-point handling — were never in that list, and remain
-fully WinForms/WPF-coupled today.)
+ViewModel list, but `ElementTreeViewManager` and the wireframe-canvas editing subsystem — selection,
+camera, move/resize/rotate/polygon-point handling — were never in that list. Their business logic
+has since moved to `Gum.Presentation`; what legitimately remains WinForms/WPF-coupled is the View
+layer itself — `MultiSelectTreeView` and `WireframeControl` — which is expected, not a gap. See the
+scope boundary below.)
 
 Apply the test by evaluating, not by trusting a closure comment: pick a core interaction surface and
 check concretely whether its code lives in `Gum.Presentation` (or another WPF/WinForms-free
@@ -36,11 +38,11 @@ be built on the shared libraries as they exist, not until the phases run out.
 
 **Scope boundary: the test targets business logic, not a control's own interactive mechanics.**
 Multi-select tracking, drag-and-drop, and owner-draw rendering built directly against one framework's
-widget APIs (e.g. `MultiSelectTreeView`'s WinForms `TreeView` internals) don't get pre-extracted or
-"shrunk" toward a hypothetical future framework — that produces an abstraction shaped by guesswork,
-not by the framework actually chosen. Defer this class of work entirely until a framework decision is
-real (ADR-0003's measured prototype), then design and build it fresh against that framework's actual
-paradigms.
+widget APIs — `MultiSelectTreeView`'s WinForms `TreeView` internals, `WireframeControl`'s WPF-hosted
+render-surface embedding — don't get pre-extracted or "shrunk" toward a hypothetical future framework;
+that produces an abstraction shaped by guesswork, not by the framework actually chosen. Defer this
+class of work entirely until a framework decision is real (ADR-0003's measured prototype), then design
+and build it fresh against that framework's actual paradigms.
 
 ## Where the tool actually is today (grounding)
 
@@ -106,6 +108,14 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   free; one injecting a still-WPF/WinForms-coupled interface can't move until that interface is
   cleaned or relocated too. Re-check the current state of each dependency — a past note's "this
   interface is blocked" claim can go stale as unrelated PRs clean things up.
+- **An `#if GUM` (or similar tool-only compile constant) guard silently flips from always-true to
+  always-false when its class moves into `Gum.Presentation`**, which never defines that constant —
+  a real behavior regression the build won't catch. Make the guarded code unconditional instead of
+  moving it as-is.
+- **A file excluded from `Gum.csproj` may already be linked into `GumCommon.csproj` instead of
+  `Gum.Presentation.csproj`** — `GumCommon` predates ADR-0005 and has its own separate `<Compile
+  Include>` link list. Check both project files (and grep for real call sites already reaching the
+  class from `Tools/Gum.Presentation/`) before concluding a file needs relocating at all.
 - **A class can look fully relocatable by its injected fields while an extension-method call site
   still resolves to a `Locator`-based static.** Grep the whole class for receiver-less-looking calls
   (`x.SomeMethod()` with no visible owning type) in addition to its constructor dependencies — an
