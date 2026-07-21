@@ -443,7 +443,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
             {
                 // copy from the original location here
                 var source = gumDirectory.Original + reference.Link;
-                var destination = gumDirectory.Original + reference.Subfolder + "\\" + reference.Name + "." + reference.Extension;
+                var destination = gumDirectory.Original + reference.Subfolder + "/" + reference.Name + "." + reference.Extension;
 
                 try
                 {
@@ -597,17 +597,17 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
                         foreach (var screenSave in GumProjectSave.Screens)
                         {
                             _pluginManager.BeforeSavingElementSave(screenSave);
-                            _fileWatchManager.Value.IgnoreNextChangeUntil(screenSave.GetFullPathXmlFile());
+                            _fileWatchManager.Value.IgnoreNextChangeUntil(_fileCommands.Value.GetFullPathXmlFile(screenSave, screenSave.Name));
                         }
                         foreach (var componentSave in GumProjectSave.Components)
                         {
                             _pluginManager.BeforeSavingElementSave(componentSave);
-                            _fileWatchManager.Value.IgnoreNextChangeUntil(componentSave.GetFullPathXmlFile());
+                            _fileWatchManager.Value.IgnoreNextChangeUntil(_fileCommands.Value.GetFullPathXmlFile(componentSave, componentSave.Name));
                         }
                         foreach (var standardElementSave in GumProjectSave.StandardElements)
                         {
                             _pluginManager.BeforeSavingElementSave(standardElementSave);
-                            _fileWatchManager.Value.IgnoreNextChangeUntil(standardElementSave.GetFullPathXmlFile());
+                            _fileWatchManager.Value.IgnoreNextChangeUntil(_fileCommands.Value.GetFullPathXmlFile(standardElementSave, standardElementSave.Name));
                         }
                     }
 
