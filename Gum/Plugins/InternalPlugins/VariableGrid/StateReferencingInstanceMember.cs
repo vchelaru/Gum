@@ -187,12 +187,25 @@ public class StateReferencingInstanceMember : InstanceMember
             typeManager,
             clipboardService);
 
-        if (isReadOnly)
-        {
-            // don't assign it (can't null it)
-            //this.CustomSetEvent = null;
-        }
-        else
+        Initialize();
+    }
+
+    /// <summary>
+    /// Wraps an already-built <see cref="VariableGridEntry"/> - used by
+    /// <c>PropertyGridManager.ToWpf</c> to materialize a headless <see cref="Gum.Plugins.InternalPlugins.VariableGrid.VariableCategoryDescriptor"/>
+    /// (built by the relocated <c>ElementSaveDisplayer</c>) into the real WPF row the live grid needs.
+    /// </summary>
+    public StateReferencingInstanceMember(VariableGridEntry entry) :
+        base(entry.Name, entry.StateSave)
+    {
+        _entry = entry;
+
+        Initialize();
+    }
+
+    private void Initialize()
+    {
+        if (!_entry.IsReadOnly)
         {
             this.CustomSetPropertyEvent += HandleCustomSet;
             this.SetToDefault += HandleSetToDefault;
@@ -211,6 +224,21 @@ public class StateReferencingInstanceMember : InstanceMember
         foreach (var kvp in _entry.PropertiesToSetOnDisplayer)
         {
             this.PropertiesToSetOnDisplayer[kvp.Key] = kvp.Value;
+        }
+
+        // Generic hook for a headless caller (e.g. ElementSaveDisplayer's XUnits/YUnits subtext) that
+        // needs DetailText to live-update as the value changes - something only the WPF-bound Value
+        // property change notification (below) can observe.
+        if (_entry.RecomputeDetailTextOnValueChanged != null)
+        {
+            this.PropertyChanged += (sender, args) =>
+            {
+                if (args.PropertyName == "Value")
+                {
+                    _entry.RecomputeDetailTextOnValueChanged();
+                    this.DetailText = _entry.DetailText;
+                }
+            };
         }
 
         PopulateContextMenu();

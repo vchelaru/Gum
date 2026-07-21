@@ -143,6 +143,38 @@ public class VariableGridEntryTests : BaseTestClass
     }
 
     [Fact]
+    public void PreferredDisplayerKind_ShouldReturnKindOverride_WhenSet()
+    {
+        // ElementSaveDisplayer (headless) can't reference a concrete WpfDataUi control Type, so it
+        // forces a displayer kind directly (e.g. defaulting variable lists to ListBox) rather than
+        // going through PreferredDisplayerOverride's raw Type.
+        ComponentSave component = CreateComponent("MyComponent");
+        VariableGridEntry sut = CreateSut("X", component.DefaultState, component);
+
+        sut.PreferredDisplayerKind.ShouldBe(VariableDisplayerKind.Default);
+
+        sut.PreferredDisplayerKindOverride = VariableDisplayerKind.ListBox;
+
+        sut.PreferredDisplayerKind.ShouldBe(VariableDisplayerKind.ListBox);
+    }
+
+    [Fact]
+    public void RecomputeDetailTextOnValueChanged_ShouldUpdateDetailText_WhenInvoked()
+    {
+        // Mirrors the WPF adapter's usage: a headless caller (ElementSaveDisplayer's XUnits/YUnits
+        // subtext) stores a recompute delegate here; the adapter invokes it and re-reads DetailText
+        // whenever its own "Value" change notification fires.
+        ComponentSave component = CreateComponent("MyComponent");
+        VariableGridEntry sut = CreateSut("X", component.DefaultState, component);
+        sut.DetailText = "initial";
+
+        sut.RecomputeDetailTextOnValueChanged = () => sut.DetailText = "recomputed";
+        sut.RecomputeDetailTextOnValueChanged();
+
+        sut.DetailText.ShouldBe("recomputed");
+    }
+
+    [Fact]
     public void SetValue_ShouldStoreLastOldFullCommitValue_WhenCommitTypeIsFull()
     {
         ComponentSave component = CreateComponent("MyComponent");

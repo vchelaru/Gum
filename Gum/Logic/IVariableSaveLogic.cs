@@ -1,5 +1,6 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using System.ComponentModel;
 
 namespace Gum.Logic;
 
@@ -22,4 +23,13 @@ public interface IVariableSaveLogic
     /// Returns whether a variable is hidden from instances of the given element, walking the inheritance chain.
     /// </summary>
     bool IsVariableHiddenForInstance(string variableName, InstanceSave instance);
+
+    /// <summary>
+    /// Returns the <see cref="TypeConverter"/> that should be used to edit/display the given variable
+    /// in the Variables tab (classified by file/font/guide/state/animation-chain/exposed-variable, or
+    /// ultimately its runtime type). Narrow seam over <c>VariableSaveExtensionMethodsGumTool.GetTypeConverter</c>
+    /// (Locator-resolving, tool-only) so headless callers (e.g. the relocated <c>ElementSaveDisplayer</c>)
+    /// don't need to reference it directly.
+    /// </summary>
+    TypeConverter GetTypeConverter(VariableSave defaultVariable, ElementSave? container);
 }

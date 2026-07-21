@@ -1,21 +1,22 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WpfDataUi.DataTypes;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 
+/// <summary>
+/// Relocated from Gum.csproj (ADR-0005 Phase 3, part of #3860): sorts categories into a fixed
+/// display order and assigns each a header color. Headless since the color is stored as a hex
+/// string on <see cref="VariableCategoryDescriptor"/> rather than a WPF <c>Brush</c> - the WPF
+/// mapper (<c>PropertyGridManager.ToWpf</c>) converts the hex string via <c>BrushConverter</c>
+/// when materializing the real <c>MemberCategory</c>.
+/// </summary>
 public class CategorySortAndColorLogic
 {
     record CategoryColor
     {
         public string Name;
         public string Color;
-
     }
-
 
     const string alphaHex = "20";
 
@@ -39,7 +40,7 @@ public class CategorySortAndColorLogic
         new CategoryColor { Name = "References", Color = $"#{alphaHex}90FF00" }, // yellow-green
     };
 
-    public List<MemberCategory> SortAndColorCategories(List<MemberCategory> categories)
+    public List<VariableCategoryDescriptor> SortAndColorCategories(List<VariableCategoryDescriptor> categories)
     {
         int GetDesiredIndex(string category)
         {
@@ -71,8 +72,7 @@ public class CategorySortAndColorLogic
             var foundColor = OrderedCategories.FirstOrDefault(item => item.Name == category.Name);
             if (foundColor != default)
             {
-                category.HeaderColor =
-                    (System.Windows.Media.Brush)(new System.Windows.Media.BrushConverter().ConvertFrom(foundColor.Color)!);
+                category.HeaderColorHex = foundColor.Color;
             }
         }
 

@@ -125,6 +125,14 @@ public class VariableGridEntry
     /// <summary>Named property overrides a view-side displayer should reflectively apply after creating its control (e.g. "IsEditable").</summary>
     public Dictionary<string, object> PropertiesToSetOnDisplayer { get; } = new();
 
+    /// <summary>
+    /// Optional hook a headless caller can set so a live "Value changed" notification recomputes
+    /// <see cref="DetailText"/> (e.g. the XUnits/YUnits parent-sizing hint, which depends on the
+    /// current value rather than only on construction-time state). Consumed generically by the WPF
+    /// adapter, which re-reads <see cref="DetailText"/> after invoking this.
+    /// </summary>
+    public Action? RecomputeDetailTextOnValueChanged { get; set; }
+
     /// <summary>Whether this row should reject edits (a locked instance's other variables, or a descriptor-read-only variable).</summary>
     public bool IsReadOnly
     {
@@ -164,10 +172,23 @@ public class VariableGridEntry
     /// </summary>
     public Type? PreferredDisplayerOverride { get; set; }
 
+    /// <summary>
+    /// Explicit kind a headless caller can force when it wants a specific displayer but has no
+    /// concrete WPF control <see cref="Type"/> to reference directly (e.g. <c>ElementSaveDisplayer</c>'s
+    /// variable-list default of "ListBox"). Checked before the <see cref="PreferredDisplayerOverride"/>/
+    /// <see cref="CustomOptions"/>-derived classification below.
+    /// </summary>
+    public VariableDisplayerKind? PreferredDisplayerKindOverride { get; set; }
+
     public VariableDisplayerKind PreferredDisplayerKind
     {
         get
         {
+            if (PreferredDisplayerKindOverride != null)
+            {
+                return PreferredDisplayerKindOverride.Value;
+            }
+
             bool shouldBeComboBox = false;
             // we want to still give priority to the base displayer since
             // we may want to replace combo boxes with something like toggles:

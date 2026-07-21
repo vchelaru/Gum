@@ -1,18 +1,21 @@
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers;
 using Gum.Services;
 using Gum.ToolStates;
+using Gum.Undo;
+using Gum.Wireframe;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Moq.AutoMock;
 using Shouldly;
 using System.Reflection;
-using WpfDataUi.DataTypes;
 
 namespace GumToolUnitTests.PropertyGridHelpers;
 
@@ -95,6 +98,13 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
             .Setup(x => x.GetAttributesFor(It.IsAny<VariableSave>()))
             .Returns(new List<Attribute>());
 
+        // ElementSaveDisplayer constructor-injects IProjectState directly (AvailableBaseTypeConverter's
+        // dependency, once resolved via Locator<IProjectManager>) - keep it in sync with the same
+        // project the Locator-registered IProjectManager mock above returns.
+        _mocker.GetMock<IProjectState>()
+            .Setup(x => x.GumProjectSave)
+            .Returns(_project);
+
         _displayer = _mocker.CreateInstance<ElementSaveDisplayer>();
     }
 
@@ -108,10 +118,44 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
         base.Dispose();
     }
 
+    /// <summary>
+    /// Builds a standalone <see cref="VariableGridEntry"/> with the same mocked dependency closure
+    /// the displayer itself is constructed with, for tests that need to simulate a pre-existing row
+    /// (e.g. one already placed in a category before <c>AddBehaviorFormsPropertyMembers</c> runs).
+    /// </summary>
+    private VariableGridEntry CreateBareEntry(string variableName, InstanceSave? instanceSave, IStateContainer stateListCategoryContainer)
+    {
+        return new VariableGridEntry(
+            attributes: null,
+            converter: null,
+            componentType: typeof(string),
+            isReadOnly: false,
+            isAssignedByReference: false,
+            isVariable: true,
+            stateSave: _screenDefaultState,
+            stateSaveCategory: null,
+            variableName: variableName,
+            instanceSave: instanceSave,
+            stateListCategoryContainer: stateListCategoryContainer,
+            selectedState: _mocker.GetMock<ISelectedState>().Object,
+            undoManager: _mocker.GetMock<IUndoManager>().Object,
+            guiCommands: _mocker.GetMock<IGuiCommands>().Object,
+            fileCommands: _mocker.GetMock<IFileCommands>().Object,
+            setVariableLogic: _mocker.GetMock<ISetVariableLogic>().Object,
+            wireframeObjectManager: _mocker.GetMock<IWireframeObjectManager>().Object,
+            pluginManager: _mocker.GetMock<IPluginManager>().Object,
+            hotkeyManager: _mocker.GetMock<IHotkeyManager>().Object,
+            deleteVariableService: _mocker.GetMock<IDeleteVariableService>().Object,
+            exposeVariableService: _mocker.GetMock<IExposeVariableService>().Object,
+            editVariableService: _mocker.GetMock<IEditVariableService>().Object,
+            typeManager: _mocker.Get<Gum.Reflection.TypeManager>(),
+            clipboardService: _mocker.GetMock<IClipboardService>().Object);
+    }
+
     [Fact]
     public void AddBehaviorFormsPropertyMembers_InstanceContext_AddsQualifiedToolTipMember()
     {
-        List<MemberCategory> categories = new List<MemberCategory>();
+        List<VariableCategoryDescriptor> categories = new List<VariableCategoryDescriptor>();
 
         _displayer.AddBehaviorFormsPropertyMembers(
             elementWithBehaviors: _buttonComponent,
@@ -130,7 +174,7 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
     [Fact]
     public void AddBehaviorFormsPropertyMembers_ComponentContext_AddsUnqualifiedToolTipMember()
     {
-        List<MemberCategory> categories = new List<MemberCategory>();
+        List<VariableCategoryDescriptor> categories = new List<VariableCategoryDescriptor>();
 
         _displayer.AddBehaviorFormsPropertyMembers(
             elementWithBehaviors: _buttonComponent,
@@ -164,7 +208,7 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
         _project.Behaviors.Add(behaviorWithDefault);
         _project.Components.Add(component);
 
-        List<MemberCategory> categories = new List<MemberCategory>();
+        List<VariableCategoryDescriptor> categories = new List<VariableCategoryDescriptor>();
 
         _displayer.AddBehaviorFormsPropertyMembers(
             elementWithBehaviors: component,
@@ -174,11 +218,11 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
             stateSaveCategory: null,
             categories: categories);
 
-        MemberCategory? behaviorCategory = categories.FirstOrDefault(c => c.Name == "Behavior");
+        VariableCategoryDescriptor? behaviorCategory = categories.FirstOrDefault(c => c.Name == "Behavior");
         behaviorCategory.ShouldNotBeNull();
-        InstanceMember? isEnabledMember = behaviorCategory.Members.FirstOrDefault(m => m.Name == "IsEnabled");
+        VariableGridEntry? isEnabledMember = behaviorCategory.Members.FirstOrDefault(m => m.Name == "IsEnabled");
         isEnabledMember.ShouldNotBeNull();
-        isEnabledMember.Value.ShouldBe(true,
+        isEnabledMember.GetValue(isEnabledMember.Instance!).ShouldBe(true,
             "with no value authored on state, the variable grid should display the behavior's declared FormsProperty default");
     }
 
@@ -201,7 +245,7 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
         _project.Components.Add(bogusComponent);
         _project.Behaviors.Add(bogusBehavior);
 
-        List<MemberCategory> categories = new List<MemberCategory>();
+        List<VariableCategoryDescriptor> categories = new List<VariableCategoryDescriptor>();
 
         Should.NotThrow(() =>
             _displayer.AddBehaviorFormsPropertyMembers(
@@ -239,7 +283,7 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
         _project.Behaviors.Add(describedBehavior);
         _project.Components.Add(component);
 
-        List<MemberCategory> categories = new List<MemberCategory>();
+        List<VariableCategoryDescriptor> categories = new List<VariableCategoryDescriptor>();
 
         _displayer.AddBehaviorFormsPropertyMembers(
             elementWithBehaviors: component,
@@ -249,9 +293,9 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
             stateSaveCategory: null,
             categories: categories);
 
-        MemberCategory? behaviorCategory = categories.FirstOrDefault(c => c.Name == "Behavior");
+        VariableCategoryDescriptor? behaviorCategory = categories.FirstOrDefault(c => c.Name == "Behavior");
         behaviorCategory.ShouldNotBeNull();
-        InstanceMember? acceptsReturnMember = behaviorCategory.Members.FirstOrDefault(m => m.Name == "AcceptsReturn");
+        VariableGridEntry? acceptsReturnMember = behaviorCategory.Members.FirstOrDefault(m => m.Name == "AcceptsReturn");
         acceptsReturnMember.ShouldNotBeNull();
         acceptsReturnMember.DetailText.ShouldBe("If true, pressing Enter inserts a newline.");
     }
@@ -262,13 +306,10 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
         // Simulates the case where the component has set a default value for the
         // FormsProperty: the standard properties path adds the variable under
         // "General" first; the helper must reclaim it into "Behavior".
-        var generalCategory = new MemberCategory("General");
-        var existingMember = new WpfDataUi.DataTypes.InstanceMember
-        {
-            Name = "ButtonInstance.ToolTip"
-        };
+        var generalCategory = new VariableCategoryDescriptor("General");
+        var existingMember = CreateBareEntry("ButtonInstance.ToolTip", _buttonInstance, _screen);
         generalCategory.Members.Add(existingMember);
-        List<MemberCategory> categories = new List<MemberCategory> { generalCategory };
+        List<VariableCategoryDescriptor> categories = new List<VariableCategoryDescriptor> { generalCategory };
 
         _displayer.AddBehaviorFormsPropertyMembers(
             elementWithBehaviors: _buttonComponent,
@@ -290,7 +331,7 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
     [Fact]
     public void AddBehaviorFormsPropertyMembers_EnumTypedFormsProperty_ResolvesEnumComponentType()
     {
-        // The variable grid renders an enum picker only when the SRIM's PropertyType
+        // The variable grid renders an enum picker only when the entry's value type
         // (sourced from TypeManager.GetTypeFromString on the FormsProperty's Type
         // string) is the actual enum. Regression for the v4 enum-typed FormsProperty
         // path: TypeManager must find Gum.Forms.Controls.ScrollBarVisibility (now
@@ -313,7 +354,7 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
         _project.Behaviors.Add(scrollViewerBehavior);
         _project.Components.Add(scrollViewerComponent);
 
-        List<MemberCategory> categories = new List<MemberCategory>();
+        List<VariableCategoryDescriptor> categories = new List<VariableCategoryDescriptor>();
 
         _displayer.AddBehaviorFormsPropertyMembers(
             elementWithBehaviors: scrollViewerComponent,
@@ -323,11 +364,11 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
             stateSaveCategory: null,
             categories: categories);
 
-        MemberCategory? behaviorCategory = categories.FirstOrDefault(c => c.Name == "Behavior");
+        VariableCategoryDescriptor? behaviorCategory = categories.FirstOrDefault(c => c.Name == "Behavior");
         behaviorCategory.ShouldNotBeNull();
-        InstanceMember? member = behaviorCategory.Members.FirstOrDefault(m => m.Name == "VerticalScrollBarVisibility");
+        VariableGridEntry? member = behaviorCategory.Members.FirstOrDefault(m => m.Name == "VerticalScrollBarVisibility");
         member.ShouldNotBeNull();
-        member.PropertyType.ShouldBe(typeof(Gum.Forms.Controls.ScrollBarVisibility));
+        member.GetValueType(member.Instance!).ShouldBe(typeof(Gum.Forms.Controls.ScrollBarVisibility));
     }
 
     [Fact]
@@ -343,12 +384,9 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
             Value = "InnerContainer"
         });
 
-        List<MemberCategory> categories = new List<MemberCategory>();
-
-        _displayer.GetCategories(
+        var categories = _displayer.GetCategories(
             instanceOwner: _screen,
             instance: _buttonInstance,
-            categories: categories,
             stateSave: _screenDefaultState,
             stateSaveCategory: null);
 
@@ -397,12 +435,9 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
             SetsValue = true
         });
 
-        List<MemberCategory> categories = new List<MemberCategory>();
-
-        _displayer.GetCategories(
+        var categories = _displayer.GetCategories(
             instanceOwner: _screen,
             instance: _buttonInstance,
-            categories: categories,
             stateSave: _screenDefaultState,
             stateSaveCategory: null);
 
@@ -441,12 +476,9 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
             SetsValue = true
         });
 
-        List<MemberCategory> categories = new List<MemberCategory>();
-
-        _displayer.GetCategories(
+        var categories = _displayer.GetCategories(
             instanceOwner: _screen,
             instance: _buttonInstance,
-            categories: categories,
             stateSave: _screenDefaultState,
             stateSaveCategory: null);
 
@@ -506,12 +538,9 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
             SetsValue = true
         });
 
-        List<MemberCategory> categories = new List<MemberCategory>();
-
-        _displayer.GetCategories(
+        var categories = _displayer.GetCategories(
             instanceOwner: _screen,
             instance: fancyInstance,
-            categories: categories,
             stateSave: _screenDefaultState,
             stateSaveCategory: null);
 
@@ -526,7 +555,7 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
         // FormsProperty Type="Foo?" must resolve to typeof(Foo?) so the variable grid
         // renders an enum picker (with a "None" option) instead of falling back to a
         // string textbox. Without nullable-enum support in TypeManager.GetTypeFromString,
-        // the SRIM's PropertyType is null and the grid uses a generic editor — that's
+        // the entry's value type is null and the grid uses a generic editor — that's
         // the bug for Splitter.ResizeBehavior? and ItemsControl/ListBox.Orientation?.
         BehaviorSave splitterBehavior = new BehaviorSave { Name = "SplitterBehavior" };
         splitterBehavior.FormsProperties.Add(new VariableSave
@@ -545,7 +574,7 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
         _project.Behaviors.Add(splitterBehavior);
         _project.Components.Add(splitterComponent);
 
-        List<MemberCategory> categories = new List<MemberCategory>();
+        List<VariableCategoryDescriptor> categories = new List<VariableCategoryDescriptor>();
 
         _displayer.AddBehaviorFormsPropertyMembers(
             elementWithBehaviors: splitterComponent,
@@ -555,10 +584,10 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
             stateSaveCategory: null,
             categories: categories);
 
-        MemberCategory? behaviorCategory = categories.FirstOrDefault(c => c.Name == "Behavior");
+        VariableCategoryDescriptor? behaviorCategory = categories.FirstOrDefault(c => c.Name == "Behavior");
         behaviorCategory.ShouldNotBeNull();
-        InstanceMember? member = behaviorCategory.Members.FirstOrDefault(m => m.Name == "ResizeBehavior");
+        VariableGridEntry? member = behaviorCategory.Members.FirstOrDefault(m => m.Name == "ResizeBehavior");
         member.ShouldNotBeNull();
-        member.PropertyType.ShouldBe(typeof(Gum.Forms.Controls.ResizeBehavior?));
+        member.GetValueType(member.Instance!).ShouldBe(typeof(Gum.Forms.Controls.ResizeBehavior?));
     }
 }
