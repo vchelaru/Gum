@@ -11,5 +11,9 @@ public enum VariableDisplayerKind
     ComboBox,
     FileSelection,
     ListBox,
-    MultiLineTextBox
+    MultiLineTextBox,
+    /// <summary>A button that removes the row's underlying variable rather than editing a value
+    /// (the category "common members" remove-from-category row). Maps to the WPF-side
+    /// <c>VariableRemoveButton</c> control.</summary>
+    RemoveButton
 }
