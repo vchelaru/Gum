@@ -178,7 +178,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             _fileCommands,
             _setVariableLogic,
             _wireframeObjectManager,
-            _clipboardService);
+            _clipboardService,
+            _projectState);
 
         mainControl = new Gum.MainPropertyGrid();
 
@@ -711,8 +712,6 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
     private List<MemberCategory> GetMemberCategories(BehaviorSave behavior, InstanceSave instance)
     {
-        List<MemberCategory> categories = new List<MemberCategory>();
-
         mLastElement = null;
         mLastState = null;
         mLastInstanceSaves.Clear();
@@ -722,9 +721,9 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         }
         mLastCategory = null;
 
-        mPropertyGridDisplayer.GetCategories(behavior, instance, categories);
+        var descriptors = mPropertyGridDisplayer.GetCategories(behavior, instance);
 
-        return categories;
+        return ToWpf(descriptors);
     }
 
     private List<MemberCategory> GetMemberCategories(ElementSave instanceOwner, StateSave state, StateSaveCategory? stateCategory, InstanceSave instance)
@@ -743,7 +742,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         var stateSave = _selectedState.SelectedStateSave;
         if (stateSave != null)
         {
-            GetMemberCategoriesForState(instanceOwner, instance, ref categories, stateSave, stateCategory);
+            categories = GetMemberCategoriesForState(instanceOwner, instance, stateSave, stateCategory);
         }
         else if(stateCategory != null)
         {
@@ -753,10 +752,38 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
     }
 
-    private void GetMemberCategoriesForState(ElementSave instanceOwner, InstanceSave instance, ref List<MemberCategory> categories, StateSave stateSave, StateSaveCategory stateSaveCategory)
+    /// <summary>
+    /// Materializes headless <see cref="VariableCategoryDescriptor"/>s (built by the relocated,
+    /// WPF-free <see cref="ElementSaveDisplayer"/>) into the real WPF <see cref="MemberCategory"/>/
+    /// <see cref="StateReferencingInstanceMember"/> rows the live grid needs. See ADR-0005 and the
+    /// "ui-decoupling-plan.md" known-gotchas list.
+    /// </summary>
+    private List<MemberCategory> ToWpf(List<VariableCategoryDescriptor> descriptors)
     {
-        categories.Clear();
-        categories = mPropertyGridDisplayer.GetCategories(instanceOwner, instance, categories, stateSave, stateSaveCategory);
+        var categories = new List<MemberCategory>();
+        foreach (var descriptor in descriptors)
+        {
+            var category = new MemberCategory(descriptor.Name);
+            if (!string.IsNullOrEmpty(descriptor.HeaderColorHex))
+            {
+                category.HeaderColor =
+                    (System.Windows.Media.Brush)(new System.Windows.Media.BrushConverter().ConvertFrom(descriptor.HeaderColorHex)!);
+            }
+
+            foreach (var entry in descriptor.Members)
+            {
+                category.Members.Add(new StateReferencingInstanceMember(entry));
+            }
+
+            categories.Add(category);
+        }
+        return categories;
+    }
+
+    private List<MemberCategory> GetMemberCategoriesForState(ElementSave instanceOwner, InstanceSave instance, StateSave stateSave, StateSaveCategory stateSaveCategory)
+    {
+        var descriptors = mPropertyGridDisplayer.GetCategories(instanceOwner, instance, stateSave, stateSaveCategory);
+        var categories = ToWpf(descriptors);
 
         foreach (var category in categories)
         {
@@ -770,6 +797,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         }
 
         CustomizeVariables(categories, stateSave, instanceOwner, instance);
+
+        return categories;
     }
 
     private void CustomizeVariables(List<MemberCategory> categories, StateSave stateSave, ElementSave element, InstanceSave instance)

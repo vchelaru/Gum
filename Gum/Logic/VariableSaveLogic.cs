@@ -296,4 +296,8 @@ public class VariableSaveLogic : IVariableSaveLogic
 
         return ObjectFinder.Self.IsVariableHiddenRecursively(instanceElement, variableName);
     }
+
+    /// <inheritdoc/>
+    public System.ComponentModel.TypeConverter GetTypeConverter(VariableSave defaultVariable, ElementSave? container) =>
+        defaultVariable.GetTypeConverter(container);
 }

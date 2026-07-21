@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.ComponentModel;
@@ -9,17 +9,15 @@ using Gum.Managers;
 using Gum.PropertyGridHelpers.Converters;
 using Gum.Plugins;
 using Gum.Logic;
-using WpfDataUi.DataTypes;
 using Gum.Wireframe;
-using WpfDataUi.Controls;
 using GumRuntime;
 using Gum.DataTypes.Behaviors;
 using Gum.Undo;
-using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
 using System.Collections;
 using Gum.Commands;
 using Gum.Reflection;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.PropertyGridHelpers;
 
@@ -32,10 +30,24 @@ public enum AmountToDisplay
 }
 #endregion
 
+/// <summary>
+/// Relocated from Gum.csproj into headless Gum.Presentation (ADR-0005 Phase 3, part of #3860):
+/// the category/row factory for the Variables tab. Returns <see cref="VariableCategoryDescriptor"/>
+/// (wrapping <see cref="VariableGridEntry"/>) instead of WpfDataUi's <c>MemberCategory</c>/
+/// <c>StateReferencingInstanceMember</c> - a WPF-side mapper (<c>PropertyGridManager.ToWpf</c>)
+/// materializes the real WPF types from these descriptors.
+/// </summary>
 public class ElementSaveDisplayer
 {
     #region Fields
-    static EditorAttribute mFileWindowAttribute = new EditorAttribute(typeof(System.Windows.Forms.Design.FileNameEditor), typeof(System.Drawing.Design.UITypeEditor));
+
+    // EditorAttribute's string constructor (rather than the Type-based one) avoids a compile-time
+    // reference to System.Windows.Forms.Design/System.Drawing.Design - both WinForms-only assemblies
+    // this headless project must never reference. VariableGridEntry.IsFile only ever compares
+    // EditorTypeName as a string (StartsWith), so the assembly-qualification isn't needed.
+    static EditorAttribute mFileWindowAttribute = new EditorAttribute(
+        "System.Windows.Forms.Design.FileNameEditor",
+        "System.Drawing.Design.UITypeEditor");
 
     private readonly SubtextLogic _subtextLogic;
     private readonly ISelectedState _selectedState;
@@ -54,6 +66,7 @@ public class ElementSaveDisplayer
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IClipboardService _clipboardService;
+    private readonly IProjectState _projectState;
     private readonly ShapeVariableVersionGate _shapeVariableVersionGate;
 
     #endregion
@@ -89,7 +102,8 @@ public class ElementSaveDisplayer
         IFileCommands fileCommands,
         ISetVariableLogic setVariableLogic,
         IWireframeObjectManager wireframeObjectManager,
-        IClipboardService clipboardService)
+        IClipboardService clipboardService,
+        IProjectState projectState)
     {
         _subtextLogic = subtextLogic;
         _selectedState = selectedState;
@@ -108,6 +122,7 @@ public class ElementSaveDisplayer
         _setVariableLogic = setVariableLogic;
         _wireframeObjectManager = wireframeObjectManager;
         _clipboardService = clipboardService;
+        _projectState = projectState;
         _shapeVariableVersionGate = new ShapeVariableVersionGate();
     }
 
@@ -258,7 +273,7 @@ public class ElementSaveDisplayer
                     .Where(item => !string.IsNullOrEmpty(item.ExposedAsName) && item.SourceObject == instanceSave.Name);
                 foreach (var variable in exposedVariablesOnThisInstance)
                 {
-                    var definingVariable = effectiveElementSave.GetVariableFromThisOrBase(variable.GetRootName()) ??
+                    var definingVariable = GetVariableFromThisOrBase(effectiveElementSave, variable.GetRootName()) ??
                         ObjectFinder.Self.GetRootVariable(variable.Name, instanceOwner);
                     if (definingVariable != null)
                     {
@@ -396,8 +411,10 @@ public class ElementSaveDisplayer
         return variablesSetThroughReference;
     }
 
-    public void GetCategories(BehaviorSave behavior, InstanceSave instance, List<MemberCategory> categories)
+    public List<VariableCategoryDescriptor> GetCategories(BehaviorSave behavior, InstanceSave instance)
     {
+        var categories = new List<VariableCategoryDescriptor>();
+
         if (instance != null)
         {
             var propertyList = new List<PropertyData>();
@@ -405,9 +422,9 @@ public class ElementSaveDisplayer
 
             foreach(var item in propertyList)
             {
-                var srim = CreateSrimFromPropertyData(null, instance, null, null, item);
+                var entry = CreateEntryFromPropertyData(null, instance, null, null, item);
 
-                if (srim == null)
+                if (entry == null)
                 {
                     continue;
                 }
@@ -417,20 +434,23 @@ public class ElementSaveDisplayer
 
                 if (categoryToAddTo == null)
                 {
-                    categoryToAddTo = new MemberCategory(category);
+                    categoryToAddTo = new VariableCategoryDescriptor(category);
                     categories.Add(categoryToAddTo);
                 }
 
-                categoryToAddTo.Members.Add(srim);
+                categoryToAddTo.Members.Add(entry);
             }
 
         }
 
+        return categories;
     }
 
 
-    public List<MemberCategory> GetCategories(ElementSave instanceOwner, InstanceSave instance, List<MemberCategory> categories, StateSave stateSave, StateSaveCategory stateSaveCategory)
+    public List<VariableCategoryDescriptor> GetCategories(ElementSave instanceOwner, InstanceSave instance, StateSave stateSave, StateSaveCategory stateSaveCategory)
     {
+        var categories = new List<VariableCategoryDescriptor>();
+
         var properties = GetProperties(instanceOwner, instance, stateSave);
 
         StateSave defaultState;
@@ -448,9 +468,9 @@ public class ElementSaveDisplayer
 
         foreach (var propertyData in properties)
         {
-            var srim = CreateSrimFromPropertyData(instanceOwner, instance, stateSave, stateSaveCategory, propertyData);
+            var entry = CreateEntryFromPropertyData(instanceOwner, instance, stateSave, stateSaveCategory, propertyData);
 
-            if(srim == null)
+            if(entry == null)
             {
                 continue;
             }
@@ -466,11 +486,11 @@ public class ElementSaveDisplayer
 
             if (categoryToAddTo == null)
             {
-                categoryToAddTo = new MemberCategory(category);
+                categoryToAddTo = new VariableCategoryDescriptor(category);
                 categories.Add(categoryToAddTo);
             }
 
-            categoryToAddTo.Members.Add(srim);
+            categoryToAddTo.Members.Add(entry);
 
         }
 
@@ -502,7 +522,7 @@ public class ElementSaveDisplayer
 
             if (shouldInclude)
             {
-                StateReferencingInstanceMember srim;
+                VariableGridEntry entry;
 
                 Type? type = null;
 
@@ -515,7 +535,7 @@ public class ElementSaveDisplayer
                     ? instance.Name + "." + variableList.Name
                     : variableList.Name;
 
-                srim = new StateReferencingInstanceMember(
+                entry = new VariableGridEntry(
                     null,
                     null,
                     type,
@@ -543,18 +563,19 @@ public class ElementSaveDisplayer
 
                 // moved to internal
                 //srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
-                // Only if it wasn't already set:
-                if(srim.PreferredDisplayer == null)
+                // Only if nothing else (a raw Type override, or the ComboBox/File classification)
+                // already implies a displayer:
+                if(entry.PreferredDisplayerKind == VariableDisplayerKind.Default)
                 {
-                    srim.PreferredDisplayer = typeof(ListBoxDisplay);
+                    entry.PreferredDisplayerKindOverride = VariableDisplayerKind.ListBox;
                 }
 
                 if (instance == null && instanceOwner.VariablesHiddenFromInstances?.Contains(variableList.Name) == true)
                 {
                     var hiddenText = "Hidden from instances";
-                    srim.DetailText = string.IsNullOrEmpty(srim.DetailText)
+                    entry.DetailText = string.IsNullOrEmpty(entry.DetailText)
                         ? hiddenText
-                        : srim.DetailText + "\n" + hiddenText;
+                        : entry.DetailText + "\n" + hiddenText;
                 }
 
                 string? category = variableList.Category;
@@ -563,11 +584,11 @@ public class ElementSaveDisplayer
 
                 if (categoryToAddTo == null)
                 {
-                    categoryToAddTo = new MemberCategory(category);
+                    categoryToAddTo = new VariableCategoryDescriptor(category);
                     categories.Add(categoryToAddTo);
                 }
 
-                categoryToAddTo.Members.Add(srim);
+                categoryToAddTo.Members.Add(entry);
             }
         }
 
@@ -584,7 +605,7 @@ public class ElementSaveDisplayer
         InstanceSave? instance,
         StateSave stateSave,
         StateSaveCategory? stateSaveCategory,
-        List<MemberCategory> categories)
+        List<VariableCategoryDescriptor> categories)
     {
         if (elementWithBehaviors?.Behaviors == null || elementWithBehaviors.Behaviors.Count == 0)
         {
@@ -598,7 +619,7 @@ public class ElementSaveDisplayer
         }
 
         const string categoryName = "Behavior";
-        MemberCategory? behaviorCategory = null;
+        VariableCategoryDescriptor? behaviorCategory = null;
 
         foreach (var behaviorRef in elementWithBehaviors.Behaviors)
         {
@@ -629,8 +650,8 @@ public class ElementSaveDisplayer
                 // on the component's default state — relocate it. The behavior owns the
                 // categorization for FormsProperties; preserving the existing member also
                 // keeps any DetailText, displayer hints, and converter wiring it accumulated.
-                InstanceMember? existing = null;
-                MemberCategory? sourceCategory = null;
+                VariableGridEntry? existing = null;
+                VariableCategoryDescriptor? sourceCategory = null;
                 foreach (var candidate in categories)
                 {
                     var match = candidate.Members.FirstOrDefault(m => m.Name == variableName);
@@ -647,7 +668,7 @@ public class ElementSaveDisplayer
                     behaviorCategory = categories.FirstOrDefault(c => c.Name == categoryName);
                     if (behaviorCategory == null)
                     {
-                        behaviorCategory = new MemberCategory(categoryName);
+                        behaviorCategory = new VariableCategoryDescriptor(categoryName);
                         categories.Add(behaviorCategory);
                     }
                 }
@@ -665,7 +686,7 @@ public class ElementSaveDisplayer
 
                 Type? type = _typeManager.GetTypeFromString(formsProperty.Type);
 
-                var srim = new StateReferencingInstanceMember(
+                var entry = new VariableGridEntry(
                     attributes: null,
                     converter: null,
                     componentType: type,
@@ -694,25 +715,25 @@ public class ElementSaveDisplayer
                 // Surface the behavior's declared default (FormsProperty.Value) so the grid
                 // reflects e.g. IsEnabled = true even before the user authors anything. The
                 // closure captures the FormsProperty so a future .behx edit (after reload)
-                // is picked up; the captured reference doesn't go stale because the SRIM
+                // is picked up; the captured reference doesn't go stale because the entry
                 // is rebuilt whenever the variable grid recomputes.
                 VariableSave declaration = formsProperty;
-                srim.DefaultValueFallback = () => declaration.Value;
+                entry.DefaultValueFallback = () => declaration.Value;
 
                 // Seed the row's display text from the FormsProperty's authored Description
                 // (persisted in the .behx). Later state-dependent hints set elsewhere via
-                // srim.DetailText can still overwrite or append to this seed.
+                // entry.DetailText can still overwrite or append to this seed.
                 if (!string.IsNullOrEmpty(formsProperty.Description))
                 {
-                    srim.DetailText = formsProperty.Description;
+                    entry.DetailText = formsProperty.Description;
                 }
 
-                behaviorCategory.Members.Add(srim);
+                behaviorCategory.Members.Add(entry);
             }
         }
     }
 
-    private StateReferencingInstanceMember CreateSrimFromPropertyData(ElementSave instanceOwner, InstanceSave instance,
+    private VariableGridEntry? CreateEntryFromPropertyData(ElementSave instanceOwner, InstanceSave instance,
         StateSave stateSave, StateSaveCategory stateSaveCategory, PropertyData propertyData)
     {
         // early continue
@@ -728,7 +749,7 @@ public class ElementSaveDisplayer
             ? instance.Name + "." + propertyData.OriginalName
             : propertyData.OriginalName;
 
-        var srim = new StateReferencingInstanceMember(
+        var entry = new VariableGridEntry(
             propertyData.Attributes,
             propertyData.Converter,
             propertyData.ComponentType,
@@ -758,43 +779,41 @@ public class ElementSaveDisplayer
         // Override the display name if specified in PropertyData
         if (!string.IsNullOrEmpty(propertyData.DisplayName))
         {
-            srim.DisplayName = propertyData.DisplayName;
+            entry.DisplayName = propertyData.DisplayName;
         }
 
-        srim.ToolTipText = propertyData.ToolTipText;
+        entry.ToolTipText = propertyData.ToolTipText;
 
         if (propertyData.PropertiesToSetOnDisplayer != null)
         {
             foreach (var kvp in propertyData.PropertiesToSetOnDisplayer)
             {
-                srim.PropertiesToSetOnDisplayer[kvp.Key] = kvp.Value;
+                entry.PropertiesToSetOnDisplayer[kvp.Key] = kvp.Value;
             }
         }
 
         // moved to internal
         //srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
-        SetSubtext(stateSave, propertyData.Subtext, srim, variableName);
+        SetSubtext(stateSave, propertyData.Subtext, entry, variableName);
 
         if(stateSave != null)
         {
             if (_subtextLogic.HasSubtextFunctionFor(stateSave, variableName))
             {
-                srim.PropertyChanged += (sender, args) =>
-                {
-                    if (args.PropertyName == "Value")
-                    {
-                        SetSubtext(stateSave, propertyData.Subtext, srim, variableName);
-                    }
-                };
+                // The grid rebuilds when the underlying Value changes, so a headless caller can't
+                // subscribe directly the way the old WPF-only InstanceMember.PropertyChanged did.
+                // The WPF adapter (StateReferencingInstanceMember) generically invokes this hook and
+                // re-reads DetailText whenever its own "Value" PropertyChanged fires.
+                entry.RecomputeDetailTextOnValueChanged = () => SetSubtext(stateSave, propertyData.Subtext, entry, variableName);
             }
         }
 
-        return srim;
+        return entry;
     }
 
-    private void SetSubtext(StateSave stateSave, string subtext, StateReferencingInstanceMember srim, string variableName)
+    private void SetSubtext(StateSave stateSave, string subtext, VariableGridEntry entry, string variableName)
     {
-        srim.DetailText = subtext;
+        entry.DetailText = subtext;
         string? extraDetail = null;
         if (stateSave != null)
         {
@@ -804,11 +823,11 @@ public class ElementSaveDisplayer
         }
         if (!string.IsNullOrEmpty(extraDetail))
         {
-            if (!string.IsNullOrEmpty(srim.DetailText))
+            if (!string.IsNullOrEmpty(entry.DetailText))
             {
-                srim.DetailText += "\n";
+                entry.DetailText += "\n";
             }
-            srim.DetailText += extraDetail;
+            entry.DetailText += extraDetail;
         }
     }
 
@@ -864,7 +883,7 @@ public class ElementSaveDisplayer
         {
             var expectedName = category.Name + "State";
 
-            var variable = elementSave.GetVariableFromThisOrBase(expectedName);
+            var variable = GetVariableFromThisOrBase(elementSave, expectedName);
             if (variable != null)
             {
                 stateToAddTo.Variables.Add(variable);
@@ -872,6 +891,21 @@ public class ElementSaveDisplayer
         }
 
         return stateToAddTo;
+    }
+
+    /// <summary>
+    /// Headless replacement for <c>ElementSaveExtensionMethodsGumTool.GetVariableFromThisOrBase</c>
+    /// (which resolves <see cref="ISelectedState"/> via <c>Locator</c> instead of injection): uses the
+    /// selected state when this element is the one currently selected, else its default state. Mirrors
+    /// <see cref="VariableGridEntry"/>'s identically-named private helper.
+    /// </summary>
+    private VariableSave? GetVariableFromThisOrBase(ElementSave element, string variable)
+    {
+        var stateToPullFrom = element == _selectedState.SelectedElement && _selectedState.SelectedStateSave != null
+            ? _selectedState.SelectedStateSave
+            : element.DefaultState;
+
+        return stateToPullFrom.GetVariableRecursive(variable);
     }
 
     private void FillPropertyList(List<PropertyData> properties, InstanceSave instanceSave, ElementSave instanceOwner)
@@ -920,7 +954,7 @@ public class ElementSaveDisplayer
                 {
                     var expectedName = category.Name + "State";
 
-                    var variable = instanceBaseType.GetVariableFromThisOrBase(expectedName);
+                    var variable = GetVariableFromThisOrBase(instanceBaseType, expectedName);
                     if (variable != null)
                     {
                         defaultState.Variables.Add(variable);
@@ -1009,7 +1043,7 @@ public class ElementSaveDisplayer
 
         if (shouldInclude)
         {
-            TypeConverter typeConverter = defaultVariable.GetTypeConverter(elementSave);
+            TypeConverter typeConverter = _variableSaveLogic.GetTypeConverter(defaultVariable, elementSave);
 
             Attribute[] customAttributes = GetAttributesForVariable(defaultVariable);
 
@@ -1136,7 +1170,7 @@ public class ElementSaveDisplayer
             "DefaultChildContainer",
             typeof(string),
             new Attribute[0],
-            new AvailableInstancesConverter(),
+            new AvailableInstancesConverter(_selectedState),
             "",
             !isDefault,
             false,
@@ -1175,10 +1209,13 @@ public class ElementSaveDisplayer
 
         if (!isExcluded)
         {
-            var baseTypeConverter = new AvailableBaseTypeConverter(instanceOwner, instance);
+            var baseTypeConverter = new AvailableBaseTypeConverter(instanceOwner, instance, _projectState);
             // We may want to support Screens inheriting from other Screens in the future, but for now we won't allow it
+            // "IsEditable" is a literal (rather than nameof(WpfDataUi.Controls.ComboBoxDisplay.IsEditable))
+            // since this headless project must never reference WpfDataUi; the WPF ComboBoxDisplay
+            // control reflectively reads this same key by name.
             pdc.Add(new PropertyData("BaseType", typeof(string), new Attribute[0], baseTypeConverter, "", isReadOnly, false, null,
-                PropertiesToSetOnDisplayer: new Dictionary<string, object> { [nameof(ComboBoxDisplay.IsEditable)] = true }));
+                PropertiesToSetOnDisplayer: new Dictionary<string, object> { ["IsEditable"] = true }));
         }
     }
 
