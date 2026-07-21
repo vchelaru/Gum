@@ -356,6 +356,13 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   can silently break a subscriber whose handler still declares the old concrete parameter type —
   delegate contravariance only allows a *wider* handler parameter, never narrower, so check every
   subscriber's signature after a publisher-side retype, not just the publisher.
+- **A zero-`System.Windows`-hit class can still be blocked by a concrete tool-side type it
+  manipulates through member access on a method's *return value*, not just a field or parameter
+  type.** `PluginBase.CreateTab` took an already-headless `ITabManager` (params typed `object`) but
+  returned a concrete `PluginTab`, and directly called `.Location =`/`.Hide()` on it — the coupling
+  was one level deeper than a declared-type grep catches. Check what a method's *return type's own
+  members* are used for at each call site, not just whether the field/parameter types it declares
+  are clean, before trusting a zero-hit grep as proof the class is mechanically relocatable.
 
 **Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap).
 - *4a — Element tree:* decouple `ElementTreeViewManager` from `TreeNode`; the already-migrated
