@@ -58,6 +58,11 @@ public class MainCodeOutputPlugin : PluginBase
 
     IPluginTab pluginTab = default!;
 
+    // Built in CreateControl (called from StartUp), not the ctor: it needs the just-constructed
+    // control/pluginTab instances. Null until then - every call site below goes through the
+    // null-conditional thin wrappers, mirroring the old "control != null" guards.
+    private CodeOutputTabController? _controller;
+
     // Not sure why this is null..., so getting it from the builder instead
     //[Import("LocalizationService")]
     //public LocalizationService LocalizationService
@@ -145,9 +150,11 @@ public class MainCodeOutputPlugin : PluginBase
 
     public override void StartUp()
     {
-        AssignEvents();
-
+        // CreateControl builds _controller, which several of AssignEvents' handlers rely on -
+        // must run first.
         CreateControl();
+
+        AssignEvents();
     }
 
     private void AssignEvents()
@@ -264,21 +271,7 @@ public class MainCodeOutputPlugin : PluginBase
         GenerateCodeForElement(showPopups: false, element);
     }
 
-    private void LoadCodeSettingsFile(ElementSave? element)
-    {
-        ////////////////////////Early Out/////////////////////
-        if (control == null) return;
-        ///////////////////////End Early Out//////////////////
-
-        if (element != null && _projectState.GumProjectSave?.FullFileName != null)
-        {
-            control.CodeOutputElementSettings = _elementSettingsManager.LoadOrCreateSettingsFor(element);
-        }
-        else
-        {
-            control.CodeOutputElementSettings = new CodeOutputElementSettings();
-        }
-    }
+    private void LoadCodeSettingsFile(ElementSave? element) => _controller?.LoadCodeSettingsFile(element);
 
 
     private void HandleBehaviorReferencesChanged(ElementSave save)
@@ -328,162 +321,17 @@ public class MainCodeOutputPlugin : PluginBase
     private void HandleInstanceReordered(InstanceSave obj) => HandleRefreshAndExport();
 
 
-    private void HandleRefreshAndExport()
-    {
-        if (control != null)
-        {
-            RefreshCodeDisplay();
-
-            if (control.CodeOutputElementSettings == null)
-            {
-                control.CodeOutputElementSettings = new CodeOutputElementSettings();
-            }
-
-            var elementSettings = control.CodeOutputElementSettings;
-
-            if (elementSettings.AutoGenerateOnChange)
-            {
-                GenerateCodeForSelectedElement(showPopups: false);
-            }
-        }
-    }
+    private void HandleRefreshAndExport() => _controller?.HandleRefreshAndExport(codeOutputProjectSettings);
 
     // Refresh + auto-regenerate for an explicit owning element rather than the live
     // SelectedElement. Used by instance add/delete events because the affected instance
     // may live in an element that is not currently selected (e.g. delete fired from a
     // tree-view selection that doesn't match what the codegen tab is viewing), in
     // which case regenerating for SelectedElement writes the wrong file or NREs.
-    private void HandleRefreshAndExportForElement(ElementSave element)
-    {
-        if (control != null)
-        {
-            RefreshCodeDisplay();
-        }
+    private void HandleRefreshAndExportForElement(ElementSave element) =>
+        _controller?.HandleRefreshAndExportForElement(element, codeOutputProjectSettings);
 
-        var elementSettings = _elementSettingsManager.LoadOrCreateSettingsFor(element);
-
-        if (elementSettings.AutoGenerateOnChange)
-        {
-            GenerateCodeForElement(showPopups: false, element, elementSettings);
-        }
-    }
-
-    private void HandleViewCodeClicked(object? sender, EventArgs e)
-    {
-        if(_selectedState.SelectedElement != null)
-        {
-            LoadCodeSettingsFile(_selectedState.SelectedElement);
-        }
-
-        RefreshCodeDisplay();
-
-    }
-
-
-    private void RefreshCodeDisplay()
-    {
-        var shouldShow = _selectedState.SelectedElement != null &&
-            _selectedState.SelectedElement is not StandardElementSave;
-
-        if(shouldShow)
-        {
-            pluginTab.Show();
-        }
-        else
-        {
-            pluginTab.Hide();
-        }
-
-        ///////////////////////early out////////////////////
-        if(!pluginTab.IsSelected)
-        {
-            return;
-        }
-
-        if(control == null)
-        {
-            return;
-        }
-
-        // SelectedElement can be null if the user has selected something other than
-        // a Screen/Component (e.g. a behavior, a folder, nothing), or if a delete just
-        // cleared the selection. Without an owning element, there is nothing to
-        // generate code for — the .Element-dereferences below (and inside the
-        // generator) would NRE.
-        if(_selectedState.SelectedElement == null)
-        {
-            viewModel.Code = "// Select a Screen, Component, or Standard to see generated code";
-            return;
-        }
-
-        /////////////////////end early out/////////////////
-
-        // Defensive: never feed the generator an unsupported combination (e.g. a Raylib project whose
-        // .codsj still carries FullyInCode). CoerceToSupportedCombination keeps the display path safe
-        // regardless of how the settings reached this state.
-        CodeGenerator.CoerceToSupportedCombination(codeOutputProjectSettings);
-
-        control.CodeOutputProjectSettings = codeOutputProjectSettings;
-        if(control.CodeOutputElementSettings == null)
-        {
-            control.CodeOutputElementSettings = new CodeOutputElementSettings();
-        }
-
-        var instance = _selectedState.SelectedInstance;
-        var selectedElement = _selectedState.SelectedElement!;
-
-        viewModel.IsViewingStandardElement = selectedElement is StandardElementSave;
-
-        var settings = control.CodeOutputElementSettings;
-
-        if(settings.GenerationBehavior != GenerationBehavior.NeverGenerate)
-        {
-            ObjectFinder.Self.EnableCache();
-            try
-            {
-                switch(viewModel.WhatToView)
-                {
-                    case ViewModels.WhatToView.SelectedElement:
-
-                        if (instance != null)
-                        {
-                            string code = _codeGenerator.GetCodeForInstance(instance, selectedElement, codeOutputProjectSettings );
-                            viewModel.Code = code;
-                        }
-                        else if(selectedElement != null && selectedElement is not StandardElementSave)
-                        {
-
-                            string gumCode = _codeGenerator.GetGeneratedCodeForElement(selectedElement, settings, codeOutputProjectSettings);
-                            viewModel.Code = $"//Code for {selectedElement.ToString()}\r\n{gumCode}";
-                        }
-                        break;
-                    case ViewModels.WhatToView.SelectedState:
-                        var state = _selectedState.SelectedStateSave;
-
-                        if (state != null && selectedElement != null)
-                        {
-                            string gumCode = _codeGenerator.GetCodeForState(selectedElement, state, codeOutputProjectSettings);
-                            viewModel.Code = $"//State Code for {state.Name ?? "Default"}:\r\n{gumCode}";
-                        }
-                        break;
-                }
-            }
-            finally
-            {
-                ObjectFinder.Self.DisableCache();
-            }
-        }
-        else if(selectedElement == null)
-        {
-            viewModel.Code = "// Select a Screen, Component, or Standard to see generated code";
-        }
-        else
-        {
-            viewModel.Code = "// code generation disabled for this object";
-        }
-
-
-    }
+    private void RefreshCodeDisplay() => _controller?.RefreshCodeDisplay(codeOutputProjectSettings);
 
     private void CreateControl()
     {
@@ -497,6 +345,19 @@ public class MainCodeOutputPlugin : PluginBase
         control.DataContext = viewModel;
 
         pluginTab = _tabManager.AddControl(control, "Code", TabLocation.RightBottom);
+
+        _controller = new CodeOutputTabController(
+            control,
+            pluginTab,
+            (ITabSelectionState)pluginTab,
+            _selectedState,
+            _projectState,
+            _codeGenerator,
+            _codeGenerationService,
+            _elementSettingsManager,
+            _codeOutputProjectSettingsManager,
+            viewModel);
+
         pluginTab.GotFocus += () => RefreshCodeDisplay();
     }
 
@@ -525,22 +386,7 @@ public class MainCodeOutputPlugin : PluginBase
         }
     }
 
-    private void HandleCodeOutputPropertyChanged()
-    {
-        // Switching OutputLibrary to Raylib while ObjectInstantiationType is still FullyInCode is an
-        // unsupported combination that would throw during generation. Normalize before saving/regenerating
-        // so the user can switch libraries in any order without ever hitting that crash.
-        CodeGenerator.CoerceToSupportedCombination(codeOutputProjectSettings);
-
-        var element = _selectedState.SelectedElement;
-        if(element != null && control?.CodeOutputElementSettings != null)
-        {
-            _elementSettingsManager.WriteSettingsForElement(element, control.CodeOutputElementSettings);
-
-            RefreshCodeDisplay();
-        }
-        _codeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
-    }
+    private void HandleCodeOutputPropertyChanged() => _controller?.HandleCodeOutputPropertyChanged(codeOutputProjectSettings);
 
     private void HandleGenerateCodeButtonClicked()
     {
@@ -619,28 +465,8 @@ public class MainCodeOutputPlugin : PluginBase
         }
     }
 
-    private void GenerateCodeForSelectedElement(bool showPopups)
-    {
-        var selectedElement = _selectedState.SelectedElement;
-        GenerateCodeForElement(showPopups, selectedElement);
-    }
-
-    private void GenerateCodeForElement(bool showPopups, ElementSave? element, CodeOutputElementSettings? settings = null)
-    {
-        if (element != null && element is not StandardElementSave)
-        {
-            settings = settings ?? control?.CodeOutputElementSettings;
-
-            // If user is using automatic generation, generate everything
-            // If it's manual, don't check for missing files
-
-            if(settings != null)
-            {
-                var checkForMissing = settings.GenerationBehavior == GenerationBehavior.GenerateAutomaticallyOnPropertyChange;
-                _codeGenerationService.GenerateCodeForElement(element, settings, codeOutputProjectSettings, showPopups, checkForMissing: checkForMissing);
-            }
-        }
-    }
+    private void GenerateCodeForElement(bool showPopups, ElementSave? element, CodeOutputElementSettings? settings = null) =>
+        _controller?.GenerateCodeForElement(showPopups, element, codeOutputProjectSettings, settings);
 
     public override bool ShutDown(PluginShutDownReason shutDownReason) => true;
 }
