@@ -18,7 +18,12 @@ public static class ContextMenuItemViewModelExtensions
             return new Separator();
         }
 
-        var menuItem = new MenuItem { Header = item.Text };
+        var menuItem = new MenuItem { Header = item.Text, IsEnabled = item.IsEnabled };
+
+        if (item.Shortcut != null)
+        {
+            menuItem.InputGestureText = item.Shortcut;
+        }
 
         if (item.Action != null)
         {
