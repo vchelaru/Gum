@@ -3,14 +3,20 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Logic;
 using Gum.Managers;
-using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
-using Gum.ToolStates;
 using Moq;
 using Shouldly;
 
-namespace GumToolUnitTests.Logic;
+namespace Gum.Presentation.Tests;
 
+/// <summary>
+/// Pins <see cref="InheritanceLogic"/>'s behavior after its relocation to Gum.Presentation
+/// (ADR-0005, #3908). The only blocker was its constructor depending on the concrete,
+/// still-WPF/WinForms-side <c>StandardElementsManagerGumTool</c> instead of the already-headless
+/// <see cref="IStandardElementsManagerGumTool"/> interface — everything else it touches
+/// (<c>ObjectFinder.Self</c>, <c>StandardElementsManager.Self</c>, <see cref="IFileCommands"/>,
+/// <see cref="IGuiCommands"/>) was already reachable from this assembly.
+/// </summary>
 public class InheritanceLogicTests : BaseTestClass
 {
     private readonly Mock<IFileCommands> _fileCommands;
@@ -25,7 +31,21 @@ public class InheritanceLogicTests : BaseTestClass
         _sut = new InheritanceLogic(
             _fileCommands.Object,
             _guiCommands.Object,
-            new StandardElementsManagerGumTool(new Mock<IPluginManager>().Object, new Mock<ISelectedState>().Object));
+            new Mock<IStandardElementsManagerGumTool>().Object);
+    }
+
+    [Fact]
+    public void HandleInstanceRenamed_WithNullContainer_DoesNotSaveOrRefresh()
+    {
+        var project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        var behaviorInstance = new BehaviorInstanceSave { Name = "NewName" };
+
+        _sut.HandleInstanceRenamed(container: null, instance: behaviorInstance, oldName: "OldName");
+
+        _fileCommands.Verify(f => f.TryAutoSaveElement(It.IsAny<ElementSave>()), Times.Never);
+        _guiCommands.Verify(g => g.RefreshElementTreeView(It.IsAny<IInstanceContainer>()), Times.Never);
     }
 
     [Fact]
@@ -43,20 +63,6 @@ public class InheritanceLogicTests : BaseTestClass
             container: null,
             instance: behaviorInstance,
             oldName: "OldName"));
-    }
-
-    [Fact]
-    public void HandleInstanceRenamed_WithNullContainer_DoesNotSaveOrRefresh()
-    {
-        var project = new GumProjectSave();
-        ObjectFinder.Self.GumProjectSave = project;
-
-        var behaviorInstance = new BehaviorInstanceSave { Name = "NewName" };
-
-        _sut.HandleInstanceRenamed(container: null, instance: behaviorInstance, oldName: "OldName");
-
-        _fileCommands.Verify(f => f.TryAutoSaveElement(It.IsAny<ElementSave>()), Times.Never);
-        _guiCommands.Verify(g => g.RefreshElementTreeView(It.IsAny<IInstanceContainer>()), Times.Never);
     }
 
     [Fact]
