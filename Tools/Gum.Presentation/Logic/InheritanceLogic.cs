@@ -3,7 +3,6 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
-using Gum.Services;
 using System.Linq;
 
 namespace Gum.Logic;
@@ -12,10 +11,10 @@ public class InheritanceLogic
 {
     private readonly IFileCommands _fileCommands;
     private readonly IGuiCommands _guiCommands;
-    private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
+    private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
 
     public InheritanceLogic(IFileCommands fileCommands, IGuiCommands guiCommands,
-        StandardElementsManagerGumTool standardElementsManagerGumTool)
+        IStandardElementsManagerGumTool standardElementsManagerGumTool)
     {
         _fileCommands = fileCommands;
         _guiCommands = guiCommands;
