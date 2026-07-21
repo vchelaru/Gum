@@ -1,21 +1,30 @@
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
-using Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.ViewModels;
-using Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.Views;
-using Gum.Services;
-using System;
+using Gum.Services.Dialogs;
+using Gum.Settings;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Windows.Controls;
-using ToolsUtilities;
 
 namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
 {
+    // As of ADR-0005 Phase 3, the display/filtering/dialog logic for the "Load Recent" menu lives in
+    // RecentFilesLogic (Gum.Presentation) so it can be unit tested headlessly. This plugin builds only
+    // the actual WPF MenuItems and forwards clicks into that logic.
     [Export(typeof(PluginBase))]
     internal class MainRecentFilesPlugin : PriorityPlugin
     {
         MenuItem recentFilesMenuItem;
+        private readonly RecentFilesLogic _recentFilesLogic;
+
+        [ImportingConstructor]
+        public MainRecentFilesPlugin(IProjectManager projectManager, IFileCommands fileCommands, IDialogService dialogService)
+        {
+            _recentFilesLogic = new RecentFilesLogic(projectManager, fileCommands, dialogService);
+        }
+
         public override void StartUp()
         {
             recentFilesMenuItem = this.AddMenuItemTo("Load Recent", null, "File", preferredIndex: 2);
@@ -32,44 +41,26 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
 
         private void RefreshMenuItems()
         {
-            var recentFiles = Locator.GetRequiredService<IProjectManager>().RecentProjects;
-
             recentFilesMenuItem.Items.Clear();
 
-            foreach (var item in recentFiles.Where(item => item.IsFavorite))
+            var favorites = _recentFilesLogic.GetFavoriteProjects().ToList();
+            foreach (var item in favorites)
             {
-                var filePath = item.FilePath;
-                string name = GetDisplayedNameForGumxFilePath(filePath);
-
-                var mi = new MenuItem { Header = name };
-                mi.Click += (_, _) => _fileCommands.LoadProject(filePath.FullPath);
-                recentFilesMenuItem.Items.Add(mi);
+                AddMenuItemFor(item);
             }
 
-            var hasFavorites = recentFiles.Any(item => item.IsFavorite);
-            var nonFavorites = recentFiles.Where(item => !item.IsFavorite).ToArray();
-
-            var hasNonFavorites = nonFavorites.Length > 0;
-
-            if (hasNonFavorites)
+            var nonFavorites = _recentFilesLogic.GetNonFavoriteProjectsForMenu().ToList();
+            if (nonFavorites.Count > 0)
             {
-                if (hasFavorites)
+                if (favorites.Count > 0)
                 {
                     recentFilesMenuItem.Items.Add(new Separator());
                 }
 
-                foreach (var item in nonFavorites.Take(5))
+                foreach (var item in nonFavorites)
                 {
-                    var filePath = item.FilePath;
-
-                    string name = GetDisplayedNameForGumxFilePath(filePath);
-
-                    var mi = new MenuItem { Header = name };
-                    mi.Click += (_, _) => _fileCommands.LoadProject(filePath.FullPath);
-                    recentFilesMenuItem.Items.Add(mi);
+                    AddMenuItemFor(item);
                 }
-
-
             }
 
             recentFilesMenuItem.Items.Add(new Separator());
@@ -78,74 +69,19 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
             recentFilesMenuItem.Items.Add(moreItem);
         }
 
-        private static string GetDisplayedNameForGumxFilePath(FilePath filePath)
+        private void AddMenuItemFor(RecentProjectReference item)
         {
-            var name = filePath.RemoveExtension().FileNameNoPath;
+            var filePath = item.FilePath;
+            string name = RecentFilesLogic.GetDisplayedNameForGumxFilePath(filePath);
 
-            // It's common to have lots of same-named projects so let's see if this is in a csproj somewhere:
-            var parentDirectory = filePath.GetDirectoryContainingThis();
-            if (parentDirectory != null)
-            {
-                string? foundCsproj = null;
-                while (parentDirectory?.Exists() == true)
-                {
-                    foundCsproj = System.IO.Directory.GetFiles(parentDirectory.FullPath, "*.csproj").FirstOrDefault();
-
-                    if (foundCsproj == null)
-                    {
-                        parentDirectory = parentDirectory.GetDirectoryContainingThis();
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(foundCsproj))
-                {
-                    var fullPath = new FilePath(foundCsproj);
-                    name += $" ({fullPath.FileNameNoPath})";
-                }
-            }
-
-            return name;
+            var mi = new MenuItem { Header = name };
+            mi.Click += (_, _) => _recentFilesLogic.LoadProject(filePath.FullPath);
+            recentFilesMenuItem.Items.Add(mi);
         }
 
-        private async void HandleLoadRecentClicked(object? sender, System.Windows.RoutedEventArgs e)
+        private void HandleLoadRecentClicked(object? sender, System.Windows.RoutedEventArgs e)
         {
-            var viewModel = new LoadRecentViewModel();
-            var recentFiles = Locator.GetRequiredService<IProjectManager>().RecentProjects;
-            viewModel.AllItems.Clear();
-            foreach (var recentFile in recentFiles)
-            {
-                var vm = new RecentItemViewModel()
-                {
-                    FullPath = recentFile.FilePath.FullPath,
-                    IsFavorite = recentFile.IsFavorite
-                };
-                viewModel.AllItems.Add(vm);
-            }
-
-            viewModel.RefreshFilteredItems();
-
-            if (_dialogService.Show(viewModel))
-            {
-                var fileToLoad = viewModel.SelectedItem.FullPath;
-
-                _fileCommands.LoadProject(fileToLoad);
-
-            }
-
-            foreach (var item in viewModel.FilteredItems)
-            {
-                var matching = recentFiles.FirstOrDefault(candidate => candidate.FilePath == item.FullPath);
-
-                if (matching != null)
-                {
-                    matching.IsFavorite = item.IsFavorite;
-                }
-            }
-            _fileCommands.SaveGeneralSettings();
+            _recentFilesLogic.ShowLoadRecentDialog();
             RefreshMenuItems();
         }
     }
