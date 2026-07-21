@@ -6,14 +6,12 @@ using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
 using Gum.Services;
 using Gum.Services.Dialogs;
-using Gum.ToolCommands;
-using Gum.ToolStates;
 using Gum.Undo;
 using Moq;
 using Moq.AutoMock;
 using Shouldly;
 
-namespace GumToolUnitTests.Services;
+namespace Gum.Presentation.Tests;
 
 public class EditVariableServiceTests : BaseTestClass
 {
