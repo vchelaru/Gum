@@ -113,6 +113,11 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   `IFoo`/`Foo` dual-registration where `Foo` already implements `IFoo` — if the only members the
   consumer calls are already on that interface, the fix is a one-line field-type swap, not a new
   seam.
+- **A method's public signature already being neutral doesn't mean its body is.** `HotkeyManager`'s
+  public methods already took a headless `GumKeyEventArgs`, but internally still rebuilt a live WPF
+  `KeyEventArgs` to match against — invisible from the signature, and it only surfaces as an
+  STA-thread-dependent test failure, not a compile error. Check the method body for a framework
+  object it reconstructs internally, not just its parameter/return types.
 - **An `#if GUM` (or similar tool-only compile constant) guard silently flips from always-true to
   always-false when its class moves into `Gum.Presentation`**, which never defines that constant —
   a real behavior regression the build won't catch. Make the guarded code unconditional instead of
