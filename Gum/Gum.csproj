@@ -481,6 +481,11 @@
 		<Compile Remove="Mvvm\ViewModel.cs" />
 		<Compile Remove="RenderingLibrary\Blend.cs" />
 		<Compile Remove="RenderingLibrary\BlendExtensions.cs" />
+		<!-- Linked into Gum.Presentation.csproj (SetVariableLogic calls GetFileWidthAndHeightOrDefault);
+		     removed here so the extension methods aren't compiled into both Gum.dll and
+		     Gum.Presentation.dll, which would make every call site ambiguous (CS0121). Gum.csproj
+		     already references Gum.Presentation.csproj, so it still gets this transitively. -->
+		<Compile Remove="RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs" />
 		<Compile Remove="Wireframe\CustomSetPropertyOnRenderable.cs" />
 		<Compile Remove="Wireframe\ElementWithState.cs" />
 		<Compile Remove="Wireframe\FallbackRenderableFactory.cs" />

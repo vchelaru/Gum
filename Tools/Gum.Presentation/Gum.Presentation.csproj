@@ -48,6 +48,10 @@
 		     has no WPF/WinForms dependency; pin matches Gum.csproj's Microsoft.Extensions.Hosting version
 		     (which pulls Options in transitively there) so a single bump propagates predictably. -->
 		<PackageReference Include="Microsoft.Extensions.Options" Version="9.0.0" />
+		<!-- ImageHeader's malformed-file fallback path constructs a System.Drawing.Bitmap. This has
+		     no WPF/WinForms dependency (Gum.csproj already references it for the same class); pin
+		     matches Gum.csproj's version so a single bump propagates predictably. -->
+		<PackageReference Include="System.Drawing.Common" Version="10.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -56,6 +60,15 @@
 		     and evaluates them via EvaluatedSyntax. GumExpressions has no WPF/WinForms dependency
 		     and already pulls in Microsoft.CodeAnalysis.CSharp transitively. -->
 		<ProjectReference Include="..\..\Runtimes\GumExpressions\GumExpressions.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- SetVariableLogic calls the IRenderableIpso.GetFileWidthAndHeightOrDefault extension method.
+		     This file is genuinely shared runtime source (SilkNetGum/SkiaGum also link it directly by
+		     relative path), so it stays physically in Gum/RenderingLibrary/ rather than moving under
+		     this tool-only assembly; link it in the same way GumCommon.csproj links shared Gum/ files
+		     (e.g. Managers/INameVerifier.cs). -->
+		<Compile Include="..\..\Gum\RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs" Link="RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs" />
 	</ItemGroup>
 
 </Project>
