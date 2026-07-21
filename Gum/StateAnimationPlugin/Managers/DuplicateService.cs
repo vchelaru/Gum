@@ -11,7 +11,7 @@ using ToolsUtilities;
 
 namespace StateAnimationPlugin.Managers
 {
-    public class DuplicateService
+    public class DuplicateService : IDuplicateService
     {
         private readonly IDialogService _dialogService;
         private readonly IProjectManager _projectManager;

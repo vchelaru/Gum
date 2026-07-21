@@ -1,9 +1,7 @@
 using CommunityToolkit.Mvvm.Messaging;
-using FlatRedBall.Glue.StateInterpolation;
 using Gum;
 using Gum.Commands;
 using Gum.DataTypes;
-using Gum.DataTypes.Variables;
 using Gum.Extensions;
 using Gum.Gui.Windows;
 using Gum.Logic.FileWatch;
@@ -13,22 +11,15 @@ using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Gum.Responses;
 using Gum.Services;
-using Gum.Services.Dialogs;
 using Gum.StateAnimation.SaveClasses;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
 using StateAnimationPlugin.Managers;
 using StateAnimationPlugin.ViewModels;
-using StateAnimationPlugin.Views;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.ComponentModel.Composition;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using ToolsUtilities;
@@ -36,6 +27,13 @@ using ToolsUtilities;
 
 namespace StateAnimationPlugin;
 
+/// <summary>
+/// WPF-hosted plugin entry point for the Animations tab. All of the WPF-free business logic (view
+/// model construction/refresh, undo/redo repaint, rename/delete/variable-set reactions, keyframe
+/// dialogs) lives in <see cref="AnimationTabController"/> (issue #3866) - this class owns only the
+/// real platform glue: the WPF window/menu/tab-visibility wiring, and pushing the controller's view
+/// model onto the window's DataContext.
+/// </summary>
 [Export(typeof(PluginBase))]
 public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
 {
@@ -48,12 +46,8 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
     private readonly IAnimationUndoProviderRegistrar _animationUndoProviderRegistrar;
     private readonly Func<ElementAnimationsViewModel> _animationVmFactory;
 
-    // True while an undo/redo is restoring animations to disk and the tab is repainting from it.
-    // Guards HandleDataChange from flushing a *new* undo for the change the undo itself just made.
-    private bool _isApplyingUndo;
-
     #region Fields
-    private readonly DuplicateService _duplicateService;
+    private readonly IDuplicateService _duplicateService;
     private readonly AnimationFilePathService _animationFilePathService;
     private readonly ElementDeleteService _elementDeleteService;
     private readonly IRenameManager _renameManager;
@@ -62,7 +56,10 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
     private readonly IProjectManager _projectManager;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IAnimationCollectionViewModelManager _animationCollectionViewModelManager;
-    ElementAnimationsViewModel? _viewModel;
+
+    // Constructed in StartUp, not the ctor: it needs _dialogService/_guiCommands, which are
+    // PluginBase [Import] properties satisfied by MEF *after* this constructor returns.
+    private AnimationTabController _controller = null!;
 
     StateAnimationPlugin.Views.MainWindow? _mainWindow;
     private PluginTab? pluginTab;
@@ -90,17 +87,8 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
 
     public override void FillTopLevelNames(ElementSave element, List<TopLevelName> names)
     {
-        var animationsSave = _animationCollectionViewModelManager.GetElementAnimationsSave(element);
-        if (animationsSave != null)
-        {
-            foreach (var anim in animationsSave.Animations)
-            {
-                names.Add(new TopLevelName(anim.Name, "Animation", anim));
-            }
-        }
+        _controller.FillTopLevelNames(element, names);
     }
-
-    ObservableCollection<string> AvailableStates { get; set; } = new ObservableCollection<string>();
 
     #endregion
 
@@ -154,6 +142,24 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
 
     public override void StartUp()
     {
+        // _dialogService/_guiCommands (PluginBase [Import] properties) are only guaranteed set once
+        // MEF finishes composing this part, which happens before StartUp runs - so the controller is
+        // built here, not in the constructor above.
+        _controller = new AnimationTabController(
+            _selectedState,
+            _undoManager,
+            _guiCommands,
+            _dialogService,
+            _projectState,
+            _animationCollectionViewModelManager,
+            _renameManager,
+            _duplicateService,
+            _animationFilePathService,
+            _animationVmFactory);
+
+        _controller.ViewModelRefreshed += HandleControllerViewModelRefreshed;
+        _controller.DataSaved += HandleControllerDataSaved;
+
         // Register as the live animation provider so the element undo strategy can fold this
         // element's animations into its snapshot (#3406). UndoManager was constructed at DI time,
         // before any plugin existed, so it holds a relay that this call now points at us.
@@ -164,31 +170,38 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
         AssignEvents();
     }
 
+    /// <summary>
+    /// Pushes the controller's (possibly-same-instance) view model onto the WPF window's DataContext
+    /// and requests a scoped error recheck - both real platform/host concerns the headless controller
+    /// has no seam for (the message type carries a <see cref="PluginBase"/> identity).
+    /// </summary>
+    private void HandleControllerViewModelRefreshed()
+    {
+        _messenger.Send(new RequestErrorRefreshMessage { RequestingPlugin = this });
+
+        if (_mainWindow != null)
+        {
+            _mainWindow.DataContext = _controller.ViewModel;
+        }
+    }
+
+    /// <summary>
+    /// Requests a full (unscoped) error recheck after the controller persists an edit - the headless
+    /// checker re-reads the just-saved .ganx. RequestingPlugin is left null (full refresh) so both the
+    /// Errors tab and the tree "!" indicator re-check.
+    /// </summary>
+    private void HandleControllerDataSaved()
+    {
+        _messenger.Send(new RequestErrorRefreshMessage());
+    }
+
     #region IAnimationUndoProvider
 
-    ElementAnimationsSave? IAnimationUndoProvider.GetCurrentAnimations(ElementSave element)
-    {
-        // Prefer the live tab contents when this element is the one loaded; otherwise read the .ganx.
-        ElementAnimationsSave? save = _viewModel?.Element == element
-            ? _viewModel!.ToSave()
-            : _animationCollectionViewModelManager.GetElementAnimationsSave(element);
+    ElementAnimationsSave? IAnimationUndoProvider.GetCurrentAnimations(ElementSave element) =>
+        _controller.GetCurrentAnimations(element);
 
-        // Normalize "no animations" to null so a null-vs-null diff compares equal (no spurious undo).
-        if (save == null || save.Animations.Count == 0)
-        {
-            return null;
-        }
-
-        return save;
-    }
-
-    void IAnimationUndoProvider.ApplyAnimations(ElementSave element, ElementAnimationsSave animations)
-    {
-        // Suppress undo recording for the write itself and the after-undo tab repaint that follows
-        // (HandleAfterUndo clears the flag once the repaint is done).
-        _isApplyingUndo = true;
-        _animationCollectionViewModelManager.SaveElementAnimations(element, animations);
-    }
+    void IAnimationUndoProvider.ApplyAnimations(ElementSave element, ElementAnimationsSave animations) =>
+        _controller.ApplyAnimations(element, animations);
 
     #endregion
 
@@ -203,42 +216,42 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
     {
         this.ElementSelected += HandleElementSelected;
 
-        this.InstanceSelected += (_, _) => RefreshViewModel();
+        this.InstanceSelected += (_, _) => _controller.RefreshViewModel();
 
-        this.InstanceRename += HandleInstanceRename;
-        this.StateRename += HandleStateRename;
+        this.InstanceRename += _controller.HandleInstanceRename;
+        this.StateRename += _controller.HandleStateRename;
 
-        this.StateAdd += HandleStateAdd;
-        this.StateDelete += HandleStateDelete;
+        this.StateAdd += _controller.HandleStateAdd;
+        this.StateDelete += _controller.HandleStateDelete;
 
-        this.VariableSet += HandleVariableSet;
+        this.VariableSet += _controller.HandleVariableSet;
 
-        this.CategoryRename += HandleCategoryRename;
+        this.CategoryRename += _controller.HandleCategoryRename;
 
         // Deleting a whole category (and its states) doesn't fire the granular StateDelete event, so
-        // recompute the view model afterward — otherwise a keyframe that referenced a state in the
+        // recompute the view model afterward - otherwise a keyframe that referenced a state in the
         // deleted category keeps its non-error icon until the element is reselected (issue #3392).
-        this.CategoryDelete += HandleCategoryDelete;
+        this.CategoryDelete += _controller.HandleCategoryDelete;
 
-        this.ElementRename += HandleElementRename;
-        this.ElementDuplicate += HandleElementDuplicate;
+        this.ElementRename += _controller.HandleElementRename;
+        this.ElementDuplicate += _controller.HandleElementDuplicate;
 
         // Live-reload the tab when the selected element's .ganx is edited on disk (issue #3410).
         // FileChangeReactionLogic owns no animation data (the .ganx is a per-element sidecar loaded
-        // on demand here, not part of GumProjectSave), so the reload lives in this plugin rather than
-        // in the core dispatch.
-        this.ReactToFileChanged += HandleFileChanged;
+        // on demand here, not part of GumProjectSave), so the reload lives in the controller rather
+        // than in the core dispatch.
+        this.ReactToFileChanged += _controller.HandleFileChanged;
 
-        this.GetDeleteStateResponse = HandleGetDeleteStateResponse;
-        this.GetDeleteStateCategoryResponse = HandleGetDeleteStateCategoryResponse;
+        this.GetDeleteStateResponse = _controller.HandleGetDeleteStateResponse;
+        this.GetDeleteStateCategoryResponse = _controller.HandleGetDeleteStateCategoryResponse;
 
         this.DeleteOptionsWindowShow += HandleDeleteOptionsWindowShow;
         this.DeleteConfirmed += HandleDeleteConfirmed;
 
         // Undo/redo restore element state without firing the granular StateAdd/StateDelete events, so
-        // recompute the view model (and its keyframe error state) afterward — otherwise a broken
+        // recompute the view model (and its keyframe error state) afterward - otherwise a broken
         // keyframe's error icon stays stale until the element is reselected (issue #3386).
-        this.AfterUndo += HandleAfterUndo;
+        this.AfterUndo += _controller.HandleAfterUndo;
 
         // Animation "keyframe references a missing state" errors are now detected per-element by
         // the headless AnimationKeyframeErrorSource (issue #3293), which reads the .ganx so it
@@ -284,35 +297,15 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
         }
     }
 
-    private void HandleFileChanged(FilePath filePath)
-    {
-        var selectedElement = _selectedState.SelectedElement;
-        var selectedElementAnimationFile = selectedElement != null
-            ? _animationFilePathService.GetAbsoluteAnimationFileNameFor(selectedElement)
-            : null;
-
-        if (AnimationTabRefreshLogic.ShouldReloadAnimationsForChangedFile(filePath, selectedElementAnimationFile))
-        {
-            // Capture the selection before the rebuild replaces every animation/keyframe instance, then
-            // reapply it so the external edit doesn't deselect the user's animation + keyframe (#3410).
-            var selection = AnimationTabRefreshLogic.CaptureAnimationSelection(_viewModel);
-
-            // forceReload bypasses CreateViewModel's same-element early-out: the external edit doesn't
-            // change the selection, so without forcing it the stale view model would survive and the
-            // tab would keep showing the pre-edit animations until the element was reselected. Mirrors
-            // the after-undo repaint (#3406).
-            RefreshViewModel(forceReload: true);
-
-            if (_viewModel != null)
-            {
-                AnimationTabRefreshLogic.RestoreAnimationSelection(_viewModel, selection);
-            }
-        }
-    }
-
+    /// <summary>
+    /// Refreshes the tab and, if it's hidden, auto-shows it the first time the newly-selected element
+    /// turns out to have an animation file. <see cref="pluginTab"/> is a WPF-backed type
+    /// (<c>PluginTab.Content</c> is a <c>FrameworkElement</c>), so this stays plugin-side glue even
+    /// though the refresh decision itself is now the controller's.
+    /// </summary>
     private void HandleElementSelected(ElementSave? element)
     {
-        RefreshViewModel();
+        _controller.RefreshViewModel();
 
         if (element != null && !pluginTab!.IsVisible)
         {
@@ -330,148 +323,7 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
         return true;
     }
 
-    private void HandleVariableSet(ElementSave element, InstanceSave? save2, string arg3, object? arg4)
-    {
-        // This maybe a little inefficient but it should address all issues:
-        // eventually this could be more targeted
-        var state = _selectedState.SelectedStateSave;
-        if (_viewModel == null || state == null) return;
-
-        var isDefault =
-            state == _selectedState.SelectedElement?.DefaultState;
-
-        var stateName = state.Name;
-        if (_selectedState.SelectedStateCategorySave != null)
-        {
-            stateName = _selectedState.SelectedStateCategorySave.Name + "/" + stateName;
-        }
-
-        foreach (var animation in _viewModel.Animations)
-        {
-            var shouldRefresh = isDefault;
-            if (!shouldRefresh)
-            {
-                // see if this state is referenced:
-                foreach (var keyframe in animation.Keyframes)
-                {
-                    if (keyframe.StateName == stateName)
-                    {
-                        shouldRefresh = true;
-                        break;
-                    }
-                }
-            }
-
-            if (shouldRefresh)
-            {
-                animation.RefreshCumulativeStates(element);
-            }
-        }
-    }
-
-
     #endregion
-
-    private void HandleElementDuplicate(ElementSave oldElement, ElementSave newElement)
-    {
-        _duplicateService.HandleDuplicate(oldElement, newElement);
-    }
-
-    private void HandleElementRename(ElementSave element, string oldName)
-    {
-        if (_viewModel == null)
-        {
-            CreateViewModel();
-        }
-
-        _renameManager.HandleRename(element, oldName, _viewModel!);
-    }
-
-    private void HandleInstanceRename(ElementSave element, InstanceSave instanceSave, string oldName)
-    {
-        if (_viewModel == null)
-        {
-            CreateViewModel();
-        }
-
-        if (_selectedState.SelectedElement != null)
-        {
-            _renameManager.HandleRename(instanceSave, oldName, _viewModel!);
-        }
-    }
-
-    private void HandleStateRename(StateSave stateSave, string oldName)
-    {
-        if (_viewModel == null)
-        {
-            CreateViewModel();
-        }
-
-        var element = _selectedState.SelectedElement;
-        if (element != null && _viewModel != null)
-        {
-            AnimationTabRefreshLogic.RefreshAfterStateRename(_renameManager, _viewModel, element, stateSave, oldName);
-        }
-
-        // Refresh available states / DataContext and re-broadcast. RefreshErrors runs again here,
-        // but it is idempotent and rename is not a hot path.
-        RefreshViewModel();
-    }
-
-    private void HandleAfterUndo()
-    {
-        // Capture the selection before the forced rebuild below replaces the view model (and with it
-        // every AnimationViewModel/keyframe instance), then reselect by identity afterward so the
-        // user's animation + keyframe selection survives undo/redo — mirroring element-undo's state
-        // selection restore (#3406). Index + count are captured alongside the keyframe so the reselect
-        // can fall back to position when the undo reverted the selected keyframe's own value (see
-        // AnimationTabRefreshLogic.RestoreAnimationSelection).
-        var selection = AnimationTabRefreshLogic.CaptureAnimationSelection(_viewModel);
-
-        // Repaint the tab from the just-restored .ganx, then re-arm undo recording. The flag spanned
-        // the .ganx write (ApplyAnimations) through this repaint so neither flushed a spurious undo.
-        // forceReload bypasses CreateViewModel's same-element early-out: an in-place undo leaves the
-        // selected element unchanged, so without forcing it the stale view model would survive and the
-        // tab would keep showing the pre-undo animations until the element was reselected (#3406).
-        RefreshViewModel(forceReload: true);
-
-        if (_viewModel != null)
-        {
-            AnimationTabRefreshLogic.RestoreAnimationSelection(_viewModel, selection);
-        }
-
-        _isApplyingUndo = false;
-    }
-
-    private void HandleStateAdd(StateSave state)
-    {
-        RefreshViewModel();
-    }
-
-    private void HandleStateDelete(StateSave state)
-    {
-        RefreshViewModel();
-    }
-
-    private void HandleCategoryDelete(StateSaveCategory category)
-    {
-        RefreshViewModel();
-    }
-
-    private void HandleCategoryRename(StateSaveCategory category, string oldName)
-    {
-        if (_viewModel == null)
-        {
-            CreateViewModel();
-        }
-
-        // We only care about this if we have an element. Otherwise, it could be a behavior:
-        if (_selectedState.SelectedElement != null)
-        {
-            _renameManager.HandleRename(category, oldName, _viewModel!);
-        }
-
-    }
 
     private void HandleToggleTabVisibility(object? sender, System.Windows.RoutedEventArgs e)
     {
@@ -498,10 +350,10 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
 
             _mainWindow.FirstRowWidth = new GridLength((double)settings.FirstToSecondColumnRatio, GridUnitType.Star);
             _mainWindow.SecondRowWidth = new GridLength(1, GridUnitType.Star);
-            _mainWindow.AddStateKeyframeClicked += HandleAddStateKeyframe;
-            _mainWindow.AnimationKeyframeAdded += HandleAnimationKeyrameAdded;
+            _mainWindow.AddStateKeyframeClicked += _controller.HandleAddStateKeyframe;
+            _mainWindow.AnimationKeyframeAdded += _controller.HandleAnimationKeyrameAdded;
             _mainWindow.AnimationColumnsResized += HandleAnimationColumnsResized;
-            
+
             pluginTab = _tabManager.AddControl(_mainWindow, "Animations",
                 TabLocation.RightBottom);
 
@@ -512,9 +364,9 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
         }
 
         // forces a refresh:
-        _viewModel = _animationVmFactory();
+        _controller.CreateInitialViewModel();
 
-        RefreshViewModel();
+        _controller.RefreshViewModel();
     }
 
     private void HandleAnimationColumnsResized()
@@ -527,81 +379,6 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
 
             _settingsManager.SaveSettings();
         }
-    }
-
-    private void HandleAddStateKeyframe(object? sender, EventArgs e)
-    {
-        string? whyIsntValid = GetWhyAddingTimedStateIsInvalid();
-
-        var selectedAnimation = _viewModel?.SelectedAnimation;
-        if(selectedAnimation == null)
-        {
-            return;
-        }
-
-        if (!string.IsNullOrEmpty(whyIsntValid))
-        {
-            _dialogService.ShowMessage(whyIsntValid);
-            return;
-        }
-
-        AddStateKeyframeDialog dialog = new()
-        {
-            ElementSave = _selectedState.SelectedElement
-        };
-
-
-
-        _dialogService.Show(dialog);
-
-        if (dialog.Result is { } newVm)
-        {
-            if (selectedAnimation.SelectedKeyframe != null)
-            {
-                // put this after the current animation
-                newVm.Time = selectedAnimation.SelectedKeyframe.Time + 1f;
-            }
-            else if (selectedAnimation.Keyframes.Count != 0)
-            {
-                newVm.Time = selectedAnimation.Keyframes.Last().Time + 1f;
-            }
-
-            selectedAnimation.Keyframes.BubbleSort();
-
-            selectedAnimation.Keyframes.Add(newVm);
-            // Call this *before* setting SelectedKeyframe so the available
-            // states are assigned. Otherwise
-            // StateName will be nulled out.
-            HandleAnimationKeyrameAdded(newVm);
-            selectedAnimation.SelectedKeyframe = newVm;
-        }
-    }
-
-    private void HandleAnimationKeyrameAdded(AnimatedKeyframeViewModel newVm)
-    {
-        newVm.AvailableStates = this.AvailableStates;
-        newVm.PropertyChanged += HandleAnimatedKeyframePropertyChanged;
-    }
-
-    private string? GetWhyAddingTimedStateIsInvalid()
-    {
-        string? whyIsntValid = null;
-
-        if(_viewModel == null)
-        {
-            // invalid state, but don't blow up
-            return null;
-        }
-        if (_viewModel.SelectedAnimation == null)
-        {
-            whyIsntValid = "You must first select an Animation";
-        }
-
-        if (_selectedState.SelectedScreen == null && _selectedState.SelectedComponent == null)
-        {
-            whyIsntValid = "You must first select a Screen or Component";
-        }
-        return whyIsntValid;
     }
 
     private void HandleTabShown()
@@ -618,298 +395,5 @@ public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
         {
             menuItem.Header = "View Animations";
         }
-    }
-
-    private void RefreshViewModel(bool forceReload = false)
-    {
-        RefreshAvailableStates();
-
-        CreateViewModel(forceReload);
-
-        if (_mainWindow != null)
-        {
-            _mainWindow.DataContext = _viewModel;
-        }
-    }
-
-    private void RefreshAvailableStates()
-    {
-        AvailableStates.ReplaceWith(AnimationTabRefreshLogic.GetAvailableStates(_selectedState.SelectedElement, _viewModel));
-    }
-
-    private void CreateViewModel(bool forceReload = false)
-    {
-        ElementSave? currentlyReferencedElement = null;
-        if (_viewModel != null)
-        {
-            currentlyReferencedElement = _viewModel.Element;
-        }
-
-        var element = _selectedState.SelectedElement;
-
-        if (AnimationTabRefreshLogic.ShouldReloadViewModel(currentlyReferencedElement, element, forceReload))
-        {
-            if (_projectState.GumProjectSave?.FullFileName == null)
-            {
-                // OK to assign null, will be fixed down below
-                _viewModel = null!;
-            }
-            else
-            {
-                // OK to assign null, will be fixed down below
-                _viewModel = _animationCollectionViewModelManager.GetAnimationCollectionViewModel(element)!;
-            }
-
-            if (_viewModel != null)
-            {
-                _viewModel.PropertyChanged += HandlePropertyChanged;
-                _viewModel.AnyChange += HandleDataChange;
-                _viewModel.AddStateKeyframeRequested += HandleAddStateKeyframe;
-
-                foreach (var item in _viewModel.Animations)
-                {
-                    foreach (var keyframe in item.Keyframes)
-                    {
-                        keyframe.AvailableStates = this.AvailableStates;
-                        keyframe.PropertyChanged += HandleAnimatedKeyframePropertyChanged;
-
-                    }
-                }
-            }
-            currentlyReferencedElement = element;
-        }
-        
-        if (_viewModel == null)
-        {
-            _viewModel = _animationVmFactory();
-        }
-        if(currentlyReferencedElement != null)
-        {
-            _viewModel?.RefreshErrors(currentlyReferencedElement);
-        }
-
-        _messenger.Send(new RequestErrorRefreshMessage { RequestingPlugin = this });
-
-    }
-
-    private void HandleAnimatedKeyframePropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        switch (e.PropertyName)
-        {
-            case nameof(AnimatedKeyframeViewModel.StateName):
-                // user may have changed a state that is currently being displayed so let's refresh it all!
-                SetWireframeStateFromDisplayedAnimTime();
-                break;
-        }
-    }
-
-    private void HandlePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
-    {
-        var variableName = e.PropertyName;
-
-        if (sender is ElementAnimationsViewModel)
-        {
-            if (variableName == "DisplayedAnimationTime")
-            {
-                SetWireframeStateFromDisplayedAnimTime();
-            }
-        }
-    }
-
-    private void SetWireframeStateFromDisplayedAnimTime()
-    {
-        //////////////////////// EARLY OUT
-        if (_viewModel?.SelectedAnimation == null)
-        {
-            return;
-        }
-        ////////////////////// END EARLY OUT
-
-        var animationTime = _viewModel.DisplayedAnimationTime;
-
-        var animation = _viewModel.SelectedAnimation;
-        var element = _selectedState.SelectedElement;
-
-        if(element != null)
-        {
-            animation.SetStateAtTime(animationTime, element, defaultIfNull: true);
-        }
-    }
-
-    private void HandleDataChange(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
-    {
-        var variableName = e.PropertyName;
-
-        bool shouldSave = true;
-
-        if (sender is ElementAnimationsViewModel)
-        {
-            shouldSave = variableName == "Animations";
-        }
-
-        if (sender is AnimationViewModel)
-        {
-            // can this happen? I don't see anything on the view model
-            if (variableName == "SelectedState" ||
-                variableName == nameof(AnimationViewModel.SelectedKeyframe) ||
-                variableName == nameof(AnimationViewModel.Length)
-                )
-            {
-                shouldSave = false;
-            }
-        }
-
-        if (sender is AnimatedKeyframeViewModel)
-        {
-            shouldSave =
-                variableName == nameof(AnimatedKeyframeViewModel.StateName) ||
-                variableName == nameof(AnimatedKeyframeViewModel.AnimationName) ||
-                variableName == nameof(AnimatedKeyframeViewModel.EventName) ||
-                variableName == nameof(AnimatedKeyframeViewModel.SubAnimationViewModel) ||
-                variableName == nameof(AnimatedKeyframeViewModel.Time) ||
-                variableName == nameof(AnimatedKeyframeViewModel.InterpolationType) ||
-                variableName == nameof(AnimatedKeyframeViewModel.Easing);
-
-        }
-
-        if (shouldSave)
-        {
-            try
-            {
-                _animationCollectionViewModelManager.Save(_viewModel!);
-            }
-            catch (Exception exc)
-            {
-                _guiCommands.PrintOutput($"Could not save animations for {_viewModel?.Element}:\n{exc}");
-            }
-
-            // Fold this animation edit into the selected element's undo timeline. Opening and disposing
-            // an undo lock fires the element strategy's TryRecord, whose baseline (captured on selection
-            // / after the previous record) now differs from the just-saved animations, so it records the
-            // change atomically with any element edit and re-baselines. One mechanism covers every
-            // persisted gesture — keyframe add/delete/paste, time/interpolation/loop edits. Skipped while
-            // an undo is being applied, so restoring animations doesn't record a brand-new undo (#3406).
-            if (!_isApplyingUndo)
-            {
-                using (_undoManager.RequestLock()) { }
-            }
-
-            // The edit changed which states/animations the keyframes reference, so an animation
-            // error (e.g. a keyframe pointing at a now-missing state) may have appeared or cleared.
-            // No structural plugin event fires for an animation edit, so request a full error
-            // refresh; the headless checker re-reads the just-saved .ganx. RequestingPlugin is left
-            // null (full refresh) so both the Errors tab and the tree "!" indicator re-check.
-            _messenger.Send(new RequestErrorRefreshMessage());
-        }
-    }
-
-
-    private DeleteResponse HandleGetDeleteStateResponse(StateSave state, IStateContainer container)
-    {
-        var response = new DeleteResponse();
-        response.ShouldDelete = true;
-
-        if(container is ElementSave elementSave)
-        {
-            List<AnimationSave> animatedStatesReferencingState = GetAnimationsReferencingState(state, elementSave);
-
-            if (animatedStatesReferencingState?.Count > 0)
-            {
-                string message = "Are you sure you want to delete this state? It is used by the following animations. Deleting this state may break the animation:\n\n";
-
-                foreach (var animation in animatedStatesReferencingState)
-                {
-                    message += animation.Name;
-                }
-
-                if (!_dialogService.ShowYesNoMessage(message, "Delete state?"))
-                {
-                    response.ShouldDelete = false;
-                    response.Message = null;
-                    response.ShouldShowMessage = false; // user said 'no', no need to show a message...S
-                }
-            }
-        }
-
-
-        return response;
-    }
-
-    private DeleteResponse HandleGetDeleteStateCategoryResponse(StateSaveCategory category, IStateContainer container)
-    {
-        var response = new DeleteResponse();
-        response.ShouldDelete = true;
-
-        var animatedStatesReferencingState = new HashSet<AnimationSave>();
-
-        foreach (var state in category.States)
-        {
-            foreach (var toAdd in GetAnimationsReferencingState(state, container as ElementSave))
-            {
-                animatedStatesReferencingState.Add(toAdd);
-            }
-        }
-
-        if (animatedStatesReferencingState?.Count > 0)
-        {
-            string message = "Are you sure you want to delete this category? It is used by the following animations. Deleting this category may break the animation:\n\n";
-
-            foreach (var animation in animatedStatesReferencingState)
-            {
-                message += animation.Name;
-            }
-
-            if (!_dialogService.ShowYesNoMessage(message, "Delete category?"))
-            {
-                response.ShouldDelete = false;
-                response.Message = null;
-                response.ShouldShowMessage = false; // user said 'no', no need to show a message...S
-            }
-        }
-
-        return response;
-    }
-
-    private List<AnimationSave> GetAnimationsReferencingState(StateSave state, ElementSave? element)
-    {
-        List<AnimationSave> animatedStatesReferencingState = new List<AnimationSave>();
-        if (element != null)
-        {
-            global::Gum.StateAnimation.SaveClasses.ElementAnimationsSave? model;
-            if (element == _viewModel?.Element)
-            {
-                model = _viewModel.BackingData!;
-            }
-            else
-            {
-                model = _animationCollectionViewModelManager.GetElementAnimationsSave(element);
-            }
-
-
-            animatedStatesReferencingState = new List<AnimationSave>();
-
-            var category = element.Categories.FirstOrDefault(item => item.States.Contains(state));
-
-            var stateName = category != null
-                ? $"{category.Name}/{state.Name}"
-                : state.Name;
-
-            if (model != null)
-            {
-                foreach (var animation in model.Animations)
-                {
-                    foreach (var animatedState in animation.States)
-                    {
-                        if (animatedState.StateName == stateName)
-                        {
-                            animatedStatesReferencingState.Add(animation);
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        return animatedStatesReferencingState;
     }
 }
