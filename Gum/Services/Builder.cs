@@ -231,6 +231,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<ProjectServices.IErrorDocsRegistry, ProjectServices.ErrorDocsRegistry>();
         services.AddSingleton<ErrorChecker>();
         services.AddSingleton<IErrorChecker>(provider => provider.GetRequiredService<ErrorChecker>());
+        services.AddSingleton<IVariableTypeConverterProvider, VariableTypeConverterProvider>();
         services.AddSingleton<IVariableSaveLogic, VariableSaveLogic>();
         services.AddSingleton<IVariableReferenceLogic, VariableReferenceLogic>();
         services.AddSingleton<IReferenceFinder, ReferenceFinder>();

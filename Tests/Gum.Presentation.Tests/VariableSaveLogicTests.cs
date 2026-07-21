@@ -7,12 +7,13 @@ using Gum.ToolStates;
 using Moq;
 using Shouldly;
 
-namespace GumToolUnitTests.Logic;
+namespace Gum.Presentation.Tests;
 
 public class VariableSaveLogicTests : BaseTestClass
 {
     private readonly Mock<ISelectedState> _mockSelectedState;
     private readonly Mock<IPluginManager> _mockPluginManager;
+    private readonly Mock<IVariableTypeConverterProvider> _mockVariableTypeConverterProvider;
     private readonly VariableSaveLogic _logic;
 
     public VariableSaveLogicTests()
@@ -21,7 +22,9 @@ public class VariableSaveLogicTests : BaseTestClass
         _mockPluginManager = new Mock<IPluginManager>();
         _mockPluginManager.Setup(p => p.ShouldExclude(It.IsAny<VariableSave>(), It.IsAny<RecursiveVariableFinder>()))
             .Returns(false);
-        _logic = new VariableSaveLogic(_mockSelectedState.Object, _mockPluginManager.Object);
+        _mockVariableTypeConverterProvider = new Mock<IVariableTypeConverterProvider>();
+        _logic = new VariableSaveLogic(_mockSelectedState.Object, _mockPluginManager.Object,
+            _mockVariableTypeConverterProvider.Object);
 
         ObjectFinder.Self.GumProjectSave = new GumProjectSave();
     }
@@ -105,6 +108,25 @@ public class VariableSaveLogicTests : BaseTestClass
         bool result = _logic.GetShouldIncludeBasedOnBaseType(variableList, container, rootElementSave: null);
 
         result.ShouldBeFalse();
+    }
+
+    // -----------------------------------------------------------------------
+    // GetTypeConverter
+    // -----------------------------------------------------------------------
+
+    [Fact]
+    public void GetTypeConverter_DelegatesToInjectedVariableTypeConverterProvider()
+    {
+        VariableSave variable = new VariableSave { Name = "MyVar" };
+        ComponentSave container = new ComponentSave();
+        System.ComponentModel.TypeConverter expectedConverter = new System.ComponentModel.TypeConverter();
+        _mockVariableTypeConverterProvider
+            .Setup(p => p.GetTypeConverter(variable, container))
+            .Returns(expectedConverter);
+
+        System.ComponentModel.TypeConverter result = _logic.GetTypeConverter(variable, container);
+
+        result.ShouldBeSameAs(expectedConverter);
     }
 
     // -----------------------------------------------------------------------

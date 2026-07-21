@@ -86,14 +86,20 @@
 			resolve System.Type by name via reflection over GumCommon-compiled assemblies), but
 			physically live in Gum/ alongside the WPF-coupled tool code. Linked here so
 			Gum.Presentation (which references GumCommon transitively but not Gum.csproj) can take
-			ITypeManager as a constructor dependency. IVariableSaveLogic (interface only - the
-			concrete VariableSaveLogic stays in Gum/Logic since it depends on IPluginManager/
-			ISelectedState, which live in Gum.Presentation and would create a circular reference)
-			is linked for the same reason, prepping ElementSaveDisplayer's future relocation.
+			ITypeManager as a constructor dependency. IVariableSaveLogic and
+			IVariableTypeConverterProvider are linked for the same reason: the concrete
+			VariableSaveLogic itself moved to Tools/Gum.Presentation/Logic (#3907) since
+			IPluginManager/ISelectedState already live there too - no circular reference, since
+			Gum.Presentation depends on GumCommon, not the other way around. Only its
+			GetTypeConverter member stayed tool-only, behind the IVariableTypeConverterProvider
+			seam (VariableTypeConverterProvider, the concrete implementation, stays in Gum/Logic -
+			it delegates to VariableSaveExtensionMethodsGumTool.GetTypeConverter, which is
+			Locator-resolving and tool-only).
 		-->
 		<Compile Include="..\Gum\Reflection\ITypeManager.cs" Link="Reflection\ITypeManager.cs" />
 		<Compile Include="..\Gum\Reflection\TypeManager.cs" Link="Reflection\TypeManager.cs" />
 		<Compile Include="..\Gum\Logic\IVariableSaveLogic.cs" Link="Logic\IVariableSaveLogic.cs" />
+		<Compile Include="..\Gum\Logic\IVariableTypeConverterProvider.cs" Link="Logic\IVariableTypeConverterProvider.cs" />
 		<Compile Include="..\Gum\Mvvm\ObservableCollectionExtensions.cs" Link="Mvvm\ObservableCollectionExtensions.cs" />
 		<Compile Include="..\Gum\Mvvm\ViewModel.cs" Link="Mvvm\ViewModel.cs" />
 		<Compile Include="..\RenderingLibrary\Content\IContentLoader.cs" Link="Content\IContentLoader.cs" />
