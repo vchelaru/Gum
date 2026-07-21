@@ -27,9 +27,11 @@ public interface IVariableSaveLogic
     /// <summary>
     /// Returns the <see cref="TypeConverter"/> that should be used to edit/display the given variable
     /// in the Variables tab (classified by file/font/guide/state/animation-chain/exposed-variable, or
-    /// ultimately its runtime type). Narrow seam over <c>VariableSaveExtensionMethodsGumTool.GetTypeConverter</c>
-    /// (Locator-resolving, tool-only) so headless callers (e.g. the relocated <c>ElementSaveDisplayer</c>)
-    /// don't need to reference it directly.
+    /// ultimately its runtime type). Implemented by delegating to the injected
+    /// <c>IVariableTypeConverterProvider</c> — the actual narrow seam over
+    /// <c>VariableSaveExtensionMethodsGumTool.GetTypeConverter</c> (Locator-resolving, tool-only) —
+    /// so headless callers (e.g. the relocated <c>ElementSaveDisplayer</c>) don't need to reference
+    /// that tool-only extension method directly.
     /// </summary>
     TypeConverter GetTypeConverter(VariableSave defaultVariable, ElementSave? container);
 }

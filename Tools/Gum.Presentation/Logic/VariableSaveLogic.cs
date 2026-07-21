@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins;
@@ -14,12 +14,25 @@ public class VariableSaveLogic : IVariableSaveLogic
 {
     private readonly ISelectedState _selectedState;
     private readonly IPluginManager _pluginManager;
+    private readonly IVariableTypeConverterProvider _variableTypeConverterProvider;
 
-    public VariableSaveLogic(ISelectedState selectedState, IPluginManager pluginManager)
+    public VariableSaveLogic(ISelectedState selectedState, IPluginManager pluginManager,
+        IVariableTypeConverterProvider variableTypeConverterProvider)
     {
         _selectedState = selectedState;
         _pluginManager = pluginManager;
+        _variableTypeConverterProvider = variableTypeConverterProvider;
     }
+
+    /// <summary>
+    /// Returns the VariableSave from the argument element's default state, walking the base-element
+    /// chain. Headless replacement for the tool-only <c>ElementSaveExtensionMethodsGumTool
+    /// .GetVariableFromThisOrBase</c>'s <c>forceDefault: true</c> overload (the only overload this
+    /// class uses) - that overload never touches <see cref="ISelectedState"/>/<c>Locator</c> either,
+    /// it only does so on the <c>forceDefault: false</c> path this class doesn't call.
+    /// </summary>
+    private static VariableSave? GetVariableFromThisOrBaseDefaultState(ElementSave element, string variable) =>
+        element.DefaultState.GetVariableRecursive(variable);
 
     /// <inheritdoc/>
     public bool GetIfVariableIsActive(VariableSave defaultVariable, ElementSave container, InstanceSave? currentInstance)
@@ -114,18 +127,19 @@ public class VariableSaveLogic : IVariableSaveLogic
         if (currentInstance != null)
         {
             var root = ObjectFinder.Self.GetRootStandardElementSave(currentInstance);
-            if (root != null && root.GetVariableFromThisOrBase(defaultVariable.Name, true) != null)
+            var foundVariable = root != null ? GetVariableFromThisOrBaseDefaultState(root, defaultVariable.Name) : null;
+            if (foundVariable != null)
             {
-                var foundVariable = root.GetVariableFromThisOrBase(defaultVariable.Name, true);
                 canOnlyBeSetInDefaultState = foundVariable.CanOnlyBeSetInDefaultState;
             }
         }
         else if (container != null)
         {
             var root = ObjectFinder.Self.GetRootStandardElementSave(container);
-            if (root != null && root.GetVariableFromThisOrBase(defaultVariable.Name, true) != null)
+            var foundVariable = root != null ? GetVariableFromThisOrBaseDefaultState(root, defaultVariable.Name) : null;
+            if (foundVariable != null)
             {
-                canOnlyBeSetInDefaultState = root.GetVariableFromThisOrBase(defaultVariable.Name, true).CanOnlyBeSetInDefaultState;
+                canOnlyBeSetInDefaultState = foundVariable.CanOnlyBeSetInDefaultState;
             }
         }
         bool shouldInclude = true;
@@ -299,5 +313,5 @@ public class VariableSaveLogic : IVariableSaveLogic
 
     /// <inheritdoc/>
     public System.ComponentModel.TypeConverter GetTypeConverter(VariableSave defaultVariable, ElementSave? container) =>
-        defaultVariable.GetTypeConverter(container);
+        _variableTypeConverterProvider.GetTypeConverter(defaultVariable, container);
 }
