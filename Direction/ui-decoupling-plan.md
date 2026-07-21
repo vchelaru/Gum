@@ -187,6 +187,25 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   .InstanceMember` (a `net8.0-windows`/WPF-only library). Split the interface rather than block the
   whole move: the clean members go to `Gum.Presentation`, the WPF-typed one moves to a new
   tool-only sibling interface implemented by the same concrete class.
+- **A plugin's handler method can be WPF-free by type yet still unmovable, because it reads the
+  plugin's own private fields rather than taking its dependencies as parameters.** Unlike a
+  WPF-typed member (fixed by splitting an interface or relocating a type), this is fixed by pushing
+  the handler into a new ctor-injected controller class — the same shape as `CameraController`/
+  `SelectionManager` — taking those fields as constructor dependencies. Check field access, not just
+  type references, when a plugin method looks clean on a first read.
+- **A blocker doesn't have to be WPF/WinForms — a NuGet target-framework mismatch blocks identically.**
+  A dependency on a `net8.0-windows`-targeted library (e.g. `CsvLibrary`) from the plain-`net8.0`
+  `Gum.Presentation` is a hard `NU1201` restore error, not a compile-time type error, even though the
+  library itself contains no WPF/WinForms types. Fix with the same narrow-interface seam used for a
+  real WPF blocker.
+- **Mocked constructor-injection unit tests give zero signal on a real DI construction cycle.**
+  Injecting a new interface non-lazily can introduce a cycle through the *real* DI graph
+  (`A → B → ... → A`) that every test mocking `A`'s dependencies passes cleanly, because a mock never
+  touches the container — only a test that resolves the real container (`ServiceProviderCompositionSpikeTests`)
+  catches it, and it fails as a hang/timeout in CI, not a clean assertion failure. Fix the same way as
+  any other cycle: inject the cycling dependency as `Lazy<T>` (rule 4 of the `refactoring-direction`
+  skill). Run the composition-spike test locally before pushing whenever a PR adds a new constructor
+  dependency, not just when mocked tests are green.
 - **A dependency's live value can come from a WPF resource dictionary
   (`Application.Current.Resources[...]`), not just a `.Self`/`Locator`-typed service.** The resource's
   own type is often a `DependencyObject`, unconstructable and unmockable outside WPF, so the fix isn't
