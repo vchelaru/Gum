@@ -106,6 +106,10 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   free; one injecting a still-WPF/WinForms-coupled interface can't move until that interface is
   cleaned or relocated too. Re-check the current state of each dependency — a past note's "this
   interface is blocked" claim can go stale as unrelated PRs clean things up.
+- **A class can look fully relocatable by its injected fields while an extension-method call site
+  still resolves to a `Locator`-based static.** Grep the whole class for receiver-less-looking calls
+  (`x.SomeMethod()` with no visible owning type) in addition to its constructor dependencies — an
+  extension method can hide a `Locator`/`.Self` resolution that a field-only audit misses entirely.
 - **XAML `clr-namespace` declarations need `;assembly=Gum.Presentation`** once a bound type moves
   out of `Gum.csproj`, or the XAML fails to resolve it. `d:DesignInstance`/`d:`-namespaced
   attributes are silently skipped by `dotnet build` (only the VS designer breaks); real
