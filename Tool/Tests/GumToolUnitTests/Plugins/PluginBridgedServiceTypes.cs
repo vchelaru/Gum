@@ -43,6 +43,9 @@ internal static class PluginBridgedServiceTypes
 {
     internal static readonly Type[] All =
     {
+        // PluginManager's own [ImportingConstructor] dep (#3880) - bridged because PluginManager itself
+        // is an implicit MEF part (see its ctor's comment), not because it's a plugin.
+        typeof(IPluginEnablementStore),
         typeof(ISelectedState),
         typeof(IElementCommands),
         typeof(IUndoManager),

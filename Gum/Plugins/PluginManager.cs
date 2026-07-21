@@ -60,7 +60,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 {
     #region Fields
 
-    static PluginSettingsSave mPluginSettingsSave = new PluginSettingsSave();
+    private readonly IPluginEnablementStore _pluginEnablementStore;
 
     private List<Assembly> mExternalAssemblies = new List<Assembly>();
     private List<string> mReferenceListInternal = new List<string>();
@@ -100,14 +100,6 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     #endregion
 
     #region Properties
-
-    static string PluginSettingsSaveFileName
-    {
-        get
-        {
-            return FileManager.UserApplicationDataForThisApplication + "GumPluginSettings.xml";
-        }
-    }
 
     [Export("LocalizationService")]
     public LocalizationService LocalizationService => Locator.GetRequiredService<LocalizationService>();
@@ -733,9 +725,17 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
     #region Additional Methods
 
-    public PluginManager()
+    // [ImportingConstructor] is required, not just decorative: PluginManager's own assembly is added
+    // to LoadPlugins' AggregateCatalog (see CreateCatalog), and the class exports a member
+    // ("LocalizationService" below), which makes MEF treat PluginManager itself as an implicit part it
+    // must activate - a *second*, throwaway instance distinct from the DI-built singleton bridged as
+    // IPluginManager. That activation only reads the parameterless-safe LocalizationService property,
+    // never _pluginEnablementStore, but MEF still needs a satisfiable constructor to build it, hence
+    // both the attribute and the IPluginEnablementStore bridge in LoadPlugins below.
+    [ImportingConstructor]
+    public PluginManager(IPluginEnablementStore pluginEnablementStore)
     {
-
+        _pluginEnablementStore = pluginEnablementStore;
     }
 
 
@@ -746,28 +746,15 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         _dialogService = Locator.GetRequiredService<IDialogService>();
 
         _messenger.Register<AfterUndoMessage>(this, (_, _) => AfterUndo());
-        LoadPluginSettings();
+        _pluginEnablementStore.Load();
         LoadPlugins(this);
         mInstances.Add(this);
         mGlobalInstance = this;
     }
 
-    private void LoadPluginSettings()
-    {
-
-        if (System.IO.File.Exists(PluginSettingsSaveFileName))
-        {
-            mPluginSettingsSave = PluginSettingsSave.Load(PluginSettingsSaveFileName);
-        }
-        else
-        {
-            mPluginSettingsSave = new PluginSettingsSave();
-        }
-    }
-
     public void SavePluginSettings()
     {
-        FileManager.XmlSerialize(mPluginSettingsSave, PluginSettingsSaveFileName);
+        _pluginEnablementStore.Save();
     }
 
     private void LoadReferenceLists()
@@ -845,6 +832,10 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
             AggregateCatalog catalog = instance.CreateCatalog();
 
             var batch = new CompositionBatch();
+            // PluginManager's own [ImportingConstructor] dep (#3880): MEF activates PluginManager itself
+            // as an implicit part (see the ctor's comment), so its ctor param must be bridged like any
+            // plugin dependency even though PluginManager is not a PluginBase.
+            batch.AddExportedValue<IPluginEnablementStore>(Locator.GetRequiredService<IPluginEnablementStore>());
             batch.AddExportedValue<ISelectedState>(Locator.GetRequiredService<ISelectedState>());
             batch.AddExportedValue<IElementCommands>(Locator.GetRequiredService<IElementCommands>());
             batch.AddExportedValue<IUndoManager>(Locator.GetRequiredService<IUndoManager>());
@@ -1089,7 +1080,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
                 plugin.UniqueId = plugin.GetType().FullName;
 
 
-                if (!mPluginSettingsSave.DisabledPlugins.Contains(plugin.UniqueId))
+                if (!instance._pluginEnablementStore.IsDisabled(plugin.UniqueId))
                 {
 
                     plugin.StartUp();
@@ -1285,11 +1276,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
         if (shutDownReason == PluginShutDownReason.UserDisabled)
         {
-            if (!mPluginSettingsSave.DisabledPlugins.Contains(pluginToShutDown.UniqueId))
-            {
-                mPluginSettingsSave.DisabledPlugins.Add(pluginToShutDown.UniqueId);
-                mPluginSettingsSave.Save(PluginSettingsSaveFileName);
-            }
+            mGlobalInstance._pluginEnablementStore.Disable(pluginToShutDown.UniqueId);
         }
 
         return doesPluginWantToShutDown;
@@ -1297,8 +1284,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
     internal static void ReenablePlugin(IPlugin pluginToReenable)
     {
-        if (mPluginSettingsSave.DisabledPlugins.Remove(pluginToReenable.UniqueId))
-            mPluginSettingsSave.Save(PluginSettingsSaveFileName);
+        mGlobalInstance._pluginEnablementStore.Enable(pluginToReenable.UniqueId);
     }
 
     /// <inheritdoc/>

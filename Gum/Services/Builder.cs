@@ -94,8 +94,14 @@ file static class ServiceCollectionExtensions
 
         // static singletons
         services.AddSingleton<IObjectFinder>(ObjectFinder.Self);
-        // PluginManager: drained from a static Self singleton (#3291). DI-constructed (empty ctor); Initialize()
-        // (Program.cs) does the heavy two-stage setup and registers the global instance for the static plugin machinery.
+        // PluginEnablementStore: the user-disabled-plugins persistence PluginManager used to own via a
+        // static field (#3880) - genuinely relocatable (plain string plugin ids, no MEF/WinForms types),
+        // so it lives in the headless Gum.Presentation assembly even though PluginManager itself stays
+        // tool-side.
+        services.AddSingleton<IPluginEnablementStore, PluginEnablementStore>();
+        // PluginManager: drained from a static Self singleton (#3291). DI-constructed (lightweight ctor
+        // taking only IPluginEnablementStore); Initialize() (Program.cs) does the heavy two-stage setup
+        // and registers the global instance for the static plugin machinery.
         services.AddSingleton<PluginManager>();
         services.AddSingleton<IPluginManager>(provider => provider.GetRequiredService<PluginManager>());
         // IUndoPluginNotifier: narrow headless port (ADR-0005 Phase 3) so UndoManager no longer depends on the
