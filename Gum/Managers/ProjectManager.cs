@@ -48,7 +48,9 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
     // rebuild-fonts path reads GumProjectSave) — deferring it breaks the construction cycle.
     private readonly Lazy<ICommandLineManager> _commandLineManager;
     private readonly IPluginManager _pluginManager;
-    private readonly IHotkeyManager _hotkeyManager;
+    // Lazy because HotkeyManager depends (via ISetVariableLogic -> SetVariableLogic) back on
+    // IProjectManager — deferring it breaks the construction cycle, same as _commandLineManager above.
+    private readonly Lazy<IHotkeyManager> _hotkeyManager;
     private readonly IGumProjectRepairLogic _gumProjectRepairLogic;
 
     #endregion
@@ -124,7 +126,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         IRetryService retryService,
         Lazy<ICommandLineManager> commandLineManager,
         IPluginManager pluginManager,
-        IHotkeyManager hotkeyManager,
+        Lazy<IHotkeyManager> hotkeyManager,
         IGumProjectRepairLogic gumProjectRepairLogic)
     {
         _selectedState = selectedState;
@@ -158,7 +160,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
 
         if (!_commandLineManager.Value.ShouldExitImmediately)
         {
-            var isShift = _hotkeyManager.IsPressedInControl(KeyCombination.Shift());
+            var isShift = _hotkeyManager.Value.IsPressedInControl(KeyCombination.Shift());
 
             if (!isShift && !string.IsNullOrEmpty(_commandLineManager.Value.GlueProjectToLoad))
             {

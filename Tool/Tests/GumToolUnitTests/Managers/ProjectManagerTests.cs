@@ -68,7 +68,7 @@ public class ProjectManagerTests : BaseTestClass
             _retryService.Object,
             new Lazy<ICommandLineManager>(() => _commandLineManager.Object),
             _pluginManager.Object,
-            _hotkeyManager.Object,
+            new Lazy<IHotkeyManager>(() => _hotkeyManager.Object),
             _gumProjectRepairLogic.Object);
     }
 
