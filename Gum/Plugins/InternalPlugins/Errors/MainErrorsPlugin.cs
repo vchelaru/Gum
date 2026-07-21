@@ -80,7 +80,9 @@ public class MainErrorsPlugin : PriorityPlugin
     {
         control = new ErrorDisplay();
         control.DataContext = viewModel;
-        tabPage = _tabManager.AddControl(control, "Errors", TabLocation.RightBottom);
+        // CustomHeaderContent is FrameworkElement-typed (WPF), so it stays off IPluginTab; cast back
+        // to the concrete PluginTab here rather than widening the headless interface for one caller.
+        tabPage = (PluginTab)_tabManager.AddControl(control, "Errors", TabLocation.RightBottom);
 
         _tabPageHeader = new ErrorTabHeader { DataContext = viewModel };
         tabPage.CustomHeaderContent = _tabPageHeader;

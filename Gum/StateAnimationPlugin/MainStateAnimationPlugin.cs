@@ -62,7 +62,7 @@ public class MainStateAnimationPlugin : WpfPluginBase, IAnimationUndoProvider
     private AnimationTabController _controller = null!;
 
     StateAnimationPlugin.Views.MainWindow? _mainWindow;
-    private PluginTab? pluginTab;
+    private IPluginTab? pluginTab;
     private MenuItem? menuItem;
 
     // Owned here (not by ElementDeleteService) because materializing a WPF CheckBox from the
@@ -299,9 +299,10 @@ public class MainStateAnimationPlugin : WpfPluginBase, IAnimationUndoProvider
 
     /// <summary>
     /// Refreshes the tab and, if it's hidden, auto-shows it the first time the newly-selected element
-    /// turns out to have an animation file. <see cref="pluginTab"/> is a WPF-backed type
-    /// (<c>PluginTab.Content</c> is a <c>FrameworkElement</c>), so this stays plugin-side glue even
-    /// though the refresh decision itself is now the controller's.
+    /// turns out to have an animation file. <see cref="pluginTab"/> is exposed only through the
+    /// headless <see cref="IPluginTab"/> seam, but the plugin still owns the animation-window
+    /// construction (a real WPF <c>Window</c>), so this stays plugin-side glue even though the
+    /// refresh decision itself is now the controller's.
     /// </summary>
     private void HandleElementSelected(ElementSave? element)
     {

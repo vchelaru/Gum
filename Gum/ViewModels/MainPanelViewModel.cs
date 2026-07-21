@@ -96,7 +96,7 @@ public class MainPanelViewModel : ViewModel, ITabManager, IRecipient<Application
         }
     }
 
-    public PluginTab AddControl(object element, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom)
+    public IPluginTab AddControl(object element, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom)
     {
         FrameworkElement frameworkElement = (FrameworkElement)element;
 
@@ -107,8 +107,8 @@ public class MainPanelViewModel : ViewModel, ITabManager, IRecipient<Application
         PluginTabs.Add(newPluginTab);
         return newPluginTab;
     }
-    
-    public void RemoveTab(PluginTab tab) => PluginTabs.Remove(tab);
+
+    public void RemoveTab(IPluginTab tab) => PluginTabs.Remove((PluginTab)tab);
 
     private void SaveLayoutSettings()
     {

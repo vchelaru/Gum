@@ -10,7 +10,7 @@ namespace Gum.Plugins.InternalPlugins.Hotkey
     [Export(typeof(PluginBase))]
     public class MainHotkeyPlugin : PriorityPlugin
     {
-        PluginTab pluginTab;
+        IPluginTab pluginTab;
         HotkeyView hotkeyView;
         MenuItem menuItem;
         private readonly HotkeyViewModel _hotkeyViewModel;

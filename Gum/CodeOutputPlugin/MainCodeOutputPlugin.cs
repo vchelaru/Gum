@@ -56,7 +56,7 @@ public class MainCodeOutputPlugin : PluginBase
     private readonly IProjectDirectoryProvider _projectDirectoryProvider;
     private readonly CodeGenerationNameVerifier _codeGenerationNameVerifier;
 
-    PluginTab pluginTab = default!;
+    IPluginTab pluginTab = default!;
 
     // Not sure why this is null..., so getting it from the builder instead
     //[Import("LocalizationService")]

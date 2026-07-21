@@ -52,7 +52,7 @@ class MainPropertiesWindowPlugin : PriorityPlugin
     private readonly IProjectManager _projectManager;
     private FilePath? _fontCharacterFileAbsolute;
 
-    private PluginTab? _pluginTab;
+    private IPluginTab? _pluginTab;
 
     private ProjectPropertiesChangeLogic? _changeLogic;
 

@@ -110,7 +110,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         _textureOutlineManager = new TextureOutlineManager();
     }
 
-    public PluginTab CreateControl(object dataContext, out IList<int> availableZoomLevels)
+    public IPluginTab CreateControl(object dataContext, out IList<int> availableZoomLevels)
     {
         mainControl = new MainControl();
         //var control = new ImageRegionSelectionControl();

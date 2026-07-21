@@ -25,7 +25,7 @@ public class MainStatePlugin : PriorityPlugin
 
     StateTreeView stateTreeView;
 
-    PluginTab newPluginTab;
+    IPluginTab newPluginTab;
     private readonly StateTreeViewRightClickService _stateTreeViewRightClickService;
     private readonly IHotkeyManager _hotkeyManager;
     private readonly ISelectedState _selectedState;

@@ -19,7 +19,7 @@ public class MainBehaviorsPlugin : PriorityPlugin
     private readonly IPluginManager _pluginManager;
 
     BehaviorsViewModel viewModel;
-    PluginTab behaviorsTab;
+    IPluginTab behaviorsTab;
     BehaviorsLogic behaviorsLogic;
 
     [ImportingConstructor]

@@ -356,6 +356,21 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   can silently break a subscriber whose handler still declares the old concrete parameter type —
   delegate contravariance only allows a *wider* handler parameter, never narrower, so check every
   subscriber's signature after a publisher-side retype, not just the publisher.
+- **A zero-`System.Windows`-hit class can still be blocked by a concrete tool-side type it
+  manipulates through member access on a method's *return value*, not just a field or parameter
+  type.** `PluginBase.CreateTab` took an already-headless `ITabManager` (params typed `object`) but
+  returned a concrete `PluginTab`, and directly called `.Location =`/`.Hide()` on it — the coupling
+  was one level deeper than a declared-type grep catches. Check what a method's *return type's own
+  members* are used for at each call site, not just whether the field/parameter types it declares
+  are clean, before trusting a zero-hit grep as proof the class is mechanically relocatable.
+- **A narrow interface extracted to unblock one return-type coupling has to be sized to the union
+  of every real caller's member usage, not just the one consumer that originally motivated it.**
+  `IPluginTab` only needed `Location`/`Hide()` for `PluginBase`'s own use, but ~13 other call sites
+  across the tool needed more (`Title`, `IsVisible`, `IsSelected`, `CanClose`, focus/shown/hidden
+  events) — sizing the interface from the blocked class's own usage alone would have left every
+  other caller broken. Grep every real call site of the type being narrowed before finalizing the
+  interface, including `var`-typed locals (`var tab = CreateTab(...)`), not just field/parameter
+  declarations — a `var` local is otherwise easy to miss in a declared-type-only sweep.
 - **A headless method that needs to trigger a WPF-only side effect on itself after its own
   computed action** (e.g. re-opening/refreshing a live control after a state mutation, with no other
   change-notification path back to the View) **is a delegate parameter on the headless method, not

@@ -52,6 +52,10 @@
 		     no WPF/WinForms dependency (Gum.csproj already references it for the same class); pin
 		     matches Gum.csproj's version so a single bump propagates predictably. -->
 		<PackageReference Include="System.Drawing.Common" Version="10.0.0" />
+		<!-- PluginBase's [Import] property injections (MEF) need System.ComponentModel.Composition.
+		     No WPF/WinForms dependency; pin matches Gum.csproj and the plugin csprojs' version so a
+		     single bump propagates predictably. -->
+		<PackageReference Include="System.ComponentModel.Composition" Version="9.0.3" />
 	</ItemGroup>
 
 	<ItemGroup>

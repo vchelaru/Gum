@@ -10,7 +10,6 @@ using Gum.Responses;
 using Gum.Wireframe;
 using ToolsUtilities;
 using Gum.ToolStates;
-using ExCSS;
 using RenderingLibrary;
 using System.Numerics;
 using Gum.Commands;
@@ -261,20 +260,20 @@ public abstract class PluginBase : IPlugin
 
     #region Plugin Tabs
 
-    public PluginTab CreateTab(object control, string tabName, TabLocation defaultLocation = TabLocation.RightBottom)
+    public IPluginTab CreateTab(object control, string tabName, TabLocation defaultLocation = TabLocation.RightBottom)
     {
-        PluginTab newTab = _tabManager.AddControl(control, tabName, defaultLocation);
+        IPluginTab newTab = _tabManager.AddControl(control, tabName, defaultLocation);
         newTab.Location = defaultLocation;
         newTab.Hide();
         return newTab;
     }
 
-    public PluginTab AddControl(object control, string tabName, TabLocation tabLocation)
+    public IPluginTab AddControl(object control, string tabName, TabLocation tabLocation)
     {
         return _tabManager.AddControl(control, tabName, tabLocation);
     }
 
-    public void RemoveTab(PluginTab tab)
+    public void RemoveTab(IPluginTab tab)
     {
         _tabManager.RemoveTab(tab);
     }
@@ -428,7 +427,9 @@ public abstract class PluginBase : IPlugin
 
     public IRenderableIpso? CallCreateRenderableForType(string type) => CreateRenderableForType?.Invoke(type);
 
-    internal bool GetIfVariableIsExcluded(VariableSave defaultVariable, RecursiveVariableFinder rvf) =>
+    // Was internal - bumped to public because PluginBase moved to Gum.Presentation while its only
+    // caller (PluginManager) stays in Gum.csproj; the two no longer share an assembly (issue #3950).
+    public bool GetIfVariableIsExcluded(VariableSave defaultVariable, RecursiveVariableFinder rvf) =>
         VariableExcluded?.Invoke(defaultVariable, rvf) ?? false;
 
     public void CallCameraChanged() => CameraChanged?.Invoke();
