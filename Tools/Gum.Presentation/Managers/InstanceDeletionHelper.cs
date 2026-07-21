@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.Managers;
-using Gum.ToolCommands;
+using ToolsUtilities;
 
 namespace Gum.Gui.Plugins;
 
@@ -168,5 +169,79 @@ public class InstanceDeletionHelper
         _guiCommands.RefreshElementTreeView(parentElement);
         _wireframeCommands.Refresh();
         _fileCommands.TryAutoSaveElement(parentElement);
+    }
+
+    /// <summary>
+    /// Detaches and/or recursively deletes the children of the given instances, according to
+    /// the caller's chosen delete-children option. Instances are grouped by parent container
+    /// when deleting children, since a multi-select delete may span multiple elements.
+    /// </summary>
+    public void PerformMultipleInstancesDelete(
+        IEnumerable<InstanceSave> instances,
+        bool shouldDetachChildren,
+        bool shouldDeleteChildren)
+    {
+        var instancesList = instances.ToList();
+        if (instancesList.Count == 0)
+        {
+            return;
+        }
+
+        if (shouldDetachChildren)
+        {
+            DetachChildrenFromInstances(instancesList);
+        }
+        if (shouldDeleteChildren)
+        {
+            // Group by parent container since instances may belong to different elements
+            var instancesByParent = instancesList
+                .GroupBy(i => i.ParentContainer)
+                .Where(g => g.Key != null);
+
+            foreach (var group in instancesByParent)
+            {
+                RecursivelyDeleteChildrenOfInstances(group.ToList(), group.Key);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Returns the full path to the XML file backing the given object (an <see cref="ElementSave"/>
+    /// or <see cref="BehaviorSave"/>), or null for an <see cref="InstanceSave"/> (which has no XML
+    /// file of its own).
+    /// </summary>
+    public FilePath? GetFileNameForObject(object deletedObject)
+    {
+        return deletedObject switch
+        {
+            ElementSave elementSave => _fileCommands.GetFullPathXmlFile(elementSave, elementSave.Name),
+            BehaviorSave behaviorSave => _fileCommands.GetFullPathXmlFile(behaviorSave),
+            InstanceSave => null,
+            _ => throw new NotImplementedException($"Unsupported object type: {deletedObject?.GetType().Name}")
+        };
+    }
+
+    /// <summary>
+    /// Decides whether the "Delete XML file?" option should be offered for the given object being
+    /// deleted. Instances have no XML file of their own. An element only offers this option when
+    /// its name is not shared by another element in the project (e.g. duplicates added directly to
+    /// the .gumx) — deleting the shared XML file in that case would remove the base file out from
+    /// under any surviving duplicate.
+    /// </summary>
+    public bool ShouldOfferDeleteXmlOption(object objectToDelete)
+    {
+        if (objectToDelete is InstanceSave)
+        {
+            return false;
+        }
+
+        if (objectToDelete is ElementSave elementSave)
+        {
+            var numberOfMatches = ObjectFinder.Self.GumProjectSave?.AllElements
+                .Count(item => item.Name == elementSave.Name) ?? 0;
+            return numberOfMatches < 2;
+        }
+
+        return true;
     }
 }

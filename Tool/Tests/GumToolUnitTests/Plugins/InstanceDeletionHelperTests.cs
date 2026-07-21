@@ -1,5 +1,6 @@
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Gui.Plugins;
 using Gum.Managers;
@@ -7,6 +8,7 @@ using Gum.ToolCommands;
 using Moq;
 using Moq.AutoMock;
 using Shouldly;
+using ToolsUtilities;
 
 namespace GumToolUnitTests.Plugins;
 
@@ -203,6 +205,40 @@ public class InstanceDeletionHelperTests : BaseTestClass
     }
 
     [Fact]
+    public void GetFileNameForObject_BehaviorSave_ReturnsFileCommandsPath()
+    {
+        BehaviorSave behaviorSave = new BehaviorSave { Name = "MyBehavior" };
+        FilePath expectedPath = new FilePath("C:/project/MyBehavior.behx");
+        _fileCommands.Setup(x => x.GetFullPathXmlFile(behaviorSave)).Returns(expectedPath);
+
+        FilePath? result = _helper.GetFileNameForObject(behaviorSave);
+
+        result.ShouldBe(expectedPath);
+    }
+
+    [Fact]
+    public void GetFileNameForObject_ElementSave_ReturnsFileCommandsPath()
+    {
+        ScreenSave screenSave = new ScreenSave { Name = "MyScreen" };
+        FilePath expectedPath = new FilePath("C:/project/Screens/MyScreen.gusx");
+        _fileCommands.Setup(x => x.GetFullPathXmlFile(screenSave, screenSave.Name)).Returns(expectedPath);
+
+        FilePath? result = _helper.GetFileNameForObject(screenSave);
+
+        result.ShouldBe(expectedPath);
+    }
+
+    [Fact]
+    public void GetFileNameForObject_InstanceSave_ReturnsNull()
+    {
+        InstanceSave instanceSave = new InstanceSave { Name = "MyInstance" };
+
+        FilePath? result = _helper.GetFileNameForObject(instanceSave);
+
+        result.ShouldBeNull();
+    }
+
+    [Fact]
     public void InstanceHasChildren_NoChildren_ReturnsFalse()
     {
         var screen = CreateScreenWithInstances("Parent");
@@ -241,6 +277,45 @@ public class InstanceDeletionHelperTests : BaseTestClass
         var result = _helper.InstanceHasChildren(screen.Instances[0]);
 
         result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void PerformMultipleInstancesDelete_EmptyList_DoesNothing()
+    {
+        _helper.PerformMultipleInstancesDelete(Array.Empty<InstanceSave>(), shouldDetachChildren: true, shouldDeleteChildren: true);
+
+        _deleteLogic.Verify(x => x.RemoveReferencesToInstance(It.IsAny<InstanceSave>(), It.IsAny<ElementSave>()), Times.Never);
+        _deleteLogic.Verify(x => x.RemoveInstance(It.IsAny<InstanceSave>(), It.IsAny<ElementSave>()), Times.Never);
+    }
+
+    [Fact]
+    public void PerformMultipleInstancesDelete_ShouldDeleteChildren_DeletesChildrenGroupedByParent()
+    {
+        ScreenSave screen = CreateScreenWithInstances("Parent1", "Parent2");
+        InstanceSave parent1 = screen.Instances[0];
+        InstanceSave parent2 = screen.Instances[1];
+        InstanceSave child1 = AddChild(screen, "Child1", "Parent1");
+        InstanceSave child2 = AddChild(screen, "Child2", "Parent2");
+
+        _helper.PerformMultipleInstancesDelete(new[] { parent1, parent2 }, shouldDetachChildren: false, shouldDeleteChildren: true);
+
+        _deleteLogic.Verify(x => x.RemoveInstance(child1, screen), Times.Once);
+        _deleteLogic.Verify(x => x.RemoveInstance(child2, screen), Times.Once);
+    }
+
+    [Fact]
+    public void PerformMultipleInstancesDelete_ShouldDetachChildren_DetachesFromEachInstance()
+    {
+        ScreenSave screen = CreateScreenWithInstances("Parent1", "Parent2");
+        InstanceSave parent1 = screen.Instances[0];
+        InstanceSave parent2 = screen.Instances[1];
+        AddChild(screen, "Child1", "Parent1");
+        AddChild(screen, "Child2", "Parent2");
+
+        _helper.PerformMultipleInstancesDelete(new[] { parent1, parent2 }, shouldDetachChildren: true, shouldDeleteChildren: false);
+
+        _deleteLogic.Verify(x => x.RemoveReferencesToInstance(parent1, screen), Times.Once);
+        _deleteLogic.Verify(x => x.RemoveReferencesToInstance(parent2, screen), Times.Once);
     }
 
     [Fact]
@@ -390,6 +465,54 @@ public class InstanceDeletionHelperTests : BaseTestClass
         deletionOrder[0].ShouldBe(grandchild1, "Deepest child should be deleted first");
         deletionOrder.ShouldContain(child1);
         deletionOrder.ShouldContain(child2);
+    }
+
+    [Fact]
+    public void ShouldOfferDeleteXmlOption_BehaviorSave_ReturnsTrue()
+    {
+        BehaviorSave behaviorSave = new BehaviorSave { Name = "MyBehavior" };
+
+        bool result = _helper.ShouldOfferDeleteXmlOption(behaviorSave);
+
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ShouldOfferDeleteXmlOption_ElementSaveWithDuplicateName_ReturnsFalse()
+    {
+        ScreenSave screenSave = new ScreenSave { Name = "MyScreen" };
+        ScreenSave duplicateScreenSave = new ScreenSave { Name = "MyScreen" };
+        GumProjectSave gumProjectSave = new GumProjectSave();
+        gumProjectSave.Screens.Add(screenSave);
+        gumProjectSave.Screens.Add(duplicateScreenSave);
+        ObjectFinder.Self.GumProjectSave = gumProjectSave;
+
+        bool result = _helper.ShouldOfferDeleteXmlOption(screenSave);
+
+        result.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ShouldOfferDeleteXmlOption_ElementSaveWithUniqueName_ReturnsTrue()
+    {
+        ScreenSave screenSave = new ScreenSave { Name = "MyScreen" };
+        GumProjectSave gumProjectSave = new GumProjectSave();
+        gumProjectSave.Screens.Add(screenSave);
+        ObjectFinder.Self.GumProjectSave = gumProjectSave;
+
+        bool result = _helper.ShouldOfferDeleteXmlOption(screenSave);
+
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ShouldOfferDeleteXmlOption_InstanceSave_ReturnsFalse()
+    {
+        InstanceSave instanceSave = new InstanceSave { Name = "MyInstance" };
+
+        bool result = _helper.ShouldOfferDeleteXmlOption(instanceSave);
+
+        result.ShouldBeFalse();
     }
 
     private ScreenSave CreateScreenWithInstances(params string[] instanceNames)
