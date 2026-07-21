@@ -8,6 +8,7 @@ using Moq;
 using Shouldly;
 using System.Collections.Generic;
 using System.Linq;
+using ToolsUtilities;
 
 namespace Gum.Presentation.Tests;
 
@@ -75,10 +76,17 @@ public class RecentFilesLogicTests
     [Fact]
     public void ShowLoadRecentDialog_Confirmed_LoadsSelectedProjectAndPersistsFavoriteChanges()
     {
+        // A leading-slash literal is rooted per Path.IsPathRooted on both Windows and Unix. We still
+        // route it through FilePath.FullPath rather than comparing to the raw literal, because
+        // FilePath normalizes slashes to the platform's own separator - a raw "/..." literal would
+        // match on Unix but not on Windows, where FullPath comes back with backslashes.
+        string projectAPath = new FilePath("/ProjectA.gumx").FullPath;
+        string projectBPath = new FilePath("/ProjectB.gumx").FullPath;
+
         List<RecentProjectReference> recentProjects = new()
         {
-            MakeRecentProject(@"C:\ProjectA.gumx", isFavorite: false),
-            MakeRecentProject(@"C:\ProjectB.gumx", isFavorite: false),
+            MakeRecentProject(projectAPath, isFavorite: false),
+            MakeRecentProject(projectBPath, isFavorite: false),
         };
         _projectManager.Setup(x => x.RecentProjects).Returns(recentProjects);
 
@@ -86,7 +94,7 @@ public class RecentFilesLogicTests
             .Setup(x => x.Show(It.IsAny<LoadRecentViewModel>()))
             .Callback<LoadRecentViewModel>(vm =>
             {
-                RecentItemViewModel itemA = vm.FilteredItems.Single(item => item.FullPath == @"C:\ProjectA.gumx");
+                RecentItemViewModel itemA = vm.FilteredItems.Single(item => item.FullPath == projectAPath);
                 itemA.IsFavorite = true;
                 vm.SelectedItem = itemA;
             })
@@ -94,7 +102,7 @@ public class RecentFilesLogicTests
 
         _logic.ShowLoadRecentDialog();
 
-        _fileCommands.Verify(x => x.LoadProject(@"C:\ProjectA.gumx"), Times.Once);
+        _fileCommands.Verify(x => x.LoadProject(projectAPath), Times.Once);
         recentProjects[0].IsFavorite.ShouldBeTrue();
         _fileCommands.Verify(x => x.SaveGeneralSettings(), Times.Once);
     }
