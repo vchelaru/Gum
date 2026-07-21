@@ -339,6 +339,13 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   in the same class was live and needed the narrow-interface treatment instead. Don't pattern-match
   "type-check on a renderable" to one fix; check what each branch actually does before choosing
   delete vs. seam.
+- **A method's parameter type looking WPF-coupled at the signature doesn't mean the body is.**
+  A member declared to take a framework type (e.g. `System.Windows.FrameworkElement`) can be safe
+  to retype to `object` with zero call-site changes if it only ever forwards the value into an
+  already-headless `object`-typed sink downstream (an interface already narrowed for this exact
+  reason). Check where the parameter *flows*, not just its declared type, before writing a member
+  off as blocked — a class-wide "N regions are WPF-coupled" count can overstate true blast radius
+  this way.
 
 **Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap).
 - *4a — Element tree:* decouple `ElementTreeViewManager` from `TreeNode`; the already-migrated
