@@ -346,6 +346,16 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   reason). Check where the parameter *flows*, not just its declared type, before writing a member
   off as blocked — a class-wide "N regions are WPF-coupled" count can overstate true blast radius
   this way.
+- **Splitting a common base class into a headless one plus a narrower WPF-coupled subclass can
+  break a caller that iterates "for every plugin" via the common base type**, not just the
+  declaration site. A `Call*` forwarder moved from the base onto the narrower subclass needs the
+  generic-iteration caller updated to `(plugin as NarrowerBase)?.Call...()` — behavior-preserving,
+  since only subclass-derived plugins could ever have subscribed to that event in the first place,
+  but easy to miss because the compile error surfaces at the call site, not the moved member.
+  Relatedly, retyping a delegate's parameter (e.g. a concrete runtime type to its neutral interface)
+  can silently break a subscriber whose handler still declares the old concrete parameter type —
+  delegate contravariance only allows a *wider* handler parameter, never narrower, so check every
+  subscriber's signature after a publisher-side retype, not just the publisher.
 
 **Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap).
 - *4a — Element tree:* decouple `ElementTreeViewManager` from `TreeNode`; the already-migrated
