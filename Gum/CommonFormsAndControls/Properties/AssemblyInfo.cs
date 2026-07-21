@@ -3,6 +3,9 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 [assembly: InternalsVisibleTo("GumToolUnitTests")]
+// MainEditorTabPlugin (EditorTabPlugin_XNA) calls MultiSelectTreeView.ExtractDraggedNodes to detect
+// a dragged tree node robustly against TreeNode subclasses (e.g. GumTreeNode). See issue #3965.
+[assembly: InternalsVisibleTo("EditorTabPlugin_XNA")]
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information

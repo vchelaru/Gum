@@ -9,9 +9,9 @@ namespace Gum.Managers;
 /// Reads a WPF drag payload (<see cref="IDataObject"/>) into a framework-neutral
 /// <see cref="WireframeDropPayload"/>. The WPF counterpart to the WinForms extraction that lives
 /// inline in <c>MainEditorTabPlugin.OnWireframeDragEnter</c>/<c>OnWireframeDrop</c> (which uses
-/// <c>DragEventArgsExt.GetData</c>/<c>HasData</c> against
-/// <see cref="System.Windows.Forms.DataFormats.FileDrop"/> and
-/// <see cref="DragDropManager.StandardElementNameDataFormat"/>).
+/// <c>CommonFormsAndControls.MultiSelectTreeView.ExtractDraggedNodes</c> for node detection, plus
+/// direct <see cref="System.Windows.Forms.DataFormats.FileDrop"/> and
+/// <see cref="DragDropManager.StandardElementNameDataFormat"/> checks).
 ///
 /// Not yet wired to a live control — <c>WireframeControl</c> is still a
 /// <see cref="System.Windows.Forms.Control"/> (issue #3833). This exists so a future WPF-native
