@@ -3,6 +3,7 @@ using CodeOutputPlugin.ViewModels;
 using Gum;
 using Gum.Managers;
 using Gum.Mvvm;
+using Gum.Plugins;
 using Gum.Services;
 using Gum.ToolStates;
 using System;
@@ -30,7 +31,7 @@ namespace CodeOutputPlugin.Views;
 /// <summary>
 /// Interaction logic for CodeWindow.xaml
 /// </summary>
-public partial class CodeWindow : UserControl
+public partial class CodeWindow : UserControl, ICodeOutputTabView
 {
     #region Fields/Properties
 
