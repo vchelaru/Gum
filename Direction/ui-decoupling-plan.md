@@ -566,17 +566,14 @@ ordering (cheapest, highest-confidence first):
 - **First bite — `SelectedState.Self` → injected `ISelectedState`.** The interface already exists, is
   DI-registered, and is injected everywhere as `_selectedState`; the remaining ~16 `.Self` calls are
   laggard call sites. Pure call-site migration, low risk — a good warm-up for the service-layer pass.
-- **Then the bigger tool-DI `.Self` targets:** `StandardElementsManager` (~51 — first check whether an
-  interface exists; if not, extract one or register the concrete, *then* migrate call sites — likely
-  its own PR), then `GumCommands`, `UnitConverter`, etc. Leave `PluginManager.Self` for later — it
-  carries the same self-injection cycle smell deliberately kept in the drained plugins.
 - **The real bulk — the ~224 `Locator` fallback:** services that self-locate their own deps instead of
   taking them via the ctor. Drain the biggest self-locating services first. Same recipe as the plugins,
   minus the MEF bridge (these are host-container, not MEF parts): inject the interface, break any
   construction cycle with `Lazy<T>` on the *consumer's* edge (rule 4 of the `refactoring-direction`
   skill).
-- **Do NOT drain:** `ObjectFinder.Self` and the `RenderingLibrary`/`InputLibrary` runtime singletons
-  (see the resolved scoping question above and the `refactoring-direction` skill).
+- **Do NOT drain:** `ObjectFinder.Self`, `StandardElementsManager.Self`, and the
+  `RenderingLibrary`/`InputLibrary` runtime singletons (see the resolved scoping question above and
+  the `refactoring-direction` skill).
 
 Definition of done below still applies to each of these: every drain lands a *tested* unit.
 
