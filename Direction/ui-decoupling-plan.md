@@ -251,6 +251,11 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   reads the view mid-logic as a live input (e.g. `control?.SomeProperty ?? default`, or branching on
   `tab.IsSelected`) — that needs a designed narrow view-state interface first, not a mechanical
   extraction.
+- **When extracting a handler that also produces a plugin-owned side effect (a cached field, a view
+  refresh), carry that side effect out as a small result value the plugin applies itself — don't
+  leave it as a field write or view-push inside the extracted method.** Otherwise the new headless
+  class silently inherits ownership of plugin-private state or a control reference it shouldn't
+  hold, undermining the whole point of the extraction.
 - **A blocker doesn't have to be WPF/WinForms — a NuGet target-framework mismatch blocks identically.**
   A dependency on a `net8.0-windows`-targeted library (e.g. `CsvLibrary`) from the plain-`net8.0`
   `Gum.Presentation` is a hard `NU1201` restore error, not a compile-time type error, even though the
