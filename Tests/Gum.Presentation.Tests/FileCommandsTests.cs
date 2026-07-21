@@ -83,13 +83,19 @@ public class FileCommandsTests : BaseTestClass
     [Fact]
     public void GetFullFileName_ShouldReturnPathUnderProjectDirectory()
     {
-        _gumProject.FullFileName = @"C:\MyProject\MyProject.gumx";
+        // A real, OS-native temp directory is used here (rather than a hardcoded "C:\..." literal)
+        // because FilePath's path-rooting logic (FileManager.IsRelative -> Path.IsPathRooted) is
+        // platform-specific: a Windows-style drive-letter path is not rooted on macOS/Linux, so a
+        // hardcoded literal computes a different (wrong) FullPath there.
+        _tempDirectory = CreateTempDirectory();
+        _gumProject.FullFileName = Path.Combine(_tempDirectory, "MyProject.gumx");
         ComponentSave component = new() { Name = "MyComponent" };
 
         FilePath result = _fileCommands.GetFullFileName(component);
 
         FilePath expectedDirectory = FileManager.GetDirectory(_gumProject.FullFileName);
-        result.FullPath.ShouldBe(expectedDirectory.Original + "Components\\MyComponent.gucx");
+        FilePath expected = expectedDirectory.Original + "Components\\MyComponent.gucx";
+        result.FullPath.ShouldBe(expected.FullPath);
     }
 
     [Fact]
