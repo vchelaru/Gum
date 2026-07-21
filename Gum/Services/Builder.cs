@@ -139,9 +139,13 @@ file static class ServiceCollectionExtensions
         // bloated WinForms-coupled UI class whose only consumer couples to internal/UI-typed members.
         services.AddSingleton<ElementTreeViewManager>();
         // PropertyGridManager: drained from a static Self singleton (#3288), same pattern as ElementTreeViewManager.
-        // Concrete (no interface) because it is a bloated WinForms/WPF-coupled UI class. SelectedState and GuiCommands
-        // are both consumers AND dependencies of it, so they break the construction cycle by injecting Lazy<PropertyGridManager>.
+        // Concrete (no interface) because it is a bloated WinForms/WPF-coupled UI class. GuiCommands is both a
+        // consumer AND a dependency of it, so it breaks the construction cycle by injecting Lazy<PropertyGridManager>.
         services.AddSingleton<PropertyGridManager>();
+        // IBehaviorVariablePropertyGridSink: narrow headless port (issue #3875) so the relocated SelectedState
+        // (Gum.Presentation) can push the selected behavior variable into the property grid without depending on
+        // the concrete PropertyGridManager. Resolves to the same PropertyGridManager singleton.
+        services.AddSingleton<IBehaviorVariablePropertyGridSink>(provider => provider.GetRequiredService<PropertyGridManager>());
 
         // singletons
         services.AddSingleton<ICircularReferenceManager, CircularReferenceManager>();

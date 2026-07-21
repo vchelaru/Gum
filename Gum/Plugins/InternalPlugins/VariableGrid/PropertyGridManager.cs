@@ -27,7 +27,7 @@ using Gum.Plugins;
 
 namespace Gum.Managers;
 
-public partial class PropertyGridManager
+public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 {
     #region Fields
 
