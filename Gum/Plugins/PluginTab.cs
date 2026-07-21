@@ -7,7 +7,7 @@ using Gum.Plugins;
 
 namespace Gum.Plugins
 {
-    public partial class PluginTab : ViewModel, IRecipient<TabSelectedMessage>, ITabAutoSelectCandidate, ITabDockingCandidate, ITabVisibility
+    public partial class PluginTab : ViewModel, IRecipient<TabSelectedMessage>, ITabAutoSelectCandidate, ITabDockingCandidate, ITabVisibility, IPluginTab
     {
         private readonly IMessenger _messenger;
         public event Action? TabShown;

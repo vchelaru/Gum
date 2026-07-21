@@ -25,7 +25,7 @@ public class MainFileWatchPlugin : PriorityPlugin
 
     FileWatchViewModel viewModel;
 
-    PluginTab pluginTab;
+    IPluginTab pluginTab;
     System.Windows.Controls.MenuItem showFileWatchMenuItem;
 
     #endregion

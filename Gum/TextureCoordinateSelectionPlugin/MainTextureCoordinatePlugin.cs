@@ -24,7 +24,7 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
 {
     #region Fields/Properties
 
-    PluginTab textureCoordinatePluginTab = default!;
+    IPluginTab textureCoordinatePluginTab = default!;
     readonly ISelectedState _selectedState;
     readonly IWireframeCommands _wireframeCommands;
     TextureCoordinateDisplayController _displayController;

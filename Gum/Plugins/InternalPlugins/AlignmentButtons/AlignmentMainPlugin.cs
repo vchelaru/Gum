@@ -10,7 +10,7 @@ namespace Gum.Plugins.AlignmentButtons
     {
         private readonly ISelectedState _selectedState;
 
-        private PluginTab _tab;
+        private IPluginTab _tab;
 
         [ImportingConstructor]
         public AlignmentMainPlugin(ISelectedState selectedState)

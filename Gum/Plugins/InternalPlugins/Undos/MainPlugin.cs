@@ -31,7 +31,7 @@ namespace Gum.Plugins.Undos
             UndosViewModel viewModel = new (_selectedState, _undoManager);
             control.DataContext = viewModel;
 
-            PluginTab tab = AddControl(control, "History", TabLocation.RightBottom);
+            IPluginTab tab = AddControl(control, "History", TabLocation.RightBottom);
             tab.GotFocus += () =>
             {
                 control.ListBoxInstance.SelectedItem = viewModel.HistoryItems.LastOrDefault(x => x.UndoOrRedo is InternalPlugins.Undos.UndoOrRedo.Undo);
