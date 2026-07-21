@@ -126,6 +126,45 @@ public class Binding(string path)
     public static object DoNothing { get; } = new();
 
     /// <summary>
+    /// Project-configurable defaults for <see cref="UpdateSourceTrigger.Default"/>, keyed by the
+    /// target control type and the bound property name. Lets a project opt every binding of a given
+    /// control/property pair into a trigger (e.g. <c>LostFocus</c> for every <c>TextBox.Text</c>)
+    /// without setting <see cref="UpdateSourceTrigger"/> on each individual <see cref="Binding"/>.
+    /// </summary>
+    /// <remarks>
+    /// Empty by default, so registering nothing reproduces today's behavior exactly (falls back to
+    /// <see cref="Data.UpdateSourceTrigger.PropertyChanged"/>). A binding's own explicit
+    /// <see cref="UpdateSourceTrigger"/> always takes precedence over anything registered here.
+    /// Lookup walks up from the control's runtime type through its base types, so registering
+    /// against a base control type (e.g. <c>TextBoxBase</c>) applies to all its subclasses unless a
+    /// more derived type has its own registration.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// Binding.DefaultUpdateTriggers[(typeof(TextBox), nameof(TextBox.Text))] = UpdateSourceTrigger.LostFocus;
+    /// </code>
+    /// </example>
+    public static Dictionary<(Type ControlType, string PropertyName), UpdateSourceTrigger> DefaultUpdateTriggers { get; } = new();
+
+    /// <summary>
+    /// Resolves <see cref="Data.UpdateSourceTrigger.Default"/> to a concrete trigger for the given
+    /// control type and property, consulting <see cref="DefaultUpdateTriggers"/> before falling back
+    /// to <see cref="Data.UpdateSourceTrigger.PropertyChanged"/>.
+    /// </summary>
+    internal static UpdateSourceTrigger ResolveDefaultUpdateTrigger(Type controlType, string propertyName)
+    {
+        for (Type? type = controlType; type is not null; type = type.BaseType)
+        {
+            if (DefaultUpdateTriggers.TryGetValue((type, propertyName), out UpdateSourceTrigger trigger))
+            {
+                return trigger;
+            }
+        }
+
+        return UpdateSourceTrigger.PropertyChanged;
+    }
+
+    /// <summary>
     /// Creates a binding using a lambda expression to specify the property path.
     /// This provides compile-time safety and refactoring support compared to using a string path.
     /// </summary>

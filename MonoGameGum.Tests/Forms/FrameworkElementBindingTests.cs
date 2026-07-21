@@ -382,9 +382,88 @@ public class FrameworkElementBindingTests : BaseTestClass
         element.Text = "Initial";
         element.IsFocused = false;
 
-        vm.TimesCalled.ShouldBe(1, 
+        vm.TimesCalled.ShouldBe(1,
             "only once from the initializer, because the TextBox's value never changed, " +
             "so setting IsFocused to false should not update the source value");
+    }
+
+    [Fact]
+    public void DefaultUpdateTrigger_Registered_AppliesAsLostFocus()
+    {
+        // Arrange
+        Binding.DefaultUpdateTriggers[(typeof(TextBox), nameof(TextBox.Text))] = UpdateSourceTrigger.LostFocus;
+        try
+        {
+            TestViewModel vm = new() { Text = "Initial" };
+            TextBox element = new() { BindingContext = vm };
+
+            // No explicit UpdateSourceTrigger - uses Default, which should resolve via the registry
+            element.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.Text));
+            element.IsFocused = true;
+            element.Text = "FromUI";
+
+            // Act / Assert
+            vm.Text.ShouldBe("Initial");
+            element.IsFocused = false;
+            vm.Text.ShouldBe("FromUI");
+        }
+        finally
+        {
+            Binding.DefaultUpdateTriggers.Remove((typeof(TextBox), nameof(TextBox.Text)));
+        }
+    }
+
+    [Fact]
+    public void DefaultUpdateTrigger_ExplicitBindingValue_OverridesRegisteredDefault()
+    {
+        // Arrange
+        Binding.DefaultUpdateTriggers[(typeof(TextBox), nameof(TextBox.Text))] = UpdateSourceTrigger.LostFocus;
+        try
+        {
+            TestViewModel vm = new() { Text = "Initial" };
+            TextBox element = new() { BindingContext = vm };
+
+            Binding binding = new(nameof(TestViewModel.Text))
+            {
+                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+            };
+            element.SetBinding(nameof(TextBox.Text), binding);
+
+            // Act
+            element.Text = "FromUI";
+
+            // Assert - explicit PropertyChanged wins over the registered LostFocus default
+            vm.Text.ShouldBe("FromUI");
+        }
+        finally
+        {
+            Binding.DefaultUpdateTriggers.Remove((typeof(TextBox), nameof(TextBox.Text)));
+        }
+    }
+
+    [Fact]
+    public void DefaultUpdateTrigger_RegisteredOnBaseType_AppliesToSubclass()
+    {
+        // Arrange
+        Binding.DefaultUpdateTriggers[(typeof(TextBoxBase), nameof(TextBox.Text))] = UpdateSourceTrigger.LostFocus;
+        try
+        {
+            TestViewModel vm = new() { Text = "Initial" };
+            TextBox element = new() { BindingContext = vm };
+
+            element.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.Text));
+            element.IsFocused = true;
+            element.Text = "FromUI";
+
+            // Act / Assert
+            vm.Text.ShouldBe("Initial");
+            element.IsFocused = false;
+            vm.Text.ShouldBe("FromUI");
+        }
+        finally
+        {
+            Binding.DefaultUpdateTriggers.Remove((typeof(TextBoxBase), nameof(TextBox.Text)));
+        }
     }
 
     [Theory]

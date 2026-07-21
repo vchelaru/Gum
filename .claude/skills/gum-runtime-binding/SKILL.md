@@ -130,3 +130,5 @@ All binding features work with indexed paths: modes, converters, StringFormat, F
 **Lambda extracts path at call time, not at update time.** `vm => vm.Child.Text` becomes the static path `"Child.Text"`. If `Child` is replaced, `PropertyPathObserver` re-hooks the listener chain automatically.
 
 **ListBox `Items` is bindable.** `listBox.SetBinding(nameof(ListBox.Items), nameof(vm.Items))` works and keeps the list in sync with an `ObservableCollection` on the VM.
+
+**`UpdateSourceTrigger.Default` is project-configurable.** `Binding.DefaultUpdateTriggers` lets a project register a default trigger per control type + property, resolved in `NpcBindingExpression.HookUpdateSource` before falling back to `PropertyChanged`. See [Default Update Triggers](../../../docs/code/binding-viewmodels/advanced-binding-options.md#default-update-triggers).
