@@ -1,16 +1,10 @@
-﻿using Gum;
-using Gum.Dialogs;
-using Gum.Settings;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
-using System.Windows.Forms;
 using System.Xml.Serialization;
-using CommunityToolkit.Mvvm.Messaging;
 using ToolsUtilities;
 
 namespace Gum.Settings
@@ -89,7 +83,13 @@ namespace Gum.Settings
             set;
         }
 
-        public FormWindowState MainWindowState
+        /// <summary>
+        /// Legacy main-window maximize/minimize state, read from an older <c>GeneralSettings.xml</c>
+        /// on load and migrated once into <see cref="Settings.WindowSettings.IsMaximized"/> (see
+        /// <c>LayoutSettings.MigrateLegacyLayout</c>). See <see cref="LegacyMainWindowState"/> for
+        /// why this isn't <c>System.Windows.Forms.FormWindowState</c> anymore.
+        /// </summary>
+        public LegacyMainWindowState MainWindowState
         {
             get;
             set;

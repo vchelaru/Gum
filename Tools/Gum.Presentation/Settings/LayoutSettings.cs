@@ -15,7 +15,7 @@ public class LayoutSettings
                 Height = legacySettings.MainWindowBounds.Height,
                 Left = legacySettings.MainWindowBounds.Left,
                 Top = legacySettings.MainWindowBounds.Top,
-                IsMaximized = legacySettings.MainWindowState == System.Windows.Forms.FormWindowState.Maximized
+                IsMaximized = legacySettings.MainWindowState == LegacyMainWindowState.Maximized
             };
         }
     }

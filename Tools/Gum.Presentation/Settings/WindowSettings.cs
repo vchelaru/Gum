@@ -2,10 +2,10 @@ namespace Gum.Settings;
 
 /// <summary>
 /// Relocated from <c>Gum/Settings/LayoutSettings.cs</c> (part of #3856) — pure data records, no WPF
-/// dependency. <see cref="LayoutSettings"/> itself stays in <c>Gum.csproj</c> because
-/// <c>LayoutSettings.MigrateLegacyLayout</c> reads WinForms-typed legacy settings
-/// (<c>GeneralSettingsFile.MainWindowBounds</c>/<c>MainWindowState</c>). Pure file-location move:
-/// namespace and members are unchanged, so no consumer needed an import change.
+/// dependency. Pure file-location move: namespace and members are unchanged, so no consumer needed
+/// an import change. <see cref="LayoutSettings"/> itself has since relocated alongside these records
+/// once <c>GeneralSettingsFile.MainWindowState</c> stopped being WinForms-typed (see
+/// <see cref="LegacyMainWindowState"/>).
 /// </summary>
 public record WindowSettings(
     double Width = 1280,

@@ -52,6 +52,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
     // IProjectManager — deferring it breaks the construction cycle, same as _commandLineManager above.
     private readonly Lazy<IHotkeyManager> _hotkeyManager;
     private readonly IGumProjectRepairLogic _gumProjectRepairLogic;
+    private readonly IFilePickingFolderProvider _filePickingFolderProvider;
 
     #endregion
 
@@ -60,9 +61,10 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
     public GumProjectSave? GumProjectSave => _gumProjectSave;
 
     /// <summary>
-    /// The full settings object, including the WinForms-typed members (<c>MainWindowBounds</c>,
-    /// <c>MainWindowState</c>) that keep it out of <see cref="IProjectManager"/>'s headless surface.
-    /// Concrete-only; interface consumers use the narrowed members below instead.
+    /// The full settings object. Concrete-only -- <see cref="IProjectManager"/> intentionally exposes
+    /// only the narrowed members below instead of this whole object. <see cref="Gum.Settings.GeneralSettingsFile"/>
+    /// is no longer WinForms-typed itself (see <see cref="Gum.Settings.LegacyMainWindowState"/>), but the
+    /// narrowed surface is kept as the smaller, encapsulated contract for headless consumers.
     /// </summary>
     public GeneralSettingsFile GeneralSettingsFile
     {
@@ -127,7 +129,8 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         Lazy<ICommandLineManager> commandLineManager,
         IPluginManager pluginManager,
         Lazy<IHotkeyManager> hotkeyManager,
-        IGumProjectRepairLogic gumProjectRepairLogic)
+        IGumProjectRepairLogic gumProjectRepairLogic,
+        IFilePickingFolderProvider filePickingFolderProvider)
     {
         _selectedState = selectedState;
         _elementCommands = elementCommands;
@@ -142,6 +145,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         _pluginManager = pluginManager;
         _hotkeyManager = hotkeyManager;
         _gumProjectRepairLogic = gumProjectRepairLogic;
+        _filePickingFolderProvider = filePickingFolderProvider;
         // Default settings until LoadSettings() replaces this with the loaded (or newly-created)
         // file. Avoids a null-before-load window that every narrowed IProjectManager member above
         // would otherwise need to guard against (some plugins read these before LoadSettings runs -
@@ -285,7 +289,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
 
         ObjectFinder.Self.GumProjectSave = _gumProjectSave;
 
-        WpfDataUi.Controls.FilePickingLogic.FolderRelativeTo = fileName.GetDirectoryContainingThis().FullPath;
+        _filePickingFolderProvider.FolderRelativeTo = fileName.GetDirectoryContainingThis().FullPath;
 
         if (_gumProjectSave != null)
         {
@@ -314,7 +318,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
                     }
                 }
                 _standardElementsManagerGumTool.FixCustomTypeConverters(_gumProjectSave);
-                RecreateMissingStandardElements();
+                RecreateMissingStandardElements(_gumProjectSave);
 
                 if (RecreateMissingDefinedByBaseObjects())
                 {
@@ -356,7 +360,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
 
             GraphicalUiElement.ShowLineRectangles = _gumProjectSave.ShowOutlines;
 
-            CopyLinkedComponents();
+            CopyLinkedComponents(_gumProjectSave);
 
             if (_gumProjectRepairLogic.FixRecursiveAssignments(_gumProjectSave))
             {
@@ -429,9 +433,9 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         }
     }
 
-    private void CopyLinkedComponents()
+    internal void CopyLinkedComponents(GumProjectSave gumProjectSave)
     {
-        var gumDirectory = new FilePath(_gumProjectSave.FullFileName).GetDirectoryContainingThis();
+        var gumDirectory = new FilePath(gumProjectSave.FullFileName).GetDirectoryContainingThis();
 
         void CopyReference(ElementReference reference)
         {
@@ -452,26 +456,26 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
             }
         }
 
-        foreach (var reference in _gumProjectSave.ScreenReferences)
+        foreach (var reference in gumProjectSave.ScreenReferences)
         {
             CopyReference(reference);
         }
 
-        foreach (var reference in _gumProjectSave.ComponentReferences)
+        foreach (var reference in gumProjectSave.ComponentReferences)
         {
             CopyReference(reference);
         }
 
-        foreach (var reference in _gumProjectSave.StandardElementReferences)
+        foreach (var reference in gumProjectSave.StandardElementReferences)
         {
             CopyReference(reference);
         }
     }
 
-    internal void RecreateMissingStandardElements()
+    internal void RecreateMissingStandardElements(GumProjectSave gumProjectSave)
     {
         List<StandardElementSave> missingElements = new List<StandardElementSave>();
-        foreach (var element in _gumProjectSave.StandardElements)
+        foreach (var element in gumProjectSave.StandardElements)
         {
             if (element.IsSourceFileMissing)
             {
@@ -500,14 +504,14 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
 
             if (result)
             {
-                _gumProjectSave.StandardElements.RemoveAll(item => item.Name == element.Name);
-                _gumProjectSave.StandardElementReferences.RemoveAll(item => item.Name == element.Name);
+                gumProjectSave.StandardElements.RemoveAll(item => item.Name == element.Name);
+                gumProjectSave.StandardElementReferences.RemoveAll(item => item.Name == element.Name);
 
-                StandardElementsManager.Self.AddStandardElementSaveInstance(_gumProjectSave, element.Name);
+                StandardElementsManager.Self.AddStandardElementSaveInstance(gumProjectSave, element.Name);
 
-                string gumProjectDirectory = FileManager.GetDirectory(_gumProjectSave.FullFileName);
+                string gumProjectDirectory = FileManager.GetDirectory(gumProjectSave.FullFileName);
 
-                _gumProjectSave.SaveStandardElements(gumProjectDirectory);
+                gumProjectSave.SaveStandardElements(gumProjectDirectory);
             }
         }
 
@@ -726,7 +730,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
                 GumProjectSave.FullFileName = chosenFileName!;
                 var filePath = new FilePath(chosenFileName!);
                 _pluginManager.ProjectLocationSet(filePath);
-                WpfDataUi.Controls.FilePickingLogic.FolderRelativeTo = filePath.GetDirectoryContainingThis().FullPath;
+                _filePickingFolderProvider.FolderRelativeTo = filePath.GetDirectoryContainingThis().FullPath;
 
                 shouldSave = true;
                 isProjectNew = true;

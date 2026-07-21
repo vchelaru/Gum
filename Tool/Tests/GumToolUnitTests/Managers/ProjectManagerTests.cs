@@ -38,6 +38,7 @@ public class ProjectManagerTests : BaseTestClass
     private readonly Mock<IPluginManager> _pluginManager;
     private readonly Mock<IHotkeyManager> _hotkeyManager;
     private readonly Mock<IGumProjectRepairLogic> _gumProjectRepairLogic;
+    private readonly Mock<IFilePickingFolderProvider> _filePickingFolderProvider;
     private readonly ProjectManager _projectManager;
 
     public ProjectManagerTests()
@@ -55,6 +56,7 @@ public class ProjectManagerTests : BaseTestClass
         _pluginManager = new Mock<IPluginManager>();
         _hotkeyManager = new Mock<IHotkeyManager>();
         _gumProjectRepairLogic = new Mock<IGumProjectRepairLogic>();
+        _filePickingFolderProvider = new Mock<IFilePickingFolderProvider>();
 
         _projectManager = new ProjectManager(
             _selectedState.Object,
@@ -69,7 +71,8 @@ public class ProjectManagerTests : BaseTestClass
             new Lazy<ICommandLineManager>(() => _commandLineManager.Object),
             _pluginManager.Object,
             new Lazy<IHotkeyManager>(() => _hotkeyManager.Object),
-            _gumProjectRepairLogic.Object);
+            _gumProjectRepairLogic.Object,
+            _filePickingFolderProvider.Object);
     }
 
     [Fact]
@@ -171,6 +174,108 @@ public class ProjectManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void AskUserForProjectNameIfNecessary_SetsFilePickingFolderRelativeTo_WhenUserChoosesEmptyFolder()
+    {
+        SetCurrentProject(new GumProjectSave());
+
+        string tempDirectory = Path.Combine(
+            Path.GetTempPath(),
+            "GumProjectManagerTests_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDirectory);
+
+        try
+        {
+            string chosenFile = Path.Combine(tempDirectory, "NewProject.gumx");
+            _dialogService
+                .Setup(d => d.SaveFile(It.IsAny<SaveFileDialogOptions?>()))
+                .Returns(chosenFile);
+
+            bool shouldSave = _projectManager.AskUserForProjectNameIfNecessary(out bool isProjectNew);
+
+            shouldSave.ShouldBeTrue();
+            isProjectNew.ShouldBeTrue();
+            string normalizedTempDirectory = tempDirectory.Replace('\\', '/');
+            _filePickingFolderProvider.VerifySet(
+                p => p.FolderRelativeTo = It.Is<string>(s => s.Replace('\\', '/').Contains(normalizedTempDirectory)),
+                Times.Once);
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void CopyLinkedComponents_CopiesFile_WhenLinkTypeIsCopyLocally()
+    {
+        string tempDirectory = Path.Combine(
+            Path.GetTempPath(),
+            "GumProjectManagerTests_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDirectory);
+        Directory.CreateDirectory(Path.Combine(tempDirectory, "Components"));
+
+        try
+        {
+            File.WriteAllText(Path.Combine(tempDirectory, "Source.gucx"), "source contents");
+
+            GumProjectSave project = new GumProjectSave
+            {
+                FullFileName = Path.Combine(tempDirectory, "Project.gumx")
+            };
+            project.ComponentReferences.Add(new ElementReference
+            {
+                ElementType = ElementType.Component,
+                LinkType = LinkType.CopyLocally,
+                Name = "Copied",
+                Link = "Source.gucx"
+            });
+
+            _projectManager.CopyLinkedComponents(project);
+
+            string destination = Path.Combine(tempDirectory, "Components", "Copied.gucx");
+            File.Exists(destination).ShouldBeTrue();
+            File.ReadAllText(destination).ShouldBe("source contents");
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void CopyLinkedComponents_PrintsError_WhenSourceFileIsMissing()
+    {
+        string tempDirectory = Path.Combine(
+            Path.GetTempPath(),
+            "GumProjectManagerTests_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDirectory);
+        Directory.CreateDirectory(Path.Combine(tempDirectory, "Components"));
+
+        try
+        {
+            GumProjectSave project = new GumProjectSave
+            {
+                FullFileName = Path.Combine(tempDirectory, "Project.gumx")
+            };
+            project.ComponentReferences.Add(new ElementReference
+            {
+                ElementType = ElementType.Component,
+                LinkType = LinkType.CopyLocally,
+                Name = "Missing",
+                Link = "DoesNotExist.gucx"
+            });
+
+            Should.NotThrow(() => _projectManager.CopyLinkedComponents(project));
+
+            _guiCommands.Verify(g => g.PrintOutput(It.Is<string>(m => m.StartsWith("Error"))), Times.Once);
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
     public void LoadProject_LoadsAndReturnsTrue_WhenFileChosen()
     {
         string chosenFile = "c:/projects/MyGame.gumx";
@@ -206,14 +311,13 @@ public class ProjectManagerTests : BaseTestClass
         // single informational message instead.
         GumProjectSave project = new GumProjectSave();
         project.StandardElements.Add(new StandardElementSave { Name = "Arc", IsSourceFileMissing = true });
-        SetCurrentProject(project);
 
         // Simulate the user clicking "Yes" on any recreate prompt -- the pre-fix crash path.
         _dialogService
             .Setup(d => d.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.Is<MessageDialogStyle?>(s => s != null)))
             .Returns(MessageDialogResult.Affirmative);
 
-        Should.NotThrow(() => _projectManager.RecreateMissingStandardElements());
+        Should.NotThrow(() => _projectManager.RecreateMissingStandardElements(project));
 
         // No Yes/No prompt (the only call with a non-null style) is offered for a plugin standard.
         _dialogService.Verify(
@@ -238,13 +342,12 @@ public class ProjectManagerTests : BaseTestClass
         // shows no plugin-standard informational message.
         GumProjectSave project = new GumProjectSave();
         project.StandardElements.Add(new StandardElementSave { Name = "Sprite", IsSourceFileMissing = true });
-        SetCurrentProject(project);
 
         _dialogService
             .Setup(d => d.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.Is<MessageDialogStyle?>(s => s != null)))
             .Returns(MessageDialogResult.Negative);
 
-        _projectManager.RecreateMissingStandardElements();
+        _projectManager.RecreateMissingStandardElements(project);
 
         // The Yes/No recreate prompt (non-null style) is offered for a built-in standard...
         _dialogService.Verify(
