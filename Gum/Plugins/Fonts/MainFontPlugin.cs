@@ -1,10 +1,8 @@
-﻿using Gum.Commands;
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
-using System;
 using System.ComponentModel.Composition;
-using System.Windows;
 using System.Threading.Tasks;
 using Gum.Services.Dialogs;
 using System.Diagnostics;
@@ -12,14 +10,16 @@ using Gum.Services.Fonts;
 
 namespace Gum.Plugins.Fonts;
 
+// As of ADR-0005 Phase 3, the font-cache logic lives in FontCacheLogic (Gum.Presentation) so it can
+// be unit tested headlessly. This plugin keeps only menu wiring; HandleClearFontCache stays here
+// unchanged since its catch block reads the handler's own RoutedEventArgs parameter, not the caught
+// exception - extracting it would either leak a WPF type into Gum.Presentation or change behavior.
 [Export(typeof(PluginBase))]
 public class MainFontPlugin : PriorityPlugin
 {
-
-    private readonly IGuiCommands _guiCommands;
     private readonly IFontManager _fontManager;
     private readonly IDialogService _dialogService;
-    private readonly IProjectState _projectState;
+    private readonly FontCacheLogic _fontCacheLogic;
 
     [ImportingConstructor]
     public MainFontPlugin(
@@ -28,10 +28,9 @@ public class MainFontPlugin : PriorityPlugin
         IDialogService dialogService,
         IProjectState projectState)
     {
-        _guiCommands = guiCommands;
         _fontManager = fontManager;
         _dialogService = dialogService;
-        _projectState = projectState;
+        _fontCacheLogic = new FontCacheLogic(fontManager, dialogService, projectState);
     }
 
     public override void StartUp()
@@ -64,11 +63,8 @@ public class MainFontPlugin : PriorityPlugin
 
     }
 
-    private async void HandleProjectLoaded(GumProjectSave save)
-    {
-        await _fontManager.CreateAllMissingFontFiles(
-            _projectState.GumProjectSave);
-    }
+    private async void HandleProjectLoaded(GumProjectSave save) =>
+        await _fontCacheLogic.CreateMissingFontFilesForLoadedProject();
 
     private void HandleClearFontCache(object? sender, System.Windows.RoutedEventArgs e)
     {
@@ -84,37 +80,17 @@ public class MainFontPlugin : PriorityPlugin
 
     private void HandleViewFontCache(object? sender, System.Windows.RoutedEventArgs e)
     {
-        if(!System.IO.Directory.Exists(_fontManager.AbsoluteFontCacheFolder))
-        {
-            System.IO.Directory.CreateDirectory(_fontManager.AbsoluteFontCacheFolder);
-        }
+        string folder = _fontCacheLogic.GetOrCreateFontCacheFolder();
 
         var processStartInfo = new ProcessStartInfo
         {
-            FileName = _fontManager.AbsoluteFontCacheFolder,
+            FileName = folder,
             UseShellExecute = true
         };
 
-        System.Diagnostics.Process.Start(processStartInfo);
+        Process.Start(processStartInfo);
     }
 
-    private async Task HandleRefreshFontCache(bool forceRecreate)
-    {
-        var gumProjectSave = _projectState.GumProjectSave;
-        if(gumProjectSave == null)
-        {
-            _dialogService.ShowMessage(
-                "A Gum project must first be loaded before recreating font files");
-        }
-        else
-        {
-            var before = DateTime.Now;
-            await _fontManager.CreateAllMissingFontFiles(
-                _projectState.GumProjectSave, forceRecreate:forceRecreate);
-            var after = DateTime.Now;
-
-            var difference = after - before;
-            System.Diagnostics.Debug.WriteLine($"Total time: {difference.TotalMilliseconds:N0}");
-        }
-    }
+    private async Task HandleRefreshFontCache(bool forceRecreate) =>
+        await _fontCacheLogic.RefreshFontCache(forceRecreate);
 }

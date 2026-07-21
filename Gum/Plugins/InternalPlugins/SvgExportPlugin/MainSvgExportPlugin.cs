@@ -8,13 +8,15 @@ using System.Windows.Controls;
 
 namespace Gum.Plugins.InternalPlugins.SvgExportPlugin;
 
+// As of ADR-0005 Phase 3, the exportability/guard decisions live in SvgExportMenuLogic
+// (Gum.Presentation) so they can be unit tested headlessly. This plugin builds the WPF menu item
+// and forwards clicks; the actual gumcli invocation stays in SvgExportCommand.
 [Export(typeof(PluginBase))]
 internal class MainSvgExportPlugin : PriorityPlugin
 {
     private MenuItem _exportSvgMenuItem;
-    private readonly ISelectedState _selectedState;
-    private readonly IProjectState _projectState;
     private readonly ISvgExportCommand _svgExportCommand;
+    private readonly SvgExportMenuLogic _svgExportMenuLogic;
 
     [ImportingConstructor]
     public MainSvgExportPlugin(
@@ -23,12 +25,11 @@ internal class MainSvgExportPlugin : PriorityPlugin
         ISelectedState selectedState,
         IProjectState projectState)
     {
-        _selectedState = selectedState;
-        _projectState = projectState;
         // SVG export is plugin-specific, so the command is instantiated here rather than
         // registered app-wide. These services are injected (they are also property-injected
         // into PluginBase for use in StartUp()/handlers).
         _svgExportCommand = new SvgExportCommand(dialogService, guiCommands);
+        _svgExportMenuLogic = new SvgExportMenuLogic(selectedState, projectState, guiCommands);
     }
 
     public override void StartUp()
@@ -49,37 +50,19 @@ internal class MainSvgExportPlugin : PriorityPlugin
 
     private void RefreshMenuItem()
     {
-        var element = _selectedState.SelectedElement;
+        bool isExportable = _svgExportMenuLogic.GetIsExportable(out var element);
 
-        bool isExportable = element is ScreenSave or ComponentSave;
-
-        if (isExportable)
-        {
-            _exportSvgMenuItem.Header = $"Export {element!.Name} to SVG";
-            _exportSvgMenuItem.IsEnabled = true;
-        }
-        else
-        {
-            _exportSvgMenuItem.Header = "Export to SVG";
-            _exportSvgMenuItem.IsEnabled = false;
-        }
+        _exportSvgMenuItem.Header = isExportable ? $"Export {element!.Name} to SVG" : "Export to SVG";
+        _exportSvgMenuItem.IsEnabled = isExportable;
     }
 
     private void HandleExportSvgClicked(object? sender, System.Windows.RoutedEventArgs e)
     {
-        var element = _selectedState.SelectedElement;
-        if (element is not (ScreenSave or ComponentSave))
+        if (!_svgExportMenuLogic.TryPrepareExport(out var element, out var projectSave))
         {
             return;
         }
 
-        var projectSave = _projectState.GumProjectSave;
-        if (projectSave == null)
-        {
-            _guiCommands.PrintOutput("No project is loaded.");
-            return;
-        }
-
-        _svgExportCommand.ExportElementToSvg(element, projectSave);
+        _svgExportCommand.ExportElementToSvg(element!, projectSave!);
     }
 }

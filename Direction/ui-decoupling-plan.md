@@ -367,6 +367,14 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   for that pattern; a plain state-DTO returned by a headless method (applied by the WPF side to the
   live items) is the right shape there instead. Match the extraction shape to whether the menu is
   rebuilt or mutated, don't force one pattern onto both.
+- **A grid row that isn't backed by a real state/instance-bound variable doesn't need the full
+  `VariableGridEntry`-style DTO treatment.** A category's own synthetic "remove" action or a
+  behavior's ad hoc property row has no real `StateSave`/`ObjectFinder` lookup behind it, so forcing
+  it through the state-bound entry seam means threading fake lookups it never uses. A second,
+  lighter DTO (plain name/getter/setter/value-type/options delegates, no state binding) is the right
+  shape for this case, mapped to a real `MemberCategory`/`InstanceMember` by a small sibling to the
+  existing state-bound converter. Don't reflexively reuse the heavier entry type for every synthetic
+  row — check whether it's actually state-bound first.
 
 **Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap).
 - *4a — Element tree:* decouple `ElementTreeViewManager` from `TreeNode`; the already-migrated

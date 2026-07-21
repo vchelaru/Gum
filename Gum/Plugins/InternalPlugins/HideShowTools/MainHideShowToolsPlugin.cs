@@ -1,25 +1,23 @@
-﻿using Gum.Plugins.BaseClasses;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Controls;
 using Gum.Controls;
+using Gum.Plugins.BaseClasses;
+using System.ComponentModel.Composition;
+using System.Windows.Controls;
 
 namespace Gum.Plugins.InternalPlugins.HideShowTools;
 
+// As of ADR-0005 Phase 3, the toggle decision lives in HideShowToolsLogic (Gum.Presentation) so it
+// can be unit tested headlessly. MainPanelViewModel itself is WPF-typed, so it's narrowed to
+// IToolsVisibility for that logic.
 [Export(typeof(PluginBase))]
 internal class MainHideShowToolsPlugin : PriorityPlugin
 {
     private MenuItem _hideShowMenuItem;
-    private readonly MainPanelViewModel _mainPanelViewModel;
+    private readonly HideShowToolsLogic _hideShowToolsLogic;
 
     [ImportingConstructor]
     public MainHideShowToolsPlugin(MainPanelViewModel mainPanelViewModel)
     {
-        _mainPanelViewModel = mainPanelViewModel;
+        _hideShowToolsLogic = new HideShowToolsLogic(mainPanelViewModel);
     }
 
     public override void StartUp()
@@ -30,13 +28,8 @@ internal class MainHideShowToolsPlugin : PriorityPlugin
 
     private void HandleMenuItemClick(object? sender, System.Windows.RoutedEventArgs e)
     {
-        _mainPanelViewModel.IsToolsVisible = !_mainPanelViewModel.IsToolsVisible;
+        bool isVisible = _hideShowToolsLogic.ToggleToolsVisibility();
 
-        if(_mainPanelViewModel.IsToolsVisible)
-        {
-            _mainPanelViewModel.EnsureMinimumWidth();
-        }
-
-        _hideShowMenuItem.Header = _mainPanelViewModel.IsToolsVisible ? "Hide Tools" : "Show Tools";
+        _hideShowMenuItem.Header = isVisible ? "Hide Tools" : "Show Tools";
     }
 }
