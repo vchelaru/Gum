@@ -371,6 +371,17 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   other caller broken. Grep every real call site of the type being narrowed before finalizing the
   interface, including `var`-typed locals (`var tab = CreateTab(...)`), not just field/parameter
   declarations — a `var` local is otherwise easy to miss in a declared-type-only sweep.
+- **A headless method that needs to trigger a WPF-only side effect on itself after its own
+  computed action** (e.g. re-opening/refreshing a live control after a state mutation, with no other
+  change-notification path back to the View) **is a delegate parameter on the headless method, not
+  a callback injected into its constructor.** An optional delegate arg (defaulting to a no-op) keeps
+  the class constructible and testable without a WPF dependency, while the WPF-side caller supplies
+  the real refresh action at the call site. Also: not every WPF-menu-building class fits the
+  `ContextMenuItemViewModel`/ephemeral-rebuild neutral-VM shape — a menu that's built once and
+  mutated in place (persistent named items, not rebuilt per right-click) is a structural mismatch
+  for that pattern; a plain state-DTO returned by a headless method (applied by the WPF side to the
+  live items) is the right shape there instead. Match the extraction shape to whether the menu is
+  rebuilt or mutated, don't force one pattern onto both.
 - **A grid row that isn't backed by a real state/instance-bound variable doesn't need the full
   `VariableGridEntry`-style DTO treatment.** A category's own synthetic "remove" action or a
   behavior's ad hoc property row has no real `StateSave`/`ObjectFinder` lookup behind it, so forcing
