@@ -8,7 +8,7 @@ using Gum.ToolStates;
 
 namespace CodeOutputPlugin.Manager;
 
-internal class RenameService
+public class RenameService
 {
     private readonly CodeGenerationFileLocationsService _codeGenerationFileLocationsService;
     private readonly CodeGenerationService _codeGenerationService;
@@ -32,7 +32,7 @@ internal class RenameService
         _dialogService = dialogService;
     }
 
-    internal void HandleRename(ElementSave element, string oldName, CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi)
+    public void HandleRename(ElementSave element, string oldName, CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi)
     {
         if (codeOutputProjectSettings.CodeProjectRoot == string.Empty)
         {
@@ -112,7 +112,7 @@ internal class RenameService
         _codeGenerationService.GenerateCodeForElement(element, thisElementOutputSettings, codeOutputProjectSettings, showPopups: false);
     }
 
-    internal void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
+    public void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
     {
         /////////////////////////Early Out////////////////////
         if (variableName != "BaseType" || instance != null)

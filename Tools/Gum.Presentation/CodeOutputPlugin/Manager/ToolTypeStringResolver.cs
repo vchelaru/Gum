@@ -7,7 +7,7 @@ namespace CodeOutputPlugin.Manager;
 /// <summary>
 /// Adapts the Gum tool's TypeManager to the headless ITypeStringResolver interface.
 /// </summary>
-internal class ToolTypeStringResolver : ITypeStringResolver
+public class ToolTypeStringResolver : ITypeStringResolver
 {
     private readonly ITypeManager _typeManager;
 

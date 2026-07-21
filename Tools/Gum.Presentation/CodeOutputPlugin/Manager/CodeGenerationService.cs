@@ -12,7 +12,7 @@ using Gum.ToolStates;
 
 namespace CodeOutputPlugin.Manager;
 
-internal class CodeGenerationService
+public class CodeGenerationService
 {
     private readonly CodeGenerator _codeGenerator;
     private readonly CustomCodeGenerator _customCodeGenerator;
