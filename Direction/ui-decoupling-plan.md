@@ -141,6 +141,11 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   `typeof(GumBuilder).Assembly`.** A DI-resolved VM moved to `Gum.Presentation` needs a second scan
   anchored in that assembly too, or it silently stops resolving (caught by
   `ServiceProviderCompositionSpikeTests`, not by a compile error).
+- **`Builder.cs` has a second, separate single-assembly scan with the same blind spot:
+  `AddViewModelFuncFactories`.** It auto-registers `Func<TViewModel>` factories by scanning
+  *consumer* constructors (not `ViewModel` types themselves) for a `Func<ViewModel>` parameter,
+  also scoped to one assembly. Moving the *consumer* of such a factory into `Gum.Presentation` —
+  not just moving a ViewModel — needs its own second scan anchored there too.
 - **`DialogViewResolver` scans the VM's own assembly, then falls back to an injected
   `IDialogViewAssemblyProvider`** (default impl scans every assembly currently loaded in the
   process) when the VM's own assembly has no View. This lets a relocated `DialogViewModel` resolve
