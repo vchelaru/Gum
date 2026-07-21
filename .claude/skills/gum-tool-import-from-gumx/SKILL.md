@@ -10,11 +10,11 @@ Cross-project import dialog (Content menu → "Import from .gumx..."). Lets the 
 ## Layout (one-screen map)
 
 - `Gum/ImportFromGumxPlugin/MainImportFromGumxPlugin.cs` — plugin entry, menu item, DI wiring.
-- `Gum/Plugins/ImportPlugin/Services/GumxSourceService` — loads source `.gumx` (file path or URL). Stays tool-side (`Gum.csproj`).
+- `Tools/Gum.Presentation/Plugins/ImportPlugin/Services/GumxSourceService` — loads source `.gumx` (file path or URL).
 - `Tools/Gum.Presentation/ImportFromGumx/Services/GumxDependencyResolver` — `ComputeTransitive(...)` → `DependencySet { TransitiveComponents, Behaviors, DifferingStandards, DifferingStandardDiffs }`. Standards that differ from destination are included; standards that match are excluded entirely. The `DifferingStandardDiffs` dictionary (#2779) carries the full `StandardComparisonResult` per differing standard so the dialog can render a variable-level diff.
 - `Tools/Gum.Presentation/ImportFromGumx/Services/GumxImportService` — performs the actual import + conflict reporting.
 
-Both concrete services above (and `GumxSourceService`'s interface) live in the headless **Gum.Presentation** assembly (no WPF) — their dependency closures were already headless, so the concrete classes moved too, not just their interfaces; namespace stays `ImportFromGumxPlugin.Services`.
+All three concrete services above (and their interfaces) live in the headless **Gum.Presentation** assembly (no WPF) — their dependency closures were already headless, so the concrete classes moved too, not just their interfaces. `GumxSourceService`/`IGumxSourceService` keep their original `Gum.Plugins.ImportPlugin.Services` namespace; `GumxDependencyResolver`/`GumxImportService` use `ImportFromGumxPlugin.Services`.
 - `ViewModels/ImportFromGumxViewModel` — orchestrates load/preview/import; owns `RootNodes` and `RecomputeTransitiveDependencies()`.
 - `Tools/Gum.ProjectServices/ImportFromGumx/ImportTreeNodeViewModel` — one node in the TreeView; folder or leaf; carries `IsChecked`, `InclusionState`, optional `StandardDiffRows`. Lives in the **headless `net8.0` `Gum.ProjectServices`** assembly (no WPF) so its display logic is unit-testable without standing up WPF (#3229, ADR-0003/0004); namespace stays `ImportFromGumxPlugin.ViewModels`.
 - `Tools/Gum.ProjectServices/ImportFromGumx/StandardDiffRowViewModel` — passive `Kind + Summary` display record for one diff entry (same headless assembly; sibling `ImportPreviewItemViewModel.cs` holds the `ElementItemType`/`InclusionState` enums).
