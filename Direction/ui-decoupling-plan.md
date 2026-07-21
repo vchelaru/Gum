@@ -222,6 +222,12 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   the handler into a new ctor-injected controller class — the same shape as `CameraController`/
   `SelectionManager` — taking those fields as constructor dependencies. Check field access, not just
   type references, when a plugin method looks clean on a first read.
+- **Not every control-coupled plugin fits the controller-extraction shape above — check whether the
+  View is a push target or an ambient input.** The `AnimationTabController` pattern works when the
+  WPF-side view only *receives* a value at the end of a method call. It doesn't apply when a method
+  reads the view mid-logic as a live input (e.g. `control?.SomeProperty ?? default`, or branching on
+  `tab.IsSelected`) — that needs a designed narrow view-state interface first, not a mechanical
+  extraction.
 - **A blocker doesn't have to be WPF/WinForms — a NuGet target-framework mismatch blocks identically.**
   A dependency on a `net8.0-windows`-targeted library (e.g. `CsvLibrary`) from the plain-`net8.0`
   `Gum.Presentation` is a hard `NU1201` restore error, not a compile-time type error, even though the
