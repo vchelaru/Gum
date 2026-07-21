@@ -72,7 +72,7 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
             setVariableLogic,
             tabManager,
             hotkeyManager,
-            new ScrollBarLogicWpf(),
+            new ScrollBarLogicWpf(new ScrollBarLogic()),
             messenger,
             themingService);
 
