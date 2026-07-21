@@ -4,7 +4,6 @@ using Gum.Localization;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.RenderingLibrary;
-using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.Services.Fonts;
 using Gum.ToolStates;
@@ -15,9 +14,6 @@ using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Color = System.Drawing.Color; 
-using Matrix = System.Numerics.Matrix4x4; 
-using Rectangle = System.Drawing.Rectangle; 
 
 namespace Gum.Wireframe;
 
@@ -88,13 +84,11 @@ public partial class WireframeObjectManager : IWireframeObjectManager
 
     private IRenderable HandleCreateGraphicalComponent(string type, ISystemManagers systemManagers)
     {
-
-        IRenderable? containedObject = null;
-
-#if GUM
-        containedObject =
-            _pluginManager.CreateRenderableForType(type);
-#endif
+        // Was previously guarded by "#if GUM" from when this class lived in Gum.csproj (which
+        // always defines GUM), making the guard always-true and effectively dead. This class now
+        // lives in Gum.Presentation (which does not define GUM), so the assignment is unconditional
+        // to preserve the prior always-on behavior.
+        IRenderable? containedObject = _pluginManager.CreateRenderableForType(type);
 
         return containedObject;
     }
