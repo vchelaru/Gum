@@ -766,13 +766,18 @@ internal class ElementTreeViewCreator
             {
                 node.Collapse();
             }
-            // If it's a folder node (top-level or subfolder), leave it alone but recurse into its children
-            else if ((node.IsTopElementContainerTreeNode() ||
-                      node.IsScreensFolderTreeNode() ||
-                      node.IsComponentsFolderTreeNode()) &&
-                     node.Nodes.Count > 0)
+            // If it's a folder node (top-level or subfolder), leave it alone but recurse into its
+            // children. Every node ETVM constructs is a GumTreeNode, which already implements
+            // ITreeNode directly, so this cast is always safe - it lets these predicates resolve to
+            // the headless TreeNodeFolderExtensions instead of a WinForms-only twin.
+            else if (((ITreeNode)node).IsTopElementContainerTreeNode() ||
+                      ((ITreeNode)node).IsScreensFolderTreeNode() ||
+                      ((ITreeNode)node).IsComponentsFolderTreeNode())
             {
-                CollapseElementNodesRecursively(node.Nodes);
+                if (node.Nodes.Count > 0)
+                {
+                    CollapseElementNodesRecursively(node.Nodes);
+                }
             }
         }
     }

@@ -2335,24 +2335,6 @@ public static class TreeNodeExtensionMethods
     }
 
     /// <summary>
-    /// Determines whether the tree node is one of the top-level element container folders
-    /// (Screens, Components, Standard, or Behaviors).
-    /// </summary>
-    /// <param name="treeNode">The tree node to check.</param>
-    /// <returns>True if the node has no Tag (indicating a top-level folder or subfolder); otherwise, false.</returns>
-    /// <remarks>
-    /// This returns true for all top-level folders ONLY.
-    /// Use IsTopScreenContainerTreeNode, IsTopComponentContainerTreeNode, IsTopStandardElementTreeNode,
-    /// or IsTopBehaviorTreeNode to check for specific top-level folders only.
-    /// Use IsScreensFolderTreeNode or IsComponentsFolderTreeNode to check for any folder under the
-    /// Screens or Components hierarchy (excluding the top-level folders themselves).
-    /// </remarks>
-    public static bool IsTopElementContainerTreeNode(this TreeNode treeNode)
-    {
-        return treeNode.Tag == null && treeNode.Parent == null;
-    }
-
-    /// <summary>
     /// Determines whether the tree node is the top-level "Screens" container folder.
     /// </summary>
     /// <param name="treeNode">The tree node to check.</param>
@@ -2486,170 +2468,24 @@ public static class TreeNodeExtensionMethods
         }
     }
 
-    /// <summary>
-    /// Determines whether the tree node is a top level or contained folder within the Screens hierarchy 
-    /// (includes the top-level "Screens" folder itself).
-    /// </summary>
-    /// <param name="treeNode">The tree node to check.</param>
-    /// <returns>True if this is a folder anywhere under the top-level "Screens" folder; otherwise, false.</returns>
-    /// <summary>
-    /// Determines whether the tree node is a top level or contained folder within the Screens hierarchy
-    /// (includes the top-level "Screens" folder itself).
-    /// </summary>
-    /// <param name="treeNode">The tree node to check.</param>
-    /// <returns>True if this is a folder anywhere under the top-level "Screens" folder; otherwise, false.</returns>
-    /// <remarks>
-    /// This returns true for ANY folder under the Screens hierarchy, including:
-    /// - Direct child folders of the top-level "Screens" folder (e.g., "Screens/Menus")
-    /// - Nested subfolders at any depth (e.g., "Screens/Menus/MainMenu")
-    /// - The top-level "Screens" folder itself (use IsTopScreenContainerTreeNode for that)
-    /// Returns false for:
-    /// - Screen element nodes (which have a Tag)
-    /// </remarks>
-    public static bool IsScreensFolderTreeNode(this TreeNode treeNode)
-    {
-        return treeNode.Tag == null &&
-            treeNode.Parent != null &&
-            (treeNode.Parent.IsScreensFolderTreeNode() ||
-            // If the parent is the top screen container and this has no tag, then this is a folder:
-            treeNode.Parent.IsTopScreenContainerTreeNode());
-    }
-
-    /// <summary>
-    /// Determines whether the tree node is part of the Screens folder structure
-    /// (either the root Screens folder, a subfolder, or a Screen element within the hierarchy).
-    /// </summary>
-    /// <param name="treeNode">The tree node to check.</param>
-    /// <returns>True if this node is anywhere within the Screens folder structure; otherwise, false.</returns>
-    /// <remarks>
-    /// This recursively checks if the node or any of its parents is the root Screens node.
-    /// Unlike IsScreensFolderTreeNode and IsTopScreenContainerTreeNode, this returns true for
-    /// Screen elements themselves, not just folders.
-    /// </remarks>
-    /// <remarks>
-    /// The <see cref="ITreeNode"/>-typed overload now lives in Gum.Presentation's
-    /// TreeNodeFolderExtensions (headless, ADR-0005 Phase 3) instead of this WinForms-cast-based
-    /// one, so AddScreenDialogViewModel/DragDropManager and any other <see cref="ITreeNode"/> caller
-    /// resolve there without an ambiguous-call conflict.
-    /// </remarks>
-    public static bool IsPartOfScreensFolderStructure(this TreeNode treeNode)
-    {
-        if (treeNode == ElementTreeViewManager.RootScreensTreeNode)
-            return true;
-
-        if (treeNode.Parent == null)
-            return false;
-
-        return treeNode.Parent.IsPartOfScreensFolderStructure();
-    }
-
-    /// <summary>
-    /// Determines whether the tree node is part of the Components folder structure
-    /// (either the root Components folder, a subfolder, or a Component element within the hierarchy).
-    /// </summary>
-    /// <param name="treeNode">The tree node to check.</param>
-    /// <returns>True if this node is anywhere within the Components folder structure; otherwise, false.</returns>
-    /// <remarks>
-    /// This recursively checks if the node or any of its parents is the root Components node.
-    /// Unlike IsComponentsFolderTreeNode and IsTopComponentContainerTreeNode, this returns true for
-    /// Component elements themselves, not just folders.
-    /// </remarks>
-    /// <remarks>
-    /// The <see cref="ITreeNode"/>-typed overload now lives in Gum.Presentation's
-    /// TreeNodeFolderExtensions (headless, ADR-0005 Phase 3) instead of this WinForms-cast-based
-    /// one, so AddComponentDialogViewModel/DragDropManager and any other <see cref="ITreeNode"/>
-    /// caller resolve there without an ambiguous-call conflict.
-    /// </remarks>
-    public static bool IsPartOfComponentsFolderStructure(this TreeNode treeNode)
-    {
-        if (treeNode == ElementTreeViewManager.RootComponentsTreeNode)
-            return true;
-
-        if (treeNode.Parent == null)
-            return false;
-
-        return treeNode.Parent.IsPartOfComponentsFolderStructure();
-    }
-
-    /// <summary>
-    /// Determines whether the tree node is part of the Standard elements folder structure
-    /// (either the root Standard folder, a subfolder, or a Standard element within the hierarchy).
-    /// </summary>
-    /// <param name="treeNode">The tree node to check.</param>
-    /// <returns>True if this node is anywhere within the Standard elements folder structure; otherwise, false.</returns>
-    /// <remarks>
-    /// This recursively checks if the node or any of its parents is the root Standard elements node.
-    /// Unlike IsTopStandardElementTreeNode, this returns true for Standard element instances themselves, not just folders.
-    /// </remarks>
-    public static bool IsPartOfStandardElementsFolderStructure(this TreeNode treeNode)
-    {
-        if (treeNode == ElementTreeViewManager.RootStandardElementsTreeNode)
-            return true;
-
-        if (treeNode.Parent == null)
-            return false;
-
-        return treeNode.Parent.IsPartOfStandardElementsFolderStructure();
-    }
-
-    /// <summary>
-    /// Determines whether the tree node is a folder within the Components hierarchy (excluding the top-level "Components" folder itself).
-    /// </summary>
-    /// <param name="treeNode">The tree node to check.</param>
-    /// <returns>True if this is a folder anywhere under the top-level "Components" folder; otherwise, false.</returns>
-    /// <summary>
-    /// Determines whether the tree node is a folder within the Components hierarchy
-    /// (including the top-level "Components" folder itself).
-    /// </summary>
-    /// <param name="treeNode">The tree node to check.</param>
-    /// <returns>True if this is a folder anywhere under and including the top-level "Components" folder; otherwise, false.</returns>
-    /// <remarks>
-    /// This returns true for ANY folder under the Components hierarchy, including:
-    /// - Direct child folders of the top-level "Components" folder (e.g., "Components/UI")
-    /// - Nested subfolders at any depth (e.g., "Components/UI/Buttons")
-    /// - The top-level "Components" folder itself (use IsTopComponentContainerTreeNode for that)
-    /// Returns false for:
-    /// - Component element nodes (which have a Tag)
-    /// </remarks>
-    public static bool IsComponentsFolderTreeNode(this TreeNode treeNode)
-    {
-        return treeNode.Tag == null &&
-            treeNode.Parent != null &&
-            (treeNode.Parent.IsComponentsFolderTreeNode() ||
-            // If the parent is the top component container and this has no tag, then this is a folder:
-            treeNode.Parent.IsTopComponentContainerTreeNode());
-    }
-
     // MoveToIndex/SortByName/FirstComesBeforeSecond moved to Gum.Presentation's
     // TreeNodeMutationExtensions (part of #3845) - they only touched ITreeNodeMutable/ITreeNode
     // members already, so this was a pure file-location move. See that file for the implementation.
 
-    /// <summary>
-    /// Gets all descendant nodes of the tree node in a flattened list, recursively traversing the entire tree structure.
-    /// </summary>
-    /// <param name="treeNode">The tree node whose descendants should be collected.</param>
-    /// <returns>A list containing all child, grandchild, and deeper descendant nodes in depth-first order.</returns>
-    /// <remarks>
-    /// The returned list does not include the tree node itself, only its descendants.
-    /// Nodes are added in depth-first order (parent node's children are added before their siblings' children).
-    /// </remarks>
-    public static List<TreeNode> GetAllChildrenNodesRecursively(this TreeNode treeNode)
-    {
-        List<TreeNode> toReturn = new List<TreeNode>();
-
-        void Fill(TreeNode parent)
-        {
-            foreach(TreeNode child in parent.Nodes)
-            {
-                toReturn.Add(child);
-                Fill(child);
-            }
-        }
-
-        Fill(treeNode);
-
-        return toReturn;
-    }
+    // IsTopElementContainerTreeNode, IsScreensFolderTreeNode, IsComponentsFolderTreeNode,
+    // IsPartOfScreensFolderStructure, IsPartOfComponentsFolderStructure,
+    // IsPartOfStandardElementsFolderStructure, and GetAllChildrenNodesRecursively (all WinForms
+    // TreeNode-typed) were deleted here (#3963, Phase 4a step 4) - every real caller now resolves to
+    // the ITreeNode-typed twin in Gum.Presentation (TreeNodeFolderExtensions/
+    // TreeNodeNavigationExtensions). What remains below (IsScreenTreeNode/IsComponentTreeNode/
+    // IsBehaviorTreeNode/IsStandardElementTreeNode/IsTop*ContainerTreeNode/GetFullFilePath) is NOT
+    // fully dead: GumTreeNode's own ITreeNode.GetFullFilePath() implementation and
+    // TreeNodeWrapper.GetFullFilePath() both still call this WinForms GetFullFilePath (via
+    // `this.GetFullFilePath()`/`Node.GetFullFilePath()`), so it - and the Is*/IsTop* predicates it
+    // depends on - is the live backing implementation for every concrete node's headless
+    // GetFullFilePath(), not dead code. Porting that logic to a headless IElementTreeRoots-based
+    // extension (mirroring TreeNodeDirectoryExtensions) so this class can be deleted entirely would
+    // need to touch GumTreeNode.cs and TreeNodeWrapper, both out of this PR's scope.
 }
 
 #endregion
