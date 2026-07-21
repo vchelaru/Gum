@@ -35,7 +35,7 @@ namespace StateAnimationPlugin;
 /// model onto the window's DataContext.
 /// </summary>
 [Export(typeof(PluginBase))]
-public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
+public class MainStateAnimationPlugin : WpfPluginBase, IAnimationUndoProvider
 {
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;

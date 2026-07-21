@@ -22,7 +22,7 @@ using Gum.Logic.FileWatch;
 namespace GumFormsPlugin;
 
 [Export(typeof(PluginBase))]
-internal class MainGumFormsPlugin : PluginBase
+internal class MainGumFormsPlugin : WpfPluginBase
 {
     #region Fields/Properties
 

@@ -5,7 +5,7 @@ namespace Gum.Plugins.BaseClasses
     // This can't be done on the base class - it must be done on the
     // class that inherits from PriorityPlugin...oh well
     //[Export(typeof(Gum.Plugins.BaseClasses.PluginBase))]
-    public abstract class PriorityPlugin : PluginBase
+    public abstract class PriorityPlugin : WpfPluginBase
     {
         public override string FriendlyName
         {

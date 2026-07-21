@@ -1,7 +1,7 @@
-﻿using Gum.Plugins.BaseClasses;
+﻿using Gum.Managers;
+using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
 using System.ComponentModel.Composition;
-using System.Windows.Forms;
 
 namespace Gum.Plugins.AlignmentButtons
 {
@@ -31,12 +31,12 @@ namespace Gum.Plugins.AlignmentButtons
             this.StateWindowTreeNodeSelected += HandleStateWindowTreeNodeSelected;
         }
 
-        private void HandleStateWindowTreeNodeSelected(TreeNode obj)
+        private void HandleStateWindowTreeNodeSelected(ITreeNode obj)
         {
             RefreshTabVisibility();
         }
 
-        private void HandleTreeNodeSelected(TreeNode? treeNode)
+        private void HandleTreeNodeSelected(ITreeNode? treeNode)
         {
             RefreshTabVisibility();
         }

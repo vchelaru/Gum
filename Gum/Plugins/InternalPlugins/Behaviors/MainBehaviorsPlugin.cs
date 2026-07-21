@@ -2,7 +2,6 @@ using Gum.Plugins.BaseClasses;
 using System.ComponentModel.Composition;
 using Gum.ToolStates;
 using Gum.DataTypes.Behaviors;
-using System.Windows.Forms;
 using Gum.Undo;
 using Gum.ToolCommands;
 using Gum.Managers;
@@ -73,10 +72,9 @@ public class MainBehaviorsPlugin : PriorityPlugin
         this.StateMovedToCategory += behaviorsLogic.HandleStateMovedToCategory;
     }
 
-    // System.Windows.Forms.TreeNode is a real WinForms-glue signature baked into
-    // PluginBase.StateWindowTreeNodeSelected itself, so this handler can't move into
-    // BehaviorsLogic; it's a no-op today regardless.
-    private void HandleStateSelected(TreeNode obj)
+    // A no-op today regardless of type - StateWindowTreeNodeSelected has no live invoker
+    // (PluginManager.StateWindowTreeNodeSelected is never called), so this handler never fires.
+    private void HandleStateSelected(ITreeNode obj)
     {
 
     }
