@@ -6,7 +6,7 @@ namespace CodeOutputPlugin.Manager;
 /// <summary>
 /// Adapts the Gum tool's IOutputManager to the headless ICodeGenLogger interface.
 /// </summary>
-internal class ToolCodeGenLogger : ICodeGenLogger
+public class ToolCodeGenLogger : ICodeGenLogger
 {
     private readonly IOutputManager _outputManager;
 

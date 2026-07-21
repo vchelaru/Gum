@@ -9,7 +9,7 @@ namespace CodeOutputPlugin.Manager;
 /// is computed on each call, services consuming this provider automatically see
 /// the current project directory after the user switches projects.
 /// </summary>
-internal class ProjectStateDirectoryProvider : IProjectDirectoryProvider
+public class ProjectStateDirectoryProvider : IProjectDirectoryProvider
 {
     private readonly IProjectState _projectState;
 

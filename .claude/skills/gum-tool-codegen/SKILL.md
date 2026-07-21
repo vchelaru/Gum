@@ -14,15 +14,14 @@ The code generation system produces C# partial classes from Gum Screens and Comp
 ## Architecture
 
 ```
-Tool UI                              Shared Engine
-  CodeOutputPlugin/                    Gum.ProjectServices/CodeGeneration/
-    MainCodeOutputPlugin               CodeGenerator (~5700 lines)
-    CodeGenerationService              CustomCodeGenerator
-    CodeWindow (Code tab)              CodeGenerationFileLocationsService
-    ParentSetLogic                     CodeGenerationNameVerifier
-    RenameService                      VariableExclusionLogic
-                                       CodeOutputProjectSettingsManager
-                                       CodeOutputElementSettingsManager
+Tool UI (Gum.csproj)                 Headless (Gum.Presentation / Gum.ProjectServices)
+  CodeOutputPlugin/                    CodeOutputPlugin/Manager/ (Gum.Presentation)
+    MainCodeOutputPlugin                 CodeGenerationService, ParentSetLogic, RenameService
+    CodeWindow (Code tab)               CodeGeneration/ (Gum.ProjectServices)
+                                          CodeGenerator (~5700 lines), CustomCodeGenerator
+                                          CodeGenerationFileLocationsService, CodeGenerationNameVerifier
+                                          VariableExclusionLogic, CodeOutputProjectSettingsManager
+                                          CodeOutputElementSettingsManager
 ```
 
 `CodeGenerationService` (tool-side) orchestrates generation by calling into `CodeGenerator` (shared engine). The same `CodeGenerator` is used by the CLI via `HeadlessCodeGenerationService` -- see the gum-cli skill for that path.
@@ -95,7 +94,7 @@ Tool UI                              Shared Engine
 | `Tools/Gum.ProjectServices/CodeGeneration/CodeGenerationFileLocationsService.cs` | Output path resolution |
 | `Tools/Gum.ProjectServices/CodeGeneration/CodeGenerationNameVerifier.cs` | C# name compliance |
 | `Tools/Gum.ProjectServices/CodeGeneration/VariableExclusionLogic.cs` | Platform-specific variable exclusion |
-| `Gum/CodeOutputPlugin/MainCodeOutputPlugin.cs` | Tool UI plugin entry point |
-| `Gum/CodeOutputPlugin/Manager/CodeGenerationService.cs` | Tool-side generation orchestration |
-| `Gum/CodeOutputPlugin/Manager/ParentSetLogic.cs` | Forms parent relationship handling |
-| `Gum/CodeOutputPlugin/Manager/RenameService.cs` | Element rename to code rename |
+| `Gum/CodeOutputPlugin/MainCodeOutputPlugin.cs` | Tool UI plugin entry point (WPF, `Gum.csproj`) |
+| `Tools/Gum.Presentation/CodeOutputPlugin/Manager/CodeGenerationService.cs` | Generation orchestration (headless) |
+| `Tools/Gum.Presentation/CodeOutputPlugin/Manager/ParentSetLogic.cs` | Forms parent relationship handling (headless) |
+| `Tools/Gum.Presentation/CodeOutputPlugin/Manager/RenameService.cs` | Element rename to code rename (headless) |

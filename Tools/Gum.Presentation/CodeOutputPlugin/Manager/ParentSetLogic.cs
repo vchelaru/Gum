@@ -78,7 +78,7 @@ public class ParentSetLogic
         }
     }
 
-    internal void HandleNewCreatedInstance(ElementSave element, InstanceSave instance,  CodeOutputProjectSettings codeOutputProjectSettings)
+    public void HandleNewCreatedInstance(ElementSave element, InstanceSave instance,  CodeOutputProjectSettings codeOutputProjectSettings)
     {
        
         var rfv = new RecursiveVariableFinder(element.DefaultState);
