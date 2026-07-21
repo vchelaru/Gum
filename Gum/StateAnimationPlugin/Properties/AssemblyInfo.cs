@@ -14,11 +14,6 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
-// Exposes internal members (e.g. the animation view models' RefreshErrors/GetErrors error
-// computation) to the tool unit test project so the rename/error logic can be characterized
-// without driving the WPF plugin.
-[assembly: InternalsVisibleTo("GumToolUnitTests")]
-
 // Setting ComVisible to false makes the types in this assembly not visible
 // to COM components.  If you need to access a type in this assembly from
 // COM, set the ComVisible attribute to true on that type.

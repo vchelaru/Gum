@@ -65,7 +65,7 @@ public class AnimationStateRenameErrorTests : BaseTestClass
 
         element.Categories.Clear();  // delete the whole category, as DeleteLogic does
 
-        List<string> availableStates = MainStateAnimationPlugin.GetAvailableStates(element, viewModel);
+        List<string> availableStates = AnimationTabRefreshLogic.GetAvailableStates(element, viewModel);
 
         availableStates.ShouldContain("Cat/Idle");
     }
@@ -109,7 +109,7 @@ public class AnimationStateRenameErrorTests : BaseTestClass
             CreateAnimationWithKeyframes(Keyframe(stateName: "Cat/Idle")));
 
         idle.Name = "Walk";  // state already renamed when the plugin event fires
-        MainStateAnimationPlugin.RefreshAfterStateRename(
+        AnimationTabRefreshLogic.RefreshAfterStateRename(
             RenameManagerFor(element), viewModel, element, idle, "Idle");
 
         viewModel.Animations[0].Keyframes[0].StateName.ShouldBe("Cat/Walk");

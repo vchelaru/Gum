@@ -89,7 +89,7 @@ public class AnimationUndoTests : BaseTestClass
         // .ganx even when the selected element is the same one already loaded (issue #3406 follow-up).
         ComponentSave element = new();
 
-        bool shouldReload = MainStateAnimationPlugin.ShouldReloadViewModel(
+        bool shouldReload = AnimationTabRefreshLogic.ShouldReloadViewModel(
             currentlyReferencedElement: element,
             selectedElement: element,
             forceReload: true);
@@ -103,7 +103,7 @@ public class AnimationUndoTests : BaseTestClass
         // The stale-VM early-out the normal refresh path relies on: same element, no reload.
         ComponentSave element = new();
 
-        bool shouldReload = MainStateAnimationPlugin.ShouldReloadViewModel(
+        bool shouldReload = AnimationTabRefreshLogic.ShouldReloadViewModel(
             currentlyReferencedElement: element,
             selectedElement: element,
             forceReload: false);
@@ -117,7 +117,7 @@ public class AnimationUndoTests : BaseTestClass
         ComponentSave currentElement = new();
         ComponentSave selectedElement = new();
 
-        bool shouldReload = MainStateAnimationPlugin.ShouldReloadViewModel(
+        bool shouldReload = AnimationTabRefreshLogic.ShouldReloadViewModel(
             currentlyReferencedElement: currentElement,
             selectedElement: selectedElement,
             forceReload: false);
@@ -134,11 +134,11 @@ public class AnimationUndoTests : BaseTestClass
         // across the reload when the selected keyframe itself was unchanged by the undo.
         ElementAnimationsViewModel rebuilt = ViewModelWithAnimation("Anim", out AnimationViewModel animation,
             Keyframe("Default", 0f), Keyframe("Highlighted", 1f));
-        var selection = new MainStateAnimationPlugin.AnimationSelectionState(
+        var selection = new AnimationTabRefreshLogic.AnimationSelectionState(
             "Anim", Keyframe("Highlighted", 1f), KeyframeIndex: 1, KeyframeCount: 2);
 
         AnimatedKeyframeViewModel? matched =
-            MainStateAnimationPlugin.RestoreAnimationSelection(rebuilt, selection);
+            AnimationTabRefreshLogic.RestoreAnimationSelection(rebuilt, selection);
 
         rebuilt.SelectedAnimation.ShouldBe(animation);
         matched.ShouldNotBeNull();
@@ -157,11 +157,11 @@ public class AnimationUndoTests : BaseTestClass
         // selected (with its time showing 5 again).
         ElementAnimationsViewModel rebuilt = ViewModelWithAnimation("Anim", out AnimationViewModel animation,
             Keyframe("Default", 0f), Keyframe("Highlighted", 5f));
-        var selection = new MainStateAnimationPlugin.AnimationSelectionState(
+        var selection = new AnimationTabRefreshLogic.AnimationSelectionState(
             "Anim", Keyframe("Highlighted", 4f), KeyframeIndex: 1, KeyframeCount: 2);
 
         AnimatedKeyframeViewModel? matched =
-            MainStateAnimationPlugin.RestoreAnimationSelection(rebuilt, selection);
+            AnimationTabRefreshLogic.RestoreAnimationSelection(rebuilt, selection);
 
         matched.ShouldNotBeNull();
         matched!.Time.ShouldBe(5f);
@@ -176,11 +176,11 @@ public class AnimationUndoTests : BaseTestClass
         // rather than grabbing a neighbor. The animation is still reselected.
         ElementAnimationsViewModel rebuilt = ViewModelWithAnimation("Anim", out AnimationViewModel animation,
             Keyframe("Default", 0f));
-        var selection = new MainStateAnimationPlugin.AnimationSelectionState(
+        var selection = new AnimationTabRefreshLogic.AnimationSelectionState(
             "Anim", Keyframe("Highlighted", 1f), KeyframeIndex: 1, KeyframeCount: 2);
 
         AnimatedKeyframeViewModel? matched =
-            MainStateAnimationPlugin.RestoreAnimationSelection(rebuilt, selection);
+            AnimationTabRefreshLogic.RestoreAnimationSelection(rebuilt, selection);
 
         rebuilt.SelectedAnimation.ShouldBe(animation);
         matched.ShouldBeNull();
@@ -196,12 +196,12 @@ public class AnimationUndoTests : BaseTestClass
         // keyframe is re-matched on it by content.
         ElementAnimationsViewModel rebuilt = ViewModelWithAnimation("NewName", out AnimationViewModel animation,
             Keyframe("Default", 0f), Keyframe("Highlighted", 1f));
-        var selection = new MainStateAnimationPlugin.AnimationSelectionState(
+        var selection = new AnimationTabRefreshLogic.AnimationSelectionState(
             "OldName", Keyframe("Highlighted", 1f), KeyframeIndex: 1, KeyframeCount: 2,
             AnimationIndex: 0, AnimationCount: 1);
 
         AnimatedKeyframeViewModel? matched =
-            MainStateAnimationPlugin.RestoreAnimationSelection(rebuilt, selection);
+            AnimationTabRefreshLogic.RestoreAnimationSelection(rebuilt, selection);
 
         rebuilt.SelectedAnimation.ShouldBe(animation);
         matched.ShouldNotBeNull();
@@ -217,12 +217,12 @@ public class AnimationUndoTests : BaseTestClass
         // Drop the selection cleanly instead.
         ElementAnimationsViewModel rebuilt = ViewModelWithAnimation("NewName", out AnimationViewModel _,
             Keyframe("Default", 0f));
-        var selection = new MainStateAnimationPlugin.AnimationSelectionState(
+        var selection = new AnimationTabRefreshLogic.AnimationSelectionState(
             "OldName", Keyframe("Default", 0f), KeyframeIndex: 0, KeyframeCount: 1,
             AnimationIndex: 1, AnimationCount: 2);
 
         AnimatedKeyframeViewModel? matched =
-            MainStateAnimationPlugin.RestoreAnimationSelection(rebuilt, selection);
+            AnimationTabRefreshLogic.RestoreAnimationSelection(rebuilt, selection);
 
         rebuilt.SelectedAnimation.ShouldBeNull();
         matched.ShouldBeNull();

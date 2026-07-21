@@ -10,7 +10,7 @@ namespace GumToolUnitTests.Plugins.StateAnimationPlugin;
 /// disk (issue #3410): only the currently-selected element's animation sidecar should trigger a
 /// repaint, and only for the <c>.ganx</c> extension. The plugin subscribes to the file-watch
 /// <c>ReactToFileChanged</c> event for every changed file, so the extension and per-element gates
-/// both live in <see cref="MainStateAnimationPlugin.ShouldReloadAnimationsForChangedFile"/>.
+/// both live in <see cref="AnimationTabRefreshLogic.ShouldReloadAnimationsForChangedFile"/>.
 /// </summary>
 public class AnimationFileReloadTests
 {
@@ -20,7 +20,7 @@ public class AnimationFileReloadTests
         FilePath changed = new FilePath(@"C:\Proj\Components\MyButtonAnimations.ganx");
         FilePath selectedElementAnimationFile = new FilePath(@"C:\Proj\Components\MyButtonAnimations.ganx");
 
-        MainStateAnimationPlugin.ShouldReloadAnimationsForChangedFile(changed, selectedElementAnimationFile)
+        AnimationTabRefreshLogic.ShouldReloadAnimationsForChangedFile(changed, selectedElementAnimationFile)
             .ShouldBeTrue();
     }
 
@@ -30,7 +30,7 @@ public class AnimationFileReloadTests
         FilePath changed = new FilePath(@"C:\Proj\Components\OtherAnimations.ganx");
         FilePath selectedElementAnimationFile = new FilePath(@"C:\Proj\Components\MyButtonAnimations.ganx");
 
-        MainStateAnimationPlugin.ShouldReloadAnimationsForChangedFile(changed, selectedElementAnimationFile)
+        AnimationTabRefreshLogic.ShouldReloadAnimationsForChangedFile(changed, selectedElementAnimationFile)
             .ShouldBeFalse();
     }
 
@@ -40,7 +40,7 @@ public class AnimationFileReloadTests
         FilePath changed = new FilePath(@"C:\Proj\Components\MyButton.gucx");
         FilePath selectedElementAnimationFile = new FilePath(@"C:\Proj\Components\MyButtonAnimations.ganx");
 
-        MainStateAnimationPlugin.ShouldReloadAnimationsForChangedFile(changed, selectedElementAnimationFile)
+        AnimationTabRefreshLogic.ShouldReloadAnimationsForChangedFile(changed, selectedElementAnimationFile)
             .ShouldBeFalse();
     }
 
@@ -49,7 +49,7 @@ public class AnimationFileReloadTests
     {
         FilePath changed = new FilePath(@"C:\Proj\Components\MyButtonAnimations.ganx");
 
-        MainStateAnimationPlugin.ShouldReloadAnimationsForChangedFile(changed, null)
+        AnimationTabRefreshLogic.ShouldReloadAnimationsForChangedFile(changed, null)
             .ShouldBeFalse();
     }
 }
