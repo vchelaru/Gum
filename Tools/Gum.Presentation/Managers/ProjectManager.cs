@@ -443,7 +443,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
             {
                 // copy from the original location here
                 var source = gumDirectory.Original + reference.Link;
-                var destination = gumDirectory.Original + reference.Subfolder + "\\" + reference.Name + "." + reference.Extension;
+                var destination = gumDirectory.Original + reference.Subfolder + "/" + reference.Name + "." + reference.Extension;
 
                 try
                 {
