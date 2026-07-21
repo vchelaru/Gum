@@ -13,12 +13,9 @@ using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using System;
-using System.Windows;
 using System.Windows.Forms;
-using System.Windows.Input;
 using Gum.SelectionHistory;
 using Gum.Undo;
-using KeyEventArgs = System.Windows.Forms.KeyEventArgs;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.Managers;
@@ -137,17 +134,12 @@ public class HotkeyManager : IHotkeyManager
 
     public bool PreviewKeyDownAppWide(GumKeyEventArgs e, bool enableEntireAppZoom = true)
     {
-        // Rebuild the WPF key event the matching logic consumes, run it, and copy Handled back onto the
-        // framework-neutral args. ToWpf() reads live modifier state via the keyboard device, as before.
-        System.Windows.Input.KeyEventArgs wpfE = e.ToWinFormsKeyEventArgs().ToWpf();
-        bool result = PreviewKeyDownAppWideInternal(wpfE, enableEntireAppZoom);
-        e.Handled = wpfE.Handled;
-        return result;
+        return PreviewKeyDownAppWideInternal(e, enableEntireAppZoom);
     }
 
-    private bool PreviewKeyDownAppWideInternal(System.Windows.Input.KeyEventArgs e, bool enableEntireAppZoom = true)
+    private bool PreviewKeyDownAppWideInternal(GumKeyEventArgs e, bool enableEntireAppZoom = true)
     {
-        Action? match = (e.Key, Keyboard.Modifiers) switch
+        Action? match = true switch
         {
             _ when Search.IsPressed(e)  => _guiCommands.FocusSearch,
             _ when RedoAlt.IsPressed(e) || Redo.IsPressed(e) => _undoManager.PerformRedo,
@@ -180,32 +172,21 @@ public class HotkeyManager : IHotkeyManager
 
     public void HandleKeyDownElementTreeView(GumKeyEventArgs e)
     {
-        // Rebuild the WinForms key event the matching logic consumes, run the existing logic unchanged,
-        // then copy Handled/SuppressKeyPress back onto the framework-neutral args for the boundary caller.
-        KeyEventArgs winE = e.ToWinFormsKeyEventArgs();
-        try
+        if (PreviewKeyDownAppWideInternal(e))
         {
-            if (PreviewKeyDownAppWideInternal(winE.ToWpf()))
-            {
-                winE.Handled = true;
-                return;
-            }
+            e.Handled = true;
+            return;
+        }
 
-            HandleCopyCutPaste(winE);
-            HandleDelete(winE);
-            HandleReorder(winE);
-            TryHandleCtrlF(winE);
-            HandleGoToDefinition(winE);
-            HandleRename(winE);
-        }
-        finally
-        {
-            e.Handled = winE.Handled;
-            e.SuppressKeyPress = winE.SuppressKeyPress;
-        }
+        HandleCopyCutPaste(e);
+        HandleDelete(e);
+        HandleReorder(e);
+        TryHandleCtrlF(e);
+        HandleGoToDefinition(e);
+        HandleRename(e);
     }
 
-    private void HandleRename(KeyEventArgs e)
+    private void HandleRename(GumKeyEventArgs e)
     {
         if(Rename.IsPressed(e))
         {
@@ -255,7 +236,7 @@ public class HotkeyManager : IHotkeyManager
         }
     }
 
-    private void TryHandleCtrlF(KeyEventArgs e)
+    private void TryHandleCtrlF(GumKeyEventArgs e)
     {
 
         if(Search.IsPressed(e))
@@ -265,7 +246,7 @@ public class HotkeyManager : IHotkeyManager
         }
     }
 
-    private void HandleReorder(KeyEventArgs e)
+    private void HandleReorder(GumKeyEventArgs e)
     {
         if(ReorderUp.IsPressed(e))
         {
@@ -279,7 +260,7 @@ public class HotkeyManager : IHotkeyManager
         }
     }
 
-    void HandleDelete(KeyEventArgs e)
+    void HandleDelete(GumKeyEventArgs e)
     {
         if (Delete.IsPressed(e))
         {
@@ -290,7 +271,7 @@ public class HotkeyManager : IHotkeyManager
         }
     }
 
-    void HandleGoToDefinition(KeyEventArgs e)
+    void HandleGoToDefinition(GumKeyEventArgs e)
     {
         if (GoToDefinition.IsPressed(e))
         {
@@ -311,7 +292,7 @@ public class HotkeyManager : IHotkeyManager
         }
     }
 
-    void HandleCopyCutPaste(KeyEventArgs e)
+    void HandleCopyCutPaste(GumKeyEventArgs e)
     {
         if(Copy.IsPressed(e))
         {
@@ -339,33 +320,22 @@ public class HotkeyManager : IHotkeyManager
 
     public void HandleEditorKeyDown(GumKeyEventArgs e)
     {
-        // Rebuild the WinForms key event the matching logic consumes, run the existing logic unchanged,
-        // then copy Handled/SuppressKeyPress back onto the framework-neutral args for the boundary caller.
-        KeyEventArgs winE = e.ToWinFormsKeyEventArgs();
-        try
+        if (PreviewKeyDownAppWideInternal(e, enableEntireAppZoom: false))
         {
-            if (PreviewKeyDownAppWideInternal(winE.ToWpf(), enableEntireAppZoom: false))
-            {
-                winE.Handled = true;
-                return;
-            }
-
-            HandleCopyCutPaste(winE);
-
-            HandleDelete(winE);
-            // Up moves the control "up" in the tree view, but when you are in the wireframe
-            // up should move it the opposite direction. We'll see how it goes...
-            // Update - inverting is not a good idea because it will work differently when
-            // dealing with stack layouts, and that's more complexity than I want to handle
-            HandleReorder(winE);
-
-            HandleGoToDefinition(winE);
+            e.Handled = true;
+            return;
         }
-        finally
-        {
-            e.Handled = winE.Handled;
-            e.SuppressKeyPress = winE.SuppressKeyPress;
-        }
+
+        HandleCopyCutPaste(e);
+
+        HandleDelete(e);
+        // Up moves the control "up" in the tree view, but when you are in the wireframe
+        // up should move it the opposite direction. We'll see how it goes...
+        // Update - inverting is not a good idea because it will work differently when
+        // dealing with stack layouts, and that's more complexity than I want to handle
+        HandleReorder(e);
+
+        HandleGoToDefinition(e);
     }
 
     public void HandleKeyUpWireframe()
@@ -454,43 +424,4 @@ public class HotkeyManager : IHotkeyManager
 
 
     #endregion
-
-    #region State Tree View
-
-    internal void HandleKeyDownStateView(KeyEventArgs e)
-    {
-        HandleCopyCutPasteState(e);
-    }
-
-    private void HandleCopyCutPasteState(KeyEventArgs e)
-    {
-        if (Copy.IsPressed(e))
-        {
-            _copyPasteLogic.OnCopy(CopyType.State);
-            e.Handled = true;
-            e.SuppressKeyPress = true;
-        }
-        else if (Paste.IsPressed(e))
-        {
-            _copyPasteLogic.OnPaste(CopyType.State);
-            e.Handled = true;
-            e.SuppressKeyPress = true;
-        }
-    }
-
-    #endregion
-}
-file static class Helpers
-{
-    public static System.Windows.Input.KeyEventArgs ToWpf(this System.Windows.Forms.KeyEventArgs e)
-    {
-        return new System.Windows.Input.KeyEventArgs(
-            Keyboard.PrimaryDevice,
-            PresentationSource.FromVisual(System.Windows.Application.Current.MainWindow),
-            0, // timestamp
-            KeyInterop.KeyFromVirtualKey((int)e.KeyCode))
-        {
-            RoutedEvent = Keyboard.KeyDownEvent
-        };
-    }
 }
