@@ -12,7 +12,7 @@ using ToolsUtilities;
 
 namespace Gum.Services;
 
-internal class ExposeVariableService : IExposeVariableService
+public class ExposeVariableService : IExposeVariableService
 {
     private readonly IUndoManager _undoManager;
     private readonly IGuiCommands _guiCommands;
@@ -115,7 +115,7 @@ internal class ExposeVariableService : IExposeVariableService
         var elementSave = _selectedState.SelectedElement;
 
         // if there is an inactive variable, we should get rid of it:
-        var existingVariable = elementSave.GetVariableFromThisOrBase(exposedName);
+        var existingVariable = GetVariableFromThisOrBase(elementSave, exposedName);
 
         // there's a variable but we shouldn't consider it
         // unless it's "Active" - inactive variables may be
@@ -170,6 +170,21 @@ internal class ExposeVariableService : IExposeVariableService
             Succeeded = true,
             Data = variableSave,
         };
+    }
+
+    /// <summary>
+    /// Returns the variable from the element's currently-selected state if <paramref name="element"/>
+    /// is the currently selected element and a state is selected, otherwise from its default state.
+    /// Headless replacement for the tool-only <c>ElementSaveExtensionMethodsGumTool.GetVariableFromThisOrBase</c>,
+    /// which resolves <see cref="ISelectedState"/> via <c>Locator</c> instead of taking it as a dependency.
+    /// </summary>
+    private VariableSave? GetVariableFromThisOrBase(ElementSave element, string variable)
+    {
+        var stateToPullFrom = (element == _selectedState.SelectedElement && _selectedState.SelectedStateSave != null)
+            ? _selectedState.SelectedStateSave
+            : element.DefaultState;
+
+        return stateToPullFrom.GetVariableRecursive(variable);
     }
 
     private GeneralResponse GetIfCanExpose(InstanceSave instanceSave, VariableSave variableSave, string rootVariableName)

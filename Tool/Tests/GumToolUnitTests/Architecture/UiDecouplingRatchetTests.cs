@@ -107,11 +107,14 @@ public class UiDecouplingRatchetTests
         //
         // Heuristic: a file that declares an interface and imports a System.Windows* namespace, with no
         // class declared in the same file. The class exclusion avoids false positives from files that
-        // combine an interface with its WPF-heavy implementation (e.g. ExposeVariableService.cs,
-        // ThemingDialogViewModel.cs), where the using is consumed by the class, not the interface
-        // (audited 2026-07 -- both interfaces there only reference Gum/System.Drawing types). Known
-        // blind spot: a leak added to an interface living in a combined interface+class file won't be
-        // caught by this heuristic.
+        // combine an interface with its WPF-heavy implementation (e.g. ThemingDialogViewModel.cs),
+        // where the using is consumed by the class, not the interface (audited 2026-07 -- the interface
+        // there only references Gum/System.Drawing types). Known blind spot: a leak added to an
+        // interface living in a combined interface+class file won't be caught by this heuristic.
+        // (ExposeVariableService.cs was cited here previously, but IExposeVariableService/
+        // ExposeVariableService were already split into separate files before this comment's last
+        // edit and ExposeVariableService itself has since moved to Gum.Presentation entirely (#3909)
+        // -- neither file is scanned here or matches this heuristic anymore.)
         //
         // ITabManager.AddControl and IBitmapLoader.LoadImage (the 2 sites baseline=2 was tracking)
         // were sealed to object/byte[] respectively -- see issue #3225.
