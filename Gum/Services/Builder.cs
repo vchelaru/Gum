@@ -181,6 +181,7 @@ file static class ServiceCollectionExtensions
                 provider.GetRequiredService<IFontFileGenerator>(),
                 provider.GetRequiredService<IFontGenerationCallbacks>()));
         services.AddSingleton<IFontManager, FontManager>();
+        services.AddSingleton<IModifierKeyState, WinFormsModifierKeyState>();
         services.AddSingleton<IHotkeyManager, HotkeyManager>();
         services.AddSingleton<IRetryService, RetryService>();
         services.AddSingleton<LocalizationService>();
@@ -231,6 +232,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<ProjectServices.IErrorDocsRegistry, ProjectServices.ErrorDocsRegistry>();
         services.AddSingleton<ErrorChecker>();
         services.AddSingleton<IErrorChecker>(provider => provider.GetRequiredService<ErrorChecker>());
+        services.AddSingleton<IVariableTypeConverterProvider, VariableTypeConverterProvider>();
         services.AddSingleton<IVariableSaveLogic, VariableSaveLogic>();
         services.AddSingleton<IVariableReferenceLogic, VariableReferenceLogic>();
         services.AddSingleton<IReferenceFinder, ReferenceFinder>();
@@ -268,6 +270,11 @@ file static class ServiceCollectionExtensions
         // other
         services.AddDialogs();
         services.AddViewModelFuncFactories(typeof(ServiceCollectionExtensions).Assembly);
+        // ADR-0005: mirrors the ViewModel-registration double-scan above (line ~88) — a service that
+        // moved into the headless Gum.Presentation assembly (e.g. EditVariableService, which takes a
+        // Func<AddVariableViewModel>) needs its ctor scanned from that assembly too, or the factory the
+        // container needs to activate it never gets registered.
+        services.AddViewModelFuncFactories(typeof(DialogViewModel).Assembly);
         services.AddSingleton<IDispatcher>(_ => new AppDispatcher(() => Application.Current.Dispatcher));
         services.AddSingleton<IAppScaleProvider, AppScaleProvider>();
         services.AddSingleton<IUiSettingsService, UiSettingsService>();

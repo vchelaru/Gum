@@ -1,17 +1,11 @@
 using Gum.Plugins.BaseClasses;
-using System;
 using System.ComponentModel.Composition;
-using System.Linq;
-using Gum.DataTypes;
 using Gum.ToolStates;
 using Gum.DataTypes.Behaviors;
-using WpfDataUi;
 using System.Windows.Forms;
 using Gum.Undo;
-using Gum.DataTypes.Variables;
-using Gum.Managers;
-using System.Collections.Generic;
 using Gum.ToolCommands;
+using Gum.Managers;
 
 namespace Gum.Plugins.Behaviors;
 
@@ -26,8 +20,8 @@ public class MainBehaviorsPlugin : PriorityPlugin
     private readonly IPluginManager _pluginManager;
 
     BehaviorsViewModel viewModel;
-    DataUiGrid stateDataUiGrid;
     PluginTab behaviorsTab;
+    BehaviorsLogic behaviorsLogic;
 
     [ImportingConstructor]
     public MainBehaviorsPlugin(
@@ -46,92 +40,42 @@ public class MainBehaviorsPlugin : PriorityPlugin
 
     public override void StartUp()
     {
-
         viewModel = new BehaviorsViewModel(_selectedState, _projectManager);
-        viewModel.ApplyChangedValues += HandleApplyBehaviorChanges;
-
 
         control = new BehaviorsControl();
         control.DataContext = viewModel;
         behaviorsTab = _tabManager.AddControl(control, "Behaviors", TabLocation.CenterBottom);
         behaviorsTab.Hide();
-        
-        stateDataUiGrid = new DataUiGrid();
+
+        // The bulk of this plugin's logic lives in BehaviorsLogic (Gum.Presentation, headless and
+        // unit tested) - this plugin is just the WPF glue that builds the view/tab above and
+        // forwards its own plugin events into that logic (ADR-0005 Phase 3, #3928).
+        behaviorsLogic = new BehaviorsLogic(
+            _selectedState, _elementCommands, _undoManager, _pluginManager,
+            _guiCommands, _fileCommands, viewModel, behaviorsTab);
+
+        viewModel.ApplyChangedValues += behaviorsLogic.HandleApplyBehaviorChanges;
+
         AssignEvents();
     }
 
     private void AssignEvents()
     {
-        this.ElementSelected += HandleElementSelected;
-        this.InstanceSelected += HandleInstanceSelected;
+        this.ElementSelected += behaviorsLogic.HandleElementSelected;
+        this.InstanceSelected += behaviorsLogic.HandleInstanceSelected;
         this.BehaviorSelected += HandleBehaviorSelected;
         this.StateWindowTreeNodeSelected += HandleStateSelected;
-        this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
+        this.BehaviorReferencesChanged += behaviorsLogic.HandleBehaviorReferencesChanged;
 
-        this.RefreshBehaviorView += HandleRefreshBehaviorView;
+        this.RefreshBehaviorView += behaviorsLogic.HandleRefreshBehaviorView;
 
-        this.StateAdd += HandleStateAdd;
-        this.StateMovedToCategory += HandleStateMovedToCategory;
+        this.StateAdd += behaviorsLogic.HandleStateAdd;
+        this.StateMovedToCategory += behaviorsLogic.HandleStateMovedToCategory;
     }
 
-    private void HandleRefreshBehaviorView()
-    {
-        HandleElementSelected(_selectedState.SelectedElement);
-    }
-
-    private void HandleStateMovedToCategory(StateSave stateSave, StateSaveCategory newCategory, StateSaveCategory oldCategory)
-    {
-        var behavior = ObjectFinder.Self.GumProjectSave.Behaviors
-            .FirstOrDefault(item => item.AllStates.Contains(stateSave));
-
-        if (behavior != null)
-        {
-            AddStateToElementsImplementingBehavior(stateSave, behavior);
-        }
-    }
-
-    private void HandleStateAdd(StateSave stateSave)
-    {
-        var behavior = ObjectFinder.Self.GumProjectSave.Behaviors
-            .FirstOrDefault(item => item.AllStates.Contains(stateSave));
-
-        if (behavior != null)
-        {
-            AddStateToElementsImplementingBehavior(stateSave, behavior);
-        }
-    }
-
-    private void AddStateToElementsImplementingBehavior(StateSave stateSave, BehaviorSave behavior)
-    {
-        var category = behavior.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
-
-        var elementsUsingBehavior = ObjectFinder.Self.GumProjectSave.AllElements
-            .Where(item => item.Behaviors.Any(b => b.BehaviorName == behavior.Name))
-            .ToList();
-
-        var categoryName = category?.Name;
-
-        List<ElementSave> elementsToSave = new List<ElementSave>();
-
-        foreach (var element in elementsUsingBehavior)
-        {
-            var categoryInElement = element.Categories.FirstOrDefault(item => item.Name == categoryName);
-
-            if (categoryInElement != null)
-            {
-                var existingState = categoryInElement.States.FirstOrDefault(item => item.Name == stateSave.Name);
-
-                if (existingState == null)
-                {
-                    // add a new state to this category
-                    _elementCommands.AddState(element, categoryInElement, stateSave.Name);
-
-                    elementsToSave.Add(element);
-                }
-            }
-        }
-    }
-
+    // System.Windows.Forms.TreeNode is a real WinForms-glue signature baked into
+    // PluginBase.StateWindowTreeNodeSelected itself, so this handler can't move into
+    // BehaviorsLogic; it's a no-op today regardless.
     private void HandleStateSelected(TreeNode obj)
     {
 
@@ -141,110 +85,4 @@ public class MainBehaviorsPlugin : PriorityPlugin
     {
 
     }
-
-    bool isApplyingChanges = false;
-    private void HandleApplyBehaviorChanges(object? sender, EventArgs e)
-    {
-
-        var component = _selectedState.SelectedComponent;
-        if (component == null) return;
-
-        isApplyingChanges = true;
-
-        try
-        {
-            using var undoLock = _undoManager.RequestLock();
-
-            var selectedBehaviorNames = viewModel.AllBehaviors
-                .Where(item => item.IsChecked)
-                .Select(item => item.Name)
-                .ToList();
-
-            var addedBehaviors = selectedBehaviorNames
-                .Except(component.Behaviors.Select(item => item.BehaviorName))
-                .ToList();
-
-            var removedBehaviors = component.Behaviors.Select(item => item.BehaviorName)
-                .Except(selectedBehaviorNames)
-                .ToList();
-
-            if (removedBehaviors.Any())
-            {
-                // ask the user what to do
-            }
-
-            if (removedBehaviors.Any() || addedBehaviors.Any())
-            {
-                component.Behaviors.Clear();
-                foreach (var behavior in viewModel.AllBehaviors.Where(item => item.IsChecked))
-                {
-                    _elementCommands.AddBehaviorTo(behavior.Name, component, performSave: false);
-                }
-
-                _guiCommands.RefreshStateTreeView();
-                _fileCommands.TryAutoSaveElement(component);
-                // _elementCommands.AddBehaviorTo only raises BehaviorReferencesChanged
-                // when a real (project-existing) behavior is added. Pure removals — e.g.
-                // unchecking only a stale orphan — would otherwise leave error state stale.
-                _pluginManager.BehaviorReferencesChanged(component);
-            }
-            viewModel.UpdateTo(component);
-
-        }
-        finally
-        {
-            isApplyingChanges = false;
-        }
-    }
-
-
-    private void HandleBehaviorReferencesChanged(ElementSave element)
-    {
-        if (isApplyingChanges)
-        {
-            return;
-        }
-        HandleElementSelected(element);
-
-        if(element == _selectedState.SelectedElement)
-        {
-            this.behaviorsTab.Show();
-        }
-    }
-
-    private void HandleElementSelected(ElementSave element)
-    {
-        // In case the user left without clicking "OK" on the previous edit:
-        viewModel.IsEditing = false;
-        UpdateTabPresence();
-    }
-
-    private void UpdateTabPresence()
-    {
-        var asComponent = _selectedState.SelectedComponent;
-
-
-        bool shouldShow = asComponent != null &&
-            // Don't show behaviors if an instance is selected since that can be confusing
-            // Only show it on the element to be clear that behaviors are element-wide.
-            _selectedState.SelectedInstance == null;
-
-        if (shouldShow)
-        {
-            viewModel.UpdateTo(asComponent);
-
-            this.behaviorsTab.Show();
-        }
-        else
-        {
-            this.behaviorsTab.Hide();
-        }
-    }
-
-    private void HandleInstanceSelected(ElementSave save1, InstanceSave save2)
-    {
-        UpdateTabPresence();
-    }
-
-
 }

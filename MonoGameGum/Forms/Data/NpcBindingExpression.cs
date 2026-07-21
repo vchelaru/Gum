@@ -63,11 +63,13 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
     private void HookUpdateSource(UpdateSourceTrigger trigger)
     {
+        if (trigger == UpdateSourceTrigger.Default)
+        {
+            trigger = Binding.ResolveDefaultUpdateTrigger(TargetElement.GetType(), TargetProperty.Name);
+        }
+
         switch (trigger)
         {
-            case UpdateSourceTrigger.Default:
-                // A more robust property system could have a default trigger defined on the property metadata
-                // for now we just default to PropertyChanged
             case UpdateSourceTrigger.PropertyChanged:
                 if (TargetElement is INotifyPropertyChanged npc)
                 {

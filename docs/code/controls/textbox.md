@@ -322,6 +322,8 @@ mainPanel.AddChild(textBox);
 
 <figure><img src="../../.gitbook/assets/24_07 50 58.gif" alt=""><figcaption><p>Pressing enter applies binding</p></figcaption></figure>
 
+If every `TextBox` in a project should use `LostFocus` by default, it can be registered once instead of set on every individual binding. See [Default Update Triggers](../binding-viewmodels/advanced-binding-options.md#default-update-triggers).
+
 ## Binding to Numeric Properties
 
 `TextBox.Text` can be bound to any standard numeric ViewModel property — `byte`, `int`, `float`, `double`, or `decimal`. The binding automatically converts between strings and numbers, so no `Converter` is required for these types.

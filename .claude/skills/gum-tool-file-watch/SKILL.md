@@ -7,13 +7,13 @@ description: Gum FileWatch system. Triggers: external file change detection, Ign
 
 ## Architecture
 
-Three cooperating classes handle the full pipeline:
+Three cooperating classes handle the full pipeline — all three now live in the headless `Gum.Presentation` assembly (ADR-0005):
 
-- **`FileWatchManager`** (`Gum/Plugins/InternalPlugins/FileWatchPlugin/FileWatchManager.cs`): Owns `FileSystemWatcher` instances, queues changed files, manages the ignore list, and exposes `Flush()`.
-- **`FileWatchLogic`** (`Gum/Plugins/InternalPlugins/FileWatchPlugin/FileWatchLogic.cs`): Determines *which directories* to watch by scanning all project elements for referenced files. Calls `EnableWithDirectories()` on project load/unload/variable change.
-- **`FileChangeReactionLogic`** (`Gum/Managers/FileChangeReactionLogic.cs`): Dispatches a queued file to the correct reload handler based on file extension.
+- **`FileWatchManager`** (`Tools/Gum.Presentation/FileWatchPlugin/FileWatchManager.cs`): Owns `FileSystemWatcher` instances, queues changed files, manages the ignore list, and exposes `Flush()`.
+- **`FileWatchLogic`** (`Tools/Gum.Presentation/FileWatchPlugin/FileWatchLogic.cs`): Determines *which directories* to watch by scanning all project elements for referenced files. Calls `EnableWithDirectories()` on project load/unload/variable change.
+- **`FileChangeReactionLogic`** (`Tools/Gum.Presentation/Managers/FileChangeReactionLogic.cs`): Dispatches a queued file to the correct reload handler based on file extension.
 
-`MainFileWatchPlugin` (`Gum/Plugins/InternalPlugins/FileWatchPlugin/MainFileWatchPlugin.cs`) is the plugin entry point; it wires events and updates the File Watch UI panel.
+`MainFileWatchPlugin` (`Gum/Plugins/InternalPlugins/FileWatchPlugin/MainFileWatchPlugin.cs`) is the WPF-hosted plugin entry point — it only owns the platform glue (control/tab/menu-item creation, timer subscription). Its event-reaction logic (project load/unload, variable-set, debug-panel display refresh) is extracted into **`FileWatchPluginController`** (`Tools/Gum.Presentation/FileWatchPlugin/FileWatchPluginController.cs`), also headless.
 
 ## Change Pipeline
 
@@ -78,14 +78,14 @@ A separate `changesToIgnore` dictionary supports count-based ignoring (decrement
 
 ## Debug UI Panel
 
-The File Watch tab (hidden by default, toggled via **View > Show File Watch**) shows live state from `FileWatchManager`. It is driven by a 200ms `PeriodicUiTimer` in `MainFileWatchPlugin.HandleRefreshDisplayTimerElapsed()` and displays:
+The File Watch tab (hidden by default, toggled via **View > Show File Watch**) shows live state from `FileWatchManager`. A 200ms `PeriodicUiTimer` drives `MainFileWatchPlugin`, which delegates each tick to `FileWatchPluginController.RefreshDisplay()`, and displays:
 
 - Which directories are being watched
 - Files queued in `ChangedFilesWaitingForFlush` (up to 15)
 - Countdown to next flush
 - Currently active ignores with their remaining ignore time
 
-`FileWatchViewModel` (`FileWatchPlugin/FileWatchViewModel.cs`) is the data-bound VM; `FileWatchControl.xaml` is the view.
+`FileWatchViewModel` (`Tools/Gum.Presentation/FileWatchPlugin/FileWatchViewModel.cs`) is the data-bound VM; `FileWatchControl.xaml` (`Gum/Plugins/InternalPlugins/FileWatchPlugin/`) is the WPF view.
 
 ## Non-Obvious Behaviors
 
@@ -105,12 +105,13 @@ The File Watch tab (hidden by default, toggled via **View > Show File Watch**) s
 
 | File | Purpose |
 |------|---------|
-| `Gum/Plugins/InternalPlugins/FileWatchPlugin/FileWatchManager.cs` | Core watcher, queue, ignore list, flush |
-| `Gum/Plugins/InternalPlugins/FileWatchPlugin/FileWatchLogic.cs` | Computes watched directories, enables/disables watcher |
-| `Gum/Managers/FileChangeReactionLogic.cs` | Dispatches flushed files to reload handlers |
-| `Gum/Plugins/InternalPlugins/FileWatchPlugin/MainFileWatchPlugin.cs` | Plugin entry point; wires events; drives debug UI |
+| `Tools/Gum.Presentation/FileWatchPlugin/FileWatchManager.cs` | Core watcher, queue, ignore list, flush |
+| `Tools/Gum.Presentation/FileWatchPlugin/FileWatchLogic.cs` | Computes watched directories, enables/disables watcher |
+| `Tools/Gum.Presentation/FileWatchPlugin/FileWatchPluginController.cs` | WPF-free reactions (project/variable events, debug-panel display refresh) extracted from the plugin |
+| `Tools/Gum.Presentation/Managers/FileChangeReactionLogic.cs` | Dispatches flushed files to reload handlers |
+| `Gum/Plugins/InternalPlugins/FileWatchPlugin/MainFileWatchPlugin.cs` | Plugin entry point; owns WPF control/tab/menu-item wiring only |
 | `Gum/Services/PeriodicUiTimer.cs` | UI-thread-safe periodic timer used for both flush and display |
 | `Gum/Program.cs` (lines ~144–157) | Creates the 2s flush timer and calls `fileWatchManager.Flush()` |
-| `Gum/Commands/FileCommands.cs` | Calls `IgnoreNextChangeUntil` before saving elements |
-| `Gum/Managers/ProjectManager.cs` | Calls `IgnoreNextChangeUntil` before saving project |
+| `Tools/Gum.Presentation/Commands/FileCommands.cs` | Calls `IgnoreNextChangeUntil` before saving elements |
+| `Tools/Gum.Presentation/Managers/ProjectManager.cs` | Calls `IgnoreNextChangeUntil` before saving project |
 | `Gum/Services/Fonts/FontManager.cs` | Calls `IgnoreNextChangeUntil` before generating fonts |

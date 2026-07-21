@@ -483,6 +483,7 @@
 		<Compile Remove="Reflection\ITypeManager.cs" />
 		<Compile Remove="Reflection\TypeManager.cs" />
 		<Compile Remove="Logic\IVariableSaveLogic.cs" />
+		<Compile Remove="Logic\IVariableTypeConverterProvider.cs" />
 		<Compile Remove="Mvvm\ObservableCollectionExtensions.cs" />
 		<Compile Remove="Mvvm\ViewModel.cs" />
 		<Compile Remove="RenderingLibrary\Blend.cs" />

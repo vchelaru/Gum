@@ -4,10 +4,8 @@ using System.Linq;
 using Gum.Plugins.BaseClasses;
 using System.ComponentModel.Composition;
 using Gum.DataTypes;
-using Gum.DataTypes.Behaviors;
 using System.Windows.Controls;
 using Gum.Commands;
-using ToolsUtilities;
 using Gum.Managers;
 
 namespace Gum.Gui.Plugins;
@@ -80,7 +78,7 @@ public class DeleteObjectPlugin : PriorityPlugin
 
             if (deleteXmlCheckBox.IsChecked == true)
             {
-                var fileName = GetFileNameForObject(deletedObject);
+                var fileName = _instanceDeletionHelper.GetFileNameForObject(deletedObject);
 
                 if (fileName?.Exists() == true)
                 {
@@ -99,7 +97,11 @@ public class DeleteObjectPlugin : PriorityPlugin
         // Perform batch instance deletion
         if (instancesToDelete.Count > 0)
         {
-            PerformMultipleInstancesDeleteLogic(instancesToDelete);
+            var shouldDetachChildren = deleteJustParent.IsChecked == true;
+            var shouldDeleteChildren = deleteAllContainedObjects.IsChecked == true;
+
+            _instanceDeletionHelper.PerformMultipleInstancesDelete(
+                instancesToDelete, shouldDetachChildren, shouldDeleteChildren);
         }
 
         if (deleteOptionsWindow.MainStackPanel.Children.Contains(deleteXmlCheckBox))
@@ -111,49 +113,6 @@ public class DeleteObjectPlugin : PriorityPlugin
         {
             deleteOptionsWindow.MainStackPanel.Children.Remove(deleteGroupBox);
         }
-    }
-
-    private void PerformInstanceDeleteLogic(InstanceSave instance)
-    {
-        PerformMultipleInstancesDeleteLogic(new[] { instance });
-    }
-
-    private void PerformMultipleInstancesDeleteLogic(IEnumerable<InstanceSave> instances)
-    {
-        var instancesList = instances.ToList();
-        if (instancesList.Count == 0)
-            return;
-
-        var shouldDetachChildren = deleteJustParent.IsChecked == true;
-        var shouldDeleteChildren = deleteAllContainedObjects.IsChecked == true;
-
-        if (shouldDetachChildren)
-        {
-            _instanceDeletionHelper.DetachChildrenFromInstances(instancesList);
-        }
-        if (shouldDeleteChildren)
-        {
-            // Group by parent container since instances may belong to different elements
-            var instancesByParent = instancesList
-                .GroupBy(i => i.ParentContainer)
-                .Where(g => g.Key != null);
-
-            foreach (var group in instancesByParent)
-            {
-                _instanceDeletionHelper.RecursivelyDeleteChildrenOfInstances(group.ToList(), group.Key);
-            }
-        }
-    }
-
-    public FilePath GetFileNameForObject(object deletedObject)
-    {
-        return deletedObject switch
-        {
-            ElementSave elementSave => elementSave.GetFullPathXmlFile(),
-            BehaviorSave behaviorSave => _fileCommands.GetFullPathXmlFile(behaviorSave),
-            InstanceSave => null,
-            _ => throw new NotImplementedException($"Unsupported object type: {deletedObject?.GetType().Name}")
-        };
     }
 
     void HandleDeleteOptionsShow(Windows.DeleteOptionsWindow deleteWindow, Array objectsToDelete)
@@ -182,22 +141,13 @@ public class DeleteObjectPlugin : PriorityPlugin
 
         foreach (var objectToDelete in objectsToDelete)
         {
-
-            var shouldAddDeleteXml = objectToDelete is not InstanceSave && !alreadyAddedDeleteXmlCheckBox;
-
-            // offer to delete this only if there are no duplicates
-            if(shouldAddDeleteXml)
-            {
-                if(objectToDelete is ElementSave elementSave)
-                {
-                    var numberOfMatches = ObjectFinder.Self.GumProjectSave?.AllElements.Count(item => item.Name == elementSave.Name) ?? 0;
-                    // If there are more than 1 match, we don't want to delete XML files because we don't want to remove the base file if
-                    // duplicates were somehow added to the .gumx.
-                    // it's possible the user has multiple components selected, and wants to delete both, but that's an edge case that adds complexity
-                    // so I'm not going to worry about that.
-                    shouldAddDeleteXml = numberOfMatches < 2;
-                }
-            }
+            // Offer to delete the XML file only if there are no duplicates - if there are more than 1
+            // match, we don't want to delete XML files because we don't want to remove the base file if
+            // duplicates were somehow added to the .gumx. It's possible the user has multiple components
+            // selected, and wants to delete both, but that's an edge case that adds complexity so I'm not
+            // going to worry about that.
+            var shouldAddDeleteXml = !alreadyAddedDeleteXmlCheckBox
+                && _instanceDeletionHelper.ShouldOfferDeleteXmlOption(objectToDelete);
 
             if (shouldAddDeleteXml)
             {
