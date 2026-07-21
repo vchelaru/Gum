@@ -32,6 +32,7 @@ public class HotkeyManagerTests : BaseTestClass
     private readonly Mock<IReorderLogic> _reorderLogic;
     private readonly Mock<IPluginManager> _pluginManager;
     private readonly Mock<ISelectionHistory> _selectionHistory;
+    private readonly Mock<IModifierKeyState> _modifierKeyState;
     private readonly HotkeyManager _hotkeyManager;
 
     public HotkeyManagerTests()
@@ -49,6 +50,7 @@ public class HotkeyManagerTests : BaseTestClass
         _reorderLogic = new Mock<IReorderLogic>();
         _pluginManager = new Mock<IPluginManager>();
         _selectionHistory = new Mock<ISelectionHistory>();
+        _modifierKeyState = new Mock<IModifierKeyState>();
 
         _hotkeyManager = new HotkeyManager(
             _guiCommands.Object,
@@ -63,42 +65,9 @@ public class HotkeyManagerTests : BaseTestClass
             _editCommands.Object,
             _reorderLogic.Object,
             _pluginManager.Object,
-            _selectionHistory.Object
+            _selectionHistory.Object,
+            _modifierKeyState.Object
         );
-    }
-
-    [Fact]
-    public void IsPressed_KeyData_NudgeUp5_RequiresShift()
-    {
-        // NudgeUp5 is Shift+Up: the Shift modifier bit is required.
-        _hotkeyManager.NudgeUp5.IsPressed(System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.Up).ShouldBeTrue();
-        _hotkeyManager.NudgeUp5.IsPressed(System.Windows.Forms.Keys.Up).ShouldBeFalse();
-    }
-
-    [Fact]
-    public void IsPressed_KeyData_NudgeUp_MatchesUp_AndIgnoresShiftBit()
-    {
-        // NudgeUp is a plain Up with no modifier requirement. The keyData flags overload must
-        // strip modifier bits to extract the key code, so Shift+Up still matches the key part.
-        _hotkeyManager.NudgeUp.IsPressed(System.Windows.Forms.Keys.Up).ShouldBeTrue();
-        _hotkeyManager.NudgeUp.IsPressed(System.Windows.Forms.Keys.Down).ShouldBeFalse();
-        _hotkeyManager.NudgeUp.IsPressed(System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.Up).ShouldBeTrue();
-    }
-
-    [Fact]
-    public void IsPressed_KeyData_ReorderUp_MatchesAltPlusKey()
-    {
-        // ReorderUp is Alt+Up: matches only when both the Alt flag and the Up key code are present.
-        _hotkeyManager.ReorderUp.IsPressed(System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.Up).ShouldBeTrue();
-        _hotkeyManager.ReorderUp.IsPressed(System.Windows.Forms.Keys.Up).ShouldBeFalse();
-    }
-
-    [Fact]
-    public void IsPressed_KeyData_ResizeFromCenter_MatchesAltOnly()
-    {
-        // ResizeFromCenter is Alt with no key: matches the bare Alt modifier, not Alt+other.
-        _hotkeyManager.ResizeFromCenter.IsPressed(System.Windows.Forms.Keys.Alt).ShouldBeTrue();
-        _hotkeyManager.ResizeFromCenter.IsPressed(System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.C).ShouldBeFalse();
     }
 
     [Fact]
@@ -145,6 +114,18 @@ public class HotkeyManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void ProcessCmdKeyWireframe_AltArrow_DoesNotNudge()
+    {
+        // Alt+arrow reorders the selected instance elsewhere, so it must not also nudge here.
+        SetUpSelectedInstance(x: 10f, y: 20f);
+
+        bool handled = _hotkeyManager.ProcessCmdKeyWireframe(GumKey.Up, isShiftDown: false, isCtrlDown: false, isAltDown: true);
+
+        handled.ShouldBeFalse();
+        _elementCommands.Verify(e => e.MoveSelectedObjectsBy(It.IsAny<float>(), It.IsAny<float>()), Times.Never);
+    }
+
+    [Fact]
     public void ProcessCmdKeyWireframe_LockedInstance_DoesNothing()
     {
         SetUpSelectedInstance(x: 10f, y: 20f, locked: true);
@@ -165,22 +146,6 @@ public class HotkeyManagerTests : BaseTestClass
 
         handled.ShouldBeTrue();
         _elementCommands.Verify(e => e.MoveSelectedObjectsBy(0f, -5f), Times.Once);
-    }
-
-    [Fact]
-    public void IsPressed_KeyData_NavigateBack_MatchesAltPlusLeft()
-    {
-        // NavigateBack is Alt+Left: matches only when both the Alt flag and the Left key code are present.
-        _hotkeyManager.NavigateBack.IsPressed(System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.Left).ShouldBeTrue();
-        _hotkeyManager.NavigateBack.IsPressed(System.Windows.Forms.Keys.Left).ShouldBeFalse();
-    }
-
-    [Fact]
-    public void IsPressed_KeyData_NavigateForward_MatchesAltPlusRight()
-    {
-        // NavigateForward is Alt+Right: matches only when both the Alt flag and the Right key code are present.
-        _hotkeyManager.NavigateForward.IsPressed(System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.Right).ShouldBeTrue();
-        _hotkeyManager.NavigateForward.IsPressed(System.Windows.Forms.Keys.Right).ShouldBeFalse();
     }
 
     [Fact]
@@ -379,6 +344,32 @@ public class HotkeyManagerTests : BaseTestClass
         _hotkeyManager.HandleEditorKeyDown(e);
 
         _uiSettingsService.Object.BaseFontSize.ShouldBe(12d);
+    }
+
+    [Fact]
+    public void IsPressedInControl_RequiredModifierHeld_KeyNull_ReturnsTrue()
+    {
+        // MultiSelect is Shift with no key: the modifier-only check is the only requirement.
+        _modifierKeyState.Setup(m => m.IsShiftDown).Returns(true);
+
+        _hotkeyManager.IsPressedInControl(_hotkeyManager.MultiSelect).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsPressedInControl_RequiredModifierNotHeld_ReturnsFalse()
+    {
+        _modifierKeyState.Setup(m => m.IsShiftDown).Returns(false);
+
+        _hotkeyManager.IsPressedInControl(_hotkeyManager.MultiSelect).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsPressedInControl_ComboHasKeySet_AlwaysReturnsFalse()
+    {
+        // Pre-existing residual quirk, preserved as-is: the live modifier-key read reports only
+        // Ctrl/Shift/Alt, never a key code, so a combo with Key set (e.g. NudgeUp) never matches
+        // here even when no modifier is required and none are held.
+        _hotkeyManager.IsPressedInControl(_hotkeyManager.NudgeUp).ShouldBeFalse();
     }
 
     private (ComponentSave element, InstanceSave instance) SetUpSelectedInstance(float x, float y, bool locked = false)

@@ -1,5 +1,4 @@
 using Gum.Commands;
-using Gum.Controls;
 using Gum.DataTypes;
 using Gum.Dialogs;
 using Gum.Input;
@@ -8,12 +7,10 @@ using Gum.Plugins;
 using Gum.PropertyGridHelpers;
 using Gum.Services;
 using Gum.Services.Dialogs;
-using Gum.Themes;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using System;
-using System.Windows.Forms;
 using Gum.SelectionHistory;
 using Gum.Undo;
 using Gum.Plugins.InternalPlugins.VariableGrid;
@@ -87,6 +84,7 @@ public class HotkeyManager : IHotkeyManager
     private readonly IReorderLogic _reorderLogic;
     private readonly IPluginManager _pluginManager;
     private readonly ISelectionHistory _selectionHistory;
+    private readonly IModifierKeyState _modifierKeyState;
 
 
     public HotkeyManager(IGuiCommands guiCommands,
@@ -101,7 +99,8 @@ public class HotkeyManager : IHotkeyManager
         IEditCommands editCommands,
         IReorderLogic reorderLogic,
         IPluginManager pluginManager,
-        ISelectionHistory selectionHistory)
+        ISelectionHistory selectionHistory,
+        IModifierKeyState modifierKeyState)
     {
         _copyPasteLogic = copyPasteLogic;
         _guiCommands = guiCommands;
@@ -116,17 +115,21 @@ public class HotkeyManager : IHotkeyManager
         _reorderLogic = reorderLogic;
         _pluginManager = pluginManager;
         _selectionHistory = selectionHistory;
+        _modifierKeyState = modifierKeyState;
     }
 
     public bool IsPressedInControl(KeyCombination combo)
     {
-        // Reads the live WinForms modifier state (Control.ModifierKeys). This stays in the tool layer
-        // (off the now-headless KeyCombination) and on the interface so it remains mockable in tests.
-        if (combo.IsCtrlDown && (Control.ModifierKeys & Keys.Control) != Keys.Control) return false;
-        if (combo.IsShiftDown && (Control.ModifierKeys & Keys.Shift) != Keys.Shift) return false;
-        if (combo.IsAltDown && (Control.ModifierKeys & Keys.Alt) != Keys.Alt) return false;
+        if (combo.IsCtrlDown && !_modifierKeyState.IsCtrlDown) return false;
+        if (combo.IsShiftDown && !_modifierKeyState.IsShiftDown) return false;
+        if (combo.IsAltDown && !_modifierKeyState.IsAltDown) return false;
 
-        return combo.Key == null || (Control.ModifierKeys & Keys.KeyCode) == (Keys)(int)combo.Key.Value;
+        // Pre-existing behavior, preserved as-is: the live modifier-key read only ever reports the
+        // held modifiers, never a key code, so a combo with Key set never actually matched here -
+        // only combos with Key == null (checked purely by the modifier guards above) can return
+        // true. Left as a known residual quirk rather than fixed here (Ruler.cs calls this with
+        // NudgeUp/Down/Left/Right, which have Key set, so those calls always report "not pressed").
+        return combo.Key == null;
     }
 
     #region App Wide Keys
@@ -352,34 +355,38 @@ public class HotkeyManager : IHotkeyManager
 
     public bool ProcessCmdKeyWireframe(GumKey? key, bool isShiftDown, bool isCtrlDown, bool isAltDown)
     {
-        // The interface is framework-neutral (GumKey, not WinForms Keys). Rebuild the Keys value the
-        // nudge logic matches against: GumKey values equal Win32 virtual-key codes (pinned by GumKeyTests),
-        // so the key is a pure cast, and the modifier bits are re-applied from the booleans. Reconstructing
-        // here keeps HandleNudge / KeyCombination.IsPressed unchanged and behavior identical — including the
-        // existing suppression of nudging while Ctrl/Alt are held (Ctrl+arrow pans the camera instead).
-        Keys keyData = key.HasValue ? (Keys)(int)key.Value : Keys.None;
-        if (isShiftDown) { keyData |= Keys.Shift; }
-        if (isCtrlDown) { keyData |= Keys.Control; }
-        if (isAltDown) { keyData |= Keys.Alt; }
+        GumKeyEventArgs e = new()
+        {
+            Key = key,
+            IsShiftDown = isShiftDown,
+            IsCtrlDown = isCtrlDown,
+            IsAltDown = isAltDown
+        };
 
-        return HandleNudge(keyData);
+        return HandleNudge(e);
     }
 
-    private bool HandleNudge(Keys keyData)
+    private bool HandleNudge(GumKeyEventArgs e)
     {
+        // Ctrl+arrow pans the camera and Alt+arrow reorders the selected instance elsewhere - neither
+        // should also nudge the selection here, regardless of which key combo would otherwise match.
+        if (e.IsCtrlDown || e.IsAltDown)
+        {
+            return false;
+        }
 
         int nudgeX = 0;
         int nudgeY = 0;
-        
-        if (NudgeUp5.IsPressed(keyData)) nudgeY = -5;
-        else if (NudgeDown5.IsPressed(keyData)) nudgeY = 5;
-        else if (NudgeUp.IsPressed(keyData)) nudgeY = -1;
-        else if (NudgeDown.IsPressed(keyData)) nudgeY = 1;
 
-        if (NudgeRight5.IsPressed(keyData)) nudgeX = 5;
-        else if (NudgeLeft5.IsPressed(keyData)) nudgeX = -5;
-        else if (NudgeRight.IsPressed(keyData)) nudgeX = 1;
-        else if (NudgeLeft.IsPressed(keyData)) nudgeX = -1;
+        if (NudgeUp5.IsPressed(e)) nudgeY = -5;
+        else if (NudgeDown5.IsPressed(e)) nudgeY = 5;
+        else if (NudgeUp.IsPressed(e)) nudgeY = -1;
+        else if (NudgeDown.IsPressed(e)) nudgeY = 1;
+
+        if (NudgeRight5.IsPressed(e)) nudgeX = 5;
+        else if (NudgeLeft5.IsPressed(e)) nudgeX = -5;
+        else if (NudgeRight.IsPressed(e)) nudgeX = 1;
+        else if (NudgeLeft.IsPressed(e)) nudgeX = -1;
 
         bool handled = false;
 

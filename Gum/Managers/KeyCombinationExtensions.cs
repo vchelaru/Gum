@@ -46,39 +46,4 @@ public static class KeyCombinationExtensions
         }
     }
 
-    public static bool IsPressed(this KeyCombination kc, Keys keyData)
-    {
-        Keys extracted = keyData;
-
-        if (kc.IsAltDown)
-        {
-            if (kc.Key == null)
-            {
-                return keyData == Keys.Alt;
-            }
-            else
-            {
-                return keyData == (Keys.Alt | ToWinFormsKey(kc.Key.Value));
-            }
-        }
-        else
-        {
-            if (keyData >= Keys.KeyCode)
-            {
-                int value = (int)(keyData) + (int)Keys.Modifiers;
-
-                extracted = (Keys)value;
-            }
-
-            bool shiftDown = (keyData & Keys.Shift) == Keys.Shift;
-            bool ctrlDown = (keyData & Keys.Control) == Keys.Control;
-            bool altDown = (keyData & Keys.Alt) == Keys.Alt;
-
-            if (kc.IsCtrlDown && !ctrlDown) return false;
-            if (kc.IsShiftDown && !shiftDown) return false;
-            if (kc.IsAltDown && !altDown) return false;
-
-            return kc.Key == null || extracted == ToWinFormsKey(kc.Key.Value);
-        }
-    }
 }
