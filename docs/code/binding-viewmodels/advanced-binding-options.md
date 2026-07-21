@@ -134,7 +134,7 @@ The following properties are available on the Binding class. Note that the term 
 
 * `Path` - the property path on the source. This can be a simple name like `LabelText`, a dotted path like `Player.Name`, or an indexed path like `Items[0].Text`.
 * `Mode` - the direction of data flow in binding. This can be used to create one-way binding.
-* `UpdateSourceTrigger` - controls when binding is applied
+* `UpdateSourceTrigger` - controls when binding is applied. See [Enter and Binding](../controls/textbox.md#enter-and-binding) for a `TextBox`-specific example, including how the Enter key interacts with `UpdateSourceTrigger.LostFocus`.
 * `FallbackValue` - the value to apply when binding cannot retrieve a value from the source
 * `TargetNullValue` - the value to use when the source property value is null
 * `Converter` - a converter to transform values between the source and target
