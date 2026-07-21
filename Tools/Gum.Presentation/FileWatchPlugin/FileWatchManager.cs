@@ -1,7 +1,6 @@
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
-using Gum.Services;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -72,7 +71,6 @@ public class FileWatchManager : IFileWatchManager
         {
             return;
         }
-        FilePath gumProjectFilePath = gumProject.FullFileName;
 
         foreach(var item in this.fileSystemWatchers)
         {
