@@ -1,36 +1,33 @@
-﻿using Gum.Commands;
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.PropertyGridHelpers;
+using Gum.PropertyGridHelpers.Converters;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using Moq;
 using Shouldly;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace GumToolUnitTests.ToolCommands;
+namespace Gum.Presentation.Tests;
 
-public class ElementCommandsTests
+public class ElementCommandsTests : BaseTestClass
 {
-    ElementCommands _sut;
+    private readonly ElementCommands _sut;
 
-    Mock<ISelectedState> _selectedState;
-    Mock<IGuiCommands> _guiCommands;
-    Mock<IFileCommands> _fileCommands;
-    Mock<IVariableInCategoryPropagationLogic> _variableInCategoryPropagationLogic;
-    Mock<IWireframeObjectManager> _wireframeObjectManager;
-    Mock<IPluginManager> _pluginManager;
-    Mock<IProjectManager> _projectManager;
-    Mock<IProjectState> _projectState;
+    private readonly Mock<ISelectedState> _selectedState;
+    private readonly Mock<IGuiCommands> _guiCommands;
+    private readonly Mock<IFileCommands> _fileCommands;
+    private readonly Mock<IVariableInCategoryPropagationLogic> _variableInCategoryPropagationLogic;
+    private readonly Mock<IWireframeObjectManager> _wireframeObjectManager;
+    private readonly Mock<IPluginManager> _pluginManager;
+    private readonly Mock<IProjectManager> _projectManager;
+    private readonly Mock<IProjectState> _projectState;
 
-    ObjectFinder _objectFinder => ObjectFinder.Self;
+    private ObjectFinder ObjectFinder => ObjectFinder.Self;
 
     public ElementCommandsTests()
     {
@@ -52,6 +49,22 @@ public class ElementCommandsTests
             _pluginManager.Object,
             _projectManager.Object,
             _projectState.Object);
+    }
+
+    [Fact]
+    public void AddCategory_ShouldAddCategoryStateVariable_WithAvailableStatesConverter()
+    {
+        ComponentSave component = new();
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+
+        StateSaveCategory category = _sut.AddCategory(component, "MyCategory");
+
+        VariableSave? stateVariable = component.DefaultState.Variables
+            .FirstOrDefault(item => item.Name == "MyCategoryState");
+
+        stateVariable.ShouldNotBeNull();
+        stateVariable.CustomTypeConverter.ShouldBeOfType<AvailableStatesConverter>();
+        ((AvailableStatesConverter)stateVariable.CustomTypeConverter).CategoryName.ShouldBe("MyCategory");
     }
 
     [Fact]
@@ -82,16 +95,15 @@ public class ElementCommandsTests
     public void GetUniqueNameForNewInstance_ShouldReturnDefaultName()
     {
         GumProjectSave project = new GumProjectSave();
-        _objectFinder.GumProjectSave = project;
+        ObjectFinder.GumProjectSave = project;
 
         StandardElementSave text = new()
         {
             Name = "Text"
         };
-        _objectFinder.GumProjectSave.StandardElements.Add(text);
+        ObjectFinder.GumProjectSave.StandardElements.Add(text);
 
         ComponentSave component = new();
-
 
         // act
         string name = _sut.GetUniqueNameForNewInstance(text, component);
@@ -104,13 +116,13 @@ public class ElementCommandsTests
     public void GetUniqueNameForNewInstance_ShouldIncrement_OnMatchingName()
     {
         GumProjectSave project = new GumProjectSave();
-        _objectFinder.GumProjectSave = project;
+        ObjectFinder.GumProjectSave = project;
 
         StandardElementSave text = new()
         {
             Name = "Text"
         };
-        _objectFinder.GumProjectSave.StandardElements.Add(text);
+        ObjectFinder.GumProjectSave.StandardElements.Add(text);
 
         ComponentSave component = new();
         component.Instances.Add(new InstanceSave
@@ -129,13 +141,13 @@ public class ElementCommandsTests
     public void GetUniqueNameForNewInstance_WithBehaviorSave_ShouldReturnDefaultName()
     {
         GumProjectSave project = new GumProjectSave();
-        _objectFinder.GumProjectSave = project;
+        ObjectFinder.GumProjectSave = project;
 
         StandardElementSave text = new()
         {
             Name = "Text"
         };
-        _objectFinder.GumProjectSave.StandardElements.Add(text);
+        ObjectFinder.GumProjectSave.StandardElements.Add(text);
 
         BehaviorSave behavior = new();
 
@@ -150,13 +162,13 @@ public class ElementCommandsTests
     public void GetUniqueNameForNewInstance_WithBehaviorSave_ShouldIncrement_OnMatchingName()
     {
         GumProjectSave project = new GumProjectSave();
-        _objectFinder.GumProjectSave = project;
+        ObjectFinder.GumProjectSave = project;
 
         StandardElementSave text = new()
         {
             Name = "Text"
         };
-        _objectFinder.GumProjectSave.StandardElements.Add(text);
+        ObjectFinder.GumProjectSave.StandardElements.Add(text);
 
         BehaviorSave behavior = new();
         behavior.RequiredInstances.Add(new BehaviorInstanceSave

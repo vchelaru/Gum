@@ -621,11 +621,11 @@ public class ElementCommands : IElementCommands
                 Name = category.Name + "State",
                 // We used to set the type with the word "State" appended but why? Gum seems to not do this everywhere, and this can add confusion, so let's omit the "State" suffix
                 Type = category.Name,
-                Value = null
-#if GUM
-,
+                Value = null,
+                // Was previously guarded by "#if GUM" from when this class lived in Gum.csproj (which
+                // always defines GUM), making the guard always-true and effectively dead. AvailableStatesConverter
+                // already lives in Gum.Presentation, so this assignment is unconditional now that the class does too.
                 CustomTypeConverter = new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(category.Name, _selectedState)
-#endif
             });
 
             elementToAddTo.DefaultState.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
