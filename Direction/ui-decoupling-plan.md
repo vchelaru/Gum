@@ -390,6 +390,19 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   shape for this case, mapped to a real `MemberCategory`/`InstanceMember` by a small sibling to the
   existing state-bound converter. Don't reflexively reuse the heavier entry type for every synthetic
   row — check whether it's actually state-bound first.
+- **A class with a WPF-neutral return type on an interface already in `Gum.Presentation` can still
+  directly `new` the concrete WPF implementation inside the method body.** The interface being
+  neutral (e.g. an `ISpinner`-returning member) doesn't imply the construction behind it is — check
+  what a method's body actually constructs, not just its declared return type, before assuming a
+  class is headless-safe. Same "inject, don't construct" fix as other constructor-time gotchas here,
+  just triggered by a return-type check instead of a field-type check.
+
+A live progress instrument worth knowing about: `Tool/Tests/GumToolUnitTests/Architecture/UiDecouplingRatchetTests.cs`
+is a source-scan ratchet (baselines for `.Self` count, `System.Windows` usage in ViewModels,
+WPF/WinForms leaks in interface signatures, inline-dialog-bypass sites) — the lighter, targeted
+successor this doc's Phase 0 section suggested in place of a permanent scanner. Check it alongside
+this doc when scoping a new target; its own baselines and comments often already classify a class
+as in-scope vs. deferred.
 
 **Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap).
 - *4a — Element tree:* decouple `ElementTreeViewManager` from `TreeNode`; the already-migrated

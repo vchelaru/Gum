@@ -5,8 +5,13 @@ using Gum.ToolStates;
 using Moq;
 using Shouldly;
 
-namespace GumToolUnitTests.ViewModels.Dialogs;
+namespace Gum.Presentation.Tests;
 
+/// <summary>
+/// Characterization (pinning) test for DisplayReferencesDialog, relocated out of Gum.csproj into
+/// the headless Gum.Presentation assembly (ADR-0005) as a clean leaf VM whose only injected
+/// dependency (ISelectedState) is already headless.
+/// </summary>
 public class DisplayReferencesDialogTests : BaseTestClass
 {
     private readonly Mock<ISelectedState> _selectedState;
