@@ -3,25 +3,37 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
+using Gum.Plugins;
+using Gum.ToolStates;
 using Moq;
 using Shouldly;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace GumToolUnitTests.Managers;
+namespace Gum.Presentation.Tests;
+
+/// <summary>
+/// Pins <see cref="NameVerifier"/>'s name-validation logic after its relocation to
+/// Gum.Presentation (ADR-0005, #3889) — the class had no WPF/WinForms-typed members; every
+/// dependency (<see cref="IVariableSaveLogic"/>, <see cref="IPluginManager"/>,
+/// <see cref="StandardElementsManager"/>, <see cref="ObjectFinder"/>) was already headless. The one
+/// wrinkle: <see cref="NameVerifier.IsVariableNameValid"/> used to resolve <see cref="ISelectedState"/>
+/// via an ambient tool-only extension method (<c>ElementSaveExtensionMethodsGumTool.GetVariableFromThisOrBase</c>,
+/// which called <c>Locator</c> internally) instead of taking it as a dependency; it is now a real
+/// constructor parameter, which is also what makes the "existing active variable" branch below
+/// testable for the first time (it previously required a live <c>Locator</c> container).
+/// </summary>
 public class NameVerifierTests : BaseTestClass
 {
     private readonly NameVerifier _nameVerifier;
-    private readonly Mock<Gum.Plugins.IPluginManager> _pluginManager;
+    private readonly Mock<IPluginManager> _pluginManager;
+    private readonly Mock<IVariableSaveLogic> _variableSaveLogic;
+    private readonly Mock<ISelectedState> _selectedState;
 
     public NameVerifierTests()
     {
-        _pluginManager = new Mock<Gum.Plugins.IPluginManager>();
-        _nameVerifier = new NameVerifier(new Mock<IVariableSaveLogic>().Object, _pluginManager.Object);
+        _pluginManager = new Mock<IPluginManager>();
+        _variableSaveLogic = new Mock<IVariableSaveLogic>();
+        _selectedState = new Mock<ISelectedState>();
+        _nameVerifier = new NameVerifier(_variableSaveLogic.Object, _pluginManager.Object, _selectedState.Object);
     }
 
     #region ElementSave
@@ -77,6 +89,61 @@ public class NameVerifierTests : BaseTestClass
         isValid.ShouldBeFalse("Because spaces are not allowed. This makes variable references difficult to parse");
 
         whyNotValid.ShouldBe("Variable names cannot contain spaces");
+    }
+
+    [Fact]
+    public void IsVariableNameValid_ShouldReturnFalse_ForExistingActiveVariable_InDefaultState_WhenElementIsNotSelected()
+    {
+        ComponentSave element = new ComponentSave { Name = "MyComponent" };
+        element.States.Add(new StateSave { Name = "Default", ParentContainer = element });
+        VariableSave existingVariable = new VariableSave { Name = "ExistingVar" };
+        element.DefaultState.Variables.Add(existingVariable);
+
+        _selectedState.SetupGet(x => x.SelectedElement).Returns((ElementSave?)null);
+        _selectedState.SetupGet(x => x.SelectedStateSave).Returns((StateSave?)null);
+        _variableSaveLogic.Setup(x => x.GetIfVariableIsActive(existingVariable, element, null)).Returns(true);
+
+        bool isValid = _nameVerifier.IsVariableNameValid("ExistingVar", element, new VariableSave(), out string whyNotValid);
+
+        isValid.ShouldBeFalse("Because the element is not the selected element, so the default state (not any selected state) should be searched.");
+        whyNotValid.ShouldBe("The variable name ExistingVar is already used");
+    }
+
+    [Fact]
+    public void IsVariableNameValid_ShouldReturnFalse_ForExistingActiveVariable_InSelectedState_WhenElementIsSelected()
+    {
+        ComponentSave element = new ComponentSave { Name = "MyComponent" };
+        StateSave selectedStateSave = new StateSave();
+        VariableSave existingVariable = new VariableSave { Name = "ExistingVar" };
+        selectedStateSave.Variables.Add(existingVariable);
+        // Deliberately NOT added to element.DefaultState, to prove the selected state (not the
+        // default state) is what gets searched when the element is currently selected.
+
+        _selectedState.SetupGet(x => x.SelectedElement).Returns(element);
+        _selectedState.SetupGet(x => x.SelectedStateSave).Returns(selectedStateSave);
+        _variableSaveLogic.Setup(x => x.GetIfVariableIsActive(existingVariable, element, null)).Returns(true);
+
+        bool isValid = _nameVerifier.IsVariableNameValid("ExistingVar", element, new VariableSave(), out string whyNotValid);
+
+        isValid.ShouldBeFalse("Because the element is the selected element with a selected state, so that state should be searched.");
+        whyNotValid.ShouldBe("The variable name ExistingVar is already used");
+    }
+
+    [Fact]
+    public void IsVariableNameValid_ShouldReturnTrue_WhenExistingVariableIsNotActive()
+    {
+        ComponentSave element = new ComponentSave { Name = "MyComponent" };
+        element.States.Add(new StateSave { Name = "Default", ParentContainer = element });
+        VariableSave existingVariable = new VariableSave { Name = "ExistingVar" };
+        element.DefaultState.Variables.Add(existingVariable);
+
+        _selectedState.SetupGet(x => x.SelectedElement).Returns((ElementSave?)null);
+        _selectedState.SetupGet(x => x.SelectedStateSave).Returns((StateSave?)null);
+        _variableSaveLogic.Setup(x => x.GetIfVariableIsActive(existingVariable, element, null)).Returns(false);
+
+        bool isValid = _nameVerifier.IsVariableNameValid("ExistingVar", element, new VariableSave(), out string whyNotValid);
+
+        isValid.ShouldBeTrue("Because an inactive variable (e.g. a leftover from a type change) should not block reuse of its name.");
     }
 
     #endregion

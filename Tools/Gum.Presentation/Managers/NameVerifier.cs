@@ -2,7 +2,7 @@
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
-using System.CodeDom.Compiler;
+using Gum.ToolStates;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
@@ -139,16 +139,18 @@ public class NameVerifier : INameVerifier
     private readonly StandardElementsManager _standardElementsManager;
     private readonly IVariableSaveLogic _variableSaveLogic;
     private readonly Plugins.IPluginManager _pluginManager;
-    
+    private readonly ISelectedState _selectedState;
+
     #endregion
-    
+
     #region Folder
-    
-    public NameVerifier(IVariableSaveLogic variableSaveLogic, Plugins.IPluginManager pluginManager)
+
+    public NameVerifier(IVariableSaveLogic variableSaveLogic, Plugins.IPluginManager pluginManager, ISelectedState selectedState)
     {
         _standardElementsManager = StandardElementsManager.Self;
         _variableSaveLogic = variableSaveLogic;
         _pluginManager = pluginManager;
+        _selectedState = selectedState;
     }
     public bool IsFolderNameValid(string? folderName, out string whyNotValid)
     {
@@ -165,10 +167,6 @@ public class NameVerifier : INameVerifier
         {
             IsFileNameWindowsReserved(componentNameWithoutFolder, out whyNotValid);
         }
-        //if (string.IsNullOrEmpty(whyNotValid))
-        //{
-        //    IsNameValidVariable(componentName, out whyNotValid);
-        //}
         if (string.IsNullOrEmpty(whyNotValid) && componentNameWithoutFolder != null)
         {
             IsNameAnExistingElement(componentNameWithoutFolder, folderName, elementSave, out whyNotValid);
@@ -242,10 +240,6 @@ public class NameVerifier : INameVerifier
     public bool IsInstanceNameValid(string instanceName, InstanceSave instanceSave, IInstanceContainer instanceContainer, out string whyNotValid)
     {
         IsNameValidCommon(instanceName, out whyNotValid, out _);
-        //if (string.IsNullOrEmpty(whyNotValid))
-        //{
-        //    IsNameValidVariable(instanceName, out whyNotValid);
-        //}
         // See if this is a variable used by any state in the StandardElementsManager:
         if(string.IsNullOrEmpty(whyNotValid))
         {
@@ -339,7 +333,7 @@ public class NameVerifier : INameVerifier
 
         if (string.IsNullOrEmpty(whyNotValid))
         {
-            var existingVariable = elementSave?.GetVariableFromThisOrBase(variableName);
+            var existingVariable = elementSave != null ? GetVariableFromThisOrBase(elementSave, variableName) : null;
             // there's a variable but we shouldn't consider it
             // unless it's "Active" - inactive variables may be
             // leftovers from a type change
@@ -405,15 +399,6 @@ public class NameVerifier : INameVerifier
         commonValidationError = CommonValidationError.None;
         return true;
     }
-    private void IsNameValidVariable(string name, out string whyNotValid)
-    {
-        whyNotValid = null;
-        CodeDomProvider provider = CodeDomProvider.CreateProvider("C#");
-        if (provider.IsValidIdentifier(name) == false)
-        {
-            whyNotValid = "The name uses an invalid character";
-        }
-    }
     private void IsFileNameWindowsReserved(string? name, out string? whyNotValid)
     {
         whyNotValid = null;
@@ -421,6 +406,20 @@ public class NameVerifier : INameVerifier
         {
             whyNotValid = $"The name {name} is a reserved file name in Windows";
         }
+    }
+    /// <summary>
+    /// Returns the variable from the element's currently-selected state if <paramref name="element"/>
+    /// is the currently selected element and a state is selected, otherwise from its default state.
+    /// Headless replacement for the tool-only <c>ElementSaveExtensionMethodsGumTool.GetVariableFromThisOrBase</c>,
+    /// which resolves <see cref="ISelectedState"/> via <c>Locator</c> instead of taking it as a dependency.
+    /// </summary>
+    private VariableSave? GetVariableFromThisOrBase(ElementSave element, string variable)
+    {
+        var stateToPullFrom = (element == _selectedState.SelectedElement && _selectedState.SelectedStateSave != null)
+            ? _selectedState.SelectedStateSave
+            : element.DefaultState;
+
+        return stateToPullFrom.GetVariableRecursive(variable);
     }
     public bool IsValidCSharpName(string name, out string whyNotValid, out CommonValidationError commonValidationError)
     {
