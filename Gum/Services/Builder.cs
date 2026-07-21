@@ -200,6 +200,8 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IOutputManager>(provider => provider.GetRequiredService<MainOutputViewModel>());
         services.AddSingleton<FileWatchIgnoreList>();
         services.AddSingleton<IFileWatchIgnoreList>(provider => provider.GetRequiredService<FileWatchIgnoreList>());
+        services.AddSingleton<IRecycleBinService, RecycleBinService>();
+        services.AddSingleton<ICsvLocalizationLoader, CsvLocalizationLoader>();
         services.AddSingleton<FileWatchManager>();
         services.AddSingleton<IFileWatchManager>(provider => provider.GetRequiredService<FileWatchManager>());
         services.AddSingleton<ReorderLogic>();
