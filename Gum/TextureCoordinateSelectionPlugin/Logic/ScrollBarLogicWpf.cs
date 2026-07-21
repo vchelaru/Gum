@@ -1,9 +1,4 @@
 ﻿using RenderingLibrary;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 
@@ -11,12 +6,14 @@ namespace TextureCoordinateSelectionPlugin.Logic;
 
 public class ScrollBarLogicWpf
 {
+    private readonly ScrollBarLogic _scrollBarLogic;
     private ScrollBar _verticalScrollBar;
     private ScrollBar _horizontalScrollBar;
     private Camera _camera;
 
-    public ScrollBarLogicWpf()
+    public ScrollBarLogicWpf(ScrollBarLogic scrollBarLogic)
     {
+        _scrollBarLogic = scrollBarLogic;
     }
 
     public void Initialize (ScrollBar verticalScrollBar, ScrollBar horizontalScrollBar, Camera camera)
@@ -46,20 +43,19 @@ public class ScrollBarLogicWpf
     public void UpdateScrollBarsToCamera(int spriteWidth, int spriteHeight)
     {
         isInScrollBarUpdate = true;
-        var viewableArea = _camera.ClientWidth / _camera.Zoom;
-        _horizontalScrollBar.Minimum = -viewableArea / 2;
-        var maximum = spriteWidth + viewableArea / 2;
-        _horizontalScrollBar.Maximum = Math.Max(_horizontalScrollBar.Minimum, maximum - viewableArea);
-        _horizontalScrollBar.ViewportSize = viewableArea;
-        _horizontalScrollBar.Value = _camera.X;
 
-        viewableArea = _camera.ClientHeight / _camera.Zoom;
-        _verticalScrollBar.Minimum = -viewableArea / 2;
-        maximum = spriteHeight + viewableArea / 2;
-        _verticalScrollBar.Maximum = Math.Max(_verticalScrollBar.Minimum, maximum - viewableArea);
-        _verticalScrollBar.ViewportSize = viewableArea;
-        _verticalScrollBar.Value = _camera.Y;
+        ScrollBarRange horizontalRange = _scrollBarLogic.CalculateHorizontalRange(_camera, spriteWidth);
+        _horizontalScrollBar.Minimum = horizontalRange.Minimum;
+        _horizontalScrollBar.Maximum = horizontalRange.Maximum;
+        _horizontalScrollBar.ViewportSize = horizontalRange.ViewportSize;
+        _horizontalScrollBar.Value = horizontalRange.Value;
+
+        ScrollBarRange verticalRange = _scrollBarLogic.CalculateVerticalRange(_camera, spriteHeight);
+        _verticalScrollBar.Minimum = verticalRange.Minimum;
+        _verticalScrollBar.Maximum = verticalRange.Maximum;
+        _verticalScrollBar.ViewportSize = verticalRange.ViewportSize;
+        _verticalScrollBar.Value = verticalRange.Value;
+
         isInScrollBarUpdate = false;
-
     }
 }
