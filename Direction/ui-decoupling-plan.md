@@ -108,6 +108,16 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   free; one injecting a still-WPF/WinForms-coupled interface can't move until that interface is
   cleaned or relocated too. Re-check the current state of each dependency — a past note's "this
   interface is blocked" claim can go stale as unrelated PRs clean things up.
+- **A field typed against a concrete WPF-side class can already have a `Gum.Presentation`-registered
+  interface sitting unused.** Before extracting a new interface, check `Builder.cs` for an existing
+  `IFoo`/`Foo` dual-registration where `Foo` already implements `IFoo` — if the only members the
+  consumer calls are already on that interface, the fix is a one-line field-type swap, not a new
+  seam.
+- **A method's public signature already being neutral doesn't mean its body is.** `HotkeyManager`'s
+  public methods already took a headless `GumKeyEventArgs`, but internally still rebuilt a live WPF
+  `KeyEventArgs` to match against — invisible from the signature, and it only surfaces as an
+  STA-thread-dependent test failure, not a compile error. Check the method body for a framework
+  object it reconstructs internally, not just its parameter/return types.
 - **An `#if GUM` (or similar tool-only compile constant) guard silently flips from always-true to
   always-false when its class moves into `Gum.Presentation`**, which never defines that constant —
   a real behavior regression the build won't catch. Make the guarded code unconditional instead of
@@ -120,6 +130,9 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   still resolves to a `Locator`-based static.** Grep the whole class for receiver-less-looking calls
   (`x.SomeMethod()` with no visible owning type) in addition to its constructor dependencies — an
   extension method can hide a `Locator`/`.Self` resolution that a field-only audit misses entirely.
+  Even when one is found, check which specific overload/branch is actually reached (e.g. a
+  `forceDefault: true` argument that always skips the `Locator`-touching path) before assuming the
+  whole method needs a seam — sometimes it's a plain private-helper substitution instead.
 - **XAML `clr-namespace` declarations need `;assembly=Gum.Presentation`** once a bound type moves
   out of `Gum.csproj`, or the XAML fails to resolve it. `d:DesignInstance`/`d:`-namespaced
   attributes are silently skipped by `dotnet build` (only the VS designer breaks); real
@@ -128,6 +141,11 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   `typeof(GumBuilder).Assembly`.** A DI-resolved VM moved to `Gum.Presentation` needs a second scan
   anchored in that assembly too, or it silently stops resolving (caught by
   `ServiceProviderCompositionSpikeTests`, not by a compile error).
+- **`Builder.cs` has a second, separate single-assembly scan with the same blind spot:
+  `AddViewModelFuncFactories`.** It auto-registers `Func<TViewModel>` factories by scanning
+  *consumer* constructors (not `ViewModel` types themselves) for a `Func<ViewModel>` parameter,
+  also scoped to one assembly. Moving the *consumer* of such a factory into `Gum.Presentation` —
+  not just moving a ViewModel — needs its own second scan anchored there too.
 - **`DialogViewResolver` scans the VM's own assembly, then falls back to an injected
   `IDialogViewAssemblyProvider`** (default impl scans every assembly currently loaded in the
   process) when the VM's own assembly has no View. This lets a relocated `DialogViewModel` resolve
@@ -216,12 +234,28 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   .InstanceMember` (a `net8.0-windows`/WPF-only library). Split the interface rather than block the
   whole move: the clean members go to `Gum.Presentation`, the WPF-typed one moves to a new
   tool-only sibling interface implemented by the same concrete class.
+- **The same split applies to a whole WPF-typed class, not just interfaces on already-headless
+  types.** `PluginTab` is blocked by its `Content: FrameworkElement` field, but consumers that only
+  call `.Show()`/`.Hide()` don't need the rest — narrow with a single-purpose interface
+  (`ITabVisibility`) the WPF-typed class implements alongside its existing members, same shape as
+  `ITabDockingCandidate`/`ITabAutoSelectCandidate`.
 - **A plugin's handler method can be WPF-free by type yet still unmovable, because it reads the
   plugin's own private fields rather than taking its dependencies as parameters.** Unlike a
   WPF-typed member (fixed by splitting an interface or relocating a type), this is fixed by pushing
   the handler into a new ctor-injected controller class — the same shape as `CameraController`/
   `SelectionManager` — taking those fields as constructor dependencies. Check field access, not just
   type references, when a plugin method looks clean on a first read.
+- **Not every control-coupled plugin fits the controller-extraction shape above — check whether the
+  View is a push target or an ambient input.** The `AnimationTabController` pattern works when the
+  WPF-side view only *receives* a value at the end of a method call. It doesn't apply when a method
+  reads the view mid-logic as a live input (e.g. `control?.SomeProperty ?? default`, or branching on
+  `tab.IsSelected`) — that needs a designed narrow view-state interface first, not a mechanical
+  extraction.
+- **When extracting a handler that also produces a plugin-owned side effect (a cached field, a view
+  refresh), carry that side effect out as a small result value the plugin applies itself — don't
+  leave it as a field write or view-push inside the extracted method.** Otherwise the new headless
+  class silently inherits ownership of plugin-private state or a control reference it shouldn't
+  hold, undermining the whole point of the extraction.
 - **A blocker doesn't have to be WPF/WinForms — a NuGet target-framework mismatch blocks identically.**
   A dependency on a `net8.0-windows`-targeted library (e.g. `CsvLibrary`) from the plain-`net8.0`
   `Gum.Presentation` is a hard `NU1201` restore error, not a compile-time type error, even though the
@@ -305,6 +339,13 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   in the same class was live and needed the narrow-interface treatment instead. Don't pattern-match
   "type-check on a renderable" to one fix; check what each branch actually does before choosing
   delete vs. seam.
+- **A method's parameter type looking WPF-coupled at the signature doesn't mean the body is.**
+  A member declared to take a framework type (e.g. `System.Windows.FrameworkElement`) can be safe
+  to retype to `object` with zero call-site changes if it only ever forwards the value into an
+  already-headless `object`-typed sink downstream (an interface already narrowed for this exact
+  reason). Check where the parameter *flows*, not just its declared type, before writing a member
+  off as blocked — a class-wide "N regions are WPF-coupled" count can overstate true blast radius
+  this way.
 
 **Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap).
 - *4a — Element tree:* decouple `ElementTreeViewManager` from `TreeNode`; the already-migrated
