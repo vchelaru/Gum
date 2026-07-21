@@ -171,9 +171,6 @@ public class HotkeyManagerTests : BaseTestClass
     public void IsPressed_KeyData_NavigateBack_MatchesAltPlusLeft()
     {
         // NavigateBack is Alt+Left: matches only when both the Alt flag and the Left key code are present.
-        // (PreviewKeyDownAppWide's actual dispatch isn't unit-testable here - it constructs a real WPF
-        // KeyEventArgs via Keyboard.PrimaryDevice, which requires an STA thread this test host doesn't
-        // guarantee. Same pre-existing gap applies to Undo/Redo/Search; verified manually instead.)
         _hotkeyManager.NavigateBack.IsPressed(System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.Left).ShouldBeTrue();
         _hotkeyManager.NavigateBack.IsPressed(System.Windows.Forms.Keys.Left).ShouldBeFalse();
     }
@@ -216,6 +213,172 @@ public class HotkeyManagerTests : BaseTestClass
         // Verify alternative zoom out hotkey configuration
         _hotkeyManager.ZoomCameraOutAlternative.Key.ShouldBe(GumKey.OemMinus);
         _hotkeyManager.ZoomCameraOutAlternative.IsCtrlDown.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void PreviewKeyDownAppWide_CtrlF_InvokesFocusSearchAndSetsHandled()
+    {
+        // Previously untestable: the dispatch used to round-trip through a real WPF KeyEventArgs
+        // (Keyboard.PrimaryDevice), which requires an STA thread this test host doesn't guarantee.
+        // Now matched directly against the framework-neutral GumKeyEventArgs.
+        GumKeyEventArgs e = new() { Key = GumKey.F, IsCtrlDown = true };
+
+        bool handled = _hotkeyManager.PreviewKeyDownAppWide(e);
+
+        handled.ShouldBeTrue();
+        e.Handled.ShouldBeTrue();
+        _guiCommands.Verify(g => g.FocusSearch(), Times.Once);
+    }
+
+    [Fact]
+    public void PreviewKeyDownAppWide_CtrlZ_InvokesPerformUndo()
+    {
+        GumKeyEventArgs e = new() { Key = GumKey.Z, IsCtrlDown = true };
+
+        bool handled = _hotkeyManager.PreviewKeyDownAppWide(e);
+
+        handled.ShouldBeTrue();
+        _undoManager.Verify(u => u.PerformUndo(), Times.Once);
+    }
+
+    [Fact]
+    public void PreviewKeyDownAppWide_CtrlY_InvokesPerformRedo()
+    {
+        GumKeyEventArgs e = new() { Key = GumKey.Y, IsCtrlDown = true };
+
+        bool handled = _hotkeyManager.PreviewKeyDownAppWide(e);
+
+        handled.ShouldBeTrue();
+        _undoManager.Verify(u => u.PerformRedo(), Times.Once);
+    }
+
+    [Fact]
+    public void PreviewKeyDownAppWide_CtrlShiftZ_InvokesPerformRedo()
+    {
+        // RedoAlt is Ctrl+Shift+Z.
+        GumKeyEventArgs e = new() { Key = GumKey.Z, IsCtrlDown = true, IsShiftDown = true };
+
+        bool handled = _hotkeyManager.PreviewKeyDownAppWide(e);
+
+        handled.ShouldBeTrue();
+        _undoManager.Verify(u => u.PerformRedo(), Times.Once);
+    }
+
+    [Fact]
+    public void PreviewKeyDownAppWide_AltLeft_InvokesNavigateBack()
+    {
+        GumKeyEventArgs e = new() { Key = GumKey.Left, IsAltDown = true };
+
+        bool handled = _hotkeyManager.PreviewKeyDownAppWide(e);
+
+        handled.ShouldBeTrue();
+        _selectionHistory.Verify(s => s.NavigateBack(), Times.Once);
+    }
+
+    [Fact]
+    public void PreviewKeyDownAppWide_AltRight_InvokesNavigateForward()
+    {
+        GumKeyEventArgs e = new() { Key = GumKey.Right, IsAltDown = true };
+
+        bool handled = _hotkeyManager.PreviewKeyDownAppWide(e);
+
+        handled.ShouldBeTrue();
+        _selectionHistory.Verify(s => s.NavigateForward(), Times.Once);
+    }
+
+    [Fact]
+    public void PreviewKeyDownAppWide_CtrlAdd_IncreasesBaseFontSize()
+    {
+        _uiSettingsService.SetupProperty(u => u.BaseFontSize, 12d);
+        GumKeyEventArgs e = new() { Key = GumKey.Add, IsCtrlDown = true };
+
+        bool handled = _hotkeyManager.PreviewKeyDownAppWide(e);
+
+        handled.ShouldBeTrue();
+        _uiSettingsService.Object.BaseFontSize.ShouldBe(13d);
+    }
+
+    [Fact]
+    public void PreviewKeyDownAppWide_CtrlAdd_WhenAppWideZoomDisabled_DoesNotHandle()
+    {
+        _uiSettingsService.SetupProperty(u => u.BaseFontSize, 12d);
+        GumKeyEventArgs e = new() { Key = GumKey.Add, IsCtrlDown = true };
+
+        bool handled = _hotkeyManager.PreviewKeyDownAppWide(e, enableEntireAppZoom: false);
+
+        handled.ShouldBeFalse();
+        _uiSettingsService.Object.BaseFontSize.ShouldBe(12d);
+    }
+
+    [Fact]
+    public void PreviewKeyDownAppWide_UnmatchedKey_ReturnsFalseAndLeavesHandledFalse()
+    {
+        GumKeyEventArgs e = new() { Key = GumKey.C };
+
+        bool handled = _hotkeyManager.PreviewKeyDownAppWide(e);
+
+        handled.ShouldBeFalse();
+        e.Handled.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HandleKeyDownElementTreeView_Delete_InvokesDeleteSelectionAndSuppressesKeyPress()
+    {
+        GumKeyEventArgs e = new() { Key = GumKey.Delete };
+
+        _hotkeyManager.HandleKeyDownElementTreeView(e);
+
+        _editCommands.Verify(c => c.DeleteSelection(), Times.Once);
+        e.Handled.ShouldBeTrue();
+        e.SuppressKeyPress.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HandleKeyDownElementTreeView_CtrlZ_DispatchesToAppWideUndo_NotDelete()
+    {
+        // App-wide keys (Undo/Redo/Search/...) take precedence over the element-tree-specific keys.
+        GumKeyEventArgs e = new() { Key = GumKey.Z, IsCtrlDown = true };
+
+        _hotkeyManager.HandleKeyDownElementTreeView(e);
+
+        _undoManager.Verify(u => u.PerformUndo(), Times.Once);
+        _editCommands.Verify(c => c.DeleteSelection(), Times.Never);
+    }
+
+    [Fact]
+    public void HandleKeyDownElementTreeView_CtrlC_InvokesOnCopyAndSuppressesKeyPress()
+    {
+        GumKeyEventArgs e = new() { Key = GumKey.C, IsCtrlDown = true };
+
+        _hotkeyManager.HandleKeyDownElementTreeView(e);
+
+        _copyPasteLogic.Verify(c => c.OnCopy(CopyType.InstanceOrElement), Times.Once);
+        e.Handled.ShouldBeTrue();
+        e.SuppressKeyPress.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HandleEditorKeyDown_Delete_InvokesDeleteSelection()
+    {
+        GumKeyEventArgs e = new() { Key = GumKey.Delete };
+
+        _hotkeyManager.HandleEditorKeyDown(e);
+
+        _editCommands.Verify(c => c.DeleteSelection(), Times.Once);
+        e.Handled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HandleEditorKeyDown_CtrlAdd_DoesNotDispatchAppWideZoom()
+    {
+        // HandleEditorKeyDown calls the app-wide dispatch with enableEntireAppZoom: false -
+        // zoom in the wireframe editor is handled elsewhere (e.g. CameraController).
+        _uiSettingsService.SetupProperty(u => u.BaseFontSize, 12d);
+        GumKeyEventArgs e = new() { Key = GumKey.Add, IsCtrlDown = true };
+
+        _hotkeyManager.HandleEditorKeyDown(e);
+
+        _uiSettingsService.Object.BaseFontSize.ShouldBe(12d);
     }
 
     private (ComponentSave element, InstanceSave instance) SetUpSelectedInstance(float x, float y, bool locked = false)
