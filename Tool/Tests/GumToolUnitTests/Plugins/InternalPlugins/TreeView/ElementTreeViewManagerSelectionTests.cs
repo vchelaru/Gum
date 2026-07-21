@@ -1,10 +1,7 @@
-using CommonFormsAndControls;
 using Gum.DataTypes;
 using Gum.Managers;
 using Shouldly;
-using System;
 using System.Collections.Generic;
-using System.Windows.Forms;
 using Xunit;
 
 namespace GumToolUnitTests.Plugins.InternalPlugins.TreeView;
@@ -19,18 +16,18 @@ public class ElementTreeViewManagerSelectionTests : BaseTestClass
         // not collapse to the first one.
         InstanceSave first = new InstanceSave { Name = "First" };
         InstanceSave second = new InstanceSave { Name = "Second" };
-        TreeNode firstNode = new TreeNode { Tag = first };
-        TreeNode secondNode = new TreeNode { Tag = second };
+        ITreeNode firstNode = new GumTreeNode { Tag = first };
+        ITreeNode secondNode = new GumTreeNode { Tag = second };
 
-        Dictionary<InstanceSave, TreeNode> lookup = new()
+        Dictionary<InstanceSave, ITreeNode> lookup = new()
         {
             { first, firstNode },
             { second, secondNode },
         };
 
-        List<TreeNode> result = ElementTreeViewManager.GetReselectableNodes(
+        List<ITreeNode> result = ElementTreeViewManager.GetReselectableNodes(
             new List<InstanceSave> { first, second },
-            instance => lookup.TryGetValue(instance, out TreeNode? node) ? node : null);
+            instance => lookup.TryGetValue(instance, out ITreeNode? node) ? node : null);
 
         result.ShouldBe(new[] { firstNode, secondNode });
     }
@@ -41,18 +38,18 @@ public class ElementTreeViewManagerSelectionTests : BaseTestClass
         InstanceSave first = new InstanceSave { Name = "First" };
         InstanceSave deleted = new InstanceSave { Name = "Deleted" };
         InstanceSave third = new InstanceSave { Name = "Third" };
-        TreeNode firstNode = new TreeNode { Tag = first };
-        TreeNode thirdNode = new TreeNode { Tag = third };
+        ITreeNode firstNode = new GumTreeNode { Tag = first };
+        ITreeNode thirdNode = new GumTreeNode { Tag = third };
 
-        Dictionary<InstanceSave, TreeNode> lookup = new()
+        Dictionary<InstanceSave, ITreeNode> lookup = new()
         {
             { first, firstNode },
             { third, thirdNode },
         };
 
-        List<TreeNode> result = ElementTreeViewManager.GetReselectableNodes(
+        List<ITreeNode> result = ElementTreeViewManager.GetReselectableNodes(
             new List<InstanceSave> { first, deleted, third },
-            instance => lookup.TryGetValue(instance, out TreeNode? node) ? node : null);
+            instance => lookup.TryGetValue(instance, out ITreeNode? node) ? node : null);
 
         result.ShouldBe(new[] { firstNode, thirdNode });
     }
@@ -60,7 +57,7 @@ public class ElementTreeViewManagerSelectionTests : BaseTestClass
     [Fact]
     public void GetReselectableNodes_EmptyInput_ReturnsEmpty()
     {
-        List<TreeNode> result = ElementTreeViewManager.GetReselectableNodes(
+        List<ITreeNode> result = ElementTreeViewManager.GetReselectableNodes(
             new List<InstanceSave>(),
             _ => null);
 
