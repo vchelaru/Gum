@@ -21,9 +21,9 @@ public class ImportLogic : IImportLogic
     private readonly IDialogService _dialogService;
     private readonly IProjectManager _projectManager;
     private readonly IPluginManager _pluginManager;
-    private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
+    private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
 
-    public ImportLogic(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands, IDialogService dialogService, IProjectManager projectManager, IPluginManager pluginManager, StandardElementsManagerGumTool standardElementsManagerGumTool)
+    public ImportLogic(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands, IDialogService dialogService, IProjectManager projectManager, IPluginManager pluginManager, IStandardElementsManagerGumTool standardElementsManagerGumTool)
     {
         _selectedState = selectedState;
         _guiCommands = guiCommands;
@@ -216,5 +216,4 @@ public class ImportLogic : IImportLogic
         return toReturn;
     }
 }
-
 
