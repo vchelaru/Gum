@@ -405,6 +405,15 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   cast at the construction call site — not a blocker, just easy to miss if you assume a field's
   static type from an earlier read is still current. Re-check the field's actual current type before
   wiring a new constructor dependency to it.
+- **An old WinForms-typed extension-method class can't always be deleted once every *external* caller
+  converts to the neutral twin** — check whether the type's *own* interface implementation still
+  routes through it internally. `TreeNodeExtensionMethods`' `GetFullFilePath` stayed load-bearing
+  because both `GumTreeNode.ITreeNode.GetFullFilePath()` and `TreeNodeWrapper.GetFullFilePath()`
+  (both legitimate WinForms-side adapters) call `this.GetFullFilePath()`, which resolves against
+  `this`'s *static* `TreeNode` type — the neutral `ITreeNode`-typed twin is never reached from inside
+  the adapter itself. Grep for the old extension method's use *inside its own interface's WinForms
+  implementations*, not just across the rest of the codebase, before assuming a "convert every
+  caller" pass makes the old class fully dead.
 
 A live progress instrument worth knowing about: `Tool/Tests/GumToolUnitTests/Architecture/UiDecouplingRatchetTests.cs`
 is a source-scan ratchet (baselines for `.Self` count, `System.Windows` usage in ViewModels,
