@@ -12,7 +12,6 @@ using Gum.Undo;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Windows.Forms;
 using CommunityToolkit.Mvvm.Messaging;
 using TextureCoordinateSelectionPlugin.Logic;
 using TextureCoordinateSelectionPlugin.Models;
@@ -182,7 +181,7 @@ public class MainTextureCoordinatePlugin : PluginBase, IRecipient<UiBaseFontSize
         }
     }
 
-    private void HandleTreeNodeSelected(TreeNode? treeNode)
+    private void HandleTreeNodeSelected(ITreeNode? treeNode)
     {
         _displayController.Refresh();
         _displayController.CenterCameraOnSelection();

@@ -3,13 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
 using Gum.DataTypes;
-using Gum.Gui.Windows;
 using Gum.DataTypes.Variables;
-using System.Windows;
-using System.Windows.Forms;
-using System.Windows;
-using MenuItem = System.Windows.Controls.MenuItem;
-using Separator = System.Windows.Controls.Separator;
 using Gum.DataTypes.Behaviors;
 using RenderingLibrary.Graphics;
 using Gum.Responses;
@@ -23,6 +17,7 @@ using Gum.Commands;
 using Gum.Managers;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.Input;
 
 namespace Gum.Plugins.BaseClasses;
 
@@ -37,13 +32,11 @@ public abstract class PluginBase : IPlugin
     protected IFileCommands _fileCommands;
     protected ITabManager _tabManager;
     protected IDialogService _dialogService;
-    private MenuStripManager _menuStripManager;
 
     [Import] public IGuiCommands GuiCommands { get => _guiCommands; set => _guiCommands = value; }
     [Import] public IFileCommands FileCommands { get => _fileCommands; set => _fileCommands = value; }
     [Import] public ITabManager TabManager { get => _tabManager; set => _tabManager = value; }
     [Import] public IDialogService DialogService { get => _dialogService; set => _dialogService = value; }
-    [Import] public MenuStripManager MenuStripManager { get => _menuStripManager; set => _menuStripManager = value; }
 
     #region Events
 
@@ -56,8 +49,6 @@ public abstract class PluginBase : IPlugin
     public event Action<ElementSave>? BeforeElementSave;
     public event Action<ElementSave>? AfterElementSave;
     public event Action<ElementSave>? Export;
-    public event Action<DeleteOptionsWindow, Array>? DeleteOptionsWindowShow;
-    public event Action<DeleteOptionsWindow, Array>? DeleteConfirmed;
 
     public event Action<ElementSave>? ElementAdd;
     public event Action<ElementSave>? ElementDelete;
@@ -158,8 +149,8 @@ public abstract class PluginBase : IPlugin
     public event Action<ElementSave, string>? VariableDelete;
 
     public event Action<ElementSave?>? ElementSelected;
-    public event Action<TreeNode?>? TreeNodeSelected;
-    public event Action<TreeNode>? StateWindowTreeNodeSelected;
+    public event Action<ITreeNode?>? TreeNodeSelected;
+    public event Action<ITreeNode>? StateWindowTreeNodeSelected;
     public event Func<ITreeNode?>? GetTreeNodeOver;
     public event Func<IEnumerable<ITreeNode>>? GetSelectedNodes;
     public event Action? FocusSearch;
@@ -247,7 +238,7 @@ public abstract class PluginBase : IPlugin
 
     public event Func<bool>? TryHandleDelete;
 
-    public event Func<InputLibrary.Cursor, Vector2?>? GetWorldCursorPosition;
+    public event Func<IGumCursorState, Vector2?>? GetWorldCursorPosition;
 
     public event Func<IEnumerable<ErrorViewModel>>? GetAllErrors;
 
@@ -268,85 +259,9 @@ public abstract class PluginBase : IPlugin
     public abstract void StartUp();
     public abstract bool ShutDown(PluginShutDownReason shutDownReason);
 
-    #region Menu Items
-
-    /// <summary>
-    /// Adds a menu item using the path specified by the menuAndSubmenus. 
-    /// </summary>
-    /// <param name="menuAndSubmenus">The menu path. The first item may specify an existing menu to add to.
-    /// For example, to add a Properties item to the existing Edit item, the following
-    /// parameter could be used:
-    /// new List<string> { "Edit", "Properties" }
-    /// </param>
-    /// <returns>The newly-created menu item.</returns>
-    public MenuItem AddMenuItem(IEnumerable<string> menuAndSubmenus) =>
-        _menuStripManager.AddMenuItem(menuAndSubmenus);
-
-    public MenuItem AddMenuItem(params string[] menuAndSubmenus)
-    {
-        return AddMenuItem((IEnumerable<string>)menuAndSubmenus);
-    }
-
-    MenuItem GetItem(string name) => _menuStripManager.GetItem(name);
-
-    public MenuItem GetChildMenuItem(string parentText, string childText)
-    {
-        MenuItem parentItem = GetItem(parentText);
-        if (parentItem != null)
-        {
-            MenuItem childMenuItem = parentItem.Items
-                .OfType<MenuItem>()
-                .FirstOrDefault(item => item.Header as string == childText);
-
-            return childMenuItem;
-        }
-
-        return null;
-    }
-
-
-    protected MenuItem AddMenuItemTo(string whatToAdd, RoutedEventHandler eventHandler, string container, int? preferredIndex = null)
-    {
-        var menuItem = new MenuItem { Header = whatToAdd };
-        if (eventHandler != null)
-            menuItem.Click += eventHandler;
-
-        MenuItem itemToAddTo = GetItem(container);
-
-#if DEBUG
-        if (itemToAddTo == null)
-        {
-            throw new InvalidOperationException(
-                $"Could not find menu item '{container}'. Make sure the menu is populated before calling AddMenuItemTo.");
-        }
-#endif
-
-        if (preferredIndex == -1)
-        {
-            itemToAddTo.Items.Add(menuItem);
-        }
-        else
-        {
-            int indexToInsertAt = itemToAddTo.Items.Count;
-            if(preferredIndex != null)
-            {
-                indexToInsertAt = System.Math.Min(preferredIndex.Value, itemToAddTo.Items.Count);
-            }
-
-            itemToAddTo.Items.Insert(indexToInsertAt, menuItem);
-        }
-
-        _menuStripManager.ApplyLayout(container);
-
-        return menuItem;
-    }
-
-    #endregion
-
     #region Plugin Tabs
 
-
-    public PluginTab CreateTab(System.Windows.FrameworkElement control, string tabName, TabLocation defaultLocation = TabLocation.RightBottom)
+    public PluginTab CreateTab(object control, string tabName, TabLocation defaultLocation = TabLocation.RightBottom)
     {
         PluginTab newTab = _tabManager.AddControl(control, tabName, defaultLocation);
         newTab.Location = defaultLocation;
@@ -354,7 +269,7 @@ public abstract class PluginBase : IPlugin
         return newTab;
     }
 
-    public PluginTab AddControl(System.Windows.FrameworkElement control, string tabName, TabLocation tabLocation)
+    public PluginTab AddControl(object control, string tabName, TabLocation tabLocation)
     {
         return _tabManager.AddControl(control, tabName, tabLocation);
     }
@@ -390,12 +305,6 @@ public abstract class PluginBase : IPlugin
         return false;
     }
 
-    public void CallDeleteOptionsWindowShow(DeleteOptionsWindow optionsWindow, Array objectsToDelete) =>
-            DeleteOptionsWindowShow?.Invoke(optionsWindow, objectsToDelete);
-
-    public void CallDeleteConfirmed(DeleteOptionsWindow optionsWindow, Array deletedObjects) =>
-        DeleteConfirmed?.Invoke(optionsWindow, deletedObjects);
-    
     public void CallElementAdd(ElementSave element) =>
         ElementAdd?.Invoke(element);
     public void CallElementDelete(ElementSave element) =>
@@ -458,9 +367,9 @@ public abstract class PluginBase : IPlugin
 
     public void CallElementSelected(ElementSave? element) => ElementSelected?.Invoke(element);
 
-    public void CallTreeNodeSelected(TreeNode? treeNode) => TreeNodeSelected?.Invoke(treeNode);
+    public void CallTreeNodeSelected(ITreeNode? treeNode) => TreeNodeSelected?.Invoke(treeNode);
 
-    public void CallStateWindowTreeNodeSelected(TreeNode treeNode) => StateWindowTreeNodeSelected?.Invoke(treeNode);
+    public void CallStateWindowTreeNodeSelected(ITreeNode treeNode) => StateWindowTreeNodeSelected?.Invoke(treeNode);
 
     public void CallBehaviorSelected(BehaviorSave? behavior) => BehaviorSelected?.Invoke(behavior);
 
@@ -546,7 +455,7 @@ public abstract class PluginBase : IPlugin
     public GraphicalUiElement? CallCreateGraphicalUiElement(ElementSave elementSave) =>
         CreateGraphicalUiElement?.Invoke(elementSave);
 
-    public Vector2? CallGetWorldCursorPosition(InputLibrary.Cursor cursor) =>
+    public Vector2? CallGetWorldCursorPosition(IGumCursorState cursor) =>
         GetWorldCursorPosition?.Invoke(cursor);
 
     public IEnumerable<ErrorViewModel>? CallGetAllErrors() =>

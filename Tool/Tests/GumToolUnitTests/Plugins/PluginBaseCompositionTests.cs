@@ -25,7 +25,9 @@ public class PluginBaseCompositionTests : BaseTestClass
         plugin.GuiCommands.ShouldBeSameAs(services.GuiCommands);
         plugin.FileCommands.ShouldBeSameAs(services.FileCommands);
         plugin.TabManager.ShouldBeSameAs(services.TabManager);
-        plugin.MenuStripManager.ShouldBeSameAs(services.MenuStripManager);
+        // MenuStripManager lives on WpfPluginBase (not PluginBase itself) - PropertyInjectedTestPlugin
+        // reaches it transitively via PriorityPlugin : WpfPluginBase.
+        ((WpfPluginBase)plugin).MenuStripManager.ShouldBeSameAs(services.MenuStripManager);
         plugin.DialogService.ShouldBeSameAs(services.DialogService);
     }
 

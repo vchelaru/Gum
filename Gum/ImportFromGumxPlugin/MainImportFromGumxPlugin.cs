@@ -16,7 +16,7 @@ using System.Windows;
 namespace ImportFromGumxPlugin;
 
 [Export(typeof(PluginBase))]
-internal class MainImportFromGumxPlugin : PluginBase
+internal class MainImportFromGumxPlugin : WpfPluginBase
 {
     public override string FriendlyName => "Import from .gumx Plugin";
     public override bool ShutDown(PluginShutDownReason shutDownReason) => true;

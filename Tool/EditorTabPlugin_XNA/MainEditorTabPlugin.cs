@@ -8,6 +8,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Dialogs;
 using Gum.Extensions;
+using Gum.Input;
 using Gum.Localization;
 using Gum.Logic;
 using Gum.Managers;
@@ -367,7 +368,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         _wireframeObjectManager.RefreshAll(false);
     }
 
-    private Vector2? HandleGetWorldCursorPosition(InputLibrary.Cursor cursor)
+    private Vector2? HandleGetWorldCursorPosition(IGumCursorState cursor)
     {
         Renderer.Self.Camera.ScreenToWorld(cursor.X, cursor.Y,
                                    out float worldX, out float worldY);

@@ -274,10 +274,10 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     /// <param name="window">The window to modify.</param>
     /// <param name="objectsToDelete">An array of objects that may be deleted, which could be any Gum type.</param>
     public void ShowDeleteDialog(DeleteOptionsWindow window, Array objectsToDelete) =>
-        CallMethodOnPlugin(plugin => plugin.CallDeleteOptionsWindowShow(window, objectsToDelete));
+        CallMethodOnPlugin(plugin => (plugin as WpfPluginBase)?.CallDeleteOptionsWindowShow(window, objectsToDelete));
 
     public void DeleteConfirmed(DeleteOptionsWindow window, Array objectsToDelete) =>
-        CallMethodOnPlugin(plugin => plugin.CallDeleteConfirmed(window, objectsToDelete));
+        CallMethodOnPlugin(plugin => (plugin as WpfPluginBase)?.CallDeleteConfirmed(window, objectsToDelete));
 
     public void ElementRename(ElementSave elementSave, string oldName) =>
         CallMethodOnPlugin(plugin => plugin.CallElementRename(elementSave, oldName));
@@ -370,10 +370,10 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         CallMethodOnPlugin(plugin => plugin.CallElementSelected(elementSave));
 
     public void TreeNodeSelected(object? treeNode) =>
-        CallMethodOnPlugin(plugin => plugin.CallTreeNodeSelected(treeNode as TreeNode));
+        CallMethodOnPlugin(plugin => plugin.CallTreeNodeSelected(treeNode as ITreeNode));
 
     internal void StateWindowTreeNodeSelected(TreeNode treeNode) =>
-        CallMethodOnPlugin(plugin => plugin.CallStateWindowTreeNodeSelected(treeNode));
+        CallMethodOnPlugin(plugin => plugin.CallStateWindowTreeNodeSelected((ITreeNode)treeNode));
 
     public ITreeNode? GetTreeNodeOver()
     {

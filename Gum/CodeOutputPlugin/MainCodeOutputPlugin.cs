@@ -19,7 +19,6 @@ using System.Linq;
 using System.Runtime;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
 using CommunityToolkit.Mvvm.Messaging;
@@ -228,7 +227,7 @@ public class MainCodeOutputPlugin : PluginBase
         HandleElementSelected(null);
     }
 
-    private void HandleStateSelected(TreeNode obj)
+    private void HandleStateSelected(ITreeNode obj)
     {
         if (control != null && _selectedState.SelectedElement != null)
         {

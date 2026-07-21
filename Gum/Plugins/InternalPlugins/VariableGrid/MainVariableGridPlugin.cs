@@ -10,7 +10,6 @@ using Gum.ToolStates;
 using GumRuntime;
 using System;
 using System.ComponentModel.Composition;
-using System.Windows.Forms;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 
@@ -140,7 +139,7 @@ public class MainVariableGridPlugin : PriorityPlugin
         //_propertyGridManager.RefreshVariablesDataGridValues();
     }
 
-    private void HandleTreeNodeSelected(TreeNode? node)
+    private void HandleTreeNodeSelected(ITreeNode? node)
     {
         _selectionCoordinator.Reset();
         var selectedState = _selectedState;
