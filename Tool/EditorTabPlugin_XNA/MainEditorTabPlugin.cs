@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+﻿using CommonFormsAndControls;
+using CommunityToolkit.Mvvm.Messaging;
 using EditorTabPlugin_XNA.Services;
 using EditorTabPlugin_XNA.ViewModels;
 using EditorTabPlugin_XNA.Views;
@@ -7,7 +8,6 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Dialogs;
-using Gum.Extensions;
 using Gum.Input;
 using Gum.Localization;
 using Gum.Logic;
@@ -915,7 +915,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         // whether to accept it, then apply the decision. The accept/reject logic
         // itself lives in DragDropManager.DecideWireframeDragEffect.
         bool hasFileDrop = e.Data.GetDataPresent(System.Windows.Forms.DataFormats.FileDrop);
-        bool hasNodes = e.HasData<List<TreeNode>>() || e.HasData<TreeNode>();
+        bool hasNodes = MultiSelectTreeView.ExtractDraggedNodes(e.Data).Length > 0;
         bool hasStandardChip = e.Data.GetDataPresent(DragDropManager.StandardElementNameDataFormat);
 
         DragAcceptDecision decision = _dragDropManager.DecideWireframeDragEffect(hasFileDrop, hasNodes);
@@ -946,14 +946,9 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         }
 
         // Handle node drops
-        List<TreeNode>? droppedNodes = e switch
-        {
-            _ when e.GetData<List<TreeNode>>() is { } nodes => nodes,
-            _ when e.GetData<TreeNode>() is { } singleNode => [singleNode],
-            _ => null,
-        };
+        TreeNode[] droppedNodes = MultiSelectTreeView.ExtractDraggedNodes(e.Data);
 
-        if (droppedNodes is not null)
+        if (droppedNodes.Length > 0)
         {
             foreach (var draggedObject in droppedNodes.Select(x => x.Tag))
             {
