@@ -190,6 +190,13 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
 - **A VM going headless doesn't automatically catch extension methods that operate on it and still
   live WPF-side.** When narrowing a dependency closure, check for extension methods keyed off the
   moved type (e.g. an `IDialogServiceExt`-style `Show<T>` helper), not just the type's own members.
+- **A class with its own assembly added to `LoadPlugins`'s MEF catalog and an `[Export(...)]` member
+  gets activated twice** — once as the ordinary DI-built singleton, once as an implicit second MEF
+  part. Adding a new required constructor dependency to such a class needs the same
+  `[ImportingConstructor]` + `batch.AddExportedValue<T>` bridge as a real plugin ctor drain, even
+  though the class isn't a `PluginBase`. Only `AllPluginsCompositionTests` (a real MEF catalog scan)
+  catches a miss — `ServiceProviderCompositionSpikeTests` passes regardless, since it never touches
+  MEF's catalog.
 - **An interface can be "mostly" headless-clean with one bad method mixed in.** `IEditVariableService`
   had 3 clean members plus one (`TryAddEditVariableOptions`) typed against `WpfDataUi.DataTypes
   .InstanceMember` (a `net8.0-windows`/WPF-only library). Split the interface rather than block the
