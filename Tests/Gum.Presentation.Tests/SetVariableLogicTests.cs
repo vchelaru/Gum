@@ -11,7 +11,7 @@ using Moq.AutoMock;
 using Shouldly;
 using ToolsUtilities;
 
-namespace GumToolUnitTests.PropertyGridHelpers;
+namespace Gum.Presentation.Tests;
 public class SetVariableLogicTests : BaseTestClass
 {
     private readonly AutoMocker mocker;
@@ -33,7 +33,6 @@ public class SetVariableLogicTests : BaseTestClass
         mocker.Use<IDialogService>(_fakeDialogService);
 
         _setVariableLogic = mocker.CreateInstance<SetVariableLogic>();
-        StandardElementsManager.Self.Initialize();
     }
 
     [Fact]
