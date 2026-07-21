@@ -181,6 +181,7 @@ file static class ServiceCollectionExtensions
                 provider.GetRequiredService<IFontFileGenerator>(),
                 provider.GetRequiredService<IFontGenerationCallbacks>()));
         services.AddSingleton<IFontManager, FontManager>();
+        services.AddSingleton<IModifierKeyState, WinFormsModifierKeyState>();
         services.AddSingleton<IHotkeyManager, HotkeyManager>();
         services.AddSingleton<IRetryService, RetryService>();
         services.AddSingleton<LocalizationService>();
