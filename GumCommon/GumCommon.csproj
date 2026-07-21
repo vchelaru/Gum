@@ -81,6 +81,19 @@
 		<Compile Include="..\Gum\Managers\CommonValidationError.cs" Link="Managers\CommonValidationError.cs" />
 		<Compile Include="..\Gum\Managers\INameVerifier.cs" Link="Managers\INameVerifier.cs" />
 		<Compile Include="..\Gum\Managers\ObjectFinder.cs" Link="Managers\ObjectFinder.cs" />
+		<!--
+			ITypeManager/TypeManager are headless in content (no WPF/WinForms types - they only
+			resolve System.Type by name via reflection over GumCommon-compiled assemblies), but
+			physically live in Gum/ alongside the WPF-coupled tool code. Linked here so
+			Gum.Presentation (which references GumCommon transitively but not Gum.csproj) can take
+			ITypeManager as a constructor dependency. IVariableSaveLogic (interface only - the
+			concrete VariableSaveLogic stays in Gum/Logic since it depends on IPluginManager/
+			ISelectedState, which live in Gum.Presentation and would create a circular reference)
+			is linked for the same reason, prepping ElementSaveDisplayer's future relocation.
+		-->
+		<Compile Include="..\Gum\Reflection\ITypeManager.cs" Link="Reflection\ITypeManager.cs" />
+		<Compile Include="..\Gum\Reflection\TypeManager.cs" Link="Reflection\TypeManager.cs" />
+		<Compile Include="..\Gum\Logic\IVariableSaveLogic.cs" Link="Logic\IVariableSaveLogic.cs" />
 		<Compile Include="..\Gum\Mvvm\ObservableCollectionExtensions.cs" Link="Mvvm\ObservableCollectionExtensions.cs" />
 		<Compile Include="..\Gum\Mvvm\ViewModel.cs" Link="Mvvm\ViewModel.cs" />
 		<Compile Include="..\RenderingLibrary\Content\IContentLoader.cs" Link="Content\IContentLoader.cs" />

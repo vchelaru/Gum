@@ -477,6 +477,12 @@
 		<Compile Remove="Managers\INameVerifier.cs" />
 		<Compile Remove="Managers\ObjectFinder.cs" />
 		<Compile Remove="Managers\StandardElementsManager.cs" />
+		<!-- Linked into GumCommon.csproj so Gum.Presentation can take ITypeManager/IVariableSaveLogic
+		     as constructor dependencies; removed here so they aren't compiled twice (Gum.csproj
+		     references GumCommon.csproj and gets them transitively). -->
+		<Compile Remove="Reflection\ITypeManager.cs" />
+		<Compile Remove="Reflection\TypeManager.cs" />
+		<Compile Remove="Logic\IVariableSaveLogic.cs" />
 		<Compile Remove="Mvvm\ObservableCollectionExtensions.cs" />
 		<Compile Remove="Mvvm\ViewModel.cs" />
 		<Compile Remove="RenderingLibrary\Blend.cs" />
