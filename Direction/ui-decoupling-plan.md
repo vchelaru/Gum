@@ -23,9 +23,11 @@ counts: **could an Avalonia UI be built today, reusing the same libraries/servic
 proxies can be wrong: a phase can close honestly against its own stated scope while the tool's
 highest-value, most-interacted-with logic sits untouched, because that scope was drawn too narrowly
 relative to the real question. (Concretely: Phase 3 closing "done" was true to its own defined
-ViewModel list, but `ElementTreeViewManager` and the entire wireframe-canvas editing subsystem —
-selection, camera, move/resize/rotate/polygon-point handling — were never in that list, and remain
-fully WinForms/WPF-coupled today.)
+ViewModel list, but `ElementTreeViewManager` and the wireframe-canvas editing subsystem — selection,
+camera, move/resize/rotate/polygon-point handling — were never in that list. Their business logic
+has since moved to `Gum.Presentation`; what legitimately remains WinForms/WPF-coupled is the View
+layer itself — `MultiSelectTreeView` and `WireframeControl` — which is expected, not a gap. See the
+scope boundary below.)
 
 Apply the test by evaluating, not by trusting a closure comment: pick a core interaction surface and
 check concretely whether its code lives in `Gum.Presentation` (or another WPF/WinForms-free
@@ -36,11 +38,11 @@ be built on the shared libraries as they exist, not until the phases run out.
 
 **Scope boundary: the test targets business logic, not a control's own interactive mechanics.**
 Multi-select tracking, drag-and-drop, and owner-draw rendering built directly against one framework's
-widget APIs (e.g. `MultiSelectTreeView`'s WinForms `TreeView` internals) don't get pre-extracted or
-"shrunk" toward a hypothetical future framework — that produces an abstraction shaped by guesswork,
-not by the framework actually chosen. Defer this class of work entirely until a framework decision is
-real (ADR-0003's measured prototype), then design and build it fresh against that framework's actual
-paradigms.
+widget APIs — `MultiSelectTreeView`'s WinForms `TreeView` internals, `WireframeControl`'s WPF-hosted
+render-surface embedding — don't get pre-extracted or "shrunk" toward a hypothetical future framework;
+that produces an abstraction shaped by guesswork, not by the framework actually chosen. Defer this
+class of work entirely until a framework decision is real (ADR-0003's measured prototype), then design
+and build it fresh against that framework's actual paradigms.
 
 ## Where the tool actually is today (grounding)
 
