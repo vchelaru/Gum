@@ -110,6 +110,10 @@ changelog — update this list when a *new kind* of gotcha is discovered, not fo
   always-false when its class moves into `Gum.Presentation`**, which never defines that constant —
   a real behavior regression the build won't catch. Make the guarded code unconditional instead of
   moving it as-is.
+- **A file excluded from `Gum.csproj` may already be linked into `GumCommon.csproj` instead of
+  `Gum.Presentation.csproj`** — `GumCommon` predates ADR-0005 and has its own separate `<Compile
+  Include>` link list. Check both project files (and grep for real call sites already reaching the
+  class from `Tools/Gum.Presentation/`) before concluding a file needs relocating at all.
 - **A class can look fully relocatable by its injected fields while an extension-method call site
   still resolves to a `Locator`-based static.** Grep the whole class for receiver-less-looking calls
   (`x.SomeMethod()` with no visible owning type) in addition to its constructor dependencies — an
