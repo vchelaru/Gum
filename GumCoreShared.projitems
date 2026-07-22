@@ -75,7 +75,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Gum\Wireframe\CustomSetPropertyOnRenderable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\Wireframe\ElementWithState.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\Wireframe\FallbackRenderableFactory.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Gum\Wireframe\TimeManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tools\Gum.Presentation\Wireframe\TimeManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ILocalizationService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MonoGameIntegration\RuntimeLogic.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Camera.cs" />
