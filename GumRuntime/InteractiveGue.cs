@@ -1185,11 +1185,9 @@ public interface IInputReceiverKeyboard
 
 
 
-// A per-frame bag of "already handled" flags threaded through the DoUiActivityRecursively walk.
-// It is a struct passed by ref so the top-level walk allocates it on the stack (zero managed
-// bytes per idle frame, issue #1934) and each Update call gets its own instance (reentrancy-safe),
-// while the ref threading preserves the original shared-mutable-reference semantics through the
-// recursion.
+// "Already handled" flags threaded through the DoUiActivityRecursively walk. A struct passed by ref
+// so the walk allocates it on the stack rather than the heap each frame; ref threading preserves the
+// shared-mutable-reference semantics the class had, and each Update gets its own instance.
 struct HandledActions
 {
     public bool HandledMouseWheel;

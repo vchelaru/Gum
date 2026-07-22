@@ -1179,9 +1179,8 @@ public partial class GumService : IGumService
     // Platform-agnostic tail of every frame's Update: advance AnimationChain playback on each root.
     private void AnimateRoots(double difference, IEnumerable<GraphicalUiElement> roots)
     {
-        // The internal callers always pass the reused List field, so take an index-based fast path
-        // that avoids boxing the List enumerator every idle frame (issue #1934). foreach over the
-        // IEnumerable parameter would box List<T>.Enumerator (~40 bytes/frame).
+        // Internal callers pass the reused List field; take an index-based fast path so we don't box
+        // the List enumerator each frame that foreach over the IEnumerable parameter would (#1934).
         if (roots is IList<GraphicalUiElement> list)
         {
             for (int i = 0; i < list.Count; i++)

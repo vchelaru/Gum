@@ -57,16 +57,11 @@ public class DrawAllocationTests : BaseTestClass
         // roots on every FormsUtilities.Update call.
         global::Gum.Forms.FormsUtilities.LastEventRoots.Count.ShouldBeGreaterThan(0);
 
-        // Ratchet (#1934): the idle-frame input/cursor pass (GumService.Update over an unchanging
-        // Forms scene). Down from 128 B/f after removing the two Gum-owned per-frame allocations:
-        // the HandledActions class allocated by every DoUiActivityRecursively walk (now a stack
-        // struct passed by ref, 24 B/f) and the boxed List enumerator in AnimateRoots' foreach over
-        // the IEnumerable roots (now an index-based fast path, 40 B/f). The deterministic ~64 B/f
-        // residual is MonoGame's per-frame GamePad.GetState (4 pads x 16 bytes) inside
-        // FormsUtilities.UpdateGamepads — framework-internal, not removable without changing input
-        // polling behavior. This guard owns the idle-Update residual (separate from the text /
-        // full-relayout ratchets) and is set just above the residual so a regression that
-        // re-introduces either removed source (88 or 104 B/f) fails the build.
+        // Ratchet (#1934): the idle-frame input/cursor pass (GumService.Update over an unchanging Forms
+        // scene). The ~64 B/f residual is MonoGame's per-frame GamePad.GetState (4 pads) inside
+        // FormsUtilities.UpdateGamepads — framework-internal, not removable here. This guard owns the
+        // idle-Update residual (separate from the text/full-relayout ratchets); set just above the
+        // residual so re-introducing a removed allocation source fails the build.
         result.BytesPerIteration.ShouldBeLessThanOrEqualTo(80);
     }
 
