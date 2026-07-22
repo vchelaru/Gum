@@ -144,36 +144,33 @@ public class AnimationRuntime
 
     static StateSave? GetStateFromCategorizedName(string categorizedName, ElementSave element)
     {
-        if (categorizedName.Contains("/"))
+        if (TrySplitCategorizedName(categorizedName, out string category, out string stateName))
         {
-            var names = categorizedName.Split('/');
-
-            string category = names[0];
-            string stateName = names[1];
-
-            return element
-                .Categories.FirstOrDefault(item => item.Name == category)
-                ?.States.FirstOrDefault(item => item.Name == stateName);
+            StateSaveCategory? foundCategory = null;
+            for (int i = 0; i < element.Categories.Count; i++)
+            {
+                if (element.Categories[i].Name == category)
+                {
+                    foundCategory = element.Categories[i];
+                    break;
+                }
+            }
+            return foundCategory == null ? null : FindStateByName(foundCategory.States, stateName);
         }
         else
         {
-            return element.States.FirstOrDefault(item => item.Name == categorizedName);
+            return FindStateByName(element.States, categorizedName);
         }
     }
 
 
     static StateSave? GetStateFromCategorizedName(string categorizedName, GraphicalUiElement graphicalUiElement)
     {
-        if (categorizedName.Contains("/"))
+        if (TrySplitCategorizedName(categorizedName, out string category, out string stateName))
         {
-            var names = categorizedName.Split('/');
-
-            string category = names[0];
-            string stateName = names[1];
-
             if(graphicalUiElement.Categories.TryGetValue(category, out var foundCategory))
             {
-                return foundCategory.States.FirstOrDefault(item => item.Name == stateName);
+                return FindStateByName(foundCategory.States, stateName);
             }
         }
         else
@@ -182,6 +179,40 @@ public class AnimationRuntime
             if(graphicalUiElement.States.TryGetValue(categorizedName, out var foundState))
             {
                 return foundState;
+            }
+        }
+        return null;
+    }
+
+    // Splits "Category/State" into its two parts without allocating the string[] a Split('/') would.
+    // Matches the prior behavior: category is the text before the first '/', state is the text
+    // between the first and second '/' (or to the end when there is no second '/').
+    private static bool TrySplitCategorizedName(string categorizedName, out string category, out string stateName)
+    {
+        int firstSlash = categorizedName.IndexOf('/');
+        if (firstSlash < 0)
+        {
+            category = "";
+            stateName = "";
+            return false;
+        }
+
+        category = categorizedName.Substring(0, firstSlash);
+        int secondSlash = categorizedName.IndexOf('/', firstSlash + 1);
+        stateName = secondSlash >= 0
+            ? categorizedName.Substring(firstSlash + 1, secondSlash - firstSlash - 1)
+            : categorizedName.Substring(firstSlash + 1);
+        return true;
+    }
+
+    // FirstOrDefault(item => item.Name == name) over a state list without the closure allocation.
+    private static StateSave? FindStateByName(List<StateSave> states, string name)
+    {
+        for (int i = 0; i < states.Count; i++)
+        {
+            if (states[i].Name == name)
+            {
+                return states[i];
             }
         }
         return null;
@@ -239,8 +270,11 @@ public class AnimationRuntime
         foreach (var track in _tracks)
         {
             StateSave? stateForTrack = null;
-            var keyframeBefore = track.Value.LastOrDefault(item => item.Time <= animationTime);
-            var keyframeAfter = track.Value.FirstOrDefault(item => item.Time >= animationTime);
+            // Plain loops rather than LINQ LastOrDefault/FirstOrDefault: this runs every frame for
+            // every playing animation, and the capturing lambdas would allocate a closure + delegate
+            // per call (issue #1934).
+            KeyframeRuntime? keyframeBefore = GetLastKeyframeAtOrBefore(track.Value, animationTime);
+            KeyframeRuntime? keyframeAfter = GetFirstKeyframeAtOrAfter(track.Value, animationTime);
 
             if(element != null)
             {
@@ -310,12 +344,18 @@ public class AnimationRuntime
 
     private void CombineStateFromAnimations(double animationTime, ElementSave? element, GraphicalUiElement? graphicalUiElement, ref StateSave stateToSet)
     {
-        var animationKeyframes = this.Keyframes.Where(item => item.SubAnimation != null && item.Time <= animationTime);
-
+        // Iterate the keyframe list directly and guard inline rather than using a LINQ Where: this
+        // runs every frame per playing animation, and the capturing lambda would allocate a closure,
+        // delegate, and iterator even when no keyframe carries a sub-animation (issue #1934).
         if(element != null)
         {
-            foreach (var keyframe in animationKeyframes)
+            foreach (var keyframe in this.Keyframes)
             {
+                if (keyframe.SubAnimation == null || keyframe.Time > animationTime)
+                {
+                    continue;
+                }
+
                 var subAnimationElement = element;
 
                 string instanceName = null;
@@ -352,8 +392,13 @@ public class AnimationRuntime
         }
         else if(graphicalUiElement != null)
         {
-            foreach (var keyframe in animationKeyframes)
+            foreach (var keyframe in this.Keyframes)
             {
+                if (keyframe.SubAnimation == null || keyframe.Time > animationTime)
+                {
+                    continue;
+                }
+
                 var subAnimationGue = graphicalUiElement;
 
                 string instanceName = null;
@@ -389,6 +434,32 @@ public class AnimationRuntime
             }
         }
 
+    }
+
+    // LastOrDefault(item => item.Time <= animationTime) without the closure allocation.
+    private static KeyframeRuntime? GetLastKeyframeAtOrBefore(List<KeyframeRuntime> keyframes, double animationTime)
+    {
+        for (int i = keyframes.Count - 1; i >= 0; i--)
+        {
+            if (keyframes[i].Time <= animationTime)
+            {
+                return keyframes[i];
+            }
+        }
+        return null;
+    }
+
+    // FirstOrDefault(item => item.Time >= animationTime) without the closure allocation.
+    private static KeyframeRuntime? GetFirstKeyframeAtOrAfter(List<KeyframeRuntime> keyframes, double animationTime)
+    {
+        for (int i = 0; i < keyframes.Count; i++)
+        {
+            if (keyframes[i].Time >= animationTime)
+            {
+                return keyframes[i];
+            }
+        }
+        return null;
     }
 
     private static double GetLinearRatio(double value, KeyframeRuntime stateVmBefore, KeyframeRuntime stateVmAfter)
