@@ -86,8 +86,9 @@ public class RealisticLayoutAllocationTests : BaseTestClass
         BuildRealisticTree();
         global::Gum.GumService.Default.Root.UpdateLayout();
 
-        AllocationResult result = AllocationMeasurer.Measure(
+        AllocationResult result = AllocationMeasurer.MeasureMinimum(
             () => global::Gum.GumService.Default.Root.UpdateLayout(),
+            attempts: 3,
             warmupIterations: 50,
             measuredIterations: 500);
 
@@ -95,9 +96,10 @@ public class RealisticLayoutAllocationTests : BaseTestClass
             $"{result.BytesPerIteration:N0} bytes/frame " +
             $"({result.TotalBytes:N0} bytes over {result.Iterations} frames)");
 
-        // Ratchet (#1934): a full relayout of a real Forms tree with Text allocates ~80 bytes/frame locally.
-        // Pins that with headroom for runner variance; tighten as remaining sources are removed.
-        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(160);
+        // Ratchet (#1934): a steady-state full relayout of a real Forms tree allocates nothing. The
+        // bound sits below the cost of a single boxed IEnumerable enumerator so re-introducing a
+        // foreach over an interface-typed collection on the layout hot path fails the build.
+        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(24);
     }
 
     /// <summary>

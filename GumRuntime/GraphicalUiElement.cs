@@ -4429,9 +4429,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 // This child's dimension is less than the stored max. It may have been
                 // the previous max-holder and shrunk, so we must rescan all siblings
                 // in this row/column up to and including this child to find the true max.
+                // Indexed loop rather than foreach so iterating the Children
+                // ObservableCollection does not box its enumerator on this hot path.
                 parentGue.StackedRowOrColumnDimensions[indexToUpdate] = 0;
-                foreach (GraphicalUiElement child in parentGue.Children)
+                var siblings = parentGue.Children;
+                for (int i = 0; i < siblings.Count; i++)
                 {
+                    GraphicalUiElement child = siblings[i];
                     if (child.Visible)
                     {
                         if (child.StackedRowOrColumnIndex == indexToUpdate)
