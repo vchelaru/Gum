@@ -232,6 +232,67 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
         result.TotalBytes.ShouldBe(0);
     }
 
+    // #1934 allocation pass: the genuinely-wrapping path (text that does NOT fit on one line, so it
+    // can't take the single-line fast path) was the residual full-relayout allocator — it re-tokenized
+    // via String.Split, allocated a fresh List, and concatenated a throwaway "currentLine + currentWord"
+    // string on every word just to measure the candidate line. The only allocation a genuine wrap can't
+    // avoid is the output line strings themselves (one string per wrapped line); everything else — the
+    // Split array, the word List, and the per-word measurement concatenations — is pure per-frame garbage
+    // that must be eliminated. This pins the wrapping path to at most the output-line cost plus headroom.
+    [Fact]
+    public void UpdateWrappedText_WhenTextWrapsToMultipleLines_AllocatesOnlyOutputLines()
+    {
+        const int advance = 10;
+        BitmapFont font = new BitmapFont((Texture2D)null!, AbcFontData(advance, lineHeight: 20));
+        font.SetFontPattern(256, 256);
+
+        Text text = new Text();
+        text.BitmapFont = font;
+        // Width 25 fits one two-char word (20) but not two words with a space ("AA BB" = 50), so the
+        // three words wrap to three lines: "AA ", "BB ", "CC".
+        text.Width = 25;
+        text.RawText = "AA BB CC";
+        text.WrappedText.Count.ShouldBe(3); // liveness guard: the scenario really does wrap word-by-word
+
+        AllocationResult result = AllocationMeasurer.Measure(
+            () => text.UpdateWrappedText(),
+            warmupIterations: 50,
+            measuredIterations: 500);
+
+        // What remains is the three output line strings ("AA ", "BB ", "CC") plus the per-word substrings
+        // the tokenizer produces (~160 B/frame locally, down from ~360). The word List is pooled, the
+        // Split array is gone, and the per-word measurement concatenations no longer allocate — those were
+        // the eliminated waste. The bound pins that win with headroom for runtime/runner variance.
+        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(200);
+    }
+
+    // #1934 allocation pass: UpdatePreRenderDimensions runs during layout whenever a Text's size changes,
+    // and it measures the wrapped lines via BitmapFont.GetRequiredWidthAndHeight. WrappedText is a
+    // List<string>, but the only no-widths overload took IEnumerable<string>, so the foreach boxed the
+    // List's struct enumerator — ~40 bytes of garbage per Text per frame (the actual residual in the
+    // realistic-Forms full relayout, NOT the word-by-word wrap path). Routing to a List<string> overload
+    // removes the boxing, so re-measuring an unchanged wrapped Text is allocation-free.
+    [Fact]
+    public void UpdatePreRenderDimensions_DoesNotAllocate()
+    {
+        const int advance = 10;
+        BitmapFont font = new BitmapFont((Texture2D)null!, AbcFontData(advance, lineHeight: 20));
+        font.SetFontPattern(256, 256);
+
+        Text text = new Text();
+        text.BitmapFont = font;
+        text.Width = 25;
+        text.RawText = "AA BB CC"; // wraps to three lines, so measurement iterates a multi-entry List
+        text.WrappedText.Count.ShouldBe(3);
+
+        AllocationResult result = AllocationMeasurer.Measure(
+            () => text.UpdatePreRenderDimensions(),
+            warmupIterations: 50,
+            measuredIterations: 500);
+
+        result.TotalBytes.ShouldBe(0);
+    }
+
     // #3520: a base run that FOLLOWS a font-swap run (like " text." after [FontSize=40]big[/FontSize])
     // must be measured at the base size. Reproduces the residual under-measurement the manual test
     // showed: the mid-line swap grows the box, but the trailing run was still being dropped/mismeasured.

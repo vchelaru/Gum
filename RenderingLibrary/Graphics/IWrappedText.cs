@@ -42,13 +42,34 @@ public interface IWrappedText : IText
     /// </summary>
     float MeasureString(string text, int absoluteStartIndexInStrippedText) => MeasureString(text);
 
+    /// <summary>
+    /// Returns the full-advance width of <paramref name="text"/> — every glyph counted at its full advance,
+    /// with NO trailing-glyph trim — or a negative value if the backend can't provide it. This lets the
+    /// wrapping loop measure a candidate line incrementally (full advance of the already-committed line plus
+    /// the next word's own width) instead of concatenating <c>currentLine + currentWord</c> just to measure
+    /// it, so that throwaway string is only built when the word is actually appended, never on the overflow
+    /// branch (issue #1934). Because the committed line's last glyph is NOT the line's last glyph once a word
+    /// follows it, its full advance is what the concatenation would measure. A backend must return negative
+    /// whenever it can't guarantee that equivalence — most importantly when an inline BBCode run is active,
+    /// since the whole line must then be measured together for per-run sizing — so the caller falls back to
+    /// exact concatenation. The default implementation opts out (returns -1).
+    /// </summary>
+    float MeasureStringFullAdvance(string text) => -1;
+
     bool IsMidWordLineBreakEnabled { get; }
 }
 
 public static class IWrappedTextExtensions
 {
     const string ellipsis = "...";
-    static char[] whatToSplitOn = new char[] { ' ' };
+
+    // Reusable word buffer for the word-by-word wrapping path (issue #1934). UpdateLines runs every
+    // layout frame for constrained Text; renting and clearing a single per-thread list avoids allocating
+    // a fresh List plus the throwaway array String.Split returns on each call. Thread-static so concurrent
+    // layout on separate threads doesn't share the buffer; a null field marks it "rented" so a reentrant
+    // call on the same thread transparently falls back to a fresh list instead of corrupting the shared one.
+    [ThreadStatic]
+    static List<string>? _pooledWordList;
 
     public static void UpdateLines(this IWrappedText textInstance, List<string> lines)
     {
@@ -123,9 +144,12 @@ public static class IWrappedTextExtensions
         // measured at the run's real size while wrapping.
         int absoluteLineStartIndex = 0;
 
-        // The words to process, including the current word
-        List<string> remainingWordsToProcess = new();
-        remainingWordsToProcess.AddRange(stringToUse.Split(whatToSplitOn));
+        // The words to process, including the current word. Tokenize directly into a pooled list rather
+        // than String.Split (which allocates a throwaway array) + a fresh List every call — this is the
+        // genuinely-wrapping path that runs every layout frame for constrained Text (issue #1934). The
+        // list is returned to the pool at the single exit point after the loop below.
+        List<string> remainingWordsToProcess = RentWordList();
+        SplitOnSpaces(remainingWordsToProcess, stringToUse);
 
 
         bool isLastLine = false;
@@ -157,7 +181,35 @@ public static class IWrappedTextExtensions
             // If it's not the last word, we show ellipsis, and the last word plus ellipsis won't fit, then we need
             // to include part of the word:
 
-            float linePlusWordWidth = textInstance.MeasureString(currentLine + currentWord, absoluteLineStartIndex);
+            // Measure the candidate line (currentLine + currentWord) to decide whether the word fits.
+            // linePlusWord is the concatenated string; it is built lazily so the overflow branch — which
+            // measures but then discards the candidate — never allocates it (issue #1934). When the line is
+            // empty the candidate IS the word (no concat). When the backend can report a line's full-advance
+            // width (the XNA/BitmapFont path with no inline run), measure incrementally so the concatenation
+            // is only built if the word is actually appended below; otherwise fall back to exact concatenation.
+            string? linePlusWord;
+            float linePlusWordWidth;
+            if (currentLine.Length == 0)
+            {
+                linePlusWord = currentWord;
+                linePlusWordWidth = textInstance.MeasureString(currentWord, absoluteLineStartIndex);
+            }
+            else
+            {
+                float lineFullAdvance = textInstance.MeasureStringFullAdvance(currentLine);
+                if (lineFullAdvance >= 0)
+                {
+                    // No inline run active: the candidate width is the committed line's full advance (its
+                    // last glyph isn't trimmed because the word follows it) plus the word's own width.
+                    linePlusWord = null;
+                    linePlusWordWidth = lineFullAdvance + textInstance.MeasureString(currentWord);
+                }
+                else
+                {
+                    linePlusWord = currentLine + currentWord;
+                    linePlusWordWidth = textInstance.MeasureString(linePlusWord, absoluteLineStartIndex);
+                }
+            }
 
             var shouldAddEllipsis =
                 textInstance.IsTruncatingWithEllipsisOnLastLine &&
@@ -314,11 +366,13 @@ public static class IWrappedTextExtensions
                         // hit this branch via `currentWord == ""`, appending a phantom extra
                         // space. That made WrappedText longer than RawText and pushed TextBox
                         // caretIndex past Text.Length on click — see issue #2617.
-                        currentLine = currentLine + currentWord + ' ';
+                        // linePlusWord is null only on the incremental-measure path; build the concat now
+                        // (it's the committed output, so it is not throwaway here).
+                        currentLine = (linePlusWord ?? currentLine + currentWord) + ' ';
                     }
                     else
                     {
-                        currentLine = currentLine + currentWord;
+                        currentLine = linePlusWord ?? currentLine + currentWord;
                     }
                 }
 
@@ -349,8 +403,59 @@ public static class IWrappedTextExtensions
             lines.Add(currentLine);
         }
 
+        // Single exit point: the loop above only ever breaks or falls through here, so returning the
+        // buffer once is sufficient (no early return threads past this).
+        ReturnWordList(remainingWordsToProcess);
+
         // This is up to the implementer to set:
         //mNeedsBitmapFontRefresh = true;
+    }
+
+    /// <summary>
+    /// Splits <paramref name="value"/> on the space character into <paramref name="destination"/>,
+    /// preserving empty entries exactly as <c>string.Split(' ')</c> does (leading, interior, and trailing
+    /// spaces each produce an empty token). The wrapping algorithm relies on those empty tokens — a
+    /// trailing space is significant for TextBox caret indexing (issue #2617).
+    /// </summary>
+    static void SplitOnSpaces(List<string> destination, string value)
+    {
+        int start = 0;
+        for (int i = 0; i < value.Length; i++)
+        {
+            if (value[i] == ' ')
+            {
+                destination.Add(value.Substring(start, i - start));
+                start = i + 1;
+            }
+        }
+        destination.Add(value.Substring(start, value.Length - start));
+    }
+
+    /// <summary>
+    /// Rents the per-thread word buffer, clearing it for reuse. A reentrant call (the buffer is already
+    /// rented on this thread) gets a fresh list so the two calls don't corrupt each other's state.
+    /// </summary>
+    static List<string> RentWordList()
+    {
+        List<string>? rented = _pooledWordList;
+        if (rented == null)
+        {
+            return new List<string>();
+        }
+
+        _pooledWordList = null;
+        rented.Clear();
+        return rented;
+    }
+
+    /// <summary>
+    /// Returns a list previously obtained from <see cref="RentWordList"/> to the per-thread pool. A list
+    /// from the reentrant fallback (pool already occupied) is simply dropped for the GC to reclaim.
+    /// </summary>
+    static void ReturnWordList(List<string> list)
+    {
+        list.Clear();
+        _pooledWordList ??= list;
     }
 
     static string SubstringEnd(this string value, int lettersToRemove)
