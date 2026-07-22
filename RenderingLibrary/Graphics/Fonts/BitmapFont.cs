@@ -1135,12 +1135,8 @@ public class BitmapFont : IDisposable
     }
 
     /// <inheritdoc cref="GetRequiredWidthAndHeight(List{string}, out int, out int, List{int}?)"/>
-    /// <remarks>
-    /// A <see cref="List{T}"/> overload so callers passing a concrete <see cref="List{String}"/> (e.g. a
-    /// Text's WrappedText) route to the indexed, non-boxing loop instead of the <see cref="IEnumerable{T}"/>
-    /// overload, whose foreach boxes the list's struct enumerator every call — ~40 bytes of per-frame layout
-    /// garbage (issue #1934).
-    /// </remarks>
+    /// <remarks>List overload so a concrete List (e.g. Text.WrappedText) avoids boxing the enumerator the
+    /// IEnumerable overload's foreach allocates each call.</remarks>
     public void GetRequiredWidthAndHeight(List<string> lines, out int requiredWidth, out int requiredHeight)
     {
         GetRequiredWidthAndHeight(lines, out requiredWidth, out requiredHeight, null);

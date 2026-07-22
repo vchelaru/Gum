@@ -232,13 +232,8 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
         result.TotalBytes.ShouldBe(0);
     }
 
-    // #1934 allocation pass: the genuinely-wrapping path (text that does NOT fit on one line, so it
-    // can't take the single-line fast path) was the residual full-relayout allocator — it re-tokenized
-    // via String.Split, allocated a fresh List, and concatenated a throwaway "currentLine + currentWord"
-    // string on every word just to measure the candidate line. The only allocation a genuine wrap can't
-    // avoid is the output line strings themselves (one string per wrapped line); everything else — the
-    // Split array, the word List, and the per-word measurement concatenations — is pure per-frame garbage
-    // that must be eliminated. This pins the wrapping path to at most the output-line cost plus headroom.
+    // A genuine wrap should allocate only its output line strings; the tokenizer scratch and per-word
+    // measurement concats are pooled/eliminated.
     [Fact]
     public void UpdateWrappedText_WhenTextWrapsToMultipleLines_AllocatesOnlyOutputLines()
     {
@@ -259,19 +254,12 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
             warmupIterations: 50,
             measuredIterations: 500);
 
-        // What remains is the three output line strings ("AA ", "BB ", "CC") plus the per-word substrings
-        // the tokenizer produces (~160 B/frame locally, down from ~360). The word List is pooled, the
-        // Split array is gone, and the per-word measurement concatenations no longer allocate — those were
-        // the eliminated waste. The bound pins that win with headroom for runtime/runner variance.
+        // Only the output line strings plus the tokenizer's word substrings remain; headroom for runner variance.
         result.BytesPerIteration.ShouldBeLessThanOrEqualTo(200);
     }
 
-    // #1934 allocation pass: UpdatePreRenderDimensions runs during layout whenever a Text's size changes,
-    // and it measures the wrapped lines via BitmapFont.GetRequiredWidthAndHeight. WrappedText is a
-    // List<string>, but the only no-widths overload took IEnumerable<string>, so the foreach boxed the
-    // List's struct enumerator — ~40 bytes of garbage per Text per frame (the actual residual in the
-    // realistic-Forms full relayout, NOT the word-by-word wrap path). Routing to a List<string> overload
-    // removes the boxing, so re-measuring an unchanged wrapped Text is allocation-free.
+    // Re-measuring an unchanged wrapped Text must be allocation-free: WrappedText is a List<string>, and
+    // routing to the List overload of GetRequiredWidthAndHeight avoids boxing its enumerator.
     [Fact]
     public void UpdatePreRenderDimensions_DoesNotAllocate()
     {
