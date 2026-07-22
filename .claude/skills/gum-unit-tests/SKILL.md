@@ -45,6 +45,10 @@ Every `StateSave` must have `ParentContainer` set — `GetValueRecursive` traver
 
 `InternalsVisibleTo` is set up in `Gum.ProjectServices.csproj` for `Gum.ProjectServices.Tests` — internal members are directly accessible.
 
+## Headless Forms allocation tests: install a real Cursor
+
+`BaseTestClass` installs a Moq mock as `FrameworkElement.MainCursor`, and each proxied member access allocates (~296 B). Any control that reads `MainCursor` (e.g. a `ScrollBar` value setter) then pollutes an `AllocationMeasurer` result with a pure test artifact. Assign a real `MonoGameGum.Input.Cursor(null)` before measuring — production always uses a real cursor. See `ListBoxScrollAllocationTests`.
+
 ## WPF-touching tool code (GumToolUnitTests) needs an STA thread
 
 xUnit's runner is **MTA**, but WPF `FrameworkElement`s (`MenuItem`, `Menu`, `ComboBox`, …) throw `InvalidOperationException: The calling thread must be STA` when constructed. If a tool class news up a WPF control — often a ViewModel building right-click `MenuItem`s in its constructor — build it inside a `RunOnSta(() => { ... })` helper that runs the body on an `ApartmentState.STA` thread and rethrows. Copy the helper from `MenuStripManagerTests` / `RenameManagerTests`; there is no shared base for it.
