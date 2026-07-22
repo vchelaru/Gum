@@ -89,6 +89,43 @@ GumService.Default.Update(totalSeconds);
 The `IInputContext` you pass to `Initialize` must come from a window that `Silk.NET.Windowing` created and initialized itself — `Window.Create(options)` followed by `window.Initialize()`, then `window.CreateInput()`. Building an `IInputContext` by wrapping a window you created another way (for example via `SdlWindowing.CreateFrom(existingHandle)`) skips the normal event-subscription path. The resulting `IInputContext` looks valid, but it silently never receives events — no exception is thrown, and clicks, key presses, and typed text simply do nothing.
 {% endhint %}
 
+## Adding Expression Support (Optional)
+
+If your Gum project uses arithmetic expressions in variable references (such as `Width = OtherInstance.Width + 20`), you can add the `Gum.Expressions` NuGet package for full expression evaluation at runtime. Without this package, simple variable references like `Width = OtherInstance.Width` still work.
+
+Add the NuGet package:
+
+```bash
+dotnet add package Gum.Expressions
+```
+
+Then call `GumExpressionService.Initialize()` after `GumService.Default.Initialize`. Expression support is typically used with a Gum project that has variable references defined in the tool:
+
+```csharp
+// Initialize
+GumService.Default.Initialize(canvas, inputContext, "Content/GumProject/GumProject.gumx");
+GumExpressionService.Initialize();
+```
+
+If linking to source instead of NuGet, add `<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj` to your solution.
+
+For more information, see the [Runtime Variable References](../../../styling/runtime-variable-references.md) page.
+
+## Adding a Button (Testing the Setup)
+
+Gum can be tested by adding a Button after Gum is initialized. To do so, add code to create a `Button` as shown in the following block of code after Gum is initialized:
+
+```csharp
+// Initialize
+GumService.Default.Initialize(canvas, inputContext);
+
+var button = new Button();
+button.AddToRoot();
+button.Width = 200;
+button.Anchor(Anchor.Center);
+button.Click += (_, _) => button.Text = $"Clicked\n{System.DateTime.Now}";
+```
+
 For a working project, see the Gum Silk.NET sample:
 
 {% embed url="https://github.com/vchelaru/Gum/tree/main/Samples/SilkNetGum" %}

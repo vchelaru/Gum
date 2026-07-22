@@ -2,7 +2,7 @@
 
 ## What Is a Syntax Version?
 
-A syntax version is an integer stamped on each Gum runtime assembly (MonoGameGum, RaylibGum, SkiaGum) via the `GumSyntaxVersionAttribute`. It tells the Gum tool's code generator which namespaces and conventions to use when emitting C# code for your project.
+A syntax version is an integer stamped on each Gum runtime assembly (MonoGameGum, RaylibGum, SkiaGum, SilkNetGum) via the `GumSyntaxVersionAttribute`. It tells the Gum tool's code generator which namespaces and conventions to use when emitting C# code for your project.
 
 When the Gum team makes a breaking namespace change (such as moving enums to a unified namespace), the syntax version is incremented. The code generator reads the syntax version from the runtime your project references and emits code that matches.
 

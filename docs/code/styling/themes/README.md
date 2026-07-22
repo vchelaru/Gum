@@ -16,10 +16,10 @@ Here are six of Gum's built-in themes, each rendering the same sample settings p
 
 A **theme** is a per-backend NuGet package that restyles every default Gum Forms control with a single call. After calling `GumService.Default.Initialize(...)`, calling `<Name>Theme.Apply` swaps the default visuals for the theme's visuals — every `Button`, `TextBox`, `CheckBox`, `ComboBox`, etc. created afterward renders in that theme's style.
 
-Themes ship one NuGet per rendering backend (for example `Gum.Themes.DarkPro.MonoGame`, `Gum.Themes.DarkPro.Kni`, and `Gum.Themes.DarkPro.Raylib`) so each package only carries the assets and references it needs.
+Themes ship one NuGet per rendering backend (for example `Gum.Themes.DarkPro.MonoGame`, `Gum.Themes.DarkPro.Kni`, `Gum.Themes.DarkPro.Raylib`, and `Gum.Themes.DarkPro.SilkNet`) so each package only carries the assets and references it needs.
 
 {% hint style="warning" %}
-All themes install and initialize KernSmith for dynamic font generation. Also, all themes except `Editor` install and initialize Apos.Shapes for vector art rendering on MonoGame/KNI. For more information see the [KernSmith](../../files-and-fonts/font-strategies.md#dynamic-kernsmith-generation) and [Apos.Shapes](../../standard-visuals/shapes-apos.shapes.md) pages.
+On MonoGame, KNI, and Raylib, all themes install and initialize KernSmith for dynamic font generation, and all themes except `Editor` install and initialize Apos.Shapes for vector art rendering on MonoGame/KNI. Silk.NET themes need neither package — Silk.NET renders through SkiaSharp, which rasterizes fonts and vector art directly. For more information see the [KernSmith](../../files-and-fonts/font-strategies.md#dynamic-kernsmith-generation), [Dynamic Generation on SkiaGum](../../files-and-fonts/font-strategies.md#dynamic-generation-on-skiagum), and [Apos.Shapes](../../standard-visuals/shapes-apos.shapes.md) pages.
 {% endhint %}
 
 ## Usage
@@ -102,7 +102,20 @@ BubblegumTheme.Apply();
 
 {% tab title="Raylib" %}
 ```bash
-dotnet add package Gum.Themes.Bubblegum.Raylib --prerelease
+dotnet add package Gum.Themes.Bubblegum.Raylib
+```
+
+```csharp
+// Initialize
+using Gum.Themes.Bubblegum;
+
+BubblegumTheme.Apply();
+```
+{% endtab %}
+
+{% tab title="Silk.NET" %}
+```bash
+dotnet add package Gum.Themes.Bubblegum.SilkNet
 ```
 
 ```csharp
@@ -172,7 +185,20 @@ DarkProTheme.Apply();
 
 {% tab title="Raylib" %}
 ```bash
-dotnet add package Gum.Themes.DarkPro.Raylib --prerelease
+dotnet add package Gum.Themes.DarkPro.Raylib
+```
+
+```csharp
+// Initialize
+using Gum.Themes.DarkPro;
+
+DarkProTheme.Apply();
+```
+{% endtab %}
+
+{% tab title="Silk.NET" %}
+```bash
+dotnet add package Gum.Themes.DarkPro.SilkNet
 ```
 
 ```csharp
@@ -238,7 +264,20 @@ EditorTheme.Apply();
 
 {% tab title="Raylib" %}
 ```bash
-dotnet add package Gum.Themes.Editor.Raylib --prerelease
+dotnet add package Gum.Themes.Editor.Raylib
+```
+
+```csharp
+// Initialize
+using Gum.Themes.Editor;
+
+EditorTheme.Apply();
+```
+{% endtab %}
+
+{% tab title="Silk.NET" %}
+```bash
+dotnet add package Gum.Themes.Editor.SilkNet
 ```
 
 ```csharp
@@ -307,7 +346,20 @@ ForestGladeTheme.Apply();
 
 {% tab title="Raylib" %}
 ```bash
-dotnet add package Gum.Themes.ForestGlade.Raylib --prerelease
+dotnet add package Gum.Themes.ForestGlade.Raylib
+```
+
+```csharp
+// Initialize
+using Gum.Themes.ForestGlade;
+
+ForestGladeTheme.Apply();
+```
+{% endtab %}
+
+{% tab title="Silk.NET" %}
+```bash
+dotnet add package Gum.Themes.ForestGlade.SilkNet
 ```
 
 ```csharp
@@ -383,7 +435,20 @@ HazardTheme.Apply();
 
 {% tab title="Raylib" %}
 ```bash
-dotnet add package Gum.Themes.Hazard.Raylib --prerelease
+dotnet add package Gum.Themes.Hazard.Raylib
+```
+
+```csharp
+// Initialize
+using Gum.Themes.Hazard;
+
+HazardTheme.Apply();
+```
+{% endtab %}
+
+{% tab title="Silk.NET" %}
+```bash
+dotnet add package Gum.Themes.Hazard.SilkNet
 ```
 
 ```csharp
@@ -462,7 +527,20 @@ MeadowTheme.Apply();
 
 {% tab title="Raylib" %}
 ```bash
-dotnet add package Gum.Themes.Meadow.Raylib --prerelease
+dotnet add package Gum.Themes.Meadow.Raylib
+```
+
+```csharp
+// Initialize
+using Gum.Themes.Meadow;
+
+MeadowTheme.Apply();
+```
+{% endtab %}
+
+{% tab title="Silk.NET" %}
+```bash
+dotnet add package Gum.Themes.Meadow.SilkNet
 ```
 
 ```csharp
@@ -540,7 +618,20 @@ NeonTheme.Apply();
 
 {% tab title="Raylib" %}
 ```bash
-dotnet add package Gum.Themes.Neon.Raylib --prerelease
+dotnet add package Gum.Themes.Neon.Raylib
+```
+
+```csharp
+// Initialize
+using Gum.Themes.Neon;
+
+NeonTheme.Apply();
+```
+{% endtab %}
+
+{% tab title="Silk.NET" %}
+```bash
+dotnet add package Gum.Themes.Neon.SilkNet
 ```
 
 ```csharp
@@ -612,7 +703,20 @@ Retro95Theme.Apply();
 
 {% tab title="Raylib" %}
 ```bash
-dotnet add package Gum.Themes.Retro95.Raylib --prerelease
+dotnet add package Gum.Themes.Retro95.Raylib
+```
+
+```csharp
+// Initialize
+using Gum.Themes.Retro95;
+
+Retro95Theme.Apply();
+```
+{% endtab %}
+
+{% tab title="Silk.NET" %}
+```bash
+dotnet add package Gum.Themes.Retro95.SilkNet
 ```
 
 ```csharp
@@ -655,11 +759,11 @@ All bundled fonts are SIL Open Font License or the Bitstream Vera / DejaVu licen
 
 ## Supported backends
 
-Themes are published for **MonoGame**, **KNI**, and **Raylib** (Raylib in preview — see the note under [Usage](./#usage)). If you'd like to see a theme published for **FNA** or **Skia**, please open an issue or start a discussion on the [Gum GitHub repo](https://github.com/vchelaru/Gum).
+Themes are published for **MonoGame**, **KNI**, **Raylib**, and **Silk.NET**. If you'd like to see a theme published for **FNA** or **Skia** (WPF, .NET MAUI), please open an issue or start a discussion on the [Gum GitHub repo](https://github.com/vchelaru/Gum).
 
 ## Requirements
 
 * .NET 8.0+
-* MonoGame 3.8+ (for the MonoGame packages), KNI (for the KNI packages), or Raylib (for the Raylib packages)
-* [Gum.MonoGame](https://www.nuget.org/packages/Gum.MonoGame), [Gum.Kni](https://www.nuget.org/packages/Gum.Kni), or [Gum.raylib](https://www.nuget.org/packages/Gum.raylib)
-* [KernSmith.MonoGameGum](https://www.nuget.org/packages/KernSmith.MonoGameGum) — optional, only needed when using runtime in-memory font generation
+* MonoGame 3.8+ (for the MonoGame packages), KNI (for the KNI packages), Raylib (for the Raylib packages), or Silk.NET (for the Silk.NET packages)
+* [Gum.MonoGame](https://www.nuget.org/packages/Gum.MonoGame), [Gum.Kni](https://www.nuget.org/packages/Gum.Kni), [Gum.raylib](https://www.nuget.org/packages/Gum.raylib), or [Gum.SilkNet](https://www.nuget.org/packages/Gum.SilkNet)
+* [KernSmith.MonoGameGum](https://www.nuget.org/packages/KernSmith.MonoGameGum) or [KernSmith.RaylibGum](https://www.nuget.org/packages/KernSmith.RaylibGum) for the MonoGame/KNI/Raylib packages — optional, only needed for runtime font generation on those backends. Silk.NET renders through SkiaSharp, which rasterizes glyphs directly and needs no equivalent package — see [Dynamic Generation on SkiaGum](../../files-and-fonts/font-strategies.md#dynamic-generation-on-skiagum)

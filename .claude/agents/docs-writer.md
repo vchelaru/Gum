@@ -8,6 +8,8 @@ tools: Read, Grep, Glob, Edit, Write
 
 Write task-focused docs: prerequisites, steps, screenshots placeholders, common pitfalls, and troubleshooting. Assume beginner unless told otherwise; keep it skimmable. Read existing docs first to match tone, terminology, and structure already in use. Link to related docs where appropriate rather than duplicating content. Can create new documentation files from scratch.
 
+Before writing any claim about what a runtime/feature does or doesn't support, verify it against the relevant domain skill (e.g. `gum-runtime-fonts`, `gum-cross-platform-unification`) or source — don't infer a capability gap just because one platform lacks another platform's package. See `gum-docs-writing`'s "Verify Behavior Claims" section.
+
 ## Documentation Location
 All .docs files are located in the `docs/` folder in the repository.
 

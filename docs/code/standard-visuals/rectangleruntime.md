@@ -11,7 +11,9 @@ A freshly-constructed `RectangleRuntime` is 50 × 50 and renders as a **stroke-o
 For the full property surface — fill, outline, corner radius, gradient, drop shadow, dashed stroke, and the platform/package requirements — see the [Shapes](shapes-apos.shapes.md#circleruntime-and-rectangleruntime) page. The examples below cover the common cases.
 
 {% hint style="info" %}
-On MonoGame, KNI, and FNA the outline and geometry render out of the box, but the **fill** and the richer effects (gradient, drop shadow, dashed stroke, anti-aliasing) only draw once the `Gum.Shapes.<platform>` package is added — otherwise they are stored and round-trip but silently do not draw. Skia, .NET MAUI, and raylib support the full surface natively. See the [Shapes](shapes-apos.shapes.md) page for setup.
+On MonoGame, KNI, and FNA the outline and geometry render out of the box, but the **fill** and the richer effects (gradient, drop shadow, dashed stroke, anti-aliasing) only draw once the `Gum.Shapes.<platform>` package is added — otherwise they are stored and round-trip but silently do not draw. See the [Shapes](shapes-apos.shapes.md) page for setup.
+
+Skia, .NET MAUI, raylib, and Silk.NET support the full surface natively — no additional package needed.
 {% endhint %}
 
 ### Code Example

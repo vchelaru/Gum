@@ -11,7 +11,7 @@ For information on using gamepads for tabbing, see the [Tabbing](tabbing-moving-
 To enable gamepad support in your screen:
 
 1. Be sure to have a gamepad plugged in. Any gamepad that is usable in MonoGame will also work as a gamepad in Gum Forms
-2. Add the gamepad to the FrameworkElement.GamepadsForUiControl. You can add multiple gamepads for multiplayer games.
+2. Add the gamepad to the FrameworkElement.GamePadsForUiControl. You can add multiple gamepads for multiplayer games.
 3. Set the initial control to have focus by setting its `IsFocused = true`
 
 For example, the following code enables gamepad control for a game assuming MyButton is a valid button:
@@ -34,8 +34,7 @@ By default a gamepad's A button can be used to select the focused control. If th
 
 ```csharp
 // Initialize
-FrameworkElement.GamePadsForUiControl.AddRange(
-    GumUI.Gamepads);
+GumUI.UseGamepadDefaults();
 
 TopButton.IsFocused = true;
 TopButton.Click += (_, _) =>

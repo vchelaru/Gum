@@ -14,7 +14,7 @@ This section uses screenshots of the Gum tool so you can see what is possible wi
 
 ### Sample Projects
 
-If you prefer to dive in and see things working, the Gum repository includes sample projects that show how to work with Gum purely in code, and also how to load a Gum project into a MonoGame project.
+If you prefer to dive in and see things working, the Gum repository includes sample projects that show how to work with Gum purely in code, and also how to load a Gum project into a MonoGame, raylib, or Silk.NET project — including `SilkNetGum` and `SilkNetGumThemesShowcase` for Silk.NET.
 
 You can clone the repository and open the projects in your favorite IDE (like Visual Studio) and try them out.
 

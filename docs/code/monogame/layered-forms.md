@@ -16,6 +16,10 @@ button.AddToRoot();
 
 Although this is convenient, the Button must be drawn on the same layer as the root. Instead, we an create a custom layer and add the Button to the layer. However, controls which are not added to Root will not receive automatic updates, so they will not receive input events such as clicks from a cursor.
 
+{% hint style="info" %}
+Creating a `Layer` and setting `LayerCameraSettings` (steps 1-4 below) works the same on every backend. The custom-root-list `Update` overload shown in step 6 (`GumUI.Update(gameTime, itemsToUpdate)`) is available on MonoGame/KNI/FNA and raylib; Silk.NET's `Update(double totalSeconds)` does not currently accept a root list, so this exact multi-root update pattern isn't available there yet.
+{% endhint %}
+
 At a high level, the steps to creating a layered button are:
 
 1. Create a Layer

@@ -50,4 +50,4 @@ If you want to take ownership of the context for advanced reasons (custom queuei
 
 ## Platform Coverage
 
-`UseSingleThreadedAsync` is available on MonoGame, KNI, FNA, Raylib, and Sokol. Under FlatRedBall, the FRB runtime supplies its own thread/instruction model; this opt-in is intentionally not exposed there — use FRB's own facilities (e.g. `InstructionManager`) for primary-thread work.
+`UseSingleThreadedAsync` is available on MonoGame, KNI, FNA, Raylib, Silk.NET, and Sokol. Under FlatRedBall, the FRB runtime supplies its own thread/instruction model; this opt-in is intentionally not exposed there — use FRB's own facilities (e.g. `InstructionManager`) for primary-thread work.

@@ -10,7 +10,7 @@ This tutorial uses Gum's default visuals to keep the dependency footprint minima
 
 ## Introduction
 
-This tutorial walks you through turning an empty MonoGame or Raylib project into a code-only Gum project, which acts as a starting point for the rest of the tutorials.
+This tutorial walks you through turning an empty MonoGame, Raylib, or Silk.NET project into a code-only Gum project, which acts as a starting point for the rest of the tutorials.
 
 This tutorial covers:
 
@@ -18,7 +18,7 @@ This tutorial covers:
 * Adding the code to initialize, update, and draw Gum
 * Adding your first Gum control (Button)
 
-Everything after you have a root container is identical across MonoGame and Raylib. The only part that differs is the host application skeleton on this Setup page — once Gum is initialized, the rest of the tutorial series is fully shared.
+Everything after you have a root container is identical across MonoGame, Raylib, and Silk.NET. The only part that differs is the host application skeleton on this Setup page — once Gum is initialized, the rest of the tutorial series is fully shared.
 
 ## Adding Gum NuGet Packages
 
@@ -48,11 +48,27 @@ Or add through the command line:
 dotnet add package Gum.raylib
 ```
 {% endtab %}
+
+{% tab title="Silk.NET" %}
+Add the `Gum.SilkNet` package to your game ([https://www.nuget.org/packages/Gum.SilkNet](https://www.nuget.org/packages/Gum.SilkNet)). For more information see the [Silk.NET setup page](../../setup/adding-initializing-gum/silk.net.md).
+
+Modify csproj:
+
+```xml
+<PackageReference Include="Gum.SilkNet" />
+```
+
+Or add through the command line:
+
+```bash
+dotnet add package Gum.SilkNet
+```
+{% endtab %}
 {% endtabs %}
 
 ## Adding Gum to Your Game
 
-Gum requires a few lines of code to get started. The host application skeleton differs by platform — MonoGame uses a `Game` subclass whose `Initialize`/`Update`/`Draw` methods the framework calls for you, while Raylib uses a `Program.Main` with a game loop you own. The Gum calls themselves are the same on both backends: initialize once, then update and draw each frame.
+Gum requires a few lines of code to get started. The host application skeleton differs by platform — MonoGame uses a `Game` subclass whose `Initialize`/`Update`/`Draw` methods the framework calls for you, Raylib uses a `Program.Main` with a game loop you own, and Silk.NET uses a `Program.Main` that creates its own window and hands Gum an `SKCanvas`/`IInputContext` pair. The Gum calls themselves follow the same shape on every backend: initialize once, then update and draw each frame.
 
 A simplified host with the required calls would look like the following code:
 
@@ -148,6 +164,57 @@ public class Program
             Raylib.EndDrawing();
         }
         Raylib.CloseWindow();
+    }
+}
+```
+{% endtab %}
+
+{% tab title="Silk.NET" %}
+A full Silk.NET project requires more setup than fits cleanly in a tutorial snippet (window creation, GL/ANGLE backend selection, wiring the SkiaSharp surface) — see the [Silk.NET setup page](../../setup/adding-initializing-gum/silk.net.md) for that detail and a link to a working sample. Once the window, `SKCanvas`, and `IInputContext` exist, the Gum-specific calls are the same shape as MonoGame/Raylib:
+
+```csharp
+using Gum;
+using Gum.Forms;
+using Gum.Forms.Controls;
+using Silk.NET.Windowing;
+using Silk.NET.Input;
+using SkiaSharp;
+
+namespace MyGumProject;
+
+public class Program
+{
+    static GumService GumUI => GumService.Default;
+
+    public static void Main()
+    {
+        Silk.NET.Windowing.Sdl.SdlWindowing.Use();
+
+        IWindow window = Window.Create(WindowOptions.Default);
+        window.Initialize();
+
+        // SkiaSharp GL surface/canvas creation is omitted here for brevity -- see the
+        // Silk.NET setup page and sample for the full ANGLE/backend setup.
+        SKCanvas canvas = CreateSkiaCanvas(window);
+        IInputContext inputContext = window.CreateInput();
+
+        GumUI.Initialize(canvas, inputContext);
+
+        var mainPanel = new StackPanel();
+        mainPanel.AddToRoot();
+
+        var totalTime = System.Diagnostics.Stopwatch.StartNew();
+
+        while (!window.IsClosing)
+        {
+            window.DoEvents();
+
+            GumUI.Update(totalTime.Elapsed.TotalSeconds);
+
+            canvas.Clear(SKColors.CornflowerBlue);
+            GumUI.Draw();
+            // Present the frame (SwapBuffers) -- see the sample for the full call.
+        }
     }
 }
 ```

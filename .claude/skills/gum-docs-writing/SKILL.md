@@ -6,6 +6,10 @@ type: skill
 
 # Gum Docs Writing Reference
 
+## Verify Behavior Claims Before Writing Them
+
+Before writing a claim like "X isn't available on backend Y" or "X requires package Z," verify it against the relevant domain skill (e.g. `gum-runtime-fonts`, `gum-kernsmith-integrations`, `gum-cross-platform-unification`) or source — this skill covers GitBook mechanics only, not product behavior. A missing per-platform package is not proof of a capability gap: the platform may get the capability another way (Silk.NET has no KernSmith package because it renders through SkiaSharp, which rasterizes fonts natively — parity, not a gap).
+
 ## File Location and SUMMARY.md
 
 All docs live under `docs/`. `docs/SUMMARY.md` is the master table of contents — GitBook navigation is built entirely from it. A file not listed in SUMMARY.md is unreachable from the nav even if it exists on disk.

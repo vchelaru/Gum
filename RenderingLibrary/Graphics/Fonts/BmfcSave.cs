@@ -205,6 +205,11 @@ public class BmfcSave
     /// Returns whether the given font value represents a .ttf font file path
     /// rather than a system font family name.
     /// </summary>
+    /// <remarks>
+    /// This is a pure suffix check, not a path-shape check -- a bare filename with no directory
+    /// (e.g. "MyFont.ttf") counts as a file path just as much as "fonts/MyFont.ttf" does. There is
+    /// no slash/path-separator detection involved.
+    /// </remarks>
     /// <param name="fontValue">The font value to check (e.g., "Arial" or "fonts/MyFont.ttf").</param>
     /// <returns>True if the value ends with ".ttf" (case-insensitive); false if null, empty, or not a .ttf path.</returns>
     public static bool IsFontFilePath(string? fontValue)

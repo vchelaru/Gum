@@ -60,23 +60,27 @@ By default Gum controls work with the mouse and touch screen. The mouse automati
 
 Gum supports applying input from the keyboard and gamepads. By default the TextBox and PasswordBox forms types automatically receive input from the keyboard without any additional setup. All other interactive Forms controls can receive input from the keyboard and gamepads, but this input must be enabled.
 
-To enable keyboard input, add the keyboard to the FrameworkElement.KeyboardsForUiControl list as shown in the following code block:
+To enable keyboard input, call `GumService.Default.UseKeyboardDefaults()`:
 
 ```csharp
 // Initialize
-FrameworkElement.KeyboardsForUiControl.Add(GumService.Default.Keyboard);
+GumService.Default.UseKeyboardDefaults();
 ```
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACl2Qy07DMBBF9_mKwatEVPmAVkGC0KKKTUXKLlLlxoOw4tjVeNzyEP-O41YEdekzZ66v_Z0BiLV_CoOYA1PA2Qi01ayl0V8YqThKgkFqu5EWDVRg8QQNy65PIC8Wrf0bl_dKbd2Lc5z4iuSAJ0f90uCAlstn_Nw7ScqvHL3q2lkml5byWKFBOuoOy0d8k8FM8pg0ltgHZmcvDR7SId1y5uUWPzgOW7Eh9B6ag-wQHMHSMlIrJrE2uuvhtoJ8N4NdAdXdJXqKSAqqm_9r61i6Cx5VNMavun53_a6Nys9ysRDZT_YLwXDrNF4BAAA)
 
-To enable gamepad input, add the gamepad to the FrameworkElement.GamePadsForUiControl list as shown in the following code block:
+`UseKeyboardDefaults()` is shorthand for `FrameworkElement.KeyboardsForUiControl.Add(GumService.Default.Keyboard)`.
+
+To enable gamepad input, call `GumService.Default.UseGamepadDefaults()`:
 
 ```csharp
 // Initialize
-FrameworkElement.GamePadsForUiControl.AddRange(GumService.Default.Gamepads);
+GumService.Default.UseGamepadDefaults();
 ```
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACl2QwU7DMAyG730Kk1Mrpj4AU5FGYdNu1TZulabQeGA1TVDibAjEu5OmFUMc_fv_7N_-ygDE1m_CIO6AXcDFKJAhJqnpE6MqztLBIMk00qCGCgxeYM-y65OQF8vW_LbLlVIHu7OWk752csCLdf2TxgENl5tYN1L5tXXPVFvDziZmJ80r5jHGHt2ZOiwf8SSDnoD3CIzTxiAvgdmaOcVDKtKmSS8P-MGx2YrGofcw07BqxdVTa-p6uK0gPy7gWEB1P0-90smC6uYvto2hu-BRRcf4qf9n12-kVT6Zi6XIvrMfW6v54F0BAAA)
 
-Notice that both KeyboardsForUiControl and GamePadsForUiControl are lists. If you do not want your game to support keyboard input you can keep the KeyboardsForUiControl empty. You can selectively add gamepads to GamePadsForUiControl depending on whether you only want some of the gamepads to control UI. For example, you may only want to read input from gamepads which have joined the game.
+`UseGamepadDefaults()` is shorthand for `FrameworkElement.GamePadsForUiControl.AddRange(GumService.Default.Gamepads)`.
+
+Both `KeyboardsForUiControl` and `GamePadsForUiControl` are plain lists, and the default methods above just add to them — you can bypass the defaults and manipulate the lists directly for advanced scenarios. If you do not want your game to support keyboard input, skip `UseKeyboardDefaults()` and keep `KeyboardsForUiControl` empty. For gamepads, you can selectively `Add` individual pads to `GamePadsForUiControl` instead of calling `UseGamepadDefaults()`, if you only want some of the gamepads to control UI — for example, only gamepads which have joined the game.
 
 {% hint style="info" %}
 Most games either support the main keyboard or no keyboard input. KeyboardsForUiControl is a list, allowing for advanced scenarios such as controlling UI using a virtual keyboard. This advanced scenario is not covered in this tutorial.
@@ -86,8 +90,8 @@ Once keyboard and gamepads are added to their appropriate lists, focused forms c
 
 ```csharp
 // Initialize
-FrameworkElement.KeyboardsForUiControl.Add(GumService.Default.Keyboard);
-FrameworkElement.GamePadsForUiControl.AddRange(GumService.Default.Gamepads);
+GumService.Default.UseKeyboardDefaults();
+GumService.Default.UseGamepadDefaults();
 
 var mainPanel = new StackPanel();
 mainPanel.AddToRoot();
@@ -232,7 +236,7 @@ For example, the following code adds the ability to tab by pressing the up and d
 {% tab title="MonoGame" %}
 ```csharp
 // Initialize
-FrameworkElement.KeyboardsForUiControl.Add(GumService.Default.Keyboard);
+GumService.Default.UseKeyboardDefaults();
 FrameworkElement.TabKeyCombos.Add(new KeyCombo()
 {
     PushedKey = Microsoft.Xna.Framework.Input.Keys.Down
@@ -258,7 +262,33 @@ for (int i = 0; i < 3; i++)
 {% tab title="Raylib" %}
 ```csharp
 // Initialize
-FrameworkElement.KeyboardsForUiControl.Add(GumService.Default.Keyboard);
+GumService.Default.UseKeyboardDefaults();
+FrameworkElement.TabKeyCombos.Add(new KeyCombo()
+{
+    PushedKey = Gum.Forms.Input.Keys.Down
+});
+FrameworkElement.TabReverseKeyCombos.Add(new KeyCombo()
+{
+    PushedKey = Gum.Forms.Input.Keys.Up
+});
+
+var mainPanel = new StackPanel();
+mainPanel.AddToRoot();
+mainPanel.Spacing = 6;
+for (int i = 0; i < 3; i++)
+{
+    var button = new Button();
+    button.Text = $"Button {i + 1}";
+    if (i == 0) button.IsFocused = true;
+    mainPanel.AddChild(button);
+}
+```
+{% endtab %}
+
+{% tab title="Silk.NET" %}
+```csharp
+// Initialize
+GumService.Default.UseKeyboardDefaults();
 FrameworkElement.TabKeyCombos.Add(new KeyCombo()
 {
     PushedKey = Gum.Forms.Input.Keys.Down
@@ -323,6 +353,38 @@ void HandleTabKeyDown(object sender, KeyEventArgs args)
 {% endtab %}
 
 {% tab title="Raylib" %}
+```csharp
+// Initialize
+var mainPanel = new StackPanel();
+mainPanel.AddToRoot();
+
+var slider = new Slider();
+mainPanel.AddChild(slider);
+
+var button = new Button();
+button.IsFocused = true;
+button.KeyDown += HandleTabKeyDown;
+mainPanel.AddChild(button);
+
+var button2 = new Button();
+button2.KeyDown += HandleTabKeyDown;
+mainPanel.AddChild(button2);
+
+void HandleTabKeyDown(object sender, KeyEventArgs args)
+{
+    if(args.Key == Gum.Forms.Input.Keys.Right)
+    {
+        ((FrameworkElement)sender).HandleTab(TabDirection.Down);
+    }
+    else if(args.Key == Gum.Forms.Input.Keys.Left)
+    {
+        ((FrameworkElement)sender).HandleTab(TabDirection.Up);
+    }
+}
+```
+{% endtab %}
+
+{% tab title="Silk.NET" %}
 ```csharp
 // Initialize
 var mainPanel = new StackPanel();

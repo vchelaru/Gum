@@ -107,6 +107,7 @@ Before creating any controls, you must initialize Gum. This registers the defaul
 
 * **MonoGame/KNI/FNA:** `GumService.Default.Initialize(this)` in your Game's `Initialize` method
 * **raylib:** `GumService.Default.Initialize()` after calling `Raylib.InitWindow`. See [raylib setup](../getting-started/setup/adding-initializing-gum/raylib-raylib-cs.md) for a full example.
+* **Silk.NET:** `GumService.Default.Initialize(canvas, inputContext)`, passed an `SKCanvas` and `IInputContext` your project owns. See [Silk.NET setup](../getting-started/setup/adding-initializing-gum/silk.net.md) for a full example.
 {% endhint %}
 
 ```csharp
