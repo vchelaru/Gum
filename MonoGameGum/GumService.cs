@@ -1179,9 +1179,21 @@ public partial class GumService : IGumService
     // Platform-agnostic tail of every frame's Update: advance AnimationChain playback on each root.
     private void AnimateRoots(double difference, IEnumerable<GraphicalUiElement> roots)
     {
-        foreach (var item in roots)
+        // Internal callers pass the reused List field; take an index-based fast path so we don't box
+        // the List enumerator each frame that foreach over the IEnumerable parameter would (#1934).
+        if (roots is IList<GraphicalUiElement> list)
         {
-            item.AnimateSelf(difference);
+            for (int i = 0; i < list.Count; i++)
+            {
+                list[i].AnimateSelf(difference);
+            }
+        }
+        else
+        {
+            foreach (var item in roots)
+            {
+                item.AnimateSelf(difference);
+            }
         }
     }
 

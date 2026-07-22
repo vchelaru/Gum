@@ -30,6 +30,42 @@ public class DrawAllocationTests : BaseTestClass
     }
 
     [Fact]
+    public void IdleUpdate_RepresentativeFormsScene_AllocationBaseline()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        BuildScene();
+
+        // A single fixed GameTime reused every frame keeps the scene idle (no time advance, no
+        // animation) and avoids allocating a GameTime per iteration, so the measured delta reflects
+        // only the Update walk itself (the FormsUtilities input/cursor pass) with Draw excluded.
+        GameTime gameTime = new GameTime(TimeSpan.Zero, TimeSpan.FromSeconds(1.0 / 60.0));
+
+        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+            () => global::Gum.GumService.Default.Update(gameTime),
+            attempts: 3,
+            warmupIterations: 50,
+            measuredIterations: 500);
+
+        _output.WriteLine($"Idle Update (no Draw) of a representative Forms scene (20-item ListBox, labels, " +
+            $"a Text, and a filled rectangle): {result.BytesPerIteration:N0} bytes/frame " +
+            $"({result.TotalBytes:N0} bytes over {result.Iterations} frames)");
+
+        // Liveness: prove the Update pass actually walked the scene roots (a silent early-return
+        // would make a low allocation result meaningless). LastEventRoots is repopulated from the
+        // roots on every FormsUtilities.Update call.
+        global::Gum.Forms.FormsUtilities.LastEventRoots.Count.ShouldBeGreaterThan(0);
+
+        // Ratchet (#1934): the idle-frame input/cursor pass (GumService.Update over an unchanging Forms
+        // scene). The ~64 B/f residual is MonoGame's per-frame GamePad.GetState (4 pads) inside
+        // FormsUtilities.UpdateGamepads — framework-internal, not removable here. This guard owns the
+        // idle-Update residual (separate from the text/full-relayout ratchets); set just above the
+        // residual so re-introducing a removed allocation source fails the build.
+        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(80);
+    }
+
+    [Fact]
     public void IdleUpdateAndDraw_RepresentativeFormsScene_AllocationBaseline()
     {
         using MinimalGame game = new();

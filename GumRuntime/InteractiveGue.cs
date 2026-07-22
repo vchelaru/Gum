@@ -334,15 +334,8 @@ public partial class InteractiveGue : GraphicalUiElement
 
     #endregion
 
-    private bool DoUiActivityRecursively(ICursor cursor, Layer layer, HandledActions? handledActions = null)
+    internal static bool DoUiActivityRecursively(ICursor cursor, ref HandledActions handledActions, GraphicalUiElement currentItem, Layer? layer)
     {
-        return DoUiActivityRecursively(cursor, handledActions, this, layer);
-
-    }
-
-    internal static bool DoUiActivityRecursively(ICursor cursor, HandledActions? handledActions, GraphicalUiElement currentItem, Layer? layer)
-    {
-        handledActions = handledActions ?? new HandledActions();
         bool handledByChild = false;
         bool handledByThis = false;
 
@@ -392,7 +385,7 @@ public partial class InteractiveGue : GraphicalUiElement
 
                     if (child != null && HasCursorOver(cursor, child, layer))
                     {
-                        handledByChild = DoUiActivityRecursively(cursor, handledActions, child, layer);
+                        handledByChild = DoUiActivityRecursively(cursor, ref handledActions, child, layer);
 
                         if (handledByChild)
                         {
@@ -423,7 +416,7 @@ public partial class InteractiveGue : GraphicalUiElement
                     }
                     if (hasCursorOver)
                     {
-                        handledByChild = DoUiActivityRecursively(cursor, handledActions, child, layer);
+                        handledByChild = DoUiActivityRecursively(cursor, ref handledActions, child, layer);
 
                         if (handledByChild)
                         {
@@ -1192,7 +1185,10 @@ public interface IInputReceiverKeyboard
 
 
 
-class HandledActions
+// "Already handled" flags threaded through the DoUiActivityRecursively walk. A struct passed by ref
+// so the walk allocates it on the stack rather than the heap each frame; ref threading preserves the
+// shared-mutable-reference semantics the class had, and each Update gets its own instance.
+struct HandledActions
 {
     public bool HandledMouseWheel;
     public bool HandledRollOver;
@@ -1266,7 +1262,7 @@ public static class GueInteractiveExtensionMethods
             if(gue.EffectiveManagers != null)
 #endif
             {
-                InteractiveGue.DoUiActivityRecursively(cursor, actions, gue, gue.Layer);
+                InteractiveGue.DoUiActivityRecursively(cursor, ref actions, gue, gue.Layer);
             }
             if(cursor.VisualOver != null)
             {
