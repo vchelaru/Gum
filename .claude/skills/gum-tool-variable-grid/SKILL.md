@@ -89,6 +89,8 @@ The icon-based displayers (origin/alignment/dock toggles) get their glyphs from 
 
 **Landmine: a new custom `IDataUi` displayer must wire its own right-click menu and default-value highlighting — nothing does either for you.** `SingleDataUiContainer`/`DataUiGrid` never touch `ContextMenu` or background color. Every existing displayer (`ColorDisplay`, `SliderDisplay`, `TextBoxDisplay`, ...) attaches a WPF `ContextMenu` to its root element in XAML and calls `this.RefreshContextMenu(yourRoot.ContextMenu)` from `Refresh()` — skip it and `InstanceMember.ContextMenuEvents` (Make Default, Copy Qualified Variable Name, expose/un-expose) silently never reach an actual menu; right-click does nothing. Default-value background tinting (the green `TextBoxDisplayLogic.DefaultValueBackground` / gray `IndeterminateValueBackground`, driven by `InstanceMember.IsDefault`/`.IsIndeterminate`) is likewise opt-in per displayer — copy the pattern from `TextBoxDisplayLogic.RefreshBackgroundColor`, don't assume a new control gets it for free. Both gaps compile fine and only show up as "this row behaves differently from every other row" in manual testing.
 
+Same opt-in-per-displayer trap for click-drag-over-label-to-scrub a numeric value: it's implemented only in `WpfDataUi/Controls/TextBoxDisplay.xaml.cs` (`Label_MouseMove`, `EnableLabelDragValueChange`, `LabelDragValueRounding`/`LabelDragChangeMultiplier`), not on `DataUiGrid`/`SingleDataUiContainer`. A custom or composite displayer (e.g. `CornerRadiusDisplay`) gets no drag-scrub on any of its fields unless it copies that logic itself.
+
 ---
 
 ## Composite Members (several variables, one row)
