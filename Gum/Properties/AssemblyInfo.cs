@@ -31,7 +31,7 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
-// [assembly: AssemblyVersion("2026.05.02")]
-[assembly: AssemblyVersion("2026.05.02")]
-[assembly: AssemblyFileVersion("2026.05.02")]
+// [assembly: AssemblyVersion("2026.07.22")]
+[assembly: AssemblyVersion("2026.07.22")]
+[assembly: AssemblyFileVersion("2026.07.22")]
 [assembly: InternalsVisibleTo("GumToolUnitTests")]
