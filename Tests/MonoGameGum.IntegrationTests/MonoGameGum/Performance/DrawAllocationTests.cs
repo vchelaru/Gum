@@ -30,6 +30,47 @@ public class DrawAllocationTests : BaseTestClass
     }
 
     [Fact]
+    public void IdleUpdate_RepresentativeFormsScene_AllocationBaseline()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        BuildScene();
+
+        // A single fixed GameTime reused every frame keeps the scene idle (no time advance, no
+        // animation) and avoids allocating a GameTime per iteration, so the measured delta reflects
+        // only the Update walk itself (the FormsUtilities input/cursor pass) with Draw excluded.
+        GameTime gameTime = new GameTime(TimeSpan.Zero, TimeSpan.FromSeconds(1.0 / 60.0));
+
+        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+            () => global::Gum.GumService.Default.Update(gameTime),
+            attempts: 3,
+            warmupIterations: 50,
+            measuredIterations: 500);
+
+        _output.WriteLine($"Idle Update (no Draw) of a representative Forms scene (20-item ListBox, labels, " +
+            $"a Text, and a filled rectangle): {result.BytesPerIteration:N0} bytes/frame " +
+            $"({result.TotalBytes:N0} bytes over {result.Iterations} frames)");
+
+        // Liveness: prove the Update pass actually walked the scene roots (a silent early-return
+        // would make a low allocation result meaningless). LastEventRoots is repopulated from the
+        // roots on every FormsUtilities.Update call.
+        global::Gum.Forms.FormsUtilities.LastEventRoots.Count.ShouldBeGreaterThan(0);
+
+        // Ratchet (#1934): the idle-frame input/cursor pass (GumService.Update over an unchanging
+        // Forms scene). Down from 128 B/f after removing the two Gum-owned per-frame allocations:
+        // the HandledActions class allocated by every DoUiActivityRecursively walk (now a stack
+        // struct passed by ref, 24 B/f) and the boxed List enumerator in AnimateRoots' foreach over
+        // the IEnumerable roots (now an index-based fast path, 40 B/f). The deterministic ~64 B/f
+        // residual is MonoGame's per-frame GamePad.GetState (4 pads x 16 bytes) inside
+        // FormsUtilities.UpdateGamepads — framework-internal, not removable without changing input
+        // polling behavior. This guard owns the idle-Update residual (separate from the text /
+        // full-relayout ratchets) and is set just above the residual so a regression that
+        // re-introduces either removed source (88 or 104 B/f) fails the build.
+        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(80);
+    }
+
+    [Fact]
     public void IdleUpdateAndDraw_RepresentativeFormsScene_AllocationBaseline()
     {
         using MinimalGame game = new();
