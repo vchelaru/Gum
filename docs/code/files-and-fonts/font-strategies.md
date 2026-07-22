@@ -219,7 +219,7 @@ text.FontSize = 24;
 For a font loaded from bytes (an embedded resource, for example) rather than a file on disk, call `SkiaGum.Content.Fonts.GumFontMapper.RegisterFont(familyName, fontBytes)` directly and then assign `Font = familyName`.
 
 {% hint style="info" %}
-Only the `.ttf` extension is recognized — `.otf` files are not auto-routed through this path today and resolve as a (likely-missing) system font family name instead.
+`Font`/`CustomFontFile` is detected as a file path purely by whether the string ends in `.ttf` — not by whether it looks like a path. A bare filename with no directory (`"MyFont.ttf"`) is loaded from disk the same as a full path; there's no slash detection involved, and it never falls through to an OS font-name lookup. Only the `.ttf` extension is recognized — `.otf` files are not auto-routed through this path today and resolve as a (likely-missing) system font family name instead.
 {% endhint %}
 
 {% hint style="info" %}
