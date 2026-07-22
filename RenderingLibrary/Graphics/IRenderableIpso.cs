@@ -107,4 +107,40 @@ public class ObservableCollectionNoReset<T> : ObservableCollection<T>
         if (e.Action != NotifyCollectionChangedAction.Reset)
             base.OnCollectionChanged(e);
     }
+
+    /// <summary>
+    /// Inserts an item without raising CollectionChanged. Used by wrappers that mirror this
+    /// collection and raise their own notification, so an event here would only allocate args for
+    /// a handler that ignores them.
+    /// </summary>
+    public void InsertWithoutNotification(int index, T item) => Items.Insert(index, item);
+
+    /// <summary>
+    /// Removes the item at the specified index without raising CollectionChanged. See
+    /// <see cref="InsertWithoutNotification"/> for when to use this.
+    /// </summary>
+    public void RemoveAtWithoutNotification(int index) => Items.RemoveAt(index);
+
+    /// <summary>
+    /// Replaces the item at the specified index without raising CollectionChanged. See
+    /// <see cref="InsertWithoutNotification"/> for when to use this.
+    /// </summary>
+    public void SetWithoutNotification(int index, T item) => Items[index] = item;
+
+    /// <summary>
+    /// Removes all items without raising CollectionChanged. See
+    /// <see cref="InsertWithoutNotification"/> for when to use this.
+    /// </summary>
+    public void ClearWithoutNotification() => Items.Clear();
+
+    /// <summary>
+    /// Moves an item without raising CollectionChanged. See
+    /// <see cref="InsertWithoutNotification"/> for when to use this.
+    /// </summary>
+    public void MoveWithoutNotification(int oldIndex, int newIndex)
+    {
+        T item = Items[oldIndex];
+        Items.RemoveAt(oldIndex);
+        Items.Insert(newIndex, item);
+    }
 }
