@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -586,9 +585,6 @@ public class BitmapFont : IDisposable
         return RenderToTexture2D(lines, horizontalAlignment, managers, null, objectRequestingRender);
     }
 
-    // To help out the GC, we're going to just use a Color that's 2048x2048
-    static Microsoft.Xna.Framework.Color[] mColorBuffer = new Microsoft.Xna.Framework.Color[2048 * 2048];
-
     /// <summary>
     /// Renders pre-split lines of text to a <see cref="RenderTarget2D"/>. If <paramref name="toReplace"/>
     /// is provided and has matching dimensions, it is reused to avoid allocating a new render target.
@@ -625,7 +621,8 @@ public class BitmapFont : IDisposable
 
         int requiredWidth;
         int requiredHeight;
-        List<int> widths = new List<int>();
+        var widths = sMeasuredLineWidths;
+        widths.Clear();
         GetRequiredWidthAndHeight(lines, out requiredWidth, out requiredHeight, widths);
 
         if (requiredWidth != 0)
@@ -683,6 +680,11 @@ public class BitmapFont : IDisposable
     }
 
     static List<LetterRenderInfo> letterInfos = new List<LetterRenderInfo>();
+
+    // Reused per-line width buffer for the realization passes. Rendering is single-threaded and
+    // non-reentrant (same assumption as letterInfos above), so a shared static avoids allocating a
+    // List every time a Text realizes its render target.
+    static List<int> sMeasuredLineWidths = new List<int>();
 
     /// <summary>
     /// Draws pre-split lines of text directly to the screen via the <paramref name="spriteRenderer"/>,
@@ -987,7 +989,8 @@ public class BitmapFont : IDisposable
         var point = new Vector2();
         int requiredWidth;
         int requiredHeight;
-        List<int> widths = new List<int>();
+        var widths = sMeasuredLineWidths;
+        widths.Clear();
         GetRequiredWidthAndHeight(lines, out requiredWidth, out requiredHeight, widths);
 
         int lineNumber = 0;
@@ -1206,120 +1209,6 @@ public class BitmapFont : IDisposable
         if (requiredWidth != 0 && mOutlineThickness != 0)
         {
             requiredWidth += mOutlineThickness * 2;
-        }
-    }
-
-    private Texture2D RenderToTexture2DUsingImageData(IEnumerable lines, HorizontalAlignment horizontalAlignment, SystemManagers managers)
-    {
-        ImageData[] imageDatas = new ImageData[this.mTextures.Length];
-
-        for (int i = 0; i < imageDatas.Length; i++)
-        {
-            // Only use the existing buffer on one-page fonts
-            var bufferToUse = mColorBuffer;
-            if (i > 0)
-            {
-                bufferToUse = null;
-            }
-            imageDatas[i] = ImageData.FromTexture2D(this.mTextures[i], managers, bufferToUse);
-        }
-
-        Point point = new Point();
-
-        int maxWidthSoFar = 0;
-        int requiredWidth = 0;
-        int requiredHeight = 0;
-
-        List<int> widths = new List<int>();
-
-        foreach (string line in lines)
-        {
-            requiredHeight += LineHeightInPixels;
-            requiredWidth = 0;
-
-            requiredWidth = MeasureString(line);
-            widths.Add(requiredWidth);
-            maxWidthSoFar = System.Math.Max(requiredWidth, maxWidthSoFar);
-        }
-
-        const int MaxWidthAndHeight = 2048; // change this later?
-        maxWidthSoFar = System.Math.Min(maxWidthSoFar, MaxWidthAndHeight);
-        requiredHeight = System.Math.Min(requiredHeight, MaxWidthAndHeight);
-
-
-
-        ImageData imageData = null;
-
-        if (maxWidthSoFar != 0)
-        {
-            imageData = new ImageData(maxWidthSoFar, requiredHeight, managers);
-
-            int lineNumber = 0;
-
-            foreach (string line in lines)
-            {
-                point.X = 0;
-
-                if (horizontalAlignment == HorizontalAlignment.Right)
-                {
-                    point.X = maxWidthSoFar - widths[lineNumber];
-                }
-                else if (horizontalAlignment == HorizontalAlignment.Center)
-                {
-                    point.X = (maxWidthSoFar - widths[lineNumber]) / 2;
-                }
-
-                foreach (char c in line)
-                {
-
-                    BitmapCharacterInfo characterInfo = GetCharacterInfo(c);
-
-                    int sourceLeft = characterInfo.PixelLeft;
-                    int sourceTop = characterInfo.PixelTop;
-                    int sourceWidth = characterInfo.PixelRight - sourceLeft;
-                    int sourceHeight = characterInfo.PixelBottom - sourceTop;
-
-                    int distanceFromTop = characterInfo.GetPixelDistanceFromTop(LineHeightInPixels);
-
-                    // There could be some offset for this character
-                    //int xOffset = characterInfo.GetPixelXOffset(LineHeightInPixels);
-                    int xOffset = characterInfo.XOffsetInPixels;
-                    point.X += xOffset;
-
-                    point.Y = lineNumber * LineHeightInPixels + distanceFromTop;
-
-                    Rectangle sourceRectangle = new Rectangle(sourceLeft, sourceTop, sourceWidth, sourceHeight);
-
-                    int pageIndex = characterInfo.PageNumber;
-
-                    imageData.Blit(imageDatas[pageIndex], sourceRectangle, point);
-
-                    point.X -= xOffset;
-                    //point.X += characterInfo.GetXAdvanceInPixels(LineHeightInPixels);
-                    point.X += characterInfo.XAdvance;
-
-                }
-                point.X = 0;
-                lineNumber++;
-            }
-        }
-
-
-        if (imageData != null)
-        {
-            // We don't want
-            // to generate mipmaps
-            // because text is usually
-            // rendered pixel-perfect.
-
-            const bool generateMipmaps = false;
-
-
-            return imageData.ToTexture2D(generateMipmaps);
-        }
-        else
-        {
-            return null;
         }
     }
 
