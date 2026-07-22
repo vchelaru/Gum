@@ -32,6 +32,10 @@ Create a folder inside of your game's Content folder, such as `Content/GumProjec
 Create a folder inside of your game's resources folder, such as `resources/GumProject`, then save the file in the newly-created folder.
 {% endtab %}
 
+{% tab title="Silk.NET" %}
+Create a folder inside of your game's Content folder, such as `Content/GumProject`, then save the file in the newly-created folder.
+{% endtab %}
+
 {% tab title="MonoGame/KNI Web" %}
 Web targets (KNI BlazorGL and other WebAssembly hosts) must serve the Gum project from `wwwroot`. Create a folder inside your web project's `wwwroot/Content` folder, such as `wwwroot/Content/GumProject`, then save the file in the newly-created folder.
 
@@ -79,6 +83,16 @@ If you are using the Contentless project ([https://github.com/Ellpeck/Contentles
 ```xml
 <ItemGroup>
     <None Update="resources\GumProject\**\*.*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+</ItemGroup>
+```
+{% endtab %}
+
+{% tab title="Silk.NET" %}
+```xml
+<ItemGroup>
+    <None Update="Content\GumProject\**\*.*">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
 </ItemGroup>
@@ -195,6 +209,26 @@ public static void Main()
     // Additional initialization logic goes here
 }
 ```
+{% endtab %}
+
+{% tab title="Silk.NET" %}
+```csharp
+// Initialize
+GumService.Default.Initialize(canvas, inputContext, "Content/GumProject/GumProject.gumx");
+
+// This assumes that your project has at least 1 screen
+if (ObjectFinder.Self.GumProjectSave.Screens.Count == 0)
+{
+    throw new Exception(
+        "No screen found in the Gum project, " +
+        "did you add a Screen in the Gum tool?");
+}
+var screen = ObjectFinder.Self.GumProjectSave.Screens[0]
+    .ToGraphicalUiElement();
+screen.AddToRoot();
+```
+
+See the [Silk.NET setup page](adding-initializing-gum/silk.net.md) for where `canvas` and `inputContext` come from — window/GL/Skia surface setup is elided here since it's the same regardless of whether you load a `.gumx` project.
 {% endtab %}
 
 {% tab title=".NET MAUI" %}

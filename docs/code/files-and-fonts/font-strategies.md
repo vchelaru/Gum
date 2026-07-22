@@ -7,7 +7,7 @@ This page covers each font loading strategy in detail with code samples and trad
 The strategies are:
 
 * [Dynamic KernSmith Generation](font-strategies.md#dynamic-kernsmith-generation) — recommended for MonoGame, KNI, and Raylib.
-* [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum) — SkiaGum rasterizes glyphs itself, separate from KernSmith.
+* [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum) — SkiaGum and Silk.NET rasterize glyphs themselves via SkiaSharp, separate from KernSmith.
 * [Custom Font File](font-strategies.md#custom-font-file) — load a specific `.fnt` file you ship with the game.
 * [Direct BitmapFont Assignment](font-strategies.md#direct-bitmapfont-assignment) — fully manual.
 * [Build-Time Font Cache](font-strategies.md#build-time-font-cache) — pre-baked atlases from the Gum tool.
@@ -22,6 +22,7 @@ The strategies are:
 | FNA      | Not yet. If you need it, let us know on Discord or [open an issue](https://github.com/vchelaru/Gum/issues).                            |
 | Sokol    | Not yet. Use the [Build-Time Font Cache](font-strategies.md#build-time-font-cache) for now.                                            |
 | SkiaGum  | Yes — uses SkiaSharp's own glyph rasterization. See [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum). |
+| Silk.NET | Yes — renders through SkiaGum and shares its glyph rasterization; no KernSmith package needed. See [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum). |
 
 ## Dynamic KernSmith Generation
 
@@ -137,7 +138,7 @@ For these reasons, registering your own `.ttf` (or `.otf`) files is recommended 
 ### Registering Custom .ttf Fonts
 
 {% hint style="info" %}
-Registering `.ttf` files is supported on MonoGame and KNI. SkiaGum uses system fonts directly and does not currently support `RegisterFont`.
+This section covers MonoGame/KNI's `KernSmithFontCreator.RegisterFont`. SkiaGum and Silk.NET load a `.ttf` file a different way — point `Font`/`CustomFontFile` directly at the `.ttf` path instead of calling a register method; see [Custom .ttf Files](font-strategies.md#custom-ttf-files) under Dynamic Generation on SkiaGum.
 {% endhint %}
 
 To use a `.ttf` file with KernSmith:
@@ -188,9 +189,11 @@ Registered fonts take priority over system fonts. If you register a font with th
 
 ## Dynamic Generation on SkiaGum
 
-SkiaGum is its own thing. It does **not** use KernSmith — SkiaSharp rasterizes glyphs directly, so dynamic font generation works out of the box. No NuGet package to install, no `InMemoryFontCreator` to assign.
+SkiaGum is its own thing, and Silk.NET (`Gum.SilkNet`) shares this exact same font path since it renders through SkiaGum. Neither uses KernSmith — SkiaSharp rasterizes glyphs directly, so dynamic font generation works out of the box. No NuGet package to install, no `InMemoryFontCreator` to assign.
 
-Assign the font properties directly on the `TextRuntime`:
+### System Fonts
+
+Assign the font properties directly on the `TextRuntime`; the family name must be installed on the system to resolve:
 
 ```csharp
 // Initialize
@@ -201,7 +204,23 @@ text.FontSize = 24;
 text.IsBold = true;
 ```
 
-The font must be installed on the system to be used. SkiaGum does not currently support `RegisterFont`-style registration of shipped `.ttf` files.
+### Custom .ttf Files
+
+Point `Font` (or `CustomFontFile` with `UseCustomFont = true`) at a `.ttf` path instead of a family name — SkiaGum/Silk.NET load and cache the file automatically, the same way KernSmith's `RegisterFont` does for MonoGame/KNI:
+
+```csharp
+// Initialize
+var text = new TextRuntime();
+text.Text = "Hello, World!";
+text.Font = "Content/Fonts/Bungee-Regular.ttf";
+text.FontSize = 24;
+```
+
+For a font loaded from bytes (an embedded resource, for example) rather than a file on disk, call `SkiaGum.Content.Fonts.GumFontMapper.RegisterFont(familyName, fontBytes)` directly and then assign `Font = familyName`.
+
+{% hint style="info" %}
+Only the `.ttf` extension is recognized — `.otf` files are not auto-routed through this path today and resolve as a (likely-missing) system font family name instead.
+{% endhint %}
 
 {% hint style="info" %}
 A dedicated SkiaGum fonts page is planned. For now, this section is the canonical reference. If something is unclear, ask on Discord or [open an issue](https://github.com/vchelaru/Gum/issues).
@@ -385,7 +404,7 @@ foreach (var label in titleLabels)
 ## Build-Time Font Cache
 
 {% hint style="info" %}
-This approach is primarily useful when your project already has pre-generated font files from the Gum tool, or when dynamic font generation is not yet available for your runtime (Sokol and FNA today). For MonoGame, KNI, and Raylib, [Dynamic KernSmith Generation](font-strategies.md#dynamic-kernsmith-generation) is the recommended approach; for SkiaGum see [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum).
+This approach is primarily useful when your project already has pre-generated font files from the Gum tool, or when dynamic font generation is not yet available for your runtime (Sokol and FNA today). For MonoGame, KNI, and Raylib, [Dynamic KernSmith Generation](font-strategies.md#dynamic-kernsmith-generation) is the recommended approach; for SkiaGum or Silk.NET see [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum).
 {% endhint %}
 
 If `UseCustomFont` is `false` (the default) and no `InMemoryFontCreator` is registered, a `TextRuntime`'s font is determined by its font component values. These values combine to produce a file name, and the corresponding `.fnt` file must already exist in a `FontCache` folder.

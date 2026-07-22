@@ -280,6 +280,32 @@ for (int i = 0; i < 3; i++)
 }
 ```
 {% endtab %}
+
+{% tab title="Silk.NET" %}
+```csharp
+// Initialize
+FrameworkElement.KeyboardsForUiControl.Add(GumService.Default.Keyboard);
+FrameworkElement.TabKeyCombos.Add(new KeyCombo()
+{
+    PushedKey = Gum.Forms.Input.Keys.Down
+});
+FrameworkElement.TabReverseKeyCombos.Add(new KeyCombo()
+{
+    PushedKey = Gum.Forms.Input.Keys.Up
+});
+
+var mainPanel = new StackPanel();
+mainPanel.AddToRoot();
+mainPanel.Spacing = 6;
+for (int i = 0; i < 3; i++)
+{
+    var button = new Button();
+    button.Text = $"Button {i + 1}";
+    if (i == 0) button.IsFocused = true;
+    mainPanel.AddChild(button);
+}
+```
+{% endtab %}
 {% endtabs %}
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACrVSTUvDQBC991cMwUNKZVEED2oP2lopIpR-gIdcNsnELk1myu6mVUv-u5M0bRX06F6GfW_mvWHf7joAwdg9lUVwA96WeF4Dhow3OjefKGiw0RYKbWiiCXPoA-EWZl4nqwYIu7cRHWl1n6ZznjL7Bh9ZXeCW7eoxxwLJq2f8iFnb1I3YLsyAyVtuhkJZYYZ2YxJUQ8x0mZ-af1Wa61j4ARcxu0agXuuAhN2IdhGBnEnplpgKIZu_mMSy48yrV9LqKKnGtC4bO6eGvKWIqr8sp7hB6_A_nBfr1vf7c87WOjH0JgrXwmRsITTkwQhwcSvlDq6k9Hon1zqtuPSeqY3qobk0cdT8nlNzfPfScBYFex52BnpwWUVB22cysYK--HQPM2NJLSkdpjJY_5W280f4g6XJ03A_UFtWQafqfAE2d5mXZgIAAA)
 
@@ -323,6 +349,38 @@ void HandleTabKeyDown(object sender, KeyEventArgs args)
 {% endtab %}
 
 {% tab title="Raylib" %}
+```csharp
+// Initialize
+var mainPanel = new StackPanel();
+mainPanel.AddToRoot();
+
+var slider = new Slider();
+mainPanel.AddChild(slider);
+
+var button = new Button();
+button.IsFocused = true;
+button.KeyDown += HandleTabKeyDown;
+mainPanel.AddChild(button);
+
+var button2 = new Button();
+button2.KeyDown += HandleTabKeyDown;
+mainPanel.AddChild(button2);
+
+void HandleTabKeyDown(object sender, KeyEventArgs args)
+{
+    if(args.Key == Gum.Forms.Input.Keys.Right)
+    {
+        ((FrameworkElement)sender).HandleTab(TabDirection.Down);
+    }
+    else if(args.Key == Gum.Forms.Input.Keys.Left)
+    {
+        ((FrameworkElement)sender).HandleTab(TabDirection.Up);
+    }
+}
+```
+{% endtab %}
+
+{% tab title="Silk.NET" %}
 ```csharp
 // Initialize
 var mainPanel = new StackPanel();

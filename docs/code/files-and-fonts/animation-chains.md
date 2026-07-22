@@ -29,7 +29,7 @@ This conversion happens once, when the `.achx` loads — not every frame during 
 
 ## Loading in Code
 
-There are two ways to get an `.achx` onto a `SpriteRuntime` or `NineSliceRuntime`. Both work the same way on either type, and both work across MonoGame, KNI, FNA, Raylib, and Skia.
+There are two ways to get an `.achx` onto a `SpriteRuntime` or `NineSliceRuntime`. Both work the same way on either type, and both work across MonoGame, KNI, FNA, Raylib, Skia, and Silk.NET.
 
 ### Auto-Load via SourceFileName
 

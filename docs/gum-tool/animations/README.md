@@ -17,5 +17,5 @@ Animations are defined per element (Screen, Component, or Standard element) and 
 The **Add Named Event** option places a named marker at a point in time on an animation.
 
 {% hint style="info" %}
-**Named Events** are not used by Gum's own runtimes (MonoGame, KNI, FNA, raylib, SkiaSharp) — they are saved and loaded but never raised. They exist for integration with FlatRedBall (FRB1). Unless you are using Gum with FlatRedBall (FRB1), you can ignore the **Add Named Event** option.
+**Named Events** are not used by Gum's own runtimes (MonoGame, KNI, FNA, raylib, SkiaSharp, Silk.NET) — they are saved and loaded but never raised. They exist for integration with FlatRedBall (FRB1). Unless you are using Gum with FlatRedBall (FRB1), you can ignore the **Add Named Event** option.
 {% endhint %}

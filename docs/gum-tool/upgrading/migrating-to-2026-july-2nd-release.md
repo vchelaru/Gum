@@ -8,6 +8,8 @@ This page discusses breaking changes and other considerations when migrating fro
 
 This release renames the explicit-font-object property on `TextRuntime` to `Typeface`, unifying a name that previously differed per backend (`BitmapFont` on MonoGame/KNI/FNA, `CustomFont` on raylib) and adding the same capability to SkiaSharp for the first time. This is a **soft break**: the old names still compile and work, but now emit a `CS0618` obsolete warning.
 
+This release also promotes Silk.NET to a first-class Gum runtime — see "Silk.NET Is Now a First-Class Runtime" below. This is purely additive; no migration is required.
+
 ## Upgrading the Gum Tool
 
 {% tabs %}
@@ -32,12 +34,21 @@ This release's runtime ships as NuGet version **`2026.7.22.1`**. Upgrade your Gu
 * KNI - [https://www.nuget.org/packages/Gum.KNI/](https://www.nuget.org/packages/Gum.KNI/)
 * FNA - [https://www.nuget.org/packages/Gum.FNA/](https://www.nuget.org/packages/Gum.FNA/)
 * raylib - [https://www.nuget.org/packages/Gum.raylib](https://www.nuget.org/packages/Gum.raylib)
+* Silk.NET - [https://www.nuget.org/packages/Gum.SilkNet](https://www.nuget.org/packages/Gum.SilkNet)
 * .NET MAUI - [https://www.nuget.org/packages/Gum.SkiaSharp.Maui](https://www.nuget.org/packages/Gum.SkiaSharp.Maui)
 * SkiaSharp - [https://www.nuget.org/packages/Gum.SkiaSharp/](https://www.nuget.org/packages/Gum.SkiaSharp/)
 
 If using GumCommon directly, you can update the GumCommon NuGet:
 
 * GumCommon - [https://www.nuget.org/packages/FlatRedBall.GumCommon](https://www.nuget.org/packages/FlatRedBall.GumCommon)
+
+## Silk.NET Is Now a First-Class Runtime
+
+Silk.NET moves from shared source (no dedicated package) to a real `Gum.SilkNet` NuGet package with real Forms input — mouse, keyboard, and focus — via `Silk.NET.Input`, rendering through SkiaGum. See the [Silk.NET setup page](../../code/getting-started/setup/adding-initializing-gum/silk.net.md) to get started.
+
+Eight built-in themes also gained a Silk.NET variant this release: Bubblegum, DarkPro, Editor, Forest Glade, Hazard, Meadow, Neon, and Retro95. See the [Themes reference](../../code/styling/themes/README.md) for install/usage per theme.
+
+This is purely additive — no existing code needs to change.
 
 ## Breaking Changes and Migrations
 
