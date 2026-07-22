@@ -102,7 +102,7 @@ BubblegumTheme.Apply();
 
 {% tab title="Raylib" %}
 ```bash
-dotnet add package Gum.Themes.Bubblegum.Raylib --prerelease
+dotnet add package Gum.Themes.Bubblegum.Raylib
 ```
 
 ```csharp
@@ -185,7 +185,7 @@ DarkProTheme.Apply();
 
 {% tab title="Raylib" %}
 ```bash
-dotnet add package Gum.Themes.DarkPro.Raylib --prerelease
+dotnet add package Gum.Themes.DarkPro.Raylib
 ```
 
 ```csharp
@@ -264,7 +264,7 @@ EditorTheme.Apply();
 
 {% tab title="Raylib" %}
 ```bash
-dotnet add package Gum.Themes.Editor.Raylib --prerelease
+dotnet add package Gum.Themes.Editor.Raylib
 ```
 
 ```csharp
@@ -346,7 +346,7 @@ ForestGladeTheme.Apply();
 
 {% tab title="Raylib" %}
 ```bash
-dotnet add package Gum.Themes.ForestGlade.Raylib --prerelease
+dotnet add package Gum.Themes.ForestGlade.Raylib
 ```
 
 ```csharp
@@ -435,7 +435,7 @@ HazardTheme.Apply();
 
 {% tab title="Raylib" %}
 ```bash
-dotnet add package Gum.Themes.Hazard.Raylib --prerelease
+dotnet add package Gum.Themes.Hazard.Raylib
 ```
 
 ```csharp
@@ -527,7 +527,7 @@ MeadowTheme.Apply();
 
 {% tab title="Raylib" %}
 ```bash
-dotnet add package Gum.Themes.Meadow.Raylib --prerelease
+dotnet add package Gum.Themes.Meadow.Raylib
 ```
 
 ```csharp
@@ -618,7 +618,7 @@ NeonTheme.Apply();
 
 {% tab title="Raylib" %}
 ```bash
-dotnet add package Gum.Themes.Neon.Raylib --prerelease
+dotnet add package Gum.Themes.Neon.Raylib
 ```
 
 ```csharp
@@ -703,7 +703,7 @@ Retro95Theme.Apply();
 
 {% tab title="Raylib" %}
 ```bash
-dotnet add package Gum.Themes.Retro95.Raylib --prerelease
+dotnet add package Gum.Themes.Retro95.Raylib
 ```
 
 ```csharp
@@ -759,7 +759,7 @@ All bundled fonts are SIL Open Font License or the Bitstream Vera / DejaVu licen
 
 ## Supported backends
 
-Themes are published for **MonoGame**, **KNI**, **Raylib** (Raylib in preview — see the note under [Usage](./#usage)), and **Silk.NET**. If you'd like to see a theme published for **FNA** or **Skia** (WPF, .NET MAUI), please open an issue or start a discussion on the [Gum GitHub repo](https://github.com/vchelaru/Gum).
+Themes are published for **MonoGame**, **KNI**, **Raylib**, and **Silk.NET**. If you'd like to see a theme published for **FNA** or **Skia** (WPF, .NET MAUI), please open an issue or start a discussion on the [Gum GitHub repo](https://github.com/vchelaru/Gum).
 
 ## Requirements
 
