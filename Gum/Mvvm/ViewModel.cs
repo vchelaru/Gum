@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -154,18 +155,20 @@ namespace Gum.Mvvm
             }
         }
 
+        // PropertyChangedEventArgs is immutable, so one instance per property name is reused across
+        // all notifications and all ViewModel instances instead of allocating one per notification.
+        private static readonly ConcurrentDictionary<string, PropertyChangedEventArgs> _eventArgsCache = new();
+
         protected virtual void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             System.Diagnostics.Debug.Assert(propertyName != null, "propertyName should not be null");
             if (PropertyChanged != null)
             {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+                PropertyChanged(this, _eventArgsCache.GetOrAdd(propertyName, static name => new PropertyChangedEventArgs(name)));
             }
 
-            if (notifyRelationships.ContainsKey(propertyName))
+            if (notifyRelationships.TryGetValue(propertyName, out var childPropertyNames))
             {
-                var childPropertyNames = notifyRelationships[propertyName];
-
                 foreach (var childPropertyName in childPropertyNames)
                 {
                     // todo - worry about recursive notifications?

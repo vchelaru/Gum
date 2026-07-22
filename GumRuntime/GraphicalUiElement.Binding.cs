@@ -2,6 +2,7 @@ using Gum.Mvvm;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
@@ -538,13 +539,43 @@ public partial class GraphicalUiElement
 
     private void TryPushBindingContextChangeToChildren(string vmPropertyName)
     {
-        foreach (GraphicalUiElement descendent in GetAllBindableDescendents())
+        // Walks every descendant with index-based loops rather than a yield iterator so a VM
+        // notification allocates nothing when descending the tree. Each descendant is matched
+        // against this element's BindingContext (the root of the push), mirroring the original
+        // flat-visitation semantics.
+        object? rootContext = BindingContext;
+        PushBindingContextChangeToDescendents(vmPropertyName, rootContext);
+    }
+
+    private void PushBindingContextChangeToDescendents(string vmPropertyName, object? rootContext)
+    {
+        if (Children != null)
         {
-            if (descendent.BindingContextBinding == vmPropertyName && descendent.BindingContextBindingPropertyOwner == BindingContext)
+            ObservableCollection<GraphicalUiElement> children = Children;
+            int count = children.Count;
+            for (int i = 0; i < count; i++)
             {
-                descendent.UpdateToVmProperty(vmPropertyName);
+                children[i].MatchAndPushBindingContextChange(vmPropertyName, rootContext);
             }
         }
+        else
+        {
+            IList<GraphicalUiElement> contained = ContainedElements;
+            int count = contained.Count;
+            for (int i = 0; i < count; i++)
+            {
+                contained[i].MatchAndPushBindingContextChange(vmPropertyName, rootContext);
+            }
+        }
+    }
+
+    private void MatchAndPushBindingContextChange(string vmPropertyName, object? rootContext)
+    {
+        if (BindingContextBinding == vmPropertyName && BindingContextBindingPropertyOwner == rootContext)
+        {
+            UpdateToVmProperty(vmPropertyName);
+        }
+        PushBindingContextChangeToDescendents(vmPropertyName, rootContext);
     }
 
     protected void PushValueToViewModel([CallerMemberName] string? uiPropertyName = null)
@@ -626,19 +657,6 @@ public partial class GraphicalUiElement
     {
         if (Children != null) return Children;
         else return ContainedElements;
-    }
-
-    private IEnumerable<GraphicalUiElement> GetAllBindableDescendents()
-    {
-        foreach (GraphicalUiElement child in GetAllBindableChildren())
-        {
-            yield return child;
-
-            foreach (GraphicalUiElement subChild in child.GetAllBindableDescendents())
-            {
-                yield return subChild;
-            }
-        }
     }
 
     public static object? ConvertValue(object? value, Type desiredType, string? format)
