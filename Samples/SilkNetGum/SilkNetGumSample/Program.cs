@@ -97,10 +97,6 @@ unsafe class Program
         // Registers GumUI.Keyboard for Tab / Shift+Tab focus traversal between Forms controls.
         GumUI.UseKeyboardDefaults();
 
-        // #3671 proof of concept: the Editor theme ported to Skia/SilkNet. Visible on the "Forms"
-        // nav button (FormsScreen), which already exercises every control Editor restyles.
-        Gum.Themes.Editor.EditorTheme.Apply();
-
         GraphicalUiElement.CanvasWidth = windowWidth;
         GraphicalUiElement.CanvasHeight = windowHeight;
 
