@@ -1,12 +1,12 @@
-# Migrating to 2026 August
+# Migrating to 2026 July - 2nd Release
 
 ## Introduction
 
-This page discusses breaking changes and other considerations when migrating from `2026 July` to `2026 August`.
+This page discusses breaking changes and other considerations when migrating from the first `2026 July` release to the second `2026 July` release.
 
 ## What Changed at a Glance
 
-`2026 August` renames the explicit-font-object property on `TextRuntime` to `Typeface`, unifying a name that previously differed per backend (`BitmapFont` on MonoGame/KNI/FNA, `CustomFont` on raylib) and adding the same capability to SkiaSharp for the first time. This is a **soft break**: the old names still compile and work, but now emit a `CS0618` obsolete warning.
+This release renames the explicit-font-object property on `TextRuntime` to `Typeface`, unifying a name that previously differed per backend (`BitmapFont` on MonoGame/KNI/FNA, `CustomFont` on raylib) and adding the same capability to SkiaSharp for the first time. This is a **soft break**: the old names still compile and work, but now emit a `CS0618` obsolete warning.
 
 ## Upgrading the Gum Tool
 
@@ -14,7 +14,7 @@ This page discusses breaking changes and other considerations when migrating fro
 {% tab title="Windows" %}
 To upgrade the Gum tool:
 
-1. Download Gum.zip from the [PLACEHOLDER!!!! August 2026 release on GitHub](https://github.com/vchelaru/Gum/releases)
+1. Download Gum.zip from the [July 22, 2026 release on GitHub](https://github.com/vchelaru/Gum/releases/tag/Release_July_22_2026)
 2. Delete the old tool from your machine
 3. Unzip the gum tool to the same location as to not break any file associations
 {% endtab %}
@@ -26,7 +26,7 @@ Run the upgrade `gum upgrade` or `~/bin/gum upgrade`
 
 ## Upgrading the Runtime
 
-The `2026 August` runtime ships as NuGet version **`PLACEHOLDER!!!! version number`**. Upgrade your Gum NuGet packages to this version. For more information, see the NuGet packages for your particular platform:
+This release's runtime ships as NuGet version **`2026.7.22.1`**. Upgrade your Gum NuGet packages to this version. For more information, see the NuGet packages for your particular platform:
 
 * MonoGame - [https://www.nuget.org/packages/Gum.MonoGame/](https://www.nuget.org/packages/Gum.MonoGame/)
 * KNI - [https://www.nuget.org/packages/Gum.KNI/](https://www.nuget.org/packages/Gum.KNI/)
