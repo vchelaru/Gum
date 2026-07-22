@@ -7,6 +7,9 @@ description: Conventions for filing GitHub issues in the Gum repo via gh. Trigge
 
 Use `gh issue create` to file issues. Conventions:
 
+## Before researching the source pointer
+Check the skills list for one matching the feature area and load it **before** grepping for the file:line pointer — CLAUDE.md's "load matching skills before investigating" rule applies to issue research too, not just edits. A matching skill (e.g. `gum-tool-variable-grid` for a Variables-tab/displayer report) names the relevant files and known gotchas directly instead of rediscovering them by grep.
+
 ## Labels
 - **Bug reports get `--label bug`** (label exists, color `#fc2929`). Apply it at creation time.
 - The `bug` label is real and applies silently — don't second-guess it or omit it on later issues.
