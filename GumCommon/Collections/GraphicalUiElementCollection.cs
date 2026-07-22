@@ -23,6 +23,9 @@ public class GraphicalUiElementCollection : ObservableCollectionNoReset<Graphica
     public static GraphicalUiElementCollection Empty => _empty;
 
     private readonly ObservableCollection<IRenderableIpso> _innerCollection = default!;
+    // Non-null when the inner collection supports silent mutation, letting outer-driven changes
+    // sync into it without allocating event args the wrapper's own handler would ignore anyway.
+    private readonly ObservableCollectionNoReset<IRenderableIpso>? _innerNoReset;
     private bool _isUpdatingFromInner = false;
     private bool _isUpdatingFromOuter = false;
 
@@ -37,6 +40,7 @@ public class GraphicalUiElementCollection : ObservableCollectionNoReset<Graphica
     public GraphicalUiElementCollection(ObservableCollection<IRenderableIpso> innerCollection)
     {
         _innerCollection = innerCollection ?? throw new ArgumentNullException(nameof(innerCollection));
+        _innerNoReset = innerCollection as ObservableCollectionNoReset<IRenderableIpso>;
         IsReadOnly = false;
 
         // Subscribe to inner collection changes
@@ -166,7 +170,14 @@ public class GraphicalUiElementCollection : ObservableCollectionNoReset<Graphica
         _isUpdatingFromOuter = true;
         try
         {
-            _innerCollection.Insert(index, item);
+            if (_innerNoReset != null)
+            {
+                _innerNoReset.InsertWithoutNotification(index, item);
+            }
+            else
+            {
+                _innerCollection.Insert(index, item);
+            }
             base.InsertItem(index, item);
         }
         finally
@@ -191,7 +202,14 @@ public class GraphicalUiElementCollection : ObservableCollectionNoReset<Graphica
         _isUpdatingFromOuter = true;
         try
         {
-            _innerCollection.RemoveAt(index);
+            if (_innerNoReset != null)
+            {
+                _innerNoReset.RemoveAtWithoutNotification(index);
+            }
+            else
+            {
+                _innerCollection.RemoveAt(index);
+            }
             base.RemoveItem(index);
         }
         finally
@@ -216,7 +234,14 @@ public class GraphicalUiElementCollection : ObservableCollectionNoReset<Graphica
         _isUpdatingFromOuter = true;
         try
         {
-            _innerCollection[index] = item;
+            if (_innerNoReset != null)
+            {
+                _innerNoReset.SetWithoutNotification(index, item);
+            }
+            else
+            {
+                _innerCollection[index] = item;
+            }
             base.SetItem(index, item);
         }
         finally
@@ -241,7 +266,14 @@ public class GraphicalUiElementCollection : ObservableCollectionNoReset<Graphica
         _isUpdatingFromOuter = true;
         try
         {
-            _innerCollection.Clear();
+            if (_innerNoReset != null)
+            {
+                _innerNoReset.ClearWithoutNotification();
+            }
+            else
+            {
+                _innerCollection.Clear();
+            }
             base.ClearItems();
         }
         finally
@@ -266,7 +298,14 @@ public class GraphicalUiElementCollection : ObservableCollectionNoReset<Graphica
         _isUpdatingFromOuter = true;
         try
         {
-            _innerCollection.Move(oldIndex, newIndex);
+            if (_innerNoReset != null)
+            {
+                _innerNoReset.MoveWithoutNotification(oldIndex, newIndex);
+            }
+            else
+            {
+                _innerCollection.Move(oldIndex, newIndex);
+            }
             base.MoveItem(oldIndex, newIndex);
         }
         finally

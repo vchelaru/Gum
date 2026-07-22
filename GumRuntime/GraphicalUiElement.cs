@@ -5844,10 +5844,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     {
         if (e.Action == NotifyCollectionChangedAction.Add)
         {
-            if (e.NewItems != null)
+            // Index rather than foreach: NotifyCollectionChangedEventArgs.NewItems is a non-generic
+            // IList whose enumerator boxes, which is measurable under add/remove churn (#1934).
+            var newItems = e.NewItems;
+            if (newItems != null)
             {
-                foreach (var newItem in e.NewItems)
+                for (int i = 0; i < newItems.Count; i++)
                 {
+                    var newItem = newItems[i];
 #if FULL_DIAGNOSTICS
                     if (newItem == null)
                     {
@@ -5858,7 +5862,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                         throw new InvalidOperationException($"{this} cannot be added as a child of itself");
                     }
 #endif
-                    var ipso = (GraphicalUiElement)newItem;
+                    var ipso = (GraphicalUiElement)newItem!;
 
                     if (ipso.Parent != this && !ipso._isSettingParent)
                     {
@@ -5876,10 +5880,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         else if (e.Action == NotifyCollectionChangedAction.Remove)
         {
-            if (e.OldItems != null)
+            var oldItems = e.OldItems;
+            if (oldItems != null)
             {
-                foreach (GraphicalUiElement child in e.OldItems)
+                for (int i = 0; i < oldItems.Count; i++)
                 {
+                    var child = (GraphicalUiElement)oldItems[i]!;
                     if (child.Parent == this && !child._isSettingParent)
                     {
                         child.Parent = null;
@@ -5889,10 +5895,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         else if (e.Action == NotifyCollectionChangedAction.Reset)
         {
-            if (e.OldItems != null)
+            var oldItems = e.OldItems;
+            if (oldItems != null)
             {
-                foreach (GraphicalUiElement child in e.OldItems)
+                for (int i = 0; i < oldItems.Count; i++)
                 {
+                    var child = (GraphicalUiElement)oldItems[i]!;
                     if (child.Parent == this && !child._isSettingParent)
                     {
                         child.Parent = null;
@@ -5912,20 +5920,24 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         else if (e.Action == NotifyCollectionChangedAction.Replace)
         {
-            if (e.OldItems != null)
+            var oldItems = e.OldItems;
+            if (oldItems != null)
             {
-                foreach (GraphicalUiElement child in e.OldItems)
+                for (int i = 0; i < oldItems.Count; i++)
                 {
+                    var child = (GraphicalUiElement)oldItems[i]!;
                     if (child.Parent == this && !child._isSettingParent)
                     {
                         child.Parent = null;
                     }
                 }
             }
-            if (e.NewItems != null)
+            var newItems = e.NewItems;
+            if (newItems != null)
             {
-                foreach (IRenderableIpso ipso in e.NewItems)
+                for (int i = 0; i < newItems.Count; i++)
                 {
+                    var ipso = (IRenderableIpso)newItems[i]!;
                     if (ipso.Parent != this)
                     {
                         ipso.Parent = this;
