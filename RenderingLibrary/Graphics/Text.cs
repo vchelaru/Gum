@@ -1675,6 +1675,23 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
         return MeasureStyledLineInBaseUnits(substrings, out _);
     }
+
+    /// <inheritdoc/>
+    public float MeasureStringFullAdvance(string whatToMeasure)
+    {
+        // Opt into the wrapping loop's incremental candidate measurement (issue #1934) only when it is
+        // exactly equivalent to measuring the full concatenation: a BitmapFont must be available (so the
+        // Full style — no trailing-glyph trim — is honored), and no inline BBCode run may be active (an
+        // inline [FontSize]/[FontScale] run has to be measured across the whole line, not word-by-word).
+        // Otherwise return -1 so UpdateLines falls back to exact concatenation.
+        var bitmapFontToUse = BitmapFont ?? DefaultBitmapFont;
+        if (bitmapFontToUse == null || InlineVariables.Count > 0)
+        {
+            return -1;
+        }
+
+        return bitmapFontToUse.MeasureString(whatToMeasure, HorizontalMeasurementStyle.Full);
+    }
     #endregion
 
     void IRenderableIpso.SetParentDirect(IRenderableIpso? parent)
