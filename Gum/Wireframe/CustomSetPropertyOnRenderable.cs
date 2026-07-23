@@ -1265,6 +1265,42 @@ public partial class CustomSetPropertyOnRenderable
         bmfcSave.DropshadowAlpha = currentDropshadowAlpha;
     }
 
+    /// <summary>
+    /// Builds the <see cref="BmfcSave"/> for an in-memory inline-run font creation inside
+    /// <c>GetAndCreateFontIfNecessary</c>. Identical on every platform - only the created font's type
+    /// (<c>BitmapFont</c> vs <c>Raylib_cs.Font</c>) and how it's cached differ, which stay #if-gated in
+    /// the caller.
+    /// </summary>
+    static BmfcSave BuildInlineRunBmfcSave(
+        int fontSize, int outlineThickness, bool useFontSmoothing, bool isItalic, bool isBold,
+        string? fontFilePath, string fontName)
+    {
+        BmfcSave bmfcSave = new BmfcSave();
+        bmfcSave.FontSize = fontSize;
+        bmfcSave.OutlineThickness = outlineThickness;
+        bmfcSave.UseSmoothing = useFontSmoothing;
+        bmfcSave.IsItalic = isItalic;
+        bmfcSave.IsBold = isBold;
+        ApplyCurrentDropshadowTo(bmfcSave);
+
+        if (fontFilePath != null)
+        {
+            bmfcSave.FontFile = ResolveFontFilePath(fontFilePath);
+            bmfcSave.FontName = System.IO.Path.GetFileNameWithoutExtension(fontFilePath);
+        }
+        else
+        {
+            bmfcSave.FontName = fontName;
+        }
+
+        var gumProject = ObjectFinder.Self.GumProjectSave;
+        bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
+        bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
+        bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
+
+        return bmfcSave;
+    }
+
     static List<TagInfo> allTags = new List<TagInfo>();
 
     /// <summary>
@@ -1734,28 +1770,9 @@ public partial class CustomSetPropertyOnRenderable
                     {
                         string? bbFontFile = BmfcSave.IsFontFilePath(fontNameStack.Peek()) ? fontNameStack.Peek() : null;
 
-                        BmfcSave bmfcSave = new BmfcSave();
-                        bmfcSave.FontSize = fontSizeStack.Peek();
-                        bmfcSave.OutlineThickness = outlineThicknessStack.Peek();
-                        bmfcSave.UseSmoothing = useFontSmoothingStack.Peek();
-                        bmfcSave.IsItalic = isItalicStack.Peek();
-                        bmfcSave.IsBold = isBoldStack.Peek();
-                        ApplyCurrentDropshadowTo(bmfcSave);
-
-                        if (bbFontFile != null)
-                        {
-                            bmfcSave.FontFile = ResolveFontFilePath(bbFontFile);
-                            bmfcSave.FontName = System.IO.Path.GetFileNameWithoutExtension(bbFontFile);
-                        }
-                        else
-                        {
-                            bmfcSave.FontName = fontNameStack.Peek();
-                        }
-
-                        var gumProject = ObjectFinder.Self.GumProjectSave;
-                        bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
-                        bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
-                        bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
+                        BmfcSave bmfcSave = BuildInlineRunBmfcSave(
+                            fontSizeStack.Peek(), outlineThicknessStack.Peek(), useFontSmoothingStack.Peek(),
+                            isItalicStack.Peek(), isBoldStack.Peek(), bbFontFile, fontNameStack.Peek());
 
                         font = InMemoryFontCreator.TryCreateFont(bmfcSave);
                         if (font != null)
@@ -1890,28 +1907,9 @@ public partial class CustomSetPropertyOnRenderable
                     return cachedManagedFont.Font;
                 }
 
-                BmfcSave bmfcSave = new BmfcSave();
-                bmfcSave.FontSize = fontSizeStack.Peek();
-                bmfcSave.OutlineThickness = outlineThicknessStack.Peek();
-                bmfcSave.UseSmoothing = useFontSmoothingStack.Peek();
-                bmfcSave.IsItalic = isItalicStack.Peek();
-                bmfcSave.IsBold = isBoldStack.Peek();
-                ApplyCurrentDropshadowTo(bmfcSave);
-
-                if (bbCodeFontFilePath != null)
-                {
-                    bmfcSave.FontFile = ResolveFontFilePath(bbCodeFontFilePath);
-                    bmfcSave.FontName = System.IO.Path.GetFileNameWithoutExtension(bbCodeFontFilePath);
-                }
-                else
-                {
-                    bmfcSave.FontName = fontName;
-                }
-
-                var gumProject = ObjectFinder.Self.GumProjectSave;
-                bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
-                bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
-                bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
+                BmfcSave bmfcSave = BuildInlineRunBmfcSave(
+                    fontSizeStack.Peek(), outlineThicknessStack.Peek(), useFontSmoothingStack.Peek(),
+                    isItalicStack.Peek(), isBoldStack.Peek(), bbCodeFontFilePath, fontName);
 
                 Raylib_cs.Font? createdFont = InMemoryFontCreator.TryCreateFont(bmfcSave);
                 if (createdFont.HasValue && createdFont.Value.BaseSize != 0)
