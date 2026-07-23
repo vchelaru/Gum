@@ -933,10 +933,3 @@ public class Sprite : SpriteBatchRenderableBase,
         return Clone();
     }
 }
-
-
-
-public interface IRenderTargetTextureReferencer
-{
-    IRenderableIpso? RenderTargetTextureSource { get; }
-}
