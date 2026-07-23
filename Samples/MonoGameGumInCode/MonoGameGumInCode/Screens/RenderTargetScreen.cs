@@ -249,14 +249,11 @@ internal class RenderTargetScreen : FrameworkElement
     // reads as "clipped" in a way a rectangle (which just looks like a smaller rectangle) never can.
     // This is texture-size truncation, not the ClipsChildren scissor path (#3440).
     //
-    // NOTE: use an OUTLINE circle (leave IsFilled off, set Color for the ring). It must render the
-    // same on both backends: this sample's CircleRuntime is backed by the core SpriteBatch LineCircle,
-    // which draws an outline only (no Apos.Shapes needed), and raylib's CircleRuntime defaults to a
-    // stroke-only outline too. A FILLED circle would render filled on raylib but only as an outline
-    // here — a mismatch that misleads in a comparison.
-    // Set the ring via Color, NOT StrokeColor: this sample's core LineCircle exposes only Color, so
-    // StrokeColor is raylib/Sokol-only and switching to it would break this build. Ignore the CS0618
-    // deprecation on Color here — it does not apply to this outline-only cross-backend case.
+    // NOTE: use an OUTLINE circle (leave IsFilled off, set StrokeColor for the ring). It must render
+    // the same on all three backends: XNALIKE/raylib's obsolete Color already routed to the stroke
+    // slot, but Skia's CircleRuntime has no such override and fell through to the base class's legacy
+    // shim, which writes the FILL slot instead and rendered a solid disk (#3989 follow-up). StrokeColor
+    // is unambiguous everywhere, so use it directly instead of the obsolete Color.
     private static GraphicalUiElement BuildOverflow()
     {
         var holder = BuildFrame(150, 110);
@@ -273,7 +270,7 @@ internal class RenderTargetScreen : FrameworkElement
         circle.Y = 8;
         circle.Width = 140;
         circle.Height = 140;
-        circle.Color = Rgba(80, 200, 120, 255);
+        circle.StrokeColor = Rgba(80, 200, 120, 255);
         group.AddChild(circle);
 
         holder.AddChild(group);
@@ -286,10 +283,10 @@ internal class RenderTargetScreen : FrameworkElement
     // rectangle to a rectangle just yields a smaller rectangle and demonstrates nothing, which is why
     // the child must be a circle.)
     //
-    // Same outline-circle rules as BuildOverflow: leave IsFilled off and set the ring via Color (NOT
-    // StrokeColor) so it renders identically on MonoGame and raylib. The clip window is a sub-region
-    // of the render target, so the empty area to its right is the RT extending past the clip. Kept
-    // identical to the raylib sample's BuildClipsChildrenInside.
+    // Same outline-circle rules as BuildOverflow: leave IsFilled off and set StrokeColor for the ring
+    // so it renders identically on all three backends. The clip window is a sub-region of the render
+    // target, so the empty area to its right is the RT extending past the clip. Kept identical to the
+    // raylib sample's BuildClipsChildrenInside.
     private static GraphicalUiElement BuildClipsChildrenInside()
     {
         var holder = BuildFrame(150, 110);
@@ -311,7 +308,7 @@ internal class RenderTargetScreen : FrameworkElement
         circle.Y = 5;
         circle.Width = 120;
         circle.Height = 120;
-        circle.Color = Rgba(220, 60, 60, 255);
+        circle.StrokeColor = Rgba(220, 60, 60, 255);
         clip.AddChild(circle);
 
         group.AddChild(clip);
