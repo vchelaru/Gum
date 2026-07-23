@@ -74,6 +74,7 @@ unsafe class Program
         () => new SilkNetGum.Screens.RectanglesScreen(),
         () => new SilkNetGum.Screens.ArcsScreen(),
         () => new SilkNetGum.Screens.PolygonsScreen(),
+        () => new SilkNetGum.Screens.RenderTargetScreen(),
         () => new GumSamples.Screens.FormsScreen(),
     };
 
@@ -87,6 +88,7 @@ unsafe class Program
         "Rectangles",
         "Arcs",
         "Polygons",
+        "Render Target",
         "Forms",
     };
 

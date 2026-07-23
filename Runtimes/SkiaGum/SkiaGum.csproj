@@ -45,6 +45,9 @@
 		<!-- Shared markup model + run-splitter (InlineVariable, StyledSubstring, StyledSubstringSplitter)
 		     so Skia's Text can render BBCode inline styling without reimplementing the split (#3679). -->
 		<Compile Include="..\..\RenderingLibrary\Graphics\StyledSubstringSplitter.cs" Link="RenderingLibrary\StyledSubstringSplitter.cs" />
+		<!-- Backend-agnostic offscreen render-target cache base, subclassed by SkiaRenderTargetService
+		     for render-target container baking (#3988). Same file raylib links. -->
+		<Compile Include="..\..\RenderingLibrary\Graphics\RenderTargetService.cs" Link="RenderingLibrary\RenderTargetService.cs" />
 		<!--
 		  IAnimatable is file-linked into GumCommon (GumCommon.csproj line 89) and arrives
 		  here via the GumCommon ProjectReference below. Compiling it locally too produced two

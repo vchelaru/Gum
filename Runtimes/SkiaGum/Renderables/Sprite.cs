@@ -33,8 +33,15 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
 
     public SKImage? Image { get; set; }
 
-    public float? TextureWidth => Texture?.Width;
-    public float? TextureHeight => Texture?.Height;
+    /// <summary>
+    /// The render-target container whose baked offscreen texture this sprite displays, in place of a
+    /// directly-assigned <see cref="Texture"/>/<see cref="Image"/> (#3988). When set, the sprite pulls
+    /// the baked <see cref="SKImage"/> from the renderer at draw time; a null bake draws nothing.
+    /// </summary>
+    public IRenderableIpso? RenderTargetTextureSource { get; set; }
+
+    public float? TextureWidth => RenderTargetTextureSource?.Width ?? Texture?.Width;
+    public float? TextureHeight => RenderTargetTextureSource?.Height ?? Texture?.Height;
 
     public Rectangle? SourceRectangle;
     private SKBitmap? _texture;
@@ -53,7 +60,17 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         set { } // don't support this yet...
     }
 
-    public float AspectRatio => Texture != null ? (Texture.Width / (float)Texture.Height) : 1.0f;
+    public float AspectRatio
+    {
+        get
+        {
+            if (RenderTargetTextureSource != null && RenderTargetTextureSource.Height != 0)
+            {
+                return RenderTargetTextureSource.Width / RenderTargetTextureSource.Height;
+            }
+            return Texture != null ? (Texture.Width / (float)Texture.Height) : 1.0f;
+        }
+    }
 
     public AnimationChainLogic AnimationLogic { get; } = new AnimationChainLogic();
 
@@ -105,6 +122,22 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
 
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
+        // Render-target pull (#3988): display the baked texture of the referenced container instead of
+        // an assigned Texture/Image. A null bake (degenerate size, or off-screen) draws nothing rather
+        // than stale content, matching the raylib/MonoGame pull model.
+        if (RenderTargetTextureSource != null)
+        {
+            SKImage? bakedImage = Renderer.Self.TryGetBakedRenderTargetFor(RenderTargetTextureSource);
+            if (bakedImage == null)
+            {
+                return;
+            }
+
+            SKPaint renderTargetPaint = base.GetCachedPaint(boundingRect, absoluteRotation);
+            canvas.DrawImage(bakedImage, boundingRect, renderTargetPaint);
+            return;
+        }
+
         ////////////Early Out/////////////
         if (Texture == null && Image == null)
         {

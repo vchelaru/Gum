@@ -18,6 +18,7 @@ using Texture2D = Raylib_cs.Texture2D;
 using ContainedSpriteType = Gum.Renderables.Sprite;
 #elif SKIA
 using SkiaGum.Renderables;
+using RenderingLibrary.Graphics;
 using Color = SkiaSharp.SKColor;
 using Rectangle = SkiaSharp.SKRect;
 using Texture2D = SkiaSharp.SKBitmap;
@@ -424,7 +425,7 @@ public class SpriteRuntime : GraphicalUiElement
         }
     }
 
-#if XNALIKE || RAYLIB
+#if XNALIKE || RAYLIB || SKIA
     /// <summary>
     /// The source render-target container whose baked texture this sprite displays, in place of
     /// a directly-assigned <see cref="Texture"/>.
@@ -445,9 +446,9 @@ public class SpriteRuntime : GraphicalUiElement
 
 #if XNALIKE
     // The XNA Renderer's render-target detection walk (CollectReferencedRenderTargets) tests for
-    // IRenderTargetTextureReferencer, so a nested SpriteRuntime must implement it. Raylib's Renderer
-    // resolves the source via concrete Gum.Renderables.Sprite type checks instead, so it doesn't need
-    // this interface. Both backends pull the baked target via Renderer.TryGetBakedRenderTargetFor.
+    // IRenderTargetTextureReferencer, so a nested SpriteRuntime must implement it. The raylib and Skia
+    // Renderers resolve the source via concrete Sprite type checks instead, so they don't need this
+    // interface. All three backends pull the baked target via Renderer.TryGetBakedRenderTargetFor.
     IRenderableIpso? IRenderTargetTextureReferencer.RenderTargetTextureSource =>
         ContainedSprite.RenderTargetTextureSource;
 #endif

@@ -1,4 +1,6 @@
 ﻿using Gum.GueDeriving;
+using Gum.Wireframe;
+using RenderingLibrary.Math;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -64,6 +66,20 @@ namespace RenderingLibrary.Graphics
         public Camera Camera { get; private set; }
         public bool ClearsCanvas { get; set; } = true;
 
+        // Per-render-target-container offscreen surfaces (#3988), baked in a pre-pass and composited
+        // in place during the main walk. Cache keyed by the container's contained renderable; swept
+        // once per frame via RenderTargetServiceBase, exactly like the raylib/MonoGame renderers.
+        readonly SkiaRenderTargetService _renderTargetService = new SkiaRenderTargetService();
+
+        // This frame's baked snapshots, keyed by the same contained-renderable owner. Rebuilt each
+        // top-level Draw (old snapshots disposed first) and read by both the composite pass and a
+        // Sprite pulling its RenderTargetTextureSource.
+        readonly Dictionary<IRenderableIpso, SKImage> _bakedImages = new Dictionary<IRenderableIpso, SKImage>();
+
+        // Cache owners of render-target containers referenced by a visible Sprite's
+        // RenderTargetTextureSource, so an invisible-but-referenced container still bakes (#1643).
+        readonly HashSet<IRenderableIpso> _referencedRenderTargetOwners = new HashSet<IRenderableIpso>();
+
         public void Initialize(SystemManagers managers)
         {
             Camera = new Camera();
@@ -115,13 +131,32 @@ namespace RenderingLibrary.Graphics
 
         void Draw(IList<IRenderableIpso> whatToRender, SystemManagers managers, bool isTopLevelDraw = false)
         {
-            if (ClearsCanvas && isTopLevelDraw)
+            if (isTopLevelDraw)
             {
-                managers.Canvas.Clear();
-            }
+                // Frame-boundary lifecycle: drop last frame's snapshots, then sweep offscreen surfaces
+                // whose owner wasn't baked last frame (removed, hidden, or resized). Mirrors the
+                // raylib/MonoGame RenderTargetService pattern (#3988).
+                DisposeBakedImages();
+                _renderTargetService.ClearUnusedRenderTargetsLastFrame();
 
-            if(isTopLevelDraw)
-            { 
+                // Collect render-target containers referenced by a visible Sprite before baking, so an
+                // invisible-but-referenced container still bakes (#1643).
+                _referencedRenderTargetOwners.Clear();
+                CollectReferencedRenderTargets(whatToRender);
+
+                if (ClearsCanvas)
+                {
+                    managers.Canvas.Clear();
+                }
+
+                // Bake every render-target container's subtree into its offscreen surface before the
+                // camera transform is applied to the screen canvas. Each bake swaps managers.Canvas to
+                // its own offscreen canvas and restores it, so nothing leaks between the two.
+                if (HasAnyRenderTarget(whatToRender))
+                {
+                    BakeRenderTargetsInSubtree(whatToRender, managers);
+                }
+
                 if (Camera.Zoom != 1)
                 {
                     managers.Canvas.Scale(Camera.Zoom);
@@ -151,6 +186,14 @@ namespace RenderingLibrary.Graphics
                 var renderable = whatToRender[i];
                 if (renderable.Visible)
                 {
+                    // A render-target container composites its baked offscreen texture in place of
+                    // walking its live children (its subtree was baked in the pre-pass, #3988). A
+                    // hidden one is skipped by the Visible check above, so no stale texture ghosts.
+                    if (renderable.IsRenderTarget)
+                    {
+                        CompositeRenderTarget(renderable, managers);
+                        continue;
+                    }
 
                     var canvas = (managers as SystemManagers).Canvas;
 
@@ -252,6 +295,200 @@ namespace RenderingLibrary.Graphics
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Whether an offscreen texture is currently baked for the given render-target container.
+        /// Resolves the container's cache owner internally. Intended for tests and diagnostics.
+        /// </summary>
+        public bool HasBakedRenderTargetFor(IRenderableIpso container)
+            => _bakedImages.ContainsKey(ResolveRenderTargetCacheOwner(container));
+
+        /// <summary>
+        /// The offscreen texture baked for the given render-target container this frame, or null if
+        /// none exists. Resolves the container's cache owner internally. Used by a Sprite pulling its
+        /// <c>RenderTargetTextureSource</c>, and by tests.
+        /// </summary>
+        public SKImage TryGetBakedRenderTargetFor(IRenderableIpso container)
+            => _bakedImages.TryGetValue(ResolveRenderTargetCacheOwner(container), out SKImage image)
+                ? image
+                : null;
+
+        private void DisposeBakedImages()
+        {
+            foreach (SKImage image in _bakedImages.Values)
+            {
+                image?.Dispose();
+            }
+            _bakedImages.Clear();
+        }
+
+        // Populates _referencedRenderTargetOwners with the cache owner of every render-target
+        // container referenced by a visible Sprite's RenderTargetTextureSource. Both a top-level
+        // Sprite (handed directly) and a nested one (wrapped in a GraphicalUiElement) are handled.
+        private void CollectReferencedRenderTargets(IList<IRenderableIpso> renderables)
+        {
+            for (int i = 0; i < renderables.Count; i++)
+            {
+                IRenderableIpso renderable = renderables[i];
+                if (!renderable.Visible)
+                {
+                    continue;
+                }
+
+                SkiaGum.Renderables.Sprite sprite = renderable as SkiaGum.Renderables.Sprite
+                    ?? (renderable as GraphicalUiElement)?.RenderableComponent as SkiaGum.Renderables.Sprite;
+                if (sprite?.RenderTargetTextureSource != null)
+                {
+                    _referencedRenderTargetOwners.Add(ResolveRenderTargetCacheOwner(sprite.RenderTargetTextureSource));
+                }
+
+                if (renderable.Children != null)
+                {
+                    CollectReferencedRenderTargets(renderable.Children);
+                }
+            }
+        }
+
+        private bool IsReferencedRenderTargetOwner(IRenderableIpso renderable)
+            => _referencedRenderTargetOwners.Contains(ResolveRenderTargetCacheOwner(renderable));
+
+        // Whether the tree contains any render-target container that needs baking this frame — a
+        // visible one, or an invisible one referenced by a visible Sprite. Lets screens with no
+        // render targets skip the bake walk entirely.
+        private bool HasAnyRenderTarget(IList<IRenderableIpso> renderables)
+        {
+            for (int i = 0; i < renderables.Count; i++)
+            {
+                IRenderableIpso renderable = renderables[i];
+                bool isReferenced = renderable.IsRenderTarget && IsReferencedRenderTargetOwner(renderable);
+                if (!renderable.Visible && !isReferenced)
+                {
+                    continue;
+                }
+
+                if (renderable.IsRenderTarget)
+                {
+                    return true;
+                }
+
+                if (renderable.Children != null && HasAnyRenderTarget(renderable.Children))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Post-order (innermost-first) bake of every render-target container, so a nested inner
+        // target is baked before its outer one; the outer bake then composites the inner's finished
+        // texture while walking its children.
+        private void BakeRenderTargetsInSubtree(IList<IRenderableIpso> renderables, SystemManagers managers)
+        {
+            for (int i = 0; i < renderables.Count; i++)
+            {
+                IRenderableIpso renderable = renderables[i];
+                bool isReferenced = renderable.IsRenderTarget && IsReferencedRenderTargetOwner(renderable);
+                if (!renderable.Visible && !isReferenced)
+                {
+                    continue;
+                }
+
+                if (renderable.Children != null)
+                {
+                    BakeRenderTargetsInSubtree(renderable.Children, managers);
+                }
+
+                if (renderable.IsRenderTarget)
+                {
+                    BakeRenderTarget(renderable, managers);
+                }
+            }
+        }
+
+        // Bakes a single render-target container's child subtree into its cached offscreen surface,
+        // then snapshots it for this frame. Children draw in the surface's local pixel space via an
+        // offset translate; content outside the surface is clipped, truncating overflow to the
+        // render-target size. A non-positive size bakes nothing (the composite then draws nothing).
+        private void BakeRenderTarget(IRenderableIpso container, SystemManagers managers)
+        {
+            int width = MathFunctions.RoundToInt(container.Width);
+            int height = MathFunctions.RoundToInt(container.Height);
+            if (width <= 0 || height <= 0)
+            {
+                return;
+            }
+
+            IRenderableIpso owner = ResolveRenderTargetCacheOwner(container);
+            SkiaRenderTarget renderTarget = _renderTargetService.GetFor(owner, width, height);
+            if (renderTarget == null)
+            {
+                return;
+            }
+
+            float left = container.GetAbsoluteX();
+            float top = container.GetAbsoluteY();
+
+            SKCanvas offscreenCanvas = renderTarget.Surface.Canvas;
+            offscreenCanvas.Clear(SKColors.Transparent);
+            offscreenCanvas.Save();
+            offscreenCanvas.Translate(-left, -top);
+
+            SKCanvas screenCanvas = managers.Canvas;
+            managers.Canvas = offscreenCanvas;
+            Draw(container.Children, managers, isTopLevelDraw: false);
+            managers.Canvas = screenCanvas;
+
+            offscreenCanvas.Restore();
+
+            // The snapshot stays valid across the frame via SkiaSharp copy-on-write; the persistent
+            // surface is only re-cleared next frame, after DisposeBakedImages frees this snapshot.
+            _bakedImages[owner] = renderTarget.Surface.Snapshot();
+        }
+
+        // Composites a render-target container's baked texture at the container's rectangle, honoring
+        // group alpha and additive blend. No valid baked texture (degenerate size, or off-screen) =>
+        // draws nothing, so the subtree simply does not appear.
+        private void CompositeRenderTarget(IRenderableIpso container, SystemManagers managers)
+        {
+            IRenderableIpso owner = ResolveRenderTargetCacheOwner(container);
+            if (!_bakedImages.TryGetValue(owner, out SKImage image) || image == null)
+            {
+                return;
+            }
+
+            int width = MathFunctions.RoundToInt(container.Width);
+            int height = MathFunctions.RoundToInt(container.Height);
+            if (width <= 0 || height <= 0)
+            {
+                return;
+            }
+
+            // Skia surfaces are premultiplied, so a plain SrcOver composite needs no straight-vs-
+            // premultiplied correction (unlike the XNA/raylib bake blend handling). Group alpha tints
+            // the whole texture. Additive-blend render-target containers aren't handled here because
+            // ContainerRuntime exposes no Blend/BlendState on Skia (it's gated !SKIA) — nothing can set
+            // a Skia container additive, so there is no additive case to composite (deferred: #3989).
+            byte alpha = (byte)System.Math.Clamp(container.Alpha, 0, 255);
+            using SKPaint paint = new SKPaint();
+            paint.Color = new SKColor(255, 255, 255, alpha);
+
+            float left = container.GetAbsoluteX();
+            float top = container.GetAbsoluteY();
+            SKRect destination = new SKRect(left, top, left + width, top + height);
+            managers.Canvas.DrawImage(image, destination, paint);
+        }
+
+        // For a nested render-target container the walk hands the GraphicalUiElement wrapper; for a
+        // top-level one it hands the contained renderable directly. The cache key is always the
+        // contained renderable so both forms resolve to the same texture.
+        private static IRenderableIpso ResolveRenderTargetCacheOwner(IRenderableIpso source)
+        {
+            if (source is GraphicalUiElement gue && gue.RenderableComponent is IRenderableIpso contained)
+            {
+                return contained;
+            }
+            return source;
         }
 
         public void RenderLayer(ISystemManagers managers, Layer layer, bool prerender = true)

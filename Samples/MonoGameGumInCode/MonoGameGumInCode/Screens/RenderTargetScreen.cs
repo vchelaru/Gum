@@ -2,19 +2,40 @@ using Gum.DataTypes;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Managers;
-using Gum.RenderingLibrary;
 using Gum.Wireframe;
-using Microsoft.Xna.Framework;
+#if RAYLIB
+using Gum.RenderingLibrary;
+using Color = Raylib_cs.Color;
+#elif SKIA
+using Color = SkiaSharp.SKColor;
+#else
+using Gum.RenderingLibrary;
+using Color = Microsoft.Xna.Framework.Color;
+#endif
 
+#if RAYLIB
+namespace Examples.Shapes;
+#elif SKIA
+namespace SilkNetGum.Screens;
+#else
 namespace MonoGameGumInCode.Screens;
+#endif
 
 /// <summary>
-/// Render-to-texture gallery (issue #3434), the MonoGame mirror of the raylib RenderTargetScreen.
-/// Each cell wraps its content in a <see cref="ContainerRuntime"/> with
+/// Render-to-texture gallery (issues #3434 / #3988), shared by the MonoGame, raylib, and
+/// SilkNetGum/Skia samples. Each cell wraps its content in a <see cref="ContainerRuntime"/> with
 /// <see cref="ContainerRuntime.IsRenderTarget"/> = true, so the subtree bakes into an offscreen
-/// texture and composites back in place. Unlike <c>RenderTargetEffectScreen</c>, no shader is
-/// involved — this exercises the render-target path itself: group alpha/blend, nested targets,
-/// overflow clipping to the container bounds, and a ClipsChildren descendant inside the target.
+/// texture and composites back in place: group alpha, nested targets, overflow clipping to the
+/// container bounds, a ClipsChildren descendant inside the target, and a Sprite that samples another
+/// container's bake via RenderTargetTextureSource.
+///
+/// One shared file (linked into Samples/raylib/GumTest.csproj and
+/// Samples/SilkNetGum/SilkNetGumSample/SilkNetGumSample.csproj via &lt;Compile Include ... Link&gt;),
+/// like TextScreen. Only genuinely backend-specific bits differ, gated `#if RAYLIB` / `#elif SKIA` /
+/// `#else`: the Color alias and namespace above, and the two cells Skia can't express yet — additive
+/// group blend (ContainerRuntime.Blend is !SKIA) and a blurred dropshadow in a render target (Skia's
+/// dropshadow blur API differs). Both are `#if !SKIA` and simply absent on the Skia screen; the
+/// remaining six cells are the render-target feature itself and render on all three backends.
 /// </summary>
 internal class RenderTargetScreen : FrameworkElement
 {
@@ -35,13 +56,22 @@ internal class RenderTargetScreen : FrameworkElement
 
         root.AddChild(BuildCell("Render to target", BuildBaseline()));
         root.AddChild(BuildCell("Group alpha 50%", BuildGroupAlpha()));
+#if !SKIA
         root.AddChild(BuildCell("Additive group", BuildAdditiveGroup()));
+#endif
         root.AddChild(BuildCell("Nested RT + sibling", BuildNestedWithSibling()));
         root.AddChild(BuildCell("Overflow clipped", BuildOverflow()));
         root.AddChild(BuildCell("ClipsChildren inside RT", BuildClipsChildrenInside()));
         root.AddChild(BuildCell("Sprite shows RT texture", BuildSpriteFromRenderTarget()));
+#if !SKIA
         root.AddChild(BuildCell("Blurred shadow in RT", BuildBlurredShadowInRenderTarget()));
+#endif
     }
+
+    // Portable color construction across the three backends' Color aliases (XNA / Raylib_cs / SKColor
+    // all expose a (byte,byte,byte,byte) form). Callers pass plain int literals, which convert to the
+    // byte parameters as in-range constants.
+    private static Color Rgba(byte r, byte g, byte b, byte a) => new Color(r, g, b, a);
 
     private static ContainerRuntime BuildCell(string caption, GraphicalUiElement body)
     {
@@ -55,7 +85,7 @@ internal class RenderTargetScreen : FrameworkElement
 
         var header = new TextRuntime();
         header.Text = caption;
-        header.Color = Color.White;
+        header.Color = Rgba(255, 255, 255, 255);
         cell.AddChild(header);
         cell.AddChild(body);
         return cell;
@@ -68,7 +98,7 @@ internal class RenderTargetScreen : FrameworkElement
         var frame = new ColoredRectangleRuntime();
         frame.Width = width;
         frame.Height = height;
-        frame.Color = new Color(70, 70, 90, 255);
+        frame.Color = Rgba(70, 70, 90, 255);
 
         var holder = new ContainerRuntime();
         holder.Width = width;
@@ -98,8 +128,8 @@ internal class RenderTargetScreen : FrameworkElement
         group.Width = 150;
         group.Height = 110;
         group.IsRenderTarget = true;
-        group.AddChild(Rect(10, 10, 90, 70, new Color(220, 60, 60, 255)));
-        group.AddChild(Rect(55, 35, 90, 70, new Color(60, 120, 220, 255)));
+        group.AddChild(Rect(10, 10, 90, 70, Rgba(220, 60, 60, 255)));
+        group.AddChild(Rect(55, 35, 90, 70, Rgba(60, 120, 220, 255)));
         holder.AddChild(group);
         return holder;
     }
@@ -116,14 +146,16 @@ internal class RenderTargetScreen : FrameworkElement
         group.Height = 110;
         group.IsRenderTarget = true;
         group.Alpha = 128;
-        group.AddChild(Rect(10, 10, 90, 70, new Color(220, 60, 60, 255)));
-        group.AddChild(Rect(55, 35, 90, 70, new Color(60, 120, 220, 255)));
+        group.AddChild(Rect(10, 10, 90, 70, Rgba(220, 60, 60, 255)));
+        group.AddChild(Rect(55, 35, 90, 70, Rgba(60, 120, 220, 255)));
         holder.AddChild(group);
         return holder;
     }
 
+#if !SKIA
     // Additive blend on the render target: the flattened group adds its color to the background, so
-    // overlapping the gray frame brightens it rather than replacing it.
+    // overlapping the gray frame brightens it rather than replacing it. Skia omits this cell —
+    // ContainerRuntime exposes no Blend on Skia (see #3989).
     private static GraphicalUiElement BuildAdditiveGroup()
     {
         var holder = BuildFrame(150, 110);
@@ -133,11 +165,12 @@ internal class RenderTargetScreen : FrameworkElement
         group.Height = 110;
         group.IsRenderTarget = true;
         group.Blend = Blend.Additive;
-        group.AddChild(Rect(10, 10, 90, 70, new Color(120, 40, 40, 255)));
-        group.AddChild(Rect(55, 35, 90, 70, new Color(40, 70, 120, 255)));
+        group.AddChild(Rect(10, 10, 90, 70, Rgba(120, 40, 40, 255)));
+        group.AddChild(Rect(55, 35, 90, 70, Rgba(40, 70, 120, 255)));
         holder.AddChild(group);
         return holder;
     }
+#endif
 
     // Outer render target containing a nested render-target group followed by a semi-transparent
     // sibling, shown beside a direct-draw reference of the same semi-transparent rect over the same
@@ -171,7 +204,7 @@ internal class RenderTargetScreen : FrameworkElement
 
         var caption = new TextRuntime();
         caption.Text = label;
-        caption.Color = new Color(180, 180, 180, 255);
+        caption.Color = Rgba(180, 180, 180, 255);
         swatch.AddChild(caption);
         swatch.AddChild(body);
         return swatch;
@@ -193,9 +226,9 @@ internal class RenderTargetScreen : FrameworkElement
         inner.Height = 94;
         inner.IsRenderTarget = true;
         inner.Alpha = 200;
-        inner.AddChild(Rect(0, 0, 64, 94, new Color(230, 120, 40, 255)));
+        inner.AddChild(Rect(0, 0, 64, 94, Rgba(230, 120, 40, 255)));
 
-        var sibling = Rect(80, 8, 62, 94, new Color(255, 255, 255, 128));
+        var sibling = Rect(80, 8, 62, 94, Rgba(255, 255, 255, 128));
 
         outer.AddChild(inner);
         outer.AddChild(sibling);
@@ -208,7 +241,7 @@ internal class RenderTargetScreen : FrameworkElement
     private static GraphicalUiElement BuildDirectReference()
     {
         var holder = BuildFrame(70, 110);
-        holder.AddChild(Rect(8, 8, 62, 94, new Color(255, 255, 255, 128)));
+        holder.AddChild(Rect(8, 8, 62, 94, Rgba(255, 255, 255, 128)));
         return holder;
     }
 
@@ -243,7 +276,7 @@ internal class RenderTargetScreen : FrameworkElement
         circle.Y = 8;
         circle.Width = 140;
         circle.Height = 140;
-        circle.Color = new Color(80, 200, 120, 255);
+        circle.Color = Rgba(80, 200, 120, 255);
         group.AddChild(circle);
 
         holder.AddChild(group);
@@ -281,7 +314,7 @@ internal class RenderTargetScreen : FrameworkElement
         circle.Y = 5;
         circle.Width = 120;
         circle.Height = 120;
-        circle.Color = new Color(220, 60, 60, 255);
+        circle.Color = Rgba(220, 60, 60, 255);
         clip.AddChild(circle);
 
         group.AddChild(clip);
@@ -308,8 +341,8 @@ internal class RenderTargetScreen : FrameworkElement
         source.Width = 70;
         source.Height = 70;
         source.IsRenderTarget = true;
-        source.AddChild(Rect(0, 0, 70, 35, new Color(220, 60, 60, 255)));
-        source.AddChild(Rect(0, 35, 70, 35, new Color(60, 120, 220, 255)));
+        source.AddChild(Rect(0, 0, 70, 35, Rgba(220, 60, 60, 255)));
+        source.AddChild(Rect(0, 35, 70, 35, Rgba(60, 120, 220, 255)));
 
         var sprite = new SpriteRuntime();
         sprite.WidthUnits = DimensionUnitType.Absolute;
@@ -327,11 +360,14 @@ internal class RenderTargetScreen : FrameworkElement
         return row;
     }
 
+#if !SKIA
     // Issue #3464 (raylib-only bug, mirrored here for gallery parity/comparison — MonoGame's
     // dropshadow is an Apos.Shapes shader pass, not an offscreen render-to-texture blur, so it never
     // had the nested-render-target clobber raylib had). A blurred dropshadow inside a render-target
     // container, plus a sibling drawn after it, should look identical to the raylib cell: a soft
     // shadow offset down-right of the blue rectangle, and a red sibling rectangle below-right of it.
+    // Skia omits this cell — its dropshadow-blur API differs (DropshadowBlurX/Y, not the singular
+    // DropshadowBlur used here); a Skia dropshadow-in-RT demo is future work (see #3989).
     private static GraphicalUiElement BuildBlurredShadowInRenderTarget()
     {
         var holder = BuildFrame(150, 110);
@@ -347,17 +383,18 @@ internal class RenderTargetScreen : FrameworkElement
         shadowed.Width = 50;
         shadowed.Height = 40;
         shadowed.IsFilled = true;
-        shadowed.FillColor = new Color(60, 120, 220, 255);
+        shadowed.FillColor = Rgba(60, 120, 220, 255);
         shadowed.HasDropshadow = true;
-        shadowed.DropshadowColor = new Color(0, 0, 0, 200);
+        shadowed.DropshadowColor = Rgba(0, 0, 0, 200);
         shadowed.DropshadowOffsetX = 6;
         shadowed.DropshadowOffsetY = 6;
         shadowed.DropshadowBlur = 8;
         group.AddChild(shadowed);
 
-        group.AddChild(Rect(80, 55, 55, 45, new Color(220, 60, 60, 255)));
+        group.AddChild(Rect(80, 55, 55, 45, Rgba(220, 60, 60, 255)));
 
         holder.AddChild(group);
         return holder;
     }
+#endif
 }

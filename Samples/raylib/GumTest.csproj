@@ -18,10 +18,11 @@
     <ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.RaylibGum\KernSmith.RaylibGum.csproj" />
   </ItemGroup>
 
-  <!-- #3640: TextScreen.cs is shared with Samples/MonoGameGumInCode (the canonical copy), gated
-       #if RAYLIB, to stop the two mirrors drifting when only one got updated. -->
+  <!-- #3640/#3988: TextScreen.cs and RenderTargetScreen.cs are shared with Samples/MonoGameGumInCode
+       (the canonical copies), gated #if RAYLIB, to stop the mirrors drifting when only one got updated. -->
   <ItemGroup>
     <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\TextScreen.cs" Link="Screens\TextScreen.cs" />
+    <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\RenderTargetScreen.cs" Link="Screens\RenderTargetScreen.cs" />
   </ItemGroup>
 
   <ItemGroup>
