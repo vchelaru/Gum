@@ -4,15 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#if SKIA
-using SkiaGum.Xna;
-#endif
-
 namespace Gum.RenderingLibrary;
 
 public static class BlendExtensions
 {
-    #if !NO_XNA && !SKIA
+    // BlendState resolves to Gum.BlendState via the enclosing-namespace rule (Gum.RenderingLibrary
+    // is nested under Gum) on every platform, XNA-likes included, so no per-platform using/alias is
+    // needed here.
+    #if !NO_XNA
     public static BlendState ToBlendState(this Blend blend, bool isUsingPremultipliedAlpha = false)
     {
 #if FRB

@@ -10,10 +10,6 @@ using System.Threading.Tasks;
 
 #if XNALIKE
 using BlendStateAlias = global::Microsoft.Xna.Framework.Graphics.BlendState;
-#elif RAYLIB || SOKOL
-using BlendStateAlias = global::Gum.BlendState;
-#elif SKIA
-// SkiaGum has no BlendState property on ContainerRuntime
 #else
 using BlendStateAlias = global::Gum.BlendState;
 #endif
@@ -113,7 +109,7 @@ public class ContainerRuntime : InteractiveGue
 #endif
 
 
-#if !SKIA && !SOKOL
+#if !SOKOL
     public BlendStateAlias BlendState
     {
 #if XNALIKE

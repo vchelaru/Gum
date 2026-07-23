@@ -148,4 +148,98 @@ public class RenderTargetTests
 
         SystemManagers.Default.Renderer.HasBakedRenderTargetFor(renderTarget).ShouldBeTrue();
     }
+
+    // ContainerRuntime.Blend/BlendState (#3989) additive composite. The baked texture is
+    // premultiplied, so a correct additive composite adds the premultiplied color straight onto the
+    // background (SKBlendMode.Plus): half-alpha red (200,0,0,128) premultiplies to ~(100,0,0), added
+    // onto a (50,0,0) background reaches ~150 red. A plain alpha-over composite (the non-additive
+    // path, see the next test) would only reach ~125 -- the >140 threshold discriminates the two.
+    [Fact]
+    public void Draw_AdditiveRenderTarget_AddsToBackgroundInsteadOfReplacing()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+        RectangleRuntime background = new()
+        {
+            X = 0,
+            Y = 0,
+            Width = 64,
+            Height = 64,
+            IsFilled = true,
+            FillColor = new SKColor(50, 0, 0, 255),
+        };
+        GumService.Default.Root.Children.Add(background);
+
+        ContainerRuntime additive = new()
+        {
+            X = 0,
+            Y = 0,
+            Width = 64,
+            Height = 64,
+            IsRenderTarget = true,
+            Blend = Gum.RenderingLibrary.Blend.Additive,
+        };
+        additive.Children.Add(new RectangleRuntime
+        {
+            X = 0,
+            Y = 0,
+            Width = 64,
+            Height = 64,
+            IsFilled = true,
+            FillColor = new SKColor(200, 0, 0, 128),
+        });
+        GumService.Default.Root.Children.Add(additive);
+
+        GumService.Default.Draw();
+
+        using SKImage image = surface.Snapshot();
+        using SKBitmap bitmap = SKBitmap.FromImage(image);
+        bitmap.GetPixel(32, 32).Red.ShouldBeGreaterThan((byte)140);
+    }
+
+    // Contrast for the additive test above: with no Blend set (the default), the render-target
+    // composite stays a plain alpha-over blit, so the background is dimmed rather than added to.
+    [Fact]
+    public void Draw_NonAdditiveRenderTarget_CompositesOverBackgroundInsteadOfAdding()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(64, 64));
+        GumService.Default.Initialize(surface.Canvas, 64, 64);
+
+        RectangleRuntime background = new()
+        {
+            X = 0,
+            Y = 0,
+            Width = 64,
+            Height = 64,
+            IsFilled = true,
+            FillColor = new SKColor(50, 0, 0, 255),
+        };
+        GumService.Default.Root.Children.Add(background);
+
+        ContainerRuntime normal = new()
+        {
+            X = 0,
+            Y = 0,
+            Width = 64,
+            Height = 64,
+            IsRenderTarget = true,
+        };
+        normal.Children.Add(new RectangleRuntime
+        {
+            X = 0,
+            Y = 0,
+            Width = 64,
+            Height = 64,
+            IsFilled = true,
+            FillColor = new SKColor(200, 0, 0, 128),
+        });
+        GumService.Default.Root.Children.Add(normal);
+
+        GumService.Default.Draw();
+
+        using SKImage image = surface.Snapshot();
+        using SKBitmap bitmap = SKBitmap.FromImage(image);
+        bitmap.GetPixel(32, 32).Red.ShouldBeLessThan((byte)140);
+    }
 }
