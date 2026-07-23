@@ -151,6 +151,83 @@ half4 main(float2 coord) {
         ((int)center.Red - center.Green).ShouldBeGreaterThan(80);
     }
 
+    [Fact]
+    public void SourceShaderFile_CompilesOnce_WhenReferencedByMultipleContainers()
+    {
+        string shaderPath = WriteTempShader(GrayscaleSksl);
+        int invocationCount = 0;
+        try
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = path =>
+            {
+                invocationCount++;
+                return SKRuntimeEffect.CreateShader(File.ReadAllText(path), out _);
+            };
+
+            ContainerRuntime first = new() { IsRenderTarget = true };
+            first.SourceShaderFile = shaderPath;
+
+            ContainerRuntime second = new() { IsRenderTarget = true };
+            second.SourceShaderFile = shaderPath;
+
+            // The second container referencing the same .sksl must hit the LoaderManager cache.
+            invocationCount.ShouldBe(1);
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            File.Delete(shaderPath);
+        }
+    }
+
+    [Fact]
+    public void SourceShaderFile_RaisesPropertyAssignmentError_WhenResolverFailsAndConsumingSilently()
+    {
+        MissingFileBehavior previousBehavior = GraphicalUiElement.MissingFileBehavior;
+        string? reportedError = null;
+        Action<string> handler = message => reportedError = message;
+        try
+        {
+            GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
+            CustomSetPropertyOnRenderable.PropertyAssignmentError += handler;
+            // Resolver registered but unable to produce an effect (missing .sksl / compile failure).
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = _ => null;
+
+            ContainerRuntime container = new() { IsRenderTarget = true };
+
+            // ConsumeSilently must not throw; it reports through PropertyAssignmentError instead.
+            container.SourceShaderFile = "resources/Missing.sksl";
+
+            reportedError.ShouldNotBeNull();
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.PropertyAssignmentError -= handler;
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            GraphicalUiElement.MissingFileBehavior = previousBehavior;
+        }
+    }
+
+    [Fact]
+    public void SourceShaderFile_Throws_WhenResolverFailsAndMissingFileBehaviorIsThrow()
+    {
+        MissingFileBehavior previousBehavior = GraphicalUiElement.MissingFileBehavior;
+        try
+        {
+            GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ThrowException;
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = _ => null;
+
+            ContainerRuntime container = new() { IsRenderTarget = true };
+
+            Should.Throw<FileNotFoundException>(() => container.SourceShaderFile = "resources/Missing.sksl");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.RenderTargetEffectResolver = null;
+            GraphicalUiElement.MissingFileBehavior = previousBehavior;
+        }
+    }
+
     private static string WriteTempShader(string source)
     {
         string path = Path.Combine(Path.GetTempPath(), "GumSkiaShaderTest_" + Guid.NewGuid().ToString("N") + ".sksl");

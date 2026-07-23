@@ -95,6 +95,13 @@ public partial class CustomSetPropertyOnRenderable
     /// </summary>
     public static Func<IRenderableIpso, GraphicalUiElement, string, object, bool>? AdditionalPropertyOnRenderable = null;
 
+    /// <summary>
+    /// Raised when a string-path property assignment fails and <see cref="GraphicalUiElement.MissingFileBehavior"/>
+    /// is not <see cref="MissingFileBehavior.ThrowException"/>. Mirrors the MonoGame/raylib dispatcher's
+    /// event of the same name (<c>Gum.Wireframe.CustomSetPropertyOnRenderable.PropertyAssignmentError</c>).
+    /// </summary>
+    public static event Action<string>? PropertyAssignmentError;
+
     // Issue #2956 follow-up — two-slot CircleRuntime / RectangleRuntime own a fill renderable
     // AND a stroke renderable. The runtime's typed setters (UseGradient, IsFilled,
     // gradient color channels, gradient endpoints, etc.) forward to BOTH slots; reflection
@@ -1142,11 +1149,14 @@ public partial class CustomSetPropertyOnRenderable
 
     /// <summary>
     /// Resolves <see cref="RenderTargetEffectResolver"/> and stores the result in the container's
-    /// <see cref="RenderingLibrary.Graphics.IRenderTargetRenderable.RenderTargetEffect"/> slot. With
-    /// no resolver registered, or a resolver that throws, this is a graceful no-op (the container
-    /// renders unshaded) -- mirrors the lean, uncached SourceFile handling this dispatcher already
-    /// uses for Sprite/NineSlice above, rather than the XNA-like/raylib dispatcher's cached,
-    /// error-reporting equivalent (a separate assembly graph SkiaGum doesn't reference).
+    /// <see cref="RenderingLibrary.Graphics.IRenderTargetRenderable.RenderTargetEffect"/> slot. Mirrors
+    /// <c>Gum.Wireframe.CustomSetPropertyOnRenderable.AssignSourceShaderFileOnContainer</c>: the
+    /// resolved effect is cached in <see cref="global::RenderingLibrary.Content.LoaderManager"/> by
+    /// normalized path so a shader referenced by multiple containers compiles once, and a failed
+    /// resolve honors <see cref="GraphicalUiElement.MissingFileBehavior"/>. That XNA-like/raylib
+    /// dispatcher lives in a separate assembly graph SkiaGum doesn't reference, so it can't be called
+    /// directly -- this is a parallel copy, not a shared call. With no resolver registered, this is a
+    /// graceful no-op (the container renders unshaded).
     /// </summary>
     private static void AssignSourceShaderFileOnContainer(
         RenderingLibrary.Graphics.InvisibleRenderable effectOwner, string? value)
@@ -1162,14 +1172,56 @@ public partial class CustomSetPropertyOnRenderable
             return;
         }
 
-        SKRuntimeEffect? resolvedEffect;
+        var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+
+        if (ToolsUtilities.FileManager.IsRelative(value) && ToolsUtilities.FileManager.IsUrl(value) == false)
+        {
+            value = ToolsUtilities.FileManager.RelativeDirectory + value;
+            value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
+        }
+
+        // LoaderManager caches disposables by normalized path (same convention as the texture cache)
+        // so a shader referenced by multiple containers compiles once.
+        if (loaderManager.CacheTextures)
+        {
+            var cachedEffect = loaderManager.GetDisposable(value);
+            if (cachedEffect is SKRuntimeEffect cachedSkRuntimeEffect)
+            {
+                effectOwner.RenderTargetEffect = cachedSkRuntimeEffect;
+                return;
+            }
+        }
+
+        SKRuntimeEffect? resolvedEffect = null;
+        Exception? resolveException = null;
         try
         {
             resolvedEffect = RenderTargetEffectResolver(value);
         }
-        catch
+        catch (Exception ex)
         {
-            resolvedEffect = null;
+            resolveException = ex;
+        }
+
+        if (resolvedEffect == null)
+        {
+            // Resolver registered but couldn't produce an effect (missing file or compile error).
+            // Mirror Sprite source-file handling: honor MissingFileBehavior, else report the error.
+            string message = $"Error setting SourceShaderFile on Container\n{value}";
+            message += "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory";
+            message += "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
+            if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
+            {
+                throw new System.IO.FileNotFoundException(message, resolveException);
+            }
+            effectOwner.RenderTargetEffect = null;
+            PropertyAssignmentError?.Invoke(resolveException != null ? message + "\n" + resolveException : message);
+            return;
+        }
+
+        if (loaderManager.CacheTextures)
+        {
+            loaderManager.AddDisposable(value, resolvedEffect);
         }
 
         effectOwner.RenderTargetEffect = resolvedEffect;
