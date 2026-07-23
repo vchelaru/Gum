@@ -1,0 +1,10 @@
+// Grayscale post-process for a render-target container (issue #3998). Bound as the "inputImage"
+// child shader for the single composite draw of a container whose SourceShaderFile points here, so
+// it recolors the whole baked container. SkSL's fixed entry point/contract: a `uniform shader` input
+// sampled via `.eval(coord)`, not GLSL's `texture()`/`sampler2D`.
+uniform shader inputImage;
+half4 main(float2 coord) {
+    half4 texel = inputImage.eval(coord);
+    half gray = dot(texel.rgb, half3(0.299, 0.587, 0.114));
+    return half4(gray, gray, gray, texel.a);
+}

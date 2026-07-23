@@ -1176,8 +1176,14 @@ public partial class CustomSetPropertyOnRenderable
 
         if (ToolsUtilities.FileManager.IsRelative(value) && ToolsUtilities.FileManager.IsUrl(value) == false)
         {
-            value = ToolsUtilities.FileManager.RelativeDirectory + value;
-            value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
+            string prefixed = ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.RelativeDirectory + value);
+
+            // Mirrors SkiaResourceManager.CacheSKImage's texture-loading fallback: prefer the path
+            // relative to the loaded project's directory, but fall back to the original path (left
+            // for the resolver to interpret, typically relative to the working directory) when that
+            // candidate doesn't exist -- e.g. a loose shader file shipped next to the executable
+            // rather than inside the .gumx project folder (#4001).
+            value = System.IO.File.Exists(prefixed) ? prefixed : value;
         }
 
         // LoaderManager caches disposables by normalized path (same convention as the texture cache)

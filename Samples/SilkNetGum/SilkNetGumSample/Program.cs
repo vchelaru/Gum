@@ -75,6 +75,7 @@ unsafe class Program
         () => new SilkNetGum.Screens.ArcsScreen(),
         () => new SilkNetGum.Screens.PolygonsScreen(),
         () => new SilkNetGum.Screens.RenderTargetScreen(),
+        () => new SilkNetGum.Screens.RenderTargetShaderScreen(),
         () => new GumSamples.Screens.FormsScreen(),
     };
 
@@ -89,12 +90,19 @@ unsafe class Program
         "Arcs",
         "Polygons",
         "Render Target",
+        "RT Shader",
         "Forms",
     };
 
     private static void InitializeGum(SKCanvas canvas, IInputContext inputContext)
     {
         GumUI.Initialize(canvas, inputContext, "Content/GumProject/GumProject.gumx");
+
+        // Issue #3998: Gum core ships no shader loader, so the app registers a resolver that turns a
+        // ContainerRuntime.SourceShaderFile (.sksl path) into a compiled SKRuntimeEffect. With no
+        // resolver registered, SourceShaderFile is a graceful no-op.
+        SkiaGum.CustomSetPropertyOnRenderable.RenderTargetEffectResolver =
+            SilkNetGum.Screens.RenderTargetShaderScreen.CompileEffectFromFile;
 
         // Registers GumUI.Keyboard for Tab / Shift+Tab focus traversal between Forms controls.
         GumUI.UseKeyboardDefaults();
