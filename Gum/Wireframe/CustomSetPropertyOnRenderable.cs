@@ -43,11 +43,15 @@ using RaylibGum.Helpers;
 // backends it is a BitmapFont. Mirrored #if so the shared BBCode stack-resolution loop below stays
 // type-neutral (see ApplyFontVariables) - only the font-CREATION body is platform-gated.
 using ResolvedFont = Raylib_cs.Font;
+// The type of InMemoryFontCreator below. On Raylib it produces a live Raylib_cs.Font resource;
+// on the XNA-family backends it produces a pre-baked BitmapFont glyph atlas.
+using FontCreatorType = RaylibGum.Renderables.IRaylibFontCreator;
 namespace RaylibGum.Renderables;
 #else
 using RenderingLibrary.Math.Geometry;
 using Microsoft.Xna.Framework.Graphics;
 using ResolvedFont = RenderingLibrary.Graphics.BitmapFont;
+using FontCreatorType = RenderingLibrary.Graphics.Fonts.IInMemoryFontCreator;
 namespace Gum.Wireframe;
 #endif
 
@@ -102,26 +106,15 @@ public partial class CustomSetPropertyOnRenderable
     public static IRuntimeFontService? FontService { get; set; }
 #endif
 
-#if !RAYLIB
     /// <summary>
-    /// Optional in-memory font creator. When set, font generation bypasses disk entirely —
-    /// the creator produces a <see cref="BitmapFont"/> directly from raw pixel data and
-    /// .fnt metadata. If null or if creation fails, falls back to the disk-based
-    /// <see cref="FontService"/> path.
+    /// Optional in-memory font creator. When set, font generation bypasses disk entirely. On the
+    /// XNA-family backends the creator produces a <see cref="BitmapFont"/> directly from raw pixel
+    /// data and .fnt metadata; on Raylib it produces a <c>Raylib_cs.Font</c> from a
+    /// <see cref="BmfcSave"/> descriptor (for example, by rasterizing an atlas with KernSmith). If
+    /// null or if creation fails, falls back to the disk-based <see cref="FontService"/> path (or
+    /// the existing disk / system-font path on Raylib).
     /// </summary>
-    public static IInMemoryFontCreator? InMemoryFontCreator { get; set; }
-#endif
-
-#if RAYLIB
-    /// <summary>
-    /// Optional in-memory font creator. When set, font generation bypasses disk entirely — the
-    /// creator produces a <see cref="Raylib_cs.Font"/> directly from a <see cref="BmfcSave"/>
-    /// descriptor (for example, by rasterizing an atlas with KernSmith). If null or if creation
-    /// returns null, falls back to the existing disk / system-font path. Raylib parallel to the
-    /// <c>#if !RAYLIB</c> <see cref="IInMemoryFontCreator"/> property above.
-    /// </summary>
-    public static IRaylibFontCreator? InMemoryFontCreator { get; set; }
-#endif
+    public static FontCreatorType? InMemoryFontCreator { get; set; }
 
     public static event Action<string>? PropertyAssignmentError;
 
