@@ -60,6 +60,11 @@
 	  <None Update="Content\GumProject\**\*.*">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
+	  <!-- Loose .sksl shader(s) for RenderTargetShaderScreen (#3998), mirroring Samples/raylib's
+	       resources\*.fs copy rule. -->
+	  <None Update="resources\**\*.*">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
 	  <None Update="libEGL.dll">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
