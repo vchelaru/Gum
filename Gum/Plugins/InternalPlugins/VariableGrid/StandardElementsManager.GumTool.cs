@@ -152,6 +152,12 @@ public class StandardElementsManagerGumTool : IStandardElementsManagerGumTool
                 variable.PropertiesToSetOnDisplayer["MaxValue"] = 255.0;
                 variable.PreferredDisplayer = typeof(SliderDisplay);
             }
+            else if (variable.Name == "StrokeWidth")
+            {
+                // Stroke width has no meaningful negative value but no natural maximum either, so it
+                // stays a plain numeric field (not a slider) with only a floor of 0.
+                variable.PropertiesToSetOnDisplayer["MinValue"] = 0.0;
+            }
         }
         foreach (var variableList in state.VariableLists)
         {

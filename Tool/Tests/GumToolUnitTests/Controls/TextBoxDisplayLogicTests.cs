@@ -122,4 +122,29 @@ public class TextBoxDisplayLogicTests
     {
         TextBoxDisplayLogic.SnapDraggedValue(12.8, null).ShouldBe(12.8);
     }
+
+    [Fact]
+    public void ClampToRange_MinOnly_RaisesBelowMinToMin()
+    {
+        // StrokeWidth-style floor: a min with no max still clamps negatives to the floor.
+        TextBoxDisplayLogic.ClampToRange(-5, 0m, null).ShouldBe(0m);
+    }
+
+    [Fact]
+    public void ClampToRange_MinOnly_LeavesValueAtOrAboveMinUnchanged()
+    {
+        TextBoxDisplayLogic.ClampToRange(10, 0m, null).ShouldBe(10m);
+    }
+
+    [Fact]
+    public void ClampToRange_MaxOnly_LowersAboveMaxToMax()
+    {
+        TextBoxDisplayLogic.ClampToRange(300, null, 255m).ShouldBe(255m);
+    }
+
+    [Fact]
+    public void ClampToRange_NoBounds_LeavesNegativeUnchanged()
+    {
+        TextBoxDisplayLogic.ClampToRange(-5, null, null).ShouldBe(-5m);
+    }
 }

@@ -79,16 +79,33 @@ namespace WpfDataUi.Controls
 
                 if (decimal.TryParse(mAssociatedTextBox.Text, out parsedDecimal))
                 {
-                    if (MinValue.HasValue && parsedDecimal < MinValue)
+                    decimal clamped = ClampToRange((double)parsedDecimal, MinValue, MaxValue);
+                    if (clamped != parsedDecimal)
                     {
-                        mAssociatedTextBox.Text = MinValue.ToString();
-                    }
-                    if (MaxValue.HasValue && parsedDecimal > MaxValue)
-                    {
-                        mAssociatedTextBox.Text = MaxValue.ToString();
+                        mAssociatedTextBox.Text = clamped.ToString();
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Clamps a value into an optional [min, max] range. Either bound may be null (an unbounded
+        /// side), so a variable like StrokeWidth can enforce a floor of 0 with no upper limit.
+        /// </summary>
+        public static decimal ClampToRange(double value, decimal? min, decimal? max)
+        {
+            decimal result = (decimal)value;
+
+            if (min.HasValue && result < min.Value)
+            {
+                result = min.Value;
+            }
+            if (max.HasValue && result > max.Value)
+            {
+                result = max.Value;
+            }
+
+            return result;
         }
 
         private void HandlePreviewKeydown(object? sender, System.Windows.Input.KeyEventArgs e)
