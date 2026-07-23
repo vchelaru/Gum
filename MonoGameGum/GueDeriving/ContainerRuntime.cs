@@ -88,17 +88,41 @@ public class ContainerRuntime : InteractiveGue
             }
         }
     }
+#elif SKIA
+    /// <summary>
+    /// An optional compiled SkSL <see cref="global::SkiaSharp.SKRuntimeEffect"/> applied when this
+    /// container is drawn back to the screen as a render target. Only has an effect when
+    /// <see cref="IsRenderTarget"/> is true. The effect is image-independent (it declares a
+    /// <c>uniform shader inputImage</c> child) — the baked render-target image is bound to that
+    /// child and the resulting <c>SKShader</c> built only at composite time, since the image isn't
+    /// known until the bake completes. Compile SkSL with
+    /// <c>SKRuntimeEffect.CreateShader(sksl, out errors)</c> and assign the result here.
+    /// </summary>
+    public global::SkiaSharp.SKRuntimeEffect? RenderTargetEffect
+    {
+        get => (RenderableComponent as InvisibleRenderable)?.RenderTargetEffect
+            as global::SkiaSharp.SKRuntimeEffect;
+        set
+        {
+            if (RenderableComponent is InvisibleRenderable invisibleRenderable)
+            {
+                invisibleRenderable.RenderTargetEffect = value;
+            }
+        }
+    }
 #endif
 
-#if XNALIKE || RAYLIB
+#if XNALIKE || RAYLIB || SKIA
     /// <summary>
     /// A file reference (e.g. a <c>.fx</c> path on XNA-likes, a <c>.fs</c>/<c>.glsl</c> path on
-    /// raylib) to a post-process shader applied when this container is drawn back to the screen as a
-    /// render target. Mirrors how a Sprite references a texture: setting this routes through the
-    /// string property path, which resolves the reference via
-    /// <see cref="Gum.Wireframe.CustomSetPropertyOnRenderable.RenderTargetEffectResolver"/> and
-    /// assigns the result to <see cref="RenderTargetEffect"/>. With no resolver registered the
-    /// assignment is a graceful no-op (the container renders unshaded). Only has an effect when
+    /// raylib, or a <c>.sksl</c> path on Skia) to a post-process shader applied when this container
+    /// is drawn back to the screen as a render target. Mirrors how a Sprite references a texture:
+    /// setting this routes through the string property path, which resolves the reference via the
+    /// active backend's registered resolver (XNA-like/raylib:
+    /// <c>Gum.Wireframe.CustomSetPropertyOnRenderable.RenderTargetEffectResolver</c>; Skia:
+    /// <c>SkiaGum.CustomSetPropertyOnRenderable.RenderTargetEffectResolver</c>) and assigns the
+    /// result to <see cref="RenderTargetEffect"/>. With no resolver registered the assignment is a
+    /// graceful no-op (the container renders unshaded). Only has an effect when
     /// <see cref="IsRenderTarget"/> is true. Write-only: there is no backing field; the resolved
     /// effect is read back via <see cref="RenderTargetEffect"/>.
     /// </summary>

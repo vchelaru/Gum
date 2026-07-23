@@ -4,6 +4,7 @@ using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using SkiaGum;
+using SkiaSharp;
 
 namespace SkiaGum.Tests.GueDeriving;
 
@@ -61,6 +62,27 @@ public class ContainerRuntimeTests
     {
         ContainerRuntime sut = new();
         sut.Height.ShouldBe(150);
+    }
+
+    [Fact]
+    public void RenderTargetEffect_DefaultsToNull()
+    {
+        ContainerRuntime sut = new();
+        sut.RenderTargetEffect.ShouldBeNull();
+    }
+
+    [Fact]
+    public void RenderTargetEffect_SetThenGet_RoundTrips()
+    {
+        ContainerRuntime sut = new();
+        SKRuntimeEffect effect = SKRuntimeEffect.CreateShader(
+            "uniform shader inputImage; half4 main(float2 coord) { return inputImage.eval(coord); }",
+            out string errors);
+        string.IsNullOrEmpty(errors).ShouldBeTrue(errors);
+
+        sut.RenderTargetEffect = effect;
+
+        sut.RenderTargetEffect.ShouldBe(effect);
     }
 
     [Fact]

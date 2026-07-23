@@ -493,7 +493,28 @@ namespace RenderingLibrary.Graphics
             float left = container.GetAbsoluteX();
             float top = container.GetAbsoluteY();
             SKRect destination = new SKRect(left, top, left + width, top + height);
-            managers.Canvas.DrawImage(image, destination, paint);
+
+            // Optional post-process shader (ContainerRuntime.RenderTargetEffect / SourceShaderFile,
+            // #3998). The effect is image-independent (declares a `uniform shader inputImage`
+            // child) -- the baked image is only known here, at composite time, so it is bound as
+            // that child shader input on this call rather than cached on the effect.
+            SKRuntimeEffect effect = (owner as IRenderTargetRenderable)?.RenderTargetEffect as SKRuntimeEffect;
+            if (effect == null)
+            {
+                managers.Canvas.DrawImage(image, destination, paint);
+                return;
+            }
+
+            // SKCanvas.DrawImage ignores paint.Shader -- a paint's shader only takes effect on a
+            // shape-drawing call, so the shaded path switches to DrawRect and feeds the baked image
+            // in as the effect's "inputImage" child shader instead of passing it as the image arg.
+            using SKShader imageShader = image.ToShader();
+            using SKRuntimeEffectUniforms uniforms = new SKRuntimeEffectUniforms(effect);
+            using SKRuntimeEffectChildren children = new SKRuntimeEffectChildren(effect);
+            children["inputImage"] = imageShader;
+            using SKShader combinedShader = effect.ToShader(uniforms, children);
+            paint.Shader = combinedShader;
+            managers.Canvas.DrawRect(destination, paint);
         }
 
         // Whether the render-target container's blend is Additive (ContainerRuntime.Blend, #3989).

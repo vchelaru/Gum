@@ -1017,6 +1017,47 @@ public partial class CustomSetPropertyOnRenderable
                 //handled = TrySetPropertyOnRoundedRectangle(asRoundedRectangle, graphicalUiElement, propertyName, value);
             }
         }
+        else if (containedObjectAsIpso is RenderingLibrary.Graphics.InvisibleRenderable asInvisibleRenderable)
+        {
+            // Backs a plain ContainerRuntime. Mirrors TrySetPropertyOnContainer in
+            // Gum/Wireframe/CustomSetPropertyOnRenderable.cs (the XNA-like/raylib dispatcher's
+            // equivalent branch), but that file lives in a separate assembly graph SkiaGum doesn't
+            // reference, so SourceShaderFile resolution has its own lean copy here rather than a
+            // shared call (issue #3998) -- same convention as this dispatcher's own
+            // Sprite/NineSlice SourceFile handling above, which is also independent per backend.
+            switch (propertyName)
+            {
+                case "IsRenderTarget":
+                    asInvisibleRenderable.IsRenderTarget = value as bool? ?? false;
+                    handled = true;
+                    break;
+#if SKIA
+                case "SourceShaderFile":
+                    // ContainerRuntime.SourceShaderFile only exists under XNALIKE/RAYLIB/SKIA, so
+                    // this case is unreachable (never assigned) in the Apos.Shapes / non-SKIA
+                    // build of this shared file -- guarded here purely so that build, which has no
+                    // SkiaSharp reference, still compiles.
+                    AssignSourceShaderFileOnContainer(asInvisibleRenderable, value as string);
+                    handled = true;
+                    break;
+#endif
+                case "Alpha":
+                    if (value is int asInt)
+                    {
+                        asInvisibleRenderable.Alpha = asInt;
+                    }
+                    else if (value is float asFloat)
+                    {
+                        asInvisibleRenderable.Alpha = (int)asFloat;
+                    }
+                    else
+                    {
+                        asInvisibleRenderable.Alpha = 255;
+                    }
+                    handled = true;
+                    break;
+            }
+        }
 #if SKIA
         else if (containedObjectAsIpso is Text asText)
         {
@@ -1089,6 +1130,50 @@ public partial class CustomSetPropertyOnRenderable
     }
 
 #if SKIA
+
+    /// <summary>
+    /// Resolves a <see cref="Gum.GueDeriving.ContainerRuntime.SourceShaderFile"/> reference (a
+    /// <c>.sksl</c> path) into a compiled <see cref="SKRuntimeEffect"/>. Null by default: a
+    /// consumer opts in by assigning this (e.g. compiling the referenced file's text with
+    /// <c>SKRuntimeEffect.CreateShader</c>). With no resolver registered, setting
+    /// <c>SourceShaderFile</c> is a graceful no-op (issue #3998).
+    /// </summary>
+    public static Func<string, SKRuntimeEffect?>? RenderTargetEffectResolver { get; set; }
+
+    /// <summary>
+    /// Resolves <see cref="RenderTargetEffectResolver"/> and stores the result in the container's
+    /// <see cref="RenderingLibrary.Graphics.IRenderTargetRenderable.RenderTargetEffect"/> slot. With
+    /// no resolver registered, or a resolver that throws, this is a graceful no-op (the container
+    /// renders unshaded) -- mirrors the lean, uncached SourceFile handling this dispatcher already
+    /// uses for Sprite/NineSlice above, rather than the XNA-like/raylib dispatcher's cached,
+    /// error-reporting equivalent (a separate assembly graph SkiaGum doesn't reference).
+    /// </summary>
+    private static void AssignSourceShaderFileOnContainer(
+        RenderingLibrary.Graphics.InvisibleRenderable effectOwner, string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            effectOwner.RenderTargetEffect = null;
+            return;
+        }
+
+        if (RenderTargetEffectResolver == null)
+        {
+            return;
+        }
+
+        SKRuntimeEffect? resolvedEffect;
+        try
+        {
+            resolvedEffect = RenderTargetEffectResolver(value);
+        }
+        catch
+        {
+            resolvedEffect = null;
+        }
+
+        effectOwner.RenderTargetEffect = resolvedEffect;
+    }
 
     private static bool TrySetPropertyOnPolygon(Polygon asPolygon, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
