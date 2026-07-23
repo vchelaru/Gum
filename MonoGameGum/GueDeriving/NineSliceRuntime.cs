@@ -5,18 +5,21 @@ using System;
 #if RAYLIB
 using Gum.Graphics.Animation;
 using Gum.Renderables;
+using RaylibGum.Helpers;
 using Color = Raylib_cs.Color;
 using Texture2D = Raylib_cs.Texture2D;
 using ContainedNineSliceType = Gum.Renderables.NineSlice;
 #elif SOKOL
 using Gum.Graphics.Animation;
 using Gum.Renderables;
+using SokolGum.Helpers;
 using Color = SokolGum.Color;
 using Texture2D = SokolGum.Texture2D;
 using ContainedNineSliceType = Gum.Renderables.NineSlice;
 #elif SKIA
 using Gum.Graphics.Animation;
 using SkiaGum.Renderables;
+using SkiaGum.Helpers;
 using Color = SkiaSharp.SKColor;
 using Texture2D = SkiaSharp.SKBitmap;
 using ContainedNineSliceType = SkiaGum.Renderables.NineSlice;
@@ -171,21 +174,12 @@ public class NineSliceRuntime : InteractiveGue
 
     public Color Color
     {
-#if XNALIKE
-        get => global::RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedNineSlice.Color);
+        get => ContainedNineSlice.Color.ToUserColor();
         set
         {
-            ContainedNineSlice.Color = global::RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
+            ContainedNineSlice.Color = value.ToContainerColor();
             NotifyPropertyChanged();
         }
-#else
-        get => ContainedNineSlice.Color;
-        set
-        {
-            ContainedNineSlice.Color = value;
-            NotifyPropertyChanged();
-        }
-#endif
     }
 
     #endregion

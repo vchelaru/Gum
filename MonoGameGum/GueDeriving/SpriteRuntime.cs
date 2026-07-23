@@ -12,12 +12,14 @@ using System.Threading.Tasks;
 #if RAYLIB
 using Gum.Renderables;
 using RenderingLibrary.Graphics;
+using RaylibGum.Helpers;
 using Color = Raylib_cs.Color;
 using Rectangle = Raylib_cs.Rectangle;
 using Texture2D = Raylib_cs.Texture2D;
 using ContainedSpriteType = Gum.Renderables.Sprite;
 #elif SKIA
 using SkiaGum.Renderables;
+using SkiaGum.Helpers;
 using RenderingLibrary.Graphics;
 using Color = SkiaSharp.SKColor;
 using Rectangle = SkiaSharp.SKRect;
@@ -121,21 +123,10 @@ public class SpriteRuntime : GraphicalUiElement
     /// </summary>
     public Color Color
     {
-        get
-        {
-#if RAYLIB || SKIA
-            return ContainedSprite.Color;
-#else
-            return global::RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedSprite.Color);
-#endif
-        }
+        get => ContainedSprite.Color.ToUserColor();
         set
         {
-#if RAYLIB || SKIA
-            ContainedSprite.Color = value;
-#else
-            ContainedSprite.Color = global::RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
-#endif
+            ContainedSprite.Color = value.ToContainerColor();
             NotifyPropertyChanged();
         }
     }

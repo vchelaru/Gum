@@ -142,6 +142,21 @@ public class SpriteRuntimeTests : BaseTestClass
     }
 
     [Fact]
+    public void Color_ShouldRoundTrip_ThroughContainedRenderable()
+    {
+        // Pins the System.Drawing <-> XNA conversion in the Color property (ToUserColor/
+        // ToContainerColor on XNALIKE). Distinct channels catch any R/B swap or dropped alpha.
+        SpriteRuntime sut = new();
+
+        sut.Color = new Microsoft.Xna.Framework.Color(10, 20, 30, 40);
+
+        sut.Color.R.ShouldBe((byte)10);
+        sut.Color.G.ShouldBe((byte)20);
+        sut.Color.B.ShouldBe((byte)30);
+        sut.Color.A.ShouldBe((byte)40);
+    }
+
+    [Fact]
     public void CurrentFrameIndex_ShouldSyncTimeIntoAnimation()
     {
         // 3 frames: 0.5s, 1.0s, 0.75s

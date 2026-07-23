@@ -53,4 +53,17 @@ public static class ColorExtensions
     {
         return new SKColor(value.R, value.G, value.B, value.A);
     }
+
+    /// <summary>
+    /// Converts a contained renderable's color to the user-facing color. On Skia both are
+    /// <see cref="SKColor"/>, so this is identity — it exists only so shared runtime source can
+    /// call the same member name that needs a real conversion on the XNA backend.
+    /// </summary>
+    public static SKColor ToUserColor(this SKColor value) => value;
+
+    /// <summary>
+    /// Converts a user-facing color to the contained renderable's color. Identity on Skia; see
+    /// <see cref="ToUserColor(SKColor)"/>.
+    /// </summary>
+    public static SKColor ToContainerColor(this SKColor value) => value;
 }

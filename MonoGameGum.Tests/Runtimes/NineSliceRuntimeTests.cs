@@ -78,6 +78,21 @@ public class NineSliceRuntimeTests
     }
 
     [Fact]
+    public void Color_ShouldRoundTrip_ThroughContainedRenderable()
+    {
+        // Pins the System.Drawing <-> XNA conversion in the Color property (ToUserColor/
+        // ToContainerColor on XNALIKE). Distinct channels catch any R/B swap or dropped alpha.
+        NineSliceRuntime sut = new();
+
+        sut.Color = new Microsoft.Xna.Framework.Color(10, 20, 30, 40);
+
+        sut.Color.R.ShouldBe((byte)10);
+        sut.Color.G.ShouldBe((byte)20);
+        sut.Color.B.ShouldBe((byte)30);
+        sut.Color.A.ShouldBe((byte)40);
+    }
+
+    [Fact]
     public void Constructor_ShouldDefaultSizeTo100()
     {
         // Bucket 1 (#2908): all backends should default a NineSliceRuntime to 100x100.
