@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 800px; height: 600px; background: #181820; }
+  #app {
+    position: relative; /* containing block for #badge */
+    display: flex;
+    flex-direction: column;
+    width: 800px; height: 600px;
+    padding: 60px 20px 20px;
+    gap: 12px;
+    background: #222230;
+  }
+  #app .row {
+    flex: 1;
+    background: #3c5a8a;
+  }
+  /* HUD pinned to the viewport — must not participate in #app's column stack. */
+  #hud {
+    position: fixed;
+    left: 0; top: 0;
+    width: 800px; height: 48px;
+    background: #e0a53c;
+  }
+  #badge {
+    position: absolute;
+    right: 16px; bottom: 16px;
+    width: 80px; height: 80px;
+    background: #3c8a5a;
+  }
+</style>
+</head>
+<body>
+  <div id="app">
+    <div class="row" id="a"></div>
+    <div class="row" id="b"></div>
+    <div id="badge"></div>
+  </div>
+  <div id="hud"></div>
+</body>
+</html>

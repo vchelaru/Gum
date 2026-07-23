@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 800px; height: 600px; background: #181820; }
+
+  /* Asymmetric borders: each edge a different width+color. Gum Rectangle has one
+     stroke — mapper must emit four edge Rectangles (figma-html technique). */
+  #box {
+    position: absolute; left: 40px; top: 40px;
+    width: 200px; height: 120px;
+    background: #3c3c50;
+    border-top: 8px solid #e0a53c;
+    border-right: 2px solid #3c8a5a;
+    border-bottom: 4px solid #5a3c8a;
+    border-left: 12px solid #c04040;
+  }
+</style>
+</head>
+<body>
+  <div id="box"></div>
+</body>
+</html>

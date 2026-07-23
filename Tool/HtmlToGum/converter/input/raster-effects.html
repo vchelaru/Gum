@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 800px; height: 400px; background: #181820; }
+
+  #grad {
+    position: absolute; left: 20px; top: 20px;
+    width: 300px; height: 150px;
+    background: linear-gradient(90deg, #e0a53c 0%, #3c5a8a 100%);
+  }
+  #blurred {
+    position: absolute; left: 20px; top: 190px;
+    width: 300px; height: 80px;
+    background: #5a3c8a;
+    filter: blur(4px);
+  }
+  /* Gradient parent with structured children — must not collapse to one sprite. */
+  #panel {
+    position: absolute; left: 360px; top: 20px;
+    width: 280px; height: 150px;
+    background: linear-gradient(180deg, #2a4060 0%, #1a2030 100%);
+    padding: 12px;
+    color: #eee;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+  }
+  #panel .row {
+    height: 28px;
+    margin-bottom: 8px;
+    background: #3c5a8a;
+  }
+</style>
+</head>
+<body>
+  <div id="grad"></div>
+  <div id="blurred"></div>
+  <div id="panel">
+    <div class="row"></div>
+    <div class="row"></div>
+    <div class="row"></div>
+  </div>
+</body>
+</html>

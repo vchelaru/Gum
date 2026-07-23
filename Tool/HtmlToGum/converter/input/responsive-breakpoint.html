@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #181820; font-family: Arial, sans-serif; }
+
+  #layout {
+    width: 100%; height: 400px;
+    display: flex; flex-direction: row;
+  }
+  #sidebar {
+    width: 25%; height: 100%;
+    background: #3c5a8a;
+  }
+  #main {
+    flex-grow: 1; height: 100%;
+    background: #2a2a38;
+    padding: 20px;
+  }
+
+  /* Visible child counts under #main deliberately differ across the training widths:
+       wide (≥601px):  badge + desktop-a + desktop-b + desktop-c  → 4 children
+       narrow (≤600px): badge + mobile-a                          → 2 children
+     extract.mjs skips display:none, so the box trees have different child counts and
+     responsive.mjs must emit a structure-mismatch warning rather than silently
+     path-key-pairing unrelated nodes. */
+  #badge {
+    width: 80px; height: 40px;
+    background: #e0a53c;
+  }
+  #desktop-a, #desktop-b, #desktop-c {
+    width: 100px; height: 30px;
+    margin-top: 10px;
+    background: #6a8a3c;
+  }
+  #mobile-a {
+    width: 50px; height: 50px;
+    margin-top: 10px;
+    background: #c04040;
+    display: none;
+  }
+
+  @media (max-width: 600px) {
+    #desktop-a, #desktop-b, #desktop-c { display: none; }
+    #mobile-a { display: block; }
+  }
+</style>
+</head>
+<body>
+  <div id="layout">
+    <div id="sidebar"></div>
+    <div id="main">
+      <div id="badge"></div>
+      <div id="desktop-a"></div>
+      <div id="desktop-b"></div>
+      <div id="desktop-c"></div>
+      <div id="mobile-a"></div>
+    </div>
+  </div>
+</body>
+</html>

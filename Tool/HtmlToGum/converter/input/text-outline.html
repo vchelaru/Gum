@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>text-shadow faux outline</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 800px; height: 400px; background: #3a2a1a; }
+  #panel {
+    width: 400px;
+    height: 200px;
+    margin: 40px;
+    padding: 24px;
+    background: #5a4030;
+  }
+  #panel h1 {
+    color: #fff;
+    font-family: Arial, sans-serif;
+    font-size: 28px;
+    text-align: center;
+    /* RPGUI-style cardinal hard shadow = glyph outline */
+    text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black;
+  }
+  #panel p {
+    margin-top: 16px;
+    color: #ffe08a;
+    font-family: Arial, sans-serif;
+    font-size: 18px;
+    text-align: center;
+    text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black;
+  }
+</style>
+</head>
+<body>
+  <div id="panel">
+    <h1>Outlined Title</h1>
+    <p>Shadow border text</p>
+  </div>
+</body>
+</html>

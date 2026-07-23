@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 800px; height: 600px; background: #181820; font-family: Arial, sans-serif; }
+
+  #panel {
+    position: absolute; left: 20px; top: 20px;
+    width: 300px; height: 400px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  #header { height: 40px; background: #e0a53c; border-radius: 4px; }
+  #title  { font-size: 24px; font-weight: bold; color: #ffffff; }
+  #body   { flex-grow: 1; background: #3c3c50; }
+  #status { font-size: 14px; color: #c0c0c0; }
+</style>
+</head>
+<body>
+  <div id="panel">
+    <div id="header"></div>
+    <div id="title">Inventory</div>
+    <div id="body"></div>
+    <div id="status">12 / 40 slots</div>
+  </div>
+</body>
+</html>

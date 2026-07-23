@@ -1,0 +1,25 @@
+{
+  "name": "html-to-gum-converter",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "Chromium front end: HTML/CSS -> Gum .gusx via computed box tree",
+  "scripts": {
+    "convert": "tsx convert.ts",
+    "regress": "tsx regress.ts",
+    "demo": "tsx build-demo.ts",
+    "froggy": "tsx run-froggy.ts",
+    "garden": "tsx run-garden.ts",
+    "gumcli": "tsx gumcli.ts",
+    "typecheck": "tsc --noEmit",
+    "postinstall": "npx playwright-core install chromium"
+  },
+  "dependencies": {
+    "playwright-core": "1.61.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}

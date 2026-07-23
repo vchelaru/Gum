@@ -1,0 +1,201 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>html-to-gum showcase</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 960px; height: 600px;
+    background: #0e1218;
+    font-family: "Segoe UI", Arial, sans-serif;
+    color: #e6eaf0;
+  }
+
+  /* Fixed chrome */
+  #top {
+    position: fixed; left: 0; top: 0; z-index: 5;
+    width: 960px; height: 52px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px;
+    background: #161c26;
+    border-bottom: 2px solid #2a3544;
+  }
+  #brand {
+    font-size: 15px; font-weight: 700; letter-spacing: 0.08em;
+    color: #d4a84b;
+  }
+  #meters {
+    display: flex; gap: 18px; align-items: center;
+  }
+  .meter { width: 140px; }
+  .meter .lbl { font-size: 10px; color: #8b95a5; margin-bottom: 3px; }
+  .meter .track {
+    height: 8px; border-radius: 4px; background: #222a36; overflow: hidden;
+  }
+  .meter .hp { height: 100%; width: 78%; background: linear-gradient(90deg, #6b2a2a, #c44a4a); }
+  .meter .mp { height: 100%; width: 52%; background: linear-gradient(90deg, #1e3a5c, #3d7ec9); }
+  #credits { font-size: 13px; font-weight: 700; color: #d4a84b; }
+
+  #stage {
+    position: absolute; left: 0; top: 52px;
+    width: 960px; height: 548px;
+  }
+
+  /* Left: flex column quests + padding */
+  #quests {
+    position: absolute; left: 16px; top: 16px;
+    width: 240px;
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 14px;
+    background: #161c26;
+    border: 1px solid #2a3544;
+    border-radius: 10px;
+  }
+  #quests h2 {
+    font-size: 11px; letter-spacing: 0.12em; color: #d4a84b;
+  }
+  .q {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 10px; border-radius: 6px; background: #1c2430;
+    font-size: 12px;
+  }
+  .q .n { color: #8b95a5; font-size: 11px; }
+
+  /* Uniform AutoGrid inventory */
+  #inv {
+    position: absolute; left: 16px; bottom: 88px;
+    width: 240px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 6px;
+    padding: 10px;
+    background: #161c26;
+    border: 1px solid #2a3544;
+    border-radius: 10px;
+  }
+  #inv .cell {
+    aspect-ratio: 1; border-radius: 5px; background: #1c2430;
+  }
+  #inv .cell.on { background: #3d5a80; }
+  #inv .cell.rare { background: #5a3d80; }
+
+  /* Minimap + absolute badge */
+  #map {
+    position: absolute; right: 16px; top: 16px;
+    width: 160px; height: 160px;
+    background: #1a2e24;
+    border: 3px solid #3d8a5a;
+    border-radius: 10px;
+  }
+  #map .you {
+    position: absolute; left: 74px; top: 74px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: #d4a84b;
+  }
+  #toast {
+    position: absolute; right: 16px; top: 192px;
+    width: 160px; padding: 10px 12px;
+    background: #161c26;
+    border: 1px solid #2a3544;
+    border-radius: 8px;
+    font-size: 11px; color: #a8b2c0;
+  }
+  #toast strong { display: block; color: #d4a84b; margin-bottom: 4px; font-size: 12px; }
+
+  /* Center status strip — justify space-between */
+  #strip {
+    position: absolute; left: 280px; top: 40px;
+    width: 420px; height: 44px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 14px;
+    background: #161c26;
+    border: 1px solid #2a3544;
+    border-radius: 8px;
+    font-size: 12px;
+  }
+  #strip .tag {
+    padding: 4px 10px; border-radius: 999px;
+    background: #243044; color: #9eb4d4; font-size: 11px;
+  }
+
+  /* Hotbar — fixed, styled text slots */
+  #hotbar {
+    position: fixed; left: 318px; bottom: 18px; z-index: 5;
+    display: flex; gap: 8px;
+    padding: 10px;
+    background: #161c26;
+    border: 2px solid #2a3544;
+    border-radius: 12px;
+  }
+  .slot {
+    width: 52px; height: 52px;
+    display: flex; align-items: flex-end; justify-content: flex-end;
+    padding: 3px 5px;
+    background: #1c2430;
+    border: 2px solid #3a4658;
+    border-radius: 8px;
+    font-size: 10px; color: #8b95a5;
+  }
+  .slot.on { background: #3d5a80; border-color: #5a7aa0; color: #dce6f4; }
+  .slot.ult { background: #5a3d80; border-color: #7a5aa0; color: #ece0f8; }
+</style>
+</head>
+<body>
+  <div id="top">
+    <div id="brand">AETHER OUTPOST</div>
+    <div id="meters">
+      <div class="meter">
+        <div class="lbl">Integrity</div>
+        <div class="track"><div class="hp"></div></div>
+      </div>
+      <div class="meter">
+        <div class="lbl">Capacitor</div>
+        <div class="track"><div class="mp"></div></div>
+      </div>
+    </div>
+    <div id="credits">◈ 24,910</div>
+  </div>
+
+  <div id="stage">
+    <div id="quests">
+      <h2>ACTIVE CONTRACTS</h2>
+      <div class="q"><span>Secure the relay</span><span class="n">3/5</span></div>
+      <div class="q"><span>Salvage ore crates</span><span class="n">1/8</span></div>
+      <div class="q"><span>Meet Commander Vale</span><span class="n">•</span></div>
+    </div>
+
+    <div id="inv">
+      <div class="cell on"></div>
+      <div class="cell"></div>
+      <div class="cell rare"></div>
+      <div class="cell on"></div>
+      <div class="cell"></div>
+      <div class="cell on"></div>
+      <div class="cell"></div>
+      <div class="cell rare"></div>
+    </div>
+
+    <div id="map"><div class="you"></div></div>
+    <div id="toast">
+      <strong>Sector ping</strong>
+      Hostile signature 420m NW — hold position.
+    </div>
+
+    <div id="strip">
+      <span>Outpost Theta</span>
+      <span class="tag">SAFE</span>
+      <span>Cycle 14 · Night</span>
+    </div>
+  </div>
+
+  <div id="hotbar">
+    <div class="slot on">1</div>
+    <div class="slot on">2</div>
+    <div class="slot">3</div>
+    <div class="slot on">4</div>
+    <div class="slot ult">5</div>
+  </div>
+</body>
+</html>

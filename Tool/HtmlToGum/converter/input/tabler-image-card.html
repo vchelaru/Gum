@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<!-- Pinned: @latest made Tabler layout drift between sessions and poisoned pixel baselines.
+     Explicit Inter Var @font-face — Tabler CSS names the family but does not ship files. -->
+<link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" rel="stylesheet">
+<style>
+  @font-face {
+    font-family: "Inter Var";
+    font-style: normal;
+    font-display: swap;
+    font-weight: 100 900;
+    src: url("https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5.2.5/files/inter-latin-wght-normal.woff2") format("woff2-variations");
+  }
+  body { background: #f4f6fa; padding: 20px; }
+</style>
+</head>
+<body>
+  <div class="container-xl">
+    <div class="row row-deck row-cards">
+      <!-- Verbatim from https://preview.tabler.io/cards.html ("Card with top image").
+           Real photo asset, real markup — background-image is Tabler's own pattern for
+           aspect-ratio-controlled photo containers, not something written for this
+           converter. -->
+      <div class="col-md-6 col-lg-3">
+        <div class="card">
+          <div
+            class="img-responsive img-responsive-21x9 card-img-top"
+            style="background-image: url(https://preview.tabler.io/static/photos/home-office-desk-with-macbook-iphone-calendar-watch-and-organizer.jpg)"
+          ></div>
+          <div class="card-body">
+            <h3 class="card-title">Card with top image</h3>
+            <p class="text-secondary">
+              Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aperiam deleniti fugit incidunt, iste, itaque minima neque pariatur perferendis
+              sed suscipit velit vitae voluptatem.
+            </p>
+          </div>
+        </div>
+      </div>
+      <!-- Same real photo asset, referenced via a genuine <img> tag (the other common
+           real-world path — Tabler's own site uses background-image for photos, so this
+           half is a minimal hand-built wrapper, but the asset itself is real. -->
+      <div class="col-md-6 col-lg-3">
+        <div class="card">
+          <div class="card-body">
+            <h3 class="card-title">Card with an &lt;img&gt; tag</h3>
+            <img
+              src="https://preview.tabler.io/static/photos/home-office-desk-with-macbook-iphone-calendar-watch-and-organizer.jpg"
+              alt="Desk"
+              style="width: 100%; height: 120px; object-fit: cover; border-radius: 4px; display: block;"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

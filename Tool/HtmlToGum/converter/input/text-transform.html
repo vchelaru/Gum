@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>text-transform</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 800px; height: 400px; background: #181820; font-family: Arial, sans-serif; }
+  #panel {
+    position: absolute; left: 40px; top: 40px;
+    width: 400px; padding: 16px;
+    background: #2a2a38; color: #eee;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .up { text-transform: uppercase; font-size: 18px; }
+  .low { text-transform: lowercase; font-size: 16px; }
+  .cap { text-transform: capitalize; font-size: 16px; }
+  .none { text-transform: none; font-size: 14px; color: #a0a0b0; }
+</style>
+</head>
+<body>
+  <div id="panel">
+    <div class="up">party — emberveil</div>
+    <div class="low">SIGNAL Overdrive</div>
+    <div class="cap">stash of ruinpath relics</div>
+    <div class="none">Leave Me Alone</div>
+  </div>
+</body>
+</html>

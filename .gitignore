@@ -57,3 +57,6 @@ Runtimes/GumShapes/XnbTest/
 !/temp/.gitkeep
 /.claude/worktrees
 /.claude/tmp
+
+# HtmlToGum Node deps / Playwright (install locally)
+Tool/HtmlToGum/converter/node_modules/

@@ -1,0 +1,256 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>BR Overlay — Driftzone</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1280px; height: 720px;
+    overflow: hidden;
+    background: #0a0c10;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    color: #e8ece8;
+  }
+  #hud {
+    position: relative;
+    width: 1280px; height: 720px;
+    background: #0a0c10;
+    overflow: hidden;
+  }
+
+  /* Kill feed — top-left */
+  #feed {
+    position: absolute;
+    left: 20px; top: 20px;
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .feed-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    background: #12161a;
+    border-left: 3px solid #5080a0;
+    font-size: 12px;
+  }
+  .feed-row.elim { border-left-color: #c04040; }
+  .feed-killer { color: #80c0e0; font-weight: 600; }
+  .feed-weapon { color: #8a9098; font-size: 11px; }
+  .feed-victim { color: #e08080; }
+
+  /* Compass — top-center */
+  #compass {
+    position: absolute;
+    left: 340px; top: 12px;
+    width: 600px; height: 36px;
+    background: #12161a;
+    border: 1px solid #2a3038;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 8px 4px;
+    overflow: hidden;
+  }
+  .tick {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    color: #6a7078;
+    font-size: 9px;
+  }
+  .tick .mark {
+    width: 1px; height: 8px;
+    background: #4a5058;
+  }
+  .tick.cardinal .mark { height: 14px; background: #c0c8d0; }
+  .tick.cardinal { color: #e0e8f0; font-size: 11px; font-weight: 700; }
+  .tick.heading {
+    color: #e0a040;
+    font-weight: 700;
+  }
+  .tick.heading .mark { background: #e0a040; height: 16px; width: 2px; }
+
+  /* Squad portraits — top, under compass area left of minimap */
+  #squad {
+    position: absolute;
+    left: 480px; top: 56px;
+    display: flex;
+    gap: 10px;
+  }
+  .squad-slot {
+    width: 72px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .squad-face {
+    width: 48px; height: 48px;
+    background: #1a2430;
+    border: 2px solid #4a6070;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .squad-face img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .squad-slot.self .squad-face { border-color: #e0a040; }
+  .squad-slot.down .squad-face { border-color: #c04040; opacity: 0.7; }
+  .squad-name { font-size: 10px; color: #a0a8b0; text-align: center; }
+  .squad-hp {
+    width: 48px; height: 4px;
+    background: #1a2030;
+    overflow: hidden;
+  }
+  .squad-hp-fill { height: 100%; background: #40a060; }
+  .s1 .squad-hp-fill { width: 100%; }
+  .s2 .squad-hp-fill { width: 64%; }
+  .s3 .squad-hp-fill { width: 18%; background: #c04040; }
+
+  /* Minimap — top-right (large radius square) */
+  #minimap {
+    position: absolute;
+    right: 20px; top: 20px;
+    width: 160px; height: 160px;
+    background: #152018;
+    border: 3px solid #3a5040;
+    border-radius: 24px;
+    overflow: hidden;
+  }
+  #minimap .zone {
+    position: absolute;
+    left: 30px; top: 30px;
+    width: 100px; height: 100px;
+    border: 2px solid #4080c0;
+    border-radius: 16px;
+  }
+  #minimap .player-dot {
+    position: absolute;
+    left: 74px; top: 74px;
+    width: 10px; height: 10px;
+    background: #e0a040;
+    border-radius: 50%;
+  }
+  #minimap .poi {
+    position: absolute;
+    left: 40px; top: 50px;
+    width: 6px; height: 6px;
+    background: #c04040;
+    border-radius: 50%;
+  }
+  #minimap .label {
+    position: absolute;
+    left: 8px; bottom: 6px;
+    font-size: 10px;
+    color: #80a090;
+  }
+
+  /* Ammo + weapon — bottom-right */
+  #weapon {
+    position: absolute;
+    right: 24px; bottom: 28px;
+    text-align: right;
+    padding: 10px 14px;
+    background: #12161a;
+    border: 1px solid #2a3038;
+  }
+  #weapon .wpn-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #e8ece8;
+    letter-spacing: 0.04em;
+  }
+  #weapon .wpn-type {
+    font-size: 11px;
+    color: #6a7078;
+    margin-bottom: 6px;
+  }
+  #weapon .ammo {
+    font-size: 28px;
+    font-weight: 700;
+    color: #e0a040;
+    font-variant-numeric: tabular-nums;
+  }
+  #weapon .ammo .reserve {
+    font-size: 16px;
+    color: #8a9098;
+    font-weight: 400;
+  }
+</style>
+</head>
+<body>
+  <div id="hud">
+    <div id="feed">
+      <div class="feed-row elim">
+        <span class="feed-killer">You</span>
+        <span class="feed-weapon">[Pulse Carbine]</span>
+        <span class="feed-victim">NovaRex</span>
+      </div>
+      <div class="feed-row">
+        <span class="feed-killer">PixelHawk</span>
+        <span class="feed-weapon">[Rail Spike]</span>
+        <span class="feed-victim">GridRunner</span>
+      </div>
+      <div class="feed-row">
+        <span class="feed-killer">AshUnit</span>
+        <span class="feed-weapon">[Frag]</span>
+        <span class="feed-victim">ColdStatic</span>
+      </div>
+    </div>
+
+    <div id="compass">
+      <div class="tick cardinal"><span class="mark"></span>W</div>
+      <div class="tick"><span class="mark"></span></div>
+      <div class="tick"><span class="mark"></span></div>
+      <div class="tick"><span class="mark"></span>315</div>
+      <div class="tick"><span class="mark"></span></div>
+      <div class="tick heading"><span class="mark"></span>N</div>
+      <div class="tick"><span class="mark"></span></div>
+      <div class="tick"><span class="mark"></span>45</div>
+      <div class="tick"><span class="mark"></span></div>
+      <div class="tick"><span class="mark"></span></div>
+      <div class="tick cardinal"><span class="mark"></span>E</div>
+    </div>
+
+    <div id="squad">
+      <div class="squad-slot self s1">
+        <div class="squad-face"><img src="icons/face.png" alt=""></div>
+        <div class="squad-name">You</div>
+        <div class="squad-hp"><div class="squad-hp-fill"></div></div>
+      </div>
+      <div class="squad-slot s2">
+        <div class="squad-face"><img src="icons/headset.png" alt=""></div>
+        <div class="squad-name">Rivet</div>
+        <div class="squad-hp"><div class="squad-hp-fill"></div></div>
+      </div>
+      <div class="squad-slot down s3">
+        <div class="squad-face"><img src="icons/skull.png" alt=""></div>
+        <div class="squad-name">Moss</div>
+        <div class="squad-hp"><div class="squad-hp-fill"></div></div>
+      </div>
+    </div>
+
+    <div id="minimap">
+      <div class="zone"></div>
+      <div class="poi"></div>
+      <div class="player-dot"></div>
+      <div class="label">Sector 7 · 1.2 km</div>
+    </div>
+
+    <div id="weapon">
+      <div class="wpn-type">Primary</div>
+      <div class="wpn-name">PULSE CARBINE</div>
+      <div class="ammo">24 <span class="reserve">/ 120</span></div>
+    </div>
+  </div>
+</body>
+</html>

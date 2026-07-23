@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!--
+  Cold AdminKit composite — trimmed from adminkit/adminkit static/index.html (dev).
+  Real Bootstrap-5 AdminKit CSS; Chart.js / maps / dropdown panels stripped so the
+  converter is stressed by layout chrome (sidebar + navbar + metric cards + table),
+  not canvas paint. Feather icons hydrate to SVG before extract.
+-->
+<link href="https://cdn.jsdelivr.net/npm/@adminkit/core@3.4.0/dist/css/app.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  /* Pin Inter so Chromium + gumcli share a real face (same idea as tabler-card). */
+  @font-face {
+    font-family: "Inter";
+    font-style: normal;
+    font-display: swap;
+    font-weight: 300 600;
+    src: url("https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5.2.5/files/inter-latin-wght-normal.woff2") format("woff2-variations");
+  }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  /* Keep dropdown menus closed — we only want the closed navbar chrome. */
+  .dropdown-menu { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrapper" id="panel">
+  <nav id="sidebar" class="sidebar js-sidebar">
+    <div class="sidebar-content">
+      <a class="sidebar-brand" href="#">
+        <span class="align-middle">AdminKit</span>
+      </a>
+      <ul class="sidebar-nav">
+        <li class="sidebar-header">Pages</li>
+        <li class="sidebar-item active">
+          <a class="sidebar-link" href="#">
+            <i class="align-middle" data-feather="sliders"></i>
+            <span class="align-middle">Dashboard</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a class="sidebar-link" href="#">
+            <i class="align-middle" data-feather="user"></i>
+            <span class="align-middle">Profile</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a class="sidebar-link" href="#">
+            <i class="align-middle" data-feather="book"></i>
+            <span class="align-middle">Blank</span>
+          </a>
+        </li>
+        <li class="sidebar-header">Tools &amp; Components</li>
+        <li class="sidebar-item">
+          <a class="sidebar-link" href="#">
+            <i class="align-middle" data-feather="grid"></i>
+            <span class="align-middle">Cards</span>
+          </a>
+        </li>
+        <li class="sidebar-item">
+          <a class="sidebar-link" href="#">
+            <i class="align-middle" data-feather="square"></i>
+            <span class="align-middle">Buttons</span>
+          </a>
+        </li>
+      </ul>
+      <div class="sidebar-cta">
+        <div class="sidebar-cta-content">
+          <strong class="d-inline-block mb-2">Upgrade to Pro</strong>
+          <div class="mb-3 text-sm">
+            Are you looking for more components? Check out our premium version.
+          </div>
+          <div class="d-grid">
+            <a href="#" class="btn btn-primary">Upgrade to Pro</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="main">
+    <nav class="navbar navbar-expand navbar-light navbar-bg">
+      <a class="sidebar-toggle js-sidebar-toggle">
+        <i class="hamburger align-self-center"></i>
+      </a>
+      <div class="navbar-collapse collapse">
+        <ul class="navbar-nav navbar-align">
+          <li class="nav-item">
+            <a class="nav-icon" href="#">
+              <div class="position-relative">
+                <i class="align-middle" data-feather="bell"></i>
+                <span class="indicator">4</span>
+              </div>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-icon" href="#">
+              <div class="position-relative">
+                <i class="align-middle" data-feather="message-square"></i>
+              </div>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link d-none d-sm-inline-block" href="#">
+              <span class="text-dark">Charles Hall</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="content">
+      <div class="container-fluid p-0">
+        <h1 class="h3 mb-3"><strong>Analytics</strong> Dashboard</h1>
+
+        <div class="row">
+          <div class="col-sm-6 col-xl-3">
+            <div class="card">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col mt-0"><h5 class="card-title">Sales</h5></div>
+                  <div class="col-auto">
+                    <div class="stat text-primary">
+                      <i class="align-middle" data-feather="truck"></i>
+                    </div>
+                  </div>
+                </div>
+                <h1 class="mt-1 mb-3">2.382</h1>
+                <div class="mb-0">
+                  <span class="text-danger">-3.65%</span>
+                  <span class="text-muted">Since last week</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="card">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col mt-0"><h5 class="card-title">Visitors</h5></div>
+                  <div class="col-auto">
+                    <div class="stat text-primary">
+                      <i class="align-middle" data-feather="users"></i>
+                    </div>
+                  </div>
+                </div>
+                <h1 class="mt-1 mb-3">14.212</h1>
+                <div class="mb-0">
+                  <span class="text-success">5.25%</span>
+                  <span class="text-muted">Since last week</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="card">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col mt-0"><h5 class="card-title">Earnings</h5></div>
+                  <div class="col-auto">
+                    <div class="stat text-primary">
+                      <i class="align-middle" data-feather="dollar-sign"></i>
+                    </div>
+                  </div>
+                </div>
+                <h1 class="mt-1 mb-3">$21.300</h1>
+                <div class="mb-0">
+                  <span class="text-success">6.65%</span>
+                  <span class="text-muted">Since last week</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="card">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col mt-0"><h5 class="card-title">Orders</h5></div>
+                  <div class="col-auto">
+                    <div class="stat text-primary">
+                      <i class="align-middle" data-feather="shopping-cart"></i>
+                    </div>
+                  </div>
+                </div>
+                <h1 class="mt-1 mb-3">64</h1>
+                <div class="mb-0">
+                  <span class="text-danger">-2.25%</span>
+                  <span class="text-muted">Since last week</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-12">
+            <div class="card flex-fill">
+              <div class="card-header">
+                <h5 class="card-title mb-0">Latest Projects</h5>
+              </div>
+              <table class="table table-hover my-0">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Status</th>
+                    <th>Assignee</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Project Apollo</td>
+                    <td>01/01/2023</td>
+                    <td>31/06/2023</td>
+                    <td><span class="badge bg-success">Done</span></td>
+                    <td>Vanessa Tucker</td>
+                  </tr>
+                  <tr>
+                    <td>Project Fireball</td>
+                    <td>01/01/2023</td>
+                    <td>31/06/2023</td>
+                    <td><span class="badge bg-danger">Cancelled</span></td>
+                    <td>William Harris</td>
+                  </tr>
+                  <tr>
+                    <td>Project Nitro</td>
+                    <td>01/01/2023</td>
+                    <td>31/06/2023</td>
+                    <td><span class="badge bg-warning">In progress</span></td>
+                    <td>Vanessa Tucker</td>
+                  </tr>
+                  <tr>
+                    <td>Project Phoenix</td>
+                    <td>01/01/2023</td>
+                    <td>31/06/2023</td>
+                    <td><span class="badge bg-success">Done</span></td>
+                    <td>William Harris</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/feather-icons@4.29.2/dist/feather.min.js"></script>
+<script>feather.replace();</script>
+</body>
+</html>

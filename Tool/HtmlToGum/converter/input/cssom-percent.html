@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 800px; height: 600px; background: #181820; }
+  /* Specified % lives in a stylesheet rule — not inline — to exercise CSSOM cascade. */
+  #box {
+    position: absolute; left: 40px; top: 40px;
+    width: 50%;
+    height: 80px;
+    background: #3c8a5a;
+  }
+  #parent {
+    position: absolute; left: 40px; top: 140px;
+    width: 400px; height: 100px;
+    background: #2a2a38;
+  }
+  #child {
+    width: 25%;
+    height: 100%;
+    background: #e0a53c;
+  }
+</style>
+</head>
+<body>
+  <div id="box"></div>
+  <div id="parent"><div id="child"></div></div>
+</body>
+</html>
