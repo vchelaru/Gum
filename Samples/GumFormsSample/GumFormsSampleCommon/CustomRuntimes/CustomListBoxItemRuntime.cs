@@ -59,7 +59,7 @@ internal class CustomListBoxItemRuntime : InteractiveGue
             FocusedIndicator.Visible = false;
             FocusedIndicator.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
             FocusedIndicator.YUnits = GeneralUnitType.PixelsFromMiddle;
-            FocusedIndicator.Color = new Microsoft.Xna.Framework.Color(205, 142, 44);
+            FocusedIndicator.StrokeColor = new Microsoft.Xna.Framework.Color(205, 142, 44);
             this.Children.Add(FocusedIndicator);
 
             var listBoxItemCategory = new Gum.DataTypes.Variables.StateSaveCategory();

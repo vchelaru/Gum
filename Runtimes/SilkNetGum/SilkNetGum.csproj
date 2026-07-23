@@ -74,6 +74,8 @@
 		<Compile Include="..\..\RenderingLibrary\Graphics\StyledSubstringSplitter.cs" Link="RenderingLibrary\StyledSubstringSplitter.cs" />
 		<!-- Render-target cache base subclassed by SkiaRenderTargetService (#3988); mirrors SkiaGum.csproj's link. -->
 		<Compile Include="..\..\RenderingLibrary\Graphics\RenderTargetService.cs" Link="RenderingLibrary\RenderTargetService.cs" />
+		<!-- ContainerRuntime.Blend/BlendState (unblocked for Skia in #3989); mirrors SkiaGum.csproj's link. -->
+		<Compile Include="..\..\Gum\RenderingLibrary\BlendExtensions.cs" Link="RenderingLibrary\BlendExtensions.cs" />
 		<!-- IAnimatable intentionally NOT linked (arrives via GumCommon); a local copy would create
 		     two distinct same-FQN types and silently break AnimateSelf — see SkiaGum.csproj. -->
 		<Compile Include="..\..\MonoGameGum\GueDeriving\CircleRuntime.cs" Link="GueDeriving\CircleRuntime.cs" />

@@ -1,4 +1,5 @@
-﻿using Gum.GueDeriving;
+﻿using Gum;
+using Gum.GueDeriving;
 using Gum.Wireframe;
 using RenderingLibrary.Math;
 using SkiaSharp;
@@ -41,6 +42,14 @@ namespace RenderingLibrary.Graphics
         public static bool UseCustomEffectRendering { get; set; } = false;
         public static bool UseBasicEffectRendering { get; set; } = true;
         public static bool UsingEffect { get { return UseCustomEffectRendering || UseBasicEffectRendering; } }
+
+        /// <summary>
+        /// The <see cref="BlendState"/> that <see cref="Gum.RenderingLibrary.Blend.Normal"/> resolves
+        /// to via <see cref="Gum.RenderingLibrary.BlendExtensions.ToBlendState"/>. Mirrors the XNA and
+        /// raylib renderers' own <c>NormalBlendState</c> so <c>ContainerRuntime.Blend</c> round-trips
+        /// on Skia too (#3989).
+        /// </summary>
+        public static BlendState NormalBlendState { get; set; } = BlendState.NonPremultiplied;
 
         public static Renderer Self
         {
@@ -466,18 +475,32 @@ namespace RenderingLibrary.Graphics
             }
 
             // Skia surfaces are premultiplied, so a plain SrcOver composite needs no straight-vs-
-            // premultiplied correction (unlike the XNA/raylib bake blend handling). Group alpha tints
-            // the whole texture. Additive-blend render-target containers aren't handled here because
-            // ContainerRuntime exposes no Blend/BlendState on Skia (it's gated !SKIA) — nothing can set
-            // a Skia container additive, so there is no additive case to composite (deferred: #3989).
+            // premultiplied correction (unlike the XNA/raylib bake blend handling) -- the default
+            // SKPaint.BlendMode (SrcOver) already composites the premultiplied baked color correctly.
+            // An additive container (ContainerRuntime.Blend == Additive, #3989) switches to
+            // SKBlendMode.Plus, which adds the (already-premultiplied) baked color straight onto the
+            // destination instead of alpha-blending over it -- no separate premultiplied-additive pass
+            // is needed the way raylib's non-premultiplied textures require. Group alpha tints the
+            // whole texture via the paint's alpha channel either way.
             byte alpha = (byte)System.Math.Clamp(container.Alpha, 0, 255);
             using SKPaint paint = new SKPaint();
             paint.Color = new SKColor(255, 255, 255, alpha);
+            if (IsAdditiveComposite(owner))
+            {
+                paint.BlendMode = SKBlendMode.Plus;
+            }
 
             float left = container.GetAbsoluteX();
             float top = container.GetAbsoluteY();
             SKRect destination = new SKRect(left, top, left + width, top + height);
             managers.Canvas.DrawImage(image, destination, paint);
+        }
+
+        // Whether the render-target container's blend is Additive (ContainerRuntime.Blend, #3989).
+        private static bool IsAdditiveComposite(IRenderableIpso cacheOwner)
+        {
+            return Gum.RenderingLibrary.BlendExtensions.ToBlend(cacheOwner.BlendState)
+                == Gum.RenderingLibrary.Blend.Additive;
         }
 
         // For a nested render-target container the walk hands the GraphicalUiElement wrapper; for a

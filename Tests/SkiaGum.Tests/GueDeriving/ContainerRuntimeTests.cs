@@ -1,14 +1,12 @@
+using Gum.GueDeriving;
+using Gum.RenderingLibrary;
 using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using SkiaGum;
-using SkiaGum.GueDeriving;
 
 namespace SkiaGum.Tests.GueDeriving;
 
-// Note: Alpha/IsRenderTarget/BlendState round-trip tests are intentionally omitted here.
-// Those properties don't exist on the Skia ContainerRuntime yet; they'll be added as part
-// of the ContainerRuntime unification step that converges Skia to match MG+Raylib.
 public class ContainerRuntimeTests
 {
     public ContainerRuntimeTests()
@@ -17,6 +15,24 @@ public class ContainerRuntimeTests
         // Normally done by SystemManagers.Initialize(), but we don't need the full
         // rendering pipeline for these unit tests.
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+    }
+
+    [Fact]
+    public void Blend_DefaultsToNormal()
+    {
+        ContainerRuntime sut = new();
+        sut.Blend.ShouldBe(Blend.Normal);
+    }
+
+    [Fact]
+    public void Blend_SetToAdditive_RoundTripsThroughBlendState()
+    {
+        ContainerRuntime sut = new();
+
+        sut.Blend = Blend.Additive;
+
+        sut.Blend.ShouldBe(Blend.Additive);
+        sut.BlendState.ShouldBe(Gum.BlendState.Additive);
     }
 
     [Fact]
