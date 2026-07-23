@@ -11,7 +11,7 @@ Tool/HtmlToGum/
   HtmlToGumPlugin.csproj     # MEF plugin
   MainHtmlToGumPlugin.cs
   converter/                 # Node convert pipeline (required for Import HTML)
-  sample/                    # Minimal .gumx scaffold (Standards) used by CLI convert
+    scaffold/                # Minimal .gumx + Standards template used when emitting
   samples/                   # Optional fixture HTML for try-outs
 ```
 
@@ -19,7 +19,7 @@ Tool/HtmlToGum/
 |------|------|
 | Plugin DLL | Menu + staging import |
 | `converter/` | `convert.ts` + map/extract/fonts |
-| `sample/` | Blank Gum project template the CLI copies into `.out/` |
+| `converter/scaffold/` | Blank Gum project template copied into the convert output |
 | `samples/` | Example HTML pages (not required for the plugin) |
 
 ## Setup

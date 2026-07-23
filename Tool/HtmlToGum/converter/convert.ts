@@ -121,7 +121,7 @@ if (flags.responsive) {
 }
 const tag = flags.tag || screenName.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'out';
 
-const sampleDir = join(repoRoot, 'sample');
+const scaffoldDir = join(__dirname, 'scaffold');
 const outProjectDir = flags.out
   ? resolve(flags.out)
   : join(repoRoot, '.out');
@@ -336,7 +336,7 @@ async function main() {
 
   rmSync(outProjectDir, { recursive: true, force: true });
   mkdirSync(join(outProjectDir, 'Screens'), { recursive: true });
-  cpSync(join(sampleDir, 'Standards'), join(outProjectDir, 'Standards'), { recursive: true });
+  cpSync(join(scaffoldDir, 'Standards'), join(outProjectDir, 'Standards'), { recursive: true });
   const imagesDir = join(outProjectDir, 'Images');
   const fontsDir = join(outProjectDir, 'Fonts');
 
@@ -372,7 +372,7 @@ async function main() {
   }
 
   const screenRefs = screens.map((s) => `  <ScreenReference Name="${s.name}" />`).join('\n');
-  const gumx = readFileSync(join(sampleDir, 'Sample.gumx'), 'utf8')
+  const gumx = readFileSync(join(scaffoldDir, 'Sample.gumx'), 'utf8')
     .replace('  <ScreenReference Name="InventoryPanelScreen" />', screenRefs);
   writeFileSync(join(outProjectDir, 'Generated.gumx'), gumx);
   for (const s of screens) writeFileSync(join(outProjectDir, 'Screens', `${s.name}.gusx`), s.gusx);
