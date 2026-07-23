@@ -60,3 +60,5 @@ Runtimes/GumShapes/XnbTest/
 
 # HtmlToGum Node deps / Playwright (install locally)
 Tool/HtmlToGum/converter/node_modules/
+Tool/HtmlToGum/.out/
+Tool/HtmlToGum/.regress/

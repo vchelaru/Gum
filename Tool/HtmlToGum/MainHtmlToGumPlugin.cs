@@ -114,7 +114,7 @@ public class MainHtmlToGumPlugin : PluginBase
             _dialogService.ShowMessage(
                 "tsx is required to run convert.ts but was not found.\n\n" +
                 $"Looked for:\n{tsxCli}\n\n" +
-                "Fix: cd converter && npm install, then restart Gum.");
+                "Fix: cd Tool/HtmlToGum/converter && npm install, then restart Gum.");
             return;
         }
 
@@ -229,7 +229,7 @@ public class MainHtmlToGumPlugin : PluginBase
         if (string.IsNullOrWhiteSpace(err))
         {
             sb.AppendLine("(no stdout/stderr — is Playwright Chromium installed?");
-            sb.AppendLine("Run: cd converter && npx playwright-core install chromium)");
+            sb.AppendLine("Run: cd Tool/HtmlToGum/converter && npx playwright-core install chromium");
         }
         else
         {

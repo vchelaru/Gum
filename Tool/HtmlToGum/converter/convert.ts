@@ -14,21 +14,21 @@
 //   --compare-naive             Also emit <Screen>Naive (Absolute control) for A/B.
 //   --tag=<name>                Save chromium-<name>.png (and chromium.png).
 //   --out=<dir>                 Write .gumx / Screens / Images / Fonts / FontCache here
-//                               instead of host/Content/generated. Chromium shots go in
-//                               <dir> too (repo-root chromium*.png only when --out omitted).
+//                               instead of ../.out. Chromium shots go in <dir> when --out
+//                               is set; otherwise under ../.regress/ (gitignored).
 //
 // After emit: gumcli fonts (via gumcli.ts) bakes FontCache from Font/FontSize and any
-// Fonts/*.ttf web-font instances. The MonoGame host loads FontCache (no InMemoryFontCreator).
+// Fonts/*.ttf web-font instances.
 //
 // Examples:
-//   npx tsx convert.ts input/inventory.html #panel InventoryScreen 800 600
-//   npx tsx convert.ts input/responsive-sidebar.html #layout R 800 400 --responsive=400,1200
-//   npx tsx convert.ts input/inventory.html #panel Inv 800 600 --no-responsive
+//   npx tsx convert.ts ../samples/features/inventory.html #panel InventoryScreen 800 600
+//   npx tsx convert.ts ../samples/features/responsive-sidebar.html #layout R 800 400 --responsive=400,1200
+//   npx tsx convert.ts ../samples/features/inventory.html #panel Inv 800 600 --no-responsive
 //   npx tsx convert.ts page.html body Hud 800 600 --out=/tmp/html-to-gum-stage
-//   npm run gumcli -- fonts ../host/Content/generated/Generated.gumx
+//   npm run gumcli -- fonts ../.out/Generated.gumx
 import { chromium } from 'playwright-core';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { dirname, resolve, join } from 'node:path';
+import { dirname, resolve, join, isAbsolute } from 'node:path';
 import { mkdirSync, cpSync, readFileSync, writeFileSync, rmSync, copyFileSync } from 'node:fs';
 import { extractBoxTree } from './extract.js';
 import { mapTreeToScreen, toGusx } from './map.js';
@@ -39,6 +39,7 @@ import {
 } from './fonts.js';
 import { generateNineSliceAssets } from './nineslice.js';
 import { installTsxEvaluateShim } from './tsx-evaluate-shim.js';
+import { samplePath } from './samples-path.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
@@ -94,8 +95,10 @@ function defaultAltWidth(primaryW) {
 
 const { positional, flags } = parseArgs(process.argv.slice(2));
 
-const htmlArg = positional[0] || 'input/inventory.html';
-const htmlFile = /^https?:\/\//i.test(htmlArg) ? htmlArg : resolve(__dirname, htmlArg);
+const htmlArg = positional[0] || samplePath('features', 'inventory.html');
+const htmlFile = /^https?:\/\//i.test(htmlArg)
+  ? htmlArg
+  : (isAbsolute(htmlArg) ? htmlArg : resolve(__dirname, htmlArg));
 const rootSelector = positional[1] || '#panel';
 const screenName = positional[2] || 'GeneratedScreen';
 const VIEWPORT = {
@@ -121,8 +124,8 @@ const tag = flags.tag || screenName.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-
 const sampleDir = join(repoRoot, 'sample');
 const outProjectDir = flags.out
   ? resolve(flags.out)
-  : join(repoRoot, 'host', 'Content', 'generated');
-// Keep repo root clean — screenshots land in .regress/ (gitignored) unless --out= is set.
+  : join(repoRoot, '.out');
+// Screenshots land in .regress/ (gitignored) unless --out= is set.
 const regressDir = join(repoRoot, '.regress');
 const chromiumPng = flags.out
   ? join(outProjectDir, 'chromium.png')

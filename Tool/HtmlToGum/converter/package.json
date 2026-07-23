@@ -3,13 +3,9 @@
   "version": "0.1.0",
   "type": "module",
   "private": true,
-  "description": "Chromium front end: HTML/CSS -> Gum .gusx via computed box tree",
+  "description": "HTML/CSS → Gum .gusx via Chromium box tree (HtmlToGum plugin)",
   "scripts": {
     "convert": "tsx convert.ts",
-    "regress": "tsx regress.ts",
-    "demo": "tsx build-demo.ts",
-    "froggy": "tsx run-froggy.ts",
-    "garden": "tsx run-garden.ts",
     "gumcli": "tsx gumcli.ts",
     "typecheck": "tsc --noEmit",
     "postinstall": "npx playwright-core install chromium"

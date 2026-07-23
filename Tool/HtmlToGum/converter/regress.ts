@@ -10,6 +10,8 @@ import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { nodeTsxArgs } from './tsx-run.js';
+import { FIXTURES, EXTRA_CHECKS } from './fixtures.ts';
+import { samplePath } from './samples-path.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
@@ -17,39 +19,14 @@ const hostDir = join(repoRoot, 'host');
 const convertTs = join(__dirname, 'convert.ts');
 const regressDir = join(repoRoot, '.regress');
 mkdirSync(regressDir, { recursive: true });
-const regressDir = join(repoRoot, '.regress');
-mkdirSync(regressDir, { recursive: true });
 
-// maxPct: soft ceiling. layoutOk means "glyph AA only is fine; layout must match."
-// For fixtures where residual is known-large (Tabler font/CDN, Cerberus placeholders),
-// the ceiling is the documented residual band, not zero.
-const FIXTURES = [
-  { tag: 'inventory', html: 'input/inventory.html', sel: '#panel', screen: 'InventoryScreen', w: 800, h: 600, maxPct: 1.5 },
-  { tag: 'statusbar', html: 'input/statusbar.html', sel: '#bar', screen: 'StatusbarScreen', w: 800, h: 600, maxPct: 1.5 },
-  { tag: 'grid', html: 'input/grid-uniform.html', sel: '#grid', screen: 'GridScreen', w: 800, h: 600, maxPct: 0.5 },
-  { tag: 'asymmetric', html: 'input/asymmetric-border.html', sel: '#box', screen: 'AsymBorderScreen', w: 800, h: 600, maxPct: 1.5 },
-  { tag: 'raster', html: 'input/raster-effects.html', sel: 'body', screen: 'RasterScreen', w: 800, h: 400, maxPct: 5 },
-  { tag: 'padding', html: 'input/padding-flex.html', sel: '#panel', screen: 'PaddingScreen', w: 800, h: 600, maxPct: 1.5 },
-  { tag: 'align', html: 'input/align-items-center.html', sel: '#bar', screen: 'AlignScreen', w: 800, h: 600, maxPct: 1.5 },
-  { tag: 'zindex', html: 'input/z-index-order.html', sel: '#stage', screen: 'ZIndexScreen', w: 800, h: 600, maxPct: 1.5 },
-  { tag: 'justify', html: 'input/justify-between.html', sel: '#bar', screen: 'JustifyScreen', w: 800, h: 600, maxPct: 1.5 },
-  { tag: 'nineslice', html: 'input/nineslice-panel.html', sel: '#panel', screen: 'NineSliceScreen', w: 800, h: 600, maxPct: 5 },
-  { tag: 'cssom', html: 'input/cssom-percent.html', sel: 'body', screen: 'CssomScreen', w: 800, h: 600, maxPct: 1.5 },
-  { tag: 'borderimage', html: 'input/border-image.html', sel: '#panel', screen: 'BorderImageScreen', w: 800, h: 600, maxPct: 5 },
-  // bg url + border-image → chrome rasterized with kids hidden (RPGUI panel pattern).
-  { tag: 'borderbg', html: 'input/border-image-with-bg.html', sel: '#panel', screen: 'BorderBgScreen', w: 800, h: 400, maxPct: 5, noResponsive: true },
-  { tag: 'brtext', html: 'input/br-text.html', sel: '#panel', screen: 'BrTextScreen', w: 800, h: 400, maxPct: 5.5, noResponsive: true },
-  { tag: 'fixed', html: 'input/fixed-hud.html', sel: 'body', screen: 'FixedHudScreen', w: 800, h: 600, maxPct: 1.5 },
-  { tag: 'gridspan', html: 'input/grid-span.html', sel: '#grid', screen: 'GridSpanScreen', w: 800, h: 600, maxPct: 1.5 },
-  { tag: 'gamehud', html: 'input/game-hud.html', sel: 'body', screen: 'GameHudScreen', w: 800, h: 600, maxPct: 5 },
-  // Real RPGUI composite — border-image chrome is rasterized; residual is mostly font AA.
-  { tag: 'rpgui', html: 'input/rpgui-hud.html', sel: '#hud', screen: 'RpguiHudScreen', w: 800, h: 600, maxPct: 5, noResponsive: true },
-  { tag: 'textxform', html: 'input/text-transform.html', sel: '#panel', screen: 'TextTransformScreen', w: 800, h: 400, maxPct: 12, noResponsive: true },
-  { tag: 'textoutline', html: 'input/text-outline.html', sel: '#panel', screen: 'TextOutlineScreen', w: 800, h: 400, maxPct: 8, noResponsive: true },
-  { tag: 'tabler', html: 'input/tabler-card.html', sel: '.card', screen: 'TablerScreen', w: 800, h: 600, maxPct: 26 },
-  { tag: 'cerberus', html: 'input/cerberus-fluid.html', sel: '.email-container', screen: 'CerberusScreen', w: 700, h: 1000, maxPct: 45 },
-  { tag: 'imagecard', html: 'input/tabler-image-card.html', sel: '.row', screen: 'TablerImageScreen', w: 800, h: 400, maxPct: 58 },
-];
+if (!existsSync(join(hostDir, 'HtmlToGumHost.csproj'))) {
+  console.error(
+    'Pixel regress needs Tool/HtmlToGum/host (MonoGame renderer), which is not in this tree.\n' +
+    'Use Import HTML in Gum, or: npm run convert -- ../samples/features/inventory.html #panel InventoryScreen 800 600',
+  );
+  process.exit(2);
+}
 
 function run(cmd, args, cwd) {
   console.log(`\n> ${cmd} ${args.join(' ')}`);
@@ -89,7 +66,7 @@ console.log('=== single-viewport fixtures ===');
 for (const f of FIXTURES) {
   console.log(`\n========== ${f.tag} ==========`);
   const convertArgs = [
-    convertTs, f.html, f.sel, f.screen, String(f.w), String(f.h), `--tag=${f.tag}`,
+    convertTs, samplePath(f.html), f.sel, f.screen, String(f.w), String(f.h), `--tag=${f.tag}`,
   ];
   if (f.noResponsive) convertArgs.push('--no-responsive');
   run(process.execPath, nodeTsxArgs(...convertArgs), __dirname);
@@ -126,7 +103,7 @@ console.log('\n=== underlay + opacity ===');
 {
   run(process.execPath, nodeTsxArgs(
     convertTs,
-    'input/underlay-opacity.html', '#panel', 'UnderlayScreen', '800', '400', '--tag=underlay',
+    samplePath(EXTRA_CHECKS.underlay.html), EXTRA_CHECKS.underlay.sel, EXTRA_CHECKS.underlay.screen, String(EXTRA_CHECKS.underlay.w), String(EXTRA_CHECKS.underlay.h), `--tag=${EXTRA_CHECKS.underlay.tag}`,
   ), __dirname);
   const gusx = readFileSync(join(hostDir, 'Content', 'generated', 'Screens', 'UnderlayScreen.gusx'), 'utf8');
   const hasUnderlay = /PhBg[\s\S]*FillRed/.test(gusx) && /Instance Name="PhBg" BaseType="Rectangle"/.test(gusx);
@@ -144,8 +121,8 @@ console.log('\n=== responsive sidebar (width inference) ===');
 {
   run(process.execPath, nodeTsxArgs(
     convertTs,
-    'input/responsive-sidebar.html', '#layout', 'ResponsiveScreen', '1200', '400',
-    '--responsive=400,1200', '--tag=responsive-sidebar',
+    samplePath(EXTRA_CHECKS.responsive.html), EXTRA_CHECKS.responsive.sel, EXTRA_CHECKS.responsive.screen, String(EXTRA_CHECKS.responsive.w), String(EXTRA_CHECKS.responsive.h),
+    '--responsive=400,1200', `--tag=${EXTRA_CHECKS.responsive.tag}`,
   ), __dirname);
 
   const gusx = readFileSync(join(hostDir, 'Content', 'generated', 'Screens', 'ResponsiveScreen.gusx'), 'utf8');
@@ -192,8 +169,8 @@ console.log('\n=== responsive default (no explicit train pair) ===');
 {
   run(process.execPath, nodeTsxArgs(
     convertTs,
-    'input/responsive-sidebar.html', '#layout', 'ResponsiveDefault', '800', '400',
-    '--tag=responsive-default',
+    samplePath(EXTRA_CHECKS.responsiveDefault.html), EXTRA_CHECKS.responsiveDefault.sel, EXTRA_CHECKS.responsiveDefault.screen, String(EXTRA_CHECKS.responsiveDefault.w), String(EXTRA_CHECKS.responsiveDefault.h),
+    `--tag=${EXTRA_CHECKS.responsiveDefault.tag}`,
   ), __dirname);
   const gusxDef = readFileSync(join(hostDir, 'Content', 'generated', 'Screens', 'ResponsiveDefault.gusx'), 'utf8');
   const defPct = /Sidebar\.WidthUnits[\s\S]*?<Value xsi:type="xsd:int">1<\/Value>/.test(gusxDef)
@@ -207,8 +184,8 @@ console.log('\n=== responsive breakpoint (structure mismatch) ===');
 {
   const r = spawnSync(process.execPath, nodeTsxArgs(
     convertTs,
-    'input/responsive-breakpoint.html', '#layout', 'BreakpointScreen', '1200', '400',
-    '--responsive=400,1200', '--tag=responsive-breakpoint',
+    samplePath(EXTRA_CHECKS.breakpoint.html), EXTRA_CHECKS.breakpoint.sel, EXTRA_CHECKS.breakpoint.screen, String(EXTRA_CHECKS.breakpoint.w), String(EXTRA_CHECKS.breakpoint.h),
+    '--responsive=400,1200', `--tag=${EXTRA_CHECKS.breakpoint.tag}`,
   ), { cwd: __dirname, encoding: 'utf8', shell: false });
   process.stdout.write(r.stdout || '');
   process.stderr.write(r.stderr || '');
