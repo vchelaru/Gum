@@ -444,10 +444,10 @@ public class SpriteRuntime : GraphicalUiElement
 #endif
 
 #if XNALIKE
-    // IRenderTargetTextureReferencer (RenderingLibrary/Graphics/Sprite.cs) is XNA-only — its
-    // Texture member is typed to XNA's Texture2D, which raylib doesn't have. Raylib resolves its
-    // render-target source directly in Gum.Renderables.Sprite.Render via
-    // Renderer.TryGetBakedRenderTargetFor instead of this interface.
+    // The XNA Renderer's render-target detection walk (CollectReferencedRenderTargets) tests for
+    // IRenderTargetTextureReferencer, so a nested SpriteRuntime must implement it. Raylib's Renderer
+    // resolves the source via concrete Gum.Renderables.Sprite type checks instead, so it doesn't need
+    // this interface. Both backends pull the baked target via Renderer.TryGetBakedRenderTargetFor.
     IRenderableIpso? IRenderTargetTextureReferencer.RenderTargetTextureSource =>
         ContainedSprite.RenderTargetTextureSource;
 #endif

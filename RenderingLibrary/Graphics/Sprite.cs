@@ -386,7 +386,7 @@ public class Sprite : SpriteBatchRenderableBase,
             var systemManagers = managers as SystemManagers;
             var renderer = systemManagers.Renderer;
             bool shouldTileByMultipleCalls = this.Wrap && (this as IRenderable).Wrap == false;
-            if (shouldTileByMultipleCalls && (this.Texture != null))
+            if (shouldTileByMultipleCalls && this.Texture != null && RenderTargetTextureSource == null)
             {
                 RenderTiledSprite(renderer.SpriteRenderer, systemManagers);
             }
@@ -394,6 +394,19 @@ public class Sprite : SpriteBatchRenderableBase,
             {
                 Rectangle? sourceRectangle = EffectiveRectangle;
                 Texture2D texture = Texture;
+
+                if (RenderTargetTextureSource != null)
+                {
+                    // Pull the baked render target at draw time (converged onto raylib's model, #3986).
+                    // A null result means nothing baked (off-camera / degenerate / removed source);
+                    // draw nothing rather than stale content.
+                    var baked = renderer.TryGetBakedRenderTargetFor(RenderTargetTextureSource);
+                    if (baked == null)
+                    {
+                        return;
+                    }
+                    texture = baked;
+                }
 
                 var oldX = this.X;
                 var oldY = this.Y;
@@ -926,6 +939,4 @@ public class Sprite : SpriteBatchRenderableBase,
 public interface IRenderTargetTextureReferencer
 {
     IRenderableIpso? RenderTargetTextureSource { get; }
-
-    Texture2D? Texture { get; set; }
 }
