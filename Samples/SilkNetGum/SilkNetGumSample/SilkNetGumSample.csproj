@@ -54,6 +54,8 @@
 	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\TextScreen.cs" Link="Screens\TextScreen.cs" />
 	  <!-- Render-target gallery shared from MonoGameGumInCode, gated #elif SKIA (#3988). -->
 	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\RenderTargetScreen.cs" Link="Screens\RenderTargetScreen.cs" />
+	  <!-- Render-target post-process shader demo shared from MonoGameGumInCode, gated #elif SKIA (#3998). -->
+	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\RenderTargetShaderScreen.cs" Link="Screens\RenderTargetShaderScreen.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

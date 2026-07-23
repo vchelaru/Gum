@@ -61,11 +61,11 @@ namespace MonoGameGumInCode
 
             // Issue #3206: Gum core ships no shader loader, so the app registers a resolver that
             // turns a ContainerRuntime.SourceShaderFile (.fx path) into a platform Effect. Here it
-            // compiles the .fx at runtime via ShadowDusk (see RenderTargetEffectScreen). With no
+            // compiles the .fx at runtime via ShadowDusk (see RenderTargetShaderScreen). With no
             // resolver registered, SourceShaderFile is a graceful no-op (the container renders
             // unshaded), matching how a missing texture degrades.
             CustomSetPropertyOnRenderable.RenderTargetEffectResolver =
-                path => RenderTargetEffectScreen.CompileEffectFromFile(path);
+                path => RenderTargetShaderScreen.CompileEffectFromFile(path);
 
             // Demo the auto-fit helpers — flip via the Zoom/Expand buttons in the nav strip.
             GumService.Default.EnableZoomToWindow();
@@ -103,8 +103,8 @@ namespace MonoGameGumInCode
             AddNavButton("NineSlice", () => ShowScreen<NineSliceScreen>());
             AddNavButton("Sprite", () => ShowScreen<SpriteScreen>());
             AddNavButton("Clip", () => ShowScreen<ClippingScreen>());
-            AddNavButton("RT Effect", () => ShowScreen<RenderTargetEffectScreen>());
             AddNavButton("Render Target", () => ShowScreen<RenderTargetScreen>());
+            AddNavButton("RT Shader", () => ShowScreen<RenderTargetShaderScreen>());
 
             AddFitModeRadio("Zoom", isChecked: true, () => GumService.Default.EnableZoomToWindow());
             AddFitModeRadio("Expand", isChecked: false, () => GumService.Default.EnableExpandToWindow());
