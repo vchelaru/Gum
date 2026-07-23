@@ -95,6 +95,13 @@ public partial class CustomSetPropertyOnRenderable
     /// </summary>
     public static Func<IRenderableIpso, GraphicalUiElement, string, object, bool>? AdditionalPropertyOnRenderable = null;
 
+    /// <summary>
+    /// Raised when a string-path property assignment fails and <see cref="GraphicalUiElement.MissingFileBehavior"/>
+    /// is not <see cref="MissingFileBehavior.ThrowException"/>. Mirrors the MonoGame/raylib dispatcher's
+    /// event of the same name (<c>Gum.Wireframe.CustomSetPropertyOnRenderable.PropertyAssignmentError</c>).
+    /// </summary>
+    public static event Action<string>? PropertyAssignmentError;
+
     // Issue #2956 follow-up — two-slot CircleRuntime / RectangleRuntime own a fill renderable
     // AND a stroke renderable. The runtime's typed setters (UseGradient, IsFilled,
     // gradient color channels, gradient endpoints, etc.) forward to BOTH slots; reflection
@@ -1017,6 +1024,47 @@ public partial class CustomSetPropertyOnRenderable
                 //handled = TrySetPropertyOnRoundedRectangle(asRoundedRectangle, graphicalUiElement, propertyName, value);
             }
         }
+        else if (containedObjectAsIpso is RenderingLibrary.Graphics.InvisibleRenderable asInvisibleRenderable)
+        {
+            // Backs a plain ContainerRuntime. Mirrors TrySetPropertyOnContainer in
+            // Gum/Wireframe/CustomSetPropertyOnRenderable.cs (the XNA-like/raylib dispatcher's
+            // equivalent branch), but that file lives in a separate assembly graph SkiaGum doesn't
+            // reference, so SourceShaderFile resolution has its own lean copy here rather than a
+            // shared call (issue #3998) -- same convention as this dispatcher's own
+            // Sprite/NineSlice SourceFile handling above, which is also independent per backend.
+            switch (propertyName)
+            {
+                case "IsRenderTarget":
+                    asInvisibleRenderable.IsRenderTarget = value as bool? ?? false;
+                    handled = true;
+                    break;
+#if SKIA
+                case "SourceShaderFile":
+                    // ContainerRuntime.SourceShaderFile only exists under XNALIKE/RAYLIB/SKIA, so
+                    // this case is unreachable (never assigned) in the Apos.Shapes / non-SKIA
+                    // build of this shared file -- guarded here purely so that build, which has no
+                    // SkiaSharp reference, still compiles.
+                    AssignSourceShaderFileOnContainer(asInvisibleRenderable, value as string);
+                    handled = true;
+                    break;
+#endif
+                case "Alpha":
+                    if (value is int asInt)
+                    {
+                        asInvisibleRenderable.Alpha = asInt;
+                    }
+                    else if (value is float asFloat)
+                    {
+                        asInvisibleRenderable.Alpha = (int)asFloat;
+                    }
+                    else
+                    {
+                        asInvisibleRenderable.Alpha = 255;
+                    }
+                    handled = true;
+                    break;
+            }
+        }
 #if SKIA
         else if (containedObjectAsIpso is Text asText)
         {
@@ -1089,6 +1137,95 @@ public partial class CustomSetPropertyOnRenderable
     }
 
 #if SKIA
+
+    /// <summary>
+    /// Resolves a <see cref="Gum.GueDeriving.ContainerRuntime.SourceShaderFile"/> reference (a
+    /// <c>.sksl</c> path) into a compiled <see cref="SKRuntimeEffect"/>. Null by default: a
+    /// consumer opts in by assigning this (e.g. compiling the referenced file's text with
+    /// <c>SKRuntimeEffect.CreateShader</c>). With no resolver registered, setting
+    /// <c>SourceShaderFile</c> is a graceful no-op (issue #3998).
+    /// </summary>
+    public static Func<string, SKRuntimeEffect?>? RenderTargetEffectResolver { get; set; }
+
+    /// <summary>
+    /// Resolves <see cref="RenderTargetEffectResolver"/> and stores the result in the container's
+    /// <see cref="RenderingLibrary.Graphics.IRenderTargetRenderable.RenderTargetEffect"/> slot. Mirrors
+    /// <c>Gum.Wireframe.CustomSetPropertyOnRenderable.AssignSourceShaderFileOnContainer</c>: the
+    /// resolved effect is cached in <see cref="global::RenderingLibrary.Content.LoaderManager"/> by
+    /// normalized path so a shader referenced by multiple containers compiles once, and a failed
+    /// resolve honors <see cref="GraphicalUiElement.MissingFileBehavior"/>. That XNA-like/raylib
+    /// dispatcher lives in a separate assembly graph SkiaGum doesn't reference, so it can't be called
+    /// directly -- this is a parallel copy, not a shared call. With no resolver registered, this is a
+    /// graceful no-op (the container renders unshaded).
+    /// </summary>
+    private static void AssignSourceShaderFileOnContainer(
+        RenderingLibrary.Graphics.InvisibleRenderable effectOwner, string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            effectOwner.RenderTargetEffect = null;
+            return;
+        }
+
+        if (RenderTargetEffectResolver == null)
+        {
+            return;
+        }
+
+        var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+
+        if (ToolsUtilities.FileManager.IsRelative(value) && ToolsUtilities.FileManager.IsUrl(value) == false)
+        {
+            value = ToolsUtilities.FileManager.RelativeDirectory + value;
+            value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
+        }
+
+        // LoaderManager caches disposables by normalized path (same convention as the texture cache)
+        // so a shader referenced by multiple containers compiles once.
+        if (loaderManager.CacheTextures)
+        {
+            var cachedEffect = loaderManager.GetDisposable(value);
+            if (cachedEffect is SKRuntimeEffect cachedSkRuntimeEffect)
+            {
+                effectOwner.RenderTargetEffect = cachedSkRuntimeEffect;
+                return;
+            }
+        }
+
+        SKRuntimeEffect? resolvedEffect = null;
+        Exception? resolveException = null;
+        try
+        {
+            resolvedEffect = RenderTargetEffectResolver(value);
+        }
+        catch (Exception ex)
+        {
+            resolveException = ex;
+        }
+
+        if (resolvedEffect == null)
+        {
+            // Resolver registered but couldn't produce an effect (missing file or compile error).
+            // Mirror Sprite source-file handling: honor MissingFileBehavior, else report the error.
+            string message = $"Error setting SourceShaderFile on Container\n{value}";
+            message += "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory";
+            message += "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
+            if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
+            {
+                throw new System.IO.FileNotFoundException(message, resolveException);
+            }
+            effectOwner.RenderTargetEffect = null;
+            PropertyAssignmentError?.Invoke(resolveException != null ? message + "\n" + resolveException : message);
+            return;
+        }
+
+        if (loaderManager.CacheTextures)
+        {
+            loaderManager.AddDisposable(value, resolvedEffect);
+        }
+
+        effectOwner.RenderTargetEffect = resolvedEffect;
+    }
 
     private static bool TrySetPropertyOnPolygon(Polygon asPolygon, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
