@@ -1301,6 +1301,38 @@ public partial class CustomSetPropertyOnRenderable
         return bmfcSave;
     }
 
+    /// <summary>
+    /// Builds the <see cref="BmfcSave"/> for a family-name/CustomFontFile font sync - shared by
+    /// <c>GetOrCreateBakedFont</c> (both its in-memory and disk/FontService branches) and its Raylib
+    /// mirror inside <c>ApplyFontVariables</c>. Identical on every platform: copies
+    /// <paramref name="textRuntime"/>'s font generation fields (size, outline, bold, italic,
+    /// dropshadow - via <c>CopyFontGenerationFieldsTo</c>) plus the current project's font
+    /// ranges/spacing.
+    /// </summary>
+    /// <remarks>
+    /// Same dual signature as <c>GetOrCreateBakedFont</c>: under FRB, <c>CopyFontGenerationFieldsTo</c>
+    /// is the FRB-only extension method on <see cref="GraphicalUiElement"/> (FRB has no TextRuntime);
+    /// everywhere else it's an instance method on <see cref="Gum.GueDeriving.TextRuntime"/> itself, so
+    /// the parameter must stay typed as TextRuntime there or overload resolution fails to find it.
+    /// </remarks>
+#if FRB
+    static BmfcSave BuildFontSyncBmfcSave(GraphicalUiElement textRuntime, string? fontFilePath)
+#else
+    static BmfcSave BuildFontSyncBmfcSave(Gum.GueDeriving.TextRuntime textRuntime, string? fontFilePath)
+#endif
+    {
+        BmfcSave bmfcSave = new BmfcSave();
+        textRuntime.CopyFontGenerationFieldsTo(
+            bmfcSave, fontFilePath != null ? ResolveFontFilePath(fontFilePath) : null);
+
+        var gumProject = ObjectFinder.Self.GumProjectSave;
+        bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
+        bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
+        bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
+
+        return bmfcSave;
+    }
+
     static List<TagInfo> allTags = new List<TagInfo>();
 
     /// <summary>
@@ -2045,15 +2077,7 @@ public partial class CustomSetPropertyOnRenderable
         {
             try
             {
-                BmfcSave bmfcSave = new BmfcSave();
-                textRuntime.CopyFontGenerationFieldsTo(
-                    bmfcSave,
-                    fontFilePath != null ? ResolveFontFilePath(fontFilePath) : null);
-
-                var gumProject = ObjectFinder.Self.GumProjectSave;
-                bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
-                bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
-                bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
+                BmfcSave bmfcSave = BuildFontSyncBmfcSave(textRuntime, fontFilePath);
 
                 font = InMemoryFontCreator.TryCreateFont(bmfcSave);
                 if (font != null)
@@ -2075,15 +2099,7 @@ public partial class CustomSetPropertyOnRenderable
         {
             try
             {
-                BmfcSave bmfcSave = new BmfcSave();
-                textRuntime.CopyFontGenerationFieldsTo(
-                    bmfcSave,
-                    fontFilePath != null ? ResolveFontFilePath(fontFilePath) : null);
-
-                var gumProject = ObjectFinder.Self.GumProjectSave;
-                bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
-                bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
-                bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
+                BmfcSave bmfcSave = BuildFontSyncBmfcSave(textRuntime, fontFilePath);
 
                 FontService.CreateFontIfNecessary(bmfcSave);
             }
@@ -2362,21 +2378,15 @@ public partial class CustomSetPropertyOnRenderable
                         return;
                     }
 
-                    // In-memory font creation (no disk I/O). The BmfcSave construction below is kept
-                    // byte-identical to the MonoGame path in Gum/Wireframe/CustomSetPropertyOnRenderable.cs;
-                    // only the created-font type (Raylib_cs.Font vs BitmapFont) and how it is cached are
-                    // necessarily platform-gated. Null/failure falls through to the FontCache .fnt path.
+                    // In-memory font creation (no disk I/O). BuildFontSyncBmfcSave is shared with the
+                    // MonoGame path in GetOrCreateBakedFont; only the created-font type (Raylib_cs.Font
+                    // vs BitmapFont) and how it is cached are necessarily platform-gated. Null/failure
+                    // falls through to the FontCache .fnt path.
                     if (InMemoryFontCreator != null)
                     {
                         try
                         {
-                            BmfcSave bmfcSave = new BmfcSave();
-                            textRuntime.CopyFontGenerationFieldsTo(bmfcSave, resolvedFontFilePath: null);
-
-                            var gumProject = ObjectFinder.Self.GumProjectSave;
-                            bmfcSave.Ranges = gumProject?.FontRanges ?? BmfcSave.GetEffectiveDefaultRanges();
-                            bmfcSave.SpacingHorizontal = gumProject?.FontSpacingHorizontal ?? 1;
-                            bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
+                            BmfcSave bmfcSave = BuildFontSyncBmfcSave(textRuntime, fontFilePath: null);
 
                             Raylib_cs.Font? createdFont = InMemoryFontCreator.TryCreateFont(bmfcSave);
                             if (createdFont.HasValue && createdFont.Value.BaseSize != 0)
