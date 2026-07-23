@@ -35,6 +35,27 @@ namespace WpfDataUi.Controls
         public bool EnableLabelDragValueChange { get; set; } = true;
 
         /// <summary>
+        /// Optional inclusive lower bound for a numeric field. When set, values are clamped up to this
+        /// floor on every write (typing, tab-away, label-drag) so an unbounded field like StrokeWidth
+        /// can still refuse negatives without becoming a slider. Exposed as double? (not decimal?)
+        /// because PropertiesToSetOnDisplayer pushes a boxed double via raw reflection SetValue.
+        /// </summary>
+        public double? MinValue
+        {
+            get => mTextBoxLogic.MinValue.HasValue ? (double)mTextBoxLogic.MinValue.Value : null;
+            set => mTextBoxLogic.MinValue = value.HasValue ? (decimal)value.Value : null;
+        }
+
+        /// <summary>
+        /// Optional inclusive upper bound for a numeric field. See <see cref="MinValue"/>.
+        /// </summary>
+        public double? MaxValue
+        {
+            get => mTextBoxLogic.MaxValue.HasValue ? (double)mTextBoxLogic.MaxValue.Value : null;
+            set => mTextBoxLogic.MaxValue = value.HasValue ? (decimal)value.Value : null;
+        }
+
+        /// <summary>
         /// Resets the label-drag scrub configuration to its declared defaults when this control is
         /// returned to the SingleDataUiContainer pool. TextBoxDisplay controls are recycled across
         /// variables, and only the keys a variable lists in PropertiesToSetOnDisplayer get re-applied
@@ -49,6 +70,8 @@ namespace WpfDataUi.Controls
             LabelDragValueRounding = 1;
             LabelDragChangeMultiplier = 1;
             EnableLabelDragValueChange = true;
+            MinValue = null;
+            MaxValue = null;
         }
 
         public InstanceMember? InstanceMember
@@ -355,6 +378,9 @@ namespace WpfDataUi.Controls
             {
                 // Check if the text has actually changed. If it hasn't, we don't
                 // want to forcefully set the text on a lost focus.
+                // Clamp first so a typed-then-tabbed-away value honors the min/max (Enter already
+                // clamps in HandlePreviewKeydown; this covers the tab-away / click-away path).
+                mTextBoxLogic.ClampTextBoxValuesToMinMax();
                 lastApplyValueResult = mTextBoxLogic.TryApplyToInstance();
             }
 
@@ -458,6 +484,11 @@ namespace WpfDataUi.Controls
                         // 1px-rounded variable still landed on values like 12.8 on a scaled display
                         // (issue #3191). unroundedValue already includes this tick's movement.
                         var rounded = TextBoxDisplayLogic.SnapDraggedValue(unroundedValue, LabelDragValueRounding);
+
+                        // Respect a min/max floor while scrubbing so the field visibly sticks at the
+                        // bound (e.g. StrokeWidth can't be dragged below 0) instead of applying a
+                        // clamped value while the text keeps counting past the limit.
+                        rounded = (double)TextBoxDisplayLogic.ClampToRange(rounded, mTextBoxLogic.MinValue, mTextBoxLogic.MaxValue);
 
                         var getValueStatus = TryGetValueOnUi(out _);
 

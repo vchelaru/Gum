@@ -37,6 +37,22 @@ public class StandardElementsManagerTests : BaseTestClass
         variable.PropertiesToSetOnDisplayer["MaxValue"].ShouldBe(255.0);
     }
 
+    // StrokeWidth has a meaningful floor of 0 but no natural maximum, so it stays a plain numeric
+    // textbox (no SliderDisplay, which would require an arbitrary max) and only gets a MinValue.
+    [Fact]
+    public void SetPreferredDisplayers_ClampsStrokeWidthToMinZero_AsPlainTextBox()
+    {
+        var state = new StateSave();
+        state.Variables.Add(new VariableSave { Type = "float", Name = "StrokeWidth" });
+
+        CreateSut().SetPreferredDisplayers(state);
+
+        var variable = state.Variables.First();
+        variable.PreferredDisplayer.ShouldBeNull();
+        variable.PropertiesToSetOnDisplayer["MinValue"].ShouldBe(0.0);
+        variable.PropertiesToSetOnDisplayer.ContainsKey("MaxValue").ShouldBeFalse();
+    }
+
     // Pins the static->instance drain: the Parent variable's type converter is built from the
     // injected ISelectedState. Before the drain SetPreferredDisplayers pulled ISelectedState from
     // the static Locator (which throws in a unit test); now it must come from the constructor.
