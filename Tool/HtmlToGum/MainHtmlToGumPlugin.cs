@@ -27,7 +27,7 @@ namespace HtmlToGumPlugin;
 /// Images/Fonts/FontCache into the open Gum project, then IImportLogic.ImportScreen.
 /// </summary>
 [Export(typeof(PluginBase))]
-public class MainHtmlToGumPlugin : PluginBase
+public class MainHtmlToGumPlugin : WpfPluginBase
 {
     public override string FriendlyName => "HTML to Gum";
     public override Version Version => new(0, 3, 0);

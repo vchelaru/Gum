@@ -14,7 +14,19 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Gum\Gum.csproj" />
   </ItemGroup>
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="echo Copying to &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;IF NOT EXIST &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot; md &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;" />
+  <!-- Deploy next to Gum.exe so MEF loads us from Plugins\HtmlToGumPlugin\ -->
+  <Target Name="CopyToGumPlugins" AfterTargets="Build">
+    <PropertyGroup>
+      <_ConfigName Condition="'$(Configuration)' != ''">$(Configuration)</_ConfigName>
+      <_ConfigName Condition="'$(_ConfigName)' == ''">$(ConfigurationName)</_ConfigName>
+      <_GumBinDir Condition="'$(SolutionDir)' != '' And '$(SolutionDir)' != '*Undefined*'">$(SolutionDir)Gum\bin\$(_ConfigName)\</_GumBinDir>
+      <_GumBinDir Condition="'$(_GumBinDir)' == ''">$(MSBuildThisFileDirectory)..\..\Gum\bin\$(_ConfigName)\</_GumBinDir>
+      <_PluginOut>$(_GumBinDir)Plugins\$(AssemblyName)\</_PluginOut>
+    </PropertyGroup>
+    <MakeDir Directories="$(_PluginOut)" Condition="Exists('$(_GumBinDir)')" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(_PluginOut)" Condition="Exists('$(_GumBinDir)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(_PluginOut)" Condition="Exists('$(TargetDir)$(TargetName).pdb') And Exists('$(_GumBinDir)')" SkipUnchangedFiles="true" />
+    <Message Importance="high" Text="HtmlToGumPlugin → $(_PluginOut)" Condition="Exists('$(_GumBinDir)')" />
+    <Warning Text="Gum bin not found at $(_GumBinDir) — skipped Plugins copy. Build Gum Tool first." Condition="!Exists('$(_GumBinDir)')" />
   </Target>
 </Project>
