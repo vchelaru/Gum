@@ -508,7 +508,14 @@ namespace RenderingLibrary.Graphics
             // SKCanvas.DrawImage ignores paint.Shader -- a paint's shader only takes effect on a
             // shape-drawing call, so the shaded path switches to DrawRect and feeds the baked image
             // in as the effect's "inputImage" child shader instead of passing it as the image arg.
-            using SKShader imageShader = image.ToShader();
+            // A plain image.ToShader() has an identity local matrix, so it samples using the raw
+            // canvas/device coordinate passed to the runtime effect's main() -- correct only when
+            // destination starts at (0, 0). The baked image's local (0, 0) corresponds to this
+            // container's absolute (left, top), so the child shader needs a matching translation;
+            // without it, any non-origin container reads the wrong (typically out-of-bounds,
+            // edge-clamped) region of the baked image instead of its own contents (#4001).
+            using SKShader imageShader = image.ToShader(
+                SKShaderTileMode.Clamp, SKShaderTileMode.Clamp, SKMatrix.CreateTranslation(left, top));
             using SKRuntimeEffectUniforms uniforms = new SKRuntimeEffectUniforms(effect);
             using SKRuntimeEffectChildren children = new SKRuntimeEffectChildren(effect);
             children["inputImage"] = imageShader;
