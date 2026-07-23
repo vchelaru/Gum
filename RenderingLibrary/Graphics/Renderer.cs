@@ -519,12 +519,6 @@ public class Renderer : IRenderer
             SetFilteringForLayer(layers[i]);
             PreRender(layers[i].Renderables);
         }
-
-        for (int i = 0; i < layers.Count; i++)
-        {
-            SetFilteringForLayer(layers[i]);
-            PreRenderWithSourceRenderTargets(layers[i].Renderables);
-        }
     }
 
     private void SetFilteringForLayer(Layer layer)
@@ -587,7 +581,6 @@ public class Renderer : IRenderer
 
             SetFilteringForLayer(layer);
             PreRender(layer.Renderables);
-            PreRenderWithSourceRenderTargets(layer.Renderables);
 
             SetFilteringForLayer(layer);
             RenderLayer(managers, layer, prerender:false);
@@ -648,8 +641,6 @@ public class Renderer : IRenderer
         if (prerender)
         {
             PreRender(layer.Renderables);
-
-            PreRenderWithSourceRenderTargets(layer.Renderables);
         }
 
         SpriteBatchStack.PerformStartOfLayerRenderingLogic();
@@ -843,31 +834,15 @@ public class Renderer : IRenderer
         return _referencedRenderTargetOwners.Contains(ResolveRenderTargetCacheOwner(renderable));
     }
 
-    private void PreRenderWithSourceRenderTargets(IList<IRenderableIpso> renderables)
+    /// <summary>
+    /// Returns the baked offscreen render target cached for the given render-target container, or
+    /// null if none exists. A <see cref="Sprite"/> pulls its
+    /// <see cref="Sprite.RenderTargetTextureSource"/> content through this at draw time — the sprite's
+    /// pixel source. Mirrors raylib's <c>Renderer.TryGetBakedRenderTargetFor</c>.
+    /// </summary>
+    public RenderTarget2D? TryGetBakedRenderTargetFor(IRenderableIpso container)
     {
-        var count = renderables.Count;
-        if (count == 0)
-        {
-            return;
-        }
-
-
-        for (int i = 0; i < count; i++)
-        {
-            var renderable = renderables[i];
-            if (renderable.Visible && renderable is IRenderTargetTextureReferencer textureReferencer &&
-                textureReferencer.RenderTargetTextureSource != null)
-            {
-                IRenderableIpso cacheOwner = ResolveRenderTargetCacheOwner(
-                    textureReferencer.RenderTargetTextureSource);
-                textureReferencer.Texture = renderTargetService.GetExistingRenderTarget(cacheOwner);
-            }
-
-            if (renderable.Visible && renderable.Children != null)
-            {
-                PreRenderWithSourceRenderTargets(renderable.Children);
-            }
-        }
+        return renderTargetService.GetExistingRenderTarget(ResolveRenderTargetCacheOwner(container));
     }
 
     private static IRenderableIpso ResolveRenderTargetCacheOwner(IRenderableIpso source)
@@ -910,7 +885,7 @@ public class Renderer : IRenderer
         var oldCameraY = Camera.Y;
         var oldViewport = GraphicsDevice.Viewport;
 
-        // Cache key must match what PreRenderWithSourceRenderTargets resolves for a
+        // Cache key must match what TryGetBakedRenderTargetFor resolves for a
         // RenderTargetTextureSource reference (#3451) — always the contained renderable, not the
         // GraphicalUiElement wrapper a nested container is walked as (#816). Unresolved, a nested
         // source bakes under the wrapper while the referencing Sprite looks up the raw renderable
