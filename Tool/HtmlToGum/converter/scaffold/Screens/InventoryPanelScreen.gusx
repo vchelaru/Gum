@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>InventoryPanelScreen</Name>
+  <State>
+    <Name>Default</Name>
+
+    <!-- Panel: HTML <div style="display:flex; flex-direction:column; gap:8px; width:300px; height:400px"> -->
+    <!-- ChildrenLayout=1 (TopToBottomStack); StackSpacing=8 = CSS gap -->
+    <Variable Type="ChildrenLayout" Name="Panel.ChildrenLayout" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="float" Name="Panel.StackSpacing" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="float" Name="Panel.X" SetsValue="true">
+      <Value xsi:type="xsd:float">20</Value>
+    </Variable>
+    <Variable Type="float" Name="Panel.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">20</Value>
+    </Variable>
+    <Variable Type="float" Name="Panel.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">300</Value>
+    </Variable>
+    <Variable Type="float" Name="Panel.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">400</Value>
+    </Variable>
+
+    <!-- HeaderBar: HTML <div style="height:40px; background:#e0a53c; border-radius:4px"> -->
+    <!-- WidthUnits=2 (RelativeToParent) + Width=0 = full column width (align-items:stretch) -->
+    <!-- CornerRadius = border-radius; FillR/G/B = background -->
+    <Variable Type="string" Name="HeaderBar.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Panel</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="HeaderBar.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="HeaderBar.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="float" Name="HeaderBar.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">40</Value>
+    </Variable>
+    <Variable Type="float" Name="HeaderBar.CornerRadius" SetsValue="true">
+      <Value xsi:type="xsd:float">4</Value>
+    </Variable>
+    <Variable Type="int" Name="HeaderBar.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">224</Value>
+    </Variable>
+    <Variable Type="int" Name="HeaderBar.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">165</Value>
+    </Variable>
+    <Variable Type="int" Name="HeaderBar.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <!-- Rectangle standard defaults to IsFilled=false + StrokeWidth=2 (outline only).
+         A background needs IsFilled=true and StrokeWidth=0 to drop the outline. -->
+    <Variable Type="bool" Name="HeaderBar.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="float" Name="HeaderBar.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+
+    <!-- TitleText: HTML <span style="font-size:24px; font-weight:bold; color:#fff">Inventory</span> -->
+    <!-- Text standard defaults to Absolute 100x50 (NOT auto-size); set units to -->
+    <!-- RelativeToChildren (4) so the box hugs the glyphs like inline text. -->
+    <Variable Type="string" Name="TitleText.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Panel</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TitleText.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TitleText.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="string" Name="TitleText.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Inventory</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="bool" Name="TitleText.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+
+    <!-- Body: HTML <div style="flex-grow:1; background:#3c3c50"> -->
+    <!-- HeightUnits=7 (Ratio) + Height=1 = flex-grow:1 (fills remaining vertical space) -->
+    <Variable Type="string" Name="Body.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Panel</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Body.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="Body.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Body.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="float" Name="Body.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="Body.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">80</Value>
+    </Variable>
+    <Variable Type="bool" Name="Body.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="float" Name="Body.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+
+    <!-- StatusText: HTML <span style="font-size:14px; color:#c0c0c0">12 / 40 slots</span> -->
+    <Variable Type="string" Name="StatusText.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Panel</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="StatusText.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="StatusText.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="string" Name="StatusText.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">12 / 40 slots</Value>
+    </Variable>
+    <Variable Type="int" Name="StatusText.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
+    <Variable Type="int" Name="StatusText.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">192</Value>
+    </Variable>
+    <Variable Type="int" Name="StatusText.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">192</Value>
+    </Variable>
+    <Variable Type="int" Name="StatusText.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">192</Value>
+    </Variable>
+  </State>
+
+  <Instance Name="Panel" BaseType="Container" />
+  <Instance Name="HeaderBar" BaseType="Rectangle" />
+  <Instance Name="TitleText" BaseType="Text" />
+  <Instance Name="Body" BaseType="Rectangle" />
+  <Instance Name="StatusText" BaseType="Text" />
+  <Behaviors />
+</ScreenSave>

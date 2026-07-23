@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 800px; height: 600px; background: #181820; }
+  /* Mixed track sizes — AutoGrid cannot represent; expect Absolute Tier-1 fallback. */
+  #grid {
+    position: absolute; left: 40px; top: 40px;
+    display: grid;
+    grid-template-columns: 100px 200px;
+    grid-template-rows: 80px 120px;
+    gap: 10px;
+    width: 310px; height: 210px;
+  }
+  #grid > div { background: #3c5a8a; }
+  #grid > #wide {
+    grid-column: 1 / span 2;
+    background: #e0a53c;
+  }
+</style>
+</head>
+<body>
+  <div id="grid">
+    <div id="wide"></div>
+    <div></div>
+    <div></div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RPGUI composite HUD</title>
+<link href="../assets/rpgui/rpgui.css" rel="stylesheet">
+<script src="../assets/rpgui/rpgui.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 800px;
+    height: 600px;
+    overflow: hidden;
+    background: #2a1a0a;
+    font-family: "Press Start 2P", Arial, sans-serif;
+  }
+  /* Soft parchment backdrop — RPGUI frames sit on top */
+  #hud {
+    position: relative;
+    width: 800px;
+    height: 600px;
+    background: #241608;
+  }
+
+  #vitals {
+    position: absolute;
+    left: 16px;
+    top: 16px;
+    width: 260px;
+    padding: 14px 16px 12px;
+  }
+  #vitals h1 {
+    font-size: 14px;
+    margin: 0 0 10px;
+    color: #fff;
+  }
+  .bar-row {
+    margin-bottom: 10px;
+  }
+  .bar-row label {
+    display: block;
+    font-size: 10px;
+    margin-bottom: 4px;
+    color: #eee;
+  }
+  .rpgui-progress {
+    width: 100%;
+  }
+
+  #quests {
+    position: absolute;
+    left: 16px;
+    top: 200px;
+    width: 260px;
+    padding: 14px 16px;
+  }
+  #quests h2 {
+    font-size: 12px;
+    margin: 0 0 8px;
+    color: #ffe08a;
+  }
+  #quests ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 10px;
+    line-height: 1.55;
+    color: #eee;
+  }
+
+  #equipment {
+    position: absolute;
+    right: 16px;
+    top: 16px;
+    width: 220px;
+    padding: 14px 16px;
+  }
+  #equipment h2 {
+    font-size: 12px;
+    margin: 0 0 10px;
+    color: #ffe08a;
+  }
+  .slots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  #party {
+    position: absolute;
+    right: 16px;
+    top: 200px;
+    width: 220px;
+    padding: 14px 16px;
+  }
+  #party h2 {
+    font-size: 12px;
+    margin: 0 0 8px;
+    color: #ffe08a;
+  }
+  #party p {
+    font-size: 10px;
+    line-height: 1.5;
+    color: #eee;
+    margin: 0 0 8px;
+  }
+
+  #hotbar {
+    position: absolute;
+    left: 160px;
+    bottom: 20px;
+    width: 480px;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+  }
+
+  #gold {
+    position: absolute;
+    right: 16px;
+    bottom: 28px;
+    padding: 10px 14px;
+    font-size: 11px;
+    color: #ffe08a;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div id="hud" class="rpgui-content">
+  <div id="vitals" class="rpgui-container framed">
+    <h1>Bob the Destroyer</h1>
+    <div class="bar-row">
+      <label>Health</label>
+      <div class="rpgui-progress red" data-value="0.72"></div>
+    </div>
+    <div class="bar-row">
+      <label>Mana</label>
+      <div class="rpgui-progress blue" data-value="0.45"></div>
+    </div>
+    <div class="bar-row">
+      <label>Stamina</label>
+      <div class="rpgui-progress green" data-value="0.88"></div>
+    </div>
+  </div>
+
+  <div id="quests" class="rpgui-container framed-grey">
+    <h2>Quests</h2>
+    <ul>
+      <li>Slay the cave troll</li>
+      <li>Find the golden key</li>
+      <li>Return to the village</li>
+    </ul>
+  </div>
+
+  <div id="equipment" class="rpgui-container framed-golden">
+    <h2>Equipment</h2>
+    <div class="slots">
+      <div class="rpgui-icon sword"></div>
+      <div class="rpgui-icon shield"></div>
+      <div class="rpgui-icon helmet-slot"></div>
+      <div class="rpgui-icon armor-slot"></div>
+      <div class="rpgui-icon ring-slot"></div>
+      <div class="rpgui-icon potion-red"></div>
+    </div>
+  </div>
+
+  <div id="party" class="rpgui-container framed-golden-2">
+    <h2>Party</h2>
+    <p>Mira — Mage<br>HP 40 / 40</p>
+    <p>Gorn — Fighter<br>HP 62 / 80</p>
+    <button type="button" class="rpgui-button"><p>Trade</p></button>
+  </div>
+
+  <div id="hotbar" class="rpgui-container framed">
+    <div class="rpgui-icon potion-red"></div>
+    <div class="rpgui-icon potion-blue"></div>
+    <div class="rpgui-icon potion-green"></div>
+    <div class="rpgui-icon magic-slot"></div>
+    <div class="rpgui-icon empty-slot"></div>
+    <div class="rpgui-icon empty-slot"></div>
+  </div>
+
+  <div id="gold" class="rpgui-container framed-grey">Gold: 1,250</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>border-image + background</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 800px; height: 400px; background: #181820; }
+  #panel {
+    position: absolute; left: 40px; top: 40px;
+    width: 280px; height: 160px;
+    border: 16px solid transparent;
+    border-image-source: url("border-slice.png");
+    border-image-slice: 16;
+    border-image-repeat: stretch;
+    /* Tiled/solid fill behind the frame — must not suppress NineSlice emit. */
+    background-color: #3c5a8a;
+    background-image: url("border-slice.png");
+    background-size: 24px 24px;
+    background-repeat: repeat;
+    padding: 20px;
+    color: #eee;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+  <div id="panel">Framed with fill</div>
+</body>
+</html>

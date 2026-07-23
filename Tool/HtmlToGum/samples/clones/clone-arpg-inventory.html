@@ -1,0 +1,234 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Inventory — Ruinpath</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 900px; height: 600px;
+    overflow: hidden;
+    background: #0a0c10;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    color: #e0dcc8;
+  }
+  #panel {
+    position: relative;
+    width: 900px; height: 600px;
+    background: #12141a;
+    overflow: hidden;
+    border: 2px solid #3a3540;
+  }
+
+  #title {
+    position: absolute;
+    left: 0; top: 0;
+    width: 900px; height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    background: #1a1c24;
+    border-bottom: 1px solid #3a3540;
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #c0a860;
+  }
+  #title .char { color: #a0a8b0; font-size: 12px; letter-spacing: 0.04em; text-transform: none; }
+
+  /* Paperdoll — left */
+  #paperdoll {
+    position: absolute;
+    left: 40px; top: 70px;
+    width: 280px; height: 420px;
+  }
+  #paperdoll h2 {
+    font-size: 12px;
+    color: #8a8090;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .doll {
+    position: relative;
+    width: 260px; height: 380px;
+    background: #181a22;
+    border: 1px solid #2a2830;
+  }
+  .slot {
+    position: absolute;
+    width: 56px; height: 56px;
+    background: #22242e;
+    border: 2px solid #4a4558;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+  }
+  .slot img {
+    width: 28px; height: 28px;
+    object-fit: contain;
+    display: block;
+  }
+  .slot .slot-label {
+    font-size: 8px;
+    color: #6a6878;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .slot.filled { border-color: #8088a0; background: #2a2e3a; }
+  .slot.rare { border-color: #4080d0; }
+  .slot.unique { border-color: #c08030; }
+  #slot-head { left: 102px; top: 16px; }
+  #slot-chest { left: 102px; top: 90px; }
+  #slot-hands { left: 24px; top: 130px; }
+  #slot-weapon { left: 24px; top: 220px; }
+  #slot-offhand { left: 180px; top: 220px; }
+  #slot-feet { left: 102px; top: 280px; }
+  .silhouette {
+    position: absolute;
+    left: 100px; top: 80px;
+    width: 60px; height: 180px;
+    background: #1e2028;
+    border: 1px dashed #3a3848;
+  }
+
+  /* Item grid — right */
+  #bag {
+    position: absolute;
+    left: 360px; top: 70px;
+    width: 500px;
+  }
+  #bag h2 {
+    font-size: 12px;
+    color: #8a8090;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  #grid {
+    display: grid;
+    grid-template-columns: repeat(8, 56px);
+    grid-template-rows: repeat(4, 56px);
+    gap: 4px;
+  }
+  .cell {
+    width: 56px; height: 56px;
+    background: #1a1c24;
+    border: 1px solid #2a2838;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cell img {
+    width: 32px; height: 32px;
+    object-fit: contain;
+    display: block;
+  }
+  .cell.common { border: 2px solid #808890; }
+  .cell.magic { border: 2px solid #4080d0; }
+  .cell.rare { border: 2px solid #c0b030; }
+  .cell.unique { border: 2px solid #c08030; }
+  .cell.empty { color: transparent; }
+
+  /* Footer — gold + weight */
+  #footer {
+    position: absolute;
+    left: 0; bottom: 0;
+    width: 900px; height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    background: #1a1c24;
+    border-top: 1px solid #3a3540;
+    font-size: 13px;
+  }
+  #footer .gold {
+    color: #e0b040; font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
+  }
+  #footer .gold img { width: 20px; height: 20px; }
+  #footer .weight { color: #a0a8b0; }
+  #footer .weight .over { color: #c05050; }
+</style>
+</head>
+<body>
+  <div id="panel">
+    <div id="title">
+      <span>Stash · Ruinpath</span>
+      <span class="char">Ashen Rook · Level 67 Outlander</span>
+    </div>
+
+    <div id="paperdoll">
+      <h2>Equipment</h2>
+      <div class="doll">
+        <div class="silhouette"></div>
+        <div class="slot filled rare" id="slot-head">
+          <img src="../assets/icons/helmet.png" alt=""><span class="slot-label">Head</span>
+        </div>
+        <div class="slot filled" id="slot-chest">
+          <img src="../assets/icons/chest.png" alt=""><span class="slot-label">Chest</span>
+        </div>
+        <div class="slot filled" id="slot-hands">
+          <img src="../assets/icons/glove.png" alt=""><span class="slot-label">Hands</span>
+        </div>
+        <div class="slot filled unique" id="slot-weapon">
+          <img src="../assets/icons/sword.png" alt=""><span class="slot-label">Weapon</span>
+        </div>
+        <div class="slot" id="slot-offhand">
+          <span class="slot-label">Offhand</span>
+        </div>
+        <div class="slot filled" id="slot-feet">
+          <img src="../assets/icons/boot.png" alt=""><span class="slot-label">Feet</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="bag">
+      <h2>Backpack</h2>
+      <div id="grid">
+        <div class="cell unique"><img src="../assets/icons/ring.png" alt=""></div>
+        <div class="cell rare"><img src="../assets/icons/scroll.png" alt=""></div>
+        <div class="cell magic"><img src="../assets/icons/potion.png" alt=""></div>
+        <div class="cell common"><img src="../assets/icons/key.png" alt=""></div>
+        <div class="cell magic"><img src="../assets/icons/gem.png" alt=""></div>
+        <div class="cell common"><img src="../assets/icons/bread.png" alt=""></div>
+        <div class="cell empty"></div>
+        <div class="cell rare"><img src="../assets/icons/bow.png" alt=""></div>
+        <div class="cell common"><img src="../assets/icons/wood.png" alt=""></div>
+        <div class="cell magic"><img src="../assets/icons/orb.png" alt=""></div>
+        <div class="cell empty"></div>
+        <div class="cell empty"></div>
+        <div class="cell unique"><img src="../assets/icons/crown.png" alt=""></div>
+        <div class="cell common"><img src="../assets/icons/bone.png" alt=""></div>
+        <div class="cell magic"><img src="../assets/icons/flask.png" alt=""></div>
+        <div class="cell empty"></div>
+        <div class="cell empty"></div>
+        <div class="cell common"><img src="../assets/icons/rock.png" alt=""></div>
+        <div class="cell rare"><img src="../assets/icons/shield.png" alt=""></div>
+        <div class="cell empty"></div>
+        <div class="cell empty"></div>
+        <div class="cell empty"></div>
+        <div class="cell magic"><img src="../assets/icons/book.png" alt=""></div>
+        <div class="cell empty"></div>
+        <div class="cell empty"></div>
+        <div class="cell empty"></div>
+        <div class="cell empty"></div>
+        <div class="cell empty"></div>
+        <div class="cell empty"></div>
+        <div class="cell empty"></div>
+        <div class="cell empty"></div>
+        <div class="cell empty"></div>
+      </div>
+    </div>
+
+    <div id="footer">
+      <span class="gold"><img src="../assets/icons/coin.png" alt=""><span>12,847 Gold</span></span>
+      <span class="weight">Weight 47.2 / 60.0</span>
+    </div>
+  </div>
+</body>
+</html>

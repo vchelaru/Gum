@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 800px; height: 600px; background: #181820; }
+
+  /* Uniform 2×2 CSS Grid — equal 1fr tracks, single gap. Maps to Gum
+     ChildrenLayout=AutoGridHorizontal + AutoGridHorizontalCells=2 /
+     AutoGridVerticalCells=2 + StackSpacing. No spans, no template-areas. */
+  #grid {
+    position: absolute; left: 20px; top: 20px;
+    width: 410px; height: 410px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 10px;
+  }
+  #a { background: #e0a53c; }
+  #b { background: #3c5a8a; }
+  #c { background: #5a3c8a; }
+  #d { background: #3c8a5a; }
+</style>
+</head>
+<body>
+  <div id="grid">
+    <div id="a"></div>
+    <div id="b"></div>
+    <div id="c"></div>
+    <div id="d"></div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Vitals HUD — Hollow March</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 960px; height: 540px;
+    overflow: hidden;
+    background: #0a0c10;
+    font-family: Georgia, "Times New Roman", serif;
+    color: #d8d0c0;
+  }
+  #hud {
+    position: relative;
+    width: 960px; height: 540px;
+    background: #0a0c10;
+    overflow: hidden;
+  }
+
+  /* Bottom-center vitals */
+  #vitals {
+    position: absolute;
+    left: 230px; bottom: 48px;
+    width: 500px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: stretch;
+  }
+  .vital-label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #8a8070;
+    margin-bottom: 2px;
+  }
+  #hp-track {
+    height: 22px;
+    background: #1a1814;
+    border: 2px solid #4a4030;
+    overflow: hidden;
+  }
+  #hp-fill {
+    height: 100%; width: 68%;
+    background: linear-gradient(90deg, #5a1010, #b02828);
+  }
+  #res-track {
+    height: 12px;
+    background: #1a1814;
+    border: 1px solid #3a3830;
+    overflow: hidden;
+  }
+  #res-fill {
+    height: 100%; width: 41%;
+    background: linear-gradient(90deg, #203040, #5080a0);
+  }
+
+  /* Flask / charge pips */
+  #flasks {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    align-items: center;
+  }
+  .flask-label { font-size: 11px; color: #8a8070; margin-right: 4px; }
+  .pip {
+    width: 18px; height: 28px;
+    background: #2a2030;
+    border: 2px solid #6a5080;
+  }
+  .pip.empty {
+    background: #141018;
+    border-color: #3a3040;
+  }
+  .pip.charge {
+    background: #203028;
+    border-color: #508060;
+  }
+
+  /* Interaction prompt — center */
+  #prompt {
+    position: absolute;
+    left: 330px; top: 240px;
+    width: 300px;
+    text-align: center;
+    padding: 10px 16px;
+    background: #141210;
+    border: 1px solid #4a4030;
+  }
+  #prompt .key {
+    display: inline-block;
+    padding: 2px 8px;
+    margin-right: 8px;
+    background: #2a2820;
+    border: 1px solid #6a6050;
+    font-size: 12px;
+    font-family: "Segoe UI", sans-serif;
+  }
+  #prompt .text {
+    font-size: 14px;
+    color: #e0d8c0;
+  }
+
+  /* Bottom-right counters */
+  #counters {
+    position: absolute;
+    right: 24px; bottom: 48px;
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .counter {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  .counter .label {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #6a6050;
+  }
+  .counter .value {
+    font-size: 20px;
+    color: #e8dcc0;
+    font-variant-numeric: tabular-nums;
+  }
+  .counter.discovery .value { color: #c0a060; font-size: 16px; }
+</style>
+</head>
+<body>
+  <div id="hud">
+    <div id="prompt">
+      <span class="key">E</span>
+      <span class="text">Touch the Ember Gate</span>
+    </div>
+
+    <div id="vitals">
+      <div>
+        <div class="vital-label">Vigor</div>
+        <div id="hp-track"><div id="hp-fill"></div></div>
+      </div>
+      <div>
+        <div class="vital-label">Focus</div>
+        <div id="res-track"><div id="res-fill"></div></div>
+      </div>
+      <div id="flasks">
+        <span class="flask-label">Flasks</span>
+        <div class="pip" title="Crimson Draught"></div>
+        <div class="pip" title="Crimson Draught"></div>
+        <div class="pip empty" title="Empty"></div>
+        <div class="pip charge" title="Cerulean Charge"></div>
+        <div class="pip charge empty" title="Empty charge"></div>
+      </div>
+    </div>
+
+    <div id="counters">
+      <div class="counter discovery">
+        <span class="label">Item Discovery</span>
+        <span class="value">142%</span>
+      </div>
+      <div class="counter">
+        <span class="label">Ember Marks</span>
+        <span class="value">38,420</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

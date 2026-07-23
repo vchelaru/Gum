@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 800px; height: 600px; background: #181820; font-family: Arial, sans-serif; }
+
+  /* Row layout with flex-grow siblings at DIFFERENT grow values (1 : 2 : 1),
+     one fixed-width sibling, and a nested column container. */
+  #bar {
+    position: absolute; left: 20px; top: 20px;
+    width: 760px; height: 100px;
+    display: flex; flex-direction: row; gap: 10px;
+  }
+  #badge  { width: 64px; background: #e0a53c; border-radius: 8px; }
+  #growA  { flex-grow: 1; background: #3c5a50; }
+  #growB  { flex-grow: 2; background: #503c5a; }
+  #stack  {
+    flex-grow: 1;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  #line1 { font-size: 18px; font-weight: bold; color: #ffffff; }
+  #line2 { font-size: 14px; color: #c0c0c0; }
+</style>
+</head>
+<body>
+  <div id="bar">
+    <div id="badge"></div>
+    <div id="growA"></div>
+    <div id="growB"></div>
+    <div id="stack">
+      <div id="line1">HP 120</div>
+      <div id="line2">MP 40</div>
+    </div>
+  </div>
+</body>
+</html>

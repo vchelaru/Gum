@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 800px; height: 600px; background: #181820; }
+  /* 48×48 9-slice style PNG: 16px corners, stretchable edges. Generated offline as data URL. */
+  #panel {
+    position: absolute; left: 40px; top: 40px;
+    width: 220px; height: 140px;
+    border: 16px solid transparent;
+    border-image-source: url("border-slice.png");
+    border-image-slice: 16;
+    border-image-repeat: stretch;
+    background: #3c5a8a;
+  }
+</style>
+</head>
+<body>
+  <div id="panel"></div>
+</body>
+</html>

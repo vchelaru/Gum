@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 800px; height: 600px; background: #181820; }
+  #stage {
+    position: absolute; left: 40px; top: 40px;
+    width: 200px; height: 200px;
+    background: #2a2a38;
+  }
+  .back {
+    position: absolute; left: 20px; top: 20px;
+    width: 120px; height: 120px;
+    background: #c04040;
+    z-index: 1;
+  }
+  .front {
+    position: absolute; left: 60px; top: 60px;
+    width: 120px; height: 120px;
+    background: #3c8a5a;
+    z-index: 5;
+  }
+</style>
+</head>
+<body>
+  <!-- DOM order is back then front, but z-index must paint green on top of red. -->
+  <div id="stage">
+    <div class="front"></div>
+    <div class="back"></div>
+  </div>
+</body>
+</html>

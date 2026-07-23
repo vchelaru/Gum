@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #181820; font-family: Arial, sans-serif; }
+
+  /* #layout fills the viewport width exactly (not a fixed px value), so its own
+     width is itself a genuine "scales with viewport" case -- the root of the tree. */
+  #layout {
+    width: 100%; height: 400px;
+    display: flex; flex-direction: row;
+  }
+  /* Sidebar: a real CSS percentage width, no flex-grow -- the case single-viewport
+     inference cannot distinguish from "just happens to be 25% of THIS viewport". */
+  #sidebar {
+    width: 25%; height: 100%;
+    background: #3c5a8a;
+  }
+  /* Main: flex-grow -- already handled by the existing Ratio mechanism; included so
+     the fixture matches a realistic real-world sidebar+content layout, not a toy. */
+  #main {
+    flex-grow: 1; height: 100%;
+    background: #2a2a38;
+  }
+  /* A fixed-width badge inside main -- deliberately NOT proportional, to test that the
+     inference correctly distinguishes "stays constant" from "scales with parent" on the
+     same axis, not just default to percentage for everything that isn't the sidebar. */
+  #badge {
+    width: 80px; height: 40px;
+    margin: 20px;
+    background: #e0a53c;
+  }
+</style>
+</head>
+<body>
+  <div id="layout">
+    <div id="sidebar"></div>
+    <div id="main">
+      <div id="badge"></div>
+    </div>
+  </div>
+</body>
+</html>

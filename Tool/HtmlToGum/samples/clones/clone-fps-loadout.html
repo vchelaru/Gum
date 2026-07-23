@@ -1,0 +1,229 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>FPS Loadout — Neon Breach</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 1280px; height: 720px;
+    overflow: hidden;
+    background: #0a0c10;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    color: #e0e8f0;
+  }
+  #hud {
+    position: relative;
+    width: 1280px; height: 720px;
+    background: #0a0c10;
+    overflow: hidden;
+  }
+
+  /* Scoreboard strip — top */
+  #scoreboard {
+    position: absolute;
+    left: 0; top: 0;
+    width: 1280px; height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    background: #12161c;
+    border-bottom: 2px solid #2a3440;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+  .team-a { color: #50a0e0; }
+  .team-b { color: #e06050; }
+  .score-num {
+    font-size: 22px;
+    font-variant-numeric: tabular-nums;
+  }
+  .round-info {
+    color: #8a9098;
+    font-weight: 400;
+    font-size: 12px;
+  }
+  .timer { color: #e0c040; font-size: 18px; }
+
+  /* Crosshair — center */
+  #crosshair {
+    position: absolute;
+    left: 632px; top: 352px;
+    width: 16px; height: 16px;
+  }
+  #crosshair .h {
+    position: absolute;
+    left: 0; top: 7px;
+    width: 16px; height: 2px;
+    background: #e0e8f0;
+  }
+  #crosshair .v {
+    position: absolute;
+    left: 7px; top: 0;
+    width: 2px; height: 16px;
+    background: #e0e8f0;
+  }
+  #crosshair .dot {
+    position: absolute;
+    left: 7px; top: 7px;
+    width: 2px; height: 2px;
+    background: #e0a040;
+  }
+
+  /* Ability dock — bottom center */
+  #abilities {
+    position: absolute;
+    left: 340px; bottom: 28px;
+    width: 600px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 12px;
+  }
+  .ability {
+    position: relative;
+    width: 72px; height: 72px;
+    background: #1a2030;
+    border: 2px solid #4a5568;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .ability img {
+    width: 36px; height: 36px;
+    object-fit: contain;
+    display: block;
+  }
+  .ability .key {
+    position: absolute;
+    left: 4px; top: 2px;
+    font-size: 10px;
+    color: #8a9098;
+    font-weight: 700;
+  }
+  .ability .name {
+    position: absolute;
+    bottom: -18px;
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 9px;
+    color: #6a7080;
+    white-space: nowrap;
+  }
+  .ability.ready { border-color: #60a080; }
+  .ability.ult-slot {
+    width: 88px; height: 88px;
+    border-color: #c08040;
+    background: #241c14;
+  }
+
+  /* Cooldown overlay */
+  .cd-overlay {
+    position: absolute;
+    left: 0; bottom: 0;
+    width: 100%;
+    background: rgba(10, 12, 16, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: #e0e8f0;
+  }
+  .a2 .cd-overlay { height: 55%; }
+  .a4 .cd-overlay { height: 30%; }
+
+  /* CSS ring cooldown via nested borders */
+  .cd-ring {
+    position: absolute;
+    left: -4px; top: -4px;
+    width: 80px; height: 80px;
+    border: 3px solid transparent;
+    border-top-color: #e0a040;
+    border-right-color: #e0a040;
+  }
+  .a3 .cd-ring { display: block; }
+  .ability:not(.a3) .cd-ring { display: none; }
+
+  /* Ultimate meter */
+  #ult-meter {
+    position: absolute;
+    left: 480px; bottom: 140px;
+    width: 320px;
+  }
+  #ult-meter .label {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #c08040;
+    margin-bottom: 4px;
+    text-align: center;
+  }
+  #ult-meter .track {
+    height: 10px;
+    background: #1a1814;
+    border: 1px solid #4a4030;
+    overflow: hidden;
+  }
+  #ult-meter .fill {
+    height: 100%; width: 78%;
+    background: linear-gradient(90deg, #604020, #e0a040);
+  }
+</style>
+</head>
+<body>
+  <div id="hud">
+    <div id="scoreboard">
+      <span class="team-a">SIGNAL <span class="score-num">8</span></span>
+      <span class="timer">1:24</span>
+      <span class="round-info">Round 12 · Overtime</span>
+      <span class="team-b"><span class="score-num">7</span> STATIC</span>
+    </div>
+
+    <div id="crosshair">
+      <div class="h"></div>
+      <div class="v"></div>
+      <div class="dot"></div>
+    </div>
+
+    <div id="ult-meter">
+      <div class="label">Overdrive · 78%</div>
+      <div class="track"><div class="fill"></div></div>
+    </div>
+
+    <div id="abilities">
+      <div class="ability ready a1">
+        <span class="key">Q</span>
+        <img src="../assets/icons/dash.png" alt="">
+        <span class="name">Dash</span>
+      </div>
+      <div class="ability a2">
+        <span class="key">E</span>
+        <img src="../assets/icons/brick.png" alt="">
+        <span class="name">Barrier</span>
+        <div class="cd-overlay">8</div>
+      </div>
+      <div class="ability a3">
+        <span class="key">C</span>
+        <img src="../assets/icons/eye.png" alt="">
+        <span class="name">Scan</span>
+        <div class="cd-ring"></div>
+      </div>
+      <div class="ability a4">
+        <span class="key">X</span>
+        <img src="../assets/icons/bomb.png" alt="">
+        <span class="name">Charge</span>
+        <div class="cd-overlay">4</div>
+      </div>
+      <div class="ability ult-slot ready a5">
+        <span class="key">F</span>
+        <img src="../assets/icons/ult.png" alt="">
+        <span class="name">Overdrive</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

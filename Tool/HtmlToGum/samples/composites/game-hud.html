@@ -1,0 +1,158 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 800px; height: 600px;
+    background: #14141c;
+    font-family: Arial, sans-serif;
+    color: #e8e8f0;
+  }
+
+  /* --- Fixed top resource bar --- */
+  #topbar {
+    position: fixed; left: 0; top: 0;
+    width: 800px; height: 44px;
+    display: flex; align-items: center; gap: 16px;
+    padding: 0 16px;
+    background: #1e1e2a;
+    border-bottom: 2px solid #3a3a4c;
+    z-index: 10;
+  }
+  .meter {
+    display: flex; flex-direction: column; gap: 2px;
+    width: 160px;
+  }
+  .meter label { font-size: 11px; color: #a0a0b0; }
+  .meter .track {
+    height: 10px; border-radius: 5px; background: #2a2a38; overflow: hidden;
+  }
+  .meter .fill-hp {
+    height: 100%; width: 72%;
+    background: linear-gradient(90deg, #8a3030, #e05050);
+  }
+  .meter .fill-mp {
+    height: 100%; width: 45%;
+    background: linear-gradient(90deg, #284878, #5080e0);
+  }
+  #gold { margin-left: auto; font-size: 14px; font-weight: bold; color: #e0a53c; }
+
+  /* --- Main stage under the topbar --- */
+  #stage {
+    position: absolute; left: 0; top: 44px;
+    width: 800px; height: 556px;
+  }
+
+  /* Quest tracker — left column */
+  #quests {
+    position: absolute; left: 12px; top: 12px;
+    width: 220px;
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 12px;
+    background: rgba(30, 30, 42, 0.92);
+    border: 1px solid #3a3a4c;
+    border-radius: 8px;
+  }
+  #quests h2 { font-size: 13px; color: #e0a53c; letter-spacing: 0.04em; }
+  .quest {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; padding: 6px 8px; background: #252532; border-radius: 4px;
+  }
+  .quest .n { color: #808090; }
+
+  /* Minimap — top-right, absolute */
+  #minimap {
+    position: absolute; right: 12px; top: 12px;
+    width: 140px; height: 140px;
+    background: #2a4a3a;
+    border: 3px solid #3c8a5a;
+    border-radius: 8px;
+  }
+  #minimap .dot {
+    position: absolute; left: 64px; top: 64px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: #e0a53c;
+  }
+
+  /* Hotbar — fixed bottom center (no transform; left from measured half-width) */
+  #hotbar {
+    position: fixed; left: 258px; bottom: 16px;
+    display: flex; gap: 6px;
+    padding: 8px;
+    background: #1e1e2a;
+    border: 2px solid #3a3a4c;
+    border-radius: 10px;
+    z-index: 10;
+  }
+  .slot {
+    width: 48px; height: 48px;
+    background: #2a2a38;
+    border: 2px solid #4a4a5c;
+    border-radius: 6px;
+  }
+  .slot.filled { background: #3c5a8a; }
+  .slot.key {
+    font-size: 10px; color: #a0a0b0;
+    display: flex; align-items: flex-end; justify-content: flex-end;
+    padding: 2px 4px;
+  }
+
+  /* Inventory grid — bottom-left panel */
+  #inv {
+    position: absolute; left: 12px; bottom: 80px;
+    width: 200px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 4px;
+    padding: 8px;
+    background: #1e1e2a;
+    border: 1px solid #3a3a4c;
+    border-radius: 8px;
+  }
+  #inv .cell {
+    aspect-ratio: 1;
+    background: #2a2a38;
+    border-radius: 4px;
+  }
+  #inv .cell.on { background: #5a3c8a; }
+</style>
+</head>
+<body>
+  <div id="topbar">
+    <div class="meter">
+      <label>Health</label>
+      <div class="track"><div class="fill-hp"></div></div>
+    </div>
+    <div class="meter">
+      <label>Mana</label>
+      <div class="track"><div class="fill-mp"></div></div>
+    </div>
+    <div id="gold">◈ 12,480</div>
+  </div>
+
+  <div id="stage">
+    <div id="quests">
+      <h2>QUESTS</h2>
+      <div class="quest"><span>Clear the crypt</span><span class="n">2/5</span></div>
+      <div class="quest"><span>Fetch iron ore</span><span class="n">0/10</span></div>
+      <div class="quest"><span>Talk to Mira</span><span class="n">•</span></div>
+    </div>
+    <div id="minimap"><div class="dot"></div></div>
+    <div id="inv">
+      <div class="cell on"></div><div class="cell"></div><div class="cell on"></div><div class="cell"></div>
+      <div class="cell"></div><div class="cell on"></div><div class="cell"></div><div class="cell on"></div>
+    </div>
+  </div>
+
+  <div id="hotbar">
+    <div class="slot filled key">1</div>
+    <div class="slot filled key">2</div>
+    <div class="slot key">3</div>
+    <div class="slot filled key">4</div>
+    <div class="slot key">5</div>
+  </div>
+</body>
+</html>

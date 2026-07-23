@@ -1,0 +1,230 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>MMO Unit Frames — Emberveil Online</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 960px; height: 540px;
+    overflow: hidden;
+    background: #0a0c10;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    color: #e8e4d8;
+  }
+  #hud {
+    position: relative;
+    width: 960px; height: 540px;
+    background: #0a0c10;
+    overflow: hidden;
+  }
+
+  /* Player frame — bottom-left */
+  #player-frame {
+    position: absolute;
+    left: 16px; bottom: 16px;
+    width: 280px;
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    background: #141820;
+    border: 2px solid #3a4558;
+  }
+  .portrait {
+    width: 56px; height: 56px;
+    flex-shrink: 0;
+    background: #2a3548;
+    border: 2px solid #5a6a80;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+  }
+  .frame-body { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .unit-name { font-size: 13px; font-weight: 700; color: #f0e8c8; white-space: nowrap; }
+  .unit-level { font-size: 11px; color: #8a90a0; }
+  .bar-row { display: flex; align-items: center; gap: 6px; }
+  .bar-label { font-size: 10px; color: #7a8090; width: 22px; flex-shrink: 0; }
+  .bar-track {
+    flex: 1; height: 12px;
+    background: #1a2030;
+    border: 1px solid #3a4558;
+    overflow: hidden;
+  }
+  .bar-fill-hp {
+    height: 100%; width: 78%;
+    background: linear-gradient(90deg, #4a2020, #c04040);
+  }
+  .bar-fill-res {
+    height: 100%; width: 52%;
+    background: linear-gradient(90deg, #203060, #4080d0);
+  }
+  .bar-text {
+    position: absolute;
+    font-size: 9px; color: #fff;
+    pointer-events: none;
+  }
+
+  /* Target frame — top-center */
+  #target-frame {
+    position: absolute;
+    left: 340px; top: 16px;
+    width: 280px;
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    background: #141820;
+    border: 2px solid #6a4040;
+  }
+  #target-frame .portrait { border-color: #a05050; background: #3a2020; }
+  #target-frame .bar-fill-hp { width: 34%; background: linear-gradient(90deg, #5a1818, #e05030); }
+  #target-frame .bar-fill-res { width: 88%; background: linear-gradient(90deg, #404018, #c0a030); }
+
+  /* Cast bar — under target */
+  #cast-bar {
+    position: absolute;
+    left: 340px; top: 100px;
+    width: 280px;
+    padding: 6px 8px;
+    background: #141820;
+    border: 1px solid #4a5060;
+  }
+  #cast-bar .cast-name { font-size: 11px; color: #d0c8a0; margin-bottom: 4px; }
+  #cast-bar .cast-track {
+    height: 14px;
+    background: #1a2030;
+    border: 1px solid #3a4558;
+    overflow: hidden;
+  }
+  #cast-bar .cast-fill {
+    height: 100%; width: 62%;
+    background: linear-gradient(90deg, #504020, #e0a040);
+  }
+
+  /* Party list — left side */
+  #party {
+    position: absolute;
+    left: 16px; top: 16px;
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  #party h2 {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #8a90a0;
+    margin-bottom: 2px;
+  }
+  .party-member {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    background: #141820;
+    border: 1px solid #2a3548;
+  }
+  .party-portrait {
+    width: 28px; height: 28px;
+    background: #2a3548;
+    border: 1px solid #4a5568;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .party-portrait img, .portrait img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .party-info { flex: 1; min-width: 0; }
+  .party-name { font-size: 11px; color: #d0d0d8; white-space: nowrap; overflow: hidden; }
+  .party-hp-track {
+    height: 6px; margin-top: 3px;
+    background: #1a2030;
+    border: 1px solid #2a3548;
+    overflow: hidden;
+  }
+  .party-hp-fill { height: 100%; background: #50a050; }
+  .p1 .party-hp-fill { width: 95%; }
+  .p2 .party-hp-fill { width: 61%; background: #c0a030; }
+  .p3 .party-hp-fill { width: 100%; }
+  .p4 .party-hp-fill { width: 22%; background: #c04040; }
+</style>
+</head>
+<body>
+  <div id="hud">
+    <div id="party">
+      <h2>Party — Emberveil</h2>
+      <div class="party-member p1">
+        <div class="party-portrait"><img src="../assets/icons/shield.png" alt=""></div>
+        <div class="party-info">
+          <div class="party-name">Kael Ironward</div>
+          <div class="party-hp-track"><div class="party-hp-fill"></div></div>
+        </div>
+      </div>
+      <div class="party-member p2">
+        <div class="party-portrait"><img src="../assets/icons/swords.png" alt=""></div>
+        <div class="party-info">
+          <div class="party-name">Nyx Ashblade</div>
+          <div class="party-hp-track"><div class="party-hp-fill"></div></div>
+        </div>
+      </div>
+      <div class="party-member p3">
+        <div class="party-portrait"><img src="../assets/icons/spark.png" alt=""></div>
+        <div class="party-info">
+          <div class="party-name">Lira Softsong</div>
+          <div class="party-hp-track"><div class="party-hp-fill"></div></div>
+        </div>
+      </div>
+      <div class="party-member p4">
+        <div class="party-portrait"><img src="../assets/icons/bow.png" alt=""></div>
+        <div class="party-info">
+          <div class="party-name">Rook Quietstep</div>
+          <div class="party-hp-track"><div class="party-hp-fill"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="target-frame">
+      <div class="portrait"><img src="../assets/icons/wolf.png" alt=""></div>
+      <div class="frame-body">
+        <div class="unit-name">Ashfang Alpha</div>
+        <div class="unit-level">Elite · Lv 42</div>
+        <div class="bar-row">
+          <span class="bar-label">HP</span>
+          <div class="bar-track"><div class="bar-fill-hp"></div></div>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">EN</span>
+          <div class="bar-track"><div class="bar-fill-res"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="cast-bar">
+      <div class="cast-name">Casting: Howl of Embers</div>
+      <div class="cast-track"><div class="cast-fill"></div></div>
+    </div>
+
+    <div id="player-frame">
+      <div class="portrait"><img src="../assets/icons/mage.png" alt=""></div>
+      <div class="frame-body">
+        <div class="unit-name">Vesper Moonrift</div>
+        <div class="unit-level">Mystic · Lv 41</div>
+        <div class="bar-row">
+          <span class="bar-label">HP</span>
+          <div class="bar-track"><div class="bar-fill-hp"></div></div>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">MP</span>
+          <div class="bar-track"><div class="bar-fill-res"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

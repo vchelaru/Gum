@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 800px; height: 400px; background: #181820; }
+
+  #panel {
+    position: absolute; left: 20px; top: 20px;
+    width: 360px; height: 200px;
+    display: flex; flex-direction: row; gap: 20px;
+  }
+  /* Broken-image affordance: bg color under the img (Cerberus-style). Sprite alone
+     drops this — needs Rectangle underlay. */
+  #ph {
+    width: 160px; height: 100px;
+    background-color: #dddddd;
+    /* intentional 404 so Chromium also shows the gray affordance */
+  }
+  /* Partial opacity over a known yellow — maps to Gum Alpha / FillAlpha. */
+  #fade {
+    width: 160px; height: 100px;
+    background: #e0a53c;
+    opacity: 0.5;
+  }
+</style>
+</head>
+<body>
+  <div id="panel">
+    <img id="ph" src="https://via.placeholder.com/this-will-404.png" width="160" height="100" alt=""
+         style="background-color:#dddddd; width:160px; height:100px; display:block;" />
+    <div id="fade"></div>
+  </div>
+</body>
+</html>
