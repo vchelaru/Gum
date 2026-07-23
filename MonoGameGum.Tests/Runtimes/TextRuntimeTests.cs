@@ -84,6 +84,25 @@ $"chars count=223\r\n";
 
     #endregion
 
+    #region Color
+
+    [Fact]
+    public void Color_ShouldRoundTrip_ThroughContainedRenderable()
+    {
+        // Pins the System.Drawing <-> XNA conversion in the Color property (ToUserColor/
+        // ToContainerColor on XNALIKE). Distinct channels catch any R/B swap or dropped alpha.
+        TextRuntime sut = new();
+
+        sut.Color = new Microsoft.Xna.Framework.Color(10, 20, 30, 40);
+
+        sut.Color.R.ShouldBe((byte)10);
+        sut.Color.G.ShouldBe((byte)20);
+        sut.Color.B.ShouldBe((byte)30);
+        sut.Color.A.ShouldBe((byte)40);
+    }
+
+    #endregion
+
     #region FontScale Inline Measurement (issue #3481)
 
     // Issue #3481: an inline [FontScale=N] run renders larger but the Text used to report its

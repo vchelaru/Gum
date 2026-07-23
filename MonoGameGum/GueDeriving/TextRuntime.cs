@@ -1,8 +1,10 @@
 ﻿using Gum.DataTypes;
 #if RAYLIB
 using Gum.Renderables;
+using RaylibGum.Helpers;
 #elif SKIA
 using SkiaGum;
+using SkiaGum.Helpers;
 using SkiaSharp;
 #else
 using Gum.Graphics;
@@ -138,21 +140,12 @@ public class TextRuntime : InteractiveGue
     /// </summary>
     public Color Color
     {
-#if XNALIKE
-        get => global::RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedText.Color);
+        get => ContainedText.Color.ToUserColor();
         set
         {
-            ContainedText.Color = global::RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
+            ContainedText.Color = value.ToContainerColor();
             NotifyPropertyChanged();
         }
-#else
-        get => ContainedText.Color;
-        set
-        {
-            ContainedText.Color = value;
-            NotifyPropertyChanged();
-        }
-#endif
     }
 
     /// <summary>
