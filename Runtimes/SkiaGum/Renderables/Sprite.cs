@@ -8,7 +8,7 @@ using System;
 
 namespace SkiaGum.Renderables;
 
-public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAnimatable, ICloneable
+public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAnimatable, ICloneable, IRenderTargetTextureReferencer
 {
     public object Clone()
     {

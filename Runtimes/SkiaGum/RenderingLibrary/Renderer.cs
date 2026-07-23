@@ -325,7 +325,9 @@ namespace RenderingLibrary.Graphics
 
         // Populates _referencedRenderTargetOwners with the cache owner of every render-target
         // container referenced by a visible Sprite's RenderTargetTextureSource. Both a top-level
-        // Sprite (handed directly) and a nested one (wrapped in a GraphicalUiElement) are handled.
+        // Sprite (handed directly) and a nested one (a SpriteRuntime wrapping the Sprite) implement
+        // IRenderTargetTextureReferencer, so one interface test covers both — the same detection path
+        // the xnalike and raylib Renderers use (#3992).
         private void CollectReferencedRenderTargets(IList<IRenderableIpso> renderables)
         {
             for (int i = 0; i < renderables.Count; i++)
@@ -336,11 +338,10 @@ namespace RenderingLibrary.Graphics
                     continue;
                 }
 
-                SkiaGum.Renderables.Sprite sprite = renderable as SkiaGum.Renderables.Sprite
-                    ?? (renderable as GraphicalUiElement)?.RenderableComponent as SkiaGum.Renderables.Sprite;
-                if (sprite?.RenderTargetTextureSource != null)
+                if (renderable is IRenderTargetTextureReferencer textureReferencer &&
+                    textureReferencer.RenderTargetTextureSource != null)
                 {
-                    _referencedRenderTargetOwners.Add(ResolveRenderTargetCacheOwner(sprite.RenderTargetTextureSource));
+                    _referencedRenderTargetOwners.Add(ResolveRenderTargetCacheOwner(textureReferencer.RenderTargetTextureSource));
                 }
 
                 if (renderable.Children != null)

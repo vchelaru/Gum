@@ -14,7 +14,7 @@ using ToolsUtilitiesStandard.Helpers;
 using static Raylib_cs.Raylib;
 
 namespace Gum.Renderables;
-public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAnimatable, IRenderableIpso
+public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAnimatable, IRenderableIpso, IRenderTargetTextureReferencer
 {
     public Texture2D? Texture { get; set; }
 

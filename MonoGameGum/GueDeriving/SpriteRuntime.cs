@@ -42,7 +42,7 @@ namespace Gum.GueDeriving;
 /// Provides a unified API for common Sprite properties across different rendering platforms.
 /// </summary>
 public class SpriteRuntime : GraphicalUiElement
-#if XNALIKE
+#if XNALIKE || RAYLIB || SKIA
     , IRenderTargetTextureReferencer
 #endif
 {
@@ -442,15 +442,6 @@ public class SpriteRuntime : GraphicalUiElement
             }
         }
     }
-#endif
-
-#if XNALIKE
-    // The XNA Renderer's render-target detection walk (CollectReferencedRenderTargets) tests for
-    // IRenderTargetTextureReferencer, so a nested SpriteRuntime must implement it. The raylib and Skia
-    // Renderers resolve the source via concrete Sprite type checks instead, so they don't need this
-    // interface. All three backends pull the baked target via Renderer.TryGetBakedRenderTargetFor.
-    IRenderableIpso? IRenderTargetTextureReferencer.RenderTargetTextureSource =>
-        ContainedSprite.RenderTargetTextureSource;
 #endif
 
 

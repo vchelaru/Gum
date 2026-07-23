@@ -48,6 +48,19 @@ public interface IRenderTargetRenderable
     object? RenderTargetEffect { get; set; }
 }
 
+/// <summary>
+/// Implemented by a renderable (or its runtime wrapper) that displays another container's baked
+/// render-target texture as its pixel source. The <c>Renderer</c>'s render-target detection walk
+/// (<c>CollectReferencedRenderTargets</c>) tests for this interface to discover which containers
+/// must bake this frame — even invisible ones, as long as a visible referencer points at them.
+/// Type-neutral (the source is an <see cref="IRenderableIpso"/>, not a backend texture type) so it
+/// lives here in GumCommon and every backend — xnalike, raylib, Skia — implements the one path.
+/// </summary>
+public interface IRenderTargetTextureReferencer
+{
+    IRenderableIpso? RenderTargetTextureSource { get; }
+}
+
 
 public static class IRenderableIpsoExtensions
 {

@@ -323,10 +323,9 @@ public class Renderer : IRenderer
 
     // Populates _referencedRenderTargetOwners with the cache owner of every render-target container
     // referenced by a visible Sprite's RenderTargetTextureSource. Both a top-level Sprite (the walk
-    // hands the contained Sprite directly) and a nested one (a GraphicalUiElement wrapping the Sprite)
-    // are handled. Mirrors MonoGame's CollectReferencedRenderTargets, but resolves the raylib
-    // Gum.Renderables.Sprite concretely — raylib has no IRenderTargetTextureReferencer interface (its
-    // Texture member is XNA-typed). See #3452 / #1643.
+    // hands the contained Sprite directly) and a nested one (a SpriteRuntime wrapping the Sprite)
+    // implement IRenderTargetTextureReferencer, so one interface test covers both — the same detection
+    // path the xnalike and Skia Renderers use (#3992). See #3452 / #1643.
     private void CollectReferencedRenderTargets(System.Collections.Generic.IList<IRenderableIpso> renderables)
     {
         for (int i = 0; i < renderables.Count; i++)
@@ -337,12 +336,11 @@ public class Renderer : IRenderer
                 continue;
             }
 
-            Sprite? sprite = renderable as Sprite
-                ?? (renderable as GraphicalUiElement)?.RenderableComponent as Sprite;
-            if (sprite?.RenderTargetTextureSource != null)
+            if (renderable is IRenderTargetTextureReferencer textureReferencer &&
+                textureReferencer.RenderTargetTextureSource != null)
             {
                 _referencedRenderTargetOwners.Add(
-                    ResolveRenderTargetCacheOwner(sprite.RenderTargetTextureSource));
+                    ResolveRenderTargetCacheOwner(textureReferencer.RenderTargetTextureSource));
             }
 
             if (renderable.Children != null)
