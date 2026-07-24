@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
@@ -25,6 +26,13 @@ namespace Gum.Controls.DataUi
         bool _isLinked = true;
         CornerRadiusComposite _current;
 
+        readonly Dictionary<FrameworkElement, TextBox> _labelDragTargets;
+        FrameworkElement? _draggingLabel;
+        TextBox? _draggingTextBox;
+        double? _dragCurrentX;
+        double? _dragPressedX;
+        double _dragUnroundedValue;
+
         public InstanceMember? InstanceMember
         {
             get => mInstanceMember;
@@ -51,6 +59,15 @@ namespace Gum.Controls.DataUi
         public CornerRadiusDisplay()
         {
             InitializeComponent();
+
+            _labelDragTargets = new Dictionary<FrameworkElement, TextBox>
+            {
+                [Label] = UniformTextBox,
+                [TopLeftLabel] = TopLeftTextBox,
+                [TopRightLabel] = TopRightTextBox,
+                [BottomLeftLabel] = BottomLeftTextBox,
+                [BottomRightLabel] = BottomRightTextBox,
+            };
         }
 
         public void Refresh(bool forceRefreshEvenIfFocused = false)
@@ -221,7 +238,7 @@ namespace Gum.Controls.DataUi
 
         private void CornerTextBox_LostFocus(object sender, RoutedEventArgs e) => CommitValue();
 
-        private void CommitValue()
+        private void CommitValue(SetPropertyCommitType commitType = SetPropertyCommitType.Full)
         {
             if (_isSyncingFromInstance)
             {
@@ -231,9 +248,77 @@ namespace Gum.Controls.DataUi
             ApplyValueResult result = TryGetValueOnUi(out object? value);
             if (result == ApplyValueResult.Success && value != null)
             {
-                this.TrySetValueOnInstance(value, SetPropertyCommitType.Full);
+                this.TrySetValueOnInstance(value, commitType);
             }
         }
+
+        #region Label Dragging
+
+        /// <summary>
+        /// Click-and-drag over a field's label to scrub its numeric value, mirroring
+        /// <see cref="TextBoxDisplay"/>'s label-drag gesture. Applies to the uniform field's shared
+        /// <see cref="Label"/> and each per-corner TL/TR/BL/BR label via <see cref="_labelDragTargets"/>.
+        /// </summary>
+        private void Label_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is not FrameworkElement label || !_labelDragTargets.TryGetValue(label, out TextBox target))
+            {
+                return;
+            }
+
+            _draggingLabel = label;
+            _draggingTextBox = target;
+            _dragCurrentX = e.GetPosition(this).X;
+            _dragPressedX = _dragCurrentX;
+
+            Mouse.Capture(label);
+
+            _dragUnroundedValue = ParseFloat(target.Text) ?? _current.Uniform;
+        }
+
+        private void Label_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (_dragCurrentX == null || _draggingTextBox == null)
+            {
+                return;
+            }
+
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                double newX = e.GetPosition(this).X;
+                double difference = newX - _dragCurrentX.Value;
+                _dragCurrentX = newX;
+
+                if (difference != 0)
+                {
+                    _dragUnroundedValue += difference;
+                    double rounded = TextBoxDisplayLogic.SnapDraggedValue(_dragUnroundedValue, rounding: 1);
+
+                    _draggingTextBox.Text = FormatFloat((float)rounded);
+                    CommitValue(SetPropertyCommitType.Intermediate);
+                }
+            }
+            else if (Mouse.Captured == _draggingLabel)
+            {
+                Mouse.Capture(null);
+            }
+        }
+
+        private void Label_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (_draggingTextBox != null && _dragPressedX != e.GetPosition(this).X)
+            {
+                CommitValue(SetPropertyCommitType.Full);
+            }
+
+            _draggingLabel = null;
+            _draggingTextBox = null;
+            _dragCurrentX = null;
+            _dragPressedX = null;
+            Mouse.Capture(null);
+        }
+
+        #endregion
 
         private static string FormatFloat(float value) => value.ToString("0.####", CultureInfo.InvariantCulture);
 

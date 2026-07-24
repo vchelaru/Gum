@@ -17,7 +17,13 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <Label x:Name="Label" MinWidth="100">Property Label:</Label>
+            <Label
+                x:Name="Label"
+                MinWidth="100"
+                Cursor="ScrollWE"
+                MouseDown="Label_MouseDown"
+                MouseMove="Label_MouseMove"
+                MouseUp="Label_MouseUp">Property Label:</Label>
 
             <!--  Linked state: a single uniform-radius field, matching the plain CornerRadius row.  -->
             <TextBox
@@ -45,11 +51,16 @@
                 </Grid.RowDefinitions>
 
                 <TextBlock
+                    x:Name="TopLeftLabel"
                     Grid.Row="0"
                     Grid.Column="0"
                     Margin="0,0,2,0"
                     VerticalAlignment="Center"
+                    Cursor="ScrollWE"
                     FontSize="10"
+                    MouseDown="Label_MouseDown"
+                    MouseMove="Label_MouseMove"
+                    MouseUp="Label_MouseUp"
                     Text="TL"
                     ToolTip="Top-left corner radius" />
                 <TextBox
@@ -61,11 +72,16 @@
                     LostFocus="CornerTextBox_LostFocus" />
 
                 <TextBlock
+                    x:Name="TopRightLabel"
                     Grid.Row="0"
                     Grid.Column="2"
                     Margin="0,0,2,0"
                     VerticalAlignment="Center"
+                    Cursor="ScrollWE"
                     FontSize="10"
+                    MouseDown="Label_MouseDown"
+                    MouseMove="Label_MouseMove"
+                    MouseUp="Label_MouseUp"
                     Text="TR"
                     ToolTip="Top-right corner radius" />
                 <TextBox
@@ -77,11 +93,16 @@
                     LostFocus="CornerTextBox_LostFocus" />
 
                 <TextBlock
+                    x:Name="BottomLeftLabel"
                     Grid.Row="1"
                     Grid.Column="0"
                     Margin="0,0,2,0"
                     VerticalAlignment="Center"
+                    Cursor="ScrollWE"
                     FontSize="10"
+                    MouseDown="Label_MouseDown"
+                    MouseMove="Label_MouseMove"
+                    MouseUp="Label_MouseUp"
                     Text="BL"
                     ToolTip="Bottom-left corner radius" />
                 <TextBox
@@ -93,11 +114,16 @@
                     LostFocus="CornerTextBox_LostFocus" />
 
                 <TextBlock
+                    x:Name="BottomRightLabel"
                     Grid.Row="1"
                     Grid.Column="2"
                     Margin="0,0,2,0"
                     VerticalAlignment="Center"
+                    Cursor="ScrollWE"
                     FontSize="10"
+                    MouseDown="Label_MouseDown"
+                    MouseMove="Label_MouseMove"
+                    MouseUp="Label_MouseUp"
                     Text="BR"
                     ToolTip="Bottom-right corner radius" />
                 <TextBox
