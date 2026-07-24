@@ -94,8 +94,7 @@ public class MainHtmlToGumPlugin : WpfPluginBase
             _dialogService.ShowMessage(
                 "Converter not found.\n\n" +
                 $"Looked for:\n{convertTs}\n{convertMjs}\n\n" +
-                "Fix: run `cd Tool/HtmlToGum/converter && npm install`, or set the\n" +
-                "HTMLTOGUM_CONVERTER environment variable to the converter folder, then restart Gum.");
+                "Fix: set the HTMLTOGUM_CONVERTER environment variable to the converter folder, then restart Gum.");
             return;
         }
 
@@ -105,16 +104,6 @@ public class MainHtmlToGumPlugin : WpfPluginBase
                 "Node.js was not found on PATH.\n\n" +
                 "Install Node.js LTS and ensure `node` works in a terminal, then restart Gum.\n\n" +
                 nodeHint);
-            return;
-        }
-
-        var tsxCli = Path.Combine(converterDir, "node_modules", "tsx", "dist", "cli.mjs");
-        if (useTs && !File.Exists(tsxCli))
-        {
-            _dialogService.ShowMessage(
-                "tsx is required to run convert.ts but was not found.\n\n" +
-                $"Looked for:\n{tsxCli}\n\n" +
-                "Fix: cd Tool/HtmlToGum/converter && npm install, then restart Gum.");
             return;
         }
 
@@ -142,6 +131,23 @@ public class MainHtmlToGumPlugin : WpfPluginBase
 
         try
         {
+            var tsxCli = Path.Combine(converterDir, "node_modules", "tsx", "dist", "cli.mjs");
+            if (useTs && !File.Exists(tsxCli))
+            {
+                progress.SetStatus("Installing converter dependencies (first run only)…");
+                var (installExitCode, installStdout, installStderr) = await RunProcessAsync(
+                        "cmd.exe", "/c npm install", converterDir, progress)
+                    .ConfigureAwait(true);
+
+                if (installExitCode != 0 || !File.Exists(tsxCli))
+                {
+                    progress.Hide();
+                    _dialogService.ShowMessage(
+                        FormatNpmInstallFailure(installExitCode, installStdout, installStderr, converterDir));
+                    return;
+                }
+            }
+
             var flagArgs = opts.NoResponsive ? " --no-responsive" : "";
             var scriptArgs =
                 $"\"{opts.HtmlPath}\" \"{opts.Selector}\" {screenName} " +
@@ -222,19 +228,36 @@ public class MainHtmlToGumPlugin : WpfPluginBase
     }
 
     private static string FormatConverterFailure(
-        int exitCode, string stdout, string stderr, string nodePath, string converterDir)
+        int exitCode, string stdout, string stderr, string nodePath, string converterDir) =>
+        FormatProcessFailure(
+            "Converter failed", exitCode, stdout, stderr,
+            [$"node: {nodePath}", $"cwd:  {converterDir}"],
+            "(no stdout/stderr — is Playwright Chromium installed?\n" +
+            "Run: cd Tool/HtmlToGum/converter && npx playwright-core install chromium)");
+
+    private static string FormatNpmInstallFailure(int exitCode, string stdout, string stderr, string converterDir) =>
+        FormatProcessFailure(
+            "Automatic npm install failed", exitCode, stdout, stderr,
+            [$"cwd: {converterDir}"],
+            "(no output — is npm on PATH? It ships with Node.js; run `npm -v` in a terminal to check.)") +
+        "\nFix: run `cd Tool/HtmlToGum/converter && npm install` manually, then retry.";
+
+    /// <summary>Formats a failed child-process run for display: exit code, context lines, then the last ~40 lines of its stderr/stdout.</summary>
+    private static string FormatProcessFailure(
+        string title, int exitCode, string stdout, string stderr, string[] contextLines, string noOutputHint)
     {
         var sb = new StringBuilder();
-        sb.AppendLine($"Converter failed (exit {exitCode}).");
+        sb.AppendLine($"{title} (exit {exitCode}).");
         sb.AppendLine();
-        sb.AppendLine($"node: {nodePath}");
-        sb.AppendLine($"cwd:  {converterDir}");
+        foreach (var line in contextLines)
+        {
+            sb.AppendLine(line);
+        }
         sb.AppendLine();
         var err = string.IsNullOrWhiteSpace(stderr) ? stdout : stderr;
         if (string.IsNullOrWhiteSpace(err))
         {
-            sb.AppendLine("(no stdout/stderr — is Playwright Chromium installed?");
-            sb.AppendLine("Run: cd Tool/HtmlToGum/converter && npx playwright-core install chromium");
+            sb.AppendLine(noOutputHint);
         }
         else
         {
