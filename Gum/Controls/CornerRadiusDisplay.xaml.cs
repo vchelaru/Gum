@@ -98,6 +98,10 @@ namespace Gum.Controls.DataUi
         /// field and would only confuse a single shared color. When InstanceMember isn't a plain
         /// CompositeInstanceMember (e.g. a multi-select wrapper), fall back to its own aggregate
         /// IsDefault/IsIndeterminate for every field - less precise, but still a signal.
+        /// Deferred via Dispatcher.BeginInvoke like TextBoxDisplayLogic.RefreshBackgroundColor:
+        /// DataUiGrid.OverridesIsDefaultStyling is an inherited attached property, and a pooled
+        /// control isn't necessarily re-parented into the grid's visual tree yet when Refresh runs,
+        /// so reading it synchronously here can see the pre-inheritance default (false).
         /// </summary>
         private void RefreshBackgrounds()
         {
@@ -106,22 +110,25 @@ namespace Gum.Controls.DataUi
                 return;
             }
 
-            if (InstanceMember is CompositeInstanceMember composite && composite.ChannelMembers.Count == 5)
+            Dispatcher.BeginInvoke(() =>
             {
-                ApplyBackground(UniformTextBox, composite.ChannelMembers[0]);
-                ApplyBackground(TopLeftTextBox, composite.ChannelMembers[1]);
-                ApplyBackground(TopRightTextBox, composite.ChannelMembers[2]);
-                ApplyBackground(BottomLeftTextBox, composite.ChannelMembers[3]);
-                ApplyBackground(BottomRightTextBox, composite.ChannelMembers[4]);
-            }
-            else
-            {
-                ApplyBackground(UniformTextBox, InstanceMember);
-                ApplyBackground(TopLeftTextBox, InstanceMember);
-                ApplyBackground(TopRightTextBox, InstanceMember);
-                ApplyBackground(BottomLeftTextBox, InstanceMember);
-                ApplyBackground(BottomRightTextBox, InstanceMember);
-            }
+                if (InstanceMember is CompositeInstanceMember composite && composite.ChannelMembers.Count == 5)
+                {
+                    ApplyBackground(UniformTextBox, composite.ChannelMembers[0]);
+                    ApplyBackground(TopLeftTextBox, composite.ChannelMembers[1]);
+                    ApplyBackground(TopRightTextBox, composite.ChannelMembers[2]);
+                    ApplyBackground(BottomLeftTextBox, composite.ChannelMembers[3]);
+                    ApplyBackground(BottomRightTextBox, composite.ChannelMembers[4]);
+                }
+                else if (InstanceMember != null)
+                {
+                    ApplyBackground(UniformTextBox, InstanceMember);
+                    ApplyBackground(TopLeftTextBox, InstanceMember);
+                    ApplyBackground(TopRightTextBox, InstanceMember);
+                    ApplyBackground(BottomLeftTextBox, InstanceMember);
+                    ApplyBackground(BottomRightTextBox, InstanceMember);
+                }
+            });
         }
 
         private static void ApplyBackground(TextBox textBox, InstanceMember member)
