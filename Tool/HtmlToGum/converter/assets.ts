@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { parseBackgroundImageUrl } from './map.js';
+import { installTsxEvaluateShim } from './tsx-evaluate-shim.js';
 
 // Gum's LoaderManager.ValidTextureExtensions — WebP/AVIF/SVG are not loadable as-is;
 // convert those to PNG. Dedup by content hash so the same bytes aren't written twice.
@@ -14,7 +15,75 @@ const CONTENT_TYPE_TO_EXT = {
   'image/webp': 'webp', 'image/avif': 'avif',
 };
 const URL_EXT_FALLBACK = new Set(['png', 'jpg', 'jpeg', 'gif', 'bmp', 'tga', 'svg', 'webp', 'avif']);
-const CONVERT_TO_PNG = new Set(['webp', 'avif', 'svg']);
+// SVG is a vector format — Pillow can't rasterize it (Image.open() only reads raster
+// formats), so it's handled separately via rasterizeSvg() below, not this PIL round-trip.
+const CONVERT_TO_PNG = new Set(['webp', 'avif']);
+
+const SVG_MAX_DIM = 1024;
+const SVG_UPSCALE = 2; // render at 2x the SVG's declared size for a crisper downscale
+
+/** Declared size from the root <svg> tag: width/height attrs, falling back to viewBox. */
+export function svgIntrinsicSize(svgText) {
+  const openTag = (svgText.match(/<svg\b[^>]*>/i) || [''])[0];
+  const attr = (name) => {
+    // Lookbehind requires a boundary right before the name so e.g. "stroke-width" doesn't
+    // match `width` and "data-width" doesn't either — both common on real icon SVGs.
+    const m = openTag.match(new RegExp(`(?<=[\\s"'])${name}\\s*=\\s*["']([^"']*)["']`, 'i'));
+    if (!m) return null;
+    const raw = m[1].trim();
+    // Percentage/relative units aren't resolvable from the tag alone (e.g. width="100%")
+    // — fall through to viewBox/default rather than silently treating "100" as px.
+    if (!/^[\d.]+$/.test(raw)) return null;
+    return parseFloat(raw);
+  };
+  let w = attr('width');
+  let h = attr('height');
+  if (!w || !h) {
+    // Comma or whitespace separated per the SVG/CSS spec ("0 0 100 50" and "0,0,100,50"
+    // are both valid).
+    const vb = openTag.match(/viewBox\s*=\s*["']?\s*[\d.-]+[\s,]+[\d.-]+[\s,]+([\d.]+)[\s,]+([\d.]+)/i);
+    if (vb) { w = w || parseFloat(vb[1]); h = h || parseFloat(vb[2]); }
+  }
+  if (!w || !h) return { width: 128, height: 128 };
+  return { width: w, height: h };
+}
+
+/** Rasterize an SVG (vector, not loadable by Gum) to PNG via headless Chromium — the
+ *  same technique convert.ts already uses for CSS-painted effects (rasterizeEffects).
+ *  `browser` is the caller's already-open instance (see downloadImages), not launched
+ *  here, so a page with several SVGs doesn't pay for a separate Chromium process. */
+export async function rasterizeSvg(browser, buf) {
+  const svgText = buf.toString('utf8');
+  const { width, height } = svgIntrinsicSize(svgText);
+  const scale = Math.min(SVG_UPSCALE, SVG_MAX_DIM / Math.max(width, height, 1));
+  const renderW = Math.max(1, Math.round(width * scale));
+  const renderH = Math.max(1, Math.round(height * scale));
+  // SVGs can embed <script> — HtmlToGum already converts arbitrary third-party pages by
+  // design, but there's no reason a static icon/logo raster needs script execution, so
+  // disable it here specifically.
+  const page = await browser.newPage({
+    viewport: { width: renderW, height: renderH }, deviceScaleFactor: 1, javaScriptEnabled: false,
+  });
+  try {
+    await installTsxEvaluateShim(page);
+    await page.setContent(
+      `<!doctype html><html><body style="margin:0;width:${renderW}px;height:${renderH}px">${svgText}</body></html>`,
+    );
+    await page.evaluate(({ width, height }) => {
+      const svg = document.querySelector('svg');
+      if (!svg) return;
+      // Without a viewBox, resizing via CSS doesn't rescale content — it stays pinned to
+      // its native top-left region, cropping the rest. Synthesize one from the declared
+      // (pre-scale) size so CSS width/height:100% scales the actual artwork.
+      if (!svg.hasAttribute('viewBox')) svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      svg.style.width = '100%';
+      svg.style.height = '100%';
+    }, { width, height });
+    return await page.screenshot({ omitBackground: true });
+  } finally {
+    await page.close();
+  }
+}
 
 function sha1(buf) {
   return createHash('sha1').update(buf).digest('hex').slice(0, 12);
@@ -31,7 +100,7 @@ function sniffExt(buf) {
   return null;
 }
 
-/** Convert webp/avif/svg bytes to PNG via Pillow (already used by regress). */
+/** Convert webp/avif bytes to PNG via Pillow (already used by regress). */
 function convertToPng(buf, hintExt) {
   const script = `
 import sys
@@ -53,7 +122,11 @@ sys.stdout.buffer.write(out.getvalue())
   return Buffer.from(r.stdout);
 }
 
-export async function downloadImages(root: import('./types.js').BoxNode, outDir: string) {
+export async function downloadImages(
+  root: import('./types.js').BoxNode,
+  outDir: string,
+  browser: import('playwright-core').Browser,
+) {
   const urls = new Set();
   (function collect(node) {
     if (node.imgSrc) urls.add(node.imgSrc);
@@ -107,7 +180,16 @@ export async function downloadImages(root: import('./types.js').BoxNode, outDir:
 
       let outExt = ext === 'jpeg' ? 'jpg' : ext;
       let outBuf = buf;
-      if (CONVERT_TO_PNG.has(ext)) {
+      if (ext === 'svg') {
+        try {
+          outBuf = await rasterizeSvg(browser, buf);
+          outExt = 'png';
+          console.log(`  image: rasterized svg → png`);
+        } catch (e) {
+          console.warn(`  ! svg rasterize failed: ${e.message} — skipped ${url}`);
+          continue;
+        }
+      } else if (CONVERT_TO_PNG.has(ext)) {
         try {
           outBuf = convertToPng(buf, ext);
           outExt = 'png';
