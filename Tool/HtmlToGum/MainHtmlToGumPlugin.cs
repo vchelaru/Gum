@@ -22,7 +22,7 @@ using Gum.ToolStates;
 namespace HtmlToGumPlugin;
 
 /// <summary>
-/// Content → Import HTML… — runs converter/convert.ts (via tsx) into a staging folder, copies
+/// Content → Import → HTML… — runs converter/convert.ts (via tsx) into a staging folder, copies
 /// Images/Fonts/FontCache into the open Gum project, then IImportLogic.ImportScreen.
 /// </summary>
 [Export(typeof(PluginBase))]
@@ -35,7 +35,8 @@ public class MainHtmlToGumPlugin : WpfPluginBase
 
     public override void StartUp()
     {
-        AddMenuItemTo("Import HTML…", HandleImportHtml, "Content");
+        var menuItem = AddMenuItem(new[] { "Content", "Import", "HTML…" });
+        menuItem.Click += HandleImportHtml;
     }
 
     private async void HandleImportHtml(object? sender, System.Windows.RoutedEventArgs e)

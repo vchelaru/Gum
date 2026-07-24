@@ -5,7 +5,7 @@ description: The "Import from .gumx" dialog. Triggers: ImportFromGumxPlugin, Gum
 
 # Import from .gumx Dialog
 
-Cross-project import dialog (Content menu → "Import from .gumx..."). Lets the user pick a source `.gumx` (local or URL), preview its Components/Screens/Behaviors/Standards in a checkbox TreeView, and import a selected subset into the currently open project.
+Cross-project import dialog (Content → Import → ".gumx…"). Lets the user pick a source `.gumx` (local or URL), preview its Components/Screens/Behaviors/Standards in a checkbox TreeView, and import a selected subset into the currently open project.
 
 ## Layout (one-screen map)
 

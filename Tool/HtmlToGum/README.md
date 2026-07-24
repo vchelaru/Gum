@@ -1,6 +1,6 @@
 # HtmlToGum
 
-Gum Tool plugin: **Content → Import HTML…** converts a page into a Gum screen via Chromium’s computed box tree (Playwright), then imports the resulting `.gusx` and assets into the open project.
+Gum Tool plugin: **Content → Import → HTML…** converts a page into a Gum screen via Chromium’s computed box tree (Playwright), then imports the resulting `.gusx` and assets into the open project.
 
 Chromium is **not** bundled with Gum. It is downloaded locally when you `npm install` the converter.
 
@@ -37,7 +37,7 @@ cd Tool/HtmlToGum/converter
 npm install
 ```
 
-3. Launch Gum → open a saved `.gumx` → **Content → Import HTML…**. Choose a local file or a remote `http(s)://` URL, and optionally set a destination subfolder to import under `Screens/<subfolder>/` and avoid name conflicts with existing screens.
+3. Launch Gum → open a saved `.gumx` → **Content → Import → HTML…**. Choose a local file or a remote `http(s)://` URL, and optionally set a destination subfolder to import under `Screens/<subfolder>/` and avoid name conflicts with existing screens.
 
 ### Converter discovery
 
