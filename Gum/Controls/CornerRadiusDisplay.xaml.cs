@@ -126,6 +126,15 @@ namespace Gum.Controls.DataUi
 
         private static void ApplyBackground(TextBox textBox, InstanceMember member)
         {
+            // The DataUiGrid style sets this attached property so rows rely on the per-row
+            // "is edited" icon (Frb.Styles.Defaults.xaml's IsDefaultIcon) instead of a
+            // displayer-painted background - see TextBoxDisplayLogic.RefreshBackgroundColor
+            // for the reference check every other displayer already honors.
+            if (DataUiGrid.GetOverridesIsDefaultStyling(textBox))
+            {
+                return;
+            }
+
             if (member.IsDefault)
             {
                 textBox.Background = TextBoxDisplayLogic.DefaultValueBackground;
@@ -293,6 +302,11 @@ namespace Gum.Controls.DataUi
                 {
                     _dragUnroundedValue += difference;
                     double rounded = TextBoxDisplayLogic.SnapDraggedValue(_dragUnroundedValue, rounding: 1);
+
+                    // Stick visibly at the 0 floor while scrubbing (matching TextBoxDisplay's
+                    // min/max handling) instead of showing a negative value that only snaps back
+                    // to 0 once the commit round-trips through Decompose's clamp.
+                    rounded = (double)TextBoxDisplayLogic.ClampToRange(rounded, min: 0m, max: null);
 
                     _draggingTextBox.Text = FormatFloat((float)rounded);
                     CommitValue(SetPropertyCommitType.Intermediate);
