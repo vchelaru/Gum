@@ -351,6 +351,23 @@ public class MainHtmlToGumPlugin : WpfPluginBase
         }
     }
 
+    /// <summary>
+    /// Candidate converter directories, in lookup order, given the plugin DLL's base directory
+    /// (<c>AppDomain.CurrentDomain.BaseDirectory</c>). <c>Gum.csproj</c> sets
+    /// <c>AppendTargetFrameworkToOutputPath=false</c>, so <c>baseDir</c> is <c>&lt;repo&gt;/Gum/bin/&lt;Config&gt;/</c>
+    /// with no TFM subfolder — three levels up reaches the repo (or worktree) root.
+    /// </summary>
+    public static string[] GetConverterDirCandidates(string baseDir) =>
+    [
+        Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "Tool", "HtmlToGum", "converter")),
+        Path.GetFullPath(Path.Combine(baseDir, "converter")),
+        // Legacy sibling html-to-gum repository layouts.
+        Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "..", "html-to-gum", "converter")),
+        Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "html-to-gum", "converter")),
+        Path.GetFullPath(Path.Combine(baseDir, "..", "..", "html-to-gum", "converter")),
+        Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "..", "Repos", "html-to-gum", "converter")),
+    ];
+
     private static string ResolveConverterDir()
     {
         var env = Environment.GetEnvironmentVariable("HTMLTOGUM_CONVERTER");
@@ -359,17 +376,7 @@ public class MainHtmlToGumPlugin : WpfPluginBase
             return Path.GetFullPath(env);
         }
 
-        var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-        string[] candidates =
-        [
-            Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "..", "Tool", "HtmlToGum", "converter")),
-            Path.GetFullPath(Path.Combine(baseDir, "converter")),
-            // Legacy sibling html-to-gum repository layouts.
-            Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "..", "html-to-gum", "converter")),
-            Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "html-to-gum", "converter")),
-            Path.GetFullPath(Path.Combine(baseDir, "..", "..", "html-to-gum", "converter")),
-            Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "..", "Repos", "html-to-gum", "converter")),
-        ];
+        var candidates = GetConverterDirCandidates(AppDomain.CurrentDomain.BaseDirectory);
         foreach (string candidate in candidates)
         {
             if (File.Exists(Path.Combine(candidate, "convert.ts")) ||
@@ -589,12 +596,8 @@ internal static class ImportOptionsForm
             }
             if (radioUrl.Checked)
             {
-                if (!HtmlImportNaming.IsUrl(source))
-                {
-                    MessageBox.Show(form, "URL must start with http:// or https://.", "Import HTML",
-                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
+                source = HtmlImportNaming.NormalizeUrl(source);
+                txtSource.Text = source;
             }
             else if (!File.Exists(source))
             {

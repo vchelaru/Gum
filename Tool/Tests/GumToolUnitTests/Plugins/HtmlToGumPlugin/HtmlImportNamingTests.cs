@@ -32,6 +32,29 @@ public class HtmlImportNamingTests
     }
 
     [Fact]
+    public void NormalizeUrl_LeavesUrlUnchanged_WhenSchemeAlreadyPresent()
+    {
+        HtmlImportNaming.NormalizeUrl("http://example.com").ShouldBe("http://example.com");
+        HtmlImportNaming.NormalizeUrl("https://example.com").ShouldBe("https://example.com");
+    }
+
+    [Fact]
+    public void NormalizeUrl_PrependsHttps_WhenSchemeIsMissing()
+    {
+        string result = HtmlImportNaming.NormalizeUrl("example.com");
+
+        result.ShouldBe("https://example.com");
+    }
+
+    [Fact]
+    public void NormalizeUrl_TrimsWhitespace_BeforeChecking()
+    {
+        string result = HtmlImportNaming.NormalizeUrl("  example.com  ");
+
+        result.ShouldBe("https://example.com");
+    }
+
+    [Fact]
     public void QualifyScreenName_PrefixesWithSubfolder_WhenSubfolderProvided()
     {
         string result = HtmlImportNaming.QualifyScreenName("MyScreen", "Imported");

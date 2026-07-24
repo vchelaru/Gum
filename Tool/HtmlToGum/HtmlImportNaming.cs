@@ -14,6 +14,13 @@ public static class HtmlImportNaming
     /// <summary>Whether <paramref name="source"/> is a remote http(s) URL rather than a local file path.</summary>
     public static bool IsUrl(string source) => UrlPattern.IsMatch(source ?? "");
 
+    /// <summary>Prepends "https://" to <paramref name="source"/> if it doesn't already start with http(s)://, so a bare host like "example.com" is treated as a URL.</summary>
+    public static string NormalizeUrl(string source)
+    {
+        var trimmed = (source ?? "").Trim();
+        return trimmed.Length == 0 || IsUrl(trimmed) ? trimmed : $"https://{trimmed}";
+    }
+
     /// <summary>Prefixes <paramref name="screenName"/> with <paramref name="destinationSubfolder"/>, matching the "Screens/{subfolder}/{name}" convention used by the .gumx importer.</summary>
     public static string QualifyScreenName(string screenName, string? destinationSubfolder) =>
         string.IsNullOrWhiteSpace(destinationSubfolder)
