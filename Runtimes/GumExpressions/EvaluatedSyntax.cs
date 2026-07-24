@@ -1,6 +1,7 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.Wireframe;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CSharp.RuntimeBinder;
@@ -57,9 +58,19 @@ public class EvaluatedSyntax
     /// returns null. The Forms-property-promotion apply pipeline uses this to fall
     /// back to a linked behavior's <c>FormsProperty.Value</c> declarations when no
     /// state authors a value (mirrors WPF DependencyProperty default values).</param>
-    public static EvaluatedSyntax FromSyntaxNode(SyntaxNode syntaxNode, StateSave stateForUnqualifiedRightSide, Func<string, object?>? fallback = null)
+    /// <param name="liveRoot">Optional live, already-laid-out <see cref="GraphicalUiElement"/>
+    /// used to resolve the runtime-computed <c>AbsoluteX</c>/<c>AbsoluteY</c>/<c>AbsoluteLeft</c>/
+    /// <c>AbsoluteTop</c>/<c>AbsoluteRight</c>/<c>AbsoluteBottom</c>/<c>AbsoluteWidth</c>/
+    /// <c>AbsoluteHeight</c> identifiers. These only exist on a live object post-layout, not on
+    /// authored <see cref="StateSave"/> data, so <see cref="RecursiveVariableFinder"/> can never
+    /// resolve them; when null (the default), those identifiers are simply unresolvable, same as
+    /// any other unknown identifier. The instance path is resolved against <paramref
+    /// name="liveRoot"/> via <see cref="GraphicalUiElement.GetGraphicalUiElementByName(string)"/>,
+    /// so it is scoped to <paramref name="liveRoot"/>'s own element (does not cross into a
+    /// different element for a cross-element reference).</param>
+    public static EvaluatedSyntax FromSyntaxNode(SyntaxNode syntaxNode, StateSave stateForUnqualifiedRightSide, Func<string, object?>? fallback = null, GraphicalUiElement? liveRoot = null)
     {
-        return Evaluate(syntaxNode, stateForUnqualifiedRightSide, fallback);
+        return Evaluate(syntaxNode, stateForUnqualifiedRightSide, fallback, liveRoot);
     }
 
     /// <summary>
@@ -92,15 +103,15 @@ public class EvaluatedSyntax
         return Evaluate(syntaxNode, restingState, fallback);
     }
 
-    private static EvaluatedSyntax Evaluate(SyntaxNode syntaxNode, StateSave stateForUnqualifiedRightSide, Func<string, object?>? fallback = null)
+    private static EvaluatedSyntax Evaluate(SyntaxNode syntaxNode, StateSave stateForUnqualifiedRightSide, Func<string, object?>? fallback = null, GraphicalUiElement? liveRoot = null)
     {
         if (syntaxNode is BinaryExpressionSyntax binaryExpressionSytax)
         {
             var leftSyntax = binaryExpressionSytax.Left;
             var rightSyntax = binaryExpressionSytax.Right;
 
-            var leftEvaluated = Evaluate(leftSyntax, stateForUnqualifiedRightSide, fallback);
-            var rightEvaluated = Evaluate(rightSyntax, stateForUnqualifiedRightSide, fallback);
+            var leftEvaluated = Evaluate(leftSyntax, stateForUnqualifiedRightSide, fallback, liveRoot);
+            var rightEvaluated = Evaluate(rightSyntax, stateForUnqualifiedRightSide, fallback, liveRoot);
 
             var value = Combine(leftEvaluated, rightEvaluated, binaryExpressionSytax.OperatorToken);
 
@@ -117,7 +128,7 @@ public class EvaluatedSyntax
 
             foreach (var item in childNodes)
             {
-                var evaluatedSyntax = Evaluate(item, stateForUnqualifiedRightSide, fallback);
+                var evaluatedSyntax = Evaluate(item, stateForUnqualifiedRightSide, fallback, liveRoot);
                 if (evaluatedSyntax != null)
                 {
                     return evaluatedSyntax;
@@ -127,6 +138,11 @@ public class EvaluatedSyntax
         }
         else if (syntaxNode is IdentifierNameSyntax or VariableDeclarationSyntax)
         {
+            if (TryResolveAbsoluteValue(liveRoot, syntaxNode.ToString(), out var absoluteValue))
+            {
+                return FromSyntaxAndValue(syntaxNode, absoluteValue);
+            }
+
             var rfv = new RecursiveVariableFinder(stateForUnqualifiedRightSide) { Fallback = fallback };
 
             var value = rfv.GetValue(syntaxNode.ToString());
@@ -142,8 +158,9 @@ public class EvaluatedSyntax
             RecursiveVariableFinder rfv = null;
 
             var stateForRfv = stateForUnqualifiedRightSide;
+            var isCrossElement = rightSideToEvaluate.StartsWith("global::");
 
-            if (rightSideToEvaluate.StartsWith("global::"))
+            if (isCrossElement)
             {
                 string elementName, elementType;
                 ConvertGlobalToElementNameWithSlashes(rightSideToEvaluate, out elementName, out elementType);
@@ -154,6 +171,14 @@ public class EvaluatedSyntax
                     stateForRfv = element?.DefaultState;
                     rightSideToEvaluate = rightSideToEvaluate.Substring(($"global::{elementType}." + elementName).Length + 1);
                 }
+            }
+
+            // liveRoot is scoped to stateForUnqualifiedRightSide's own element; a cross-element
+            // reference (global::) targets a different element's live tree, which liveRoot doesn't
+            // represent, so Absolute* resolution only applies to same-element references.
+            if (!isCrossElement && TryResolveAbsoluteValue(liveRoot, rightSideToEvaluate, out var absoluteValue))
+            {
+                return FromSyntaxAndValue(syntaxNode, absoluteValue);
             }
 
             if (stateForRfv == null)
@@ -172,11 +197,11 @@ public class EvaluatedSyntax
         }
         else if (syntaxNode is ConditionalExpressionSyntax conditional)
         {
-            var conditionEvaluated = Evaluate(conditional.Condition, stateForUnqualifiedRightSide, fallback);
+            var conditionEvaluated = Evaluate(conditional.Condition, stateForUnqualifiedRightSide, fallback, liveRoot);
             if (conditionEvaluated?.Value is bool conditionValue)
             {
                 var branch = conditionValue ? conditional.WhenTrue : conditional.WhenFalse;
-                var branchEvaluated = Evaluate(branch, stateForUnqualifiedRightSide, fallback);
+                var branchEvaluated = Evaluate(branch, stateForUnqualifiedRightSide, fallback, liveRoot);
                 if (branchEvaluated != null)
                 {
                     return FromSyntaxAndValue(syntaxNode, branchEvaluated.Value);
@@ -188,7 +213,7 @@ public class EvaluatedSyntax
         {
             if (prefixUnary.OperatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.ExclamationToken))
             {
-                var operand = Evaluate(prefixUnary.Operand, stateForUnqualifiedRightSide, fallback);
+                var operand = Evaluate(prefixUnary.Operand, stateForUnqualifiedRightSide, fallback, liveRoot);
                 if (operand?.Value is bool b)
                 {
                     return FromSyntaxAndValue(syntaxNode, !b);
@@ -215,7 +240,7 @@ public class EvaluatedSyntax
 
             foreach (var item in childNodes)
             {
-                var evaluatedSyntax = Evaluate(item, stateForUnqualifiedRightSide, fallback);
+                var evaluatedSyntax = Evaluate(item, stateForUnqualifiedRightSide, fallback, liveRoot);
                 if (evaluatedSyntax != null)
                 {
                     return evaluatedSyntax;
@@ -233,7 +258,7 @@ public class EvaluatedSyntax
 
             foreach (var item in childNodes)
             {
-                var evaluatedSyntax = Evaluate(item, stateForUnqualifiedRightSide, fallback);
+                var evaluatedSyntax = Evaluate(item, stateForUnqualifiedRightSide, fallback, liveRoot);
                 if (evaluatedSyntax != null)
                 {
                     return evaluatedSyntax;
@@ -241,6 +266,57 @@ public class EvaluatedSyntax
             }
         }
         return null;
+    }
+
+    private static readonly Dictionary<string, Func<GraphicalUiElement, float>> AbsoluteValueSelectors = new()
+    {
+        ["AbsoluteX"] = gue => gue.AbsoluteX,
+        ["AbsoluteY"] = gue => gue.AbsoluteY,
+        ["AbsoluteLeft"] = gue => gue.AbsoluteLeft,
+        ["AbsoluteTop"] = gue => gue.AbsoluteTop,
+        ["AbsoluteRight"] = gue => gue.AbsoluteRight,
+        ["AbsoluteBottom"] = gue => gue.AbsoluteBottom,
+        ["AbsoluteWidth"] = gue => gue.AbsoluteWidth,
+        ["AbsoluteHeight"] = gue => gue.AbsoluteHeight,
+    };
+
+    /// <summary>
+    /// Resolves <paramref name="path"/> (e.g. <c>"AbsoluteWidth"</c> or <c>"Source.AbsoluteWidth"</c>)
+    /// against <paramref name="liveRoot"/> when its final segment names one of the runtime-computed
+    /// Absolute* properties. These exist only on an already-laid-out <see cref="GraphicalUiElement"/>,
+    /// never on authored <see cref="StateSave"/> data, so they must be resolved here rather than via
+    /// <see cref="RecursiveVariableFinder"/>. Everything before the last dot (if any) is the
+    /// unqualified instance name, looked up within <paramref name="liveRoot"/>'s own element via
+    /// <see cref="GraphicalUiElement.GetGraphicalUiElementByName(string)"/>; no dot means "liveRoot
+    /// itself". Returns false (path not an Absolute* reference, or unresolvable) rather than throwing,
+    /// so callers can fall through to the normal resolution path.
+    /// </summary>
+    private static bool TryResolveAbsoluteValue(GraphicalUiElement? liveRoot, string path, out object? value)
+    {
+        value = null;
+
+        if (liveRoot == null)
+        {
+            return false;
+        }
+
+        var lastDot = path.LastIndexOf('.');
+        var instanceName = lastDot < 0 ? null : path.Substring(0, lastDot);
+        var propertyName = lastDot < 0 ? path : path.Substring(lastDot + 1);
+
+        if (!AbsoluteValueSelectors.TryGetValue(propertyName, out var selector))
+        {
+            return false;
+        }
+
+        var target = instanceName == null ? liveRoot : liveRoot.GetGraphicalUiElementByName(instanceName);
+        if (target == null)
+        {
+            return false;
+        }
+
+        value = selector(target);
+        return true;
     }
 
     // FixEnumerationsWithReflection promotes int-on-disk enum values to boxed enums in

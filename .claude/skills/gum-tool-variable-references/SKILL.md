@@ -51,10 +51,10 @@ SetVariableLogic (variable change entry point)
 
 | Class | Location | Role |
 |-------|----------|------|
-| `VariableReferenceLogic` | `Gum/Plugins/InternalPlugins/VariableGrid/` | Tool-side orchestration: validation, reaction to changes, line expansion |
-| `EvaluatedSyntax` | Same directory | Roslyn-based expression parser/evaluator; resolves right-side values via `RecursiveVariableFinder` |
+| `VariableReferenceLogic` | `Tools/Gum.Presentation/Plugins/InternalPlugins/VariableGrid/` | Tool-side orchestration: validation, reaction to changes, line expansion |
+| `EvaluatedSyntax` | `Runtimes/GumExpressions/` | Roslyn-based expression parser/evaluator (shared `Gum.Expressions` package); resolves right-side values via `RecursiveVariableFinder`, or via a live `GraphicalUiElement` for Absolute* identifiers (see below) |
 | `ElementSaveExtensions` (partial) | `GumRuntime/ElementSaveExtensions.GumRuntime.cs` | `ApplyVariableReferences` — two overloads: one for `ElementSave` (save-class, tool-time), one for `GraphicalUiElement` (runtime) |
-| `MainVariableGridPlugin` | Same directory as logic | Wires `CustomEvaluateExpression` delegate so the runtime can use Roslyn evaluation |
+| `MainVariableGridPlugin` | `Tools/Gum.Presentation/Plugins/InternalPlugins/VariableGrid/` | Calls `GumExpressionService.Initialize()` so the tool uses Roslyn evaluation |
 
 ### Two Apply Paths
 
@@ -69,6 +69,12 @@ SetVariableLogic (variable change entry point)
 `GetRightSideValue` resolves the right side of an assignment:
 - In the tool: `CustomEvaluateExpression` is set by `MainVariableGridPlugin` to use `EvaluatedSyntax` (Roslyn parsing with full expression support).
 - At runtime (no tool): Falls back to `RecursiveVariableFinder` with simple dot-path lookup — no expression support, just direct variable resolution.
+
+### Resolving Absolute* Identifiers (AbsoluteX/Y/Left/Top/Right/Bottom/Width/Height)
+
+These exist only as computed properties on an already-laid-out `GraphicalUiElement` — never as authored `StateSave` data — so `RecursiveVariableFinder` can never resolve them. `EvaluatedSyntax` takes an optional `liveRoot` (a `GraphicalUiElement`) threaded all the way from the top of the apply chain; when the right side's final identifier is one of these names, it resolves against `liveRoot.GetGraphicalUiElementByName(...)` instead of falling through to state lookup. `liveRoot` is scoped to one element (mirrors how instance names are scoped), so a cross-element (`Components/Foo...`) reference never attempts this resolution.
+
+Both apply paths supply `liveRoot` when a live tree is available: the tool passes `IWireframeObjectManager.GetRepresentation(parentElement)` (null when nothing is currently rendered for that element); the runtime passes the top-level `GraphicalUiElement` already being applied against. Validation (`AddFailureForLine`) needs the same `liveRoot` as the apply call, or a valid Absolute* reference gets auto-commented out before it's ever applied.
 
 ### Left-Side Type Coercion
 

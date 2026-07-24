@@ -556,7 +556,7 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         // returns false). The check must pass the LHS type so the Roslyn-based
         // evaluator can resolve cross-element / literal RHSes.
         bool sawNonNullDesiredType = false;
-        ElementSaveExtensions.CustomEvaluateExpression = (state, expr, desiredType) =>
+        ElementSaveExtensions.CustomEvaluateExpression = (state, expr, desiredType, liveRoot) =>
         {
             if (desiredType == null)
             {

@@ -1,4 +1,5 @@
 using Gum.DataTypes.Variables;
+using Gum.Wireframe;
 using GumRuntime;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -20,7 +21,7 @@ public static class GumExpressionService
         ElementSaveExtensions.CustomEvaluateExpression = EvaluateExpression;
     }
 
-    private static object EvaluateExpression(StateSave stateSave, string expression, string desiredType)
+    private static object EvaluateExpression(StateSave stateSave, string expression, string desiredType, GraphicalUiElement? liveRoot)
     {
         expression = EvaluatedSyntax.ConvertToCSharpSyntax(expression);
 
@@ -31,7 +32,7 @@ public static class GumExpressionService
 
         if (syntax != null)
         {
-            var evaluatedSyntax = EvaluatedSyntax.FromSyntaxNode(syntax, stateSave);
+            var evaluatedSyntax = EvaluatedSyntax.FromSyntaxNode(syntax, stateSave, liveRoot: liveRoot);
 
             if (evaluatedSyntax?.CastTo(desiredType) == true)
             {

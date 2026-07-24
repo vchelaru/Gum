@@ -1,10 +1,12 @@
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Expressions;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.Wireframe;
 using Moq;
 using Shouldly;
 using System;
@@ -17,6 +19,7 @@ public class VariableReferenceLogicTests : BaseTestClass
     private readonly Mock<IGuiCommands> _guiCommandsMock;
     private readonly Mock<IDialogService> _dialogServiceMock;
     private readonly Mock<IDispatcher> _dispatcherMock;
+    private readonly Mock<IWireframeObjectManager> _wireframeObjectManagerMock;
     private readonly VariableReferenceLogic _sut;
 
     public VariableReferenceLogicTests()
@@ -24,13 +27,15 @@ public class VariableReferenceLogicTests : BaseTestClass
         _guiCommandsMock = new Mock<IGuiCommands>();
         _dialogServiceMock = new Mock<IDialogService>();
         _dispatcherMock = new Mock<IDispatcher>();
+        _wireframeObjectManagerMock = new Mock<IWireframeObjectManager>();
         _sut = new VariableReferenceLogic(
             _guiCommandsMock.Object,
             new Mock<IWireframeCommands>().Object,
             _dialogServiceMock.Object,
             new Mock<IFileCommands>().Object,
             BuildCompositeMemberRegistry(),
-            _dispatcherMock.Object);
+            _dispatcherMock.Object,
+            _wireframeObjectManagerMock.Object);
     }
 
     /// <summary>
@@ -417,6 +422,42 @@ public class VariableReferenceLogicTests : BaseTestClass
 
         varList.Value[0].ShouldBe("Visible = !OtherInstance.Visible"); // not commented out
         defaultState.GetValue("Visible").ShouldBe(false);
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_RightSideReferencesOwnAbsoluteWidth_ResolvesFromWireframeRepresentation()
+    {
+        // AbsoluteWidth only exists on a live, already-laid-out GraphicalUiElement - it can't be
+        // derived from authored StateSave data - so this locks in that the tool's apply path looks
+        // up the currently-rendered wireframe representation and threads it through so the
+        // evaluator can resolve it, rather than leaving it unresolved.
+        GumExpressionService.Initialize();
+        GraphicalUiElement.CanvasWidth = 800f;
+
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ScreenSave screen = BuildScreenWithVariableReference(
+            line: "Width = AbsoluteWidth",
+            out StateSave defaultState,
+            out _);
+        defaultState.Variables.Add(new VariableSave { Name = "Width", SetsValue = true, Value = 0f, Type = "float" });
+        project.Screens.Add(screen);
+
+        // A bare GraphicalUiElement has no ContainedObject, so its IPSO Width getter falls back to
+        // the static CanvasWidth - that's a real (if minimal) live layout value, not authored data,
+        // which is exactly what distinguishes this from a normal state lookup.
+        _wireframeObjectManagerMock.Setup(w => w.GetRepresentation(screen)).Returns(new GraphicalUiElement());
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: screen,
+            leftSideInstance: null,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "VariableReferences",
+            trySave: false);
+
+        defaultState.GetValue("Width").ShouldBe(800f);
     }
 
     #endregion
