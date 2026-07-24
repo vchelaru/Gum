@@ -212,10 +212,10 @@ public class ElementCommandsTests : BaseTestClass
         // commit loop (iterate stateSave.Variables in file order, SetVariableLogic.PropertyValueChanged
         // -> VariableReferenceLogic.DoVariableReferenceReaction for each variable that changed since
         // the drag started). Asserts every step tracks correctly and release never reverts the value -
-        // pins the ElementCommands.ModifyVariable fix at the data/logic layer. (A live-app flicker the
-        // user still saw after this fix did not reproduce here, so it lives in WPF-canvas refresh
-        // timing outside what this headless test can drive - see PrintOutput diagnostics in
-        // ElementCommands.ModifyVariable / VariableReferenceLogic.DoVariableReferenceReaction.)
+        // pins the ElementCommands.ModifyVariable fix at the data/logic layer. (The on-load flicker
+        // the user still saw after this fix was a separate root cause - Absolute* references resolving
+        // against stale, pre-layout geometry during suspended wireframe construction - fixed in
+        // WireframeObjectManager.RefreshAll and pinned by WireframeObjectManagerVariableReferenceTests.)
         GumExpressionService.Initialize();
 
         ScreenSave screen = new ScreenSave { Name = "RectScreen" };

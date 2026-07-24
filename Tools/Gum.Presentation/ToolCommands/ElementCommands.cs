@@ -408,9 +408,6 @@ public class ElementCommands : IElementCommands
 
             rootGue?.ApplyVariableReferences(_selectedState.SelectedStateSave);
 
-            // TEMP DIAGNOSTIC - remove before merge
-            DiagnosticLogReferencedVariables("ModifyVariable", $"{baseVariableName}={newValue} on {instanceSave.Name}", rootGue);
-
             _variableInCategoryPropagationLogic.PropagateVariablesInCategory(nameWithInstance,
                 _selectedState.SelectedElement, _selectedState.SelectedStateCategorySave);
 
@@ -420,32 +417,6 @@ public class ElementCommands : IElementCommands
         else
         {
             return 0;
-        }
-    }
-
-    // TEMP DIAGNOSTIC - remove before merge
-    private void DiagnosticLogReferencedVariables(string callSite, string context, GraphicalUiElement? liveRoot)
-    {
-        var stateSave = _selectedState.SelectedStateSave;
-        if (stateSave == null) return;
-
-        foreach (var variableList in stateSave.VariableLists)
-        {
-            if (variableList.GetRootName() != "VariableReferences" || variableList.ValueAsIList.Count == 0) continue;
-
-            var sourceObject = variableList.SourceObject;
-            foreach (var entryObj in variableList.ValueAsIList)
-            {
-                var entry = entryObj as string;
-                if (string.IsNullOrEmpty(entry) || entry.StartsWith("//")) continue;
-
-                var left = entry.Split('=')[0].Trim();
-                var qualifiedLeft = string.IsNullOrEmpty(sourceObject) ? left : $"{sourceObject}.{left}";
-                var materialized = stateSave.GetValue(qualifiedLeft);
-
-                _guiCommands.PrintOutput($"[{callSite}] {context} | liveRoot={liveRoot?.GetHashCode()} | " +
-                    $"{qualifiedLeft} = {entry.Split('=', 2)[1].Trim()} -> materialized={materialized}");
-            }
         }
     }
 

@@ -859,9 +859,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    // TEMP DIAGNOSTIC - remove before merge
-    public static Action<GraphicalUiElement, string, float, float>? DiagnosticPropertySetHook;
-
     public float X
     {
         get
@@ -872,8 +869,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             if (mX != value && mContainedObjectAsIpso != null)
             {
-                // TEMP DIAGNOSTIC - remove before merge
-                DiagnosticPropertySetHook?.Invoke(this, "X", mX, value);
 #if FULL_DIAGNOSTICS
                 if (float.IsNaN(value))
                 {
@@ -1001,8 +996,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             if (mWidth != value)
             {
-                // TEMP DIAGNOSTIC - remove before merge
-                DiagnosticPropertySetHook?.Invoke(this, "Width", mWidth, value);
 #if FULL_DIAGNOSTICS
                 if (float.IsPositiveInfinity(value) ||
                     float.IsNegativeInfinity(value) ||

@@ -488,11 +488,6 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         // apply references on this element first, then apply the values to the other references:
         ElementSaveExtensions.ApplyVariableReferences(parentElement, stateSave, liveRoot);
 
-        // TEMP DIAGNOSTIC - remove before merge
-        DiagnosticLogReferencedVariables("DoVariableReferenceReaction",
-            $"unqualifiedMember={unqualifiedMember} qualifiedName={qualifiedName} instance={leftSideInstance?.Name}",
-            stateSave, liveRoot);
-
         // Then evaluate any behavior-level ToolOnlyVariableReferences so design-time
         // wireframe preview reflects FormsProperty values (e.g. IsEnabled = false →
         // ButtonCategoryState = "Disabled"). Tool-only by design — never invoked at
@@ -646,30 +641,6 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         }
         return didAssignDeepReference;
     }
-
-    // TEMP DIAGNOSTIC - remove before merge
-    private void DiagnosticLogReferencedVariables(string callSite, string context, StateSave stateSave, GraphicalUiElement? liveRoot)
-    {
-        foreach (var variableList in stateSave.VariableLists)
-        {
-            if (variableList.GetRootName() != "VariableReferences" || variableList.ValueAsIList.Count == 0) continue;
-
-            var sourceObject = variableList.SourceObject;
-            foreach (var entryObj in variableList.ValueAsIList)
-            {
-                var entry = entryObj as string;
-                if (string.IsNullOrEmpty(entry) || entry.StartsWith("//")) continue;
-
-                var left = entry.Split('=')[0].Trim();
-                var qualifiedLeft = string.IsNullOrEmpty(sourceObject) ? left : $"{sourceObject}.{left}";
-                var materialized = stateSave.GetValue(qualifiedLeft);
-
-                _guiCommands.PrintOutput($"[{callSite}] {context} | liveRoot={liveRoot?.GetHashCode()} | " +
-                    $"{qualifiedLeft} = {entry.Split('=', 2)[1].Trim()} -> materialized={materialized}");
-            }
-        }
-    }
-
 
     public void ReactIfChangedMemberIsVariableReference(InstanceSave? instance, StateSave stateSave, string changedMember, object? oldValue)
     {

@@ -196,6 +196,18 @@ public partial class WireframeObjectManager : IWireframeObjectManager
                     RootGue.UpdateFontRecursive();
                     RootGue.UpdateLayout();
 
+                    // Variable references that read an Absolute* property (AbsoluteWidth, AbsoluteX,
+                    // AbsoluteRight, ...) were already resolved during construction above, while
+                    // IsAllLayoutSuspended was true. Those getters read the underlying renderable's
+                    // geometry, which only UpdateLayout syncs - so under suspension they saw stale
+                    // (pre-layout) values and baked the wrong result. Now that UpdateLayout has caught
+                    // up, re-resolve the references so Absolute* reads correct geometry (#4015).
+                    var stateForReferences = _selectedState.SelectedStateSave ?? elementSave.DefaultState;
+                    if (stateForReferences != null)
+                    {
+                        RootGue.ApplyVariableReferences(stateForReferences);
+                    }
+
                     gueManager.Add(RootGue);
                     //FontManager.Self.CreateAllMissingFontFiles(ObjectFinder.Self.GumProjectSave);
 

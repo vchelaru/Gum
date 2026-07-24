@@ -11,8 +11,6 @@ using Gum.Wireframe;
 using GumRuntime;
 using System;
 using System.ComponentModel.Composition;
-using System.Diagnostics;
-using System.Linq;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 
@@ -31,17 +29,6 @@ public class MainVariableGridPlugin : PriorityPlugin
         _propertyGridManager = propertyGridManager;
         _variableReferenceLogic = variableReferenceLogic;
         GumExpressionService.Initialize();
-
-        // TEMP DIAGNOSTIC - remove before merge
-        GraphicalUiElement.DiagnosticPropertySetHook = (gue, propertyName, oldValue, newValue) =>
-        {
-            if (string.IsNullOrEmpty(gue.Name)) return;
-            var frames = new StackTrace(2, false).GetFrames()
-                ?.Take(20)
-                .Select(f => f.GetMethod()?.DeclaringType?.Name + "." + f.GetMethod()?.Name);
-            var callChain = frames != null ? string.Join(" <- ", frames) : "?";
-            _guiCommands.PrintOutput($"[{propertyName} SET] {gue.Name} ({gue.GetHashCode()}): {oldValue} -> {newValue} | {callChain}");
-        };
     }
 
     public override void StartUp()
