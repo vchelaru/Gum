@@ -84,8 +84,19 @@ public class CompositeMemberRegistry : ICompositeMemberRegistry
     private object?[] DecomposeCornerRadius(object value)
     {
         CornerRadiusComposite composite = (CornerRadiusComposite)value;
-        return new object?[] { composite.Uniform, composite.TopLeft, composite.TopRight, composite.BottomLeft, composite.BottomRight };
+        return new object?[]
+        {
+            ClampToZeroMin(composite.Uniform),
+            ClampNullableToZeroMin(composite.TopLeft),
+            ClampNullableToZeroMin(composite.TopRight),
+            ClampNullableToZeroMin(composite.BottomLeft),
+            ClampNullableToZeroMin(composite.BottomRight)
+        };
     }
+
+    private static float ClampToZeroMin(float value) => Math.Max(0f, value);
+
+    private static float? ClampNullableToZeroMin(float? value) => value.HasValue ? Math.Max(0f, value.Value) : null;
 
     private float ToFloat(object? value) => value is float asFloat ? asFloat : 0f;
 

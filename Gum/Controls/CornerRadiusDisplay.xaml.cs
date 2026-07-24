@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
@@ -25,6 +26,13 @@ namespace Gum.Controls.DataUi
         bool _isLinked = true;
         CornerRadiusComposite _current;
 
+        readonly Dictionary<FrameworkElement, TextBox> _labelDragTargets;
+        FrameworkElement? _draggingLabel;
+        TextBox? _draggingTextBox;
+        double? _dragCurrentX;
+        double? _dragPressedX;
+        double _dragUnroundedValue;
+
         public InstanceMember? InstanceMember
         {
             get => mInstanceMember;
@@ -51,6 +59,15 @@ namespace Gum.Controls.DataUi
         public CornerRadiusDisplay()
         {
             InitializeComponent();
+
+            _labelDragTargets = new Dictionary<FrameworkElement, TextBox>
+            {
+                [Label] = UniformTextBox,
+                [TopLeftLabel] = TopLeftTextBox,
+                [TopRightLabel] = TopRightTextBox,
+                [BottomLeftLabel] = BottomLeftTextBox,
+                [BottomRightLabel] = BottomRightTextBox,
+            };
         }
 
         public void Refresh(bool forceRefreshEvenIfFocused = false)
@@ -81,6 +98,10 @@ namespace Gum.Controls.DataUi
         /// field and would only confuse a single shared color. When InstanceMember isn't a plain
         /// CompositeInstanceMember (e.g. a multi-select wrapper), fall back to its own aggregate
         /// IsDefault/IsIndeterminate for every field - less precise, but still a signal.
+        /// Deferred via Dispatcher.BeginInvoke like TextBoxDisplayLogic.RefreshBackgroundColor:
+        /// DataUiGrid.OverridesIsDefaultStyling is an inherited attached property, and a pooled
+        /// control isn't necessarily re-parented into the grid's visual tree yet when Refresh runs,
+        /// so reading it synchronously here can see the pre-inheritance default (false).
         /// </summary>
         private void RefreshBackgrounds()
         {
@@ -89,26 +110,38 @@ namespace Gum.Controls.DataUi
                 return;
             }
 
-            if (InstanceMember is CompositeInstanceMember composite && composite.ChannelMembers.Count == 5)
+            Dispatcher.BeginInvoke(() =>
             {
-                ApplyBackground(UniformTextBox, composite.ChannelMembers[0]);
-                ApplyBackground(TopLeftTextBox, composite.ChannelMembers[1]);
-                ApplyBackground(TopRightTextBox, composite.ChannelMembers[2]);
-                ApplyBackground(BottomLeftTextBox, composite.ChannelMembers[3]);
-                ApplyBackground(BottomRightTextBox, composite.ChannelMembers[4]);
-            }
-            else
-            {
-                ApplyBackground(UniformTextBox, InstanceMember);
-                ApplyBackground(TopLeftTextBox, InstanceMember);
-                ApplyBackground(TopRightTextBox, InstanceMember);
-                ApplyBackground(BottomLeftTextBox, InstanceMember);
-                ApplyBackground(BottomRightTextBox, InstanceMember);
-            }
+                if (InstanceMember is CompositeInstanceMember composite && composite.ChannelMembers.Count == 5)
+                {
+                    ApplyBackground(UniformTextBox, composite.ChannelMembers[0]);
+                    ApplyBackground(TopLeftTextBox, composite.ChannelMembers[1]);
+                    ApplyBackground(TopRightTextBox, composite.ChannelMembers[2]);
+                    ApplyBackground(BottomLeftTextBox, composite.ChannelMembers[3]);
+                    ApplyBackground(BottomRightTextBox, composite.ChannelMembers[4]);
+                }
+                else if (InstanceMember != null)
+                {
+                    ApplyBackground(UniformTextBox, InstanceMember);
+                    ApplyBackground(TopLeftTextBox, InstanceMember);
+                    ApplyBackground(TopRightTextBox, InstanceMember);
+                    ApplyBackground(BottomLeftTextBox, InstanceMember);
+                    ApplyBackground(BottomRightTextBox, InstanceMember);
+                }
+            });
         }
 
         private static void ApplyBackground(TextBox textBox, InstanceMember member)
         {
+            // The DataUiGrid style sets this attached property so rows rely on the per-row
+            // "is edited" icon (Frb.Styles.Defaults.xaml's IsDefaultIcon) instead of a
+            // displayer-painted background - see TextBoxDisplayLogic.RefreshBackgroundColor
+            // for the reference check every other displayer already honors.
+            if (DataUiGrid.GetOverridesIsDefaultStyling(textBox))
+            {
+                return;
+            }
+
             if (member.IsDefault)
             {
                 textBox.Background = TextBoxDisplayLogic.DefaultValueBackground;
@@ -221,7 +254,7 @@ namespace Gum.Controls.DataUi
 
         private void CornerTextBox_LostFocus(object sender, RoutedEventArgs e) => CommitValue();
 
-        private void CommitValue()
+        private void CommitValue(SetPropertyCommitType commitType = SetPropertyCommitType.Full)
         {
             if (_isSyncingFromInstance)
             {
@@ -231,9 +264,82 @@ namespace Gum.Controls.DataUi
             ApplyValueResult result = TryGetValueOnUi(out object? value);
             if (result == ApplyValueResult.Success && value != null)
             {
-                this.TrySetValueOnInstance(value, SetPropertyCommitType.Full);
+                this.TrySetValueOnInstance(value, commitType);
             }
         }
+
+        #region Label Dragging
+
+        /// <summary>
+        /// Click-and-drag over a field's label to scrub its numeric value, mirroring
+        /// <see cref="TextBoxDisplay"/>'s label-drag gesture. Applies to the uniform field's shared
+        /// <see cref="Label"/> and each per-corner TL/TR/BL/BR label via <see cref="_labelDragTargets"/>.
+        /// </summary>
+        private void Label_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is not FrameworkElement label || !_labelDragTargets.TryGetValue(label, out TextBox target))
+            {
+                return;
+            }
+
+            _draggingLabel = label;
+            _draggingTextBox = target;
+            _dragCurrentX = e.GetPosition(this).X;
+            _dragPressedX = _dragCurrentX;
+
+            Mouse.Capture(label);
+
+            _dragUnroundedValue = ParseFloat(target.Text) ?? _current.Uniform;
+        }
+
+        private void Label_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (_dragCurrentX == null || _draggingTextBox == null)
+            {
+                return;
+            }
+
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                double newX = e.GetPosition(this).X;
+                double difference = newX - _dragCurrentX.Value;
+                _dragCurrentX = newX;
+
+                if (difference != 0)
+                {
+                    _dragUnroundedValue += difference;
+                    double rounded = TextBoxDisplayLogic.SnapDraggedValue(_dragUnroundedValue, rounding: 1);
+
+                    // Stick visibly at the 0 floor while scrubbing (matching TextBoxDisplay's
+                    // min/max handling) instead of showing a negative value that only snaps back
+                    // to 0 once the commit round-trips through Decompose's clamp.
+                    rounded = (double)TextBoxDisplayLogic.ClampToRange(rounded, min: 0m, max: null);
+
+                    _draggingTextBox.Text = FormatFloat((float)rounded);
+                    CommitValue(SetPropertyCommitType.Intermediate);
+                }
+            }
+            else if (Mouse.Captured == _draggingLabel)
+            {
+                Mouse.Capture(null);
+            }
+        }
+
+        private void Label_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (_draggingTextBox != null && _dragPressedX != e.GetPosition(this).X)
+            {
+                CommitValue(SetPropertyCommitType.Full);
+            }
+
+            _draggingLabel = null;
+            _draggingTextBox = null;
+            _dragCurrentX = null;
+            _dragPressedX = null;
+            Mouse.Capture(null);
+        }
+
+        #endregion
 
         private static string FormatFloat(float value) => value.ToString("0.####", CultureInfo.InvariantCulture);
 

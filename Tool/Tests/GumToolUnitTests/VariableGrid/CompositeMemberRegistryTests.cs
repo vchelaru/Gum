@@ -90,6 +90,16 @@ public class CompositeMemberRegistryTests
     }
 
     [Fact]
+    public void CornerRadiusDescriptor_Decompose_ShouldClampNegativeUniformAndOverridesToZero()
+    {
+        CornerRadiusComposite composite = new(-8f, -1f, null, 3f, -0.5f);
+
+        object?[] channels = CornerRadiusDescriptor.Decompose(composite);
+
+        channels.ShouldBe(new object?[] { 0f, 0f, null, 3f, 0f });
+    }
+
+    [Fact]
     public void CornerRadiusDescriptor_ShouldUseCornerRadiusDisplayAndCompositeType()
     {
         CornerRadiusDescriptor.Displayer.ShouldBe(typeof(Gum.Controls.DataUi.CornerRadiusDisplay));
