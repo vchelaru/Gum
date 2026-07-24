@@ -360,7 +360,7 @@ public class Grid :
             {
                 InteractiveGue cell = (InteractiveGue)_rowContainers[r].Children[c];
                 cell.UpdateLayout();
-                float cellWidth = cell.GetAbsoluteWidth();
+                float cellWidth = cell.AbsoluteWidth;
                 if (cellWidth > maxContentWidth)
                 {
                     maxContentWidth = cellWidth;
@@ -394,7 +394,7 @@ public class Grid :
 
             InteractiveGue rowContainer = _rowContainers[r];
             rowContainer.UpdateLayout();
-            float computedHeight = rowContainer.GetAbsoluteHeight();
+            float computedHeight = rowContainer.AbsoluteHeight;
             float clamped = Math.Max(def.MinHeight, Math.Min(def.MaxHeight, computedHeight));
             if (clamped != computedHeight)
             {

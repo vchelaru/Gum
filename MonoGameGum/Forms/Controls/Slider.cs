@@ -208,7 +208,7 @@ public class Slider : RangeBase, IInputReceiver
         if (IsMoveToPointEnabled)
         {
             var left = Track.GetAbsoluteX();
-            var right = Track.GetAbsoluteX() + Track.GetAbsoluteWidth();
+            var right = Track.GetAbsoluteX() + Track.AbsoluteWidth;
 
             var screenX = MainCursor.XRespectingGumZoomAndBounds();
 
@@ -342,7 +342,7 @@ public class Slider : RangeBase, IInputReceiver
         // problems:
 
         //thumb.Visual.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
-        //thumb.X = Microsoft.Xna.Framework.MathHelper.Lerp(0, Track.GetAbsoluteWidth(),
+        //thumb.X = Microsoft.Xna.Framework.MathHelper.Lerp(0, Track.AbsoluteWidth,
         //    (float)ratioOver);
 
         if(thumb != null)
@@ -372,7 +372,7 @@ public class Slider : RangeBase, IInputReceiver
         thumb.Visual.XUnits = global::Gum.Converters.GeneralUnitType.Percentage;
 
         var pixelOffset = cursorXRelativeToTrack - cursorGrabOffsetRelativeToThumb;
-        var width = Track.GetAbsoluteWidth();
+        var width = Track.AbsoluteWidth;
         if (width == 0)
         {
             // prevent divide by 0's
@@ -381,7 +381,7 @@ public class Slider : RangeBase, IInputReceiver
 
         thumb.X = 100 * pixelOffset / width;
 
-        float range = Track.GetAbsoluteWidth();
+        float range = Track.AbsoluteWidth;
 
 
         if (range != 0)

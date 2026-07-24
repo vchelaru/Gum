@@ -314,7 +314,7 @@ public class TextRuntimeTests : BaseTestClass
                 Text = "aaa bbb ccc ddd",
             };
             sut.UpdateLayout();
-            sut.GetAbsoluteHeight().ShouldBe(48f);
+            sut.AbsoluteHeight.ShouldBe(48f);
         }
         finally { Text.DefaultMeasurer = previous; }
     }
@@ -334,7 +334,7 @@ public class TextRuntimeTests : BaseTestClass
                 Text = "Hello",
             };
             sut.UpdateLayout();
-            sut.GetAbsoluteHeight().ShouldBe(24f);
+            sut.AbsoluteHeight.ShouldBe(24f);
         }
         finally { Text.DefaultMeasurer = previousMeasurer; }
     }

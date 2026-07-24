@@ -193,14 +193,14 @@ public class GraphicalUiElementTests : BaseTestClass
             child.Dock(Dock.Fill);
             parent.AddChild(child);
         }
-        parent.Children[0].GetAbsoluteWidth().ShouldBe(200);
-        parent.Children[0].GetAbsoluteHeight().ShouldBe(200);
-        parent.Children[1].GetAbsoluteWidth().ShouldBe(200);
-        parent.Children[1].GetAbsoluteHeight().ShouldBe(200);
-        parent.Children[2].GetAbsoluteWidth().ShouldBe(200);
-        parent.Children[2].GetAbsoluteHeight().ShouldBe(200);
-        parent.Children[3].GetAbsoluteWidth().ShouldBe(200);
-        parent.Children[3].GetAbsoluteHeight().ShouldBe(200);
+        parent.Children[0].AbsoluteWidth.ShouldBe(200);
+        parent.Children[0].AbsoluteHeight.ShouldBe(200);
+        parent.Children[1].AbsoluteWidth.ShouldBe(200);
+        parent.Children[1].AbsoluteHeight.ShouldBe(200);
+        parent.Children[2].AbsoluteWidth.ShouldBe(200);
+        parent.Children[2].AbsoluteHeight.ShouldBe(200);
+        parent.Children[3].AbsoluteWidth.ShouldBe(200);
+        parent.Children[3].AbsoluteHeight.ShouldBe(200);
     }
 
     [Fact]
@@ -223,14 +223,14 @@ public class GraphicalUiElementTests : BaseTestClass
             child.Dock(Dock.Fill);
             parent.AddChild(child);
         }
-        parent.Children[0].GetAbsoluteWidth().ShouldBe(200);
-        parent.Children[0].GetAbsoluteHeight().ShouldBe(200);
-        parent.Children[1].GetAbsoluteWidth().ShouldBe(200);
-        parent.Children[1].GetAbsoluteHeight().ShouldBe(200);
-        parent.Children[2].GetAbsoluteWidth().ShouldBe(200);
-        parent.Children[2].GetAbsoluteHeight().ShouldBe(200);
-        parent.Children[3].GetAbsoluteWidth().ShouldBe(200);
-        parent.Children[3].GetAbsoluteHeight().ShouldBe(200);
+        parent.Children[0].AbsoluteWidth.ShouldBe(200);
+        parent.Children[0].AbsoluteHeight.ShouldBe(200);
+        parent.Children[1].AbsoluteWidth.ShouldBe(200);
+        parent.Children[1].AbsoluteHeight.ShouldBe(200);
+        parent.Children[2].AbsoluteWidth.ShouldBe(200);
+        parent.Children[2].AbsoluteHeight.ShouldBe(200);
+        parent.Children[3].AbsoluteWidth.ShouldBe(200);
+        parent.Children[3].AbsoluteHeight.ShouldBe(200);
     }
 
     [Fact]
@@ -244,22 +244,22 @@ public class GraphicalUiElementTests : BaseTestClass
         container.AutoGridHorizontalCells = 2;
         container.AutoGridVerticalCells = 2;
 
-        container.GetAbsoluteWidth().ShouldBe(0);
+        container.AbsoluteWidth.ShouldBe(0);
 
         AddChild();
-        container.GetAbsoluteWidth().ShouldBe(200);
+        container.AbsoluteWidth.ShouldBe(200);
 
         AddChild();
-        container.GetAbsoluteWidth().ShouldBe(200);
+        container.AbsoluteWidth.ShouldBe(200);
 
         AddChild();
-        container.GetAbsoluteWidth().ShouldBe(200);
+        container.AbsoluteWidth.ShouldBe(200);
 
         AddChild();
-        container.GetAbsoluteWidth().ShouldBe(200);
+        container.AbsoluteWidth.ShouldBe(200);
 
         AddChild();
-        container.GetAbsoluteWidth().ShouldBe(200);
+        container.AbsoluteWidth.ShouldBe(200);
 
         void AddChild()
         {
@@ -281,26 +281,26 @@ public class GraphicalUiElementTests : BaseTestClass
         container.AutoGridHorizontalCells = 2;
         container.AutoGridVerticalCells = 2;
 
-        container.GetAbsoluteHeight().ShouldBe(0);
+        container.AbsoluteHeight.ShouldBe(0);
 
         AddChild();
-        container.GetAbsoluteHeight().ShouldBe(200);
+        container.AbsoluteHeight.ShouldBe(200);
 
         AddChild();
-        container.GetAbsoluteHeight().ShouldBe(200);
+        container.AbsoluteHeight.ShouldBe(200);
 
         AddChild();
-        container.GetAbsoluteHeight().ShouldBe(200);
+        container.AbsoluteHeight.ShouldBe(200);
 
         AddChild();
-        container.GetAbsoluteHeight().ShouldBe(200);
+        container.AbsoluteHeight.ShouldBe(200);
 
         AddChild();
-        container.GetAbsoluteHeight().ShouldBe(300);
+        container.AbsoluteHeight.ShouldBe(300);
 
         AddChild();
         AddChild();
-        container.GetAbsoluteHeight().ShouldBe(400);
+        container.AbsoluteHeight.ShouldBe(400);
 
         void AddChild()
         {
@@ -335,8 +335,8 @@ public class GraphicalUiElementTests : BaseTestClass
         container.AddChild(fillContainer);
         fillContainer.Dock(Dock.Fill);
 
-        fillContainer.GetAbsoluteWidth().ShouldBe(100);
-        fillContainer.GetAbsoluteHeight().ShouldBe(100);
+        fillContainer.AbsoluteWidth.ShouldBe(100);
+        fillContainer.AbsoluteHeight.ShouldBe(100);
         fillContainer.AbsoluteLeft.ShouldBe(100);
 
         ContainerRuntime fillContainer2 = new();
@@ -344,8 +344,8 @@ public class GraphicalUiElementTests : BaseTestClass
         fillContainer2.Dock(Dock.Fill);
         container.AddChild(fillContainer2);
 
-        fillContainer2.GetAbsoluteWidth().ShouldBe(100);
-        fillContainer2.GetAbsoluteHeight().ShouldBe(100);
+        fillContainer2.AbsoluteWidth.ShouldBe(100);
+        fillContainer2.AbsoluteHeight.ShouldBe(100);
         fillContainer2.AbsoluteLeft.ShouldBe(0);
         fillContainer2.AbsoluteTop.ShouldBe(100);
     }
@@ -361,22 +361,22 @@ public class GraphicalUiElementTests : BaseTestClass
         container.AutoGridHorizontalCells = 2;
         container.AutoGridVerticalCells = 2;
 
-        container.GetAbsoluteHeight().ShouldBe(0);
+        container.AbsoluteHeight.ShouldBe(0);
 
         AddChild();
-        container.GetAbsoluteHeight().ShouldBe(200);
+        container.AbsoluteHeight.ShouldBe(200);
 
         AddChild();
-        container.GetAbsoluteHeight().ShouldBe(200);
+        container.AbsoluteHeight.ShouldBe(200);
 
         AddChild();
-        container.GetAbsoluteHeight().ShouldBe(200);
+        container.AbsoluteHeight.ShouldBe(200);
 
         AddChild();
-        container.GetAbsoluteHeight().ShouldBe(200);
+        container.AbsoluteHeight.ShouldBe(200);
 
         AddChild();
-        container.GetAbsoluteHeight().ShouldBe(200);
+        container.AbsoluteHeight.ShouldBe(200);
 
         void AddChild()
         {
@@ -398,26 +398,26 @@ public class GraphicalUiElementTests : BaseTestClass
         container.AutoGridHorizontalCells = 2;
         container.AutoGridVerticalCells = 2;
 
-        container.GetAbsoluteWidth().ShouldBe(0);
+        container.AbsoluteWidth.ShouldBe(0);
 
         AddChild();
-        container.GetAbsoluteWidth().ShouldBe(200);
+        container.AbsoluteWidth.ShouldBe(200);
 
         AddChild();
-        container.GetAbsoluteWidth().ShouldBe(200);
+        container.AbsoluteWidth.ShouldBe(200);
 
         AddChild();
-        container.GetAbsoluteWidth().ShouldBe(200);
+        container.AbsoluteWidth.ShouldBe(200);
 
         AddChild();
-        container.GetAbsoluteWidth().ShouldBe(200);
+        container.AbsoluteWidth.ShouldBe(200);
 
         AddChild();
-        container.GetAbsoluteWidth().ShouldBe(300);
+        container.AbsoluteWidth.ShouldBe(300);
 
         AddChild();
         AddChild();
-        container.GetAbsoluteWidth().ShouldBe(400);
+        container.AbsoluteWidth.ShouldBe(400);
 
         void AddChild()
         {
@@ -453,8 +453,8 @@ public class GraphicalUiElementTests : BaseTestClass
         container.AddChild(fillContainer);
         fillContainer.Dock(Dock.Fill);
 
-        fillContainer.GetAbsoluteWidth().ShouldBe(100);
-        fillContainer.GetAbsoluteHeight().ShouldBe(100);
+        fillContainer.AbsoluteWidth.ShouldBe(100);
+        fillContainer.AbsoluteHeight.ShouldBe(100);
         fillContainer.AbsoluteLeft.ShouldBe(0);
         fillContainer.AbsoluteTop.ShouldBe(100);
 
@@ -463,8 +463,8 @@ public class GraphicalUiElementTests : BaseTestClass
         fillContainer2.Dock(Dock.Fill);
         container.AddChild(fillContainer2);
 
-        fillContainer2.GetAbsoluteWidth().ShouldBe(100);
-        fillContainer2.GetAbsoluteHeight().ShouldBe(100);
+        fillContainer2.AbsoluteWidth.ShouldBe(100);
+        fillContainer2.AbsoluteHeight.ShouldBe(100);
         fillContainer2.AbsoluteLeft.ShouldBe(100);
         fillContainer2.AbsoluteTop.ShouldBe(0);
     }
@@ -501,7 +501,7 @@ public class GraphicalUiElementTests : BaseTestClass
 
         // 6 children in a 2-column grid => 3 rows (spilling past the 2 minimum rows),
         // each 100 tall.
-        container.GetAbsoluteHeight().ShouldBe(300);
+        container.AbsoluteHeight.ShouldBe(300);
 
         container.Children[0].AbsoluteX.ShouldBe(0);
         container.Children[0].AbsoluteY.ShouldBe(0);
@@ -551,7 +551,7 @@ public class GraphicalUiElementTests : BaseTestClass
 
         // 6 children in a 2-row grid => 3 columns (spilling past the 2 minimum columns),
         // each 100 wide.
-        container.GetAbsoluteWidth().ShouldBe(300);
+        container.AbsoluteWidth.ShouldBe(300);
 
         container.Children[0].AbsoluteX.ShouldBe(0);
         container.Children[0].AbsoluteY.ShouldBe(0);
@@ -1309,11 +1309,11 @@ public class GraphicalUiElementTests : BaseTestClass
             parent.AddChild(child);
         }
 
-        parent.GetAbsoluteHeight().ShouldBe(200);
+        parent.AbsoluteHeight.ShouldBe(200);
 
         parent.StackSpacing = 20;
 
-        parent.GetAbsoluteHeight().ShouldBe(220);
+        parent.AbsoluteHeight.ShouldBe(220);
     }
 
     [Fact]
@@ -1334,7 +1334,7 @@ public class GraphicalUiElementTests : BaseTestClass
             parent.AddChild(child);
         }
 
-        parent.GetAbsoluteHeight().ShouldBe(200);
+        parent.AbsoluteHeight.ShouldBe(200);
     }
 
     [Fact]
@@ -1357,7 +1357,7 @@ public class GraphicalUiElementTests : BaseTestClass
             parent.AddChild(child);
         }
 
-        parent.GetAbsoluteHeight().ShouldBe(100);
+        parent.AbsoluteHeight.ShouldBe(100);
     }
 
     [Fact]
@@ -1380,7 +1380,7 @@ public class GraphicalUiElementTests : BaseTestClass
             parent.AddChild(child);
         }
 
-        parent.GetAbsoluteWidth().ShouldBe(100);
+        parent.AbsoluteWidth.ShouldBe(100);
     }
 
     [Fact]
@@ -1402,11 +1402,11 @@ public class GraphicalUiElementTests : BaseTestClass
             parent.AddChild(child);
         }
 
-        parent.GetAbsoluteWidth().ShouldBe(200);
+        parent.AbsoluteWidth.ShouldBe(200);
 
         parent.StackSpacing = 20;
 
-        parent.GetAbsoluteWidth().ShouldBe(220);
+        parent.AbsoluteWidth.ShouldBe(220);
     }
 
     [Fact]
@@ -1420,28 +1420,28 @@ public class GraphicalUiElementTests : BaseTestClass
         sut.Width = 1;
         sut.WidthUnits = DimensionUnitType.Ratio;
 
-        sut.GetAbsoluteWidth().ShouldBe(1000);
+        sut.AbsoluteWidth.ShouldBe(1000);
 
         ContainerRuntime absoluteContainer = new();
         parent.AddChild(absoluteContainer);
         absoluteContainer.Width = 100;
         absoluteContainer.WidthUnits = DimensionUnitType.Absolute;
 
-        sut.GetAbsoluteWidth().ShouldBe(900);
+        sut.AbsoluteWidth.ShouldBe(900);
 
         ContainerRuntime percentContainer = new();
         parent.AddChild(percentContainer);
         percentContainer.Width = 5;
         percentContainer.WidthUnits = DimensionUnitType.PercentageOfParent;
 
-        sut.GetAbsoluteWidth().ShouldBe(850);
+        sut.AbsoluteWidth.ShouldBe(850);
 
         ContainerRuntime relativeToParentContainer = new();
         parent.AddChild(relativeToParentContainer);
         relativeToParentContainer.Width = -880; // 120 width
         relativeToParentContainer.WidthUnits = DimensionUnitType.RelativeToParent;
 
-        sut.GetAbsoluteWidth().ShouldBe(850 - 120); // 730
+        sut.AbsoluteWidth.ShouldBe(850 - 120); // 730
 
         var mockSprite = new Mock<IPositionedSizedObject>()
             .As<IRenderable>()
@@ -1476,7 +1476,7 @@ public class GraphicalUiElementTests : BaseTestClass
         parent.AddChild(percentOfSourceFile);
         percentOfSourceFile.WidthUnits = DimensionUnitType.PercentageOfSourceFile;
 
-        sut.GetAbsoluteWidth().ShouldBe(680);
+        sut.AbsoluteWidth.ShouldBe(680);
 
 
         ContainerRuntime percentOtherDimension = new();
@@ -1484,7 +1484,7 @@ public class GraphicalUiElementTests : BaseTestClass
         percentOtherDimension.Width = 50; // 50% of height
         percentOtherDimension.WidthUnits = DimensionUnitType.PercentageOfOtherDimension;
         percentOtherDimension.Height = 100; 
-        sut.GetAbsoluteWidth().ShouldBe(630); 
+        sut.AbsoluteWidth.ShouldBe(630); 
 
 
 
@@ -1508,7 +1508,7 @@ public class GraphicalUiElementTests : BaseTestClass
         absoluteMultipliedByFontScaleContainer.Width = 100;
         absoluteMultipliedByFontScaleContainer.WidthUnits = DimensionUnitType.AbsoluteMultipliedByFontScale;
 
-        sut.GetAbsoluteWidth().ShouldBe(800); // 1000 - (100 * 2)
+        sut.AbsoluteWidth.ShouldBe(800); // 1000 - (100 * 2)
     }
 
     [Fact]
@@ -1738,13 +1738,13 @@ public class GraphicalUiElementTests : BaseTestClass
         child.Height = 0;
         child.Parent = parent1;
 
-        child.GetAbsoluteWidth().ShouldBe(200);
-        child.GetAbsoluteHeight().ShouldBe(200);
+        child.AbsoluteWidth.ShouldBe(200);
+        child.AbsoluteHeight.ShouldBe(200);
 
         child.Parent = parent2;
 
-        child.GetAbsoluteWidth().ShouldBe(400);
-        child.GetAbsoluteHeight().ShouldBe(400);
+        child.AbsoluteWidth.ShouldBe(400);
+        child.AbsoluteHeight.ShouldBe(400);
     }
 
     [Fact]
@@ -1892,13 +1892,13 @@ public class GraphicalUiElementTests : BaseTestClass
 
         leftChild.Visible = false;
 
-        rightChild.GetAbsoluteWidth().ShouldBe(200);
-        sut.GetAbsoluteWidth().ShouldBe(200);
+        rightChild.AbsoluteWidth.ShouldBe(200);
+        sut.AbsoluteWidth.ShouldBe(200);
 
         leftChild.Visible = true;
 
-        rightChild.GetAbsoluteWidth().ShouldBe(100);
-        sut.GetAbsoluteWidth().ShouldBe(100);
+        rightChild.AbsoluteWidth.ShouldBe(100);
+        sut.AbsoluteWidth.ShouldBe(100);
 
     }
 

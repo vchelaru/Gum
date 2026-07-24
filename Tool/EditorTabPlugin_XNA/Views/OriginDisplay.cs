@@ -128,7 +128,7 @@ namespace Gum.Wireframe
                 //if (parentFlips)
                 //{
                 //    var rotationMatrix = parent.GetAbsoluteRotationMatrix();
-                //    Vector3 offset = new Vector3(parent.GetAbsoluteWidth(), 0, 0);
+                //    Vector3 offset = new Vector3(parent.AbsoluteWidth, 0, 0);
                 //    offset = Vector3.Transform(offset, rotationMatrix);
                 //    parentOriginOffsetX += offset.X;
                 //    parentOriginOffsetY += offset.Y;
@@ -221,7 +221,7 @@ namespace Gum.Wireframe
             if (parentFlips)
             {
                 var rotationMatrix = asGue.GetAbsoluteRotationMatrix();
-                Vector3 offset = new Vector3(asGue.GetAbsoluteWidth(), 0, 0);
+                Vector3 offset = new Vector3(asGue.AbsoluteWidth, 0, 0);
                 offset = Vector3.Transform(offset, rotationMatrix);
                 selectedObjectX += offset.X;
                 selectedObjectY += offset.Y;

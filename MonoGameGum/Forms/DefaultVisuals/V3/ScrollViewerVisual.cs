@@ -409,7 +409,7 @@ public class ScrollViewerVisual : InteractiveGue
         {
             // Check the parent to verify that the user hasn't removed the ScrollBar
             float margin = VerticalScrollBarInstance.Visible
-                ? VerticalScrollBarInstance.GetAbsoluteWidth()
+                ? VerticalScrollBarInstance.AbsoluteWidth
                 : 0;
             ClipContainerContainer.Width = -margin;
         }
@@ -417,7 +417,7 @@ public class ScrollViewerVisual : InteractiveGue
         if (HorizontalScrollBarInstance.Parent == ScrollAndClipContainer)
         {
             float margin = HorizontalScrollBarInstance.Visible
-                ? HorizontalScrollBarInstance.GetAbsoluteHeight()
+                ? HorizontalScrollBarInstance.AbsoluteHeight
                 : 0;
             ClipContainerContainer.Height = -margin;
         }
@@ -436,7 +436,7 @@ public class ScrollViewerVisual : InteractiveGue
             && HorizontalScrollBarInstance != null)
         {
             float margin = VerticalScrollBarInstance.Visible
-                ? VerticalScrollBarInstance.GetAbsoluteWidth()
+                ? VerticalScrollBarInstance.AbsoluteWidth
                 : 0;
             HorizontalScrollBarInstance.Width = -margin;
         }
@@ -445,7 +445,7 @@ public class ScrollViewerVisual : InteractiveGue
             && VerticalScrollBarInstance != null)
         {
             float margin = HorizontalScrollBarInstance.Visible
-                ? HorizontalScrollBarInstance.GetAbsoluteHeight()
+                ? HorizontalScrollBarInstance.AbsoluteHeight
                 : 0;
             VerticalScrollBarInstance.Height = -margin;
         }

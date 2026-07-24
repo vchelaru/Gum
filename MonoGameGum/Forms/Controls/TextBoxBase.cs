@@ -1804,13 +1804,13 @@ public abstract class TextBoxBase :
             return;
         }
 
-        // textComponent.GetAbsoluteHeight() reflects layout-computed size, which
+        // textComponent.AbsoluteHeight reflects layout-computed size, which
         // in Multi state is bounded by the parent (HeightUnits=RelativeToParent).
         // For the clamp we want the actual content height — line count × line
         // height — so we don't over-clamp and undo a legitimate scroll.
         var lineCount = coreTextObject.WrappedText?.Count ?? 0;
         float contentHeight = lineCount * EffectiveLineHeightInPixels;
-        float containerHeight = caretComponent.EffectiveParentGue.GetAbsoluteHeight();
+        float containerHeight = caretComponent.EffectiveParentGue.AbsoluteHeight;
         float maxScrollUp = System.Math.Max(0f, contentHeight - containerHeight);
         float clamped = System.Math.Max(this.textComponent.Y, -maxScrollUp);
         float delta = clamped - this.textComponent.Y;
@@ -1844,14 +1844,14 @@ public abstract class TextBoxBase :
             // the text by hundreds of pixels and the asymmetric branches
             // below would never undo it once the parent reached a sane size.
             // See issue #2680.
-            float parentWidth = caretComponent.EffectiveParentGue.GetAbsoluteWidth();
+            float parentWidth = caretComponent.EffectiveParentGue.AbsoluteWidth;
             if (parentWidth <= 0)
             {
                 return;
             }
 
             float nearOfCaret = caretComponent.GetAbsoluteLeft();
-            float farOfCaret = nearOfCaret + caretComponent.GetAbsoluteWidth();
+            float farOfCaret = nearOfCaret + caretComponent.AbsoluteWidth;
             float nearOfParent = caretComponent.EffectiveParentGue.GetAbsoluteLeft();
             float farOfParent = nearOfParent + parentWidth;
 
@@ -1895,14 +1895,14 @@ public abstract class TextBoxBase :
             // meaning of the existing Y value.
 
             // Same invalid-geometry guard as the horizontal branch (see #2680).
-            float parentHeight = caretComponent.EffectiveParentGue.GetAbsoluteHeight();
+            float parentHeight = caretComponent.EffectiveParentGue.AbsoluteHeight;
             if (parentHeight <= 0)
             {
                 return;
             }
 
             float nearOfCaret = caretComponent.GetAbsoluteTop();
-            float farOfCaret = nearOfCaret + caretComponent.GetAbsoluteHeight();
+            float farOfCaret = nearOfCaret + caretComponent.AbsoluteHeight;
             float nearOfParent = caretComponent.EffectiveParentGue.GetAbsoluteTop();
             float farOfParent = nearOfParent + parentHeight;
 
@@ -2000,7 +2000,7 @@ public abstract class TextBoxBase :
             return 0;
 
         float measuredLineWidth = MeasureStringScaled(stringToMeasure);
-        float textComponentWidth = textComponent.GetAbsoluteWidth();
+        float textComponentWidth = textComponent.AbsoluteWidth;
         float gapBetweenTextAndEdge = textComponentWidth - measuredLineWidth;
         if (coreTextObject.HorizontalAlignment == global::RenderingLibrary.Graphics.HorizontalAlignment.Center)
             gapBetweenTextAndEdge /= 2.0f;
@@ -2030,7 +2030,7 @@ public abstract class TextBoxBase :
         }
         if (target.YUnits == global::Gum.Converters.GeneralUnitType.PixelsFromMiddle)
         {
-            adjusted -= textComponent.GetAbsoluteHeight() / 2.0f;
+            adjusted -= textComponent.AbsoluteHeight / 2.0f;
         }
         return adjusted;
     }

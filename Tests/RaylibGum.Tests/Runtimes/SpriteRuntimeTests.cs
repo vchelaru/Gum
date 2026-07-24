@@ -97,7 +97,7 @@ public class SpriteRuntimeTests : BaseTestClass
 
         // Raylib implementation uses 64 as default width in InvisibleRenderable/GraphicalUiElement 
         // if texture is null and using PercentageOfSourceFile.
-        sut.GetAbsoluteWidth().ShouldBe(64);
+        sut.AbsoluteWidth.ShouldBe(64);
     }
 
     [Fact]
@@ -124,11 +124,11 @@ public class SpriteRuntimeTests : BaseTestClass
         
         sut.Texture = texture;
         
-        sut.GetAbsoluteWidth().ShouldBe(100);
+        sut.AbsoluteWidth.ShouldBe(100);
         
         var biggerTexture = new Texture2D { Width = 200, Height = 200 };
         sut.Texture = biggerTexture;
         
-        sut.GetAbsoluteWidth().ShouldBe(200);
+        sut.AbsoluteWidth.ShouldBe(200);
     }
 }

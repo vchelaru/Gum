@@ -773,10 +773,10 @@ public class FrameworkElementTests : BaseTestClass
 
         frameworkElement.RepositionToKeepInScreen(boundsRoot);
 
-        (frameworkElement.Visual.AbsoluteX + frameworkElement.Visual.GetAbsoluteWidth())
-            .ShouldBeLessThanOrEqualTo(boundsRoot.X + boundsRoot.GetAbsoluteWidth());
-        (frameworkElement.Visual.AbsoluteY + frameworkElement.Visual.GetAbsoluteHeight())
-            .ShouldBeLessThanOrEqualTo(boundsRoot.Y + boundsRoot.GetAbsoluteHeight());
+        (frameworkElement.Visual.AbsoluteX + frameworkElement.Visual.AbsoluteWidth)
+            .ShouldBeLessThanOrEqualTo(boundsRoot.X + boundsRoot.AbsoluteWidth);
+        (frameworkElement.Visual.AbsoluteY + frameworkElement.Visual.AbsoluteHeight)
+            .ShouldBeLessThanOrEqualTo(boundsRoot.Y + boundsRoot.AbsoluteHeight);
     }
 
     [Fact]

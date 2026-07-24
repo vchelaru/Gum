@@ -44,10 +44,10 @@ $"chars count=223\r\n";
         sut.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         sut.Width = 0;
         sut.Text = "Short";
-        float shortWidth = sut.GetAbsoluteWidth();
+        float shortWidth = sut.AbsoluteWidth;
 
         sut.Text = "This is much longer";
-        float longWidth = sut.GetAbsoluteWidth();
+        float longWidth = sut.AbsoluteWidth;
 
         longWidth.ShouldBeGreaterThan(shortWidth);
     }
@@ -62,11 +62,11 @@ $"chars count=223\r\n";
 
         textRuntime.Text = "Hello";
 
-        var widthBefore = textRuntime.GetAbsoluteWidth();
+        var widthBefore = textRuntime.AbsoluteWidth;
 
         textRuntime.Text = "Hello\na";
 
-        var widthAfter = textRuntime.GetAbsoluteWidth();
+        var widthAfter = textRuntime.AbsoluteWidth;
 
         widthBefore.ShouldBe(widthAfter, "Because a trailing newline should not affect the width of a text, regardless of its XAdavance");
     }
@@ -434,7 +434,7 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
 
         float textContentWidth = ((Text)text.RenderableComponent).WrappedTextWidth;
         textContentWidth.ShouldBeGreaterThan(0);
-        box.GetAbsoluteWidth().ShouldBeGreaterThanOrEqualTo(textContentWidth,
+        box.AbsoluteWidth.ShouldBeGreaterThanOrEqualTo(textContentWidth,
             "because the RelativeToChildren box must be at least as wide as its text, even with a RelativeToParent background sibling");
         // #3645: containment alone isn't enough - a container that "correctly" grows to fit a wrapped
         // 2-line block still passes the containment assertion above even though the wrap itself is the
@@ -471,7 +471,7 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
             plainText.Text = "AA BB CC";
             plainContainer.Children.Add(plainText);
             plainContainer.AddToRoot();
-            float plainContainerWidth = plainContainer.GetAbsoluteWidth();
+            float plainContainerWidth = plainContainer.AbsoluteWidth;
             float baseBAdvance = plainText.BitmapFont.Characters['B'].XAdvance;
 
             ContainerRuntime swappedContainer = new();
@@ -485,14 +485,14 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
             swappedText.Text = "AA [FontSize=40]BB[/FontSize] CC";
             swappedContainer.Children.Add(swappedText);
             swappedContainer.AddToRoot();
-            float swappedContainerWidth = swappedContainer.GetAbsoluteWidth();
+            float swappedContainerWidth = swappedContainer.AbsoluteWidth;
 
             InlineVariable fontSwapVariable = ((Text)swappedText.RenderableComponent)
                 .InlineVariables.First(v => v.VariableName == "BitmapFont");
             float swappedBAdvance = ((BitmapFont)fontSwapVariable.Value).Characters['B'].XAdvance;
 
             // The container must wrap its child exactly — this is the "background contains the text" case.
-            swappedContainerWidth.ShouldBe(swappedText.GetAbsoluteWidth(),
+            swappedContainerWidth.ShouldBe(swappedText.AbsoluteWidth,
                 "because a RelativeToChildren container must size to its child's full measured width");
 
             // And that width must include the enlarged run: swapping the two 'B' glyphs to the size-40
@@ -674,13 +674,13 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
         sut.Height = 0;
         sut.Text = "Hello";
 
-        var baseHeight = sut.GetAbsoluteHeight();
+        var baseHeight = sut.AbsoluteHeight;
         baseHeight.ShouldBeGreaterThan(0);
 
         GraphicalUiElement.GlobalFontScale = 2;
         sut.UpdateLayout();
 
-        sut.GetAbsoluteHeight().ShouldBe(baseHeight * 2);
+        sut.AbsoluteHeight.ShouldBe(baseHeight * 2);
     }
 
     [Fact]
@@ -691,13 +691,13 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
         sut.Width = 0;
         sut.Text = "Hello";
 
-        var baseWidth = sut.GetAbsoluteWidth();
+        var baseWidth = sut.AbsoluteWidth;
         baseWidth.ShouldBeGreaterThan(0);
 
         GraphicalUiElement.GlobalFontScale = 2;
         sut.UpdateLayout();
 
-        sut.GetAbsoluteWidth().ShouldBe(baseWidth * 2);
+        sut.AbsoluteWidth.ShouldBe(baseWidth * 2);
     }
 
     [Fact]
@@ -782,12 +782,12 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
         textRuntime.MaxWidth = 50; // Set a max width
         textRuntime.Text = "a a a a a a a a a a a a a a a a a";
 
-        textRuntime.GetAbsoluteWidth().ShouldBeLessThanOrEqualTo(50);
+        textRuntime.AbsoluteWidth.ShouldBeLessThanOrEqualTo(50);
         var innerText = (Text)textRuntime.RenderableComponent;
         innerText.WrappedText.Count.ShouldBeGreaterThan(1);
         var lineCount = innerText.WrappedText.Count;
 
-        var absoluteHeight = textRuntime.GetAbsoluteHeight();
+        var absoluteHeight = textRuntime.AbsoluteHeight;
         absoluteHeight.ShouldBe(lineCount * textRuntime.Typeface.LineHeightInPixels);
     }
 
@@ -1536,12 +1536,12 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
         textRuntime.Width = 0;
         textRuntime.Text = "This is some sample text";
 
-        textRuntime.GetAbsoluteWidth().ShouldBeGreaterThan(0);
-        var absoluteWidth = textRuntime.GetAbsoluteWidth();
+        textRuntime.AbsoluteWidth.ShouldBeGreaterThan(0);
+        var absoluteWidth = textRuntime.AbsoluteWidth;
 
         textRuntime.MaxLettersToShow = 0;
 
-        textRuntime.GetAbsoluteWidth().ShouldBe(absoluteWidth);
+        textRuntime.AbsoluteWidth.ShouldBe(absoluteWidth);
 
 
     }
@@ -1754,10 +1754,10 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
 
         float renderedHeight = renderable.WrappedTextHeight;
         renderedHeight.ShouldBeGreaterThan(0, "Because the single line must still be rendered");
-        sut.GetAbsoluteHeight().ShouldBe(renderedHeight + heightOffset,
+        sut.AbsoluteHeight.ShouldBe(renderedHeight + heightOffset,
             "Because the bounds are the full rendered height plus the (negative) offset");
-        sut.GetAbsoluteHeight().ShouldBeLessThan(renderedHeight);
-        sut.GetAbsoluteHeight().ShouldBeGreaterThan(0);
+        sut.AbsoluteHeight.ShouldBeLessThan(renderedHeight);
+        sut.AbsoluteHeight.ShouldBeGreaterThan(0);
     }
 
     // The exact issue #3372 repro: vertical truncation + RelativeToChildren height +

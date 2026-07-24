@@ -86,11 +86,11 @@ public class RotationHandleVisual : EditorVisualBase, IRotationHandleVisual
 
         if (singleSelectedObject.XOrigin == HorizontalAlignment.Left)
         {
-            xOffset = singleSelectedObject.GetAbsoluteWidth() + minimumOffset;
+            xOffset = singleSelectedObject.AbsoluteWidth + minimumOffset;
         }
         else if (singleSelectedObject.XOrigin == HorizontalAlignment.Center)
         {
-            xOffset = singleSelectedObject.GetAbsoluteWidth() / 2.0f + minimumOffset;
+            xOffset = singleSelectedObject.AbsoluteWidth / 2.0f + minimumOffset;
         }
         else if (singleSelectedObject.XOrigin == HorizontalAlignment.Right)
         {

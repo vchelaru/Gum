@@ -66,7 +66,7 @@ system, dirty tracking, and performance considerations.
 | `UpdateLayout(updateParent, childrenUpdateDepth, xOrY)` | Granular control |
 | `SuspendLayout(recursive)` | Pause layout, queue as dirty |
 | `ResumeLayout(recursive)` | Resume and apply queued updates |
-| `GetAbsoluteWidth()` / `GetAbsoluteHeight()` | Final computed dimensions |
+| `AbsoluteWidth` / `AbsoluteHeight` | Final computed dimensions |
 | `MakeDirty(...)` | Queue deferred update when suspended |
 
 ### Key Properties

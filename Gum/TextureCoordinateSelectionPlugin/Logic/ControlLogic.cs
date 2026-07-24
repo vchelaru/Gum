@@ -715,8 +715,8 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
                     var widthScale = rfv.GetValue<float>($"{instancePrefix}TextureWidthScale");
                     var heightScale = rfv.GetValue<float>($"{instancePrefix}TextureHeightScale");
 
-                    var absoluteWidth = graphicalUiElement.GetAbsoluteWidth();
-                    var absoluteHeight = graphicalUiElement.GetAbsoluteHeight();
+                    var absoluteWidth = graphicalUiElement.AbsoluteWidth;
+                    var absoluteHeight = graphicalUiElement.AbsoluteHeight;
 
                     selector.Width = absoluteWidth / widthScale;
                     selector.Height = absoluteHeight / heightScale;

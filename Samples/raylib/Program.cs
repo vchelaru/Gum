@@ -243,7 +243,7 @@ public class BasicShapes
         // Offset the screen so it doesn't sit underneath the nav strip — same trick as
         // MonoGameGumInCode/Game1.ShowScreen. Use the nav strip's actual laid-out height so a
         // wrapped (multi-row) button strip still clears the screen content below it.
-        float navStripHeight = navStrip!.Visual.GetAbsoluteHeight();
+        float navStripHeight = navStrip!.Visual.AbsoluteHeight;
         activeScreen.Visual.YOrigin = VerticalAlignment.Top;
         activeScreen.Visual.YUnits = GeneralUnitType.PixelsFromSmall;
         activeScreen.Visual.Y = navStripHeight;

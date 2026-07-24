@@ -65,7 +65,7 @@ void FillAndExpandVertically(GraphicalUiElement visual)
     visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
 
     // then measure:
-    if(visual.GetAbsoluteHeight() > visual.Parent.GetAbsoluteHeight())
+    if(visual.AbsoluteHeight > visual.Parent.AbsoluteHeight)
     {
         visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
     }

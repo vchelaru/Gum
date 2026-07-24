@@ -139,7 +139,7 @@ public class TooltipTests : BaseTestClass
 
         tooltip.Show(cursorX: 790, cursorY: 10);
 
-        tooltip.Visual.X.ShouldBeLessThanOrEqualTo(800 - tooltip.Visual.GetAbsoluteWidth());
+        tooltip.Visual.X.ShouldBeLessThanOrEqualTo(800 - tooltip.Visual.AbsoluteWidth);
     }
 
     [Fact]
@@ -159,8 +159,8 @@ public class TooltipTests : BaseTestClass
 
         tooltip.Show(cursorX: 390, cursorY: 290);
 
-        var width = tooltip.Visual.GetAbsoluteWidth();
-        var height = tooltip.Visual.GetAbsoluteHeight();
+        var width = tooltip.Visual.AbsoluteWidth;
+        var height = tooltip.Visual.AbsoluteHeight;
         tooltip.Visual.X.ShouldBeLessThanOrEqualTo(400 - width);
         tooltip.Visual.Y.ShouldBeLessThanOrEqualTo(300 - height);
     }

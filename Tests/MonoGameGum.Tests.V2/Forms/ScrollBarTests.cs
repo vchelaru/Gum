@@ -62,8 +62,8 @@ public class ScrollBarTests
         ScrollBar scrollBar = new();
         ScrollBarVisual scrollBarVisual = (ScrollBarVisual)scrollBar.Visual;
 
-        scrollBarVisual.ThumbInstance.GetAbsoluteWidth().ShouldBe(
-            scrollBarVisual.GetAbsoluteWidth());
+        scrollBarVisual.ThumbInstance.AbsoluteWidth.ShouldBe(
+            scrollBarVisual.AbsoluteWidth);
     }
 
 }

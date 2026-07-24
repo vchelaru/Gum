@@ -178,7 +178,7 @@ public class Splitter : Gum.Forms.Controls.FrameworkElement
         {
             if(resizeBehavior == Controls.ResizeBehavior.Rows)
             {
-                var absoluteHeight = firstVisual.GetAbsoluteHeight();
+                var absoluteHeight = firstVisual.AbsoluteHeight;
                 if(firstVisual.MinHeight != null)
                 {
                     absoluteHeight -= firstVisual.MinHeight.Value;
@@ -187,7 +187,7 @@ public class Splitter : Gum.Forms.Controls.FrameworkElement
             }
             else
             {
-                var absoluteWidth = firstVisual.GetAbsoluteWidth();
+                var absoluteWidth = firstVisual.AbsoluteWidth;
                 if(firstVisual.MinWidth != null)
                 {
                     absoluteWidth -= firstVisual.MinWidth.Value;
@@ -199,7 +199,7 @@ public class Splitter : Gum.Forms.Controls.FrameworkElement
         {
             if(resizeBehavior == Controls.ResizeBehavior.Rows)
             {
-                var absoluteHeight = secondVisual.GetAbsoluteHeight();
+                var absoluteHeight = secondVisual.AbsoluteHeight;
                 if(secondVisual.MinHeight != null)
                 {
                     absoluteHeight -= secondVisual.MinHeight.Value;
@@ -208,7 +208,7 @@ public class Splitter : Gum.Forms.Controls.FrameworkElement
             }
             else
             {
-                var absoluteWidth = secondVisual.GetAbsoluteWidth();
+                var absoluteWidth = secondVisual.AbsoluteWidth;
                 if(secondVisual.MinWidth != null)
                 {
                     absoluteWidth -= secondVisual.MinWidth.Value;
@@ -263,7 +263,7 @@ public class Splitter : Gum.Forms.Controls.FrameworkElement
         {
             if (resizeBehavior == Controls.ResizeBehavior.Rows)
             {
-                var firstHeightInPixels = firstVisual.GetAbsoluteHeight();
+                var firstHeightInPixels = firstVisual.AbsoluteHeight;
 
                 var ratioToAdd = (changeInPixels / firstHeightInPixels) * firstVisual.Height;
                 firstVisual.Height += ratioToAdd;
@@ -271,7 +271,7 @@ public class Splitter : Gum.Forms.Controls.FrameworkElement
             }
             else
             {
-                var firstWidthInPixels = firstVisual.GetAbsoluteWidth();
+                var firstWidthInPixels = firstVisual.AbsoluteWidth;
 
                 var ratioToAdd = (changeInPixels / firstWidthInPixels) * firstVisual.Width;
                 firstVisual.Width += ratioToAdd;
@@ -284,22 +284,22 @@ public class Splitter : Gum.Forms.Controls.FrameworkElement
             {
                 if (resizeBehavior == Controls.ResizeBehavior.Rows)
                 {
-                    var heightInPixels = firstVisual.GetAbsoluteHeight();
+                    var heightInPixels = firstVisual.AbsoluteHeight;
                     var newAbsoluteHeight = heightInPixels + changeInPixels;
 
                     // convert considering the parent's absolute height
                     firstVisual.Height =
-                        (newAbsoluteHeight / parent.GetAbsoluteHeight()) * 100.0f;
+                        (newAbsoluteHeight / parent.AbsoluteHeight) * 100.0f;
 
                 }
                 else // columns
                 {
-                    var widthInPixels = firstVisual.GetAbsoluteWidth();
+                    var widthInPixels = firstVisual.AbsoluteWidth;
                     var newAbsoluteWidth = widthInPixels + changeInPixels;
 
                     // convert considering the parent's absolute width
                     firstVisual.Width =
-                        (newAbsoluteWidth / parent.GetAbsoluteWidth()) * 100.0f;
+                        (newAbsoluteWidth / parent.AbsoluteWidth) * 100.0f;
                 }
             }
             else if (isFirstAbsolute)
@@ -315,7 +315,7 @@ public class Splitter : Gum.Forms.Controls.FrameworkElement
             }
             else if(firstUnits == DimensionUnitType.Ratio)
             {
-                var firstHeightInPixels = firstVisual.GetAbsoluteHeight();
+                var firstHeightInPixels = firstVisual.AbsoluteHeight;
 
                 var ratioToAdd = (changeInPixels / firstHeightInPixels) * firstVisual.Height;
                 firstVisual.Height += ratioToAdd;
@@ -326,19 +326,19 @@ public class Splitter : Gum.Forms.Controls.FrameworkElement
             {
                 if (resizeBehavior == Controls.ResizeBehavior.Rows)
                 {
-                    var heightInPixels = secondVisual.GetAbsoluteHeight();
+                    var heightInPixels = secondVisual.AbsoluteHeight;
                     var newAbsoluteHeight = heightInPixels - changeInPixels;
                     // convert considering the parent's absolute height
                     secondVisual.Height =
-                        (newAbsoluteHeight / parent.GetAbsoluteHeight()) * 100.0f;
+                        (newAbsoluteHeight / parent.AbsoluteHeight) * 100.0f;
                 }
                 else // columns
                 {
-                    var widthInPixels = secondVisual.GetAbsoluteWidth();
+                    var widthInPixels = secondVisual.AbsoluteWidth;
                     var newAbsoluteWidth = widthInPixels - changeInPixels;
                     // convert considering the parent's absolute width
                     secondVisual.Width =
-                        (newAbsoluteWidth / parent.GetAbsoluteWidth()) * 100.0f;
+                        (newAbsoluteWidth / parent.AbsoluteWidth) * 100.0f;
                 }
             }
             else if (isSecondAbsolute)
@@ -354,7 +354,7 @@ public class Splitter : Gum.Forms.Controls.FrameworkElement
             }
             else if(secondUnits == DimensionUnitType.Ratio)
             {
-                var secondHeightInPixels = secondVisual.GetAbsoluteHeight();
+                var secondHeightInPixels = secondVisual.AbsoluteHeight;
 
                 var ratioToAdd = (changeInPixels / secondHeightInPixels) * secondVisual.Height;
                 secondVisual.Height -= ratioToAdd;

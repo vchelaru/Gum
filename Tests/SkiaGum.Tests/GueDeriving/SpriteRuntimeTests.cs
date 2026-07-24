@@ -295,19 +295,19 @@ public class SpriteRuntimeTests
         sut.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
 
         // Initial 100% of nothing is probably 0 or default
-        var initialWidth = sut.GetAbsoluteWidth();
+        var initialWidth = sut.AbsoluteWidth;
 
         var bitmap = new SKBitmap(100, 50);
         sut.Texture = bitmap;
 
         // 100% of 100 should be 100
-        sut.GetAbsoluteWidth().ShouldBe(100);
-        sut.GetAbsoluteHeight().ShouldBe(50);
+        sut.AbsoluteWidth.ShouldBe(100);
+        sut.AbsoluteHeight.ShouldBe(50);
 
         var biggerBitmap = new SKBitmap(200, 300);
         sut.Texture = biggerBitmap;
 
-        sut.GetAbsoluteWidth().ShouldBe(200);
-        sut.GetAbsoluteHeight().ShouldBe(300);
+        sut.AbsoluteWidth.ShouldBe(200);
+        sut.AbsoluteHeight.ShouldBe(300);
     }
 }

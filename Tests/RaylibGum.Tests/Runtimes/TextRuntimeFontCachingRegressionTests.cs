@@ -53,7 +53,7 @@ public class TextRuntimeFontCachingRegressionTests : BaseTestClass
                 Gum.Renderables.Text renderable = (Gum.Renderables.Text)textRuntime.RenderableComponent;
                 renderable.Font.BaseSize.ShouldBeGreaterThan(0,
                     "every text must resolve a usable fallback font, not the empty (BaseSize 0) font cached after the .fnt load failed");
-                textRuntime.GetAbsoluteHeight().ShouldBeGreaterThan(0,
+                textRuntime.AbsoluteHeight.ShouldBeGreaterThan(0,
                     "a text with a usable font and Height=RelativeToChildren must measure to a non-zero line height");
             }
         });
@@ -68,10 +68,10 @@ public class TextRuntimeFontCachingRegressionTests : BaseTestClass
         WithFont18ArialCached(() =>
         {
             TextRuntime first = NewArial18Text("List item 1");
-            first.GetAbsoluteHeight().ShouldBe(21);
+            first.AbsoluteHeight.ShouldBe(21);
 
             TextRuntime second = NewArial18Text("List item 2");
-            second.GetAbsoluteHeight().ShouldBe(21);
+            second.AbsoluteHeight.ShouldBe(21);
         });
     }
 
@@ -159,9 +159,9 @@ public class TextRuntimeFontCachingRegressionTests : BaseTestClass
 
             stack.UpdateLayout();
 
-            first.GetAbsoluteHeight().ShouldBe(21);
-            second.GetAbsoluteHeight().ShouldBe(21);
-            stack.GetAbsoluteHeight().ShouldBe(42);
+            first.AbsoluteHeight.ShouldBe(21);
+            second.AbsoluteHeight.ShouldBe(21);
+            stack.AbsoluteHeight.ShouldBe(42);
             second.AbsoluteTop.ShouldBe(first.AbsoluteTop + 21);
         });
     }

@@ -36,10 +36,10 @@ public class TextRuntimeTests : BaseTestClass
         sut.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         sut.Width = 0;
         sut.Text = "Short";
-        float shortWidth = sut.GetAbsoluteWidth();
+        float shortWidth = sut.AbsoluteWidth;
 
         sut.Text = "This is much longer";
-        float longWidth = sut.GetAbsoluteWidth();
+        float longWidth = sut.AbsoluteWidth;
 
         longWidth.ShouldBeGreaterThan(shortWidth);
     }
@@ -51,11 +51,11 @@ public class TextRuntimeTests : BaseTestClass
 
         textRuntime.Text = "Hello";
 
-        var widthBefore = textRuntime.GetAbsoluteWidth();
+        var widthBefore = textRuntime.AbsoluteWidth;
 
         textRuntime.Text = "Hello\na";
 
-        var widthAfter = textRuntime.GetAbsoluteWidth();
+        var widthAfter = textRuntime.AbsoluteWidth;
 
         widthBefore.ShouldBe(widthAfter, "Because a trailing newline should not affect the width of a text");
     }
@@ -216,7 +216,7 @@ public class TextRuntimeTests : BaseTestClass
             setterFont.Texture.Width.ShouldBe(stateFont.Texture.Width);
             setterFont.Texture.Height.ShouldBe(stateFont.Texture.Height);
             // ... and on measured size (catches a wrong font size, which atlas size alone would not).
-            viaSetter.GetAbsoluteWidth().ShouldBe(viaState.GetAbsoluteWidth());
+            viaSetter.AbsoluteWidth.ShouldBe(viaState.AbsoluteWidth);
         }
         finally
         {
@@ -651,7 +651,7 @@ public class TextRuntimeTests : BaseTestClass
             text.SetProperty("FontSize", 18);
             text.Text = "List item 1";
 
-            text.GetAbsoluteHeight().ShouldBe(21);
+            text.AbsoluteHeight.ShouldBe(21);
         });
     }
 

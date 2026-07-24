@@ -9,7 +9,7 @@ namespace MonoGameGum.Tests.Forms;
 
 /// <summary>
 /// Regression coverage for issue #2781 — ScrollBar's thumb is sized in absolute pixels
-/// from a snapshot of <see cref="GraphicalUiElement.GetAbsoluteHeight"/>/<see cref="GraphicalUiElement.GetAbsoluteWidth"/>
+/// from a snapshot of <see cref="GraphicalUiElement.AbsoluteHeight"/>/<see cref="GraphicalUiElement.AbsoluteWidth"/>
 /// on Track. If Track resizes after construction (parent resize, sibling resize, layout reflow,
 /// or direct Track manipulation) and nothing re-runs UpdateThumbSize, the thumb keeps the old
 /// absolute size. The fix is to subscribe to Track.SizeChanged so any Track resize — from any
@@ -43,8 +43,8 @@ public class ScrollBarThumbResizeTests : BaseTestClass
         scrollBar.Value = 50;
         visual.UpdateLayout();
 
-        float trackHeightBefore = scrollBar.Track!.GetAbsoluteHeight();
-        float thumbHeightBefore = GetThumbVisual(scrollBar).GetAbsoluteHeight();
+        float trackHeightBefore = scrollBar.Track!.AbsoluteHeight;
+        float thumbHeightBefore = GetThumbVisual(scrollBar).AbsoluteHeight;
         float rangeBefore = trackHeightBefore - thumbHeightBefore;
         GetThumbVisual(scrollBar).Y.ShouldBe(rangeBefore * 0.5f, 0.5f,
             "Sanity: thumb Y at Value=50 should sit at midpoint of (trackHeight - thumbHeight).");
@@ -52,8 +52,8 @@ public class ScrollBarThumbResizeTests : BaseTestClass
         visual.Height = 256;
         visual.UpdateLayout();
 
-        float trackHeightAfter = scrollBar.Track.GetAbsoluteHeight();
-        float thumbHeightAfter = GetThumbVisual(scrollBar).GetAbsoluteHeight();
+        float trackHeightAfter = scrollBar.Track.AbsoluteHeight;
+        float thumbHeightAfter = GetThumbVisual(scrollBar).AbsoluteHeight;
         float rangeAfter = trackHeightAfter - thumbHeightAfter;
         GetThumbVisual(scrollBar).Y.ShouldBe(rangeAfter * 0.5f, 0.5f,
             "After Track resize, thumb Y must reflect the new (trackHeight - thumbHeight), not the cached old range.");
@@ -76,7 +76,7 @@ public class ScrollBarThumbResizeTests : BaseTestClass
         scrollBar.Maximum = 10;
         scrollBar.ViewportSize = 10;          // ratio 0.5, initial thumb = 80 * 0.5 = 40
         visual.UpdateLayout();
-        GetThumbVisual(scrollBar).GetAbsoluteHeight().ShouldBe(40f, 0.5f,
+        GetThumbVisual(scrollBar).AbsoluteHeight.ShouldBe(40f, 0.5f,
             "Sanity precondition: initial thumb should be 40, well above the 16 floor.");
 
         // Shrink Track to a size where (trackSize * ratio) = 10, which is below MinimumThumbSize.
@@ -84,7 +84,7 @@ public class ScrollBarThumbResizeTests : BaseTestClass
         scrollBar.Track.Height = 20;
         visual.UpdateLayout();
 
-        GetThumbVisual(scrollBar).GetAbsoluteHeight().ShouldBe(16f, 0.01f,
+        GetThumbVisual(scrollBar).AbsoluteHeight.ShouldBe(16f, 0.01f,
             "After Track shrink, thumb must be re-clamped to MinimumThumbSize (16), not left at the stale 40.");
     }
 
@@ -104,16 +104,16 @@ public class ScrollBarThumbResizeTests : BaseTestClass
         scrollBar.ViewportSize = 40;
         visual.UpdateLayout();
 
-        float thumbWidthBefore = GetThumbVisual(scrollBar).GetAbsoluteWidth();
+        float thumbWidthBefore = GetThumbVisual(scrollBar).AbsoluteWidth;
 
         visual.Width = 256;
         visual.UpdateLayout();
 
-        float thumbWidthAfter = GetThumbVisual(scrollBar).GetAbsoluteWidth();
+        float thumbWidthAfter = GetThumbVisual(scrollBar).AbsoluteWidth;
         thumbWidthAfter.ShouldBeGreaterThan(thumbWidthBefore,
             "Thumb width must grow when the ScrollBar Visual (and therefore Track) widens.");
 
-        float trackWidthAfter = scrollBar.Track!.GetAbsoluteWidth();
+        float trackWidthAfter = scrollBar.Track!.AbsoluteWidth;
         double expectedRatio = 40.0 / (100.0 + 40.0);
         thumbWidthAfter.ShouldBe((float)(trackWidthAfter * expectedRatio), 0.5f,
             "Thumb width should equal trackWidth * (ViewportSize / valueRange) after Visual resize.");
@@ -133,16 +133,16 @@ public class ScrollBarThumbResizeTests : BaseTestClass
         scrollBar.ViewportSize = 40;
         visual.UpdateLayout();
 
-        float thumbHeightBefore = GetThumbVisual(scrollBar).GetAbsoluteHeight();
+        float thumbHeightBefore = GetThumbVisual(scrollBar).AbsoluteHeight;
 
         visual.Height = 256;
         visual.UpdateLayout();
 
-        float thumbHeightAfter = GetThumbVisual(scrollBar).GetAbsoluteHeight();
+        float thumbHeightAfter = GetThumbVisual(scrollBar).AbsoluteHeight;
         thumbHeightAfter.ShouldBeGreaterThan(thumbHeightBefore,
             "Thumb height must grow when the ScrollBar Visual (and therefore Track) grows.");
 
-        float trackHeightAfter = scrollBar.Track!.GetAbsoluteHeight();
+        float trackHeightAfter = scrollBar.Track!.AbsoluteHeight;
         double expectedRatio = 40.0 / (100.0 + 40.0);
         thumbHeightAfter.ShouldBe((float)(trackHeightAfter * expectedRatio), 0.5f,
             "Thumb height should equal trackHeight * (ViewportSize / valueRange) after Visual resize.");
@@ -162,13 +162,13 @@ public class ScrollBarThumbResizeTests : BaseTestClass
         scrollBar.ViewportSize = 40;
         visual.UpdateLayout();
 
-        float thumbWidthBefore = GetThumbVisual(scrollBar).GetAbsoluteWidth();
+        float thumbWidthBefore = GetThumbVisual(scrollBar).AbsoluteWidth;
 
         scrollBar.Track!.WidthUnits = DimensionUnitType.Absolute;
         scrollBar.Track.Width = 200;
         visual.UpdateLayout();
 
-        float thumbWidthAfter = GetThumbVisual(scrollBar).GetAbsoluteWidth();
+        float thumbWidthAfter = GetThumbVisual(scrollBar).AbsoluteWidth;
         thumbWidthAfter.ShouldNotBe(thumbWidthBefore,
             "Thumb width must change when Track is resized directly.");
 
@@ -194,7 +194,7 @@ public class ScrollBarThumbResizeTests : BaseTestClass
         scrollBar.ViewportSize = 40;
         visual.UpdateLayout();
 
-        float thumbHeightBefore = GetThumbVisual(scrollBar).GetAbsoluteHeight();
+        float thumbHeightBefore = GetThumbVisual(scrollBar).AbsoluteHeight;
 
         // Override Track sizing to be absolute so Visual size doesn't dictate it. Then resize
         // Track. This is the path the original Visual.SizeChanged hook fails to cover.
@@ -202,7 +202,7 @@ public class ScrollBarThumbResizeTests : BaseTestClass
         scrollBar.Track.Height = 200;
         visual.UpdateLayout();
 
-        float thumbHeightAfter = GetThumbVisual(scrollBar).GetAbsoluteHeight();
+        float thumbHeightAfter = GetThumbVisual(scrollBar).AbsoluteHeight;
         thumbHeightAfter.ShouldNotBe(thumbHeightBefore,
             "Thumb height must change when Track is resized directly (independent of Visual size).");
 

@@ -897,7 +897,7 @@ public class GridTests : BaseTestClass
         GraphicalUiElement rowContainer = (GraphicalUiElement)grid.Visual.Children[0];
         rowContainer.UpdateLayout();
 
-        rowContainer.GetAbsoluteHeight().ShouldBe(60f);
+        rowContainer.AbsoluteHeight.ShouldBe(60f);
     }
 
     [Fact]
@@ -1592,7 +1592,7 @@ public class GridTests : BaseTestClass
         Panel child = new Panel();
         grid.AddChild(child, row: 0, column: 0);
 
-        // In unit test context, GetAbsoluteHeight() returns 0.
+        // In unit test context, AbsoluteHeight returns 0.
         // MinHeight (50) > computed (0), so clamping fires and sets Absolute height.
         GraphicalUiElement rowContainer = (GraphicalUiElement)grid.Visual.Children[0];
         rowContainer.HeightUnits.ShouldBe(DimensionUnitType.Absolute);

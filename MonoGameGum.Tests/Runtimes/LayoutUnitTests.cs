@@ -68,7 +68,7 @@ public class LayoutUnitTests : BaseTestClass
         element.Width = -10;
         element.WidthUnits = DimensionUnitType.Absolute;
 
-        element.GetAbsoluteWidth().ShouldBe(-10);
+        element.AbsoluteWidth.ShouldBe(-10);
     }
 
     [Fact]
@@ -78,7 +78,7 @@ public class LayoutUnitTests : BaseTestClass
         element.Width = 150;
         element.WidthUnits = DimensionUnitType.Absolute;
 
-        element.GetAbsoluteWidth().ShouldBe(150);
+        element.AbsoluteWidth.ShouldBe(150);
     }
 
     [Fact]
@@ -88,7 +88,7 @@ public class LayoutUnitTests : BaseTestClass
         element.Width = 0;
         element.WidthUnits = DimensionUnitType.Absolute;
 
-        element.GetAbsoluteWidth().ShouldBe(0);
+        element.AbsoluteWidth.ShouldBe(0);
     }
 
     [Fact]
@@ -103,7 +103,7 @@ public class LayoutUnitTests : BaseTestClass
         child.Width = 100;
         child.WidthUnits = DimensionUnitType.PercentageOfParent;
 
-        child.GetAbsoluteWidth().ShouldBe(400);
+        child.AbsoluteWidth.ShouldBe(400);
     }
 
     [Fact]
@@ -118,7 +118,7 @@ public class LayoutUnitTests : BaseTestClass
         child.Width = 50;
         child.WidthUnits = DimensionUnitType.PercentageOfParent;
 
-        child.GetAbsoluteWidth().ShouldBe(200);
+        child.AbsoluteWidth.ShouldBe(200);
     }
 
     [Fact]
@@ -133,7 +133,7 @@ public class LayoutUnitTests : BaseTestClass
         child.Width = 50;
         child.WidthUnits = DimensionUnitType.PercentageOfParent;
 
-        child.GetAbsoluteWidth().ShouldBe(0);
+        child.AbsoluteWidth.ShouldBe(0);
     }
 
     [Fact]
@@ -148,7 +148,7 @@ public class LayoutUnitTests : BaseTestClass
         child.Width = 20;
         child.WidthUnits = DimensionUnitType.RelativeToParent;
 
-        child.GetAbsoluteWidth().ShouldBe(220);
+        child.AbsoluteWidth.ShouldBe(220);
     }
 
     [Fact]
@@ -163,7 +163,7 @@ public class LayoutUnitTests : BaseTestClass
         child.Width = -20;
         child.WidthUnits = DimensionUnitType.RelativeToParent;
 
-        child.GetAbsoluteWidth().ShouldBe(180);
+        child.AbsoluteWidth.ShouldBe(180);
     }
 
     [Fact]
@@ -178,7 +178,7 @@ public class LayoutUnitTests : BaseTestClass
         child.Width = 0;
         child.WidthUnits = DimensionUnitType.RelativeToParent;
 
-        child.GetAbsoluteWidth().ShouldBe(200);
+        child.AbsoluteWidth.ShouldBe(200);
     }
 
     [Fact]
@@ -197,7 +197,7 @@ public class LayoutUnitTests : BaseTestClass
         child.WidthUnits = DimensionUnitType.ScreenPixel;
 
         // Should be the raw value, not scaled to parent
-        child.GetAbsoluteWidth().ShouldBe(200);
+        child.AbsoluteWidth.ShouldBe(200);
     }
 
     #endregion
@@ -211,7 +211,7 @@ public class LayoutUnitTests : BaseTestClass
         element.Height = -10;
         element.HeightUnits = DimensionUnitType.Absolute;
 
-        element.GetAbsoluteHeight().ShouldBe(-10);
+        element.AbsoluteHeight.ShouldBe(-10);
     }
 
     [Fact]
@@ -221,7 +221,7 @@ public class LayoutUnitTests : BaseTestClass
         element.Height = 150;
         element.HeightUnits = DimensionUnitType.Absolute;
 
-        element.GetAbsoluteHeight().ShouldBe(150);
+        element.AbsoluteHeight.ShouldBe(150);
     }
 
     [Fact]
@@ -231,7 +231,7 @@ public class LayoutUnitTests : BaseTestClass
         element.Height = 0;
         element.HeightUnits = DimensionUnitType.Absolute;
 
-        element.GetAbsoluteHeight().ShouldBe(0);
+        element.AbsoluteHeight.ShouldBe(0);
     }
 
     [Fact]
@@ -246,7 +246,7 @@ public class LayoutUnitTests : BaseTestClass
         child.Height = 100;
         child.HeightUnits = DimensionUnitType.PercentageOfParent;
 
-        child.GetAbsoluteHeight().ShouldBe(400);
+        child.AbsoluteHeight.ShouldBe(400);
     }
 
     [Fact]
@@ -261,7 +261,7 @@ public class LayoutUnitTests : BaseTestClass
         child.Height = 50;
         child.HeightUnits = DimensionUnitType.PercentageOfParent;
 
-        child.GetAbsoluteHeight().ShouldBe(200);
+        child.AbsoluteHeight.ShouldBe(200);
     }
 
     [Fact]
@@ -276,7 +276,7 @@ public class LayoutUnitTests : BaseTestClass
         child.Height = 50;
         child.HeightUnits = DimensionUnitType.PercentageOfParent;
 
-        child.GetAbsoluteHeight().ShouldBe(0);
+        child.AbsoluteHeight.ShouldBe(0);
     }
 
     [Fact]
@@ -291,7 +291,7 @@ public class LayoutUnitTests : BaseTestClass
         child.Height = 20;
         child.HeightUnits = DimensionUnitType.RelativeToParent;
 
-        child.GetAbsoluteHeight().ShouldBe(220);
+        child.AbsoluteHeight.ShouldBe(220);
     }
 
     [Fact]
@@ -306,7 +306,7 @@ public class LayoutUnitTests : BaseTestClass
         child.Height = -20;
         child.HeightUnits = DimensionUnitType.RelativeToParent;
 
-        child.GetAbsoluteHeight().ShouldBe(180);
+        child.AbsoluteHeight.ShouldBe(180);
     }
 
     [Fact]
@@ -321,7 +321,7 @@ public class LayoutUnitTests : BaseTestClass
         child.Height = 0;
         child.HeightUnits = DimensionUnitType.RelativeToParent;
 
-        child.GetAbsoluteHeight().ShouldBe(200);
+        child.AbsoluteHeight.ShouldBe(200);
     }
 
     [Fact]
@@ -336,7 +336,7 @@ public class LayoutUnitTests : BaseTestClass
         child.Height = 200;
         child.HeightUnits = DimensionUnitType.ScreenPixel;
 
-        child.GetAbsoluteHeight().ShouldBe(200);
+        child.AbsoluteHeight.ShouldBe(200);
     }
 
     #endregion
@@ -355,7 +355,7 @@ public class LayoutUnitTests : BaseTestClass
         child.HeightUnits = DimensionUnitType.Absolute;
         parent.AddChild(child);
 
-        parent.GetAbsoluteHeight().ShouldBe(120);
+        parent.AbsoluteHeight.ShouldBe(120);
     }
 
     [Fact]
@@ -376,7 +376,7 @@ public class LayoutUnitTests : BaseTestClass
         invisibleChild.Visible = false;
         parent.AddChild(invisibleChild);
 
-        parent.GetAbsoluteHeight().ShouldBe(80);
+        parent.AbsoluteHeight.ShouldBe(80);
     }
 
     [Fact]
@@ -392,7 +392,7 @@ public class LayoutUnitTests : BaseTestClass
         child.HeightUnits = DimensionUnitType.Absolute;
         parent.AddChild(child);
 
-        parent.GetAbsoluteHeight().ShouldBe(150);
+        parent.AbsoluteHeight.ShouldBe(150);
     }
 
     [Fact]
@@ -412,7 +412,7 @@ public class LayoutUnitTests : BaseTestClass
         child2.HeightUnits = DimensionUnitType.Absolute;
         parent.AddChild(child2);
 
-        parent.GetAbsoluteHeight().ShouldBe(120);
+        parent.AbsoluteHeight.ShouldBe(120);
     }
 
     [Fact]
@@ -422,7 +422,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.Height = 10;
         parent.HeightUnits = DimensionUnitType.RelativeToChildren;
 
-        parent.GetAbsoluteHeight().ShouldBe(10);
+        parent.AbsoluteHeight.ShouldBe(10);
     }
 
     [Fact]
@@ -437,10 +437,10 @@ public class LayoutUnitTests : BaseTestClass
         child.HeightUnits = DimensionUnitType.Absolute;
         parent.AddChild(child);
 
-        parent.GetAbsoluteHeight().ShouldBe(100);
+        parent.AbsoluteHeight.ShouldBe(100);
 
         child.Height = 200;
-        parent.GetAbsoluteHeight().ShouldBe(200);
+        parent.AbsoluteHeight.ShouldBe(200);
     }
 
     [Fact]
@@ -464,18 +464,18 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // Baseline: parent and grandparent should reflect the child's height
-        parent.GetAbsoluteHeight().ShouldBe(100);
-        grandparent.GetAbsoluteHeight().ShouldBe(100);
+        parent.AbsoluteHeight.ShouldBe(100);
+        grandparent.AbsoluteHeight.ShouldBe(100);
 
         // Hide the child — parent and grandparent should shrink to 0
         child.Visible = false;
-        parent.GetAbsoluteHeight().ShouldBe(0);
-        grandparent.GetAbsoluteHeight().ShouldBe(0);
+        parent.AbsoluteHeight.ShouldBe(0);
+        grandparent.AbsoluteHeight.ShouldBe(0);
 
         // Show the child again — parent and grandparent should restore to 100
         child.Visible = true;
-        parent.GetAbsoluteHeight().ShouldBe(100);
-        grandparent.GetAbsoluteHeight().ShouldBe(100);
+        parent.AbsoluteHeight.ShouldBe(100);
+        grandparent.AbsoluteHeight.ShouldBe(100);
     }
 
     [Fact]
@@ -490,7 +490,7 @@ public class LayoutUnitTests : BaseTestClass
         child.WidthUnits = DimensionUnitType.Absolute;
         parent.AddChild(child);
 
-        parent.GetAbsoluteWidth().ShouldBe(120);
+        parent.AbsoluteWidth.ShouldBe(120);
     }
 
     [Fact]
@@ -511,7 +511,7 @@ public class LayoutUnitTests : BaseTestClass
         invisibleChild.Visible = false;
         parent.AddChild(invisibleChild);
 
-        parent.GetAbsoluteWidth().ShouldBe(80);
+        parent.AbsoluteWidth.ShouldBe(80);
     }
 
     [Fact]
@@ -527,7 +527,7 @@ public class LayoutUnitTests : BaseTestClass
         child.WidthUnits = DimensionUnitType.Absolute;
         parent.AddChild(child);
 
-        parent.GetAbsoluteWidth().ShouldBe(150);
+        parent.AbsoluteWidth.ShouldBe(150);
     }
 
     [Fact]
@@ -547,7 +547,7 @@ public class LayoutUnitTests : BaseTestClass
         child2.WidthUnits = DimensionUnitType.Absolute;
         parent.AddChild(child2);
 
-        parent.GetAbsoluteWidth().ShouldBe(120);
+        parent.AbsoluteWidth.ShouldBe(120);
     }
 
     [Fact]
@@ -557,7 +557,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.Width = 10;
         parent.WidthUnits = DimensionUnitType.RelativeToChildren;
 
-        parent.GetAbsoluteWidth().ShouldBe(10);
+        parent.AbsoluteWidth.ShouldBe(10);
     }
 
     [Fact]
@@ -573,10 +573,10 @@ public class LayoutUnitTests : BaseTestClass
         child.WidthUnits = DimensionUnitType.Absolute;
         parent.AddChild(child);
 
-        parent.GetAbsoluteWidth().ShouldBe(110);
+        parent.AbsoluteWidth.ShouldBe(110);
 
         child.X = 50;
-        parent.GetAbsoluteWidth().ShouldBe(150);
+        parent.AbsoluteWidth.ShouldBe(150);
     }
 
     [Fact]
@@ -591,10 +591,10 @@ public class LayoutUnitTests : BaseTestClass
         child.WidthUnits = DimensionUnitType.Absolute;
         parent.AddChild(child);
 
-        parent.GetAbsoluteWidth().ShouldBe(100);
+        parent.AbsoluteWidth.ShouldBe(100);
 
         child.Width = 200;
-        parent.GetAbsoluteWidth().ShouldBe(200);
+        parent.AbsoluteWidth.ShouldBe(200);
     }
 
     #endregion
@@ -610,7 +610,7 @@ public class LayoutUnitTests : BaseTestClass
         element.Height = 50;
         element.HeightUnits = DimensionUnitType.PercentageOfOtherDimension;
 
-        element.GetAbsoluteHeight().ShouldBe(100);
+        element.AbsoluteHeight.ShouldBe(100);
     }
 
     [Fact]
@@ -622,7 +622,7 @@ public class LayoutUnitTests : BaseTestClass
         element.Height = 100;
         element.HeightUnits = DimensionUnitType.PercentageOfOtherDimension;
 
-        element.GetAbsoluteHeight().ShouldBe(200);
+        element.AbsoluteHeight.ShouldBe(200);
     }
 
     [Fact]
@@ -634,7 +634,7 @@ public class LayoutUnitTests : BaseTestClass
         element.Width = 50;
         element.WidthUnits = DimensionUnitType.PercentageOfOtherDimension;
 
-        element.GetAbsoluteWidth().ShouldBe(100);
+        element.AbsoluteWidth.ShouldBe(100);
     }
 
     [Fact]
@@ -646,7 +646,7 @@ public class LayoutUnitTests : BaseTestClass
         element.Width = 100;
         element.WidthUnits = DimensionUnitType.PercentageOfOtherDimension;
 
-        element.GetAbsoluteWidth().ShouldBe(200);
+        element.AbsoluteWidth.ShouldBe(200);
     }
 
     [Fact]
@@ -658,10 +658,10 @@ public class LayoutUnitTests : BaseTestClass
         element.Width = 100;
         element.WidthUnits = DimensionUnitType.PercentageOfOtherDimension;
 
-        element.GetAbsoluteWidth().ShouldBe(200);
+        element.AbsoluteWidth.ShouldBe(200);
 
         element.Height = 300;
-        element.GetAbsoluteWidth().ShouldBe(300);
+        element.AbsoluteWidth.ShouldBe(300);
     }
 
     #endregion
@@ -677,7 +677,7 @@ public class LayoutUnitTests : BaseTestClass
         element.Height = 100;
         element.HeightUnits = DimensionUnitType.AbsoluteMultipliedByFontScale;
 
-        element.GetAbsoluteHeight().ShouldBe(150);
+        element.AbsoluteHeight.ShouldBe(150);
     }
 
     [Fact]
@@ -689,7 +689,7 @@ public class LayoutUnitTests : BaseTestClass
         element.Height = 100;
         element.HeightUnits = DimensionUnitType.AbsoluteMultipliedByFontScale;
 
-        element.GetAbsoluteHeight().ShouldBe(200);
+        element.AbsoluteHeight.ShouldBe(200);
     }
 
     [Fact]
@@ -701,7 +701,7 @@ public class LayoutUnitTests : BaseTestClass
         element.Width = 100;
         element.WidthUnits = DimensionUnitType.AbsoluteMultipliedByFontScale;
 
-        element.GetAbsoluteWidth().ShouldBe(100);
+        element.AbsoluteWidth.ShouldBe(100);
     }
 
     [Fact]
@@ -713,7 +713,7 @@ public class LayoutUnitTests : BaseTestClass
         element.Width = 100;
         element.WidthUnits = DimensionUnitType.AbsoluteMultipliedByFontScale;
 
-        element.GetAbsoluteWidth().ShouldBe(200);
+        element.AbsoluteWidth.ShouldBe(200);
     }
 
     #endregion
@@ -738,8 +738,8 @@ public class LayoutUnitTests : BaseTestClass
         child2.HeightUnits = DimensionUnitType.Ratio;
         parent.AddChild(child2);
 
-        child1.GetAbsoluteHeight().ShouldBe(100);
-        child2.GetAbsoluteHeight().ShouldBe(200);
+        child1.AbsoluteHeight.ShouldBe(100);
+        child2.AbsoluteHeight.ShouldBe(200);
     }
 
     [Fact]
@@ -760,7 +760,7 @@ public class LayoutUnitTests : BaseTestClass
         ratioChild.HeightUnits = DimensionUnitType.Ratio;
         parent.AddChild(ratioChild);
 
-        ratioChild.GetAbsoluteHeight().ShouldBe(200);
+        ratioChild.AbsoluteHeight.ShouldBe(200);
     }
 
     [Fact]
@@ -781,7 +781,7 @@ public class LayoutUnitTests : BaseTestClass
         ratioChild.HeightUnits = DimensionUnitType.Ratio;
         parent.AddChild(ratioChild);
 
-        ratioChild.GetAbsoluteHeight().ShouldBe(150);
+        ratioChild.AbsoluteHeight.ShouldBe(150);
     }
 
     [Fact]
@@ -806,9 +806,9 @@ public class LayoutUnitTests : BaseTestClass
         child3.WidthUnits = DimensionUnitType.Ratio;
         parent.AddChild(child3);
 
-        child1.GetAbsoluteWidth().ShouldBe(100);
-        child2.GetAbsoluteWidth().ShouldBe(100);
-        child3.GetAbsoluteWidth().ShouldBe(100);
+        child1.AbsoluteWidth.ShouldBe(100);
+        child2.AbsoluteWidth.ShouldBe(100);
+        child3.AbsoluteWidth.ShouldBe(100);
     }
 
     [Fact]
@@ -833,9 +833,9 @@ public class LayoutUnitTests : BaseTestClass
         child3.WidthUnits = DimensionUnitType.Ratio;
         parent.AddChild(child3);
 
-        child1.GetAbsoluteWidth().ShouldBe(100);
-        child2.GetAbsoluteWidth().ShouldBe(200);
-        child3.GetAbsoluteWidth().ShouldBe(300);
+        child1.AbsoluteWidth.ShouldBe(100);
+        child2.AbsoluteWidth.ShouldBe(200);
+        child3.AbsoluteWidth.ShouldBe(300);
     }
 
     [Fact]
@@ -861,8 +861,8 @@ public class LayoutUnitTests : BaseTestClass
         child3.WidthUnits = DimensionUnitType.Ratio;
         parent.AddChild(child3);
 
-        child1.GetAbsoluteWidth().ShouldBe(150);
-        child3.GetAbsoluteWidth().ShouldBe(150);
+        child1.AbsoluteWidth.ShouldBe(150);
+        child3.AbsoluteWidth.ShouldBe(150);
     }
 
     [Fact]
@@ -882,7 +882,7 @@ public class LayoutUnitTests : BaseTestClass
         ratioChild.WidthUnits = DimensionUnitType.Ratio;
         parent.AddChild(ratioChild);
 
-        ratioChild.GetAbsoluteWidth().ShouldBe(0);
+        ratioChild.AbsoluteWidth.ShouldBe(0);
     }
 
     #endregion
@@ -1447,7 +1447,7 @@ public class LayoutUnitTests : BaseTestClass
 
         child1.AbsoluteTop.ShouldBe(0);
         child2.AbsoluteTop.ShouldBe(100);
-        child2.GetAbsoluteHeight().ShouldBe(200);
+        child2.AbsoluteHeight.ShouldBe(200);
     }
 
     [Fact]
@@ -1708,7 +1708,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child3);
 
         // Parent height should be: 25 + (0 + 25) * 2 = 75
-        parent.GetAbsoluteHeight().ShouldBe(75);
+        parent.AbsoluteHeight.ShouldBe(75);
     }
 
     [Fact]
@@ -1766,7 +1766,7 @@ public class LayoutUnitTests : BaseTestClass
 
         child1.AbsoluteLeft.ShouldBe(0);
         child2.AbsoluteLeft.ShouldBe(100);
-        child2.GetAbsoluteWidth().ShouldBe(100);
+        child2.AbsoluteWidth.ShouldBe(100);
     }
 
     [Fact]
@@ -2129,7 +2129,7 @@ public class LayoutUnitTests : BaseTestClass
         child3.HeightUnits = DimensionUnitType.Absolute;
         parent.AddChild(child3);
 
-        parent.GetAbsoluteHeight().ShouldBe(120);
+        parent.AbsoluteHeight.ShouldBe(120);
     }
 
     [Fact]
@@ -2157,7 +2157,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child3);
 
         // 50 + 10 + 50 + 10 + 50 = 170
-        parent.GetAbsoluteHeight().ShouldBe(170);
+        parent.AbsoluteHeight.ShouldBe(170);
     }
 
     [Fact]
@@ -2183,7 +2183,7 @@ public class LayoutUnitTests : BaseTestClass
         child3.HeightUnits = DimensionUnitType.Absolute;
         parent.AddChild(child3);
 
-        parent.GetAbsoluteHeight().ShouldBe(150);
+        parent.AbsoluteHeight.ShouldBe(150);
     }
 
     [Fact]
@@ -2211,7 +2211,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child3);
 
         // 50 + 10 + 50 + 10 + 50 = 170
-        parent.GetAbsoluteWidth().ShouldBe(170);
+        parent.AbsoluteWidth.ShouldBe(170);
     }
 
     [Fact]
@@ -2237,7 +2237,7 @@ public class LayoutUnitTests : BaseTestClass
         child3.WidthUnits = DimensionUnitType.Absolute;
         parent.AddChild(child3);
 
-        parent.GetAbsoluteWidth().ShouldBe(150);
+        parent.AbsoluteWidth.ShouldBe(150);
     }
 
     [Fact]
@@ -2271,7 +2271,7 @@ public class LayoutUnitTests : BaseTestClass
         child3.WidthUnits = DimensionUnitType.Absolute;
         parent.AddChild(child3);
 
-        parent.GetAbsoluteWidth().ShouldBe(450);
+        parent.AbsoluteWidth.ShouldBe(450);
     }
 
     [Fact]
@@ -2304,7 +2304,7 @@ public class LayoutUnitTests : BaseTestClass
         child3.HeightUnits = DimensionUnitType.Absolute;
         parent.AddChild(child3);
 
-        parent.GetAbsoluteHeight().ShouldBe(450);
+        parent.AbsoluteHeight.ShouldBe(450);
     }
 
     [Fact]
@@ -2329,7 +2329,7 @@ public class LayoutUnitTests : BaseTestClass
         child.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
         parent.AddChild(child);
 
-        parent.GetAbsoluteHeight().ShouldBe(44);
+        parent.AbsoluteHeight.ShouldBe(44);
     }
 
     [Fact]
@@ -2398,7 +2398,7 @@ public class LayoutUnitTests : BaseTestClass
         child.XUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
         parent.AddChild(child);
 
-        parent.GetAbsoluteWidth().ShouldBe(44);
+        parent.AbsoluteWidth.ShouldBe(44);
     }
 
     [Fact]
@@ -2430,7 +2430,7 @@ public class LayoutUnitTests : BaseTestClass
         child3.HeightUnits = DimensionUnitType.Absolute;
         parent.AddChild(child3);
 
-        parent.GetAbsoluteWidth().ShouldBe(120);
+        parent.AbsoluteWidth.ShouldBe(120);
     }
 
     [Fact]
@@ -2452,14 +2452,14 @@ public class LayoutUnitTests : BaseTestClass
         child2.WidthUnits = DimensionUnitType.Absolute;
         parent.AddChild(child2);
 
-        parent.GetAbsoluteWidth().ShouldBe(57);
+        parent.AbsoluteWidth.ShouldBe(57);
 
         child2.Visible = false;
-        var widthWithLastHidden = parent.GetAbsoluteWidth();
+        var widthWithLastHidden = parent.AbsoluteWidth;
         child2.Visible = true;
 
         child1.Visible = false;
-        var widthWithFirstHidden = parent.GetAbsoluteWidth();
+        var widthWithFirstHidden = parent.AbsoluteWidth;
 
         widthWithFirstHidden.ShouldBe(widthWithLastHidden);
         widthWithFirstHidden.ShouldBe(21);
@@ -2485,16 +2485,16 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child2);
 
         // Both visible: 21 + 15 + 21 = 57
-        parent.GetAbsoluteHeight().ShouldBe(57);
+        parent.AbsoluteHeight.ShouldBe(57);
 
         // Hide last child -> only child1 contributes -> 21
         child2.Visible = false;
-        var heightWithLastHidden = parent.GetAbsoluteHeight();
+        var heightWithLastHidden = parent.AbsoluteHeight;
         child2.Visible = true;
 
         // Hide first child -> only child2 contributes -> should also be 21
         child1.Visible = false;
-        var heightWithFirstHidden = parent.GetAbsoluteHeight();
+        var heightWithFirstHidden = parent.AbsoluteHeight;
 
         heightWithFirstHidden.ShouldBe(heightWithLastHidden);
         heightWithFirstHidden.ShouldBe(21);
@@ -2649,10 +2649,10 @@ public class LayoutUnitTests : BaseTestClass
         child.X = 0;
         parent.AddChild(child);
 
-        parent.GetAbsoluteWidth().ShouldBe(100);
+        parent.AbsoluteWidth.ShouldBe(100);
 
         child.X = 50;
-        parent.GetAbsoluteWidth().ShouldBe(150);
+        parent.AbsoluteWidth.ShouldBe(150);
     }
 
     [Fact]
@@ -2667,10 +2667,10 @@ public class LayoutUnitTests : BaseTestClass
         child.WidthUnits = DimensionUnitType.Absolute;
         parent.AddChild(child);
 
-        parent.GetAbsoluteWidth().ShouldBe(100);
+        parent.AbsoluteWidth.ShouldBe(100);
 
         child.Width = 200;
-        parent.GetAbsoluteWidth().ShouldBe(200);
+        parent.AbsoluteWidth.ShouldBe(200);
     }
 
     [Fact]
@@ -2690,10 +2690,10 @@ public class LayoutUnitTests : BaseTestClass
         child.WidthUnits = DimensionUnitType.Absolute;
         parent.AddChild(child);
 
-        grandparent.GetAbsoluteWidth().ShouldBe(100);
+        grandparent.AbsoluteWidth.ShouldBe(100);
 
         child.Width = 200;
-        grandparent.GetAbsoluteWidth().ShouldBe(200);
+        grandparent.AbsoluteWidth.ShouldBe(200);
     }
 
     [Fact]
@@ -2713,7 +2713,7 @@ public class LayoutUnitTests : BaseTestClass
         child.WidthUnits = DimensionUnitType.PercentageOfParent;
         parent.AddChild(child);
 
-        child.GetAbsoluteWidth().ShouldBe(100);
+        child.AbsoluteWidth.ShouldBe(100);
     }
 
     [Fact]
@@ -2733,7 +2733,7 @@ public class LayoutUnitTests : BaseTestClass
         child.WidthUnits = DimensionUnitType.PercentageOfParent;
         parent.AddChild(child);
 
-        child.GetAbsoluteWidth().ShouldBe(0);
+        child.AbsoluteWidth.ShouldBe(0);
     }
 
     [Fact]
@@ -2753,10 +2753,10 @@ public class LayoutUnitTests : BaseTestClass
         child.HeightUnits = DimensionUnitType.Absolute;
         parent.AddChild(child);
 
-        grandparent.GetAbsoluteHeight().ShouldBe(100);
+        grandparent.AbsoluteHeight.ShouldBe(100);
 
         child.Height = 150;
-        grandparent.GetAbsoluteHeight().ShouldBe(150);
+        grandparent.AbsoluteHeight.ShouldBe(150);
     }
 
     [Fact]
@@ -2777,7 +2777,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // parent = 400 - 50 = 350, child = 350 - 50 = 300
-        child.GetAbsoluteWidth().ShouldBe(300);
+        child.AbsoluteWidth.ShouldBe(300);
     }
 
     [Fact]
@@ -2792,10 +2792,10 @@ public class LayoutUnitTests : BaseTestClass
         child.WidthUnits = DimensionUnitType.PercentageOfParent;
         parent.AddChild(child);
 
-        child.GetAbsoluteWidth().ShouldBe(200);
+        child.AbsoluteWidth.ShouldBe(200);
 
         parent.Width = 600;
-        child.GetAbsoluteWidth().ShouldBe(300);
+        child.AbsoluteWidth.ShouldBe(300);
     }
 
     [Fact]
@@ -2810,10 +2810,10 @@ public class LayoutUnitTests : BaseTestClass
         child.WidthUnits = DimensionUnitType.RelativeToParent;
         parent.AddChild(child);
 
-        child.GetAbsoluteWidth().ShouldBe(300);
+        child.AbsoluteWidth.ShouldBe(300);
 
         parent.Width = 500;
-        child.GetAbsoluteWidth().ShouldBe(400);
+        child.AbsoluteWidth.ShouldBe(400);
     }
 
     #endregion
@@ -2970,13 +2970,13 @@ public class LayoutUnitTests : BaseTestClass
         child.WidthUnits = DimensionUnitType.PercentageOfParent;
         parent.AddChild(child);
 
-        child.GetAbsoluteWidth().ShouldBe(200);
+        child.AbsoluteWidth.ShouldBe(200);
 
         GraphicalUiElement.IsAllLayoutSuspended = true;
         parent.Width = 600;
 
         // Layout should NOT have updated
-        child.GetAbsoluteWidth().ShouldBe(200);
+        child.AbsoluteWidth.ShouldBe(200);
     }
 
     [Fact]
@@ -2997,7 +2997,7 @@ public class LayoutUnitTests : BaseTestClass
         GraphicalUiElement.IsAllLayoutSuspended = false;
         parent.UpdateLayout();
 
-        child.GetAbsoluteWidth().ShouldBe(300);
+        child.AbsoluteWidth.ShouldBe(300);
     }
 
     [Fact]
@@ -3016,11 +3016,11 @@ public class LayoutUnitTests : BaseTestClass
         parent.Width = 600;
 
         // Layout not yet updated during suspension
-        child.GetAbsoluteWidth().ShouldBe(200);
+        child.AbsoluteWidth.ShouldBe(200);
 
         parent.ResumeLayout();
 
-        child.GetAbsoluteWidth().ShouldBe(300);
+        child.AbsoluteWidth.ShouldBe(300);
     }
 
     [Fact]
@@ -3033,7 +3033,7 @@ public class LayoutUnitTests : BaseTestClass
         // Should not throw
         element.ResumeLayout();
 
-        element.GetAbsoluteWidth().ShouldBe(100);
+        element.AbsoluteWidth.ShouldBe(100);
     }
 
     [Fact]
@@ -3048,13 +3048,13 @@ public class LayoutUnitTests : BaseTestClass
         child.WidthUnits = DimensionUnitType.PercentageOfParent;
         parent.AddChild(child);
 
-        child.GetAbsoluteWidth().ShouldBe(200);
+        child.AbsoluteWidth.ShouldBe(200);
 
         parent.SuspendLayout();
         parent.Width = 800;
 
         // Layout should NOT have updated during suspension
-        child.GetAbsoluteWidth().ShouldBe(200);
+        child.AbsoluteWidth.ShouldBe(200);
     }
 
     #endregion
@@ -3079,7 +3079,7 @@ public class LayoutUnitTests : BaseTestClass
         ratioChild.WidthUnits = DimensionUnitType.Ratio;
         parent.AddChild(ratioChild);
 
-        ratioChild.GetAbsoluteWidth().ShouldBe(300);
+        ratioChild.AbsoluteWidth.ShouldBe(300);
     }
 
     [Fact]
@@ -3100,8 +3100,8 @@ public class LayoutUnitTests : BaseTestClass
         child2.WidthUnits = DimensionUnitType.Ratio;
         parent.AddChild(child2);
 
-        child1.GetAbsoluteWidth().ShouldBe(100);
-        child2.GetAbsoluteWidth().ShouldBe(200);
+        child1.AbsoluteWidth.ShouldBe(100);
+        child2.AbsoluteWidth.ShouldBe(200);
     }
 
     [Fact]
@@ -3122,8 +3122,8 @@ public class LayoutUnitTests : BaseTestClass
         child2.HeightUnits = DimensionUnitType.Ratio;
         parent.AddChild(child2);
 
-        child1.GetAbsoluteHeight().ShouldBe(100);
-        child2.GetAbsoluteHeight().ShouldBe(200);
+        child1.AbsoluteHeight.ShouldBe(100);
+        child2.AbsoluteHeight.ShouldBe(200);
     }
 
     [Fact]
@@ -3144,7 +3144,7 @@ public class LayoutUnitTests : BaseTestClass
         ratioChild.HeightUnits = DimensionUnitType.Ratio;
         parent.AddChild(ratioChild);
 
-        ratioChild.GetAbsoluteHeight().ShouldBe(300);
+        ratioChild.AbsoluteHeight.ShouldBe(300);
     }
 
     [Fact]
@@ -3165,10 +3165,10 @@ public class LayoutUnitTests : BaseTestClass
         ratioChild.HeightUnits = DimensionUnitType.Ratio;
         parent.AddChild(ratioChild);
 
-        ratioChild.GetAbsoluteHeight().ShouldBe(300);
+        ratioChild.AbsoluteHeight.ShouldBe(300);
 
         absoluteChild.Height = 200;
-        ratioChild.GetAbsoluteHeight().ShouldBe(200);
+        ratioChild.AbsoluteHeight.ShouldBe(200);
     }
 
     #endregion
@@ -3282,7 +3282,7 @@ public class LayoutUnitTests : BaseTestClass
         invisibleChild.Visible = false;
         parent.AddChild(invisibleChild);
 
-        parent.GetAbsoluteWidth().ShouldBe(100);
+        parent.AbsoluteWidth.ShouldBe(100);
     }
 
     [Fact]
@@ -3335,12 +3335,12 @@ public class LayoutUnitTests : BaseTestClass
         child3.WidthUnits = DimensionUnitType.Ratio;
         parent.AddChild(child3);
 
-        child1.GetAbsoluteWidth().ShouldBe(100);
+        child1.AbsoluteWidth.ShouldBe(100);
 
         child3.Visible = false;
         // Space now split between two visible children
-        child1.GetAbsoluteWidth().ShouldBe(150);
-        child2.GetAbsoluteWidth().ShouldBe(150);
+        child1.AbsoluteWidth.ShouldBe(150);
+        child2.AbsoluteWidth.ShouldBe(150);
     }
 
     #endregion
@@ -3371,13 +3371,13 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(ratioChild);
 
         absoluteChild.AbsoluteTop.ShouldBe(0);
-        absoluteChild.GetAbsoluteHeight().ShouldBe(100);
+        absoluteChild.AbsoluteHeight.ShouldBe(100);
 
         percentChild.AbsoluteTop.ShouldBe(100);
-        percentChild.GetAbsoluteHeight().ShouldBe(100);
+        percentChild.AbsoluteHeight.ShouldBe(100);
 
         ratioChild.AbsoluteTop.ShouldBe(200);
-        ratioChild.GetAbsoluteHeight().ShouldBe(200);
+        ratioChild.AbsoluteHeight.ShouldBe(200);
     }
 
     [Fact]
@@ -3397,8 +3397,8 @@ public class LayoutUnitTests : BaseTestClass
         percentChild.WidthUnits = DimensionUnitType.PercentageOfParent;
         parent.AddChild(percentChild);
 
-        absoluteChild.GetAbsoluteWidth().ShouldBe(150);
-        percentChild.GetAbsoluteWidth().ShouldBe(200);
+        absoluteChild.AbsoluteWidth.ShouldBe(150);
+        percentChild.AbsoluteWidth.ShouldBe(200);
     }
 
     [Fact]
@@ -3418,8 +3418,8 @@ public class LayoutUnitTests : BaseTestClass
         ratioChild.WidthUnits = DimensionUnitType.Ratio;
         parent.AddChild(ratioChild);
 
-        absoluteChild.GetAbsoluteWidth().ShouldBe(100);
-        ratioChild.GetAbsoluteWidth().ShouldBe(300);
+        absoluteChild.AbsoluteWidth.ShouldBe(100);
+        ratioChild.AbsoluteWidth.ShouldBe(300);
     }
 
     [Fact]
@@ -3439,8 +3439,8 @@ public class LayoutUnitTests : BaseTestClass
         relativeChild.WidthUnits = DimensionUnitType.RelativeToParent;
         parent.AddChild(relativeChild);
 
-        percentChild.GetAbsoluteWidth().ShouldBe(200);
-        relativeChild.GetAbsoluteWidth().ShouldBe(300);
+        percentChild.AbsoluteWidth.ShouldBe(200);
+        relativeChild.AbsoluteWidth.ShouldBe(300);
     }
 
     #endregion
@@ -3459,8 +3459,8 @@ public class LayoutUnitTests : BaseTestClass
         element.Height = 50;
         element.HeightUnits = DimensionUnitType.PercentageOfParent;
 
-        element.GetAbsoluteWidth().ShouldBe(512);
-        element.GetAbsoluteHeight().ShouldBe(384);
+        element.AbsoluteWidth.ShouldBe(512);
+        element.AbsoluteHeight.ShouldBe(384);
     }
 
     [Fact]
@@ -3475,8 +3475,8 @@ public class LayoutUnitTests : BaseTestClass
         element.Height = -100;
         element.HeightUnits = DimensionUnitType.RelativeToParent;
 
-        element.GetAbsoluteWidth().ShouldBe(924);
-        element.GetAbsoluteHeight().ShouldBe(668);
+        element.AbsoluteWidth.ShouldBe(924);
+        element.AbsoluteHeight.ShouldBe(668);
     }
 
     #endregion
@@ -3493,8 +3493,8 @@ public class LayoutUnitTests : BaseTestClass
         orphan.HeightUnits = DimensionUnitType.Absolute;
 
         // Should not throw
-        orphan.GetAbsoluteWidth().ShouldBe(100);
-        orphan.GetAbsoluteHeight().ShouldBe(100);
+        orphan.AbsoluteWidth.ShouldBe(100);
+        orphan.AbsoluteHeight.ShouldBe(100);
     }
 
     [Fact]
@@ -3523,7 +3523,7 @@ public class LayoutUnitTests : BaseTestClass
             expectedWidth *= 0.5f;
         }
 
-        current.GetAbsoluteWidth().ShouldBe(expectedWidth);
+        current.AbsoluteWidth.ShouldBe(expectedWidth);
     }
 
     [Fact]
@@ -3542,8 +3542,8 @@ public class LayoutUnitTests : BaseTestClass
         child.HeightUnits = DimensionUnitType.PercentageOfParent;
         parent.AddChild(child);
 
-        child.GetAbsoluteWidth().ShouldBe(0);
-        child.GetAbsoluteHeight().ShouldBe(0);
+        child.AbsoluteWidth.ShouldBe(0);
+        child.AbsoluteHeight.ShouldBe(0);
     }
 
     [Fact]
@@ -3562,8 +3562,8 @@ public class LayoutUnitTests : BaseTestClass
         child.HeightUnits = DimensionUnitType.RelativeToParent;
         parent.AddChild(child);
 
-        child.GetAbsoluteWidth().ShouldBe(-10);
-        child.GetAbsoluteHeight().ShouldBe(-10);
+        child.AbsoluteWidth.ShouldBe(-10);
+        child.AbsoluteHeight.ShouldBe(-10);
     }
 
     [Fact]
@@ -3579,7 +3579,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // 50 + (-100) = -50
-        child.GetAbsoluteHeight().ShouldBe(-50);
+        child.AbsoluteHeight.ShouldBe(-50);
     }
 
     [Fact]
@@ -3595,7 +3595,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // 50 + (-100) = -50
-        child.GetAbsoluteWidth().ShouldBe(-50);
+        child.AbsoluteWidth.ShouldBe(-50);
     }
 
     [Fact]
@@ -3611,14 +3611,14 @@ public class LayoutUnitTests : BaseTestClass
         child1.HeightUnits = DimensionUnitType.Absolute;
         parent.AddChild(child1);
 
-        parent.GetAbsoluteHeight().ShouldBe(50);
+        parent.AbsoluteHeight.ShouldBe(50);
 
         ContainerRuntime child2 = new();
         child2.Height = 50;
         child2.HeightUnits = DimensionUnitType.Absolute;
         parent.AddChild(child2);
 
-        parent.GetAbsoluteHeight().ShouldBe(100);
+        parent.AbsoluteHeight.ShouldBe(100);
     }
 
     [Fact]
@@ -3677,7 +3677,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child2);
 
         // Only child1 contributes to parent height
-        parent.GetAbsoluteHeight().ShouldBe(80);
+        parent.AbsoluteHeight.ShouldBe(80);
     }
 
     [Fact]
@@ -3700,9 +3700,9 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child2);
 
         // Only child1 contributes to parent width
-        parent.GetAbsoluteWidth().ShouldBe(100);
+        parent.AbsoluteWidth.ShouldBe(100);
         // Child2 gets 50% of parent (100)
-        child2.GetAbsoluteWidth().ShouldBe(50);
+        child2.AbsoluteWidth.ShouldBe(50);
     }
 
     [Fact]
@@ -3725,9 +3725,9 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child2);
 
         // Only child1 contributes to parent width
-        parent.GetAbsoluteWidth().ShouldBe(150);
+        parent.AbsoluteWidth.ShouldBe(150);
         // Child2 gets parent(150) - 50 = 100
-        child2.GetAbsoluteWidth().ShouldBe(100);
+        child2.AbsoluteWidth.ShouldBe(100);
     }
 
     [Fact]
@@ -3750,7 +3750,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child2);
 
         // Only child1 contributes; ratio children are excluded
-        parent.GetAbsoluteWidth().ShouldBe(100);
+        parent.AbsoluteWidth.ShouldBe(100);
     }
 
     [Fact]
@@ -3773,7 +3773,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child2);
 
         // No absolute children -> parent width is just the padding (0)
-        parent.GetAbsoluteWidth().ShouldBe(0);
+        parent.AbsoluteWidth.ShouldBe(0);
     }
 
     [Fact]
@@ -3790,7 +3790,7 @@ public class LayoutUnitTests : BaseTestClass
         child.WidthUnits = DimensionUnitType.Absolute;
         parent.AddChild(child);
 
-        parent.GetAbsoluteWidth().ShouldBe(200);
+        parent.AbsoluteWidth.ShouldBe(200);
     }
 
     #endregion
@@ -3821,7 +3821,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child2);
 
         // Child2 extends from 100 to 150, so parent should be 150
-        parent.GetAbsoluteWidth().ShouldBe(150);
+        parent.AbsoluteWidth.ShouldBe(150);
     }
 
     [Fact]
@@ -3843,7 +3843,7 @@ public class LayoutUnitTests : BaseTestClass
         // Child extends from -20 to 80. The engine computes parent width
         // based on the rightmost edge of children. With XOrigin=Left (default),
         // the child's right edge is at -20+100=80, so parent width = 80.
-        parent.GetAbsoluteWidth().ShouldBe(80);
+        parent.AbsoluteWidth.ShouldBe(80);
     }
 
     [Fact]
@@ -3866,7 +3866,7 @@ public class LayoutUnitTests : BaseTestClass
         // and starts at width=0, the child at X=0 from large edge sits at position 0.
         // The engine does not count PixelsFromLarge children toward parent sizing
         // because the position depends on the parent's width (circular).
-        parent.GetAbsoluteWidth().ShouldBe(0);
+        parent.AbsoluteWidth.ShouldBe(0);
     }
 
     [Fact]
@@ -3889,7 +3889,7 @@ public class LayoutUnitTests : BaseTestClass
         // PixelsFromMiddle uses 2*max(abs(smallEdge), abs(bigEdge)) formula
         // SmallEdge = 50, BigEdge = 50+100 = 150
         // Parent width = 2 * max(50, 150) = 300
-        parent.GetAbsoluteWidth().ShouldBe(300);
+        parent.AbsoluteWidth.ShouldBe(300);
     }
 
     #endregion
@@ -3906,8 +3906,8 @@ public class LayoutUnitTests : BaseTestClass
         element.HeightUnits = DimensionUnitType.PercentageOfOtherDimension;
 
         // Both depend on each other -> engine falls back to raw pixel values
-        element.GetAbsoluteWidth().ShouldBe(100);
-        element.GetAbsoluteHeight().ShouldBe(200);
+        element.AbsoluteWidth.ShouldBe(100);
+        element.AbsoluteHeight.ShouldBe(200);
     }
 
     [Fact]
@@ -3927,9 +3927,9 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // Child height = 50% of 200 = 100
-        child.GetAbsoluteHeight().ShouldBe(100);
+        child.AbsoluteHeight.ShouldBe(100);
         // Parent height should be 100 (RelativeToChildren)
-        parent.GetAbsoluteHeight().ShouldBe(100);
+        parent.AbsoluteHeight.ShouldBe(100);
     }
 
     [Fact]
@@ -3949,11 +3949,11 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // Child width = 50% of 400 = 200
-        child.GetAbsoluteWidth().ShouldBe(200);
+        child.AbsoluteWidth.ShouldBe(200);
         // Child height = 100% of child width = 200
-        child.GetAbsoluteHeight().ShouldBe(200);
+        child.AbsoluteHeight.ShouldBe(200);
         // Parent height = 200 (RelativeToChildren)
-        parent.GetAbsoluteHeight().ShouldBe(200);
+        parent.AbsoluteHeight.ShouldBe(200);
     }
 
     [Fact]
@@ -3966,11 +3966,11 @@ public class LayoutUnitTests : BaseTestClass
         element.HeightUnits = DimensionUnitType.PercentageOfOtherDimension;
 
         // Height = 100% of 200 = 200
-        element.GetAbsoluteHeight().ShouldBe(200);
+        element.AbsoluteHeight.ShouldBe(200);
 
         // Change width -> height should update
         element.Width = 300;
-        element.GetAbsoluteHeight().ShouldBe(300);
+        element.AbsoluteHeight.ShouldBe(300);
     }
 
     [Fact]
@@ -3998,9 +3998,9 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child2);
 
         // Child2 width = ratio gets remaining 300
-        child2.GetAbsoluteWidth().ShouldBe(300);
+        child2.AbsoluteWidth.ShouldBe(300);
         // Child2 height = 50% of 300 = 150
-        child2.GetAbsoluteHeight().ShouldBe(150);
+        child2.AbsoluteHeight.ShouldBe(150);
     }
 
     #endregion
@@ -4031,7 +4031,7 @@ public class LayoutUnitTests : BaseTestClass
         // Document whatever the engine actually returns.
         // In a non-stacked parent, ratio children may get the full parent height
         // since there is no stacking to subtract absolute siblings from.
-        float child2Height = child2.GetAbsoluteHeight();
+        float child2Height = child2.AbsoluteHeight;
         child2Height.ShouldBeGreaterThanOrEqualTo(0);
     }
 
@@ -4058,9 +4058,9 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child2);
 
         // Child1 width = 50% of height(100) = 50
-        child1.GetAbsoluteWidth().ShouldBe(50);
+        child1.AbsoluteWidth.ShouldBe(50);
         // Ratio child gets 1000 - 50 = 950
-        child2.GetAbsoluteWidth().ShouldBe(950);
+        child2.AbsoluteWidth.ShouldBe(950);
     }
 
     [Fact]
@@ -4084,9 +4084,9 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child2);
 
         // Child1 = 10% of 1000 = 100
-        child1.GetAbsoluteWidth().ShouldBe(100);
+        child1.AbsoluteWidth.ShouldBe(100);
         // Ratio gets 1000 - 100 = 900
-        child2.GetAbsoluteWidth().ShouldBe(900);
+        child2.AbsoluteWidth.ShouldBe(900);
     }
 
     [Fact]
@@ -4110,9 +4110,9 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child2);
 
         // Child1 = 1000 - 800 = 200
-        child1.GetAbsoluteWidth().ShouldBe(200);
+        child1.AbsoluteWidth.ShouldBe(200);
         // Ratio gets 1000 - 200 = 800
-        child2.GetAbsoluteWidth().ShouldBe(800);
+        child2.AbsoluteWidth.ShouldBe(800);
     }
 
     [Fact]
@@ -4140,9 +4140,9 @@ public class LayoutUnitTests : BaseTestClass
         child3.WidthUnits = DimensionUnitType.Ratio;
         parent.AddChild(child3);
 
-        child1.GetAbsoluteWidth().ShouldBe(100);
-        child2.GetAbsoluteWidth().ShouldBe(200);
-        child3.GetAbsoluteWidth().ShouldBe(300);
+        child1.AbsoluteWidth.ShouldBe(100);
+        child2.AbsoluteWidth.ShouldBe(200);
+        child3.AbsoluteWidth.ShouldBe(300);
     }
 
     [Fact]
@@ -4172,9 +4172,9 @@ public class LayoutUnitTests : BaseTestClass
 
         // Each gets ~33.333...
         float expectedWidth = 100f / 3f;
-        child1.GetAbsoluteWidth().ShouldBe(expectedWidth, 0.01f);
-        child2.GetAbsoluteWidth().ShouldBe(expectedWidth, 0.01f);
-        child3.GetAbsoluteWidth().ShouldBe(expectedWidth, 0.01f);
+        child1.AbsoluteWidth.ShouldBe(expectedWidth, 0.01f);
+        child2.AbsoluteWidth.ShouldBe(expectedWidth, 0.01f);
+        child3.AbsoluteWidth.ShouldBe(expectedWidth, 0.01f);
     }
 
     [Fact]
@@ -4192,7 +4192,7 @@ public class LayoutUnitTests : BaseTestClass
         child.WidthUnits = DimensionUnitType.Ratio;
         parent.AddChild(child);
 
-        child.GetAbsoluteWidth().ShouldBe(500);
+        child.AbsoluteWidth.ShouldBe(500);
     }
 
     [Fact]
@@ -4216,8 +4216,8 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child2);
 
         // Zero-ratio child gets 0, the other gets everything
-        child1.GetAbsoluteWidth().ShouldBe(0);
-        child2.GetAbsoluteWidth().ShouldBe(500);
+        child1.AbsoluteWidth.ShouldBe(0);
+        child2.AbsoluteWidth.ShouldBe(500);
     }
 
     #endregion
@@ -4281,8 +4281,8 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child3);
 
         // 500 - 100 = 400 remaining, split between 2 ratio children
-        child2.GetAbsoluteWidth().ShouldBe(200);
-        child3.GetAbsoluteWidth().ShouldBe(200);
+        child2.AbsoluteWidth.ShouldBe(200);
+        child3.AbsoluteWidth.ShouldBe(200);
     }
 
     [Fact]
@@ -4303,7 +4303,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // Width should be 50% of 400 = 200
-        child.GetAbsoluteWidth().ShouldBe(200);
+        child.AbsoluteWidth.ShouldBe(200);
         // Should be positioned normally in stack at Y=0
         child.AbsoluteTop.ShouldBe(0);
     }
@@ -4357,7 +4357,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child2);
 
         // Should not crash, parent should still be 400
-        parent.GetAbsoluteHeight().ShouldBe(400);
+        parent.AbsoluteHeight.ShouldBe(400);
     }
 
     [Fact]
@@ -4442,8 +4442,8 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child3);
 
         // 300 - 100 = 200 remaining, split between 2 ratio children
-        child2.GetAbsoluteHeight().ShouldBe(100);
-        child3.GetAbsoluteHeight().ShouldBe(100);
+        child2.AbsoluteHeight.ShouldBe(100);
+        child3.AbsoluteHeight.ShouldBe(100);
     }
 
     #endregion
@@ -4485,7 +4485,7 @@ public class LayoutUnitTests : BaseTestClass
         // Row1: child1(80)+child2(80)=160 < 200, max height 60
         // Row2: child3(80), height 40
         // Parent height = 60 + 40 = 100
-        parent.GetAbsoluteHeight().ShouldBe(100);
+        parent.AbsoluteHeight.ShouldBe(100);
     }
 
     [Fact]
@@ -4522,7 +4522,7 @@ public class LayoutUnitTests : BaseTestClass
 
         // Row1: child1+child2 = 160 < 200, Row2: child3
         // Parent height = 50 + 50 = 100
-        parent.GetAbsoluteHeight().ShouldBe(100);
+        parent.AbsoluteHeight.ShouldBe(100);
     }
 
     [Fact]
@@ -4545,7 +4545,7 @@ public class LayoutUnitTests : BaseTestClass
 
         // Child wider than parent should not cause infinite loop.
         // Child stays on first row.
-        child.GetAbsoluteWidth().ShouldBe(150);
+        child.AbsoluteWidth.ShouldBe(150);
         child.AbsoluteTop.ShouldBe(0);
     }
 
@@ -4583,7 +4583,7 @@ public class LayoutUnitTests : BaseTestClass
 
         // Col1: child1+child2 = 160 < 200, Col2: child3
         // Parent width = 50 + 50 = 100
-        parent.GetAbsoluteWidth().ShouldBe(100);
+        parent.AbsoluteWidth.ShouldBe(100);
     }
 
     #endregion
@@ -4604,18 +4604,18 @@ public class LayoutUnitTests : BaseTestClass
         child.WidthUnits = DimensionUnitType.PercentageOfParent;
         parent.AddChild(child);
 
-        child.GetAbsoluteWidth().ShouldBe(200);
+        child.AbsoluteWidth.ShouldBe(200);
 
         GraphicalUiElement.IsAllLayoutSuspended = true;
         parent.Width = 600;
 
         // Layout not updated while globally suspended
-        child.GetAbsoluteWidth().ShouldBe(200);
+        child.AbsoluteWidth.ShouldBe(200);
 
         GraphicalUiElement.IsAllLayoutSuspended = false;
         parent.ResumeLayout(recursive: true);
 
-        child.GetAbsoluteWidth().ShouldBe(300);
+        child.AbsoluteWidth.ShouldBe(300);
     }
 
     [Fact]
@@ -4637,17 +4637,17 @@ public class LayoutUnitTests : BaseTestClass
         child.WidthUnits = DimensionUnitType.PercentageOfParent;
         parent.AddChild(child);
 
-        child.GetAbsoluteWidth().ShouldBe(200);
+        child.AbsoluteWidth.ShouldBe(200);
 
         grandparent.SuspendLayout(recursive: true);
         grandparent.Width = 600;
 
         // Layout not updated during suspension
-        child.GetAbsoluteWidth().ShouldBe(200);
+        child.AbsoluteWidth.ShouldBe(200);
 
         grandparent.ResumeLayout(recursive: true);
 
-        child.GetAbsoluteWidth().ShouldBe(300);
+        child.AbsoluteWidth.ShouldBe(300);
     }
 
     [Fact]
@@ -4666,8 +4666,8 @@ public class LayoutUnitTests : BaseTestClass
         child.HeightUnits = DimensionUnitType.PercentageOfParent;
         parent.AddChild(child);
 
-        child.GetAbsoluteWidth().ShouldBe(200);
-        child.GetAbsoluteHeight().ShouldBe(200);
+        child.AbsoluteWidth.ShouldBe(200);
+        child.AbsoluteHeight.ShouldBe(200);
 
         parent.SuspendLayout();
 
@@ -4676,14 +4676,14 @@ public class LayoutUnitTests : BaseTestClass
         parent.Height = 800;
 
         // Still old values
-        child.GetAbsoluteWidth().ShouldBe(200);
-        child.GetAbsoluteHeight().ShouldBe(200);
+        child.AbsoluteWidth.ShouldBe(200);
+        child.AbsoluteHeight.ShouldBe(200);
 
         parent.ResumeLayout();
 
         // All changes applied at once
-        child.GetAbsoluteWidth().ShouldBe(300);
-        child.GetAbsoluteHeight().ShouldBe(400);
+        child.AbsoluteWidth.ShouldBe(300);
+        child.AbsoluteHeight.ShouldBe(400);
     }
 
     [Fact]
@@ -4742,9 +4742,9 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child2);
 
         // Child2 width = ratio gets 400
-        child2.GetAbsoluteWidth().ShouldBe(400);
+        child2.AbsoluteWidth.ShouldBe(400);
         // Child2 height = 50% of 400 = 200
-        child2.GetAbsoluteHeight().ShouldBe(200);
+        child2.AbsoluteHeight.ShouldBe(200);
     }
 
     [Fact]
@@ -4764,9 +4764,9 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // Child height = 50% of 400 = 200
-        child.GetAbsoluteHeight().ShouldBe(200);
+        child.AbsoluteHeight.ShouldBe(200);
         // Child width = 100% of height = 200
-        child.GetAbsoluteWidth().ShouldBe(200);
+        child.AbsoluteWidth.ShouldBe(200);
     }
 
     [Fact]
@@ -4786,9 +4786,9 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // Child height = 400 - 100 = 300
-        child.GetAbsoluteHeight().ShouldBe(300);
+        child.AbsoluteHeight.ShouldBe(300);
         // Child width = 50% of 300 = 150
-        child.GetAbsoluteWidth().ShouldBe(150);
+        child.AbsoluteWidth.ShouldBe(150);
     }
 
     [Fact]
@@ -4808,9 +4808,9 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // Parent width = 200 (from child)
-        parent.GetAbsoluteWidth().ShouldBe(200);
+        parent.AbsoluteWidth.ShouldBe(200);
         // Child height = 50% of 200 = 100
-        child.GetAbsoluteHeight().ShouldBe(100);
+        child.AbsoluteHeight.ShouldBe(100);
     }
 
     #endregion
@@ -4849,9 +4849,9 @@ public class LayoutUnitTests : BaseTestClass
         outer.AddChild(inner2);
 
         // Inner1 should size to its child = 80
-        inner1.GetAbsoluteWidth().ShouldBe(80);
+        inner1.AbsoluteWidth.ShouldBe(80);
         // Inner2 gets remaining 500 - 80 = 420
-        inner2.GetAbsoluteWidth().ShouldBe(420);
+        inner2.AbsoluteWidth.ShouldBe(420);
     }
 
     [Fact]
@@ -4886,9 +4886,9 @@ public class LayoutUnitTests : BaseTestClass
         outer.AddChild(child2);
 
         // Child1 = grandchild(50) + padding(10) = 60
-        child1.GetAbsoluteWidth().ShouldBe(60);
+        child1.AbsoluteWidth.ShouldBe(60);
         // Child2 = 500 - 60 = 440
-        child2.GetAbsoluteWidth().ShouldBe(440);
+        child2.AbsoluteWidth.ShouldBe(440);
     }
 
     [Fact]
@@ -4917,7 +4917,7 @@ public class LayoutUnitTests : BaseTestClass
         // Grandparent has RelativeToChildren, but its only direct child (parent) uses
         // PercentageOfParent, which is ignored for sizing. So grandparent has
         // no absolute direct children contributing to its width -> width = 0.
-        grandparent.GetAbsoluteWidth().ShouldBe(0);
+        grandparent.AbsoluteWidth.ShouldBe(0);
     }
 
     [Fact]
@@ -4952,11 +4952,11 @@ public class LayoutUnitTests : BaseTestClass
         parent2.AddChild(grandchild);
 
         // Parent2 width = ratio gets 400
-        parent2.GetAbsoluteWidth().ShouldBe(400);
+        parent2.AbsoluteWidth.ShouldBe(400);
         // Grandchild width = parent2(400) + 0 = 400
-        grandchild.GetAbsoluteWidth().ShouldBe(400);
+        grandchild.AbsoluteWidth.ShouldBe(400);
         // Grandchild height = 50% of 400 = 200
-        grandchild.GetAbsoluteHeight().ShouldBe(200);
+        grandchild.AbsoluteHeight.ShouldBe(200);
     }
 
     #endregion
@@ -5008,15 +5008,15 @@ public class LayoutUnitTests : BaseTestClass
         child.Dock(Gum.Wireframe.Dock.Fill);
         parent.AddChild(child);
 
-        child.GetAbsoluteWidth().ShouldBe(400);
-        child.GetAbsoluteHeight().ShouldBe(300);
+        child.AbsoluteWidth.ShouldBe(400);
+        child.AbsoluteHeight.ShouldBe(300);
 
         // Resize parent
         parent.Width = 600;
         parent.Height = 400;
 
-        child.GetAbsoluteWidth().ShouldBe(600);
-        child.GetAbsoluteHeight().ShouldBe(400);
+        child.AbsoluteWidth.ShouldBe(600);
+        child.AbsoluteHeight.ShouldBe(400);
     }
 
     [Fact]
@@ -5040,8 +5040,8 @@ public class LayoutUnitTests : BaseTestClass
         child.AddChild(grandchild);
 
         // SizeToChildren sets both Width and Height to RelativeToChildren
-        child.GetAbsoluteWidth().ShouldBe(100);
-        child.GetAbsoluteHeight().ShouldBe(50);
+        child.AbsoluteWidth.ShouldBe(100);
+        child.AbsoluteHeight.ShouldBe(50);
     }
 
     #endregion
@@ -5068,7 +5068,7 @@ public class LayoutUnitTests : BaseTestClass
         child2.IgnoredByParentSize = true;
         parent.AddChild(child2);
 
-        parent.GetAbsoluteHeight().ShouldBe(100);
+        parent.AbsoluteHeight.ShouldBe(100);
     }
 
     [Fact]
@@ -5091,7 +5091,7 @@ public class LayoutUnitTests : BaseTestClass
         child2.IgnoredByParentSize = true;
         parent.AddChild(child2);
 
-        parent.GetAbsoluteWidth().ShouldBe(100);
+        parent.AbsoluteWidth.ShouldBe(100);
     }
 
     [Fact]
@@ -5246,12 +5246,12 @@ public class LayoutUnitTests : BaseTestClass
         child.HeightUnits = DimensionUnitType.Absolute;
         parent.AddChild(child);
 
-        child.GetAbsoluteHeight().ShouldBe(50);
+        child.AbsoluteHeight.ShouldBe(50);
 
         // Change units to PercentageOfParent -> 50% of 400 = 200
         child.HeightUnits = DimensionUnitType.PercentageOfParent;
 
-        child.GetAbsoluteHeight().ShouldBe(200);
+        child.AbsoluteHeight.ShouldBe(200);
     }
 
     [Fact]
@@ -5313,12 +5313,12 @@ public class LayoutUnitTests : BaseTestClass
         child.WidthUnits = DimensionUnitType.Absolute;
         parent.AddChild(child);
 
-        child.GetAbsoluteWidth().ShouldBe(50);
+        child.AbsoluteWidth.ShouldBe(50);
 
         // Change units to PercentageOfParent -> 50% of 400 = 200
         child.WidthUnits = DimensionUnitType.PercentageOfParent;
 
-        child.GetAbsoluteWidth().ShouldBe(200);
+        child.AbsoluteWidth.ShouldBe(200);
     }
 
     [Fact]
@@ -5335,12 +5335,12 @@ public class LayoutUnitTests : BaseTestClass
         child.WidthUnits = DimensionUnitType.PercentageOfParent;
         parent.AddChild(child);
 
-        child.GetAbsoluteWidth().ShouldBe(200);
+        child.AbsoluteWidth.ShouldBe(200);
 
         // Change parent width to 600
         parent.Width = 600;
 
-        child.GetAbsoluteWidth().ShouldBe(300);
+        child.AbsoluteWidth.ShouldBe(300);
     }
 
     #endregion
@@ -5381,8 +5381,8 @@ public class LayoutUnitTests : BaseTestClass
 
         // Available = 400 - 100 (absolute) - 2*10 (2 spacing gaps between 3 children) = 280
         // Each ratio child gets 140
-        child2.GetAbsoluteWidth().ShouldBe(140);
-        child3.GetAbsoluteWidth().ShouldBe(140);
+        child2.AbsoluteWidth.ShouldBe(140);
+        child3.AbsoluteWidth.ShouldBe(140);
     }
 
     [Fact]
@@ -5419,8 +5419,8 @@ public class LayoutUnitTests : BaseTestClass
 
         // Available = 300 - 50 (absolute) - 2*10 (2 spacing gaps between 3 children) = 230
         // Each ratio child gets 115
-        child2.GetAbsoluteHeight().ShouldBe(115);
-        child3.GetAbsoluteHeight().ShouldBe(115);
+        child2.AbsoluteHeight.ShouldBe(115);
+        child3.AbsoluteHeight.ShouldBe(115);
     }
 
     [Fact]
@@ -5449,8 +5449,8 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child2);
 
         // Available = 100 - 100 (1 gap) = 0 -> each gets 0
-        child1.GetAbsoluteWidth().ShouldBe(0);
-        child2.GetAbsoluteWidth().ShouldBe(0);
+        child1.AbsoluteWidth.ShouldBe(0);
+        child2.AbsoluteWidth.ShouldBe(0);
     }
 
     #endregion
@@ -5473,7 +5473,7 @@ public class LayoutUnitTests : BaseTestClass
         element.Height = 200;
 
         // 200% of source height 100 = 200
-        element.GetAbsoluteHeight().ShouldBe(200);
+        element.AbsoluteHeight.ShouldBe(200);
     }
 
     [Fact]
@@ -5492,7 +5492,7 @@ public class LayoutUnitTests : BaseTestClass
         element.HeightUnits = DimensionUnitType.PercentageOfSourceFile;
 
         // 100% of source height 100 = 100
-        element.GetAbsoluteHeight().ShouldBe(100);
+        element.AbsoluteHeight.ShouldBe(100);
     }
 
     [Fact]
@@ -5511,7 +5511,7 @@ public class LayoutUnitTests : BaseTestClass
         element.WidthUnits = DimensionUnitType.PercentageOfSourceFile;
 
         // 50% of source width 200 = 100
-        element.GetAbsoluteWidth().ShouldBe(100);
+        element.AbsoluteWidth.ShouldBe(100);
     }
 
     [Fact]
@@ -5530,7 +5530,7 @@ public class LayoutUnitTests : BaseTestClass
         element.WidthUnits = DimensionUnitType.PercentageOfSourceFile;
 
         // 100% of source width 200 = 200
-        element.GetAbsoluteWidth().ShouldBe(200);
+        element.AbsoluteWidth.ShouldBe(200);
     }
 
     #endregion
@@ -5557,7 +5557,7 @@ public class LayoutUnitTests : BaseTestClass
 
         // Height = sourceHeight * (absoluteWidth / sourceWidth) * mHeight / 100
         // = 100 * (400 / 200) * 100 / 100 = 200
-        element.GetAbsoluteHeight().ShouldBe(200);
+        element.AbsoluteHeight.ShouldBe(200);
     }
 
     [Fact]
@@ -5580,7 +5580,7 @@ public class LayoutUnitTests : BaseTestClass
 
         // Height = sourceHeight * (absoluteWidth / sourceWidth) * mHeight / 100
         // = 200 * (200 / 100) * 100 / 100 = 400
-        element.GetAbsoluteHeight().ShouldBe(400);
+        element.AbsoluteHeight.ShouldBe(400);
     }
 
     [Fact]
@@ -5603,7 +5603,7 @@ public class LayoutUnitTests : BaseTestClass
 
         // Height = sourceHeight * (absoluteWidth / sourceWidth) * mHeight / 100
         // = 100 * (200 / 100) * 100 / 100 = 200
-        element.GetAbsoluteHeight().ShouldBe(200);
+        element.AbsoluteHeight.ShouldBe(200);
     }
 
     [Fact]
@@ -5626,7 +5626,7 @@ public class LayoutUnitTests : BaseTestClass
 
         // Width = sourceWidth * (absoluteHeight / sourceHeight) * mWidth / 100
         // = 200 * (200 / 100) * 100 / 100 = 400
-        element.GetAbsoluteWidth().ShouldBe(400);
+        element.AbsoluteWidth.ShouldBe(400);
     }
 
     #endregion
@@ -5660,7 +5660,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child2);
 
         // child1 width = 50 * 2 = 100
-        child1.GetAbsoluteWidth().ShouldBe(100);
+        child1.AbsoluteWidth.ShouldBe(100);
         // child2 position after scaled child1
         child2.AbsoluteLeft.ShouldBe(100);
 
@@ -5694,7 +5694,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child2);
 
         // child1 height = 50 * 2 = 100
-        child1.GetAbsoluteHeight().ShouldBe(100);
+        child1.AbsoluteHeight.ShouldBe(100);
         // child2 position after scaled child1
         child2.AbsoluteTop.ShouldBe(100);
 
@@ -5729,7 +5729,7 @@ public class LayoutUnitTests : BaseTestClass
 
         // child1 width = 100 * 2 = 200
         // child2 gets remaining = 400 - 200 = 200
-        child2.GetAbsoluteWidth().ShouldBe(200);
+        child2.AbsoluteWidth.ShouldBe(200);
 
         GraphicalUiElement.GlobalFontScale = 1;
     }
@@ -5759,13 +5759,13 @@ public class LayoutUnitTests : BaseTestClass
         parent1.AddChild(child);
 
         // 50% of 200 = 100
-        child.GetAbsoluteWidth().ShouldBe(100);
+        child.AbsoluteWidth.ShouldBe(100);
 
         // Move child to parent2
         child.Parent = parent2;
 
         // 50% of 400 = 200
-        child.GetAbsoluteWidth().ShouldBe(200);
+        child.AbsoluteWidth.ShouldBe(200);
     }
 
     [Fact]
@@ -5788,14 +5788,14 @@ public class LayoutUnitTests : BaseTestClass
         child.WidthUnits = DimensionUnitType.Absolute;
         parent1.AddChild(child);
 
-        parent1.GetAbsoluteWidth().ShouldBe(100);
+        parent1.AbsoluteWidth.ShouldBe(100);
 
         // Move child to parent2
         child.Parent = parent2;
         parent1.UpdateLayout();
 
         // Parent1 has no children, so RelativeToChildren width = 0
-        parent1.GetAbsoluteWidth().ShouldBe(0);
+        parent1.AbsoluteWidth.ShouldBe(0);
     }
 
     [Fact]
@@ -5822,13 +5822,13 @@ public class LayoutUnitTests : BaseTestClass
         child2.HeightUnits = DimensionUnitType.Absolute;
         parent.AddChild(child2);
 
-        parent.GetAbsoluteHeight().ShouldBe(100);
+        parent.AbsoluteHeight.ShouldBe(100);
 
         // Remove child2
         child2.Parent = null;
         parent.UpdateLayout();
 
-        parent.GetAbsoluteHeight().ShouldBe(50);
+        parent.AbsoluteHeight.ShouldBe(50);
     }
 
     #endregion
@@ -5860,9 +5860,9 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child2);
 
         // Width = widest child = 120
-        parent.GetAbsoluteWidth().ShouldBe(120);
+        parent.AbsoluteWidth.ShouldBe(120);
         // Height = sum of stacked children = 100
-        parent.GetAbsoluteHeight().ShouldBe(100);
+        parent.AbsoluteHeight.ShouldBe(100);
     }
 
     [Fact]
@@ -5884,9 +5884,9 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // Parent width = X + Width = 10 + 150 = 160
-        parent.GetAbsoluteWidth().ShouldBe(160);
+        parent.AbsoluteWidth.ShouldBe(160);
         // Parent height = Y + Height = 20 + 80 = 100
-        parent.GetAbsoluteHeight().ShouldBe(100);
+        parent.AbsoluteHeight.ShouldBe(100);
     }
 
     [Fact]
@@ -5917,9 +5917,9 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child2);
 
         // Parent width = max(0+100, 30+80) = 110
-        parent.GetAbsoluteWidth().ShouldBe(110);
+        parent.AbsoluteWidth.ShouldBe(110);
         // Parent height = max(0+50, 10+120) = 130
-        parent.GetAbsoluteHeight().ShouldBe(130);
+        parent.AbsoluteHeight.ShouldBe(130);
     }
 
     [Fact]
@@ -5939,9 +5939,9 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // Parent width = 100 + 20 = 120
-        parent.GetAbsoluteWidth().ShouldBe(120);
+        parent.AbsoluteWidth.ShouldBe(120);
         // Parent height = 50 + 10 = 60
-        parent.GetAbsoluteHeight().ShouldBe(60);
+        parent.AbsoluteHeight.ShouldBe(60);
     }
 
     #endregion
@@ -6128,7 +6128,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.WidthUnits = DimensionUnitType.RelativeToChildren;
         parent.Width = 0;
 
-        parent.GetAbsoluteWidth().ShouldBe(150);
+        parent.AbsoluteWidth.ShouldBe(150);
     }
 
     [Fact]
@@ -6147,7 +6147,7 @@ public class LayoutUnitTests : BaseTestClass
         child.HeightUnits = DimensionUnitType.Absolute;
         parent.AddChild(child);
 
-        parent.GetAbsoluteWidth().ShouldBe(150);
+        parent.AbsoluteWidth.ShouldBe(150);
     }
 
     #endregion
@@ -6182,7 +6182,7 @@ public class LayoutUnitTests : BaseTestClass
         // child1 extends from middle+0 to middle+60, symmetric = 2*60 = 120
         // child2 extends from middle-50 to middle-10, symmetric = 2*50 = 100
         // Parent should use the larger symmetric bound = 120
-        parent.GetAbsoluteWidth().ShouldBe(120);
+        parent.AbsoluteWidth.ShouldBe(120);
     }
 
     [Fact]
@@ -6203,7 +6203,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // Centered at middle: extends -50 to +50, symmetric = 2*50 = 100
-        parent.GetAbsoluteWidth().ShouldBe(100);
+        parent.AbsoluteWidth.ShouldBe(100);
     }
 
     #endregion
@@ -6227,9 +6227,9 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // Child height = 100% of width(300) = 300
-        child.GetAbsoluteHeight().ShouldBe(300);
+        child.AbsoluteHeight.ShouldBe(300);
         // Parent height = 300
-        parent.GetAbsoluteHeight().ShouldBe(300);
+        parent.AbsoluteHeight.ShouldBe(300);
     }
 
     [Fact]
@@ -6249,9 +6249,9 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // Child width = 50% of height(200) = 100
-        child.GetAbsoluteWidth().ShouldBe(100);
+        child.AbsoluteWidth.ShouldBe(100);
         // Parent width = 100
-        parent.GetAbsoluteWidth().ShouldBe(100);
+        parent.AbsoluteWidth.ShouldBe(100);
     }
 
     #endregion
@@ -6283,7 +6283,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child2);
 
         // child2 width = 25% of parent(400) = 100, not 25% of remaining space
-        child2.GetAbsoluteWidth().ShouldBe(100);
+        child2.AbsoluteWidth.ShouldBe(100);
         // child2 starts after child1
         child2.AbsoluteLeft.ShouldBe(100);
     }
@@ -6313,7 +6313,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child2);
 
         // child2 height = 25% of parent(400) = 100, not 25% of remaining space
-        child2.GetAbsoluteHeight().ShouldBe(100);
+        child2.AbsoluteHeight.ShouldBe(100);
         // child2 starts after child1
         child2.AbsoluteTop.ShouldBe(100);
     }
@@ -6330,7 +6330,7 @@ public class LayoutUnitTests : BaseTestClass
         element.HeightUnits = DimensionUnitType.Absolute;
         element.MaxHeight = 300;
 
-        element.GetAbsoluteHeight().ShouldBe(300);
+        element.AbsoluteHeight.ShouldBe(300);
     }
 
     [Fact]
@@ -6349,7 +6349,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // 80% of 1000 = 800, clamped to 400
-        child.GetAbsoluteHeight().ShouldBe(400);
+        child.AbsoluteHeight.ShouldBe(400);
     }
 
     [Fact]
@@ -6360,7 +6360,7 @@ public class LayoutUnitTests : BaseTestClass
         element.WidthUnits = DimensionUnitType.Absolute;
         element.MaxWidth = null;
 
-        element.GetAbsoluteWidth().ShouldBe(500);
+        element.AbsoluteWidth.ShouldBe(500);
     }
 
     [Fact]
@@ -6371,7 +6371,7 @@ public class LayoutUnitTests : BaseTestClass
         element.WidthUnits = DimensionUnitType.Absolute;
         element.MaxWidth = 300;
 
-        element.GetAbsoluteWidth().ShouldBe(300);
+        element.AbsoluteWidth.ShouldBe(300);
     }
 
     [Fact]
@@ -6390,7 +6390,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // 80% of 1000 = 800, clamped to 400
-        child.GetAbsoluteWidth().ShouldBe(400);
+        child.AbsoluteWidth.ShouldBe(400);
     }
 
     [Fact]
@@ -6401,7 +6401,7 @@ public class LayoutUnitTests : BaseTestClass
         element.WidthUnits = DimensionUnitType.Absolute;
         element.MaxWidth = 500;
 
-        element.GetAbsoluteWidth().ShouldBe(200);
+        element.AbsoluteWidth.ShouldBe(200);
     }
 
     [Fact]
@@ -6412,7 +6412,7 @@ public class LayoutUnitTests : BaseTestClass
         element.HeightUnits = DimensionUnitType.Absolute;
         element.MinHeight = 100;
 
-        element.GetAbsoluteHeight().ShouldBe(100);
+        element.AbsoluteHeight.ShouldBe(100);
     }
 
     [Fact]
@@ -6423,7 +6423,7 @@ public class LayoutUnitTests : BaseTestClass
         element.WidthUnits = DimensionUnitType.Absolute;
         element.MinWidth = 100;
 
-        element.GetAbsoluteWidth().ShouldBe(100);
+        element.AbsoluteWidth.ShouldBe(100);
     }
 
     [Fact]
@@ -6434,7 +6434,7 @@ public class LayoutUnitTests : BaseTestClass
         element.WidthUnits = DimensionUnitType.Absolute;
         element.MinWidth = 100;
 
-        element.GetAbsoluteWidth().ShouldBe(200);
+        element.AbsoluteWidth.ShouldBe(200);
     }
 
     [Fact]
@@ -6453,7 +6453,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // RelativeToParent: 200 + (-180) = 20, clamped to 50
-        child.GetAbsoluteWidth().ShouldBe(50);
+        child.AbsoluteWidth.ShouldBe(50);
     }
 
     #endregion
@@ -6475,7 +6475,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // 200% of 400 = 800
-        child.GetAbsoluteWidth().ShouldBe(800);
+        child.AbsoluteWidth.ShouldBe(800);
     }
 
     [Fact]
@@ -6493,7 +6493,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // -50% of 400 = -200
-        child.GetAbsoluteWidth().ShouldBe(-200);
+        child.AbsoluteWidth.ShouldBe(-200);
     }
 
     [Fact]
@@ -6511,7 +6511,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // 0.1% of 1000 = 1
-        child.GetAbsoluteWidth().ShouldBe(1);
+        child.AbsoluteWidth.ShouldBe(1);
     }
 
     [Fact]
@@ -6528,7 +6528,7 @@ public class LayoutUnitTests : BaseTestClass
         child.WidthUnits = DimensionUnitType.PercentageOfParent;
         parent.AddChild(child);
 
-        child.GetAbsoluteWidth().ShouldBe(0);
+        child.AbsoluteWidth.ShouldBe(0);
     }
 
     #endregion
@@ -6627,9 +6627,9 @@ public class LayoutUnitTests : BaseTestClass
         inner.AddChild(child2);
 
         // Inner width = sum of children in LeftToRightStack = 80 + 60 = 140
-        inner.GetAbsoluteWidth().ShouldBe(140);
+        inner.AbsoluteWidth.ShouldBe(140);
         // Inner height = tallest child = 70
-        inner.GetAbsoluteHeight().ShouldBe(70);
+        inner.AbsoluteHeight.ShouldBe(70);
     }
 
     [Fact]
@@ -6666,7 +6666,7 @@ public class LayoutUnitTests : BaseTestClass
 
         // Inner width = 400 (RelativeToParent with 0 offset)
         // InnerChild1 = 100 absolute, InnerChild2 gets remaining = 300
-        innerChild2.GetAbsoluteWidth().ShouldBe(300);
+        innerChild2.AbsoluteWidth.ShouldBe(300);
     }
 
     [Fact]
@@ -6931,7 +6931,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // Parent height = child height (100) + padding (-10) = 90
-        parent.GetAbsoluteHeight().ShouldBe(90);
+        parent.AbsoluteHeight.ShouldBe(90);
     }
 
     [Fact]
@@ -6951,7 +6951,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // Parent width = child width (100) + padding (-10) = 90
-        parent.GetAbsoluteWidth().ShouldBe(90);
+        parent.AbsoluteWidth.ShouldBe(90);
     }
 
     #endregion
@@ -7079,7 +7079,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child2);
 
         // Invisible child1 is excluded, child2 gets full 400
-        child2.GetAbsoluteWidth().ShouldBe(400);
+        child2.AbsoluteWidth.ShouldBe(400);
     }
 
     [Fact]
@@ -7100,7 +7100,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // Only child is invisible, parent width should be 0 (padding only)
-        parent.GetAbsoluteWidth().ShouldBe(0);
+        parent.AbsoluteWidth.ShouldBe(0);
     }
 
     [Fact]
@@ -7318,7 +7318,7 @@ public class LayoutUnitTests : BaseTestClass
 
         // Should not crash; the element has no renderable
         // Width may or may not be computed correctly, but it should not throw
-        Should.NotThrow(() => child.GetAbsoluteWidth());
+        Should.NotThrow(() => child.AbsoluteWidth);
     }
 
     [Fact]
@@ -7329,7 +7329,7 @@ public class LayoutUnitTests : BaseTestClass
         element.WidthUnits = DimensionUnitType.Absolute;
 
         // Should not crash even without a renderable
-        Should.NotThrow(() => element.GetAbsoluteWidth());
+        Should.NotThrow(() => element.AbsoluteWidth);
     }
 
     #endregion
@@ -7357,7 +7357,7 @@ public class LayoutUnitTests : BaseTestClass
     }
 
     [Fact]
-    public void Rotation_ShouldNotAffectGetAbsoluteWidth()
+    public void Rotation_ShouldNotAffectAbsoluteWidth()
     {
         ContainerRuntime element = new();
         element.Width = 200;
@@ -7367,7 +7367,7 @@ public class LayoutUnitTests : BaseTestClass
         element.Rotation = 45;
 
         // GetAbsoluteWidth returns the unrotated dimension
-        element.GetAbsoluteWidth().ShouldBe(200);
+        element.AbsoluteWidth.ShouldBe(200);
     }
 
     #endregion
@@ -7384,8 +7384,8 @@ public class LayoutUnitTests : BaseTestClass
         element.HeightUnits = DimensionUnitType.Absolute;
         element.FlipHorizontal = true;
 
-        element.GetAbsoluteWidth().ShouldBe(200);
-        element.GetAbsoluteHeight().ShouldBe(100);
+        element.AbsoluteWidth.ShouldBe(200);
+        element.AbsoluteHeight.ShouldBe(100);
     }
 
     #endregion
@@ -7410,7 +7410,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // Parent (400) > child (100), so element uses parent size
-        parent.GetAbsoluteWidth().ShouldBe(400);
+        parent.AbsoluteWidth.ShouldBe(400);
     }
 
     [Fact]
@@ -7431,7 +7431,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // Child (500) > parent (200), so element uses children size
-        parent.GetAbsoluteWidth().ShouldBe(500);
+        parent.AbsoluteWidth.ShouldBe(500);
     }
 
     [Fact]
@@ -7451,7 +7451,7 @@ public class LayoutUnitTests : BaseTestClass
         child.HeightUnits = DimensionUnitType.Absolute;
         parent.AddChild(child);
 
-        parent.GetAbsoluteHeight().ShouldBe(400);
+        parent.AbsoluteHeight.ShouldBe(400);
     }
 
     [Fact]
@@ -7471,7 +7471,7 @@ public class LayoutUnitTests : BaseTestClass
         child.HeightUnits = DimensionUnitType.Absolute;
         parent.AddChild(child);
 
-        parent.GetAbsoluteHeight().ShouldBe(500);
+        parent.AbsoluteHeight.ShouldBe(500);
     }
 
     #endregion
@@ -7499,7 +7499,7 @@ public class LayoutUnitTests : BaseTestClass
         // childrenBased: 300 + 20 = 320
         // parentBased: 200
         // max(200, 320) = 320
-        parent.GetAbsoluteWidth().ShouldBe(320);
+        parent.AbsoluteWidth.ShouldBe(320);
     }
 
     [Fact]
@@ -7522,7 +7522,7 @@ public class LayoutUnitTests : BaseTestClass
         // childrenBased: 100 + 20 = 120
         // parentBased: 400
         // max(400, 120) = 400
-        parent.GetAbsoluteWidth().ShouldBe(400);
+        parent.AbsoluteWidth.ShouldBe(400);
     }
 
     [Fact]
@@ -7545,14 +7545,14 @@ public class LayoutUnitTests : BaseTestClass
         // childrenBased: 380 + 50 = 430
         // parentBased: 400
         // max(400, 430) = 430 — children + padding wins
-        parent.GetAbsoluteWidth().ShouldBe(430);
+        parent.AbsoluteWidth.ShouldBe(430);
 
         // Now make child smaller so parent wins
         child.Width = 300;
         // childrenBased: 300 + 50 = 350
         // parentBased: 400
         // max(400, 350) = 400
-        parent.GetAbsoluteWidth().ShouldBe(400);
+        parent.AbsoluteWidth.ShouldBe(400);
     }
 
     #endregion
@@ -7572,7 +7572,7 @@ public class LayoutUnitTests : BaseTestClass
         grandparent.AddChild(parent);
 
         // No children, so max(400, 0) = 400
-        parent.GetAbsoluteWidth().ShouldBe(400);
+        parent.AbsoluteWidth.ShouldBe(400);
     }
 
     [Fact]
@@ -7587,7 +7587,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.HeightUnits = DimensionUnitType.RelativeToMaxParentOrChildren;
         grandparent.AddChild(parent);
 
-        parent.GetAbsoluteHeight().ShouldBe(300);
+        parent.AbsoluteHeight.ShouldBe(300);
     }
 
     #endregion
@@ -7613,7 +7613,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // Invisible child excluded, falls back to parent size
-        parent.GetAbsoluteWidth().ShouldBe(200);
+        parent.AbsoluteWidth.ShouldBe(200);
     }
 
     #endregion
@@ -7644,7 +7644,7 @@ public class LayoutUnitTests : BaseTestClass
 
         // PercentageOfParent child excluded from children measurement (circular dep).
         // Only absoluteChild (100) contributes. max(300, 100) = 300
-        parent.GetAbsoluteWidth().ShouldBe(300);
+        parent.AbsoluteWidth.ShouldBe(300);
     }
 
     [Fact]
@@ -7671,7 +7671,7 @@ public class LayoutUnitTests : BaseTestClass
 
         // RelativeToParent child excluded. Only absoluteChild (100) counts.
         // max(300, 100) = 300
-        parent.GetAbsoluteWidth().ShouldBe(300);
+        parent.AbsoluteWidth.ShouldBe(300);
     }
 
     #endregion
@@ -7704,7 +7704,7 @@ public class LayoutUnitTests : BaseTestClass
 
         // Ratio sibling should subtract maxChild's absolute width (600) from parent (600).
         // Remaining = 0
-        ratioChild.GetAbsoluteWidth().ShouldBe(0);
+        ratioChild.AbsoluteWidth.ShouldBe(0);
     }
 
     #endregion
@@ -7736,9 +7736,9 @@ public class LayoutUnitTests : BaseTestClass
         element.AddChild(wideChild);
 
         // Width: max(300, 500) = 500
-        element.GetAbsoluteWidth().ShouldBe(500);
+        element.AbsoluteWidth.ShouldBe(500);
         // Height is absolute 100
-        element.GetAbsoluteHeight().ShouldBe(100);
+        element.AbsoluteHeight.ShouldBe(100);
     }
 
     #endregion
@@ -7763,13 +7763,13 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // Initially parent wins: max(300, 100) = 300
-        parent.GetAbsoluteWidth().ShouldBe(300);
+        parent.AbsoluteWidth.ShouldBe(300);
 
         // Now child grows larger than parent
         child.Width = 500;
 
         // Children win: max(300, 500) = 500
-        parent.GetAbsoluteWidth().ShouldBe(500);
+        parent.AbsoluteWidth.ShouldBe(500);
     }
 
     [Fact]
@@ -7790,13 +7790,13 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child);
 
         // Initially children win: max(200, 300) = 300
-        parent.GetAbsoluteWidth().ShouldBe(300);
+        parent.AbsoluteWidth.ShouldBe(300);
 
         // Now grandparent grows
         grandparent.Width = 500;
 
         // Parent wins: max(500, 300) = 500
-        parent.GetAbsoluteWidth().ShouldBe(500);
+        parent.AbsoluteWidth.ShouldBe(500);
     }
 
     #endregion
@@ -7831,7 +7831,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.AddChild(child3);
 
         // Widest child is 350. max(200, 350) = 350
-        parent.GetAbsoluteWidth().ShouldBe(350);
+        parent.AbsoluteWidth.ShouldBe(350);
     }
 
     #endregion
@@ -7861,8 +7861,8 @@ public class LayoutUnitTests : BaseTestClass
         // Since inner depends on parent, it's excluded from outer's children measurement.
         // outer = max(400, 0) = 400
         // inner = max(400, 0) = 400
-        outer.GetAbsoluteWidth().ShouldBe(400);
-        inner.GetAbsoluteWidth().ShouldBe(400);
+        outer.AbsoluteWidth.ShouldBe(400);
+        inner.AbsoluteWidth.ShouldBe(400);
     }
 
     #endregion
@@ -7924,12 +7924,12 @@ public class LayoutUnitTests : BaseTestClass
         row3.AddChild(row3Child);
 
         // Parent should size to widest child's children-based size: 300
-        parent.GetAbsoluteWidth().ShouldBe(300);
+        parent.AbsoluteWidth.ShouldBe(300);
 
         // All rows should be max(parent=300, ownChild) = 300
-        row1.GetAbsoluteWidth().ShouldBe(300);
-        row2.GetAbsoluteWidth().ShouldBe(300);
-        row3.GetAbsoluteWidth().ShouldBe(300);
+        row1.AbsoluteWidth.ShouldBe(300);
+        row2.AbsoluteWidth.ShouldBe(300);
+        row3.AbsoluteWidth.ShouldBe(300);
     }
 
     [Fact]
@@ -7981,10 +7981,10 @@ public class LayoutUnitTests : BaseTestClass
         // Widest child is 600. With 30 padding: 600 + 30 = 630.
         // Parent sizes to widest row's children-based size: 630.
         // All rows: max(parent=630, ownChild+30) = 630.
-        parent.GetAbsoluteWidth().ShouldBe(630);
-        row1.GetAbsoluteWidth().ShouldBe(630);
-        row2.GetAbsoluteWidth().ShouldBe(630);
-        row3.GetAbsoluteWidth().ShouldBe(630);
+        parent.AbsoluteWidth.ShouldBe(630);
+        row1.AbsoluteWidth.ShouldBe(630);
+        row2.AbsoluteWidth.ShouldBe(630);
+        row3.AbsoluteWidth.ShouldBe(630);
     }
 
     [Fact]
@@ -8022,17 +8022,17 @@ public class LayoutUnitTests : BaseTestClass
         row2.AddChild(row2Child);
 
         // Both rows 200, parent 200, all rows 200
-        parent.GetAbsoluteWidth().ShouldBe(200);
-        row1.GetAbsoluteWidth().ShouldBe(200);
-        row2.GetAbsoluteWidth().ShouldBe(200);
+        parent.AbsoluteWidth.ShouldBe(200);
+        row1.AbsoluteWidth.ShouldBe(200);
+        row2.AbsoluteWidth.ShouldBe(200);
 
         // Now row1's child grows
         row1Child.Width = 500;
 
         // Parent should expand to 500, both rows should follow
-        parent.GetAbsoluteWidth().ShouldBe(500);
-        row1.GetAbsoluteWidth().ShouldBe(500);
-        row2.GetAbsoluteWidth().ShouldBe(500);
+        parent.AbsoluteWidth.ShouldBe(500);
+        row1.AbsoluteWidth.ShouldBe(500);
+        row2.AbsoluteWidth.ShouldBe(500);
     }
 
     [Fact]
@@ -8057,27 +8057,27 @@ public class LayoutUnitTests : BaseTestClass
         child.AddChild(grandchild);
 
         // Initial state: everything should be 50
-        parent.GetAbsoluteWidth().ShouldBe(50);
-        child.GetAbsoluteWidth().ShouldBe(50);
+        parent.AbsoluteWidth.ShouldBe(50);
+        child.AbsoluteWidth.ShouldBe(50);
 
         // Increase parent padding to 200: parent = 50 + 200 = 250, child matches parent
         parent.Width = 200;
-        parent.GetAbsoluteWidth().ShouldBe(250);
-        child.GetAbsoluteWidth().ShouldBe(250);
+        parent.AbsoluteWidth.ShouldBe(250);
+        child.AbsoluteWidth.ShouldBe(250);
 
         // Set parent padding back to 0: should return to 50, not stay at 250
         parent.Width = 0;
-        parent.GetAbsoluteWidth().ShouldBe(50);
-        child.GetAbsoluteWidth().ShouldBe(50);
+        parent.AbsoluteWidth.ShouldBe(50);
+        child.AbsoluteWidth.ShouldBe(50);
 
         // Another cycle to verify no ratcheting
         parent.Width = 200;
-        parent.GetAbsoluteWidth().ShouldBe(250);
-        child.GetAbsoluteWidth().ShouldBe(250);
+        parent.AbsoluteWidth.ShouldBe(250);
+        child.AbsoluteWidth.ShouldBe(250);
 
         parent.Width = 0;
-        parent.GetAbsoluteWidth().ShouldBe(50);
-        child.GetAbsoluteWidth().ShouldBe(50);
+        parent.AbsoluteWidth.ShouldBe(50);
+        child.AbsoluteWidth.ShouldBe(50);
     }
 
     [Fact]
@@ -8098,17 +8098,17 @@ public class LayoutUnitTests : BaseTestClass
         child.AddChild(grandchild);
 
         // Initial state
-        parent.GetAbsoluteHeight().ShouldBe(50);
-        child.GetAbsoluteHeight().ShouldBe(50);
+        parent.AbsoluteHeight.ShouldBe(50);
+        child.AbsoluteHeight.ShouldBe(50);
 
         // Increase then decrease parent padding
         parent.Height = 200;
-        parent.GetAbsoluteHeight().ShouldBe(250);
-        child.GetAbsoluteHeight().ShouldBe(250);
+        parent.AbsoluteHeight.ShouldBe(250);
+        child.AbsoluteHeight.ShouldBe(250);
 
         parent.Height = 0;
-        parent.GetAbsoluteHeight().ShouldBe(50);
-        child.GetAbsoluteHeight().ShouldBe(50);
+        parent.AbsoluteHeight.ShouldBe(50);
+        child.AbsoluteHeight.ShouldBe(50);
     }
 
     [Fact]
@@ -8144,22 +8144,22 @@ public class LayoutUnitTests : BaseTestClass
         row2.AddChild(row2Child);
 
         // row1 is widest at 500, all match
-        parent.GetAbsoluteWidth().ShouldBe(500);
-        row1.GetAbsoluteWidth().ShouldBe(500);
-        row2.GetAbsoluteWidth().ShouldBe(500);
+        parent.AbsoluteWidth.ShouldBe(500);
+        row1.AbsoluteWidth.ShouldBe(500);
+        row2.AbsoluteWidth.ShouldBe(500);
 
         // Shrink row1's child — row2 is now widest at 200
         row1Child.Width = 100;
-        parent.GetAbsoluteWidth().ShouldBe(200);
-        row1.GetAbsoluteWidth().ShouldBe(200);
-        row2.GetAbsoluteWidth().ShouldBe(200);
+        parent.AbsoluteWidth.ShouldBe(200);
+        row1.AbsoluteWidth.ShouldBe(200);
+        row2.AbsoluteWidth.ShouldBe(200);
 
         // Shrink to zero
         row1Child.Width = 0;
         row2Child.Width = 0;
-        parent.GetAbsoluteWidth().ShouldBe(0);
-        row1.GetAbsoluteWidth().ShouldBe(0);
-        row2.GetAbsoluteWidth().ShouldBe(0);
+        parent.AbsoluteWidth.ShouldBe(0);
+        row1.AbsoluteWidth.ShouldBe(0);
+        row2.AbsoluteWidth.ShouldBe(0);
     }
 
     [Fact]
@@ -8192,20 +8192,20 @@ public class LayoutUnitTests : BaseTestClass
 
         // Absolute child (300) is wider than maxChild's content (100)
         // Parent sizes to 300, maxChild fills to 300
-        parent.GetAbsoluteWidth().ShouldBe(300);
-        absoluteChild.GetAbsoluteWidth().ShouldBe(300);
-        maxChild.GetAbsoluteWidth().ShouldBe(300);
+        parent.AbsoluteWidth.ShouldBe(300);
+        absoluteChild.AbsoluteWidth.ShouldBe(300);
+        maxChild.AbsoluteWidth.ShouldBe(300);
 
         // Now make the maxChild's content wider
         maxChildInner.Width = 500;
-        parent.GetAbsoluteWidth().ShouldBe(500);
-        absoluteChild.GetAbsoluteWidth().ShouldBe(300);
-        maxChild.GetAbsoluteWidth().ShouldBe(500);
+        parent.AbsoluteWidth.ShouldBe(500);
+        absoluteChild.AbsoluteWidth.ShouldBe(300);
+        maxChild.AbsoluteWidth.ShouldBe(500);
 
         // Shrink it back — Absolute child dominates again
         maxChildInner.Width = 100;
-        parent.GetAbsoluteWidth().ShouldBe(300);
-        maxChild.GetAbsoluteWidth().ShouldBe(300);
+        parent.AbsoluteWidth.ShouldBe(300);
+        maxChild.AbsoluteWidth.ShouldBe(300);
     }
 
     [Fact]
@@ -8229,14 +8229,14 @@ public class LayoutUnitTests : BaseTestClass
         child.AddChild(grandchild);
 
         // At X=0: parent=100, child=100
-        parent.GetAbsoluteWidth().ShouldBe(100);
-        child.GetAbsoluteWidth().ShouldBe(100);
+        parent.AbsoluteWidth.ShouldBe(100);
+        child.AbsoluteWidth.ShouldBe(100);
 
         // Move child to X=100: parent stays at 100 (based on content only),
         // child stays at 100 (max of parent=100 and content=100)
         child.X = 100;
-        parent.GetAbsoluteWidth().ShouldBe(100);
-        child.GetAbsoluteWidth().ShouldBe(100);
+        parent.AbsoluteWidth.ShouldBe(100);
+        child.AbsoluteWidth.ShouldBe(100);
     }
 
     #endregion

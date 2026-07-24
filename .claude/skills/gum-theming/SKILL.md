@@ -67,7 +67,7 @@ Different controls have different state sets — Button has 7, TextBox has 4 (no
 
 Need a dotted / dashed outline (Win95 focus rectangle, marching-ants selection, etc.)? Don't spawn many small `RectangleRuntime` "dot" instances along the edges. `RectangleRuntime` / `CircleRuntime` (and the other Apos shape runtimes) expose `StrokeDashLength` and `StrokeGapLength`. Set `IsFilled = false`, `StrokeWidth = 1`, both dash properties to your desired pattern, and the shape renders as a properly-rasterized dashed stroke — one node in the render tree, sized via the usual `RelativeToParent` units, with no per-frame dot bookkeeping and no sensitivity to layout timing.
 
-The dotted-rectangle materialization approach (place N tiny rectangles at fixed offsets) looks superficially simpler, but ends up needing `GetAbsoluteWidth()` to compute N — and that returns stale values when the consumer sets `control.Width = X; control.IsFocused = true;` back-to-back: the state callback fires before the next layout pass, so the dot count is computed off the construction-time size. The visible artifact is a half-drawn focus rect that "self-heals" once a hover fires another state change after layout has run.
+The dotted-rectangle materialization approach (place N tiny rectangles at fixed offsets) looks superficially simpler, but ends up needing `AbsoluteWidth` to compute N — and that returns stale values when the consumer sets `control.Width = X; control.IsFocused = true;` back-to-back: the state callback fires before the next layout pass, so the dot count is computed off the construction-time size. The visible artifact is a half-drawn focus rect that "self-heals" once a hover fires another state change after layout has run.
 
 ## ContainerRuntime sub-wrappers eat clicks
 

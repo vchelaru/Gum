@@ -28,6 +28,6 @@ public class MenuTests
     public void AbsoluteHeight_ShouldNotBe0_IfNoItemsAreAdded()
     {
         Menu menu = new();
-        menu.Visual.GetAbsoluteHeight().ShouldBeGreaterThan(0);
+        menu.Visual.AbsoluteHeight.ShouldBeGreaterThan(0);
     }
 }

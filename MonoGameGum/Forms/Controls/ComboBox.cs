@@ -396,8 +396,8 @@ public class ComboBox :
         // ... so grab the absolute values:
         var x = listBox.Visual.AbsoluteX;
         var y = listBox.Visual.AbsoluteY;
-        var width = listBox.Visual.GetAbsoluteWidth();
-        var height = listBox.Visual.GetAbsoluteHeight();
+        var width = listBox.Visual.AbsoluteWidth;
+        var height = listBox.Visual.AbsoluteHeight;
 
         listBoxWidthUnits = listBox.Visual.WidthUnits;
         listBoxHeightUnits = listBox.Visual.HeightUnits;

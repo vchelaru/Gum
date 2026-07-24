@@ -206,8 +206,8 @@ unsafe class Program
             currentCodeScreen = codeScreenFactories[currentScreenIndex - gumxScreens.Count]();
             currentCodeScreen.Visual.YOrigin = VerticalAlignment.Top;
             currentCodeScreen.Visual.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
-            currentCodeScreen.Visual.Y = navStrip.Visual.GetAbsoluteHeight();
-            currentCodeScreen.Visual.Height = -navStrip.Visual.GetAbsoluteHeight();
+            currentCodeScreen.Visual.Y = navStrip.Visual.AbsoluteHeight;
+            currentCodeScreen.Visual.Height = -navStrip.Visual.AbsoluteHeight;
             currentCodeScreen.AddToRoot();
         }
     }
@@ -222,7 +222,7 @@ unsafe class Program
     {
         if (currentGumxScreen == null) return;
 
-        float navStripHeight = navStrip.Visual.GetAbsoluteHeight();
+        float navStripHeight = navStrip.Visual.AbsoluteHeight;
         currentGumxScreen.Width = GraphicalUiElement.CanvasWidth;
         currentGumxScreen.Height = GraphicalUiElement.CanvasHeight - navStripHeight;
         currentGumxScreen.Y = navStripHeight;

@@ -226,11 +226,11 @@ public class FrameworkElement : INotifyPropertyChanged
     /// <summary>
     /// The height in pixels. This is a calculated value considering HeightUnits and Height.
     /// </summary>
-    public float ActualHeight => Visual.GetAbsoluteHeight();
+    public float ActualHeight => Visual.AbsoluteHeight;
     /// <summary>
     /// The width in pixels. This is a calculated value considering WidthUnits and Width;
     /// </summary>
-    public float ActualWidth => Visual.GetAbsoluteWidth();
+    public float ActualWidth => Visual.AbsoluteWidth;
 
     /// <summary>
     /// Returns the left of this element in absolute (screen) coordinates
@@ -976,8 +976,8 @@ public class FrameworkElement : INotifyPropertyChanged
             canvasHeight = GraphicalUiElement.CanvasHeight;
         }
 
-        var width = Visual.GetAbsoluteWidth();
-        var height = Visual.GetAbsoluteHeight();
+        var width = Visual.AbsoluteWidth;
+        var height = Visual.AbsoluteHeight;
 
         // Use Absolute coords for the bounds check so this works even when Visual has
         // a non-zero-positioned parent. Mutate local X/Y by the same delta — the parent

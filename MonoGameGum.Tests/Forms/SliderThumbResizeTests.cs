@@ -23,10 +23,10 @@ public class SliderThumbResizeTests : BaseTestClass
     // Default thumb has Center XOrigin so AbsoluteLeft is offset by half its width.
     // Compare centers, not left edges.
     private static float CenterX(GraphicalUiElement element) =>
-        element.AbsoluteLeft + element.GetAbsoluteWidth() * 0.5f;
+        element.AbsoluteLeft + element.AbsoluteWidth * 0.5f;
 
     private static float CenterX(InteractiveGue element) =>
-        element.AbsoluteLeft + element.GetAbsoluteWidth() * 0.5f;
+        element.AbsoluteLeft + element.AbsoluteWidth * 0.5f;
 
     [Fact]
     public void ThumbCenter_ShouldFollow_WhenSliderVisualResizes()

@@ -1475,7 +1475,7 @@ public class ListBox : ItemsControl, IInputReceiver
             var visualBottom = visualAsIpso.Y + visualAsIpso.Height;
 
             var viewTop = -InnerPanel.Y;
-            var viewBottom = -InnerPanel.Y + clipContainer.GetAbsoluteHeight();
+            var viewBottom = -InnerPanel.Y + clipContainer.AbsoluteHeight;
             var isAboveView = visualTop < viewTop;
             var isBelowView = visualBottom > viewBottom;
 
@@ -1512,7 +1512,7 @@ public class ListBox : ItemsControl, IInputReceiver
 
                     var viewHeight = visualAsIpso.Height;
 
-                    var desiredViewTop = viewHeight / 2.0f + visualTop - clipContainer.GetAbsoluteHeight() / 2;
+                    var desiredViewTop = viewHeight / 2.0f + visualTop - clipContainer.AbsoluteHeight / 2;
 
                     amountToScroll = desiredViewTop - viewTop;
                     if (verticalScrollBar != null)
@@ -1860,8 +1860,8 @@ public class ListBox : ItemsControl, IInputReceiver
             var item = listBoxItem.Visual;
             if (item.Visible)
             {
-                var widthHalf = item.GetAbsoluteWidth() / 2.0f;
-                var heightHalf = item.GetAbsoluteHeight() / 2.0f;
+                var widthHalf = item.AbsoluteWidth / 2.0f;
+                var heightHalf = item.AbsoluteHeight / 2.0f;
 
                 var absoluteX = item.GetAbsoluteCenterX();
                 var absoluteY = item.GetAbsoluteCenterY();
@@ -1913,8 +1913,8 @@ public class ListBox : ItemsControl, IInputReceiver
 
                 var offsetToCheck = InnerPanel.StackSpacing + AdditionalOffsetToCheckForDPadNavigation;
 
-                float xCenter = currentSelection.GetAbsoluteX() + currentSelection.GetAbsoluteWidth() / 2.0f;
-                float yCenter = currentSelection.GetAbsoluteY() + currentSelection.GetAbsoluteHeight() / 2.0f;
+                float xCenter = currentSelection.GetAbsoluteX() + currentSelection.AbsoluteWidth / 2.0f;
+                float yCenter = currentSelection.GetAbsoluteY() + currentSelection.AbsoluteHeight / 2.0f;
 
                 float x = xCenter;
                 float y = yCenter;

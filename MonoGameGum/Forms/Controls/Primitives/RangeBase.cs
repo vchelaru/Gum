@@ -456,7 +456,7 @@ public abstract class RangeBase :
         if (IsMoveToPointEnabled)
         {
             var left = Track.GetAbsoluteX();
-            var right = Track.GetAbsoluteX() + Track.GetAbsoluteWidth();
+            var right = Track.GetAbsoluteX() + Track.AbsoluteWidth;
 
             var screenX = MainCursor.XRespectingGumZoomAndBounds();
 
@@ -507,13 +507,13 @@ public abstract class RangeBase :
 
         if(Orientation == Orientation.Horizontal)
         {
-            var trackWidth = Track.GetAbsoluteWidth();
+            var trackWidth = Track.AbsoluteWidth;
             var cursorX = MainCursor.XRespectingGumZoomAndBounds();
             clickedPercentageOver = (cursorX - Track.AbsoluteLeft) / trackWidth;
         }
         else
         {
-            var trackHeight = Track.GetAbsoluteHeight();
+            var trackHeight = Track.AbsoluteHeight;
             var cursorY = MainCursor.YRespectingGumZoomAndBounds();
             clickedPercentageOver = (cursorY - Track.AbsoluteTop) / trackHeight;
         }

@@ -141,8 +141,8 @@ namespace MonoGameGumInCode
             // by the nav strip's footprint so the two never overlap.
             _currentScreen.Visual.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Top;
             _currentScreen.Visual.YUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall;
-            _currentScreen.Visual.Y = _navStrip.Visual.GetAbsoluteHeight();
-            _currentScreen.Visual.Height = -_navStrip.Visual.GetAbsoluteHeight();
+            _currentScreen.Visual.Y = _navStrip.Visual.AbsoluteHeight;
+            _currentScreen.Visual.Height = -_navStrip.Visual.AbsoluteHeight;
             _currentScreen.AddToRoot();
         }
 

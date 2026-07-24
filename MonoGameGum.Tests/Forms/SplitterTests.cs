@@ -52,13 +52,13 @@ public class SplitterTests : BaseTestClass
         _secondPanel!.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         _secondPanel.Height = 100;
 
-        var originalAbsoluteHeightBefore = _firstPanel.Visual.GetAbsoluteHeight();
-        var originalAbsoluteHeightAfter = _secondPanel.Visual.GetAbsoluteHeight();
+        var originalAbsoluteHeightBefore = _firstPanel.Visual.AbsoluteHeight;
+        var originalAbsoluteHeightAfter = _secondPanel.Visual.AbsoluteHeight;
 
         _splitter!.ApplyResizeChangeInPixels(12);
 
-        _firstPanel.Visual.GetAbsoluteHeight().ShouldBe(originalAbsoluteHeightBefore + 12);
-        _secondPanel.Visual.GetAbsoluteHeight().ShouldBe(originalAbsoluteHeightAfter - 12);
+        _firstPanel.Visual.AbsoluteHeight.ShouldBe(originalAbsoluteHeightBefore + 12);
+        _secondPanel.Visual.AbsoluteHeight.ShouldBe(originalAbsoluteHeightAfter - 12);
     }
 
     [Fact]
@@ -74,13 +74,13 @@ public class SplitterTests : BaseTestClass
         _secondPanel!.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfParent;
         _secondPanel.Height = 30;
 
-        var originalAbsoluteHeightBefore = _firstPanel.Visual.GetAbsoluteHeight();
-        var originalAbsoluteHeightAfter = _secondPanel.Visual.GetAbsoluteHeight();
+        var originalAbsoluteHeightBefore = _firstPanel.Visual.AbsoluteHeight;
+        var originalAbsoluteHeightAfter = _secondPanel.Visual.AbsoluteHeight;
 
         _splitter!.ApplyResizeChangeInPixels(12);
 
-        _firstPanel.Visual.GetAbsoluteHeight().ShouldBe(originalAbsoluteHeightBefore + 12);
-        _secondPanel.Visual.GetAbsoluteHeight().ShouldBe(originalAbsoluteHeightAfter - 12);
+        _firstPanel.Visual.AbsoluteHeight.ShouldBe(originalAbsoluteHeightBefore + 12);
+        _secondPanel.Visual.AbsoluteHeight.ShouldBe(originalAbsoluteHeightAfter - 12);
     }
 
 
@@ -98,13 +98,13 @@ public class SplitterTests : BaseTestClass
         _parentPanel!.Height = 300;
         _parentPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
 
-        var originalAbsoluteHeightBefore = _firstPanel.Visual.GetAbsoluteHeight();
-        var originalAbsoluteHeightAfter = _secondPanel.Visual.GetAbsoluteHeight();
+        var originalAbsoluteHeightBefore = _firstPanel.Visual.AbsoluteHeight;
+        var originalAbsoluteHeightAfter = _secondPanel.Visual.AbsoluteHeight;
 
         _splitter!.ApplyResizeChangeInPixels(12);
 
-        _firstPanel.Visual.GetAbsoluteHeight().ShouldBe(originalAbsoluteHeightBefore + 12);
-        _secondPanel.Visual.GetAbsoluteHeight().ShouldBe(originalAbsoluteHeightAfter - 12);
+        _firstPanel.Visual.AbsoluteHeight.ShouldBe(originalAbsoluteHeightBefore + 12);
+        _secondPanel.Visual.AbsoluteHeight.ShouldBe(originalAbsoluteHeightAfter - 12);
     }
 
     [Fact]
@@ -121,13 +121,13 @@ public class SplitterTests : BaseTestClass
         _parentPanel!.Height = 300;
         _parentPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
 
-        var originalAbsoluteHeightBefore = _firstPanel.Visual.GetAbsoluteHeight();
-        var originalAbsoluteHeightAfter = _secondPanel.Visual.GetAbsoluteHeight();
+        var originalAbsoluteHeightBefore = _firstPanel.Visual.AbsoluteHeight;
+        var originalAbsoluteHeightAfter = _secondPanel.Visual.AbsoluteHeight;
 
         _splitter!.ApplyResizeChangeInPixels(12);
 
-        _firstPanel.Visual.GetAbsoluteHeight().ShouldBe(originalAbsoluteHeightBefore + 12, .01f);
-        _secondPanel.Visual.GetAbsoluteHeight().ShouldBe(originalAbsoluteHeightAfter - 12, .01f);
+        _firstPanel.Visual.AbsoluteHeight.ShouldBe(originalAbsoluteHeightBefore + 12, .01f);
+        _secondPanel.Visual.AbsoluteHeight.ShouldBe(originalAbsoluteHeightAfter - 12, .01f);
     }
 
     [Fact]
@@ -149,15 +149,15 @@ public class SplitterTests : BaseTestClass
         _parentPanel.Height = 300;
         _parentPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
 
-        var originalAbsoluteHeightBefore = _firstPanel.Visual.GetAbsoluteHeight();
-        var originalAbsoluteHeightAfter = _secondPanel.Visual.GetAbsoluteHeight();
-        var additionalAbsoluteHeight = additionalSibling.Visual.GetAbsoluteHeight();
+        var originalAbsoluteHeightBefore = _firstPanel.Visual.AbsoluteHeight;
+        var originalAbsoluteHeightAfter = _secondPanel.Visual.AbsoluteHeight;
+        var additionalAbsoluteHeight = additionalSibling.Visual.AbsoluteHeight;
 
         _splitter!.ApplyResizeChangeInPixels(12);
 
-        _firstPanel.Visual.GetAbsoluteHeight().ShouldBe(originalAbsoluteHeightBefore + 12, .01f);
-        _secondPanel.Visual.GetAbsoluteHeight().ShouldBe(originalAbsoluteHeightAfter - 12, .01f);
-        additionalSibling.Visual.GetAbsoluteHeight().ShouldBe(additionalAbsoluteHeight, .01f);
+        _firstPanel.Visual.AbsoluteHeight.ShouldBe(originalAbsoluteHeightBefore + 12, .01f);
+        _secondPanel.Visual.AbsoluteHeight.ShouldBe(originalAbsoluteHeightAfter - 12, .01f);
+        additionalSibling.Visual.AbsoluteHeight.ShouldBe(additionalAbsoluteHeight, .01f);
     }
 
     [Fact]
