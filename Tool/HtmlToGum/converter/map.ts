@@ -759,14 +759,27 @@ export function mapTreeToScreen(
    * Cross-axis sizing + alignment for a flex stack child.
    * stretch + indefinite → RelativeToParent 0; otherwise hug / % size and origin-align.
    * Child `align-self` overrides parent `align-items` when not `auto`.
+   *
+   * A literal (non-auto) margin on the cross-start/end edge still offsets the child even
+   * under flex-start/stretch alignment — CSS aligns the item's *margin* box to the line,
+   * not its border box (e.g. iana.org's <article style="display:flex"><main
+   * style="margin-top:25px">: main's border-box sits 25px below the container's
+   * cross-start, and its stretched height shrinks by that margin).
    */
   function emitStackCrossAxis(name, parentOrientation, alignItems, measuredCross, style) {
     const self = (style?.alignSelf || 'auto').toLowerCase();
     const align = (self !== 'auto' ? self : (alignItems || 'stretch')).toLowerCase();
     const stretch = isAlignStretch(align) && !hasDefiniteCrossSize(style, parentOrientation);
     const axisName = parentOrientation === 'column' ? 'Width' : 'Height';
+    const posName = parentOrientation === 'column' ? 'X' : 'Y';
+    const crossStart = (parentOrientation === 'column' ? style?.marginLeft : style?.marginTop) || 0;
+    const crossEnd = (parentOrientation === 'column' ? style?.marginRight : style?.marginBottom) || 0;
     if (stretch) {
-      variables.push(VDIM(`${name}.${axisName}Units`, DIM.RelativeToParent), VF(`${name}.${axisName}`, 0));
+      variables.push(
+        VDIM(`${name}.${axisName}Units`, DIM.RelativeToParent),
+        VF(`${name}.${axisName}`, -Math.round(crossStart + crossEnd)),
+      );
+      if (crossStart > 0) variables.push(VF(`${name}.${posName}`, Math.round(crossStart)));
       return;
     }
     const pct = specifiedPercent(style, axisName);
@@ -775,7 +788,11 @@ export function mapTreeToScreen(
     } else {
       variables.push(VDIM(`${name}.${axisName}Units`, DIM.Absolute), VF(`${name}.${axisName}`, Math.round(measuredCross)));
     }
-    if (isAlignStretch(align)) return; // definite size under stretch → cross-start (no origin shift)
+    if (isAlignStretch(align)) {
+      // Definite size under stretch → cross-start, offset only by the child's own margin.
+      if (crossStart > 0) variables.push(VF(`${name}.${posName}`, Math.round(crossStart)));
+      return;
+    }
     if (parentOrientation === 'column') {
       if (align === 'center') {
         variables.push(VPOS(`${name}.XUnits`, POS.PixelsFromCenterX), VOH(`${name}.XOrigin`, ORIGIN_H.Center), VF(`${name}.X`, 0));
