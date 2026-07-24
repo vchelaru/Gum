@@ -503,7 +503,7 @@ internal sealed class ImportProgressForm : Form
         ControlBox = false;
         MinimizeBox = false;
         MaximizeBox = false;
-        ClientSize = new Size(420, 72);
+        ClientSize = new Size(420, 92);
         Font = new Font("Segoe UI", 9f);
         TopMost = true;
 
@@ -511,12 +511,26 @@ internal sealed class ImportProgressForm : Form
         {
             Text = "Starting…",
             Left = 16,
-            Top = 24,
+            Top = 16,
             Width = 388,
             Height = 28,
             AutoEllipsis = true,
         };
         Controls.Add(_status);
+
+        // convert.ts prints its progress lines in one burst near the end, not as it goes —
+        // without this, the status label can sit unchanged for the whole run and reads as
+        // hung rather than working. Marquee needs no real progress signal to stay honest.
+        var spinner = new ProgressBar
+        {
+            Style = ProgressBarStyle.Marquee,
+            MarqueeAnimationSpeed = 30,
+            Left = 16,
+            Top = 48,
+            Width = 388,
+            Height = 16,
+        };
+        Controls.Add(spinner);
     }
 
     public void SetStatus(string text)
