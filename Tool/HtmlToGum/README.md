@@ -2,7 +2,7 @@
 
 Gum Tool plugin: **Content → Import → HTML…** converts a page into a Gum screen via Chromium’s computed box tree (Playwright), then imports the resulting `.gusx` and assets into the open project.
 
-Chromium is **not** bundled with Gum. It is downloaded locally when you `npm install` the converter.
+Chromium is **not** bundled with Gum. The plugin runs `npm install` (downloading Playwright's Chromium) automatically the first time you import, if it hasn't been run yet.
 
 ## Layout
 
@@ -30,7 +30,7 @@ dotnet build Tool/HtmlToGum/HtmlToGumPlugin.csproj -c Release
 
 Post-build copies `HtmlToGumPlugin.dll` to `Gum/bin/{Config}/Plugins/HtmlToGumPlugin/`.
 
-2. Install Node.js LTS, then converter deps (downloads Playwright Chromium):
+2. Install Node.js LTS. Converter dependencies (`npm install`, including Playwright's Chromium download) run automatically on first import — or run them yourself ahead of time:
 
 ```powershell
 cd Tool/HtmlToGum/converter
@@ -71,6 +71,6 @@ See [`samples/README.md`](samples/README.md). Open any sample via Import HTML, o
 | Need | For |
 |------|-----|
 | .NET 8 / Gum Tool build | Plugin |
-| Node.js LTS + `npm install` in `converter/` | Import HTML / CLI |
+| Node.js LTS | Import HTML / CLI (`npm install` runs automatically on first Import HTML; run it manually for CLI use) |
 | Playwright Chromium (via postinstall) | Box tree + screenshots |
 | Python + fonttools (optional) | Variable-font → static TTF (`requirements-fonts.txt`) |
