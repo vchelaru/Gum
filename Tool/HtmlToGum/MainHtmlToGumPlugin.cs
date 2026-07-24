@@ -18,12 +18,11 @@ using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
-using ToolsUtilities;
 
 namespace HtmlToGumPlugin;
 
 /// <summary>
-/// Content → Import HTML… — runs converter/convert.ts (via tsx) into a staging folder, copies
+/// Content → Import → HTML… — runs converter/convert.ts (via tsx) into a staging folder, copies
 /// Images/Fonts/FontCache into the open Gum project, then IImportLogic.ImportScreen.
 /// </summary>
 [Export(typeof(PluginBase))]
@@ -36,7 +35,8 @@ public class MainHtmlToGumPlugin : WpfPluginBase
 
     public override void StartUp()
     {
-        AddMenuItemTo("Import HTML…", HandleImportHtml, "Content");
+        var menuItem = AddMenuItem(new[] { "Content", "Import", "HTML…" });
+        menuItem.Click += HandleImportHtml;
     }
 
     private async void HandleImportHtml(object? sender, System.Windows.RoutedEventArgs e)
@@ -59,22 +59,17 @@ public class MainHtmlToGumPlugin : WpfPluginBase
             return;
         }
 
-        using var dlg = new OpenFileDialog
-        {
-            Filter = "HTML (*.html;*.htm)|*.html;*.htm|All files (*.*)|*.*",
-            Title = "Import HTML into Gum",
-        };
-        if (dlg.ShowDialog() != DialogResult.OK) return;
-
         var prefs = ImportPrefs.Load();
         var defaults = new ImportOptions
         {
-            HtmlPath = dlg.FileName,
+            HtmlPath = prefs.LastSource,
+            IsUrl = prefs.LastIsUrl,
             Selector = string.IsNullOrWhiteSpace(prefs.Selector) ? "body" : prefs.Selector,
-            ScreenName = SanitizeScreenName(Path.GetFileNameWithoutExtension(dlg.FileName)),
+            ScreenName = DeriveDefaultScreenName(prefs.LastSource, prefs.LastIsUrl),
             Width = prefs.Width > 0 ? prefs.Width : 800,
             Height = prefs.Height > 0 ? prefs.Height : 600,
             NoResponsive = prefs.NoResponsive,
+            DestinationSubfolder = prefs.DestinationSubfolder,
         };
         if (!ImportOptionsForm.ShowDialog(defaults, out var opts) || opts is null) return;
 
@@ -82,7 +77,12 @@ public class MainHtmlToGumPlugin : WpfPluginBase
         prefs.Width = opts.Width;
         prefs.Height = opts.Height;
         prefs.NoResponsive = opts.NoResponsive;
+        prefs.LastSource = opts.HtmlPath;
+        prefs.LastIsUrl = opts.IsUrl;
+        prefs.DestinationSubfolder = opts.DestinationSubfolder;
         prefs.Save();
+
+        var subfolder = string.IsNullOrWhiteSpace(opts.DestinationSubfolder) ? null : opts.DestinationSubfolder.Trim();
 
         var converterDir = ResolveConverterDir();
         var convertTs = Path.Combine(converterDir, "convert.ts");
@@ -94,8 +94,7 @@ public class MainHtmlToGumPlugin : WpfPluginBase
             _dialogService.ShowMessage(
                 "Converter not found.\n\n" +
                 $"Looked for:\n{convertTs}\n{convertMjs}\n\n" +
-                "Fix: run `cd Tool/HtmlToGum/converter && npm install`, or set the\n" +
-                "HTMLTOGUM_CONVERTER environment variable to the converter folder, then restart Gum.");
+                "Fix: set the HTMLTOGUM_CONVERTER environment variable to the converter folder, then restart Gum.");
             return;
         }
 
@@ -108,26 +107,15 @@ public class MainHtmlToGumPlugin : WpfPluginBase
             return;
         }
 
-        var tsxCli = Path.Combine(converterDir, "node_modules", "tsx", "dist", "cli.mjs");
-        if (useTs && !File.Exists(tsxCli))
+        // Unique screen name if one already exists in the project (scoped to the destination subfolder, if any).
+        var screenName = HtmlImportNaming.ResolveUniqueScreenName(
+            opts.ScreenName, subfolder, name => ObjectFinder.Self.GetElementSave(name) != null);
+        if (screenName != opts.ScreenName)
         {
-            _dialogService.ShowMessage(
-                "tsx is required to run convert.ts but was not found.\n\n" +
-                $"Looked for:\n{tsxCli}\n\n" +
-                "Fix: cd Tool/HtmlToGum/converter && npm install, then restart Gum.");
-            return;
-        }
-
-        // Unique screen name if one already exists in the project.
-        var screenName = opts.ScreenName;
-        if (ObjectFinder.Self.GetElementSave(screenName) != null)
-        {
-            var baseName = screenName;
-            var n = 2;
-            while (ObjectFinder.Self.GetElementSave($"{baseName}_{n}") != null) n++;
-            screenName = $"{baseName}_{n}";
+            var existingQualifiedName = HtmlImportNaming.QualifyScreenName(opts.ScreenName, subfolder);
+            var newQualifiedName = HtmlImportNaming.QualifyScreenName(screenName, subfolder);
             if (!_dialogService.ShowYesNoMessage(
-                    $"Screen \"{baseName}\" already exists. Import as \"{screenName}\"?",
+                    $"Screen \"{existingQualifiedName}\" already exists. Import as \"{newQualifiedName}\"?",
                     FriendlyName))
             {
                 return;
@@ -143,6 +131,23 @@ public class MainHtmlToGumPlugin : WpfPluginBase
 
         try
         {
+            var tsxCli = Path.Combine(converterDir, "node_modules", "tsx", "dist", "cli.mjs");
+            if (useTs && !File.Exists(tsxCli))
+            {
+                progress.SetStatus("Installing converter dependencies (first run only)…");
+                var (installExitCode, installStdout, installStderr) = await RunProcessAsync(
+                        "cmd.exe", "/c npm install", converterDir, progress)
+                    .ConfigureAwait(true);
+
+                if (installExitCode != 0 || !File.Exists(tsxCli))
+                {
+                    progress.Hide();
+                    _dialogService.ShowMessage(
+                        FormatNpmInstallFailure(installExitCode, installStdout, installStderr, converterDir));
+                    return;
+                }
+            }
+
             var flagArgs = opts.NoResponsive ? " --no-responsive" : "";
             var scriptArgs =
                 $"\"{opts.HtmlPath}\" \"{opts.Selector}\" {screenName} " +
@@ -179,7 +184,13 @@ public class MainHtmlToGumPlugin : WpfPluginBase
             CopyAssetTree(Path.Combine(stageDir, "FontCache"), Path.Combine(projectDir, "FontCache"));
 
             progress.SetStatus("Importing screen into project…");
-            var imported = importLogic.ImportScreen(new FilePath(gusx), saveProject: false);
+            var screenSave = ElementReference.DeserializeElement<ScreenSave>(gusx, GumProjectSave.NativeVersion);
+            if (subfolder != null)
+            {
+                screenSave.Name = HtmlImportNaming.QualifyScreenName(screenSave.Name, subfolder);
+            }
+            var qualifiedScreenName = screenSave.Name;
+            var imported = importLogic.ImportScreen(screenSave, saveProject: false);
             if (imported is null)
             {
                 progress.Hide();
@@ -195,15 +206,16 @@ public class MainHtmlToGumPlugin : WpfPluginBase
             }
 
             // Re-resolve after reload so selection points at the live ElementSave.
-            var live = ObjectFinder.Self.GetElementSave(screenName);
+            var live = ObjectFinder.Self.GetElementSave(qualifiedScreenName);
             if (live != null)
             {
                 selectedState.SelectedElement = live;
             }
 
             progress.Hide();
-            _dialogService.ShowMessage(
-                $"Imported and selected screen \"{screenName}\".\n\n{SummarizeConverterLog(stdout)}");
+            ImportResultForm.Show(
+                $"Imported and selected screen \"{qualifiedScreenName}\".",
+                SummarizeConverterLog(stdout, maxLines: 300));
         }
         catch (Exception ex)
         {
@@ -217,19 +229,36 @@ public class MainHtmlToGumPlugin : WpfPluginBase
     }
 
     private static string FormatConverterFailure(
-        int exitCode, string stdout, string stderr, string nodePath, string converterDir)
+        int exitCode, string stdout, string stderr, string nodePath, string converterDir) =>
+        FormatProcessFailure(
+            "Converter failed", exitCode, stdout, stderr,
+            [$"node: {nodePath}", $"cwd:  {converterDir}"],
+            "(no stdout/stderr — is Playwright Chromium installed?\n" +
+            "Run: cd Tool/HtmlToGum/converter && npx playwright-core install chromium)");
+
+    private static string FormatNpmInstallFailure(int exitCode, string stdout, string stderr, string converterDir) =>
+        FormatProcessFailure(
+            "Automatic npm install failed", exitCode, stdout, stderr,
+            [$"cwd: {converterDir}"],
+            "(no output — is npm on PATH? It ships with Node.js; run `npm -v` in a terminal to check.)") +
+        "\nFix: run `cd Tool/HtmlToGum/converter && npm install` manually, then retry.";
+
+    /// <summary>Formats a failed child-process run for display: exit code, context lines, then the last ~40 lines of its stderr/stdout.</summary>
+    private static string FormatProcessFailure(
+        string title, int exitCode, string stdout, string stderr, string[] contextLines, string noOutputHint)
     {
         var sb = new StringBuilder();
-        sb.AppendLine($"Converter failed (exit {exitCode}).");
+        sb.AppendLine($"{title} (exit {exitCode}).");
         sb.AppendLine();
-        sb.AppendLine($"node: {nodePath}");
-        sb.AppendLine($"cwd:  {converterDir}");
+        foreach (var line in contextLines)
+        {
+            sb.AppendLine(line);
+        }
         sb.AppendLine();
         var err = string.IsNullOrWhiteSpace(stderr) ? stdout : stderr;
         if (string.IsNullOrWhiteSpace(err))
         {
-            sb.AppendLine("(no stdout/stderr — is Playwright Chromium installed?");
-            sb.AppendLine("Run: cd Tool/HtmlToGum/converter && npx playwright-core install chromium");
+            sb.AppendLine(noOutputHint);
         }
         else
         {
@@ -323,13 +352,13 @@ public class MainHtmlToGumPlugin : WpfPluginBase
         });
     }
 
-    private static string SummarizeConverterLog(string stdout)
+    private static string SummarizeConverterLog(string stdout, int maxLines = 12)
     {
         var lines = stdout.Split('\n')
             .Select(l => l.TrimEnd())
             .Where(l => l.Length > 0)
             .Where(l => !l.StartsWith('>'))
-            .TakeLast(12);
+            .TakeLast(maxLines);
         return string.Join("\n", lines);
     }
 
@@ -346,6 +375,23 @@ public class MainHtmlToGumPlugin : WpfPluginBase
         }
     }
 
+    /// <summary>
+    /// Candidate converter directories, in lookup order, given the plugin DLL's base directory
+    /// (<c>AppDomain.CurrentDomain.BaseDirectory</c>). <c>Gum.csproj</c> sets
+    /// <c>AppendTargetFrameworkToOutputPath=false</c>, so <c>baseDir</c> is <c>&lt;repo&gt;/Gum/bin/&lt;Config&gt;/</c>
+    /// with no TFM subfolder — three levels up reaches the repo (or worktree) root.
+    /// </summary>
+    public static string[] GetConverterDirCandidates(string baseDir) =>
+    [
+        Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "Tool", "HtmlToGum", "converter")),
+        Path.GetFullPath(Path.Combine(baseDir, "converter")),
+        // Legacy sibling html-to-gum repository layouts.
+        Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "..", "html-to-gum", "converter")),
+        Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "html-to-gum", "converter")),
+        Path.GetFullPath(Path.Combine(baseDir, "..", "..", "html-to-gum", "converter")),
+        Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "..", "Repos", "html-to-gum", "converter")),
+    ];
+
     private static string ResolveConverterDir()
     {
         var env = Environment.GetEnvironmentVariable("HTMLTOGUM_CONVERTER");
@@ -354,17 +400,7 @@ public class MainHtmlToGumPlugin : WpfPluginBase
             return Path.GetFullPath(env);
         }
 
-        var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-        string[] candidates =
-        [
-            Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "..", "Tool", "HtmlToGum", "converter")),
-            Path.GetFullPath(Path.Combine(baseDir, "converter")),
-            // Legacy sibling html-to-gum repository layouts.
-            Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "..", "html-to-gum", "converter")),
-            Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "html-to-gum", "converter")),
-            Path.GetFullPath(Path.Combine(baseDir, "..", "..", "html-to-gum", "converter")),
-            Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", "..", "Repos", "html-to-gum", "converter")),
-        ];
+        var candidates = GetConverterDirCandidates(AppDomain.CurrentDomain.BaseDirectory);
         foreach (string candidate in candidates)
         {
             if (File.Exists(Path.Combine(candidate, "convert.ts")) ||
@@ -376,31 +412,48 @@ public class MainHtmlToGumPlugin : WpfPluginBase
         return candidates[0];
     }
 
-    private static string SanitizeScreenName(string? raw)
+    internal static string SanitizeScreenName(string? raw)
     {
         var name = Regex.Replace(raw ?? "ImportedScreen", @"[^A-Za-z0-9_]", "_");
         if (string.IsNullOrEmpty(name)) name = "ImportedScreen";
         if (char.IsDigit(name[0])) name = "S_" + name;
         return name;
     }
+
+    private static string DeriveDefaultScreenName(string source, bool isUrl)
+    {
+        if (string.IsNullOrWhiteSpace(source)) return "ImportedScreen";
+        if (isUrl)
+        {
+            return Uri.TryCreate(source, UriKind.Absolute, out var uri)
+                ? SanitizeScreenName(uri.Host)
+                : "ImportedScreen";
+        }
+        return SanitizeScreenName(Path.GetFileNameWithoutExtension(source));
+    }
 }
 
 internal sealed class ImportOptions
 {
     public string HtmlPath { get; set; } = "";
+    public bool IsUrl { get; set; }
     public string Selector { get; set; } = "body";
     public string ScreenName { get; set; } = "ImportedScreen";
     public int Width { get; set; } = 800;
     public int Height { get; set; } = 600;
     public bool NoResponsive { get; set; }
+    public string DestinationSubfolder { get; set; } = "";
 }
 
 internal sealed class ImportPrefs
 {
+    public string LastSource { get; set; } = "";
+    public bool LastIsUrl { get; set; }
     public string Selector { get; set; } = "body";
     public int Width { get; set; } = 800;
     public int Height { get; set; } = 600;
     public bool NoResponsive { get; set; }
+    public string DestinationSubfolder { get; set; } = "";
 
     private static string PrefsPath =>
         Path.Combine(
@@ -478,7 +531,66 @@ internal sealed class ImportProgressForm : Form
     }
 }
 
-/// <summary>WinForms dialog for selector / screen name / viewport / responsive flag.</summary>
+/// <summary>Success dialog with a terse summary and a collapsed "Show details" panel for the full converter log.</summary>
+internal static class ImportResultForm
+{
+    private const int CollapsedHeight = 104;
+    private const int DetailsHeight = 220;
+
+    public static void Show(string summary, string details)
+    {
+        using var form = new Form
+        {
+            Text = "Import HTML",
+            FormBorderStyle = FormBorderStyle.FixedDialog,
+            StartPosition = FormStartPosition.CenterParent,
+            MinimizeBox = false,
+            MaximizeBox = false,
+            ClientSize = new Size(420, CollapsedHeight),
+            Font = new Font("Segoe UI", 9f),
+        };
+
+        var lblSummary = new Label { Text = summary, Left = 16, Top = 16, Width = 388, Height = 40 };
+        var btnDetails = new Button
+        {
+            Text = "Show details ▾",
+            Left = 16,
+            Top = 60,
+            Width = 130,
+            Visible = !string.IsNullOrWhiteSpace(details),
+        };
+        var btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Left = 324, Top = 60, Width = 80 };
+        var txtDetails = new TextBox
+        {
+            Left = 16,
+            Top = 96,
+            Width = 388,
+            Height = DetailsHeight,
+            Multiline = true,
+            ReadOnly = true,
+            ScrollBars = ScrollBars.Vertical,
+            Font = new Font("Consolas", 8.5f),
+            Text = details,
+            Visible = false,
+        };
+
+        btnDetails.Click += (_, _) =>
+        {
+            bool expanding = !txtDetails.Visible;
+            txtDetails.Visible = expanding;
+            btnDetails.Text = expanding ? "Hide details ▴" : "Show details ▾";
+            form.ClientSize = expanding
+                ? new Size(420, CollapsedHeight + DetailsHeight)
+                : new Size(420, CollapsedHeight);
+        };
+
+        form.AcceptButton = btnOk;
+        form.Controls.AddRange([lblSummary, btnDetails, btnOk, txtDetails]);
+        form.ShowDialog();
+    }
+}
+
+/// <summary>WinForms dialog for HTML source (local file / URL) / selector / screen name / viewport / responsive flag / destination subfolder.</summary>
 internal static class ImportOptionsForm
 {
     public static bool ShowDialog(ImportOptions defaults, out ImportOptions? result)
@@ -491,67 +603,112 @@ internal static class ImportOptionsForm
             StartPosition = FormStartPosition.CenterParent,
             MinimizeBox = false,
             MaximizeBox = false,
-            ClientSize = new Size(460, 248),
+            ClientSize = new Size(460, 316),
             Font = new Font("Segoe UI", 9f),
         };
 
-        var lblHtml = new Label
-        {
-            Text = Path.GetFileName(defaults.HtmlPath),
-            Left = 12,
-            Top = 12,
-            Width = 436,
-            AutoEllipsis = true,
-        };
-        var lblSel = new Label { Text = "CSS root selector", Left = 12, Top = 44, Width = 140 };
-        var txtSel = new TextBox { Text = defaults.Selector, Left = 160, Top = 40, Width = 280 };
-        var lblName = new Label { Text = "Screen name", Left = 12, Top = 76, Width = 140 };
-        var txtName = new TextBox { Text = defaults.ScreenName, Left = 160, Top = 72, Width = 280 };
-        var lblSize = new Label { Text = "Viewport W×H", Left = 12, Top = 108, Width = 140 };
-        var txtW = new TextBox { Text = defaults.Width.ToString(), Left = 160, Top = 104, Width = 80 };
-        var txtH = new TextBox { Text = defaults.Height.ToString(), Left = 250, Top = 104, Width = 80 };
+        var radioLocal = new RadioButton { Text = "Local file", Left = 12, Top = 12, Width = 100, Checked = !defaults.IsUrl };
+        var radioUrl = new RadioButton { Text = "URL", Left = 116, Top = 12, Width = 80, Checked = defaults.IsUrl };
+        var txtSource = new TextBox { Text = defaults.HtmlPath, Left = 12, Top = 36, Width = 356 };
+        var btnBrowse = new Button { Text = "Browse…", Left = 372, Top = 34, Width = 76 };
+
+        var lblSel = new Label { Text = "CSS root selector", Left = 12, Top = 72, Width = 140 };
+        var txtSel = new TextBox { Text = defaults.Selector, Left = 160, Top = 68, Width = 280 };
+        var lblName = new Label { Text = "Screen name", Left = 12, Top = 104, Width = 140 };
+        var txtName = new TextBox { Text = defaults.ScreenName, Left = 160, Top = 100, Width = 280 };
+        var lblSize = new Label { Text = "Viewport W×H", Left = 12, Top = 136, Width = 140 };
+        var txtW = new TextBox { Text = defaults.Width.ToString(), Left = 160, Top = 132, Width = 80 };
+        var txtH = new TextBox { Text = defaults.Height.ToString(), Left = 250, Top = 132, Width = 80 };
         var chkNoResp = new CheckBox
         {
             Text = "Disable responsive units (--no-responsive)",
             Left = 160,
-            Top = 140,
+            Top = 168,
             Width = 280,
             Checked = defaults.NoResponsive,
         };
+        var lblSubfolder = new Label { Text = "Destination subfolder", Left = 12, Top = 200, Width = 140 };
+        var txtSubfolder = new TextBox { Text = defaults.DestinationSubfolder, Left = 160, Top = 196, Width = 280 };
         var hint = new Label
         {
-            Text = "Selector / viewport remembered for next import.",
+            Text = "Optional — avoids name conflicts by importing under Screens/<subfolder>/.",
             Left = 12,
-            Top = 172,
+            Top = 228,
             Width = 436,
             ForeColor = SystemColors.GrayText,
         };
-        var btnOk = new Button { Text = "Import", DialogResult = DialogResult.OK, Left = 264, Top = 204, Width = 88 };
-        var btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Left = 360, Top = 204, Width = 88 };
+        var btnOk = new Button { Text = "Import", Left = 264, Top = 272, Width = 88 };
+        var btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Left = 360, Top = 272, Width = 88 };
         form.Controls.AddRange(
         [
-            lblHtml, lblSel, txtSel, lblName, txtName, lblSize, txtW, txtH,
-            chkNoResp, hint, btnOk, btnCancel,
+            radioLocal, radioUrl, txtSource, btnBrowse,
+            lblSel, txtSel, lblName, txtName, lblSize, txtW, txtH,
+            chkNoResp, lblSubfolder, txtSubfolder, hint, btnOk, btnCancel,
         ]);
         form.AcceptButton = btnOk;
         form.CancelButton = btnCancel;
+
+        void UpdateBrowseEnabled() => btnBrowse.Enabled = radioLocal.Checked;
+        radioLocal.CheckedChanged += (_, _) => UpdateBrowseEnabled();
+        radioUrl.CheckedChanged += (_, _) => UpdateBrowseEnabled();
+        UpdateBrowseEnabled();
+
+        btnBrowse.Click += (_, _) =>
+        {
+            using var fileDlg = new OpenFileDialog
+            {
+                Filter = "HTML (*.html;*.htm)|*.html;*.htm|All files (*.*)|*.*",
+                Title = "Choose local HTML file",
+            };
+            if (fileDlg.ShowDialog(form) != DialogResult.OK) return;
+            txtSource.Text = fileDlg.FileName;
+            if (string.IsNullOrWhiteSpace(txtName.Text) || txtName.Text == "ImportedScreen")
+            {
+                txtName.Text = MainHtmlToGumPlugin.SanitizeScreenName(Path.GetFileNameWithoutExtension(fileDlg.FileName));
+            }
+        };
+
+        btnOk.Click += (_, _) =>
+        {
+            var source = txtSource.Text.Trim();
+            if (string.IsNullOrWhiteSpace(source))
+            {
+                MessageBox.Show(form, "Enter a local HTML file path or a URL.", "Import HTML",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if (radioUrl.Checked)
+            {
+                source = HtmlImportNaming.NormalizeUrl(source);
+                txtSource.Text = source;
+            }
+            else if (!File.Exists(source))
+            {
+                MessageBox.Show(form, $"File not found:\n{source}", "Import HTML",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            form.DialogResult = DialogResult.OK;
+            form.Close();
+        };
 
         if (form.ShowDialog() != DialogResult.OK) return false;
 
         if (!int.TryParse(txtW.Text.Trim(), out var w) || w < 1) w = defaults.Width;
         if (!int.TryParse(txtH.Text.Trim(), out var h) || h < 1) h = defaults.Height;
         var name = string.IsNullOrWhiteSpace(txtName.Text) ? defaults.ScreenName : txtName.Text.Trim();
-        name = Regex.Replace(name, @"[^A-Za-z0-9_]", "_");
-        if (char.IsDigit(name[0])) name = "S_" + name;
+        name = MainHtmlToGumPlugin.SanitizeScreenName(name);
 
         result = new ImportOptions
         {
-            HtmlPath = defaults.HtmlPath,
+            HtmlPath = txtSource.Text.Trim(),
+            IsUrl = radioUrl.Checked,
             Selector = string.IsNullOrWhiteSpace(txtSel.Text) ? "body" : txtSel.Text.Trim(),
             ScreenName = name,
             Width = w,
             Height = h,
             NoResponsive = chkNoResp.Checked,
+            DestinationSubfolder = txtSubfolder.Text.Trim(),
         };
         return true;
     }

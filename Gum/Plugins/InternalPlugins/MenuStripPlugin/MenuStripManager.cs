@@ -440,7 +440,7 @@ namespace Gum.Managers
             ["Content"] = new[]
             {
                 new[] { "Find file references..." },
-                new[] { "Add Forms Components", "Import from .gumx..." },
+                new[] { "Add Forms Components", "Import" },
                 new[]
                 {
                     "Clear Font Cache",

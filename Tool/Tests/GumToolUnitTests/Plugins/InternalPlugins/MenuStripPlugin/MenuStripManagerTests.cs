@@ -199,7 +199,7 @@ public class MenuStripManagerTests : BaseTestClass
         // Register in one order
         _menuStripManager.AddMenuItem(new[] { "Content", "View Font Cache" });
         _menuStripManager.AddMenuItem(new[] { "Content", "Clear Font Cache" });
-        _menuStripManager.AddMenuItem(new[] { "Content", "Import from .gumx..." });
+        _menuStripManager.AddMenuItem(new[] { "Content", "Import" });
         _menuStripManager.AddMenuItem(new[] { "Content", "Add Forms Components" });
         _menuStripManager.AddMenuItem(new[] { "Content", "Force re-create all font files" });
         _menuStripManager.AddMenuItem(new[] { "Content", "Re-create missing font files" });
@@ -220,7 +220,7 @@ public class MenuStripManagerTests : BaseTestClass
         // Register in a different order
         secondManager.AddMenuItem(new[] { "Content", "Add Forms Components" });
         secondManager.AddMenuItem(new[] { "Content", "Re-create missing font files" });
-        secondManager.AddMenuItem(new[] { "Content", "Import from .gumx..." });
+        secondManager.AddMenuItem(new[] { "Content", "Import" });
         secondManager.AddMenuItem(new[] { "Content", "Force re-create all font files" });
         secondManager.AddMenuItem(new[] { "Content", "Clear Font Cache" });
         secondManager.AddMenuItem(new[] { "Content", "View Font Cache" });
@@ -234,7 +234,7 @@ public class MenuStripManagerTests : BaseTestClass
             "Find file references...",
             "<separator>",
             "Add Forms Components",
-            "Import from .gumx...",
+            "Import",
             "<separator>",
             "Clear Font Cache",
             "Re-create missing font files",
@@ -251,7 +251,7 @@ public class MenuStripManagerTests : BaseTestClass
         _menuStripManager.PopulateMenu(menu);
 
         _menuStripManager.AddMenuItem(new[] { "Content", "Add Forms Components" });
-        _menuStripManager.AddMenuItem(new[] { "Content", "Import from .gumx..." });
+        _menuStripManager.AddMenuItem(new[] { "Content", "Import" });
         _menuStripManager.AddMenuItem(new[] { "Content", "Clear Font Cache" });
         _menuStripManager.AddMenuItem(new[] { "Content", "View Font Cache" });
 
@@ -275,7 +275,7 @@ public class MenuStripManagerTests : BaseTestClass
 
         // The re-added item must land back in its forms group, not at the end.
         int formsIndex = Array.IndexOf(headers, (object)"Add Forms Components");
-        int importIndex = Array.IndexOf(headers, (object)"Import from .gumx...");
+        int importIndex = Array.IndexOf(headers, (object)"Import");
         int clearFontIndex = Array.IndexOf(headers, (object)"Clear Font Cache");
 
         formsIndex.ShouldBeLessThan(importIndex);

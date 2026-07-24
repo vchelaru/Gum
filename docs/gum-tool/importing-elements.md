@@ -31,7 +31,7 @@ This option is useful if you would like to import a set of components, such as a
 
 To import from a project:
 
-1. Click the Content -> Import from .gumx... menu item
+1. Click the Content -> Import -> .gumx... menu item
 2. Select either Local File or URL depending on the location of the .gumx
 3. Browser or enter the location of the project
 4. Select the desired objects to import. You can click entire folders to select all contained objects. Note that dependencies (such as behaviors) are automatically checked.
