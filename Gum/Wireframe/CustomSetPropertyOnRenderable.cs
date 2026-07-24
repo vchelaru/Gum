@@ -3098,6 +3098,44 @@ public partial class CustomSetPropertyOnRenderable
             case "Radius":
                 circleRuntime.Radius = (float)value;
                 return true;
+            // Issue #2768 v3 shape surface (fill/stroke as independent channels) — these
+            // properties only exist on the runtime, not on either renderable slot, so without
+            // an explicit case they fell through to SetPropertyThroughReflection, which
+            // reflects on the contained renderable slot and silently drops them (a Circle
+            // saved with IsFilled=true loaded back unfilled).
+            case "IsFilled":
+                circleRuntime.IsFilled = (bool)value;
+                return true;
+            case "FillRed":
+                circleRuntime.FillRed = (int)value;
+                return true;
+            case "FillGreen":
+                circleRuntime.FillGreen = (int)value;
+                return true;
+            case "FillBlue":
+                circleRuntime.FillBlue = (int)value;
+                return true;
+            case "FillAlpha":
+                circleRuntime.FillAlpha = (int)value;
+                return true;
+            case "StrokeRed":
+                circleRuntime.StrokeRed = (int)value;
+                return true;
+            case "StrokeGreen":
+                circleRuntime.StrokeGreen = (int)value;
+                return true;
+            case "StrokeBlue":
+                circleRuntime.StrokeBlue = (int)value;
+                return true;
+            case "StrokeAlpha":
+                circleRuntime.StrokeAlpha = (int)value;
+                return true;
+            case "StrokeWidth":
+                circleRuntime.StrokeWidth = (float)value;
+                return true;
+            case "Blend":
+                circleRuntime.Blend = (Gum.RenderingLibrary.Blend)value;
+                return true;
         }
         return false;
 #pragma warning restore CS0618
@@ -3149,6 +3187,44 @@ public partial class CustomSetPropertyOnRenderable
                 return true;
             case "CustomRadiusBottomRight":
                 rectangleRuntime.CustomRadiusBottomRight = (float?)value;
+                return true;
+            // Issue #2768 v3 shape surface (fill/stroke as independent channels) — these
+            // properties only exist on the runtime, not on either renderable slot, so without
+            // an explicit case they fell through to SetPropertyThroughReflection, which
+            // reflects on the contained renderable slot and silently drops them (a Rectangle
+            // saved with IsFilled=true loaded back unfilled).
+            case "IsFilled":
+                rectangleRuntime.IsFilled = (bool)value;
+                return true;
+            case "FillRed":
+                rectangleRuntime.FillRed = (int)value;
+                return true;
+            case "FillGreen":
+                rectangleRuntime.FillGreen = (int)value;
+                return true;
+            case "FillBlue":
+                rectangleRuntime.FillBlue = (int)value;
+                return true;
+            case "FillAlpha":
+                rectangleRuntime.FillAlpha = (int)value;
+                return true;
+            case "StrokeRed":
+                rectangleRuntime.StrokeRed = (int)value;
+                return true;
+            case "StrokeGreen":
+                rectangleRuntime.StrokeGreen = (int)value;
+                return true;
+            case "StrokeBlue":
+                rectangleRuntime.StrokeBlue = (int)value;
+                return true;
+            case "StrokeAlpha":
+                rectangleRuntime.StrokeAlpha = (int)value;
+                return true;
+            case "StrokeWidth":
+                rectangleRuntime.StrokeWidth = (float)value;
+                return true;
+            case "Blend":
+                rectangleRuntime.Blend = (Gum.RenderingLibrary.Blend)value;
                 return true;
         }
         return false;
