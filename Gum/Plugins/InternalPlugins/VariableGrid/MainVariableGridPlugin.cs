@@ -33,14 +33,14 @@ public class MainVariableGridPlugin : PriorityPlugin
         GumExpressionService.Initialize();
 
         // TEMP DIAGNOSTIC - remove before merge
-        GraphicalUiElement.DiagnosticXSetHook = (gue, oldX, newX) =>
+        GraphicalUiElement.DiagnosticPropertySetHook = (gue, propertyName, oldValue, newValue) =>
         {
             if (string.IsNullOrEmpty(gue.Name)) return;
             var frames = new StackTrace(2, false).GetFrames()
-                ?.Take(8)
+                ?.Take(20)
                 .Select(f => f.GetMethod()?.DeclaringType?.Name + "." + f.GetMethod()?.Name);
             var callChain = frames != null ? string.Join(" <- ", frames) : "?";
-            _guiCommands.PrintOutput($"[X SET] {gue.Name} ({gue.GetHashCode()}): {oldX} -> {newX} | {callChain}");
+            _guiCommands.PrintOutput($"[{propertyName} SET] {gue.Name} ({gue.GetHashCode()}): {oldValue} -> {newValue} | {callChain}");
         };
     }
 
