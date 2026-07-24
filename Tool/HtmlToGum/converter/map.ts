@@ -20,6 +20,42 @@ const CL = {
 const DIM = { Absolute: 0, PercentageOfParent: 1, RelativeToParent: 2, RelativeToChildren: 4, Ratio: 7 };
 
 // ---- helpers ----------------------------------------------------------------
+// OKLab -> linear sRGB matrices (Björn Ottosson, https://bottosson.github.io/posts/oklab/).
+function oklabToSrgb(L, a, b) {
+  const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
+  const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
+  const s_ = L - 0.0894841775 * a - 1.2914855480 * b;
+  const l = l_ ** 3;
+  const m = m_ ** 3;
+  const s = s_ ** 3;
+  const rLin = +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+  const gLin = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+  const bLin = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+  const gamma = (c) => (c <= 0.0031308 ? 12.92 * c : 1.055 * Math.abs(c) ** (1 / 2.4) - 0.055);
+  const clamp255 = (c) => Math.round(Math.min(255, Math.max(0, gamma(c) * 255)));
+  return { r: clamp255(rLin), g: clamp255(gLin), b: clamp255(bLin) };
+}
+
+// "oklch(L C H)" / "oklch(L C H / A)" — CSS Color 4 syntax. L is 0..1 (or a percentage of
+// it), C is chroma, H is hue in degrees. Chromium serializes getComputedStyle() this way
+// for colors defined via oklch() (common in modern design systems, e.g. Tailwind v4's
+// default palette) even when no color-mix()/relative-color is involved.
+function parseOklch(str) {
+  const m = str.match(
+    /oklch\(\s*([\d.]+)(%)?\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+)(%)?)?\s*\)/,
+  );
+  if (!m) return null;
+  const [, lRaw, lPct, cRaw, hRaw, aRaw, aPct] = m;
+  const L = lPct ? parseFloat(lRaw) / 100 : parseFloat(lRaw);
+  const C = parseFloat(cRaw);
+  const H = (parseFloat(hRaw) * Math.PI) / 180;
+  const a = C * Math.cos(H);
+  const b = C * Math.sin(H);
+  const { r, g, b: bl } = oklabToSrgb(L, a, b);
+  const alpha = aRaw === undefined ? 1 : (aPct ? parseFloat(aRaw) / 100 : parseFloat(aRaw));
+  return { r, g, b: bl, a: Math.round(alpha * 255) };
+}
+
 export function parseColor(str) {
   if (!str) return null;
   // Legacy syntax: "rgb(r, g, b)" / "rgba(r, g, b, a)" — components 0..255.
@@ -43,6 +79,7 @@ export function parseColor(str) {
       a: Math.round((a !== undefined ? parseFloat(a) : 1) * 255),
     };
   }
+  if (str.startsWith('oklch(')) return parseOklch(str);
   return null;
 }
 const isTransparent = (c) => !c || c.a === 0;

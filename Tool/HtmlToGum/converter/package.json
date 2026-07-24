@@ -8,6 +8,7 @@
     "convert": "tsx convert.ts",
     "gumcli": "tsx gumcli.ts",
     "typecheck": "tsc --noEmit",
+    "test": "tsx --test *.test.ts",
     "postinstall": "npx playwright-core install chromium"
   },
   "dependencies": {
