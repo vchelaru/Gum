@@ -11,7 +11,6 @@ Tool/HtmlToGum/
   HtmlToGumPlugin.csproj     # MEF plugin
   MainHtmlToGumPlugin.cs
   converter/                 # Node convert pipeline (required for Import HTML)
-    scaffold/                # Minimal .gumx + Standards template used when emitting
   samples/                   # Optional fixture HTML for try-outs
 ```
 
@@ -19,7 +18,6 @@ Tool/HtmlToGum/
 |------|------|
 | Plugin DLL | Menu + staging import |
 | `converter/` | `convert.ts` + map/extract/fonts |
-| `converter/scaffold/` | Blank Gum project template copied into the convert output |
 | `samples/` | Example HTML pages (not required for the plugin) |
 
 ## Setup
@@ -56,7 +54,7 @@ cd Tool/HtmlToGum/converter
 npm run convert -- ../samples/features/inventory.html #panel InventoryScreen 800 600
 ```
 
-Default output is `Tool/HtmlToGum/.out/` (gitignored). Use `--out=<dir>` to choose another folder (the plugin always passes a temp `--out=`).
+Default output is `Tool/HtmlToGum/.out/` (gitignored). Use `--out=<dir>` to choose another folder (the plugin always passes a temp `--out=`). The output project (`.gumx` + `Standards/`) is bootstrapped via `gumcli new --template empty`, so Standards always match Gum's live defaults rather than a static snapshot.
 
 Useful flags: `--no-responsive`, `--responsive=n,w`, `--tag=name`.
 

@@ -29,7 +29,8 @@
 import { chromium } from 'playwright-core';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, resolve, join, isAbsolute } from 'node:path';
-import { mkdirSync, cpSync, readFileSync, writeFileSync, rmSync, copyFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync, rmSync, copyFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { extractBoxTree } from './extract.js';
 import { mapTreeToScreen, toGusx } from './map.js';
 import { downloadImages } from './assets.js';
@@ -40,6 +41,7 @@ import {
 import { generateNineSliceAssets } from './nineslice.js';
 import { installTsxEvaluateShim } from './tsx-evaluate-shim.js';
 import { samplePath } from './samples-path.js';
+import { nodeTsxArgs } from './tsx-run.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
@@ -121,7 +123,6 @@ if (flags.responsive) {
 }
 const tag = flags.tag || screenName.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'out';
 
-const scaffoldDir = join(__dirname, 'scaffold');
 const outProjectDir = flags.out
   ? resolve(flags.out)
   : join(repoRoot, '.out');
@@ -297,6 +298,24 @@ async function rasterizeEffects(page, tree, imagesDir, assetMap, rootSelector) {
   await walk(tree, []);
 }
 
+/**
+ * Bootstrap outProjectDir's .gumx + Standards/ via `gumcli new --template empty` (via
+ * gumcli.ts) instead of a static scaffold snapshot, so Standards always match Gum's live
+ * defaults (StandardElementsManager) — see #4003.
+ */
+function runGumcliNew(gumxPath) {
+  const wrapper = join(__dirname, 'gumcli.ts');
+  console.log(`> npx tsx gumcli.ts new ${gumxPath} --template empty`);
+  const r = spawnSync(
+    process.execPath,
+    nodeTsxArgs(wrapper, 'new', gumxPath, '--template', 'empty'),
+    { encoding: 'utf8', shell: false },
+  );
+  if (r.stdout) process.stdout.write(r.stdout);
+  if (r.stderr) process.stderr.write(r.stderr);
+  if (r.status !== 0) throw new Error(`gumcli new exited ${r.status}`);
+}
+
 async function main() {
   const browser = await chromium.launch();
   let tree;
@@ -335,8 +354,8 @@ async function main() {
   }
 
   rmSync(outProjectDir, { recursive: true, force: true });
-  mkdirSync(join(outProjectDir, 'Screens'), { recursive: true });
-  cpSync(join(scaffoldDir, 'Standards'), join(outProjectDir, 'Standards'), { recursive: true });
+  const gumxPath = join(outProjectDir, 'Generated.gumx');
+  runGumcliNew(gumxPath);
   const imagesDir = join(outProjectDir, 'Images');
   const fontsDir = join(outProjectDir, 'Fonts');
 
@@ -372,9 +391,15 @@ async function main() {
   }
 
   const screenRefs = screens.map((s) => `  <ScreenReference Name="${s.name}" />`).join('\n');
-  const gumx = readFileSync(join(scaffoldDir, 'Sample.gumx'), 'utf8')
-    .replace('  <ScreenReference Name="InventoryPanelScreen" />', screenRefs);
-  writeFileSync(join(outProjectDir, 'Generated.gumx'), gumx);
+  const gumx = readFileSync(gumxPath, 'utf8');
+  // gumcli new --template empty emits no <ScreenReference> (empty list serializes to nothing);
+  // insert ours right before the first <StandardElementReference>, matching GumProjectSave's
+  // field order (ScreenReferences before StandardElementReferences).
+  const anchor = gumx.indexOf('  <StandardElementReference');
+  if (anchor === -1) {
+    throw new Error(`gumcli new did not produce a <StandardElementReference> anchor in ${gumxPath}`);
+  }
+  writeFileSync(gumxPath, gumx.slice(0, anchor) + screenRefs + '\n' + gumx.slice(anchor));
   for (const s of screens) writeFileSync(join(outProjectDir, 'Screens', `${s.name}.gusx`), s.gusx);
   writeFileSync(join(outProjectDir, 'boxtree.json'), JSON.stringify(tree, null, 2));
 
