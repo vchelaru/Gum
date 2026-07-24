@@ -176,20 +176,70 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
       applyTextTransform(lead + trimmed + trail, cs.textTransform),
     );
     if (!ownText.trim()) return null;
-    let lineCount = 1;
-    const rects = Array.from(range.getClientRects()).filter((r) => r.width > 0 && r.height > 0);
-    if (rects.length > 0) lineCount = Math.max(1, rects.length);
-    return {
-      id: null,
-      tag: '#text',
-      rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
-      text: ownText,
-      lineCount,
-      imgSrc: null,
-      naturalWidth: 0,
-      naturalHeight: 0,
-      rasterSrc: null,
-      style: {
+    const lineRects = Array.from(range.getClientRects()).filter((r) => r.width > 0 && r.height > 0);
+
+    function makeLeaf(text, r) {
+      return {
+        id: null,
+        tag: '#text',
+        rect: { x: r.x, y: r.y, width: r.width, height: r.height },
+        text,
+        lineCount: 1,
+        imgSrc: null,
+        naturalWidth: 0,
+        naturalHeight: 0,
+        rasterSrc: null,
+        style: leafStyle(),
+        children: [],
+      };
+    }
+
+    // A run that itself wraps across multiple rendered lines (e.g. a long sentence
+    // that continues after a sibling <a> on line 1, then wraps under it) can't be
+    // represented by one Absolute leaf: Range.getBoundingClientRect() unions every
+    // line into a single box whose left edge is the *leftmost* line — wrapped lines
+    // restart at the block's margin — not the actual start of this run on line 1.
+    // Placing a leaf there overlaps whatever inline content precedes it. Split into
+    // one leaf per rendered line instead, using caretRangeFromPoint to find where
+    // Chromium actually broke the line.
+    if (lineRects.length > 1) {
+      const boundaries = [0];
+      let ok = true;
+      for (let i = 1; i < lineRects.length; i++) {
+        const r = lineRects[i];
+        const caret = document.caretRangeFromPoint(r.left + 1, r.top + r.height / 2);
+        if (caret && caret.startContainer === textNode && caret.startOffset > boundaries[i - 1]) {
+          boundaries.push(caret.startOffset);
+        } else {
+          ok = false;
+          break;
+        }
+      }
+      if (ok) {
+        boundaries.push(textNode.textContent.length);
+        const leaves = [];
+        for (let i = 0; i < lineRects.length; i++) {
+          const raw = textNode.textContent.slice(boundaries[i], boundaries[i + 1]);
+          // Collapse runs of whitespace to one space, but only trim at the very start/end
+          // of the whole text node — a space at an internal line boundary is the wrap
+          // point itself and reconstructs the original word-joined text.
+          let lineText = raw.replace(/\s+/g, ' ');
+          if (i === 0) lineText = lineText.replace(/^ /, '');
+          if (i === lineRects.length - 1) lineText = lineText.replace(/ $/, '');
+          if (!lineText) continue;
+          if (i === 0 && lead) lineText = lead + lineText;
+          if (i === lineRects.length - 1 && trail) lineText += trail;
+          lineText = normalizeForBitmapFont(applyTextTransform(lineText, cs.textTransform));
+          if (lineText.trim()) leaves.push(makeLeaf(lineText, lineRects[i]));
+        }
+        if (leaves.length > 0) return leaves;
+      }
+    }
+
+    return [makeLeaf(ownText, rect)];
+
+    function leafStyle() {
+      return {
         display: 'inline',
         backgroundImage: 'none',
         backgroundSize: cs.backgroundSize,
@@ -258,9 +308,8 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
         borderImageSource: 'none',
         borderImageSlice: 0,
         borderImageRepeat: '',
-      },
-      children: [],
-    };
+      };
+    }
   }
 
   function walk(el) {
@@ -301,8 +350,8 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
       walkChildren = [];
       for (const child of el.childNodes) {
         if (child.nodeType === Node.TEXT_NODE) {
-          const leaf = walkTextNode(child, el);
-          if (leaf) walkChildren.push(leaf);
+          const leaves = walkTextNode(child, el);
+          if (leaves) walkChildren.push(...leaves);
         } else if (child.nodeType === Node.ELEMENT_NODE && isVisible(child)) {
           walkChildren.push(walk(child));
         }
@@ -401,6 +450,10 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
         display: cs.display,
         backgroundImage: cs.backgroundImage,
         backgroundSize: cs.backgroundSize,
+        // CSS sprite-sheet icons (background-image + background-position offset, e.g.
+        // GeeksforGeeks' social icon strip) select one sub-region of a shared image —
+        // see computeBackgroundSpriteCrop() in map.ts.
+        backgroundPosition: cs.backgroundPosition,
         objectFit: cs.objectFit,
         objectPosition: cs.objectPosition,
         listStyleType: cs.listStyleType,

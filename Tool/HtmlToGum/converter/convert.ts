@@ -163,6 +163,30 @@ async function renderTree(browser, width, height, { captureFonts = false } = {})
 }
 
 /**
+ * page.screenshot({ clip }) without fullPage only crops the currently visible viewport —
+ * it does not scroll to reach content below the fold, and clip regions entirely outside
+ * the viewport throw "Clipped area is either empty or outside the resulting image" (seen
+ * on tall pages like a full-page `body` root, where most raster nodes sit well past the
+ * requested viewport height). Scroll the clip's top-left into view, capture with clip
+ * coordinates adjusted for the resulting scroll offset, then restore scroll position so
+ * later page-relative captures (subsequent raster shots, the final reference screenshot)
+ * keep seeing document coordinates from a scroll-0 origin.
+ */
+async function screenshotClip(page, path, clip, screenshotOptions = {}) {
+  await page.evaluate(({ x, y }) => window.scrollTo(x, y), { x: clip.x, y: clip.y });
+  const scroll = await page.evaluate(() => ({ x: window.scrollX, y: window.scrollY }));
+  try {
+    await page.screenshot({
+      path,
+      ...screenshotOptions,
+      clip: { ...clip, x: clip.x - scroll.x, y: clip.y - scroll.y },
+    });
+  } finally {
+    await page.evaluate(() => window.scrollTo(0, 0));
+  }
+}
+
+/**
  * Screenshot nodes flagged needsRaster (gradients / CSS filter / border-image) into Images/.
  * Backdrop-only parents: hide element children (and own text paint) so the sprite is
  * chrome-only; structured kids / Text labels are still emitted by map.mjs. Filter
@@ -270,11 +294,7 @@ async function rasterizeEffects(page, tree, imagesDir, assetMap, rootSelector) {
             return;
           }
         }
-        await page.screenshot({
-          path: join(imagesDir, filename),
-          clip,
-          omitBackground: false,
-        });
+        await screenshotClip(page, join(imagesDir, filename), clip, { omitBackground: false });
       };
       const backdropOnly = !node.style.rasterWholeSubtree
         && (node.children.length > 0 || !!(node.text && String(node.text).trim()));
@@ -374,7 +394,7 @@ async function main() {
 
   // Reuse the still-open browser for SVG rasterization inside downloadImages() instead
   // of paying a second Chromium launch — close only after it's done with it.
-  const downloaded = await downloadImages(tree, imagesDir, browser);
+  const { assetMap: downloaded, assetSizeMap } = await downloadImages(tree, imagesDir, browser);
   for (const [k, v] of downloaded) assetMap.set(k, v);
   await browser.close();
 
@@ -383,11 +403,11 @@ async function main() {
   });
   const nineSliceMap = generateNineSliceAssets(tree, imagesDir, assetMap);
 
-  const mapped = mapTreeToScreen(tree, assetMap, responsiveMap, fontMap, nineSliceMap);
+  const mapped = mapTreeToScreen(tree, assetMap, responsiveMap, fontMap, nineSliceMap, assetSizeMap);
   const screens = [{ name: screenName, mapped, gusx: toGusx(screenName, mapped) }];
 
   if (flags.responsive && flags.compareNaive) {
-    const naive = mapTreeToScreen(tree, assetMap, null, fontMap, nineSliceMap);
+    const naive = mapTreeToScreen(tree, assetMap, null, fontMap, nineSliceMap, assetSizeMap);
     const naiveName = `${screenName}Naive`;
     screens.push({ name: naiveName, mapped: naive, gusx: toGusx(naiveName, naive) });
   }

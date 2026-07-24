@@ -12,6 +12,7 @@ export type BoxStyle = {
   display: string;
   backgroundImage: string;
   backgroundSize: string;
+  backgroundPosition: string;
   objectFit: string;
   objectPosition: string;
   listStyleType: string;
