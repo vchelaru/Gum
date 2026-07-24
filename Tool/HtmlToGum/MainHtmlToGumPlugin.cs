@@ -213,8 +213,9 @@ public class MainHtmlToGumPlugin : WpfPluginBase
             }
 
             progress.Hide();
-            _dialogService.ShowMessage(
-                $"Imported and selected screen \"{qualifiedScreenName}\".\n\n{SummarizeConverterLog(stdout)}");
+            ImportResultForm.Show(
+                $"Imported and selected screen \"{qualifiedScreenName}\".",
+                SummarizeConverterLog(stdout, maxLines: 300));
         }
         catch (Exception ex)
         {
@@ -351,13 +352,13 @@ public class MainHtmlToGumPlugin : WpfPluginBase
         });
     }
 
-    private static string SummarizeConverterLog(string stdout)
+    private static string SummarizeConverterLog(string stdout, int maxLines = 12)
     {
         var lines = stdout.Split('\n')
             .Select(l => l.TrimEnd())
             .Where(l => l.Length > 0)
             .Where(l => !l.StartsWith('>'))
-            .TakeLast(12);
+            .TakeLast(maxLines);
         return string.Join("\n", lines);
     }
 
@@ -527,6 +528,65 @@ internal sealed class ImportProgressForm : Form
             return;
         }
         _status.Text = text;
+    }
+}
+
+/// <summary>Success dialog with a terse summary and a collapsed "Show details" panel for the full converter log.</summary>
+internal static class ImportResultForm
+{
+    private const int CollapsedHeight = 104;
+    private const int DetailsHeight = 220;
+
+    public static void Show(string summary, string details)
+    {
+        using var form = new Form
+        {
+            Text = "Import HTML",
+            FormBorderStyle = FormBorderStyle.FixedDialog,
+            StartPosition = FormStartPosition.CenterParent,
+            MinimizeBox = false,
+            MaximizeBox = false,
+            ClientSize = new Size(420, CollapsedHeight),
+            Font = new Font("Segoe UI", 9f),
+        };
+
+        var lblSummary = new Label { Text = summary, Left = 16, Top = 16, Width = 388, Height = 40 };
+        var btnDetails = new Button
+        {
+            Text = "Show details ▾",
+            Left = 16,
+            Top = 60,
+            Width = 130,
+            Visible = !string.IsNullOrWhiteSpace(details),
+        };
+        var btnOk = new Button { Text = "OK", DialogResult = DialogResult.OK, Left = 324, Top = 60, Width = 80 };
+        var txtDetails = new TextBox
+        {
+            Left = 16,
+            Top = 96,
+            Width = 388,
+            Height = DetailsHeight,
+            Multiline = true,
+            ReadOnly = true,
+            ScrollBars = ScrollBars.Vertical,
+            Font = new Font("Consolas", 8.5f),
+            Text = details,
+            Visible = false,
+        };
+
+        btnDetails.Click += (_, _) =>
+        {
+            bool expanding = !txtDetails.Visible;
+            txtDetails.Visible = expanding;
+            btnDetails.Text = expanding ? "Hide details ▴" : "Show details ▾";
+            form.ClientSize = expanding
+                ? new Size(420, CollapsedHeight + DetailsHeight)
+                : new Size(420, CollapsedHeight);
+        };
+
+        form.AcceptButton = btnOk;
+        form.Controls.AddRange([lblSummary, btnDetails, btnOk, txtDetails]);
+        form.ShowDialog();
     }
 }
 
