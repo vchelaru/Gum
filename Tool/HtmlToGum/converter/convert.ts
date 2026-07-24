@@ -40,6 +40,7 @@ import {
 } from './fonts.js';
 import { generateNineSliceAssets } from './nineslice.js';
 import { installTsxEvaluateShim } from './tsx-evaluate-shim.js';
+import { waitForDomQuiescence } from './dom-quiescence.js';
 import { samplePath } from './samples-path.js';
 import { nodeTsxArgs } from './tsx-run.js';
 
@@ -157,6 +158,9 @@ async function renderTree(browser, width, height, { captureFonts = false } = {})
   } catch {
     /* static pages already have content */
   }
+  // Content exists now, but a framework-driven page may still be actively re-rendering it
+  // (hydration, lazy-loaded sections) — wait for it to settle before reading the DOM.
+  await waitForDomQuiescence(page);
   const fontFaceRules = captureFonts ? await collectFontFaceRules(page) : [];
   const tree = await page.evaluate(extractBoxTree, rootSelector);
   return { page, tree, width, height, capturedFonts, fontFaceRules, pageUrl: url };
