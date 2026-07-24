@@ -89,6 +89,14 @@ function sha1(buf) {
   return createHash('sha1').update(buf).digest('hex').slice(0, 12);
 }
 
+/** Width/height from a PNG's IHDR chunk (bytes 16-23, big-endian) — used to recover the
+ *  actual rasterized pixel size of an SVG->PNG conversion (SVG_UPSCALE / SVG_MAX_DIM in
+ *  rasterizeSvg mean it's not simply the SVG's own declared intrinsic size) without
+ *  duplicating that scale math here. */
+function pngDimensions(buf) {
+  return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) };
+}
+
 function sniffExt(buf) {
   if (buf.length >= 12 && buf.toString('ascii', 0, 4) === 'RIFF' && buf.toString('ascii', 8, 12) === 'WEBP') {
     return 'webp';
@@ -138,7 +146,14 @@ export async function downloadImages(
   })(root);
 
   const assetMap = new Map();
-  if (urls.size === 0) return assetMap;
+  // url -> actual rasterized pixel {width,height}, populated only for SVG sources (the
+  // only path where the on-disk asset's pixel size diverges from the box tree's captured
+  // naturalWidth/naturalHeight — see rasterizeSvg's SVG_UPSCALE/SVG_MAX_DIM). map.ts's
+  // TextureLeft/Top/Width/Height crop math (cover-fit and background-position sprites)
+  // scales by this against naturalWidth/Height so crop coordinates land on the right
+  // pixels in the actual (possibly upscaled) asset file.
+  const assetSizeMap = new Map();
+  if (urls.size === 0) return { assetMap, assetSizeMap };
 
   mkdirSync(outDir, { recursive: true });
   const hashToFile = new Map();
@@ -184,6 +199,7 @@ export async function downloadImages(
         try {
           outBuf = await rasterizeSvg(browser, buf);
           outExt = 'png';
+          assetSizeMap.set(url, pngDimensions(outBuf));
           console.log(`  image: rasterized svg → png`);
         } catch (e) {
           console.warn(`  ! svg rasterize failed: ${e.message} — skipped ${url}`);
@@ -214,5 +230,5 @@ export async function downloadImages(
       console.warn(`  ! image download error: ${url} (${e.message})`);
     }
   }
-  return assetMap;
+  return { assetMap, assetSizeMap };
 }

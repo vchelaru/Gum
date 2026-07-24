@@ -450,6 +450,10 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
         display: cs.display,
         backgroundImage: cs.backgroundImage,
         backgroundSize: cs.backgroundSize,
+        // CSS sprite-sheet icons (background-image + background-position offset, e.g.
+        // GeeksforGeeks' social icon strip) select one sub-region of a shared image —
+        // see computeBackgroundSpriteCrop() in map.ts.
+        backgroundPosition: cs.backgroundPosition,
         objectFit: cs.objectFit,
         objectPosition: cs.objectPosition,
         listStyleType: cs.listStyleType,

@@ -403,6 +403,127 @@ function computeCoverCrop(srcW, srcH, dstW, dstH) {
   };
 }
 
+// CSS icon-sprite technique: one shared background-image, positioned with a
+// background-position offset per element so each element's fixed-size box acts as a
+// window onto one sub-region of the sheet (GeeksforGeeks' social-icon strip, common site
+// pattern). Gum's Sprite has no background-position concept — TextureAddress=EntireTexture
+// squashes the *whole* sheet into the box. Reproduces the visible sub-region as an explicit
+// TextureAddress=Custom source-rect crop, mirroring computeCoverCrop's approach.
+// Only background-size tokens resolvable without a layout pass are supported: 'auto' (natural
+// size) and <percentage> (relative to the box — the common case, matching how site sprites
+// are usually pinned to their native resolution). 'cover'/'contain' are cover-crop's territory
+// (see wantsCoverCrop) and never reach here; unrecognized tokens (bare lengths, keywords like
+// left/right/top/bottom) bail to null rather than emit a wrong crop.
+// allowZeroOffset: a sprite's *first* tile is legitimately at background-position:0 0 (no
+// offset needed to select it) — the caller sets this once it's established elsewhere that
+// the same URL is used at multiple distinct positions in the tree (see
+// collectBackgroundPositionsByUrl), i.e. this really is a sprite sheet, not a plain
+// single-use background image that happens to be positioned at the default top-left.
+function computeBackgroundSpriteCrop(style, naturalWidth, naturalHeight, boxWidth, boxHeight, allowZeroOffset = false) {
+  if (naturalWidth <= 0 || naturalHeight <= 0 || boxWidth <= 0 || boxHeight <= 0) return null;
+
+  function resolveSize(tok, basis) {
+    if (tok == null || tok === 'auto') return null;
+    if (tok.endsWith('%')) return (parseFloat(tok) / 100) * basis;
+    if (tok.endsWith('px')) return parseFloat(tok);
+    return undefined; // unrecognized (length in other units, etc.) — caller bails
+  }
+
+  const sizeToks = (style.backgroundSize || 'auto').trim().split(/\s+/);
+  const wTok = resolveSize(sizeToks[0], boxWidth);
+  const hTok = resolveSize(sizeToks[1], boxHeight);
+  if (wTok === undefined || hTok === undefined) return null;
+
+  let imgWidth;
+  let imgHeight;
+  if (wTok == null && hTok == null) {
+    imgWidth = naturalWidth;
+    imgHeight = naturalHeight;
+  } else if (hTok == null) {
+    imgWidth = wTok;
+    imgHeight = naturalHeight * (imgWidth / naturalWidth);
+  } else if (wTok == null) {
+    imgHeight = hTok;
+    imgWidth = naturalWidth * (imgHeight / naturalHeight);
+  } else {
+    imgWidth = wTok;
+    imgHeight = hTok;
+  }
+  if (imgWidth <= 0 || imgHeight <= 0) return null;
+
+  function resolvePos(tok, basis, imgSize) {
+    if (tok == null) return 0;
+    if (tok.endsWith('%')) return (basis - imgSize) * (parseFloat(tok) / 100);
+    if (tok.endsWith('px')) return parseFloat(tok);
+    return undefined;
+  }
+
+  const posToks = (style.backgroundPosition || '0% 0%').trim().split(/\s+/);
+  const posX = resolvePos(posToks[0], boxWidth, imgWidth);
+  const posY = resolvePos(posToks[1], boxHeight, imgHeight);
+  if (posX === undefined || posY === undefined) return null;
+
+  // Default top-left placement (posX===0 && posY===0) usually means "no sprite offset to
+  // reproduce" — leave it to the existing EntireTexture stretch-to-fill default rather than
+  // risk a crop rect that doesn't match Gum's current (correct-enough) behavior for plain
+  // backgrounds. Confirmed sprite sheets (allowZeroOffset) still crop even at (0,0) — that's
+  // just the sheet's first tile (e.g. GFG's facebook icon, offset 0 0).
+  if (posX === 0 && posY === 0 && !allowZeroOffset) return null;
+
+  const scaleX = imgWidth / naturalWidth;
+  const scaleY = imgHeight / naturalHeight;
+  const crop = {
+    left: Math.round(-posX / scaleX) || 0, // normalize -0
+    top: Math.round(-posY / scaleY) || 0,
+    width: Math.round(boxWidth / scaleX),
+    height: Math.round(boxHeight / scaleY),
+  };
+  // Bail if the resolved window falls outside the actual sheet — our px-only parsing
+  // (no repeat-tiling support) can't reproduce that correctly, so don't emit a bogus crop.
+  if (crop.left < 0 || crop.top < 0
+    || crop.left + crop.width > naturalWidth || crop.top + crop.height > naturalHeight) {
+    return null;
+  }
+  return crop;
+}
+
+// A URL used at 2+ distinct background-position values across the tree is definitionally
+// a sprite sheet in use (that's the whole point of the technique — one image, several
+// elements each dialing in a different offset). Lets computeBackgroundSpriteCrop tell a
+// sprite's first tile (offset 0 0, still a deliberate selection) apart from a plain
+// single-use background image that's simply left at its default top-left position.
+function collectBackgroundPositionsByUrl(node, acc = new Map()) {
+  const url = parseBackgroundImageUrl(node.style.backgroundImage);
+  if (url) {
+    const pos = (node.style.backgroundPosition || '0% 0%').trim();
+    if (!acc.has(url)) acc.set(url, new Set());
+    acc.get(url).add(pos);
+  }
+  for (const child of node.children) collectBackgroundPositionsByUrl(child, acc);
+  return acc;
+}
+
+// computeCoverCrop / computeBackgroundSpriteCrop both work in "natural" units — the box
+// tree's captured naturalWidth/naturalHeight (Chromium's intrinsic size for the source
+// image). That matches the on-disk asset pixel-for-pixel for ordinary raster images, but
+// not for a rasterized SVG: rasterizeSvg (assets.mjs) renders at up to 2x the SVG's
+// declared size for crisper downscaling (SVG_UPSCALE/SVG_MAX_DIM), so the PNG Gum actually
+// loads can be a different pixel size than naturalWidth/Height. Rescale the crop rect by
+// (actual asset size / natural size) so TextureLeft/Top/Width/Height index the real file.
+function scaleCropToAsset(crop, assetSizeMap, url, naturalWidth, naturalHeight) {
+  const actual = assetSizeMap && assetSizeMap.get(url);
+  if (!actual || naturalWidth <= 0 || naturalHeight <= 0) return crop;
+  const scaleX = actual.width / naturalWidth;
+  const scaleY = actual.height / naturalHeight;
+  if (scaleX === 1 && scaleY === 1) return crop;
+  return {
+    left: Math.round(crop.left * scaleX),
+    top: Math.round(crop.top * scaleY),
+    width: Math.round(crop.width * scaleX),
+    height: Math.round(crop.height * scaleY),
+  };
+}
+
 // List bullets are pseudo-content (::marker) — never part of textContent, so they were
 // silently absent from every emitted <li>. Gum has no marker/list concept, so this is a
 // text-prefix approximation covering the common unordered-list styles; `decimal` and
@@ -633,6 +754,11 @@ function wantsCoverCrop(style) {
  * @param {Map|null} fontMap fontFaceKey(family,weight,style) -> "Fonts/….ttf" from
  *   fonts.mjs. When present, Text.Font is the .ttf path (gumcli fonts / FontCache);
  *   weight/style are baked into the file so IsBold/IsItalic are omitted.
+ * @param {Map|null} assetSizeMap image URL -> actual rasterized pixel {width,height} from
+ *   assets.mjs's downloadImages, only populated for SVG sources (SVG_UPSCALE/SVG_MAX_DIM
+ *   mean the on-disk asset can be a different pixel size than the box tree's captured
+ *   naturalWidth/naturalHeight). Cover-fit and background-position-sprite crop math scales
+ *   against this so TextureLeft/Top/Width/Height land on the right pixels in that file.
  * @returns {{instances: {name,baseType}[], variables: {}[], warnings: string[]}}
  */
 export function mapTreeToScreen(
@@ -641,11 +767,13 @@ export function mapTreeToScreen(
   responsiveMap: ResponsiveMap | null = null,
   fontMap: Map<string, string> | null = null,
   nineSliceMap: Map<string, NineSliceInfo> | null = null,
+  assetSizeMap: Map<string, { width: number, height: number }> | null = null,
 ): MappedScreen {
   const namer = makeNamer();
   const instances = [];
   const variables = [];
   const warnings = [];
+  const backgroundPositionsByUrl = collectBackgroundPositionsByUrl(root);
 
   function orientationOf(node) {
     return layoutModeOf(node);
@@ -876,12 +1004,18 @@ export function mapTreeToScreen(
     const asset = url && assetMap.get(url);
     if (asset) {
       variables.push(VS(`${name}.SourceFile`, asset));
-      if (wantsCoverCrop(s) && node.naturalWidth > 0 && node.naturalHeight > 0) {
-        const crop = computeCoverCrop(node.naturalWidth, node.naturalHeight, node.rect.width, node.rect.height);
+      const isSpriteSheet = (backgroundPositionsByUrl.get(url)?.size || 0) > 1;
+      const crop = wantsCoverCrop(s) && node.naturalWidth > 0 && node.naturalHeight > 0
+        ? computeCoverCrop(node.naturalWidth, node.naturalHeight, node.rect.width, node.rect.height)
+        : computeBackgroundSpriteCrop(
+          s, node.naturalWidth, node.naturalHeight, node.rect.width, node.rect.height, isSpriteSheet,
+        );
+      if (crop) {
+        const scaled = scaleCropToAsset(crop, assetSizeMap, url, node.naturalWidth, node.naturalHeight);
         variables.push(
           v('TextureAddress', `${name}.TextureAddress`, 'xsd:int', 1), // Custom
-          VI(`${name}.TextureLeft`, crop.left), VI(`${name}.TextureTop`, crop.top),
-          VI(`${name}.TextureWidth`, crop.width), VI(`${name}.TextureHeight`, crop.height),
+          VI(`${name}.TextureLeft`, scaled.left), VI(`${name}.TextureTop`, scaled.top),
+          VI(`${name}.TextureWidth`, scaled.width), VI(`${name}.TextureHeight`, scaled.height),
         );
       }
       return true;

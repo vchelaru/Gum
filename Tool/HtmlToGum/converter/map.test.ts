@@ -11,6 +11,7 @@ function baseStyle(overrides = {}) {
     display: 'block',
     backgroundImage: 'none',
     backgroundSize: 'auto',
+    backgroundPosition: '0% 0%',
     objectFit: 'fill',
     objectPosition: '50% 50%',
     listStyleType: 'none',
@@ -257,4 +258,123 @@ test('mapTreeToScreen: does not merge same-line runs when a run color differs fr
 
   const textInstances = instances.filter((i) => i.baseType === 'Text');
   assert.equal(textInstances.length, 4, 'runs with a differing color should stay as separate Text instances');
+});
+
+// ---- CSS sprite-sheet icon crop (GeeksforGeeks social-icon strip) -------------------
+test('mapTreeToScreen: background-position sprite offset crops the icon sub-region (GFG social icons)', () => {
+  // Ground truth from GeeksforGeeks' live social_sprites_icons.svg: a 38x532 vertical
+  // strip, one 38px-tall icon per multiple-of-38 offset. Each icon <div> is
+  // background-size:100% (== natural width, so 1:1 scale) + background-position:0 -76px
+  // for LinkedIn. Previously the missing crop stretched the *entire* 532px-tall strip into
+  // the 38x38 box (visibly garbled), instead of showing just the LinkedIn slice.
+  const url = 'https://media.geeksforgeeks.org/wp-content/cdn-uploads/social_sprites_icons.svg';
+  const assetMap = new Map([[url, 'Images/social.png']]);
+  const icon = boxNode({
+    id: 'linkedin',
+    rect: { x: 0, y: 0, width: 38, height: 38 },
+    naturalWidth: 38,
+    naturalHeight: 532,
+    style: baseStyle({
+      backgroundImage: `url("${url}")`,
+      backgroundSize: '100%',
+      backgroundPosition: '0px -76px',
+    }),
+  });
+  const root = boxNode({ id: 'root', rect: { x: 0, y: 0, width: 38, height: 38 }, children: [icon] });
+
+  const { variables } = mapTreeToScreen(root, assetMap);
+
+  assert.equal(findVar(variables, 'Linkedin.TextureAddress')?.value, 1); // Custom
+  assert.equal(findVar(variables, 'Linkedin.TextureLeft')?.value, 0);
+  assert.equal(findVar(variables, 'Linkedin.TextureTop')?.value, 76);
+  assert.equal(findVar(variables, 'Linkedin.TextureWidth')?.value, 38);
+  assert.equal(findVar(variables, 'Linkedin.TextureHeight')?.value, 38);
+});
+
+test('mapTreeToScreen: sprite crop scales to the actual rasterized SVG pixel size', () => {
+  // rasterizeSvg (assets.mjs) upscales an SVG source above its declared intrinsic size for
+  // a crisper downscale (SVG_UPSCALE/SVG_MAX_DIM) — GFG's 38x532 social-icon SVG actually
+  // gets rasterized to 73x1024 on disk (~1.9248x, clamped by SVG_MAX_DIM=1024). A crop
+  // computed in naturalWidth/Height (38x532) units without rescaling samples the wrong
+  // pixels once written as literal TextureLeft/Top into the 73x1024 file — this reproduces
+  // the youtube icon (bottom of the strip) rendering as a garbled diagonal mush.
+  const url = 'https://media.geeksforgeeks.org/wp-content/cdn-uploads/social_sprites_icons.svg';
+  const assetMap = new Map([[url, 'Images/social.png']]);
+  const assetSizeMap = new Map([[url, { width: 73, height: 1024 }]]);
+  const icon = boxNode({
+    id: 'youtube',
+    rect: { x: 0, y: 0, width: 38, height: 38 },
+    naturalWidth: 38,
+    naturalHeight: 532,
+    style: baseStyle({
+      backgroundImage: `url("${url}")`,
+      backgroundSize: '100%',
+      backgroundPosition: '0px -152px',
+    }),
+  });
+  const root = boxNode({ id: 'root', rect: { x: 0, y: 0, width: 38, height: 38 }, children: [icon] });
+
+  const { variables } = mapTreeToScreen(root, assetMap, null, null, null, assetSizeMap);
+
+  assert.equal(findVar(variables, 'Youtube.TextureLeft')?.value, 0);
+  assert.equal(findVar(variables, 'Youtube.TextureTop')?.value, Math.round(152 * (1024 / 532)));
+  assert.equal(findVar(variables, 'Youtube.TextureWidth')?.value, Math.round(38 * (73 / 38)));
+  assert.equal(findVar(variables, 'Youtube.TextureHeight')?.value, Math.round(38 * (1024 / 532)));
+});
+
+test('mapTreeToScreen: a sprite tile at the sheet\'s default (0,0) offset still crops', () => {
+  // GFG's facebook icon sits at the *top* of the strip (background-position: 0px 0px) — a
+  // deliberate sprite-tile selection that happens to coincide with the default position.
+  // Distinguishing signal: the same sprite URL is used elsewhere in the tree at a different
+  // position (instagram, -38px), so this really is a sprite sheet — a lone background-image
+  // at the default position (see the "plain background-image" test below) is left alone.
+  // Previously this bailed like a plain background image, stretching the whole 532px-tall
+  // strip into the 38x38 box instead of showing just the top (facebook) tile.
+  const url = 'https://media.geeksforgeeks.org/wp-content/cdn-uploads/social_sprites_icons.svg';
+  const assetMap = new Map([[url, 'Images/social.png']]);
+  const facebook = boxNode({
+    id: 'facebook',
+    rect: { x: 0, y: 0, width: 38, height: 38 },
+    naturalWidth: 38,
+    naturalHeight: 532,
+    style: baseStyle({ backgroundImage: `url("${url}")`, backgroundSize: '100%', backgroundPosition: '0px 0px' }),
+  });
+  const instagram = boxNode({
+    id: 'instagram',
+    rect: { x: 43, y: 0, width: 38, height: 38 },
+    naturalWidth: 38,
+    naturalHeight: 532,
+    style: baseStyle({ backgroundImage: `url("${url}")`, backgroundSize: '100%', backgroundPosition: '0px -38px' }),
+  });
+  const root = boxNode({
+    id: 'root', rect: { x: 0, y: 0, width: 81, height: 38 }, children: [facebook, instagram],
+  });
+
+  const { variables } = mapTreeToScreen(root, assetMap);
+
+  assert.equal(findVar(variables, 'Facebook.TextureAddress')?.value, 1); // Custom
+  assert.equal(findVar(variables, 'Facebook.TextureLeft')?.value, 0);
+  assert.equal(findVar(variables, 'Facebook.TextureTop')?.value, 0);
+  assert.equal(findVar(variables, 'Facebook.TextureWidth')?.value, 38);
+  assert.equal(findVar(variables, 'Facebook.TextureHeight')?.value, 38);
+});
+
+test('mapTreeToScreen: plain background-image at default position gets no sprite crop', () => {
+  // background-position:0% 0% (the default — no authored offset) is a plain full-image
+  // background, not a sprite selection. Must keep stretch-to-fill (no TextureAddress
+  // override) rather than emit a crop derived from a coincidental size mismatch.
+  const url = 'https://example.com/hero.png';
+  const assetMap = new Map([[url, 'Images/hero.png']]);
+  const node = boxNode({
+    id: 'hero',
+    rect: { x: 0, y: 0, width: 200, height: 100 },
+    naturalWidth: 400,
+    naturalHeight: 200,
+    style: baseStyle({ backgroundImage: `url("${url}")`, backgroundSize: 'auto' }),
+  });
+  const root = boxNode({ id: 'root', rect: { x: 0, y: 0, width: 200, height: 100 }, children: [node] });
+
+  const { variables } = mapTreeToScreen(root, assetMap);
+
+  assert.equal(findVar(variables, 'Hero.TextureAddress'), undefined);
 });
