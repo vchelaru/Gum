@@ -90,6 +90,11 @@ const isBold = (w) => w === 'bold' || w === 'bolder' || parseInt(w, 10) >= 600;
 const isItalic = (s) => s === 'italic' || s === 'oblique';
 const firstFont = (fam) => (fam || '').split(',')[0].replace(/["']/g, '').trim();
 
+// Tags whose only visual effect (once background/border/shadow/padding is ruled out) is a
+// font weight/style/color change — safe to fold into one Text via BBCode markup instead of
+// a sibling Text per run. #text nodes carry no style deviation of their own.
+const INLINE_PHRASING_TAGS = new Set(['#text', 'a', 'strong', 'b', 'em', 'i']);
+
 // Chromium serializes resolved grid tracks as "200px 200px 200px" (fr already computed).
 // Returns pixel lengths; empty for none/auto/unsupported keywords.
 function parseGridTracks(str) {
@@ -889,6 +894,27 @@ export function mapTreeToScreen(
     return false;
   }
 
+  // Web-font file path (B / gumcli fonts): style is baked into the instantiated TTF for
+  // this exact family+weight+style. No mapping (system/KernSmith fallback) → caller falls
+  // back to IsBold/IsItalic synthesis. Shared by emitVisual and the inline-run BBCode merge
+  // so both pick the same font file for the same style.
+  function resolveFontFile(s) {
+    const family = firstFont(s.fontFamily);
+    const weightNum = (() => {
+      const w = s.fontWeight;
+      if (w === 'bold' || w === 'bolder') return 700;
+      if (w === 'normal' || w === 'lighter') return 400;
+      const n = parseInt(w, 10);
+      return Number.isFinite(n) ? n : 400;
+    })();
+    const styleKey = isItalic(s.fontStyle) ? 'italic' : 'normal';
+    const famKey = (family || '').toLowerCase().replace(/\s+var\b/g, '').replace(/\s+/g, ' ').trim();
+    const filePath = fontMap && family
+      && (fontMap.get(`${famKey}|${weightNum}|${styleKey}`)
+        || fontMap.get(`${famKey}|${weightNum}|normal`));
+    return { family, filePath };
+  }
+
   function emitVisual(kind, name, node, alignOpts = null, { colorOverride = null, skipOutline = false } = {}) {
     const s = node.style;
     if (kind === 'rect') {
@@ -904,21 +930,7 @@ export function mapTreeToScreen(
         variables.push(VI(`${name}.Red`, col.r), VI(`${name}.Green`, col.g), VI(`${name}.Blue`, col.b));
         if (col.a != null && col.a !== 255) variables.push(VI(`${name}.Alpha`, col.a));
       }
-      // Web-font file path (B / gumcli fonts): style is baked into the instantiated TTF.
-      // Family name fallback: keep IsBold/IsItalic for system/KernSmith synthesis.
-      const family = firstFont(s.fontFamily);
-      const weightNum = (() => {
-        const w = s.fontWeight;
-        if (w === 'bold' || w === 'bolder') return 700;
-        if (w === 'normal' || w === 'lighter') return 400;
-        const n = parseInt(w, 10);
-        return Number.isFinite(n) ? n : 400;
-      })();
-      const styleKey = isItalic(s.fontStyle) ? 'italic' : 'normal';
-      const famKey = (family || '').toLowerCase().replace(/\s+var\b/g, '').replace(/\s+/g, ' ').trim();
-      const filePath = fontMap && family
-        && (fontMap.get(`${famKey}|${weightNum}|${styleKey}`)
-          || fontMap.get(`${famKey}|${weightNum}|normal`));
+      const { family, filePath } = resolveFontFile(s);
       if (filePath) {
         variables.push(VS(`${name}.Font`, filePath));
       } else {
@@ -941,6 +953,67 @@ export function mapTreeToScreen(
       emitSpriteSource(name, node);
     }
     applyOpacity(kind, name, s);
+  }
+
+  // Is this child a same-line inline-styled run that can fold into the parent's Text via
+  // BBCode instead of becoming its own sibling Text? Must differ from the base run only in
+  // weight/style (color support is a possible future extension — bail for now rather than
+  // guess a BBCode Color format), have no chrome/shadow/padding of its own, and contain no
+  // literal '[' or ']' (BBCode has no escape sequence for its own delimiters).
+  function isSimpleInlineStyleChild(child, baseStyle) {
+    if (!INLINE_PHRASING_TAGS.has(child.tag)) return false;
+    if (child.lineCount > 1) return false;
+    if (!child.text || /[[\]]/.test(child.text)) return false;
+    if (hasVisualStyling(child.style)) return false;
+    if (parseHardTextShadows(child.style).length > 0) return false;
+    if (hasPadding(paddingOf(child.style))) return false;
+    if (firstFont(child.style.fontFamily) !== firstFont(baseStyle.fontFamily)) return false;
+    if (Math.round(child.style.fontSize) !== Math.round(baseStyle.fontSize)) return false;
+    const baseColor = parseColor(baseStyle.color);
+    const childColor = parseColor(child.style.color);
+    return JSON.stringify(baseColor) === JSON.stringify(childColor);
+  }
+
+  // Folds a block-level text container's same-line inline runs (plain #text plus
+  // <strong>/<b>/<em>/<i>/<a> weight-or-style-only children — e.g. iana.org's "...provided
+  // by <a>Public Technical Identifiers</a>, an affiliate of <a>ICANN</a>.") into ONE Text
+  // leaf using BBCode markup, instead of one sibling Text per run.
+  //
+  // Previously every run got its own WidthUnits=RelativeToChildren Text at a fixed Absolute
+  // X lifted from Chromium. Gum's bitmap font renders each run at a slightly different pixel
+  // width than Chromium measured (worst for bold), so the next run's fixed X drifted from
+  // where the previous run actually ended — a visible gap before the run and an
+  // overlap/garbling right after it. One Text lets Gum's own font engine lay out the whole
+  // line itself, the same run-by-run measurement it already does for inline BBCode styling
+  // (#3520) — self-consistent regardless of how its bitmap font compares to Chromium's.
+  //
+  // Only applies when every run sits on the same rendered line (paragraphs that wrap are
+  // left alone — round 1 already handles per-line splitting for a single wrapping #text
+  // node; mixing that with cross-run BBCode wrapping is a separate, untested feature).
+  function mergeInlinePhrasingRun(node) {
+    if (!node.children || node.children.length < 2) return null;
+    if (!node.children.every((c) => isSimpleInlineStyleChild(c, node.style))) return null;
+    const y0 = node.children[0].rect.y;
+    if (!node.children.every((c) => Math.abs(c.rect.y - y0) < 1.5)) return null;
+
+    const base = resolveFontFile(node.style);
+    let text = '';
+    for (const c of node.children) {
+      let piece = c.text;
+      const cf = resolveFontFile(c.style);
+      if (cf.filePath && cf.filePath !== base.filePath) {
+        piece = `[Font=${cf.filePath}]${piece}[/Font]`;
+      } else if (!cf.filePath) {
+        if (isBold(c.style.fontWeight) !== isBold(node.style.fontWeight)) {
+          piece = `[IsBold=${isBold(c.style.fontWeight)}]${piece}[/IsBold]`;
+        }
+        if (isItalic(c.style.fontStyle) !== isItalic(node.style.fontStyle)) {
+          piece = `[IsItalic=${isItalic(c.style.fontStyle)}]${piece}[/IsItalic]`;
+        }
+      }
+      text += piece;
+    }
+    return { ...node, text, children: [], lineCount: 1 };
   }
 
   /** CSS hard text-shadow → black (or tinted) Text stamps behind the face label. */
@@ -1041,6 +1114,7 @@ export function mapTreeToScreen(
   // node's child-index chain from the root ("0.1.0"), the key responsiveMap is keyed by.
   // parentAlignItems is the parent's align-items (cross-axis) for flex stacks.
   function walk(node, parentName, parentOrientation, parentRect, path = [], parentAlignItems = 'stretch', opts = {}) {
+    node = mergeInlinePhrasingRun(node) || node;
     const kind = classify(node);
     const name = namer.forNode(node);
     // Image with a solid background-color/border (Cerberus broken-image affordance,

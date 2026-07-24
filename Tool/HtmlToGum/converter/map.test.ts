@@ -178,3 +178,83 @@ test('mapTreeToScreen: flex row child margin-top offsets stretch cross-axis (IAN
   assert.equal(findVar(variables, 'Main.HeightUnits')?.value, 2); // RelativeToParent
   assert.equal(findVar(variables, 'Main.Height')?.value, -25);
 });
+
+// ---- inline-styled run merging (IANA "Public Technical Identifiers" bold spans) ------
+function ianaParagraphFixture(runOverrides = {}) {
+  const plainStyle = baseStyle({ fontSize: 12, color: 'rgb(10, 20, 30)' });
+  const boldStyle = baseStyle({ fontSize: 12, fontWeight: '700', color: 'rgb(10, 20, 30)', ...runOverrides });
+  const run1 = boxNode({
+    tag: '#text',
+    text: 'The IANA functions ... provided by ',
+    rect: { x: 90, y: 778, width: 522, height: 17 },
+    lineCount: 1,
+    style: plainStyle,
+  });
+  const run2 = boxNode({
+    tag: 'a',
+    text: 'Public Technical Identifiers',
+    rect: { x: 612, y: 778, width: 161, height: 17 },
+    lineCount: 1,
+    style: boldStyle,
+  });
+  const run3 = boxNode({
+    tag: '#text',
+    text: ', an affiliate of ',
+    rect: { x: 773, y: 778, width: 83, height: 17 },
+    lineCount: 1,
+    style: plainStyle,
+  });
+  const run4 = boxNode({
+    tag: 'a',
+    text: 'ICANN',
+    rect: { x: 856, y: 778, width: 40, height: 17 },
+    lineCount: 1,
+    style: boldStyle,
+  });
+  const p = boxNode({
+    id: 'P1',
+    tag: 'p',
+    rect: { x: 90, y: 778, width: 806, height: 17 },
+    style: plainStyle,
+    children: [run1, run2, run3, run4],
+  });
+  return boxNode({
+    id: 'root',
+    rect: { x: 0, y: 0, width: 1000, height: 900 },
+    children: [p],
+  });
+}
+
+test('mapTreeToScreen: merges same-line inline-styled runs into one Text with BBCode (IANA bold links)', () => {
+  // Reproduces iana.org/help/example-domains: a paragraph with plain text, a bold <a> run,
+  // more plain text, and another bold <a> run — all on one visual line. Previously each run
+  // became its own sibling Text (WidthUnits=RelativeToChildren) positioned at a fixed
+  // Absolute X lifted from Chromium; Gum's own bitmap font renders each run at a different
+  // pixel width than Chromium measured, so the next run's fixed X drifted from where the
+  // previous run actually ended, producing a visible gap/overlap. Merging same-line runs
+  // into one Text with BBCode markup lets Gum's own font engine lay out the whole line
+  // consistently, the same way a single Text already measures run-by-run styling (#3520).
+  const root = ianaParagraphFixture();
+
+  const { instances, variables } = mapTreeToScreen(root);
+
+  const textInstances = instances.filter((i) => i.baseType === 'Text');
+  assert.equal(textInstances.length, 1, 'four same-line inline runs should merge into a single Text');
+  const name = textInstances[0].name;
+  assert.equal(
+    findVar(variables, `${name}.Text`)?.value,
+    'The IANA functions ... provided by [IsBold=true]Public Technical Identifiers[/IsBold], an affiliate of [IsBold=true]ICANN[/IsBold]',
+  );
+});
+
+test('mapTreeToScreen: does not merge same-line runs when a run color differs from the base run', () => {
+  // Color-changing runs (BBCode Color support) are out of scope for the merge — bail out
+  // to the pre-existing per-run Absolute-position behavior rather than silently dropping
+  // the color difference.
+  const root = ianaParagraphFixture({ color: 'rgb(200, 0, 0)' });
+
+  const { instances } = mapTreeToScreen(root);
+
+  const textInstances = instances.filter((i) => i.baseType === 'Text');
+  assert.equal(textInstances.length, 4, 'runs with a differing color should stay as separate Text instances');
+});
