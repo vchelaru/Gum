@@ -12,6 +12,8 @@ The following absolute values are available:
 * AbsoluteBottom - Returns the absolute bottom edge of the GraphicalUiElement
 * AbsoluteX - Returns the absolute X of the GraphicalUiElement considering its XOrigin
 * AbsoluteY - Returns the absolute Y of the GraphicalUiElement considering its YOrigin
+* AbsoluteWidth - Returns the absolute width of the GraphicalUiElement in pixels
+* AbsoluteHeight - Returns the absolute height of the GraphicalUiElement in pixels
 
 ## Code Example - Drawing a Sprite at the Absolute Position
 

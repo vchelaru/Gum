@@ -341,7 +341,7 @@ public class ComboBoxVisual : InteractiveGue
     private void PositionAndAttachListBox(GraphicalUiElement listBoxVisual)
     {
         listBoxVisual.Name = "ListBoxInstance";
-        listBoxVisual.Y = this.GetAbsoluteHeight();
+        listBoxVisual.Y = this.AbsoluteHeight;
         listBoxVisual.Width = 0f;
         listBoxVisual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         listBoxVisual.Height = 128f;

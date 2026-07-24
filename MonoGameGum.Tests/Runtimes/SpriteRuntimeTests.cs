@@ -184,7 +184,7 @@ public class SpriteRuntimeTests : BaseTestClass
         sut.TextureAddress = Gum.Managers.TextureAddress.EntireTexture;
         sut.TextureHeight = 150;
 
-        sut.GetAbsoluteHeight().ShouldBe(64);
+        sut.AbsoluteHeight.ShouldBe(64);
     }
 
     [Fact]
@@ -267,7 +267,7 @@ public class SpriteRuntimeTests : BaseTestClass
         sut.Width.ShouldBe(100);
         sut.WidthUnits.ShouldBe(Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile);
 
-        sut.GetAbsoluteWidth().ShouldBe(64);
+        sut.AbsoluteWidth.ShouldBe(64);
     }
 
     [Fact]
@@ -279,7 +279,7 @@ public class SpriteRuntimeTests : BaseTestClass
         sut.TextureAddress = Gum.Managers.TextureAddress.EntireTexture;
         sut.TextureWidth = 150;
 
-        sut.GetAbsoluteWidth().ShouldBe(64);
+        sut.AbsoluteWidth.ShouldBe(64);
     }
 
 }

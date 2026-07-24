@@ -119,7 +119,7 @@ public static class CursorExtensions
             return $"The parent {NameOrType(notExposingParent)} does not raise its children's events, preventing {NameOrType(interactiveGue)} from raising events\n" +
                 GetAncestorTree(interactiveGue, notExposingParent);
         }
-        if (interactiveGue.GetAbsoluteWidth() == 0)
+        if (interactiveGue.AbsoluteWidth == 0)
         {
             return "The argument InteractiveGue has an AbsoluteWidth of 0";
         }
@@ -129,11 +129,11 @@ public static class CursorExtensions
         }
         if(Get0WidthOrHeightParent(interactiveGue) is GraphicalUiElement parentWith0WidthOrHeight)
         {
-            if(parentWith0WidthOrHeight.GetAbsoluteHeight() == 0)
+            if(parentWith0WidthOrHeight.AbsoluteHeight == 0)
             {
                 return $"The parent {parentWith0WidthOrHeight} has an AbsoluteHeight of 0";
             }
-            else if(parentWith0WidthOrHeight.GetAbsoluteWidth() == 0)
+            else if(parentWith0WidthOrHeight.AbsoluteWidth == 0)
             {
                 return $"The parent {parentWith0WidthOrHeight} has an AbsoluteWidth of 0";
             }
@@ -197,8 +197,8 @@ public static class CursorExtensions
             {
                 var absoluteX = gue.GetAbsoluteX();
                 var absoluteY = gue.GetAbsoluteY();
-                var absoluteWidth = gue.GetAbsoluteWidth();
-                var absoluteHeight = gue.GetAbsoluteHeight();
+                var absoluteWidth = gue.AbsoluteWidth;
+                var absoluteHeight = gue.AbsoluteHeight;
                 if(cursor.XRespectingGumZoomAndBounds() < absoluteX)
                 {
                     return $"The cursor X={cursor.XRespectingGumZoomAndBounds()} is to the left of the element which starts at X={absoluteX}";
@@ -379,8 +379,8 @@ public static class CursorExtensions
     {
         var x = gue.GetAbsoluteX();
         var y = gue.GetAbsoluteY();
-        var width = gue.GetAbsoluteWidth();
-        var height = gue.GetAbsoluteHeight();
+        var width = gue.AbsoluteWidth;
+        var height = gue.AbsoluteHeight;
 
         var info = $"abs=({x:0.#},{y:0.#} {width:0.#}x{height:0.#})";
 
@@ -462,7 +462,7 @@ public static class CursorExtensions
             return null;
         }
         else if(visual.Parent is GraphicalUiElement parentGue && 
-            (parentGue.GetAbsoluteWidth() == 0 || parentGue.GetAbsoluteHeight() == 0))
+            (parentGue.AbsoluteWidth == 0 || parentGue.AbsoluteHeight == 0))
         {
             return visual.Parent as GraphicalUiElement;
         }

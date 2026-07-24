@@ -37,8 +37,8 @@ public class WindowVisualTests
         child.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
         child.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
 
-        window.Visual.GetAbsoluteWidth().ShouldBe(100 + 1 + 3);
-        window.Visual.GetAbsoluteHeight().ShouldBe(150 + 2 + 4);
+        window.Visual.AbsoluteWidth.ShouldBe(100 + 1 + 3);
+        window.Visual.AbsoluteHeight.ShouldBe(150 + 2 + 4);
     }
 
     [Fact]

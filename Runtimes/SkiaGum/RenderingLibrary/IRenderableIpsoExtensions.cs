@@ -27,8 +27,8 @@ namespace RenderingLibrary.Graphics
             {
                 var left = renderableIpso.GetAbsoluteX();
                 var top = renderableIpso.GetAbsoluteY();
-                var right = left + gue.GetAbsoluteWidth();
-                var bottom = top + gue.GetAbsoluteHeight(); ;
+                var right = left + gue.AbsoluteWidth;
+                var bottom = top + gue.AbsoluteHeight; ;
 
                 return new SKRect(left, top, right, bottom);
             }

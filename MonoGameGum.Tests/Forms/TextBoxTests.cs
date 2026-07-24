@@ -120,8 +120,8 @@ public class TextBoxTests : BaseTestClass
         // the bottom. Tolerance matches the convention used by the existing X-axis
         // scroll tests (font/layout geometry has small implementation-dependent
         // variance).
-        float caretAbsoluteCenter = visual.CaretInstance.AbsoluteTop + visual.CaretInstance.GetAbsoluteHeight() / 2f;
-        float visualBottom = visual.AbsoluteTop + visual.GetAbsoluteHeight();
+        float caretAbsoluteCenter = visual.CaretInstance.AbsoluteTop + visual.CaretInstance.AbsoluteHeight / 2f;
+        float visualBottom = visual.AbsoluteTop + visual.AbsoluteHeight;
         caretAbsoluteCenter.ShouldBeLessThanOrEqualTo(visualBottom,
             "because the caret center should remain inside the visible area after vertical scrolling");
     }

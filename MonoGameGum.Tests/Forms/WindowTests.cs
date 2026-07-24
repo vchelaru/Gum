@@ -399,12 +399,12 @@ public class WindowTests : BaseTestClass
         top.TryCallDragging();
 
         sut.Y.ShouldBe(100);
-        sut.Visual.GetAbsoluteHeight().ShouldBe(256);
+        sut.Visual.AbsoluteHeight.ShouldBe(256);
 
         // A second drag at the same cursor position must not push further.
         top.TryCallDragging();
         sut.Y.ShouldBe(100);
-        sut.Visual.GetAbsoluteHeight().ShouldBe(256);
+        sut.Visual.AbsoluteHeight.ShouldBe(256);
     }
 
     [Fact]

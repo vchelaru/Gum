@@ -536,13 +536,15 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// Returns the absolute width of the GraphicalUiElement in pixels (as opposed to using its WidthUnits)
     /// </summary>
     /// <returns>The absolute width in pixels.</returns>
-    public float GetAbsoluteWidth() => ((IPositionedSizedObject)this).Width;
+    [Obsolete("Use AbsoluteWidth instead.")]
+    public float GetAbsoluteWidth() => AbsoluteWidth;
 
     /// <summary>
     /// Returns the absolute height of the GraphicalUiElement in pixels (as opposed to using its HeightUnits)
     /// </summary>
     /// <returns>The absolute height in pixels.</returns>
-    public float GetAbsoluteHeight() => ((IPositionedSizedObject)this).Height;
+    [Obsolete("Use AbsoluteHeight instead.")]
+    public float GetAbsoluteHeight() => AbsoluteHeight;
 
     void IRenderableIpso.SetParentDirect(IRenderableIpso? parent)
     {
@@ -1405,14 +1407,24 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     public float AbsoluteTop => this.GetAbsoluteY();
 
     /// <summary>
+    /// Returns the absolute width of the GraphicalUiElement in pixels (as opposed to using its WidthUnits).
+    /// </summary>
+    public float AbsoluteWidth => ((IPositionedSizedObject)this).Width;
+
+    /// <summary>
+    /// Returns the absolute height of the GraphicalUiElement in pixels (as opposed to using its HeightUnits).
+    /// </summary>
+    public float AbsoluteHeight => ((IPositionedSizedObject)this).Height;
+
+    /// <summary>
     /// Returns the right side in absolute pixel coordinates
     /// </summary>
-    public float AbsoluteRight => AbsoluteLeft + this.GetAbsoluteWidth();
+    public float AbsoluteRight => AbsoluteLeft + this.AbsoluteWidth;
 
     /// <summary>
     /// Returns the bottom side in absolute pixel coordinates
     /// </summary>
-    public float AbsoluteBottom => AbsoluteTop + this.GetAbsoluteHeight();
+    public float AbsoluteBottom => AbsoluteTop + this.AbsoluteHeight;
 
     public IVisible ExplicitIVisibleParent
     {
@@ -2459,7 +2471,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                             var element = Children[0];
 
                             maxHeight = element.GetRequiredParentHeight();
-                            var elementHeight = element.GetAbsoluteHeight();
+                            var elementHeight = element.AbsoluteHeight;
                             maxHeight += (StackSpacing + elementHeight) * (Children.Count - 1);
                         }
                         else
@@ -2584,7 +2596,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                         //    throw new NotImplementedException();
                         //}
                         //else 
-                        pixelHeightToSet = GetAbsoluteWidth() * (mHeight / 100.0f) / aspectRatioObject.AspectRatio;
+                        pixelHeightToSet = AbsoluteWidth * (mHeight / 100.0f) / aspectRatioObject.AspectRatio;
                         wasSet = true;
 
                         if (wasSet && mContainedObjectAsIpso is ITextureCoordinate textureCoordinate)
@@ -2596,7 +2608,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                                 var scale = 1f;
                                 if (textureCoordinate.SourceRectangle.Value.Width != 0)
                                 {
-                                    scale = GetAbsoluteWidth() / textureCoordinate.SourceRectangle.Value.Width;
+                                    scale = AbsoluteWidth / textureCoordinate.SourceRectangle.Value.Width;
                                 }
                                 pixelHeightToSet = textureCoordinate.SourceRectangle.Value.Height * scale * mHeight / 100.0f;
                             }
@@ -2674,7 +2686,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                                         gue.HeightUnits == DimensionUnitType.ScreenPixel ||
                                         gue.HeightUnits == DimensionUnitType.RelativeToMaxParentOrChildren)
                                     {
-                                        var childAbsoluteWidth = gue.GetAbsoluteHeight();
+                                        var childAbsoluteWidth = gue.AbsoluteHeight;
                                         heightToSplit -= childAbsoluteWidth;
                                     }
                                     numberOfVisibleChildren++;
@@ -3013,7 +3025,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     if (mContainedObjectAsIpso is IAspectRatio aspectRatioObject)
                     {
                         // mWidth is a percent where 100 means maintain aspect ratio
-                        pixelWidthToSet = GetAbsoluteHeight() * aspectRatioObject.AspectRatio * (mWidth / 100.0f);
+                        pixelWidthToSet = AbsoluteHeight * aspectRatioObject.AspectRatio * (mWidth / 100.0f);
                         wasSet = true;
 
                         if (wasSet && mContainedObjectAsIpso is ITextureCoordinate iTextureCoordinate)
@@ -3023,7 +3035,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                                 var scale = 1f;
                                 if (iTextureCoordinate.SourceRectangle.Value.Height != 0)
                                 {
-                                    scale = GetAbsoluteHeight() / iTextureCoordinate.SourceRectangle.Value.Height;
+                                    scale = AbsoluteHeight / iTextureCoordinate.SourceRectangle.Value.Height;
                                 }
                                 pixelWidthToSet = iTextureCoordinate.SourceRectangle.Value.Width * scale * mWidth / 100.0f;
                             }
@@ -3102,7 +3114,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                                         gue.WidthUnits == DimensionUnitType.ScreenPixel ||
                                         gue.WidthUnits == DimensionUnitType.RelativeToMaxParentOrChildren)
                                     {
-                                        var childAbsoluteWidth = gue.GetAbsoluteWidth();
+                                        var childAbsoluteWidth = gue.AbsoluteWidth;
                                         widthToSplit -= childAbsoluteWidth;
                                     }
                                     numberOfVisibleChildren++;
@@ -3434,14 +3446,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     }
                 }
 
-                parentWidth = (Parent.GetAbsoluteWidth() - (effectiveHorizontalCells - 1) * Parent.StackSpacing) / effectiveHorizontalCells;
+                parentWidth = (Parent.AbsoluteWidth - (effectiveHorizontalCells - 1) * Parent.StackSpacing) / effectiveHorizontalCells;
 
-                parentHeight = ( Parent.GetAbsoluteHeight() - (effectiveVerticalCells - 1) * Parent.StackSpacing ) / effectiveVerticalCells;
+                parentHeight = ( Parent.AbsoluteHeight - (effectiveVerticalCells - 1) * Parent.StackSpacing ) / effectiveVerticalCells;
             }
             else
             {
-                parentWidth = Parent.GetAbsoluteWidth();
-                parentHeight = Parent.GetAbsoluteHeight();
+                parentWidth = Parent.AbsoluteWidth;
+                parentHeight = Parent.AbsoluteHeight;
             }
         }
         else if (this.ElementGueContainingThis != null && this.ElementGueContainingThis.mContainedObjectAsIpso != null)
@@ -4314,7 +4326,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 var visibleIndex = this.GetIndexInVisibleSiblings();
                 if (visibleIndex > 0)
                 {
-                    var firstChildHeight = effectiveParent.Children[0].GetAbsoluteHeight();
+                    var firstChildHeight = effectiveParent.Children[0].AbsoluteHeight;
                     unitOffsetY += visibleIndex * (firstChildHeight + effectiveParent.StackSpacing);
                 }
                 this.StackedRowOrColumnIndex = 0;
@@ -4410,11 +4422,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             float myDimension;
             if (parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack)
             {
-                myDimension = this.Y + this.GetAbsoluteHeight();
+                myDimension = this.Y + this.AbsoluteHeight;
             }
             else
             {
-                myDimension = this.X + this.GetAbsoluteWidth();
+                myDimension = this.X + this.AbsoluteWidth;
             }
 
             float currentMax = parentGue.StackedRowOrColumnDimensions[indexToUpdate];
@@ -4444,13 +4456,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                             {
                                 parentGue.StackedRowOrColumnDimensions[indexToUpdate] =
                                     System.Math.Max(parentGue.StackedRowOrColumnDimensions[indexToUpdate],
-                                    child.Y + child.GetAbsoluteHeight());
+                                    child.Y + child.AbsoluteHeight);
                             }
                             else
                             {
                                 parentGue.StackedRowOrColumnDimensions[indexToUpdate] =
                                     System.Math.Max(parentGue.StackedRowOrColumnDimensions[indexToUpdate],
-                                    child.X + child.GetAbsoluteWidth());
+                                    child.X + child.AbsoluteWidth);
                             }
 
                             if (this == child)
@@ -4501,8 +4513,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             var requiredColumnCount = (int)Math.Ceiling((float)childCount / rowCount);
             columnCount = System.Math.Max(columnCount, requiredColumnCount);
         }
-        var parentWidth = effectiveParent.GetAbsoluteWidth() - (columnCount - 1) * effectiveParent.StackSpacing;
-        var parentHeight = effectiveParent.GetAbsoluteHeight() - (rowCount - 1) * effectiveParent.StackSpacing;
+        var parentWidth = effectiveParent.AbsoluteWidth - (columnCount - 1) * effectiveParent.StackSpacing;
+        var parentHeight = effectiveParent.AbsoluteHeight - (rowCount - 1) * effectiveParent.StackSpacing;
 
         cellWidth = (parentWidth / columnCount);
         cellHeight = (parentHeight / rowCount);

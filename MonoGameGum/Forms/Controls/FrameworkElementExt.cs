@@ -112,8 +112,8 @@ public static class FrameworkElementExt
         
 
     //    var coloredRectangle = new ColoredRectangleRuntime();
-    //    coloredRectangle.Width = element.Visual.GetAbsoluteWidth();
-    //    coloredRectangle.Height = element.Visual.GetAbsoluteHeight();
+    //    coloredRectangle.Width = element.Visual.AbsoluteWidth;
+    //    coloredRectangle.Height = element.Visual.AbsoluteHeight;
     //    coloredRectangle.X = element.Visual.AbsoluteLeft;
     //    coloredRectangle.Y = element.Visual.AbsoluteTop;
     //    coloredRectangle.Color = color.Value;

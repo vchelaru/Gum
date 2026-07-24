@@ -795,7 +795,7 @@ public class ScrollViewer :
 
         // Capture the header's height before we move it; reparenting can
         // re-trigger layout and we want the size as the user sees it now.
-        float headerHeight = header.GetAbsoluteHeight();
+        float headerHeight = header.AbsoluteHeight;
 
         // Build the placeholder, then swap header → placeholder at the same
         // index in the inner panel's stack so nothing visually shifts.
@@ -818,7 +818,7 @@ public class ScrollViewer :
         };
         entry.HeaderSizeChangedHandler = (_, _) =>
         {
-            entry.Placeholder.Height = entry.Header.GetAbsoluteHeight();
+            entry.Placeholder.Height = entry.Header.AbsoluteHeight;
             RecomputeStickyHeaders();
         };
         header.SizeChanged += entry.HeaderSizeChangedHandler;
@@ -1015,7 +1015,7 @@ public class ScrollViewer :
             if (i + 1 < _stickyHeaders.Count)
             {
                 float nextRelY = _stickyHeaders[i + 1].Placeholder.AbsoluteTop - overlayTop;
-                float maxY = nextRelY - entry.Header!.GetAbsoluteHeight();
+                float maxY = nextRelY - entry.Header!.AbsoluteHeight;
                 if (headerY > maxY)
                 {
                     headerY = maxY;
@@ -1230,7 +1230,7 @@ public class ScrollViewer :
 
         // Record the inner panel height before (possibly) changing the
         // scroll bar height...
-        var innerPanelHeight = innerPanel.GetAbsoluteHeight();
+        var innerPanelHeight = innerPanel.AbsoluteHeight;
 
         switch (verticalScrollBarVisibility)
         {
@@ -1242,7 +1242,7 @@ public class ScrollViewer :
                 break;
             case ScrollBarVisibility.Auto:
                 {
-                    var clipContainerHeight = clipContainer.GetAbsoluteHeight();
+                    var clipContainerHeight = clipContainer.AbsoluteHeight;
                     verticalScrollBar.IsVisible = innerPanelHeight > clipContainerHeight;
                 }
                 break;
@@ -1251,7 +1251,7 @@ public class ScrollViewer :
 
 
         // now that we've set the visibility state, let's see if the height has changed
-        var didHeightChange = innerPanel.GetAbsoluteHeight() != innerPanelHeight;
+        var didHeightChange = innerPanel.AbsoluteHeight != innerPanelHeight;
         if (didHeightChange)
         {
             // It changed, which can adjust the scroll bar height so let's adjust it again
@@ -1261,10 +1261,10 @@ public class ScrollViewer :
         void SetVerticalScrollBarValuesFromVisuals()
         {
             verticalScrollBar.Minimum = 0;
-            verticalScrollBar.ViewportSize = clipContainer.GetAbsoluteHeight();
+            verticalScrollBar.ViewportSize = clipContainer.AbsoluteHeight;
 
-            var innerPanelHeight = innerPanel.GetAbsoluteHeight();
-            var clipContainerHeight = clipContainer.GetAbsoluteHeight();
+            var innerPanelHeight = innerPanel.AbsoluteHeight;
+            var clipContainerHeight = clipContainer.AbsoluteHeight;
             var maxValue = innerPanelHeight - clipContainerHeight;
 
             maxValue = System.Math.Max(0, maxValue);
@@ -1305,7 +1305,7 @@ public class ScrollViewer :
         SetHorizontalSrollBarValuesFromVisuals();
         // Record the inner panel width before (possibly) changing the
         // scroll bar width...
-        var innerPanelWidth = innerPanel.GetAbsoluteWidth();
+        var innerPanelWidth = innerPanel.AbsoluteWidth;
 
         switch (horizontalScrollBarVisibility)
         {
@@ -1317,7 +1317,7 @@ public class ScrollViewer :
                 break;
             case ScrollBarVisibility.Auto:
                 {
-                    var clipContainerWidth = clipContainer.GetAbsoluteWidth();
+                    var clipContainerWidth = clipContainer.AbsoluteWidth;
                     horizontalScrollBar.IsVisible = innerPanelWidth > clipContainerWidth;
                 }
                 break;
@@ -1327,7 +1327,7 @@ public class ScrollViewer :
 
 
         // now that we've set the visibility state, let's see if the width has changed
-        var didWidthChange = innerPanel.GetAbsoluteWidth() != innerPanelWidth;
+        var didWidthChange = innerPanel.AbsoluteWidth != innerPanelWidth;
         if (didWidthChange)
         {
             // It changed, which can adjust the scroll bar width so let's adjust it again
@@ -1337,10 +1337,10 @@ public class ScrollViewer :
         void SetHorizontalSrollBarValuesFromVisuals()
         {
             horizontalScrollBar.Minimum = 0;
-            horizontalScrollBar.ViewportSize = clipContainer.GetAbsoluteWidth();
+            horizontalScrollBar.ViewportSize = clipContainer.AbsoluteWidth;
 
-            var innerPanelWidth = innerPanel.GetAbsoluteWidth();
-            var clipContainerWidth = clipContainer.GetAbsoluteWidth();
+            var innerPanelWidth = innerPanel.AbsoluteWidth;
+            var clipContainerWidth = clipContainer.AbsoluteWidth;
             var maxValue = innerPanelWidth - clipContainerWidth;
 
             maxValue = System.Math.Max(0, maxValue);

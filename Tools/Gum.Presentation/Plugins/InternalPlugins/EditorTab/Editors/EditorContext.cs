@@ -157,8 +157,8 @@ public class EditorContext
             SelectedState.SelectedIpso != null)
         {
             var ipso = (GraphicalUiElement)SelectedState.SelectedIpso;
-            float width = ipso.GetAbsoluteWidth();
-            float height = ipso.GetAbsoluteHeight();
+            float width = ipso.AbsoluteWidth;
+            float height = ipso.AbsoluteHeight;
 
             if (height != 0)
             {

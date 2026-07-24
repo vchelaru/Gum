@@ -1,5 +1,9 @@
 # GetAbsoluteHeight
 
+{% hint style="warning" %}
+`GetAbsoluteHeight()` is obsolete. Use the [AbsoluteHeight](absolute-values.md) property instead.
+{% endhint %}
+
 ### Introduction
 
 Returns the height of the calling GraphicalUiElement in pixels. This can be used to get the actual height of instance even if it is using a Height Units that is not pixels.

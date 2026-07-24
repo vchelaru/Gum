@@ -62,8 +62,8 @@ public class ScrollBar : RangeBase
     float MinThumbPosition => 0;
     float MaxThumbPosition =>
         Orientation == Orientation.Vertical
-        ? Track.GetAbsoluteHeight() - thumb.ActualHeight
-        : Track.GetAbsoluteWidth() - thumb.ActualWidth;
+        ? Track.AbsoluteHeight - thumb.ActualHeight
+        : Track.AbsoluteWidth - thumb.ActualWidth;
 
 
     public override Orientation Orientation 
@@ -178,7 +178,7 @@ public class ScrollBar : RangeBase
 
 
         var visibleTrackSpace = upButton != null && downButton != null
-            ? Track.GetAbsoluteHeight() - upButton.ActualHeight - downButton.ActualHeight
+            ? Track.AbsoluteHeight - upButton.ActualHeight - downButton.ActualHeight
             : 0;
 
         if (visibleTrackSpace != 0)
@@ -480,7 +480,7 @@ public class ScrollBar : RangeBase
 
                 if(Orientation == Orientation.Vertical)
                 {
-                    float trackSize =  Track.GetAbsoluteHeight();
+                    float trackSize =  Track.AbsoluteHeight;
                     thumb.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
                     thumb.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
 
@@ -488,7 +488,7 @@ public class ScrollBar : RangeBase
                 }
                 else
                 {
-                    float trackSize =  Track.GetAbsoluteWidth();
+                    float trackSize =  Track.AbsoluteWidth;
                     thumb.Visual.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
                     thumb.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
 

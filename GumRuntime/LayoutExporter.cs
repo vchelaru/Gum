@@ -55,8 +55,8 @@ public static class LayoutExporter
 
         writer.WriteNumber("x", element.AbsoluteX);
         writer.WriteNumber("y", element.AbsoluteY);
-        writer.WriteNumber("width", element.GetAbsoluteWidth());
-        writer.WriteNumber("height", element.GetAbsoluteHeight());
+        writer.WriteNumber("width", element.AbsoluteWidth);
+        writer.WriteNumber("height", element.AbsoluteHeight);
         writer.WriteBoolean("visible", element.AbsoluteVisible);
 
         if (element.RenderableComponent is IText text && text.RawText != null)

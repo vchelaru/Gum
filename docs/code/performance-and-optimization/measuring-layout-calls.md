@@ -31,12 +31,12 @@ stackPanel.Anchor(Anchor.Center);
 
 for(int i = 0; i < 10; i++)
 {
-    float heightBefore = stackPanel.Visual.GetAbsoluteHeight();
+    float heightBefore = stackPanel.Visual.AbsoluteHeight;
 
     Label label = new();
     stackPanel.AddChild(label);
 
-    float heightAfter = stackPanel.Visual.GetAbsoluteHeight();
+    float heightAfter = stackPanel.Visual.AbsoluteHeight;
 
     label.Text = 
         $"Label {i + 1} (StackPanel Height: {heightBefore} -> {heightAfter})";
@@ -45,7 +45,7 @@ for(int i = 0; i < 10; i++)
 
 <figure><img src="../../.gitbook/assets/02_07 57 16.png" alt=""><figcaption><p>StackPanel displaying its size</p></figcaption></figure>
 
-This code shows that a `StackPanel's` absolute height is calculated after every `AddChild` call. Note that the absolute height is calculated whether we call `GetAbsoluteHeight` or not - this method simply retrieves the already-calculated value.
+This code shows that a `StackPanel's` absolute height is calculated after every `AddChild` call. Note that the absolute height is calculated whether we access `AbsoluteHeight` or not - this property simply retrieves the already-calculated value.
 
 This behavior has the benefit of an object always updating its most up-to-date position and size, but it has the downside of performing potentially unnecessary layout calls.
 
@@ -64,12 +64,12 @@ stackPanel.Anchor(Anchor.Center);
 
 <strong>for(int i = 0; i &#x3C; 20; i++)
 </strong>{
-    float heightBefore = stackPanel.Visual.GetAbsoluteHeight();
+    float heightBefore = stackPanel.Visual.AbsoluteHeight;
 
     Label label = new();
     stackPanel.AddChild(label);
 
-    float heightAfter = stackPanel.Visual.GetAbsoluteHeight();
+    float heightAfter = stackPanel.Visual.AbsoluteHeight;
 
 <strong>    label.Text =
 </strong><strong>        $"Label {i + 1}, layout calls: {GraphicalUiElement.UpdateLayoutCallCount}";
@@ -134,12 +134,12 @@ stackPanel.Anchor(Anchor.Center);
 
 for(int i = 0; i &#x3C; 20; i++)
 {
-    float heightBefore = stackPanel.Visual.GetAbsoluteHeight();
+    float heightBefore = stackPanel.Visual.AbsoluteHeight;
 
     Label label = new();
     stackPanel.AddChild(label);
 
-    float heightAfter = stackPanel.Visual.GetAbsoluteHeight();
+    float heightAfter = stackPanel.Visual.AbsoluteHeight;
 
     label.Text = 
         $"Label {i + 1}, layout calls: {GraphicalUiElement.UpdateLayoutCallCount}";

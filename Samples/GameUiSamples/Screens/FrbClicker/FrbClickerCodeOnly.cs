@@ -209,7 +209,7 @@ public class FrbClickerCodeOnly : Panel, IUpdateScreen
 
             if(toolTip.AbsoluteRight > GraphicalUiElement.CanvasWidth)
             {
-                toolTip.X = GraphicalUiElement.CanvasWidth - toolTip.GetAbsoluteWidth();
+                toolTip.X = GraphicalUiElement.CanvasWidth - toolTip.AbsoluteWidth;
             }
         }
     }

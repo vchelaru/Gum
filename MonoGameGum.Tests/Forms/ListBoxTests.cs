@@ -516,8 +516,8 @@ public class ListBoxTests : BaseTestClass
         listBox.SelectionChanged += (_, _) => fireCount++;
 
         Mock<ICursor> cursor = SetupForPush();
-        var cx = button.GetAbsoluteX() + button.GetAbsoluteWidth() / 2;
-        var cy = button.GetAbsoluteY() + button.GetAbsoluteHeight() / 2;
+        var cx = button.GetAbsoluteX() + button.AbsoluteWidth / 2;
+        var cy = button.GetAbsoluteY() + button.AbsoluteHeight / 2;
         cursor.Setup(c => c.XRespectingGumZoomAndBounds()).Returns(cx);
         cursor.Setup(c => c.YRespectingGumZoomAndBounds()).Returns(cy);
         cursor.Setup(c => c.X).Returns((int)cx);
@@ -1554,8 +1554,8 @@ public class ListBoxTests : BaseTestClass
         if (itemIndex >= 0 && itemIndex < listBox.ListBoxItems.Count)
         {
             var targetItemVisual = listBox.ListBoxItems[itemIndex]!.Visual;
-            var cursorX = targetItemVisual.GetAbsoluteX() + targetItemVisual.GetAbsoluteWidth() / 2;
-            var cursorY = targetItemVisual.GetAbsoluteY() + targetItemVisual.GetAbsoluteHeight() / 2;
+            var cursorX = targetItemVisual.GetAbsoluteX() + targetItemVisual.AbsoluteWidth / 2;
+            var cursorY = targetItemVisual.GetAbsoluteY() + targetItemVisual.AbsoluteHeight / 2;
 
             mockCursor.Setup(c => c.XRespectingGumZoomAndBounds()).Returns(cursorX);
             mockCursor.Setup(c => c.YRespectingGumZoomAndBounds()).Returns(cursorY);
@@ -1922,8 +1922,8 @@ public class ListBoxTests : BaseTestClass
         listBox.SelectionChanged += (_, _) => fireCount++;
 
         Mock<ICursor> cursor = SetupForPush();
-        float cx = separator.GetAbsoluteX() + separator.GetAbsoluteWidth() / 2;
-        float cy = separator.GetAbsoluteY() + separator.GetAbsoluteHeight() / 2;
+        float cx = separator.GetAbsoluteX() + separator.AbsoluteWidth / 2;
+        float cy = separator.GetAbsoluteY() + separator.AbsoluteHeight / 2;
         cursor.Setup(c => c.XRespectingGumZoomAndBounds()).Returns(cx);
         cursor.Setup(c => c.YRespectingGumZoomAndBounds()).Returns(cy);
         cursor.Setup(c => c.X).Returns((int)cx);
@@ -2407,10 +2407,10 @@ public class ListBoxTests : BaseTestClass
 
             ListBox.ShowPopupListBox(popup, listBoxParent);
 
-            (popup.Visual.AbsoluteX + popup.Visual.GetAbsoluteWidth())
-                .ShouldBeLessThanOrEqualTo(customPopupRoot.X + customPopupRoot.GetAbsoluteWidth());
-            (popup.Visual.AbsoluteY + popup.Visual.GetAbsoluteHeight())
-                .ShouldBeLessThanOrEqualTo(customPopupRoot.Y + customPopupRoot.GetAbsoluteHeight());
+            (popup.Visual.AbsoluteX + popup.Visual.AbsoluteWidth)
+                .ShouldBeLessThanOrEqualTo(customPopupRoot.X + customPopupRoot.AbsoluteWidth);
+            (popup.Visual.AbsoluteY + popup.Visual.AbsoluteHeight)
+                .ShouldBeLessThanOrEqualTo(customPopupRoot.Y + customPopupRoot.AbsoluteHeight);
         }
         finally
         {

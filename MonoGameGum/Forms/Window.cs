@@ -264,23 +264,23 @@ public class Window : Gum.Forms.Controls.FrameworkElement
             // MinWidth clamp below restore the absolute width to at least
             // MinWidth without overshooting for non-absolute units.
             var widthUnitBefore = Visual.Width;
-            var absoluteWidthBefore = Visual.GetAbsoluteWidth();
+            var absoluteWidthBefore = Visual.AbsoluteWidth;
 
             switch (Visual.XOrigin)
             {
                 case global::RenderingLibrary.Graphics.HorizontalAlignment.Left:
                     {
-                        var widthBefore = Visual.GetAbsoluteWidth();
+                        var widthBefore = Visual.AbsoluteWidth;
                         Visual.Width -= difference;
-                        var addedWidth = Visual.GetAbsoluteWidth() - widthBefore;
+                        var addedWidth = Visual.AbsoluteWidth - widthBefore;
                         Visual.X -= addedWidth;
                     }
                     break;
                 case global::RenderingLibrary.Graphics.HorizontalAlignment.Center:
                     {
-                        var widthBefore = Visual.GetAbsoluteWidth();
+                        var widthBefore = Visual.AbsoluteWidth;
                         Visual.Width -= difference;
-                        var addedWidth = Visual.GetAbsoluteWidth() - widthBefore;
+                        var addedWidth = Visual.AbsoluteWidth - widthBefore;
                         Visual.X -= addedWidth / 2f;
                     }
                     break;
@@ -296,23 +296,23 @@ public class Window : Gum.Forms.Controls.FrameworkElement
             var difference = desiredTop - Visual.AbsoluteTop;
 
             var heightUnitBefore = Visual.Height;
-            var absoluteHeightBefore = Visual.GetAbsoluteHeight();
+            var absoluteHeightBefore = Visual.AbsoluteHeight;
 
             switch (Visual.YOrigin)
             {
                 case global::RenderingLibrary.Graphics.VerticalAlignment.Top:
                     {
-                        var heightBefore = Visual.GetAbsoluteHeight();
+                        var heightBefore = Visual.AbsoluteHeight;
                         Visual.Height -= difference;
-                        var addedHeight = Visual.GetAbsoluteHeight() - heightBefore;
+                        var addedHeight = Visual.AbsoluteHeight - heightBefore;
                         Visual.Y -= addedHeight;
                     }
                     break;
                 case global::RenderingLibrary.Graphics.VerticalAlignment.Center:
                     {
-                        var heightBefore = Visual.GetAbsoluteHeight();
+                        var heightBefore = Visual.AbsoluteHeight;
                         Visual.Height -= difference;
-                        var addedHeight = Visual.GetAbsoluteHeight() - heightBefore;
+                        var addedHeight = Visual.AbsoluteHeight - heightBefore;
                         Visual.Y -= addedHeight / 2f;
                     }
                     break;
@@ -329,7 +329,7 @@ public class Window : Gum.Forms.Controls.FrameworkElement
             var difference = desiredRight - Visual.AbsoluteRight;
 
             var widthUnitBefore = Visual.Width;
-            var absoluteWidthBefore = Visual.GetAbsoluteWidth();
+            var absoluteWidthBefore = Visual.AbsoluteWidth;
 
             switch (Visual.XOrigin)
             {
@@ -338,18 +338,18 @@ public class Window : Gum.Forms.Controls.FrameworkElement
                     break;
                 case global::RenderingLibrary.Graphics.HorizontalAlignment.Center:
                     {
-                        var widthBefore = Visual.GetAbsoluteWidth();
+                        var widthBefore = Visual.AbsoluteWidth;
                         Visual.Width += difference;
-                        var addedWidth = Visual.GetAbsoluteWidth() - widthBefore;
+                        var addedWidth = Visual.AbsoluteWidth - widthBefore;
                         Visual.X += addedWidth / 2f;
                     }
 
                     break;
                 case global::RenderingLibrary.Graphics.HorizontalAlignment.Right:
                     {
-                        var widthBefore = Visual.GetAbsoluteWidth();
+                        var widthBefore = Visual.AbsoluteWidth;
                         Visual.Width += difference;
-                        var addedWidth = Visual.GetAbsoluteWidth() - widthBefore;
+                        var addedWidth = Visual.AbsoluteWidth - widthBefore;
                         Visual.X += addedWidth;
                     }
                     break;
@@ -363,7 +363,7 @@ public class Window : Gum.Forms.Controls.FrameworkElement
             var difference = desiredBottom - Visual.AbsoluteBottom;
 
             var heightUnitBefore = Visual.Height;
-            var absoluteHeightBefore = Visual.GetAbsoluteHeight();
+            var absoluteHeightBefore = Visual.AbsoluteHeight;
 
             switch (Visual.YOrigin)
             {
@@ -372,18 +372,18 @@ public class Window : Gum.Forms.Controls.FrameworkElement
                     break;
                 case global::RenderingLibrary.Graphics.VerticalAlignment.Center:
                     {
-                        var heightBefore = Visual.GetAbsoluteHeight();
+                        var heightBefore = Visual.AbsoluteHeight;
                         Visual.Height += difference;
-                        var addedHeight = Visual.GetAbsoluteHeight() - heightBefore;
+                        var addedHeight = Visual.AbsoluteHeight - heightBefore;
                         Visual.Y += addedHeight / 2f;
 
                     }
                     break;
                 case global::RenderingLibrary.Graphics.VerticalAlignment.Bottom:
                     {
-                        var heightBefore = Visual.GetAbsoluteHeight();
+                        var heightBefore = Visual.AbsoluteHeight;
                         Visual.Height += difference;
-                        var addedHeight = Visual.GetAbsoluteHeight() - heightBefore;
+                        var addedHeight = Visual.AbsoluteHeight - heightBefore;
                         Visual.Y += addedHeight;
                     }
                     break;
@@ -406,7 +406,7 @@ public class Window : Gum.Forms.Controls.FrameworkElement
     }
 
     /// <summary>
-    /// Ensures Visual.GetAbsoluteWidth() is at least Visual.MinWidth by adjusting Visual.Width
+    /// Ensures Visual.AbsoluteWidth is at least Visual.MinWidth by adjusting Visual.Width
     /// by the deficit only. Using Math.Max(MinWidth, Visual.Width) directly is only correct
     /// for WidthUnits=Absolute; for RelativeToChildren the unit value is an offset added to
     /// children's size, so clamping it to MinWidth overshoots and inflates the absolute width,

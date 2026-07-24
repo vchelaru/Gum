@@ -24,7 +24,7 @@ Tests for `DimensionUnitType.Absolute`, `PercentageOfParent`, `RelativeToParent`
 
 | # | Test Name | Priority | Notes |
 |---|-----------|----------|-------|
-| 1 | `WidthAbsolute_ShouldReturnExactPixels` | P0 | Width=150, assert GetAbsoluteWidth()=150 |
+| 1 | `WidthAbsolute_ShouldReturnExactPixels` | P0 | Width=150, assert AbsoluteWidth=150 |
 | 2 | `WidthAbsolute_ShouldReturnZero_WhenSetToZero` | P1 | Edge case: zero width |
 | 3 | `WidthAbsolute_ShouldAllowNegativeValues` | P2 | Verify negative width doesn't crash |
 | 4 | `WidthPercentageOfParent_ShouldReturnHalfParentWidth_WhenFiftyPercent` | P0 | Parent=400, Width=50 |

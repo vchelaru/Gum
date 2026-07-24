@@ -119,7 +119,7 @@ For computed or transformed values, use the lambda overload:
 ```csharp
 // In CustomInitialize
 this.RegisterRuntimeProperty(
-    () => ContentPanel.GetAbsoluteWidth(),
+    () => ContentPanel.AbsoluteWidth,
     v => ContentPanel.Width = v);
 ```
 
