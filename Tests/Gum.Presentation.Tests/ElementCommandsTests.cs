@@ -2,6 +2,7 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
+using Gum.Expressions;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.PropertyGridHelpers;
@@ -10,6 +11,7 @@ using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using Moq;
+using RenderingLibrary.Graphics;
 using Shouldly;
 
 namespace Gum.Presentation.Tests;
@@ -136,6 +138,69 @@ public class ElementCommandsTests : BaseTestClass
         // assert
         name.ShouldBe("TextInstance1");
     }
+
+    #region ModifyVariable
+
+    [Fact]
+    public void ModifyVariable_ReferenceReadsAbsoluteRightOfDraggedInstance_MaterializesLiveResolvedValueIntoStateSave()
+    {
+        // Repro for a live-drag bug: while dragging Source, a sibling's "X = Source.AbsoluteRight"
+        // reference must track Source's live position - not the position from before this drag
+        // tick started. ModifyVariable is called on every drag tick (ElementCommands.MoveSelectedObjectsBy),
+        // so its ElementSave-overload ApplyVariableReferences call must resolve against a live root
+        // that already reflects Source's just-applied position, or the materialized value goes stale
+        // and later gets overwritten back to the pre-drag value when the wireframe next refreshes
+        // from the (never-updated) StateSave scalar.
+        GumExpressionService.Initialize();
+
+        ComponentSave component = new ComponentSave { Name = "TestComponent" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        component.States.Add(defaultState);
+
+        InstanceSave sourceInstance = new InstanceSave { Name = "Source", BaseType = "Container", ParentContainer = component };
+        InstanceSave targetInstance = new InstanceSave { Name = "Target", BaseType = "Container", ParentContainer = component };
+        component.Instances.Add(sourceInstance);
+        component.Instances.Add(targetInstance);
+
+        StandardElementSave containerStandard = new StandardElementSave { Name = "Container" };
+        containerStandard.States.Add(new StateSave { Name = "Default", ParentContainer = containerStandard });
+
+        GumProjectSave project = new GumProjectSave();
+        project.StandardElements.Add(containerStandard);
+        project.Components.Add(component);
+        ObjectFinder.GumProjectSave = project;
+
+        defaultState.Variables.Add(new VariableSave { Name = "Source.X", Value = 0f, Type = "float", SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = "Source.XUnits", Value = PositionUnitType.PixelsFromLeft, Type = "PositionUnitType", SetsValue = true });
+        // The existing scalar the reference will overwrite - also what gives ApplyVariableReferencesOnSpecificOwner
+        // the left-side type ("float") it needs to cast the resolved AbsoluteRight value to.
+        defaultState.Variables.Add(new VariableSave { Name = "Target.X", Value = 0f, Type = "float", SetsValue = true });
+
+        VariableListSave<string> targetRefs = new VariableListSave<string> { Type = "string", Name = "Target.VariableReferences" };
+        targetRefs.Value.Add("X = Source.AbsoluteRight");
+        defaultState.VariableLists.Add(targetRefs);
+
+        GraphicalUiElement rootGue = new GraphicalUiElement(new InvisibleRenderable());
+        GraphicalUiElement sourceGue = new GraphicalUiElement(new InvisibleRenderable()) { Name = "Source", Width = 40f };
+        sourceGue.Parent = rootGue;
+
+        _selectedState.SetupGet(x => x.SelectedElement).Returns(component);
+        _selectedState.SetupGet(x => x.SelectedStateSave).Returns(defaultState);
+        _selectedState.SetupGet(x => x.CustomCurrentStateSave).Returns((StateSave)null);
+
+        _wireframeObjectManager.Setup(x => x.GetRepresentation(sourceInstance, null)).Returns(sourceGue);
+        _wireframeObjectManager.SetupGet(x => x.RootGue).Returns(rootGue);
+
+        // Drag Source 100px to the right.
+        _sut.ModifyVariable("X", 100f, sourceInstance);
+
+        // AbsoluteRight = AbsoluteX (100, the just-applied drag position) + Width (40) = 140.
+        // A stale/unresolved reference would leave Target.X unset (null) or resolved against
+        // Source's pre-drag X (0 + 40 = 40).
+        defaultState.GetValue("Target.X").ShouldBe(140f);
+    }
+
+    #endregion
 
     [Fact]
     public void GetUniqueNameForNewInstance_WithBehaviorSave_ShouldReturnDefaultName()
