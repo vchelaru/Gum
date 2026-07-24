@@ -90,6 +90,11 @@ const isBold = (w) => w === 'bold' || w === 'bolder' || parseInt(w, 10) >= 600;
 const isItalic = (s) => s === 'italic' || s === 'oblique';
 const firstFont = (fam) => (fam || '').split(',')[0].replace(/["']/g, '').trim();
 
+// Tags whose only visual effect (once background/border/shadow/padding is ruled out) is a
+// font weight/style/color change — safe to fold into one Text via BBCode markup instead of
+// a sibling Text per run. #text nodes carry no style deviation of their own.
+const INLINE_PHRASING_TAGS = new Set(['#text', 'a', 'strong', 'b', 'em', 'i']);
+
 // Chromium serializes resolved grid tracks as "200px 200px 200px" (fr already computed).
 // Returns pixel lengths; empty for none/auto/unsupported keywords.
 function parseGridTracks(str) {
@@ -398,6 +403,127 @@ function computeCoverCrop(srcW, srcH, dstW, dstH) {
   };
 }
 
+// CSS icon-sprite technique: one shared background-image, positioned with a
+// background-position offset per element so each element's fixed-size box acts as a
+// window onto one sub-region of the sheet (GeeksforGeeks' social-icon strip, common site
+// pattern). Gum's Sprite has no background-position concept — TextureAddress=EntireTexture
+// squashes the *whole* sheet into the box. Reproduces the visible sub-region as an explicit
+// TextureAddress=Custom source-rect crop, mirroring computeCoverCrop's approach.
+// Only background-size tokens resolvable without a layout pass are supported: 'auto' (natural
+// size) and <percentage> (relative to the box — the common case, matching how site sprites
+// are usually pinned to their native resolution). 'cover'/'contain' are cover-crop's territory
+// (see wantsCoverCrop) and never reach here; unrecognized tokens (bare lengths, keywords like
+// left/right/top/bottom) bail to null rather than emit a wrong crop.
+// allowZeroOffset: a sprite's *first* tile is legitimately at background-position:0 0 (no
+// offset needed to select it) — the caller sets this once it's established elsewhere that
+// the same URL is used at multiple distinct positions in the tree (see
+// collectBackgroundPositionsByUrl), i.e. this really is a sprite sheet, not a plain
+// single-use background image that happens to be positioned at the default top-left.
+function computeBackgroundSpriteCrop(style, naturalWidth, naturalHeight, boxWidth, boxHeight, allowZeroOffset = false) {
+  if (naturalWidth <= 0 || naturalHeight <= 0 || boxWidth <= 0 || boxHeight <= 0) return null;
+
+  function resolveSize(tok, basis) {
+    if (tok == null || tok === 'auto') return null;
+    if (tok.endsWith('%')) return (parseFloat(tok) / 100) * basis;
+    if (tok.endsWith('px')) return parseFloat(tok);
+    return undefined; // unrecognized (length in other units, etc.) — caller bails
+  }
+
+  const sizeToks = (style.backgroundSize || 'auto').trim().split(/\s+/);
+  const wTok = resolveSize(sizeToks[0], boxWidth);
+  const hTok = resolveSize(sizeToks[1], boxHeight);
+  if (wTok === undefined || hTok === undefined) return null;
+
+  let imgWidth;
+  let imgHeight;
+  if (wTok == null && hTok == null) {
+    imgWidth = naturalWidth;
+    imgHeight = naturalHeight;
+  } else if (hTok == null) {
+    imgWidth = wTok;
+    imgHeight = naturalHeight * (imgWidth / naturalWidth);
+  } else if (wTok == null) {
+    imgHeight = hTok;
+    imgWidth = naturalWidth * (imgHeight / naturalHeight);
+  } else {
+    imgWidth = wTok;
+    imgHeight = hTok;
+  }
+  if (imgWidth <= 0 || imgHeight <= 0) return null;
+
+  function resolvePos(tok, basis, imgSize) {
+    if (tok == null) return 0;
+    if (tok.endsWith('%')) return (basis - imgSize) * (parseFloat(tok) / 100);
+    if (tok.endsWith('px')) return parseFloat(tok);
+    return undefined;
+  }
+
+  const posToks = (style.backgroundPosition || '0% 0%').trim().split(/\s+/);
+  const posX = resolvePos(posToks[0], boxWidth, imgWidth);
+  const posY = resolvePos(posToks[1], boxHeight, imgHeight);
+  if (posX === undefined || posY === undefined) return null;
+
+  // Default top-left placement (posX===0 && posY===0) usually means "no sprite offset to
+  // reproduce" — leave it to the existing EntireTexture stretch-to-fill default rather than
+  // risk a crop rect that doesn't match Gum's current (correct-enough) behavior for plain
+  // backgrounds. Confirmed sprite sheets (allowZeroOffset) still crop even at (0,0) — that's
+  // just the sheet's first tile (e.g. GFG's facebook icon, offset 0 0).
+  if (posX === 0 && posY === 0 && !allowZeroOffset) return null;
+
+  const scaleX = imgWidth / naturalWidth;
+  const scaleY = imgHeight / naturalHeight;
+  const crop = {
+    left: Math.round(-posX / scaleX) || 0, // normalize -0
+    top: Math.round(-posY / scaleY) || 0,
+    width: Math.round(boxWidth / scaleX),
+    height: Math.round(boxHeight / scaleY),
+  };
+  // Bail if the resolved window falls outside the actual sheet — our px-only parsing
+  // (no repeat-tiling support) can't reproduce that correctly, so don't emit a bogus crop.
+  if (crop.left < 0 || crop.top < 0
+    || crop.left + crop.width > naturalWidth || crop.top + crop.height > naturalHeight) {
+    return null;
+  }
+  return crop;
+}
+
+// A URL used at 2+ distinct background-position values across the tree is definitionally
+// a sprite sheet in use (that's the whole point of the technique — one image, several
+// elements each dialing in a different offset). Lets computeBackgroundSpriteCrop tell a
+// sprite's first tile (offset 0 0, still a deliberate selection) apart from a plain
+// single-use background image that's simply left at its default top-left position.
+function collectBackgroundPositionsByUrl(node, acc = new Map()) {
+  const url = parseBackgroundImageUrl(node.style.backgroundImage);
+  if (url) {
+    const pos = (node.style.backgroundPosition || '0% 0%').trim();
+    if (!acc.has(url)) acc.set(url, new Set());
+    acc.get(url).add(pos);
+  }
+  for (const child of node.children) collectBackgroundPositionsByUrl(child, acc);
+  return acc;
+}
+
+// computeCoverCrop / computeBackgroundSpriteCrop both work in "natural" units — the box
+// tree's captured naturalWidth/naturalHeight (Chromium's intrinsic size for the source
+// image). That matches the on-disk asset pixel-for-pixel for ordinary raster images, but
+// not for a rasterized SVG: rasterizeSvg (assets.mjs) renders at up to 2x the SVG's
+// declared size for crisper downscaling (SVG_UPSCALE/SVG_MAX_DIM), so the PNG Gum actually
+// loads can be a different pixel size than naturalWidth/Height. Rescale the crop rect by
+// (actual asset size / natural size) so TextureLeft/Top/Width/Height index the real file.
+function scaleCropToAsset(crop, assetSizeMap, url, naturalWidth, naturalHeight) {
+  const actual = assetSizeMap && assetSizeMap.get(url);
+  if (!actual || naturalWidth <= 0 || naturalHeight <= 0) return crop;
+  const scaleX = actual.width / naturalWidth;
+  const scaleY = actual.height / naturalHeight;
+  if (scaleX === 1 && scaleY === 1) return crop;
+  return {
+    left: Math.round(crop.left * scaleX),
+    top: Math.round(crop.top * scaleY),
+    width: Math.round(crop.width * scaleX),
+    height: Math.round(crop.height * scaleY),
+  };
+}
+
 // List bullets are pseudo-content (::marker) — never part of textContent, so they were
 // silently absent from every emitted <li>. Gum has no marker/list concept, so this is a
 // text-prefix approximation covering the common unordered-list styles; `decimal` and
@@ -628,6 +754,11 @@ function wantsCoverCrop(style) {
  * @param {Map|null} fontMap fontFaceKey(family,weight,style) -> "Fonts/….ttf" from
  *   fonts.mjs. When present, Text.Font is the .ttf path (gumcli fonts / FontCache);
  *   weight/style are baked into the file so IsBold/IsItalic are omitted.
+ * @param {Map|null} assetSizeMap image URL -> actual rasterized pixel {width,height} from
+ *   assets.mjs's downloadImages, only populated for SVG sources (SVG_UPSCALE/SVG_MAX_DIM
+ *   mean the on-disk asset can be a different pixel size than the box tree's captured
+ *   naturalWidth/naturalHeight). Cover-fit and background-position-sprite crop math scales
+ *   against this so TextureLeft/Top/Width/Height land on the right pixels in that file.
  * @returns {{instances: {name,baseType}[], variables: {}[], warnings: string[]}}
  */
 export function mapTreeToScreen(
@@ -636,11 +767,13 @@ export function mapTreeToScreen(
   responsiveMap: ResponsiveMap | null = null,
   fontMap: Map<string, string> | null = null,
   nineSliceMap: Map<string, NineSliceInfo> | null = null,
+  assetSizeMap: Map<string, { width: number, height: number }> | null = null,
 ): MappedScreen {
   const namer = makeNamer();
   const instances = [];
   const variables = [];
   const warnings = [];
+  const backgroundPositionsByUrl = collectBackgroundPositionsByUrl(root);
 
   function orientationOf(node) {
     return layoutModeOf(node);
@@ -759,14 +892,27 @@ export function mapTreeToScreen(
    * Cross-axis sizing + alignment for a flex stack child.
    * stretch + indefinite → RelativeToParent 0; otherwise hug / % size and origin-align.
    * Child `align-self` overrides parent `align-items` when not `auto`.
+   *
+   * A literal (non-auto) margin on the cross-start/end edge still offsets the child even
+   * under flex-start/stretch alignment — CSS aligns the item's *margin* box to the line,
+   * not its border box (e.g. iana.org's <article style="display:flex"><main
+   * style="margin-top:25px">: main's border-box sits 25px below the container's
+   * cross-start, and its stretched height shrinks by that margin).
    */
   function emitStackCrossAxis(name, parentOrientation, alignItems, measuredCross, style) {
     const self = (style?.alignSelf || 'auto').toLowerCase();
     const align = (self !== 'auto' ? self : (alignItems || 'stretch')).toLowerCase();
     const stretch = isAlignStretch(align) && !hasDefiniteCrossSize(style, parentOrientation);
     const axisName = parentOrientation === 'column' ? 'Width' : 'Height';
+    const posName = parentOrientation === 'column' ? 'X' : 'Y';
+    const crossStart = (parentOrientation === 'column' ? style?.marginLeft : style?.marginTop) || 0;
+    const crossEnd = (parentOrientation === 'column' ? style?.marginRight : style?.marginBottom) || 0;
     if (stretch) {
-      variables.push(VDIM(`${name}.${axisName}Units`, DIM.RelativeToParent), VF(`${name}.${axisName}`, 0));
+      variables.push(
+        VDIM(`${name}.${axisName}Units`, DIM.RelativeToParent),
+        VF(`${name}.${axisName}`, -Math.round(crossStart + crossEnd)),
+      );
+      if (crossStart > 0) variables.push(VF(`${name}.${posName}`, Math.round(crossStart)));
       return;
     }
     const pct = specifiedPercent(style, axisName);
@@ -775,7 +921,11 @@ export function mapTreeToScreen(
     } else {
       variables.push(VDIM(`${name}.${axisName}Units`, DIM.Absolute), VF(`${name}.${axisName}`, Math.round(measuredCross)));
     }
-    if (isAlignStretch(align)) return; // definite size under stretch → cross-start (no origin shift)
+    if (isAlignStretch(align)) {
+      // Definite size under stretch → cross-start, offset only by the child's own margin.
+      if (crossStart > 0) variables.push(VF(`${name}.${posName}`, Math.round(crossStart)));
+      return;
+    }
     if (parentOrientation === 'column') {
       if (align === 'center') {
         variables.push(VPOS(`${name}.XUnits`, POS.PixelsFromCenterX), VOH(`${name}.XOrigin`, ORIGIN_H.Center), VF(`${name}.X`, 0));
@@ -854,12 +1004,18 @@ export function mapTreeToScreen(
     const asset = url && assetMap.get(url);
     if (asset) {
       variables.push(VS(`${name}.SourceFile`, asset));
-      if (wantsCoverCrop(s) && node.naturalWidth > 0 && node.naturalHeight > 0) {
-        const crop = computeCoverCrop(node.naturalWidth, node.naturalHeight, node.rect.width, node.rect.height);
+      const isSpriteSheet = (backgroundPositionsByUrl.get(url)?.size || 0) > 1;
+      const crop = wantsCoverCrop(s) && node.naturalWidth > 0 && node.naturalHeight > 0
+        ? computeCoverCrop(node.naturalWidth, node.naturalHeight, node.rect.width, node.rect.height)
+        : computeBackgroundSpriteCrop(
+          s, node.naturalWidth, node.naturalHeight, node.rect.width, node.rect.height, isSpriteSheet,
+        );
+      if (crop) {
+        const scaled = scaleCropToAsset(crop, assetSizeMap, url, node.naturalWidth, node.naturalHeight);
         variables.push(
           v('TextureAddress', `${name}.TextureAddress`, 'xsd:int', 1), // Custom
-          VI(`${name}.TextureLeft`, crop.left), VI(`${name}.TextureTop`, crop.top),
-          VI(`${name}.TextureWidth`, crop.width), VI(`${name}.TextureHeight`, crop.height),
+          VI(`${name}.TextureLeft`, scaled.left), VI(`${name}.TextureTop`, scaled.top),
+          VI(`${name}.TextureWidth`, scaled.width), VI(`${name}.TextureHeight`, scaled.height),
         );
       }
       return true;
@@ -870,6 +1026,27 @@ export function mapTreeToScreen(
       warnings.push(`"${name}" (${node.tag}) was flagged for rasterization but no sprite was captured.`);
     }
     return false;
+  }
+
+  // Web-font file path (B / gumcli fonts): style is baked into the instantiated TTF for
+  // this exact family+weight+style. No mapping (system/KernSmith fallback) → caller falls
+  // back to IsBold/IsItalic synthesis. Shared by emitVisual and the inline-run BBCode merge
+  // so both pick the same font file for the same style.
+  function resolveFontFile(s) {
+    const family = firstFont(s.fontFamily);
+    const weightNum = (() => {
+      const w = s.fontWeight;
+      if (w === 'bold' || w === 'bolder') return 700;
+      if (w === 'normal' || w === 'lighter') return 400;
+      const n = parseInt(w, 10);
+      return Number.isFinite(n) ? n : 400;
+    })();
+    const styleKey = isItalic(s.fontStyle) ? 'italic' : 'normal';
+    const famKey = (family || '').toLowerCase().replace(/\s+var\b/g, '').replace(/\s+/g, ' ').trim();
+    const filePath = fontMap && family
+      && (fontMap.get(`${famKey}|${weightNum}|${styleKey}`)
+        || fontMap.get(`${famKey}|${weightNum}|normal`));
+    return { family, filePath };
   }
 
   function emitVisual(kind, name, node, alignOpts = null, { colorOverride = null, skipOutline = false } = {}) {
@@ -887,21 +1064,7 @@ export function mapTreeToScreen(
         variables.push(VI(`${name}.Red`, col.r), VI(`${name}.Green`, col.g), VI(`${name}.Blue`, col.b));
         if (col.a != null && col.a !== 255) variables.push(VI(`${name}.Alpha`, col.a));
       }
-      // Web-font file path (B / gumcli fonts): style is baked into the instantiated TTF.
-      // Family name fallback: keep IsBold/IsItalic for system/KernSmith synthesis.
-      const family = firstFont(s.fontFamily);
-      const weightNum = (() => {
-        const w = s.fontWeight;
-        if (w === 'bold' || w === 'bolder') return 700;
-        if (w === 'normal' || w === 'lighter') return 400;
-        const n = parseInt(w, 10);
-        return Number.isFinite(n) ? n : 400;
-      })();
-      const styleKey = isItalic(s.fontStyle) ? 'italic' : 'normal';
-      const famKey = (family || '').toLowerCase().replace(/\s+var\b/g, '').replace(/\s+/g, ' ').trim();
-      const filePath = fontMap && family
-        && (fontMap.get(`${famKey}|${weightNum}|${styleKey}`)
-          || fontMap.get(`${famKey}|${weightNum}|normal`));
+      const { family, filePath } = resolveFontFile(s);
       if (filePath) {
         variables.push(VS(`${name}.Font`, filePath));
       } else {
@@ -924,6 +1087,67 @@ export function mapTreeToScreen(
       emitSpriteSource(name, node);
     }
     applyOpacity(kind, name, s);
+  }
+
+  // Is this child a same-line inline-styled run that can fold into the parent's Text via
+  // BBCode instead of becoming its own sibling Text? Must differ from the base run only in
+  // weight/style (color support is a possible future extension — bail for now rather than
+  // guess a BBCode Color format), have no chrome/shadow/padding of its own, and contain no
+  // literal '[' or ']' (BBCode has no escape sequence for its own delimiters).
+  function isSimpleInlineStyleChild(child, baseStyle) {
+    if (!INLINE_PHRASING_TAGS.has(child.tag)) return false;
+    if (child.lineCount > 1) return false;
+    if (!child.text || /[[\]]/.test(child.text)) return false;
+    if (hasVisualStyling(child.style)) return false;
+    if (parseHardTextShadows(child.style).length > 0) return false;
+    if (hasPadding(paddingOf(child.style))) return false;
+    if (firstFont(child.style.fontFamily) !== firstFont(baseStyle.fontFamily)) return false;
+    if (Math.round(child.style.fontSize) !== Math.round(baseStyle.fontSize)) return false;
+    const baseColor = parseColor(baseStyle.color);
+    const childColor = parseColor(child.style.color);
+    return JSON.stringify(baseColor) === JSON.stringify(childColor);
+  }
+
+  // Folds a block-level text container's same-line inline runs (plain #text plus
+  // <strong>/<b>/<em>/<i>/<a> weight-or-style-only children — e.g. iana.org's "...provided
+  // by <a>Public Technical Identifiers</a>, an affiliate of <a>ICANN</a>.") into ONE Text
+  // leaf using BBCode markup, instead of one sibling Text per run.
+  //
+  // Previously every run got its own WidthUnits=RelativeToChildren Text at a fixed Absolute
+  // X lifted from Chromium. Gum's bitmap font renders each run at a slightly different pixel
+  // width than Chromium measured (worst for bold), so the next run's fixed X drifted from
+  // where the previous run actually ended — a visible gap before the run and an
+  // overlap/garbling right after it. One Text lets Gum's own font engine lay out the whole
+  // line itself, the same run-by-run measurement it already does for inline BBCode styling
+  // (#3520) — self-consistent regardless of how its bitmap font compares to Chromium's.
+  //
+  // Only applies when every run sits on the same rendered line (paragraphs that wrap are
+  // left alone — round 1 already handles per-line splitting for a single wrapping #text
+  // node; mixing that with cross-run BBCode wrapping is a separate, untested feature).
+  function mergeInlinePhrasingRun(node) {
+    if (!node.children || node.children.length < 2) return null;
+    if (!node.children.every((c) => isSimpleInlineStyleChild(c, node.style))) return null;
+    const y0 = node.children[0].rect.y;
+    if (!node.children.every((c) => Math.abs(c.rect.y - y0) < 1.5)) return null;
+
+    const base = resolveFontFile(node.style);
+    let text = '';
+    for (const c of node.children) {
+      let piece = c.text;
+      const cf = resolveFontFile(c.style);
+      if (cf.filePath && cf.filePath !== base.filePath) {
+        piece = `[Font=${cf.filePath}]${piece}[/Font]`;
+      } else if (!cf.filePath) {
+        if (isBold(c.style.fontWeight) !== isBold(node.style.fontWeight)) {
+          piece = `[IsBold=${isBold(c.style.fontWeight)}]${piece}[/IsBold]`;
+        }
+        if (isItalic(c.style.fontStyle) !== isItalic(node.style.fontStyle)) {
+          piece = `[IsItalic=${isItalic(c.style.fontStyle)}]${piece}[/IsItalic]`;
+        }
+      }
+      text += piece;
+    }
+    return { ...node, text, children: [], lineCount: 1 };
   }
 
   /** CSS hard text-shadow → black (or tinted) Text stamps behind the face label. */
@@ -1024,6 +1248,7 @@ export function mapTreeToScreen(
   // node's child-index chain from the root ("0.1.0"), the key responsiveMap is keyed by.
   // parentAlignItems is the parent's align-items (cross-axis) for flex stacks.
   function walk(node, parentName, parentOrientation, parentRect, path = [], parentAlignItems = 'stretch', opts = {}) {
+    node = mergeInlinePhrasingRun(node) || node;
     const kind = classify(node);
     const name = namer.forNode(node);
     // Image with a solid background-color/border (Cerberus broken-image affordance,
