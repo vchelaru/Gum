@@ -18,7 +18,6 @@ using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
-using ToolsUtilities;
 
 namespace HtmlToGumPlugin;
 
@@ -59,22 +58,17 @@ public class MainHtmlToGumPlugin : WpfPluginBase
             return;
         }
 
-        using var dlg = new OpenFileDialog
-        {
-            Filter = "HTML (*.html;*.htm)|*.html;*.htm|All files (*.*)|*.*",
-            Title = "Import HTML into Gum",
-        };
-        if (dlg.ShowDialog() != DialogResult.OK) return;
-
         var prefs = ImportPrefs.Load();
         var defaults = new ImportOptions
         {
-            HtmlPath = dlg.FileName,
+            HtmlPath = prefs.LastSource,
+            IsUrl = prefs.LastIsUrl,
             Selector = string.IsNullOrWhiteSpace(prefs.Selector) ? "body" : prefs.Selector,
-            ScreenName = SanitizeScreenName(Path.GetFileNameWithoutExtension(dlg.FileName)),
+            ScreenName = DeriveDefaultScreenName(prefs.LastSource, prefs.LastIsUrl),
             Width = prefs.Width > 0 ? prefs.Width : 800,
             Height = prefs.Height > 0 ? prefs.Height : 600,
             NoResponsive = prefs.NoResponsive,
+            DestinationSubfolder = prefs.DestinationSubfolder,
         };
         if (!ImportOptionsForm.ShowDialog(defaults, out var opts) || opts is null) return;
 
@@ -82,7 +76,12 @@ public class MainHtmlToGumPlugin : WpfPluginBase
         prefs.Width = opts.Width;
         prefs.Height = opts.Height;
         prefs.NoResponsive = opts.NoResponsive;
+        prefs.LastSource = opts.HtmlPath;
+        prefs.LastIsUrl = opts.IsUrl;
+        prefs.DestinationSubfolder = opts.DestinationSubfolder;
         prefs.Save();
+
+        var subfolder = string.IsNullOrWhiteSpace(opts.DestinationSubfolder) ? null : opts.DestinationSubfolder.Trim();
 
         var converterDir = ResolveConverterDir();
         var convertTs = Path.Combine(converterDir, "convert.ts");
@@ -118,16 +117,15 @@ public class MainHtmlToGumPlugin : WpfPluginBase
             return;
         }
 
-        // Unique screen name if one already exists in the project.
-        var screenName = opts.ScreenName;
-        if (ObjectFinder.Self.GetElementSave(screenName) != null)
+        // Unique screen name if one already exists in the project (scoped to the destination subfolder, if any).
+        var screenName = HtmlImportNaming.ResolveUniqueScreenName(
+            opts.ScreenName, subfolder, name => ObjectFinder.Self.GetElementSave(name) != null);
+        if (screenName != opts.ScreenName)
         {
-            var baseName = screenName;
-            var n = 2;
-            while (ObjectFinder.Self.GetElementSave($"{baseName}_{n}") != null) n++;
-            screenName = $"{baseName}_{n}";
+            var existingQualifiedName = HtmlImportNaming.QualifyScreenName(opts.ScreenName, subfolder);
+            var newQualifiedName = HtmlImportNaming.QualifyScreenName(screenName, subfolder);
             if (!_dialogService.ShowYesNoMessage(
-                    $"Screen \"{baseName}\" already exists. Import as \"{screenName}\"?",
+                    $"Screen \"{existingQualifiedName}\" already exists. Import as \"{newQualifiedName}\"?",
                     FriendlyName))
             {
                 return;
@@ -179,7 +177,13 @@ public class MainHtmlToGumPlugin : WpfPluginBase
             CopyAssetTree(Path.Combine(stageDir, "FontCache"), Path.Combine(projectDir, "FontCache"));
 
             progress.SetStatus("Importing screen into project…");
-            var imported = importLogic.ImportScreen(new FilePath(gusx), saveProject: false);
+            var screenSave = ElementReference.DeserializeElement<ScreenSave>(gusx, GumProjectSave.NativeVersion);
+            if (subfolder != null)
+            {
+                screenSave.Name = HtmlImportNaming.QualifyScreenName(screenSave.Name, subfolder);
+            }
+            var qualifiedScreenName = screenSave.Name;
+            var imported = importLogic.ImportScreen(screenSave, saveProject: false);
             if (imported is null)
             {
                 progress.Hide();
@@ -195,7 +199,7 @@ public class MainHtmlToGumPlugin : WpfPluginBase
             }
 
             // Re-resolve after reload so selection points at the live ElementSave.
-            var live = ObjectFinder.Self.GetElementSave(screenName);
+            var live = ObjectFinder.Self.GetElementSave(qualifiedScreenName);
             if (live != null)
             {
                 selectedState.SelectedElement = live;
@@ -203,7 +207,7 @@ public class MainHtmlToGumPlugin : WpfPluginBase
 
             progress.Hide();
             _dialogService.ShowMessage(
-                $"Imported and selected screen \"{screenName}\".\n\n{SummarizeConverterLog(stdout)}");
+                $"Imported and selected screen \"{qualifiedScreenName}\".\n\n{SummarizeConverterLog(stdout)}");
         }
         catch (Exception ex)
         {
@@ -376,31 +380,48 @@ public class MainHtmlToGumPlugin : WpfPluginBase
         return candidates[0];
     }
 
-    private static string SanitizeScreenName(string? raw)
+    internal static string SanitizeScreenName(string? raw)
     {
         var name = Regex.Replace(raw ?? "ImportedScreen", @"[^A-Za-z0-9_]", "_");
         if (string.IsNullOrEmpty(name)) name = "ImportedScreen";
         if (char.IsDigit(name[0])) name = "S_" + name;
         return name;
     }
+
+    private static string DeriveDefaultScreenName(string source, bool isUrl)
+    {
+        if (string.IsNullOrWhiteSpace(source)) return "ImportedScreen";
+        if (isUrl)
+        {
+            return Uri.TryCreate(source, UriKind.Absolute, out var uri)
+                ? SanitizeScreenName(uri.Host)
+                : "ImportedScreen";
+        }
+        return SanitizeScreenName(Path.GetFileNameWithoutExtension(source));
+    }
 }
 
 internal sealed class ImportOptions
 {
     public string HtmlPath { get; set; } = "";
+    public bool IsUrl { get; set; }
     public string Selector { get; set; } = "body";
     public string ScreenName { get; set; } = "ImportedScreen";
     public int Width { get; set; } = 800;
     public int Height { get; set; } = 600;
     public bool NoResponsive { get; set; }
+    public string DestinationSubfolder { get; set; } = "";
 }
 
 internal sealed class ImportPrefs
 {
+    public string LastSource { get; set; } = "";
+    public bool LastIsUrl { get; set; }
     public string Selector { get; set; } = "body";
     public int Width { get; set; } = 800;
     public int Height { get; set; } = 600;
     public bool NoResponsive { get; set; }
+    public string DestinationSubfolder { get; set; } = "";
 
     private static string PrefsPath =>
         Path.Combine(
@@ -478,7 +499,7 @@ internal sealed class ImportProgressForm : Form
     }
 }
 
-/// <summary>WinForms dialog for selector / screen name / viewport / responsive flag.</summary>
+/// <summary>WinForms dialog for HTML source (local file / URL) / selector / screen name / viewport / responsive flag / destination subfolder.</summary>
 internal static class ImportOptionsForm
 {
     public static bool ShowDialog(ImportOptions defaults, out ImportOptions? result)
@@ -491,67 +512,116 @@ internal static class ImportOptionsForm
             StartPosition = FormStartPosition.CenterParent,
             MinimizeBox = false,
             MaximizeBox = false,
-            ClientSize = new Size(460, 248),
+            ClientSize = new Size(460, 316),
             Font = new Font("Segoe UI", 9f),
         };
 
-        var lblHtml = new Label
-        {
-            Text = Path.GetFileName(defaults.HtmlPath),
-            Left = 12,
-            Top = 12,
-            Width = 436,
-            AutoEllipsis = true,
-        };
-        var lblSel = new Label { Text = "CSS root selector", Left = 12, Top = 44, Width = 140 };
-        var txtSel = new TextBox { Text = defaults.Selector, Left = 160, Top = 40, Width = 280 };
-        var lblName = new Label { Text = "Screen name", Left = 12, Top = 76, Width = 140 };
-        var txtName = new TextBox { Text = defaults.ScreenName, Left = 160, Top = 72, Width = 280 };
-        var lblSize = new Label { Text = "Viewport W×H", Left = 12, Top = 108, Width = 140 };
-        var txtW = new TextBox { Text = defaults.Width.ToString(), Left = 160, Top = 104, Width = 80 };
-        var txtH = new TextBox { Text = defaults.Height.ToString(), Left = 250, Top = 104, Width = 80 };
+        var radioLocal = new RadioButton { Text = "Local file", Left = 12, Top = 12, Width = 100, Checked = !defaults.IsUrl };
+        var radioUrl = new RadioButton { Text = "URL", Left = 116, Top = 12, Width = 80, Checked = defaults.IsUrl };
+        var txtSource = new TextBox { Text = defaults.HtmlPath, Left = 12, Top = 36, Width = 356 };
+        var btnBrowse = new Button { Text = "Browse…", Left = 372, Top = 34, Width = 76 };
+
+        var lblSel = new Label { Text = "CSS root selector", Left = 12, Top = 72, Width = 140 };
+        var txtSel = new TextBox { Text = defaults.Selector, Left = 160, Top = 68, Width = 280 };
+        var lblName = new Label { Text = "Screen name", Left = 12, Top = 104, Width = 140 };
+        var txtName = new TextBox { Text = defaults.ScreenName, Left = 160, Top = 100, Width = 280 };
+        var lblSize = new Label { Text = "Viewport W×H", Left = 12, Top = 136, Width = 140 };
+        var txtW = new TextBox { Text = defaults.Width.ToString(), Left = 160, Top = 132, Width = 80 };
+        var txtH = new TextBox { Text = defaults.Height.ToString(), Left = 250, Top = 132, Width = 80 };
         var chkNoResp = new CheckBox
         {
             Text = "Disable responsive units (--no-responsive)",
             Left = 160,
-            Top = 140,
+            Top = 168,
             Width = 280,
             Checked = defaults.NoResponsive,
         };
+        var lblSubfolder = new Label { Text = "Destination subfolder", Left = 12, Top = 200, Width = 140 };
+        var txtSubfolder = new TextBox { Text = defaults.DestinationSubfolder, Left = 160, Top = 196, Width = 280 };
         var hint = new Label
         {
-            Text = "Selector / viewport remembered for next import.",
+            Text = "Optional — avoids name conflicts by importing under Screens/<subfolder>/.",
             Left = 12,
-            Top = 172,
+            Top = 228,
             Width = 436,
             ForeColor = SystemColors.GrayText,
         };
-        var btnOk = new Button { Text = "Import", DialogResult = DialogResult.OK, Left = 264, Top = 204, Width = 88 };
-        var btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Left = 360, Top = 204, Width = 88 };
+        var btnOk = new Button { Text = "Import", Left = 264, Top = 272, Width = 88 };
+        var btnCancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Left = 360, Top = 272, Width = 88 };
         form.Controls.AddRange(
         [
-            lblHtml, lblSel, txtSel, lblName, txtName, lblSize, txtW, txtH,
-            chkNoResp, hint, btnOk, btnCancel,
+            radioLocal, radioUrl, txtSource, btnBrowse,
+            lblSel, txtSel, lblName, txtName, lblSize, txtW, txtH,
+            chkNoResp, lblSubfolder, txtSubfolder, hint, btnOk, btnCancel,
         ]);
         form.AcceptButton = btnOk;
         form.CancelButton = btnCancel;
+
+        void UpdateBrowseEnabled() => btnBrowse.Enabled = radioLocal.Checked;
+        radioLocal.CheckedChanged += (_, _) => UpdateBrowseEnabled();
+        radioUrl.CheckedChanged += (_, _) => UpdateBrowseEnabled();
+        UpdateBrowseEnabled();
+
+        btnBrowse.Click += (_, _) =>
+        {
+            using var fileDlg = new OpenFileDialog
+            {
+                Filter = "HTML (*.html;*.htm)|*.html;*.htm|All files (*.*)|*.*",
+                Title = "Choose local HTML file",
+            };
+            if (fileDlg.ShowDialog(form) != DialogResult.OK) return;
+            txtSource.Text = fileDlg.FileName;
+            if (string.IsNullOrWhiteSpace(txtName.Text) || txtName.Text == "ImportedScreen")
+            {
+                txtName.Text = MainHtmlToGumPlugin.SanitizeScreenName(Path.GetFileNameWithoutExtension(fileDlg.FileName));
+            }
+        };
+
+        btnOk.Click += (_, _) =>
+        {
+            var source = txtSource.Text.Trim();
+            if (string.IsNullOrWhiteSpace(source))
+            {
+                MessageBox.Show(form, "Enter a local HTML file path or a URL.", "Import HTML",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if (radioUrl.Checked)
+            {
+                if (!HtmlImportNaming.IsUrl(source))
+                {
+                    MessageBox.Show(form, "URL must start with http:// or https://.", "Import HTML",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+            }
+            else if (!File.Exists(source))
+            {
+                MessageBox.Show(form, $"File not found:\n{source}", "Import HTML",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            form.DialogResult = DialogResult.OK;
+            form.Close();
+        };
 
         if (form.ShowDialog() != DialogResult.OK) return false;
 
         if (!int.TryParse(txtW.Text.Trim(), out var w) || w < 1) w = defaults.Width;
         if (!int.TryParse(txtH.Text.Trim(), out var h) || h < 1) h = defaults.Height;
         var name = string.IsNullOrWhiteSpace(txtName.Text) ? defaults.ScreenName : txtName.Text.Trim();
-        name = Regex.Replace(name, @"[^A-Za-z0-9_]", "_");
-        if (char.IsDigit(name[0])) name = "S_" + name;
+        name = MainHtmlToGumPlugin.SanitizeScreenName(name);
 
         result = new ImportOptions
         {
-            HtmlPath = defaults.HtmlPath,
+            HtmlPath = txtSource.Text.Trim(),
+            IsUrl = radioUrl.Checked,
             Selector = string.IsNullOrWhiteSpace(txtSel.Text) ? "body" : txtSel.Text.Trim(),
             ScreenName = name,
             Width = w,
             Height = h,
             NoResponsive = chkNoResp.Checked,
+            DestinationSubfolder = txtSubfolder.Text.Trim(),
         };
         return true;
     }

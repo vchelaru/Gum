@@ -37,7 +37,7 @@ cd Tool/HtmlToGum/converter
 npm install
 ```
 
-3. Launch Gum → open a saved `.gumx` → **Content → Import HTML…**.
+3. Launch Gum → open a saved `.gumx` → **Content → Import HTML…**. Choose a local file or a remote `http(s)://` URL, and optionally set a destination subfolder to import under `Screens/<subfolder>/` and avoid name conflicts with existing screens.
 
 ### Converter discovery
 
