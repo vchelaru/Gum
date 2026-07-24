@@ -31,7 +31,9 @@ function oklabToSrgb(L, a, b) {
   const rLin = +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
   const gLin = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
   const bLin = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
-  const gamma = (c) => (c <= 0.0031308 ? 12.92 * c : 1.055 * Math.abs(c) ** (1 / 2.4) - 0.055);
+  // Negative (out-of-gamut) channels always take the c <= threshold branch here, so they
+  // stay negative through gamma() and get clamped to 0 below — never reach c ** (1/2.4).
+  const gamma = (c) => (c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055);
   const clamp255 = (c) => Math.round(Math.min(255, Math.max(0, gamma(c) * 255)));
   return { r: clamp255(rLin), g: clamp255(gLin), b: clamp255(bLin) };
 }
@@ -42,12 +44,13 @@ function oklabToSrgb(L, a, b) {
 // default palette) even when no color-mix()/relative-color is involved.
 function parseOklch(str) {
   const m = str.match(
-    /oklch\(\s*([\d.]+)(%)?\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+)(%)?)?\s*\)/,
+    /oklch\(\s*([\d.]+)(%)?\s+([\d.]+)(%)?\s+([\d.]+)(?:\s*\/\s*([\d.]+)(%)?)?\s*\)/,
   );
   if (!m) return null;
-  const [, lRaw, lPct, cRaw, hRaw, aRaw, aPct] = m;
+  const [, lRaw, lPct, cRaw, cPct, hRaw, aRaw, aPct] = m;
   const L = lPct ? parseFloat(lRaw) / 100 : parseFloat(lRaw);
-  const C = parseFloat(cRaw);
+  // Chroma percentage reference range per CSS Color 4: 100% = 0.4.
+  const C = cPct ? (parseFloat(cRaw) / 100) * 0.4 : parseFloat(cRaw);
   const H = (parseFloat(hRaw) * Math.PI) / 180;
   const a = C * Math.cos(H);
   const b = C * Math.sin(H);
@@ -297,11 +300,11 @@ function childrenInPaintOrder(node) {
 // common single-shadow case (contra the original DESIGN.md §5.3 assumption). Multiple
 // shadows only keep the first (Gum has one shadow slot); `inset` shadows are skipped —
 // Gum's dropshadow is an outer shadow, an inset would render backwards.
-function parseBoxShadow(str) {
+export function parseBoxShadow(str) {
   if (!str || str === 'none') return null;
   const first = str.split(/,(?![^(]*\))/)[0].trim(); // split on top-level commas only
   if (/inset/.test(first)) return null;
-  const colorMatch = first.match(/^(rgba?\([^)]+\)|color\([^)]+\))/);
+  const colorMatch = first.match(/^(rgba?\([^)]+\)|color\([^)]+\)|oklch\([^)]+\))/);
   if (!colorMatch) return null;
   const color = parseColor(colorMatch[1]);
   if (!color) return null;
@@ -326,7 +329,7 @@ export function parseHardTextShadows(style) {
   for (const layer of layers) {
     if (/inset/i.test(layer)) return []; // mixed inset → bail
     let color = { r: 0, g: 0, b: 0, a: 255 };
-    const colorMatch = layer.match(/rgba?\([^)]+\)|color\([^)]+\)|#[0-9a-fA-F]{3,8}/i);
+    const colorMatch = layer.match(/rgba?\([^)]+\)|color\([^)]+\)|oklch\([^)]+\)|#[0-9a-fA-F]{3,8}/i);
     if (colorMatch) {
       const c = parseColor(colorMatch[0]);
       if (c) color = c;

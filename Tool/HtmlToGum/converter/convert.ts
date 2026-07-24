@@ -371,10 +371,12 @@ async function main() {
   await shotPage.screenshot({ path: chromiumPng, clip });
   copyFileSync(chromiumPng, chromiumTagged);
   await shotPage.close();
-  await browser.close();
 
-  const downloaded = await downloadImages(tree, imagesDir);
+  // Reuse the still-open browser for SVG rasterization inside downloadImages() instead
+  // of paying a second Chromium launch — close only after it's done with it.
+  const downloaded = await downloadImages(tree, imagesDir, browser);
   for (const [k, v] of downloaded) assetMap.set(k, v);
+  await browser.close();
 
   const fontMap = await materializeWebFonts({
     tree, captured: capturedFonts, rules: fontFaceRules, fontsDir, pageUrl,

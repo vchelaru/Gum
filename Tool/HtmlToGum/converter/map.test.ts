@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseColor } from './map.js';
+import { parseColor, parseBoxShadow, parseHardTextShadows } from './map.js';
 
 test('parseColor: rgb()', () => {
   assert.deepEqual(parseColor('rgb(255, 0, 128)'), { r: 255, g: 0, b: 128, a: 255 });
@@ -36,4 +36,22 @@ test('parseColor: oklch() with alpha', () => {
 
 test('parseColor: unrecognized syntax returns null (not opaque garbage)', () => {
   assert.equal(parseColor('lab(50% 40 59.5)'), null);
+});
+
+test('parseColor: oklch() with percentage chroma', () => {
+  // Ground truth from Chromium canvas fillStyle: 50% chroma == 0.2 (CSS Color 4 reference
+  // range for oklch chroma is 100% = 0.4), both resolve to the same rgb().
+  assert.deepEqual(parseColor('oklch(0.5 50% 180)'), parseColor('oklch(0.5 0.2 180)'));
+  assert.deepEqual(parseColor('oklch(0.5 50% 180)'), { r: 0, g: 131, b: 104, a: 255 });
+});
+
+test('parseBoxShadow: oklch() color', () => {
+  const shadow = parseBoxShadow('oklch(0.95 0.005 220) 0px 0px 4px 0px');
+  assert.deepEqual(shadow.color, { r: 235, g: 239, b: 241, a: 255 });
+});
+
+test('parseHardTextShadows: oklch() color', () => {
+  const shadows = parseHardTextShadows({ textShadow: 'oklch(0.58 0.14 251) 1px 1px 0px' });
+  assert.equal(shadows.length, 1);
+  assert.deepEqual(shadows[0].color, { r: 46, g: 125, b: 202, a: 255 });
 });

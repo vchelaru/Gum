@@ -17,11 +17,26 @@ test('svgIntrinsicSize: falls back to a default when neither is present', () => 
   assert.deepEqual(svgIntrinsicSize('<svg></svg>'), { width: 128, height: 128 });
 });
 
+test('svgIntrinsicSize: does not mistake stroke-width/data-width for width', () => {
+  // A common icon-set shape (Lucide/Feather/Heroicons): no width/height, viewBox present,
+  // stroke-width set. An unanchored `width=` match would read "2" off stroke-width and
+  // squash the aspect ratio.
+  const svg = '<svg viewBox="0 0 24 24" stroke-width="2" data-width="99"></svg>';
+  assert.deepEqual(svgIntrinsicSize(svg), { width: 24, height: 24 });
+});
+
+test('svgIntrinsicSize: viewBox with comma-separated values', () => {
+  assert.deepEqual(svgIntrinsicSize('<svg viewBox="0,0,100,50"></svg>'), { width: 100, height: 50 });
+});
+
+test('svgIntrinsicSize: percentage width/height falls back to viewBox, not px', () => {
+  const svg = '<svg width="100%" height="100%" viewBox="0 0 512 512"></svg>';
+  assert.deepEqual(svgIntrinsicSize(svg), { width: 512, height: 512 });
+});
+
 test('rasterizeSvg: fills the full canvas for an SVG without a viewBox', async () => {
-  // Reproduces the IANA logo bug (PIL.Image.open() can't read raw SVG XML — it's vector,
-  // not raster, so it needs a real rendering engine) plus a real edge case found while
-  // fixing it: an SVG with no viewBox doesn't rescale via CSS width/height — it stays
-  // pinned to its native top-left region, cropping everything past its original size.
+  // An SVG with no viewBox doesn't rescale via CSS width/height — content stays pinned
+  // to its native top-left region, cropping everything past its original size.
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40">'
     + '<rect width="40" height="40" fill="#ff0000"/></svg>';
   const browser = await chromium.launch();

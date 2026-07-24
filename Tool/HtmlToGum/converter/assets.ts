@@ -4,7 +4,6 @@ import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { chromium } from 'playwright-core';
 import { parseBackgroundImageUrl } from './map.js';
 import { installTsxEvaluateShim } from './tsx-evaluate-shim.js';
 
@@ -27,13 +26,22 @@ const SVG_UPSCALE = 2; // render at 2x the SVG's declared size for a crisper dow
 export function svgIntrinsicSize(svgText) {
   const openTag = (svgText.match(/<svg\b[^>]*>/i) || [''])[0];
   const attr = (name) => {
-    const m = openTag.match(new RegExp(`${name}\\s*=\\s*["']?([\\d.]+)`, 'i'));
-    return m ? parseFloat(m[1]) : null;
+    // Lookbehind requires a boundary right before the name so e.g. "stroke-width" doesn't
+    // match `width` and "data-width" doesn't either — both common on real icon SVGs.
+    const m = openTag.match(new RegExp(`(?<=[\\s"'])${name}\\s*=\\s*["']([^"']*)["']`, 'i'));
+    if (!m) return null;
+    const raw = m[1].trim();
+    // Percentage/relative units aren't resolvable from the tag alone (e.g. width="100%")
+    // — fall through to viewBox/default rather than silently treating "100" as px.
+    if (!/^[\d.]+$/.test(raw)) return null;
+    return parseFloat(raw);
   };
   let w = attr('width');
   let h = attr('height');
   if (!w || !h) {
-    const vb = openTag.match(/viewBox\s*=\s*["']?\s*[\d.-]+\s+[\d.-]+\s+([\d.]+)\s+([\d.]+)/i);
+    // Comma or whitespace separated per the SVG/CSS spec ("0 0 100 50" and "0,0,100,50"
+    // are both valid).
+    const vb = openTag.match(/viewBox\s*=\s*["']?\s*[\d.-]+[\s,]+[\d.-]+[\s,]+([\d.]+)[\s,]+([\d.]+)/i);
     if (vb) { w = w || parseFloat(vb[1]); h = h || parseFloat(vb[2]); }
   }
   if (!w || !h) return { width: 128, height: 128 };
@@ -42,14 +50,20 @@ export function svgIntrinsicSize(svgText) {
 
 /** Rasterize an SVG (vector, not loadable by Gum) to PNG via headless Chromium — the
  *  same technique convert.ts already uses for CSS-painted effects (rasterizeEffects).
- *  `browser` is shared/lazy across a whole downloadImages() batch — see below. */
+ *  `browser` is the caller's already-open instance (see downloadImages), not launched
+ *  here, so a page with several SVGs doesn't pay for a separate Chromium process. */
 export async function rasterizeSvg(browser, buf) {
   const svgText = buf.toString('utf8');
   const { width, height } = svgIntrinsicSize(svgText);
   const scale = Math.min(SVG_UPSCALE, SVG_MAX_DIM / Math.max(width, height, 1));
   const renderW = Math.max(1, Math.round(width * scale));
   const renderH = Math.max(1, Math.round(height * scale));
-  const page = await browser.newPage({ viewport: { width: renderW, height: renderH }, deviceScaleFactor: 1 });
+  // SVGs can embed <script> — HtmlToGum already converts arbitrary third-party pages by
+  // design, but there's no reason a static icon/logo raster needs script execution, so
+  // disable it here specifically.
+  const page = await browser.newPage({
+    viewport: { width: renderW, height: renderH }, deviceScaleFactor: 1, javaScriptEnabled: false,
+  });
   try {
     await installTsxEvaluateShim(page);
     await page.setContent(
@@ -86,7 +100,7 @@ function sniffExt(buf) {
   return null;
 }
 
-/** Convert webp/avif/svg bytes to PNG via Pillow (already used by regress). */
+/** Convert webp/avif bytes to PNG via Pillow (already used by regress). */
 function convertToPng(buf, hintExt) {
   const script = `
 import sys
@@ -108,7 +122,11 @@ sys.stdout.buffer.write(out.getvalue())
   return Buffer.from(r.stdout);
 }
 
-export async function downloadImages(root: import('./types.js').BoxNode, outDir: string) {
+export async function downloadImages(
+  root: import('./types.js').BoxNode,
+  outDir: string,
+  browser: import('playwright-core').Browser,
+) {
   const urls = new Set();
   (function collect(node) {
     if (node.imgSrc) urls.add(node.imgSrc);
@@ -125,87 +143,76 @@ export async function downloadImages(root: import('./types.js').BoxNode, outDir:
   mkdirSync(outDir, { recursive: true });
   const hashToFile = new Map();
   let i = 0;
-  // Lazy/shared across the whole batch: most pages have zero or one SVG, so avoid
-  // paying Chromium launch cost unless one actually shows up.
-  let svgBrowser = null;
-  async function svgBrowserLazy() {
-    if (!svgBrowser) svgBrowser = await chromium.launch();
-    return svgBrowser;
-  }
-  try {
-    for (const url of urls) {
-      try {
-        let buf;
-        let contentType = '';
-        if (url.startsWith('file:')) {
-          // Node fetch() does not support file:// — local fixtures / file:// pages.
-          buf = readFileSync(fileURLToPath(url));
-        } else if (url.startsWith('data:')) {
-          const m = url.match(/^data:([^;,]+)?(?:;base64)?,([\s\S]*)$/i);
-          if (!m) {
-            console.warn(`  ! bad data URL: ${url.slice(0, 64)}…`);
-            continue;
-          }
-          contentType = (m[1] || '').trim();
-          buf = Buffer.from(m[2], /;base64,/i.test(url) ? 'base64' : 'utf8');
-        } else {
-          const res = await fetch(url);
-          if (!res.ok) {
-            console.warn(`  ! image download failed (${res.status}): ${url}`);
-            continue;
-          }
-          buf = Buffer.from(await res.arrayBuffer());
-          contentType = (res.headers.get('content-type') || '').split(';')[0].trim();
-        }
-        let ext = CONTENT_TYPE_TO_EXT[contentType];
-        if (!ext) {
-          const urlExt = (url.split(/[?#]/)[0].split('.').pop() || '').toLowerCase();
-          if (URL_EXT_FALLBACK.has(urlExt)) ext = urlExt;
-        }
-        if (!ext) ext = sniffExt(buf);
-        if (!ext) {
-          console.warn(`  ! unsupported/unrecognized image format (content-type: "${contentType}"): ${url}`);
+  for (const url of urls) {
+    try {
+      let buf;
+      let contentType = '';
+      if (url.startsWith('file:')) {
+        // Node fetch() does not support file:// — local fixtures / file:// pages.
+        buf = readFileSync(fileURLToPath(url));
+      } else if (url.startsWith('data:')) {
+        const m = url.match(/^data:([^;,]+)?(?:;base64)?,([\s\S]*)$/i);
+        if (!m) {
+          console.warn(`  ! bad data URL: ${url.slice(0, 64)}…`);
           continue;
         }
-
-        let outExt = ext === 'jpeg' ? 'jpg' : ext;
-        let outBuf = buf;
-        if (ext === 'svg') {
-          try {
-            outBuf = await rasterizeSvg(await svgBrowserLazy(), buf);
-            outExt = 'png';
-            console.log(`  image: rasterized svg → png`);
-          } catch (e) {
-            console.warn(`  ! svg rasterize failed: ${e.message} — skipped ${url}`);
-            continue;
-          }
-        } else if (CONVERT_TO_PNG.has(ext)) {
-          try {
-            outBuf = convertToPng(buf, ext);
-            outExt = 'png';
-            console.log(`  image: converted ${ext} → png`);
-          } catch (e) {
-            console.warn(`  ! ${e.message} — skipped ${url}`);
-            continue;
-          }
-        }
-
-        const hash = sha1(outBuf);
-        if (hashToFile.has(hash)) {
-          assetMap.set(url, hashToFile.get(hash));
+        contentType = (m[1] || '').trim();
+        buf = Buffer.from(m[2], /;base64,/i.test(url) ? 'base64' : 'utf8');
+      } else {
+        const res = await fetch(url);
+        if (!res.ok) {
+          console.warn(`  ! image download failed (${res.status}): ${url}`);
           continue;
         }
-        const filename = `img${i++}_${hash}.${outExt}`;
-        writeFileSync(join(outDir, filename), outBuf);
-        const rel = `Images/${filename}`;
-        hashToFile.set(hash, rel);
-        assetMap.set(url, rel);
-      } catch (e) {
-        console.warn(`  ! image download error: ${url} (${e.message})`);
+        buf = Buffer.from(await res.arrayBuffer());
+        contentType = (res.headers.get('content-type') || '').split(';')[0].trim();
       }
+      let ext = CONTENT_TYPE_TO_EXT[contentType];
+      if (!ext) {
+        const urlExt = (url.split(/[?#]/)[0].split('.').pop() || '').toLowerCase();
+        if (URL_EXT_FALLBACK.has(urlExt)) ext = urlExt;
+      }
+      if (!ext) ext = sniffExt(buf);
+      if (!ext) {
+        console.warn(`  ! unsupported/unrecognized image format (content-type: "${contentType}"): ${url}`);
+        continue;
+      }
+
+      let outExt = ext === 'jpeg' ? 'jpg' : ext;
+      let outBuf = buf;
+      if (ext === 'svg') {
+        try {
+          outBuf = await rasterizeSvg(browser, buf);
+          outExt = 'png';
+          console.log(`  image: rasterized svg → png`);
+        } catch (e) {
+          console.warn(`  ! svg rasterize failed: ${e.message} — skipped ${url}`);
+          continue;
+        }
+      } else if (CONVERT_TO_PNG.has(ext)) {
+        try {
+          outBuf = convertToPng(buf, ext);
+          outExt = 'png';
+          console.log(`  image: converted ${ext} → png`);
+        } catch (e) {
+          console.warn(`  ! ${e.message} — skipped ${url}`);
+          continue;
+        }
+      }
+
+      const hash = sha1(outBuf);
+      if (hashToFile.has(hash)) {
+        assetMap.set(url, hashToFile.get(hash));
+        continue;
+      }
+      const filename = `img${i++}_${hash}.${outExt}`;
+      writeFileSync(join(outDir, filename), outBuf);
+      const rel = `Images/${filename}`;
+      hashToFile.set(hash, rel);
+      assetMap.set(url, rel);
+    } catch (e) {
+      console.warn(`  ! image download error: ${url} (${e.message})`);
     }
-  } finally {
-    if (svgBrowser) await svgBrowser.close();
   }
   return assetMap;
 }
