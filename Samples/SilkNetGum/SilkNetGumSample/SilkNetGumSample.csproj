@@ -56,6 +56,8 @@
 	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\RenderTargetScreen.cs" Link="Screens\RenderTargetScreen.cs" />
 	  <!-- Render-target post-process shader demo shared from MonoGameGumInCode, gated #elif SKIA (#3998). -->
 	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\RenderTargetShaderScreen.cs" Link="Screens\RenderTargetShaderScreen.cs" />
+	  <!-- Circle shape gallery shared from MonoGameGumInCode, gated #elif SKIA (#4024). -->
+	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\CirclesScreen.cs" Link="Screens\CirclesScreen.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

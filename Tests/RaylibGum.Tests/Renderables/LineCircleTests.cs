@@ -319,6 +319,78 @@ public class LineCircleTests
     // projection in EmitGradientVertex. Rotation convention mirrors LineRectangle's R helper
     // (visual CCW on screen: [cos sin; -sin cos]).
 
+    // Bug repro: on raylib the fill pass drew at the full Radius, the same outer radius as the
+    // stroke ring's outer edge. A solid stroke hides the overlap, but a dashed stroke's gaps let
+    // the full-radius fill show through where the ring is absent (visible in the "Fill + stroke"
+    // gallery row's dashed cells). MonoGame/Skia already inset the fill by StrokeWidth
+    // (FillRadiusInset) so the fill never reaches the ring's footprint at all.
+
+    [Fact]
+    public void EffectiveFillRadius_FillAndStrokeVisible_InsetByStrokeWidth()
+    {
+        LineCircle circle = new()
+        {
+            Width = 64,
+            Height = 64,
+            IsFilled = true,
+            StrokeColor = new Color(255, 255, 255, 255),
+            StrokeWidth = 8f,
+        };
+
+        circle.EffectiveFillRadius.ShouldBe(24f);
+    }
+
+    [Fact]
+    public void EffectiveFillRadius_FillOnlyNoStrokeColor_ReturnsFullRadius()
+    {
+        // No StrokeColor set and a fill slot is enabled -> WillRenderStroke is false (legacy
+        // outline-only path doesn't apply once a fill is present), so nothing insets the fill.
+        LineCircle circle = new()
+        {
+            Width = 64,
+            Height = 64,
+            IsFilled = true,
+            StrokeWidth = 8f,
+        };
+
+        circle.EffectiveFillRadius.ShouldBe(32f);
+    }
+
+    [Fact]
+    public void EffectiveFillRadius_StrokeWidthZero_ReturnsFullRadius()
+    {
+        LineCircle circle = new()
+        {
+            Width = 64,
+            Height = 64,
+            IsFilled = true,
+            StrokeColor = new Color(255, 255, 255, 255),
+            StrokeWidth = 0f,
+        };
+
+        circle.EffectiveFillRadius.ShouldBe(32f);
+    }
+
+    [Fact]
+    public void EffectiveFillRadius_GradientSuppressesStroke_ReturnsFullRadius()
+    {
+        // When the fill gradient paints, the stroke pass is suppressed entirely (Skia parity,
+        // see ShouldPaintFillGradient) so there's no ring for the fill to stay clear of.
+        LineCircle circle = new()
+        {
+            Width = 64,
+            Height = 64,
+            IsFilled = true,
+            UseGradient = true,
+            Color1 = new Color(10, 20, 30, 255),
+            Color2 = new Color(40, 50, 60, 255),
+            StrokeColor = new Color(255, 255, 255, 255),
+            StrokeWidth = 8f,
+        };
+
+        circle.EffectiveFillRadius.ShouldBe(32f);
+    }
+
     [Fact]
     public void GetRotatedGradientEndpoints_ZeroRotation_ReturnsOriginalEndpoints()
     {

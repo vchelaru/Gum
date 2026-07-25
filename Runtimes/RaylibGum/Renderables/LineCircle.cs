@@ -253,6 +253,38 @@ public class LineCircle : InvisibleRenderable
         UseGradient && (FillColor.HasValue || IsFilled) && (Color1.A > 0 || Color2.A > 0);
 
     /// <summary>
+    /// True when the stroke pass will actually render this frame. Mirrors the exact gating
+    /// <see cref="Render"/> uses (stroke color set, or no fill so the legacy outline stays
+    /// visible; positive <see cref="StrokeWidth"/>; suppressed when a fill gradient is painting,
+    /// same as Skia's parity rule). Exposed so <see cref="EffectiveFillRadius"/> is testable
+    /// without a GL context.
+    /// </summary>
+    public bool WillRenderStroke
+    {
+        get
+        {
+            bool runFill = FillColor.HasValue || IsFilled;
+            bool runStroke = (StrokeColor.HasValue || !runFill) && StrokeWidth > 0f;
+            if (runStroke && ShouldPaintFillGradient)
+            {
+                runStroke = false;
+            }
+            return runStroke;
+        }
+    }
+
+    /// <summary>
+    /// Radius the fill pass draws at. Issue #4027 — when the stroke ring will render, the fill
+    /// is inset by <see cref="StrokeWidth"/> so it sits entirely inside the ring's inner edge
+    /// rather than sharing the ring's outer radius. Without this, a dashed/gapped stroke lets a
+    /// full-radius fill show through the gaps. Mirrors Apos.Shapes/SkiaGum's FillRadiusInset
+    /// contract (#2834).
+    /// </summary>
+    public float EffectiveFillRadius => WillRenderStroke
+        ? System.Math.Max(0f, Radius - StrokeWidth)
+        : Radius;
+
+    /// <summary>
     /// Issue #2934 / #2956 — returns the linear gradient axis endpoints rotated around the
     /// bbox center by <paramref name="rotationDegrees"/>. The disc itself is rotation-
     /// symmetric so its position is unchanged by rotation, but the gradient axis is defined
@@ -406,6 +438,12 @@ public class LineCircle : InvisibleRenderable
         // composition (#2790) where setting FillColor alone, StrokeColor alone, or both lights
         // up the appropriate layers.
         bool runFill = FillColor.HasValue || IsFilled;
+        // Issue #4027 — WillRenderStroke also decides whether the fill pass insets its radius
+        // (EffectiveFillRadius), so the ring-gating logic lives there once instead of being
+        // duplicated between the fill and stroke passes. See WillRenderStroke and
+        // EffectiveFillRadius docs for the full gating rationale (dashed-stroke #3183 gate,
+        // Skia-parity gradient suppression #2956/#2757).
+        bool runStroke = WillRenderStroke;
         if (runFill)
         {
             Color fillColor = FillColor ?? Color;
@@ -424,6 +462,10 @@ public class LineCircle : InvisibleRenderable
                 // solid fill alpha. DrawGradientFan emits per-vertex Color1/Color2 directly, so
                 // route through ShouldPaintFillGradient (the single source of truth): a transparent
                 // solid fill with visible stops still paints; two transparent stops paint nothing.
+                //
+                // Not inset by EffectiveFillRadius: whenever the gradient paints, WillRenderStroke
+                // is necessarily false (the gradient suppresses the stroke pass below), so
+                // EffectiveFillRadius always equals Radius here anyway.
                 if (ShouldPaintFillGradient)
                 {
                     DrawGradientFan(cx, cy, Radius);
@@ -431,7 +473,10 @@ public class LineCircle : InvisibleRenderable
             }
             else
             {
-                DrawCircle((int)cx, (int)cy, Radius, fillColor);
+                // Issue #4027 — inset so the fill sits entirely inside the stroke ring's inner
+                // edge rather than sharing its outer radius. Without this, a dashed/gapped
+                // stroke lets the full-radius fill show through the gaps.
+                DrawCircle((int)cx, (int)cy, EffectiveFillRadius, fillColor);
             }
         }
 
@@ -441,34 +486,6 @@ public class LineCircle : InvisibleRenderable
         // StrokeWidth) so the ring never bleeds past the nominal bounds — mirrors Skia's
         // RenderableShapeBase.IsOffsetAppliedForStroke contract, which the #2790 gallery's
         // "inscribed in 64x64 frame" row treats as the visual acceptance.
-        // Issue #3183 — gate the stroke pass on a positive StrokeWidth. The default StrokeColor
-        // is non-null (white), so a fill-only disk (IsFilled = true, StrokeWidth = 0) would
-        // otherwise keep runStroke true and draw a zero/near-zero-width DrawRing in the stroke
-        // color. Mirrors the Apos RenderableShapeBase.HasVisibleOutput contract
-        // (IsFilled || StrokeWidth > 0). A fresh shape (StrokeWidth defaults to 1) keeps its ring.
-        bool runStroke = (StrokeColor.HasValue || !runFill) && StrokeWidth > 0f;
-
-        // Skia parity (#2757): SkiaShapeRuntime.RefreshSlotGradients auto-gates each slot's
-        // UseGradient flag by whether that slot has a non-null color, so a cell with both
-        // FillColor and StrokeColor set + UseGradient = true paints the gradient as BOTH the
-        // fill and the stroke. The stroke's gradient samples match the fill's gradient samples
-        // at the boundary pixels, so the stroke is visually indistinguishable from the fill
-        // underneath — no visible outline. raylib has one UseGradient flag per renderable and
-        // would otherwise paint the stroke as solid strokeColor over the gradient fill, which
-        // shows up as a visible outline that Skia doesn't draw. Suppressing the stroke here
-        // matches Skia's rendered output without needing a separate gradient-stroke draw path.
-        // Same gate landed on LineRectangle in commit 7f1e3b55b.
-        //
-        // Issue #2956 — gate on ShouldPaintFillGradient (which checks effective fill alpha)
-        // not on the looser `UseGradient && runFill`: with a transparent fill the gradient
-        // pass is suppressed, so the solid stroke is the only visible output and should NOT
-        // be suppressed. Before this tightening, IsFilled = false + UseGradient = true
-        // produced no fill (alpha 0) AND no stroke (suppressed by the old gate) — a
-        // completely invisible Circle. The outline gallery row exercises exactly this case.
-        if (runStroke && ShouldPaintFillGradient)
-        {
-            runStroke = false;
-        }
         if (runStroke)
         {
             Color strokeColor = StrokeColor ?? Color;
