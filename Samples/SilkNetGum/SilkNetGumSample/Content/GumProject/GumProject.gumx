@@ -57,11 +57,6 @@
     <ElementType>Screen</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
   </ScreenReference>
-  <ScreenReference>
-    <Name>RectangleScreen</Name>
-    <ElementType>Screen</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </ScreenReference>
   <StandardElementReference>
     <Name>Arc</Name>
     <ElementType>Standard</ElementType>
