@@ -87,8 +87,7 @@ jobs:
       - name: Publish Gum (single-file)
         run: dotnet publish Gum/Gum.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o dist/publish
 
-      # Some content files (e.g. apos-shapes.xnb) are deposited into bin/Release/Content/ by
-      # plugin post-build events (EditorTabPlugin_XNA copies the XNB from Runtimes/GumShapes/).
+      # Some content files are deposited into bin/Release/Content/ by plugin post-build events.
       # dotnet publish has no knowledge of files placed there outside of project items, so we
       # merge the full build-output Content/ folder into the publish output.
       - name: Copy content to publish output

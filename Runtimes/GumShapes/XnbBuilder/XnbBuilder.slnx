@@ -1,7 +1,0 @@
-<Solution>
-  <Project Path="XnbBuilderBlazorGL/XnbBuilderBlazorGL.csproj" />
-  <Project Path="XnbBuilderDesktopGL/XnbBuilderDesktopGL.csproj" />
-  <Project Path="XnbBuilderDirectX/XnbBuilderDirectX.csproj" />
-  <Project Path="XnbBuilderMonoGameDesktopGL/XnbBuilderMonoGameDesktopGL.csproj" />
-  <Project Path="XnbBuilderMonoGameWindowsDX/XnbBuilderMonoGameWindowsDX.csproj" />
-</Solution>
