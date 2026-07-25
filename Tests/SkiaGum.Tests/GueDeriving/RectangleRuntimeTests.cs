@@ -527,18 +527,23 @@ public class RectangleRuntimeTests
 
     // Issue #2938 — IsFilled gates the fill-slot gradient. With IsFilled = false the fill-slot
     // gradient stays off even when UseGradient = true; toggling IsFilled = true lights it up.
+    // Issue #4029 — toggling IsFilled = true also turns the stroke-slot gradient back OFF: once a
+    // fill is active, the gradient belongs to the fill only (see UseGradient_BothSlotsActive_*).
     [Fact]
-    public void SettingIsFilledTrue_AfterUseGradientTrue_LightsUpFillSlotGradient()
+    public void SettingIsFilledTrue_AfterUseGradientTrue_LightsUpFillSlotGradient_AndTurnsOffStrokeSlotGradient()
     {
         RectangleRuntime sut = new();
         sut.IsFilled = false;
         sut.UseGradient = true;
         RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
         fillSlot.UseGradient.ShouldBeFalse();
+        strokeSlot.UseGradient.ShouldBeTrue();
 
         sut.IsFilled = true;
 
         fillSlot.UseGradient.ShouldBeTrue();
+        strokeSlot.UseGradient.ShouldBeFalse();
     }
 
     [Fact]
@@ -582,8 +587,14 @@ public class RectangleRuntimeTests
         sut.StrokeWidth.ShouldBe(1);
     }
 
+    // Issue #4029 — corrected contract: gradient follows the ACTIVE body. When both a fill and a
+    // stroke are active, the gradient applies to the fill ONLY; the stroke keeps rendering as a
+    // plain solid outline on top of it, exactly like it would on top of a solid fill. Previously
+    // both slots got the gradient here, making the stroke visually indistinguishable from the
+    // fill underneath -- no visible outline, even though the user never asked for a gradient
+    // stroke (this was the root cause of the missing outline on the Gradients gallery row).
     [Fact]
-    public void UseGradient_BothSlotsActive_BothSlotsOn()
+    public void UseGradient_BothSlotsActive_OnlyFillSlotGetsGradient()
     {
         RectangleRuntime sut = new();
         sut.IsFilled = true;
@@ -592,7 +603,7 @@ public class RectangleRuntimeTests
         RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
         RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
         fillSlot.UseGradient.ShouldBeTrue();
-        strokeSlot.UseGradient.ShouldBeTrue();
+        strokeSlot.UseGradient.ShouldBeFalse();
     }
 
     // Issue #2938 — IsFilled gates the fill-slot gradient. With IsFilled = false the fill slot

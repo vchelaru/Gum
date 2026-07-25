@@ -280,4 +280,66 @@ public class LineRectangleTests
 
         rectangle.ShouldPaintFillGradient.ShouldBeTrue();
     }
+
+    // Contract (corrected after #2956/#2757 got this backwards): gradient follows the ACTIVE
+    // body -- the fill when a fill is present, the stroke only when there is no fill. A gradient
+    // fill must never hide an independently-colored stroke. Mirrors LineCircleTests.
+
+    [Fact]
+    public void WillRenderStroke_GradientFillWithStrokeColor_True()
+    {
+        LineRectangle rectangle = new()
+        {
+            IsFilled = true,
+            UseGradient = true,
+            Color1 = new Color(10, 20, 30, 255),
+            Color2 = new Color(40, 50, 60, 255),
+            StrokeColor = new Color(255, 255, 255, 255),
+            LinePixelWidth = 8f,
+        };
+
+        rectangle.WillRenderStroke.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void WillRenderStroke_FillOnlyNoStrokeColor_False()
+    {
+        // No StrokeColor set and a fill slot is enabled -> the legacy outline-only path doesn't
+        // apply once a fill is present, so no stroke renders regardless of the gradient.
+        LineRectangle rectangle = new()
+        {
+            IsFilled = true,
+            UseGradient = true,
+            Color1 = new Color(10, 20, 30, 255),
+            Color2 = new Color(40, 50, 60, 255),
+            LinePixelWidth = 8f,
+        };
+
+        rectangle.WillRenderStroke.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void WillRenderStroke_NoFill_OutlineOnly_True()
+    {
+        LineRectangle rectangle = new()
+        {
+            StrokeColor = new Color(255, 255, 255, 255),
+            LinePixelWidth = 2f,
+        };
+
+        rectangle.WillRenderStroke.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void WillRenderStroke_LinePixelWidthZero_False()
+    {
+        LineRectangle rectangle = new()
+        {
+            IsFilled = true,
+            StrokeColor = new Color(255, 255, 255, 255),
+            LinePixelWidth = 0f,
+        };
+
+        rectangle.WillRenderStroke.ShouldBeFalse();
+    }
 }

@@ -242,6 +242,31 @@ public class LineRectangle : InvisibleRenderable
     public bool ShouldPaintFillGradient =>
         UseGradient && (FillColor.HasValue || IsFilled) && (Color1.A > 0 || Color2.A > 0);
 
+    /// <summary>
+    /// True when the stroke pass will actually render this frame. Mirrors the exact gating
+    /// <see cref="Render"/> uses (stroke color set, or no fill so the legacy outline stays
+    /// visible; positive <see cref="LinePixelWidth"/>). Exposed so this gating is testable
+    /// without a GL context.
+    /// </summary>
+    /// <remarks>
+    /// Does NOT get suppressed by an active fill gradient. The contract (clarified after #2956/
+    /// #2757 got this backwards) is: gradient follows the ACTIVE body -- the fill when a fill is
+    /// present, the stroke only when there is no fill. A gradient fill never hides an
+    /// independently-colored stroke; the stroke keeps rendering as a plain solid outline on top
+    /// of the gradient, exactly like it would on top of a solid fill. Mirrors
+    /// <see cref="LineCircle.WillRenderStroke"/> and the corrected
+    /// <c>SkiaShapeRuntime.RefreshSlotGradients</c> gate.
+    /// </remarks>
+    public bool WillRenderStroke
+    {
+        get
+        {
+            bool runFill = FillColor.HasValue || IsFilled;
+            bool runStroke = (StrokeColor.HasValue || !runFill) && LinePixelWidth > 0f;
+            return runStroke;
+        }
+    }
+
     public LineRectangle() : this(null) { }
 
     public LineRectangle(SystemManagers? _) { }
@@ -465,30 +490,13 @@ public class LineRectangle : InvisibleRenderable
         // white hairline at width 0 (visible on the Dark Pro slider track / scrollbars). Mirrors
         // the Apos RenderableShapeBase.HasVisibleOutput contract (IsFilled || StrokeWidth > 0),
         // which Circle/RoundedRectangle/Arc early-return on so a zero-width stroke draws nothing.
-        // A fresh shape (StrokeWidth defaults to 1) keeps its outline.
-        bool runStroke = (StrokeColor.HasValue || !runFill) && LinePixelWidth > 0f;
-
-        // Skia parity (#2757): SkiaShapeRuntime.RefreshSlotGradients auto-gates each slot's
-        // UseGradient flag by whether that slot has a non-null color, so a cell with both
-        // FillColor and StrokeColor set + UseGradient = true paints the gradient as BOTH the
-        // fill and the stroke. The stroke's gradient samples match the fill's gradient samples
-        // at the boundary pixels, so the stroke is visually indistinguishable from the fill
-        // underneath — no visible outline. raylib has one UseGradient flag per renderable and
-        // would otherwise paint the stroke as solid strokeColor over the gradient fill, which
-        // shows up as a visible outline that Skia doesn't draw. Suppressing the stroke here
-        // matches Skia's rendered output without needing a separate gradient-stroke draw path.
+        // A fresh shape (StrokeWidth defaults to 1) keeps its outline. See WillRenderStroke for
+        // the full gating contract, including why an active fill gradient does NOT suppress this.
         //
         // Corner case not yet implemented: UseGradient = true with only StrokeColor (no fill).
         // Skia paints a gradient outline; raylib would currently fall through to solid stroke.
         // Not exercised by the sample; tracked as a #2757 follow-up.
-        //
-        // Issue #2956 — see the matching block in LineCircle for the same tightening.
-        // ShouldPaintFillGradient gates on effective fill alpha, so an IsFilled = false +
-        // transparent-fill cell leaves the solid stroke visible instead of suppressing it.
-        if (runStroke && ShouldPaintFillGradient)
-        {
-            runStroke = false;
-        }
+        bool runStroke = WillRenderStroke;
         if (runStroke)
         {
             Color strokeColor = StrokeColor ?? Color;

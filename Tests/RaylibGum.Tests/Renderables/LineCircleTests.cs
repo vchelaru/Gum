@@ -372,10 +372,12 @@ public class LineCircleTests
     }
 
     [Fact]
-    public void EffectiveFillRadius_GradientSuppressesStroke_ReturnsFullRadius()
+    public void EffectiveFillRadius_GradientFillWithStrokeColor_StillInsetByStrokeWidth()
     {
-        // When the fill gradient paints, the stroke pass is suppressed entirely (Skia parity,
-        // see ShouldPaintFillGradient) so there's no ring for the fill to stay clear of.
+        // Contract (corrected after #2956/#2757 got this backwards): gradient follows the ACTIVE
+        // body -- the fill, since a fill is present here -- and never hides an independently-
+        // colored stroke. The stroke keeps rendering as a solid ring on top of the gradient, so
+        // the gradient fill must stay inset and clear of the ring exactly like a solid fill would.
         LineCircle circle = new()
         {
             Width = 64,
@@ -388,7 +390,25 @@ public class LineCircleTests
             StrokeWidth = 8f,
         };
 
-        circle.EffectiveFillRadius.ShouldBe(32f);
+        circle.EffectiveFillRadius.ShouldBe(24f);
+    }
+
+    [Fact]
+    public void WillRenderStroke_GradientFillWithStrokeColor_True()
+    {
+        // Direct assertion of the corrected contract: an active fill gradient must NOT suppress
+        // an explicitly-colored stroke.
+        LineCircle circle = new()
+        {
+            IsFilled = true,
+            UseGradient = true,
+            Color1 = new Color(10, 20, 30, 255),
+            Color2 = new Color(40, 50, 60, 255),
+            StrokeColor = new Color(255, 255, 255, 255),
+            StrokeWidth = 8f,
+        };
+
+        circle.WillRenderStroke.ShouldBeTrue();
     }
 
     [Fact]

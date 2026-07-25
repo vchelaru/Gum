@@ -441,8 +441,13 @@ public class CircleRuntimeTests
         strokeSlot.UseGradient.ShouldBeFalse();
     }
 
+    // Issue #4029 — corrected contract: gradient follows the ACTIVE body. When both a fill and a
+    // stroke are active, the gradient applies to the fill ONLY; the stroke keeps rendering as a
+    // plain solid ring on top of it, exactly like it would on top of a solid fill. Previously both
+    // slots got the gradient here, making the stroke visually indistinguishable from the fill
+    // underneath -- no visible outline, even though the user never asked for a gradient stroke.
     [Fact]
-    public void UseGradient_DefaultsBothSlotsOn()
+    public void UseGradient_BothSlotsActive_OnlyFillSlotGetsGradient()
     {
         CircleRuntime sut = new();
         sut.IsFilled = true;
@@ -451,21 +456,24 @@ public class CircleRuntimeTests
         Circle fillSlot = (Circle)sut.RenderableComponent;
         Circle strokeSlot = (Circle)fillSlot.Children.Single();
         fillSlot.UseGradient.ShouldBeTrue();
-        strokeSlot.UseGradient.ShouldBeTrue();
+        strokeSlot.UseGradient.ShouldBeFalse();
     }
 
     [Fact]
-    public void SettingIsFilledTrue_AfterUseGradientTrue_LightsUpFillSlotGradient()
+    public void SettingIsFilledTrue_AfterUseGradientTrue_LightsUpFillSlotGradient_AndTurnsOffStrokeSlotGradient()
     {
         CircleRuntime sut = new();
         sut.IsFilled = false;
         sut.UseGradient = true;
         Circle fillSlot = (Circle)sut.RenderableComponent;
+        Circle strokeSlot = (Circle)fillSlot.Children.Single();
         fillSlot.UseGradient.ShouldBeFalse();
+        strokeSlot.UseGradient.ShouldBeTrue();
 
         sut.IsFilled = true;
 
         fillSlot.UseGradient.ShouldBeTrue();
+        strokeSlot.UseGradient.ShouldBeFalse();
     }
 
     // Issue #3009 — Circle/Rectangle no longer carry a standalone gradient Color1. Each slot's

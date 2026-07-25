@@ -255,20 +255,23 @@ public class LineCircle : InvisibleRenderable
     /// <summary>
     /// True when the stroke pass will actually render this frame. Mirrors the exact gating
     /// <see cref="Render"/> uses (stroke color set, or no fill so the legacy outline stays
-    /// visible; positive <see cref="StrokeWidth"/>; suppressed when a fill gradient is painting,
-    /// same as Skia's parity rule). Exposed so <see cref="EffectiveFillRadius"/> is testable
-    /// without a GL context.
+    /// visible; positive <see cref="StrokeWidth"/>). Exposed so <see cref="EffectiveFillRadius"/>
+    /// is testable without a GL context.
     /// </summary>
+    /// <remarks>
+    /// Does NOT get suppressed by an active fill gradient. The contract (clarified after #2956/
+    /// #2757 got this backwards) is: gradient follows the ACTIVE body — the fill when a fill is
+    /// present, the stroke only when there is no fill. A gradient fill never hides an
+    /// independently-colored stroke; the stroke keeps rendering as a plain solid ring on top of
+    /// the gradient, exactly like it would on top of a solid fill. Mirrors the corrected
+    /// <c>SkiaShapeRuntime.RefreshSlotGradients</c> gate.
+    /// </remarks>
     public bool WillRenderStroke
     {
         get
         {
             bool runFill = FillColor.HasValue || IsFilled;
             bool runStroke = (StrokeColor.HasValue || !runFill) && StrokeWidth > 0f;
-            if (runStroke && ShouldPaintFillGradient)
-            {
-                runStroke = false;
-            }
             return runStroke;
         }
     }
@@ -278,7 +281,8 @@ public class LineCircle : InvisibleRenderable
     /// is inset by <see cref="StrokeWidth"/> so it sits entirely inside the ring's inner edge
     /// rather than sharing the ring's outer radius. Without this, a dashed/gapped stroke lets a
     /// full-radius fill show through the gaps. Mirrors Apos.Shapes/SkiaGum's FillRadiusInset
-    /// contract (#2834).
+    /// contract (#2834). Applies equally whether the fill is solid or a gradient — a gradient
+    /// fill needs to stay clear of the stroke ring exactly like a solid one does.
     /// </summary>
     public float EffectiveFillRadius => WillRenderStroke
         ? System.Math.Max(0f, Radius - StrokeWidth)
@@ -463,12 +467,13 @@ public class LineCircle : InvisibleRenderable
                 // route through ShouldPaintFillGradient (the single source of truth): a transparent
                 // solid fill with visible stops still paints; two transparent stops paint nothing.
                 //
-                // Not inset by EffectiveFillRadius: whenever the gradient paints, WillRenderStroke
-                // is necessarily false (the gradient suppresses the stroke pass below), so
-                // EffectiveFillRadius always equals Radius here anyway.
+                // Issue #4027 follow-up — inset the gradient fan by EffectiveFillRadius too, same
+                // reason as the solid-fill DrawCircle call below: an independently-colored stroke
+                // ring can coexist with a gradient fill (see WillRenderStroke), so the gradient
+                // must stay clear of the ring's footprint exactly like a solid fill does.
                 if (ShouldPaintFillGradient)
                 {
-                    DrawGradientFan(cx, cy, Radius);
+                    DrawGradientFan(cx, cy, EffectiveFillRadius);
                 }
             }
             else
