@@ -127,22 +127,25 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     }
 
     /// <summary>
-    /// Applies <see cref="UseGradient"/> to each slot, gated by whether that slot is "active"
-    /// (its color setter input is non-null). Issue #2790: keeps the API single-knob —
-    /// <c>UseGradient = true</c> renders the gradient wherever the user has lit up a color, and
-    /// silently does nothing on slots with <c>FillColor</c> / <c>StrokeColor</c> set to null.
-    /// Without this gate, an alpha-0 slot would still draw the gradient because SKPaint.Shader
-    /// overrides the paint's Color.
+    /// Applies <see cref="UseGradient"/> to the ACTIVE body slot only: the fill when a fill is
+    /// present, the stroke only when there is no fill. Issue #4029 follow-up — corrects the prior
+    /// #2790/#2956 contract, which applied the gradient to both slots whenever both were "active"
+    /// (fill lit up AND StrokeWidth > 0). On Skia that put the identical gradient on the stroke
+    /// too, making it visually indistinguishable from the fill underneath at the boundary — no
+    /// visible outline, even though the user never asked for a gradient stroke. The corrected
+    /// contract mirrors <c>LineCircle.WillRenderStroke</c> / <c>LineRectangle.WillRenderStroke</c>
+    /// on raylib: a fill's gradient never hides an independently-colored stroke, which keeps
+    /// rendering as a plain solid ring on top of the gradient.
     /// </summary>
     void RefreshSlotGradients()
     {
         if (StrokeRenderable != null)
         {
-            // Two-slot: each slot is gated independently so a gradient lights up only where the
-            // user lit up a color (issue #2790). Issue #2938: fill activity is now gated by
-            // IsFilled (FillColor is non-nullable), stroke activity by StrokeWidth > 0.
+            // Two-slot: gated so a gradient lights up only the active body slot (issue #2790,
+            // #2938: fill activity is IsFilled, stroke activity is StrokeWidth > 0), and only the
+            // fill when both are active (issue #4029 -- see remarks above).
             ContainedRenderable.UseGradient = _useGradient && _isFilled;
-            StrokeRenderable.UseGradient = _useGradient && StrokeWidth > 0;
+            StrokeRenderable.UseGradient = _useGradient && StrokeWidth > 0 && !_isFilled;
         }
         else
         {

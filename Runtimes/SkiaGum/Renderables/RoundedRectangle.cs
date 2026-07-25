@@ -17,6 +17,18 @@ public class RoundedRectangle : RenderableShapeBase, IClipPath, ICloneable
     public float? CustomRadiusBottomRight { get; set; } = null;
     public float? CustomRadiusBottomLeft { get; set; } = null;
 
+    /// <summary>
+    /// Pixels to inset each side of the rendered fill (rectangle analog of
+    /// <see cref="Circle.FillRadiusInset"/>, issue #2834). Pushed by
+    /// <see cref="Gum.GueDeriving.RectangleRuntime.PreRender"/> when the stroke slot is visible
+    /// alongside the fill -- pulling the fill's outer edge inside the stroke's inner edge so the
+    /// stroke's own antialiased outer boundary blends against the true background instead of the
+    /// fill color sitting right behind it. Applied at render time only; Width/Height stay
+    /// layout-owned. Ignored when <see cref="RenderableShapeBase.IsFilled"/> is false -- only the
+    /// fill instance honors the inset.
+    /// </summary>
+    public float FillInset { get; set; }
+
     public RoundedRectangle()
     {
         CornerRadius = 5;
@@ -51,40 +63,83 @@ public class RoundedRectangle : RenderableShapeBase, IClipPath, ICloneable
     public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
     {
         var paint = GetCachedPaint(boundingRect, absoluteRotation);
-        SKPath path = new SKPath();
-        if(CustomRadiusBottomLeft == null && CustomRadiusBottomRight == null && CustomRadiusTopLeft == null && CustomRadiusTopRight == null)
+
+        float radiusInset = IsFilled ? FillInset : 0f;
+        SKRect effectiveRect = GetFillInsetRect(boundingRect);
+
+        if (CustomRadiusBottomLeft == null && CustomRadiusBottomRight == null && CustomRadiusTopLeft == null && CustomRadiusTopRight == null)
         {
-            canvas.DrawRoundRect(boundingRect, CornerRadius, CornerRadius, paint);
+            float radius = System.Math.Max(0f, CornerRadius - radiusInset);
+            canvas.DrawRoundRect(effectiveRect, radius, radius, paint);
         }
         else
         {
-
-            float cornerRadius = CornerRadius;
-
-            float topLeft = CustomRadiusTopLeft ?? CornerRadius;
-            float topRight = CustomRadiusTopRight ?? CornerRadius;
-            float bottomLeft = CustomRadiusBottomLeft ?? CornerRadius;
-            float bottomRight = CustomRadiusBottomRight ?? CornerRadius;
-
-            path.MoveTo(boundingRect.Left + topLeft, boundingRect.Top);
-            path.LineTo(boundingRect.Right - topRight, boundingRect.Top);
-            path.ArcTo(SKRect.Create(boundingRect.Right - topRight*2, boundingRect.Top, topRight*2, topRight* 2), 270, 90, false);
-
-            path.LineTo(boundingRect.Right, boundingRect.Bottom - bottomRight);
-            path.ArcTo(SKRect.Create(boundingRect.Right - bottomRight * 2, boundingRect.Bottom - bottomRight * 2, bottomRight * 2, bottomRight * 2), 0, 90, false);
-
-            path.LineTo(boundingRect.Left + bottomLeft, boundingRect.Bottom);
-            path.ArcTo(SKRect.Create(boundingRect.Left, boundingRect.Bottom - bottomLeft * 2, bottomLeft * 2, bottomLeft * 2), 90, 90, false);
-
-            path.LineTo(boundingRect.Left, boundingRect.Top + topLeft);
-            path.ArcTo(SKRect.Create(boundingRect.Left, boundingRect.Top, topLeft * 2, topLeft * 2), 180, 90, false);
-
-
-
+            using SKPath path = BuildCustomCornerPath(effectiveRect, radiusInset);
+            canvas.DrawPath(path, paint);
         }
+    }
+
+    /// <summary>
+    /// Shrinks <paramref name="boundingRect"/> by <see cref="FillInset"/> on each side when this
+    /// is the fill instance (<see cref="RenderableShapeBase.IsFilled"/>) and an inset is set.
+    /// Extracted from <see cref="DrawBound"/> so the rect math is testable without an
+    /// <see cref="SKCanvas"/>.
+    /// </summary>
+    internal SKRect GetFillInsetRect(SKRect boundingRect)
+    {
+        if (!IsFilled || FillInset <= 0f)
+        {
+            return boundingRect;
+        }
+
+        return new SKRect(
+            boundingRect.Left + FillInset,
+            boundingRect.Top + FillInset,
+            System.Math.Max(boundingRect.Left + FillInset, boundingRect.Right - FillInset),
+            System.Math.Max(boundingRect.Top + FillInset, boundingRect.Bottom - FillInset));
+    }
+
+    /// <summary>
+    /// Builds the per-corner-radius outline path used when at least one
+    /// <c>CustomRadius*</c> override is set. Extracted from <see cref="DrawBound"/> so the
+    /// geometry is testable without an <see cref="SKCanvas"/> (path bounds can be asserted
+    /// directly via <see cref="SKPath.Bounds"/>).
+    /// </summary>
+    /// <remarks>
+    /// Issue #4030 follow-up — unlike <see cref="SKCanvas.DrawRoundRect(SKRect, float, float, SKPaint)"/>
+    /// (which clamps its radii to fit the rect internally), the manual <see cref="SKPath.ArcTo"/>
+    /// construction here does not. A per-corner radius larger than half the bounding rect's width
+    /// or height produces an arc whose circle is bigger than the corner it's cut into, so the path
+    /// bulges past the rect's edge -- most visible on the stroke slot, whose bounding rect is
+    /// shrunk by half the stroke width (<see cref="RenderableShapeBase.IsOffsetAppliedForStroke"/>)
+    /// while the corner radius pushed onto it stays the fill's un-shrunk value. Each corner radius
+    /// is clamped to half the smaller of the rect's width/height so no arc can ever extend past the
+    /// rect on any side.
+    /// </remarks>
+    internal SKPath BuildCustomCornerPath(SKRect boundingRect, float additionalRadiusInset = 0f)
+    {
+        float maxRadius = System.Math.Max(0f, System.Math.Min(boundingRect.Width, boundingRect.Height) / 2f);
+
+        float topLeft = System.Math.Min(System.Math.Max(0f, (CustomRadiusTopLeft ?? CornerRadius) - additionalRadiusInset), maxRadius);
+        float topRight = System.Math.Min(System.Math.Max(0f, (CustomRadiusTopRight ?? CornerRadius) - additionalRadiusInset), maxRadius);
+        float bottomLeft = System.Math.Min(System.Math.Max(0f, (CustomRadiusBottomLeft ?? CornerRadius) - additionalRadiusInset), maxRadius);
+        float bottomRight = System.Math.Min(System.Math.Max(0f, (CustomRadiusBottomRight ?? CornerRadius) - additionalRadiusInset), maxRadius);
+
+        SKPath path = new SKPath();
+        path.MoveTo(boundingRect.Left + topLeft, boundingRect.Top);
+        path.LineTo(boundingRect.Right - topRight, boundingRect.Top);
+        path.ArcTo(SKRect.Create(boundingRect.Right - topRight * 2, boundingRect.Top, topRight * 2, topRight * 2), 270, 90, false);
+
+        path.LineTo(boundingRect.Right, boundingRect.Bottom - bottomRight);
+        path.ArcTo(SKRect.Create(boundingRect.Right - bottomRight * 2, boundingRect.Bottom - bottomRight * 2, bottomRight * 2, bottomRight * 2), 0, 90, false);
+
+        path.LineTo(boundingRect.Left + bottomLeft, boundingRect.Bottom);
+        path.ArcTo(SKRect.Create(boundingRect.Left, boundingRect.Bottom - bottomLeft * 2, bottomLeft * 2, bottomLeft * 2), 90, 90, false);
+
+        path.LineTo(boundingRect.Left, boundingRect.Top + topLeft);
+        path.ArcTo(SKRect.Create(boundingRect.Left, boundingRect.Top, topLeft * 2, topLeft * 2), 180, 90, false);
+
         path.Close();
-
-        canvas.DrawPath(path, paint);
-
+        return path;
     }
 }

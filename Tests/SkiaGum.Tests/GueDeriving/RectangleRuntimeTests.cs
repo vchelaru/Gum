@@ -229,9 +229,12 @@ public class RectangleRuntimeTests
     }
 
     // Issue #2818: CornerRadius mirrors onto both slots each frame in PreRender so the outline
-    // traces the same rounded corners as the fill.
+    // traces the same rounded corners as the fill. Issue #4030 follow-up: the stroke slot's
+    // radius is reduced by half the stroke width so its arc stays a true parallel offset of the
+    // fill's curve (same arc center) rather than a differently-curved shape -- with the default
+    // StrokeWidth of 1, the stroke's radius is 0.5 less than the fill's.
     [Fact]
-    public void CornerRadius_PushedToBothSlots_InPreRender()
+    public void CornerRadius_PushedToFillSlot_AndInsetByHalfStrokeWidth_OnStrokeSlot()
     {
         RectangleRuntime sut = new();
         sut.CornerRadius = 8f;
@@ -241,7 +244,76 @@ public class RectangleRuntimeTests
         RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
         RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
         fillSlot.CornerRadius.ShouldBe(8f);
-        strokeSlot.CornerRadius.ShouldBe(8f);
+        strokeSlot.CornerRadius.ShouldBe(7.5f);
+    }
+
+    [Fact]
+    public void CornerRadius_ThickStroke_InsetByHalfStrokeWidth_OnStrokeSlot()
+    {
+        RectangleRuntime sut = new();
+        sut.CornerRadius = 20f;
+        sut.StrokeWidth = 8f;
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+
+        sut.PreRender();
+
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
+        fillSlot.CornerRadius.ShouldBe(20f);
+        strokeSlot.CornerRadius.ShouldBe(16f);
+    }
+
+    [Fact]
+    public void CustomRadiusTopLeft_ThickStroke_InsetByHalfStrokeWidth_OnStrokeSlot()
+    {
+        RectangleRuntime sut = new();
+        sut.CustomRadiusTopLeft = 20f;
+        sut.StrokeWidth = 8f;
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+
+        sut.PreRender();
+
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
+        fillSlot.CustomRadiusTopLeft.ShouldBe(20f);
+        strokeSlot.CustomRadiusTopLeft.ShouldBe(16f);
+    }
+
+    // Issue #4030 follow-up — the fill slot always drew at the full bounding rect, the same
+    // outer edge as the stroke's outer edge. A solid, opaque stroke hides the overlap everywhere
+    // except its own antialiased feather at the true outer boundary, where the "underneath" color
+    // was the fill instead of the real background — visible as a tinted fringe around the
+    // stroke's outer edge (confirmed by testing against a white background, where the fringe read
+    // as the fill's color bleeding through rather than clean antialiasing to white). Mirrors
+    // CircleRuntime's SKIA PreRender (#2834): push the FULL StrokeWidth (not half) as the fill's
+    // inset, since the fill needs to retreat all the way behind the stroke's ring, not just to
+    // its centerline.
+    [Fact]
+    public void PreRender_StrokeVisible_PushesFullStrokeWidthAsFillInset()
+    {
+        RectangleRuntime sut = new();
+        sut.StrokeColor = SKColors.White;
+        sut.StrokeWidth = 8f;
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+
+        sut.PreRender();
+
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        fillSlot.FillInset.ShouldBe(8f);
+    }
+
+    [Fact]
+    public void PreRender_StrokeInvisible_FillInsetStaysZero()
+    {
+        RectangleRuntime sut = new();
+        sut.StrokeColor = new SKColor(255, 255, 255, 0);
+        sut.StrokeWidth = 8f;
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+
+        sut.PreRender();
+
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        fillSlot.FillInset.ShouldBe(0f);
     }
 
     // Issue #2720: per-corner radii set via the string path (SetProperty) must land on the
@@ -310,8 +382,10 @@ public class RectangleRuntimeTests
     }
 
     [Fact]
-    public void PerCornerRadii_PushedToBothSlots_InPreRender()
+    public void PerCornerRadii_PushedToFillSlot_AndInsetByHalfStrokeWidth_OnStrokeSlot()
     {
+        // Default StrokeWidth is 1, so each stroke-slot radius is inset by 0.5 (issue #4030
+        // follow-up -- see CornerRadius_PushedToFillSlot_AndInsetByHalfStrokeWidth_OnStrokeSlot).
         RectangleRuntime sut = new();
         sut.CustomRadiusTopLeft = 1f;
         sut.CustomRadiusTopRight = 2f;
@@ -326,10 +400,10 @@ public class RectangleRuntimeTests
         fillSlot.CustomRadiusTopRight.ShouldBe(2f);
         fillSlot.CustomRadiusBottomLeft.ShouldBe(3f);
         fillSlot.CustomRadiusBottomRight.ShouldBe(4f);
-        strokeSlot.CustomRadiusTopLeft.ShouldBe(1f);
-        strokeSlot.CustomRadiusTopRight.ShouldBe(2f);
-        strokeSlot.CustomRadiusBottomLeft.ShouldBe(3f);
-        strokeSlot.CustomRadiusBottomRight.ShouldBe(4f);
+        strokeSlot.CustomRadiusTopLeft.ShouldBe(0.5f);
+        strokeSlot.CustomRadiusTopRight.ShouldBe(1.5f);
+        strokeSlot.CustomRadiusBottomLeft.ShouldBe(2.5f);
+        strokeSlot.CustomRadiusBottomRight.ShouldBe(3.5f);
     }
 
     // Scalar-blur collapse: the plain Rectangle exposes a single isotropic DropshadowBlur. The
@@ -527,18 +601,23 @@ public class RectangleRuntimeTests
 
     // Issue #2938 — IsFilled gates the fill-slot gradient. With IsFilled = false the fill-slot
     // gradient stays off even when UseGradient = true; toggling IsFilled = true lights it up.
+    // Issue #4029 — toggling IsFilled = true also turns the stroke-slot gradient back OFF: once a
+    // fill is active, the gradient belongs to the fill only (see UseGradient_BothSlotsActive_*).
     [Fact]
-    public void SettingIsFilledTrue_AfterUseGradientTrue_LightsUpFillSlotGradient()
+    public void SettingIsFilledTrue_AfterUseGradientTrue_LightsUpFillSlotGradient_AndTurnsOffStrokeSlotGradient()
     {
         RectangleRuntime sut = new();
         sut.IsFilled = false;
         sut.UseGradient = true;
         RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
         fillSlot.UseGradient.ShouldBeFalse();
+        strokeSlot.UseGradient.ShouldBeTrue();
 
         sut.IsFilled = true;
 
         fillSlot.UseGradient.ShouldBeTrue();
+        strokeSlot.UseGradient.ShouldBeFalse();
     }
 
     [Fact]
@@ -582,8 +661,14 @@ public class RectangleRuntimeTests
         sut.StrokeWidth.ShouldBe(1);
     }
 
+    // Issue #4029 — corrected contract: gradient follows the ACTIVE body. When both a fill and a
+    // stroke are active, the gradient applies to the fill ONLY; the stroke keeps rendering as a
+    // plain solid outline on top of it, exactly like it would on top of a solid fill. Previously
+    // both slots got the gradient here, making the stroke visually indistinguishable from the
+    // fill underneath -- no visible outline, even though the user never asked for a gradient
+    // stroke (this was the root cause of the missing outline on the Gradients gallery row).
     [Fact]
-    public void UseGradient_BothSlotsActive_BothSlotsOn()
+    public void UseGradient_BothSlotsActive_OnlyFillSlotGetsGradient()
     {
         RectangleRuntime sut = new();
         sut.IsFilled = true;
@@ -592,7 +677,7 @@ public class RectangleRuntimeTests
         RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
         RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
         fillSlot.UseGradient.ShouldBeTrue();
-        strokeSlot.UseGradient.ShouldBeTrue();
+        strokeSlot.UseGradient.ShouldBeFalse();
     }
 
     // Issue #2938 — IsFilled gates the fill-slot gradient. With IsFilled = false the fill slot

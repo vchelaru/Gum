@@ -1764,11 +1764,27 @@ public class RectangleRuntime : GraphicalUiElement
 
         if (StrokeRenderable is SkiaGum.Renderables.RoundedRectangle strokeRounded)
         {
-            strokeRounded.CornerRadius = cornerRadius;
-            strokeRounded.CustomRadiusTopLeft = topLeft;
-            strokeRounded.CustomRadiusTopRight = topRight;
-            strokeRounded.CustomRadiusBottomLeft = bottomLeft;
-            strokeRounded.CustomRadiusBottomRight = bottomRight;
+            // Issue #4030 follow-up — the stroke's bounding rect is shrunk by half the stroke
+            // width (RenderableShapeBase.IsOffsetAppliedForStroke), so its corner radius must
+            // shrink by the same amount to stay a true parallel offset of the fill's curve (same
+            // arc center, not just a scaled-down copy). Pushing the fill's raw, un-reduced radius
+            // here made the stroke's corner arc a differently-curved shape than the fill's — most
+            // visible as a seam/notch where a straight edge meets the arc on a thick stroke with
+            // a sizeable corner radius. base.PreRender() (called above) already resolved
+            // StrokeWidth (including ScreenPixel/zoom), so StrokeRenderable.StrokeWidth here is
+            // the final on-screen value.
+            float strokeInset = strokeRounded.StrokeWidth / 2f;
+            strokeRounded.CornerRadius = System.Math.Max(0f, cornerRadius - strokeInset);
+            strokeRounded.CustomRadiusTopLeft = topLeft.HasValue ? System.Math.Max(0f, topLeft.Value - strokeInset) : (float?)null;
+            strokeRounded.CustomRadiusTopRight = topRight.HasValue ? System.Math.Max(0f, topRight.Value - strokeInset) : (float?)null;
+            strokeRounded.CustomRadiusBottomLeft = bottomLeft.HasValue ? System.Math.Max(0f, bottomLeft.Value - strokeInset) : (float?)null;
+            strokeRounded.CustomRadiusBottomRight = bottomRight.HasValue ? System.Math.Max(0f, bottomRight.Value - strokeInset) : (float?)null;
+
+            // Issue #4030 follow-up (mirrors CircleRuntime's SKIA PreRender / #2834) — when the
+            // stroke is visible, pull the fill's outer edge inside the stroke's inner edge (full
+            // StrokeWidth, not half) so the stroke's own antialiased outer boundary blends against
+            // the true background instead of the fill color sitting right behind it.
+            fill.FillInset = strokeRounded.Color.Alpha > 0 ? strokeRounded.StrokeWidth : 0f;
         }
     }
 
