@@ -351,7 +351,8 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
     private async Task<GeneralResponse> TryCreateFontFor(BmfcSave bmfcSave, bool force, bool showSpinner,
         bool createTask, string projectDirectory, bool iterativelyDetermineSize)
     {
-        if (force || GetFilePath(bmfcSave, destinationDirectory: null, projectDirectory).Exists() == false)
+        if ((force || GetFilePath(bmfcSave, destinationDirectory: null, projectDirectory).Exists() == false)
+            && _fontFileGenerator.RequiresSizeEstimation)
         {
             await AssignEstimatedNeededSizeOn(bmfcSave, iterativelyDetermineSize, _callbacks.OnOutput);
         }

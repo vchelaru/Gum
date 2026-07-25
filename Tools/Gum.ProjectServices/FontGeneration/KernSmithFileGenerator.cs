@@ -33,6 +33,13 @@ public class KernSmithFileGenerator : IFontFileGenerator
         EnsureRasterizerRegistered();
     }
 
+    /// <summary>
+    /// KernSmith sizes its own atlas via <see cref="FontGeneratorOptions.AutofitTexture"/>, so the
+    /// caller's <c>OutputWidth</c>/<c>OutputHeight</c> heuristic (built for bmfont.exe, which can't
+    /// autofit) is unnecessary here.
+    /// </summary>
+    public bool RequiresSizeEstimation => false;
+
     private static void EnsureRasterizerRegistered()
     {
         if (_rasterizerRegistered)
@@ -99,6 +106,12 @@ public class KernSmithFileGenerator : IFontFileGenerator
         return response;
     }
 
+    /// <summary>
+    /// Largest atlas dimension KernSmith is allowed to grow to via <see cref="FontGeneratorOptions.AutofitTexture"/>,
+    /// matching the largest size in <see cref="HeadlessFontGenerationService"/>'s bmfont.exe binary-search table.
+    /// </summary>
+    private const int MaxAtlasDimension = 8192;
+
     internal static FontGeneratorOptions BuildOptions(BmfcSave bmfcSave)
     {
         FontGeneratorOptions options = new FontGeneratorOptions();
@@ -112,8 +125,12 @@ public class KernSmithFileGenerator : IFontFileGenerator
         options.AntiAlias = bmfcSave.UseSmoothing ? AntiAliasMode.Grayscale : AntiAliasMode.None;
         options.Outline = bmfcSave.OutlineThickness;
         options.Spacing = new Spacing(bmfcSave.SpacingHorizontal, bmfcSave.SpacingVertical);
-        options.MaxTextureWidth = bmfcSave.OutputWidth;
-        options.MaxTextureHeight = bmfcSave.OutputHeight;
+        // KernSmith picks the smallest atlas that fits everything on one page (capped by
+        // MaxTextureWidth/Height below) instead of relying on Gum's own bmfont.exe-oriented size
+        // guess, which doesn't account for dropshadow inflation and can undersize the atlas.
+        options.AutofitTexture = true;
+        options.MaxTextureWidth = MaxAtlasDimension;
+        options.MaxTextureHeight = MaxAtlasDimension;
 
         // Drop shadow (and outline/shadow combos) are composited to RGBA by KernSmith's effect
         // pipeline. A custom ChannelConfig routes through ChannelCompositor, which rebuilds RGB from
