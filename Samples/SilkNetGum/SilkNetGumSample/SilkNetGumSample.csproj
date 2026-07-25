@@ -58,6 +58,8 @@
 	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\RenderTargetShaderScreen.cs" Link="Screens\RenderTargetShaderScreen.cs" />
 	  <!-- Circle shape gallery shared from MonoGameGumInCode, gated #elif SKIA (#4024). -->
 	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\CirclesScreen.cs" Link="Screens\CirclesScreen.cs" />
+	  <!-- Rectangle shape gallery shared from MonoGameGumInCode, gated #elif SKIA (#4029). -->
+	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\RectanglesScreen.cs" Link="Screens\RectanglesScreen.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
