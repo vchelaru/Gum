@@ -1779,6 +1779,12 @@ public class RectangleRuntime : GraphicalUiElement
             strokeRounded.CustomRadiusTopRight = topRight.HasValue ? System.Math.Max(0f, topRight.Value - strokeInset) : (float?)null;
             strokeRounded.CustomRadiusBottomLeft = bottomLeft.HasValue ? System.Math.Max(0f, bottomLeft.Value - strokeInset) : (float?)null;
             strokeRounded.CustomRadiusBottomRight = bottomRight.HasValue ? System.Math.Max(0f, bottomRight.Value - strokeInset) : (float?)null;
+
+            // Issue #4030 follow-up (mirrors CircleRuntime's SKIA PreRender / #2834) — when the
+            // stroke is visible, pull the fill's outer edge inside the stroke's inner edge (full
+            // StrokeWidth, not half) so the stroke's own antialiased outer boundary blends against
+            // the true background instead of the fill color sitting right behind it.
+            fill.FillInset = strokeRounded.Color.Alpha > 0 ? strokeRounded.StrokeWidth : 0f;
         }
     }
 

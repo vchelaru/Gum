@@ -279,6 +279,43 @@ public class RectangleRuntimeTests
         strokeSlot.CustomRadiusTopLeft.ShouldBe(16f);
     }
 
+    // Issue #4030 follow-up — the fill slot always drew at the full bounding rect, the same
+    // outer edge as the stroke's outer edge. A solid, opaque stroke hides the overlap everywhere
+    // except its own antialiased feather at the true outer boundary, where the "underneath" color
+    // was the fill instead of the real background — visible as a tinted fringe around the
+    // stroke's outer edge (confirmed by testing against a white background, where the fringe read
+    // as the fill's color bleeding through rather than clean antialiasing to white). Mirrors
+    // CircleRuntime's SKIA PreRender (#2834): push the FULL StrokeWidth (not half) as the fill's
+    // inset, since the fill needs to retreat all the way behind the stroke's ring, not just to
+    // its centerline.
+    [Fact]
+    public void PreRender_StrokeVisible_PushesFullStrokeWidthAsFillInset()
+    {
+        RectangleRuntime sut = new();
+        sut.StrokeColor = SKColors.White;
+        sut.StrokeWidth = 8f;
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+
+        sut.PreRender();
+
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        fillSlot.FillInset.ShouldBe(8f);
+    }
+
+    [Fact]
+    public void PreRender_StrokeInvisible_FillInsetStaysZero()
+    {
+        RectangleRuntime sut = new();
+        sut.StrokeColor = new SKColor(255, 255, 255, 0);
+        sut.StrokeWidth = 8f;
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+
+        sut.PreRender();
+
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        fillSlot.FillInset.ShouldBe(0f);
+    }
+
     // Issue #2720: per-corner radii set via the string path (SetProperty) must land on the
     // runtime, not on the renderable. The runtime's setter mirrors to fill+stroke, and PreRender
     // pushes the runtime's stored value to the renderable each frame, so a string-path write
