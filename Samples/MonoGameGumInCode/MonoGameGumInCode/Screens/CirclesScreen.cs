@@ -470,6 +470,28 @@ internal class CirclesScreen : FrameworkElement
         fillLast.IsFilled = true;
         row.Children.Add(fillLast);
 
+        // Dashed stroke over a fill, thin vs thick, so dash rendering is confirmed alongside the
+        // two-slot fill+stroke composition rather than only on its own in BuildDashedStrokeRow.
+        CircleRuntime dashedThin = new();
+        dashedThin.Radius = 28;
+        dashedThin.FillColor = new Color(220, 20, 60, 255); // Crimson
+        dashedThin.IsFilled = true;
+        dashedThin.StrokeColor = new Color(255, 255, 255, 255);
+        dashedThin.StrokeWidth = 1;
+        dashedThin.StrokeDashLength = 4;
+        dashedThin.StrokeGapLength = 3;
+        row.Children.Add(dashedThin);
+
+        CircleRuntime dashedThick = new();
+        dashedThick.Radius = 28;
+        dashedThick.FillColor = new Color(255, 215, 0, 255); // Gold
+        dashedThick.IsFilled = true;
+        dashedThick.StrokeColor = new Color(0, 255, 255, 255); // Cyan
+        dashedThick.StrokeWidth = 8;
+        dashedThick.StrokeDashLength = 12;
+        dashedThick.StrokeGapLength = 6;
+        row.Children.Add(dashedThick);
+
         return row;
     }
 
