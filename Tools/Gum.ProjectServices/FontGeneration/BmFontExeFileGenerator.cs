@@ -32,6 +32,9 @@ public class BmFontExeFileGenerator : IFontFileGenerator
     private string BmFontExeLocation => Path.Combine(AppContext.BaseDirectory, "Libraries", "bmfont.exe");
 
     /// <inheritdoc/>
+    public bool RequiresSizeEstimation => true;
+
+    /// <inheritdoc/>
     public async Task<GeneralResponse> GenerateFont(BmfcSave bmfcSave, string outputFntPath, bool createTask)
     {
         ThrowIfNotWindows();

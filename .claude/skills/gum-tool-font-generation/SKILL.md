@@ -1,13 +1,16 @@
 ---
 name: gum-tool-font-generation
-description: Gum bitmap font generation — tool converts font properties into .fnt/.png via bmfont.exe. Triggers: BmfcSave, HeadlessFontGenerationService, FontManager, BmfcTemplate.bmfc, font cache naming, texture size estimation, GumProjectFontGenerator CLI.
+description: Gum bitmap font generation — tool converts font properties into .fnt/.png via bmfont.exe or KernSmith. Triggers: BmfcSave, HeadlessFontGenerationService, FontManager, FontFileGeneratorSelector, KernSmithFileGenerator, BmfcTemplate.bmfc, texture size estimation, dropshadow.
 ---
 
 # Font Generation Pipeline
 
-Gum generates BMFont-format bitmap fonts (`.fnt` + `.png` atlas) by shelling out to `bmfont.exe`. The pipeline is: **collect font properties → build BmfcSave → write .bmfc file → invoke bmfont.exe → produce .fnt + .png**.
+Gum generates BMFont-format bitmap fonts (`.fnt` + `.png` atlas). Pipeline: **collect font properties → build BmfcSave → pick a generator backend → produce .fnt + .png**. Two interchangeable `IFontFileGenerator` backends exist, chosen per-project via `GumProjectSave.FontGenerator` (`FontGeneratorType.BmFont`, the default for back-compat, or `.KernSmith`):
 
-> **Future direction:** The bmfont.exe dependency is being evaluated for replacement due to platform limitations (Windows-only) and other concerns. A leading candidate is [KernSmith](https://github.com/kaltinril/Kernsmith), a cross-platform .NET BMFont library/CLI that consumes the same `.bmfc` files Gum already produces — making it a near drop-in.
+- **`BmFontExeFileGenerator`** shells out to the embedded `bmfont.exe` (Windows-only). Legacy path; does **not** support dropshadow at all — `BmfcTemplate.bmfc` has no dropshadow placeholders, so `BmfcSave.HasDropshadow`/`Dropshadow*` fields are silently ignored on this backend.
+- **`KernSmithFileGenerator`** calls the [KernSmith](https://github.com/kaltinril/Kernsmith) library in-process (cross-platform, no external exe, supports dropshadow). This is the newer, recommended backend.
+
+`FontFileGeneratorSelector` picks between them at generation time (project isn't loaded yet when DI wires services up, so selection can't happen at construction).
 
 ## Architecture
 
@@ -15,17 +18,19 @@ Gum generates BMFont-format bitmap fonts (`.fnt` + `.png` atlas) by shelling out
 FontManager (tool facade)
   └─ HeadlessFontGenerationService (core logic, headless)
        ├─ BmfcSave (data model + .bmfc serialization)
-       │    └─ BmfcTemplate.bmfc (template file with placeholders)
-       └─ bmfont.exe (external process, one per font, run in parallel)
+       │    └─ BmfcTemplate.bmfc (template file with placeholders, bmfont.exe only)
+       └─ FontFileGeneratorSelector → BmFontExeFileGenerator | KernSmithFileGenerator
 ```
 
 **FontManager** is the tool-facing entry point. It wires `IFontGenerationCallbacks` (UI output, spinner, file-watch suppression) and delegates all real work to **HeadlessFontGenerationService** via `IHeadlessFontGenerationService`.
 
-**HeadlessFontGenerationService** is platform-checked (Windows-only, throws `PlatformNotSupportedException` otherwise). It owns:
+**HeadlessFontGenerationService** is platform-checked for the bmfont.exe backend only (throws `PlatformNotSupportedException` off-Windows when `FontGeneratorType.BmFont` is selected). It owns:
 - Collecting all unique fonts a project needs (`CollectRequiredFonts`)
 - Deciding whether a font file already exists or needs (re)generation
-- Launching bmfont.exe processes — one per font, all awaited via `Task.WhenAll` for parallelism
+- Invoking the selected `IFontFileGenerator` — one call per font, all awaited via `Task.WhenAll` for parallelism
 - Texture size estimation (heuristic) and optimization (binary search over `AvailableSizes`)
+
+**Texture-size estimation is bmfont.exe-specific and does not run for KernSmith.** `EstimateBlocksNeeded`'s heuristic (and the dropshadow blindness that falls out of it) only matters for `BmFontExeFileGenerator`. `IFontFileGenerator.RequiresSizeEstimation` (false on `KernSmithFileGenerator`, true on `BmFontExeFileGenerator`) gates the whole `AssignEstimatedNeededSizeOn` call in `HeadlessFontGenerationService` — KernSmith instead sizes its own atlas via `FontGeneratorOptions.AutofitTexture`.
 
 **BmfcSave** holds the six font properties (FontName, FontSize, OutlineThickness, UseSmoothing, IsItalic, IsBold) plus ranges, spacing, and output dimensions. Its `Save()` method loads `BmfcTemplate.bmfc` and does string replacement to produce the `.bmfc` file that bmfont.exe consumes. It also owns `FontCacheFileName` which determines the output path.
 

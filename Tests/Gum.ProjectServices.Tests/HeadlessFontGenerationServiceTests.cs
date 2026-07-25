@@ -828,6 +828,47 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     #endregion
 
     // -------------------------------------------------------------------------
+    // Size estimation gating (IFontFileGenerator.RequiresSizeEstimation)
+    // -------------------------------------------------------------------------
+
+    #region Size estimation gating
+
+    [Fact]
+    public void CreateFontIfNecessary_ShouldEstimateSize_WhenGeneratorRequiresSizeEstimation()
+    {
+        HeadlessFontGenerationService service =
+            new HeadlessFontGenerationService(new NoOpFontFileGenerator { RequiresSizeEstimation = true });
+
+        BmfcSave bmfcSave = new BmfcSave();
+        bmfcSave.FontName = "Arial";
+        bmfcSave.FontSize = 48;
+
+        service.CreateFontIfNecessary(bmfcSave, projectDirectory: "/tmp/test", autoSizeFontOutputs: false);
+
+        bmfcSave.OutputWidth.ShouldBe(1024);
+    }
+
+    [Fact]
+    public void CreateFontIfNecessary_ShouldNotEstimateSize_WhenGeneratorDoesNotRequireSizeEstimation()
+    {
+        HeadlessFontGenerationService service =
+            new HeadlessFontGenerationService(new NoOpFontFileGenerator { RequiresSizeEstimation = false });
+
+        BmfcSave bmfcSave = new BmfcSave();
+        bmfcSave.FontName = "Arial";
+        bmfcSave.FontSize = 48;
+        bmfcSave.OutputWidth = 999;
+        bmfcSave.OutputHeight = 999;
+
+        service.CreateFontIfNecessary(bmfcSave, projectDirectory: "/tmp/test", autoSizeFontOutputs: false);
+
+        bmfcSave.OutputWidth.ShouldBe(999);
+        bmfcSave.OutputHeight.ShouldBe(999);
+    }
+
+    #endregion
+
+    // -------------------------------------------------------------------------
     // Windows gate (BmFontExeFileGenerator)
     // -------------------------------------------------------------------------
 
@@ -861,6 +902,8 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     /// </summary>
     private sealed class NoOpFontFileGenerator : IFontFileGenerator
     {
+        public bool RequiresSizeEstimation { get; init; } = true;
+
         public Task<GeneralResponse> GenerateFont(BmfcSave bmfcSave, string outputFntPath, bool createTask)
         {
             GeneralResponse response = GeneralResponse.SuccessfulResponse;

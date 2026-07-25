@@ -42,12 +42,15 @@ public class FontFileGeneratorSelector : IFontFileGenerator
     /// <inheritdoc/>
     public Task<GeneralResponse> GenerateFont(BmfcSave bmfcSave, string outputFntPath, bool createTask)
     {
-        IFontFileGenerator generator = _getGeneratorType() switch
-        {
-            FontGeneratorType.KernSmith => _kernSmithGenerator,
-            _ => _bmFontGenerator
-        };
-
-        return generator.GenerateFont(bmfcSave, outputFntPath, createTask);
+        return CurrentGenerator.GenerateFont(bmfcSave, outputFntPath, createTask);
     }
+
+    /// <inheritdoc/>
+    public bool RequiresSizeEstimation => CurrentGenerator.RequiresSizeEstimation;
+
+    private IFontFileGenerator CurrentGenerator => _getGeneratorType() switch
+    {
+        FontGeneratorType.KernSmith => _kernSmithGenerator,
+        _ => _bmFontGenerator
+    };
 }

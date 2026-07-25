@@ -16,4 +16,11 @@ public interface IFontFileGenerator
     /// <param name="outputFntPath">Absolute path for the output .fnt file.</param>
     /// <param name="createTask">When true, runs asynchronously; when false, blocks until complete.</param>
     Task<GeneralResponse> GenerateFont(BmfcSave bmfcSave, string outputFntPath, bool createTask);
+
+    /// <summary>
+    /// Whether this generator needs <see cref="BmfcSave.OutputWidth"/>/<see cref="BmfcSave.OutputHeight"/>
+    /// pre-populated by the caller before generation. Generators that can size their own atlas
+    /// (e.g. KernSmith's autofit) should return false so the caller skips that work entirely.
+    /// </summary>
+    bool RequiresSizeEstimation { get; }
 }

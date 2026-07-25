@@ -5,7 +5,7 @@ description: KernSmith runtime bitmap-font packages. Triggers: Integrations/Kern
 
 # KernSmith Integrations
 
-[KernSmith](https://github.com/kaltinril/KernSmith) is a third-party, cross-platform, in-memory BMFont rasterizer. `Integrations/KernSmith/*` are optional first-party Gum packages that bridge it into each runtime — this is unrelated to the tool's `bmfont.exe`-based generation pipeline (see `gum-tool-font-generation`).
+[KernSmith](https://github.com/kaltinril/KernSmith) is a third-party, cross-platform, in-memory BMFont rasterizer. `Integrations/KernSmith/*` are optional first-party Gum packages that bridge it into each runtime. The tool itself also uses KernSmith directly as an alternate offline generator backend — see `gum-tool-font-generation` for that (`KernSmithFileGenerator`, unrelated to the runtime packages below).
 
 ## Package map
 
