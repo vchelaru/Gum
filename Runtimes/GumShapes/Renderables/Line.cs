@@ -157,12 +157,12 @@ internal class Line : RenderableShapeBase
         if (UseGradient && forcedColor == null)
         {
             var gradient = base.GetGradient(absoluteLeft, absoluteTop);
-            sb.DrawRectangle(position, size, gradient, gradient, thickness: 0, rounded: 0, rotation: rotation, aaSize: antiAliasSize);
+            sb.DrawRectangle(position, size, gradient, gradient, thickness: 0, cornerRadii: 0, rotation: rotation, aaSize: antiAliasSize);
         }
         else
         {
             var color = forcedColor ?? this.Color;
-            sb.DrawRectangle(position, size, color, color, thickness: 0, rounded: 0, rotation: rotation, aaSize: antiAliasSize);
+            sb.DrawRectangle(position, size, color, color, thickness: 0, cornerRadii: 0, rotation: rotation, aaSize: antiAliasSize);
         }
     }
 }

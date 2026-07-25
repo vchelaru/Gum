@@ -206,8 +206,9 @@ public class WireframeControl : GraphicsDeviceControl
             // actually have a renderer to draw into. Without this, Circle/Rectangle runtimes in the
             // tool fall back to LineCircle/LineRectangle defaults. See issue #2925.
             //
-            // ContentManager is rooted at "Content" because the apos-shapes.xnb ships at
-            // <tool-bin>\Content\apos-shapes.xnb (see EditorTabPlugin_XNA.csproj PostBuild).
+            // The ContentManager is unused by ShapeRenderer as of Apos.Shapes.KNI 0.7.2+ (the shader
+            // is embedded in the assembly, not loaded via content pipeline) but the parameter stays
+            // for source compatibility — see ShapeRenderer.Initialize.
             if (!ShapeRenderer.Self.IsInitialized)
             {
                 ContentManager shapesContentManager = new ContentManager(renderHost.Services, "Content");

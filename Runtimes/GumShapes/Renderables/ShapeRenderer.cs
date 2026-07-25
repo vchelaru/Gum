@@ -5,23 +5,13 @@ using MonoGameGum;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
-using System.Reflection.Metadata;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MonoGameAndGum.Renderables;
 
 public class ShapeRenderer
 {
-    // Bump this whenever the shipped apos-shapes.xnb files in
-    // buildTransitive/MonoGame/Content/{DesktopGL,WindowsDX}/ are regenerated
-    // against a new Apos.Shapes version. The XnbBuilderMonoGame* projects must
-    // be rebuilt and their output XNBs copied in alongside this constant change.
-    const string CompiledAgainstAposShapesVersion = "0.6.10-alpha";
-
     static ShapeRenderer _self = default!;
     ShapeBatch _sb = default!;
 
@@ -125,41 +115,21 @@ public class ShapeRenderer
         Initialize(gumService.Game.GraphicsDevice, gumService.Game.Content);
     }
 
+    // contentManager is unused as of Apos.Shapes 0.7.2+ — the shader is embedded in the
+    // assembly, so ShapeBatch no longer loads it via the content pipeline. Kept as a parameter
+    // for source/binary compatibility with existing callers.
     public void Initialize(GraphicsDevice graphicsDevice, ContentManager contentManager)
     {
         if(IsInitialized)
         {
             throw new InvalidOperationException("ShapeRenderer is already initialized");
         }
-        ValidateAposShapesVersion();
         IsInitialized = true;
-        _sb = new ShapeBatch(graphicsDevice, contentManager);
+        _sb = new ShapeBatch(graphicsDevice, (Effect?)null);
 
         // Belt-and-suspenders for consumers using GumBatch directly (without GumService).
         // GumService.Initialize already triggers this via reflection scan; calling it here
         // covers the path that bypasses GumService. Idempotent via the guard inside.
         Gum.GueDeriving.AposShapeRuntime.RegisterRuntimeTypes();
-    }
-
-    [Conditional("DEBUG")]
-    static void ValidateAposShapesVersion()
-    {
-        var assembly = typeof(ShapeBatch).Assembly;
-        var informational = assembly
-            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
-            .InformationalVersion ?? assembly.GetName().Version?.ToString() ?? "<unknown>";
-
-        // InformationalVersion may include a +commit suffix; strip it for comparison.
-        var plusIndex = informational.IndexOf('+');
-        var resolved = plusIndex >= 0 ? informational.Substring(0, plusIndex) : informational;
-
-        if (!resolved.StartsWith(CompiledAgainstAposShapesVersion, StringComparison.Ordinal))
-        {
-            throw new InvalidOperationException(
-                $"Gum.Shapes was built against Apos.Shapes {CompiledAgainstAposShapesVersion}, " +
-                $"but the resolved Apos.Shapes assembly reports version '{resolved}'. " +
-                "The shipped apos-shapes.xnb may be incompatible with this Apos.Shapes runtime. " +
-                "To fix, follow Runtimes/GumShapes/XnbBuilder/README.md.");
-        }
     }
 }

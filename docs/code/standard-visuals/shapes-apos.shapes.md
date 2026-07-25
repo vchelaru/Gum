@@ -54,12 +54,6 @@ Or add through command line:
 ```bash
 dotnet add package Gum.Shapes.KNI
 ```
-
-{% hint style="warning" %}
-Apos.Shapes compiles a shader at compile time which is used by the library to draw shapes. As of January 2026 shader compilation is not supported on Linux for KNI. Therefore, libraries must be compiled on Windows.
-
-For more information, see this issue: [https://github.com/vchelaru/Gum/issues/2034](https://github.com/vchelaru/Gum/issues/2034)
-{% endhint %}
 {% endtab %}
 
 {% tab title="FNA" %}

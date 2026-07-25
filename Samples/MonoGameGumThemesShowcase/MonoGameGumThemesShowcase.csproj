@@ -6,11 +6,6 @@
     <PublishReadyToRun>false</PublishReadyToRun>
     <TieredCompilation>false</TieredCompilation>
     <RootNamespace>MonoGameGumThemesShowcase</RootNamespace>
-    <!-- Source-referencing the Gum.Shapes runtime csproj would otherwise pull
-         Apos.Shapes' apos-shapes.fx into MGCB; the Gum.Shapes.MonoGame NuGet
-         skips this via buildTransitive and we replicate it here. The prebuilt
-         apos-shapes.xnb is copied as a plain Content item below. -->
-    <SkipAposShapeContent>true</SkipAposShapeContent>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -40,12 +35,5 @@
     <ProjectReference Include="..\..\Themes\Gum.Themes.Neon.MonoGame\Gum.Themes.Neon.MonoGame.csproj" />
     <ProjectReference Include="..\..\Themes\Gum.Themes.Retro95.MonoGame\Gum.Themes.Retro95.MonoGame.csproj" />
     <ProjectReference Include="..\..\Themes\Gum.Themes.Template.MonoGame\Gum.Themes.Template.MonoGame.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <!-- Mirror the Gum.Shapes.MonoGame NuGet's buildTransitive: copy the prebuilt
-         apos-shapes.xnb to the sample's Content output. -->
-    <Content Include="..\..\Runtimes\GumShapes\buildTransitive\MonoGame\Content\DesktopGL\apos-shapes.xnb"
-             Link="Content/apos-shapes.xnb"
-             CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

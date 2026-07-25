@@ -553,7 +553,7 @@ public class RoundedRectangle : RenderableShapeBase,
         // center at rotatedCenter, set xy = rotatedCenter - size/2).
         var rotatedCenter = RotateAround(center, pivot, cos, sin);
         var xy = rotatedCenter - dashSize * 0.5f;
-        sb.DrawRectangle(xy, dashSize, gradient, gradient, thickness: 1f, rounded: 0f, rotation: rotationRadians, aaSize: aaSize);
+        sb.DrawRectangle(xy, dashSize, gradient, gradient, thickness: 1f, cornerRadii: 0f, rotation: rotationRadians, aaSize: aaSize);
     }
 
     private static void EmitCornerDash(Apos.Shapes.ShapeBatch sb,
