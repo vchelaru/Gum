@@ -4,6 +4,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.Wireframe;
 using GumRuntime;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -29,6 +30,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
     private readonly IFileCommands _fileCommands;
     private readonly ICompositeMemberRegistry _compositeMemberRegistry;
     private readonly IDispatcher _dispatcher;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
 
     #endregion
 
@@ -37,7 +39,8 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         IDialogService dialogService,
         IFileCommands fileCommands,
         ICompositeMemberRegistry compositeMemberRegistry,
-        IDispatcher dispatcher)
+        IDispatcher dispatcher,
+        IWireframeObjectManager wireframeObjectManager)
     {
         _guiCommands = guiCommands;
         _wireframeCommands = wireframeCommands;
@@ -45,6 +48,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         _fileCommands = fileCommands;
         _compositeMemberRegistry = compositeMemberRegistry;
         _dispatcher = dispatcher;
+        _wireframeObjectManager = wireframeObjectManager;
     }
 
     public AssignmentExpressionSyntax? GetAssignmentSyntax(string item)
@@ -83,7 +87,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
     #region Validation (failures)
 
-    private List<(string, GeneralResponse)> GetIndividualFailures(ElementSave parentElement, InstanceSave? leftSideInstance, VariableListSave newDirectValue)
+    private List<(string, GeneralResponse)> GetIndividualFailures(ElementSave parentElement, InstanceSave? leftSideInstance, VariableListSave newDirectValue, GraphicalUiElement? liveRoot)
     {
         var values = newDirectValue.ValueAsIList;
 
@@ -91,13 +95,13 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
         foreach (string line in values)
         {
-            AddFailureForLine(parentElement, leftSideInstance, failures, line);
+            AddFailureForLine(parentElement, leftSideInstance, failures, line, liveRoot);
         }
 
         return failures;
     }
 
-    private void AddFailureForLine(ElementSave parentElement, InstanceSave? leftSideInstance, List<(string, GeneralResponse)> failures, string line)
+    private void AddFailureForLine(ElementSave parentElement, InstanceSave? leftSideInstance, List<(string, GeneralResponse)> failures, string line, GraphicalUiElement? liveRoot)
     {
         if (line.StartsWith("//") || string.IsNullOrEmpty(line))
         {
@@ -144,7 +148,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
         if (response.Succeeded)
         {
-            evaluatedSyntax = EvaluatedSyntax.FromSyntaxNode(assignmentSyntax.Right, parentElement.DefaultState);
+            evaluatedSyntax = EvaluatedSyntax.FromSyntaxNode(assignmentSyntax.Right, parentElement.DefaultState, liveRoot: liveRoot);
 
             if (evaluatedSyntax == null)
             {
@@ -444,13 +448,19 @@ public class VariableReferenceLogic : IVariableReferenceLogic
     public void DoVariableReferenceReaction(ElementSave parentElement, InstanceSave? leftSideInstance, string unqualifiedMember,
         StateSave stateSave, string qualifiedName, bool trySave)
     {
+        // The currently-rendered wireframe representation of parentElement, if any. Lets a right
+        // side like "Root.AbsoluteWidth" resolve against the live, already-laid-out object - null
+        // when nothing is rendered for this element, in which case such identifiers stay
+        // unresolved, same as any other unresolvable identifier.
+        var liveRoot = _wireframeObjectManager.GetRepresentation(parentElement);
+
         if (unqualifiedMember == "VariableReferences")
         {
             var newDirectValue = stateSave.GetVariableListSave(qualifiedName);
 
             if (newDirectValue != null)
             {
-                var failures = GetIndividualFailures(parentElement, leftSideInstance, newDirectValue);
+                var failures = GetIndividualFailures(parentElement, leftSideInstance, newDirectValue, liveRoot);
 
                 if (failures.Count > 0)
                 {
@@ -476,7 +486,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         }
 
         // apply references on this element first, then apply the values to the other references:
-        ElementSaveExtensions.ApplyVariableReferences(parentElement, stateSave);
+        ElementSaveExtensions.ApplyVariableReferences(parentElement, stateSave, liveRoot);
 
         // Then evaluate any behavior-level ToolOnlyVariableReferences so design-time
         // wireframe preview reflects FormsProperty values (e.g. IsEnabled = false →
@@ -504,7 +514,8 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         {
             if (statesAlreadyApplied.Contains(reference.StateSave) == false)
             {
-                ElementSaveExtensions.ApplyVariableReferences(reference.OwnerOfReferencingObject, reference.StateSave);
+                ElementSaveExtensions.ApplyVariableReferences(reference.OwnerOfReferencingObject, reference.StateSave,
+                    _wireframeObjectManager.GetRepresentation(reference.OwnerOfReferencingObject));
                 statesAlreadyApplied.Add(reference.StateSave);
                 elementsToSave.Add(reference.OwnerOfReferencingObject);
             }
@@ -630,7 +641,6 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         }
         return didAssignDeepReference;
     }
-
 
     public void ReactIfChangedMemberIsVariableReference(InstanceSave? instance, StateSave stateSave, string changedMember, object? oldValue)
     {

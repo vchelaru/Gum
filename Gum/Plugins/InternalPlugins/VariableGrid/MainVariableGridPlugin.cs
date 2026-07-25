@@ -7,6 +7,7 @@ using Gum.Managers;
 
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
+using Gum.Wireframe;
 using GumRuntime;
 using System;
 using System.ComponentModel.Composition;

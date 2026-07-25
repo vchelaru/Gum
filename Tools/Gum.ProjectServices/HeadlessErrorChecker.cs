@@ -251,7 +251,9 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         {
             try
             {
-                return ElementSaveExtensions.CustomEvaluateExpression(ownerState, right, leftType);
+                // No live wireframe in a headless check, so runtime-computed identifiers like
+                // AbsoluteWidth are simply unresolvable here, same as any other unresolvable identifier.
+                return ElementSaveExtensions.CustomEvaluateExpression(ownerState, right, leftType, null);
             }
             catch
             {

@@ -2,6 +2,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Expressions;
 using Gum.Managers;
+using Gum.Wireframe;
 using Microsoft.CodeAnalysis.CSharp;
 using Shouldly;
 
@@ -11,13 +12,13 @@ public class EvaluatedSyntaxTests : BaseTestClass
 {
     #region Helpers
 
-    private static EvaluatedSyntax Evaluate(string expression, StateSave state)
+    private static EvaluatedSyntax Evaluate(string expression, StateSave state, GraphicalUiElement? liveRoot = null)
     {
         string csharp = EvaluatedSyntax.ConvertToCSharpSyntax(expression);
         // Parse as an expression (matches GumExpressionService) so top-level ternaries are not
         // mis-parsed as nullable variable declarations.
         Microsoft.CodeAnalysis.SyntaxNode syntax = Microsoft.CodeAnalysis.CSharp.SyntaxFactory.ParseExpression(csharp);
-        return EvaluatedSyntax.FromSyntaxNode(syntax, state);
+        return EvaluatedSyntax.FromSyntaxNode(syntax, state, liveRoot: liveRoot);
     }
 
     private static StateSave BuildState(params (string name, object value, string type)[] variables)
@@ -598,6 +599,39 @@ public class EvaluatedSyntaxTests : BaseTestClass
 
         result.ShouldNotBeNull();
         result.Value.ShouldBe(42f);
+    }
+
+    #endregion
+
+    #region AbsoluteValues
+
+    // Positive resolution (an Absolute* identifier actually resolving to a live, laid-out pixel
+    // value) requires a real contained renderable - a bare GraphicalUiElement's IPSO X/Width
+    // getters just return 0/CanvasWidth with no ContainedObject, and Parent assignment throws
+    // without one ("did you create a proper Visual... such as ContainerRuntime?"). That case is
+    // covered end-to-end in MonoGameGum.Tests/Runtimes/ApplyVariableReferencesRuntimeTests.cs using
+    // ContainerRuntime. These tests cover the routing/null-safety paths that don't need real layout.
+
+    [Fact]
+    public void FromSyntaxNode_AbsoluteWidthWithNoLiveRoot_ReturnsNullValue()
+    {
+        StateSave state = BuildState();
+
+        EvaluatedSyntax result = Evaluate("Source.AbsoluteWidth", state, liveRoot: null);
+
+        (result?.Value).ShouldBeNull();
+    }
+
+    [Fact]
+    public void FromSyntaxNode_AbsoluteWidthOfUnknownInstance_ReturnsNullValue()
+    {
+        StateSave state = BuildState();
+
+        GraphicalUiElement root = new GraphicalUiElement();
+
+        EvaluatedSyntax result = Evaluate("Nonexistent.AbsoluteWidth", state, root);
+
+        (result?.Value).ShouldBeNull();
     }
 
     #endregion

@@ -256,4 +256,53 @@ public class ApplyVariableReferencesRuntimeTests : BaseTestClass
     }
 
     #endregion
+
+    #region AbsoluteValues
+
+    [Fact]
+    public void ApplyVariableReferences_RightSideReferencesAbsoluteWidthOfSibling_ResolvesLiveLayoutValue()
+    {
+        // AbsoluteWidth only exists on a live, already-laid-out GraphicalUiElement - it can't be
+        // derived from authored StateSave data - so this locks in that the runtime apply path
+        // threads the top-level element through to EvaluatedSyntax so it can resolve it.
+        GumExpressionService.Initialize();
+
+        ContainerRuntime parent = new ContainerRuntime();
+        parent.Width = 0;
+
+        ContainerRuntime source = new ContainerRuntime();
+        source.Name = "Source";
+        source.Width = 120f;
+        source.Parent = parent;
+
+        StateSave state = BuildStateWithVariableReference(
+            "Width = Source.AbsoluteWidth",
+            null,
+            ("Width", 0f, "float"));
+
+        parent.ApplyVariableReferences(state);
+
+        parent.Width.ShouldBe(120f);
+    }
+
+    [Fact]
+    public void ApplyVariableReferences_RightSideReferencesOwnAbsoluteX_ResolvesLiveLayoutValue()
+    {
+        GumExpressionService.Initialize();
+
+        ContainerRuntime parent = new ContainerRuntime();
+        parent.X = 15f;
+        parent.Height = 0;
+
+        StateSave state = BuildStateWithVariableReference(
+            "Height = AbsoluteX",
+            null,
+            ("Height", 0f, "float"));
+
+        parent.ApplyVariableReferences(state);
+
+        parent.Height.ShouldBe(15f);
+    }
+
+    #endregion
 }

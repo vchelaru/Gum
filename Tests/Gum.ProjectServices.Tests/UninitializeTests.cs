@@ -40,7 +40,7 @@ public class UninitializeTests : IDisposable
     [Fact]
     public void ClearRegistrations_ClearsCustomEvaluateExpression()
     {
-        ElementSaveExtensions.CustomEvaluateExpression = (_, _, _) => null!;
+        ElementSaveExtensions.CustomEvaluateExpression = (_, _, _, _) => null!;
 
         ElementSaveExtensions.ClearRegistrations();
 

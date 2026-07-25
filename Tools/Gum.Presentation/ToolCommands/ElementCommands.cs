@@ -396,11 +396,17 @@ public class ElementCommands : IElementCommands
 
             float newValue = currentValue + modificationAmount;
             _selectedState.SelectedStateSave.SetValue(nameWithInstance, newValue, instanceSave, "float");
-            ElementSaveExtensions.ApplyVariableReferences(_selectedState.SelectedElement, _selectedState.SelectedStateSave);
 
+            // Push the dragged instance's own new value onto its live GUE *before* resolving
+            // references, so a sibling reference reading a runtime-computed identifier such as
+            // AbsoluteWidth (which only exists on a live, laid-out GraphicalUiElement) sees this
+            // tick's position rather than the previous one.
             graphicalUiElement.SetProperty(baseVariableName, newValue);
 
-            _wireframeObjectManager.RootGue?.ApplyVariableReferences(_selectedState.SelectedStateSave);
+            var rootGue = _wireframeObjectManager.RootGue;
+            ElementSaveExtensions.ApplyVariableReferences(_selectedState.SelectedElement, _selectedState.SelectedStateSave, rootGue);
+
+            rootGue?.ApplyVariableReferences(_selectedState.SelectedStateSave);
 
             _variableInCategoryPropagationLogic.PropagateVariablesInCategory(nameWithInstance,
                 _selectedState.SelectedElement, _selectedState.SelectedStateCategorySave);

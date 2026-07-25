@@ -25,7 +25,14 @@ namespace GumRuntime
         static Dictionary<string, Func<GraphicalUiElement>> mElementToGueTypeFuncs = new Dictionary<string, Func<GraphicalUiElement>>();
         static Func<GraphicalUiElement>? TemplateFunc;
 
-        public static Func<StateSave, string, string, object>? CustomEvaluateExpression;
+        /// <summary>
+        /// Evaluates a variable reference's right side. The 4th argument is the live,
+        /// already-laid-out <see cref="GraphicalUiElement"/> that owns the reference (null when
+        /// applying against pure <see cref="StateSave"/> data with no live tree, e.g. the tool's
+        /// design-time apply path with no wireframe rendered) - it lets the evaluator resolve
+        /// runtime-computed identifiers like <c>AbsoluteWidth</c> that don't exist on authored data.
+        /// </summary>
+        public static Func<StateSave, string, string, GraphicalUiElement?, object>? CustomEvaluateExpression;
 
         public static void RegisterGueInstantiationType(string elementName, Type gueInheritingType, bool overwriteIfAlreadyExists = true)
         {
@@ -719,7 +726,11 @@ namespace GumRuntime
             }
         }
 
-        public static void ApplyVariableReferences(this ElementSave element, StateSave stateSave)
+        // liveRoot: the live, already-laid-out GraphicalUiElement representing element, when one is
+        // currently rendered (e.g. the tool's wireframe for the element being edited). Lets right-side
+        // references resolve runtime-computed identifiers such as AbsoluteWidth; null (the default)
+        // leaves those identifiers unresolved, same as before this parameter existed.
+        public static void ApplyVariableReferences(this ElementSave element, StateSave stateSave, GraphicalUiElement? liveRoot = null)
         {
             foreach (var variableList in stateSave.VariableLists)
             {
@@ -735,7 +746,7 @@ namespace GumRuntime
                     foreach (string referenceString in variableList.ValueAsIList)
                     {
                         // this applies the variable and returns info about the application:
-                        var result = ApplyVariableReferencesOnSpecificOwner(instance, referenceString, stateSave);
+                        var result = ApplyVariableReferencesOnSpecificOwner(instance, referenceString, stateSave, liveRoot);
                         // In the gum tool, we need to check if the applicatoin actually changed the value
                         // If so, we notify plugins that the variable was changed in case any additional changes
                         // need to happen
@@ -773,7 +784,7 @@ namespace GumRuntime
                     {
                         foreach (string referenceString in variableList.ValueAsIList)
                         {
-                            ApplyVariableReferencesOnSpecificOwner(graphicalElement, referenceString, stateSave);
+                            ApplyVariableReferencesOnSpecificOwner(graphicalElement, referenceString, stateSave, graphicalElement);
                         }
                     }
                     else
@@ -787,7 +798,7 @@ namespace GumRuntime
                         else
                         {
                             // Give preferential treatment to the children of graphicalElement. If none are found, then go to the managers
-                            // 
+                            //
                             instance = graphicalElement.GetGraphicalUiElementByName(variableList.SourceObject);
                         }
 
@@ -795,7 +806,7 @@ namespace GumRuntime
                         {
                             foreach (string referenceString in variableList.ValueAsIList)
                             {
-                                ApplyVariableReferencesOnSpecificOwner(instance, referenceString, stateSave);
+                                ApplyVariableReferencesOnSpecificOwner(instance, referenceString, stateSave, graphicalElement);
                             }
                         }
                     }
@@ -811,7 +822,12 @@ namespace GumRuntime
         /// <param name="referenceOwner">The owner that owns the variable reference, such as the instance.</param>
         /// <param name="referenceString">The string such as "X = SomeItem.X"</param>
         /// <param name="stateSave">The state save which owns the variable reference.</param>
-        public static void ApplyVariableReferencesOnSpecificOwner(GraphicalUiElement referenceOwner, string referenceString, StateSave stateSave)
+        /// <param name="liveRootForRightSide">The top-level live <see cref="GraphicalUiElement"/> to
+        /// search within for a right-side runtime-computed identifier such as <c>AbsoluteWidth</c>
+        /// (e.g. "Source.AbsoluteWidth"). Defaults to <paramref name="referenceOwner"/> when not
+        /// given, since instance names are scoped to the owning element, not to the instance that
+        /// happens to own the reference.</param>
+        public static void ApplyVariableReferencesOnSpecificOwner(GraphicalUiElement referenceOwner, string referenceString, StateSave stateSave, GraphicalUiElement? liveRootForRightSide = null)
         {
             //////////////////////////////Early Out/////////////////////////////////
             if(referenceString?.StartsWith("//") == true)
@@ -849,7 +865,7 @@ namespace GumRuntime
 
 
             var right = split[1];
-            var value = GetRightSideValue(stateSave, right, leftSideType);
+            var value = GetRightSideValue(stateSave, right, leftSideType, liveRootForRightSide ?? referenceOwner);
 
 
             if (value != null)
@@ -872,9 +888,13 @@ namespace GumRuntime
         /// back into the state. Used by both state-level <c>VariableReferences</c>
         /// application and (tool-only) behavior <c>ToolOnlyVariableReferences</c>
         /// application. Returns the resulting variable name + old/new values so callers
-        /// can fire change notifications.
+        /// can fire change notifications. <paramref name="liveRoot"/> is the live <see
+        /// cref="GraphicalUiElement"/> to search within for a right-side runtime-computed identifier
+        /// such as <c>AbsoluteWidth</c>, when one is available (e.g. the tool's currently-rendered
+        /// wireframe for this element); null when applying against pure save data with nothing
+        /// rendered, in which case such identifiers are simply unresolvable.
         /// </summary>
-        public static VariableReferenceAssignmentResult ApplyVariableReferencesOnSpecificOwner(InstanceSave instanceLeft, string referenceString, StateSave stateSave)
+        public static VariableReferenceAssignmentResult ApplyVariableReferencesOnSpecificOwner(InstanceSave instanceLeft, string referenceString, StateSave stateSave, GraphicalUiElement? liveRoot = null)
         {
 
             //////////////////////////////Early Out/////////////////////////////////
@@ -909,7 +929,7 @@ namespace GumRuntime
             }
 
             var right = split[1];
-            object value = GetRightSideValue(stateSave, right, leftSideType);
+            object value = GetRightSideValue(stateSave, right, leftSideType, liveRoot);
 
             object valueBefore = null;
             string effectiveLeft = null;
@@ -935,19 +955,19 @@ namespace GumRuntime
             };
         }
 
-        private static object GetRightSideValue(StateSave stateSave, string right, string leftSideType)
+        private static object GetRightSideValue(StateSave stateSave, string right, string leftSideType, GraphicalUiElement? liveRoot = null)
         {
             if (right.TrimStart().StartsWith("!"))
             {
                 var withoutNot = right.TrimStart().Substring(1).Trim();
-                var originalValue = GetRightSideValue(stateSave, withoutNot, leftSideType);
+                var originalValue = GetRightSideValue(stateSave, withoutNot, leftSideType, liveRoot);
                 if (originalValue is bool boolValue) return !boolValue;
                 return null;
             }
 
             if(CustomEvaluateExpression != null)
             {
-                return CustomEvaluateExpression(stateSave, right, leftSideType);
+                return CustomEvaluateExpression(stateSave, right, leftSideType, liveRoot);
             }
             else
             {

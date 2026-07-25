@@ -38,7 +38,7 @@ Gum.Expressions (adds Roslyn) — optional NuGet
 Gum Tool    Game (opt-in)
 ```
 
-The decoupling mechanism is `ElementSaveExtensions.CustomEvaluateExpression` — a static `Func<StateSave, string, string, object>` delegate. When null, falls back to `RecursiveVariableFinder` (simple lookups only). When set by `GumExpressionService.Initialize()`, uses Roslyn for full expression support.
+The decoupling mechanism is `ElementSaveExtensions.CustomEvaluateExpression` — a static `Func<StateSave, string, string, GraphicalUiElement?, object>` delegate. When null, falls back to `RecursiveVariableFinder` (simple lookups only). When set by `GumExpressionService.Initialize()`, uses Roslyn for full expression support. The 4th argument is the live, already-laid-out `GraphicalUiElement` being applied against (when one exists) — it lets a reference resolve the runtime-computed Absolute* properties, which don't exist on authored `StateSave` data at all (see `gum-tool-variable-references` for the resolution mechanism). `ApplyVariableReferences(GraphicalUiElement, StateSave)` supplies its own top-level element automatically; `ApplyVariableReferences(ElementSave, StateSave)` only resolves Absolute* references when called with its optional `liveRoot` argument.
 
 After applying variable references, call `GraphicalUiElement.RefreshStyles()` or
 `GumService.Default.RefreshStyles()` to push the updated values to live visuals. For a deep
