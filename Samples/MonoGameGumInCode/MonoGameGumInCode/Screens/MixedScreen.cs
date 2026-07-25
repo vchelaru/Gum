@@ -120,6 +120,33 @@ internal class MixedScreen : FrameworkElement
         polygon.Width = 30;
         polygon.Height = 8;
         container.Children.Add(polygon);
+
+        AddText(container, "These are dashed lines (round cap, butt cap):");
+        var dashedLineRounded = new LineRuntime();
+        dashedLineRounded.IsFilled = false;
+        dashedLineRounded.IsRounded = true;
+        dashedLineRounded.Color = Color.Yellow;
+        dashedLineRounded.StrokeWidth = 6;
+        dashedLineRounded.StrokeDashLength = 12;
+        dashedLineRounded.StrokeGapLength = 6;
+        dashedLineRounded.X = 10;
+        dashedLineRounded.Y = 10;
+        dashedLineRounded.Width = 150;
+        dashedLineRounded.Height = 0;
+        container.Children.Add(dashedLineRounded);
+
+        var dashedLineButt = new LineRuntime();
+        dashedLineButt.IsFilled = false;
+        dashedLineButt.IsRounded = false;
+        dashedLineButt.Color = Color.Cyan;
+        dashedLineButt.StrokeWidth = 6;
+        dashedLineButt.StrokeDashLength = 12;
+        dashedLineButt.StrokeGapLength = 6;
+        dashedLineButt.X = 10;
+        dashedLineButt.Y = 20;
+        dashedLineButt.Width = 150;
+        dashedLineButt.Height = 40;
+        container.Children.Add(dashedLineButt);
     }
 
     internal static void AddText(ContainerRuntime container, string text)

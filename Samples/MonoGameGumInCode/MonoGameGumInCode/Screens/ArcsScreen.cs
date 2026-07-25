@@ -16,8 +16,6 @@ namespace MonoGameGumInCode.Screens;
 //   - Arcs are stroke-only on both backends (the chord-fill seal in #2891 is Skia-only; Apos's
 //     Arc.Render has always ignored IsFilled). The Skia "filled" cell in the AA row becomes a
 //     thick-band cell here so the row keeps its shape without inventing a fill mode.
-//   - Apos's Arc.RenderInternal only honors dashing on the butt-cap path (IsEndRounded = false).
-//     The dashed-stroke row pins butt caps so a regression that breaks one branch surfaces.
 //   - Apos's edge AA is signed-distance-field (1 px bloom on, crisp at aaSize = 0). Skia uses
 //     path AA. Subtle visual differences between the two are expected, not bugs.
 internal class ArcsScreen : FrameworkElement
@@ -233,11 +231,9 @@ internal class ArcsScreen : FrameworkElement
         return row;
     }
 
-    // Mirrors the dashed-stroke row from the Skia gallery. Caps pinned to butt (IsEndRounded
-    // = false, which is the default) because Apos's Arc.RenderInternal only routes through
-    // DrawRing — and therefore honors dashing — on the butt path. The rounded path goes
-    // through DrawArc which has no dash support, so flipping any cell to rounded here would
-    // silently swallow the dash pattern.
+    // Mirrors the dashed-stroke row from the Skia gallery. Issue #3972 — Apos.Shapes 0.7.5 added
+    // native dashing to both DrawRing (butt path) and DrawArc (rounded path, IsEndRounded = true),
+    // so the trailing cell pins IsEndRounded = true to cover the previously-unsupported case.
     static ContainerRuntime BuildDashedStrokeRow()
     {
         ContainerRuntime row = BuildHorizontalRow();
@@ -275,6 +271,16 @@ internal class ArcsScreen : FrameworkElement
         longDash.StrokeDashLength = 12;
         longDash.StrokeGapLength = 6;
         row.AddChild(longDash);
+
+        ArcRuntime roundedDash = new();
+        roundedDash.Width = 60; roundedDash.Height = 60;
+        roundedDash.SweepAngle = 270;
+        roundedDash.Thickness = 6;
+        roundedDash.Color = Color.Orange;
+        roundedDash.IsEndRounded = true;
+        roundedDash.StrokeDashLength = 12;
+        roundedDash.StrokeGapLength = 6;
+        row.AddChild(roundedDash);
 
         return row;
     }
