@@ -229,9 +229,12 @@ public class RectangleRuntimeTests
     }
 
     // Issue #2818: CornerRadius mirrors onto both slots each frame in PreRender so the outline
-    // traces the same rounded corners as the fill.
+    // traces the same rounded corners as the fill. Issue #4030 follow-up: the stroke slot's
+    // radius is reduced by half the stroke width so its arc stays a true parallel offset of the
+    // fill's curve (same arc center) rather than a differently-curved shape -- with the default
+    // StrokeWidth of 1, the stroke's radius is 0.5 less than the fill's.
     [Fact]
-    public void CornerRadius_PushedToBothSlots_InPreRender()
+    public void CornerRadius_PushedToFillSlot_AndInsetByHalfStrokeWidth_OnStrokeSlot()
     {
         RectangleRuntime sut = new();
         sut.CornerRadius = 8f;
@@ -241,7 +244,39 @@ public class RectangleRuntimeTests
         RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
         RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
         fillSlot.CornerRadius.ShouldBe(8f);
-        strokeSlot.CornerRadius.ShouldBe(8f);
+        strokeSlot.CornerRadius.ShouldBe(7.5f);
+    }
+
+    [Fact]
+    public void CornerRadius_ThickStroke_InsetByHalfStrokeWidth_OnStrokeSlot()
+    {
+        RectangleRuntime sut = new();
+        sut.CornerRadius = 20f;
+        sut.StrokeWidth = 8f;
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+
+        sut.PreRender();
+
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
+        fillSlot.CornerRadius.ShouldBe(20f);
+        strokeSlot.CornerRadius.ShouldBe(16f);
+    }
+
+    [Fact]
+    public void CustomRadiusTopLeft_ThickStroke_InsetByHalfStrokeWidth_OnStrokeSlot()
+    {
+        RectangleRuntime sut = new();
+        sut.CustomRadiusTopLeft = 20f;
+        sut.StrokeWidth = 8f;
+        sut.StrokeWidthUnits = DimensionUnitType.Absolute;
+
+        sut.PreRender();
+
+        RoundedRectangle fillSlot = (RoundedRectangle)sut.RenderableComponent;
+        RoundedRectangle strokeSlot = (RoundedRectangle)fillSlot.Children.Single();
+        fillSlot.CustomRadiusTopLeft.ShouldBe(20f);
+        strokeSlot.CustomRadiusTopLeft.ShouldBe(16f);
     }
 
     // Issue #2720: per-corner radii set via the string path (SetProperty) must land on the
@@ -310,8 +345,10 @@ public class RectangleRuntimeTests
     }
 
     [Fact]
-    public void PerCornerRadii_PushedToBothSlots_InPreRender()
+    public void PerCornerRadii_PushedToFillSlot_AndInsetByHalfStrokeWidth_OnStrokeSlot()
     {
+        // Default StrokeWidth is 1, so each stroke-slot radius is inset by 0.5 (issue #4030
+        // follow-up -- see CornerRadius_PushedToFillSlot_AndInsetByHalfStrokeWidth_OnStrokeSlot).
         RectangleRuntime sut = new();
         sut.CustomRadiusTopLeft = 1f;
         sut.CustomRadiusTopRight = 2f;
@@ -326,10 +363,10 @@ public class RectangleRuntimeTests
         fillSlot.CustomRadiusTopRight.ShouldBe(2f);
         fillSlot.CustomRadiusBottomLeft.ShouldBe(3f);
         fillSlot.CustomRadiusBottomRight.ShouldBe(4f);
-        strokeSlot.CustomRadiusTopLeft.ShouldBe(1f);
-        strokeSlot.CustomRadiusTopRight.ShouldBe(2f);
-        strokeSlot.CustomRadiusBottomLeft.ShouldBe(3f);
-        strokeSlot.CustomRadiusBottomRight.ShouldBe(4f);
+        strokeSlot.CustomRadiusTopLeft.ShouldBe(0.5f);
+        strokeSlot.CustomRadiusTopRight.ShouldBe(1.5f);
+        strokeSlot.CustomRadiusBottomLeft.ShouldBe(2.5f);
+        strokeSlot.CustomRadiusBottomRight.ShouldBe(3.5f);
     }
 
     // Scalar-blur collapse: the plain Rectangle exposes a single isotropic DropshadowBlur. The
