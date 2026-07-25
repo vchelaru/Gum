@@ -47,6 +47,10 @@ The **Variables tab** displays and edits properties of the selected element, ins
 | Composite member model | `WpfDataUi/DataTypes/CompositeInstanceMember.cs` |
 | Composite descriptor registry | `Gum/Plugins/InternalPlugins/VariableGrid/CompositeMemberRegistry.cs`, `CompositeMemberDescriptor.cs`, `CompositeMemberLogic.cs` |
 
+Landmine: `PropertyGridManager.cs` (under `Gum/`) and `ElementSaveDisplayer.cs`/`ShapeVariableVersionGate.cs` (under `Tools/Gum.Presentation/`) compile into **separate assemblies** (`Gum.csproj` references `Gum.Presentation.csproj`) — an `internal` pure-logic class added in `Gum.Presentation` for `PropertyGridManager` to call must be `public`; `Gum.Presentation`'s `InternalsVisibleTo` only covers its own test projects, not `Gum`.
+
+Numeric drag-scrub reports every intermediate tick as `VariablePropertyCommitType.Intermediate` and only the mouse-up as `.Full` (`SetVariableLogic.ReactToPropertyValueChanged`'s `isFullCommit` param) — an expensive per-set side effect (e.g. font regeneration) must gate on `Full`, not fire per-tick; see `GraphicalUiElement.SuppressFontRegeneration`.
+
 ---
 
 ## Non-Obvious Behaviors

@@ -58,4 +58,23 @@ public class CustomSetPropertyOnRenderableTests
 
         ((Text)renderable).Typeface.ShouldBe(typeface);
     }
+
+    // Issue #4005 — Text's new dropshadow variables. HasDropshadow/DropshadowOffsetX/Y and the
+    // color channels already had dispatch arms (they route onto SkiaGum.Renderables.Text, which
+    // has matching properties). But the scalar DropshadowBlur has no arm and no matching property
+    // on the renderable (only DropshadowBlurX/DropshadowBlurY exist there, which Text.Render reads
+    // directly) -- setting it via SetProperty silently no-op'd even after the reflection fallback.
+    // The scalar must seed both per-axis renderable properties, not TextRuntime's own separate
+    // (and unread-by-rendering) DropshadowBlur field.
+    [Fact]
+    public void SetPropertyOnRenderable_TextDropshadowBlur_ShouldForwardToRenderableBothAxes()
+    {
+        Gum.GueDeriving.TextRuntime textRuntime = new();
+        Text renderable = (Text)textRuntime.RenderableComponent;
+
+        textRuntime.SetProperty("DropshadowBlur", 7f);
+
+        renderable.DropshadowBlurX.ShouldBe(7f);
+        renderable.DropshadowBlurY.ShouldBe(7f);
+    }
 }

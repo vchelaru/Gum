@@ -142,6 +142,43 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
         result.UseSmoothing.ShouldBe(true);
         result.IsItalic.ShouldBe(false);
         result.IsBold.ShouldBe(false);
+        result.HasDropshadow.ShouldBeFalse();
+        result.DropshadowOffsetX.ShouldBe(0f);
+        result.DropshadowOffsetY.ShouldBe(0f);
+        result.DropshadowBlur.ShouldBe(0f);
+        result.DropshadowRed.ShouldBe((byte)0);
+        result.DropshadowGreen.ShouldBe((byte)0);
+        result.DropshadowBlue.ShouldBe((byte)0);
+        result.DropshadowAlpha.ShouldBe((byte)0);
+    }
+
+    [Fact]
+    public void TryGetBmfcSaveFor_ShouldReadDropshadowVariables_WhenSetInState()
+    {
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave state = AddState(screen);
+        SetVar(state, "Font", "Arial");
+        SetVar(state, "FontSize", 24);
+        SetVar(state, "HasDropshadow", true);
+        SetVar(state, "DropshadowOffsetX", 2f);
+        SetVar(state, "DropshadowOffsetY", 5f);
+        SetVar(state, "DropshadowBlur", 4f);
+        SetVar(state, "DropshadowRed", 10);
+        SetVar(state, "DropshadowGreen", 20);
+        SetVar(state, "DropshadowBlue", 30);
+        SetVar(state, "DropshadowAlpha", 200);
+
+        BmfcSave? result = _sut.TryGetBmfcSaveFor(null, state, fontRanges: "", spacingHorizontal: 1, spacingVertical: 1, forcedValues: null);
+
+        result.ShouldNotBeNull();
+        result.HasDropshadow.ShouldBeTrue();
+        result.DropshadowOffsetX.ShouldBe(2f);
+        result.DropshadowOffsetY.ShouldBe(5f);
+        result.DropshadowBlur.ShouldBe(4f);
+        result.DropshadowRed.ShouldBe((byte)10);
+        result.DropshadowGreen.ShouldBe((byte)20);
+        result.DropshadowBlue.ShouldBe((byte)30);
+        result.DropshadowAlpha.ShouldBe((byte)200);
     }
 
     [Fact]

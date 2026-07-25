@@ -1662,6 +1662,17 @@ public partial class CustomSetPropertyOnRenderable
             text.DropshadowOffsetY = (float)value;
             handled = true;
         }
+        else if (propertyName == nameof(gueAsTextRuntime.DropshadowBlur))
+        {
+            // There's no scalar DropshadowBlur property on the renderable -- only the Skia-only
+            // per-axis DropshadowBlurX/DropshadowBlurY below, which the renderable's own Render
+            // method reads directly. Seed both axes equally on the RENDERABLE (matching how
+            // Gum.GueDeriving.TextRuntime.DropshadowBlur seeds its own X/Y fields under #if SKIA),
+            // not on gueAsTextRuntime -- that type's fields are separate and unread by rendering.
+            text.DropshadowBlurX = (float)value;
+            text.DropshadowBlurY = (float)value;
+            handled = true;
+        }
         else if (propertyName == nameof(text.DropshadowBlurX))
         {
             text.DropshadowBlurX = (float)value;

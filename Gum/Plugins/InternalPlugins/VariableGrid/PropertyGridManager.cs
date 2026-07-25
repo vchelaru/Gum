@@ -865,6 +865,39 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         UpdateFileFilters(categories);
 
         AdjustFontSourceToggle(categories, stateSave, instance);
+
+        AdjustDropshadowFontGeneratorWarning(categories, element, instance);
+    }
+
+    private readonly TextDropshadowFontGeneratorWarningLogic _textDropshadowFontGeneratorWarningLogic = new();
+
+    private void AdjustDropshadowFontGeneratorWarning(List<MemberCategory> categories, ElementSave element, InstanceSave? instance)
+    {
+        var dropshadowCategory = categories.FirstOrDefault(c => c.Name == "Dropshadow");
+        if (dropshadowCategory == null)
+        {
+            return;
+        }
+
+        var hasDropshadowMember = dropshadowCategory.Members
+            .OfType<StateReferencingInstanceMember>()
+            .FirstOrDefault(m => m.RootVariableName == "HasDropshadow");
+        if (hasDropshadowMember == null)
+        {
+            return;
+        }
+
+        var rootStandardTypeName = (instance != null
+            ? _objectFinder.GetRootStandardElementSave(instance)
+            : _objectFinder.GetRootStandardElementSave(element))?.Name;
+
+        var fontGenerator = _projectState.GumProjectSave?.FontGenerator ?? DataTypes.FontGeneratorType.BmFont;
+
+        var warning = _textDropshadowFontGeneratorWarningLogic.GetWarningIfApplicable(rootStandardTypeName, fontGenerator);
+        if (warning != null)
+        {
+            hasDropshadowMember.DetailText = warning;
+        }
     }
 
     private void UpdateFileFilters(List<MemberCategory> categories)

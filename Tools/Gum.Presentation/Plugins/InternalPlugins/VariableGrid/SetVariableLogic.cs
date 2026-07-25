@@ -190,6 +190,12 @@ public class SetVariableLogic : ISetVariableLogic
     {
         GeneralResponse response = GeneralResponse.SuccessfulResponse;
         ObjectFinder.Self.EnableCache();
+        // Dragging a numeric font-affecting variable (e.g. DropshadowOffsetX) fires this method on
+        // every intermediate tick. Suppress the (otherwise unconditional) font/KernSmith regeneration
+        // that the resulting wireframe property push would trigger, so a drag doesn't flood the font
+        // cache; the final commit clears this and re-pushes the value, generating exactly once. See
+        // GraphicalUiElement.SuppressFontRegeneration.
+        GraphicalUiElement.SuppressFontRegeneration = !isFullCommit;
         try
         {
             // This code calls plugin methods and may generate code. We want to generate code
@@ -257,6 +263,7 @@ public class SetVariableLogic : ISetVariableLogic
         }
         finally
         {
+            GraphicalUiElement.SuppressFontRegeneration = false;
             ObjectFinder.Self.DisableCache();
         }
 
