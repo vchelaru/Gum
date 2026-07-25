@@ -32,16 +32,18 @@ namespace MonoGameGumInCode.Screens;
 // color would need a second alias for no real benefit given how few colors overlap across all
 // three backends' palettes.
 //
-// Two sections are genuinely backend-limited and excluded via #if rather than shown as
-// non-functional cells:
+// Every row runs on every backend except Blend (additive), which stays gated #if !SKIA -- Blend
+// isn't just visually absent on Skia, the property doesn't exist at all on the SKIA branch of
+// CircleRuntime, so calling it is a compile error there, not a no-op.
+//
+// Two other known backend gaps are left ungated on purpose, so the mismatch is visible instead of
+// hidden:
 //   - Antialiasing: raylib has no per-shape AA (framebuffer MSAA only, via
-//     SetConfigFlags(Msaa4xHint) in Program.Main). IsAntialiased exists on the raylib CircleRuntime
-//     for round-trip API parity but is a visual no-op there.
-//   - Blend (additive): XNALIKE/raylib-only on CircleRuntime. SkiaShapeRuntime has no Blend.
-// The "Rotation (outline)" row is the third divergence, but it stays in-position on every backend:
-// raylib's LineCircle stroke pass is solid-color only (no gradient-on-stroke), so a rotation-
-// symmetric circle has no rotation signal to show outlined -- BuildRotationRow substitutes a
-// "not supported" label row on raylib instead of omitting the section.
+//     SetConfigFlags(Msaa4xHint) in Program.Main), so toggling IsAntialiased there renders
+//     identically both ways -- the row still runs, it just doesn't show a difference on raylib.
+//   - Rotation (outline): raylib's LineCircle stroke pass is solid-color only (no gradient-on-
+//     stroke), so BuildRotatedGradientCircleCell(filled: false) renders a solid outline instead of
+//     the black-to-white gradient the other backends show. Left as-is rather than special-cased.
 //
 // Deliberately uses CircleRuntime directly rather than the obsolete ColoredCircleRuntime path.
 //
@@ -78,9 +80,7 @@ internal class CirclesScreen : FrameworkElement
         left.Children.Add(BuildSection("Rotation (filled)", BuildRotationRow(filled: true)));
         left.Children.Add(BuildSection("Rotation (outline)", BuildRotationRow(filled: false)));
 
-#if !RAYLIB
         right.Children.Add(BuildSection("Antialiasing", BuildAntialiasingRow()));
-#endif
         right.Children.Add(BuildSection("Dropshadow", BuildDropshadowRow()));
         right.Children.Add(BuildSection("Dashed strokes", BuildDashedStrokeRow()));
         right.Children.Add(BuildSection("Fill + stroke", BuildBothColorsRow()));
@@ -295,10 +295,10 @@ internal class CirclesScreen : FrameworkElement
         return row;
     }
 
-#if !RAYLIB
     // Issue #2798 visual acceptance: two pairs (filled disk + 1 px outline ring), once with
     // IsAntialiased = true (the default — soft edges) and once false (crisp pixels). The 1 px
-    // stroke makes the AA bloom obvious.
+    // stroke makes the AA bloom obvious. On raylib this is a no-op -- no per-shape AA there, see
+    // the file header -- so both cells in a pair render identically.
     static ContainerRuntime BuildAntialiasingRow()
     {
         ContainerRuntime row = BuildHorizontalRow();
@@ -322,7 +322,6 @@ internal class CirclesScreen : FrameworkElement
 
         return row;
     }
-#endif
 
     // Issue #2797 visual acceptance: four cells — first is the baseline (no shadow), the
     // remaining three exercise different shadow configurations. Plus a fifth (#2851) cell that
@@ -571,17 +570,11 @@ internal class CirclesScreen : FrameworkElement
     //
     // Two rows: "filled" sets FillColor opaque so the gradient lights up the fill slot; "outline"
     // sets IsFilled = false so the gradient lights up the stroke slot. raylib's LineCircle stroke
-    // pass is solid-color only (no gradient-on-stroke path), so a rotation-symmetric circle has no
-    // rotation signal to show outlined — the outline row is replaced with a "not supported" label
-    // on that backend instead of being omitted, keeping the section in the same position.
+    // pass is solid-color only (no gradient-on-stroke path), so the outline row renders a plain
+    // solid ring on that backend instead of a gradient -- left as-is rather than special-cased, so
+    // the gap is visible.
     static ContainerRuntime BuildRotationRow(bool filled)
     {
-#if RAYLIB
-        if (!filled)
-        {
-            return BuildRotationOutlineUnsupportedRow();
-        }
-#endif
         ContainerRuntime row = BuildHorizontalRow();
         foreach (float rotation in new[] { 0f, 60f, 120f, 180f })
         {
@@ -589,20 +582,6 @@ internal class CirclesScreen : FrameworkElement
         }
         return row;
     }
-
-#if RAYLIB
-    static ContainerRuntime BuildRotationOutlineUnsupportedRow()
-    {
-        ContainerRuntime row = BuildHorizontalRow();
-        TextRuntime label = new();
-        label.Text = "Not supported in raylib (LineCircle has no gradient-on-stroke path)";
-        label.Red = 220;
-        label.Green = 220;
-        label.Blue = 220;
-        row.Children.Add(label);
-        return row;
-    }
-#endif
 
     static RectangleRuntime BuildRotatedGradientCircleCell(float rotation, bool filled)
     {
