@@ -4,6 +4,10 @@
 `Has Dropshadow` is a shape property supported by Circle, Rectangle, ColoredCircle, RoundedRectangle, Arc, and Line.
 {% endhint %}
 
+{% hint style="info" %}
+Text also supports `Has Dropshadow`, but the shadow is baked into the font's texture atlas at generation time rather than drawn at runtime like the shape dropshadows above. This requires the project's `FontGenerator` setting to be `KernSmith` — bmfont.exe (the default) cannot bake shadows.
+{% endhint %}
+
 ### Introduction
 
 `Has Dropshadow` controls whether a dropshadow is drawn below a shape. By default this value is false.

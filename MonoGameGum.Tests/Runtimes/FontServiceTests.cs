@@ -682,4 +682,84 @@ public class FontServiceTests : BaseTestClass
     }
 
     #endregion
+
+    #region Drag-Scrub Suppression (issue #4005 follow-up)
+
+    [Fact]
+    public void DirectSetter_ShouldNotCallFontGeneration_WhenSuppressFontRegenerationIsTrue()
+    {
+        TextRuntime textRuntime = new();
+        var capturedCalls = StartCapturingFontCalls();
+
+        try
+        {
+            GraphicalUiElement.SuppressFontRegeneration = true;
+            textRuntime.Font = "Consolas";
+            textRuntime.FontSize = 24;
+
+            capturedCalls.Count.ShouldBe(0);
+        }
+        finally
+        {
+            GraphicalUiElement.SuppressFontRegeneration = false;
+        }
+    }
+
+    [Fact]
+    public void StringSetPath_ShouldNotCallFontGeneration_WhenSuppressFontRegenerationIsTrue()
+    {
+        // This is the path the tool's Variable Grid uses (SetProperty). A numeric drag-scrub (e.g.
+        // DropshadowOffsetX) fires this on every intermediate tick, which is what floods the font
+        // cache with one KernSmith bake per tick if not suppressed.
+        TextRuntime textRuntime = new();
+        var capturedCalls = StartCapturingFontCalls();
+
+        try
+        {
+            GraphicalUiElement.SuppressFontRegeneration = true;
+            textRuntime.SetProperty("Font", "Consolas");
+            textRuntime.SetProperty("FontSize", 24);
+
+            capturedCalls.Count.ShouldBe(0);
+        }
+        finally
+        {
+            GraphicalUiElement.SuppressFontRegeneration = false;
+        }
+    }
+
+    [Fact]
+    public void StringSetPath_ShouldGenerateOnceWithFinalValue_AfterSuppressionCleared()
+    {
+        // Mirrors a drag-scrub gesture: many intermediate ticks (suppressed, zero generations),
+        // then the mouse-up commit (suppression cleared) with the final value actually generates.
+        // Not asserting an exact count for the commit itself: the string-set path already invokes
+        // font generation twice per SetProperty call regardless of suppression (the property setter's
+        // own UpdateToFontValues() plus the explicit ReactToFontValueChange() redispatch) -- a
+        // pre-existing, unrelated inefficiency this fix doesn't change.
+        TextRuntime textRuntime = new();
+        textRuntime.Font = "Consolas";
+        var capturedCalls = StartCapturingFontCalls();
+
+        try
+        {
+            GraphicalUiElement.SuppressFontRegeneration = true;
+            textRuntime.SetProperty("FontSize", 20);
+            textRuntime.SetProperty("FontSize", 21);
+            textRuntime.SetProperty("FontSize", 22);
+
+            capturedCalls.Count.ShouldBe(0);
+        }
+        finally
+        {
+            GraphicalUiElement.SuppressFontRegeneration = false;
+        }
+
+        textRuntime.SetProperty("FontSize", 24);
+
+        capturedCalls.ShouldNotBeEmpty();
+        capturedCalls.ShouldAllBe(bmfc => bmfc.FontSize == 24);
+    }
+
+    #endregion
 }

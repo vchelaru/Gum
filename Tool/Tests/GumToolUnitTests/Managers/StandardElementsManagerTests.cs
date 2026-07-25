@@ -83,6 +83,7 @@ public class StandardElementsManagerTests : BaseTestClass
     [Theory]
     [InlineData("Circle")]
     [InlineData("Rectangle")]
+    [InlineData("Text")]
     public void DefaultState_ExposesDropshadowVariables(string standardElementName)
     {
         var state = StandardElementsManager.Self.DefaultStates[standardElementName];

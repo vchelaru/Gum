@@ -71,4 +71,28 @@ public class CustomSetPropertyOnRenderableTests : BaseTestClass
         sut.Color.B.ShouldBe((byte)40);
         sut.Color.A.ShouldBe((byte)10);
     }
+
+    // Issue #4005 — Text's new dropshadow variables (Variable Grid) route through SetProperty
+    // just like Font/FontSize/IsItalic, but TrySetPropertyOnText had no case for them, so the
+    // fallback reflection lookup silently no-op'd (the underlying Text renderable has no such
+    // property) and toggling "Has Dropshadow" in the tool never reached TextRuntime.
+    [Fact]
+    public void SetProperty_HasDropshadow_ShouldForwardToTextRuntime()
+    {
+        TextRuntime sut = new();
+
+        sut.SetProperty("HasDropshadow", true);
+
+        sut.HasDropshadow.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void SetProperty_DropshadowOffsetX_ShouldForwardToTextRuntime()
+    {
+        TextRuntime sut = new();
+
+        sut.SetProperty("DropshadowOffsetX", 7f);
+
+        sut.DropshadowOffsetX.ShouldBe(7f);
+    }
 }

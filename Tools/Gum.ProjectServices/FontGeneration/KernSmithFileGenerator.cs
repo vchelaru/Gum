@@ -99,7 +99,7 @@ public class KernSmithFileGenerator : IFontFileGenerator
         return response;
     }
 
-    private static FontGeneratorOptions BuildOptions(BmfcSave bmfcSave)
+    internal static FontGeneratorOptions BuildOptions(BmfcSave bmfcSave)
     {
         FontGeneratorOptions options = new FontGeneratorOptions();
 
@@ -115,28 +115,46 @@ public class KernSmithFileGenerator : IFontFileGenerator
         options.MaxTextureWidth = bmfcSave.OutputWidth;
         options.MaxTextureHeight = bmfcSave.OutputHeight;
 
-        // Match bmfont.exe channel layout so Gum's runtime renders correctly.
-        // No outline: alpha=glyph shape, RGB=white (One). Glyph is white text with alpha transparency.
-        // With outline: alpha=outline, RGB=glyph. Outline uses color channels.
-        if (bmfcSave.OutlineThickness == 0)
+        // Drop shadow (and outline/shadow combos) are composited to RGBA by KernSmith's effect
+        // pipeline. A custom ChannelConfig routes through ChannelCompositor, which rebuilds RGB from
+        // alpha masks only -- discarding baked shadow color and forcing white (RGB=One). Leave
+        // Channels unset so AtlasBuilder blits the RGBA glyphs (and shadow) directly.
+        if (!bmfcSave.HasDropshadow)
         {
-            options.Channels = new ChannelConfig(
-                Alpha: ChannelContent.Glyph,
-                Red: ChannelContent.One,
-                Green: ChannelContent.One,
-                Blue: ChannelContent.One);
-        }
-        else
-        {
-            options.Channels = new ChannelConfig(
-                Alpha: ChannelContent.Outline,
-                Red: ChannelContent.Glyph,
-                Green: ChannelContent.Glyph,
-                Blue: ChannelContent.Glyph);
+            // Match bmfont.exe channel layout so Gum's runtime renders correctly.
+            // No outline: alpha=glyph shape, RGB=white (One). Glyph is white text with alpha transparency.
+            // With outline: alpha=outline, RGB=glyph. Outline uses color channels.
+            if (bmfcSave.OutlineThickness == 0)
+            {
+                options.Channels = new ChannelConfig(
+                    Alpha: ChannelContent.Glyph,
+                    Red: ChannelContent.One,
+                    Green: ChannelContent.One,
+                    Blue: ChannelContent.One);
+            }
+            else
+            {
+                options.Channels = new ChannelConfig(
+                    Alpha: ChannelContent.Outline,
+                    Red: ChannelContent.Glyph,
+                    Green: ChannelContent.Glyph,
+                    Blue: ChannelContent.Glyph);
+            }
         }
 
         List<int> codepoints = BmfcSave.ParseCharRanges(bmfcSave.Ranges);
         options.Characters = CharacterSet.FromChars(codepoints);
+
+        if (bmfcSave.HasDropshadow)
+        {
+            options.ShadowOffsetX = (int)MathF.Round(bmfcSave.DropshadowOffsetX);
+            options.ShadowOffsetY = (int)MathF.Round(bmfcSave.DropshadowOffsetY);
+            options.ShadowBlur = (int)MathF.Round(bmfcSave.DropshadowBlur);
+            options.ShadowR = bmfcSave.DropshadowRed;
+            options.ShadowG = bmfcSave.DropshadowGreen;
+            options.ShadowB = bmfcSave.DropshadowBlue;
+            options.ShadowOpacity = bmfcSave.DropshadowAlpha / 255f;
+        }
 
         return options;
     }

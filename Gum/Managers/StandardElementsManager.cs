@@ -223,6 +223,8 @@ public class StandardElementsManager
 
             AddColorVariables(stateSave, includeAlpha: true);
 
+            AddDropshadowVariables(stateSave, minimumGumxVersion: V3StandardSurfaceVersion);
+
             ApplySortValuesFromOrderInState(stateSave);
 
             mDefaults.Add("Text", stateSave);

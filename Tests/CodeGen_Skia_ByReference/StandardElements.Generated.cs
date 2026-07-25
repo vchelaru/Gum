@@ -825,6 +825,27 @@ internal static class StandardElementsCodeGenRegistration
       <Variable IsFile=""true"" Type=""string"" Name=""CustomFontFile"" Category=""Font"" SetsValue=""true"">
         <Value xsi:type=""xsd:string""></Value>
       </Variable>
+      <Variable Type=""int"" Name=""DropshadowAlpha"" Category=""Dropshadow"" SetsValue=""true"">
+        <Value xsi:type=""xsd:int"">255</Value>
+      </Variable>
+      <Variable Type=""int"" Name=""DropshadowBlue"" Category=""Dropshadow"" SetsValue=""true"">
+        <Value xsi:type=""xsd:int"">0</Value>
+      </Variable>
+      <Variable Type=""float"" Name=""DropshadowBlur"" Category=""Dropshadow"" SetsValue=""true"">
+        <Value xsi:type=""xsd:float"">3</Value>
+      </Variable>
+      <Variable Type=""int"" Name=""DropshadowGreen"" Category=""Dropshadow"" SetsValue=""true"">
+        <Value xsi:type=""xsd:int"">0</Value>
+      </Variable>
+      <Variable Type=""float"" Name=""DropshadowOffsetX"" Category=""Dropshadow"" SetsValue=""true"">
+        <Value xsi:type=""xsd:float"">0</Value>
+      </Variable>
+      <Variable Type=""float"" Name=""DropshadowOffsetY"" Category=""Dropshadow"" SetsValue=""true"">
+        <Value xsi:type=""xsd:float"">3</Value>
+      </Variable>
+      <Variable Type=""int"" Name=""DropshadowRed"" Category=""Dropshadow"" SetsValue=""true"">
+        <Value xsi:type=""xsd:int"">0</Value>
+      </Variable>
       <Variable Type=""bool"" Name=""ExposeChildrenEvents"" Category=""Behavior"" SetsValue=""true"">
         <Value xsi:type=""xsd:boolean"">false</Value>
       </Variable>
@@ -839,6 +860,9 @@ internal static class StandardElementsCodeGenRegistration
       </Variable>
       <Variable Type=""int"" Name=""Green"" Category=""Rendering"" SetsValue=""true"">
         <Value xsi:type=""xsd:int"">255</Value>
+      </Variable>
+      <Variable Type=""bool"" Name=""HasDropshadow"" Category=""Dropshadow"" SetsValue=""true"">
+        <Value xsi:type=""xsd:boolean"">false</Value>
       </Variable>
       <Variable Type=""bool"" Name=""HasEvents"" Category=""Behavior"" SetsValue=""true"">
         <Value xsi:type=""xsd:boolean"">false</Value>

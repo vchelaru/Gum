@@ -58,6 +58,28 @@ public class ShapeVariableVersionGateTests
     }
 
     [Theory]
+    // Text gates its dropshadow surface the same way plain Circle/Rectangle do — no fill/gradient
+    // on Text, so only the dropshadow names apply.
+    [InlineData("HasDropshadow")]
+    [InlineData("DropshadowOffsetX")]
+    [InlineData("DropshadowOffsetY")]
+    [InlineData("DropshadowBlur")]
+    [InlineData("DropshadowAlpha")]
+    [InlineData("DropshadowRed")]
+    [InlineData("DropshadowGreen")]
+    [InlineData("DropshadowBlue")]
+    public void GetIfHidden_HidesDropshadow_OnOlderText(string variableName)
+    {
+        _gate.GetIfHiddenForProjectVersion(variableName, "Text", OlderThanV3).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void GetIfHidden_KeepsDropshadow_OnV3Text()
+    {
+        _gate.GetIfHiddenForProjectVersion("HasDropshadow", "Text", V3).ShouldBeFalse();
+    }
+
+    [Theory]
     // The gate is scoped to plain Circle / Rectangle only. On the legacy Skia shapes these
     // variables predate v3, so they must stay visible even on an older project.
     [InlineData("ColoredCircle")]

@@ -1012,6 +1012,75 @@ public partial class CustomSetPropertyOnRenderable
             }
             ReactToFontValueChange();
         }
+#if !FRB
+        // Dropshadow (issue #4005) only exists on Gum.GueDeriving.TextRuntime -- FRB's
+        // GraphicalUiElement (the #if FRB textRuntime fallback above) has no such properties, so
+        // these cases must stay out of the FRB build (see FrbGraphicalUiElementFontExtensions).
+        else if (propertyName == nameof(textRuntime.HasDropshadow))
+        {
+            if (textRuntime != null)
+            {
+                textRuntime.HasDropshadow = (bool)value;
+            }
+            ReactToFontValueChange();
+        }
+        else if (propertyName == nameof(textRuntime.DropshadowOffsetX))
+        {
+            if (textRuntime != null)
+            {
+                textRuntime.DropshadowOffsetX = (float)value;
+            }
+            ReactToFontValueChange();
+        }
+        else if (propertyName == nameof(textRuntime.DropshadowOffsetY))
+        {
+            if (textRuntime != null)
+            {
+                textRuntime.DropshadowOffsetY = (float)value;
+            }
+            ReactToFontValueChange();
+        }
+        else if (propertyName == nameof(textRuntime.DropshadowBlur))
+        {
+            if (textRuntime != null)
+            {
+                textRuntime.DropshadowBlur = (float)value;
+            }
+            ReactToFontValueChange();
+        }
+        else if (propertyName == nameof(textRuntime.DropshadowRed))
+        {
+            if (textRuntime != null)
+            {
+                textRuntime.DropshadowRed = (int)value;
+            }
+            ReactToFontValueChange();
+        }
+        else if (propertyName == nameof(textRuntime.DropshadowGreen))
+        {
+            if (textRuntime != null)
+            {
+                textRuntime.DropshadowGreen = (int)value;
+            }
+            ReactToFontValueChange();
+        }
+        else if (propertyName == nameof(textRuntime.DropshadowBlue))
+        {
+            if (textRuntime != null)
+            {
+                textRuntime.DropshadowBlue = (int)value;
+            }
+            ReactToFontValueChange();
+        }
+        else if (propertyName == nameof(textRuntime.DropshadowAlpha))
+        {
+            if (textRuntime != null)
+            {
+                textRuntime.DropshadowAlpha = (int)value;
+            }
+            ReactToFontValueChange();
+        }
+#endif
         else if (propertyName == nameof(Blend))
         {
 #if FRB
@@ -2189,6 +2258,14 @@ public partial class CustomSetPropertyOnRenderable
         if (GraphicalUiElement.IsAllLayoutSuspended)
         {
             graphicalUiElement.IsFontDirty = true;
+            return;
+        }
+
+        // Skip entirely (no IsFontDirty flag, no auto-flush) -- the tool clears this flag and
+        // re-invokes SetProperty with the final value on the full commit, which is what actually
+        // performs the (single) real generation. See GraphicalUiElement.SuppressFontRegeneration.
+        if (GraphicalUiElement.SuppressFontRegeneration)
+        {
             return;
         }
 

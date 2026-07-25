@@ -167,6 +167,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     internal static bool SuppressLayoutFromFontChange = false;
 
     /// <summary>
+    /// While true, <see cref="CustomSetPropertyOnRenderable"/>'s font-value update (bitmap font
+    /// resolution/regeneration, including KernSmith dropshadow baking) is skipped entirely on every
+    /// font-property assignment (both the direct-setter and string <c>SetProperty</c> paths). Set by
+    /// the tool's Variable Grid while a numeric drag-scrub is mid-gesture (<c>VariablePropertyCommitType
+    /// .Intermediate</c>) so a continuous drag doesn't regenerate a font file per tick; cleared before
+    /// the final committed <c>SetProperty</c> call so that one performs the real (and only) generation.
+    /// Public (not internal, unlike the sibling flags above) because the tool code that sets it lives
+    /// in the separate Gum.Presentation assembly.
+    /// </summary>
+    public static bool SuppressFontRegeneration = false;
+
+    /// <summary>
     /// The total number of layout calls that have been performed since the application has started running.
     /// This value can be used as a rough indication of the layout cost and to measure whether efforts to reduce
     /// layout calls have been effective.

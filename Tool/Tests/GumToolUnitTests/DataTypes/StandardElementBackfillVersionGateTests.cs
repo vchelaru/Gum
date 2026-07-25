@@ -143,6 +143,43 @@ public class StandardElementBackfillVersionGateTests : BaseTestClass
         circleDefault.Variables.Any(v => v.Name == "Alpha").ShouldBeTrue();
     }
 
+    // Dropshadow variables added to the Text standard element's own default state — pins the same
+    // FRB #1881 back-fill gate the Circle/Rectangle dropshadow surface uses. Text's own gutx/runtime
+    // is not FRB1-generated, but the mechanism (MinimumGumxVersion back-fill gating) is shared.
+    private static readonly string[] TextDropshadowVariables =
+    {
+        "HasDropshadow", "DropshadowOffsetX", "DropshadowOffsetY", "DropshadowBlur",
+        "DropshadowAlpha", "DropshadowRed", "DropshadowGreen", "DropshadowBlue",
+    };
+
+    [Fact]
+    public void Initialize_DoesNotInjectDropshadowVariables_IntoPreV3TextStandard()
+    {
+        var project = MakeProjectWithBareStandard("Text", PreV3, "Width", "Height", "Visible");
+
+        var textDefault = DefaultStateAfterInitialize(project, "Text");
+
+        foreach (var gatedVariable in TextDropshadowVariables)
+        {
+            textDefault.Variables.Any(v => v.Name == gatedVariable).ShouldBeFalse(
+                $"A pre-v3 project must not have the dropshadow variable '{gatedVariable}' back-filled into its Text standard.");
+        }
+    }
+
+    [Fact]
+    public void Initialize_InjectsDropshadowVariables_IntoV3TextStandard()
+    {
+        var project = MakeProjectWithBareStandard("Text", V3, "Width", "Height", "Visible");
+
+        var textDefault = DefaultStateAfterInitialize(project, "Text");
+
+        foreach (var gatedVariable in TextDropshadowVariables)
+        {
+            textDefault.Variables.Any(v => v.Name == gatedVariable).ShouldBeTrue(
+                $"A v3 project should still get the dropshadow variable '{gatedVariable}' on its Text standard.");
+        }
+    }
+
     [Fact]
     public void Initialize_DoesNotInjectRenderTargetTextureSource_IntoPreV3SpriteStandard()
     {
@@ -184,6 +221,7 @@ public class StandardElementBackfillVersionGateTests : BaseTestClass
     [InlineData("Circle", "StrokeWidth")]
     [InlineData("Circle", "HasDropshadow")]
     [InlineData("Circle", "UseGradient")]
+    [InlineData("Text", "HasDropshadow")]
     [InlineData("Rectangle", "CornerRadius")]
     [InlineData("Sprite", "RenderTargetTextureSource")]
     [InlineData("NineSlice", "IsTilingMiddleSections")]

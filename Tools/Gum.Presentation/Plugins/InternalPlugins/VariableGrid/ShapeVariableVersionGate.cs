@@ -16,11 +16,14 @@ internal class ShapeVariableVersionGate
 {
     // Only the plain Circle / Rectangle standard elements are gated. The legacy Skia shapes
     // (ColoredCircle / RoundedRectangle / Arc) carried gradient / dropshadow / fill long before
-    // v3, so they must stay visible on older projects.
+    // v3, so they must stay visible on older projects. Text's dropshadow surface (issue #4005) is
+    // new in the same v3 surface, so it is gated here too — the fill/gradient names below don't
+    // apply to Text, but V3OnlyVariableNames.Contains still only matches the dropshadow names.
     private static readonly HashSet<string> GatedStandardTypeNames = new()
     {
         "Circle",
         "Rectangle",
+        "Text",
     };
 
     // Fill / dropshadow / gradient variable names added to plain Circle / Rectangle in v3

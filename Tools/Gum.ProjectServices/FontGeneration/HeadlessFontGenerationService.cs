@@ -108,6 +108,15 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
         bool isItalic = forcedValues?.GetValue("IsItalic") as bool? ?? stateSave.GetValueRecursive(prefix + "IsItalic") as bool? ?? false;
         bool isBold = forcedValues?.GetValue("IsBold") as bool? ?? stateSave.GetValueRecursive(prefix + "IsBold") as bool? ?? false;
 
+        bool hasDropshadow = forcedValues?.GetValue("HasDropshadow") as bool? ?? stateSave.GetValueRecursive(prefix + "HasDropshadow") as bool? ?? false;
+        float dropshadowOffsetX = forcedValues?.GetValue("DropshadowOffsetX") as float? ?? stateSave.GetValueRecursive(prefix + "DropshadowOffsetX") as float? ?? 0f;
+        float dropshadowOffsetY = forcedValues?.GetValue("DropshadowOffsetY") as float? ?? stateSave.GetValueRecursive(prefix + "DropshadowOffsetY") as float? ?? 0f;
+        float dropshadowBlur = forcedValues?.GetValue("DropshadowBlur") as float? ?? stateSave.GetValueRecursive(prefix + "DropshadowBlur") as float? ?? 0f;
+        int dropshadowRed = forcedValues?.GetValue("DropshadowRed") as int? ?? stateSave.GetValueRecursive(prefix + "DropshadowRed") as int? ?? 0;
+        int dropshadowGreen = forcedValues?.GetValue("DropshadowGreen") as int? ?? stateSave.GetValueRecursive(prefix + "DropshadowGreen") as int? ?? 0;
+        int dropshadowBlue = forcedValues?.GetValue("DropshadowBlue") as int? ?? stateSave.GetValueRecursive(prefix + "DropshadowBlue") as int? ?? 0;
+        int dropshadowAlpha = forcedValues?.GetValue("DropshadowAlpha") as int? ?? stateSave.GetValueRecursive(prefix + "DropshadowAlpha") as int? ?? 0;
+
         BmfcSave? bmfcSave = null;
         if (fontValue != null && fontSize != null)
         {
@@ -120,6 +129,14 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
             bmfcSave.Ranges = fontRanges;
             bmfcSave.SpacingHorizontal = spacingHorizontal;
             bmfcSave.SpacingVertical = spacingVertical;
+            bmfcSave.HasDropshadow = hasDropshadow;
+            bmfcSave.DropshadowOffsetX = dropshadowOffsetX;
+            bmfcSave.DropshadowOffsetY = dropshadowOffsetY;
+            bmfcSave.DropshadowBlur = dropshadowBlur;
+            bmfcSave.DropshadowRed = (byte)dropshadowRed;
+            bmfcSave.DropshadowGreen = (byte)dropshadowGreen;
+            bmfcSave.DropshadowBlue = (byte)dropshadowBlue;
+            bmfcSave.DropshadowAlpha = (byte)dropshadowAlpha;
 
             if (BmfcSave.IsFontFilePath(fontValue))
             {

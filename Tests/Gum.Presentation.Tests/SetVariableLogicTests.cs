@@ -6,6 +6,7 @@ using Gum.Plugins;
 using Gum.PropertyGridHelpers;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
+using Gum.Wireframe;
 using Moq;
 using Moq.AutoMock;
 using Shouldly;
@@ -435,6 +436,64 @@ public class SetVariableLogicTests : BaseTestClass
 
         mocker.GetMock<IGuiCommands>()
             .Verify(x => x.RefreshElementTreeView(It.IsAny<ElementSave>()), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public void ReactToPropertyValueChanged_ShouldSuppressFontRegeneration_WhileCommitIsIntermediate()
+    {
+        // Issue #4005 follow-up: dragging a numeric font-affecting variable (e.g. DropshadowOffsetX)
+        // must not trigger a real font/KernSmith regeneration on every intermediate tick. The flag
+        // must be true for the duration of the plugin dispatch (which is what eventually reaches
+        // CustomSetPropertyOnRenderable via the wireframe update) and reset to false afterward.
+        ScreenSave screen = new ScreenSave { Name = "MyScreen" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(state);
+
+        bool? suppressedDuringDispatch = null;
+        mocker.GetMock<IPluginManager>()
+            .Setup(x => x.VariableSet(It.IsAny<ElementSave>(), It.IsAny<InstanceSave>(), It.IsAny<string>(), It.IsAny<object>()))
+            .Callback(() => suppressedDuringDispatch = GraphicalUiElement.SuppressFontRegeneration);
+
+        _setVariableLogic.ReactToPropertyValueChanged(
+            "DropshadowOffsetX",
+            0f,
+            screen,
+            null,
+            state,
+            refresh: false,
+            recordUndo: false,
+            trySave: false,
+            isFullCommit: false);
+
+        suppressedDuringDispatch.ShouldBe(true);
+        GraphicalUiElement.SuppressFontRegeneration.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ReactToPropertyValueChanged_ShouldNotSuppressFontRegeneration_WhenCommitIsFull()
+    {
+        ScreenSave screen = new ScreenSave { Name = "MyScreen" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(state);
+
+        bool? suppressedDuringDispatch = null;
+        mocker.GetMock<IPluginManager>()
+            .Setup(x => x.VariableSet(It.IsAny<ElementSave>(), It.IsAny<InstanceSave>(), It.IsAny<string>(), It.IsAny<object>()))
+            .Callback(() => suppressedDuringDispatch = GraphicalUiElement.SuppressFontRegeneration);
+
+        _setVariableLogic.ReactToPropertyValueChanged(
+            "DropshadowOffsetX",
+            0f,
+            screen,
+            null,
+            state,
+            refresh: true,
+            recordUndo: false,
+            trySave: false,
+            isFullCommit: true);
+
+        suppressedDuringDispatch.ShouldBe(false);
+        GraphicalUiElement.SuppressFontRegeneration.ShouldBeFalse();
     }
 
     [Fact]
