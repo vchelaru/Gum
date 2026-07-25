@@ -46,10 +46,139 @@ jobs:
           reporter: dotnet-trx
           fail-on-error: true
 
+  # Regenerates every Tests/CodeGen_* harness with GumCli, fails on drift, then
+  # compiles the regenerated projects. This used to be two steps at the tail of
+  # Build-and-Test (windows-latest), running after Build AllLibraries on the same
+  # runner — pure sequential wall-clock even though neither step needs AllLibraries'
+  # build output (each CodeGen_*.sln restores and builds its own project graph).
+  # Splitting it into its own job lets it run concurrently with Build-and-Test
+  # instead of adding to its critical path.
+  #
+  # None of the CodeGen_* projects reference FnaGum/SokolGum, so this job skips
+  # submodule init entirely. Of the workloads Build-and-Test installs for
+  # AllLibraries.sln (wasm-tools-net9/ios/android/maui), only CodeGen_Maui_FullCodegen
+  # needs one — maui — so this job installs just that, with its own cache key,
+  # rather than duplicating the full set.
+  Build-Generated-Code:
+    if: github.event_name != 'push'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Setup .NET SDKs
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Cache .NET workloads (main only)
+        id: cache-workloads
+        if: github.ref == 'refs/heads/main'
+        uses: actions/cache@v4
+        with:
+          path: |
+            C:\Program Files\dotnet\metadata
+            C:\Program Files\dotnet\packs
+            C:\Program Files\dotnet\sdk-manifests
+          key: workloads-gencode-${{ runner.os }}-${{ hashFiles('.github/workflows/build-and-test.yaml') }}
+
+      - name: Restore cached .NET workloads (PRs)
+        id: cache-workloads-restore
+        if: github.ref != 'refs/heads/main'
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            C:\Program Files\dotnet\metadata
+            C:\Program Files\dotnet\packs
+            C:\Program Files\dotnet\sdk-manifests
+          key: workloads-gencode-${{ runner.os }}-${{ hashFiles('.github/workflows/build-and-test.yaml') }}
+
+      - name: Install workloads
+        if: steps.cache-workloads.outputs.cache-hit != 'true' && steps.cache-workloads-restore.outputs.cache-hit != 'true'
+        run: dotnet workload install maui
+
+      # Regenerate every harness project with GumCli and fail if the checked-in
+      # generated code is stale. This forces codegen behavior changes to ship with
+      # their regenerated output in the same PR, which the compile step below then
+      # proves still builds. GumCli exit code 1 means individual elements were
+      # skipped by the per-element error check — expected, several harness projects
+      # contain deliberately-broken fixture elements (e.g. DemoScreenGum's deleted
+      # component reference). Exit code 2+ means the project failed to load and
+      # must fail the build.
+      - name: Codegen Drift Check
+        run: |
+          dotnet build "Tools/Gum.Cli/Gum.Cli.csproj" --configuration Release --verbosity quiet -p:WarningLevel=0
+          $cli = "Tools/Gum.Cli/bin/Release/net8.0/GumCli.exe"
+          $gumxProjects = @(
+            "Tests/CodeGen_Maui_FullCodegen/Content/GumProject/CodeGenTestProject.gumx",
+            "Tests/CodeGen_MonoGame_ByReference/Content/GumProject/CodeGenTestProject.gumx",
+            "Tests/CodeGen_MonoGameForms_ByReference/Content/GumProject/CodeGenTestProject.gumx",
+            "Tests/CodeGen_MonoGameForms_Localization_ByReference/Content/GumProject/LocalizationCodeGenTestProject.gumx",
+            "Tests/CodeGen_MonoGameForms_FullCodegen/Content/CodeGenProject.gumx",
+            "Tests/CodeGen_Raylib_ByReference/Content/GumProject/CodeGenTestProject.gumx",
+            "Tests/CodeGen_Skia_ByReference/Content/GumProject/CodeGenTestProject.gumx"
+          )
+          foreach ($gumxProject in $gumxProjects) {
+            & $cli codegen $gumxProject
+            if ($LASTEXITCODE -gt 1) { exit $LASTEXITCODE }
+          }
+          $drift = git status --porcelain -- "Tests/CodeGen_*"
+          if ($drift) {
+            Write-Host "::error::Checked-in generated code is stale. Run 'gumcli codegen' on each Tests/CodeGen_* project (or Tests/GenerateAllCodeGenProjects.bat) and commit the result."
+            Write-Host ($drift -join "`n")
+            git diff -- "Tests/CodeGen_*"
+            exit 1
+          }
+
+      - name: Build Generated Code Projects
+        run: |
+          # Note: the Maui project is built by csproj (not its .sln) with --framework
+          # rather than -p:TargetFrameworks=. A -p: override on a solution build is a
+          # global MSBuild property that leaks into every project in the graph — it
+          # forced GumCommon's own <TargetFrameworks>net8.0</TargetFrameworks> to
+          # net9.0-windows10.0.19041.0 too, breaking the SkiaGum.Maui -> SkiaGum ->
+          # GumCommon reference chain. --framework on the csproj scopes the TFM
+          # selection to just that project via the SDK's outer/inner multi-target build.
+          dotnet restore "Tests/CodeGen_Maui_FullCodegen/CodeGen_Maui_FullCodegen.sln" --verbosity quiet
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet build "Tests/CodeGen_Maui_FullCodegen/CodeGen_Maui_FullCodegen.csproj" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0 --framework net9.0-windows10.0.19041.0
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          dotnet restore "Tests/CodeGen_MonoGame_ByReference/CodeGen_MonoGame_ByReference.sln" --verbosity quiet
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet build "Tests/CodeGen_MonoGame_ByReference/CodeGen_MonoGame_ByReference.sln" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          dotnet restore "Tests/CodeGen_MonoGameForms_ByReference/CodeGenProject.sln" --verbosity quiet
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet build "Tests/CodeGen_MonoGameForms_ByReference/CodeGenProject.sln" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          dotnet restore "Tests/CodeGen_MonoGameForms_Localization_ByReference/CodeGen_MonoGameForms_Localization_ByReference.csproj" --verbosity quiet
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet build "Tests/CodeGen_MonoGameForms_Localization_ByReference/CodeGen_MonoGameForms_Localization_ByReference.csproj" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          dotnet restore "Tests/CodeGen_MonoGameForms_FullCodegen/CodeGen_MonoGameForms_FullCodegen.sln" --verbosity quiet
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet build "Tests/CodeGen_MonoGameForms_FullCodegen/CodeGen_MonoGameForms_FullCodegen.sln" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          dotnet restore "Tests/CodeGen_Raylib_ByReference/CodeGen_Raylib_ByReference.sln" --verbosity quiet
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet build "Tests/CodeGen_Raylib_ByReference/CodeGen_Raylib_ByReference.sln" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          dotnet restore "Tests/CodeGen_Skia_ByReference/CodeGen_Skia_ByReference.sln" --verbosity quiet
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet build "Tests/CodeGen_Skia_ByReference/CodeGen_Skia_ByReference.sln" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
   Build-and-Test:
     strategy:
       matrix:
-      # We used to have ubuntu-latest here, but it can't build iOS, and it's easier to just use macos 
+      # We used to have ubuntu-latest here, but it can't build iOS, and it's easier to just use macos
         os: [windows-latest, macos-15]
     runs-on: ${{ matrix.os }}
     steps:
@@ -165,85 +294,6 @@ jobs:
         run: |
           dotnet restore "AllLibraries.sln" -p:IncludeAndroid=true --verbosity quiet
           dotnet build "AllLibraries.sln" --configuration Release --no-restore --verbosity quiet -p:WarningLevel=0 -p:IncludeAndroid=true
-
-      # Regenerate every harness project with GumCli and fail if the checked-in
-      # generated code is stale. This forces codegen behavior changes to ship with
-      # their regenerated output in the same PR, which the compile step below then
-      # proves still builds. GumCli exit code 1 means individual elements were
-      # skipped by the per-element error check — expected, several harness projects
-      # contain deliberately-broken fixture elements (e.g. DemoScreenGum's deleted
-      # component reference). Exit code 2+ means the project failed to load and
-      # must fail the build.
-      - name: Codegen Drift Check (Windows Only)
-        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
-        run: |
-          dotnet build "Tools/Gum.Cli/Gum.Cli.csproj" --configuration Release --verbosity quiet -p:WarningLevel=0
-          $cli = "Tools/Gum.Cli/bin/Release/net8.0/GumCli.exe"
-          $gumxProjects = @(
-            "Tests/CodeGen_Maui_FullCodegen/Content/GumProject/CodeGenTestProject.gumx",
-            "Tests/CodeGen_MonoGame_ByReference/Content/GumProject/CodeGenTestProject.gumx",
-            "Tests/CodeGen_MonoGameForms_ByReference/Content/GumProject/CodeGenTestProject.gumx",
-            "Tests/CodeGen_MonoGameForms_Localization_ByReference/Content/GumProject/LocalizationCodeGenTestProject.gumx",
-            "Tests/CodeGen_MonoGameForms_FullCodegen/Content/CodeGenProject.gumx",
-            "Tests/CodeGen_Raylib_ByReference/Content/GumProject/CodeGenTestProject.gumx",
-            "Tests/CodeGen_Skia_ByReference/Content/GumProject/CodeGenTestProject.gumx"
-          )
-          foreach ($gumxProject in $gumxProjects) {
-            & $cli codegen $gumxProject
-            if ($LASTEXITCODE -gt 1) { exit $LASTEXITCODE }
-          }
-          $drift = git status --porcelain -- "Tests/CodeGen_*"
-          if ($drift) {
-            Write-Host "::error::Checked-in generated code is stale. Run 'gumcli codegen' on each Tests/CodeGen_* project (or Tests/GenerateAllCodeGenProjects.bat) and commit the result."
-            Write-Host ($drift -join "`n")
-            git diff -- "Tests/CodeGen_*"
-            exit 1
-          }
-
-      - name: Build Generated Code Projects (Windows Only)
-        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
-        run: |
-          # Note: the Maui project is built by csproj (not its .sln) with --framework
-          # rather than -p:TargetFrameworks=. A -p: override on a solution build is a
-          # global MSBuild property that leaks into every project in the graph — it
-          # forced GumCommon's own <TargetFrameworks>net8.0</TargetFrameworks> to
-          # net9.0-windows10.0.19041.0 too, breaking the SkiaGum.Maui -> SkiaGum ->
-          # GumCommon reference chain. --framework on the csproj scopes the TFM
-          # selection to just that project via the SDK's outer/inner multi-target build.
-          dotnet restore "Tests/CodeGen_Maui_FullCodegen/CodeGen_Maui_FullCodegen.sln" --verbosity quiet
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet build "Tests/CodeGen_Maui_FullCodegen/CodeGen_Maui_FullCodegen.csproj" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0 --framework net9.0-windows10.0.19041.0
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-          dotnet restore "Tests/CodeGen_MonoGame_ByReference/CodeGen_MonoGame_ByReference.sln" --verbosity quiet
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet build "Tests/CodeGen_MonoGame_ByReference/CodeGen_MonoGame_ByReference.sln" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-          dotnet restore "Tests/CodeGen_MonoGameForms_ByReference/CodeGenProject.sln" --verbosity quiet
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet build "Tests/CodeGen_MonoGameForms_ByReference/CodeGenProject.sln" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-          dotnet restore "Tests/CodeGen_MonoGameForms_Localization_ByReference/CodeGen_MonoGameForms_Localization_ByReference.csproj" --verbosity quiet
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet build "Tests/CodeGen_MonoGameForms_Localization_ByReference/CodeGen_MonoGameForms_Localization_ByReference.csproj" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-          dotnet restore "Tests/CodeGen_MonoGameForms_FullCodegen/CodeGen_MonoGameForms_FullCodegen.sln" --verbosity quiet
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet build "Tests/CodeGen_MonoGameForms_FullCodegen/CodeGen_MonoGameForms_FullCodegen.sln" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-          dotnet restore "Tests/CodeGen_Raylib_ByReference/CodeGen_Raylib_ByReference.sln" --verbosity quiet
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet build "Tests/CodeGen_Raylib_ByReference/CodeGen_Raylib_ByReference.sln" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-          dotnet restore "Tests/CodeGen_Skia_ByReference/CodeGen_Skia_ByReference.sln" --verbosity quiet
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet build "Tests/CodeGen_Skia_ByReference/CodeGen_Skia_ByReference.sln" --configuration Debug --no-restore --verbosity quiet -p:WarningLevel=0
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       # ---------------------------------------------------------------------
       # Test allow-list policy
