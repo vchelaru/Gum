@@ -1,3 +1,4 @@
+using Apos.Shapes;
 using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using System;
@@ -55,55 +56,30 @@ internal class Line : RenderableShapeBase
         // Match Skia's semantics: dashing only kicks in when IsFilled is false. Skia lines also
         // require IsFilled = false to render as a stroke, so users authoring dashed strokes already
         // have to set this; keeping the trigger identical avoids cross-runtime surprises.
+        //
+        // Issue #3972 — Apos.Shapes 0.7.5 added a native DashStyle parameter to DrawLine, which
+        // dashes an open stroke along its centerline with independent per-dash cap control. This
+        // replaces the manual per-segment RenderRounded/RenderButt loop below. Only the round-cap
+        // path (RenderRounded's DrawLine call) can carry it — DrawRectangle's dash (RenderButt)
+        // dashes the shape's own outline perimeter, not a straight cut along a line's length, so
+        // it can't be reused for a butt-cap dashed line the same way. DashCap picks the per-dash
+        // end shape independently of IsRounded, and DashSnap.Off preserves Gum's historical look
+        // (see Circle.RenderInternal for the rationale).
         if (!IsFilled && StrokeDashLength > 0 && StrokeGapLength > 0)
         {
-            RenderDashed(sb, absoluteLeft, absoluteTop, a, b, antiAliasSize, forcedColor);
+            var dash = new DashStyle(StrokeDashLength, StrokeGapLength,
+                cap: IsRounded ? DashCap.Round : DashCap.Butt, snap: DashSnap.Off);
+            RenderRounded(sb, absoluteLeft, absoluteTop, a, b, antiAliasSize, forcedColor, dash);
             return;
         }
 
         if (IsRounded)
         {
-            RenderRounded(sb, absoluteLeft, absoluteTop, a, b, antiAliasSize, forcedColor);
+            RenderRounded(sb, absoluteLeft, absoluteTop, a, b, antiAliasSize, forcedColor, default);
         }
         else
         {
             RenderButt(sb, absoluteLeft, absoluteTop, a, b, antiAliasSize, forcedColor);
-        }
-    }
-
-    private void RenderDashed(Apos.Shapes.ShapeBatch sb,
-        float absoluteLeft,
-        float absoluteTop,
-        Vector2 a,
-        Vector2 b,
-        float antiAliasSize,
-        Color? forcedColor)
-    {
-        var delta = b - a;
-        var length = delta.Length();
-        if (length <= 0) return;
-
-        var direction = delta / length;
-        var period = StrokeDashLength + StrokeGapLength;
-
-        // Skia's default phase is 0: the first dash starts at t=0 and the last dash is clipped wherever
-        // it lands. We mirror that here rather than the "fit to path" mode from the upstream PR; the
-        // exact pattern is more predictable for short lines (where rescaling would visibly change dash
-        // sizes) and matches what users authoring against the Skia runtime already see.
-        for (float t = 0; t < length; t += period)
-        {
-            var dashEnd = MathHelper.Min(t + StrokeDashLength, length);
-            var segA = a + direction * t;
-            var segB = a + direction * dashEnd;
-
-            if (IsRounded)
-            {
-                RenderRounded(sb, absoluteLeft, absoluteTop, segA, segB, antiAliasSize, forcedColor);
-            }
-            else
-            {
-                RenderButt(sb, absoluteLeft, absoluteTop, segA, segB, antiAliasSize, forcedColor);
-            }
         }
     }
 
@@ -113,19 +89,20 @@ internal class Line : RenderableShapeBase
         Vector2 a,
         Vector2 b,
         float antiAliasSize,
-        Color? forcedColor)
+        Color? forcedColor,
+        DashStyle dash)
     {
         var lineRadius = StrokeWidth / 2.0f;
 
         if (UseGradient && forcedColor == null)
         {
             var gradient = base.GetGradient(absoluteLeft, absoluteTop);
-            sb.DrawLine(a, b, lineRadius, gradient, gradient, aaSize: antiAliasSize);
+            sb.DrawLine(a, b, lineRadius, gradient, gradient, aaSize: antiAliasSize, dash: dash);
         }
         else
         {
             var color = forcedColor ?? this.Color;
-            sb.DrawLine(a, b, lineRadius, color, color, aaSize: antiAliasSize);
+            sb.DrawLine(a, b, lineRadius, color, color, aaSize: antiAliasSize, dash: dash);
         }
     }
 

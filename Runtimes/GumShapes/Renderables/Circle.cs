@@ -213,10 +213,15 @@ public class Circle : RenderableShapeBase,
         float cameraZoom,
         Color? forcedColor = null)
     {
+        // Issue #3972 — Apos.Shapes 0.7.5 added a native DashStyle parameter to DrawCircle, so
+        // dashing now flows through the same draw call as a solid stroke instead of a hand-rolled
+        // perimeter walk. DashSnap.Off preserves Gum's historical look (fixed period from a fixed
+        // start, last dash clipped wherever it lands) rather than upstream's new seamless-tiling
+        // default, so existing saved projects render unchanged.
+        DashStyle dash = default;
         if (!IsFilled && StrokeDashLength > 0 && StrokeGapLength > 0 && strokeWidth > 0 && radius > 0)
         {
-            RenderDashed(sb, absoluteLeft, absoluteTop, center, radius, antiAliasSize, strokeWidth, rotationRadians, forcedColor);
-            return;
+            dash = new DashStyle(StrokeDashLength, StrokeGapLength, cap: DashCap.Butt, snap: DashSnap.Off);
         }
 
         // See RoundedRectangle for more info. The offset is half a SCREEN pixel, so it is divided
@@ -283,7 +288,8 @@ public class Circle : RenderableShapeBase,
                     transparentGradient,
                     gradient,
                     strokeWidth,
-                    aaSize: antiAliasSize);
+                    aaSize: antiAliasSize,
+                    dash: dash);
             }
             else
             {
@@ -297,75 +303,8 @@ public class Circle : RenderableShapeBase,
                     transparentColor,
                     color,
                     strokeWidth,
-                    aaSize: antiAliasSize);
-            }
-        }
-    }
-
-    // Ported from the upstream Apos.Shapes dashed-line PR
-    // (https://github.com/Apostolique/Apos.Shapes/pull/31, DrawDashedCircle).
-    // Walks dash starts around the circle perimeter and emits a partial ring per dash via
-    // ShapeBatch.DrawRing, which batches into the same draw call as the surrounding shapes.
-    // Adapted to Apos.Shapes 0.6.8's DrawRing(center, a1, a2, radius, thickness, ...) signature
-    // (the upstream PR is built against the unreleased master signature with radius1/radius2);
-    // the inner-fill pass and FitToPath logic are dropped because we only invoke this branch when
-    // IsFilled is false and we want Skia-style exact dashing.
-    private void RenderDashed(ShapeBatch sb,
-        float absoluteLeft,
-        float absoluteTop,
-        Microsoft.Xna.Framework.Vector2 center,
-        float radius,
-        int antiAliasSize,
-        float strokeWidth,
-        float rotationRadians,
-        Color? forcedColor)
-    {
-        // Apos.Shapes 0.6.x DrawRing parameter naming is misleading - despite being called
-        // (radius1, radius2), the shader's RingSDF treats them as (centerline, totalThickness):
-        //   abs(length(p) - r) - th * 0.5, meaning the band spans [r - th/2, r + th/2].
-        // The shader also does `radius1 -= 1f` internally before sampling, so we pass
-        // centerline + 1 to compensate so the outer edge of the band lines up with where a
-        // solid BorderCircle's outline sits.
-        var ringRadius = radius - strokeWidth / 2f;
-        var circumference = 2f * MathHelper.Pi * radius;
-
-        // Issue #2790: when AA is on, each dash's tangential end-cap halo leaks into the
-        // neighboring gap from each side, smearing dotted patterns into near-continuous
-        // rings. Shift 1.5 * aaSize into the gap and trim 0.5 * aaSize off each dash so the
-        // gap opens up noticeably while the dashes shrink slightly to compensate. Total
-        // period grows by aaSize so the perimeter still has one or two fewer dashes overall,
-        // but each one reads as a discrete dot. Dash length floored at a small epsilon so a
-        // tight 1-px-dash pattern doesn't push 0 (Apos won't render a zero-length dash).
-        var effectiveGapLen = StrokeGapLength + 1.5f * antiAliasSize;
-        var dashLen = MathHelper.Max(0.01f, StrokeDashLength - 0.5f * antiAliasSize);
-        var period = dashLen + effectiveGapLen;
-        if (period <= 0) return;
-
-        // Build the stroke "paint" once and pass the same Gradient/Color to every dash so the
-        // gradient looks continuous across the dashed border (each dash samples the same world-
-        // space gradient rather than restarting per-segment). GetGradient already returns world
-        // coords, mirroring how upstream's DrawDashedCircle calls GradientToWorld + IsLocal=false.
-        Gradient? gradient = ShouldPaintGradient(forcedColor)
-            ? base.GetGradient(absoluteLeft, absoluteTop, rotationRadians)
-            : null;
-        var color = forcedColor ?? Color;
-
-        for (float t = 0; t < circumference; t += period)
-        {
-            var dashEnd = MathHelper.Min(t + dashLen, circumference);
-            // Arc length / radius = swept angle. Apos.Shapes DrawRing expects start < end in math
-            // (CCW) radians; user-facing CW angles only enter via Arc.StartAngle, which is none of
-            // our concern here since we're walking the perimeter from angle 0.
-            var a1 = t / radius;
-            var a2 = dashEnd / radius;
-
-            if (gradient is Gradient g)
-            {
-                sb.DrawRing(center, a1, a2, ringRadius + 1f, strokeWidth, g, g, 1, aaSize: antiAliasSize);
-            }
-            else
-            {
-                sb.DrawRing(center, a1, a2, ringRadius + 1f, strokeWidth, color, color, 1, aaSize: antiAliasSize);
+                    aaSize: antiAliasSize,
+                    dash: dash);
             }
         }
     }
