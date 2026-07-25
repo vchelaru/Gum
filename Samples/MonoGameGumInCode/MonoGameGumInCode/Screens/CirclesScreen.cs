@@ -492,6 +492,17 @@ internal class CirclesScreen : FrameworkElement
         dashedThick.StrokeGapLength = 6;
         row.Children.Add(dashedThick);
 
+        // Same-color fill + thick solid stroke — any seam/bleed between the two slots shows up
+        // as a visible ring of mismatched alpha/AA even though the hue is identical, which a
+        // contrasting-color cell like the ones above can't reveal on its own.
+        CircleRuntime blackOnBlack = new();
+        blackOnBlack.Radius = 28;
+        blackOnBlack.FillColor = new Color(0, 0, 0, 255);
+        blackOnBlack.IsFilled = true;
+        blackOnBlack.StrokeColor = new Color(0, 0, 0, 255);
+        blackOnBlack.StrokeWidth = 8;
+        row.Children.Add(blackOnBlack);
+
         return row;
     }
 
