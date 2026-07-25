@@ -1,5 +1,6 @@
 using Gum.ProjectServices.FontGeneration;
 using KernSmith;
+using KernSmith.Output;
 using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
 using Xunit;
@@ -32,5 +33,30 @@ public class KernSmithFileGeneratorSizeTests
         options.AutofitTexture.ShouldBeTrue();
         options.MaxTextureWidth.ShouldBe(8192);
         options.MaxTextureHeight.ShouldBe(8192);
+    }
+
+    [Fact]
+    public void BuildOptions_ThenGenerate_WithLargeDropshadow_ProducesSinglePage()
+    {
+        // The issue's exact repro: Font48Arial_ds31_-13_6_0_0_0_255.bmfc.
+        BmfcSave bmfcSave = new BmfcSave
+        {
+            FontName = "Arial",
+            FontSize = 48,
+            Ranges = "32-126,160-255",
+            HasDropshadow = true,
+            DropshadowOffsetX = 31f,
+            DropshadowOffsetY = -13f,
+            DropshadowBlur = 6f,
+            DropshadowAlpha = 255,
+            // The undersized heuristic guess that produced the multi-page split in the issue.
+            OutputWidth = 1024,
+            OutputHeight = 256,
+        };
+
+        FontGeneratorOptions options = KernSmithFileGenerator.BuildOptions(bmfcSave);
+        BmFontResult result = BmFont.GenerateFromSystem(bmfcSave.FontName, options);
+
+        result.Pages.Count.ShouldBe(1);
     }
 }
