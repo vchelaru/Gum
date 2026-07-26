@@ -277,15 +277,29 @@ public class LineCircle : InvisibleRenderable
     }
 
     /// <summary>
+    /// Issue #4027 follow-up — a small overlap added back onto the stroke-width inset so the
+    /// fill's outer edge reaches slightly INTO the stroke ring's footprint rather than touching
+    /// it exactly flush. raylib's <c>DrawCircle</c> (fill) tessellates the disk with its own
+    /// internal segment count, independent of <c>DrawRing</c>'s explicit segment count for the
+    /// ring's inner edge — two separate polygon approximations of the same nominal radius don't
+    /// share vertices, so an exact flush touch leaves a thin background seam at some angles
+    /// around the circumference. The ring is drawn AFTER the fill and is opaque, so the overlap
+    /// is simply painted over and never visible itself.
+    /// </summary>
+    const float SeamOverlap = 1f;
+
+    /// <summary>
     /// Radius the fill pass draws at. Issue #4027 — when the stroke ring will render, the fill
-    /// is inset by <see cref="StrokeWidth"/> so it sits entirely inside the ring's inner edge
-    /// rather than sharing the ring's outer radius. Without this, a dashed/gapped stroke lets a
-    /// full-radius fill show through the gaps. Mirrors Apos.Shapes/SkiaGum's FillRadiusInset
-    /// contract (#2834). Applies equally whether the fill is solid or a gradient — a gradient
-    /// fill needs to stay clear of the stroke ring exactly like a solid one does.
+    /// is inset by <see cref="StrokeWidth"/> (minus <see cref="SeamOverlap"/>, clamped to never
+    /// exceed <see cref="Radius"/>) so it sits just inside the ring's inner edge, overlapping the
+    /// ring's footprint rather than sharing the ring's outer radius. Without the StrokeWidth
+    /// inset, a dashed/gapped stroke lets a full-radius fill show through the gaps. Mirrors
+    /// Apos.Shapes/SkiaGum's FillRadiusInset contract (#2834). Applies equally whether the fill
+    /// is solid or a gradient — a gradient fill needs to stay clear of the stroke ring exactly
+    /// like a solid one does.
     /// </summary>
     public float EffectiveFillRadius => WillRenderStroke
-        ? System.Math.Max(0f, Radius - StrokeWidth)
+        ? System.Math.Clamp(Radius - StrokeWidth + SeamOverlap, 0f, Radius)
         : Radius;
 
     /// <summary>
