@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Silk.NET.Input;
 using GumGamepadButton = Gum.Input.GamepadButton;
@@ -22,12 +24,39 @@ internal static class GamePadDriver
     // driver's TriggerThreshold.
     const float TriggerThreshold = 0.5f;
 
+    // Works around a Silk.NET.Input.Sdl bug: SdlGamepad's DoEvent handler writes its internal
+    // _buttons/_triggers arrays as a side effect INSIDE the argument list of
+    // `ButtonDown?.Invoke(this, _buttons[i] = new Button(...))` (and the equivalent for
+    // ButtonUp/TriggerMoved). C#'s null-conditional operator short-circuits the ENTIRE call --
+    // including evaluating its arguments -- when the event has zero subscribers, so with nobody
+    // listening those arrays are never actually updated: every poll of Buttons/Triggers reads
+    // permanently stale (false/0) state, even though the controller is reporting real presses.
+    // Thumbsticks are unaffected (SdlGamepad assigns _thumbsticks unconditionally before invoking
+    // ThumbstickMoved), which is why analog-stick navigation always worked while D-pad/face
+    // buttons and analog triggers silently did nothing. Subscribing a no-op handler per gamepad
+    // instance forces Silk to keep the arrays live; a reference-equality set keyed by instance
+    // (not index) means a reconnect's new IGamepad gets re-subscribed automatically, and repeated
+    // per-frame Apply calls don't pile up duplicate handlers.
+    static readonly HashSet<IGamepad> _forceUpdatedGamepads = new(ReferenceEqualityComparer.Instance);
+
+    static void EnsureButtonAndTriggerEventsAreLive(IGamepad silkGamepad)
+    {
+        if (_forceUpdatedGamepads.Add(silkGamepad))
+        {
+            silkGamepad.ButtonDown += static (_, _) => { };
+            silkGamepad.ButtonUp += static (_, _) => { };
+            silkGamepad.TriggerMoved += static (_, _) => { };
+        }
+    }
+
     /// <summary>
     /// Pushes the current state of <paramref name="silkGamepad"/> into <paramref name="gamepad"/>
     /// via its driver-facing setters and commits the frame with <see cref="GamePad.Activity"/>.
     /// </summary>
     public static void Apply(GamePad gamepad, IGamepad silkGamepad, double time)
     {
+        EnsureButtonAndTriggerEventsAreLive(silkGamepad);
+
         gamepad.SetConnected(silkGamepad.IsConnected);
 
         gamepad.SetButtonState(GumGamepadButton.DPadUp, IsDown(silkGamepad, ButtonName.DPadUp));

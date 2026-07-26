@@ -2,6 +2,7 @@ using Gum.Input;
 using Moq;
 using Shouldly;
 using Silk.NET.Input;
+using System;
 using System.Collections.Generic;
 using GumGamepadButton = Gum.Input.GamepadButton;
 
@@ -86,5 +87,26 @@ public class GamePadDriverTests
         GamePadDriver.Apply(sut, silkGamepad.Object, time: 1);
 
         sut.IsConnected.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Apply_SubscribesButtonAndTriggerEventsExactlyOnce_AcrossRepeatedCalls()
+    {
+        // Silk.NET.Input.Sdl's SdlGamepad writes its internal _buttons/_triggers arrays as a side
+        // effect INSIDE the argument list of `ButtonDown?.Invoke(...)` / `TriggerMoved?.Invoke(...)`.
+        // C#'s null-conditional operator short-circuits the WHOLE call -- including evaluating its
+        // arguments -- when the event has zero subscribers, so with nobody listening those arrays are
+        // never actually updated and polling Buttons/Triggers reads permanently stale state. Apply
+        // must force at least one subscriber so real hardware's button/trigger reads stay live. Called
+        // every frame, so it must not pile up a new subscription each call.
+        GamePad sut = new GamePad();
+        var silkGamepad = CreateGamepad();
+
+        GamePadDriver.Apply(sut, silkGamepad.Object, time: 1);
+        GamePadDriver.Apply(sut, silkGamepad.Object, time: 2);
+
+        silkGamepad.VerifyAdd(g => g.ButtonDown += It.IsAny<Action<IGamepad, Button>>(), Times.Once());
+        silkGamepad.VerifyAdd(g => g.ButtonUp += It.IsAny<Action<IGamepad, Button>>(), Times.Once());
+        silkGamepad.VerifyAdd(g => g.TriggerMoved += It.IsAny<Action<IGamepad, Trigger>>(), Times.Once());
     }
 }
