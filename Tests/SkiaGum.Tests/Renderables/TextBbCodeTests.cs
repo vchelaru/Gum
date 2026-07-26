@@ -1,7 +1,9 @@
 using Shouldly;
 using SkiaGum;
 using SkiaSharp;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Topten.RichTextKit;
 
@@ -73,6 +75,32 @@ public class TextBbCodeTests
         List<Text.StyledTextRun> runs = text.GetStyledRuns();
 
         runs.Single(r => r.Text == "big").Style.FontSize.ShouldBe(baseFontSize * 2);
+    }
+
+    [Fact]
+    public void GetStyledRuns_FontTag_ChangesRunFontFamily()
+    {
+        Text text = MakeText();
+        text.RawText = "plain [Font=Courier New]mono[/Font] plain";
+
+        List<Text.StyledTextRun> runs = text.GetStyledRuns();
+
+        runs.Single(r => r.Text == "mono").Style.FontFamily.ShouldBe("Courier New");
+        runs.First(r => r.Text.StartsWith("plain")).Style.FontFamily.ShouldBe("Arial");
+    }
+
+    [Fact]
+    public void GetStyledRuns_FontTagWithTtfPath_ResolvesToRegisteredTypeface()
+    {
+        string ttfPath = Path.Combine(AppContext.BaseDirectory, "Assets", "Fonts", "TestFont.ttf");
+        Text text = MakeText();
+        text.RawText = $"plain [Font={ttfPath}]custom[/Font] plain";
+
+        List<Text.StyledTextRun> runs = text.GetStyledRuns();
+
+        string customFamily = runs.Single(r => r.Text == "custom").Style.FontFamily!;
+        customFamily.ShouldNotBeNullOrEmpty();
+        customFamily.ShouldNotBe("Arial");
     }
 
     [Fact]
