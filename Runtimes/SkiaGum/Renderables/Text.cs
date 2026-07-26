@@ -1046,15 +1046,18 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     // The subset of BbCodeParser.KnownTags SkiaGum honors. Most map onto a RichTextKit Style override;
     // "custom" (issue #3692) instead produces one single-character InlineVariable per letter, resolved
     // against Customizations/ContextCustomizations in BuildRunStyle and applied as a Style color override
-    // plus a post-layout glyph nudge (see GetTextBlock). Font family ("font") and outline are still
-    // intentionally excluded (see the PR's deferred scope); unrecognized tags are left as literal
-    // characters, matching the parser.
+    // plus a post-layout glyph nudge (see GetTextBlock). "font" resolves through GumFontMapper the same
+    // way the base Font property does (issue #3719). "outlinethickness" is still intentionally excluded
+    // -- the whole-image recolor+dilate technique OutlineThickness uses (see BuildRunStyle's remarks)
+    // has no per-run equivalent, and doing that properly needs its own design, not a tag-table entry.
+    // Unrecognized tags are left as literal characters, matching the parser.
     private static readonly HashSet<string> SupportedTags = new(StringComparer.OrdinalIgnoreCase)
     {
         "color",
         "red",
         "green",
         "blue",
+        "font",
         "fontsize",
         "fontscale",
         "isbold",
@@ -1358,7 +1361,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// <summary>
     /// Builds the RichTextKit <see cref="Style"/> for one run: the base font/color/weight/italic from
     /// this Text's properties, overridden by the run's inline BBCode <paramref name="variables"/>
-    /// (Color / Red / Green / Blue, FontSize, FontScale, IsBold, IsItalic). A <c>[Custom]</c> variable
+    /// (Font, Color / Red / Green / Blue, FontSize, FontScale, IsBold, IsItalic). A <c>[Custom]</c> variable
     /// (issue #3692) additionally resolves its callback against <see cref="Customizations"/> /
     /// <see cref="ContextCustomizations"/> and can override the color, substitute the run's text (via
     /// <see cref="LetterCustomization.ReplacementCharacter"/>), and produce a glyph offset the caller
@@ -1368,6 +1371,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     private (Style Style, string Text, float XOffset, float YOffset) BuildRunStyle(string runText, List<InlineVariable>? variables)
     {
         var color = this.Color;
+        string? fontFamily = EffectiveFontFamily;
         int fontSizePixels = FontSize;
         float fontScale = FontScale;
         bool italic = this.IsItalic;
@@ -1382,6 +1386,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             {
                 switch (variable.VariableName)
                 {
+                    case "Font":
+                        fontFamily = (string)variable.Value;
+                        break;
                     case "Color":
                         if (variable.Value is System.Drawing.Color drawingColor)
                         {
@@ -1460,7 +1467,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         var style = new Style()
         {
-            FontFamily = EffectiveFontFamily,
+            FontFamily = fontFamily,
             FontSize = fontSizePixels * (float)GlobalTextScale * fontScale,
             TextColor = color,
             FontItalic = italic,
@@ -1516,6 +1523,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// Converts the parsed BBCode <paramref name="tags"/> into <see cref="_inlineVariables"/> keyed by
     /// their character range in the stripped <see cref="_layoutText"/>. Each supported tag maps to a
     /// value the shared <see cref="StyledSubstringSplitter"/> and <see cref="BuildRunStyle"/> understand:
+    /// Font -> resolved family-name string (via <see cref="Content.Fonts.GumFontMapper.ResolveFontFamily"/>),
     /// Color -> System.Drawing.Color, Red/Green/Blue -> byte, FontSize -> int, FontScale -> float,
     /// IsBold/IsItalic -> bool. Tags whose argument fails to parse are skipped (rendered with base style).
     /// </summary>
@@ -1529,6 +1537,12 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
             switch (tag.Name.ToLowerInvariant())
             {
+                case "font":
+                    variableName = "Font";
+                    value = string.IsNullOrEmpty(argument)
+                        ? null
+                        : Content.Fonts.GumFontMapper.ResolveFontFamily(useCustomFont: false, customFontFile: null, font: argument);
+                    break;
                 case "color":
                     variableName = "Color";
                     value = ParseColor(argument);
