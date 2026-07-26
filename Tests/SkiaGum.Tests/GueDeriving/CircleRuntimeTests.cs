@@ -330,14 +330,18 @@ public class CircleRuntimeTests
     // is inscribed inside the runtime bounds (IsOffsetAppliedForStroke shifts the stroke
     // inward by StrokeWidth/2 so the ring spans R-sw to R). Without the inset, the stroke's
     // inner AA edge fades from opaque white to transparent atop the still-opaque fill at
-    // that radius, producing a visible pink halo on the inside of the stroke. Inset = full
-    // stroke width (Skia fits AA within the stroke thickness, so no AA-bloom adjustment).
+    // that radius, producing a visible pink halo on the inside of the stroke.
+    //
+    // Issue #4028 — inset is stroke width minus a 1px AA-seam overlap (not the full stroke
+    // width): two independently-antialiased draws touching at the exact same radius still
+    // leave a visible background seam (alpha-over composition, not summed coverage), so the
+    // fill is pushed slightly further in to guarantee full opacity at the boundary.
     //
     // Pushed via FillRadiusInset rather than mutating fill.Width because the fill is the
     // runtime's contained sizing object — mutating Width would feed back into layout and
     // accumulate frame-over-frame until the circle vanished (same trap caught on Apos).
     [Fact]
-    public void FillRadiusInset_WhenStrokeVisible_PushedStrokeWidthInPreRender()
+    public void FillRadiusInset_WhenStrokeVisible_PushedStrokeWidthMinusAaSeamOverlapInPreRender()
     {
         CircleRuntime sut = new();
         sut.Width = 56;
@@ -350,7 +354,7 @@ public class CircleRuntimeTests
         sut.PreRender();
 
         Circle fillSlot = (Circle)sut.RenderableComponent;
-        fillSlot.FillRadiusInset.ShouldBe(4f);
+        fillSlot.FillRadiusInset.ShouldBe(3f);
     }
 
     // Issue #2938 — stroke is hidden via StrokeWidth = 0 (StrokeColor is non-nullable now).
@@ -369,6 +373,69 @@ public class CircleRuntimeTests
 
         Circle fillSlot = (Circle)sut.RenderableComponent;
         fillSlot.FillRadiusInset.ShouldBe(0f);
+    }
+
+    // Issue #4028 — a thick stroke with fill and stroke the same color shows a visible ring of
+    // background color at the seam. Fill and stroke are two SEPARATE antialiased draw calls;
+    // even though their nominal radii touch exactly (FillRadiusInset = StrokeWidth), each draw's
+    // AA fringe blends against the destination independently (alpha-over composition, not summed
+    // coverage), leaving a thin gap of background visible at the boundary -- more visible as
+    // StrokeWidth grows. Renders a black-filled, black-stroked circle over a white background and
+    // samples the seam pixel directly; a correct render is solid black there.
+    [Fact]
+    public void ThickStroke_SameColorFillAndStroke_NoBackgroundSeamAtBoundary()
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(120, 120));
+        Gum.GumService.Default.Initialize(surface.Canvas, 120, 120);
+
+        RectangleRuntime background = new()
+        {
+            X = 0,
+            Y = 0,
+            Width = 120,
+            Height = 120,
+            IsFilled = true,
+            FillColor = SKColors.White,
+        };
+        Gum.GumService.Default.Root.Children.Add(background);
+
+        CircleRuntime circle = new()
+        {
+            X = 10,
+            Y = 10,
+            Width = 100,
+            Height = 100,
+            IsFilled = true,
+            FillColor = SKColors.Black,
+            StrokeColor = SKColors.Black,
+            StrokeWidth = 8,
+        };
+        Gum.GumService.Default.Root.Children.Add(circle);
+
+        Gum.GumService.Default.Draw();
+
+        using SKImage image = surface.Snapshot();
+        using SKBitmap bitmap = SKBitmap.FromImage(image);
+
+        // Circle center is at (60, 60), radius 50; the fill/stroke seam sits at radius
+        // 50 - 8 = 42 from center. Scan an annulus around that radius (well inside the
+        // circle's own outer AA edge) for the worst-case white bleed-through.
+        byte maxRed = 0;
+        for (int yy = 0; yy < 120; yy++)
+        {
+            for (int xx = 0; xx < 120; xx++)
+            {
+                double dx = xx - 60;
+                double dy = yy - 60;
+                double dist = System.Math.Sqrt(dx * dx + dy * dy);
+                if (dist >= 38 && dist <= 46)
+                {
+                    maxRed = System.Math.Max(maxRed, bitmap.GetPixel(xx, yy).Red);
+                }
+            }
+        }
+
+        maxRed.ShouldBeLessThan((byte)50);
     }
 
     // Regression guard matching the Apos-side test — repeated PreRender calls must not

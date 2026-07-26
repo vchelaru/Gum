@@ -1623,9 +1623,8 @@ public class CircleRuntime : GraphicalUiElement
     /// <summary>
     /// Pushes the issue #2834 fill radius inset after the base runs its stroke-width and
     /// W/H mirror. Inset equals the post-ScreenPixel-scaled stroke width (matching what the
-    /// base just pushed onto the stroke slot); zero when the stroke is hidden so fill-only
-    /// mode renders at full radius. Skia fits AA within the stroke thickness so no AA-bloom
-    /// adjustment is needed — the user's StrokeWidth IS the rendered thickness.
+    /// base just pushed onto the stroke slot), minus a small AA-seam overlap (issue #4028);
+    /// zero when the stroke is hidden so fill-only mode renders at full radius.
     /// </summary>
     public override void PreRender()
     {
@@ -1637,6 +1636,23 @@ public class CircleRuntime : GraphicalUiElement
             if (StrokeRenderable.Color.Alpha > 0)
             {
                 fillRadiusInset = StrokeRenderable.StrokeWidth;
+
+                // Issue #4028 — Skia's stroke AA fits within the nominal thickness (no bloom
+                // to compensate, unlike Apos), but fill and stroke are still two SEPARATE
+                // antialiased draw calls. Even though their nominal radii touch exactly, each
+                // draw blends its own AA fringe against the destination independently (alpha-
+                // over composition, not summed coverage), leaving a thin ring of background
+                // color visible at the seam — worse as StrokeWidth grows. Same root cause as
+                // the NineSlice abutting-section seam (see RenderableShapeBase.cs remarks).
+                // Overlapping the fill slightly into the stroke's opaque band guarantees full
+                // opacity at the boundary and hides the seam.
+                if (StrokeRenderable.IsAntialiased)
+                {
+                    var camera = this.EffectiveManagers?.Renderer?.Camera;
+                    float cameraZoom = camera?.Zoom ?? 1f;
+                    float aaSeamOverlap = 1f / cameraZoom;
+                    fillRadiusInset = Math.Max(0f, fillRadiusInset - aaSeamOverlap);
+                }
             }
             ContainedLineCircle.FillRadiusInset = fillRadiusInset;
         }
