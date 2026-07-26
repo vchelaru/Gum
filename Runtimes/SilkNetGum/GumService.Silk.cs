@@ -87,8 +87,19 @@ public partial class GumService
         return new Keyboard(_inputContext.Keyboards[0]);
     }
 
-    // ApplyGamePadState is intentionally NOT overridden -- gamepad support is out of scope (#3564),
-    // so the IGumService default no-op is inherited.
+    /// <inheritdoc/>
+    void IGumService.ApplyGamePadState(Gum.Input.GamePad gamepad, int index, double time)
+    {
+        if (_inputContext != null && index < _inputContext.Gamepads.Count)
+        {
+            Gum.Input.GamePadDriver.Apply(gamepad, _inputContext.Gamepads[index], time);
+        }
+        else
+        {
+            gamepad.SetConnected(false);
+            gamepad.Activity(time);
+        }
+    }
 
     // AssignClipboard is implemented below via Silk.NET.Input's IKeyboard.ClipboardText (#3651).
     // The AssignNativeTextInput / UninitializePlatform / ApplyTextureFilterPlatform /

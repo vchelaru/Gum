@@ -44,6 +44,7 @@ public class TestAssemblyInitialize : XunitTestFramework
         var inputContext = new Mock<IInputContext>();
         inputContext.SetupGet(x => x.Mice).Returns(new List<IMouse>());
         inputContext.SetupGet(x => x.Keyboards).Returns(new List<IKeyboard>());
+        inputContext.SetupGet(x => x.Gamepads).Returns(new List<IGamepad>());
 
         GumService.Default.Initialize(_surface.Canvas, inputContext.Object, 800, 600);
 
