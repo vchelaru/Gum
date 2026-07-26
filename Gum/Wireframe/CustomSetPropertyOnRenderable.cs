@@ -273,28 +273,56 @@ public partial class CustomSetPropertyOnRenderable
 
     private static bool TrySetPropertyOnContainer(InvisibleRenderable invisibleRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
+#if FRB
+        // FRB doesn't have a ContainerRuntime, so we have to do this:
+        var containerRuntime = graphicalUiElement;
+#else
+        var containerRuntime = graphicalUiElement as Gum.GueDeriving.ContainerRuntime;
+#endif
+
         switch (propertyName)
         {
             case "IsRenderTarget":
-                invisibleRenderable.IsRenderTarget = value as bool? ?? false;
-                return true;
+                {
+                    bool valueAsBool = value as bool? ?? false;
+#if FRB
+                    invisibleRenderable.IsRenderTarget = valueAsBool;
+#else
+                    if (containerRuntime != null)
+                    {
+                        containerRuntime.IsRenderTarget = valueAsBool;
+                    }
+#endif
+                    return true;
+                }
             case "SourceShaderFile":
                 AssignSourceShaderFileOnContainer(invisibleRenderable, graphicalUiElement, value as string);
                 return true;
             case "Alpha":
-                if (value is int asInt)
                 {
-                    invisibleRenderable.Alpha = asInt;
+                    int valueAsInt;
+                    if (value is int asInt)
+                    {
+                        valueAsInt = asInt;
+                    }
+                    else if (value is float asFloat)
+                    {
+                        valueAsInt = (int)asFloat;
+                    }
+                    else
+                    {
+                        valueAsInt = 255;
+                    }
+#if FRB
+                    invisibleRenderable.Alpha = valueAsInt;
+#else
+                    if (containerRuntime != null)
+                    {
+                        containerRuntime.Alpha = valueAsInt;
+                    }
+#endif
+                    return true;
                 }
-                else if (value is float asFloat)
-                {
-                    invisibleRenderable.Alpha = (int)asFloat;
-                }
-                else
-                {
-                    invisibleRenderable.Alpha = 255;
-                }
-                return true;
         }
 
         return false;
