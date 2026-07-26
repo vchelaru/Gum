@@ -180,7 +180,7 @@ public partial class CustomSetPropertyOnRenderable
         }
         else if (renderableIpso is LinePolygon)
         {
-            handled = TrySetPropertyOnLinePolygon(renderableIpso, propertyName, value);
+            handled = TrySetPropertyOnLinePolygon(renderableIpso, graphicalUiElement, propertyName, value);
         }
         else if (renderableIpso is SolidRectangle)
         {
@@ -2706,20 +2706,33 @@ public partial class CustomSetPropertyOnRenderable
 #endif
 
 #if !RAYLIB
-    private static bool TrySetPropertyOnLinePolygon(IRenderableIpso mContainedObjectAsIpso, string propertyName, object value)
+    private static bool TrySetPropertyOnLinePolygon(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
         bool handled = false;
 
+#if FRB
+        // FRB doesn't have a PolygonRuntime, so we have to do this:
+        var polygonRuntime = graphicalUiElement;
+#else
+        var polygonRuntime = graphicalUiElement as Gum.GueDeriving.PolygonRuntime;
+#endif
 
         if (propertyName == "Alpha")
         {
             int valueAsInt = (int)value;
 
+#if FRB
             var color =
                 ((LinePolygon)mContainedObjectAsIpso).Color;
             color = color.WithAlpha((byte)valueAsInt);
 
             ((LinePolygon)mContainedObjectAsIpso).Color = color;
+#else
+            if (polygonRuntime != null)
+            {
+                polygonRuntime.Alpha = valueAsInt;
+            }
+#endif
             handled = true;
         }
 
@@ -2727,11 +2740,18 @@ public partial class CustomSetPropertyOnRenderable
         {
             int valueAsInt = (int)value;
 
+#if FRB
             var color =
                 ((LinePolygon)mContainedObjectAsIpso).Color;
             color = color.WithRed((byte)valueAsInt);
 
             ((LinePolygon)mContainedObjectAsIpso).Color = color;
+#else
+            if (polygonRuntime != null)
+            {
+                polygonRuntime.Red = valueAsInt;
+            }
+#endif
             handled = true;
         }
 
@@ -2739,11 +2759,18 @@ public partial class CustomSetPropertyOnRenderable
         {
             int valueAsInt = (int)value;
 
+#if FRB
             var color =
                 ((LinePolygon)mContainedObjectAsIpso).Color;
             color = color.WithGreen((byte)valueAsInt);
 
             ((LinePolygon)mContainedObjectAsIpso).Color = color;
+#else
+            if (polygonRuntime != null)
+            {
+                polygonRuntime.Green = valueAsInt;
+            }
+#endif
             handled = true;
         }
 
@@ -2751,18 +2778,32 @@ public partial class CustomSetPropertyOnRenderable
         {
             int valueAsInt = (int)value;
 
+#if FRB
             var color =
                 ((LinePolygon)mContainedObjectAsIpso).Color;
             color = color.WithBlue((byte)valueAsInt);
 
             ((LinePolygon)mContainedObjectAsIpso).Color = color;
+#else
+            if (polygonRuntime != null)
+            {
+                polygonRuntime.Blue = valueAsInt;
+            }
+#endif
             handled = true;
         }
 
         else if (propertyName == "Color")
         {
             var valueAsColor = (Color)value;
+#if FRB
             ((LinePolygon)mContainedObjectAsIpso).Color = valueAsColor;
+#else
+            if (polygonRuntime != null)
+            {
+                polygonRuntime.Color = valueAsColor.ToUserColor();
+            }
+#endif
             handled = true;
         }
 
