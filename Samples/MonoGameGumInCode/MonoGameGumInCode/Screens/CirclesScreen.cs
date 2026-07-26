@@ -470,6 +470,19 @@ internal class CirclesScreen : FrameworkElement
         fillLast.IsFilled = true;
         row.Children.Add(fillLast);
 
+        // Same-color fill and stroke, thick and solid (not dashed) — issue #4028. Fill and
+        // stroke are two separately-antialiased draws that meet at the same nominal radius;
+        // with matching colors any seam between them shows up as a visible ring of the
+        // background color instead of blending away, which a dashed or differently-colored
+        // stroke would hide.
+        CircleRuntime blackOnBlack = new();
+        blackOnBlack.Radius = 28;
+        blackOnBlack.FillColor = new Color(0, 0, 0, 255);
+        blackOnBlack.IsFilled = true;
+        blackOnBlack.StrokeColor = new Color(0, 0, 0, 255);
+        blackOnBlack.StrokeWidth = 8;
+        row.Children.Add(blackOnBlack);
+
         // Dashed stroke over a fill, thin vs thick, so dash rendering is confirmed alongside the
         // two-slot fill+stroke composition rather than only on its own in BuildDashedStrokeRow.
         CircleRuntime dashedThin = new();
