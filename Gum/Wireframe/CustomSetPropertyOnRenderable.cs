@@ -396,6 +396,13 @@ public partial class CustomSetPropertyOnRenderable
     private static bool TrySetPropertyOnNineSlice(NineSlice nineSlice, GraphicalUiElement graphicalUiElement, string propertyName, object value, bool handled)
     {
 
+#if FRB
+        // FRB doesn't have a NineSliceRuntime, so we have to do this:
+        var nineSliceRuntime = graphicalUiElement;
+#else
+        var nineSliceRuntime = graphicalUiElement as Gum.GueDeriving.NineSliceRuntime;
+#endif
+
         if (propertyName == "SourceFile")
         {
             AssignSourceFileOnNineSlice(value as string, graphicalUiElement, nineSlice);
@@ -405,6 +412,7 @@ public partial class CustomSetPropertyOnRenderable
         {
             var valueAsGumBlend = (Gum.RenderingLibrary.Blend)value;
 
+#if FRB
 #if !RAYLIB
             var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
 
@@ -415,6 +423,12 @@ public partial class CustomSetPropertyOnRenderable
             // needed here, unlike the XNA-family branch above.
             nineSlice.Blend = valueAsGumBlend;
 #endif
+#else
+            if (nineSliceRuntime != null)
+            {
+                nineSliceRuntime.Blend = valueAsGumBlend;
+            }
+#endif
 
             handled = true;
         }
@@ -422,12 +436,20 @@ public partial class CustomSetPropertyOnRenderable
         {
             var asFloat = value as float?;
 
+#if FRB
             nineSlice.CustomFrameTextureCoordinateWidth = asFloat;
+#else
+            if (nineSliceRuntime != null)
+            {
+                nineSliceRuntime.CustomFrameTextureCoordinateWidth = asFloat;
+            }
+#endif
 
             handled = true;
         }
         else if (propertyName == "Color")
         {
+#if FRB
 #if !RAYLIB
             if (value is System.Drawing.Color drawingColor)
             {
@@ -446,20 +468,65 @@ public partial class CustomSetPropertyOnRenderable
                 handled = true;
             }
 #endif
+#else
+            if (nineSliceRuntime != null)
+            {
+                if (value is System.Drawing.Color drawingColor)
+                {
+#if RAYLIB
+                    nineSliceRuntime.Color = drawingColor.ToRaylib();
+#else
+                    // NineSliceRuntime.Color is XNA-typed on this backend (unlike the renderable's
+                    // System.Drawing-typed Color), so the incoming System.Drawing value needs the
+                    // same ToXNA conversion the runtime's own getter uses in reverse.
+                    nineSliceRuntime.Color = global::RenderingLibrary.Graphics.XNAExtensions.ToXNA(drawingColor);
+#endif
+                    handled = true;
+                }
+#if !RAYLIB
+                else if (value is Microsoft.Xna.Framework.Color xnaColor)
+                {
+                    nineSliceRuntime.Color = xnaColor;
+                    handled = true;
+                }
+#endif
+            }
+#endif
         }
         else if(propertyName == "Red")
         {
+#if FRB
             nineSlice.Red = (int)value;
+#else
+            if (nineSliceRuntime != null)
+            {
+                nineSliceRuntime.Red = (int)value;
+            }
+#endif
             handled = true;
         }
         else if (propertyName == "Green")
         {
+#if FRB
             nineSlice.Green = (int)value;
+#else
+            if (nineSliceRuntime != null)
+            {
+                nineSliceRuntime.Green = (int)value;
+            }
+#endif
             handled = true;
         }
         else if (propertyName == "Blue")
         {
+#if FRB
             nineSlice.Blue = (int)value;
+#else
+            if (nineSliceRuntime != null)
+            {
+                nineSliceRuntime.Blue = (int)value;
+            }
+#endif
             handled = true;
         }
         else if (propertyName == "Texture")
@@ -469,12 +536,26 @@ public partial class CustomSetPropertyOnRenderable
         }
         else if(propertyName == nameof(NineSlice.BorderScale))
         {
+#if FRB
             nineSlice.BorderScale = (float)value;
+#else
+            if (nineSliceRuntime != null)
+            {
+                nineSliceRuntime.BorderScale = (float)value;
+            }
+#endif
             handled = true;
         }
         else if(propertyName == nameof(NineSlice.IsTilingMiddleSections))
         {
+#if FRB
             nineSlice.IsTilingMiddleSections = (bool)value;
+#else
+            if (nineSliceRuntime != null)
+            {
+                nineSliceRuntime.IsTilingMiddleSections = (bool)value;
+            }
+#endif
             handled = true;
         }
 
