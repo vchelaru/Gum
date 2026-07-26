@@ -452,14 +452,6 @@ unsafe class Program
                 };
             }
 
-            // TEMP diagnostic (#3668): isolate whether Silk.NET.Input.Sdl is delivering button
-            // events at all, independent of Gum's GamePadDriver polling. inputContext.Gamepads is
-            // empty right here -- SDL enumerates the controller as a device-connected event that
-            // only gets processed once window.DoEvents() starts pumping in the main loop below, so
-            // the subscribe attempt is deferred there (gamepadDiagSubscribed guards it to run once).
-            // Remove before merge.
-            bool gamepadDiagSubscribed = false;
-
             // Main loop
 
             sKPaint = new SKPaint()
@@ -508,17 +500,6 @@ unsafe class Program
                 // drives the input context -- mouse/keyboard state), then clears the list. This
                 // is what makes clicks/typing actually reach the Forms controls (#3652).
                 window.DoEvents();
-
-                // TEMP diagnostic (#3668, see note above). Only run the subscribe attempt once
-                // the device has actually shown up post-DoEvents.
-                if (!gamepadDiagSubscribed && inputContext.Gamepads.Count > 0)
-                {
-                    gamepadDiagSubscribed = true;
-                    var pad = inputContext.Gamepads[0];
-                    Debug.WriteLine($"[GamepadDiag] Found gamepad: {pad.Name}, Buttons={pad.Buttons.Count}, Thumbsticks={pad.Thumbsticks.Count}, Triggers={pad.Triggers.Count}");
-                    pad.ButtonDown += (g, btn) => Debug.WriteLine($"[GamepadDiag] ButtonDown event: {btn.Name} (index {btn.Index})");
-                    pad.ButtonUp += (g, btn) => Debug.WriteLine($"[GamepadDiag] ButtonUp event: {btn.Name} (index {btn.Index})");
-                }
 
                 if (pendingResize.HasValue)
                 {
