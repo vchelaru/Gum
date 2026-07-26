@@ -32,6 +32,23 @@ using Gum.Wireframe;
 using Gum.GueDeriving;
 #endif
 
+// FRB has no compiled XRuntime types - Glue (FlatRedBall's editor) generates a per-project
+// XRuntime.Generated.cs that this shared Gum file can't reference by concrete type. These FRB-only
+// aliases point at small FRB-only interfaces (declared below, under #if FRB) that mirror the subset
+// of properties Glue's generated runtimes are known to implement with matching names/types, so the
+// FRB dispatch branches below can use the same alias-and-cast idiom the other backends already use
+// via the real compiled Gum.GueDeriving runtime classes.
+#if FRB
+using SpriteRuntimeType = Gum.Wireframe.ISpriteRuntime;
+using NineSliceRuntimeType = Gum.Wireframe.INineSliceRuntime;
+using ContainerRuntimeType = Gum.Wireframe.IContainerRuntime;
+using PolygonRuntimeType = Gum.Wireframe.IPolygonRuntime;
+#else
+using SpriteRuntimeType = Gum.GueDeriving.SpriteRuntime;
+using NineSliceRuntimeType = Gum.GueDeriving.NineSliceRuntime;
+using ContainerRuntimeType = Gum.GueDeriving.ContainerRuntime;
+using PolygonRuntimeType = Gum.GueDeriving.PolygonRuntime;
+#endif
 
 
 
@@ -53,6 +70,45 @@ using Microsoft.Xna.Framework.Graphics;
 using ResolvedFont = RenderingLibrary.Graphics.BitmapFont;
 using FontCreatorType = RenderingLibrary.Graphics.Fonts.IInMemoryFontCreator;
 namespace Gum.Wireframe;
+#endif
+
+#if FRB
+// FRB-only interfaces so this file's FRB dispatch branches can use the same alias-and-cast idiom as
+// the other backends (see SpriteRuntimeType/etc. aliases above). Nothing outside FRB compiles or
+// sees these - Glue's generated runtime classes don't implement them yet (tracked in #3731).
+public interface ISpriteRuntime
+{
+    int Alpha { get; set; }
+    int Red { get; set; }
+    int Green { get; set; }
+    int Blue { get; set; }
+    Gum.RenderingLibrary.Blend Blend { get; set; }
+}
+
+public interface INineSliceRuntime
+{
+    Gum.RenderingLibrary.Blend Blend { get; set; }
+    float? CustomFrameTextureCoordinateWidth { get; set; }
+    int Red { get; set; }
+    int Green { get; set; }
+    int Blue { get; set; }
+    float BorderScale { get; set; }
+    bool IsTilingMiddleSections { get; set; }
+}
+
+public interface IContainerRuntime
+{
+    int Alpha { get; set; }
+    bool IsRenderTarget { get; set; }
+}
+
+public interface IPolygonRuntime
+{
+    int Alpha { get; set; }
+    int Red { get; set; }
+    int Green { get; set; }
+    int Blue { get; set; }
+}
 #endif
 
 public partial class CustomSetPropertyOnRenderable
@@ -273,26 +329,17 @@ public partial class CustomSetPropertyOnRenderable
 
     private static bool TrySetPropertyOnContainer(InvisibleRenderable invisibleRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
-#if FRB
-        // FRB doesn't have a ContainerRuntime, so we have to do this:
-        var containerRuntime = graphicalUiElement;
-#else
-        var containerRuntime = graphicalUiElement as Gum.GueDeriving.ContainerRuntime;
-#endif
+        var containerRuntime = graphicalUiElement as ContainerRuntimeType;
 
         switch (propertyName)
         {
             case "IsRenderTarget":
                 {
                     bool valueAsBool = value as bool? ?? false;
-#if FRB
-                    invisibleRenderable.IsRenderTarget = valueAsBool;
-#else
                     if (containerRuntime != null)
                     {
                         containerRuntime.IsRenderTarget = valueAsBool;
                     }
-#endif
                     return true;
                 }
             case "SourceShaderFile":
@@ -313,14 +360,10 @@ public partial class CustomSetPropertyOnRenderable
                     {
                         valueAsInt = 255;
                     }
-#if FRB
-                    invisibleRenderable.Alpha = valueAsInt;
-#else
                     if (containerRuntime != null)
                     {
                         containerRuntime.Alpha = valueAsInt;
                     }
-#endif
                     return true;
                 }
         }
@@ -424,12 +467,7 @@ public partial class CustomSetPropertyOnRenderable
     private static bool TrySetPropertyOnNineSlice(NineSlice nineSlice, GraphicalUiElement graphicalUiElement, string propertyName, object value, bool handled)
     {
 
-#if FRB
-        // FRB doesn't have a NineSliceRuntime, so we have to do this:
-        var nineSliceRuntime = graphicalUiElement;
-#else
-        var nineSliceRuntime = graphicalUiElement as Gum.GueDeriving.NineSliceRuntime;
-#endif
+        var nineSliceRuntime = graphicalUiElement as NineSliceRuntimeType;
 
         if (propertyName == "SourceFile")
         {
@@ -440,23 +478,10 @@ public partial class CustomSetPropertyOnRenderable
         {
             var valueAsGumBlend = (Gum.RenderingLibrary.Blend)value;
 
-#if FRB
-#if !RAYLIB
-            var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
-
-            nineSlice.BlendState = valueAsXnaBlend;
-#else
-            // Gum.Renderables.NineSlice (Raylib) stores the Gum-level Blend enum directly (see its
-            // Blend property) rather than an XNA BlendState object, so no ToBlendState() bridge is
-            // needed here, unlike the XNA-family branch above.
-            nineSlice.Blend = valueAsGumBlend;
-#endif
-#else
             if (nineSliceRuntime != null)
             {
                 nineSliceRuntime.Blend = valueAsGumBlend;
             }
-#endif
 
             handled = true;
         }
@@ -464,14 +489,10 @@ public partial class CustomSetPropertyOnRenderable
         {
             var asFloat = value as float?;
 
-#if FRB
-            nineSlice.CustomFrameTextureCoordinateWidth = asFloat;
-#else
             if (nineSliceRuntime != null)
             {
                 nineSliceRuntime.CustomFrameTextureCoordinateWidth = asFloat;
             }
-#endif
 
             handled = true;
         }
@@ -523,38 +544,26 @@ public partial class CustomSetPropertyOnRenderable
         }
         else if(propertyName == "Red")
         {
-#if FRB
-            nineSlice.Red = (int)value;
-#else
             if (nineSliceRuntime != null)
             {
                 nineSliceRuntime.Red = (int)value;
             }
-#endif
             handled = true;
         }
         else if (propertyName == "Green")
         {
-#if FRB
-            nineSlice.Green = (int)value;
-#else
             if (nineSliceRuntime != null)
             {
                 nineSliceRuntime.Green = (int)value;
             }
-#endif
             handled = true;
         }
         else if (propertyName == "Blue")
         {
-#if FRB
-            nineSlice.Blue = (int)value;
-#else
             if (nineSliceRuntime != null)
             {
                 nineSliceRuntime.Blue = (int)value;
             }
-#endif
             handled = true;
         }
         else if (propertyName == "Texture")
@@ -564,26 +573,18 @@ public partial class CustomSetPropertyOnRenderable
         }
         else if(propertyName == nameof(NineSlice.BorderScale))
         {
-#if FRB
-            nineSlice.BorderScale = (float)value;
-#else
             if (nineSliceRuntime != null)
             {
                 nineSliceRuntime.BorderScale = (float)value;
             }
-#endif
             handled = true;
         }
         else if(propertyName == nameof(NineSlice.IsTilingMiddleSections))
         {
-#if FRB
-            nineSlice.IsTilingMiddleSections = (bool)value;
-#else
             if (nineSliceRuntime != null)
             {
                 nineSliceRuntime.IsTilingMiddleSections = (bool)value;
             }
-#endif
             handled = true;
         }
 
@@ -704,12 +705,7 @@ public partial class CustomSetPropertyOnRenderable
     {
         bool handled = false;
 
-#if FRB
-        // FRB doesn't have a SpriteRuntime, so we have to do this:
-        var spriteRuntime = graphicalUiElement;
-#else
-        var spriteRuntime = graphicalUiElement as Gum.GueDeriving.SpriteRuntime;
-#endif
+        var spriteRuntime = graphicalUiElement as SpriteRuntimeType;
 
         switch (propertyName)
         {
@@ -722,56 +718,40 @@ public partial class CustomSetPropertyOnRenderable
             case nameof(Sprite.Alpha):
                 {
                     int valueAsInt = (int)value;
-#if FRB
-                    sprite.Alpha = valueAsInt;
-#else
                     if (spriteRuntime != null)
                     {
                         spriteRuntime.Alpha = valueAsInt;
                     }
-#endif
                     handled = true;
                     break;
                 }
             case nameof(Sprite.Red):
                 {
                     int valueAsInt = (int)value;
-#if FRB
-                    sprite.Red = valueAsInt;
-#else
                     if (spriteRuntime != null)
                     {
                         spriteRuntime.Red = valueAsInt;
                     }
-#endif
                     handled = true;
                     break;
                 }
             case nameof(Sprite.Green):
                 {
                     int valueAsInt = (int)value;
-#if FRB
-                    sprite.Green = valueAsInt;
-#else
                     if (spriteRuntime != null)
                     {
                         spriteRuntime.Green = valueAsInt;
                     }
-#endif
                     handled = true;
                     break;
                 }
             case nameof(Sprite.Blue):
                 {
                     int valueAsInt = (int)value;
-#if FRB
-                    sprite.Blue = valueAsInt;
-#else
                     if (spriteRuntime != null)
                     {
                         spriteRuntime.Blue = valueAsInt;
                     }
-#endif
                     handled = true;
                     break;
                 }
@@ -814,20 +794,10 @@ public partial class CustomSetPropertyOnRenderable
             case "Blend":
                 {
                     var valueAsGumBlend = (Gum.RenderingLibrary.Blend)value;
-#if FRB
-#if RAYLIB
-                    sprite.Blend = valueAsGumBlend;
-#else
-                    var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
-
-                    sprite.BlendState = valueAsXnaBlend;
-#endif
-#else
                     if (spriteRuntime != null)
                     {
                         spriteRuntime.Blend = valueAsGumBlend;
                     }
-#endif
                     handled = true;
                     break;
                 }
@@ -2819,29 +2789,16 @@ public partial class CustomSetPropertyOnRenderable
     {
         bool handled = false;
 
-#if FRB
-        // FRB doesn't have a PolygonRuntime, so we have to do this:
-        var polygonRuntime = graphicalUiElement;
-#else
-        var polygonRuntime = graphicalUiElement as Gum.GueDeriving.PolygonRuntime;
-#endif
+        var polygonRuntime = graphicalUiElement as PolygonRuntimeType;
 
         if (propertyName == "Alpha")
         {
             int valueAsInt = (int)value;
 
-#if FRB
-            var color =
-                ((LinePolygon)mContainedObjectAsIpso).Color;
-            color = color.WithAlpha((byte)valueAsInt);
-
-            ((LinePolygon)mContainedObjectAsIpso).Color = color;
-#else
             if (polygonRuntime != null)
             {
                 polygonRuntime.Alpha = valueAsInt;
             }
-#endif
             handled = true;
         }
 
@@ -2849,18 +2806,10 @@ public partial class CustomSetPropertyOnRenderable
         {
             int valueAsInt = (int)value;
 
-#if FRB
-            var color =
-                ((LinePolygon)mContainedObjectAsIpso).Color;
-            color = color.WithRed((byte)valueAsInt);
-
-            ((LinePolygon)mContainedObjectAsIpso).Color = color;
-#else
             if (polygonRuntime != null)
             {
                 polygonRuntime.Red = valueAsInt;
             }
-#endif
             handled = true;
         }
 
@@ -2868,18 +2817,10 @@ public partial class CustomSetPropertyOnRenderable
         {
             int valueAsInt = (int)value;
 
-#if FRB
-            var color =
-                ((LinePolygon)mContainedObjectAsIpso).Color;
-            color = color.WithGreen((byte)valueAsInt);
-
-            ((LinePolygon)mContainedObjectAsIpso).Color = color;
-#else
             if (polygonRuntime != null)
             {
                 polygonRuntime.Green = valueAsInt;
             }
-#endif
             handled = true;
         }
 
@@ -2887,18 +2828,10 @@ public partial class CustomSetPropertyOnRenderable
         {
             int valueAsInt = (int)value;
 
-#if FRB
-            var color =
-                ((LinePolygon)mContainedObjectAsIpso).Color;
-            color = color.WithBlue((byte)valueAsInt);
-
-            ((LinePolygon)mContainedObjectAsIpso).Color = color;
-#else
             if (polygonRuntime != null)
             {
                 polygonRuntime.Blue = valueAsInt;
             }
-#endif
             handled = true;
         }
 
