@@ -325,8 +325,16 @@ public class LineCircleTests
     // gallery row's dashed cells). MonoGame/Skia already inset the fill by StrokeWidth
     // (FillRadiusInset) so the fill never reaches the ring's footprint at all.
 
+    // Issue #4027 follow-up — a solid (non-dashed) stroke still showed a thin background seam
+    // even though EffectiveFillRadius already inset the fill flush against the ring's inner
+    // edge. raylib's DrawCircle (fill) tessellates the disk with its own internal segment
+    // count, independent of DrawRing's explicit `segments` for the ring's inner edge -- two
+    // separate polygon approximations of the same nominal radius don't share vertices, so the
+    // "flush" touch leaves a sliver of background at some angles around the circumference.
+    // Overlapping the fill 1px further into the ring's opaque footprint (which is drawn AFTER
+    // the fill and covers the overlap) closes the gap regardless of the tessellation mismatch.
     [Fact]
-    public void EffectiveFillRadius_FillAndStrokeVisible_InsetByStrokeWidth()
+    public void EffectiveFillRadius_FillAndStrokeVisible_InsetByStrokeWidthMinusSeamOverlap()
     {
         LineCircle circle = new()
         {
@@ -337,7 +345,25 @@ public class LineCircleTests
             StrokeWidth = 8f,
         };
 
-        circle.EffectiveFillRadius.ShouldBe(24f);
+        circle.EffectiveFillRadius.ShouldBe(25f);
+    }
+
+    // The overlap must never push the fill radius past the ring's OUTER edge (Radius) -- a
+    // StrokeWidth thinner than the overlap constant would otherwise let the fill stick out
+    // past the ring entirely.
+    [Fact]
+    public void EffectiveFillRadius_StrokeThinnerThanSeamOverlap_ClampsToRadius()
+    {
+        LineCircle circle = new()
+        {
+            Width = 64,
+            Height = 64,
+            IsFilled = true,
+            StrokeColor = new Color(255, 255, 255, 255),
+            StrokeWidth = 0.5f,
+        };
+
+        circle.EffectiveFillRadius.ShouldBe(32f);
     }
 
     [Fact]
@@ -390,7 +416,7 @@ public class LineCircleTests
             StrokeWidth = 8f,
         };
 
-        circle.EffectiveFillRadius.ShouldBe(24f);
+        circle.EffectiveFillRadius.ShouldBe(25f);
     }
 
     [Fact]
