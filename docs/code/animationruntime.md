@@ -177,7 +177,7 @@ Every `GraphicalUiElement` owns an `AnimationController` (accessed via `Visual.A
 
 ### Waiting for an Animation to Finish with PlayAnimationAsync
 
-Use `PlayAnimationAsync` to await an animation's completion instead of subscribing to `OnCompleted`/`OnStopped` and manually unsubscribing:
+Use `PlayAnimationAsync` to await an animation's completion instead of subscribing to `OnCompleted`/`OnStopped` and manually unsubscribing. New to `async`/`await`? See [async Programming](async-programming.md).
 
 ```csharp
 // Update
