@@ -72,6 +72,51 @@ public class FileCommandsTests : BaseTestClass
         _localizationService.Translate("T_OK").ShouldBe("Aceptar");
     }
 
+    [Fact]
+    public void LoadLocalizationFile_ShouldTranslateCorrectly_ForEveryLanguageInAThreeLanguageCsv()
+    {
+        // Pins the header-skip fix (Languages must not include the "String ID" column) against
+        // more than the minimal 2-language case: every language index from 0 (the ID itself,
+        // untranslated) through the last real language must resolve correctly, with no
+        // off-by-one for the middle or last entries.
+        _tempDirectory = CreateTempDirectory();
+        string csvPath = Path.Combine(_tempDirectory, "Strings.csv");
+        File.WriteAllText(csvPath, "StringId,English,Spanish,French\nT_Cancel,Cancel,Cancelar,Annuler\n");
+        _gumProject.LocalizationFiles.Add("Strings.csv");
+
+        _fileCommands.LoadLocalizationFile();
+
+        _localizationService.Languages.ShouldBe(new[] { "English", "Spanish", "French" });
+
+        _localizationService.CurrentLanguage = 0;
+        _localizationService.Translate("T_Cancel").ShouldBe("T_Cancel");
+        _localizationService.CurrentLanguage = 1;
+        _localizationService.Translate("T_Cancel").ShouldBe("Cancel");
+        _localizationService.CurrentLanguage = 2;
+        _localizationService.Translate("T_Cancel").ShouldBe("Cancelar");
+        _localizationService.CurrentLanguage = 3;
+        _localizationService.Translate("T_Cancel").ShouldBe("Annuler");
+    }
+
+    [Fact]
+    public void LoadLocalizationFile_ShouldClearPreviousDatabase_WhenSwitchingToAProjectWithNoLocalizationFiles()
+    {
+        // Pins that switching between projects (or screens) doesn't leak a previously-loaded
+        // CSV's translations into a project that has none configured.
+        _tempDirectory = CreateTempDirectory();
+        string csvPath = Path.Combine(_tempDirectory, "Strings.csv");
+        File.WriteAllText(csvPath, "StringId,English\nT_OK,OK\n");
+        _gumProject.LocalizationFiles.Add("Strings.csv");
+        _fileCommands.LoadLocalizationFile();
+        _localizationService.HasDatabase.ShouldBeTrue();
+
+        _gumProject.LocalizationFiles.Clear();
+        _fileCommands.LoadLocalizationFile();
+
+        _localizationService.HasDatabase.ShouldBeFalse();
+        _localizationService.Translate("T_OK").ShouldBe("T_OK");
+    }
+
     private static string CreateTempDirectory()
     {
         string tempDir = Path.Combine(Path.GetTempPath(),
