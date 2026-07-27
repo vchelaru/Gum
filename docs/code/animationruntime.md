@@ -171,6 +171,48 @@ public class Game1 : Game
 
 <figure><img src="../.gitbook/assets/23_05 20 06.gif" alt=""><figcaption></figcaption></figure>
 
+## AnimationController
+
+Every `GraphicalUiElement` owns an `AnimationController` (accessed via `Visual.AnimationController`) which tracks playback state and raises `OnStarted`, `OnCompleted`, `OnStopped`, `OnPaused`, and `OnResumed` events. `PlayAnimation` and `StopAnimation` are convenience wrappers around this controller.
+
+### Waiting for an Animation to Finish with PlayAnimationAsync
+
+Use `PlayAnimationAsync` to await an animation's completion instead of subscribing to `OnCompleted`/`OnStopped` and manually unsubscribing:
+
+```csharp
+// Update
+try
+{
+    await buttonVisual.PlayAnimationAsync(growAnimation);
+    // Only runs if the animation actually finished.
+    DoNextThing();
+}
+catch (TaskCanceledException)
+{
+    // The animation was interrupted before it finished.
+}
+```
+
+{% hint style="warning" %}
+Calling `PlayAnimation` or `StopAnimation`/`AnimationController.Stop()` again while a `PlayAnimationAsync` call is still in flight cancels the awaited task (`TaskCanceledException`) instead of letting it complete. "Finished" and "interrupted" are different outcomes, so code after the `await` should not assume the animation actually played to the end unless the cancellation is handled, either with a `try`/`catch` as shown above or by checking `task.IsCanceled`.
+{% endhint %}
+
+An optional `System.Threading.CancellationToken` can also be passed to stop the animation and cancel the task from outside code, for example an unfocus or a scene change:
+
+```csharp
+// Class scope
+CancellationTokenSource _animationCancellation = new CancellationTokenSource();
+
+// Update
+try
+{
+    await buttonVisual.PlayAnimationAsync(growAnimation, _animationCancellation.Token);
+}
+catch (TaskCanceledException)
+{
+}
+```
+
 ## Playing Animations on Hover or Highlight
 
 Forms controls such as `Button` change their visual state (for example **Enabled**, **Highlighted**, **Pushed**, and **Disabled**) automatically as the user interacts with them. These state changes are applied instantly — they are not keyframe animations, and they do not call `PlayAnimation`.

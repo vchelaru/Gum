@@ -7,6 +7,8 @@ using Gum.GueDeriving;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
@@ -563,6 +565,87 @@ public class AnimationControllerTests : BaseTestClass
 
         controller.CurrentTime.ShouldBe(0.3);
         gue.X.ShouldBeInRange(29.99f, 30.01f);
+    }
+
+    #endregion
+
+    #region PlayAnimationAsync Tests
+
+    [Fact]
+    public async Task PlayAnimationAsync_ShouldCompleteTask_WhenAnimationCompletes()
+    {
+        AnimationController controller = new AnimationController();
+        AnimationRuntime animation = CreateTestAnimation();
+        animation.Loops = false;
+        GraphicalUiElement gue = CreateTestGraphicalUiElement();
+
+        Task task = controller.PlayAnimationAsync(animation);
+        controller.Update(1.5, gue);
+
+        await task;
+
+        task.IsCompletedSuccessfully.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task PlayAnimationAsync_ShouldCancelTask_WhenStopped()
+    {
+        AnimationController controller = new AnimationController();
+        AnimationRuntime animation = CreateTestAnimation();
+
+        Task task = controller.PlayAnimationAsync(animation);
+        controller.Stop();
+
+        await Should.ThrowAsync<TaskCanceledException>(task);
+    }
+
+    [Fact]
+    public async Task PlayAnimationAsync_ShouldCancelTask_WhenReplacedByAnotherPlayCall()
+    {
+        AnimationController controller = new AnimationController();
+        AnimationRuntime firstAnimation = CreateTestAnimation();
+        AnimationRuntime secondAnimation = CreateTestAnimation();
+
+        Task task = controller.PlayAnimationAsync(firstAnimation);
+        controller.Play(secondAnimation);
+
+        await Should.ThrowAsync<TaskCanceledException>(task);
+    }
+
+    [Fact]
+    public async Task PlayAnimationAsync_ShouldCancelTask_WhenReplacedByAnotherPlayAnimationAsyncCall()
+    {
+        AnimationController controller = new AnimationController();
+        AnimationRuntime firstAnimation = CreateTestAnimation();
+        AnimationRuntime secondAnimation = CreateTestAnimation();
+
+        Task firstTask = controller.PlayAnimationAsync(firstAnimation);
+        Task secondTask = controller.PlayAnimationAsync(secondAnimation);
+
+        await Should.ThrowAsync<TaskCanceledException>(firstTask);
+        controller.CurrentAnimation.ShouldBe(secondAnimation);
+    }
+
+    [Fact]
+    public void PlayAnimationAsync_ShouldThrow_IfAnimationIsNull()
+    {
+        AnimationController controller = new AnimationController();
+
+        Should.Throw<ArgumentNullException>(() => controller.PlayAnimationAsync(null!));
+    }
+
+    [Fact]
+    public async Task PlayAnimationAsync_ShouldCancelTask_WhenCancellationTokenIsTriggered()
+    {
+        AnimationController controller = new AnimationController();
+        AnimationRuntime animation = CreateTestAnimation();
+        CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+
+        Task task = controller.PlayAnimationAsync(animation, cancellationTokenSource.Token);
+        cancellationTokenSource.Cancel();
+
+        await Should.ThrowAsync<TaskCanceledException>(task);
+        controller.IsStopped.ShouldBeTrue();
     }
 
     #endregion

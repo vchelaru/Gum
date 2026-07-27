@@ -127,8 +127,9 @@ This applies to: "as of <date>", "starting in <date>", "before <date>", "in vers
 - Use numbered lists for procedures; bullet lists for non-sequential items.
 - **Bold** UI element names: menu items, button labels, tab names, category names shown in the tool (e.g., **Source** category, **Variables** tab).
 - Backticks for property names, variable names, property values, file names, and code: `Width Units`, `Relative To Children`, `Is Tiling Middle Sections`.
-- Avoid passive voice — prefer "Gum displays a label" over "a label is displayed."
+- Avoid passive voice, prefer "Gum displays a label" over "a label is displayed."
 - Screenshots (`.png`) for single states; animated GIFs (`.gif`) for multi-step interactions. Use them liberally.
+- **Never use an em dash (—).** Use a comma, period, or parenthetical instead. Check new/edited text for the character before finishing a doc pass.
 
 ## Code Sample Placement Comments
 
