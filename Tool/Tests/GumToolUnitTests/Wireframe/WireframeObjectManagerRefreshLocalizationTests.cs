@@ -37,6 +37,7 @@ public class WireframeObjectManagerRefreshLocalizationTests : BaseTestClass
     private readonly WireframeObjectManager _wireframeObjectManager;
     private readonly ScreenSave _screen;
     private readonly GumProjectSave _toolProject;
+    private readonly VariableSave _textVariable;
     private GraphicalUiElement? _textGue;
 
     public WireframeObjectManagerRefreshLocalizationTests()
@@ -60,6 +61,10 @@ public class WireframeObjectManagerRefreshLocalizationTests : BaseTestClass
         _screen = new ScreenSave { Name = "TextScreen" };
         StateSave defaultState = new StateSave { Name = "Default", ParentContainer = _screen };
         _screen.States.Add(defaultState);
+        // Stored the same way the real state system holds an instance's Text value - a
+        // VariableSave, read (never written) by ApplyState each time the tree is rebuilt.
+        _textVariable = new VariableSave { Name = "CancelLabel.Text", Value = "T_Cancel", Type = "string" };
+        defaultState.Variables.Add(_textVariable);
 
         GumProjectSave project = new();
         project.Screens.Add(_screen);
@@ -72,12 +77,13 @@ public class WireframeObjectManagerRefreshLocalizationTests : BaseTestClass
 
         Mock<IPluginManager> pluginManager = new();
         // Mirrors what real ToGraphicalUiElement/ApplyState does for a Text instance's default
-        // state Text variable: GraphicalUiElement.SetProperty("Text", "T_Cancel").
+        // state Text variable: reads the stored VariableSave value and pushes it through
+        // GraphicalUiElement.SetProperty("Text", ...) - it never writes back to the VariableSave.
         pluginManager.Setup(x => x.CreateGraphicalUiElement(_screen)).Returns(() =>
         {
             GraphicalUiElement root = new(new InvisibleRenderable()) { Name = "TextScreen" };
             _textGue = new GraphicalUiElement(new Text()) { Name = "CancelLabel", Parent = root };
-            _textGue.SetProperty("Text", "T_Cancel");
+            _textGue.SetProperty("Text", (string)_textVariable.Value);
             return root;
         });
 
@@ -152,5 +158,25 @@ public class WireframeObjectManagerRefreshLocalizationTests : BaseTestClass
         _textGue.ShouldNotBeNull();
         Text containedText = (Text)_textGue!.RenderableComponent;
         containedText.RawText.ShouldBe("Cancelar");
+    }
+
+    [Fact]
+    public void RefreshAll_ThroughRepeatedLanguageAndToggleChanges_ShouldNeverMutateTheStoredVariable()
+    {
+        // Regression pin for the original reported chain: an earlier (now-fixed) bug baked the
+        // translated text back into the persisted value, so turning localization off revealed an
+        // already-corrupted "Hello(loc)" instead of the real raw "Hello". This drives RefreshAll
+        // through several language switches and Show Localization toggles and asserts the
+        // VariableSave itself - the actual saved/authored value - is untouched throughout.
+        _wireframeObjectManager.RefreshAll(forceLayout: true);
+        _localizationService.CurrentLanguage = 1;
+        _wireframeObjectManager.RefreshAll(forceLayout: true);
+        _toolProject.ShowLocalizationInGum = false;
+        _wireframeObjectManager.RefreshAll(forceLayout: true);
+        _toolProject.ShowLocalizationInGum = true;
+        _localizationService.CurrentLanguage = 2;
+        _wireframeObjectManager.RefreshAll(forceLayout: true);
+
+        _textVariable.Value.ShouldBe("T_Cancel");
     }
 }
