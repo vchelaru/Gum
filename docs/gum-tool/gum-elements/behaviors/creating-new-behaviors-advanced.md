@@ -98,3 +98,7 @@ At this time Gum does not automatically add required instances to components whi
 
 <img src="../../../.gitbook/assets/21_07 08 10.gif" alt="" data-size="original">
 {% endhint %}
+
+### Behavior Properties on Custom Behaviors
+
+The standard Forms behaviors ship with **Behavior Properties** (see [Behavior Properties](README.md#behavior-properties)) that surface a Behavior category in the Variables tab and drive design-time preview. A custom behavior can declare these too, but there is currently no tool UI for it — they are added by hand-editing the behavior's `.behx` file. This is an advanced, rarely-needed scenario; the standard Forms behaviors already cover the common cases.

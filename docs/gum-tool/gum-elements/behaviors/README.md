@@ -4,6 +4,8 @@
 
 Behaviors can define requirements which are reusable across multiple components to standardize instance names and behaviors. If a component uses a behavior, then the component is forced to include categories and instances according to the behavior definition.
 
+Behaviors can also declare **Behavior Properties**, which surface as a **Behavior** category in the Variables tab and connect to properties on the runtime Forms control (such as `TextBox`'s `TextWrapping` or `Slider`'s `Minimum`/`Maximum`). This is covered in [Behavior Properties](#behavior-properties) below.
+
 Common behavior usage falls into one of two categories:
 
 1. Behaviors for built-in controls such as Button and TextBox exist to make customization for these types of controls easier.
@@ -99,3 +101,17 @@ By contrast, Gum cannot guess how to create instances for your components. For e
 
 Future versions of Gum may provide shortcuts to create required types.
 {% endhint %}
+
+## Behavior Properties
+
+Beyond categories, states, and instances, a behavior can declare **Behavior Properties** — design-time properties that appear in a **Behavior** category in the Variables tab and flow through to the matching property on the runtime Forms control. For example, `TextBoxBehavior` declares properties matching `TextBox`'s `TextWrapping`, `AcceptsReturn`, `IsReadOnly`, and `MaxLength`; `SliderBehavior` declares properties matching `Slider`'s `Minimum` and `Maximum`. Setting one of these in the Variables tab sets the corresponding property on the control when your game runs.
+
+Some Behavior Properties also drive a visual state automatically, so you get a design-time preview even though Forms controls don't run inside the tool. For example, setting `TextWrapping` in the Behavior category updates the component's visual line-mode state immediately. See [Behavior-Driven References](../general-properties/variable-references.md#behavior-driven-references) for how this works.
+
+{% hint style="info" %}
+Standard Forms components (Button, TextBox, Slider, and so on) are **copied into your project** the first time you add a Forms control, rather than referenced live from the Gum tool install. If a later Gum version adds a new Behavior Property to a standard control, that property only reaches components added to your project *after* upgrading — components already in your project keep whatever properties they had when they were added.
+{% endhint %}
+
+### Custom Behaviors
+
+You can add your own Behavior Properties and behavior-driven references to a custom behavior you create, but this is an advanced, rarely-needed scenario. See [Behavior Properties on Custom Behaviors](creating-new-behaviors-advanced.md#behavior-properties-on-custom-behaviors) for a brief overview.

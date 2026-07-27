@@ -200,6 +200,20 @@ ButtonCategoryState = Background.Visible ? "Enabled" : "Disabled"
 
 If the right side is a literal string, Gum validates it against the category's state names and comments out the line if there is no match.
 
+### Behavior-Driven References
+
+Standard Forms behaviors (Button, TextBox, Slider, and so on) can use a category-state assignment to drive a visual state from a **Behavior Property** — a property in the Variables tab's **Behavior** category that also flows through to the runtime Forms control. See [Behavior Properties](../behaviors/README.md#behavior-properties) for what these are.
+
+For example, a TextBox-derived component previews its multi-line layout at design time using a reference like:
+
+```csharp
+LineModeCategoryState = TextWrapping == "Wrap" ? "Multi" : (AcceptsReturn ? "Multi" : "Single")
+```
+
+This works the same as any other category-state assignment — the driven state is read-only, and changing `TextWrapping` or `AcceptsReturn` in the Behavior category updates the preview immediately. The only difference is where the right-hand variable comes from: a Behavior Property instead of an ordinary instance variable.
+
+These references ship pre-authored on the standard Forms behaviors, so you typically won't write one yourself unless you're customizing a Forms component's default visual or authoring a custom behavior.
+
 ### Enum Assignment
 
 Variables whose type is an enumeration — such as `ChildrenLayout`, or unit and alignment types like `XUnits` and `WidthUnits` — can be assigned using the enum value's name as a string. Gum converts the name to the matching enum value:
