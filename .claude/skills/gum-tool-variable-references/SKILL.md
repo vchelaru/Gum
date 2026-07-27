@@ -76,6 +76,10 @@ These exist only as computed properties on an already-laid-out `GraphicalUiEleme
 
 Both apply paths supply `liveRoot` when a live tree is available: the tool passes `IWireframeObjectManager.GetRepresentation(parentElement)` (null when nothing is currently rendered for that element); the runtime passes the top-level `GraphicalUiElement` already being applied against. Validation (`AddFailureForLine`) needs the same `liveRoot` as the apply call, or a valid Absolute* reference gets auto-commented out before it's ever applied.
 
+### `global::Localization.CurrentLanguage`
+
+Reserved identifier resolving the current language index — see the **gum-runtime-variable-references** skill for the resolution mechanism. Tool preview works because every property change already triggers a full wireframe rebuild (`WireframeObjectManager.RefreshAll(forceLayout: true, ...)`), which re-applies variable references; `MainEditorTabPlugin.StartUp()` wires `CustomSetPropertyOnRenderable.LocalizationService` to the DI `ILocalizationService` singleton so that re-apply sees the tool's actual current language.
+
 ### Left-Side Type Coercion
 
 Before the evaluated right side is written, it is coerced to the left variable's declared type via `EvaluatedSyntax.CastTo(desiredType)` (`desiredType` resolved from the existing state variable, else `ObjectFinder.GetRootVariable`). `CastTo` handles numeric widening/narrowing, `ToString` for string targets, **and enum targets** — a string (e.g. a ternary result `"LeftToRightStack"`) is parsed via `Enum.Parse`, an int via `Enum.ToObject`. The boxed enum is required: typed consumers like `GraphicalUiElement`'s `ChildrenLayout` setter and int-on-disk serialization reject a raw string. The enum CLR type is resolved by a cached reflection scan (`EvaluatedSyntax.ResolveEnumType`), overridable via the static `EvaluatedSyntax.TypeResolver`.

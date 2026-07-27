@@ -27,6 +27,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Bundle\WalkResult.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Collections\GraphicalUiElementCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumCommon\GueDeriving\RenderableRegistry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumCommon\Localization\LocalizationRuntimeState.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Behaviors\BehaviorInstanceSave.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Behaviors\BehaviorReference.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Behaviors\BehaviorSave.cs" />
@@ -76,6 +77,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Gum\Wireframe\ElementWithState.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\Wireframe\FallbackRenderableFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Tools\Gum.Presentation\Wireframe\TimeManager.cs" />
+    <!-- Deliberately the frozen root-level duplicate, not GumCommon\Localization\ILocalizationService.cs -
+         see the comment in that file for why. -->
     <Compile Include="$(MSBuildThisFileDirectory)ILocalizationService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MonoGameIntegration\RuntimeLogic.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Camera.cs" />

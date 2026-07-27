@@ -43,3 +43,7 @@ The decoupling mechanism is `ElementSaveExtensions.CustomEvaluateExpression` —
 After applying variable references, call `GraphicalUiElement.RefreshStyles()` or
 `GumService.Default.RefreshStyles()` to push the updated values to live visuals. For a deep
 dive into how this works end-to-end, see the **gum-variable-deep-dive** skill.
+
+### `global::Localization.CurrentLanguage`
+
+Reserved identifier (int, mirrors `ILocalizationService.CurrentLanguage`) resolved in `EvaluatedSyntax` against `Gum.Localization.LocalizationRuntimeState.Current` — a GumCommon-level static so `Gum.Expressions` can read it without depending on any platform runtime. `CustomSetPropertyOnRenderable.LocalizationService` (per-platform-compiled) forwards to it. A `CurrentLanguage`-dependent reference needs an explicit `ApplyAllVariableReferences()` + `RefreshStyles()` after a language switch, same as any other reference — `CurrentLanguageChanged` does not trigger re-evaluation on its own.

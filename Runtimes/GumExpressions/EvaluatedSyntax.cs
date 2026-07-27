@@ -1,5 +1,6 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Localization;
 using Gum.Managers;
 using Gum.Wireframe;
 using Microsoft.CodeAnalysis;
@@ -201,6 +202,10 @@ public class EvaluatedSyntax
             // we just need to evaluate the right-side
             var rightSideToEvaluate = memberAccess.ToString();
 
+            if (TryResolveLocalizationValue(rightSideToEvaluate, out var localizationValue))
+            {
+                return FromSyntaxAndValue(syntaxNode, localizationValue);
+            }
 
             RecursiveVariableFinder rfv = null;
 
@@ -363,6 +368,37 @@ public class EvaluatedSyntax
         }
 
         value = selector(target);
+        return true;
+    }
+
+    private const string LocalizationCurrentLanguagePath = "global::Localization.CurrentLanguage";
+
+    /// <summary>
+    /// Resolves the reserved <c>global::Localization.CurrentLanguage</c> identifier to the
+    /// current language index on <see cref="LocalizationRuntimeState.Current"/>.
+    /// This is project-wide runtime state, not data owned by any element, so it can't be resolved
+    /// through <see cref="RecursiveVariableFinder"/> (element-state lookup) or the normal
+    /// <c>global::</c> cross-element dispatch (which only knows Components/Screens/Standards
+    /// element paths). It uses the same <c>global::</c> qualifier as those for consistency, as a
+    /// distinct reserved category rather than a bare identifier, since it isn't scoped to the
+    /// current element the way every other unqualified reference is.
+    /// </summary>
+    private static bool TryResolveLocalizationValue(string path, out object? value)
+    {
+        value = null;
+
+        if (path != LocalizationCurrentLanguagePath)
+        {
+            return false;
+        }
+
+        var localizationService = LocalizationRuntimeState.Current;
+        if (localizationService == null)
+        {
+            return false;
+        }
+
+        value = localizationService.CurrentLanguage;
         return true;
     }
 
