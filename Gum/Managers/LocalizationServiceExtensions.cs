@@ -19,16 +19,16 @@ public static class LocalizationServiceExtensions
     /// <param name="delimiter">The delimiter character used in the CSV file.</param>
     public static void AddDatabaseFromCsv(this ILocalizationService service, string fileName, char delimiter)
     {
-        RuntimeCsvRepresentation rcr;
-
         Dictionary<string, string[]> entryDictionary = new Dictionary<string, string[]>();
 
-        CsvFileManager.CsvDeserializeDictionary<string, string[]>(
-            fileName,
+        // CsvFileManager.CsvDeserializeDictionary hardcodes ',' internally (via the parameterless
+        // CsvDeserializeToRuntime(fileName) overload), silently ignoring any other delimiter passed
+        // to this method - call the delimiter-aware overload directly instead.
+        RuntimeCsvRepresentation rcr = CsvFileManager.CsvDeserializeToRuntime(fileName, delimiter);
+        rcr.FillObjectDictionary(
             entryDictionary,
             // FRB supports multiple lines of text per single string ID. We don't support this in Gum (yet?), so just use the first:
-            DuplicateDictionaryEntryBehavior.PreserveFirst,
-            out rcr);
+            duplicateDictionaryEntryBehavior: DuplicateDictionaryEntryBehavior.PreserveFirst);
 
         // Remove comment lines (lines starting with //)
         var keys = entryDictionary.Keys.ToArray();
@@ -40,12 +40,13 @@ public static class LocalizationServiceExtensions
             }
         }
 
-        List<string> headerList = new List<string>();
-
-        foreach (CsvHeader header in rcr.Headers)
-        {
-            headerList.Add(header.Name);
-        }
+        // The first column is the string ID itself, not a language - ILocalizationService.Languages
+        // must list only translation languages so its index lines up with a per-ID array's index
+        // (array[0] is the ID, array[i+1] is Languages[i]'s translation). Skip it here to match
+        // GumCommon's AddCsvDatabase, which does the same via HeaderRecord.Skip(1). Including it was
+        // an off-by-one: e.g. selecting the last of 2 languages resolved to array index 3 on a
+        // length-3 array and threw IndexOutOfRangeException.
+        List<string> headerList = rcr.Headers.Skip(1).Select(header => header.Name).ToList();
 
         service.AddDatabase(entryDictionary, headerList);
     }

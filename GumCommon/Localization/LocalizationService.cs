@@ -106,9 +106,16 @@ public class LocalizationService : ILocalizationService
         {
             return stringID;
         }
-        else if (mStringDatabase.ContainsKey(stringID))
+        else if (mStringDatabase.TryGetValue(stringID, out string[] translations))
         {
-            return mStringDatabase[stringID][language];
+            // A malformed/short database (e.g. a ragged CSV row, or Languages/CurrentLanguage out of
+            // sync with a per-ID array's actual length) must degrade gracefully rather than crash -
+            // fall back to the string ID itself, same as "not found".
+            if (language < 0 || language >= translations.Length)
+            {
+                return stringID;
+            }
+            return translations[language];
         }
         else if (ShouldExcludeFromTranslation(stringID))
         {
