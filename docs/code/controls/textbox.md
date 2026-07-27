@@ -89,10 +89,6 @@ If `IsReadOnly` is set to true, then the user cannot modify a `TextBox`'s `Text`
 * The TextBox can receive focus
 * The Caret is optionally visible depending on whether `IsCaretVisibleWhenReadOnly` is set to true. By default `IsCaretVisibleWhenReadOnly` is false.
 
-{% hint style="info" %}
-`IsReadOnly` is also settable from the Gum tool's Variables tab, in the **Behavior** category — see [Behavior Properties](../../gum-tool/gum-elements/behaviors/README.md#behavior-properties).
-{% endhint %}
-
 The following code shows how to create a read-only TextBox:
 
 ```csharp
@@ -111,10 +107,6 @@ panel.AddChild(textBox);
 ## MaxLength
 
 The `MaxLength` property can be used to restrict the number of characters that can be entered into a `TextBox`. This limit applies to both user typing and pasting. If a user attempts to type more characters than allowed, the extra characters are ignored. If a user pastes a string that would exceed the limit, the string is truncated to fit.
-
-{% hint style="info" %}
-`MaxLength` is also settable from the Gum tool's Variables tab, in the **Behavior** category — see [Behavior Properties](../../gum-tool/gum-elements/behaviors/README.md#behavior-properties).
-{% endhint %}
 
 The following code creates a `TextBox` with a `MaxLength` of 10:
 
@@ -257,10 +249,6 @@ textBox.Placeholder = string.Empty;
 
 The `TextWrapping` property can be used to set whether the TextBox wraps text. By default this value is set to `TextWrapping.NoWrap` which means the text does not wrap, but instead extends horizontally.
 
-{% hint style="info" %}
-`TextWrapping` is also settable from the Gum tool's Variables tab, in the **Behavior** category, and drives a design-time line-mode preview — see [Behavior Properties](../../gum-tool/gum-elements/behaviors/README.md#behavior-properties) and [Behavior-Driven References](../../gum-tool/gum-elements/general-properties/variable-references.md#behavior-driven-references).
-{% endhint %}
-
 ```csharp
 // Initialize
 var textBox = new TextBox();
@@ -293,10 +281,6 @@ The behavior of the Enter key depends on the `AcceptsReturn` property and whethe
 ### Multi-Line Entry (AcceptsReturn)
 
 `AcceptsReturn` can be set to true to add newlines when the return (enter) key is pressed.
-
-{% hint style="info" %}
-`AcceptsReturn` is also settable from the Gum tool's Variables tab, in the **Behavior** category, and drives a design-time line-mode preview — see [Behavior Properties](../../gum-tool/gum-elements/behaviors/README.md#behavior-properties) and [Behavior-Driven References](../../gum-tool/gum-elements/general-properties/variable-references.md#behavior-driven-references).
-{% endhint %}
 
 ```csharp
 // Initialize
