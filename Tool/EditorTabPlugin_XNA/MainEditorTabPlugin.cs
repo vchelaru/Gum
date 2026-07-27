@@ -290,6 +290,11 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         // empty database and passes the string ID through untouched, no matter what's loaded or what
         // CurrentLanguage is set to.
         CustomSetPropertyOnRenderable.LocalizationService = _localizationService;
+        // Backs the "Show Localization" project setting: WireframeObjectManager calls this before
+        // rebuilding the wireframe so every SetProperty("Text", ...) - not just the tool's own
+        // ApplyLocalization sweep - either translates or passes the raw string ID through unchanged.
+        GraphicalUiElement.SetLocalizationEnabled = enabled =>
+            CustomSetPropertyOnRenderable.LocalizationService = enabled ? _localizationService : null;
         CustomSetPropertyOnRenderable.FontService = Locator.GetRequiredService<IFontManager>();
         // Gum core ships no shader loader, so the tool registers a resolver that compiles a
         // render-target Container's SourceShaderFile (.fx) into an Effect at runtime (ShadowDusk),

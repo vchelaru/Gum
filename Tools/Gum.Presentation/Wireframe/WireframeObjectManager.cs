@@ -166,6 +166,12 @@ public partial class WireframeObjectManager : IWireframeObjectManager
 
                 GraphicalUiElement.IsAllLayoutSuspended = true;
 
+                // The "Show Localization" project setting must gate translation everywhere it
+                // happens - not just this class's own ApplyLocalization sweep below, but every
+                // SetProperty("Text", ...) call made while building the tree (SetInitialState's
+                // ApplyState translates directly, with no knowledge of this tool-only setting).
+                GraphicalUiElement.SetLocalizationEnabled?.Invoke(_projectState.GumProjectSave?.ShowLocalizationInGum ?? true);
+
                 try
                 {
                     RootGue = _pluginManager.CreateGraphicalUiElement(elementSave);

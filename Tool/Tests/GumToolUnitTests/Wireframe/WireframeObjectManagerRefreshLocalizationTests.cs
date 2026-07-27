@@ -36,6 +36,7 @@ public class WireframeObjectManagerRefreshLocalizationTests : BaseTestClass
     private readonly LocalizationService _localizationService;
     private readonly WireframeObjectManager _wireframeObjectManager;
     private readonly ScreenSave _screen;
+    private readonly GumProjectSave _toolProject;
     private GraphicalUiElement? _textGue;
 
     public WireframeObjectManagerRefreshLocalizationTests()
@@ -52,6 +53,9 @@ public class WireframeObjectManagerRefreshLocalizationTests : BaseTestClass
         // singleton into the static hook GraphicalUiElement.SetProperty("Text", ...) uses to
         // translate - see that method's comment for why this must be the SAME instance.
         CustomSetPropertyOnRenderable.LocalizationService = _localizationService;
+        // Mirrors MainEditorTabPlugin.StartUp()'s wiring of the "Show Localization" toggle hook.
+        GraphicalUiElement.SetLocalizationEnabled = enabled =>
+            CustomSetPropertyOnRenderable.LocalizationService = enabled ? _localizationService : null;
 
         _screen = new ScreenSave { Name = "TextScreen" };
         StateSave defaultState = new StateSave { Name = "Default", ParentContainer = _screen };
@@ -77,8 +81,9 @@ public class WireframeObjectManagerRefreshLocalizationTests : BaseTestClass
             return root;
         });
 
+        _toolProject = new GumProjectSave { ShowLocalizationInGum = true };
         Mock<IProjectState> projectState = new();
-        projectState.Setup(x => x.GumProjectSave).Returns(new GumProjectSave { ShowLocalizationInGum = true });
+        projectState.Setup(x => x.GumProjectSave).Returns(_toolProject);
 
         _wireframeObjectManager = new WireframeObjectManager(
             Mock.Of<IFontManager>(),
@@ -94,6 +99,7 @@ public class WireframeObjectManagerRefreshLocalizationTests : BaseTestClass
     {
         CustomSetPropertyOnRenderable.LocalizationService = null;
         GraphicalUiElement.TryGetLocalizationKey = null;
+        GraphicalUiElement.SetLocalizationEnabled = null;
         base.Dispose();
     }
 
@@ -120,5 +126,31 @@ public class WireframeObjectManagerRefreshLocalizationTests : BaseTestClass
         _textGue.ShouldNotBeNull();
         Text containedText = (Text)_textGue!.RenderableComponent;
         containedText.RawText.ShouldBe("Cancel");
+    }
+
+    [Fact]
+    public void RefreshAll_WithShowLocalizationInGumFalse_ShouldShowTheLiteralStringId()
+    {
+        _toolProject.ShowLocalizationInGum = false;
+
+        _wireframeObjectManager.RefreshAll(forceLayout: true);
+
+        _textGue.ShouldNotBeNull();
+        Text containedText = (Text)_textGue!.RenderableComponent;
+        containedText.RawText.ShouldBe("T_Cancel");
+    }
+
+    [Fact]
+    public void RefreshAll_AfterShowLocalizationInGumIsToggledBackOn_ShouldTranslateAgain()
+    {
+        _toolProject.ShowLocalizationInGum = false;
+        _wireframeObjectManager.RefreshAll(forceLayout: true);
+
+        _toolProject.ShowLocalizationInGum = true;
+        _wireframeObjectManager.RefreshAll(forceLayout: true);
+
+        _textGue.ShouldNotBeNull();
+        Text containedText = (Text)_textGue!.RenderableComponent;
+        containedText.RawText.ShouldBe("Cancelar");
     }
 }
