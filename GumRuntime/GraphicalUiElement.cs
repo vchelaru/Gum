@@ -1657,6 +1657,26 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         AnimationController.Play(animation);
     }
 
+    /// <summary>
+    /// Convenience wrapper for <see cref="AnimationController.PlayAnimationAsync(AnimationRuntime, System.Threading.CancellationToken)"/>.
+    /// Starts playing the specified <see cref="AnimationRuntime"/> and returns a task that completes
+    /// when it finishes.
+    /// <para>
+    /// If the animation is stopped or replaced by another <see cref="PlayAnimation(AnimationRuntime)"/>/
+    /// <c>PlayAnimationAsync</c> call before it finishes, the returned task is cancelled
+    /// (<see cref="System.Threading.Tasks.TaskCanceledException"/>) rather than completing. Callers awaiting
+    /// this method must handle that case, since code after the <c>await</c> should only run once the
+    /// animation actually finished.
+    /// </para>
+    /// </summary>
+    /// <param name="animation">The AnimationRuntime object to play.</param>
+    /// <param name="cancellationToken">A token used to stop the animation and cancel the task early.</param>
+    /// <exception cref="ArgumentNullException">Thrown when animation is null.</exception>
+    public System.Threading.Tasks.Task PlayAnimationAsync(AnimationRuntime animation, System.Threading.CancellationToken cancellationToken = default)
+    {
+        return AnimationController.PlayAnimationAsync(animation, cancellationToken);
+    }
+
 
     /// <summary>
     /// Convenience wrapper for <see cref="AnimationController.Stop()"/>.
@@ -5639,6 +5659,26 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// <c>GumService.RefreshLocalization</c>.
     /// </summary>
     public static Action<GraphicalUiElement>? RefreshLocalizationOnElementAction;
+
+    /// <summary>
+    /// Optional lookup for the original (untranslated) string ID last assigned to this element's
+    /// "Text" property via the localized path, if any. Wired by the tool/runtime since GumRuntime
+    /// cannot reference <c>CustomSetPropertyOnRenderable</c> directly. Used by callers (e.g. the
+    /// Gum tool's <c>WireframeObjectManager.ApplyLocalization</c>) that need to re-translate an
+    /// element without re-translating its already-translated live text.
+    /// </summary>
+    public static Func<GraphicalUiElement, string?>? TryGetLocalizationKey;
+
+    /// <summary>
+    /// Optional hook to enable/disable translation for every subsequent <c>SetProperty("Text",
+    /// ...)</c> call (the tool's design-time "show localized text" preview toggle). Wired by the
+    /// tool since GumRuntime cannot reference <c>CustomSetPropertyOnRenderable</c> directly - the
+    /// wired implementation swaps its static <c>LocalizationService</c> between the real,
+    /// database-populated instance and null. Passing false must be indistinguishable from no
+    /// localization database ever having been loaded (raw string IDs display unchanged); passing
+    /// true restores translation.
+    /// </summary>
+    public static Action<bool>? SetLocalizationEnabled;
 
     /// <summary>
     /// Re-applies the most recently assigned localization key on this element

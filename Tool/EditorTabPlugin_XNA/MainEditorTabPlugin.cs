@@ -281,6 +281,20 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         GraphicalUiElement.ThrowExceptionsForMissingFiles = CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles;
         GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
         GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;
+        GraphicalUiElement.TryGetLocalizationKey = CustomSetPropertyOnRenderable.TryGetLocalizationKey;
+        // Without this, CustomSetPropertyOnRenderable.LocalizationService defaults (via
+        // RenderingLibrary.SystemManagers' "??= new LocalizationService()") to a separate,
+        // permanently-empty instance - distinct from this plugin's DI-injected _localizationService,
+        // the one FileCommands.LoadLocalizationFile actually populates. Unwired, every
+        // SetProperty("Text", ...) translate (the tool's and the runtime-shared path alike) reads an
+        // empty database and passes the string ID through untouched, no matter what's loaded or what
+        // CurrentLanguage is set to.
+        CustomSetPropertyOnRenderable.LocalizationService = _localizationService;
+        // Backs the "Show Localization" project setting: WireframeObjectManager calls this before
+        // rebuilding the wireframe so every SetProperty("Text", ...) - not just the tool's own
+        // ApplyLocalization sweep - either translates or passes the raw string ID through unchanged.
+        GraphicalUiElement.SetLocalizationEnabled = enabled =>
+            CustomSetPropertyOnRenderable.LocalizationService = enabled ? _localizationService : null;
         CustomSetPropertyOnRenderable.FontService = Locator.GetRequiredService<IFontManager>();
         // Wires the DI-registered ILocalizationService singleton into the static
         // LocalizationRuntimeState so GumCommon-layer code (e.g. Gum.Expressions'
@@ -784,10 +798,6 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
                     //gue.ApplyVariableReferences(_selectedState.SelectedStateSave);
 
                     handledByDirectSet = didPush && !disposedFile;
-                }
-                if (gue != null && value is string valueAsString && unqualifiedMember == "Text" && _localizationService.HasDatabase)
-                {
-                    _wireframeObjectManager.ApplyLocalization(gue, valueAsString);
                 }
             }
 
