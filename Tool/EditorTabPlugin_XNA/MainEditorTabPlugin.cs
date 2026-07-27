@@ -296,13 +296,6 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         GraphicalUiElement.SetLocalizationEnabled = enabled =>
             CustomSetPropertyOnRenderable.LocalizationService = enabled ? _localizationService : null;
         CustomSetPropertyOnRenderable.FontService = Locator.GetRequiredService<IFontManager>();
-        // Wires the DI-registered ILocalizationService singleton into the static
-        // LocalizationRuntimeState so GumCommon-layer code (e.g. Gum.Expressions'
-        // global::Localization.CurrentLanguage evaluator) can read the tool's actual
-        // current language. Text preview itself doesn't need this - it translates via
-        // WireframeObjectManager's own injected service - but a reserved variable-reference
-        // identifier reading a stale/empty default would silently never preview correctly.
-        CustomSetPropertyOnRenderable.LocalizationService = _localizationService;
         // Gum core ships no shader loader, so the tool registers a resolver that compiles a
         // render-target Container's SourceShaderFile (.fx) into an Effect at runtime (ShadowDusk),
         // letting the WYSIWYG preview render shaded containers. Mirrors FontService above.
