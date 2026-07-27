@@ -282,7 +282,7 @@ public class ScrollViewer :
                         this.IsFocused = true;
                     }
                 }
-                else
+                else if (InnerPanel != null)
                 {
                     // find first InputReceiver and give it focus:
                     for (int i = 0; i < this.InnerPanel.Children.Count; i++)
@@ -302,6 +302,10 @@ public class ScrollViewer :
                         }
                     }
                 }
+                // else: subclasses like MenuItem (via ItemsControl) have no InnerPanelInstance in
+                // their default Visual since they don't scroll -- DoItemsHaveFocus still flips (e.g.
+                // from gamepad/keyboard A/Enter while a MenuItem has top-level focus, #3668), it just
+                // has no items to hand focus to.
             }
             // todo - give the first item focus:
             //if (SelectedIndex > -1 && SelectedIndex < ListBoxItemsInternal.Count)

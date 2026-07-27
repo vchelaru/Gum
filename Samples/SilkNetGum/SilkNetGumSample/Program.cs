@@ -107,6 +107,13 @@ unsafe class Program
         // Registers GumUI.Keyboard for Tab / Shift+Tab focus traversal between Forms controls.
         GumUI.UseKeyboardDefaults();
 
+        // Enables gamepad navigation for Forms controls (#3668): GumUI.Update reads the connected
+        // controller into these gamepads each frame; the D-pad / left stick then move focus between
+        // controls and A activates the focused control. Mirrors the raylib sample's wiring. Visit the
+        // "Forms" screen and give a control focus (e.g. click it once) to see it take effect.
+        FrameworkElement.GamePadsForUiControl.Clear();
+        FrameworkElement.GamePadsForUiControl.AddRange(GumUI.Gamepads);
+
         GraphicalUiElement.CanvasWidth = windowWidth;
         GraphicalUiElement.CanvasHeight = windowHeight;
 

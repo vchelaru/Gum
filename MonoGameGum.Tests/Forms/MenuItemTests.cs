@@ -66,4 +66,19 @@ public class MenuItemTests : BaseTestClass
         childMenuItem.ParentMenuItem.ShouldNotBeNull();
         childMenuItem.GetVisual("SubmenuIndicatorInstance")!.Visible.ShouldBeTrue();
     }
+
+    [Fact]
+    public void DoItemsHaveFocus_SetTrue_OnMenuItem_ShouldNotThrow()
+    {
+        // MenuItem inherits ScrollViewer.DoItemsHaveFocus (via ItemsControl), but MenuItemVisual --
+        // unlike ScrollViewerVisual -- has no InnerPanelInstance, since menu items don't scroll.
+        // Gamepad/keyboard nav sets this to true when A/Enter is pressed while a MenuItem has focus
+        // (ScrollViewer.DoTopLevelFocusUpdate), which must not NRE on the null InnerPanel (#3668).
+        MenuItem menuItem = new();
+        menuItem.InnerPanel.ShouldBeNull();
+
+        menuItem.IsFocused = true;
+
+        Should.NotThrow(() => menuItem.DoItemsHaveFocus = true);
+    }
 }
