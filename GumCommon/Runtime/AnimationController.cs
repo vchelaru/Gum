@@ -1,5 +1,7 @@
 using Gum.Wireframe;
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Gum.StateAnimation.Runtime;
 
@@ -9,6 +11,7 @@ namespace Gum.StateAnimation.Runtime;
 public class AnimationController
 {
     private AnimationState _state = AnimationState.Stopped;
+    private TaskCompletionSource<bool>? _asyncCompletionSource;
 
     /// <summary>
     /// Gets the currently playing or paused animation, or null if no animation is loaded.
@@ -70,10 +73,67 @@ public class AnimationController
         if (animation == null)
             throw new ArgumentNullException(nameof(animation));
 
+        // Interrupting a pending PlayAnimationAsync task cancels it rather than
+        // leaving it unresolved, since only one animation can play at a time.
+        _asyncCompletionSource?.TrySetCanceled();
+
         CurrentAnimation = animation;
         CurrentTime = 0;
         _state = AnimationState.Playing;
         OnStarted?.Invoke();
+    }
+
+    /// <summary>
+    /// Starts playing the specified animation from the beginning and returns a <see cref="Task"/>
+    /// that completes when the animation finishes.
+    /// </summary>
+    /// <param name="animation">The AnimationRuntime to play.</param>
+    /// <param name="cancellationToken">
+    /// A token used to stop the animation and cancel the returned task before it finishes.
+    /// </param>
+    /// <returns>
+    /// A task that completes successfully when the animation reaches its end. If the animation
+    /// is stopped, replaced by another <see cref="Play(AnimationRuntime)"/>/<see cref="PlayAnimationAsync"/>
+    /// call, or the <paramref name="cancellationToken"/> is triggered before it finishes, the task
+    /// is cancelled (<see cref="TaskCanceledException"/>) instead of completing.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown when animation is null.</exception>
+    public Task PlayAnimationAsync(AnimationRuntime animation, CancellationToken cancellationToken = default)
+    {
+        Play(animation);
+
+        var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _asyncCompletionSource = tcs;
+
+        void OnCompletedHandler() => tcs.TrySetResult(true);
+        void OnStoppedHandler() => tcs.TrySetCanceled();
+
+        OnCompleted += OnCompletedHandler;
+        OnStopped += OnStoppedHandler;
+
+        CancellationTokenRegistration registration = cancellationToken.CanBeCanceled
+            ? cancellationToken.Register(() =>
+            {
+                if (tcs.TrySetCanceled(cancellationToken))
+                {
+                    Stop();
+                }
+            })
+            : default;
+
+        tcs.Task.ContinueWith(_ =>
+        {
+            OnCompleted -= OnCompletedHandler;
+            OnStopped -= OnStoppedHandler;
+            registration.Dispose();
+
+            if (ReferenceEquals(_asyncCompletionSource, tcs))
+            {
+                _asyncCompletionSource = null;
+            }
+        }, TaskScheduler.Default);
+
+        return tcs.Task;
     }
 
     /// <summary>

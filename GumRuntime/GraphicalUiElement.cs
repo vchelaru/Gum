@@ -1657,6 +1657,26 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         AnimationController.Play(animation);
     }
 
+    /// <summary>
+    /// Convenience wrapper for <see cref="AnimationController.PlayAnimationAsync(AnimationRuntime, System.Threading.CancellationToken)"/>.
+    /// Starts playing the specified <see cref="AnimationRuntime"/> and returns a task that completes
+    /// when it finishes.
+    /// <para>
+    /// If the animation is stopped or replaced by another <see cref="PlayAnimation(AnimationRuntime)"/>/
+    /// <c>PlayAnimationAsync</c> call before it finishes, the returned task is cancelled
+    /// (<see cref="System.Threading.Tasks.TaskCanceledException"/>) rather than completing. Callers awaiting
+    /// this method must handle that case, since code after the <c>await</c> should only run once the
+    /// animation actually finished.
+    /// </para>
+    /// </summary>
+    /// <param name="animation">The AnimationRuntime object to play.</param>
+    /// <param name="cancellationToken">A token used to stop the animation and cancel the task early.</param>
+    /// <exception cref="ArgumentNullException">Thrown when animation is null.</exception>
+    public System.Threading.Tasks.Task PlayAnimationAsync(AnimationRuntime animation, System.Threading.CancellationToken cancellationToken = default)
+    {
+        return AnimationController.PlayAnimationAsync(animation, cancellationToken);
+    }
+
 
     /// <summary>
     /// Convenience wrapper for <see cref="AnimationController.Stop()"/>.
