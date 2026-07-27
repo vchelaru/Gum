@@ -2,16 +2,16 @@
 
 ## Introduction
 
-Behaviors can define requirements which are reusable across multiple components to standardize instance names and behaviors. If a component uses a behavior, then the component is forced to include categories and instances according to the behavior definition.
+By default, a new Gum project has no behaviors. The most common way behaviors enter a project is automatically: adding Forms controls (Button, TextBox, Slider, and so on) adds their matching behaviors for you — see [Default Behaviors](#default-behaviors) below.
 
-Behaviors can also declare **Behavior Properties**, which surface as a **Behavior** category in the Variables tab and connect to properties on the runtime Forms control (such as `TextBox`'s `TextWrapping` or `Slider`'s `Minimum`/`Maximum`). This is covered in [Behavior Properties](#behavior-properties) below.
+Creating or editing behaviors yourself is an advanced, rarely-needed scenario. The vast majority of projects only ever use the behaviors that Forms controls bring in automatically.
+
+A behavior defines requirements that are reusable across multiple components: required categories and states, required instances, and optionally **Behavior Properties** — design-time properties that surface in a **Behavior** category in the Variables tab and connect to properties on the runtime Forms control (such as `TextBox`'s `TextWrapping` or `Slider`'s `Minimum`/`Maximum`). Behavior Properties are covered in [Behavior Properties](#behavior-properties) below. If a component uses a behavior, then the component is forced to include categories and instances according to the behavior definition.
 
 Common behavior usage falls into one of two categories:
 
 1. Behaviors for built-in controls such as Button and TextBox exist to make customization for these types of controls easier.
 2. New behaviors can be created to match the syntax of controls defined in your game project. This is considered an advanced scenario and is rarely used.
-
-The most common usage of behaviors is the automatic creation and inclusion of _Gum Forms_ behaviors. Therefore, it is unlikely that you will need to create new behaviors or edit existing behaviors.&#x20;
 
 {% hint style="info" %}
 C# programmers may find the concept of behaviors to be similar to interfaces in code. Behaviors define requirements for components, but they give components the flexibility to implement these requirements, just like interfaces define required properties and methods which classes can implement.
@@ -25,7 +25,7 @@ As of February 2026, forms controls are not implemented in Skia-based runtimes. 
 
 ## Default Behaviors
 
-By default, empty projects contain no behaviors. If your project has added forms components, then it should contain a set of default behaviors matching the forms control types.
+If your project has added forms components, then it should contain a set of default behaviors matching the forms control types.
 
 <figure><img src="../../../.gitbook/assets/image (1).png" alt=""><figcaption><p>Default behavior types</p></figcaption></figure>
 

@@ -2,9 +2,11 @@
 
 ## Introduction
 
-Behaviors are used to standardize state, category, and instance names. The most common usage of behaviors is with Gum Forms. Of course, behaviors can also be used to standardize names in your project for components which are not intended to be with Gum Forms.
+{% hint style="warning" %}
+Standard Forms behaviors (`ButtonBehavior`, `TextBoxBehavior`, and so on) already ship with every project that uses Forms controls — see [Behaviors](README.md). Creating or editing a behavior yourself is a rare, advanced scenario, needed only when you're standardizing categories/states/instances for your own components that are **not** part of Gum Forms.
+{% endhint %}
 
-This document shows how to create a ButtonBehavior from-scratch. Keep in mind that the ButtonBehavior is a standard type of behavior that exists in most projects, so this is only for illustrative purposes.
+This document walks through creating a behavior from scratch, using a `ButtonBehavior`-style definition as a familiar illustration. You would not actually recreate `ButtonBehavior` in a real project — it already exists — but the same steps apply to any custom behavior you define for your own components.
 
 ### Creating a Behavior
 
