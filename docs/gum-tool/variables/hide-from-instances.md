@@ -10,6 +10,7 @@ Hiding variables is useful for:
 
 * Simplifying the **Variables** tab on instances by removing variables that are never changed per-instance
 * Preventing accidental changes to variables that could break a component's layout or behavior, such as `Children Layout` on a container that relies on a specific stacking mode
+* Keeping a single source of truth when a visual variable is driven by a [Behavior Property](../gum-elements/behaviors/README.md#behavior-properties) — the standard Forms components hide the driven visual variable so the Behavior Property in the Variables tab is the only place to set it
 
 {% hint style="info" %}
 The **Hide from Instances** option is also available on screens. Since screens cannot be instanced in the tool, this only affects runtime code generation.
