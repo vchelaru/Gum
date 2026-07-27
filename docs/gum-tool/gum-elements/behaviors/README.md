@@ -2,11 +2,11 @@
 
 ## Introduction
 
-By default, a new Gum project has no behaviors. The most common way behaviors enter a project is automatically: adding Forms controls (Button, TextBox, Slider, and so on) adds their matching behaviors for you — see [Default Behaviors](#default-behaviors) below.
+By default, a new Gum project has no behaviors. The most common way behaviors enter a project is automatically: adding Forms controls (Button, TextBox, Slider, and so on) adds their matching behaviors for you - see [Default Behaviors](./#default-behaviors) below.
 
 Creating or editing behaviors yourself is an advanced, rarely-needed scenario. The vast majority of projects only ever use the behaviors that Forms controls bring in automatically.
 
-A behavior defines requirements that are reusable across multiple components: required categories and states, required instances, and optionally **Behavior Properties** — design-time properties that surface in a **Behavior** category in the Variables tab and connect to properties on the runtime Forms control (such as `TextBox`'s `TextWrapping` or `Slider`'s `Minimum`/`Maximum`). Behavior Properties are covered in [Behavior Properties](#behavior-properties) below. If a component uses a behavior, then the component is forced to include categories and instances according to the behavior definition.
+A behavior defines requirements that are reusable across multiple components: required categories and states, required instances, and optionally **Behavior Properties** - design-time properties that surface in a **Behavior** category in the Variables tab and connect to properties on the runtime Forms control (such as `TextBox`'s `TextWrapping` or `Slider`'s `Minimum`/`Maximum`). Behavior Properties are covered in [Behavior Properties](./#behavior-properties) below. If a component uses a behavior, then the component is forced to include categories and instances according to the behavior definition.
 
 Common behavior usage falls into one of two categories:
 
@@ -15,12 +15,6 @@ Common behavior usage falls into one of two categories:
 
 {% hint style="info" %}
 C# programmers may find the concept of behaviors to be similar to interfaces in code. Behaviors define requirements for components, but they give components the flexibility to implement these requirements, just like interfaces define required properties and methods which classes can implement.
-{% endhint %}
-
-{% hint style="warning" %}
-Behaviors place requirements for components in the Gum tool, but the behavior of these components at runtime depends on the control existing in the particular runtime that is being used.
-
-As of February 2026, forms controls are not implemented in Skia-based runtimes. If this is a requirement for your project, please post an issue on GitHub or let us know on Discord.
 {% endhint %}
 
 ## Default Behaviors
@@ -57,7 +51,7 @@ Notice the categories and states defined by ButtonBehavior:
 
 These automatically-added states are empty - they do nothing by default. For information on working with states, see the [States page](../states/).
 
-Gum prevents the removal or renaming of any of these states from `ButtonStandard` since they are required by  `ButtonBehavior`.
+Gum prevents the removal or renaming of any of these states from `ButtonStandard` since they are required by `ButtonBehavior`.
 
 <figure><img src="../../../.gitbook/assets/08_07 41 13.png" alt=""><figcaption><p>Removal is prevented if a state is defined by a used behavior</p></figcaption></figure>
 
@@ -65,7 +59,7 @@ Gum prevents the removal or renaming of any of these states from `ButtonStandard
 
 If you are creating a new component which should be used as a standard forms type, such as creating a new Button style, then you will need to add a behavior to the component. By adding a new behavior, Gum will add required states automatically and will display errors if any behavior requirements are missing.
 
-For example, consider the creation of a new component which will have button behavior (responding visually to hover and push, enabled/disabled support, and click events).&#x20;
+For example, consider the creation of a new component which will have button behavior (responding visually to hover and push, enabled/disabled support, and click events).
 
 To add the ButtonBehavior to a component:
 
@@ -81,7 +75,7 @@ Gum automatically creates the ButtonCategory and required states. Keep in mind t
 
 ## Behavior Instance Requirements
 
-Some behaviors have instance requirements too. For example, the `TextBoxBehavior` has two required instances:&#x20;
+Some behaviors have instance requirements too. For example, the `TextBoxBehavior` has two required instances:
 
 1. TextInstance which uses a base type of Text
 2. CaretInstance which can be of any type
@@ -109,7 +103,7 @@ Beyond categories, states, and instances, a behavior can declare **Behavior Prop
 Some Behavior Properties also drive a visual state automatically, so you get a design-time preview even though Forms controls don't run inside the tool. For example, setting `TextWrapping` in the Behavior category updates the component's visual line-mode state immediately. See [Behavior-Driven References](../general-properties/variable-references.md#behavior-driven-references) for how this works.
 
 {% hint style="info" %}
-Standard Forms components (Button, TextBox, Slider, and so on) are **copied into your project** the first time you add a Forms control, rather than referenced live from the Gum tool install. If a later Gum version adds a new Behavior Property to a standard control, that property only reaches components added to your project *after* upgrading — components already in your project keep whatever properties they had when they were added.
+Standard Forms components (Button, TextBox, Slider, and so on) are **copied into your project** the first time you add a Forms control, rather than referenced live from the Gum tool install. If a later Gum version adds a new Behavior Property to a standard control, that property only reaches components added to your project _after_ upgrading — components already in your project keep whatever properties they had when they were added.
 {% endhint %}
 
 ### Custom Behaviors

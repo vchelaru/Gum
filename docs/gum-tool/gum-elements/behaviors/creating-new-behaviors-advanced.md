@@ -3,10 +3,10 @@
 ## Introduction
 
 {% hint style="warning" %}
-Standard Forms behaviors (`ButtonBehavior`, `TextBoxBehavior`, and so on) already ship with every project that uses Forms controls — see [Behaviors](README.md). Creating or editing a behavior yourself is a rare, advanced scenario, needed only when you're standardizing categories/states/instances for your own components that are **not** part of Gum Forms.
+Standard Forms behaviors (`ButtonBehavior`, `TextBoxBehavior`, and so on) already ship with every project that uses Forms controls - see [Behaviors](./). Creating or editing a behavior yourself is a rare, advanced scenario, needed only when you're standardizing categories/states/instances for your own components that are **not** part of Gum Forms.
 {% endhint %}
 
-This document walks through creating a behavior from scratch, using a `ButtonBehavior`-style definition as a familiar illustration. You would not actually recreate `ButtonBehavior` in a real project — it already exists — but the same steps apply to any custom behavior you define for your own components.
+This document walks through creating a behavior from scratch, using a `ButtonBehavior`-style definition as a familiar illustration. You would not actually recreate `ButtonBehavior` in a real project — it already exists - but the same steps apply to any custom behavior you define for your own components.
 
 ### Creating a Behavior
 
@@ -103,4 +103,4 @@ At this time Gum does not automatically add required instances to components whi
 
 ### Behavior Properties on Custom Behaviors
 
-The standard Forms behaviors ship with **Behavior Properties** (see [Behavior Properties](README.md#behavior-properties)) that surface a Behavior category in the Variables tab and drive design-time preview. A custom behavior can declare these too, but there is currently no tool UI for it — they are added by hand-editing the behavior's `.behx` file. This is an advanced, rarely-needed scenario; the standard Forms behaviors already cover the common cases.
+The standard Forms behaviors ship with **Behavior Properties** (see [Behavior Properties](./#behavior-properties)) that surface a Behavior category in the Variables tab and drive design-time preview. A custom behavior can declare these too, but there is currently no tool UI for it - they are added by hand-editing the behavior's `.behx` file. This is an advanced, rarely-needed scenario; the standard Forms behaviors already cover the common cases.
