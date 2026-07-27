@@ -5661,6 +5661,15 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     public static Action<GraphicalUiElement>? RefreshLocalizationOnElementAction;
 
     /// <summary>
+    /// Optional lookup for the original (untranslated) string ID last assigned to this element's
+    /// "Text" property via the localized path, if any. Wired by the tool/runtime since GumRuntime
+    /// cannot reference <c>CustomSetPropertyOnRenderable</c> directly. Used by callers (e.g. the
+    /// Gum tool's <c>WireframeObjectManager.ApplyLocalization</c>) that need to re-translate an
+    /// element without re-translating its already-translated live text.
+    /// </summary>
+    public static Func<GraphicalUiElement, string?>? TryGetLocalizationKey;
+
+    /// <summary>
     /// Re-applies the most recently assigned localization key on this element
     /// and all descendants via <see cref="RefreshLocalizationOnElementAction"/>.
     /// Each element that had its <c>Text</c> set via the localization path

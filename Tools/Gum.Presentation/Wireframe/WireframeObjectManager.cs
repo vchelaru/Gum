@@ -323,6 +323,14 @@ public partial class WireframeObjectManager : IWireframeObjectManager
         if(shouldLocalize)
         {
             var stringId = forcedId;
+            if(string.IsNullOrWhiteSpace(stringId))
+            {
+                // Prefer the originally-assigned string ID (tracked whenever "Text" was set
+                // through the localized path) over the live renderable text, which may already
+                // be translated - reading RawText here would re-translate already-translated
+                // text and compound the "(loc)" suffix on every repeated call.
+                stringId = GraphicalUiElement.TryGetLocalizationKey?.Invoke(gue);
+            }
             if(string.IsNullOrWhiteSpace(stringId) && gue.RenderableComponent is IText asText)
             {
                 stringId = asText.StoredMarkupText;
@@ -333,8 +341,10 @@ public partial class WireframeObjectManager : IWireframeObjectManager
 
             }
 
-            // Go through the GraphicalUiElement to kick off a layout adjustment if necessary
-            gue.SetProperty("Text", _localizationService.Translate(stringId));
+            // Go through the GraphicalUiElement so it translates (and kicks off a layout
+            // adjustment if necessary) - SetProperty("Text", ...) already translates internally,
+            // so translating here too would double-translate.
+            gue.SetProperty("Text", stringId);
         }
     }
 

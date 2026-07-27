@@ -281,6 +281,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         GraphicalUiElement.ThrowExceptionsForMissingFiles = CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles;
         GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
         GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;
+        GraphicalUiElement.TryGetLocalizationKey = CustomSetPropertyOnRenderable.TryGetLocalizationKey;
         CustomSetPropertyOnRenderable.FontService = Locator.GetRequiredService<IFontManager>();
         // Gum core ships no shader loader, so the tool registers a resolver that compiles a
         // render-target Container's SourceShaderFile (.fx) into an Effect at runtime (ShadowDusk),
@@ -777,10 +778,6 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
                     //gue.ApplyVariableReferences(_selectedState.SelectedStateSave);
 
                     handledByDirectSet = didPush && !disposedFile;
-                }
-                if (gue != null && value is string valueAsString && unqualifiedMember == "Text" && _localizationService.HasDatabase)
-                {
-                    _wireframeObjectManager.ApplyLocalization(gue, valueAsString);
                 }
             }
 
