@@ -5,6 +5,8 @@ using Gum.Managers;
 using Gum.Wireframe;
 using Microsoft.CodeAnalysis.CSharp;
 using Shouldly;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace GumExpressions.Tests;
 
@@ -747,6 +749,50 @@ public class EvaluatedSyntaxTests : BaseTestClass
 
         result.ShouldNotBeNull();
         result.Value.ShouldBe(100);
+    }
+
+    #endregion
+
+    #region EnumerateAllBranches
+
+    private static List<object> EnumerateAllBranches(string expression, StateSave state)
+    {
+        string csharp = EvaluatedSyntax.ConvertToCSharpSyntax(expression);
+        Microsoft.CodeAnalysis.SyntaxNode syntax = Microsoft.CodeAnalysis.CSharp.SyntaxFactory.ParseExpression(csharp);
+        return EvaluatedSyntax.EnumerateAllBranches(syntax, state).Select(evaluated => evaluated.Value).ToList();
+    }
+
+    [Fact]
+    public void EnumerateAllBranches_NestedTernary_ReturnsAllFourLeafValues()
+    {
+        StateSave state = BuildState(
+            ("Instance.IsTall", true, "bool"),
+            ("Instance.IsWide", false, "bool"));
+
+        List<object> values = EnumerateAllBranches(
+            "Instance.IsTall ? (Instance.IsWide ? \"TallWide\" : \"TallNarrow\") : (Instance.IsWide ? \"ShortWide\" : \"ShortNarrow\")", state);
+
+        values.ShouldBe(new object[] { "TallWide", "TallNarrow", "ShortWide", "ShortNarrow" });
+    }
+
+    [Fact]
+    public void EnumerateAllBranches_NonConditionalExpression_ReturnsSingleValue()
+    {
+        StateSave state = BuildState(("Instance.Width", 100f, "float"));
+
+        List<object> values = EnumerateAllBranches("Instance.Width + 10", state);
+
+        values.ShouldBe(new object[] { 110f });
+    }
+
+    [Fact]
+    public void EnumerateAllBranches_SimpleTernary_ReturnsBothBranchesRegardlessOfCondition()
+    {
+        StateSave state = BuildState(("Instance.IsLocaleZh", false, "bool"));
+
+        List<object> values = EnumerateAllBranches("Instance.IsLocaleZh ? \"NotoSansCJK\" : \"Arial\"", state);
+
+        values.ShouldBe(new object[] { "NotoSansCJK", "Arial" });
     }
 
     #endregion

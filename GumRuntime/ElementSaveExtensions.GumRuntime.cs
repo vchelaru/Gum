@@ -34,6 +34,16 @@ namespace GumRuntime
         /// </summary>
         public static Func<StateSave, string, string, GraphicalUiElement?, object>? CustomEvaluateExpression;
 
+        /// <summary>
+        /// Enumerates every value a reference's right side could resolve to (all ternary
+        /// branches, not just the one the condition currently selects). Same arguments as
+        /// <see cref="CustomEvaluateExpression"/>. Set by <c>GumExpressionService.Initialize()</c>;
+        /// used by <see cref="GetAllVariableReferenceBranches"/> for font bulk-generation
+        /// (see issue #4042) so it can pregenerate every branch of a conditional Font-affecting
+        /// expression instead of only the one active at collection time.
+        /// </summary>
+        public static Func<StateSave, string, string, GraphicalUiElement?, IEnumerable<object>>? CustomEvaluateExpressionAllBranches;
+
         public static void RegisterGueInstantiationType(string elementName, Type gueInheritingType, bool overwriteIfAlreadyExists = true)
         {
             if(overwriteIfAlreadyExists)
@@ -81,6 +91,7 @@ namespace GumRuntime
             TemplateFunc = null;
             CustomCreateGraphicalComponentFunc = null;
             CustomEvaluateExpression = null;
+            CustomEvaluateExpressionAllBranches = null;
         }
 
 
@@ -982,6 +993,88 @@ namespace GumRuntime
                 var value = recursiveVariableFinder.GetValue(right);
                 return value;
             }
+        }
+
+        /// <summary>
+        /// Read-only counterpart to <see cref="GetRightSideValue"/>: enumerates every value the
+        /// right side could resolve to (all ternary branches) instead of applying just the one
+        /// selected by the condition's current value. Falls back to a single-item sequence
+        /// wrapping <see cref="GetRightSideValue"/> when <see cref="CustomEvaluateExpressionAllBranches"/>
+        /// is unset (no Roslyn evaluator wired up).
+        /// </summary>
+        private static IEnumerable<object> GetAllRightSideValues(StateSave stateSave, string right, string leftSideType, GraphicalUiElement? liveRoot = null)
+        {
+            if (right.TrimStart().StartsWith("!"))
+            {
+                var withoutNot = right.TrimStart().Substring(1).Trim();
+                foreach (var value in GetAllRightSideValues(stateSave, withoutNot, leftSideType, liveRoot))
+                {
+                    if (value is bool boolValue)
+                    {
+                        yield return !boolValue;
+                    }
+                }
+                yield break;
+            }
+
+            if (CustomEvaluateExpressionAllBranches != null)
+            {
+                foreach (var value in CustomEvaluateExpressionAllBranches(stateSave, right, leftSideType, liveRoot))
+                {
+                    yield return value;
+                }
+            }
+            else
+            {
+                var value = GetRightSideValue(stateSave, right, leftSideType, liveRoot);
+                if (value != null)
+                {
+                    yield return value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Parses a single <c>VariableReferences</c> row (e.g.
+        /// <c>Font = IsLocaleZh ? "NotoSansCJK" : "Arial"</c>) and returns the qualified left-hand
+        /// variable name plus every value its right side could resolve to (all ternary branches).
+        /// Read-only counterpart to <see cref="ApplyVariableReferencesOnSpecificOwner(InstanceSave, string, StateSave, GraphicalUiElement)"/>
+        /// for callers that need every possible value rather than applying just one - namely font
+        /// bulk-generation (see issue #4042). Returns null for a comment row or a malformed
+        /// (non "Left = Right") reference string.
+        /// </summary>
+        public static (string VariableName, IEnumerable<object> Values)? GetAllVariableReferenceBranches(InstanceSave? instanceLeft, string referenceString, StateSave stateSave, GraphicalUiElement? liveRoot = null)
+        {
+            if (referenceString?.StartsWith("//") == true)
+            {
+                return null;
+            }
+
+            var split = referenceString
+                .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
+                .Select(item => item.Trim()).ToArray();
+
+            if (split.Length != 2)
+            {
+                return null;
+            }
+
+            var left = split[0];
+            var leftVariableName = instanceLeft == null ? left : instanceLeft.Name + "." + left;
+
+            string leftSideType = null;
+            var variableOnState = stateSave.Variables.FirstOrDefault(item => item.Name == leftVariableName);
+            leftSideType = variableOnState?.Type;
+            if (leftSideType == null)
+            {
+                var elementOwningInstance = instanceLeft?.ParentContainer ?? stateSave.ParentContainer;
+                leftSideType = ObjectFinder.Self.GetRootVariable(leftVariableName, elementOwningInstance)?.Type;
+            }
+
+            var right = split[1];
+            var values = GetAllRightSideValues(stateSave, right, leftSideType, liveRoot).ToList();
+
+            return (leftVariableName, values);
         }
 
         public static void GetRightSideAndState(ref string right, ref StateSave stateSave)

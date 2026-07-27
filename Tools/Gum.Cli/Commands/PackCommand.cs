@@ -4,6 +4,7 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
 using Gum.Bundle;
+using Gum.Expressions;
 using Gum.Managers;
 using Gum.ProjectServices;
 
@@ -78,6 +79,11 @@ public static class PackCommand
         // before walking so inherited font variables (e.g. Strong.Font from Standards/Text)
         // resolve correctly.
         ObjectFinder.Self.GumProjectSave = loadResult.Project;
+
+        // Wires Roslyn-based evaluation of VariableReferences so conditional (ternary) Font
+        // expressions resolve (and every branch gets pregenerated for FontCache - see #4042)
+        // instead of silently failing to resolve at all (mirrors CheckReferencesCommand).
+        GumExpressionService.Initialize();
 
         string resolvedOutputPath = outputPath != null
             ? Path.GetFullPath(outputPath)

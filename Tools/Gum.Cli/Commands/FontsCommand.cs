@@ -3,6 +3,7 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
 using Gum.DataTypes;
+using Gum.Expressions;
 using Gum.Managers;
 using Gum.ProjectServices;
 using Gum.ProjectServices.FontGeneration;
@@ -63,6 +64,11 @@ public static class FontsCommand
         StandardElementsManager.Self.Initialize();
         ObjectFinder.Self.GumProjectSave = project;
         FileManager.RelativeDirectory = projectDirectory;
+
+        // Wires Roslyn-based evaluation of VariableReferences so conditional (ternary) Font
+        // expressions resolve (and every branch gets pregenerated - see #4042) instead of
+        // silently failing to resolve at all (mirrors CheckReferencesCommand).
+        GumExpressionService.Initialize();
 
         IFontGenerationCallbacks callbacks = new ConsoleFontGenerationCallbacks();
         IFontFileGenerator fontFileGenerator = CreateFontFileGenerator(project, callbacks);

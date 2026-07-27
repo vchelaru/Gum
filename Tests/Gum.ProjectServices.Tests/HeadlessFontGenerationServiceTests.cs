@@ -792,6 +792,50 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
         font.FontSize.ShouldBe(36);
     }
 
+    [Fact]
+    public void CollectRequiredFonts_ShouldCollectBothBranches_WhenFontSetViaConditionalVariableReference()
+    {
+        // A locale-style ternary: "Font = IsLocaleZh ? "NotoSansCJK" : "Arial"". Only the
+        // false branch is active at collection time, but both must be pregenerated - see #4042.
+        // GumExpressionService.Initialize() sets process-wide static delegates
+        // (ElementSaveExtensions.CustomEvaluateExpression*); reset them afterward so this test
+        // doesn't leak Roslyn evaluation into other tests in this class.
+        Gum.Expressions.GumExpressionService.Initialize();
+        try
+        {
+            ComponentSave component = new ComponentSave { Name = "Panel", BaseType = "Container" };
+            StateSave state = AddState(component);
+            AddTextInstance(component, "Label");
+
+            SetVar(state, "IsLocaleZh", false);
+            // Type = "string" mirrors what the tool's own VariableReferences apply path
+            // authors - EvaluatedSyntax.CastTo needs a concrete desired type to resolve the
+            // ternary's string branches (see ApplyVariableReferencesElementSaveTests for the
+            // same pattern).
+            state.Variables.Add(new VariableSave { SetsValue = true, Name = "Label.Font", Value = "Arial", Type = "string" });
+            SetVar(state, "Label.FontSize", 24); // hard value baked in by the currently-false condition
+
+            VariableListSave<string> variableReferences = new VariableListSave<string>
+            {
+                Name = "Label.VariableReferences",
+                Type = "string"
+            };
+            variableReferences.ValueAsIList.Add("Font = IsLocaleZh ? \"NotoSansCJK\" : \"Arial\"");
+            state.VariableLists.Add(variableReferences);
+
+            Project.Components.Add(component);
+
+            Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { component });
+
+            result.Values.ShouldContain(f => f.FontName == "Arial" && f.FontSize == 24);
+            result.Values.ShouldContain(f => f.FontName == "NotoSansCJK" && f.FontSize == 24);
+        }
+        finally
+        {
+            GumRuntime.ElementSaveExtensions.ClearRegistrations();
+        }
+    }
+
     #endregion
 
     // -------------------------------------------------------------------------
