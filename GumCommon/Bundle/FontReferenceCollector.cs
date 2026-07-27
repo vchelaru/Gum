@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Wireframe;
@@ -26,9 +27,25 @@ namespace Gum.Bundle;
 /// the resolved font for the referencing TextInstance). That's a deeper runtime-resolution
 /// gap that affects both gumcli fonts and gumcli pack equally; tracking separately.
 /// </para>
+/// <para>
+/// Known limitation: a conditional (ternary) <c>VariableReferences</c> row on the element
+/// itself or a direct instance has every branch pregenerated (see #4042), but a conditional
+/// reference reached only through a nested component instance's inner Text instances
+/// (<see cref="CollectFontsFromNestedTextInstances"/>) still resolves a single value via
+/// <see cref="RecursiveVariableFinder"/> - only the currently-active branch is collected there.
+/// </para>
 /// </remarks>
 public class FontReferenceCollector
 {
+    /// <summary>
+    /// Font-affecting properties whose <c>VariableReferences</c> row is branch-enumerated
+    /// (all ternary branches collected, not just the one active now). See #4042.
+    /// </summary>
+    private static readonly string[] FontAffectingVariableNames =
+    {
+        "Font", "FontSize", "OutlineThickness", "UseFontSmoothing", "IsItalic", "IsBold"
+    };
+
     private readonly Func<InstanceSave, ElementSave?> _resolveInstanceElement;
 
     /// <summary>
@@ -64,16 +81,14 @@ public class FontReferenceCollector
                 // paths the references may not have been applied yet.
                 element.ApplyVariableReferences(state);
 
-                BmfcSave? bmfcSave = TryGetBmfcSaveFor(instance: null, state, fontRanges, spacingHorizontal, spacingVertical);
-                if (bmfcSave != null)
+                foreach (BmfcSave bmfcSave in CollectAllBmfcSavesFor(instance: null, state, fontRanges, spacingHorizontal, spacingVertical))
                 {
                     bitmapFonts[bmfcSave.FontCacheFileName] = bmfcSave;
                 }
 
                 foreach (InstanceSave instance in element.Instances)
                 {
-                    BmfcSave? bmfcSaveInner = TryGetBmfcSaveFor(instance, state, fontRanges, spacingHorizontal, spacingVertical);
-                    if (bmfcSaveInner != null)
+                    foreach (BmfcSave bmfcSaveInner in CollectAllBmfcSavesFor(instance, state, fontRanges, spacingHorizontal, spacingVertical))
                     {
                         bitmapFonts[bmfcSaveInner.FontCacheFileName] = bmfcSaveInner;
                     }
@@ -94,20 +109,117 @@ public class FontReferenceCollector
     private static BmfcSave? TryGetBmfcSaveFor(InstanceSave? instance, StateSave stateSave,
         string fontRanges, int spacingHorizontal, int spacingVertical)
     {
-        string prefix = "";
-        if (instance != null)
+        string prefix = instance != null ? instance.Name + "." : "";
+        return BuildBmfcSave(name => stateSave.GetValueRecursive(prefix + name),
+            fontRanges, spacingHorizontal, spacingVertical);
+    }
+
+    /// <summary>
+    /// Collects every <see cref="BmfcSave"/> combination for <paramref name="instance"/> (or the
+    /// element itself when null), enumerating all branches of any conditional (ternary)
+    /// <c>VariableReferences</c> row that targets a <see cref="FontAffectingVariableNames"/>
+    /// entry, instead of only the branch <c>ApplyVariableReferences</c> already
+    /// baked into <paramref name="stateSave"/>. Yields a single combo (the baseline already
+    /// applied) when none of the owner's font-affecting properties are set via a conditional
+    /// reference. See #4042.
+    /// </summary>
+    private static IEnumerable<BmfcSave> CollectAllBmfcSavesFor(InstanceSave? instance, StateSave stateSave,
+        string fontRanges, int spacingHorizontal, int spacingVertical)
+    {
+        string prefix = instance != null ? instance.Name + "." : "";
+        string? ownerName = instance?.Name;
+
+        VariableListSave? variableList = stateSave.VariableLists
+            .FirstOrDefault(vl => vl.GetRootName() == "VariableReferences"
+                && vl.ValueAsIList.Count > 0
+                && string.Equals(vl.SourceObject, ownerName, StringComparison.Ordinal));
+
+        Dictionary<string, List<object>> branchValuesByProperty = new();
+
+        if (variableList != null)
         {
-            prefix = instance.Name + ".";
+            foreach (string referenceString in variableList.ValueAsIList.Cast<string>())
+            {
+                var parsed = ElementSaveExtensions.GetAllVariableReferenceBranches(instance, referenceString, stateSave);
+                if (parsed == null)
+                {
+                    continue;
+                }
+
+                (string variableName, IEnumerable<object> values) = parsed.Value;
+                string unqualified = variableName.Contains('.')
+                    ? variableName.Substring(variableName.LastIndexOf('.') + 1)
+                    : variableName;
+
+                if (!FontAffectingVariableNames.Contains(unqualified))
+                {
+                    continue;
+                }
+
+                List<object> distinctValues = values.Where(v => v != null).Distinct().ToList();
+                if (distinctValues.Count > 1)
+                {
+                    branchValuesByProperty[unqualified] = distinctValues;
+                }
+            }
         }
 
-        int? fontSize = stateSave.GetValueRecursive(prefix + "FontSize") as int?;
-        string? fontValue = stateSave.GetValueRecursive(prefix + "Font") as string;
-        int outlineValue = stateSave.GetValueRecursive(prefix + "OutlineThickness") as int? ?? 0;
+        if (branchValuesByProperty.Count == 0)
+        {
+            BmfcSave? baseline = TryGetBmfcSaveFor(instance, stateSave, fontRanges, spacingHorizontal, spacingVertical);
+            if (baseline != null)
+            {
+                yield return baseline;
+            }
+            yield break;
+        }
+
+        foreach (Dictionary<string, object> combo in CrossProduct(branchValuesByProperty))
+        {
+            object? Lookup(string name) => combo.TryGetValue(name, out object? overridden)
+                ? overridden
+                : stateSave.GetValueRecursive(prefix + name);
+
+            BmfcSave? bmfcSave = BuildBmfcSave(Lookup, fontRanges, spacingHorizontal, spacingVertical);
+            if (bmfcSave != null)
+            {
+                yield return bmfcSave;
+            }
+        }
+    }
+
+    /// <summary>
+    /// All combinations of one value per key in <paramref name="branchValuesByProperty"/>
+    /// (Cartesian product), used to cross-multiply multiple independently-conditional
+    /// font-affecting properties (e.g. both <c>Font</c> and <c>FontSize</c> set via ternaries).
+    /// </summary>
+    private static IEnumerable<Dictionary<string, object>> CrossProduct(Dictionary<string, List<object>> branchValuesByProperty)
+    {
+        IEnumerable<Dictionary<string, object>> combos = new[] { new Dictionary<string, object>() };
+
+        foreach (KeyValuePair<string, List<object>> property in branchValuesByProperty)
+        {
+            combos = combos.SelectMany(existing => property.Value.Select(value =>
+            {
+                Dictionary<string, object> next = new(existing) { [property.Key] = value };
+                return next;
+            }));
+        }
+
+        return combos;
+    }
+
+    private static BmfcSave? BuildBmfcSave(Func<string, object?> getValue,
+        string fontRanges, int spacingHorizontal, int spacingVertical)
+    {
+        int? fontSize = getValue("FontSize") as int?;
+        string? fontValue = getValue("Font") as string;
+        int outlineValue = getValue("OutlineThickness") as int? ?? 0;
 
         // default to true to match how old behavior worked
-        bool fontSmoothing = stateSave.GetValueRecursive(prefix + "UseFontSmoothing") as bool? ?? true;
-        bool isItalic = stateSave.GetValueRecursive(prefix + "IsItalic") as bool? ?? false;
-        bool isBold = stateSave.GetValueRecursive(prefix + "IsBold") as bool? ?? false;
+        bool fontSmoothing = getValue("UseFontSmoothing") as bool? ?? true;
+        bool isItalic = getValue("IsItalic") as bool? ?? false;
+        bool isBold = getValue("IsBold") as bool? ?? false;
 
         if (fontValue == null || fontSize == null)
         {

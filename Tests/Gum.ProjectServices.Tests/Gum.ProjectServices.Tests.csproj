@@ -20,6 +20,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Tools\Gum.ProjectServices\Gum.ProjectServices.csproj" />
+    <!-- GumExpressions wires Roslyn-based right-side evaluation for VariableReferences, needed
+         to test conditional (ternary) Font expressions in font bulk-generation. -->
+    <ProjectReference Include="..\..\Runtimes\GumExpressions\GumExpressions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

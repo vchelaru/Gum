@@ -103,6 +103,53 @@ public class EvaluatedSyntax
         return Evaluate(syntaxNode, restingState, fallback);
     }
 
+    /// <summary>
+    /// Enumerates every value <paramref name="syntaxNode"/> could resolve to, by evaluating
+    /// <b>both</b> branches of each <see cref="ConditionalExpressionSyntax"/> instead of picking
+    /// one via the condition's current value. Nested ternaries are cross-multiplied (a ternary
+    /// inside a branch of another ternary yields the product of both, in evaluation order).
+    /// A non-conditional expression yields its single <see cref="Evaluate"/> result, same as
+    /// <see cref="FromSyntaxNode"/>. Used by font bulk-generation to pregenerate every branch of
+    /// a conditional Font-affecting expression rather than only the one active at collection time
+    /// (see issue #4042) - ternary detection only looks at the top-level shape of the expression
+    /// (unwrapping parentheses), not inside binary/member-access operands, so e.g.
+    /// <c>"prefix" + (A ? "x" : "y")</c> is not branch-enumerated.
+    /// </summary>
+    public static IEnumerable<EvaluatedSyntax> EnumerateAllBranches(SyntaxNode syntaxNode, StateSave stateForUnqualifiedRightSide, Func<string, object?>? fallback = null, GraphicalUiElement? liveRoot = null)
+    {
+        if (syntaxNode is ParenthesizedExpressionSyntax parenthesizedExpressionSyntax)
+        {
+            var child = parenthesizedExpressionSyntax.ChildNodes().FirstOrDefault();
+            if (child != null)
+            {
+                foreach (var branch in EnumerateAllBranches(child, stateForUnqualifiedRightSide, fallback, liveRoot))
+                {
+                    yield return branch;
+                }
+            }
+            yield break;
+        }
+
+        if (syntaxNode is ConditionalExpressionSyntax conditional)
+        {
+            foreach (var branch in EnumerateAllBranches(conditional.WhenTrue, stateForUnqualifiedRightSide, fallback, liveRoot))
+            {
+                yield return branch;
+            }
+            foreach (var branch in EnumerateAllBranches(conditional.WhenFalse, stateForUnqualifiedRightSide, fallback, liveRoot))
+            {
+                yield return branch;
+            }
+            yield break;
+        }
+
+        var evaluated = Evaluate(syntaxNode, stateForUnqualifiedRightSide, fallback, liveRoot);
+        if (evaluated != null)
+        {
+            yield return evaluated;
+        }
+    }
+
     private static EvaluatedSyntax Evaluate(SyntaxNode syntaxNode, StateSave stateForUnqualifiedRightSide, Func<string, object?>? fallback = null, GraphicalUiElement? liveRoot = null)
     {
         if (syntaxNode is BinaryExpressionSyntax binaryExpressionSytax)

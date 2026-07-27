@@ -2,6 +2,7 @@ using Gum.DataTypes.Variables;
 using Gum.Wireframe;
 using GumRuntime;
 using Microsoft.CodeAnalysis.CSharp;
+using System.Collections.Generic;
 
 namespace Gum.Expressions;
 
@@ -19,6 +20,7 @@ public static class GumExpressionService
     public static void Initialize()
     {
         ElementSaveExtensions.CustomEvaluateExpression = EvaluateExpression;
+        ElementSaveExtensions.CustomEvaluateExpressionAllBranches = EvaluateExpressionAllBranches;
     }
 
     private static object EvaluateExpression(StateSave stateSave, string expression, string desiredType, GraphicalUiElement? liveRoot)
@@ -40,5 +42,29 @@ public static class GumExpressionService
             }
         }
         return null;
+    }
+
+    /// <summary>
+    /// Enumerates every value <paramref name="expression"/> could resolve to (all ternary
+    /// branches, not just the one the condition currently selects). See
+    /// <see cref="EvaluatedSyntax.EnumerateAllBranches"/>.
+    /// </summary>
+    private static IEnumerable<object> EvaluateExpressionAllBranches(StateSave stateSave, string expression, string desiredType, GraphicalUiElement? liveRoot)
+    {
+        expression = EvaluatedSyntax.ConvertToCSharpSyntax(expression);
+        var syntax = SyntaxFactory.ParseExpression(expression);
+
+        if (syntax == null)
+        {
+            yield break;
+        }
+
+        foreach (var branch in EvaluatedSyntax.EnumerateAllBranches(syntax, stateSave, liveRoot: liveRoot))
+        {
+            if (branch.CastTo(desiredType))
+            {
+                yield return branch.Value;
+            }
+        }
     }
 }
