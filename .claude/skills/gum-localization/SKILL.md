@@ -127,19 +127,21 @@ PasswordBox uses `TextNoTranslate` for mask characters (e.g., "●●●●") si
 
 ## Gotchas
 
-1. **"(loc)" suffix is intentional** — When a database is loaded but a string ID isn't found, `Translate()` appends "(loc)". This is a debugging feature, not a bug. Empty databases return strings unchanged (no suffix).
+1. **Language selection is always index-driven.** `CurrentLanguage` (int) is the only way to select a language; `Languages`/`LanguageName` (tool VM) is a display-string wrapper around that index, not a separate string-based selection mechanism.
 
-2. **Translation happens at assignment time, not read time** — The renderable stores only the final translated string. Live UI is kept in sync by a separate path: `CustomSetPropertyOnRenderable` records the original raw value in a `ConditionalWeakTable<GraphicalUiElement, string>` whenever the localized `Text` path runs, and `GumService` subscribes to `ILocalizationService.CurrentLanguageChanged` to walk the live tree and re-call `SetProperty("Text", storedKey)` on every tracked element. `SetTextNoTranslate` clears the entry, so user input and explicit literals survive language switches. Programmatic dynamic strings assigned via the localized `Text` property still get re-translated on language change and will pick up the `(loc)` suffix — use `SetTextNoTranslate` for those. Bound `Text` is overwritten by refresh; the design assumes bindings and runtime language switching aren't combined.
+2. **"(loc)" suffix is intentional** — When a database is loaded but a string ID isn't found, `Translate()` appends "(loc)". This is a debugging feature, not a bug. Empty databases return strings unchanged (no suffix).
 
-3. **Null service = no localization** — If `LocalizationService` is null, all text passes through unchanged. This is the expected state when localization isn't needed.
+3. **Translation happens at assignment time, not read time** — The renderable stores only the final translated string. Live UI is kept in sync by a separate path: `CustomSetPropertyOnRenderable` records the original raw value in a `ConditionalWeakTable<GraphicalUiElement, string>` whenever the localized `Text` path runs, and `GumService` subscribes to `ILocalizationService.CurrentLanguageChanged` to walk the live tree and re-call `SetProperty("Text", storedKey)` on every tracked element. `SetTextNoTranslate` clears the entry, so user input and explicit literals survive language switches. Programmatic dynamic strings assigned via the localized `Text` property still get re-translated on language change and will pick up the `(loc)` suffix — use `SetTextNoTranslate` for those. Bound `Text` is overwritten by refresh; the design assumes bindings and runtime language switching aren't combined.
 
-4. **BBCode interaction** — If the original string contains `[`, BBCode is parsed *before* translation (and translation is skipped for that value). If the original has no BBCode but the translated result does, BBCode is parsed on the translated result. Be careful: a string ID with `[` in it won't be translated.
+4. **Null service = no localization** — If `LocalizationService` is null, all text passes through unchanged. This is the expected state when localization isn't needed.
 
-5. **CurrentLanguage is a raw array index** — No bounds checking. Index 0 in the translation array is the string ID itself (not a translation). Actual translations start at index 1. Setting `CurrentLanguage = 0` returns the string ID.
+5. **BBCode interaction** — If the original string contains `[`, BBCode is parsed *before* translation (and translation is skipped for that value). If the original has no BBCode but the translated result does, BBCode is parsed on the translated result. Be careful: a string ID with `[` in it won't be translated.
 
-6. **RESX satellite ordering and naming** — Satellites are sorted alphabetically by file path, so `de` comes before `es` comes before `fr`. The base file is always first and labeled `"Default"`. If you need a specific order or names, use the stream-based overload.
+6. **CurrentLanguage is a raw array index** — No bounds checking. Index 0 in the translation array is the string ID itself (not a translation). Actual translations start at index 1. Setting `CurrentLanguage = 0` returns the string ID.
 
-7. **ShouldExcludeFromTranslation** — Strings with no letters (pure numbers, punctuation, whitespace, or empty) are silently excluded from translation and returned as-is, with no "(loc)" suffix. This prevents false positives on numeric display values.
+7. **RESX satellite ordering and naming** — Satellites are sorted alphabetically by file path, so `de` comes before `es` comes before `fr`. The base file is always first and labeled `"Default"`. If you need a specific order or names, use the stream-based overload.
+
+8. **ShouldExcludeFromTranslation** — Strings with no letters (pure numbers, punctuation, whitespace, or empty) are silently excluded from translation and returned as-is, with no "(loc)" suffix. This prevents false positives on numeric display values.
 
 ## Key Files
 

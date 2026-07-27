@@ -1,6 +1,7 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Expressions;
+using Gum.Localization;
 using Gum.Managers;
 using Gum.Wireframe;
 using Microsoft.CodeAnalysis.CSharp;
@@ -634,6 +635,47 @@ public class EvaluatedSyntaxTests : BaseTestClass
         EvaluatedSyntax result = Evaluate("Nonexistent.AbsoluteWidth", state, root);
 
         (result?.Value).ShouldBeNull();
+    }
+
+    #endregion
+
+    #region LocalizationValues
+
+    [Fact]
+    public void FromSyntaxNode_LocalizationCurrentLanguage_ResolvesLanguageIndex()
+    {
+        LocalizationService localizationService = new() { CurrentLanguage = 2 };
+        LocalizationRuntimeState.Current = localizationService;
+        StateSave state = BuildState();
+
+        EvaluatedSyntax result = Evaluate("global::Localization.CurrentLanguage", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe(2);
+    }
+
+    [Fact]
+    public void FromSyntaxNode_LocalizationCurrentLanguage_WithNoServiceSet_ReturnsNullValue()
+    {
+        StateSave state = BuildState();
+
+        EvaluatedSyntax result = Evaluate("global::Localization.CurrentLanguage", state);
+
+        (result?.Value).ShouldBeNull();
+    }
+
+    [Fact]
+    public void FromSyntaxNode_LocalizationCurrentLanguageTernary_ResolvesMatchingBranch()
+    {
+        LocalizationService localizationService = new() { CurrentLanguage = 1 };
+        LocalizationRuntimeState.Current = localizationService;
+        StateSave state = BuildState();
+
+        EvaluatedSyntax result = Evaluate(
+            "global::Localization.CurrentLanguage == 1 ? \"NotoSansCJK\" : \"Arial\"", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe("NotoSansCJK");
     }
 
     #endregion

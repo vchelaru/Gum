@@ -113,25 +113,25 @@ public interface IPolygonRuntime
 
 public partial class CustomSetPropertyOnRenderable
 {
-    private static ILocalizationService? _localizationService;
-
     /// <summary>
     /// The active localization service used by the runtime. Assigning a new
     /// instance fires <see cref="LocalizationServiceChanged"/> so consumers
     /// (e.g. <c>GumService</c>) can re-wire <see cref="ILocalizationService.CurrentLanguageChanged"/>
-    /// subscriptions for runtime language switching.
+    /// subscriptions for runtime language switching. Backed by <see cref="LocalizationRuntimeState.Current"/>
+    /// so GumCommon-layer code (e.g. Gum.Expressions' variable-reference evaluator) can read the
+    /// active service without depending on this (per-platform-runtime-compiled) type.
     /// </summary>
     public static ILocalizationService? LocalizationService
     {
-        get => _localizationService;
+        get => LocalizationRuntimeState.Current;
         set
         {
-            if (ReferenceEquals(_localizationService, value))
+            if (ReferenceEquals(LocalizationRuntimeState.Current, value))
             {
                 return;
             }
-            ILocalizationService? previous = _localizationService;
-            _localizationService = value;
+            ILocalizationService? previous = LocalizationRuntimeState.Current;
+            LocalizationRuntimeState.Current = value;
             LocalizationServiceChanged?.Invoke(previous, value);
         }
     }

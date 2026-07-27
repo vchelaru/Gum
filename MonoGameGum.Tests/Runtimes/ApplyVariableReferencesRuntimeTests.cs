@@ -22,6 +22,7 @@ public class ApplyVariableReferencesRuntimeTests : BaseTestClass
     {
         ElementSaveExtensions.CustomEvaluateExpression = null;
         ObjectFinder.Self.GumProjectSave = null;
+        Gum.Localization.LocalizationRuntimeState.Current = null;
         base.Dispose();
     }
 
@@ -302,6 +303,35 @@ public class ApplyVariableReferencesRuntimeTests : BaseTestClass
         parent.ApplyVariableReferences(state);
 
         parent.Height.ShouldBe(15f);
+    }
+
+    #endregion
+
+    #region LocalizationValues
+
+    [Fact]
+    public void ApplyVariableReferences_RightSideReferencesLocalizationCurrentLanguage_ResolvesLanguageIndex()
+    {
+        // Locks in the runtime-apply plumbing the tool's own rebuild path relies on
+        // (WireframeObjectManager.RefreshAll -> RootGue.ApplyVariableReferences): the
+        // GraphicalUiElement overload must thread through to EvaluatedSyntax's
+        // global::Localization.CurrentLanguage resolution the same as any other reference.
+        GumExpressionService.Initialize();
+
+        Gum.Localization.LocalizationService localizationService = new() { CurrentLanguage = 2 };
+        Gum.Localization.LocalizationRuntimeState.Current = localizationService;
+
+        ContainerRuntime parent = new ContainerRuntime();
+        parent.Width = 0;
+
+        StateSave state = BuildStateWithVariableReference(
+            "Width = global::Localization.CurrentLanguage",
+            null,
+            ("Width", 0f, "float"));
+
+        parent.ApplyVariableReferences(state);
+
+        parent.Width.ShouldBe(2f);
     }
 
     #endregion
