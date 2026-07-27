@@ -282,6 +282,14 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
         GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;
         GraphicalUiElement.TryGetLocalizationKey = CustomSetPropertyOnRenderable.TryGetLocalizationKey;
+        // Without this, CustomSetPropertyOnRenderable.LocalizationService defaults (via
+        // RenderingLibrary.SystemManagers' "??= new LocalizationService()") to a separate,
+        // permanently-empty instance - distinct from this plugin's DI-injected _localizationService,
+        // the one FileCommands.LoadLocalizationFile actually populates. Unwired, every
+        // SetProperty("Text", ...) translate (the tool's and the runtime-shared path alike) reads an
+        // empty database and passes the string ID through untouched, no matter what's loaded or what
+        // CurrentLanguage is set to.
+        CustomSetPropertyOnRenderable.LocalizationService = _localizationService;
         CustomSetPropertyOnRenderable.FontService = Locator.GetRequiredService<IFontManager>();
         // Gum core ships no shader loader, so the tool registers a resolver that compiles a
         // render-target Container's SourceShaderFile (.fx) into an Effect at runtime (ShadowDusk),
