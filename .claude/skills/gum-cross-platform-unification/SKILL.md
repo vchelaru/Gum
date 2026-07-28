@@ -55,6 +55,10 @@ Before adding a "forward to the contained renderable" property to a runtime, che
 
 When you swap *how* a renderable achieves an effect (e.g. Skia text outline moving off RichTextKit's halo onto a render-time recolor+dilate pass), grep the test projects for assertions against the old mechanism (`Halo`, the old `GetStyle` shape) — they compile fine and fail only at run time, and a per-OS CI job that fail-fasts hides which one broke. Run the whole affected test project locally, not a name-filtered subset.
 
+## SkiaGum's Topten.RichTextKit Is a Vendored Patched Build
+
+`Runtimes/SkiaGum/SkiaGum.csproj`'s `Topten.RichTextKit` reference is not the real nuget.org package — it's a local-feed build (`ThirdParty/nuget-local/`, wired via `/NuGet.config`) patched to fix `Style.HaloWidth` spiking at acute glyph corners. Don't "clean up" the version to the real `0.4.167` in a routine dependency-update pass — that silently reintroduces the spike. Upstream: [toptensoftware/RichTextKit#113](https://github.com/toptensoftware/RichTextKit/issues/113) (issue), [#114](https://github.com/toptensoftware/RichTextKit/pull/114) (fix). See `ThirdParty/README.md` for what's vendored and when to revert.
+
 ## Never Widen an Obsolete API
 
 When a member gated under `#if` carries `[Obsolete]` (or is otherwise a deprecated back-compat shim) and a *sibling* runtime exposes it on more platforms, **do not "fix the inconsistency" by widening the obsolete member to the missing platforms.** Obsolete APIs are deprecated paths we want consumers off of — adding them to a backend that never had them plants a fresh dead surface in new code. Leave the gate at its current footprint and add a code comment explaining it is intentionally not widened. Two sibling runtimes disagreeing on which platforms carry an obsolete member (e.g. one gated `#if !SKIA`, another only `#if XNALIKE`) is not itself the bug — comment both as intentional rather than widening the narrower one to match. This is the one asymmetry the boyscout/"two platforms agree, the outlier is wrong" heuristics do **not** apply to — for obsolete members, the narrower footprint wins.
