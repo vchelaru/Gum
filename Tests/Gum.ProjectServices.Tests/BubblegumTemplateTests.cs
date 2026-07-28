@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -135,6 +136,200 @@ public class BubblegumTemplateTests
         }
 
         dangling.ShouldBeEmpty();
+    }
+
+    private static readonly string[] ColorChannelSuffixes =
+    {
+        "FillRed", "FillGreen", "FillBlue",
+        "StrokeRed", "StrokeGreen", "StrokeBlue",
+        "Red", "Green", "Blue"
+    };
+
+    [Fact]
+    public void AllColorVariables_ShouldBeStylesWired()
+    {
+        // The whole point of Components/Bubblegum/Styles.gucx is that every control routes its
+        // colors through it via VariableReferences instead of hardcoding values - in every
+        // state, not just Default. A control can look correctly wired at a glance (Default state
+        // references Styles) while every one of its categorized states (Enabled/Disabled/
+        // Highlighted/Pushed/...) still hardcodes the same colors directly.
+        GumProjectSave project = LoadBubblegum();
+
+        List<string> offenders = new();
+        foreach (ComponentSave component in project.Components)
+        {
+            if (component.Name == "Bubblegum/Styles")
+            {
+                continue;
+            }
+
+            foreach (StateSave state in component.AllStates)
+            {
+                HashSet<string> wired = new();
+                foreach (VariableListSave variableList in state.VariableLists)
+                {
+                    if (variableList.GetRootName() != "VariableReferences")
+                    {
+                        continue;
+                    }
+
+                    string? sourceObject = variableList.SourceObject;
+                    foreach (string referenceString in variableList.ValueAsIList.Cast<string>())
+                    {
+                        int equalsIndex = referenceString.IndexOf('=');
+                        if (equalsIndex < 0)
+                        {
+                            continue;
+                        }
+
+                        string left = referenceString.Substring(0, equalsIndex).Trim();
+                        string effectiveLeft = string.IsNullOrEmpty(sourceObject) ? left : $"{sourceObject}.{left}";
+                        wired.Add(effectiveLeft);
+                    }
+                }
+
+                Dictionary<string, VariableSave> variablesByName = state.Variables
+                    .Where(v => v.Name != null)
+                    .GroupBy(v => v.Name!)
+                    .ToDictionary(g => g.Key, g => g.First());
+
+                foreach (VariableSave variable in state.Variables)
+                {
+                    if (variable.SetsValue != true || variable.Name == null)
+                    {
+                        continue;
+                    }
+
+                    string channel = GetLastNameSegment(variable.Name);
+                    if (!ColorChannelSuffixes.Contains(channel))
+                    {
+                        continue;
+                    }
+
+                    if (wired.Contains(variable.Name))
+                    {
+                        continue;
+                    }
+
+                    // A fully transparent fill's RGB is never visible, so it doesn't need to
+                    // route through Styles - it's not "touching color" in any observable way.
+                    if (channel.StartsWith("Fill", StringComparison.Ordinal))
+                    {
+                        string prefix = variable.Name.Substring(0, variable.Name.Length - channel.Length - 1);
+                        if (variablesByName.TryGetValue($"{prefix}.FillAlpha", out VariableSave? alphaVariable)
+                            && alphaVariable.SetsValue == true
+                            && alphaVariable.Value != null
+                            && Convert.ToInt32(alphaVariable.Value) == 0)
+                        {
+                            continue;
+                        }
+                    }
+
+                    offenders.Add($"{component.Name} [{state.Name}]: {variable.Name}");
+                }
+            }
+        }
+
+        offenders.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void AllPhysicalComponentFiles_ShouldBeBubblegumNamespaced()
+    {
+        // FormsFileService.GetSourceDestinations copies every .gucx file it finds on disk
+        // under the theme folder, regardless of whether that file is registered as a
+        // ComponentReference in the theme's own GumProject.gumx. A file whose own <Name> tag
+        // was left unrenamed during the Bubblegum/ namespacing pass still gets imported under
+        // its stale name, colliding with (or duplicating) content from every other theme's
+        // import.
+        string bubblegumDir = Path.Combine(FindRepoRoot(),
+            "Tools", "Gum.ProjectServices", "Templates", "FormsThemes", "Bubblegum");
+
+        List<string> componentFiles = Directory
+            .GetFiles(Path.Combine(bubblegumDir, "Components"), "*.gucx", SearchOption.AllDirectories)
+            .ToList();
+
+        List<string> offenders = new();
+        foreach (string file in componentFiles)
+        {
+            string? name = XDocument.Load(file).Root?.Element("Name")?.Value;
+            if (name != null && !name.StartsWith("Bubblegum/", StringComparison.Ordinal))
+            {
+                offenders.Add($"{Path.GetFileName(file)}: <Name>{name}</Name>");
+            }
+        }
+
+        offenders.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void AllBehaviorFiles_ShouldBeSharedAndUnnamespaced()
+    {
+        // Unlike Components (which define a theme's look), Behaviors declare the generic
+        // category-state/FormsProperty contract every theme's visuals plug into - the same
+        // content every project and theme needs. They live flat at the project root
+        // (Behaviors/*.behx, matching Standards) rather than namespaced per theme, so
+        // importing a theme reuses/overwrites the shared behavior instead of adding a
+        // redundant Bubblegum-specific copy alongside it.
+        string behaviorsDir = Path.Combine(FindRepoRoot(),
+            "Tools", "Gum.ProjectServices", "Templates", "FormsThemes", "Bubblegum", "Behaviors");
+
+        List<string> topLevelBehaviorFiles = Directory
+            .GetFiles(behaviorsDir, "*.behx", SearchOption.TopDirectoryOnly)
+            .ToList();
+        List<string> allBehaviorFiles = Directory
+            .GetFiles(behaviorsDir, "*.behx", SearchOption.AllDirectories)
+            .ToList();
+
+        allBehaviorFiles.ShouldBe(topLevelBehaviorFiles, ignoreOrder: true,
+            customMessage: "Behavior files must live directly under Behaviors/, not in a per-theme subfolder.");
+
+        List<string> offenders = new();
+        foreach (string file in topLevelBehaviorFiles)
+        {
+            string? name = XDocument.Load(file).Root?.Element("Name")?.Value;
+            if (name != null && name.StartsWith("Bubblegum/", StringComparison.Ordinal))
+            {
+                offenders.Add($"{Path.GetFileName(file)}: <Name>{name}</Name>");
+            }
+        }
+
+        offenders.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void StylesPalette_ShouldExactlyMatchCodeOnlyBubblegumColors()
+    {
+        // Components/Bubblegum/Styles.gucx exists so tool content can reference one set of
+        // color/text tokens instead of hardcoding values. Its swatch names must match
+        // Themes/Gum.Themes.Bubblegum.MonoGame/BubblegumStyling.cs's BubblegumColors/BubblegumText
+        // properties exactly (not the generic Standard/FormsTemplate naming this once inherited),
+        // and carry no swatch beyond what that class defines - otherwise the tool content silently
+        // drifts from the theme it's supposed to mirror.
+        string[] expectedColorSwatches =
+        {
+            "Accent", "AccentDark", "AccentHover", "AccentLight", "Background", "Border",
+            "Disabled", "DisabledFill", "HoverOption", "HoverRow", "Muted", "Placeholder",
+            "Surface1", "Text", "White"
+        };
+        string[] expectedTextStyles = { "Normal", "Strong" };
+
+        GumProjectSave project = LoadBubblegum();
+        ComponentSave styles = project.Components.Single(c => c.Name == "Bubblegum/Styles");
+
+        List<string> actualColorSwatches = styles.Instances
+            .Where(i => i.BaseType is "Rectangle")
+            .Select(i => i.Name)
+            .OrderBy(n => n, StringComparer.Ordinal)
+            .ToList();
+        List<string> actualTextStyles = styles.Instances
+            .Where(i => i.BaseType is "Text")
+            .Select(i => i.Name)
+            .OrderBy(n => n, StringComparer.Ordinal)
+            .ToList();
+
+        actualColorSwatches.ShouldBe(expectedColorSwatches.OrderBy(n => n, StringComparer.Ordinal).ToList());
+        actualTextStyles.ShouldBe(expectedTextStyles.OrderBy(n => n, StringComparer.Ordinal).ToList());
     }
 
     private static string GetLastNameSegment(string variableName)

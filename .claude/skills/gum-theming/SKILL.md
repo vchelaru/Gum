@@ -315,3 +315,4 @@ If the chrome's geometry depends on its visibility (e.g. ScrollBar's `ShowFrame`
 - Apos.Shapes runtime types and the shape-batch scissor plumbing: [gum-monogame-rendering](../gum-monogame-rendering/SKILL.md).
 - V3 visual base classes and the state-category contract: [gum-forms-default-visuals](../gum-forms-default-visuals/SKILL.md).
 - KernSmith and font generation: [gum-runtime-fonts](../gum-runtime-fonts/SKILL.md).
+- Porting a theme's look into the tool's Add Forms dialog as importable Gum content (a separate system from this one): [gum-forms-theme-import](../gum-forms-theme-import/SKILL.md).

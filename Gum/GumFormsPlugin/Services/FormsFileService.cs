@@ -55,7 +55,10 @@ public class FormsFileService : IFormsFileService
             .Replace('\\', '/') + "/";
 
     /// <inheritdoc/>
-    /// <remarks>Extensions skipped: .gumx, .gumfcs, .ganx (animation files, deferred), .codsj</remarks>
+    /// <remarks>
+    /// Extensions skipped: .gumx, .gumfcs, .ganx (animation files, deferred), .codsj.
+    /// .gutx (Standards) is skipped for every theme except <see cref="DefaultThemeName"/>.
+    /// </remarks>
     public Dictionary<string, FilePath> GetSourceDestinations(string themeName, bool isIncludeDemoScreenGum)
     {
         var destinationFolder = _projectState.ProjectDirectory;
@@ -96,6 +99,15 @@ public class FormsFileService : IFormsFileService
             // Skip files that are not content or not relevant to import
             if (extension is "gumx" or "gumfcs" or
                 "ganx" or "codsj" or "bmfc" or "fnt" or "exe" or "setj" or "json")
+            {
+                continue;
+            }
+
+            // Only the Standard theme may modify the destination project's Standard elements.
+            // Styling must live entirely in a theme's own Components, never in shared Standards,
+            // or importing one theme after another would stomp the earlier theme's look.
+            if (extension == "gutx" &&
+                !string.Equals(themeName, DefaultThemeName, StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
