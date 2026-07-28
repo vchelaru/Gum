@@ -126,6 +126,22 @@ char id=37   x=161   y=0     width=22    height=20    xoffset=1     yoffset=6   
         Assert.Throws<InvalidOperationException>(() => new BitmapFont((Texture2D)null!, bmFontData));
     }
 
+    [Theory]
+    [InlineData("FontCache/Font24Arial_ds2.fnt", "FontCache/Font24Arial_ds2-shadow.fnt")]
+    [InlineData("Font18Arial.FNT", "Font18Arial-shadow.fnt")]
+    public void GetShadowSiblingFntPath_AppendsShadowSuffix(string fontFile, string expected)
+    {
+        BitmapFont.GetShadowSiblingFntPath(fontFile).ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("Font18Arial_0.png")]
+    [InlineData("FontCache/Font24Arial")]
+    public void GetShadowSiblingFntPath_ReturnsNull_ForNonFntPath(string fontFile)
+    {
+        BitmapFont.GetShadowSiblingFntPath(fontFile).ShouldBeNull();
+    }
+
     [Fact]
     public void MeasureString_ShouldProperlyMeasureWhitespace()
     {

@@ -111,6 +111,14 @@ public class BitmapFont : IDisposable
     /// </summary>
     public BitmapCharacterInfo[] Characters => mCharacterInfo;
 
+    /// <summary>
+    /// Optional companion font holding the drop-shadow silhouette glyphs (issue #4001). When set,
+    /// <see cref="Text"/> draws these offset and tinted underneath the primary glyphs. Loaded from
+    /// the "-shadow.fnt" sibling next to this font's .fnt (or attached by an in-memory font creator),
+    /// and shares this font's atlas page(s), so no extra texture is loaded.
+    /// </summary>
+    public BitmapFont? ShadowFont { get; set; }
+
     #endregion
 
     #region Methods
@@ -136,6 +144,37 @@ public class BitmapFont : IDisposable
         ReloadTextures(fontFile, fontContents);
 
         SetFontPattern();
+
+        LoadShadowSiblingIfPresent(fontFile);
+    }
+
+    /// <summary>
+    /// Issue #4001: if a "-shadow.fnt" sibling exists next to <paramref name="fontFile"/> (written by
+    /// the font generator for a dropshadow font, sharing the same PNG), load it as <see cref="ShadowFont"/>.
+    /// The sibling has no "-shadow.fnt" of its own, so this does not recurse.
+    /// </summary>
+    private void LoadShadowSiblingIfPresent(string fontFile)
+    {
+        string? shadowFile = GetShadowSiblingFntPath(fontFile);
+        if (shadowFile != null && FileManager.FileExists(shadowFile))
+        {
+            ShadowFont = new BitmapFont(shadowFile);
+        }
+    }
+
+    /// <summary>
+    /// Returns the "-shadow.fnt" sibling path for a primary .fnt path, or null if the path is not a
+    /// .fnt. The sibling is not itself a .fnt+"-shadow", so loading it does not recurse (issue #4001).
+    /// </summary>
+    public static string? GetShadowSiblingFntPath(string fontFile)
+    {
+        const string fntExtension = ".fnt";
+        if (!fontFile.EndsWith(fntExtension, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        return fontFile.Substring(0, fontFile.Length - fntExtension.Length) + "-shadow" + fntExtension;
     }
 
     private bool ContainsAscii(string s)

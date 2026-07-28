@@ -147,7 +147,18 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         }
     }
 
-    
+    /// <summary>
+    /// When true and the active <see cref="BitmapFont"/> has a <see cref="Fonts.BitmapFont.ShadowFont"/>,
+    /// a drop shadow is drawn as a second pass (issue #4001): the shadow silhouette is drawn offset by
+    /// <see cref="DropshadowOffsetX"/>/<see cref="DropshadowOffsetY"/> and tinted <see cref="DropshadowColor"/>,
+    /// with the primary glyphs drawn on top. This keeps text and shadow color independent, which baking
+    /// the shadow into the atlas could not.
+    /// </summary>
+    public bool HasDropshadow;
+    public Color DropshadowColor = Color.FromArgb(180, 0, 0, 0);
+    public float DropshadowOffsetX;
+    public float DropshadowOffsetY;
+
     List<string> mWrappedText = new List<string>();
     float? mWidth = 200;
     float mHeight = 200;
@@ -1052,6 +1063,23 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                 }
                 else
                 {
+                    if (HasDropshadow && fontToUse.ShadowFont != null)
+                    {
+                        // Issue #4001: draw the shadow silhouette first, offset and tinted, so the
+                        // primary glyphs land on top of it. The offset scales with the font so it
+                        // stays proportional when the text is scaled.
+                        fontToUse.ShadowFont.DrawTextLines(WrappedText,
+                            HorizontalAlignment,
+                            this,
+                            requiredWidth, widths, spriteRenderer, DropshadowColor,
+                            absoluteLeft + DropshadowOffsetX * EffectiveFontScale,
+                            absoluteTop + DropshadowOffsetY * EffectiveFontScale,
+                            this.GetAbsoluteRotation(),
+                            EffectiveFontScale, EffectiveFontScale, maxLettersToShow,
+                            OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier,
+                            overlapDirection: OverlapDirection);
+                    }
+
                     fontToUse.DrawTextLines(WrappedText,
                         HorizontalAlignment,
                         this,
@@ -1099,6 +1127,19 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             if (substrings.Count == 0)
             {
                 lineByLineList[0] = lineOfText;
+
+                if (HasDropshadow && fontToUse.ShadowFont != null)
+                {
+                    fontToUse.ShadowFont.DrawTextLines(lineByLineList, HorizontalAlignment,
+                        this,
+                        requiredWidth, widths, spriteRenderer, DropshadowColor,
+                        absoluteLeft + DropshadowOffsetX * EffectiveFontScale,
+                        topOfLine + DropshadowOffsetY * EffectiveFontScale,
+                        this.GetAbsoluteRotation(), EffectiveFontScale,
+                        EffectiveFontScale, lettersLeft, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier,
+                        overlapDirection: OverlapDirection);
+                }
+
                 fontToUse.DrawTextLines(lineByLineList, HorizontalAlignment,
                     this,
                     requiredWidth, widths, spriteRenderer, color,
@@ -1263,6 +1304,26 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
                     var baselineDifference = maxBaseline - (fontScale * effectiveFont.BaselineY);
                     effectiveTopOfLine += baselineDifference;
+
+                    if (HasDropshadow && effectiveFont.ShadowFont != null)
+                    {
+                        effectiveFont.ShadowFont.DrawTextLines(lineByLineList, HorizontalAlignment,
+                            this,
+                            requiredWidth,
+                            individualLineWidth,
+                            spriteRenderer,
+                            DropshadowColor,
+                            absoluteLeft + xOffset + DropshadowOffsetX * fontScale,
+                            effectiveTopOfLine + yOffset + DropshadowOffsetY * fontScale,
+                            rotation + rotationOffset,
+                            fontScale * scaleX,
+                            fontScale * scaleY,
+                            lettersLeft,
+                            OverrideTextRenderingPositionMode,
+                            lineHeightMultiplier: LineHeightMultiplier,
+                            shiftForOutline: substringIndex == 0,
+                            overlapDirection: OverlapDirection);
+                    }
 
                     var rect = effectiveFont.DrawTextLines(lineByLineList, HorizontalAlignment,
                         this,
