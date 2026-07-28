@@ -86,7 +86,7 @@
   <Instance Name="LineInstance" BaseType="Rectangle" />
   <Behaviors>
     <ElementBehaviorReference>
-      <BehaviorName>Bubblegum/SplitterBehavior</BehaviorName>
+      <BehaviorName>SplitterBehavior</BehaviorName>
     </ElementBehaviorReference>
   </Behaviors>
   <VariablesHiddenFromInstances>

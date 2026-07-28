@@ -10,7 +10,7 @@
   </State>
   <Behaviors>
     <ElementBehaviorReference>
-      <BehaviorName>Bubblegum/PanelBehavior</BehaviorName>
+      <BehaviorName>PanelBehavior</BehaviorName>
     </ElementBehaviorReference>
   </Behaviors>
 </ComponentSave>

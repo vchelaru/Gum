@@ -1240,7 +1240,7 @@
   <Instance Name="FocusedIndicator" BaseType="Rectangle" />
   <Behaviors>
     <ElementBehaviorReference>
-      <BehaviorName>Bubblegum/CheckBoxBehavior</BehaviorName>
+      <BehaviorName>CheckBoxBehavior</BehaviorName>
     </ElementBehaviorReference>
   </Behaviors>
   <VariablesHiddenFromInstances>

@@ -323,7 +323,7 @@
   <Instance Name="FocusedIndicator" BaseType="Rectangle" />
   <Behaviors>
     <ElementBehaviorReference>
-      <BehaviorName>Bubblegum/ItemsControlBehavior</BehaviorName>
+      <BehaviorName>ItemsControlBehavior</BehaviorName>
     </ElementBehaviorReference>
   </Behaviors>
   <VariablesHiddenFromInstances>

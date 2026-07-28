@@ -199,7 +199,7 @@
   <Instance Name="ContinueIndicatorInstance" BaseType="Text" />
   <Behaviors>
     <ElementBehaviorReference>
-      <BehaviorName>Bubblegum/DialogBoxBehavior</BehaviorName>
+      <BehaviorName>DialogBoxBehavior</BehaviorName>
     </ElementBehaviorReference>
   </Behaviors>
   <VariablesHiddenFromInstances>

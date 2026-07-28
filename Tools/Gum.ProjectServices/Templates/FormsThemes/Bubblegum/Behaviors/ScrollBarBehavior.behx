@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <BehaviorSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <Name>Bubblegum/ScrollBarBehavior</Name>
+  <Name>ScrollBarBehavior</Name>
   <RequiredVariables />
   <FormsProperty Type="string" Name="ToolTip" />
   <FormsProperty Type="bool" Name="IsEnabled">
@@ -32,7 +32,7 @@
       <DefinedByBase>false</DefinedByBase>
       <Behaviors>
         <BehaviorReference>
-          <Name>Bubblegum/ButtonBehavior</Name>
+          <Name>ButtonBehavior</Name>
         </BehaviorReference>
       </Behaviors>
     </InstanceSave>

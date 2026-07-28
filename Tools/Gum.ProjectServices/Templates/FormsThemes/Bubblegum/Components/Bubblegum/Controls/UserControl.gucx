@@ -72,7 +72,7 @@
   <Instance Name="Background" BaseType="Rectangle" />
   <Behaviors>
     <ElementBehaviorReference>
-      <BehaviorName>Bubblegum/UserControlBehavior</BehaviorName>
+      <BehaviorName>UserControlBehavior</BehaviorName>
     </ElementBehaviorReference>
   </Behaviors>
   <VariablesHiddenFromInstances>

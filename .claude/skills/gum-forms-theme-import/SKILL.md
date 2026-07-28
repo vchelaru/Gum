@@ -29,15 +29,36 @@ So a theme can't be namespaced by nesting its whole tree one level deeper (e.g. 
 
 Instead, prefix the theme name into every qualified `Name` itself, the same way `Controls/` and
 `Elements/` already subfolder within `Components/`: `Controls/Button` → `Bubblegum/Controls/Button`,
-landing on disk at `Components/Bubblegum/Controls/Button.gucx`. Apply this to every reference
-surface: `.gumx` `ComponentReference`/`ScreenReference`/`BehaviorReference` `Name` attributes,
-each file's own `<Name>` tag, `BaseType="..."` instance attributes, `VariableReferences` strings
+landing on disk at `Components/Bubblegum/Controls/Button.gucx`. Apply this to every Component/Screen
+reference surface: `.gumx` `ComponentReference`/`ScreenReference` `Name` attributes, each file's own
+`<Name>` tag, `BaseType="..."` instance attributes, `VariableReferences` strings
 (`Components/Styles.X` → `Components/Bubblegum/Styles.X`), and a `.behx`'s
-`<DefaultImplementation>`/`<BehaviorName>`. `StandardElementReference` stays unprefixed — Standards
-aren't per-theme (see below). Without this, importing a second theme into the same project
-silently overwrites the first theme's entire Components/Behaviors/Screens tree
-(`GetSourceDestinations` maps every theme file to an identical unnamespaced destination with
-`overwrite: true`).
+`<DefaultImplementation>` (points at a themed *component*, so it gets the prefix even though the
+behavior file itself doesn't — see below). `StandardElementReference` and `BehaviorReference` stay
+unprefixed. Without this, importing a second theme into the same project silently overwrites the
+first theme's entire Components/Screens tree (`GetSourceDestinations` maps every theme file to an
+identical unnamespaced destination with `overwrite: true`).
+
+**A file that exists on disk but isn't referenced in the theme's own `.gumx` still gets copied and
+imported** — `GetSourceDestinations` walks every `.gucx`/`.behx` file under the theme folder, not
+just the ones listed as a `ComponentReference`/`BehaviorReference`. A rename pass built only from
+the `.gumx`'s reference list misses these orphans, leaving a stale un-prefixed `<Name>` that
+duplicates or collides with the correctly-renamed content. Verify by scanning physical files
+directly (`Directory.GetFiles(..., SearchOption.AllDirectories)`), not `project.AllElements`, which
+only reflects what's registered.
+
+## Behaviors are shared infrastructure, not per-theme content
+
+Unlike Components (a theme's look) and Screens (a theme's demo content), Behaviors declare the
+generic category-state/`FormsProperty` contract every theme's visuals plug into — the same
+`ButtonBehavior`, `CheckBoxBehavior`, etc. every theme and project needs. They live flat at
+`Behaviors/*.behx`, unprefixed, matching how `Standards/` is shared rather than namespaced. A
+`.behx`'s own `<Name>` and a `.gucx`'s `<ElementBehaviorReference><BehaviorName>` stay unprefixed;
+only `<DefaultImplementation>` (which names a themed *component*) gets the theme prefix. Each
+theme still ships its own copy of every behavior file (same reason as Standards, above) — those
+copies are expected to be identical to every other theme's, so importing one theme after another
+just re-overwrites the shared file rather than duplicating it. There's no mechanism yet to
+guarantee the copies actually stay identical as Forms controls gain new properties — see #4070.
 
 ## Standard elements: only the default theme may touch them
 
@@ -65,3 +86,11 @@ regardless of instance type. Getting this wrong doesn't error — if the pre-exi
 is unchanged, so the mistake is invisible until `gumcli check-references` reports "has
 VariableReferences but missing materialized scalars" (it matches by property *name*, not value).
 Run `gumcli check-references --fix` after any hand-authored reference to materialize it for real.
+
+None of this exercises the actual runtime copy path, though: `gumcli` reads straight from
+`Templates/FormsThemes/<Theme>/`, but Add Forms reads from `Gum/bin/<Config>/Content/FormsThemes/<Theme>/`,
+populated by `GumFormsPlugin`'s postbuild `xcopy`. `xcopy` never deletes — a rename or removal in
+the template leaves the stale old file sitting in any already-built output, so importing the theme
+pulls in both the old and new copy. The postbuild step deletes the theme's output folder before
+`xcopy`-ing to prevent this; verify a source-side rename actually lands clean by planting a
+throwaway file in the built output and confirming a rebuild removes it.

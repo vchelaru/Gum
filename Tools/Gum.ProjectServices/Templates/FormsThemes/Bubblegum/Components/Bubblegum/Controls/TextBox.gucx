@@ -703,7 +703,7 @@
   <Instance Name="BorderInstance" BaseType="Rectangle" />
   <Behaviors>
     <ElementBehaviorReference>
-      <BehaviorName>Bubblegum/TextBoxBehavior</BehaviorName>
+      <BehaviorName>TextBoxBehavior</BehaviorName>
     </ElementBehaviorReference>
   </Behaviors>
   <VariablesHiddenFromInstances>

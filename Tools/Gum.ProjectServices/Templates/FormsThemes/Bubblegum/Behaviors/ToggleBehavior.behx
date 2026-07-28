@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <BehaviorSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <Name>Bubblegum/RadioButtonBehavior</Name>
+  <Name>ToggleBehavior</Name>
   <RequiredVariables />
   <FormsProperty Type="string" Name="ToolTip" />
   <FormsProperty Type="bool" Name="IsEnabled">
@@ -9,12 +9,9 @@
   <FormsProperty Type="bool" Name="IsChecked">
     <Value xsi:type="xsd:boolean">false</Value>
   </FormsProperty>
-  <FormsProperty Type="string" Name="GroupName">
-    <Description>Radio buttons that share a GroupName mutually exclude each other at runtime. Empty groups by parent container.</Description>
-  </FormsProperty>
-  <ToolOnlyVariableReference>RadioButtonCategoryState = IsEnabled ? (IsChecked ? "EnabledOn" : "EnabledOff") : (IsChecked ? "DisabledOn" : "DisabledOff")</ToolOnlyVariableReference>
+  <ToolOnlyVariableReference>ToggleCategoryState = IsEnabled ? (IsChecked ? "EnabledOn" : "EnabledOff") : (IsChecked ? "DisabledOn" : "DisabledOff")</ToolOnlyVariableReference>
   <Category>
-    <Name>RadioButtonCategory</Name>
+    <Name>ToggleCategory</Name>
     <State>
       <Name>EnabledOn</Name>
     </State>
@@ -39,26 +36,8 @@
     <State>
       <Name>PushedOff</Name>
     </State>
-    <State>
-      <Name>FocusedOn</Name>
-    </State>
-    <State>
-      <Name>FocusedOff</Name>
-    </State>
-    <State>
-      <Name>HighlightedFocusedOn</Name>
-    </State>
-    <State>
-      <Name>HighlightedFocusedOff</Name>
-    </State>
-    <State>
-      <Name>DisabledFocusedOn</Name>
-    </State>
-    <State>
-      <Name>DisabledFocusedOff</Name>
-    </State>
   </Category>
   <RequiredInstances />
   <RequiredAnimations />
-  <DefaultImplementation>Bubblegum/Controls/RadioButton</DefaultImplementation>
+  <DefaultImplementation>Controls/TreeViewToggle</DefaultImplementation>
 </BehaviorSave>

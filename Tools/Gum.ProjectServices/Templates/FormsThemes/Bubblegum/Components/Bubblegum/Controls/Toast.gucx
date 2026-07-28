@@ -185,7 +185,7 @@
   <Instance Name="TextInstance" BaseType="Text" />
   <Behaviors>
     <ElementBehaviorReference>
-      <BehaviorName>Bubblegum/ToastBehavior</BehaviorName>
+      <BehaviorName>ToastBehavior</BehaviorName>
     </ElementBehaviorReference>
   </Behaviors>
   <VariablesHiddenFromInstances>

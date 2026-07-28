@@ -220,7 +220,7 @@
   <Instance Name="ThumbInstance" BaseType="Bubblegum/Controls/SliderThumb" />
   <Behaviors>
     <ElementBehaviorReference>
-      <BehaviorName>Bubblegum/SliderBehavior</BehaviorName>
+      <BehaviorName>SliderBehavior</BehaviorName>
     </ElementBehaviorReference>
   </Behaviors>
   <VariablesHiddenFromInstances>

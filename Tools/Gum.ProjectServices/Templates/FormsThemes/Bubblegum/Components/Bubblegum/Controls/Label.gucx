@@ -309,7 +309,7 @@
   </Category>
   <Behaviors>
     <ElementBehaviorReference>
-      <BehaviorName>Bubblegum/LabelBehavior</BehaviorName>
+      <BehaviorName>LabelBehavior</BehaviorName>
     </ElementBehaviorReference>
   </Behaviors>
   <VariablesHiddenFromInstances>

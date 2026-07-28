@@ -611,7 +611,7 @@
   <Instance Name="FocusedIndicator" BaseType="Rectangle" />
   <Behaviors>
     <ElementBehaviorReference>
-      <BehaviorName>Bubblegum/ComboBoxBehavior</BehaviorName>
+      <BehaviorName>ComboBoxBehavior</BehaviorName>
     </ElementBehaviorReference>
   </Behaviors>
   <VariablesHiddenFromInstances>

@@ -153,7 +153,7 @@
   <Instance Name="ThumbInstance" BaseType="Bubblegum/Controls/Button" />
   <Behaviors>
     <ElementBehaviorReference>
-      <BehaviorName>Bubblegum/ScrollBarBehavior</BehaviorName>
+      <BehaviorName>ScrollBarBehavior</BehaviorName>
     </ElementBehaviorReference>
   </Behaviors>
   <VariablesHiddenFromInstances>

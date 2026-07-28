@@ -259,7 +259,7 @@
   <Instance Name="TextInstance" BaseType="Text" />
   <Behaviors>
     <ElementBehaviorReference>
-      <BehaviorName>Bubblegum/ListBoxItemBehavior</BehaviorName>
+      <BehaviorName>ListBoxItemBehavior</BehaviorName>
     </ElementBehaviorReference>
   </Behaviors>
   <VariablesHiddenFromInstances>

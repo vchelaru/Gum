@@ -915,7 +915,7 @@
   <Instance Name="FocusedIndicator" BaseType="Circle" />
   <Behaviors>
     <ElementBehaviorReference>
-      <BehaviorName>Bubblegum/RadioButtonBehavior</BehaviorName>
+      <BehaviorName>RadioButtonBehavior</BehaviorName>
     </ElementBehaviorReference>
   </Behaviors>
   <VariablesHiddenFromInstances>

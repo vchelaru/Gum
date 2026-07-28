@@ -441,7 +441,7 @@
   <Instance Name="SubItemContainerInstance" BaseType="Container" />
   <Behaviors>
     <ElementBehaviorReference>
-      <BehaviorName>Bubblegum/MenuItemBehavior</BehaviorName>
+      <BehaviorName>MenuItemBehavior</BehaviorName>
     </ElementBehaviorReference>
   </Behaviors>
   <VariablesHiddenFromInstances>

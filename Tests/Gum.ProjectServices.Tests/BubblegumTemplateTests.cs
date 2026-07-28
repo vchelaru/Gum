@@ -139,27 +139,61 @@ public class BubblegumTemplateTests
     }
 
     [Fact]
-    public void AllPhysicalComponentAndBehaviorFiles_ShouldBeBubblegumNamespaced()
+    public void AllPhysicalComponentFiles_ShouldBeBubblegumNamespaced()
     {
-        // FormsFileService.GetSourceDestinations copies every .gucx/.behx file it finds on
-        // disk under the theme folder, regardless of whether that file is registered as a
-        // ComponentReference/BehaviorReference in the theme's own GumProject.gumx. A file
-        // whose own <Name> tag was left unrenamed during the Bubblegum/ namespacing pass
-        // still gets imported under its stale name, colliding with (or duplicating) content
-        // from every other theme's import.
+        // FormsFileService.GetSourceDestinations copies every .gucx file it finds on disk
+        // under the theme folder, regardless of whether that file is registered as a
+        // ComponentReference in the theme's own GumProject.gumx. A file whose own <Name> tag
+        // was left unrenamed during the Bubblegum/ namespacing pass still gets imported under
+        // its stale name, colliding with (or duplicating) content from every other theme's
+        // import.
         string bubblegumDir = Path.Combine(FindRepoRoot(),
             "Tools", "Gum.ProjectServices", "Templates", "FormsThemes", "Bubblegum");
 
-        List<string> componentAndBehaviorFiles = Directory
+        List<string> componentFiles = Directory
             .GetFiles(Path.Combine(bubblegumDir, "Components"), "*.gucx", SearchOption.AllDirectories)
-            .Concat(Directory.GetFiles(Path.Combine(bubblegumDir, "Behaviors"), "*.behx", SearchOption.AllDirectories))
             .ToList();
 
         List<string> offenders = new();
-        foreach (string file in componentAndBehaviorFiles)
+        foreach (string file in componentFiles)
         {
             string? name = XDocument.Load(file).Root?.Element("Name")?.Value;
             if (name != null && !name.StartsWith("Bubblegum/", StringComparison.Ordinal))
+            {
+                offenders.Add($"{Path.GetFileName(file)}: <Name>{name}</Name>");
+            }
+        }
+
+        offenders.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void AllBehaviorFiles_ShouldBeSharedAndUnnamespaced()
+    {
+        // Unlike Components (which define a theme's look), Behaviors declare the generic
+        // category-state/FormsProperty contract every theme's visuals plug into - the same
+        // content every project and theme needs. They live flat at the project root
+        // (Behaviors/*.behx, matching Standards) rather than namespaced per theme, so
+        // importing a theme reuses/overwrites the shared behavior instead of adding a
+        // redundant Bubblegum-specific copy alongside it.
+        string behaviorsDir = Path.Combine(FindRepoRoot(),
+            "Tools", "Gum.ProjectServices", "Templates", "FormsThemes", "Bubblegum", "Behaviors");
+
+        List<string> topLevelBehaviorFiles = Directory
+            .GetFiles(behaviorsDir, "*.behx", SearchOption.TopDirectoryOnly)
+            .ToList();
+        List<string> allBehaviorFiles = Directory
+            .GetFiles(behaviorsDir, "*.behx", SearchOption.AllDirectories)
+            .ToList();
+
+        allBehaviorFiles.ShouldBe(topLevelBehaviorFiles, ignoreOrder: true,
+            customMessage: "Behavior files must live directly under Behaviors/, not in a per-theme subfolder.");
+
+        List<string> offenders = new();
+        foreach (string file in topLevelBehaviorFiles)
+        {
+            string? name = XDocument.Load(file).Root?.Element("Name")?.Value;
+            if (name != null && name.StartsWith("Bubblegum/", StringComparison.Ordinal))
             {
                 offenders.Add($"{Path.GetFileName(file)}: <Name>{name}</Name>");
             }

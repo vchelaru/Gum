@@ -530,7 +530,7 @@
   <Instance Name="BorderRightInstance" BaseType="Bubblegum/Controls/Panel" />
   <Behaviors>
     <ElementBehaviorReference>
-      <BehaviorName>Bubblegum/WindowBehavior</BehaviorName>
+      <BehaviorName>WindowBehavior</BehaviorName>
     </ElementBehaviorReference>
   </Behaviors>
   <VariablesHiddenFromInstances>
