@@ -122,9 +122,9 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillRed = Components/Bubblegum/Styles.Highlight.FillRed</string>
-        <string>FillGreen = Components/Bubblegum/Styles.Highlight.FillGreen</string>
-        <string>FillBlue = Components/Bubblegum/Styles.Highlight.FillBlue</string>
+        <string>FillRed = Components/Bubblegum/Styles.AccentLight.FillRed</string>
+        <string>FillGreen = Components/Bubblegum/Styles.AccentLight.FillGreen</string>
+        <string>FillBlue = Components/Bubblegum/Styles.AccentLight.FillBlue</string>
       </Value>
     </VariableList>
   </State>

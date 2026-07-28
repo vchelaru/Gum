@@ -281,9 +281,9 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillRed = Components/Bubblegum/Styles.White.FillRed</string>
-        <string>FillGreen = Components/Bubblegum/Styles.White.FillGreen</string>
-        <string>FillBlue = Components/Bubblegum/Styles.White.FillBlue</string>
+        <string>FillRed = Components/Bubblegum/Styles.Surface1.FillRed</string>
+        <string>FillGreen = Components/Bubblegum/Styles.Surface1.FillGreen</string>
+        <string>FillBlue = Components/Bubblegum/Styles.Surface1.FillBlue</string>
       </Value>
     </VariableList>
   </State>

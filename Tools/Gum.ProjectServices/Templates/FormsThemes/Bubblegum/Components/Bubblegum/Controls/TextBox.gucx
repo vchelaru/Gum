@@ -407,9 +407,9 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Bubblegum/Styles.Gray.FillRed</string>
-        <string>Green = Components/Bubblegum/Styles.Gray.FillGreen</string>
-        <string>Blue = Components/Bubblegum/Styles.Gray.FillBlue</string>
+        <string>Red = Components/Bubblegum/Styles.Placeholder.FillRed</string>
+        <string>Green = Components/Bubblegum/Styles.Placeholder.FillGreen</string>
+        <string>Blue = Components/Bubblegum/Styles.Placeholder.FillBlue</string>
         <string>Font = Components/Bubblegum/Styles.Normal.Font</string>
         <string>FontSize = Components/Bubblegum/Styles.Normal.FontSize</string>
       </Value>
@@ -421,9 +421,9 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Bubblegum/Styles.Black.FillRed</string>
-        <string>Green = Components/Bubblegum/Styles.Black.FillGreen</string>
-        <string>Blue = Components/Bubblegum/Styles.Black.FillBlue</string>
+        <string>Red = Components/Bubblegum/Styles.Text.FillRed</string>
+        <string>Green = Components/Bubblegum/Styles.Text.FillGreen</string>
+        <string>Blue = Components/Bubblegum/Styles.Text.FillBlue</string>
         <string>Font = Components/Bubblegum/Styles.Normal.Font</string>
         <string>FontSize = Components/Bubblegum/Styles.Normal.FontSize</string>
       </Value>

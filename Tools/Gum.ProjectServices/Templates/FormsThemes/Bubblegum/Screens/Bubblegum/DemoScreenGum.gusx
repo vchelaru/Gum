@@ -699,12 +699,12 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Bubblegum/Styles.Primary.FillRed</string>
-        <string>Green = Components/Bubblegum/Styles.Primary.FillGreen</string>
-        <string>Blue = Components/Bubblegum/Styles.Primary.FillBlue</string>
-        <string>Font = Components/Bubblegum/Styles.Title.Font</string>
-        <string>FontSize = Components/Bubblegum/Styles.Title.FontSize</string>
-        <string>IsBold = Components/Bubblegum/Styles.Title.IsBold</string>
+        <string>Red = Components/Bubblegum/Styles.Accent.FillRed</string>
+        <string>Green = Components/Bubblegum/Styles.Accent.FillGreen</string>
+        <string>Blue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+        <string>Font = Components/Bubblegum/Styles.Strong.Font</string>
+        <string>FontSize = Components/Bubblegum/Styles.Strong.FontSize</string>
+        <string>IsBold = Components/Bubblegum/Styles.Strong.IsBold</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -714,12 +714,12 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Bubblegum/Styles.Primary.FillRed</string>
-        <string>Green = Components/Bubblegum/Styles.Primary.FillGreen</string>
-        <string>Blue = Components/Bubblegum/Styles.Primary.FillBlue</string>
-        <string>Font = Components/Bubblegum/Styles.Title.Font</string>
-        <string>FontSize = Components/Bubblegum/Styles.Title.FontSize</string>
-        <string>IsBold = Components/Bubblegum/Styles.Title.IsBold</string>
+        <string>Red = Components/Bubblegum/Styles.Accent.FillRed</string>
+        <string>Green = Components/Bubblegum/Styles.Accent.FillGreen</string>
+        <string>Blue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+        <string>Font = Components/Bubblegum/Styles.Strong.Font</string>
+        <string>FontSize = Components/Bubblegum/Styles.Strong.FontSize</string>
+        <string>IsBold = Components/Bubblegum/Styles.Strong.IsBold</string>
       </Value>
     </VariableList>
   </State>

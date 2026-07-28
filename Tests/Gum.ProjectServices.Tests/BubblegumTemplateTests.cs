@@ -202,6 +202,40 @@ public class BubblegumTemplateTests
         offenders.ShouldBeEmpty();
     }
 
+    [Fact]
+    public void StylesPalette_ShouldExactlyMatchCodeOnlyBubblegumColors()
+    {
+        // Components/Bubblegum/Styles.gucx exists so tool content can reference one set of
+        // color/text tokens instead of hardcoding values. Its swatch names must match
+        // Themes/Gum.Themes.Bubblegum.MonoGame/BubblegumStyling.cs's BubblegumColors/BubblegumText
+        // properties exactly (not the generic Standard/FormsTemplate naming this once inherited),
+        // and carry no swatch beyond what that class defines - otherwise the tool content silently
+        // drifts from the theme it's supposed to mirror.
+        string[] expectedColorSwatches =
+        {
+            "Accent", "AccentDark", "AccentHover", "AccentLight", "Background", "Border",
+            "Disabled", "DisabledFill", "Muted", "Placeholder", "Surface1", "Text", "White"
+        };
+        string[] expectedTextStyles = { "Normal", "Strong" };
+
+        GumProjectSave project = LoadBubblegum();
+        ComponentSave styles = project.Components.Single(c => c.Name == "Bubblegum/Styles");
+
+        List<string> actualColorSwatches = styles.Instances
+            .Where(i => i.BaseType is "Rectangle")
+            .Select(i => i.Name)
+            .OrderBy(n => n, StringComparer.Ordinal)
+            .ToList();
+        List<string> actualTextStyles = styles.Instances
+            .Where(i => i.BaseType is "Text")
+            .Select(i => i.Name)
+            .OrderBy(n => n, StringComparer.Ordinal)
+            .ToList();
+
+        actualColorSwatches.ShouldBe(expectedColorSwatches.OrderBy(n => n, StringComparer.Ordinal).ToList());
+        actualTextStyles.ShouldBe(expectedTextStyles.OrderBy(n => n, StringComparer.Ordinal).ToList());
+    }
+
     private static string GetLastNameSegment(string variableName)
     {
         int lastDotIndex = variableName.LastIndexOf('.');

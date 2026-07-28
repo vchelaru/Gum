@@ -52,8 +52,6 @@ Components/Bubblegum/Elements/Icon.gucx
 Components/Bubblegum/Styles.gucx
 EventExport/.gitignore
 Fonts/Nunito-Bold.ttf
-Fonts/Nunito-BoldItalic.ttf
-Fonts/Nunito-Italic.ttf
 Fonts/Nunito-Regular.ttf
 Fonts/OFL.txt
 Screens/Bubblegum/DemoScreenGum.gusx
