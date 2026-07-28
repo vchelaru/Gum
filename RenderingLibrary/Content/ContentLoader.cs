@@ -26,8 +26,6 @@ public class ContentLoader : IContentLoader
     public Microsoft.Xna.Framework.Content.ContentManager? XnaContentManager { get; set; }
 #endif
 
-    //List<Atlas> atlases = new List<Atlas>();
-
     /// <inheritdoc/>
     public T LoadContent<T>(string contentName)
     {
@@ -36,19 +34,6 @@ public class ContentLoader : IContentLoader
             var texture = LoadTexture2D(contentName, SystemManagers);
             return (T)(object)texture;
         }
-        //else if(typeof(T) == (typeof(AtlasedTexture)))
-        //{
-        //    foreach(var atlas in atlases)
-        //    {
-        //        if(atlas.Contains(contentName))
-        //        {
-        //            var asObject = (object)atlas.Get(contentName);
-        //            return (T)(asObject);
-        //        }
-        //    }
-
-        //    return default(T);
-        //}
         else
         {
             throw new NotImplementedException($"Error attempting to load {contentName} of type {typeof(T).AssemblyQualifiedName}");
@@ -66,21 +51,6 @@ public class ContentLoader : IContentLoader
                 knownType = true;
                 var texture = LoadTexture2D(contentName, SystemManagers);
                 return (T)(object)texture;
-            }
-            else if (typeof(T) == (typeof(AtlasedTexture)))
-            {
-                knownType = true;
-
-                //foreach (var atlas in atlases)
-                //{
-                //    if (atlas.Contains(contentName))
-                //    {
-                //        var asObject = (object)atlas.Get(contentName);
-                //        return (T)(asObject);
-                //    }
-                //}
-
-                return default(T);
             }
         }
         catch

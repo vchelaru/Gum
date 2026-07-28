@@ -48,15 +48,10 @@ public class BitmapFont : IDisposable
 
     int mOutlineThickness;
 
-    private AtlasedTexture mAtlasedTexture;
-    private LineRectangle mCharRect;
     private ParsedFontFile _ParsedFontFile;
     #endregion
 
     #region Properties
-
-    [Obsolete("Atlased textures are no longer supported in Gum as of 2025")]
-    public AtlasedTexture AtlasedTexture => mAtlasedTexture; 
 
     /// <summary>
     /// The first texture page of this font, or null if no pages exist.
@@ -229,26 +224,17 @@ public class BitmapFont : IDisposable
     {
         for (int i = 0; i < mTextures.Length; i++)
         {
-            AtlasedTexture atlasedTexture = CheckForLoadedAtlasTexture(mTextureNames[i]);
-            if (atlasedTexture != null)
-            {
-                mAtlasedTexture = atlasedTexture;
-                mTextures[i] = mAtlasedTexture.Texture;
-            }
-            else
-            {
-                // Don't rely on FileExists because mTextureNames may be aliased.
-                // If aliased, the internal loader may redirect. Let it do its job:
-                //if (ToolsUtilities.FileManager.FileExists(mTextureNames[i]))
-                mTextures[i] = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Texture2D>(mTextureNames[i]);
+            // Don't rely on FileExists because mTextureNames may be aliased.
+            // If aliased, the internal loader may redirect. Let it do its job:
+            //if (ToolsUtilities.FileManager.FileExists(mTextureNames[i]))
+            mTextures[i] = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Texture2D>(mTextureNames[i]);
 
-                // On desktop the loader returns null for a missing file instead of throwing; fall back to
-                // the invalid-texture placeholder so a missing font page doesn't NRE downstream.
-                if (mTextures[i] == null)
-                {
-                    // InvalidTexture is initialized at startup, so it is non-null here.
-                    mTextures[i] = RenderingLibrary.Graphics.Sprite.InvalidTexture!;
-                }
+            // On desktop the loader returns null for a missing file instead of throwing; fall back to
+            // the invalid-texture placeholder so a missing font page doesn't NRE downstream.
+            if (mTextures[i] == null)
+            {
+                // InvalidTexture is initialized at startup, so it is non-null here.
+                mTextures[i] = RenderingLibrary.Graphics.Sprite.InvalidTexture!;
             }
         }
     }
@@ -265,23 +251,14 @@ public class BitmapFont : IDisposable
 
         mTextureNames = new string[] { textureFile };
 
-        var atlasedTexture = CheckForLoadedAtlasTexture(FileManager.GetDirectory(fontFile) + textureFile);
-        if (atlasedTexture != null)
-        {
-            mAtlasedTexture = atlasedTexture;
-            mTextures[0] = mAtlasedTexture.Texture;
-        }
-        else
-        {
-            mTextures[0] = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Texture2D>(textureFile);
+        mTextures[0] = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Texture2D>(textureFile);
 
-            // On desktop the loader returns null for a missing file instead of throwing; fall back to
-            // the invalid-texture placeholder so the mTextures[0].Name access below doesn't NRE.
-            if (mTextures[0] == null)
-            {
-                // InvalidTexture is initialized at startup, so it is non-null here.
-                mTextures[0] = RenderingLibrary.Graphics.Sprite.InvalidTexture!;
-            }
+        // On desktop the loader returns null for a missing file instead of throwing; fall back to
+        // the invalid-texture placeholder so the mTextures[0].Name access below doesn't NRE.
+        if (mTextures[0] == null)
+        {
+            // InvalidTexture is initialized at startup, so it is non-null here.
+            mTextures[0] = RenderingLibrary.Graphics.Sprite.InvalidTexture!;
         }
 
         mTextureNames[0] = mTextures[0].Name;
@@ -1018,80 +995,6 @@ public class BitmapFont : IDisposable
     }
 
     /// <summary>
-    /// Used for rendering directly to screen with an atlased texture.
-    /// </summary>
-    public void RenderAtlasedTextureToScreen(List<string> lines, HorizontalAlignment horizontalAlignment,
-        float textureToRenderHeight, Color color, float rotation, float fontScale, SystemManagers managers, SpriteRenderer spriteRenderer,
-        object objectRequestingChange)
-    {
-        var textObject = (Text)objectRequestingChange;
-        var point = new Vector2();
-        int requiredWidth;
-        int requiredHeight;
-        var widths = sMeasuredLineWidths;
-        widths.Clear();
-        GetRequiredWidthAndHeight(lines, out requiredWidth, out requiredHeight, widths);
-
-        int lineNumber = 0;
-
-        if (mCharRect == null) mCharRect = new LineRectangle(managers);
-
-        var yoffset = 0f;
-        if (textObject.VerticalAlignment == Graphics.VerticalAlignment.Center)
-        {
-            yoffset = (textObject.EffectiveHeight - textureToRenderHeight) / 2.0f;
-        }
-        else if (textObject.VerticalAlignment == Graphics.VerticalAlignment.Bottom)
-        {
-            yoffset = textObject.EffectiveHeight - textureToRenderHeight * fontScale;
-        }
-
-        foreach (string line in lines)
-        {
-            // scoot over to leave room for the outline
-            point.X = mOutlineThickness;
-
-            if (horizontalAlignment == HorizontalAlignment.Right)
-            {
-                point.X = (int)(textObject.Width - widths[lineNumber] * fontScale);
-            }
-            else if (horizontalAlignment == HorizontalAlignment.Center)
-            {
-                point.X = (int)(textObject.Width - widths[lineNumber] * fontScale) / 2;
-            }
-
-            foreach (char c in line)
-            {
-                FloatRectangle destRect;
-                int pageIndex;
-                var sourceRect = GetCharacterRect(c, lineNumber, ref point, out destRect, out pageIndex, textObject.FontScale);
-
-                var origin = new Point((int)textObject.X, (int)(textObject.Y + yoffset));
-                var rotate = (float)-(textObject.Rotation * System.Math.PI / 180f);
-
-                var rotatingPoint = new Point(origin.X + (int)destRect.X, origin.Y + (int)destRect.Y);
-                MathFunctions.RotatePointAroundPoint(origin, ref rotatingPoint, rotate);
-
-                mCharRect.X = rotatingPoint.X;
-                mCharRect.Y = rotatingPoint.Y;
-                mCharRect.Width = destRect.Width;
-                mCharRect.Height = destRect.Height;
-
-                if (textObject.Parent != null)
-                {
-                    mCharRect.X += textObject.Parent.GetAbsoluteX();
-                    mCharRect.Y += textObject.Parent.GetAbsoluteY();
-                }
-
-                Sprite.Render(managers, spriteRenderer, mCharRect, mTextures[0], color, sourceRect, false, rotation,
-                    treat0AsFullDimensions: false, objectCausingRendering: objectRequestingChange);
-            }
-            point.X = 0;
-            lineNumber++;
-        }
-    }
-
-    /// <summary>
     /// Returns the effective line height in pixels, accounting for font scale and line height multiplier.
     /// </summary>
     public float EffectiveLineHeight(float fontScale = 1, float lineHeightMultiplier = 1) => mLineHeightInPixels * lineHeightMultiplier * fontScale;
@@ -1358,21 +1261,6 @@ public class BitmapFont : IDisposable
 
 
     #region Private Methods
-
-    private AtlasedTexture CheckForLoadedAtlasTexture(string filename)
-    {
-        if (ToolsUtilities.FileManager.IsRelative(filename))
-        {
-            filename = ToolsUtilities.FileManager.RelativeDirectory + filename;
-
-            filename = ToolsUtilities.FileManager.RemoveDotDotSlash(filename);
-        }
-
-        // see if an atlas exists:
-        var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(filename);
-
-        return atlasedTexture;
-    }
 
     private BitmapCharacterInfo FillBitmapCharacterInfo(
         FontFileCharLine charInfo, 

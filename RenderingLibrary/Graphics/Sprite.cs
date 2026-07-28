@@ -308,18 +308,7 @@ public class Sprite : SpriteBatchRenderableBase,
     }
 
 
-    /// <summary>
-    /// Returns the effective source rectangle, which may be the same as the SourceRectangle unless an AtlasedTexture is used.
-    /// </summary>
-    public Rectangle? EffectiveRectangle
-    {
-        get
-        {
-            Rectangle? sourceRectangle = SourceRectangle;
-
-            return sourceRectangle;
-        }
-    }
+    public Rectangle? EffectiveRectangle => SourceRectangle;
 
     float IAspectRatio.AspectRatio
     {

@@ -623,80 +623,68 @@ public partial class CustomSetPropertyOnRenderable
                 value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
             }
 
-            //check if part of atlas
-            //Note: assumes that if this filename is in an atlas that all 9 are in an atlas
 #if !RAYLIB
-            var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(value);
-            if (atlasedTexture != null)
+            if (NineSliceExtensions.GetIfShouldUsePattern(value))
             {
-                nineSlice.LoadAtlasedTexture(value, atlasedTexture);
+                nineSlice.SetTexturesUsingPattern(value, SystemManagers.Default);
             }
             else
 #endif
             {
+
 #if !RAYLIB
-                if (NineSliceExtensions.GetIfShouldUsePattern(value))
+                Microsoft.Xna.Framework.Graphics.Texture2D? texture =
+                    Sprite.InvalidTexture;
+
+                try
                 {
-                    nineSlice.SetTexturesUsingPattern(value, SystemManagers.Default, false);
+                    texture =
+                        loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(value);
                 }
-                else
-#endif
+                catch (Exception)
                 {
+                    // Treated the same as a missing file below.
+                    texture = null;
+                }
 
-#if !RAYLIB
-                    Microsoft.Xna.Framework.Graphics.Texture2D? texture =
-                        Sprite.InvalidTexture;
-
-                    try
+                if (texture == null)
+                {
+                    // On desktop the loader returns null for a missing file instead of throwing, and a
+                    // genuine load error is funneled here too. Honor MissingFileBehavior; otherwise fall
+                    // back to the invalid-texture placeholder, matching the prior catch behavior.
+                    if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
                     {
-                        texture =
-                            loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(value);
+                        string message = $"Error setting SourceFile on NineSlice named {nineSlice.Name}:\n{value}";
+                        throw new System.IO.FileNotFoundException(message);
                     }
-                    catch (Exception)
-                    {
-                        // Treated the same as a missing file below.
-                        texture = null;
-                    }
-
-                    if (texture == null)
-                    {
-                        // On desktop the loader returns null for a missing file instead of throwing, and a
-                        // genuine load error is funneled here too. Honor MissingFileBehavior; otherwise fall
-                        // back to the invalid-texture placeholder, matching the prior catch behavior.
-                        if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
-                        {
-                            string message = $"Error setting SourceFile on NineSlice named {nineSlice.Name}:\n{value}";
-                            throw new System.IO.FileNotFoundException(message);
-                        }
-                        texture = Sprite.InvalidTexture;
-                    }
-                    nineSlice.SetSingleTexture(texture);
+                    texture = Sprite.InvalidTexture;
+                }
+                nineSlice.SetSingleTexture(texture);
 #else
-                    // Raylib has neither atlas (AtlasedTexture) nor tiled-pattern
-                    // (SetTexturesUsingPattern) NineSlice support, and no InvalidTexture placeholder
-                    // (Sprite.InvalidTexture lives on the XNA-only RenderingLibrary.Graphics.Sprite) -
-                    // so a load failure here can only honor MissingFileBehavior.ThrowException or
-                    // leave the texture unset.
-                    Texture2D? texture = null;
+                // Raylib has neither atlas (AtlasedTexture) nor tiled-pattern
+                // (SetTexturesUsingPattern) NineSlice support, and no InvalidTexture placeholder
+                // (Sprite.InvalidTexture lives on the XNA-only RenderingLibrary.Graphics.Sprite) -
+                // so a load failure here can only honor MissingFileBehavior.ThrowException or
+                // leave the texture unset.
+                Texture2D? texture = null;
 
-                    try
+                try
+                {
+                    texture =
+                        loaderManager.LoadContent<Texture2D>(value);
+                }
+                catch (Exception)
+                {
+                    if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
                     {
-                        texture =
-                            loaderManager.LoadContent<Texture2D>(value);
+                        string message = $"Error setting SourceFile on NineSlice named {nineSlice.Name}:\n{value}";
+                        throw new System.IO.FileNotFoundException(message);
                     }
-                    catch (Exception)
-                    {
-                        if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
-                        {
-                            string message = $"Error setting SourceFile on NineSlice named {nineSlice.Name}:\n{value}";
-                            throw new System.IO.FileNotFoundException(message);
-                        }
-                        // do nothing?
-                    }
-                    nineSlice.SetSingleTexture(texture);
+                    // do nothing?
+                }
+                nineSlice.SetSingleTexture(texture);
 #endif
 
-                }
             }
         }
     }
@@ -2925,67 +2913,55 @@ public partial class CustomSetPropertyOnRenderable
                 value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
             }
 
-#if !RAYLIB
-            // see if an atlas exists:
-            var atlasedTexture = loaderManager.TryLoadContent<AtlasedTexture>(value);
-
-            if (atlasedTexture != null)
+            // We used to check if the file exists. But internally something may
+            // alias a file. Ultimately the content loader should make that decision,
+            // not the GUE
+            Texture2D? texture = null;
+            Exception? loadException = null;
+            try
             {
-                graphicalUiElement.UpdateLayout();
+                texture = loaderManager.LoadContent<Texture2D>(value);
+            }
+            catch (Exception ex)
+            // Jan 1, 2025 - we used to only catch certain types of exceptions, but this list keeps growing as there
+            // are a variety of types of crashes that can occur. NineSlice catches all exceptions, so let's just do that!
+            //when (ex is System.IO.FileNotFoundException or System.IO.DirectoryNotFoundException or WebException or IOException)
+            {
+                loadException = ex;
+            }
+
+            if (texture == null)
+            {
+                // On desktop the loader returns null for a missing file instead of throwing, and a
+                // genuine load error is funneled here too (loadException). Report it the same way the
+                // catch used to.
+                string message = $"Error setting SourceFile on Sprite";
+
+                if (graphicalUiElement.Tag != null)
+                {
+                    message += $" in {graphicalUiElement.Tag}";
+                }
+                message += $"\n{value}";
+                message += "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory";
+                message += "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
+                if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
+                {
+                    if (ObjectFinder.Self.GumProjectSave == null)
+                    {
+                        message += "\nNo Gum project has been loaded";
+                    }
+
+                    throw new System.IO.FileNotFoundException(message, loadException);
+                }
+                sprite.Texture = null;
+
+                PropertyAssignmentError?.Invoke(loadException != null ? message + "\n" + loadException.ToString() : message);
             }
             else
-#endif
             {
-                // We used to check if the file exists. But internally something may
-                // alias a file. Ultimately the content loader should make that decision,
-                // not the GUE
-                Texture2D? texture = null;
-                Exception? loadException = null;
-                try
-                {
-                    texture = loaderManager.LoadContent<Texture2D>(value);
-                }
-                catch (Exception ex)
-                // Jan 1, 2025 - we used to only catch certain types of exceptions, but this list keeps growing as there
-                // are a variety of types of crashes that can occur. NineSlice catches all exceptions, so let's just do that!
-                //when (ex is System.IO.FileNotFoundException or System.IO.DirectoryNotFoundException or WebException or IOException)
-                {
-                    loadException = ex;
-                }
-
-                if (texture == null)
-                {
-                    // On desktop the loader returns null for a missing file instead of throwing, and a
-                    // genuine load error is funneled here too (loadException). Report it the same way the
-                    // catch used to.
-                    string message = $"Error setting SourceFile on Sprite";
-
-                    if (graphicalUiElement.Tag != null)
-                    {
-                        message += $" in {graphicalUiElement.Tag}";
-                    }
-                    message += $"\n{value}";
-                    message += "\nCheck if the file exists. If necessary, set FileManager.RelativeDirectory";
-                    message += "\nThe current relative directory is:\n" + ToolsUtilities.FileManager.RelativeDirectory;
-                    if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
-                    {
-                        if (ObjectFinder.Self.GumProjectSave == null)
-                        {
-                            message += "\nNo Gum project has been loaded";
-                        }
-
-                        throw new System.IO.FileNotFoundException(message, loadException);
-                    }
-                    sprite.Texture = null;
-
-                    PropertyAssignmentError?.Invoke(loadException != null ? message + "\n" + loadException.ToString() : message);
-                }
-                else
-                {
-                    sprite.Texture = texture;
-                }
-                graphicalUiElement.UpdateLayout();
+                sprite.Texture = texture;
             }
+            graphicalUiElement.UpdateLayout();
         }
         handled = true;
         return handled;

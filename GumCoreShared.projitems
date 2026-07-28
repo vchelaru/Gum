@@ -91,8 +91,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Animation\AnimationFrame.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Animation\AnimationChainLogic.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Animation\SpriteAnimationLogic.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Atlas.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\AtlasedTexture.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\BatchKeyGroupedOrderer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\BatchOrchestrator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\BitmapCharacterInfo.cs" />

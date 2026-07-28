@@ -1403,19 +1403,10 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     {
         UpdateIpsoForRendering();
 
-        if (mBitmapFont?.AtlasedTexture != null)
-        {
-            mBitmapFont.RenderAtlasedTextureToScreen(WrappedText, this.HorizontalAlignment, mTextureToRender.Height,
-                Color.FromArgb(mAlpha, mRed, mGreen, mBlue), Rotation, EffectiveFontScale, managers, spriteRenderer, this);
-        }
-        else
-        {
-            Sprite.Render(managers, spriteRenderer, mTempForRendering, mTextureToRender,
-                Color.FromArgb(mAlpha, mRed, mGreen, mBlue), null, false, Rotation,
-                treat0AsFullDimensions: false,
-                objectCausingRendering: this);
-
-        }
+        Sprite.Render(managers, spriteRenderer, mTempForRendering, mTextureToRender,
+            Color.FromArgb(mAlpha, mRed, mGreen, mBlue), null, false, Rotation,
+            treat0AsFullDimensions: false,
+            objectCausingRendering: this);
     }
 
     private void UpdateIpsoForRendering()
