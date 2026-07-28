@@ -97,6 +97,11 @@ public class MainVariableGridPlugin : PriorityPlugin
 
     private void HandleInstanceSelected(ElementSave save1, InstanceSave save2)
     {
+        // Auto-selecting a new instance (e.g. right-click Add Object on an already-selected
+        // Screen) only raises InstanceSelected, not TreeNodeSelected - see issue #4067.
+        _propertyGridManager.VariableViewModel.IsAddVariableButtonVisible =
+            AddVariableButtonVisibilityLogic.ShouldShow(_selectedState);
+
         if (!_selectionCoordinator.ShouldRefreshOnInstanceSelected(save2))
         {
             // HandleStateSelected already refreshed the grid for this instance
@@ -144,14 +149,8 @@ public class MainVariableGridPlugin : PriorityPlugin
     {
         _selectionCoordinator.Reset();
         var selectedState = _selectedState;
-        var shouldShowButton = (selectedState.SelectedBehavior != null ||
-            selectedState.SelectedComponent != null ||
-            selectedState.SelectedScreen != null);
-        if(shouldShowButton)
-        {
-            shouldShowButton = _selectedState.SelectedInstance == null;
-        }
-        _propertyGridManager.VariableViewModel.IsAddVariableButtonVisible = shouldShowButton;
+        _propertyGridManager.VariableViewModel.IsAddVariableButtonVisible =
+            AddVariableButtonVisibilityLogic.ShouldShow(selectedState);
 
         if(selectedState.SelectedBehavior == null && selectedState.SelectedInstance == null && selectedState.SelectedElement == null)
         {
