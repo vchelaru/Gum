@@ -152,10 +152,11 @@ public class StandardElementsManagerGumTool : IStandardElementsManagerGumTool
                 variable.PropertiesToSetOnDisplayer["MaxValue"] = 255.0;
                 variable.PreferredDisplayer = typeof(SliderDisplay);
             }
-            else if (variable.Name == "StrokeWidth")
+            else if (variable.Name == "StrokeWidth" || variable.Name == "DropshadowBlur")
             {
-                // Stroke width has no meaningful negative value but no natural maximum either, so it
-                // stays a plain numeric field (not a slider) with only a floor of 0.
+                // Neither has a meaningful negative value but neither has a natural maximum either, so
+                // they stay plain numeric fields (not sliders) with only a floor of 0. DropshadowBlur is
+                // a radius; the runtime already clamps it, and this stops the tool from storing negatives.
                 variable.PropertiesToSetOnDisplayer["MinValue"] = 0.0;
             }
         }
