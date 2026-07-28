@@ -56,6 +56,18 @@
     <Name>TextCategory</Name>
     <State>
       <Name>Tiny</Name>
+      <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
+        <Value xsi:type="xsd:string">Nunito</Value>
+      </Variable>
+      <Variable Type="int" Name="FontSize" SetsValue="true">
+        <Value xsi:type="xsd:int">10</Value>
+      </Variable>
+      <Variable Type="bool" Name="IsBold" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="IsItalic" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
         <Name>VariableReferences</Name>
@@ -72,6 +84,18 @@
     </State>
     <State>
       <Name>Small</Name>
+      <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
+        <Value xsi:type="xsd:string">Nunito</Value>
+      </Variable>
+      <Variable Type="int" Name="FontSize" SetsValue="true">
+        <Value xsi:type="xsd:int">12</Value>
+      </Variable>
+      <Variable Type="bool" Name="IsBold" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="IsItalic" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
         <Name>VariableReferences</Name>
@@ -88,6 +112,18 @@
     </State>
     <State>
       <Name>Normal</Name>
+      <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
+        <Value xsi:type="xsd:string">Nunito</Value>
+      </Variable>
+      <Variable Type="int" Name="FontSize" SetsValue="true">
+        <Value xsi:type="xsd:int">14</Value>
+      </Variable>
+      <Variable Type="bool" Name="IsBold" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="IsItalic" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
         <Name>VariableReferences</Name>
@@ -104,6 +140,18 @@
     </State>
     <State>
       <Name>Emphasis</Name>
+      <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
+        <Value xsi:type="xsd:string">Nunito</Value>
+      </Variable>
+      <Variable Type="int" Name="FontSize" SetsValue="true">
+        <Value xsi:type="xsd:int">14</Value>
+      </Variable>
+      <Variable Type="bool" Name="IsBold" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="IsItalic" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
         <Name>VariableReferences</Name>
@@ -120,6 +168,18 @@
     </State>
     <State>
       <Name>Strong</Name>
+      <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
+        <Value xsi:type="xsd:string">Nunito</Value>
+      </Variable>
+      <Variable Type="int" Name="FontSize" SetsValue="true">
+        <Value xsi:type="xsd:int">14</Value>
+      </Variable>
+      <Variable Type="bool" Name="IsBold" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="IsItalic" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
         <Name>VariableReferences</Name>
@@ -136,6 +196,18 @@
     </State>
     <State>
       <Name>H3</Name>
+      <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
+        <Value xsi:type="xsd:string">Nunito</Value>
+      </Variable>
+      <Variable Type="int" Name="FontSize" SetsValue="true">
+        <Value xsi:type="xsd:int">16</Value>
+      </Variable>
+      <Variable Type="bool" Name="IsBold" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="IsItalic" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
         <Name>VariableReferences</Name>
@@ -152,6 +224,18 @@
     </State>
     <State>
       <Name>H2</Name>
+      <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
+        <Value xsi:type="xsd:string">Nunito</Value>
+      </Variable>
+      <Variable Type="int" Name="FontSize" SetsValue="true">
+        <Value xsi:type="xsd:int">18</Value>
+      </Variable>
+      <Variable Type="bool" Name="IsBold" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="IsItalic" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
         <Name>VariableReferences</Name>
@@ -168,6 +252,18 @@
     </State>
     <State>
       <Name>H1</Name>
+      <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
+        <Value xsi:type="xsd:string">Nunito</Value>
+      </Variable>
+      <Variable Type="int" Name="FontSize" SetsValue="true">
+        <Value xsi:type="xsd:int">22</Value>
+      </Variable>
+      <Variable Type="bool" Name="IsBold" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="IsItalic" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
         <Name>VariableReferences</Name>
@@ -184,6 +280,18 @@
     </State>
     <State>
       <Name>Title</Name>
+      <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
+        <Value xsi:type="xsd:string">Nunito</Value>
+      </Variable>
+      <Variable Type="int" Name="FontSize" SetsValue="true">
+        <Value xsi:type="xsd:int">28</Value>
+      </Variable>
+      <Variable Type="bool" Name="IsBold" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="IsItalic" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
         <Name>VariableReferences</Name>

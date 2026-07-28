@@ -22,6 +22,24 @@
     <Variable Type="float" Name="Accent.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
+    <Variable Type="int" Name="Backdrop.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">242</Value>
+    </Variable>
+    <Variable Type="int" Name="Backdrop.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">231</Value>
+    </Variable>
+    <Variable Type="int" Name="Backdrop.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="bool" Name="Backdrop.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="Backdrop.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="Backdrop.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
     <Variable Type="int" Name="Black.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">85</Value>
     </Variable>
@@ -109,6 +127,42 @@
     <Variable Type="float" Name="DarkGray.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
+    <Variable Type="int" Name="Disabled.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">221</Value>
+    </Variable>
+    <Variable Type="int" Name="Disabled.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">174</Value>
+    </Variable>
+    <Variable Type="int" Name="Disabled.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">205</Value>
+    </Variable>
+    <Variable Type="bool" Name="Disabled.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="Disabled.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="Disabled.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="int" Name="DisabledBackground.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">248</Value>
+    </Variable>
+    <Variable Type="int" Name="DisabledBackground.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">234</Value>
+    </Variable>
+    <Variable Type="int" Name="DisabledBackground.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">245</Value>
+    </Variable>
+    <Variable Type="bool" Name="DisabledBackground.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="DisabledBackground.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="DisabledBackground.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
     <Variable Type="string" Name="Emphasis.Font" SetsValue="true">
       <Value xsi:type="xsd:string">Nunito</Value>
     </Variable>
@@ -192,6 +246,24 @@
     </Variable>
     <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="int" Name="Highlight.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">237</Value>
+    </Variable>
+    <Variable Type="int" Name="Highlight.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">222</Value>
+    </Variable>
+    <Variable Type="int" Name="Highlight.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="bool" Name="Highlight.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="Highlight.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="Highlight.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="int" Name="LightGray.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">204</Value>
@@ -433,6 +505,10 @@
   <Instance Name="Warning" BaseType="Rectangle" />
   <Instance Name="Danger" BaseType="Rectangle" />
   <Instance Name="Accent" BaseType="Rectangle" />
+  <Instance Name="Highlight" BaseType="Rectangle" />
+  <Instance Name="Disabled" BaseType="Rectangle" />
+  <Instance Name="DisabledBackground" BaseType="Rectangle" />
+  <Instance Name="Backdrop" BaseType="Rectangle" />
   <Instance Name="Tiny" BaseType="Text" />
   <Instance Name="Small" BaseType="Text" />
   <Instance Name="Normal" BaseType="Text" />

@@ -56,6 +56,18 @@
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Background.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>FillRed = Components/Bubblegum/Styles.Backdrop.FillRed</string>
+        <string>FillGreen = Components/Bubblegum/Styles.Backdrop.FillGreen</string>
+        <string>FillBlue = Components/Bubblegum/Styles.Backdrop.FillBlue</string>
+      </Value>
+    </VariableList>
   </State>
   <Instance Name="Background" BaseType="Rectangle" />
   <Behaviors>

@@ -478,6 +478,42 @@
     <Variable Type="float" Name="Width" SetsValue="true">
       <Value xsi:type="xsd:float">256</Value>
     </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Background.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>FillRed = Components/Bubblegum/Styles.White.FillRed</string>
+        <string>FillGreen = Components/Bubblegum/Styles.White.FillGreen</string>
+        <string>FillBlue = Components/Bubblegum/Styles.White.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TitleBarFill.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>FillRed = Components/Bubblegum/Styles.Primary.FillRed</string>
+        <string>FillGreen = Components/Bubblegum/Styles.Primary.FillGreen</string>
+        <string>FillBlue = Components/Bubblegum/Styles.Primary.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TitleBarSeparator.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>FillRed = Components/Bubblegum/Styles.LightGray.FillRed</string>
+        <string>FillGreen = Components/Bubblegum/Styles.LightGray.FillGreen</string>
+        <string>FillBlue = Components/Bubblegum/Styles.LightGray.FillBlue</string>
+      </Value>
+    </VariableList>
   </State>
   <Instance Name="Background" BaseType="Rectangle" />
   <Instance Name="InnerPanelInstance" BaseType="Bubblegum/Controls/Panel" />

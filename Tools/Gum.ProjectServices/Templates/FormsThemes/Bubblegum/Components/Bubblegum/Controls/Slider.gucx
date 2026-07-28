@@ -115,6 +115,18 @@
     <Variable Type="float" Name="Width" SetsValue="true">
       <Value xsi:type="xsd:float">128</Value>
     </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TrackBackground.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>FillRed = Components/Bubblegum/Styles.Highlight.FillRed</string>
+        <string>FillGreen = Components/Bubblegum/Styles.Highlight.FillGreen</string>
+        <string>FillBlue = Components/Bubblegum/Styles.Highlight.FillBlue</string>
+      </Value>
+    </VariableList>
   </State>
   <Category>
     <Name>SliderCategory</Name>
@@ -138,6 +150,18 @@
       <Variable Type="int" Name="TrackBackground.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">205</Value>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TrackBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillRed = Components/Bubblegum/Styles.Disabled.FillRed</string>
+          <string>FillGreen = Components/Bubblegum/Styles.Disabled.FillGreen</string>
+          <string>FillBlue = Components/Bubblegum/Styles.Disabled.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>DisabledFocused</Name>
@@ -153,6 +177,18 @@
       <Variable Type="int" Name="TrackBackground.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">205</Value>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TrackBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillRed = Components/Bubblegum/Styles.Disabled.FillRed</string>
+          <string>FillGreen = Components/Bubblegum/Styles.Disabled.FillGreen</string>
+          <string>FillBlue = Components/Bubblegum/Styles.Disabled.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Focused</Name>

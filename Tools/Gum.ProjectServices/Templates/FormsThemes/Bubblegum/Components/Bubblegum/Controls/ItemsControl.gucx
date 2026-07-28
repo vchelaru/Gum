@@ -274,6 +274,18 @@
     <Variable Type="float" Name="Width" SetsValue="true">
       <Value xsi:type="xsd:float">256</Value>
     </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Background.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>FillRed = Components/Bubblegum/Styles.White.FillRed</string>
+        <string>FillGreen = Components/Bubblegum/Styles.White.FillGreen</string>
+        <string>FillBlue = Components/Bubblegum/Styles.White.FillBlue</string>
+      </Value>
+    </VariableList>
   </State>
   <Category>
     <Name>ItemsControlCategory</Name>

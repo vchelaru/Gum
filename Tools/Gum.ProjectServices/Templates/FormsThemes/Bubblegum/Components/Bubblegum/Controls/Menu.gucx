@@ -169,6 +169,30 @@
     <Variable Type="PositionUnitType" Name="YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Background.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>FillRed = Components/Bubblegum/Styles.White.FillRed</string>
+        <string>FillGreen = Components/Bubblegum/Styles.White.FillGreen</string>
+        <string>FillBlue = Components/Bubblegum/Styles.White.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>BottomSeparator.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>FillRed = Components/Bubblegum/Styles.LightGray.FillRed</string>
+        <string>FillGreen = Components/Bubblegum/Styles.LightGray.FillGreen</string>
+        <string>FillBlue = Components/Bubblegum/Styles.LightGray.FillBlue</string>
+      </Value>
+    </VariableList>
   </State>
   <Instance Name="Background" BaseType="Rectangle" />
   <Instance Name="BottomSeparator" BaseType="Rectangle" />
