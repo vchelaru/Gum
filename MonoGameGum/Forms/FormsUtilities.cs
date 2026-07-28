@@ -228,6 +228,11 @@ public class FormsUtilities
                 TryAdd(typeof(ScrollViewer), (_, c) => new DefaultVisuals.V3.ScrollViewerVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(TextBox), (_, c) => new DefaultVisuals.V3.TextBoxVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(Slider), (_, c) => new DefaultVisuals.V3.SliderVisual(tryCreateFormsObject: c));
+#if XNALIKE
+                // ColorPickerVisual generates its saturation/value and hue textures per-pixel, which
+                // is XNA-family only for now. Raylib/Skia need their own visual (issue #4047).
+                TryAdd(typeof(ColorPicker), (_, c) => new DefaultVisuals.V3.ColorPickerVisual(tryCreateFormsObject: c));
+#endif
                 TryAdd(typeof(Splitter), (_, c) => new DefaultVisuals.V3.SplitterVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(ToggleButton), (_, c) => new DefaultVisuals.V3.ToggleButtonVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(Window), (_, c) => new DefaultVisuals.V3.WindowVisual(tryCreateFormsObject: c));

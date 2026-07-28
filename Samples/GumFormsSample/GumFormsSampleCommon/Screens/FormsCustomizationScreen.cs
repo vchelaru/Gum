@@ -101,7 +101,8 @@ internal class FormsCustomizationScreen : ContainerRuntime
 
     private void CreateColorPicker()
     {
-        var picker = new ColorPicker();
+        // Sample's own hand-rolled picker; disambiguated from the new core Gum.Forms.Controls.ColorPicker (issue #4047).
+        var picker = new CustomForms.ColorPicker();
         _mainStackPanel.AddChild(picker);
 
 
