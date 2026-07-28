@@ -68,11 +68,10 @@ public static class GumFontGenerator
     /// </summary>
     private static void ApplyChannelLayout(BmfcSave bmfcSave, FontGeneratorOptions options)
     {
-        // Drop shadow (and outline/shadow combos) are composited to RGBA by KernSmith's effect
-        // pipeline. A custom ChannelConfig routes through ChannelCompositor, which rebuilds RGB from
-        // alpha masks only — discarding baked shadow color and forcing white (RGB=One), so the
-        // runtime's text-color modulate tints the shadow the same as the glyph. Leave Channels unset
-        // so AtlasBuilder blits the RGBA glyphs directly.
+        // Issue #4001: drop shadow is a ShadowSilhouette atlas variant (see ApplyShadowOptions), and
+        // KernSmith forbids a custom ChannelConfig alongside Variants. Leave Channels at the default
+        // glyph-coverage layout so the primary stays a plain glyph atlas the runtime can tint on its
+        // own, with the shadow drawn separately underneath.
         if (bmfcSave.HasDropshadow)
         {
             return;
@@ -106,13 +105,15 @@ public static class GumFontGenerator
             return;
         }
 
-        options.ShadowOffsetX = (int)MathF.Round(bmfcSave.DropshadowOffsetX);
-        options.ShadowOffsetY = (int)MathF.Round(bmfcSave.DropshadowOffsetY);
-        options.ShadowBlur = (int)MathF.Round(bmfcSave.DropshadowBlur);
-        options.ShadowR = bmfcSave.DropshadowRed;
-        options.ShadowG = bmfcSave.DropshadowGreen;
-        options.ShadowB = bmfcSave.DropshadowBlue;
-        options.ShadowOpacity = bmfcSave.DropshadowAlpha / 255f;
+        // Issue #4001: request a ShadowSilhouette variant packed into the same shared atlas as the
+        // primary glyphs, instead of baking a colored shadow into the primary. Offset and color are
+        // applied by the runtime at draw time, so BlurRadius is the only shadow parameter that
+        // affects the baked silhouette shape.
+        options.Variants = new[]
+        {
+            new AtlasVariant("shadow", AtlasVariantKind.ShadowSilhouette,
+                BlurRadius: (int)MathF.Round(bmfcSave.DropshadowBlur)),
+        };
     }
 
     /// <summary>

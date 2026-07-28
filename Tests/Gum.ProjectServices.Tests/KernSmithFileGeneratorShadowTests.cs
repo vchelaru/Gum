@@ -1,32 +1,46 @@
 using Gum.ProjectServices.FontGeneration;
 using KernSmith;
-using KernSmith.Atlas;
 using KernSmith.Output;
 using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
-using System;
+using System.Linq;
 using Xunit;
 
 namespace Gum.ProjectServices.Tests;
 
 /// <summary>
-/// Issue #4005 — the tool's own disk-based KernSmith generator (used by
-/// HeadlessFontGenerationService/FontFileGeneratorSelector when a project's FontGenerator is
-/// KernSmith) has its own private BuildOptions, duplicated from (and independent of)
-/// KernSmith.Gum.GumFontGenerator.BuildOptions. That copy never mapped BmfcSave's dropshadow
-/// fields onto FontGeneratorOptions at all, so toggling "Has Dropshadow" in the tool regenerated
-/// a font file (the cache key changed) but the file never actually had a shadow baked into it.
+/// Issue #4001 — dropshadow is now rendered as a two-pass draw at runtime (a shadow silhouette
+/// drawn offset + tinted under the primary glyph) instead of being baked into the primary atlas.
+/// The tool's disk-based KernSmith generator must therefore request a ShadowSilhouette
+/// <see cref="AtlasVariant"/> (packed into the same shared PNG) and leave the primary atlas a
+/// plain glyph atlas — NOT bake shadow offset/color into it, which was the source of the
+/// re-tinting bug.
 /// </summary>
 public class KernSmithFileGeneratorShadowTests
 {
     [Fact]
-    public void BuildOptions_WhenHasDropshadow_MapsShadowFieldsAndDecomposesAlphaToOpacity()
+    public void BuildOptions_WhenHasDropshadow_RequestsShadowSilhouetteVariantWithBlur()
+    {
+        BmfcSave bmfcSave = BaseBmfcSave();
+        bmfcSave.HasDropshadow = true;
+        bmfcSave.DropshadowBlur = 4f;
+
+        FontGeneratorOptions options = KernSmithFileGenerator.BuildOptions(bmfcSave);
+
+        options.Variants.ShouldNotBeNull();
+        AtlasVariant variant = options.Variants.Single();
+        variant.Name.ShouldBe("shadow");
+        variant.Kind.ShouldBe(AtlasVariantKind.ShadowSilhouette);
+        variant.BlurRadius.ShouldBe(4);
+    }
+
+    [Fact]
+    public void BuildOptions_WhenHasDropshadow_DoesNotBakeShadowIntoPrimary()
     {
         BmfcSave bmfcSave = BaseBmfcSave();
         bmfcSave.HasDropshadow = true;
         bmfcSave.DropshadowOffsetX = 2f;
         bmfcSave.DropshadowOffsetY = 3f;
-        bmfcSave.DropshadowBlur = 4f;
         bmfcSave.DropshadowRed = 10;
         bmfcSave.DropshadowGreen = 20;
         bmfcSave.DropshadowBlue = 30;
@@ -34,32 +48,21 @@ public class KernSmithFileGeneratorShadowTests
 
         FontGeneratorOptions options = KernSmithFileGenerator.BuildOptions(bmfcSave);
 
-        options.ShadowOffsetX.ShouldBe(2);
-        options.ShadowOffsetY.ShouldBe(3);
-        options.ShadowBlur.ShouldBe(4);
-        ((int)options.ShadowR).ShouldBe(10);
-        ((int)options.ShadowG).ShouldBe(20);
-        ((int)options.ShadowB).ShouldBe(30);
-        options.ShadowOpacity.ShouldBe(128 / 255f, 0.001f);
-    }
-
-    [Fact]
-    public void BuildOptions_WhenHasDropshadow_LeavesChannelsUnsetSoAtlasPreservesShadowRgb()
-    {
-        BmfcSave bmfcSave = BaseBmfcSave();
-        bmfcSave.HasDropshadow = true;
-
-        FontGeneratorOptions options = KernSmithFileGenerator.BuildOptions(bmfcSave);
-
+        // KernSmith bakes a shadow into the primary only when HasShadow is true (any offset or
+        // blur set on the options). Leaving all three at 0 keeps the primary a plain glyph atlas —
+        // baking the shadow in is exactly the re-tinting bug this fixes.
+        options.ShadowOffsetX.ShouldBe(0);
+        options.ShadowOffsetY.ShouldBe(0);
+        options.ShadowBlur.ShouldBe(0);
+        // Variants require the default channel layout (a custom ChannelConfig throws in KernSmith).
         options.Channels.ShouldBeNull();
     }
 
     [Fact]
-    public void BuildOptions_ThenGenerate_WithDropshadow_BakesDarkPixelsIntoTheAtlas()
+    public void BuildOptions_ThenGenerate_WithDropshadow_ProducesShadowVariantAndCleanPrimary()
     {
-        // Shortcut end-to-end proof (bypassing disk I/O and the tool entirely): feed the tool's own
-        // BuildOptions output straight into KernSmith's generator and confirm the in-memory atlas
-        // actually contains dark (shadow) pixels rather than only white glyph pixels.
+        // End-to-end proof (bypassing disk I/O): a separate "shadow" variant model should exist
+        // with one entry per requested codepoint, packed into the same shared atlas as the primary.
         BmfcSave bmfcSave = BaseBmfcSave();
         bmfcSave.Ranges = "65";
         bmfcSave.HasDropshadow = true;
@@ -74,11 +77,8 @@ public class KernSmithFileGeneratorShadowTests
         FontGeneratorOptions options = KernSmithFileGenerator.BuildOptions(bmfcSave);
         BmFontResult result = BmFont.GenerateFromSystem(bmfcSave.FontName, options);
 
-        (int minR, int darkPixelCount, int brightPixelCount) = SummarizeRedChannel(result);
-
-        darkPixelCount.ShouldBeGreaterThan(0, "the atlas should contain dark shadow pixels, not just white glyph pixels");
-        brightPixelCount.ShouldBeGreaterThan(0, "the glyph itself should still be present");
-        minR.ShouldBeLessThan(32);
+        result.VariantModels.ContainsKey("shadow").ShouldBeTrue();
+        result.VariantModels["shadow"].Characters.Select(c => c.Id).ShouldContain('A');
     }
 
     private static BmfcSave BaseBmfcSave() => new BmfcSave
@@ -88,38 +88,4 @@ public class KernSmithFileGeneratorShadowTests
         UseSmoothing = true,
         Ranges = "65",
     };
-
-    private static (int minR, int darkPixelCount, int brightPixelCount) SummarizeRedChannel(BmFontResult result)
-    {
-        int minR = 255;
-        int darkPixelCount = 0;
-        int brightPixelCount = 0;
-
-        foreach (AtlasPage page in result.Pages)
-        {
-            byte[] pixels = page.PixelData;
-            for (int i = 0; i + 3 < pixels.Length; i += 4)
-            {
-                if (pixels[i + 3] == 0)
-                {
-                    continue;
-                }
-
-                byte r = pixels[i];
-                minR = Math.Min(minR, r);
-
-                if (r < 32)
-                {
-                    darkPixelCount++;
-                }
-
-                if (r > 200)
-                {
-                    brightPixelCount++;
-                }
-            }
-        }
-
-        return (minR, darkPixelCount, brightPixelCount);
-    }
 }

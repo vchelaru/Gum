@@ -444,6 +444,7 @@ public class TextRuntime : InteractiveGue
 
             hasDropshadow = value;
             UpdateToFontValues();
+            ApplyDropshadowToRenderable();
         }
     }
 
@@ -472,45 +473,46 @@ public class TextRuntime : InteractiveGue
             dropshadowAlpha = value.A;
 #endif
             UpdateToFontValues();
+            ApplyDropshadowToRenderable();
         }
     }
 
     public int DropshadowRed
     {
         get => dropshadowRed;
-        set { dropshadowRed = (byte)value; UpdateToFontValues(); }
+        set { dropshadowRed = (byte)value; UpdateToFontValues(); ApplyDropshadowToRenderable(); }
     }
 
     public int DropshadowGreen
     {
         get => dropshadowGreen;
-        set { dropshadowGreen = (byte)value; UpdateToFontValues(); }
+        set { dropshadowGreen = (byte)value; UpdateToFontValues(); ApplyDropshadowToRenderable(); }
     }
 
     public int DropshadowBlue
     {
         get => dropshadowBlue;
-        set { dropshadowBlue = (byte)value; UpdateToFontValues(); }
+        set { dropshadowBlue = (byte)value; UpdateToFontValues(); ApplyDropshadowToRenderable(); }
     }
 
     public int DropshadowAlpha
     {
         get => dropshadowAlpha;
-        set { dropshadowAlpha = (byte)value; UpdateToFontValues(); }
+        set { dropshadowAlpha = (byte)value; UpdateToFontValues(); ApplyDropshadowToRenderable(); }
     }
 
     float dropshadowOffsetX;
     public float DropshadowOffsetX
     {
         get => dropshadowOffsetX;
-        set { dropshadowOffsetX = value; UpdateToFontValues(); }
+        set { dropshadowOffsetX = value; UpdateToFontValues(); ApplyDropshadowToRenderable(); }
     }
 
     float dropshadowOffsetY;
     public float DropshadowOffsetY
     {
         get => dropshadowOffsetY;
-        set { dropshadowOffsetY = value; UpdateToFontValues(); }
+        set { dropshadowOffsetY = value; UpdateToFontValues(); ApplyDropshadowToRenderable(); }
     }
 
     float dropshadowBlur;
@@ -574,6 +576,22 @@ public class TextRuntime : InteractiveGue
             _dropshadowBlurY = dropshadowBlur;
 #endif
         }
+    }
+
+    /// <summary>
+    /// Issue #4001: forwards the dropshadow color/offset to the XNALIKE Text renderable so the runtime
+    /// draws the shadow as a second (offset, independently tinted) pass under the glyphs. Skia renders
+    /// its own blurred shadow, and raylib's separate Text/Raylib_cs.Font stack does not yet implement
+    /// the two-pass shadow, so this is XNALIKE-only.
+    /// </summary>
+    void ApplyDropshadowToRenderable()
+    {
+#if XNALIKE
+        ContainedText.HasDropshadow = HasDropshadow;
+        ContainedText.DropshadowColor = DropshadowColor.ToContainerColor();
+        ContainedText.DropshadowOffsetX = DropshadowOffsetX;
+        ContainedText.DropshadowOffsetY = DropshadowOffsetY;
+#endif
     }
 
 #if !FRB

@@ -705,14 +705,11 @@ public class BmfcSave
 
         if (hasDropshadow)
         {
-            fileName += "_ds"
-                + FormatCacheKeyFloat(dropshadowOffsetX) + "_"
-                + FormatCacheKeyFloat(dropshadowOffsetY) + "_"
-                + FormatCacheKeyFloat(dropshadowBlur) + "_"
-                + dropshadowRed + "_"
-                + dropshadowGreen + "_"
-                + dropshadowBlue + "_"
-                + dropshadowAlpha;
+            // Issue #4001: the shadow is drawn at runtime as a separate silhouette, offset and
+            // tinted at draw time, so offset and color no longer affect the baked atlas and are
+            // deliberately excluded from the cache key (including them forced needless regeneration
+            // on every tweak). Only blur, which shapes the baked silhouette, remains.
+            fileName += "_ds" + FormatCacheKeyFloat(dropshadowBlur);
         }
 
         fileName += ".fnt";
