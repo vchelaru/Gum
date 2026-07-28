@@ -69,6 +69,15 @@ imported). A theme's `Standards/` folder still needs to exist on disk with real 
 without it the theme's `GumProject.gumx` isn't a loadable, standalone Gum project, which is how a
 theme is meant to be opened/edited/previewed directly in the tool.
 
+## A theme's Styles component must mirror its code-only palette by name, not just value
+
+A theme's centralized styling component (e.g. `Components/Bubblegum/Styles.gucx`) should expose
+exactly the color/text tokens its code-only counterpart defines (`Themes/Gum.Themes.<Name>.*`'s
+`*Colors`/`*Text` classes — see `gum-theming`), under the *same names*, with no extra swatch that
+class doesn't define. A swatch can hold the correct value under the wrong name — verify by diffing
+the tool content's swatch/text-instance names against the code-only class's property names
+directly, not by eyeballing rendered colors.
+
 ## Verifying theme content changes
 
 There's no C#-unit-test surface for a theme's XML content. Use `gumcli diff-standards` (theme's
