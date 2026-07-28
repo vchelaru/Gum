@@ -8,21 +8,6 @@ using Color = System.Drawing.Color;
 namespace Gum.Forms.Controls;
 
 /// <summary>
-/// Implemented by a <see cref="ColorPicker"/> visual that can procedurally regenerate its
-/// saturation/value background for a given hue. The regeneration is backend-specific (it uploads
-/// pixels to a texture), so it lives on the visual rather than on the runtime-agnostic control.
-/// </summary>
-public interface IColorPickerVisual
-{
-    /// <summary>
-    /// Regenerates the saturation/value square so it displays every saturation (X) and value (Y)
-    /// combination for the given <paramref name="hue"/>.
-    /// </summary>
-    /// <param name="hue">The hue in degrees (0-360).</param>
-    void RefreshSaturationValueBackground(float hue);
-}
-
-/// <summary>
 /// A control for visually selecting a color through a saturation/value square and a hue bar.
 /// The selected color is available through <see cref="SelectedColor"/>, and changes raise
 /// <see cref="SelectedColorChanged"/>.
@@ -31,7 +16,16 @@ public class ColorPicker : FrameworkElement
 {
     #region Fields/Properties
 
-    private IColorPickerVisual? _colorPickerVisual;
+    // Internal texture resolution for the procedurally generated backgrounds. The display sprites
+    // stretch it to their on-screen size, so it's independent of layout.
+    private const int SaturationValueTextureSize = 256;
+    private const int HueTextureHeight = 256;
+    private const string HueBarCacheKey = "GumColorPickerHueBar";
+
+    // The sprite children whose textures are generated at runtime. Found by name so any visual --
+    // code-only or tool-authored -- works, as long as it contains sprites with these names.
+    private GraphicalUiElement? _saturationValueDisplay;
+    private GraphicalUiElement? _hueDisplay;
 
     // The interactive areas the user drags on, plus the indicators moved to reflect the selection.
     private InteractiveGue? _saturationValueContainer;
@@ -133,12 +127,14 @@ public class ColorPicker : FrameworkElement
     {
         base.ReactToVisualChanged();
 
-        _colorPickerVisual = Visual as IColorPickerVisual;
-
         _saturationValueContainer = Visual.GetGraphicalUiElementByName("SaturationValueContainer") as InteractiveGue;
         _hueContainer = Visual.GetGraphicalUiElementByName("HueContainer") as InteractiveGue;
+        _saturationValueDisplay = Visual.GetGraphicalUiElementByName("SaturationValueDisplay");
+        _hueDisplay = Visual.GetGraphicalUiElementByName("HueDisplay");
         _saturationValueIndicator = Visual.GetGraphicalUiElementByName("SaturationValueIndicator");
         _hueIndicator = Visual.GetGraphicalUiElementByName("HueIndicator");
+
+        PaintHueBar();
 
         // Push handles the initial click; Dragging continues to fire on the pushed element every
         // frame the cursor moves, even once it leaves the element's bounds, so a drag keeps tracking
@@ -265,7 +261,7 @@ public class ColorPicker : FrameworkElement
         _isUpdatingColor = true;
         try
         {
-            _colorPickerVisual?.RefreshSaturationValueBackground(_hue);
+            PaintSaturationValue();
 
             if (_saturationValueContainer != null && _saturationValueIndicator != null)
             {
@@ -285,6 +281,82 @@ public class ColorPicker : FrameworkElement
         {
             _isUpdatingColor = false;
         }
+    }
+
+    #endregion
+
+    #region Texture Generation
+
+    private void PaintHueBar()
+    {
+        if (_hueDisplay == null)
+        {
+            return;
+        }
+
+        // The hue bar is identical for every picker, so it's generated once and shared via the cache.
+        GraphicalUiElement.ApplyCachedTextureFromPixelData?.Invoke(
+            _hueDisplay, HueBarCacheKey, BuildHueBarPixels(), 1, HueTextureHeight);
+    }
+
+    private void PaintSaturationValue()
+    {
+        if (_saturationValueDisplay == null)
+        {
+            return;
+        }
+
+        // The saturation/value square depends on the current hue, so each picker gets its own pooled
+        // texture (keyed by this control's Visual) rather than a shared one.
+        GraphicalUiElement.ApplyPooledTextureFromPixelData?.Invoke(
+            _saturationValueDisplay, Visual, BuildSaturationValuePixels(_hue),
+            SaturationValueTextureSize, SaturationValueTextureSize);
+    }
+
+    /// <summary>
+    /// Builds the saturation/value square as RGBA bytes for a hue: X is saturation (0-100), Y is value
+    /// (100 at top to 0 at bottom).
+    /// </summary>
+    internal static byte[] BuildSaturationValuePixels(float hue)
+    {
+        int size = SaturationValueTextureSize;
+        byte[] rgba = new byte[size * size * 4];
+        for (int y = 0; y < size; y++)
+        {
+            float value = (1f - (float)y / (size - 1)) * 100f;
+            for (int x = 0; x < size; x++)
+            {
+                float saturation = (float)x / (size - 1) * 100f;
+                (byte r, byte g, byte b) = HsvToRgb(hue, saturation, value);
+                int i = (y * size + x) * 4;
+                rgba[i] = r;
+                rgba[i + 1] = g;
+                rgba[i + 2] = b;
+                rgba[i + 3] = 255;
+            }
+        }
+        return rgba;
+    }
+
+    /// <summary>
+    /// Builds the hue bar as a 1-pixel-wide RGBA column: hue runs 0-360 from top to bottom at full
+    /// saturation and value.
+    /// </summary>
+    internal static byte[] BuildHueBarPixels()
+    {
+        int height = HueTextureHeight;
+        byte[] rgba = new byte[height * 4];
+        for (int y = 0; y < height; y++)
+        {
+            float hue = (float)y / (height - 1) * 360f;
+            (byte r, byte g, byte b) = HsvToRgb(hue, 100f, 100f);
+            int i = y * 4;
+            rgba[i] = r;
+            rgba[i + 1] = g;
+            rgba[i + 2] = b;
+            rgba[i + 3] = 255;
+        }
+        return rgba;
     }
 
     #endregion

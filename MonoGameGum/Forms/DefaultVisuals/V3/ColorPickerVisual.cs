@@ -1,23 +1,20 @@
 #pragma warning disable CS0618, GUM001 // Default visuals intentionally use deprecated MonoGameGum.GueDeriving shim types for backward compatibility until V1/V2/V3 visuals are retired. See issue #2715.
-using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum.GueDeriving;
-using RenderingLibrary;
 using RenderingLibrary.Graphics;
 
 namespace Gum.Forms.DefaultVisuals.V3;
 
 /// <summary>
-/// Default V3 visual for a <see cref="ColorPicker"/> control. Builds a saturation/value square and
-/// a hue bar, each backed by a procedurally generated texture, plus the indicators the control
-/// moves to reflect the selected color. This visual is XNA-family only (MonoGame/KNI/FNA); other
-/// backends require their own texture-generation implementation.
+/// Default V3 visual for a <see cref="ColorPicker"/> control. Builds the saturation/value square, the
+/// hue bar, and the indicators the control moves to reflect the selected color. The square/bar
+/// textures are generated at runtime by the control (via the sprites named "SaturationValueDisplay"
+/// and "HueDisplay"), so this visual is purely structural and backend-agnostic.
 /// </summary>
-public class ColorPickerVisual : InteractiveGue, IColorPickerVisual
+public class ColorPickerVisual : InteractiveGue
 {
     private const int SaturationValueSize = 160;
     private const int HueBarWidth = 20;
@@ -33,13 +30,6 @@ public class ColorPickerVisual : InteractiveGue, IColorPickerVisual
     /// The interactive vertical bar displaying the full range of hues.
     /// </summary>
     public ContainerRuntime HueContainer { get; private set; }
-
-    private SpriteRuntime _saturationValueDisplay;
-    private SpriteRuntime _hueDisplay;
-
-    private Texture2D? _saturationValueTexture;
-    private Texture2D? _hueTexture;
-    private Color[]? _saturationValuePixels;
 
     /// <summary>
     /// Returns the strongly-typed ColorPicker Forms control backing this visual.
@@ -64,15 +54,7 @@ public class ColorPickerVisual : InteractiveGue, IColorPickerVisual
         SaturationValueContainer.ClipsChildren = true;
         this.AddChild(SaturationValueContainer);
 
-        _saturationValueDisplay = new SpriteRuntime();
-        _saturationValueDisplay.Name = "SaturationValueDisplay";
-        _saturationValueDisplay.Width = 0;
-        _saturationValueDisplay.WidthUnits = DimensionUnitType.RelativeToParent;
-        _saturationValueDisplay.Height = 0;
-        _saturationValueDisplay.HeightUnits = DimensionUnitType.RelativeToParent;
-        _saturationValueDisplay.TextureAddress = global::Gum.Managers.TextureAddress.EntireTexture;
-        SaturationValueContainer.AddChild(_saturationValueDisplay);
-
+        AddDisplaySprite(SaturationValueContainer, "SaturationValueDisplay");
         AddOutline(SaturationValueContainer);
         AddSaturationValueIndicator(SaturationValueContainer);
 
@@ -85,25 +67,27 @@ public class ColorPickerVisual : InteractiveGue, IColorPickerVisual
         HueContainer.ClipsChildren = true;
         this.AddChild(HueContainer);
 
-        _hueDisplay = new SpriteRuntime();
-        _hueDisplay.Name = "HueDisplay";
-        _hueDisplay.Width = 0;
-        _hueDisplay.WidthUnits = DimensionUnitType.RelativeToParent;
-        _hueDisplay.Height = 0;
-        _hueDisplay.HeightUnits = DimensionUnitType.RelativeToParent;
-        _hueDisplay.TextureAddress = global::Gum.Managers.TextureAddress.EntireTexture;
-        HueContainer.AddChild(_hueDisplay);
-
+        AddDisplaySprite(HueContainer, "HueDisplay");
         AddOutline(HueContainer);
         AddHueIndicator(HueContainer);
-
-        GenerateHueTexture();
-        RefreshSaturationValueBackground(0);
 
         if (tryCreateFormsObject)
         {
             FormsControlAsObject = new ColorPicker(this);
         }
+    }
+
+    // The sprite that fills the container and whose texture the control generates at runtime.
+    private static void AddDisplaySprite(ContainerRuntime parent, string name)
+    {
+        SpriteRuntime display = new SpriteRuntime();
+        display.Name = name;
+        display.Width = 0;
+        display.WidthUnits = DimensionUnitType.RelativeToParent;
+        display.Height = 0;
+        display.HeightUnits = DimensionUnitType.RelativeToParent;
+        display.TextureAddress = global::Gum.Managers.TextureAddress.EntireTexture;
+        parent.AddChild(display);
     }
 
     private static void AddOutline(ContainerRuntime parent)
@@ -166,62 +150,5 @@ public class ColorPickerVisual : InteractiveGue, IColorPickerVisual
         inner.Height = -2;
         inner.HeightUnits = DimensionUnitType.RelativeToParent;
         parent.AddChild(inner);
-    }
-
-    /// <inheritdoc/>
-    public void RefreshSaturationValueBackground(float hue)
-    {
-        GraphicsDevice? graphicsDevice = SystemManagers.Default?.Renderer?.GraphicsDevice;
-        if (graphicsDevice == null)
-        {
-            return;
-        }
-
-        int width = SaturationValueSize;
-        int height = SaturationValueSize;
-        _saturationValuePixels ??= new Color[width * height];
-
-        for (int y = 0; y < height; y++)
-        {
-            float value = (1f - (float)y / (height - 1)) * 100f;
-            for (int x = 0; x < width; x++)
-            {
-                float saturation = (float)x / (width - 1) * 100f;
-                (byte r, byte g, byte b) = ColorPicker.HsvToRgb(hue, saturation, value);
-                _saturationValuePixels[y * width + x] = new Color(r, g, b);
-            }
-        }
-
-        _saturationValueTexture ??= new Texture2D(graphicsDevice, width, height);
-        _saturationValueTexture.SetData(_saturationValuePixels);
-        _saturationValueDisplay.Texture = _saturationValueTexture;
-    }
-
-    private void GenerateHueTexture()
-    {
-        GraphicsDevice? graphicsDevice = SystemManagers.Default?.Renderer?.GraphicsDevice;
-        if (graphicsDevice == null)
-        {
-            return;
-        }
-
-        int width = HueBarWidth;
-        int height = HueBarHeight;
-        Color[] pixels = new Color[width * height];
-
-        for (int y = 0; y < height; y++)
-        {
-            float hue = (float)y / (height - 1) * 360f;
-            (byte r, byte g, byte b) = ColorPicker.HsvToRgb(hue, 100f, 100f);
-            Color color = new Color(r, g, b);
-            for (int x = 0; x < width; x++)
-            {
-                pixels[y * width + x] = color;
-            }
-        }
-
-        _hueTexture = new Texture2D(graphicsDevice, width, height);
-        _hueTexture.SetData(pixels);
-        _hueDisplay.Texture = _hueTexture;
     }
 }

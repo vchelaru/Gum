@@ -1,3 +1,4 @@
+using System;
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using Color = System.Drawing.Color;
@@ -15,6 +16,23 @@ public class ColorPickerTests : BaseTestClass
         ColorPicker.HsvToRgb(120f, 100f, 100f).ShouldBe(((byte)0, (byte)255, (byte)0));
         ColorPicker.HsvToRgb(240f, 100f, 100f).ShouldBe(((byte)0, (byte)0, (byte)255));
         ColorPicker.HsvToRgb(0f, 0f, 0f).ShouldBe(((byte)0, (byte)0, (byte)0));
+    }
+
+    [Fact]
+    public void BuildSaturationValuePixels_HasExpectedCorners_ForRedHue()
+    {
+        byte[] rgba = ColorPicker.BuildSaturationValuePixels(0f);
+        int size = (int)Math.Sqrt(rgba.Length / 4);
+
+        PixelAt(rgba, size, 0, 0).ShouldBe(((byte)255, (byte)255, (byte)255));        // sat 0, value 100 => white
+        PixelAt(rgba, size, 0, size - 1).ShouldBe(((byte)0, (byte)0, (byte)0));        // sat 0, value 0 => black
+        PixelAt(rgba, size, size - 1, 0).ShouldBe(((byte)255, (byte)0, (byte)0));      // sat 100, value 100, hue 0 => red
+    }
+
+    private static (byte R, byte G, byte B) PixelAt(byte[] rgba, int size, int x, int y)
+    {
+        int i = (y * size + x) * 4;
+        return (rgba[i], rgba[i + 1], rgba[i + 2]);
     }
 
     [Fact]

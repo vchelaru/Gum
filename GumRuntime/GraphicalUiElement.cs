@@ -1731,6 +1731,21 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     public static Action<IRenderableIpso, ISystemManagers, Layer>? AddRenderableToManagers;
     public static Action<string, GraphicalUiElement>? ApplyMarkup;
 
+    /// <summary>
+    /// Applies constant RGBA pixel data (width*height*4 bytes) to the sprite renderable of the target
+    /// as a texture shared/cached under the given key. For backgrounds identical across every instance
+    /// (e.g. a color picker hue bar). Assigned per rendering backend; null on backends that don't support it.
+    /// </summary>
+    public static Action<GraphicalUiElement, string, byte[], int, int>? ApplyCachedTextureFromPixelData;
+
+    /// <summary>
+    /// Applies changing RGBA pixel data (width*height*4 bytes) to the sprite renderable of the target
+    /// using a texture pooled per owner (second argument). Pooled textures whose owner has detached from
+    /// the visual tree are reclaimed, so repeated create/destroy cycles reuse a bounded set. For per-instance
+    /// procedural backgrounds (e.g. a color picker saturation/value square). Assigned per rendering backend.
+    /// </summary>
+    public static Action<GraphicalUiElement, GraphicalUiElement, byte[], int, int>? ApplyPooledTextureFromPixelData;
+
     public static Action<IRenderableIpso, GraphicalUiElement, string, object?> SetPropertyOnRenderable =
         // This is the default fallback to make Gum work. Specific rendering libraries can change this to provide
         // better performance.
