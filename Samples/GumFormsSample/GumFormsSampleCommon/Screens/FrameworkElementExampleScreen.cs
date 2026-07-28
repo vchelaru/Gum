@@ -330,6 +330,26 @@ namespace GumFormsSample.Screens
             text.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
             text.Text = "abcdefghijklmnopqrstuvwxyz";
             stackPanel.AddChild(text);
+
+            // ColorPicker (issue #4047). Built through its visual type, mirroring the button above.
+            var colorPickerVisual = new Gum.Forms.DefaultVisuals.V3.ColorPickerVisual();
+            var colorPicker = colorPickerVisual.FormsControl;
+            stackPanel.AddChild(colorPickerVisual);
+
+            var selectedColorSwatch = new RectangleRuntime();
+            selectedColorSwatch.IsFilled = true;
+            selectedColorSwatch.Width = 60;
+            selectedColorSwatch.Height = 24;
+            stackPanel.AddChild(selectedColorSwatch);
+
+            colorPicker.SelectedColorChanged += (_, _) =>
+            {
+                // SelectedColor is a backend-neutral System.Drawing.Color, so convert to the XNA
+                // color the runtime visual uses.
+                var selected = colorPicker.SelectedColor;
+                selectedColorSwatch.FillColor = new Color(selected.R, selected.G, selected.B);
+            };
+            colorPicker.SelectedColor = System.Drawing.Color.CornflowerBlue;
         }
 
         void CreateLayeredUi()

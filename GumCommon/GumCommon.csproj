@@ -284,6 +284,7 @@
 		<Compile Include="..\MonoGameGum\Forms\FrameworkElementTreeExtensions.cs" Link="Forms\FrameworkElementTreeExtensions.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Button.cs" Link="Forms\Controls\Button.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\CheckBox.cs" Link="Forms\Controls\CheckBox.cs" />
+		<Compile Include="..\MonoGameGum\Forms\Controls\ColorPicker.cs" Link="Forms\Controls\ColorPicker.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\ColumnDefinition.cs" Link="Forms\Controls\ColumnDefinition.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\ComboBox.cs" Link="Forms\Controls\ComboBox.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Expander.cs" Link="Forms\Controls\Expander.cs" />

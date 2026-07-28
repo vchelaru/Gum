@@ -143,6 +143,7 @@
 		<Compile Remove="Forms\VisualTemplate.cs" />
 		<Compile Remove="Forms\Controls\Button.cs" />
 		<Compile Remove="Forms\Controls\CheckBox.cs" />
+		<Compile Remove="Forms\Controls\ColorPicker.cs" />
 		<Compile Remove="Forms\Controls\ColumnDefinition.cs" />
 		<Compile Remove="Forms\Controls\ComboBox.cs" />
 		<Compile Remove="Forms\Controls\Expander.cs" />

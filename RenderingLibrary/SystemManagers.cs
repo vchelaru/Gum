@@ -267,6 +267,8 @@ public partial class SystemManagers : ISystemManagers
             //GraphicalUiElement.CanvasWidth = graphicsDevice.Viewport.Width;
             //GraphicalUiElement.CanvasHeight = graphicsDevice.Viewport.Height;
             GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+            GraphicalUiElement.ApplyCachedTextureFromPixelData = PixelDataTextureApplier.ApplyCached;
+            GraphicalUiElement.ApplyPooledTextureFromPixelData = PixelDataTextureApplier.ApplyPooled;
             CustomSetPropertyOnRenderable.LocalizationService ??= new LocalizationService();
             GraphicalUiElement.UpdateFontFromProperties = CustomSetPropertyOnRenderable.UpdateToFontValues;
             GraphicalUiElement.ThrowExceptionsForMissingFiles = CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles;
@@ -457,3 +459,96 @@ public partial class SystemManagers : ISystemManagers
         throw new NotImplementedException();
     }
 }
+
+// GraphicalUiElement is only in scope under USE_GUMCOMMON (see the using above); FRB, which doesn't
+// define it, provides its own runtime and never uses this applier. Guard to keep the FRB build green.
+#if USE_GUMCOMMON
+/// <summary>
+/// XNA-family backend for <see cref="GraphicalUiElement.ApplyCachedTextureFromPixelData"/> and
+/// <see cref="GraphicalUiElement.ApplyPooledTextureFromPixelData"/>. Cached textures live in the
+/// <see cref="LoaderManager"/> (shared across instances, disposed on content unload). Pooled textures
+/// are reused across control instances, reclaiming entries whose owner has detached from the visual
+/// tree, so repeated create/destroy cycles never grow the pool.
+/// </summary>
+internal static class PixelDataTextureApplier
+{
+    private class PoolEntry
+    {
+        public PoolEntry(Texture2D texture) => Texture = texture;
+        public Texture2D Texture { get; }
+        public GraphicalUiElement? Owner { get; set; }
+    }
+
+    private static readonly List<PoolEntry> Pool = new List<PoolEntry>();
+
+    public static void ApplyCached(GraphicalUiElement target, string cacheKey, byte[] rgba, int width, int height)
+    {
+        if (target?.RenderableComponent is not Sprite sprite)
+        {
+            return;
+        }
+
+        LoaderManager loader = LoaderManager.Self;
+        Texture2D? texture = loader.TryGetCachedDisposable<Texture2D>(cacheKey);
+        if (texture == null)
+        {
+            GraphicsDevice? graphicsDevice = SystemManagers.Default?.Renderer?.GraphicsDevice;
+            if (graphicsDevice == null)
+            {
+                return;
+            }
+            texture = new Texture2D(graphicsDevice, width, height, false, SurfaceFormat.Color);
+            texture.SetData(rgba);
+            loader.AddDisposable(cacheKey, texture);
+        }
+
+        sprite.Texture = texture;
+    }
+
+    public static void ApplyPooled(GraphicalUiElement target, GraphicalUiElement owner, byte[] rgba, int width, int height)
+    {
+        if (target?.RenderableComponent is not Sprite sprite)
+        {
+            return;
+        }
+
+        GraphicsDevice? graphicsDevice = SystemManagers.Default?.Renderer?.GraphicsDevice;
+        if (graphicsDevice == null)
+        {
+            return;
+        }
+
+        PoolEntry? entry = null;
+        PoolEntry? reclaimable = null;
+        foreach (PoolEntry candidate in Pool)
+        {
+            if (candidate.Owner == owner)
+            {
+                entry = candidate;
+                break;
+            }
+            // An entry whose owner has left the visual tree (removed from root) can be reused.
+            if (reclaimable == null && (candidate.Owner == null || candidate.Owner.Parent == null))
+            {
+                reclaimable = candidate;
+            }
+        }
+
+        if (entry == null)
+        {
+            entry = reclaimable ?? AddPoolEntry(graphicsDevice, width, height);
+            entry.Owner = owner;
+        }
+
+        entry.Texture.SetData(rgba);
+        sprite.Texture = entry.Texture;
+    }
+
+    private static PoolEntry AddPoolEntry(GraphicsDevice graphicsDevice, int width, int height)
+    {
+        PoolEntry entry = new PoolEntry(new Texture2D(graphicsDevice, width, height, false, SurfaceFormat.Color));
+        Pool.Add(entry);
+        return entry;
+    }
+}
+#endif

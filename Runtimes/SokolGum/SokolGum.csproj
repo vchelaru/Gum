@@ -161,6 +161,7 @@
 		-->
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Button.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\CheckBox.cs" />
+		<Compile Remove="..\..\MonoGameGum\Forms\Controls\ColorPicker.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\ColumnDefinition.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\ComboBox.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Expander.cs" />
