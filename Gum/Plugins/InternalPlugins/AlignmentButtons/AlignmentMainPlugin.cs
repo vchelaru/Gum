@@ -1,4 +1,5 @@
-﻿using Gum.Managers;
+﻿using Gum.DataTypes;
+using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
 using System.ComponentModel.Composition;
@@ -10,66 +11,44 @@ namespace Gum.Plugins.AlignmentButtons
     {
         private readonly ISelectedState _selectedState;
 
-        private IPluginTab _tab;
+        private AlignmentTabVisibilityCoordinator _coordinator;
 
         [ImportingConstructor]
         public AlignmentMainPlugin(ISelectedState selectedState)
         {
             _selectedState = selectedState;
         }
-        
+
         public override void StartUp()
         {
             AssignEvents();
-            _tab = _tabManager.AddControl(new Gum.Plugins.AlignmentButtons.AlignmentPluginControl(), "Alignment");
-            RefreshTabVisibility();
+            var tab = _tabManager.AddControl(new Gum.Plugins.AlignmentButtons.AlignmentPluginControl(), "Alignment");
+            _coordinator = new AlignmentTabVisibilityCoordinator(_selectedState, tab);
+            _coordinator.Refresh();
         }
 
         private void AssignEvents()
         {
             this.TreeNodeSelected += HandleTreeNodeSelected;
             this.StateWindowTreeNodeSelected += HandleStateWindowTreeNodeSelected;
+            this.InstanceSelected += HandleInstanceSelected;
         }
 
         private void HandleStateWindowTreeNodeSelected(ITreeNode obj)
         {
-            RefreshTabVisibility();
+            _coordinator.Refresh();
         }
 
         private void HandleTreeNodeSelected(ITreeNode? treeNode)
         {
-            RefreshTabVisibility();
+            _coordinator.Refresh();
         }
 
-        private void RefreshTabVisibility()
+        private void HandleInstanceSelected(ElementSave elementSave, InstanceSave instance)
         {
-            if (DetermineIfShouldShowTab())
-            {
-                _tab.Show();
-            }
-            else
-            {
-                _tab.Hide();
-            }
-        }
-
-        private bool DetermineIfShouldShowTab()
-        {
-            var shouldAdd = _selectedState.SelectedElement != null &&
-                _selectedState.SelectedStateSave != null;
-
-            if (shouldAdd)
-            {
-                if (_selectedState.SelectedScreen != null &&
-                    _selectedState.SelectedInstance == null)
-                {
-                    // screens as a whole can't be aligned
-                    shouldAdd = false;
-                }
-
-            }
-
-            return shouldAdd;
+            // Auto-selecting a new instance (e.g. right-click Add Object on an already-selected
+            // Screen) only raises InstanceSelected, not TreeNodeSelected - see issue #4067.
+            _coordinator.Refresh();
         }
     }
 }

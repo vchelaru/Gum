@@ -51,9 +51,11 @@ Every `StateSave` must have `ParentContainer` set — `GetValueRecursive` traver
 
 ## WPF-touching tool code (GumToolUnitTests) needs an STA thread
 
-xUnit's runner is **MTA**, but WPF `FrameworkElement`s (`MenuItem`, `Menu`, `ComboBox`, …) throw `InvalidOperationException: The calling thread must be STA` when constructed. If a tool class news up a WPF control — often a ViewModel building right-click `MenuItem`s in its constructor — build it inside a `RunOnSta(() => { ... })` helper that runs the body on an `ApartmentState.STA` thread and rethrows. Copy the helper from `MenuStripManagerTests` / `RenameManagerTests`; there is no shared base for it.
+xUnit's runner is **MTA**, but WPF `FrameworkElement`s (`MenuItem`, `Menu`, `ComboBox`, …) throw `InvalidOperationException: The calling thread must be STA` when constructed. If a tool class news up a WPF control — often a ViewModel building right-click `MenuItem`s in its constructor, or a plugin's `StartUp()` — mark the test `[StaFact]` (Xunit.StaFact), which runs it on an `ApartmentState.STA` thread. See `MenuStripManagerTests`.
 
 **Verify the real construction blocker empirically before designing around an assumed one.** A quick throwaway probe (construct the object, see what actually throws) beats reasoning: e.g. `BitmapFrame` PNG decode and most non-control VM constructors run fine on MTA, so the blocker is usually the WPF control, not the singleton/resource you suspected.
+
+**`[StaFact]` alone isn't enough for a control that pulls `StaticResource`s from an App-level merged `ResourceDictionary`** — those only exist inside the real running `Application`, so construction throws `XamlParseException` ("Cannot find resource named '...'") even under STA. Don't construct the real control to test a plugin's event-driven show/hide logic; extract that logic into a small class taking `ISelectedState`/`IPluginTab` via the constructor (mirrors `VariableGridSelectionCoordinator`) and test it without touching the control.
 
 ## Plugin/DI composition tests (GumToolUnitTests)
 
