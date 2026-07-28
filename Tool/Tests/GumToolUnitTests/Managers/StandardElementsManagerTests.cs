@@ -53,6 +53,22 @@ public class StandardElementsManagerTests : BaseTestClass
         variable.PropertiesToSetOnDisplayer.ContainsKey("MaxValue").ShouldBeFalse();
     }
 
+    // DropshadowBlur is a radius: negative is meaningless (and the runtime already clamps it), so the
+    // tool floors it at 0 like StrokeWidth — plain numeric textbox, no arbitrary maximum.
+    [Fact]
+    public void SetPreferredDisplayers_ClampsDropshadowBlurToMinZero_AsPlainTextBox()
+    {
+        var state = new StateSave();
+        state.Variables.Add(new VariableSave { Type = "float", Name = "DropshadowBlur" });
+
+        CreateSut().SetPreferredDisplayers(state);
+
+        var variable = state.Variables.First();
+        variable.PreferredDisplayer.ShouldBeNull();
+        variable.PropertiesToSetOnDisplayer["MinValue"].ShouldBe(0.0);
+        variable.PropertiesToSetOnDisplayer.ContainsKey("MaxValue").ShouldBeFalse();
+    }
+
     // Pins the static->instance drain: the Parent variable's type converter is built from the
     // injected ISelectedState. Before the drain SetPreferredDisplayers pulled ISelectedState from
     // the static Locator (which throws in a unit test); now it must come from the constructor.
