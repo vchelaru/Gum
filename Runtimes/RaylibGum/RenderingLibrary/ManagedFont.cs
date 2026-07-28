@@ -38,6 +38,14 @@ public class ManagedFont : IDisposable
             // Drop any recorded line metrics first — raylib may reuse this texture id after UnloadFont,
             // and a stale entry would hand the next font the wrong line height.
             RaylibFontMetricsRegistry.Remove(Font.Texture.Id);
+
+            // Unload the drop-shadow companion font (#4057), if this font had one, so its GPU texture
+            // doesn't leak — RaylibFontShadowRegistry only tracks the association, not the font's lifetime.
+            if (RaylibFontShadowRegistry.Remove(Font.Texture.Id, out Raylib_cs.Font shadowFont))
+            {
+                Raylib_cs.Raylib.UnloadFont(shadowFont);
+            }
+
             Raylib_cs.Raylib.UnloadFont(Font);
             disposed = true;
         }

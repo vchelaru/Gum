@@ -579,14 +579,13 @@ public class TextRuntime : InteractiveGue
     }
 
     /// <summary>
-    /// Issue #4001: forwards the dropshadow color/offset to the XNALIKE Text renderable so the runtime
+    /// Issues #4001/#4057: forwards the dropshadow color/offset to the Text renderable so the runtime
     /// draws the shadow as a second (offset, independently tinted) pass under the glyphs. Skia renders
-    /// its own blurred shadow, and raylib's separate Text/Raylib_cs.Font stack does not yet implement
-    /// the two-pass shadow, so this is XNALIKE-only.
+    /// its own blurred shadow instead, so this is XNALIKE/Raylib-only.
     /// </summary>
     void ApplyDropshadowToRenderable()
     {
-#if XNALIKE
+#if XNALIKE || RAYLIB
         ContainedText.HasDropshadow = HasDropshadow;
         ContainedText.DropshadowColor = DropshadowColor.ToContainerColor();
         ContainedText.DropshadowOffsetX = DropshadowOffsetX;

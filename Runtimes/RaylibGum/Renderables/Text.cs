@@ -418,6 +418,19 @@ public class Text : IVisible, IRenderableIpso,
         get; set;
     } = Color.White;
 
+    /// <summary>
+    /// When true and a "-shadow.fnt" sibling was loaded for the font(s) this Text draws with (see
+    /// <see cref="RenderingLibrary.RaylibFontShadowRegistry"/>), a drop shadow is drawn as a second
+    /// pass (issue #4057, the Raylib counterpart of #4001): the shadow silhouette is drawn offset by
+    /// <see cref="DropshadowOffsetX"/>/<see cref="DropshadowOffsetY"/> and tinted
+    /// <see cref="DropshadowColor"/>, with the primary glyphs drawn on top. Degrades gracefully to no
+    /// shadow when no shadow companion font was loaded for a given run's font.
+    /// </summary>
+    public bool HasDropshadow { get; set; }
+    public Color DropshadowColor { get; set; } = new Color(0, 0, 0, 180);
+    public float DropshadowOffsetX { get; set; }
+    public float DropshadowOffsetY { get; set; }
+
 
     public bool IsTruncatingWithEllipsisOnLastLine { get; set; }
 
@@ -1002,6 +1015,13 @@ public class Text : IVisible, IRenderableIpso,
         linePosition = SnapToPixelIfNeeded(linePosition);
         origin = SnapToPixelIfNeeded(origin);
 
+        if (HasDropshadow && RaylibFontShadowRegistry.TryGet(fontValue.Texture.Id, out Font shadowFont))
+        {
+            var shadowPosition = SnapToPixelIfNeeded(
+                linePosition + new Vector2(DropshadowOffsetX, DropshadowOffsetY) * FontScale);
+            DrawTextPro(shadowFont, line, shadowPosition, origin, 0, fontValue.BaseSize * FontScale, 0, DropshadowColor);
+        }
+
         // Texture filtering is applied once when the font's atlas texture is loaded/built (see
         // ContentLoader.DefaultTextureFilter, #3496), not per-draw — a per-line GPU state reset here
         // was both redundant and ignored the project's texture filter setting.
@@ -1252,6 +1272,16 @@ public class Text : IVisible, IRenderableIpso,
 
             runPosition = SnapToPixelIfNeeded(runPosition);
             runOrigin = SnapToPixelIfNeeded(runOrigin);
+
+            // Issue #4057: each run looks up its OWN font's shadow companion (a run may draw with a
+            // swapped [FontSize]/[IsBold]/etc. font), so a run whose font has no shadow companion
+            // simply draws no shadow - the same graceful degradation as the base-font path.
+            if (HasDropshadow && RaylibFontShadowRegistry.TryGet(runFonts[s].Texture.Id, out Font runShadowFont))
+            {
+                var shadowRunPosition = SnapToPixelIfNeeded(
+                    runPosition + new Vector2(DropshadowOffsetX, DropshadowOffsetY) * runScales[s]);
+                DrawTextPro(runShadowFont, runTexts[s], shadowRunPosition, runOrigin, runRotations[s], runDrawSizes[s], 0, DropshadowColor);
+            }
 
             DrawTextPro(runFonts[s], runTexts[s], runPosition, runOrigin, runRotations[s], runDrawSizes[s], 0, runColors[s]);
 

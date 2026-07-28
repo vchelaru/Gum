@@ -87,6 +87,10 @@ public class ContentLoader : IContentLoader
                 // file to record them (same registry the in-memory/KernSmith path populates via
                 // BuildFont). Keyed by atlas texture id so the Text renderable can recover them.
                 RegisterFontMetricsFromFnt(File.ReadAllText(contentName), loadedFont.Texture.Id);
+                // #4057: if a "-shadow.fnt" sibling exists (written by the font generator for a
+                // dropshadow font, sharing the same PNG - see BitmapFont.LoadShadowSiblingIfPresent on
+                // the MonoGame side), load it too and record it against the primary's texture id.
+                RegisterShadowSiblingIfPresent(contentName, loadedFont.Texture.Id);
             }
             else
             {
@@ -342,6 +346,29 @@ public class ContentLoader : IContentLoader
         catch
         {
             // Leave unregistered; line height falls back to MeasureTextEx in the Text renderable.
+        }
+    }
+
+    // #4057: loads the "-shadow.fnt" sibling next to primaryFntPath (if present) via raylib's native
+    // loader and records it in RaylibFontShadowRegistry against the primary's texture id. Absent for
+    // the vast majority of fonts (no dropshadow requested), in which case this is a no-op - the Text
+    // renderable's shadow-registry lookup simply finds nothing and draws no shadow pass.
+    private static void RegisterShadowSiblingIfPresent(string primaryFntPath, uint primaryTextureId)
+    {
+        const string fntExtension = ".fnt";
+        if (!primaryFntPath.EndsWith(fntExtension, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        string shadowFntPath = primaryFntPath.Substring(0, primaryFntPath.Length - fntExtension.Length)
+            + "-shadow" + fntExtension;
+
+        if (System.IO.File.Exists(shadowFntPath))
+        {
+            Font shadowFont = Raylib.LoadFont(shadowFntPath);
+            TextureFilterApplier(shadowFont.Texture, DefaultTextureFilter);
+            RaylibFontShadowRegistry.Register(primaryTextureId, shadowFont);
         }
     }
 

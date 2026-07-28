@@ -195,6 +195,86 @@ public class ContentLoaderTests : BaseTestClass
         }
     }
 
+    // Issue #4057: loading a primary .fnt whose "-shadow.fnt" sibling exists on disk (written by the
+    // KernSmith ShadowSilhouette variant, #4001) should register the shadow companion font in
+    // RaylibFontShadowRegistry, keyed by the primary's atlas texture id, so the Text renderable can
+    // find it at draw time. Mirrors BitmapFont.LoadShadowSiblingIfPresent on the MonoGame side.
+    [Fact]
+    public void LoadContent_Font_WhenShadowSiblingFntExistsOnDisk_ShouldRegisterShadowFont()
+    {
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        try
+        {
+            LoaderManager.Self.CacheTextures = false;
+
+            string fixtureDirectory = Path.Combine(AppContext.BaseDirectory, "Content", "FontCache");
+            string fntPath = Path.Combine(fixtureDirectory, "Font18Arial.fnt");
+
+            Font font = LoaderManager.Self.ContentLoader.LoadContent<Font>(fntPath);
+
+            RaylibFontShadowRegistry.TryGet(font.Texture.Id, out Font shadowFont).ShouldBeTrue();
+            shadowFont.GlyphCount.ShouldBe(2);
+        }
+        finally
+        {
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+        }
+    }
+
+    // Companion to the above: a primary .fnt with no "-shadow.fnt" sibling (the common case) must not
+    // register anything - this is the "gracefully degrades to no shadow" contract #4057 preserves.
+    [Fact]
+    public void LoadContent_Font_WhenNoShadowSiblingFntExists_ShouldNotRegisterShadowFont()
+    {
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        try
+        {
+            LoaderManager.Self.CacheTextures = false;
+
+            // Font18ArialNoShadow.fnt is a copy of Font18Arial.fnt with no "-shadow.fnt" sibling next to it.
+            string fixtureDirectory = Path.Combine(AppContext.BaseDirectory, "Content", "FontCache");
+            string fntPath = Path.Combine(fixtureDirectory, "Font18ArialNoShadow.fnt");
+
+            Font font = LoaderManager.Self.ContentLoader.LoadContent<Font>(fntPath);
+
+            RaylibFontShadowRegistry.TryGet(font.Texture.Id, out _).ShouldBeFalse();
+        }
+        finally
+        {
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+        }
+    }
+
+    // Companion to ManagedFont_Dispose_ShouldRemoveRegisteredLineMetrics: disposing the primary font
+    // must also unload and unregister its shadow companion, or the shadow's GPU texture leaks and a
+    // reused texture id could return a stale shadow font (#4057).
+    [Fact]
+    public void ManagedFont_Dispose_ShouldRemoveRegisteredShadowFont()
+    {
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        try
+        {
+            LoaderManager.Self.CacheTextures = false;
+
+            string fixtureDirectory = Path.Combine(AppContext.BaseDirectory, "Content", "FontCache");
+            string fntPath = Path.Combine(fixtureDirectory, "Font18Arial.fnt");
+
+            Font font = LoaderManager.Self.ContentLoader.LoadContent<Font>(fntPath);
+            uint textureId = font.Texture.Id;
+
+            RaylibFontShadowRegistry.TryGet(textureId, out _).ShouldBeTrue();
+
+            ManagedFont managedFont = new ManagedFont(font);
+            managedFont.Dispose();
+
+            RaylibFontShadowRegistry.TryGet(textureId, out _).ShouldBeFalse();
+        }
+        finally
+        {
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+        }
+    }
+
     // Regression for #3037: a bundled bitmap font (.fnt + .png page) loaded via LoadFont used to
     // bypass CustomGetStreamFromFile entirely — raylib's path-based LoadFont reads straight off
     // disk. Here both files exist ONLY in memory (served through the hook) and the path handed to

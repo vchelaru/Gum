@@ -33,6 +33,10 @@
          raw bytes and serve them through an in-memory CustomGetStreamFromFile hook. -->
     <None Include="Content\FontCache\Font18Arial.fnt" CopyToOutputDirectory="PreserveNewest" />
     <None Include="Content\FontCache\Font18Arial_0.png" CopyToOutputDirectory="PreserveNewest" />
+    <!-- #4057: "-shadow.fnt" sibling sharing Font18Arial_0.png, for the shadow-companion-loading tests. -->
+    <None Include="Content\FontCache\Font18Arial-shadow.fnt" CopyToOutputDirectory="PreserveNewest" />
+    <!-- #4057: a copy of Font18Arial.fnt with no "-shadow.fnt" sibling, for the no-shadow-registered test. -->
+    <None Include="Content\FontCache\Font18ArialNoShadow.fnt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
