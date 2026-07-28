@@ -18,9 +18,37 @@ const URL_EXT_FALLBACK = new Set(['png', 'jpg', 'jpeg', 'gif', 'bmp', 'tga', 'sv
 // SVG is a vector format — Pillow can't rasterize it (Image.open() only reads raster
 // formats), so it's handled separately via rasterizeSvg() below, not this PIL round-trip.
 const CONVERT_TO_PNG = new Set(['webp', 'avif']);
+// GIF/BMP palette + browser color management diverge from Gum's raw decode — paint
+// through Chromium so tiled backgrounds (Space Jam stars) match page screenshots.
+const RASTERIZE_VIA_CHROMIUM = new Set(['gif', 'bmp']);
 
 const SVG_MAX_DIM = 1024;
 const SVG_UPSCALE = 2; // render at 2x the SVG's declared size for a crisper downscale
+
+/**
+ * Decode a `data:` image URL into bytes + MIME. Handles `;base64`, `;charset=…`, and
+ * percent-encoded SVG payloads (`data:image/svg+xml;charset=US-ASCII,%3Csvg…`) used by
+ * CSS selects (Pocket chevron). Returns null when the URL is not a usable data image.
+ */
+export function parseDataImageUrl(url) {
+  if (!url || !url.startsWith('data:')) return null;
+  const comma = url.indexOf(',');
+  if (comma < 0) return null;
+  const header = url.slice(5, comma); // after "data:"
+  const payload = url.slice(comma + 1);
+  const parts = header.split(';').filter(Boolean);
+  const contentType = (parts[0] || '').trim().toLowerCase();
+  const isBase64 = parts.some((p) => p.toLowerCase() === 'base64');
+  try {
+    if (isBase64) {
+      return { buffer: Buffer.from(payload, 'base64'), contentType };
+    }
+    // Percent-encoded (or plain) SVG / text payloads.
+    return { buffer: Buffer.from(decodeURIComponent(payload), 'utf8'), contentType };
+  } catch {
+    return null;
+  }
+}
 
 /** Declared size from the root <svg> tag: width/height attrs, falling back to viewBox. */
 export function svgIntrinsicSize(svgText) {
@@ -89,6 +117,29 @@ function sha1(buf) {
   return createHash('sha1').update(buf).digest('hex').slice(0, 12);
 }
 
+const IMAGE_CT_RE = /^image\//i;
+
+/** Attach a response listener; returns a Map<url, {buffer, contentType}>. Sites with a
+ *  server-randomized/rotating hero banner (same URL, different bytes per request — Team
+ *  Liquid's front page) return different content to downloadImages()'s own fetch() than
+ *  what the page actually rendered. Capturing the response the live page already received
+ *  guarantees the downloaded asset matches the pixels the reference screenshot shows. */
+export function attachImageCapture(page) {
+  const captured = new Map();
+  page.on('response', async (res) => {
+    try {
+      const ct = (res.headers()['content-type'] || '').split(';')[0].trim();
+      if (!IMAGE_CT_RE.test(ct)) return;
+      if (res.status() < 200 || res.status() >= 300) return;
+      const buffer = Buffer.from(await res.body());
+      if (buffer.length > 0) captured.set(res.url(), { buffer, contentType: ct });
+    } catch {
+      // Body may be unavailable for cached/opaque responses — ignore.
+    }
+  });
+  return captured;
+}
+
 /** Width/height from a PNG's IHDR chunk (bytes 16-23, big-endian) — used to recover the
  *  actual rasterized pixel size of an SVG->PNG conversion (SVG_UPSCALE / SVG_MAX_DIM in
  *  rasterizeSvg mean it's not simply the SVG's own declared intrinsic size) without
@@ -106,6 +157,45 @@ function sniffExt(buf) {
   if (buf.length >= 5 && buf.toString('ascii', 0, 5) === '<?xml') return 'svg';
   if (buf.length >= 4 && buf.toString('ascii', 0, 4) === '<svg') return 'svg';
   return null;
+}
+
+/** Re-paint a raster (GIF/BMP) through Chromium so SourceFile pixels match what
+ *  `page.screenshot` captures for CSS backgrounds / <img> — Gum loads files
+ *  without the browser's color-management pass. */
+export async function rasterizeRasterViaChromium(browser, buf, mime = 'image/gif') {
+  const b64 = buf.toString('base64');
+  const page = await browser.newPage({
+    viewport: { width: 2048, height: 2048 },
+    deviceScaleFactor: 1,
+  });
+  try {
+    await installTsxEvaluateShim(page);
+    await page.setContent(
+      `<!doctype html><html><body style="margin:0;background:transparent">` +
+      `<img id="i" src="data:${mime};base64,${b64}" style="display:block"/></body></html>`,
+    );
+    const loc = page.locator('#i');
+    await loc.waitFor({ state: 'visible' });
+    await page.evaluate(async () => {
+      const img = document.getElementById('i');
+      if (img && img.decode) await img.decode();
+    });
+    const box = await loc.boundingBox();
+    if (!box || box.width < 1 || box.height < 1) {
+      throw new Error('image has empty bounding box after decode');
+    }
+    return await page.screenshot({
+      omitBackground: true,
+      clip: {
+        x: Math.floor(box.x),
+        y: Math.floor(box.y),
+        width: Math.ceil(box.width),
+        height: Math.ceil(box.height),
+      },
+    });
+  } finally {
+    await page.close();
+  }
 }
 
 /** Convert webp/avif bytes to PNG via Pillow (already used by regress). */
@@ -134,6 +224,7 @@ export async function downloadImages(
   root: import('./types.js').BoxNode,
   outDir: string,
   browser: import('playwright-core').Browser,
+  capturedImages: Map<string, { buffer: Buffer, contentType: string }> = new Map(),
 ) {
   const urls = new Set();
   (function collect(node) {
@@ -166,13 +257,16 @@ export async function downloadImages(
         // Node fetch() does not support file:// — local fixtures / file:// pages.
         buf = readFileSync(fileURLToPath(url));
       } else if (url.startsWith('data:')) {
-        const m = url.match(/^data:([^;,]+)?(?:;base64)?,([\s\S]*)$/i);
-        if (!m) {
+        const parsed = parseDataImageUrl(url);
+        if (!parsed) {
           console.warn(`  ! bad data URL: ${url.slice(0, 64)}…`);
           continue;
         }
-        contentType = (m[1] || '').trim();
-        buf = Buffer.from(m[2], /;base64,/i.test(url) ? 'base64' : 'utf8');
+        ({ buffer: buf, contentType } = parsed);
+      } else if (capturedImages.has(url)) {
+        // Prefer the exact bytes the live page already received over re-fetching — a
+        // fresh fetch() can land on a different random rotation for the same URL.
+        ({ buffer: buf, contentType } = capturedImages.get(url));
       } else {
         const res = await fetch(url);
         if (!res.ok) {
@@ -204,6 +298,16 @@ export async function downloadImages(
         } catch (e) {
           console.warn(`  ! svg rasterize failed: ${e.message} — skipped ${url}`);
           continue;
+        }
+      } else if (RASTERIZE_VIA_CHROMIUM.has(ext)) {
+        try {
+          const mime = ext === 'bmp' ? 'image/bmp' : 'image/gif';
+          outBuf = await rasterizeRasterViaChromium(browser, buf, mime);
+          outExt = 'png';
+          assetSizeMap.set(url, pngDimensions(outBuf));
+          console.log(`  image: chromium-painted ${ext} → png`);
+        } catch (e) {
+          console.warn(`  ! ${ext} chromium paint failed: ${e.message} — keeping original`);
         }
       } else if (CONVERT_TO_PNG.has(ext)) {
         try {

@@ -2,8 +2,26 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright-core';
-import { svgIntrinsicSize, rasterizeSvg } from './assets.js';
+import { svgIntrinsicSize, rasterizeSvg, parseDataImageUrl } from './assets.js';
 import { installTsxEvaluateShim } from './tsx-evaluate-shim.js';
+
+test('parseDataImageUrl: percent-encoded SVG with charset (Pocket select chevron)', () => {
+  const url = 'data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2210%22%20height%3D%2210%22%3E%3C%2Fsvg%3E';
+  const parsed = parseDataImageUrl(url);
+  assert.ok(parsed);
+  assert.equal(parsed.contentType, 'image/svg+xml');
+  assert.match(parsed.buffer.toString('utf8'), /<svg xmlns=/);
+});
+
+test('parseDataImageUrl: base64 PNG header', () => {
+  // 1x1 transparent PNG
+  const b64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  const parsed = parseDataImageUrl(`data:image/png;base64,${b64}`);
+  assert.ok(parsed);
+  assert.equal(parsed.contentType, 'image/png');
+  assert.equal(parsed.buffer[0], 0x89);
+  assert.equal(parsed.buffer[1], 0x50); // P
+});
 
 test('svgIntrinsicSize: width/height attrs', () => {
   assert.deepEqual(svgIntrinsicSize('<svg width="24" height="32"></svg>'), { width: 24, height: 32 });

@@ -7,8 +7,11 @@
   "scripts": {
     "convert": "tsx convert.ts",
     "gumcli": "tsx gumcli.ts",
+    "site-fidelity": "npm --prefix ../fidelity run site-fidelity --",
+    "bookmark-fidelity": "npm --prefix ../fidelity run bookmark-fidelity --",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test *.test.ts",
+    "test:fidelity": "npm --prefix ../fidelity test",
     "postinstall": "npx playwright-core install chromium"
   },
   "dependencies": {

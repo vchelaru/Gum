@@ -13,6 +13,8 @@ export type BoxStyle = {
   backgroundImage: string;
   backgroundSize: string;
   backgroundPosition: string;
+  /** CSS background-repeat (computed). Default in CSS is `repeat`. */
+  backgroundRepeat: string;
   objectFit: string;
   objectPosition: string;
   listStyleType: string;

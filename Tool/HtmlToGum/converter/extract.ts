@@ -15,9 +15,83 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
   // at all" state, so the closest correct behavior is to not emit one. Common in real
   // pages (collapsed dropdowns, inactive tabs, modal content) that never showed up in
   // either hand-written fixture.
+  // Also skip non-rendered host tags whose textContent would otherwise leak (Space Jam
+  // sitemap: <noscript><iframe src="googletagmanager…"></iframe></noscript> showed up
+  // as a literal string at the top of the Gum screenshot).
+  const SKIP_TAGS = new Set([
+    'SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'HEAD', 'META', 'LINK', 'TITLE',
+  ]);
   function isVisible(el) {
+    if (!el || el.nodeType !== Node.ELEMENT_NODE) return false;
+    if (SKIP_TAGS.has(String(el.tagName).toUpperCase())) return false;
     const cs = getComputedStyle(el);
-    return cs.opacity !== '0' && cs.display !== 'none' && cs.visibility !== 'hidden';
+    if (cs.opacity === '0' || cs.display === 'none' || cs.visibility === 'hidden') return false;
+    // Zero-size tracking iframes / pixels (GTM) — not painted, but may not be display:none.
+    if (String(el.tagName).toUpperCase() === 'IFRAME') {
+      const r = el.getBoundingClientRect();
+      if (r.width < 1 && r.height < 1) return false;
+    }
+    return true;
+  }
+
+  // Chromium paints HTML presentational table borders (`border="1"` / `border=""`) as a
+  // fixed grey bevel — light #eee top/left on the table (outset), dark #9a on cells
+  // (inset). getComputedStyle still reports border-*-color as currentColor (e.g. Space
+  // Jam yellow), so without this rewrite Gum strokes yellow and diffs ~10% on sitemap.
+  const HTML_TABLE_BEVEL_LIGHT = 'rgb(238, 238, 238)';
+  const HTML_TABLE_BEVEL_DARK = 'rgb(154, 154, 154)';
+
+  function htmlTableBorderAttrWidth(table) {
+    if (!table || !table.hasAttribute('border')) return 0;
+    const raw = table.getAttribute('border');
+    if (raw === '0') return 0;
+    const n = parseInt(raw, 10);
+    // Empty border="" is treated as 1 (legacy HTML / Space Jam sitemap).
+    if (raw === '' || !Number.isFinite(n) || n < 0) return 1;
+    return n;
+  }
+
+  function authoredBorderColor(el) {
+    if (!el || !el.style) return false;
+    const s = el.style;
+    return !!(s.borderColor || s.borderTopColor || s.borderRightColor
+      || s.borderBottomColor || s.borderLeftColor);
+  }
+
+  /** Replace lying currentColor table borders with Chromium's painted grey bevel. */
+  function applyHtmlTableBorderPaint(el, style) {
+    const tag = String(el.tagName).toUpperCase();
+    if (tag !== 'TABLE' && tag !== 'TD' && tag !== 'TH') return style;
+    const table = tag === 'TABLE' ? el : el.closest('table');
+    if (htmlTableBorderAttrWidth(table) <= 0) return style;
+    if (authoredBorderColor(el) || authoredBorderColor(table)) return style;
+    const hasBorder = (style.borderTopWidth || 0) > 0 || (style.borderRightWidth || 0) > 0
+      || (style.borderBottomWidth || 0) > 0 || (style.borderLeftWidth || 0) > 0;
+    if (!hasBorder) return style;
+    const isTable = tag === 'TABLE';
+    const tl = isTable ? HTML_TABLE_BEVEL_LIGHT : HTML_TABLE_BEVEL_DARK;
+    const br = isTable ? HTML_TABLE_BEVEL_DARK : HTML_TABLE_BEVEL_LIGHT;
+    return {
+      ...style,
+      borderTopColor: tl,
+      borderLeftColor: tl,
+      borderBottomColor: br,
+      borderRightColor: br,
+    };
+  }
+
+  // BitmapFont metrics + missing text-decoration:underline leave multi-line table prose
+  // (Space Jam sitemap) well above a 5% pixel budget even after BBCode merges. Baking the
+  // cell through Chromium captures borders, underlines, and glyph raster in one sprite.
+  function shouldRasterTextHeavyCell(el) {
+    const tag = String(el.tagName).toUpperCase();
+    if (tag !== 'TD' && tag !== 'TH') return false;
+    const text = (el.innerText || '').replace(/\s+/g, ' ').trim();
+    if (text.length < 40) return false;
+    const imgs = el.querySelectorAll('img');
+    // Icon / logo cells with a short alt caption stay structured Sprites.
+    if (imgs.length > 0 && text.length < 80) return false;
+    return true;
   }
 
   function bgImageUrl(str) {
@@ -243,6 +317,8 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
         display: 'inline',
         backgroundImage: 'none',
         backgroundSize: cs.backgroundSize,
+        backgroundPosition: cs.backgroundPosition || '0% 0%',
+        backgroundRepeat: 'no-repeat',
         objectFit: cs.objectFit,
         objectPosition: cs.objectPosition,
         listStyleType: 'none',
@@ -428,6 +504,15 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
       kids = [];
     }
 
+    if (shouldRasterTextHeavyCell(el) && !paint.needsRaster) {
+      paint.needsRaster = true;
+      paint.rasterWholeSubtree = true;
+      paint.rasterOmitBackground = false;
+      kids = [];
+      ownText = '';
+      lineCount = 1;
+    }
+
     return {
       id: el.id || null,
       tag: el.tagName.toLowerCase(),
@@ -446,7 +531,7 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
       naturalHeight: el.naturalHeight || 0,
       // Set by convert.ts when this node was screenshotted as a raster sprite (§5.3).
       rasterSrc: null,
-      style: {
+      style: applyHtmlTableBorderPaint(el, {
         display: cs.display,
         backgroundImage: cs.backgroundImage,
         backgroundSize: cs.backgroundSize,
@@ -454,6 +539,9 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
         // GeeksforGeeks' social icon strip) select one sub-region of a shared image —
         // see computeBackgroundSpriteCrop() in map.ts.
         backgroundPosition: cs.backgroundPosition,
+        // Space Jam-style starfields use the CSS default (`repeat`) — without this the
+        // mapper stretches one tile to fill (EntireTexture). See wantsTiledBackground().
+        backgroundRepeat: cs.backgroundRepeat || 'repeat',
         objectFit: cs.objectFit,
         objectPosition: cs.objectPosition,
         listStyleType: cs.listStyleType,
@@ -530,7 +618,7 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
         borderImageSource: cs.borderImageSource || 'none',
         borderImageSlice: parseBorderImageSlice(cs),
         borderImageRepeat: cs.borderImageRepeat || '',
-      },
+      }),
       children: kids,
     };
   }

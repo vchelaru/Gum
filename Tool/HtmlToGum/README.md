@@ -11,13 +11,15 @@ Tool/HtmlToGum/
   HtmlToGumPlugin.csproj     # MEF plugin
   MainHtmlToGumPlugin.cs
   converter/                 # Node convert pipeline (required for Import HTML)
+  fidelity/                  # Site/bookmark pixel-gate harness (dev only)
   samples/                   # Optional fixture HTML for try-outs
 ```
 
 | Path | Role |
 |------|------|
 | Plugin DLL | Menu + staging import |
-| `converter/` | `convert.ts` + map/extract/fonts |
+| `converter/` | `convert.ts` + map/extract/fonts (+ `dom-quiescence` for stable extract) |
+| `fidelity/` | `site-fidelity` crawl → convert → screenshot → pixel diff |
 | `samples/` | Example HTML pages (not required for the plugin) |
 
 ## Setup
@@ -59,6 +61,31 @@ Default output is `Tool/HtmlToGum/.out/` (gitignored). Use `--out=<dir>` to choo
 Useful flags: `--no-responsive`, `--responsive=n,w`, `--tag=name`.
 
 Fonts: `npm run gumcli -- fonts <project.gumx>` (wraps in-repo `Tools/Gum.Cli`).
+
+## Site fidelity (dev loop)
+
+Crawl a live site (same-origin links), convert each page, screenshot via `gumcli screenshot`, and pixel-diff against Chromium until every page is under a threshold (default **5%**). Harness sources live in `Tool/HtmlToGum/fidelity/`; the convert pipeline stays in `converter/`. Output is gitignored under `Tool/HtmlToGum/.site-fidelity/`.
+
+```powershell
+cd Tool/HtmlToGum/converter
+npm run site-fidelity -- https://www.spacejam.com/1996/jam.htm
+# optional: --max-pages=15 --max-pct=5 --width=800 --height=900 --path-prefix=/1996/
+# same as: cd ../fidelity && npm run site-fidelity -- <url>
+```
+
+Exit code `0` = all pages ≤ `--max-pct`; `1` = one or more over budget (see `report.json` + per-page `diff/` crops). Use that report to patch the converter, then re-run the same command until green.
+
+Frameset hubs (e.g. Space Jam `*frames.html`) are skipped; their `<frame src>` targets are crawled instead so convert always gets a real `<body>`.
+
+**Agent iteration loop:** run site-fidelity → open failing `pages/<Screen>/diff/` crops + `report.json` → fix `converter/map.ts` / `extract.ts` → re-run the same command (optionally `--pages=` for a single URL) until every page is under 5%.
+
+**Rotating media:** convert calls `stabilizeDynamicMedia` before extract (see `converter/dom-quiescence.ts`). If `capture-meta.json` reports `suspectedRotatingMedia`, do not debug carousel timing — convert already pinned the slide. Treat remaining diffs as real converter issues or move on.
+
+To skip crawl and re-test a fixed URL list:
+
+```powershell
+npm run site-fidelity -- https://www.spacejam.com/1996/jam.htm --pages=https://www.spacejam.com/1996/jam.htm
+```
 
 ## Samples
 

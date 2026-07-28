@@ -8,6 +8,7 @@
 import type {
   BoxNode, MappedScreen, NineSliceInfo, ResponsiveMap,
 } from './types.js';
+import { resolveCssFontFamily } from './fonts.js';
 
 // ---- Gum enum values (see ai-reference/gum-xml-format.md) --------------------
 const CL = {
@@ -88,7 +89,7 @@ export function parseColor(str) {
 const isTransparent = (c) => !c || c.a === 0;
 const isBold = (w) => w === 'bold' || w === 'bolder' || parseInt(w, 10) >= 600;
 const isItalic = (s) => s === 'italic' || s === 'oblique';
-const firstFont = (fam) => (fam || '').split(',')[0].replace(/["']/g, '').trim();
+const firstFont = (fam) => resolveCssFontFamily(fam);
 
 // Tags whose only visual effect (once background/border/shadow/padding is ruled out) is a
 // font weight/style/color change — safe to fold into one Text via BBCode markup instead of
@@ -742,6 +743,54 @@ function wantsCoverCrop(style) {
 }
 
 /**
+ * CSS `background-repeat` (default `repeat`) → Gum Sprite Wrap + DimensionsBased.
+ * Skip when the author asked for a single stretched/cropped image (`no-repeat`,
+ * `background-size: cover|contain`, or percentage sizes that fill the box).
+ */
+function wantsTiledBackground(style) {
+  if (!style) return false;
+  const repeat = String(style.backgroundRepeat || 'repeat').trim().toLowerCase();
+  if (!repeat || repeat === 'no-repeat') return false;
+  const sizeToks = String(style.backgroundSize || 'auto').trim().toLowerCase().split(/\s+/);
+  const size0 = sizeToks[0] || 'auto';
+  if (size0 === 'cover' || size0 === 'contain') return false;
+  // `100%` / `100% 100%` stretch-to-fill — not a repeating tile.
+  if (sizeToks.length >= 1 && sizeToks.every((t) => t.endsWith('%') && parseFloat(t) >= 100)) {
+    return false;
+  }
+  return /^(repeat|repeat-x|repeat-y|space|round)(\s|$)/.test(repeat)
+    || repeat.split(/\s+/).some((t) => t === 'repeat' || t === 'repeat-x' || t === 'repeat-y'
+      || t === 'space' || t === 'round');
+}
+
+/**
+ * Extra px to grow a painted backdrop so BitmapFont glyphs that spill past Chromium's
+ * tighter line-box still sit on the background (Space Jam copyright under body stars).
+ */
+function textOverflowPad(node) {
+  const boxBottom = node.rect.y + node.rect.height;
+  let pad = 0;
+  function visit(n) {
+    if (n.text && n.style && n.style.fontSize > 0) {
+      const lines = Math.max(1, n.lineCount || 1);
+      // Gum BitmapFont line boxes run taller than CSS; ~1.35× font-size per line is a
+      // conservative lower bound seen across Arial/Times imports.
+      const guess = Math.round(n.style.fontSize * 1.35 * lines);
+      const spill = Math.max(0, guess - Math.round(n.rect.height));
+      pad = Math.max(pad, (n.rect.y + n.rect.height + spill) - boxBottom);
+    }
+    for (const c of n.children || []) visit(c);
+  }
+  visit(node);
+  return Math.max(0, Math.ceil(pad));
+}
+
+function backdropHeight(node) {
+  const base = Math.round(node.rect.height);
+  return hasVisualStyling(node.style) ? base + textOverflowPad(node) : base;
+}
+
+/**
  * Build the instance list + variable list for a box tree.
  * @param {Map<string,string>} assetMap Downloaded-image URL -> relative SourceFile path
  *   (see convert.mjs's downloadImages). Nodes whose image URL isn't in the map (download
@@ -858,6 +907,26 @@ export function mapTreeToScreen(
     variables.push(
       VDIM(`${name}.WidthUnits`, DIM.RelativeToParent), VF(`${name}.Width`, 0),
       VDIM(`${name}.HeightUnits`, DIM.RelativeToParent), VF(`${name}.Height`, 0),
+    );
+  }
+
+  /**
+   * Root/body CSS backgrounds paint on the canvas and tile from the viewport origin,
+   * not the margin-box top-left. Body's default 8px margin (Space Jam) otherwise shifts
+   * Wrap tiles by that amount vs Chromium. Offset + grow the sprite so tile phase matches.
+   */
+  function fillParentCanvasTiledBackground(name, node) {
+    const ox = Math.round(node.rect.x) || 0;
+    const oy = Math.round(node.rect.y) || 0;
+    if (ox === 0 && oy === 0) {
+      fillParent(name);
+      return;
+    }
+    variables.push(
+      VF(`${name}.X`, -ox),
+      VF(`${name}.Y`, -oy),
+      VDIM(`${name}.WidthUnits`, DIM.RelativeToParent), VF(`${name}.Width`, ox),
+      VDIM(`${name}.HeightUnits`, DIM.RelativeToParent), VF(`${name}.Height`, oy),
     );
   }
 
@@ -998,7 +1067,7 @@ export function mapTreeToScreen(
     if (vert != null) variables.push(v('VerticalAlignment', `${name}.VerticalAlignment`, 'xsd:int', vert));
   }
 
-  function emitSpriteSource(name, node) {
+  function emitSpriteSource(name, node, { asBackground = false } = {}) {
     const s = node.style;
     const url = node.rasterSrc || node.imgSrc || parseBackgroundImageUrl(s.backgroundImage);
     const asset = url && assetMap.get(url);
@@ -1016,6 +1085,13 @@ export function mapTreeToScreen(
           v('TextureAddress', `${name}.TextureAddress`, 'xsd:int', 1), // Custom
           VI(`${name}.TextureLeft`, scaled.left), VI(`${name}.TextureTop`, scaled.top),
           VI(`${name}.TextureWidth`, scaled.width), VI(`${name}.TextureHeight`, scaled.height),
+        );
+      } else if (asBackground && wantsTiledBackground(s)) {
+        // CSS background-repeat (default `repeat`) — DimensionsBased + Wrap tiles at
+        // intrinsic size instead of stretching one copy across the box (Space Jam stars).
+        variables.push(
+          v('TextureAddress', `${name}.TextureAddress`, 'xsd:int', 2), // DimensionsBased
+          VB(`${name}.Wrap`, true),
         );
       }
       return true;
@@ -1108,7 +1184,7 @@ export function mapTreeToScreen(
     return JSON.stringify(baseColor) === JSON.stringify(childColor);
   }
 
-  // Folds a block-level text container's same-line inline runs (plain #text plus
+  // Folds a block-level text container's inline runs (plain #text plus
   // <strong>/<b>/<em>/<i>/<a> weight-or-style-only children — e.g. iana.org's "...provided
   // by <a>Public Technical Identifiers</a>, an affiliate of <a>ICANN</a>.") into ONE Text
   // leaf using BBCode markup, instead of one sibling Text per run.
@@ -1121,33 +1197,109 @@ export function mapTreeToScreen(
   // line itself, the same run-by-run measurement it already does for inline BBCode styling
   // (#3520) — self-consistent regardless of how its bitmap font compares to Chromium's.
   //
-  // Only applies when every run sits on the same rendered line (paragraphs that wrap are
-  // left alone — round 1 already handles per-line splitting for a single wrapping #text
-  // node; mixing that with cross-run BBCode wrapping is a separate, untested feature).
+  // Multi-line: cluster runs by Chromium Y and join with `\n` so wrap points stay Chromium's
+  // (Space Jam sitemap table cells: bold "Space Jam" mid-paragraph). Re-wrapping with
+  // BitmapFont metrics would still drift; hardcoded newlines do not.
+  function formatInlineBbCode(c, base, baseStyle) {
+    let piece = c.text;
+    const cf = resolveFontFile(c.style);
+    if (cf.filePath && cf.filePath !== base.filePath) {
+      piece = `[Font=${cf.filePath}]${piece}[/Font]`;
+    } else if (!cf.filePath) {
+      if (isBold(c.style.fontWeight) !== isBold(baseStyle.fontWeight)) {
+        piece = `[IsBold=${isBold(c.style.fontWeight)}]${piece}[/IsBold]`;
+      }
+      if (isItalic(c.style.fontStyle) !== isItalic(baseStyle.fontStyle)) {
+        piece = `[IsItalic=${isItalic(c.style.fontStyle)}]${piece}[/IsItalic]`;
+      }
+    }
+    return piece;
+  }
+
   function mergeInlinePhrasingRun(node) {
     if (!node.children || node.children.length < 2) return null;
-    if (!node.children.every((c) => isSimpleInlineStyleChild(c, node.style))) return null;
-    const y0 = node.children[0].rect.y;
-    if (!node.children.every((c) => Math.abs(c.rect.y - y0) < 1.5)) return null;
+    // <br> only separates lines — ignore for the "all phrasing" check.
+    const kids = node.children.filter((c) => c.tag !== 'br' && c.tag !== 'wbr');
+    if (kids.length < 2) return null;
+    if (!kids.every((c) => isSimpleInlineStyleChild(c, node.style))) return null;
+
+    const sorted = kids
+      .map((c, i) => ({ c, i }))
+      .sort((a, b) => (a.c.rect.y - b.c.rect.y) || (a.c.rect.x - b.c.rect.x) || (a.i - b.i));
+
+    const lines = [];
+    for (const { c } of sorted) {
+      const last = lines[lines.length - 1];
+      if (last && Math.abs(c.rect.y - last.y) < 1.5) last.runs.push(c);
+      else lines.push({ y: c.rect.y, runs: [c] });
+    }
 
     const base = resolveFontFile(node.style);
-    let text = '';
-    for (const c of node.children) {
-      let piece = c.text;
-      const cf = resolveFontFile(c.style);
-      if (cf.filePath && cf.filePath !== base.filePath) {
-        piece = `[Font=${cf.filePath}]${piece}[/Font]`;
-      } else if (!cf.filePath) {
-        if (isBold(c.style.fontWeight) !== isBold(node.style.fontWeight)) {
-          piece = `[IsBold=${isBold(c.style.fontWeight)}]${piece}[/IsBold]`;
-        }
-        if (isItalic(c.style.fontStyle) !== isItalic(node.style.fontStyle)) {
-          piece = `[IsItalic=${isItalic(c.style.fontStyle)}]${piece}[/IsItalic]`;
-        }
-      }
-      text += piece;
+    const text = lines
+      .map((line) => line.runs.map((c) => formatInlineBbCode(c, base, node.style)).join(''))
+      .join('\n');
+
+    // Union of Chromium glyph boxes — preserves valign=middle offsets inside table cells.
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const c of kids) {
+      minX = Math.min(minX, c.rect.x);
+      minY = Math.min(minY, c.rect.y);
+      maxX = Math.max(maxX, c.rect.x + c.rect.width);
+      maxY = Math.max(maxY, c.rect.y + c.rect.height);
     }
-    return { ...node, text, children: [], lineCount: 1 };
+    const textRect = {
+      x: minX,
+      y: minY,
+      width: Math.max(0, maxX - minX),
+      height: Math.max(0, maxY - minY),
+    };
+
+    // Hosts with their own chrome/padding (td borders, padded labels) must stay Containers
+    // so Absolute children keep Chromium positions. Flattening into the host would put the
+    // Text at the padding-box origin and drop valign=middle (Space Jam sitemap).
+    const hostHasChrome = hasVisualStyling(node.style) || hasPadding(paddingOf(node.style));
+    if (hostHasChrome) {
+      const leafStyle = {
+        ...node.style,
+        borderTopWidth: 0,
+        borderRightWidth: 0,
+        borderBottomWidth: 0,
+        borderLeftWidth: 0,
+        paddingTop: 0,
+        paddingRight: 0,
+        paddingBottom: 0,
+        paddingLeft: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0)',
+        backgroundImage: 'none',
+        boxShadow: 'none',
+        borderTopLeftRadius: 0,
+        needsRaster: false,
+        rasterWholeSubtree: false,
+      };
+      return {
+        ...node,
+        text: '',
+        lineCount: 0,
+        children: [{
+          id: null,
+          tag: '#text',
+          rect: textRect,
+          text,
+          lineCount: lines.length,
+          imgSrc: null,
+          naturalWidth: 0,
+          naturalHeight: 0,
+          rasterSrc: null,
+          style: leafStyle,
+          children: [],
+        }],
+      };
+    }
+
+    return { ...node, text, children: [], lineCount: lines.length };
   }
 
   /** CSS hard text-shadow → black (or tinted) Text stamps behind the face label. */
@@ -1289,7 +1441,7 @@ export function mapTreeToScreen(
       // practice the root has no parent to be percentage-relative to and stays Absolute.
       variables.push(VF(`${name}.X`, Math.round(node.rect.x)), VF(`${name}.Y`, Math.round(node.rect.y)));
       emitSizeAxis(sizeKind, name, path, 'Width', node.rect.width, node.style);
-      emitSizeAxis(sizeKind, name, path, 'Height', node.rect.height, node.style);
+      emitSizeAxis(sizeKind, name, path, 'Height', backdropHeight(node), node.style);
     } else {
       variables.push(VS(`${name}.Parent`, parentName));
       if (kind === 'text' && !textWrap) {
@@ -1327,18 +1479,37 @@ export function mapTreeToScreen(
           );
           const hAlign = textAlignHorizontal(node.style);
           const centerOrRight = hAlign === 1 || hAlign === 2;
-          if (node.lineCount > 1 || centerOrRight) {
+          if (node.lineCount > 1) {
             variables.push(
               VDIM(`${name}.WidthUnits`, DIM.Absolute), VF(`${name}.Width`, Math.round(node.rect.width)),
             );
+          } else if (centerOrRight) {
+            // Single-line center/right: hug width; anchor to Chromium box edge/center.
+            variables.push(VDIM(`${name}.WidthUnits`, DIM.RelativeToChildren));
+            if (hAlign === 2) {
+              variables.push(
+                VF(`${name}.X`, Math.round(node.rect.x - parentRect.x + node.rect.width)),
+                VOH(`${name}.XOrigin`, ORIGIN_H.Right),
+              );
+            } else {
+              variables.push(
+                VF(`${name}.X`, Math.round(node.rect.x - parentRect.x + node.rect.width / 2)),
+                VOH(`${name}.XOrigin`, ORIGIN_H.Center),
+              );
+            }
           } else {
             variables.push(VDIM(`${name}.WidthUnits`, DIM.RelativeToChildren));
           }
           if (!isManagedLayout(parentOrientation)) {
-            variables.push(
-              VF(`${name}.X`, Math.round(node.rect.x - parentRect.x)),
-              VF(`${name}.Y`, Math.round(node.rect.y - parentRect.y)),
-            );
+            if (centerOrRight && (node.lineCount || 1) <= 1) {
+              // X / XOrigin already set for hug+align above; only pin Y.
+              variables.push(VF(`${name}.Y`, Math.round(node.rect.y - parentRect.y)));
+            } else {
+              variables.push(
+                VF(`${name}.X`, Math.round(node.rect.x - parentRect.x)),
+                VF(`${name}.Y`, Math.round(node.rect.y - parentRect.y)),
+              );
+            }
           }
         }
       } else if (isStackLayout(parentOrientation)) {
@@ -1369,14 +1540,38 @@ export function mapTreeToScreen(
         // Always use Chromium's measured px — authored width/height % on grid items is
         // relative to the grid *area* (cell), not the grid container. PercentageOfParent
         // against this parent would stretch items to the full garden (Garden L10 bug).
-        // Keep Chromium Absolute size for the chrome plate; single-line badge labels use
-        // hugWidth (RelativeToChildren) so BitmapFont won't wrap in a tight text box.
+        const hAlign = textAlignHorizontal(node.style);
+        const hugSingleLine = kind === 'text' && !textWrap && (node.lineCount || 1) <= 1;
+        let x = Math.round(node.rect.x - parentRect.x);
+        const y = Math.round(node.rect.y - parentRect.y);
+        if (hugSingleLine && hAlign === 2) {
+          // Right-aligned: hug BitmapFont width but keep Chromium's right edge (TL header
+          // "Liquipedia" is text-align:right in a tight Absolute box).
+          x = Math.round(node.rect.x - parentRect.x + node.rect.width);
+          variables.push(
+            VF(`${name}.X`, x), VF(`${name}.Y`, y),
+            VOH(`${name}.XOrigin`, ORIGIN_H.Right),
+          );
+        } else if (hugSingleLine && hAlign === 1) {
+          x = Math.round(node.rect.x - parentRect.x + node.rect.width / 2);
+          variables.push(
+            VF(`${name}.X`, x), VF(`${name}.Y`, y),
+            VPOS(`${name}.XUnits`, POS.PixelsFromLeft),
+            VOH(`${name}.XOrigin`, ORIGIN_H.Center),
+          );
+        } else {
+          variables.push(VF(`${name}.X`, x), VF(`${name}.Y`, y));
+        }
         variables.push(
-          VF(`${name}.X`, Math.round(node.rect.x - parentRect.x)),
-          VF(`${name}.Y`, Math.round(node.rect.y - parentRect.y)),
-          VDIM(`${name}.WidthUnits`, DIM.Absolute), VF(`${name}.Width`, Math.round(node.rect.width)),
-          VDIM(`${name}.HeightUnits`, DIM.Absolute), VF(`${name}.Height`, Math.round(node.rect.height)),
+          VDIM(`${name}.HeightUnits`, DIM.Absolute), VF(`${name}.Height`, backdropHeight(node)),
         );
+        if (hugSingleLine) {
+          variables.push(VDIM(`${name}.WidthUnits`, DIM.RelativeToChildren));
+        } else {
+          variables.push(
+            VDIM(`${name}.WidthUnits`, DIM.Absolute), VF(`${name}.Width`, Math.round(node.rect.width)),
+          );
+        }
       }
     }
 
@@ -1396,7 +1591,11 @@ export function mapTreeToScreen(
         instances.push({ name: sprName, baseType: 'Sprite' });
         variables.push(VS(`${sprName}.Parent`, name));
         fillParent(sprName); // explicit RelativeToParent — Sprite's odd default
-        emitSpriteSource(sprName, node);
+        // Leaf divs styled only via background-image classify as 'image' (Tabler cards,
+        // empty body shells) — still a CSS background, so honor background-repeat.
+        const asBackground = !node.imgSrc && !node.rasterSrc
+          && !!parseBackgroundImageUrl(node.style.backgroundImage);
+        emitSpriteSource(sprName, node, { asBackground });
         applyOpacity('image', sprName, node.style);
       } else if (node.imgSrc || parseBackgroundImageUrl(node.style.backgroundImage)) {
         warnings.push(`"${name}" (${node.tag}) image download failed — showing background-color underlay only.`);
@@ -1417,7 +1616,7 @@ export function mapTreeToScreen(
         if (rasterAsset) variables.push(VS(`${sprName}.SourceFile`, rasterAsset));
         else {
           const fakeNode = { ...node, imgSrc: null, rasterSrc: null };
-          emitSpriteSource(sprName, fakeNode);
+          emitSpriteSource(sprName, fakeNode, { asBackground: true });
         }
       }
       // Rasterized border-image chrome already includes the frame — don't stack NineSlice.
@@ -1454,7 +1653,11 @@ export function mapTreeToScreen(
         preferCenterVertical: node.lineCount <= 1,
         preferCenterHorizontal: false,
       };
-      emitTextWithHardShadows(name, `${name}Label`, node, hardShadows, textInset, alignOpts);
+      // Same hugWidth as chrome badges — padded nav links (TL Calendar/Streams) must not
+      // wrap BitmapFont inside Chromium's padding-box width.
+      emitTextWithHardShadows(name, `${name}Label`, node, hardShadows, textInset, alignOpts, {
+        hugWidth: (node.lineCount || 1) <= 1,
+      });
       applyOpacity('container', name, node.style);
     } else if (kind === 'rect' && nsSelf) {
       variables.push(VS(`${name}.SourceFile`, nsSelf.sourceFile));
@@ -1646,12 +1849,17 @@ export function mapTreeToScreen(
           const sprName = namer.mint(`${name}Bg`);
           instances.push({ name: sprName, baseType: 'Sprite' });
           variables.push(VS(`${sprName}.Parent`, name));
-          fillParent(sprName);
+          // Root tiled backgrounds: canvas/viewport tile origin (see fillParentCanvasTiledBackground).
+          if (parentName === null && wantsTiledBackground(node.style)) {
+            fillParentCanvasTiledBackground(sprName, node);
+          } else {
+            fillParent(sprName);
+          }
           if (rasterAsset) {
             variables.push(VS(`${sprName}.SourceFile`, rasterAsset));
           } else {
             const fakeNode = { ...node, imgSrc: null, rasterSrc: null };
-            emitSpriteSource(sprName, fakeNode);
+            emitSpriteSource(sprName, fakeNode, { asBackground: true });
           }
           paintedBackdrop = true;
         } else if (!isTransparent(bgColor) || anyBorder(node.style) || styleHasShadowOrRadius(node.style)) {

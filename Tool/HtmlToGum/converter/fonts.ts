@@ -7,8 +7,8 @@
 //    pick a matching face, instantiate variable axes via instantiate_font.py, and
 //    write a static .ttf under Fonts/.
 // 4. map.mjs emits Font = "Fonts/….ttf" so gumcli fonts bakes FontCache/*_ttf.fnt.
-import { mkdirSync, writeFileSync, existsSync, rmSync, readFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { mkdirSync, writeFileSync, existsSync, rmSync, readFileSync, readdirSync } from 'node:fs';
+import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { nodeTsxArgs } from './tsx-run.js';
@@ -34,7 +34,28 @@ export function parseFontStyle(style) {
 }
 
 export function firstFontFamily(fam) {
-  return (fam || '').split(',')[0].replace(/["']/g, '').trim();
+  return resolveCssFontFamily(fam);
+}
+
+/**
+ * Pick a concrete face from a CSS `font-family` stack. Skip generics and OS aliases
+ * (`-apple-system`, `system-ui`, …) so Windows Chromium stacks resolve to `Segoe UI`
+ * (already an allowlisted gumcli system font) instead of a synthetic name that falls
+ * through to Arial.
+ */
+export function resolveCssFontFamily(fam) {
+  const parts = (fam || '')
+    .split(',')
+    .map((p) => p.replace(/["']/g, '').trim())
+    .filter(Boolean);
+  const skip = /^(serif|sans-serif|monospace|cursive|fantasy|system-ui|ui-sans-serif|ui-serif|ui-monospace|ui-rounded|emoji|math|fangsong|-apple-system|blinkmacsystemfont)$/i;
+  const skipEmoji = /emoji|symbol/i;
+  for (const p of parts) {
+    if (skip.test(p) || skipEmoji.test(p)) continue;
+    return p;
+  }
+  if (parts.some((p) => /apple-system|system-ui|blinkmac/i.test(p))) return 'Segoe UI';
+  return parts[0] || '';
 }
 
 /** Normalize for matching: "Inter Var" / "Inter" / '"Inter"' → "inter" */
@@ -240,7 +261,18 @@ function extFor(buffer, contentType, url) {
   if (buffer[0] === 0x77 && buffer[1] === 0x4f && buffer[2] === 0x46) return buffer[3] === 0x32 ? 'woff2' : 'woff';
   if (buffer[0] === 0x00 && buffer[1] === 0x01 && buffer[2] === 0x00 && buffer[3] === 0x00) return 'ttf';
   if (buffer.toString('ascii', 0, 4) === 'OTTO') return 'otf';
+  // TrueType Collection
+  if (buffer.toString('ascii', 0, 4) === 'ttcf') return 'ttf';
   return 'bin';
+}
+
+/** Reject HTML/JSON/empty payloads that share a font URL or content-type. */
+export function looksLikeFontBuffer(buffer) {
+  if (!buffer || buffer.length < 4) return false;
+  const tag = buffer.toString('ascii', 0, 4);
+  if (tag === 'wOFF' || tag === 'wOF2' || tag === 'OTTO' || tag === 'ttcf') return true;
+  if (buffer[0] === 0x00 && buffer[1] === 0x01 && buffer[2] === 0x00 && buffer[3] === 0x00) return true;
+  return false;
 }
 
 function safeStem(family, weight, style) {
@@ -278,8 +310,14 @@ export async function materializeWebFonts({ tree, captured, rules, fontsDir, pag
     // Prefer exact family name length (shorter = closer), then first url that we captured.
     candidates.sort((a, b) => normalizeFamily(a.family).length - normalizeFamily(b.family).length);
 
-    let hit = null;
-    let hitUrl = null;
+    /** @type {{ buffer: Buffer, contentType: string, url: string }[]} */
+    const tries = [];
+    const pushTry = (cap, url) => {
+      if (!cap?.buffer || !looksLikeFontBuffer(cap.buffer)) return;
+      if (tries.some((t) => t.url === url)) return;
+      tries.push({ buffer: cap.buffer, contentType: cap.contentType || '', url });
+    };
+
     for (const face of candidates) {
       for (const u of face.urls) {
         const abs = resolveUrl(pageUrl, u);
@@ -296,38 +334,44 @@ export async function materializeWebFonts({ tree, captured, rules, fontsDir, pag
             }
           } catch { /* ignore */ }
         }
-        if (cap) { hit = cap; hitUrl = abs; break; }
+        if (cap) pushTry(cap, abs);
       }
-      if (hit) break;
     }
 
     // Fallback: any captured font whose URL mentions the family token
-    if (!hit) {
+    if (tries.length === 0) {
       const token = normalizeFamily(need.family).split(' ')[0];
       for (const [u, cap] of captured) {
-        if (token && u.toLowerCase().includes(token)) { hit = cap; hitUrl = u; break; }
+        if (token && u.toLowerCase().includes(token)) pushTry(cap, u);
       }
     }
 
-    if (!hit) {
+    if (tries.length === 0) {
       console.warn(`  ! web font not captured for ${key} (will use system/family name)`);
       continue;
     }
 
-    const ext = extFor(hit.buffer, hit.contentType, hitUrl);
     const stem = safeStem(need.family, need.weight, need.style);
-    const rawPath = join(fontsDir, `_raw${i}.${ext}`);
     const outName = `${stem}.ttf`;
     const outPath = join(fontsDir, outName);
-    writeFileSync(rawPath, hit.buffer);
-    try {
-      instantiateToTtf(rawPath, outPath, need.weight, need.style);
-    } catch (e) {
-      console.warn(`  ! ${e.message}`);
-      continue;
-    } finally {
-      try { rmSync(rawPath, { force: true }); } catch { /* ignore */ }
+    let baked = false;
+    for (const hit of tries) {
+      const ext = extFor(hit.buffer, hit.contentType, hit.url);
+      if (ext === 'bin') continue;
+      const rawPath = join(fontsDir, `_raw${i}.${ext}`);
+      writeFileSync(rawPath, hit.buffer);
+      try {
+        instantiateToTtf(rawPath, outPath, need.weight, need.style);
+        baked = true;
+      } catch (e) {
+        console.warn(`  ! ${e.message}`);
+      } finally {
+        try { rmSync(rawPath, { force: true }); } catch { /* ignore */ }
+      }
+      if (baked) break;
     }
+    if (!baked) continue;
+
     const rel = `Fonts/${outName}`;
     fontMap.set(key, rel);
     // Also alias without italic if we baked italic into the file under italic key only
@@ -348,4 +392,58 @@ export function runGumcliFonts(gumxPath: string, _gumCliCsprojIgnored?: string) 
   if (r.stdout) process.stdout.write(r.stdout);
   if (r.stderr) process.stderr.write(r.stderr);
   if (r.status !== 0) throw new Error(`gumcli fonts exited ${r.status}`);
+}
+
+/**
+ * KernSmith occasionally bakes a .ttf into an empty atlas (chars count=2: space + nbsp
+ * only) — seen with some Poppins Light instantiations. Gum then draws invisible text.
+ * Detect those FontCache/*.fnt files and rewrite matching Screen Font=Fonts/….ttf
+ * references to system Arial so a second fonts pass produces usable glyphs.
+ *
+ * @returns {{ repaired: string[] }} relative Fonts/ paths that were emptied
+ */
+export function repairEmptyCustomFonts(outProjectDir: string) {
+  const cacheDir = join(outProjectDir, 'FontCache');
+  const screensDir = join(outProjectDir, 'Screens');
+  if (!existsSync(cacheDir) || !existsSync(screensDir)) return { repaired: [] };
+
+  /** @type {Set<string>} stem without Font{size} prefix / _ttf suffix — e.g. poppins_w300_i0 */
+  const emptyStems = new Set();
+  for (const f of readdirSync(cacheDir)) {
+    if (!f.endsWith('.fnt') || !f.includes('_ttf')) continue;
+    const body = readFileSync(join(cacheDir, f), 'utf8');
+    const m = body.match(/chars count=(\d+)/);
+    const count = m ? parseInt(m[1], 10) : 0;
+    // Usable ASCII bake is dozens–hundreds of glyphs; ≤4 means effectively blank.
+    if (count > 4) continue;
+    // Font18poppins_w300_i0_ttf.fnt → poppins_w300_i0
+    const stem = f
+      .replace(/^Font\d+/, '')
+      .replace(/_ttf\.fnt$/i, '')
+      .replace(/\.fnt$/i, '');
+    if (stem) emptyStems.add(stem.toLowerCase());
+  }
+  if (emptyStems.size === 0) return { repaired: [] };
+
+  /** @type {string[]} */
+  const repaired = [];
+  for (const file of readdirSync(screensDir).filter((n) => n.endsWith('.gusx'))) {
+    const path = join(screensDir, file);
+    let gusx = readFileSync(path, 'utf8');
+    let changed = false;
+    gusx = gusx.replace(
+      /(<Variable Type="string" Name="[^"]+\.Font" SetsValue="true">\s*<Value[^>]*>)([^<]+)(<\/Value>)/g,
+      (full, pre, fontVal, post) => {
+        const v = fontVal.trim();
+        if (!/\.ttf$/i.test(v)) return full;
+        const stem = basename(v).replace(/\.ttf$/i, '').toLowerCase();
+        if (!emptyStems.has(stem)) return full;
+        if (!repaired.includes(v)) repaired.push(v);
+        changed = true;
+        return `${pre}Arial${post}`;
+      },
+    );
+    if (changed) writeFileSync(path, gusx);
+  }
+  return { repaired };
 }

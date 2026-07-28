@@ -33,14 +33,14 @@ import { mkdirSync, readFileSync, writeFileSync, rmSync, copyFileSync } from 'no
 import { spawnSync } from 'node:child_process';
 import { extractBoxTree } from './extract.js';
 import { mapTreeToScreen, toGusx } from './map.js';
-import { downloadImages } from './assets.js';
+import { downloadImages, attachImageCapture } from './assets.js';
 import { computeResponsiveMap } from './responsive.js';
 import {
-  attachFontCapture, collectFontFaceRules, materializeWebFonts, runGumcliFonts,
+  attachFontCapture, collectFontFaceRules, materializeWebFonts, runGumcliFonts, repairEmptyCustomFonts,
 } from './fonts.js';
 import { generateNineSliceAssets } from './nineslice.js';
 import { installTsxEvaluateShim } from './tsx-evaluate-shim.js';
-import { waitForDomQuiescence } from './dom-quiescence.js';
+import { waitForDomQuiescence, stabilizeDynamicMedia } from './dom-quiescence.js';
 import { samplePath } from './samples-path.js';
 import { nodeTsxArgs } from './tsx-run.js';
 
@@ -141,8 +141,16 @@ async function renderTree(browser, width, height, { captureFonts = false } = {})
   const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
   await installTsxEvaluateShim(page);
   const capturedFonts = captureFonts ? attachFontCapture(page) : null;
+  // Always attach — cheap (a Map + response listener) and downloadImages() only reads
+  // from it for URLs collected off the primary tree, so narrow/wide responsive passes'
+  // captures are harmless to build but simply unused.
+  const capturedImages = attachImageCapture(page);
   const url = /^https?:\/\//i.test(htmlFile) ? htmlFile : pathToFileURL(htmlFile).href;
-  await page.goto(url, { waitUntil: 'networkidle' });
+  const gotoTimeoutMs = Number(process.env.HTMLTOGUM_GOTO_TIMEOUT_MS || 0);
+  await page.goto(url, {
+    waitUntil: 'networkidle',
+    ...(gotoTimeoutMs > 0 ? { timeout: gotoTimeoutMs } : {}),
+  });
   await installTsxEvaluateShim(page); // re-apply after navigation clears some contexts
   await page.evaluate(() => document.fonts.ready);
   // SPA / framework roots (e.g. Gameface Solid #root) need a beat after networkidle.
@@ -161,33 +169,40 @@ async function renderTree(browser, width, height, { captureFonts = false } = {})
   // Content exists now, but a framework-driven page may still be actively re-rendering it
   // (hydration, lazy-loaded sections) — wait for it to settle before reading the DOM.
   await waitForDomQuiescence(page);
+  // Pin carousels / kill timers BEFORE extract so the box tree and the later chromium.png
+  // reference show the same slide (Team Liquid hero, etc.). Do not debug this race in
+  // site-fidelity agents — stabilizeDynamicMedia is the fix.
+  const captureMeta = await stabilizeDynamicMedia(page);
+  if (captureMeta.suspectedRotatingMedia) {
+    console.log(
+      `stabilizeDynamicMedia: pinned ${captureMeta.pinnedSlideGroups} slide group(s), `
+      + `paused ${captureMeta.pausedAnimations} animation(s)`,
+    );
+  }
   const fontFaceRules = captureFonts ? await collectFontFaceRules(page) : [];
   const tree = await page.evaluate(extractBoxTree, rootSelector);
-  return { page, tree, width, height, capturedFonts, fontFaceRules, pageUrl: url };
+  return {
+    page, tree, width, height, capturedFonts, capturedImages, fontFaceRules, pageUrl: url,
+    captureMeta,
+  };
 }
 
 /**
- * page.screenshot({ clip }) without fullPage only crops the currently visible viewport —
- * it does not scroll to reach content below the fold, and clip regions entirely outside
- * the viewport throw "Clipped area is either empty or outside the resulting image" (seen
- * on tall pages like a full-page `body` root, where most raster nodes sit well past the
- * requested viewport height). Scroll the clip's top-left into view, capture with clip
- * coordinates adjusted for the resulting scroll offset, then restore scroll position so
- * later page-relative captures (subsequent raster shots, the final reference screenshot)
- * keep seeing document coordinates from a scroll-0 origin.
+ * page.screenshot({ clip }) without fullPage crops the currently visible viewport — clip
+ * regions below the fold, or taller/wider than the viewport itself, get silently clamped
+ * to whatever's on-screen (a below-the-viewport-height raster node, e.g. HN's itemlist
+ * cell, came back short and was then stretched to the node's full box height by the Sprite
+ * mapper, producing a growing vertical drift down the page). fullPage renders the whole
+ * scrollable document first, so clip coordinates stay page-absolute and no manual scroll
+ * bookkeeping is needed.
  */
 async function screenshotClip(page, path, clip, screenshotOptions = {}) {
-  await page.evaluate(({ x, y }) => window.scrollTo(x, y), { x: clip.x, y: clip.y });
-  const scroll = await page.evaluate(() => ({ x: window.scrollX, y: window.scrollY }));
-  try {
-    await page.screenshot({
-      path,
-      ...screenshotOptions,
-      clip: { ...clip, x: clip.x - scroll.x, y: clip.y - scroll.y },
-    });
-  } finally {
-    await page.evaluate(() => window.scrollTo(0, 0));
-  }
+  await page.screenshot({
+    path,
+    fullPage: true,
+    ...screenshotOptions,
+    clip,
+  });
 }
 
 /**
@@ -354,6 +369,7 @@ async function main() {
   tree = primary.tree;
   shotPage = primary.page;
   const capturedFonts = primary.capturedFonts || new Map();
+  const capturedImages = primary.capturedImages || new Map();
   const fontFaceRules = primary.fontFaceRules || [];
   const pageUrl = primary.pageUrl;
 
@@ -398,7 +414,7 @@ async function main() {
 
   // Reuse the still-open browser for SVG rasterization inside downloadImages() instead
   // of paying a second Chromium launch — close only after it's done with it.
-  const { assetMap: downloaded, assetSizeMap } = await downloadImages(tree, imagesDir, browser);
+  const { assetMap: downloaded, assetSizeMap } = await downloadImages(tree, imagesDir, browser, capturedImages);
   for (const [k, v] of downloaded) assetMap.set(k, v);
   await browser.close();
 
@@ -428,10 +444,28 @@ async function main() {
   writeFileSync(gumxPath, gumx.slice(0, anchor) + screenRefs + '\n' + gumx.slice(anchor));
   for (const s of screens) writeFileSync(join(outProjectDir, 'Screens', `${s.name}.gusx`), s.gusx);
   writeFileSync(join(outProjectDir, 'boxtree.json'), JSON.stringify(tree, null, 2));
+  writeFileSync(
+    join(outProjectDir, 'capture-meta.json'),
+    JSON.stringify({
+      ...primary.captureMeta,
+      note: primary.captureMeta?.suspectedRotatingMedia
+        ? 'Rotating media was stabilized before extract. Do not probe timer races in fidelity agents.'
+        : undefined,
+    }, null, 2),
+  );
 
   // B-first: bake FontCache from Font/FontSize (+ .ttf paths) before the MonoGame host loads.
   try {
     runGumcliFonts(join(outProjectDir, 'Generated.gumx'));
+    const { repaired } = repairEmptyCustomFonts(outProjectDir);
+    if (repaired.length) {
+      console.warn(
+        `  ! empty FontCache atlas for ${repaired.length} custom font(s) `
+        + `(${repaired.slice(0, 3).join(', ')}${repaired.length > 3 ? '…' : ''}) `
+        + `— falling back to Arial and re-baking`,
+      );
+      runGumcliFonts(join(outProjectDir, 'Generated.gumx'));
+    }
   } catch (e) {
     console.warn(`  ! gumcli fonts failed: ${e.message}`);
   }
