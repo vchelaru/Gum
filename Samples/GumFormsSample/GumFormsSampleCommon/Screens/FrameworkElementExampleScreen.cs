@@ -344,9 +344,12 @@ namespace GumFormsSample.Screens
 
             colorPicker.SelectedColorChanged += (_, _) =>
             {
-                selectedColorSwatch.FillColor = colorPicker.SelectedColor;
+                // SelectedColor is a backend-neutral System.Drawing.Color, so convert to the XNA
+                // color the runtime visual uses.
+                var selected = colorPicker.SelectedColor;
+                selectedColorSwatch.FillColor = new Color(selected.R, selected.G, selected.B);
             };
-            colorPicker.SelectedColor = Color.CornflowerBlue;
+            colorPicker.SelectedColor = System.Drawing.Color.CornflowerBlue;
         }
 
         void CreateLayeredUi()

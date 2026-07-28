@@ -1,6 +1,9 @@
 using System;
 using Gum.Wireframe;
-using Microsoft.Xna.Framework;
+// System.Drawing.Color is a plain BCL struct (no GDI). The control lives in the runtime-agnostic
+// GumCommon layer alongside the other Forms controls, so it exposes a backend-neutral color rather
+// than any one runtime's native color type.
+using Color = System.Drawing.Color;
 
 namespace Gum.Forms.Controls;
 
@@ -53,7 +56,7 @@ public class ColorPicker : FrameworkElement
     /// </summary>
     public Color SelectedColor
     {
-        get => new Color(_red, _green, _blue);
+        get => Color.FromArgb(_red, _green, _blue);
         set
         {
             if (value.R != _red || value.G != _green || value.B != _blue)

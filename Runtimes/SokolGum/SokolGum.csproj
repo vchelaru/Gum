@@ -161,7 +161,6 @@
 		-->
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\Button.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\CheckBox.cs" />
-		<!-- ColorPicker's default visual generates textures per-pixel via XNA APIs; it's XNALIKE-only until Sokol gets its own visual (issue #4047). -->
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\ColorPicker.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\ColumnDefinition.cs" />
 		<Compile Remove="..\..\MonoGameGum\Forms\Controls\ComboBox.cs" />

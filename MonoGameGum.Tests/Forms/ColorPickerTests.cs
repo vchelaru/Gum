@@ -1,6 +1,6 @@
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
-using Microsoft.Xna.Framework;
+using Color = System.Drawing.Color;
 using Shouldly;
 using Xunit;
 
@@ -32,7 +32,7 @@ public class ColorPickerTests : BaseTestClass
         ColorPickerVisual visual = new();
         ColorPicker picker = visual.FormsControl;
 
-        picker.SelectedColor = new Color((byte)255, (byte)0, (byte)0);
+        picker.SelectedColor = Color.FromArgb(255, 0, 0);
 
         picker.Hue.ShouldBe(0f);
         picker.Saturation.ShouldBe(100f);
@@ -48,8 +48,8 @@ public class ColorPickerTests : BaseTestClass
         int raisedCount = 0;
         picker.SelectedColorChanged += (_, _) => raisedCount++;
 
-        picker.SelectedColor = new Color((byte)255, (byte)0, (byte)0);
-        picker.SelectedColor = new Color((byte)255, (byte)0, (byte)0);
+        picker.SelectedColor = Color.FromArgb(255, 0, 0);
+        picker.SelectedColor = Color.FromArgb(255, 0, 0);
 
         raisedCount.ShouldBe(1);
     }
@@ -60,10 +60,10 @@ public class ColorPickerTests : BaseTestClass
         ColorPickerVisual visual = new();
         ColorPicker picker = visual.FormsControl;
 
-        picker.SelectedColor = new Color((byte)255, (byte)0, (byte)0);
+        picker.SelectedColor = Color.FromArgb(255, 0, 0);
         picker.Hue = 120f;
 
-        picker.SelectedColor.ShouldBe(new Color((byte)0, (byte)255, (byte)0));
+        picker.SelectedColor.ShouldBe(Color.FromArgb(0, 255, 0));
     }
 
     [Fact]
