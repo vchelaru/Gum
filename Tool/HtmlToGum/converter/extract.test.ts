@@ -48,3 +48,39 @@ test('extractBoxTree: a #text run that wraps across lines is split per rendered 
     await browser.close();
   }
 });
+
+// <input type="submit|button|reset"> labels live in the value attribute, not textContent
+// (KORE Sign In: empty text → orange rect with no label).
+test('extractBoxTree: submit/button input uses value as text', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await installTsxEvaluateShim(page);
+    await page.setContent(`
+      <form>
+        <input id="go" type="submit" value="Sign In"
+          style="width:120px;height:32px;background:#f58320;color:#fff;border:0;font:14px Arial;">
+      </form>
+    `);
+    const tree = await page.evaluate(extractBoxTree, '#go');
+    await page.close();
+    assert.equal(tree.tag, 'input');
+    assert.equal(tree.text, 'Sign In');
+  } finally {
+    await browser.close();
+  }
+});
+
+test('extractBoxTree: text input does not treat empty value as a label', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await installTsxEvaluateShim(page);
+    await page.setContent(`<input id="email" type="email" value="" placeholder="Email" style="width:200px;height:32px;">`);
+    const tree = await page.evaluate(extractBoxTree, '#email');
+    await page.close();
+    assert.equal(tree.text || '', '');
+  } finally {
+    await browser.close();
+  }
+});

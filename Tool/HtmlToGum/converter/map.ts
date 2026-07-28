@@ -1522,11 +1522,24 @@ export function mapTreeToScreen(
         if (parentOrientation === 'column') {
           emitStackCrossAxis(name, parentOrientation, parentAlignItems, node.rect.width, node.style);
           if (grow > 0) variables.push(VDIM(`${name}.HeightUnits`, DIM.Ratio), VF(`${name}.Height`, Math.round(node.rect.height)));
-          else emitSizeAxis(sizeKind, name, path, 'Height', node.rect.height, node.style);
+          else {
+            // Flex item height:100% resolves against the flex container, but the *used*
+            // size is flex-constrained. Gum PercentageOfParent would take the full parent
+            // (same Absolute-fallback rule as grid items above).
+            variables.push(
+              VDIM(`${name}.HeightUnits`, DIM.Absolute), VF(`${name}.Height`, Math.round(node.rect.height)),
+            );
+          }
         } else {
           emitStackCrossAxis(name, parentOrientation, parentAlignItems, node.rect.height, node.style);
           if (grow > 0) variables.push(VDIM(`${name}.WidthUnits`, DIM.Ratio), VF(`${name}.Width`, Math.round(node.rect.width)));
-          else emitSizeAxis(sizeKind, name, path, 'Width', node.rect.width, node.style);
+          else {
+            // KORE login column: CSS width:100% → Chromium used 384px in a 768px row;
+            // PercentageOfParent 100 made the form column full-width and shifted left.
+            variables.push(
+              VDIM(`${name}.WidthUnits`, DIM.Absolute), VF(`${name}.Width`, Math.round(node.rect.width)),
+            );
+          }
         }
       } else if (isGridLayout(parentOrientation)) {
         // AutoGrid: each child's "parent" for RelativeToParent is its cell. CSS grid

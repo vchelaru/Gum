@@ -35,6 +35,10 @@ Keep converter fixes in `converter/`; keep crawl/gate/diff scripts in `fidelity/
 
 **Percent-encoded `data:image/svg+xml`:** select chevrons etc. need `parseDataImageUrl` (`decodeURIComponent`) — the old `;base64`-only regex dropped charset URLs (Pocket).
 
+**`<input type="submit|button|reset">` labels:** value lives in `.value`, not `textContent`. Extract must copy `el.value` or buttons render as chrome-only (KORE “Sign In”).
+
+**Flex item `width`/`height: 100%`:** Chromium’s *used* size is flex-constrained; do not emit Gum `PercentageOfParent` for stack main-axis — use Absolute measured px (KORE login column shifted ~192px left).
+
 **Rotating heroes / carousels are not converter bugs.** `stabilizeDynamicMedia` runs in convert *before* extract (pins `.newsitem` / swiper / carousel slides, pauses CSS animations, clears + noops timers/rAF). If `capture-meta.json` has `suspectedRotatingMedia: true`, **do not** write probe scripts or spend iterations on timer races — fix mapping/fonts/layout or move to the next site after one re-run.
 
 **Rejected hosts:** crawl aborts on HTTP 4xx / challenge / seed nav timeout (`fidelity/rejection.ts`). Empty crawl → `status: rejected`, not a fidelity fail. Do not retry max-pages on the same wall.

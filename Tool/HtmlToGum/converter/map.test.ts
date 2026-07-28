@@ -181,6 +181,32 @@ test('mapTreeToScreen: flex row child margin-top offsets stretch cross-axis (IAN
   assert.equal(findVar(variables, 'Main.Height')?.value, -25);
 });
 
+test('mapTreeToScreen: flex row child with width:100% uses Absolute measured width (KORE login column)', () => {
+  // CSS width:100% on a flex item resolves against the flex container, but Chromium's
+  // *used* width is flex-constrained (e.g. 384 in a 768 row). Emitting PercentageOfParent
+  // 100 made the column full-width and shifted the login form left.
+  const illus = boxNode({
+    id: 'illus',
+    rect: { x: 0, y: 0, width: 404, height: 500 },
+    style: baseStyle({ widthSpecified: '500px' }),
+  });
+  const formCol = boxNode({
+    id: 'formCol',
+    rect: { x: 404, y: 0, width: 384, height: 430 },
+    style: baseStyle({ widthSpecified: '100%' }),
+  });
+  const root = boxNode({
+    id: 'row',
+    rect: { x: 0, y: 0, width: 768, height: 500 },
+    style: baseStyle({ display: 'flex', flexDirection: 'row', justifyContent: 'center' }),
+    children: [illus, formCol],
+  });
+
+  const { variables } = mapTreeToScreen(root);
+  assert.equal(findVar(variables, 'FormCol.WidthUnits')?.value, 0); // Absolute
+  assert.equal(findVar(variables, 'FormCol.Width')?.value, 384);
+});
+
 // ---- inline-styled run merging (IANA "Public Technical Identifiers" bold spans) ------
 function ianaParagraphFixture(runOverrides = {}) {
   const plainStyle = baseStyle({ fontSize: 12, color: 'rgb(10, 20, 30)' });

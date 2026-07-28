@@ -434,7 +434,17 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
       }
     } else if (elementChildren.length === 0) {
       walkChildren = [];
-      ownText = el.textContent.replace(/\s+/g, ' ').trim();
+      const tag = String(el.tagName).toUpperCase();
+      // <input type="submit|button|reset"> labels are in .value, not textContent
+      // (Chromium paints value; textContent is empty — KORE "Sign In").
+      if (tag === 'INPUT') {
+        const type = String(el.type || 'text').toLowerCase();
+        if (type === 'submit' || type === 'button' || type === 'reset') {
+          ownText = String(el.value || '').replace(/\s+/g, ' ').trim();
+        }
+      } else {
+        ownText = el.textContent.replace(/\s+/g, ' ').trim();
+      }
       if (ownText) {
         ownText = normalizeForBitmapFont(applyTextTransform(ownText, cs.textTransform));
       }
