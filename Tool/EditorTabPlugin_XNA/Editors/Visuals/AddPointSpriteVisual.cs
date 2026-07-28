@@ -43,11 +43,9 @@ public class AddPointSpriteVisual : EditorVisualBase
         // Load texture if not already loaded
         if (_addPointTexture == null)
         {
-            var gumExePath = System.IO.Path.GetDirectoryName(
-                System.Reflection.Assembly.GetEntryAssembly()!.Location)!
-                .ToLower().Replace("/", "\\") + "\\";
-
-            var fileName = gumExePath + "Content/AddPoint.png";
+            // Assembly.GetEntryAssembly().Location returns empty string in single-file published apps.
+            // AppContext.BaseDirectory is the correct way to locate the executable's directory.
+            var fileName = System.IO.Path.Combine(System.AppContext.BaseDirectory, "Content", "AddPoint.png");
 
             using (var stream = FileManager.GetStreamForFile(fileName))
             {
