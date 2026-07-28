@@ -273,6 +273,30 @@
         <string>FillBlue = Components/Bubblegum/Styles.Surface1.FillBlue</string>
       </Value>
     </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>BorderInstance.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>StrokeRed = Components/Bubblegum/Styles.Border.FillRed</string>
+        <string>StrokeGreen = Components/Bubblegum/Styles.Border.FillGreen</string>
+        <string>StrokeBlue = Components/Bubblegum/Styles.Border.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>FocusedIndicator.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>StrokeRed = Components/Bubblegum/Styles.Accent.FillRed</string>
+        <string>StrokeGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
+        <string>StrokeBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+      </Value>
+    </VariableList>
   </State>
   <Category>
     <Name>ScrollBarVisibility</Name>
@@ -377,6 +401,18 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>BorderInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>StrokeRed = Components/Bubblegum/Styles.Border.FillRed</string>
+          <string>StrokeGreen = Components/Bubblegum/Styles.Border.FillGreen</string>
+          <string>StrokeBlue = Components/Bubblegum/Styles.Border.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Focused</Name>
@@ -392,6 +428,18 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>BorderInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>StrokeRed = Components/Bubblegum/Styles.Accent.FillRed</string>
+          <string>StrokeGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
+          <string>StrokeBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
   </Category>
   <Instance Name="Background" BaseType="Rectangle" />

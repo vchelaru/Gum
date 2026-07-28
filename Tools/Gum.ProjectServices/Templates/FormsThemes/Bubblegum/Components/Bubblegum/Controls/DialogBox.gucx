@@ -193,6 +193,30 @@
         <string>FontSize = Components/Bubblegum/Styles.Normal.FontSize</string>
       </Value>
     </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>NineSliceInstance.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>FillRed = Components/Bubblegum/Styles.Accent.FillRed</string>
+        <string>FillGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
+        <string>FillBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>ContinueIndicatorInstance.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Bubblegum/Styles.White.FillRed</string>
+        <string>Green = Components/Bubblegum/Styles.White.FillGreen</string>
+        <string>Blue = Components/Bubblegum/Styles.White.FillBlue</string>
+      </Value>
+    </VariableList>
   </State>
   <Instance Name="NineSliceInstance" BaseType="Rectangle" />
   <Instance Name="TextInstance" BaseType="Text" />

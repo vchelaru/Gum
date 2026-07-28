@@ -187,6 +187,42 @@
     <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
+    <Variable Type="int" Name="HoverOption.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">246</Value>
+    </Variable>
+    <Variable Type="int" Name="HoverOption.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">240</Value>
+    </Variable>
+    <Variable Type="int" Name="HoverOption.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="bool" Name="HoverOption.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="HoverOption.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="HoverOption.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="int" Name="HoverRow.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">251</Value>
+    </Variable>
+    <Variable Type="int" Name="HoverRow.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">245</Value>
+    </Variable>
+    <Variable Type="int" Name="HoverRow.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="bool" Name="HoverRow.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="HoverRow.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="HoverRow.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
     <Variable Type="int" Name="Muted.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">176</Value>
     </Variable>
@@ -353,6 +389,8 @@
   <Instance Name="Disabled" BaseType="Rectangle" />
   <Instance Name="DisabledFill" BaseType="Rectangle" />
   <Instance Name="Background" BaseType="Rectangle" />
+  <Instance Name="HoverOption" BaseType="Rectangle" />
+  <Instance Name="HoverRow" BaseType="Rectangle" />
   <Instance Name="Normal" BaseType="Text" />
   <Instance Name="Strong" BaseType="Text" />
   <Instance Name="TextStyles" BaseType="Container" />

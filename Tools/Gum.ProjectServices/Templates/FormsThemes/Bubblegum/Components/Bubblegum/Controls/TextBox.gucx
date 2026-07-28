@@ -428,6 +428,66 @@
         <string>FontSize = Components/Bubblegum/Styles.Normal.FontSize</string>
       </Value>
     </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>FocusedIndicator.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>StrokeRed = Components/Bubblegum/Styles.Accent.FillRed</string>
+        <string>StrokeGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
+        <string>StrokeBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>BorderInstance.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>StrokeRed = Components/Bubblegum/Styles.Border.FillRed</string>
+        <string>StrokeGreen = Components/Bubblegum/Styles.Border.FillGreen</string>
+        <string>StrokeBlue = Components/Bubblegum/Styles.Border.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>CaretInstance.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>FillRed = Components/Bubblegum/Styles.Accent.FillRed</string>
+        <string>FillGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
+        <string>FillBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Background.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>FillRed = Components/Bubblegum/Styles.Surface1.FillRed</string>
+        <string>FillGreen = Components/Bubblegum/Styles.Surface1.FillGreen</string>
+        <string>FillBlue = Components/Bubblegum/Styles.Surface1.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>SelectionInstance.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>FillRed = Components/Bubblegum/Styles.AccentLight.FillRed</string>
+        <string>FillGreen = Components/Bubblegum/Styles.AccentLight.FillGreen</string>
+        <string>FillBlue = Components/Bubblegum/Styles.AccentLight.FillBlue</string>
+      </Value>
+    </VariableList>
   </State>
   <Category>
     <Name>TextBoxCategory</Name>
@@ -481,6 +541,66 @@
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
         <Value xsi:type="xsd:int">61</Value>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>PlaceholderTextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Bubblegum/Styles.Placeholder.FillRed</string>
+          <string>Green = Components/Bubblegum/Styles.Placeholder.FillGreen</string>
+          <string>Blue = Components/Bubblegum/Styles.Placeholder.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>BorderInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>StrokeRed = Components/Bubblegum/Styles.Border.FillRed</string>
+          <string>StrokeGreen = Components/Bubblegum/Styles.Border.FillGreen</string>
+          <string>StrokeBlue = Components/Bubblegum/Styles.Border.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Bubblegum/Styles.Text.FillRed</string>
+          <string>Green = Components/Bubblegum/Styles.Text.FillGreen</string>
+          <string>Blue = Components/Bubblegum/Styles.Text.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>Background.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillRed = Components/Bubblegum/Styles.Surface1.FillRed</string>
+          <string>FillGreen = Components/Bubblegum/Styles.Surface1.FillGreen</string>
+          <string>FillBlue = Components/Bubblegum/Styles.Surface1.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CaretInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillRed = Components/Bubblegum/Styles.Accent.FillRed</string>
+          <string>FillGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
+          <string>FillBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Highlighted</Name>
@@ -532,6 +652,66 @@
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
         <Value xsi:type="xsd:int">61</Value>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>PlaceholderTextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Bubblegum/Styles.Placeholder.FillRed</string>
+          <string>Green = Components/Bubblegum/Styles.Placeholder.FillGreen</string>
+          <string>Blue = Components/Bubblegum/Styles.Placeholder.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>BorderInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>StrokeRed = Components/Bubblegum/Styles.Accent.FillRed</string>
+          <string>StrokeGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
+          <string>StrokeBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Bubblegum/Styles.Text.FillRed</string>
+          <string>Green = Components/Bubblegum/Styles.Text.FillGreen</string>
+          <string>Blue = Components/Bubblegum/Styles.Text.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>Background.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillRed = Components/Bubblegum/Styles.Surface1.FillRed</string>
+          <string>FillGreen = Components/Bubblegum/Styles.Surface1.FillGreen</string>
+          <string>FillBlue = Components/Bubblegum/Styles.Surface1.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CaretInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillRed = Components/Bubblegum/Styles.Accent.FillRed</string>
+          <string>FillGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
+          <string>FillBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Focused</Name>
@@ -583,6 +763,66 @@
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
         <Value xsi:type="xsd:int">61</Value>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>PlaceholderTextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Bubblegum/Styles.Placeholder.FillRed</string>
+          <string>Green = Components/Bubblegum/Styles.Placeholder.FillGreen</string>
+          <string>Blue = Components/Bubblegum/Styles.Placeholder.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>BorderInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>StrokeRed = Components/Bubblegum/Styles.Accent.FillRed</string>
+          <string>StrokeGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
+          <string>StrokeBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Bubblegum/Styles.Text.FillRed</string>
+          <string>Green = Components/Bubblegum/Styles.Text.FillGreen</string>
+          <string>Blue = Components/Bubblegum/Styles.Text.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>Background.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillRed = Components/Bubblegum/Styles.Surface1.FillRed</string>
+          <string>FillGreen = Components/Bubblegum/Styles.Surface1.FillGreen</string>
+          <string>FillBlue = Components/Bubblegum/Styles.Surface1.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CaretInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillRed = Components/Bubblegum/Styles.Accent.FillRed</string>
+          <string>FillGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
+          <string>FillBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Disabled</Name>
@@ -634,6 +874,66 @@
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
         <Value xsi:type="xsd:int">201</Value>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>PlaceholderTextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Bubblegum/Styles.Placeholder.FillRed</string>
+          <string>Green = Components/Bubblegum/Styles.Placeholder.FillGreen</string>
+          <string>Blue = Components/Bubblegum/Styles.Placeholder.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>BorderInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>StrokeRed = Components/Bubblegum/Styles.Disabled.FillRed</string>
+          <string>StrokeGreen = Components/Bubblegum/Styles.Disabled.FillGreen</string>
+          <string>StrokeBlue = Components/Bubblegum/Styles.Disabled.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Bubblegum/Styles.Placeholder.FillRed</string>
+          <string>Green = Components/Bubblegum/Styles.Placeholder.FillGreen</string>
+          <string>Blue = Components/Bubblegum/Styles.Placeholder.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>Background.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillRed = Components/Bubblegum/Styles.DisabledFill.FillRed</string>
+          <string>FillGreen = Components/Bubblegum/Styles.DisabledFill.FillGreen</string>
+          <string>FillBlue = Components/Bubblegum/Styles.DisabledFill.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CaretInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillRed = Components/Bubblegum/Styles.Disabled.FillRed</string>
+          <string>FillGreen = Components/Bubblegum/Styles.Disabled.FillGreen</string>
+          <string>FillBlue = Components/Bubblegum/Styles.Disabled.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
   </Category>
   <Category>

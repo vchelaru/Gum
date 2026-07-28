@@ -138,6 +138,101 @@ public class BubblegumTemplateTests
         dangling.ShouldBeEmpty();
     }
 
+    private static readonly string[] ColorChannelSuffixes =
+    {
+        "FillRed", "FillGreen", "FillBlue",
+        "StrokeRed", "StrokeGreen", "StrokeBlue",
+        "Red", "Green", "Blue"
+    };
+
+    [Fact]
+    public void AllColorVariables_ShouldBeStylesWired()
+    {
+        // The whole point of Components/Bubblegum/Styles.gucx is that every control routes its
+        // colors through it via VariableReferences instead of hardcoding values - in every
+        // state, not just Default. A control can look correctly wired at a glance (Default state
+        // references Styles) while every one of its categorized states (Enabled/Disabled/
+        // Highlighted/Pushed/...) still hardcodes the same colors directly.
+        GumProjectSave project = LoadBubblegum();
+
+        List<string> offenders = new();
+        foreach (ComponentSave component in project.Components)
+        {
+            if (component.Name == "Bubblegum/Styles")
+            {
+                continue;
+            }
+
+            foreach (StateSave state in component.AllStates)
+            {
+                HashSet<string> wired = new();
+                foreach (VariableListSave variableList in state.VariableLists)
+                {
+                    if (variableList.GetRootName() != "VariableReferences")
+                    {
+                        continue;
+                    }
+
+                    string? sourceObject = variableList.SourceObject;
+                    foreach (string referenceString in variableList.ValueAsIList.Cast<string>())
+                    {
+                        int equalsIndex = referenceString.IndexOf('=');
+                        if (equalsIndex < 0)
+                        {
+                            continue;
+                        }
+
+                        string left = referenceString.Substring(0, equalsIndex).Trim();
+                        string effectiveLeft = string.IsNullOrEmpty(sourceObject) ? left : $"{sourceObject}.{left}";
+                        wired.Add(effectiveLeft);
+                    }
+                }
+
+                Dictionary<string, VariableSave> variablesByName = state.Variables
+                    .Where(v => v.Name != null)
+                    .GroupBy(v => v.Name!)
+                    .ToDictionary(g => g.Key, g => g.First());
+
+                foreach (VariableSave variable in state.Variables)
+                {
+                    if (variable.SetsValue != true || variable.Name == null)
+                    {
+                        continue;
+                    }
+
+                    string channel = GetLastNameSegment(variable.Name);
+                    if (!ColorChannelSuffixes.Contains(channel))
+                    {
+                        continue;
+                    }
+
+                    if (wired.Contains(variable.Name))
+                    {
+                        continue;
+                    }
+
+                    // A fully transparent fill's RGB is never visible, so it doesn't need to
+                    // route through Styles - it's not "touching color" in any observable way.
+                    if (channel.StartsWith("Fill", StringComparison.Ordinal))
+                    {
+                        string prefix = variable.Name.Substring(0, variable.Name.Length - channel.Length - 1);
+                        if (variablesByName.TryGetValue($"{prefix}.FillAlpha", out VariableSave? alphaVariable)
+                            && alphaVariable.SetsValue == true
+                            && alphaVariable.Value != null
+                            && Convert.ToInt32(alphaVariable.Value) == 0)
+                        {
+                            continue;
+                        }
+                    }
+
+                    offenders.Add($"{component.Name} [{state.Name}]: {variable.Name}");
+                }
+            }
+        }
+
+        offenders.ShouldBeEmpty();
+    }
+
     [Fact]
     public void AllPhysicalComponentFiles_ShouldBeBubblegumNamespaced()
     {
@@ -214,7 +309,8 @@ public class BubblegumTemplateTests
         string[] expectedColorSwatches =
         {
             "Accent", "AccentDark", "AccentHover", "AccentLight", "Background", "Border",
-            "Disabled", "DisabledFill", "Muted", "Placeholder", "Surface1", "Text", "White"
+            "Disabled", "DisabledFill", "HoverOption", "HoverRow", "Muted", "Placeholder",
+            "Surface1", "Text", "White"
         };
         string[] expectedTextStyles = { "Normal", "Strong" };
 

@@ -78,6 +78,15 @@ class doesn't define. A swatch can hold the correct value under the wrong name �
 the tool content's swatch/text-instance names against the code-only class's property names
 directly, not by eyeballing rendered colors.
 
+## "Wire the controls to Styles" means every state, not just Default
+
+A control can look fully wired at a glance — its Default state references `Styles.*` — while every
+one of its categorized states (Enabled/Disabled/Highlighted/Pushed/...) still hardcodes the same
+colors directly, since Default and category states are separate `StateSave`s with independent
+`VariableReferences`. `Tests/Gum.ProjectServices.Tests/BubblegumTemplateTests.cs`'s
+`AllColorVariables_ShouldBeStylesWired` is the authoritative check-all for this — a fully
+transparent fill (`FillAlpha` set to `0`) is exempted, since its RGB is never visible.
+
 ## Verifying theme content changes
 
 There's no C#-unit-test surface for a theme's XML content. Use `gumcli diff-standards` (theme's
