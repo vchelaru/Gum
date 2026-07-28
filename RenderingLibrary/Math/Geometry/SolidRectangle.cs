@@ -18,8 +18,6 @@ public class SolidRectangle : SpriteBatchRenderableBase, IRenderableIpso, IVisib
     IRenderableIpso mParent;
 
     ObservableCollectionNoReset<IRenderableIpso> mChildren;
-    private static Texture2D mTexture;
-    public static Rectangle SinglePixelTextureSourceRectangle;
 
     public Color Color;
 
@@ -28,14 +26,6 @@ public class SolidRectangle : SpriteBatchRenderableBase, IRenderableIpso, IVisib
     #region Properties
 
     ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
-
-
-    public static string AtlasedTextureName { get; set; }
-
-    public static Texture2D Texture
-    {
-        get { return mTexture; }
-    }
 
     public bool Wrap
     {
@@ -176,38 +166,6 @@ public class SolidRectangle : SpriteBatchRenderableBase, IRenderableIpso, IVisib
         mChildren = new ();
         Color = Color.White;
         Visible = true;
-
-        if (mTexture == null && !string.IsNullOrEmpty(AtlasedTextureName)) mTexture = GetAtlasedTexture();
-    }
-
-    /// <summary>
-    /// Checks if the Colored Rectangle texture is located in a loaded atlas.
-    /// </summary>
-    /// <returns>Returns atlased texture if it exists.</returns>
-    private Texture2D GetAtlasedTexture()
-    {
-        Texture2D texture = null;
-
-        if (ToolsUtilities.FileManager.IsRelative(AtlasedTextureName))
-        {
-            AtlasedTextureName = ToolsUtilities.FileManager.RelativeDirectory + AtlasedTextureName;
-
-            AtlasedTextureName = ToolsUtilities.FileManager.RemoveDotDotSlash(AtlasedTextureName);
-        }
-
-        // see if an atlas exists:
-        var atlasedTexture =
-            global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(AtlasedTextureName);
-
-        if (atlasedTexture != null)
-        {
-            SinglePixelTextureSourceRectangle = new Rectangle(atlasedTexture.SourceRectangle.Left + 1,
-                atlasedTexture.SourceRectangle.Top + 1, 1, 1);
-
-            texture = atlasedTexture.Texture;
-        }
-
-        return texture;
     }
 
     public override void Render(ISystemManagers managers)
@@ -227,16 +185,11 @@ public class SolidRectangle : SpriteBatchRenderableBase, IRenderableIpso, IVisib
 
             var texture = renderer.SinglePixelTexture;
             Rectangle? sourceRect = renderer.SinglePixelSourceRectangle;
-            if (mTexture != null)
-            {
-                texture = mTexture;
-                sourceRect = SinglePixelTextureSourceRectangle;
-            }
 
             var rotation =
                 this.GetAbsoluteRotation(ignoreParentRotationIfRenderTarget: true);
 
-            Sprite.Render(managers as SystemManagers, renderer.SpriteRenderer, this, texture, Color, sourceRect, false, 
+            Sprite.Render(managers as SystemManagers, renderer.SpriteRenderer, this, texture, Color, sourceRect, false,
                 rotation);
         }
     }

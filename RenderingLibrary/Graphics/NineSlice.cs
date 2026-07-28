@@ -1133,23 +1133,6 @@ public class NineSlice : SpriteBatchRenderableBase,
         FlipHorizontal = frame.FlipHorizontal;
     }
 
-    /// <summary>
-    /// Loads given texture(s) from atlas.
-    /// </summary>
-    /// <param name="valueAsString"></param>
-    /// <param name="atlasedTexture"></param>
-    public void LoadAtlasedTexture(string valueAsString, AtlasedTexture atlasedTexture)
-    {
-        //if made up of seperate textures
-        if (NineSliceExtensions.GetIfShouldUsePattern(valueAsString))
-        {
-            SetTexturesUsingPattern(valueAsString, SystemManagers.Default, true);
-        }
-        else //single texture
-        {
-        }
-    }
-
     public void SetSingleTexture(Texture2D? texture)
     {
         foreach (var sprite in mSprites)
@@ -1159,12 +1142,11 @@ public class NineSlice : SpriteBatchRenderableBase,
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="anyOf9Textures"></param>
     /// <param name="managers"></param>
-    /// <param name="inAtlas">True if textures are atlased.</param>
-    public void SetTexturesUsingPattern(string anyOf9Textures, SystemManagers managers, bool inAtlas)
+    public void SetTexturesUsingPattern(string anyOf9Textures, SystemManagers managers)
     {
         string absoluteTexture = anyOf9Textures;
 
@@ -1178,31 +1160,19 @@ public class NineSlice : SpriteBatchRenderableBase,
         string extension = FileManager.GetExtension(absoluteTexture);
 
         string bareTexture = NineSliceExtensions.GetBareTextureForNineSliceTexture(absoluteTexture);
-        string error;
         if (!string.IsNullOrEmpty(bareTexture))
         {
-            if (inAtlas)
+            for (var sprite = 0; sprite < NineSliceExtensions.PossibleNineSliceEndings.Count(); sprite++)
             {
-                //loop through all nine sprite names
-                for (var sprite = 0; sprite < NineSliceExtensions.PossibleNineSliceEndings.Count(); sprite++)
+
+                var item = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<Texture2D>(bareTexture + NineSliceExtensions.PossibleNineSliceEndings[sprite] + "." + extension);
+
+                if(item == null)
                 {
-
+                    item = Sprite.InvalidTexture;
                 }
-            }
-            else
-            {
-                for (var sprite = 0; sprite < NineSliceExtensions.PossibleNineSliceEndings.Count(); sprite++)
-                {
 
-                    var item = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<Texture2D>(bareTexture + NineSliceExtensions.PossibleNineSliceEndings[sprite] + "." + extension);
-
-                    if(item == null)
-                    {
-                        item = Sprite.InvalidTexture;
-                    }
-
-                    mSprites[sprite].Texture = item;
-                }
+                mSprites[sprite].Texture = item;
             }
         }
     }

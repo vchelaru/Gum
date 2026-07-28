@@ -2638,11 +2638,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                     if (mContainedObjectAsIpso is IAspectRatio aspectRatioObject)
                     {
-                        //if(sprite.AtlasedTexture != null)
-                        //{
-                        //    throw new NotImplementedException();
-                        //}
-                        //else 
                         pixelHeightToSet = AbsoluteWidth * (mHeight / 100.0f) / aspectRatioObject.AspectRatio;
                         wasSet = true;
 
