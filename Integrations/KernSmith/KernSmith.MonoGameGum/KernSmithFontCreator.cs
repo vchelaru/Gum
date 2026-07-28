@@ -112,6 +112,15 @@ public class KernSmithFontCreator : IInMemoryFontCreator
             textures[i] = texture;
         }
 
-        return new BitmapFont(textures, result.FntText);
+        BitmapFont bitmapFont = new BitmapFont(textures, result.FntText);
+
+        // Issue #4061: attach the shadow AtlasVariant (if requested) as ShadowFont. It shares the
+        // primary's atlas pages (same shared texture array), so no extra texture upload is needed.
+        if (result.VariantModels.ContainsKey("shadow"))
+        {
+            bitmapFont.ShadowFont = new BitmapFont(textures, result.GetVariantFntText("shadow"));
+        }
+
+        return bitmapFont;
     }
 }

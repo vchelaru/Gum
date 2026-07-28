@@ -26,8 +26,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="KernSmith" Version="0.18.1" />
-    <PackageReference Include="KernSmith.Rasterizers.FreeType" Version="0.18.1" />
+    <PackageReference Include="KernSmith" Version="0.18.2" />
+    <PackageReference Include="KernSmith.Rasterizers.FreeType" Version="0.18.2" />
   </ItemGroup>
 
   <ItemGroup>

@@ -27,6 +27,9 @@
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
 		<ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
 		<ProjectReference Include="..\MonoGameGum.TestsCommon\MonoGameGum.TestsCommon.csproj" />
+		<!-- Referenced so the in-memory font creator can be exercised end-to-end (KernSmith atlas
+		     generation -> MonoGame Texture2D upload -> BitmapFont), mirroring RaylibGum.Tests. -->
+		<ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.MonoGameGum\KernSmith.MonoGameGum.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
