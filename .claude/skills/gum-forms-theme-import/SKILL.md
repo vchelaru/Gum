@@ -11,6 +11,21 @@ packages). This is the **tool-content** side: a theme is a self-contained Gum pr
 `Components/`, `Behaviors/`, `Screens/`, `Standards/`) that Add Forms copies into the user's
 project. `Bubblegum` is the only one with parity today (#3527 tracks porting the rest).
 
+## Porting a new theme (#3527): do the landmines up front, not reactively
+
+Each gotcha below is cheap to prevent up front and expensive to discover one at a time via manual
+testing after the fact. Sequence a new theme port like this:
+
+1. Namespace the whole tree and scan physical files on disk (not just the `.gumx`'s reference
+   list) for orphans, before anything else.
+2. Build `Styles.gucx` matching the code-only `*Colors`/`*Text` class names first — every control
+   wires against it, so getting names right early avoids a rename pass later.
+3. Wire every control's Default state and every categorized state as you build each one; run
+   `AllColorVariables_ShouldBeStylesWired` from the start, not as a final audit.
+4. After every batch of edits: `gumcli check`/`check-references`/`diff-standards`, **and** a
+   rebuild plus fresh-project Add Forms import in the actual tool — `gumcli` never exercises the
+   postbuild-copy path where duplicate-import bugs live.
+
 ## Key files
 
 | File | Role |
