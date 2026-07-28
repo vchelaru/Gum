@@ -132,10 +132,12 @@ public class KernSmithFileGenerator : IFontFileGenerator
         options.MaxTextureWidth = MaxAtlasDimension;
         options.MaxTextureHeight = MaxAtlasDimension;
 
-        // Drop shadow (and outline/shadow combos) are composited to RGBA by KernSmith's effect
-        // pipeline. A custom ChannelConfig routes through ChannelCompositor, which rebuilds RGB from
-        // alpha masks only -- discarding baked shadow color and forcing white (RGB=One). Leave
-        // Channels unset so AtlasBuilder blits the RGBA glyphs (and shadow) directly.
+        // Drop shadow renders as a two-pass draw at runtime (issue #4001): a ShadowSilhouette atlas
+        // variant, packed into the same shared PNG as the primary, is drawn offset + tinted under
+        // each glyph. Nothing about the shadow is baked into the primary anymore -- baking is what
+        // caused the runtime text-color modulate to re-tint the shadow. KernSmith forbids a custom
+        // ChannelConfig alongside Variants, so the primary keeps the default glyph-coverage layout
+        // when dropshadow is on.
         if (!bmfcSave.HasDropshadow)
         {
             // Match bmfont.exe channel layout so Gum's runtime renders correctly.
@@ -164,13 +166,14 @@ public class KernSmithFileGenerator : IFontFileGenerator
 
         if (bmfcSave.HasDropshadow)
         {
-            options.ShadowOffsetX = (int)MathF.Round(bmfcSave.DropshadowOffsetX);
-            options.ShadowOffsetY = (int)MathF.Round(bmfcSave.DropshadowOffsetY);
-            options.ShadowBlur = (int)MathF.Round(bmfcSave.DropshadowBlur);
-            options.ShadowR = bmfcSave.DropshadowRed;
-            options.ShadowG = bmfcSave.DropshadowGreen;
-            options.ShadowB = bmfcSave.DropshadowBlue;
-            options.ShadowOpacity = bmfcSave.DropshadowAlpha / 255f;
+            // Offset and color are applied by the runtime at draw time; the silhouette bakes only
+            // its blurred coverage shape, so BlurRadius is the sole shadow parameter that affects
+            // the atlas.
+            options.Variants = new[]
+            {
+                new AtlasVariant("shadow", AtlasVariantKind.ShadowSilhouette,
+                    BlurRadius: (int)MathF.Round(bmfcSave.DropshadowBlur)),
+            };
         }
 
         return options;

@@ -388,9 +388,16 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
 
         IDisposable? spinner = null;
 
+        // Issue #4001: a dropshadow font is a primary .fnt plus a "-shadow.fnt" sibling (the shadow
+        // silhouette, sharing the primary's PNG). A primary present without its sibling — e.g. an
+        // atlas baked before the two-pass change — must regenerate, otherwise the runtime renders
+        // with no shadow at all.
+        bool shadowSiblingMissing = bmfcSave.HasDropshadow
+            && !new FilePath(desiredFntFile.RemoveExtension() + "-shadow.fnt").Exists();
+
         try
         {
-            if (!desiredFntFile.Exists() || force)
+            if (!desiredFntFile.Exists() || shadowSiblingMissing || force)
             {
                 if (showSpinner)
                 {
