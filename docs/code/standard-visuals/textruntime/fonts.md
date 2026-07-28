@@ -15,9 +15,9 @@ By default all `TextRuntime` instances use an Arial 18-point font embedded in th
 | `IsBold` | `bool` | Bold style. |
 | `IsItalic` | `bool` | Italic style. |
 | `OutlineThickness` | `int` | Outline thickness in pixels (0 = no outline). |
-| `HasDropshadow` | `bool` | When `true`, KernSmith bakes a drop shadow into the font atlas (see [Baked drop shadow](#baked-drop-shadow)). |
-| `DropshadowColor` | `Color` | Shadow color. Shortcut for the four channel properties below. |
-| `DropshadowRed`, `DropshadowGreen`, `DropshadowBlue`, `DropshadowAlpha` | `int` | Shadow color channels (0–255). `DropshadowAlpha` decomposes to KernSmith `ShadowOpacity` at generation time. |
+| `HasDropshadow` | `bool` | When `true`, draws a drop shadow under the text at runtime (see [Drop shadow](#drop-shadow)). |
+| `DropshadowColor` | `Color` | Shadow color, applied at draw time independently of the text `Color`. Shortcut for the four channel properties below. |
+| `DropshadowRed`, `DropshadowGreen`, `DropshadowBlue`, `DropshadowAlpha` | `int` | Shadow color channels (0–255). |
 | `DropshadowOffsetX`, `DropshadowOffsetY` | `float` | Horizontal / vertical shadow offset in pixels. |
 | `DropshadowBlur` | `float` | Blur radius in pixels. `0` is a sharp shadow; larger values soften the edges. Single scalar (like shape `DropshadowBlur`), not a per-axis pair. |
 | `UseFontSmoothing` | `bool` | Whether to use anti-aliased glyph rasterization. |
@@ -25,15 +25,15 @@ By default all `TextRuntime` instances use an Arial 18-point font embedded in th
 | `CustomFontFile` | `string` | Path to a specific `.fnt` file (only used when `UseCustomFont` is `true`). |
 | `BitmapFont` | `BitmapFont` | A directly-assigned font instance — bypasses the property-driven font system entirely. |
 
-### Baked drop shadow
+### Drop shadow
 
-When `HasDropshadow` is `true`, KernSmith composites the shadow into each glyph's atlas cell at font-generation time — the same baked model as `OutlineThickness`. The shadow is **not** a per-draw runtime overlay; every character in that font variant always carries the shadow. State-dependent shadows (on/off per frame, animated blur) still need a runtime overlay such as a shape behind the text — see [Shapes — Drop shadow](../shapes-apos.shapes.md#drop-shadow).
+When `HasDropshadow` is `true`, Gum draws the text a second time — a shadow silhouette offset by `DropshadowOffsetX`/`DropshadowOffsetY` and tinted `DropshadowColor` — underneath the primary glyphs. Because the shadow is its own draw, its color is fully independent of the text `Color`: white text can carry a black shadow, and either can be recolored or animated per frame without regenerating the font.
 
-Requirements and cache behavior:
+The silhouette is packed into the same atlas as the glyphs (a blurred coverage mask sharing one texture page), so drawing it adds no texture switch. Only `DropshadowBlur` shapes that baked mask; offset and color are applied at draw time and are not part of the font cache key.
 
-* **KernSmith / `InMemoryFontCreator` required** — shadow fields participate in the property-driven path only when an in-memory font creator is registered (MonoGame, KNI, or Raylib via `KernSmithRaylibFontCreator`). Without it, Gum falls back to FontCache `.fnt` files, which do not encode shadow today.
-* **Separate font variant per shadow tuple** — like outline thickness, shadow offset/blur/color are keyed into the font cache file name when `HasDropshadow` is true, so each distinct combination generates its own atlas.
-* **Channel layout** — when shadow is enabled, Gum omits a custom `ChannelConfig` so KernSmith's default RGBA atlas path is preserved. Baked shadow color survives the runtime's text-color modulate instead of being forced to white.
+{% hint style="info" %}
+Runtime shadow rendering currently applies to **MonoGame, KNI, and FNA** using tool-generated `FontCache` fonts — the generator writes a companion `<font>-shadow.fnt` next to each shadowed font, and the tool regenerates existing fonts to add it. Raylib and the in-memory `KernSmith` font creator generate the shadow data but do not yet draw it; Skia renders its own blurred shadow.
+{% endhint %}
 
 **First-enable defaults:** toggling `HasDropshadow` from `false` to `true` seeds a visible shadow when offset and blur are still zero — black (`DropshadowAlpha` 180), `DropshadowOffsetY` 3, `DropshadowBlur` 2. `DropshadowOffsetX` stays 0. Set channels explicitly before enabling if you need a different color.
 
