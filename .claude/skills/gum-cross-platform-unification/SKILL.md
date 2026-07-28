@@ -57,7 +57,7 @@ When you swap *how* a renderable achieves an effect (e.g. Skia text outline movi
 
 ## SkiaGum's Topten.RichTextKit Is a Vendored Patched Build
 
-`Runtimes/SkiaGum/SkiaGum.csproj`'s `Topten.RichTextKit` reference is not the real nuget.org package — it's a local-feed build (`ThirdParty/nuget-local/`, wired via `/NuGet.config`) patched to fix `Style.HaloWidth` spiking at acute glyph corners. Don't "clean up" the version to the real `0.4.167` in a routine dependency-update pass — that silently reintroduces the spike. See `ThirdParty/README.md` for what's vendored and when to revert.
+`Runtimes/SkiaGum/SkiaGum.csproj`'s `Topten.RichTextKit` reference is not the real nuget.org package — it's a local-feed build (`ThirdParty/nuget-local/`, wired via `/NuGet.config`) patched to fix `Style.HaloWidth` spiking at acute glyph corners. Don't "clean up" the version to the real `0.4.167` in a routine dependency-update pass — that silently reintroduces the spike. Upstream: [toptensoftware/RichTextKit#113](https://github.com/toptensoftware/RichTextKit/issues/113) (issue), [#114](https://github.com/toptensoftware/RichTextKit/pull/114) (fix). See `ThirdParty/README.md` for what's vendored and when to revert.
 
 ## Never Widen an Obsolete API
 
