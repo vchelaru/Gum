@@ -450,6 +450,56 @@ public class AnimationControllerTests : BaseTestClass
         controller.IsPlaying.ShouldBeTrue();
     }
 
+    [Fact]
+    public void Update_ShouldRaiseNamedEventOccurred_WhenCrossingEventTime()
+    {
+        AnimationController controller = new AnimationController();
+        AnimationRuntime animation = CreateAnimationWithEvent("Footstep", 0.5f, loops: false);
+        GraphicalUiElement gue = CreateTestGraphicalUiElement();
+        NamedAnimationEventArgs raised = null;
+        int raiseCount = 0;
+
+        controller.NamedEventOccurred += args => { raised = args; raiseCount++; };
+        controller.Play(animation);
+        controller.Update(0.6, gue);
+
+        raiseCount.ShouldBe(1);
+        raised.Name.ShouldBe("Footstep");
+        raised.Time.ShouldBe(0.5f);
+    }
+
+    [Fact]
+    public void Update_ShouldNotRaiseNamedEventOccurred_BeforeEventTime()
+    {
+        AnimationController controller = new AnimationController();
+        AnimationRuntime animation = CreateAnimationWithEvent("Footstep", 0.5f, loops: false);
+        GraphicalUiElement gue = CreateTestGraphicalUiElement();
+        int raiseCount = 0;
+
+        controller.NamedEventOccurred += _ => raiseCount++;
+        controller.Play(animation);
+        controller.Update(0.3, gue);
+
+        raiseCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Update_ShouldRaiseNamedEventOccurred_OncePerLoop()
+    {
+        AnimationController controller = new AnimationController();
+        AnimationRuntime animation = CreateAnimationWithEvent("Footstep", 0.5f, loops: true);
+        GraphicalUiElement gue = CreateTestGraphicalUiElement();
+        int raiseCount = 0;
+
+        controller.NamedEventOccurred += _ => raiseCount++;
+        controller.Play(animation);
+        // Animation length is 1.0; 2.2s crosses the 0.5 event on the first (0.5)
+        // and second (1.5) loop, but not a third (2.5).
+        controller.Update(2.2, gue);
+
+        raiseCount.ShouldBe(2);
+    }
+
     #endregion
 
     #region State Property Tests
@@ -681,6 +731,18 @@ public class AnimationControllerTests : BaseTestClass
         animation.Keyframes.Add(keyframe1);
         animation.Keyframes.Add(keyframe2);
 
+        return animation;
+    }
+
+    private static AnimationRuntime CreateAnimationWithEvent(string eventName, float eventTime, bool loops)
+    {
+        AnimationRuntime animation = CreateTestAnimation();
+        animation.Loops = loops;
+        animation.Keyframes.Add(new KeyframeRuntime
+        {
+            EventName = eventName,
+            Time = eventTime
+        });
         return animation;
     }
 

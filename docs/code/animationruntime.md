@@ -329,6 +329,42 @@ protected override void Initialize()
 
 <figure><img src="../.gitbook/assets/06_11 02 23.gif" alt=""><figcaption><p>Button reacting to hover</p></figcaption></figure>
 
+## Named Events
+
+An animation can carry **named events** on its timeline — markers with a name and a time. When playback crosses a marker's time, Gum raises an event so your game can react: play a sound effect, enable a hitbox, spawn a particle, and so on. Named events are authored in the Gum tool's animation editor (see the [Animation Tutorials](../gum-tool/tutorials-and-examples/animation-tutorials/)) or added in code.
+
+Subscribe through the visual's `AnimationController`. The `NamedEventOccurred` event passes a `NamedAnimationEventArgs` whose `Name` you typically switch on:
+
+```csharp
+// Initialize
+_animatedScreen.Visual.AnimationController.NamedEventOccurred += args =>
+{
+    switch (args.Name)
+    {
+        case "Footstep":
+            // play a footstep sound
+            break;
+        case "EnableHitbox":
+            // turn on a hitbox
+            break;
+    }
+};
+```
+
+The same `AnimationController` also exposes playback events such as `OnStarted`, `OnCompleted`, `OnStopped`, `OnPaused`, and `OnResumed`.
+
+For looping animations, `NamedEventOccurred` fires once each loop. An event fires when playback passes its time, so it does not fire if the animation is stopped or restarted before reaching it.
+
+To add a named event to an animation created in code, add a `KeyframeRuntime` with its `EventName` and `Time` set (leave `StateName` unset — an event keyframe carries no state):
+
+```csharp
+// Initialize
+var footstepEvent = new KeyframeRuntime();
+growAnimation.Keyframes.Add(footstepEvent);
+footstepEvent.EventName = "Footstep";
+footstepEvent.Time = 0.5f;
+```
+
 ## Playing Multiple Animations on the Same Instance
 
 {% hint style="warning" %}

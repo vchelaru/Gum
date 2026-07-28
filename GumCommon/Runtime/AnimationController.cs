@@ -64,6 +64,13 @@ public class AnimationController
     public event Action? OnResumed;
 
     /// <summary>
+    /// Raised when playback crosses the time of a named event authored on the animation timeline.
+    /// Games typically switch on <see cref="NamedAnimationEventArgs.Name"/> to trigger sound effects,
+    /// hitboxes, and similar. For looping animations the event fires once per loop.
+    /// </summary>
+    public event Action<NamedAnimationEventArgs>? NamedEventOccurred;
+
+    /// <summary>
     /// Starts playing the specified animation from the beginning.
     /// </summary>
     /// <param name="animation">The AnimationRuntime to play.</param>
@@ -200,16 +207,66 @@ public class AnimationController
     {
         if (_state == AnimationState.Playing && CurrentAnimation != null)
         {
+            AnimationRuntime animation = CurrentAnimation;
+            double previousTime = CurrentTime;
             CurrentTime += secondDifference;
-            CurrentAnimation.ApplyAtTimeTo(CurrentTime, target);
+            animation.ApplyAtTimeTo(CurrentTime, target);
+
+            RaiseNamedEvents(animation, previousTime, CurrentTime);
 
             // Check if animation has completed
-            if (!CurrentAnimation.Loops && CurrentTime >= CurrentAnimation.Length)
+            if (CurrentAnimation != null && !CurrentAnimation.Loops && CurrentTime >= CurrentAnimation.Length)
             {
                 _state = AnimationState.Stopped;
                 CurrentAnimation = null;
                 CurrentTime = 0;
                 OnCompleted?.Invoke();
+            }
+        }
+    }
+
+    // Fires NamedEventOccurred for every named event whose time falls within (previousTime, currentTime].
+    // For looping animations each authored event recurs every Length seconds, so all occurrences in the
+    // interval are raised. Skipped entirely when nothing is subscribed to avoid per-frame work.
+    private void RaiseNamedEvents(AnimationRuntime animation, double previousTime, double currentTime)
+    {
+        if (NamedEventOccurred == null)
+        {
+            return;
+        }
+
+        double length = animation.Length;
+        bool loops = animation.Loops && length > 0;
+
+        // Plain loop rather than LINQ: this runs per frame for every playing animation.
+        for (int i = 0; i < animation.Keyframes.Count; i++)
+        {
+            KeyframeRuntime keyframe = animation.Keyframes[i];
+            if (string.IsNullOrEmpty(keyframe.EventName))
+            {
+                continue;
+            }
+
+            float eventTime = keyframe.Time;
+
+            if (loops)
+            {
+                // Advance to the first occurrence strictly after previousTime, then fire each up to currentTime.
+                double occurrence = eventTime;
+                if (occurrence <= previousTime)
+                {
+                    double loopsToSkip = Math.Floor((previousTime - eventTime) / length) + 1;
+                    occurrence = eventTime + loopsToSkip * length;
+                }
+                while (occurrence <= currentTime)
+                {
+                    NamedEventOccurred?.Invoke(new NamedAnimationEventArgs(keyframe.EventName!, eventTime));
+                    occurrence += length;
+                }
+            }
+            else if (eventTime > previousTime && eventTime <= currentTime)
+            {
+                NamedEventOccurred?.Invoke(new NamedAnimationEventArgs(keyframe.EventName!, eventTime));
             }
         }
     }
