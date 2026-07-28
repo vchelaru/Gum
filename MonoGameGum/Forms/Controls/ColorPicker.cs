@@ -36,9 +36,6 @@ public class ColorPicker : FrameworkElement
     private GraphicalUiElement? _saturationValueIndicator;
     private GraphicalUiElement? _hueIndicator;
 
-    private bool _isDraggingSaturationValue;
-    private bool _isDraggingHue;
-
     // Guards against re-entrant sync when a property setter derives and stores the other
     // representation of the same color.
     private bool _isUpdatingColor;
@@ -140,18 +137,19 @@ public class ColorPicker : FrameworkElement
         _saturationValueIndicator = Visual.GetGraphicalUiElementByName("SaturationValueIndicator");
         _hueIndicator = Visual.GetGraphicalUiElementByName("HueIndicator");
 
+        // Push handles the initial click; Dragging continues to fire on the pushed element every
+        // frame the cursor moves, even once it leaves the element's bounds, so a drag keeps tracking
+        // the cursor outside the picker (matching Slider/ScrollBar).
         if (_saturationValueContainer != null)
         {
-            _saturationValueContainer.Push += HandleSaturationValuePush;
-            _saturationValueContainer.RollOver += HandleSaturationValueRollOver;
-            _saturationValueContainer.RemovedAsPushed += HandleSaturationValueRemovedAsPushed;
+            _saturationValueContainer.Push += HandleSaturationValueInput;
+            _saturationValueContainer.Dragging += HandleSaturationValueInput;
         }
 
         if (_hueContainer != null)
         {
-            _hueContainer.Push += HandleHuePush;
-            _hueContainer.RollOver += HandleHueRollOver;
-            _hueContainer.RemovedAsPushed += HandleHueRemovedAsPushed;
+            _hueContainer.Push += HandleHueInput;
+            _hueContainer.Dragging += HandleHueInput;
         }
 
         RefreshVisuals();
@@ -161,42 +159,14 @@ public class ColorPicker : FrameworkElement
 
     #region Event Handlers
 
-    private void HandleSaturationValuePush(object? sender, EventArgs e)
+    private void HandleSaturationValueInput(object? sender, EventArgs e)
     {
-        _isDraggingSaturationValue = true;
         PickSaturationValueFromCursor();
     }
 
-    private void HandleSaturationValueRollOver(object? sender, EventArgs e)
+    private void HandleHueInput(object? sender, EventArgs e)
     {
-        if (_isDraggingSaturationValue)
-        {
-            PickSaturationValueFromCursor();
-        }
-    }
-
-    private void HandleSaturationValueRemovedAsPushed(object? sender, EventArgs e)
-    {
-        _isDraggingSaturationValue = false;
-    }
-
-    private void HandleHuePush(object? sender, EventArgs e)
-    {
-        _isDraggingHue = true;
         PickHueFromCursor();
-    }
-
-    private void HandleHueRollOver(object? sender, EventArgs e)
-    {
-        if (_isDraggingHue)
-        {
-            PickHueFromCursor();
-        }
-    }
-
-    private void HandleHueRemovedAsPushed(object? sender, EventArgs e)
-    {
-        _isDraggingHue = false;
     }
 
     #endregion
@@ -212,7 +182,7 @@ public class ColorPicker : FrameworkElement
 
         float width = _saturationValueContainer.AbsoluteWidth;
         float height = _saturationValueContainer.AbsoluteHeight;
-        if (width <= 1 || height <= 1)
+        if (width <= 0 || height <= 0)
         {
             return;
         }
@@ -220,11 +190,11 @@ public class ColorPicker : FrameworkElement
         float relativeX = MainCursor.XRespectingGumZoomAndBounds() - _saturationValueContainer.AbsoluteLeft;
         float relativeY = MainCursor.YRespectingGumZoomAndBounds() - _saturationValueContainer.AbsoluteTop;
 
-        relativeX = Math.Clamp(relativeX, 0, width - 1);
-        relativeY = Math.Clamp(relativeY, 0, height - 1);
+        relativeX = Math.Clamp(relativeX, 0, width);
+        relativeY = Math.Clamp(relativeY, 0, height);
 
-        float saturation = relativeX / (width - 1) * 100f;
-        float value = (1f - relativeY / (height - 1)) * 100f;
+        float saturation = relativeX / width * 100f;
+        float value = (1f - relativeY / height) * 100f;
 
         SetHsv(_hue, saturation, value);
     }
@@ -237,15 +207,15 @@ public class ColorPicker : FrameworkElement
         }
 
         float height = _hueContainer.AbsoluteHeight;
-        if (height <= 1)
+        if (height <= 0)
         {
             return;
         }
 
         float relativeY = MainCursor.YRespectingGumZoomAndBounds() - _hueContainer.AbsoluteTop;
-        relativeY = Math.Clamp(relativeY, 0, height - 1);
+        relativeY = Math.Clamp(relativeY, 0, height);
 
-        float hue = relativeY / (height - 1) * 360f;
+        float hue = relativeY / height * 360f;
 
         SetHsv(hue, _saturation, _value);
     }
