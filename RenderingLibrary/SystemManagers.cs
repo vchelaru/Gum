@@ -460,6 +460,9 @@ public partial class SystemManagers : ISystemManagers
     }
 }
 
+// GraphicalUiElement is only in scope under USE_GUMCOMMON (see the using above); FRB, which doesn't
+// define it, provides its own runtime and never uses this applier. Guard to keep the FRB build green.
+#if USE_GUMCOMMON
 /// <summary>
 /// XNA-family backend for <see cref="GraphicalUiElement.ApplyCachedTextureFromPixelData"/> and
 /// <see cref="GraphicalUiElement.ApplyPooledTextureFromPixelData"/>. Cached textures live in the
@@ -548,3 +551,4 @@ internal static class PixelDataTextureApplier
         return entry;
     }
 }
+#endif
