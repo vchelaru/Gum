@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -135,6 +136,36 @@ public class BubblegumTemplateTests
         }
 
         dangling.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void AllPhysicalComponentAndBehaviorFiles_ShouldBeBubblegumNamespaced()
+    {
+        // FormsFileService.GetSourceDestinations copies every .gucx/.behx file it finds on
+        // disk under the theme folder, regardless of whether that file is registered as a
+        // ComponentReference/BehaviorReference in the theme's own GumProject.gumx. A file
+        // whose own <Name> tag was left unrenamed during the Bubblegum/ namespacing pass
+        // still gets imported under its stale name, colliding with (or duplicating) content
+        // from every other theme's import.
+        string bubblegumDir = Path.Combine(FindRepoRoot(),
+            "Tools", "Gum.ProjectServices", "Templates", "FormsThemes", "Bubblegum");
+
+        List<string> componentAndBehaviorFiles = Directory
+            .GetFiles(Path.Combine(bubblegumDir, "Components"), "*.gucx", SearchOption.AllDirectories)
+            .Concat(Directory.GetFiles(Path.Combine(bubblegumDir, "Behaviors"), "*.behx", SearchOption.AllDirectories))
+            .ToList();
+
+        List<string> offenders = new();
+        foreach (string file in componentAndBehaviorFiles)
+        {
+            string? name = XDocument.Load(file).Root?.Element("Name")?.Value;
+            if (name != null && !name.StartsWith("Bubblegum/", StringComparison.Ordinal))
+            {
+                offenders.Add($"{Path.GetFileName(file)}: <Name>{name}</Name>");
+            }
+        }
+
+        offenders.ShouldBeEmpty();
     }
 
     private static string GetLastNameSegment(string variableName)
