@@ -3,6 +3,7 @@ using KernSmith.Output;
 using KernSmith.Rasterizer;
 using Raylib_cs;
 using RaylibGum.Renderables;
+using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics.Fonts;
 
@@ -84,32 +85,58 @@ public class KernSmithRaylibFontCreator : IRaylibFontCreator
             return null;
         }
 
-        if (result.Pages.Count == 1)
-        {
-            AtlasPage page = result.Pages[0];
-            Texture2D texture = UploadTexture(page.PixelData, page.Width, page.Height);
-            return ContentLoader.BuildFontFromFntText(result.FntText, texture);
-        }
-
-        // Merge KernSmith's pages into a single texture. KernSmith sizes every page identically
-        // (PackResult.PageWidth/Height), so stacking them vertically is a contiguous copy and each
-        // glyph's atlas Y is shifted by its page's offset. Mirrors the MonoGame creator, which hands
-        // BitmapFont a texture array — same behavior (a usable font for any glyph set), no fallback.
+        Texture2D primaryTexture;
+        Raylib_cs.Font font;
+        int[]? pageYOffsets = null;
+        byte[] pixelData;
         int pageWidth = result.Pages[0].Width;
         int pageHeight = result.Pages[0].Height;
-        int pageCount = result.Pages.Count;
+        int textureHeight;
 
-        byte[] merged = new byte[pageWidth * pageHeight * pageCount * 4];
-        int[] pageYOffsets = new int[pageCount];
-        for (int i = 0; i < pageCount; i++)
+        if (result.Pages.Count == 1)
         {
-            byte[] pagePixels = result.Pages[i].PixelData;
-            System.Array.Copy(pagePixels, 0, merged, i * pagePixels.Length, pagePixels.Length);
-            pageYOffsets[i] = i * pageHeight;
+            pixelData = result.Pages[0].PixelData;
+            textureHeight = pageHeight;
+            primaryTexture = UploadTexture(pixelData, pageWidth, textureHeight);
+            font = ContentLoader.BuildFontFromFntText(result.FntText, primaryTexture);
+        }
+        else
+        {
+            // Merge KernSmith's pages into a single texture. KernSmith sizes every page identically
+            // (PackResult.PageWidth/Height), so stacking them vertically is a contiguous copy and each
+            // glyph's atlas Y is shifted by its page's offset. Mirrors the MonoGame creator, which hands
+            // BitmapFont a texture array — same behavior (a usable font for any glyph set), no fallback.
+            int pageCount = result.Pages.Count;
+
+            pixelData = new byte[pageWidth * pageHeight * pageCount * 4];
+            pageYOffsets = new int[pageCount];
+            for (int i = 0; i < pageCount; i++)
+            {
+                byte[] pagePixels = result.Pages[i].PixelData;
+                System.Array.Copy(pagePixels, 0, pixelData, i * pagePixels.Length, pagePixels.Length);
+                pageYOffsets[i] = i * pageHeight;
+            }
+
+            textureHeight = pageHeight * pageCount;
+            primaryTexture = UploadTexture(pixelData, pageWidth, textureHeight);
+            font = ContentLoader.BuildFontFromFntText(result.FntText, primaryTexture, pageYOffsets);
         }
 
-        Texture2D mergedTexture = UploadTexture(merged, pageWidth, pageHeight * pageCount);
-        return ContentLoader.BuildFontFromFntText(result.FntText, mergedTexture, pageYOffsets);
+        // Issue #4061: attach the shadow AtlasVariant (if requested) as a companion Font, registered
+        // against the primary's atlas texture id (RaylibFontShadowRegistry — the Raylib counterpart of
+        // MonoGame's BitmapFont.ShadowFont). The shadow gets its OWN texture upload (from the same
+        // pixel data) rather than reusing primaryTexture: ManagedFont.Dispose calls Raylib.UnloadFont
+        // on both fonts, which unloads each font's Texture — sharing one GPU texture between them
+        // would double-free it.
+        if (result.VariantModels.ContainsKey("shadow"))
+        {
+            string shadowFntText = result.GetVariantFntText("shadow");
+            Texture2D shadowTexture = UploadTexture(pixelData, pageWidth, textureHeight);
+            Raylib_cs.Font shadowFont = ContentLoader.BuildFontFromFntText(shadowFntText, shadowTexture, pageYOffsets);
+            RaylibFontShadowRegistry.Register(font.Texture.Id, shadowFont);
+        }
+
+        return font;
     }
 
     private static unsafe Texture2D UploadTexture(byte[] pixels, int width, int height)

@@ -1,4 +1,5 @@
 using KernSmith.Gum;
+using RenderingLibrary;
 using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
 using Xunit;
@@ -64,5 +65,53 @@ public class KernSmithRaylibFontCreatorTests : BaseTestClass
         font!.Value.BaseSize.ShouldBe(32);
         font.Value.GlyphCount.ShouldBeGreaterThan(0);
         font.Value.Texture.Id.ShouldBeGreaterThan(0u);
+    }
+
+    // #4061: the shadow AtlasVariant KernSmith generates for a dropshadow font must be attached to the
+    // returned font so RenderingLibrary's Text renderable can draw it, not silently discarded.
+    [Fact]
+    public void TryCreateFont_WithDropshadow_RegistersShadowFont()
+    {
+        KernSmithRaylibFontCreator creator = new KernSmithRaylibFontCreator();
+
+        BmfcSave bmfcSave = new BmfcSave
+        {
+            FontName = "Arial",
+            FontSize = 32,
+            UseSmoothing = true,
+            Ranges = "65",
+            HasDropshadow = true,
+            DropshadowOffsetX = 2f,
+            DropshadowOffsetY = 2f,
+            DropshadowBlur = 2f,
+            DropshadowAlpha = 255,
+        };
+
+        Raylib_cs.Font? font = creator.TryCreateFont(bmfcSave);
+
+        font.ShouldNotBeNull();
+        RaylibFontShadowRegistry.TryGet(font!.Value.Texture.Id, out Raylib_cs.Font shadowFont).ShouldBeTrue();
+        shadowFont.GlyphCount.ShouldBeGreaterThan(0);
+        shadowFont.Texture.Id.ShouldBeGreaterThan(0u);
+        shadowFont.Texture.Id.ShouldNotBe(font.Value.Texture.Id);
+    }
+
+    [Fact]
+    public void TryCreateFont_WithoutDropshadow_DoesNotRegisterShadowFont()
+    {
+        KernSmithRaylibFontCreator creator = new KernSmithRaylibFontCreator();
+
+        BmfcSave bmfcSave = new BmfcSave
+        {
+            FontName = "Arial",
+            FontSize = 32,
+            UseSmoothing = true,
+            Ranges = "65",
+        };
+
+        Raylib_cs.Font? font = creator.TryCreateFont(bmfcSave);
+
+        font.ShouldNotBeNull();
+        RaylibFontShadowRegistry.TryGet(font!.Value.Texture.Id, out _).ShouldBeFalse();
     }
 }
