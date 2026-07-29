@@ -6,6 +6,9 @@
     <Variable Type="int" Name="Bordered.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">177</Value>
     </Variable>
+    <Variable Type="bool" Name="Bordered.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
     <Variable Type="int" Name="Bordered.Green" SetsValue="true">
       <Value xsi:type="xsd:int">159</Value>
     </Variable>
@@ -20,6 +23,12 @@
     </Variable>
     <Variable Type="int" Name="Bordered.Red" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="Bordered.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="Bordered.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
     </Variable>
     <Variable Type="int" Name="Bordered.TextureHeight" SetsValue="true">
       <Value xsi:type="xsd:int">24</Value>
@@ -57,6 +66,9 @@
     <Variable Type="int" Name="BracketHorizontal.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">177</Value>
     </Variable>
+    <Variable Type="bool" Name="BracketHorizontal.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
     <Variable Type="int" Name="BracketHorizontal.Green" SetsValue="true">
       <Value xsi:type="xsd:int">159</Value>
     </Variable>
@@ -71,6 +83,12 @@
     </Variable>
     <Variable Type="int" Name="BracketHorizontal.Red" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="BracketHorizontal.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="BracketHorizontal.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
     </Variable>
     <Variable Type="int" Name="BracketHorizontal.TextureHeight" SetsValue="true">
       <Value xsi:type="xsd:int">24</Value>
@@ -108,6 +126,9 @@
     <Variable Type="int" Name="BracketVertical.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">177</Value>
     </Variable>
+    <Variable Type="bool" Name="BracketVertical.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
     <Variable Type="int" Name="BracketVertical.Green" SetsValue="true">
       <Value xsi:type="xsd:int">159</Value>
     </Variable>
@@ -122,6 +143,12 @@
     </Variable>
     <Variable Type="int" Name="BracketVertical.Red" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="BracketVertical.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="BracketVertical.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
     </Variable>
     <Variable Type="int" Name="BracketVertical.TextureHeight" SetsValue="true">
       <Value xsi:type="xsd:int">24</Value>
@@ -186,27 +213,6 @@
     <Variable Type="float" Name="ButtonIconInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
     </Variable>
-    <Variable Type="ChildrenLayout" Name="ButtonsContainer.ChildrenLayout" SetsValue="true">
-      <Value xsi:type="xsd:int">1</Value>
-    </Variable>
-    <Variable Type="float" Name="ButtonsContainer.Height" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
-    </Variable>
-    <Variable Type="DimensionUnitType" Name="ButtonsContainer.HeightUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">4</Value>
-    </Variable>
-    <Variable Type="float" Name="ButtonsContainer.Width" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
-    </Variable>
-    <Variable Type="DimensionUnitType" Name="ButtonsContainer.WidthUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">4</Value>
-    </Variable>
-    <Variable Type="float" Name="ButtonsContainer.X" SetsValue="true">
-      <Value xsi:type="xsd:float">159</Value>
-    </Variable>
-    <Variable Type="float" Name="ButtonsContainer.Y" SetsValue="true">
-      <Value xsi:type="xsd:float">12</Value>
-    </Variable>
     <Variable Type="string" Name="ButtonStandardIconInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ButtonsContainer</Value>
     </Variable>
@@ -239,6 +245,27 @@
     </Variable>
     <Variable Type="VerticalAlignment" Name="ButtonTabInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="ChildrenLayout" Name="ButtonsContainer.ChildrenLayout" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="float" Name="ButtonsContainer.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ButtonsContainer.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="float" Name="ButtonsContainer.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ButtonsContainer.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="float" Name="ButtonsContainer.X" SetsValue="true">
+      <Value xsi:type="xsd:float">159</Value>
+    </Variable>
+    <Variable Type="float" Name="ButtonsContainer.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">12</Value>
     </Variable>
     <Variable Type="ColorCategory" Name="CautionLinesInstance.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
@@ -438,6 +465,9 @@
     <Variable Type="int" Name="Outlined.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">177</Value>
     </Variable>
+    <Variable Type="bool" Name="Outlined.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
     <Variable Type="int" Name="Outlined.Green" SetsValue="true">
       <Value xsi:type="xsd:int">159</Value>
     </Variable>
@@ -452,6 +482,12 @@
     </Variable>
     <Variable Type="int" Name="Outlined.Red" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="Outlined.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="Outlined.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
     </Variable>
     <Variable Type="int" Name="Outlined.TextureHeight" SetsValue="true">
       <Value xsi:type="xsd:int">24</Value>
@@ -489,6 +525,9 @@
     <Variable Type="int" Name="OutlinedHeavy.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">177</Value>
     </Variable>
+    <Variable Type="bool" Name="OutlinedHeavy.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
     <Variable Type="int" Name="OutlinedHeavy.Green" SetsValue="true">
       <Value xsi:type="xsd:int">159</Value>
     </Variable>
@@ -503,6 +542,12 @@
     </Variable>
     <Variable Type="int" Name="OutlinedHeavy.Red" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="OutlinedHeavy.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="OutlinedHeavy.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
     </Variable>
     <Variable Type="int" Name="OutlinedHeavy.TextureHeight" SetsValue="true">
       <Value xsi:type="xsd:int">24</Value>
@@ -540,6 +585,9 @@
     <Variable Type="int" Name="Panel.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">177</Value>
     </Variable>
+    <Variable Type="bool" Name="Panel.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
     <Variable Type="int" Name="Panel.Green" SetsValue="true">
       <Value xsi:type="xsd:int">159</Value>
     </Variable>
@@ -554,6 +602,12 @@
     </Variable>
     <Variable Type="int" Name="Panel.Red" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="Panel.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="Panel.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
     </Variable>
     <Variable Type="int" Name="Panel.TextureHeight" SetsValue="true">
       <Value xsi:type="xsd:int">24</Value>
@@ -732,6 +786,9 @@
     <Variable Type="int" Name="Solid.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">177</Value>
     </Variable>
+    <Variable Type="bool" Name="Solid.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
     <Variable Type="int" Name="Solid.Green" SetsValue="true">
       <Value xsi:type="xsd:int">159</Value>
     </Variable>
@@ -746,6 +803,12 @@
     </Variable>
     <Variable Type="int" Name="Solid.Red" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="Solid.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="Solid.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
     </Variable>
     <Variable Type="int" Name="Solid.TextureHeight" SetsValue="true">
       <Value xsi:type="xsd:int">24</Value>
@@ -780,6 +843,9 @@
     <Variable Type="int" Name="Tab.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">177</Value>
     </Variable>
+    <Variable Type="bool" Name="Tab.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
     <Variable Type="int" Name="Tab.Green" SetsValue="true">
       <Value xsi:type="xsd:int">159</Value>
     </Variable>
@@ -794,6 +860,12 @@
     </Variable>
     <Variable Type="int" Name="Tab.Red" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="Tab.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="Tab.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
     </Variable>
     <Variable Type="int" Name="Tab.TextureHeight" SetsValue="true">
       <Value xsi:type="xsd:int">24</Value>
@@ -831,6 +903,9 @@
     <Variable Type="int" Name="TabBordered.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">177</Value>
     </Variable>
+    <Variable Type="bool" Name="TabBordered.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
     <Variable Type="int" Name="TabBordered.Green" SetsValue="true">
       <Value xsi:type="xsd:int">159</Value>
     </Variable>
@@ -845,6 +920,12 @@
     </Variable>
     <Variable Type="int" Name="TabBordered.Red" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TabBordered.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="TabBordered.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
     </Variable>
     <Variable Type="int" Name="TabBordered.TextureHeight" SetsValue="true">
       <Value xsi:type="xsd:int">24</Value>
@@ -897,6 +978,12 @@
     <Variable Type="int" Name="TextAccent.Green" SetsValue="true">
       <Value xsi:type="xsd:int">48</Value>
     </Variable>
+    <Variable Type="float" Name="TextAccent.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextAccent.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="bool" Name="TextAccent.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
@@ -917,6 +1004,9 @@
     </Variable>
     <Variable Type="bool" Name="TextAccent.UseCustomFont" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextAccent.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="TextAccent.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
@@ -939,6 +1029,12 @@
     <Variable Type="int" Name="TextBlack.Green" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
+    <Variable Type="float" Name="TextBlack.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextBlack.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="bool" Name="TextBlack.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
@@ -959,6 +1055,9 @@
     </Variable>
     <Variable Type="bool" Name="TextBlack.UseCustomFont" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextBlack.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="TextBlack.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
@@ -987,6 +1086,12 @@
     <Variable Type="int" Name="TextDarkGray.Green" SetsValue="true">
       <Value xsi:type="xsd:int">70</Value>
     </Variable>
+    <Variable Type="float" Name="TextDarkGray.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextDarkGray.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="bool" Name="TextDarkGray.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
@@ -1007,6 +1112,9 @@
     </Variable>
     <Variable Type="bool" Name="TextDarkGray.UseCustomFont" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextDarkGray.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="TextDarkGray.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
@@ -1029,6 +1137,12 @@
     <Variable Type="int" Name="TextEmphasis.Green" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
+    <Variable Type="float" Name="TextEmphasis.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextEmphasis.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="bool" Name="TextEmphasis.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
@@ -1050,6 +1164,12 @@
     <Variable Type="bool" Name="TextEmphasis.UseCustomFont" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
+    <Variable Type="float" Name="TextEmphasis.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextEmphasis.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="int" Name="TextGray.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">130</Value>
     </Variable>
@@ -1067,6 +1187,12 @@
     </Variable>
     <Variable Type="int" Name="TextGray.Green" SetsValue="true">
       <Value xsi:type="xsd:int">130</Value>
+    </Variable>
+    <Variable Type="float" Name="TextGray.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextGray.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="bool" Name="TextGray.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
@@ -1089,6 +1215,9 @@
     <Variable Type="bool" Name="TextGray.UseCustomFont" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
+    <Variable Type="float" Name="TextGray.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
     <Variable Type="DimensionUnitType" Name="TextGray.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
@@ -1109,6 +1238,12 @@
     </Variable>
     <Variable Type="int" Name="TextH1.Green" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="float" Name="TextH1.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextH1.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="bool" Name="TextH1.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
@@ -1131,6 +1266,12 @@
     <Variable Type="bool" Name="TextH1.UseCustomFont" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
+    <Variable Type="float" Name="TextH1.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextH1.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="int" Name="TextH2.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
@@ -1148,6 +1289,12 @@
     </Variable>
     <Variable Type="int" Name="TextH2.Green" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="float" Name="TextH2.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextH2.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="bool" Name="TextH2.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
@@ -1170,6 +1317,12 @@
     <Variable Type="bool" Name="TextH2.UseCustomFont" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
+    <Variable Type="float" Name="TextH2.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextH2.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="int" Name="TextH3.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
@@ -1187,6 +1340,12 @@
     </Variable>
     <Variable Type="int" Name="TextH3.Green" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="float" Name="TextH3.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextH3.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="bool" Name="TextH3.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
@@ -1209,6 +1368,12 @@
     <Variable Type="bool" Name="TextH3.UseCustomFont" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
+    <Variable Type="float" Name="TextH3.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextH3.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="int" Name="TextLightGray.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">170</Value>
     </Variable>
@@ -1226,6 +1391,12 @@
     </Variable>
     <Variable Type="int" Name="TextLightGray.Green" SetsValue="true">
       <Value xsi:type="xsd:int">170</Value>
+    </Variable>
+    <Variable Type="float" Name="TextLightGray.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextLightGray.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="bool" Name="TextLightGray.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
@@ -1248,6 +1419,9 @@
     <Variable Type="bool" Name="TextLightGray.UseCustomFont" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
+    <Variable Type="float" Name="TextLightGray.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
     <Variable Type="DimensionUnitType" Name="TextLightGray.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
@@ -1268,6 +1442,12 @@
     </Variable>
     <Variable Type="int" Name="TextNormal.Green" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="float" Name="TextNormal.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextNormal.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="bool" Name="TextNormal.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
@@ -1290,6 +1470,12 @@
     <Variable Type="bool" Name="TextNormal.UseCustomFont" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
+    <Variable Type="float" Name="TextNormal.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextNormal.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="int" Name="TextPrimary.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">177</Value>
     </Variable>
@@ -1307,6 +1493,12 @@
     </Variable>
     <Variable Type="int" Name="TextPrimary.Green" SetsValue="true">
       <Value xsi:type="xsd:int">159</Value>
+    </Variable>
+    <Variable Type="float" Name="TextPrimary.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextPrimary.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="bool" Name="TextPrimary.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
@@ -1329,6 +1521,9 @@
     <Variable Type="bool" Name="TextPrimary.UseCustomFont" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
+    <Variable Type="float" Name="TextPrimary.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
     <Variable Type="DimensionUnitType" Name="TextPrimary.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
@@ -1349,6 +1544,12 @@
     </Variable>
     <Variable Type="int" Name="TextPrimaryDark.Green" SetsValue="true">
       <Value xsi:type="xsd:int">120</Value>
+    </Variable>
+    <Variable Type="float" Name="TextPrimaryDark.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextPrimaryDark.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="bool" Name="TextPrimaryDark.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
@@ -1371,6 +1572,9 @@
     <Variable Type="bool" Name="TextPrimaryDark.UseCustomFont" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
+    <Variable Type="float" Name="TextPrimaryDark.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
     <Variable Type="DimensionUnitType" Name="TextPrimaryDark.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
@@ -1391,6 +1595,12 @@
     </Variable>
     <Variable Type="int" Name="TextPrimaryLight.Green" SetsValue="true">
       <Value xsi:type="xsd:int">180</Value>
+    </Variable>
+    <Variable Type="float" Name="TextPrimaryLight.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextPrimaryLight.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="bool" Name="TextPrimaryLight.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
@@ -1413,6 +1623,9 @@
     <Variable Type="bool" Name="TextPrimaryLight.UseCustomFont" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
+    <Variable Type="float" Name="TextPrimaryLight.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
     <Variable Type="DimensionUnitType" Name="TextPrimaryLight.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
@@ -1433,6 +1646,12 @@
     </Variable>
     <Variable Type="int" Name="TextSmall.Green" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="float" Name="TextSmall.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextSmall.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="bool" Name="TextSmall.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
@@ -1455,6 +1674,12 @@
     <Variable Type="bool" Name="TextSmall.UseCustomFont" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
+    <Variable Type="float" Name="TextSmall.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextSmall.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="int" Name="TextStrong.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
@@ -1472,6 +1697,12 @@
     </Variable>
     <Variable Type="int" Name="TextStrong.Green" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="float" Name="TextStrong.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextStrong.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="bool" Name="TextStrong.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
@@ -1493,6 +1724,12 @@
     </Variable>
     <Variable Type="bool" Name="TextStrong.UseCustomFont" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextStrong.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextStrong.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="ChildrenLayout" Name="TextStyleContainer.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
@@ -1531,6 +1768,12 @@
     <Variable Type="int" Name="TextSuccess.Green" SetsValue="true">
       <Value xsi:type="xsd:int">167</Value>
     </Variable>
+    <Variable Type="float" Name="TextSuccess.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextSuccess.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="bool" Name="TextSuccess.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
@@ -1551,6 +1794,9 @@
     </Variable>
     <Variable Type="bool" Name="TextSuccess.UseCustomFont" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextSuccess.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="TextSuccess.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
@@ -1573,6 +1819,12 @@
     <Variable Type="int" Name="TextTiny.Green" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
+    <Variable Type="float" Name="TextTiny.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextTiny.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="bool" Name="TextTiny.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
@@ -1594,6 +1846,12 @@
     <Variable Type="bool" Name="TextTiny.UseCustomFont" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
+    <Variable Type="float" Name="TextTiny.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextTiny.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="int" Name="TextTitle.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
@@ -1611,6 +1869,12 @@
     </Variable>
     <Variable Type="int" Name="TextTitle.Green" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="float" Name="TextTitle.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextTitle.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="bool" Name="TextTitle.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
@@ -1633,6 +1897,12 @@
     <Variable Type="bool" Name="TextTitle.UseCustomFont" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
+    <Variable Type="float" Name="TextTitle.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextTitle.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="int" Name="TextWarning.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">25</Value>
     </Variable>
@@ -1650,6 +1920,12 @@
     </Variable>
     <Variable Type="int" Name="TextWarning.Green" SetsValue="true">
       <Value xsi:type="xsd:int">171</Value>
+    </Variable>
+    <Variable Type="float" Name="TextWarning.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextWarning.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="bool" Name="TextWarning.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
@@ -1672,6 +1948,9 @@
     <Variable Type="bool" Name="TextWarning.UseCustomFont" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
+    <Variable Type="float" Name="TextWarning.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
     <Variable Type="DimensionUnitType" Name="TextWarning.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
@@ -1692,6 +1971,12 @@
     </Variable>
     <Variable Type="int" Name="TextWarning1.Green" SetsValue="true">
       <Value xsi:type="xsd:int">18</Value>
+    </Variable>
+    <Variable Type="float" Name="TextWarning1.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextWarning1.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="bool" Name="TextWarning1.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
@@ -1714,6 +1999,9 @@
     <Variable Type="bool" Name="TextWarning1.UseCustomFont" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
+    <Variable Type="float" Name="TextWarning1.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
     <Variable Type="DimensionUnitType" Name="TextWarning1.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
@@ -1735,6 +2023,12 @@
     <Variable Type="int" Name="TextWhite.Green" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
+    <Variable Type="float" Name="TextWhite.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextWhite.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="bool" Name="TextWhite.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
@@ -1755,6 +2049,9 @@
     </Variable>
     <Variable Type="bool" Name="TextWhite.UseCustomFont" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextWhite.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="TextWhite.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>

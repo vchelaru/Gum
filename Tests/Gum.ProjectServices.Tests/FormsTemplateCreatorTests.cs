@@ -335,6 +335,52 @@ public class FormsTemplateCreatorTests : IDisposable
         result.ProjectOnlyStandards.ShouldBeEmpty();
     }
 
+    [Fact]
+    public void Create_NoInstanceShouldRelyOnInheritingFormerlyBakedStandardProperties()
+    {
+        // Issue #4092 follow-up: the first fix pass materialized these properties onto every
+        // Component instance but missed Screens (DemoScreenGum's "Background" and StylesScreen's
+        // swatch/text instances), so they silently picked up the reset Standards' blank defaults
+        // (no texture, no fill-parent sizing) instead of their themed look. This checks both
+        // Components AND Screens so that gap can't reopen.
+        string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
+        _sut.Create(filePath);
+
+        ProjectLoadResult result = new ProjectLoader().Load(filePath);
+        GumProjectSave project = result.Project!;
+
+        Dictionary<string, string[]> tracked = new()
+        {
+            ["NineSlice"] = ["ExposeChildrenEvents", "Height", "HeightUnits", "SourceFile", "TextureAddress",
+                "TextureHeight", "TextureTop", "TextureWidth", "Width", "WidthUnits", "XOrigin", "XUnits", "YOrigin", "YUnits"],
+            ["Text"] = ["FontSize", "Height", "HeightUnits", "Width", "WidthUnits"],
+        };
+
+        List<string> missing = [];
+
+        foreach ((string baseType, string[] props) in tracked)
+        {
+            var componentInstances = project.Components
+                .SelectMany(c => c.Instances.Where(i => i.BaseType == baseType).Select(i => (Owner: (ElementSave)c, Instance: i)));
+            var screenInstances = project.Screens
+                .SelectMany(s => s.Instances.Where(i => i.BaseType == baseType).Select(i => (Owner: (ElementSave)s, Instance: i)));
+
+            foreach (var (owner, instance) in componentInstances.Concat(screenInstances))
+            {
+                foreach (string prop in props)
+                {
+                    bool isSet = owner.DefaultState.Variables.Any(v => v.Name == $"{instance.Name}.{prop}" && v.Value != null);
+                    if (!isSet)
+                    {
+                        missing.Add($"{owner.Name}.{instance.Name}.{prop}");
+                    }
+                }
+            }
+        }
+
+        missing.ShouldBeEmpty();
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_tempDirectory))
