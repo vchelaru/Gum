@@ -660,6 +660,23 @@ public class TextBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleKeyDown_Paste_ShouldNotThrow_WhenTextIsNull()
+    {
+        // #4099: Text is string? and can legitimately be assigned null (e.g. to clear a box).
+        // Pasting into it NREd because HandlePaste called this.Text.Insert without a null guard.
+        Gum.Clipboard.ClipboardImplementation.PushStringToClipboard("pasted");
+
+        TextBox textBox = new();
+        textBox.IsFocused = true;
+        textBox.Text = null;
+        textBox.Text.ShouldBeNull();
+
+        Should.NotThrow(() => textBox.HandleKeyDown(Gum.Forms.Input.Keys.V, false, false, isCtrlDown: true));
+
+        textBox.Text.ShouldBe("pasted");
+    }
+
+    [Fact]
     public void HandleKeyDown_Paste_ShouldReplaceSlashRSlashN_WithSlashN()
     {
         Gum.Clipboard.ClipboardImplementation.PushStringToClipboard("Line1\r\nLine2");
