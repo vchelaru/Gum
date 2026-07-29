@@ -137,7 +137,11 @@ public class GuiCommands : IGuiCommands
     /// <inheritdoc/>
     public void ActivateMainWindow()
     {
-        if (Application.Current?.MainWindow is not { } mainWindow)
+        // IsLoaded: font generation can run before the main window has completed its Show()
+        // sequence (e.g. during initial project load at startup) - Activate() throws
+        // InvalidOperationException ("Cannot call DragMove or Activate before a Window is shown")
+        // if called that early.
+        if (Application.Current?.MainWindow is not { IsLoaded: true } mainWindow)
         {
             return;
         }
