@@ -138,55 +138,101 @@ public class TextRuntimeTests : BaseTestClass
         sut.WrappedText.ShouldNotBeEmpty();
     }
 
-    [Fact]
-    public void Text_ViaDirectPropertySetVersusSetProperty_WithMaxWidth_ShouldWrapIdentically()
+    [Theory]
+    [InlineData("Text")]
+    [InlineData("TextNoTranslate")]
+    public void Text_ViaDirectPropertySetVersusSetProperty_WithMaxWidth_ShouldWrapIdentically(string propertyName)
     {
         const string longText = "This is a long piece of text that should wrap at the max width";
 
-        TextRuntime viaProperty = new();
-        viaProperty.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        viaProperty.MaxWidth = 40;
-        viaProperty.Text = longText;
-
-        TextRuntime viaSetProperty = new();
-        viaSetProperty.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        viaSetProperty.MaxWidth = 40;
-        viaSetProperty.SetProperty("Text", longText);
-
-        viaProperty.WrappedText.Count.ShouldBeGreaterThan(1);
-        viaSetProperty.WrappedText.ShouldBe(viaProperty.WrappedText);
+        AssertWrapsIdentically(propertyName, longText, expectMultipleLines: true, sut =>
+        {
+            sut.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            sut.MaxWidth = 40;
+        });
     }
 
-    [Fact]
-    public void Text_ViaSetProperty_WithFixedWidthAndHeightRelativeToChildren_ShouldWrapSameAsDirectPropertySet()
+    [Theory]
+    [InlineData("Text")]
+    [InlineData("TextNoTranslate")]
+    public void Text_ViaDirectPropertySetVersusSetProperty_WithFixedWidthAndHeightRelativeToChildren_ShouldWrapIdentically(string propertyName)
     {
         const string longText = "This is a long piece of text that should wrap at the fixed width";
 
-        TextRuntime viaProperty = new();
-        viaProperty.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        viaProperty.Width = 100;
-        viaProperty.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        viaProperty.Text = longText;
-
-        TextRuntime viaSetProperty = new();
-        viaSetProperty.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        viaSetProperty.Width = 100;
-        viaSetProperty.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        viaSetProperty.SetProperty("Text", longText);
-
-        viaProperty.WrappedText.Count.ShouldBeGreaterThan(1);
-        viaSetProperty.WrappedText.ShouldBe(viaProperty.WrappedText);
+        AssertWrapsIdentically(propertyName, longText, expectMultipleLines: true, sut =>
+        {
+            sut.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+            sut.Width = 100;
+            sut.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        });
     }
 
-    [Fact]
-    public void Text_ViaDirectPropertySetVersusSetProperty_InStack_ShouldPositionSiblingIdentically()
+    [Theory]
+    [InlineData("Text")]
+    [InlineData("TextNoTranslate")]
+    public void Text_ViaDirectPropertySetVersusSetProperty_WithBbCodeAndMaxWidth_ShouldWrapIdentically(string propertyName)
     {
-        float ySettingViaProperty = BuildStackAndGetSecondChildY(
-            (first, value) => first.Text = value);
-        float ySettingViaSetProperty = BuildStackAndGetSecondChildY(
-            (first, value) => first.SetProperty("Text", value));
+        const string longBbCodeText = "plain [IsBold=true]bold text that should wrap at the given max width value[/IsBold] plain";
 
-        ySettingViaSetProperty.ShouldBe(ySettingViaProperty);
+        AssertWrapsIdentically(propertyName, longBbCodeText, expectMultipleLines: true, sut =>
+        {
+            sut.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            sut.MaxWidth = 40;
+        });
+    }
+
+    [Theory]
+    [InlineData("Text")]
+    [InlineData("TextNoTranslate")]
+    public void Text_ViaDirectPropertySetVersusSetProperty_WithNullValue_ShouldBehaveIdentically(string propertyName)
+    {
+        AssertWrapsIdentically(propertyName, null, expectMultipleLines: false, sut =>
+        {
+            sut.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            sut.MaxWidth = 40;
+        });
+    }
+
+    [Theory]
+    [InlineData("Text")]
+    [InlineData("TextNoTranslate")]
+    public void Text_ViaDirectPropertySetVersusSetProperty_InStack_ShouldPositionSiblingIdentically(string propertyName)
+    {
+        float ySettingViaDirect = BuildStackAndGetSecondChildY(
+            (first, value) => SetDirect(first, propertyName, value));
+        float ySettingViaSetProperty = BuildStackAndGetSecondChildY(
+            (first, value) => first.SetProperty(propertyName, value));
+
+        ySettingViaSetProperty.ShouldBe(ySettingViaDirect);
+    }
+
+    private static void AssertWrapsIdentically(string propertyName, string? text, bool expectMultipleLines, Action<TextRuntime> configure)
+    {
+        TextRuntime viaDirect = new();
+        configure(viaDirect);
+        SetDirect(viaDirect, propertyName, text);
+
+        TextRuntime viaSetProperty = new();
+        configure(viaSetProperty);
+        viaSetProperty.SetProperty(propertyName, text);
+
+        if (expectMultipleLines)
+        {
+            viaDirect.WrappedText.Count.ShouldBeGreaterThan(1);
+        }
+        viaSetProperty.WrappedText.ShouldBe(viaDirect.WrappedText);
+    }
+
+    private static void SetDirect(TextRuntime textRuntime, string propertyName, string? value)
+    {
+        if (propertyName == "TextNoTranslate")
+        {
+            textRuntime.SetTextNoTranslate(value);
+        }
+        else
+        {
+            textRuntime.Text = value;
+        }
     }
 
     private static float BuildStackAndGetSecondChildY(Action<TextRuntime, string> setText)
