@@ -138,6 +138,78 @@ public class TextRuntimeTests : BaseTestClass
         sut.WrappedText.ShouldNotBeEmpty();
     }
 
+    [Fact]
+    public void Text_ViaDirectPropertySetVersusSetProperty_WithMaxWidth_ShouldWrapIdentically()
+    {
+        const string longText = "This is a long piece of text that should wrap at the max width";
+
+        TextRuntime viaProperty = new();
+        viaProperty.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        viaProperty.MaxWidth = 40;
+        viaProperty.Text = longText;
+
+        TextRuntime viaSetProperty = new();
+        viaSetProperty.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        viaSetProperty.MaxWidth = 40;
+        viaSetProperty.SetProperty("Text", longText);
+
+        viaProperty.WrappedText.Count.ShouldBeGreaterThan(1);
+        viaSetProperty.WrappedText.ShouldBe(viaProperty.WrappedText);
+    }
+
+    [Fact]
+    public void Text_ViaSetProperty_WithFixedWidthAndHeightRelativeToChildren_ShouldWrapSameAsDirectPropertySet()
+    {
+        const string longText = "This is a long piece of text that should wrap at the fixed width";
+
+        TextRuntime viaProperty = new();
+        viaProperty.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        viaProperty.Width = 100;
+        viaProperty.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        viaProperty.Text = longText;
+
+        TextRuntime viaSetProperty = new();
+        viaSetProperty.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        viaSetProperty.Width = 100;
+        viaSetProperty.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        viaSetProperty.SetProperty("Text", longText);
+
+        viaProperty.WrappedText.Count.ShouldBeGreaterThan(1);
+        viaSetProperty.WrappedText.ShouldBe(viaProperty.WrappedText);
+    }
+
+    [Fact]
+    public void Text_ViaDirectPropertySetVersusSetProperty_InStack_ShouldPositionSiblingIdentically()
+    {
+        float ySettingViaProperty = BuildStackAndGetSecondChildY(
+            (first, value) => first.Text = value);
+        float ySettingViaSetProperty = BuildStackAndGetSecondChildY(
+            (first, value) => first.SetProperty("Text", value));
+
+        ySettingViaSetProperty.ShouldBe(ySettingViaProperty);
+    }
+
+    private static float BuildStackAndGetSecondChildY(Action<TextRuntime, string> setText)
+    {
+        ContainerRuntime stack = new();
+        stack.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        stack.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        stack.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+
+        TextRuntime first = new();
+        first.Text = "Line1";
+        TextRuntime second = new();
+        second.Text = "Line2";
+        stack.Children.Add(first);
+        stack.Children.Add(second);
+
+        stack.UpdateLayout();
+
+        setText(first, "Line1\nLine1b\nLine1c");
+
+        return second.Y;
+    }
+
     #endregion
 
     #region WidthUnits
