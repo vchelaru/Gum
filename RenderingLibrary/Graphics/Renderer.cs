@@ -1236,16 +1236,47 @@ public class Renderer : IRenderer
     // has already premultiplied the color, so premultiplying again during the bake would double-
     // darken it (a 50%-alpha child would bake to 25% color). In that case the ambient AlphaBlend
     // already accumulates correctly over the transparent clear, so leave the blend unchanged.
+    //
+    // MinAlpha (e.g. GameUiSamples' ManaOrb wave mask) is a second, narrower case under the same
+    // straight-alpha pipeline: it deliberately leaves color untouched and only clips alpha
+    // (ColorSourceBlend=Zero, ColorDestinationBlend=One), so after it reduces a pixel's alpha, that
+    // pixel's leftover color is still premultiplied against its OLD (higher) alpha rather than its
+    // new one — violating the premultiplied-by-construction invariant the composite-back blit in
+    // DrawRenderTargetToScreen relies on, which bled the leftover color through as if the pixel
+    // were still opaque instead of masked out (#4091). Swap to MinAlphaPremultiplied, whose
+    // Min-for-color-too formula drops the leftover color to whatever the mask's own
+    // (premultiplied-authored) texture color contributes instead.
     internal static BlendState AdjustBlendStateForRenderTargetBake(BlendState renderBlendState, bool isBakingRenderTarget)
     {
-        if (isBakingRenderTarget
-            && renderBlendState == Renderer.NormalBlendState
-            && Renderer.NormalBlendState != BlendState.AlphaBlend)
+        if (!isBakingRenderTarget || Renderer.NormalBlendState == BlendState.AlphaBlend)
+        {
+            return renderBlendState;
+        }
+
+        if (renderBlendState == Renderer.NormalBlendState)
         {
             return _bakeToRenderTargetBlendState;
         }
+
+        if (IsFieldEquivalentToMinAlpha(renderBlendState))
+        {
+            return BlendState.MinAlphaPremultiplied;
+        }
+
         return renderBlendState;
     }
+
+    // A Sprite's Blend setter round-trips MinAlpha through XNA's BlendState and back (Gum -> XNA ->
+    // Gum), and only the four core presets (Opaque/AlphaBlend/Additive/NonPremultiplied) survive
+    // that round-trip as the same static reference — MinAlpha arrives here as a field-identical but
+    // distinct instance. So detect it structurally instead of by reference.
+    private static bool IsFieldEquivalentToMinAlpha(BlendState blendState) =>
+        blendState.ColorSourceBlend == BlendState.MinAlpha.ColorSourceBlend
+        && blendState.ColorBlendFunction == BlendState.MinAlpha.ColorBlendFunction
+        && blendState.ColorDestinationBlend == BlendState.MinAlpha.ColorDestinationBlend
+        && blendState.AlphaSourceBlend == BlendState.MinAlpha.AlphaSourceBlend
+        && blendState.AlphaBlendFunction == BlendState.MinAlpha.AlphaBlendFunction
+        && blendState.AlphaDestinationBlend == BlendState.MinAlpha.AlphaDestinationBlend;
 
     private void AdjustNonClipRenderStates(RenderStateVariables renderState, Layer layer, IRenderableIpso renderable, SystemManagers managers)
     {
