@@ -528,6 +528,43 @@ public class SyntaxVersionDetectionServiceTests : IDisposable
     }
 
     [Fact]
+    public void Detect_NuGetPackage_RealAssembly_ReadsSyntaxVersionFromAttribute()
+    {
+        // Uses the real GumCommon.dll already copied next to this test assembly (a transitive
+        // build dependency) so ReadVersionFromAssembly's MetadataLoadContext usage is exercised
+        // against a genuine multi-reference assembly instead of an empty placeholder file.
+        string nuGetCacheRoot = Path.Combine(_tempDirectory, "nuget-cache");
+        string tfmDir = Path.Combine(nuGetCacheRoot, "gum.monogame", "2026.1.1", "lib", "net8.0");
+        Directory.CreateDirectory(tfmDir);
+        File.Copy(
+            Path.Combine(AppContext.BaseDirectory, "GumCommon.dll"),
+            Path.Combine(tfmDir, "GumCommon.dll"));
+
+        SyntaxVersionDetectionService sut = new SyntaxVersionDetectionService(_logger, nuGetCacheRoot);
+
+        string gameDir = Path.Combine(_tempDirectory, "game");
+        Directory.CreateDirectory(gameDir);
+        string csprojPath = Path.Combine(gameDir, "MyGame.csproj");
+        File.WriteAllText(csprojPath,
+@"<Project Sdk=""Microsoft.NET.Sdk"">
+  <ItemGroup>
+    <PackageReference Include=""Gum.MonoGame"" Version=""2026.1.1"" />
+  </ItemGroup>
+</Project>");
+
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            SyntaxVersion = "*",
+            CodeProjectRoot = "./"
+        };
+
+        SyntaxVersionResult result = sut.Detect(settings, gameDir);
+
+        result.Source.ShouldBe(SyntaxVersionSource.NuGetPackage);
+        result.Version.ShouldBe(3);
+    }
+
+    [Fact]
     public void FindDllInNuGetCache_PackageNotInCache_ReturnsNull()
     {
         string nuGetCacheRoot = Path.Combine(_tempDirectory, "nuget-cache");

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -327,8 +328,15 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
     {
         try
         {
-            // Use MetadataLoadContext to avoid loading into the app domain
-            var resolver = new PathAssemblyResolver(new[] { dllPath, typeof(object).Assembly.Location });
+            // Use MetadataLoadContext to avoid loading into the app domain. PathAssemblyResolver
+            // needs the whole runtime assembly set (not just the target dll + typeof(object)'s
+            // assembly) to identify the core assembly -- with only two paths it throws
+            // "Could not find core assembly" for any real multi-reference assembly.
+            string runtimeDirectory = Path.GetDirectoryName(typeof(object).Assembly.Location)!;
+            IEnumerable<string> resolverPaths = Directory
+                .EnumerateFiles(runtimeDirectory, "*.dll")
+                .Append(dllPath);
+            var resolver = new PathAssemblyResolver(resolverPaths);
             using var context = new MetadataLoadContext(resolver);
             Assembly assembly = context.LoadFromAssemblyPath(dllPath);
 
