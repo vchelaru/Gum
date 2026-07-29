@@ -77,6 +77,8 @@ internal class TextScreen : FrameworkElement
 
         var textRuntime = new TextRuntime();
         textRuntime.Text = "Hi, I'm default text";
+        textRuntime.WidthUnits = DimensionUnitType.PercentageOfParent;
+        textRuntime.Width = 33;
         container.Children.Add(textRuntime);
 
         // Placed right after the default text -- this screen has no ScrollViewer, and the rest of the
@@ -111,6 +113,8 @@ internal class TextScreen : FrameworkElement
         var stateBbcode = new TextRuntime();
         stateBbcode.Font = "Arial";
         stateBbcode.FontSize = 24;
+        stateBbcode.WidthUnits = DimensionUnitType.PercentageOfParent;
+        stateBbcode.Width = 33;
         var highlightedState = new StateSave { Name = "Highlighted" };
         highlightedState.Variables.Add(new VariableSave { Name = "Color", Value = System.Drawing.Color.Gold });
         highlightedState.Variables.Add(new VariableSave { Name = "IsBold", Value = true });
@@ -131,6 +135,8 @@ internal class TextScreen : FrameworkElement
         var customMarkup = new TextRuntime();
         customMarkup.Font = "Arial";
         customMarkup.FontSize = 24;
+        customMarkup.WidthUnits = DimensionUnitType.PercentageOfParent;
+        customMarkup.Width = 33;
         customMarkup.Text = "[Custom=Wave]Wavy rainbow text[/Custom]";
         container.Children.Add(customMarkup);
 
@@ -138,6 +144,8 @@ internal class TextScreen : FrameworkElement
         shadowDefault.Text = "Soft shadow";
         shadowDefault.FontSize = 24;
         shadowDefault.HasDropshadow = true;
+        shadowDefault.WidthUnits = DimensionUnitType.PercentageOfParent;
+        shadowDefault.Width = 33;
         container.Children.Add(shadowDefault);
 
         var shadowColored = new TextRuntime();
@@ -148,6 +156,8 @@ internal class TextScreen : FrameworkElement
         shadowColored.DropshadowOffsetX = 2;
         shadowColored.DropshadowOffsetY = 4;
         shadowColored.DropshadowBlur = 4;
+        shadowColored.WidthUnits = DimensionUnitType.PercentageOfParent;
+        shadowColored.Width = 33;
         container.Children.Add(shadowColored);
 
         var shadowOutline = new TextRuntime();
@@ -155,12 +165,28 @@ internal class TextScreen : FrameworkElement
         shadowOutline.FontSize = 24;
         shadowOutline.OutlineThickness = 2;
         shadowOutline.HasDropshadow = true;
+        shadowOutline.WidthUnits = DimensionUnitType.PercentageOfParent;
+        shadowOutline.Width = 33;
         container.Children.Add(shadowOutline);
+
+        // [HasDropshadow] BBCode tag (#3528): toggles the shadow for just the wrapped run,
+        // independently of the base HasDropshadow=true above. On MonoGame/raylib the middle run
+        // should visibly lose its shadow; on Skia the tag is a recognized no-op (parsed and
+        // stripped, but every run keeps the base shadow -- Skia has no per-run implementation yet).
+        var shadowBbCodeToggle = new TextRuntime();
+        shadowBbCodeToggle.Text = "Shadow on, [HasDropshadow=false]shadow off[/HasDropshadow], shadow on again";
+        shadowBbCodeToggle.FontSize = 24;
+        shadowBbCodeToggle.HasDropshadow = true;
+        shadowBbCodeToggle.WidthUnits = DimensionUnitType.PercentageOfParent;
+        shadowBbCodeToggle.Width = 33;
+        container.Children.Add(shadowBbCodeToggle);
 
         var withOutline = new TextRuntime();
         withOutline.Text = "I am text with OutlineThickness = 2";
         withOutline.FontSize = 24;
         withOutline.OutlineThickness = 2;
+        withOutline.WidthUnits = DimensionUnitType.PercentageOfParent;
+        withOutline.Width = 33;
         container.Children.Add(withOutline);
 
         // #3670/#3703: CustomFontFile pointing at a bundled .ttf -- previously silently fell back
@@ -250,6 +276,8 @@ internal class TextScreen : FrameworkElement
         snapText.X = 120.5f;
         snapText.Text = "Fractional X=120.5 - SnapToPixel";
         snapText.TextRenderingPositionMode = TextRenderingPositionMode.SnapToPixel;
+        snapText.WidthUnits = DimensionUnitType.PercentageOfParent;
+        snapText.Width = 33;
         container.Children.Add(snapText);
 
         var toggleButton = new Button();
@@ -274,11 +302,15 @@ internal class TextScreen : FrameworkElement
         hitText.FontSize = 24;
         hitText.Text = "Click me to report the character index";
         hitText.HasEvents = true;
+        hitText.WidthUnits = DimensionUnitType.PercentageOfParent;
+        hitText.Width = 33;
         container.Children.Add(hitText);
 
         var hitResult = new TextRuntime();
         hitResult.FontSize = 16;
         hitResult.Text = "(no click yet)";
+        hitResult.WidthUnits = DimensionUnitType.PercentageOfParent;
+        hitResult.Width = 33;
         container.Children.Add(hitResult);
 
         hitText.Click += (_, _) =>
