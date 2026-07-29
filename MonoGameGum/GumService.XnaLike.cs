@@ -202,6 +202,15 @@ public partial class GumService
         return FinishInitialize(gumProjectFile);
     }
 
+    // Framework/BCL assemblies never define a Gum "RegisterRuntimeType(s)" hook. Skipping them by
+    // name avoids wasted scanning and, under Native AOT, avoids GetTypes()/GetMethod() throwing
+    // while walking their trimmed metadata (issue #4105).
+    private static readonly string[] FrameworkAssemblyNamePrefixes =
+    {
+        "System", "Microsoft", "mscorlib", "netstandard", "WindowsBase",
+        "PresentationCore", "PresentationFramework", "Accessibility",
+    };
+
     // Originally added so codegen-emitted user types could self-register. Module initializers
     // replaced that path for newer Gum (https://github.com/vchelaru/Gum/issues/275), but we
     // still need a reflection-based hook for two reasons:
@@ -211,7 +220,7 @@ public partial class GumService
     //      "RegisterRuntimeTypes" (plural) we can call directly to force registration before
     //      .gumx load. RegisterRuntimeTypes is idempotent (guarded), so calling it on top of an
     //      already-fired ModuleInitializer is a no-op.
-    private void RegisterRuntimeTypesThroughReflection()
+    internal void RegisterRuntimeTypesThroughReflection()
     {
         // (1) Legacy entry-assembly hook (singular method name).
         Assembly? executingAssembly = Assembly.GetEntryAssembly();
@@ -220,8 +229,7 @@ public partial class GumService
         {
             foreach (Type type in types)
             {
-                var method = type.GetMethod("RegisterRuntimeType", BindingFlags.Static | BindingFlags.Public);
-                method?.Invoke(null, null);
+                InvokeRuntimeTypeHookIfPresent(type, "RegisterRuntimeType");
             }
         }
 
@@ -229,7 +237,11 @@ public partial class GumService
         // what unblocks Apos shapes on Blazor/WASM.
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
         {
-            if (assembly.IsDynamic) continue;
+            if (assembly.IsDynamic || IsFrameworkAssembly(assembly.GetName()))
+            {
+                continue;
+            }
+
             Type[] assemblyTypes;
             try { assemblyTypes = assembly.GetTypes(); }
             catch (ReflectionTypeLoadException ex) { assemblyTypes = ex.Types.Where(t => t != null).ToArray()!; }
@@ -237,14 +249,50 @@ public partial class GumService
 
             foreach (var type in assemblyTypes)
             {
-                if (type == null) continue;
-                var method = type.GetMethod("RegisterRuntimeTypes", BindingFlags.Static | BindingFlags.Public);
-                if (method != null && method.GetParameters().Length == 0)
+                if (type == null)
                 {
-                    try { method.Invoke(null, null); }
-                    catch { /* a misbehaving extension shouldn't break Gum init */ }
+                    continue;
                 }
+                InvokeRuntimeTypeHookIfPresent(type, "RegisterRuntimeTypes");
             }
+        }
+    }
+
+    internal bool IsFrameworkAssembly(AssemblyName assemblyName)
+    {
+        string? name = assemblyName.Name;
+        if (string.IsNullOrEmpty(name))
+        {
+            return false;
+        }
+
+        foreach (string prefix in FrameworkAssemblyNamePrefixes)
+        {
+            if (name.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // GetMethod itself can throw - not just Invoke - for an ambiguous overload set
+    // (AmbiguousMatchException) or, under Native AOT, while walking a type's trimmed metadata
+    // (TypeLoadException, issue #4105). A misbehaving or ambiguous hook shouldn't break Gum init,
+    // so the whole lookup+call is guarded together rather than just the Invoke.
+    private void InvokeRuntimeTypeHookIfPresent(Type type, string methodName)
+    {
+        try
+        {
+            MethodInfo? method = type.GetMethod(methodName, BindingFlags.Static | BindingFlags.Public);
+            if (method != null && method.GetParameters().Length == 0)
+            {
+                method.Invoke(null, null);
+            }
+        }
+        catch
+        {
+            // a misbehaving or ambiguous extension shouldn't break Gum init
         }
     }
 
