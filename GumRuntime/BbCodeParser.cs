@@ -80,6 +80,7 @@ public static class BbCodeParser
         "lineheightmultiplier",
         "custom",
         "state",
+        "hasdropshadow",
     };
 
     private struct Tag

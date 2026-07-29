@@ -1399,7 +1399,7 @@ public partial class CustomSetPropertyOnRenderable
         return handled;
     }
 
-    // The seven font-resolution stacks (mirroring the MonoGame path). Inline [FontSize]/[IsBold]/etc. tags
+    // The eight font-resolution stacks (mirroring the MonoGame path). Inline [FontSize]/[IsBold]/etc. tags
     // push their value on open and pop on close, so a run resolves to the font implied by every tag currently
     // open over it - the whole reason nested markup needs a stack rather than a flat lookup.
     static Stack<int> fontSizeStack = new Stack<int>();
@@ -1409,12 +1409,15 @@ public partial class CustomSetPropertyOnRenderable
     static Stack<bool> isItalicStack = new Stack<bool>();
     static Stack<bool> isBoldStack = new Stack<bool>();
     static Stack<bool> useCustomFontStack = new Stack<bool>();
+    // A [HasDropshadow] tag toggles just this on/off flag per run - offset/blur/color stay whole-text
+    // (set via TextRuntime.Dropshadow*), the same split [OutlineThickness] uses against the whole-text
+    // OutlineColor. See #3528.
+    static Stack<bool> hasDropshadowStack = new Stack<bool>();
 
-    // The base text's dropshadow, snapshotted once per SetBbCodeText call (no BBCode tag toggles
-    // dropshadow mid-text, so unlike the seven stacks above this needs no push/pop) and applied to
-    // every per-run font resolved by GetAndCreateFontIfNecessary, matching the base-font path
+    // The base text's dropshadow offset/blur/color, snapshotted once per SetBbCodeText call (no BBCode
+    // tag varies these mid-text - only on/off, via hasDropshadowStack above) and applied to every per-run
+    // font resolved by GetAndCreateFontIfNecessary, matching the base-font path
     // (TextRuntime.CopyFontGenerationFieldsTo / GetFontCacheFileName). See #3625.
-    static bool currentHasDropshadow;
     static float currentDropshadowOffsetX;
     static float currentDropshadowOffsetY;
     static float currentDropshadowBlur;
@@ -1423,10 +1426,11 @@ public partial class CustomSetPropertyOnRenderable
     static byte currentDropshadowBlue;
     static byte currentDropshadowAlpha;
 
-    // Copies the snapshotted base-text dropshadow (see the fields above) onto a per-run BmfcSave.
+    // Copies the current run's HasDropshadow (from the stack) and the snapshotted base-text
+    // offset/blur/color (see the fields above) onto a per-run BmfcSave.
     static void ApplyCurrentDropshadowTo(BmfcSave bmfcSave)
     {
-        bmfcSave.HasDropshadow = currentHasDropshadow;
+        bmfcSave.HasDropshadow = hasDropshadowStack.Peek();
         bmfcSave.DropshadowOffsetX = currentDropshadowOffsetX;
         bmfcSave.DropshadowOffsetY = currentDropshadowOffsetY;
         bmfcSave.DropshadowBlur = currentDropshadowBlur;
@@ -1516,7 +1520,7 @@ public partial class CustomSetPropertyOnRenderable
     private static readonly HashSet<string> StateBbCodeAllowlist = new HashSet<string>
     {
         "Color", "Red", "Green", "Blue", "FontScale",
-        "Font", "FontSize", "OutlineThickness", "IsItalic", "IsBold", "UseCustomFont",
+        "Font", "FontSize", "OutlineThickness", "IsItalic", "IsBold", "UseCustomFont", "HasDropshadow",
     };
 
     /// <summary>
@@ -1609,7 +1613,7 @@ public partial class CustomSetPropertyOnRenderable
     /// Parses BBCode markup, assigns the tag-stripped text to <see cref="Text.RawText"/>, and populates
     /// <see cref="Text.InlineVariables"/> with the per-run styling the renderer applies: Color / Red /
     /// Green / Blue and FontScale runs in the loop below, plus the resolved-font runs for the font family
-    /// tags (Font / FontSize / OutlineThickness / IsBold / IsItalic) produced by
+    /// tags (Font / FontSize / OutlineThickness / IsBold / IsItalic / HasDropshadow) produced by
     /// <see cref="ApplyFontVariables"/> using the same stack model on every platform. A <c>[Custom]</c> tag's
     /// per-letter callback is applied identically on every platform: it produces one
     /// <see cref="ParameterizedLetterCustomizationCall"/> InlineVariable per character, which each
@@ -1706,8 +1710,8 @@ public partial class CustomSetPropertyOnRenderable
                     // we apply the inline ourselves
                     shouldApply = false;
                     break;
-                    // Font / FontSize / OutlineThickness / IsBold / IsItalic family swaps are handled below in
-                    // ApplyFontVariables (stack model), not here.
+                    // Font / FontSize / OutlineThickness / IsBold / IsItalic / HasDropshadow family swaps
+                    // are handled below in ApplyFontVariables (stack model), not here.
             }
 
             if (shouldApply)
@@ -1728,7 +1732,7 @@ public partial class CustomSetPropertyOnRenderable
         var textRuntime = graphicalUiElement as Gum.GueDeriving.TextRuntime;
 #endif
 
-        // Per-run font resolution requires the seven stacks to be seeded from a TextRuntime's base font
+        // Per-run font resolution requires the eight stacks to be seeded from a TextRuntime's base font
         // values. A Text owned by a non-TextRuntime GraphicalUiElement has no such values, so we neither seed
         // nor resolve here - otherwise ApplyFontVariables would peek/pop unseeded (stale or empty) stacks,
         // giving a wrong font or an InvalidOperationException. One guard covers seeding and resolution; the
@@ -1769,10 +1773,11 @@ public partial class CustomSetPropertyOnRenderable
             useCustomFontStack.Clear();
             useCustomFontStack.Push(textRuntime.UseCustomFont);
 
+            hasDropshadowStack.Clear();
 #if FRB
             // FRB's GraphicalUiElement has no dropshadow font properties (see the FRB extension
             // methods below), so per-run resolution never applies a dropshadow there either.
-            currentHasDropshadow = false;
+            hasDropshadowStack.Push(false);
             currentDropshadowOffsetX = 0f;
             currentDropshadowOffsetY = 0f;
             currentDropshadowBlur = 0f;
@@ -1781,7 +1786,7 @@ public partial class CustomSetPropertyOnRenderable
             currentDropshadowBlue = 0;
             currentDropshadowAlpha = 0;
 #else
-            currentHasDropshadow = textRuntime.HasDropshadow;
+            hasDropshadowStack.Push(textRuntime.HasDropshadow);
             currentDropshadowOffsetX = textRuntime.DropshadowOffsetX;
             currentDropshadowOffsetY = textRuntime.DropshadowOffsetY;
             currentDropshadowBlur = textRuntime.DropshadowBlur;
@@ -1805,7 +1810,7 @@ public partial class CustomSetPropertyOnRenderable
     }
 
     /// <summary>
-    /// Resolves the Font / FontSize / OutlineThickness / IsBold / IsItalic BBCode tags into per-run
+    /// Resolves the Font / FontSize / OutlineThickness / IsBold / IsItalic / HasDropshadow BBCode tags into per-run
     /// resolved-font (<c>"BitmapFont"</c>) inline variables using a stack model: each open tag pushes its
     /// value and each close tag pops it, so a run resolves to the font implied by every tag open over it.
     /// The push/pop/sort/character-count loop is identical on every platform; only the font-CREATION body
@@ -1915,6 +1920,17 @@ public partial class CustomSetPropertyOnRenderable
                     else
                     {
                         useCustomFontStack.Pop();
+                    }
+                    castedValue = GetAndCreateFontIfNecessary();
+                    break;
+                case "HasDropshadow":
+                    if (bool.TryParse(tag.Argument, out bool parsedHasDropshadow))
+                    {
+                        hasDropshadowStack.Push(parsedHasDropshadow);
+                    }
+                    else
+                    {
+                        hasDropshadowStack.Pop();
                     }
                     castedValue = GetAndCreateFontIfNecessary();
                     break;
@@ -2092,7 +2108,7 @@ public partial class CustomSetPropertyOnRenderable
                     isItalicStack.Peek(),
                     isBoldStack.Peek(),
                     bbCodeFontFilePath,
-                    currentHasDropshadow,
+                    hasDropshadowStack.Peek(),
                     currentDropshadowOffsetX,
                     currentDropshadowOffsetY,
                     currentDropshadowBlur,
@@ -2154,7 +2170,7 @@ public partial class CustomSetPropertyOnRenderable
                     isItalicStack.Peek(),
                     isBoldStack.Peek(),
                     bbCodeFontFilePath,
-                    currentHasDropshadow,
+                    hasDropshadowStack.Peek(),
                     currentDropshadowOffsetX,
                     currentDropshadowOffsetY,
                     currentDropshadowBlur,
