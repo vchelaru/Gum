@@ -130,6 +130,20 @@ public class TextBbCodeTests
     }
 
     [Fact]
+    public void GetStyledRuns_HasDropshadowTag_StripsTagWithoutChangingStyle()
+    {
+        // #3528: Skia has no per-run dropshadow implementation yet, but [HasDropshadow] must still be
+        // recognized and stripped like every other tag in BbCodeParser.KnownTags - not left as literal
+        // bracket text in the rendered output.
+        Text text = MakeText();
+        text.RawText = "plain [HasDropshadow=false]off[/HasDropshadow] plain";
+
+        List<Text.StyledTextRun> runs = text.GetStyledRuns();
+
+        string.Concat(runs.Select(r => r.Text)).ShouldBe("plain off plain");
+    }
+
+    [Fact]
     public void GetStyledRuns_PlainText_ProducesSingleUnchangedRun()
     {
         Text text = MakeText();
