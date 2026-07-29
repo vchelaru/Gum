@@ -96,7 +96,8 @@ internal class TextScreen : FrameworkElement
         bbcode.Text =
             "[Color=Red]red[/Color], [Color=Blue]blue[/Color], " +
             "[FontSize=40]big[/FontSize], [FontScale=1.5]scaled[/FontScale], " +
-            "[IsBold=true]bold[/IsBold], [IsItalic=true]italic[/IsItalic], and " +
+            "[IsBold=true]bold[/IsBold], [IsItalic=true]italic[/IsItalic], " +
+            "[OutlineThickness=2]outlined[/OutlineThickness], and " +
             "[Font=Courier New]a different font[/Font] runs, all styled inline in one Text.";
         container.Children.Add(bbcode);
 
