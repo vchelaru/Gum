@@ -112,6 +112,12 @@
     <Variable Type="int" Name="Emphasis.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">14</Value>
     </Variable>
+    <Variable Type="float" Name="Emphasis.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Emphasis.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="bool" Name="Emphasis.IsItalic" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
@@ -120,6 +126,12 @@
     </Variable>
     <Variable Type="string" Name="Emphasis.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Emphasis</Value>
+    </Variable>
+    <Variable Type="float" Name="Emphasis.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Emphasis.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="int" Name="Gray.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">130</Value>
@@ -142,6 +154,12 @@
     <Variable Type="int" Name="H1.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">22</Value>
     </Variable>
+    <Variable Type="float" Name="H1.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="H1.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="bool" Name="H1.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
@@ -151,8 +169,20 @@
     <Variable Type="string" Name="H1.Text" SetsValue="true">
       <Value xsi:type="xsd:string">H1</Value>
     </Variable>
+    <Variable Type="float" Name="H1.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="H1.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="int" Name="H2.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">18</Value>
+    </Variable>
+    <Variable Type="float" Name="H2.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="H2.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="bool" Name="H2.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
@@ -163,8 +193,20 @@
     <Variable Type="string" Name="H2.Text" SetsValue="true">
       <Value xsi:type="xsd:string">H2</Value>
     </Variable>
+    <Variable Type="float" Name="H2.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="H2.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="int" Name="H3.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">16</Value>
+    </Variable>
+    <Variable Type="float" Name="H3.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="H3.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="bool" Name="H3.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
@@ -174,6 +216,12 @@
     </Variable>
     <Variable Type="string" Name="H3.Text" SetsValue="true">
       <Value xsi:type="xsd:string">H3</Value>
+    </Variable>
+    <Variable Type="float" Name="H3.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="H3.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">-0</Value>
@@ -202,11 +250,23 @@
     <Variable Type="int" Name="Normal.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">14</Value>
     </Variable>
+    <Variable Type="float" Name="Normal.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Normal.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="string" Name="Normal.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyles</Value>
     </Variable>
     <Variable Type="string" Name="Normal.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
+    </Variable>
+    <Variable Type="float" Name="Normal.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Normal.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="int" Name="Primary.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">177</Value>
@@ -265,17 +325,35 @@
     <Variable Type="int" Name="Small.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">12</Value>
     </Variable>
+    <Variable Type="float" Name="Small.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Small.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="string" Name="Small.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyles</Value>
     </Variable>
     <Variable Type="string" Name="Small.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Small</Value>
     </Variable>
+    <Variable Type="float" Name="Small.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Small.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="false">
       <Value xsi:type="xsd:string">Default</Value>
     </Variable>
     <Variable Type="int" Name="Strong.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">14</Value>
+    </Variable>
+    <Variable Type="float" Name="Strong.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Strong.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="bool" Name="Strong.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
@@ -285,6 +363,12 @@
     </Variable>
     <Variable Type="string" Name="Strong.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Strong</Value>
+    </Variable>
+    <Variable Type="float" Name="Strong.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Strong.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="int" Name="Success.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">48</Value>
@@ -323,14 +407,32 @@
     <Variable Type="int" Name="Tiny.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">10</Value>
     </Variable>
+    <Variable Type="float" Name="Tiny.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Tiny.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="string" Name="Tiny.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyles</Value>
     </Variable>
     <Variable Type="string" Name="Tiny.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Tiny</Value>
     </Variable>
+    <Variable Type="float" Name="Tiny.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Tiny.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
     <Variable Type="int" Name="Title.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">28</Value>
+    </Variable>
+    <Variable Type="float" Name="Title.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Title.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="bool" Name="Title.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
@@ -340,6 +442,12 @@
     </Variable>
     <Variable Type="string" Name="Title.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Title</Value>
+    </Variable>
+    <Variable Type="float" Name="Title.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Title.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="int" Name="Warning.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">25</Value>

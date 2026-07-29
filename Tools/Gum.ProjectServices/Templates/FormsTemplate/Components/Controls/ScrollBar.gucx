@@ -61,6 +61,9 @@
     <Variable Type="int" Name="TrackBackground.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">130</Value>
     </Variable>
+    <Variable Type="bool" Name="TrackBackground.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
     <Variable Type="int" Name="TrackBackground.Green" SetsValue="true">
       <Value xsi:type="xsd:int">130</Value>
     </Variable>
@@ -75,6 +78,12 @@
     </Variable>
     <Variable Type="int" Name="TrackBackground.Red" SetsValue="true">
       <Value xsi:type="xsd:int">130</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TrackBackground.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="TrackBackground.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
     </Variable>
     <Variable Type="int" Name="TrackBackground.TextureHeight" SetsValue="true">
       <Value xsi:type="xsd:int">24</Value>

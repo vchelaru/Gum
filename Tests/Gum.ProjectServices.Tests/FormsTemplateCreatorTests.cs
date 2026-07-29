@@ -316,51 +316,69 @@ public class FormsTemplateCreatorTests : IDisposable
     }
 
     [Fact]
-    public void Create_ShouldOnlyDriftFromDefaultStandardsInKnownBakedProperties()
+    public void Create_ShouldNotDriftFromDefaultStandards()
     {
-        // Issue #4089: Add Forms (Standard theme) shouldn't need to change the project's
-        // Standards at all. The StyleCategory double-indirection (same shape as #4079's
-        // ColorCategory) and a handful of stale/mismatched declarations (dead Guide variables,
-        // SetsValue flags, an unused Polygon's default point shape) are fully fixed - this pins
-        // that no new drift regresses in. What remains is deliberately deferred: baked
-        // Standard-theme visual defaults (NineSlice texture-atlas coordinates/anchoring, Text
-        // sizing, Sprite texture scale) still differ from a blank project's Standards, tracked by
-        // a dedicated follow-up issue since relocating them touches every themed component that
-        // relies on inheriting them (~50 NineSlice instances across the template).
+        // Issue #4092, follow-up to #4089: the last remaining drift was baked Standard-theme
+        // visual defaults (NineSlice texture-atlas coordinates/anchoring, Text sizing, Sprite
+        // texture scale) that differed from a blank project's Standards. Every consuming instance
+        // that relied on inheriting one of these values now sets it explicitly (materialized from
+        // the Standard's prior baked value, so appearance is unchanged), and the 3 Standards
+        // (NineSlice/Sprite/Text) were reset to match a blank project. Add Forms (Standard theme)
+        // no longer needs to change the project's Standards at all.
         string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
         _sut.Create(filePath);
 
         DiffStandardsResult result = new DiffStandardsService().Diff(filePath);
 
-        string[] expectedRemainingDiffs =
-        [
-            "NineSlice.ExposeChildrenEvents",
-            "NineSlice.Height",
-            "NineSlice.HeightUnits",
-            "NineSlice.SourceFile",
-            "NineSlice.TextureAddress",
-            "NineSlice.TextureHeight",
-            "NineSlice.TextureTop",
-            "NineSlice.TextureWidth",
-            "NineSlice.Width",
-            "NineSlice.WidthUnits",
-            "NineSlice.XOrigin",
-            "NineSlice.XUnits",
-            "NineSlice.YOrigin",
-            "NineSlice.YUnits",
-            "Sprite.TextureHeightScale",
-            "Sprite.TextureWidthScale",
-            "Text.FontSize",
-            "Text.Height",
-            "Text.HeightUnits",
-            "Text.Width",
-            "Text.WidthUnits",
-        ];
-
-        result.Differences.Select(d => $"{d.StandardName}.{d.VariableName}")
-            .ShouldBe(expectedRemainingDiffs, ignoreOrder: true);
+        result.Differences.ShouldBeEmpty();
         result.MissingFromProject.ShouldBeEmpty();
         result.ProjectOnlyStandards.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Create_NoInstanceShouldRelyOnInheritingFormerlyBakedStandardProperties()
+    {
+        // Issue #4092 follow-up: the first fix pass materialized these properties onto every
+        // Component instance but missed Screens (DemoScreenGum's "Background" and StylesScreen's
+        // swatch/text instances), so they silently picked up the reset Standards' blank defaults
+        // (no texture, no fill-parent sizing) instead of their themed look. This checks both
+        // Components AND Screens so that gap can't reopen.
+        string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
+        _sut.Create(filePath);
+
+        ProjectLoadResult result = new ProjectLoader().Load(filePath);
+        GumProjectSave project = result.Project!;
+
+        Dictionary<string, string[]> tracked = new()
+        {
+            ["NineSlice"] = ["ExposeChildrenEvents", "Height", "HeightUnits", "SourceFile", "TextureAddress",
+                "TextureHeight", "TextureTop", "TextureWidth", "Width", "WidthUnits", "XOrigin", "XUnits", "YOrigin", "YUnits"],
+            ["Text"] = ["FontSize", "Height", "HeightUnits", "Width", "WidthUnits"],
+        };
+
+        List<string> missing = [];
+
+        foreach ((string baseType, string[] props) in tracked)
+        {
+            var componentInstances = project.Components
+                .SelectMany(c => c.Instances.Where(i => i.BaseType == baseType).Select(i => (Owner: (ElementSave)c, Instance: i)));
+            var screenInstances = project.Screens
+                .SelectMany(s => s.Instances.Where(i => i.BaseType == baseType).Select(i => (Owner: (ElementSave)s, Instance: i)));
+
+            foreach (var (owner, instance) in componentInstances.Concat(screenInstances))
+            {
+                foreach (string prop in props)
+                {
+                    bool isSet = owner.DefaultState.Variables.Any(v => v.Name == $"{instance.Name}.{prop}" && v.Value != null);
+                    if (!isSet)
+                    {
+                        missing.Add($"{owner.Name}.{instance.Name}.{prop}");
+                    }
+                }
+            }
+        }
+
+        missing.ShouldBeEmpty();
     }
 
     public void Dispose()

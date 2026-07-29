@@ -22,7 +22,7 @@
       <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="int" Name="FontSize" Category="Font" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
+      <Value xsi:type="xsd:int">18</Value>
     </Variable>
     <Variable Type="int" Name="Green" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
@@ -31,10 +31,10 @@
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="float" Name="Height" Category="Dimensions" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
+      <Value xsi:type="xsd:float">50</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="HeightUnits" Category="Dimensions" SetsValue="true">
-      <Value xsi:type="xsd:int">4</Value>
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="HorizontalAlignment" Name="HorizontalAlignment" Category="Text" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
@@ -92,10 +92,10 @@
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="float" Name="Width" Category="Dimensions" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
+      <Value xsi:type="xsd:float">100</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="WidthUnits" Category="Dimensions" SetsValue="true">
-      <Value xsi:type="xsd:int">4</Value>
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="float" Name="X" Category="Position" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>

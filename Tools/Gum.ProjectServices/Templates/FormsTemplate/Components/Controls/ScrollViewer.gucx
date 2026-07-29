@@ -7,6 +7,9 @@
     <Variable Type="int" Name="Background.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">80</Value>
     </Variable>
+    <Variable Type="bool" Name="Background.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
     <Variable Type="int" Name="Background.Green" SetsValue="true">
       <Value xsi:type="xsd:int">70</Value>
     </Variable>
@@ -19,6 +22,12 @@
     <Variable Type="string" Name="Background.Parent" SetsValue="true" />
     <Variable Type="int" Name="Background.Red" SetsValue="true">
       <Value xsi:type="xsd:int">70</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="Background.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="Background.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
     </Variable>
     <Variable Type="int" Name="Background.TextureHeight" SetsValue="true">
       <Value xsi:type="xsd:int">24</Value>
@@ -93,6 +102,9 @@
     <Variable Type="int" Name="FocusedIndicator.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">25</Value>
     </Variable>
+    <Variable Type="bool" Name="FocusedIndicator.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
     <Variable Type="int" Name="FocusedIndicator.Green" SetsValue="true">
       <Value xsi:type="xsd:int">171</Value>
     </Variable>
@@ -105,6 +117,12 @@
     <Variable Type="string" Name="FocusedIndicator.Parent" SetsValue="true" />
     <Variable Type="int" Name="FocusedIndicator.Red" SetsValue="true">
       <Value xsi:type="xsd:int">232</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="FocusedIndicator.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="FocusedIndicator.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
     </Variable>
     <Variable Type="int" Name="FocusedIndicator.TextureHeight" SetsValue="true">
       <Value xsi:type="xsd:int">24</Value>
@@ -120,6 +138,18 @@
     </Variable>
     <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="FocusedIndicator.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="FocusedIndicator.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="FocusedIndicator.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="FocusedIndicator.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.Y" SetsValue="true">
       <Value xsi:type="xsd:float">2</Value>
