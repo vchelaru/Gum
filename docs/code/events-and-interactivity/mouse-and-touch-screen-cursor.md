@@ -14,7 +14,7 @@ Touch support varies by runtime. Where a runtime has no real touch API, touch is
 | Silk.NET | Full | ✅ |
 | MonoGame (DesktopGL) | Full | ✅ |
 
-raylib's default desktop backend (GLFW) has no real touch input — see raylib's own [source comment acknowledging this](https://github.com/raysan5/raylib/blob/4640c849208079d758d8f0dbb4b5b7816db5ed0c/src/platforms/rcore_desktop_glfw.c#L1305-L1310). raylib's SDL backend does support real touch, but isn't what Gum's raylib runtime currently uses.
+raylib's default desktop backend (GLFW) has no real touch input. See raylib's own [source comment acknowledging this](https://github.com/raysan5/raylib/blob/4640c849208079d758d8f0dbb4b5b7816db5ed0c/src/platforms/rcore_desktop_glfw.c#L1305-L1310). raylib's SDL backend does support real touch, but isn't what Gum's raylib runtime currently uses.
 
 ## Code Example: Accessing the Cursor
 

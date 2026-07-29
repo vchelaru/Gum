@@ -4,7 +4,7 @@
 
 GumBatch is an object which supports _immediate mode_ rendering, similar to MonoGame's SpriteBatch. GumBatch can support rendering text with DrawString as well as any IRenderableIpso.
 
-For information on getting your project set up to use GumBatch — including how to wire up KernSmith so you do not need to ship any `.fnt` files — see the [Setup for GumBatch](../getting-started/setup/setup-for-gumbatch.md) page.
+For information on getting your project set up to use GumBatch, including how to wire up KernSmith so you do not need to ship any `.fnt` files, see the [Setup for GumBatch](../getting-started/setup/setup-for-gumbatch.md) page.
 
 {% hint style="info" %}
 GumBatch draws only what you pass it. In some cases controls may create additional controls on the popup layer, such as ComboBox and Tooltip. If your UI includes these controls, you may need to also draw your popup layers, as shown in the following code:
@@ -21,11 +21,11 @@ Core.GumBatch.End();
 
 ### Relationship with the Camera
 
-GumBatch draws through the same `Camera` as the rest of Gum — the one at `GumService.Default.Renderer.Camera`. It does **not** ignore the camera: the camera's `Zoom`, `Position` (`X` and `Y`), and `CameraCenterOnScreen` all apply to everything you draw between `Begin` and `End`. So if you zoom the camera to handle a window resize (see [Resolution and Resizing the Game Window](../layout/resizing-the-game-window.md)), your GumBatch output zooms along with the rest of your UI.
+GumBatch draws through the same `Camera` as the rest of Gum, the one at `GumService.Default.Renderer.Camera`. It does **not** ignore the camera: the camera's `Zoom`, `Position` (`X` and `Y`), and `CameraCenterOnScreen` all apply to everything you draw between `Begin` and `End`. So if you zoom the camera to handle a window resize (see [Resolution and Resizing the Game Window](../layout/resizing-the-game-window.md)), your GumBatch output zooms along with the rest of your UI.
 
 `Begin` also refreshes the camera's client dimensions from the current `GraphicsDevice.Viewport` on every call, so GumBatch always matches the live viewport size.
 
-`Begin` accepts an optional transform: `Begin(Matrix)`. This matrix **composes on top of** the camera transform rather than replacing it — the effective transform is your matrix multiplied with the camera's view.
+`Begin` accepts an optional transform: `Begin(Matrix)`. This matrix **composes on top of** the camera transform rather than replacing it. The effective transform is your matrix multiplied with the camera's view.
 
 {% hint style="warning" %}
 Because the matrix composes on top of the camera, setting `Camera.Zoom` to a non-default value **and** passing a scaling matrix to `Begin(Matrix)` applies the scale twice. Drive scaling from a single source: either leave the matrix off and use `Camera.Zoom`, or pass a matrix and keep `Camera.Zoom` at `1`.
@@ -33,7 +33,7 @@ Because the matrix composes on top of the camera, setting `Camera.Zoom` to a non
 
 ### Rendering TextRuntimes
 
-The most flexible way to draw text with GumBatch is to create a `TextRuntime`. TextRuntimes support all of Gum's layout rules — wrapping, alignment, rotation, sizing — and integrate with Gum's font system so you can set `Font` and `FontSize` directly and let KernSmith create the atlas on demand.
+The most flexible way to draw text with GumBatch is to create a `TextRuntime`. TextRuntimes support all of Gum's layout rules (wrapping, alignment, rotation, sizing) and integrate with Gum's font system so you can set `Font` and `FontSize` directly and let KernSmith create the atlas on demand.
 
 The following code shows how to create a `TextRuntime` and render it using GumBatch:
 
@@ -44,7 +44,7 @@ TextRuntime textRuntime;
 protected override void Initialize()
 {
     // This assumes CustomSetPropertyOnRenderable.InMemoryFontCreator
-    // has already been assigned to a KernSmithFontCreator — see the
+    // has already been assigned to a KernSmithFontCreator. See the
     // Setup for GumBatch page.
     textRuntime = new TextRuntime();
     textRuntime.Font = "Arial";
@@ -84,7 +84,7 @@ If you would rather load a specific `.fnt` file instead of using KernSmith, set 
 
 ### Rendering Strings
 
-GumBatch can also render strings directly via `DrawString`. This is a lower-level API than `TextRuntime` — it does not support layout, wrapping, or rotation — but the call shape matches `SpriteBatch.DrawString` and is convenient for quick HUD-style text.
+GumBatch can also render strings directly via `DrawString`. This is a lower-level API than `TextRuntime` (it does not support layout, wrapping, or rotation) but the call shape matches `SpriteBatch.DrawString` and is convenient for quick HUD-style text.
 
 `DrawString` takes a `BitmapFont`. The recommended way to obtain one is to ask KernSmith for it directly:
 
@@ -217,7 +217,7 @@ protected override void Draw(GameTime gameTime)
 
 ### Mixing with SpriteBatch
 
-GumBatch wraps an internal `SpriteBatch` and exposes it through the `SpriteBatch` property. This lets you issue your own SpriteBatch draw calls between `GumBatch.Begin` and `GumBatch.End` without managing a second batch — both your draws and Gum's draws land in the same batch, so they share sort order, blend state, and transform matrix.
+GumBatch wraps an internal `SpriteBatch` and exposes it through the `SpriteBatch` property. This lets you issue your own SpriteBatch draw calls between `GumBatch.Begin` and `GumBatch.End` without managing a second batch. Both your draws and Gum's draws land in the same batch, so they share sort order, blend state, and transform matrix.
 
 This is useful when you want to draw a few of your own textures alongside Gum's immediate-mode output without paying for two Begin/End pairs.
 
@@ -237,7 +237,7 @@ gumBatch.Draw(someGumObject);
 gumBatch.End();
 ```
 
-The underlying `SpriteBatch` instance is stable for the lifetime of the GumBatch — Gum may mutate its state (clip regions, blend, transform) but never swaps the instance — so it is safe to cache the reference if you want.
+The underlying `SpriteBatch` instance is stable for the lifetime of the GumBatch. Gum may mutate its state (clip regions, blend, transform) but never swaps the instance, so it is safe to cache the reference if you want.
 
 {% hint style="warning" %}
 You are sharing a batch with Gum, so any state you change on the SpriteBatch directly (e.g. by calling `End` and re-issuing `Begin` with different parameters) will affect subsequent Gum draws. If you need independent state, use your own separate SpriteBatch instead.
