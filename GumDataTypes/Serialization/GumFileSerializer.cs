@@ -22,14 +22,28 @@ public static class GumFileSerializer
         "StandardizedName", "IsFile", "IsFont", "IsHiddenInPropertyGrid", "IsCustomVariable"
     ];
 
-    private static void AddVariableSaveOverrides(XmlAttributeOverrides overrides)
+    private static void AddVariableSaveOverrides(XmlAttributeOverrides overrides, bool suppressDefaultSetsValue = false)
     {
         foreach (var prop in AttributeProps)
         {
             XmlAttributes attrs = new XmlAttributes();
             attrs.XmlAttribute = new XmlAttributeAttribute(prop);
+            if (suppressDefaultSetsValue && prop == "SetsValue")
+            {
+                // VariableSave.SetsValue defaults to true, but BehaviorSave.RequiredVariables/FormsProperties
+                // never write it explicitly when true - suppressing it here keeps behavior save/load round trips
+                // byte-identical (see issue #4080).
+                attrs.XmlDefaultValue = true;
+            }
             overrides.Add(typeof(VariableSave), prop, attrs);
         }
+    }
+
+    private static void AddBehaviorRequiredVariablesNameOverride(XmlAttributeOverrides overrides)
+    {
+        XmlAttributes attrs = new XmlAttributes();
+        attrs.XmlDefaultValue = string.Empty;
+        overrides.Add(typeof(StateSave), "Name", attrs);
     }
 
     private static void AddInstanceSaveOverrides(XmlAttributeOverrides overrides)
@@ -58,9 +72,15 @@ public static class GumFileSerializer
             if (_compactSerializers.TryGetValue(rootType, out var cached))
                 return cached;
 
+            bool isBehaviorSave = rootType == typeof(BehaviorSave);
+
             XmlAttributeOverrides overrides = new XmlAttributeOverrides();
-            AddVariableSaveOverrides(overrides);
+            AddVariableSaveOverrides(overrides, suppressDefaultSetsValue: isBehaviorSave);
             AddInstanceSaveOverrides(overrides);
+            if (isBehaviorSave)
+            {
+                AddBehaviorRequiredVariablesNameOverride(overrides);
+            }
 
             var serializer = new XmlSerializer(rootType, overrides);
             _compactSerializers[rootType] = serializer;
