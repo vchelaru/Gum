@@ -562,6 +562,25 @@ public class TextRuntimeTests
         containedText.OutlineThickness.ShouldBe(7);
     }
 
+    [Fact]
+    public void OutlineThickness_SetWithoutOutlineColor_ShouldNotClobberContainedTextOutlineColorToTransparent()
+    {
+        // TextRuntime's _outlineColor backing field previously had no initializer, so it defaulted
+        // to transparent (SKColor.Empty). UpdateFonts pushes OutlineColor to the contained Text
+        // unconditionally whenever UpdateToFontValues runs (including as a side effect of setting
+        // OutlineThickness alone) -- so setting only OutlineThickness silently overwrote Text's own
+        // opaque-black constructor default with transparent, making RichTextKit's
+        // `Style.HaloColor != SKColor.Empty` gate skip the halo draw entirely (issue #4077).
+        new RenderingLibrary.SystemManagers().Initialize();
+
+        TextRuntime sut = new();
+        sut.OutlineThickness = 7;
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.OutlineColor.Alpha.ShouldNotBe((byte)0);
+        containedText.GetStyle().HaloColor.ShouldNotBe(SKColor.Empty);
+    }
+
     #endregion
 
     #region PropertyChanged

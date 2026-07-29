@@ -414,7 +414,13 @@ public class TextRuntime : InteractiveGue
     }
 
 #if SKIA
-    Color _outlineColor;
+    // Defaults to opaque black (not default(Color), which is fully transparent) to match
+    // SkiaGum.Text's own constructor default -- UpdateFonts pushes this to the contained Text
+    // unconditionally whenever UpdateToFontValues runs, including as a side effect of setting only
+    // OutlineThickness, so an uninitialized transparent default silently clobbered Text's halo
+    // color and made RichTextKit's `Style.HaloColor != SKColor.Empty` gate skip the halo draw
+    // entirely (issue #4077).
+    Color _outlineColor = SkiaSharp.SKColors.Black;
     /// <summary>
     /// The color of the outline drawn when <see cref="OutlineThickness"/> is greater than zero.
     /// Skia-only: MonoGame/Raylib bake the outline into the font atlas at generation time and expose
