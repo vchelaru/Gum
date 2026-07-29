@@ -14,6 +14,7 @@ The following BBCode variables require font generation:
 * Font
 * FontSize
 * OutlineThickness
+* HasDropshadow
 
 The Gum tool generates fonts automatically into the FontCache folder. For code-only projects, the recommended approach is to use [dynamic font generation via KernSmith](fonts.md#dynamic-font-generation-recommended), which handles font creation at runtime with no extra setup. Without the Gum tool or KernSmith, you must provide pre-built `.fnt` files for each font combination your BBCode text uses.
 
@@ -38,7 +39,21 @@ text.AddToRoot();
 
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACkWOTQvCMAyG7_sVoSeF4cCjsoMfODx4mbt1PXQ2zEDXQtdOUfzvdoMphECe5CHvOwFg574IHduAdwHTEZAhT1LTCyNlg3Tg8ekhB4MPuFhjC9lhdFZFwCM6Gsi0qyqelMF46nCx3NZmVCYYvZpVd-ohFj9YbV1eohIOFc-mUaQz3-uAoontv5FGAT9Z4683qTFfi4Zanv2AmLLVbP64U6qypbU-hmDJ5wu5H0Ud4QAAAA)
 
-BBCode tags can be nested and combined. Tags are written as `[TagName=Value]text[/TagName]`. The supported tags include `Color`, `Red`, `Green`, `Blue`, `FontScale`, `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, and `Custom`.
+BBCode tags can be nested and combined. Tags are written as `[TagName=Value]text[/TagName]`. The supported tags include `Color`, `Red`, `Green`, `Blue`, `FontScale`, `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, `HasDropshadow`, and `Custom`.
+
+`HasDropshadow` toggles the shadow for just the wrapped run, independently of the TextRuntime's own `HasDropshadow` value. The shadow's offset, blur, and color always come from the TextRuntime's `DropshadowOffsetX`/`DropshadowOffsetY`/`DropshadowBlur`/`DropshadowColor` properties; the tag only controls whether a given run draws it:
+
+```csharp
+// Initialize
+var text = new TextRuntime();
+text.HasDropshadow = true;
+text.Text = "This has a shadow, [HasDropshadow=false]this does not[/HasDropshadow], and this does again";
+text.AddToRoot();
+```
+
+{% hint style="info" %}
+`HasDropshadow` toggles the shadow on MonoGame, KNI, FNA, and raylib. On SkiaSharp-based runtimes (Skia, Silk.NET, MAUI, WPF) the tag is parsed and stripped from the text but has no effect - the shadow always follows the TextRuntime's own `HasDropshadow` value there.
+{% endhint %}
 
 ## Custom Functions
 

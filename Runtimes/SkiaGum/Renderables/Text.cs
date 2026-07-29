@@ -1025,7 +1025,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     // plus a post-layout glyph nudge (see GetTextBlock). "font" resolves through GumFontMapper the same
     // way the base Font property does (issue #3719). "outlinethickness" maps onto RichTextKit's per-run
     // Style.HaloWidth, doubled to compensate for the halo being a centered stroke (issue #4037) -- the
-    // outline color is not per-run, it always uses the whole Text's OutlineColor.
+    // outline color is not per-run, it always uses the whole Text's OutlineColor. "hasdropshadow" has no
+    // per-run implementation on Skia yet (its dropshadow is a whole-canvas SKImageFilter, not a per-glyph
+    // baked silhouette like MonoGame/Raylib's - see #3528) - it's recognized here purely so it parses and
+    // strips like every other tag instead of leaking as literal bracket text; BuildInlineVariables' switch
+    // has no case for it, so it's a genuine no-op.
     // Unrecognized tags are left as literal characters, matching the parser.
     private static readonly HashSet<string> SupportedTags = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -1040,6 +1044,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         "isitalic",
         "outlinethickness",
         "custom",
+        "hasdropshadow",
     };
 
     public TextBlock GetCachedTextBlock(float? forcedWidth = null)

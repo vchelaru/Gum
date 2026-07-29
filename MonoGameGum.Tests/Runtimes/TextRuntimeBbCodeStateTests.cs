@@ -14,8 +14,8 @@ namespace MonoGameGum.Tests.Runtimes;
 // [State=Name] BBCode tag: decomposes a GraphicalUiElement's named state (States/AddStates, the
 // same runtime concept ApplyState(string) already uses) into the substring the tag wraps, but only
 // for variables already wired for per-run application - Color/Red/Green/Blue/FontScale (direct
-// InlineVariable) and Font/FontSize/OutlineThickness/IsItalic/IsBold/UseCustomFont (the font-stack
-// path in ApplyFontVariables). Anything else in the state (X, Y, Width, etc.) is silently skipped,
+// InlineVariable) and Font/FontSize/OutlineThickness/IsItalic/IsBold/UseCustomFont/HasDropshadow (the
+// font-stack path in ApplyFontVariables). Anything else in the state (X, Y, Width, etc.) is silently skipped,
 // and an unknown state name is a no-op - neither is an error.
 public class TextRuntimeBbCodeStateTests : BaseTestClass
 {

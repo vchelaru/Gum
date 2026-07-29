@@ -45,6 +45,7 @@ public class FontPlaygroundScreen
     private Label _dropshadowOffsetYLabel = null!;
     private Label _dropshadowBlurLabel = null!;
     private TextRuntime _previewText = null!;
+    private TextRuntime _bbCodeDropshadowPreviewText = null!;
 
     /// <summary>
     /// Builds the font-playground controls and preview text into the given root and wires up
@@ -196,6 +197,22 @@ public class FontPlaygroundScreen
         _previewText.Alpha = 255;
         root.Children.Add(_previewText);
 
+        // [HasDropshadow] BBCode tag preview (issue #3528): always has its own base shadow on, and
+        // uses the tag to turn it off for one run, independently of the "Drop Shadow" checkbox above -
+        // demonstrates the per-run toggle rather than the whole-Text HasDropshadow property.
+        _bbCodeDropshadowPreviewText = new TextRuntime();
+        _bbCodeDropshadowPreviewText.Text =
+            "Shadow on [HasDropshadow=false]shadow off[/HasDropshadow] shadow on again";
+        _bbCodeDropshadowPreviewText.X = 290;
+        _bbCodeDropshadowPreviewText.Y = 90;
+        _bbCodeDropshadowPreviewText.Width = 500;
+        _bbCodeDropshadowPreviewText.Red = 255;
+        _bbCodeDropshadowPreviewText.Green = 255;
+        _bbCodeDropshadowPreviewText.Blue = 255;
+        _bbCodeDropshadowPreviewText.Alpha = 255;
+        _bbCodeDropshadowPreviewText.HasDropshadow = true;
+        root.Children.Add(_bbCodeDropshadowPreviewText);
+
         ApplyFontSettings();
     }
 
@@ -228,5 +245,18 @@ public class FontPlaygroundScreen
         _previewText.DropshadowOffsetX = shadowOffsetX;
         _previewText.DropshadowOffsetY = shadowOffsetY;
         _previewText.DropshadowBlur = shadowBlur;
+
+        // Same font settings as the main preview, but HasDropshadow always stays true here - the
+        // [HasDropshadow=false] BBCode tag in its Text is what should turn the shadow off, not this
+        // checkbox.
+        _bbCodeDropshadowPreviewText.Font = _previewText.Font;
+        _bbCodeDropshadowPreviewText.FontSize = fontSize;
+        _bbCodeDropshadowPreviewText.IsBold = _previewText.IsBold;
+        _bbCodeDropshadowPreviewText.IsItalic = _previewText.IsItalic;
+        _bbCodeDropshadowPreviewText.OutlineThickness = outlineThickness;
+        _bbCodeDropshadowPreviewText.UseFontSmoothing = _previewText.UseFontSmoothing;
+        _bbCodeDropshadowPreviewText.DropshadowOffsetX = shadowOffsetX;
+        _bbCodeDropshadowPreviewText.DropshadowOffsetY = shadowOffsetY;
+        _bbCodeDropshadowPreviewText.DropshadowBlur = shadowBlur;
     }
 }

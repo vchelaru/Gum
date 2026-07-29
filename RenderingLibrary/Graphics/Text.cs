@@ -1305,7 +1305,14 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                     var baselineDifference = maxBaseline - (fontScale * effectiveFont.BaselineY);
                     effectiveTopOfLine += baselineDifference;
 
-                    if (HasDropshadow && effectiveFont.ShadowFont != null)
+                    // Issue #3528: gate on the per-run resolved font's own ShadowFont, not the whole-Text
+                    // HasDropshadow - a [HasDropshadow] BBCode tag resolves effectiveFont with (or without)
+                    // a baked ShadowFont independently of the base text's setting, so effectiveFont.ShadowFont
+                    // already reflects this run's state (baking is gated on the same flag - see
+                    // ApplyCurrentDropshadowTo in CustomSetPropertyOnRenderable.cs). When no per-run font tag
+                    // is active, effectiveFont is just the base fontToUse, whose ShadowFont already matches
+                    // this.HasDropshadow, so this check is equivalent to the old one in that case.
+                    if (effectiveFont.ShadowFont != null)
                     {
                         effectiveFont.ShadowFont.DrawTextLines(lineByLineList, HorizontalAlignment,
                             this,
