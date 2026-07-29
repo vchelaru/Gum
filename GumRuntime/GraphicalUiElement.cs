@@ -313,6 +313,37 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+    /// <summary>
+    /// A transform applied to the cursor's raw screen position during hit-testing on this
+    /// element and its descendants (resolved through <see cref="EffectiveHitTestTransformMatrix"/>).
+    /// Set it to map a window pixel back into the coordinate space this subtree was drawn in —
+    /// e.g. the inverse of the scale/letterbox blit used to composite a subtree that was rendered
+    /// into an externally-managed RenderTarget2D. Null (the default) means no transform. This is
+    /// consumed by hit-testing only and is never read by rendering or layout (issue #4096).
+    /// </summary>
+    public System.Numerics.Matrix3x2? HitTestTransformMatrix { get; set; }
+
+    /// <summary>
+    /// Returns this instance's <see cref="HitTestTransformMatrix"/>, or climbs the parent/child
+    /// relationship to the nearest ancestor that set one. Returns null when none is set. Mirrors
+    /// <see cref="EffectiveManagers"/>: nearest ancestor wins, null means "no transform."
+    /// </summary>
+    public System.Numerics.Matrix3x2? EffectiveHitTestTransformMatrix
+    {
+        get
+        {
+            if (HitTestTransformMatrix != null)
+            {
+                return HitTestTransformMatrix;
+            }
+            else
+            {
+                return this.ElementGueContainingThis?.EffectiveHitTestTransformMatrix ??
+                    this.EffectiveParentGue?.EffectiveHitTestTransformMatrix;
+            }
+        }
+    }
+
     /// <inheritdoc/>
     public bool AbsoluteVisible => ((IVisible)this).GetAbsoluteVisible();
 
