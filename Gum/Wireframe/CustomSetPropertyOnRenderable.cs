@@ -957,6 +957,9 @@ public partial class CustomSetPropertyOnRenderable
 #else
             // Runtime-type-first: delegate to TextRuntime.Text/SetTextNoTranslate, which own the
             // logic via the shared SetText helper. Matches the shape dispatcher's pattern (#3706).
+            // Unlike Font/FontScale/etc. below, a bare GraphicalUiElement(Text) with no TextRuntime
+            // is a real, supported combination (e.g. the tool's WireframeObjectManager), so fall
+            // back to calling SetText directly rather than silently no-op'ing.
             if (textRuntime != null)
             {
                 if (propertyName == "Text")
@@ -967,6 +970,10 @@ public partial class CustomSetPropertyOnRenderable
                 {
                     textRuntime.SetTextNoTranslate(value as string);
                 }
+            }
+            else
+            {
+                SetText(textRenderable, graphicalUiElement, propertyName, value);
             }
 #endif
             handled = true;
