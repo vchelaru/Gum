@@ -21,6 +21,9 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Windows;
+using System.Windows.Interop;
 using System.Xml.Linq;
 using ToolsUtilities;
 using WpfDataUi.DataTypes;
@@ -130,4 +133,63 @@ public class GuiCommands : IGuiCommands
 
     /// <inheritdoc/>
     public ISpinner ShowSpinner() => _spinnerFactory.Create();
+
+    /// <inheritdoc/>
+    public void ActivateMainWindow()
+    {
+        // IsLoaded: font generation can run before the main window has completed its Show()
+        // sequence (e.g. during initial project load at startup) - Activate() throws
+        // InvalidOperationException ("Cannot call DragMove or Activate before a Window is shown")
+        // if called that early.
+        if (Application.Current?.MainWindow is not { IsLoaded: true } mainWindow)
+        {
+            return;
+        }
+
+        // EnsureHandle forces the Win32 HWND to be created if it doesn't exist yet.
+        IntPtr windowHandle = new WindowInteropHelper(mainWindow).EnsureHandle();
+        NativeMethods.ForceForegroundWindow(windowHandle);
+        mainWindow.Activate();
+    }
+
+    private static class NativeMethods
+    {
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll")]
+        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, IntPtr processId);
+
+        [DllImport("kernel32.dll")]
+        private static extern uint GetCurrentThreadId();
+
+        [DllImport("user32.dll")]
+        private static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
+
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        /// <summary>
+        /// Forces <paramref name="hWnd"/> to the foreground even when this process isn't already
+        /// foreground. A plain <c>SetForegroundWindow</c> call from a background process is
+        /// throttled by Windows and silently no-ops; temporarily attaching this thread's input
+        /// state to the currently-foreground window's thread is the documented workaround.
+        /// </summary>
+        public static void ForceForegroundWindow(IntPtr hWnd)
+        {
+            uint foregroundThreadId = GetWindowThreadProcessId(GetForegroundWindow(), IntPtr.Zero);
+            uint currentThreadId = GetCurrentThreadId();
+
+            if (foregroundThreadId != currentThreadId)
+            {
+                AttachThreadInput(currentThreadId, foregroundThreadId, true);
+                SetForegroundWindow(hWnd);
+                AttachThreadInput(currentThreadId, foregroundThreadId, false);
+            }
+            else
+            {
+                SetForegroundWindow(hWnd);
+            }
+        }
+    }
 }

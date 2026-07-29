@@ -79,6 +79,16 @@ public class ToolFontGenerationCallbacksTests
     }
 
     [Fact]
+    public void ShowSpinner_Dispose_ActivatesMainWindow()
+    {
+        IDisposable? handle = _callbacks.ShowSpinner();
+
+        handle!.Dispose();
+
+        _guiCommands.Verify(g => g.ActivateMainWindow(), Times.Once);
+    }
+
+    [Fact]
     public void ShowSpinner_Dispose_HidesSpinnerAndStopsFurtherProgress()
     {
         IDisposable? handle = _callbacks.ShowSpinner();
