@@ -58,8 +58,11 @@
     <Variable Type="PositionUnitType" Name="ThumbInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TrackBackground.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Gray</Value>
+    <Variable Type="int" Name="TrackBackground.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">130</Value>
+    </Variable>
+    <Variable Type="int" Name="TrackBackground.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">130</Value>
     </Variable>
     <Variable Type="float" Name="TrackBackground.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -69,6 +72,9 @@
     </Variable>
     <Variable Type="string" Name="TrackBackground.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TrackInstance</Value>
+    </Variable>
+    <Variable Type="int" Name="TrackBackground.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">130</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TrackBackground.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Solid</Value>
@@ -142,6 +148,18 @@
     <Variable Type="float" Name="Width" SetsValue="true">
       <Value xsi:type="xsd:float">24</Value>
     </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TrackBackground.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Gray.FillRed</string>
+        <string>Green = Components/Styles.Gray.FillGreen</string>
+        <string>Blue = Components/Styles.Gray.FillBlue</string>
+      </Value>
+    </VariableList>
   </State>
   <Category>
     <Name>ScrollBarCategory</Name>

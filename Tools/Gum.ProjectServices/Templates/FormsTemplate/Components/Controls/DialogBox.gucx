@@ -40,21 +40,33 @@
     <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">128</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="NineSliceInstance.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Primary</Value>
+    <Variable Type="int" Name="NineSliceInstance.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">177</Value>
+    </Variable>
+    <Variable Type="int" Name="NineSliceInstance.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">159</Value>
+    </Variable>
+    <Variable Type="int" Name="NineSliceInstance.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="NineSliceInstance.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Panel</Value>
     </Variable>
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
-    <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">White</Value>
+    <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="float" Name="TextInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">-32</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="TextInstance.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextInstance.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
@@ -83,6 +95,30 @@
     <Variable Type="float" Name="Width" SetsValue="true">
       <Value xsi:type="xsd:float">256</Value>
     </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>NineSliceInstance.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Primary.FillRed</string>
+        <string>Green = Components/Styles.Primary.FillGreen</string>
+        <string>Blue = Components/Styles.Primary.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextInstance.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.White.FillRed</string>
+        <string>Green = Components/Styles.White.FillGreen</string>
+        <string>Blue = Components/Styles.White.FillBlue</string>
+      </Value>
+    </VariableList>
   </State>
   <Instance Name="NineSliceInstance" BaseType="NineSlice" />
   <Instance Name="TextInstance" BaseType="Text" />

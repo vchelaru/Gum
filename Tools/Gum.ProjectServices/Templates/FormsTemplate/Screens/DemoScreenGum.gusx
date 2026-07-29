@@ -3,17 +3,26 @@
   <Name>DemoScreenGum</Name>
   <State>
     <Name>Default</Name>
-    <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Primary</Value>
+    <Variable Type="int" Name="Background.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">177</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">159</Value>
     </Variable>
     <Variable Type="string" Name="Background.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">DemoSettingsMenu</Value>
     </Variable>
+    <Variable Type="int" Name="Background.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
     <Variable Type="StyleCategory" Name="Background.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Panel</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="Background1.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Primary</Value>
+    <Variable Type="int" Name="Background1.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">177</Value>
+    </Variable>
+    <Variable Type="int" Name="Background1.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">159</Value>
     </Variable>
     <Variable Type="float" Name="Background1.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -23,6 +32,9 @@
     </Variable>
     <Variable Type="string" Name="Background1.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">DemoDialog</Value>
+    </Variable>
+    <Variable Type="int" Name="Background1.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="Background1.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Panel</Value>
@@ -165,14 +177,20 @@
     <Variable Type="float" Name="DemoDialog.Y" SetsValue="true">
       <Value xsi:type="xsd:float">13</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="DemoHud.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Primary</Value>
+    <Variable Type="int" Name="DemoHud.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">177</Value>
+    </Variable>
+    <Variable Type="int" Name="DemoHud.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">159</Value>
     </Variable>
     <Variable Type="float" Name="DemoHud.Height" SetsValue="true">
       <Value xsi:type="xsd:float">207</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="DemoHud.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="DemoHud.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="DemoHud.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Panel</Value>
@@ -369,7 +387,7 @@
     <Variable Type="float" Name="FullScreenCheckbox.Y" SetsValue="true">
       <Value xsi:type="xsd:float">-26</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="HitpointsBar1.BarColor" SetsValue="true">
+    <Variable Type="ColorCategory" Name="HitpointsBar1.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Success</Value>
     </Variable>
     <Variable Type="BarDecorCategory" Name="HitpointsBar1.BarDecorCategoryState" SetsValue="true">
@@ -396,7 +414,7 @@
     <Variable Type="float" Name="HitpointsBar1.Y" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="HitpointsBar2.BarColor" SetsValue="true">
+    <Variable Type="ColorCategory" Name="HitpointsBar2.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Warning</Value>
     </Variable>
     <Variable Type="BarDecorCategory" Name="HitpointsBar2.BarDecorCategoryState" SetsValue="true">
@@ -423,7 +441,7 @@
     <Variable Type="float" Name="HitpointsBar2.Y" SetsValue="true">
       <Value xsi:type="xsd:float">20</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="HitpointsBar3.BarColor" SetsValue="true">
+    <Variable Type="ColorCategory" Name="HitpointsBar3.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Danger</Value>
     </Variable>
     <Variable Type="BarDecorCategory" Name="HitpointsBar3.BarDecorCategoryState" SetsValue="true">
@@ -660,7 +678,7 @@
     <Variable Type="float" Name="PercentBarInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="PercentBarInstance1.BarColor" SetsValue="true">
+    <Variable Type="ColorCategory" Name="PercentBarInstance1.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Success</Value>
     </Variable>
     <Variable Type="BarDecorCategory" Name="PercentBarInstance1.BarDecorCategoryState" SetsValue="true">
@@ -678,7 +696,7 @@
     <Variable Type="float" Name="PercentBarInstance1.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="PercentBarInstance2.BarColor" SetsValue="true">
+    <Variable Type="ColorCategory" Name="PercentBarInstance2.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Warning</Value>
     </Variable>
     <Variable Type="BarDecorCategory" Name="PercentBarInstance2.BarDecorCategoryState" SetsValue="true">
@@ -696,7 +714,7 @@
     <Variable Type="float" Name="PercentBarInstance2.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="PercentBarInstance3.BarColor" SetsValue="true">
+    <Variable Type="ColorCategory" Name="PercentBarInstance3.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Danger</Value>
     </Variable>
     <Variable Type="string" Name="PercentBarInstance3.Parent" SetsValue="true">
@@ -711,7 +729,7 @@
     <Variable Type="float" Name="PercentBarInstance3.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="PercentBarInstance4.BarColor" SetsValue="true">
+    <Variable Type="ColorCategory" Name="PercentBarInstance4.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Accent</Value>
     </Variable>
     <Variable Type="BarDecorCategory" Name="PercentBarInstance4.BarDecorCategoryState" SetsValue="true">
@@ -729,7 +747,7 @@
     <Variable Type="float" Name="PercentBarInstance4.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="PercentBarInstance5.BarColor" SetsValue="true">
+    <Variable Type="ColorCategory" Name="PercentBarInstance5.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Danger</Value>
     </Variable>
     <Variable Type="string" Name="PercentBarInstance5.Parent" SetsValue="true">
@@ -896,11 +914,17 @@
     <Variable Type="float" Name="TextBoxInstance1.Y" SetsValue="true">
       <Value xsi:type="xsd:float">7</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TitleText.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Primary</Value>
+    <Variable Type="int" Name="TitleText.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">177</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">159</Value>
     </Variable>
     <Variable Type="string" Name="TitleText.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">MenuTitle</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TitleText.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Title</Value>
@@ -908,11 +932,17 @@
     <Variable Type="string" Name="TitleText.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Settings</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TitleText1.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Primary</Value>
+    <Variable Type="int" Name="TitleText1.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">177</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText1.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">159</Value>
     </Variable>
     <Variable Type="string" Name="TitleText1.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">MenuTitle1</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText1.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TitleText1.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Title</Value>
@@ -920,11 +950,17 @@
     <Variable Type="string" Name="TitleText1.Text" SetsValue="true">
       <Value xsi:type="xsd:string">New Profile</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TitleText2.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Primary</Value>
+    <Variable Type="int" Name="TitleText2.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">177</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText2.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">159</Value>
     </Variable>
     <Variable Type="string" Name="TitleText2.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">MenuTitle2</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText2.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TitleText2.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Title</Value>
@@ -977,6 +1013,78 @@
     <Variable Type="float" Name="WindowStandardInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">575</Value>
     </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Background.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Primary.FillRed</string>
+        <string>Green = Components/Styles.Primary.FillGreen</string>
+        <string>Blue = Components/Styles.Primary.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Background1.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Primary.FillRed</string>
+        <string>Green = Components/Styles.Primary.FillGreen</string>
+        <string>Blue = Components/Styles.Primary.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>DemoHud.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Primary.FillRed</string>
+        <string>Green = Components/Styles.Primary.FillGreen</string>
+        <string>Blue = Components/Styles.Primary.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TitleText.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Primary.FillRed</string>
+        <string>Green = Components/Styles.Primary.FillGreen</string>
+        <string>Blue = Components/Styles.Primary.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TitleText1.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Primary.FillRed</string>
+        <string>Green = Components/Styles.Primary.FillGreen</string>
+        <string>Blue = Components/Styles.Primary.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TitleText2.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Primary.FillRed</string>
+        <string>Green = Components/Styles.Primary.FillGreen</string>
+        <string>Blue = Components/Styles.Primary.FillBlue</string>
+      </Value>
+    </VariableList>
   </State>
   <Instance Name="DemoSettingsMenu" BaseType="Container" />
   <Instance Name="Background" BaseType="NineSlice" />

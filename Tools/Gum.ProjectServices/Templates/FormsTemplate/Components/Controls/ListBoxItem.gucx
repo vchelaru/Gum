@@ -4,14 +4,20 @@
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">DarkGray</Value>
+    <Variable Type="int" Name="Background.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">80</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">70</Value>
     </Variable>
     <Variable Type="float" Name="Background.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="Background.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">70</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="Background.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Solid</Value>
@@ -40,8 +46,11 @@
     <Variable Type="PositionUnitType" Name="Background.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="FocusedIndicator.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Warning</Value>
+    <Variable Type="int" Name="FocusedIndicator.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">25</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">171</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.Height" SetsValue="true">
       <Value xsi:type="xsd:float">2</Value>
@@ -50,6 +59,9 @@
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="string" Name="FocusedIndicator.Parent" SetsValue="true" />
+    <Variable Type="int" Name="FocusedIndicator.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">232</Value>
+    </Variable>
     <Variable Type="StyleCategory" Name="FocusedIndicator.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Solid</Value>
     </Variable>
@@ -73,8 +85,11 @@
     </Variable>
     <Variable Type="ListBoxItemCategory" Name="ListBoxItemCategoryState" SetsValue="false" />
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
-    <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">White</Value>
+    <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="float" Name="TextInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -84,6 +99,9 @@
     </Variable>
     <Variable Type="HorizontalAlignment" Name="TextInstance.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextInstance.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
@@ -118,13 +136,55 @@
     <Variable Type="DimensionUnitType" Name="WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Background.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.DarkGray.FillRed</string>
+        <string>Green = Components/Styles.DarkGray.FillGreen</string>
+        <string>Blue = Components/Styles.DarkGray.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>FocusedIndicator.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Warning.FillRed</string>
+        <string>Green = Components/Styles.Warning.FillGreen</string>
+        <string>Blue = Components/Styles.Warning.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextInstance.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.White.FillRed</string>
+        <string>Green = Components/Styles.White.FillGreen</string>
+        <string>Blue = Components/Styles.White.FillBlue</string>
+      </Value>
+    </VariableList>
   </State>
   <Category>
     <Name>ListBoxItemCategory</Name>
     <State>
       <Name>Enabled</Name>
-      <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">DarkGray</Value>
+      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">80</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
       </Variable>
       <Variable Type="bool" Name="Background.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -132,11 +192,29 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>Background.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.DarkGray.FillRed</string>
+          <string>Green = Components/Styles.DarkGray.FillGreen</string>
+          <string>Blue = Components/Styles.DarkGray.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Highlighted</Name>
-      <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Accent</Value>
+      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">138</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">48</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">140</Value>
       </Variable>
       <Variable Type="bool" Name="Background.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -144,11 +222,29 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>Background.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Accent.FillRed</string>
+          <string>Green = Components/Styles.Accent.FillGreen</string>
+          <string>Blue = Components/Styles.Accent.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Selected</Name>
-      <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Primary</Value>
+      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">177</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">159</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">6</Value>
       </Variable>
       <Variable Type="bool" Name="Background.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -156,11 +252,29 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>Background.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Primary.FillRed</string>
+          <string>Green = Components/Styles.Primary.FillGreen</string>
+          <string>Blue = Components/Styles.Primary.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Focused</Name>
-      <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">DarkGray</Value>
+      <Variable Type="int" Name="Background.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">80</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
       </Variable>
       <Variable Type="bool" Name="Background.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -168,6 +282,18 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>Background.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.DarkGray.FillRed</string>
+          <string>Green = Components/Styles.DarkGray.FillGreen</string>
+          <string>Blue = Components/Styles.DarkGray.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
   </Category>
   <Instance Name="Background" BaseType="NineSlice" />

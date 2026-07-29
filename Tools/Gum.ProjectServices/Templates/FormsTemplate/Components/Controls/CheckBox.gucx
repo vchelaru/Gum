@@ -4,14 +4,20 @@
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable Type="ColorCategory" Name="CheckBoxBackground.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Primary</Value>
+    <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">177</Value>
+    </Variable>
+    <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">159</Value>
     </Variable>
     <Variable Type="float" Name="CheckBoxBackground.Height" SetsValue="true">
       <Value xsi:type="xsd:float">24</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="CheckBoxBackground.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="CheckBoxBackground.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Bordered</Value>
@@ -29,8 +35,11 @@
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="CheckBoxCategory" Name="CheckBoxCategoryState" SetsValue="false" />
-    <Variable Type="ColorCategory" Name="FocusedIndicator.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Warning</Value>
+    <Variable Type="int" Name="FocusedIndicator.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">25</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">171</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.Height" SetsValue="true">
       <Value xsi:type="xsd:float">2</Value>
@@ -39,6 +48,9 @@
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="string" Name="FocusedIndicator.Parent" SetsValue="true" />
+    <Variable Type="int" Name="FocusedIndicator.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">232</Value>
+    </Variable>
     <Variable Type="StyleCategory" Name="FocusedIndicator.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Solid</Value>
     </Variable>
@@ -72,7 +84,7 @@
     <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Check</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="InnerCheck.IconColor" SetsValue="true">
+    <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">White</Value>
     </Variable>
     <Variable Type="string" Name="InnerCheck.Parent" SetsValue="true">
@@ -88,8 +100,11 @@
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
-    <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">White</Value>
+    <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="float" Name="TextInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -99,6 +114,9 @@
     </Variable>
     <Variable Type="HorizontalAlignment" Name="TextInstance.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextInstance.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
@@ -130,13 +148,55 @@
     <Variable Type="float" Name="Width" SetsValue="true">
       <Value xsi:type="xsd:float">128</Value>
     </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>CheckBoxBackground.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Primary.FillRed</string>
+        <string>Green = Components/Styles.Primary.FillGreen</string>
+        <string>Blue = Components/Styles.Primary.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>FocusedIndicator.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Warning.FillRed</string>
+        <string>Green = Components/Styles.Warning.FillGreen</string>
+        <string>Blue = Components/Styles.Warning.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextInstance.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.White.FillRed</string>
+        <string>Green = Components/Styles.White.FillGreen</string>
+        <string>Blue = Components/Styles.White.FillBlue</string>
+      </Value>
+    </VariableList>
   </State>
   <Category>
     <Name>CheckBoxCategory</Name>
     <State>
       <Name>EnabledOn</Name>
-      <Variable Type="ColorCategory" Name="CheckBoxBackground.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Primary</Value>
+      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">177</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">159</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">6</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -144,20 +204,56 @@
       <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Check</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="InnerCheck.IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">White</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckBoxBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Primary.FillRed</string>
+          <string>Green = Components/Styles.Primary.FillGreen</string>
+          <string>Blue = Components/Styles.Primary.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.White.FillRed</string>
+          <string>Green = Components/Styles.White.FillGreen</string>
+          <string>Blue = Components/Styles.White.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>EnabledOff</Name>
-      <Variable Type="ColorCategory" Name="CheckBoxBackground.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Primary</Value>
+      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">177</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">159</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">6</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -165,20 +261,56 @@
       <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Check</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="InnerCheck.IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">White</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckBoxBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Primary.FillRed</string>
+          <string>Green = Components/Styles.Primary.FillGreen</string>
+          <string>Blue = Components/Styles.Primary.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.White.FillRed</string>
+          <string>Green = Components/Styles.White.FillGreen</string>
+          <string>Blue = Components/Styles.White.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>EnabledIndeterminate</Name>
-      <Variable Type="ColorCategory" Name="CheckBoxBackground.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Primary</Value>
+      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">177</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">159</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">6</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -186,20 +318,56 @@
       <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Dash</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="InnerCheck.IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">White</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckBoxBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Primary.FillRed</string>
+          <string>Green = Components/Styles.Primary.FillGreen</string>
+          <string>Blue = Components/Styles.Primary.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.White.FillRed</string>
+          <string>Green = Components/Styles.White.FillGreen</string>
+          <string>Blue = Components/Styles.White.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>DisabledOn</Name>
-      <Variable Type="ColorCategory" Name="CheckBoxBackground.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">DarkGray</Value>
+      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">80</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -207,20 +375,56 @@
       <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Check</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="InnerCheck.IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Gray</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Gray</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">130</Value>
       </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">130</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">130</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckBoxBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.DarkGray.FillRed</string>
+          <string>Green = Components/Styles.DarkGray.FillGreen</string>
+          <string>Blue = Components/Styles.DarkGray.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Gray.FillRed</string>
+          <string>Green = Components/Styles.Gray.FillGreen</string>
+          <string>Blue = Components/Styles.Gray.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>DisabledOff</Name>
-      <Variable Type="ColorCategory" Name="CheckBoxBackground.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">DarkGray</Value>
+      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">80</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -228,20 +432,56 @@
       <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Check</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="InnerCheck.IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Gray</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">130</Value>
       </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">130</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">130</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckBoxBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.DarkGray.FillRed</string>
+          <string>Green = Components/Styles.DarkGray.FillGreen</string>
+          <string>Blue = Components/Styles.DarkGray.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Gray.FillRed</string>
+          <string>Green = Components/Styles.Gray.FillGreen</string>
+          <string>Blue = Components/Styles.Gray.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>DisabledIndeterminate</Name>
-      <Variable Type="ColorCategory" Name="CheckBoxBackground.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">DarkGray</Value>
+      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">80</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -249,20 +489,56 @@
       <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Dash</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="InnerCheck.IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Gray</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Gray</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">130</Value>
       </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">130</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">130</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckBoxBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.DarkGray.FillRed</string>
+          <string>Green = Components/Styles.DarkGray.FillGreen</string>
+          <string>Blue = Components/Styles.DarkGray.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Gray.FillRed</string>
+          <string>Green = Components/Styles.Gray.FillGreen</string>
+          <string>Blue = Components/Styles.Gray.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>HighlightedOn</Name>
-      <Variable Type="ColorCategory" Name="CheckBoxBackground.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">PrimaryLight</Value>
+      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">193</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">180</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">74</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -270,20 +546,56 @@
       <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Check</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="InnerCheck.IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">White</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckBoxBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.PrimaryLight.FillRed</string>
+          <string>Green = Components/Styles.PrimaryLight.FillGreen</string>
+          <string>Blue = Components/Styles.PrimaryLight.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.White.FillRed</string>
+          <string>Green = Components/Styles.White.FillGreen</string>
+          <string>Blue = Components/Styles.White.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>HighlightedOff</Name>
-      <Variable Type="ColorCategory" Name="CheckBoxBackground.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">PrimaryLight</Value>
+      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">193</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">180</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">74</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -291,20 +603,56 @@
       <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Check</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="InnerCheck.IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">White</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckBoxBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.PrimaryLight.FillRed</string>
+          <string>Green = Components/Styles.PrimaryLight.FillGreen</string>
+          <string>Blue = Components/Styles.PrimaryLight.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.White.FillRed</string>
+          <string>Green = Components/Styles.White.FillGreen</string>
+          <string>Blue = Components/Styles.White.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>HighlightedIndeterminate</Name>
-      <Variable Type="ColorCategory" Name="CheckBoxBackground.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">PrimaryLight</Value>
+      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">193</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">180</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">74</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -312,20 +660,56 @@
       <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Dash</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="InnerCheck.IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">White</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckBoxBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.PrimaryLight.FillRed</string>
+          <string>Green = Components/Styles.PrimaryLight.FillGreen</string>
+          <string>Blue = Components/Styles.PrimaryLight.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.White.FillRed</string>
+          <string>Green = Components/Styles.White.FillGreen</string>
+          <string>Blue = Components/Styles.White.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>PushedOn</Name>
-      <Variable Type="ColorCategory" Name="CheckBoxBackground.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">PrimaryDark</Value>
+      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">137</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">120</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">4</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -333,20 +717,56 @@
       <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Check</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="InnerCheck.IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">White</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckBoxBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.PrimaryDark.FillRed</string>
+          <string>Green = Components/Styles.PrimaryDark.FillGreen</string>
+          <string>Blue = Components/Styles.PrimaryDark.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.White.FillRed</string>
+          <string>Green = Components/Styles.White.FillGreen</string>
+          <string>Blue = Components/Styles.White.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>PushedOff</Name>
-      <Variable Type="ColorCategory" Name="CheckBoxBackground.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">PrimaryDark</Value>
+      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">137</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">120</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">4</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -354,20 +774,56 @@
       <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Check</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="InnerCheck.IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">White</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckBoxBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.PrimaryDark.FillRed</string>
+          <string>Green = Components/Styles.PrimaryDark.FillGreen</string>
+          <string>Blue = Components/Styles.PrimaryDark.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.White.FillRed</string>
+          <string>Green = Components/Styles.White.FillGreen</string>
+          <string>Blue = Components/Styles.White.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>PushedIndeterminate</Name>
-      <Variable Type="ColorCategory" Name="CheckBoxBackground.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">PrimaryDark</Value>
+      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">137</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">120</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">4</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -375,20 +831,56 @@
       <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Dash</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="InnerCheck.IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">White</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckBoxBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.PrimaryDark.FillRed</string>
+          <string>Green = Components/Styles.PrimaryDark.FillGreen</string>
+          <string>Blue = Components/Styles.PrimaryDark.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.White.FillRed</string>
+          <string>Green = Components/Styles.White.FillGreen</string>
+          <string>Blue = Components/Styles.White.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>FocusedOn</Name>
-      <Variable Type="ColorCategory" Name="CheckBoxBackground.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Primary</Value>
+      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">177</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">159</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">6</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -396,20 +888,56 @@
       <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Check</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="InnerCheck.IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">White</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckBoxBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Primary.FillRed</string>
+          <string>Green = Components/Styles.Primary.FillGreen</string>
+          <string>Blue = Components/Styles.Primary.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.White.FillRed</string>
+          <string>Green = Components/Styles.White.FillGreen</string>
+          <string>Blue = Components/Styles.White.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>FocusedOff</Name>
-      <Variable Type="ColorCategory" Name="CheckBoxBackground.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Primary</Value>
+      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">177</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">159</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">6</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -417,20 +945,56 @@
       <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Check</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="InnerCheck.IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">White</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckBoxBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Primary.FillRed</string>
+          <string>Green = Components/Styles.Primary.FillGreen</string>
+          <string>Blue = Components/Styles.Primary.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.White.FillRed</string>
+          <string>Green = Components/Styles.White.FillGreen</string>
+          <string>Blue = Components/Styles.White.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>FocusedIndeterminate</Name>
-      <Variable Type="ColorCategory" Name="CheckBoxBackground.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Primary</Value>
+      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">177</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">159</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">6</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -438,20 +1002,56 @@
       <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Dash</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="InnerCheck.IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">White</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckBoxBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Primary.FillRed</string>
+          <string>Green = Components/Styles.Primary.FillGreen</string>
+          <string>Blue = Components/Styles.Primary.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.White.FillRed</string>
+          <string>Green = Components/Styles.White.FillGreen</string>
+          <string>Blue = Components/Styles.White.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>HighlightedFocusedOn</Name>
-      <Variable Type="ColorCategory" Name="CheckBoxBackground.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">PrimaryLight</Value>
+      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">193</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">180</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">74</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -459,20 +1059,56 @@
       <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Check</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="InnerCheck.IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">White</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckBoxBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.PrimaryLight.FillRed</string>
+          <string>Green = Components/Styles.PrimaryLight.FillGreen</string>
+          <string>Blue = Components/Styles.PrimaryLight.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.White.FillRed</string>
+          <string>Green = Components/Styles.White.FillGreen</string>
+          <string>Blue = Components/Styles.White.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>HighlightedFocusedOff</Name>
-      <Variable Type="ColorCategory" Name="CheckBoxBackground.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">PrimaryLight</Value>
+      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">193</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">180</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">74</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -480,20 +1116,56 @@
       <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Check</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="InnerCheck.IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">White</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckBoxBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.PrimaryLight.FillRed</string>
+          <string>Green = Components/Styles.PrimaryLight.FillGreen</string>
+          <string>Blue = Components/Styles.PrimaryLight.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.White.FillRed</string>
+          <string>Green = Components/Styles.White.FillGreen</string>
+          <string>Blue = Components/Styles.White.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>HighlightedFocusedIndeterminate</Name>
-      <Variable Type="ColorCategory" Name="CheckBoxBackground.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">PrimaryLight</Value>
+      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">193</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">180</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">74</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -501,20 +1173,56 @@
       <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Dash</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="InnerCheck.IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">White</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckBoxBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.PrimaryLight.FillRed</string>
+          <string>Green = Components/Styles.PrimaryLight.FillGreen</string>
+          <string>Blue = Components/Styles.PrimaryLight.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.White.FillRed</string>
+          <string>Green = Components/Styles.White.FillGreen</string>
+          <string>Blue = Components/Styles.White.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>DisabledFocusedOn</Name>
-      <Variable Type="ColorCategory" Name="CheckBoxBackground.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">DarkGray</Value>
+      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">80</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -522,20 +1230,56 @@
       <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Check</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="InnerCheck.IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Gray</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Gray</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">130</Value>
       </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">130</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">130</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckBoxBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.DarkGray.FillRed</string>
+          <string>Green = Components/Styles.DarkGray.FillGreen</string>
+          <string>Blue = Components/Styles.DarkGray.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Gray.FillRed</string>
+          <string>Green = Components/Styles.Gray.FillGreen</string>
+          <string>Blue = Components/Styles.Gray.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>DisabledFocusedOff</Name>
-      <Variable Type="ColorCategory" Name="CheckBoxBackground.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">DarkGray</Value>
+      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">80</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -543,20 +1287,56 @@
       <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Check</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="InnerCheck.IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Gray</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">130</Value>
       </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">130</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">130</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckBoxBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.DarkGray.FillRed</string>
+          <string>Green = Components/Styles.DarkGray.FillGreen</string>
+          <string>Blue = Components/Styles.DarkGray.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Gray.FillRed</string>
+          <string>Green = Components/Styles.Gray.FillGreen</string>
+          <string>Blue = Components/Styles.Gray.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>DisabledFocusedIndeterminate</Name>
-      <Variable Type="ColorCategory" Name="CheckBoxBackground.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">DarkGray</Value>
+      <Variable Type="int" Name="CheckBoxBackground.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">80</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -564,15 +1344,45 @@
       <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Dash</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="InnerCheck.IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Gray</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="TextInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Gray</Value>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">130</Value>
       </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">130</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">130</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>CheckBoxBackground.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.DarkGray.FillRed</string>
+          <string>Green = Components/Styles.DarkGray.FillGreen</string>
+          <string>Blue = Components/Styles.DarkGray.FillBlue</string>
+        </Value>
+      </VariableList>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Gray.FillRed</string>
+          <string>Green = Components/Styles.Gray.FillGreen</string>
+          <string>Blue = Components/Styles.Gray.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
   </Category>
   <Instance Name="CheckBoxBackground" BaseType="NineSlice" />

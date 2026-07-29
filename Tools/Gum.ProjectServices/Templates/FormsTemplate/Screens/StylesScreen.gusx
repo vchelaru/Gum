@@ -3,8 +3,11 @@
   <Name>StylesScreen</Name>
   <State>
     <Name>Default</Name>
-    <Variable Type="ColorCategory" Name="Bordered.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Primary</Value>
+    <Variable Type="int" Name="Bordered.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">177</Value>
+    </Variable>
+    <Variable Type="int" Name="Bordered.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">159</Value>
     </Variable>
     <Variable Type="float" Name="Bordered.Height" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
@@ -14,6 +17,9 @@
     </Variable>
     <Variable Type="string" Name="Bordered.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="Bordered.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="Bordered.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Bordered</Value>
@@ -39,8 +45,11 @@
     <Variable Type="PositionUnitType" Name="Bordered.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="BracketHorizontal.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Primary</Value>
+    <Variable Type="int" Name="BracketHorizontal.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">177</Value>
+    </Variable>
+    <Variable Type="int" Name="BracketHorizontal.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">159</Value>
     </Variable>
     <Variable Type="float" Name="BracketHorizontal.Height" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
@@ -50,6 +59,9 @@
     </Variable>
     <Variable Type="string" Name="BracketHorizontal.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="BracketHorizontal.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="BracketHorizontal.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">BracketHorizontal</Value>
@@ -75,8 +87,11 @@
     <Variable Type="PositionUnitType" Name="BracketHorizontal.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="BracketVertical.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Primary</Value>
+    <Variable Type="int" Name="BracketVertical.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">177</Value>
+    </Variable>
+    <Variable Type="int" Name="BracketVertical.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">159</Value>
     </Variable>
     <Variable Type="float" Name="BracketVertical.Height" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
@@ -86,6 +101,9 @@
     </Variable>
     <Variable Type="string" Name="BracketVertical.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="BracketVertical.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="BracketVertical.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">BracketVertical</Value>
@@ -195,7 +213,7 @@
     <Variable Type="VerticalAlignment" Name="ButtonTabInstance.YOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="CautionLinesInstance.LineColor" SetsValue="true">
+    <Variable Type="ColorCategory" Name="CautionLinesInstance.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
     </Variable>
     <Variable Type="string" Name="CautionLinesInstance.Parent" SetsValue="true">
@@ -390,8 +408,11 @@
     <Variable Type="float" Name="NineSliceStyleContainer.Y" SetsValue="true">
       <Value xsi:type="xsd:float">14</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="Outlined.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Primary</Value>
+    <Variable Type="int" Name="Outlined.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">177</Value>
+    </Variable>
+    <Variable Type="int" Name="Outlined.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">159</Value>
     </Variable>
     <Variable Type="float" Name="Outlined.Height" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
@@ -401,6 +422,9 @@
     </Variable>
     <Variable Type="string" Name="Outlined.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="Outlined.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="Outlined.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Outlined</Value>
@@ -426,8 +450,11 @@
     <Variable Type="PositionUnitType" Name="Outlined.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="OutlinedHeavy.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Primary</Value>
+    <Variable Type="int" Name="OutlinedHeavy.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">177</Value>
+    </Variable>
+    <Variable Type="int" Name="OutlinedHeavy.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">159</Value>
     </Variable>
     <Variable Type="float" Name="OutlinedHeavy.Height" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
@@ -437,6 +464,9 @@
     </Variable>
     <Variable Type="string" Name="OutlinedHeavy.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="OutlinedHeavy.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="OutlinedHeavy.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">OutlinedHeavy</Value>
@@ -462,8 +492,11 @@
     <Variable Type="PositionUnitType" Name="OutlinedHeavy.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="Panel.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Primary</Value>
+    <Variable Type="int" Name="Panel.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">177</Value>
+    </Variable>
+    <Variable Type="int" Name="Panel.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">159</Value>
     </Variable>
     <Variable Type="float" Name="Panel.Height" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
@@ -473,6 +506,9 @@
     </Variable>
     <Variable Type="string" Name="Panel.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="Panel.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="Panel.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Panel</Value>
@@ -519,7 +555,7 @@
     <Variable Type="float" Name="PercentBarCautionDecor.Y" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="PercentBarIconCautionDecor.BarColor" SetsValue="true">
+    <Variable Type="ColorCategory" Name="PercentBarIconCautionDecor.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
     </Variable>
     <Variable Type="BarDecorCategory" Name="PercentBarIconCautionDecor.BarDecorCategoryState" SetsValue="true">
@@ -543,7 +579,7 @@
     <Variable Type="float" Name="PercentBarIconCautionDecor.Y" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="PercentBarIconLinesDecor.BarColor" SetsValue="true">
+    <Variable Type="ColorCategory" Name="PercentBarIconLinesDecor.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
     </Variable>
     <Variable Type="BarDecorCategory" Name="PercentBarIconLinesDecor.BarDecorCategoryState" SetsValue="true">
@@ -567,7 +603,7 @@
     <Variable Type="float" Name="PercentBarIconLinesDecor.Y" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="PercentBarIconPrimary.BarColor" SetsValue="true">
+    <Variable Type="ColorCategory" Name="PercentBarIconPrimary.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
     </Variable>
     <Variable Type="BarDecorCategory" Name="PercentBarIconPrimary.BarDecorCategoryState" SetsValue="true">
@@ -639,8 +675,11 @@
     <Variable Type="float" Name="SliderInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="Solid.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Primary</Value>
+    <Variable Type="int" Name="Solid.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">177</Value>
+    </Variable>
+    <Variable Type="int" Name="Solid.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">159</Value>
     </Variable>
     <Variable Type="float" Name="Solid.Height" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
@@ -650,6 +689,9 @@
     </Variable>
     <Variable Type="string" Name="Solid.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="Solid.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="Solid.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Solid</Value>
@@ -672,8 +714,11 @@
     <Variable Type="PositionUnitType" Name="Solid.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="Tab.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Primary</Value>
+    <Variable Type="int" Name="Tab.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">177</Value>
+    </Variable>
+    <Variable Type="int" Name="Tab.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">159</Value>
     </Variable>
     <Variable Type="float" Name="Tab.Height" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
@@ -683,6 +728,9 @@
     </Variable>
     <Variable Type="string" Name="Tab.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="Tab.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="Tab.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Tab</Value>
@@ -708,8 +756,11 @@
     <Variable Type="PositionUnitType" Name="Tab.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TabBordered.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Primary</Value>
+    <Variable Type="int" Name="TabBordered.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">177</Value>
+    </Variable>
+    <Variable Type="int" Name="TabBordered.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">159</Value>
     </Variable>
     <Variable Type="float" Name="TabBordered.Height" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
@@ -719,6 +770,9 @@
     </Variable>
     <Variable Type="string" Name="TabBordered.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">NineSliceStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TabBordered.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TabBordered.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">TabBordered</Value>
@@ -744,11 +798,17 @@
     <Variable Type="PositionUnitType" Name="TabBordered.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TextAccent.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Accent</Value>
+    <Variable Type="int" Name="TextAccent.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">138</Value>
+    </Variable>
+    <Variable Type="int" Name="TextAccent.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
     </Variable>
     <Variable Type="string" Name="TextAccent.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ColorContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextAccent.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">140</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextAccent.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
@@ -759,11 +819,17 @@
     <Variable Type="DimensionUnitType" Name="TextAccent.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TextBlack.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Black</Value>
+    <Variable Type="int" Name="TextBlack.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="TextBlack.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="string" Name="TextBlack.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ColorContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextBlack.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextBlack.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
@@ -780,11 +846,17 @@
     <Variable Type="float" Name="TextBoxInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TextDarkGray.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">DarkGray</Value>
+    <Variable Type="int" Name="TextDarkGray.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">80</Value>
+    </Variable>
+    <Variable Type="int" Name="TextDarkGray.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">70</Value>
     </Variable>
     <Variable Type="string" Name="TextDarkGray.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ColorContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextDarkGray.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">70</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextDarkGray.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
@@ -795,11 +867,17 @@
     <Variable Type="DimensionUnitType" Name="TextDarkGray.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TextEmphasis.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">White</Value>
+    <Variable Type="int" Name="TextEmphasis.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="TextEmphasis.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="string" Name="TextEmphasis.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextEmphasis.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextEmphasis.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Emphasis</Value>
@@ -807,11 +885,17 @@
     <Variable Type="string" Name="TextEmphasis.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Emphasis</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TextGray.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Gray</Value>
+    <Variable Type="int" Name="TextGray.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">130</Value>
+    </Variable>
+    <Variable Type="int" Name="TextGray.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">130</Value>
     </Variable>
     <Variable Type="string" Name="TextGray.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ColorContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextGray.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">130</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextGray.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
@@ -822,11 +906,17 @@
     <Variable Type="DimensionUnitType" Name="TextGray.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TextH1.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">White</Value>
+    <Variable Type="int" Name="TextH1.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="TextH1.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="string" Name="TextH1.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextH1.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextH1.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">H1</Value>
@@ -834,11 +924,17 @@
     <Variable Type="string" Name="TextH1.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Heading 1</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TextH2.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">White</Value>
+    <Variable Type="int" Name="TextH2.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="TextH2.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="string" Name="TextH2.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextH2.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextH2.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">H2</Value>
@@ -846,11 +942,17 @@
     <Variable Type="string" Name="TextH2.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Heading 2</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TextH3.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">White</Value>
+    <Variable Type="int" Name="TextH3.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="TextH3.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="string" Name="TextH3.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextH3.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextH3.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">H3</Value>
@@ -858,11 +960,17 @@
     <Variable Type="string" Name="TextH3.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Heading 3</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TextLightGray.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">LightGray</Value>
+    <Variable Type="int" Name="TextLightGray.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">170</Value>
+    </Variable>
+    <Variable Type="int" Name="TextLightGray.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">170</Value>
     </Variable>
     <Variable Type="string" Name="TextLightGray.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ColorContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextLightGray.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">170</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextLightGray.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
@@ -873,11 +981,17 @@
     <Variable Type="DimensionUnitType" Name="TextLightGray.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TextNormal.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">White</Value>
+    <Variable Type="int" Name="TextNormal.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="TextNormal.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="string" Name="TextNormal.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextNormal.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextNormal.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
@@ -885,11 +999,17 @@
     <Variable Type="string" Name="TextNormal.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TextPrimary.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Primary</Value>
+    <Variable Type="int" Name="TextPrimary.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">177</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimary.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">159</Value>
     </Variable>
     <Variable Type="string" Name="TextPrimary.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ColorContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimary.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextPrimary.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
@@ -900,11 +1020,17 @@
     <Variable Type="DimensionUnitType" Name="TextPrimary.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TextPrimaryDark.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">PrimaryDark</Value>
+    <Variable Type="int" Name="TextPrimaryDark.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">137</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimaryDark.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">120</Value>
     </Variable>
     <Variable Type="string" Name="TextPrimaryDark.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ColorContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimaryDark.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextPrimaryDark.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
@@ -915,11 +1041,17 @@
     <Variable Type="DimensionUnitType" Name="TextPrimaryDark.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TextPrimaryLight.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">PrimaryLight</Value>
+    <Variable Type="int" Name="TextPrimaryLight.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">193</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimaryLight.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
     </Variable>
     <Variable Type="string" Name="TextPrimaryLight.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ColorContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextPrimaryLight.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">74</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextPrimaryLight.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
@@ -930,11 +1062,17 @@
     <Variable Type="DimensionUnitType" Name="TextPrimaryLight.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TextSmall.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">White</Value>
+    <Variable Type="int" Name="TextSmall.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="TextSmall.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="string" Name="TextSmall.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextSmall.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextSmall.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Small</Value>
@@ -942,11 +1080,17 @@
     <Variable Type="string" Name="TextSmall.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Small</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TextStrong.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">White</Value>
+    <Variable Type="int" Name="TextStrong.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="TextStrong.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="string" Name="TextStrong.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextStrong.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextStrong.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Strong</Value>
@@ -973,11 +1117,17 @@
     <Variable Type="float" Name="TextStyleContainer.Y" SetsValue="true">
       <Value xsi:type="xsd:float">11</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TextSuccess.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Success</Value>
+    <Variable Type="int" Name="TextSuccess.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="TextSuccess.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">167</Value>
     </Variable>
     <Variable Type="string" Name="TextSuccess.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ColorContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextSuccess.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">62</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextSuccess.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
@@ -988,11 +1138,17 @@
     <Variable Type="DimensionUnitType" Name="TextSuccess.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TextTiny.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">White</Value>
+    <Variable Type="int" Name="TextTiny.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="TextTiny.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="string" Name="TextTiny.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextTiny.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextTiny.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Tiny</Value>
@@ -1000,11 +1156,17 @@
     <Variable Type="string" Name="TextTiny.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Tiny</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TextTitle.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">White</Value>
+    <Variable Type="int" Name="TextTitle.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="TextTitle.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="string" Name="TextTitle.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyleContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextTitle.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextTitle.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Title</Value>
@@ -1012,11 +1174,17 @@
     <Variable Type="string" Name="TextTitle.Text" SetsValue="true">
       <Value xsi:type="xsd:string">H2</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TextWarning.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Warning</Value>
+    <Variable Type="int" Name="TextWarning.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">25</Value>
+    </Variable>
+    <Variable Type="int" Name="TextWarning.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">171</Value>
     </Variable>
     <Variable Type="string" Name="TextWarning.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ColorContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextWarning.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">232</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextWarning.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
@@ -1027,11 +1195,17 @@
     <Variable Type="DimensionUnitType" Name="TextWarning.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TextWarning1.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Danger</Value>
+    <Variable Type="int" Name="TextWarning1.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">41</Value>
+    </Variable>
+    <Variable Type="int" Name="TextWarning1.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">18</Value>
     </Variable>
     <Variable Type="string" Name="TextWarning1.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ColorContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextWarning1.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">212</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextWarning1.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
@@ -1042,11 +1216,17 @@
     <Variable Type="DimensionUnitType" Name="TextWarning1.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="TextWhite.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">White</Value>
+    <Variable Type="int" Name="TextWhite.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="TextWhite.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="string" Name="TextWhite.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ColorContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="TextWhite.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="TextWhite.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
@@ -1069,7 +1249,7 @@
     <Variable Type="float" Name="TreeViewInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="VerticalLinesInstance.LineColor" SetsValue="true">
+    <Variable Type="ColorCategory" Name="VerticalLinesInstance.ColorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Primary</Value>
     </Variable>
     <Variable Type="string" Name="VerticalLinesInstance.Parent" SetsValue="true">
@@ -1084,6 +1264,366 @@
     <Variable Type="float" Name="VerticalLinesInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
     </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Bordered.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Primary.FillRed</string>
+        <string>Green = Components/Styles.Primary.FillGreen</string>
+        <string>Blue = Components/Styles.Primary.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>BracketHorizontal.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Primary.FillRed</string>
+        <string>Green = Components/Styles.Primary.FillGreen</string>
+        <string>Blue = Components/Styles.Primary.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>BracketVertical.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Primary.FillRed</string>
+        <string>Green = Components/Styles.Primary.FillGreen</string>
+        <string>Blue = Components/Styles.Primary.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Outlined.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Primary.FillRed</string>
+        <string>Green = Components/Styles.Primary.FillGreen</string>
+        <string>Blue = Components/Styles.Primary.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>OutlinedHeavy.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Primary.FillRed</string>
+        <string>Green = Components/Styles.Primary.FillGreen</string>
+        <string>Blue = Components/Styles.Primary.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Panel.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Primary.FillRed</string>
+        <string>Green = Components/Styles.Primary.FillGreen</string>
+        <string>Blue = Components/Styles.Primary.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Solid.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Primary.FillRed</string>
+        <string>Green = Components/Styles.Primary.FillGreen</string>
+        <string>Blue = Components/Styles.Primary.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Tab.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Primary.FillRed</string>
+        <string>Green = Components/Styles.Primary.FillGreen</string>
+        <string>Blue = Components/Styles.Primary.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TabBordered.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Primary.FillRed</string>
+        <string>Green = Components/Styles.Primary.FillGreen</string>
+        <string>Blue = Components/Styles.Primary.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextAccent.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Accent.FillRed</string>
+        <string>Green = Components/Styles.Accent.FillGreen</string>
+        <string>Blue = Components/Styles.Accent.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextBlack.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Black.FillRed</string>
+        <string>Green = Components/Styles.Black.FillGreen</string>
+        <string>Blue = Components/Styles.Black.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextDarkGray.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.DarkGray.FillRed</string>
+        <string>Green = Components/Styles.DarkGray.FillGreen</string>
+        <string>Blue = Components/Styles.DarkGray.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextEmphasis.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.White.FillRed</string>
+        <string>Green = Components/Styles.White.FillGreen</string>
+        <string>Blue = Components/Styles.White.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextGray.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Gray.FillRed</string>
+        <string>Green = Components/Styles.Gray.FillGreen</string>
+        <string>Blue = Components/Styles.Gray.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextH1.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.White.FillRed</string>
+        <string>Green = Components/Styles.White.FillGreen</string>
+        <string>Blue = Components/Styles.White.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextH2.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.White.FillRed</string>
+        <string>Green = Components/Styles.White.FillGreen</string>
+        <string>Blue = Components/Styles.White.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextH3.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.White.FillRed</string>
+        <string>Green = Components/Styles.White.FillGreen</string>
+        <string>Blue = Components/Styles.White.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextLightGray.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.LightGray.FillRed</string>
+        <string>Green = Components/Styles.LightGray.FillGreen</string>
+        <string>Blue = Components/Styles.LightGray.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextNormal.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.White.FillRed</string>
+        <string>Green = Components/Styles.White.FillGreen</string>
+        <string>Blue = Components/Styles.White.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextPrimary.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Primary.FillRed</string>
+        <string>Green = Components/Styles.Primary.FillGreen</string>
+        <string>Blue = Components/Styles.Primary.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextPrimaryDark.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.PrimaryDark.FillRed</string>
+        <string>Green = Components/Styles.PrimaryDark.FillGreen</string>
+        <string>Blue = Components/Styles.PrimaryDark.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextPrimaryLight.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.PrimaryLight.FillRed</string>
+        <string>Green = Components/Styles.PrimaryLight.FillGreen</string>
+        <string>Blue = Components/Styles.PrimaryLight.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextSmall.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.White.FillRed</string>
+        <string>Green = Components/Styles.White.FillGreen</string>
+        <string>Blue = Components/Styles.White.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextStrong.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.White.FillRed</string>
+        <string>Green = Components/Styles.White.FillGreen</string>
+        <string>Blue = Components/Styles.White.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextSuccess.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Success.FillRed</string>
+        <string>Green = Components/Styles.Success.FillGreen</string>
+        <string>Blue = Components/Styles.Success.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextTiny.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.White.FillRed</string>
+        <string>Green = Components/Styles.White.FillGreen</string>
+        <string>Blue = Components/Styles.White.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextTitle.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.White.FillRed</string>
+        <string>Green = Components/Styles.White.FillGreen</string>
+        <string>Blue = Components/Styles.White.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextWarning.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Warning.FillRed</string>
+        <string>Green = Components/Styles.Warning.FillGreen</string>
+        <string>Blue = Components/Styles.Warning.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextWarning1.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Danger.FillRed</string>
+        <string>Green = Components/Styles.Danger.FillGreen</string>
+        <string>Blue = Components/Styles.Danger.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextWhite.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.White.FillRed</string>
+        <string>Green = Components/Styles.White.FillGreen</string>
+        <string>Blue = Components/Styles.White.FillBlue</string>
+      </Value>
+    </VariableList>
   </State>
   <Instance Name="TextStyleContainer" BaseType="Container" />
   <Instance Name="TextTitle" BaseType="Text" />
