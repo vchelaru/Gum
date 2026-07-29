@@ -59,12 +59,10 @@ public class TextBox : TextBoxBase
                     value = value.Substring(0, MaxLength.Value);
                 }
 
-                // go through the component instead of the core text object to force a layout refresh if necessary
-                // Calling SetProperty.
-                // This bypasses the Text change event so we need to explicitly handle text changing.
+                // go through the component instead of the core text object to force a layout refresh if necessary.
+                // SetProperty raises textComponent's PropertyChanged("Text"), which TextBoxBase's
+                // HandleTextComponentPropertyChanged forwards into OnTextChanged -- no explicit call needed here.
                 textComponent.SetProperty("Text", value);
-
-                OnTextChanged(value);
             }
         }
     }
@@ -87,9 +85,8 @@ public class TextBox : TextBoxBase
                 value = value.Substring(0, MaxLength.Value);
             }
 
+            // See the Text setter above: PropertyChanged("Text") drives OnTextChanged.
             textComponent.SetProperty("TextNoTranslate", value);
-
-            OnTextChanged(value);
         }
     }
 

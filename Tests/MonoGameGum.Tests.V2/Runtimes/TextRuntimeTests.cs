@@ -208,7 +208,7 @@ public class TextRuntimeTests : BaseTestClass
     }
 
     [Fact]
-    public void Text_ViaDirectPropertySet_WhenSizeChanges_StillTriggersTwoUpdateLayoutCalls()
+    public void Text_ViaDirectPropertySet_WhenSizeChanges_ShouldTriggerOneUpdateLayoutCall()
     {
         TextRuntime sut = new();
         sut.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
@@ -218,12 +218,10 @@ public class TextRuntimeTests : BaseTestClass
         sut.Text = "This is a much longer string that changes the wrapped size";
         int callCount = GraphicalUiElement.UpdateLayoutCallCount - countBefore;
 
-        // TextRuntime.Text's own wrapper AND the dispatcher's wrapper (reached via the SetProperty call
-        // in between) both still run and both now agree the size changed, so each independently calls
-        // UpdateLayout -- reconciling the two wrappers' *conditions* didn't collapse them into one call.
-        // That only happens once the dispatcher delegates directly to TextRuntime.Text (a follow-up PR),
-        // at which point this should drop to 1 -- update this test when that lands.
-        callCount.ShouldBe(2);
+        // TextRuntime.Text now owns the width-wrapper logic directly (via the shared
+        // CustomSetPropertyOnRenderable.SetText helper) instead of round-tripping through
+        // SetProperty into the dispatcher's own copy, so only one UpdateLayout call fires.
+        callCount.ShouldBe(1);
     }
 
     private static void AssertWrapsIdentically(string propertyName, string? text, bool expectMultipleLines, Action<TextRuntime> configure)
