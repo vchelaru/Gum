@@ -29,6 +29,7 @@
     <Label
       Background="{Binding StateBackground, Converter={StaticResource ColorToBrushConverter}}"
       Content="{Binding StateInformation}"
+      Foreground="{DynamicResource Frb.Brushes.OnLightBanner}"
       Visibility="{Binding HasStateInformation, Converter={StaticResource BoolToVisibilityConverter}}" />
     <Label
       Grid.Row="1"
