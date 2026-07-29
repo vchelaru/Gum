@@ -1,15 +1,9 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<ComponentSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<?xml version="1.0" encoding="utf-8"?>
+<ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>Elements/Divider</Name>
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>AccentLeft.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">Gray</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
     <Variable>
       <Type>float</Type>
       <Name>AccentLeft.Height</Name>
@@ -63,12 +57,6 @@
       <Type>float</Type>
       <Name>AccentLeft.Width</Name>
       <Value xsi:type="xsd:float">100</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>AccentRight.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">Gray</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -148,12 +136,6 @@
       <Type>DimensionUnitType</Type>
       <Name>HeightUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>Line.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">Gray</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -272,6 +254,42 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value />
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>AccentLeft.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Gray.FillRed</string>
+        <string>Green = Components/Styles.Gray.FillGreen</string>
+        <string>Blue = Components/Styles.Gray.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>AccentRight.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Gray.FillRed</string>
+        <string>Green = Components/Styles.Gray.FillGreen</string>
+        <string>Blue = Components/Styles.Gray.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Line.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Gray.FillRed</string>
+        <string>Green = Components/Styles.Gray.FillGreen</string>
+        <string>Blue = Components/Styles.Gray.FillBlue</string>
+      </Value>
     </VariableList>
   </State>
   <Instance>

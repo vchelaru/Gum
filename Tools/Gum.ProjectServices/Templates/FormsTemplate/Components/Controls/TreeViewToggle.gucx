@@ -28,8 +28,14 @@
     <Variable Type="DimensionUnitType" Name="IconInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="NineSliceInstance.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Primary</Value>
+    <Variable Type="int" Name="NineSliceInstance.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">177</Value>
+    </Variable>
+    <Variable Type="int" Name="NineSliceInstance.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">159</Value>
+    </Variable>
+    <Variable Type="int" Name="NineSliceInstance.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
     </Variable>
     <Variable Type="StyleCategory" Name="NineSliceInstance.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Bordered</Value>
@@ -42,12 +48,24 @@
     <Variable Type="DimensionUnitType" Name="WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>NineSliceInstance.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Primary.FillRed</string>
+        <string>Green = Components/Styles.Primary.FillGreen</string>
+        <string>Blue = Components/Styles.Primary.FillBlue</string>
+      </Value>
+    </VariableList>
   </State>
   <Category>
     <Name>ToggleCategory</Name>
     <State>
       <Name>EnabledOn</Name>
-      <Variable Type="ColorCategory" Name="IconInstance.IconColor" ExposedAsName="IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" ExposedAsName="IconColor" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
       <Variable Type="float" Name="IconInstance.Rotation" SetsValue="true">
@@ -59,13 +77,31 @@
       <Variable Type="RenderingLibrary.Graphics.VerticalAlignment" Name="IconInstance.YOrigin" SetsValue="true">
         <Value xsi:type="xsd:int">2</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="NineSliceInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Primary</Value>
+      <Variable Type="int" Name="NineSliceInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">177</Value>
       </Variable>
+      <Variable Type="int" Name="NineSliceInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">159</Value>
+      </Variable>
+      <Variable Type="int" Name="NineSliceInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">6</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>NineSliceInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Primary.FillRed</string>
+          <string>Green = Components/Styles.Primary.FillGreen</string>
+          <string>Blue = Components/Styles.Primary.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>EnabledOff</Name>
-      <Variable Type="ColorCategory" Name="IconInstance.IconColor" ExposedAsName="IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" ExposedAsName="IconColor" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
       <Variable Type="float" Name="IconInstance.Rotation" Category="Flip and Rotation" SetsValue="true">
@@ -77,13 +113,31 @@
       <Variable Type="VerticalAlignment" Name="IconInstance.YOrigin" Category="Position" SetsValue="true">
         <Value xsi:type="xsd:int">0</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="NineSliceInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Primary</Value>
+      <Variable Type="int" Name="NineSliceInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">177</Value>
       </Variable>
+      <Variable Type="int" Name="NineSliceInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">159</Value>
+      </Variable>
+      <Variable Type="int" Name="NineSliceInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">6</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>NineSliceInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Primary.FillRed</string>
+          <string>Green = Components/Styles.Primary.FillGreen</string>
+          <string>Blue = Components/Styles.Primary.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>DisabledOn</Name>
-      <Variable Type="string" Name="IconInstance.IconColor" SetsValue="true">
+      <Variable Type="string" Name="IconInstance.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Gray</Value>
       </Variable>
       <Variable Type="float" Name="IconInstance.Rotation" Category="Flip and Rotation" SetsValue="true">
@@ -95,13 +149,31 @@
       <Variable Type="VerticalAlignment" Name="IconInstance.YOrigin" Category="Position" SetsValue="true">
         <Value xsi:type="xsd:int">2</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="NineSliceInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">DarkGray</Value>
+      <Variable Type="int" Name="NineSliceInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">80</Value>
       </Variable>
+      <Variable Type="int" Name="NineSliceInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
+      </Variable>
+      <Variable Type="int" Name="NineSliceInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>NineSliceInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.DarkGray.FillRed</string>
+          <string>Green = Components/Styles.DarkGray.FillGreen</string>
+          <string>Blue = Components/Styles.DarkGray.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>DisabledOff</Name>
-      <Variable Type="ColorCategory" Name="IconInstance.IconColor" ExposedAsName="IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" ExposedAsName="IconColor" SetsValue="true">
         <Value xsi:type="xsd:string">Gray</Value>
       </Variable>
       <Variable Type="float" Name="IconInstance.Rotation" Category="Flip and Rotation" SetsValue="true">
@@ -113,13 +185,31 @@
       <Variable Type="VerticalAlignment" Name="IconInstance.YOrigin" Category="Position" SetsValue="true">
         <Value xsi:type="xsd:int">0</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="NineSliceInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">DarkGray</Value>
+      <Variable Type="int" Name="NineSliceInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">80</Value>
       </Variable>
+      <Variable Type="int" Name="NineSliceInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
+      </Variable>
+      <Variable Type="int" Name="NineSliceInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">70</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>NineSliceInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.DarkGray.FillRed</string>
+          <string>Green = Components/Styles.DarkGray.FillGreen</string>
+          <string>Blue = Components/Styles.DarkGray.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>HighlightedOn</Name>
-      <Variable Type="ColorCategory" Name="IconInstance.IconColor" ExposedAsName="IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" ExposedAsName="IconColor" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
       <Variable Type="float" Name="IconInstance.Rotation" Category="Flip and Rotation" SetsValue="true">
@@ -131,13 +221,31 @@
       <Variable Type="VerticalAlignment" Name="IconInstance.YOrigin" Category="Position" SetsValue="true">
         <Value xsi:type="xsd:int">2</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="NineSliceInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">PrimaryLight</Value>
+      <Variable Type="int" Name="NineSliceInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">193</Value>
       </Variable>
+      <Variable Type="int" Name="NineSliceInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">180</Value>
+      </Variable>
+      <Variable Type="int" Name="NineSliceInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">74</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>NineSliceInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.PrimaryLight.FillRed</string>
+          <string>Green = Components/Styles.PrimaryLight.FillGreen</string>
+          <string>Blue = Components/Styles.PrimaryLight.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>HighlightedOff</Name>
-      <Variable Type="ColorCategory" Name="IconInstance.IconColor" ExposedAsName="IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" ExposedAsName="IconColor" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
       <Variable Type="float" Name="IconInstance.Rotation" Category="Flip and Rotation" SetsValue="true">
@@ -149,13 +257,31 @@
       <Variable Type="VerticalAlignment" Name="IconInstance.YOrigin" Category="Position" SetsValue="true">
         <Value xsi:type="xsd:int">0</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="NineSliceInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">PrimaryLight</Value>
+      <Variable Type="int" Name="NineSliceInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">193</Value>
       </Variable>
+      <Variable Type="int" Name="NineSliceInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">180</Value>
+      </Variable>
+      <Variable Type="int" Name="NineSliceInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">74</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>NineSliceInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.PrimaryLight.FillRed</string>
+          <string>Green = Components/Styles.PrimaryLight.FillGreen</string>
+          <string>Blue = Components/Styles.PrimaryLight.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>PushedOn</Name>
-      <Variable Type="ColorCategory" Name="IconInstance.IconColor" ExposedAsName="IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" ExposedAsName="IconColor" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
       <Variable Type="float" Name="IconInstance.Rotation" Category="Flip and Rotation" SetsValue="true">
@@ -167,13 +293,31 @@
       <Variable Type="VerticalAlignment" Name="IconInstance.YOrigin" Category="Position" SetsValue="true">
         <Value xsi:type="xsd:int">2</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="NineSliceInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">PrimaryDark</Value>
+      <Variable Type="int" Name="NineSliceInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">137</Value>
       </Variable>
+      <Variable Type="int" Name="NineSliceInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">120</Value>
+      </Variable>
+      <Variable Type="int" Name="NineSliceInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">4</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>NineSliceInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.PrimaryDark.FillRed</string>
+          <string>Green = Components/Styles.PrimaryDark.FillGreen</string>
+          <string>Blue = Components/Styles.PrimaryDark.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>PushedOff</Name>
-      <Variable Type="ColorCategory" Name="IconInstance.IconColor" ExposedAsName="IconColor" SetsValue="true">
+      <Variable Type="ColorCategory" Name="IconInstance.ColorCategoryState" ExposedAsName="IconColor" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
       </Variable>
       <Variable Type="float" Name="IconInstance.Rotation" Category="Flip and Rotation" SetsValue="true">
@@ -185,9 +329,27 @@
       <Variable Type="VerticalAlignment" Name="IconInstance.YOrigin" Category="Position" SetsValue="true">
         <Value xsi:type="xsd:int">0</Value>
       </Variable>
-      <Variable Type="ColorCategory" Name="NineSliceInstance.ColorCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">PrimaryDark</Value>
+      <Variable Type="int" Name="NineSliceInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">137</Value>
       </Variable>
+      <Variable Type="int" Name="NineSliceInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">120</Value>
+      </Variable>
+      <Variable Type="int" Name="NineSliceInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">4</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>NineSliceInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.PrimaryDark.FillRed</string>
+          <string>Green = Components/Styles.PrimaryDark.FillGreen</string>
+          <string>Blue = Components/Styles.PrimaryDark.FillBlue</string>
+        </Value>
+      </VariableList>
     </State>
   </Category>
   <Instance Name="NineSliceInstance" BaseType="NineSlice" />

@@ -4,8 +4,11 @@
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable Type="ColorCategory" Name="Background.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">DarkGray</Value>
+    <Variable Type="int" Name="Background.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">80</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">70</Value>
     </Variable>
     <Variable Type="float" Name="Background.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -14,6 +17,9 @@
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
     <Variable Type="string" Name="Background.Parent" SetsValue="true" />
+    <Variable Type="int" Name="Background.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">70</Value>
+    </Variable>
     <Variable Type="StyleCategory" Name="Background.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Bordered</Value>
     </Variable>
@@ -75,8 +81,11 @@
     <Variable Type="string" Name="DefaultChildContainer" SetsValue="true">
       <Value xsi:type="xsd:string">InnerPanelInstance</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="FocusedIndicator.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Warning</Value>
+    <Variable Type="int" Name="FocusedIndicator.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">25</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">171</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.Height" SetsValue="true">
       <Value xsi:type="xsd:float">2</Value>
@@ -85,6 +94,9 @@
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="string" Name="FocusedIndicator.Parent" SetsValue="true" />
+    <Variable Type="int" Name="FocusedIndicator.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">232</Value>
+    </Variable>
     <Variable Type="StyleCategory" Name="FocusedIndicator.StyleCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Solid</Value>
     </Variable>
@@ -171,6 +183,30 @@
     <Variable Type="PositionUnitType" Name="VerticalScrollBarInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Background.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.DarkGray.FillRed</string>
+        <string>Green = Components/Styles.DarkGray.FillGreen</string>
+        <string>Blue = Components/Styles.DarkGray.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>FocusedIndicator.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Warning.FillRed</string>
+        <string>Green = Components/Styles.Warning.FillGreen</string>
+        <string>Blue = Components/Styles.Warning.FillBlue</string>
+      </Value>
+    </VariableList>
   </State>
   <Category>
     <Name>ScrollBarVisibility</Name>

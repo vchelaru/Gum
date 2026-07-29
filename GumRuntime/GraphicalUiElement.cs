@@ -6339,14 +6339,23 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             string underlyingProperty = mExposedVariables[propertyName];
             int indexOfDot = underlyingProperty.IndexOf('.');
-            string instanceName = underlyingProperty.Substring(0, indexOfDot);
-            GraphicalUiElement? containedGue = GetGraphicalUiElementByName(instanceName);
-            string variable = underlyingProperty.Substring(indexOfDot + 1);
 
-            // Children may not have been created yet
-            if (containedGue != null)
+            // ExposedAsName forwards to a named child instance's property, so the
+            // underlying property must be instance-qualified (e.g. "Background.ColorCategoryState").
+            // A malformed/unqualified underlying property has nowhere to forward to - skip it
+            // rather than crash the whole load (mirrors SetPropertyThroughReflection's handling
+            // of bad values below).
+            if (indexOfDot >= 0)
             {
-                containedGue.SetProperty(variable, value);
+                string instanceName = underlyingProperty.Substring(0, indexOfDot);
+                GraphicalUiElement? containedGue = GetGraphicalUiElementByName(instanceName);
+                string variable = underlyingProperty.Substring(indexOfDot + 1);
+
+                // Children may not have been created yet
+                if (containedGue != null)
+                {
+                    containedGue.SetProperty(variable, value);
+                }
             }
         }
         else if (ToolsUtilities.StringFunctions.ContainsNoAlloc(propertyName, '.'))

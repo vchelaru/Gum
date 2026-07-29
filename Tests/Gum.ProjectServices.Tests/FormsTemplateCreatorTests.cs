@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.ProjectServices;
 using Shouldly;
 
@@ -166,6 +167,96 @@ public class FormsTemplateCreatorTests : IDisposable
         }
 
         dangling.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Create_ColorCategoryOwningComponents_ShouldOwnTheirOwnLocalCategory()
+    {
+        // CautionLines/VerticalLines/Icon/PercentBar/PercentBarIcon each used to forward a
+        // friendly-named color property (LineColor/IconColor/BarColor) via ExposedAsName to a
+        // child instance's ColorCategoryState. ExposedAsName forwarding requires the
+        // underlying property to be instance-qualified (GraphicalUiElement.SetProperty splits
+        // it on '.'); an early version of this migration promoted the property to live
+        // unqualified on the owning component while keeping ExposedAsName, which crashes at
+        // runtime (ArgumentOutOfRangeException). The fix: these components now own their
+        // "ColorCategoryState" directly (unqualified, no ExposedAsName), matching the same
+        // pattern already used by ButtonCategoryState/IconCategoryState elsewhere. Pin that
+        // shape directly.
+        string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
+        _sut.Create(filePath);
+
+        ProjectLoadResult result = new ProjectLoader().Load(filePath);
+        result.Success.ShouldBeTrue();
+
+        string[] owningElements =
+        [
+            "Elements/CautionLines",
+            "Elements/VerticalLines",
+            "Elements/Icon",
+            "Elements/PercentBar",
+            "Elements/PercentBarIcon",
+        ];
+
+        foreach (string elementName in owningElements)
+        {
+            ComponentSave component = result.Project!.Components.First(c => c.Name == elementName);
+
+            VariableSave? colorState = component.DefaultState.Variables
+                .FirstOrDefault(v => v.Name == "ColorCategoryState");
+
+            colorState.ShouldNotBeNull($"{elementName} should own an unqualified ColorCategoryState");
+            colorState!.SourceObject.ShouldBeNull(
+                $"{elementName}.ColorCategoryState should live on the component itself, not forward to a child");
+            colorState.ExposedAsName.ShouldBeNullOrEmpty(
+                $"{elementName}.ColorCategoryState is not instance-qualified, so it cannot use ExposedAsName " +
+                "(that mechanism requires forwarding to a named child instance)");
+
+            StateSaveCategory? category = component.Categories.FirstOrDefault(c => c.Name == "ColorCategory");
+            category.ShouldNotBeNull($"{elementName} should own a local ColorCategory backing ColorCategoryState");
+            category!.States.Select(s => s.Name).ShouldContain("Primary");
+            category.States.Count.ShouldBe(12);
+        }
+    }
+
+    [Fact]
+    public void Create_PercentBarIconBarIconColor_ShouldForwardThroughIconsOwnColorCategoryState()
+    {
+        // BarIconColor is a genuine forward (PercentBarIcon -> IconInstance.ColorCategoryState),
+        // legitimate because the underlying name is instance-qualified - Icon.ColorCategoryState
+        // itself is covered (unqualified, un-exposed) by the test above.
+        string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
+        _sut.Create(filePath);
+
+        ProjectLoadResult result = new ProjectLoader().Load(filePath);
+        result.Success.ShouldBeTrue();
+
+        ComponentSave percentBarIcon = result.Project!.Components.First(c => c.Name == "Elements/PercentBarIcon");
+        VariableSave? forward = percentBarIcon.DefaultState.Variables
+            .FirstOrDefault(v => v.ExposedAsName == "BarIconColor");
+
+        forward.ShouldNotBeNull();
+        forward!.SourceObject.ShouldBe("IconInstance");
+        forward.GetRootName().ShouldBe("ColorCategoryState");
+    }
+
+    [Fact]
+    public void Create_StandardElements_ShouldNoLongerOwnColorCategory()
+    {
+        string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
+        _sut.Create(filePath);
+
+        ProjectLoadResult result = new ProjectLoader().Load(filePath);
+        result.Success.ShouldBeTrue();
+
+        string[] formerOwners = ["NineSlice", "Sprite", "Text"];
+        foreach (string name in formerOwners)
+        {
+            StandardElementSave standard = result.Project!.StandardElements.First(s => s.Name == name);
+            standard.Categories.ShouldNotContain(c => c.Name == "ColorCategory",
+                $"{name} should no longer define the now-dead ColorCategory");
+            standard.DefaultState.Variables.ShouldNotContain(v => v.Name == "ColorCategoryState",
+                $"{name} should no longer carry the ColorCategoryState stub variable");
+        }
     }
 
     public void Dispose()

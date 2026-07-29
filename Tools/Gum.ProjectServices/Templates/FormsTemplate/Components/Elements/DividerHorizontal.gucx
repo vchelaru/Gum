@@ -4,14 +4,20 @@
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable Type="ColorCategory" Name="AccentLeft.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Gray</Value>
+    <Variable Type="int" Name="AccentLeft.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">130</Value>
+    </Variable>
+    <Variable Type="int" Name="AccentLeft.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">130</Value>
     </Variable>
     <Variable Type="float" Name="AccentLeft.Height" SetsValue="true">
       <Value xsi:type="xsd:float">100</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="AccentLeft.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">3</Value>
+    </Variable>
+    <Variable Type="int" Name="AccentLeft.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">130</Value>
     </Variable>
     <Variable IsFile="true" Type="string" Name="AccentLeft.SourceFile" SetsValue="true">
       <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
@@ -34,14 +40,20 @@
     <Variable Type="float" Name="AccentLeft.Width" SetsValue="true">
       <Value xsi:type="xsd:float">100</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="AccentRight.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Gray</Value>
+    <Variable Type="int" Name="AccentRight.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">130</Value>
+    </Variable>
+    <Variable Type="int" Name="AccentRight.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">130</Value>
     </Variable>
     <Variable Type="float" Name="AccentRight.Height" SetsValue="true">
       <Value xsi:type="xsd:float">100</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="AccentRight.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">3</Value>
+    </Variable>
+    <Variable Type="int" Name="AccentRight.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">130</Value>
     </Variable>
     <Variable IsFile="true" Type="string" Name="AccentRight.SourceFile" SetsValue="true">
       <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
@@ -76,14 +88,20 @@
     <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="Line.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Gray</Value>
+    <Variable Type="int" Name="Line.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">130</Value>
+    </Variable>
+    <Variable Type="int" Name="Line.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">130</Value>
     </Variable>
     <Variable Type="float" Name="Line.Height" SetsValue="true">
       <Value xsi:type="xsd:float">100</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="Line.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">3</Value>
+    </Variable>
+    <Variable Type="int" Name="Line.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">130</Value>
     </Variable>
     <Variable IsFile="true" Type="string" Name="Line.SourceFile" SetsValue="true">
       <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
@@ -145,6 +163,42 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value />
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>AccentLeft.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Gray.FillRed</string>
+        <string>Green = Components/Styles.Gray.FillGreen</string>
+        <string>Blue = Components/Styles.Gray.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>AccentRight.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Gray.FillRed</string>
+        <string>Green = Components/Styles.Gray.FillGreen</string>
+        <string>Blue = Components/Styles.Gray.FillBlue</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Line.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Red = Components/Styles.Gray.FillRed</string>
+        <string>Green = Components/Styles.Gray.FillGreen</string>
+        <string>Blue = Components/Styles.Gray.FillBlue</string>
+      </Value>
     </VariableList>
   </State>
   <Instance Name="AccentLeft" BaseType="Sprite" />
