@@ -1,4 +1,5 @@
 using Gum.GueDeriving;
+using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using Shouldly;
 
@@ -204,6 +205,25 @@ public class TextRuntimeTests : BaseTestClass
             (first, value) => first.SetProperty(propertyName, value));
 
         ySettingViaSetProperty.ShouldBe(ySettingViaDirect);
+    }
+
+    [Fact]
+    public void Text_ViaDirectPropertySet_WhenSizeChanges_StillTriggersTwoUpdateLayoutCalls()
+    {
+        TextRuntime sut = new();
+        sut.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        sut.Text = "Short";
+
+        int countBefore = GraphicalUiElement.UpdateLayoutCallCount;
+        sut.Text = "This is a much longer string that changes the wrapped size";
+        int callCount = GraphicalUiElement.UpdateLayoutCallCount - countBefore;
+
+        // TextRuntime.Text's own wrapper AND the dispatcher's wrapper (reached via the SetProperty call
+        // in between) both still run and both now agree the size changed, so each independently calls
+        // UpdateLayout -- reconciling the two wrappers' *conditions* didn't collapse them into one call.
+        // That only happens once the dispatcher delegates directly to TextRuntime.Text (a follow-up PR),
+        // at which point this should drop to 1 -- update this test when that lands.
+        callCount.ShouldBe(2);
     }
 
     private static void AssertWrapsIdentically(string propertyName, string? text, bool expectMultipleLines, Action<TextRuntime> configure)
