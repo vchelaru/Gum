@@ -48,6 +48,9 @@ public class FontFileGeneratorSelector : IFontFileGenerator
     /// <inheritdoc/>
     public bool RequiresSizeEstimation => CurrentGenerator.RequiresSizeEstimation;
 
+    /// <inheritdoc/>
+    public bool UsesExternalProcess => CurrentGenerator.UsesExternalProcess;
+
     private IFontFileGenerator CurrentGenerator => _getGeneratorType() switch
     {
         FontGeneratorType.KernSmith => _kernSmithGenerator,

@@ -71,6 +71,14 @@ public class ToolFontGenerationCallbacksTests
     }
 
     [Fact]
+    public void OnExternalProcessExited_ActivatesMainWindow()
+    {
+        _callbacks.OnExternalProcessExited();
+
+        _guiCommands.Verify(g => g.ActivateMainWindow(), Times.Once);
+    }
+
+    [Fact]
     public void OnOutput_RoutesToGuiCommandsPrintOutput()
     {
         _callbacks.OnOutput("generating fonts");

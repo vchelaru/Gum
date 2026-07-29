@@ -55,6 +55,9 @@ public class ToolFontGenerationCallbacks : IFontGenerationCallbacks
     /// <inheritdoc/>
     public void OnIgnoreFileChange(FilePath filePath) => _fileWatchIgnoreList.IgnoreNextChangeUntil(filePath);
 
+    /// <inheritdoc/>
+    public void OnExternalProcessExited() => _guiCommands.ActivateMainWindow();
+
     private sealed class SpinnerHandle : IDisposable
     {
         private readonly ToolFontGenerationCallbacks _owner;

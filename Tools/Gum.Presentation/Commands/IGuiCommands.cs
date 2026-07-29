@@ -17,4 +17,10 @@ public interface IGuiCommands
     /// Shows a progress spinner and returns it as a framework-neutral <see cref="ISpinner"/>.
     /// </summary>
     ISpinner ShowSpinner();
+
+    /// <summary>
+    /// Brings the tool's main window to the foreground. Used to reclaim focus after an external
+    /// process (e.g. bmfont.exe) that briefly took its own top-level window has exited.
+    /// </summary>
+    void ActivateMainWindow();
 }

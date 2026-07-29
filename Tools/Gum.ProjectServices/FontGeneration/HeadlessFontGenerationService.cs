@@ -420,6 +420,11 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
                 GeneralResponse generateResponse = await _fontFileGenerator.GenerateFont(
                     bmfcSave, desiredFntFile.FullPath, createTask);
 
+                if (_fontFileGenerator.UsesExternalProcess)
+                {
+                    _callbacks.OnExternalProcessExited();
+                }
+
                 toReturn.Succeeded = generateResponse.Succeeded;
                 toReturn.Message = generateResponse.Message;
             }

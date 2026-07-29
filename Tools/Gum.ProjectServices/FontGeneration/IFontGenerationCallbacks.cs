@@ -31,4 +31,11 @@ public interface IFontGenerationCallbacks
     /// Called before a font-related file is written so that file-watch listeners can ignore the change.
     /// </summary>
     void OnIgnoreFileChange(FilePath filePath) { }
+
+    /// <summary>
+    /// Called after an <see cref="IFontFileGenerator"/> with <see cref="IFontFileGenerator.UsesExternalProcess"/>
+    /// finishes generating, so WPF-side callers can restore window focus the external process's own
+    /// window may have stolen (issue #4078).
+    /// </summary>
+    void OnExternalProcessExited() { }
 }

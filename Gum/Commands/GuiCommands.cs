@@ -21,6 +21,9 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Windows;
+using System.Windows.Interop;
 using System.Xml.Linq;
 using ToolsUtilities;
 using WpfDataUi.DataTypes;
@@ -130,4 +133,33 @@ public class GuiCommands : IGuiCommands
 
     /// <inheritdoc/>
     public ISpinner ShowSpinner() => _spinnerFactory.Create();
+
+    /// <inheritdoc/>
+    public void ActivateMainWindow()
+    {
+        if (Application.Current?.MainWindow is not { } mainWindow)
+        {
+            return;
+        }
+
+        mainWindow.Activate();
+
+        // Windows throttles Activate() calls from a background process - grant this process
+        // permission to steal foreground focus first, then take it directly via Win32.
+        // EnsureHandle forces the Win32 HWND to be created if it doesn't exist yet.
+        IntPtr windowHandle = new WindowInteropHelper(mainWindow).EnsureHandle();
+        NativeMethods.AllowSetForegroundWindow(NativeMethods.ASFW_ANY);
+        NativeMethods.SetForegroundWindow(windowHandle);
+    }
+
+    private static class NativeMethods
+    {
+        public const int ASFW_ANY = -1;
+
+        [DllImport("user32.dll")]
+        public static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        public static extern bool AllowSetForegroundWindow(int dwProcessId);
+    }
 }

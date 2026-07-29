@@ -79,6 +79,22 @@ public class FontFileGeneratorSelectorTests
         selector.RequiresSizeEstimation.ShouldBeFalse();
     }
 
+    [Fact]
+    public void UsesExternalProcess_ShouldDelegateToCurrentlySelectedGenerator()
+    {
+        RecordingFontFileGenerator bmFont = new RecordingFontFileGenerator { UsesExternalProcess = true };
+        RecordingFontFileGenerator kernSmith = new RecordingFontFileGenerator { UsesExternalProcess = false };
+        FontGeneratorType currentType = FontGeneratorType.BmFont;
+        FontFileGeneratorSelector selector = new FontFileGeneratorSelector(
+            bmFont, kernSmith, () => currentType);
+
+        selector.UsesExternalProcess.ShouldBeTrue();
+
+        currentType = FontGeneratorType.KernSmith;
+
+        selector.UsesExternalProcess.ShouldBeFalse();
+    }
+
     // -------------------------------------------------------------------------
     // Test doubles
     // -------------------------------------------------------------------------
@@ -91,6 +107,7 @@ public class FontFileGeneratorSelectorTests
         public bool WasCalled { get; private set; }
 
         public bool RequiresSizeEstimation { get; init; } = true;
+        public bool UsesExternalProcess { get; init; }
 
         public void Reset()
         {
