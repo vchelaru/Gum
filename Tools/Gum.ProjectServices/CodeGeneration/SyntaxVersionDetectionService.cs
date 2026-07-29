@@ -1,7 +1,8 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Reflection;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using System.Text.RegularExpressions;
 using ToolsUtilities;
 
@@ -253,11 +254,34 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
 
     internal static string? ExtractPackageReferenceVersion(string csprojContents, string packageName)
     {
-        // Match: <PackageReference Include="FlatRedBall.MonoGameGum" Version="2026.4.1" />
-        // or: <PackageReference Include="FlatRedBall.MonoGameGum" Version="2026.4.1">
-        string pattern = $"<PackageReference\\s+Include=\"{Regex.Escape(packageName)}\"\\s+Version=\"([^\"]*)\"";
-        Match match = Regex.Match(csprojContents, pattern, RegexOptions.IgnoreCase);
-        return match.Success ? match.Groups[1].Value : null;
+        // Capture the whole element so Version can be found either as an attribute
+        // (<PackageReference Include="X" Version="Y" />) or, for csproj files migrated
+        // from packages.config, as a nested child element:
+        // <PackageReference Include="X"><Version>Y</Version></PackageReference>
+        string elementPattern =
+            $"<PackageReference\\b(?=[^>]*\\bInclude=\"{Regex.Escape(packageName)}\")[^>]*?(?:/>|>(?<body>.*?)</PackageReference>)";
+        Match elementMatch = Regex.Match(csprojContents, elementPattern, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        if (!elementMatch.Success)
+        {
+            return null;
+        }
+
+        Match versionAttribute = Regex.Match(elementMatch.Value, "\\bVersion=\"([^\"]*)\"", RegexOptions.IgnoreCase);
+        if (versionAttribute.Success)
+        {
+            return versionAttribute.Groups[1].Value;
+        }
+
+        if (elementMatch.Groups["body"].Success)
+        {
+            Match versionElement = Regex.Match(elementMatch.Groups["body"].Value, "<Version>([^<]*)</Version>", RegexOptions.IgnoreCase);
+            if (versionElement.Success)
+            {
+                return versionElement.Groups[1].Value;
+            }
+        }
+
+        return null;
     }
 
     internal string? FindDllInNuGetCache(string packageName, string version)
@@ -304,21 +328,33 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
     {
         try
         {
-            // Use MetadataLoadContext to avoid loading into the app domain
-            var resolver = new PathAssemblyResolver(new[] { dllPath, typeof(object).Assembly.Location });
-            using var context = new MetadataLoadContext(resolver);
-            Assembly assembly = context.LoadFromAssemblyPath(dllPath);
+            // Read the assembly-level custom attribute via raw ECMA-335 metadata rather than
+            // MetadataLoadContext/reflection. A real Gum.MonoGame/etc. package's dll declares
+            // [assembly: GumSyntaxVersion] using a type defined in GumCommon, which ships as its
+            // own separate NuGet package -- reflection-based resolution would need every
+            // transitively-referenced assembly (GumCommon, and whatever it references) available
+            // to the resolver just to identify one attribute's name and read one int field.
+            // Reading the metadata tables directly needs none of that: type references are just
+            // names/strings in the tables, never resolved to their declaring assembly.
+            using FileStream stream = File.OpenRead(dllPath);
+            using var peReader = new PEReader(stream);
+            MetadataReader reader = peReader.GetMetadataReader();
+            AssemblyDefinition assemblyDefinition = reader.GetAssemblyDefinition();
 
-            foreach (CustomAttributeData attr in assembly.GetCustomAttributesData())
+            foreach (CustomAttributeHandle attributeHandle in assemblyDefinition.GetCustomAttributes())
             {
-                if (attr.AttributeType.Name == nameof(Gum.DataTypes.GumSyntaxVersionAttribute))
+                CustomAttribute customAttribute = reader.GetCustomAttribute(attributeHandle);
+                if (GetAttributeTypeName(reader, customAttribute) != nameof(Gum.DataTypes.GumSyntaxVersionAttribute))
                 {
-                    foreach (CustomAttributeNamedArgument namedArg in attr.NamedArguments)
+                    continue;
+                }
+
+                CustomAttributeValue<string> decoded = customAttribute.DecodeValue(NullCustomAttributeTypeProvider.Instance);
+                foreach (CustomAttributeNamedArgument<string> namedArgument in decoded.NamedArguments)
+                {
+                    if (namedArgument.Name == "Version" && namedArgument.Value is int version)
                     {
-                        if (namedArg.MemberName == "Version" && namedArg.TypedValue.Value is int version)
-                        {
-                            return version;
-                        }
+                        return version;
                     }
                 }
             }
@@ -329,6 +365,51 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
         }
 
         return null;
+    }
+
+    private static string? GetAttributeTypeName(MetadataReader reader, CustomAttribute customAttribute)
+    {
+        StringHandle nameHandle;
+        switch (customAttribute.Constructor.Kind)
+        {
+            case HandleKind.MemberReference:
+                MemberReference memberReference = reader.GetMemberReference((MemberReferenceHandle)customAttribute.Constructor);
+                nameHandle = memberReference.Parent.Kind switch
+                {
+                    HandleKind.TypeReference => reader.GetTypeReference((TypeReferenceHandle)memberReference.Parent).Name,
+                    HandleKind.TypeDefinition => reader.GetTypeDefinition((TypeDefinitionHandle)memberReference.Parent).Name,
+                    _ => default
+                };
+                break;
+            case HandleKind.MethodDefinition:
+                MethodDefinition methodDefinition = reader.GetMethodDefinition((MethodDefinitionHandle)customAttribute.Constructor);
+                nameHandle = reader.GetTypeDefinition(methodDefinition.GetDeclaringType()).Name;
+                break;
+            default:
+                return null;
+        }
+
+        return nameHandle.IsNil ? null : reader.GetString(nameHandle);
+    }
+
+    /// <summary>
+    /// Minimal <see cref="ICustomAttributeTypeProvider{TType}"/> for decoding
+    /// <see cref="Gum.DataTypes.GumSyntaxVersionAttribute"/>'s single primitive named argument. Only the
+    /// argument's runtime <c>Value</c> (decoded directly by the blob reader for primitives)
+    /// is needed here, never the reported <c>TType</c>, so every type-lookup method is a stub.
+    /// </summary>
+    private sealed class NullCustomAttributeTypeProvider : ICustomAttributeTypeProvider<string>
+    {
+        public static readonly NullCustomAttributeTypeProvider Instance = new();
+
+        public string GetPrimitiveType(PrimitiveTypeCode typeCode) => typeCode.ToString();
+        public string GetSystemType() => "Type";
+        public string GetSZArrayType(string elementType) => elementType + "[]";
+        public string GetTypeFromDefinition(MetadataReader reader, TypeDefinitionHandle handle, byte rawTypeKind) => "";
+        public string GetTypeFromReference(MetadataReader reader, TypeReferenceHandle handle, byte rawTypeKind) => "";
+        public string GetTypeFromSerializedName(string name) => name;
+        public PrimitiveTypeCode GetUnderlyingEnumType(string type) => PrimitiveTypeCode.Int32;
+        public bool IsSystemType(string type) => false;
     }
 
     internal static int? ParseVersionFromSourceFile(string filePath)

@@ -404,6 +404,23 @@ public class SyntaxVersionDetectionServiceTests : IDisposable
     }
 
     [Fact]
+    public void ExtractPackageReferenceVersion_NestedVersionElement_ReturnsVersion()
+    {
+        string csproj = @"<Project Sdk=""Microsoft.NET.Sdk"">
+  <ItemGroup>
+    <PackageReference Include=""FlatRedBall.MonoGameGum"">
+      <Version>2026.4.1</Version>
+    </PackageReference>
+  </ItemGroup>
+</Project>";
+
+        string? result = SyntaxVersionDetectionService.ExtractPackageReferenceVersion(csproj, "FlatRedBall.MonoGameGum");
+
+        result.ShouldNotBeNull();
+        result.ShouldBe("2026.4.1");
+    }
+
+    [Fact]
     public void ExtractPackageReferenceVersion_MultiplePackages_FindsCorrectOne()
     {
         string csproj = @"<Project Sdk=""Microsoft.NET.Sdk"">
@@ -508,6 +525,84 @@ public class SyntaxVersionDetectionServiceTests : IDisposable
         string? result = sut.FindDllInNuGetCache("Gum.SkiaSharp", "1.0.0");
 
         result.ShouldBe(net8DllPath);
+    }
+
+    [Fact]
+    public void Detect_NuGetPackage_RealAssembly_ReadsSyntaxVersionFromAttribute()
+    {
+        // Uses the real GumCommon.dll already copied next to this test assembly (a transitive
+        // build dependency) so ReadVersionFromAssembly's MetadataLoadContext usage is exercised
+        // against a genuine multi-reference assembly instead of an empty placeholder file.
+        string nuGetCacheRoot = Path.Combine(_tempDirectory, "nuget-cache");
+        string tfmDir = Path.Combine(nuGetCacheRoot, "gum.monogame", "2026.1.1", "lib", "net8.0");
+        Directory.CreateDirectory(tfmDir);
+        File.Copy(
+            Path.Combine(AppContext.BaseDirectory, "GumCommon.dll"),
+            Path.Combine(tfmDir, "GumCommon.dll"));
+
+        SyntaxVersionDetectionService sut = new SyntaxVersionDetectionService(_logger, nuGetCacheRoot);
+
+        string gameDir = Path.Combine(_tempDirectory, "game");
+        Directory.CreateDirectory(gameDir);
+        string csprojPath = Path.Combine(gameDir, "MyGame.csproj");
+        File.WriteAllText(csprojPath,
+@"<Project Sdk=""Microsoft.NET.Sdk"">
+  <ItemGroup>
+    <PackageReference Include=""Gum.MonoGame"" Version=""2026.1.1"" />
+  </ItemGroup>
+</Project>");
+
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            SyntaxVersion = "*",
+            CodeProjectRoot = "./"
+        };
+
+        SyntaxVersionResult result = sut.Detect(settings, gameDir);
+
+        result.Source.ShouldBe(SyntaxVersionSource.NuGetPackage);
+        result.Version.ShouldBe(3);
+    }
+
+    [Fact]
+    public void Detect_NuGetPackage_AttributeTypeInSeparateReferencedAssembly_ReadsSyntaxVersion()
+    {
+        // Real published Gum runtime packages (Gum.MonoGame, etc.) declare their
+        // [assembly: GumSyntaxVersion] attribute using a type defined in GumCommon, which
+        // ships as its own separate NuGet package (FlatRedBall.GumCommon) -- so a consumer's
+        // NuGet cache has the runtime's dll in one package folder and GumCommon's dll in a
+        // DIFFERENT one. CrossAssemblyAttributeFixture.dll reproduces that shape. Deliberately
+        // NOT copying GumCommon.dll alongside it here: reading the attribute must not require
+        // resolving/loading the assembly that declares the attribute's type.
+        string nuGetCacheRoot = Path.Combine(_tempDirectory, "nuget-cache");
+        string tfmDir = Path.Combine(nuGetCacheRoot, "gum.monogame", "2026.1.1", "lib", "net8.0");
+        Directory.CreateDirectory(tfmDir);
+        File.Copy(
+            Path.Combine(AppContext.BaseDirectory, "CrossAssemblyAttributeFixture.dll"),
+            Path.Combine(tfmDir, "CrossAssemblyAttributeFixture.dll"));
+
+        SyntaxVersionDetectionService sut = new SyntaxVersionDetectionService(_logger, nuGetCacheRoot);
+
+        string gameDir = Path.Combine(_tempDirectory, "game");
+        Directory.CreateDirectory(gameDir);
+        string csprojPath = Path.Combine(gameDir, "MyGame.csproj");
+        File.WriteAllText(csprojPath,
+@"<Project Sdk=""Microsoft.NET.Sdk"">
+  <ItemGroup>
+    <PackageReference Include=""Gum.MonoGame"" Version=""2026.1.1"" />
+  </ItemGroup>
+</Project>");
+
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            SyntaxVersion = "*",
+            CodeProjectRoot = "./"
+        };
+
+        SyntaxVersionResult result = sut.Detect(settings, gameDir);
+
+        result.Source.ShouldBe(SyntaxVersionSource.NuGetPackage);
+        result.Version.ShouldBe(5);
     }
 
     [Fact]

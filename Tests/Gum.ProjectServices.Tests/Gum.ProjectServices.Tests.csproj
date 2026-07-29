@@ -23,6 +23,11 @@
     <!-- GumExpressions wires Roslyn-based right-side evaluation for VariableReferences, needed
          to test conditional (ternary) Font expressions in font bulk-generation. -->
     <ProjectReference Include="..\..\Runtimes\GumExpressions\GumExpressions.csproj" />
+    <!-- Test fixture reproducing a Gum runtime assembly whose [assembly: GumSyntaxVersion]
+         attribute type is defined in a different referenced assembly (GumCommon), matching
+         MonoGameGum/RaylibGum/SkiaGum's real shape. Referenced by path (not built/run directly)
+         so SyntaxVersionDetectionServiceTests can copy its built dll into a fake NuGet cache. -->
+    <ProjectReference Include="..\CrossAssemblyAttributeFixture\CrossAssemblyAttributeFixture.csproj" />
   </ItemGroup>
 
   <ItemGroup>
