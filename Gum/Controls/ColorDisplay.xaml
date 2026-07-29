@@ -32,6 +32,16 @@
             MouseUp="ColorPicker_MouseUp"
             PreviewMouseUp="ColorPicker_PreviewMouseUp" />
 
+        <!--  Overlays the (disabled) picker with the real resolved color when read-only, since WPF's
+              disabled-control rendering blanks the third-party picker's swatch to solid gray (#4072).  -->
+        <Rectangle
+            x:Name="ReadOnlySwatch"
+            Grid.Column="1"
+            Margin="0,5,0,5"
+            VerticalAlignment="Stretch"
+            IsHitTestVisible="False"
+            Visibility="Collapsed" />
+
         <!--  Inline hex entry: paste/type a 6- or 8-digit hex (alpha stripped) without opening the picker popup.  -->
         <StackPanel
             Grid.Column="2"

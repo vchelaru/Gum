@@ -111,14 +111,10 @@ namespace Gum.Controls.DataUi
 
         private void RefreshIsEnabled()
         {
-            if (InstanceMember?.IsReadOnly == true)
-            {
-                IsEnabled = false;
-            }
-            else
-            {
-                IsEnabled = true;
-            }
+            bool isReadOnly = InstanceMember?.IsReadOnly == true;
+
+            IsEnabled = !isReadOnly;
+            ReadOnlySwatch.Visibility = isReadOnly ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public ApplyValueResult TrySetValueOnUi(object valueOnInstance)
@@ -133,6 +129,7 @@ namespace Gum.Controls.DataUi
                 windowsColor.B = color.B;
 
                 this.ColorPicker.SelectedColor = windowsColor;
+                ReadOnlySwatch.Fill = new SolidColorBrush(ColorDisplayLogic.ToOpaqueSwatchColor(windowsColor));
                 SyncHexTextFromPicker();
                 // This is beign set from the underlying data object to the UI
                 // which means the UI hasn't updated yet, so we don't want to push
@@ -141,7 +138,7 @@ namespace Gum.Controls.DataUi
 
                 return ApplyValueResult.Success;
             }
-            else 
+            else
 #endif
             if(valueOnInstance is System.Drawing.Color drawingColor)
             {
@@ -152,6 +149,7 @@ namespace Gum.Controls.DataUi
                 windowsColor.B = drawingColor.B;
 
                 this.ColorPicker.SelectedColor = windowsColor;
+                ReadOnlySwatch.Fill = new SolidColorBrush(ColorDisplayLogic.ToOpaqueSwatchColor(windowsColor));
                 SyncHexTextFromPicker();
                 return ApplyValueResult.Success;
             }
