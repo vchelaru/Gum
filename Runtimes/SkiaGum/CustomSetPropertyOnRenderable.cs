@@ -1107,6 +1107,16 @@ public partial class CustomSetPropertyOnRenderable
         }
         else if(containedObjectAsIpso is Polygon asPolygon)
         {
+            // Route through the runtime first (ADR 0011), same as the Circle/Rectangle branches
+            // above -- PolygonRuntime inherits SkiaShapeRuntime, the same runtime family, and some
+            // of its properties (e.g. StrokeWidth) are backed by a runtime-only field applied at
+            // pre-render, not a pass-through to the renderable. Falling straight to
+            // TrySetPropertiesOnRenderableBase would write the renderable's own StrokeWidth, which
+            // the runtime never reads.
+            if(!handled)
+            {
+                handled = TrySetPropertyOnRuntime(graphicalUiElement, propertyName, value);
+            }
             if(!handled)
             {
                 handled = TrySetPropertiesOnRenderableBase(asPolygon, graphicalUiElement, propertyName, value);
