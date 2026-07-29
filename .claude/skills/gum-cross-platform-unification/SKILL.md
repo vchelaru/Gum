@@ -53,11 +53,13 @@ Before adding a "forward to the contained renderable" property to a runtime, che
 
 ## Changing a Renderable's Mechanism Strands Its Old Tests
 
-When you swap *how* a renderable achieves an effect (e.g. Skia text outline moving off RichTextKit's halo onto a render-time recolor+dilate pass), grep the test projects for assertions against the old mechanism (`Halo`, the old `GetStyle` shape) — they compile fine and fail only at run time, and a per-OS CI job that fail-fasts hides which one broke. Run the whole affected test project locally, not a name-filtered subset.
+When you swap *how* a renderable achieves an effect (e.g. Skia text outline moving between RichTextKit's native halo and a render-time recolor+dilate pass), grep the test projects for assertions against the old mechanism (`Halo`, the old `GetStyle` shape) — they compile fine and fail only at run time, and a per-OS CI job that fail-fasts hides which one broke. Run the whole affected test project locally, not a name-filtered subset.
 
 ## SkiaGum's Topten.RichTextKit Is a Vendored Patched Build
 
 `Runtimes/SkiaGum/SkiaGum.csproj`'s `Topten.RichTextKit` reference is not the real nuget.org package — it's a local-feed build (`ThirdParty/nuget-local/`, wired via `/NuGet.config`) patched to fix `Style.HaloWidth` spiking at acute glyph corners. Don't "clean up" the version to the real `0.4.167` in a routine dependency-update pass — that silently reintroduces the spike. Upstream: [toptensoftware/RichTextKit#113](https://github.com/toptensoftware/RichTextKit/issues/113) (issue), [#114](https://github.com/toptensoftware/RichTextKit/pull/114) (fix). See `ThirdParty/README.md` for what's vendored and when to revert.
+
+**`Runtimes/SilkNetGum/SilkNetGum.csproj` has its own separate `PackageReference` for the same package** — it links SkiaGum's `Renderables/*.cs` source via `<Compile Include>` rather than referencing `SkiaGum.csproj`, so bumping the vendored version in one csproj does not carry to the other. Bump or revert both together, or the shared `Text.cs` silently runs against unpatched behavior in whichever csproj was missed, with no compile error and no failing test to catch it.
 
 ## Never Widen an Obsolete API
 
