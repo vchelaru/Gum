@@ -105,8 +105,11 @@ namespace RenderingLibrary
                     textRuntime.UseCustomFont, textRuntime.CustomFontFile, textRuntime.Font)
                     ?? textRuntime.Font ?? "Arial";
                 asText.IsItalic = textRuntime.IsItalic;
-                // BoldWeight is an embolden multiplier (1.0 = normal). Do NOT set CSS weights (400/700) here.
-                asText.BoldWeight = textRuntime.IsBold ? 1.5f : 1.0f;
+                // BoldWeight is an embolden multiplier (1.0 = normal). Do NOT set CSS weights (400/700)
+                // here. Forward the stored value (not IsBold ? 1.5f : 1.0f) -- recomputing from the
+                // derived bool lost any custom multiplier outside {1.0, 1.5} the next time an unrelated
+                // font property changed and re-ran this bridge (issue #4077 follow-up).
+                asText.BoldWeight = textRuntime.BoldWeight;
                 asText.FontSize = textRuntime.FontSize;
                 // Push OutlineThickness/OutlineColor here too: this delegate is the code-property path
                 // (GraphicalUiElement.OutlineThickness setter -> UpdateToFontValues -> this). #3675

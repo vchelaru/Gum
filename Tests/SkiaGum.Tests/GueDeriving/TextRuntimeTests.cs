@@ -92,6 +92,26 @@ public class TextRuntimeTests
         containedText.BoldWeight.ShouldBe(1.5f);
     }
 
+    [Fact]
+    public void BoldWeight_CustomValue_ShouldSurviveSubsequentFontPropertyChange()
+    {
+        // SystemManagers.UpdateFonts pushes BoldWeight on every font-property change (FontSize,
+        // Font, IsItalic, OutlineThickness, ...), but recomputes it from the derived IsBold bool
+        // (`IsBold ? 1.5f : 1.0f`) instead of forwarding the stored value -- so any BoldWeight
+        // outside {1.0, 1.5} is silently clobbered back to 1.5 the next time an unrelated font
+        // property changes. BoldWeight_ShouldPushToContainedText above doesn't catch this because
+        // 1.5 happens to survive the lossy recompute unchanged.
+        new RenderingLibrary.SystemManagers().Initialize();
+
+        TextRuntime sut = new();
+        sut.BoldWeight = 1.25f;
+
+        sut.FontSize = 20;
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.BoldWeight.ShouldBe(1.25f);
+    }
+
     #endregion
 
     #region Clone
