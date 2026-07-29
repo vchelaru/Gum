@@ -35,9 +35,6 @@ public class BmFontExeFileGenerator : IFontFileGenerator
     public bool RequiresSizeEstimation => true;
 
     /// <inheritdoc/>
-    public bool UsesExternalProcess => true;
-
-    /// <inheritdoc/>
     public async Task<GeneralResponse> GenerateFont(BmfcSave bmfcSave, string outputFntPath, bool createTask)
     {
         ThrowIfNotWindows();

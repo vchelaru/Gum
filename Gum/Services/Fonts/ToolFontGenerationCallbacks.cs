@@ -55,9 +55,6 @@ public class ToolFontGenerationCallbacks : IFontGenerationCallbacks
     /// <inheritdoc/>
     public void OnIgnoreFileChange(FilePath filePath) => _fileWatchIgnoreList.IgnoreNextChangeUntil(filePath);
 
-    /// <inheritdoc/>
-    public void OnExternalProcessExited() => _guiCommands.ActivateMainWindow();
-
     private sealed class SpinnerHandle : IDisposable
     {
         private readonly ToolFontGenerationCallbacks _owner;
@@ -73,6 +70,11 @@ public class ToolFontGenerationCallbacks : IFontGenerationCallbacks
         {
             _owner._currentSpinner = null;
             _spinner.Hide();
+
+            // The spinner is a top-level WPF window (Spinner.xaml); Window.Hide() doesn't restore
+            // focus to its owner, so the OS can hand focus to whatever else is in the z-order
+            // (e.g. Visual Studio when running Gum under the debugger). See issue #4078.
+            _owner._guiCommands.ActivateMainWindow();
         }
     }
 }

@@ -40,11 +40,6 @@ public class KernSmithFileGenerator : IFontFileGenerator
     /// </summary>
     public bool RequiresSizeEstimation => false;
 
-    /// <summary>
-    /// KernSmith runs in-process — no separate window can steal focus.
-    /// </summary>
-    public bool UsesExternalProcess => false;
-
     private static void EnsureRasterizerRegistered()
     {
         if (_rasterizerRegistered)

@@ -19,8 +19,8 @@ public interface IGuiCommands
     ISpinner ShowSpinner();
 
     /// <summary>
-    /// Brings the tool's main window to the foreground. Used to reclaim focus after an external
-    /// process (e.g. bmfont.exe) that briefly took its own top-level window has exited.
+    /// Brings the tool's main window to the foreground. Used to reclaim focus after a transient
+    /// top-level window (e.g. the font-generation spinner) closes without returning it.
     /// </summary>
     void ActivateMainWindow();
 }

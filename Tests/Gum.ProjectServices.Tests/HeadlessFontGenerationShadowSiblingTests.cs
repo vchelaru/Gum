@@ -100,7 +100,6 @@ public class HeadlessFontGenerationShadowSiblingTests : IDisposable
     private sealed class RecordingFontFileGenerator : IFontFileGenerator
     {
         public bool RequiresSizeEstimation { get; init; }
-        public bool UsesExternalProcess { get; init; }
         public int CallCount { get; private set; }
 
         public Task<GeneralResponse> GenerateFont(BmfcSave bmfcSave, string outputFntPath, bool createTask)

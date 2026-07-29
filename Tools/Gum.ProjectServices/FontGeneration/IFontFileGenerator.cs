@@ -23,11 +23,4 @@ public interface IFontFileGenerator
     /// (e.g. KernSmith's autofit) should return false so the caller skips that work entirely.
     /// </summary>
     bool RequiresSizeEstimation { get; }
-
-    /// <summary>
-    /// Whether this generator shells out to a separate top-level-window process (e.g. bmfont.exe)
-    /// to produce a font. In-process generators (e.g. KernSmith) should return false. Callers use
-    /// this to know when the external process may have stolen window focus.
-    /// </summary>
-    bool UsesExternalProcess { get; }
 }

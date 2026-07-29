@@ -142,24 +142,50 @@ public class GuiCommands : IGuiCommands
             return;
         }
 
-        mainWindow.Activate();
-
-        // Windows throttles Activate() calls from a background process - grant this process
-        // permission to steal foreground focus first, then take it directly via Win32.
         // EnsureHandle forces the Win32 HWND to be created if it doesn't exist yet.
         IntPtr windowHandle = new WindowInteropHelper(mainWindow).EnsureHandle();
-        NativeMethods.AllowSetForegroundWindow(NativeMethods.ASFW_ANY);
-        NativeMethods.SetForegroundWindow(windowHandle);
+        NativeMethods.ForceForegroundWindow(windowHandle);
+        mainWindow.Activate();
     }
 
     private static class NativeMethods
     {
-        public const int ASFW_ANY = -1;
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
 
         [DllImport("user32.dll")]
-        public static extern bool SetForegroundWindow(IntPtr hWnd);
+        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, IntPtr processId);
+
+        [DllImport("kernel32.dll")]
+        private static extern uint GetCurrentThreadId();
 
         [DllImport("user32.dll")]
-        public static extern bool AllowSetForegroundWindow(int dwProcessId);
+        private static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
+
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        /// <summary>
+        /// Forces <paramref name="hWnd"/> to the foreground even when this process isn't already
+        /// foreground. A plain <c>SetForegroundWindow</c> call from a background process is
+        /// throttled by Windows and silently no-ops; temporarily attaching this thread's input
+        /// state to the currently-foreground window's thread is the documented workaround.
+        /// </summary>
+        public static void ForceForegroundWindow(IntPtr hWnd)
+        {
+            uint foregroundThreadId = GetWindowThreadProcessId(GetForegroundWindow(), IntPtr.Zero);
+            uint currentThreadId = GetCurrentThreadId();
+
+            if (foregroundThreadId != currentThreadId)
+            {
+                AttachThreadInput(currentThreadId, foregroundThreadId, true);
+                SetForegroundWindow(hWnd);
+                AttachThreadInput(currentThreadId, foregroundThreadId, false);
+            }
+            else
+            {
+                SetForegroundWindow(hWnd);
+            }
+        }
     }
 }

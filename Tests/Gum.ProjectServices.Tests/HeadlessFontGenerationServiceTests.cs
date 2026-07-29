@@ -913,46 +913,6 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     #endregion
 
     // -------------------------------------------------------------------------
-    // External process notification (issue #4078)
-    // -------------------------------------------------------------------------
-
-    #region External process notification
-
-    [Fact]
-    public void CreateFontIfNecessary_ShouldNotifyExternalProcessExited_WhenGeneratorUsesExternalProcess()
-    {
-        RecordingFontGenerationCallbacks callbacks = new RecordingFontGenerationCallbacks();
-        HeadlessFontGenerationService service = new HeadlessFontGenerationService(
-            new NoOpFontFileGenerator { UsesExternalProcess = true }, callbacks);
-
-        BmfcSave bmfcSave = new BmfcSave();
-        bmfcSave.FontName = "Arial";
-        bmfcSave.FontSize = 24;
-
-        service.CreateFontIfNecessary(bmfcSave, projectDirectory: "/tmp/test", autoSizeFontOutputs: false);
-
-        callbacks.ExternalProcessExitedCount.ShouldBe(1);
-    }
-
-    [Fact]
-    public void CreateFontIfNecessary_ShouldNotNotifyExternalProcessExited_WhenGeneratorDoesNotUseExternalProcess()
-    {
-        RecordingFontGenerationCallbacks callbacks = new RecordingFontGenerationCallbacks();
-        HeadlessFontGenerationService service = new HeadlessFontGenerationService(
-            new NoOpFontFileGenerator { UsesExternalProcess = false }, callbacks);
-
-        BmfcSave bmfcSave = new BmfcSave();
-        bmfcSave.FontName = "Arial";
-        bmfcSave.FontSize = 24;
-
-        service.CreateFontIfNecessary(bmfcSave, projectDirectory: "/tmp/test", autoSizeFontOutputs: false);
-
-        callbacks.ExternalProcessExitedCount.ShouldBe(0);
-    }
-
-    #endregion
-
-    // -------------------------------------------------------------------------
     // Windows gate (BmFontExeFileGenerator)
     // -------------------------------------------------------------------------
 
@@ -987,22 +947,11 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     private sealed class NoOpFontFileGenerator : IFontFileGenerator
     {
         public bool RequiresSizeEstimation { get; init; } = true;
-        public bool UsesExternalProcess { get; init; }
 
         public Task<GeneralResponse> GenerateFont(BmfcSave bmfcSave, string outputFntPath, bool createTask)
         {
             GeneralResponse response = GeneralResponse.SuccessfulResponse;
             return Task.FromResult(response);
         }
-    }
-
-    /// <summary>
-    /// A callbacks fake that counts <see cref="IFontGenerationCallbacks.OnExternalProcessExited"/> calls.
-    /// </summary>
-    private sealed class RecordingFontGenerationCallbacks : IFontGenerationCallbacks
-    {
-        public int ExternalProcessExitedCount { get; private set; }
-
-        public void OnExternalProcessExited() => ExternalProcessExitedCount++;
     }
 }

@@ -71,19 +71,21 @@ public class ToolFontGenerationCallbacksTests
     }
 
     [Fact]
-    public void OnExternalProcessExited_ActivatesMainWindow()
-    {
-        _callbacks.OnExternalProcessExited();
-
-        _guiCommands.Verify(g => g.ActivateMainWindow(), Times.Once);
-    }
-
-    [Fact]
     public void OnOutput_RoutesToGuiCommandsPrintOutput()
     {
         _callbacks.OnOutput("generating fonts");
 
         _guiCommands.Verify(g => g.PrintOutput("generating fonts"), Times.Once);
+    }
+
+    [Fact]
+    public void ShowSpinner_Dispose_ActivatesMainWindow()
+    {
+        IDisposable? handle = _callbacks.ShowSpinner();
+
+        handle!.Dispose();
+
+        _guiCommands.Verify(g => g.ActivateMainWindow(), Times.Once);
     }
 
     [Fact]
