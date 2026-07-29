@@ -1032,10 +1032,18 @@ public partial class CustomSetPropertyOnRenderable
             // reference, so SourceShaderFile resolution has its own lean copy here rather than a
             // shared call (issue #3998) -- same convention as this dispatcher's own
             // Sprite/NineSlice SourceFile handling above, which is also independent per backend.
+            //
+            // IsRenderTarget/Alpha route through ContainerRuntime (ADR 0011), matching core's
+            // TrySetPropertyOnContainer, so the string path stays behind the same setter as
+            // direct C# assignment (containerRuntime.Alpha = ...) if that setter ever grows logic.
+            var containerRuntime = graphicalUiElement as ContainerRuntime;
             switch (propertyName)
             {
                 case "IsRenderTarget":
-                    asInvisibleRenderable.IsRenderTarget = value as bool? ?? false;
+                    if (containerRuntime != null)
+                    {
+                        containerRuntime.IsRenderTarget = value as bool? ?? false;
+                    }
                     handled = true;
                     break;
 #if SKIA
@@ -1049,20 +1057,27 @@ public partial class CustomSetPropertyOnRenderable
                     break;
 #endif
                 case "Alpha":
-                    if (value is int asInt)
                     {
-                        asInvisibleRenderable.Alpha = asInt;
+                        int valueAsInt;
+                        if (value is int asInt)
+                        {
+                            valueAsInt = asInt;
+                        }
+                        else if (value is float asFloat)
+                        {
+                            valueAsInt = (int)asFloat;
+                        }
+                        else
+                        {
+                            valueAsInt = 255;
+                        }
+                        if (containerRuntime != null)
+                        {
+                            containerRuntime.Alpha = valueAsInt;
+                        }
+                        handled = true;
+                        break;
                     }
-                    else if (value is float asFloat)
-                    {
-                        asInvisibleRenderable.Alpha = (int)asFloat;
-                    }
-                    else
-                    {
-                        asInvisibleRenderable.Alpha = 255;
-                    }
-                    handled = true;
-                    break;
             }
         }
 #if SKIA
