@@ -42,6 +42,18 @@ namespace SkiaGumWpfSample
             rectangle2.IsFilled = true;
 
             container.Children.Add(rectangle2);
+
+            // Issue #4037: per-run [OutlineThickness=N] BBCode tag, plus the whole-string
+            // OutlineThickness property -- both now render through RichTextKit's halo with the
+            // vendored round-join patch, so acute corners (W, V, A) shouldn't spike.
+            var text = new TextRuntime();
+            text.Width = 400;
+            text.FontSize = 40;
+            text.Color = SkiaSharp.SKColors.White;
+            text.OutlineColor = SkiaSharp.SKColors.Red;
+            text.OutlineThickness = 4;
+            text.Text = "WAVY whole-string outline, [OutlineThickness=10]WAVY thick run[/OutlineThickness], [OutlineThickness=0]WAVY no outline[/OutlineThickness]";
+            container.Children.Add(text);
         }
     }
 }

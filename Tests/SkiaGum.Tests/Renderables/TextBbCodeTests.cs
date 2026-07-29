@@ -116,6 +116,20 @@ public class TextBbCodeTests
     }
 
     [Fact]
+    public void GetStyledRuns_OutlineThicknessTag_SetsRunHaloDoubled()
+    {
+        Text text = MakeText();
+        text.OutlineColor = SKColors.Red;
+        text.RawText = "plain [OutlineThickness=3]outlined[/OutlineThickness] plain";
+
+        List<Text.StyledTextRun> runs = text.GetStyledRuns();
+
+        runs.Single(r => r.Text == "outlined").Style.HaloWidth.ShouldBe(6f);
+        runs.Single(r => r.Text == "outlined").Style.HaloColor.ShouldBe(SKColors.Red);
+        runs.First(r => r.Text.StartsWith("plain")).Style.HaloWidth.ShouldBe(0f);
+    }
+
+    [Fact]
     public void GetStyledRuns_PlainText_ProducesSingleUnchangedRun()
     {
         Text text = MakeText();

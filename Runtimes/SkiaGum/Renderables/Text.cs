@@ -470,9 +470,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
     /// <summary>
     /// The thickness, in pixels, of the outline drawn around the text. Zero (the default) draws no
-    /// outline. Rendered through RichTextKit's halo (<see cref="Style.HaloWidth"/>). Mirrors the
-    /// OutlineThickness font property on the MonoGame/Raylib backends, which instead bake the outline
-    /// into the generated bitmap font since they have no runtime font-drawing outline mechanism.
+    /// outline. Rendered through RichTextKit's halo (<see cref="Style.HaloWidth"/>, doubled -- see
+    /// <see cref="BuildRunStyle"/>). Can be overridden per run with the <c>[OutlineThickness=N]</c>
+    /// BBCode tag (issue #4037). Mirrors the OutlineThickness font property on the MonoGame/Raylib
+    /// backends, which instead bake the outline into the generated bitmap font since they have no
+    /// runtime font-drawing outline mechanism.
     /// </summary>
     public int OutlineThickness
     {
@@ -939,13 +941,13 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             if (renderPaint != null)
             {
                 canvas.SaveLayer(renderPaint);
-                DrawTextWithOutline(canvas, paintBlock);
+                paintBlock.Paint(canvas, new SKPoint(0, 0));
                 canvas.Restore();
                 renderPaint.Dispose();
             }
             else
             {
-                DrawTextWithOutline(canvas, paintBlock);
+                paintBlock.Paint(canvas, new SKPoint(0, 0));
             }
             canvas.Restore();
         }
@@ -981,32 +983,6 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     // (rulers, distance arrows), not a feature any game project needs. XNALIKE-only is fine, not
     // adding it here (#3708).
 
-    /// <summary>
-    /// Paints the outline (when <see cref="OutlineThickness"/> &gt; 0) followed by the text fill.
-    /// The outline is a single recolor+dilate pass: the text is painted into a layer whose paint
-    /// recolors every glyph to <see cref="OutlineColor"/> (SrcIn) and dilates it by
-    /// <see cref="OutlineThickness"/> pixels, producing a uniform outline of that width on every
-    /// side. Unlike RichTextKit's centered halo stroke this can neither spike at acute vertices
-    /// (no miter join) nor emboss (no half-hidden 1px edge), and it reuses RichTextKit's exact
-    /// layout so the outline always registers with the fill.
-    /// </summary>
-    private void DrawTextWithOutline(SKCanvas canvas, TextBlock paintBlock)
-    {
-        if (OutlineThickness > 0)
-        {
-            using var outlinePaint = new SKPaint
-            {
-                IsAntialias = true,
-                ColorFilter = SKColorFilter.CreateBlendMode(OutlineColor, SKBlendMode.SrcIn),
-                ImageFilter = SKImageFilter.CreateDilate(OutlineThickness, OutlineThickness),
-            };
-            canvas.SaveLayer(outlinePaint);
-            paintBlock.Paint(canvas, new SKPoint(0, 0));
-            canvas.Restore();
-        }
-
-        paintBlock.Paint(canvas, new SKPoint(0, 0));
-    }
     public BlendState BlendState => BlendState.AlphaBlend;
 
 
@@ -1047,9 +1023,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     // "custom" (issue #3692) instead produces one single-character InlineVariable per letter, resolved
     // against Customizations/ContextCustomizations in BuildRunStyle and applied as a Style color override
     // plus a post-layout glyph nudge (see GetTextBlock). "font" resolves through GumFontMapper the same
-    // way the base Font property does (issue #3719). "outlinethickness" is still intentionally excluded
-    // -- the whole-image recolor+dilate technique OutlineThickness uses (see BuildRunStyle's remarks)
-    // has no per-run equivalent, and doing that properly needs its own design, not a tag-table entry.
+    // way the base Font property does (issue #3719). "outlinethickness" maps onto RichTextKit's per-run
+    // Style.HaloWidth, doubled to compensate for the halo being a centered stroke (issue #4037) -- the
+    // outline color is not per-run, it always uses the whole Text's OutlineColor.
     // Unrecognized tags are left as literal characters, matching the parser.
     private static readonly HashSet<string> SupportedTags = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -1062,6 +1038,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         "fontscale",
         "isbold",
         "isitalic",
+        "outlinethickness",
         "custom",
     };
 
@@ -1376,6 +1353,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         float fontScale = FontScale;
         bool italic = this.IsItalic;
         int weight = (int)(400 * BoldWeight);
+        int outlineThickness = this.OutlineThickness;
         float xOffset = 0;
         float yOffset = 0;
         string text = runText;
@@ -1415,6 +1393,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                         break;
                     case "IsItalic":
                         italic = (bool)variable.Value;
+                        break;
+                    case "OutlineThickness":
+                        outlineThickness = (int)variable.Value;
                         break;
                     case "Custom":
                         if (variable.Value is ParameterizedLetterCustomizationCall call)
@@ -1472,15 +1453,17 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             TextColor = color,
             FontItalic = italic,
             FontWeight = weight,
-            LineHeight = LineHeightMultiplier
+            LineHeight = LineHeightMultiplier,
+            // HaloWidth is a stroke centered on the glyph edge, so at width N the fill covers the
+            // inner half and only ~N/2 shows -- doubled here so the requested thickness shows in
+            // full outward. That doubling used to hit RichTextKit's hardcoded miter join and spike
+            // at acute vertices, which is why this used to be a separate whole-image recolor+dilate
+            // pass instead; the join is now a vendored round-join fix (issue #4068), so the native
+            // per-run halo is used directly, which is also what makes per-run [OutlineThickness]
+            // possible (issue #4037) -- RichTextKit paints per-run halo natively in one pass.
+            HaloWidth = outlineThickness > 0 ? outlineThickness * 2f : 0f,
+            HaloColor = OutlineColor,
         };
-
-        // OutlineThickness is intentionally NOT mapped to RichTextKit's Style.HaloColor/HaloWidth here.
-        // That halo is a stroke centered on the glyph edge, so at width N the fill covers the inner
-        // half and only ~N/2 shows (thin, uneven at small sizes); widening to 2N to compensate hits
-        // RichTextKit's hardcoded miter join (no join knob) and spikes at acute vertices. Instead the
-        // outline is a uniform recolor+dilate pass in Render (DrawTextWithOutline), which can't spike
-        // or emboss and reuses RichTextKit's exact layout.
 
         return (style, text, xOffset, yOffset);
     }
@@ -1525,7 +1508,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// value the shared <see cref="StyledSubstringSplitter"/> and <see cref="BuildRunStyle"/> understand:
     /// Font -> resolved family-name string (via <see cref="Content.Fonts.GumFontMapper.ResolveFontFamily"/>),
     /// Color -> System.Drawing.Color, Red/Green/Blue -> byte, FontSize -> int, FontScale -> float,
-    /// IsBold/IsItalic -> bool. Tags whose argument fails to parse are skipped (rendered with base style).
+    /// IsBold/IsItalic -> bool, OutlineThickness -> int. Tags whose argument fails to parse are skipped
+    /// (rendered with base style).
     /// </summary>
     private void BuildInlineVariables(List<FoundTag> tags)
     {
@@ -1578,6 +1562,12 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                 case "isitalic":
                     variableName = "IsItalic";
                     value = bool.TryParse(argument, out var italic) ? italic : (bool?)null;
+                    break;
+                case "outlinethickness":
+                    variableName = "OutlineThickness";
+                    value = int.TryParse(argument, NumberStyles.Integer, CultureInfo.InvariantCulture, out var outlineThickness)
+                        ? outlineThickness
+                        : (int?)null;
                     break;
                 case "custom":
                     // A [Custom=Name] callback applies per letter (issue #3692), so -- unlike every other

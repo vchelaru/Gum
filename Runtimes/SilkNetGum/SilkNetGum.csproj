@@ -173,7 +173,13 @@
 		<PackageReference Include="SkiaSharp.Extended" Version="3.0.0" />
 		<PackageReference Include="SkiaSharp.Skottie" Version="3.119.1" />
 		<PackageReference Include="Svg.Skia" Version="1.0.0.19" />
-		<PackageReference Include="Topten.RichTextKit" Version="0.4.167" />
+		<!-- Vendored patched build (see /NuGet.config and /ThirdParty/nuget-local), fixes halo
+		     stroke-join spiking at acute glyph corners, needed for per-run outline thickness (#4037).
+		     Must track SkiaGum.csproj's reference: this project links SkiaGum's Renderables/*.cs
+		     source directly, so a mismatched RichTextKit version here means the shared Text.cs runs
+		     against the unpatched halo behavior despite compiling clean. Revert both together once
+		     toptensoftware/RichTextKit#114 ships. -->
+		<PackageReference Include="Topten.RichTextKit" Version="0.4.167-gumfix.1" />
 		<!-- Input only: the backend-agnostic IInputContext lives here. Silk.NET.Windowing (which
 		     picks GLFW vs SDL and owns the window) is intentionally NOT referenced. -->
 		<PackageReference Include="Silk.NET.Input" Version="2.21.0" />
