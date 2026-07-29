@@ -601,6 +601,24 @@ public class TextRuntimeTests
         containedText.GetStyle().HaloColor.ShouldNotBe(SKColor.Empty);
     }
 
+    [Fact]
+    public void OutlineThickness_Default_ShouldNotEmitHalo()
+    {
+        // Regression: fixing OutlineColor's default to opaque black (above) means every TextRuntime
+        // now carries a non-empty HaloColor even when no outline was ever requested. RichTextKit's
+        // halo gate only checks `Style.HaloColor != SKColor.Empty` -- it ignores HaloWidth -- and a
+        // Stroke-style SKPaint with StrokeWidth 0 draws as a 1px hairline rather than nothing. So
+        // plain text with OutlineThickness left at its default (0) started rendering a thin outline
+        // on every glyph. BuildRunStyle must suppress HaloColor to Empty whenever OutlineThickness is
+        // not greater than zero, regardless of what OutlineColor holds.
+        new RenderingLibrary.SystemManagers().Initialize();
+
+        TextRuntime sut = new();
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.GetStyle().HaloColor.ShouldBe(SKColor.Empty);
+    }
+
     #endregion
 
     #region PropertyChanged
