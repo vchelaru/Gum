@@ -1096,13 +1096,15 @@ public partial class CustomSetPropertyOnRenderable
         }
         else if(containedObjectAsIpso is NineSlice asNineSlice)
         {
-            if(!handled)
-            {
-                handled = TrySetPropertiesOnRenderableBase(asNineSlice, graphicalUiElement, propertyName, value);
-            }
+            // Route through NineSliceRuntime first (ADR 0011), same reasoning as the Sprite branch
+            // above: mechanical properties need the runtime's NotifyPropertyChanged side effect.
             if(!handled)
             {
                 handled = TrySetPropertyOnNineSlice(asNineSlice, graphicalUiElement, propertyName, value);
+            }
+            if(!handled)
+            {
+                handled = TrySetPropertiesOnRenderableBase(asNineSlice, graphicalUiElement, propertyName, value);
             }
         }
         else if(containedObjectAsIpso is Polygon asPolygon)
@@ -1253,6 +1255,8 @@ public partial class CustomSetPropertyOnRenderable
 
     private static bool TrySetPropertyOnNineSlice(NineSlice asNineSlice, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
+        var nineSliceRuntime = graphicalUiElement as NineSliceRuntime;
+
         switch(propertyName)
         {
             case "SourceFile":
@@ -1266,6 +1270,77 @@ public partial class CustomSetPropertyOnRenderable
                 else
                 {
                     asNineSlice.Texture = null;
+                }
+                return true;
+            case nameof(NineSlice.Alpha):
+                if (nineSliceRuntime != null)
+                {
+                    nineSliceRuntime.Alpha = (int)value;
+                    return true;
+                }
+                break;
+            case nameof(NineSlice.Red):
+                if (nineSliceRuntime != null)
+                {
+                    nineSliceRuntime.Red = (int)value;
+                    return true;
+                }
+                break;
+            case nameof(NineSlice.Green):
+                if (nineSliceRuntime != null)
+                {
+                    nineSliceRuntime.Green = (int)value;
+                    return true;
+                }
+                break;
+            case nameof(NineSlice.Blue):
+                if (nineSliceRuntime != null)
+                {
+                    nineSliceRuntime.Blue = (int)value;
+                    return true;
+                }
+                break;
+            case nameof(NineSlice.Color):
+                if (nineSliceRuntime != null)
+                {
+                    if (value is System.Drawing.Color drawingColor)
+                    {
+                        nineSliceRuntime.Color = drawingColor.ToSkia();
+                        return true;
+                    }
+                    else if (value is SKColor skColor)
+                    {
+                        nineSliceRuntime.Color = skColor;
+                        return true;
+                    }
+                }
+                break;
+            case "Blend":
+                if (nineSliceRuntime != null)
+                {
+                    nineSliceRuntime.Blend = (Gum.RenderingLibrary.Blend)value;
+                    return true;
+                }
+                break;
+            case nameof(NineSliceRuntime.BorderScale):
+                if (nineSliceRuntime != null)
+                {
+                    nineSliceRuntime.BorderScale = (float)value;
+                    return true;
+                }
+                break;
+            case nameof(NineSliceRuntime.IsTilingMiddleSections):
+                if (nineSliceRuntime != null)
+                {
+                    nineSliceRuntime.IsTilingMiddleSections = (bool)value;
+                    return true;
+                }
+                break;
+            case nameof(NineSliceRuntime.CustomFrameTextureCoordinateWidth):
+                if (nineSliceRuntime != null)
+                {
+                    nineSliceRuntime.CustomFrameTextureCoordinateWidth = (float?)value;
+                    return true;
                 }
                 break;
         }
