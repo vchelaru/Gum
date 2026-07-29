@@ -684,14 +684,28 @@ public partial class InteractiveGue : GraphicalUiElement
 
             if (managers != null)
             {
-                int cursorScreenX = cursor.X;
-                int cursorScreenY = cursor.Y;
+                float cursorScreenX = cursor.X;
+                float cursorScreenY = cursor.Y;
                 float worldX;
                 float worldY;
                 // Adjust by viewport values:
                 // todo ...
                 //cursorScreenX -= managers.Renderer.GraphicsDevice.Viewport.X;
                 //cursorScreenY -= managers.Renderer.GraphicsDevice.Viewport.Y;
+
+                // A subtree drawn into an externally-scaled render target can supply a transform
+                // that maps the raw window pixel back into the space it was drawn in (issue #4096).
+                // Apply it before screen-to-world so the camera/layer transform still composes on
+                // top. Resolved by climbing to the nearest ancestor that set one.
+                var hitTestTransform = thisInstance.EffectiveHitTestTransformMatrix;
+                if (hitTestTransform != null)
+                {
+                    var transformed = System.Numerics.Vector2.Transform(
+                        new System.Numerics.Vector2(cursorScreenX, cursorScreenY),
+                        hitTestTransform.Value);
+                    cursorScreenX = transformed.X;
+                    cursorScreenY = transformed.Y;
+                }
 
                 var camera = managers.Renderer.Camera;
 

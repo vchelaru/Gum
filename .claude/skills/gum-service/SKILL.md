@@ -26,6 +26,8 @@ GumService.Default.Uninitialize()
 
 `Initialize` throws if called twice without an intervening `Uninitialize`.
 
+`Draw()` draws everything through `SystemManagers.Default` in one call — for manual control over what's drawn when/to-which-target (e.g. compositing onto multiple `RenderTarget2D`s in one frame), use `GumBatch`'s immediate-mode `Begin`/`Draw`/`End` instead (`docs/code/rendering/gumbatch.md`; internals in the **gum-monogame-rendering** skill).
+
 **Only the `gumProjectFile` overload loads a project.** `Initialize(game, gumProjectFile)` loads the `.gumx` and runs the project-load path — which applies project-level settings (standard-element defaults, localization, and the project's `TextureFilter` → `Renderer.TextureFilter`, issue #3199). The `Initialize(game, DefaultVisualsVersion)` / parameterless overloads are **code-only** and never touch that path. So when manually verifying anything that depends on a loaded project, you must pass the `.gumx` path or the behavior under test never runs. The cheapest from-file smoke test is `Initialize(game, "GumProject/GumProject.gumx")` plus a `SpriteRuntime` (`SourceFileName` set, scaled up) added to `Root`.
 
 ## Singleton Pattern
@@ -55,6 +57,10 @@ GumService.Default.Uninitialize()
 | `ModalRoot` | Topmost layer; blocks input to everything below |
 
 `PopupRoot` and `ModalRoot` are `FrameworkElement` statics, not instance fields — they are shared across all `GumService` instances.
+
+## Multiple GumService Instances
+
+The constructor is public (`new GumService()`), but two instances don't give two independent UI spaces — `GraphicalUiElement.CanvasWidth`/`CanvasHeight`, `FormsUtilities`'s `Cursor`/`Keyboard`, and `SystemManagers.Default`/`ISystemManagers.Default` are static, so the second instance's `Initialize()` overwrites state the first depends on (e.g. `Cursor`'s zoom-aware hit-testing reads `SystemManagers.Default` directly, not its owning instance). Tracked as issue #4096.
 
 ## Key Files
 

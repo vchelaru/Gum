@@ -6,6 +6,10 @@ type: skill
 
 # Gum Docs Writing Reference
 
+## Organize by Functionality, Not API Type
+
+A page's home is the functional section a user browses when they have the problem it solves, not a type-indexed folder chosen because that's where the class lives. A new feature's primary explanation goes in its task-based section (e.g. cursor hit-testing for scaled/render-target rendering under `events-and-interactivity/`); the `gum-code-reference/<Type>/` folders hold only terse per-member stubs that link back to it.
+
 ## Verify Behavior Claims Before Writing Them
 
 Before writing a claim like "X isn't available on backend Y" or "X requires package Z," verify it against the relevant domain skill (e.g. `gum-runtime-fonts`, `gum-kernsmith-integrations`, `gum-cross-platform-unification`) or source — this skill covers GitBook mechanics only, not product behavior. A missing per-platform package is not proof of a capability gap: the platform may get the capability another way (Silk.NET has no KernSmith package because it renders through SkiaSharp, which rasterizes fonts natively — parity, not a gap).

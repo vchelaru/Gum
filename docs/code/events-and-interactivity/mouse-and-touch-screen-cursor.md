@@ -14,7 +14,7 @@ Touch support varies by runtime. Where a runtime has no real touch API, touch is
 | Silk.NET | Full | ✅ |
 | MonoGame (DesktopGL) | Full | ✅ |
 
-raylib's default desktop backend (GLFW) has no real touch input — see raylib's own [source comment acknowledging this](https://github.com/raysan5/raylib/blob/4640c849208079d758d8f0dbb4b5b7816db5ed0c/src/platforms/rcore_desktop_glfw.c#L1305-L1310). raylib's SDL backend does support real touch, but isn't what Gum's raylib runtime currently uses.
+raylib's default desktop backend (GLFW) has no real touch input. See raylib's own [source comment acknowledging this](https://github.com/raysan5/raylib/blob/4640c849208079d758d8f0dbb4b5b7816db5ed0c/src/platforms/rcore_desktop_glfw.c#L1305-L1310). raylib's SDL backend does support real touch, but isn't what Gum's raylib runtime currently uses.
 
 ## Code Example: Accessing the Cursor
 
@@ -159,9 +159,47 @@ protected override void Update(GameTime gameTime)
 
 ## Adjusting the Cursor for Scaled or Offset Rendering
 
-If your game draws Gum's output through a `RenderTarget2D`, scales it with a `SpriteBatch` matrix, or otherwise transforms the rendered UI, the raw cursor position will no longer line up with what the player sees. The `Cursor` exposes a `TransformMatrix` property that compensates for these transformations so clicks land on the visual under the mouse.
+If your game draws Gum's output through a `RenderTarget2D`, scales it with a `SpriteBatch` matrix, or otherwise transforms the rendered UI, the raw cursor position no longer lines up with what the player sees. Gum offers two ways to compensate, depending on whether all of your UI shares one coordinate space or several coexist in the same frame.
 
-See [TransformMatrix](../gum-code-reference/cursor/transformmatrix.md) for a full example.
+### One coordinate space: Cursor.TransformMatrix
+
+When every Gum visual is transformed the same way (for example, the entire UI is drawn into one render target and scaled to fit the window), set a single `Cursor.TransformMatrix`. It is applied once to the cursor position before any hit-testing, so clicks land on the visual under the mouse. See [TransformMatrix](../gum-code-reference/cursor/transformmatrix.md) for a full example.
+
+### Several coordinate spaces at once: HitTestTransformMatrix
+
+A single cursor transform cannot serve two coordinate spaces at the same time. A common case is game UI drawn into a scaled `RenderTarget2D` while a separate editor or debug UI is drawn straight to the window at 1:1, with both clickable in the same frame. For this, set `HitTestTransformMatrix` on the root of each subtree that needs its own mapping.
+
+`HitTestTransformMatrix` is a `System.Numerics.Matrix3x2?` on `GraphicalUiElement`. It is resolved by climbing to the nearest ancestor that set one, so setting it on a container covers that whole subtree, and content drawn at 1:1 simply leaves it unset (the default). Set it to the matrix that maps a raw window pixel back into the space the subtree was drawn in, which is the inverse of the scale and offset used to blit the render target. It affects hit-testing only and never changes rendering or layout.
+
+```csharp
+// Class scope
+ContainerRuntime gameUi;
+
+float blitScale = 1.5f;
+System.Numerics.Vector2 blitOffset = new System.Numerics.Vector2(60, 100);
+
+protected override void Initialize()
+{
+    GumUI.Initialize(this);
+
+    gameUi = new ContainerRuntime { Width = 300, Height = 300 };
+    // ...add the game UI's controls as children of gameUi...
+
+    // Map a raw window pixel back into render-target space: undo the blit
+    // offset, then the blit scale. Descendants inherit this by climbing.
+    gameUi.HitTestTransformMatrix =
+        System.Numerics.Matrix3x2.CreateTranslation(-blitOffset.X, -blitOffset.Y) *
+        System.Numerics.Matrix3x2.CreateScale(1f / blitScale);
+
+    base.Initialize();
+}
+```
+
+Draw `gameUi` into the render target and blit it to the window just as in the [TransformMatrix example](../gum-code-reference/cursor/transformmatrix.md), using `blitOffset` and `blitScale` for the blit destination. Any UI drawn straight to the window stays at 1:1 with no transform, so both are clickable in the same frame. Check hits with the `HasCursorOver(ICursor)` overload, for example `gameUi.HasCursorOver(GumUI.Cursor)`.
+
+{% hint style="info" %}
+Only the `HasCursorOver(ICursor)` path applies `HitTestTransformMatrix`, and this is the path normal Forms interaction uses. The pure-bounds `HasCursorOver(float, float)` overload shown earlier on this page does not.
+{% endhint %}
 
 ## Disabling the Cursor Globally
 
