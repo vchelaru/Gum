@@ -69,4 +69,6 @@ protected override void Update(GameTime gameTime)
 
 {% hint style="info" %}
 Currently the ListBox is not interactive because the original ListBox is invisible so it does not receive events from the Cursor. Future versions of Gum may provide a way to interact with invisible controls rendered to a RenderTarget.
+
+This limitation applies to Gum's own `IsRenderTarget` baking. If you instead draw a subtree into a `RenderTarget2D` yourself (for example with `GumBatch`), you can keep it interactive by mapping the cursor with [`HitTestTransformMatrix`](../../events-and-interactivity/mouse-and-touch-screen-cursor.md#several-coordinate-spaces-at-once-hittesttransformmatrix).
 {% endhint %}

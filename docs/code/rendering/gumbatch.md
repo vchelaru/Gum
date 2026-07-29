@@ -262,6 +262,10 @@ GraphicsDevice.SetRenderTarget(null);
 spriteBatch.Draw(MyRenderTarget, new Vector2(0, 0), Color.White);
 ```
 
+{% hint style="info" %}
+Content drawn to a render target this way is not interactive by default, because the cursor is measured in window pixels while the content was drawn, and then scaled or offset, into the render target. To keep it clickable, map the cursor back into render-target space with [`HitTestTransformMatrix`](../events-and-interactivity/mouse-and-touch-screen-cursor.md#several-coordinate-spaces-at-once-hittesttransformmatrix).
+{% endhint %}
+
 Note that if you are rendering multiple objects on a render target, the BlendState must be set as to add the transparency. Using the default BlendState may result in alpha being "removed" from the render target when new instances are drawn.
 
 The following shows how to create a BlendState for objects which have partial transparency and are to be drawn on RenderTargets:

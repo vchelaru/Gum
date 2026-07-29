@@ -69,3 +69,7 @@ public class Game1 : Game
 ```
 
 <figure><img src="../../../.gitbook/assets/11_05 57 54.gif" alt=""><figcaption><p>Cursor interacting with a Button drawn on an offset render target</p></figcaption></figure>
+
+{% hint style="info" %}
+`TransformMatrix` applies one transform to the whole cursor, so it fits when all of your UI shares a single coordinate space. If several coordinate spaces coexist in the same frame (for example, game UI in a scaled render target plus a window-pinned editor UI), use the per-subtree [`HitTestTransformMatrix`](../../events-and-interactivity/mouse-and-touch-screen-cursor.md#several-coordinate-spaces-at-once-hittesttransformmatrix) instead.
+{% endhint %}
