@@ -6615,6 +6615,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     this.WrapsChildren = (bool)value!;
                     toReturn = true;
                     break;
+
+                // No Font/FontSize/CustomFontFile/UseCustomFont cases here by design: those properties
+                // exist on GraphicalUiElement only under #if FRB (see the Font/Text region below). Every
+                // other backend owns them on TextRuntime and dispatches via CustomSetPropertyOnRenderable,
+                // so there is no backend-agnostic property here to route them to (see issue #4088).
             }
 
             if (!toReturn)
