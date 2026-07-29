@@ -848,6 +848,83 @@ public partial class CustomSetPropertyOnRenderable
 
     #region Text
 
+    // The single owner of Text/TextNoTranslate assignment: localization, BBCode detection, and the
+    // width-wrapper/re-layout logic. Called directly by TextRuntime.Text/SetTextNoTranslate
+    // (MonoGameGum/GueDeriving/TextRuntime.cs) and, for FRB (which has no TextRuntime), by
+    // TrySetPropertyOnText below. Public so both call sites can reach it (#3706).
+    public static void SetText(Text textRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    {
+        var widthBefore = textRenderable.WrappedTextWidth;
+        var heightBefore = textRenderable.WrappedTextHeight;
+
+        if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren)
+        {
+            if (graphicalUiElement.MaxWidth == null)
+            {
+                // make it have no line wrap width before assignign the text:
+                textRenderable.Width = null;
+            }
+            else
+            {
+                textRenderable.Width = graphicalUiElement.MaxWidth;
+            }
+        }
+
+        var valueAsString = value as string;
+
+        // Track the original (untranslated) value so RefreshLocalization can
+        // re-translate this element if CurrentLanguage changes later.
+        // - "Text" with an active LocalizationService stores the raw input.
+        // - "TextNoTranslate" always clears any previously-stored key so user
+        //   input or explicitly-untranslated values aren't re-translated later.
+        if (propertyName == "TextNoTranslate")
+        {
+            _localizationKeys.Remove(graphicalUiElement);
+        }
+        else if (LocalizationService != null && valueAsString != null)
+        {
+            _localizationKeys.AddOrUpdate(graphicalUiElement, valueAsString);
+        }
+        else
+        {
+            _localizationKeys.Remove(graphicalUiElement);
+        }
+
+        textRenderable.InlineVariables.Clear();
+        if (valueAsString?.Contains("[") == true)
+        {
+            textRenderable.StoredMarkupText = valueAsString;
+            SetBbCodeText(textRenderable, graphicalUiElement, textRenderable.StoredMarkupText);
+        }
+        else
+        {
+            textRenderable.StoredMarkupText = null;
+            var rawText = valueAsString;
+            if(LocalizationService != null && propertyName == "Text")
+            {
+                rawText = LocalizationService.Translate(rawText);
+            }
+
+            if(rawText?.Contains("[") == true)
+            {
+                textRenderable.StoredMarkupText = rawText;
+                SetBbCodeText(textRenderable, graphicalUiElement, textRenderable.StoredMarkupText);
+            }
+            else
+            {
+                textRenderable.RawText = rawText;
+            }
+        }
+        // we want to update if the text's size actually changed (the letters it contains)
+        var shouldUpdate = widthBefore != textRenderable.WrappedTextWidth || heightBefore != textRenderable.WrappedTextHeight;
+        if (shouldUpdate)
+        {
+            graphicalUiElement.UpdateLayout(
+                GraphicalUiElement.ParentUpdateType.IfParentWidthHeightDependOnChildren |
+                GraphicalUiElement.ParentUpdateType.IfParentStacks, int.MaxValue / 2);
+        }
+    }
+
     // Public (not private) is deliberate: FlatRedBall's Glue tool generates FRB game projects'
     // TextRuntime.Generated.cs with a hardcoded direct call to
     // global::Gum.Wireframe.CustomSetPropertyOnRenderable.TrySetPropertyOnText(...) (and the same for
@@ -874,77 +951,31 @@ public partial class CustomSetPropertyOnRenderable
 
         if (propertyName == "Text" || propertyName == "TextNoTranslate")
         {
-            // Mirrors TextRuntime.Text's own wrapper (MonoGameGum/GueDeriving/TextRuntime.cs) so both
-            // entry points measure/re-layout identically instead of each doing it slightly differently.
-            var widthBefore = textRenderable.WrappedTextWidth;
-            var heightBefore = textRenderable.WrappedTextHeight;
-
-            if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren)
+#if FRB
+            // FRB has no TextRuntime to delegate to, so SetText remains the direct owner here.
+            SetText(textRenderable, graphicalUiElement, propertyName, value);
+#else
+            // Runtime-type-first: delegate to TextRuntime.Text/SetTextNoTranslate, which own the
+            // logic via the shared SetText helper. Matches the shape dispatcher's pattern (#3706).
+            // Unlike Font/FontScale/etc. below, a bare GraphicalUiElement(Text) with no TextRuntime
+            // is a real, supported combination (e.g. the tool's WireframeObjectManager), so fall
+            // back to calling SetText directly rather than silently no-op'ing.
+            if (textRuntime != null)
             {
-                if (graphicalUiElement.MaxWidth == null)
+                if (propertyName == "Text")
                 {
-                    // make it have no line wrap width before assignign the text:
-                    textRenderable.Width = null;
+                    textRuntime.Text = value as string;
                 }
                 else
                 {
-                    textRenderable.Width = graphicalUiElement.MaxWidth;
+                    textRuntime.SetTextNoTranslate(value as string);
                 }
-            }
-
-            var valueAsString = value as string;
-
-            // Track the original (untranslated) value so RefreshLocalization can
-            // re-translate this element if CurrentLanguage changes later.
-            // - "Text" with an active LocalizationService stores the raw input.
-            // - "TextNoTranslate" always clears any previously-stored key so user
-            //   input or explicitly-untranslated values aren't re-translated later.
-            if (propertyName == "TextNoTranslate")
-            {
-                _localizationKeys.Remove(graphicalUiElement);
-            }
-            else if (LocalizationService != null && valueAsString != null)
-            {
-                _localizationKeys.AddOrUpdate(graphicalUiElement, valueAsString);
             }
             else
             {
-                _localizationKeys.Remove(graphicalUiElement);
+                SetText(textRenderable, graphicalUiElement, propertyName, value);
             }
-
-            textRenderable.InlineVariables.Clear();
-            if (valueAsString?.Contains("[") == true)
-            {
-                textRenderable.StoredMarkupText = valueAsString;
-                SetBbCodeText(textRenderable, graphicalUiElement, textRenderable.StoredMarkupText);
-            }
-            else
-            {
-                textRenderable.StoredMarkupText = null;
-                var rawText = valueAsString;
-                if(LocalizationService != null && propertyName == "Text")
-                {
-                    rawText = LocalizationService.Translate(rawText);
-                }
-
-                if(rawText?.Contains("[") == true)
-                {
-                    textRenderable.StoredMarkupText = rawText;
-                    SetBbCodeText(textRenderable, graphicalUiElement, textRenderable.StoredMarkupText);
-                }
-                else
-                {
-                    textRenderable.RawText = rawText;
-                }
-            }
-            // we want to update if the text's size actually changed (the letters it contains)
-            var shouldUpdate = widthBefore != textRenderable.WrappedTextWidth || heightBefore != textRenderable.WrappedTextHeight;
-            if (shouldUpdate)
-            {
-                graphicalUiElement.UpdateLayout(
-                    GraphicalUiElement.ParentUpdateType.IfParentWidthHeightDependOnChildren |
-                    GraphicalUiElement.ParentUpdateType.IfParentStacks, int.MaxValue / 2);
-            }
+#endif
             handled = true;
         }
         else if (propertyName == "Font Scale" || propertyName == "FontScale")

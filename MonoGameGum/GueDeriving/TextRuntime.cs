@@ -2,6 +2,10 @@
 #if RAYLIB
 using Gum.Renderables;
 using RaylibGum.Helpers;
+// This file (via Gum/Wireframe/CustomSetPropertyOnRenderable.cs, RAYLIB-namespaced) is the same
+// shared dispatcher source XNALIKE compiles, just under a different namespace -- see that file's
+// own #if RAYLIB/#else namespace switch.
+using CustomSetPropertyOnRenderableType = RaylibGum.Renderables.CustomSetPropertyOnRenderable;
 #elif SKIA
 using SkiaGum;
 using SkiaGum.Helpers;
@@ -9,6 +13,7 @@ using SkiaSharp;
 #else
 using Gum.Graphics;
 using Gum.RenderingLibrary;
+using CustomSetPropertyOnRenderableType = Gum.Wireframe.CustomSetPropertyOnRenderable;
 #endif
 using Gum.Wireframe;
 using RenderingLibrary;
@@ -724,6 +729,10 @@ public class TextRuntime : InteractiveGue
         }
         set
         {
+#if SKIA
+            // Skia's own SetProperty("Text", ...) dispatch (Runtimes/SkiaGum/CustomSetPropertyOnRenderable.cs)
+            // parses BBCode lazily at render time rather than eagerly like the shared SetText helper below,
+            // so it isn't safe to redirect here yet -- tracked as a separate follow-up on #3706.
             var widthBefore = ContainedText.WrappedTextWidth;
             var heightBefore = ContainedText.WrappedTextHeight;
             if (this.WidthUnits == Gum.DataTypes.DimensionUnitType.RelativeToChildren)
@@ -740,7 +749,6 @@ public class TextRuntime : InteractiveGue
             }
 
             // Use SetProperty so it goes through the BBCode-checking methods
-            //ContainedText.RawText = value;
             this.SetProperty("Text", value);
 
             NotifyPropertyChanged();
@@ -751,6 +759,10 @@ public class TextRuntime : InteractiveGue
                     Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentWidthHeightDependOnChildren |
                     Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentStacks, int.MaxValue / 2);
             }
+#else
+            CustomSetPropertyOnRenderableType.SetText(ContainedText, this, "Text", value);
+            NotifyPropertyChanged();
+#endif
         }
     }
 
@@ -766,6 +778,8 @@ public class TextRuntime : InteractiveGue
     /// </remarks>
     public void SetTextNoTranslate(string? value)
     {
+#if SKIA
+        // See the Text setter above for why Skia stays on the SetProperty path for now.
         var widthBefore = ContainedText.WrappedTextWidth;
         var heightBefore = ContainedText.WrappedTextHeight;
         if (this.WidthUnits == Gum.DataTypes.DimensionUnitType.RelativeToChildren)
@@ -790,6 +804,10 @@ public class TextRuntime : InteractiveGue
                 Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentWidthHeightDependOnChildren |
                 Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentStacks, int.MaxValue / 2);
         }
+#else
+        CustomSetPropertyOnRenderableType.SetText(ContainedText, this, "TextNoTranslate", value);
+        NotifyPropertyChanged(nameof(Text));
+#endif
     }
 
     /// <summary>
