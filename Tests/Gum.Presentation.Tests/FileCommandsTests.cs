@@ -1,5 +1,6 @@
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.Localization;
 using Gum.Managers;
 using Gum.ToolStates;
@@ -96,6 +97,114 @@ public class FileCommandsTests : BaseTestClass
         FilePath expectedDirectory = FileManager.GetDirectory(_gumProject.FullFileName);
         FilePath expected = expectedDirectory.Original + "Components\\MyComponent.gucx";
         result.FullPath.ShouldBe(expected.FullPath);
+    }
+
+    [Fact]
+    public void GetFullPathXmlFile_ForBehavior_ShouldReturnBehaviorsSubfolderPath_WhenMatchingReferenceHasNoSourcePath()
+    {
+        _tempDirectory = CreateTempDirectory();
+        _gumProject.FullFileName = Path.Combine(_tempDirectory, "MyProject.gumx");
+        _gumProject.BehaviorReferences.Add(new BehaviorReference { Name = "ButtonBehavior" });
+        BehaviorSave behavior = new() { Name = "ButtonBehavior" };
+
+        FilePath result = _fileCommands.GetFullPathXmlFile(behavior);
+
+        FilePath expectedDirectory = FileManager.GetDirectory(_gumProject.FullFileName);
+        FilePath expected = expectedDirectory.Original + "Behaviors\\ButtonBehavior.behx";
+        result.FullPath.ShouldBe(expected.FullPath);
+    }
+
+    [Fact]
+    public void GetFullPathXmlFile_ForBehavior_ShouldResolveSourcePath_WhenMatchingReferenceHasSourcePathSet()
+    {
+        _tempDirectory = CreateTempDirectory();
+        _gumProject.FullFileName = Path.Combine(_tempDirectory, "MyProject.gumx");
+        _gumProject.BehaviorReferences.Add(new BehaviorReference
+        {
+            Name = "ButtonBehavior",
+            SourcePath = "../SharedBehaviors/ButtonBehavior.behx"
+        });
+        BehaviorSave behavior = new() { Name = "ButtonBehavior" };
+
+        FilePath result = _fileCommands.GetFullPathXmlFile(behavior);
+
+        FilePath expectedDirectory = FileManager.GetDirectory(_gumProject.FullFileName);
+        FilePath expected = expectedDirectory.Original + "../SharedBehaviors/ButtonBehavior.behx";
+        result.FullPath.ShouldBe(expected.FullPath);
+    }
+
+    [Fact]
+    public void GetFullPathXmlFile_ForBehavior_ShouldFallBackToBehaviorsSubfolderPath_WhenNoMatchingReferenceExists()
+    {
+        // A behavior can be saved before its BehaviorReference is added to the project
+        // (e.g. right after creation) - must still fall back to the legacy convention.
+        _tempDirectory = CreateTempDirectory();
+        _gumProject.FullFileName = Path.Combine(_tempDirectory, "MyProject.gumx");
+        BehaviorSave behavior = new() { Name = "NewlyCreatedBehavior" };
+
+        FilePath result = _fileCommands.GetFullPathXmlFile(behavior);
+
+        FilePath expectedDirectory = FileManager.GetDirectory(_gumProject.FullFileName);
+        FilePath expected = expectedDirectory.Original + "Behaviors\\NewlyCreatedBehavior.behx";
+        result.FullPath.ShouldBe(expected.FullPath);
+    }
+
+    [Fact]
+    public void TryAutoSaveBehavior_ForLinkedBehavior_ShouldCaptureOverrideWithoutChangingSharedFile()
+    {
+        _tempDirectory = CreateTempDirectory();
+        string projectDir = Path.Combine(_tempDirectory, "MyProject");
+        Directory.CreateDirectory(projectDir);
+        _gumProject.FullFileName = Path.Combine(projectDir, "MyProject.gumx");
+
+        string sharedDir = Path.Combine(_tempDirectory, "SharedBehaviors");
+        Directory.CreateDirectory(sharedDir);
+        string sharedFilePath = Path.Combine(sharedDir, "ButtonBehavior.behx");
+        new BehaviorSave { Name = "ButtonBehavior", DefaultImplementation = "Controls/ButtonStandard" }
+            .Save(sharedFilePath, useCompactFormat: true);
+
+        BehaviorReference reference = new()
+        {
+            Name = "ButtonBehavior",
+            SourcePath = "../SharedBehaviors/ButtonBehavior.behx"
+        };
+        _gumProject.BehaviorReferences.Add(reference);
+
+        _projectManager.Setup(p => p.AutoSave).Returns(true);
+        bool isProjectNew = false;
+        _projectManager.Setup(p => p.AskUserForProjectNameIfNecessary(out isProjectNew)).Returns(true);
+
+        BehaviorSave behavior = new() { Name = "ButtonBehavior", DefaultImplementation = "Bubblegum/Controls/Button" };
+
+        _fileCommands.TryAutoSaveBehavior(behavior);
+
+        reference.DefaultImplementationOverride.ShouldBe("Bubblegum/Controls/Button");
+        BehaviorSave sharedOnDisk = BehaviorReference.DeserializeBehavior(sharedFilePath, projectVersion: _gumProject.Version);
+        sharedOnDisk.DefaultImplementation.ShouldBe("Controls/ButtonStandard");
+        behavior.DefaultImplementation.ShouldBe("Bubblegum/Controls/Button");
+        _projectManager.Verify(p => p.SaveProject(It.IsAny<bool>()), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public void TryAutoSaveBehavior_ForNonLinkedBehavior_ShouldSaveDefaultImplementationDirectlyToItsOwnFile()
+    {
+        _tempDirectory = CreateTempDirectory();
+        string projectDir = Path.Combine(_tempDirectory, "MyProject");
+        Directory.CreateDirectory(projectDir);
+        _gumProject.FullFileName = Path.Combine(projectDir, "MyProject.gumx");
+        _gumProject.BehaviorReferences.Add(new BehaviorReference { Name = "ButtonBehavior" });
+
+        _projectManager.Setup(p => p.AutoSave).Returns(true);
+        bool isProjectNew = false;
+        _projectManager.Setup(p => p.AskUserForProjectNameIfNecessary(out isProjectNew)).Returns(true);
+
+        BehaviorSave behavior = new() { Name = "ButtonBehavior", DefaultImplementation = "Controls/ButtonStandard" };
+
+        _fileCommands.TryAutoSaveBehavior(behavior);
+
+        string ownFilePath = Path.Combine(projectDir, "Behaviors", "ButtonBehavior.behx");
+        BehaviorSave onDisk = BehaviorReference.DeserializeBehavior(ownFilePath, projectVersion: _gumProject.Version);
+        onDisk.DefaultImplementation.ShouldBe("Controls/ButtonStandard");
     }
 
     [Fact]

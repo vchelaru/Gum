@@ -529,7 +529,10 @@ public class GumxImportService : IGumxImportService
         bool isConflict = conflictNameSet.Contains(behavior.Name);
         if (isConflict && conflictResolution == ConflictResolution.Skip) { return; }
 
-        string relativeSrc = $"Behaviors/{behavior.Name}.{BehaviorReference.Extension}";
+        var matchingReference = source.BehaviorReferences?.FirstOrDefault(item => item.Name == behavior.Name);
+        string relativeSrc = matchingReference != null
+            ? matchingReference.GetRelativeFilePath()
+            : $"Behaviors/{behavior.Name}.{BehaviorReference.Extension}";
         string destPath = Path.Combine(projectDir, "Behaviors", $"{behavior.Name}.{BehaviorReference.Extension}");
 
         if (await CopyElementFileAsync(relativeSrc, sourceBase, destPath) && !isConflict)

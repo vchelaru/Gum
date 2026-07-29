@@ -35,6 +35,50 @@ public class BubblegumTemplateTests
         return result.Project!;
     }
 
+    private static GumProjectSave LoadFormsTemplate()
+    {
+        StandardElementsManager.Self.Initialize();
+
+        string formsTemplateDir = Path.Combine(FindRepoRoot(),
+            "Tools", "Gum.ProjectServices", "Templates", "FormsTemplate");
+        ProjectLoadResult result = new ProjectLoader().Load(Path.Combine(formsTemplateDir, "GumProject.gumx"));
+
+        result.Success.ShouldBeTrue();
+        result.LoadErrors.ShouldBeEmpty();
+        return result.Project!;
+    }
+
+    [Fact]
+    public void Load_SharedBehaviorReferences_ShouldResolveWithNoSourceFileMissing()
+    {
+        // Both themes link the same ~24 behaviors from Templates/FormsBehaviors/ via
+        // BehaviorReference.SourcePath (#4070) instead of each keeping its own physical copy.
+        GumProjectSave bubblegum = LoadBubblegum();
+        GumProjectSave formsTemplate = LoadFormsTemplate();
+
+        bubblegum.Behaviors.ShouldNotBeEmpty();
+        formsTemplate.Behaviors.ShouldNotBeEmpty();
+        bubblegum.Behaviors.ShouldAllBe(b => !b.IsSourceFileMissing, customMessage:
+            "every Bubblegum behavior reference (shared or theme-local) must resolve to a real file");
+        formsTemplate.Behaviors.ShouldAllBe(b => !b.IsSourceFileMissing, customMessage:
+            "every FormsTemplate behavior reference (shared or theme-local) must resolve to a real file");
+    }
+
+    [Fact]
+    public void Load_SharedButtonBehavior_ShouldUsePerThemeDefaultImplementationOverride()
+    {
+        // ButtonBehavior's Categories/FormsProperties/RequiredVariables are shared, but each
+        // theme needs its own default-visual path - that's what DefaultImplementationOverride
+        // supplies per BehaviorReference without writing a theme-specific value into the shared file.
+        GumProjectSave bubblegum = LoadBubblegum();
+        GumProjectSave formsTemplate = LoadFormsTemplate();
+
+        bubblegum.Behaviors.Single(b => b.Name == "ButtonBehavior").DefaultImplementation
+            .ShouldBe("Bubblegum/Controls/Button");
+        formsTemplate.Behaviors.Single(b => b.Name == "ButtonBehavior").DefaultImplementation
+            .ShouldBe("Controls/ButtonStandard");
+    }
+
     [Fact]
     public void Load_CircleInstances_ShouldNotCarryRadiusVariable()
     {
@@ -267,12 +311,20 @@ public class BubblegumTemplateTests
     {
         // Unlike Components (which define a theme's look), Behaviors declare the generic
         // category-state/FormsProperty contract every theme's visuals plug into - the same
-        // content every project and theme needs. They live flat at the project root
-        // (Behaviors/*.behx, matching Standards) rather than namespaced per theme, so
-        // importing a theme reuses/overwrites the shared behavior instead of adding a
-        // redundant Bubblegum-specific copy alongside it.
+        // content every project and theme needs. They now live in the single shared
+        // Templates/FormsBehaviors/ folder, linked into each theme's GumProject.gumx via
+        // BehaviorReference.SourcePath (#4070) rather than duplicated per theme, so this
+        // folder is normally empty. This test guards that a future Bubblegum-only behavior
+        // (if one is ever added here instead of shared) stays unnamespaced.
         string behaviorsDir = Path.Combine(FindRepoRoot(),
             "Tools", "Gum.ProjectServices", "Templates", "FormsThemes", "Bubblegum", "Behaviors");
+
+        // Git doesn't track empty directories, so this folder may not physically exist at all
+        // once every behavior it used to hold has been shared out to Templates/FormsBehaviors/.
+        if (!Directory.Exists(behaviorsDir))
+        {
+            return;
+        }
 
         List<string> topLevelBehaviorFiles = Directory
             .GetFiles(behaviorsDir, "*.behx", SearchOption.TopDirectoryOnly)

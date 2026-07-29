@@ -449,6 +449,52 @@ public class GumxImportServiceTests : IDisposable
         _importLogic.ImportedBehaviorPaths.ShouldBeEmpty();
     }
 
+    [Fact]
+    public async Task ImportAsync_Behavior_ShouldFetchFromSourcePath_WhenSourceReferenceLinksOutsideBehaviorsFolder()
+    {
+        // Arrange: the source project's own Behaviors folder does NOT contain this file - it
+        // lives in a sibling directory instead, linked via the source reference's SourcePath
+        // (mirrors how FormsTemplate/Bubblegum link out to a shared Behaviors location).
+        string sharedDir = Path.Combine(Path.GetDirectoryName(_sourceDir)!, "GumSharedBehaviors_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(sharedDir);
+        const string sharedContent = "<BehaviorSave><Name>LinkedBehavior</Name><Marker>shared</Marker></BehaviorSave>";
+        File.WriteAllText(Path.Combine(sharedDir, "LinkedBehavior.behx"), sharedContent);
+
+        try
+        {
+            BehaviorSave behavior = new BehaviorSave { Name = "LinkedBehavior" };
+            GumProjectSave source = SourceProject();
+            source.Behaviors.Add(behavior);
+            source.BehaviorReferences.Add(new BehaviorReference
+            {
+                Name = "LinkedBehavior",
+                SourcePath = "../" + Path.GetFileName(sharedDir) + "/LinkedBehavior.behx"
+            });
+
+            ImportSelections selections = new ImportSelections
+            {
+                DirectComponents = new(),
+                TransitiveComponents = new(),
+                DirectScreens = new(),
+                Behaviors = new() { behavior },
+                Standards = new(),
+            };
+
+            // Act
+            ImportResult result = await _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: "");
+
+            // Assert
+            string destPath = Path.Combine(_projectDir, "Behaviors", "LinkedBehavior.behx");
+            File.Exists(destPath).ShouldBeTrue();
+            File.ReadAllText(destPath).ShouldBe(sharedContent);
+            _importLogic.ImportedBehaviorPaths.ShouldContain(destPath);
+        }
+        finally
+        {
+            Directory.Delete(sharedDir, recursive: true);
+        }
+    }
+
     // ── conflict resolution: Overwrite ────────────────────────────────────
 
     [Fact]

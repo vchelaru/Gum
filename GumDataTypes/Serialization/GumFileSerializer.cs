@@ -117,6 +117,14 @@ public static class GumFileSerializer
             behaviorNameAttrs.XmlAttribute = new XmlAttributeAttribute("Name");
             overrides.Add(typeof(BehaviorReference), "Name", behaviorNameAttrs);
 
+            XmlAttributes behaviorSourcePathAttrs = new XmlAttributes();
+            behaviorSourcePathAttrs.XmlAttribute = new XmlAttributeAttribute("SourcePath");
+            overrides.Add(typeof(BehaviorReference), "SourcePath", behaviorSourcePathAttrs);
+
+            XmlAttributes behaviorDefaultImplementationOverrideAttrs = new XmlAttributes();
+            behaviorDefaultImplementationOverrideAttrs.XmlAttribute = new XmlAttributeAttribute("DefaultImplementationOverride");
+            overrides.Add(typeof(BehaviorReference), "DefaultImplementationOverride", behaviorDefaultImplementationOverrideAttrs);
+
             _gumProjectCompactSerializer = new XmlSerializer(typeof(GumProjectSave), overrides);
             return _gumProjectCompactSerializer;
         }
