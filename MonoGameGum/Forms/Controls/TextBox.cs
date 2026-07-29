@@ -392,8 +392,10 @@ public class TextBox : TextBoxBase
             }
             foreach (var character in whatToPaste)
             {
-                // Use SetTextFromUi because this is user-pasted input
-                SetTextFromUi(this.Text.Insert(caretIndex, "" + character));
+                // Use SetTextFromUi because this is user-pasted input.
+                // Text may legitimately be null (e.g. explicitly cleared), so guard it
+                // the same way HandleCharEntered does (#4099).
+                SetTextFromUi((this.Text ?? "").Insert(caretIndex, "" + character));
                 caretIndex++;
             }
 
