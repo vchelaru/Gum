@@ -316,49 +316,21 @@ public class FormsTemplateCreatorTests : IDisposable
     }
 
     [Fact]
-    public void Create_ShouldOnlyDriftFromDefaultStandardsInKnownBakedProperties()
+    public void Create_ShouldNotDriftFromDefaultStandards()
     {
-        // Issue #4089: Add Forms (Standard theme) shouldn't need to change the project's
-        // Standards at all. The StyleCategory double-indirection (same shape as #4079's
-        // ColorCategory) and a handful of stale/mismatched declarations (dead Guide variables,
-        // SetsValue flags, an unused Polygon's default point shape) are fully fixed - this pins
-        // that no new drift regresses in. What remains is deliberately deferred: baked
-        // Standard-theme visual defaults (NineSlice texture-atlas coordinates/anchoring, Text
-        // sizing, Sprite texture scale) still differ from a blank project's Standards, tracked by
-        // a dedicated follow-up issue since relocating them touches every themed component that
-        // relies on inheriting them (~50 NineSlice instances across the template).
+        // Issue #4092, follow-up to #4089: the last remaining drift was baked Standard-theme
+        // visual defaults (NineSlice texture-atlas coordinates/anchoring, Text sizing, Sprite
+        // texture scale) that differed from a blank project's Standards. Every consuming instance
+        // that relied on inheriting one of these values now sets it explicitly (materialized from
+        // the Standard's prior baked value, so appearance is unchanged), and the 3 Standards
+        // (NineSlice/Sprite/Text) were reset to match a blank project. Add Forms (Standard theme)
+        // no longer needs to change the project's Standards at all.
         string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
         _sut.Create(filePath);
 
         DiffStandardsResult result = new DiffStandardsService().Diff(filePath);
 
-        string[] expectedRemainingDiffs =
-        [
-            "NineSlice.ExposeChildrenEvents",
-            "NineSlice.Height",
-            "NineSlice.HeightUnits",
-            "NineSlice.SourceFile",
-            "NineSlice.TextureAddress",
-            "NineSlice.TextureHeight",
-            "NineSlice.TextureTop",
-            "NineSlice.TextureWidth",
-            "NineSlice.Width",
-            "NineSlice.WidthUnits",
-            "NineSlice.XOrigin",
-            "NineSlice.XUnits",
-            "NineSlice.YOrigin",
-            "NineSlice.YUnits",
-            "Sprite.TextureHeightScale",
-            "Sprite.TextureWidthScale",
-            "Text.FontSize",
-            "Text.Height",
-            "Text.HeightUnits",
-            "Text.Width",
-            "Text.WidthUnits",
-        ];
-
-        result.Differences.Select(d => $"{d.StandardName}.{d.VariableName}")
-            .ShouldBe(expectedRemainingDiffs, ignoreOrder: true);
+        result.Differences.ShouldBeEmpty();
         result.MissingFromProject.ShouldBeEmpty();
         result.ProjectOnlyStandards.ShouldBeEmpty();
     }

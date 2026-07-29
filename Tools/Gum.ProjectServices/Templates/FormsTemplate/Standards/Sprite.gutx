@@ -64,7 +64,7 @@
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="float" Name="TextureHeightScale" Category="Source" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
+      <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="int" Name="TextureLeft" Category="Source" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
@@ -76,7 +76,7 @@
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="float" Name="TextureWidthScale" Category="Source" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
+      <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="bool" Name="Visible" Category="States and Visibility" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>

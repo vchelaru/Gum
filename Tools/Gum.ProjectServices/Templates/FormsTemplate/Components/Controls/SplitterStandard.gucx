@@ -10,6 +10,9 @@
     <Variable Type="int" Name="NineSliceInstance.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">80</Value>
     </Variable>
+    <Variable Type="bool" Name="NineSliceInstance.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
     <Variable Type="int" Name="NineSliceInstance.Green" SetsValue="true">
       <Value xsi:type="xsd:int">70</Value>
     </Variable>
@@ -21,6 +24,12 @@
     </Variable>
     <Variable Type="int" Name="NineSliceInstance.Red" SetsValue="true">
       <Value xsi:type="xsd:int">70</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="NineSliceInstance.SourceFile" SetsValue="true">
+      <Value xsi:type="xsd:string">UISpriteSheet.png</Value>
+    </Variable>
+    <Variable Type="TextureAddress" Name="NineSliceInstance.TextureAddress" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
     </Variable>
     <Variable Type="int" Name="NineSliceInstance.TextureHeight" SetsValue="true">
       <Value xsi:type="xsd:int">24</Value>
