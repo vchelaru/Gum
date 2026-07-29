@@ -62,6 +62,14 @@ unsafe class Program
 
     #endregion
 
+    // Diagnostic screenshot mode (issue #4077): when GUM_SCREENSHOT_PATH is set, jump straight to
+    // the named screen (GUM_SCREENSHOT_SCREEN, default "Text"), render a few frames on the real
+    // ANGLE/D3D11 GPU-backed surface so layout settles, snapshot it to a PNG, and exit -- lets an
+    // agent (or a script) inspect what actually rendered on this GPU backend without a human
+    // watching the live window. Not wired into any CI path; local-only verification tool.
+    static readonly string? screenshotPath = Environment.GetEnvironmentVariable("GUM_SCREENSHOT_PATH");
+    static readonly string screenshotScreenName = Environment.GetEnvironmentVariable("GUM_SCREENSHOT_SCREEN") ?? "Text";
+
     // Code-only screens appended after every screen from the gumx, allowing the
     // sample to exercise runtime features (like the unified NineSliceRuntime) that
     // are not yet authored as Gum screens.
@@ -125,6 +133,14 @@ unsafe class Program
 
         BuildNavStrip();
 
+        if (screenshotPath != null)
+        {
+            var gumxScreens = ObjectFinder.Self.GumProjectSave!.Screens;
+            int codeIndex = Array.IndexOf(codeScreenNames, screenshotScreenName);
+            LoadScreen(codeIndex >= 0 ? gumxScreens.Count + codeIndex : 0);
+            return;
+        }
+
         LoadScreen(0);
     }
 
@@ -138,6 +154,14 @@ unsafe class Program
         repro.X = 20;
         repro.Y = 20;
         repro.AddToRoot();
+
+        var reproOutline = new TextRuntime();
+        reproOutline.Text = "Minimal root-level OutlineThickness repro (should show a black outline)";
+        reproOutline.FontSize = 40;
+        reproOutline.X = 20;
+        reproOutline.Y = 100;
+        reproOutline.OutlineThickness = 4;
+        reproOutline.AddToRoot();
     }
 
     // Mirrors MonoGameGumInCode's Game1.BuildNavStrip -- a horizontal strip of buttons, one per
@@ -461,6 +485,7 @@ unsafe class Program
             };
 
             int frames = 0;
+            int totalFramesRendered = 0;
 
             using var fontFromFile = SKTypeface.FromFile("Super Morning.ttf");
             paintFromFile = new SKPaint
@@ -538,6 +563,16 @@ unsafe class Program
 
                 // Swap buffers
                 window.GLContext!.SwapBuffers();
+
+                totalFramesRendered++;
+                if (screenshotPath != null && totalFramesRendered >= 5)
+                {
+                    using var image = surface!.Snapshot();
+                    using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+                    using var stream = File.OpenWrite(screenshotPath);
+                    data.SaveTo(stream);
+                    running = false;
+                }
             }
         }
         finally

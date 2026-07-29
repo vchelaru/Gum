@@ -1462,7 +1462,12 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             // per-run halo is used directly, which is also what makes per-run [OutlineThickness]
             // possible (issue #4037) -- RichTextKit paints per-run halo natively in one pass.
             HaloWidth = outlineThickness > 0 ? outlineThickness * 2f : 0f,
-            HaloColor = OutlineColor,
+            // RichTextKit's halo gate (`Style.HaloColor != SKColor.Empty`) ignores HaloWidth, and a
+            // Stroke-style SKPaint with StrokeWidth 0 draws as a 1px hairline instead of nothing -- so
+            // passing OutlineColor through unconditionally drew a thin outline on every glyph whenever
+            // OutlineColor was non-transparent, even with no outline requested (issue #4077 follow-up).
+            // Suppress to Empty whenever there's no actual outline thickness.
+            HaloColor = outlineThickness > 0 ? OutlineColor : SKColor.Empty,
         };
 
         return (style, text, xOffset, yOffset);

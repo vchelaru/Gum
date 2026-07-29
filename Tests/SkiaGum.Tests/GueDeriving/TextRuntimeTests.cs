@@ -92,6 +92,26 @@ public class TextRuntimeTests
         containedText.BoldWeight.ShouldBe(1.5f);
     }
 
+    [Fact]
+    public void BoldWeight_CustomValue_ShouldSurviveSubsequentFontPropertyChange()
+    {
+        // SystemManagers.UpdateFonts pushes BoldWeight on every font-property change (FontSize,
+        // Font, IsItalic, OutlineThickness, ...), but recomputes it from the derived IsBold bool
+        // (`IsBold ? 1.5f : 1.0f`) instead of forwarding the stored value -- so any BoldWeight
+        // outside {1.0, 1.5} is silently clobbered back to 1.5 the next time an unrelated font
+        // property changes. BoldWeight_ShouldPushToContainedText above doesn't catch this because
+        // 1.5 happens to survive the lossy recompute unchanged.
+        new RenderingLibrary.SystemManagers().Initialize();
+
+        TextRuntime sut = new();
+        sut.BoldWeight = 1.25f;
+
+        sut.FontSize = 20;
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.BoldWeight.ShouldBe(1.25f);
+    }
+
     #endregion
 
     #region Clone
@@ -560,6 +580,43 @@ public class TextRuntimeTests
 
         Text containedText = (Text)sut.RenderableComponent;
         containedText.OutlineThickness.ShouldBe(7);
+    }
+
+    [Fact]
+    public void OutlineThickness_SetWithoutOutlineColor_ShouldNotClobberContainedTextOutlineColorToTransparent()
+    {
+        // TextRuntime's _outlineColor backing field previously had no initializer, so it defaulted
+        // to transparent (SKColor.Empty). UpdateFonts pushes OutlineColor to the contained Text
+        // unconditionally whenever UpdateToFontValues runs (including as a side effect of setting
+        // OutlineThickness alone) -- so setting only OutlineThickness silently overwrote Text's own
+        // opaque-black constructor default with transparent, making RichTextKit's
+        // `Style.HaloColor != SKColor.Empty` gate skip the halo draw entirely (issue #4077).
+        new RenderingLibrary.SystemManagers().Initialize();
+
+        TextRuntime sut = new();
+        sut.OutlineThickness = 7;
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.OutlineColor.Alpha.ShouldNotBe((byte)0);
+        containedText.GetStyle().HaloColor.ShouldNotBe(SKColor.Empty);
+    }
+
+    [Fact]
+    public void OutlineThickness_Default_ShouldNotEmitHalo()
+    {
+        // Regression: fixing OutlineColor's default to opaque black (above) means every TextRuntime
+        // now carries a non-empty HaloColor even when no outline was ever requested. RichTextKit's
+        // halo gate only checks `Style.HaloColor != SKColor.Empty` -- it ignores HaloWidth -- and a
+        // Stroke-style SKPaint with StrokeWidth 0 draws as a 1px hairline rather than nothing. So
+        // plain text with OutlineThickness left at its default (0) started rendering a thin outline
+        // on every glyph. BuildRunStyle must suppress HaloColor to Empty whenever OutlineThickness is
+        // not greater than zero, regardless of what OutlineColor holds.
+        new RenderingLibrary.SystemManagers().Initialize();
+
+        TextRuntime sut = new();
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.GetStyle().HaloColor.ShouldBe(SKColor.Empty);
     }
 
     #endregion
