@@ -3,7 +3,7 @@
   <Name>Component</Name>
   <State>
     <Name>Default</Name>
-    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true">
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="false">
       <Value xsi:type="xsd:string">Default</Value>
     </Variable>
   </State>

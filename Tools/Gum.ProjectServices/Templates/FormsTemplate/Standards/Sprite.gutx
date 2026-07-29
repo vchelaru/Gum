@@ -16,9 +16,6 @@
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable Type="string" Name="CurrentChainName" Category="Animation" SetsValue="true" />
-    <Variable Type="bool" Name="Custom Texture Coordinates" Category="Source" SetsValue="true">
-      <Value xsi:type="xsd:boolean">false</Value>
-    </Variable>
     <Variable Type="bool" Name="ExposeChildrenEvents" Category="Behavior" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
@@ -31,7 +28,6 @@
     <Variable Type="int" Name="Green" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
-    <Variable Type="string" Name="Guide" Category="Position" SetsValue="true" />
     <Variable Type="bool" Name="HasEvents" Category="Behavior" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
@@ -112,14 +108,6 @@
     <Variable Type="PositionUnitType" Name="YUnits" Category="Position" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
-    <VariableList xsi:type="VariableListSaveOfString">
-      <Type>string</Type>
-      <Name>AnimationFrames</Name>
-      <Category>Animation</Category>
-      <IsFile>false</IsFile>
-      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-      <Value />
-    </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
       <Type>string</Type>
       <Name>VariableReferences</Name>

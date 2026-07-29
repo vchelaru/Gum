@@ -13,14 +13,32 @@
     <Variable Type="int" Name="Background.Red" SetsValue="true">
       <Value xsi:type="xsd:int">70</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="Background.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Bordered</Value>
+    <Variable Type="int" Name="Background.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
     </Variable>
     <Variable Type="string" Name="Bar.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">BarContainer</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="Bar.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Solid</Value>
+    <Variable Type="int" Name="Bar.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="Bar.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Bar.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="Bar.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
     </Variable>
     <Variable Type="float" Name="Bar.Width" ExposedAsName="BarPercent" SetsValue="true">
       <Value xsi:type="xsd:float">25</Value>
@@ -50,8 +68,17 @@
     <Variable Type="int" Name="BarContainer.Red" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="BarContainer.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Solid</Value>
+    <Variable Type="int" Name="BarContainer.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="BarContainer.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="BarContainer.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="BarContainer.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
     </Variable>
     <Variable Type="float" Name="BarContainer.Width" SetsValue="true">
       <Value xsi:type="xsd:float">-18</Value>

@@ -14,8 +14,17 @@
     <Variable Type="int" Name="Background.Red" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="Background.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Panel</Value>
+    <Variable Type="int" Name="Background.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">96</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
     </Variable>
     <Variable Type="float" Name="BorderBottomInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>

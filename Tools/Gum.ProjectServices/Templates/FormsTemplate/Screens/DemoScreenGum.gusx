@@ -15,8 +15,17 @@
     <Variable Type="int" Name="Background.Red" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="Background.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Panel</Value>
+    <Variable Type="int" Name="Background.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">96</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
     </Variable>
     <Variable Type="int" Name="Background1.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">177</Value>
@@ -36,8 +45,17 @@
     <Variable Type="int" Name="Background1.Red" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="Background1.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Panel</Value>
+    <Variable Type="int" Name="Background1.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="Background1.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">96</Value>
+    </Variable>
+    <Variable Type="int" Name="Background1.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="Background1.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
     </Variable>
     <Variable Type="float" Name="Background1.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -192,8 +210,17 @@
     <Variable Type="int" Name="DemoHud.Red" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="DemoHud.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Panel</Value>
+    <Variable Type="int" Name="DemoHud.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="DemoHud.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">96</Value>
+    </Variable>
+    <Variable Type="int" Name="DemoHud.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="DemoHud.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
     </Variable>
     <Variable Type="float" Name="DemoHud.Width" SetsValue="true">
       <Value xsi:type="xsd:float">279</Value>
@@ -387,14 +414,14 @@
     <Variable Type="float" Name="FullScreenCheckbox.Y" SetsValue="true">
       <Value xsi:type="xsd:float">-26</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="HitpointsBar1.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Success</Value>
-    </Variable>
     <Variable Type="BarDecorCategory" Name="HitpointsBar1.BarDecorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">VerticalLines</Value>
     </Variable>
     <Variable Type="float" Name="HitpointsBar1.BarPercent" SetsValue="true">
       <Value xsi:type="xsd:float">75</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="HitpointsBar1.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Success</Value>
     </Variable>
     <Variable Type="float" Name="HitpointsBar1.Height" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
@@ -414,14 +441,14 @@
     <Variable Type="float" Name="HitpointsBar1.Y" SetsValue="true">
       <Value xsi:type="xsd:float">10</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="HitpointsBar2.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Warning</Value>
-    </Variable>
     <Variable Type="BarDecorCategory" Name="HitpointsBar2.BarDecorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">VerticalLines</Value>
     </Variable>
     <Variable Type="float" Name="HitpointsBar2.BarPercent" SetsValue="true">
       <Value xsi:type="xsd:float">50</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="HitpointsBar2.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Warning</Value>
     </Variable>
     <Variable Type="float" Name="HitpointsBar2.Height" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
@@ -441,14 +468,14 @@
     <Variable Type="float" Name="HitpointsBar2.Y" SetsValue="true">
       <Value xsi:type="xsd:float">20</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="HitpointsBar3.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Danger</Value>
-    </Variable>
     <Variable Type="BarDecorCategory" Name="HitpointsBar3.BarDecorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">VerticalLines</Value>
     </Variable>
     <Variable Type="float" Name="HitpointsBar3.BarPercent" SetsValue="true">
       <Value xsi:type="xsd:float">25</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="HitpointsBar3.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Danger</Value>
     </Variable>
     <Variable Type="float" Name="HitpointsBar3.Height" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
@@ -477,14 +504,35 @@
     <Variable Type="float" Name="LabelInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
     </Variable>
+    <Variable IsFile="true" Type="string" Name="LabelInstance1.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="LabelInstance1.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Arial</Value>
+    </Variable>
+    <Variable Type="float" Name="LabelInstance1.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="LabelInstance1.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
+    <Variable Type="bool" Name="LabelInstance1.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="bool" Name="LabelInstance1.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="LabelInstance1.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
     <Variable Type="string" Name="LabelInstance1.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">WindowStandardInstance</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="LabelInstance1.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Strong</Value>
-    </Variable>
     <Variable Type="string" Name="LabelInstance1.Text" SetsValue="true">
       <Value xsi:type="xsd:string">I am a label. I will line wrap if you resize this window. You can also grab the top part of the window to move it around. Try it!</Value>
+    </Variable>
+    <Variable Type="bool" Name="LabelInstance1.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="float" Name="LabelInstance1.Width" SetsValue="true">
       <Value xsi:type="xsd:float">-16</Value>
@@ -678,11 +726,11 @@
     <Variable Type="float" Name="PercentBarInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="PercentBarInstance1.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Success</Value>
-    </Variable>
     <Variable Type="BarDecorCategory" Name="PercentBarInstance1.BarDecorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">CautionLines</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="PercentBarInstance1.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Success</Value>
     </Variable>
     <Variable Type="string" Name="PercentBarInstance1.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ContainerInstance</Value>
@@ -696,11 +744,11 @@
     <Variable Type="float" Name="PercentBarInstance1.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="PercentBarInstance2.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Warning</Value>
-    </Variable>
     <Variable Type="BarDecorCategory" Name="PercentBarInstance2.BarDecorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">VerticalLines</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="PercentBarInstance2.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Warning</Value>
     </Variable>
     <Variable Type="string" Name="PercentBarInstance2.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ContainerInstance</Value>
@@ -729,11 +777,11 @@
     <Variable Type="float" Name="PercentBarInstance3.Y" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
     </Variable>
-    <Variable Type="ColorCategory" Name="PercentBarInstance4.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Accent</Value>
-    </Variable>
     <Variable Type="BarDecorCategory" Name="PercentBarInstance4.BarDecorCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">CautionLines</Value>
+    </Variable>
+    <Variable Type="ColorCategory" Name="PercentBarInstance4.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Accent</Value>
     </Variable>
     <Variable Type="string" Name="PercentBarInstance4.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">ContainerInstance</Value>
@@ -917,8 +965,29 @@
     <Variable Type="int" Name="TitleText.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">177</Value>
     </Variable>
+    <Variable IsFile="true" Type="string" Name="TitleText.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TitleText.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Arial</Value>
+    </Variable>
+    <Variable Type="float" Name="TitleText.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">28</Value>
+    </Variable>
     <Variable Type="int" Name="TitleText.Green" SetsValue="true">
       <Value xsi:type="xsd:int">159</Value>
+    </Variable>
+    <Variable Type="bool" Name="TitleText.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="bool" Name="TitleText.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TitleText.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="string" Name="TitleText.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">MenuTitle</Value>
@@ -926,17 +995,38 @@
     <Variable Type="int" Name="TitleText.Red" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="TitleText.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Title</Value>
-    </Variable>
     <Variable Type="string" Name="TitleText.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Settings</Value>
+    </Variable>
+    <Variable Type="bool" Name="TitleText.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="int" Name="TitleText1.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">177</Value>
     </Variable>
+    <Variable IsFile="true" Type="string" Name="TitleText1.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TitleText1.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Arial</Value>
+    </Variable>
+    <Variable Type="float" Name="TitleText1.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText1.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">28</Value>
+    </Variable>
     <Variable Type="int" Name="TitleText1.Green" SetsValue="true">
       <Value xsi:type="xsd:int">159</Value>
+    </Variable>
+    <Variable Type="bool" Name="TitleText1.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="bool" Name="TitleText1.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TitleText1.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="string" Name="TitleText1.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">MenuTitle1</Value>
@@ -944,17 +1034,38 @@
     <Variable Type="int" Name="TitleText1.Red" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="TitleText1.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Title</Value>
-    </Variable>
     <Variable Type="string" Name="TitleText1.Text" SetsValue="true">
       <Value xsi:type="xsd:string">New Profile</Value>
+    </Variable>
+    <Variable Type="bool" Name="TitleText1.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="int" Name="TitleText2.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">177</Value>
     </Variable>
+    <Variable IsFile="true" Type="string" Name="TitleText2.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TitleText2.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Arial</Value>
+    </Variable>
+    <Variable Type="float" Name="TitleText2.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TitleText2.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">28</Value>
+    </Variable>
     <Variable Type="int" Name="TitleText2.Green" SetsValue="true">
       <Value xsi:type="xsd:int">159</Value>
+    </Variable>
+    <Variable Type="bool" Name="TitleText2.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="bool" Name="TitleText2.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TitleText2.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="string" Name="TitleText2.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">MenuTitle2</Value>
@@ -962,11 +1073,11 @@
     <Variable Type="int" Name="TitleText2.Red" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="TitleText2.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Title</Value>
-    </Variable>
     <Variable Type="string" Name="TitleText2.Text" SetsValue="true">
       <Value xsi:type="xsd:string">HUD Demo</Value>
+    </Variable>
+    <Variable Type="bool" Name="TitleText2.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="float" Name="TreeViewInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">155</Value>
@@ -1059,6 +1170,14 @@
         <string>Red = Components/Styles.Primary.FillRed</string>
         <string>Green = Components/Styles.Primary.FillGreen</string>
         <string>Blue = Components/Styles.Primary.FillBlue</string>
+        <string>Font = Components/Styles.Title.Font</string>
+        <string>FontSize = Components/Styles.Title.FontSize</string>
+        <string>IsBold = Components/Styles.Title.IsBold</string>
+        <string>IsItalic = Components/Styles.Title.IsItalic</string>
+        <string>UseCustomFont = Components/Styles.Title.UseCustomFont</string>
+        <string>CustomFontFile = Components/Styles.Title.CustomFontFile</string>
+        <string>FontScale = Components/Styles.Title.FontScale</string>
+        <string>LineHeightMultiplier = Components/Styles.Title.LineHeightMultiplier</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -1071,6 +1190,14 @@
         <string>Red = Components/Styles.Primary.FillRed</string>
         <string>Green = Components/Styles.Primary.FillGreen</string>
         <string>Blue = Components/Styles.Primary.FillBlue</string>
+        <string>Font = Components/Styles.Title.Font</string>
+        <string>FontSize = Components/Styles.Title.FontSize</string>
+        <string>IsBold = Components/Styles.Title.IsBold</string>
+        <string>IsItalic = Components/Styles.Title.IsItalic</string>
+        <string>UseCustomFont = Components/Styles.Title.UseCustomFont</string>
+        <string>CustomFontFile = Components/Styles.Title.CustomFontFile</string>
+        <string>FontScale = Components/Styles.Title.FontScale</string>
+        <string>LineHeightMultiplier = Components/Styles.Title.LineHeightMultiplier</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -1083,6 +1210,31 @@
         <string>Red = Components/Styles.Primary.FillRed</string>
         <string>Green = Components/Styles.Primary.FillGreen</string>
         <string>Blue = Components/Styles.Primary.FillBlue</string>
+        <string>Font = Components/Styles.Title.Font</string>
+        <string>FontSize = Components/Styles.Title.FontSize</string>
+        <string>IsBold = Components/Styles.Title.IsBold</string>
+        <string>IsItalic = Components/Styles.Title.IsItalic</string>
+        <string>UseCustomFont = Components/Styles.Title.UseCustomFont</string>
+        <string>CustomFontFile = Components/Styles.Title.CustomFontFile</string>
+        <string>FontScale = Components/Styles.Title.FontScale</string>
+        <string>LineHeightMultiplier = Components/Styles.Title.LineHeightMultiplier</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>LabelInstance1.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Font = Components/Styles.Strong.Font</string>
+        <string>FontSize = Components/Styles.Strong.FontSize</string>
+        <string>IsBold = Components/Styles.Strong.IsBold</string>
+        <string>IsItalic = Components/Styles.Strong.IsItalic</string>
+        <string>UseCustomFont = Components/Styles.Strong.UseCustomFont</string>
+        <string>CustomFontFile = Components/Styles.Strong.CustomFontFile</string>
+        <string>FontScale = Components/Styles.Strong.FontScale</string>
+        <string>LineHeightMultiplier = Components/Styles.Strong.LineHeightMultiplier</string>
       </Value>
     </VariableList>
   </State>

@@ -49,12 +49,33 @@
     <Variable Type="int" Name="NineSliceInstance.Red" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="NineSliceInstance.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Panel</Value>
+    <Variable Type="int" Name="NineSliceInstance.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="NineSliceInstance.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">96</Value>
+    </Variable>
+    <Variable Type="int" Name="NineSliceInstance.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="NineSliceInstance.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
     </Variable>
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
     <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable IsFile="true" Type="string" Name="TextInstance.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TextInstance.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Arial</Value>
+    </Variable>
+    <Variable Type="float" Name="TextInstance.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
     </Variable>
     <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
@@ -65,17 +86,26 @@
     <Variable Type="DimensionUnitType" Name="TextInstance.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
+    <Variable Type="bool" Name="TextInstance.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextInstance.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextInstance.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
     <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
-    </Variable>
-    <Variable Type="StyleCategory" Name="TextInstance.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Normal</Value>
     </Variable>
     <Variable Type="string" Name="TextInstance.Text" SetsValue="true">
       <Value xsi:type="xsd:string">This is a dialog box. This text will be displayed one character at a time. Typically a dialog box is added to a Screen such as the GameScreen, but it defaults to being invisible.</Value>
     </Variable>
     <Variable Type="TextOverflowVerticalMode" Name="TextInstance.TextOverflowVerticalMode" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextInstance.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="float" Name="TextInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">-16</Value>
@@ -117,6 +147,14 @@
         <string>Red = Components/Styles.White.FillRed</string>
         <string>Green = Components/Styles.White.FillGreen</string>
         <string>Blue = Components/Styles.White.FillBlue</string>
+        <string>Font = Components/Styles.Normal.Font</string>
+        <string>FontSize = Components/Styles.Normal.FontSize</string>
+        <string>IsBold = Components/Styles.Normal.IsBold</string>
+        <string>IsItalic = Components/Styles.Normal.IsItalic</string>
+        <string>UseCustomFont = Components/Styles.Normal.UseCustomFont</string>
+        <string>CustomFontFile = Components/Styles.Normal.CustomFontFile</string>
+        <string>FontScale = Components/Styles.Normal.FontScale</string>
+        <string>LineHeightMultiplier = Components/Styles.Normal.LineHeightMultiplier</string>
       </Value>
     </VariableList>
   </State>

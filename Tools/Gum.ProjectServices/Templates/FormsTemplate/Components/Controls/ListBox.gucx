@@ -19,8 +19,17 @@
     <Variable Type="int" Name="Background.Red" SetsValue="true">
       <Value xsi:type="xsd:int">70</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="Background.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Bordered</Value>
+    <Variable Type="int" Name="Background.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
     </Variable>
     <Variable Type="float" Name="Background.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -173,8 +182,17 @@
     <Variable Type="int" Name="FocusedIndicator.Red" SetsValue="true">
       <Value xsi:type="xsd:int">232</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="FocusedIndicator.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Solid</Value>
+    <Variable Type="int" Name="FocusedIndicator.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
     </Variable>
     <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>

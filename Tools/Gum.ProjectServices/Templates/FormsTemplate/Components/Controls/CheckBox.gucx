@@ -19,8 +19,17 @@
     <Variable Type="int" Name="CheckBoxBackground.Red" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="CheckBoxBackground.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Bordered</Value>
+    <Variable Type="int" Name="CheckBoxBackground.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="CheckBoxBackground.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="CheckBoxBackground.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="CheckBoxBackground.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
     </Variable>
     <Variable Type="float" Name="CheckBoxBackground.Width" SetsValue="true">
       <Value xsi:type="xsd:float">24</Value>
@@ -51,8 +60,17 @@
     <Variable Type="int" Name="FocusedIndicator.Red" SetsValue="true">
       <Value xsi:type="xsd:int">232</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="FocusedIndicator.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Solid</Value>
+    <Variable Type="int" Name="FocusedIndicator.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
     </Variable>
     <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
@@ -69,6 +87,9 @@
     <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">24</Value>
     </Variable>
+    <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">White</Value>
+    </Variable>
     <Variable Type="bool" Name="InnerCheck.ExposeChildrenEvents" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
@@ -83,9 +104,6 @@
     </Variable>
     <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Check</Value>
-    </Variable>
-    <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">White</Value>
     </Variable>
     <Variable Type="string" Name="InnerCheck.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">CheckBoxBackground</Value>
@@ -103,6 +121,18 @@
     <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
+    <Variable IsFile="true" Type="string" Name="TextInstance.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TextInstance.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Arial</Value>
+    </Variable>
+    <Variable Type="float" Name="TextInstance.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
     <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
@@ -115,14 +145,23 @@
     <Variable Type="HorizontalAlignment" Name="TextInstance.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
+    <Variable Type="bool" Name="TextInstance.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextInstance.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TextInstance.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
     <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="TextInstance.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Normal</Value>
-    </Variable>
     <Variable Type="string" Name="TextInstance.Text" ExposedAsName="Text" SetsValue="true">
       <Value xsi:type="xsd:string">Label</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextInstance.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="VerticalAlignment" Name="TextInstance.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
@@ -182,6 +221,14 @@
         <string>Red = Components/Styles.White.FillRed</string>
         <string>Green = Components/Styles.White.FillGreen</string>
         <string>Blue = Components/Styles.White.FillBlue</string>
+        <string>Font = Components/Styles.Normal.Font</string>
+        <string>FontSize = Components/Styles.Normal.FontSize</string>
+        <string>IsBold = Components/Styles.Normal.IsBold</string>
+        <string>IsItalic = Components/Styles.Normal.IsItalic</string>
+        <string>UseCustomFont = Components/Styles.Normal.UseCustomFont</string>
+        <string>CustomFontFile = Components/Styles.Normal.CustomFontFile</string>
+        <string>FontScale = Components/Styles.Normal.FontScale</string>
+        <string>LineHeightMultiplier = Components/Styles.Normal.LineHeightMultiplier</string>
       </Value>
     </VariableList>
   </State>
@@ -201,11 +248,11 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Check</Value>
-      </Variable>
       <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Check</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -258,11 +305,11 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Check</Value>
-      </Variable>
       <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Check</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -315,11 +362,11 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Dash</Value>
-      </Variable>
       <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Dash</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -372,11 +419,11 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Check</Value>
-      </Variable>
       <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Gray</Value>
+      </Variable>
+      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Check</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -429,11 +476,11 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Check</Value>
-      </Variable>
       <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Check</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -486,11 +533,11 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Dash</Value>
-      </Variable>
       <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Gray</Value>
+      </Variable>
+      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Dash</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -543,11 +590,11 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Check</Value>
-      </Variable>
       <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Check</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -600,11 +647,11 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Check</Value>
-      </Variable>
       <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Check</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -657,11 +704,11 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Dash</Value>
-      </Variable>
       <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Dash</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -714,11 +761,11 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Check</Value>
-      </Variable>
       <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Check</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -771,11 +818,11 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Check</Value>
-      </Variable>
       <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Check</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -828,11 +875,11 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Dash</Value>
-      </Variable>
       <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Dash</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -885,11 +932,11 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Check</Value>
-      </Variable>
       <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Check</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -942,11 +989,11 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Check</Value>
-      </Variable>
       <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Check</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -999,11 +1046,11 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Dash</Value>
-      </Variable>
       <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Dash</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -1056,11 +1103,11 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Check</Value>
-      </Variable>
       <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Check</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -1113,11 +1160,11 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Check</Value>
-      </Variable>
       <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Check</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -1170,11 +1217,11 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Dash</Value>
-      </Variable>
       <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Dash</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -1227,11 +1274,11 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Check</Value>
-      </Variable>
       <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Gray</Value>
+      </Variable>
+      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Check</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -1284,11 +1331,11 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Check</Value>
-      </Variable>
       <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">White</Value>
+      </Variable>
+      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Check</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -1341,11 +1388,11 @@
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">Dash</Value>
-      </Variable>
       <Variable Type="ColorCategory" Name="InnerCheck.ColorCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Gray</Value>
+      </Variable>
+      <Variable Type="IconCategory" Name="InnerCheck.IconCategoryState" SetsValue="true">
+        <Value xsi:type="xsd:string">Dash</Value>
       </Variable>
       <Variable Type="bool" Name="InnerCheck.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>

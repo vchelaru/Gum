@@ -76,8 +76,17 @@
     <Variable Type="int" Name="TrackBackground.Red" SetsValue="true">
       <Value xsi:type="xsd:int">130</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="TrackBackground.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Solid</Value>
+    <Variable Type="int" Name="TrackBackground.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="TrackBackground.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="TrackBackground.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="TrackBackground.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
     </Variable>
     <Variable Type="float" Name="TrackBackground.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
