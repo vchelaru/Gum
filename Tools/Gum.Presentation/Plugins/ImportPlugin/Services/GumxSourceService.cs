@@ -258,7 +258,7 @@ public class GumxSourceService : IGumxSourceService
         if (gps.BehaviorReferences == null) return;
         var tasks = gps.BehaviorReferences.Select(async reference =>
         {
-            string relativePath = $"Behaviors/{reference.Name}.{BehaviorReference.Extension}";
+            string relativePath = reference.GetRelativeFilePath();
             var elementText = await FetchElementTextAsync(relativePath, baseUrl);
             onFileLoaded?.Invoke();
             if (elementText == null) return null;

@@ -555,6 +555,31 @@ public class FileCommands : IFileCommands
                 //PluginManager.Self.BeforeBehaviorSave(behavior);
 
                 string fileName = GetFullPathXmlFile( behavior).FullPath;
+
+                // A SourcePath-linked behavior's DefaultImplementation is per-project (each theme
+                // has its own default visual) even though the rest of the behavior is shared.
+                // Never let one project's save write its DefaultImplementation into the shared
+                // file - capture it as a reference-level override instead, and restore whatever
+                // DefaultImplementation is already on disk before writing.
+                var matchingReference = _projectManager.GumProjectSave.BehaviorReferences
+                    ?.FirstOrDefault(item => item.Name == behavior.Name);
+                bool isLinkedBehavior = matchingReference != null && !string.IsNullOrEmpty(matchingReference.SourcePath);
+                string userIntendedDefaultImplementation = behavior.DefaultImplementation;
+
+                if (isLinkedBehavior)
+                {
+                    matchingReference.DefaultImplementationOverride = userIntendedDefaultImplementation;
+
+                    string sharedDefaultImplementationOnDisk = null;
+                    if (FileManager.FileExists(fileName))
+                    {
+                        sharedDefaultImplementationOnDisk = BehaviorReference
+                            .DeserializeBehavior(fileName, _projectState.GumProjectSave.Version)
+                            .DefaultImplementation;
+                    }
+                    behavior.DefaultImplementation = sharedDefaultImplementationOnDisk;
+                }
+
                 _fileWatchIgnoreList.IgnoreNextChangeUntil(fileName);
                 // if it's readonly, let's warn the user
                 bool isReadOnly = IsFileReadOnly(fileName);
@@ -597,10 +622,21 @@ public class FileCommands : IFileCommands
                         succeeded = false;
                     }
                 }
+
+                if (isLinkedBehavior)
+                {
+                    behavior.DefaultImplementation = userIntendedDefaultImplementation;
+                }
+
                 if (succeeded)
                 {
                     _outputManager.AddOutput("Saved " + behavior + " to " + fileName);
                     //PluginManager.Self.AfterBehaviorSave(behavior);
+
+                    if (isLinkedBehavior)
+                    {
+                        _projectManager.SaveProject();
+                    }
                 }
             }
 
@@ -623,7 +659,14 @@ public class FileCommands : IFileCommands
 
         string directory = FileManager.GetDirectory(_projectManager.GumProjectSave.FullFileName);
 
-        return directory + BehaviorReference.Subfolder + "\\" + behaviorName + "." + BehaviorReference.Extension;
+        var matchingReference = _projectManager.GumProjectSave.BehaviorReferences
+            ?.FirstOrDefault(item => item.Name == behaviorName);
+
+        string relativeFilePath = matchingReference != null
+            ? matchingReference.GetRelativeFilePath()
+            : BehaviorReference.Subfolder + "\\" + behaviorName + "." + BehaviorReference.Extension;
+
+        return directory + relativeFilePath;
     }
 
     public void SaveGeneralSettings()

@@ -27,6 +27,7 @@ public class Program
         rootCommand.AddCommand(CheckCommand.Create());
         rootCommand.AddCommand(CheckReferencesCommand.Create());
         rootCommand.AddCommand(DiffStandardsCommand.Create());
+        rootCommand.AddCommand(StageFormsBehaviorsCommand.Create());
         rootCommand.AddCommand(PackCommand.Create());
         rootCommand.AddCommand(CodegenCommand.Create());
         rootCommand.AddCommand(CodegenInitCommand.Create());

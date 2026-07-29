@@ -475,6 +475,77 @@ public class GumFileSerializerTests
     }
 
     [Fact]
+    public void CompactFormat_BehaviorReferenceSourcePath_RoundTrips()
+    {
+        var project = new GumProjectSave();
+        project.BehaviorReferences.Add(new BehaviorReference { Name = "ButtonBehavior", SourcePath = "../../FormsBehaviors/ButtonBehavior.behx" });
+
+        var serializer = GumFileSerializer.GetGumProjectCompactSerializer();
+        string xml = SerializeToString(serializer, project);
+
+        xml.ShouldContain("SourcePath=\"../../FormsBehaviors/ButtonBehavior.behx\"");
+
+        GumProjectSave result;
+        using (var reader = new StringReader(xml))
+        {
+            result = (GumProjectSave)serializer.Deserialize(reader)!;
+        }
+
+        result.BehaviorReferences.Count.ShouldBe(1);
+        result.BehaviorReferences[0].Name.ShouldBe("ButtonBehavior");
+        result.BehaviorReferences[0].SourcePath.ShouldBe("../../FormsBehaviors/ButtonBehavior.behx");
+    }
+
+    [Fact]
+    public void CompactFormat_BehaviorReferenceWithoutSourcePath_OmitsSourcePathAttribute()
+    {
+        var project = new GumProjectSave();
+        project.BehaviorReferences.Add(new BehaviorReference { Name = "ButtonBehavior" });
+
+        var serializer = GumFileSerializer.GetGumProjectCompactSerializer();
+        string xml = SerializeToString(serializer, project);
+
+        xml.ShouldNotContain("SourcePath");
+    }
+
+    [Fact]
+    public void CompactFormat_BehaviorReferenceDefaultImplementationOverride_RoundTrips()
+    {
+        var project = new GumProjectSave();
+        project.BehaviorReferences.Add(new BehaviorReference
+        {
+            Name = "ButtonBehavior",
+            SourcePath = "../../FormsBehaviors/ButtonBehavior.behx",
+            DefaultImplementationOverride = "Bubblegum/Controls/Button"
+        });
+
+        var serializer = GumFileSerializer.GetGumProjectCompactSerializer();
+        string xml = SerializeToString(serializer, project);
+
+        xml.ShouldContain("DefaultImplementationOverride=\"Bubblegum/Controls/Button\"");
+
+        GumProjectSave result;
+        using (var reader = new StringReader(xml))
+        {
+            result = (GumProjectSave)serializer.Deserialize(reader)!;
+        }
+
+        result.BehaviorReferences[0].DefaultImplementationOverride.ShouldBe("Bubblegum/Controls/Button");
+    }
+
+    [Fact]
+    public void CompactFormat_BehaviorReferenceWithoutDefaultImplementationOverride_OmitsAttribute()
+    {
+        var project = new GumProjectSave();
+        project.BehaviorReferences.Add(new BehaviorReference { Name = "ButtonBehavior" });
+
+        var serializer = GumFileSerializer.GetGumProjectCompactSerializer();
+        string xml = SerializeToString(serializer, project);
+
+        xml.ShouldNotContain("DefaultImplementationOverride");
+    }
+
+    [Fact]
     public void NewProjectDefaultsToAttributeVersion()
     {
         var project = new GumProjectSave();
