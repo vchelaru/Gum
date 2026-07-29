@@ -173,6 +173,42 @@ public class GumFileSerializerTests
     }
 
     [Fact]
+    public void SerializeBehaviorSave_CompactFormat_FormsPropertyWithoutExplicitSetsValue_OmitsSetsValueAttribute()
+    {
+        BehaviorSave original = new BehaviorSave();
+        original.FormsProperties.Add(new VariableSave { Type = "string", Name = "ToolTip" });
+
+        XmlSerializer compactSerializer = GumFileSerializer.GetCompactSerializer(typeof(BehaviorSave));
+        string xml = SerializeToString(compactSerializer, original);
+
+        xml.ShouldNotContain("SetsValue");
+    }
+
+    [Fact]
+    public void SerializeBehaviorSave_CompactFormat_FormsPropertyWithExplicitFalseSetsValue_KeepsSetsValueAttribute()
+    {
+        BehaviorSave original = new BehaviorSave();
+        original.FormsProperties.Add(new VariableSave { Type = "string", Name = "ToolTip", SetsValue = false });
+
+        XmlSerializer compactSerializer = GumFileSerializer.GetCompactSerializer(typeof(BehaviorSave));
+        string xml = SerializeToString(compactSerializer, original);
+
+        xml.ShouldContain("SetsValue=\"false\"");
+    }
+
+    [Fact]
+    public void SerializeBehaviorSave_CompactFormat_EmptyRequiredVariables_OmitsNameElement()
+    {
+        BehaviorSave original = new BehaviorSave();
+
+        XmlSerializer compactSerializer = GumFileSerializer.GetCompactSerializer(typeof(BehaviorSave));
+        string xml = SerializeToString(compactSerializer, original);
+
+        xml.ShouldContain("<RequiredVariables />");
+        xml.ShouldNotContain("<Name />");
+    }
+
+    [Fact]
     public void SerializeBehaviorSave_EmptyToolOnlyVariableReferences_OmittedFromXml()
     {
         BehaviorSave original = new BehaviorSave();
