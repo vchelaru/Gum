@@ -1,4 +1,5 @@
 using Gum.GueDeriving;
+using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using Shouldly;
 
@@ -136,6 +137,143 @@ public class TextRuntimeTests : BaseTestClass
         TextRuntime sut = new();
         sut.Text = "Line1\nLine2";
         sut.WrappedText.ShouldNotBeEmpty();
+    }
+
+    [Theory]
+    [InlineData("Text")]
+    [InlineData("TextNoTranslate")]
+    public void Text_ViaDirectPropertySetVersusSetProperty_WithMaxWidth_ShouldWrapIdentically(string propertyName)
+    {
+        const string longText = "This is a long piece of text that should wrap at the max width";
+
+        AssertWrapsIdentically(propertyName, longText, expectMultipleLines: true, sut =>
+        {
+            sut.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            sut.MaxWidth = 40;
+        });
+    }
+
+    [Theory]
+    [InlineData("Text")]
+    [InlineData("TextNoTranslate")]
+    public void Text_ViaDirectPropertySetVersusSetProperty_WithFixedWidthAndHeightRelativeToChildren_ShouldWrapIdentically(string propertyName)
+    {
+        const string longText = "This is a long piece of text that should wrap at the fixed width";
+
+        AssertWrapsIdentically(propertyName, longText, expectMultipleLines: true, sut =>
+        {
+            sut.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+            sut.Width = 100;
+            sut.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        });
+    }
+
+    [Theory]
+    [InlineData("Text")]
+    [InlineData("TextNoTranslate")]
+    public void Text_ViaDirectPropertySetVersusSetProperty_WithBbCodeAndMaxWidth_ShouldWrapIdentically(string propertyName)
+    {
+        const string longBbCodeText = "plain [IsBold=true]bold text that should wrap at the given max width value[/IsBold] plain";
+
+        AssertWrapsIdentically(propertyName, longBbCodeText, expectMultipleLines: true, sut =>
+        {
+            sut.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            sut.MaxWidth = 40;
+        });
+    }
+
+    [Theory]
+    [InlineData("Text")]
+    [InlineData("TextNoTranslate")]
+    public void Text_ViaDirectPropertySetVersusSetProperty_WithNullValue_ShouldBehaveIdentically(string propertyName)
+    {
+        AssertWrapsIdentically(propertyName, null, expectMultipleLines: false, sut =>
+        {
+            sut.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            sut.MaxWidth = 40;
+        });
+    }
+
+    [Theory]
+    [InlineData("Text")]
+    [InlineData("TextNoTranslate")]
+    public void Text_ViaDirectPropertySetVersusSetProperty_InStack_ShouldPositionSiblingIdentically(string propertyName)
+    {
+        float ySettingViaDirect = BuildStackAndGetSecondChildY(
+            (first, value) => SetDirect(first, propertyName, value));
+        float ySettingViaSetProperty = BuildStackAndGetSecondChildY(
+            (first, value) => first.SetProperty(propertyName, value));
+
+        ySettingViaSetProperty.ShouldBe(ySettingViaDirect);
+    }
+
+    [Fact]
+    public void Text_ViaDirectPropertySet_WhenSizeChanges_StillTriggersTwoUpdateLayoutCalls()
+    {
+        TextRuntime sut = new();
+        sut.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        sut.Text = "Short";
+
+        int countBefore = GraphicalUiElement.UpdateLayoutCallCount;
+        sut.Text = "This is a much longer string that changes the wrapped size";
+        int callCount = GraphicalUiElement.UpdateLayoutCallCount - countBefore;
+
+        // TextRuntime.Text's own wrapper AND the dispatcher's wrapper (reached via the SetProperty call
+        // in between) both still run and both now agree the size changed, so each independently calls
+        // UpdateLayout -- reconciling the two wrappers' *conditions* didn't collapse them into one call.
+        // That only happens once the dispatcher delegates directly to TextRuntime.Text (a follow-up PR),
+        // at which point this should drop to 1 -- update this test when that lands.
+        callCount.ShouldBe(2);
+    }
+
+    private static void AssertWrapsIdentically(string propertyName, string? text, bool expectMultipleLines, Action<TextRuntime> configure)
+    {
+        TextRuntime viaDirect = new();
+        configure(viaDirect);
+        SetDirect(viaDirect, propertyName, text);
+
+        TextRuntime viaSetProperty = new();
+        configure(viaSetProperty);
+        viaSetProperty.SetProperty(propertyName, text);
+
+        if (expectMultipleLines)
+        {
+            viaDirect.WrappedText.Count.ShouldBeGreaterThan(1);
+        }
+        viaSetProperty.WrappedText.ShouldBe(viaDirect.WrappedText);
+    }
+
+    private static void SetDirect(TextRuntime textRuntime, string propertyName, string? value)
+    {
+        if (propertyName == "TextNoTranslate")
+        {
+            textRuntime.SetTextNoTranslate(value);
+        }
+        else
+        {
+            textRuntime.Text = value;
+        }
+    }
+
+    private static float BuildStackAndGetSecondChildY(Action<TextRuntime, string> setText)
+    {
+        ContainerRuntime stack = new();
+        stack.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        stack.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        stack.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+
+        TextRuntime first = new();
+        first.Text = "Line1";
+        TextRuntime second = new();
+        second.Text = "Line2";
+        stack.Children.Add(first);
+        stack.Children.Add(second);
+
+        stack.UpdateLayout();
+
+        setText(first, "Line1\nLine1b\nLine1c");
+
+        return second.Y;
     }
 
     #endregion

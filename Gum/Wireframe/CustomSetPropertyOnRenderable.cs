@@ -874,12 +874,22 @@ public partial class CustomSetPropertyOnRenderable
 
         if (propertyName == "Text" || propertyName == "TextNoTranslate")
         {
-            if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                // If height is relative to children, it could be in a stack
-                graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
+            // Mirrors TextRuntime.Text's own wrapper (MonoGameGum/GueDeriving/TextRuntime.cs) so both
+            // entry points measure/re-layout identically instead of each doing it slightly differently.
+            var widthBefore = textRenderable.WrappedTextWidth;
+            var heightBefore = textRenderable.WrappedTextHeight;
+
+            if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren)
             {
-                // make it have no line wrap width before assignign the text:
-                textRenderable.Width = null;
+                if (graphicalUiElement.MaxWidth == null)
+                {
+                    // make it have no line wrap width before assignign the text:
+                    textRenderable.Width = null;
+                }
+                else
+                {
+                    textRenderable.Width = graphicalUiElement.MaxWidth;
+                }
             }
 
             var valueAsString = value as string;
@@ -927,12 +937,13 @@ public partial class CustomSetPropertyOnRenderable
                     textRenderable.RawText = rawText;
                 }
             }
-            // we want to update if the text's size is based on its "children" (the letters it contains)
-            if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                // If height is relative to children, it could be in a stack
-                graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
+            // we want to update if the text's size actually changed (the letters it contains)
+            var shouldUpdate = widthBefore != textRenderable.WrappedTextWidth || heightBefore != textRenderable.WrappedTextHeight;
+            if (shouldUpdate)
             {
-                graphicalUiElement.UpdateLayout();
+                graphicalUiElement.UpdateLayout(
+                    GraphicalUiElement.ParentUpdateType.IfParentWidthHeightDependOnChildren |
+                    GraphicalUiElement.ParentUpdateType.IfParentStacks, int.MaxValue / 2);
             }
             handled = true;
         }
