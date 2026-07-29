@@ -26,7 +26,6 @@
     <Variable Type="int" Name="Green" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
-    <Variable Type="string" Name="Guide" Category="Position" SetsValue="true" />
     <Variable Type="bool" Name="HasEvents" Category="Behavior" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
@@ -50,7 +49,7 @@
     <Variable Type="int" Name="Red" Category="Rendering" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
-    <Variable Type="float" Name="Rotation" Category="Flip and Rotation" SetsValue="false">
+    <Variable Type="float" Name="Rotation" Category="Flip and Rotation" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable IsFile="true" Type="string" Name="SourceFile" Category="Source" SetsValue="true">
@@ -59,7 +58,6 @@
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="false">
       <Value xsi:type="xsd:string">Default</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="StyleCategoryState" SetsValue="false" />
     <Variable Type="TextureAddress" Name="TextureAddress" Category="Source" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
@@ -104,13 +102,6 @@
     </Variable>
     <VariableList xsi:type="VariableListSaveOfString">
       <Type>string</Type>
-      <Name>AnimationFrames</Name>
-      <IsFile>false</IsFile>
-      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-      <Value />
-    </VariableList>
-    <VariableList xsi:type="VariableListSaveOfString">
-      <Type>string</Type>
       <Name>VariableReferences</Name>
       <Category>References</Category>
       <IsFile>false</IsFile>
@@ -118,203 +109,5 @@
       <Value />
     </VariableList>
   </State>
-  <Category>
-    <Name>StyleCategory</Name>
-    <State>
-      <Name>Solid</Name>
-      <Variable Type="int" Name="TextureHeight" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureLeft" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">0</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureTop" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">48</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureWidth" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-    </State>
-    <State>
-      <Name>Bordered</Name>
-      <Variable Type="int" Name="TextureHeight" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureLeft" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureTop" SetsValue="true">
-        <Value xsi:type="xsd:int">48</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureWidth" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-    </State>
-    <State>
-      <Name>BracketHorizontal</Name>
-      <Variable Type="int" Name="TextureHeight" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureLeft" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">72</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureTop" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">72</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureWidth" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-    </State>
-    <State>
-      <Name>BracketVertical</Name>
-      <Variable Type="int" Name="TextureHeight" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureLeft" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">48</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureTop" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">72</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureWidth" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-    </State>
-    <State>
-      <Name>Tab</Name>
-      <Variable Type="int" Name="TextureHeight" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureLeft" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">48</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureTop" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">48</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureWidth" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-    </State>
-    <State>
-      <Name>TabBordered</Name>
-      <Variable Type="int" Name="TextureHeight" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureLeft" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">72</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureTop" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">48</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureWidth" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-    </State>
-    <State>
-      <Name>Outlined</Name>
-      <Variable Type="int" Name="TextureHeight" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureLeft" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">0</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureTop" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">72</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureWidth" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-    </State>
-    <State>
-      <Name>OutlinedHeavy</Name>
-      <Variable Type="int" Name="TextureHeight" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureLeft" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureTop" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">72</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureWidth" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-    </State>
-    <State>
-      <Name>Panel</Name>
-      <Variable Type="int" Name="TextureHeight" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureLeft" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">96</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureTop" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">48</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureWidth" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-    </State>
-    <State>
-      <Name>CircleSolid</Name>
-      <Variable Type="int" Name="TextureHeight" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureLeft" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">0</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureTop" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">96</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureWidth" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-    </State>
-    <State>
-      <Name>CircleBordered</Name>
-      <Variable Type="int" Name="TextureHeight" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureLeft" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureTop" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">96</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureWidth" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-    </State>
-    <State>
-      <Name>CircleOutlined</Name>
-      <Variable Type="int" Name="TextureHeight" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureLeft" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">0</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureTop" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">120</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureWidth" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-    </State>
-    <State>
-      <Name>CircleOutlinedHeavy</Name>
-      <Variable Type="int" Name="TextureHeight" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureLeft" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureTop" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">120</Value>
-      </Variable>
-      <Variable Type="int" Name="TextureWidth" Category="Source" SetsValue="true">
-        <Value xsi:type="xsd:int">24</Value>
-      </Variable>
-    </State>
-  </Category>
   <Behaviors />
 </StandardElementSave>

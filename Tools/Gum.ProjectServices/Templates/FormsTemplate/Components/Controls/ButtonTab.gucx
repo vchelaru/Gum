@@ -13,8 +13,17 @@
     <Variable Type="int" Name="Background.Red" SetsValue="true">
       <Value xsi:type="xsd:int">6</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="Background.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">TabBordered</Value>
+    <Variable Type="int" Name="Background.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">72</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
     </Variable>
     <Variable Type="float" Name="Background.Width" SetsValue="true">
       <Value xsi:type="xsd:float">32</Value>
@@ -41,8 +50,17 @@
     <Variable Type="int" Name="FocusedIndicator.Red" SetsValue="true">
       <Value xsi:type="xsd:int">232</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="FocusedIndicator.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Solid</Value>
+    <Variable Type="int" Name="FocusedIndicator.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusedIndicator.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
     </Variable>
     <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
@@ -66,6 +84,18 @@
     <Variable Type="int" Name="TabText.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
+    <Variable IsFile="true" Type="string" Name="TabText.CustomFontFile" SetsValue="true">
+      <Value xsi:type="xsd:string"></Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TabText.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Arial</Value>
+    </Variable>
+    <Variable Type="float" Name="TabText.FontScale" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="TabText.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
     <Variable Type="int" Name="TabText.Green" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
@@ -75,17 +105,26 @@
     <Variable Type="HorizontalAlignment" Name="TabText.HorizontalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
+    <Variable Type="bool" Name="TabText.IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="bool" Name="TabText.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="TabText.LineHeightMultiplier" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
     <Variable Type="string" Name="TabText.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">Background</Value>
     </Variable>
     <Variable Type="int" Name="TabText.Red" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="TabText.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Strong</Value>
-    </Variable>
     <Variable Type="string" Name="TabText.Text" ExposedAsName="TabDisplayText" SetsValue="true">
       <Value xsi:type="xsd:string">Tab 1</Value>
+    </Variable>
+    <Variable Type="bool" Name="TabText.UseCustomFont" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="VerticalAlignment" Name="TabText.VerticalAlignment" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
@@ -151,6 +190,14 @@
         <string>Red = Components/Styles.White.FillRed</string>
         <string>Green = Components/Styles.White.FillGreen</string>
         <string>Blue = Components/Styles.White.FillBlue</string>
+        <string>Font = Components/Styles.Strong.Font</string>
+        <string>FontSize = Components/Styles.Strong.FontSize</string>
+        <string>IsBold = Components/Styles.Strong.IsBold</string>
+        <string>IsItalic = Components/Styles.Strong.IsItalic</string>
+        <string>UseCustomFont = Components/Styles.Strong.UseCustomFont</string>
+        <string>CustomFontFile = Components/Styles.Strong.CustomFontFile</string>
+        <string>FontScale = Components/Styles.Strong.FontScale</string>
+        <string>LineHeightMultiplier = Components/Styles.Strong.LineHeightMultiplier</string>
       </Value>
     </VariableList>
   </State>

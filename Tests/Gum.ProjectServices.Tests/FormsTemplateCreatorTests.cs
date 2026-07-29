@@ -259,6 +259,110 @@ public class FormsTemplateCreatorTests : IDisposable
         }
     }
 
+    [Fact]
+    public void Create_StandardElements_ShouldNoLongerOwnStyleCategory()
+    {
+        // Issue #4089 follow-up to #4079: StyleCategory was the same double-indirection shape
+        // as ColorCategory (a category living on the shared standard, selected via
+        // <instance>.StyleCategoryState from Standard-theme components), just for texture-region
+        // and font-style picks instead of color. Migrated the same way: consumers now own their
+        // resolved values locally instead of relying on the shared standard's category.
+        string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
+        _sut.Create(filePath);
+
+        ProjectLoadResult result = new ProjectLoader().Load(filePath);
+        result.Success.ShouldBeTrue();
+
+        string[] formerOwners = ["NineSlice", "Text"];
+        foreach (string name in formerOwners)
+        {
+            StandardElementSave standard = result.Project!.StandardElements.First(s => s.Name == name);
+            standard.Categories.ShouldNotContain(c => c.Name == "StyleCategory",
+                $"{name} should no longer define the now-dead StyleCategory");
+            standard.DefaultState.Variables.ShouldNotContain(v => v.Name == "StyleCategoryState",
+                $"{name} should no longer carry the StyleCategoryState stub variable");
+        }
+    }
+
+    [Fact]
+    public void Create_ButtonStandard_ShouldOwnLocalStyleValuesInsteadOfStyleCategoryState()
+    {
+        // ButtonStandard.Background used NineSlice's "Bordered" StyleCategory preset (literal
+        // texture-region ints, no indirection to Styles) and TextInstance used Text's "Strong"
+        // preset (which itself referenced Components/Styles.Strong.* - copy that reference list
+        // directly onto the consumer, same as ColorCategory's #4079 fix).
+        string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
+        _sut.Create(filePath);
+
+        ProjectLoadResult result = new ProjectLoader().Load(filePath);
+        result.Success.ShouldBeTrue();
+
+        ComponentSave buttonStandard = result.Project!.Components.First(c => c.Name == "Controls/ButtonStandard");
+
+        buttonStandard.DefaultState.Variables.ShouldNotContain(v => v.Name == "StyleCategoryState",
+            "ButtonStandard should no longer set any instance's StyleCategoryState");
+
+        VariableSave? textureLeft = buttonStandard.DefaultState.Variables
+            .FirstOrDefault(v => v.Name == "Background.TextureLeft");
+        textureLeft.ShouldNotBeNull("Background should own its resolved 'Bordered' texture region directly");
+        textureLeft!.Value.ShouldBe(24);
+
+        VariableListSave? textReferences = buttonStandard.DefaultState.VariableLists
+            .FirstOrDefault(v => v.Name == "TextInstance.VariableReferences");
+        textReferences.ShouldNotBeNull();
+        List<string> referenceStrings = textReferences!.ValueAsIList.Cast<string>().ToList();
+        referenceStrings.ShouldContain("Font = Components/Styles.Strong.Font");
+        referenceStrings.ShouldContain("FontSize = Components/Styles.Strong.FontSize");
+    }
+
+    [Fact]
+    public void Create_ShouldOnlyDriftFromDefaultStandardsInKnownBakedProperties()
+    {
+        // Issue #4089: Add Forms (Standard theme) shouldn't need to change the project's
+        // Standards at all. The StyleCategory double-indirection (same shape as #4079's
+        // ColorCategory) and a handful of stale/mismatched declarations (dead Guide variables,
+        // SetsValue flags, an unused Polygon's default point shape) are fully fixed - this pins
+        // that no new drift regresses in. What remains is deliberately deferred: baked
+        // Standard-theme visual defaults (NineSlice texture-atlas coordinates/anchoring, Text
+        // sizing, Sprite texture scale) still differ from a blank project's Standards, tracked by
+        // a dedicated follow-up issue since relocating them touches every themed component that
+        // relies on inheriting them (~50 NineSlice instances across the template).
+        string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
+        _sut.Create(filePath);
+
+        DiffStandardsResult result = new DiffStandardsService().Diff(filePath);
+
+        string[] expectedRemainingDiffs =
+        [
+            "NineSlice.ExposeChildrenEvents",
+            "NineSlice.Height",
+            "NineSlice.HeightUnits",
+            "NineSlice.SourceFile",
+            "NineSlice.TextureAddress",
+            "NineSlice.TextureHeight",
+            "NineSlice.TextureTop",
+            "NineSlice.TextureWidth",
+            "NineSlice.Width",
+            "NineSlice.WidthUnits",
+            "NineSlice.XOrigin",
+            "NineSlice.XUnits",
+            "NineSlice.YOrigin",
+            "NineSlice.YUnits",
+            "Sprite.TextureHeightScale",
+            "Sprite.TextureWidthScale",
+            "Text.FontSize",
+            "Text.Height",
+            "Text.HeightUnits",
+            "Text.Width",
+            "Text.WidthUnits",
+        ];
+
+        result.Differences.Select(d => $"{d.StandardName}.{d.VariableName}")
+            .ShouldBe(expectedRemainingDiffs, ignoreOrder: true);
+        result.MissingFromProject.ShouldBeEmpty();
+        result.ProjectOnlyStandards.ShouldBeEmpty();
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_tempDirectory))

@@ -22,8 +22,17 @@
     <Variable Type="int" Name="NineSliceInstance.Red" SetsValue="true">
       <Value xsi:type="xsd:int">70</Value>
     </Variable>
-    <Variable Type="StyleCategory" Name="NineSliceInstance.StyleCategoryState" SetsValue="true">
-      <Value xsi:type="xsd:string">Bordered</Value>
+    <Variable Type="int" Name="NineSliceInstance.TextureHeight" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="NineSliceInstance.TextureLeft" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
+    </Variable>
+    <Variable Type="int" Name="NineSliceInstance.TextureTop" SetsValue="true">
+      <Value xsi:type="xsd:int">48</Value>
+    </Variable>
+    <Variable Type="int" Name="NineSliceInstance.TextureWidth" SetsValue="true">
+      <Value xsi:type="xsd:int">24</Value>
     </Variable>
     <Variable Type="float" Name="NineSliceInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">-0</Value>

@@ -28,7 +28,6 @@
     <Variable Type="bool" Name="FlipHorizontal" Category="Flip and Rotation" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
-    <Variable Type="string" Name="Guide" Category="Position" SetsValue="true" />
     <Variable Type="bool" Name="HasEvents" Category="Behavior" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
@@ -49,7 +48,7 @@
     <Variable Type="float?" Name="MinHeight" Category="Dimensions" SetsValue="true" />
     <Variable Type="float?" Name="MinWidth" Category="Dimensions" SetsValue="true" />
     <Variable Type="string" Name="Parent" Category="Parent" SetsValue="true" />
-    <Variable Type="float" Name="Rotation" Category="Flip and Rotation" SetsValue="false">
+    <Variable Type="float" Name="Rotation" Category="Flip and Rotation" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="float" Name="StackSpacing" Category="Children" SetsValue="true">
