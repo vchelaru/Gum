@@ -404,6 +404,23 @@ public class SyntaxVersionDetectionServiceTests : IDisposable
     }
 
     [Fact]
+    public void ExtractPackageReferenceVersion_NestedVersionElement_ReturnsVersion()
+    {
+        string csproj = @"<Project Sdk=""Microsoft.NET.Sdk"">
+  <ItemGroup>
+    <PackageReference Include=""FlatRedBall.MonoGameGum"">
+      <Version>2026.4.1</Version>
+    </PackageReference>
+  </ItemGroup>
+</Project>";
+
+        string? result = SyntaxVersionDetectionService.ExtractPackageReferenceVersion(csproj, "FlatRedBall.MonoGameGum");
+
+        result.ShouldNotBeNull();
+        result.ShouldBe("2026.4.1");
+    }
+
+    [Fact]
     public void ExtractPackageReferenceVersion_MultiplePackages_FindsCorrectOne()
     {
         string csproj = @"<Project Sdk=""Microsoft.NET.Sdk"">

@@ -253,11 +253,34 @@ public class SyntaxVersionDetectionService : ISyntaxVersionDetectionService
 
     internal static string? ExtractPackageReferenceVersion(string csprojContents, string packageName)
     {
-        // Match: <PackageReference Include="FlatRedBall.MonoGameGum" Version="2026.4.1" />
-        // or: <PackageReference Include="FlatRedBall.MonoGameGum" Version="2026.4.1">
-        string pattern = $"<PackageReference\\s+Include=\"{Regex.Escape(packageName)}\"\\s+Version=\"([^\"]*)\"";
-        Match match = Regex.Match(csprojContents, pattern, RegexOptions.IgnoreCase);
-        return match.Success ? match.Groups[1].Value : null;
+        // Capture the whole element so Version can be found either as an attribute
+        // (<PackageReference Include="X" Version="Y" />) or, for csproj files migrated
+        // from packages.config, as a nested child element:
+        // <PackageReference Include="X"><Version>Y</Version></PackageReference>
+        string elementPattern =
+            $"<PackageReference\\b(?=[^>]*\\bInclude=\"{Regex.Escape(packageName)}\")[^>]*?(?:/>|>(?<body>.*?)</PackageReference>)";
+        Match elementMatch = Regex.Match(csprojContents, elementPattern, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        if (!elementMatch.Success)
+        {
+            return null;
+        }
+
+        Match versionAttribute = Regex.Match(elementMatch.Value, "\\bVersion=\"([^\"]*)\"", RegexOptions.IgnoreCase);
+        if (versionAttribute.Success)
+        {
+            return versionAttribute.Groups[1].Value;
+        }
+
+        if (elementMatch.Groups["body"].Success)
+        {
+            Match versionElement = Regex.Match(elementMatch.Groups["body"].Value, "<Version>([^<]*)</Version>", RegexOptions.IgnoreCase);
+            if (versionElement.Success)
+            {
+                return versionElement.Groups[1].Value;
+            }
+        }
+
+        return null;
     }
 
     internal string? FindDllInNuGetCache(string packageName, string version)
