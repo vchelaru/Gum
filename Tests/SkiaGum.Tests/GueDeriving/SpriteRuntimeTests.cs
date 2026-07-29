@@ -1,5 +1,6 @@
+using Gum.GueDeriving;
 using Gum.Wireframe;
-using SkiaGum.GueDeriving;
+using SkiaGum;
 using SkiaGum.Renderables;
 using SkiaSharp;
 using Shouldly;
@@ -41,6 +42,98 @@ public class MockContentLoader : IContentLoader
 
 public class SpriteRuntimeTests
 {
+    public SpriteRuntimeTests()
+    {
+        GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+    }
+
+    // ---- Dispatcher routing pins (issue #3639 / ADR 0011) -----------------------------------
+    // These drive the STRING property name through the production Skia dispatcher (via
+    // SetProperty) and assert the value lands on SpriteRuntime, including its NotifyPropertyChanged
+    // side effect -- not just that the value is retrievable. Before the ADR 0011 redispatch, Alpha/
+    // Red/Green/Blue/Blend wrote straight to the contained Sprite renderable (skipping
+    // NotifyPropertyChanged), and Animate/CurrentChainName had no dispatch path at all (silent
+    // no-op), since Sprite has no such properties itself -- only SpriteRuntime.AnimationLogic does.
+
+    [Fact]
+    public void Dispatch_Alpha_RoutesToRuntimeAndNotifies()
+    {
+        SpriteRuntime sut = new();
+        var seen = new System.Collections.Generic.List<string>();
+        sut.PropertyChanged += (_, e) => seen.Add(e.PropertyName!);
+
+        sut.SetProperty("Alpha", 128);
+
+        sut.Alpha.ShouldBe(128);
+        seen.ShouldContain(nameof(SpriteRuntime.Alpha));
+    }
+
+    [Fact]
+    public void Dispatch_RedGreenBlue_RouteToRuntime()
+    {
+        SpriteRuntime sut = new();
+
+        sut.SetProperty("Red", 10);
+        sut.SetProperty("Green", 20);
+        sut.SetProperty("Blue", 30);
+
+        sut.Red.ShouldBe(10);
+        sut.Green.ShouldBe(20);
+        sut.Blue.ShouldBe(30);
+    }
+
+    [Fact]
+    public void Dispatch_Color_ConvertsDrawingColorAndRoutesToRuntime()
+    {
+        SpriteRuntime sut = new();
+        System.Drawing.Color drawingColor = System.Drawing.Color.FromArgb(10, 20, 30, 40);
+
+        sut.SetProperty("Color", drawingColor);
+
+        sut.Color.ShouldBe(new SKColor(20, 30, 40, 10));
+    }
+
+    [Fact]
+    public void Dispatch_Blend_RoutesToRuntime()
+    {
+        SpriteRuntime sut = new();
+
+        sut.SetProperty("Blend", Gum.RenderingLibrary.Blend.Additive);
+
+        sut.Blend.ShouldBe(Gum.RenderingLibrary.Blend.Additive);
+    }
+
+    [Fact]
+    public void Dispatch_Animate_RoutesToRuntime()
+    {
+        SpriteRuntime sut = new();
+
+        sut.SetProperty("Animate", true);
+
+        sut.Animate.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Dispatch_CurrentChainName_RoutesToRuntime()
+    {
+        SpriteRuntime sut = new();
+        AnimationChainList chains = new();
+        AnimationChain idleChain = new() { Name = "Idle" };
+        idleChain.Add(new AnimationFrame { Texture = new SKBitmap(4, 4), FrameLength = 0.1f, LeftCoordinate = 0f, RightCoordinate = 1f, TopCoordinate = 0f, BottomCoordinate = 1f });
+        AnimationChain walkChain = new() { Name = "Walk" };
+        walkChain.Add(new AnimationFrame { Texture = new SKBitmap(4, 4), FrameLength = 0.1f, LeftCoordinate = 0f, RightCoordinate = 1f, TopCoordinate = 0f, BottomCoordinate = 1f });
+        chains.Add(idleChain);
+        chains.Add(walkChain);
+        sut.AnimationChains = chains;
+
+        // "Idle" (index 0) is the AnimationChainLogic default -- assigning "Walk" (index 1) via
+        // the dispatcher is the only thing that can produce this value, unlike a same-as-default
+        // name which would pass even with no dispatch path.
+        sut.SetProperty("CurrentChainName", "Walk");
+
+        sut.CurrentChainName.ShouldBe("Walk");
+    }
+
     [Fact]
     public void Constructor_ShouldSetDefaults()
     {

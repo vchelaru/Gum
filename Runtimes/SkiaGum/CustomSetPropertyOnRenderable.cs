@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 
 #if SKIA
 using HarfBuzzSharp;
+using RenderingLibrary;
 using SkiaGum.Content;
 using SkiaGum.Helpers;
 using Gum.GueDeriving;
@@ -1081,17 +1082,19 @@ public partial class CustomSetPropertyOnRenderable
         }
         else if(containedObjectAsIpso is Sprite asSprite)
         {
-            // Route base-class properties (Blend, gradient/dropshadow channels, etc.) first.
-            // These branches historically skipped TrySetPropertiesOnRenderableBase and relied
-            // on the reflection fallback, which works for int/float properties but throws on
-            // enum -> Nullable<enum> (the Blend case).
-            if(!handled)
-            {
-                handled = TrySetPropertiesOnRenderableBase(asSprite, graphicalUiElement, propertyName, value);
-            }
+            // Route through SpriteRuntime first (ADR 0011) so mechanical properties
+            // (Alpha/Red/Green/Blue/Color/Blend/Animate/CurrentChainName) pick up the runtime's
+            // NotifyPropertyChanged side effect, matching core's TrySetPropertyOnSprite. Falling
+            // straight to TrySetPropertiesOnRenderableBase would write the renderable directly and
+            // skip that notification, and Animate/CurrentChainName have no equivalent on the
+            // renderable at all (only on SpriteRuntime.AnimationLogic).
             if(!handled)
             {
                 handled = TrySetPropertyOnSprite(asSprite, graphicalUiElement, propertyName, value);
+            }
+            if(!handled)
+            {
+                handled = TrySetPropertiesOnRenderableBase(asSprite, graphicalUiElement, propertyName, value);
             }
         }
         else if(containedObjectAsIpso is NineSlice asNineSlice)
@@ -1274,11 +1277,13 @@ public partial class CustomSetPropertyOnRenderable
 
     private static bool TrySetPropertyOnSprite(Sprite asSprite, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
+        var spriteRuntime = graphicalUiElement as SpriteRuntime;
+
         switch(propertyName)
         {
             case "SourceFile":
                 var asString = value as string;
-                if(graphicalUiElement is SpriteRuntime spriteRuntime)
+                if(spriteRuntime != null)
                 {
                     spriteRuntime.SourceFile = asString;
                 }
@@ -1292,6 +1297,91 @@ public partial class CustomSetPropertyOnRenderable
                 else
                 {
                     asSprite.Texture = null;
+                }
+                return true;
+            case nameof(Sprite.Alpha):
+                if (spriteRuntime != null)
+                {
+                    spriteRuntime.Alpha = (int)value;
+                    return true;
+                }
+                break;
+            case nameof(Sprite.Red):
+                if (spriteRuntime != null)
+                {
+                    spriteRuntime.Red = (int)value;
+                    return true;
+                }
+                break;
+            case nameof(Sprite.Green):
+                if (spriteRuntime != null)
+                {
+                    spriteRuntime.Green = (int)value;
+                    return true;
+                }
+                break;
+            case nameof(Sprite.Blue):
+                if (spriteRuntime != null)
+                {
+                    spriteRuntime.Blue = (int)value;
+                    return true;
+                }
+                break;
+            case nameof(Sprite.Color):
+                if (spriteRuntime != null)
+                {
+                    if (value is System.Drawing.Color drawingColor)
+                    {
+                        spriteRuntime.Color = drawingColor.ToSkia();
+                        return true;
+                    }
+                    else if (value is SKColor skColor)
+                    {
+                        spriteRuntime.Color = skColor;
+                        return true;
+                    }
+                }
+                break;
+            case "Blend":
+                if (spriteRuntime != null)
+                {
+                    spriteRuntime.Blend = (Gum.RenderingLibrary.Blend)value;
+                    return true;
+                }
+                break;
+            case "Animate":
+                if (spriteRuntime != null)
+                {
+                    spriteRuntime.Animate = (bool)value;
+                    return true;
+                }
+                break;
+            case "CurrentChainName":
+                if (spriteRuntime != null)
+                {
+                    spriteRuntime.CurrentChainName = (string)value;
+                    graphicalUiElement.UpdateTextureValuesFrom(asSprite);
+                    graphicalUiElement.UpdateLayout();
+                    return true;
+                }
+                break;
+            case nameof(SpriteRuntime.RenderTargetTextureSource):
+                if (spriteRuntime != null)
+                {
+                    if (value == null)
+                    {
+                        spriteRuntime.RenderTargetTextureSource = null;
+                    }
+                    else if (value is IRenderableIpso renderableIpso)
+                    {
+                        spriteRuntime.RenderTargetTextureSource = renderableIpso;
+                    }
+                    else if (value is string sourceName)
+                    {
+                        spriteRuntime.RenderTargetTextureSource =
+                            (graphicalUiElement.GetTopParent() as GraphicalUiElement)?.FindByName(sourceName);
+                    }
+                    return true;
                 }
                 break;
         }
