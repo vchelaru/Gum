@@ -17,6 +17,9 @@
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 	</PropertyGroup>
 
+	<ItemGroup>
+		<InternalsVisibleTo Include="GumToolUnitTests" />
+	</ItemGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
 		<OutputPath>bin\Debug\</OutputPath>
 		<CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>

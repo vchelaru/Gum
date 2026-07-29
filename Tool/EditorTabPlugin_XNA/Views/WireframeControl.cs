@@ -281,7 +281,15 @@ public class WireframeControl : GraphicsDeviceControl
     }
 
 
-    private void InitializeDefaultTypeInstantiation()
+    // internal (not private) and static so GumToolUnitTests can verify every standard type the
+    // tool needs to render is registered here - this list drifting out of sync with the runtime's
+    // own registration (RenderingLibrary.SystemManagers.RegisterComponentRuntimeInstantiations) is
+    // exactly how NineSlice/Container ended up missing: an instance whose type has no registration
+    // here falls back to a plain GraphicalUiElement wrapping a raw renderable, which most
+    // CustomSetPropertyOnRenderable dispatch branches don't handle (they cast to the typed Runtime
+    // and silently no-op if that fails) - producing a correctly-valued but unrendered property
+    // (e.g. a NineSlice's Red/Green/Blue staying at the renderable's default white).
+    internal static void InitializeDefaultTypeInstantiation()
     {
         ElementSaveExtensions.RegisterGueInstantiation(
             "Circle",
@@ -292,12 +300,20 @@ public class WireframeControl : GraphicsDeviceControl
             () => new ColoredRectangleRuntime());
 
         ElementSaveExtensions.RegisterGueInstantiation(
+            "Container",
+            () => new ContainerRuntime());
+
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "NineSlice",
+            () => new NineSliceRuntime());
+
+        ElementSaveExtensions.RegisterGueInstantiation(
             "Polygon",
             () => new PolygonRuntime());
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "Rectangle",
-            () => new RectangleRuntime(systemManagers: this.SystemManagers));
+            () => new RectangleRuntime(systemManagers: SystemManagers.Default));
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "Sprite",
@@ -309,7 +325,7 @@ public class WireframeControl : GraphicsDeviceControl
             {
                 // Set this to false to make Text instantiation faster - we always set defaults explicitly
                 TextRuntime.AssignFontInConstructor = false;
-                return new TextRuntime(systemManagers: this.SystemManagers);
+                return new TextRuntime(systemManagers: SystemManagers.Default);
             });
 
 
