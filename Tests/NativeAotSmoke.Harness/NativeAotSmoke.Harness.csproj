@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    End-to-end harness for issue #4105 (RegisterRuntimeTypesThroughReflection breaking under Native
+    AOT metadata trimming). This project is NOT part of any solution and is not a unit-test project:
+    the "Native-AOT-Smoke" CI job publishes it with PublishAot=true and runs it against Mesa's
+    llvmpipe software GL (no GPU on the runners) so GumService.Initialize is proven against a real
+    Native AOT publish with a genuine GraphicsDevice, not just the JIT path `dotnet test` exercises.
+    See the "Native-AOT-Smoke" job in .github/workflows/build-and-test.yaml.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>NativeAotSmoke.Harness</AssemblyName>
+    <RootNamespace>NativeAotSmoke.Harness</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
+  </ItemGroup>
+
+</Project>

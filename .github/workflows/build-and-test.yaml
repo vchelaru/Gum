@@ -46,6 +46,78 @@ jobs:
           reporter: dotnet-trx
           fail-on-error: true
 
+  # End-to-end Native AOT smoke test for issue #4105: RegisterRuntimeTypesThroughReflection walked
+  # every loaded assembly via unguarded reflection, which crashed GumService.Initialize under
+  # Native AOT when it hit trimmed framework metadata - a failure mode only a real `dotnet publish
+  # -p:PublishAot=true` reproduces, `dotnet test` always runs JIT and can't catch it. This job
+  # publishes Tests/NativeAotSmoke.Harness as Native AOT and runs it end-to-end (real
+  # GraphicsDevice, real Texture2D upload, default-visuals construction), so a future regression
+  # anywhere in that path is caught automatically instead of waiting for another user report.
+  #
+  # The runner has no GPU, so the harness is forced onto Mesa's llvmpipe software GL the same way
+  # "Install Mesa llvmpipe" does for RaylibGum.Tests below - confirmed to work for MonoGame
+  # DesktopGL too, not just raylib (both resolve opengl32.dll by name from the exe's own directory
+  # before System32).
+  #
+  # Needs neither FNA/Sokol submodules nor mobile workloads - the harness only references
+  # MonoGameGum/GumCommon - so ExcludeAndroid/ExcludeIOS keep restore on just net8.0, same escape
+  # hatches Build-Generated-Code below uses for the same reason.
+  Native-AOT-Smoke:
+    if: github.event_name != 'push'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Setup .NET SDKs
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      # PublishAot's native link step shells out to vswhere.exe to locate the MSVC linker. Not
+      # guaranteed to already be on PATH for this job's shell - add it defensively rather than
+      # find out from a red "link.exe exited with code 123" on a run this job can't otherwise see.
+      - name: Add vswhere to PATH (Native AOT link step needs it)
+        run: echo "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Publish harness as Native AOT
+        run: dotnet publish "Tests/NativeAotSmoke.Harness/NativeAotSmoke.Harness.csproj" --configuration Release -r win-x64 --self-contained -p:ExcludeAndroid=true -p:ExcludeIOS=true
+
+      # Same download/extract as "Install Mesa llvmpipe" below, pointed at this job's own AOT
+      # publish output instead of RaylibGum.Tests' bin dir.
+      - name: Install Mesa llvmpipe (software GL, no GPU on the runner)
+        run: |
+          $ErrorActionPreference = "Stop"
+          $ProgressPreference = "SilentlyContinue"
+          $ver = "26.1.2"
+          $asset = "mesa3d-$ver-release-msvc.7z"
+          $url = "https://github.com/pal1000/mesa-dist-win/releases/download/$ver/$asset"
+          $archive = Join-Path $env:RUNNER_TEMP $asset
+          $extract = Join-Path $env:RUNNER_TEMP "mesa"
+          for ($i = 1; $i -le 3; $i++) {
+            try { Write-Host "Downloading $url (attempt $i)"; Invoke-WebRequest -Uri $url -OutFile $archive; break }
+            catch {
+              if ($i -eq 3) { throw }
+              Write-Host "Download failed: $($_.Exception.Message). Retrying in $(5 * $i)s..."
+              Start-Sleep -Seconds (5 * $i)
+            }
+          }
+          7z x $archive "-o$extract" -y -bso0 -bsp0
+          $opengl = Get-ChildItem -Path $extract -Recurse -Filter opengl32.dll |
+                    Where-Object { $_.FullName -match '\\x64\\' } | Select-Object -First 1
+          if (-not $opengl) { Write-Error "x64 opengl32.dll not found in Mesa archive"; exit 1 }
+          $dest = "Tests/NativeAotSmoke.Harness/bin/Release/net8.0/win-x64/publish"
+          Copy-Item (Join-Path $opengl.Directory.FullName "*.dll") -Destination $dest -Force
+          Write-Host "Mesa GL runtime copied to $dest"
+
+      - name: Run harness (exit code is the assertion)
+        env:
+          GALLIUM_DRIVER: llvmpipe
+        run: |
+          & "Tests/NativeAotSmoke.Harness/bin/Release/net8.0/win-x64/publish/NativeAotSmoke.Harness.exe"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
   # Regenerates every Tests/CodeGen_* harness with GumCli, fails on drift, then
   # compiles the regenerated projects. This used to be two steps at the tail of
   # Build-and-Test (windows-latest), running after Build AllLibraries on the same
