@@ -265,6 +265,34 @@ public class CodeGeneratorSyntaxVersionNamespaceTests
     }
 
     [Fact]
+    public void ResolveSyntaxVersion_Silk_WithExplicitLegacyVersion_FloorsToVersion3()
+    {
+        // Gum.SilkNet, like Raylib, never existed at any legacy (pre-unification) namespace
+        // scheme, so it floors to version 3 regardless of an explicit lower SyntaxVersion setting.
+        Mock<INameVerifier> mockNameVerifier = new Mock<INameVerifier>();
+        CodeGenerationNameVerifier codeGenNameVerifier = new CodeGenerationNameVerifier(mockNameVerifier.Object);
+        FixedProjectDirectoryProvider directoryProvider = new FixedProjectDirectoryProvider(projectDirectory: null);
+        CodeOutputElementSettingsManager elementSettingsManager = new CodeOutputElementSettingsManager(directoryProvider);
+        Gum.Localization.LocalizationService localizationService = new Gum.Localization.LocalizationService();
+
+        CodeGenerator generator = new CodeGenerator(
+            codeGenNameVerifier,
+            localizationService,
+            elementSettingsManager,
+            directoryProvider);
+
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            OutputLibrary = OutputLibrary.Silk,
+            SyntaxVersion = "2"
+        };
+
+        int result = generator.ResolveSyntaxVersion(settings);
+
+        result.ShouldBe(3);
+    }
+
+    [Fact]
     public void ResolveSyntaxVersion_MonoGame_WithNoExplicitVersion_StaysAtVersion0()
     {
         // Pin existing MonoGame behavior: no detection service + auto-detect "*" still resolves to 0.
