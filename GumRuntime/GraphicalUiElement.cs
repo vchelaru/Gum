@@ -1476,7 +1476,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     }
 
     /// <summary>
-    /// The pixel coorinate of the top of the displayed region.
+    /// The pixel coordinate of the top of the displayed region.
+    /// Ignored unless <see cref="TextureAddress"/> is Custom or DimensionsBased.
     /// </summary>
     public int TextureTop
     {
@@ -1496,6 +1497,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     /// <summary>
     /// The pixel coordinate of the left of the displayed region.
+    /// Ignored unless <see cref="TextureAddress"/> is Custom or DimensionsBased.
     /// </summary>
     public int TextureLeft
     {
@@ -1512,6 +1514,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     /// <summary>
     /// The pixel width of the source rectangle on the referenced texture.
+    /// Only applied when <see cref="TextureAddress"/> is Custom; ignored for EntireTexture and
+    /// DimensionsBased (which derives width from <see cref="TextureWidthScale"/> instead).
     /// </summary>
     public int TextureWidth
     {
@@ -1531,6 +1535,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     /// <summary>
     /// The pixel height of the source rectangle on the referenced texture.
+    /// Only applied when <see cref="TextureAddress"/> is Custom; ignored for EntireTexture and
+    /// DimensionsBased (which derives height from <see cref="TextureHeightScale"/> instead).
     /// </summary>
     public int TextureHeight
     {
@@ -1588,6 +1594,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+    /// <summary>
+    /// Controls how the source rectangle on the texture is determined. Defaults to EntireTexture, which
+    /// ignores <see cref="TextureLeft"/>, <see cref="TextureTop"/>, <see cref="TextureWidth"/>, and
+    /// <see cref="TextureHeight"/>. Must be set to Custom (or DimensionsBased) for those values to take effect.
+    /// </summary>
     public TextureAddress TextureAddress
     {
         get

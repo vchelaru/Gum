@@ -14,10 +14,23 @@ namespace Gum.Managers;
 
 #region Enums
 
+/// <summary>
+/// Controls how the source rectangle for a texture-rendering element (e.g. Sprite, NineSlice) is determined.
+/// </summary>
 public enum TextureAddress
 {
+    /// <summary>
+    /// The entire texture is shown. TextureLeft, TextureTop, TextureWidth, and TextureHeight are ignored.
+    /// </summary>
     EntireTexture,
+    /// <summary>
+    /// TextureLeft, TextureTop, TextureWidth, and TextureHeight are used as an explicit source rectangle.
+    /// </summary>
     Custom,
+    /// <summary>
+    /// TextureLeft and TextureTop set the source rectangle's position, but its width and height are derived
+    /// from the element's own dimensions divided by TextureWidthScale and TextureHeightScale.
+    /// </summary>
     DimensionsBased
 }
 

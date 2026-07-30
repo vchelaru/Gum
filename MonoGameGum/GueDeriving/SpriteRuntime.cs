@@ -194,6 +194,7 @@ public class SpriteRuntime : GraphicalUiElement
     /// <summary>
     /// The source rectangle in the texture to render, using platform-specific Rectangle type.
     /// Setting this also updates TextureLeft, TextureTop, TextureWidth, and TextureHeight.
+    /// TextureAddress must be set to Custom for these values to affect rendering.
     /// </summary>
     public Rectangle SourceRectangle
     {
