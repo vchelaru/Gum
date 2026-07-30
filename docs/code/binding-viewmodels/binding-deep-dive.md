@@ -16,7 +16,7 @@ Visual properties can be bound directly. For example, the following code shows h
 // Initialize
 // assume MyButton is a valid button
 var buttonVisual = MyButton.Visual;
-buttonVisual.SetBinding<ViewModel>(
+buttonVisual.SetBinding<MyViewModel>(
     nameof(buttonVisual.Width),
     vm => vm.ButtonWidth);
 ```
@@ -28,7 +28,7 @@ A visual can also be bound using a string property name:
 var buttonVisual = MyButton.Visual;
 buttonVisual.SetBinding(
     nameof(buttonVisual.Width),
-    nameof(ViewModel.ButtonWidth));
+    nameof(MyViewModel.ButtonWidth));
 ```
 
 {% hint style="warning" %}
@@ -42,7 +42,7 @@ If the property requires a specific type, then the Visual can be casted to acces
 // This assumes the project is code-only
 var buttonVisual = (ButtonVisual)MyButton.Visual;
 var text = buttonVisual.TextInstance;
-text.SetBinding<ViewModel>(
+text.SetBinding<MyViewModel>(
     nameof(Text.FontScale),
     vm => vm.ButtonFontScale);
 ```
