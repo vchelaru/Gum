@@ -46,6 +46,22 @@ public class ControllerSpatialNavigationTests : BaseTestClass
         return harness;
     }
 
+    private sealed class SpatialNavButton : Button
+    {
+        public void InvokeHandleGamepadSpatialNavigation(IGamePad gamepad, GraphicalUiElement navigationRoot) =>
+            HandleGamepadSpatialNavigation(gamepad, navigationRoot);
+    }
+
+    private static SpatialNavButton CreateButton(string name, float x, float y)
+    {
+        SpatialNavButton button = new SpatialNavButton();
+        button.Name = name;
+        button.X = x;
+        button.Y = y;
+        button.AddToRoot();
+        return button;
+    }
+
     [Fact]
     public void HandleGamepadSpatialNavigation_DiagonalDPadHeld_MovesFocusToDiagonalCandidate()
     {
@@ -67,6 +83,39 @@ public class ControllerSpatialNavigationTests : BaseTestClass
         origin.IsFocused.ShouldBeFalse();
         downRight.IsFocused.ShouldBeTrue();
         right.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HandleGamepadSpatialNavigation_DiagonalDPadPressedSequentially_MovesFocusToDiagonalCandidate()
+    {
+        // Realistic controller use: Up is held first, then Right is pressed afterward while Up is
+        // still down — not both pushed on the exact same frame. ButtonRepeatRate(Up) only pulses
+        // on its own push/repeat schedule, so it is false on the frame Right is first pressed;
+        // direction must come from which buttons are currently held (ButtonDown), not from which
+        // ones' own repeat-rate happened to fire this frame. pureRight sits exactly where a
+        // (buggy) Up-dropped, Right-only angle of 0 degrees would send focus; diagonal sits
+        // exactly where the correct -45 degree (up-right) angle should send it instead.
+        ContainerRuntime root = new ContainerRuntime();
+
+        SpatialNavHarness origin = CreateHarness(root, 0, 0);
+        SpatialNavHarness pureRight = CreateHarness(root, 150, 0);
+        SpatialNavHarness diagonal = CreateHarness(root, 100, -100);
+
+        origin.IsFocused = true;
+
+        GamePad gamepad = new GamePad();
+        gamepad.SetButtonState(GamepadButton.DPadUp, true);
+        gamepad.Activity(0);
+
+        gamepad.SetButtonState(GamepadButton.DPadUp, true);
+        gamepad.SetButtonState(GamepadButton.DPadRight, true);
+        gamepad.Activity(0.1);
+
+        origin.InvokeHandleGamepadSpatialNavigation(gamepad, root);
+
+        origin.IsFocused.ShouldBeFalse();
+        diagonal.IsFocused.ShouldBeTrue();
+        pureRight.IsFocused.ShouldBeFalse();
     }
 
     [Fact]
@@ -108,6 +157,32 @@ public class ControllerSpatialNavigationTests : BaseTestClass
 
         origin.IsFocused.ShouldBeTrue();
         other.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HandleGamepadSpatialNavigation_SkillTreeLayoutDPadDown_MovesFocusToNearestDownwardCandidate()
+    {
+        // Reproduces the manual-test demo's scattered 6-button layout reported in issue #4129:
+        // pressing Down from TopLeft was observed to jump straight to FarRightMid instead of
+        // BottomLeft/Middle. Real Button (not the bare-visual harness) via AddToRoot, matching
+        // the demo's own setup exactly, to see whether this test path agrees with the app.
+        SpatialNavButton topLeft = CreateButton("TopLeft", 80, 60);
+        CreateButton("TopRight", 500, 90);
+        SpatialNavButton middle = CreateButton("Middle", 280, 260);
+        SpatialNavButton bottomLeft = CreateButton("BottomLeft", 60, 420);
+        CreateButton("BottomRight", 560, 440);
+        SpatialNavButton farRightMid = CreateButton("FarRightMid", 650, 250);
+
+        topLeft.IsFocused = true;
+
+        GamePad gamepad = new GamePad();
+        gamepad.SetButtonState(GamepadButton.DPadDown, true);
+        gamepad.Activity(1);
+
+        topLeft.InvokeHandleGamepadSpatialNavigation(gamepad, GumService.Default.Root);
+
+        farRightMid.IsFocused.ShouldBeFalse();
+        (bottomLeft.IsFocused || middle.IsFocused).ShouldBeTrue();
     }
 
     [Fact]

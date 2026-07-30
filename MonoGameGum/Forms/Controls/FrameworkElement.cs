@@ -1524,14 +1524,32 @@ public class FrameworkElement : INotifyPropertyChanged
 #if !FRB
     /// <summary>
     /// Direction-agnostic ("spatial") focus navigation spike (issue #4129): reads the requested
-    /// direction from the gamepad's DPad — including diagonals, from two simultaneously-held
-    /// buttons — or left analog stick, then moves focus to whichever focusable candidate under
+    /// direction from the gamepad's DPad — including diagonals, from two currently-held buttons —
+    /// or left analog stick, then moves focus to whichever focusable candidate under
     /// <paramref name="navigationRoot"/> best matches that direction by on-screen position (see
     /// <see cref="Gum.Forms.SpatialNavigationService"/>), rather than by tab order. This is a
     /// parallel, opt-in path — it does not call and is not called by
     /// <see cref="HandleGamepadNavigation(GamePadForNavigation)"/>; a control/screen chooses one or
     /// the other.
     /// </summary>
+    /// <remarks>
+    /// Call this at most once per frame, for whichever single element currently has focus (e.g.
+    /// from that element's own per-frame update, mirroring where <see cref="HandleGamepadNavigation(GamePadForNavigation)"/>
+    /// is normally called from). Do not call it from a loop over every candidate that checks
+    /// <see cref="IsFocused"/> per iteration — a candidate this call just focused can still be
+    /// visited later in that same loop, re-triggering navigation against the same held input and
+    /// chaining multiple hops into a single press.
+    ///
+    /// Also do not add the same gamepad to <see cref="GamePadsForUiControl"/> (what
+    /// <c>GumService.UseGamepadDefaults()</c> does) for a control that also drives this method:
+    /// every stock control's own <c>OnFocusUpdate</c> (e.g. <c>ButtonBase</c>) already reads that
+    /// list and runs the existing index-based <see cref="HandleGamepadNavigation(GamePadForNavigation)"/>
+    /// off it. If both are wired to the same gamepad, one Down press moves focus via tab order
+    /// first, then this method fires again from the new position using the same still-held press —
+    /// two navigation systems compounding into one input. Read the gamepad directly (e.g. from
+    /// <c>GumService.Default.Gamepads</c>) instead, without registering it in
+    /// <see cref="GamePadsForUiControl"/>, for a control that should use spatial nav exclusively.
+    /// </remarks>
     /// <param name="gamepad">The gamepad to read directional input from.</param>
     /// <param name="navigationRoot">The visual subtree to search for focusable candidates.</param>
     protected void HandleGamepadSpatialNavigation(IGamePad gamepad, GraphicalUiElement navigationRoot)
@@ -1553,35 +1571,27 @@ public class FrameworkElement : INotifyPropertyChanged
         }
     }
 
+    // Direction comes from which buttons are currently held (ButtonDown), so a diagonal is just
+    // "both held right now" — it doesn't require two buttons to be pushed on the exact same frame.
+    // Firing (returning non-null) is still gated on ButtonRepeatRate, so a held direction only
+    // triggers on its own push/repeat pulses rather than every single frame.
     private static float? TryGetRequestedDirectionAngle(IGamePad gamepad)
     {
-        float x = 0f;
-        float y = 0f;
-        bool anyDigital = false;
+        bool right = gamepad.ButtonDown(GamepadButton.DPadRight);
+        bool left = gamepad.ButtonDown(GamepadButton.DPadLeft);
+        bool down = gamepad.ButtonDown(GamepadButton.DPadDown);
+        bool up = gamepad.ButtonDown(GamepadButton.DPadUp);
 
-        if (gamepad.ButtonRepeatRate(GamepadButton.DPadRight))
-        {
-            x += 1f;
-            anyDigital = true;
-        }
-        if (gamepad.ButtonRepeatRate(GamepadButton.DPadLeft))
-        {
-            x -= 1f;
-            anyDigital = true;
-        }
-        if (gamepad.ButtonRepeatRate(GamepadButton.DPadDown))
-        {
-            y += 1f;
-            anyDigital = true;
-        }
-        if (gamepad.ButtonRepeatRate(GamepadButton.DPadUp))
-        {
-            y -= 1f;
-            anyDigital = true;
-        }
+        bool shouldFireDigital =
+            (right && gamepad.ButtonRepeatRate(GamepadButton.DPadRight)) ||
+            (left && gamepad.ButtonRepeatRate(GamepadButton.DPadLeft)) ||
+            (down && gamepad.ButtonRepeatRate(GamepadButton.DPadDown)) ||
+            (up && gamepad.ButtonRepeatRate(GamepadButton.DPadUp));
 
-        if (anyDigital)
+        if (shouldFireDigital)
         {
+            float x = (right ? 1f : 0f) - (left ? 1f : 0f);
+            float y = (down ? 1f : 0f) - (up ? 1f : 0f);
             return MathF.Atan2(y, x);
         }
 
