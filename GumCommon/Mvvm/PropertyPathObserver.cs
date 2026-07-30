@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 #if FRB
@@ -71,6 +72,9 @@ public class PropertyPathObserver : IDisposable
     /// <summary>
     /// Start observing on a new root object (detaches from the old).
     /// </summary>
+    [RequiresUnreferencedCode(
+        "Walks the path on newRoot's own type, resolving each segment by name (GetProperty). Those " +
+        "members may be removed under PublishTrimmed if nothing else in the app references them.")]
     public void Attach(object newRoot)
     {
         ArgumentNullException.ThrowIfNull(newRoot);
@@ -124,6 +128,7 @@ public class PropertyPathObserver : IDisposable
     /// Walks the path on the current root and returns the leaf value, or null if any
     /// intermediate is null. Returns null if no root is attached.
     /// </summary>
+    [RequiresUnreferencedCode("Calls " + nameof(WalkSegments) + ".")]
     public object? GetCurrentValue()
     {
         if (_currentRoot is null)
@@ -137,6 +142,9 @@ public class PropertyPathObserver : IDisposable
     /// Walks the first <paramref name="count"/> segments starting from <paramref name="root"/>
     /// and returns the resulting object, or null if any intermediate is null.
     /// </summary>
+    [RequiresUnreferencedCode(
+        "Walks the path on root's own type, resolving each segment by name (GetProperty). Those " +
+        "members may be removed under PublishTrimmed if nothing else in the app references them.")]
     public static object? WalkSegments(object? root, PathSegment[] segments, int count)
     {
         object? cursor = root;
@@ -153,6 +161,10 @@ public class PropertyPathObserver : IDisposable
         return cursor;
     }
 
+    [RequiresUnreferencedCode(
+        "Re-walks the path from the changed segment, resolving each by name (GetProperty) on the " +
+        "runtime type. Those members may be removed under PublishTrimmed if nothing else in the app " +
+        "references them.")]
     private void OnSegmentChanged(int level, string propName)
     {
         // only react if the changed property matches the segment
@@ -209,6 +221,10 @@ public class PropertyPathObserver : IDisposable
         OnValueChanged();
     }
 
+    [RequiresUnreferencedCode(
+        "Walks the path from the root, resolving each segment by name (GetProperty) on the runtime " +
+        "type. Those members may be removed under PublishTrimmed if nothing else in the app references " +
+        "them.")]
     private object? WalkTo(int level)
     {
         object? cursor = _currentRoot;
@@ -226,6 +242,9 @@ public class PropertyPathObserver : IDisposable
         return cursor;
     }
 
+    [RequiresUnreferencedCode(
+        "Searches collectionType's own properties by reflection for an int indexer. That indexer may " +
+        "be removed under PublishTrimmed if nothing else in the app references it.")]
     private static Type GetElementTypeForLeaf(Type collectionType)
     {
         if (collectionType.IsArray)
@@ -251,6 +270,10 @@ public class PropertyPathObserver : IDisposable
     /// path references an index that doesn't yet exist (e.g. empty collection) or has
     /// been removed. The binding will re-evaluate when the collection changes.
     /// </summary>
+    [RequiresUnreferencedCode(
+        "Falls back to searching collection's own properties by reflection for an int indexer when " +
+        "it isn't an array or IList. That indexer may be removed under PublishTrimmed if nothing else " +
+        "in the app references it.")]
     private static object? GetIndexedValue(object collection, int index)
     {
         Type type = collection.GetType();
@@ -341,6 +364,9 @@ public class PropertyPathObserver : IDisposable
             Detached = true;
         }
 
+        [UnconditionalSuppressMessage("Trimming", "IL2026",
+            Justification = "Automatic relay for an already-attached path observer's INotifyPropertyChanged " +
+                "subscription. The trim risk is already surfaced wherever Attach was actually called.")]
         private void OnChanged(object? _, PropertyChangedEventArgs e)
         {
             if (_weakObs.TryGetTarget(out PropertyPathObserver? obs))

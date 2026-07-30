@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 
@@ -32,6 +33,7 @@ internal class PropertyRegistry
         return npcExpression;
     }
 
+    [RequiresUnreferencedCode("Calls " + nameof(NpcBindingExpression) + "." + nameof(NpcBindingExpression.Start) + ".")]
     public void SetBinding(string uiPropertyName, Binding binding)
     {
         NpcBindingExpression npcExpression = new (Owner, uiPropertyName, binding);

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics.CodeAnalysis;
 using RenderingLibrary;
 using System.Collections.ObjectModel;
 using System.Reflection;
@@ -576,6 +577,10 @@ public class ListBox : ItemsControl, IInputReceiver
 
     #region Item Creation
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Automatic per-item BindingContext assignment when populating from a bound " +
+            "collection. Any by-name VM member resolution happens in the item template's own bindings, " +
+            "which already carry this warning at the SetBinding call that created them.")]
     protected override FrameworkElement CreateNewItemFrameworkElement(object o)
     {
         ListBoxItem? item = null;

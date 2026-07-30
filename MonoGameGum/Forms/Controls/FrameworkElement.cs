@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -211,6 +212,10 @@ public class FrameworkElement : INotifyPropertyChanged
     public object BindingContext
     {
         get => Visual?.BindingContext;
+        [RequiresUnreferencedCode(
+            "Assigning a new BindingContext re-resolves every existing binding's VM member by name on " +
+            "the new context's type. Those members may be removed under PublishTrimmed if nothing else " +
+            "in the app references them.")]
         set
         {
             if (Visual != null)
@@ -1102,8 +1107,30 @@ public class FrameworkElement : INotifyPropertyChanged
 
     #region Binding/ViewModel
 
+    /// <summary>
+    /// Binds <paramref name="uiProperty"/> to the VM member named by <paramref name="vmProperty"/>,
+    /// resolved by reflection at bind time. Under <c>PublishTrimmed</c>, that member survives only if
+    /// something else in the app references it directly -- prefer the lambda <c>SetBinding</c>
+    /// overload (see <see cref="FrameworkElementExt"/>), whose expression argument keeps the member
+    /// from being trimmed.
+    /// </summary>
+    [RequiresUnreferencedCode(
+        "vmProperty is resolved by name against the BindingContext's own type. That member may be " +
+        "removed under PublishTrimmed if nothing else in the app references it. Prefer the lambda " +
+        "SetBinding overload that takes an expression instead of a string.")]
     public void SetBinding(string uiProperty, string vmProperty) => SetBinding(uiProperty, new Binding(vmProperty));
 
+    /// <summary>
+    /// Binds <paramref name="uiProperty"/> using <paramref name="binding"/>'s <see cref="Binding.Path"/>,
+    /// resolved by reflection at bind time. Under <c>PublishTrimmed</c>, the bound VM member survives
+    /// only if something else in the app references it directly -- prefer the lambda <c>SetBinding</c>
+    /// overload (see <see cref="FrameworkElementExt"/>), whose expression argument keeps the member
+    /// from being trimmed.
+    /// </summary>
+    [RequiresUnreferencedCode(
+        "binding.Path is resolved by name against the BindingContext's own type. That member may be " +
+        "removed under PublishTrimmed if nothing else in the app references it. Prefer the lambda " +
+        "SetBinding overload that takes an expression instead of a string.")]
     public void SetBinding(string uiProperty, Binding binding)
     {
         PropertyRegistry.SetBinding(uiProperty, binding);

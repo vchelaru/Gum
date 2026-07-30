@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -34,6 +35,9 @@ internal static class BinderHelpers
     /// </summary>
     public static PathSegment[] ParseSegments(string path) => PathSegmentParser.ParseSegments(path);
 
+    [RequiresUnreferencedCode(
+        "Walks the path on targetType by name (GetProperty/GetField). Those members may be removed " +
+        "under PublishTrimmed if nothing else in the app references them.")]
     public static bool CanWritePath(Type targetType, string path)
     {
         if (string.IsNullOrWhiteSpace(path))
@@ -88,6 +92,9 @@ internal static class BinderHelpers
         };
     }
 
+    [RequiresUnreferencedCode(
+        "Looks up a property or field on declaringType by name. That member may be removed under " +
+        "PublishTrimmed if nothing else in the app references it.")]
     private static bool TryGetMember(Type declaringType, string memberName, out MemberInfo? member, out Type memberType)
     {
         member = declaringType.GetProperty(memberName, BindingFlags.Instance | BindingFlags.Public);
@@ -111,6 +118,9 @@ internal static class BinderHelpers
     /// <summary>
     /// Null-safe getter: returns DependencyProperty.UnsetValue if any intermediate is null.
     /// </summary>
+    [RequiresUnreferencedCode(
+        "Walks the path on targetType by name (Expression.PropertyOrField). Those members may be " +
+        "removed under PublishTrimmed if nothing else in the app references them.")]
     public static Func<object, object?> BuildGetter(Type targetType, string path)
     {
         //parameter: the incoming object
@@ -174,6 +184,9 @@ internal static class BinderHelpers
     /// <summary>
     /// Null-safe setter: no-op if any intermediate is null.
     /// </summary>
+    [RequiresUnreferencedCode(
+        "Walks the path on targetType by name (Expression.PropertyOrField). Those members may be " +
+        "removed under PublishTrimmed if nothing else in the app references them.")]
     public static Action<object, object?> BuildSetter(Type targetType, string path)
     {
         // parameters: (object instance, object? value)
@@ -392,6 +405,7 @@ internal static class BinderHelpers
     /// Builds an expression that accesses an element by integer index, with null propagation
     /// on the collection. If the collection is null, the result is default(elementType).
     /// </summary>
+    [RequiresUnreferencedCode("Calls " + nameof(FindIntIndexer) + " for non-array collections.")]
     private static Expression BuildIndexAccess(Expression collection, int index)
     {
         Type collectionType = collection.Type;
@@ -428,6 +442,7 @@ internal static class BinderHelpers
         return rawAccess;
     }
 
+    [RequiresUnreferencedCode("Calls " + nameof(FindIntIndexer) + " for non-array collections.")]
     private static Expression BuildIndexAccessWithNullPropagation(Expression collection, int index)
     {
         Type collectionType = collection.Type;
@@ -464,6 +479,7 @@ internal static class BinderHelpers
         return rawAccess;
     }
 
+    [RequiresUnreferencedCode("Calls " + nameof(FindIntIndexer) + " for non-array collections.")]
     private static Expression BuildIndexSetExpression(Expression collection, int index, Expression value)
     {
         Type collectionType = collection.Type;
@@ -509,6 +525,9 @@ internal static class BinderHelpers
         }
     }
 
+    [RequiresUnreferencedCode(
+        "Searches type's own properties by reflection for an int indexer. That indexer may be removed " +
+        "under PublishTrimmed if nothing else in the app references it.")]
     private static PropertyInfo? FindIntIndexer(Type type)
     {
         // Look for a property with an int index parameter (the standard C# indexer named "Item")
@@ -524,6 +543,7 @@ internal static class BinderHelpers
         return null;
     }
 
+    [RequiresUnreferencedCode("Calls " + nameof(FindIntIndexer) + ".")]
     private static Type GetElementType(Type collectionType)
     {
         if (collectionType.IsArray)

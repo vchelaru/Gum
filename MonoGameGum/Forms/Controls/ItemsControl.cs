@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 #if FRB
@@ -235,6 +236,10 @@ public class ItemsControl : ScrollViewer
 
     #region Create New Item
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Automatic per-item BindingContext assignment when populating from a bound " +
+            "collection. Any by-name VM member resolution happens in the item template's own bindings, " +
+            "which already carry this warning at the SetBinding call that created them.")]
     protected virtual FrameworkElement CreateNewItemFrameworkElement(object o)
     {
         if(FrameworkElementTemplate != null)
@@ -666,6 +671,10 @@ public class ItemsControl : ScrollViewer
 
     #region Event Handler methods
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Automatic per-item BindingContext assignment when populating from a bound " +
+            "collection. Any by-name VM member resolution happens in the item template's own bindings, " +
+            "which already carry this warning at the SetBinding call that created them.")]
     protected virtual void HandleItemsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
     {
         switch (e.Action)

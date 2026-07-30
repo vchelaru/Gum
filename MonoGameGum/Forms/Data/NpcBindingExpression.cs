@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Gum.Wireframe;
 
@@ -53,6 +54,10 @@ internal class NpcBindingExpression : UntypedBindingExpression
         Binding.Mode is not BindingMode.OneWay &&
         TargetProperty.Name is not nameof(FrameworkElement.BindingContext);
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Automatic relay when an inherited BindingContext changes further up the visual " +
+            "tree. The trim risk is already surfaced wherever SetBinding was actually called to create " +
+            "this binding.")]
     private void OnInheritedBindingContextChanged(object? sender, BindingContextChangedEventArgs e)
     {
         if (CurrentRoot != null)
