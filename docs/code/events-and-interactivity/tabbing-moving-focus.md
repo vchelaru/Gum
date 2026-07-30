@@ -114,6 +114,45 @@ button.IsUsingLeftAndRightGamepadDirectionsForNavigation = false;
 
 `IsUsingLeftAndRightGamepadDirectionsForNavigation` is set to true on all controls except on `Sliders`, which use left/right input for changing the `Slider`'s `Value`.
 
+## Spatial (Any-Angle) Gamepad Navigation
+
+For scattered layouts where controls aren't arranged in a single row, column, or stack, such as a skill tree, radial menu, or free-form HUD, tab order navigation doesn't produce a natural or predictable path between controls. Spatial navigation instead moves focus to whichever focusable control is nearest in the direction the player presses, based on each control's on-screen position.
+
+This section assumes you have already followed the gamepad setup above (adding a gamepad to `GamePadsForUiControl` and giving a control initial focus).
+
+To opt a group of controls into spatial navigation, set `GamepadNavigationMode` on a container that wraps them:
+
+```csharp
+// Initialize
+Panel skillTreePanel = new();
+skillTreePanel.AddToRoot();
+skillTreePanel.GamepadNavigationMode = GamepadNavigationMode.Spatial;
+```
+
+Every focusable descendant of `skillTreePanel`, including controls nested inside further sub-containers, automatically uses spatial navigation for DPad and left stick input. No changes are needed on the controls themselves. `GamepadNavigationMode` is inherited: a control with the property unset walks up to the nearest ancestor that has it set, so you only need to set it once on the container that groups the scattered controls.
+
+Setting `GamepadNavigationMode` to `TabOrder` on a nested container opts that container back out of an outer `Spatial` zone. For example, a linear list of items inside an otherwise scattered screen can keep tab order navigation for its own items:
+
+```csharp
+// Initialize
+StackPanel linearList = new();
+skillTreePanel.AddChild(linearList);
+linearList.GamepadNavigationMode = GamepadNavigationMode.TabOrder;
+```
+
+Keyboard Tab navigation always uses tab order, regardless of `GamepadNavigationMode`. Spatial navigation only affects gamepad DPad and left stick input.
+
+### Explicit Direction Overrides
+
+Spatial navigation scores candidates by distance and angle, which can occasionally pick a control other than the one you expect for an unusual layout. To force a specific direction to a specific control, set `SpatialNavigationUp`, `SpatialNavigationDown`, `SpatialNavigationLeft`, or `SpatialNavigationRight` on the control:
+
+```csharp
+// Initialize
+myButton.SpatialNavigationRight = otherButton;
+```
+
+An explicit override only applies to a single-direction DPad press. It is not consulted for a diagonal press or for left stick input, since neither has one well-defined cardinal direction to match against.
+
 ## Modal Tab Trapping
 
 When you show an element modally by adding it to `GumService.Default.ModalRoot`, tab focus is confined to the controls inside that modal element. Tabbing forward past the last focusable control wraps back to the first, and Shift+Tabbing before the first control wraps to the last. Focus never escapes to the controls behind the modal under the regular `Root`.

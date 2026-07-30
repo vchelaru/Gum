@@ -288,6 +288,7 @@
 		<Compile Include="..\MonoGameGum\Forms\Controls\FrameworkElementExt.cs" Link="Forms\Controls\FrameworkElementExt.cs" />
 		<Compile Include="..\MonoGameGum\Forms\FrameworkElementTemplate.cs" Link="Forms\FrameworkElementTemplate.cs" />
 		<Compile Include="..\MonoGameGum\Forms\FrameworkElementTreeExtensions.cs" Link="Forms\FrameworkElementTreeExtensions.cs" />
+		<Compile Include="..\MonoGameGum\Forms\SpatialNavigationService.cs" Link="Forms\SpatialNavigationService.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\Button.cs" Link="Forms\Controls\Button.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\CheckBox.cs" Link="Forms\Controls\CheckBox.cs" />
 		<Compile Include="..\MonoGameGum\Forms\Controls\ColorPicker.cs" Link="Forms\Controls\ColorPicker.cs" />
