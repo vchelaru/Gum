@@ -48,6 +48,41 @@ public class SpatialNavigationServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void FindBestCandidate_ExcludesAncestorsOfOrigin_EvenWhenGeometricallyBestScored()
+    {
+        // Reproduces a real finding: a large focusable container wrapping the origin near its top
+        // edge has its own center positioned "downward" relative to the origin, and close by (the
+        // origin is inside it) -- so without this exclusion, pressing Down from an item near the
+        // top of a container can navigate back to that same container instead of a true sibling.
+        Panel container = new();
+        container.AddToRoot();
+        container.X = 0;
+        container.Y = 0;
+        container.Width = 150;
+        container.Height = 200;
+
+        Button origin = new();
+        container.AddChild(origin);
+        origin.X = 2;
+        origin.Y = 2;
+        origin.Width = 10;
+        origin.Height = 10;
+
+        Button sibling = new();
+        sibling.AddToRoot();
+        sibling.X = 0;
+        sibling.Y = 300;
+        sibling.Width = 10;
+        sibling.Height = 10;
+
+        List<FrameworkElement> candidates = new() { container, sibling };
+
+        FrameworkElement? result = SpatialNavigationService.FindBestCandidate(origin, MathF.PI / 2f, candidates);
+
+        result.ShouldBe(sibling);
+    }
+
+    [Fact]
     public void FindBestCandidate_NeverReturnsOrigin_EvenIfPresentInCandidates()
     {
         Button origin = CreatePositionedButton(0, 0);

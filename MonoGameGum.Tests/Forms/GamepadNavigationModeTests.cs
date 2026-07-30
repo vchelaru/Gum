@@ -205,6 +205,62 @@ public class GamepadNavigationModeTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleGamepadNavigation_ScrollViewerItemHasInternalFocus_ChildNavigatesLikeAnyOtherFocusedControl()
+    {
+        // ScrollViewer.DoItemsHaveFocus is NOT the same shape as ListBox.DoListItemsHaveFocus --
+        // ListBox's is a virtual/internal flag (the ListBox itself stays the real IsFocused /
+        // CurrentInputReceiver throughout), but ScrollViewer.DoItemsHaveFocus hands REAL focus to
+        // the child element (confirmed: scrollViewer.IsFocused goes false, item.IsFocused goes
+        // true, matching the existing ScrollViewerTests precedent). Once that happens, it's the
+        // child's own OnFocusUpdate that runs each frame (per InteractiveGue.CurrentInputReceiver
+        // dispatch), not ScrollViewer.DoTopLevelFocusUpdate -- so a plain Button child under a
+        // Spatial-marked ancestor navigates exactly like any other focused Button.
+        //
+        // This originally exposed a real bug: ScrollViewer itself is also a focusable candidate,
+        // and (being a large container wrapping `item` near its top edge) its own center scored
+        // better than the true sibling `below`, so Down navigated back to the ScrollViewer itself
+        // instead of escaping to `below`. Fixed in SpatialNavigationService by excluding ancestors
+        // of the origin, not just the origin, from the candidate set (see
+        // SpatialNavigationServiceTests.FindBestCandidate_ExcludesAncestorsOfOrigin...).
+        Panel panel = new Panel();
+        panel.AddToRoot();
+        panel.GamepadNavigationMode = GamepadNavigationMode.Spatial;
+
+        ScrollViewer scrollViewer = new ScrollViewer();
+        panel.AddChild(scrollViewer);
+        scrollViewer.X = 0;
+        scrollViewer.Y = 0;
+
+        Button item = new Button();
+        scrollViewer.AddChild(item);
+
+        Button below = new Button();
+        panel.AddChild(below);
+        below.X = 0;
+        below.Y = 300;
+
+        scrollViewer.IsFocused = true;
+        scrollViewer.DoItemsHaveFocus = true;
+
+        item.IsFocused.ShouldBeTrue();
+        scrollViewer.IsFocused.ShouldBeFalse();
+        item.ParentFrameworkElement.ShouldBe(scrollViewer);
+
+        GamePad gamepad = new GamePad();
+        gamepad.SetButtonState(GamepadButton.DPadDown, true);
+        gamepad.Activity(1);
+        FrameworkElement.GamePadsForUiControl.Add(gamepad);
+
+        // The real per-frame dispatch would call OnFocusUpdate on whichever element is actually
+        // CurrentInputReceiver -- that's now `item`, not scrollViewer.
+        item.OnFocusUpdate();
+
+        below.IsFocused.ShouldBeTrue();
+        item.IsFocused.ShouldBeFalse();
+        scrollViewer.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
     public void HandleGamepadNavigation_NestedPanelExplicitTabOrder_OptsOutOfOuterSpatialZone()
     {
         Panel outer = new Panel();

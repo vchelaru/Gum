@@ -26,7 +26,11 @@ public static class SpatialNavigationService
     /// The requested direction in screen space: 0 = right, increasing clockwise (Y grows downward).
     /// </param>
     /// <param name="candidates">
-    /// The focusable elements to consider. <paramref name="origin"/> is skipped if present.
+    /// The focusable elements to consider. <paramref name="origin"/>, and any ancestor of
+    /// <paramref name="origin"/> (e.g. a large focusable container the origin sits near the edge
+    /// of), are skipped if present — an ancestor's own center can otherwise score better than a
+    /// true sibling simply by virtue of containing the origin, sending focus "backwards" into a
+    /// container the origin is already inside instead of to something actually in that direction.
     /// </param>
     /// <param name="maxAngleRadians">Half-width of the direction cone; candidates outside are excluded.</param>
     /// <param name="angleWeight">How strongly angular misalignment penalizes an otherwise-close candidate.</param>
@@ -44,7 +48,7 @@ public static class SpatialNavigationService
 
         foreach (FrameworkElement candidate in candidates)
         {
-            if (candidate == origin)
+            if (candidate == origin || origin.Visual.IsInParentChain(candidate.Visual))
             {
                 continue;
             }
