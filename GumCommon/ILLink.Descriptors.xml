@@ -1,0 +1,6 @@
+<linker>
+  <assembly fullname="GumCommon">
+    <type fullname="Gum.DataTypes.*" preserve="all" />
+    <type fullname="Gum.StateAnimation.SaveClasses.*" preserve="all" />
+  </assembly>
+</linker>
