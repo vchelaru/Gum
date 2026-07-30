@@ -165,6 +165,46 @@ public class GamepadNavigationModeTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleGamepadNavigation_ListBoxItemsHaveInternalFocus_DoesNotTriggerTopLevelNavigation()
+    {
+        // ListBox.OnFocusUpdate branches: DoListItemsHaveFocus routes to DoListItemFocusUpdate
+        // (moves selection between rows), which never calls HandleGamepadNavigation at all --
+        // only the else branch (DoTopLevelFocusUpdate, top-level list focus) does. So a Down
+        // press while an item has internal focus should stay entirely within the list, not also
+        // trigger spatial navigation away to a sibling control.
+        Panel panel = new Panel();
+        panel.AddToRoot();
+        panel.GamepadNavigationMode = GamepadNavigationMode.Spatial;
+
+        ListBox listBox = new ListBox();
+        panel.AddChild(listBox);
+        listBox.X = 0;
+        listBox.Y = 0;
+        listBox.Items!.Add("A");
+        listBox.Items!.Add("B");
+        listBox.Items!.Add("C");
+        listBox.SelectedIndex = 0;
+        listBox.DoListItemsHaveFocus = true;
+
+        Button below = new Button();
+        panel.AddChild(below);
+        below.X = 0;
+        below.Y = 300;
+
+        listBox.IsFocused = true;
+
+        GamePad gamepad = new GamePad();
+        gamepad.SetButtonState(GamepadButton.DPadDown, true);
+        gamepad.Activity(1);
+        FrameworkElement.GamePadsForUiControl.Add(gamepad);
+
+        listBox.OnFocusUpdate();
+
+        listBox.IsFocused.ShouldBeTrue();
+        below.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
     public void HandleGamepadNavigation_NestedPanelExplicitTabOrder_OptsOutOfOuterSpatialZone()
     {
         Panel outer = new Panel();
