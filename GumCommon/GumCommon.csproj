@@ -33,6 +33,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<EmbeddedResource Include="ILLink.Descriptors.xml">
+			<LogicalName>ILLink.Descriptors.xml</LogicalName>
+		</EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
 		<Compile Include="..\GumDataTypes\Behaviors\BehaviorInstanceSave.cs" Link="Behaviors\BehaviorInstanceSave.cs" />
 		<Compile Include="..\GumDataTypes\Behaviors\BehaviorReference.cs" Link="Behaviors\BehaviorReference.cs" />
 		<Compile Include="..\GumDataTypes\Behaviors\BehaviorSave.cs" Link="Behaviors\BehaviorSave.cs" />

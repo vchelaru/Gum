@@ -543,4 +543,23 @@ public class GumProjectSaveTests : BaseTestClass
         project.ScreenReferences.Count.ShouldBe(1);
         project.ScreenReferences[0].Name.ShouldBe("MainMenu");
     }
+
+    [Fact]
+    public void ContainingAssembly_EmbedsIlLinkDescriptor_PreservingSaveClassesForTrimmedPublish()
+    {
+        // Pins the fix for #4104: PublishTrimmed console/game builds crashed on GumProjectSave.Load
+        // with "cannot be serialized because it does not have a parameterless constructor", because
+        // the trimmer can't see the reflection-based construction XmlSerializer does internally.
+        // This embedded resource tells the .NET trimmer to keep every save-class member instead.
+        var assembly = typeof(GumProjectSave).Assembly;
+
+        assembly.GetManifestResourceNames().ShouldContain("ILLink.Descriptors.xml");
+
+        using var stream = assembly.GetManifestResourceStream("ILLink.Descriptors.xml")!;
+        using var reader = new StreamReader(stream);
+        string descriptorXml = reader.ReadToEnd();
+
+        descriptorXml.ShouldContain($"assembly fullname=\"{assembly.GetName().Name}\"");
+        descriptorXml.ShouldContain("preserve=\"all\"");
+    }
 }
