@@ -1512,7 +1512,7 @@ public class FrameworkElement : INotifyPropertyChanged
         return didChildHandle;
     }
 
-    static bool CanElementBeFocused(FrameworkElement? element)
+    internal static bool CanElementBeFocused(FrameworkElement? element)
     {
         return element is IInputReceiver &&
                     ((IVisible)element.Visual).AbsoluteVisible == true &&
@@ -1520,6 +1520,80 @@ public class FrameworkElement : INotifyPropertyChanged
                     element.Visual.HasEvents &&
                     element.GamepadTabbingFocusBehavior == TabbingFocusBehavior.FocusableIfInputReceiver;
     }
+
+#if !FRB
+    /// <summary>
+    /// Direction-agnostic ("spatial") focus navigation spike (issue #4129): reads the requested
+    /// direction from the gamepad's DPad — including diagonals, from two simultaneously-held
+    /// buttons — or left analog stick, then moves focus to whichever focusable candidate under
+    /// <paramref name="navigationRoot"/> best matches that direction by on-screen position (see
+    /// <see cref="Gum.Forms.SpatialNavigationService"/>), rather than by tab order. This is a
+    /// parallel, opt-in path — it does not call and is not called by
+    /// <see cref="HandleGamepadNavigation(GamePadForNavigation)"/>; a control/screen chooses one or
+    /// the other.
+    /// </summary>
+    /// <param name="gamepad">The gamepad to read directional input from.</param>
+    /// <param name="navigationRoot">The visual subtree to search for focusable candidates.</param>
+    protected void HandleGamepadSpatialNavigation(IGamePad gamepad, GraphicalUiElement navigationRoot)
+    {
+        float? angle = TryGetRequestedDirectionAngle(gamepad);
+        if (angle == null)
+        {
+            return;
+        }
+
+        var candidates = Gum.Forms.FrameworkElementTreeExtensions.ProjectToFrameworkElements(navigationRoot.Descendants())
+            .Where(CanElementBeFocused);
+
+        FrameworkElement? best = Gum.Forms.SpatialNavigationService.FindBestCandidate(this, angle.Value, candidates);
+        if (best != null)
+        {
+            best.IsFocused = true;
+            this.IsFocused = false;
+        }
+    }
+
+    private static float? TryGetRequestedDirectionAngle(IGamePad gamepad)
+    {
+        float x = 0f;
+        float y = 0f;
+        bool anyDigital = false;
+
+        if (gamepad.ButtonRepeatRate(GamepadButton.DPadRight))
+        {
+            x += 1f;
+            anyDigital = true;
+        }
+        if (gamepad.ButtonRepeatRate(GamepadButton.DPadLeft))
+        {
+            x -= 1f;
+            anyDigital = true;
+        }
+        if (gamepad.ButtonRepeatRate(GamepadButton.DPadDown))
+        {
+            y += 1f;
+            anyDigital = true;
+        }
+        if (gamepad.ButtonRepeatRate(GamepadButton.DPadUp))
+        {
+            y -= 1f;
+            anyDigital = true;
+        }
+
+        if (anyDigital)
+        {
+            return MathF.Atan2(y, x);
+        }
+
+        if (gamepad.LeftStick.RadialPushedRepeatRate())
+        {
+            // AnalogStick.Y is math-convention (+1 = up); screen space is Y-down, so flip the sign.
+            return MathF.Atan2(-gamepad.LeftStick.Y, gamepad.LeftStick.X);
+        }
+
+        return null;
+    }
+#endif
 
 #if !FRB
     /// <summary>
