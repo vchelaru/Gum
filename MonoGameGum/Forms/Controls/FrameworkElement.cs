@@ -75,6 +75,19 @@ public enum SizeMode
     Auto
 }
 
+#if !FRB
+/// <summary>
+/// How gamepad D-pad/stick input navigates focus among a <see cref="FrameworkElement"/>'s
+/// focusable descendants. See <see cref="FrameworkElement.GamepadNavigationMode"/>.
+/// </summary>
+public enum GamepadNavigationMode
+{
+    /// <summary>Index-based navigation (<see cref="FrameworkElement.HandleTab"/>) — the default.</summary>
+    TabOrder,
+    /// <summary>On-screen-position-based navigation (<see cref="Gum.Forms.SpatialNavigationService"/>).</summary>
+    Spatial
+}
+#endif
 
 #endregion
 
@@ -1161,8 +1174,66 @@ public class FrameworkElement : INotifyPropertyChanged
     /// </summary>
     public bool IsUsingLeftAndRightGamepadDirectionsForNavigation { get; set; } = true;
 
+#if !FRB
+    /// <summary>
+    /// Explicitly sets (or clears, if null) how gamepad D-pad/stick input navigates focus among
+    /// this element's focusable descendants — <see cref="Controls.GamepadNavigationMode.TabOrder"/>
+    /// (index-based, the default) or <see cref="Controls.GamepadNavigationMode.Spatial"/>
+    /// (nearest-in-direction by on-screen position, see <see cref="Gum.Forms.SpatialNavigationService"/>).
+    /// An unset element inherits the nearest ancestor's value (an explicit
+    /// <see cref="Controls.GamepadNavigationMode.TabOrder"/> on a nested element opts back out of an
+    /// outer <see cref="Controls.GamepadNavigationMode.Spatial"/> zone); the root default is TabOrder.
+    /// Does not affect keyboard Tab, which is always index-based.
+    /// </summary>
+    public GamepadNavigationMode? GamepadNavigationMode { get; set; }
+
+    /// <summary>
+    /// Explicit per-direction focus overrides (Unity/UWP-style escape hatch): if set, a clean
+    /// single-direction D-pad press in that direction moves focus straight to the assigned element,
+    /// skipping <see cref="Gum.Forms.SpatialNavigationService"/> scoring entirely. Not consulted for
+    /// diagonal presses or analog stick input, which have no single well-defined cardinal to key off.
+    /// Only meaningful while resolved <see cref="GamepadNavigationMode"/> is
+    /// <see cref="Controls.GamepadNavigationMode.Spatial"/>.
+    /// </summary>
+    public FrameworkElement? SpatialNavigationUp { get; set; }
+
+    /// <inheritdoc cref="SpatialNavigationUp"/>
+    public FrameworkElement? SpatialNavigationDown { get; set; }
+
+    /// <inheritdoc cref="SpatialNavigationUp"/>
+    public FrameworkElement? SpatialNavigationLeft { get; set; }
+
+    /// <inheritdoc cref="SpatialNavigationUp"/>
+    public FrameworkElement? SpatialNavigationRight { get; set; }
+
+    private (GamepadNavigationMode Mode, GraphicalUiElement? SpatialRoot) ResolveGamepadNavigationMode()
+    {
+        for (FrameworkElement? current = this; current != null; current = current.ParentFrameworkElement)
+        {
+            if (current.GamepadNavigationMode == Controls.GamepadNavigationMode.Spatial)
+            {
+                return (Controls.GamepadNavigationMode.Spatial, current.Visual);
+            }
+            if (current.GamepadNavigationMode == Controls.GamepadNavigationMode.TabOrder)
+            {
+                // Explicit opt-out wins even when nested under an outer Spatial-marked ancestor.
+                return (Controls.GamepadNavigationMode.TabOrder, null);
+            }
+        }
+        return (Controls.GamepadNavigationMode.TabOrder, null);
+    }
+#endif
+
     protected void HandleGamepadNavigation(GamePadForNavigation gamepad)
     {
+#if !FRB
+        (GamepadNavigationMode mode, GraphicalUiElement? spatialRoot) = ResolveGamepadNavigationMode();
+        if (mode == Controls.GamepadNavigationMode.Spatial && spatialRoot != null)
+        {
+            HandleGamepadSpatialNavigation(gamepad, spatialRoot);
+            return;
+        }
+#endif
         if (gamepad.ButtonRepeatRate(GamepadButton.DPadDown) ||
             (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonRepeatRate(GamepadButton.DPadRight)) ||
             gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Down) ||
@@ -1523,37 +1594,36 @@ public class FrameworkElement : INotifyPropertyChanged
 
 #if !FRB
     /// <summary>
-    /// Direction-agnostic ("spatial") focus navigation spike (issue #4129): reads the requested
-    /// direction from the gamepad's DPad — including diagonals, from two currently-held buttons —
-    /// or left analog stick, then moves focus to whichever focusable candidate under
+    /// Direction-agnostic ("spatial") focus navigation (issue #4129): reads the requested direction
+    /// from the gamepad's DPad — including diagonals, from two currently-held buttons — or left
+    /// analog stick, then moves focus to whichever focusable candidate under
     /// <paramref name="navigationRoot"/> best matches that direction by on-screen position (see
-    /// <see cref="Gum.Forms.SpatialNavigationService"/>), rather than by tab order. This is a
-    /// parallel, opt-in path — it does not call and is not called by
-    /// <see cref="HandleGamepadNavigation(GamePadForNavigation)"/>; a control/screen chooses one or
-    /// the other.
+    /// <see cref="Gum.Forms.SpatialNavigationService"/>), rather than by tab order. An explicit
+    /// per-direction override (<see cref="SpatialNavigationUp"/> etc.) on this element takes
+    /// precedence over scoring for a clean single-direction D-pad press.
     /// </summary>
     /// <remarks>
-    /// Call this at most once per frame, for whichever single element currently has focus (e.g.
-    /// from that element's own per-frame update, mirroring where <see cref="HandleGamepadNavigation(GamePadForNavigation)"/>
-    /// is normally called from). Do not call it from a loop over every candidate that checks
-    /// <see cref="IsFocused"/> per iteration — a candidate this call just focused can still be
+    /// Prefer setting <see cref="GamepadNavigationMode"/> on a container instead of calling this
+    /// directly — every stock control already calls <see cref="HandleGamepadNavigation(GamePadForNavigation)"/>
+    /// from its own per-frame update, which resolves the mode automatically and dispatches here.
+    /// If calling this directly, call it at most once per frame, for whichever single element
+    /// currently has focus — do not call it from a loop over every candidate that checks
+    /// <see cref="IsFocused"/> per iteration, since a candidate this call just focused can still be
     /// visited later in that same loop, re-triggering navigation against the same held input and
     /// chaining multiple hops into a single press.
-    ///
-    /// Also do not add the same gamepad to <see cref="GamePadsForUiControl"/> (what
-    /// <c>GumService.UseGamepadDefaults()</c> does) for a control that also drives this method:
-    /// every stock control's own <c>OnFocusUpdate</c> (e.g. <c>ButtonBase</c>) already reads that
-    /// list and runs the existing index-based <see cref="HandleGamepadNavigation(GamePadForNavigation)"/>
-    /// off it. If both are wired to the same gamepad, one Down press moves focus via tab order
-    /// first, then this method fires again from the new position using the same still-held press —
-    /// two navigation systems compounding into one input. Read the gamepad directly (e.g. from
-    /// <c>GumService.Default.Gamepads</c>) instead, without registering it in
-    /// <see cref="GamePadsForUiControl"/>, for a control that should use spatial nav exclusively.
     /// </remarks>
     /// <param name="gamepad">The gamepad to read directional input from.</param>
     /// <param name="navigationRoot">The visual subtree to search for focusable candidates.</param>
     protected void HandleGamepadSpatialNavigation(IGamePad gamepad, GraphicalUiElement navigationRoot)
     {
+        FrameworkElement? explicitOverride = TryGetExplicitDirectionOverride(gamepad);
+        if (explicitOverride != null)
+        {
+            explicitOverride.IsFocused = true;
+            this.IsFocused = false;
+            return;
+        }
+
         float? angle = TryGetRequestedDirectionAngle(gamepad);
         if (angle == null)
         {
@@ -1571,27 +1641,86 @@ public class FrameworkElement : INotifyPropertyChanged
         }
     }
 
+    private readonly struct DigitalDirectionState
+    {
+        public bool Right { get; }
+        public bool Left { get; }
+        public bool Down { get; }
+        public bool Up { get; }
+        public bool ShouldFire { get; }
+
+        public DigitalDirectionState(bool right, bool left, bool down, bool up, bool shouldFire)
+        {
+            Right = right;
+            Left = left;
+            Down = down;
+            Up = up;
+            ShouldFire = shouldFire;
+        }
+    }
+
     // Direction comes from which buttons are currently held (ButtonDown), so a diagonal is just
     // "both held right now" — it doesn't require two buttons to be pushed on the exact same frame.
-    // Firing (returning non-null) is still gated on ButtonRepeatRate, so a held direction only
-    // triggers on its own push/repeat pulses rather than every single frame.
-    private static float? TryGetRequestedDirectionAngle(IGamePad gamepad)
+    // Firing is still gated on ButtonRepeatRate, so a held direction only triggers on its own
+    // push/repeat pulses rather than every single frame.
+    private static DigitalDirectionState GetDigitalDirectionState(IGamePad gamepad)
     {
         bool right = gamepad.ButtonDown(GamepadButton.DPadRight);
         bool left = gamepad.ButtonDown(GamepadButton.DPadLeft);
         bool down = gamepad.ButtonDown(GamepadButton.DPadDown);
         bool up = gamepad.ButtonDown(GamepadButton.DPadUp);
 
-        bool shouldFireDigital =
+        bool shouldFire =
             (right && gamepad.ButtonRepeatRate(GamepadButton.DPadRight)) ||
             (left && gamepad.ButtonRepeatRate(GamepadButton.DPadLeft)) ||
             (down && gamepad.ButtonRepeatRate(GamepadButton.DPadDown)) ||
             (up && gamepad.ButtonRepeatRate(GamepadButton.DPadUp));
 
-        if (shouldFireDigital)
+        return new DigitalDirectionState(right, left, down, up, shouldFire);
+    }
+
+    // Only a clean single held direction has one well-defined cardinal to key an override off of —
+    // a diagonal (two held) or stick-driven request falls through to SpatialNavigationService instead.
+    private FrameworkElement? TryGetExplicitDirectionOverride(IGamePad gamepad)
+    {
+        DigitalDirectionState state = GetDigitalDirectionState(gamepad);
+        if (!state.ShouldFire)
         {
-            float x = (right ? 1f : 0f) - (left ? 1f : 0f);
-            float y = (down ? 1f : 0f) - (up ? 1f : 0f);
+            return null;
+        }
+
+        int heldCount = (state.Right ? 1 : 0) + (state.Left ? 1 : 0) + (state.Down ? 1 : 0) + (state.Up ? 1 : 0);
+        if (heldCount != 1)
+        {
+            return null;
+        }
+
+        if (state.Right)
+        {
+            return SpatialNavigationRight;
+        }
+        if (state.Left)
+        {
+            return SpatialNavigationLeft;
+        }
+        if (state.Down)
+        {
+            return SpatialNavigationDown;
+        }
+        if (state.Up)
+        {
+            return SpatialNavigationUp;
+        }
+        return null;
+    }
+
+    private static float? TryGetRequestedDirectionAngle(IGamePad gamepad)
+    {
+        DigitalDirectionState state = GetDigitalDirectionState(gamepad);
+        if (state.ShouldFire)
+        {
+            float x = (state.Right ? 1f : 0f) - (state.Left ? 1f : 0f);
+            float y = (state.Down ? 1f : 0f) - (state.Up ? 1f : 0f);
             return MathF.Atan2(y, x);
         }
 
