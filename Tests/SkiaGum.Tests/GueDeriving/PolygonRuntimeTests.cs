@@ -1,6 +1,6 @@
+using Gum.GueDeriving;
 using Gum.Wireframe;
 using Shouldly;
-using SkiaGum.GueDeriving;
 using SkiaGum.Renderables;
 using SkiaSharp;
 using System.Numerics;
@@ -16,6 +16,56 @@ public class PolygonRuntimeTests
     public PolygonRuntimeTests()
     {
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+    }
+
+    // ---- Dispatcher routing pins (issue #3639 / ADR 0011) -----------------------------------
+    // These drive the STRING property name through the production Skia dispatcher (via
+    // SetProperty) and assert the value lands on PolygonRuntime (inherited from
+    // SkiaShapeRuntime, the same runtime family as Circle/Rectangle/Arc). Mirrors those shapes'
+    // existing TrySetPropertyOnRuntime routing rather than Sprite/NineSlice's hand-written cases.
+
+    [Fact]
+    public void Dispatch_Alpha_RoutesToRuntime()
+    {
+        PolygonRuntime sut = new();
+
+        sut.SetProperty("Alpha", 128);
+
+        sut.Alpha.ShouldBe(128);
+    }
+
+    [Fact]
+    public void Dispatch_RedGreenBlue_RouteToRuntime()
+    {
+        PolygonRuntime sut = new();
+
+        sut.SetProperty("Red", 10);
+        sut.SetProperty("Green", 20);
+        sut.SetProperty("Blue", 30);
+
+        sut.Red.ShouldBe(10);
+        sut.Green.ShouldBe(20);
+        sut.Blue.ShouldBe(30);
+    }
+
+    [Fact]
+    public void Dispatch_FillColor_RoutesToRuntime()
+    {
+        PolygonRuntime sut = new();
+
+        sut.SetProperty("FillColor", SKColors.CornflowerBlue);
+
+        sut.FillColor.ShouldBe(SKColors.CornflowerBlue);
+    }
+
+    [Fact]
+    public void Dispatch_StrokeWidth_RoutesToRuntime()
+    {
+        PolygonRuntime sut = new();
+
+        sut.SetProperty("StrokeWidth", 3f);
+
+        sut.StrokeWidth.ShouldBe(3f);
     }
 
     [Fact]
