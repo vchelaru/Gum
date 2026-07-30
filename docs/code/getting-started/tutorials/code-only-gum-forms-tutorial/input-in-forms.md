@@ -232,34 +232,6 @@ The keyboard's tab and shift+tab keys are used to move focus between forms contr
 
 For example, the following code adds the ability to tab by pressing the up and down arrows on the keyboard.
 
-{% tabs %}
-{% tab title="MonoGame" %}
-```csharp
-// Initialize
-GumService.Default.UseKeyboardDefaults();
-FrameworkElement.TabKeyCombos.Add(new KeyCombo()
-{
-    PushedKey = Microsoft.Xna.Framework.Input.Keys.Down
-});
-FrameworkElement.TabReverseKeyCombos.Add(new KeyCombo()
-{
-    PushedKey = Microsoft.Xna.Framework.Input.Keys.Up
-});
-
-var mainPanel = new StackPanel();
-mainPanel.AddToRoot();
-mainPanel.Spacing = 6;
-for (int i = 0; i < 3; i++)
-{
-    var button = new Button();
-    button.Text = $"Button {i + 1}";
-    if (i == 0) button.IsFocused = true;
-    mainPanel.AddChild(button);
-}
-```
-{% endtab %}
-
-{% tab title="Raylib" %}
 ```csharp
 // Initialize
 GumService.Default.UseKeyboardDefaults();
@@ -283,35 +255,7 @@ for (int i = 0; i < 3; i++)
     mainPanel.AddChild(button);
 }
 ```
-{% endtab %}
-
-{% tab title="Silk.NET" %}
-```csharp
-// Initialize
-GumService.Default.UseKeyboardDefaults();
-FrameworkElement.TabKeyCombos.Add(new KeyCombo()
-{
-    PushedKey = Gum.Forms.Input.Keys.Down
-});
-FrameworkElement.TabReverseKeyCombos.Add(new KeyCombo()
-{
-    PushedKey = Gum.Forms.Input.Keys.Up
-});
-
-var mainPanel = new StackPanel();
-mainPanel.AddToRoot();
-mainPanel.Spacing = 6;
-for (int i = 0; i < 3; i++)
-{
-    var button = new Button();
-    button.Text = $"Button {i + 1}";
-    if (i == 0) button.IsFocused = true;
-    mainPanel.AddChild(button);
-}
-```
-{% endtab %}
-{% endtabs %}
-[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACrVSTUvDQBC991cMwUNKZVEED2oP2lopIpR-gIdcNsnELk1myu6mVUv-u5M0bRX06F6GfW_mvWHf7joAwdg9lUVwA96WeF4Dhow3OjefKGiw0RYKbWiiCXPoA-EWZl4nqwYIu7cRHWl1n6ZznjL7Bh9ZXeCW7eoxxwLJq2f8iFnb1I3YLsyAyVtuhkJZYYZ2YxJUQ8x0mZ-af1Wa61j4ARcxu0agXuuAhN2IdhGBnEnplpgKIZu_mMSy48yrV9LqKKnGtC4bO6eGvKWIqr8sp7hB6_A_nBfr1vf7c87WOjH0JgrXwmRsITTkwQhwcSvlDq6k9Hon1zqtuPSeqY3qobk0cdT8nlNzfPfScBYFex52BnpwWUVB22cysYK--HQPM2NJLSkdpjJY_5W280f4g6XJ03A_UFtWQafqfAE2d5mXZgIAAA)
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACq2RPU_DMBCG9_6KU8SQqsgCITFQOkBLUcVS9WPz4iQXajU5V_5ogSr_nXOagkBiI4uV533Pjy0fewDJzD2HOrkDbwNeRqBJe60q_YFMEw6XaPc6RzHBUoXKi7XDF3zPjLJFh1zaH0qaWlXjwdjtU4U1khcrlXFxbOrMOPFQFCnhAc4k7Us6SgL-5sFtsOAARsA-MTW2dmJGu-AFUycm5kCSmr8kC9yjbQ_1D671rjNJ2isLtdI0V4QV9-OWS6_ybQvaO3_F0bkyC2P8L77cqVzTK4_fMi-NhVSTB83gasjLPdzwMhh8HzFqs-C9oc752P60-8b8lIkVvnkuXMjklMNRwwCuG5l0PV2yCkbs6Z9nZm5q8uCw4MH44F3zxy3GG10V6WkgKpuk1_Q-AcaOG_ArAgAA)
 
 `TabKeyCombos` and `TabReverseKeyCombos` are lists and automatically include tab and shift+tab. You can clear these lists if you would like to prevent the tab key from moving focus.
 
@@ -319,40 +263,6 @@ Adding a KeyCombo to either of these lists enables navigation with these keys gl
 
 Tabbing on a case by case basis can be performed by subscribing to individual control events as shown in the following code. Only the `Button` instances have left/right key tabbing while the `Slider` does not tab with left/right so that it can use the arrow keys to change its value:
 
-{% tabs %}
-{% tab title="MonoGame" %}
-```csharp
-// Initialize
-var mainPanel = new StackPanel();
-mainPanel.AddToRoot();
-
-var slider = new Slider();
-mainPanel.AddChild(slider);
-
-var button = new Button();
-button.IsFocused = true;
-button.KeyDown += HandleTabKeyDown;
-mainPanel.AddChild(button);
-
-var button2 = new Button();
-button2.KeyDown += HandleTabKeyDown;
-mainPanel.AddChild(button2);
-
-void HandleTabKeyDown(object sender, KeyEventArgs args)
-{
-    if(args.Key == Microsoft.Xna.Framework.Input.Keys.Right)
-    {
-        ((FrameworkElement)sender).HandleTab(TabDirection.Down);
-    }
-    else if(args.Key == Microsoft.Xna.Framework.Input.Keys.Left)
-    {
-        ((FrameworkElement)sender).HandleTab(TabDirection.Up);
-    }
-}
-```
-{% endtab %}
-
-{% tab title="Raylib" %}
 ```csharp
 // Initialize
 var mainPanel = new StackPanel();
@@ -382,41 +292,7 @@ void HandleTabKeyDown(object sender, KeyEventArgs args)
     }
 }
 ```
-{% endtab %}
-
-{% tab title="Silk.NET" %}
-```csharp
-// Initialize
-var mainPanel = new StackPanel();
-mainPanel.AddToRoot();
-
-var slider = new Slider();
-mainPanel.AddChild(slider);
-
-var button = new Button();
-button.IsFocused = true;
-button.KeyDown += HandleTabKeyDown;
-mainPanel.AddChild(button);
-
-var button2 = new Button();
-button2.KeyDown += HandleTabKeyDown;
-mainPanel.AddChild(button2);
-
-void HandleTabKeyDown(object sender, KeyEventArgs args)
-{
-    if(args.Key == Gum.Forms.Input.Keys.Right)
-    {
-        ((FrameworkElement)sender).HandleTab(TabDirection.Down);
-    }
-    else if(args.Key == Gum.Forms.Input.Keys.Left)
-    {
-        ((FrameworkElement)sender).HandleTab(TabDirection.Up);
-    }
-}
-```
-{% endtab %}
-{% endtabs %}
-[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACq2Ry27CMBBF93yFlZWjIi9YtsqC8mhRW6niIXWRjRNPwMUZI9sBtYh_r52kUEG7QbWURL6eO_fEs-8QEk3sQ1VGt8SZCrpBkCid5Ep-glejLTek5BJfOYIiCUHYkZnj-boWaHyX4vGY9YWY66nWrtbHhpew02Y9UlACOvYEH5nmRtixNgs50OiMrk3UI8zAbGUObAgFr9SpOHRKMWBYJQWYb4Z6c5k_WEklaFN6smaVcxpb6329qa2NziaeKK8sCF8R7uF04imGeofkJiGPHIWCOc9a7ffkxnee3PsrundtQq-N0FJc-KjO3iF3xAL6W-gSL4-2fgB9s7SE-1ec4j5F4pcsaBACBUkS8iJzo60uHHtDzo4DZBPcVPVILJvK5cr5BsHdNgmL0vNxx018zI541D9DaTya9FcbSMNPBPeh-YCycAXSMxT_QrTY_OA5RJ1D5wvjsOY0IgMAAA)
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACq2RwU_CMBTG7_wVLzt1kezAUbMDClOiB4N426WjD6h0r6TtWJTsf7fdJhjRxBibtM37-n79vrSHAUA0s7dVGV2CMxUOgyBJOsmVfEOvRntuoOSSHjmhghQIa3hyfLltBRZf5XQ8TsZCLPRca9fqOQXYKinQfJBtcU7dbKQSrGs9oUXlnKYevW6LFu30ZGYzvawsCt8R0p9O7vF1omuCixTuOAmFC1702vfOHffVefST9eivDqPeQktxxjFdvODSgUXyrzAEL0_3SG5s1ha4X-KcDjmBH3LFghBSQJqC_8Ak06a0yYx2lQuyTeZyvXEeCf09FgZjmeEl1tpspwpLf3_cGcbJMRDzcyKNDyP9Y4ZsIXagm25DZfFXIR5w9S8ZnnefEjTRoBm8A1G11oa8AgAA)
 
 <figure><img src="../../../../.gitbook/assets/16_06 37 17.gif" alt=""><figcaption><p>Tabbing with left/right on Button, but using left/right to change Slider value</p></figcaption></figure>
 

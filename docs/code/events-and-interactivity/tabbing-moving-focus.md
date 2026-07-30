@@ -4,10 +4,6 @@
 
 Gum supports tabbing focus between controls. Tabbing can be performed with the keyboard or gamepad.
 
-{% hint style="info" %}
-Keyboard and Gamepad input is currently not supported in raylib Gum. If you need this feature or would like to help with its implementation or testing, please send us a message in Discord.
-{% endhint %}
-
 ## Keyboard Tabbing
 
 The keyboard can be used to interact with controls. Keyboards can be used to:
@@ -50,6 +46,26 @@ MyButton.GamepadTabbingFocusBehavior = TabbingFocusBehavior.SkipOnTab;
 {% hint style="info" %}
 Despite its name, the GamepadTabbingFocusBehavior property controls tabbing for both gamepad and keyboard tabbing. Future versions of Gum may change this property to more clearly indicate its purpose.
 {% endhint %}
+
+### Customizing Tab Key Combos
+
+The keys that trigger tabbing are defined as static lists on `FrameworkElement`: `TabKeyCombos` for moving forward and `TabReverseKeyCombos` for moving backward. By default `TabKeyCombos` contains Tab, and `TabReverseKeyCombos` contains Shift+Tab (both left and right Shift).
+
+Each entry is a `KeyCombo`, with a `PushedKey`, an optional `HeldKey` modifier, and `IsTriggeredOnRepeat` (whether holding `PushedKey` down repeatedly re-triggers the combo, rather than only on the initial press). Both lists are mutable, so you can add, remove, or replace entries. For example, the following code adds the ability to tab forward and backward using the up and down arrow keys in addition to Tab:
+
+```csharp
+// Initialize
+FrameworkElement.TabKeyCombos.Add(new KeyCombo { PushedKey = Gum.Forms.Input.Keys.Down, IsTriggeredOnRepeat = true });
+FrameworkElement.TabReverseKeyCombos.Add(new KeyCombo { PushedKey = Gum.Forms.Input.Keys.Up, IsTriggeredOnRepeat = true });
+```
+
+{% hint style="warning" %}
+Only combos whose `PushedKey` is Tab respect a control's `IsTabNavigationEnabled` (the property backing `AcceptsTab` on `TextBox` and `PasswordBox`, described above). A combo bound to any other key always moves focus, even on a control with `AcceptsTab` set to `true`.
+{% endhint %}
+
+For a longer worked example, including tabbing on a per-control basis by handling `KeyDown` instead of changing the global combo lists, see [Customizing Tab Keys](../getting-started/tutorials/code-only-gum-forms-tutorial/input-in-forms.md#customizing-tab-keys) in the code-only Gum Forms tutorial.
+
+`FrameworkElement.ClickCombos` follows the same `KeyCombo` pattern and controls which keys "click" a focused control (Enter and Space by default) rather than move focus.
 
 ## Gamepad Tabbing
 
