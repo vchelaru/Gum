@@ -94,4 +94,17 @@ public class WireframeObjectManagerApplyLocalizationTests : BaseTestClass
         Text containedText = (Text)gue.RenderableComponent;
         containedText.RawText.ShouldBe("Hello(loc)");
     }
+
+    [Fact]
+    public void ApplyLocalization_ShouldNotTranslate_WhenLocalizeTextIsFalse()
+    {
+        Gum.GueDeriving.TextRuntime textRuntime = new();
+        textRuntime.LocalizeText = false;
+        textRuntime.SetProperty("Text", "Hello");
+
+        _wireframeObjectManager.ApplyLocalization(textRuntime);
+
+        Text containedText = (Text)textRuntime.RenderableComponent;
+        containedText.RawText.ShouldBe("Hello");
+    }
 }

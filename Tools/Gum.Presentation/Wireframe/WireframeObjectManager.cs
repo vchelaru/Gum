@@ -318,13 +318,6 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     public void ApplyLocalization(GraphicalUiElement gue, string forcedId = null)
     {
         var shouldLocalize = _projectState.GumProjectSave.ShowLocalizationInGum;
-        //if(gue.Tag is InstanceSave instance)
-        //{
-        //    var rfv = new RecursiveVariableFinder(_selectedState.SelectedStateSave);
-
-        //    var value = rfv.GetValue<bool>(instance.Name + ".Apply Localization");
-        //    isLocalized = value;
-        //}
 
         if(shouldLocalize)
         {
