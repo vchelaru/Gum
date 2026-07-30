@@ -1557,7 +1557,9 @@ public partial class CustomSetPropertyOnRenderable
             }
 
             var rawText = valueAsString;
-            if (LocalizationService != null && propertyName == "Text")
+            var shouldTranslate = gue is not Gum.GueDeriving.TextRuntime textRuntimeForLocalization
+                || textRuntimeForLocalization.LocalizeText;
+            if (LocalizationService != null && propertyName == "Text" && shouldTranslate)
             {
                 rawText = LocalizationService.Translate(rawText);
             }
@@ -1574,6 +1576,14 @@ public partial class CustomSetPropertyOnRenderable
                 gue.HeightUnits == DimensionUnitType.RelativeToChildren)
             {
                 gue.UpdateLayout();
+            }
+            handled = true;
+        }
+        else if (propertyName == "LocalizeText")
+        {
+            if (gueAsTextRuntime != null)
+            {
+                gueAsTextRuntime.LocalizeText = (bool)value;
             }
             handled = true;
         }

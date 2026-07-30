@@ -10,6 +10,7 @@ using CustomSetPropertyOnRenderableType = RaylibGum.Renderables.CustomSetPropert
 using SkiaGum;
 using SkiaGum.Helpers;
 using SkiaSharp;
+using CustomSetPropertyOnRenderableType = SkiaGum.CustomSetPropertyOnRenderable;
 #else
 using Gum.Graphics;
 using Gum.RenderingLibrary;
@@ -808,6 +809,35 @@ public class TextRuntime : InteractiveGue
         CustomSetPropertyOnRenderableType.SetText(ContainedText, this, "TextNoTranslate", value);
         NotifyPropertyChanged(nameof(Text));
 #endif
+    }
+
+    bool _localizeText = true;
+
+    /// <summary>
+    /// Whether this instance's <see cref="Text"/> is translated through the active
+    /// <see cref="Gum.Localization.LocalizationService"/>. Defaults to true.
+    /// </summary>
+    /// <remarks>
+    /// Unlike <see cref="SetTextNoTranslate"/>, which bypasses translation for a single assignment,
+    /// this is a persistent, per-instance setting - useful for elements whose text is never
+    /// translatable (e.g. numeric readouts). Toggling it re-derives the currently assigned text
+    /// under the new setting; it does not affect text assigned via <see cref="SetTextNoTranslate"/>.
+    /// </remarks>
+    public bool LocalizeText
+    {
+        get => _localizeText;
+        set
+        {
+            if (_localizeText != value)
+            {
+                _localizeText = value;
+                string? originalText = CustomSetPropertyOnRenderableType.TryGetLocalizationKey(this);
+                if (originalText != null)
+                {
+                    this.Text = originalText;
+                }
+            }
+        }
     }
 
     /// <summary>

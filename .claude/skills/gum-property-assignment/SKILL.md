@@ -70,6 +70,18 @@ branches, and which one a property takes isn't obvious from this pipeline alone 
 
 ---
 
+## Combining Variables
+
+Several independent variables can combine into one derived value — X/XUnits into position,
+Font+FontSize+IsBold+... into a loaded `BitmapFont` (below), or a boolean opt-out flag alongside
+a text/state value into the final displayed string. `SetProperty` never peeks across variables to
+sequence or dedupe this: each contributing setter independently recomputes the full derived value
+from whatever is currently live on the object, so any application order converges to the same
+result, at the cost of tolerated redundant recomputation (e.g. re-deriving a font twice if both
+`Font` and `FontSize` land in the same batch).
+
+---
+
 ## Font Deferred-Loading System
 
 Loading a `.fnt` file is expensive. A text element has ~6 font-related properties (Font,

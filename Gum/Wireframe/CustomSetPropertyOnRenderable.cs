@@ -900,7 +900,16 @@ public partial class CustomSetPropertyOnRenderable
         {
             textRenderable.StoredMarkupText = null;
             var rawText = valueAsString;
-            if(LocalizationService != null && propertyName == "Text")
+#if !FRB
+            // TextRuntime doesn't exist under FRB (see Guard symmetry in coder.md), so a bare
+            // GraphicalUiElement(Text) - not possible outside FRB per TrySetPropertyOnText above -
+            // is treated as translatable, matching pre-LocalizeText behavior.
+            var shouldTranslate = graphicalUiElement is not Gum.GueDeriving.TextRuntime textRuntimeForLocalization
+                || textRuntimeForLocalization.LocalizeText;
+#else
+            var shouldTranslate = true;
+#endif
+            if(LocalizationService != null && propertyName == "Text" && shouldTranslate)
             {
                 rawText = LocalizationService.Translate(rawText);
             }
@@ -957,9 +966,12 @@ public partial class CustomSetPropertyOnRenderable
 #else
             // Runtime-type-first: delegate to TextRuntime.Text/SetTextNoTranslate, which own the
             // logic via the shared SetText helper. Matches the shape dispatcher's pattern (#3706).
-            // Unlike Font/FontScale/etc. below, a bare GraphicalUiElement(Text) with no TextRuntime
-            // is a real, supported combination (e.g. the tool's WireframeObjectManager), so fall
-            // back to calling SetText directly rather than silently no-op'ing.
+            // Every current runtime (MonoGame, Raylib, Skia, Sokol) registers "Text" as a
+            // TextRuntime via RegisterGueInstantiation, so textRuntime is non-null everywhere
+            // except FRB (handled separately above via #if FRB). New Text functionality can
+            // assume TextRuntime exists and skip FRB - FRB gets no new functionality unless
+            // skipping it would break FRB outright. The else below is just a defensive fallback
+            // for a registration gap, not a normal path.
             if (textRuntime != null)
             {
                 if (propertyName == "Text")
@@ -974,6 +986,18 @@ public partial class CustomSetPropertyOnRenderable
             else
             {
                 SetText(textRenderable, graphicalUiElement, propertyName, value);
+            }
+#endif
+            handled = true;
+        }
+        else if (propertyName == "LocalizeText")
+        {
+#if !FRB
+            // No TextRuntime under FRB (see Guard symmetry in coder.md) - FRB gets no new
+            // functionality here, so this is a no-op there rather than a compile error.
+            if (textRuntime != null)
+            {
+                textRuntime.LocalizeText = (bool)value;
             }
 #endif
             handled = true;

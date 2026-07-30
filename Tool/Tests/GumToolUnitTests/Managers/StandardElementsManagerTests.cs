@@ -114,6 +114,16 @@ public class StandardElementsManagerTests : BaseTestClass
         state.Variables.Any(v => v.Name == "DropshadowBlue").ShouldBeTrue();
     }
 
+    [Fact]
+    public void DefaultState_ExposesLocalizeTextVariable_DefaultingTrue()
+    {
+        var state = StandardElementsManager.Self.DefaultStates["Text"];
+
+        var variable = state.Variables.First(v => v.Name == "LocalizeText");
+        variable.Type.ShouldBe("bool");
+        variable.Value.ShouldBe(true);
+    }
+
     [Theory]
     [InlineData("Circle")]
     [InlineData("Rectangle")]
