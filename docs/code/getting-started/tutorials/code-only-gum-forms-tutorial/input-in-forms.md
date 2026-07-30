@@ -18,7 +18,7 @@ By default Gum controls work with the mouse and touch screen. The mouse automati
   * Unchecked event
 * ComboBox
   * Expand/Collapse
-  * Item selection&#x20;
+  * Item selection
   * SelectionChanged event
 * ListBox
   * Item selection
@@ -66,6 +66,7 @@ To enable keyboard input, call `GumService.Default.UseKeyboardDefaults()`:
 // Initialize
 GumService.Default.UseKeyboardDefaults();
 ```
+
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACl2Qy07DMBBF9_mKwatEVPmAVkGC0KKKTUXKLlLlxoOw4tjVeNzyEP-O41YEdekzZ66v_Z0BiLV_CoOYA1PA2Qi01ayl0V8YqThKgkFqu5EWDVRg8QQNy65PIC8Wrf0bl_dKbd2Lc5z4iuSAJ0f90uCAlstn_Nw7ScqvHL3q2lkml5byWKFBOuoOy0d8k8FM8pg0ltgHZmcvDR7SId1y5uUWPzgOW7Eh9B6ag-wQHMHSMlIrJrE2uuvhtoJ8N4NdAdXdJXqKSAqqm_9r61i6Cx5VNMavun53_a6Nys9ysRDZT_YLwXDrNF4BAAA)
 
 `UseKeyboardDefaults()` is shorthand for `FrameworkElement.KeyboardsForUiControl.Add(GumService.Default.Keyboard)`.
@@ -76,6 +77,7 @@ To enable gamepad input, call `GumService.Default.UseGamepadDefaults()`:
 // Initialize
 GumService.Default.UseGamepadDefaults();
 ```
+
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACl2QwU7DMAyG730Kk1Mrpj4AU5FGYdNu1TZulabQeGA1TVDibAjEu5OmFUMc_fv_7N_-ygDE1m_CIO6AXcDFKJAhJqnpE6MqztLBIMk00qCGCgxeYM-y65OQF8vW_LbLlVIHu7OWk752csCLdf2TxgENl5tYN1L5tXXPVFvDziZmJ80r5jHGHt2ZOiwf8SSDnoD3CIzTxiAvgdmaOcVDKtKmSS8P-MGx2YrGofcw07BqxdVTa-p6uK0gPy7gWEB1P0-90smC6uYvto2hu-BRRcf4qf9n12-kVT6Zi6XIvrMfW6v54F0BAAA)
 
 `UseGamepadDefaults()` is shorthand for `FrameworkElement.GamePadsForUiControl.AddRange(GumService.Default.Gamepads)`.
@@ -107,6 +109,7 @@ button.Click += (s, e) =>
 button.IsFocused = true;
 mainPanel.AddChild(button);
 ```
+
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACm2RwU7DMAyG73sKK-LQqlPFmalIUNg0cZm2ceslaw1ETRyUJhtQ9d1J0okKWE7x59-_bbmfAbB1t3KK3YA1DucBCBJWcCm-0FN25AYUF7ThhBIKIDzBzvK6jSBJFxX9pPO7ptnrrdY28qXhCk_atI8SFZLNn_DzoLlpuqU2z6LUZI2ORYkfYYfmKGrMH_CFOzmJLzqtfLzh_422nF7xklsoePcFwa2isNTBWavpvNF9DOLUgizUUtRtqZ3_FnDt4SjO9_gRSMXKIACFFZuSI8sKSLo5YArFbUV9ReDf5JdlviCg345XZ0tsoJ_EA1ihsItNhqnR2q9du85ri3i1vyco34RsklGcLthsmH0DCVJb0ekBAAA)
 
 <figure><img src="../../../../.gitbook/assets/13_08 31 15.gif" alt=""><figcaption><p>Button clicks through gamepad A button or keyboard space/enter</p></figcaption></figure>
@@ -143,6 +146,7 @@ for(int i = 0; i < 5; i++)
     mainPanel.AddChild(button);
 }
 ```
+
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACm1STWvCQBC9-yuG0ENEWYTSHmpT2moVKRQxtr3ksiajDia7stloreS_O_moJWguw7437-282RxbAM4kHWeJ8wDWZNgtAFJkScb0i4w6O2kgkaSmUmEMHijcg29luCkBt90P1JkWL1E01zOtbYmPjExwr83mLcYElRXveFhoaaJ0pM0nDbSyRpcil0fw0ewoRDHEpczi_-arTmM-T-Wl0UyqFV5zKwRbFjTn9bcyJLXiWPeMB2qpjUvKAjHS63N5hDsunU47UMdAAX_FPhaZtVrVy3gtD2Xggq84Mccfyw2BM4gp3ECCgdNs-KI0k7H4psiuufG212vyla7jgZt2AdvgPVV0PcblVTf1XRjBMxz9Q2oxEUNpcU4Jig-9z88j5HWlpctJOSrHu-494Q2HWcqeXvmD_BlUpfHwgzXFkVvpimXkTitvnQAwOCC1YgIAAA)
 
 <figure><img src="../../../../.gitbook/assets/13_08 33 43.gif" alt=""><figcaption><p>Button stack tabbing and receiving input</p></figcaption></figure>
@@ -186,6 +190,7 @@ passwordBox.AcceptsTab = false;
 passwordBox.Placeholder = "";
 mainPanel.AddChild(passwordBox);
 ```
+
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACpWSUU_CMBSF3_kVzZ4gMY1ubxAfEJ0hEkNkmpDs5bJeQkPXkrYD1Pjf7epgCw6Db925595zv7WfHUKCsXks8qBPrC7wqhS45JaD4B_o1GALmuTA5RQkCnJLJO7IzEK29kK3N0jlsUyHjCXqRSnr9VhDjjul1w8Cc5SWPuH7QoFmJlb6lY-UtFr5pq5bYYZ6yzOk97iEQtTmclIqyzUELI4rTMqzT_EqTXBvXSkNYq6NJc8uuZ8Gp8uNVlywru-ox1rXeqf21eDk58uPrip07BbOCoPMecrf1ChNBWS4UoKh9vHnMiv_CUzYThPSN24KEHTu6jfXtXyknMBFkOEvyvA8ZvhfmMZ0nxa100TtNFFNMwVj3Dthf8NEddymaqiv7TDiwNRw0GGW4caaBBbOvARhygtsGi7lbvT0BkHnq_MN1JVhokEDAAA)
 
 <figure><img src="../../../../.gitbook/assets/13_08 36 31.gif" alt=""><figcaption><p>Tabbing skips over Labels and moves to the next TextBox or PasswordBox</p></figcaption></figure>
@@ -222,6 +227,7 @@ for (int i = 0; i < 3; i++)
     panel2.AddChild(button);
 }
 ```
+
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACsVRwU7CQBC98xWTxkNJTUPrTfSgKIR4IYAxJr2s7CAT2t1m2YJK-Hdnu41grIk3e5nsmzdv3rzuOwDBeDOqiuASrKnw3AGkyJLI6QMZDbbCQCFITYTCHK5B4Q5mVizWNRB2-5n6asc3Us71VGtb40MjCtxps77PsUBl4wd8f9HCyM1Qm0caaGWNrodCtjBDs6UFxne4FFV-JLcqjfg9ET-FpkK9YpuaGyh5wKllyh1VOsfJHy4arCiXoae75lIbCElZIB7u9blcwQWXKOpmap8p4M8teKms1apZMBWS9G2N1BscyRPiJ5J2xbS01_vemOObZfwsC0ZGVyUkoEtLLLmnKDlkQcOmZchO2ErXvxsLJ0JjzmlRbVCymvvNzeDBF3_Z8VI_5Ewy4SSrtD0r34ufuZu4A37LLv3X7NJjdhDBSXqN_bbrg86h8wnFvL2UIwMAAA)
 
 <figure><img src="../../../../.gitbook/assets/13_08 37 43.gif" alt=""><figcaption><p>Tabbing between RadioButton groups in nested StackPanels</p></figcaption></figure>
@@ -255,6 +261,7 @@ for (int i = 0; i < 3; i++)
     mainPanel.AddChild(button);
 }
 ```
+
 [Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACq2RPU_DMBCG9_6KU8SQqsgCITFQOkBLUcVS9WPz4iQXajU5V_5ogSr_nXOagkBiI4uV533Pjy0fewDJzD2HOrkDbwNeRqBJe60q_YFMEw6XaPc6RzHBUoXKi7XDF3zPjLJFh1zaH0qaWlXjwdjtU4U1khcrlXFxbOrMOPFQFCnhAc4k7Us6SgL-5sFtsOAARsA-MTW2dmJGu-AFUycm5kCSmr8kC9yjbQ_1D671rjNJ2isLtdI0V4QV9-OWS6_ybQvaO3_F0bkyC2P8L77cqVzTK4_fMi-NhVSTB83gasjLPdzwMhh8HzFqs-C9oc752P60-8b8lIkVvnkuXMjklMNRwwCuG5l0PV2yCkbs6Z9nZm5q8uCw4MH44F3zxy3GG10V6WkgKpuk1_Q-AcaOG_ArAgAA)
 
 `TabKeyCombos` and `TabReverseKeyCombos` are lists and automatically include tab and shift+tab. You can clear these lists if you would like to prevent the tab key from moving focus.
@@ -266,6 +273,7 @@ Tabbing on a case by case basis can be performed by subscribing to individual co
 ```csharp
 // Initialize
 var mainPanel = new StackPanel();
+mainPanel.Spacing = 6;
 mainPanel.AddToRoot();
 
 var slider = new Slider();
@@ -292,12 +300,11 @@ void HandleTabKeyDown(object sender, KeyEventArgs args)
     }
 }
 ```
-[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACq2RwU_CMBTG7_wVLzt1kezAUbMDClOiB4N426WjD6h0r6TtWJTsf7fdJhjRxBibtM37-n79vrSHAUA0s7dVGV2CMxUOgyBJOsmVfEOvRntuoOSSHjmhghQIa3hyfLltBRZf5XQ8TsZCLPRca9fqOQXYKinQfJBtcU7dbKQSrGs9oUXlnKYevW6LFu30ZGYzvawsCt8R0p9O7vF1omuCixTuOAmFC1702vfOHffVefST9eivDqPeQktxxjFdvODSgUXyrzAEL0_3SG5s1ha4X-KcDjmBH3LFghBSQJqC_8Ak06a0yYx2lQuyTeZyvXEeCf09FgZjmeEl1tpspwpLf3_cGcbJMRDzcyKNDyP9Y4ZsIXagm25DZfFXIR5w9S8ZnnefEjTRoBm8A1G11oa8AgAA)
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA61Ry27CMBD8FSsnR0IRyqEHqhygQBu1hwroLRcTL7DFWSPbAbWIf6-dAC19SJVaS7bl2Zmdsb2PcntbV1HPmRo6ERI6FApfIepFW2FYJZAeBYFiGSPYsakT5boBeHxd0LmcTDeiRFp62tUF3pdypidau4YfWlqFEsypX3P41MtrblaoJG-pJ-G8dk7TUThoDo2wxZPcjnVZW5CeEW7zXrmHl6HeESvqbjcdZOxOkFQwE_Nj4XvzVnxpnv7knv7JJG1cNMovKq7nz1A6ZoH8S3SYh0dbINc3S8uEX-KC9gUxP3DBAxCCsCxj_leTsTaVTXLa1C7ANpngcuXiln-UhcH52IgKdtqsRwoq3z9uDePkHIj7OUTjw6B_0pAthA7qQ7uBsvCrEA-w-JcMT5sPCQ7R4Q0RDDRrzAIAAA)
 
 <figure><img src="../../../../.gitbook/assets/16_06 37 17.gif" alt=""><figcaption><p>Tabbing with left/right on Button, but using left/right to change Slider value</p></figcaption></figure>
 
 {% hint style="info" %}
 Currently, gamepad tabbing behavior cannot be modified - tabbing automatically uses gamepad up and down on dpad and analog sticks. This may change in future versions of Gum.
 {% endhint %}
-
-
