@@ -1663,10 +1663,14 @@ public class FrameworkElement : INotifyPropertyChanged
     // "both held right now" — it doesn't require two buttons to be pushed on the exact same frame.
     // Firing is still gated on ButtonRepeatRate, so a held direction only triggers on its own
     // push/repeat pulses rather than every single frame.
-    private static DigitalDirectionState GetDigitalDirectionState(IGamePad gamepad)
+    // Right/Left are gated on IsUsingLeftAndRightGamepadDirectionsForNavigation, matching the
+    // existing index-based path (HandleGamepadNavigation above) — a control that disables it
+    // (e.g. Slider, which uses Left/Right for its own value adjustment) must keep that exclusion
+    // under spatial navigation too, or the same press would both navigate and act on the control.
+    private DigitalDirectionState GetDigitalDirectionState(IGamePad gamepad)
     {
-        bool right = gamepad.ButtonDown(GamepadButton.DPadRight);
-        bool left = gamepad.ButtonDown(GamepadButton.DPadLeft);
+        bool right = IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonDown(GamepadButton.DPadRight);
+        bool left = IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonDown(GamepadButton.DPadLeft);
         bool down = gamepad.ButtonDown(GamepadButton.DPadDown);
         bool up = gamepad.ButtonDown(GamepadButton.DPadUp);
 
@@ -1714,7 +1718,7 @@ public class FrameworkElement : INotifyPropertyChanged
         return null;
     }
 
-    private static float? TryGetRequestedDirectionAngle(IGamePad gamepad)
+    private float? TryGetRequestedDirectionAngle(IGamePad gamepad)
     {
         DigitalDirectionState state = GetDigitalDirectionState(gamepad);
         if (state.ShouldFire)

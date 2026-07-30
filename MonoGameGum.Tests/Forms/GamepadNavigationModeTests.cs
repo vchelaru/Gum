@@ -56,6 +56,79 @@ public class GamepadNavigationModeTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleGamepadNavigation_SliderDPadDownPressed_NavigatesAwayWithoutChangingValue()
+    {
+        // Companion to the DPadRight test below: Up/Down aren't gated by
+        // IsUsingLeftAndRightGamepadDirectionsForNavigation, and Slider has no competing Up/Down
+        // handling of its own, so Down should navigate (now spatially) exactly like any other
+        // control, leaving Value untouched.
+        Panel panel = new Panel();
+        panel.AddToRoot();
+        panel.GamepadNavigationMode = GamepadNavigationMode.Spatial;
+
+        Slider slider = new Slider();
+        panel.AddChild(slider);
+        slider.X = 0;
+        slider.Y = 0;
+        slider.Value = 50;
+
+        Button below = new Button();
+        panel.AddChild(below);
+        below.X = 0;
+        below.Y = 150;
+
+        slider.IsFocused = true;
+
+        GamePad gamepad = new GamePad();
+        gamepad.SetButtonState(GamepadButton.DPadDown, true);
+        gamepad.Activity(1);
+        FrameworkElement.GamePadsForUiControl.Add(gamepad);
+
+        slider.OnFocusUpdate();
+
+        slider.Value.ShouldBe(50);
+        slider.IsFocused.ShouldBeFalse();
+        below.IsFocused.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HandleGamepadNavigation_SliderDPadRightPressed_AdjustsValueAndDoesNotNavigate()
+    {
+        // Slider disables Left/Right-as-navigation in its own constructor (Slider.cs:101),
+        // predating this feature — confirms that pre-existing guard also protects the new Spatial
+        // path, since GamepadNavigationMode is resolved inside the same shared
+        // HandleGamepadNavigation method Slider already calls. Without it, DPadRight would both
+        // adjust Value and try to navigate away using the same press.
+        Panel panel = new Panel();
+        panel.AddToRoot();
+        panel.GamepadNavigationMode = GamepadNavigationMode.Spatial;
+
+        Slider slider = new Slider();
+        panel.AddChild(slider);
+        slider.X = 0;
+        slider.Y = 0;
+        slider.Value = 50;
+
+        Button right = new Button();
+        panel.AddChild(right);
+        right.X = 150;
+        right.Y = 0;
+
+        slider.IsFocused = true;
+
+        GamePad gamepad = new GamePad();
+        gamepad.SetButtonState(GamepadButton.DPadRight, true);
+        gamepad.Activity(1);
+        FrameworkElement.GamePadsForUiControl.Add(gamepad);
+
+        slider.OnFocusUpdate();
+
+        slider.Value.ShouldBeGreaterThan(50);
+        slider.IsFocused.ShouldBeTrue();
+        right.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
     public void HandleGamepadNavigation_ExplicitOverrideSet_TakesPrecedenceOverScoring()
     {
         Panel panel = new Panel();
