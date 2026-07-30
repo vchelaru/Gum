@@ -3,7 +3,9 @@ using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using Gum.Wireframe;
 using Gum.GueDeriving;
+using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
+using MonoGameGum.Tests.Input;
 using Gum.Input;
 using Moq;
 using Shouldly;
@@ -13,6 +15,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
+using GamePad = Gum.Input.GamePad;
 
 namespace MonoGameGum.Tests.Forms;
 public class SliderTests : BaseTestClass
@@ -156,5 +159,69 @@ public class SliderTests : BaseTestClass
         slider.OnFocusUpdate();
 
         slider.Value.ShouldBe(55);
+    }
+
+    [Fact]
+    public void Slider_RightArrowPressed_RaisesValueChangedByUi()
+    {
+        Slider slider = new()
+        {
+            Minimum = 0,
+            Maximum = 100,
+            SmallChange = 5,
+            Value = 50
+        };
+
+        Mock<IInputReceiverKeyboardMonoGame> keyboard = new Mock<IInputReceiverKeyboardMonoGame>();
+        keyboard.As<IInputReceiverKeyboard>()
+            .Setup(k => k.KeyTyped(Gum.Forms.Input.Keys.Right)).Returns(true);
+        keyboard.As<IInputReceiverKeyboard>()
+            .Setup(k => k.KeysTyped).Returns(new List<Gum.Forms.Input.Keys>());
+        FrameworkElement.KeyboardsForUiControl.Add(keyboard.Object);
+
+        bool wasRaised = false;
+        slider.ValueChangedByUi += (_, _) => wasRaised = true;
+
+        slider.OnFocusUpdate();
+
+        wasRaised.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Slider_DPadRightPressed_RaisesValueChangedByUi()
+    {
+        Slider slider = new()
+        {
+            Minimum = 0,
+            Maximum = 100,
+            SmallChange = 5,
+            Value = 50
+        };
+        slider.IsFocused = true;
+
+        GamePad gamepad = new();
+        GamePadState pressedState = new GamePadState(
+            new GamePadThumbSticks(new Microsoft.Xna.Framework.Vector2(0, 0), new Microsoft.Xna.Framework.Vector2(0, 0)),
+            new GamePadTriggers(0, 0),
+            new GamePadButtons(0),
+            new GamePadDPad(
+                ButtonState.Released,
+                ButtonState.Released,
+                ButtonState.Released,
+                ButtonState.Pressed));
+
+        InteractiveGue.CurrentGameTime = 0;
+        gamepad.Activity(new GamePadState(), 0);
+        FrameworkElement.GamePadsForUiControl.Add(gamepad);
+
+        bool wasRaised = false;
+        slider.ValueChangedByUi += (_, _) => wasRaised = true;
+
+        InteractiveGue.CurrentGameTime = 1;
+        gamepad.Activity(pressedState, 1);
+        slider.OnFocusUpdate();
+
+        slider.Value.ShouldBe(55);
+        wasRaised.ShouldBeTrue();
     }
 }

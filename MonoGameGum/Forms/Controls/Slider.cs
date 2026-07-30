@@ -424,6 +424,7 @@ public class Slider : RangeBase, IInputReceiver
 
             HandleGamepadNavigation(gamepad);
 
+            var valueBeforeGamepad = Value;
 
             if (gamepad.ButtonRepeatRate(GamepadButton.DPadLeft) ||
                 gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Left))
@@ -436,6 +437,10 @@ public class Slider : RangeBase, IInputReceiver
                 this.Value += this.SmallChange;
             }
 
+            if (valueBeforeGamepad != Value)
+            {
+                RaiseValueChangedByUi();
+            }
 
             void RaiseIfPushedAndEnabled(GamepadButton button)
             {
@@ -464,6 +469,8 @@ public class Slider : RangeBase, IInputReceiver
                 ? gamepad.AnalogSticks[0]
                 : null;
 
+            var valueBeforeGamepad = Value;
+
             if (gamepad.DPadRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Left) ||
                 leftStick?.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Left) == true)
             {
@@ -473,6 +480,11 @@ public class Slider : RangeBase, IInputReceiver
                 leftStick?.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Right) == true)
             {
                 this.Value += this.SmallChange;
+            }
+
+            if (valueBeforeGamepad != Value)
+            {
+                RaiseValueChangedByUi();
             }
 
             if (IsEnabled)
@@ -492,6 +504,8 @@ public class Slider : RangeBase, IInputReceiver
 
         foreach (var keyboard in KeyboardsForUiControl)
         {
+            var valueBeforeKeyboard = Value;
+
             // Fully qualified so this compiles regardless of the file-level `using Keys = ...` alias.
             if(keyboard.KeyTyped(Gum.Forms.Input.Keys.Right) == true)
             {
@@ -500,6 +514,11 @@ public class Slider : RangeBase, IInputReceiver
             if(keyboard.KeyTyped(Gum.Forms.Input.Keys.Left) == true)
             {
                 this.Value -= SmallChange;
+            }
+
+            if (valueBeforeKeyboard != Value)
+            {
+                RaiseValueChangedByUi();
             }
         }
 
