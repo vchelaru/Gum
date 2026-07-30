@@ -14,7 +14,8 @@ public enum OutputLibrary
     Maui = 3,
     MonoGame = 4,
     MonoGameForms = 5,
-    Raylib = 6
+    Raylib = 6,
+    Silk = 7
 }
 
 public enum ObjectInstantiationType

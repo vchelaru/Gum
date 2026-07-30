@@ -328,37 +328,46 @@ public class CodeGenerator
     /// <summary>
     /// True for the <see cref="OutputLibrary"/> values whose generated code targets Gum's
     /// unified <c>Gum.GueDeriving</c>/<c>GumService</c> runtime surface the same way MonoGame
-    /// does (currently <see cref="OutputLibrary.MonoGame"/> and <see cref="OutputLibrary.Raylib"/>).
+    /// does (currently <see cref="OutputLibrary.MonoGame"/>, <see cref="OutputLibrary.Raylib"/>,
+    /// and <see cref="OutputLibrary.Silk"/> — <c>Gum.SilkNet</c>).
     /// This is not "behaves like MonoGame" — Gum owns the unified API and MonoGame is simply the
-    /// platform that has led its rollout — so sites that need identical codegen behavior for both
-    /// should check this instead of duplicating <c>|| OutputLibrary.Raylib</c> at every call site.
+    /// platform that has led its rollout — so sites that need identical codegen behavior for all
+    /// three should check this instead of duplicating <c>|| OutputLibrary.Raylib || OutputLibrary.Silk</c>
+    /// at every call site.
     /// </summary>
     internal static bool UsesUnifiedGumRuntime(OutputLibrary outputLibrary) =>
-        outputLibrary == OutputLibrary.MonoGame || outputLibrary == OutputLibrary.Raylib;
+        outputLibrary == OutputLibrary.MonoGame ||
+        outputLibrary == OutputLibrary.Raylib ||
+        outputLibrary == OutputLibrary.Silk;
+
+    /// <summary>
+    /// True for the <see cref="OutputLibrary"/> values whose codegen is scoped to
+    /// <see cref="ObjectInstantiationType.FindByName"/> only — <see cref="ObjectInstantiationType.FullyInCode"/>
+    /// is a deferred follow-up for these targets (Raylib: issue #3430; Silk: issue #3573), not
+    /// implemented, and must fail loudly rather than silently emit broken code.
+    /// </summary>
+    private static bool IsFindByNameOnly(OutputLibrary outputLibrary) =>
+        outputLibrary == OutputLibrary.Raylib || outputLibrary == OutputLibrary.Silk;
 
     /// <summary>
     /// Throws if the project settings request a combination code generation does not support yet.
-    /// Currently: <see cref="OutputLibrary.Raylib"/> only supports
-    /// <see cref="ObjectInstantiationType.FindByName"/> — <see cref="ObjectInstantiationType.FullyInCode"/>
-    /// for Raylib is a deferred follow-up (see issue #3430), not implemented, and must fail loudly
-    /// rather than silently emit broken code.
+    /// See <see cref="IsFindByNameOnly"/> for which <see cref="OutputLibrary"/> values this applies to.
     /// </summary>
     public static void AssertSupportedCombination(CodeOutputProjectSettings projectSettings)
     {
-        if (projectSettings.OutputLibrary == OutputLibrary.Raylib &&
+        if (IsFindByNameOnly(projectSettings.OutputLibrary) &&
             projectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
         {
             throw new NotSupportedException(
-                "Raylib code generation currently only supports ObjectInstantiationType.FindByName. " +
-                "Set ObjectInstantiationType to FindByName in ProjectCodeSettings.codsj (FullyInCode support for Raylib is not implemented yet).");
+                $"{projectSettings.OutputLibrary} code generation currently only supports ObjectInstantiationType.FindByName. " +
+                "Set ObjectInstantiationType to FindByName in ProjectCodeSettings.codsj (FullyInCode support is not implemented yet).");
         }
     }
 
     /// <summary>
     /// Adjusts <paramref name="projectSettings"/> in place to the nearest combination code generation
-    /// supports, so callers never reach the <see cref="AssertSupportedCombination"/> throw. Currently
-    /// forces <see cref="OutputLibrary.Raylib"/> to <see cref="ObjectInstantiationType.FindByName"/>
-    /// (FullyInCode for Raylib is not implemented yet — see issue #3430).
+    /// supports, so callers never reach the <see cref="AssertSupportedCombination"/> throw. See
+    /// <see cref="IsFindByNameOnly"/> for which <see cref="OutputLibrary"/> values this applies to.
     /// </summary>
     /// <remarks>
     /// This is the smooth-UX counterpart to <see cref="AssertSupportedCombination"/>: the interactive
@@ -369,7 +378,7 @@ public class CodeGenerator
     /// <returns><c>true</c> if a setting was changed, otherwise <c>false</c>.</returns>
     public static bool CoerceToSupportedCombination(CodeOutputProjectSettings projectSettings)
     {
-        if (projectSettings.OutputLibrary == OutputLibrary.Raylib &&
+        if (IsFindByNameOnly(projectSettings.OutputLibrary) &&
             projectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
         {
             projectSettings.ObjectInstantiationType = ObjectInstantiationType.FindByName;
@@ -385,14 +394,14 @@ public class CodeGenerator
     /// parsing <see cref="CodeOutputProjectSettings.SyntaxVersion"/> directly (treating
     /// auto-detect <c>"*"</c> as version 0) when no detection service is wired in.
     /// <para>
-    /// Raylib codegen never existed at any legacy (pre-unification) namespace scheme — the
-    /// Raylib runtime only ever exposed the fully unified <c>Gum.GueDeriving</c>/<c>GumService</c>
+    /// Raylib and Silk codegen never existed at any legacy (pre-unification) namespace scheme —
+    /// both runtimes only ever exposed the fully unified <c>Gum.GueDeriving</c>/<c>GumService</c>
     /// surface — so this floors the resolved version at 3 (the highest namespace-unification
-    /// threshold any generator check uses) for <see cref="OutputLibrary.Raylib"/> regardless of
-    /// what auto-detection or an explicit (legacy) <see cref="CodeOutputProjectSettings.SyntaxVersion"/>
-    /// would otherwise report. Flooring at the max threshold rather than the minimum needed (1)
-    /// means Raylib never takes any legacy branch anywhere in the generator, so those branches
-    /// never need Raylib-specific handling.
+    /// threshold any generator check uses) for those two <see cref="OutputLibrary"/> values
+    /// regardless of what auto-detection or an explicit (legacy)
+    /// <see cref="CodeOutputProjectSettings.SyntaxVersion"/> would otherwise report. Flooring at
+    /// the max threshold rather than the minimum needed (1) means neither ever takes any legacy
+    /// branch anywhere in the generator, so those branches never need platform-specific handling.
     /// </para>
     /// </summary>
     internal int ResolveSyntaxVersion(CodeOutputProjectSettings projectSettings)
@@ -414,7 +423,10 @@ public class CodeGenerator
             version = 0;
         }
 
-        if (projectSettings.OutputLibrary == OutputLibrary.Raylib && version < 3)
+        bool neverHadLegacyNamespace = projectSettings.OutputLibrary == OutputLibrary.Raylib ||
+            projectSettings.OutputLibrary == OutputLibrary.Silk;
+
+        if (neverHadLegacyNamespace && version < 3)
         {
             version = 3;
         }

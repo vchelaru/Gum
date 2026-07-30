@@ -236,7 +236,8 @@ public partial class CodeWindow : UserControl, ICodeOutputTabView
             {OutputLibrary.MonoGameForms, "MonoGame + Forms" },
             {OutputLibrary.Skia, "SkiaSharp" },
             {OutputLibrary.MonoGame, "MonoGame (no forms, deprecated)" },
-            {OutputLibrary.Raylib, "Raylib" }
+            {OutputLibrary.Raylib, "Raylib" },
+            {OutputLibrary.Silk, "Silk.NET" }
         };
         var StringToLibrary = LibraryToString.ToDictionary((i) => i.Value, (i) => i.Key);
 
@@ -279,6 +280,7 @@ public partial class CodeWindow : UserControl, ICodeOutputTabView
         options.Add(LibraryToString[OutputLibrary.Skia]);
         options.Add(LibraryToString[OutputLibrary.MonoGame]);
         options.Add(LibraryToString[OutputLibrary.Raylib]);
+        options.Add(LibraryToString[OutputLibrary.Silk]);
 
         member.CustomOptions = options;
 
@@ -504,6 +506,13 @@ public partial class CodeWindow : UserControl, ICodeOutputTabView
                 if (CodeOutputProjectSettings?.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
                 {
                     detailText = "Raylib code generation only supports \"Reference loaded Gum Project\" (Fully in Code is not yet supported)";
+                }
+            }
+            else if (CodeOutputProjectSettings?.OutputLibrary == OutputLibrary.Silk)
+            {
+                if (CodeOutputProjectSettings?.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
+                {
+                    detailText = "Silk.NET code generation only supports \"Reference loaded Gum Project\" (Fully in Code is not yet supported)";
                 }
             }
 
