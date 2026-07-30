@@ -18,6 +18,34 @@ public class ContainerRuntimeTests
         GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
     }
 
+    // ---- Dispatcher routing pins (issue #3639 / ADR 0011) -----------------------------------
+    // These drive the STRING property name through the production Skia dispatcher (via
+    // SetProperty) and assert the value lands on ContainerRuntime. Unlike Sprite/NineSlice,
+    // ContainerRuntime.Alpha/IsRenderTarget don't call NotifyPropertyChanged, so redispatching
+    // through the runtime here is a structural convergence with the core dispatcher (matching
+    // #4034's core-file redispatch), not a bug fix -- these pins protect that routing going
+    // forward rather than proving a red-to-green behavior change.
+
+    [Fact]
+    public void Dispatch_Alpha_RoutesToRuntime()
+    {
+        ContainerRuntime sut = new();
+
+        sut.SetProperty("Alpha", 128);
+
+        sut.Alpha.ShouldBe(128);
+    }
+
+    [Fact]
+    public void Dispatch_IsRenderTarget_RoutesToRuntime()
+    {
+        ContainerRuntime sut = new();
+
+        sut.SetProperty("IsRenderTarget", true);
+
+        sut.IsRenderTarget.ShouldBeTrue();
+    }
+
     [Fact]
     public void Blend_DefaultsToNormal()
     {
