@@ -329,6 +329,11 @@ public class AnalogStick : IAnalogStick
     double[] _lastDPadPush;
     double[] _lastDPadRepeatRate;
 
+    bool _lastRadialDown;
+    // Start at -1 (not 0) so the first frame at time 0 is not mistaken for a repeat.
+    double _lastRadialPush = -1;
+    double _lastRadialRepeatRate = -1;
+
     /// <summary>
     /// Creates a new analog stick in its neutral (centered) state.
     /// </summary>
@@ -380,7 +385,8 @@ public class AnalogStick : IAnalogStick
             return true;
         }
 
-        bool repeatedThisFrame = _currentTime > 0 && _lastDPadPush[(int)direction] == _currentTime;
+        // If called multiple times in one frame, keep returning true for the rest of the frame.
+        bool repeatedThisFrame = _currentTime > 0 && _lastDPadRepeatRate[(int)direction] == _currentTime;
 
         if (repeatedThisFrame ||
             (AsDPadDown(direction) &&
@@ -393,6 +399,50 @@ public class AnalogStick : IAnalogStick
 
         return false;
     }
+
+    /// <inheritdoc/>
+    public bool RadialPushedRepeatRate() =>
+        RadialPushedRepeatRate(DefaultTimeAfterPush, DefaultTimeBetweenRepeating);
+
+    /// <summary>
+    /// Returns whether the stick's radial magnitude (sqrt(x²+y²)) was pushed past the on-threshold
+    /// this frame, or has been held past the off-threshold long enough to trigger a key-repeat with
+    /// the supplied timing. Unlike <see cref="AsDPadPushedRepeatRate(DPadDirection)"/>, this is
+    /// direction-agnostic — it fires at any angle, not just the four DPad directions. Read
+    /// <see cref="X"/>/<see cref="Y"/> after this returns true to get the angle the stick is pointing.
+    /// </summary>
+    public bool RadialPushedRepeatRate(double timeAfterPush, double timeBetweenRepeating)
+    {
+        if (RadialPushed())
+        {
+            return true;
+        }
+
+        // If called multiple times in one frame, keep returning true for the rest of the frame.
+        bool repeatedThisFrame = _currentTime > 0 && _lastRadialRepeatRate == _currentTime;
+
+        if (repeatedThisFrame ||
+            (RadialDown() &&
+             _currentTime - _lastRadialPush > timeAfterPush &&
+             _currentTime - _lastRadialRepeatRate > timeBetweenRepeating))
+        {
+            _lastRadialRepeatRate = _currentTime;
+            return true;
+        }
+
+        return false;
+    }
+
+    // Radial equivalent of AsDPadDown: gated on magnitude instead of a per-axis threshold, with
+    // the same on/off hysteresis band so a push doesn't chatter near the threshold.
+    bool RadialDown()
+    {
+        float magnitudeSquared = (_x * _x) + (_y * _y);
+        float threshold = _lastRadialDown ? DPadOffValue : DPadOnValue;
+        return magnitudeSquared > threshold * threshold;
+    }
+
+    bool RadialPushed() => !_lastRadialDown && RadialDown();
 
     /// <summary>
     /// Commits the stick position for the current frame. Called by <see cref="GamePad.Activity"/>.
@@ -421,11 +471,12 @@ public class AnalogStick : IAnalogStick
         }
 
         // Capture the previous down-state (using the previous position) before moving to the
-        // new position, so AsDPadPushed can detect the off-to-on transition this frame.
+        // new position, so AsDPadPushed/RadialPushed can detect the off-to-on transition this frame.
         _lastDPadDown[(int)DPadDirection.Up] = AsDPadDown(DPadDirection.Up);
         _lastDPadDown[(int)DPadDirection.Down] = AsDPadDown(DPadDirection.Down);
         _lastDPadDown[(int)DPadDirection.Left] = AsDPadDown(DPadDirection.Left);
         _lastDPadDown[(int)DPadDirection.Right] = AsDPadDown(DPadDirection.Right);
+        _lastRadialDown = RadialDown();
 
         _x = x;
         _y = y;
@@ -436,6 +487,10 @@ public class AnalogStick : IAnalogStick
             {
                 _lastDPadPush[i] = time;
             }
+        }
+        if (RadialPushed())
+        {
+            _lastRadialPush = time;
         }
     }
 
@@ -543,6 +598,10 @@ public class AnalogStick : IAnalogStick
             _lastDPadPush[i] = -1;
             _lastDPadRepeatRate[i] = -1;
         }
+
+        _lastRadialDown = false;
+        _lastRadialPush = -1;
+        _lastRadialRepeatRate = -1;
     }
 }
 

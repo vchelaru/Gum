@@ -61,6 +61,14 @@ public interface IAnalogStick
     bool AsDPadPushedRepeatRate(DPadDirection direction);
 
     /// <summary>
+    /// Returns whether the stick's radial magnitude (sqrt(x²+y²)) was pushed past the on-threshold
+    /// this frame, or has held there long enough to trigger key-repeat semantics. Unlike
+    /// <see cref="AsDPadPushedRepeatRate(DPadDirection)"/>, this is direction-agnostic — it fires
+    /// at any angle. Read <see cref="X"/>/<see cref="Y"/> after this returns true for the angle.
+    /// </summary>
+    bool RadialPushedRepeatRate();
+
+    /// <summary>
     /// The stick's horizontal position after deadzone processing, from -1 (left) to +1 (right).
     /// </summary>
     float X { get; }
