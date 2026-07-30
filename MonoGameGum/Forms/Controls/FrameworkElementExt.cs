@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
 using Gum.Wireframe;
 using RenderingLibrary;
 using System;
@@ -23,9 +24,27 @@ namespace Gum.Forms.Controls;
 
 public static class FrameworkElementExt
 {
+    /// <summary>
+    /// Binds <paramref name="uiProperty"/> to the VM member referenced by <paramref name="propertyExpression"/>.
+    /// Prefer this over the string-path overload: the expression is a compile-time reference to the VM
+    /// member, which keeps that member from being removed under <c>PublishTrimmed</c>.
+    /// </summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "propertyExpression is a compiler-built expression tree that references the VM " +
+            "member directly, which keeps the trimmer from removing it. The string-path overload this " +
+            "forwards to can therefore always resolve that member by name at runtime.")]
     public static void SetBinding(this FrameworkElement element, string uiProperty, LambdaExpression propertyExpression) =>
         element.SetBinding(uiProperty, BinderHelpers.ExtractPath(propertyExpression));
-    
+
+    /// <summary>
+    /// Binds <paramref name="uiProperty"/> to the VM member referenced by <paramref name="propertyExpression"/>.
+    /// Prefer this over the string-path overload: the expression is a compile-time reference to the VM
+    /// member, which keeps that member from being removed under <c>PublishTrimmed</c>.
+    /// </summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "propertyExpression is a compiler-built expression tree that references the VM " +
+            "member directly, which keeps the trimmer from removing it. The string-path overload this " +
+            "forwards to can therefore always resolve that member by name at runtime.")]
     public static void SetBinding<T>(this FrameworkElement element, string uiProperty, Expression<Func<T, object?>> propertyExpression) =>
         element.SetBinding(uiProperty, BinderHelpers.ExtractPath(propertyExpression));
 

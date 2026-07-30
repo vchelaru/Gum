@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.SymbolStore;
 using System.Linq;
 using System.Text;
@@ -453,6 +454,10 @@ public class MenuItem : ItemsControl
 
     #region Popup ListBox (sub-items)
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Automatic per-item BindingContext assignment when populating sub-items from a " +
+            "bound collection. Any by-name VM member resolution happens in the item template's own " +
+            "bindings, which already carry this warning at the SetBinding call that created them.")]
     internal void TryShowPopup()
     {
         if (this.Items?.Count > 0 && itemsPopup == null)

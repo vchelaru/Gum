@@ -10,16 +10,30 @@ Although typical ViewModels do not include view-specific properties such as colo
 
 ### Binding Visual Properties Directly
 
-Visual properties can be bound directly. For example, the following code shows how to bind the width of a Button to a ButtonWidth property on a ViewModel.
+Visual properties can be bound directly. For example, the following code shows how to bind the width of a Button to a ButtonWidth property on a ViewModel using a lambda expression:
 
 ```csharp
 // Initialize
 // assume MyButton is a valid button
 var buttonVisual = MyButton.Visual;
+buttonVisual.SetBinding<MyViewModel>(
+    nameof(buttonVisual.Width),
+    vm => vm.ButtonWidth);
+```
+
+A visual can also be bound using a string property name:
+
+```csharp
+// Initialize
+var buttonVisual = MyButton.Visual;
 buttonVisual.SetBinding(
     nameof(buttonVisual.Width),
-    nameof(ViewModel.ButtonWidth));
+    nameof(MyViewModel.ButtonWidth));
 ```
+
+{% hint style="warning" %}
+The string-path overload resolves `ButtonWidth` by reflection when the binding is applied. Under `PublishTrimmed`, a VM member reached *only* through a string-path binding can be removed by the trimmer if nothing else in your code references it directly -- the binding then silently stops updating instead of throwing. The lambda overload above avoids this: writing `vm => vm.ButtonWidth` gives the compiler a direct reference to the property, which keeps the trimmer from removing it. Prefer lambda binding for any project that publishes with `PublishTrimmed` enabled.
+{% endhint %}
 
 If the property requires a specific type, then the Visual can be casted to access type-specific properties, as shown in the following code block:
 
@@ -28,9 +42,9 @@ If the property requires a specific type, then the Visual can be casted to acces
 // This assumes the project is code-only
 var buttonVisual = (ButtonVisual)MyButton.Visual;
 var text = buttonVisual.TextInstance;
-text.SetBinding(
+text.SetBinding<MyViewModel>(
     nameof(Text.FontScale),
-    nameof(ViewModel.ButtonFontScale));
+    vm => vm.ButtonFontScale);
 ```
 
 ### Binding Converter Properties (Code Generation)

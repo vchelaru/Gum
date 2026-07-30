@@ -4,9 +4,35 @@
 
 Gum provides multiple options to control how binding behaves using the `Binding` type.
 
+## Lambda Binding
+
+The recommended way to set up a binding is with a lambda expression, which provides compile-time checking, refactoring support, and (unlike a string path) safety under `PublishTrimmed` -- see the hint below. Lambda expressions are extension methods available on `FrameworkElement`.
+
+A typed lambda specifies the ViewModel type explicitly:
+
+```csharp
+// Initialize
+textBox.SetBinding<MyViewModel>(
+    nameof(TextBox.Text),
+    vm => vm.PlayerName);
+```
+
+A parameterless lambda captures the ViewModel from a local variable:
+
+```csharp
+// Initialize
+MyViewModel vm = new();
+textBox.BindingContext = vm;
+textBox.SetBinding(
+    nameof(TextBox.Text),
+    () => vm.PlayerName);
+```
+
+Both approaches extract the property path from the expression at call time. The resulting binding behaves identically to a string-based binding.
+
 ## Using the Binding Class
 
-The fastest way to set up binding is to use the name of the properties being bound, as shown in the following code example:
+A binding can also be set up using the name of the properties being bound:
 
 ```csharp
 // Initialize
@@ -17,6 +43,10 @@ label.SetBinding(
     // ViewModel property:
     nameof(MyViewModel.LabelText));
 ```
+
+{% hint style="warning" %}
+This string-path overload resolves `LabelText` by reflection when the binding is applied. Under `PublishTrimmed`, a VM member reached *only* through a string-path binding can be removed by the trimmer if nothing else in your code references it directly -- the binding then silently stops updating instead of throwing. The lambda overloads above avoid this: writing `vm => vm.LabelText` gives the compiler a direct reference to the property, which keeps the trimmer from removing it. Prefer lambda binding for any project that publishes with `PublishTrimmed` enabled.
+{% endhint %}
 
 The SetBinding call shown above is a shortcut for creating a `Binding` object. The following code is functionally identical:
 
@@ -43,32 +73,6 @@ label.SetBinding(
     nameof(label.Text),
     binding);
 ```
-
-## Lambda Binding
-
-Binding can also be created using lambda expressions, which provide compile-time checking and refactoring support. Lambda expressions are extension methods available on `FrameworkElement`.
-
-A typed lambda specifies the ViewModel type explicitly:
-
-```csharp
-// Initialize
-textBox.SetBinding<MyViewModel>(
-    nameof(TextBox.Text),
-    vm => vm.PlayerName);
-```
-
-A parameterless lambda captures the ViewModel from a local variable:
-
-```csharp
-// Initialize
-MyViewModel vm = new();
-textBox.BindingContext = vm;
-textBox.SetBinding(
-    nameof(TextBox.Text),
-    () => vm.PlayerName);
-```
-
-Both approaches extract the property path from the expression at call time. The resulting binding behaves identically to a string-based binding.
 
 ## Nested Property Paths
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Gum.Wireframe;
 
 #if !FRB
@@ -38,8 +39,12 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
         PathObserver.ValueChanged += UpdateTarget;
     }
 
+    [RequiresUnreferencedCode("Calls " + nameof(AttachToSource) + ".")]
     public void Start() => AttachToSource(TargetElement.BindingContext);
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Automatic relay when an already-bound target's BindingContext changes. The " +
+            "trim risk is already surfaced wherever SetBinding was actually called to create this binding.")]
     private void OnTargetBindingContextChanged(object? sender, BindingContextChangedEventArgs e)
     {
         AttachToSource(e.NewBindingContext);
@@ -47,6 +52,10 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
 
     protected bool SuppressAttach { get; set; }
 
+    [RequiresUnreferencedCode(
+        "Resolves the binding path by name against newSource's own type (PropertyPathObserver.Attach, " +
+        "BinderHelpers.BuildGetter/BuildSetter). Those members may be removed under PublishTrimmed if " +
+        "nothing else in the app references them.")]
     protected void AttachToSource(object? newSource)
     {
         if (SuppressAttach)

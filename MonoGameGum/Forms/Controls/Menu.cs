@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -89,6 +90,10 @@ public class Menu : ItemsControl
 
     #region Item Creation
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Automatic per-item BindingContext assignment when populating from a bound " +
+            "collection. Any by-name VM member resolution happens in the item template's own bindings, " +
+            "which already carry this warning at the SetBinding call that created them.")]
     protected override FrameworkElement CreateNewItemFrameworkElement(object o)
     {
         MenuItem menuItem;

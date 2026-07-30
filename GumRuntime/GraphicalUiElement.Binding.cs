@@ -1,10 +1,13 @@
+using Gum.Forms.Data;
 using Gum.Mvvm;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -81,6 +84,10 @@ public partial class GraphicalUiElement
         RemoveBindingContextRecursively();
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Automatic parent-to-child BindingContext propagation, always wired regardless " +
+            "of whether binding is used. The trim risk is already surfaced wherever an ancestor's " +
+            "BindingContext/SetBinding was actually called by the app.")]
     private void HandleBindingParentChanged(object? sender, ParentChangedEventArgs args)
     {
         if (args.OldValue is GraphicalUiElement old)
@@ -98,6 +105,10 @@ public partial class GraphicalUiElement
         InheritedBindingContext = newParent?.BindingContext;
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Automatic parent-to-child BindingContext propagation, always wired regardless " +
+            "of whether binding is used. The trim risk is already surfaced wherever an ancestor's " +
+            "BindingContext/SetBinding was actually called by the app.")]
     void ParentBindingContextChanged(object? s, BindingContextChangedEventArgs e)
     {
         InheritedBindingContext = EffectiveParentGue?.BindingContext;
@@ -105,6 +116,10 @@ public partial class GraphicalUiElement
 
     public event EventHandler<BindingContextChangedEventArgs>? InheritedBindingContextChanged;
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Automatic teardown clearing BindingContext when this element is removed from " +
+            "managers. The trim risk this unwinds was already surfaced wherever BindingContext/SetBinding " +
+            "was actually called by the app to set up the binding in the first place.")]
     private void RemoveBindingContextRecursively()
     {
         this.BindingContext = null;
@@ -131,6 +146,10 @@ public partial class GraphicalUiElement
     internal object? InheritedBindingContext
     {
         get => mInheritedBindingContext;
+        [RequiresUnreferencedCode(
+            "Propagates a new BindingContext down from a parent, which re-resolves every existing " +
+            "binding's VM member by name on the new context's type. Those members may be removed " +
+            "under PublishTrimmed if nothing else in the app references them.")]
         set
         {
             var oldInherited = mInheritedBindingContext;
@@ -158,6 +177,10 @@ public partial class GraphicalUiElement
     public object? BindingContext
     {
         get => mBindingContext ?? mInheritedBindingContext;
+        [RequiresUnreferencedCode(
+            "Assigning a new BindingContext re-resolves every existing binding's VM member by name " +
+            "on the new context's type. Those members may be removed under PublishTrimmed if nothing " +
+            "else in the app references them.")]
         set
         {
             var oldEffectiveBindingContext = BindingContext;
@@ -171,6 +194,10 @@ public partial class GraphicalUiElement
     }
 
     bool _isSubscribedToViewModelPropertyChanged = false;
+    [RequiresUnreferencedCode(
+        "Unsubscribes VM events and resolves each bound VM property/field/event by name on the new " +
+        "context's own type. Those members may be removed under PublishTrimmed if nothing else in the " +
+        "app references them.")]
     private void HandleBindingContextChangedInternal(object? oldContext, object? newContext)
     {
         if (oldContext is INotifyPropertyChanged oldViewModel)
@@ -225,6 +252,9 @@ public partial class GraphicalUiElement
     public static int PropertyUnsubscribeCallCount = 0;
     public static int GetTypeCallCount = 0;
 
+    [RequiresUnreferencedCode(
+        "Looks up an event on the VM's own type by name (GetEvent). That member may be removed " +
+        "under PublishTrimmed if nothing else in the app references it.")]
     private void UnsubscribeEventsOnOldViewModel(INotifyPropertyChanged oldViewModel)
     {
         if (_isSubscribedToViewModelPropertyChanged)
@@ -250,6 +280,10 @@ public partial class GraphicalUiElement
 
     object? EffectiveBindingContext => mBindingContext ?? InheritedBindingContext;
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Automatic relay for an already-active flat binding's INotifyPropertyChanged " +
+            "subscription. The trim risk is already surfaced at the SetBinding/BindingContext call that " +
+            "set this binding up.")]
     private void HandleViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName is null)
@@ -286,6 +320,9 @@ public partial class GraphicalUiElement
     /// assigned. Returns true if the path was confirmed to target an event and
     /// should throw.
     /// </summary>
+    [RequiresUnreferencedCode(
+        "Walks the dotted path on the VM's own type and looks up the leaf event by name (GetEvent). " +
+        "Those members may be removed under PublishTrimmed if nothing else in the app references them.")]
     private bool IsDottedPathTargetingEvent(string vmProperty)
     {
         var context = BindingContext;
@@ -305,6 +342,7 @@ public partial class GraphicalUiElement
         return parent.GetType().GetEvent(leafName) != null;
     }
 
+    [RequiresUnreferencedCode("Calls " + nameof(IsDottedPathTargetingEvent) + ".")]
     private void ThrowIfDottedPathTargetsEvent(string vmProperty)
     {
         if (IsDottedPathTargetingEvent(vmProperty))
@@ -326,6 +364,17 @@ public partial class GraphicalUiElement
         }
     }
 
+    /// <summary>
+    /// Binds <paramref name="uiProperty"/> to the VM member named by <paramref name="vmProperty"/>,
+    /// resolved by reflection at bind time. Under <c>PublishTrimmed</c>, that member survives only if
+    /// something else in the app references it directly -- prefer the
+    /// <see cref="SetBinding{TVm}(string, Expression{Func{TVm, object}}, string?)"/> overload, whose
+    /// expression argument keeps the member from being trimmed.
+    /// </summary>
+    [RequiresUnreferencedCode(
+        "vmProperty is resolved by name against the BindingContext's own type. That member may be " +
+        "removed under PublishTrimmed if nothing else in the app references it. Prefer the " +
+        "SetBinding<TVm> overload that takes an expression instead of a string.")]
     public void SetBinding(string uiProperty, string vmProperty, string? toStringFormat = null)
     {
         if (uiProperty == nameof(BindingContext))
@@ -392,6 +441,23 @@ public partial class GraphicalUiElement
         }
     }
 
+    /// <summary>
+    /// Binds <paramref name="uiProperty"/> to the VM member referenced by <paramref name="vmPropertyExpression"/>.
+    /// Prefer this over the string-path overload: the expression is a compile-time reference to the VM
+    /// member, which keeps that member from being removed under <c>PublishTrimmed</c>. See
+    /// <see cref="SetBinding(string, string, string?)"/> for the trim-safety caveat this avoids.
+    /// </summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "vmPropertyExpression is a compiler-built expression tree that references the " +
+            "VM member directly, which keeps the trimmer from removing it. The string-path overload this " +
+            "forwards to can therefore always resolve that member by name at runtime.")]
+    public void SetBinding<TVm>(string uiProperty, Expression<Func<TVm, object?>> vmPropertyExpression, string? toStringFormat = null) =>
+        SetBinding(uiProperty, BinderHelpers.ExtractPath(vmPropertyExpression), toStringFormat);
+
+    [RequiresUnreferencedCode(
+        "Resolves the bound VM property/field/event by name on the BindingContext's own type " +
+        "(GetProperty/GetField/GetEvent). That member may be removed under PublishTrimmed if nothing " +
+        "else in the app references it.")]
     private bool UpdateToVmProperty(string vmPropertyName)
     {
         var updated = false;
@@ -569,6 +635,10 @@ public partial class GraphicalUiElement
         }
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Automatic descendant notification when a BindingContext-bound VM property " +
+            "changes. The trim risk is already surfaced wherever SetBinding was actually called to set " +
+            "up this binding.")]
     private void MatchAndPushBindingContextChange(string vmPropertyName, object? rootContext)
     {
         if (BindingContextBinding == vmPropertyName && BindingContextBindingPropertyOwner == rootContext)
@@ -578,6 +648,15 @@ public partial class GraphicalUiElement
         PushBindingContextChangeToDescendents(vmPropertyName, rootContext);
     }
 
+    /// <summary>
+    /// Writes this UI property's current value back to its bound VM member, resolved by name on the
+    /// BindingContext's own type. That member may be removed under <c>PublishTrimmed</c> if nothing
+    /// else in the app references it -- see <see cref="SetBinding(string, string, string?)"/>.
+    /// </summary>
+    [RequiresUnreferencedCode(
+        "Resolves the bound VM property by name on the BindingContext's own type (or an intermediate " +
+        "segment's type for dotted paths). That member may be removed under PublishTrimmed if nothing " +
+        "else in the app references it.")]
     protected void PushValueToViewModel([CallerMemberName] string? uiPropertyName = null)
     {
         if (uiPropertyName == null)
