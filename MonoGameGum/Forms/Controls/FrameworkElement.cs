@@ -637,6 +637,12 @@ public class FrameworkElement : INotifyPropertyChanged
             // whether to create a forms object. Yes, this is less convenient for the user who is manually
             // creating runtimes, but it's worth it for the standard behavior of the user creating instances
             // of Gum objects, and to be able to create Forms objects in Gum tool
+            //
+            // Trim-unsafe (#4116 audit): gumType is an arbitrary caller-supplied type (the value side
+            // of the obsolete DefaultFormsComponents dictionary), so Gum has no way to preserve its
+            // members via its own ILLink.Descriptors.xml. Not fixed: this is the deprecated legacy
+            // path (superseded by DefaultFormsTemplates above), so the trim-safety cost of a caller
+            // still using it is accepted rather than invested in.
             var boolBoolConstructor = gumType.GetConstructor(new[] { typeof(bool), typeof(bool) });
             if(boolBoolConstructor != null)
             {
