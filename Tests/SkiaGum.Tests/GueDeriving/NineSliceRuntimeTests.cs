@@ -1,6 +1,8 @@
 using Gum.Graphics.Animation;
 using Gum.GueDeriving;
+using Gum.Wireframe;
 using RenderingLibrary.Graphics.Animation;
+using SkiaGum;
 using SkiaGum.Renderables;
 using SkiaSharp;
 using Shouldly;
@@ -10,6 +12,95 @@ namespace SkiaGum.Tests.GueDeriving;
 
 public class NineSliceRuntimeTests
 {
+    public NineSliceRuntimeTests()
+    {
+        GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+    }
+
+    // ---- Dispatcher routing pins (issue #3639 / ADR 0011) -----------------------------------
+    // These drive the STRING property name through the production Skia dispatcher (via
+    // SetProperty) and assert the value lands on NineSliceRuntime, including its
+    // NotifyPropertyChanged side effect -- before the ADR 0011 redispatch these wrote straight to
+    // the contained NineSlice renderable and skipped that notification.
+
+    [Fact]
+    public void Dispatch_Alpha_RoutesToRuntimeAndNotifies()
+    {
+        NineSliceRuntime sut = new();
+        var seen = new System.Collections.Generic.List<string>();
+        sut.PropertyChanged += (_, e) => seen.Add(e.PropertyName!);
+
+        sut.SetProperty("Alpha", 128);
+
+        sut.Alpha.ShouldBe(128);
+        seen.ShouldContain(nameof(NineSliceRuntime.Alpha));
+    }
+
+    [Fact]
+    public void Dispatch_RedGreenBlue_RouteToRuntime()
+    {
+        NineSliceRuntime sut = new();
+
+        sut.SetProperty("Red", 10);
+        sut.SetProperty("Green", 20);
+        sut.SetProperty("Blue", 30);
+
+        sut.Red.ShouldBe(10);
+        sut.Green.ShouldBe(20);
+        sut.Blue.ShouldBe(30);
+    }
+
+    [Fact]
+    public void Dispatch_Color_ConvertsDrawingColorAndRoutesToRuntime()
+    {
+        NineSliceRuntime sut = new();
+        System.Drawing.Color drawingColor = System.Drawing.Color.FromArgb(10, 20, 30, 40);
+
+        sut.SetProperty("Color", drawingColor);
+
+        sut.Color.ShouldBe(new SKColor(20, 30, 40, 10));
+    }
+
+    [Fact]
+    public void Dispatch_Blend_RoutesToRuntime()
+    {
+        NineSliceRuntime sut = new();
+
+        sut.SetProperty("Blend", Gum.RenderingLibrary.Blend.Additive);
+
+        sut.Blend.ShouldBe(Gum.RenderingLibrary.Blend.Additive);
+    }
+
+    [Fact]
+    public void Dispatch_BorderScale_RoutesToRuntime()
+    {
+        NineSliceRuntime sut = new();
+
+        sut.SetProperty("BorderScale", 2.5f);
+
+        sut.BorderScale.ShouldBe(2.5f);
+    }
+
+    [Fact]
+    public void Dispatch_IsTilingMiddleSections_RoutesToRuntime()
+    {
+        NineSliceRuntime sut = new();
+
+        sut.SetProperty("IsTilingMiddleSections", true);
+
+        sut.IsTilingMiddleSections.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Dispatch_CustomFrameTextureCoordinateWidth_RoutesToRuntime()
+    {
+        NineSliceRuntime sut = new();
+
+        sut.SetProperty("CustomFrameTextureCoordinateWidth", 0.25f);
+
+        sut.CustomFrameTextureCoordinateWidth.ShouldBe(0.25f);
+    }
+
     [Fact]
     public void Animate_ShouldRouteThroughContainedAnimationLogic()
     {
