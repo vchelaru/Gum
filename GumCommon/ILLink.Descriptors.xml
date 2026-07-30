@@ -3,5 +3,6 @@
     <type fullname="Gum.DataTypes.*" preserve="all" />
     <type fullname="Gum.StateAnimation.SaveClasses.*" preserve="all" />
     <type fullname="Gum.Forms.Controls.*" preserve="all" />
+    <type fullname="Gum.Wireframe.GraphicalUiElement" preserve="all" />
   </assembly>
 </linker>

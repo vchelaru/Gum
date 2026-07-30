@@ -1,0 +1,9 @@
+<linker>
+  <assembly fullname="RaylibGum">
+    <type fullname="Gum.GueDeriving.*" preserve="all" />
+    <type fullname="MonoGameGum.GueDeriving.*" preserve="all" />
+    <type fullname="SkiaGum.GueDeriving.*" preserve="all" />
+    <type fullname="RenderingLibrary.Graphics.*" preserve="all" />
+    <type fullname="RenderingLibrary.Math.Geometry.*" preserve="all" />
+  </assembly>
+</linker>

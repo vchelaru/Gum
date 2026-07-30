@@ -280,4 +280,10 @@
 	  <Compile Update="..\..\MonoGameGum\Forms\Controls\TextBoxBase.cs" Link="Forms\Controls\TextBoxBase.cs" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<EmbeddedResource Include="ILLink.Descriptors.xml">
+			<LogicalName>ILLink.Descriptors.xml</LogicalName>
+		</EmbeddedResource>
+	</ItemGroup>
+
 </Project>

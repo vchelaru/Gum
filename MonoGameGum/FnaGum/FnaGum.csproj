@@ -218,4 +218,10 @@
 		<PackageReference Include="TextCopy" Version="6.2.1" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<EmbeddedResource Include="ILLink.Descriptors.xml">
+			<LogicalName>ILLink.Descriptors.xml</LogicalName>
+		</EmbeddedResource>
+	</ItemGroup>
+
 </Project>

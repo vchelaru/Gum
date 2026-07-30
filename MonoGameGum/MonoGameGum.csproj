@@ -317,4 +317,10 @@
 		<PackageReference Include="TextCopy" Version="6.2.1" Condition="!$(TargetFramework.Contains('ios'))" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<EmbeddedResource Include="ILLink.Descriptors.xml">
+			<LogicalName>ILLink.Descriptors.xml</LogicalName>
+		</EmbeddedResource>
+	</ItemGroup>
+
 </Project>

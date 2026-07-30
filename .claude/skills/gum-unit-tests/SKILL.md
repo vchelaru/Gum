@@ -32,6 +32,7 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
 - A test asserting on an absolute path must not use a Windows-style `"C:\..."` literal — `Path.IsPathRooted` doesn't recognize a drive letter as rooted on Unix, so macOS/Linux CI treats it as relative and silently prepends the runner's real working directory, corrupting the path. Use a leading-slash literal (e.g. `"/game/Content/"`) instead — rooted on both platforms.
   - If the assertion compares against `ToolsUtilities.FilePath.FullPath`, a bare leading-slash literal still isn't safe: `FilePath` normalizes slashes to `Path.DirectorySeparatorChar`, so `fullPath == "/ProjectA.gumx"` passes on Unix but fails on Windows. Route the literal through `new FilePath(...).FullPath` on both sides of the comparison instead.
 - Use named parameters for boolean literals.
+- Don't name a test namespace after an existing Gum type (e.g. `MonoGameGum.Tests.Binding` collides with `Gum.Forms.Data.Binding`) — an unrelated file elsewhere in the same test project that references the type unqualified can suddenly fail to compile (`CS0118: '...' is a namespace but is used like a type`).
 
 ## Test at production defaults
 
