@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <Name>Bubblegum/Controls/RadioButton</Name>
+  <Name>Hazard/Controls/RadioButton</Name>
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
@@ -18,13 +18,13 @@
       <Value xsi:type="xsd:int">90</Value>
     </Variable>
     <Variable Type="int" Name="FocusedIndicator.StrokeBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">157</Value>
+      <Value xsi:type="xsd:int">26</Value>
     </Variable>
     <Variable Type="int" Name="FocusedIndicator.StrokeGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">107</Value>
+      <Value xsi:type="xsd:int">200</Value>
     </Variable>
     <Variable Type="int" Name="FocusedIndicator.StrokeRed" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+      <Value xsi:type="xsd:int">244</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">3</Value>
@@ -70,13 +70,13 @@
     </Variable>
     <Variable Type="string" Name="OuterBorder.Parent" SetsValue="true" />
     <Variable Type="int" Name="OuterBorder.StrokeBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">204</Value>
+      <Value xsi:type="xsd:int">22</Value>
     </Variable>
     <Variable Type="int" Name="OuterBorder.StrokeGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">170</Value>
+      <Value xsi:type="xsd:int">63</Value>
     </Variable>
     <Variable Type="int" Name="OuterBorder.StrokeRed" SetsValue="true">
-      <Value xsi:type="xsd:int">240</Value>
+      <Value xsi:type="xsd:int">74</Value>
     </Variable>
     <Variable Type="float" Name="OuterBorder.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">2</Value>
@@ -109,13 +109,13 @@
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="int" Name="Radio.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">157</Value>
+      <Value xsi:type="xsd:int">26</Value>
     </Variable>
     <Variable Type="int" Name="Radio.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">107</Value>
+      <Value xsi:type="xsd:int">200</Value>
     </Variable>
     <Variable Type="int" Name="Radio.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+      <Value xsi:type="xsd:int">244</Value>
     </Variable>
     <Variable Type="bool" Name="Radio.HasEvents" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
@@ -163,13 +163,13 @@
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
     <Variable Type="int" Name="RadioBackground.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+      <Value xsi:type="xsd:int">7</Value>
     </Variable>
     <Variable Type="int" Name="RadioBackground.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+      <Value xsi:type="xsd:int">16</Value>
     </Variable>
     <Variable Type="int" Name="RadioBackground.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+      <Value xsi:type="xsd:int">18</Value>
     </Variable>
     <Variable Type="float" Name="RadioBackground.Height" SetsValue="true">
       <Value xsi:type="xsd:float">20</Value>
@@ -207,22 +207,22 @@
     <Variable Type="RadioButtonCategory" Name="RadioButtonCategoryState" SetsValue="false" />
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
     <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">85</Value>
+      <Value xsi:type="xsd:int">40</Value>
     </Variable>
-    <Variable Type="string" Name="TextInstance.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Nunito</Value>
+    <Variable IsFont="true" Type="string" Name="TextInstance.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Saira Condensed</Value>
     </Variable>
     <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
+      <Value xsi:type="xsd:int">15</Value>
     </Variable>
     <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-      <Value xsi:type="xsd:int">17</Value>
+      <Value xsi:type="xsd:int">181</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="TextInstance.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">4</Value>
     </Variable>
     <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">61</Value>
+      <Value xsi:type="xsd:int">227</Value>
     </Variable>
     <Variable Type="string" Name="TextInstance.Text" ExposedAsName="Text" SetsValue="true">
       <Value xsi:type="xsd:string">Radio Label</Value>
@@ -261,11 +261,11 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Bubblegum/Styles.Text.FillRed</string>
-        <string>Green = Components/Bubblegum/Styles.Text.FillGreen</string>
-        <string>Blue = Components/Bubblegum/Styles.Text.FillBlue</string>
-        <string>Font = Components/Bubblegum/Styles.Normal.Font</string>
-        <string>FontSize = Components/Bubblegum/Styles.Normal.FontSize</string>
+        <string>Red = Components/Hazard/Styles.Text.FillRed</string>
+        <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
+        <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
+        <string>Font = Components/Hazard/Styles.Normal.Font</string>
+        <string>FontSize = Components/Hazard/Styles.Normal.FontSize</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -275,9 +275,9 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>StrokeRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-        <string>StrokeGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-        <string>StrokeBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+        <string>StrokeRed = Components/Hazard/Styles.Accent.FillRed</string>
+        <string>StrokeGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+        <string>StrokeBlue = Components/Hazard/Styles.Accent.FillBlue</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -287,9 +287,9 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-        <string>FillGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-        <string>FillBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+        <string>FillRed = Components/Hazard/Styles.Accent.FillRed</string>
+        <string>FillGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+        <string>FillBlue = Components/Hazard/Styles.Accent.FillBlue</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -299,9 +299,9 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillRed = Components/Bubblegum/Styles.Surface1.FillRed</string>
-        <string>FillGreen = Components/Bubblegum/Styles.Surface1.FillGreen</string>
-        <string>FillBlue = Components/Bubblegum/Styles.Surface1.FillBlue</string>
+        <string>FillRed = Components/Hazard/Styles.Surface1.FillRed</string>
+        <string>FillGreen = Components/Hazard/Styles.Surface1.FillGreen</string>
+        <string>FillBlue = Components/Hazard/Styles.Surface1.FillBlue</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -311,9 +311,9 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>StrokeRed = Components/Bubblegum/Styles.Border.FillRed</string>
-        <string>StrokeGreen = Components/Bubblegum/Styles.Border.FillGreen</string>
-        <string>StrokeBlue = Components/Bubblegum/Styles.Border.FillBlue</string>
+        <string>StrokeRed = Components/Hazard/Styles.Border.FillRed</string>
+        <string>StrokeGreen = Components/Hazard/Styles.Border.FillGreen</string>
+        <string>StrokeBlue = Components/Hazard/Styles.Border.FillBlue</string>
       </Value>
     </VariableList>
   </State>
@@ -325,43 +325,43 @@
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">157</Value>
+        <Value xsi:type="xsd:int">26</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">107</Value>
+        <Value xsi:type="xsd:int">200</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">244</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">157</Value>
+        <Value xsi:type="xsd:int">26</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">107</Value>
+        <Value xsi:type="xsd:int">200</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">244</Value>
       </Variable>
       <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">7</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">16</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">18</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">85</Value>
+        <Value xsi:type="xsd:int">40</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">17</Value>
+        <Value xsi:type="xsd:int">181</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">61</Value>
+        <Value xsi:type="xsd:int">227</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -370,9 +370,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Surface1.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Surface1.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Surface1.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Surface1.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Surface1.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Surface1.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -382,9 +382,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Bubblegum/Styles.Text.FillRed</string>
-          <string>Green = Components/Bubblegum/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Bubblegum/Styles.Text.FillBlue</string>
+          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
+          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
+          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -394,9 +394,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>StrokeRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-          <string>StrokeGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-          <string>StrokeBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+          <string>StrokeRed = Components/Hazard/Styles.Accent.FillRed</string>
+          <string>StrokeGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+          <string>StrokeBlue = Components/Hazard/Styles.Accent.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -406,9 +406,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Accent.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Accent.FillBlue</string>
         </Value>
       </VariableList>
     </State>
@@ -418,43 +418,43 @@
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">204</Value>
+        <Value xsi:type="xsd:int">22</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">170</Value>
+        <Value xsi:type="xsd:int">63</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeRed" SetsValue="true">
-        <Value xsi:type="xsd:int">240</Value>
+        <Value xsi:type="xsd:int">74</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">157</Value>
+        <Value xsi:type="xsd:int">26</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">107</Value>
+        <Value xsi:type="xsd:int">200</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">244</Value>
       </Variable>
       <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">7</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">16</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">18</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">85</Value>
+        <Value xsi:type="xsd:int">40</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">17</Value>
+        <Value xsi:type="xsd:int">181</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">61</Value>
+        <Value xsi:type="xsd:int">227</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -463,9 +463,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Surface1.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Surface1.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Surface1.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Surface1.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Surface1.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Surface1.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -475,9 +475,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Bubblegum/Styles.Text.FillRed</string>
-          <string>Green = Components/Bubblegum/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Bubblegum/Styles.Text.FillBlue</string>
+          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
+          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
+          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -487,9 +487,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>StrokeRed = Components/Bubblegum/Styles.Border.FillRed</string>
-          <string>StrokeGreen = Components/Bubblegum/Styles.Border.FillGreen</string>
-          <string>StrokeBlue = Components/Bubblegum/Styles.Border.FillBlue</string>
+          <string>StrokeRed = Components/Hazard/Styles.Border.FillRed</string>
+          <string>StrokeGreen = Components/Hazard/Styles.Border.FillGreen</string>
+          <string>StrokeBlue = Components/Hazard/Styles.Border.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -499,9 +499,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Accent.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Accent.FillBlue</string>
         </Value>
       </VariableList>
     </State>
@@ -511,43 +511,43 @@
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">221</Value>
+        <Value xsi:type="xsd:int">16</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">174</Value>
+        <Value xsi:type="xsd:int">36</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeRed" SetsValue="true">
-        <Value xsi:type="xsd:int">205</Value>
+        <Value xsi:type="xsd:int">42</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">157</Value>
+        <Value xsi:type="xsd:int">26</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">107</Value>
+        <Value xsi:type="xsd:int">200</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">244</Value>
       </Variable>
       <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">248</Value>
+        <Value xsi:type="xsd:int">7</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">234</Value>
+        <Value xsi:type="xsd:int">14</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">245</Value>
+        <Value xsi:type="xsd:int">16</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">217</Value>
+        <Value xsi:type="xsd:int">38</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">168</Value>
+        <Value xsi:type="xsd:int">102</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">201</Value>
+        <Value xsi:type="xsd:int">120</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -556,9 +556,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.DisabledFill.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.DisabledFill.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.DisabledFill.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.DisabledFill.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.DisabledFill.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.DisabledFill.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -568,9 +568,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Bubblegum/Styles.Placeholder.FillRed</string>
-          <string>Green = Components/Bubblegum/Styles.Placeholder.FillGreen</string>
-          <string>Blue = Components/Bubblegum/Styles.Placeholder.FillBlue</string>
+          <string>Red = Components/Hazard/Styles.Placeholder.FillRed</string>
+          <string>Green = Components/Hazard/Styles.Placeholder.FillGreen</string>
+          <string>Blue = Components/Hazard/Styles.Placeholder.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -580,9 +580,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>StrokeRed = Components/Bubblegum/Styles.Disabled.FillRed</string>
-          <string>StrokeGreen = Components/Bubblegum/Styles.Disabled.FillGreen</string>
-          <string>StrokeBlue = Components/Bubblegum/Styles.Disabled.FillBlue</string>
+          <string>StrokeRed = Components/Hazard/Styles.DisabledBorder.FillRed</string>
+          <string>StrokeGreen = Components/Hazard/Styles.DisabledBorder.FillGreen</string>
+          <string>StrokeBlue = Components/Hazard/Styles.DisabledBorder.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -592,9 +592,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Accent.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Accent.FillBlue</string>
         </Value>
       </VariableList>
     </State>
@@ -604,43 +604,43 @@
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">221</Value>
+        <Value xsi:type="xsd:int">16</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">174</Value>
+        <Value xsi:type="xsd:int">36</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeRed" SetsValue="true">
-        <Value xsi:type="xsd:int">205</Value>
+        <Value xsi:type="xsd:int">42</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">157</Value>
+        <Value xsi:type="xsd:int">26</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">107</Value>
+        <Value xsi:type="xsd:int">200</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">244</Value>
       </Variable>
       <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">248</Value>
+        <Value xsi:type="xsd:int">7</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">234</Value>
+        <Value xsi:type="xsd:int">14</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">245</Value>
+        <Value xsi:type="xsd:int">16</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">217</Value>
+        <Value xsi:type="xsd:int">38</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">168</Value>
+        <Value xsi:type="xsd:int">102</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">201</Value>
+        <Value xsi:type="xsd:int">120</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -649,9 +649,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.DisabledFill.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.DisabledFill.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.DisabledFill.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.DisabledFill.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.DisabledFill.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.DisabledFill.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -661,9 +661,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Bubblegum/Styles.Placeholder.FillRed</string>
-          <string>Green = Components/Bubblegum/Styles.Placeholder.FillGreen</string>
-          <string>Blue = Components/Bubblegum/Styles.Placeholder.FillBlue</string>
+          <string>Red = Components/Hazard/Styles.Placeholder.FillRed</string>
+          <string>Green = Components/Hazard/Styles.Placeholder.FillGreen</string>
+          <string>Blue = Components/Hazard/Styles.Placeholder.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -673,9 +673,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>StrokeRed = Components/Bubblegum/Styles.Disabled.FillRed</string>
-          <string>StrokeGreen = Components/Bubblegum/Styles.Disabled.FillGreen</string>
-          <string>StrokeBlue = Components/Bubblegum/Styles.Disabled.FillBlue</string>
+          <string>StrokeRed = Components/Hazard/Styles.DisabledBorder.FillRed</string>
+          <string>StrokeGreen = Components/Hazard/Styles.DisabledBorder.FillGreen</string>
+          <string>StrokeBlue = Components/Hazard/Styles.DisabledBorder.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -685,9 +685,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Accent.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Accent.FillBlue</string>
         </Value>
       </VariableList>
     </State>
@@ -697,43 +697,43 @@
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">157</Value>
+        <Value xsi:type="xsd:int">26</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">107</Value>
+        <Value xsi:type="xsd:int">200</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">244</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">157</Value>
+        <Value xsi:type="xsd:int">26</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">107</Value>
+        <Value xsi:type="xsd:int">200</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">244</Value>
       </Variable>
       <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">7</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">16</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">18</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">85</Value>
+        <Value xsi:type="xsd:int">40</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">17</Value>
+        <Value xsi:type="xsd:int">181</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">61</Value>
+        <Value xsi:type="xsd:int">227</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -742,9 +742,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Surface1.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Surface1.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Surface1.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Surface1.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Surface1.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Surface1.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -754,9 +754,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Bubblegum/Styles.Text.FillRed</string>
-          <string>Green = Components/Bubblegum/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Bubblegum/Styles.Text.FillBlue</string>
+          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
+          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
+          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -766,9 +766,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>StrokeRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-          <string>StrokeGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-          <string>StrokeBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+          <string>StrokeRed = Components/Hazard/Styles.Accent.FillRed</string>
+          <string>StrokeGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+          <string>StrokeBlue = Components/Hazard/Styles.Accent.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -778,9 +778,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Accent.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Accent.FillBlue</string>
         </Value>
       </VariableList>
     </State>
@@ -790,43 +790,43 @@
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">157</Value>
+        <Value xsi:type="xsd:int">26</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">107</Value>
+        <Value xsi:type="xsd:int">200</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">244</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">157</Value>
+        <Value xsi:type="xsd:int">26</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">107</Value>
+        <Value xsi:type="xsd:int">200</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">244</Value>
       </Variable>
       <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">7</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">16</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">18</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">85</Value>
+        <Value xsi:type="xsd:int">40</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">17</Value>
+        <Value xsi:type="xsd:int">181</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">61</Value>
+        <Value xsi:type="xsd:int">227</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -835,9 +835,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Surface1.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Surface1.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Surface1.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Surface1.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Surface1.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Surface1.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -847,9 +847,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Bubblegum/Styles.Text.FillRed</string>
-          <string>Green = Components/Bubblegum/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Bubblegum/Styles.Text.FillBlue</string>
+          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
+          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
+          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -859,9 +859,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>StrokeRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-          <string>StrokeGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-          <string>StrokeBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+          <string>StrokeRed = Components/Hazard/Styles.Accent.FillRed</string>
+          <string>StrokeGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+          <string>StrokeBlue = Components/Hazard/Styles.Accent.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -871,9 +871,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Accent.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Accent.FillBlue</string>
         </Value>
       </VariableList>
     </State>
@@ -883,43 +883,43 @@
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">117</Value>
+        <Value xsi:type="xsd:int">12</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">68</Value>
+        <Value xsi:type="xsd:int">163</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeRed" SetsValue="true">
-        <Value xsi:type="xsd:int">204</Value>
+        <Value xsi:type="xsd:int">201</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">117</Value>
+        <Value xsi:type="xsd:int">12</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">68</Value>
+        <Value xsi:type="xsd:int">163</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">204</Value>
+        <Value xsi:type="xsd:int">201</Value>
       </Variable>
       <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">7</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">16</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">18</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">85</Value>
+        <Value xsi:type="xsd:int">40</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">17</Value>
+        <Value xsi:type="xsd:int">181</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">61</Value>
+        <Value xsi:type="xsd:int">227</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -928,9 +928,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Surface1.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Surface1.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Surface1.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Surface1.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Surface1.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Surface1.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -940,9 +940,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Bubblegum/Styles.Text.FillRed</string>
-          <string>Green = Components/Bubblegum/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Bubblegum/Styles.Text.FillBlue</string>
+          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
+          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
+          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -952,9 +952,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>StrokeRed = Components/Bubblegum/Styles.AccentDark.FillRed</string>
-          <string>StrokeGreen = Components/Bubblegum/Styles.AccentDark.FillGreen</string>
-          <string>StrokeBlue = Components/Bubblegum/Styles.AccentDark.FillBlue</string>
+          <string>StrokeRed = Components/Hazard/Styles.AccentPressed.FillRed</string>
+          <string>StrokeGreen = Components/Hazard/Styles.AccentPressed.FillGreen</string>
+          <string>StrokeBlue = Components/Hazard/Styles.AccentPressed.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -964,9 +964,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.AccentDark.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.AccentDark.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.AccentDark.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.AccentPressed.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.AccentPressed.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.AccentPressed.FillBlue</string>
         </Value>
       </VariableList>
     </State>
@@ -976,43 +976,43 @@
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">117</Value>
+        <Value xsi:type="xsd:int">12</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">68</Value>
+        <Value xsi:type="xsd:int">163</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeRed" SetsValue="true">
-        <Value xsi:type="xsd:int">204</Value>
+        <Value xsi:type="xsd:int">201</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">157</Value>
+        <Value xsi:type="xsd:int">26</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">107</Value>
+        <Value xsi:type="xsd:int">200</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">244</Value>
       </Variable>
       <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">7</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">16</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">18</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">85</Value>
+        <Value xsi:type="xsd:int">40</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">17</Value>
+        <Value xsi:type="xsd:int">181</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">61</Value>
+        <Value xsi:type="xsd:int">227</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -1021,9 +1021,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Surface1.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Surface1.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Surface1.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Surface1.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Surface1.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Surface1.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1033,9 +1033,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Bubblegum/Styles.Text.FillRed</string>
-          <string>Green = Components/Bubblegum/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Bubblegum/Styles.Text.FillBlue</string>
+          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
+          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
+          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1045,9 +1045,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>StrokeRed = Components/Bubblegum/Styles.AccentDark.FillRed</string>
-          <string>StrokeGreen = Components/Bubblegum/Styles.AccentDark.FillGreen</string>
-          <string>StrokeBlue = Components/Bubblegum/Styles.AccentDark.FillBlue</string>
+          <string>StrokeRed = Components/Hazard/Styles.AccentPressed.FillRed</string>
+          <string>StrokeGreen = Components/Hazard/Styles.AccentPressed.FillGreen</string>
+          <string>StrokeBlue = Components/Hazard/Styles.AccentPressed.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1057,9 +1057,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Accent.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Accent.FillBlue</string>
         </Value>
       </VariableList>
     </State>
@@ -1069,43 +1069,43 @@
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">157</Value>
+        <Value xsi:type="xsd:int">26</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">107</Value>
+        <Value xsi:type="xsd:int">200</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">244</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">157</Value>
+        <Value xsi:type="xsd:int">26</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">107</Value>
+        <Value xsi:type="xsd:int">200</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">244</Value>
       </Variable>
       <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">7</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">16</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">18</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">85</Value>
+        <Value xsi:type="xsd:int">40</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">17</Value>
+        <Value xsi:type="xsd:int">181</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">61</Value>
+        <Value xsi:type="xsd:int">227</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -1114,9 +1114,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Surface1.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Surface1.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Surface1.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Surface1.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Surface1.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Surface1.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1126,9 +1126,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Bubblegum/Styles.Text.FillRed</string>
-          <string>Green = Components/Bubblegum/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Bubblegum/Styles.Text.FillBlue</string>
+          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
+          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
+          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1138,9 +1138,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>StrokeRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-          <string>StrokeGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-          <string>StrokeBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+          <string>StrokeRed = Components/Hazard/Styles.Accent.FillRed</string>
+          <string>StrokeGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+          <string>StrokeBlue = Components/Hazard/Styles.Accent.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1150,9 +1150,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Accent.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Accent.FillBlue</string>
         </Value>
       </VariableList>
     </State>
@@ -1162,43 +1162,43 @@
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">157</Value>
+        <Value xsi:type="xsd:int">26</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">107</Value>
+        <Value xsi:type="xsd:int">200</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">244</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">157</Value>
+        <Value xsi:type="xsd:int">26</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">107</Value>
+        <Value xsi:type="xsd:int">200</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">244</Value>
       </Variable>
       <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">7</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">16</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">18</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">85</Value>
+        <Value xsi:type="xsd:int">40</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">17</Value>
+        <Value xsi:type="xsd:int">181</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">61</Value>
+        <Value xsi:type="xsd:int">227</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -1207,9 +1207,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Surface1.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Surface1.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Surface1.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Surface1.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Surface1.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Surface1.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1219,9 +1219,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Bubblegum/Styles.Text.FillRed</string>
-          <string>Green = Components/Bubblegum/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Bubblegum/Styles.Text.FillBlue</string>
+          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
+          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
+          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1231,9 +1231,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>StrokeRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-          <string>StrokeGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-          <string>StrokeBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+          <string>StrokeRed = Components/Hazard/Styles.Accent.FillRed</string>
+          <string>StrokeGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+          <string>StrokeBlue = Components/Hazard/Styles.Accent.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1243,9 +1243,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Accent.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Accent.FillBlue</string>
         </Value>
       </VariableList>
     </State>
@@ -1255,43 +1255,43 @@
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">157</Value>
+        <Value xsi:type="xsd:int">26</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">107</Value>
+        <Value xsi:type="xsd:int">200</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">244</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">157</Value>
+        <Value xsi:type="xsd:int">26</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">107</Value>
+        <Value xsi:type="xsd:int">200</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">244</Value>
       </Variable>
       <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">7</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">16</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">18</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">85</Value>
+        <Value xsi:type="xsd:int">40</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">17</Value>
+        <Value xsi:type="xsd:int">181</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">61</Value>
+        <Value xsi:type="xsd:int">227</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -1300,9 +1300,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Surface1.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Surface1.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Surface1.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Surface1.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Surface1.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Surface1.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1312,9 +1312,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Bubblegum/Styles.Text.FillRed</string>
-          <string>Green = Components/Bubblegum/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Bubblegum/Styles.Text.FillBlue</string>
+          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
+          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
+          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1324,9 +1324,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>StrokeRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-          <string>StrokeGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-          <string>StrokeBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+          <string>StrokeRed = Components/Hazard/Styles.Accent.FillRed</string>
+          <string>StrokeGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+          <string>StrokeBlue = Components/Hazard/Styles.Accent.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1336,9 +1336,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Accent.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Accent.FillBlue</string>
         </Value>
       </VariableList>
     </State>
@@ -1348,43 +1348,43 @@
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">157</Value>
+        <Value xsi:type="xsd:int">26</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">107</Value>
+        <Value xsi:type="xsd:int">200</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">244</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">157</Value>
+        <Value xsi:type="xsd:int">26</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">107</Value>
+        <Value xsi:type="xsd:int">200</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">244</Value>
       </Variable>
       <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">7</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">16</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">18</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">85</Value>
+        <Value xsi:type="xsd:int">40</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">17</Value>
+        <Value xsi:type="xsd:int">181</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">61</Value>
+        <Value xsi:type="xsd:int">227</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -1393,9 +1393,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Surface1.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Surface1.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Surface1.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Surface1.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Surface1.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Surface1.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1405,9 +1405,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Bubblegum/Styles.Text.FillRed</string>
-          <string>Green = Components/Bubblegum/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Bubblegum/Styles.Text.FillBlue</string>
+          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
+          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
+          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1417,9 +1417,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>StrokeRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-          <string>StrokeGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-          <string>StrokeBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+          <string>StrokeRed = Components/Hazard/Styles.Accent.FillRed</string>
+          <string>StrokeGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+          <string>StrokeBlue = Components/Hazard/Styles.Accent.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1429,9 +1429,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Accent.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Accent.FillBlue</string>
         </Value>
       </VariableList>
     </State>
@@ -1441,43 +1441,43 @@
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">221</Value>
+        <Value xsi:type="xsd:int">16</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">174</Value>
+        <Value xsi:type="xsd:int">36</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeRed" SetsValue="true">
-        <Value xsi:type="xsd:int">205</Value>
+        <Value xsi:type="xsd:int">42</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">157</Value>
+        <Value xsi:type="xsd:int">26</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">107</Value>
+        <Value xsi:type="xsd:int">200</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">244</Value>
       </Variable>
       <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">248</Value>
+        <Value xsi:type="xsd:int">7</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">234</Value>
+        <Value xsi:type="xsd:int">14</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">245</Value>
+        <Value xsi:type="xsd:int">16</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">217</Value>
+        <Value xsi:type="xsd:int">38</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">168</Value>
+        <Value xsi:type="xsd:int">102</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">201</Value>
+        <Value xsi:type="xsd:int">120</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -1486,9 +1486,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.DisabledFill.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.DisabledFill.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.DisabledFill.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.DisabledFill.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.DisabledFill.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.DisabledFill.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1498,9 +1498,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Bubblegum/Styles.Placeholder.FillRed</string>
-          <string>Green = Components/Bubblegum/Styles.Placeholder.FillGreen</string>
-          <string>Blue = Components/Bubblegum/Styles.Placeholder.FillBlue</string>
+          <string>Red = Components/Hazard/Styles.Placeholder.FillRed</string>
+          <string>Green = Components/Hazard/Styles.Placeholder.FillGreen</string>
+          <string>Blue = Components/Hazard/Styles.Placeholder.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1510,9 +1510,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>StrokeRed = Components/Bubblegum/Styles.Disabled.FillRed</string>
-          <string>StrokeGreen = Components/Bubblegum/Styles.Disabled.FillGreen</string>
-          <string>StrokeBlue = Components/Bubblegum/Styles.Disabled.FillBlue</string>
+          <string>StrokeRed = Components/Hazard/Styles.DisabledBorder.FillRed</string>
+          <string>StrokeGreen = Components/Hazard/Styles.DisabledBorder.FillGreen</string>
+          <string>StrokeBlue = Components/Hazard/Styles.DisabledBorder.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1522,9 +1522,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Accent.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Accent.FillBlue</string>
         </Value>
       </VariableList>
     </State>
@@ -1534,43 +1534,43 @@
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">221</Value>
+        <Value xsi:type="xsd:int">16</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">174</Value>
+        <Value xsi:type="xsd:int">36</Value>
       </Variable>
       <Variable Type="int" Name="OuterBorder.StrokeRed" SetsValue="true">
-        <Value xsi:type="xsd:int">205</Value>
+        <Value xsi:type="xsd:int">42</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">157</Value>
+        <Value xsi:type="xsd:int">26</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">107</Value>
+        <Value xsi:type="xsd:int">200</Value>
       </Variable>
       <Variable Type="int" Name="Radio.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">244</Value>
       </Variable>
       <Variable Type="bool" Name="Radio.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">248</Value>
+        <Value xsi:type="xsd:int">7</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">234</Value>
+        <Value xsi:type="xsd:int">14</Value>
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">245</Value>
+        <Value xsi:type="xsd:int">16</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">217</Value>
+        <Value xsi:type="xsd:int">38</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">168</Value>
+        <Value xsi:type="xsd:int">102</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">201</Value>
+        <Value xsi:type="xsd:int">120</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -1579,9 +1579,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.DisabledFill.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.DisabledFill.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.DisabledFill.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.DisabledFill.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.DisabledFill.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.DisabledFill.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1591,9 +1591,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Bubblegum/Styles.Placeholder.FillRed</string>
-          <string>Green = Components/Bubblegum/Styles.Placeholder.FillGreen</string>
-          <string>Blue = Components/Bubblegum/Styles.Placeholder.FillBlue</string>
+          <string>Red = Components/Hazard/Styles.Placeholder.FillRed</string>
+          <string>Green = Components/Hazard/Styles.Placeholder.FillGreen</string>
+          <string>Blue = Components/Hazard/Styles.Placeholder.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1603,9 +1603,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>StrokeRed = Components/Bubblegum/Styles.Disabled.FillRed</string>
-          <string>StrokeGreen = Components/Bubblegum/Styles.Disabled.FillGreen</string>
-          <string>StrokeBlue = Components/Bubblegum/Styles.Disabled.FillBlue</string>
+          <string>StrokeRed = Components/Hazard/Styles.DisabledBorder.FillRed</string>
+          <string>StrokeGreen = Components/Hazard/Styles.DisabledBorder.FillGreen</string>
+          <string>StrokeBlue = Components/Hazard/Styles.DisabledBorder.FillBlue</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1615,9 +1615,9 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Accent.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Accent.FillBlue</string>
         </Value>
       </VariableList>
     </State>

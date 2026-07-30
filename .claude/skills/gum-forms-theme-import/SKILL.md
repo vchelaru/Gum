@@ -1,6 +1,6 @@
 ---
 name: gum-forms-theme-import
-description: Add Forms dialog's tool-content theme system (Templates/FormsThemes/*). Triggers: FormsFileService, AddFormsViewModel, ThemeRequirements, theme.txt, GetSourceDestinations, Bubblegum theme content, adding a new Forms theme.
+description: Add Forms dialog's tool-content theme system (Templates/FormsThemes/*). Triggers: FormsFileService, AddFormsViewModel, ThemeRequirements, theme.txt, GetSourceDestinations, Bubblegum/Hazard theme content, ThemeRecolorHelper, porting a new Forms theme.
 ---
 
 # Add Forms Theme Import
@@ -9,22 +9,33 @@ Distinct from code-only themes (`gum-theming` skill — C# `*Visual` subclasses,
 packages). This is the **tool-content** side: a theme is a self-contained Gum project under
 `Tools/Gum.ProjectServices/Templates/FormsThemes/<Name>/` (its own `GumProject.gumx`,
 `Components/`, `Behaviors/`, `Screens/`, `Standards/`) that Add Forms copies into the user's
-project. `Bubblegum` is the only one with parity today (#3527 tracks porting the rest).
+project. `Bubblegum` and `Hazard` have parity today (#3527 tracks porting the rest: Editor,
+DarkPro, ForestGlade, Neon, Retro95, Meadow).
 
 ## Porting a new theme (#3527): do the landmines up front, not reactively
 
 Each gotcha below is cheap to prevent up front and expensive to discover one at a time via manual
 testing after the fact. Sequence a new theme port like this:
 
-1. Namespace the whole tree and scan physical files on disk (not just the `.gumx`'s reference
-   list) for orphans, before anything else.
+1. Clone an existing theme's whole tree (fastest correct starting point — layout, state set, and
+   structure are almost all theme-agnostic) rather than hand-authoring controls from scratch;
+   namespace it and scan physical files on disk (not just the `.gumx`'s reference list) for
+   orphans, before anything else.
 2. Build `Styles.gucx` matching the code-only `*Colors`/`*Text` class names first — every control
    wires against it, so getting names right early avoids a rename pass later.
-3. Wire every control's Default state and every categorized state as you build each one; run
-   `AllColorVariables_ShouldBeStylesWired` from the start, not as a final audit.
-4. After every batch of edits: `gumcli check`/`check-references`/`diff-standards`, **and** a
+3. Recolor per "Recoloring after a clone" below instead of hand-placing literals control-by-control.
+4. Grep the code-only theme's `*Visual.cs` files for `CornerRadius` and `HasDropshadow`/
+   `Dropshadow*` constants — a separate axis from color, untouched by any Styles-swatch rename. A
+   uniformly square-cornered or shadow-free theme needs a project-wide mechanical fix (zero every
+   `CornerRadius`, flip every `HasDropshadow` to `false`) that nothing catches automatically.
+5. Run `AllColorVariables_ShouldBeStylesWired` from the start, not as a final audit — see "Wire
+   the controls to Styles" below for what it does and doesn't catch.
+6. After every batch of edits: `gumcli check`/`check-references`/`diff-standards`, **and** a
    rebuild plus fresh-project Add Forms import in the actual tool — `gumcli` never exercises the
-   postbuild-copy path where duplicate-import bugs live.
+   postbuild-copy path where duplicate-import bugs live. `gumcli check`'s summary line reads "N
+   error(s) found" even when every listed line is `warning:` severity, so a pre-existing warning
+   inherited from the clone (e.g. a `Category` state illegally selecting its own category) is easy
+   to mistake for a pass — read the lines, not just the count.
 
 ## Key files
 
@@ -33,6 +44,7 @@ testing after the fact. Sequence a new theme port like this:
 | `Gum/GumFormsPlugin/Services/FormsFileService.cs` | `GetAvailableThemes`, `GetThemeDirectory`, `GetSourceDestinations` — computes what gets copied where |
 | `Tools/Gum.Presentation/GumForms/ViewModels/AddFormsViewModel.cs` | Add Forms dialog: theme selection, save/import |
 | `Tools/Gum.Presentation/GumForms/Services/ThemeRequirements.cs` | Parses optional `theme.txt` (font generator, Skia shapes) — project-level prerequisites, not content |
+| `Gum/GumFormsPlugin/GumFormsPlugin.csproj` | Postbuild `<Exec>` stages each theme into the built `Content/FormsThemes/<Name>/` — **one hand-written `xcopy` + `stage-forms-behaviors` block per theme, not a loop over the folder.** A new theme is invisible to `FormsFileService.GetAvailableThemes()` in a built tool until its own block is added here, mirroring the existing per-theme blocks exactly. |
 
 ## A theme's qualified names must be self-prefixed — there's no folder-nesting shortcut
 
@@ -91,7 +103,14 @@ exactly the color/text tokens its code-only counterpart defines (`Themes/Gum.The
 `*Colors`/`*Text` classes — see `gum-theming`), under the *same names*, with no extra swatch that
 class doesn't define. A swatch can hold the correct value under the wrong name — verify by diffing
 the tool content's swatch/text-instance names against the code-only class's property names
-directly, not by eyeballing rendered colors.
+directly, not by eyeballing rendered colors. "Exactly" is scoped to swatches something actually
+references, not the full C# property list: a get-only *alias* (returns another property's value
+unchanged, e.g. `HoverFill => Surface2`) needs no swatch of its own — point references at the
+underlying token; a get-only property with a genuinely *computed* value (e.g.
+`AccentHover => Accent.Adjust(+15f)`) has no equivalent in static XML and must be precomputed
+(same lighten/darken math as `ColorExtensions.Adjust` — see `gum-theming`) and baked in as an
+ordinary swatch. A theme's own `StylesPalette_ShouldExactlyMatch...` test in
+`Tests/Gum.ProjectServices.Tests/` pins the resulting (non-exhaustive) swatch list once decided.
 
 ## "Wire the controls to Styles" means every state, not just Default
 
@@ -100,7 +119,36 @@ one of its categorized states (Enabled/Disabled/Highlighted/Pushed/...) still ha
 colors directly, since Default and category states are separate `StateSave`s with independent
 `VariableReferences`. `Tests/Gum.ProjectServices.Tests/BubblegumTemplateTests.cs`'s
 `AllColorVariables_ShouldBeStylesWired` is the authoritative check-all for this — a fully
-transparent fill (`FillAlpha` set to `0`) is exempted, since its RGB is never visible.
+transparent fill (`FillAlpha` set to `0`) is exempted, since its RGB is never visible. It only
+proves *some* Styles swatch is wired, not the *right* one — a state referencing the wrong swatch
+(right structure, wrong concept) passes silently. Spot-check a control's trickiest states (the
+ones whose interaction language most diverges between the cloned theme and the new one) against
+the code-only theme's state-wiring method directly.
+
+## Recoloring after a clone
+
+A cloned theme's controls already reference the old theme's swatch names throughout. Where a
+swatch's *concept* carries over unchanged (e.g. `Border`, `Text`), the reference string needs no
+edit — only the value differs, and that's handled below. Rename only the reference strings whose
+target swatch name no longer exists under the new palette (e.g. old `White` → new `Ink`); grep
+each renamed swatch's actual usage sites first; a single old swatch can legitimately split across
+several new ones by *role*, and the local left-hand property prefix on each `VariableReferences`
+line reliably signals which — bare `Red=`/`Green=`/`Blue=` is a `Text`-type instance, `Stroke*=` is
+a border, `Fill*=` is a fill — so this is a small, closed decision per swatch, not per site.
+
+Once every reference string names the *correct* swatch, every state's redundant hardcoded scalar
+(`FillRed`, etc.) is still the *old* theme's value until something re-runs
+`ApplyVariableReferences` and re-saves — **`gumcli check-references --fix` will not do this**: it
+only materializes a scalar that's entirely missing, never corrects one that exists but no longer
+matches what its reference currently resolves to (confirmed empirically — running it after a
+rename with the values already stale made zero changes). `Tests/Gum.ProjectServices.Tests/ThemeRecolorHelper.cs`
+is a reusable, `[Fact(Skip=...)]`-guarded migration step that loads the theme project, calls
+`GumProjectSave.ApplyAllVariableReferences()` (from `GumRuntime`), and re-saves every component —
+point it at the new theme and run it once via `dotnet test --filter`. When re-saving any
+`ElementSave` programmatically, `Save(path, useCompactFormat: true)` is load-bearing: the default
+`false` serializes `VariableSave`/`InstanceSave` as child elements (the legacy v1 shape) instead of
+the attribute-based shape every theme file on disk actually uses — both round-trip through
+`ProjectLoader` fine, so passing the default silently produces a valid-but-inconsistent file.
 
 ## Verifying theme content changes
 
@@ -118,7 +166,9 @@ regardless of instance type. Getting this wrong doesn't error — if the pre-exi
 `<Variable>` value already happens to match the swatch, `gumcli check` stays clean and the visual
 is unchanged, so the mistake is invisible until `gumcli check-references` reports "has
 VariableReferences but missing materialized scalars" (it matches by property *name*, not value).
-Run `gumcli check-references --fix` after any hand-authored reference to materialize it for real.
+Run `gumcli check-references --fix` after any hand-authored reference to materialize it for real —
+this only works when the scalar is missing outright; see "Recoloring after a clone" above for the
+stale-but-present case it can't touch.
 
 None of this exercises the actual runtime copy path, though: `gumcli` reads straight from
 `Templates/FormsThemes/<Theme>/`, but Add Forms reads from `Gum/bin/<Config>/Content/FormsThemes/<Theme>/`,
