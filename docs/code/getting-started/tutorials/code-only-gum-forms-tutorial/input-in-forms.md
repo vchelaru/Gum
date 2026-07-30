@@ -272,6 +272,7 @@ Tabbing on a case by case basis can be performed by subscribing to individual co
 
 ```csharp
 // Initialize
+GumService.Default.UseKeyboardDefaults();
 var mainPanel = new StackPanel();
 mainPanel.Spacing = 6;
 mainPanel.AddToRoot();
@@ -301,7 +302,9 @@ void HandleTabKeyDown(object sender, KeyEventArgs args)
 }
 ```
 
-[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAAA61Ry27CMBD8FSsnR0IRyqEHqhygQBu1hwroLRcTL7DFWSPbAbWIf6-dAC19SJVaS7bl2Zmdsb2PcntbV1HPmRo6ERI6FApfIepFW2FYJZAeBYFiGSPYsakT5boBeHxd0LmcTDeiRFp62tUF3pdypidau4YfWlqFEsypX3P41MtrblaoJG-pJ-G8dk7TUThoDo2wxZPcjnVZW5CeEW7zXrmHl6HeESvqbjcdZOxOkFQwE_Nj4XvzVnxpnv7knv7JJG1cNMovKq7nz1A6ZoH8S3SYh0dbINc3S8uEX-KC9gUxP3DBAxCCsCxj_leTsTaVTXLa1C7ANpngcuXiln-UhcH52IgKdtqsRwoq3z9uDePkHIj7OUTjw6B_0pAthA7qQ7uBsvCrEA-w-JcMT5sPCQ7R4Q0RDDRrzAIAAA)
+Without `UseKeyboardDefaults()`, the buttons still tab via their own `KeyDown` handler, but the `Slider`'s own arrow-key handling and the built-in Tab-key fallback are both gated on `FrameworkElement.KeyboardsForUiControl`, which stays empty — so once focus reaches the `Slider`, arrow keys do nothing and there's no way to tab back out.
+
+[Try on XnaFiddle.NET](https://xnafiddle.net/#snippet=H4sIAAAAAAAACq1RPU_DMBDd-ytOmRJReejAAMpQSAsVDKgfWxcnvramjl3ZTiuo-t85J6GFAhJCWHIsv3vv3vNl3wGIRu6uKqMr8LbCbgCkll5yJV-R0IiKE7RbWSDLcMEr5dnM4QO-5IZb0UIuTq7nesstlFzqJ65RQQoadzDxvFjXQE05ltlkwwupl0S7_IT3hZiasTG-5jdNnZIC7XvH-nLWjVS3K6lE3FBP0rzy3uhWelNfammDs5EbmqJyKIgRBnCq0Aszs9NwkcI910LhlOct9r1zozt37v1k3furQ6-1MFJ80cUmf8bCg0NNU-gCwYMtat-3SwecPslc7-caaMlFHICQAtIU6DezobGlYyO9qXyAHRvL5cqTJPBbWVhxPLS8xJ2x64HCkvonjWHCjoFi2pm0FEbSMEO2EDuoD82ByuGvQjzi4l8yzDYfEhyizqHzBsOHfib_AgAA)
 
 <figure><img src="../../../../.gitbook/assets/16_06 37 17.gif" alt=""><figcaption><p>Tabbing with left/right on Button, but using left/right to change Slider value</p></figcaption></figure>
 
