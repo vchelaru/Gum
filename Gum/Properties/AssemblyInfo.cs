@@ -35,3 +35,4 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion("2026.07.22")]
 [assembly: AssemblyFileVersion("2026.07.22")]
 [assembly: InternalsVisibleTo("GumToolUnitTests")]
+[assembly: InternalsVisibleTo("EditorTabPlugin_XNA")]

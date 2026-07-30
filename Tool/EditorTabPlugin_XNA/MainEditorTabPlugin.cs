@@ -968,7 +968,9 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
         if (droppedNodes.Length > 0)
         {
-            foreach (var draggedObject in droppedNodes.Select(x => x.Tag))
+            // A search-result drag's TreeNode.Tag doesn't survive the WPF -> WinForms boundary
+            // (see SearchResultDragPayload); fall back to it when Tag comes back null.
+            foreach (var draggedObject in droppedNodes.Select(x => x.Tag ?? SearchResultDragPayload.Current))
             {
                 _dragDropManager.OnNodeObjectDroppedInWireframe(draggedObject);
             }
