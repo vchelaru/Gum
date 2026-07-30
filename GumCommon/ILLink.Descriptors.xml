@@ -2,5 +2,6 @@
   <assembly fullname="GumCommon">
     <type fullname="Gum.DataTypes.*" preserve="all" />
     <type fullname="Gum.StateAnimation.SaveClasses.*" preserve="all" />
+    <type fullname="Gum.Forms.Controls.*" preserve="all" />
   </assembly>
 </linker>

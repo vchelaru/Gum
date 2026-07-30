@@ -526,4 +526,22 @@ public class BehaviorFormsPropertyApplyTests : BaseTestClass
 
         scrollViewer.VerticalScrollBarVisibility.ShouldBe(ScrollBarVisibility.Hidden);
     }
+
+    [Fact]
+    public void ContainingAssembly_IlLinkDescriptor_PreservesFormsControlsForTrimmedPublish()
+    {
+        // Pins the fix for #4115: Apply resolves formsControl.GetType().GetProperty(name)
+        // reflectively, which the .NET trimmer can't see through, so a PublishTrimmed game
+        // silently dropped Behavior-declared FormsProperties like Splitter.ResizeBehavior.
+        // This embedded resource tells the trimmer to keep every Gum.Forms.Controls member.
+        System.Reflection.Assembly assembly = typeof(FrameworkElement).Assembly;
+
+        assembly.GetManifestResourceNames().ShouldContain("ILLink.Descriptors.xml");
+
+        using System.IO.Stream stream = assembly.GetManifestResourceStream("ILLink.Descriptors.xml")!;
+        using System.IO.StreamReader reader = new(stream);
+        string descriptorXml = reader.ReadToEnd();
+
+        descriptorXml.ShouldContain("Gum.Forms.Controls.*");
+    }
 }
