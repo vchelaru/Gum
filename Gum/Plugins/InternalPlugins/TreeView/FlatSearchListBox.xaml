@@ -20,7 +20,11 @@
     </UserControl.Resources>
     <Grid>
 
-        <ListBox x:Name="FlatList" PreviewMouseLeftButtonUp="FlatList_MouseLeftButtonUp">
+        <ListBox
+            x:Name="FlatList"
+            PreviewMouseLeftButtonDown="FlatList_PreviewMouseLeftButtonDown"
+            PreviewMouseLeftButtonUp="FlatList_MouseLeftButtonUp"
+            PreviewMouseMove="FlatList_PreviewMouseMove">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">

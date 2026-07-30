@@ -92,6 +92,34 @@ public class MainEditorTabPluginDragDropTests : BaseTestClass
         dragDropManager.Verify(x => x.OnNodeObjectDroppedInWireframe(draggedTag), Times.Once);
     }
 
+    [Fact]
+    public void OnWireframeDrop_DraggedNodeTagIsNull_FallsBackToSearchResultDragPayload()
+    {
+        // Issue #4123: a search-result drag (FlatSearchListBox) boxes its backing object into
+        // TreeNode.Tag, but Tag comes back null after crossing the WPF -> WinForms drag boundary
+        // (confirmed empirically: ComponentSave/ElementSave aren't [Serializable], and TreeNode's
+        // own serialization only carries Tag across when its type is). SearchResultDragPayload is
+        // the in-process fallback that carries the real object instead.
+        MainEditorTabPlugin plugin = CreatePlugin(out Mock<IDragDropManager> dragDropManager);
+
+        object backingObject = new();
+        SearchResultDragPayload.Current = backingObject;
+        try
+        {
+            GumTreeNode draggedNode = new GumTreeNode("Circle1") { Tag = null };
+            DataObject dataObject = new DataObject((object)draggedNode);
+            DragEventArgs args = new DragEventArgs(dataObject, 0, 0, 0, DragDropEffects.Copy, DragDropEffects.Copy);
+
+            plugin.OnWireframeDrop(null, args);
+
+            dragDropManager.Verify(x => x.OnNodeObjectDroppedInWireframe(backingObject), Times.Once);
+        }
+        finally
+        {
+            SearchResultDragPayload.Current = null;
+        }
+    }
+
     // Stubs MainEditorTabPlugin headlessly without running its ~20-argument constructor (which stands
     // up a WireframeEditorFactory, SelectionManager, ScreenshotService, etc.) - see the
     // "Plugin/DI composition tests" entry in the gum-unit-tests skill. OnWireframeDragEnter/
