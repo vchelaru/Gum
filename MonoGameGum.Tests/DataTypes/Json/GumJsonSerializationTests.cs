@@ -209,6 +209,26 @@ public class GumJsonSerializationTests
     }
 
     [Fact]
+    public void SerializeDeserialize_VariableSave_WithEnumTypedValue_ConvertsToUnderlyingInt()
+    {
+        // StandardElementsManager builds default Standards with Value set directly to a boxed enum
+        // (e.g. DimensionUnitType.Absolute for WidthUnits/HeightUnits) - a shape that only exists
+        // before any XML round-trip. XmlSerializer already stores this as xsi:type="xsd:int" (verified
+        // against a real gumcli-generated Container.gutx), reconstructing a plain int on load - JSON
+        // must accept the same boxed-enum input and produce the same underlying int, or gumcli new
+        // (which builds Standards this way) can never be converted to JSON.
+        StateSave state = new StateSave { Name = "Default" };
+        state.Variables.Add(new VariableSave { Name = "WidthUnits", Type = "DimensionUnitType", Value = DimensionUnitType.RelativeToChildren });
+        StandardElementSave element = new StandardElementSave { Name = "Container" };
+        element.States.Add(state);
+
+        string json = GumJsonFileSerializer.SerializeElement(element);
+        StandardElementSave result = GumJsonFileSerializer.DeserializeElement<StandardElementSave>(json);
+
+        result.States[0].Variables.Single(v => v.Name == "WidthUnits").Value.ShouldBe((int)DimensionUnitType.RelativeToChildren);
+    }
+
+    [Fact]
     public void SerializeDeserialize_VariableListSave_PreservesVector2List()
     {
         StateSave state = new StateSave { Name = "Default" };
