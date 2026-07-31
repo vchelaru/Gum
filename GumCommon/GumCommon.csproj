@@ -50,6 +50,22 @@
 		<Compile Include="..\GumDataTypes\GumSyntaxVersionAttribute.cs" Link="DataTypes\GumSyntaxVersionAttribute.cs" />
 		<Compile Include="..\GumDataTypes\ElementReference.cs" Link="DataTypes\ElementReference.cs" />
 		<Compile Include="..\GumDataTypes\Serialization\GumFileSerializer.cs" Link="DataTypes\GumFileSerializer.cs" />
+		<Compile Include="..\GumDataTypes\Serialization\Json\BehaviorReferenceJson.cs" Link="DataTypes\Serialization\Json\BehaviorReferenceJson.cs" />
+		<Compile Include="..\GumDataTypes\Serialization\Json\BehaviorSaveJson.cs" Link="DataTypes\Serialization\Json\BehaviorSaveJson.cs" />
+		<Compile Include="..\GumDataTypes\Serialization\Json\BoxedValueJson.cs" Link="DataTypes\Serialization\Json\BoxedValueJson.cs" />
+		<Compile Include="..\GumDataTypes\Serialization\Json\CustomPropertySaveJson.cs" Link="DataTypes\Serialization\Json\CustomPropertySaveJson.cs" />
+		<Compile Include="..\GumDataTypes\Serialization\Json\ElementAnimationsSaveJson.cs" Link="DataTypes\Serialization\Json\ElementAnimationsSaveJson.cs" />
+		<Compile Include="..\GumDataTypes\Serialization\Json\ElementReferenceJson.cs" Link="DataTypes\Serialization\Json\ElementReferenceJson.cs" />
+		<Compile Include="..\GumDataTypes\Serialization\Json\ElementSaveJson.cs" Link="DataTypes\Serialization\Json\ElementSaveJson.cs" />
+		<Compile Include="..\GumDataTypes\Serialization\Json\GumAnimationJsonFileSerializer.cs" Link="DataTypes\Serialization\Json\GumAnimationJsonFileSerializer.cs" />
+		<Compile Include="..\GumDataTypes\Serialization\Json\GumAnimationJsonSerializerContext.cs" Link="DataTypes\Serialization\Json\GumAnimationJsonSerializerContext.cs" />
+		<Compile Include="..\GumDataTypes\Serialization\Json\GumJsonFileSerializer.cs" Link="DataTypes\Serialization\Json\GumJsonFileSerializer.cs" />
+		<Compile Include="..\GumDataTypes\Serialization\Json\GumJsonSerializerContext.cs" Link="DataTypes\Serialization\Json\GumJsonSerializerContext.cs" />
+		<Compile Include="..\GumDataTypes\Serialization\Json\GumProjectSaveJson.cs" Link="DataTypes\Serialization\Json\GumProjectSaveJson.cs" />
+		<Compile Include="..\GumDataTypes\Serialization\Json\InstanceSaveJson.cs" Link="DataTypes\Serialization\Json\InstanceSaveJson.cs" />
+		<Compile Include="..\GumDataTypes\Serialization\Json\StateSaveJson.cs" Link="DataTypes\Serialization\Json\StateSaveJson.cs" />
+		<Compile Include="..\GumDataTypes\Serialization\Json\VariableListSaveJson.cs" Link="DataTypes\Serialization\Json\VariableListSaveJson.cs" />
+		<Compile Include="..\GumDataTypes\Serialization\Json\VariableSaveJson.cs" Link="DataTypes\Serialization\Json\VariableSaveJson.cs" />
 		<Compile Include="..\GumDataTypes\ElementSave.cs" Link="DataTypes\ElementSave.cs" />
 		<Compile Include="..\GumDataTypes\EventSave.cs" Link="DataTypes\EventSave.cs" />
 		<Compile Include="..\GumDataTypes\GuideRectangle.cs" Link="DataTypes\GuideRectangle.cs" />
