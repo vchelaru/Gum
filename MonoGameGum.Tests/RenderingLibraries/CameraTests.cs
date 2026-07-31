@@ -204,6 +204,110 @@ public class CameraTests : BaseTestClass
         scissor.Bottom.ShouldBe(650);
     }
 
+    // Minimal IRenderableIpso + IWrappedText double for GetCullTestBoundsFor (#4144): only
+    // Height (IRenderableIpso) and WrappedTextHeight (IText, via IWrappedText) are meaningful;
+    // every other IWrappedText/IText member is unused by the cull-bounds computation and stubbed.
+    private sealed class StubWrappedTextRenderable : IRenderableIpso, IWrappedText
+    {
+        public StubWrappedTextRenderable()
+        {
+            Children = new ObservableCollection<IRenderableIpso>();
+        }
+
+        public float WrappedTextHeight { get; set; }
+
+        public float X { get; set; }
+        public float Y { get; set; }
+        public float Z { get; set; }
+        public float Width { get; set; }
+        public float Height { get; set; }
+        public float Rotation { get; set; }
+        public bool FlipHorizontal { get; set; }
+        public string? Name { get; set; }
+        public object? Tag { get; set; }
+        public bool Visible { get; set; } = true;
+        public bool AbsoluteVisible => Visible;
+        public bool ClipsChildren { get; set; }
+        public bool IsRenderTarget => false;
+        public ObservableCollection<IRenderableIpso> Children { get; }
+        public IRenderableIpso? Parent { get; set; }
+        IVisible? IVisible.Parent => Parent;
+        public int Alpha => 255;
+        public ColorOperation ColorOperation => ColorOperation.Modulate;
+        public Gum.BlendState BlendState => Gum.BlendState.NonPremultiplied;
+        public bool Wrap => false;
+        public string BatchKey => "SpriteBatch";
+        public void SetParentDirect(IRenderableIpso? newParent) => Parent = newParent;
+        public void Render(ISystemManagers managers) { }
+        public void PreRender() { }
+        public void StartBatch(ISystemManagers managers) { }
+        public void EndBatch(ISystemManagers managers) { }
+
+        public int? MaxNumberOfLines => null;
+        public int LineHeightInPixels => 0;
+        public bool IsTruncatingWithEllipsisOnLastLine => false;
+        public bool IsHeightDependentOnLines { get; set; }
+        public bool IsMidWordLineBreakEnabled => false;
+        public float MeasureString(string text) => 0;
+        public void SetNeedsRefreshToTrue() { }
+        public void UpdatePreRenderDimensions() { }
+        public float DescenderHeight => 0;
+        public float FontScale => 1;
+        public float WrappedTextWidth => 0;
+        public string? RawText { get; set; }
+        public string? StoredMarkupText => null;
+        float? IText.Width { get => Width; set => Width = value ?? 0; }
+        public TextOverflowVerticalMode TextOverflowVerticalMode { get; set; }
+    }
+
+    // #4144: the multi-line Forms TextBox scrolls by moving Y while its Text's Height stays fixed
+    // to the visible box (RelativeToParent), so WrappedTextHeight (the actual rendered extent) can
+    // far exceed Height. The off-screen cull must not judge such a renderable by its declared
+    // Height alone, or it culls content that's still genuinely on screen. Client area is sized
+    // generously so the expanded bounds don't hit the camera clamp and mask the excess math.
+    [Fact]
+    public void GetCullTestBoundsFor_WrappedTextTallerThanDeclaredHeight_ExpandsBoundsBySameExcessBothEdges()
+    {
+        Camera camera = new Camera();
+        camera.ClientWidth = 2000;
+        camera.ClientHeight = 2000;
+        camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
+
+        StubWrappedTextRenderable text = new StubWrappedTextRenderable();
+        text.X = 10;
+        text.Y = 500;
+        text.Width = 150;
+        text.Height = 100;
+        text.WrappedTextHeight = 300; // 200px taller than the declared Height
+
+        System.Drawing.Rectangle plain = camera.GetScissorRectangleFor(layer: null!, text);
+        System.Drawing.Rectangle cullBounds = camera.GetCullTestBoundsFor(layer: null!, text);
+
+        cullBounds.Left.ShouldBe(plain.Left);
+        cullBounds.Right.ShouldBe(plain.Right);
+        cullBounds.Top.ShouldBe(plain.Top - 200);
+        cullBounds.Bottom.ShouldBe(plain.Bottom + 200);
+    }
+
+    [Fact]
+    public void GetCullTestBoundsFor_WrappedTextNotTallerThanDeclaredHeight_MatchesScissorRectangleFor()
+    {
+        Camera camera = new Camera();
+        camera.ClientWidth = 2000;
+        camera.ClientHeight = 2000;
+        camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
+
+        StubWrappedTextRenderable text = new StubWrappedTextRenderable();
+        text.X = 10;
+        text.Y = 500;
+        text.Width = 150;
+        text.Height = 100;
+        text.WrappedTextHeight = 80; // fits within the declared Height — no expansion expected
+
+        camera.GetCullTestBoundsFor(layer: null!, text)
+            .ShouldBe(camera.GetScissorRectangleFor(layer: null!, text));
+    }
+
     [Fact]
     public void NoSetFromMatrixCall_ShouldPreserveExplicitlySetCameraValues()
     {

@@ -99,11 +99,13 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
 
         // #2998 off-screen cull: skip a renderable (and its subtree) fully outside the active
         // clip. Gated on a non-null camera, mirroring HierarchicalOrderer — see its rationale.
+        // GetCullTestBoundsFor (rather than the plain GetScissorRectangleFor) accounts for
+        // wrapped text whose actual rendered extent exceeds its declared bounds (#4144).
         if (camera != null
             && activeClip.HasValue
             && CameraScissorExtensions.CullOffscreenWhenClipped
             && CameraScissorExtensions.IsFullyOutside(
-                camera.GetScissorRectangleFor(layer, renderable),
+                camera.GetCullTestBoundsFor(layer, renderable),
                 activeClip.Value,
                 CameraScissorExtensions.OffscreenCullMarginInPixels))
         {
