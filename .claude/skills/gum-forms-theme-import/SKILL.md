@@ -27,7 +27,10 @@ testing after the fact. Sequence a new theme port like this:
 4. Grep the code-only theme's `*Visual.cs` files for `CornerRadius` and `HasDropshadow`/
    `Dropshadow*` constants — a separate axis from color, untouched by any Styles-swatch rename. A
    uniformly square-cornered or shadow-free theme needs a project-wide mechanical fix (zero every
-   `CornerRadius`, flip every `HasDropshadow` to `false`) that nothing catches automatically.
+   `CornerRadius`, flip every `HasDropshadow` to `false`) that nothing catches automatically. Do
+   this sweep across **`Screens/` too, not just `Components/`** — a demo screen's own instances
+   (e.g. a panel background) are just as likely to still carry the cloned theme's raw values, and
+   nothing propagates a Components-only fix to them.
 5. Run `AllColorVariables_ShouldBeStylesWired` from the start, not as a final audit — see "Wire
    the controls to Styles" below for what it does and doesn't catch.
 6. After every batch of edits: `gumcli check`/`check-references`/`diff-standards`, **and** a
@@ -36,6 +39,17 @@ testing after the fact. Sequence a new theme port like this:
    error(s) found" even when every listed line is `warning:` severity, so a pre-existing warning
    inherited from the clone (e.g. a `Category` state illegally selecting its own category) is easy
    to mistake for a pass — read the lines, not just the count.
+7. **The rebuild in step 6 can silently no-op.** `GumFormsPlugin`'s postbuild `xcopy` only runs
+   when MSBuild actually re-executes that project's build — and theme `.gucx`/`.gusx` content
+   isn't a tracked input of `GumFormsPlugin.csproj` (it lives in a different project entirely), so
+   an IDE-driven incremental "Build" can decide the project is up to date and skip the postbuild
+   even though the theme source changed. The result: every content-only fix looks correct on disk
+   and in every automated check, but the *staged* output the running tool actually reads from
+   (`Gum/bin/<Config>/Content/FormsThemes/<Name>/`) is still the old content, and a fresh Add
+   Forms import reproduces the exact bug you just fixed. After any content-only change, diff a
+   file directly from the staged output (not just the source template) before calling the fix
+   verified — a full `dotnet build GumFull.sln` from the command line has reliably re-triggered
+   the postbuild in practice; an IDE "Build" may not.
 
 ## Key files
 
@@ -143,8 +157,9 @@ only materializes a scalar that's entirely missing, never corrects one that exis
 matches what its reference currently resolves to (confirmed empirically — running it after a
 rename with the values already stale made zero changes). `Tests/Gum.ProjectServices.Tests/ThemeRecolorHelper.cs`
 is a reusable, `[Fact(Skip=...)]`-guarded migration step that loads the theme project, calls
-`GumProjectSave.ApplyAllVariableReferences()` (from `GumRuntime`), and re-saves every component —
-point it at the new theme and run it once via `dotnet test --filter`. When re-saving any
+`GumProjectSave.ApplyAllVariableReferences()` (from `GumRuntime`), and re-saves every component
+**and screen** (see the previous section for why screens need the same pass) — point it at the new
+theme and run it once via `dotnet test --filter`. When re-saving any
 `ElementSave` programmatically, `Save(path, useCompactFormat: true)` is load-bearing: the default
 `false` serializes `VariableSave`/`InstanceSave` as child elements (the legacy v1 shape) instead of
 the attribute-based shape every theme file on disk actually uses — both round-trip through

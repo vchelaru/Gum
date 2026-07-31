@@ -10,9 +10,10 @@ using Shouldly;
 namespace Gum.ProjectServices.Tests;
 
 /// <summary>
-/// Re-materializes every VariableReferences scalar in a FormsThemes/&lt;Name&gt; theme against
-/// its current Styles.gucx values. NOT a real test - a reusable manual migration step for
-/// porting a new theme (see the gum-forms-theme-import skill's "recolor" step).
+/// Re-materializes every VariableReferences scalar in a FormsThemes/&lt;Name&gt; theme's
+/// Components AND Screens against its current Styles.gucx values. NOT a real test - a reusable
+/// manual migration step for porting a new theme (see the gum-forms-theme-import skill's
+/// "recolor" step).
 /// <para>
 /// Why this exists: <c>gumcli check-references --fix</c> only fills scalars that are entirely
 /// MISSING; it does not detect or correct a stale literal that no longer matches what its
@@ -62,6 +63,15 @@ public class ThemeRecolorHelper
         {
             string path = Path.Combine(themeDir, "Components", component.Name + ".gucx");
             component.Save(path, useCompactFormat: true);
+        }
+
+        // Screens need the same re-materialization as Components - a demo screen's own
+        // instances (e.g. DemoScreenGum's title text) can carry VariableReferences to Styles
+        // just like a control does, and go just as stale.
+        foreach (ScreenSave screen in project.Screens)
+        {
+            string path = Path.Combine(themeDir, "Screens", screen.Name + ".gusx");
+            screen.Save(path, useCompactFormat: true);
         }
     }
 
