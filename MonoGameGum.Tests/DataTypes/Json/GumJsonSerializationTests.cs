@@ -180,9 +180,15 @@ public class GumJsonSerializationTests
     [Fact]
     public void SerializeDeserialize_VariableSave_PreservesEachBoxedValueType()
     {
+        // Covers every CLR type BoxedValueJson supports. long/double are real but rare in checked-in
+        // project content (double: 13 instances, all in the FormsBehaviors slider/scrollbar/scrollviewer
+        // templates covered separately by GumJsonFixtureDifferentialTests; long: zero instances anywhere
+        // in this repo, so this is the only coverage for it).
         StateSave state = new StateSave { Name = "Default" };
         state.Variables.Add(new VariableSave { Name = "FloatVar", Type = "float", Value = 1.5f });
         state.Variables.Add(new VariableSave { Name = "IntVar", Type = "int", Value = 42 });
+        state.Variables.Add(new VariableSave { Name = "LongVar", Type = "long", Value = 9_000_000_000L });
+        state.Variables.Add(new VariableSave { Name = "DoubleVar", Type = "double", Value = 3.14159265358979 });
         state.Variables.Add(new VariableSave { Name = "BoolVar", Type = "bool", Value = true });
         state.Variables.Add(new VariableSave { Name = "StringVar", Type = "string", Value = "hello" });
         state.Variables.Add(new VariableSave { Name = "NullVar", Type = "string", Value = null, SetsValue = false });
@@ -195,6 +201,8 @@ public class GumJsonSerializationTests
         List<VariableSave> resultVariables = result.States[0].Variables;
         resultVariables.First(v => v.Name == "FloatVar").Value.ShouldBe(1.5f);
         resultVariables.First(v => v.Name == "IntVar").Value.ShouldBe(42);
+        resultVariables.First(v => v.Name == "LongVar").Value.ShouldBe(9_000_000_000L);
+        resultVariables.First(v => v.Name == "DoubleVar").Value.ShouldBe(3.14159265358979);
         resultVariables.First(v => v.Name == "BoolVar").Value.ShouldBe(true);
         resultVariables.First(v => v.Name == "StringVar").Value.ShouldBe("hello");
         resultVariables.First(v => v.Name == "NullVar").Value.ShouldBeNull();
@@ -217,5 +225,58 @@ public class GumJsonSerializationTests
         VariableListSave<Vector2> resultList = (VariableListSave<Vector2>)result.States[0].VariableLists[0];
         resultList.Name.ShouldBe("Points");
         resultList.Value.ShouldBe(new[] { new Vector2(1, 2), new Vector2(3, 4) });
+    }
+
+    [Fact]
+    public void SerializeDeserialize_VariableListSave_PreservesEveryOtherClosedGenericType()
+    {
+        // VariableListSaveJsonMapper explicitly switches on all 7 closed VariableListSave<T> generics
+        // (see the [XmlInclude] list on VariableListSave); Vector2 is covered by the test above, this
+        // covers the remaining 6 so every branch that mapper switches on has a pinning test.
+        StateSave state = new StateSave { Name = "Default" };
+
+        VariableListSave<string> stringList = new VariableListSave<string> { Name = "StringList", Type = "string" };
+        stringList.Value.Add("a");
+        stringList.Value.Add("b");
+        state.VariableLists.Add(stringList);
+
+        VariableListSave<float> floatList = new VariableListSave<float> { Name = "FloatList", Type = "float" };
+        floatList.Value.Add(1.5f);
+        floatList.Value.Add(2.5f);
+        state.VariableLists.Add(floatList);
+
+        VariableListSave<int> intList = new VariableListSave<int> { Name = "IntList", Type = "int" };
+        intList.Value.Add(1);
+        intList.Value.Add(2);
+        state.VariableLists.Add(intList);
+
+        VariableListSave<long> longList = new VariableListSave<long> { Name = "LongList", Type = "long" };
+        longList.Value.Add(9_000_000_000L);
+        longList.Value.Add(10_000_000_000L);
+        state.VariableLists.Add(longList);
+
+        VariableListSave<double> doubleList = new VariableListSave<double> { Name = "DoubleList", Type = "double" };
+        doubleList.Value.Add(3.14159265358979);
+        doubleList.Value.Add(2.71828182845905);
+        state.VariableLists.Add(doubleList);
+
+        VariableListSave<bool> boolList = new VariableListSave<bool> { Name = "BoolList", Type = "bool" };
+        boolList.Value.Add(true);
+        boolList.Value.Add(false);
+        state.VariableLists.Add(boolList);
+
+        StandardElementSave element = new StandardElementSave { Name = "Container" };
+        element.States.Add(state);
+
+        string json = GumJsonFileSerializer.SerializeElement(element);
+        StandardElementSave result = GumJsonFileSerializer.DeserializeElement<StandardElementSave>(json);
+
+        List<VariableListSave> resultLists = result.States[0].VariableLists;
+        ((VariableListSave<string>)resultLists.First(v => v.Name == "StringList")).Value.ShouldBe(new[] { "a", "b" });
+        ((VariableListSave<float>)resultLists.First(v => v.Name == "FloatList")).Value.ShouldBe(new[] { 1.5f, 2.5f });
+        ((VariableListSave<int>)resultLists.First(v => v.Name == "IntList")).Value.ShouldBe(new[] { 1, 2 });
+        ((VariableListSave<long>)resultLists.First(v => v.Name == "LongList")).Value.ShouldBe(new[] { 9_000_000_000L, 10_000_000_000L });
+        ((VariableListSave<double>)resultLists.First(v => v.Name == "DoubleList")).Value.ShouldBe(new[] { 3.14159265358979, 2.71828182845905 });
+        ((VariableListSave<bool>)resultLists.First(v => v.Name == "BoolList")).Value.ShouldBe(new[] { true, false });
     }
 }
