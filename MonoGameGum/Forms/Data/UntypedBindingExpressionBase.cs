@@ -52,6 +52,15 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
 
     protected bool SuppressAttach { get; set; }
 
+    /// <summary>
+    /// Commits any pending edit to the outgoing source before <see cref="AttachToSource"/> repoints
+    /// this binding at a new one. A source swap (e.g. a master-detail panel's BindingContext changing)
+    /// is an implicit end-of-edit, since the control is about to display a different object entirely -
+    /// so a deferred-commit trigger (like <see cref="UpdateSourceTrigger.LostFocus"/>) must flush here
+    /// even when the target never raised its real focus-lost event.
+    /// </summary>
+    protected virtual void FlushPendingTargetValue() { }
+
     [RequiresUnreferencedCode(
         "Resolves the binding path by name against newSource's own type (PropertyPathObserver.Attach, " +
         "BinderHelpers.BuildGetter/BuildSetter). Those members may be removed under PublishTrimmed if " +
@@ -62,6 +71,8 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
         {
             return;
         }
+
+        FlushPendingTargetValue();
 
         PathObserver.Detach();
         SourceGetter = null;
