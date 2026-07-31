@@ -18,6 +18,15 @@ namespace Gum.DataTypes.Serialization.Json;
 /// <see cref="string"/>.
 /// </remarks>
 /// <remarks>
+/// A boxed <see cref="Enum"/> (e.g. <c>DimensionUnitType.Absolute</c>) is also accepted, converted
+/// to its underlying <see cref="int"/> value. This shape only occurs on a variable that was built
+/// programmatically and never round-tripped through XML yet (e.g. <c>StandardElementsManager</c>'s
+/// default Standards) - <see cref="System.Xml.Serialization.XmlSerializer"/> already stores a boxed
+/// enum on <see cref="Variables.VariableSave.Value"/> as <c>xsi:type="xsd:int"</c>, reconstructing a
+/// plain <see cref="int"/> (never the enum type) on load, so this mirrors that existing convention
+/// rather than introducing a new one.
+/// </remarks>
+/// <remarks>
 /// Known, accepted limitation: <see cref="CustomPropertySave.Value"/>'s XML shape additionally
 /// declares a <c>[XmlElement("ValueAsObject", typeof(object))]</c> catch-all (plus a commented-out,
 /// never-implemented <c>ValueAsEnum</c> case) for values outside the six supported types above. This
@@ -66,6 +75,9 @@ internal static class BoxedValueJson
                 break;
             case string stringValue:
                 asString = stringValue;
+                break;
+            case Enum enumValue:
+                asInt = Convert.ToInt32(enumValue);
                 break;
             default:
                 throw new NotSupportedException(
