@@ -40,6 +40,7 @@ After editing project XML — whether by hand, with custom tooling, or via an as
 Generated code that compiles is not proof the UI looks right. Rendering the result to an image gives the agent something concrete to inspect — and, with a multimodal model, to actually "see."
 
 * [`screenshot`](../cli/screenshot.md) — render a Screen or Component to a PNG. An agent can open the PNG to confirm the layout matches intent.
+* [`diff-screenshots`](../cli/diff-screenshots.md) — render every Screen and Component via both `monogame` and `raylib` and report any mismatch, so a raylib-specific rendering bug doesn't slip through if the project targets both.
 * [`svg`](../cli/svg.md) — render to SVG when a vector format is preferred.
 
 ## Supporting commands

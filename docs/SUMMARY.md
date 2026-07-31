@@ -419,6 +419,7 @@
   * [fonts](cli/fonts.md)
   * [pack](cli/pack.md)
   * [screenshot](cli/screenshot.md)
+  * [diff-screenshots](cli/diff-screenshots.md)
   * [svg](cli/svg.md)
 
 ## Using Gum with AI
