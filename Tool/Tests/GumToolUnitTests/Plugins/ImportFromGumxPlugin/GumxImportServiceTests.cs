@@ -186,6 +186,36 @@ public class GumxImportServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task ImportAsync_CopiesJsonAnimationSidecar_WhenSourceHasGanjFile()
+    {
+        // Issue #4182: importing from a source project whose animations were converted to JSON
+        // must copy the .ganj sidecar the same way .ganx already is - both are a plain byte copy,
+        // no format-specific parsing involved.
+        string componentName = "AnimatedButton";
+        WriteSourceComponent(componentName);
+        string sourceGanjPath = Path.Combine(_sourceDir, "Components", $"{componentName}Animations.ganj");
+        File.WriteAllText(sourceGanjPath, "{}");
+
+        ComponentSave component = ComponentNoAssets(componentName);
+        GumProjectSave source = SourceProject();
+        source.Components.Add(component);
+
+        ImportSelections selections = new ImportSelections
+        {
+            DirectComponents = new() { component },
+            TransitiveComponents = new(),
+            DirectScreens = new(),
+            Behaviors = new(),
+            Standards = new(),
+        };
+
+        await _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: "");
+
+        string destGanjPath = Path.Combine(_projectDir, "Components", $"{componentName}Animations.ganj");
+        File.Exists(destGanjPath).ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task ImportAsync_NoConflicts_ConflictingElementsIsEmpty()
     {
         // Arrange — no pre-existing destination files

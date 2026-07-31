@@ -1,3 +1,6 @@
+using System;
+using System.IO;
+using System.Linq;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -6,7 +9,9 @@ using Gum.Plugins.ImportPlugin.ViewModel;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Moq;
+using Shouldly;
 using ToolsUtilities;
+using Xunit;
 
 namespace GumToolUnitTests.ViewModels.Dialogs;
 
@@ -20,6 +25,7 @@ public class ImportComponentDialogTests : BaseTestClass
     private readonly Mock<IProjectState> _projectState;
     private readonly Mock<IProjectManager> _projectManager;
     private readonly GumProjectSave _gumProjectSave;
+    private string? _componentsDirectory;
 
     public ImportComponentDialogTests()
     {
@@ -39,6 +45,15 @@ public class ImportComponentDialogTests : BaseTestClass
         _projectManager.Setup(x => x.GumProjectSave).Returns(_gumProjectSave);
     }
 
+    public override void Dispose()
+    {
+        if (_componentsDirectory != null && Directory.Exists(_componentsDirectory))
+        {
+            Directory.Delete(_componentsDirectory, recursive: true);
+        }
+        base.Dispose();
+    }
+
     private ImportComponentDialog CreateSut() => new(
         _fileCommands.Object,
         _guiCommands.Object,
@@ -56,5 +71,31 @@ public class ImportComponentDialogTests : BaseTestClass
         sut.OnAffirmative();
 
         _projectManager.Verify(x => x.GumProjectSave, Times.Once);
+    }
+
+    [Fact]
+    public void Constructor_ListsBothXmlAndJsonComponentFiles_ThatAreNotYetInProject()
+    {
+        // A JSON-converted component (issue #4182) must be offered for import the same way a .gucx
+        // one is.
+        _componentsDirectory = Path.Combine(Path.GetTempPath(), "ImportComponentDialogTests_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(_componentsDirectory);
+        File.WriteAllText(Path.Combine(_componentsDirectory, "XmlOnly.gucx"), "");
+        File.WriteAllText(Path.Combine(_componentsDirectory, "JsonOnly.gucj"), "{}");
+        _projectState.Setup(x => x.ComponentFilePath).Returns(new FilePath(_componentsDirectory + "/"));
+
+        ImportComponentDialog sut = CreateSut();
+
+        sut.UnfilteredFiles.Any(f => f.EndsWith("XmlOnly.gucx")).ShouldBeTrue();
+        sut.UnfilteredFiles.Any(f => f.EndsWith("JsonOnly.gucj")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void BrowseFileFilter_AcceptsBothXmlAndJsonComponentFiles()
+    {
+        ImportComponentDialog sut = CreateSut();
+
+        sut.BrowseFileFilter.ShouldContain("*.gucx");
+        sut.BrowseFileFilter.ShouldContain("*.gucj");
     }
 }

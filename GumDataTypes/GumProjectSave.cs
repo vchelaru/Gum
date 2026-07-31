@@ -821,7 +821,14 @@ public class GumProjectSave
         return content.Contains("Reference Name=");
     }
 
-    private static bool IsJsonFormat(string fileName) =>
+    /// <summary>
+    /// True when <paramref name="fileName"/>'s extension is <see cref="ProjectJsonExtension"/>
+    /// (case-insensitive) - the single source of truth for "is this project JSON or XML formatted"
+    /// used throughout Load/Save/Reload. Public so other tool-side code that needs to route a
+    /// per-element file name/serialization choice off the project's own format (e.g. the Animations
+    /// tab's <c>.ganx</c>/<c>.ganj</c> sidecar) doesn't hand-roll the same extension check.
+    /// </summary>
+    public static bool IsJsonFormat(string fileName) =>
         string.Equals(FileManager.GetExtension(fileName), ProjectJsonExtension, StringComparison.OrdinalIgnoreCase);
 
     public void Save(string fileName, bool saveElements)

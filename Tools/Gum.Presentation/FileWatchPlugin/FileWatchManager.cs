@@ -140,7 +140,8 @@ public class FileWatchManager : IFileWatchManager
         // every extension we know how to react to.
         var extension = fileName.Extension;
         if(extension is "png" or "csv" or "resx"
-            or "gumx" or "gusx" or "gutx" or "gucx" or "ganx" or "behx" or "fnt"
+            or "gumx" or "gumj" or "gusx" or "gusj" or "gutx" or "gutj" or "gucx" or "gucj"
+            or "ganx" or "ganj" or "behx" or "behj" or "fnt"
             or "achx" or "gif" or "tga" or "bmp")
         {
             HandleFileSystemChange(fileName);
@@ -161,12 +162,16 @@ public class FileWatchManager : IFileWatchManager
         }
     }
 
-    private static bool IsElementFileExtension(FilePath file)
+    // internal (not private) so tests can pin the recognized extension set directly.
+    internal static bool IsElementFileExtension(FilePath file)
     {
         var extension = file.Extension;
         return extension == GumProjectSave.ScreenExtension
+            || extension == GumProjectSave.ScreenJsonExtension
             || extension == GumProjectSave.ComponentExtension
-            || extension == GumProjectSave.StandardExtension;
+            || extension == GumProjectSave.ComponentJsonExtension
+            || extension == GumProjectSave.StandardExtension
+            || extension == GumProjectSave.StandardJsonExtension;
     }
 
     private void HandleFileSystemChange(object? sender, FileSystemEventArgs e)
@@ -174,7 +179,8 @@ public class FileWatchManager : IFileWatchManager
         var fileName = new FilePath(e.FullPath);
         var extension = fileName.Extension;
 
-        var isGum = extension is "gumx" or "gusx" or "gutx" or "gucx" or "ganx" or "behx";
+        var isGum = extension is "gumx" or "gumj" or "gusx" or "gusj" or "gutx" or "gutj"
+            or "gucx" or "gucj" or "ganx" or "ganj" or "behx" or "behj";
 
         // for some reason if we include created here, we'll get double-adds for XML files like screens...
         if (e.ChangeType != WatcherChangeTypes.Created || !isGum)

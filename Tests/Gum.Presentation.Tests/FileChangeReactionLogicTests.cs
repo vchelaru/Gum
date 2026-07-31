@@ -15,16 +15,29 @@ using Xunit;
 
 namespace Gum.Presentation.Tests;
 
-public class FileChangeReactionLogicTests
+public class FileChangeReactionLogicTests : BaseTestClass
 {
     private static FileChangeReactionLogic BuildSut(
         out Mock<IGuiCommands> guiCommandsMock,
         out Mock<IFileCommands> fileCommandsMock,
         out Mock<IPluginManager> pluginManagerMock)
     {
+        return BuildSut(out guiCommandsMock, out fileCommandsMock, out pluginManagerMock, out _);
+    }
+
+    private static FileChangeReactionLogic BuildSut(
+        out Mock<IGuiCommands> guiCommandsMock,
+        out Mock<IFileCommands> fileCommandsMock,
+        out Mock<IPluginManager> pluginManagerMock,
+        out Mock<IProjectState> projectStateMock)
+    {
         guiCommandsMock = new Mock<IGuiCommands>();
         fileCommandsMock = new Mock<IFileCommands>();
         pluginManagerMock = new Mock<IPluginManager>();
+        projectStateMock = new Mock<IProjectState>();
+
+        Mock<IWireframeObjectManager> wireframeObjectManagerMock = new Mock<IWireframeObjectManager>();
+        wireframeObjectManagerMock.Setup(w => w.AllIpsos).Returns(new List<GraphicalUiElement>());
 
         return new FileChangeReactionLogic(
             new Mock<ISelectedState>().Object,
@@ -32,8 +45,8 @@ public class FileChangeReactionLogicTests
             guiCommandsMock.Object,
             fileCommandsMock.Object,
             new Mock<IOutputManager>().Object,
-            new Mock<IWireframeObjectManager>().Object,
-            new Mock<IProjectState>().Object,
+            wireframeObjectManagerMock.Object,
+            projectStateMock.Object,
             new Mock<IStandardElementsManagerGumTool>().Object,
             pluginManagerMock.Object);
     }
@@ -71,6 +84,112 @@ public class FileChangeReactionLogicTests
         {
             ObjectFinder.Self.GumProjectSave = null;
         }
+    }
+
+    [Fact]
+    public void ReactToFileDeleted_ShouldFlagElementAndRefresh_WhenJsonElementFileWasDeleted()
+    {
+        // Same wiring as above, but for a JSON-converted project's .gucj element (issue #4182).
+        string tempDir = Path.Combine(Path.GetTempPath(), "GumJsonDeleteWiringTest_" + Guid.NewGuid().ToString("N"));
+        FilePath projectDirectory = new FilePath(tempDir);
+        FilePath deletedFile = new FilePath(Path.Combine(tempDir, "Components", "MyButton.gucj")); // never created -> "deleted"
+
+        FileChangeReactionLogic sut = BuildSut(
+            out Mock<IGuiCommands> guiCommandsMock,
+            out Mock<IFileCommands> fileCommandsMock,
+            out Mock<IPluginManager> pluginManagerMock);
+        fileCommandsMock.Setup(f => f.ProjectDirectory).Returns(projectDirectory);
+
+        GumProjectSave project = new GumProjectSave();
+        ComponentSave component = new ComponentSave { Name = "MyButton" };
+        project.Components.Add(component);
+        ObjectFinder.Self.GumProjectSave = project;
+        try
+        {
+            sut.ReactToFileDeleted(deletedFile);
+
+            component.IsSourceFileMissing.ShouldBeTrue();
+            guiCommandsMock.Verify(g => g.RefreshElementTreeView(), Times.Once);
+            pluginManagerMock.Verify(p => p.ElementReloaded(component), Times.Once);
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    [Fact]
+    public void ReactToFileChanged_ShouldReloadElement_WhenJsonComponentFileChanges()
+    {
+        // A JSON-converted project's .gucj element change must reach the same reload path as .gucx
+        // (issue #4182). GumProjectSave.ReloadElement already picks the right XML/JSON extension
+        // once invoked - only the top-level extension dispatch was missing the JSON siblings.
+        FileChangeReactionLogic sut = BuildSut(
+            out Mock<IGuiCommands> guiCommandsMock,
+            out Mock<IFileCommands> fileCommandsMock,
+            out Mock<IPluginManager> pluginManagerMock,
+            out Mock<IProjectState> projectStateMock);
+        FilePath projectDirectory = new FilePath(@"C:\proj\");
+        fileCommandsMock.Setup(f => f.ProjectDirectory).Returns(projectDirectory);
+
+        GumProjectSave project = new GumProjectSave { FullFileName = @"C:\proj\Project.gumj" };
+        ComponentSave component = new ComponentSave { Name = "MyButton" };
+        project.Components.Add(component);
+        projectStateMock.Setup(p => p.GumProjectSave).Returns(project);
+        ObjectFinder.Self.GumProjectSave = project;
+        try
+        {
+            FilePath changedFile = new FilePath(@"C:\proj\Components\MyButton.gucj");
+
+            sut.ReactToFileChanged(changedFile);
+
+            guiCommandsMock.Verify(g => g.RefreshElementTreeView(), Times.Once);
+            pluginManagerMock.Verify(p => p.ElementReloaded(component), Times.Once);
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    [Fact]
+    public void ReactToFileChanged_ShouldReloadProject_WhenJsonProjectFileChangesAndMatchesCurrentProject()
+    {
+        FileChangeReactionLogic sut = BuildSut(
+            out _,
+            out Mock<IFileCommands> fileCommandsMock,
+            out _,
+            out Mock<IProjectState> projectStateMock);
+
+        GumProjectSave project = new GumProjectSave { FullFileName = @"C:\proj\Project.gumj" };
+        projectStateMock.Setup(p => p.GumProjectSave).Returns(project);
+
+        FilePath changedFile = new FilePath(@"C:\proj\Project.gumj");
+
+        sut.ReactToFileChanged(changedFile);
+
+        fileCommandsMock.Verify(f => f.LoadProject(changedFile.Standardized), Times.Once);
+    }
+
+    [Fact]
+    public void ReactToFileChanged_ShouldReloadBehavior_WhenJsonBehaviorFileChanges()
+    {
+        FileChangeReactionLogic sut = BuildSut(
+            out Mock<IGuiCommands> guiCommandsMock,
+            out _,
+            out _,
+            out Mock<IProjectState> projectStateMock);
+
+        GumProjectSave project = new GumProjectSave { FullFileName = @"C:\proj\Project.gumj" };
+        Gum.DataTypes.Behaviors.BehaviorSave behavior = new() { Name = "ButtonBehavior" };
+        project.Behaviors.Add(behavior);
+        projectStateMock.Setup(p => p.GumProjectSave).Returns(project);
+
+        FilePath changedFile = new FilePath(@"C:\proj\Behaviors\ButtonBehavior.behj");
+
+        sut.ReactToFileChanged(changedFile);
+
+        guiCommandsMock.Verify(g => g.RefreshElementTreeView(), Times.Once);
     }
 
     [Fact]

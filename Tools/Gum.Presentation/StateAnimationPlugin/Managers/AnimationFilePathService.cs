@@ -1,5 +1,6 @@
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.Managers;
 using Gum.ToolStates;
 using ToolsUtilities;
 
@@ -9,12 +10,22 @@ public class AnimationFilePathService : IAnimationFilePathService
 {
     private readonly ISelectedState _selectedState;
     private readonly IFileCommands _fileCommands;
+    private readonly IProjectManager _projectManager;
 
-    public AnimationFilePathService(ISelectedState selectedState, IFileCommands fileCommands)
+    public AnimationFilePathService(ISelectedState selectedState, IFileCommands fileCommands, IProjectManager projectManager)
     {
         _selectedState = selectedState;
         _fileCommands = fileCommands;
+        _projectManager = projectManager;
     }
+
+    /// <summary>
+    /// "Animations.ganx" or "Animations.ganj" depending on the currently-open project's own format
+    /// (issue #4182) - independent of whichever extension <see cref="IFileCommands.GetFullPathXmlFile"/>
+    /// happened to resolve for the element itself.
+    /// </summary>
+    private string AnimationsFileNameSuffix =>
+        "Animations." + (GumProjectSave.IsJsonFormat(_projectManager.GumProjectSave?.FullFileName ?? "") ? "ganj" : "ganx");
 
     /// <inheritdoc/>
     public FilePath? GetAbsoluteAnimationFileNameFor(string elementName)
@@ -30,7 +41,7 @@ public class AnimationFilePathService : IAnimationFilePathService
         }
         else
         {
-            var absoluteFileName = fullPathXmlForElement.RemoveExtension() + "Animations.ganx";
+            var absoluteFileName = fullPathXmlForElement.RemoveExtension() + AnimationsFileNameSuffix;
 
             return absoluteFileName;
         }
@@ -47,7 +58,7 @@ public class AnimationFilePathService : IAnimationFilePathService
         }
         else
         {
-            var absoluteFileName = fullPathXmlForElement.RemoveExtension() + "Animations.ganx";
+            var absoluteFileName = fullPathXmlForElement.RemoveExtension() + AnimationsFileNameSuffix;
 
             return absoluteFileName;
         }

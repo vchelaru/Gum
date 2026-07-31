@@ -230,7 +230,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
     {
         List<string>? files = _dialogService.OpenFile(new OpenFileDialogOptions
         {
-            Filter = "Gum Project (*.gumx)|*.gumx",
+            Filter = "Gum Project (*.gumx;*.gumj)|*.gumx;*.gumj",
             Title = "Select project to load",
         });
 
@@ -698,7 +698,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
 
             string? chosenFileName = _dialogService.SaveFile(new SaveFileDialogOptions
             {
-                Filter = "Gum Project (*.gumx)|*.gumx",
+                Filter = "Gum Project (*.gumx;*.gumj)|*.gumx;*.gumj",
                 Title = "Where would you like to save the Gum project?",
             });
 

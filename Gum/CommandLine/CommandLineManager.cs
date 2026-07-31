@@ -93,20 +93,30 @@ namespace Gum.CommandLine
                     {
                         string argExtension = FileManager.GetExtension(arg);
 
-                        if (argExtension == "gumx")
+                        if (argExtension == GumProjectSave.ProjectExtension || argExtension == GumProjectSave.ProjectJsonExtension)
                         {
                             GlueProjectToLoad = arg;
                         }
                         else if (argExtension == GumProjectSave.ComponentExtension ||
+                            argExtension == GumProjectSave.ComponentJsonExtension ||
                             argExtension == GumProjectSave.ScreenExtension ||
-                            argExtension == GumProjectSave.StandardExtension)
+                            argExtension == GumProjectSave.ScreenJsonExtension ||
+                            argExtension == GumProjectSave.StandardExtension ||
+                            argExtension == GumProjectSave.StandardJsonExtension)
                         {
                             ElementName = FileManager.RemovePath(FileManager.RemoveExtension(arg));
 
                             string gluxDirectory = FileManager.GetDirectory(FileManager.GetDirectory(arg));
 
+                            // The containing project may itself be XML or JSON-formatted (issue #4182) -
+                            // whichever project file sits next to the element wins.
                             GlueProjectToLoad = System.IO.Directory.GetFiles(gluxDirectory)
-                                .FirstOrDefault(item => item.ToLowerInvariant().EndsWith(".gumx"));
+                                .FirstOrDefault(item =>
+                                {
+                                    string lowerItem = item.ToLowerInvariant();
+                                    return lowerItem.EndsWith("." + GumProjectSave.ProjectExtension) ||
+                                        lowerItem.EndsWith("." + GumProjectSave.ProjectJsonExtension);
+                                });
                         }
 
                     }
