@@ -8,7 +8,7 @@
       <Value xsi:type="xsd:int">85</Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Nunito-Bold.ttf</Value>
+      <Value xsi:type="xsd:string">Fonts/Nunito-Bold.ttf</Value>
     </Variable>
     <Variable Type="int" Name="FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">14</Value>
@@ -57,7 +57,7 @@
     <State>
       <Name>Normal</Name>
       <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
-        <Value xsi:type="xsd:string">Nunito-Regular.ttf</Value>
+        <Value xsi:type="xsd:string">Fonts/Nunito-Regular.ttf</Value>
       </Variable>
       <Variable Type="int" Name="FontSize" SetsValue="true">
         <Value xsi:type="xsd:int">14</Value>
@@ -85,7 +85,7 @@
     <State>
       <Name>Strong</Name>
       <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
-        <Value xsi:type="xsd:string">Nunito-Bold.ttf</Value>
+        <Value xsi:type="xsd:string">Fonts/Nunito-Bold.ttf</Value>
       </Variable>
       <Variable Type="int" Name="FontSize" SetsValue="true">
         <Value xsi:type="xsd:int">14</Value>
