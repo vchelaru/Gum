@@ -31,7 +31,6 @@ public class RadioButtonVisual : BaseRadioButtonVisual
 
     private readonly CircleRuntime _focusRing;
     private readonly CircleRuntime _outerFill;
-    private readonly CircleRuntime _outerBorder;
     private readonly CircleRuntime _innerDot;
 
     public RadioButtonVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
@@ -49,9 +48,6 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         _outerFill = CreateOuterFill();
         AddChild(_outerFill);
 
-        _outerBorder = CreateOuterBorder();
-        AddChild(_outerBorder);
-
         _innerDot = CreateInnerDot();
         AddChild(_innerDot);
 
@@ -60,6 +56,10 @@ public class RadioButtonVisual : BaseRadioButtonVisual
 
     private static CircleRuntime CreateOuterFill()
     {
+        // Fill + border merged onto one CircleRuntime (not two stacked circles): the
+        // runtime insets the fill's AA halo under the stroke's opaque band when both are
+        // set on the same instance, avoiding the seam two independently-antialiased
+        // circles at identical bounds would produce.
         CircleRuntime c = new CircleRuntime();
         c.Name = "ForestGladeRadioOuterFill";
         c.X = 0;
@@ -74,25 +74,6 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         c.HeightUnits = DimensionUnitType.Absolute;
         c.IsFilled = true;
         c.FillColor = new Color(3, 28, 32);
-        c.StrokeWidth = 0;
-        return c;
-    }
-
-    private static CircleRuntime CreateOuterBorder()
-    {
-        CircleRuntime c = new CircleRuntime();
-        c.Name = "ForestGladeRadioOuterBorder";
-        c.X = 0;
-        c.Y = 0;
-        c.XUnits = GeneralUnitType.PixelsFromSmall;
-        c.YUnits = GeneralUnitType.PixelsFromMiddle;
-        c.XOrigin = HorizontalAlignment.Left;
-        c.YOrigin = VerticalAlignment.Center;
-        c.Width = OuterSize;
-        c.Height = OuterSize;
-        c.WidthUnits = DimensionUnitType.Absolute;
-        c.HeightUnits = DimensionUnitType.Absolute;
-        c.IsFilled = false;
         c.StrokeWidth = BorderThickness;
         c.StrokeWidthUnits = DimensionUnitType.Absolute;
         c.StrokeColor = new Color(232, 255, 117, 76);
@@ -222,7 +203,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         Color? innerColor = null)
     {
         _outerFill.FillColor = fill;
-        _outerBorder.StrokeColor = border;
+        _outerFill.StrokeColor = border;
         TextInstance.Color = text;
         _innerDot.Visible = innerVisible;
         if (innerColor.HasValue)

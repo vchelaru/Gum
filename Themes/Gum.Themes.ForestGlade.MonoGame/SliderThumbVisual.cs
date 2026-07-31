@@ -32,7 +32,6 @@ public class SliderThumbVisual : InteractiveGue
 
     private readonly CircleRuntime _focusRing;
     private readonly CircleRuntime _body;
-    private readonly CircleRuntime _border;
 
     private StateSaveCategory _buttonCategory = null!;
 
@@ -50,9 +49,6 @@ public class SliderThumbVisual : InteractiveGue
         _body = CreateBody();
         AddChild(_body);
 
-        _border = CreateBorder();
-        AddChild(_border);
-
         WireStates();
     }
 
@@ -69,7 +65,13 @@ public class SliderThumbVisual : InteractiveGue
         body.WidthUnits = DimensionUnitType.RelativeToParent;
         body.HeightUnits = DimensionUnitType.RelativeToParent;
         body.IsFilled = true;
-        body.StrokeWidth = 0;
+        // Fill + border merged onto one CircleRuntime (not two stacked circles): the
+        // runtime insets the fill's AA halo under the stroke's opaque band when both are
+        // set on the same instance, avoiding the seam two independently-antialiased
+        // circles at identical bounds would produce.
+        body.StrokeWidth = BorderThickness;
+        body.StrokeWidthUnits = DimensionUnitType.Absolute;
+        body.StrokeColor = new Color(232, 255, 117, 128); // sun-pale .5 alpha
         // CSS radial-gradient(circle at 35% 30%, sun-pale, leaf-bright 65%, #008c2e).
         // 2-stop approximation: sun-pale centre → canopy-lit edge. Offset of
         // 35%/30% is implemented by nudging the gradient origin off-centre
@@ -93,25 +95,6 @@ public class SliderThumbVisual : InteractiveGue
         body.DropshadowOffsetY = 0f;
         body.DropshadowBlur = ShadowBlur;
         return body;
-    }
-
-    private static CircleRuntime CreateBorder()
-    {
-        CircleRuntime border = new CircleRuntime();
-        border.Name = "ForestGladeSliderThumbBorder";
-        border.XUnits = GeneralUnitType.PixelsFromMiddle;
-        border.YUnits = GeneralUnitType.PixelsFromMiddle;
-        border.XOrigin = HorizontalAlignment.Center;
-        border.YOrigin = VerticalAlignment.Center;
-        border.Width = 0;
-        border.Height = 0;
-        border.WidthUnits = DimensionUnitType.RelativeToParent;
-        border.HeightUnits = DimensionUnitType.RelativeToParent;
-        border.IsFilled = false;
-        border.StrokeWidth = BorderThickness;
-        border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = new Color(232, 255, 117, 128); // sun-pale .5 alpha
-        return border;
     }
 
     private static CircleRuntime CreateFocusRing()
@@ -189,7 +172,7 @@ public class SliderThumbVisual : InteractiveGue
         _body.FillColor = centre;
         _body.HasDropshadow = showShadow;
         _body.DropshadowBlur = blur;
-        _border.StrokeColor = border;
+        _body.StrokeColor = border;
         _focusRing.Visible = ring;
     }
 }
