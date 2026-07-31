@@ -1,4 +1,6 @@
-﻿using Gum.DataTypes.Variables;
+﻿using Gum.DataTypes.Serialization.Json;
+using Gum.DataTypes.Variables;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
@@ -76,7 +78,13 @@ namespace Gum.DataTypes.Behaviors
 
         public void Save(string fileName, bool useCompactFormat = false)
         {
-            if (useCompactFormat)
+            // No content-sniffing between XML and JSON - the target file's own extension decides
+            // the format, symmetric with BehaviorReference.DeserializeBehavior.
+            if (string.Equals(FileManager.GetExtension(fileName), BehaviorReference.JsonExtension, StringComparison.OrdinalIgnoreCase))
+            {
+                GumJsonFileSerializer.WriteToFile(fileName, GumJsonFileSerializer.SerializeBehavior(this));
+            }
+            else if (useCompactFormat)
             {
                 var serializer = GumFileSerializer.GetCompactSerializer(this.GetType());
                 FileManager.XmlSerialize(this, fileName, serializer);

@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using Gum.DataTypes.Serialization.Json;
 using ToolsUtilities;
 
 namespace Gum.DataTypes.Behaviors
@@ -7,6 +9,9 @@ namespace Gum.DataTypes.Behaviors
     {
         public const string Subfolder = "Behaviors";
         public const string Extension = "behx";
+
+        /// <summary>JSON counterpart of <see cref="Extension"/>. See <see cref="GumJsonFileSerializer"/>.</summary>
+        public const string JsonExtension = "behj";
 
         public string Name;
 
@@ -26,16 +31,22 @@ namespace Gum.DataTypes.Behaviors
         /// </summary>
         public string DefaultImplementationOverride;
 
-        public string GetRelativeFilePath()
+        /// <summary>
+        /// Returns the relative path to this behavior's backing file. When <see cref="SourcePath"/>
+        /// is set it always wins (verbatim, whatever extension it carries); otherwise the conventional
+        /// <c>Behaviors/{Name}</c> path is built using <paramref name="isJsonFormat"/> to pick
+        /// <see cref="JsonExtension"/> or <see cref="Extension"/>.
+        /// </summary>
+        public string GetRelativeFilePath(bool isJsonFormat = false)
         {
             return string.IsNullOrEmpty(SourcePath)
-                ? Subfolder + "/" + Name + "." + Extension
+                ? Subfolder + "/" + Name + "." + (isJsonFormat ? JsonExtension : Extension)
                 : SourcePath;
         }
 
-        public BehaviorSave ToBehaviorSave(string projectRoot, int projectVersion = 1)
+        public BehaviorSave ToBehaviorSave(string projectRoot, int projectVersion = 1, bool isJsonFormat = false)
         {
-            string fullName = projectRoot + GetRelativeFilePath();
+            string fullName = projectRoot + GetRelativeFilePath(isJsonFormat);
 
             if (FileManager.FileExists(fullName))
             {
@@ -65,6 +76,13 @@ namespace Gum.DataTypes.Behaviors
 
         public static BehaviorSave DeserializeBehavior(string filePath, int projectVersion)
         {
+            // No content-sniffing between XML and JSON - the file's own extension determines the format.
+            if (string.Equals(FileManager.GetExtension(filePath), JsonExtension, StringComparison.OrdinalIgnoreCase))
+            {
+                string jsonContent = FileManager.FromFileText(filePath);
+                return GumJsonFileSerializer.DeserializeBehavior(jsonContent);
+            }
+
             if (projectVersion >= (int)GumProjectSave.GumxVersions.AttributeVersion)
             {
                 string content = FileManager.FromFileText(filePath);

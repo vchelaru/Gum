@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Gum.DataTypes.Serialization.Json;
+using System;
 using System.IO;
 using ToolsUtilities;
 
@@ -167,8 +168,26 @@ namespace Gum.DataTypes
             }
         }
 
+        private static readonly string[] JsonElementExtensions =
+        {
+            GumProjectSave.ScreenJsonExtension,
+            GumProjectSave.ComponentJsonExtension,
+            GumProjectSave.StandardJsonExtension
+        };
+
         public static T DeserializeElement<T>(string filePath, int projectVersion) where T : ElementSave, new()
         {
+            // No content-sniffing between XML and JSON - the file's own extension determines the format.
+            string extension = FileManager.GetExtension(filePath);
+            foreach (string jsonExtension in JsonElementExtensions)
+            {
+                if (string.Equals(extension, jsonExtension, StringComparison.OrdinalIgnoreCase))
+                {
+                    string jsonContent = FileManager.FromFileText(filePath);
+                    return GumJsonFileSerializer.DeserializeElement<T>(jsonContent);
+                }
+            }
+
             if (projectVersion >= (int)GumProjectSave.GumxVersions.AttributeVersion)
             {
                 var (content, isCompact) = GumFileSerializer.ReadAndDetectFormat(filePath);

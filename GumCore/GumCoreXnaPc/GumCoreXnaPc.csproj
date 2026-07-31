@@ -85,6 +85,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <!-- This TFM has no built-in System.Text.Json; required by GumCoreShared.projitems'
+         JSON project-format source generator (GumDataTypes/Serialization/Json). -->
+    <PackageReference Include="System.Text.Json">
+      <Version>8.0.5</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\..\FlatRedBall\Engines\FlatRedBallXNA\FlatRedBall\FlatRedBallXna4.csproj">
       <Project>{e1cb7d7b-e2ec-4deb-92e2-6ef0b76f40f0}</Project>
       <Name>FlatRedBallXna4</Name>
