@@ -37,6 +37,7 @@ Once installed, invoke it as `gumcli` from any terminal.
 | `fonts` | Generate missing bitmap font files |
 | `pack` | Pack a project into a single `.gumpkg` bundle |
 | `screenshot` | Render a Screen or Component to a PNG file |
+| `diff-screenshots` | Render every Screen and Component via MonoGame and raylib and report mismatches |
 | `svg` | Render a Screen or Component to an SVG file |
 
 ## Output Streams

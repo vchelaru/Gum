@@ -98,21 +98,40 @@ gumcli codegen MyProject.gumx --element Button --element Slider
 - Warnings are printed to stderr but do not block generation
 - Exit code `0` = success, `1` = elements blocked by errors, `2` = load failure or missing configuration
 
-### `gumcli screenshot <project.gumx> <element> [--output <path>] [--width <px>] [--height <px>]`
+### `gumcli screenshot <project.gumx> <element> [--output <path>] [--width <px>] [--height <px>] [--backend <name>]`
 
-Renders a Gum Screen or Component to a PNG file using MonoGame (DesktopGL), producing pixel-accurate output that matches a live MonoGame game.
+Renders a Gum Screen or Component to a PNG file, producing pixel-accurate output that matches a live game using that backend.
 
 ```
 gumcli screenshot MyProject.gumx MainMenu
 gumcli screenshot MyProject.gumx MainMenu --output screenshots/MainMenu.png
 gumcli screenshot MyProject.gumx MainMenu --width 1280 --height 720
+gumcli screenshot MyProject.gumx MainMenu --backend raylib
 ```
 
 - `<element>` is the Screen or Component name (without folder prefix or extension, e.g. `MainMenu` not `Screens/MainMenu.gusx`)
 - `--output` path for the PNG file; defaults to `<element>.png` in the current directory
 - `--width` / `--height` override the render dimensions; default to the project canvas size (800×600 if canvas size is not set)
-- Uses MonoGame rendering to match the exact visual output of a MonoGame game — fonts, textures, and anti-aliasing are identical
-- Exit code `0` = success, `1` = render error, `2` = project file not found
+- `--backend` selects the rendering backend: `monogame` (default, DesktopGL) or `raylib`. Fonts, textures, and anti-aliasing match a live game using that same backend
+- Exit code `0` = success, `1` = render error, `2` = project file not found or unknown `--backend` value
+
+### `gumcli diff-screenshots <project.gumx> [--output <dir>] [--tolerance <0-255>] [--proximity <px>] [--json]`
+
+Renders every Screen and Component in a project via both MonoGame and raylib and reports any pixel-level mismatch between the two, catching raylib rendering that silently diverges from the tool's MonoGame-based preview.
+
+```
+gumcli diff-screenshots MyProject.gumx
+gumcli diff-screenshots MyProject.gumx --output diffs/
+gumcli diff-screenshots MyProject.gumx --tolerance 4 --proximity 2
+gumcli diff-screenshots MyProject.gumx --json
+```
+
+- Renders each element through both backends into `<output>/A/` (MonoGame) and `<output>/B/` (raylib), then compares the two PNGs
+- A pixel only counts as a real mismatch if no pixel within `--proximity` pixels of it (default `1`) matches within `--tolerance` (default `2`, max per-channel difference), absorbing the few-pixel positional jitter different renderers' antialiasing/rounding produces at edges, without masking pixels that are actually wrong
+- Writes a side-by-side HTML report (`report.html` in the output directory) with MonoGame on the left and raylib on the right, mismatched elements listed first
+- Human-readable output lists each element's match/mismatch status, the mismatched pixel count/percentage, and the bounding box of the mismatched region; `--json` outputs the same data as a JSON document
+- `--output` defaults to a new temp directory when omitted (the path is always printed)
+- Exit code `0` = every element matched, `1` = at least one element mismatched or failed to render, `2` = project file not found or could not be loaded
 
 ### `gumcli fonts <project.gumx>`
 
@@ -134,5 +153,5 @@ gumcli fonts path/to/MyProject.gumx
 | Code | Meaning |
 |------|---------|
 | 0 | Success |
-| 1 | Errors found (check) or elements blocked (codegen) or font generation error or render error (screenshot) |
-| 2 | Project could not be loaded, invalid arguments, non-Windows platform (fonts), or project file not found (screenshot) |
+| 1 | Errors found (check) or elements blocked (codegen) or font generation error or render error (screenshot) or a mismatch/render failure (diff-screenshots) |
+| 2 | Project could not be loaded, invalid arguments, non-Windows platform (fonts), project file not found (screenshot, diff-screenshots), or unknown `--backend` (screenshot) |
