@@ -190,16 +190,36 @@ style must point `Font` at the bold-weight file directly (`"Fonts/SairaCondensed
 `IsBold` alone does nothing for a `.ttf`-valued `Font`. This has no color-style parallel to check against:
 `AllColorVariables_ShouldBeStylesWired` only inspects color-channel suffixes, so a family-name
 `Font` value passes every existing automated check. After fixing `Styles.gucx`, rerun
-`ThemeRecolorHelper` (above) to cascade to every control that references `Styles.Normal.Font`/
-`Styles.Strong.Font` — then grep the whole theme for the bare family-name string, since a Screen
-(the demo screen's own `Text` instances, notably) can hardcode `Font` directly instead of routing
-through `Styles`, and `ThemeRecolorHelper` only walks `project.Components`, not `project.Screens`.
+`ThemeRecolorHelper` (above) to cascade to every control and screen that references
+`Styles.Normal.Font`/`Styles.Strong.Font` — then grep the whole theme for the bare family-name
+string, since a demo screen's own `Text` instances can hardcode `Font` directly instead of routing
+through `Styles`, and a hardcoded value has no reference for the reapply pass to cascade into.
 
 ## Verifying theme content changes
 
-There's no C#-unit-test surface for a theme's XML content. Use `gumcli diff-standards` (theme's
-Standards vs. `StandardElementsManager` canonical defaults — should always read "No drift found"
-for a non-default theme), `gumcli check` (structural errors), and `gumcli check-references`
+**Structural checks prove the XML is well-formed; they prove nothing about whether the theme
+actually works.** `gumcli check`/`check-references`/`diff-standards` and the `Gum.ProjectServices.Tests`
+suite all validate *shape* — types match, references resolve to *some* materialized scalar,
+Standards match canonical defaults. None of them generate a font, render a color, or read the
+built tool's output. A theme can pass every one of these while still being visibly broken — a
+family-name `Font` value, a missing `Fonts/` path segment, and an un-recolored screen all do.
+Treat a clean run of these as "no *regression*," never as "the theme works." Two checks actually
+exercise real behavior and catch what structural checks can't:
+
+- **Font generation, for real.** `GumProjectFontGenerator` (`GumProjectFontGenerator/Program.cs`)
+  runs the same headless pipeline (`HeadlessFontGenerationService`) the tool's own "Checking N font
+  files..." step uses. Copy the theme to a scratch folder, empty its `FontCache/`, and run
+  `dotnet GumProjectFontGenerator.dll <path>\GumProject.gumx` — a real `.fnt`/`.png` pair appearing
+  in `FontCache/` for every custom font is the only proof font resolution actually succeeds; a clean
+  `gumcli check` proves nothing about it.
+- **The staged build, not the source.** Add Forms reads from `Gum/bin/<Config>/Content/FormsThemes/<Theme>/`,
+  not from `Templates/FormsThemes/<Theme>/` — and per the postbuild-can-no-op landmine above, those
+  two can silently diverge even after a correct, committed fix. Diff a file straight from the staged
+  path after rebuilding, not just the source template, before calling anything verified.
+
+Beyond those two, still run `gumcli diff-standards` (theme's Standards vs.
+`StandardElementsManager` canonical defaults — should always read "No drift found" for a
+non-default theme), `gumcli check` (structural errors), and `gumcli check-references`
 (unmaterialized `VariableReferences`) — see the `gum-cli` skill. Run before and after a change;
 identical output (same pre-existing warnings, nothing new) is the proof a mechanical edit didn't
 regress anything.
@@ -215,10 +235,10 @@ Run `gumcli check-references --fix` after any hand-authored reference to materia
 this only works when the scalar is missing outright; see "Recoloring after a clone" above for the
 stale-but-present case it can't touch.
 
-None of this exercises the actual runtime copy path, though: `gumcli` reads straight from
-`Templates/FormsThemes/<Theme>/`, but Add Forms reads from `Gum/bin/<Config>/Content/FormsThemes/<Theme>/`,
-populated by `GumFormsPlugin`'s postbuild `xcopy`. `xcopy` never deletes — a rename or removal in
-the template leaves the stale old file sitting in any already-built output, so importing the theme
-pulls in both the old and new copy. The postbuild step deletes the theme's output folder before
-`xcopy`-ing to prevent this; verify a source-side rename actually lands clean by planting a
-throwaway file in the built output and confirming a rebuild removes it.
+One more staged-output-specific gotcha, beyond the postbuild simply not rerunning (item 7 /
+"the staged build, not the source" above): `xcopy` never deletes, so a rename or removal in the
+template leaves the stale old file sitting in an already-built output even when the postbuild
+*does* rerun, and importing the theme pulls in both the old and new copy. The postbuild step
+deletes the theme's output folder before `xcopy`-ing to prevent this; verify a source-side rename
+actually lands clean by planting a throwaway file in the built output and confirming a rebuild
+removes it.
