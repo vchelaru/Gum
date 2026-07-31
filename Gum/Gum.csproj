@@ -424,6 +424,7 @@
 	<ItemGroup>
 		<Compile Remove="CodeOutputPlugin\**" />
 		<Compile Remove="CommonFormsAndControls\**" />
+		<Compile Remove="ConvertToJsonPlugin\**" />
 		<Compile Remove="CsvLibrary\**" />
 		<Compile Remove="EventOutputPlugin\**" />
 		<Compile Remove="GumFigmaIconRipper\**" />
@@ -436,6 +437,7 @@
 		<Compile Remove="TextureCoordinateSelectionPlugin\**" />
 		<EmbeddedResource Remove="CodeOutputPlugin\**" />
 		<EmbeddedResource Remove="CommonFormsAndControls\**" />
+		<EmbeddedResource Remove="ConvertToJsonPlugin\**" />
 		<EmbeddedResource Remove="CsvLibrary\**" />
 		<EmbeddedResource Remove="EventOutputPlugin\**" />
 		<EmbeddedResource Remove="GumFigmaIconRipper\**" />
@@ -447,6 +449,7 @@
 		<EmbeddedResource Remove="TextureCoordinateSelectionPlugin\**" />
 		<None Remove="CodeOutputPlugin\**" />
 		<None Remove="CommonFormsAndControls\**" />
+		<None Remove="ConvertToJsonPlugin\**" />
 		<None Remove="CsvLibrary\**" />
 		<None Remove="EventOutputPlugin\**" />
 		<None Remove="GumFigmaIconRipper\**" />
@@ -458,6 +461,7 @@
 		<None Remove="TextureCoordinateSelectionPlugin\**" />
 		<Page Remove="CodeOutputPlugin\**" />
 		<Page Remove="CommonFormsAndControls\**" />
+		<Page Remove="ConvertToJsonPlugin\**" />
 		<Page Remove="CsvLibrary\**" />
 		<Page Remove="EventOutputPlugin\**" />
 		<Page Remove="GumFigmaIconRipper\**" />
