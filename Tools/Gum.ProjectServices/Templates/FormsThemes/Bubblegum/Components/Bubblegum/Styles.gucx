@@ -242,7 +242,7 @@
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="string" Name="Normal.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Nunito</Value>
+      <Value xsi:type="xsd:string">Nunito-Regular.ttf</Value>
     </Variable>
     <Variable Type="int" Name="Normal.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">14</Value>
@@ -275,7 +275,7 @@
       <Value xsi:type="xsd:string">Default</Value>
     </Variable>
     <Variable Type="string" Name="Strong.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Nunito</Value>
+      <Value xsi:type="xsd:string">Nunito-Bold.ttf</Value>
     </Variable>
     <Variable Type="int" Name="Strong.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">14</Value>

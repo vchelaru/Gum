@@ -281,8 +281,8 @@
     <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">85</Value>
     </Variable>
-    <Variable Type="string" Name="TextInstance.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Nunito</Value>
+    <Variable IsFont="true" Type="string" Name="TextInstance.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Nunito-Regular.ttf</Value>
     </Variable>
     <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">14</Value>
