@@ -21,7 +21,12 @@ namespace RaylibGum.Tests.Renderables;
 /// styling (Color / FontScale runs) when text is assigned through the property pipeline,
 /// mirroring the MonoGame runtime's behavior. Issue #3471.
 /// </summary>
-public class TextMarkupTests
+// #4142: must inherit BaseTestClass. Text_WithBoldWrappingFontSize_AppliesNestedResolvedRuns_WhenFontCreatorWired
+// below rasterizes a real font (Bold=true, FontSize=20, Arial) via KernSmithRaylibFontCreator and caches it in
+// the process-wide LoaderManager.Self singleton. Without BaseTestClass's Dispose (which clears that cache via
+// the CacheTextures false/true toggle), the cached entry leaks into whichever later test in the same process
+// happens to request the same font signature, poisoning it with a cache hit that skips its own font creator.
+public class TextMarkupTests : BaseTestClass
 {
     // Issue #3532: the font-aware wrap seam MeasureString(string, int) must fall back to the base
     // MeasureString when the line carries no inline runs, so plain-text wrapping stays byte-identical.
