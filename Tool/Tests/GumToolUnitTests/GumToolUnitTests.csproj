@@ -29,6 +29,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Gum\CodeOutputPlugin\CodeOutputPlugin.csproj" />
+    <ProjectReference Include="..\..\..\Gum\ConvertToJsonPlugin\ConvertToJsonPlugin.csproj" />
     <ProjectReference Include="..\..\..\Gum\EventOutputPlugin\EventOutputPlugin.csproj" />
     <ProjectReference Include="..\..\..\Gum\Gum.csproj" />
     <ProjectReference Include="..\..\..\Gum\GumFormsPlugin\GumFormsPlugin.csproj" />

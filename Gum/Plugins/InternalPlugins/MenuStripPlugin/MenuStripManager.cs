@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Windows.Controls;
 using Gum.ToolStates;
 using Gum.DataTypes;
@@ -204,7 +205,9 @@ namespace Gum.Managers
             _aboutMenuItem.Header = "About...";
             _aboutMenuItem.Click += (_, _) =>
             {
-                var version = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "unknown";
+                var version = Assembly.GetEntryAssembly()
+                    ?.GetCustomAttributes<AssemblyMetadataAttribute>()
+                    .FirstOrDefault(a => a.Key == "BuildVersion")?.Value ?? "unknown";
                 _dialogService.ShowMessage("Gum version " + version, "About");
             };
 

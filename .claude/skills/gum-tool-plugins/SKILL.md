@@ -90,3 +90,13 @@ Visualization/rendering is handled by **external** plugin projects, not by Gum.c
 `AllPluginsCompositionTests` (`Tool/Tests/GumToolUnitTests/Plugins/`) composes **every** plugin through MEF exactly as `PluginManager.LoadPlugins` does — the automated replacement for manually launching Gum to confirm plugins load. A missing/typo'd bridge or a bad `[ImportingConstructor]` signature fails it as a red `CompositionException`.
 
 **When draining a plugin to `[ImportingConstructor]`:** if the drain adds a *new* service to the `batch.AddExportedValue<T>(...)` list in `LoadPlugins`, mirror that type into `PluginBridgedServiceTypes.All` (same test folder) — it is a hand-maintained duplicate of that list and the test goes red otherwise. Reusing services already in the list needs no test change. (`ServiceProviderCompositionSpikeTests` resolves the same set from the real `Builder.cs` container, catching DI cycles / missing registrations.) A follow-up to extract an internal `ComposePlugins(...)` from `LoadPlugins` will delete the duplicate list.
+
+## Adding a new external plugin under `Gum/<PluginName>/`
+
+Three places need a matching entry per plugin:
+
+1. **`Gum.csproj`** — `<Compile Remove="<PluginName>\**" />` plus matching `EmbeddedResource`/`None`/`Page` removes. Without this, Gum.csproj's own default SDK glob also compiles the plugin's sources directly into Gum.exe. Since `Gum.exe`'s executing assembly is itself in `PluginManager`'s MEF catalog, the `[Export(typeof(PluginBase))]` class then composes twice as two distinct `Type` objects (one from Gum.exe, one from the plugin's own .dll) - `StartUp()` fires twice, and anything non-idempotent it does (e.g. `AddMenuItem` for the same path) crashes.
+2. **`GumToolUnitTests.csproj`** — a `ProjectReference` to the plugin's `.csproj`.
+3. **`AllPluginsCompositionTests.PluginAssemblies`** — an anchor `typeof(...).Assembly` entry (use `[InternalsVisibleTo("GumToolUnitTests")]` on the plugin's assembly instead if its entry type is `internal`, matching `GumFormsPlugin`'s `FormsFileService` workaround).
+
+Missing (2)/(3) doesn't fail the build or the test - it just means the plugin's real composition, including a case like (1), is never actually exercised by this test.

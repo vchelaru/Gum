@@ -4,6 +4,11 @@
 		<OutputType>WinExe</OutputType>
 		<LangVersion>12.0</LangVersion>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<!-- See the comment in Properties/AssemblyInfo.cs: the WPF wpftmp temp project always
+		     regenerates the TargetFrameworkAttribute source for itself and, independent of
+		     GenerateAssemblyInfo above, ends up including it twice in its own compile
+		     (CS0579). This is the documented per-attribute escape hatch. -->
+		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
 		<UseWindowsForms>true</UseWindowsForms>
 		<UseWPF>true</UseWPF>
 		<ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
@@ -419,6 +424,7 @@
 	<ItemGroup>
 		<Compile Remove="CodeOutputPlugin\**" />
 		<Compile Remove="CommonFormsAndControls\**" />
+		<Compile Remove="ConvertToJsonPlugin\**" />
 		<Compile Remove="CsvLibrary\**" />
 		<Compile Remove="EventOutputPlugin\**" />
 		<Compile Remove="GumFigmaIconRipper\**" />
@@ -431,6 +437,7 @@
 		<Compile Remove="TextureCoordinateSelectionPlugin\**" />
 		<EmbeddedResource Remove="CodeOutputPlugin\**" />
 		<EmbeddedResource Remove="CommonFormsAndControls\**" />
+		<EmbeddedResource Remove="ConvertToJsonPlugin\**" />
 		<EmbeddedResource Remove="CsvLibrary\**" />
 		<EmbeddedResource Remove="EventOutputPlugin\**" />
 		<EmbeddedResource Remove="GumFigmaIconRipper\**" />
@@ -442,6 +449,7 @@
 		<EmbeddedResource Remove="TextureCoordinateSelectionPlugin\**" />
 		<None Remove="CodeOutputPlugin\**" />
 		<None Remove="CommonFormsAndControls\**" />
+		<None Remove="ConvertToJsonPlugin\**" />
 		<None Remove="CsvLibrary\**" />
 		<None Remove="EventOutputPlugin\**" />
 		<None Remove="GumFigmaIconRipper\**" />
@@ -453,6 +461,7 @@
 		<None Remove="TextureCoordinateSelectionPlugin\**" />
 		<Page Remove="CodeOutputPlugin\**" />
 		<Page Remove="CommonFormsAndControls\**" />
+		<Page Remove="ConvertToJsonPlugin\**" />
 		<Page Remove="CsvLibrary\**" />
 		<Page Remove="EventOutputPlugin\**" />
 		<Page Remove="GumFigmaIconRipper\**" />

@@ -33,12 +33,6 @@ class MainPropertiesWindowPlugin : PriorityPlugin
     ProjectPropertiesControl control;
 
     ProjectPropertiesViewModel viewModel;
-    [Import("LocalizationService")]
-    public LocalizationService LocalizationService
-    {
-        get;
-        set;
-    }
     #endregion
 
     private readonly IFontManager _fontManager;
@@ -50,6 +44,7 @@ class MainPropertiesWindowPlugin : PriorityPlugin
     private readonly IProjectState _projectState;
     private readonly IPluginManager _pluginManager;
     private readonly IProjectManager _projectManager;
+    private readonly LocalizationService _localizationService;
     private FilePath? _fontCharacterFileAbsolute;
 
     private IPluginTab? _pluginTab;
@@ -66,7 +61,8 @@ class MainPropertiesWindowPlugin : PriorityPlugin
         FileWatchLogic fileWatchLogic,
         IProjectState projectState,
         IPluginManager pluginManager,
-        IProjectManager projectManager)
+        IProjectManager projectManager,
+        LocalizationService localizationService)
     {
         _fontManager = fontManager;
         _wireframeCommands = wireframeCommands;
@@ -77,6 +73,7 @@ class MainPropertiesWindowPlugin : PriorityPlugin
         _projectState = projectState;
         _pluginManager = pluginManager;
         _projectManager = projectManager;
+        _localizationService = localizationService;
     }
 
     public override void StartUp()
@@ -93,7 +90,7 @@ class MainPropertiesWindowPlugin : PriorityPlugin
             _wireframeCommands,
             _guiCommands,
             _pluginManager,
-            LocalizationService);
+            _localizationService);
 
         viewModel = new PropertiesWindowPlugin.ProjectPropertiesViewModel();
         viewModel.PropertyChanged += HandlePropertyChanged;
@@ -113,7 +110,7 @@ class MainPropertiesWindowPlugin : PriorityPlugin
     private void HandleLocalizationLoaded()
     {
         if (control == null || viewModel == null) return;
-        viewModel.UpdateLanguageNameFromIndex(LocalizationService.Languages);
+        viewModel.UpdateLanguageNameFromIndex(_localizationService.Languages);
         control.ViewModel = null;
         control.ViewModel = viewModel;
     }
