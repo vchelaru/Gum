@@ -41,6 +41,11 @@ public static class DiffScreenshotsCommand
             () => 2,
             "Maximum per-channel pixel difference (0-255) still considered a match.");
 
+        Option<int> proximityOption = new Option<int>(
+            "--proximity",
+            () => 1,
+            "How many pixels away to search for a matching color before counting a pixel as a real mismatch. Absorbs positional jitter between renderers (e.g. a 1px antialiasing shift) without masking real differences.");
+
         Option<bool> jsonOption = new Option<bool>(
             "--json",
             "Output the diff as a JSON document.");
@@ -52,6 +57,7 @@ public static class DiffScreenshotsCommand
             projectArgument,
             outputOption,
             toleranceOption,
+            proximityOption,
             jsonOption,
         };
 
@@ -60,15 +66,16 @@ public static class DiffScreenshotsCommand
             string projectPath = context.ParseResult.GetValueForArgument(projectArgument);
             string? output = context.ParseResult.GetValueForOption(outputOption);
             byte tolerance = context.ParseResult.GetValueForOption(toleranceOption);
+            int proximity = context.ParseResult.GetValueForOption(proximityOption);
             bool json = context.ParseResult.GetValueForOption(jsonOption);
 
-            context.ExitCode = Execute(projectPath, output, tolerance, json);
+            context.ExitCode = Execute(projectPath, output, tolerance, proximity, json);
         });
 
         return command;
     }
 
-    private static int Execute(string projectPath, string? output, byte tolerance, bool json)
+    private static int Execute(string projectPath, string? output, byte tolerance, int proximity, bool json)
     {
         string fullProjectPath = Path.GetFullPath(projectPath);
 
@@ -89,6 +96,7 @@ public static class DiffScreenshotsCommand
                 BackendB = new RaylibScreenshotService(),
                 OutputDirectory = output != null ? Path.GetFullPath(output) : null,
                 Tolerance = tolerance,
+                ProximityRadius = proximity,
             });
         }
         catch (InvalidOperationException ex)
@@ -126,9 +134,16 @@ public static class DiffScreenshotsCommand
                 errorMessage = d.ErrorMessage,
                 monoGamePath = d.BackendAPath,
                 raylibPath = d.BackendBPath,
-                diffX = d.DiffX,
-                diffY = d.DiffY,
-                maxChannelDifference = d.MaxChannelDifference,
+                mismatchedPixelCount = d.MismatchedPixelCount,
+                totalPixelCount = d.TotalPixelCount,
+                mismatchPercentage = d.MismatchPercentage,
+                boundingBox = d.Matches ? null : new
+                {
+                    minX = d.BoundingBoxMinX,
+                    minY = d.BoundingBoxMinY,
+                    maxX = d.BoundingBoxMaxX,
+                    maxY = d.BoundingBoxMaxY,
+                },
                 dimensionMismatch = d.DimensionMismatchDescription,
             }),
         };
@@ -148,7 +163,8 @@ public static class DiffScreenshotsCommand
 
             string reason = diff.ErrorMessage
                 ?? diff.DimensionMismatchDescription
-                ?? $"pixel ({diff.DiffX}, {diff.DiffY}) differs by {diff.MaxChannelDifference}";
+                ?? $"{diff.MismatchedPixelCount:N0} px mismatched ({diff.MismatchPercentage:0.###}%), " +
+                   $"region ({diff.BoundingBoxMinX}, {diff.BoundingBoxMinY})–({diff.BoundingBoxMaxX}, {diff.BoundingBoxMaxY})";
 
             Console.WriteLine($"DIFF   {diff.ElementName}: {reason}");
         }

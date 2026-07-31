@@ -80,7 +80,9 @@ public class ScreenshotDiffHtmlReportWriter : IScreenshotDiffHtmlReportWriter
         }
         else if (!diff.Matches)
         {
-            html.AppendLine($"<p>pixel ({diff.DiffX}, {diff.DiffY}) differs by {diff.MaxChannelDifference}</p>");
+            html.AppendLine(
+                $"<p>{diff.MismatchedPixelCount:N0} px mismatched ({diff.MismatchPercentage:0.###}%), " +
+                $"region ({diff.BoundingBoxMinX}, {diff.BoundingBoxMinY})–({diff.BoundingBoxMaxX}, {diff.BoundingBoxMaxY})</p>");
         }
 
         html.AppendLine("</div>");

@@ -61,9 +61,13 @@ public class ScreenshotDiffHtmlReportWriterTests : IDisposable
                     Matches = false,
                     BackendAPath = Path.Combine(_tempDirectory, "A", "Controls", "Button.png"),
                     BackendBPath = Path.Combine(_tempDirectory, "B", "Controls", "Button.png"),
-                    DiffX = 12,
-                    DiffY = 34,
-                    MaxChannelDifference = 200,
+                    MismatchedPixelCount = 42,
+                    TotalPixelCount = 1000,
+                    MismatchPercentage = 4.2,
+                    BoundingBoxMinX = 12,
+                    BoundingBoxMinY = 34,
+                    BoundingBoxMaxX = 56,
+                    BoundingBoxMaxY = 78,
                 },
             },
         };
@@ -75,8 +79,10 @@ public class ScreenshotDiffHtmlReportWriterTests : IDisposable
 
         string html = File.ReadAllText(reportPath);
         html.ShouldContain("Controls/Button");
+        html.ShouldContain("42");
+        html.ShouldContain("4.2%");
         html.ShouldContain("(12, 34)");
-        html.ShouldContain("200");
+        html.ShouldContain("(56, 78)");
     }
 
     [Fact]
@@ -128,9 +134,13 @@ public class ScreenshotDiffHtmlReportWriterTests : IDisposable
                     Matches = false,
                     BackendAPath = Path.Combine(_tempDirectory, "A", "Mismatched.png"),
                     BackendBPath = Path.Combine(_tempDirectory, "B", "Mismatched.png"),
-                    DiffX = 1,
-                    DiffY = 1,
-                    MaxChannelDifference = 100,
+                    MismatchedPixelCount = 5,
+                    TotalPixelCount = 100,
+                    MismatchPercentage = 5.0,
+                    BoundingBoxMinX = 1,
+                    BoundingBoxMinY = 1,
+                    BoundingBoxMaxX = 2,
+                    BoundingBoxMaxY = 2,
                 },
             },
         };

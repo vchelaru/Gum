@@ -31,4 +31,11 @@ public class ScreenshotDiffRequest
     /// antialiasing/hinting drift between renderers.
     /// </summary>
     public byte Tolerance { get; init; } = 2;
+
+    /// <summary>
+    /// How many pixels away (in any direction) to search for a matching color before counting a
+    /// pixel as a real mismatch. Absorbs the few-pixel positional jitter two different renderers'
+    /// antialiasing/rounding produces at edges, without masking pixels that are actually wrong.
+    /// </summary>
+    public int ProximityRadius { get; init; } = 1;
 }

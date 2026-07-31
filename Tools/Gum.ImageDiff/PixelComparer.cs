@@ -40,6 +40,89 @@ public static class PixelComparer
         return PixelDiffResult.Match();
     }
 
+    /// <summary>
+    /// Aggregate, proximity-tolerant comparison for two images rendered by different backends.
+    /// </summary>
+    /// <remarks>
+    /// A pixel that fails the strict same-coordinate tolerance check is only counted as a real
+    /// mismatch if no pixel within <paramref name="proximityRadius"/> of it in <paramref
+    /// name="actual"/> matches <paramref name="expected"/>'s color — this absorbs the few-pixel
+    /// positional jitter two different renderers' antialiasing/rounding produces at edges without
+    /// masking pixels that are actually wrong. Reports the mismatch count/percentage and bounding
+    /// box of all real mismatches, rather than <see cref="Compare"/>'s single first-differing pixel
+    /// — a global shift or one missing region look identical under "first pixel that differs."
+    /// </remarks>
+    public static ImageDiffResult CompareApproximate(
+        SKBitmap expected, SKBitmap actual, byte colorTolerance = 2, int proximityRadius = 1)
+    {
+        if (expected.Width != actual.Width || expected.Height != actual.Height)
+        {
+            return ImageDiffResult.DimensionMismatch(expected.Width, expected.Height, actual.Width, actual.Height);
+        }
+
+        int width = expected.Width;
+        int height = expected.Height;
+        int mismatchCount = 0;
+        int minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue, maxY = int.MinValue;
+
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                SKColor expectedPixel = expected.GetPixel(x, y);
+                if (MaxChannelDifference(expectedPixel, actual.GetPixel(x, y)) <= colorTolerance)
+                {
+                    continue;
+                }
+
+                if (HasNearbyMatch(actual, expectedPixel, x, y, colorTolerance, proximityRadius, width, height))
+                {
+                    continue;
+                }
+
+                mismatchCount++;
+                minX = Math.Min(minX, x);
+                minY = Math.Min(minY, y);
+                maxX = Math.Max(maxX, x);
+                maxY = Math.Max(maxY, y);
+            }
+        }
+
+        int totalPixelCount = width * height;
+        return mismatchCount == 0
+            ? ImageDiffResult.Match(totalPixelCount)
+            : ImageDiffResult.Mismatch(mismatchCount, totalPixelCount, minX, minY, maxX, maxY);
+    }
+
+    private static bool HasNearbyMatch(
+        SKBitmap actual, SKColor expectedPixel, int x, int y, byte colorTolerance, int radius, int width, int height)
+    {
+        for (int dy = -radius; dy <= radius; dy++)
+        {
+            for (int dx = -radius; dx <= radius; dx++)
+            {
+                if (dx == 0 && dy == 0)
+                {
+                    continue;
+                }
+
+                int nx = x + dx;
+                int ny = y + dy;
+                if (nx < 0 || nx >= width || ny < 0 || ny >= height)
+                {
+                    continue;
+                }
+
+                if (MaxChannelDifference(expectedPixel, actual.GetPixel(nx, ny)) <= colorTolerance)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private static int MaxChannelDifference(SKColor expected, SKColor actual)
     {
         int diff = Math.Abs(expected.Red - actual.Red);

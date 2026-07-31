@@ -75,7 +75,7 @@ public class ScreenshotDiffService : IScreenshotDiffService
         using SKBitmap bitmapB = SKBitmap.Decode(resultB.OutputPath)
             ?? throw new InvalidOperationException($"Failed to decode '{resultB.OutputPath}'.");
 
-        PixelDiffResult diff = PixelComparer.Compare(bitmapA, bitmapB, request.Tolerance);
+        ImageDiffResult diff = PixelComparer.CompareApproximate(bitmapA, bitmapB, request.Tolerance, request.ProximityRadius);
 
         return new ElementScreenshotDiff
         {
@@ -83,9 +83,13 @@ public class ScreenshotDiffService : IScreenshotDiffService
             Matches = diff.Matches,
             BackendAPath = resultA.OutputPath,
             BackendBPath = resultB.OutputPath,
-            DiffX = diff.DiffX,
-            DiffY = diff.DiffY,
-            MaxChannelDifference = diff.Matches ? null : diff.MaxChannelDifference,
+            MismatchedPixelCount = diff.MismatchedPixelCount,
+            TotalPixelCount = diff.TotalPixelCount,
+            MismatchPercentage = diff.MismatchPercentage,
+            BoundingBoxMinX = diff.BoundingBoxMinX,
+            BoundingBoxMinY = diff.BoundingBoxMinY,
+            BoundingBoxMaxX = diff.BoundingBoxMaxX,
+            BoundingBoxMaxY = diff.BoundingBoxMaxY,
             DimensionMismatchDescription = diff.DimensionMismatchDescription,
         };
     }
