@@ -110,37 +110,33 @@ public class VariableReferenceLogicTests : BaseTestClass
     #region ReactIfChangedMemberIsVariableReference
 
     [Fact]
-    public void ReactIfChangedMemberIsVariableReference_ColorAssignment_ExpandsToThreeEntries()
+    public void ReactIfChangedMemberIsVariableReference_ColorAssignment_StaysCollapsed()
     {
         // "Background.Color" has no explicit left side, so AddImpliedLeftSide runs first,
-        // converting it to "Color = Background.Color", then the composite expansion splits it.
+        // converting it to "Color = Background.Color" - but composite expansion no longer runs
+        // at authoring time, so the line stays collapsed on disk. Expansion happens at apply
+        // time instead (GumRuntime.ElementSaveExtensions.ApplyVariableReferences).
         (StateSave defaultState, VariableListSave<string> varList) =
             BuildOwnerWithChannelsAndReference("Background.Color", "Red", "Green", "Blue");
 
         _sut.ReactIfChangedMemberIsVariableReference(
             instance: null, defaultState, changedMember: "VariableReferences", oldValue: null);
 
-        varList.Value.Count.ShouldBe(3);
-        varList.Value.ShouldContain("Red = Background.Red");
-        varList.Value.ShouldContain("Green = Background.Green");
-        varList.Value.ShouldContain("Blue = Background.Blue");
+        varList.Value.Count.ShouldBe(1);
+        varList.Value[0].ShouldBe("Color = Background.Color");
     }
 
     [Fact]
-    public void ReactIfChangedMemberIsVariableReference_FillColorAssignment_ExpandsToFillChannels()
+    public void ReactIfChangedMemberIsVariableReference_FillColorAssignment_StaysCollapsed()
     {
-        // Affixed colors expand to their affixed channels, the inverse of how CompositeMemberLogic
-        // collapses FillRed/FillGreen/FillBlue into a single "FillColor" swatch.
         (StateSave defaultState, VariableListSave<string> varList) =
-            BuildOwnerWithChannelsAndReference("Background.FillColor", "FillRed", "FillGreen", "FillBlue");
+            BuildOwnerWithChannelsAndReference("FillColor = Background.FillColor", "FillRed", "FillGreen", "FillBlue");
 
         _sut.ReactIfChangedMemberIsVariableReference(
             instance: null, defaultState, changedMember: "VariableReferences", oldValue: null);
 
-        varList.Value.Count.ShouldBe(3);
-        varList.Value.ShouldContain("FillRed = Background.FillRed");
-        varList.Value.ShouldContain("FillGreen = Background.FillGreen");
-        varList.Value.ShouldContain("FillBlue = Background.FillBlue");
+        varList.Value.Count.ShouldBe(1);
+        varList.Value[0].ShouldBe("FillColor = Background.FillColor");
     }
 
     [Fact]
@@ -160,7 +156,7 @@ public class VariableReferenceLogicTests : BaseTestClass
     }
 
     [Fact]
-    public void ReactIfChangedMemberIsVariableReference_StrokeColorAssignment_ExpandsToStrokeChannels()
+    public void ReactIfChangedMemberIsVariableReference_StrokeColorAssignment_StaysCollapsed()
     {
         (StateSave defaultState, VariableListSave<string> varList) =
             BuildOwnerWithChannelsAndReference("Background.StrokeColor", "StrokeRed", "StrokeGreen", "StrokeBlue");
@@ -168,14 +164,12 @@ public class VariableReferenceLogicTests : BaseTestClass
         _sut.ReactIfChangedMemberIsVariableReference(
             instance: null, defaultState, changedMember: "VariableReferences", oldValue: null);
 
-        varList.Value.Count.ShouldBe(3);
-        varList.Value.ShouldContain("StrokeRed = Background.StrokeRed");
-        varList.Value.ShouldContain("StrokeGreen = Background.StrokeGreen");
-        varList.Value.ShouldContain("StrokeBlue = Background.StrokeBlue");
+        varList.Value.Count.ShouldBe(1);
+        varList.Value[0].ShouldBe("StrokeColor = Background.StrokeColor");
     }
 
     [Fact]
-    public void ReactIfChangedMemberIsVariableReference_SuffixedColorAssignment_ExpandsToSuffixedChannels()
+    public void ReactIfChangedMemberIsVariableReference_SuffixedColorAssignment_StaysCollapsed()
     {
         // Gradient channels carry a numeric suffix (e.g. Color2 -> Red2/Green2/Blue2).
         (StateSave defaultState, VariableListSave<string> varList) =
@@ -184,10 +178,8 @@ public class VariableReferenceLogicTests : BaseTestClass
         _sut.ReactIfChangedMemberIsVariableReference(
             instance: null, defaultState, changedMember: "VariableReferences", oldValue: null);
 
-        varList.Value.Count.ShouldBe(3);
-        varList.Value.ShouldContain("Red2 = Background.Red2");
-        varList.Value.ShouldContain("Green2 = Background.Green2");
-        varList.Value.ShouldContain("Blue2 = Background.Blue2");
+        varList.Value.Count.ShouldBe(1);
+        varList.Value[0].ShouldBe("Color2 = Background.Color2");
     }
 
     [Fact]
@@ -617,6 +609,45 @@ public class VariableReferenceLogicTests : BaseTestClass
             trySave: false);
 
         varList.Value[0].ShouldBe("ButtonCategoryState = \"Disabled\"");
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_CollapsedColorReference_AcceptsLineAndAppliesAllChannels()
+    {
+        // "Color = Source.Color" is not a real StateSave variable on either side, so validation
+        // must special-case it rather than reporting "Could not find variable [Color]". The line
+        // stays collapsed on disk; Red/Green/Blue are materialized via the same apply-time
+        // expansion GumRuntime.ElementSaveExtensions.ApplyVariableReferences performs.
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ScreenSave screen = BuildScreenWithVariableReference(
+            line: "Color = Source.Color",
+            out StateSave defaultState,
+            out VariableListSave<string> varList);
+
+        defaultState.Variables.Add(new VariableSave { Name = "Red", Value = 0, Type = "int", SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = "Green", Value = 0, Type = "int", SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = "Blue", Value = 0, Type = "int", SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = "Source.Red", Value = 10, Type = "int", SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = "Source.Green", Value = 20, Type = "int", SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = "Source.Blue", Value = 30, Type = "int", SetsValue = true });
+
+        project.Screens.Add(screen);
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: screen,
+            leftSideInstance: null,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "VariableReferences",
+            trySave: false);
+
+        varList.Value.Count.ShouldBe(1);
+        varList.Value[0].ShouldBe("Color = Source.Color");
+        defaultState.GetValue("Red").ShouldBe(10);
+        defaultState.GetValue("Green").ShouldBe(20);
+        defaultState.GetValue("Blue").ShouldBe(30);
     }
 
     #endregion

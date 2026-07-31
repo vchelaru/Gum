@@ -586,7 +586,7 @@ namespace GumRuntime
         /// are not materialized into the state's <see cref="StateSave.Variables"/>. This
         /// indicates the state was authored by something other than the Gum tool's normal
         /// reference-edit path (AI agent, hand edit, programmatic creation, partial delete)
-        /// and that running <see cref="ApplyVariableReferences"/> on each returned state
+        /// and that running <c>ApplyVariableReferences</c> on each returned state
         /// would restore consistency. Commented-out (<c>//</c>) and unparseable lines are
         /// skipped; they are not treated as missing materializations.
         /// </summary>
@@ -615,6 +615,7 @@ namespace GumRuntime
                 }
 
                 var sourceObject = variableList.SourceObject;
+                ElementSave? channelOwner = ResolveChannelOwner(state, sourceObject);
 
                 foreach (string referenceString in variableList.ValueAsIList)
                 {
@@ -623,28 +624,50 @@ namespace GumRuntime
                         continue;
                     }
 
-                    var split = referenceString
-                        .Split(equalsArray, 2, StringSplitOptions.RemoveEmptyEntries);
-                    if (split.Length != 2)
+                    foreach (string expandedReferenceString in ExpandCompositeReferenceLine(referenceString, channelOwner))
                     {
-                        continue;
-                    }
+                        var split = expandedReferenceString
+                            .Split(equalsArray, 2, StringSplitOptions.RemoveEmptyEntries);
+                        if (split.Length != 2)
+                        {
+                            continue;
+                        }
 
-                    var left = split[0].Trim();
-                    var effectiveLeft = string.IsNullOrEmpty(sourceObject)
-                        ? left
-                        : $"{sourceObject}.{left}";
+                        var left = split[0].Trim();
+                        var effectiveLeft = string.IsNullOrEmpty(sourceObject)
+                            ? left
+                            : $"{sourceObject}.{left}";
 
-                    var hasMaterialized = state.Variables
-                        .Any(v => v.Name == effectiveLeft);
-                    if (!hasMaterialized)
-                    {
-                        return true;
+                        var hasMaterialized = state.Variables
+                            .Any(v => v.Name == effectiveLeft);
+                        if (!hasMaterialized)
+                        {
+                            return true;
+                        }
                     }
                 }
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Resolves the <see cref="ElementSave"/> whose declared root variables determine whether a
+        /// composite reference's channels (e.g. Red/Green/Blue for <c>Color</c>) are real for the
+        /// object a <c>VariableReferences</c> row applies to - the row's own state's element when
+        /// unqualified, or the qualified instance's type when <paramref name="sourceObject"/> is set.
+        /// Public for the same reason as <see cref="ExpandCompositeReferenceLine"/>.
+        /// </summary>
+        public static ElementSave? ResolveChannelOwner(StateSave state, string? sourceObject)
+        {
+            ElementSave? element = state.ParentContainer;
+            if (string.IsNullOrEmpty(sourceObject) || element == null)
+            {
+                return element;
+            }
+
+            InstanceSave? instance = element.GetInstance(sourceObject);
+            return instance != null ? ObjectFinder.Self.GetElementSave(instance) : null;
         }
 
         /// <summary>
@@ -753,25 +776,29 @@ namespace GumRuntime
                         instance = element.GetInstance(variableList.SourceObject);
                     }
 
+                    ElementSave? channelOwner = instance != null ? ObjectFinder.Self.GetElementSave(instance) : element;
 
                     foreach (string referenceString in variableList.ValueAsIList)
                     {
-                        // this applies the variable and returns info about the application:
-                        var result = ApplyVariableReferencesOnSpecificOwner(instance, referenceString, stateSave, liveRoot);
-                        // In the gum tool, we need to check if the applicatoin actually changed the value
-                        // If so, we notify plugins that the variable was changed in case any additional changes
-                        // need to happen
-                        if (!string.IsNullOrEmpty(result.VariableName))
+                        foreach (string expandedReferenceString in ExpandCompositeReferenceLine(referenceString, channelOwner))
                         {
-                            var unqualified = result.VariableName;
-                            if (unqualified?.Contains(".") == true)
+                            // this applies the variable and returns info about the application:
+                            var result = ApplyVariableReferencesOnSpecificOwner(instance, expandedReferenceString, stateSave, liveRoot);
+                            // In the gum tool, we need to check if the applicatoin actually changed the value
+                            // If so, we notify plugins that the variable was changed in case any additional changes
+                            // need to happen
+                            if (!string.IsNullOrEmpty(result.VariableName))
                             {
-                                unqualified = unqualified.Substring(unqualified.IndexOf(".") + 1);
-                            }
-                            if (!ValueEquality(result.OldValue, result.NewValue))
-                            {
-                                VariableChangedThroughReference?.Invoke(
-                                    element, null, unqualified, result.OldValue);
+                                var unqualified = result.VariableName;
+                                if (unqualified?.Contains(".") == true)
+                                {
+                                    unqualified = unqualified.Substring(unqualified.IndexOf(".") + 1);
+                                }
+                                if (!ValueEquality(result.OldValue, result.NewValue))
+                                {
+                                    VariableChangedThroughReference?.Invoke(
+                                        element, null, unqualified, result.OldValue);
+                                }
                             }
                         }
                     }
@@ -793,9 +820,13 @@ namespace GumRuntime
                 {
                     if (variableList.SourceObject == null)
                     {
+                        ElementSave? channelOwner = stateSave.ParentContainer;
                         foreach (string referenceString in variableList.ValueAsIList)
                         {
-                            ApplyVariableReferencesOnSpecificOwner(graphicalElement, referenceString, stateSave, graphicalElement);
+                            foreach (string expandedReferenceString in ExpandCompositeReferenceLine(referenceString, channelOwner))
+                            {
+                                ApplyVariableReferencesOnSpecificOwner(graphicalElement, expandedReferenceString, stateSave, graphicalElement);
+                            }
                         }
                     }
                     else
@@ -815,9 +846,15 @@ namespace GumRuntime
 
                         if (instance != null)
                         {
+                            ElementSave? channelOwner = instance.Tag is InstanceSave instanceSave
+                                ? ObjectFinder.Self.GetElementSave(instanceSave)
+                                : null;
                             foreach (string referenceString in variableList.ValueAsIList)
                             {
-                                ApplyVariableReferencesOnSpecificOwner(instance, referenceString, stateSave, graphicalElement);
+                                foreach (string expandedReferenceString in ExpandCompositeReferenceLine(referenceString, channelOwner))
+                                {
+                                    ApplyVariableReferencesOnSpecificOwner(instance, expandedReferenceString, stateSave, graphicalElement);
+                                }
                             }
                         }
                     }
@@ -826,6 +863,160 @@ namespace GumRuntime
         }
 
         static char[] equalsArray = new char[] { '=' };
+
+        /// <summary>
+        /// A composite reference property (e.g. <c>Color</c>) backed by several sibling "channel"
+        /// variables (e.g. Red/Green/Blue) that must stay in sync when the composite is referenced
+        /// as a whole (<c>Color = Other.Color</c>). Mirrors the tool-side
+        /// <c>CompositeMemberDescriptor</c> used for the Variables-tab swatch, minus the WPF-only
+        /// compose/decompose/display concerns - this half only needs to expand a reference line
+        /// into one line per channel at apply time.
+        /// </summary>
+        private readonly struct CompositeReferenceDescriptor
+        {
+            public string CompositeToken { get; }
+            public string[] ChannelRootNames { get; }
+
+            public CompositeReferenceDescriptor(string compositeToken, string[] channelRootNames)
+            {
+                CompositeToken = compositeToken;
+                ChannelRootNames = channelRootNames;
+            }
+
+            /// <summary>
+            /// If <paramref name="compositeName"/> contains this descriptor's token surrounded by
+            /// some prefix/suffix (e.g. <c>StrokeColor</c>, <c>Color2</c>), outputs the matching
+            /// channel variable names (e.g. <c>StrokeColor</c> -&gt; StrokeRed/StrokeGreen/StrokeBlue).
+            /// </summary>
+            public bool TryGetChannelNames(string compositeName, out IReadOnlyList<string> channelNames)
+            {
+                int index = compositeName.IndexOf(CompositeToken, StringComparison.Ordinal);
+                if (index < 0)
+                {
+                    channelNames = Array.Empty<string>();
+                    return false;
+                }
+
+                string prefix = compositeName.Substring(0, index);
+                string suffix = compositeName.Substring(index + CompositeToken.Length);
+
+                channelNames = ChannelRootNames.Select(token => prefix + token + suffix).ToArray();
+                return true;
+            }
+        }
+
+        private static readonly CompositeReferenceDescriptor[] CompositeReferenceDescriptors = new[]
+        {
+            new CompositeReferenceDescriptor("Color", new[] { "Red", "Green", "Blue" }),
+            new CompositeReferenceDescriptor("CornerRadius", new[]
+            {
+                "CornerRadius", "CustomRadiusTopLeft", "CustomRadiusTopRight",
+                "CustomRadiusBottomLeft", "CustomRadiusBottomRight"
+            }),
+        };
+
+        /// <summary>
+        /// Returns the channel root names for a known composite token (e.g. <c>"Color"</c> -&gt;
+        /// Red/Green/Blue), or null if the token isn't registered. Exposed so other
+        /// composite-aware consumers - e.g. the tool's <c>CompositeMemberRegistry</c>, which adds
+        /// WPF display/compose concerns on top - can source the channel list from one place
+        /// instead of duplicating it.
+        /// </summary>
+        public static string[]? GetCompositeChannelRootNames(string compositeToken)
+        {
+            foreach (CompositeReferenceDescriptor descriptor in CompositeReferenceDescriptors)
+            {
+                if (descriptor.CompositeToken == compositeToken)
+                {
+                    return descriptor.ChannelRootNames;
+                }
+            }
+
+            return null;
+        }
+
+        private static bool TryGetCompositeChannelNames(string compositeName, out IReadOnlyList<string> channelNames)
+        {
+            foreach (CompositeReferenceDescriptor descriptor in CompositeReferenceDescriptors)
+            {
+                if (descriptor.TryGetChannelNames(compositeName, out channelNames))
+                {
+                    return true;
+                }
+            }
+
+            channelNames = Array.Empty<string>();
+            return false;
+        }
+
+        /// <summary>
+        /// True only if <paramref name="channelOwner"/> declares a root variable for every channel -
+        /// i.e. the composite name really is backed by real channels on this element, not just a
+        /// coincidental name match (e.g. a literal "BackgroundColor" scalar with no
+        /// BackgroundRed/Green/Blue).
+        /// </summary>
+        private static bool OwnerHasAllCompositeChannels(IReadOnlyList<string> channelNames, ElementSave? channelOwner)
+        {
+            if (channelOwner == null)
+            {
+                return false;
+            }
+
+            foreach (string channelName in channelNames)
+            {
+                if (ObjectFinder.Self.GetRootVariable(channelName, channelOwner) == null)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Expands a single reference line into one line per channel when its left side is a
+        /// composite property directly referencing the same composite on another object (e.g.
+        /// <c>Color = Other.Color</c> -&gt; <c>Red = Other.Red</c>, <c>Green = Other.Green</c>,
+        /// <c>Blue = Other.Blue</c>). Returns the line unchanged (as a single-item sequence) when it
+        /// isn't a composite reference. This is what lets the collapsed form stay on disk while
+        /// every apply/evaluate/validate path downstream only ever sees plain single-channel lines.
+        /// Public so other GumCommon-tier consumers of raw <c>VariableReferences</c> line text
+        /// (e.g. <c>HeadlessErrorChecker</c>'s reference-conflict check) can expand consistently
+        /// with how references are actually applied, instead of duplicating the channel table.
+        /// </summary>
+        public static IEnumerable<string> ExpandCompositeReferenceLine(string referenceString, ElementSave? channelOwner)
+        {
+            if (string.IsNullOrEmpty(referenceString) || referenceString.StartsWith("//"))
+            {
+                yield return referenceString;
+                yield break;
+            }
+
+            string[] split = referenceString
+                .Split(equalsArray, 2, StringSplitOptions.RemoveEmptyEntries)
+                .Select(item => item.Trim())
+                .ToArray();
+
+            if (split.Length == 2)
+            {
+                string left = split[0];
+                string right = split[1];
+
+                if (right.EndsWith("." + left, StringComparison.Ordinal) &&
+                    TryGetCompositeChannelNames(left, out IReadOnlyList<string> channelNames) &&
+                    OwnerHasAllCompositeChannels(channelNames, channelOwner))
+                {
+                    string withoutVariable = right.Substring(0, right.Length - (1 + left.Length));
+                    foreach (string channelName in channelNames)
+                    {
+                        yield return $"{channelName} = {withoutVariable}.{channelName}";
+                    }
+                    yield break;
+                }
+            }
+
+            yield return referenceString;
+        }
 
         /// <summary>
         /// Evaluates the reference string (such as X = SomeOtherItem.X), applying the right side to the left side.

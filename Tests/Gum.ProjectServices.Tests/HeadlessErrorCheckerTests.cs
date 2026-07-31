@@ -647,6 +647,42 @@ public class HeadlessErrorCheckerTests : BaseTestClass
     }
 
     [Fact]
+    public void GetErrorsFor_ShouldReportGum0002_WhenCollapsedColorReferenceChannelDisagreesWithMaterializedScalar()
+    {
+        // "Color = Source.Color" is a collapsed composite reference - Red/Green/Blue are the real
+        // channels. An explicit Red=14 that disagrees with the reference's evaluated Red (100)
+        // must still be flagged, even though "Color" itself is never a materialized scalar to
+        // compare directly against.
+        ComponentSave component = new ComponentSave { Name = "BadColorComponent", BaseType = "Container" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = component };
+        component.States.Add(state);
+
+        state.Variables.Add(new VariableSave { Name = "Source.Red", Type = "int", Value = 100, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "Source.Green", Type = "int", Value = 20, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "Source.Blue", Type = "int", Value = 30, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "Red", Type = "int", Value = 14, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "Green", Type = "int", Value = 20, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "Blue", Type = "int", Value = 30, SetsValue = true });
+
+        VariableListSave<string> refs = new VariableListSave<string>
+        {
+            Name = "VariableReferences",
+            Type = "string"
+        };
+        refs.Value.Add("Color = Source.Color");
+        state.VariableLists.Add(refs);
+
+        Project.Components.Add(component);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe("GUM0002");
+        error.ElementName.ShouldBe("BadColorComponent");
+        error.Message.ShouldContain("Red");
+    }
+
+    [Fact]
     public void GetErrorsFor_ShouldNotReportGum0002_WhenScalarMatchesEvaluatedReference()
     {
         // Regression guard: when the materialized scalar matches the evaluated

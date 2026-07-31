@@ -63,6 +63,53 @@ public class ReferencePropagationServiceTests : IDisposable
         return component;
     }
 
+    // The type Red/Green/Blue-composite components derive from. Its own DefaultState is what
+    // tells the composite-channel guard the channels are real - a real ColoredRectangle-derived
+    // component normally doesn't redeclare inherited scalars on its own state unless overridden,
+    // so the schema (channel existence) and the materialized value live on different states.
+    private static ComponentSave BuildColorTypeComponent()
+    {
+        ComponentSave colorType = new ComponentSave { Name = "ColorType" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = colorType };
+        state.Variables.Add(new VariableSave { Name = "Red", Type = "int", Value = 0, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "Green", Type = "int", Value = 0, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "Blue", Type = "int", Value = 0, SetsValue = true });
+        colorType.States.Add(state);
+        return colorType;
+    }
+
+    // "Color = Source.Color" is a collapsed composite reference - Red/Green/Blue are the real
+    // materialized scalars. materializeChannels controls whether this component's OWN state
+    // already records them (simulating post-propagation) or not (pre-propagation); either way
+    // BuildColorTypeComponent (added separately via BaseType) is what makes the channels real.
+    private static ComponentSave BuildComponentWithCollapsedColorReference(string componentName, bool materializeChannels)
+    {
+        ComponentSave component = new ComponentSave { Name = componentName, BaseType = "ColorType" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = component };
+        component.States.Add(state);
+
+        if (materializeChannels)
+        {
+            state.Variables.Add(new VariableSave { Name = "Red", Type = "int", Value = 10, SetsValue = true });
+            state.Variables.Add(new VariableSave { Name = "Green", Type = "int", Value = 20, SetsValue = true });
+            state.Variables.Add(new VariableSave { Name = "Blue", Type = "int", Value = 30, SetsValue = true });
+        }
+
+        state.Variables.Add(new VariableSave { Name = "Source.Red", Type = "int", Value = 10, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "Source.Green", Type = "int", Value = 20, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "Source.Blue", Type = "int", Value = 30, SetsValue = true });
+
+        VariableListSave<string> refs = new VariableListSave<string>
+        {
+            Name = "VariableReferences",
+            Type = "string"
+        };
+        refs.Value.Add("Color = Source.Color");
+        state.VariableLists.Add(refs);
+
+        return component;
+    }
+
     [Fact]
     public void Detect_ProjectWithUnpropagatedComponent_ReportsThatComponent()
     {
@@ -136,5 +183,38 @@ public class ReferencePropagationServiceTests : IDisposable
         IReadOnlyList<ElementSave> modified = _sut.PropagateReferences(project);
 
         modified.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Detect_ComponentWithMaterializedCollapsedColorReference_ReportsClean()
+    {
+        // Red/Green/Blue are already materialized (10/20/30) - the collapsed "Color = ..."
+        // row must not be treated as unpropagated just because no literal "Color" scalar exists.
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(BuildColorTypeComponent());
+        ComponentSave component = BuildComponentWithCollapsedColorReference("ColorComponent", materializeChannels: true);
+        project.Components.Add(component);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        DetectUnpropagatedReferencesResult result = _sut.Detect(project);
+
+        result.HasUnpropagatedReferences.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void PropagateReferences_CollapsedColorReference_MaterializesAllThreeChannels()
+    {
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(BuildColorTypeComponent());
+        ComponentSave component = BuildComponentWithCollapsedColorReference("ColorComponent", materializeChannels: false);
+        project.Components.Add(component);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        IReadOnlyList<ElementSave> modified = _sut.PropagateReferences(project);
+
+        modified.Count.ShouldBe(1);
+        component.DefaultState.GetValue("Red").ShouldBe(10);
+        component.DefaultState.GetValue("Green").ShouldBe(20);
+        component.DefaultState.GetValue("Blue").ShouldBe(30);
     }
 }

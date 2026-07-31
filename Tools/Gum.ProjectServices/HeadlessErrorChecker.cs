@@ -141,11 +141,18 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                 continue;
             }
             string? sourceObject = variableList.SourceObject;
+            ElementSave? channelOwner = ElementSaveExtensions.ResolveChannelOwner(state, sourceObject);
             foreach (string referenceString in variableList.ValueAsIList)
             {
-                if (TryParseReference(referenceString, sourceObject, out string qualifiedLeft, out string right))
+                // A collapsed composite line (e.g. "Color = Other.Color") never materializes a
+                // literal "Color" scalar - only Red/Green/Blue do - so expand to the underlying
+                // channels first, the same way ApplyVariableReferences does at apply time.
+                foreach (string expandedReferenceString in ElementSaveExtensions.ExpandCompositeReferenceLine(referenceString, channelOwner))
                 {
-                    EmitConflictIfPresent(element, state, state, qualifiedLeft, right, errors);
+                    if (TryParseReference(expandedReferenceString, sourceObject, out string qualifiedLeft, out string right))
+                    {
+                        EmitConflictIfPresent(element, state, state, qualifiedLeft, right, errors);
+                    }
                 }
             }
         }
@@ -187,12 +194,16 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                 {
                     continue;
                 }
+                ElementSave? channelOwner = ElementSaveExtensions.ResolveChannelOwner(matchedState, sourceObject: null);
                 foreach (string referenceString in variableList.ValueAsIList)
                 {
-                    if (TryParseReference(referenceString, sourceObject: null, out string leftOnInstance, out string right))
+                    foreach (string expandedReferenceString in ElementSaveExtensions.ExpandCompositeReferenceLine(referenceString, channelOwner))
                     {
-                        string qualifiedLeft = $"{variable.SourceObject}.{leftOnInstance}";
-                        EmitConflictIfPresent(element, state, matchedState, qualifiedLeft, right, errors);
+                        if (TryParseReference(expandedReferenceString, sourceObject: null, out string leftOnInstance, out string right))
+                        {
+                            string qualifiedLeft = $"{variable.SourceObject}.{leftOnInstance}";
+                            EmitConflictIfPresent(element, state, matchedState, qualifiedLeft, right, errors);
+                        }
                     }
                 }
             }
