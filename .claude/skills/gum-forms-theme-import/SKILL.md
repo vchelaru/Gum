@@ -161,12 +161,18 @@ almost never is), generation fails — logged as `KernSmith error: System font '
 in the tool's Output panel, easy to miss — and the text silently falls back to the embedded
 default (`Font18Arial`), which looks like a rendering/alpha bug at a glance, not a missing-font one.
 
-The fix is to set `Font` to the literal bundled filename instead (`"SairaCondensed-Regular.ttf"`,
-matching the file under the theme's `Fonts/` folder) — `IsFontFilePath`/`ResolveTtfSourcePath`
+The fix is to set `Font` to the literal bundled path instead — `IsFontFilePath`/`ResolveTtfSourcePath`
 treat any `Font` value ending in `.ttf` as a direct file reference, bypassing system-font lookup
-entirely. There's no separate "pick the bold weight" mechanism on this path — a `Strong`/bold style
-must point `Font` at the bold-weight file directly (`"SairaCondensed-SemiBold.ttf"`); `IsBold`
-alone does nothing for a `.ttf`-valued `Font`. This has no color-style parallel to check against:
+entirely. **The value must include the `Fonts/` folder segment** (`"Fonts/SairaCondensed-Regular.ttf"`,
+not the bare filename) — `ResolveFontFilePath` resolves a non-rooted path against the *project
+root* (the `.gumx`'s own directory), not the `Fonts/` folder specifically, so a bare filename looks
+for the ttf directly in the project root and silently fails to find it there. That failure is
+swallowed by a bare `catch { }` around the font-creation call (`CustomSetPropertyOnRenderable.
+GetOrCreateBakedFont`) with **no Output-panel message at all** — quieter than the system-font-lookup
+failure above, and easy to mistake for "the fix didn't take" after already fixing the family-name
+half of this. There's no separate "pick the bold weight" mechanism on this path — a `Strong`/bold
+style must point `Font` at the bold-weight file directly (`"Fonts/SairaCondensed-SemiBold.ttf"`);
+`IsBold` alone does nothing for a `.ttf`-valued `Font`. This has no color-style parallel to check against:
 `AllColorVariables_ShouldBeStylesWired` only inspects color-channel suffixes, so a family-name
 `Font` value passes every existing automated check. After fixing `Styles.gucx`, rerun
 `ThemeRecolorHelper` (above) to cascade to every control that references `Styles.Normal.Font`/

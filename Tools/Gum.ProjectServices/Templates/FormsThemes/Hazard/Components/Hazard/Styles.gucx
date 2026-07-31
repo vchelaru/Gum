@@ -278,7 +278,7 @@
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="string" Name="Normal.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">SairaCondensed-Regular.ttf</Value>
+      <Value xsi:type="xsd:string">Fonts/SairaCondensed-Regular.ttf</Value>
     </Variable>
     <Variable Type="int" Name="Normal.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">15</Value>
@@ -365,7 +365,7 @@
       <Value xsi:type="xsd:string">Default</Value>
     </Variable>
     <Variable Type="string" Name="Strong.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">SairaCondensed-SemiBold.ttf</Value>
+      <Value xsi:type="xsd:string">Fonts/SairaCondensed-SemiBold.ttf</Value>
     </Variable>
     <Variable Type="int" Name="Strong.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">15</Value>
