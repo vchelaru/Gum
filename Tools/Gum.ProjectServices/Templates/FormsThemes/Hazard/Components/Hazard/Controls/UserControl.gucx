@@ -63,9 +63,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillRed = Components/Hazard/Styles.Background.FillRed</string>
-        <string>FillGreen = Components/Hazard/Styles.Background.FillGreen</string>
-        <string>FillBlue = Components/Hazard/Styles.Background.FillBlue</string>
+        <string>FillColor = Components/Hazard/Styles.Background.FillColor</string>
       </Value>
     </VariableList>
   </State>

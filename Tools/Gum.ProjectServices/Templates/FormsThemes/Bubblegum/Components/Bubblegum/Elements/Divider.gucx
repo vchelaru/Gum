@@ -302,9 +302,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Bubblegum/Styles.Placeholder.Red</string>
-        <string>Green = Components/Bubblegum/Styles.Placeholder.Green</string>
-        <string>Blue = Components/Bubblegum/Styles.Placeholder.Blue</string>
+        <string>Color = Components/Bubblegum/Styles.Placeholder.Color</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -314,9 +312,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Bubblegum/Styles.Placeholder.Red</string>
-        <string>Green = Components/Bubblegum/Styles.Placeholder.Green</string>
-        <string>Blue = Components/Bubblegum/Styles.Placeholder.Blue</string>
+        <string>Color = Components/Bubblegum/Styles.Placeholder.Color</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -326,9 +322,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Bubblegum/Styles.Placeholder.Red</string>
-        <string>Green = Components/Bubblegum/Styles.Placeholder.Green</string>
-        <string>Blue = Components/Bubblegum/Styles.Placeholder.Blue</string>
+        <string>Color = Components/Bubblegum/Styles.Placeholder.Color</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">

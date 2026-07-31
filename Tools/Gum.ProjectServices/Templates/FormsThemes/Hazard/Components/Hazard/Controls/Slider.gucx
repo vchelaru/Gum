@@ -122,9 +122,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillRed = Components/Hazard/Styles.Selection.FillRed</string>
-        <string>FillGreen = Components/Hazard/Styles.Selection.FillGreen</string>
-        <string>FillBlue = Components/Hazard/Styles.Selection.FillBlue</string>
+        <string>FillColor = Components/Hazard/Styles.Selection.FillColor</string>
       </Value>
     </VariableList>
   </State>
@@ -157,9 +155,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Hazard/Styles.DisabledFill.FillRed</string>
-          <string>FillGreen = Components/Hazard/Styles.DisabledFill.FillGreen</string>
-          <string>FillBlue = Components/Hazard/Styles.DisabledFill.FillBlue</string>
+          <string>FillColor = Components/Hazard/Styles.DisabledFill.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -184,9 +180,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Hazard/Styles.DisabledFill.FillRed</string>
-          <string>FillGreen = Components/Hazard/Styles.DisabledFill.FillGreen</string>
-          <string>FillBlue = Components/Hazard/Styles.DisabledFill.FillBlue</string>
+          <string>FillColor = Components/Hazard/Styles.DisabledFill.FillColor</string>
         </Value>
       </VariableList>
     </State>

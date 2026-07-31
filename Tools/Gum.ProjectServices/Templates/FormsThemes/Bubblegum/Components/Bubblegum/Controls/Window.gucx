@@ -485,9 +485,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillRed = Components/Bubblegum/Styles.Surface1.FillRed</string>
-        <string>FillGreen = Components/Bubblegum/Styles.Surface1.FillGreen</string>
-        <string>FillBlue = Components/Bubblegum/Styles.Surface1.FillBlue</string>
+        <string>FillColor = Components/Bubblegum/Styles.Surface1.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -497,9 +495,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-        <string>FillGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-        <string>FillBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+        <string>FillColor = Components/Bubblegum/Styles.Accent.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -509,9 +505,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillRed = Components/Bubblegum/Styles.Border.FillRed</string>
-        <string>FillGreen = Components/Bubblegum/Styles.Border.FillGreen</string>
-        <string>FillBlue = Components/Bubblegum/Styles.Border.FillBlue</string>
+        <string>FillColor = Components/Bubblegum/Styles.Border.FillColor</string>
       </Value>
     </VariableList>
   </State>

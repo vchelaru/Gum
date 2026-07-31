@@ -121,9 +121,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillRed = Components/Hazard/Styles.Accent.FillRed</string>
-        <string>FillGreen = Components/Hazard/Styles.Accent.FillGreen</string>
-        <string>FillBlue = Components/Hazard/Styles.Accent.FillBlue</string>
+        <string>FillColor = Components/Hazard/Styles.Accent.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -162,9 +160,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Hazard/Styles.Accent.FillRed</string>
-          <string>FillGreen = Components/Hazard/Styles.Accent.FillGreen</string>
-          <string>FillBlue = Components/Hazard/Styles.Accent.FillBlue</string>
+          <string>FillColor = Components/Hazard/Styles.Accent.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -189,9 +185,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Hazard/Styles.AccentHover.FillRed</string>
-          <string>FillGreen = Components/Hazard/Styles.AccentHover.FillGreen</string>
-          <string>FillBlue = Components/Hazard/Styles.AccentHover.FillBlue</string>
+          <string>FillColor = Components/Hazard/Styles.AccentHover.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -216,9 +210,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Hazard/Styles.AccentPressed.FillRed</string>
-          <string>FillGreen = Components/Hazard/Styles.AccentPressed.FillGreen</string>
-          <string>FillBlue = Components/Hazard/Styles.AccentPressed.FillBlue</string>
+          <string>FillColor = Components/Hazard/Styles.AccentPressed.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -243,9 +235,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Hazard/Styles.Accent.FillRed</string>
-          <string>FillGreen = Components/Hazard/Styles.Accent.FillGreen</string>
-          <string>FillBlue = Components/Hazard/Styles.Accent.FillBlue</string>
+          <string>FillColor = Components/Hazard/Styles.Accent.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -270,9 +260,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Hazard/Styles.AccentHover.FillRed</string>
-          <string>FillGreen = Components/Hazard/Styles.AccentHover.FillGreen</string>
-          <string>FillBlue = Components/Hazard/Styles.AccentHover.FillBlue</string>
+          <string>FillColor = Components/Hazard/Styles.AccentHover.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -297,9 +285,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Hazard/Styles.DisabledAccent.FillRed</string>
-          <string>FillGreen = Components/Hazard/Styles.DisabledAccent.FillGreen</string>
-          <string>FillBlue = Components/Hazard/Styles.DisabledAccent.FillBlue</string>
+          <string>FillColor = Components/Hazard/Styles.DisabledAccent.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -324,9 +310,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Hazard/Styles.DisabledAccent.FillRed</string>
-          <string>FillGreen = Components/Hazard/Styles.DisabledAccent.FillGreen</string>
-          <string>FillBlue = Components/Hazard/Styles.DisabledAccent.FillBlue</string>
+          <string>FillColor = Components/Hazard/Styles.DisabledAccent.FillColor</string>
         </Value>
       </VariableList>
     </State>
