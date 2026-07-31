@@ -40,11 +40,13 @@ public sealed class HierarchicalOrderer : IRenderableOrderer
             // #2998 off-screen cull: when a clip is active, skip this renderable and its whole
             // subtree if its bounds fall entirely outside the clip. Gated on a non-null camera
             // (the render path) so the camera-less order-only unit tests are unaffected.
+            // GetCullTestBoundsFor (rather than the plain GetScissorRectangleFor) accounts for
+            // wrapped text whose actual rendered extent exceeds its declared bounds (#4144).
             if (camera != null
                 && activeClip.HasValue
                 && CameraScissorExtensions.CullOffscreenWhenClipped
                 && CameraScissorExtensions.IsFullyOutside(
-                    camera.GetScissorRectangleFor(layer, renderable),
+                    camera.GetCullTestBoundsFor(layer, renderable),
                     activeClip.Value,
                     CameraScissorExtensions.OffscreenCullMarginInPixels))
             {

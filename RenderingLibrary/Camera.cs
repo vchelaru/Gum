@@ -339,17 +339,94 @@ namespace RenderingLibrary
                 return new System.Drawing.Rectangle(camera.ClientLeft, camera.ClientTop, camera.ClientWidth, camera.ClientHeight);
             }
 
-            float worldX = ipso.GetAbsoluteLeft();
-            float worldY = ipso.GetAbsoluteTop();
+            return camera.GetScissorRectangleForWorldBounds(
+                layer,
+                ipso.GetAbsoluteLeft(), ipso.GetAbsoluteTop(),
+                ipso.GetAbsoluteRight(), ipso.GetAbsoluteBottom());
+        }
 
+        /// <summary>
+        /// Like <see cref="GetScissorRectangleFor"/>, but for renderables whose actual drawn extent
+        /// can exceed their own declared bounds, expands the world-space Top/Bottom before
+        /// transforming so the off-screen cull doesn't skip content that is still genuinely on
+        /// screen. The only known case today is wrapped/multi-line text whose Height is an
+        /// independent layout constraint rather than derived from its content — e.g. a multi-line
+        /// Forms TextBox, which scrolls by moving Y while Height stays fixed to the visible box. Its
+        /// <see cref="IText.WrappedTextHeight"/> (the actual rendered extent) can then be far larger
+        /// than Height, so the object's own declared bounds drift entirely outside the clip as it
+        /// scrolls, even though the currently-visible lines should still draw (#4144).
+        ///
+        /// The expansion is symmetric (both Top and Bottom, by the same excess) because this method
+        /// doesn't know the text's vertical alignment (top/center/bottom) — a symmetric expansion is
+        /// the smallest adjustment guaranteed to cover the true rendered span under any of the three.
+        ///
+        /// Used only for the off-screen cull decision (#2998) — <see cref="GetScissorRectangleFor"/>
+        /// is still used, unmodified, to apply the actual GPU clip for ClipsChildren renderables, so
+        /// this never changes what's visually cropped, only what gets culled.
+        /// </summary>
+        public static System.Drawing.Rectangle GetCullTestBoundsFor(this Camera camera, Layer layer, IRenderableIpso ipso)
+        {
+            if (ipso == null)
+            {
+                return camera.GetScissorRectangleFor(layer, ipso);
+            }
+
+            float worldTop = ipso.GetAbsoluteTop();
+            float worldBottom = ipso.GetAbsoluteBottom();
+            ExpandWorldTopBottomForWrappedTextExcess(ipso, ref worldTop, ref worldBottom);
+
+            return camera.GetScissorRectangleForWorldBounds(layer, ipso.GetAbsoluteLeft(), worldTop, ipso.GetAbsoluteRight(), worldBottom);
+        }
+
+        /// <summary>
+        /// Finds the <see cref="IWrappedText"/> for <paramref name="ipso"/> — either <paramref
+        /// name="ipso"/> itself, or (the common case in a real Gum tree) the inner renderable it
+        /// wraps via <see cref="IHasRenderableComponent"/>, since a layout wrapper like
+        /// <c>GraphicalUiElement</c>/<c>TextRuntime</c> does not itself implement
+        /// <see cref="IWrappedText"/> — only the renderable it contains does (#4144).
+        /// </summary>
+        private static IWrappedText? GetWrappedText(IRenderableIpso ipso) =>
+            ipso as IWrappedText ?? (ipso as IHasRenderableComponent)?.RenderableComponent as IWrappedText;
+
+        /// <summary>
+        /// If <paramref name="ipso"/> is (or wraps) an <see cref="IWrappedText"/> whose actual
+        /// rendered extent (<see cref="IText.WrappedTextHeight"/>) exceeds its declared
+        /// <see cref="IPositionedSizedObject.Height"/>, widens <paramref name="worldTop"/>/
+        /// <paramref name="worldBottom"/> by that excess on both edges. Shared by
+        /// <see cref="GetCullTestBoundsFor"/> and any backend-specific cull check that computes its
+        /// own world bounds (e.g. raylib's render-target-bake path) instead of going through it.
+        /// </summary>
+        public static void ExpandWorldTopBottomForWrappedTextExcess(IRenderableIpso ipso, ref float worldTop, ref float worldBottom)
+        {
+            IWrappedText? wrappedText = GetWrappedText(ipso);
+            if (wrappedText != null)
+            {
+                float excess = wrappedText.WrappedTextHeight - ipso.Height;
+                if (excess > 0)
+                {
+                    worldTop -= excess;
+                    worldBottom += excess;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Core of <see cref="GetScissorRectangleFor"/>: transforms explicit world-space bounds into
+        /// a clamped screen-space rectangle. Factored out so <see cref="GetCullTestBoundsFor"/> can
+        /// reuse the exact same transform/clamp pipeline over an adjusted world Top/Bottom, without
+        /// duplicating it.
+        /// </summary>
+        private static System.Drawing.Rectangle GetScissorRectangleForWorldBounds(
+            this Camera camera, Layer layer, float worldLeft, float worldTop, float worldRight, float worldBottom)
+        {
             float screenX, screenY;
             if (layer != null)
             {
-                layer.WorldToScreen(camera, worldX, worldY, out screenX, out screenY);
+                layer.WorldToScreen(camera, worldLeft, worldTop, out screenX, out screenY);
             }
             else
             {
-                camera.WorldToScreen(worldX, worldY, out screenX, out screenY);
+                camera.WorldToScreen(worldLeft, worldTop, out screenX, out screenY);
             }
 
 #if FRB
@@ -365,15 +442,13 @@ namespace RenderingLibrary
             int left = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenX);
             int top = global::RenderingLibrary.Math.MathFunctions.RoundToInt(screenY);
 
-            worldX = ipso.GetAbsoluteRight();
-            worldY = ipso.GetAbsoluteBottom();
             if (layer != null)
             {
-                layer.WorldToScreen(camera, worldX, worldY, out screenX, out screenY);
+                layer.WorldToScreen(camera, worldRight, worldBottom, out screenX, out screenY);
             }
             else
             {
-                camera.WorldToScreen(worldX, worldY, out screenX, out screenY);
+                camera.WorldToScreen(worldRight, worldBottom, out screenX, out screenY);
             }
 
 #if FRB

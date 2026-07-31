@@ -26,6 +26,19 @@ public interface IRenderableIpso : IRenderable, IPositionedSizedObject, IVisible
 }
 
 /// <summary>
+/// Implemented by a layout wrapper (e.g. <c>GraphicalUiElement</c>) that owns a separate, inner
+/// renderable object. Backend-agnostic code that needs to reach the actual drawable object a
+/// wrapper wraps — e.g. the off-screen cull test needing <see cref="IWrappedText"/>, which is
+/// implemented by the renderable, not the wrapper — can check for this interface instead of
+/// depending on the wrapper type directly (which would require a dependency this project doesn't
+/// have). See #4144.
+/// </summary>
+public interface IHasRenderableComponent
+{
+    IRenderable RenderableComponent { get; }
+}
+
+/// <summary>
 /// Implemented by renderables that can act as a render target: their children are drawn into an
 /// offscreen texture which is then blitted back to the screen, optionally post-processed. This is
 /// the shared home for render-target state that is NOT universal to every renderable, so the

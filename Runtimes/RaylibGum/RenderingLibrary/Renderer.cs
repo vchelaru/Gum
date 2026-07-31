@@ -390,10 +390,12 @@ public class Renderer : IRenderer
         // #2998 off-screen cull: when a clip is active (the scissor stack is non-empty), skip this
         // element and its subtree if it falls entirely outside the active clip, expanded by a small
         // margin. Mirrors the XNA orderer cull via the same shared predicate.
+        // GetCullTestBoundsFor (rather than the plain GetScissorRectangleFor) accounts for wrapped
+        // text whose actual rendered extent exceeds its declared bounds (#4144).
         if (CameraScissorExtensions.CullOffscreenWhenClipped
             && _scissorStack.Count > 0
             && CameraScissorExtensions.IsFullyOutside(
-                GetScissorRectangleFor(layer, element),
+                GetCullTestBoundsFor(layer, element),
                 _scissorStack.Peek(),
                 CameraScissorExtensions.OffscreenCullMarginInPixels))
         {
@@ -490,6 +492,35 @@ public class Renderer : IRenderer
             (element.GetAbsoluteRight() - _bakeLeft) * zoom);
         int bottom = global::RenderingLibrary.Math.MathFunctions.RoundToInt(
             (element.GetAbsoluteBottom() - _bakeTop) * zoom);
+        return new System.Drawing.Rectangle(left, top, right - left, bottom - top);
+    }
+
+    // Like GetScissorRectangleFor, but for renderables whose actual drawn extent can exceed their
+    // own declared bounds (e.g. a multi-line TextBox's Text, whose Height is fixed to its visible
+    // box while it scrolls via Y — see CameraScissorExtensions.ExpandWorldTopBottomForWrappedTextExcess),
+    // widens the world Top/Bottom before either the camera or bake-local transform below. Used only
+    // for the off-screen cull decision above (#4144); GetScissorRectangleFor itself is unchanged and
+    // still drives the actual scissor/clip application.
+    private System.Drawing.Rectangle GetCullTestBoundsFor(Layer layer, IRenderableIpso element)
+    {
+        if (!_isBakingRenderTarget)
+        {
+            return _camera.GetCullTestBoundsFor(layer, element);
+        }
+
+        float worldTop = element.GetAbsoluteTop();
+        float worldBottom = element.GetAbsoluteBottom();
+        CameraScissorExtensions.ExpandWorldTopBottomForWrappedTextExcess(element, ref worldTop, ref worldBottom);
+
+        float zoom = _camera.Zoom;
+        int left = global::RenderingLibrary.Math.MathFunctions.RoundToInt(
+            (element.GetAbsoluteLeft() - _bakeLeft) * zoom);
+        int top = global::RenderingLibrary.Math.MathFunctions.RoundToInt(
+            (worldTop - _bakeTop) * zoom);
+        int right = global::RenderingLibrary.Math.MathFunctions.RoundToInt(
+            (element.GetAbsoluteRight() - _bakeLeft) * zoom);
+        int bottom = global::RenderingLibrary.Math.MathFunctions.RoundToInt(
+            (worldBottom - _bakeTop) * zoom);
         return new System.Drawing.Rectangle(left, top, right - left, bottom - top);
     }
 
