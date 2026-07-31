@@ -14,9 +14,11 @@ public enum DrawCommandKind
 }
 
 /// <summary>
-/// One entry in the flat command list produced by <see cref="IRenderableOrderer.BuildDrawList"/>
-/// and consumed by <c>Renderer.Submit</c>. Splits the main-pass render path into a build phase
-/// (tree walk produces the list) and a submit phase (renderer iterates the list).
+/// One entry in the flat command list produced by
+/// <see cref="IRenderableOrderer.BuildDrawList(Layer, System.Collections.Generic.List{DrawCommand}, Camera?)"/>
+/// (or its subtree-rooted overload) and consumed by <c>Renderer.Submit</c>. Splits the main-pass
+/// render path into a build phase (tree walk produces the list) and a submit phase (renderer
+/// iterates the list).
 /// </summary>
 public readonly struct DrawCommand
 {

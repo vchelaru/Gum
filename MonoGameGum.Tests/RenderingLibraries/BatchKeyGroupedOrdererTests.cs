@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Drawing;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
@@ -251,6 +252,62 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
         {
             Renderer.RenderUsingHierarchy = originalValue;
         }
+    }
+
+    [Fact]
+    public void BuildDrawList_Roots_CullsOffscreenSubtreeUsingSuppliedCullTestBoundsMapping()
+    {
+        // getScissorRectangle deliberately returns an IN-clip rectangle for "cull" -- if the
+        // orderer used it (instead of getCullTestBounds) for the cull decision, "cull" would
+        // wrongly survive. getCullTestBounds returns the true (far outside the margin) rectangle,
+        // proving the subtree overload's cull decision is driven by getCullTestBounds, mirroring
+        // the Layer overload's GetCullTestBoundsFor/GetScissorRectangleFor split (#4144, #4154).
+        FakeRenderable clipContainer = new FakeRenderable("clipContainer");
+        clipContainer.ClipsChildren = true;
+        FakeRenderable keep = AddChild(clipContainer, "keep");
+        FakeRenderable cull = AddChild(clipContainer, "cull");
+
+        Rectangle clipRect = new Rectangle(0, 0, 100, 100);
+        Rectangle insideClip = new Rectangle(10, 10, 20, 20);
+        Rectangle farOutside = new Rectangle(1000, 1000, 10, 10);
+
+        Rectangle GetScissorRectangle(IRenderableIpso r) => r == clipContainer ? clipRect : insideClip;
+        Rectangle GetCullTestBounds(IRenderableIpso r) => r == cull ? farOutside : GetScissorRectangle(r);
+
+        List<DrawCommand> commands = new List<DrawCommand>();
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(
+            new List<IRenderableIpso> { clipContainer },
+            commands,
+            GetScissorRectangle,
+            GetCullTestBounds);
+
+        Describe(commands).ShouldBe(new[]
+        {
+            "BeginClip:clipContainer",
+            "DrawRenderable:clipContainer",
+            "DrawRenderable:keep",
+            "EndClip:clipContainer",
+        });
+    }
+
+    [Fact]
+    public void BuildDrawList_Roots_DepthFirstWalk_MatchesLayerOverload()
+    {
+        // Same BatchKey throughout so there is nothing to reorder -- isolates the roots-vs-layer
+        // entry point parity from the batch-grouping behavior covered elsewhere in this class.
+        FakeRenderable a = new FakeRenderable("a");
+        FakeRenderable a1 = AddChild(a, "a1");
+        AddChild(a1, "a1a");
+        FakeRenderable b = new FakeRenderable("b");
+
+        Layer layer = BuildLayer(a, b);
+        List<DrawCommand> commandsFromLayer = new List<DrawCommand>();
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commandsFromLayer);
+
+        List<DrawCommand> commandsFromRoots = new List<DrawCommand>();
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(new List<IRenderableIpso> { a, b }, commandsFromRoots);
+
+        Describe(commandsFromRoots).ShouldBe(Describe(commandsFromLayer));
     }
 
     [Fact]
