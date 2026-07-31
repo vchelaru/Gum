@@ -173,6 +173,32 @@ public class HierarchicalOrdererTests : BaseTestClass
     }
 
     [Fact]
+    public void BuildDrawList_IsRenderTargetNodeWithClipsChildren_StillBracketsButDoesNotRecurse()
+    {
+        // Real-world shape: a scrolling panel rendered to a texture for group opacity, which also
+        // (redundantly) declares ClipsChildren. The orderer brackets ClipsChildren independently of
+        // IsRenderTarget -- consumers (raylib's Renderer.Submit, #4154) rely on this and special-case
+        // IsRenderTarget uniformly across BeginClip/DrawRenderable/EndClip, rather than assuming the
+        // orderer already omits the brackets for a render-target node.
+        FakeRenderable rt = new FakeRenderable("rt");
+        rt.IsRenderTarget = true;
+        rt.ClipsChildren = true;
+        AddChild(rt, "rtChild");
+
+        Layer layer = BuildLayer(rt);
+        List<DrawCommand> commands = new List<DrawCommand>();
+
+        HierarchicalOrderer.Instance.BuildDrawList(layer, commands);
+
+        Describe(commands).ShouldBe(new[]
+        {
+            "BeginClip:rt",
+            "DrawRenderable:rt",
+            "EndClip:rt",
+        });
+    }
+
+    [Fact]
     public void BuildDrawList_IsRenderTargetNode_DoesNotRecurseIntoChildren()
     {
         FakeRenderable rt = new FakeRenderable("rt");

@@ -332,6 +332,80 @@ public class ClipWalkConformanceTests : BaseTestClass
         GumService.Default.Root.Children.Clear();
     }
 
+    // #4154: a container that is both IsRenderTarget and ClipsChildren -- e.g. a scrolling panel
+    // rendered to a texture for group opacity. DrawGumRecursively checks IsRenderTarget and
+    // composites-then-returns BEFORE ever reaching the ClipsChildren scissor push, so the node's
+    // own clip has no effect and its children are never walked outside the bake. Pinned here via a
+    // sibling drawn immediately afterward in the SAME bake: if that ordering regressed (the scissor
+    // push moved ahead of the composite-and-return, or its pop got skipped on the early-return
+    // path), the pushed scissor would leak onto the sibling with nothing to pop it. Draw-call count
+    // can't discriminate a scissor leak -- a scissored-away draw is still issued and counted,
+    // scissoring is a fragment-level test, not something that suppresses the draw call itself --
+    // so this needs pixel readback.
+    //
+    // This exercises the shared DrawGumRecursively walk (used by BakeRenderTarget's child loop),
+    // not Renderer.Submit's own IsRenderTarget guard: this harness has no way to read the actual
+    // screen framebuffer Submit draws to, only RenderTexture2D content populated by a bake, and any
+    // node nested under an IsRenderTarget ancestor is (by the orderer's own recursion gate) reached
+    // via the bake's DrawGumRecursively walk, never via Submit. Submit's matching guard -- applied
+    // uniformly across BeginClip/DrawRenderable/EndClip rather than gated by command kind -- is
+    // covered by Draw_TopLevelRenderTargetContainerWithClipsChildren_
+    // CompositesOnceWithoutDoubleDrawingChildren below (draw-call count) and by
+    // HierarchicalOrdererTests.BuildDrawList_IsRenderTargetNodeWithClipsChildren_
+    // StillBracketsButDoesNotRecurse (the orderer contract Submit's guard depends on).
+    [Fact]
+    public void Draw_NestedRenderTargetContainerWithClipsChildren_DoesNotLeakScissorToFollowingSibling()
+    {
+        ContainerRuntime readableOuter = new();
+        readableOuter.X = 0;
+        readableOuter.Y = 0;
+        readableOuter.Width = 200;
+        readableOuter.Height = 200;
+        readableOuter.IsRenderTarget = true;
+
+        ContainerRuntime containerUnderTest = new();
+        containerUnderTest.X = 0;
+        containerUnderTest.Y = 0;
+        containerUnderTest.Width = 40;
+        containerUnderTest.Height = 40;
+        containerUnderTest.IsRenderTarget = true;
+        containerUnderTest.ClipsChildren = true;
+
+        ColoredRectangleRuntime fill = new();
+        fill.Width = 40;
+        fill.Height = 40;
+        fill.Color = new Color((byte)255, (byte)0, (byte)0, (byte)255);
+        containerUnderTest.Children.Add(fill);
+
+        // Well outside containerUnderTest's [0,40]x[0,40] rect -- if that rect leaked onto the
+        // scissor stack and was never popped, this would be clipped away.
+        ColoredRectangleRuntime siblingAfter = new();
+        siblingAfter.X = 100;
+        siblingAfter.Y = 100;
+        siblingAfter.Width = 50;
+        siblingAfter.Height = 50;
+        siblingAfter.Color = new Color((byte)0, (byte)255, (byte)0, (byte)255);
+
+        readableOuter.Children.Add(containerUnderTest);
+        readableOuter.Children.Add(siblingAfter);
+
+        GumService.Default.Root.Children.Add(readableOuter);
+        GumService.Default.Root.UpdateLayout();
+
+        BeginDrawing();
+        GumService.Default.Draw();
+        EndDrawing();
+
+        RenderTexture2D renderTexture = Renderer.Self.TryGetBakedRenderTargetFor(readableOuter)!.Value;
+        Color compositedContainer = ReadRenderTargetPixel(renderTexture, 20, 20);
+        Color siblingPixel = ReadRenderTargetPixel(renderTexture, 120, 120);
+
+        compositedContainer.R.ShouldBeGreaterThan((byte)200);
+        siblingPixel.G.ShouldBeGreaterThan((byte)200);
+
+        GumService.Default.Root.Children.Clear();
+    }
+
     // Divergence 2 (#4155): HierarchicalOrderer recurses into any visible IRenderableIpso child.
     // raylib's child loop tested `child is GraphicalUiElement`, so a raw (non-wrapped) renderable
     // parented directly onto another renderable never drew.
@@ -357,5 +431,47 @@ public class ClipWalkConformanceTests : BaseTestClass
         container.RemoveFromManagers();
 
         (withRawChild - baseline).ShouldBe(1);
+    }
+
+    // #4154: raylib's Renderer.Submit (the migrated main-pass walk) special-cases IsRenderTarget
+    // uniformly for BeginClip/DrawRenderable/EndClip -- mirroring DrawGumRecursively's composite-
+    // then-return-before-ClipsChildren ordering -- so a TOP-LEVEL container that is both
+    // IsRenderTarget and ClipsChildren composites exactly once and never draws its children a
+    // second time in the main pass (only once, inside the bake). Unlike the multi-child cull case,
+    // draw-call count is reliable here: the bake and the main-pass composite land in different FBO
+    // segments (BeginTextureMode/EndTextureMode force a flush before the main pass's BeginMode2D
+    // even starts), so a spurious extra main-pass draw of the child cannot coalesce with its bake
+    // draw into the same counted slot.
+    [Fact]
+    public void Draw_TopLevelRenderTargetContainerWithClipsChildren_CompositesOnceWithoutDoubleDrawingChildren()
+    {
+        int baseline = DrawAndCountDrawCalls();
+
+        ContainerRuntime containerUnderTest = new();
+        containerUnderTest.Width = 100;
+        containerUnderTest.Height = 100;
+        containerUnderTest.IsRenderTarget = true;
+        containerUnderTest.ClipsChildren = true;
+
+        ColoredRectangleRuntime child = new();
+        child.Width = 50;
+        child.Height = 50;
+        child.Color = new Color((byte)255, (byte)0, (byte)0, (byte)255);
+        containerUnderTest.Children.Add(child);
+
+        GumService.Default.Root.Children.Add(containerUnderTest);
+        GumService.Default.Root.UpdateLayout();
+
+        int withContainer = DrawAndCountDrawCalls();
+
+        RenderTexture2D bakedTexture = Renderer.Self.TryGetBakedRenderTargetFor(containerUnderTest)!.Value;
+        Color bakedPixel = ReadRenderTargetPixel(bakedTexture, 10, 10);
+
+        // One draw for the child baked into the texture, one for the on-screen composite blit. A
+        // regression that also draws the child directly in the main pass would raise this to 3.
+        (withContainer - baseline).ShouldBe(2);
+        bakedPixel.R.ShouldBeGreaterThan((byte)200);
+
+        GumService.Default.Root.Children.Clear();
     }
 }

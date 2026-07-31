@@ -393,7 +393,12 @@ public class Renderer : IRenderer
             // was already baked into an offscreen texture during the pre-pass) and never
             // participates in the scissor stack, even if it also has ClipsChildren set --
             // mirrors DrawGumRecursively, which composites and returns before ever touching the
-            // scissor stack.
+            // scissor stack. The orderer brackets ClipsChildren independently of IsRenderTarget
+            // (see HierarchicalOrdererTests.BuildDrawList_IsRenderTargetNodeWithClipsChildren_
+            // StillBracketsButDoesNotRecurse), so this guard applies uniformly across BeginClip /
+            // DrawRenderable / EndClip rather than assuming the brackets are already absent. Covered
+            // by ClipWalkConformanceTests.Draw_TopLevelRenderTargetContainerWithClipsChildren_
+            // CompositesOnceWithoutDoubleDrawingChildren (#4154).
             if (command.Target.IsRenderTarget)
             {
                 if (command.Kind == DrawCommandKind.DrawRenderable)
