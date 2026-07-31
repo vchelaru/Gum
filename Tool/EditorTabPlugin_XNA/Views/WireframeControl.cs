@@ -18,19 +18,14 @@ using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
 using System;
-using System.ComponentModel.Composition;
-using System.Linq;
-using System.Security.Policy;
-using System.Windows.Forms;
+using System.Windows.Input;
 using XnaAndWinforms;
 using Color = System.Drawing.Color;
-using Matrix = System.Numerics.Matrix4x4;
-using WinCursor = System.Windows.Forms.Cursor;
 
 namespace Gum.Plugins.InternalPlugins.EditorTab.Views;
 
 
-public class WireframeControl : GraphicsDeviceControl
+public class WireframeControl : WpfGraphicsDeviceControl
 {
     #region Fields
 
@@ -94,14 +89,6 @@ public class WireframeControl : GraphicsDeviceControl
         get { return mCanvasBounds; }
     }
 
-    new InputLibrary.Cursor Cursor
-    {
-        get
-        {
-            return InputLibrary.Cursor.Self;
-        }
-    }
-
     Camera Camera
     {
         get { return Renderer.Self.Camera; }
@@ -118,28 +105,31 @@ public class WireframeControl : GraphicsDeviceControl
     {
         GumKeyEventArgs keyArgs = e.ToGumKeyEventArgs();
         _hotkeyManager.HandleEditorKeyDown(keyArgs);
-        e.Handled = keyArgs.Handled;
-        e.SuppressKeyPress = keyArgs.SuppressKeyPress;
+        // WPF has no SuppressKeyPress equivalent; marking the event handled stops both the key
+        // event and the text input it would otherwise produce.
+        e.Handled = keyArgs.Handled || keyArgs.SuppressKeyPress;
         _cameraController.HandleKeyPress(keyArgs);
     }
 
-    void HandleMouseDown(object? sender, MouseEventArgs e) =>
-        _cameraController.HandleMouseDown(e.ToGumMouseEventArgs());
+    void HandleMouseDown(object? sender, MouseButtonEventArgs e)
+    {
+        // The canvas only receives keys while it has keyboard focus, and clicking it is how the
+        // user hands focus over from the rest of the WPF UI.
+        Focus();
+        _cameraController.HandleMouseDown(e.ToGumMouseEventArgs(this));
+    }
 
     void HandleMouseMove(object? sender, MouseEventArgs e) =>
-        _cameraController.HandleMouseMove(e.ToGumMouseEventArgs());
+        _cameraController.HandleMouseMove(e.ToGumMouseEventArgs(this));
 
-    void HandleMouseWheel(object? sender, MouseEventArgs e)
+    void HandleMouseWheel(object? sender, MouseWheelEventArgs e)
     {
-        var gumMouseArgs = e.ToGumMouseEventArgs();
+        GumMouseEventArgs gumMouseArgs = e.ToGumMouseEventArgs(this);
         _cameraController.HandleMouseWheel(gumMouseArgs);
 
-        // WinForms reports MouseWheel via a HandledMouseEventArgs; read the neutral Handled
-        // back to suppress the container's default scroll behavior, mirroring HandleKeyDown above.
-        if (gumMouseArgs.Handled && e is HandledMouseEventArgs handledArgs)
-        {
-            handledArgs.Handled = true;
-        }
+        // Read the neutral Handled back to suppress a containing scroll viewer's default scroll
+        // behavior, mirroring HandleKeyDown above.
+        e.Handled = gumMouseArgs.Handled;
     }
 
     private void HandleKeyUp(object? sender, KeyEventArgs e)
@@ -147,23 +137,25 @@ public class WireframeControl : GraphicsDeviceControl
         _hotkeyManager.HandleKeyUpWireframe();
     }
 
-    protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+    /// <summary>
+    /// Gives the hotkey manager first refusal on every key, ahead of WPF's own handling (focus
+    /// navigation on Tab/arrows in particular). The WinForms counterpart was ProcessCmdKey.
+    /// </summary>
+    protected override void OnPreviewKeyDown(KeyEventArgs e)
     {
-        // Translate the WinForms key at this boundary so IHotkeyManager stays framework-neutral.
-        bool handled = _hotkeyManager.ProcessCmdKeyWireframe(
-            keyData.ToGumKey(),
-            isShiftDown: (keyData & Keys.Shift) == Keys.Shift,
-            isCtrlDown: (keyData & Keys.Control) == Keys.Control,
-            isAltDown: (keyData & Keys.Alt) == Keys.Alt);
+        GumKeyEventArgs keyArgs = e.ToGumKeyEventArgs();
 
-        if (handled)
+        if (_hotkeyManager != null && _hotkeyManager.ProcessCmdKeyWireframe(
+                keyArgs.Key,
+                isShiftDown: keyArgs.IsShiftDown,
+                isCtrlDown: keyArgs.IsCtrlDown,
+                isAltDown: keyArgs.IsAltDown))
         {
-            return true;
+            e.Handled = true;
+            return;
         }
-        else
-        {
-            return base.ProcessCmdKey(ref msg, keyData);
-        }
+
+        base.OnPreviewKeyDown(e);
     }
 
 
@@ -172,7 +164,6 @@ public class WireframeControl : GraphicsDeviceControl
     #region Initialize Methods
 
     public void Initialize(
-        Panel wireframeParentPanel,
         IHotkeyManager hotkeyManager,
         SelectionManager selectionManager,
         IDragDropManager dragDropManager,
@@ -229,10 +220,10 @@ public class WireframeControl : GraphicsDeviceControl
                 _outputManager.AddError(
                     "Default font file 'Content/TestFont.fnt' was not found. Text in the wireframe editor may not render correctly.");
             }
-            _cameraController.Initialize(Camera, editorViewModel, Width, Height, hotkeyManager);
+            _cameraController.Initialize(Camera, editorViewModel, hotkeyManager);
             _cameraController.CameraChanged += () => CameraChanged?.Invoke();
 
-            InputLibrary.Cursor.Self.Initialize(new InputLibrary.ControlInputHostAdapter(this));
+            InputLibrary.Cursor.Self.Initialize(new InputLibrary.WpfInputHostAdapter(this));
 
             mCanvasBounds = new LineRectangle();
             mCanvasBounds.IsDotted = true;
@@ -259,6 +250,7 @@ public class WireframeControl : GraphicsDeviceControl
             {
                 mouseHasEntered = false;
             };
+
 
             if (AfterXnaInitialize != null)
             {

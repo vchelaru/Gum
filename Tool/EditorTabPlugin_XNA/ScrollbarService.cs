@@ -2,14 +2,14 @@
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
-using Gum.Plugins.InternalPlugins.EditorTab.Views;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Windows.Forms;
+using System.Windows.Controls;
+using WpfScrollBar = System.Windows.Controls.Primitives.ScrollBar;
 
 namespace Gum.Plugins.ScrollBarPlugin;
 
@@ -90,24 +90,31 @@ public class ScrollbarService
         }
     }
 
-    public void HandleWireframeInitialized(WireframeControl wireframeControl1, System.Windows.Forms.Panel gumEditorPanel)
-    {
-        // this used to be in MainWindow.cs,
-        // but was moved to a plugin. This changes
-        // the order of this code which had a comment
-        // about needing to be done in a particular order
-        // but it seems to be working okay. Adding this comment
-        // just in case the order does in fact matter.
-        ThemedScrollBar verticalScrollBar = new() { Orientation = ScrollOrientationEx.Vertical, Dock = DockStyle.Right };
-        gumEditorPanel.Controls.Add(verticalScrollBar);
+    /// <summary>
+    /// The vertical scroll bar for the wireframe canvas. Null until
+    /// <see cref="HandleWireframeInitialized"/> runs; the caller is responsible for placing it in
+    /// the editor's visual tree.
+    /// </summary>
+    public WpfScrollBar? VerticalScrollBar { get; private set; }
 
-        ThemedScrollBar horizontalScrollBar = new() { Orientation = ScrollOrientationEx.Horizontal, Dock = DockStyle.Bottom };
-        gumEditorPanel.Controls.Add(horizontalScrollBar);
+    /// <summary>
+    /// The horizontal scroll bar for the wireframe canvas. See <see cref="VerticalScrollBar"/>.
+    /// </summary>
+    public WpfScrollBar? HorizontalScrollBar { get; private set; }
+
+    /// <summary>
+    /// Creates the wireframe canvas's scroll bars and the logic driving them, over
+    /// <paramref name="scrollSurface"/>.
+    /// </summary>
+    public void HandleWireframeInitialized(IScrollSurface scrollSurface)
+    {
+        VerticalScrollBar = new WpfScrollBar { Orientation = Orientation.Vertical };
+        HorizontalScrollBar = new WpfScrollBar { Orientation = Orientation.Horizontal };
 
         scrollBarControlLogic = new ScrollBarControlLogic(
-            horizontalScrollBar,
-            verticalScrollBar,
-            new ControlScrollSurfaceAdapter(wireframeControl1));
+            new WpfScrollBarAdapter(HorizontalScrollBar),
+            new WpfScrollBarAdapter(VerticalScrollBar),
+            scrollSurface);
         scrollBarControlLogic.SetDisplayedArea(800, 600);
     }
 

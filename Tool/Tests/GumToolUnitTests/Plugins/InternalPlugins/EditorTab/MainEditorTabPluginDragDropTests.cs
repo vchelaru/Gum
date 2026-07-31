@@ -4,23 +4,22 @@ using Moq;
 using Shouldly;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Windows.Forms;
+using System.Windows;
 using Xunit;
+using WinFormsTreeNode = System.Windows.Forms.TreeNode;
 
 namespace GumToolUnitTests.Plugins.InternalPlugins.EditorTab;
 
 // Regression coverage for issue #3965: dragging a Component/Standard/Instance tree node onto the
-// wireframe canvas silently did nothing. OnWireframeDragEnter/OnWireframeDrop detected dragged nodes
-// via DragEventArgsExt.HasData<TreeNode>()/GetData<TreeNode>(), an exact-type format lookup that
-// never matches a GumTreeNode-boxed single drag (WinForms keys a boxed payload by its *runtime* type
-// name) or a multi-select TreeNode[] drag (the code checked List<TreeNode> first, which is never the
-// shape MultiSelectTreeView.Theming actually boxes). MultiSelectTreeView.ExtractDraggedNodes already
-// fixes this for the tree's own internal drag-reorder by scanning formats instead of doing an
-// exact-type lookup; these tests pin that MainEditorTabPlugin now routes through it too.
+// wireframe canvas silently did nothing, because the drag payload was detected via an exact-type
+// format lookup that never matches a GumTreeNode-boxed single drag (a boxed payload is keyed by its
+// *runtime* type name) or a multi-select TreeNode[] drag. These tests pin that the canvas's
+// accept/drop routing still sees both shapes, end to end from the OLE data object through
+// WpfWireframeDropPayloadReader (the WPF canvas's extraction) into the plugin.
 public class MainEditorTabPluginDragDropTests : BaseTestClass
 {
-    [Fact]
-    public void OnWireframeDragEnter_MultiSelectTreeNodeArray_AcceptsCopyEffect()
+    [StaFact]
+    public void DecideWireframeDropEffect_MultiSelectTreeNodeArray_AcceptsCopyEffect()
     {
         MainEditorTabPlugin plugin = CreatePlugin(out Mock<IDragDropManager> dragDropManager);
         dragDropManager
@@ -29,17 +28,15 @@ public class MainEditorTabPluginDragDropTests : BaseTestClass
 
         GumTreeNode first = new GumTreeNode("Circle1");
         GumTreeNode second = new GumTreeNode("Circle2");
-        TreeNode[] draggedArray = { first, second };
-        DataObject dataObject = new DataObject((object)draggedArray);
-        DragEventArgs args = new DragEventArgs(dataObject, 0, 0, 0, DragDropEffects.Copy | DragDropEffects.Move, DragDropEffects.None);
+        WinFormsTreeNode[] draggedArray = { first, second };
 
-        plugin.OnWireframeDragEnter(null, args);
+        DragDropEffects effects = plugin.DecideWireframeDropEffect(ReadPayload(draggedArray), reportBlockedReason: true);
 
-        args.Effect.ShouldBe(DragDropEffects.Copy);
+        effects.ShouldBe(DragDropEffects.Copy);
     }
 
-    [Fact]
-    public void OnWireframeDragEnter_SingleGumTreeNodeBoxedAsPlainObject_AcceptsCopyEffect()
+    [StaFact]
+    public void DecideWireframeDropEffect_SingleGumTreeNodeBoxedAsPlainObject_AcceptsCopyEffect()
     {
         MainEditorTabPlugin plugin = CreatePlugin(out Mock<IDragDropManager> dragDropManager);
         dragDropManager
@@ -49,16 +46,14 @@ public class MainEditorTabPluginDragDropTests : BaseTestClass
         // Mirrors MultiSelectTreeView.Theming.cs's single-node drag start:
         // DoDragDrop((object)nodeToDrag, ...), which boxes the concrete GumTreeNode.
         GumTreeNode draggedNode = new GumTreeNode("Circle1");
-        DataObject dataObject = new DataObject((object)draggedNode);
-        DragEventArgs args = new DragEventArgs(dataObject, 0, 0, 0, DragDropEffects.Copy | DragDropEffects.Move, DragDropEffects.None);
 
-        plugin.OnWireframeDragEnter(null, args);
+        DragDropEffects effects = plugin.DecideWireframeDropEffect(ReadPayload(draggedNode), reportBlockedReason: true);
 
-        args.Effect.ShouldBe(DragDropEffects.Copy);
+        effects.ShouldBe(DragDropEffects.Copy);
     }
 
-    [Fact]
-    public void OnWireframeDrop_MultiSelectTreeNodeArray_CreatesInstanceForEachDraggedTag()
+    [StaFact]
+    public void HandleWireframeDrop_MultiSelectTreeNodeArray_CreatesInstanceForEachDraggedTag()
     {
         MainEditorTabPlugin plugin = CreatePlugin(out Mock<IDragDropManager> dragDropManager);
 
@@ -67,38 +62,34 @@ public class MainEditorTabPluginDragDropTests : BaseTestClass
         GumTreeNode first = new GumTreeNode("Circle1") { Tag = firstTag };
         GumTreeNode second = new GumTreeNode("Circle2") { Tag = secondTag };
         // Mirrors MultiSelectTreeView.Theming.cs's multi-select drag start: DoDragDrop(SelectedNodes.ToArray(), ...).
-        TreeNode[] draggedArray = { first, second };
-        DataObject dataObject = new DataObject((object)draggedArray);
-        DragEventArgs args = new DragEventArgs(dataObject, 0, 0, 0, DragDropEffects.Copy, DragDropEffects.Copy);
+        WinFormsTreeNode[] draggedArray = { first, second };
 
-        plugin.OnWireframeDrop(null, args);
+        plugin.HandleWireframeDrop(ReadPayload(draggedArray));
 
         dragDropManager.Verify(x => x.OnNodeObjectDroppedInWireframe(firstTag), Times.Once);
         dragDropManager.Verify(x => x.OnNodeObjectDroppedInWireframe(secondTag), Times.Once);
     }
 
-    [Fact]
-    public void OnWireframeDrop_SingleGumTreeNodeBoxedAsPlainObject_CreatesInstanceFromDraggedTag()
+    [StaFact]
+    public void HandleWireframeDrop_SingleGumTreeNodeBoxedAsPlainObject_CreatesInstanceFromDraggedTag()
     {
         MainEditorTabPlugin plugin = CreatePlugin(out Mock<IDragDropManager> dragDropManager);
 
         object draggedTag = new();
         GumTreeNode draggedNode = new GumTreeNode("Circle1") { Tag = draggedTag };
-        DataObject dataObject = new DataObject((object)draggedNode);
-        DragEventArgs args = new DragEventArgs(dataObject, 0, 0, 0, DragDropEffects.Copy, DragDropEffects.Copy);
 
-        plugin.OnWireframeDrop(null, args);
+        plugin.HandleWireframeDrop(ReadPayload(draggedNode));
 
         dragDropManager.Verify(x => x.OnNodeObjectDroppedInWireframe(draggedTag), Times.Once);
     }
 
-    [Fact]
-    public void OnWireframeDrop_DraggedNodeTagIsNull_FallsBackToSearchResultDragPayload()
+    [StaFact]
+    public void HandleWireframeDrop_DraggedNodeTagIsNull_FallsBackToSearchResultDragPayload()
     {
         // Issue #4123: a search-result drag (FlatSearchListBox) boxes its backing object into
-        // TreeNode.Tag, but Tag comes back null after crossing the WPF -> WinForms drag boundary
-        // (confirmed empirically: ComponentSave/ElementSave aren't [Serializable], and TreeNode's
-        // own serialization only carries Tag across when its type is). SearchResultDragPayload is
+        // TreeNode.Tag, but Tag comes back null after crossing the drag boundary (confirmed
+        // empirically: ComponentSave/ElementSave aren't [Serializable], and TreeNode's own
+        // serialization only carries Tag across when its type is). SearchResultDragPayload is
         // the in-process fallback that carries the real object instead.
         MainEditorTabPlugin plugin = CreatePlugin(out Mock<IDragDropManager> dragDropManager);
 
@@ -107,10 +98,8 @@ public class MainEditorTabPluginDragDropTests : BaseTestClass
         try
         {
             GumTreeNode draggedNode = new GumTreeNode("Circle1") { Tag = null };
-            DataObject dataObject = new DataObject((object)draggedNode);
-            DragEventArgs args = new DragEventArgs(dataObject, 0, 0, 0, DragDropEffects.Copy, DragDropEffects.Copy);
 
-            plugin.OnWireframeDrop(null, args);
+            plugin.HandleWireframeDrop(ReadPayload(draggedNode));
 
             dragDropManager.Verify(x => x.OnNodeObjectDroppedInWireframe(backingObject), Times.Once);
         }
@@ -120,11 +109,14 @@ public class MainEditorTabPluginDragDropTests : BaseTestClass
         }
     }
 
+    private static WireframeDropPayload ReadPayload(object draggedData) =>
+        WpfWireframeDropPayloadReader.Read(new DataObject(draggedData));
+
     // Stubs MainEditorTabPlugin headlessly without running its ~20-argument constructor (which stands
     // up a WireframeEditorFactory, SelectionManager, ScreenshotService, etc.) - see the
-    // "Plugin/DI composition tests" entry in the gum-unit-tests skill. OnWireframeDragEnter/
-    // OnWireframeDrop only touch _dragDropManager (and _guiCommands on the rejected-drop path, which
-    // these tests don't exercise), so only that field needs to be wired up.
+    // "Plugin/DI composition tests" entry in the gum-unit-tests skill. DecideWireframeDropEffect/
+    // HandleWireframeDrop only touch _dragDropManager (and _guiCommands on the rejected-drop path,
+    // which these tests don't exercise), so only that field needs to be wired up.
     private static MainEditorTabPlugin CreatePlugin(out Mock<IDragDropManager> dragDropManager)
     {
         MainEditorTabPlugin plugin = (MainEditorTabPlugin)RuntimeHelpers.GetUninitializedObject(typeof(MainEditorTabPlugin));

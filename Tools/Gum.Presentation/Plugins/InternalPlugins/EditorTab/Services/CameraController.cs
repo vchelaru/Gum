@@ -21,8 +21,7 @@ public class CameraController
     public event Action? CameraChanged;
     IHotkeyManager _hotkeyManager;
 
-    public void Initialize(Camera camera,
-        IZoomController zoomController, int defaultWidth, int defaultHeight, IHotkeyManager hotkeyManager)
+    public void Initialize(Camera camera, IZoomController zoomController, IHotkeyManager hotkeyManager)
     {
         _hotkeyManager = hotkeyManager;
         _zoomController = zoomController;
