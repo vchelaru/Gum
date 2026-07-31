@@ -29,13 +29,17 @@ public class DiffScreenshotsCommandTests : IDisposable
         }
 
         string projectPath = CreateProjectWithScreen();
+        string outputDirectory = Path.Combine(_tempDirectory, "renders");
 
         CliTestHelper result = CliTestHelper.Run(
-            "diff-screenshots", projectPath, "--output", Path.Combine(_tempDirectory, "renders"));
+            "diff-screenshots", projectPath, "--output", outputDirectory);
 
         result.ExitCode.ShouldBe(0, $"stdout: {result.StandardOutput}\nstderr: {result.StandardError}");
         result.StandardOutput.ShouldContain("MATCH  Screen");
         result.StandardOutput.ShouldContain("All 1 element(s) matched.");
+        string reportPath = Path.Combine(outputDirectory, "report.html");
+        result.StandardOutput.ShouldContain(reportPath);
+        File.Exists(reportPath).ShouldBeTrue();
     }
 
     [Fact]

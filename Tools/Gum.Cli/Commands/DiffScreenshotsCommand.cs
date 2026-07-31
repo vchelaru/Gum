@@ -97,24 +97,28 @@ public static class DiffScreenshotsCommand
             return 2;
         }
 
+        IScreenshotDiffHtmlReportWriter reportWriter = new ScreenshotDiffHtmlReportWriter();
+        string reportPath = reportWriter.Write(result, Path.Combine(result.OutputDirectory, "report.html"));
+
         if (json)
         {
-            WriteJson(result);
+            WriteJson(result, reportPath);
         }
         else
         {
-            WriteHumanReadable(result);
+            WriteHumanReadable(result, reportPath);
         }
 
         return result.HasMismatch ? 1 : 0;
     }
 
-    private static void WriteJson(ScreenshotDiffResult result)
+    private static void WriteJson(ScreenshotDiffResult result, string reportPath)
     {
         var payload = new
         {
             hasMismatch = result.HasMismatch,
             outputDirectory = result.OutputDirectory,
+            reportPath,
             elements = result.ElementDiffs.Select(d => new
             {
                 element = d.ElementName,
@@ -132,7 +136,7 @@ public static class DiffScreenshotsCommand
         Console.WriteLine(JsonSerializer.Serialize(payload, JsonOptions));
     }
 
-    private static void WriteHumanReadable(ScreenshotDiffResult result)
+    private static void WriteHumanReadable(ScreenshotDiffResult result, string reportPath)
     {
         foreach (ElementScreenshotDiff diff in result.ElementDiffs)
         {
@@ -151,6 +155,7 @@ public static class DiffScreenshotsCommand
 
         Console.WriteLine();
         Console.WriteLine($"Rendered PNGs: {result.OutputDirectory}");
+        Console.WriteLine($"HTML report:   {reportPath}");
         int mismatchCount = result.ElementDiffs.Count(d => !d.Matches);
         Console.WriteLine(mismatchCount == 0
             ? $"All {result.ElementDiffs.Count} element(s) matched."
