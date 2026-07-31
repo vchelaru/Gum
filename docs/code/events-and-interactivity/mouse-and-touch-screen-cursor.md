@@ -201,6 +201,23 @@ Draw `gameUi` into the render target and blit it to the window just as in the [T
 Only the `HasCursorOver(ICursor)` path applies `HitTestTransformMatrix`, and this is the path normal Forms interaction uses. The pure-bounds `HasCursorOver(float, float)` overload shown earlier on this page does not.
 {% endhint %}
 
+### Combining Root with additional interactive roots
+
+The `HasCursorOver` check above is a raw bounds test — fine for reacting to a click yourself, but it does not run hover, push, click, or drag for Forms controls (`Button`, `Window`, etc.) inside `gameUi`. Those only run through `GumService.Default.Update(gameTime, roots)`. If `gameUi` is not part of `Root` but still needs real Forms interactivity, pass it alongside `Root` in the same call:
+
+```csharp
+var roots = new List<GraphicalUiElement> { GumUI.Root, gameUi };
+GumUI.Update(gameTime, roots);
+```
+
+{% hint style="warning" %}
+Call `Update` at most once per frame. `Cursor` detects a press or release by comparing this frame's raw mouse state to a snapshot taken the last time `Update` ran. Calling `Update` a second time in the same frame — for example `GumUI.Update(gameTime)` for `Root`, then a separate `GumUI.Update(gameTime, otherRoots)` for a second group — means the second call's "previous frame" snapshot is the state the first call just wrote, so no press/release edge is ever seen. Hover still works (it only checks the cursor's current position), but `Push` and `Click` silently never fire. Combine every root that needs interactivity into one list and call `Update` once.
+{% endhint %}
+
+For a runnable project with both coordinate spaces interactive in the same frame, see the `RenderTarget` screen in the Gum immediate-mode sample:
+
+{% embed url="https://github.com/vchelaru/Gum/tree/main/Samples/MonoGameGumImmediateMode" %}
+
 ## Disabling the Cursor Globally
 
 The Cursor instance reported by GumService can be replaced with a custom implementation of the `ICursor` interface. A custom `ICursor` class can be created to modify its behavior. For example, the following implementation disables all behavior:
