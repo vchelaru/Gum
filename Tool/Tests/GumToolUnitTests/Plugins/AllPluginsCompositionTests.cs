@@ -47,6 +47,7 @@ public class AllPluginsCompositionTests : BaseTestClass
     {
         typeof(Gum.Plugins.PluginManager).Assembly,
         typeof(global::CodeOutputPlugin.MainCodeOutputPlugin).Assembly,
+        typeof(global::ConvertToJsonPlugin.MainConvertToJsonPlugin).Assembly,
         typeof(global::EventOutputPlugin.MainEventOutputPlugin).Assembly,
         typeof(global::GumFormsPlugin.Services.FormsFileService).Assembly,
         typeof(global::ImportFromGumxPlugin.MainImportFromGumxPlugin).Assembly,

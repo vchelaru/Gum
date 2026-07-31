@@ -5,6 +5,9 @@ using Gum.ProjectServices;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using System.ComponentModel.Composition;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("GumToolUnitTests")]
 
 namespace ConvertToJsonPlugin;
 
