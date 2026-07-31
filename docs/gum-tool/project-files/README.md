@@ -45,7 +45,7 @@ For details on project settings, see the [Project Properties](../project-propert
 
 ## Element Files
 
-Element files define the screens, components, standard elements, behaviors, and animations that make up your project. All element files use XML format, store paths relative to the project, and contain no machine-specific data. These files should always be committed to version control.
+Element files define the screens, components, standard elements, behaviors, and animations that make up your project. By default all element files use XML format (see [JSON Format](#json-format-native-aot) below for the opt-in alternative); either way they store paths relative to the project and contain no machine-specific data. These files should always be committed to version control.
 
 ### Screen Files (.gusx)
 
@@ -66,6 +66,17 @@ Located in the `Behaviors/` folder. Behaviors define required state categories f
 ### Animation Files (.ganx)
 
 Animation files are saved alongside their parent element. For example, a component named `Button` would have its animations stored in `ButtonAnimations.ganx` in the same folder as `Button.gucx`. These files store animation sequences that reference states by name. For more information, see the [Animation Tutorials](../tutorials-and-examples/animation-tutorials/README.md).
+
+## JSON Format (Native AOT)
+
+Every project/element file type above also has a JSON counterpart: `.gumj` (project), `.gusj` (screen), `.gucj` (component), `.gutj` (standard element), `.behj` (behavior), and `.ganj` (animation). JSON exists because `XmlSerializer` is not compatible with Native AOT; the tool's own file/save dispatch picks XML vs. JSON purely from the file's extension.
+
+Conversion is explicit opt-in and non-destructive — nothing converts your project automatically, and converting never deletes or modifies the original XML:
+
+* In the Gum tool, use **Content → Convert to JSON…**.
+* From the command line, run `gumcli convert-to-json <project.gumx>`.
+
+Both write a `.gumj` sibling of your `.gumx`, plus a JSON sibling for every Screen/Component/StandardElement/Behavior/animation file the project references, in the same folder as the existing XML file.
 
 ## Settings Files
 
