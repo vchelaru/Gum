@@ -101,10 +101,6 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
     #region Properties
 
-    [Export("LocalizationService")]
-    public LocalizationService LocalizationService => Locator.GetRequiredService<LocalizationService>();
-
-
     internal static List<PluginContainer> AllPluginContainers
     {
         get
@@ -725,14 +721,14 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
     #region Additional Methods
 
-    // [ImportingConstructor] is required, not just decorative: PluginManager's own assembly is added
-    // to LoadPlugins' AggregateCatalog (see CreateCatalog), and the class exports a member
-    // ("LocalizationService" below), which makes MEF treat PluginManager itself as an implicit part it
-    // must activate - a *second*, throwaway instance distinct from the DI-built singleton bridged as
-    // IPluginManager. That activation only reads the parameterless-safe LocalizationService property,
-    // never _pluginEnablementStore, but MEF still needs a satisfiable constructor to build it, hence
-    // both the attribute and the IPluginEnablementStore bridge in LoadPlugins below.
-    [ImportingConstructor]
+    // Plain DI constructor - PluginManager's own assembly is added to LoadPlugins' AggregateCatalog
+    // (see CreateCatalog), so historically an [Export] member on this class (a
+    // [Export("LocalizationService")] property, since replaced by a constructor-injected
+    // LocalizationService on the one plugin that used it) made MEF treat PluginManager itself as an
+    // implicit, separately-activated part - a *second*, throwaway instance distinct from the
+    // DI-built singleton bridged as IPluginManager below (#3880). PluginManager now has no [Export]
+    // members of its own, so it's no longer catalog-discoverable and MEF never touches this ctor;
+    // don't add an [Export] here (or reintroduce one on this class) without re-checking that.
     public PluginManager(IPluginEnablementStore pluginEnablementStore)
     {
         _pluginEnablementStore = pluginEnablementStore;
@@ -1011,8 +1007,28 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
         #region Start all plugins
 
+        // Defense in depth, not a workaround for a known-active bug: the specific cause we found
+        // and fixed (PluginManager's own [Export("LocalizationService")] making MEF treat it as an
+        // implicit, separately-activated part - see the ctor comment above and #3880) is gone. But
+        // LoadPlugins still composes the container in two separate passes (Compose(batch) then
+        // ComposeParts(instance)) against a Plugins import marked AllowRecomposition = true, which
+        // is inherently easy to misuse into double-realizing an export again. Starting the same
+        // plugin twice would double every side effect its StartUp() has (menu items, event
+        // subscriptions, etc.) and can crash outright (e.g. a duplicate menu item under the same
+        // parent). Surface it rather than silently starting the plugin twice OR silently dropping
+        // the dupe with no signal.
+        var startedPluginTypes = new Dictionary<Type, PluginBase>();
         foreach (PluginBase plugin in instance.Plugins)
         {
+            Type pluginType = plugin.GetType();
+            if (startedPluginTypes.ContainsKey(pluginType))
+            {
+                instance._guiCommands.PrintOutput(
+                    $"Warning: MEF composed {pluginType.FullName} more than once; only the first instance was started up.");
+                continue;
+            }
+
+            startedPluginTypes[pluginType] = plugin;
             StartupPlugin(plugin, instance);
         }
 

@@ -126,6 +126,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
     private readonly IElementCommands _elementCommands;
     private readonly SinglePixelTextureService _singlePixelTextureService;
     private BackgroundManager _backgroundManager;
+    private bool _isXnaInitialized;
     private readonly ISelectedState _selectedState;
     private readonly WireframeCommands _wireframeCommands;
     private readonly IFileCommands _fileCommands;
@@ -902,6 +903,13 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
         IEffectiveThemeSettings themeSettings = _themingService.EffectiveSettings;
         ApplyThemeSettings(themeSettings);
+
+        // Must be the last statement in this method - XnaUpdate (wired up in
+        // HandleWireframeInitialized, which runs earlier during startup) can fire before this
+        // event handler runs, since WPF's CompositionTarget.Rendering isn't gated on it. Only
+        // once every managers' Initialize() call above has actually completed is it safe for
+        // their Activity() to run.
+        _isXnaInitialized = true;
     }
 
     // WPF glue only - the decision and the drop handling below are framework-neutral.
@@ -1430,6 +1438,14 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
         _wireframeControl.XnaUpdate += () =>
         {
+            // Can fire before HandleXnaInitialized has run (see the comment there) - skip until
+            // it has, or these managers' Activity() calls hit state their Initialize() hasn't
+            // set up yet.
+            if (!_isXnaInitialized)
+            {
+                return;
+            }
+
             _backgroundManager.Activity();
             _wireframeObjectManager.Activity();
             _toolLayerService.Activity();
