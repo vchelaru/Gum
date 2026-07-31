@@ -125,6 +125,14 @@ Not this — date leaks into body bullets, so removing the dated context later m
 
 This applies to: "as of <date>", "starting in <date>", "before <date>", "in version X", "the May 2026 release", and any "what changed in <release>" section heading. When in doubt: if deleting the sentence later would leave the surrounding paragraph still accurate, it's safe in the body; if deleting it would leave a contradiction or dangling reference, lift it into a hint.
 
+## Flag Release Status for New Features
+
+Before documenting a new feature or behavior, confirm whether it has already shipped, is out in preview, or hasn't shipped yet — ask the user if it's not clear from context. Then flag accordingly in a `{% hint style="info" %}` block (same pattern as dated content above):
+
+- **Not yet shipped** — `Coming in <Month Year>` (the target release).
+- **Shipped in preview** — note that it's a preview feature.
+- **Fully shipped** — no flag; write it as current behavior.
+
 ## Tone and Style
 
 - Second person ("you"), present tense, instructional tone.
