@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Drawing;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
@@ -172,6 +173,32 @@ public class HierarchicalOrdererTests : BaseTestClass
     }
 
     [Fact]
+    public void BuildDrawList_IsRenderTargetNodeWithClipsChildren_StillBracketsButDoesNotRecurse()
+    {
+        // Real-world shape: a scrolling panel rendered to a texture for group opacity, which also
+        // (redundantly) declares ClipsChildren. The orderer brackets ClipsChildren independently of
+        // IsRenderTarget -- consumers (raylib's Renderer.Submit, #4154) rely on this and special-case
+        // IsRenderTarget uniformly across BeginClip/DrawRenderable/EndClip, rather than assuming the
+        // orderer already omits the brackets for a render-target node.
+        FakeRenderable rt = new FakeRenderable("rt");
+        rt.IsRenderTarget = true;
+        rt.ClipsChildren = true;
+        AddChild(rt, "rtChild");
+
+        Layer layer = BuildLayer(rt);
+        List<DrawCommand> commands = new List<DrawCommand>();
+
+        HierarchicalOrderer.Instance.BuildDrawList(layer, commands);
+
+        Describe(commands).ShouldBe(new[]
+        {
+            "BeginClip:rt",
+            "DrawRenderable:rt",
+            "EndClip:rt",
+        });
+    }
+
+    [Fact]
     public void BuildDrawList_IsRenderTargetNode_DoesNotRecurseIntoChildren()
     {
         FakeRenderable rt = new FakeRenderable("rt");
@@ -237,15 +264,124 @@ public class HierarchicalOrdererTests : BaseTestClass
     }
 
     [Fact]
-    public void BuildDrawList_WithPreExistingCommands_ClearsDestinationFirst()
+    public void BuildDrawList_Roots_CullsOffscreenSubtreeUsingSuppliedCullTestBoundsMapping()
     {
-        Layer layer = BuildLayer(new FakeRenderable("only"));
+        // getScissorRectangle deliberately returns an IN-clip rectangle for "cull" -- if the
+        // orderer used it (instead of getCullTestBounds) for the cull decision, "cull" would
+        // wrongly survive. getCullTestBounds returns the true (far outside the margin) rectangle,
+        // proving the subtree overload's cull decision is driven by getCullTestBounds, mirroring
+        // the Layer overload's GetCullTestBoundsFor/GetScissorRectangleFor split (#4144, #4154).
+        FakeRenderable clipContainer = new FakeRenderable("clipContainer");
+        clipContainer.ClipsChildren = true;
+        FakeRenderable keep = AddChild(clipContainer, "keep");
+        FakeRenderable cull = AddChild(clipContainer, "cull");
+
+        Rectangle clipRect = new Rectangle(0, 0, 100, 100);
+        Rectangle insideClip = new Rectangle(10, 10, 20, 20);
+        Rectangle farOutside = new Rectangle(1000, 1000, 10, 10);
+
+        Rectangle GetScissorRectangle(IRenderableIpso r) => r == clipContainer ? clipRect : insideClip;
+        Rectangle GetCullTestBounds(IRenderableIpso r) => r == cull ? farOutside : GetScissorRectangle(r);
+
         List<DrawCommand> commands = new List<DrawCommand>();
-        commands.Add(new DrawCommand(DrawCommandKind.DrawRenderable, new FakeRenderable("stale")));
+        HierarchicalOrderer.Instance.BuildDrawList(
+            new List<IRenderableIpso> { clipContainer },
+            commands,
+            GetScissorRectangle,
+            GetCullTestBounds);
 
-        HierarchicalOrderer.Instance.BuildDrawList(layer, commands);
+        Describe(commands).ShouldBe(new[]
+        {
+            "BeginClip:clipContainer",
+            "DrawRenderable:clipContainer",
+            "DrawRenderable:keep",
+            "EndClip:clipContainer",
+        });
+    }
 
-        Describe(commands).ShouldBe(new[] { "DrawRenderable:only" });
+    [Fact]
+    public void BuildDrawList_Roots_DepthFirstWalk_MatchesLayerOverload()
+    {
+        FakeRenderable a = new FakeRenderable("a");
+        FakeRenderable a1 = AddChild(a, "a1");
+        AddChild(a1, "a1a");
+        FakeRenderable b = new FakeRenderable("b");
+        b.ClipsChildren = true;
+        AddChild(b, "b1");
+
+        Layer layer = BuildLayer(a, b);
+        List<DrawCommand> commandsFromLayer = new List<DrawCommand>();
+        HierarchicalOrderer.Instance.BuildDrawList(layer, commandsFromLayer);
+
+        List<DrawCommand> commandsFromRoots = new List<DrawCommand>();
+        HierarchicalOrderer.Instance.BuildDrawList(new List<IRenderableIpso> { a, b }, commandsFromRoots);
+
+        Describe(commandsFromRoots).ShouldBe(Describe(commandsFromLayer));
+    }
+
+    [Fact]
+    public void BuildDrawList_Roots_WhenCullTestBoundsMappingOmitted_FallsBackToScissorRectangleMapping()
+    {
+        FakeRenderable clipContainer = new FakeRenderable("clipContainer");
+        clipContainer.ClipsChildren = true;
+        FakeRenderable keep = AddChild(clipContainer, "keep");
+        FakeRenderable cull = AddChild(clipContainer, "cull");
+
+        Rectangle clipRect = new Rectangle(0, 0, 100, 100);
+        Rectangle insideClip = new Rectangle(10, 10, 20, 20);
+        Rectangle farOutside = new Rectangle(1000, 1000, 10, 10);
+
+        Rectangle GetScissorRectangle(IRenderableIpso r)
+        {
+            if (r == cull)
+            {
+                return farOutside;
+            }
+            return r == clipContainer ? clipRect : insideClip;
+        }
+
+        List<DrawCommand> commands = new List<DrawCommand>();
+        HierarchicalOrderer.Instance.BuildDrawList(
+            new List<IRenderableIpso> { clipContainer },
+            commands,
+            GetScissorRectangle);
+
+        Describe(commands).ShouldBe(new[]
+        {
+            "BeginClip:clipContainer",
+            "DrawRenderable:clipContainer",
+            "DrawRenderable:keep",
+            "EndClip:clipContainer",
+        });
+    }
+
+    // Regression guard: an ordinary (non-text) child genuinely scrolled off the bottom of an
+    // on-screen clip — the ListBox/ScrollViewer case the cull exists for — must still be culled.
+    [Fact]
+    public void BuildDrawList_ScrolledPlainRenderableOutsideOnScreenClip_IsStillCulled()
+    {
+        Camera camera = new Camera();
+        camera.ClientWidth = 800;
+        camera.ClientHeight = 600;
+        camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
+
+        FakeRenderable clipParent = new FakeRenderable("clipParent");
+        clipParent.ClipsChildren = true;
+        clipParent.Y = 300;
+        clipParent.Width = 200;
+        clipParent.Height = 200;
+
+        FakeRenderable scrolledOffItem = AddChild(clipParent, "scrolledOffItem");
+        scrolledOffItem.Width = 190;
+        scrolledOffItem.Height = 80;
+        scrolledOffItem.Y = 250; // well past the 200px-tall clip band (absolute Y: 300 + 250 = 550)
+
+        Layer layer = BuildLayer(clipParent);
+        List<DrawCommand> commands = new List<DrawCommand>();
+
+        HierarchicalOrderer.Instance.BuildDrawList(layer, commands, camera);
+
+        Describe(commands).ShouldNotContain("DrawRenderable:scrolledOffItem");
     }
 
     // #4144: a multi-line Forms TextBox scrolls by moving its Text's Y while Height stays fixed to
@@ -286,32 +422,15 @@ public class HierarchicalOrdererTests : BaseTestClass
         Describe(commands).ShouldContain("DrawRenderable:scrolledText");
     }
 
-    // Regression guard: an ordinary (non-text) child genuinely scrolled off the bottom of an
-    // on-screen clip — the ListBox/ScrollViewer case the cull exists for — must still be culled.
     [Fact]
-    public void BuildDrawList_ScrolledPlainRenderableOutsideOnScreenClip_IsStillCulled()
+    public void BuildDrawList_WithPreExistingCommands_ClearsDestinationFirst()
     {
-        Camera camera = new Camera();
-        camera.ClientWidth = 800;
-        camera.ClientHeight = 600;
-        camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
-
-        FakeRenderable clipParent = new FakeRenderable("clipParent");
-        clipParent.ClipsChildren = true;
-        clipParent.Y = 300;
-        clipParent.Width = 200;
-        clipParent.Height = 200;
-
-        FakeRenderable scrolledOffItem = AddChild(clipParent, "scrolledOffItem");
-        scrolledOffItem.Width = 190;
-        scrolledOffItem.Height = 80;
-        scrolledOffItem.Y = 250; // well past the 200px-tall clip band (absolute Y: 300 + 250 = 550)
-
-        Layer layer = BuildLayer(clipParent);
+        Layer layer = BuildLayer(new FakeRenderable("only"));
         List<DrawCommand> commands = new List<DrawCommand>();
+        commands.Add(new DrawCommand(DrawCommandKind.DrawRenderable, new FakeRenderable("stale")));
 
-        HierarchicalOrderer.Instance.BuildDrawList(layer, commands, camera);
+        HierarchicalOrderer.Instance.BuildDrawList(layer, commands);
 
-        Describe(commands).ShouldNotContain("DrawRenderable:scrolledOffItem");
+        Describe(commands).ShouldBe(new[] { "DrawRenderable:only" });
     }
 }

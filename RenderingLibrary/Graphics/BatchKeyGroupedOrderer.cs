@@ -1,6 +1,6 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Drawing;
 
 namespace RenderingLibrary.Graphics;
 
@@ -28,7 +28,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     private struct Entry
     {
         public IRenderableIpso Item;
-        public Rectangle Bounds;
+        public System.Drawing.Rectangle Bounds;
         public string BatchKey;
     }
 
@@ -36,10 +36,33 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     public void BuildDrawList(Layer layer, List<DrawCommand> destination, Camera? camera = null)
     {
         destination.Clear();
-        ProcessLayerTopLevel(layer, camera, destination);
+
+        Func<IRenderableIpso, System.Drawing.Rectangle>? getScissorRectangle = camera != null
+            ? renderable => camera.GetScissorRectangleFor(layer, renderable)
+            : null;
+        Func<IRenderableIpso, System.Drawing.Rectangle>? getCullTestBounds = camera != null
+            ? renderable => camera.GetCullTestBoundsFor(layer, renderable)
+            : null;
+
+        ProcessLayerTopLevel(layer, getScissorRectangle, getCullTestBounds, destination);
     }
 
-    private static void ProcessLayerTopLevel(Layer layer, Camera? camera, List<DrawCommand> destination)
+    /// <inheritdoc/>
+    public void BuildDrawList(
+        IList<IRenderableIpso> roots,
+        List<DrawCommand> destination,
+        Func<IRenderableIpso, System.Drawing.Rectangle>? getScissorRectangle = null,
+        Func<IRenderableIpso, System.Drawing.Rectangle>? getCullTestBounds = null)
+    {
+        destination.Clear();
+        ProcessWindow(roots, getScissorRectangle, getCullTestBounds ?? getScissorRectangle, destination);
+    }
+
+    private static void ProcessLayerTopLevel(
+        Layer layer,
+        Func<IRenderableIpso, System.Drawing.Rectangle>? getScissorRectangle,
+        Func<IRenderableIpso, System.Drawing.Rectangle>? getCullTestBounds,
+        List<DrawCommand> destination)
     {
         ReadOnlyCollection<IRenderableIpso> top = layer.Renderables;
         int count = top.Count;
@@ -66,7 +89,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
                 List<Entry> window = new List<Entry>();
                 for (int i = runStart; i < runEnd; i++)
                 {
-                    ProcessRenderable(top[i], layer, camera, null, window, destination);
+                    ProcessRenderable(top[i], getScissorRectangle, getCullTestBounds, null, window, destination);
                 }
                 FlushWindow(window, destination);
 
@@ -75,20 +98,35 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         }
         else
         {
-            List<Entry> window = new List<Entry>();
-            for (int i = 0; i < count; i++)
-            {
-                ProcessRenderable(top[i], layer, camera, null, window, destination);
-            }
-            FlushWindow(window, destination);
+            ProcessWindow(top, getScissorRectangle, getCullTestBounds, destination);
         }
+    }
+
+    private static void ProcessWindow(
+        IList<IRenderableIpso> renderables,
+        Func<IRenderableIpso, System.Drawing.Rectangle>? getScissorRectangle,
+        Func<IRenderableIpso, System.Drawing.Rectangle>? getCullTestBounds,
+        List<DrawCommand> destination)
+    {
+        int count = renderables.Count;
+        if (count == 0)
+        {
+            return;
+        }
+
+        List<Entry> window = new List<Entry>();
+        for (int i = 0; i < count; i++)
+        {
+            ProcessRenderable(renderables[i], getScissorRectangle, getCullTestBounds, null, window, destination);
+        }
+        FlushWindow(window, destination);
     }
 
     private static void ProcessRenderable(
         IRenderableIpso renderable,
-        Layer layer,
-        Camera? camera,
-        Rectangle? activeClip,
+        Func<IRenderableIpso, System.Drawing.Rectangle>? getScissorRectangle,
+        Func<IRenderableIpso, System.Drawing.Rectangle>? getCullTestBounds,
+        System.Drawing.Rectangle? activeClip,
         List<Entry> currentWindow,
         List<DrawCommand> destination)
     {
@@ -98,14 +136,12 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         }
 
         // #2998 off-screen cull: skip a renderable (and its subtree) fully outside the active
-        // clip. Gated on a non-null camera, mirroring HierarchicalOrderer — see its rationale.
-        // GetCullTestBoundsFor (rather than the plain GetScissorRectangleFor) accounts for
-        // wrapped text whose actual rendered extent exceeds its declared bounds (#4144).
-        if (camera != null
+        // clip. Gated on a non-null mapping, mirroring HierarchicalOrderer — see its rationale.
+        if (getCullTestBounds != null
             && activeClip.HasValue
             && CameraScissorExtensions.CullOffscreenWhenClipped
             && CameraScissorExtensions.IsFullyOutside(
-                camera.GetCullTestBoundsFor(layer, renderable),
+                getCullTestBounds(renderable),
                 activeClip.Value,
                 CameraScissorExtensions.OffscreenCullMarginInPixels))
         {
@@ -126,11 +162,11 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
             AddEntry(renderable, innerWindow);
 
             // Entering a clipper narrows the active clip for descendants (intersect).
-            Rectangle? childClip = activeClip;
-            if (camera != null)
+            System.Drawing.Rectangle? childClip = activeClip;
+            if (getScissorRectangle != null)
             {
-                Rectangle thisClip = camera.GetScissorRectangleFor(layer, renderable);
-                childClip = activeClip.HasValue ? Rectangle.Intersect(activeClip.Value, thisClip) : thisClip;
+                System.Drawing.Rectangle thisClip = getScissorRectangle(renderable);
+                childClip = activeClip.HasValue ? System.Drawing.Rectangle.Intersect(activeClip.Value, thisClip) : thisClip;
             }
 
             if (Renderer.RenderUsingHierarchy && !renderable.IsRenderTarget)
@@ -141,7 +177,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
                     int childCount = children.Count;
                     for (int i = 0; i < childCount; i++)
                     {
-                        ProcessRenderable(children[i], layer, camera, childClip, innerWindow, destination);
+                        ProcessRenderable(children[i], getScissorRectangle, getCullTestBounds, childClip, innerWindow, destination);
                     }
                 }
             }
@@ -161,7 +197,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
                     int childCount = children.Count;
                     for (int i = 0; i < childCount; i++)
                     {
-                        ProcessRenderable(children[i], layer, camera, activeClip, currentWindow, destination);
+                        ProcessRenderable(children[i], getScissorRectangle, getCullTestBounds, activeClip, currentWindow, destination);
                     }
                 }
             }
@@ -188,13 +224,13 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     /// bounds don't intersect the parent's, fall back to the parent's bounds — it's a
     /// safe over-estimate that keeps the overlap test honest.
     /// </summary>
-    private static Rectangle GetEffectiveBounds(IRenderableIpso renderable)
+    private static System.Drawing.Rectangle GetEffectiveBounds(IRenderableIpso renderable)
     {
-        Rectangle bounds = renderable.GetAbsoluteBounds();
+        System.Drawing.Rectangle bounds = renderable.GetAbsoluteBounds();
         IRenderableIpso? parent = renderable.Parent;
         if (parent != null)
         {
-            Rectangle parentBounds = parent.GetAbsoluteBounds();
+            System.Drawing.Rectangle parentBounds = parent.GetAbsoluteBounds();
             if (parentBounds.Width > 0 && parentBounds.Height > 0 && !bounds.IntersectsWith(parentBounds))
             {
                 return parentBounds;
@@ -218,7 +254,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         List<int>?[] successors = new List<int>?[n];
         for (int i = 0; i < n; i++)
         {
-            Rectangle bi = window[i].Bounds;
+            System.Drawing.Rectangle bi = window[i].Bounds;
             for (int j = i + 1; j < n; j++)
             {
                 if (bi.IntersectsWith(window[j].Bounds))

@@ -160,6 +160,16 @@
 		<Compile Include="..\..\MonoGameGum\Input\Cursor.Forms.cs" Link="Input\Cursor.Forms.cs" />
 		<Compile Include="..\..\MonoGameGum\Input\CursorExtensions.cs" Link="Input\CursorExtensions.cs" />
 		<Compile Include="..\..\MonoGameGum\Renderables\RenderableCreator.cs" Link="Renderables\RenderableCreator.cs" />
+		<!--
+			HierarchicalOrderer / IRenderableOrderer / DrawCommand / BatchKeyGroupedOrderer are
+			included via GumCoreShared.projitems, which only MonoGameGum / KniGum / FnaGum
+			consume. Raylib does not import that projitems, so they need an explicit file link
+			here too, exactly like RenderStateChangeStatistics.cs below (#4154 step 1).
+		-->
+		<Compile Include="..\..\RenderingLibrary\Graphics\BatchKeyGroupedOrderer.cs" Link="RenderingLibrary\BatchKeyGroupedOrderer.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\DrawCommand.cs" Link="RenderingLibrary\DrawCommand.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\HierarchicalOrderer.cs" Link="RenderingLibrary\HierarchicalOrderer.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\IRenderableOrderer.cs" Link="RenderingLibrary\IRenderableOrderer.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Fonts\ParsedFontFile.cs" Link="RenderingLibrary\Fonts\ParsedFontFile.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\RenderStateChangeStatistics.cs" Link="RenderingLibrary\RenderStateChangeStatistics.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\RenderTargetService.cs" Link="RenderingLibrary\RenderTargetService.cs" />

@@ -62,6 +62,11 @@ public class Renderer : IRenderer
     // for the duration of a bake and restored afterward; balanced push/pop leaves it empty.
     readonly Stack<System.Drawing.Rectangle> _bakeScissorStack = new();
 
+    // Reused across layers and frames so the build phase does not allocate per frame after
+    // warm-up, mirroring the xnalike Renderer's _scratchCommands (#4154). The renderer owns
+    // the buffer; the orderer writes into it.
+    readonly List<DrawCommand> _scratchCommands = new();
+
     // Set during the PreRender walk (which already traverses the whole visible tree) when any
     // render-target container is present, so the bake pre-pass is skipped entirely for the common
     // case of screens with no render targets — no extra full traversal.
@@ -359,9 +364,88 @@ public class Renderer : IRenderer
     private void Render(ReadOnlyCollection<IRenderableIpso> renderables, ISystemManagers managers, Layer layer)
     {
         _scissorStack.Clear();
-        for(int i = 0; i < renderables.Count; i++)
+
+        // Build phase: flatten the (already Z-sorted) layer into a sequence of DrawCommands via
+        // the shared HierarchicalOrderer -- the same builder MonoGame/KNI/FNA use for their main
+        // pass (#4154). Submit phase below walks that sequence, issuing the raylib-specific
+        // scissor stack / BatchDrawCallCounter / render-target composite calls. BakeRenderTarget's
+        // own child walk stays on the recursive DrawGumRecursively -- unifying the bake path onto
+        // the orderer's subtree entry point is a separate follow-up (#4154 step 4).
+        HierarchicalOrderer.Instance.BuildDrawList(layer, _scratchCommands, _camera);
+        Submit(_scratchCommands, layer);
+    }
+
+    /// <summary>
+    /// Main-pass submit phase: walks the flat <see cref="DrawCommand"/> list produced by
+    /// <see cref="HierarchicalOrderer"/> and issues the corresponding raylib scissor / draw
+    /// calls. The orderer is responsible for visibility, off-screen culling, ClipsChildren
+    /// bracketing, and hierarchy traversal; this method only translates commands into raylib
+    /// calls.
+    /// </summary>
+    private void Submit(List<DrawCommand> commands, Layer layer)
+    {
+        int count = commands.Count;
+        for (int i = 0; i < count; i++)
         {
-            DrawGumRecursively(renderables[i], layer);
+            DrawCommand command = commands[i];
+
+            // A render-target container always renders as a single composited unit (its subtree
+            // was already baked into an offscreen texture during the pre-pass) and never
+            // participates in the scissor stack, even if it also has ClipsChildren set --
+            // mirrors DrawGumRecursively, which composites and returns before ever touching the
+            // scissor stack. The orderer brackets ClipsChildren independently of IsRenderTarget
+            // (see HierarchicalOrdererTests.BuildDrawList_IsRenderTargetNodeWithClipsChildren_
+            // StillBracketsButDoesNotRecurse), so this guard applies uniformly across BeginClip /
+            // DrawRenderable / EndClip rather than assuming the brackets are already absent. Covered
+            // by ClipWalkConformanceTests.Draw_TopLevelRenderTargetContainerWithClipsChildren_
+            // CompositesOnceWithoutDoubleDrawingChildren (#4154).
+            if (command.Target.IsRenderTarget)
+            {
+                if (command.Kind == DrawCommandKind.DrawRenderable)
+                {
+                    CompositeRenderTarget(command.Target);
+                }
+                continue;
+            }
+
+            switch (command.Kind)
+            {
+                case DrawCommandKind.BeginClip:
+                    BeginClipScope(layer, command.Target);
+                    break;
+                case DrawCommandKind.DrawRenderable:
+                    command.Target.Render(null);
+                    break;
+                case DrawCommandKind.EndClip:
+                    EndClipScope();
+                    break;
+            }
+        }
+    }
+
+    // #4155: pushed before the element's own Render() -- BeginClip precedes DrawRenderable in the
+    // orderer's command list, so a clipping element's own draw is bounded by its own clip.
+    private void BeginClipScope(Layer layer, IRenderableIpso element)
+    {
+        System.Drawing.Rectangle rect = GetScissorRectangleFor(layer, element);
+        System.Drawing.Rectangle effective = _scissorStack.Count > 0
+            ? System.Drawing.Rectangle.Intersect(_scissorStack.Peek(), rect)
+            : rect;
+        _scissorStack.Push(effective);
+        BatchDrawCallCounter.BeginScissorMode(effective.X, effective.Y, effective.Width, effective.Height);
+    }
+
+    private void EndClipScope()
+    {
+        _scissorStack.Pop();
+        if (_scissorStack.Count > 0)
+        {
+            System.Drawing.Rectangle parent = _scissorStack.Peek();
+            BatchDrawCallCounter.BeginScissorMode(parent.X, parent.Y, parent.Width, parent.Height);
+        }
+        else
+        {
+            BatchDrawCallCounter.EndScissorMode();
         }
     }
 
