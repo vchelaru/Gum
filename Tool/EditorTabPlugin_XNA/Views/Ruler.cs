@@ -36,7 +36,6 @@ public class Ruler
     private IToolFontService _toolFontService;
     private IToolLayerService _toolLayerService;
     private readonly IHotkeyManager _hotkeyManager;
-    GraphicsDeviceControl mControl;
     SystemManagers mManagers;
     Cursor mCursor;
     private readonly LayerService _layerService;
@@ -212,8 +211,7 @@ public class Ruler
 
 
 
-    public Ruler(GraphicsDeviceControl control, 
-        SystemManagers managers, 
+    public Ruler(SystemManagers managers,
         Cursor cursor, 
         IToolFontService toolFontService,
         IToolLayerService toolLayerService,
@@ -224,7 +222,6 @@ public class Ruler
         _toolLayerService = toolLayerService;
         _hotkeyManager = hotkeyManager;
 
-        mControl = control;
         mManagers = managers;
         mCursor = cursor;
 

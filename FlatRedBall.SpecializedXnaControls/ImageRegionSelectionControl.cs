@@ -436,8 +436,7 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
             // Route the GPU device/content-service lookup through IRenderDeviceHost rather than
             // reading GraphicsDevice/Services directly off this control, so the initialization
             // sequence below only depends on the render-host contract, not on GraphicsDeviceControl.
-            var graphicsDeviceService = (IGraphicsDeviceService)Services.GetService(typeof(IGraphicsDeviceService));
-            IRenderDeviceHost renderHost = new GraphicsDeviceServiceRenderHostAdapter(graphicsDeviceService, Services);
+            IRenderDeviceHost renderHost = RenderDeviceHost;
 
             mManagers = new SystemManagers();
             mManagers.Initialize(renderHost.GraphicsDevice);

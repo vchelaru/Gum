@@ -194,8 +194,7 @@ public class WireframeControl : GraphicsDeviceControl
             // Route the GPU device/content-service lookup through IRenderDeviceHost rather than
             // reading GraphicsDevice/Services directly off this control, so the initialization
             // sequence below only depends on the render-host contract, not on GraphicsDeviceControl.
-            var graphicsDeviceService = (IGraphicsDeviceService)Services.GetService(typeof(IGraphicsDeviceService));
-            IRenderDeviceHost renderHost = new GraphicsDeviceServiceRenderHostAdapter(graphicsDeviceService, Services);
+            IRenderDeviceHost renderHost = RenderDeviceHost;
 
             SystemManagers.Default = new SystemManagers();
             SystemManagers.Default.Initialize(renderHost.GraphicsDevice);
@@ -337,14 +336,14 @@ public class WireframeControl : GraphicsDeviceControl
         ShapeManager.Self.Add(mCanvasBounds, layerService.OverlayLayer);
 
 
-        TopRuler = new Ruler(this, 
+        TopRuler = new Ruler(
             SystemManagers.Default,
             InputLibrary.Cursor.Self,
             _toolFontService,
             _toolLayerService,
             layerService,
             _hotkeyManager);
-        LeftRuler = new Ruler(this, SystemManagers.Default,
+        LeftRuler = new Ruler(SystemManagers.Default,
             InputLibrary.Cursor.Self,
             _toolFontService,
             _toolLayerService,

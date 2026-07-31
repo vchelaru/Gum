@@ -33,24 +33,20 @@ public class GraphicsDeviceControl : Control
     #region Fields
 
     const PixelFormat BmpFormat = PixelFormat.Format32bppPArgb;
-    const SurfaceFormat RtFormat = SurfaceFormat.Bgra32;
-    const int PreferredMultiSampleCount = 1;
 
     // However many GraphicsDeviceControl instances you have, they all share
-    // the same underlying GraphicsDevice, managed by this helper service.
-    GraphicsDeviceService graphicsDeviceService = default!;
+    // the same underlying GraphicsDevice, reference-counted by this host. Null in design mode and
+    // after disposal.
+    ISharedRenderDeviceHost? _deviceHost;
 
     Timer mTimer = default!;
-
-    ServiceContainer services = new ServiceContainer();
 
     float mDesiredFramesPerSecond = 30;
 
     RenderingError mRenderError = new RenderingError();
 
-    private RenderTarget2D renderTarget;
-    byte[] rawImage;
-    Bitmap bitmap;
+    byte[]? rawImage;
+    Bitmap? bitmap;
 
     private readonly IRenderTargetPixelBufferWriter _pixelBufferWriter = new BitmapPixelBufferWriter();
 
@@ -81,15 +77,18 @@ public class GraphicsDeviceControl : Control
     /// </summary>
     public GraphicsDevice GraphicsDevice
     {
-        get { return graphicsDeviceService.GraphicsDevice; }
+        get { return _deviceHost!.GraphicsDevice; }
     }
 
 
-    public RenderTarget2D DefaultRenderTarget
+    /// <summary>
+    /// Gets this control's share of the process-wide graphics device, for code that only needs the
+    /// render-host contract rather than the control itself.
+    /// </summary>
+    public IRenderDeviceHost RenderDeviceHost
     {
-        get { return renderTarget; }
+        get { return _deviceHost!; }
     }
-
 
 
     /// <summary>
@@ -97,9 +96,9 @@ public class GraphicsDeviceControl : Control
     /// This can be used with components such as the ContentManager,
     /// which use this service to look up the GraphicsDevice.
     /// </summary>
-    public ServiceContainer Services
+    public IServiceProvider Services
     {
-        get { return services; }
+        get { return _deviceHost!.Services; }
     }
 
 
@@ -118,12 +117,8 @@ public class GraphicsDeviceControl : Control
         // Don't initialize the graphics device if we are running in the designer.
         if (!DesignMode)
         {
-            graphicsDeviceService = GraphicsDeviceService.AddRef(Handle,
-                                                                 ClientSize.Width,
-                                                                 ClientSize.Height);
-
-            // Register the service, so components like ContentManager can find it.
-            services.AddService<IGraphicsDeviceService>(graphicsDeviceService);
+            _deviceHost = new SharedRenderDeviceHost(Handle, ClientSize.Width, ClientSize.Height);
+            _deviceHost.RenderTargetRecreated += HandleRenderTargetRecreated;
 
             // We used to just invalidate on idle, which ate up the CPU.
             // Instead, I'm going to put it on a 30 fps timer
@@ -143,6 +138,20 @@ public class GraphicsDeviceControl : Control
     }
 
 
+    // The render target and the CPU-side buffers it is blitted through are sized together, so the
+    // host recreating one is what drives recreating the others.
+    void HandleRenderTargetRecreated(int width, int height)
+    {
+        if (bitmap != null)
+        {
+            bitmap.Dispose();
+        }
+        bitmap = new Bitmap(width, height, BmpFormat);
+
+        rawImage = new byte[width * height * 4];
+    }
+
+
     /// <summary>
     /// Disposes the control.
     /// </summary>
@@ -153,15 +162,11 @@ public class GraphicsDeviceControl : Control
             bitmap.Dispose();
             bitmap = null;
         }
-        if (renderTarget != null)
+        if (_deviceHost != null)
         {
-            renderTarget.Dispose();
-            renderTarget = null;
-        }
-        if (graphicsDeviceService != null)
-        {
-            graphicsDeviceService.Release(disposing);
-            graphicsDeviceService = null;
+            _deviceHost.RenderTargetRecreated -= HandleRenderTargetRecreated;
+            _deviceHost.Dispose();
+            _deviceHost = null;
         }
 
         rawImage = null;
@@ -276,18 +281,19 @@ public class GraphicsDeviceControl : Control
     void BeginDraw(RenderingError error)
     {
         // If we have no graphics device, we must be running in the designer.
-        if (graphicsDeviceService == null)
+        if (_deviceHost == null)
         {
             error.Message = Text + "\n\n" + GetType();
+            return;
         }
 
         if (error.HasErrors == false || error.GraphicsDeviceNeedsReset)
         {
-            TryHandleDeviceReset(error);
+            _deviceHost.EnsureSurfaceSize(ClientSize.Width, ClientSize.Height, error);
         }
         if (!error.HasErrors)
         {
-            GraphicsDevice.SetRenderTarget(renderTarget);
+            GraphicsDevice.SetRenderTarget(_deviceHost.RenderTarget);
             GraphicsDevice.Clear(Microsoft.Xna.Framework.Color.Transparent);
 
             // Many GraphicsDeviceControl instances can be sharing the same
@@ -324,7 +330,10 @@ public class GraphicsDeviceControl : Control
             // resolve RenderTarget
             this.GraphicsDevice.SetRenderTarget(null);
 
-            renderTarget.GetData(rawImage);
+            if (rawImage != null)
+            {
+                _deviceHost?.RenderTarget?.GetData(rawImage);
+            }
 
         }
         catch
@@ -335,101 +344,6 @@ public class GraphicsDeviceControl : Control
         }
     }
 
-
-    /// <summary>
-    /// Helper used by BeginDraw. This checks the graphics device status,
-    /// making sure it is big enough for drawing the current control, and
-    /// that the device is not lost. Returns an error string if the device
-    /// could not be reset.
-    /// </summary>
-    void TryHandleDeviceReset(RenderingError error)
-    {
-        // Don't attempt to reset if we failed resetting before
-        if (error.GraphicsDeviceResetFailed)
-            return;
-
-        switch (GraphicsDevice.GraphicsDeviceStatus)
-        {
-            case GraphicsDeviceStatus.Lost:
-                // If the graphics device is lost, but we can try to reset it
-                error.Message = "Graphics device lost";
-                error.GraphicsDeviceLost = true;
-                break;
-            case GraphicsDeviceStatus.NotReset:
-                // If device is in the not-reset state, we should try to reset it.
-                error.GraphicsDeviceNeedsReset = true;
-                error.Message = "Graphics device needs reset";
-
-                break;
-
-            default:
-                // If the device state is ok, check whether it is big enough.
-                PresentationParameters pp = GraphicsDevice.PresentationParameters;
-
-                bool deviceNeedsReset = (ClientSize.Width > pp.BackBufferWidth) ||
-                                   (ClientSize.Height > pp.BackBufferHeight);
-                if(deviceNeedsReset)
-                {
-                    error.Message = "Resolution has changed, needs reset";
-                    error.GraphicsDeviceNeedsReset = true;
-                }
-                break;
-        }
-
-        // Do we need to reset the device?
-        if (error.GraphicsDeviceNeedsReset)
-        {
-            try
-            {
-                graphicsDeviceService.ResetDevice(ClientSize.Width,
-                                                  ClientSize.Height);
-
-                error.Message = null;
-                error.GraphicsDeviceNeedsReset = false;
-            }
-            catch (Exception e)
-            {
-                error.GraphicsDeviceResetFailed = true;
-                error.GraphicsDeviceNeedsReset = false;
-                error.Message = "Graphics device reset failed\n\n" + e;
-            }
-        }
-
-        int w = Math.Max(1, ClientSize.Width);
-        int h = Math.Max(1, ClientSize.Height);
-
-        // check whether _swapChainRenderTarget is big enough.
-        if (renderTarget != null)
-        {
-            if (w != renderTarget.Width || h != renderTarget.Height)
-            {
-                renderTarget.Dispose();
-                renderTarget = null;
-                bitmap.Dispose();
-                bitmap = null;
-            }
-        }
-
-        // recreate RenderTarget
-        if (renderTarget == null)
-        {
-            renderTarget = new RenderTarget2D(
-                this.GraphicsDevice, w, h,
-                false, RtFormat, DepthFormat.Depth24Stencil8, PreferredMultiSampleCount,
-                // needed for rendering IsRenderTarget containers
-                RenderTargetUsage.PreserveContents
-                );
-
-            bitmap = new Bitmap(w, h, BmpFormat);
-        }
-        int rawImageLen = w * h * 4;
-
-        if (rawImage == null || rawImage.Length != rawImageLen)
-        {
-            rawImage = new byte[rawImageLen];
-        }
-
-    }
 
     /// <summary>
     /// If we do not have a valid graphics device (for instance if the device
@@ -454,6 +368,12 @@ public class GraphicsDeviceControl : Control
 
     private void PaintRendertarget(Graphics graphics)
     {
+        RenderTarget2D? renderTarget = _deviceHost?.RenderTarget;
+        if (renderTarget == null || rawImage == null || bitmap == null)
+        {
+            return;
+        }
+
         // Produce the pixel buffer: convert rawImage (the GPU render target readback from EndDraw)
         // into bitmap's backing memory. This step needs no live WinForms Graphics surface.
         _pixelBufferWriter.WriteToBitmap(rawImage, renderTarget.Format, bitmap);
