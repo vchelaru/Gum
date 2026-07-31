@@ -36,7 +36,6 @@ public class RadioButtonVisual : BaseRadioButtonVisual
 
     private readonly CircleRuntime _focusRing;
     private readonly CircleRuntime _outerFill;
-    private readonly CircleRuntime _outerBorder;
     private readonly CircleRuntime _innerDot;
 
     public RadioButtonVisual(bool fullInstantiation = true, bool tryCreateFormsObject = true)
@@ -57,9 +56,6 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         _outerFill = CreateOuterFill();
         AddChild(_outerFill);
 
-        _outerBorder = CreateOuterBorder();
-        AddChild(_outerBorder);
-
         _innerDot = CreateInnerDot();
         AddChild(_innerDot);
 
@@ -68,6 +64,10 @@ public class RadioButtonVisual : BaseRadioButtonVisual
 
     private static CircleRuntime CreateOuterFill()
     {
+        // Fill + border merged onto one CircleRuntime (not two stacked circles): the
+        // runtime insets the fill's AA halo under the stroke's opaque band when both are
+        // set on the same instance, avoiding the seam two independently-antialiased
+        // circles at identical bounds would produce.
         CircleRuntime circle = new CircleRuntime();
         circle.Name = "HazardRadioOuterFill";
         circle.X = 0;
@@ -82,25 +82,6 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         circle.HeightUnits = DimensionUnitType.Absolute;
         circle.IsFilled = true;
         circle.FillColor = HazardStyling.ActiveStyle.Colors.Surface1;
-        circle.StrokeWidth = 0;
-        return circle;
-    }
-
-    private static CircleRuntime CreateOuterBorder()
-    {
-        CircleRuntime circle = new CircleRuntime();
-        circle.Name = "HazardRadioOuterBorder";
-        circle.X = 0;
-        circle.Y = 0;
-        circle.XUnits = GeneralUnitType.PixelsFromSmall;
-        circle.YUnits = GeneralUnitType.PixelsFromMiddle;
-        circle.XOrigin = HorizontalAlignment.Left;
-        circle.YOrigin = VerticalAlignment.Center;
-        circle.Width = OuterSize;
-        circle.Height = OuterSize;
-        circle.WidthUnits = DimensionUnitType.Absolute;
-        circle.HeightUnits = DimensionUnitType.Absolute;
-        circle.IsFilled = false;
         circle.StrokeWidth = BorderThickness;
         circle.StrokeWidthUnits = DimensionUnitType.Absolute;
         circle.StrokeColor = HazardStyling.ActiveStyle.Colors.Border;
@@ -237,7 +218,7 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         Color? innerColor = null)
     {
         _outerFill.FillColor = fill;
-        _outerBorder.StrokeColor = border;
+        _outerFill.StrokeColor = border;
         TextInstance.Color = text;
         _innerDot.Visible = innerVisible;
         if (innerColor.HasValue)

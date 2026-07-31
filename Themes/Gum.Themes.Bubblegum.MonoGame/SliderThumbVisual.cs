@@ -41,7 +41,6 @@ public class SliderThumbVisual : InteractiveGue
 
     private readonly CircleRuntime _focusRing;
     private readonly CircleRuntime _body;
-    private readonly CircleRuntime _border;
 
     private StateSaveCategory _buttonCategory = null!;
 
@@ -60,6 +59,10 @@ public class SliderThumbVisual : InteractiveGue
             name: "BubblegumSliderThumbFocusRing");
         AddChild(_focusRing);
 
+        // Fill + border merged onto one CircleRuntime (not two stacked circles): the
+        // runtime insets the fill's AA halo under the stroke's opaque band when both are
+        // set on the same instance, avoiding the seam two independently-antialiased
+        // circles at identical bounds would produce.
         _body = BubblegumShapes.FilledCircleWithDropshadow(
             color: BubblegumStyling.ActiveStyle.Colors.White,
             shadowColor: ShadowColor,
@@ -67,13 +70,10 @@ public class SliderThumbVisual : InteractiveGue
             offsetY: ShadowOffsetY,
             blur: ShadowBlur,
             name: "BubblegumSliderThumbBody");
+        _body.StrokeWidth = BorderThickness;
+        _body.StrokeWidthUnits = DimensionUnitType.Absolute;
+        _body.StrokeColor = BubblegumStyling.ActiveStyle.Colors.Accent;
         AddChild(_body);
-
-        _border = BubblegumShapes.CircleBorder(
-            color: BubblegumStyling.ActiveStyle.Colors.Accent,
-            thickness: BorderThickness,
-            name: "BubblegumSliderThumbBorder");
-        AddChild(_border);
 
         WireStates();
     }
@@ -117,7 +117,7 @@ public class SliderThumbVisual : InteractiveGue
     {
         _body.FillColor = body;
         _body.HasDropshadow = showShadow;
-        _border.StrokeColor = border;
+        _body.StrokeColor = border;
         _focusRing.Visible = ring;
     }
 }

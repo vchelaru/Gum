@@ -38,7 +38,6 @@ public class SliderThumbVisual : InteractiveGue
 
     private readonly CircleRuntime _focusRing;
     private readonly CircleRuntime _body;
-    private readonly CircleRuntime _border;
 
     private StateSaveCategory _buttonCategory = null!;
 
@@ -56,14 +55,15 @@ public class SliderThumbVisual : InteractiveGue
         _body = CreateBody();
         AddChild(_body);
 
-        _border = CreateBorder();
-        AddChild(_border);
-
         WireStates();
     }
 
     private static CircleRuntime CreateBody()
     {
+        // Fill + border merged onto one CircleRuntime (not two stacked circles): the
+        // runtime insets the fill's AA halo under the stroke's opaque band when both are
+        // set on the same instance, avoiding the seam two independently-antialiased
+        // circles at identical bounds would produce.
         CircleRuntime body = new CircleRuntime();
         body.Name = "NeonSliderThumbBody";
         body.X = 0;
@@ -78,7 +78,9 @@ public class SliderThumbVisual : InteractiveGue
         body.HeightUnits = DimensionUnitType.RelativeToParent;
         body.IsFilled = true;
         body.FillColor = NeonStyling.ActiveStyle.Colors.Surface1;
-        body.StrokeWidth = 0;
+        body.StrokeWidth = BorderThickness;
+        body.StrokeWidthUnits = DimensionUnitType.Absolute;
+        body.StrokeColor = NeonStyling.ActiveStyle.Colors.Accent;
         // Native Gaussian drop shadow under the thumb — replaces the prior
         // single-circle approximation. Toggled per state via WireStates.
         body.HasDropshadow = true;
@@ -87,27 +89,6 @@ public class SliderThumbVisual : InteractiveGue
         body.DropshadowOffsetY = ShadowOffsetY;
         body.DropshadowBlur = ShadowBlur;
         return body;
-    }
-
-    private static CircleRuntime CreateBorder()
-    {
-        CircleRuntime border = new CircleRuntime();
-        border.Name = "NeonSliderThumbBorder";
-        border.X = 0;
-        border.Y = 0;
-        border.XUnits = GeneralUnitType.PixelsFromMiddle;
-        border.YUnits = GeneralUnitType.PixelsFromMiddle;
-        border.XOrigin = HorizontalAlignment.Center;
-        border.YOrigin = VerticalAlignment.Center;
-        border.Width = 0;
-        border.Height = 0;
-        border.WidthUnits = DimensionUnitType.RelativeToParent;
-        border.HeightUnits = DimensionUnitType.RelativeToParent;
-        border.IsFilled = false;
-        border.StrokeWidth = BorderThickness;
-        border.StrokeWidthUnits = DimensionUnitType.Absolute;
-        border.StrokeColor = NeonStyling.ActiveStyle.Colors.Accent;
-        return border;
     }
 
     private static CircleRuntime CreateFocusRing()
@@ -174,7 +155,7 @@ public class SliderThumbVisual : InteractiveGue
     {
         _body.FillColor = body;
         _body.HasDropshadow = showShadow;
-        _border.StrokeColor = border;
+        _body.StrokeColor = border;
         _focusRing.Visible = ring;
     }
 }

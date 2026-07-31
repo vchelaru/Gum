@@ -28,7 +28,6 @@ public class RadioButtonVisual : BaseRadioButtonVisual
     private const float BoxToLabelGap = 6f;
 
     private readonly CircleRuntime _outerFill;
-    private readonly CircleRuntime _outerBorder;
     private readonly CircleRuntime _innerDot;
     private readonly Retro95DottedFocusRect _focusRect;
 
@@ -45,13 +44,15 @@ public class RadioButtonVisual : BaseRadioButtonVisual
         TextInstance.X = OuterSize + BoxToLabelGap;
         TextInstance.Width = -(OuterSize + BoxToLabelGap);
 
+        // Fill + border merged onto one CircleRuntime (not two stacked circles): the
+        // runtime insets the fill's AA halo under the stroke's opaque band when both are
+        // set on the same instance, avoiding the seam two independently-antialiased
+        // circles at identical bounds would produce.
         _outerFill = CreateCircle("Retro95RadioFill", OuterSize, filled: true, color: Retro95Styling.ActiveStyle.Colors.WhiteFill);
+        _outerFill.StrokeWidth = BorderThickness;
+        _outerFill.StrokeWidthUnits = DimensionUnitType.Absolute;
+        _outerFill.StrokeColor = Retro95Styling.ActiveStyle.Colors.ShadowOuter;
         AddChild(_outerFill);
-
-        _outerBorder = CreateCircle("Retro95RadioBorder", OuterSize, filled: false, color: Retro95Styling.ActiveStyle.Colors.ShadowOuter);
-        _outerBorder.StrokeWidth = BorderThickness;
-        _outerBorder.StrokeWidthUnits = DimensionUnitType.Absolute;
-        AddChild(_outerBorder);
 
         _innerDot = CreateInnerDot();
         AddChild(_innerDot);
