@@ -17,6 +17,16 @@ namespace Gum.DataTypes.Serialization.Json;
 /// <see cref="int"/>, <see cref="long"/>, <see cref="float"/>, <see cref="double"/>, or
 /// <see cref="string"/>.
 /// </remarks>
+/// <remarks>
+/// Known, accepted limitation: <see cref="CustomPropertySave.Value"/>'s XML shape additionally
+/// declares a <c>[XmlElement("ValueAsObject", typeof(object))]</c> catch-all (plus a commented-out,
+/// never-implemented <c>ValueAsEnum</c> case) for values outside the six supported types above. This
+/// class does not replicate that catch-all - it throws <see cref="NotSupportedException"/> instead.
+/// Confirmed via repo-wide search: no <c>CustomPropertySave.Value</c> in any checked-in
+/// <c>.gumx</c>/<c>.gucx</c>/<c>.gusx</c>/<c>.gutx</c>/<c>.behx</c> file (including the FormsBehaviors
+/// templates) is ever populated at all, let alone with a type that would need the catch-all - every
+/// real project's <c>CustomProperties</c> list is empty. Revisit if a real project ever needs it.
+/// </remarks>
 internal static class BoxedValueJson
 {
     public static void Assign(
