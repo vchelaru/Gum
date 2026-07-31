@@ -361,32 +361,21 @@ public class Renderer : IRenderer
         _scissorStack.Clear();
         for(int i = 0; i < renderables.Count; i++)
         {
-            IRenderableIpso renderable = renderables[i];
-
-            DrawGumRecursively(renderable, layer);
-
-            //if (renderable is GraphicalUiElement graphicalUiElement)
-            //{
-            //    DrawGumRecursively(graphicalUiElement);
-
-            //    //if (RenderUsingHierarchy)
-            //    //{
-            //    //    DrawGumRecursively(graphicalUiElement);
-            //    //}
-            //    //else
-            //    //{
-            //    //    graphicalUiElement.Render(null);
-            //    //}
-            //}
-            //else
-            //{
-            //    renderable.Render(null);
-            //}
+            DrawGumRecursively(renderables[i], layer);
         }
     }
 
     private void DrawGumRecursively(IRenderableIpso element, Layer layer)
     {
+        // Mirrors HierarchicalOrderer's own top-of-node check: an invisible renderable and its whole
+        // subtree are skipped. Covers both top-level layer renderables (Render's loop above has no
+        // Visible check of its own) and children (the loop below no longer filters on Visible either,
+        // relying on this single check — #4155).
+        if (!element.Visible)
+        {
+            return;
+        }
+
         // #2998 off-screen cull: when a clip is active (the scissor stack is non-empty), skip this
         // element and its subtree if it falls entirely outside the active clip, expanded by a small
         // margin. Mirrors the XNA orderer cull via the same shared predicate.
@@ -410,14 +399,6 @@ public class Renderer : IRenderer
         // to draw its children directly.
         if (element.IsRenderTarget)
         {
-            // A hidden RT container draws nothing (its bake was skipped too). Without this the
-            // composite path would blit last frame's stale cached texture for one frame after the
-            // container is hidden — a 1-frame ghost (#3434).
-            if (!element.Visible)
-            {
-                return;
-            }
-
             // Composite the baked texture if a valid one exists; otherwise (degenerate/zero clamped
             // size, or entirely off-camera) render NOTHING and stop. We deliberately do NOT fall
             // through to draw the children directly: doing so would draw them unclamped, so content
@@ -431,8 +412,8 @@ public class Renderer : IRenderer
             return;
         }
 
-        element.Render(null);
-
+        // #4155: pushed before the element's own Render() so a clipping element's own draw is bounded
+        // by its own clip, matching HierarchicalOrderer (BeginClip precedes DrawRenderable).
         if (element.ClipsChildren)
         {
             System.Drawing.Rectangle rect = GetScissorRectangleFor(layer, element);
@@ -443,14 +424,16 @@ public class Renderer : IRenderer
             BatchDrawCallCounter.BeginScissorMode(effective.X, effective.Y, effective.Width, effective.Height);
         }
 
+        element.Render(null);
+
         if (element.Children != null)
         {
-            foreach (var child in element.Children)
+            // #4155: recurse into every child regardless of concrete type -- matching
+            // HierarchicalOrderer, which recurses into any visible IRenderableIpso. The Visible check
+            // above (run on entry to the recursive call) is what actually gates each child.
+            foreach (IRenderableIpso child in element.Children)
             {
-                if (child is GraphicalUiElement childGue && childGue.Visible)
-                {
-                    DrawGumRecursively(childGue, layer);
-                }
+                DrawGumRecursively(child, layer);
             }
         }
 
@@ -634,12 +617,11 @@ public class Renderer : IRenderer
 
         if (container.Children != null)
         {
+            // #4155: recurse into every child regardless of concrete type, mirroring the main walk's
+            // fix in DrawGumRecursively -- its own Visible check gates each child.
             foreach (IRenderableIpso child in container.Children)
             {
-                if (child is GraphicalUiElement childGue && childGue.Visible)
-                {
-                    DrawGumRecursively(childGue, layer);
-                }
+                DrawGumRecursively(child, layer);
             }
         }
 
