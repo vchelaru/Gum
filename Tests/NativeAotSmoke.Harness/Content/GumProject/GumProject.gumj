@@ -1,0 +1,85 @@
+{
+  "FontRanges": "32-126,160-255",
+  "FontSpacingVertical": 1,
+  "FontSpacingHorizontal": 1,
+  "UseFontCharacterFile": false,
+  "AutoSizeFontOutputs": false,
+  "FontGenerator": 1,
+  "Version": 3,
+  "DefaultCanvasWidth": 800,
+  "DefaultCanvasHeight": 600,
+  "CustomCanvasSizes": [],
+  "ShowOutlines": true,
+  "ShowCanvasOutline": true,
+  "ShowRuler": true,
+  "ShowCheckerBackground": true,
+  "TextureFilter": "Point",
+  "ConvertVariablesOnUnitTypeChange": false,
+  "RestrictToUnitValues": true,
+  "RestrictFileNamesForAndroid": false,
+  "Guides": [],
+  "FavoriteComponents": [],
+  "ParentProjectRoot": "",
+  "LocalizationFiles": [],
+  "ShowLocalizationInGum": true,
+  "CurrentLanguageIndex": 0,
+  "ScreenReferences": [],
+  "ComponentReferences": [],
+  "StandardElementReferences": [
+    {
+      "Name": "Circle",
+      "ElementType": 2,
+      "LinkType": 0,
+      "Link": null
+    },
+    {
+      "Name": "Component",
+      "ElementType": 2,
+      "LinkType": 0,
+      "Link": null
+    },
+    {
+      "Name": "Container",
+      "ElementType": 2,
+      "LinkType": 0,
+      "Link": null
+    },
+    {
+      "Name": "NineSlice",
+      "ElementType": 2,
+      "LinkType": 0,
+      "Link": null
+    },
+    {
+      "Name": "Polygon",
+      "ElementType": 2,
+      "LinkType": 0,
+      "Link": null
+    },
+    {
+      "Name": "Rectangle",
+      "ElementType": 2,
+      "LinkType": 0,
+      "Link": null
+    },
+    {
+      "Name": "Sprite",
+      "ElementType": 2,
+      "LinkType": 0,
+      "Link": null
+    },
+    {
+      "Name": "Text",
+      "ElementType": 2,
+      "LinkType": 0,
+      "Link": null
+    }
+  ],
+  "BehaviorReferences": [],
+  "SinglePixelTextureFile": "",
+  "SinglePixelTextureTop": null,
+  "SinglePixelTextureLeft": null,
+  "SinglePixelTextureRight": null,
+  "SinglePixelTextureBottom": null,
+  "CustomProperties": []
+}

@@ -190,6 +190,23 @@ public class GumBundleLoaderTests : IDisposable
         Should.Throw<ArgumentException>(() => GumBundleLoader.Resolve(badPath));
     }
 
+    [Fact]
+    public void Resolve_with_gumj_extension_is_treated_as_loose_like_gumx()
+    {
+        // .gumj (JSON) projects are loose-file projects exactly like .gumx (issue #4180) -
+        // GumProjectSave.Load already dispatches JSON vs XML off this same extension, so the
+        // bundle-resolution seam must recognize it too instead of throwing ArgumentException.
+        string gumjPath = Path.Combine(_tempDir, "Project.gumj");
+        File.WriteAllText(gumjPath, "{}");
+
+        ProjectResolution resolution = GumBundleLoader.Resolve(gumjPath);
+
+        resolution.UsedBundle.ShouldBeFalse();
+        resolution.ResolvedGumxPath.ShouldBe(gumjPath);
+        resolution.FileProvider.ShouldBeOfType<LooseFileGumFileProvider>();
+        FileManager.CustomGetStreamFromFile.ShouldBeNull();
+    }
+
     private static void WriteBundle(string path, IEnumerable<(string, byte[])> entries)
     {
         using FileStream fs = File.Create(path);
