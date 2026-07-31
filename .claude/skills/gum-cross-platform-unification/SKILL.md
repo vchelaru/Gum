@@ -19,6 +19,10 @@ Why a different home: these runtimes wrap Skia-specific renderables on one side 
 
 **Scope of this pair — do not over-generalize.** This Apos↔Skia pairing covers only the **Apos-specific** runtimes (`RoundedRectangleRuntime`, `ColoredCircleRuntime`, `ArcRuntime`, `LineRuntime`). It is **not** a statement that shape support is MonoGame/Skia-only or that raylib lacks shapes. The general-purpose `RectangleRuntime`/`CircleRuntime` are unified on the normal `MonoGameGum/GueDeriving/` axis (`#if RAYLIB`/`SOKOL`/`SKIA`/`XNALIKE`) and reach full filled/rounded/shadowed capability on **every** backend — raylib included (it wraps the fully-featured `LineRectangle`/`LineCircle`). See [gum-runtime-topology](../gum-runtime-topology/SKILL.md) "Shapes are NOT MonoGame/Skia-only" for the per-backend renderable table.
 
+## Don't Route Tests Around a Divergence You Find — Fix or Surface It
+
+A per-platform `#if`-gated dispatch (e.g. `CustomSetPropertyOnRenderable.cs`'s `TrySetPropertyOn*Runtime` methods) can silently drop a property for one backend: the gate skips it, reflection falls back to the low-level renderable, finds no matching member, and no-ops with no exception. Don't write a test that passes by asserting that fallback's default instead of the property actually applying — that hides the divergence. Fix the gate (see "Disagreements Are the Whole Job" below) or write a failing/pinned test that names the gap.
+
 ## Disagreements Are the Whole Job
 
 When three files diverge, every difference falls into one of two buckets:

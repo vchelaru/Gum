@@ -35,6 +35,9 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+		<!-- ScreenshotDiffService (#4174) decodes/diffs rendered PNGs via the shared, dependency-free
+		     PixelComparer rather than duplicating pixel-comparison logic. -->
+		<ProjectReference Include="..\Gum.ImageDiff\Gum.ImageDiff.csproj" />
 	</ItemGroup>
 
 </Project>

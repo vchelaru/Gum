@@ -397,10 +397,18 @@ jobs:
       #   - Gum.ProjectServices.SkiaGum.Tests (SkiaGum SVG export — renders into
       #                                     SKSvgCanvas, CPU-only like SkiaGum.Tests)
       #   - Gum.Analyzers.Tests            (Roslyn analyzers; pure compilation)
-      #   - Gum.Cli.Tests                  (CLI subcommand smoke tests; fonts
-      #                                     tests self-gate by OS, no screenshot
-      #                                     tests exist yet — if one is added,
-      #                                     fence it with a Trait and exclude here)
+      #   - Gum.Cli.Tests                  (CLI subcommand smoke tests; fonts, the
+      #                                     raylib-backend screenshot test, and the
+      #                                     diff-screenshots test (which renders via
+      #                                     BOTH MonoGame and raylib) all self-gate
+      #                                     by OS at runtime — see
+      #                                     ScreenshotCommandTests/
+      #                                     DiffScreenshotsCommandTests, #4174 —
+      #                                     rather than being excluded via a Trait.
+      #                                     Runs after "Install Mesa" below since
+      #                                     those tests need it on Windows)
+      #   - Gum.ImageDiff.Tests            (PixelComparer; pure SkiaSharp bitmap
+      #                                     comparison, no window/GL, fully headless)
       #   - SkiaGum.Tests                  (renders into an in-memory CPU raster
       #                                     SKSurface — no GPU / window / GL. It
       #                                     was wrongly excluded as "needs a
@@ -413,6 +421,10 @@ jobs:
       #                                     lack, supplied by Mesa llvmpipe software
       #                                     GL dropped in by the "Install Mesa" step
       #                                     right before it. #3250)
+      #   - Gum.ProjectServices.Raylib.Tests (RaylibScreenshotService — same real
+      #                                     raylib window/OpenGL context as
+      #                                     RaylibGum.Tests above, needs the same
+      #                                     Mesa llvmpipe DLLs. #4174)
       #
       # Bucket B — DEFERRED, NEEDS INVESTIGATION (likely safe in part, but may
       # mix headless and graphics-using tests in the same project; would need
@@ -455,6 +467,10 @@ jobs:
         if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
         run: dotnet test "Tests/Gum.ProjectServices.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
+      - name: Gum.ImageDiff.Tests
+        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        run: dotnet test "Tests/Gum.ImageDiff.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
       - name: Gum.Presentation.Tests
         if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
         run: dotnet test "Tests/Gum.Presentation.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
@@ -462,10 +478,6 @@ jobs:
       - name: Gum.Analyzers.Tests
         if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
         run: dotnet test "Tests/Gum.Analyzers.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
-
-      - name: Gum.Cli.Tests
-        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
-        run: dotnet test "Tests/Gum.Cli.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       # SkiaGum.Tests renders into an in-memory CPU raster SKSurface (no GPU / window /
       # GL), so it runs headless on CI like the suites above and blocks on failure. It
@@ -531,12 +543,31 @@ jobs:
           $opengl = Get-ChildItem -Path $extract -Recurse -Filter opengl32.dll |
                     Where-Object { $_.FullName -match '\\x64\\' } | Select-Object -First 1
           if (-not $opengl) { Write-Error "x64 opengl32.dll not found in Mesa archive"; exit 1 }
-          $dest = "Tests/RaylibGum.Tests/bin/Release/net8.0"
-          Copy-Item (Join-Path $opengl.Directory.FullName "*.dll") -Destination $dest -Force
-          Write-Host "Mesa GL runtime copied to $dest"
-          Get-ChildItem (Join-Path $dest "*.dll") |
-            Where-Object { $_.Name -match "opengl32|gallium|glapi|dxil" } |
-            Format-Table Name, Length
+          $dests = @(
+            "Tests/RaylibGum.Tests/bin/Release/net8.0",
+            "Tests/Gum.ProjectServices.Raylib.Tests/bin/Release/net8.0",
+            "Tests/Gum.Cli.Tests/bin/Release/net8.0"
+          )
+          foreach ($dest in $dests) {
+            Copy-Item (Join-Path $opengl.Directory.FullName "*.dll") -Destination $dest -Force
+            Write-Host "Mesa GL runtime copied to $dest"
+            Get-ChildItem (Join-Path $dest "*.dll") |
+              Where-Object { $_.Name -match "opengl32|gallium|glapi|dxil" } |
+              Format-Table Name, Length
+          }
+
+      # Moved here (after Mesa is installed) because ScreenshotCommandTests and
+      # DiffScreenshotsCommandTests exercise `gumcli screenshot --backend raylib` and
+      # `gumcli diff-screenshots` (#4174), which need the same software-GL override as RaylibGum.Tests
+      # below (diff-screenshots also renders via MonoGame — same Mesa DLLs cover both). Runs on both
+      # OSes (no runner.os gate) like before this move — only the raylib-touching tests self-skip on
+      # non-Windows (see their own comments).
+      - name: Gum.Cli.Tests
+        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        env:
+          GALLIUM_DRIVER: llvmpipe   # only consulted by the raylib-touching tests, themselves
+                                     # Windows-only; harmless no-op elsewhere
+        run: dotnet test "Tests/Gum.Cli.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: "RaylibGum.Tests (Windows, #3250)"
         if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
@@ -544,6 +575,15 @@ jobs:
         env:
           GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
         run: dotnet test "Tests/RaylibGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      # RaylibScreenshotService (#4174) — same real raylib window/OpenGL context as
+      # RaylibGum.Tests above, via the same Mesa llvmpipe DLLs copied in the step above.
+      - name: "Gum.ProjectServices.Raylib.Tests (Windows, #4174)"
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
+        timeout-minutes: 10
+        env:
+          GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
+        run: dotnet test "Tests/Gum.ProjectServices.Raylib.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Publish Test Results
         if: always() && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')

@@ -29,18 +29,19 @@
 		     Without it, only simple dot-path lookups work; literals (X = 100) and expressions
 		     (X = A + B) would silently fail to evaluate during `gumcli check-references` fix mode. -->
 		<ProjectReference Include="..\..\Runtimes\GumExpressions\GumExpressions.csproj" />
-		<!-- FUTURE: When a second rendering backend is added (e.g. Gum.ProjectServices.Skia), both
-		     backends compile copies of shared types (RenderingLibrary, SystemManagers, etc.) from
-		     GumCommon into their own assemblies, and both share static singletons (ObjectFinder.Self,
-		     SystemManagers.Default) via GumCommon. Referencing both directly from Gum.Cli will not
-		     cause compile errors (Gum.Cli only uses IScreenshotService), but loading both into the
-		     same process risks static-state collisions if they are ever initialized concurrently.
-
-		     The intended long-term architecture is to load backend assemblies dynamically via a custom
-		     AssemblyLoadContext with AssemblyDependencyResolver, so each backend's dependencies are
-		     isolated and only one backend is loaded per process run. Switch to that pattern when a
-		     second backend is introduced. -->
+		<!-- Each rendering backend compiles its own copies of shared types (RenderingLibrary,
+		     SystemManagers, etc.) from GumCommon into a separate assembly, so their static
+		     singletons (ObjectFinder.Self, SystemManagers.Default) are distinct per-assembly
+		     statics, not shared process-wide state. Referencing all three directly (rather than
+		     loading them via a custom AssemblyLoadContext + AssemblyDependencyResolver, as an
+		     earlier version of this comment proposed) has been the practice since Skia was added
+		     for `gumcli svg`, and is safe here for the same reason: each `gumcli` invocation is a
+		     one-shot process that only ever initializes the single backend the command it ran
+		     actually needs (screenshot picks MonoGame or Raylib via the backend option; svg always
+		     uses Skia) — no command initializes two backends in the same process run, so the
+		     concurrent-init collision risk this comment used to warn about never arises. -->
 		<ProjectReference Include="..\Gum.ProjectServices.MonoGame\Gum.ProjectServices.MonoGame.csproj" />
+		<ProjectReference Include="..\Gum.ProjectServices.Raylib\Gum.ProjectServices.Raylib.csproj" />
 		<ProjectReference Include="..\Gum.ProjectServices.SkiaGum\Gum.ProjectServices.SkiaGum.csproj" />
 	</ItemGroup>
 

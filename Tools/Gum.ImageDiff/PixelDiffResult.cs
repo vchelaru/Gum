@@ -1,4 +1,4 @@
-namespace SkiaGum.Tests.GoldenImages;
+namespace Gum.ImageDiff;
 
 public readonly struct PixelDiffResult
 {

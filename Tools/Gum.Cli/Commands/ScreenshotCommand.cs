@@ -3,6 +3,7 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
 using Gum.ProjectServices.MonoGame;
+using Gum.ProjectServices.Raylib;
 using Gum.ProjectServices.Screenshot;
 
 namespace Gum.Cli.Commands;
@@ -11,19 +12,18 @@ namespace Gum.Cli.Commands;
 /// Defines the <c>gumcli screenshot</c> command which renders a Gum Screen or Component to a PNG file.
 /// </summary>
 /// <remarks>
-/// Uses MonoGame (DesktopGL) to render the element with the same backend as a MonoGame game,
-/// producing pixel-accurate output suitable for visual regression testing.
-/// <para>
-/// FUTURE: When a second backend is added (e.g. Skia), do not add it as a direct ProjectReference.
-/// Both backends compile copies of shared types (RenderingLibrary, SystemManagers, etc.) and share
-/// static singletons via GumCommon. Instead, load backends dynamically using a custom
-/// AssemblyLoadContext + AssemblyDependencyResolver so each backend's dependencies are isolated
-/// and only one is loaded per process run. Add a --backend flag to select between them.
-/// See the comment in Gum.Cli.csproj for more detail.
-/// </para>
+/// Defaults to MonoGame (DesktopGL); <c>--backend raylib</c> renders the same element via raylib
+/// instead, so the two outputs can be diffed pixel-for-pixel against the same project (#4174) —
+/// exactly the gap that let raylib's rendering silently diverge from the tool's undetected (#4172).
+/// Both backends are referenced directly (see Gum.Cli.csproj) rather than loaded via a custom
+/// AssemblyLoadContext: each `gumcli screenshot` invocation is a one-shot process that only ever
+/// initializes one backend, so the static-singleton collision a shared-process concurrent-init would
+/// risk never arises in practice.
 /// </remarks>
 public static class ScreenshotCommand
 {
+    private const string MonoGameBackend = "monogame";
+    private const string RaylibBackend = "raylib";
 
     /// <summary>
     /// Creates the <c>screenshot</c> command definition.
@@ -50,6 +50,11 @@ public static class ScreenshotCommand
             "--height",
             "Height of the output image in pixels. Defaults to the project canvas height.");
 
+        Option<string> backendOption = new Option<string>(
+            "--backend",
+            () => MonoGameBackend,
+            $"Rendering backend to use: '{MonoGameBackend}' (default) or '{RaylibBackend}'.");
+
         Command command = new Command("screenshot", "Render a Gum Screen or Component to a PNG file.")
         {
             projectArgument,
@@ -57,6 +62,7 @@ public static class ScreenshotCommand
             outputOption,
             widthOption,
             heightOption,
+            backendOption,
         };
 
         command.SetHandler((InvocationContext context) =>
@@ -66,16 +72,18 @@ public static class ScreenshotCommand
             string? output = context.ParseResult.GetValueForOption(outputOption);
             int? width = context.ParseResult.GetValueForOption(widthOption);
             int? height = context.ParseResult.GetValueForOption(heightOption);
+            string backend = context.ParseResult.GetValueForOption(backendOption) ?? MonoGameBackend;
 
             string outputPath = output ?? $"{elementName}.png";
 
-            context.ExitCode = Execute(projectPath, elementName, outputPath, width, height);
+            context.ExitCode = Execute(projectPath, elementName, outputPath, width, height, backend);
         });
 
         return command;
     }
 
-    private static int Execute(string projectPath, string elementName, string outputPath, int? width, int? height)
+    private static int Execute(
+        string projectPath, string elementName, string outputPath, int? width, int? height, string backend)
     {
         string fullProjectPath = Path.GetFullPath(projectPath);
 
@@ -85,7 +93,20 @@ public static class ScreenshotCommand
             return 2;
         }
 
-        IScreenshotService service = new MonoGameScreenshotService();
+        IScreenshotService service;
+        switch (backend.ToLowerInvariant())
+        {
+            case MonoGameBackend:
+                service = new MonoGameScreenshotService();
+                break;
+            case RaylibBackend:
+                service = new RaylibScreenshotService();
+                break;
+            default:
+                Console.Error.WriteLine(
+                    $"error: Unknown backend '{backend}'. Expected '{MonoGameBackend}' or '{RaylibBackend}'.");
+                return 2;
+        }
 
         ScreenshotRequest request = new ScreenshotRequest
         {

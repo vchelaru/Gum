@@ -17,6 +17,12 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\..\Runtimes\SkiaGum\SkiaGum.csproj" />
+	  <!-- PixelComparer/PixelDiffResult (used by GoldenImages/*Tests.cs) live in the dependency-free
+	       Gum.ImageDiff so gumcli diff-screenshots (#4174) can reuse the same comparer instead of
+	       duplicating it. Deliberately NOT Gum.ProjectServices.SkiaGum — that project file-links the
+	       same GumService.cs this test project also file-links below, and referencing it would
+	       produce a duplicate-type (CS0433) conflict on GumService. -->
+	  <ProjectReference Include="..\..\Tools\Gum.ImageDiff\Gum.ImageDiff.csproj" />
 	</ItemGroup>
 
 	<!-- Render-only GumService (evicted from Gum.SkiaSharp core, #3218). Shared source,
