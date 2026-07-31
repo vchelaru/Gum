@@ -397,13 +397,18 @@ jobs:
       #   - Gum.ProjectServices.SkiaGum.Tests (SkiaGum SVG export — renders into
       #                                     SKSvgCanvas, CPU-only like SkiaGum.Tests)
       #   - Gum.Analyzers.Tests            (Roslyn analyzers; pure compilation)
-      #   - Gum.Cli.Tests                  (CLI subcommand smoke tests; fonts and
-      #                                     the raylib-backend screenshot test both
-      #                                     self-gate by OS at runtime — see
-      #                                     ScreenshotCommandTests, #4174 — rather
-      #                                     than being excluded via a Trait. Runs
-      #                                     after "Install Mesa" below since that
-      #                                     raylib-backend test needs it on Windows)
+      #   - Gum.Cli.Tests                  (CLI subcommand smoke tests; fonts, the
+      #                                     raylib-backend screenshot test, and the
+      #                                     diff-screenshots test (which renders via
+      #                                     BOTH MonoGame and raylib) all self-gate
+      #                                     by OS at runtime — see
+      #                                     ScreenshotCommandTests/
+      #                                     DiffScreenshotsCommandTests, #4174 —
+      #                                     rather than being excluded via a Trait.
+      #                                     Runs after "Install Mesa" below since
+      #                                     those tests need it on Windows)
+      #   - Gum.ImageDiff.Tests            (PixelComparer; pure SkiaSharp bitmap
+      #                                     comparison, no window/GL, fully headless)
       #   - SkiaGum.Tests                  (renders into an in-memory CPU raster
       #                                     SKSurface — no GPU / window / GL. It
       #                                     was wrongly excluded as "needs a
@@ -461,6 +466,10 @@ jobs:
       - name: Gum.ProjectServices.Tests
         if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
         run: dotnet test "Tests/Gum.ProjectServices.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      - name: Gum.ImageDiff.Tests
+        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        run: dotnet test "Tests/Gum.ImageDiff.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Gum.Presentation.Tests
         if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
@@ -547,14 +556,16 @@ jobs:
               Format-Table Name, Length
           }
 
-      # Moved here (after Mesa is installed) because ScreenshotCommandTests exercises
-      # `gumcli screenshot --backend raylib` (#4174), which needs the same software-GL override as
-      # RaylibGum.Tests below. Runs on both OSes (no runner.os gate) like before this move — only the
-      # raylib-backend test self-skips on non-Windows (see its own comment).
+      # Moved here (after Mesa is installed) because ScreenshotCommandTests and
+      # DiffScreenshotsCommandTests exercise `gumcli screenshot --backend raylib` and
+      # `gumcli diff-screenshots` (#4174), which need the same software-GL override as RaylibGum.Tests
+      # below (diff-screenshots also renders via MonoGame — same Mesa DLLs cover both). Runs on both
+      # OSes (no runner.os gate) like before this move — only the raylib-touching tests self-skip on
+      # non-Windows (see their own comments).
       - name: Gum.Cli.Tests
         if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
         env:
-          GALLIUM_DRIVER: llvmpipe   # only consulted by the raylib-backend screenshot test, itself
+          GALLIUM_DRIVER: llvmpipe   # only consulted by the raylib-touching tests, themselves
                                      # Windows-only; harmless no-op elsewhere
         run: dotnet test "Tests/Gum.Cli.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 

@@ -1,7 +1,8 @@
+using Gum.ImageDiff;
 using Shouldly;
 using SkiaSharp;
 
-namespace SkiaGum.Tests.GoldenImages;
+namespace Gum.ImageDiff.Tests;
 
 public class PixelComparerTests
 {

@@ -15,24 +15,28 @@ namespace Gum.ProjectServices.Raylib;
 /// <remarks>
 /// Mirrors <c>MonoGameScreenshotService</c>'s render pipeline (load project, instantiate the
 /// element, run layout, draw once) so the two backends can be diffed pixel-for-pixel against the
-/// same project — the whole point of adding this backend (#4174). Reuses the current process'
-/// hidden raylib window if one is already open (e.g. from a previous call in the same process)
-/// rather than closing/reopening it, since raylib window re-creation is unreliable — see
-/// RaylibGum.Tests' TestAssemblyInitialize.
+/// same project — the whole point of adding this backend (#4174).
+///
+/// <para>Creates and closes its own hidden window on every call rather than reusing one already
+/// open in the process. An earlier version reused an existing window (matching RaylibGum.Tests'
+/// persistent-window design), but <c>gumcli diff-screenshots</c> (#4174) calls this and
+/// <c>MonoGameScreenshotService</c> back-to-back for every element — MonoGame's DesktopGL
+/// teardown between calls left the reused raylib window's OpenGL context no longer valid, so a
+/// second raylib render in the same process silently produced a corrupt image
+/// (<c>ExportImage</c> failing). Owning a fresh window per call sidesteps that: it matches what a
+/// real one-shot <c>gumcli screenshot --backend raylib</c> process already does (open, render,
+/// process exits) with no added cost there, and gives every render its own valid GL context
+/// regardless of what other graphics backends ran earlier in the process.</para>
 /// </remarks>
 public class RaylibScreenshotService : IScreenshotService
 {
     /// <inheritdoc/>
     public ScreenshotResult TakeScreenshot(ScreenshotRequest request)
     {
+        Raylib_cs.Raylib.SetConfigFlags(ConfigFlags.HiddenWindow);
+        Raylib_cs.Raylib.InitWindow(1, 1, "Gum Screenshot");
         try
         {
-            if (!Raylib_cs.Raylib.IsWindowReady())
-            {
-                Raylib_cs.Raylib.SetConfigFlags(ConfigFlags.HiddenWindow);
-                Raylib_cs.Raylib.InitWindow(1, 1, "Gum Screenshot");
-            }
-
             var gumService = GumService.Default;
             GumProjectSave? project = gumService.Initialize(request.ProjectPath);
 
@@ -114,6 +118,8 @@ public class RaylibScreenshotService : IScreenshotService
             {
                 // best-effort cleanup
             }
+
+            Raylib_cs.Raylib.CloseWindow();
         }
     }
 }

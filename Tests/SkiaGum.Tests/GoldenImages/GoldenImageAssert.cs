@@ -1,3 +1,4 @@
+using Gum.ImageDiff;
 using SkiaSharp;
 
 namespace SkiaGum.Tests.GoldenImages;
