@@ -8,10 +8,10 @@
       <Value xsi:type="xsd:float">10</Value>
     </Variable>
     <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">242</Value>
+      <Value xsi:type="xsd:int">249</Value>
     </Variable>
     <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">231</Value>
+      <Value xsi:type="xsd:int">240</Value>
     </Variable>
     <Variable Type="int" Name="Background.FillRed" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>

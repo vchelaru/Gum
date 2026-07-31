@@ -209,8 +209,8 @@
     <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">85</Value>
     </Variable>
-    <Variable Type="string" Name="TextInstance.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Nunito</Value>
+    <Variable IsFont="true" Type="string" Name="TextInstance.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Nunito-Regular.ttf</Value>
     </Variable>
     <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">14</Value>
@@ -539,9 +539,6 @@
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">245</Value>
-      </Variable>
-      <Variable Type="RadioButtonCategory" Name="RadioButtonCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">EnabledOff</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">217</Value>
@@ -1472,9 +1469,6 @@
       </Variable>
       <Variable Type="int" Name="RadioBackground.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">245</Value>
-      </Variable>
-      <Variable Type="RadioButtonCategory" Name="RadioButtonCategoryState" SetsValue="true">
-        <Value xsi:type="xsd:string">EnabledOff</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
         <Value xsi:type="xsd:int">217</Value>
