@@ -9,7 +9,7 @@ namespace Gum.Controls;
 
 public enum ScrollOrientationEx { Horizontal, Vertical }
 
-public sealed class ThemedScrollBar : Control
+public sealed class ThemedScrollBar : Control, IScrollBar
 {
     public ScrollOrientationEx Orientation { get; set; } = ScrollOrientationEx.Vertical;
 

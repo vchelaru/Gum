@@ -1,7 +1,7 @@
-﻿using FlatRedBall.SpecializedXnaControls;
+﻿using Gum.Controls;
 using Gum.DataTypes;
 using Gum.Managers;
-using Gum.Plugins.BaseClasses;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Plugins.InternalPlugins.EditorTab.Views;
 using Gum.ToolStates;
 using Gum.Wireframe;
@@ -9,7 +9,7 @@ using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
+using System.Windows.Forms;
 
 namespace Gum.Plugins.ScrollBarPlugin;
 
@@ -98,7 +98,16 @@ public class ScrollbarService
         // about needing to be done in a particular order
         // but it seems to be working okay. Adding this comment
         // just in case the order does in fact matter.
-        scrollBarControlLogic = new ScrollBarControlLogic(gumEditorPanel, wireframeControl1);
+        ThemedScrollBar verticalScrollBar = new() { Orientation = ScrollOrientationEx.Vertical, Dock = DockStyle.Right };
+        gumEditorPanel.Controls.Add(verticalScrollBar);
+
+        ThemedScrollBar horizontalScrollBar = new() { Orientation = ScrollOrientationEx.Horizontal, Dock = DockStyle.Bottom };
+        gumEditorPanel.Controls.Add(horizontalScrollBar);
+
+        scrollBarControlLogic = new ScrollBarControlLogic(
+            horizontalScrollBar,
+            verticalScrollBar,
+            new ControlScrollSurfaceAdapter(wireframeControl1));
         scrollBarControlLogic.SetDisplayedArea(800, 600);
     }
 
@@ -110,7 +119,7 @@ public class ScrollbarService
 
     public void HandleXnaInitialized()
     {
-        scrollBarControlLogic.Managers = global::RenderingLibrary.SystemManagers.Default;
+        scrollBarControlLogic.Camera = global::RenderingLibrary.SystemManagers.Default.Renderer.Camera;
         scrollBarControlLogic.UpdateScrollBars();
     }
 
